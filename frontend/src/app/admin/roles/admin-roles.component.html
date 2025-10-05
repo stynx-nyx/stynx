@@ -3,10 +3,14 @@
     <h2>Roles</h2>
     <button mat-flat-button color="primary" (click)="createRole()">New Role</button>
   </div>
-  <mat-list *ngIf="roles$ | async as roles">
-    <mat-list-item *ngFor="let role of roles">
-      <div matListItemTitle>{{ role.name }}</div>
-      <div matListItemLine>{{ role.code }}</div>
-    </mat-list-item>
-  </mat-list>
+  @if (roles$ | async as roles) {
+    <mat-list>
+      @for (role of roles; track role.roleId) {
+        <mat-list-item>
+          <div matListItemTitle>{{ role.name }}</div>
+          <div matListItemLine>{{ role.code }}</div>
+        </mat-list-item>
+      }
+    </mat-list>
+  }
 </mat-card>

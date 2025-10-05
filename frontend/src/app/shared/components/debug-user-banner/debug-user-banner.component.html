@@ -1,4 +1,6 @@
-<mat-card *ngIf="show" appearance="outlined" class="debug-banner">
-  <strong>Debug Principal:</strong>
-  <pre>{{ user | json }}</pre>
-</mat-card>
+@if (show) {
+  <mat-card appearance="outlined" class="debug-banner">
+    <strong>Debug Principal:</strong>
+    <pre>{{ user | json }}</pre>
+  </mat-card>
+}
