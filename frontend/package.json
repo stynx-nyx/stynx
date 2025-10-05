@@ -1,0 +1,58 @@
+{
+  "name": "st-core-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve --proxy-config proxy.conf.json",
+    "build": "ng build",
+    "test": "npm run test:unit",
+    "test:unit": "jest --config ../test/frontend/jest.config.ts",
+    "test:e2e": "cypress run --config-file ../test/frontend/cypress.config.ts",
+    "lint": "ng lint"
+  },
+  "dependencies": {
+    "@angular/animations": "^20.2.0",
+    "@angular/cdk": "^20.2.0",
+    "@angular/common": "^20.2.0",
+    "@angular/compiler": "^20.2.0",
+    "@angular/core": "^20.2.0",
+    "@angular/forms": "^20.2.0",
+    "@angular/material": "^20.2.0",
+    "@angular/platform-browser": "^20.2.0",
+    "@angular/platform-browser-dynamic": "^20.2.0",
+    "@angular/router": "^20.2.0",
+    "@ngx-translate/core": "^17.0.0",
+    "@ngx-translate/http-loader": "^17.0.0",
+    "angular-oauth2-oidc": "^20.0.2",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0",
+    "zone.js": "~0.15.0"
+  },
+  "devDependencies": {
+    "@angular-builders/jest": "^16.0.0",
+    "@angular-devkit/build-angular": "^20.2.0",
+    "@angular/cli": "^20.2.0",
+    "@angular/compiler-cli": "^20.2.0",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.16.5",
+    "cypress": "^13.7.2",
+    "eslint": "^9.12.0",
+    "jest": "^29.7.0",
+    "jest-preset-angular": "^14.0.3",
+    "ts-jest": "^29.1.1",
+    "typescript": "~5.9.2"
+  },
+  "prettier": {
+    "printWidth": 100,
+    "singleQuote": true,
+    "overrides": [
+      {
+        "files": "*.html",
+        "options": {
+          "parser": "angular"
+        }
+      }
+    ]
+  }
+}

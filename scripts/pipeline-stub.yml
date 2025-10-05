@@ -1,0 +1,40 @@
+name: st-core-ci
+
+on:
+  push:
+    branches: [ main ]
+  pull_request: {}
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install backend deps
+        run: npm ci
+        working-directory: backend
+      - name: Install frontend deps
+        run: npm ci
+        working-directory: frontend
+      - name: Install backend test deps
+        run: npm ci
+        working-directory: test/backend
+      - name: Install frontend test deps
+        run: npm ci
+        working-directory: test/frontend
+      - name: Lint backend
+        run: npm run lint
+        working-directory: backend
+      - name: Test backend
+        run: npm test
+        working-directory: backend
+      - name: Test frontend
+        run: npm run test:unit
+        working-directory: frontend
+      - name: Cypress smoke (headless)
+        run: npm run test:e2e
+        working-directory: frontend

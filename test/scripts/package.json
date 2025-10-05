@@ -1,0 +1,7 @@
+{
+  "name": "st-core-script-tests",
+  "private": true,
+  "scripts": {
+    "test": "node validate.js"
+  }
+}

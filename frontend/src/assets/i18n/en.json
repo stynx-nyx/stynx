@@ -1,0 +1,14 @@
+{
+  "app": {
+    "title": "st-core",
+    "logout": "Logout"
+  },
+  "admin": {
+    "users": "Users",
+    "roles": "Roles",
+    "tenancies": "Tenancies"
+  },
+  "storage": {
+    "title": "Storage"
+  }
+}

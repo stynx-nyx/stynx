@@ -1,0 +1,180 @@
+From d02e6ea57b29cc6f1cbf212e65f4c748ca6eff8c Mon Sep 17 00:00:00 2001
+From: "Antonio A. Russo" <aarusso@nyxk.com.br>
+Date: Sun, 5 Oct 2025 20:05:35 -0300
+Subject: [PATCH 3/6] refactor(frontend): migrate *ngIf/*ngFor to Angular
+ @if/@for syntax
+
+---
+ .../admin/roles/admin-roles.component.html    | 16 +++---
+ .../tenancies/admin-tenancies.component.html  | 12 +++--
+ .../admin/users/admin-users.component.html    | 17 ++++---
+ .../debug-user-banner.component.html          | 10 ++--
+ .../language-switcher.component.html          |  8 +--
+ .../storage/storage-explorer.component.html   | 50 ++++++++++---------
+ 6 files changed, 64 insertions(+), 49 deletions(-)
+
+diff --git a/frontend/src/app/admin/roles/admin-roles.component.html b/frontend/src/app/admin/roles/admin-roles.component.html
+index d14f08c..936c761 100644
+--- a/frontend/src/app/admin/roles/admin-roles.component.html
++++ b/frontend/src/app/admin/roles/admin-roles.component.html
+@@ -3,10 +3,14 @@
+     <h2>Roles</h2>
+     <button mat-flat-button color="primary" (click)="createRole()">New Role</button>
+   </div>
+-  <mat-list *ngIf="roles$ | async as roles">
+-    <mat-list-item *ngFor="let role of roles">
+-      <div matListItemTitle>{{ role.name }}</div>
+-      <div matListItemLine>{{ role.code }}</div>
+-    </mat-list-item>
+-  </mat-list>
++  @if (roles$ | async as roles) {
++    <mat-list>
++      @for (role of roles; track role.roleId) {
++        <mat-list-item>
++          <div matListItemTitle>{{ role.name }}</div>
++          <div matListItemLine>{{ role.code }}</div>
++        </mat-list-item>
++      }
++    </mat-list>
++  }
+ </mat-card>
+diff --git a/frontend/src/app/admin/tenancies/admin-tenancies.component.html b/frontend/src/app/admin/tenancies/admin-tenancies.component.html
+index 850c729..7357afb 100644
+--- a/frontend/src/app/admin/tenancies/admin-tenancies.component.html
++++ b/frontend/src/app/admin/tenancies/admin-tenancies.component.html
+@@ -12,9 +12,13 @@
+     <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid">Create</button>
+   </form>
+   <div class="list">
+-    <div class="tenancy" *ngFor="let tenancy of tenancies$ | async">
+-      <h3>{{ tenancy.name }}</h3>
+-      <div class="subtitle">{{ tenancy.code }}</div>
+-    </div>
++    @if (tenancies$ | async as tenancies) {
++      @for (tenancy of tenancies; track tenancy.tenancyId) {
++        <div class="tenancy">
++          <h3>{{ tenancy.name }}</h3>
++          <div class="subtitle">{{ tenancy.code }}</div>
++        </div>
++      }
++    }
+   </div>
+ </mat-card>
+diff --git a/frontend/src/app/admin/users/admin-users.component.html b/frontend/src/app/admin/users/admin-users.component.html
+index e2934a7..fc067e4 100644
+--- a/frontend/src/app/admin/users/admin-users.component.html
++++ b/frontend/src/app/admin/users/admin-users.component.html
+@@ -1,14 +1,15 @@
+ <mat-card>
+   <h2>Users</h2>
+-  <ng-container *ngIf="users$ | async as vm; else loading">
++  @if (users$ | async as vm) {
+     <mat-list>
+-      <mat-list-item *ngFor="let user of vm">
+-        <div matListItemTitle>{{ user.displayName || user.email }}</div>
+-        <div matListItemLine>{{ user.roles.join(', ') }}</div>
+-      </mat-list-item>
++      @for (user of vm; track user.userId) {
++        <mat-list-item>
++          <div matListItemTitle>{{ user.displayName || user.email }}</div>
++          <div matListItemLine>{{ user.roles.join(', ') }}</div>
++        </mat-list-item>
++      }
+     </mat-list>
+-  </ng-container>
+-  <ng-template #loading>
++  } @else {
+     <div class="loading"><mat-spinner></mat-spinner></div>
+-  </ng-template>
++  }
+ </mat-card>
+diff --git a/frontend/src/app/shared/components/debug-user-banner/debug-user-banner.component.html b/frontend/src/app/shared/components/debug-user-banner/debug-user-banner.component.html
+index be22a67..c81df89 100644
+--- a/frontend/src/app/shared/components/debug-user-banner/debug-user-banner.component.html
++++ b/frontend/src/app/shared/components/debug-user-banner/debug-user-banner.component.html
+@@ -1,4 +1,6 @@
+-<mat-card *ngIf="show" appearance="outlined" class="debug-banner">
+-  <strong>Debug Principal:</strong>
+-  <pre>{{ user | json }}</pre>
+-</mat-card>
++@if (show) {
++  <mat-card appearance="outlined" class="debug-banner">
++    <strong>Debug Principal:</strong>
++    <pre>{{ user | json }}</pre>
++  </mat-card>
++}
+diff --git a/frontend/src/app/shared/components/language-switcher/language-switcher.component.html b/frontend/src/app/shared/components/language-switcher/language-switcher.component.html
+index a6828db..bfcee8f 100644
+--- a/frontend/src/app/shared/components/language-switcher/language-switcher.component.html
++++ b/frontend/src/app/shared/components/language-switcher/language-switcher.component.html
+@@ -1,3 +1,5 @@
+-<button mat-button *ngFor="let language of languages" (click)="switch(language)">
+-  {{ language.toUpperCase() }}
+-</button>
++@for (language of languages; track language) {
++  <button mat-button (click)="switch(language)">
++    {{ language.toUpperCase() }}
++  </button>
++}
+diff --git a/frontend/src/app/storage/storage-explorer.component.html b/frontend/src/app/storage/storage-explorer.component.html
+index 5a07644..0fe2be4 100644
+--- a/frontend/src/app/storage/storage-explorer.component.html
++++ b/frontend/src/app/storage/storage-explorer.component.html
+@@ -6,28 +6,30 @@
+       <button mat-flat-button color="primary">Upload</button>
+     </label>
+   </div>
+-  <table mat-table *ngIf="files$ | async as files" [dataSource]="files" class="mat-elevation-z1">
+-    <ng-container matColumnDef="filename">
+-      <th mat-header-cell *matHeaderCellDef>Filename</th>
+-      <td mat-cell *matCellDef="let row">{{ row.filename }}</td>
+-    </ng-container>
+-    <ng-container matColumnDef="bucket">
+-      <th mat-header-cell *matHeaderCellDef>Bucket</th>
+-      <td mat-cell *matCellDef="let row">{{ row.bucket }}</td>
+-    </ng-container>
+-    <ng-container matColumnDef="createdAt">
+-      <th mat-header-cell *matHeaderCellDef>Created</th>
+-      <td mat-cell *matCellDef="let row">{{ row.createdAt | date: 'short' }}</td>
+-    </ng-container>
+-    <ng-container matColumnDef="actions">
+-      <th mat-header-cell *matHeaderCellDef></th>
+-      <td mat-cell *matCellDef="let row">
+-        <button mat-icon-button color="warn" (click)="remove(row)">
+-          <mat-icon>delete</mat-icon>
+-        </button>
+-      </td>
+-    </ng-container>
+-    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+-    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+-  </table>
++  @if (files$ | async as files) {
++    <table mat-table [dataSource]="files" class="mat-elevation-z1">
++      <ng-container matColumnDef="filename">
++        <th mat-header-cell *matHeaderCellDef>Filename</th>
++        <td mat-cell *matCellDef="let row">{{ row.filename }}</td>
++      </ng-container>
++      <ng-container matColumnDef="bucket">
++        <th mat-header-cell *matHeaderCellDef>Bucket</th>
++        <td mat-cell *matCellDef="let row">{{ row.bucket }}</td>
++      </ng-container>
++      <ng-container matColumnDef="createdAt">
++        <th mat-header-cell *matHeaderCellDef>Created</th>
++        <td mat-cell *matCellDef="let row">{{ row.createdAt | date: 'short' }}</td>
++      </ng-container>
++      <ng-container matColumnDef="actions">
++        <th mat-header-cell *matHeaderCellDef></th>
++        <td mat-cell *matCellDef="let row">
++          <button mat-icon-button color="warn" (click)="remove(row)">
++            <mat-icon>delete</mat-icon>
++          </button>
++        </td>
++      </ng-container>
++      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
++      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
++    </table>
++  }
+ </mat-card>
+-- 
+2.50.1 (Apple Git-155)
+
