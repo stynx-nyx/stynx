@@ -22,11 +22,10 @@ interface RoleVm {
   styleUrls: ['./admin-roles.component.scss'],
 })
 export class AdminRolesComponent {
-  private readonly refresh$ = new BehaviorSubject<void>(undefined);
+  private readonly api = inject(ApiService);
   private readonly snackbar = inject(MatSnackBar);
+  private readonly refresh$ = new BehaviorSubject<void>(undefined);
   readonly roles$ = this.refresh$.pipe(switchMap(() => this.api.get<RoleVm[]>('/roles')));
-
-  constructor(private readonly api: ApiService) {}
 
   createRole(): void {
     const code = window.prompt('Role code (e.g. platform:auditor)');

@@ -1,4 +1,4 @@
-import { Component, Renderer2 } from '@angular/core';
+import { Component, Renderer2, inject } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 
@@ -10,9 +10,8 @@ import { MatButtonModule } from '@angular/material/button';
   styleUrls: ['./theme-switcher.component.scss'],
 })
 export class ThemeSwitcherComponent {
+  private readonly renderer = inject(Renderer2);
   private isDark = false;
-
-  constructor(private readonly renderer: Renderer2) {}
 
   toggle(): void {
     this.isDark = !this.isDark;

@@ -1,5 +1,5 @@
 import { AsyncPipe, JsonPipe, NgFor, NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatListModule } from '@angular/material/list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -23,9 +23,8 @@ interface AdminUserVm {
   styleUrls: ['./admin-users.component.scss'],
 })
 export class AdminUsersComponent implements OnInit {
+  private readonly api = inject(ApiService);
   users$!: Observable<AdminUserVm[]>;
-
-  constructor(private readonly api: ApiService) {}
 
   ngOnInit(): void {
     this.users$ = this.api.get<AdminUserVm[]>('/users').pipe(startWith([]), map((users) => users ?? []));

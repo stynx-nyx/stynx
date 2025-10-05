@@ -1,5 +1,5 @@
 import { AsyncPipe, DatePipe, NgFor, NgIf } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -36,14 +36,14 @@ interface StorageFileVm {
   styleUrls: ['./storage-explorer.component.scss'],
 })
 export class StorageExplorerComponent {
+  private readonly api = inject(ApiService);
+  private readonly dialog = inject(MatDialog);
   readonly displayedColumns = ['filename', 'bucket', 'createdAt', 'actions'];
   private readonly refresh$ = new BehaviorSubject<void>(undefined);
   readonly files$ = this.refresh$.pipe(
     switchMap(() => this.api.get<StorageFileVm[]>('/storage/files')),
     map((files) => files ?? []),
   );
-
-  constructor(private readonly api: ApiService, private readonly dialog: MatDialog) {}
 
   upload(event: Event): void {
     const input = event.target as HTMLInputElement;

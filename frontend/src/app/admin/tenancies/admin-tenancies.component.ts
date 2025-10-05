@@ -1,5 +1,5 @@
 import { AsyncPipe, NgFor } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -31,14 +31,14 @@ interface TenancyVm {
   styleUrls: ['./admin-tenancies.component.scss'],
 })
 export class AdminTenanciesComponent {
+  private readonly fb = inject(FormBuilder);
+  private readonly api = inject(ApiService);
   private readonly refresh$ = new BehaviorSubject<void>(undefined);
   readonly form = this.fb.group({
     code: ['', [Validators.required, Validators.pattern(/^[a-z0-9-]+$/)]],
     name: ['', Validators.required],
   });
   readonly tenancies$ = this.refresh$.pipe(switchMap(() => this.api.get<TenancyVm[]>('/tenancies')));
-
-  constructor(private readonly fb: FormBuilder, private readonly api: ApiService) {}
 
   create(): void {
     if (this.form.invalid) {

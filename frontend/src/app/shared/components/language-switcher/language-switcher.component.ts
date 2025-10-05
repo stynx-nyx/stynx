@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { TranslateService } from '@ngx-translate/core';
 
@@ -11,9 +11,8 @@ import { TranslateService } from '@ngx-translate/core';
   styleUrls: ['./language-switcher.component.scss'],
 })
 export class LanguageSwitcherComponent {
+  private readonly translate = inject(TranslateService);
   readonly languages = ['en', 'pt'];
-
-  constructor(private readonly translate: TranslateService) {}
 
   switch(language: string): void {
     this.translate.use(language);

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -23,16 +23,13 @@ import { AuthFacade } from './auth.facade';
   ],
 })
 export class LoginComponent implements OnInit {
+  private readonly fb = inject(FormBuilder);
+  private readonly router = inject(Router);
+  private readonly auth = inject(AuthFacade);
   readonly form = this.fb.group({
     username: ['', [Validators.required, Validators.email]],
     password: ['', Validators.required],
   });
-
-  constructor(
-    private readonly fb: FormBuilder,
-    private readonly router: Router,
-    private readonly auth: AuthFacade,
-  ) {}
 
   ngOnInit(): void {
     const hash = window.location.hash;
