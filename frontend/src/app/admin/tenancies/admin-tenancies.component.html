@@ -1,0 +1,20 @@
+<mat-card>
+  <h2>Tenancies</h2>
+  <form class="tenancy-form" [formGroup]="form" (ngSubmit)="create()">
+    <mat-form-field appearance="outline">
+      <mat-label>Code</mat-label>
+      <input matInput formControlName="code" />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Name</mat-label>
+      <input matInput formControlName="name" />
+    </mat-form-field>
+    <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid">Create</button>
+  </form>
+  <div class="list">
+    <div class="tenancy" *ngFor="let tenancy of tenancies$ | async">
+      <h3>{{ tenancy.name }}</h3>
+      <div class="subtitle">{{ tenancy.code }}</div>
+    </div>
+  </div>
+</mat-card>
