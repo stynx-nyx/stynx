@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
-import { AdminUsersComponent } from '@admin/users/admin-users.component';
+import { UserListComponent } from '@admin/users/user-list.component';
+import { UserDetailComponent } from '@admin/users/user-detail.component';
 import { AdminRolesComponent } from '@admin/roles/admin-roles.component';
 import { AdminTenanciesComponent } from '@admin/tenancies/admin-tenancies.component';
 import { StorageExplorerComponent } from '@storage/storage-explorer.component';
@@ -22,7 +23,10 @@ export const routes: Routes = [
       { path: '', redirectTo: 'admin/users', pathMatch: 'full' },
       {
         path: 'admin/users',
-        component: AdminUsersComponent,
+        children: [
+          { path: '', component: UserListComponent },
+          { path: ':id', component: UserDetailComponent },
+        ],
       },
       {
         path: 'admin/roles',
