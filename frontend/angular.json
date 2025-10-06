@@ -47,11 +47,11 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "st-core:build"
+            "buildTarget": "st-core:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "st-core:build:production"
+              "buildTarget": "st-core:build:production"
             }
           }
         },
