@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { Pool, PoolClient, QueryResult } from 'pg';
+import type { Pool, PoolClient, QueryResult, QueryResultRow } from 'pg';
 
 export interface DbContextOptions {
   tenantId?: string;
@@ -28,7 +28,7 @@ export class DatabaseService {
     }
   }
 
-  async query<T = unknown>(
+  async query<T extends QueryResultRow = QueryResultRow>(
     sql: string,
     params: ReadonlyArray<unknown> = [],
     context: DbContextOptions = {},

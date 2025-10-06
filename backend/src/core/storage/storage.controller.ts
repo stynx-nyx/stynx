@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  Post,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -13,7 +14,7 @@ import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 import { TenancyGuard } from '@core/auth/guards/tenancy.guard';
 import { UserGuard } from '@core/auth/guards/user.guard';
 import { RegisterFileDto } from './dto/register-file.dto';
-import { StorageService } from './storage.service';
+import { StorageFile, StorageService } from './storage.service';
 
 interface RequestContext extends Request {
   tenantId?: string;
