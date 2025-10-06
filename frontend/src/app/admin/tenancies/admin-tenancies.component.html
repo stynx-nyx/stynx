@@ -12,7 +12,7 @@
     <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid">Create</button>
   </form>
   <div class="list">
-    @if (tenancies$ | async as tenancies) {
+    @if (tenancies$ | async; as tenancies) {
       @for (tenancy of tenancies; track tenancy.tenancyId) {
         <div class="tenancy">
           <h3>{{ tenancy.name }}</h3>

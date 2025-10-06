@@ -11,7 +11,7 @@ import { MatButtonModule } from '@angular/material/button';
 })
 export class ThemeSwitcherComponent {
   private readonly renderer = inject(Renderer2);
-  private isDark = false;
+  isDark = false;
 
   toggle(): void {
     this.isDark = !this.isDark;

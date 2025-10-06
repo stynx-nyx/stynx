@@ -6,7 +6,7 @@
       <button mat-flat-button color="primary">Upload</button>
     </label>
   </div>
-  @if (files$ | async as files) {
+  @if (files$ | async; as files) {
     <table mat-table [dataSource]="files" class="mat-elevation-z1">
       <ng-container matColumnDef="filename">
         <th mat-header-cell *matHeaderCellDef>Filename</th>

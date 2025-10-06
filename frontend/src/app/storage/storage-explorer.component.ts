@@ -1,4 +1,4 @@
-import { AsyncPipe, DatePipe, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { BehaviorSubject, map, switchMap } from 'rxjs';
 import { ApiService } from '@core/api/api.service';
-import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
+import type { ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
 
 interface StorageFileVm {
@@ -27,10 +27,7 @@ interface StorageFileVm {
     MatButtonModule,
     MatIconModule,
     DatePipe,
-    NgIf,
-    NgFor,
     AsyncPipe,
-    ConfirmDialogComponent,
   ],
   templateUrl: './storage-explorer.component.html',
   styleUrls: ['./storage-explorer.component.scss'],
@@ -62,19 +59,21 @@ export class StorageExplorerComponent {
   }
 
   remove(file: StorageFileVm): void {
-    this.dialog
-      .open<ConfirmDialogComponent, ConfirmDialogData>(ConfirmDialogComponent, {
-        data: {
-          title: 'Delete file',
-          message: `Remove ${file.filename}?`,
-        },
-      })
-      .afterClosed()
-      .subscribe((confirmed) => {
-        if (!confirmed) {
-          return;
-        }
-        this.api.delete(`/storage/files/${file.fileId}`).subscribe(() => this.refresh$.next());
-      });
+    void import('@shared/components/confirm-dialog/confirm-dialog.component').then(({ ConfirmDialogComponent }) =>
+      this.dialog
+        .open(ConfirmDialogComponent, {
+          data: {
+            title: 'Delete file',
+            message: `Remove ${file.filename}?`,
+          } satisfies ConfirmDialogData,
+        })
+        .afterClosed()
+        .subscribe((confirmed) => {
+          if (!confirmed) {
+            return;
+          }
+          this.api.delete(`/storage/files/${file.fileId}`).subscribe(() => this.refresh$.next());
+        }),
+    );
   }
 }
