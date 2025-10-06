@@ -1,4 +1,4 @@
-import { AsyncPipe, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -26,8 +26,6 @@ import { LoggingSwitcherComponent } from '@shared/components/logging-switcher/lo
     MatListModule,
     RouterOutlet,
     RouterLink,
-    NgFor,
-    NgIf,
     AsyncPipe,
     DebugUserBannerComponent,
     LanguageSwitcherComponent,

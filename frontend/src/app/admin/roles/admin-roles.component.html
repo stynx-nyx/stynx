@@ -3,14 +3,14 @@
     <h2>Roles</h2>
     <button mat-flat-button color="primary" (click)="createRole()">New Role</button>
   </div>
-  @if (roles$ | async as roles) {
+  <ng-container *ngIf="roles$ | async as roles">
     <mat-list>
-      @for (role of roles; track role.roleId) {
+      <ng-container *ngFor="let role of roles; trackBy: trackRoleId">
         <mat-list-item>
           <div matListItemTitle>{{ role.name }}</div>
           <div matListItemLine>{{ role.code }}</div>
         </mat-list-item>
-      }
+      </ng-container>
     </mat-list>
-  }
+  </ng-container>
 </mat-card>

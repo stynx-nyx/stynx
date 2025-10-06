@@ -1,4 +1,4 @@
-import { AsyncPipe, JsonPipe, NgFor, NgIf } from '@angular/common';
+import { JsonPipe } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -37,9 +37,6 @@ import { RoleSummary, TenancySummary, UserDetail } from './models';
     MatListModule,
     ReactiveFormsModule,
     RouterLink,
-    AsyncPipe,
-    NgIf,
-    NgFor,
     JsonPipe,
   ],
 })

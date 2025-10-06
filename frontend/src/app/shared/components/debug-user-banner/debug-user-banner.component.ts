@@ -1,4 +1,4 @@
-import { AsyncPipe, JsonPipe, NgIf } from '@angular/common';
+import { JsonPipe } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { environment } from '@env/environment';
@@ -6,7 +6,7 @@ import { environment } from '@env/environment';
 @Component({
   selector: 'stc-debug-user-banner',
   standalone: true,
-  imports: [MatCardModule, NgIf, JsonPipe, AsyncPipe],
+  imports: [MatCardModule, JsonPipe],
   templateUrl: './debug-user-banner.component.html',
   styleUrls: ['./debug-user-banner.component.scss'],
 })

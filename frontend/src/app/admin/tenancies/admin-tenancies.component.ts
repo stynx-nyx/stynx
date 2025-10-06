@@ -1,4 +1,4 @@
-import { AsyncPipe, NgFor } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -24,7 +24,6 @@ interface TenancyVm {
     MatInputModule,
     MatButtonModule,
     ReactiveFormsModule,
-    NgFor,
     AsyncPipe,
   ],
   templateUrl: './admin-tenancies.component.html',

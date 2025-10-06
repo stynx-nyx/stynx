@@ -1,4 +1,3 @@
-import { AsyncPipe, NgIf } from '@angular/common';
 import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,7 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { UsersService } from './users.service';
 import { UserSummary } from './models';
@@ -29,9 +28,6 @@ import { UserSummary } from './models';
     MatIconModule,
     MatProgressSpinnerModule,
     ReactiveFormsModule,
-    RouterLink,
-    AsyncPipe,
-    NgIf,
   ],
 })
 export class UserListComponent implements OnInit {

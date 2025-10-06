@@ -1,4 +1,4 @@
-import { AsyncPipe, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -17,7 +17,7 @@ interface RoleVm {
 @Component({
   standalone: true,
   selector: 'stc-admin-roles',
-  imports: [MatCardModule, MatListModule, MatButtonModule, MatSnackBarModule, NgFor, NgIf, AsyncPipe],
+  imports: [MatCardModule, MatListModule, MatButtonModule, MatSnackBarModule, AsyncPipe],
   templateUrl: './admin-roles.component.html',
   styleUrls: ['./admin-roles.component.scss'],
 })
