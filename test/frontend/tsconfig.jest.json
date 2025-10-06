@@ -1,0 +1,13 @@
+{
+  "extends": "../../frontend/tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../frontend/out-tsc/spec",
+    "types": ["jest", "node"]
+  },
+  "files": [],
+  "include": [
+    "../../frontend/src/**/*.ts",
+    "../../frontend/src/**/*.d.ts",
+    "./**/*.ts"
+  ]
+}

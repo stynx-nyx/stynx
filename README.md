@@ -1,13 +1,14 @@
 # st-core
 
-st-core is the shared bootstrap platform for future NestJS + Angular applications. It merges the architecture, naming conventions, and operational practices established in the PORM and PEC systems into a single, reusable foundation covering authentication, tenancy, auditing, storage, and developer tooling.
+st-core is the shared bootstrap platform for future NestJS + Angular applications. It consolidates the common architecture, naming conventions, and operational practices from prior enterprise projects into a single, reusable foundation covering authentication, tenancy, auditing, storage, and developer tooling.
 
 ## Repository Layout
 
 - `backend/` – NestJS API skeleton with modular core (auth, audit, tenancy, storage, docs, logging, health) and shared database client.
 - `frontend/` – Angular 20 base shell, Cognito-aware auth flow, admin consoles, storage UI, and shared UI widgets built with the new control-flow syntax and the `inject()` API.
 - `db/` – SQL-first schema definitions and seeds (auth/audit/storage) plus DDL smoke tests under `test/db`.
-- `scripts/` – Host-executable automation for provisioning AWS resources, database workflows, documentation export, and CI/CD scaffolding.
+- `bootstrap/` – TypeScript CLI that configures environments, provisions AWS resources, runs database migrations, and deploys artifacts.
+- `scripts/` – Host-executable helpers for database workflows, documentation export, and CI/CD scaffolding that sit alongside the bootstrap CLI.
 - `docs/` – Living documentation split into system context (`docs/sys`), developer conventions (`docs/dev`), and generated API materials (`docs/api`).
 - `test/` – Centralised Jest/Cypress suites for database, backend, frontend, and script validation.
 
@@ -32,14 +33,11 @@ st-core is the shared bootstrap platform for future NestJS + Angular application
    (cd test/scripts && npm install)
    ```
 
-4. **Database setup**
+4. **Bootstrap environments**
    ```bash
-   scripts/postgres-setup.sh --database-url postgres://user:pass@localhost:5432/st_core
-   psql "$DATABASE_URL" -f db/ddl/00-extensions.sql
-   psql "$DATABASE_URL" -f db/ddl/01-auth.sql
-   psql "$DATABASE_URL" -f db/ddl/02-audit.sql
-   psql "$DATABASE_URL" -f db/ddl/03-storage.sql
-   psql "$DATABASE_URL" -f db/seed/00-base.sql
+   (cd bootstrap && npm install)
+   npx tsx bootstrap/index.ts configure --sync-env
+   npx tsx bootstrap/index.ts up --with-db --with-s3 --with-cloudfront --yes
    ```
 
 5. **Run backend**
@@ -74,10 +72,10 @@ st-core is the shared bootstrap platform for future NestJS + Angular application
 - Inline templates and styles have been externalised to `.html` / `.scss` files for easier maintenance.
 - Structural directives now rely on Angular’s `@if` / `@for` syntax.
 - Components and services adopt the `inject()` API instead of constructor DI.
-- The admin area bundles user management with role and tenancy tooling, mirroring the PORM experience while calling stubbed backend endpoints.
+- The admin area bundles user management with role and tenancy tooling while calling stubbed backend endpoints.
 
 ## Next Steps
 
 - Tune Cognito configuration in `backend/.env` and Angular environments before deploying.
 - Extend admin and storage modules with domain-specific functionality.
-- Wire the deployment scripts into your CI/CD toolchain (see `scripts/pipeline-stub.yml`).
+- Integrate the bootstrap CLI into your CI/CD toolchain so infrastructure and deployments remain idempotent.

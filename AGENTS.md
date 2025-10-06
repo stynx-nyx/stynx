@@ -1,6 +1,6 @@
 # st-core Agent Guide
 
-This repository consolidates reusable scaffolding from the PORM and PEC systems. Follow these guidelines while extending the platform.
+This repository bundles the reusable scaffolding extracted from previous production apps. Follow these guidelines while extending the platform.
 
 ## Directory Responsibilities
 - `backend/` – NestJS codebase. Core modules live under `src/core`. Do not introduce domain-specific logic here; build reusable services and guards only.
@@ -11,9 +11,17 @@ This repository consolidates reusable scaffolding from the PORM and PEC systems.
 - `test/` – Centralised test harness. Add backend specs to `test/backend`, frontend unit/E2E to `test/frontend`, and script validations to `test/scripts`.
 
 ## General Rules
-1. Mirror naming, module boundaries, and linting conventions set by the PORM repository.
+1. Mirror the established naming, module boundaries, and linting conventions already present in the repo.
 2. Enforce RLS and tenancy checks in every new table or API surface.
 3. Update documentation and seeds alongside code changes; nothing should be undocumented.
 4. Prefer path aliases (`@core`, `@shared`, `@admin`, `@storage`, `@env`) over deep relative imports.
-5. Do not delete or bypass the generated scripts—they are referenced by CI/CD stubs.
-6. When in doubt, study `SUMMARY.md` for what was merged from PORM/PEC and coordinate with maintainers via TODOs in `TODO.md`.
+5. Do not delete or bypass the generated scripts—they are referenced by CI/CD automation.
+6. When in doubt, study `SUMMARY.md` for the latest merge notes and coordinate unfinished work through `TODO.md`.
+
+## Mode Guidelines
+
+- **danger-full-access** – Treat commands as operating on the developer’s live filesystem. Avoid destructive operations, double-check paths, and never reset user changes.
+- **workspace-write** – You may write only inside the workspace; request guidance before touching external paths.
+- **read-only** – Limit yourself to analysis and documentation; stage proposed changes separately.
+- **approval_policy: never** – You must succeed without escalation. Prefer deterministic scripts, avoid risky shell commands, and provide manual follow-up steps if a task truly requires elevated access.
+- **approval_policy: on-request / on-failure** – Attempt tasks in the sandbox first, then surface any required escalations with clear justification.
