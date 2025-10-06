@@ -38,7 +38,10 @@ export class AdminRolesComponent {
         this.snackbar.open('Role created', undefined, { duration: 2000 });
         this.refresh$.next();
       },
-      error: (err) => this.snackbar.open(`Failed to create role: ${err.message}`, undefined, { duration: 4000 }),
+      error: (err: unknown) => {
+        const message = err instanceof Error ? err.message : 'Unexpected error';
+        this.snackbar.open(`Failed to create role: ${message}`, undefined, { duration: 4000 });
+      },
     });
   }
 }

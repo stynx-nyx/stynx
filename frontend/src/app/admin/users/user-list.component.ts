@@ -68,7 +68,7 @@ export class UserListComponent implements OnInit {
   }
 
   openDetail(user: UserSummary): void {
-    this.router.navigate(['/admin/users', user.id]);
+    void this.router.navigate(['/admin/users', user.id]);
   }
 
   private fetch(): void {

@@ -1,4 +1,4 @@
-import { ApplicationConfig, importProvidersFrom } from '@angular/core';
+import { APP_INITIALIZER, ApplicationConfig, importProvidersFrom } from '@angular/core';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
 import {
@@ -11,12 +11,15 @@ import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { routes } from './app.routes';
 import { authInterceptor } from '@core/auth/auth.interceptor';
+import { I18nService } from '@i18n/i18n.service';
 
 export function httpLoaderFactory(http: HttpClient): TranslateLoader {
   return new TranslateHttpLoader(http, '/assets/i18n/', '.json');
 }
 
-const initI18n = (service: I18nService) => () => service.init();
+const initI18n = (service: I18nService) => () => {
+  service.init();
+};
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -25,7 +28,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
     importProvidersFrom(
       TranslateModule.forRoot({
-        defaultLanguage: "en",
+        defaultLanguage: 'en',
         loader: { provide: TranslateLoader, useFactory: httpLoaderFactory, deps: [HttpClient] },
       }),
     ),

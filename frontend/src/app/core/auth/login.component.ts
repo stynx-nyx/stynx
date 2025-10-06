@@ -40,7 +40,11 @@ export class LoginComponent implements OnInit {
       const expiresIn = Number(params.get('expires_in') ?? '3600');
       if (accessToken) {
         this.auth.setTokens({ accessToken, idToken, expiresAt: Date.now() + expiresIn * 1000 });
-        this.auth.fetchProfile().subscribe(() => this.router.navigate(['/']));
+        this.auth.fetchProfile().subscribe({
+          next: () => {
+            void this.router.navigate(['/']);
+          },
+        });
       }
     }
   }
@@ -49,7 +53,11 @@ export class LoginComponent implements OnInit {
     if (this.form.invalid) {
       return;
     }
-    this.auth.fetchProfile().subscribe(() => this.router.navigate(['/']));
+    this.auth.fetchProfile().subscribe({
+      next: () => {
+        void this.router.navigate(['/']);
+      },
+    });
   }
 
   loginWithCognito(): void {
