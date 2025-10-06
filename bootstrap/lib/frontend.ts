@@ -3,7 +3,7 @@ import path from 'path';
 import { spawn } from 'child_process';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import chalk from 'chalk';
-import { baseAwsConfig, ensureDryRun } from './aws';
+import { baseAwsConfig } from './aws';
 import { invalidateDistribution, CloudFrontEnsureInput } from './cloudfront';
 
 export interface FrontendDeployOptions {

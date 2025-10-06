@@ -6,8 +6,8 @@ import { prompt } from 'enquirer';
 import { loadEnv, writeEnv, updateAngularEnvironments, BACKEND_ENV_PATH } from './lib/env';
 import { createDatabase, dropDatabase, runSqlDirectory } from './lib/db';
 import { ensureCognito, describeCognito, deleteAppClient, deleteGroups, deleteUserPool } from './lib/cognito';
-import { ensureBucket, deleteBucket, resolveBucketRegion } from './lib/s3';
-import { ensureDistribution, invalidateDistribution, deleteDistribution } from './lib/cloudfront';
+import { ensureBucket, resolveBucketRegion } from './lib/s3';
+import { ensureDistribution } from './lib/cloudfront';
 import { buildFrontend, deployFrontend } from './lib/frontend';
 import { buildBackend, deployBackendPlaceholder } from './lib/backend';
 import { teardown } from './lib/teardown';
@@ -19,6 +19,8 @@ interface GlobalOptions {
   yes?: boolean;
   nonInteractive?: boolean;
   debug?: boolean;
+  force?: boolean;
+  syncEnv?: boolean;
 }
 
 interface EnvConfig {
@@ -35,6 +37,7 @@ interface EnvConfig {
   COGNITO_USERPOOL_ID?: string;
   COGNITO_CLIENT_ID?: string;
   COGNITO_JWKS_URI?: string;
+  COGNITO_REGION?: string;
   S3_BUCKET_STORAGE?: string;
   S3_BUCKET_FRONTEND?: string;
   CLOUDFRONT_DIST_ID?: string;
@@ -51,7 +54,9 @@ program
   .option('--yes', 'Assume yes for all prompts', false)
   .option('--dry-run', 'Preview actions without executing', false)
   .option('--non-interactive', 'Disable interactive prompts', false)
-  .option('--debug', 'Enable verbose logging', false);
+  .option('--debug', 'Enable verbose logging', false)
+  .option('--force', 'Force operations even when validations fail', false)
+  .option('--sync-env', 'Automatically import missing variables from ../porm/backend/.env', false);
 
 function getGlobalOptions(command: Command): GlobalOptions {
   const opts = command.parent?.opts?.() ?? command.opts?.() ?? {};
@@ -62,10 +67,13 @@ function getGlobalOptions(command: Command): GlobalOptions {
     yes: Boolean(opts.yes),
     nonInteractive: Boolean(opts.nonInteractive),
     debug: Boolean(opts.debug),
+    force: Boolean(opts.force),
+    syncEnv: Boolean(opts.syncEnv),
   };
 }
 
 async function ensureEnvConfig(global: GlobalOptions, existing: Partial<EnvConfig>): Promise<EnvConfig> {
+  const existingRecord = existing as Record<string, string | undefined>;
   const defaults: EnvConfig = {
     APP_NAME: existing.APP_NAME || 'st-core',
     DB_NAME: existing.DB_NAME || 'stcore',
@@ -80,12 +88,20 @@ async function ensureEnvConfig(global: GlobalOptions, existing: Partial<EnvConfi
     COGNITO_USERPOOL_ID: existing.COGNITO_USERPOOL_ID,
     COGNITO_CLIENT_ID: existing.COGNITO_CLIENT_ID,
     COGNITO_JWKS_URI: existing.COGNITO_JWKS_URI,
+    COGNITO_REGION: existing.COGNITO_REGION || existing.AWS_REGION || global.region || 'us-east-1',
     S3_BUCKET_STORAGE: existing.S3_BUCKET_STORAGE,
     S3_BUCKET_FRONTEND: existing.S3_BUCKET_FRONTEND,
     CLOUDFRONT_DIST_ID: existing.CLOUDFRONT_DIST_ID,
     CLOUDFRONT_DOMAIN: existing.CLOUDFRONT_DOMAIN,
   };
+  if (existingRecord?.COGNITO_CLIENT_SECRET) {
+    // Cognito clients must be public; remove legacy secrets pulled from older environments.
+    // eslint-disable-next-line no-console
+    console.warn(chalk.yellow('Detected COGNITO_CLIENT_SECRET in backend/.env; removing to enforce secret-less app clients.'));
+    delete existingRecord.COGNITO_CLIENT_SECRET;
+  }
   if (global.nonInteractive || global.yes) {
+    defaults.COGNITO_REGION = defaults.AWS_REGION;
     return defaults;
   }
   const questions = [
@@ -101,7 +117,9 @@ async function ensureEnvConfig(global: GlobalOptions, existing: Partial<EnvConfi
     { name: 'API_BASE_URL', message: 'API base URL', initial: defaults.API_BASE_URL },
   ];
   const answers = await prompt<{ [key: string]: string }>(questions.map((question) => ({ type: 'input', ...question })));
-  return { ...defaults, ...answers } as EnvConfig;
+  const result = { ...defaults, ...answers } as EnvConfig;
+  result.COGNITO_REGION = result.AWS_REGION;
+  return result;
 }
 
 function toDbConfig(env: EnvConfig) {
@@ -114,6 +132,101 @@ function toDbConfig(env: EnvConfig) {
   };
 }
 
+const SECRET_KEY_REGEX = /secret|password|token|key|credential/i;
+const UNSUPPORTED_PORM_KEYS = new Set(['COGNITO_CLIENT_SECRET']);
+
+function maskValue(key: string, value: string | undefined): string {
+  if (!value) return '';
+  if (!SECRET_KEY_REGEX.test(key)) {
+    return value;
+  }
+  if (value.length <= 4) {
+    return '*'.repeat(value.length);
+  }
+  return `${value.slice(0, 2)}${'*'.repeat(value.length - 4)}${value.slice(-2)}`;
+}
+
+async function reconcileWithPormEnv(env: EnvConfig, global: GlobalOptions): Promise<void> {
+  const pormEnvPath = path.resolve(process.cwd(), '../porm/backend/.env');
+  let pormVars: Record<string, string>;
+  try {
+    pormVars = await loadEnv(pormEnvPath);
+  } catch (err: any) {
+    if (err?.code === 'ENOENT') {
+      if (global.debug) {
+        // eslint-disable-next-line no-console
+        console.log(chalk.gray(`porm backend/.env not found at ${pormEnvPath}`));
+      }
+      return;
+    }
+    throw err;
+  }
+  const envRecord = env as Record<string, string | undefined>;
+  const missing = Object.keys(pormVars).filter((key) => !envRecord[key]);
+  if (missing.length === 0) {
+    return;
+  }
+  // eslint-disable-next-line no-console
+  console.log(chalk.yellow('Detected missing environment variables compared to ../porm/backend/.env:'));
+  for (const key of missing) {
+    // eslint-disable-next-line no-console
+    console.log(`  ${key} (porm value: ${maskValue(key, pormVars[key])})`);
+  }
+  const shouldAutoSync = global.syncEnv || global.yes;
+  if (!shouldAutoSync && global.nonInteractive) {
+    return;
+  }
+  for (const key of missing) {
+    let copy = shouldAutoSync;
+    if (!copy && !global.nonInteractive) {
+      const answer = await prompt<{ import: boolean }>([
+        {
+          type: 'confirm',
+          name: 'import',
+          message: `Import ${key} from porm environment?`,
+          initial: true,
+        },
+      ]);
+      copy = answer.import;
+    }
+    if (copy) {
+      if (UNSUPPORTED_PORM_KEYS.has(key)) {
+        // eslint-disable-next-line no-console
+        console.warn(chalk.yellow(`Skipping ${key} import to enforce public Cognito app clients.`));
+        continue;
+      }
+      envRecord[key] = pormVars[key];
+    }
+  }
+}
+
+async function persistEnv(env: EnvConfig, global: GlobalOptions): Promise<void> {
+  env.COGNITO_REGION = env.AWS_REGION;
+  await reconcileWithPormEnv(env, global);
+  delete (env as Record<string, unknown>).COGNITO_CLIENT_SECRET;
+  const payload: Record<string, string | undefined> = {
+    ...env,
+    COGNITO_CLIENT_SECRET: undefined,
+  };
+  await writeEnv(BACKEND_ENV_PATH, payload, { dryRun: global.dryRun, debug: global.debug });
+  await updateAngularEnvironments(
+    {
+      apiBaseUrl: env.API_BASE_URL,
+      frontendUrl: env.FRONTEND_URL,
+      cognito: {
+        region: env.COGNITO_REGION,
+        userPoolId: env.COGNITO_USERPOOL_ID,
+        clientId: env.COGNITO_CLIENT_ID,
+        redirectUrl: `${env.FRONTEND_URL.replace(/\/$/, '')}/login/callback`,
+        logoutUrl: `${env.FRONTEND_URL.replace(/\/$/, '')}/logout`,
+      },
+      storageBucket: env.S3_BUCKET_STORAGE,
+      cloudfrontDomain: env.CLOUDFRONT_DOMAIN,
+    },
+    { dryRun: global.dryRun, debug: global.debug },
+  );
+}
+
 program
   .command('configure')
   .description('Interactively configure environment variables for st-core')
@@ -121,21 +234,7 @@ program
     const global = getGlobalOptions(this as Command);
     const existing = await loadEnv();
     const envConfig = await ensureEnvConfig(global, existing as Partial<EnvConfig>);
-    await writeEnv(BACKEND_ENV_PATH, envConfig, { dryRun: global.dryRun, debug: global.debug });
-    await updateAngularEnvironments(
-      {
-        apiBaseUrl: envConfig.API_BASE_URL,
-        frontendUrl: envConfig.FRONTEND_URL,
-        cognito: {
-          region: envConfig.AWS_REGION,
-          userPoolId: envConfig.COGNITO_USERPOOL_ID,
-          clientId: envConfig.COGNITO_CLIENT_ID,
-          redirectUrl: `${envConfig.FRONTEND_URL.replace(/\/$/, '')}/login/callback`,
-          logoutUrl: `${envConfig.FRONTEND_URL.replace(/\/$/, '')}/logout`,
-        },
-      },
-      { dryRun: global.dryRun, debug: global.debug },
-    );
+    await persistEnv(envConfig, global);
     // eslint-disable-next-line no-console
     console.log(chalk.green('Environment configuration complete.'));
   });
@@ -218,10 +317,12 @@ program
       profile: global.profile || env.AWS_PROFILE,
       dryRun: global.dryRun,
       debug: global.debug,
+      force: global.force,
     });
     env.COGNITO_USERPOOL_ID = cognito.userPoolId;
     env.COGNITO_CLIENT_ID = cognito.appClientId;
     env.COGNITO_JWKS_URI = cognito.jwksUri;
+    env.COGNITO_REGION = global.region || env.AWS_REGION;
 
     if (opts.withS3 || global.yes) {
       const storageBucket = `${env.APP_NAME}-storage`.toLowerCase();
@@ -269,23 +370,7 @@ program
       await runSqlDirectory(dbConfig, path.resolve('db/ddl'), { dryRun: global.dryRun, debug: global.debug });
     }
 
-    await writeEnv(BACKEND_ENV_PATH, env, { dryRun: global.dryRun, debug: global.debug });
-    await updateAngularEnvironments(
-      {
-        apiBaseUrl: env.API_BASE_URL,
-        frontendUrl: env.FRONTEND_URL,
-        cognito: {
-          region: env.AWS_REGION,
-          userPoolId: env.COGNITO_USERPOOL_ID,
-          clientId: env.COGNITO_CLIENT_ID,
-          redirectUrl: `${env.FRONTEND_URL.replace(/\/$/, '')}/login/callback`,
-          logoutUrl: `${env.FRONTEND_URL.replace(/\/$/, '')}/logout`,
-        },
-        storageBucket: env.S3_BUCKET_STORAGE,
-        cloudfrontDomain: env.CLOUDFRONT_DOMAIN,
-      },
-      { dryRun: global.dryRun, debug: global.debug },
-    );
+    await persistEnv(env, global);
   });
 
 program
@@ -356,6 +441,7 @@ program
         profile: global.profile || env.AWS_PROFILE,
         dryRun: global.dryRun,
         debug: global.debug,
+        force: global.force,
       }, env.COGNITO_USERPOOL_ID, env.COGNITO_CLIENT_ID);
       env.COGNITO_JWKS_URI = summary.jwksUri;
     }
@@ -370,23 +456,7 @@ program
         website: true,
       });
     }
-    await writeEnv(BACKEND_ENV_PATH, env, { dryRun: global.dryRun, debug: global.debug });
-    await updateAngularEnvironments(
-      {
-        apiBaseUrl: env.API_BASE_URL,
-        frontendUrl: env.FRONTEND_URL,
-        cognito: {
-          region: env.AWS_REGION,
-          userPoolId: env.COGNITO_USERPOOL_ID,
-          clientId: env.COGNITO_CLIENT_ID,
-          redirectUrl: `${env.FRONTEND_URL.replace(/\/$/, '')}/login/callback`,
-          logoutUrl: `${env.FRONTEND_URL.replace(/\/$/, '')}/logout`,
-        },
-        storageBucket: env.S3_BUCKET_STORAGE,
-        cloudfrontDomain: env.CLOUDFRONT_DOMAIN,
-      },
-      { dryRun: global.dryRun, debug: global.debug },
-    );
+    await persistEnv(env, global);
   });
 
 program

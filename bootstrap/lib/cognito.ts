@@ -14,7 +14,7 @@ import {
   UpdateUserPoolClientCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
 import chalk from 'chalk';
-import { baseAwsConfig, defaultTags, ensureDryRun, logAws, AwsContextOptions } from './aws';
+import { baseAwsConfig, defaultTags, ensureDryRun, logAws } from './aws';
 
 export interface CognitoEnsureInput {
   appName: string;
@@ -26,6 +26,7 @@ export interface CognitoEnsureInput {
   debug?: boolean;
   userPoolName?: string;
   clientName?: string;
+  force?: boolean;
 }
 
 export interface CognitoEnsureOutput {
@@ -90,20 +91,41 @@ async function ensureUserPoolClient(ctx: CognitoEnsureInput, userPoolId: string)
   const clientName = ctx.clientName ?? `${ctx.appName}-client`;
   const cognito = client(ctx);
   const list = await cognito.send(new ListUserPoolClientsCommand({ UserPoolId: userPoolId, MaxResults: 60 }));
-  const existing = list.UserPoolClients?.find((item) => item.ClientName === clientName);
+  let existingClientId: string | undefined;
+  if (list.UserPoolClients) {
+    for (const item of list.UserPoolClients) {
+      if (item.ClientName !== clientName || !item.ClientId) continue;
+      const detail = await cognito.send(new DescribeUserPoolClientCommand({ UserPoolId: userPoolId, ClientId: item.ClientId }));
+      if (detail.UserPoolClient?.ClientSecret) {
+        const warning = `Cognito app client ${clientName} has a secret. st-core requires public clients (no secret).`;
+        // eslint-disable-next-line no-console
+        console.warn(chalk.red(warning));
+        if (!ctx.force) {
+          throw new Error(`${warning} Delete the existing client or re-run with --force.`);
+        }
+        continue;
+      }
+      existingClientId = detail.UserPoolClient?.ClientId;
+      break;
+    }
+  }
   const redirectUrls = [ctx.frontendUrl, `${ctx.frontendUrl.replace(/\/$/, '')}/login/callback`];
   const logoutUrls = [ctx.logoutUrl || ctx.frontendUrl];
-  if (existing?.ClientId) {
+  if (existingClientId) {
     await cognito.send(
       new UpdateUserPoolClientCommand({
         UserPoolId: userPoolId,
-        ClientId: existing.ClientId,
+        ClientId: existingClientId,
         CallbackURLs: Array.from(new Set(redirectUrls)),
         LogoutURLs: Array.from(new Set(logoutUrls)),
         SupportedIdentityProviders: ['COGNITO'],
+        AllowedOAuthFlowsUserPoolClient: true,
+        AllowedOAuthFlows: ['code', 'implicit'],
+        AllowedOAuthScopes: ['email', 'openid', 'profile'],
+        ExplicitAuthFlows: ['ALLOW_REFRESH_TOKEN_AUTH', 'ALLOW_USER_SRP_AUTH'],
       }),
     );
-    return existing.ClientId;
+    return existingClientId;
   }
   if (ensureDryRun({ region: ctx.region, profile: ctx.profile, dryRun: ctx.dryRun, debug: ctx.debug, appName: ctx.appName }, `create app client ${clientName}`)) {
     return 'DRY_RUN_CLIENT';
@@ -116,6 +138,9 @@ async function ensureUserPoolClient(ctx: CognitoEnsureInput, userPoolId: string)
       CallbackURLs: Array.from(new Set(redirectUrls)),
       LogoutURLs: Array.from(new Set(logoutUrls)),
       SupportedIdentityProviders: ['COGNITO'],
+      AllowedOAuthFlowsUserPoolClient: true,
+      AllowedOAuthFlows: ['code', 'implicit'],
+      AllowedOAuthScopes: ['email', 'openid', 'profile'],
       ExplicitAuthFlows: ['ALLOW_REFRESH_TOKEN_AUTH', 'ALLOW_USER_SRP_AUTH'],
       Tags: defaultTags(ctx.appName),
     }),
@@ -201,6 +226,14 @@ export async function describeCognito(ctx: CognitoEnsureInput, userPoolId: strin
   const cognito = client(ctx);
   const pool = await cognito.send(new DescribeUserPoolCommand({ UserPoolId: userPoolId }));
   const clientInfo = await cognito.send(new DescribeUserPoolClientCommand({ UserPoolId: userPoolId, ClientId: clientId }));
+  if (clientInfo.UserPoolClient?.ClientSecret) {
+    const warning = `Cognito app client ${clientId} has a secret; remove it to keep the client public.`;
+    // eslint-disable-next-line no-console
+    console.warn(chalk.red(warning));
+    if (!ctx.force) {
+      throw new Error(`${warning} Re-run with --force to ignore temporarily.`);
+    }
+  }
   return {
     userPoolId,
     userPoolArn: pool.UserPool?.Arn ?? '',

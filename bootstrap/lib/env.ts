@@ -85,7 +85,7 @@ export interface AngularEnvUpdate {
 }
 
 function updateKey(text: string, key: string, value: string): string {
-  const expression = new RegExp(`${key}\\s*:\\s*(['\"])?.*?(['\"])?,`, 's');
+  const expression = new RegExp(`${key}\\s*:\\s*(["'])?.*?\\1?,`, 's');
   if (expression.test(text)) {
     return text.replace(expression, `${key}: '${value}',`);
   }
@@ -100,12 +100,7 @@ function updateCognito(text: string, cfg: NonNullable<AngularEnvUpdate['cognito'
     redirectUrl: '${cfg.redirectUrl ?? ''}',
     logoutUrl: '${cfg.logoutUrl ?? ''}',
   },`;
-  const expression = /cognito:
-?
-?
-??{[
-
-	 ]*[^}]*},?/s;
+  const expression = /cognito:\s*{[^}]*},?/s;
   if (expression.test(text)) {
     return text.replace(expression, block);
   }
