@@ -1,0 +1,77 @@
+# ------------------------
+# Global ignores
+# ------------------------
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Env files
+.env
+.env.*.local
+backend/.env
+frontend/.env
+
+# IDE/editor
+.vscode/
+.idea/
+*.swp
+
+# Coverage reports
+coverage/
+lcov-report/
+
+# Temporary dirs
+*/tmp
+
+# ------------------------
+# Backend (NestJS)
+# ------------------------
+backend/node_modules/
+backend/dist/
+backend/build/
+backend/tsconfig.tsbuildinfo
+backend/*.tgz
+
+# ------------------------
+# Frontend (Angular)
+# ------------------------
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/cache/
+frontend/tsconfig.tsbuildinfo
+frontend/src/environments/*.ts
+!frontend/src/environments/environment*.example.ts
+
+# ------------------------
+# Root level
+# ------------------------
+node_modules/
+*.tgz
+*.tmp
+
+# Python tooling
+.venv/
+__pycache__/
+*.pyc
+
+# Terraform local files
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+
+# Documentation build output
+docs/dist/
+!docs/dist/.gitkeep
+
+# Test artefacts
+test-results/
+tests/e2e/.summary.txt

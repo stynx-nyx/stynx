@@ -8,3 +8,4 @@
 - [ ] Integrate scripts/pipeline-stub.yml into target CI tooling and add deployment steps.
 - [ ] Add root workspace package.json so `npm run --workspace` commands succeed and wire lint/test/build scripts.
 - [ ] Implement real backend endpoints for admin role/tenancy APIs and align service contracts.
+- [ ] Consider adding `"type": "module"` to `backend/package.json` or restructuring flat config to silence Node module-type warnings during lint runs.
