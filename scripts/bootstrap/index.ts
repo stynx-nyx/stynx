@@ -1,0 +1,420 @@
+#!/usr/bin/env ts-node
+import path from 'path';
+import { Command } from 'commander';
+import chalk from 'chalk';
+import { prompt } from 'enquirer';
+import { loadEnv, writeEnv, updateAngularEnvironments, BACKEND_ENV_PATH } from './lib/env';
+import { createDatabase, dropDatabase, runSqlDirectory } from './lib/db';
+import { ensureCognito, describeCognito, deleteAppClient, deleteGroups, deleteUserPool } from './lib/cognito';
+import { ensureBucket, deleteBucket, resolveBucketRegion } from './lib/s3';
+import { ensureDistribution, invalidateDistribution, deleteDistribution } from './lib/cloudfront';
+import { buildFrontend, deployFrontend } from './lib/frontend';
+import { buildBackend, deployBackendPlaceholder } from './lib/backend';
+import { teardown } from './lib/teardown';
+
+interface GlobalOptions {
+  profile?: string;
+  region?: string;
+  dryRun?: boolean;
+  yes?: boolean;
+  nonInteractive?: boolean;
+  debug?: boolean;
+}
+
+interface EnvConfig {
+  APP_NAME: string;
+  DB_NAME: string;
+  DB_USER: string;
+  DB_PASSWORD: string;
+  PGHOST: string;
+  PGPORT: string;
+  AWS_REGION: string;
+  AWS_PROFILE: string;
+  FRONTEND_URL: string;
+  API_BASE_URL: string;
+  COGNITO_USERPOOL_ID?: string;
+  COGNITO_CLIENT_ID?: string;
+  COGNITO_JWKS_URI?: string;
+  S3_BUCKET_STORAGE?: string;
+  S3_BUCKET_FRONTEND?: string;
+  CLOUDFRONT_DIST_ID?: string;
+  CLOUDFRONT_DOMAIN?: string;
+}
+
+const program = new Command();
+program
+  .name('st-core bootstrap')
+  .description('Configure and bootstrap st-core infrastructure')
+  .version('0.1.0')
+  .option('--profile <name>', 'AWS profile to use')
+  .option('--region <name>', 'AWS region', process.env.AWS_REGION || 'us-east-1')
+  .option('--yes', 'Assume yes for all prompts', false)
+  .option('--dry-run', 'Preview actions without executing', false)
+  .option('--non-interactive', 'Disable interactive prompts', false)
+  .option('--debug', 'Enable verbose logging', false);
+
+function getGlobalOptions(command: Command): GlobalOptions {
+  const opts = command.parent?.opts?.() ?? command.opts?.() ?? {};
+  return {
+    profile: opts.profile,
+    region: opts.region || process.env.AWS_REGION || 'us-east-1',
+    dryRun: Boolean(opts.dryRun),
+    yes: Boolean(opts.yes),
+    nonInteractive: Boolean(opts.nonInteractive),
+    debug: Boolean(opts.debug),
+  };
+}
+
+async function ensureEnvConfig(global: GlobalOptions, existing: Partial<EnvConfig>): Promise<EnvConfig> {
+  const defaults: EnvConfig = {
+    APP_NAME: existing.APP_NAME || 'st-core',
+    DB_NAME: existing.DB_NAME || 'stcore',
+    DB_USER: existing.DB_USER || 'stcore_user',
+    DB_PASSWORD: existing.DB_PASSWORD || 'change_me',
+    PGHOST: existing.PGHOST || 'localhost',
+    PGPORT: existing.PGPORT || '5432',
+    AWS_REGION: existing.AWS_REGION || global.region || 'us-east-1',
+    AWS_PROFILE: existing.AWS_PROFILE || global.profile || 'default',
+    FRONTEND_URL: existing.FRONTEND_URL || 'http://localhost:4200',
+    API_BASE_URL: existing.API_BASE_URL || 'http://localhost:3000',
+    COGNITO_USERPOOL_ID: existing.COGNITO_USERPOOL_ID,
+    COGNITO_CLIENT_ID: existing.COGNITO_CLIENT_ID,
+    COGNITO_JWKS_URI: existing.COGNITO_JWKS_URI,
+    S3_BUCKET_STORAGE: existing.S3_BUCKET_STORAGE,
+    S3_BUCKET_FRONTEND: existing.S3_BUCKET_FRONTEND,
+    CLOUDFRONT_DIST_ID: existing.CLOUDFRONT_DIST_ID,
+    CLOUDFRONT_DOMAIN: existing.CLOUDFRONT_DOMAIN,
+  };
+  if (global.nonInteractive || global.yes) {
+    return defaults;
+  }
+  const questions = [
+    { name: 'APP_NAME', message: 'Application name', initial: defaults.APP_NAME },
+    { name: 'DB_NAME', message: 'Database name', initial: defaults.DB_NAME },
+    { name: 'DB_USER', message: 'Database user', initial: defaults.DB_USER },
+    { name: 'DB_PASSWORD', message: 'Database password', initial: defaults.DB_PASSWORD },
+    { name: 'PGHOST', message: 'PostgreSQL host', initial: defaults.PGHOST },
+    { name: 'PGPORT', message: 'PostgreSQL port', initial: defaults.PGPORT },
+    { name: 'AWS_REGION', message: 'AWS region', initial: defaults.AWS_REGION },
+    { name: 'AWS_PROFILE', message: 'AWS profile', initial: defaults.AWS_PROFILE },
+    { name: 'FRONTEND_URL', message: 'Frontend URL', initial: defaults.FRONTEND_URL },
+    { name: 'API_BASE_URL', message: 'API base URL', initial: defaults.API_BASE_URL },
+  ];
+  const answers = await prompt<{ [key: string]: string }>(questions.map((question) => ({ type: 'input', ...question })));
+  return { ...defaults, ...answers } as EnvConfig;
+}
+
+function toDbConfig(env: EnvConfig) {
+  return {
+    host: env.PGHOST,
+    port: parseInt(env.PGPORT, 10) || 5432,
+    user: env.DB_USER,
+    password: env.DB_PASSWORD,
+    database: env.DB_NAME,
+  };
+}
+
+program
+  .command('configure')
+  .description('Interactively configure environment variables for st-core')
+  .action(async function action() {
+    const global = getGlobalOptions(this as Command);
+    const existing = await loadEnv();
+    const envConfig = await ensureEnvConfig(global, existing as Partial<EnvConfig>);
+    await writeEnv(BACKEND_ENV_PATH, envConfig, { dryRun: global.dryRun, debug: global.debug });
+    await updateAngularEnvironments(
+      {
+        apiBaseUrl: envConfig.API_BASE_URL,
+        frontendUrl: envConfig.FRONTEND_URL,
+        cognito: {
+          region: envConfig.AWS_REGION,
+          userPoolId: envConfig.COGNITO_USERPOOL_ID,
+          clientId: envConfig.COGNITO_CLIENT_ID,
+          redirectUrl: `${envConfig.FRONTEND_URL.replace(/\/$/, '')}/login/callback`,
+          logoutUrl: `${envConfig.FRONTEND_URL.replace(/\/$/, '')}/logout`,
+        },
+      },
+      { dryRun: global.dryRun, debug: global.debug },
+    );
+    // eslint-disable-next-line no-console
+    console.log(chalk.green('Environment configuration complete.'));
+  });
+
+program
+  .command('db')
+  .description('Apply database DDL/seed scripts')
+  .option('--recreate', 'Drop and recreate database before applying DDL', false)
+  .option('--seed', 'Apply seed scripts after DDL', false)
+  .action(async function action(options: { recreate?: boolean; seed?: boolean }) {
+    const global = getGlobalOptions(this as Command);
+    const envVars = await loadEnv();
+    const env = await ensureEnvConfig(global, envVars as Partial<EnvConfig>);
+    const dbConfig = { ...toDbConfig(env), password: env.DB_PASSWORD };
+    if (options.recreate) {
+      await dropDatabase(dbConfig, { dryRun: global.dryRun, debug: global.debug });
+      await createDatabase(dbConfig, { dryRun: global.dryRun, debug: global.debug });
+    }
+    await runSqlDirectory(dbConfig, path.resolve('db/ddl'), { dryRun: global.dryRun, debug: global.debug });
+    if (options.seed) {
+      await runSqlDirectory(dbConfig, path.resolve('db/seed'), { dryRun: global.dryRun, debug: global.debug });
+    }
+  });
+
+program
+  .command('up')
+  .description('Provision core infrastructure (Cognito, S3, CloudFront)')
+  .option('--with-s3', 'Ensure S3 buckets exist', false)
+  .option('--with-cloudfront', 'Ensure CloudFront distribution exists', false)
+  .option('--with-db', 'Prepare database schema', false)
+  .option('--delete-userpool', 'Delete user pool before provisioning', false)
+  .option('--delete-client', 'Delete app client before provisioning', false)
+  .option('--delete-groups', 'Delete Cognito groups before provisioning', false)
+  .action(async function action(opts: { withS3?: boolean; withCloudfront?: boolean; withDb?: boolean; deleteUserpool?: boolean; deleteClient?: boolean; deleteGroups?: boolean }) {
+    const global = getGlobalOptions(this as Command);
+    const envVars = await loadEnv();
+    const env = await ensureEnvConfig(global, envVars as Partial<EnvConfig>);
+
+    if (opts.deleteUserpool && env.COGNITO_USERPOOL_ID) {
+      await deleteUserPool({
+        appName: env.APP_NAME,
+        frontendUrl: env.FRONTEND_URL,
+        logoutUrl: `${env.FRONTEND_URL.replace(/\/$/, '')}/logout`,
+        region: global.region || env.AWS_REGION,
+        profile: global.profile || env.AWS_PROFILE,
+        dryRun: global.dryRun,
+        debug: global.debug,
+      }, env.COGNITO_USERPOOL_ID);
+      env.COGNITO_USERPOOL_ID = undefined;
+    }
+    if (opts.deleteClient && env.COGNITO_USERPOOL_ID && env.COGNITO_CLIENT_ID) {
+      await deleteAppClient({
+        appName: env.APP_NAME,
+        frontendUrl: env.FRONTEND_URL,
+        logoutUrl: `${env.FRONTEND_URL.replace(/\/$/, '')}/logout`,
+        region: global.region || env.AWS_REGION,
+        profile: global.profile || env.AWS_PROFILE,
+        dryRun: global.dryRun,
+        debug: global.debug,
+      }, env.COGNITO_USERPOOL_ID, env.COGNITO_CLIENT_ID);
+      env.COGNITO_CLIENT_ID = undefined;
+    }
+    if (opts.deleteGroups && env.COGNITO_USERPOOL_ID) {
+      await deleteGroups({
+        appName: env.APP_NAME,
+        frontendUrl: env.FRONTEND_URL,
+        logoutUrl: `${env.FRONTEND_URL.replace(/\/$/, '')}/logout`,
+        region: global.region || env.AWS_REGION,
+        profile: global.profile || env.AWS_PROFILE,
+        dryRun: global.dryRun,
+        debug: global.debug,
+      }, env.COGNITO_USERPOOL_ID);
+    }
+
+    const cognito = await ensureCognito({
+      appName: env.APP_NAME,
+      frontendUrl: env.FRONTEND_URL,
+      logoutUrl: `${env.FRONTEND_URL.replace(/\/$/, '')}/logout`,
+      region: global.region || env.AWS_REGION,
+      profile: global.profile || env.AWS_PROFILE,
+      dryRun: global.dryRun,
+      debug: global.debug,
+    });
+    env.COGNITO_USERPOOL_ID = cognito.userPoolId;
+    env.COGNITO_CLIENT_ID = cognito.appClientId;
+    env.COGNITO_JWKS_URI = cognito.jwksUri;
+
+    if (opts.withS3 || global.yes) {
+      const storageBucket = `${env.APP_NAME}-storage`.toLowerCase();
+      const frontendBucket = `${env.APP_NAME}-frontend`.toLowerCase();
+      await ensureBucket({
+        appName: env.APP_NAME,
+        region: global.region || env.AWS_REGION,
+        profile: global.profile || env.AWS_PROFILE,
+        dryRun: global.dryRun,
+        debug: global.debug,
+        bucketName: storageBucket,
+      });
+      await ensureBucket({
+        appName: env.APP_NAME,
+        region: global.region || env.AWS_REGION,
+        profile: global.profile || env.AWS_PROFILE,
+        dryRun: global.dryRun,
+        debug: global.debug,
+        bucketName: frontendBucket,
+        website: true,
+      });
+      env.S3_BUCKET_STORAGE = storageBucket;
+      env.S3_BUCKET_FRONTEND = frontendBucket;
+    }
+
+    if (opts.withCloudfront) {
+      if (!env.S3_BUCKET_FRONTEND) {
+        throw new Error('Frontend bucket required for CloudFront. Run with --with-s3 first.');
+      }
+      const cf = await ensureDistribution({
+        appName: env.APP_NAME,
+        bucketDomain: `${env.S3_BUCKET_FRONTEND}.s3.amazonaws.com`,
+        region: global.region || env.AWS_REGION,
+        profile: global.profile || env.AWS_PROFILE,
+        dryRun: global.dryRun,
+        debug: global.debug,
+        aliases: [env.FRONTEND_URL.replace(/^https?:\/\//, '').replace(/\/$/, '')],
+      });
+      env.CLOUDFRONT_DIST_ID = cf.distributionId;
+      env.CLOUDFRONT_DOMAIN = cf.domainName;
+    }
+
+    if (opts.withDb) {
+      const dbConfig = { ...toDbConfig(env), password: env.DB_PASSWORD };
+      await runSqlDirectory(dbConfig, path.resolve('db/ddl'), { dryRun: global.dryRun, debug: global.debug });
+    }
+
+    await writeEnv(BACKEND_ENV_PATH, env, { dryRun: global.dryRun, debug: global.debug });
+    await updateAngularEnvironments(
+      {
+        apiBaseUrl: env.API_BASE_URL,
+        frontendUrl: env.FRONTEND_URL,
+        cognito: {
+          region: env.AWS_REGION,
+          userPoolId: env.COGNITO_USERPOOL_ID,
+          clientId: env.COGNITO_CLIENT_ID,
+          redirectUrl: `${env.FRONTEND_URL.replace(/\/$/, '')}/login/callback`,
+          logoutUrl: `${env.FRONTEND_URL.replace(/\/$/, '')}/logout`,
+        },
+        storageBucket: env.S3_BUCKET_STORAGE,
+        cloudfrontDomain: env.CLOUDFRONT_DOMAIN,
+      },
+      { dryRun: global.dryRun, debug: global.debug },
+    );
+  });
+
+program
+  .command('deploy-frontend')
+  .description('Build and deploy frontend assets to S3')
+  .option('--invalidate', 'Invalidate CloudFront cache after upload', false)
+  .action(async function action(opts: { invalidate?: boolean }) {
+    const global = getGlobalOptions(this as Command);
+    const envVars = await loadEnv();
+    const env = await ensureEnvConfig(global, envVars as Partial<EnvConfig>);
+    if (!env.S3_BUCKET_FRONTEND) {
+      throw new Error('S3_BUCKET_FRONTEND missing. Run `up --with-s3 --with-cloudfront` first.');
+    }
+    await buildFrontend({
+      appName: env.APP_NAME,
+      region: global.region || env.AWS_REGION,
+      profile: global.profile || env.AWS_PROFILE,
+      dryRun: global.dryRun,
+      debug: global.debug,
+      bucketName: env.S3_BUCKET_FRONTEND,
+    });
+    const result = await deployFrontend({
+      appName: env.APP_NAME,
+      region: global.region || env.AWS_REGION,
+      profile: global.profile || env.AWS_PROFILE,
+      dryRun: global.dryRun,
+      debug: global.debug,
+      bucketName: env.S3_BUCKET_FRONTEND,
+      distributionId: env.CLOUDFRONT_DIST_ID,
+      distributionDomain: env.CLOUDFRONT_DOMAIN,
+      invalidate: opts.invalidate,
+    });
+    if (!global.dryRun) {
+      // eslint-disable-next-line no-console
+      console.log(chalk.green(`Frontend deployed to s3://${result.bucket}`));
+      if (result.distributionDomain) {
+        // eslint-disable-next-line no-console
+        console.log(chalk.green(`CloudFront domain: https://${result.distributionDomain}`));
+      }
+    }
+  });
+
+program
+  .command('deploy-backend')
+  .description('Build backend and emit placeholder deployment instructions for EC2')
+  .option('--deploy-ec2', 'Trigger EC2 deployment placeholder', false)
+  .action(async function action(opts: { deployEc2?: boolean }) {
+    const global = getGlobalOptions(this as Command);
+    await buildBackend({ dryRun: global.dryRun, debug: global.debug });
+    if (opts.deployEc2) {
+      await deployBackendPlaceholder({ dryRun: global.dryRun, debug: global.debug });
+    }
+  });
+
+program
+  .command('sync')
+  .description('Synchronize environment files with live AWS resources')
+  .action(async function action() {
+    const global = getGlobalOptions(this as Command);
+    const envVars = await loadEnv();
+    const env = await ensureEnvConfig(global, envVars as Partial<EnvConfig>);
+    if (env.COGNITO_USERPOOL_ID && env.COGNITO_CLIENT_ID) {
+      const summary = await describeCognito({
+        appName: env.APP_NAME,
+        frontendUrl: env.FRONTEND_URL,
+        logoutUrl: `${env.FRONTEND_URL.replace(/\/$/, '')}/logout`,
+        region: global.region || env.AWS_REGION,
+        profile: global.profile || env.AWS_PROFILE,
+        dryRun: global.dryRun,
+        debug: global.debug,
+      }, env.COGNITO_USERPOOL_ID, env.COGNITO_CLIENT_ID);
+      env.COGNITO_JWKS_URI = summary.jwksUri;
+    }
+    if (env.S3_BUCKET_FRONTEND) {
+      await resolveBucketRegion({
+        appName: env.APP_NAME,
+        region: global.region || env.AWS_REGION,
+        profile: global.profile || env.AWS_PROFILE,
+        dryRun: global.dryRun,
+        debug: global.debug,
+        bucketName: env.S3_BUCKET_FRONTEND,
+        website: true,
+      });
+    }
+    await writeEnv(BACKEND_ENV_PATH, env, { dryRun: global.dryRun, debug: global.debug });
+    await updateAngularEnvironments(
+      {
+        apiBaseUrl: env.API_BASE_URL,
+        frontendUrl: env.FRONTEND_URL,
+        cognito: {
+          region: env.AWS_REGION,
+          userPoolId: env.COGNITO_USERPOOL_ID,
+          clientId: env.COGNITO_CLIENT_ID,
+          redirectUrl: `${env.FRONTEND_URL.replace(/\/$/, '')}/login/callback`,
+          logoutUrl: `${env.FRONTEND_URL.replace(/\/$/, '')}/logout`,
+        },
+        storageBucket: env.S3_BUCKET_STORAGE,
+        cloudfrontDomain: env.CLOUDFRONT_DOMAIN,
+      },
+      { dryRun: global.dryRun, debug: global.debug },
+    );
+  });
+
+program
+  .command('teardown')
+  .description('Remove provisioned infrastructure')
+  .option('--with-db', 'Drop database after tearing down cloud resources', false)
+  .action(async function action(opts: { withDb?: boolean }) {
+    const global = getGlobalOptions(this as Command);
+    const envVars = await loadEnv();
+    const env = await ensureEnvConfig(global, envVars as Partial<EnvConfig>);
+    await teardown({
+      appName: env.APP_NAME,
+      region: global.region || env.AWS_REGION,
+      profile: global.profile || env.AWS_PROFILE,
+      dryRun: global.dryRun,
+      debug: global.debug,
+      userPoolId: env.COGNITO_USERPOOL_ID,
+      appClientId: env.COGNITO_CLIENT_ID,
+      storageBucket: env.S3_BUCKET_STORAGE,
+      frontendBucket: env.S3_BUCKET_FRONTEND,
+      cloudfrontId: env.CLOUDFRONT_DIST_ID,
+      deleteDb: opts.withDb,
+      db: opts.withDb ? { ...toDbConfig(env), password: env.DB_PASSWORD } : undefined,
+    });
+  });
+
+if (process.argv.length <= 2) {
+  program.outputHelp();
+} else {
+  program.parseAsync(process.argv);
+}
