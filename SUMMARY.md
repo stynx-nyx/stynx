@@ -9,5 +9,6 @@
 7. `chore(lint): migrate backend eslint config to flat config` — 2 files
 8. `chore(lint): address backend lint findings` — 10 files
 9. `chore(lint): rename eslint flat config to .mjs to silence node warning` — 1 file
+10. `chore(repo): add workspace gitignore` — 1 file
 
-Total: 93 files changed across the series.
+Total: 94 files changed across the series.
