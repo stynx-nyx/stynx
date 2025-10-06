@@ -1,6 +1,6 @@
 # Bootstrap CLI
 
-This TypeScript CLI configures and manages st-core infrastructure end-to-end. Run it with `npx tsx scripts/bootstrap/index.ts <command>`.
+This TypeScript CLI configures and manages st-core infrastructure end-to-end. Run it with `npx tsx bootstrap/index.ts <command>`.
 
 ## Commands
 
