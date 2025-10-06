@@ -4,12 +4,13 @@ import { Injectable, Logger } from '@nestjs/common';
 export class BiometricService {
   private readonly logger = new Logger(BiometricService.name);
 
-  async enroll(userId: string, payload: Buffer): Promise<void> {
+  enroll(userId: string, payload: Buffer): Promise<void> {
     this.logger.log(`Enroll biometric stub for user ${userId} (size=${payload.length})`);
+    return Promise.resolve();
   }
 
-  async verify(userId: string, payload: Buffer): Promise<boolean> {
+  verify(userId: string, _payload: Buffer): Promise<boolean> {
     this.logger.log(`Verify biometric stub for user ${userId}`);
-    return true;
+    return Promise.resolve(true);
   }
 }

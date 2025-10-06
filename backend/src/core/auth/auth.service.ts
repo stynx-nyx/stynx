@@ -12,6 +12,16 @@ export interface Principal {
   payload: JWTPayload;
 }
 
+const isString = (value: unknown): value is string => typeof value === 'string';
+const isNonEmptyString = (value: unknown): value is string => isString(value) && value.trim().length > 0;
+const toRecord = (payload: JWTPayload): Record<string, unknown> => payload as Record<string, unknown>;
+const readStringClaim = (payload: JWTPayload, key: string): string | undefined => {
+  const value = toRecord(payload)[key];
+  return isNonEmptyString(value) ? value : undefined;
+};
+const readStringArray = (value: unknown): string[] =>
+  Array.isArray(value) ? value.filter((item): item is string => isString(item) && item.length > 0) : [];
+
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -64,9 +74,9 @@ export class AuthService {
     const candidates: string[] = [];
     if (typeof payload.aud === 'string') candidates.push(payload.aud);
     if (Array.isArray(payload.aud)) candidates.push(...payload.aud);
-    const clientId = (payload as any).client_id as string | undefined;
+    const clientId = readStringClaim(payload, 'client_id');
     if (clientId) candidates.push(clientId);
-    const azp = (payload as any).azp as string | undefined;
+    const azp = readStringClaim(payload, 'azp');
     if (azp) candidates.push(azp);
     if (!candidates.includes(this.audience)) {
       throw new UnauthorizedException('Token audience mismatch');
@@ -74,50 +84,61 @@ export class AuthService {
   }
 
   private resolveUserId(payload: JWTPayload): string {
-    const id = (payload.sub || (payload as any)['cognito:username'] || (payload as any).uid) as string | undefined;
-    if (!id) {
+    const username = readStringClaim(payload, 'cognito:username');
+    const externalId = readStringClaim(payload, 'uid');
+    const subject = isNonEmptyString(payload.sub) ? payload.sub : undefined;
+    const resolved = subject ?? username ?? externalId;
+    if (!resolved) {
       throw new UnauthorizedException('Token missing subject');
     }
-    return id;
+    return resolved;
   }
 
   private resolveRoles(payload: JWTPayload): string[] {
     const roles: string[] = [];
-    const push = (value: unknown) => {
-      if (Array.isArray(value)) {
-        for (const v of value) {
-          if (typeof v === 'string') roles.push(v);
-          else if (v && typeof v === 'object' && 'name' in (v as any)) roles.push(String((v as any).name));
-        }
-      }
-    };
-    push((payload as any).roles);
-    push((payload as any).realm_access?.roles);
-    push((payload as any)['cognito:groups']);
-    push((payload as any).permissions);
+    const claims = toRecord(payload);
+    const append = (value: unknown) => roles.push(...readStringArray(value));
+    append(claims.roles);
+    const realmAccess = claims.realm_access;
+    if (realmAccess && typeof realmAccess === 'object' && 'roles' in realmAccess) {
+      append((realmAccess as Record<string, unknown>).roles);
+    }
+    append(claims['cognito:groups']);
+    append(claims.permissions);
     return Array.from(new Set(roles.map((role) => role.toLowerCase())));
   }
 
   private resolveTenants(payload: JWTPayload): string[] {
     const tenants: string[] = [];
-    const candidate = (payload as any)['https://st-core.dev/tenant'] as unknown;
-    if (typeof candidate === 'string') tenants.push(candidate);
+    const claims = toRecord(payload);
+    const candidate = claims['https://st-core.dev/tenant'];
+    if (isNonEmptyString(candidate)) tenants.push(candidate);
     if (Array.isArray(candidate)) {
-      for (const v of candidate) {
-        if (typeof v === 'string') tenants.push(v);
-      }
+      readStringArray(candidate).forEach((tenant) => tenants.push(tenant));
     }
-    const meta = (payload as any).tenants;
+    const meta = claims.tenants;
     if (Array.isArray(meta)) {
-      for (const v of meta) {
-        if (typeof v === 'string') tenants.push(v);
-        else if (v && typeof v === 'object' && 'id' in v) tenants.push(String((v as any).id));
+      for (const entry of meta) {
+        if (isNonEmptyString(entry)) {
+          tenants.push(entry);
+        } else if (entry && typeof entry === 'object' && 'id' in entry) {
+          const id = (entry as Record<string, unknown>).id;
+          if (isNonEmptyString(id)) {
+            tenants.push(id);
+          }
+        }
       }
     }
     return Array.from(new Set(tenants));
   }
 
   private async persistPrincipal(principal: Principal): Promise<void> {
+    const claims = toRecord(principal.payload);
+    const username = readStringClaim(principal.payload, 'cognito:username');
+    const email = readStringClaim(principal.payload, 'email');
+    const displayName = readStringClaim(principal.payload, 'name') ?? email ?? username ?? principal.userId;
+    const status = readStringClaim(principal.payload, 'cognito:user_status') ?? 'CONFIRMED';
+
     await this.db.transaction(async (client) => {
       await client.query(
         `INSERT INTO auth.users (user_id, external_id, email, display_name, status, attributes)
@@ -131,11 +152,11 @@ export class AuthService {
              attributes = auth.users.attributes || EXCLUDED.attributes`,
         [
           principal.userId,
-          principal.payload['cognito:username'] ?? principal.payload.email ?? principal.userId,
-          principal.payload.email ?? null,
-          principal.payload.name ?? principal.payload.email ?? principal.userId,
-          principal.payload['cognito:user_status'] ?? 'CONFIRMED',
-          JSON.stringify(principal.payload),
+          username ?? email ?? principal.userId,
+          email ?? null,
+          displayName,
+          status,
+          JSON.stringify(claims),
         ],
       );
 
@@ -151,8 +172,9 @@ export class AuthService {
       }
     });
 
-    await this.cognitoSync.enqueueSync(principal.userId).catch((err) => {
-      this.logger.warn(`Unable to queue Cognito sync for ${principal.userId}: ${String(err?.message ?? err)}`);
+    await this.cognitoSync.enqueueSync(principal.userId).catch((err: unknown) => {
+      const message = err instanceof Error ? err.message : String(err);
+      this.logger.warn(`Unable to queue Cognito sync for ${principal.userId}: ${message}`);
     });
   }
 }

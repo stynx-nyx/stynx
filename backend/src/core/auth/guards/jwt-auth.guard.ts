@@ -1,14 +1,28 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import type { Request } from 'express';
 import { AuthService } from '../auth.service';
+
+interface AuthenticatedRequest extends Request {
+  user?: {
+    id: string;
+    roles: string[];
+    tenants: string[];
+    payload: unknown;
+  };
+  tenants?: string[];
+  tenantId?: string;
+}
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(private readonly auth: AuthService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
+    const rawTenantId = request.headers['x-tenant-id'];
+    const tenantIdHeader = Array.isArray(rawTenantId) ? rawTenantId.at(0) : rawTenantId;
+    const explicitTenancy = typeof tenantIdHeader === 'string' ? tenantIdHeader.trim() : undefined;
     const principal = await this.auth.verifyBearer(request.headers['authorization']);
-    const explicitTenancy = (request.headers['x-tenant-id'] as string | undefined)?.trim();
     request.user = {
       id: principal.userId,
       roles: principal.roles,

@@ -11,16 +11,18 @@ export interface CognitoUserMirror {
 export class CognitoSyncService {
   private readonly logger = new Logger(CognitoSyncService.name);
 
-  async enqueueSync(userId: string): Promise<void> {
+  enqueueSync(userId: string): Promise<void> {
     this.logger.debug(`Enqueueing Cognito sync for user ${userId}`);
+    return Promise.resolve();
   }
 
-  async pullUser(userId: string): Promise<CognitoUserMirror | null> {
+  pullUser(userId: string): Promise<CognitoUserMirror | null> {
     this.logger.debug(`Pulling Cognito user ${userId}`);
-    return null;
+    return Promise.resolve(null);
   }
 
-  async pushUser(user: CognitoUserMirror): Promise<void> {
+  pushUser(user: CognitoUserMirror): Promise<void> {
     this.logger.debug(`Pushing user ${user.userId} to Cognito`);
+    return Promise.resolve();
   }
 }

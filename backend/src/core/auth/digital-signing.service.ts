@@ -10,13 +10,13 @@ export interface SigningRequest {
 export class DigitalSigningService {
   private readonly logger = new Logger(DigitalSigningService.name);
 
-  async requestSignature(payload: SigningRequest): Promise<{ requestId: string }> {
+  requestSignature(payload: SigningRequest): Promise<{ requestId: string }> {
     this.logger.log(`Digital signing stub for user ${payload.userId}`);
-    return { requestId: `stub-${payload.userId}` };
+    return Promise.resolve({ requestId: `stub-${payload.userId}` });
   }
 
-  async verifySignature(requestId: string): Promise<boolean> {
+  verifySignature(requestId: string): Promise<boolean> {
     this.logger.log(`Verify digital signature stub for ${requestId}`);
-    return true;
+    return Promise.resolve(true);
   }
 }
