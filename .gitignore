@@ -75,3 +75,9 @@ docs/dist/
 # Test artefacts
 test-results/
 tests/e2e/.summary.txt
+docs/work/inv/*
+docs/work/diag/*
+docs/work/plan/*
+!docs/work/inv/.gitkeep
+!docs/work/diag/.gitkeep
+!docs/work/plan/.gitkeep
