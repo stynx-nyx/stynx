@@ -9,6 +9,8 @@
     "baseUrl": "./src",
     "rootDir": "./src",
     "incremental": true,
+    "exactOptionalPropertyTypes": false,
+    "noUncheckedIndexedAccess": false,
     "ignoreDeprecations": "6.0",
     "types": [
       "node",

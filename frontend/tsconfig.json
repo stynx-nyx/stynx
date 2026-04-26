@@ -6,6 +6,8 @@
     "outDir": "./dist/out-tsc",
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
+    "exactOptionalPropertyTypes": false,
+    "noUncheckedIndexedAccess": false,
     "typeRoots": [
       "node_modules/@types"
     ],
