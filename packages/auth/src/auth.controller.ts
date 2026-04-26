@@ -18,12 +18,12 @@ import { StynxAuthService } from './auth.service';
 import type { RequestLike } from './types';
 import { headerToString } from './utils';
 
-interface SessionExchangeBody {
+export interface SessionExchangeBody {
   cognitoToken?: string;
   deviceMeta?: Record<string, unknown>;
 }
 
-interface SessionSwitchBody {
+export interface SessionSwitchBody {
   tenantId?: string;
   deviceMeta?: Record<string, unknown>;
 }

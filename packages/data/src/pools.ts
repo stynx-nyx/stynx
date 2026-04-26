@@ -3,6 +3,18 @@ import { Injectable, Inject, type OnModuleDestroy, type OnModuleInit } from '@ne
 import { Pool, type PoolConfig } from 'pg';
 import { STYNX_DATA_OPTIONS, type StynxDataModuleOptions, type StynxDataRole } from './tokens';
 
+export interface StynxPgPoolOptions {
+  connectionString?: string | undefined;
+  host?: string | undefined;
+  port?: number | undefined;
+  user?: string | undefined;
+  password?: string | undefined;
+  database?: string | undefined;
+  max?: number | undefined;
+  ssl?: boolean | undefined;
+  applicationName?: string | undefined;
+}
+
 function parseSecretConnection(secret: string): string {
   try {
     const parsed = JSON.parse(secret) as { connectionString?: string; url?: string };
@@ -52,6 +64,22 @@ function createPool(
   options: StynxDataModuleOptions['connections'][StynxDataRole],
 ): Pool {
   const pool = new Pool(createPoolConfig(role, connectionString, options));
+  pool.on('error', () => undefined);
+  return pool;
+}
+
+export function createStynxPgPool(options: StynxPgPoolOptions): Pool {
+  const pool = new Pool({
+    connectionString: options.connectionString,
+    host: options.host,
+    port: options.port,
+    user: options.user,
+    password: options.password,
+    database: options.database,
+    max: options.max,
+    ssl: options.ssl ? { rejectUnauthorized: false } : undefined,
+    application_name: options.applicationName,
+  });
   pool.on('error', () => undefined);
   return pool;
 }

@@ -16,7 +16,7 @@ interface UserRow {
   email: string;
 }
 
-interface SessionActor {
+export interface SessionActor {
   sid: string;
   sub: string;
   cognitoSub?: string;

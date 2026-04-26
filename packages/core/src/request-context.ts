@@ -23,7 +23,7 @@ export interface RequestContextPatch {
   locale?: string;
 }
 
-type CoreClsStore = {
+export type CoreClsStore = {
   [REQUEST_CONTEXT_KEY]?: RequestContextState;
   [SYSTEM_CONTEXT_KEY]?: SystemExecutionContext;
 };

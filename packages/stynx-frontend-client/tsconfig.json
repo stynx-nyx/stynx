@@ -4,12 +4,9 @@
     "outDir": "dist",
     "baseUrl": ".",
     "paths": {
-      "@stech/stynx-frontend-contracts": [
-        "../stynx-frontend-contracts/src/index.ts"
-      ]
-    }
+      "@stech/stynx-frontend-contracts": ["../stynx-frontend-contracts/src/index.ts"]
+    },
+    "rootDir": ".."
   },
-  "include": [
-    "src/**/*.ts"
-  ]
+  "include": ["src/**/*.ts"]
 }

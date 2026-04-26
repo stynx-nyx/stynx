@@ -2,16 +2,16 @@
   "name": "@stech/stynx-contracts",
   "version": "0.2.0",
   "description": "Framework-agnostic contracts for stynx shared platform packages",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/stynx-contracts/src/index.js",
+  "types": "dist/stynx-contracts/src/index.d.ts",
   "engines": {
-    "node": ">=20 <23"
+    "node": ">=24 <25"
   },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "require": "./dist/index.js",
-      "default": "./dist/index.js"
+      "types": "./dist/stynx-contracts/src/index.d.ts",
+      "require": "./dist/stynx-contracts/src/index.js",
+      "default": "./dist/stynx-contracts/src/index.js"
     }
   },
   "files": [

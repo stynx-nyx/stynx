@@ -3,7 +3,6 @@ import { access, mkdir, rename, rm } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { tmpdir } from 'node:os';
 import { generate } from 'openapi-typescript-codegen';
 
 const currentDir = dirname(fileURLToPath(import.meta.url));
@@ -39,26 +38,32 @@ async function releaseLock() {
 }
 
 async function replaceGeneratedOutput() {
+  const outputParentPath = dirname(outputPath);
   const tempOutputPath = resolve(
-    tmpdir(),
-    `stynx-sdk-codegen-${process.pid}-${Date.now()}`,
+    outputParentPath,
+    `.generated-${process.pid}-${Date.now()}`,
   );
 
   await rm(tempOutputPath, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   await mkdir(tempOutputPath, { recursive: true });
 
-  await generate({
-    input: inputPath,
-    output: tempOutputPath,
-    httpClient: 'fetch',
-    useUnionTypes: true,
-    useOptions: true,
-    exportSchemas: true,
-    clientName: 'GeneratedStynxSdk',
-  });
+  try {
+    await generate({
+      input: inputPath,
+      output: tempOutputPath,
+      httpClient: 'fetch',
+      useUnionTypes: true,
+      useOptions: true,
+      exportSchemas: true,
+      clientName: 'GeneratedStynxSdk',
+    });
 
-  await rm(outputPath, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
-  await rename(tempOutputPath, outputPath);
+    await rm(outputPath, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+    await rename(tempOutputPath, outputPath);
+  } catch (error) {
+    await rm(tempOutputPath, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+    throw error;
+  }
 }
 
 async function ensureOpenApiInput() {

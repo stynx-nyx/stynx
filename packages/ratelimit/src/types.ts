@@ -55,6 +55,7 @@ export interface RateLimitGuardOptions {
 
 export interface RateLimitMetricsSink {
   incrementBlocked(scope: string): void;
+  recordLatency?(scope: string, elapsedMs: number): void;
 }
 
 export interface RateLimitPolicyResolver {

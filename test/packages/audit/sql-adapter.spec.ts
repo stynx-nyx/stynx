@@ -99,6 +99,8 @@ describe('AuditSqlReader parity', () => {
           metadata: { source: 'test' },
           old_data: { status: 'OLD' },
           new_data: { status: 'NEW' },
+          previous_hash: 'hash-previous',
+          row_hash: 'hash-current',
           total: 1,
         },
       ],
@@ -118,6 +120,8 @@ describe('AuditSqlReader parity', () => {
       pk: { id: 'u-1' },
       oldData: { status: 'OLD' },
       newData: { status: 'NEW' },
+      previousHash: 'hash-previous',
+      rowHash: 'hash-current',
     });
   });
 

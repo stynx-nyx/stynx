@@ -14,11 +14,11 @@ import { StynxMetricsService } from './metrics.service';
 import { StynxHealthService } from './health.service';
 import { STYNX_HEALTH_OPTIONS, type StynxHealthModuleOptions } from './tokens';
 
-interface RequestLike {
+export interface RequestLike {
   ip?: string;
 }
 
-interface ResponseLike {
+export interface ResponseLike {
   setHeader(name: string, value: string): void;
   send(body: string): void;
 }

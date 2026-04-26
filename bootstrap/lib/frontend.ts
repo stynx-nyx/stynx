@@ -19,17 +19,16 @@ export interface FrontendDeployOptions {
   invalidate?: boolean;
 }
 
-function run(command: string, args: string[], cwd: string, dryRun?: boolean): Promise<void> {
+function runNpm(args: string[], cwd: string, dryRun?: boolean): Promise<void> {
   if (dryRun) {
-    // eslint-disable-next-line no-console
-    console.log(chalk.yellow(`dry-run: ${command} ${args.join(' ')} (cwd=${cwd})`));
+    console.log(chalk.yellow(`dry-run: npm ${args.join(' ')} (cwd=${cwd})`));
     return Promise.resolve();
   }
   return new Promise((resolve, reject) => {
-    const child = spawn(command, args, { cwd, stdio: 'inherit', env: process.env });
+    const child = spawn('npm', args, { cwd, stdio: 'inherit', env: process.env });
     child.on('exit', (code) => {
       if (code === 0) resolve();
-      else reject(new Error(`${command} ${args.join(' ')} exited with code ${code}`));
+      else reject(new Error(`npm ${args.join(' ')} exited with code ${code}`));
     });
   });
 }
@@ -80,21 +79,19 @@ async function walkFiles(dir: string): Promise<string[]> {
 export async function buildFrontend(options: FrontendDeployOptions): Promise<void> {
   const target = resolveFrontendBuildTarget();
   if (options.debug) {
-    // eslint-disable-next-line no-console
     console.log(chalk.gray(`Frontend build target workspace: ${target.workspace} (${target.buildScript})`));
   }
 
   if (target.workspace === REFERENCE_FRONTEND_WORKSPACE) {
-    await run('npm', ['run', 'build', '--workspace', '@stech/stynx-frontend-contracts'], WORKSPACE_ROOT, options.dryRun);
-    await run('npm', ['run', 'build', '--workspace', '@stech/stynx-frontend-client'], WORKSPACE_ROOT, options.dryRun);
+    await runNpm(['run', 'build', '--workspace', '@stech/stynx-frontend-contracts'], WORKSPACE_ROOT, options.dryRun);
+    await runNpm(['run', 'build', '--workspace', '@stech/stynx-frontend-client'], WORKSPACE_ROOT, options.dryRun);
   }
 
-  await run('npm', ['run', target.buildScript, '--workspace', target.workspace], WORKSPACE_ROOT, options.dryRun);
+  await runNpm(['run', target.buildScript, '--workspace', target.workspace], WORKSPACE_ROOT, options.dryRun);
 }
 
 export async function deployFrontend(options: FrontendDeployOptions): Promise<{ bucket: string; distributionDomain?: string }> {
   if (options.dryRun) {
-    // eslint-disable-next-line no-console
     console.log(chalk.yellow(`dry-run: skipping frontend asset upload to s3://${options.bucketName}`));
     return { bucket: options.bucketName, distributionDomain: options.distributionDomain };
   }
@@ -105,7 +102,7 @@ export async function deployFrontend(options: FrontendDeployOptions): Promise<{ 
   if (entries.length === 0) {
     throw new Error(`${distRoot} is empty – run frontend build first`);
   }
-  const buildDir = entries.length === 1 ? path.join(distRoot, entries[0]) : distRoot;
+  const buildDir = entries.length === 1 ? path.join(distRoot, entries[0]!) : distRoot;
   const files = await walkFiles(buildDir);
   const s3 = new S3Client(baseAwsConfig({
     region: options.region,
@@ -117,7 +114,6 @@ export async function deployFrontend(options: FrontendDeployOptions): Promise<{ 
   for (const file of files) {
     const key = path.relative(buildDir, file).replace(/\\/g, '/');
     if (options.dryRun) {
-      // eslint-disable-next-line no-console
       console.log(chalk.yellow(`dry-run: upload s3://${options.bucketName}/${key}`));
       continue;
     }

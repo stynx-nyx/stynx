@@ -18,7 +18,6 @@ export const BACKEND_ENV_PATH = resolveBackendEnvPath();
 
 function debugLog(enabled: boolean | undefined, message: string) {
   if (enabled) {
-    // eslint-disable-next-line no-console
     console.log(chalk.gray(`[debug] ${message}`));
   }
 }
@@ -59,7 +58,6 @@ export async function writeEnv(envPath: string, updates: Record<string, string |
     return;
   }
   if (options.dryRun) {
-    // eslint-disable-next-line no-console
     console.log(chalk.yellow(`dry-run: skipping write to ${envPath}`));
     return;
   }
@@ -139,7 +137,6 @@ async function updateAngularFile(filePath: string, updates: AngularEnvUpdate, op
       return;
     }
     if (options.dryRun) {
-      // eslint-disable-next-line no-console
       console.log(chalk.yellow(`dry-run: skipping write to ${filePath}`));
       return;
     }

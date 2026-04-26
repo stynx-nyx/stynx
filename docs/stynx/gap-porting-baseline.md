@@ -1,0 +1,66 @@
+# Gap-Porting Baseline
+
+**Date:** 2026-04-26  
+**Status:** complete for `GAP-001..006` local closure target
+
+## Spec Gate
+
+The six GAP specs remain as long-lived reference specs, and the matching
+`docs/work/prompts/GAP-*.md` files remain as executable prompt history. All six
+specs are now marked complete after rechecking code, exported package surfaces,
+tests, and package build output:
+
+- `specs/GAP-001-audit-hash-chain.md`
+- `specs/GAP-002-dead-code-detection.md`
+- `specs/GAP-003-config-ownership.md`
+- `specs/GAP-004-session-tenant-exchange.md`
+- `specs/GAP-005-s3-lifecycle-lock.md`
+- `specs/GAP-006-permission-drift-slo.md`
+
+## Implementation Evidence
+
+- `GAP-001`: `audit.events` now carries `previous_hash` and trigger-computed
+  `row_hash` in both the DDL and package migration path. `audit.verify_chain`
+  recomputes hashes and detects direct row tampering in integration coverage.
+- `GAP-002`: root dead-code and dependency checks are available and green
+  through `pnpm lint:deadcode` and `pnpm lint:deps`.
+- `GAP-003`: config schema metadata includes owner annotations and rejects
+  ownership violations through package-level coverage.
+- `GAP-004`: session exchange types, errors, and service behavior are exported
+  and covered for happy path, owner mismatch, missing session, and inactive
+  session handling.
+- `GAP-005`: storage exposes S3 compliance options, lifecycle/object-lock
+  command handling, tenant download presigning, and related unit/integration
+  proof.
+- `GAP-006`: rate-limit latency histograms and proactive permission drift
+  resync behavior are exported and covered, including fake-timer unit coverage.
+
+## Local Closure Gate
+
+Commands were run from the repository root on 2026-04-26:
+
+| Command                    | Exit | Captured result                                                                                                                                                   |
+| -------------------------- | ---: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm build`               |  `0` | `Tasks: 38 successful, 38 total`; docs API coverage verified for 24 packages; Docusaurus generated static files without the previous TypeDoc/Docusaurus warnings. |
+| `pnpm --filter docs build` |  `0` | docs API coverage verified for 24 packages; Docusaurus generated static files from the standalone docs package path.                                              |
+| `pnpm lint`                |  `0` | `Tasks: 39 successful, 39 total`; zero ESLint warnings.                                                                                                           |
+| `pnpm test:unit`           |  `0` | package tests: 19 suites / 66 tests; backend tests: 5 suites / 5 tests; frontend tests: 3 suites / 3 tests; script validation passed.                             |
+| `pnpm test:int`            |  `0` | `Tasks: 38 successful, 38 total`; DB tests: 3 suites / 10 tests.                                                                                                  |
+| `pnpm lint:deadcode`       |  `0` | `knip --no-config-hints` completed without findings.                                                                                                              |
+| `pnpm lint:deps`           |  `0` | `No depcheck issue`.                                                                                                                                              |
+
+## Remaining Release-Readiness Gaps
+
+The GAP porting target is closed locally, but the release-readiness TODO items
+still require CI-authoritative proof before they can be closed:
+
+- Browser e2e on Linux/GitHub Actions.
+- Docs Lighthouse through `docs.yml` in GitHub Actions.
+- k6 full-suite baseline proof against a previous successful `main` artifact.
+- Stryker thresholds for `@stynx/auth`, `@stynx/data`, and `@stynx/tenancy`.
+- Real `changeset version`, publish, GitHub Release, ECR push, and signing
+  evidence after the upstream gates are green.
+
+The prior TypeDoc/TSDoc public-documentation warning blocker is closed locally
+by the root build and docs build, but CI should still be treated as the release
+authority for Prompt 37.

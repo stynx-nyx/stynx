@@ -1,7 +1,6 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
-import type { StynxSessionService } from '@stynx-web/angular-auth';
-import { EmptyStateComponent } from '@stynx-web/angular-ui';
-import type { StynxToastService } from '@stynx-web/angular-ui';
+import { ChangeDetectionStrategy, Component, Inject, Input } from '@angular/core';
+import { StynxSessionService } from '@stynx-web/angular-auth';
+import { EmptyStateComponent, StynxToastService } from '@stynx-web/angular-ui';
 import type { StynxActiveSession, StynxSessionsAdapter } from './types';
 
 @Component({
@@ -55,7 +54,9 @@ export class StynxActiveSessionsComponent {
   sessions: StynxActiveSession[] = [];
 
   constructor(
+    @Inject(StynxSessionService)
     private readonly session: StynxSessionService,
+    @Inject(StynxToastService)
     private readonly toast: StynxToastService,
   ) {}
 

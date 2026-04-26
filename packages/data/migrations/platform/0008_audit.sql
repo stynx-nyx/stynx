@@ -46,6 +46,110 @@ CREATE TABLE IF NOT EXISTS audit.disabled_tables (
   PRIMARY KEY (table_schema, table_name)
 );
 
+CREATE TABLE IF NOT EXISTS audit.events (
+  event_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  occurred_at timestamptz NOT NULL DEFAULT now(),
+  tenancy_id uuid,
+  actor_id uuid,
+  actor_role text,
+  operation text NOT NULL,
+  entity text NOT NULL,
+  entity_id text,
+  pk jsonb,
+  request_id text,
+  ip_address text,
+  station_id text,
+  metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+  old_data jsonb,
+  new_data jsonb,
+  previous_hash text,
+  row_hash text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE OR REPLACE FUNCTION audit.format_hash_timestamp(p_occurred_at timestamptz)
+RETURNS text
+LANGUAGE sql
+STABLE
+AS $$
+  SELECT to_char(p_occurred_at AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS.US') || '+00';
+$$;
+
+CREATE OR REPLACE FUNCTION audit.compute_event_hash(
+  p_event_id uuid,
+  p_occurred_at timestamptz,
+  p_tenancy_id uuid,
+  p_actor_id uuid,
+  p_entity text,
+  p_entity_id text,
+  p_operation text,
+  p_old_data jsonb,
+  p_new_data jsonb,
+  p_previous_hash text
+)
+RETURNS text
+LANGUAGE sql
+STABLE
+AS $$
+  SELECT
+    encode(
+      digest(
+        coalesce(p_event_id::text, '') || '|' ||
+        coalesce(audit.format_hash_timestamp(p_occurred_at), '') || '|' ||
+        coalesce(p_tenancy_id::text, '') || '|' ||
+        coalesce(p_actor_id::text, '') || '|' ||
+        coalesce(p_entity, '') || '|' ||
+        coalesce(p_entity_id, '') || '|' ||
+        coalesce(p_operation::text, '') || '|' ||
+        coalesce(p_old_data::text, '') || '|' ||
+        coalesce(p_new_data::text, '') || '|' ||
+        coalesce(p_previous_hash, 'GENESIS'),
+        'sha256'
+      ),
+      'hex'
+    );
+$$;
+
+CREATE OR REPLACE FUNCTION audit.set_event_row_hash()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  NEW.row_hash := audit.compute_event_hash(
+    NEW.event_id,
+    NEW.occurred_at,
+    NEW.tenancy_id,
+    NEW.actor_id,
+    NEW.entity,
+    NEW.entity_id,
+    NEW.operation,
+    NEW.old_data,
+    NEW.new_data,
+    NEW.previous_hash
+  );
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS audit_events_set_row_hash ON audit.events;
+CREATE TRIGGER audit_events_set_row_hash
+BEFORE INSERT ON audit.events
+FOR EACH ROW EXECUTE FUNCTION audit.set_event_row_hash();
+
+CREATE INDEX IF NOT EXISTS idx_audit_events_tenant_time ON audit.events (tenancy_id, occurred_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_events_entity ON audit.events (entity, entity_id);
+CREATE INDEX IF NOT EXISTS idx_audit_events_operation ON audit.events (operation);
+CREATE INDEX IF NOT EXISTS idx_audit_events_pk ON audit.events USING gin (pk);
+
+ALTER TABLE audit.events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE audit.events FORCE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_scope ON audit.events;
+CREATE POLICY tenant_scope ON audit.events
+  USING (
+    tenancy_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid
+    OR tenancy_id IS NULL
+  );
+
 CREATE OR REPLACE FUNCTION audit.ensure_monthly_partition(reference_time timestamptz DEFAULT clock_timestamp())
 RETURNS text
 LANGUAGE plpgsql
@@ -72,13 +176,13 @@ CREATE OR REPLACE FUNCTION audit.write(
   p_operation text,
   p_entity text,
   p_entity_id text,
-  p_metadata jsonb,
-  p_ip_address text,
-  p_session_id text,
-  p_request_id text,
-  p_old_data jsonb,
-  p_new_data jsonb,
-  p_pk jsonb
+  p_metadata jsonb DEFAULT '{}'::jsonb,
+  p_ip_address text DEFAULT NULL,
+  p_session_id text DEFAULT NULL,
+  p_request_id text DEFAULT NULL,
+  p_old_data jsonb DEFAULT NULL,
+  p_new_data jsonb DEFAULT NULL,
+  p_pk jsonb DEFAULT NULL
 )
 RETURNS void
 LANGUAGE plpgsql
@@ -86,8 +190,48 @@ AS $$
 DECLARE
   entity_schema text := split_part(COALESCE(p_entity, ''), '.', 1);
   entity_table text := split_part(COALESCE(p_entity, ''), '.', 2);
+  v_previous_hash text;
 BEGIN
   PERFORM audit.ensure_monthly_partition(clock_timestamp());
+
+  SELECT row_hash
+  INTO v_previous_hash
+  FROM audit.events
+  WHERE tenancy_id IS NOT DISTINCT FROM p_tenant_id
+  ORDER BY occurred_at DESC, event_id DESC
+  LIMIT 1
+  FOR UPDATE;
+
+  INSERT INTO audit.events (
+    tenancy_id,
+    actor_id,
+    actor_role,
+    operation,
+    entity,
+    entity_id,
+    pk,
+    metadata,
+    ip_address,
+    request_id,
+    old_data,
+    new_data,
+    previous_hash
+  )
+  VALUES (
+    p_tenant_id,
+    p_actor_id,
+    p_actor_role,
+    p_operation,
+    p_entity,
+    p_entity_id,
+    p_pk,
+    COALESCE(p_metadata, '{}'::jsonb),
+    p_ip_address,
+    p_request_id,
+    p_old_data,
+    p_new_data,
+    v_previous_hash
+  );
 
   INSERT INTO audit.log (
     occurred_at,
@@ -140,6 +284,11 @@ DECLARE
   );
   current_tags jsonb := '{}'::jsonb;
   current_payload jsonb;
+  v_tenant_id uuid := NULLIF(current_setting('app.tenant_id', true), '')::uuid;
+  v_actor_id uuid := NULLIF(current_setting('app.actor_id', true), '')::uuid;
+  v_request_id text := NULLIF(current_setting('app.request_id', true), '');
+  v_session_id text := NULLIF(current_setting('app.session_id', true), '');
+  v_previous_hash text;
   current_row_id text := COALESCE(
     CASE WHEN TG_OP IN ('UPDATE', 'DELETE') THEN OLD.id::text ELSE NULL END,
     CASE WHEN TG_OP IN ('INSERT', 'UPDATE') THEN NEW.id::text ELSE NULL END
@@ -203,6 +352,41 @@ BEGIN
 
   PERFORM audit.ensure_monthly_partition(clock_timestamp());
 
+  SELECT row_hash
+  INTO v_previous_hash
+  FROM audit.events
+  WHERE tenancy_id IS NOT DISTINCT FROM v_tenant_id
+  ORDER BY occurred_at DESC, event_id DESC
+  LIMIT 1
+  FOR UPDATE;
+
+  INSERT INTO audit.events (
+    tenancy_id,
+    actor_id,
+    operation,
+    entity,
+    entity_id,
+    pk,
+    request_id,
+    metadata,
+    old_data,
+    new_data,
+    previous_hash
+  )
+  VALUES (
+    v_tenant_id,
+    v_actor_id,
+    TG_OP,
+    TG_TABLE_SCHEMA || '.' || TG_TABLE_NAME,
+    current_row_id,
+    CASE WHEN current_row_id IS NULL THEN NULL ELSE jsonb_build_object('id', current_row_id) END,
+    v_request_id,
+    current_tags,
+    CASE WHEN TG_OP IN ('UPDATE', 'DELETE') THEN to_jsonb(OLD) ELSE NULL END,
+    CASE WHEN TG_OP IN ('INSERT', 'UPDATE') THEN to_jsonb(NEW) ELSE NULL END,
+    v_previous_hash
+  );
+
   INSERT INTO audit.log (
     occurred_at,
     table_schema,
@@ -222,16 +406,71 @@ BEGIN
     TG_TABLE_NAME,
     current_row_id,
     TG_OP,
-    NULLIF(current_setting('app.tenant_id', true), '')::uuid,
-    NULLIF(current_setting('app.actor_id', true), '')::uuid,
-    NULLIF(current_setting('app.request_id', true), ''),
-    NULLIF(current_setting('app.session_id', true), ''),
+    v_tenant_id,
+    v_actor_id,
+    v_request_id,
+    v_session_id,
     current_tags,
     current_payload
   );
 
   RETURN COALESCE(NEW, OLD);
 END
+$$;
+
+CREATE OR REPLACE FUNCTION audit.verify_chain(
+  p_tenancy_id uuid,
+  p_limit int DEFAULT 1000
+)
+RETURNS TABLE (
+  event_id uuid,
+  occurred_at timestamptz,
+  expected_hash text,
+  stored_hash text,
+  chain_valid boolean
+)
+LANGUAGE sql
+STABLE
+AS $$
+  WITH ordered AS (
+    SELECT
+      e.*,
+      lag(e.row_hash) OVER (ORDER BY e.occurred_at, e.event_id) AS expected_previous_hash
+    FROM audit.events e
+    WHERE e.tenancy_id = p_tenancy_id
+    ORDER BY e.occurred_at, e.event_id
+    LIMIT p_limit
+  )
+  SELECT
+    ordered.event_id,
+    ordered.occurred_at,
+    audit.compute_event_hash(
+      ordered.event_id,
+      ordered.occurred_at,
+      ordered.tenancy_id,
+      ordered.actor_id,
+      ordered.entity,
+      ordered.entity_id,
+      ordered.operation,
+      ordered.old_data,
+      ordered.new_data,
+      ordered.previous_hash
+    ) AS expected_hash,
+    ordered.row_hash AS stored_hash,
+    ordered.row_hash = audit.compute_event_hash(
+      ordered.event_id,
+      ordered.occurred_at,
+      ordered.tenancy_id,
+      ordered.actor_id,
+      ordered.entity,
+      ordered.entity_id,
+      ordered.operation,
+      ordered.old_data,
+      ordered.new_data,
+      ordered.previous_hash
+    )
+    AND ordered.previous_hash IS NOT DISTINCT FROM ordered.expected_previous_hash AS chain_valid
+  FROM ordered;
 $$;
 
 CREATE OR REPLACE FUNCTION audit.enable_for(target_table regclass)

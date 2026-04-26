@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { Pool, PoolClient, QueryResult, QueryResultRow } from 'pg';
+import type { PoolClient, QueryResult, QueryResultRow } from 'pg';
 
 export interface DbContextOptions {
   tenantId?: string;
@@ -9,11 +9,15 @@ export interface DbContextOptions {
   correlationId?: string;
 }
 
+export interface DatabasePool {
+  connect(): Promise<PoolClient>;
+}
+
 @Injectable()
 export class DatabaseService {
   private readonly logger = new Logger(DatabaseService.name);
 
-  constructor(private readonly pool: Pool, private readonly config: ConfigService) {}
+  constructor(private readonly pool: DatabasePool, private readonly config: ConfigService) {}
 
   async withClient<T>(
     callback: (client: PoolClient) => Promise<T>,

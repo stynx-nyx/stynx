@@ -224,6 +224,75 @@ describe('StynxAuditModule integration', () => {
     );
   });
 
+  it('verifies the audit.events hash chain and detects direct row tampering', async () => {
+    const tenantId = randomUUID();
+    const actorId = randomUUID();
+    const entityId = randomUUID();
+    const admin = await database.connectAsAdmin();
+
+    try {
+      await admin.query(
+        `
+          select audit.write(
+            p_tenant_id => $1::uuid,
+            p_actor_id => $2::uuid,
+            p_actor_role => 'integration-test',
+            p_operation => 'INSERT',
+            p_entity => 'demo.items',
+            p_entity_id => $3,
+            p_metadata => '{"source": "hash-chain"}'::jsonb,
+            p_old_data => null,
+            p_new_data => '{"label": "one"}'::jsonb
+          )
+        `,
+        [tenantId, actorId, entityId],
+      );
+      await admin.query(
+        `
+          select audit.write(
+            p_tenant_id => $1::uuid,
+            p_actor_id => $2::uuid,
+            p_actor_role => 'integration-test',
+            p_operation => 'UPDATE',
+            p_entity => 'demo.items',
+            p_entity_id => $3,
+            p_metadata => '{"source": "hash-chain"}'::jsonb,
+            p_old_data => '{"label": "one"}'::jsonb,
+            p_new_data => '{"label": "two"}'::jsonb
+          )
+        `,
+        [tenantId, actorId, entityId],
+      );
+
+      await expect(auditService.verifyChain(tenantId)).resolves.toEqual({
+        valid: true,
+        totalChecked: 2,
+      });
+
+      await admin.query(
+        `
+          update audit.events
+          set new_data = '{"label": "tampered"}'::jsonb
+          where event_id = (
+            select event_id
+            from audit.events
+            where tenancy_id = $1::uuid
+            order by occurred_at, event_id
+            limit 1
+          )
+        `,
+        [tenantId],
+      );
+
+      await expect(auditService.verifyChain(tenantId)).resolves.toMatchObject({
+        valid: false,
+        totalChecked: 1,
+      });
+    } finally {
+      await admin.end();
+    }
+  });
+
   it('retains lgpd partitions longer in detach dry-run', async () => {
     const admin = await database.connectAsAdmin();
     try {

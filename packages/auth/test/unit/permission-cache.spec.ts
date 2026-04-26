@@ -686,4 +686,63 @@ describe('PermissionCache', () => {
 
     expect(closeSpy).toHaveBeenCalled();
   });
+
+  it('proactively re-syncs stale in-memory permission entries', async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-04-26T12:00:00.000Z'));
+
+    const backend = new InMemoryPermissionCacheBackend();
+    const queries = {
+      resolveForUser: jest.fn().mockResolvedValue({
+        membershipId: 'membership-fresh',
+        permissions: ['document:write:*'],
+        hash: 'fresh-hash',
+        generation: 2,
+      }),
+      probeHash: jest.fn(),
+    } as unknown as PermissionQueryService;
+    const cache = new PermissionCache(
+      {
+        stynx: { issuer: 'https://stynx.test' },
+        permissions: {
+          dbFallbackOnRedisDown: true,
+          driftResyncIntervalMs: 100,
+        },
+      },
+      backend,
+      queries,
+      new PermissionCacheMetrics(),
+    );
+
+    try {
+      await cache.prime(
+        {
+          sid: 'sid-resync',
+          userId: 'user-1',
+          tenantId: 'tenant-1',
+          membershipId: 'membership-stale',
+          permissions: ['document:read:*'],
+          hash: 'stale-hash',
+          generation: 1,
+          computedAt: Date.now() - 200,
+        },
+        new Date(Date.now() + 60_000).toISOString(),
+      );
+
+      await cache.onModuleInit();
+      await jest.advanceTimersByTimeAsync(100);
+
+      expect(queries.resolveForUser).toHaveBeenCalledWith('user-1', 'tenant-1');
+      await expect(cache.inspectSid('sid-resync')).resolves.toMatchObject({
+        membershipId: 'membership-fresh',
+        permissions: ['document:write:*'],
+        hash: 'fresh-hash',
+        generation: 2,
+        computedAt: Date.now(),
+      });
+    } finally {
+      await cache.onModuleDestroy();
+      jest.useRealTimers();
+    }
+  });
 });

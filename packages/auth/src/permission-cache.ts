@@ -68,6 +68,7 @@ class TtlLruCache<TKey, TValue> {
 export class PermissionCache implements OnModuleInit, OnModuleDestroy {
   private readonly inMemory = new TtlLruCache<string, PermissionCacheRecord>(5_000, 10_000);
   private readonly hashProbe = new TtlLruCache<string, HashProbeState>(1_000, 10_000);
+  private resyncTimer: NodeJS.Timeout | undefined;
 
   constructor(
     @Inject(STYNX_AUTH_OPTIONS)
@@ -85,9 +86,14 @@ export class PermissionCache implements OnModuleInit, OnModuleDestroy {
         await this.handleInvalidation(message);
       });
     }
+    this.scheduleDriftResync();
   }
 
   async onModuleDestroy(): Promise<void> {
+    if (this.resyncTimer) {
+      clearInterval(this.resyncTimer);
+      this.resyncTimer = undefined;
+    }
     await this.backend?.close();
   }
 
@@ -172,6 +178,36 @@ export class PermissionCache implements OnModuleInit, OnModuleDestroy {
       await this.backend.set(record, 24 * 60 * 60);
     }
     return record;
+  }
+
+  private scheduleDriftResync(): void {
+    const intervalMs = this.options.permissions.driftResyncIntervalMs;
+    if (!intervalMs || this.resyncTimer) {
+      return;
+    }
+    this.resyncTimer = setInterval(
+      () => void this.resyncStaleCacheEntries(),
+      intervalMs,
+    );
+    this.resyncTimer.unref();
+  }
+
+  private async resyncStaleCacheEntries(): Promise<void> {
+    const staleThresholdMs = this.options.permissions.driftResyncIntervalMs ?? 0;
+    const now = Date.now();
+    for (const record of this.inMemory.values()) {
+      if (now - record.computedAt >= staleThresholdMs) {
+        try {
+          await this.refreshEntry(record);
+        } catch {
+          // Background refresh failures must not crash the host process.
+        }
+      }
+    }
+  }
+
+  private async refreshEntry(record: PermissionCacheRecord): Promise<void> {
+    await this.recompute(record.userId, record.tenantId, record.sid);
   }
 
   private async detectHashDrift(userId: string, tenantId: string, currentHash: string): Promise<boolean> {

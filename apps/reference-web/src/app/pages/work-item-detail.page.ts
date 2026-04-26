@@ -1,5 +1,5 @@
 import { DatePipe, NgIf } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import type { OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { StynxBannerComponent } from '@stynx-web/angular-ui';
@@ -12,7 +12,7 @@ import type { WorkItem } from '../core/reference-models';
   imports: [DatePipe, NgIf, RouterLink, StynxBannerComponent],
   template: `
     <section class="panel">
-      @if (item; as currentItem) {
+      @if (item(); as currentItem) {
         <div class="panel__header">
           <div>
             <h2 data-testid="work-item-detail-title">{{ currentItem.code }}</h2>
@@ -40,8 +40,8 @@ import type { WorkItem } from '../core/reference-models';
           <p>Use the transition form to update the work-item status.</p>
           <a [routerLink]="['/work-items', currentItem.id, 'edit']">Open edit form</a>
         </article>
-      } @else if (errorMessage) {
-        <stynx-banner tone="error" [message]="errorMessage"></stynx-banner>
+      } @else if (errorMessage()) {
+        <stynx-banner tone="error" [message]="errorMessage()"></stynx-banner>
       }
     </section>
   `,
@@ -91,19 +91,19 @@ import type { WorkItem } from '../core/reference-models';
 export class WorkItemDetailPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly api = inject(ReferenceWebApiService);
-  protected item: WorkItem | null = null;
-  protected errorMessage = '';
+  protected readonly item = signal<WorkItem | null>(null);
+  protected readonly errorMessage = signal('');
 
   async ngOnInit(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('id');
     if (!id) {
-      this.errorMessage = 'Work item id is required.';
+      this.errorMessage.set('Work item id is required.');
       return;
     }
     try {
-      this.item = await this.api.getWorkItem(id);
+      this.item.set(await this.api.getWorkItem(id));
     } catch (error) {
-      this.errorMessage = error instanceof Error ? error.message : 'Unable to load work item.';
+      this.errorMessage.set(error instanceof Error ? error.message : 'Unable to load work item.');
     }
   }
 }

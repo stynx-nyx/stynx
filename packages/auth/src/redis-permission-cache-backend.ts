@@ -87,10 +87,12 @@ export class RedisPermissionCacheBackend implements PermissionCacheBackend, OnMo
     }
 
     if (userId === '*' && tenantId === '*') {
-      for await (const key of this.client.scanIterator({ MATCH: `${this.options.redis?.keyPrefix}:perms:*` })) {
-        const sid = key.split(':').pop();
-        if (sid) {
-          await this.delete(sid);
+      for await (const keys of this.client.scanIterator({ MATCH: `${this.options.redis?.keyPrefix}:perms:*` })) {
+        for (const key of Array.isArray(keys) ? keys : [keys]) {
+          const sid = String(key).split(':').pop();
+          if (sid) {
+            await this.delete(sid);
+          }
         }
       }
       return;

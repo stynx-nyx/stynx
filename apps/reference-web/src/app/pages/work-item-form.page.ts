@@ -7,6 +7,14 @@ import { StynxBannerComponent } from '@stynx-web/angular-ui';
 import { ReferenceWebApiService } from '../core/reference-web-api.service';
 import type { RecordItem } from '../core/reference-models';
 
+function dateInputValue(offsetDays = 0): string {
+  const date = new Date();
+  date.setDate(date.getDate() + offsetDays);
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
 @Component({
   selector: 'stynx-reference-work-item-form-page',
   standalone: true,
@@ -103,8 +111,8 @@ export class WorkItemFormPageComponent implements OnInit {
   protected readonly form = this.formBuilder.nonNullable.group({
     recordId: ['', [Validators.required]],
     code: ['', [Validators.required]],
-    openedOn: ['', [Validators.required]],
-    targetOn: ['', [Validators.required]],
+    openedOn: [dateInputValue(), [Validators.required]],
+    targetOn: [dateInputValue(7), [Validators.required]],
     category: ['GEN'],
     totalUnits: [0, [Validators.min(0)]],
     status: this.formBuilder.nonNullable.control<'draft' | 'ready' | 'done' | 'cancelled'>('draft', [Validators.required]),

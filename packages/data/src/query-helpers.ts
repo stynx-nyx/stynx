@@ -10,9 +10,9 @@ import { getTableMeta, quoteIdent } from './internal/table-meta';
 import { isSoftDeletable } from './table-markers';
 import type { SoftDeletableTable } from './types';
 
-type LiveSelectBuilder = ReturnType<PgSelectBuilder<undefined>['from']>;
+export type LiveSelectBuilder = ReturnType<PgSelectBuilder<undefined>['from']>;
 
-type SelectBuilderLike = {
+export type SelectBuilderLike = {
   config: {
     where?: SQL;
     orderBy?: Array<PgColumn | SQL | SQL.Aliased>;
@@ -32,14 +32,14 @@ interface ProjectionColumn {
   columnName: string;
 }
 
-interface BuiltQuery {
+export interface BuiltQuery {
   sql: string;
   params: unknown[];
 }
 
-type ArchiveMode = 'withDeleted' | 'onlyDeleted';
+export type ArchiveMode = 'withDeleted' | 'onlyDeleted';
 
-type ArchiveMetadataNullable = {
+export type ArchiveMetadataNullable = {
   archiveId: bigint | null;
   archivedAt: Date | null;
   deletedAt: Date | null;
@@ -47,7 +47,7 @@ type ArchiveMetadataNullable = {
   lastErasureAt: Date | null;
 };
 
-type ArchiveMetadataRequired = {
+export type ArchiveMetadataRequired = {
   archiveId: bigint;
   archivedAt: Date;
   deletedAt: Date;

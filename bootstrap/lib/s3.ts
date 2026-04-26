@@ -51,7 +51,7 @@ export async function ensureBucket(ctx: S3EnsureInput): Promise<void> {
     if (ensureDryRun({ region: ctx.region, profile: ctx.profile, dryRun: ctx.dryRun, debug: ctx.debug, appName: ctx.appName }, `create bucket ${ctx.bucketName}`)) {
       return;
     }
-    const createInput: any = { Bucket: ctx.bucketName }; // eslint-disable-line @typescript-eslint/no-explicit-any
+    const createInput: any = { Bucket: ctx.bucketName };
     if (ctx.region !== 'us-east-1') {
       createInput.CreateBucketConfiguration = { LocationConstraint: ctx.region };
     }

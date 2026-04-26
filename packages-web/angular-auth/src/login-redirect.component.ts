@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Inject } from '@angular/core';
 import type { OnInit } from '@angular/core';
-import type { StynxSessionService } from './session.service';
+import { StynxSessionService } from './session.service';
 
 @Component({
   selector: 'stynx-login-redirect',
@@ -13,7 +13,7 @@ import type { StynxSessionService } from './session.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StynxLoginRedirectComponent implements OnInit {
-  constructor(private readonly session: StynxSessionService) {}
+  constructor(@Inject(StynxSessionService) private readonly session: StynxSessionService) {}
 
   async ngOnInit(): Promise<void> {
     await this.session.completeLogin(typeof window === 'undefined' ? undefined : window.location.href);

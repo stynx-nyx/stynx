@@ -1,5 +1,6 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
+import type { CanActivateFn } from '@angular/router';
+import { Router } from '@angular/router';
 import { map, take } from 'rxjs/operators';
 import { AuthFacade } from '@core/auth/auth.facade';
 

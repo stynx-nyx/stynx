@@ -1,4 +1,4 @@
-interface Queryable {
+export interface Queryable {
   query<T extends { id?: string | number; tags?: Record<string, unknown> | null }>(
     sql: string,
     params?: unknown[],

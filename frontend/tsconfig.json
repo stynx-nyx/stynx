@@ -6,29 +6,17 @@
     "outDir": "./dist/out-tsc",
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "typeRoots": [
-      "node_modules/@types"
-    ],
+    "exactOptionalPropertyTypes": false,
+    "noUncheckedIndexedAccess": false,
+    "typeRoots": ["node_modules/@types"],
     "useDefineForClassFields": false,
     "paths": {
-      "@core/*": [
-        "src/app/core/*"
-      ],
-      "@shared/*": [
-        "src/app/shared/*"
-      ],
-      "@admin/*": [
-        "src/app/admin/*"
-      ],
-      "@storage/*": [
-        "src/app/storage/*"
-      ],
-      "@i18n/*": [
-        "src/app/i18n/*"
-      ],
-      "@env/*": [
-        "src/environments/*"
-      ]
+      "@core/*": ["src/app/core/*"],
+      "@shared/*": ["src/app/shared/*"],
+      "@admin/*": ["src/app/admin/*"],
+      "@storage/*": ["src/app/storage/*"],
+      "@i18n/*": ["src/app/i18n/*"],
+      "@env/*": ["src/environments/*"]
     }
   }
 }

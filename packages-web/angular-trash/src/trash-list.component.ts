@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
-import type { StynxSessionService } from '@stynx-web/angular-auth';
+import { ChangeDetectionStrategy, Component, Inject, Input, signal } from '@angular/core';
+import { StynxSessionService } from '@stynx-web/angular-auth';
 import { StynxBannerComponent, StynxConfirmDialogComponent, EmptyStateComponent, StynxPaginationComponent, StynxTableComponent } from '@stynx-web/angular-ui';
-import type { StynxToastService } from '@stynx-web/angular-ui';
+import { StynxToastService } from '@stynx-web/angular-ui';
 import type { StynxTrashAdapter, StynxTrashColumn, StynxTrashItem } from './types';
 
 @Component({
@@ -15,16 +15,16 @@ import type { StynxTrashAdapter, StynxTrashColumn, StynxTrashItem } from './type
     StynxTableComponent,
   ],
   template: `
-    @if (errorMessage) {
-      <stynx-banner tone="warning" [message]="errorMessage"></stynx-banner>
+    @if (errorMessage()) {
+      <stynx-banner tone="warning" [message]="errorMessage()"></stynx-banner>
     }
 
-    @if (rows.length === 0) {
+    @if (rows().length === 0) {
       <stynx-empty-state title="Trash is empty" description="Deleted records will appear here."></stynx-empty-state>
     } @else {
-      <stynx-table [columns]="resolvedColumns" [rows]="rows"></stynx-table>
+      <stynx-table [columns]="resolvedColumns" [rows]="rows()"></stynx-table>
       <div class="stynx-trash-actions">
-        @for (item of items; track item.id) {
+        @for (item of items(); track item.id) {
           <article class="stynx-trash-card">
             <div>
               <strong>{{ item.label }}</strong>
@@ -40,20 +40,20 @@ import type { StynxTrashAdapter, StynxTrashColumn, StynxTrashItem } from './type
         }
       </div>
       <stynx-pagination
-        [page]="pageIndex"
-        [pageSizeInput]="pageSize"
-        [totalItems]="total"
+        [page]="pageIndex()"
+        [pageSizeInput]="pageSize()"
+        [totalItems]="total()"
         (pageChange)="setPage($event.pageIndex, $event.pageSize)"
       ></stynx-pagination>
     }
 
     <stynx-confirm-dialog
-      [open]="confirmingId !== null"
+      [open]="confirmingId() !== null"
       title="Hard delete"
       message="This permanently removes the archived row."
       confirmLabel="Delete forever"
       (confirm)="confirmHardDelete()"
-      (cancel)="confirmingId = null"
+      (cancel)="confirmingId.set(null)"
     ></stynx-confirm-dialog>
   `,
   styles: [`
@@ -89,16 +89,18 @@ export class StynxTrashListComponent {
   ];
   @Input() hardDeletePermission = 'archive:hard-delete:*';
 
-  items: StynxTrashItem[] = [];
-  rows: Array<Record<string, unknown>> = [];
-  total = 0;
-  pageIndex = 0;
-  pageSize = 10;
-  errorMessage = '';
-  confirmingId: string | null = null;
+  readonly items = signal<StynxTrashItem[]>([]);
+  readonly rows = signal<Array<Record<string, unknown>>>([]);
+  readonly total = signal(0);
+  readonly pageIndex = signal(0);
+  readonly pageSize = signal(10);
+  readonly errorMessage = signal('');
+  readonly confirmingId = signal<string | null>(null);
 
   constructor(
+    @Inject(StynxSessionService)
     private readonly session: StynxSessionService,
+    @Inject(StynxToastService)
     private readonly toast: StynxToastService,
   ) {}
 
@@ -108,22 +110,22 @@ export class StynxTrashListComponent {
 
   async load(): Promise<void> {
     const page = await this.adapter.list(this.resource, {
-      pageIndex: this.pageIndex,
-      pageSize: this.pageSize,
+      pageIndex: this.pageIndex(),
+      pageSize: this.pageSize(),
       sort: 'deleted_at_desc',
     });
-    this.items = page.items;
-    this.total = page.total;
-    this.rows = page.items.map((item) => ({
+    this.items.set(page.items);
+    this.total.set(page.total);
+    this.rows.set(page.items.map((item) => ({
       label: item.label,
       deletedAt: item.deletedAt,
-    }));
-    this.errorMessage = '';
+    })));
+    this.errorMessage.set('');
   }
 
   async setPage(pageIndex: number, pageSize: number): Promise<void> {
-    this.pageIndex = pageIndex;
-    this.pageSize = pageSize;
+    this.pageIndex.set(pageIndex);
+    this.pageSize.set(pageSize);
     await this.load();
   }
 
@@ -139,17 +141,17 @@ export class StynxTrashListComponent {
         await this.load();
         return;
       }
-      this.errorMessage = this.resolveMessage(error);
+      this.errorMessage.set(this.resolveMessage(error));
     }
   }
 
   openConfirm(id: string): void {
-    this.confirmingId = id;
+    this.confirmingId.set(id);
   }
 
   async confirmHardDelete(): Promise<void> {
-    const id = this.confirmingId;
-    this.confirmingId = null;
+    const id = this.confirmingId();
+    this.confirmingId.set(null);
     if (!id || !this.adapter.hardDelete) {
       return;
     }

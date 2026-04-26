@@ -58,6 +58,28 @@ export interface SessionCreateMetadata {
   permsHash?: string;
 }
 
+export interface SessionExchangeOptions {
+  /** The session being replaced. Must be active and belong to `actorUserId`. */
+  sessionId: string;
+  /** The tenant the new session should be scoped to. */
+  newTenantId: string;
+  /** The user performing the exchange. Must match the originating session. */
+  actorUserId: string;
+  /** Optional membership ID in the new tenant. */
+  membershipId?: string;
+  /** Optional device metadata to carry over or override. */
+  deviceMeta?: DeviceMetadata;
+  /** Optional permissions hash for the new tenant context. */
+  permsHash?: string;
+}
+
+export interface SessionExchangeResult {
+  /** The new session bundle issued for the target tenant. */
+  bundle: SessionBundle;
+  /** The session ID that was revoked. */
+  revokedSessionId: string;
+}
+
 export interface SessionStore {
   createSession(record: SessionRecord): Promise<void>;
   getSession(sid: string): Promise<SessionRecord | null>;

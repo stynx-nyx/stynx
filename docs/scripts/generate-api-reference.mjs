@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { dirname, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
@@ -7,7 +7,12 @@ const scriptDir = dirname(fileURLToPath(import.meta.url));
 const docsDir = resolve(scriptDir, '..');
 const repoRoot = resolve(docsDir, '..');
 const apiOutDir = resolve(docsDir, '.generated/site-docs/api-reference');
-const pnpmBin = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+const typeDocBin = resolve(
+  docsDir,
+  'node_modules',
+  '.bin',
+  process.platform === 'win32' ? 'typedoc.cmd' : 'typedoc',
+);
 
 function collectPackages(baseDir, matcher) {
   const resolvedBase = resolve(repoRoot, baseDir);
@@ -83,6 +88,56 @@ function rewriteReadmeLinks(targetDir) {
   }
 }
 
+function writeTypeDocTsconfig(pkg) {
+  const tsconfigPath = resolve(pkg.dirPath, 'tsconfig.json');
+  const targetDir = resolve(pkg.dirPath, '.typedoc');
+  const targetPath = resolve(targetDir, 'tsconfig.json');
+  const extendsPath = relative(targetDir, tsconfigPath).split(sep).join('/');
+  mkdirSync(targetDir, { recursive: true });
+  writeFileSync(
+    targetPath,
+    `${JSON.stringify(
+      {
+        extends: extendsPath.startsWith('.') ? extendsPath : `./${extendsPath}`,
+        compilerOptions: {
+          ignoreDeprecations: '6.0',
+        },
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  return { dirPath: targetDir, tsconfigPath: targetPath };
+}
+
+function typeDocOptionsFor(pkg) {
+  if (pkg.manifest.name === '@stynx/data') {
+    return [
+      '--intentionallyNotExported',
+      'src/schema/index.ts:schema',
+    ];
+  }
+
+  if (pkg.manifest.name === '@stynx-web/sdk') {
+    return [
+      '--intentionallyNotExported',
+      'src/generated/core/ApiRequestOptions.ts:ApiRequestOptions',
+      '--intentionallyNotExported',
+      'src/generated/core/ApiResult.ts:ApiResult',
+      '--intentionallyNotExported',
+      'src/generated/core/OpenAPI.ts:Headers',
+      '--intentionallyNotExported',
+      'src/generated/core/OpenAPI.ts:Resolver',
+      '--intentionallyNotExported',
+      'src/generated/GeneratedStynxSdk.ts:HttpRequestConstructor',
+      '--intentionallyNotExported',
+      'src/generated/core/CancelablePromise.ts:OnCancel',
+    ];
+  }
+
+  return [];
+}
+
 const packages = [
   ...collectPackages('packages', (name) => typeof name === 'string' && name.startsWith('@stynx/')),
   ...collectPackages('packages-web', (name) => typeof name === 'string' && name.startsWith('@stynx-web/')),
@@ -94,21 +149,21 @@ mkdirSync(apiOutDir, { recursive: true });
 for (const pkg of packages) {
   const slug = pkg.manifest.name.replace(/^@/u, '').replace(/[\/]/gu, '-');
   const targetDir = resolve(apiOutDir, slug);
+  const typedocTsconfig = writeTypeDocTsconfig(pkg);
   mkdirSync(targetDir, { recursive: true });
 
   const result = spawnSync(
-    pnpmBin,
+    typeDocBin,
     [
-      'exec',
-      'typedoc',
       '--plugin',
       'typedoc-plugin-markdown',
       '--entryPoints',
       'src/index.ts',
       '--tsconfig',
-      'tsconfig.json',
+      typedocTsconfig.tsconfigPath,
       '--readme',
       'none',
+      ...typeDocOptionsFor(pkg),
       '--out',
       targetDir,
     ],
@@ -118,6 +173,8 @@ for (const pkg of packages) {
       env: process.env,
     },
   );
+
+  rmSync(typedocTsconfig.dirPath, { recursive: true, force: true });
 
   if (result.status !== 0) {
     throw new Error(`TypeDoc failed for ${pkg.manifest.name}`);

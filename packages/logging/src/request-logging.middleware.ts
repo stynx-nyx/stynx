@@ -2,18 +2,18 @@ import { Inject, Injectable, type NestMiddleware, Optional } from '@nestjs/commo
 import { STYNX_LOGGING_OPTIONS, type StynxLoggingOptions } from './tokens';
 import { StynxLogger } from './logger.service';
 
-interface RequestLike {
+export interface RequestLike {
   method?: string;
   url?: string;
   originalUrl?: string;
 }
 
-interface ResponseLike {
+export interface ResponseLike {
   statusCode?: number;
   once(event: 'finish', listener: () => void): void;
 }
 
-type Next = () => void;
+export type Next = () => void;
 
 @Injectable()
 export class RequestLoggingMiddleware implements NestMiddleware {

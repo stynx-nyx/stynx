@@ -18,6 +18,7 @@ export interface StynxAuthModuleOptions {
   };
   permissions?: {
     dbFallbackOnRedisDown?: boolean;
+    driftResyncIntervalMs?: number;
   };
 }
 
@@ -39,6 +40,7 @@ export interface ResolvedStynxAuthModuleOptions {
   };
   permissions: {
     dbFallbackOnRedisDown: boolean;
+    driftResyncIntervalMs?: number;
   };
 }
 
@@ -121,6 +123,9 @@ export function resolveAuthOptions(
       : {}),
     permissions: {
       dbFallbackOnRedisDown: options.permissions?.dbFallbackOnRedisDown ?? true,
+      ...(options.permissions?.driftResyncIntervalMs !== undefined
+        ? { driftResyncIntervalMs: options.permissions.driftResyncIntervalMs }
+        : {}),
     },
   };
 }

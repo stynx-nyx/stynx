@@ -18,7 +18,8 @@ on:
     - cron: '0 4 * * 1'
 
 env:
-  NODE_VERSION: '20'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  NODE_VERSION: '24'
   PNPM_VERSION: '9.15.0'
   K6_ARTIFACT_NAME: k6-results-${{ github.event.inputs.scenario || 'all' }}
 
@@ -31,7 +32,7 @@ jobs:
     name: k6
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Start reference stack
         run: docker compose -f apps/reference-api/docker-compose.yml up -d --build
@@ -48,13 +49,15 @@ jobs:
           exit 1
 
       - name: Run k6 scenarios
+        env:
+          STYNX_K6_SCENARIO: ${{ github.event.inputs.scenario || 'all' }}
         run: |
           mkdir -p perf/k6/results
           STYNX_K6_BASE_URL=http://127.0.0.1:3000 \
           STYNX_K6_S3_PUBLIC_BASE_URL=http://127.0.0.1:4566 \
-          STYNX_K6_SCENARIO="${{ github.event.inputs.scenario || 'all' }}" \
+          STYNX_K6_SCENARIO="${STYNX_K6_SCENARIO}" \
           STYNX_K6_SCENARIO_PAUSE_MS=65000 \
-          node perf/k6/run-scenarios.mjs --scenario "${{ github.event.inputs.scenario || 'all' }}"
+          node perf/k6/run-scenarios.mjs --scenario "${STYNX_K6_SCENARIO}"
 
       - name: Download previous k6 baseline
         env:
@@ -149,7 +152,7 @@ jobs:
           fi
 
       - name: Upload k6 artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.K6_ARTIFACT_NAME }}
           path: perf/k6/results
@@ -176,18 +179,17 @@ jobs:
             filter: '@stynx/data'
             report_path: packages/data/reports/mutation
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v5
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
-          dependency-path: pnpm-lock.yaml
-
-      - name: Enable pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@${PNPM_VERSION} --activate
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install workspace dependencies
         run: pnpm install --frozen-lockfile
@@ -198,7 +200,7 @@ jobs:
         run: pnpm --filter "${{ matrix.filter }}" stryker
 
       - name: Upload mutation reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: mutation-report-${{ matrix.package }}
           path: ${{ matrix.report_path }}

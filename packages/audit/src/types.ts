@@ -35,6 +35,26 @@ export interface AuditLogPage {
   nextCursor?: string;
 }
 
+export interface AuditEvent {
+  eventId: string;
+  occurredAt: string;
+  tenantId?: string | null;
+  actorId?: string | null;
+  entity: string;
+  entityId?: string | null;
+  operation: string;
+  oldData?: Record<string, unknown> | null;
+  newData?: Record<string, unknown> | null;
+  previousHash: string | null;
+  rowHash: string;
+}
+
+export interface ChainVerificationResult {
+  valid: boolean;
+  totalChecked: number;
+  firstBrokenEventId?: string;
+}
+
 export interface AuditDetachPlan {
   partitionName: string;
   month: string;

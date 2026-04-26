@@ -3,6 +3,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import {
   InvalidRefreshTokenError,
   RefreshTokenReuseDetectedError,
+  SessionExchangeError,
   SessionExpiredError,
 } from './errors';
 import { STYNX_SESSION_MIRROR, STYNX_SESSIONS_OPTIONS, STYNX_SESSION_STORE } from './tokens';
@@ -12,6 +13,8 @@ import type {
   ResolvedStynxSessionsModuleOptions,
   SessionBundle,
   SessionCreateMetadata,
+  SessionExchangeOptions,
+  SessionExchangeResult,
   SessionMirror,
   SessionRecord,
   SessionStatus,
@@ -32,6 +35,11 @@ function createRefreshToken(): string {
 
 function hashRefreshToken(token: string): string {
   return createHash('sha256').update(token).digest('base64url');
+}
+
+interface RevokedSession {
+  record: SessionRecord;
+  revokedAt: string;
 }
 
 @Injectable()
@@ -137,26 +145,32 @@ export class SessionService {
   async revokeAllForUser(userId: string): Promise<number> {
     const sids = await this.store.listSessionIdsByUser(userId);
     const revoked = await Promise.all(
-      sids.map((sid) => this.revokeInternal(sid, 'revoked', undefined)),
+      sids.map((sid) => this.revokeRecord(sid, 'revoked')),
     );
+    const revokedSessions = revoked.filter((entry): entry is RevokedSession => entry !== null);
     const tenantMessages = new Set(
-      revoked
-        .filter((record): record is SessionRecord => record !== null)
-        .map((record) => `${record.userId}:${record.tenantId}`),
+      revokedSessions.map(({ record }) => `${record.userId}:${record.tenantId}`),
     );
     await Promise.all([...tenantMessages].map((message) => this.store.publishInvalidation(message)));
-    return revoked.filter((record) => record !== null).length;
+    await Promise.all(
+      revokedSessions.map(({ record, revokedAt }) => this.appendMirror(record, 'revoked', revokedAt)),
+    );
+    return revokedSessions.length;
   }
 
   async revokeAllForTenant(tenantId: string): Promise<number> {
     const sids = await this.store.listSessionIdsByTenant(tenantId);
     const revoked = await Promise.all(
-      sids.map((sid) => this.revokeInternal(sid, 'revoked', undefined)),
+      sids.map((sid) => this.revokeRecord(sid, 'revoked')),
     );
-    if (revoked.some((record) => record !== null)) {
+    const revokedSessions = revoked.filter((entry): entry is RevokedSession => entry !== null);
+    if (revokedSessions.length > 0) {
       await this.store.publishInvalidation(`*:${tenantId}`);
     }
-    return revoked.filter((record) => record !== null).length;
+    await Promise.all(
+      revokedSessions.map(({ record, revokedAt }) => this.appendMirror(record, 'revoked', revokedAt)),
+    );
+    return revokedSessions.length;
   }
 
   async get(sid: string): Promise<SessionRecord | null> {
@@ -189,6 +203,46 @@ export class SessionService {
       session.expiresAt,
     );
     return this.store.touchSession(sid, idleExpiresAt, touchedAt);
+  }
+
+  async exchange(options: SessionExchangeOptions): Promise<SessionExchangeResult> {
+    const current = await this.store.getSession(options.sessionId);
+    if (!current) {
+      throw new SessionExchangeError(
+        'SESSION_NOT_FOUND',
+        `Session ${options.sessionId} not found`,
+      );
+    }
+    if (current.userId !== options.actorUserId) {
+      throw new SessionExchangeError(
+        'SESSION_OWNER_MISMATCH',
+        `Session ${options.sessionId} does not belong to user ${options.actorUserId}`,
+      );
+    }
+
+    try {
+      this.assertActive(current, this.now());
+    } catch {
+      throw new SessionExchangeError(
+        'SESSION_NOT_ACTIVE',
+        `Session ${options.sessionId} is no longer active`,
+      );
+    }
+
+    await this.revokeInternal(options.sessionId, 'revoked', undefined);
+
+    const bundle = await this.create(
+      options.actorUserId,
+      options.newTenantId,
+      current.cognitoSub,
+      options.deviceMeta ?? current.deviceMeta ?? {},
+      {
+        ...(options.membershipId !== undefined ? { membershipId: options.membershipId } : {}),
+        ...(options.permsHash !== undefined ? { permsHash: options.permsHash } : {}),
+      },
+    );
+
+    return { bundle, revokedSessionId: options.sessionId };
   }
 
   private async bundle(
@@ -225,27 +279,49 @@ export class SessionService {
     status: SessionStatus,
     publishMessage: ((record: SessionRecord) => string) | undefined,
   ): Promise<SessionRecord | null> {
-    const revokedAt = this.now().toISOString();
-    const revoked = await this.store.revokeSession(sid, revokedAt, status);
-    if (!revoked) {
+    const revokedSession = await this.revokeRecord(sid, status);
+    if (!revokedSession) {
       return null;
     }
 
+    const { record, revokedAt } = revokedSession;
+
     await this.mirror.append({
-      sid: revoked.sid,
-      tenantId: revoked.tenantId,
-      userId: revoked.userId,
-      ...(revoked.membershipId !== undefined ? { membershipId: revoked.membershipId } : {}),
+      sid: record.sid,
+      tenantId: record.tenantId,
+      userId: record.userId,
+      ...(record.membershipId !== undefined ? { membershipId: record.membershipId } : {}),
       status,
-      expiresAt: revoked.expiresAt,
+      expiresAt: record.expiresAt,
       createdAt: revokedAt,
     });
 
     if (publishMessage) {
-      await this.store.publishInvalidation(publishMessage(revoked));
+      await this.store.publishInvalidation(publishMessage(record));
     }
 
-    return revoked;
+    return record;
+  }
+
+  private async revokeRecord(sid: string, status: SessionStatus): Promise<RevokedSession | null> {
+    const revokedAt = this.now().toISOString();
+    const record = await this.store.revokeSession(sid, revokedAt, status);
+    if (!record) {
+      return null;
+    }
+    return { record, revokedAt };
+  }
+
+  private async appendMirror(record: SessionRecord, status: SessionStatus, createdAt: string): Promise<void> {
+    await this.mirror.append({
+      sid: record.sid,
+      tenantId: record.tenantId,
+      userId: record.userId,
+      ...(record.membershipId !== undefined ? { membershipId: record.membershipId } : {}),
+      status,
+      expiresAt: record.expiresAt,
+      createdAt,
+    });
   }
 
   private now(): Date {

@@ -4,14 +4,23 @@ import {
   GetObjectCommand,
   HeadObjectCommand,
   ListObjectVersionsCommand,
+  PutBucketLifecycleConfigurationCommand,
+  PutObjectRetentionCommand,
   PutObjectCommand,
   S3Client,
+  type LifecycleRule,
+  type ObjectLockRetention,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Inject, Injectable } from '@nestjs/common';
 import { StorageValidationError } from './errors';
 import { STYNX_STORAGE_OPTIONS } from './tokens';
-import type { HeadedObject, StynxStorageModuleOptions } from './types';
+import type {
+  HeadedObject,
+  S3LifecycleRule,
+  S3ObjectLockConfig,
+  StynxStorageModuleOptions,
+} from './types';
 
 @Injectable()
 export class S3Service {
@@ -19,6 +28,7 @@ export class S3Service {
   private readonly bucketName: string;
   private readonly uploadExpiresInSeconds: number;
   private readonly downloadExpiresInSeconds: number;
+  private readonly presignCounts = new Map<string, { count: number; windowStart: number }>();
 
   constructor(
     @Inject(STYNX_STORAGE_OPTIONS)
@@ -90,6 +100,65 @@ export class S3Service {
     return { url, expiresInSeconds };
   }
 
+  async presignDownloadForTenant(input: {
+    key: string;
+    tenantId: string;
+    expiresInSeconds?: number;
+  }): Promise<string> {
+    this.checkPresignRateLimit(input.tenantId);
+    const command = new GetObjectCommand({
+      Bucket: this.bucketName,
+      Key: input.key,
+    });
+    return getSignedUrl(this.client, command, {
+      expiresIn: input.expiresInSeconds ?? this.downloadExpiresInSeconds,
+    });
+  }
+
+  async configureLifecycle(rules: S3LifecycleRule[]): Promise<void> {
+    const awsRules: LifecycleRule[] = rules.map((rule) => ({
+      ID: rule.name,
+      Status: 'Enabled',
+      ...(rule.prefix !== undefined ? { Filter: { Prefix: rule.prefix } } : { Filter: {} }),
+      Transitions: [
+        ...(rule.transitionToIaDays !== undefined
+          ? [{ Days: rule.transitionToIaDays, StorageClass: 'STANDARD_IA' as const }]
+          : []),
+        ...(rule.transitionToGlacierDays !== undefined
+          ? [{ Days: rule.transitionToGlacierDays, StorageClass: 'GLACIER' as const }]
+          : []),
+      ],
+      ...(rule.expirationDays !== undefined ? { Expiration: { Days: rule.expirationDays } } : {}),
+    }));
+
+    await this.client.send(
+      new PutBucketLifecycleConfigurationCommand({
+        Bucket: this.bucketName,
+        LifecycleConfiguration: { Rules: awsRules },
+      }),
+    );
+  }
+
+  async applyObjectLock(
+    key: string,
+    versionId: string,
+    config: S3ObjectLockConfig,
+  ): Promise<void> {
+    const retention: ObjectLockRetention = {
+      Mode: config.mode,
+      RetainUntilDate: new Date(Date.now() + config.retainDays * 24 * 60 * 60 * 1000),
+    };
+
+    await this.client.send(
+      new PutObjectRetentionCommand({
+        Bucket: this.bucketName,
+        Key: key,
+        VersionId: versionId,
+        Retention: retention,
+      }),
+    );
+  }
+
   async headObject(key: string): Promise<HeadedObject> {
     const response = await this.client.send(
       new HeadObjectCommand({
@@ -143,6 +212,24 @@ export class S3Service {
         Delete: { Objects: objects },
       }),
     );
+  }
+
+  private checkPresignRateLimit(tenantId: string): void {
+    const limit = this.options.compliance?.presignRateLimit?.maxPerMinute ?? 60;
+    const now = Date.now();
+    const windowMs = 60_000;
+    const entry = this.presignCounts.get(tenantId);
+    if (!entry || now - entry.windowStart >= windowMs) {
+      this.presignCounts.set(tenantId, { count: 1, windowStart: now });
+      return;
+    }
+    if (entry.count >= limit) {
+      throw new StorageValidationError(
+        `Presign rate limit exceeded for tenant ${tenantId}: ${limit} per minute`,
+        { tenantId, limit },
+      );
+    }
+    entry.count += 1;
   }
 }
 

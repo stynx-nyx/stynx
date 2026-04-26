@@ -98,7 +98,6 @@ async function ensureUserPoolClient(ctx: CognitoEnsureInput, userPoolId: string)
       const detail = await cognito.send(new DescribeUserPoolClientCommand({ UserPoolId: userPoolId, ClientId: item.ClientId }));
       if (detail.UserPoolClient?.ClientSecret) {
         const warning = `Cognito app client ${clientName} has a secret. stynx requires public clients (no secret).`;
-        // eslint-disable-next-line no-console
         console.warn(chalk.red(warning));
         if (!ctx.force) {
           throw new Error(`${warning} Delete the existing client or re-run with --force.`);
@@ -227,7 +226,6 @@ export async function describeCognito(ctx: CognitoEnsureInput, userPoolId: strin
   const clientInfo = await cognito.send(new DescribeUserPoolClientCommand({ UserPoolId: userPoolId, ClientId: clientId }));
   if (clientInfo.UserPoolClient?.ClientSecret) {
     const warning = `Cognito app client ${clientId} has a secret; remove it to keep the client public.`;
-    // eslint-disable-next-line no-console
     console.warn(chalk.red(warning));
     if (!ctx.force) {
       throw new Error(`${warning} Re-run with --force to ignore temporarily.`);

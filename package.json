@@ -6,7 +6,7 @@
   "description": "STYNX monorepo foundation for backend, frontend, apps, and tooling",
   "packageManager": "pnpm@9.15.0",
   "engines": {
-    "node": ">=20 <23",
+    "node": ">=24 <25",
     "pnpm": ">=9 <10"
   },
   "scripts": {
@@ -15,10 +15,15 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test && pnpm test:unit",
     "test:unit": "pnpm --dir test/packages test && pnpm --dir test/backend test && pnpm --dir frontend test:unit && pnpm --dir test/scripts test",
-    "test:unit:cov": "pnpm --dir test/packages exec jest --config ./jest.config.cjs --coverage --coverageDirectory ./coverage && pnpm --dir test/backend exec jest --config ./jest.config.ts --coverage --coverageDirectory ./coverage && pnpm --dir frontend exec jest --config ../test/frontend/jest.config.cjs --coverage --coverageDirectory ../test/frontend/coverage && pnpm --dir test/scripts test",
+    "test:unit:cov": "pnpm --dir test/packages exec jest --config ./jest.config.cjs --coverage --coverageDirectory ./coverage && pnpm --dir test/backend exec jest --config ./jest.config.cjs --coverage --coverageDirectory ./coverage && pnpm --dir frontend exec cross-env NODE_PATH=./node_modules jest --config ../test/frontend/jest.config.cjs --coverage --coverageDirectory test/frontend/coverage && pnpm --dir test/scripts test",
     "test:int": "turbo run test:int && pnpm --dir test/db test",
-    "test:int:cov": "pnpm --dir test/db exec jest --config ./jest.config.ts --coverage --coverageDirectory ./coverage",
+    "test:int:cov": "pnpm --dir test/db exec jest --config ./jest.config.cjs --coverage --coverageDirectory ./coverage",
     "test:e2e": "turbo run test:e2e && pnpm --dir frontend test:e2e",
+    "lint:deadcode": "knip --no-config-hints",
+    "lint:deps": "depcheck --ignore-patterns='**/*.test.ts,**/*.spec.ts' --skip-missing --ignores='@commitlint/cli,@commitlint/config-conventional,@stryker-mutator/jest-runner,@stryker-mutator/typescript-checker,eslint-plugin-boundaries,prettier'",
+    "ci:local": "bash scripts/ci-local/run.sh",
+    "ci:local:browser": "bash scripts/ci-local/run.sh browser",
+    "ci:local:all-linux": "bash scripts/ci-local/run.sh all-linux",
     "clean": "turbo run clean --continue",
     "changeset": "changeset",
     "release:status": "changeset status --output .changeset/status.json",
@@ -37,24 +42,26 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.29.6",
-    "@types/node": "^22.19.17",
+    "@changesets/cli": "^2.31.0",
+    "@commitlint/cli": "^20.5.2",
+    "@commitlint/config-conventional": "^20.5.0",
+    "@eslint/js": "^10.0.1",
     "@stryker-mutator/core": "^9.6.1",
     "@stryker-mutator/jest-runner": "^9.6.1",
     "@stryker-mutator/typescript-checker": "^9.6.1",
-    "turbo": "^2.5.6",
-    "typescript": "^5.9.3",
-    "@commitlint/cli": "^19.8.1",
-    "@commitlint/config-conventional": "^19.8.1",
-    "@eslint/js": "^9.39.1",
-    "@typescript-eslint/eslint-plugin": "^8.46.2",
-    "@typescript-eslint/parser": "^8.46.2",
-    "eslint": "^9.39.1",
-    "eslint-plugin-boundaries": "^5.1.0",
-    "globals": "^16.4.0",
+    "@types/node": "^24.12.2",
+    "@typescript-eslint/eslint-plugin": "^8.59.0",
+    "@typescript-eslint/parser": "^8.59.0",
+    "depcheck": "^1.4.7",
+    "eslint": "^10.2.1",
+    "eslint-plugin-boundaries": "^6.0.2",
+    "globals": "^17.5.0",
     "husky": "^9.1.7",
-    "lint-staged": "^16.2.0",
-    "prettier": "^3.6.2"
+    "knip": "^6.7.0",
+    "lint-staged": "^16.4.0",
+    "prettier": "^3.8.3",
+    "turbo": "^2.9.6",
+    "typescript": "^6.0.3"
   },
   "lint-staged": {
     "*.{js,cjs,mjs,ts,tsx,cts,mts}": [
@@ -66,6 +73,10 @@
   },
   "pnpm": {
     "overrides": {
+      "@types/node": "24.12.2",
+      "handlebars": "4.7.9",
+      "postcss": "8.5.12",
+      "serialize-javascript": "7.0.5",
       "webpackbar": "7.0.0"
     }
   }

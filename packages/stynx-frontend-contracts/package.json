@@ -2,16 +2,16 @@
   "name": "@stech/stynx-frontend-contracts",
   "version": "0.2.0",
   "description": "Framework-agnostic frontend contracts for stynx",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/stynx-frontend-contracts/src/index.js",
+  "types": "dist/stynx-frontend-contracts/src/index.d.ts",
   "engines": {
-    "node": ">=20 <23"
+    "node": ">=24 <25"
   },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "require": "./dist/index.js",
-      "default": "./dist/index.js"
+      "types": "./dist/stynx-frontend-contracts/src/index.d.ts",
+      "require": "./dist/stynx-frontend-contracts/src/index.js",
+      "default": "./dist/stynx-frontend-contracts/src/index.js"
     }
   },
   "files": [
