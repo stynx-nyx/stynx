@@ -1,6 +1,5 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
-import { ReactiveFormsModule, Validators } from '@angular/forms';
-import type { FormBuilder } from '@angular/forms';
+import { ChangeDetectionStrategy, Component, EventEmitter, Inject, Input, Output } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import type { StynxProfileValue } from './types';
 
 @Component({
@@ -26,7 +25,7 @@ export class StynxProfileFormComponent {
 
   @Output() readonly save = new EventEmitter<StynxProfileValue>();
 
-  constructor(private readonly formBuilder: FormBuilder) {}
+  constructor(@Inject(FormBuilder) private readonly formBuilder: FormBuilder) {}
 
   @Input()
   set value(value: StynxProfileValue | null) {

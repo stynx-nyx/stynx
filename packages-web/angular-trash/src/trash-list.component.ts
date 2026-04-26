@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
-import type { StynxSessionService } from '@stynx-web/angular-auth';
+import { ChangeDetectionStrategy, Component, Inject, Input } from '@angular/core';
+import { StynxSessionService } from '@stynx-web/angular-auth';
 import { StynxBannerComponent, StynxConfirmDialogComponent, EmptyStateComponent, StynxPaginationComponent, StynxTableComponent } from '@stynx-web/angular-ui';
-import type { StynxToastService } from '@stynx-web/angular-ui';
+import { StynxToastService } from '@stynx-web/angular-ui';
 import type { StynxTrashAdapter, StynxTrashColumn, StynxTrashItem } from './types';
 
 @Component({
@@ -98,7 +98,9 @@ export class StynxTrashListComponent {
   confirmingId: string | null = null;
 
   constructor(
+    @Inject(StynxSessionService)
     private readonly session: StynxSessionService,
+    @Inject(StynxToastService)
     private readonly toast: StynxToastService,
   ) {}
 

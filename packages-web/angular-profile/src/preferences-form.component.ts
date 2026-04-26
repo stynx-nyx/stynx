@@ -1,6 +1,5 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
-import { ReactiveFormsModule } from '@angular/forms';
-import type { FormBuilder } from '@angular/forms';
+import { ChangeDetectionStrategy, Component, EventEmitter, Inject, Input, Output } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import type { StynxPreferencesValue } from './types';
 
 @Component({
@@ -28,7 +27,7 @@ export class StynxPreferencesFormComponent {
 
   @Output() readonly save = new EventEmitter<StynxPreferencesValue>();
 
-  constructor(private readonly formBuilder: FormBuilder) {}
+  constructor(@Inject(FormBuilder) private readonly formBuilder: FormBuilder) {}
 
   @Input()
   set value(value: StynxPreferencesValue | null) {

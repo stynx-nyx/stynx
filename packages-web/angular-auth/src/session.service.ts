@@ -1,6 +1,6 @@
 import { Injectable, Inject, computed, signal } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import type { TenantContextService } from '@stynx-web/angular';
+import { TenantContextService } from '@stynx-web/angular';
 import type { AuthProvider } from '@stynx-web/sdk';
 import { STYNX_ANGULAR_AUTH_OPTIONS, STYNX_AUTH_BACKEND, STYNX_OIDC_ADAPTER } from './tokens';
 import { parseJwtPayload, normalizePermissions } from './jwt';
@@ -32,6 +32,7 @@ export class StynxSessionService implements AuthProvider {
   readonly active$ = this.stateSubject.asObservable();
 
   constructor(
+    @Inject(TenantContextService)
     private readonly tenantContext: TenantContextService,
     @Inject(STYNX_OIDC_ADAPTER)
     private readonly oidc: StynxOidcAdapter,
