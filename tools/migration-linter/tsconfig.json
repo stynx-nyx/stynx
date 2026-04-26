@@ -1,5 +1,5 @@
 {
-  "extends": "../tsconfig/node20.json",
+  "extends": "../tsconfig/node24.json",
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": ".",

@@ -1,4 +1,4 @@
-FROM node:20-bookworm-slim AS workspace
+FROM node:24-bookworm-slim AS workspace
 
 WORKDIR /app
 
@@ -34,7 +34,7 @@ FROM workspace AS prod-deps
 
 RUN pnpm install --frozen-lockfile --prod --ignore-scripts
 
-FROM node:20-bookworm-slim AS runtime
+FROM node:24-bookworm-slim AS runtime
 
 ENV NODE_ENV=production
 

@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "description": "Docusaurus documentation site for STYNX",
   "engines": {
-    "node": ">=20 <23"
+    "node": ">=24 <25"
   },
   "scripts": {
     "clean": "find build .docusaurus .generated -mindepth 0 -maxdepth 0 -exec rm -rf {} + 2>/dev/null || true",
@@ -31,7 +31,7 @@
   },
   "devDependencies": {
     "@lhci/cli": "^0.15.1",
-    "@types/node": "^22.19.17",
+    "@types/node": "^24.12.2",
     "typedoc": "^0.28.14",
     "typedoc-plugin-markdown": "^4.9.0",
     "typescript": "^5.9.3"

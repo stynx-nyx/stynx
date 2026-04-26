@@ -4,7 +4,7 @@
   "private": true,
   "main": "index.ts",
   "engines": {
-    "node": ">=20 <23"
+    "node": ">=24 <25"
   },
   "scripts": {
     "cli": "tsx index.ts",
@@ -24,7 +24,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.37.0",
-    "@types/node": "^20.16.5",
+    "@types/node": "^24.12.2",
     "@types/pg": "^8.15.5",
     "@typescript-eslint/eslint-plugin": "^8.45.0",
     "@typescript-eslint/parser": "^8.45.0",

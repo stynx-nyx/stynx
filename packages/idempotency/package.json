@@ -5,7 +5,7 @@
   "main": "dist/idempotency/src/index.js",
   "types": "dist/idempotency/src/index.d.ts",
   "engines": {
-    "node": ">=20 <23"
+    "node": ">=24 <25"
   },
   "exports": {
     ".": {

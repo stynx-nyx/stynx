@@ -1,4 +1,4 @@
-FROM node:20-alpine AS build
+FROM node:24-alpine AS build
 WORKDIR /app
 RUN corepack enable
 
@@ -11,7 +11,7 @@ COPY apps/reference-web ./apps/reference-web
 RUN pnpm install --frozen-lockfile
 RUN pnpm --filter @stynx/reference-web build:web
 
-FROM node:20-alpine AS runtime
+FROM node:24-alpine AS runtime
 WORKDIR /app
 COPY --from=build --chown=node:node /app/apps/reference-web ./apps/reference-web
 ENV PORT=3100

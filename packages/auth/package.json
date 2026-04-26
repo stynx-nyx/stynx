@@ -5,7 +5,7 @@
   "main": "dist/auth/src/index.js",
   "types": "dist/auth/src/index.d.ts",
   "engines": {
-    "node": ">=20 <23"
+    "node": ">=24 <25"
   },
   "exports": {
     ".": {

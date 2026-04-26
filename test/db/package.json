@@ -2,7 +2,7 @@
   "name": "stynx-db-tests",
   "private": true,
   "engines": {
-    "node": ">=20 <23"
+    "node": ">=24 <25"
   },
   "scripts": {
     "test": "jest --config ./jest.config.cjs",

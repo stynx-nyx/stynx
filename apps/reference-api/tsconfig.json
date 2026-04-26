@@ -1,5 +1,5 @@
 {
-  "extends": "../../tools/tsconfig/node20.json",
+  "extends": "../../tools/tsconfig/node24.json",
   "compilerOptions": {
     "outDir": "dist",
     "experimentalDecorators": true,

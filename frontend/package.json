@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=20 <23"
+    "node": ">=24 <25"
   },
   "scripts": {
     "ng": "ng",
@@ -37,7 +37,7 @@
     "@angular/cli": "^20.2.0",
     "@angular/compiler-cli": "^20.2.0",
     "@types/jest": "^29.5.12",
-    "@types/node": "^20.16.5",
+    "@types/node": "^24.12.2",
     "@typescript-eslint/eslint-plugin": "^8.10.0",
     "@typescript-eslint/parser": "^8.10.0",
     "cross-env": "^10.1.0",
