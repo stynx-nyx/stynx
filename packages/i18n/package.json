@@ -28,7 +28,7 @@
   "dependencies": {
     "@stynx/core": "workspace:*",
     "@stynx/data": "workspace:*",
-    "intl-messageformat": "^10.7.18",
+    "intl-messageformat": "^11.2.2",
     "zod": "^4.3.6"
   },
   "peerDependencies": {
