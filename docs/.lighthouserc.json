@@ -3,7 +3,8 @@
     "collect": {
       "staticDistDir": "./build",
       "settings": {
-        "chromeFlags": "--headless=new --disable-gpu --disable-dev-shm-usage --no-sandbox --no-first-run --no-default-browser-check"
+        "chromeFlags": "--headless=new --disable-gpu --disable-dev-shm-usage --no-sandbox --no-first-run --no-default-browser-check",
+        "preset": "desktop"
       }
     },
     "assert": {

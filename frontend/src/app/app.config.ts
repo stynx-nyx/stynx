@@ -1,4 +1,5 @@
-import { APP_INITIALIZER, ApplicationConfig, importProvidersFrom } from '@angular/core';
+import type { ApplicationConfig } from '@angular/core';
+import { APP_INITIALIZER, importProvidersFrom } from '@angular/core';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
 import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http';

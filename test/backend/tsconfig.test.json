@@ -1,0 +1,16 @@
+{
+  "extends": "../../tools/tsconfig/node20.json",
+  "compilerOptions": {
+    "baseUrl": "../../backend/src",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "paths": {
+      "@config/*": ["config/*"],
+      "@core/*": ["core/*"],
+      "@modules/*": ["modules/*"],
+      "@shared/*": ["shared/*"]
+    },
+    "types": ["node", "jest"]
+  },
+  "include": ["./**/*.ts", "../../backend/src/**/*.ts"]
+}

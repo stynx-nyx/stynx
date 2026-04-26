@@ -1,4 +1,5 @@
-import { Component, OnInit, ViewChild, inject } from '@angular/core';
+import type { OnInit } from '@angular/core';
+import { Component, ViewChild, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -11,7 +12,7 @@ import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { UsersService } from './users.service';
-import { UserSummary } from './models';
+import type { UserSummary } from './models';
 
 @Component({
   standalone: true,

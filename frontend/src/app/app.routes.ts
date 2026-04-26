@@ -1,4 +1,4 @@
-import { Routes } from '@angular/router';
+import type { Routes } from '@angular/router';
 import { UserListComponent } from '@admin/users/user-list.component';
 import { UserDetailComponent } from '@admin/users/user-detail.component';
 import { AdminRolesComponent } from '@admin/roles/admin-roles.component';
