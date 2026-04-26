@@ -26,8 +26,8 @@
     "test:int": "NODE_OPTIONS='--experimental-vm-modules' jest --config ./jest.integration.config.cjs"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1034.0",
-    "@aws-sdk/s3-request-presigner": "^3.1034.0",
+    "@aws-sdk/client-s3": "^3.1037.0",
+    "@aws-sdk/s3-request-presigner": "^3.1037.0",
     "@nestjs/schedule": "^6.0.1",
     "@stech/stynx-contracts": "workspace:*",
     "@stynx/core": "workspace:*",

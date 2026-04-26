@@ -27,8 +27,8 @@
     "test:int": "jest --config ./jest.integration.config.cjs"
   },
   "dependencies": {
-    "@aws-sdk/client-secrets-manager": "^3.1034.0",
-    "@aws-sdk/client-ssm": "^3.1034.0",
+    "@aws-sdk/client-secrets-manager": "^3.1037.0",
+    "@aws-sdk/client-ssm": "^3.1037.0",
     "nestjs-cls": "^6.2.0",
     "zod": "^4.1.12"
   },
