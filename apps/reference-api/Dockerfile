@@ -46,6 +46,8 @@ COPY --from=prod-deps --chown=node:node /app/apps/reference-api ./apps/reference
 COPY --from=build --chown=node:node /app/runtime-dist/packages ./packages
 COPY --from=build --chown=node:node /app/runtime-dist/apps/reference-api ./apps/reference-api
 
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
+
 EXPOSE 3000
 
 USER node

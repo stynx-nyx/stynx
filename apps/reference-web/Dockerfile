@@ -13,7 +13,9 @@ RUN pnpm --filter @stynx/reference-web build:web
 
 FROM node:20-alpine AS runtime
 WORKDIR /app
-COPY --from=build /app/apps/reference-web ./apps/reference-web
+COPY --from=build --chown=node:node /app/apps/reference-web ./apps/reference-web
 ENV PORT=3100
 EXPOSE 3100
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
+USER node
 CMD ["node", "apps/reference-web/scripts/serve-static.mjs"]

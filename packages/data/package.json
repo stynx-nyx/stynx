@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "@stynx/core": "workspace:*",
-    "drizzle-orm": "^0.44.7",
+    "drizzle-orm": "^0.45.2",
     "nestjs-cls": "^6.2.0",
     "pg": "^8.16.3",
     "zod": "^4.1.12"

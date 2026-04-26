@@ -19,7 +19,6 @@ export function baseAwsConfig<T extends Record<string, unknown>>(ctx: AwsContext
 
 export function logAws(ctx: AwsContextOptions, message: string) {
   if (ctx.debug) {
-    // eslint-disable-next-line no-console
     console.log(chalk.gray(`[aws:${ctx.region}${ctx.profile ? `:${ctx.profile}` : ''}] ${message}`));
   }
 }
@@ -35,7 +34,6 @@ export function ensureDryRun(ctx: AwsContextOptions, action: string): boolean {
   if (!ctx.dryRun) {
     return false;
   }
-  // eslint-disable-next-line no-console
   console.log(chalk.yellow(`dry-run: skipping ${action}`));
   return true;
 }

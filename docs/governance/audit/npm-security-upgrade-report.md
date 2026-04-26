@@ -1,78 +1,52 @@
 # NPM Security Upgrade Report
 
-- command_scopes: backend, frontend
+- date: 2026-04-26
+- command_scopes: workspace, release-prep dependency-audit, reference-api image
 
 ## Audit Summary
 
-- critical: 0
-- high: 20
-- moderate: 5
-- low: 2
-- outdated_count: 35
-
-## Scopes
-
-### Scope: backend
+`pnpm audit --audit-level=high` now passes.
 
 - critical: 0
 - high: 0
-- moderate: 0
-- low: 0
+- moderate: 3
+- low: 3
+- outdated_count: 8
 
-Outdated packages:
-| package | current | wanted | latest | type |
-|---|---:|---:|---:|---|
-| @aws-sdk/client-cognito-identity-provider |  | 3.990.0 | 3.990.0 |  |
-| @aws-sdk/client-s3 |  | 3.990.0 | 3.990.0 |  |
-| @aws-sdk/credential-providers |  | 3.990.0 | 3.990.0 |  |
-| @aws-sdk/s3-request-presigner |  | 3.990.0 | 3.990.0 |  |
-| @nestjs/common |  | 10.4.22 | 11.1.13 |  |
-| @nestjs/config |  | 3.3.0 | 4.0.3 |  |
-| @nestjs/core |  | 10.4.22 | 11.1.13 |  |
-| @nestjs/platform-express |  | 10.4.22 | 11.1.13 |  |
-| @nestjs/swagger |  | 7.4.2 | 11.2.6 |  |
-| class-transformer |  | 0.5.1 | 0.5.1 |  |
-| class-validator |  | 0.14.3 | 0.14.3 |  |
-| helmet |  | 7.2.0 | 8.1.0 |  |
-| jose |  | 5.10.0 | 6.1.3 |  |
-| jwks-rsa |  | 3.2.2 | 3.2.2 |  |
-| multer |  | 1.4.5-lts.2 | 2.0.2 |  |
-| pg |  | 8.18.0 | 8.18.0 |  |
-| reflect-metadata |  | 0.2.2 | 0.2.2 |  |
-| rxjs |  | 7.8.2 | 7.8.2 |  |
-| uuid |  | 9.0.1 | 13.0.0 |  |
+## Closed Findings
 
-### Scope: frontend
+- `drizzle-orm`: bumped workspace consumers from `^0.44.7` to `^0.45.2` to close the high SQL identifier escaping advisory.
+- `handlebars`: pinned transitive resolution to `4.7.9` through `pnpm.overrides` to close the critical/high advisories under `eslint-plugin-boundaries`.
+- `serialize-javascript`: pinned transitive resolution to `7.0.5` through `pnpm.overrides` to close the high Docusaurus/Webpack advisory.
+- `reference-api` and `reference-web` runtime images: removed bundled `npm` from the final images to avoid shipping non-runtime npm packages flagged by Trivy (`cross-spawn`, `glob`, `minimatch`, `tar`).
 
-- critical: 0
-- high: 20
-- moderate: 5
-- low: 2
+## Remaining Non-Blocking Findings
 
-Outdated packages:
-| package | current | wanted | latest | type |
-|---|---:|---:|---:|---|
-| @angular/animations |  | 20.3.16 | 21.1.4 |  |
-| @angular/cdk |  | 20.2.14 | 21.1.4 |  |
-| @angular/common |  | 20.3.16 | 21.1.4 |  |
-| @angular/compiler |  | 20.3.16 | 21.1.4 |  |
-| @angular/core |  | 20.3.16 | 21.1.4 |  |
-| @angular/forms |  | 20.3.16 | 21.1.4 |  |
-| @angular/material |  | 20.2.14 | 21.1.4 |  |
-| @angular/platform-browser |  | 20.3.16 | 21.1.4 |  |
-| @angular/platform-browser-dynamic |  | 20.3.16 | 21.1.4 |  |
-| @angular/router |  | 20.3.16 | 21.1.4 |  |
-| @ngx-translate/core |  | 17.0.0 | 17.0.0 |  |
-| @ngx-translate/http-loader |  | 17.0.0 | 17.0.0 |  |
-| angular-oauth2-oidc |  | 20.0.2 | 20.0.2 |  |
-| rxjs |  | 7.8.2 | 7.8.2 |  |
-| tslib |  | 2.8.1 | 2.8.1 |  |
-| zone.js |  | 0.15.1 | 0.16.0 |  |
+These remain below the `high` gate used by Release Prep.
 
+| package | severity | installed | patched |
+|---|---:|---:|---:|
+| tmp | low | 0.0.33, 0.1.0 | >=0.2.4 |
+| @tootallnate/once | low | 2.0.0 | >=3.0.1 |
+| uuid | moderate | 8.3.2, 10.0.0, 11.1.0 | >=14.0.0 |
+
+## Outdated Inventory
+
+Root workspace `pnpm outdated --format json` currently reports 8 outdated direct dev dependencies. The security fix intentionally avoided broad major upgrades while the PR is focused on making the CI/release-prep gates green.
+
+| package | current | wanted | latest |
+|---|---:|---:|---:|
+| @commitlint/cli | 19.8.1 | 19.8.1 | 20.5.2 |
+| @commitlint/config-conventional | 19.8.1 | 19.8.1 | 20.5.0 |
+| @eslint/js | 9.39.4 | 9.39.4 | 10.0.1 |
+| @types/node | 22.19.17 | 22.19.17 | 25.6.0 |
+| eslint | 9.39.4 | 9.39.4 | 10.2.1 |
+| eslint-plugin-boundaries | 5.4.0 | 5.4.0 | 6.0.2 |
+| globals | 16.5.0 | 16.5.0 | 17.5.0 |
+| typescript | 5.9.3 | 5.9.3 | 6.0.3 |
 
 ## Recommended Path
 
-1. Apply patch/minor upgrades first.
-2. Re-run test suites before major upgrades.
-3. Address critical/high vulnerabilities immediately.
-
+1. Keep this PR constrained to patched transitive dependencies and CI plumbing.
+2. Handle `uuid >=14`, `tmp >=0.2.4`, and `@tootallnate/once >=3.0.1` in a follow-up dependency-maintenance PR because they require major transitive movement.
+3. Track ESLint/TypeScript/Commitlint majors separately after `main` is green.

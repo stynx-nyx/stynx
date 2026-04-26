@@ -30,7 +30,7 @@
     "@stynx/storage": "workspace:*",
     "@stynx/tenancy": "workspace:*",
     "@stech/stynx-backend": "workspace:*",
-    "drizzle-orm": "^0.44.7",
+    "drizzle-orm": "^0.45.2",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2"
   },

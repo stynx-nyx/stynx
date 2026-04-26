@@ -3,7 +3,7 @@
     "collect": {
       "staticDistDir": "./build",
       "settings": {
-        "chromeFlags": "--headless=new --disable-gpu --disable-dev-shm-usage --no-sandbox --no-first-run --no-default-browser-check --remote-debugging-port=9222 --user-data-dir=/tmp/stynx-lhci-profile"
+        "chromeFlags": "--headless=new --disable-gpu --disable-dev-shm-usage --no-sandbox --no-first-run --no-default-browser-check"
       }
     },
     "assert": {

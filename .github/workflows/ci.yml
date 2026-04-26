@@ -48,7 +48,7 @@ jobs:
       - name: Install legacy and standalone test dependencies
         run: |
           pnpm --dir backend install --no-frozen-lockfile
-          pnpm --dir bootstrap install --no-frozen-lockfile
+          pnpm --dir bootstrap install --ignore-workspace --no-frozen-lockfile
           pnpm --dir frontend install --no-frozen-lockfile
           pnpm --dir test/backend install --no-frozen-lockfile
           pnpm --dir test/db install --no-frozen-lockfile
@@ -83,7 +83,7 @@ jobs:
         run: |
           pnpm install --frozen-lockfile
           pnpm --dir backend install --no-frozen-lockfile
-          pnpm --dir bootstrap install --no-frozen-lockfile
+          pnpm --dir bootstrap install --ignore-workspace --no-frozen-lockfile
           pnpm --dir frontend install --no-frozen-lockfile
           pnpm --dir test/backend install --no-frozen-lockfile
           pnpm --dir test/db install --no-frozen-lockfile
@@ -136,7 +136,7 @@ jobs:
         run: |
           pnpm install --frozen-lockfile
           pnpm --dir backend install --no-frozen-lockfile
-          pnpm --dir bootstrap install --no-frozen-lockfile
+          pnpm --dir bootstrap install --ignore-workspace --no-frozen-lockfile
           pnpm --dir frontend install --no-frozen-lockfile
           pnpm --dir test/backend install --no-frozen-lockfile
           pnpm --dir test/db install --no-frozen-lockfile
@@ -306,7 +306,7 @@ jobs:
         run: |
           pnpm install --frozen-lockfile
           pnpm --dir backend install --no-frozen-lockfile
-          pnpm --dir bootstrap install --no-frozen-lockfile
+          pnpm --dir bootstrap install --ignore-workspace --no-frozen-lockfile
           pnpm --dir frontend install --no-frozen-lockfile
 
       - name: Build workspace and legacy apps

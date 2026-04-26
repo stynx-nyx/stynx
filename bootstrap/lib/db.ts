@@ -29,7 +29,6 @@ function buildClient(config: DatabaseConfig, database?: string): Client {
 
 async function execute(client: Client, sql: string, label: string, options: DbOptions) {
   if (options.debug) {
-    // eslint-disable-next-line no-console
     console.log(chalk.gray(`[db] ${label}`));
   }
   await client.query(sql);
@@ -37,7 +36,6 @@ async function execute(client: Client, sql: string, label: string, options: DbOp
 
 export async function dropDatabase(config: DatabaseConfig, options: DbOptions = {}): Promise<void> {
   if (options.dryRun) {
-    // eslint-disable-next-line no-console
     console.log(chalk.yellow('dry-run: skipping database drop'));
     return;
   }
@@ -54,7 +52,6 @@ export async function dropDatabase(config: DatabaseConfig, options: DbOptions = 
 
 export async function createDatabase(config: DatabaseConfig, options: DbOptions = {}): Promise<void> {
   if (options.dryRun) {
-    // eslint-disable-next-line no-console
     console.log(chalk.yellow('dry-run: skipping database create'));
     return;
   }
@@ -72,13 +69,11 @@ export async function runSqlDirectory(config: DatabaseConfig, dir: string, optio
   const files = (await fs.readdir(dir)).filter((file) => file.endsWith('.sql')).sort();
   if (files.length === 0) {
     if (options.debug) {
-      // eslint-disable-next-line no-console
       console.log(chalk.gray(`[db] no SQL files found in ${dir}`));
     }
     return;
   }
   if (options.dryRun) {
-    // eslint-disable-next-line no-console
     console.log(chalk.yellow(`dry-run: skipping SQL apply for ${dir}`));
     return;
   }

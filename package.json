@@ -66,6 +66,8 @@
   },
   "pnpm": {
     "overrides": {
+      "handlebars": "4.7.9",
+      "serialize-javascript": "7.0.5",
       "webpackbar": "7.0.0"
     }
   }

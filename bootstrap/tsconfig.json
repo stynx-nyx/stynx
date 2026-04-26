@@ -1,6 +1,7 @@
 {
   "extends": "../tools/tsconfig/node20.json",
   "compilerOptions": {
+    "exactOptionalPropertyTypes": false,
     "types": [
       "node"
     ]

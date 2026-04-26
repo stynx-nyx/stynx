@@ -48,13 +48,15 @@ jobs:
           exit 1
 
       - name: Run k6 scenarios
+        env:
+          STYNX_K6_SCENARIO: ${{ github.event.inputs.scenario || 'all' }}
         run: |
           mkdir -p perf/k6/results
           STYNX_K6_BASE_URL=http://127.0.0.1:3000 \
           STYNX_K6_S3_PUBLIC_BASE_URL=http://127.0.0.1:4566 \
-          STYNX_K6_SCENARIO="${{ github.event.inputs.scenario || 'all' }}" \
+          STYNX_K6_SCENARIO="${STYNX_K6_SCENARIO}" \
           STYNX_K6_SCENARIO_PAUSE_MS=65000 \
-          node perf/k6/run-scenarios.mjs --scenario "${{ github.event.inputs.scenario || 'all' }}"
+          node perf/k6/run-scenarios.mjs --scenario "${STYNX_K6_SCENARIO}"
 
       - name: Download previous k6 baseline
         env:

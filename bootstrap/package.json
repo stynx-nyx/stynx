@@ -9,7 +9,7 @@
   "scripts": {
     "cli": "tsx index.ts",
     "build": "tsc -p tsconfig.json --noEmit",
-    "lint": "eslint --config ../tools/eslint-config/lib.mjs \"index.ts\" \"lib/**/*.ts\""
+    "lint": "eslint --config ../tools/eslint-config/lib.mjs \"lib/**/*.ts\""
   },
   "dependencies": {
     "@aws-sdk/client-cloudfront": "^3.645.0",
