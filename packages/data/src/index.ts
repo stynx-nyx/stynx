@@ -1,6 +1,7 @@
 export { StynxDataModule, StynxDataModule as DataModule } from './data.module';
 export { Database } from './database';
 export { Transaction } from './transaction';
+export { StynxPoolRegistry, createStynxPgPool, type StynxPgPoolOptions } from './pools';
 export { withSystemContext } from './system-context';
 export * from './table-markers';
 export * from './types';
