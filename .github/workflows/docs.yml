@@ -83,7 +83,8 @@ jobs:
 
   deploy:
     name: deploy-pages
-    if: github.event_name == 'push'
+    # Disabled by default until repository Pages deployment is explicitly enabled.
+    if: ${{ vars.ENABLE_PAGES_DEPLOY == 'true' }}
     needs: build
     runs-on: ubuntu-latest
     environment:

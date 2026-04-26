@@ -1,14 +1,13 @@
 {
   "extends": "../../tools/tsconfig/node24.json",
   "compilerOptions": {
-    "baseUrl": "../../backend/src",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "paths": {
-      "@config/*": ["config/*"],
-      "@core/*": ["core/*"],
-      "@modules/*": ["modules/*"],
-      "@shared/*": ["shared/*"]
+      "@config/*": ["../../backend/src/config/*"],
+      "@core/*": ["../../backend/src/core/*"],
+      "@modules/*": ["../../backend/src/modules/*"],
+      "@shared/*": ["../../backend/src/shared/*"]
     },
     "types": ["node", "jest"]
   },

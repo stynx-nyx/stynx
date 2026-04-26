@@ -75,10 +75,14 @@ RUN npm install -g "pnpm@${PNPM_VERSION}" \
   && pnpm config set store-dir /pnpm/store \
   && pnpm --version \
   && node --version \
-  && git config --global --add safe.directory /workspace
+  && git config --system --add safe.directory /workspace \
+  && useradd --create-home --shell /bin/bash stynxci \
+  && mkdir -p /workspace \
+  && chown -R stynxci:stynxci /workspace /pnpm /home/stynxci
 
 COPY scripts/ci-local/inside.sh /usr/local/bin/stynx-ci-local
 RUN chmod +x /usr/local/bin/stynx-ci-local
 
 WORKDIR /workspace
+USER stynxci
 ENTRYPOINT ["stynx-ci-local"]

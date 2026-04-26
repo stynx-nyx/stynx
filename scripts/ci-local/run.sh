@@ -108,6 +108,7 @@ main() {
   local -a run_args
   run_args=(
     --privileged
+    --user root
     --platform "$platform"
     --name "stynx-ci-local-$$"
     --workdir /workspace

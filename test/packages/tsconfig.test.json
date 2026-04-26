@@ -2,7 +2,6 @@
   "extends": "../../tools/tsconfig/node24.json",
   "compilerOptions": {
     "types": ["node", "jest"],
-    "baseUrl": ".",
     "paths": {
       "@stynx/auth": ["./support/auth-stub.ts"],
       "@stynx/audit": ["../../packages/audit/src/index.ts"],

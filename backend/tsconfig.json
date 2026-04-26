@@ -6,18 +6,16 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "outDir": "dist",
-    "baseUrl": "./src",
     "rootDir": "./src",
     "incremental": true,
     "exactOptionalPropertyTypes": false,
     "noUncheckedIndexedAccess": false,
-    "ignoreDeprecations": "6.0",
     "types": ["node", "jest"],
     "paths": {
-      "@core/*": ["core/*"],
-      "@modules/*": ["modules/*"],
-      "@shared/*": ["shared/*"],
-      "@config/*": ["config/*"]
+      "@core/*": ["./src/core/*"],
+      "@modules/*": ["./src/modules/*"],
+      "@shared/*": ["./src/shared/*"],
+      "@config/*": ["./src/config/*"]
     }
   },
   "exclude": ["node_modules", "dist", "test", "**/*.spec.ts"]

@@ -6,9 +6,7 @@
     "moduleResolution": "NodeNext",
     "types": ["node"],
     "allowJs": true,
-    "checkJs": false,
-    "ignoreDeprecations": "6.0",
-    "baseUrl": ".."
+    "checkJs": false
   },
   "include": ["scripts/**/*.mjs", "docusaurus.config.mjs", "sidebars.mjs"]
 }
