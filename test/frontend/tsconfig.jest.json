@@ -1,8 +1,11 @@
 {
-  "extends": "../../frontend/tsconfig.json",
+  "extends": "../../tools/tsconfig/angular18.json",
   "compilerOptions": {
     "outDir": "../../frontend/out-tsc/spec",
-    "types": ["jest", "node"]
+    "types": [
+      "jest",
+      "node"
+    ]
   },
   "files": [],
   "include": [

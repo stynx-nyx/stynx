@@ -1,6 +1,6 @@
 # Structure Conformance Audit
 
-- repo_root: /Users/aarusso/Development/stech/st-core
+- repo_root: /Users/aarusso/Development/stech/stynx
 - nci: 100
 - rating: PASS
 

@@ -6,6 +6,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { NoIdempotent } from '@stynx/idempotency';
 import type { AuditRequest } from '@core/audit/decorators/audit.decorator';
 import type { Request } from 'express';
 import { Audit } from '@core/audit/decorators/audit.decorator';
@@ -40,6 +41,7 @@ export class UsersController {
   }
 
   @Post(':id/sync')
+  @NoIdempotent()
   @Audit({
     action: 'sync',
     entity: 'user',

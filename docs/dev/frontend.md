@@ -1,6 +1,6 @@
 # Frontend Modernization Guide
 
-This document captures the shared Angular conventions derived from the PORM and PEC applications and applied to st-core.
+This document captures the shared Angular conventions derived from the PORM and PEC applications and applied to stynx.
 
 ## Project Structure
 - Components live under `frontend/src/app/**` as standalone components.

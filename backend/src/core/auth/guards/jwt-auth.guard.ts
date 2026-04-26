@@ -20,7 +20,7 @@ export class JwtAuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const rawTenantId = request.headers['x-tenant-id'];
-    const tenantIdHeader = Array.isArray(rawTenantId) ? rawTenantId.at(0) : rawTenantId;
+    const tenantIdHeader = Array.isArray(rawTenantId) ? rawTenantId[0] : rawTenantId;
     const explicitTenancy = typeof tenantIdHeader === 'string' ? tenantIdHeader.trim() : undefined;
     const principal = await this.auth.verifyBearer(request.headers['authorization']);
     request.user = {

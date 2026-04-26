@@ -12,6 +12,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+.pnpm-store/
+.turbo/
 
 # Env files
 .env
@@ -30,6 +32,8 @@ lcov-report/
 
 # Temporary dirs
 */tmp
+.tmp-tsconfig-smoke/
+.toolchain/
 
 # ------------------------
 # Backend (NestJS)
@@ -54,8 +58,18 @@ frontend/src/environments/*.ts
 # Root level
 # ------------------------
 node_modules/
+dist/
+build/
 *.tgz
 *.tmp
+
+# Monorepo build output
+apps/*/dist/
+apps/*/build/
+packages/*/dist/
+packages/*/build/
+packages-web/*/dist/
+packages-web/*/build/
 
 # Python tooling
 .venv/
@@ -68,13 +82,22 @@ __pycache__/
 *.tfstate.*
 crash.log
 
+# CDK synthesis output
+infra/cdk/cdk.out/
+
 # Documentation build output
 docs/dist/
 !docs/dist/.gitkeep
+docs/build/
+docs/.docusaurus/
+docs/.generated/
 
 # Test artefacts
 test-results/
 tests/e2e/.summary.txt
+perf/k6/results/
+*.stryker-tmp/
+reports/
 docs/work/inv/*
 docs/work/diag/*
 docs/work/plan/*

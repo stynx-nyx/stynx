@@ -3,6 +3,7 @@ import path from 'path';
 import os from 'os';
 import chalk from 'chalk';
 import { parse } from 'dotenv';
+import { resolveBackendEnvPath, resolveFrontendEnvDirs, resolveLegacyBackendEnvMirrorPath } from './targets';
 
 export interface EnvState {
   [key: string]: string;
@@ -13,8 +14,7 @@ export interface WriteEnvOptions {
   debug?: boolean;
 }
 
-export const BACKEND_ENV_PATH = path.resolve(process.cwd(), 'backend/.env');
-const FRONTEND_ENV_DIR = path.resolve(process.cwd(), 'frontend/src/environments');
+export const BACKEND_ENV_PATH = resolveBackendEnvPath();
 
 function debugLog(enabled: boolean | undefined, message: string) {
   if (enabled) {
@@ -68,6 +68,14 @@ export async function writeEnv(envPath: string, updates: Record<string, string |
     .map(([k, v]) => `${k}=${v}`);
   await fs.mkdir(path.dirname(envPath), { recursive: true });
   await fs.writeFile(envPath, `${lines.join(os.EOL)}${os.EOL}`);
+}
+
+export async function writeBackendEnv(updates: Record<string, string | undefined>, options: WriteEnvOptions = {}): Promise<void> {
+  await writeEnv(BACKEND_ENV_PATH, updates, options);
+  const legacyMirror = resolveLegacyBackendEnvMirrorPath();
+  if (legacyMirror && legacyMirror !== BACKEND_ENV_PATH) {
+    await writeEnv(legacyMirror, updates, options);
+  }
 }
 
 export interface AngularEnvUpdate {
@@ -147,7 +155,6 @@ async function updateAngularFile(filePath: string, updates: AngularEnvUpdate, op
 
 export async function updateAngularEnvironments(updates: AngularEnvUpdate, options: WriteEnvOptions = {}): Promise<void> {
   const files = ['environment.ts', 'environment.prod.ts'];
-  await Promise.all(
-    files.map((file) => updateAngularFile(path.join(FRONTEND_ENV_DIR, file), updates, options)),
-  );
+  const dirs = resolveFrontendEnvDirs();
+  await Promise.all(dirs.flatMap((dir) => files.map((file) => updateAngularFile(path.join(dir, file), updates, options))));
 }

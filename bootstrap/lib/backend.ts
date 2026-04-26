@@ -1,5 +1,6 @@
 import { spawn } from 'child_process';
 import chalk from 'chalk';
+import { resolveBackendWorkspace, WORKSPACE_ROOT } from './targets';
 
 export interface BackendDeployOptions {
   dryRun?: boolean;
@@ -22,7 +23,12 @@ function run(command: string, args: string[], cwd: string, dryRun?: boolean): Pr
 }
 
 export async function buildBackend(options: BackendDeployOptions = {}): Promise<void> {
-  await run('npm', ['run', 'build', '--workspace', 'backend'], process.cwd(), options.dryRun);
+  const workspace = resolveBackendWorkspace();
+  if (options.debug) {
+    // eslint-disable-next-line no-console
+    console.log(chalk.gray(`Backend build target workspace: ${workspace}`));
+  }
+  await run('npm', ['run', 'build', '--workspace', workspace], WORKSPACE_ROOT, options.dryRun);
 }
 
 export async function deployBackendPlaceholder(options: BackendDeployOptions = {}): Promise<void> {

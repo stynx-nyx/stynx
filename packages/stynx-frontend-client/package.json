@@ -1,0 +1,29 @@
+{
+  "name": "@stech/stynx-frontend-client",
+  "version": "0.2.0",
+  "description": "Frontend auth/session/api toolkit for stynx",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "engines": {
+    "node": ">=20 <23"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint --config ../../tools/eslint-config/lib.mjs \"src/**/*.ts\""
+  },
+  "dependencies": {
+    "@stech/stynx-frontend-contracts": "workspace:*"
+  }
+}

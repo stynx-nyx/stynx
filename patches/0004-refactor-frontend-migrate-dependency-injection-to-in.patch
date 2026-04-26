@@ -1,0 +1,259 @@
+From cf64df97b4c8c65f24b8e5ead8a29e9c41c860e0 Mon Sep 17 00:00:00 2001
+From: "Antonio A. Russo" <aarusso@nyxk.com.br>
+Date: Sun, 5 Oct 2025 20:09:34 -0300
+Subject: [PATCH 04/14] refactor(frontend): migrate dependency injection to
+ inject() API
+
+---
+ frontend/src/app/admin/roles/admin-roles.component.ts |  5 ++---
+ .../app/admin/tenancies/admin-tenancies.component.ts  |  6 +++---
+ frontend/src/app/admin/users/admin-users.component.ts |  5 ++---
+ frontend/src/app/core/api/api.service.ts              |  5 ++---
+ frontend/src/app/core/auth/login.component.ts         | 11 ++++-------
+ frontend/src/app/i18n/i18n.service.ts                 |  4 ++--
+ .../confirm-dialog/confirm-dialog.component.ts        |  8 +++-----
+ .../language-switcher/language-switcher.component.ts  |  5 ++---
+ .../theme-switcher/theme-switcher.component.ts        |  5 ++---
+ .../src/app/storage/storage-explorer.component.ts     |  6 +++---
+ 10 files changed, 25 insertions(+), 35 deletions(-)
+
+diff --git a/frontend/src/app/admin/roles/admin-roles.component.ts b/frontend/src/app/admin/roles/admin-roles.component.ts
+index b916fdc..07751f5 100644
+--- a/frontend/src/app/admin/roles/admin-roles.component.ts
++++ b/frontend/src/app/admin/roles/admin-roles.component.ts
+@@ -22,12 +22,11 @@ interface RoleVm {
+   styleUrls: ['./admin-roles.component.scss'],
+ })
+ export class AdminRolesComponent {
+-  private readonly refresh$ = new BehaviorSubject<void>(undefined);
++  private readonly api = inject(ApiService);
+   private readonly snackbar = inject(MatSnackBar);
++  private readonly refresh$ = new BehaviorSubject<void>(undefined);
+   readonly roles$ = this.refresh$.pipe(switchMap(() => this.api.get<RoleVm[]>('/roles')));
+ 
+-  constructor(private readonly api: ApiService) {}
+-
+   createRole(): void {
+     const code = window.prompt('Role code (e.g. platform:auditor)');
+     const name = code ? window.prompt('Role name') : null;
+diff --git a/frontend/src/app/admin/tenancies/admin-tenancies.component.ts b/frontend/src/app/admin/tenancies/admin-tenancies.component.ts
+index cad2f08..48d0804 100644
+--- a/frontend/src/app/admin/tenancies/admin-tenancies.component.ts
++++ b/frontend/src/app/admin/tenancies/admin-tenancies.component.ts
+@@ -1,5 +1,5 @@
+ import { AsyncPipe, NgFor } from '@angular/common';
+-import { Component } from '@angular/core';
++import { Component, inject } from '@angular/core';
+ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+ import { MatButtonModule } from '@angular/material/button';
+ import { MatCardModule } from '@angular/material/card';
+@@ -31,6 +31,8 @@ interface TenancyVm {
+   styleUrls: ['./admin-tenancies.component.scss'],
+ })
+ export class AdminTenanciesComponent {
++  private readonly fb = inject(FormBuilder);
++  private readonly api = inject(ApiService);
+   private readonly refresh$ = new BehaviorSubject<void>(undefined);
+   readonly form = this.fb.group({
+     code: ['', [Validators.required, Validators.pattern(/^[a-z0-9-]+$/)]],
+@@ -38,8 +40,6 @@ export class AdminTenanciesComponent {
+   });
+   readonly tenancies$ = this.refresh$.pipe(switchMap(() => this.api.get<TenancyVm[]>('/tenancies')));
+ 
+-  constructor(private readonly fb: FormBuilder, private readonly api: ApiService) {}
+-
+   create(): void {
+     if (this.form.invalid) {
+       return;
+diff --git a/frontend/src/app/admin/users/admin-users.component.ts b/frontend/src/app/admin/users/admin-users.component.ts
+index 67b9649..0f9c0f7 100644
+--- a/frontend/src/app/admin/users/admin-users.component.ts
++++ b/frontend/src/app/admin/users/admin-users.component.ts
+@@ -1,5 +1,5 @@
+ import { AsyncPipe, JsonPipe, NgFor, NgIf } from '@angular/common';
+-import { Component, OnInit } from '@angular/core';
++import { Component, OnInit, inject } from '@angular/core';
+ import { MatCardModule } from '@angular/material/card';
+ import { MatListModule } from '@angular/material/list';
+ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+@@ -23,10 +23,9 @@ interface AdminUserVm {
+   styleUrls: ['./admin-users.component.scss'],
+ })
+ export class AdminUsersComponent implements OnInit {
++  private readonly api = inject(ApiService);
+   users$!: Observable<AdminUserVm[]>;
+ 
+-  constructor(private readonly api: ApiService) {}
+-
+   ngOnInit(): void {
+     this.users$ = this.api.get<AdminUserVm[]>('/users').pipe(startWith([]), map((users) => users ?? []));
+   }
+diff --git a/frontend/src/app/core/api/api.service.ts b/frontend/src/app/core/api/api.service.ts
+index 0719762..ea15137 100644
+--- a/frontend/src/app/core/api/api.service.ts
++++ b/frontend/src/app/core/api/api.service.ts
+@@ -1,14 +1,13 @@
+ import { HttpClient } from '@angular/common/http';
+-import { Injectable } from '@angular/core';
++import { Injectable, inject } from '@angular/core';
+ import { Observable } from 'rxjs';
+ import { environment } from '@env/environment';
+ 
+ @Injectable({ providedIn: 'root' })
+ export class ApiService {
++  private readonly http = inject(HttpClient);
+   private readonly baseUrl = environment.apiBaseUrl;
+ 
+-  constructor(private readonly http: HttpClient) {}
+-
+   get<T>(path: string, options?: object): Observable<T> {
+     return this.http.get<T>(`${this.baseUrl}${path}`, options);
+   }
+diff --git a/frontend/src/app/core/auth/login.component.ts b/frontend/src/app/core/auth/login.component.ts
+index 834f53d..f63e7cd 100644
+--- a/frontend/src/app/core/auth/login.component.ts
++++ b/frontend/src/app/core/auth/login.component.ts
+@@ -1,5 +1,5 @@
+ import { CommonModule } from '@angular/common';
+-import { Component, OnInit } from '@angular/core';
++import { Component, OnInit, inject } from '@angular/core';
+ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+ import { MatButtonModule } from '@angular/material/button';
+ import { MatCardModule } from '@angular/material/card';
+@@ -23,17 +23,14 @@ import { AuthFacade } from './auth.facade';
+   ],
+ })
+ export class LoginComponent implements OnInit {
++  private readonly fb = inject(FormBuilder);
++  private readonly router = inject(Router);
++  private readonly auth = inject(AuthFacade);
+   readonly form = this.fb.group({
+     username: ['', [Validators.required, Validators.email]],
+     password: ['', Validators.required],
+   });
+ 
+-  constructor(
+-    private readonly fb: FormBuilder,
+-    private readonly router: Router,
+-    private readonly auth: AuthFacade,
+-  ) {}
+-
+   ngOnInit(): void {
+     const hash = window.location.hash;
+     if (hash.includes('access_token')) {
+diff --git a/frontend/src/app/i18n/i18n.service.ts b/frontend/src/app/i18n/i18n.service.ts
+index c80ebc8..044d7be 100644
+--- a/frontend/src/app/i18n/i18n.service.ts
++++ b/frontend/src/app/i18n/i18n.service.ts
+@@ -1,9 +1,9 @@
+-import { Injectable } from '@angular/core';
++import { Injectable, inject } from '@angular/core';
+ import { TranslateService } from '@ngx-translate/core';
+ 
+ @Injectable({ providedIn: 'root' })
+ export class I18nService {
+-  constructor(private readonly translate: TranslateService) {}
++  private readonly translate = inject(TranslateService);
+ 
+   init(): void {
+     const language = this.translate.getBrowserLang() ?? 'en';
+diff --git a/frontend/src/app/shared/components/confirm-dialog/confirm-dialog.component.ts b/frontend/src/app/shared/components/confirm-dialog/confirm-dialog.component.ts
+index d2ba3f7..bebd402 100644
+--- a/frontend/src/app/shared/components/confirm-dialog/confirm-dialog.component.ts
++++ b/frontend/src/app/shared/components/confirm-dialog/confirm-dialog.component.ts
+@@ -1,4 +1,4 @@
+-import { Component, Inject } from '@angular/core';
++import { Component, inject } from '@angular/core';
+ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+ import { MatButtonModule } from '@angular/material/button';
+ 
+@@ -17,10 +17,8 @@ export interface ConfirmDialogData {
+   styleUrls: ['./confirm-dialog.component.scss'],
+ })
+ export class ConfirmDialogComponent {
+-  constructor(
+-    private readonly dialogRef: MatDialogRef<ConfirmDialogComponent>,
+-    @Inject(MAT_DIALOG_DATA) public readonly data: ConfirmDialogData,
+-  ) {}
++  private readonly dialogRef = inject(MatDialogRef<ConfirmDialogComponent>);
++  readonly data = inject<ConfirmDialogData>(MAT_DIALOG_DATA);
+ 
+   confirm(): void {
+     this.dialogRef.close(true);
+diff --git a/frontend/src/app/shared/components/language-switcher/language-switcher.component.ts b/frontend/src/app/shared/components/language-switcher/language-switcher.component.ts
+index e3dd705..72f7e4c 100644
+--- a/frontend/src/app/shared/components/language-switcher/language-switcher.component.ts
++++ b/frontend/src/app/shared/components/language-switcher/language-switcher.component.ts
+@@ -1,5 +1,5 @@
+ import { CommonModule } from '@angular/common';
+-import { Component } from '@angular/core';
++import { Component, inject } from '@angular/core';
+ import { MatButtonModule } from '@angular/material/button';
+ import { TranslateService } from '@ngx-translate/core';
+ 
+@@ -11,10 +11,9 @@ import { TranslateService } from '@ngx-translate/core';
+   styleUrls: ['./language-switcher.component.scss'],
+ })
+ export class LanguageSwitcherComponent {
++  private readonly translate = inject(TranslateService);
+   readonly languages = ['en', 'pt'];
+ 
+-  constructor(private readonly translate: TranslateService) {}
+-
+   switch(language: string): void {
+     this.translate.use(language);
+   }
+diff --git a/frontend/src/app/shared/components/theme-switcher/theme-switcher.component.ts b/frontend/src/app/shared/components/theme-switcher/theme-switcher.component.ts
+index e125dfb..99d77d1 100644
+--- a/frontend/src/app/shared/components/theme-switcher/theme-switcher.component.ts
++++ b/frontend/src/app/shared/components/theme-switcher/theme-switcher.component.ts
+@@ -1,4 +1,4 @@
+-import { Component, Renderer2 } from '@angular/core';
++import { Component, Renderer2, inject } from '@angular/core';
+ import { MatIconModule } from '@angular/material/icon';
+ import { MatButtonModule } from '@angular/material/button';
+ 
+@@ -10,10 +10,9 @@ import { MatButtonModule } from '@angular/material/button';
+   styleUrls: ['./theme-switcher.component.scss'],
+ })
+ export class ThemeSwitcherComponent {
++  private readonly renderer = inject(Renderer2);
+   private isDark = false;
+ 
+-  constructor(private readonly renderer: Renderer2) {}
+-
+   toggle(): void {
+     this.isDark = !this.isDark;
+     if (this.isDark) {
+diff --git a/frontend/src/app/storage/storage-explorer.component.ts b/frontend/src/app/storage/storage-explorer.component.ts
+index 95249e1..705a810 100644
+--- a/frontend/src/app/storage/storage-explorer.component.ts
++++ b/frontend/src/app/storage/storage-explorer.component.ts
+@@ -1,5 +1,5 @@
+ import { AsyncPipe, DatePipe, NgFor, NgIf } from '@angular/common';
+-import { Component } from '@angular/core';
++import { Component, inject } from '@angular/core';
+ import { MatButtonModule } from '@angular/material/button';
+ import { MatCardModule } from '@angular/material/card';
+ import { MatIconModule } from '@angular/material/icon';
+@@ -36,6 +36,8 @@ interface StorageFileVm {
+   styleUrls: ['./storage-explorer.component.scss'],
+ })
+ export class StorageExplorerComponent {
++  private readonly api = inject(ApiService);
++  private readonly dialog = inject(MatDialog);
+   readonly displayedColumns = ['filename', 'bucket', 'createdAt', 'actions'];
+   private readonly refresh$ = new BehaviorSubject<void>(undefined);
+   readonly files$ = this.refresh$.pipe(
+@@ -43,8 +45,6 @@ export class StorageExplorerComponent {
+     map((files) => files ?? []),
+   );
+ 
+-  constructor(private readonly api: ApiService, private readonly dialog: MatDialog) {}
+-
+   upload(event: Event): void {
+     const input = event.target as HTMLInputElement;
+     const file = input.files?.item(0);
+-- 
+2.50.1 (Apple Git-155)
+

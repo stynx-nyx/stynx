@@ -1,5 +1,5 @@
 -- 00-base.sql
--- Minimal seed for st-core: one tenancy, one admin user, and baseline roles/groups.
+-- Minimal seed for stynx: one tenancy, one admin user, and baseline roles/groups.
 
 SELECT auth.set_user_context(NULL, ARRAY['platform:superadmin']);
 
@@ -7,7 +7,7 @@ INSERT INTO auth.tenancies (tenancy_id, code, name, created_by)
 VALUES (
   '00000000-0000-0000-0000-000000000001',
   'core',
-  'st-core Default Tenancy',
+  'stynx Default Tenancy',
   NULL
 )
 ON CONFLICT (tenancy_id) DO NOTHING;

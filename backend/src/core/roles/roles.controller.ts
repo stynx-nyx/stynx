@@ -7,6 +7,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { NoIdempotent } from '@stynx/idempotency';
 import type { Request } from 'express';
 import { Audit } from '@core/audit/decorators/audit.decorator';
 import { RequireRoles } from '@core/auth/decorators/roles.decorator';
@@ -32,6 +33,7 @@ export class RolesController {
   }
 
   @Post()
+  @NoIdempotent()
   @Audit({ action: 'create', entity: 'role' })
   create(@Req() req: RequestWithUser, @Body() body: CreateRoleDto) {
     return this.roles.create({
@@ -43,6 +45,7 @@ export class RolesController {
   }
 
   @Post(':code/assign/:userId')
+  @NoIdempotent()
   @Audit({
     action: 'assign',
     entity: 'role',

@@ -1,81 +1,99 @@
-# st-core
+# STYNX
 
-st-core is the shared bootstrap platform for future NestJS + Angular applications. It consolidates the common architecture, naming conventions, and operational practices from prior enterprise projects into a single, reusable foundation covering authentication, tenancy, auditing, storage, and developer tooling.
+STYNX is a `pnpm` + `Turborepo` monorepo targeting GitHub Packages for the spec-defined `@stynx/*` and `@stynx-web/*` package families.
 
-## Repository Layout
+`1.0.0` release preparation is implemented in-repo, but STYNX is not marked as shipped yet while Prompt 31 and Prompts 34-36 still have open release blockers.
 
-- `backend/` – NestJS API skeleton with modular core (auth, audit, tenancy, storage, docs, logging, health) and shared database client.
-- `frontend/` – Angular 20 base shell, Cognito-aware auth flow, admin consoles, storage UI, and shared UI widgets built with the new control-flow syntax and the `inject()` API.
-- `db/` – SQL-first schema definitions and seeds (auth/audit/storage) plus DDL smoke tests under `test/db`.
-- `bootstrap/` – TypeScript CLI that configures environments, provisions AWS resources, runs database migrations, and deploys artifacts.
-- `scripts/` – Host-executable helpers for database workflows, documentation export, and CI/CD scaffolding that sit alongside the bootstrap CLI.
-- `docs/` – Living documentation split into system context (`docs/sys`), developer conventions (`docs/dev`), and generated API materials (`docs/api`).
-- `test/` – Centralised Jest/Cypress suites for database, backend, frontend, and script validation.
+## Monorepo Layout
 
-## Getting Started
+```text
+stynx/
+├── packages/                       # Backend (Node/NestJS)
+│   ├── core/
+│   ├── auth/
+│   ├── tenancy/
+│   ├── data/
+│   ├── storage/
+│   ├── audit/
+│   ├── logging/
+│   ├── health/
+│   ├── sessions/
+│   ├── ratelimit/
+│   ├── idempotency/
+│   ├── privacy/
+│   ├── i18n/
+│   ├── testing/
+│   ├── contracts/
+│   └── cli/
+├── packages-web/                   # Frontend (Angular / TS)
+│   ├── sdk/
+│   ├── angular/
+│   ├── angular-auth/
+│   ├── angular-tenancy/
+│   ├── angular-storage/
+│   ├── angular-sessions/
+│   ├── angular-profile/
+│   ├── angular-trash/
+│   ├── angular-i18n/
+│   └── angular-ui/
+├── apps/
+│   ├── reference-api/
+│   └── reference-web/
+├── tools/
+│   ├── eslint-config/
+│   ├── tsconfig/
+│   └── migration-linter/
+├── .changeset/
+├── turbo.json
+├── pnpm-workspace.yaml
+└── package.json
+```
 
-1. **Dependencies**
-   - Node.js 20+
-   - PostgreSQL 14+
-   - AWS CLI v2 for deployment scripts
+## Transitional Legacy Directories
 
-2. **Environment variables**
-   - Copy `backend/.env.example` to `backend/.env` and fill in the required values (Cognito, S3, SMTP, etc.).
-   - The Angular frontend reads environment settings from `frontend/src/environments/*`.
+The repository still contains legacy runtime and test directories during the extraction:
 
-3. **Install toolchains**
-   ```bash
-   (cd backend && npm install)
-   (cd frontend && npm install)
-   (cd test/backend && npm install)
-   (cd test/frontend && npm install)
-   (cd test/db && npm install)
-   (cd test/scripts && npm install)
-   ```
+- `backend/`
+- `frontend/`
+- `bootstrap/`
+- `test/`
 
-4. **Bootstrap environments**
-   ```bash
-   (cd bootstrap && npm install)
-   npx tsx bootstrap/index.ts configure --sync-env
-   npx tsx bootstrap/index.ts up --with-db --with-s3 --with-cloudfront --yes
-   ```
+They are intentionally preserved for migration work, but they are outside the Prompt 1 workspace graph.
 
-5. **Run backend**
-   ```bash
-   (cd backend && npm run start:dev)
-   ```
+## Workspace Commands
 
-6. **Run frontend**
-   ```bash
-   (cd frontend && npm start)
-   ```
+```bash
+corepack pnpm install
+corepack pnpm build
+corepack pnpm lint
+corepack pnpm typecheck
+corepack pnpm test
+corepack pnpm test:int
+corepack pnpm test:e2e
+corepack pnpm changeset
+```
 
-7. **Run tests & lint**
-   ```bash
-   (cd frontend && npm run lint)
-   (cd frontend && npm run test)
-   (cd frontend && npm run build)
-   (cd backend && npm test)
-   (cd test/db && npm test)
-   (cd test/scripts && npm run test)
-   ```
+## Publishing
 
-## Documentation & Diagrams
+- Package manager: `pnpm@9`
+- Task runner: `turbo`
+- Release manager: `changesets`
+- Registries: GitHub Packages for the current `@stech/*` packages and the future `@stynx/*` / `@stynx-web/*` scopes
 
-- `docs/sys/architecture.md` – lifecycle, deployment flows, and system context diagrams.
-- `docs/dev/conventions.md` – coding standards, naming rules, linting, and testing strategies.
-- `docs/dev/frontend.md` – Angular modernization patterns (external templates/styles, control flow directives, `inject()` usage, admin consoles).
-- `docs/api/README.md` – instructions for exporting Swagger/OpenAPI artefacts via `npm run swagger:export`.
+## CI and Release
 
-## Modern Frontend Highlights
-
-- Inline templates and styles have been externalised to `.html` / `.scss` files for easier maintenance.
-- Structural directives now rely on Angular’s `@if` / `@for` syntax.
-- Components and services adopt the `inject()` API instead of constructor DI.
-- The admin area bundles user management with role and tenancy tooling while calling stubbed backend endpoints.
-
-## Next Steps
-
-- Tune Cognito configuration in `backend/.env` and Angular environments before deploying.
-- Extend admin and storage modules with domain-specific functionality.
-- Integrate the bootstrap CLI into your CI/CD toolchain so infrastructure and deployments remain idempotent.
+- CI entrypoints:
+  - `pnpm lint`
+  - `pnpm typecheck`
+  - `pnpm test:unit`
+  - `pnpm test:int`
+  - `pnpm build`
+  - `pnpm doctor`
+- Release entrypoints:
+  - `pnpm release:policy`
+  - `pnpm release:status`
+  - `pnpm release:drafts`
+  - `pnpm version-packages`
+  - `pnpm release`
+- `.npmrc` resolves GitHub Packages auth from `NODE_AUTH_TOKEN`.
+- In GitHub Actions release publishing, map `NODE_AUTH_TOKEN` to `${{ secrets.GITHUB_TOKEN }}`.

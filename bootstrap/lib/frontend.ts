@@ -5,6 +5,7 @@ import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import chalk from 'chalk';
 import { baseAwsConfig } from './aws';
 import { invalidateDistribution, CloudFrontEnsureInput } from './cloudfront';
+import { REFERENCE_FRONTEND_WORKSPACE, resolveFrontendBuildTarget, WORKSPACE_ROOT } from './targets';
 
 export interface FrontendDeployOptions {
   appName: string;
@@ -77,14 +78,32 @@ async function walkFiles(dir: string): Promise<string[]> {
 }
 
 export async function buildFrontend(options: FrontendDeployOptions): Promise<void> {
-  await run('npm', ['run', 'build', '--workspace', 'frontend'], process.cwd(), options.dryRun);
+  const target = resolveFrontendBuildTarget();
+  if (options.debug) {
+    // eslint-disable-next-line no-console
+    console.log(chalk.gray(`Frontend build target workspace: ${target.workspace} (${target.buildScript})`));
+  }
+
+  if (target.workspace === REFERENCE_FRONTEND_WORKSPACE) {
+    await run('npm', ['run', 'build', '--workspace', '@stech/stynx-frontend-contracts'], WORKSPACE_ROOT, options.dryRun);
+    await run('npm', ['run', 'build', '--workspace', '@stech/stynx-frontend-client'], WORKSPACE_ROOT, options.dryRun);
+  }
+
+  await run('npm', ['run', target.buildScript, '--workspace', target.workspace], WORKSPACE_ROOT, options.dryRun);
 }
 
 export async function deployFrontend(options: FrontendDeployOptions): Promise<{ bucket: string; distributionDomain?: string }> {
-  const distRoot = path.resolve(process.cwd(), 'frontend/dist');
+  if (options.dryRun) {
+    // eslint-disable-next-line no-console
+    console.log(chalk.yellow(`dry-run: skipping frontend asset upload to s3://${options.bucketName}`));
+    return { bucket: options.bucketName, distributionDomain: options.distributionDomain };
+  }
+
+  const target = resolveFrontendBuildTarget();
+  const distRoot = target.distRoot;
   const entries = await fs.readdir(distRoot);
   if (entries.length === 0) {
-    throw new Error('frontend/dist is empty – run build first');
+    throw new Error(`${distRoot} is empty – run frontend build first`);
   }
   const buildDir = entries.length === 1 ? path.join(distRoot, entries[0]) : distRoot;
   const files = await walkFiles(buildDir);

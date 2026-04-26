@@ -1,0 +1,22 @@
+{
+  "name": "@stynx-internal/eslint-config",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "description": "Shared flat ESLint config for the STYNX monorepo",
+  "exports": {
+    ".": "./index.mjs",
+    "./lib": "./lib.mjs",
+    "./nest": "./nest.mjs",
+    "./angular": "./angular.mjs"
+  },
+  "files": [
+    "*.mjs",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "node -e \"process.exit(0)\"",
+    "clean": "node -e \"process.exit(0)\"",
+    "typecheck": "node -e \"process.exit(0)\""
+  }
+}

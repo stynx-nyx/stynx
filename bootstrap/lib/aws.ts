@@ -27,7 +27,7 @@ export function logAws(ctx: AwsContextOptions, message: string) {
 export function defaultTags(appName: string): Record<string, string> {
   return {
     App: appName,
-    Project: 'st-core',
+    Project: 'stynx',
   };
 }
 

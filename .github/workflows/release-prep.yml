@@ -1,0 +1,189 @@
+name: Release Prep
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.changeset/**'
+      - '.github/workflows/release-prep.yml'
+      - '.semgrepignore'
+      - 'apps/reference-api/**'
+      - 'apps/reference-web/**'
+      - 'docs/**'
+      - 'infra/cdk/**'
+      - 'package.json'
+      - 'packages/**'
+      - 'packages-web/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'scripts/**'
+  push:
+    branches:
+      - main
+    paths:
+      - '.changeset/**'
+      - '.github/workflows/release-prep.yml'
+      - '.semgrepignore'
+      - 'apps/reference-api/**'
+      - 'apps/reference-web/**'
+      - 'docs/**'
+      - 'infra/cdk/**'
+      - 'package.json'
+      - 'packages/**'
+      - 'packages-web/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'scripts/**'
+
+permissions:
+  contents: read
+  security-events: write
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '9.15.0'
+
+jobs:
+  semgrep:
+    name: semgrep
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Semgrep
+        run: python -m pip install --upgrade pip semgrep
+
+      - name: Run Semgrep
+        run: semgrep scan --config auto --metrics=off --error --sarif --output semgrep.sarif
+
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep.sarif
+
+  package-policy:
+    name: package-policy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Verify release package policy
+        run: node scripts/verify-release-policy.mjs
+
+  dependency-audit:
+    name: dependency-audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          dependency-path: pnpm-lock.yaml
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@${PNPM_VERSION} --activate
+
+      - name: Audit workspace dependencies
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm audit --audit-level=high
+
+      - name: Audit CDK dependencies
+        run: |
+          cd infra/cdk
+          npm install --ignore-scripts
+          npm audit --audit-level=high
+
+  release-drafts:
+    name: release-drafts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          dependency-path: pnpm-lock.yaml
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@${PNPM_VERSION} --activate
+
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate changeset status and release drafts
+        run: |
+          pnpm release:status
+          node scripts/generate-release-drafts.mjs
+
+      - name: Upload release draft artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-drafts
+          path: |
+            .changeset/status.json
+            .release/drafts
+          if-no-files-found: error
+
+  container-security:
+    name: container-security
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build reference-api image
+        run: docker build -f apps/reference-api/Dockerfile -t stynx/reference-api:${{ github.sha }} .
+
+      - name: Build reference-web image
+        run: docker build -f apps/reference-web/Dockerfile -t stynx/reference-web:${{ github.sha }} .
+
+      - name: Run Trivy on reference-api
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          image-ref: stynx/reference-api:${{ github.sha }}
+          format: table
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+
+      - name: Run Trivy on reference-web
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          image-ref: stynx/reference-web:${{ github.sha }}
+          format: table
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+
+      - name: Install Syft
+        id: syft
+        uses: anchore/sbom-action/download-syft@v0
+
+      - name: Generate image SBOMs
+        run: |
+          "${{ steps.syft.outputs.cmd }}" stynx/reference-api:${{ github.sha }} -o spdx-json=sbom-reference-api.spdx.json
+          "${{ steps.syft.outputs.cmd }}" stynx/reference-web:${{ github.sha }} -o spdx-json=sbom-reference-web.spdx.json
+
+      - name: Upload image SBOMs
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-sboms
+          path: |
+            sbom-reference-api.spdx.json
+            sbom-reference-web.spdx.json
+          if-no-files-found: error

@@ -1,4 +1,5 @@
 const { resolve } = require('node:path');
+const { baseCoverageThreshold } = require('../../jest.coverage.cjs');
 
 const angularPreset = resolve(
   __dirname,
@@ -17,7 +18,7 @@ module.exports = {
     '^@shared/(.*)$': '<rootDir>/frontend/src/app/shared/$1',
     '^@admin/(.*)$': '<rootDir>/frontend/src/app/admin/$1',
     '^@storage/(.*)$': '<rootDir>/frontend/src/app/storage/$1',
-    '^@env/(.*)$': '<rootDir>/frontend/src/environments/$1'
+    '^@env/(.*)$': '<rootDir>/frontend/src/environments/$1',
   },
   snapshotSerializers: [
     resolve(__dirname, '../../frontend/node_modules/jest-preset-angular/build/serializers/html-comment.js'),
@@ -33,8 +34,9 @@ module.exports = {
   globals: {
     'ts-jest': {
       tsconfig: '<rootDir>/test/frontend/tsconfig.jest.json',
-      stringifyContentPathRegex: '\\.(html|svg)$'
-    }
+      stringifyContentPathRegex: '\\.(html|svg)$',
+    },
   },
-  testEnvironment: 'jsdom'
+  testEnvironment: 'jsdom',
+  coverageThreshold: baseCoverageThreshold,
 };

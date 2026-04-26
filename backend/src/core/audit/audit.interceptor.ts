@@ -12,9 +12,15 @@ import { AUDIT_METADATA_KEY, AuditMetadata, AuditRequest } from './decorators/au
 
 function headerValueToString(value: unknown): string | undefined {
   if (Array.isArray(value)) {
-    return value.at(0) ?? undefined;
+    return value[0] ?? undefined;
   }
   return typeof value === 'string' ? value : undefined;
+}
+
+function toOptionalString(value: unknown): string | undefined {
+  if (typeof value === 'string') return value;
+  if (Array.isArray(value) && typeof value[0] === 'string') return value[0];
+  return undefined;
 }
 
 @Injectable()
@@ -43,7 +49,9 @@ export class AuditInterceptor implements NestInterceptor {
           actorRole: request.user?.roles?.[0],
           action: metadata.action,
           entity: metadata.entity ?? context.getClass().name,
-          entityId: metadata.entityIdSelector ? metadata.entityIdSelector(request) : undefined,
+          entityId: metadata.entityIdSelector
+            ? toOptionalString(metadata.entityIdSelector(request))
+            : undefined,
           details: metadata.detailsSelector ? metadata.detailsSelector(request) : undefined,
           ipAddress: request.ip,
           stationId,

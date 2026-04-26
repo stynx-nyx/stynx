@@ -1,0 +1,4 @@
+{
+  "TEST_GREETING": "Hello, {name}!",
+  "ITEM_COUNT": "{count, plural, one {# item} other {# items}}"
+}

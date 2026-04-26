@@ -1,0 +1,41 @@
+# k6 Suite
+
+Scenarios:
+- `auth.js`: reference dev-login plus auth verification
+- `crud.js`: record CRUD plus idempotency and rate-limit touchpoints
+- `upload.js`: presign + PUT + complete document flow
+- `cascade-delete.js`: cascade-oriented soft-delete flow
+
+Local smoke run against the reference stack:
+
+```bash
+docker compose -f apps/reference-api/docker-compose.yml up -d --build
+STYNX_K6_BASE_URL=http://127.0.0.1:3000 \
+STYNX_K6_S3_PUBLIC_BASE_URL=http://127.0.0.1:4566 \
+STYNX_K6_DURATION=10s \
+STYNX_K6_RATE=5 \
+STYNX_K6_PREALLOCATED_VUS=1 \
+STYNX_K6_MAX_VUS=2 \
+node perf/k6/run-scenarios.mjs --scenario crud
+```
+
+The bundled `apps/reference-api/docker-compose.yml` applies a perf-friendly override for
+`sample.documents.create` and `sample.documents.complete` so the upload scenario measures
+storage flow latency instead of immediately self-throttling on the demo tenant.
+
+Supported env overrides:
+- `STYNX_K6_BASE_URL`
+- `STYNX_K6_S3_PUBLIC_BASE_URL`
+- `STYNX_K6_DURATION`
+- `STYNX_K6_RATE`
+- `STYNX_K6_PREALLOCATED_VUS`
+- `STYNX_K6_MAX_VUS`
+- `STYNX_K6_SCENARIO`
+- `STYNX_K6_SCENARIO_PAUSE_MS`
+
+For local Docker Desktop runs on macOS, use:
+
+```bash
+STYNX_K6_BASE_URL=http://host.docker.internal:3000
+STYNX_K6_S3_PUBLIC_BASE_URL=http://host.docker.internal:4566
+```

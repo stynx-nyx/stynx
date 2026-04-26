@@ -1,0 +1,51 @@
+import { MembershipAccessCache } from '../../src/membership-cache';
+
+describe('MembershipAccessCache', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('expires entries after the configured ttl', async () => {
+    const cache = new MembershipAccessCache(5, 10);
+    cache.set('user-1', 'tenant-1', true);
+    expect(cache.get('user-1', 'tenant-1')).toBe(true);
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(cache.get('user-1', 'tenant-1')).toBeUndefined();
+  });
+
+  it('evicts the oldest entry when it exceeds capacity', () => {
+    const cache = new MembershipAccessCache(1_000, 1);
+    cache.set('user-1', 'tenant-1', true);
+    cache.set('user-2', 'tenant-2', false);
+    expect(cache.get('user-1', 'tenant-1')).toBeUndefined();
+    expect(cache.get('user-2', 'tenant-2')).toBe(false);
+  });
+
+  it('treats entries as expired exactly at the ttl boundary', () => {
+    const now = 1_000;
+    const dateNow = jest.spyOn(Date, 'now').mockReturnValue(now);
+    const cache = new MembershipAccessCache(25, 10);
+
+    cache.set('user-1', 'tenant-1', true);
+    dateNow.mockReturnValue(now + 25);
+
+    expect(cache.get('user-1', 'tenant-1')).toBeUndefined();
+  });
+
+  it('clears all entries and invalidates only the requested tenant', () => {
+    const cache = new MembershipAccessCache(1_000, 10);
+    cache.set('user-1', 'tenant-1', true);
+    cache.set('user-2', 'tenant-2', false);
+    cache.set('user-3', 'tenant-1', false);
+
+    cache.invalidateTenant('tenant-1');
+
+    expect(cache.get('user-1', 'tenant-1')).toBeUndefined();
+    expect(cache.get('user-3', 'tenant-1')).toBeUndefined();
+    expect(cache.get('user-2', 'tenant-2')).toBe(false);
+
+    cache.clear();
+
+    expect(cache.get('user-2', 'tenant-2')).toBeUndefined();
+  });
+});

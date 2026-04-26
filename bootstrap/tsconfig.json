@@ -1,0 +1,12 @@
+{
+  "extends": "../tools/tsconfig/node20.json",
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "index.ts",
+    "lib/**/*.ts"
+  ]
+}

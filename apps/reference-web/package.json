@@ -1,0 +1,42 @@
+{
+  "name": "@stynx/reference-web",
+  "private": true,
+  "version": "0.2.0",
+  "description": "Reference Angular 20 app exercising the STYNX web packages against reference-api",
+  "engines": {
+    "node": ">=20 <23"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "build:web": "node scripts/build-web.mjs",
+    "clean": "find dist .playwright -mindepth 0 -maxdepth 0 -exec rm -rf {} + 2>/dev/null || true",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint --config ../../tools/eslint-config/angular.mjs \"src/**/*.ts\"",
+    "serve": "node scripts/serve-static.mjs",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@angular/common": "^20.2.0",
+    "@angular/compiler": "^20.2.0",
+    "@angular/core": "^20.2.0",
+    "@angular/forms": "^20.2.0",
+    "@angular/platform-browser": "^20.2.0",
+    "@angular/platform-browser-dynamic": "^20.2.0",
+    "@angular/router": "^20.2.0",
+    "@stynx-web/angular": "workspace:*",
+    "@stynx-web/angular-auth": "workspace:*",
+    "@stynx-web/angular-i18n": "workspace:*",
+    "@stynx-web/angular-profile": "workspace:*",
+    "@stynx-web/angular-sessions": "workspace:*",
+    "@stynx-web/angular-storage": "workspace:*",
+    "@stynx-web/angular-trash": "workspace:*",
+    "@stynx-web/angular-ui": "workspace:*",
+    "angular-auth-oidc-client": "^18.0.1",
+    "rxjs": "^7.8.2",
+    "zone.js": "^0.15.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.54.2",
+    "esbuild": "^0.25.11"
+  }
+}

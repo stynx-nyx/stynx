@@ -1,0 +1,22 @@
+:root {
+  --ifm-color-primary: #0f766e;
+  --ifm-color-primary-dark: #0d615a;
+  --ifm-color-primary-darker: #0b5650;
+  --ifm-color-primary-light: #14857b;
+  --ifm-color-primary-lighter: #189488;
+  --ifm-font-family-base: "IBM Plex Sans", "Segoe UI", sans-serif;
+  --ifm-heading-font-family: "IBM Plex Mono", "SFMono-Regular", monospace;
+  --ifm-background-color: #f7f7f2;
+  --ifm-navbar-background-color: #fffdf8;
+}
+
+body {
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(15, 118, 110, 0.08), transparent 28%),
+    radial-gradient(circle at 80% 0%, rgba(15, 23, 42, 0.06), transparent 20%);
+}
+
+.hero {
+  background: linear-gradient(135deg, #0f172a, #134e4a);
+  color: #f8fafc;
+}

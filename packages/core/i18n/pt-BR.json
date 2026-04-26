@@ -1,0 +1,7 @@
+{
+  "REQUEST_CONTEXT_MISSING": "O contexto da requisicao nao esta ativo.",
+  "REQUEST_CONTEXT_MUTATION_FORBIDDEN": "As mutacoes do contexto da requisicao so podem ocorrer dentro de uma execucao ativa.",
+  "CONFIGURATION_VALIDATION_ERROR": "A validacao da configuracao falhou.",
+  "SYSTEM_CONTEXT_REQUIRED": "O contexto de sistema e obrigatorio para esta operacao.",
+  "SECRET_LOAD_ERROR": "Nao foi possivel carregar o segredo solicitado."
+}

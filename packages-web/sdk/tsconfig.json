@@ -1,0 +1,13 @@
+{
+  "extends": "../../tools/tsconfig/node20.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "types": [
+      "node",
+      "jest"
+    ]
+  },
+  "include": [
+    "src/**/*.ts"
+  ]
+}

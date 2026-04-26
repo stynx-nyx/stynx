@@ -1,0 +1,14 @@
+dist/
+build/
+coverage/
+node_modules/
+.turbo/
+.changeset/release-drafts/
+docs/.docusaurus/
+docs/.generated/
+docs/build/
+infra/cdk/cdk.out/
+apps/reference-api/dist/
+apps/reference-web/dist/
+packages/**/dist/
+packages-web/**/dist/

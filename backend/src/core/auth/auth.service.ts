@@ -111,7 +111,7 @@ export class AuthService {
   private resolveTenants(payload: JWTPayload): string[] {
     const tenants: string[] = [];
     const claims = toRecord(payload);
-    const candidate = claims['https://st-core.dev/tenant'];
+    const candidate = claims['https://stynx.dev/tenant'];
     if (isNonEmptyString(candidate)) tenants.push(candidate);
     if (Array.isArray(candidate)) {
       readStringArray(candidate).forEach((tenant) => tenants.push(tenant));

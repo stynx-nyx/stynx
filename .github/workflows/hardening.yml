@@ -1,0 +1,205 @@
+name: Hardening
+
+on:
+  workflow_dispatch:
+    inputs:
+      scenario:
+        description: k6 scenario to run
+        required: false
+        default: crud
+        type: choice
+        options:
+          - auth
+          - crud
+          - upload
+          - cascade-delete
+          - all
+  schedule:
+    - cron: '0 4 * * 1'
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '9.15.0'
+  K6_ARTIFACT_NAME: k6-results-${{ github.event.inputs.scenario || 'all' }}
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  k6:
+    name: k6
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start reference stack
+        run: docker compose -f apps/reference-api/docker-compose.yml up -d --build
+
+      - name: Wait for API
+        run: |
+          for i in $(seq 1 60); do
+            if curl -sf http://127.0.0.1:3000/healthz >/dev/null; then
+              exit 0
+            fi
+            sleep 5
+          done
+          docker compose -f apps/reference-api/docker-compose.yml logs
+          exit 1
+
+      - name: Run k6 scenarios
+        run: |
+          mkdir -p perf/k6/results
+          STYNX_K6_BASE_URL=http://127.0.0.1:3000 \
+          STYNX_K6_S3_PUBLIC_BASE_URL=http://127.0.0.1:4566 \
+          STYNX_K6_SCENARIO="${{ github.event.inputs.scenario || 'all' }}" \
+          STYNX_K6_SCENARIO_PAUSE_MS=65000 \
+          node perf/k6/run-scenarios.mjs --scenario "${{ github.event.inputs.scenario || 'all' }}"
+
+      - name: Download previous k6 baseline
+        env:
+          GH_TOKEN: ${{ github.token }}
+          K6_ARTIFACT_NAME: ${{ env.K6_ARTIFACT_NAME }}
+        run: |
+          mkdir -p perf/k6/baseline
+          python3 - <<'PY'
+          import json
+          import os
+          import urllib.request
+          import zipfile
+
+          repo = os.environ["GITHUB_REPOSITORY"]
+          token = os.environ["GH_TOKEN"]
+          current_run_id = os.environ.get("GITHUB_RUN_ID")
+          runs_endpoint = f"https://api.github.com/repos/{repo}/actions/workflows/hardening.yml/runs?branch=main&per_page=20"
+          request = urllib.request.Request(runs_endpoint, headers={
+              "Authorization": f"Bearer {token}",
+              "Accept": "application/vnd.github+json",
+          })
+          with urllib.request.urlopen(request) as response:
+              payload = json.load(response)
+
+          workflow_runs = [
+              run
+              for run in payload.get("workflow_runs", [])
+              if run.get("status") == "completed" and run.get("conclusion") == "success"
+              if str(run.get("id")) != str(current_run_id)
+          ]
+          if not workflow_runs:
+              open("perf/k6/baseline/.first-seed-allowed", "w").write("no prior successful hardening.yml runs on main\n")
+              raise SystemExit(0)
+
+          target_run = workflow_runs[0]
+          artifacts_endpoint = target_run["artifacts_url"]
+          artifacts_request = urllib.request.Request(artifacts_endpoint, headers={
+              "Authorization": f"Bearer {token}",
+              "Accept": "application/vnd.github+json",
+          })
+          with urllib.request.urlopen(artifacts_request) as response:
+              artifacts_payload = json.load(response)
+
+          artifacts = [
+              artifact
+              for artifact in artifacts_payload.get("artifacts", [])
+              if artifact.get("name") == os.environ["K6_ARTIFACT_NAME"] and not artifact.get("expired")
+          ]
+          if not artifacts:
+              raise SystemExit(
+                  f"No unexpired {os.environ['K6_ARTIFACT_NAME']} artifact found on prior successful main run {target_run['id']}"
+              )
+
+          archive_url = artifacts[0]["archive_download_url"]
+          archive_request = urllib.request.Request(archive_url, headers={
+              "Authorization": f"Bearer {token}",
+              "Accept": "application/vnd.github+json",
+          })
+          archive_path = "perf/k6/baseline/baseline.zip"
+          with urllib.request.urlopen(archive_request) as response, open(archive_path, "wb") as handle:
+              handle.write(response.read())
+
+          with zipfile.ZipFile(archive_path) as archive:
+              archive.extractall("perf/k6/baseline")
+          open("perf/k6/baseline/.baseline-run", "w").write(str(target_run["id"]) + "\n")
+          PY
+
+      - name: Compare k6 summaries with prior baseline
+        run: |
+          set -eu
+          found_current=false
+          for current in perf/k6/results/*.summary.json; do
+            if [ ! -f "$current" ]; then
+              echo "No current k6 summary files were produced"
+              exit 1
+            fi
+            found_current=true
+            name="$(basename "$current")"
+            baseline="perf/k6/baseline/$name"
+            if [ -f "$baseline" ]; then
+              node perf/k6/check-summary.mjs "$current" "$baseline"
+            elif [ -f perf/k6/baseline/.first-seed-allowed ]; then
+              echo "No previous k6 baseline exists on main; allowing this first seed run for $name"
+            else
+              echo "Missing required k6 baseline artifact for $name"
+              exit 1
+            fi
+          done
+          if [ "$found_current" != "true" ]; then
+            echo "No current k6 summary files were produced"
+            exit 1
+          fi
+
+      - name: Upload k6 artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.K6_ARTIFACT_NAME }}
+          path: perf/k6/results
+          if-no-files-found: error
+
+      - name: Stop reference stack
+        if: always()
+        run: docker compose -f apps/reference-api/docker-compose.yml down -v
+
+  mutation:
+    name: mutation-${{ matrix.package }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - package: auth
+            filter: '@stynx/auth'
+            report_path: packages/auth/reports/mutation
+          - package: tenancy
+            filter: '@stynx/tenancy'
+            report_path: packages/tenancy/reports/mutation
+          - package: data
+            filter: '@stynx/data'
+            report_path: packages/data/reports/mutation
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          dependency-path: pnpm-lock.yaml
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@${PNPM_VERSION} --activate
+
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Stryker
+        env:
+          STRYKER_INCREMENTAL: 'false'
+        run: pnpm --filter "${{ matrix.filter }}" stryker
+
+      - name: Upload mutation reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-report-${{ matrix.package }}
+          path: ${{ matrix.report_path }}
+          if-no-files-found: error

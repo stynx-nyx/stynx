@@ -1,0 +1,437 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '9.15.0'
+
+jobs:
+  install:
+    name: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          dependency-path: |
+            pnpm-lock.yaml
+            package.json
+            backend/package.json
+            bootstrap/package.json
+            frontend/package.json
+            test/backend/package.json
+            test/db/package.json
+            test/packages/package.json
+            test/scripts/package.json
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@${PNPM_VERSION} --activate
+
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install legacy and standalone test dependencies
+        run: |
+          pnpm --dir backend install --no-frozen-lockfile
+          pnpm --dir bootstrap install --no-frozen-lockfile
+          pnpm --dir frontend install --no-frozen-lockfile
+          pnpm --dir test/backend install --no-frozen-lockfile
+          pnpm --dir test/db install --no-frozen-lockfile
+          pnpm --dir test/packages install --ignore-workspace --no-frozen-lockfile
+
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          dependency-path: |
+            pnpm-lock.yaml
+            package.json
+            backend/package.json
+            bootstrap/package.json
+            frontend/package.json
+            test/backend/package.json
+            test/db/package.json
+            test/packages/package.json
+            test/scripts/package.json
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@${PNPM_VERSION} --activate
+
+      - name: Install dependencies
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm --dir backend install --no-frozen-lockfile
+          pnpm --dir bootstrap install --no-frozen-lockfile
+          pnpm --dir frontend install --no-frozen-lockfile
+          pnpm --dir test/backend install --no-frozen-lockfile
+          pnpm --dir test/db install --no-frozen-lockfile
+          pnpm --dir test/packages install --ignore-workspace --no-frozen-lockfile
+
+      - name: Lint workspace and legacy surfaces
+        run: |
+          pnpm lint
+          pnpm --dir backend lint
+          pnpm --dir bootstrap lint
+          pnpm --dir frontend lint
+          pnpm --dir test/backend lint
+          pnpm --dir test/db lint
+          pnpm --dir test/packages lint
+          pnpm --dir test/scripts lint
+
+      - name: Reject unresolved adopt permission sentinels
+        run: |
+          if rg -n "TODO_PERMISSION" apps packages packages-web backend frontend bootstrap test; then
+            echo "Unresolved TODO_PERMISSION sentinel found in source surfaces"
+            exit 1
+          fi
+
+  typecheck:
+    name: typecheck
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          dependency-path: |
+            pnpm-lock.yaml
+            package.json
+            backend/package.json
+            bootstrap/package.json
+            frontend/package.json
+            test/backend/package.json
+            test/db/package.json
+            test/packages/package.json
+            test/scripts/package.json
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@${PNPM_VERSION} --activate
+
+      - name: Install dependencies
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm --dir backend install --no-frozen-lockfile
+          pnpm --dir bootstrap install --no-frozen-lockfile
+          pnpm --dir frontend install --no-frozen-lockfile
+          pnpm --dir test/backend install --no-frozen-lockfile
+          pnpm --dir test/db install --no-frozen-lockfile
+          pnpm --dir test/packages install --ignore-workspace --no-frozen-lockfile
+
+      - name: Typecheck workspace
+        run: pnpm typecheck
+
+      - name: Typecheck bootstrap surface
+        run: pnpm bootstrap:typecheck
+
+  unit-tests:
+    name: unit-tests
+    runs-on: ubuntu-latest
+    needs: typecheck
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          dependency-path: |
+            pnpm-lock.yaml
+            package.json
+            backend/package.json
+            bootstrap/package.json
+            frontend/package.json
+            test/backend/package.json
+            test/db/package.json
+            test/packages/package.json
+            test/scripts/package.json
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@${PNPM_VERSION} --activate
+
+      - name: Install dependencies
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm --dir backend install --no-frozen-lockfile
+          pnpm --dir frontend install --no-frozen-lockfile
+          pnpm --dir test/backend install --no-frozen-lockfile
+          pnpm --dir test/packages install --ignore-workspace --no-frozen-lockfile
+
+      - name: Run unit test suites with coverage
+        run: pnpm test:unit:cov
+
+      - name: Upload backend coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-backend
+          path: test/backend/coverage
+          if-no-files-found: error
+
+      - name: Upload frontend coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-frontend
+          path: test/frontend/coverage
+          if-no-files-found: error
+
+      - name: Upload package coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-packages
+          path: test/packages/coverage
+          if-no-files-found: error
+
+  integration-tests:
+    name: integration-tests
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: stynx
+          POSTGRES_USER: stynx
+          POSTGRES_PASSWORD: stynx
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U stynx -d stynx"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://stynx:stynx@localhost:5432/stynx
+      STYNX_DATABASE_URL: postgresql://stynx:stynx@localhost:5432/stynx
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          dependency-path: |
+            pnpm-lock.yaml
+            package.json
+            backend/package.json
+            bootstrap/package.json
+            frontend/package.json
+            test/backend/package.json
+            test/db/package.json
+            test/packages/package.json
+            test/scripts/package.json
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@${PNPM_VERSION} --activate
+
+      - name: Install dependencies
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm --dir test/db install --no-frozen-lockfile
+
+      - name: Install postgres client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Apply database DDL and seeds
+        run: bash scripts/db-reset.sh --database-url "${DATABASE_URL}"
+
+      - name: Run RLS smoke check against live database
+        run: pnpm check:rls-smoke
+
+      - name: Run integration test suite with coverage
+        run: pnpm test:int:cov
+
+      - name: Upload db coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-db
+          path: test/db/coverage
+          if-no-files-found: error
+
+  build:
+    name: build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    needs: integration-tests
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          dependency-path: |
+            pnpm-lock.yaml
+            package.json
+            backend/package.json
+            bootstrap/package.json
+            frontend/package.json
+            test/backend/package.json
+            test/db/package.json
+            test/packages/package.json
+            test/scripts/package.json
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@${PNPM_VERSION} --activate
+
+      - name: Install dependencies
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm --dir backend install --no-frozen-lockfile
+          pnpm --dir bootstrap install --no-frozen-lockfile
+          pnpm --dir frontend install --no-frozen-lockfile
+
+      - name: Build workspace and legacy apps
+        run: |
+          pnpm build
+          pnpm --dir bootstrap build
+          pnpm --dir backend build
+          pnpm --dir frontend build
+
+  doctor:
+    name: doctor
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          dependency-path: |
+            pnpm-lock.yaml
+            package.json
+            backend/package.json
+            bootstrap/package.json
+            frontend/package.json
+            test/backend/package.json
+            test/db/package.json
+            test/packages/package.json
+            test/scripts/package.json
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@${PNPM_VERSION} --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run doctor
+        run: pnpm doctor
+
+  reference-web-e2e:
+    name: reference-web-e2e
+    runs-on: ubuntu-latest
+    needs: build
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          dependency-path: |
+            pnpm-lock.yaml
+            package.json
+            apps/reference-api/package.json
+            apps/reference-web/package.json
+            packages-web/angular/package.json
+            packages-web/angular-auth/package.json
+            packages-web/angular-i18n/package.json
+            packages-web/angular-profile/package.json
+            packages-web/angular-sessions/package.json
+            packages-web/angular-storage/package.json
+            packages-web/angular-trash/package.json
+            packages-web/angular-ui/package.json
+            packages-web/sdk/package.json
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@${PNPM_VERSION} --activate
+
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter @stynx/reference-web exec playwright install --with-deps chromium
+
+      - name: Start reference API stack
+        run: docker compose -f apps/reference-api/docker-compose.yml up -d --build
+
+      - name: Wait for reference API health gates
+        run: |
+          for endpoint in healthz readyz; do
+            for i in $(seq 1 60); do
+              if curl -sf "http://127.0.0.1:3000/${endpoint}" >/dev/null; then
+                break
+              fi
+              if [ "$i" -eq 60 ]; then
+                docker compose -f apps/reference-api/docker-compose.yml logs
+                exit 1
+              fi
+              sleep 2
+            done
+          done
+
+      - name: Run reference web E2E
+        env:
+          CI: 'true'
+        run: pnpm --filter @stynx/reference-web test:e2e
+
+      - name: Upload Playwright artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reference-web-playwright-artifacts
+          path: |
+            apps/reference-web/test-results
+            apps/reference-web/playwright-report
+          if-no-files-found: ignore
+
+      - name: Stop reference API stack
+        if: always()
+        run: docker compose -f apps/reference-api/docker-compose.yml down -v

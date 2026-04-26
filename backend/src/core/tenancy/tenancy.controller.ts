@@ -6,6 +6,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { NoIdempotent } from '@stynx/idempotency';
 import type { Request } from 'express';
 import { Audit } from '@core/audit/decorators/audit.decorator';
 import { RequireRoles } from '@core/auth/decorators/roles.decorator';
@@ -30,6 +31,7 @@ export class TenancyController {
   }
 
   @Post()
+  @NoIdempotent()
   @UseGuards(RoleGuard)
   @RequireRoles('platform:admin', 'platform:superadmin')
   @Audit({ action: 'create', entity: 'tenancy' })

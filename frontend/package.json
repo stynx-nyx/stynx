@@ -1,7 +1,10 @@
 {
-  "name": "st-core-frontend",
+  "name": "stynx-frontend",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20 <23"
+  },
   "scripts": {
     "ng": "ng",
     "start": "ng serve --proxy-config proxy.conf.json",
@@ -9,7 +12,7 @@
     "test": "npm run test:unit",
     "test:unit": "cross-env NODE_PATH=./node_modules jest --config ../test/frontend/jest.config.cjs",
     "test:e2e": "cypress run --config-file ../test/frontend/cypress.config.ts",
-    "lint": "eslint \"src/**/*.ts\" --max-warnings=0"
+    "lint": "eslint --config ../tools/eslint-config/angular.mjs \"src/**/*.ts\" --max-warnings=0"
   },
   "dependencies": {
     "@angular/animations": "^20.2.0",
@@ -46,17 +49,5 @@
     "ts-jest": "^29.1.1",
     "ts-node": "^10.9.2",
     "typescript": "~5.9.2"
-  },
-  "prettier": {
-    "printWidth": 100,
-    "singleQuote": true,
-    "overrides": [
-      {
-        "files": "*.html",
-        "options": {
-          "parser": "angular"
-        }
-      }
-    ]
   }
 }

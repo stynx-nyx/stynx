@@ -1,11 +1,15 @@
 {
-  "name": "st-core-backend-tests",
+  "name": "stynx-backend-tests",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20 <23"
+  },
   "scripts": {
     "test": "jest --config ./jest.config.ts",
     "test:watch": "jest --config ./jest.config.ts --watch",
-    "test:cov": "jest --config ./jest.config.ts --coverage"
+    "test:cov": "jest --config ./jest.config.ts --coverage",
+    "lint": "eslint --config ../../tools/eslint-config/lib.mjs \"../backend/**/*.ts\""
   },
   "dependencies": {
     "ts-jest": "^29.1.1"

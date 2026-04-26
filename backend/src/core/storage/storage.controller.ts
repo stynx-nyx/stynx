@@ -8,6 +8,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { NoIdempotent } from '@stynx/idempotency';
 import type { Request } from 'express';
 import { Audit } from '@core/audit/decorators/audit.decorator';
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
@@ -32,6 +33,7 @@ export class StorageController {
   }
 
   @Audit({ action: 'upload', entity: 'storage_file' })
+  @NoIdempotent()
   @Post()
   create(@Req() req: RequestContext, @Body() body: RegisterFileDto): Promise<StorageFile> {
     return this.storage.registerFile({

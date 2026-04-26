@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>STYNX Reference Web</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --app-ink: #0f172a;
+        --app-muted: #475569;
+        --app-bg: linear-gradient(180deg, #f7fafc 0%, #eef4ff 100%);
+        --app-card: rgba(255, 255, 255, 0.84);
+        --app-line: rgba(15, 23, 42, 0.08);
+        --app-accent: #0f766e;
+        --app-accent-soft: #ccfbf1;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: var(--app-bg);
+        color: var(--app-ink);
+        font-family: "IBM Plex Sans", "Inter", system-ui, sans-serif;
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <stynx-reference-web-root></stynx-reference-web-root>
+  </body>
+</html>

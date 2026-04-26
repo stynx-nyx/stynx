@@ -1,0 +1,15 @@
+{
+  "name": "@stynx-internal/tsconfig",
+  "private": true,
+  "version": "0.2.0",
+  "description": "Shared TypeScript presets for the STYNX monorepo",
+  "files": [
+    "*.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "node -e \"process.exit(0)\"",
+    "clean": "node -e \"process.exit(0)\"",
+    "typecheck": "node -e \"process.exit(0)\""
+  }
+}

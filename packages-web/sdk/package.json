@@ -1,0 +1,36 @@
+{
+  "name": "@stynx-web/sdk",
+  "version": "0.1.0",
+  "description": "Framework-agnostic TypeScript SDK for stynx APIs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "engines": {
+    "node": ">=20 <23"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "codegen": "node ./scripts/codegen.mjs",
+    "build": "pnpm run codegen && tsc -p tsconfig.json",
+    "clean": "rm -rf dist coverage src/generated",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint --config ../../tools/eslint-config/lib.mjs \"src/**/*.ts\" --ignore-pattern \"src/generated/**\"",
+    "test": "pnpm run codegen && jest --config ./jest.config.cjs"
+  },
+  "devDependencies": {
+    "@stynx/core": "workspace:*",
+    "@types/jest": "^29.5.12",
+    "jest": "^29.7.0",
+    "openapi-typescript-codegen": "^0.30.0",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.5.4"
+  }
+}

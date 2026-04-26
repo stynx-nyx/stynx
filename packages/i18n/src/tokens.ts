@@ -1,0 +1,1 @@
+export const STYNX_I18N_OPTIONS = Symbol('STYNX_I18N_OPTIONS');

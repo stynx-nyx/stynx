@@ -1,0 +1,18 @@
+{
+  "extends": "../../tools/tsconfig/angular18.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "@stech/stynx-frontend-contracts": [
+        "../../packages/stynx-frontend-contracts/src/index.ts"
+      ],
+      "@stech/stynx-frontend-client": [
+        "../../packages/stynx-frontend-client/src/index.ts"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*.ts"
+  ]
+}

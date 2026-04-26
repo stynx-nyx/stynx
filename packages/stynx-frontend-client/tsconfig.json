@@ -1,0 +1,15 @@
+{
+  "extends": "../../tools/tsconfig/lib.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "@stech/stynx-frontend-contracts": [
+        "../stynx-frontend-contracts/src/index.ts"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*.ts"
+  ]
+}

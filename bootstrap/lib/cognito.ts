@@ -97,7 +97,7 @@ async function ensureUserPoolClient(ctx: CognitoEnsureInput, userPoolId: string)
       if (item.ClientName !== clientName || !item.ClientId) continue;
       const detail = await cognito.send(new DescribeUserPoolClientCommand({ UserPoolId: userPoolId, ClientId: item.ClientId }));
       if (detail.UserPoolClient?.ClientSecret) {
-        const warning = `Cognito app client ${clientName} has a secret. st-core requires public clients (no secret).`;
+        const warning = `Cognito app client ${clientName} has a secret. stynx requires public clients (no secret).`;
         // eslint-disable-next-line no-console
         console.warn(chalk.red(warning));
         if (!ctx.force) {
@@ -142,7 +142,6 @@ async function ensureUserPoolClient(ctx: CognitoEnsureInput, userPoolId: string)
       AllowedOAuthFlows: ['code', 'implicit'],
       AllowedOAuthScopes: ['email', 'openid', 'profile'],
       ExplicitAuthFlows: ['ALLOW_REFRESH_TOKEN_AUTH', 'ALLOW_USER_SRP_AUTH'],
-      Tags: defaultTags(ctx.appName),
     }),
   );
   if (!res.UserPoolClient?.ClientId) {

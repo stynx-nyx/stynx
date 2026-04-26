@@ -1,4 +1,4 @@
-# st-core Agent Guide
+# stynx Agent Guide
 
 This repository bundles the reusable scaffolding extracted from previous production apps. Follow these guidelines while extending the platform.
 

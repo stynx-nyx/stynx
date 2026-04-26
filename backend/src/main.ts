@@ -29,7 +29,7 @@ async function bootstrap(): Promise<void> {
 
   const port = configService.get<number>('app.port', 3000);
   await app.listen(port);
-  Logger.log(`st-core backend running at http://localhost:${port}`, 'Bootstrap');
+  Logger.log(`stynx backend running at http://localhost:${port}`, 'Bootstrap');
 }
 
 bootstrap().catch((error) => {

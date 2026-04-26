@@ -1,0 +1,18 @@
+From a822fc64b1d19c88f4c66ea3ff6f088c0b2293a9 Mon Sep 17 00:00:00 2001
+From: "Antonio A. Russo" <aarusso@nyxk.com.br>
+Date: Sun, 5 Oct 2025 21:20:25 -0300
+Subject: [PATCH 10/14] chore(lint): rename eslint flat config to .mjs to
+ silence node warning
+
+---
+ backend/{eslint.config.js => eslint.config.mjs} | 0
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ rename backend/{eslint.config.js => eslint.config.mjs} (100%)
+
+diff --git a/backend/eslint.config.js b/backend/eslint.config.mjs
+similarity index 100%
+rename from backend/eslint.config.js
+rename to backend/eslint.config.mjs
+-- 
+2.50.1 (Apple Git-155)
+

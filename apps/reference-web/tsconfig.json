@@ -1,0 +1,13 @@
+{
+  "extends": "../../tools/tsconfig/angular18.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "types": ["node"]
+  },
+  "include": [
+    "src/**/*.ts",
+    "playwright.config.ts"
+  ]
+}

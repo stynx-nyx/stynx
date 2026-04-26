@@ -1,0 +1,45 @@
+{
+  "name": "@stynx/cli",
+  "version": "0.1.0",
+  "description": "CLI for bootstrapping, doctor checks, migrations, privacy ROPA, and adoption helpers",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "stynx": "dist/main.js"
+  },
+  "engines": {
+    "node": ">=20 <23"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist coverage",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint --config ../../tools/eslint-config/lib.mjs \"src/**/*.ts\"",
+    "test": "jest --config ./jest.config.cjs",
+    "test:adopt": "jest --config ./jest.config.cjs --runTestsByPath ./test/adopt.spec.ts"
+  },
+  "dependencies": {
+    "@stynx/privacy": "workspace:*",
+    "commander": "^14.0.1",
+    "pg": "^8.20.0",
+    "yaml": "^2.8.1"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^22.19.17",
+    "@types/pg": "^8.15.5",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.5.4"
+  }
+}

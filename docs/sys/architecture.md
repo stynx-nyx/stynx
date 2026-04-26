@@ -1,6 +1,6 @@
 # System Architecture
 
-st-core provides a canonical multi-tenant architecture synthesised from PORM (canonical) and PEC (complementary) code bases.
+stynx provides a canonical multi-tenant architecture synthesised from PORM (canonical) and PEC (complementary) code bases.
 
 ## High-Level Components
 - **API (NestJS)** – Modular `CoreModule` exposing authentication, tenancy, auditing, storage, docs, logging, and health endpoints. Shared `DatabaseService` applies tenant/user context before executing SQL.

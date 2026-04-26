@@ -1,24 +1,13 @@
 {
+  "extends": "../tools/tsconfig/angular18.json",
   "compileOnSave": false,
   "compilerOptions": {
     "baseUrl": "./",
     "outDir": "./dist/out-tsc",
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "sourceMap": true,
-    "declaration": false,
-    "module": "es2022",
-    "moduleResolution": "node",
-    "importHelpers": true,
-    "target": "es2022",
     "typeRoots": [
       "node_modules/@types"
-    ],
-    "lib": [
-      "es2022",
-      "dom"
     ],
     "useDefineForClassFields": false,
     "paths": {

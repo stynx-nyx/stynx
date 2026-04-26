@@ -1,0 +1,39 @@
+{
+  "name": "docs",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Docusaurus documentation site for STYNX",
+  "engines": {
+    "node": ">=20 <23"
+  },
+  "scripts": {
+    "clean": "find build .docusaurus .generated -mindepth 0 -maxdepth 0 -exec rm -rf {} + 2>/dev/null || true",
+    "prepare:content": "node scripts/sync-content.mjs",
+    "prepare:api": "node scripts/generate-api-reference.mjs",
+    "verify:api": "node scripts/verify-api-reference.mjs",
+    "build": "pnpm run prepare:content && pnpm run prepare:api && pnpm run verify:api && docusaurus build",
+    "build:ci": "pnpm run build && pnpm run lighthouse",
+    "lighthouse": "node scripts/run-lighthouse.mjs",
+    "start": "pnpm run prepare:content && pnpm run prepare:api && docusaurus start",
+    "serve": "docusaurus serve build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@mermaid-js/layout-elk": "^0.1.9",
+    "@docusaurus/core": "^3.9.2",
+    "@docusaurus/preset-classic": "^3.9.2",
+    "@docusaurus/theme-mermaid": "^3.9.2",
+    "@easyops-cn/docusaurus-search-local": "^0.55.1",
+    "clsx": "^2.1.1",
+    "prism-react-renderer": "^2.4.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@lhci/cli": "^0.15.1",
+    "@types/node": "^22.19.17",
+    "typedoc": "^0.28.14",
+    "typedoc-plugin-markdown": "^4.9.0",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,7 +1,7 @@
 import type { Request } from 'express';
 import { SetMetadata } from '@nestjs/common';
 
-export const AUDIT_METADATA_KEY = 'stcore:audit';
+export const AUDIT_METADATA_KEY = 'stynx:audit';
 
 export interface AuditRequest extends Request {
   tenantId?: string;
@@ -12,7 +12,7 @@ export interface AuditRequest extends Request {
 export interface AuditMetadata {
   action: string;
   entity?: string;
-  entityIdSelector?: (request: AuditRequest) => string | undefined;
+  entityIdSelector?: (request: AuditRequest) => unknown;
   detailsSelector?: (request: AuditRequest) => Record<string, unknown> | undefined;
 }
 

@@ -1,0 +1,58 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  localstack:
+    image: localstack/localstack:3.8.1
+    environment:
+      SERVICES: s3
+      AWS_DEFAULT_REGION: us-east-1
+      STYNX_STORAGE_BUCKET: stynx-docs-local-us-east-1
+    ports:
+      - "4566:4566"
+    volumes:
+      - ./localstack/init-s3.sh:/etc/localstack/init/ready.d/init-s3.sh:ro
+
+  reference-api:
+    build:
+      context: ../..
+      dockerfile: apps/reference-api/Dockerfile
+    environment:
+      PORT: 3000
+      STYNX_OWNER_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres
+      STYNX_APP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres
+      STYNX_READER_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres
+      STYNX_REDIS_URL: redis://redis:6379
+      STYNX_STORAGE_ENDPOINT: http://localstack:4566
+      STYNX_STORAGE_FORCE_PATH_STYLE: "true"
+      STYNX_STORAGE_BUCKET: stynx-docs-local-us-east-1
+      STYNX_SAMPLE_RECORD_CREATE_LIMIT: "6000"
+      STYNX_SAMPLE_RECORD_CREATE_WINDOW_SECONDS: "60"
+      STYNX_SAMPLE_RECORD_READ_LIMIT: "6000"
+      STYNX_SAMPLE_RECORD_READ_WINDOW_SECONDS: "60"
+      STYNX_SAMPLE_RECORD_DELETE_LIMIT: "12000"
+      STYNX_SAMPLE_RECORD_DELETE_WINDOW_SECONDS: "60"
+      STYNX_SAMPLE_RECORD_NOTE_CREATE_LIMIT: "6000"
+      STYNX_SAMPLE_RECORD_NOTE_CREATE_WINDOW_SECONDS: "60"
+      STYNX_SAMPLE_DOCUMENT_WRITE_LIMIT: "6000"
+      STYNX_SAMPLE_DOCUMENT_WRITE_WINDOW_SECONDS: "60"
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: us-east-1
+    depends_on:
+      - postgres
+      - redis
+      - localstack
+    ports:
+      - "3000:3000"

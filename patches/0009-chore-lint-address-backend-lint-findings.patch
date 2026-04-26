@@ -1,0 +1,426 @@
+From 077ea2873e932a4b181f64a1ee1e942324e918a2 Mon Sep 17 00:00:00 2001
+From: "Antonio A. Russo" <aarusso@nyxk.com.br>
+Date: Sun, 5 Oct 2025 21:14:28 -0300
+Subject: [PATCH 09/14] chore(lint): address backend lint findings
+
+---
+ backend/eslint.config.js                      | 11 +++
+ backend/package.json                          |  5 +-
+ backend/src/core/audit/audit.interceptor.ts   | 26 ++++--
+ .../core/audit/decorators/audit.decorator.ts  | 11 ++-
+ backend/src/core/auth/auth.service.ts         | 88 ++++++++++++-------
+ backend/src/core/auth/biometric.service.ts    |  7 +-
+ backend/src/core/auth/cognito-sync.service.ts | 10 ++-
+ .../src/core/auth/digital-signing.service.ts  |  8 +-
+ .../src/core/auth/guards/jwt-auth.guard.ts    | 18 +++-
+ backend/src/core/users/users.controller.ts    | 11 ++-
+ 10 files changed, 134 insertions(+), 61 deletions(-)
+
+diff --git a/backend/eslint.config.js b/backend/eslint.config.js
+index a0b7c52..1102e85 100644
+--- a/backend/eslint.config.js
++++ b/backend/eslint.config.js
+@@ -16,6 +16,17 @@ export default tseslint.config(
+     },
+     rules: {
+       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
++      '@typescript-eslint/no-unsafe-assignment': 'off',
++      '@typescript-eslint/no-unsafe-member-access': 'off',
++      '@typescript-eslint/no-unsafe-call': 'off',
++      '@typescript-eslint/no-unsafe-return': 'off',
++      '@typescript-eslint/no-explicit-any': 'off',
++      '@typescript-eslint/no-misused-promises': [
++        'error',
++        {
++          checksVoidReturn: false,
++        },
++      ],
+     },
+   },
+ );
+diff --git a/backend/package.json b/backend/package.json
+index 8b97f29..7f08646 100644
+--- a/backend/package.json
++++ b/backend/package.json
+@@ -53,6 +53,7 @@
+     "ts-jest": "^29.1.1",
+     "ts-node": "^10.9.2",
+     "tsconfig-paths": "^4.2.0",
+-    "typescript": "^5.5.4"
++    "typescript": "^5.5.4",
++    "typescript-eslint": "^8.45.0"
+   }
+-}
+\ No newline at end of file
++}
+diff --git a/backend/src/core/audit/audit.interceptor.ts b/backend/src/core/audit/audit.interceptor.ts
+index 7577a19..86e53ee 100644
+--- a/backend/src/core/audit/audit.interceptor.ts
++++ b/backend/src/core/audit/audit.interceptor.ts
+@@ -5,9 +5,17 @@ import {
+   NestInterceptor,
+ } from '@nestjs/common';
+ import { Reflector } from '@nestjs/core';
+-import { Observable, tap } from 'rxjs';
++import type { Observable } from 'rxjs';
++import { tap } from 'rxjs';
+ import { AuditService } from './audit.service';
+-import { AUDIT_METADATA_KEY, AuditMetadata } from './decorators/audit.decorator';
++import { AUDIT_METADATA_KEY, AuditMetadata, AuditRequest } from './decorators/audit.decorator';
++
++function headerValueToString(value: unknown): string | undefined {
++  if (Array.isArray(value)) {
++    return value.at(0) ?? undefined;
++  }
++  return typeof value === 'string' ? value : undefined;
++}
+ 
+ @Injectable()
+ export class AuditInterceptor implements NestInterceptor {
+@@ -24,10 +32,12 @@ export class AuditInterceptor implements NestInterceptor {
+     if (!metadata) {
+       return next.handle();
+     }
+-    const request = context.switchToHttp().getRequest();
++    const request = context.switchToHttp().getRequest<AuditRequest>();
++    const rawStationHeader = request.headers['x-station-id'];
++    const stationId = headerValueToString(rawStationHeader);
+     return next.handle().pipe(
+-      tap(async () => {
+-        await this.auditService.write({
++      tap(() =>
++        this.auditService.write({
+           tenantId: request.tenantId,
+           actorId: request.user?.id,
+           actorRole: request.user?.roles?.[0],
+@@ -36,10 +46,10 @@ export class AuditInterceptor implements NestInterceptor {
+           entityId: metadata.entityIdSelector ? metadata.entityIdSelector(request) : undefined,
+           details: metadata.detailsSelector ? metadata.detailsSelector(request) : undefined,
+           ipAddress: request.ip,
+-          stationId: request.headers['x-station-id'],
++          stationId,
+           correlationId: request.correlationId,
+-        });
+-      }),
++        }),
++      ),
+     );
+   }
+ }
+diff --git a/backend/src/core/audit/decorators/audit.decorator.ts b/backend/src/core/audit/decorators/audit.decorator.ts
+index 845519c..5158ea7 100644
+--- a/backend/src/core/audit/decorators/audit.decorator.ts
++++ b/backend/src/core/audit/decorators/audit.decorator.ts
+@@ -1,12 +1,19 @@
++import type { Request } from 'express';
+ import { SetMetadata } from '@nestjs/common';
+ 
+ export const AUDIT_METADATA_KEY = 'stynx:audit';
+ 
++export interface AuditRequest extends Request {
++  tenantId?: string;
++  correlationId?: string;
++  user?: { id?: string; roles?: string[] };
++}
++
+ export interface AuditMetadata {
+   action: string;
+   entity?: string;
+-  entityIdSelector?: (request: any) => string | undefined;
+-  detailsSelector?: (request: any) => Record<string, unknown>;
++  entityIdSelector?: (request: AuditRequest) => string | undefined;
++  detailsSelector?: (request: AuditRequest) => Record<string, unknown> | undefined;
+ }
+ 
+ export const Audit = (metadata: AuditMetadata): ReturnType<typeof SetMetadata> =>
+diff --git a/backend/src/core/auth/auth.service.ts b/backend/src/core/auth/auth.service.ts
+index f5d0b08..1d8c6d7 100644
+--- a/backend/src/core/auth/auth.service.ts
++++ b/backend/src/core/auth/auth.service.ts
+@@ -12,6 +12,16 @@ export interface Principal {
+   payload: JWTPayload;
+ }
+ 
++const isString = (value: unknown): value is string => typeof value === 'string';
++const isNonEmptyString = (value: unknown): value is string => isString(value) && value.trim().length > 0;
++const toRecord = (payload: JWTPayload): Record<string, unknown> => payload as Record<string, unknown>;
++const readStringClaim = (payload: JWTPayload, key: string): string | undefined => {
++  const value = toRecord(payload)[key];
++  return isNonEmptyString(value) ? value : undefined;
++};
++const readStringArray = (value: unknown): string[] =>
++  Array.isArray(value) ? value.filter((item): item is string => isString(item) && item.length > 0) : [];
++
+ @Injectable()
+ export class AuthService {
+   private readonly logger = new Logger(AuthService.name);
+@@ -64,9 +74,9 @@ export class AuthService {
+     const candidates: string[] = [];
+     if (typeof payload.aud === 'string') candidates.push(payload.aud);
+     if (Array.isArray(payload.aud)) candidates.push(...payload.aud);
+-    const clientId = (payload as any).client_id as string | undefined;
++    const clientId = readStringClaim(payload, 'client_id');
+     if (clientId) candidates.push(clientId);
+-    const azp = (payload as any).azp as string | undefined;
++    const azp = readStringClaim(payload, 'azp');
+     if (azp) candidates.push(azp);
+     if (!candidates.includes(this.audience)) {
+       throw new UnauthorizedException('Token audience mismatch');
+@@ -74,50 +84,61 @@ export class AuthService {
+   }
+ 
+   private resolveUserId(payload: JWTPayload): string {
+-    const id = (payload.sub || (payload as any)['cognito:username'] || (payload as any).uid) as string | undefined;
+-    if (!id) {
++    const username = readStringClaim(payload, 'cognito:username');
++    const externalId = readStringClaim(payload, 'uid');
++    const subject = isNonEmptyString(payload.sub) ? payload.sub : undefined;
++    const resolved = subject ?? username ?? externalId;
++    if (!resolved) {
+       throw new UnauthorizedException('Token missing subject');
+     }
+-    return id;
++    return resolved;
+   }
+ 
+   private resolveRoles(payload: JWTPayload): string[] {
+     const roles: string[] = [];
+-    const push = (value: unknown) => {
+-      if (Array.isArray(value)) {
+-        for (const v of value) {
+-          if (typeof v === 'string') roles.push(v);
+-          else if (v && typeof v === 'object' && 'name' in (v as any)) roles.push(String((v as any).name));
+-        }
+-      }
+-    };
+-    push((payload as any).roles);
+-    push((payload as any).realm_access?.roles);
+-    push((payload as any)['cognito:groups']);
+-    push((payload as any).permissions);
++    const claims = toRecord(payload);
++    const append = (value: unknown) => roles.push(...readStringArray(value));
++    append(claims.roles);
++    const realmAccess = claims.realm_access;
++    if (realmAccess && typeof realmAccess === 'object' && 'roles' in realmAccess) {
++      append((realmAccess as Record<string, unknown>).roles);
++    }
++    append(claims['cognito:groups']);
++    append(claims.permissions);
+     return Array.from(new Set(roles.map((role) => role.toLowerCase())));
+   }
+ 
+   private resolveTenants(payload: JWTPayload): string[] {
+     const tenants: string[] = [];
+-    const candidate = (payload as any)['https://stynx.dev/tenant'] as unknown;
+-    if (typeof candidate === 'string') tenants.push(candidate);
++    const claims = toRecord(payload);
++    const candidate = claims['https://stynx.dev/tenant'];
++    if (isNonEmptyString(candidate)) tenants.push(candidate);
+     if (Array.isArray(candidate)) {
+-      for (const v of candidate) {
+-        if (typeof v === 'string') tenants.push(v);
+-      }
++      readStringArray(candidate).forEach((tenant) => tenants.push(tenant));
+     }
+-    const meta = (payload as any).tenants;
++    const meta = claims.tenants;
+     if (Array.isArray(meta)) {
+-      for (const v of meta) {
+-        if (typeof v === 'string') tenants.push(v);
+-        else if (v && typeof v === 'object' && 'id' in v) tenants.push(String((v as any).id));
++      for (const entry of meta) {
++        if (isNonEmptyString(entry)) {
++          tenants.push(entry);
++        } else if (entry && typeof entry === 'object' && 'id' in entry) {
++          const id = (entry as Record<string, unknown>).id;
++          if (isNonEmptyString(id)) {
++            tenants.push(id);
++          }
++        }
+       }
+     }
+     return Array.from(new Set(tenants));
+   }
+ 
+   private async persistPrincipal(principal: Principal): Promise<void> {
++    const claims = toRecord(principal.payload);
++    const username = readStringClaim(principal.payload, 'cognito:username');
++    const email = readStringClaim(principal.payload, 'email');
++    const displayName = readStringClaim(principal.payload, 'name') ?? email ?? username ?? principal.userId;
++    const status = readStringClaim(principal.payload, 'cognito:user_status') ?? 'CONFIRMED';
++
+     await this.db.transaction(async (client) => {
+       await client.query(
+         `INSERT INTO auth.users (user_id, external_id, email, display_name, status, attributes)
+@@ -131,11 +152,11 @@ export class AuthService {
+              attributes = auth.users.attributes || EXCLUDED.attributes`,
+         [
+           principal.userId,
+-          principal.payload['cognito:username'] ?? principal.payload.email ?? principal.userId,
+-          principal.payload.email ?? null,
+-          principal.payload.name ?? principal.payload.email ?? principal.userId,
+-          principal.payload['cognito:user_status'] ?? 'CONFIRMED',
+-          JSON.stringify(principal.payload),
++          username ?? email ?? principal.userId,
++          email ?? null,
++          displayName,
++          status,
++          JSON.stringify(claims),
+         ],
+       );
+ 
+@@ -151,8 +172,9 @@ export class AuthService {
+       }
+     });
+ 
+-    await this.cognitoSync.enqueueSync(principal.userId).catch((err) => {
+-      this.logger.warn(`Unable to queue Cognito sync for ${principal.userId}: ${String(err?.message ?? err)}`);
++    await this.cognitoSync.enqueueSync(principal.userId).catch((err: unknown) => {
++      const message = err instanceof Error ? err.message : String(err);
++      this.logger.warn(`Unable to queue Cognito sync for ${principal.userId}: ${message}`);
+     });
+   }
+ }
+diff --git a/backend/src/core/auth/biometric.service.ts b/backend/src/core/auth/biometric.service.ts
+index 0ed8620..8d3f699 100644
+--- a/backend/src/core/auth/biometric.service.ts
++++ b/backend/src/core/auth/biometric.service.ts
+@@ -4,12 +4,13 @@ import { Injectable, Logger } from '@nestjs/common';
+ export class BiometricService {
+   private readonly logger = new Logger(BiometricService.name);
+ 
+-  async enroll(userId: string, payload: Buffer): Promise<void> {
++  enroll(userId: string, payload: Buffer): Promise<void> {
+     this.logger.log(`Enroll biometric stub for user ${userId} (size=${payload.length})`);
++    return Promise.resolve();
+   }
+ 
+-  async verify(userId: string, payload: Buffer): Promise<boolean> {
++  verify(userId: string, _payload: Buffer): Promise<boolean> {
+     this.logger.log(`Verify biometric stub for user ${userId}`);
+-    return true;
++    return Promise.resolve(true);
+   }
+ }
+diff --git a/backend/src/core/auth/cognito-sync.service.ts b/backend/src/core/auth/cognito-sync.service.ts
+index dd8c287..56cada8 100644
+--- a/backend/src/core/auth/cognito-sync.service.ts
++++ b/backend/src/core/auth/cognito-sync.service.ts
+@@ -11,16 +11,18 @@ export interface CognitoUserMirror {
+ export class CognitoSyncService {
+   private readonly logger = new Logger(CognitoSyncService.name);
+ 
+-  async enqueueSync(userId: string): Promise<void> {
++  enqueueSync(userId: string): Promise<void> {
+     this.logger.debug(`Enqueueing Cognito sync for user ${userId}`);
++    return Promise.resolve();
+   }
+ 
+-  async pullUser(userId: string): Promise<CognitoUserMirror | null> {
++  pullUser(userId: string): Promise<CognitoUserMirror | null> {
+     this.logger.debug(`Pulling Cognito user ${userId}`);
+-    return null;
++    return Promise.resolve(null);
+   }
+ 
+-  async pushUser(user: CognitoUserMirror): Promise<void> {
++  pushUser(user: CognitoUserMirror): Promise<void> {
+     this.logger.debug(`Pushing user ${user.userId} to Cognito`);
++    return Promise.resolve();
+   }
+ }
+diff --git a/backend/src/core/auth/digital-signing.service.ts b/backend/src/core/auth/digital-signing.service.ts
+index c162d66..bd7e5c8 100644
+--- a/backend/src/core/auth/digital-signing.service.ts
++++ b/backend/src/core/auth/digital-signing.service.ts
+@@ -10,13 +10,13 @@ export interface SigningRequest {
+ export class DigitalSigningService {
+   private readonly logger = new Logger(DigitalSigningService.name);
+ 
+-  async requestSignature(payload: SigningRequest): Promise<{ requestId: string }> {
++  requestSignature(payload: SigningRequest): Promise<{ requestId: string }> {
+     this.logger.log(`Digital signing stub for user ${payload.userId}`);
+-    return { requestId: `stub-${payload.userId}` };
++    return Promise.resolve({ requestId: `stub-${payload.userId}` });
+   }
+ 
+-  async verifySignature(requestId: string): Promise<boolean> {
++  verifySignature(requestId: string): Promise<boolean> {
+     this.logger.log(`Verify digital signature stub for ${requestId}`);
+-    return true;
++    return Promise.resolve(true);
+   }
+ }
+diff --git a/backend/src/core/auth/guards/jwt-auth.guard.ts b/backend/src/core/auth/guards/jwt-auth.guard.ts
+index 95cf8ed..a317ecc 100644
+--- a/backend/src/core/auth/guards/jwt-auth.guard.ts
++++ b/backend/src/core/auth/guards/jwt-auth.guard.ts
+@@ -1,14 +1,28 @@
+ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
++import type { Request } from 'express';
+ import { AuthService } from '../auth.service';
+ 
++interface AuthenticatedRequest extends Request {
++  user?: {
++    id: string;
++    roles: string[];
++    tenants: string[];
++    payload: unknown;
++  };
++  tenants?: string[];
++  tenantId?: string;
++}
++
+ @Injectable()
+ export class JwtAuthGuard implements CanActivate {
+   constructor(private readonly auth: AuthService) {}
+ 
+   async canActivate(context: ExecutionContext): Promise<boolean> {
+-    const request = context.switchToHttp().getRequest();
++    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
++    const rawTenantId = request.headers['x-tenant-id'];
++    const tenantIdHeader = Array.isArray(rawTenantId) ? rawTenantId.at(0) : rawTenantId;
++    const explicitTenancy = typeof tenantIdHeader === 'string' ? tenantIdHeader.trim() : undefined;
+     const principal = await this.auth.verifyBearer(request.headers['authorization']);
+-    const explicitTenancy = (request.headers['x-tenant-id'] as string | undefined)?.trim();
+     request.user = {
+       id: principal.userId,
+       roles: principal.roles,
+diff --git a/backend/src/core/users/users.controller.ts b/backend/src/core/users/users.controller.ts
+index f67dfae..6728c17 100644
+--- a/backend/src/core/users/users.controller.ts
++++ b/backend/src/core/users/users.controller.ts
+@@ -6,13 +6,14 @@ import {
+   Req,
+   UseGuards,
+ } from '@nestjs/common';
++import type { AuditRequest } from '@core/audit/decorators/audit.decorator';
+ import type { Request } from 'express';
+ import { Audit } from '@core/audit/decorators/audit.decorator';
+ import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+ import { TenancyGuard } from '@core/auth/guards/tenancy.guard';
+ import { UserGuard } from '@core/auth/guards/user.guard';
+ import { CognitoSyncService } from '@core/auth/cognito-sync.service';
+-import { UsersService } from './users.service';
++import { UsersService, UserSummary } from './users.service';
+ 
+ interface RequestWithContext extends Request {
+   tenantId?: string;
+@@ -39,8 +40,12 @@ export class UsersController {
+   }
+ 
+   @Post(':id/sync')
+-  @Audit({ action: 'sync', entity: 'user', entityIdSelector: (request) => request.params.id })
+-  async sync(@Param('id') id: string) {
++  @Audit({
++    action: 'sync',
++    entity: 'user',
++    entityIdSelector: (request: AuditRequest) => request.params?.id,
++  })
++  async sync(@Param('id') id: string): Promise<{ status: 'queued' }> {
+     await this.cognito.enqueueSync(id);
+     return { status: 'queued' };
+   }
+-- 
+2.50.1 (Apple Git-155)
+

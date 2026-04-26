@@ -3,7 +3,7 @@ import path from 'path';
 import { Command } from 'commander';
 import chalk from 'chalk';
 import { prompt } from 'enquirer';
-import { loadEnv, writeEnv, updateAngularEnvironments, BACKEND_ENV_PATH } from './lib/env';
+import { loadEnv, writeBackendEnv, updateAngularEnvironments } from './lib/env';
 import { createDatabase, dropDatabase, runSqlDirectory } from './lib/db';
 import { ensureCognito, describeCognito, deleteAppClient, deleteGroups, deleteUserPool } from './lib/cognito';
 import { ensureBucket, resolveBucketRegion } from './lib/s3';
@@ -11,6 +11,7 @@ import { ensureDistribution } from './lib/cloudfront';
 import { buildFrontend, deployFrontend } from './lib/frontend';
 import { buildBackend, deployBackendPlaceholder } from './lib/backend';
 import { teardown } from './lib/teardown';
+import { WORKSPACE_ROOT } from './lib/targets';
 
 interface GlobalOptions {
   profile?: string;
@@ -21,6 +22,7 @@ interface GlobalOptions {
   debug?: boolean;
   force?: boolean;
   syncEnv?: boolean;
+  syncEnvSource?: string;
 }
 
 interface EnvConfig {
@@ -46,8 +48,8 @@ interface EnvConfig {
 
 const program = new Command();
 program
-  .name('st-core bootstrap')
-  .description('Configure and bootstrap st-core infrastructure')
+  .name('stynx bootstrap')
+  .description('Configure and bootstrap stynx infrastructure')
   .version('0.1.0')
   .option('--profile <name>', 'AWS profile to use')
   .option('--region <name>', 'AWS region', process.env.AWS_REGION || 'us-east-1')
@@ -56,7 +58,8 @@ program
   .option('--non-interactive', 'Disable interactive prompts', false)
   .option('--debug', 'Enable verbose logging', false)
   .option('--force', 'Force operations even when validations fail', false)
-  .option('--sync-env', 'Automatically import missing variables from ../porm/backend/.env', false);
+  .option('--sync-env', 'Automatically import missing variables from --sync-env-source path', false)
+  .option('--sync-env-source <path>', 'Source .env path for optional sync', '../porm/backend/.env');
 
 function getGlobalOptions(command: Command): GlobalOptions {
   const opts = command.parent?.opts?.() ?? command.opts?.() ?? {};
@@ -69,15 +72,16 @@ function getGlobalOptions(command: Command): GlobalOptions {
     debug: Boolean(opts.debug),
     force: Boolean(opts.force),
     syncEnv: Boolean(opts.syncEnv),
+    syncEnvSource: opts.syncEnvSource || '../porm/backend/.env',
   };
 }
 
 async function ensureEnvConfig(global: GlobalOptions, existing: Partial<EnvConfig>): Promise<EnvConfig> {
   const existingRecord = existing as Record<string, string | undefined>;
   const defaults: EnvConfig = {
-    APP_NAME: existing.APP_NAME || 'st-core',
-    DB_NAME: existing.DB_NAME || 'stcore',
-    DB_USER: existing.DB_USER || 'stcore_user',
+    APP_NAME: existing.APP_NAME || 'stynx',
+    DB_NAME: existing.DB_NAME || 'stynx',
+    DB_USER: existing.DB_USER || 'stynx_user',
     DB_PASSWORD: existing.DB_PASSWORD || 'change_me',
     PGHOST: existing.PGHOST || 'localhost',
     PGPORT: existing.PGPORT || '5432',
@@ -97,7 +101,7 @@ async function ensureEnvConfig(global: GlobalOptions, existing: Partial<EnvConfi
   if (existingRecord?.COGNITO_CLIENT_SECRET) {
     // Cognito clients must be public; remove legacy secrets pulled from older environments.
     // eslint-disable-next-line no-console
-    console.warn(chalk.yellow('Detected COGNITO_CLIENT_SECRET in backend/.env; removing to enforce secret-less app clients.'));
+    console.warn(chalk.yellow('Detected COGNITO_CLIENT_SECRET in backend env file; removing to enforce secret-less app clients.'));
     delete existingRecord.COGNITO_CLIENT_SECRET;
   }
   if (global.nonInteractive || global.yes) {
@@ -146,28 +150,28 @@ function maskValue(key: string, value: string | undefined): string {
   return `${value.slice(0, 2)}${'*'.repeat(value.length - 4)}${value.slice(-2)}`;
 }
 
-async function reconcileWithPormEnv(env: EnvConfig, global: GlobalOptions): Promise<void> {
-  const pormEnvPath = path.resolve(process.cwd(), '../porm/backend/.env');
+async function reconcileWithSyncSourceEnv(env: EnvConfig, global: GlobalOptions): Promise<void> {
+  const sourceEnvPath = path.resolve(WORKSPACE_ROOT, global.syncEnvSource || '../porm/backend/.env');
   let pormVars: Record<string, string>;
   try {
-    pormVars = await loadEnv(pormEnvPath);
+    pormVars = await loadEnv(sourceEnvPath);
   } catch (err: any) {
     if (err?.code === 'ENOENT') {
       if (global.debug) {
         // eslint-disable-next-line no-console
-        console.log(chalk.gray(`porm backend/.env not found at ${pormEnvPath}`));
+        console.log(chalk.gray(`sync source .env not found at ${sourceEnvPath}`));
       }
       return;
     }
     throw err;
   }
-  const envRecord = env as Record<string, string | undefined>;
+  const envRecord = env as unknown as Record<string, string | undefined>;
   const missing = Object.keys(pormVars).filter((key) => !envRecord[key]);
   if (missing.length === 0) {
     return;
   }
   // eslint-disable-next-line no-console
-  console.log(chalk.yellow('Detected missing environment variables compared to ../porm/backend/.env:'));
+  console.log(chalk.yellow(`Detected missing environment variables compared to ${sourceEnvPath}:`));
   for (const key of missing) {
     // eslint-disable-next-line no-console
     console.log(`  ${key} (porm value: ${maskValue(key, pormVars[key])})`);
@@ -183,7 +187,7 @@ async function reconcileWithPormEnv(env: EnvConfig, global: GlobalOptions): Prom
         {
           type: 'confirm',
           name: 'import',
-          message: `Import ${key} from porm environment?`,
+          message: `Import ${key} from sync source environment?`,
           initial: true,
         },
       ]);
@@ -202,13 +206,13 @@ async function reconcileWithPormEnv(env: EnvConfig, global: GlobalOptions): Prom
 
 async function persistEnv(env: EnvConfig, global: GlobalOptions): Promise<void> {
   env.COGNITO_REGION = env.AWS_REGION;
-  await reconcileWithPormEnv(env, global);
-  delete (env as Record<string, unknown>).COGNITO_CLIENT_SECRET;
+  await reconcileWithSyncSourceEnv(env, global);
+  delete (env as unknown as Record<string, unknown>).COGNITO_CLIENT_SECRET;
   const payload: Record<string, string | undefined> = {
     ...env,
     COGNITO_CLIENT_SECRET: undefined,
   };
-  await writeEnv(BACKEND_ENV_PATH, payload, { dryRun: global.dryRun, debug: global.debug });
+  await writeBackendEnv(payload, { dryRun: global.dryRun, debug: global.debug });
   await updateAngularEnvironments(
     {
       apiBaseUrl: env.API_BASE_URL,
@@ -229,8 +233,8 @@ async function persistEnv(env: EnvConfig, global: GlobalOptions): Promise<void> 
 
 program
   .command('configure')
-  .description('Interactively configure environment variables for st-core')
-  .action(async function action() {
+  .description('Interactively configure environment variables for stynx')
+  .action(async function action(this: Command) {
     const global = getGlobalOptions(this as Command);
     const existing = await loadEnv();
     const envConfig = await ensureEnvConfig(global, existing as Partial<EnvConfig>);
@@ -244,7 +248,7 @@ program
   .description('Apply database DDL/seed scripts')
   .option('--recreate', 'Drop and recreate database before applying DDL', false)
   .option('--seed', 'Apply seed scripts after DDL', false)
-  .action(async function action(options: { recreate?: boolean; seed?: boolean }) {
+  .action(async function action(this: Command, options: { recreate?: boolean; seed?: boolean }) {
     const global = getGlobalOptions(this as Command);
     const envVars = await loadEnv();
     const env = await ensureEnvConfig(global, envVars as Partial<EnvConfig>);
@@ -253,9 +257,9 @@ program
       await dropDatabase(dbConfig, { dryRun: global.dryRun, debug: global.debug });
       await createDatabase(dbConfig, { dryRun: global.dryRun, debug: global.debug });
     }
-    await runSqlDirectory(dbConfig, path.resolve('db/ddl'), { dryRun: global.dryRun, debug: global.debug });
+    await runSqlDirectory(dbConfig, path.resolve(WORKSPACE_ROOT, 'db/ddl'), { dryRun: global.dryRun, debug: global.debug });
     if (options.seed) {
-      await runSqlDirectory(dbConfig, path.resolve('db/seed'), { dryRun: global.dryRun, debug: global.debug });
+      await runSqlDirectory(dbConfig, path.resolve(WORKSPACE_ROOT, 'db/seed'), { dryRun: global.dryRun, debug: global.debug });
     }
   });
 
@@ -268,7 +272,7 @@ program
   .option('--delete-userpool', 'Delete user pool before provisioning', false)
   .option('--delete-client', 'Delete app client before provisioning', false)
   .option('--delete-groups', 'Delete Cognito groups before provisioning', false)
-  .action(async function action(opts: { withS3?: boolean; withCloudfront?: boolean; withDb?: boolean; deleteUserpool?: boolean; deleteClient?: boolean; deleteGroups?: boolean }) {
+  .action(async function action(this: Command, opts: { withS3?: boolean; withCloudfront?: boolean; withDb?: boolean; deleteUserpool?: boolean; deleteClient?: boolean; deleteGroups?: boolean }) {
     const global = getGlobalOptions(this as Command);
     const envVars = await loadEnv();
     const env = await ensureEnvConfig(global, envVars as Partial<EnvConfig>);
@@ -367,7 +371,7 @@ program
 
     if (opts.withDb) {
       const dbConfig = { ...toDbConfig(env), password: env.DB_PASSWORD };
-      await runSqlDirectory(dbConfig, path.resolve('db/ddl'), { dryRun: global.dryRun, debug: global.debug });
+      await runSqlDirectory(dbConfig, path.resolve(WORKSPACE_ROOT, 'db/ddl'), { dryRun: global.dryRun, debug: global.debug });
     }
 
     await persistEnv(env, global);
@@ -377,12 +381,16 @@ program
   .command('deploy-frontend')
   .description('Build and deploy frontend assets to S3')
   .option('--invalidate', 'Invalidate CloudFront cache after upload', false)
-  .action(async function action(opts: { invalidate?: boolean }) {
+  .action(async function action(this: Command, opts: { invalidate?: boolean }) {
     const global = getGlobalOptions(this as Command);
     const envVars = await loadEnv();
     const env = await ensureEnvConfig(global, envVars as Partial<EnvConfig>);
     if (!env.S3_BUCKET_FRONTEND) {
-      throw new Error('S3_BUCKET_FRONTEND missing. Run `up --with-s3 --with-cloudfront` first.');
+      if (global.dryRun) {
+        env.S3_BUCKET_FRONTEND = `${env.APP_NAME}-frontend`.toLowerCase();
+      } else {
+        throw new Error('S3_BUCKET_FRONTEND missing. Run `up --with-s3 --with-cloudfront` first.');
+      }
     }
     await buildFrontend({
       appName: env.APP_NAME,
@@ -417,7 +425,7 @@ program
   .command('deploy-backend')
   .description('Build backend and emit placeholder deployment instructions for EC2')
   .option('--deploy-ec2', 'Trigger EC2 deployment placeholder', false)
-  .action(async function action(opts: { deployEc2?: boolean }) {
+  .action(async function action(this: Command, opts: { deployEc2?: boolean }) {
     const global = getGlobalOptions(this as Command);
     await buildBackend({ dryRun: global.dryRun, debug: global.debug });
     if (opts.deployEc2) {
@@ -428,7 +436,7 @@ program
 program
   .command('sync')
   .description('Synchronize environment files with live AWS resources')
-  .action(async function action() {
+  .action(async function action(this: Command) {
     const global = getGlobalOptions(this as Command);
     const envVars = await loadEnv();
     const env = await ensureEnvConfig(global, envVars as Partial<EnvConfig>);
@@ -463,7 +471,7 @@ program
   .command('teardown')
   .description('Remove provisioned infrastructure')
   .option('--with-db', 'Drop database after tearing down cloud resources', false)
-  .action(async function action(opts: { withDb?: boolean }) {
+  .action(async function action(this: Command, opts: { withDb?: boolean }) {
     const global = getGlobalOptions(this as Command);
     const envVars = await loadEnv();
     const env = await ensureEnvConfig(global, envVars as Partial<EnvConfig>);

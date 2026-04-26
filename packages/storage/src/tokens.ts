@@ -1,0 +1,1 @@
+export const STYNX_STORAGE_OPTIONS = Symbol('STYNX_STORAGE_OPTIONS');

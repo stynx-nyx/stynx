@@ -1,7 +1,7 @@
 # Operational Conventions
 
 ## Cognito Public Client Policy
-- st-core only supports Cognito app clients without secrets. The bootstrap CLI deletes any legacy `COGNITO_CLIENT_SECRET` entries and refuses to reuse clients that still have secrets unless you pass `--force`.
+- stynx only supports Cognito app clients without secrets. The bootstrap CLI deletes any legacy `COGNITO_CLIENT_SECRET` entries and refuses to reuse clients that still have secrets unless you pass `--force`.
 - Allowed flows are limited to `code` and `implicit`, with OAuth scopes `email`, `openid`, and `profile`. The CLI enforces these settings whenever it creates or updates a client.
 - If AWS returns an app client that still exposes a secret, the bootstrap command aborts. Remove the legacy client or re-run with `--force` after manually resolving the mismatch.
 

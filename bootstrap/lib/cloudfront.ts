@@ -33,8 +33,9 @@ function client(ctx: CloudFrontEnsureInput) {
 
 async function findDistribution(cf: CloudFrontClient, bucketDomain: string, alias?: string): Promise<{ id: string; domain: string } | undefined> {
   const res = await cf.send(new ListDistributionsCommand({}));
-  const matches = res.DistributionList?.Items?.find((item) => {
-    const origin = item.Origins?.Items?.find((o) => o.DomainName === bucketDomain);
+  const items = res.DistributionList?.Items ?? [];
+  const matches = items.find((item) => {
+    const origin = (item.Origins?.Items ?? []).find((o) => o.DomainName === bucketDomain);
     const aliasMatch = alias ? item.Aliases?.Items?.includes(alias) : true;
     return Boolean(origin) && aliasMatch;
   });
@@ -89,10 +90,6 @@ export async function ensureDistribution(ctx: CloudFrontEnsureInput): Promise<Cl
             Cookies: { Forward: 'none' },
           },
           AllowedMethods: {
-            Quantity: 2,
-            Items: ['GET', 'HEAD'],
-          },
-          CachedMethods: {
             Quantity: 2,
             Items: ['GET', 'HEAD'],
           },

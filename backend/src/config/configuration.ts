@@ -39,7 +39,7 @@ export interface DocsConfig {
 
 const configuration = () => ({
   app: {
-    name: process.env.APP_NAME ?? 'st-core',
+    name: process.env.APP_NAME ?? 'stynx',
     env: process.env.NODE_ENV ?? 'development',
     port: parseInt(process.env.PORT ?? '3000', 10),
     version: process.env.APP_VERSION ?? '0.1.0',
@@ -54,7 +54,7 @@ const configuration = () => ({
     port: parseInt(process.env.PGPORT ?? '5432', 10),
     user: process.env.PGUSER ?? 'postgres',
     password: process.env.PGPASSWORD,
-    name: process.env.PGDATABASE ?? 'st_core',
+    name: process.env.PGDATABASE ?? 'stynx',
     ssl: process.env.PGSSL ? process.env.PGSSL !== 'false' : false,
   } satisfies DatabaseConfig,
   cognito: {

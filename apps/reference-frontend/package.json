@@ -1,0 +1,30 @@
+{
+  "name": "@stech/reference-frontend",
+  "private": true,
+  "version": "0.2.0",
+  "description": "Reference frontend module consuming stynx frontend libraries",
+  "engines": {
+    "node": ">=20 <23"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "build:web": "node scripts/build-web.mjs",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint --config ../../tools/eslint-config/angular.mjs \"src/**/*.ts\""
+  },
+  "dependencies": {
+    "@angular/common": "^20.2.0",
+    "@angular/core": "^20.2.0",
+    "@angular/platform-browser": "^20.2.0",
+    "@angular/platform-browser-dynamic": "^20.2.0",
+    "@angular/router": "^20.2.0",
+    "@stech/stynx-frontend-client": "workspace:*",
+    "@stech/stynx-frontend-contracts": "workspace:*",
+    "rxjs": "^7.8.2",
+    "zone.js": "^0.15.1"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.11"
+  }
+}

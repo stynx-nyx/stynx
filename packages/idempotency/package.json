@@ -1,0 +1,47 @@
+{
+  "name": "@stynx/idempotency",
+  "version": "0.1.0",
+  "description": "Idempotency primitives for stynx",
+  "main": "dist/idempotency/src/index.js",
+  "types": "dist/idempotency/src/index.d.ts",
+  "engines": {
+    "node": ">=20 <23"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/idempotency/src/index.d.ts",
+      "require": "./dist/idempotency/src/index.js",
+      "default": "./dist/idempotency/src/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist coverage",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+    "test": "jest --config ./jest.config.cjs",
+    "test:int": "jest --config ./jest.integration.config.cjs"
+  },
+  "dependencies": {
+    "@stynx/data": "workspace:*",
+    "redis": "^4.7.0",
+    "rxjs": "^7.8.2"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^11.1.19",
+    "@nestjs/core": "^11.1.19",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/supertest": "^6.0.3",
+    "jest": "^29.7.0",
+    "supertest": "^7.1.4",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.5.4"
+  }
+}

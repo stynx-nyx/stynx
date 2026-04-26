@@ -10,7 +10,7 @@ describe('storage schema DDL', () => {
   });
 
   it('enables row level security', () => {
-    expect(ddl).toMatch(/ENABLE ROW LEVEL SECURITY/);
-    expect(ddl).toMatch(/CREATE POLICY tenant_scope/);
+    expect(ddl).toMatch(/create_tenant_enforcement_trigger\(\s*'storage'\s*,\s*'files'/i);
+    expect(ddl).toMatch(/create_rls_policy\(\s*'storage'\s*,\s*'files'/i);
   });
 });

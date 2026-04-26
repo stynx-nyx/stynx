@@ -1,0 +1,1181 @@
+From 237f020746e69ebe992dbadcc1e2be77649e0cbc Mon Sep 17 00:00:00 2001
+From: "Antonio A. Russo" <aarusso@nyxk.com.br>
+Date: Sun, 5 Oct 2025 20:16:48 -0300
+Subject: [PATCH 05/14] feat(admin): integrate user management module from porm
+ with role and tenancy handling
+
+---
+ .../admin/users/admin-users.component.html    |  15 -
+ .../admin/users/admin-users.component.scss    |   9 -
+ .../app/admin/users/admin-users.component.ts  |  32 ---
+ frontend/src/app/admin/users/models.ts        |  37 +++
+ frontend/src/app/admin/users/roles.service.ts |  21 ++
+ .../src/app/admin/users/tenancy.service.ts    |  21 ++
+ .../admin/users/user-detail.component.html    | 155 ++++++++++
+ .../admin/users/user-detail.component.scss    | 101 +++++++
+ .../app/admin/users/user-detail.component.ts  | 271 ++++++++++++++++++
+ .../app/admin/users/user-list.component.html  |  63 ++++
+ .../app/admin/users/user-list.component.scss  |  40 +++
+ .../app/admin/users/user-list.component.ts    |  95 ++++++
+ frontend/src/app/admin/users/users.service.ts |  33 +++
+ frontend/src/app/app.routes.ts                |   8 +-
+ .../admin-users/user-detail.component.spec.ts |  89 ++++++
+ .../admin-users/user-list.component.spec.ts   |  42 +++
+ 16 files changed, 974 insertions(+), 58 deletions(-)
+ delete mode 100644 frontend/src/app/admin/users/admin-users.component.html
+ delete mode 100644 frontend/src/app/admin/users/admin-users.component.scss
+ delete mode 100644 frontend/src/app/admin/users/admin-users.component.ts
+ create mode 100644 frontend/src/app/admin/users/models.ts
+ create mode 100644 frontend/src/app/admin/users/roles.service.ts
+ create mode 100644 frontend/src/app/admin/users/tenancy.service.ts
+ create mode 100644 frontend/src/app/admin/users/user-detail.component.html
+ create mode 100644 frontend/src/app/admin/users/user-detail.component.scss
+ create mode 100644 frontend/src/app/admin/users/user-detail.component.ts
+ create mode 100644 frontend/src/app/admin/users/user-list.component.html
+ create mode 100644 frontend/src/app/admin/users/user-list.component.scss
+ create mode 100644 frontend/src/app/admin/users/user-list.component.ts
+ create mode 100644 frontend/src/app/admin/users/users.service.ts
+ create mode 100644 test/frontend/admin-users/user-detail.component.spec.ts
+ create mode 100644 test/frontend/admin-users/user-list.component.spec.ts
+
+diff --git a/frontend/src/app/admin/users/admin-users.component.html b/frontend/src/app/admin/users/admin-users.component.html
+deleted file mode 100644
+index fc067e4..0000000
+--- a/frontend/src/app/admin/users/admin-users.component.html
++++ /dev/null
+@@ -1,15 +0,0 @@
+-<mat-card>
+-  <h2>Users</h2>
+-  @if (users$ | async as vm) {
+-    <mat-list>
+-      @for (user of vm; track user.userId) {
+-        <mat-list-item>
+-          <div matListItemTitle>{{ user.displayName || user.email }}</div>
+-          <div matListItemLine>{{ user.roles.join(', ') }}</div>
+-        </mat-list-item>
+-      }
+-    </mat-list>
+-  } @else {
+-    <div class="loading"><mat-spinner></mat-spinner></div>
+-  }
+-</mat-card>
+diff --git a/frontend/src/app/admin/users/admin-users.component.scss b/frontend/src/app/admin/users/admin-users.component.scss
+deleted file mode 100644
+index 9c5ecad..0000000
+--- a/frontend/src/app/admin/users/admin-users.component.scss
++++ /dev/null
+@@ -1,9 +0,0 @@
+-mat-card {
+-  margin: 16px;
+-}
+-
+-.loading {
+-  display: flex;
+-  justify-content: center;
+-  padding: 24px;
+-}
+diff --git a/frontend/src/app/admin/users/admin-users.component.ts b/frontend/src/app/admin/users/admin-users.component.ts
+deleted file mode 100644
+index 0f9c0f7..0000000
+--- a/frontend/src/app/admin/users/admin-users.component.ts
++++ /dev/null
+@@ -1,32 +0,0 @@
+-import { AsyncPipe, JsonPipe, NgFor, NgIf } from '@angular/common';
+-import { Component, OnInit, inject } from '@angular/core';
+-import { MatCardModule } from '@angular/material/card';
+-import { MatListModule } from '@angular/material/list';
+-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+-import { Observable } from 'rxjs';
+-import { map, startWith } from 'rxjs/operators';
+-import { ApiService } from '@core/api/api.service';
+-
+-interface AdminUserVm {
+-  userId: string;
+-  email: string | null;
+-  displayName: string | null;
+-  roles: string[];
+-  status: string | null;
+-}
+-
+-@Component({
+-  standalone: true,
+-  selector: 'stc-admin-users',
+-  imports: [MatCardModule, MatListModule, MatProgressSpinnerModule, NgFor, NgIf, AsyncPipe, JsonPipe],
+-  templateUrl: './admin-users.component.html',
+-  styleUrls: ['./admin-users.component.scss'],
+-})
+-export class AdminUsersComponent implements OnInit {
+-  private readonly api = inject(ApiService);
+-  users$!: Observable<AdminUserVm[]>;
+-
+-  ngOnInit(): void {
+-    this.users$ = this.api.get<AdminUserVm[]>('/users').pipe(startWith([]), map((users) => users ?? []));
+-  }
+-}
+diff --git a/frontend/src/app/admin/users/models.ts b/frontend/src/app/admin/users/models.ts
+new file mode 100644
+index 0000000..b445b97
+--- /dev/null
++++ b/frontend/src/app/admin/users/models.ts
+@@ -0,0 +1,37 @@
++export interface UserSummary {
++  id: string;
++  email: string | null;
++  displayName: string | null;
++  phoneNumber: string | null;
++  status: 'active' | 'disabled' | 'pending';
++  groups: string[];
++}
++
++export interface UserDetail extends UserSummary {
++  createdAt?: string;
++  updatedAt?: string;
++  tenancies: TenancySummary[];
++  roles: RoleSummary[];
++  attributes: Record<string, unknown>;
++  emailVerified?: boolean;
++  phoneVerified?: boolean;
++}
++
++export interface RoleSummary {
++  id: string;
++  code: string;
++  name: string;
++  description?: string | null;
++}
++
++export interface TenancySummary {
++  id: string;
++  code: string;
++  name: string;
++}
++
++export interface UserQuery {
++  email?: string;
++  phone?: string;
++  group?: string;
++}
+diff --git a/frontend/src/app/admin/users/roles.service.ts b/frontend/src/app/admin/users/roles.service.ts
+new file mode 100644
+index 0000000..9700b5e
+--- /dev/null
++++ b/frontend/src/app/admin/users/roles.service.ts
+@@ -0,0 +1,21 @@
++import { Injectable, inject } from '@angular/core';
++import { Observable } from 'rxjs';
++import { ApiService } from '@core/api/api.service';
++import { RoleSummary } from './models';
++
++@Injectable({ providedIn: 'root' })
++export class RolesService {
++  private readonly api = inject(ApiService);
++
++  list(): Observable<RoleSummary[]> {
++    return this.api.get<RoleSummary[]>('/admin/roles');
++  }
++
++  assign(userId: string, roleId: string): Observable<void> {
++    return this.api.post<void>(`/admin/users/${userId}/roles`, { roleId });
++  }
++
++  remove(userId: string, roleId: string): Observable<void> {
++    return this.api.post<void>(`/admin/users/${userId}/roles/${roleId}/remove`, {});
++  }
++}
+diff --git a/frontend/src/app/admin/users/tenancy.service.ts b/frontend/src/app/admin/users/tenancy.service.ts
+new file mode 100644
+index 0000000..f315b86
+--- /dev/null
++++ b/frontend/src/app/admin/users/tenancy.service.ts
+@@ -0,0 +1,21 @@
++import { Injectable, inject } from '@angular/core';
++import { Observable } from 'rxjs';
++import { ApiService } from '@core/api/api.service';
++import { TenancySummary } from './models';
++
++@Injectable({ providedIn: 'root' })
++export class TenancyService {
++  private readonly api = inject(ApiService);
++
++  list(): Observable<TenancySummary[]> {
++    return this.api.get<TenancySummary[]>('/admin/tenancies');
++  }
++
++  assign(userId: string, tenancyId: string): Observable<void> {
++    return this.api.post<void>(`/admin/users/${userId}/tenancies`, { tenancyId });
++  }
++
++  remove(userId: string, tenancyId: string): Observable<void> {
++    return this.api.post<void>(`/admin/users/${userId}/tenancies/${tenancyId}/remove`, {});
++  }
++}
+diff --git a/frontend/src/app/admin/users/user-detail.component.html b/frontend/src/app/admin/users/user-detail.component.html
+new file mode 100644
+index 0000000..cda46c3
+--- /dev/null
++++ b/frontend/src/app/admin/users/user-detail.component.html
+@@ -0,0 +1,155 @@
++@if (user() as current) {
++  <section class="user-detail">
++    <header class="user-detail__header">
++      <div>
++        <button mat-button routerLink="/admin/users">
++          <mat-icon>arrow_back</mat-icon>
++          Back to users
++        </button>
++        <h1>{{ current.displayName || current.email || 'User' }}</h1>
++        @if (current.createdAt) {
++          <p class="user-detail__meta">Created {{ current.createdAt | date: 'medium' }}</p>
++        }
++      </div>
++      <div class="user-detail__status" [class.user-detail__status--inactive]="current.status !== 'active'">
++        <mat-icon>{{ current.status === 'active' ? 'verified_user' : 'block' }}</mat-icon>
++        <span>{{ current.status | titlecase }}</span>
++      </div>
++    </header>
++
++    <mat-card>
++      <mat-tab-group>
++        <mat-tab label="Account">
++          <div class="user-detail__tab">
++            <form [formGroup]="accountForm" (ngSubmit)="saveAccount()" class="user-detail__form">
++              <mat-form-field appearance="outline">
++                <mat-label>Email</mat-label>
++                <input matInput formControlName="email" />
++              </mat-form-field>
++              <mat-form-field appearance="outline">
++                <mat-label>Phone</mat-label>
++                <input matInput formControlName="phoneNumber" />
++              </mat-form-field>
++              <div class="user-detail__form-actions">
++                <button mat-flat-button color="primary" type="submit" [disabled]="accountForm.invalid || accountForm.pristine">
++                  Save changes
++                </button>
++                <span class="user-detail__spacer"></span>
++                <button mat-button type="button" (click)="confirmAccount()">Send account confirmation</button>
++              </div>
++            </form>
++            <div class="user-detail__verification">
++              <button mat-stroked-button color="primary" type="button" (click)="confirmEmail()">
++                <mat-icon>mark_email_read</mat-icon>
++                Confirm email
++              </button>
++              <button mat-stroked-button color="primary" type="button" (click)="confirmPhone()">
++                <mat-icon>phone_enabled</mat-icon>
++                Confirm phone
++              </button>
++            </div>
++          </div>
++        </mat-tab>
++
++        <mat-tab label="Roles">
++          <div class="user-detail__tab user-detail__tab--roles">
++            <section>
++              <h3>Assigned roles</h3>
++              @if (current.roles.length) {
++                <mat-chip-set>
++                  @for (role of current.roles; track role.id) {
++                    <mat-chip color="primary" selected>
++                      {{ role.name }}
++                      <button mat-icon-button matChipRemove (click)="removeRole(role)" aria-label="Remove {{ role.name }}">
++                        <mat-icon>close</mat-icon>
++                      </button>
++                    </mat-chip>
++                  }
++                </mat-chip-set>
++              } @else {
++                <p class="user-detail__empty">No roles assigned</p>
++              }
++            </section>
++            <section>
++              <h3>Available roles</h3>
++              @if (availableRoles().length) {
++                <mat-chip-set>
++                  @for (role of availableRoles(); track role.id) {
++                    <mat-chip (click)="addRole(role)" clickable>
++                      {{ role.name }}
++                      <mat-icon matChipTrailingIcon>add</mat-icon>
++                    </mat-chip>
++                  }
++                </mat-chip-set>
++              } @else {
++                <p class="user-detail__empty">All roles assigned</p>
++              }
++            </section>
++          </div>
++        </mat-tab>
++
++        <mat-tab label="Tenancies">
++          <div class="user-detail__tab user-detail__tab--tenancies">
++            <section>
++              <h3>Current tenancies</h3>
++              @if (current.tenancies.length) {
++                <mat-list>
++                  @for (tenancy of current.tenancies; track tenancy.id) {
++                    <mat-list-item>
++                      <div matListItemTitle>{{ tenancy.name }}</div>
++                      <div matListItemLine>{{ tenancy.code }}</div>
++                      <button mat-icon-button color="warn" (click)="removeTenancy(tenancy)">
++                        <mat-icon>delete</mat-icon>
++                      </button>
++                    </mat-list-item>
++                  }
++                </mat-list>
++              } @else {
++                <p class="user-detail__empty">No tenancy affiliations</p>
++              }
++            </section>
++            <section class="user-detail__tenancy-add">
++              <h3>Add tenancy</h3>
++              <mat-form-field appearance="outline">
++                <mat-label>Tenancy</mat-label>
++                <mat-select [formControl]="tenancySelection">
++                  @for (tenancy of availableTenancies(); track tenancy.id) {
++                    <mat-option [value]="tenancy.id">{{ tenancy.name }}</mat-option>
++                  }
++                </mat-select>
++              </mat-form-field>
++              <button mat-flat-button color="primary" type="button" (click)="assignTenancy()" [disabled]="!tenancySelection.value">
++                Assign
++              </button>
++            </section>
++          </div>
++        </mat-tab>
++
++        <mat-tab label="Attributes">
++          <div class="user-detail__tab user-detail__tab--attributes">
++            @if (attributes().length) {
++              <table class="user-detail__attributes">
++                <thead>
++                  <tr>
++                    <th>Key</th>
++                    <th>Value</th>
++                  </tr>
++                </thead>
++                <tbody>
++                  @for (item of attributes(); track item.key) {
++                    <tr>
++                      <td>{{ item.key }}</td>
++                      <td>{{ item.value | json }}</td>
++                    </tr>
++                  }
++                </tbody>
++              </table>
++            } @else {
++              <p class="user-detail__empty">No custom attributes</p>
++            }
++          </div>
++        </mat-tab>
++      </mat-tab-group>
++    </mat-card>
++  </section>
++}
+diff --git a/frontend/src/app/admin/users/user-detail.component.scss b/frontend/src/app/admin/users/user-detail.component.scss
+new file mode 100644
+index 0000000..9c4db27
+--- /dev/null
++++ b/frontend/src/app/admin/users/user-detail.component.scss
+@@ -0,0 +1,101 @@
++.user-detail {
++  display: flex;
++  flex-direction: column;
++  gap: 16px;
++  margin: 16px;
++}
++
++.user-detail__header {
++  display: flex;
++  justify-content: space-between;
++  align-items: flex-start;
++  gap: 16px;
++}
++
++.user-detail__meta {
++  margin: 4px 0 0;
++  color: #666;
++}
++
++.user-detail__status {
++  display: inline-flex;
++  align-items: center;
++  gap: 6px;
++  padding: 4px 8px;
++  border-radius: 999px;
++  background: rgba(46, 204, 113, 0.12);
++  color: #2ecc71;
++  text-transform: capitalize;
++}
++
++.user-detail__status--inactive {
++  background: rgba(231, 76, 60, 0.12);
++  color: #e74c3c;
++}
++
++.user-detail__tab {
++  display: flex;
++  flex-direction: column;
++  gap: 24px;
++  padding: 16px;
++}
++
++.user-detail__form {
++  display: grid;
++  gap: 16px;
++  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
++  align-items: end;
++}
++
++.user-detail__form-actions {
++  grid-column: 1 / -1;
++  display: flex;
++  align-items: center;
++  gap: 8px;
++}
++
++.user-detail__spacer {
++  flex: 1;
++}
++
++.user-detail__verification {
++  display: flex;
++  gap: 12px;
++}
++
++.user-detail__empty {
++  color: #888;
++  margin: 0;
++}
++
++.user-detail__tab--roles mat-chip-set {
++  display: flex;
++  flex-wrap: wrap;
++  gap: 8px;
++}
++
++.user-detail__tab--tenancies mat-list-item {
++  display: flex;
++  align-items: center;
++}
++
++.user-detail__tab--tenancies mat-list-item button {
++  margin-left: auto;
++}
++
++.user-detail__tenancy-add {
++  display: flex;
++  align-items: center;
++  gap: 12px;
++}
++
++.user-detail__attributes {
++  width: 100%;
++  border-collapse: collapse;
++}
++
++.user-detail__attributes th,
++.user-detail__attributes td {
++  border: 1px solid rgba(0, 0, 0, 0.12);
++  padding: 8px;
++}
+diff --git a/frontend/src/app/admin/users/user-detail.component.ts b/frontend/src/app/admin/users/user-detail.component.ts
+new file mode 100644
+index 0000000..7301cf5
+--- /dev/null
++++ b/frontend/src/app/admin/users/user-detail.component.ts
+@@ -0,0 +1,271 @@
++import { AsyncPipe, JsonPipe, NgFor, NgIf } from '@angular/common';
++import { Component, OnInit, computed, inject, signal } from '@angular/core';
++import { ActivatedRoute, Router, RouterLink } from '@angular/router';
++import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
++import { MatButtonModule } from '@angular/material/button';
++import { MatCardModule } from '@angular/material/card';
++import { MatChipsModule } from '@angular/material/chips';
++import { MatDialog, MatDialogModule } from '@angular/material/dialog';
++import { MatIconModule } from '@angular/material/icon';
++import { MatInputModule } from '@angular/material/input';
++import { MatListModule } from '@angular/material/list';
++import { MatSelectModule } from '@angular/material/select';
++import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
++import { MatTabsModule } from '@angular/material/tabs';
++import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
++import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
++import { RolesService } from './roles.service';
++import { TenancyService } from './tenancy.service';
++import { UsersService } from './users.service';
++import { RoleSummary, TenancySummary, UserDetail } from './models';
++
++@Component({
++  standalone: true,
++  selector: 'stc-user-detail',
++  templateUrl: './user-detail.component.html',
++  styleUrls: ['./user-detail.component.scss'],
++  imports: [
++    MatCardModule,
++    MatTabsModule,
++    MatButtonModule,
++    MatIconModule,
++    MatChipsModule,
++    MatSnackBarModule,
++    MatDialogModule,
++    MatInputModule,
++    MatSelectModule,
++    MatListModule,
++    ReactiveFormsModule,
++    RouterLink,
++    AsyncPipe,
++    NgIf,
++    NgFor,
++    JsonPipe,
++  ],
++})
++export class UserDetailComponent implements OnInit {
++  private readonly route = inject(ActivatedRoute);
++  private readonly router = inject(Router);
++  private readonly usersService = inject(UsersService);
++  private readonly rolesService = inject(RolesService);
++  private readonly tenancyService = inject(TenancyService);
++  private readonly snackBar = inject(MatSnackBar);
++  private readonly dialog = inject(MatDialog);
++  private readonly fb = inject(FormBuilder);
++
++  readonly accountForm = this.fb.group({
++    email: ['', [Validators.required, Validators.email]],
++    phoneNumber: [''],
++  });
++
++  readonly user = signal<UserDetail | null>(null);
++  readonly availableRoles = signal<RoleSummary[]>([]);
++  readonly availableTenancies = signal<TenancySummary[]>([]);
++  readonly attributes = computed(() => {
++    const details = this.user();
++    if (!details) {
++      return [] as Array<{ key: string; value: unknown }>;
++    }
++    return Object.entries(details.attributes ?? {}).map(([key, value]) => ({ key, value }));
++  });
++  tenancySelection = this.fb.control<string | null>(null);
++
++  ngOnInit(): void {
++    this.loadUser();
++    this.refreshRoles();
++    this.refreshTenancies();
++  }
++
++  private get userId(): string {
++    return this.route.snapshot.paramMap.get('id') ?? '';
++  }
++
++  private loadUser(): void {
++    const id = this.userId;
++    if (!id) {
++      return;
++    }
++    this.usersService
++      .getById(id)
++      .pipe(takeUntilDestroyed())
++      .subscribe({
++        next: (detail) => {
++          this.user.set(detail);
++          this.accountForm.patchValue({
++            email: detail.email ?? '',
++            phoneNumber: detail.phoneNumber ?? '',
++          });
++        },
++        error: () => {
++          this.snackBar.open('Unable to load user details', undefined, { duration: 3000 });
++          this.router.navigate(['/admin/users']);
++        },
++      });
++  }
++
++  private refreshRoles(): void {
++    this.rolesService
++      .list()
++      .pipe(takeUntilDestroyed())
++      .subscribe((roles) => {
++        const assigned = this.user()?.roles ?? [];
++        const assignedIds = new Set(assigned.map((role) => role.id));
++        this.availableRoles.set(roles.filter((role) => !assignedIds.has(role.id)));
++      });
++  }
++
++  private refreshTenancies(): void {
++    this.tenancyService
++      .list()
++      .pipe(takeUntilDestroyed())
++      .subscribe((tenancies) => {
++        const assigned = this.user()?.tenancies ?? [];
++        const assignedIds = new Set(assigned.map((t) => t.id));
++        this.availableTenancies.set(tenancies.filter((t) => !assignedIds.has(t.id)));
++      });
++  }
++
++  saveAccount(): void {
++    if (this.accountForm.invalid || !this.user()) {
++      return;
++    }
++    this.usersService
++      .updateContact(this.userId, {
++        email: this.accountForm.value.email ?? undefined,
++        phoneNumber: this.accountForm.value.phoneNumber ?? undefined,
++      })
++      .pipe(takeUntilDestroyed())
++      .subscribe({
++        next: (detail) => {
++          this.user.set(detail);
++          this.snackBar.open('Account updated', undefined, { duration: 2500 });
++        },
++        error: () => this.snackBar.open('Unable to update account', undefined, { duration: 3000 }),
++      });
++  }
++
++  confirmAccount(): void {
++    this.openConfirmDialog({
++      title: 'Confirm user account',
++      message: 'Send confirmation to this user?',
++    }).afterClosed().subscribe((confirmed) => {
++      if (!confirmed) {
++        return;
++      }
++      this.usersService
++        .confirmUser(this.userId)
++        .pipe(takeUntilDestroyed())
++        .subscribe(() => this.snackBar.open('Account confirmation triggered', undefined, { duration: 2500 }));
++    });
++  }
++
++  confirmEmail(): void {
++    this.openConfirmDialog({
++      title: 'Confirm email',
++      message: 'Mark email as verified?',
++    }).afterClosed().subscribe((confirmed) => {
++      if (!confirmed) {
++        return;
++      }
++      this.usersService
++        .confirmEmail(this.userId)
++        .pipe(takeUntilDestroyed())
++        .subscribe(() => this.snackBar.open('Email confirmation triggered', undefined, { duration: 2500 }));
++    });
++  }
++
++  confirmPhone(): void {
++    this.openConfirmDialog({
++      title: 'Confirm phone',
++      message: 'Mark phone number as verified?',
++    }).afterClosed().subscribe((confirmed) => {
++      if (!confirmed) {
++        return;
++      }
++      this.usersService
++        .confirmPhone(this.userId)
++        .pipe(takeUntilDestroyed())
++        .subscribe(() => this.snackBar.open('Phone confirmation triggered', undefined, { duration: 2500 }));
++    });
++  }
++
++  addRole(role: RoleSummary): void {
++    this.rolesService
++      .assign(this.userId, role.id)
++      .pipe(takeUntilDestroyed())
++      .subscribe({
++        next: () => {
++          const user = this.user();
++          if (!user) {
++            return;
++          }
++          this.user.set({ ...user, roles: [...user.roles, role] });
++          this.refreshRoles();
++          this.snackBar.open('Role assigned', undefined, { duration: 2500 });
++        },
++        error: () => this.snackBar.open('Unable to assign role', undefined, { duration: 3000 }),
++      });
++  }
++
++  removeRole(role: RoleSummary): void {
++    this.rolesService
++      .remove(this.userId, role.id)
++      .pipe(takeUntilDestroyed())
++      .subscribe({
++        next: () => {
++          const user = this.user();
++          if (!user) {
++            return;
++          }
++          this.user.set({ ...user, roles: user.roles.filter((r) => r.id !== role.id) });
++          this.refreshRoles();
++          this.snackBar.open('Role removed', undefined, { duration: 2500 });
++        },
++        error: () => this.snackBar.open('Unable to remove role', undefined, { duration: 3000 }),
++      });
++  }
++
++  assignTenancy(): void {
++    const tenantId = this.tenancySelection.value;
++    if (!tenantId) {
++      return;
++    }
++    this.tenancyService
++      .assign(this.userId, tenantId)
++      .pipe(takeUntilDestroyed())
++      .subscribe({
++        next: () => {
++          const user = this.user();
++          const tenancy = this.availableTenancies().find((t) => t.id === tenantId);
++          if (user && tenancy) {
++            this.user.set({ ...user, tenancies: [...user.tenancies, tenancy] });
++            this.refreshTenancies();
++            this.tenancySelection.setValue(null);
++          }
++          this.snackBar.open('Tenancy assigned', undefined, { duration: 2500 });
++        },
++        error: () => this.snackBar.open('Unable to assign tenancy', undefined, { duration: 3000 }),
++      });
++  }
++
++  removeTenancy(tenancy: TenancySummary): void {
++    this.tenancyService
++      .remove(this.userId, tenancy.id)
++      .pipe(takeUntilDestroyed())
++      .subscribe({
++        next: () => {
++          const user = this.user();
++          if (user) {
++            this.user.set({ ...user, tenancies: user.tenancies.filter((t) => t.id !== tenancy.id) });
++            this.refreshTenancies();
++          }
++          this.snackBar.open('Tenancy removed', undefined, { duration: 2500 });
++        },
++        error: () => this.snackBar.open('Unable to remove tenancy', undefined, { duration: 3000 }),
++      });
++  }
++
++  private openConfirmDialog(data: ConfirmDialogData) {
++    return this.dialog.open(ConfirmDialogComponent, { data });
++  }
++}
+diff --git a/frontend/src/app/admin/users/user-list.component.html b/frontend/src/app/admin/users/user-list.component.html
+new file mode 100644
+index 0000000..dd87f07
+--- /dev/null
++++ b/frontend/src/app/admin/users/user-list.component.html
+@@ -0,0 +1,63 @@
++<mat-card class="user-list">
++  <form class="user-list__filters" [formGroup]="filterForm" (ngSubmit)="applyFilter()">
++    <mat-form-field appearance="outline">
++      <mat-label>Email</mat-label>
++      <input matInput formControlName="email" placeholder="user@example.com" />
++    </mat-form-field>
++    <mat-form-field appearance="outline">
++      <mat-label>Phone</mat-label>
++      <input matInput formControlName="phone" placeholder="+1 555 555 5555" />
++    </mat-form-field>
++    <mat-form-field appearance="outline">
++      <mat-label>Group</mat-label>
++      <input matInput formControlName="group" placeholder="admins" />
++    </mat-form-field>
++    <div class="user-list__filters-actions">
++      <button mat-flat-button color="primary" type="submit">Apply</button>
++      <button mat-stroked-button type="button" (click)="clearFilters()">Clear</button>
++    </div>
++  </form>
++
++  @if (loading) {
++    <div class="user-list__loading">
++      <mat-spinner diameter="32"></mat-spinner>
++    </div>
++  } @else {
++    <div class="user-list__table">
++      <table mat-table [dataSource]="dataSource" class="mat-elevation-z1">
++        <ng-container matColumnDef="displayName">
++          <th mat-header-cell *matHeaderCellDef>Name</th>
++          <td mat-cell *matCellDef="let user">{{ user.displayName || user.email || 'Unnamed user' }}</td>
++        </ng-container>
++
++        <ng-container matColumnDef="email">
++          <th mat-header-cell *matHeaderCellDef>Email</th>
++          <td mat-cell *matCellDef="let user">{{ user.email || '—' }}</td>
++        </ng-container>
++
++        <ng-container matColumnDef="status">
++          <th mat-header-cell *matHeaderCellDef>Status</th>
++          <td mat-cell *matCellDef="let user">
++            <span class="user-list__status" [class.user-list__status--inactive]="user.status !== 'active'">
++              {{ user.status }}
++            </span>
++          </td>
++        </ng-container>
++
++        <ng-container matColumnDef="actions">
++          <th mat-header-cell *matHeaderCellDef></th>
++          <td mat-cell *matCellDef="let user">
++            <button mat-button color="primary" (click)="openDetail(user)">
++              <mat-icon>manage_accounts</mat-icon>
++              Details
++            </button>
++          </td>
++        </ng-container>
++
++        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
++        <tr mat-row *matRowDef="let row; columns: displayedColumns" class="user-list__row"></tr>
++      </table>
++      <mat-paginator [pageSize]="20" [pageSizeOptions]="[10, 20, 50]"></mat-paginator>
++    </div>
++  }
++</mat-card>
+diff --git a/frontend/src/app/admin/users/user-list.component.scss b/frontend/src/app/admin/users/user-list.component.scss
+new file mode 100644
+index 0000000..6f5cbf1
+--- /dev/null
++++ b/frontend/src/app/admin/users/user-list.component.scss
+@@ -0,0 +1,40 @@
++.user-list {
++  display: block;
++  margin: 16px;
++  padding: 16px;
++}
++
++.user-list__filters {
++  display: grid;
++  gap: 12px;
++  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
++  margin-bottom: 16px;
++}
++
++.user-list__filters-actions {
++  display: flex;
++  align-items: center;
++  gap: 8px;
++}
++
++.user-list__loading {
++  display: flex;
++  justify-content: center;
++  padding: 32px 0;
++}
++
++.user-list__table {
++  overflow-x: auto;
++}
++
++.user-list__row {
++  cursor: pointer;
++}
++
++.user-list__status {
++  text-transform: capitalize;
++}
++
++.user-list__status--inactive {
++  color: #d32f2f;
++}
+diff --git a/frontend/src/app/admin/users/user-list.component.ts b/frontend/src/app/admin/users/user-list.component.ts
+new file mode 100644
+index 0000000..e422eaf
+--- /dev/null
++++ b/frontend/src/app/admin/users/user-list.component.ts
+@@ -0,0 +1,95 @@
++import { AsyncPipe, NgIf } from '@angular/common';
++import { Component, OnInit, ViewChild, inject } from '@angular/core';
++import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
++import { MatButtonModule } from '@angular/material/button';
++import { MatCardModule } from '@angular/material/card';
++import { MatFormFieldModule } from '@angular/material/form-field';
++import { MatIconModule } from '@angular/material/icon';
++import { MatInputModule } from '@angular/material/input';
++import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
++import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
++import { MatTableDataSource, MatTableModule } from '@angular/material/table';
++import { Router, RouterLink } from '@angular/router';
++import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
++import { UsersService } from './users.service';
++import { UserSummary } from './models';
++
++@Component({
++  standalone: true,
++  selector: 'stc-user-list',
++  templateUrl: './user-list.component.html',
++  styleUrls: ['./user-list.component.scss'],
++  imports: [
++    MatCardModule,
++    MatTableModule,
++    MatPaginatorModule,
++    MatFormFieldModule,
++    MatInputModule,
++    MatButtonModule,
++    MatIconModule,
++    MatProgressSpinnerModule,
++    ReactiveFormsModule,
++    RouterLink,
++    AsyncPipe,
++    NgIf,
++  ],
++})
++export class UserListComponent implements OnInit {
++  private readonly usersService = inject(UsersService);
++  private readonly router = inject(Router);
++  private readonly fb = inject(FormBuilder);
++  readonly displayedColumns = ['displayName', 'email', 'status', 'actions'];
++  readonly dataSource = new MatTableDataSource<UserSummary>([]);
++  readonly filterForm = this.fb.group({
++    email: [''],
++    phone: [''],
++    group: [''],
++  });
++  loading = false;
++
++  @ViewChild(MatPaginator)
++  set paginator(paginator: MatPaginator | undefined) {
++    if (paginator) {
++      this.dataSource.paginator = paginator;
++    }
++  }
++
++  ngOnInit(): void {
++    this.fetch();
++  }
++
++  applyFilter(): void {
++    this.fetch();
++  }
++
++  clearFilters(): void {
++    this.filterForm.reset();
++    this.fetch();
++  }
++
++  openDetail(user: UserSummary): void {
++    this.router.navigate(['/admin/users', user.id]);
++  }
++
++  private fetch(): void {
++    this.loading = true;
++    const filters = this.filterForm.value;
++    this.usersService
++      .list({
++        email: filters.email || undefined,
++        phone: filters.phone || undefined,
++        group: filters.group || undefined,
++      })
++      .pipe(takeUntilDestroyed())
++      .subscribe({
++        next: (users) => {
++          this.dataSource.data = users ?? [];
++          this.loading = false;
++        },
++        error: () => {
++          this.dataSource.data = [];
++          this.loading = false;
++        },
++      });
++  }
++}
+diff --git a/frontend/src/app/admin/users/users.service.ts b/frontend/src/app/admin/users/users.service.ts
+new file mode 100644
+index 0000000..3e2af3e
+--- /dev/null
++++ b/frontend/src/app/admin/users/users.service.ts
+@@ -0,0 +1,33 @@
++import { Injectable, inject } from '@angular/core';
++import { Observable } from 'rxjs';
++import { ApiService } from '@core/api/api.service';
++import { UserDetail, UserQuery, UserSummary } from './models';
++
++@Injectable({ providedIn: 'root' })
++export class UsersService {
++  private readonly api = inject(ApiService);
++
++  list(params: UserQuery = {}): Observable<UserSummary[]> {
++    return this.api.get<UserSummary[]>('/admin/users', { params });
++  }
++
++  getById(userId: string): Observable<UserDetail> {
++    return this.api.get<UserDetail>(`/admin/users/${userId}`);
++  }
++
++  updateContact(userId: string, payload: Partial<UserDetail>): Observable<UserDetail> {
++    return this.api.post<UserDetail>(`/admin/users/${userId}/contact`, payload);
++  }
++
++  confirmUser(userId: string): Observable<void> {
++    return this.api.post<void>(`/admin/users/${userId}/confirm`, {});
++  }
++
++  confirmEmail(userId: string): Observable<void> {
++    return this.api.post<void>(`/admin/users/${userId}/confirm-email`, {});
++  }
++
++  confirmPhone(userId: string): Observable<void> {
++    return this.api.post<void>(`/admin/users/${userId}/confirm-phone`, {});
++  }
++}
+diff --git a/frontend/src/app/app.routes.ts b/frontend/src/app/app.routes.ts
+index 53def12..fe4ec17 100644
+--- a/frontend/src/app/app.routes.ts
++++ b/frontend/src/app/app.routes.ts
+@@ -1,5 +1,6 @@
+ import { Routes } from '@angular/router';
+-import { AdminUsersComponent } from '@admin/users/admin-users.component';
++import { UserListComponent } from '@admin/users/user-list.component';
++import { UserDetailComponent } from '@admin/users/user-detail.component';
+ import { AdminRolesComponent } from '@admin/roles/admin-roles.component';
+ import { AdminTenanciesComponent } from '@admin/tenancies/admin-tenancies.component';
+ import { StorageExplorerComponent } from '@storage/storage-explorer.component';
+@@ -22,7 +23,10 @@ export const routes: Routes = [
+       { path: '', redirectTo: 'admin/users', pathMatch: 'full' },
+       {
+         path: 'admin/users',
+-        component: AdminUsersComponent,
++        children: [
++          { path: '', component: UserListComponent },
++          { path: ':id', component: UserDetailComponent },
++        ],
+       },
+       {
+         path: 'admin/roles',
+diff --git a/test/frontend/admin-users/user-detail.component.spec.ts b/test/frontend/admin-users/user-detail.component.spec.ts
+new file mode 100644
+index 0000000..0bb86f4
+--- /dev/null
++++ b/test/frontend/admin-users/user-detail.component.spec.ts
+@@ -0,0 +1,89 @@
++import { ComponentFixture, TestBed } from '@angular/core/testing';
++import { RouterTestingModule } from '@angular/router/testing';
++import { ActivatedRoute, convertToParamMap } from '@angular/router';
++import { of } from 'rxjs';
++import { MatSnackBar } from '@angular/material/snack-bar';
++import { MatDialog } from '@angular/material/dialog';
++import { UserDetailComponent } from '@admin/users/user-detail.component';
++import { UsersService } from '@admin/users/users.service';
++import { RolesService } from '@admin/users/roles.service';
++import { TenancyService } from '@admin/users/tenancy.service';
++import { RoleSummary, TenancySummary, UserDetail } from '@admin/users/models';
++
++describe('UserDetailComponent', () => {
++  let fixture: ComponentFixture<UserDetailComponent>;
++  let component: UserDetailComponent;
++
++  const detail: UserDetail = {
++    id: 'user-1',
++    email: 'user@example.com',
++    displayName: 'Example User',
++    phoneNumber: '+1 555 555 5555',
++    status: 'active',
++    groups: ['admins'],
++    roles: [],
++    tenancies: [],
++    attributes: {},
++    createdAt: new Date().toISOString(),
++  };
++
++  const roles: RoleSummary[] = [
++    { id: 'role-1', code: 'platform:admin', name: 'Admin' },
++  ];
++
++  const tenancies: TenancySummary[] = [
++    { id: 'ten-1', code: 'core', name: 'Core Tenancy' },
++  ];
++
++  beforeEach(async () => {
++    await TestBed.configureTestingModule({
++      imports: [UserDetailComponent, RouterTestingModule],
++      providers: [
++        {
++          provide: UsersService,
++          useValue: {
++            getById: jest.fn().mockReturnValue(of(detail)),
++            updateContact: jest.fn().mockReturnValue(of(detail)),
++            confirmUser: jest.fn().mockReturnValue(of(void 0)),
++            confirmEmail: jest.fn().mockReturnValue(of(void 0)),
++            confirmPhone: jest.fn().mockReturnValue(of(void 0)),
++          },
++        },
++        {
++          provide: RolesService,
++          useValue: {
++            list: jest.fn().mockReturnValue(of(roles)),
++            assign: jest.fn().mockReturnValue(of(void 0)),
++            remove: jest.fn().mockReturnValue(of(void 0)),
++          },
++        },
++        {
++          provide: TenancyService,
++          useValue: {
++            list: jest.fn().mockReturnValue(of(tenancies)),
++            assign: jest.fn().mockReturnValue(of(void 0)),
++            remove: jest.fn().mockReturnValue(of(void 0)),
++          },
++        },
++        { provide: MatSnackBar, useValue: { open: jest.fn() } },
++        { provide: MatDialog, useValue: { open: jest.fn().mockReturnValue({ afterClosed: () => of(true) }) } },
++        {
++          provide: ActivatedRoute,
++          useValue: {
++            snapshot: { paramMap: convertToParamMap({ id: 'user-1' }) },
++          },
++        },
++      ],
++    }).compileComponents();
++
++    fixture = TestBed.createComponent(UserDetailComponent);
++    component = fixture.componentInstance;
++    fixture.detectChanges();
++  });
++
++  it('renders user header information', () => {
++    expect(component.user()).not.toBeNull();
++    const compiled = fixture.nativeElement as HTMLElement;
++    expect(compiled.querySelector('h1')?.textContent).toContain('Example User');
++  });
++});
+diff --git a/test/frontend/admin-users/user-list.component.spec.ts b/test/frontend/admin-users/user-list.component.spec.ts
+new file mode 100644
+index 0000000..8fd1675
+--- /dev/null
++++ b/test/frontend/admin-users/user-list.component.spec.ts
+@@ -0,0 +1,42 @@
++import { ComponentFixture, TestBed } from '@angular/core/testing';
++import { RouterTestingModule } from '@angular/router/testing';
++import { of } from 'rxjs';
++import { UserListComponent } from '@admin/users/user-list.component';
++import { UsersService } from '@admin/users/users.service';
++import { UserSummary } from '@admin/users/models';
++
++describe('UserListComponent', () => {
++  let fixture: ComponentFixture<UserListComponent>;
++  let component: UserListComponent;
++  const users: UserSummary[] = [
++    {
++      id: 'user-1',
++      email: 'user@example.com',
++      displayName: 'Example User',
++      phoneNumber: '+1 555 555 5555',
++      status: 'active',
++      groups: ['admins'],
++    },
++  ];
++
++  beforeEach(async () => {
++    await TestBed.configureTestingModule({
++      imports: [UserListComponent, RouterTestingModule],
++      providers: [
++        {
++          provide: UsersService,
++          useValue: { list: jest.fn().mockReturnValue(of(users)) },
++        },
++      ],
++    }).compileComponents();
++
++    fixture = TestBed.createComponent(UserListComponent);
++    component = fixture.componentInstance;
++    fixture.detectChanges();
++  });
++
++  it('loads users on init', () => {
++    expect(component.dataSource.data.length).toBe(1);
++    expect(component.dataSource.data[0].displayName).toBe('Example User');
++  });
++});
+-- 
+2.50.1 (Apple Git-155)
+

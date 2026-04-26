@@ -20,7 +20,7 @@ DECLARE
 BEGIN
   v := NULLIF(current_setting('auth.app_user_id', TRUE), '');
   IF v IS NULL THEN
-    v := NULLIF(current_setting('stcore.app_user_id', TRUE), '');
+    v := NULLIF(current_setting('stynx.app_user_id', TRUE), '');
   END IF;
   IF v IS NULL THEN
     RETURN NULL;
@@ -44,7 +44,7 @@ DECLARE
 BEGIN
   v := NULLIF(current_setting('auth.roles', TRUE), '');
   IF v IS NULL THEN
-    v := NULLIF(current_setting('stcore.roles', TRUE), '');
+    v := NULLIF(current_setting('stynx.roles', TRUE), '');
   END IF;
   IF v IS NULL THEN
     RETURN ARRAY[]::text[];
@@ -77,7 +77,7 @@ DECLARE
 BEGIN
   v := NULLIF(current_setting('auth.current_tenant', TRUE), '');
   IF v IS NULL THEN
-    v := NULLIF(current_setting('stcore.current_tenant', TRUE), '');
+    v := NULLIF(current_setting('stynx.current_tenant', TRUE), '');
   END IF;
   IF v IS NULL THEN
     RETURN NULL;
@@ -156,6 +156,165 @@ BEGIN
     RAISE EXCEPTION 'Tenant mismatch. expected=%, provided=%', v_tenant, NEW.tenancy_id USING errcode = '42501';
   END IF;
   RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION auth.apply_tenant_id()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  v_tenant uuid := auth.current_tenant();
+BEGIN
+  IF NEW.tenant_id IS NULL THEN
+    NEW.tenant_id := v_tenant;
+  END IF;
+  IF v_tenant IS NOT NULL AND NEW.tenant_id IS DISTINCT FROM v_tenant AND NOT auth.has_role('platform:superadmin') THEN
+    RAISE EXCEPTION 'Tenant mismatch. expected=%, provided=%', v_tenant, NEW.tenant_id USING errcode = '42501';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION auth.create_tenant_enforcement_trigger(
+  p_schema text,
+  p_table text,
+  p_trigger_name text DEFAULT 'enforce_tenant_context'
+)
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  v_full text := format('%I.%I', p_schema, p_table);
+  v_has_tenancy_id boolean;
+  v_has_tenant_id boolean;
+  v_function text;
+BEGIN
+  IF to_regclass(v_full) IS NULL THEN
+    RETURN;
+  END IF;
+
+  SELECT EXISTS (
+           SELECT 1
+             FROM information_schema.columns
+            WHERE table_schema = p_schema
+              AND table_name = p_table
+              AND column_name = 'tenancy_id'
+         ),
+         EXISTS (
+           SELECT 1
+             FROM information_schema.columns
+            WHERE table_schema = p_schema
+              AND table_name = p_table
+              AND column_name = 'tenant_id'
+         )
+    INTO v_has_tenancy_id, v_has_tenant_id;
+
+  IF NOT v_has_tenancy_id AND NOT v_has_tenant_id THEN
+    RETURN;
+  END IF;
+
+  v_function := CASE
+    WHEN v_has_tenancy_id THEN 'auth.apply_tenant'
+    ELSE 'auth.apply_tenant_id'
+  END;
+
+  EXECUTE format('DROP TRIGGER IF EXISTS %I ON %s', p_trigger_name, v_full);
+  EXECUTE format(
+    'CREATE TRIGGER %I BEFORE INSERT ON %s FOR EACH ROW EXECUTE FUNCTION %s()',
+    p_trigger_name,
+    v_full,
+    v_function
+  );
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION auth.attach_tenant_enforcement_triggers(
+  p_schema text DEFAULT NULL,
+  p_trigger_name text DEFAULT 'enforce_tenant_context',
+  p_excluded_tables text[] DEFAULT ARRAY[]::text[]
+)
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  rec record;
+BEGIN
+  FOR rec IN (
+    SELECT t.schemaname, t.tablename
+      FROM pg_tables t
+     WHERE (p_schema IS NULL OR t.schemaname = p_schema)
+       AND t.schemaname NOT IN ('pg_catalog', 'information_schema')
+       AND t.tablename <> ALL(COALESCE(p_excluded_tables, ARRAY[]::text[]))
+       AND EXISTS (
+         SELECT 1
+           FROM information_schema.columns c
+          WHERE c.table_schema = t.schemaname
+            AND c.table_name = t.tablename
+            AND c.column_name IN ('tenant_id', 'tenancy_id')
+       )
+  ) LOOP
+    PERFORM auth.create_tenant_enforcement_trigger(
+      rec.schemaname,
+      rec.tablename,
+      p_trigger_name
+    );
+  END LOOP;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION auth.create_rls_policy(
+  p_schema text,
+  p_table text,
+  p_tenant_column text DEFAULT NULL,
+  p_allow_superadmin boolean DEFAULT TRUE,
+  p_policy_name text DEFAULT 'tenant_isolation'
+)
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  v_full text := format('%I.%I', p_schema, p_table);
+  v_tenant_column text;
+  v_predicate text;
+BEGIN
+  IF to_regclass(v_full) IS NULL THEN
+    RETURN;
+  END IF;
+
+  IF p_tenant_column IS NOT NULL THEN
+    v_tenant_column := p_tenant_column;
+  ELSE
+    SELECT c.column_name
+      INTO v_tenant_column
+      FROM information_schema.columns c
+     WHERE c.table_schema = p_schema
+       AND c.table_name = p_table
+       AND c.column_name IN ('tenancy_id', 'tenant_id')
+     ORDER BY CASE c.column_name WHEN 'tenancy_id' THEN 1 ELSE 2 END
+     LIMIT 1;
+  END IF;
+
+  IF v_tenant_column IS NULL THEN
+    RETURN;
+  END IF;
+
+  v_predicate := format('%I = auth.current_tenant()', v_tenant_column);
+
+  IF p_allow_superadmin THEN
+    v_predicate := '(' || v_predicate || ' OR auth.has_role(''platform:superadmin''))';
+  END IF;
+
+  EXECUTE format('ALTER TABLE %s ENABLE ROW LEVEL SECURITY', v_full);
+  EXECUTE format('ALTER TABLE %s FORCE ROW LEVEL SECURITY', v_full);
+  EXECUTE format('DROP POLICY IF EXISTS %I ON %s', p_policy_name, v_full);
+  EXECUTE format(
+    'CREATE POLICY %I ON %s USING (%s) WITH CHECK (%s)',
+    p_policy_name,
+    v_full,
+    v_predicate,
+    v_predicate
+  );
 END;
 $$;
 
@@ -262,29 +421,19 @@ CREATE TRIGGER trig_members_touch
 BEFORE UPDATE ON auth.tenancy_members
 FOR EACH ROW EXECUTE FUNCTION auth.touch_updated_at();
 
-CREATE TRIGGER trig_members_enforce_tenant
-BEFORE INSERT ON auth.tenancy_members
-FOR EACH ROW EXECUTE FUNCTION auth.apply_tenant();
+SELECT auth.create_tenant_enforcement_trigger(
+  'auth',
+  'tenancy_members',
+  'trig_members_enforce_tenant'
+);
 
 -- ---------------------------------------------------------------------
 -- RLS policies
 -- ---------------------------------------------------------------------
 
-ALTER TABLE auth.tenancies ENABLE ROW LEVEL SECURITY;
-ALTER TABLE auth.tenancies FORCE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS tenant_isolation ON auth.tenancies;
-CREATE POLICY tenant_isolation ON auth.tenancies
-  USING (
-    tenancy_id = auth.current_tenant()
-    OR auth.has_role('platform:superadmin')
-  )
-  WITH CHECK (
-    tenancy_id = auth.current_tenant()
-    OR auth.has_role('platform:superadmin')
-  );
+SELECT auth.create_rls_policy('auth', 'tenancies', 'tenancy_id');
+SELECT auth.create_rls_policy('auth', 'tenancy_members', 'tenancy_id');
 
-ALTER TABLE auth.tenancy_members ENABLE ROW LEVEL SECURITY;
-ALTER TABLE auth.tenancy_members FORCE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS membership_isolation ON auth.tenancy_members;
 CREATE POLICY membership_isolation ON auth.tenancy_members
   USING (
@@ -362,8 +511,10 @@ CREATE POLICY users_isolation ON auth.users
     OR auth.has_role('platform:superadmin')
   );
 
-CREATE TRIGGER trig_users_enforce_tenant
-BEFORE INSERT ON auth.users
-FOR EACH ROW EXECUTE FUNCTION auth.apply_tenant();
+SELECT auth.create_tenant_enforcement_trigger(
+  'auth',
+  'users',
+  'trig_users_enforce_tenant'
+);
 
 RESET search_path;

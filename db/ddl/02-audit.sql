@@ -15,6 +15,7 @@ CREATE TABLE audit.events (
   operation text NOT NULL,
   entity text NOT NULL,
   entity_id text,
+  pk jsonb,
   request_id text,
   ip_address text,
   station_id text,
@@ -27,6 +28,7 @@ CREATE TABLE audit.events (
 CREATE INDEX idx_audit_events_tenant_time ON audit.events (tenancy_id, occurred_at DESC);
 CREATE INDEX idx_audit_events_entity ON audit.events (entity, entity_id);
 CREATE INDEX idx_audit_events_operation ON audit.events (operation);
+CREATE INDEX idx_audit_events_pk ON audit.events USING gin (pk);
 
 CREATE OR REPLACE FUNCTION audit.write(
   p_tenant uuid,
@@ -40,7 +42,8 @@ CREATE OR REPLACE FUNCTION audit.write(
   p_station text DEFAULT NULL,
   p_request text DEFAULT NULL,
   p_old jsonb DEFAULT NULL,
-  p_new jsonb DEFAULT NULL
+  p_new jsonb DEFAULT NULL,
+  p_pk jsonb DEFAULT NULL
 )
 RETURNS void
 LANGUAGE plpgsql
@@ -53,6 +56,7 @@ BEGIN
     operation,
     entity,
     entity_id,
+    pk,
     metadata,
     ip_address,
     station_id,
@@ -67,6 +71,7 @@ BEGIN
     p_operation,
     p_entity,
     p_entity_id,
+    p_pk,
     COALESCE(p_metadata, '{}'::jsonb),
     p_ip,
     p_station,
@@ -74,6 +79,51 @@ BEGIN
     p_old,
     p_new
   );
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION audit.extract_primary_key(
+  p_schema text,
+  p_table text,
+  p_row jsonb
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+STABLE
+AS $$
+DECLARE
+  v_key_columns text[];
+  v_key text;
+  v_pk jsonb := '{}'::jsonb;
+BEGIN
+  IF p_row IS NULL THEN
+    RETURN NULL;
+  END IF;
+
+  SELECT array_agg(att.attname ORDER BY key_pos.ord)
+  INTO v_key_columns
+  FROM pg_index idx
+  JOIN pg_class cls ON cls.oid = idx.indrelid
+  JOIN pg_namespace nsp ON nsp.oid = cls.relnamespace
+  JOIN LATERAL unnest(idx.indkey) WITH ORDINALITY AS key_pos(attnum, ord) ON true
+  JOIN pg_attribute att ON att.attrelid = cls.oid AND att.attnum = key_pos.attnum
+  WHERE idx.indisprimary
+    AND nsp.nspname = p_schema
+    AND cls.relname = p_table;
+
+  IF v_key_columns IS NULL OR array_length(v_key_columns, 1) IS NULL THEN
+    RETURN NULL;
+  END IF;
+
+  FOREACH v_key IN ARRAY v_key_columns LOOP
+    v_pk := v_pk || jsonb_build_object(v_key, p_row -> v_key);
+  END LOOP;
+
+  IF v_pk = '{}'::jsonb THEN
+    RETURN NULL;
+  END IF;
+
+  RETURN v_pk;
 END;
 $$;
 
@@ -86,15 +136,27 @@ DECLARE
   v_tenant uuid := auth.current_tenant();
   v_actor uuid := auth.current_user_id();
   v_roles text[] := auth.current_roles();
+  v_entity text := TG_TABLE_SCHEMA || '.' || TG_TABLE_NAME;
+  v_pk jsonb;
+  v_entity_id text;
 BEGIN
   IF v_op = 'INSERT' THEN
-    PERFORM audit.write(v_tenant, v_actor, v_roles[1], 'INSERT', TG_TABLE_NAME, NULL, to_jsonb(NEW), NULL, NULL, current_setting('stcore.correlation_id', true), NULL, to_jsonb(NEW));
+    v_pk := audit.extract_primary_key(TG_TABLE_SCHEMA, TG_TABLE_NAME, to_jsonb(NEW));
+    v_entity_id := CASE WHEN v_pk ? 'id' THEN v_pk ->> 'id' ELSE NULL END;
+    PERFORM audit.write(v_tenant, v_actor, v_roles[1], 'INSERT', v_entity, v_entity_id, to_jsonb(NEW), NULL, NULL, current_setting('stynx.correlation_id', true), NULL, to_jsonb(NEW), v_pk);
     RETURN NEW;
   ELSIF v_op = 'UPDATE' THEN
-    PERFORM audit.write(v_tenant, v_actor, v_roles[1], 'UPDATE', TG_TABLE_NAME, NULL, to_jsonb(NEW), NULL, NULL, current_setting('stcore.correlation_id', true), to_jsonb(OLD), to_jsonb(NEW));
+    v_pk := COALESCE(
+      audit.extract_primary_key(TG_TABLE_SCHEMA, TG_TABLE_NAME, to_jsonb(NEW)),
+      audit.extract_primary_key(TG_TABLE_SCHEMA, TG_TABLE_NAME, to_jsonb(OLD))
+    );
+    v_entity_id := CASE WHEN v_pk ? 'id' THEN v_pk ->> 'id' ELSE NULL END;
+    PERFORM audit.write(v_tenant, v_actor, v_roles[1], 'UPDATE', v_entity, v_entity_id, to_jsonb(NEW), NULL, NULL, current_setting('stynx.correlation_id', true), to_jsonb(OLD), to_jsonb(NEW), v_pk);
     RETURN NEW;
   ELSIF v_op = 'DELETE' THEN
-    PERFORM audit.write(v_tenant, v_actor, v_roles[1], 'DELETE', TG_TABLE_NAME, NULL, '{}'::jsonb, NULL, NULL, current_setting('stcore.correlation_id', true), to_jsonb(OLD), NULL);
+    v_pk := audit.extract_primary_key(TG_TABLE_SCHEMA, TG_TABLE_NAME, to_jsonb(OLD));
+    v_entity_id := CASE WHEN v_pk ? 'id' THEN v_pk ->> 'id' ELSE NULL END;
+    PERFORM audit.write(v_tenant, v_actor, v_roles[1], 'DELETE', v_entity, v_entity_id, '{}'::jsonb, NULL, NULL, current_setting('stynx.correlation_id', true), to_jsonb(OLD), NULL, v_pk);
     RETURN OLD;
   END IF;
   RETURN NULL;

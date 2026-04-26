@@ -1,0 +1,28 @@
+{
+  "name": "@stynx-internal/migration-linter",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "description": "Archive-aware SQL migration linter for the STYNX monorepo",
+  "bin": {
+    "stynx-migration-lint": "./dist/src/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist coverage",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint --config ../../tools/eslint-config/lib.mjs \"src/**/*.ts\"",
+    "test": "pnpm run build && node --test dist/test/migration-linter.spec.js"
+  },
+  "dependencies": {
+    "pg-query-emscripten": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.17",
+    "typescript": "^5.9.3"
+  }
+}

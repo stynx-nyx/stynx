@@ -1,0 +1,38 @@
+{
+  "entryPoints": [
+    "/Users/aarusso/Development/stech/stynx/packages/audit/src/index.ts",
+    "/Users/aarusso/Development/stech/stynx/packages/auth/src/index.ts",
+    "/Users/aarusso/Development/stech/stynx/packages/cli/src/index.ts",
+    "/Users/aarusso/Development/stech/stynx/packages/core/src/index.ts",
+    "/Users/aarusso/Development/stech/stynx/packages/data/src/index.ts",
+    "/Users/aarusso/Development/stech/stynx/packages/health/src/index.ts",
+    "/Users/aarusso/Development/stech/stynx/packages/i18n/src/index.ts",
+    "/Users/aarusso/Development/stech/stynx/packages/idempotency/src/index.ts",
+    "/Users/aarusso/Development/stech/stynx/packages/logging/src/index.ts",
+    "/Users/aarusso/Development/stech/stynx/packages/privacy/src/index.ts",
+    "/Users/aarusso/Development/stech/stynx/packages/ratelimit/src/index.ts",
+    "/Users/aarusso/Development/stech/stynx/packages/sessions/src/index.ts",
+    "/Users/aarusso/Development/stech/stynx/packages/storage/src/index.ts",
+    "/Users/aarusso/Development/stech/stynx/packages/tenancy/src/index.ts",
+    "/Users/aarusso/Development/stech/stynx/packages/testing/src/index.ts",
+    "/Users/aarusso/Development/stech/stynx/packages-web/angular/src/index.ts",
+    "/Users/aarusso/Development/stech/stynx/packages-web/angular-auth/src/index.ts",
+    "/Users/aarusso/Development/stech/stynx/packages-web/angular-i18n/src/index.ts",
+    "/Users/aarusso/Development/stech/stynx/packages-web/angular-profile/src/index.ts",
+    "/Users/aarusso/Development/stech/stynx/packages-web/angular-sessions/src/index.ts",
+    "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/src/index.ts",
+    "/Users/aarusso/Development/stech/stynx/packages-web/angular-trash/src/index.ts",
+    "/Users/aarusso/Development/stech/stynx/packages-web/angular-ui/src/index.ts",
+    "/Users/aarusso/Development/stech/stynx/packages-web/sdk/src/index.ts"
+  ],
+  "entryPointStrategy": "resolve",
+  "tsconfig": "/Users/aarusso/Development/stech/stynx/tsconfig.base.json",
+  "plugin": [
+    "typedoc-plugin-markdown"
+  ],
+  "readme": "none",
+  "hideBreadcrumbs": true,
+  "hidePageTitle": false,
+  "githubPages": false,
+  "out": "/Users/aarusso/Development/stech/stynx/docs/.generated/site-docs/api-reference"
+}

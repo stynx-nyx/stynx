@@ -69,7 +69,7 @@ export class DatabaseService {
       });
     }
     if (context.correlationId) {
-      statements.push({ text: "select set_config('stcore.correlation_id',$1,false)", params: [context.correlationId] });
+      statements.push({ text: "select set_config('stynx.correlation_id',$1,false)", params: [context.correlationId] });
     }
     if (statements.length === 0) {
       return;

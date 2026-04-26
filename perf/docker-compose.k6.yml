@@ -1,0 +1,11 @@
+services:
+  k6:
+    image: grafana/k6:0.49.0
+    working_dir: /perf
+    volumes:
+      - ./k6:/perf
+    environment:
+      STYNX_K6_BASE_URL: http://reference-api:3000
+      K6_SUMMARY_PATH: /perf/results/summary.json
+    depends_on:
+      - reference-api

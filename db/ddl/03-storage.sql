@@ -40,21 +40,12 @@ CREATE TRIGGER trig_storage_files_touch
 BEFORE UPDATE ON storage.files
 FOR EACH ROW EXECUTE FUNCTION storage.touch_updated_at();
 
-CREATE TRIGGER trig_storage_files_enforce_tenant
-BEFORE INSERT ON storage.files
-FOR EACH ROW EXECUTE FUNCTION auth.apply_tenant();
+SELECT auth.create_tenant_enforcement_trigger(
+  'storage',
+  'files',
+  'trig_storage_files_enforce_tenant'
+);
 
-ALTER TABLE storage.files ENABLE ROW LEVEL SECURITY;
-ALTER TABLE storage.files FORCE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS tenant_scope ON storage.files;
-CREATE POLICY tenant_scope ON storage.files
-  USING (
-    tenancy_id = auth.current_tenant()
-    OR auth.has_role('platform:superadmin')
-  )
-  WITH CHECK (
-    tenancy_id = auth.current_tenant()
-    OR auth.has_role('platform:superadmin')
-  );
+SELECT auth.create_rls_policy('storage', 'files', 'tenancy_id', TRUE, 'tenant_scope');
 
 RESET search_path;

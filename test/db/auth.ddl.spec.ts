@@ -10,13 +10,19 @@ describe('auth schema DDL', () => {
 
   it('exposes tenancy membership with RLS policies', () => {
     expect(ddl).toMatch(/CREATE TABLE auth\.tenancy_members/);
-    expect(ddl).toMatch(/ENABLE ROW LEVEL SECURITY/);
-    expect(ddl).toMatch(/CREATE POLICY tenant_isolation/);
+    expect(ddl).toMatch(/create_rls_policy\(\s*'auth'\s*,\s*'tenancy_members'/i);
+    expect(ddl).toMatch(/membership_isolation/);
   });
 
   it('sets up Cognito mirror tables', () => {
     expect(ddl).toMatch(/CREATE TABLE auth\.users/);
     expect(ddl).toMatch(/CREATE TABLE auth\.roles/);
     expect(ddl).toMatch(/CREATE TABLE auth\.groups/);
+  });
+
+  it('defines reusable tenant/RLS helper functions', () => {
+    expect(ddl).toMatch(/CREATE OR REPLACE FUNCTION auth\.create_tenant_enforcement_trigger/);
+    expect(ddl).toMatch(/CREATE OR REPLACE FUNCTION auth\.attach_tenant_enforcement_triggers/);
+    expect(ddl).toMatch(/CREATE OR REPLACE FUNCTION auth\.create_rls_policy/);
   });
 });

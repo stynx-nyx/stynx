@@ -1,7 +1,8 @@
 {
-  "name": "st-core-script-tests",
+  "name": "stynx-script-tests",
   "private": true,
   "scripts": {
-    "test": "node validate.js"
+    "test": "node validate.js",
+    "lint": "eslint --config ../../tools/eslint-config/lib.mjs \"../scripts/**/*.js\""
   }
 }

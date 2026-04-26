@@ -1,0 +1,10 @@
+CREATE SCHEMA IF NOT EXISTS core AUTHORIZATION stynx_owner;
+CREATE SCHEMA IF NOT EXISTS tenancy AUTHORIZATION stynx_owner;
+CREATE SCHEMA IF NOT EXISTS auth AUTHORIZATION stynx_owner;
+CREATE SCHEMA IF NOT EXISTS audit AUTHORIZATION stynx_owner;
+CREATE SCHEMA IF NOT EXISTS storage AUTHORIZATION stynx_owner;
+CREATE SCHEMA IF NOT EXISTS archive AUTHORIZATION stynx_owner;
+
+GRANT USAGE ON SCHEMA core, tenancy, auth, storage, archive TO stynx_app, stynx_reader;
+GRANT USAGE ON SCHEMA audit TO stynx_app;
+REVOKE ALL ON SCHEMA audit FROM stynx_reader;

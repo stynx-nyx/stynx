@@ -1,0 +1,67 @@
+From 4effe1f1181cc0d24daf7f17e8fdc63adb7336af Mon Sep 17 00:00:00 2001
+From: "Antonio A. Russo" <aarusso@nyxk.com.br>
+Date: Sun, 5 Oct 2025 21:02:54 -0300
+Subject: [PATCH 08/14] chore(lint): migrate backend eslint config to flat
+ config
+
+---
+ backend/.eslintrc.js     | 18 ------------------
+ backend/eslint.config.js | 21 +++++++++++++++++++++
+ 2 files changed, 21 insertions(+), 18 deletions(-)
+ delete mode 100644 backend/.eslintrc.js
+ create mode 100644 backend/eslint.config.js
+
+diff --git a/backend/.eslintrc.js b/backend/.eslintrc.js
+deleted file mode 100644
+index 22da117..0000000
+--- a/backend/.eslintrc.js
++++ /dev/null
+@@ -1,18 +0,0 @@
+-module.exports = {
+-  root: true,
+-  parser: '@typescript-eslint/parser',
+-  parserOptions: {
+-    project: ['./tsconfig.json'],
+-    tsconfigRootDir: __dirname,
+-  },
+-  plugins: ['@typescript-eslint'],
+-  extends: ['plugin:@typescript-eslint/recommended', 'plugin:@typescript-eslint/recommended-requiring-type-checking', 'prettier'],
+-  env: {
+-    node: true,
+-    jest: true,
+-  },
+-  ignorePatterns: ['dist', 'node_modules'],
+-  rules: {
+-    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+-  },
+-};
+diff --git a/backend/eslint.config.js b/backend/eslint.config.js
+new file mode 100644
+index 0000000..a0b7c52
+--- /dev/null
++++ b/backend/eslint.config.js
+@@ -0,0 +1,21 @@
++import tseslint from 'typescript-eslint';
++
++export default tseslint.config(
++  {
++    ignores: ['dist', 'node_modules'],
++  },
++  ...tseslint.configs.recommended,
++  ...tseslint.configs.recommendedTypeChecked,
++  {
++    files: ['**/*.ts'],
++    languageOptions: {
++      parserOptions: {
++        project: ['./tsconfig.json'],
++        tsconfigRootDir: import.meta.dirname,
++      },
++    },
++    rules: {
++      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
++    },
++  },
++);
+-- 
+2.50.1 (Apple Git-155)
+

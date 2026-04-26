@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/angular/angular-cli/main/packages/angular/cli/lib/config/schema.json",
   "version": 1,
   "projects": {
-    "st-core": {
+    "stynx": {
       "projectType": "application",
       "root": "",
       "sourceRoot": "src",
@@ -11,7 +11,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist/st-core",
+            "outputPath": "dist/stynx",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": ["zone.js"],
@@ -47,11 +47,11 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "buildTarget": "st-core:build"
+            "buildTarget": "stynx:build"
           },
           "configurations": {
             "production": {
-              "buildTarget": "st-core:build:production"
+              "buildTarget": "stynx:build:production"
             }
           }
         },

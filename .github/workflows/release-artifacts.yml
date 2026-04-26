@@ -1,0 +1,98 @@
+name: Release Artifacts
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: Image tag to publish
+        required: true
+        default: manual
+        type: string
+  release:
+    types:
+      - published
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION || 'sa-east-1' }}
+
+jobs:
+  containers:
+    name: publish-sign-sbom
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set image metadata
+        id: meta
+        env:
+          INPUT_IMAGE_TAG: ${{ inputs.image_tag }}
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            tag="${{ github.event.release.tag_name }}"
+          else
+            tag="${INPUT_IMAGE_TAG}"
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "reference_api=${{ steps.login-ecr.outputs.registry }}/stynx/reference-api:$tag" >> "$GITHUB_OUTPUT"
+          echo "reference_web=${{ steps.login-ecr.outputs.registry }}/stynx/reference-web:$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push reference-api
+        id: reference-api
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/reference-api/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.reference_api }}
+
+      - name: Build and push reference-web
+        id: reference-web
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/reference-web/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.reference_web }}
+
+      - name: Install Syft
+        id: syft
+        uses: anchore/sbom-action/download-syft@v0
+
+      - name: Generate release SBOMs
+        run: |
+          "${{ steps.syft.outputs.cmd }}" "${{ steps.meta.outputs.reference_api }}@${{ steps.reference-api.outputs.digest }}" -o spdx-json=reference-api-${{ steps.meta.outputs.tag }}.spdx.json
+          "${{ steps.syft.outputs.cmd }}" "${{ steps.meta.outputs.reference_web }}@${{ steps.reference-web.outputs.digest }}" -o spdx-json=reference-web-${{ steps.meta.outputs.tag }}.spdx.json
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v4.1.0
+
+      - name: Sign pushed images
+        run: |
+          cosign sign --yes "${{ steps.meta.outputs.reference_api }}@${{ steps.reference-api.outputs.digest }}"
+          cosign sign --yes "${{ steps.meta.outputs.reference_web }}@${{ steps.reference-web.outputs.digest }}"
+
+      - name: Upload SBOM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-sboms-${{ steps.meta.outputs.tag }}
+          path: |
+            reference-api-${{ steps.meta.outputs.tag }}.spdx.json
+            reference-web-${{ steps.meta.outputs.tag }}.spdx.json
+          if-no-files-found: error

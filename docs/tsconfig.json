@@ -1,0 +1,15 @@
+{
+  "extends": "../tools/tsconfig/base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["node"],
+    "baseUrl": ".."
+  },
+  "include": [
+    "scripts/**/*.mjs",
+    "docusaurus.config.mjs",
+    "sidebars.mjs"
+  ]
+}
