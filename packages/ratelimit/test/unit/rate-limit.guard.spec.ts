@@ -103,7 +103,8 @@ describe('RateLimitGuard', () => {
     const policyResolver: RateLimitPolicyResolver = {
       resolve: jest.fn(async () => ({ bucket: 'tenant', scope: 'documents.write', cost: 1, limit: 10, windowSeconds: 60 })),
     };
-    const guard = new RateLimitGuard(reflector, {}, store, policyResolver);
+    const metrics = new InMemoryRateLimitMetrics();
+    const guard = new RateLimitGuard(reflector, {}, store, policyResolver, metrics);
 
     await expect(
       guard.canActivate(
@@ -125,6 +126,7 @@ describe('RateLimitGuard', () => {
     expect(response.headers['X-RateLimit-Limit']).toBe('10');
     expect(response.headers['X-RateLimit-Remaining']).toBe('9');
     expect(response.headers['X-RateLimit-Reset']).toBe(String(Math.ceil(1_700_000_000_000 / 1000)));
+    expect(metrics.histogramSnapshot()['documents.write']?.count).toBe(1);
   });
 
   it('throws 429, emits Retry-After, and increments metrics on block', async () => {

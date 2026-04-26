@@ -36,9 +36,10 @@ test('login -> create record -> create work-item -> soft-delete -> restore -> lo
 
   await page.goto('/trash');
   await page.getByTestId('trash-resource-work-items').click();
-  await expect(page.getByText(workItemCode)).toBeVisible();
-  await page.getByRole('button', { name: 'Restore' }).click();
-  await expect(page.getByText(workItemCode)).not.toBeVisible();
+  const trashedWorkItem = page.getByRole('article').filter({ hasText: workItemCode });
+  await expect(trashedWorkItem).toBeVisible();
+  await trashedWorkItem.getByRole('button', { name: 'Restore' }).click();
+  await expect(trashedWorkItem).toBeHidden();
 
   await page.getByTestId('logout-button').click();
   await expect(page.getByTestId('login-title')).toBeVisible();

@@ -3,6 +3,6 @@
   "private": true,
   "scripts": {
     "test": "node validate.js",
-    "lint": "eslint --config ../../tools/eslint-config/lib.mjs \"../scripts/**/*.js\""
+    "lint": "eslint --config ../../tools/eslint-config/scripts.mjs \"./**/*.js\""
   }
 }

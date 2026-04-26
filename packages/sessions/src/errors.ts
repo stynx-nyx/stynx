@@ -21,3 +21,16 @@ export class SessionSigningKeyError extends Error {
     super(message);
   }
 }
+
+export class SessionExchangeError extends Error {
+  constructor(
+    public readonly code:
+      | 'SESSION_NOT_FOUND'
+      | 'SESSION_OWNER_MISMATCH'
+      | 'SESSION_NOT_ACTIVE',
+    message: string,
+  ) {
+    super(message);
+    this.name = 'SessionExchangeError';
+  }
+}

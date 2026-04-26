@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "description": "Docusaurus documentation site for STYNX",
   "engines": {
-    "node": ">=20 <23"
+    "node": ">=24 <25"
   },
   "scripts": {
     "clean": "find build .docusaurus .generated -mindepth 0 -maxdepth 0 -exec rm -rf {} + 2>/dev/null || true",
@@ -19,21 +19,21 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@mermaid-js/layout-elk": "^0.1.9",
-    "@docusaurus/core": "^3.9.2",
-    "@docusaurus/preset-classic": "^3.9.2",
-    "@docusaurus/theme-mermaid": "^3.9.2",
+    "@docusaurus/core": "^3.10.0",
+    "@docusaurus/preset-classic": "^3.10.0",
+    "@docusaurus/theme-mermaid": "^3.10.0",
     "@easyops-cn/docusaurus-search-local": "^0.55.1",
+    "@mermaid-js/layout-elk": "^0.1.9",
     "clsx": "^2.1.1",
     "prism-react-renderer": "^2.4.1",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5"
   },
   "devDependencies": {
     "@lhci/cli": "^0.15.1",
-    "@types/node": "^22.19.17",
-    "typedoc": "^0.28.14",
-    "typedoc-plugin-markdown": "^4.9.0",
-    "typescript": "^5.9.3"
+    "@types/node": "^24.12.2",
+    "typedoc": "^0.28.19",
+    "typedoc-plugin-markdown": "^4.11.0",
+    "typescript": "^6.0.3"
   }
 }

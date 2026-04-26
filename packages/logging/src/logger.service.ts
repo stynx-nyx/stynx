@@ -4,7 +4,7 @@ import { LoggingDedupeService } from './dedupe';
 import { RequestLogFieldFactory, type RequestScopedLogFields } from './pino.factory';
 import { STYNX_PINO_LOGGER } from './tokens';
 
-type LogContext = string | RequestScopedLogFields;
+export type LogContext = string | RequestScopedLogFields;
 
 @Injectable()
 export class StynxLogger {

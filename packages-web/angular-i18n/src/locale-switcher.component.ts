@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
-import type { StynxI18nService } from './i18n.service';
+import { ChangeDetectionStrategy, Component, Inject, Input } from '@angular/core';
+import { StynxI18nService } from './i18n.service';
 
 @Component({
   selector: 'stynx-locale-switcher',
@@ -26,7 +26,7 @@ import type { StynxI18nService } from './i18n.service';
 export class LocaleSwitcherComponent {
   @Input() locales: string[] = [];
 
-  constructor(protected readonly i18n: StynxI18nService) {}
+  constructor(@Inject(StynxI18nService) protected readonly i18n: StynxI18nService) {}
 
   async switchLocale(locale: string): Promise<void> {
     await this.i18n.use(locale);

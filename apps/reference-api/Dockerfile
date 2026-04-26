@@ -1,4 +1,4 @@
-FROM node:20-bookworm-slim AS workspace
+FROM node:24-bookworm-slim AS workspace
 
 WORKDIR /app
 
@@ -34,7 +34,7 @@ FROM workspace AS prod-deps
 
 RUN pnpm install --frozen-lockfile --prod --ignore-scripts
 
-FROM node:20-bookworm-slim AS runtime
+FROM node:24-bookworm-slim AS runtime
 
 ENV NODE_ENV=production
 
@@ -43,8 +43,11 @@ WORKDIR /app
 COPY --from=prod-deps --chown=node:node /app/node_modules ./node_modules
 COPY --from=prod-deps --chown=node:node /app/packages ./packages
 COPY --from=prod-deps --chown=node:node /app/apps/reference-api ./apps/reference-api
-COPY --from=build --chown=node:node /app/runtime-dist/packages ./packages
-COPY --from=build --chown=node:node /app/runtime-dist/apps/reference-api ./apps/reference-api
+COPY --from=build --chown=node:node /app/runtime-dist/packages/. ./packages
+COPY --from=build --chown=node:node /app/runtime-dist/apps/reference-api/. ./apps/reference-api
+
+RUN node apps/reference-api/scripts/repair-runtime-workspace-links.mjs \
+  && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 
 EXPOSE 3000
 

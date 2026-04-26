@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Put } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { RequestContext } from '@stynx/core';
+import { NoIdempotent } from '@stynx/idempotency';
 import { I18nAdminService } from './i18n-admin.service';
 import type { TenantOverrideUpdateInput } from './types';
 
@@ -17,6 +18,7 @@ export class I18nController {
   }
 
   @Put()
+  @NoIdempotent()
   updateOverrides(@Body() input: TenantOverrideUpdateInput) {
     return this.adminService.updateOverrides(this.requestContext().tenantId ?? '', input);
   }

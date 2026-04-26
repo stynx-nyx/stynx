@@ -1,17 +1,17 @@
-interface SessionStorageLike {
+export interface SessionStorageLike {
   getItem(key: string): string | null;
   setItem(key: string, value: string): void;
   removeItem(key: string): void;
 }
 
-interface CookieOptions {
+export interface CookieOptions {
   name?: string;
   path?: string;
   sameSite?: 'Strict' | 'Lax' | 'None';
   secure?: boolean;
 }
 
-type RefreshTokenStorageMode = 'session-storage' | 'cookie';
+export type RefreshTokenStorageMode = 'session-storage' | 'cookie';
 
 function resolveDocument(): Document | null {
   return typeof document === 'undefined' ? null : document;

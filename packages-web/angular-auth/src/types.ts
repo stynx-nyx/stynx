@@ -23,6 +23,7 @@ export interface StynxSessionBundle {
   refreshToken: string;
   expiresAt: string;
   idleExpiresAt: string;
+  permissions?: string[];
 }
 
 export interface StynxSessionState {

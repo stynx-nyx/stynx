@@ -5,11 +5,10 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "types": ["node"],
+    "allowJs": true,
+    "checkJs": false,
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".."
   },
-  "include": [
-    "scripts/**/*.mjs",
-    "docusaurus.config.mjs",
-    "sidebars.mjs"
-  ]
+  "include": ["scripts/**/*.mjs", "docusaurus.config.mjs", "sidebars.mjs"]
 }

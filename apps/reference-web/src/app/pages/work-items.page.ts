@@ -1,5 +1,5 @@
 import { NgFor, NgIf } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import type { OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { StynxBannerComponent, EmptyStateComponent, StynxLoadingSpinnerComponent, StynxTableComponent } from '@stynx-web/angular-ui';
@@ -20,18 +20,18 @@ import type { WorkItem } from '../core/reference-models';
         <a routerLink="/work-items/new">Create work item</a>
       </div>
 
-      @if (errorMessage) {
-        <stynx-banner tone="error" [message]="errorMessage"></stynx-banner>
+      @if (errorMessage()) {
+        <stynx-banner tone="error" [message]="errorMessage()"></stynx-banner>
       }
 
-      @if (loading) {
+      @if (loading()) {
         <stynx-loading-spinner label="Loading work items"></stynx-loading-spinner>
-      } @else if (rows.length === 0) {
+      } @else if (rows().length === 0) {
         <stynx-empty-state title="No work items yet" description="Create a work item after adding a record."></stynx-empty-state>
       } @else {
-        <stynx-table [columns]="columns" [rows]="rows"></stynx-table>
+        <stynx-table [columns]="columns" [rows]="rows()"></stynx-table>
         <div class="card-list">
-          @for (item of rows; track item.id) {
+          @for (item of rows(); track item.id) {
             <article class="card" [attr.data-testid]="'work-item-row-' + item.id">
               <div>
                 <strong>{{ item.code }}</strong>
@@ -86,9 +86,9 @@ import type { WorkItem } from '../core/reference-models';
 })
 export class WorkItemsPageComponent implements OnInit {
   private readonly api = inject(ReferenceWebApiService);
-  protected rows: WorkItem[] = [];
-  protected loading = true;
-  protected errorMessage = '';
+  protected readonly rows = signal<WorkItem[]>([]);
+  protected readonly loading = signal(true);
+  protected readonly errorMessage = signal('');
   protected readonly columns = [
     { key: 'code', label: 'Code' },
     { key: 'status', label: 'Status' },
@@ -100,14 +100,14 @@ export class WorkItemsPageComponent implements OnInit {
   }
 
   async load(): Promise<void> {
-    this.loading = true;
-    this.errorMessage = '';
+    this.loading.set(true);
+    this.errorMessage.set('');
     try {
-      this.rows = await this.api.listWorkItems();
+      this.rows.set(await this.api.listWorkItems());
     } catch (error) {
-      this.errorMessage = error instanceof Error ? error.message : 'Unable to load work items.';
+      this.errorMessage.set(error instanceof Error ? error.message : 'Unable to load work items.');
     } finally {
-      this.loading = false;
+      this.loading.set(false);
     }
   }
 
@@ -116,7 +116,7 @@ export class WorkItemsPageComponent implements OnInit {
       await this.api.deleteWorkItem(id);
       await this.load();
     } catch (error) {
-      this.errorMessage = error instanceof Error ? error.message : 'Unable to delete work item.';
+      this.errorMessage.set(error instanceof Error ? error.message : 'Unable to delete work item.');
     }
   }
 }

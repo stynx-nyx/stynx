@@ -1,4 +1,4 @@
-import type { HttpClient } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { STYNX_ANGULAR_OPTIONS } from '@stynx-web/angular';
@@ -18,6 +18,7 @@ function trimEdgeSlash(value: string): string {
 @Injectable()
 export class DocumentService {
   constructor(
+    @Inject(HttpClient)
     private readonly http: HttpClient,
     @Inject(STYNX_ANGULAR_OPTIONS)
     private readonly angularOptions: StynxAngularModuleOptions,

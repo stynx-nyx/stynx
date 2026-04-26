@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Inject, Input, Output } from '@angular/core';
-import { StynxBannerComponent, StynxLoadingSpinnerComponent } from '@stynx-web/angular-ui';
-import type { StynxToastService } from '@stynx-web/angular-ui';
-import type { DocumentService } from './document.service';
+import { StynxBannerComponent, StynxLoadingSpinnerComponent, StynxToastService } from '@stynx-web/angular-ui';
+import { DocumentService } from './document.service';
 import { STYNX_UPLOAD_EXECUTOR } from './tokens';
 import type { StynxDocumentUploadCompletedEvent, StynxUploadExecutor } from './types';
 
@@ -40,7 +39,9 @@ export class StynxDocumentUploadComponent {
   errorMessage = '';
 
   constructor(
+    @Inject(DocumentService)
     private readonly documents: DocumentService,
+    @Inject(StynxToastService)
     private readonly toast: StynxToastService,
     @Inject(STYNX_UPLOAD_EXECUTOR)
     private readonly executor: StynxUploadExecutor,

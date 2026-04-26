@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, tap } from 'rxjs';
-import { CognitoAuthService, AuthTokens } from './cognito-auth.service';
+import type { AuthTokens } from './cognito-auth.service';
+import { CognitoAuthService } from './cognito-auth.service';
 import { ApiService } from '@core/api/api.service';
 
 export interface AuthUser {
@@ -45,9 +46,7 @@ export class AuthFacade {
   }
 
   fetchProfile() {
-    return this.api.get<AuthUser>('/auth/me').pipe(
-      tap((user) => this.userSubject.next(user)),
-    );
+    return this.api.get<AuthUser>('/auth/me').pipe(tap((user) => this.userSubject.next(user)));
   }
 
   getAccessToken(): string | null {
@@ -60,5 +59,4 @@ export class AuthFacade {
     }
     return user.tenantId ?? user.tenants?.[0] ?? null;
   }
-
 }

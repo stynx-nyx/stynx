@@ -1,56 +1,25 @@
 {
-  "extends": "../../tools/tsconfig/node20.json",
+  "extends": "../../tools/tsconfig/node24.json",
   "compilerOptions": {
-    "types": [
-      "node",
-      "jest"
-    ],
+    "types": ["node", "jest"],
     "baseUrl": ".",
     "paths": {
-      "@stynx/auth": [
-        "./support/auth-stub.ts"
-      ],
-      "@stynx/audit": [
-        "../../packages/audit/src/index.ts"
-      ],
-      "@stynx/core": [
-        "../../packages/core/src/index.ts"
-      ],
-      "@stynx/data": [
-        "./support/data-stub.ts"
-      ],
-      "@stynx/health": [
-        "../../packages/health/src/index.ts"
-      ],
-      "@stynx/idempotency": [
-        "../../packages/idempotency/src/index.ts"
-      ],
-      "@stynx/logging": [
-        "../../packages/logging/src/index.ts"
-      ],
-      "@stynx/ratelimit": [
-        "../../packages/ratelimit/src/index.ts"
-      ],
-      "@stynx/sessions": [
-        "../../packages/sessions/src/index.ts"
-      ],
-      "@stynx/storage": [
-        "../../packages/storage/src/index.ts"
-      ],
-      "@stech/stynx-contracts": [
-        "../../packages/stynx-contracts/src/index.ts"
-      ],
-      "@stech/stynx-frontend-contracts": [
-        "../../packages/stynx-frontend-contracts/src/index.ts"
-      ],
-      "@stech/stynx-frontend-client": [
-        "../../packages/stynx-frontend-client/src/index.ts"
-      ]
+      "@stynx/auth": ["./support/auth-stub.ts"],
+      "@stynx/audit": ["../../packages/audit/src/index.ts"],
+      "@stynx/core": ["../../packages/core/src/index.ts"],
+      "@stynx/data": ["./support/data-stub.ts"],
+      "@stynx/health": ["../../packages/health/src/index.ts"],
+      "@stynx/idempotency": ["../../packages/idempotency/src/index.ts"],
+      "@stynx/logging": ["../../packages/logging/src/index.ts"],
+      "@stynx/ratelimit": ["../../packages/ratelimit/src/index.ts"],
+      "@stynx/sessions": ["../../packages/sessions/src/index.ts"],
+      "@stynx/storage": ["../../packages/storage/src/index.ts"],
+      "@stech/stynx-contracts": ["../../packages/stynx-contracts/src/index.ts"],
+      "@stech/stynx-frontend-contracts": ["../../packages/stynx-frontend-contracts/src/index.ts"],
+      "@stech/stynx-frontend-client": ["../../packages/stynx-frontend-client/src/index.ts"]
     },
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
   },
-  "include": [
-    "./**/*.ts"
-  ]
+  "include": ["./**/*.ts"]
 }

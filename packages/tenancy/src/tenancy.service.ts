@@ -1,7 +1,6 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { Database, type Transaction } from '@stynx/data';
-import { v7 as uuidv7 } from 'uuid';
 import { MembershipAccessCache } from './membership-cache';
 import {
   STYNX_TENANT_MEMBERSHIP_CACHE,
@@ -25,6 +24,7 @@ import type {
   TenantSummary,
   UpdateTenantInput,
 } from './types';
+import { createUuidV7 } from './utils';
 
 interface TenantRow {
   id: string;
@@ -205,9 +205,9 @@ export class TenancyService {
           };
         }
 
-        const tenantId = uuidv7();
-        const ownerUserId = input.ownerUserId ?? uuidv7();
-        const invitationToken = uuidv7();
+        const tenantId = createUuidV7();
+        const ownerUserId = input.ownerUserId ?? createUuidV7();
+        const invitationToken = createUuidV7();
 
         await trx.query(
           `
@@ -245,7 +245,7 @@ export class TenancyService {
             do update set user_id = excluded.user_id
             returning id::text as id
           `,
-          [uuidv7(), tenantId, effectiveOwnerUserId],
+          [createUuidV7(), tenantId, effectiveOwnerUserId],
         );
         const membershipId = membership.rows[0]?.id;
         const ownerRole = await trx.query<{ id: string }>(
@@ -416,7 +416,7 @@ export class TenancyService {
           on conflict (tenant_id, key)
           do update set name = excluded.name
         `,
-        [uuidv7(), tenantId, role.key, role.name],
+        [createUuidV7(), tenantId, role.key, role.name],
       );
     }
   }
@@ -453,8 +453,8 @@ export class TenancyService {
       `select id::text as id from auth.users where email = $1::citext limit 1`,
       [ownerEmail],
     );
-    const userId = user.rows[0]?.id ?? uuidv7();
-    const token = uuidv7();
+    const userId = user.rows[0]?.id ?? createUuidV7();
+    const token = createUuidV7();
     await this.ensureInvitationRecord(trx, tenantId, userId, ownerEmail, token);
     return { token, userId };
   }
@@ -471,7 +471,7 @@ export class TenancyService {
         insert into auth.invitations (id, tenant_id, email, invited_by, token, status, expires_at, created_at)
         values ($1::uuid, $2::uuid, $3::citext, $4::uuid, $5, 'pending', clock_timestamp() + interval '7 days', clock_timestamp())
       `,
-      [uuidv7(), tenantId, ownerEmail, userId, token],
+      [createUuidV7(), tenantId, ownerEmail, userId, token],
     );
   }
 

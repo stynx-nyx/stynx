@@ -36,6 +36,8 @@ export interface AuditSqlListItem {
   metadata?: Record<string, unknown> | null;
   oldData?: Record<string, unknown> | null;
   newData?: Record<string, unknown> | null;
+  previousHash?: string | null;
+  rowHash?: string | null;
 }
 
 export interface AuditSqlListResult {
@@ -162,6 +164,8 @@ type SelectRow = {
   metadata?: Record<string, unknown> | null;
   old_data?: Record<string, unknown> | null;
   new_data?: Record<string, unknown> | null;
+  previous_hash?: string | null;
+  row_hash?: string | null;
   payload?: Record<string, unknown> | null;
   op?: string;
   schema_name?: string;
@@ -265,7 +269,7 @@ export class AuditSqlReader {
       ${whereSql}
       ORDER BY occurred_at DESC, id DESC
       LIMIT $${index++}
-      OFFSET $${index++}`;
+      OFFSET $${index}`;
     params.push(limit, offset);
 
     const rows = toRows<SelectRow & { tags?: Record<string, unknown> | null }>(
@@ -345,12 +349,14 @@ export class AuditSqlReader {
         metadata,
         old_data,
         new_data,
+        previous_hash,
+        row_hash,
         COUNT(*) OVER() AS total
       FROM ${schema}.${table}
       ${whereSql}
       ORDER BY occurred_at DESC
       LIMIT $${index++}
-      OFFSET $${index++}`;
+      OFFSET $${index}`;
     params.push(limit, offset);
 
     const rows = toRows<SelectRow>(await this.executor.query(querySql, params));
@@ -369,6 +375,8 @@ export class AuditSqlReader {
         metadata: row.metadata ?? null,
         oldData: row.old_data ?? null,
         newData: row.new_data ?? null,
+        previousHash: row.previous_hash ?? null,
+        rowHash: row.row_hash ?? null,
       })),
       total: Number(rows[0]?.total ?? 0),
     };
@@ -419,7 +427,7 @@ export class AuditSqlReader {
       ${whereSql}
       ORDER BY occurred_at DESC
       LIMIT $${index++}
-      OFFSET $${index++}`;
+      OFFSET $${index}`;
     params.push(limit, offset);
 
     const rows = toRows<SelectRow>(await this.executor.query(querySql, params));

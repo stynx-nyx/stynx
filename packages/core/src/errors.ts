@@ -55,6 +55,25 @@ export class ConfigurationValidationError extends StynxError {
   }
 }
 
+export interface ConfigViolation {
+  key: string;
+  reason: string;
+}
+
+export class ConfigOwnershipViolationError extends StynxError {
+  readonly violations: ConfigViolation[];
+
+  constructor(violations: ConfigViolation[]) {
+    const summary = violations.map((violation) => `${violation.key}: ${violation.reason}`).join('; ');
+    super(`Config ownership violations: ${summary}`, {
+      code: 'CONFIG_OWNERSHIP_VIOLATION',
+      status: 500,
+      context: { violations },
+    });
+    this.violations = violations;
+  }
+}
+
 export class SystemContextRequiredError extends StynxError {
   constructor(reason?: string) {
     super('System context is required for this operation', {

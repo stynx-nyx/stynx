@@ -1,12 +1,8 @@
 {
-  "extends": "../tools/tsconfig/node20.json",
+  "extends": "../tools/tsconfig/node24.json",
   "compilerOptions": {
-    "types": [
-      "node"
-    ]
+    "exactOptionalPropertyTypes": false,
+    "types": ["node"]
   },
-  "include": [
-    "index.ts",
-    "lib/**/*.ts"
-  ]
+  "include": ["index.ts", "lib/**/*.ts"]
 }

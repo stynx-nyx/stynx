@@ -5,13 +5,23 @@ services:
       POSTGRES_DB: postgres
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 20
     ports:
-      - "5432:5432"
+      - '5432:5432'
 
   redis:
     image: redis:7-alpine
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 20
     ports:
-      - "6379:6379"
+      - '6379:6379'
 
   localstack:
     image: localstack/localstack:3.8.1
@@ -20,9 +30,18 @@ services:
       AWS_DEFAULT_REGION: us-east-1
       STYNX_STORAGE_BUCKET: stynx-docs-local-us-east-1
     ports:
-      - "4566:4566"
+      - '4566:4566'
     volumes:
       - ./localstack/init-s3.sh:/etc/localstack/init/ready.d/init-s3.sh:ro
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'python -c "import urllib.request; urllib.request.urlopen(''http://127.0.0.1:4566/_localstack/health'', timeout=2)"',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
 
   reference-api:
     build:
@@ -35,24 +54,27 @@ services:
       STYNX_READER_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres
       STYNX_REDIS_URL: redis://redis:6379
       STYNX_STORAGE_ENDPOINT: http://localstack:4566
-      STYNX_STORAGE_FORCE_PATH_STYLE: "true"
+      STYNX_STORAGE_FORCE_PATH_STYLE: 'true'
       STYNX_STORAGE_BUCKET: stynx-docs-local-us-east-1
-      STYNX_SAMPLE_RECORD_CREATE_LIMIT: "6000"
-      STYNX_SAMPLE_RECORD_CREATE_WINDOW_SECONDS: "60"
-      STYNX_SAMPLE_RECORD_READ_LIMIT: "6000"
-      STYNX_SAMPLE_RECORD_READ_WINDOW_SECONDS: "60"
-      STYNX_SAMPLE_RECORD_DELETE_LIMIT: "12000"
-      STYNX_SAMPLE_RECORD_DELETE_WINDOW_SECONDS: "60"
-      STYNX_SAMPLE_RECORD_NOTE_CREATE_LIMIT: "6000"
-      STYNX_SAMPLE_RECORD_NOTE_CREATE_WINDOW_SECONDS: "60"
-      STYNX_SAMPLE_DOCUMENT_WRITE_LIMIT: "6000"
-      STYNX_SAMPLE_DOCUMENT_WRITE_WINDOW_SECONDS: "60"
+      STYNX_SAMPLE_RECORD_CREATE_LIMIT: '6000'
+      STYNX_SAMPLE_RECORD_CREATE_WINDOW_SECONDS: '60'
+      STYNX_SAMPLE_RECORD_READ_LIMIT: '6000'
+      STYNX_SAMPLE_RECORD_READ_WINDOW_SECONDS: '60'
+      STYNX_SAMPLE_RECORD_DELETE_LIMIT: '12000'
+      STYNX_SAMPLE_RECORD_DELETE_WINDOW_SECONDS: '60'
+      STYNX_SAMPLE_RECORD_NOTE_CREATE_LIMIT: '6000'
+      STYNX_SAMPLE_RECORD_NOTE_CREATE_WINDOW_SECONDS: '60'
+      STYNX_SAMPLE_DOCUMENT_WRITE_LIMIT: '6000'
+      STYNX_SAMPLE_DOCUMENT_WRITE_WINDOW_SECONDS: '60'
       AWS_ACCESS_KEY_ID: test
       AWS_SECRET_ACCESS_KEY: test
       AWS_DEFAULT_REGION: us-east-1
     depends_on:
-      - postgres
-      - redis
-      - localstack
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
     ports:
-      - "3000:3000"
+      - '3000:3000'

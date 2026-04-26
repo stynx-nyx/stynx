@@ -7,6 +7,22 @@ const corePackageJsonPath = resolve(configDir, '../packages/core/package.json');
 const corePackageVersion = JSON.parse(readFileSync(corePackageJsonPath, 'utf8')).version;
 const coreMajorLabel = `v${String(corePackageVersion).split('.')[0] ?? '0'}`;
 
+function suppressKnownWebpackWarnings() {
+  return {
+    name: 'suppress-known-webpack-warnings',
+    configureWebpack() {
+      return {
+        ignoreWarnings: [
+          {
+            module: /vscode-languageserver-types\/lib\/umd\/main\.js/u,
+            message: /Critical dependency: require function is used in a way/u,
+          },
+        ],
+      };
+    },
+  };
+}
+
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'STYNX',
@@ -29,11 +45,14 @@ const config = {
     },
   },
   plugins: [
+    suppressKnownWebpackWarnings,
     [
       '@easyops-cn/docusaurus-search-local',
       {
         hashed: true,
+        docsDir: '.generated/site-docs',
         indexDocs: true,
+        indexBlog: false,
         indexPages: true,
       },
     ],

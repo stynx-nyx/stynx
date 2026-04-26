@@ -21,7 +21,7 @@ import { StynxToastService } from './toast.service';
   styles: [`
     .stynx-toast-stack {
       position: fixed;
-      top: 1rem;
+      bottom: 1rem;
       right: 1rem;
       display: grid;
       gap: 0.75rem;

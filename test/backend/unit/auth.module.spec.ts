@@ -1,4 +1,5 @@
 import { Test } from '@nestjs/testing';
+import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from '@core/auth/auth.module';
 import { AuthService } from '@core/auth/auth.service';
 import { DatabaseService } from '@shared/database/database.service';
@@ -6,15 +7,17 @@ import { DatabaseService } from '@shared/database/database.service';
 describe('AuthModule', () => {
   it('provides AuthService', async () => {
     const moduleRef = await Test.createTestingModule({
-      imports: [AuthModule],
+      imports: [ConfigModule.forRoot({ isGlobal: true }), AuthModule],
     })
       .overrideProvider('PG_POOL')
       .useValue({})
       .overrideProvider(DatabaseService)
       .useValue({
-        transaction: jest.fn().mockImplementation(async (handler: (client: any) => Promise<unknown>) =>
-          handler({ query: jest.fn() }),
-        ),
+        transaction: jest
+          .fn()
+          .mockImplementation(async (handler: (client: any) => Promise<unknown>) =>
+            handler({ query: jest.fn() }),
+          ),
       })
       .compile();
 

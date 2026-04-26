@@ -94,7 +94,9 @@ describe('Idempotency integration', () => {
 
   afterAll(async () => {
     await moduleRef?.close();
-    await backend.onModuleDestroy();
+    if (backend) {
+      await backend.onModuleDestroy();
+    }
     await stopRedisDockerContainer(redis);
     await postgres?.dispose();
   });

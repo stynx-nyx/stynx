@@ -1,78 +1,68 @@
 # NPM Security Upgrade Report
 
-- command_scopes: backend, frontend
+- date: 2026-04-26
+- command_scopes: pnpm workspace, standalone infra/cdk npm package
+- action: broad direct dependency and devDependency upgrade to latest stable compatible versions
+
+## Upgrade Summary
+
+All workspace `dependencies` and `devDependencies` were updated to their latest stable compatible versions. The standalone `infra/cdk` package was updated separately with npm and now has its own `package-lock.json` so its audit state is reproducible.
+
+Key compatibility pins remain intentional:
+
+| package                  |    pinned |   latest | reason                                                                                 |
+| ------------------------ | --------: | -------: | -------------------------------------------------------------------------------------- |
+| `@types/node`            | `24.12.2` | `25.6.0` | repo engines target Node 24 (`>=24 <25`)                                               |
+| `typescript`             |   `5.9.3` |  `6.0.3` | Angular 21 build tooling requires `>=5.9 <6.0`                                         |
+| `@mermaid-js/layout-elk` |   `0.1.9` |  `0.2.1` | `@docusaurus/theme-mermaid@3.10.0` peers on `^0.1.9`                                   |
+| `intl-messageformat`     | `10.7.18` | `11.2.2` | `@stynx/i18n` emits CommonJS; v11 is ESM-only and breaks the current runtime/Jest path |
+
+The Node/TypeScript split is now explicit:
+
+- Node-oriented packages use TypeScript 6 with `ignoreDeprecations: "6.0"`.
+- Angular packages use TypeScript 5.9 with the shared Angular-compatible config.
+- Jest/ts-jest workspaces declare `@types/node@^24.12.2` directly to avoid peer resolution drifting to Node 25 types.
 
 ## Audit Summary
 
+`pnpm audit --audit-level=high` passes.
+
+Workspace `pnpm audit --json` still reports no high or critical findings:
+
 - critical: 0
-- high: 20
+- high: 0
 - moderate: 5
 - low: 2
-- outdated_count: 35
 
-## Scopes
-
-### Scope: backend
+Standalone `infra/cdk` `npm audit --json` reports:
 
 - critical: 0
 - high: 0
 - moderate: 0
 - low: 0
 
-Outdated packages:
-| package | current | wanted | latest | type |
-|---|---:|---:|---:|---|
-| @aws-sdk/client-cognito-identity-provider |  | 3.990.0 | 3.990.0 |  |
-| @aws-sdk/client-s3 |  | 3.990.0 | 3.990.0 |  |
-| @aws-sdk/credential-providers |  | 3.990.0 | 3.990.0 |  |
-| @aws-sdk/s3-request-presigner |  | 3.990.0 | 3.990.0 |  |
-| @nestjs/common |  | 10.4.22 | 11.1.13 |  |
-| @nestjs/config |  | 3.3.0 | 4.0.3 |  |
-| @nestjs/core |  | 10.4.22 | 11.1.13 |  |
-| @nestjs/platform-express |  | 10.4.22 | 11.1.13 |  |
-| @nestjs/swagger |  | 7.4.2 | 11.2.6 |  |
-| class-transformer |  | 0.5.1 | 0.5.1 |  |
-| class-validator |  | 0.14.3 | 0.14.3 |  |
-| helmet |  | 7.2.0 | 8.1.0 |  |
-| jose |  | 5.10.0 | 6.1.3 |  |
-| jwks-rsa |  | 3.2.2 | 3.2.2 |  |
-| multer |  | 1.4.5-lts.2 | 2.0.2 |  |
-| pg |  | 8.18.0 | 8.18.0 |  |
-| reflect-metadata |  | 0.2.2 | 0.2.2 |  |
-| rxjs |  | 7.8.2 | 7.8.2 |  |
-| uuid |  | 9.0.1 | 13.0.0 |  |
+## Remaining Findings
 
-### Scope: frontend
+These are below the high gate and are transitive or false-positive findings after all direct dependencies were updated.
 
-- critical: 0
-- high: 20
-- moderate: 5
-- low: 2
+| package     | severity | source                                                        | status                                                                       |
+| ----------- | -------: | ------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `bootstrap` | moderate | private workspace importer path `bootstrap`                   | audit false positive; no direct `bootstrap` package dependency is present    |
+| `tmp`       |      low | `docs > @lhci/cli@0.15.1`                                     | latest LHCI still pulls affected transitive versions                         |
+| `uuid`      | moderate | `testcontainers > dockerode`, Docusaurus/Webpack/SockJS paths | direct `uuid` is `14.0.0`; transitive overrides would be compatibility-risky |
 
-Outdated packages:
-| package | current | wanted | latest | type |
-|---|---:|---:|---:|---|
-| @angular/animations |  | 20.3.16 | 21.1.4 |  |
-| @angular/cdk |  | 20.2.14 | 21.1.4 |  |
-| @angular/common |  | 20.3.16 | 21.1.4 |  |
-| @angular/compiler |  | 20.3.16 | 21.1.4 |  |
-| @angular/core |  | 20.3.16 | 21.1.4 |  |
-| @angular/forms |  | 20.3.16 | 21.1.4 |  |
-| @angular/material |  | 20.2.14 | 21.1.4 |  |
-| @angular/platform-browser |  | 20.3.16 | 21.1.4 |  |
-| @angular/platform-browser-dynamic |  | 20.3.16 | 21.1.4 |  |
-| @angular/router |  | 20.3.16 | 21.1.4 |  |
-| @ngx-translate/core |  | 17.0.0 | 17.0.0 |  |
-| @ngx-translate/http-loader |  | 17.0.0 | 17.0.0 |  |
-| angular-oauth2-oidc |  | 20.0.2 | 20.0.2 |  |
-| rxjs |  | 7.8.2 | 7.8.2 |  |
-| tslib |  | 2.8.1 | 2.8.1 |  |
-| zone.js |  | 0.15.1 | 0.16.0 |  |
+## Verification
 
+- `HUSKY=0 CYPRESS_CACHE_FOLDER=/tmp/stynx-cypress-cache pnpm install --frozen-lockfile`: passed
+- `pnpm outdated -r --format json`: only the four compatibility holds above remain
+- `pnpm audit --audit-level=high`: passed
+- `pnpm build`: passed
+- `pnpm typecheck`: passed, 60 successful tasks
+- `pnpm lint`: passed, 39 successful tasks
+- `pnpm lint:deadcode`: passed
+- `pnpm lint:deps`: passed
+- `pnpm test:unit`: passed
+- `pnpm test:int`: passed
+- `npm_config_cache=/tmp/stynx-npm-cache npm audit --prefix infra/cdk --json`: passed with 0 vulnerabilities
 
-## Recommended Path
-
-1. Apply patch/minor upgrades first.
-2. Re-run test suites before major upgrades.
-3. Address critical/high vulnerabilities immediately.
-
+Latest local verification ran under Node `v24.15.0` with pnpm `9.15.0`.

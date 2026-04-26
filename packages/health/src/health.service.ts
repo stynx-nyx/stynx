@@ -28,7 +28,7 @@ class CallbackIndicator implements StynxHealthIndicator {
   }
 }
 
-type ReadinessEntry = {
+export type ReadinessEntry = {
   status: StynxHealthIndicatorResult['status'];
 } & Record<string, unknown>;
 

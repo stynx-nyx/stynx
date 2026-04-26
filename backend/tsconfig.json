@@ -1,5 +1,5 @@
 {
-  "extends": "../tools/tsconfig/node20.json",
+  "extends": "../tools/tsconfig/node24.json",
   "compilerOptions": {
     "declaration": true,
     "removeComments": true,
@@ -9,30 +9,16 @@
     "baseUrl": "./src",
     "rootDir": "./src",
     "incremental": true,
+    "exactOptionalPropertyTypes": false,
+    "noUncheckedIndexedAccess": false,
     "ignoreDeprecations": "6.0",
-    "types": [
-      "node",
-      "jest"
-    ],
+    "types": ["node", "jest"],
     "paths": {
-      "@core/*": [
-        "core/*"
-      ],
-      "@modules/*": [
-        "modules/*"
-      ],
-      "@shared/*": [
-        "shared/*"
-      ],
-      "@config/*": [
-        "config/*"
-      ]
+      "@core/*": ["core/*"],
+      "@modules/*": ["modules/*"],
+      "@shared/*": ["shared/*"],
+      "@config/*": ["config/*"]
     }
   },
-  "exclude": [
-    "node_modules",
-    "dist",
-    "test",
-    "**/*.spec.ts"
-  ]
+  "exclude": ["node_modules", "dist", "test", "**/*.spec.ts"]
 }

@@ -22,8 +22,78 @@ CREATE TABLE audit.events (
   metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
   old_data jsonb,
   new_data jsonb,
+  previous_hash text,
+  row_hash text NOT NULL,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+
+CREATE OR REPLACE FUNCTION audit.format_hash_timestamp(p_occurred_at timestamptz)
+RETURNS text
+LANGUAGE sql
+STABLE
+AS $$
+  SELECT to_char(p_occurred_at AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS.US') || '+00';
+$$;
+
+CREATE OR REPLACE FUNCTION audit.compute_event_hash(
+  p_event_id uuid,
+  p_occurred_at timestamptz,
+  p_tenancy_id uuid,
+  p_actor_id uuid,
+  p_entity text,
+  p_entity_id text,
+  p_operation text,
+  p_old_data jsonb,
+  p_new_data jsonb,
+  p_previous_hash text
+)
+RETURNS text
+LANGUAGE sql
+STABLE
+AS $$
+  SELECT
+    encode(
+      digest(
+        coalesce(p_event_id::text, '') || '|' ||
+        coalesce(audit.format_hash_timestamp(p_occurred_at), '') || '|' ||
+        coalesce(p_tenancy_id::text, '') || '|' ||
+        coalesce(p_actor_id::text, '') || '|' ||
+        coalesce(p_entity, '') || '|' ||
+        coalesce(p_entity_id, '') || '|' ||
+        coalesce(p_operation::text, '') || '|' ||
+        coalesce(p_old_data::text, '') || '|' ||
+        coalesce(p_new_data::text, '') || '|' ||
+        coalesce(p_previous_hash, 'GENESIS'),
+        'sha256'
+      ),
+      'hex'
+    );
+$$;
+
+CREATE OR REPLACE FUNCTION audit.set_event_row_hash()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  NEW.row_hash := audit.compute_event_hash(
+    NEW.event_id,
+    NEW.occurred_at,
+    NEW.tenancy_id,
+    NEW.actor_id,
+    NEW.entity,
+    NEW.entity_id,
+    NEW.operation,
+    NEW.old_data,
+    NEW.new_data,
+    NEW.previous_hash
+  );
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER audit_events_set_row_hash
+BEFORE INSERT ON audit.events
+FOR EACH ROW EXECUTE FUNCTION audit.set_event_row_hash();
 
 CREATE INDEX idx_audit_events_tenant_time ON audit.events (tenancy_id, occurred_at DESC);
 CREATE INDEX idx_audit_events_entity ON audit.events (entity, entity_id);
@@ -48,7 +118,18 @@ CREATE OR REPLACE FUNCTION audit.write(
 RETURNS void
 LANGUAGE plpgsql
 AS $$
+DECLARE
+  v_tenant uuid := COALESCE(p_tenant, auth.current_tenant());
+  v_previous_hash text;
 BEGIN
+  SELECT row_hash
+  INTO v_previous_hash
+  FROM audit.events
+  WHERE tenancy_id IS NOT DISTINCT FROM v_tenant
+  ORDER BY occurred_at DESC, event_id DESC
+  LIMIT 1
+  FOR UPDATE;
+
   INSERT INTO audit.events (
     tenancy_id,
     actor_id,
@@ -62,10 +143,11 @@ BEGIN
     station_id,
     request_id,
     old_data,
-    new_data
+    new_data,
+    previous_hash
   )
   VALUES (
-    COALESCE(p_tenant, auth.current_tenant()),
+    v_tenant,
     p_actor,
     p_role,
     p_operation,
@@ -77,7 +159,8 @@ BEGIN
     p_station,
     p_request,
     p_old,
-    p_new
+    p_new,
+    v_previous_hash
   );
 END;
 $$;
@@ -173,6 +256,61 @@ BEGIN
   EXECUTE format('DROP TRIGGER IF EXISTS audit_log_dml ON %s', v_reg);
   EXECUTE format('CREATE TRIGGER audit_log_dml AFTER INSERT OR UPDATE OR DELETE ON %s FOR EACH ROW EXECUTE FUNCTION audit.fn_log_dml()', v_reg);
 END;
+$$;
+
+CREATE OR REPLACE FUNCTION audit.verify_chain(
+  p_tenancy_id uuid,
+  p_limit int DEFAULT 1000
+)
+RETURNS TABLE (
+  event_id uuid,
+  occurred_at timestamptz,
+  expected_hash text,
+  stored_hash text,
+  chain_valid boolean
+)
+LANGUAGE sql
+STABLE
+AS $$
+  WITH ordered AS (
+    SELECT
+      e.*,
+      lag(e.row_hash) OVER (ORDER BY e.occurred_at, e.event_id) AS expected_previous_hash
+    FROM audit.events e
+    WHERE e.tenancy_id = p_tenancy_id
+    ORDER BY e.occurred_at, e.event_id
+    LIMIT p_limit
+  )
+  SELECT
+    ordered.event_id,
+    ordered.occurred_at,
+    audit.compute_event_hash(
+      ordered.event_id,
+      ordered.occurred_at,
+      ordered.tenancy_id,
+      ordered.actor_id,
+      ordered.entity,
+      ordered.entity_id,
+      ordered.operation,
+      ordered.old_data,
+      ordered.new_data,
+      ordered.previous_hash
+    ) AS expected_hash,
+    ordered.row_hash AS stored_hash,
+    ordered.row_hash = audit.compute_event_hash(
+      ordered.event_id,
+      ordered.occurred_at,
+      ordered.tenancy_id,
+      ordered.actor_id,
+      ordered.entity,
+      ordered.entity_id,
+      ordered.operation,
+      ordered.old_data,
+      ordered.new_data,
+      ordered.previous_hash
+    )
+    AND ordered.previous_hash IS NOT DISTINCT FROM ordered.expected_previous_hash AS chain_valid
+  FROM ordered;
 $$;
 
 ALTER TABLE audit.events ENABLE ROW LEVEL SECURITY;

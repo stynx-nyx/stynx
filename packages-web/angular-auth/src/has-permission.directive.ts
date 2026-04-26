@@ -1,10 +1,13 @@
 import {
   Directive,
+  Inject,
   Input,
+  TemplateRef,
+  ViewContainerRef,
 } from '@angular/core';
-import type { OnDestroy, TemplateRef, ViewContainerRef } from '@angular/core';
+import type { OnDestroy } from '@angular/core';
 import type { Subscription } from 'rxjs';
-import type { StynxSessionService } from './session.service';
+import { StynxSessionService } from './session.service';
 
 @Directive({
   selector: '[stynxHasPermission]',
@@ -16,8 +19,11 @@ export class StynxHasPermissionDirective implements OnDestroy {
   private rendered = false;
 
   constructor(
+    @Inject(TemplateRef)
     private readonly templateRef: TemplateRef<unknown>,
+    @Inject(ViewContainerRef)
     private readonly viewContainerRef: ViewContainerRef,
+    @Inject(StynxSessionService)
     private readonly session: StynxSessionService,
   ) {
     this.subscription = this.session.active$.subscribe(() => this.render());

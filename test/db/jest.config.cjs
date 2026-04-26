@@ -1,11 +1,7 @@
-import type { Config } from 'jest';
-import { resolve } from 'node:path';
-import { createRequire } from 'node:module';
-
-const require = createRequire(import.meta.url);
+const { resolve } = require('node:path');
 const { baseCoverageThreshold } = require('../../jest.coverage.cjs');
 
-const config: Config = {
+const config = {
   rootDir: resolve(__dirname),
   testMatch: ['**/*.spec.ts'],
   transform: {
@@ -16,4 +12,4 @@ const config: Config = {
   coverageThreshold: baseCoverageThreshold,
 };
 
-export default config;
+module.exports = config;

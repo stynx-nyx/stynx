@@ -12,16 +12,24 @@ assert_pattern() {
   local pattern="$2"
   local label="$3"
 
-  if ! rg --multiline --pcre2 -q "$pattern" "$file"; then
-    echo "[RLS][missing] $label ($file)"
-    MISSING=1
+  if command -v rg >/dev/null 2>&1; then
+    rg --multiline --pcre2 -q "$pattern" "$file" && return 0
+  elif command -v perl >/dev/null 2>&1; then
+    perl -0e '
+      my ($pattern, $file) = @ARGV;
+      open my $fh, "<", $file or die "$file: $!";
+      local $/;
+      my $content = <$fh>;
+      exit($content =~ /$pattern/s ? 0 : 1);
+    ' "$pattern" "$file" && return 0
+  else
+    echo "[RLS][error] ripgrep (rg) or perl is required for multiline pattern checks"
+    exit 1
   fi
-}
 
-if ! command -v rg >/dev/null 2>&1; then
-  echo "[RLS][error] ripgrep (rg) is required for multiline pattern checks"
-  exit 1
-fi
+  echo "[RLS][missing] $label ($file)"
+  MISSING=1
+}
 
 assert_pattern "$AUTH_DDL" "CREATE OR REPLACE FUNCTION auth\\.create_tenant_enforcement_trigger" "auth.create_tenant_enforcement_trigger helper"
 assert_pattern "$AUTH_DDL" "CREATE OR REPLACE FUNCTION auth\\.attach_tenant_enforcement_triggers" "auth.attach_tenant_enforcement_triggers helper"

@@ -15,6 +15,7 @@ export class StynxToastService {
   push(
     message: string,
     tone: StynxToast['tone'] = 'info',
+    ttlMs = 5000,
   ): StynxToast {
     const toast: StynxToast = {
       id: this.nextId++,
@@ -22,6 +23,9 @@ export class StynxToastService {
       tone,
     };
     this.toastsState.update((current) => [...current, toast]);
+    if (ttlMs > 0) {
+      globalThis.setTimeout(() => this.dismiss(toast.id), ttlMs);
+    }
     return toast;
   }
 

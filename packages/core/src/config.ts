@@ -1,7 +1,7 @@
 import { GetParametersByPathCommand, SSMClient, type SSMClientConfig } from '@aws-sdk/client-ssm';
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import { z, type ZodTypeAny } from 'zod';
-import { ConfigurationValidationError } from './errors';
+import { ConfigOwnershipViolationError, ConfigurationValidationError } from './errors';
 import { STYNX_CORE_CONFIG, STYNX_CORE_OPTIONS } from './tokens';
 
 export interface StynxSsmOptions {
@@ -14,10 +14,25 @@ export interface StynxCoreModuleOptions<TSchema extends ZodTypeAny = ZodTypeAny>
   appName: string;
   envName?: string;
   schema: TSchema;
+  configMetadata?: Partial<Record<string, ConfigKeyMetadata>>;
   defaults?: Partial<z.input<TSchema>>;
   ssm?: StynxSsmOptions;
   secretCacheTtlMs?: number;
 }
+
+export type ConfigOwner = string;
+
+export interface ConfigKeyMetadata {
+  owner: ConfigOwner;
+  required?: boolean;
+  secret?: boolean;
+  description?: string;
+}
+
+export type AnnotatedSchema<TSchema extends ZodTypeAny> = {
+  schema: TSchema;
+  metadata?: Partial<Record<keyof z.infer<TSchema>, ConfigKeyMetadata>>;
+};
 
 export interface StynxCoreModuleAsyncOptions<TSchema extends ZodTypeAny = ZodTypeAny> {
   imports?: unknown[];
@@ -83,7 +98,36 @@ export async function loadStynxConfiguration<TSchema extends ZodTypeAny>(
   if (!parsed.success) {
     throw new ConfigurationValidationError(parsed.error.issues);
   }
-  return parsed.data;
+  const config = parsed.data;
+  if (options.configMetadata) {
+    validateConfigOwnership(config, options.configMetadata);
+  }
+  return config;
+}
+
+export function validateConfigOwnership<TSchema extends ZodTypeAny>(
+  parsed: z.infer<TSchema>,
+  metadata: Partial<Record<string, ConfigKeyMetadata>>,
+): void {
+  const violations: Array<{ key: string; reason: string }> = [];
+
+  for (const [key, meta] of Object.entries(metadata)) {
+    if (!meta) {
+      continue;
+    }
+
+    const value = (parsed as Record<string, unknown>)[key];
+    if (meta.required && (value === undefined || value === null || value === '')) {
+      violations.push({
+        key,
+        reason: `required by owner "${meta.owner}" but not set`,
+      });
+    }
+  }
+
+  if (violations.length > 0) {
+    throw new ConfigOwnershipViolationError(violations);
+  }
 }
 
 @Injectable()

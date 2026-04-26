@@ -1,5 +1,6 @@
-import { JsonPipe } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { DatePipe, JsonPipe, TitleCasePipe } from '@angular/common';
+import type { OnInit } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -13,11 +14,12 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
+import type { ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
+import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { RolesService } from './roles.service';
 import { TenancyService } from './tenancy.service';
 import { UsersService } from './users.service';
-import { RoleSummary, TenancySummary, UserDetail } from './models';
+import type { RoleSummary, TenancySummary, UserDetail } from './models';
 
 @Component({
   standalone: true,
@@ -37,7 +39,9 @@ import { RoleSummary, TenancySummary, UserDetail } from './models';
     MatListModule,
     ReactiveFormsModule,
     RouterLink,
+    DatePipe,
     JsonPipe,
+    TitleCasePipe,
   ],
 })
 export class UserDetailComponent implements OnInit {
@@ -49,6 +53,7 @@ export class UserDetailComponent implements OnInit {
   private readonly snackBar = inject(MatSnackBar);
   private readonly dialog = inject(MatDialog);
   private readonly fb = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly accountForm = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
@@ -84,7 +89,7 @@ export class UserDetailComponent implements OnInit {
     }
     this.usersService
       .getById(id)
-      .pipe(takeUntilDestroyed())
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (detail) => {
           this.user.set(detail);
@@ -103,7 +108,7 @@ export class UserDetailComponent implements OnInit {
   private refreshRoles(): void {
     this.rolesService
       .list()
-      .pipe(takeUntilDestroyed())
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((roles) => {
         const assigned = this.user()?.roles ?? [];
         const assignedIds = new Set(assigned.map((role) => role.id));
@@ -114,7 +119,7 @@ export class UserDetailComponent implements OnInit {
   private refreshTenancies(): void {
     this.tenancyService
       .list()
-      .pipe(takeUntilDestroyed())
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((tenancies) => {
         const assigned = this.user()?.tenancies ?? [];
         const assignedIds = new Set(assigned.map((t) => t.id));
@@ -131,7 +136,7 @@ export class UserDetailComponent implements OnInit {
         email: this.accountForm.value.email ?? undefined,
         phoneNumber: this.accountForm.value.phoneNumber ?? undefined,
       })
-      .pipe(takeUntilDestroyed())
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (detail) => {
           this.user.set(detail);
@@ -145,51 +150,63 @@ export class UserDetailComponent implements OnInit {
     this.openConfirmDialog({
       title: 'Confirm user account',
       message: 'Send confirmation to this user?',
-    }).afterClosed().subscribe((confirmed) => {
-      if (!confirmed) {
-        return;
-      }
-      this.usersService
-        .confirmUser(this.userId)
-        .pipe(takeUntilDestroyed())
-        .subscribe(() => this.snackBar.open('Account confirmation triggered', undefined, { duration: 2500 }));
-    });
+    })
+      .afterClosed()
+      .subscribe((confirmed) => {
+        if (!confirmed) {
+          return;
+        }
+        this.usersService
+          .confirmUser(this.userId)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe(() =>
+            this.snackBar.open('Account confirmation triggered', undefined, { duration: 2500 }),
+          );
+      });
   }
 
   confirmEmail(): void {
     this.openConfirmDialog({
       title: 'Confirm email',
       message: 'Mark email as verified?',
-    }).afterClosed().subscribe((confirmed) => {
-      if (!confirmed) {
-        return;
-      }
-      this.usersService
-        .confirmEmail(this.userId)
-        .pipe(takeUntilDestroyed())
-        .subscribe(() => this.snackBar.open('Email confirmation triggered', undefined, { duration: 2500 }));
-    });
+    })
+      .afterClosed()
+      .subscribe((confirmed) => {
+        if (!confirmed) {
+          return;
+        }
+        this.usersService
+          .confirmEmail(this.userId)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe(() =>
+            this.snackBar.open('Email confirmation triggered', undefined, { duration: 2500 }),
+          );
+      });
   }
 
   confirmPhone(): void {
     this.openConfirmDialog({
       title: 'Confirm phone',
       message: 'Mark phone number as verified?',
-    }).afterClosed().subscribe((confirmed) => {
-      if (!confirmed) {
-        return;
-      }
-      this.usersService
-        .confirmPhone(this.userId)
-        .pipe(takeUntilDestroyed())
-        .subscribe(() => this.snackBar.open('Phone confirmation triggered', undefined, { duration: 2500 }));
-    });
+    })
+      .afterClosed()
+      .subscribe((confirmed) => {
+        if (!confirmed) {
+          return;
+        }
+        this.usersService
+          .confirmPhone(this.userId)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe(() =>
+            this.snackBar.open('Phone confirmation triggered', undefined, { duration: 2500 }),
+          );
+      });
   }
 
   addRole(role: RoleSummary): void {
     this.rolesService
       .assign(this.userId, role.id)
-      .pipe(takeUntilDestroyed())
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           const user = this.user();
@@ -207,7 +224,7 @@ export class UserDetailComponent implements OnInit {
   removeRole(role: RoleSummary): void {
     this.rolesService
       .remove(this.userId, role.id)
-      .pipe(takeUntilDestroyed())
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           const user = this.user();
@@ -229,7 +246,7 @@ export class UserDetailComponent implements OnInit {
     }
     this.tenancyService
       .assign(this.userId, tenantId)
-      .pipe(takeUntilDestroyed())
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           const user = this.user();
@@ -248,12 +265,15 @@ export class UserDetailComponent implements OnInit {
   removeTenancy(tenancy: TenancySummary): void {
     this.tenancyService
       .remove(this.userId, tenancy.id)
-      .pipe(takeUntilDestroyed())
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           const user = this.user();
           if (user) {
-            this.user.set({ ...user, tenancies: user.tenancies.filter((t) => t.id !== tenancy.id) });
+            this.user.set({
+              ...user,
+              tenancies: user.tenancies.filter((t) => t.id !== tenancy.id),
+            });
             this.refreshTenancies();
           }
           this.snackBar.open('Tenancy removed', undefined, { duration: 2500 });

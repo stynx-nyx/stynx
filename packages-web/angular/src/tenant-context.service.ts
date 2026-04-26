@@ -20,7 +20,17 @@ function resolveUrl(rawUrl: string | undefined, host: string | undefined): URL {
 }
 
 function resolveSubdomainTenantId(host: string): string | null {
-  const [first] = host.split('.');
+  const hostname = host.replace(/:\d+$/, '').toLowerCase();
+  if (
+    hostname === 'localhost'
+    || hostname.endsWith('.localhost')
+    || hostname.includes(':')
+    || /^\d{1,3}(?:\.\d{1,3}){3}$/.test(hostname)
+  ) {
+    return null;
+  }
+
+  const [first] = hostname.split('.');
   return first && first !== 'localhost' ? first : null;
 }
 

@@ -1,5 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
+import { PermissionCache, PermissionQueryService } from '@stynx/auth';
 import { Database } from '@stynx/data';
 import { SessionService, type SessionBundle } from '@stynx/sessions';
 
@@ -38,7 +39,7 @@ export class ReferenceDevAuthService {
     return DEMO_TENANTS;
   }
 
-  async login(input: { email?: string; tenantId?: string; tenantSlug?: string }): Promise<SessionBundle & { tenantId: string; email: string }> {
+  async login(input: { email?: string; tenantId?: string; tenantSlug?: string }): Promise<SessionBundle & { tenantId: string; email: string; permissions: string[] }> {
     const tenant = this.resolveTenant(input.tenantId, input.tenantSlug);
     const email = (input.email ?? DEFAULT_DEMO_EMAIL).trim().toLowerCase();
 
@@ -66,11 +67,36 @@ export class ReferenceDevAuthService {
       }, { role: 'owner', readonly: false }),
     );
 
-    const bundle = await this.sessionService.create(identity.userId, tenant.id, email, {}, { membershipId: identity.membershipId });
+    const permissions = await this.permissionQueries.resolveForUser(identity.userId, tenant.id);
+    const bundle = await this.sessionService.create(
+      identity.userId,
+      tenant.id,
+      email,
+      {},
+      {
+        membershipId: permissions.membershipId,
+        permsHash: permissions.hash,
+      },
+    );
+    await this.permissionCache?.prime(
+      {
+        sid: bundle.sid,
+        userId: identity.userId,
+        tenantId: tenant.id,
+        membershipId: permissions.membershipId,
+        permissions: permissions.permissions,
+        hash: permissions.hash,
+        generation: permissions.generation,
+        computedAt: Date.now(),
+      },
+      bundle.expiresAt,
+    );
+
     return {
       ...bundle,
       tenantId: tenant.id,
       email,
+      permissions: permissions.permissions,
     };
   }
 
@@ -104,6 +130,18 @@ export class ReferenceDevAuthService {
 
   private get sessionService(): SessionService {
     return this.requireProvider(SessionService, 'SessionService');
+  }
+
+  private get permissionQueries(): PermissionQueryService {
+    return this.requireProvider(PermissionQueryService, 'PermissionQueryService');
+  }
+
+  private get permissionCache(): PermissionCache | null {
+    try {
+      return this.moduleRef.get(PermissionCache, { strict: false }) ?? null;
+    } catch {
+      return null;
+    }
   }
 
   private requireProvider<T>(token: new (...args: never[]) => T, label: string): T {

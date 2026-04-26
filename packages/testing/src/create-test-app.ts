@@ -1,8 +1,7 @@
-import { randomUUID } from 'node:crypto';
 import { Client } from 'pg';
 import { Test } from '@nestjs/testing';
 import { type INestApplication } from '@nestjs/common';
-import { GenericContainer, Wait, type StartedTestContainer } from 'testcontainers';
+import { GenericContainer, Wait } from 'testcontainers';
 import { RequestContextMutator } from '@stynx/core';
 import { Database, StynxDataModule } from '@stynx/data';
 import type {

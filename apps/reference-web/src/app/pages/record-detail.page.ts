@@ -1,5 +1,5 @@
 import { DatePipe, NgIf } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import type { OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { StynxDocumentUploadComponent } from '@stynx-web/angular-storage';
@@ -13,7 +13,7 @@ import type { RecordItem } from '../core/reference-models';
   imports: [DatePipe, NgIf, RouterLink, StynxBannerComponent, StynxDocumentUploadComponent],
   template: `
     <section class="panel">
-      @if (record; as currentRecord) {
+      @if (record(); as currentRecord) {
         <div class="panel__header">
           <div>
             <h2 data-testid="record-detail-title">{{ currentRecord.title }}</h2>
@@ -40,8 +40,8 @@ import type { RecordItem } from '../core/reference-models';
             [maxBytes]="25000000"
           ></stynx-document-upload>
         </article>
-      } @else if (errorMessage) {
-        <stynx-banner tone="error" [message]="errorMessage"></stynx-banner>
+      } @else if (errorMessage()) {
+        <stynx-banner tone="error" [message]="errorMessage()"></stynx-banner>
       }
     </section>
   `,
@@ -93,19 +93,19 @@ import type { RecordItem } from '../core/reference-models';
 export class RecordDetailPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly api = inject(ReferenceWebApiService);
-  protected record: RecordItem | null = null;
-  protected errorMessage = '';
+  protected readonly record = signal<RecordItem | null>(null);
+  protected readonly errorMessage = signal('');
 
   async ngOnInit(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('id');
     if (!id) {
-      this.errorMessage = 'Record id is required.';
+      this.errorMessage.set('Record id is required.');
       return;
     }
     try {
-      this.record = await this.api.getRecord(id);
+      this.record.set(await this.api.getRecord(id));
     } catch (error) {
-      this.errorMessage = error instanceof Error ? error.message : 'Unable to load record.';
+      this.errorMessage.set(error instanceof Error ? error.message : 'Unable to load record.');
     }
   }
 }

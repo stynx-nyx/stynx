@@ -115,7 +115,6 @@ export class RateLimitGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<RequestLike>();
-    const startedAt = performance.now();
     if (this.reflector.getAllAndOverride<boolean>(STYNX_SYSTEM_ROUTE, [context.getHandler(), context.getClass()])) {
       return true;
     }
@@ -136,6 +135,7 @@ export class RateLimitGuard implements CanActivate {
     const decisionStartedAt = performance.now();
     const decision = await this.tryConsumeDistributed(decisionContext);
     const decisionDurationMs = performance.now() - decisionStartedAt;
+    this.metrics?.recordLatency?.(resolved.scope, decisionDurationMs);
     if (!decision) {
       if (this.options.distributedStrict) {
         throw new ServiceUnavailableException('Distributed rate limit backend unavailable');

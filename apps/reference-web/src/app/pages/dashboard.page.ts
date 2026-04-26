@@ -7,6 +7,7 @@ import { StynxHasPermissionDirective, StynxSessionService } from '@stynx-web/ang
 import { StynxBannerComponent, StynxToastService } from '@stynx-web/angular-ui';
 import { StynxPreferencesFormComponent, StynxProfileFormComponent } from '@stynx-web/angular-profile';
 import type { StynxSessionsAdapter } from '@stynx-web/angular-sessions';
+import { ReferenceWebI18nService } from '../core/reference-web-i18n.service';
 import { ReferenceWebShellService } from '../core/reference-web-shell.service';
 
 @Component({
@@ -26,7 +27,8 @@ import { ReferenceWebShellService } from '../core/reference-web-shell.service';
       <article class="hero">
         <div>
           <p class="eyebrow">Prompt 31</p>
-          <h2>{{ shell.activeTenantLabel() }}</h2>
+          <h2>{{ i18n.t('dashboard.title') }}</h2>
+          <p class="tenant-label">{{ shell.activeTenantLabel() }}</p>
           <p>Dashboard, storage, sessions, profile, locale switching, and auth wiring are all mounted here.</p>
         </div>
         <stynx-banner tone="info" [message]="'Signed in as ' + shell.activeUserLabel()"></stynx-banner>
@@ -103,6 +105,7 @@ import { ReferenceWebShellService } from '../core/reference-web-shell.service';
 export class DashboardPageComponent implements AfterViewInit {
   private readonly session = inject(StynxSessionService);
   private readonly toast = inject(StynxToastService);
+  protected readonly i18n = inject(ReferenceWebI18nService);
   protected readonly shell = inject(ReferenceWebShellService);
   protected uploadedDocumentId = '';
   protected profileValue = {

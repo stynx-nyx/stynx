@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -14,7 +15,15 @@ import {
   type AuditClock,
   type AuditDumpRunner,
 } from './tokens';
-import type { AuditDetachPlan, AuditLogItem, AuditLogPage, AuditLogQuery, AuditLogCursor, StynxAuditModuleOptions } from './types';
+import type {
+  AuditDetachPlan,
+  AuditLogItem,
+  AuditLogPage,
+  AuditLogQuery,
+  AuditLogCursor,
+  ChainVerificationResult,
+  StynxAuditModuleOptions,
+} from './types';
 
 interface AuditPartitionRow {
   partition_name: string;
@@ -37,6 +46,20 @@ interface AuditLogRow {
   session_id: string | null;
   tags: Record<string, unknown> | null;
   payload: Record<string, unknown> | null;
+}
+
+interface AuditChainRow {
+  event_id: string;
+  occurred_at_text: string | null;
+  tenancy_id_text: string | null;
+  actor_id_text: string | null;
+  entity: string | null;
+  entity_id: string | null;
+  operation_text: string | null;
+  old_data_text: string | null;
+  new_data_text: string | null;
+  previous_hash: string | null;
+  row_hash: string;
 }
 
 @Injectable()
@@ -120,7 +143,7 @@ export class StynxAuditService {
             from audit.log
             ${whereParts.length > 0 ? `where ${whereParts.join(' and ')}` : ''}
             order by occurred_at desc, id desc
-            limit $${index++}
+            limit $${index}
           `,
           params,
         );
@@ -243,6 +266,75 @@ export class StynxAuditService {
     }
   }
 
+  async verifyChain(tenancyId: string, limit = 1000): Promise<ChainVerificationResult> {
+    const database = this.requireDatabase();
+    const sanitizedLimit = Math.min(Math.max(Math.trunc(limit), 1), 10_000);
+
+    return database.withSystemContext('audit hash-chain verification', async () =>
+      database.tx(async (trx) => {
+        const rows = await trx.query<AuditChainRow>(
+          `
+            select
+              event_id::text as event_id,
+              audit.format_hash_timestamp(occurred_at) as occurred_at_text,
+              tenancy_id::text as tenancy_id_text,
+              actor_id::text as actor_id_text,
+              entity,
+              entity_id,
+              operation::text as operation_text,
+              old_data::text as old_data_text,
+              new_data::text as new_data_text,
+              previous_hash,
+              row_hash
+            from audit.events
+            where tenancy_id = $1::uuid
+            order by occurred_at, event_id
+            limit $2
+          `,
+          [tenancyId, sanitizedLimit],
+        );
+
+        let previousExpectedHash: string | null = null;
+        let previousEventId: string | null = null;
+        let totalChecked = 0;
+
+        for (const row of rows.rows) {
+          totalChecked += 1;
+
+          if (!previousEventId && row.previous_hash !== null) {
+            return {
+              valid: false,
+              totalChecked,
+              firstBrokenEventId: row.event_id,
+            };
+          }
+
+          if (previousEventId && row.previous_hash !== previousExpectedHash) {
+            return {
+              valid: false,
+              totalChecked,
+              firstBrokenEventId: previousEventId,
+            };
+          }
+
+          const expectedHash = this.hashAuditEventRow(row);
+          if (expectedHash !== row.row_hash) {
+            return {
+              valid: false,
+              totalChecked,
+              firstBrokenEventId: row.event_id,
+            };
+          }
+
+          previousExpectedHash = expectedHash;
+          previousEventId = row.event_id;
+        }
+
+        return { valid: true, totalChecked };
+      }, { role: 'owner', readonly: true }),
+    );
+  }
+
   private mapLogRow(row: AuditLogRow): AuditLogItem {
     return {
       id: Number(row.id),
@@ -278,6 +370,22 @@ export class StynxAuditService {
 
   private toIso(value: string | Date): string {
     return value instanceof Date ? value.toISOString() : value;
+  }
+
+  private hashAuditEventRow(row: AuditChainRow): string {
+    const payload = [
+      row.event_id,
+      row.occurred_at_text ?? '',
+      row.tenancy_id_text ?? '',
+      row.actor_id_text ?? '',
+      row.entity ?? '',
+      row.entity_id ?? '',
+      row.operation_text ?? '',
+      row.old_data_text ?? '',
+      row.new_data_text ?? '',
+      row.previous_hash ?? 'GENESIS',
+    ].join('|');
+    return createHash('sha256').update(payload).digest('hex');
   }
 
   private partitionMonth(partitionName: string): string | null {

@@ -4,10 +4,14 @@ import { of, throwError, firstValueFrom, type Observable } from 'rxjs';
 import { AuthInterceptor } from '../src/auth.interceptor';
 import { ErrorBannerService } from '../src/error-banner.service';
 import { ErrorInterceptor } from '../src/error.interceptor';
+import { generateClientRequestId } from '../src/request-id';
 import { RequestIdInterceptor } from '../src/request-id.interceptor';
 import { TenantContextService } from '../src/tenant-context.service';
 import { TenantInterceptor } from '../src/tenant.interceptor';
 import { ForbiddenError } from '@stynx-web/sdk';
+
+const REQUEST_ID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 class FakeHeaders {
   private readonly values = new Map<string, string>();
@@ -63,6 +67,10 @@ class FakeHandler {
 }
 
 describe('@stynx-web/angular', () => {
+  it('generates UUIDv7-shaped request ids for API headers', () => {
+    expect(generateClientRequestId()).toMatch(REQUEST_ID_PATTERN);
+  });
+
   it('applies request-id, tenant, and auth headers and refreshes after 401', async () => {
     let token = 'expired-token';
     let getAccessTokenCalls = 0;
@@ -102,7 +110,7 @@ describe('@stynx-web/angular', () => {
     } as never);
 
     await expect(firstValueFrom(request)).resolves.toEqual({ ok: true });
-    expect(handler.seen[0]?.headers.get('x-request-id')).toBeTruthy();
+    expect(handler.seen[0]?.headers.get('x-request-id')).toMatch(REQUEST_ID_PATTERN);
     expect(handler.seen[0]?.headers.get('x-tenant-id')).toBe('tenant-a');
     expect(handler.seen[0]?.headers.get('authorization')).toBe('Bearer expired-token');
     expect(handler.seen[1]?.headers.get('authorization')).toBe('Bearer fresh-token');
@@ -155,6 +163,12 @@ describe('@stynx-web/angular', () => {
     await tenantContext.initialize({
       url: 'https://localhost/dashboard',
       host: 'localhost',
+    });
+    expect(tenantContext.activeTenant()).toEqual({ id: 'fallback-tenant', source: 'default' });
+
+    await tenantContext.initialize({
+      url: 'http://127.0.0.1:3100/records/new',
+      host: '127.0.0.1:3100',
     });
     expect(tenantContext.activeTenant()).toEqual({ id: 'fallback-tenant', source: 'default' });
   });
