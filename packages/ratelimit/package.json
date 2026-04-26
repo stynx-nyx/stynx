@@ -28,7 +28,7 @@
   "dependencies": {
     "@stynx/auth": "workspace:*",
     "@stynx/data": "workspace:*",
-    "redis": "^4.7.0"
+    "redis": "^5.12.1"
   },
   "peerDependencies": {
     "@nestjs/common": "^11.1.19",

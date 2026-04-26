@@ -29,7 +29,7 @@
     "@stynx/core": "workspace:*",
     "@stynx/data": "workspace:*",
     "jose": "^6.2.2",
-    "redis": "^4.7.0",
+    "redis": "^5.12.1",
     "uuid": "^10.0.0",
     "zod": "^4.1.12"
   },

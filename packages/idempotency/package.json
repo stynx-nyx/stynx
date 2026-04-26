@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@stynx/data": "workspace:*",
-    "redis": "^4.7.0",
+    "redis": "^5.12.1",
     "rxjs": "^7.8.2"
   },
   "peerDependencies": {
