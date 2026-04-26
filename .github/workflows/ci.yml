@@ -354,13 +354,15 @@ jobs:
 
       - name: Wait for reference API health gates
         run: |
+          set -euo pipefail
           for endpoint in healthz readyz; do
-            for i in $(seq 1 60); do
+            for i in $(seq 1 120); do
               if curl -sf "http://127.0.0.1:3000/${endpoint}" >/dev/null; then
                 break
               fi
-              if [ "$i" -eq 60 ]; then
-                docker compose -f apps/reference-api/docker-compose.yml logs
+              if [ "$i" -eq 120 ]; then
+                docker compose -f apps/reference-api/docker-compose.yml ps
+                docker compose -f apps/reference-api/docker-compose.yml logs --no-color --timestamps postgres redis localstack reference-api
                 exit 1
               fi
               sleep 2

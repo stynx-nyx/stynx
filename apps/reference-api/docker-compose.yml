@@ -5,11 +5,21 @@ services:
       POSTGRES_DB: postgres
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
     ports:
       - "5432:5432"
 
   redis:
     image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
     ports:
       - "6379:6379"
 
@@ -23,6 +33,15 @@ services:
       - "4566:4566"
     volumes:
       - ./localstack/init-s3.sh:/etc/localstack/init/ready.d/init-s3.sh:ro
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:4566/_localstack/health', timeout=2)\"",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
 
   reference-api:
     build:
@@ -51,8 +70,11 @@ services:
       AWS_SECRET_ACCESS_KEY: test
       AWS_DEFAULT_REGION: us-east-1
     depends_on:
-      - postgres
-      - redis
-      - localstack
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
     ports:
       - "3000:3000"
