@@ -31,7 +31,7 @@ jobs:
     name: k6
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Start reference stack
         run: docker compose -f apps/reference-api/docker-compose.yml up -d --build
@@ -176,7 +176,7 @@ jobs:
             filter: '@stynx/data'
             report_path: packages/data/reports/mutation
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-node@v4
         with:
