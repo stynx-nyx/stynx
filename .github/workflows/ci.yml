@@ -50,8 +50,8 @@ jobs:
           pnpm --dir backend install --no-frozen-lockfile
           pnpm --dir bootstrap install --ignore-workspace --no-frozen-lockfile
           pnpm --dir frontend install --no-frozen-lockfile
-          pnpm --dir test/backend install --no-frozen-lockfile
-          pnpm --dir test/db install --no-frozen-lockfile
+          pnpm --dir test/backend install --ignore-workspace --no-frozen-lockfile
+          pnpm --dir test/db install --ignore-workspace --no-frozen-lockfile
           pnpm --dir test/packages install --ignore-workspace --no-frozen-lockfile
 
   lint:
@@ -85,8 +85,8 @@ jobs:
           pnpm --dir backend install --no-frozen-lockfile
           pnpm --dir bootstrap install --ignore-workspace --no-frozen-lockfile
           pnpm --dir frontend install --no-frozen-lockfile
-          pnpm --dir test/backend install --no-frozen-lockfile
-          pnpm --dir test/db install --no-frozen-lockfile
+          pnpm --dir test/backend install --ignore-workspace --no-frozen-lockfile
+          pnpm --dir test/db install --ignore-workspace --no-frozen-lockfile
           pnpm --dir test/packages install --ignore-workspace --no-frozen-lockfile
 
       - name: Lint workspace and legacy surfaces
@@ -138,8 +138,8 @@ jobs:
           pnpm --dir backend install --no-frozen-lockfile
           pnpm --dir bootstrap install --ignore-workspace --no-frozen-lockfile
           pnpm --dir frontend install --no-frozen-lockfile
-          pnpm --dir test/backend install --no-frozen-lockfile
-          pnpm --dir test/db install --no-frozen-lockfile
+          pnpm --dir test/backend install --ignore-workspace --no-frozen-lockfile
+          pnpm --dir test/db install --ignore-workspace --no-frozen-lockfile
           pnpm --dir test/packages install --ignore-workspace --no-frozen-lockfile
 
       - name: Typecheck workspace
@@ -178,7 +178,7 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm --dir backend install --no-frozen-lockfile
           pnpm --dir frontend install --no-frozen-lockfile
-          pnpm --dir test/backend install --no-frozen-lockfile
+          pnpm --dir test/backend install --ignore-workspace --no-frozen-lockfile
           pnpm --dir test/packages install --ignore-workspace --no-frozen-lockfile
 
       - name: Run unit test suites with coverage
@@ -250,7 +250,7 @@ jobs:
       - name: Install dependencies
         run: |
           pnpm install --frozen-lockfile
-          pnpm --dir test/db install --no-frozen-lockfile
+          pnpm --dir test/db install --ignore-workspace --no-frozen-lockfile
 
       - name: Install postgres client
         run: sudo apt-get update && sudo apt-get install -y postgresql-client

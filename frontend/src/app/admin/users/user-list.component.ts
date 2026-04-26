@@ -1,5 +1,5 @@
 import type { OnInit } from '@angular/core';
-import { Component, ViewChild, inject } from '@angular/core';
+import { Component, DestroyRef, ViewChild, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -35,6 +35,7 @@ export class UserListComponent implements OnInit {
   private readonly usersService = inject(UsersService);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
   readonly displayedColumns = ['displayName', 'email', 'status', 'actions'];
   readonly dataSource = new MatTableDataSource<UserSummary>([]);
   readonly filterForm = this.fb.group({
@@ -77,7 +78,7 @@ export class UserListComponent implements OnInit {
         phone: filters.phone || undefined,
         group: filters.group || undefined,
       })
-      .pipe(takeUntilDestroyed())
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (users) => {
           this.dataSource.data = users ?? [];

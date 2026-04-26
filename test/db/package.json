@@ -5,7 +5,7 @@
     "node": ">=20 <23"
   },
   "scripts": {
-    "test": "jest",
+    "test": "jest --config ./jest.config.cjs",
     "lint": "eslint --config ../../tools/eslint-config/test.mjs \"./**/*.ts\""
   },
   "devDependencies": {
