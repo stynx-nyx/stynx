@@ -36,6 +36,7 @@ on:
       - 'scripts/**'
 
 permissions:
+  actions: read
   contents: read
   security-events: write
 
