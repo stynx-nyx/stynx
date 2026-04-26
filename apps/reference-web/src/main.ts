@@ -1,3 +1,4 @@
+import '@angular/compiler';
 import 'zone.js';
 import { APP_INITIALIZER, importProvidersFrom } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
