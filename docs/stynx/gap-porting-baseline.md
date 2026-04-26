@@ -39,14 +39,15 @@ tests, and package build output:
 
 Commands were run from the repository root on 2026-04-26:
 
-| Command              | Exit | Captured result                                                                                                                                                   |
-| -------------------- | ---: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm build`         |  `0` | `Tasks: 38 successful, 38 total`; docs API coverage verified for 24 packages; Docusaurus generated static files without the previous TypeDoc/Docusaurus warnings. |
-| `pnpm lint`          |  `0` | `Tasks: 39 successful, 39 total`; zero ESLint warnings.                                                                                                           |
-| `pnpm test:unit`     |  `0` | package tests: 19 suites / 66 tests; backend tests: 5 suites / 5 tests; frontend tests: 3 suites / 3 tests; script validation passed.                             |
-| `pnpm test:int`      |  `0` | `Tasks: 38 successful, 38 total`; DB tests: 3 suites / 10 tests.                                                                                                  |
-| `pnpm lint:deadcode` |  `0` | `knip --no-config-hints` completed without findings.                                                                                                              |
-| `pnpm lint:deps`     |  `0` | `No depcheck issue`.                                                                                                                                              |
+| Command                    | Exit | Captured result                                                                                                                                                   |
+| -------------------------- | ---: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm build`               |  `0` | `Tasks: 38 successful, 38 total`; docs API coverage verified for 24 packages; Docusaurus generated static files without the previous TypeDoc/Docusaurus warnings. |
+| `pnpm --filter docs build` |  `0` | docs API coverage verified for 24 packages; Docusaurus generated static files from the standalone docs package path.                                              |
+| `pnpm lint`                |  `0` | `Tasks: 39 successful, 39 total`; zero ESLint warnings.                                                                                                           |
+| `pnpm test:unit`           |  `0` | package tests: 19 suites / 66 tests; backend tests: 5 suites / 5 tests; frontend tests: 3 suites / 3 tests; script validation passed.                             |
+| `pnpm test:int`            |  `0` | `Tasks: 38 successful, 38 total`; DB tests: 3 suites / 10 tests.                                                                                                  |
+| `pnpm lint:deadcode`       |  `0` | `knip --no-config-hints` completed without findings.                                                                                                              |
+| `pnpm lint:deps`           |  `0` | `No depcheck issue`.                                                                                                                                              |
 
 ## Remaining Release-Readiness Gaps
 
