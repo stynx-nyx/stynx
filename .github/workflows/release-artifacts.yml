@@ -82,7 +82,7 @@ jobs:
           "${{ steps.syft.outputs.cmd }}" "${{ steps.meta.outputs.reference_web }}@${{ steps.reference-web.outputs.digest }}" -o spdx-json=reference-web-${{ steps.meta.outputs.tag }}.spdx.json
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v4.1.0
+        uses: sigstore/cosign-installer@v4.1.1
 
       - name: Sign pushed images
         run: |
