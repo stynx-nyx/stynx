@@ -16,10 +16,10 @@
     "swagger:export": "ts-node -r tsconfig-paths/register src/core/docs/swagger.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-cognito-identity-provider": "^3.1034.0",
-    "@aws-sdk/client-s3": "^3.1034.0",
-    "@aws-sdk/credential-providers": "^3.1034.0",
-    "@aws-sdk/s3-request-presigner": "^3.1034.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.1037.0",
+    "@aws-sdk/client-s3": "^3.1037.0",
+    "@aws-sdk/credential-providers": "^3.1037.0",
+    "@aws-sdk/s3-request-presigner": "^3.1037.0",
     "@stynx/idempotency": "workspace:*",
     "@nestjs/common": "^11.1.19",
     "@nestjs/config": "^4.0.4",
