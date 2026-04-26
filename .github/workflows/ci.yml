@@ -47,9 +47,9 @@ jobs:
 
       - name: Install legacy and standalone test dependencies
         run: |
-          pnpm --dir backend install --no-frozen-lockfile
+          pnpm --dir backend install --ignore-workspace --no-frozen-lockfile
           pnpm --dir bootstrap install --ignore-workspace --no-frozen-lockfile
-          pnpm --dir frontend install --no-frozen-lockfile
+          pnpm --dir frontend install --ignore-workspace --no-frozen-lockfile
           pnpm --dir test/backend install --ignore-workspace --no-frozen-lockfile
           pnpm --dir test/db install --ignore-workspace --no-frozen-lockfile
           pnpm --dir test/packages install --ignore-workspace --no-frozen-lockfile
@@ -82,9 +82,9 @@ jobs:
       - name: Install dependencies
         run: |
           pnpm install --frozen-lockfile
-          pnpm --dir backend install --no-frozen-lockfile
+          pnpm --dir backend install --ignore-workspace --no-frozen-lockfile
           pnpm --dir bootstrap install --ignore-workspace --no-frozen-lockfile
-          pnpm --dir frontend install --no-frozen-lockfile
+          pnpm --dir frontend install --ignore-workspace --no-frozen-lockfile
           pnpm --dir test/backend install --ignore-workspace --no-frozen-lockfile
           pnpm --dir test/db install --ignore-workspace --no-frozen-lockfile
           pnpm --dir test/packages install --ignore-workspace --no-frozen-lockfile
@@ -135,9 +135,9 @@ jobs:
       - name: Install dependencies
         run: |
           pnpm install --frozen-lockfile
-          pnpm --dir backend install --no-frozen-lockfile
+          pnpm --dir backend install --ignore-workspace --no-frozen-lockfile
           pnpm --dir bootstrap install --ignore-workspace --no-frozen-lockfile
-          pnpm --dir frontend install --no-frozen-lockfile
+          pnpm --dir frontend install --ignore-workspace --no-frozen-lockfile
           pnpm --dir test/backend install --ignore-workspace --no-frozen-lockfile
           pnpm --dir test/db install --ignore-workspace --no-frozen-lockfile
           pnpm --dir test/packages install --ignore-workspace --no-frozen-lockfile
@@ -176,8 +176,8 @@ jobs:
       - name: Install dependencies
         run: |
           pnpm install --frozen-lockfile
-          pnpm --dir backend install --no-frozen-lockfile
-          pnpm --dir frontend install --no-frozen-lockfile
+          pnpm --dir backend install --ignore-workspace --no-frozen-lockfile
+          pnpm --dir frontend install --ignore-workspace --no-frozen-lockfile
           pnpm --dir test/backend install --ignore-workspace --no-frozen-lockfile
           pnpm --dir test/packages install --ignore-workspace --no-frozen-lockfile
 
@@ -305,9 +305,9 @@ jobs:
       - name: Install dependencies
         run: |
           pnpm install --frozen-lockfile
-          pnpm --dir backend install --no-frozen-lockfile
+          pnpm --dir backend install --ignore-workspace --no-frozen-lockfile
           pnpm --dir bootstrap install --ignore-workspace --no-frozen-lockfile
-          pnpm --dir frontend install --no-frozen-lockfile
+          pnpm --dir frontend install --ignore-workspace --no-frozen-lockfile
 
       - name: Build workspace and legacy apps
         run: |
