@@ -1,11 +1,14 @@
 # Gap-Porting Baseline
 
 **Date:** 2026-04-26  
-**Status:** blocked before implementation
+**Status:** complete for `GAP-001..006` local closure target
 
 ## Spec Gate
 
-All required GAP spec files were present:
+The six GAP specs remain as long-lived reference specs, and the matching
+`docs/work/prompts/GAP-*.md` files remain as executable prompt history. All six
+specs are now marked complete after rechecking code, exported package surfaces,
+tests, and package build output:
 
 - `specs/GAP-001-audit-hash-chain.md`
 - `specs/GAP-002-dead-code-detection.md`
@@ -14,31 +17,49 @@ All required GAP spec files were present:
 - `specs/GAP-005-s3-lifecycle-lock.md`
 - `specs/GAP-006-permission-drift-slo.md`
 
-## Build Baseline
+## Implementation Evidence
 
-Command:
+- `GAP-001`: `audit.events` now carries `previous_hash` and trigger-computed
+  `row_hash` in both the DDL and package migration path. `audit.verify_chain`
+  recomputes hashes and detects direct row tampering in integration coverage.
+- `GAP-002`: root dead-code and dependency checks are available and green
+  through `pnpm lint:deadcode` and `pnpm lint:deps`.
+- `GAP-003`: config schema metadata includes owner annotations and rejects
+  ownership violations through package-level coverage.
+- `GAP-004`: session exchange types, errors, and service behavior are exported
+  and covered for happy path, owner mismatch, missing session, and inactive
+  session handling.
+- `GAP-005`: storage exposes S3 compliance options, lifecycle/object-lock
+  command handling, tenant download presigning, and related unit/integration
+  proof.
+- `GAP-006`: rate-limit latency histograms and proactive permission drift
+  resync behavior are exported and covered, including fake-timer unit coverage.
 
-```sh
-pnpm build 2>&1 | tail -5
-```
+## Local Closure Gate
 
-Exit code: `1`
+Commands were run from the repository root on 2026-04-26:
 
-Captured output:
+| Command              | Exit | Captured result                                                                                                                                                   |
+| -------------------- | ---: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm build`         |  `0` | `Tasks: 38 successful, 38 total`; docs API coverage verified for 24 packages; Docusaurus generated static files without the previous TypeDoc/Docusaurus warnings. |
+| `pnpm lint`          |  `0` | `Tasks: 39 successful, 39 total`; zero ESLint warnings.                                                                                                           |
+| `pnpm test:unit`     |  `0` | package tests: 19 suites / 66 tests; backend tests: 5 suites / 5 tests; frontend tests: 3 suites / 3 tests; script validation passed.                             |
+| `pnpm test:int`      |  `0` | `Tasks: 38 successful, 38 total`; DB tests: 3 suites / 10 tests.                                                                                                  |
+| `pnpm lint:deadcode` |  `0` | `knip --no-config-hints` completed without findings.                                                                                                              |
+| `pnpm lint:deps`     |  `0` | `No depcheck issue`.                                                                                                                                              |
 
-```text
- WARNING  no output files found for task @stynx-internal/eslint-config#build. Please check your `outputs` key in `turbo.json`
- WARNING  no output files found for task @stynx-internal/tsconfig#build. Please check your `outputs` key in `turbo.json`
- WARNING  no output files found for task stynx-bootstrap#build. Please check your `outputs` key in `turbo.json`
- ERROR  run failed: command  exited (1)
- ELIFECYCLE Command failed with exit code 1.
-```
+## Remaining Release-Readiness Gaps
 
-## Halted Commands
+The GAP porting target is closed locally, but the release-readiness TODO items
+still require CI-authoritative proof before they can be closed:
 
-Per the gap-porting plan instructions, the baseline stopped after the failed build. These commands were not run:
+- Browser e2e on Linux/GitHub Actions.
+- Docs Lighthouse through `docs.yml` in GitHub Actions.
+- k6 full-suite baseline proof against a previous successful `main` artifact.
+- Stryker thresholds for `@stynx/auth`, `@stynx/data`, and `@stynx/tenancy`.
+- Real `changeset version`, publish, GitHub Release, ECR push, and signing
+  evidence after the upstream gates are green.
 
-```sh
-pnpm lint 2>&1 | tail -5
-pnpm test:unit 2>&1 | tail -10
-```
+The prior TypeDoc/TSDoc public-documentation warning blocker is closed locally
+by the root build and docs build, but CI should still be treated as the release
+authority for Prompt 37.

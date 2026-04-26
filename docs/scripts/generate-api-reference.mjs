@@ -7,7 +7,12 @@ const scriptDir = dirname(fileURLToPath(import.meta.url));
 const docsDir = resolve(scriptDir, '..');
 const repoRoot = resolve(docsDir, '..');
 const apiOutDir = resolve(docsDir, '.generated/site-docs/api-reference');
-const pnpmBin = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+const typeDocBin = resolve(
+  docsDir,
+  'node_modules',
+  '.bin',
+  process.platform === 'win32' ? 'typedoc.cmd' : 'typedoc',
+);
 
 function collectPackages(baseDir, matcher) {
   const resolvedBase = resolve(repoRoot, baseDir);
@@ -148,10 +153,8 @@ for (const pkg of packages) {
   mkdirSync(targetDir, { recursive: true });
 
   const result = spawnSync(
-    pnpmBin,
+    typeDocBin,
     [
-      'exec',
-      'typedoc',
       '--plugin',
       'typedoc-plugin-markdown',
       '--entryPoints',

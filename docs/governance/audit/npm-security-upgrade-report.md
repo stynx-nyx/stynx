@@ -38,8 +38,9 @@ Standalone `infra/cdk` `npm audit --json` reports:
 
 - critical: 0
 - high: 0
-- moderate: 0
-- low: 0
+- moderate: 3
+- low: 3
+- outdated_count: 8
 
 ## Remaining Findings
 

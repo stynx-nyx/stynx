@@ -49,6 +49,8 @@ COPY --from=build --chown=node:node /app/runtime-dist/apps/reference-api/. ./app
 RUN node apps/reference-api/scripts/repair-runtime-workspace-links.mjs \
   && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
+
 EXPOSE 3000
 
 USER node
