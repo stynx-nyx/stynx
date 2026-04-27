@@ -18,6 +18,7 @@ export const options = {
     data_tx_overhead_ms: ['p(99)<2'],
     ratelimit_overhead_ms: ['p(99)<1'],
     idempotency_lookup_ms: ['p(99)<5'],
+    http_req_duration: ['p(95)<750'],
     http_req_failed: ['rate<0.02'],
   },
 };

@@ -14,6 +14,7 @@ export const options = {
   },
   thresholds: {
     auth_verify_duration_ms: ['p(99)<10'],
+    http_req_duration: ['p(95)<500'],
     http_req_failed: ['rate<0.01'],
   },
 };

@@ -23,11 +23,11 @@ import {
   expectRLSIsolated,
   expectRestored,
   expectROCannotWrite,
-  expectRestoreConflict,
   expectSoftDeleteBlocked,
 } from '@stynx/testing';
 import { SessionService } from '@stynx/sessions';
 import { RequestContextMutator } from '@stynx/core';
+import { StynxMetricsService } from '@stynx/health';
 import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../../packages/data/test/support/postgres';
 import {
   recordNotes as liveRecordNotes,
@@ -134,7 +134,7 @@ async function seedBaseState(database: PostgresTestDatabase): Promise<void> {
       'sample:probe:read',
     ];
 
-    for (const [index, perm] of perms.entries()) {
+    for (const perm of perms) {
       await client.query(
         `
           insert into auth.perms (id, key, description)
@@ -201,6 +201,7 @@ describe('@stynx/reference-api runtime suite', () => {
   let database: Database;
   let requestContextMutator: RequestContextMutator;
   let sessionService: SessionService;
+  let metricsService: StynxMetricsService;
   let adminS3: S3Client;
   let bucketName = 'stynx-docs-local-us-east-1';
   let redisUrl = '';
@@ -209,10 +210,6 @@ describe('@stynx/reference-api runtime suite', () => {
   let readerAToken = '';
   let adminBToken = '';
   let idempotencyCounter = 0;
-
-  async function authAs(token: string) {
-    return request(app.getHttpServer()).set('authorization', `Bearer ${token}`);
-  }
 
   function authRequest(token: string) {
     const nextKey = (prefix: string) => `${prefix}-${++idempotencyCounter}`;
@@ -365,6 +362,7 @@ describe('@stynx/reference-api runtime suite', () => {
     database = moduleRef.get(Database);
     requestContextMutator = moduleRef.get(RequestContextMutator);
     sessionService = moduleRef.get(SessionService);
+    metricsService = moduleRef.get(StynxMetricsService);
 
     await seedBaseState(postgres);
 
@@ -505,6 +503,30 @@ describe('@stynx/reference-api runtime suite', () => {
     expect(noteA.id).toBeDefined();
     expect(entryA.id).toBeDefined();
     expect(lockA.id).toBeDefined();
+  });
+
+  it('emits the SPEC 11.2 Prometheus metric names', async () => {
+    metricsService.httpRequestDuration.labels('GET', '/healthz', '200', 'standard').observe(0.001);
+    metricsService.httpRequestTotal.labels('GET', '/healthz', '200', 'standard').inc();
+    metricsService.httpRequestsTotal.labels('GET', '/healthz', '200', 'standard').inc();
+    metricsService.dbQueryDuration.labels('select').observe(0.001);
+    metricsService.auditEventsTotal.labels('sample.record', 'INSERT').inc();
+    metricsService.lgpdErasureTotal.labels('sample.record', 'nullify').inc();
+    metricsService.storagePresignTotal.labels('upload').inc();
+
+    const response = await request(app.getHttpServer()).get('/metrics').expect(200);
+    for (const metricName of [
+      'http_request_duration_seconds',
+      'http_request_total',
+      'http_requests_total',
+      'db_query_duration_seconds',
+      'audit_events_total',
+      'lgpd_erasure_total',
+      'storage_presign_total',
+    ]) {
+      expect(response.text).toContain(metricName);
+    }
+    expect(response.text).toContain('lgpd_erasure_total{table="sample.record",strategy="nullify"}');
   });
 
   it('family 2: denies routes when @Permission grants are missing', async () => {

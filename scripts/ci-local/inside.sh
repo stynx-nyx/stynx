@@ -287,6 +287,15 @@ job_integration() {
   export STYNX_DATABASE_URL="$DATABASE_URL"
 
   if [[ "$status" -eq 0 ]]; then
+    run pnpm --filter @stynx/cli build || status=$?
+  fi
+  if [[ "$status" -eq 0 ]]; then
+    run node packages/cli/dist/cli/src/main.js migrate up --database-url "$DATABASE_URL" || status=$?
+  fi
+  if [[ "$status" -eq 0 ]]; then
+    run pnpm db:verify || status=$?
+  fi
+  if [[ "$status" -eq 0 ]]; then
     run bash scripts/db-reset.sh --database-url "$DATABASE_URL" || status=$?
   fi
   if [[ "$status" -eq 0 ]]; then

@@ -14,6 +14,7 @@ export const options = {
   },
   thresholds: {
     data_tx_overhead_ms: ['p(99)<2'],
+    http_req_duration: ['p(95)<1000'],
     http_req_failed: ['rate<0.02'],
   },
 };

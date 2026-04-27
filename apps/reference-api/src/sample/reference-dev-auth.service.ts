@@ -275,9 +275,9 @@ export class ReferenceDevAuthService {
       `
         insert into auth.role_perms (role_id, perm_id)
         select $1::uuid, perm.id
-          from auth.perms perm
+         from auth.perms perm
          where perm.key like 'sample:%'
-           and perm.key not like '%:hard-delete'
+           and (perm.key not like '%:hard-delete' or perm.key = 'sample:document:hard-delete')
         on conflict do nothing
       `,
       [roleId],
