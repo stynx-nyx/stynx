@@ -51,6 +51,9 @@ jobs:
       - name: Run k6 scenarios
         env:
           STYNX_K6_SCENARIO: ${{ github.event.inputs.scenario || 'all' }}
+          STYNX_K6_RATE: '10'
+          STYNX_K6_PREALLOCATED_VUS: '4'
+          STYNX_K6_MAX_VUS: '25'
         run: |
           mkdir -p perf/k6/results
           export STYNX_K6_BASE_URL=http://127.0.0.1:3000
