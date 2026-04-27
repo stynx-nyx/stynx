@@ -54,6 +54,7 @@ jobs:
           STYNX_K6_RATE: '10'
           STYNX_K6_PREALLOCATED_VUS: '4'
           STYNX_K6_MAX_VUS: '25'
+          STYNX_K6_STORAGE_PRESIGN_P99_MS: '500'
         run: |
           mkdir -p perf/k6/results
           export STYNX_K6_BASE_URL=http://127.0.0.1:3000

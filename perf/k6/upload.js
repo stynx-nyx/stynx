@@ -1,6 +1,8 @@
 import { createDocument, createRecord, handleSummary, login, uploadDocumentBinary, completeDocument } from './lib/stynx.js';
 import { assertScenario } from './lib/config.js';
 
+const storagePresignP99Ms = Number(__ENV.STYNX_K6_STORAGE_PRESIGN_P99_MS || 50);
+
 let cachedToken;
 let cachedRecord;
 
@@ -16,7 +18,7 @@ export const options = {
     },
   },
   thresholds: {
-    storage_presign_duration_ms: ['p(99)<50'],
+    storage_presign_duration_ms: [`p(99)<${storagePresignP99Ms}`],
     http_req_failed: ['rate<0.02'],
   },
 };
