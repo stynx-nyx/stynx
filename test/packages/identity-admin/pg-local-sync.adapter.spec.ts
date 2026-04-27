@@ -2,7 +2,7 @@ import { IdentityAdminError } from '@stynx/contracts';
 import {
   PgIdentityLocalSyncAdapter,
   loadPormRoleMetaRows,
-} from '../../../packages/stynx-backend/src/identity-admin/pg-local-sync.adapter';
+} from '../../../packages/backend/src/identity-admin/pg-local-sync.adapter';
 
 function createIdentityAdminStub() {
   return {

@@ -4,6 +4,7 @@ Date: 2026-04-22
 Scope: define concrete workspace/package changes for an installable `stynx` package family without exposing scaffold apps as package API.
 
 ## Files inspected
+
 - `stynx/package.json`
 - `stynx/tsconfig.base.json`
 - `stynx/tsconfig.json`
@@ -54,12 +55,14 @@ Scope: define concrete workspace/package changes for an installable `stynx` pack
 - `stynx/test/frontend/tsconfig.jest.json`
 
 ## Current state summary
+
 - A root workspace exists (`stynx/package.json`) but only includes `packages/*` and `apps/*`.
 - Only one installable package is currently scaffolded with manifest + source: `packages/stynx-contracts`.
 - Existing runnable projects (`backend`, `frontend`, `bootstrap`, `test/*`) remain outside `workspaces`, with their own package manifests and scripts.
 - Bootstrap deploy code already assumes root workspace execution (`npm run build --workspace ...`) in `bootstrap/lib/backend.ts` and `bootstrap/lib/frontend.ts`, but targets `backend`/`frontend` are not workspaces in root manifest.
 
 ## Exact existing files that constrain design
+
 - `stynx/package.json`: workspace globs are currently limited to `packages/*` and `apps/*`.
 - `stynx/packages/stynx-contracts/package.json`: defines current publishable baseline (`@stech/stynx-contracts`) using CJS-style `exports` + `dist`.
 - `stynx/packages/stynx-contracts/tsconfig.json`: extends `../../tsconfig.base.json`, so shared base config is already package-oriented.
@@ -76,9 +79,10 @@ Scope: define concrete workspace/package changes for an installable `stynx` pack
 - `stynx/README.md`: install/run flow is still per-folder (`cd backend`, `cd frontend`, etc.), not package-family centric.
 
 ## Target package layout (concrete)
+
 - Keep root workspace as package-family + reference-app monorepo:
   - `packages/stynx-contracts` (existing)
-  - `packages/stynx-backend` (Nest shared platform module set)
+  - `packages/backend` (Nest shared platform module set)
   - `packages/stynx-auth-cognito` (token verifier + principal mapping adapter)
   - `packages/stynx-storage-s3` (S3 adapter for object storage contract)
   - `packages/stynx-audit-sql` (audit sink adapter)
@@ -89,6 +93,7 @@ Scope: define concrete workspace/package changes for an installable `stynx` pack
   - root should not define `exports` that expose app code
 
 ## Manifest, exports, and dependency strategy
+
 - Naming/versioning:
   - Use scoped names for publishables: `@stech/stynx-*`.
   - Keep `apps/*` manifests `private: true`.
@@ -99,7 +104,7 @@ Scope: define concrete workspace/package changes for an installable `stynx` pack
   - allow explicit subpath exports only for stable public surfaces (for example `./auth`, `./audit`), not deep internals.
 - Dependency boundaries:
   - `@stech/stynx-contracts`: no framework runtime deps.
-  - `@stech/stynx-backend`: peer deps for Nest runtime (`@nestjs/common`, `@nestjs/core`, `@nestjs/config`, `reflect-metadata`, `rxjs`), deps on `@stech/stynx-contracts`.
+  - `@stynx/backend`: peer deps for Nest runtime (`@nestjs/common`, `@nestjs/core`, `@nestjs/config`, `reflect-metadata`, `rxjs`), deps on `@stech/stynx-contracts`.
   - `@stech/stynx-auth-cognito`: deps on `jose` and `@stech/stynx-contracts`; optional Nest bridge stays in `stynx-backend`.
   - `@stech/stynx-storage-s3`: deps on AWS SDK + `@stech/stynx-contracts`.
   - `@stech/stynx-audit-sql`: deps on `@stech/stynx-contracts`; keep `pg` as peer if adapter takes client/query abstraction, or direct dep if package owns connection creation.
@@ -107,12 +112,13 @@ Scope: define concrete workspace/package changes for an installable `stynx` pack
   - use `"workspace:^"` for package-to-package dependencies during monorepo development.
 
 ## App/reference relocation plan
+
 - Backend reference app:
   - move current Nest app composition from `backend/` to `apps/reference-backend/` in phases.
   - keep controllers/routes and app wiring in reference app; move reusable services/guards/adapters into `packages/*`.
   - first extraction candidates from current files:
     - auth verification core from `backend/src/core/auth/auth.service.ts` -> `packages/stynx-auth-cognito`
-    - DB context applier from `backend/src/shared/database/database.service.ts` -> `packages/stynx-backend`
+    - DB context applier from `backend/src/shared/database/database.service.ts` -> `packages/backend`
     - audit sink logic from `backend/src/core/audit/audit.service.ts` -> `packages/stynx-audit-sql`
 - Frontend reference app:
   - keep current Angular app as reference scaffold (not package API); package family should not publish UI app surfaces.
@@ -120,8 +126,9 @@ Scope: define concrete workspace/package changes for an installable `stynx` pack
   - until relocation is complete, keep legacy `backend/` and `frontend/` runnable to avoid breaking existing scripts/docs.
 
 ## Safe first implementation slice
+
 1. Create installable manifests + `src/index.ts` entrypoints for empty package dirs already present:
-   - `packages/stynx-backend`
+   - `packages/backend`
    - `packages/stynx-auth-cognito`
    - `packages/stynx-storage-s3`
    - `packages/stynx-audit-sql`
@@ -132,6 +139,7 @@ Scope: define concrete workspace/package changes for an installable `stynx` pack
 5. Defer controller/route moves, CI workflow rewrites, and frontend relocation to subsequent slices.
 
 ## Notes on risk and sequencing
+
 - Highest immediate risk is workspace-command mismatch between root/workspace config and bootstrap build calls (`bootstrap/lib/backend.ts`, `bootstrap/lib/frontend.ts`).
 - Second risk is test tooling coupling to `frontend/node_modules` (`test/frontend/jest.config.cjs`), which should be normalized only after app relocation paths stabilize.
 - Lowest-risk path is to land package manifests + public entrypoints first, then incrementally move reusable logic from app code.

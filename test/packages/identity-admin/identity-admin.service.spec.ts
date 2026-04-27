@@ -5,7 +5,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { IdentityAdminError } from '@stynx/contracts';
-import { IdentityAdminService } from '../../../packages/stynx-backend/src/identity-admin/identity-admin.service';
+import { IdentityAdminService } from '../../../packages/backend/src/identity-admin/identity-admin.service';
 
 function createAdapterStub() {
   return {

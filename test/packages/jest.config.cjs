@@ -22,15 +22,9 @@ const config = {
     '^@stynx/ratelimit$': resolve(__dirname, '../../packages/ratelimit/src/index.ts'),
     '^@stynx/sessions$': resolve(__dirname, '../../packages/sessions/src/index.ts'),
     '^@stynx/storage$': resolve(__dirname, '../../packages/storage/src/index.ts'),
-    '^@stech/contracts$': resolve(__dirname, '../../packages/contracts/src/index.ts'),
-    '^@stech/stynx-frontend-contracts$': resolve(
-      __dirname,
-      '../../packages/stynx-frontend-contracts/src/index.ts',
-    ),
-    '^@stech/stynx-frontend-client$': resolve(
-      __dirname,
-      '../../packages/stynx-frontend-client/src/index.ts',
-    ),
+    '^@stynx/backend$': resolve(__dirname, '../../packages/backend/src/index.ts'),
+    '^@stynx/contracts$': resolve(__dirname, '../../packages/contracts/src/index.ts'),
+    '^@stynx-web/sdk$': resolve(__dirname, '../../packages-web/sdk/src/index.ts'),
   },
   coverageThreshold: baseCoverageThreshold,
 };

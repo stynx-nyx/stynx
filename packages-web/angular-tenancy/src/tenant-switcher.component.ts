@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { TenantContextService } from './tenant-context.service';
 import type { TenantOption } from './types';
 
@@ -20,8 +20,7 @@ import type { TenantOption } from './types';
 export class TenantSwitcherComponent {
   @Input({ required: true }) tenants: TenantOption[] = [];
   @Output() readonly tenantChange = new EventEmitter<string>();
-
-  constructor(readonly tenantContext: TenantContextService) {}
+  readonly tenantContext = inject(TenantContextService);
 
   selectTenant(event: Event): void {
     const tenantId = (event.target as HTMLSelectElement).value;

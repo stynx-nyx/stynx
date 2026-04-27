@@ -1,8 +1,0 @@
-{
-  "extends": "../tools/tsconfig/node24.json",
-  "compilerOptions": {
-    "exactOptionalPropertyTypes": false,
-    "types": ["node"]
-  },
-  "include": ["index.ts", "lib/**/*.ts"]
-}

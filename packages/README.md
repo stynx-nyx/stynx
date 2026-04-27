@@ -2,8 +2,8 @@
 
 This workspace contains the reusable, installable platform packages.
 
-- `stynx-contracts`: framework-agnostic contracts and error types.
-- `stynx-backend`: NestJS shared infrastructure modules.
+- `contracts`: framework-agnostic contracts and error types.
+- `backend`: NestJS shared infrastructure modules.
 - `core`: core runtime primitives, request context, config, and shared error handling.
 - `data`: data access foundation, migrations, archive-aware delete/restore helpers, and query extensions.
 - `health`: health, readiness, metrics, and `/info` endpoints.

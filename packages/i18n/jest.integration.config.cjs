@@ -9,5 +9,6 @@ module.exports = {
     '^@stynx/i18n$': '<rootDir>/src/index.ts',
     '^@stynx/sessions$': '<rootDir>/../sessions/src/index.ts',
     '^@stynx/testing$': '<rootDir>/../testing/src/index.ts',
+    '^intl-messageformat$': '<rootDir>/test/support/intl-messageformat.stub.ts',
   },
 };

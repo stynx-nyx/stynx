@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, Param, Post, Res, UseGuards } from '@nes
 import { Permission, ReadOnly, StynxAuthGuard, PermissionGuard } from '@stynx/auth';
 import { Idempotent } from '@stynx/idempotency';
 import { RateLimit } from '@stynx/ratelimit';
-import { Audit } from '@stech/stynx-backend';
+import { Audit } from '@stynx/backend';
 import type { CompleteDocumentDto, CreateDocumentDto } from './dto';
 import { ReferenceSampleService } from './reference-sample.service';
 

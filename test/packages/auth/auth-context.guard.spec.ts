@@ -6,7 +6,7 @@ import type {
   TenantResolver,
   TokenVerifier,
 } from '@stynx/contracts';
-import { AuthContextGuard } from '../../../packages/stynx-backend/src/auth/auth-context.guard';
+import { AuthContextGuard } from '../../../packages/backend/src/auth/auth-context.guard';
 
 function createExecutionContext(request: Record<string, unknown>): ExecutionContext {
   return {

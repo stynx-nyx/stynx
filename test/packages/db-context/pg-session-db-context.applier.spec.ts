@@ -1,4 +1,4 @@
-import { PgSessionDbContextApplier } from '../../../packages/stynx-backend/src/db-context/pg-session-db-context.applier';
+import { PgSessionDbContextApplier } from '../../../packages/backend/src/db-context/pg-session-db-context.applier';
 
 describe('PgSessionDbContextApplier', () => {
   it('applies row_security and session keys with compatibility mappings', async () => {

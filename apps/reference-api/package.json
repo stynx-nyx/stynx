@@ -18,7 +18,7 @@
     "@nestjs/common": "^11.1.19",
     "@nestjs/core": "^11.1.19",
     "@nestjs/platform-express": "^11.1.19",
-    "@stech/stynx-backend": "workspace:*",
+    "@stynx/backend": "workspace:*",
     "@stynx/audit": "workspace:*",
     "@stynx/auth": "workspace:*",
     "@stynx/core": "workspace:*",

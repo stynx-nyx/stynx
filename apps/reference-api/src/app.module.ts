@@ -12,7 +12,7 @@ import {
   StynxPlatformPipelineModule,
   AuditInterceptor,
   STYNX_AUDIT_SINK,
-} from '@stech/stynx-backend';
+} from '@stynx/backend';
 import { Database, StynxDataModule } from '@stynx/data';
 import { StynxHealthModule } from '@stynx/health';
 import { StynxLoggingModule } from '@stynx/logging';

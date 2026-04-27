@@ -8,7 +8,7 @@ const currentPackageName = () => process.env.npm_package_name ?? '';
 
 const deepImportPatterns = [
   {
-    group: ['@stynx/*/*', '@stynx-web/*/*', '@stech/stynx-*/*'],
+    group: ['@stynx/*/*', '@stynx-web/*/*'],
     message: 'Use barrel imports only; deep imports between workspace packages are forbidden.',
   },
 ];

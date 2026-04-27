@@ -8,14 +8,14 @@
       "@stynx/core": ["../../packages/core/src/index.ts"],
       "@stynx/data": ["./support/data-stub.ts"],
       "@stynx/health": ["../../packages/health/src/index.ts"],
+      "@stynx/backend": ["../../packages/backend/src/index.ts"],
       "@stynx/idempotency": ["../../packages/idempotency/src/index.ts"],
       "@stynx/logging": ["../../packages/logging/src/index.ts"],
       "@stynx/ratelimit": ["../../packages/ratelimit/src/index.ts"],
       "@stynx/sessions": ["../../packages/sessions/src/index.ts"],
       "@stynx/storage": ["../../packages/storage/src/index.ts"],
       "@stynx/contracts": ["../../packages/contracts/src/index.ts"],
-      "@stech/stynx-frontend-contracts": ["../../packages/stynx-frontend-contracts/src/index.ts"],
-      "@stech/stynx-frontend-client": ["../../packages/stynx-frontend-client/src/index.ts"]
+      "@stynx-web/sdk": ["../../packages-web/sdk/src/index.ts"]
     },
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true

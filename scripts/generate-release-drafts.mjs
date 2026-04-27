@@ -27,7 +27,7 @@ function collectPublishablePackageNames(baseDir, matcher) {
 }
 
 const publishablePackages = new Set([
-  ...collectPublishablePackageNames('packages', (name) => typeof name === 'string' && (name.startsWith('@stynx/') || name.startsWith('@stech/stynx-'))),
+  ...collectPublishablePackageNames('packages', (name) => typeof name === 'string' && name.startsWith('@stynx/')),
   ...collectPublishablePackageNames('packages-web', (name) => typeof name === 'string' && name.startsWith('@stynx-web/')),
 ]);
 

@@ -1,10 +1,6 @@
 packages:
-  - 'backend'
-  - 'bootstrap'
-  - 'frontend'
   - 'packages/*'
   - 'packages-web/*'
   - 'apps/*'
-  - 'test/*'
   - 'tools/*'
   - 'docs'

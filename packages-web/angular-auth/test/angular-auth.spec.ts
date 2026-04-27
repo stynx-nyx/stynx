@@ -1,19 +1,12 @@
 import '@angular/compiler';
 import { Injector, runInInjectionContext } from '@angular/core';
 import { Router } from '@angular/router';
-import { OidcSecurityService } from 'angular-auth-oidc-client';
-import { STYNX_ANGULAR_OPTIONS, TenantContextService } from '@stynx-web/angular';
-import { of } from 'rxjs';
+import { TenantContextService } from '@stynx-web/angular';
 import { stynxAuthGuard } from '../src/auth.guard';
 import { StynxHasPermissionDirective } from '../src/has-permission.directive';
-import { parseJwtPayload } from '../src/jwt';
 import { stynxPermissionGuard } from '../src/permission.guard';
 import { StynxSessionService } from '../src/session.service';
-import {
-  STYNX_ANGULAR_AUTH_OPTIONS,
-  STYNX_AUTH_BACKEND,
-  STYNX_OIDC_ADAPTER,
-} from '../src/tokens';
+import { STYNX_ANGULAR_AUTH_OPTIONS } from '../src/tokens';
 import type { StynxAuthBackend, StynxOidcAdapter, StynxSessionBundle } from '../src/types';
 
 function createJwt(payload: Record<string, unknown>): string {
@@ -111,7 +104,7 @@ describe('@stynx-web/angular-auth', () => {
     };
 
     const tenantContext = new TenantContextService(
-      { apiBaseUrl: 'https://api.example.test', sessionMode: 'bearer' },
+      {},
       {
         location: {
           href: 'https://app.example.test/dashboard?tenantId=tenant-a',
@@ -149,7 +142,7 @@ describe('@stynx-web/angular-auth', () => {
 
   it('permission guard denies and allows based on session permissions', async () => {
     const tenantContext = new TenantContextService(
-      { apiBaseUrl: 'https://api.example.test', sessionMode: 'bearer' },
+      {},
       null,
     );
     tenantContext.setTenant('tenant-a', 'manual');
@@ -244,7 +237,7 @@ describe('@stynx-web/angular-auth', () => {
 
   it('has-permission directive renders only when the session grants the permission', () => {
     const tenantContext = new TenantContextService(
-      { apiBaseUrl: 'https://api.example.test', sessionMode: 'bearer' },
+      {},
       null,
     );
     tenantContext.setTenant('tenant-a', 'manual');

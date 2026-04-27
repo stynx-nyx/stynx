@@ -27,7 +27,7 @@ function collectPackages(baseDir, matcher) {
 }
 
 const packages = [
-  ...collectPackages('packages', (name) => typeof name === 'string' && (name.startsWith('@stynx/') || name.startsWith('@stech/stynx-'))),
+  ...collectPackages('packages', (name) => typeof name === 'string' && name.startsWith('@stynx/')),
   ...collectPackages('packages-web', (name) => typeof name === 'string' && name.startsWith('@stynx-web/')),
 ];
 

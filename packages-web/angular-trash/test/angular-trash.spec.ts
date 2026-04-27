@@ -36,10 +36,10 @@ describe('@stynx-web/angular-trash', () => {
     component.adapter = adapter;
 
     await component.load();
-    expect(component.items).toHaveLength(1);
+    expect(component.items()).toHaveLength(1);
 
     await component.restore('trash-1');
     expect(adapter.restore).toHaveBeenCalledWith('records', 'trash-1');
-    expect(component.items).toHaveLength(0);
+    expect(component.items()).toHaveLength(0);
   });
 });

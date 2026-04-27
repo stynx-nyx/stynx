@@ -1,0 +1,37 @@
+{
+  "name": "@stynx/backend",
+  "version": "0.2.0",
+  "description": "NestJS shared platform modules for stynx",
+  "main": "dist/backend/src/index.js",
+  "types": "dist/backend/src/index.d.ts",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/backend/src/index.d.ts",
+      "require": "./dist/backend/src/index.js",
+      "default": "./dist/backend/src/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\""
+  },
+  "dependencies": {
+    "@stynx/idempotency": "workspace:*",
+    "@stynx/ratelimit": "workspace:*",
+    "@stynx/contracts": "workspace:*"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^11.1.19",
+    "@nestjs/core": "^11.1.19",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  }
+}

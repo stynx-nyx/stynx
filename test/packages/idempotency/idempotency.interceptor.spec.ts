@@ -6,11 +6,11 @@ import {
 } from '@nestjs/common';
 import { of } from 'rxjs';
 import { lastValueFrom } from 'rxjs';
-import { IdempotencyInterceptor } from '../../../packages/stynx-backend/src/idempotency/idempotency.interceptor';
+import { IdempotencyInterceptor } from '../../../packages/backend/src/idempotency/idempotency.interceptor';
 import type {
   IdempotencyDecisionContext,
   IdempotencyStore,
-} from '../../../packages/stynx-backend/src/idempotency/types';
+} from '../../../packages/backend/src/idempotency/types';
 
 function createExecutionContext(
   request: Record<string, unknown>,

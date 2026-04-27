@@ -12,6 +12,7 @@ module.exports = {
   moduleNameMapper: {
     ...preset.moduleNameMapper,
     '^@stynx-web/angular$': '<rootDir>/../angular/src/index.ts',
+    '^@stynx-web/angular-tenancy$': '<rootDir>/../angular-tenancy/src/index.ts',
     '^@stynx-web/angular-ui$': '<rootDir>/src/index.ts',
     '^rxjs$': '<rootDir>/node_modules/rxjs/dist/cjs/index.js',
     '^rxjs/operators$': '<rootDir>/node_modules/rxjs/dist/cjs/operators/index.js'

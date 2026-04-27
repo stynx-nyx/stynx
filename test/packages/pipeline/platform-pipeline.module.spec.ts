@@ -1,8 +1,8 @@
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { IdempotencyInterceptor } from '@stynx/idempotency';
 import { RateLimitGuard } from '@stynx/ratelimit';
-import { SlaMonitorInterceptor } from '../../../packages/stynx-backend/src/sla/sla-monitor.interceptor';
-import { StynxPlatformPipelineModule } from '../../../packages/stynx-backend/src/pipeline/platform-pipeline.module';
+import { SlaMonitorInterceptor } from '../../../packages/backend/src/sla/sla-monitor.interceptor';
+import { StynxPlatformPipelineModule } from '../../../packages/backend/src/pipeline/platform-pipeline.module';
 
 describe('StynxPlatformPipelineModule', () => {
   it('registers PEC-like global stack by default', () => {
