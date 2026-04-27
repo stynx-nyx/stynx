@@ -253,7 +253,7 @@ job_lint() {
 job_typecheck() {
   install_workspace_once
   root_turbo_run typecheck
-  run pnpm bootstrap:typecheck
+  run pnpm bootstrap:build
 }
 
 job_unit() {

@@ -36,7 +36,7 @@
     "test:mutation": "pnpm --filter @stynx/auth stryker && pnpm --filter @stynx/tenancy stryker && pnpm --filter @stynx/data stryker",
     "check:rls-smoke": "bash scripts/check-rls-smoke.sh",
     "bootstrap:cli": "pnpm --dir bootstrap run cli --",
-    "bootstrap:typecheck": "pnpm --dir bootstrap run build",
+    "bootstrap:build": "pnpm --dir bootstrap run build",
     "test:db": "pnpm --dir test/db test",
     "test:packages": "pnpm --dir test/packages test",
     "prepare": "husky"

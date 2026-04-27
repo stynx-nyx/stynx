@@ -3,10 +3,12 @@
 ## Completed In This Pass
 
 1. Workspace/package foundation
+
 - Added root workspace manifest and base TS config.
 - Added package family skeleton and manifests.
 
 2. Contracts package
+
 - Created `packages/stynx-contracts` with stable interfaces for:
   - auth principal + verifier
   - authorization requirements/evaluator
@@ -17,6 +19,7 @@
   - common errors/result envelope
 
 3. Backend core package
+
 - Created `packages/stynx-backend` with dynamic modules and adapters.
 - Implemented shared auth guard/decorator pipeline with compatibility request attachment (`req.user` and `request.actor`).
 - Implemented authorization decorators + guard with pluggable evaluator.
@@ -25,18 +28,22 @@
 - Implemented storage module contract wiring.
 
 4. Optional adapter packages
+
 - `packages/stynx-auth-cognito`
 - `packages/stynx-auth-cognito-admin`
 - `packages/stynx-storage-s3`
 - `packages/stynx-audit-sql`
 
 5. Reference consumer scaffold
+
 - Added `apps/reference-backend` to demonstrate package composition and decouple runnable scaffold from package API.
 
 6. Subagent outputs consolidated
+
 - `docs/stynx/working-notes/*.md` created for auth/authz/db-context/audit/storage/package architecture and used to freeze the extraction model.
 
 7. Identity-admin convergence groundwork
+
 - Added `@stech/stynx-auth-cognito-admin` with standardized credentials strategies and error mapping.
 - Added shared identity-admin contracts in `packages/stynx-contracts/src/identity-admin.ts`.
 - Added backend registration module `StynxIdentityAdminModule`.
@@ -46,21 +53,25 @@
 - Added explicit coverage matrix: `docs/stynx/feature-coverage-status.md`.
 
 8. Dependency refresh (workspace package family)
+
 - Updated NestJS references in package family to latest 11.1.x line.
 - Updated AWS SDK adapters to latest 3.1034.x line (and matching `@aws-sdk/types` latest line).
 - Updated Cognito token adapter to latest `jose` major.
 
 9. Legacy backend alignment
+
 - Upgraded `backend/package.json` to NestJS 11.1.x and refreshed core runtime/dev dependency set.
 - Installed updated backend dependencies and validated legacy backend build (`backend npm run build`) after compatibility fixes.
 
 10. Audit trigger convergence with PORM + PK capture
+
 - Updated `db/ddl/02-audit.sql` to add `audit.events.pk jsonb` and `idx_audit_events_pk` (GIN).
 - Added `audit.extract_primary_key(...)` for trigger-time PK extraction from catalog metadata.
 - Updated `audit.fn_log_dml` to write table-qualified entity names and extracted PK for INSERT/UPDATE/DELETE.
 - Updated `@stech/stynx-audit-sql` function-mode mapping to align with current `audit.write(...)` signature and forward optional `pk`/`oldData`/`newData`.
 
 11. PEC canonical tenant-isolation extraction into package layer
+
 - Added strict header tenant resolver: `RequiredTenantHeaderResolver`.
 - Added claim-first entitlement policy with PEC claim semantics: `ClaimFirstTenantEntitlementPolicy`.
 - Added optional SQL fallback for entitlement checks: `SqlTenantEntitlementFallback`.
@@ -70,6 +81,7 @@
 - Extended `StynxDbContextModule`/`DbContextInterceptor` to support `requestDbClientLifecycle` acquire/release wiring and attach acquired client to request (`pgClient`/`dbClient`).
 
 12. RLS helper convergence in SQL DDL
+
 - Added reusable SQL helpers in `db/ddl/01-auth.sql`:
   - `auth.create_tenant_enforcement_trigger(...)`
   - `auth.attach_tenant_enforcement_triggers(...)`
@@ -79,6 +91,7 @@
 - Expanded DB DDL tests to assert helper definitions and helper-based wiring.
 
 13. Default Postgres DB session-context applier (gap closed)
+
 - Added `PgSessionDbContextApplier` in `packages/stynx-backend/src/db-context/pg-session-db-context.applier.ts`.
 - Behavior:
   - enables `SET row_security = on`
@@ -90,6 +103,7 @@
 - Updated `apps/reference-backend` to consume `pgSessionApplier`.
 
 14. Package-level unit testing depth (core shared behaviors)
+
 - Added dedicated package harness under `test/packages` (Jest + ts-jest).
 - Added targeted unit tests for:
   - `PgSessionDbContextApplier` behavior and compatibility key mapping.
@@ -101,6 +115,7 @@
   - `npm run test` (aggregates db + package tests)
 
 15. Reference frontend module + frontend libraries
+
 - Added `packages/stynx-frontend-contracts` for shared frontend contracts:
   - token/principal/auth-state
   - API transport (`FetchLike`, request/response contract)
@@ -114,6 +129,7 @@
 - Added package tests for frontend client behaviors (`session-manager`, `api-client`).
 
 16. Bootstrap migration to package-first app targets
+
 - Retargeted bootstrap backend build from legacy `backend` workspace to dynamic package-first resolution (`@stech/reference-backend` preferred; legacy fallback).
 - Retargeted frontend build/deploy from legacy `frontend` to dynamic package-first resolution (`@stech/reference-frontend` preferred; legacy fallback).
 - Added reference frontend static build pipeline (`build:web`) producing deployable assets in `apps/reference-frontend/dist/browser`.
@@ -123,6 +139,7 @@
 - Generalized sync-env source via `--sync-env-source` (default remains `../porm/backend/.env`).
 
 17. Identity local-sync concrete adapter + PORM meta helper
+
 - Added `PgIdentityLocalSyncAdapter` for concrete provider-to-local-db sync:
   - `syncToLocal`
   - `syncUser`
@@ -130,6 +147,7 @@
 - Added optional helper `loadPormRoleMetaRows(...)` to converge PORM role metadata enrichment in a reusable package surface.
 
 18. Optional response-event tenant DB client lifecycle
+
 - Added `ResponseEventRequestDbClientLifecycle`:
   - defers release to response `finish/close`
   - preserves compatibility for stacks that require middleware-style response completion semantics.
@@ -139,6 +157,7 @@
   - preserves PEC-style strict `x-tenant-id` validation and response-event client release behavior.
 
 19. Audit metadata redaction and SQL read-model parity helpers
+
 - Added shared metadata redaction policy support:
   - `AuditMetadataRedactionPolicy`
   - `PatternAuditMetadataRedactionPolicy`
@@ -147,6 +166,7 @@
   - `porm_logged_actions` source (`audit.logged_actions`)
 
 20. Expanded compatibility matrix tests
+
 - Added package tests covering:
   - auth request attachment parity (`req.user` and `request.actor`)
   - tenant entitlement parity (claim-first + SQL fallback)
@@ -160,6 +180,7 @@
   - global pipeline module (`APP_GUARD`/`APP_INTERCEPTOR`) wiring behavior
 
 21. PEC global SLA/idempotency/rate-limit stack productization
+
 - Added `StynxPlatformPipelineModule` as package-level API for global stack registration.
 - Added dedicated concern modules:
   - `StynxRateLimitModule`
@@ -170,31 +191,38 @@
 ## stynx Diagnosis Checklist (current)
 
 ### Keep
+
 - `backend/src/shared/database/database.service.ts` session-context patterns as reference behavior.
 - `backend/src/core/auth/*`, `backend/src/core/audit/*`, `backend/src/core/storage/*` as migration source inputs.
 
 ### Extract As-Is (or near as-is)
+
 - Decorator metadata patterns (`Audit`, role/permission requirement metadata).
 - Guard/interceptor composition patterns.
 
 ### Normalize First
+
 - Claim mapping and role/permission normalization.
 - Tenant resolution and entitlement hooks.
 - Audit envelopes and sink payload contracts.
 - Storage presign contracts and response headers.
 
 ### Redesign
+
 - App-first module aggregation (`backend/src/core/core.module.ts`) into package modules with `forRoot`.
 - Direct concrete SQL coupling into adapter interfaces.
 
 ### Keep App-Local
+
 - Role/permission catalogs and business policy engines.
 - Domain document ownership/lifecycle logic.
 
 ### Deprecate/Move
+
 - Treat legacy `backend/` and `frontend/` as transitional scaffold roots while `packages/*` become primary public API.
 
 ## Validated Cross-Repo Evidence (key)
+
 - Auth verifier divergence:
   - `../porm/backend/src/core/auth/auth.service.ts`
   - `../pec/src/@core/security/jwt-auth.guard.ts`
@@ -216,18 +244,21 @@
   - `porm/database/audit/ddl.sql`
 
 ## Verified Mismatches Between Prior Docs and Current Code
+
 - Legacy `backend/` and package-first `packages/*` currently coexist, so there are still two runtime surfaces during migration.
 - CI/workflow and release automation are not yet package-native (no root workflows/changesets in place).
 - Consumers (`porm`, `pec`, `sgp`) are not yet fully switched to package APIs; convergence is still staged.
 
 ## What Is Still Legacy
+
 - `backend/` and `frontend/` remain present as legacy scaffold roots.
 - Legacy CI/build/test paths still reference those directories.
 - PORM and PEC are not yet switched to consume the new identity-admin adapter package.
 
 ## Verification Notes
+
 - Workspace validation completed:
-  - `npm run bootstrap:typecheck`: success
+  - `npm run bootstrap:build`: success
   - `npm run bootstrap:cli -- deploy-backend --dry-run`: success
   - `npm run bootstrap:cli -- deploy-frontend --dry-run --non-interactive --yes`: success
   - `npm run typecheck` (workspace): success

@@ -129,8 +129,8 @@ jobs:
       - name: Typecheck workspace
         run: pnpm typecheck
 
-      - name: Typecheck bootstrap surface
-        run: pnpm bootstrap:typecheck
+      - name: Build bootstrap surface
+        run: pnpm bootstrap:build
 
   unit-tests:
     name: unit-tests
