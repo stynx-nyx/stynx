@@ -233,18 +233,12 @@ job_install() {
 job_lint() {
   install_workspace_once
   root_turbo_run lint
-  run pnpm --dir backend lint
-  run pnpm --dir bootstrap lint
-  run pnpm --dir frontend lint
-  run pnpm --dir test/backend lint
-  run pnpm --dir test/db lint
-  run pnpm --dir test/packages lint
-  run pnpm --dir test/scripts lint
   run pnpm lint:deadcode
   run pnpm lint:deps
+  run pnpm lint:cycles
 
   log "Reject unresolved adopt permission sentinels"
-  if rg -n "TODO_PERMISSION" apps packages packages-web backend frontend bootstrap test; then
+  if rg -n "TODO_PERMISSION" apps packages packages-web tools infra/cdk/bin infra/cdk/lib infra/cdk/test; then
     printf 'Unresolved TODO_PERMISSION sentinel found in source surfaces\n' >&2
     return 1
   fi
@@ -253,16 +247,12 @@ job_lint() {
 job_typecheck() {
   install_workspace_once
   root_turbo_run typecheck
-  run pnpm bootstrap:typecheck
 }
 
 job_unit() {
   local status=0
   install_workspace_once
-  run pnpm test:unit:cov || status=$?
-  copy_artifact test/backend/coverage coverage/backend
-  copy_artifact test/frontend/coverage coverage/frontend
-  copy_artifact test/packages/coverage coverage/packages
+  run pnpm test || status=$?
   return "$status"
 }
 
@@ -303,10 +293,9 @@ job_integration() {
     run pnpm check:rls-smoke || status=$?
   fi
   if [[ "$status" -eq 0 ]]; then
-    run pnpm test:int:cov || status=$?
+    run pnpm test:int || status=$?
   fi
 
-  copy_artifact test/db/coverage coverage/db
   docker logs "$postgres_name" > "$artifact_dir/integration-postgres.log" 2>&1 || true
   docker rm -f "$postgres_name" >/dev/null 2>&1 || true
   return "$status"
@@ -315,9 +304,6 @@ job_integration() {
 job_build() {
   install_workspace_once
   root_turbo_run build
-  run pnpm --dir bootstrap build
-  run pnpm --dir backend build
-  run pnpm --dir frontend build
 }
 
 job_doctor() {

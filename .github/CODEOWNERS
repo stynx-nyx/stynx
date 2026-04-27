@@ -1,2 +1,22 @@
-/packages/* @platform-architects
-/packages-web/* @platform-architects
+# Platform packages
+/packages/* @aarusso-nyx
+/packages-web/* @aarusso-nyx
+/tools/* @aarusso-nyx
+/infra/* @aarusso-nyx
+
+# Apps
+/apps/* @aarusso-nyx
+
+# Cross-cutting
+/.github/ @aarusso-nyx
+/specs/ @aarusso-nyx
+/docs/ @aarusso-nyx
+
+# Tests
+/test/ @aarusso-nyx
+
+# Top-level
+/package.json @aarusso-nyx
+/pnpm-workspace.yaml @aarusso-nyx
+/turbo.json @aarusso-nyx
+/* @aarusso-nyx

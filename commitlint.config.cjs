@@ -30,11 +30,35 @@ const allowedScopes = [
   '@stynx-web/angular-profile',
   '@stynx-internal/eslint-config',
   '@stynx-internal/tsconfig',
+  '@stynx-internal/migration-linter',
+  'clean',
+  'deps',
+  'deps-dev',
+  'repo',
 ];
 
 module.exports = {
   extends: ['@commitlint/config-conventional'],
   rules: {
+    'header-max-length': [2, 'always', 100],
     'scope-enum': [2, 'always', allowedScopes],
+    'subject-case': [2, 'never', ['sentence-case', 'start-case', 'pascal-case', 'upper-case']],
+    'type-enum': [
+      2,
+      'always',
+      [
+        'build',
+        'chore',
+        'ci',
+        'docs',
+        'feat',
+        'fix',
+        'perf',
+        'refactor',
+        'revert',
+        'style',
+        'test',
+      ],
+    ],
   },
 };
