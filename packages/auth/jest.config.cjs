@@ -18,6 +18,7 @@ module.exports = {
   moduleNameMapper: {
     '^@stynx/core$': '<rootDir>/../core/src/index.ts',
     '^@stynx/data$': '<rootDir>/../data/src/index.ts',
+    '^@stynx/idempotency$': '<rootDir>/../idempotency/src/index.ts',
     '^@stynx/sessions$': '<rootDir>/../sessions/src/index.ts',
     '^@stynx/auth$': '<rootDir>/src/index.ts',
   },

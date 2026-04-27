@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, rmSync, statSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, rmSync, statSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
 
@@ -91,6 +91,7 @@ function runScenario(name) {
 
 async function main() {
   mkdirSync(resultsDir, { recursive: true });
+  chmodSync(resultsDir, 0o777);
   await waitFor(`${waitUrl}/healthz`, 'healthz');
   await waitFor(`${waitUrl}/readyz`, 'readyz');
 

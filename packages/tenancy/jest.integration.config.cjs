@@ -15,6 +15,7 @@ module.exports = {
   },
   moduleFileExtensions: ['ts', 'js'],
   testEnvironment: 'node',
+  maxWorkers: 1,
   coverageThreshold: strictCoverageThreshold,
   collectCoverageFrom: ['<rootDir>/src/**/*.ts'],
 };

@@ -39,7 +39,7 @@ jobs:
 
       - name: Wait for API
         run: |
-          for i in $(seq 1 60); do
+          for _ in $(seq 1 60); do
             if curl -sf http://127.0.0.1:3000/healthz >/dev/null; then
               exit 0
             fi
@@ -53,10 +53,9 @@ jobs:
           STYNX_K6_SCENARIO: ${{ github.event.inputs.scenario || 'all' }}
         run: |
           mkdir -p perf/k6/results
-          STYNX_K6_BASE_URL=http://127.0.0.1:3000 \
-          STYNX_K6_S3_PUBLIC_BASE_URL=http://127.0.0.1:4566 \
-          STYNX_K6_SCENARIO="${STYNX_K6_SCENARIO}" \
-          STYNX_K6_SCENARIO_PAUSE_MS=65000 \
+          export STYNX_K6_BASE_URL=http://127.0.0.1:3000
+          export STYNX_K6_S3_PUBLIC_BASE_URL=http://127.0.0.1:4566
+          export STYNX_K6_SCENARIO_PAUSE_MS=65000
           node perf/k6/run-scenarios.mjs --scenario "${STYNX_K6_SCENARIO}"
 
       - name: Download previous k6 baseline
@@ -165,6 +164,25 @@ jobs:
   mutation:
     name: mutation-${{ matrix.package }}
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: stynx
+          POSTGRES_USER: stynx
+          POSTGRES_PASSWORD: stynx
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U stynx -d stynx"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      STYNX_TEST_PG_HOST: 127.0.0.1
+      STYNX_TEST_PG_PORT: '5432'
+      STYNX_TEST_PG_USER: stynx
+      STYNX_TEST_PG_PASSWORD: stynx
     strategy:
       fail-fast: false
       matrix:

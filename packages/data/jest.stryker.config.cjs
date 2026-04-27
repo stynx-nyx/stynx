@@ -12,5 +12,6 @@ module.exports = {
   },
   moduleFileExtensions: ['ts', 'js'],
   testEnvironment: 'node',
+  maxWorkers: 1,
   collectCoverageFrom: ['<rootDir>/src/**/*.ts'],
 };

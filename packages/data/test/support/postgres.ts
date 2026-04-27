@@ -10,11 +10,34 @@ function localUser(): string {
   return process.env.STYNX_TEST_PG_USER ?? userInfo().username;
 }
 
+function localPort(): number {
+  return Number(process.env.STYNX_TEST_PG_PORT ?? '5432');
+}
+
+function localPassword(): string | undefined {
+  return process.env.STYNX_TEST_PG_PASSWORD;
+}
+
+function localHost(): string | undefined {
+  return process.env.STYNX_TEST_PG_HOST;
+}
+
 function databaseName(prefix: string): string {
   return `${prefix}_${randomUUID().replace(/-/g, '').slice(0, 16)}`;
 }
 
 function adminConfig(database = 'postgres'): ClientConfig {
+  const host = localHost();
+  if (host) {
+    return {
+      host,
+      port: localPort(),
+      user: localUser(),
+      password: localPassword(),
+      database,
+    };
+  }
+
   return {
     host: localSocketDir(),
     user: localUser(),
@@ -23,6 +46,17 @@ function adminConfig(database = 'postgres'): ClientConfig {
 }
 
 function connectionString(database: string, applicationName: string): string {
+  const host = localHost();
+  if (host) {
+    const url = new URL(`postgresql://${encodeURIComponent(localUser())}@${host}:${localPort()}/${database}`);
+    const password = localPassword();
+    if (password) {
+      url.password = password;
+    }
+    url.searchParams.set('application_name', applicationName);
+    return url.toString();
+  }
+
   return `postgresql://${encodeURIComponent(localUser())}@/${encodeURIComponent(database)}?host=${encodeURIComponent(localSocketDir())}&application_name=${encodeURIComponent(applicationName)}`;
 }
 
