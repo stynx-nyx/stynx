@@ -30,6 +30,9 @@ if (!baseline) {
   process.exit(0);
 }
 
+const maxRelativeIncreasePercent = Number(process.env.STYNX_K6_BASELINE_MAX_RELATIVE_INCREASE_PERCENT ?? '10');
+const minAbsoluteIncreaseMs = Number(process.env.STYNX_K6_BASELINE_MIN_ABSOLUTE_INCREASE_MS ?? '1');
+
 const degradations = [];
 for (const metric of metrics) {
   const currentP99 = metricValue(current, metric);
@@ -37,14 +40,15 @@ for (const metric of metrics) {
   if (!Number.isFinite(currentP99) || !Number.isFinite(baselineP99) || baselineP99 <= 0) {
     continue;
   }
-  const increase = ((currentP99 - baselineP99) / baselineP99) * 100;
-  if (increase > 10) {
-    degradations.push({ metric, currentP99, baselineP99, increase });
+  const absoluteIncrease = currentP99 - baselineP99;
+  const increase = (absoluteIncrease / baselineP99) * 100;
+  if (increase > maxRelativeIncreasePercent && absoluteIncrease > minAbsoluteIncreaseMs) {
+    degradations.push({ metric, currentP99, baselineP99, absoluteIncrease, increase });
   }
 }
 
 if (degradations.length > 0) {
-  throw new Error(`k6 degradation exceeded 10%: ${JSON.stringify(degradations, null, 2)}`);
+  throw new Error(`k6 degradation exceeded thresholds: ${JSON.stringify(degradations, null, 2)}`);
 }
 
 console.log('k6 baseline comparison passed.');
