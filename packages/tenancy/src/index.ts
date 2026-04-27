@@ -1,3 +1,8 @@
+/**
+ * Public tenancy exports for tenant context, membership cache, platform admin, and services.
+ *
+ * @packageDocumentation
+ */
 export * from './membership-cache';
 export * from './tenant-context.interceptor';
 export * from './tenant-system-operation.sink';

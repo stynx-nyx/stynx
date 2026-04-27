@@ -1,3 +1,8 @@
+/**
+ * Public session management exports for stores, JWT signing, JWKS, and session mirroring.
+ *
+ * @packageDocumentation
+ */
 export * from './errors';
 export * from './in-memory-session-store';
 export * from './jwks.controller';

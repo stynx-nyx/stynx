@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import boundariesPlugin from 'eslint-plugin-boundaries';
+import jsdocPlugin from 'eslint-plugin-jsdoc';
 import globals from 'globals';
 import tsParser from '@typescript-eslint/parser';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
@@ -43,6 +44,17 @@ const boundaryElements = [
   { type: 'app', pattern: 'apps/*/src/**' },
 ];
 
+const tsdocPackages = new Set([
+  '@stynx/core',
+  '@stynx/auth',
+  '@stynx/data',
+  '@stynx/storage',
+  '@stynx/audit',
+  '@stynx/sessions',
+  '@stynx/tenancy',
+  '@stynx/privacy',
+]);
+
 const writeRouteDecoratorNames = new Set(['Post', 'Put', 'Patch']);
 const idempotencyDecoratorNames = new Set(['Idempotent', 'NoIdempotent']);
 
@@ -75,6 +87,39 @@ function collectDecoratorNames(node) {
 
 const stynxPlugin = {
   rules: {
+    'require-package-index-tsdoc': {
+      meta: {
+        type: 'suggestion',
+        docs: {
+          description: 'Require package barrel files to carry package-level TSDoc.',
+        },
+        schema: [],
+        messages: {
+          missingPackageDocs:
+            'Package public barrel must start with a TSDoc @packageDocumentation block.',
+        },
+      },
+      create(context) {
+        return {
+          Program(node) {
+            const sourceCode = context.sourceCode;
+            const firstComment = sourceCode.getAllComments()[0];
+            if (
+              firstComment?.type === 'Block' &&
+              firstComment.value.includes('*') &&
+              firstComment.value.includes('@packageDocumentation')
+            ) {
+              return;
+            }
+
+            context.report({
+              node,
+              messageId: 'missingPackageDocs',
+            });
+          },
+        };
+      },
+    },
     'require-idempotent-route-decorator': {
       meta: {
         type: 'suggestion',
@@ -180,6 +225,7 @@ const createConfig = ({ files, tsconfig = './tsconfig.json', browser = false, ne
     plugins: {
       '@typescript-eslint': tsPlugin,
       boundaries: boundariesPlugin,
+      jsdoc: jsdocPlugin,
       stynx: stynxPlugin,
     },
     settings: {
@@ -227,6 +273,21 @@ const createConfig = ({ files, tsconfig = './tsconfig.json', browser = false, ne
           }
         : {}),
     },
+  },
+  {
+    files: ['src/index.ts'],
+    rules: tsdocPackages.has(currentPackageName())
+      ? {
+          'jsdoc/require-jsdoc': [
+            'error',
+            {
+              contexts: ['ExportAllDeclaration', 'ExportNamedDeclaration'],
+              publicOnly: true,
+            },
+          ],
+          'stynx/require-package-index-tsdoc': 'error',
+        }
+      : {},
   },
   {
     files: ['**/*.spec.ts', '**/*.test.ts', 'test/**/*.ts'],
