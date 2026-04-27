@@ -97,12 +97,13 @@ That path is ignored by git. Relevant files include:
 
 This runner is intentionally a preflight tool, not release evidence.
 
-- Prompt 31 closure still requires GitHub Actions `reference-web-e2e` on Ubuntu.
-- Prompt 36 closure still requires GitHub Actions Docs with Lighthouse artifacts.
+- Prompt 31 closure evidence comes from GitHub Actions `reference-web-e2e` on Ubuntu.
+- Prompt 36 closure evidence comes from GitHub Actions Docs with Lighthouse artifacts.
 - The local Linux container does not reproduce the `macos-latest` build matrix
   leg from `ci.yml`.
-- Release publishing, GitHub Pages deployment, AWS/ECR, SBOM, and Cosign signing
-  still require their GitHub workflows and configured secrets.
+- Release publishing and GitHub Pages deployment still require their GitHub
+  workflows. Prompt 37 no longer requires AWS/ECR/Cosign secrets; Release
+  Artifacts builds local runner images and uploads SBOM/image metadata artifacts.
 
 For faster Apple Silicon smoke tests, `CI_LOCAL_PLATFORM=linux/arm64` can be
 used, but that run has lower browser fidelity because Google Chrome stable is

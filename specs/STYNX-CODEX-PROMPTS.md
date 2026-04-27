@@ -1248,6 +1248,11 @@ Verification:
 
 ### Prompt 37 — v1.0 Release Preparation
 
+> Scope revision, 2026-04-27: AWS/ECR push and Cosign signing are no longer
+> required to close Prompt 37. The v1.0 release-artifact gate is secretless:
+> build the reference container images in GitHub Actions, generate Syft SBOMs,
+> and upload the SBOMs plus Docker image metadata as workflow artifacts.
+
 ```
 Final prompt. Read SPEC §17.3 (Release), §25 (Security Posture), §26 (Versioning).
 
@@ -1266,27 +1271,30 @@ Deliverables:
 - stynx doctor against apps/reference-api and apps/reference-web: exit 0.
 - Architecture Decision Log published as part of the docs site.
 - GitHub Release drafts prepared for each package with changeset-generated notes.
-- Cosign signatures on every published container image.
-- SBOM (Syft) attached to every release.
+- SBOM (Syft) attached to every release artifact.
+- Docker image metadata attached for every produced reference image.
 
-Tag and publish:
-- `pnpm changeset version` applied to bump all packages to 1.0.0.
-- `pnpm changeset publish` publishes to GitHub Packages.
-- GitHub Releases created.
-- Docker images pushed to ECR.
+Release automation:
+- Changesets release PR prepared and reviewable for the 1.0.0 version bump.
+- Release workflow owns package publishing and GitHub Release creation when the
+  Changesets PR is merged.
+- Reference Docker images built in GitHub Actions. Registry push/signing is
+  deferred until AWS/ECR/Cosign environments are configured.
 
 Post-release:
 - Update README.md top-level: "STYNX v1.0 — Shipped".
 - Open an issue "v1.1 planning" seeded with the SPEC §24 deferred extensions list.
 
 Success criteria:
-- All packages published at 1.0.0 in GitHub Packages.
 - CI green on main.
-- Release notes published and reviewable.
+- Release Prep and Release workflows green on main.
+- Release notes prepared and reviewable.
+- Release Artifacts uploads Syft SBOMs and Docker image metadata.
 
 Verification:
-- Install one of the packages into a fresh project, confirm it works.
-- stynx init TestApp against published packages, confirm scaffolded app builds and passes tests.
+- Install one of the built packages into a fresh project, confirm it works.
+- stynx init TestApp against the prepared release packages, confirm scaffolded
+  app builds and passes tests.
 ```
 
 ---

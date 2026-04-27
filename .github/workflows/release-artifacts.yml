@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       image_tag:
-        description: Image tag to publish
+        description: Image tag to build
         required: true
         default: manual
         type: string
@@ -14,63 +14,50 @@ on:
 
 permissions:
   contents: read
-  id-token: write
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
-  AWS_REGION: ${{ vars.AWS_REGION || 'sa-east-1' }}
 
 jobs:
   containers:
-    name: publish-sign-sbom
+    name: build-sbom
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v6
-        with:
-          aws-region: ${{ env.AWS_REGION }}
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
 
       - name: Set image metadata
         id: meta
         env:
           INPUT_IMAGE_TAG: ${{ inputs.image_tag }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
-          if [ "${{ github.event_name }}" = "release" ]; then
-            tag="${{ github.event.release.tag_name }}"
+          if [ "$GITHUB_EVENT_NAME" = "release" ] && [ -n "${RELEASE_TAG:-}" ]; then
+            raw_tag="$RELEASE_TAG"
           else
-            tag="${INPUT_IMAGE_TAG}"
+            raw_tag="${INPUT_IMAGE_TAG:-manual}"
           fi
-          echo "tag=$tag" >> "$GITHUB_OUTPUT"
-          echo "reference_api=${{ steps.login-ecr.outputs.registry }}/stynx/reference-api:$tag" >> "$GITHUB_OUTPUT"
-          echo "reference_web=${{ steps.login-ecr.outputs.registry }}/stynx/reference-web:$tag" >> "$GITHUB_OUTPUT"
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+          tag="$(printf '%s' "$raw_tag" | tr -c 'A-Za-z0-9_.-' '-' | sed -E 's/^-+//; s/-+$//; s/-+/-/g' | cut -c1-128)"
+          if [ -z "$tag" ]; then
+            tag="manual"
+          fi
 
-      - name: Build and push reference-api
-        id: reference-api
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          file: apps/reference-api/Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.reference_api }}
+          {
+            echo "raw_tag=$raw_tag"
+            echo "tag=$tag"
+            echo "reference_api=stynx/reference-api:$tag"
+            echo "reference_web=stynx/reference-web:$tag"
+          } >> "$GITHUB_OUTPUT"
 
-      - name: Build and push reference-web
-        id: reference-web
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          file: apps/reference-web/Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.reference_web }}
+      - name: Build reference-api image
+        run: docker build -f apps/reference-api/Dockerfile -t "${{ steps.meta.outputs.reference_api }}" .
+
+      - name: Build reference-web image
+        run: docker build -f apps/reference-web/Dockerfile -t "${{ steps.meta.outputs.reference_web }}" .
+
+      - name: Record image metadata
+        run: |
+          docker image inspect "${{ steps.meta.outputs.reference_api }}" "${{ steps.meta.outputs.reference_web }}" > "release-images-${{ steps.meta.outputs.tag }}.json"
 
       - name: Install Syft
         id: syft
@@ -78,22 +65,15 @@ jobs:
 
       - name: Generate release SBOMs
         run: |
-          "${{ steps.syft.outputs.cmd }}" "${{ steps.meta.outputs.reference_api }}@${{ steps.reference-api.outputs.digest }}" -o spdx-json=reference-api-${{ steps.meta.outputs.tag }}.spdx.json
-          "${{ steps.syft.outputs.cmd }}" "${{ steps.meta.outputs.reference_web }}@${{ steps.reference-web.outputs.digest }}" -o spdx-json=reference-web-${{ steps.meta.outputs.tag }}.spdx.json
+          "${{ steps.syft.outputs.cmd }}" "${{ steps.meta.outputs.reference_api }}" -o spdx-json=reference-api-${{ steps.meta.outputs.tag }}.spdx.json
+          "${{ steps.syft.outputs.cmd }}" "${{ steps.meta.outputs.reference_web }}" -o spdx-json=reference-web-${{ steps.meta.outputs.tag }}.spdx.json
 
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@v4.1.1
-
-      - name: Sign pushed images
-        run: |
-          cosign sign --yes "${{ steps.meta.outputs.reference_api }}@${{ steps.reference-api.outputs.digest }}"
-          cosign sign --yes "${{ steps.meta.outputs.reference_web }}@${{ steps.reference-web.outputs.digest }}"
-
-      - name: Upload SBOM artifacts
+      - name: Upload release artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: release-sboms-${{ steps.meta.outputs.tag }}
+          name: release-artifacts-${{ steps.meta.outputs.tag }}
           path: |
+            release-images-${{ steps.meta.outputs.tag }}.json
             reference-api-${{ steps.meta.outputs.tag }}.spdx.json
             reference-web-${{ steps.meta.outputs.tag }}.spdx.json
           if-no-files-found: error

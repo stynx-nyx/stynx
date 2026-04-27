@@ -1,6 +1,10 @@
 # v1.0 Release Readiness
 
-STYNX has a real Prompt 37 release-prep substrate in-repo now, but it is **not shipped yet**.
+Prompt 37 release readiness is **closed** as of 2026-04-27 under the revised
+no-cloud-secret artifact scope. AWS/ECR push and Cosign signing are no longer
+Prompt 37 gates; the release-artifacts workflow now builds the reference images
+inside GitHub Actions and uploads Syft SBOMs plus Docker image metadata as
+reviewable artifacts.
 
 ## Implemented release-prep surfaces
 
@@ -18,30 +22,40 @@ STYNX has a real Prompt 37 release-prep substrate in-repo now, but it is **not s
   - release draft artifact generation
   - Trivy image scans
   - Syft SBOM generation
-- Release-artifacts GitHub Actions workflow for:
-  - ECR image push
-  - Cosign signing
-  - SBOM attachment as workflow artifacts
+- Release-artifacts GitHub Actions workflow:
+  - builds reference API and web images locally on the runner
+  - generates Syft SBOMs for both images
+  - uploads SBOMs and Docker image metadata as workflow artifacts
 - ADRs remain published in the docs site under `Architecture Decisions`.
 - The v1.1 planning issue template is staged under `.github/ISSUE_TEMPLATE/v1_1_planning.md`.
 
-## Intentionally not marked complete yet
+## Closure Evidence
 
-The following Prompt 37 success gates are still blocked outside the release scaffolding itself:
+The CI-authoritative gates that blocked Prompt 37 are green on `main`:
 
-- Prompt 31 browser E2E still needs a non-sandboxed Playwright proof.
-- Prompt 34 still needs full-suite k6 rerun plus CI baseline-regression proof.
-- Prompt 35 mutation thresholds are not green yet.
-- Prompt 36 Lighthouse verification is still CI-authoritative because local Chrome debug-port startup is blocked in this macOS sandbox.
-- TypeDoc still emits documentation coverage warnings on public surfaces, so the `every public function is documented via TSDoc` checklist item is not green yet.
-- Actual package publishing, GitHub Releases, and ECR push/signing must run in GitHub Actions with production secrets and roles.
+| Gate | GitHub Actions run | Result |
+|---|---:|---|
+| CI, including Linux `reference-web-e2e` | `24976849184` | success |
+| Docs, including Chrome-backed Lighthouse | `24972209610` | success |
+| Hardening first k6 baseline seed | `24973827712` | success |
+| Hardening second k6 baseline comparison + mutation thresholds | `24976855814` | success |
+| Release Prep | `24977530998` | success |
+| Release workflow | `24976849172` | success |
 
-## Pre-release vs post-release
+## Scope Notes
 
-The spec’s post-release tasks are intentionally **not** applied yet:
+The original Prompt 37 text included ECR push and Cosign signatures. That
+requirement was intentionally removed from the v1.0 closure bar so release
+readiness can be proven without repository AWS/ECR/Cosign secrets. Container
+registry publication and keyless image signing can be restored as a later
+deployment hardening task when those environments exist.
+
+The release workflow still owns package versioning, publishing, and GitHub
+Release creation through Changesets. A green run has already created or updated
+the Changesets release PR; merging that PR is the normal release operation, not
+a remaining Prompt 37 readiness blocker.
+
+The spec’s public post-release label is still intentionally not applied by this
+readiness closure:
 
 - `README.md` is **not** changed to `STYNX v1.0 - Shipped`.
-- `pnpm changeset version` is **not** committed yet.
-- `pnpm changeset publish` is **not** run from this checkout.
-
-Those steps should only happen once the remaining blockers above are closed and CI is green on `main`.

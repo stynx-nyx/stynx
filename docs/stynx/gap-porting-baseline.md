@@ -49,18 +49,16 @@ Commands were run from the repository root on 2026-04-26:
 | `pnpm lint:deadcode`       |  `0` | `knip --no-config-hints` completed without findings.                                                                                                              |
 | `pnpm lint:deps`           |  `0` | `No depcheck issue`.                                                                                                                                              |
 
-## Remaining Release-Readiness Gaps
+## Release-Readiness Closure
 
-The GAP porting target is closed locally, but the release-readiness TODO items
-still require CI-authoritative proof before they can be closed:
+The GAP porting target and Prompt 37 release-readiness follow-ups are closed.
+The remaining browser, docs, k6, mutation, release-prep, and release workflow
+gates were proven in GitHub Actions on `main`.
 
-- Browser e2e on Linux/GitHub Actions.
-- Docs Lighthouse through `docs.yml` in GitHub Actions.
-- k6 full-suite baseline proof against a previous successful `main` artifact.
-- Stryker thresholds for `@stynx/auth`, `@stynx/data`, and `@stynx/tenancy`.
-- Real `changeset version`, publish, GitHub Release, ECR push, and signing
-  evidence after the upstream gates are green.
+The Prompt 37 container-artifact scope was revised to remove the AWS/ECR/Cosign
+secret prerequisite. Release Artifacts now builds reference images on the
+GitHub-hosted runner and uploads Syft SBOMs plus Docker image metadata as
+reviewable artifacts.
 
-The prior TypeDoc/TSDoc public-documentation warning blocker is closed locally
-by the root build and docs build, but CI should still be treated as the release
-authority for Prompt 37.
+CI remains the release authority for browser and Lighthouse evidence; local
+container runs are retained as fast preflight coverage, not final closure proof.

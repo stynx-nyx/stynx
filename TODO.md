@@ -1,16 +1,15 @@
 # Open Questions & Follow-ups
 
-- [ ] Revisit Prompt 31 browser e2e in a less restricted harness.
-      The `@stynx/reference-web` Playwright flow reaches the live `reference-api`, but Chromium launch fails in this macOS sandbox with `bootstrap_check_in ... MachPortRendezvousServer ... Permission denied (1100)`. Re-run `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers pnpm test:e2e` outside the current sandbox or switch the browser strategy for CI.
-- [ ] Close Prompt 36 docs CI verification in GitHub Actions.
-      `pnpm --filter docs build` is green, API-reference coverage verification is green, and `docs.yml` provisions Chrome. Local `pnpm --filter docs build:ci` still fails in this macOS sandbox because Chrome is found but never opens a debugging port for Lighthouse. Prove the path in GitHub Actions and confirm Lighthouse scores stay above the required thresholds there.
-- [ ] Finish Prompt 34 full k6 verification and baseline regression gating.
-      The repo-side k6 fixes are in place, `auth` and `upload` are green on the host-backed `reference-api` path, and `crud` no longer fails functionally (`http_req_failed = 0`, no `429`s). Probe hardening improved the hot-path metrics materially: `data_tx_overhead_ms` and `idempotency_lookup_ms` now pass on the tuned CRUD path, and the default CRUD profile was lowered to `10 rps` with smaller default VU caps. The remaining open edge is `ratelimit_overhead_ms` p99, which is still noisy on repeated host-backed runs even after warmup + multi-sample measurement. Finish stabilizing that probe, rerun the clean full `auth`, `crud`, `upload`, and `cascade-delete` suite from a fresh stack, and then prove that `perf/k6/check-summary.mjs` is comparing against a prior successful `main` baseline artifact in CI.
-- [ ] Close Prompt 35 mutation score gaps for `@stynx/auth`, `@stynx/data`, and `@stynx/tenancy`.
-      The Stryker toolchain, narrowed mutation scopes, and CI artifact paths are fixed, but the package thresholds still need to be proven green with report-driven tests. The last completed narrowed-scope `@stynx/auth` report finished at `58.13`, with the main survivor clusters in `permission-cache.ts`, `stynx-auth.guard.ts`, `cognito-jwt.validator.ts`, `stynx-jwt.validator.ts`, `permission-query.service.ts`, and `utils.ts`. This checkout added new unit coverage for `permission-cache`, `permission-query.service`, and additional validator branches, but a fresh full auth Stryker rerun was aborted after startup because the single-worker in-place run projected roughly 5 hours. `auth >= 85`, `data >= 85`, and `tenancy >= 80` are still open and need another mutation pass after more targeted tests or faster Stryker execution settings.
-- [ ] Finish Prompt 37 release readiness after Prompts 31 and 34-36 are green.
-      The repo-side Prompt 37 substrate is now in place: major changeset stubs, top-level/per-package licensing, release draft generation, Semgrep/audit/Trivy/Syft workflows, and the ECR/Cosign release-artifacts workflow. What still blocks actual closure is the remaining browser-e2e, k6 baseline proof, mutation thresholds, CI-authoritative docs Lighthouse verification, and then the real `changeset version` / publish / GitHub Releases / ECR push-signing execution on green `main`.
-      The TypeDoc/TSDoc public documentation warning blocker is now closed locally by `pnpm build` and the docs build path; keep Prompt 37 open for the remaining CI-authoritative browser, docs Lighthouse, k6, mutation, and release execution evidence.
+- [x] Revisit Prompt 31 browser e2e in a less restricted harness.
+      Closed by GitHub Actions CI on `main`: run `24976849184` (`ci: stabilize k6 baseline comparison tolerance`, 2026-04-27) completed successfully and includes the Linux `reference-web-e2e` job.
+- [x] Close Prompt 36 docs CI verification in GitHub Actions.
+      Closed by GitHub Actions Docs on `main`: run `24972209610` (`ci: stabilize hardening and release gates`, 2026-04-27) completed successfully with `pnpm --filter docs build:ci`, including Chrome-backed Lighthouse execution.
+- [x] Finish Prompt 34 full k6 verification and baseline regression gating.
+      Closed by GitHub Actions Hardening on `main`: run `24973827712` seeded the first successful k6 baseline, and run `24976855814` completed successfully with the second k6 baseline comparison enforced.
+- [x] Close Prompt 35 mutation score gaps for `@stynx/auth`, `@stynx/data`, and `@stynx/tenancy`.
+      Closed by GitHub Actions Hardening on `main`: run `24976855814` completed successfully with mutation jobs for `auth >= 85`, `data >= 85`, and `tenancy >= 80`.
+- [x] Finish Prompt 37 release readiness after Prompts 31 and 34-36 are green.
+      Closed under the revised no-cloud-secret release-artifact scope. CI, Docs, Release Prep, Release, and two Hardening runs are green on `main`; Release Artifacts now builds reference images locally and uploads Syft SBOM plus image metadata artifacts without AWS, ECR, or Cosign secrets.
 - [x] Implement and adopt `porm` and `pec` integration facades over `@stynx/auth`.
 - [x] Add optional middleware-based tenant DB lifecycle adapter for stacks requiring `res.on('finish'/'close')` semantics.
 - [x] Expand package-level compatibility coverage to include:
