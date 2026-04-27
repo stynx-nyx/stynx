@@ -23,6 +23,7 @@
     "lint:deadcode": "knip --no-config-hints",
     "lint:deps": "depcheck --ignore-patterns='**/*.test.ts,**/*.spec.ts' --skip-missing --ignores='@commitlint/cli,@commitlint/config-conventional,@stryker-mutator/jest-runner,@stryker-mutator/typescript-checker,eslint-plugin-boundaries,prettier'",
     "lint:migrations": "pnpm --filter migration-linter run lint:repo",
+    "lint:cycles": "madge --circular packages/ packages-web/ apps/ --extensions ts --exclude '(^|/)(dist|build|coverage|node_modules)/'",
     "ci:local": "bash scripts/ci-local/run.sh",
     "ci:local:browser": "bash scripts/ci-local/run.sh browser",
     "ci:local:all-linux": "bash scripts/ci-local/run.sh all-linux",
@@ -59,6 +60,7 @@
     "husky": "^9.1.7",
     "knip": "^6.7.0",
     "lint-staged": "^16.4.0",
+    "madge": "^8.0.0",
     "prettier": "^3.8.3",
     "turbo": "^2.9.6",
     "typescript": "^6.0.3"

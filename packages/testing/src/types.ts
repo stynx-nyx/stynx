@@ -1,14 +1,13 @@
 import type { DynamicModule, INestApplication, Provider, Type } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import type { StartedTestContainer } from 'testcontainers';
-import type { Client } from 'pg';
-import type { Database, Transaction } from '@stynx/data';
+import type { Database, StynxPgClient, Transaction } from '@stynx/data';
 import type { RequestContextMutator } from '@stynx/core';
 import type { SessionJwtSigningService, StynxSessionSigningKeySet } from '@stynx/sessions';
 
 export type TestSqlStep =
   | string
-  | ((client: Client) => Promise<void>);
+  | ((client: StynxPgClient) => Promise<void>);
 
 export interface TestAppOverrides {
   imports?: Array<Type<unknown> | DynamicModule>;
@@ -64,7 +63,7 @@ export interface TestAppContext {
   redis: StartedRedisHandle;
   localstack?: StartedLocalstackHandle;
   cognito?: StartedCognitoHandle;
-  adminClient(): Promise<Client>;
+  adminClient(): Promise<StynxPgClient>;
   tx<T>(fn: (trx: Transaction) => Promise<T>): Promise<T>;
   teardown(): Promise<void>;
 }

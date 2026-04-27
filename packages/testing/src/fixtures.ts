@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
-import type { Client } from 'pg';
+import type { StynxPgClient } from '@stynx/data';
 import type {
   DocumentFixture,
   MembershipFixture,
@@ -16,7 +16,7 @@ function sha256(value: string): string {
   return createHash('sha256').update(value).digest('hex');
 }
 
-export function createStynxFixtures(adminClient: () => Promise<Client>): TestingFixtures {
+export function createStynxFixtures(adminClient: () => Promise<StynxPgClient>): TestingFixtures {
   return {
     async createTenant(input = {}): Promise<TenantFixture> {
       const tenant: TenantFixture = {

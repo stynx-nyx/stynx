@@ -2,6 +2,7 @@ export { StynxDataModule, StynxDataModule as DataModule } from './data.module';
 export { Database } from './database';
 export { Transaction, createDrizzle, type StynxDrizzleDatabase } from './transaction';
 export { StynxPoolRegistry, createStynxPgPool, type StynxPgPoolOptions } from './pools';
+export { createStynxPgClient, type StynxPgClient, type StynxPgClientConfig } from './client';
 export { withSystemContext } from './system-context';
 export * from './table-markers';
 export * from './types';

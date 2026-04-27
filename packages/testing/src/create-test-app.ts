@@ -1,9 +1,8 @@
-import { Client } from 'pg';
 import { Test } from '@nestjs/testing';
 import { type INestApplication } from '@nestjs/common';
 import { GenericContainer, Wait } from 'testcontainers';
 import { RequestContextMutator } from '@stynx/core';
-import { Database, StynxDataModule } from '@stynx/data';
+import { createStynxPgClient, Database, StynxDataModule, type StynxPgClient } from '@stynx/data';
 import type {
   CreateTestAppOptions,
   StartedCognitoHandle,
@@ -14,7 +13,7 @@ import type {
   TestSqlStep,
 } from './types';
 
-async function applySqlSteps(client: Client, steps: TestSqlStep[]): Promise<void> {
+async function applySqlSteps(client: StynxPgClient, steps: TestSqlStep[]): Promise<void> {
   for (const step of steps) {
     if (typeof step === 'string') {
       await client.query(step);
@@ -146,8 +145,8 @@ export async function createTestApp(options: CreateTestAppOptions = {}): Promise
     app = testingModule.createNestApplication();
     await app.init();
 
-    async function adminClient(): Promise<Client> {
-      const client = new Client({ connectionString: postgres!.adminConnectionString });
+    async function adminClient(): Promise<StynxPgClient> {
+      const client = createStynxPgClient({ connectionString: postgres!.adminConnectionString });
       await client.connect();
       return client;
     }
