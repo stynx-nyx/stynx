@@ -1,6 +1,6 @@
 {
   "name": "@stynx-web/sdk",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Framework-agnostic TypeScript SDK for stynx APIs",
   "main": "dist/sdk/src/index.js",
   "types": "dist/sdk/src/index.d.ts",

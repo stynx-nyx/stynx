@@ -1,6 +1,6 @@
 {
   "name": "@stynx-web/angular-profile",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Angular 20 profile and preference forms for stynx",
   "main": "dist/angular-profile/src/index.js",
   "types": "dist/angular-profile/src/index.d.ts",

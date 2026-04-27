@@ -1,6 +1,6 @@
 {
   "name": "@stynx-web/angular-sessions",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Angular 20 active-session widgets for stynx",
   "main": "dist/angular-sessions/src/index.js",
   "types": "dist/angular-sessions/src/index.d.ts",

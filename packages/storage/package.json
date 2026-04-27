@@ -1,6 +1,6 @@
 {
   "name": "@stynx/storage",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Storage adapters and document primitives for stynx",
   "main": "dist/storage/src/index.js",
   "types": "dist/storage/src/index.d.ts",

@@ -1,6 +1,6 @@
 {
   "name": "@stynx/health",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Health and observability endpoints for stynx",
   "main": "dist/health/src/index.js",
   "types": "dist/health/src/index.d.ts",

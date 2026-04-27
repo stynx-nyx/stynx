@@ -1,6 +1,6 @@
 {
   "name": "@stech/stynx-contracts",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "Framework-agnostic contracts for stynx shared platform packages",
   "main": "dist/stynx-contracts/src/index.js",
   "types": "dist/stynx-contracts/src/index.d.ts",

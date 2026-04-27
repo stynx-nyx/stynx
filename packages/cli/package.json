@@ -1,6 +1,6 @@
 {
   "name": "@stynx/cli",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "CLI for bootstrapping, doctor checks, migrations, privacy ROPA, and adoption helpers",
   "main": "dist/cli/src/index.js",
   "types": "dist/cli/src/index.d.ts",

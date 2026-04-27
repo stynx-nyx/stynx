@@ -1,6 +1,6 @@
 {
   "name": "@stynx-web/angular-i18n",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Angular 20 runtime locale switching for stynx web apps",
   "main": "dist/angular-i18n/src/index.js",
   "types": "dist/angular-i18n/src/index.d.ts",

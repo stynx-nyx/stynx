@@ -1,6 +1,6 @@
 {
   "name": "@stynx/ratelimit",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Rate limiting primitives for stynx",
   "main": "dist/ratelimit/src/index.js",
   "types": "dist/ratelimit/src/index.d.ts",

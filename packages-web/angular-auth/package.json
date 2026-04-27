@@ -1,6 +1,6 @@
 {
   "name": "@stynx-web/angular-auth",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Angular authentication and session integration for stynx",
   "main": "dist/angular-auth/src/index.js",
   "types": "dist/angular-auth/src/index.d.ts",
