@@ -50,10 +50,11 @@ readiness can be proven without repository AWS/ECR/Cosign secrets. Container
 registry publication and keyless image signing can be restored as a later
 deployment hardening task when those environments exist.
 
-The release workflow still owns package versioning, publishing, and GitHub
-Release creation through Changesets. A green run has already created or updated
-the Changesets release PR; merging that PR is the normal release operation, not
-a remaining Prompt 37 readiness blocker.
+The release workflow still owns package versioning through Changesets. Registry
+publishing is intentionally opt-in because the current package scopes (`@stynx`,
+`@stynx-web`, and `@stech`) cannot be published with this repository's default
+`GITHUB_TOKEN`. Set `STYNX_ENABLE_REGISTRY_PUBLISH=true` and provide an
+appropriate `NPM_TOKEN` only after package namespace ownership is configured.
 
 The spec’s public post-release label is still intentionally not applied by this
 readiness closure:

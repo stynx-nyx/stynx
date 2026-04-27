@@ -1276,8 +1276,9 @@ Deliverables:
 
 Release automation:
 - Changesets release PR prepared and reviewable for the 1.0.0 version bump.
-- Release workflow owns package publishing and GitHub Release creation when the
-  Changesets PR is merged.
+- Release workflow owns package versioning. Registry publishing is opt-in via
+  `STYNX_ENABLE_REGISTRY_PUBLISH=true` plus an appropriate `NPM_TOKEN` after
+  package namespace ownership is configured.
 - Reference Docker images built in GitHub Actions. Registry push/signing is
   deferred until AWS/ECR/Cosign environments are configured.
 

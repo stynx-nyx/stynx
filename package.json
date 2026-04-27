@@ -31,6 +31,7 @@
     "release:policy": "node scripts/verify-release-policy.mjs",
     "version-packages": "changeset version",
     "release": "changeset publish",
+    "release:publish:ci": "node scripts/changesets-publish-ci.mjs",
     "doctor": "node scripts/stynx-doctor.mjs",
     "docs:build": "pnpm --filter docs build",
     "test:mutation": "pnpm --filter @stynx/auth stryker && pnpm --filter @stynx/tenancy stryker && pnpm --filter @stynx/data stryker",

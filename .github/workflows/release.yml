@@ -18,6 +18,7 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
   NODE_VERSION: '24'
   PNPM_VERSION: '9.15.0'
+  STYNX_ENABLE_REGISTRY_PUBLISH: ${{ vars.STYNX_ENABLE_REGISTRY_PUBLISH || 'false' }}
 
 jobs:
   release:
@@ -49,11 +50,11 @@ jobs:
         uses: changesets/action@v1
         with:
           version: pnpm version-packages
-          publish: pnpm release
+          publish: pnpm release:publish:ci
           commit: 'ci: version packages'
           title: 'ci: version packages'
           createGithubReleases: true
           setupGitUser: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
