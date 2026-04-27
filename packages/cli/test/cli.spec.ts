@@ -8,6 +8,7 @@ import {
   formatAdoptScanHuman,
   linkCognitoUsers,
 } from '../src/adopt';
+import { verifyAuditChain } from '../src/audit';
 import { runDoctor } from '../src/doctor';
 import { scaffoldApp } from '../src/init';
 import { generateRopaFromApp } from '../src/privacy-ropa';
@@ -76,5 +77,58 @@ describe('@stynx/cli', () => {
     );
     expect(result.matched).toEqual([{ userId: 'u1', email: 'a@example.com', cognitoSub: 'sub-a' }]);
     expect(result.unmatched).toEqual([{ userId: 'u2', email: 'b@example.com' }]);
+  });
+
+  it('verifies audit hash chains across tenants', async () => {
+    const calls: Array<{ sql: string; values?: unknown[] }> = [];
+    const client = {
+      async connect(): Promise<void> {},
+      async end(): Promise<void> {},
+      async query<T>(sql: string, values?: unknown[]): Promise<{ rows: T[] }> {
+        calls.push({ sql, values });
+        if (sql.includes('distinct tenancy_id')) {
+          return {
+            rows: [
+              { tenant_id: '01990000-0000-7000-8000-000000000001' },
+              { tenant_id: '01990000-0000-7000-8000-000000000002' },
+            ] as T[],
+          };
+        }
+        if (values?.[0] === '01990000-0000-7000-8000-000000000002') {
+          return {
+            rows: [
+              { event_id: '01990000-0000-7000-8000-000000000102', chain_valid: false },
+            ] as T[],
+          };
+        }
+        return {
+          rows: [
+            { event_id: '01990000-0000-7000-8000-000000000101', chain_valid: true },
+          ] as T[],
+        };
+      },
+    };
+
+    await expect(verifyAuditChain('postgres://fixture', {
+      clientFactory: () => client,
+      limit: 50,
+    })).resolves.toEqual({
+      valid: false,
+      totalChecked: 2,
+      tenants: [
+        {
+          tenantId: '01990000-0000-7000-8000-000000000001',
+          valid: true,
+          totalChecked: 1,
+        },
+        {
+          tenantId: '01990000-0000-7000-8000-000000000002',
+          valid: false,
+          totalChecked: 1,
+          firstBrokenEventId: '01990000-0000-7000-8000-000000000102',
+        },
+      ],
+    });
+    expect(calls[1]?.values).toEqual(['01990000-0000-7000-8000-000000000001', 50]);
   });
 });

@@ -10,6 +10,7 @@ import {
   formatAdoptScanHuman,
   linkCognitoUsers,
 } from './adopt';
+import { verifyAuditChain } from './audit';
 import { runDoctor } from './doctor';
 import { scaffoldApp } from './init';
 import { migrateDown, migrateRedo, migrateUp, migrationStatus } from './migrate';
@@ -77,6 +78,29 @@ export function buildProgram(): Command {
     .option('--dir <dir>', 'App directory', process.cwd())
     .action((options) => {
       process.stdout.write(generateRopaFromApp(resolve(options.dir)));
+    });
+
+  const audit = program.command('audit');
+  audit
+    .command('verify')
+    .requiredOption('--database-url <url>')
+    .option('--tenant-id <uuid>', 'Verify a single tenant chain')
+    .option('--limit <n>', 'Maximum events to verify per tenant', '1000')
+    .option('--format <format>', 'human or json', 'human')
+    .action(async (options) => {
+      const result = await verifyAuditChain(options.databaseUrl, {
+        tenantId: options.tenantId,
+        limit: Number(options.limit),
+      });
+      if (options.format === 'json') {
+        console.log(JSON.stringify(result, null, 2));
+      } else if (result.valid) {
+        console.log(`OK audit chain valid (${result.totalChecked} event(s), ${result.tenants.length} tenant(s))`);
+      } else {
+        const broken = result.tenants.find((tenant) => !tenant.valid);
+        console.log(`BROKEN audit chain tenant=${broken?.tenantId ?? 'unknown'} event=${broken?.firstBrokenEventId ?? 'unknown'}`);
+      }
+      process.exitCode = result.valid ? 0 : 1;
     });
 
   const adopt = program.command('adopt');

@@ -8,6 +8,7 @@ Reusable integration-test harness, fixtures, archive-aware matchers, and session
 - `export * from './create-test-app'`
 - `export * from './doctor'`
 - `export * from './fixtures'`
+- `export * from './lgpd-fixture'`
 - `export * from './matchers'`
 - `export * from './mint-test-session'`
 - `export * from './types'`

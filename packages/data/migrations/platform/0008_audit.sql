@@ -316,7 +316,15 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  IF archive_move = 'in_progress'
+  IF erasure_strategy IS NOT NULL THEN
+    current_tags := jsonb_build_object(
+      'lgpd_erasure', true,
+      'strategy', erasure_strategy
+    );
+    IF TG_TABLE_SCHEMA = 'archive' THEN
+      current_tags := current_tags || jsonb_build_object('from_archive', true);
+    END IF;
+  ELSIF archive_move = 'in_progress'
      AND TG_TABLE_SCHEMA <> 'archive'
      AND TG_OP = 'DELETE'
      AND archive_reason = 'soft_delete' THEN
@@ -339,14 +347,6 @@ BEGIN
   ELSIF TG_TABLE_SCHEMA = 'archive'
      AND TG_OP = 'DELETE' THEN
     current_tags := jsonb_build_object('hard_delete', true, 'from_archive', true);
-  ELSIF TG_TABLE_SCHEMA = 'archive'
-     AND TG_OP = 'UPDATE'
-     AND COALESCE(to_jsonb(NEW)->>'last_erasure_at', '')
-       IS DISTINCT FROM COALESCE(to_jsonb(OLD)->>'last_erasure_at', '') THEN
-    current_tags := jsonb_build_object(
-      'lgpd_erasure', true,
-      'strategy', COALESCE(erasure_strategy, 'unknown')
-    );
   END IF;
 
   current_payload := jsonb_strip_nulls(
