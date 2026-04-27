@@ -1,8 +1,11 @@
 # stynx Agent Guide
 
+This file is the `agents.md` protocol surface (https://agents.md). For repo-specific agent configuration, see `.codex/`.
+
 This repository bundles the reusable scaffolding extracted from previous production apps. Follow these guidelines while extending the platform.
 
 ## Directory Responsibilities
+
 - `backend/` – NestJS codebase. Core modules live under `src/core`. Do not introduce domain-specific logic here; build reusable services and guards only.
 - `frontend/` – Angular base app. Keep shared widgets in `shared/`, Cognito/auth logic under `core/auth`, and feature entrypoints in `admin/` and `storage/`.
 - `db/ddl` – Canonical SQL definitions (auth, audit, storage). Update seeds and accompanying tests under `test/db` when DDL changes.
@@ -11,6 +14,7 @@ This repository bundles the reusable scaffolding extracted from previous product
 - `test/` – Centralised test harness. Add backend specs to `test/backend`, frontend unit/E2E to `test/frontend`, and script validations to `test/scripts`.
 
 ## General Rules
+
 1. Mirror the established naming, module boundaries, and linting conventions already present in the repo.
 2. Enforce RLS and tenancy checks in every new table or API surface.
 3. Update documentation and seeds alongside code changes; nothing should be undocumented.

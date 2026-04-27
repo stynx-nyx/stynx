@@ -102,5 +102,11 @@ docs/work/inv/*
 docs/work/diag/*
 docs/work/plan/*
 !docs/work/inv/.gitkeep
+!docs/work/inv/README.md
+!docs/work/inv/REPO-GAP-ANALYSIS.md
 !docs/work/diag/.gitkeep
 !docs/work/plan/.gitkeep
+
+# Generated release-note drafts
+/.release/drafts/*.md
+!/.release/drafts/README.md

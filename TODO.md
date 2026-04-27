@@ -1,9 +1,11 @@
 # Open Questions & Follow-ups
 
-- [ ] Revisit Prompt 31 browser e2e in a less restricted harness.
-      The `@stynx/reference-web` Playwright flow reaches the live `reference-api`, but Chromium launch fails in this macOS sandbox with `bootstrap_check_in ... MachPortRendezvousServer ... Permission denied (1100)`. Re-run `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers pnpm test:e2e` outside the current sandbox or switch the browser strategy for CI.
-- [ ] Close Prompt 36 docs CI verification in GitHub Actions.
-      `pnpm --filter docs build` is green, API-reference coverage verification is green, and `docs.yml` provisions Chrome. Local `pnpm --filter docs build:ci` still fails in this macOS sandbox because Chrome is found but never opens a debugging port for Lighthouse. Prove the path in GitHub Actions and confirm Lighthouse scores stay above the required thresholds there.
+Open items from the prompt-numbered workflow. Each references the corresponding prompt session. For current CI status, see GitHub Actions.
+
+- [x] Revisit Prompt 31 browser e2e in a less restricted harness.
+      Closed by GitHub Actions CI on `main`: run `24973824581` (`ci: parameterize k6 upload threshold for actions`, 2026-04-27) completed successfully and includes the Linux `reference-web-e2e` job.
+- [x] Close Prompt 36 docs CI verification in GitHub Actions.
+      Closed by GitHub Actions Docs on `main`: run `24972209610` (`ci: stabilize hardening and release gates`, 2026-04-27) completed successfully with `pnpm --filter docs build:ci`, including Chrome-backed Lighthouse execution.
 - [ ] Finish Prompt 34 full k6 verification and baseline regression gating.
       The repo-side k6 fixes are in place, `auth` and `upload` are green on the host-backed `reference-api` path, and `crud` no longer fails functionally (`http_req_failed = 0`, no `429`s). Probe hardening improved the hot-path metrics materially: `data_tx_overhead_ms` and `idempotency_lookup_ms` now pass on the tuned CRUD path, and the default CRUD profile was lowered to `10 rps` with smaller default VU caps. The remaining open edge is `ratelimit_overhead_ms` p99, which is still noisy on repeated host-backed runs even after warmup + multi-sample measurement. Finish stabilizing that probe, rerun the clean full `auth`, `crud`, `upload`, and `cascade-delete` suite from a fresh stack, and then prove that `perf/k6/check-summary.mjs` is comparing against a prior successful `main` baseline artifact in CI.
 - [ ] Close Prompt 35 mutation score gaps for `@stynx/auth`, `@stynx/data`, and `@stynx/tenancy`.
