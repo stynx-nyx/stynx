@@ -1,6 +1,6 @@
 {
   "name": "@stynx-web/angular-trash",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Angular 20 trash-list primitives for archive-aware STYNX resources",
   "main": "dist/angular-trash/src/index.js",
   "types": "dist/angular-trash/src/index.d.ts",

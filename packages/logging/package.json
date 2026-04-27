@@ -1,6 +1,6 @@
 {
   "name": "@stynx/logging",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Structured logging primitives for stynx",
   "main": "dist/logging/src/index.js",
   "types": "dist/logging/src/index.d.ts",

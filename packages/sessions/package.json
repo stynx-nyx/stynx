@@ -1,6 +1,6 @@
 {
   "name": "@stynx/sessions",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Redis-backed sessions, refresh rotation, and JWKS signing for stynx",
   "main": "dist/sessions/src/index.js",
   "types": "dist/sessions/src/index.d.ts",
