@@ -43,6 +43,24 @@ services:
       timeout: 5s
       retries: 30
 
+  cognito-local:
+    image: jagregory/cognito-local:latest
+    environment:
+      AWS_DEFAULT_REGION: us-east-1
+      COGNITO_LOCAL_PORT: 9229
+      COGNITO_LOCAL_USER_POOLS: '[{"Id":"local_testing_pool","Name":"stynx-local","Clients":[{"ClientId":"local_testing_client","ClientName":"stynx-local-client"}]}]'
+    ports:
+      - '9229:9229'
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'node -e "fetch(''http://127.0.0.1:9229/'').then(()=>process.exit(0)).catch(()=>process.exit(1))"',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
   reference-api:
     build:
       context: ../..
@@ -53,6 +71,8 @@ services:
       STYNX_APP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres
       STYNX_READER_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres
       STYNX_REDIS_URL: redis://redis:6379
+      STYNX_COGNITO_ISSUER: http://cognito-local:9229
+      STYNX_COGNITO_JWKS_URI: http://cognito-local:9229/.well-known/jwks.json
       STYNX_STORAGE_ENDPOINT: http://localstack:4566
       STYNX_STORAGE_FORCE_PATH_STYLE: 'true'
       STYNX_STORAGE_BUCKET: stynx-docs-local-us-east-1
@@ -75,6 +95,8 @@ services:
       redis:
         condition: service_healthy
       localstack:
+        condition: service_healthy
+      cognito-local:
         condition: service_healthy
     ports:
       - '3000:3000'

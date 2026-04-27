@@ -2,6 +2,16 @@
 
 Authentication, authorization guards, permission caches, and Cognito integration for tenant-aware APIs.
 
+## Layering Note
+
+`@stynx/auth` intentionally depends on `@stynx/idempotency` only for the
+`@NoIdempotent()` decorator used on session/authentication endpoints. This is a
+documented exception to the strict spec §3 package DAG: auth routes must opt out
+of mutation idempotency before a STYNX session exists, while the runtime
+idempotency interceptor still lives above auth in the HTTP pipeline. Keep this
+edge decorator-only; do not import idempotency stores, interceptors, or module
+providers into auth.
+
 ## Public API
 
 - `export * from './cognito-token-verifier'`
@@ -41,4 +51,5 @@ Authentication, authorization guards, permission caches, and Cognito integration
 ## References
 
 - [STYNX Spec section 3](../../specs/STYNX-SPEC-v0.6.md)
+- [RFC 0008: Auth idempotency decorator layering](../../docs/rfcs/0008-auth-idempotency-layering.md)
 - [Package README template](../../docs/templates/package-README.md)

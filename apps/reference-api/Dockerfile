@@ -40,6 +40,10 @@ ENV NODE_ENV=production
 
 WORKDIR /app
 
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends wget \
+  && rm -rf /var/lib/apt/lists/*
+
 COPY --from=prod-deps --chown=node:node /app/node_modules ./node_modules
 COPY --from=prod-deps --chown=node:node /app/packages ./packages
 COPY --from=prod-deps --chown=node:node /app/apps/reference-api ./apps/reference-api
@@ -52,6 +56,9 @@ RUN node apps/reference-api/scripts/repair-runtime-workspace-links.mjs \
 RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 
 EXPOSE 3000
+
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
+  CMD wget -q -O- http://localhost:3000/healthz || exit 1
 
 USER node
 

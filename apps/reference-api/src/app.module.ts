@@ -183,6 +183,7 @@ async function runReferenceApiMigrations(
       },
       cognito: {
         issuer: env('STYNX_COGNITO_ISSUER', 'https://cognito.local'),
+        ...(process.env.STYNX_COGNITO_JWKS_URI ? { jwksUri: process.env.STYNX_COGNITO_JWKS_URI } : {}),
       },
       ...(process.env.STYNX_REDIS_URL
         ? {

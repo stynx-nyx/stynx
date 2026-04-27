@@ -40,6 +40,8 @@ describe('@stynx-web/angular-profile', () => {
 
   it('tracks dirty state in the preferences form', () => {
     const component = new StynxPreferencesFormComponent(new FormBuilder());
+    const seen: unknown[] = [];
+    component.save.subscribe((value) => seen.push(value));
     component.value = {
       locale: 'en-US',
       notifications: false,
@@ -51,5 +53,8 @@ describe('@stynx-web/angular-profile', () => {
     });
     component.form.markAsDirty();
     expect(component.form.dirty).toBe(true);
+    component.submit();
+    expect(seen).toEqual([{ locale: 'en-US', notifications: true }]);
+    expect(component.form.dirty).toBe(false);
   });
 });

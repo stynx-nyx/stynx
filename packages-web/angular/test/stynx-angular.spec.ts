@@ -119,6 +119,37 @@ describe('@stynx-web/angular', () => {
     expect(refreshCalls).toBe(1);
   });
 
+  it('passes auth through when bearer mode is disabled and reports auth failure when refresh is empty', async () => {
+    let authFailures = 0;
+    const passthrough = new AuthInterceptor(
+      { apiBaseUrl: '/api', sessionMode: 'cookie' },
+      {
+        getAccessToken: async () => 'token',
+        refresh: async () => 'fresh',
+      },
+    );
+    const passthroughHandler = new FakeHandler([of({ ok: true }) as Observable<unknown>]);
+
+    await expect(firstValueFrom(passthrough.intercept(new FakeRequest() as never, passthroughHandler as never))).resolves.toEqual({ ok: true });
+    expect(passthroughHandler.seen[0]?.headers.get('authorization')).toBeNull();
+
+    const auth = new AuthInterceptor(
+      { apiBaseUrl: '/api', sessionMode: 'bearer' },
+      {
+        getAccessToken: async () => 'expired-token',
+        refresh: async () => null,
+        onAuthFailure: async () => {
+          authFailures += 1;
+        },
+      },
+    );
+    const error = new HttpErrorResponse({ status: 401, error: { code: 'AUTHENTICATION_ERROR' } });
+    const handler = new FakeHandler([throwError(() => error)]);
+
+    await expect(firstValueFrom(auth.intercept(new FakeRequest() as never, handler as never))).rejects.toBe(error);
+    expect(authFailures).toBe(1);
+  });
+
   it('maps server errors through ErrorBannerService', async () => {
     const banners = new ErrorBannerService();
     const interceptor = new ErrorInterceptor(banners);
@@ -134,6 +165,21 @@ describe('@stynx-web/angular', () => {
     await expect(firstValueFrom(request)).rejects.toBeInstanceOf(ForbiddenError);
     expect(banners.current()?.code).toBe('TENANT_ACCESS_DENIED');
     expect(banners.current()?.message).toBe('forbidden');
+    banners.clear();
+    expect(banners.current()).toBeNull();
+  });
+
+  it('passes non-HTTP errors through without showing a banner', async () => {
+    const banners = new ErrorBannerService();
+    const interceptor = new ErrorInterceptor(banners);
+    const error = new Error('plain failure');
+
+    await expect(firstValueFrom(interceptor.intercept(
+      new FakeRequest() as never,
+      new FakeHandler([throwError(() => error)]) as never,
+    ))).rejects.toBe(error);
+
+    expect(banners.current()).toBeNull();
   });
 
   it('resolves tenant context from query, subdomain, then default resolver', async () => {

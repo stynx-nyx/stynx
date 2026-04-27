@@ -79,9 +79,11 @@
   "pnpm": {
     "overrides": {
       "@types/node": "25.6.0",
+      "dockerode": "5.0.0",
       "handlebars": "4.7.9",
       "postcss": "8.5.12",
       "serialize-javascript": "7.0.5",
+      "uuid": "14.0.0",
       "webpackbar": "7.0.0"
     }
   }

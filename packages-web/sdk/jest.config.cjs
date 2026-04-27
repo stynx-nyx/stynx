@@ -6,4 +6,10 @@ module.exports = {
   moduleNameMapper: {
     '^@stynx-web/sdk$': '<rootDir>/src/index.ts',
   },
+  coverageThreshold: {
+    global: {
+      statements: 85,
+      lines: 85,
+    },
+  },
 };
