@@ -6,6 +6,8 @@ export const stage: EnvConfig = {
   region: 'sa-east-1',
   ownerTeam: 'platform',
   domain: 'stage.api.example.test',
+  hostedZoneId: 'ZSTAGEEXAMPLETEST',
+  hostedZoneName: 'example.test',
   certArn: 'arn:aws:acm:sa-east-1:222222222222:certificate/stage-placeholder',
   alarmRecipients: ['stage-ops@example.test'],
   vpc: {

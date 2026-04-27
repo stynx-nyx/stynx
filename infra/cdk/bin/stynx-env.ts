@@ -3,6 +3,7 @@ import 'source-map-support/register';
 import { App, Tags } from 'aws-cdk-lib';
 import { ComputeStack } from '../lib/compute-stack';
 import { DataStack } from '../lib/data-stack';
+import { EdgeStack } from '../lib/edge-stack';
 import { IdentityStack } from '../lib/identity-stack';
 import { NetworkStack } from '../lib/network-stack';
 import { ObservabilityStack } from '../lib/observability-stack';
@@ -46,6 +47,7 @@ const storage = new StorageStack(app, `stynx-${envName}-storage`, {
 
 const compute = new ComputeStack(app, `stynx-${envName}-compute`, {
   env: awsEnv,
+  crossRegionReferences: true,
   config,
   vpc: network.vpc,
   dbSecret: data.dbSecret,
@@ -58,6 +60,16 @@ const compute = new ComputeStack(app, `stynx-${envName}-compute`, {
   imageTag,
 });
 
+const edge = new EdgeStack(app, `stynx-${envName}-edge`, {
+  env: {
+    account: config.accountId,
+    region: 'us-east-1',
+  },
+  crossRegionReferences: true,
+  config,
+  alb: compute.alb,
+});
+
 const observability = new ObservabilityStack(app, `stynx-${envName}-observability`, {
   env: awsEnv,
   config,
@@ -67,7 +79,7 @@ const observability = new ObservabilityStack(app, `stynx-${envName}-observabilit
   redis: data.redis,
 });
 
-for (const stack of [network, identity, data, storage, compute, observability]) {
+for (const stack of [network, identity, data, storage, compute, edge, observability]) {
   Tags.of(stack).add('stynx:env', envName);
   Tags.of(stack).add('stynx:managed', 'true');
   Tags.of(stack).add('stynx:owner', config.ownerTeam);

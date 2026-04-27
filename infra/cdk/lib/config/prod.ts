@@ -6,6 +6,8 @@ export const prod: EnvConfig = {
   region: 'sa-east-1',
   ownerTeam: 'platform',
   domain: 'api.example.com',
+  hostedZoneId: 'ZPRODEXAMPLECOM',
+  hostedZoneName: 'example.com',
   certArn: 'arn:aws:acm:sa-east-1:333333333333:certificate/prod-placeholder',
   alarmRecipients: ['platform@example.com'],
   vpc: {
