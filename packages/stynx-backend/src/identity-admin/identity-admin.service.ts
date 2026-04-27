@@ -15,8 +15,8 @@ import type {
   IdentitySyncContext,
   IdentityUpdateUserRequest,
   IdentityVerifyChannelsRequest,
-} from '@stech/stynx-contracts';
-import { IdentityAdminError } from '@stech/stynx-contracts';
+} from '@stynx/contracts';
+import { IdentityAdminError } from '@stynx/contracts';
 import { STYNX_IDENTITY_ADMIN_ADAPTER, STYNX_IDENTITY_LOCAL_SYNC_ADAPTER } from './constants';
 
 function mapIdentityAdminError(error: IdentityAdminError): Error {

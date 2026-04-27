@@ -1,4 +1,4 @@
-import type { Principal } from '@stech/stynx-contracts';
+import type { Principal } from '@stynx/contracts';
 import type { RequestLike } from '../common/request-context';
 
 export interface AuditMetadataRedactionContext {

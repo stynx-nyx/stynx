@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Inject, Injectable, Optional } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import type { PolicyEvaluator } from '@stech/stynx-contracts';
+import type { PolicyEvaluator } from '@stynx/contracts';
 import { getPrincipalFromRequest, type RequestLike } from '../common/request-context';
 import { DefaultPolicyEvaluator } from './default-policy-evaluator';
 import { STYNX_AUTHZ_METADATA, STYNX_AUTHZ_POLICY_EVALUATOR } from './constants';

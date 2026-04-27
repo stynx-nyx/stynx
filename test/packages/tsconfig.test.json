@@ -13,7 +13,7 @@
       "@stynx/ratelimit": ["../../packages/ratelimit/src/index.ts"],
       "@stynx/sessions": ["../../packages/sessions/src/index.ts"],
       "@stynx/storage": ["../../packages/storage/src/index.ts"],
-      "@stech/stynx-contracts": ["../../packages/stynx-contracts/src/index.ts"],
+      "@stynx/contracts": ["../../packages/contracts/src/index.ts"],
       "@stech/stynx-frontend-contracts": ["../../packages/stynx-frontend-contracts/src/index.ts"],
       "@stech/stynx-frontend-client": ["../../packages/stynx-frontend-client/src/index.ts"]
     },

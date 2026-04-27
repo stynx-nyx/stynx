@@ -1,4 +1,4 @@
-export * from '@stech/stynx-contracts';
+export * from '@stynx/contracts';
 
 export * from './common/request-context';
 

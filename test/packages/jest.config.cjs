@@ -22,7 +22,7 @@ const config = {
     '^@stynx/ratelimit$': resolve(__dirname, '../../packages/ratelimit/src/index.ts'),
     '^@stynx/sessions$': resolve(__dirname, '../../packages/sessions/src/index.ts'),
     '^@stynx/storage$': resolve(__dirname, '../../packages/storage/src/index.ts'),
-    '^@stech/stynx-contracts$': resolve(__dirname, '../../packages/stynx-contracts/src/index.ts'),
+    '^@stech/contracts$': resolve(__dirname, '../../packages/contracts/src/index.ts'),
     '^@stech/stynx-frontend-contracts$': resolve(
       __dirname,
       '../../packages/stynx-frontend-contracts/src/index.ts',

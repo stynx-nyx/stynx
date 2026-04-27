@@ -30,7 +30,7 @@
     "@aws-sdk/client-cognito-identity-provider": "^3.1037.0",
     "@aws-sdk/credential-providers": "^3.1037.0",
     "@aws-sdk/types": "^3.973.8",
-    "@stech/stynx-contracts": "workspace:*",
+    "@stynx/contracts": "workspace:*",
     "@stynx/core": "workspace:*",
     "@stynx/data": "workspace:*",
     "@stynx/idempotency": "workspace:*",

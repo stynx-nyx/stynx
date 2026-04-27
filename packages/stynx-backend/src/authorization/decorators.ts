@@ -1,5 +1,5 @@
 import { SetMetadata } from '@nestjs/common';
-import type { PermissionRequirement, RequirementMatchMode, RoleRequirement } from '@stech/stynx-contracts';
+import type { PermissionRequirement, RequirementMatchMode, RoleRequirement } from '@stynx/contracts';
 import { STYNX_AUTHZ_METADATA } from './constants';
 
 export interface AuthzMetadata {

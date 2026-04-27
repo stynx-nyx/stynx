@@ -1,7 +1,7 @@
 import type {
   TenantEntitlementContext,
   TenantEntitlementPolicy,
-} from '@stech/stynx-contracts';
+} from '@stynx/contracts';
 
 const DEFAULT_CLAIM_KEYS = [
   'custom:tenant_id',

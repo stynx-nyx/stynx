@@ -1,4 +1,4 @@
-import type { DbContextApplier, DbSessionContext } from '@stech/stynx-contracts';
+import type { DbContextApplier, DbSessionContext } from '@stynx/contracts';
 
 export interface PgQueryableClient {
   query(text: string, params?: readonly unknown[]): Promise<unknown>;

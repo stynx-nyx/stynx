@@ -26,7 +26,7 @@
   "dependencies": {
     "@stynx/idempotency": "workspace:*",
     "@stynx/ratelimit": "workspace:*",
-    "@stech/stynx-contracts": "workspace:*"
+    "@stynx/contracts": "workspace:*"
   },
   "peerDependencies": {
     "@nestjs/common": "^11.1.19",

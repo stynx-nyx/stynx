@@ -1,6 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { TenantContextService } from '@stynx-web/angular';
+import { TenantContextService } from '@stynx-web/angular-tenancy';
 import { StynxSessionService } from '@stynx-web/angular-auth';
 import { ReferenceWebApiService } from './reference-web-api.service';
 import { ReferenceWebDevOidcAdapter } from './reference-web-dev-oidc.adapter';

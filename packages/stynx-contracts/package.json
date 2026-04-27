@@ -1,17 +1,17 @@
 {
-  "name": "@stech/stynx-contracts",
+  "name": "@stynx/contracts",
   "version": "0.2.0",
-  "description": "Framework-agnostic contracts for stynx shared platform packages",
-  "main": "dist/stynx-contracts/src/index.js",
-  "types": "dist/stynx-contracts/src/index.d.ts",
+  "description": "Compatibility re-export for @stynx/contracts",
+  "main": "dist/contracts/src/index.js",
+  "types": "dist/contracts/src/index.d.ts",
   "engines": {
     "node": ">=24 <25"
   },
   "exports": {
     ".": {
-      "types": "./dist/stynx-contracts/src/index.d.ts",
-      "require": "./dist/stynx-contracts/src/index.js",
-      "default": "./dist/stynx-contracts/src/index.js"
+      "types": "./dist/contracts/src/index.d.ts",
+      "require": "./dist/contracts/src/index.js",
+      "default": "./dist/contracts/src/index.js"
     }
   },
   "files": [
@@ -22,5 +22,8 @@
     "clean": "rm -rf dist",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/lib.mjs \"src/**/*.ts\""
+  },
+  "dependencies": {
+    "@stynx/contracts": "workspace:*"
   }
 }

@@ -1,5 +1,5 @@
 import { DynamicModule, Module, Provider } from '@nestjs/common';
-import type { DocumentMetadataRepository, ObjectStorageService } from '@stech/stynx-contracts';
+import type { DocumentMetadataRepository, ObjectStorageService } from '@stynx/contracts';
 import { STYNX_DOCUMENT_METADATA_REPOSITORY, STYNX_OBJECT_STORAGE } from './constants';
 
 export interface StynxStorageModuleOptions {

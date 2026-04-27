@@ -2,6 +2,7 @@ CREATE SCHEMA IF NOT EXISTS data AUTHORIZATION stynx_owner;
 REVOKE ALL ON SCHEMA data FROM PUBLIC;
 GRANT USAGE ON SCHEMA data TO stynx_owner;
 
+-- @security-definer-approved: platform-architects/STYNX-I5
 CREATE OR REPLACE FUNCTION data.archive_mirror_name(schema_name text, table_name text)
 RETURNS text
 LANGUAGE plpgsql
@@ -27,6 +28,7 @@ BEGIN
 END
 $$;
 
+-- @security-definer-approved: platform-architects/STYNX-I5
 CREATE OR REPLACE FUNCTION data.ensure_archive_mirror(live_table regclass)
 RETURNS text
 LANGUAGE plpgsql
@@ -114,6 +116,7 @@ BEGIN
 END
 $$;
 
+-- @security-definer-approved: platform-architects/STYNX-I5
 CREATE OR REPLACE FUNCTION data.create_soft_deletable_table(ddl text)
 RETURNS void
 LANGUAGE plpgsql
@@ -142,6 +145,7 @@ BEGIN
 END
 $$;
 
+-- @security-definer-approved: platform-architects/STYNX-I5
 CREATE OR REPLACE FUNCTION data.alter_soft_deletable_table(live_table regclass, alter_stmt text)
 RETURNS void
 LANGUAGE plpgsql
@@ -201,6 +205,7 @@ BEGIN
 END
 $$;
 
+-- @security-definer-approved: platform-architects/STYNX-I5
 CREATE OR REPLACE FUNCTION data.register_softdelete_fk(
   p_parent_schema text,
   p_parent_table text,
@@ -246,6 +251,7 @@ BEGIN
 END
 $$;
 
+-- @security-definer-approved: platform-architects/STYNX-I5
 CREATE OR REPLACE FUNCTION data.softdelete_fk_audit()
 RETURNS TABLE (
   parent_schema text,
@@ -277,6 +283,7 @@ AS $$
     AND to_regclass(format('archive.%s_%s', parent_ns.nspname, parent_cls.relname)) IS NOT NULL;
 $$;
 
+-- @security-definer-approved: platform-architects/STYNX-I5
 CREATE OR REPLACE FUNCTION data.adopt_soft_deletable_table(
   live_table regclass,
   soft_delete_column text,

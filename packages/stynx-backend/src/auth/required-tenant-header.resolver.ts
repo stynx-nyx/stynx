@@ -1,5 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import type { TenantResolver, TenantResolverContext } from '@stech/stynx-contracts';
+import type { TenantResolver, TenantResolverContext } from '@stynx/contracts';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

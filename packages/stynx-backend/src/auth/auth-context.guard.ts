@@ -12,7 +12,7 @@ import type {
   TenantEntitlementPolicy,
   TenantResolver,
   TokenVerifier,
-} from '@stech/stynx-contracts';
+} from '@stynx/contracts';
 import { DefaultPrincipalMapper } from './default-principal-mapper';
 import {
   STYNX_PRINCIPAL_MAPPER,

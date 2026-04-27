@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS tenancy.tenants (
   updated_at timestamptz NOT NULL DEFAULT clock_timestamp()
 );
 
+-- @no_soft_delete: tenant settings are updated in place and audited, not archived as soft deletes.
 CREATE TABLE IF NOT EXISTS tenancy.tenant_settings (
   tenant_id uuid PRIMARY KEY REFERENCES tenancy.tenants(id) ON DELETE CASCADE,
   timezone text,

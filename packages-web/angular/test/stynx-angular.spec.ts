@@ -89,7 +89,7 @@ describe('@stynx-web/angular', () => {
 
     const requestId = new RequestIdInterceptor();
     const tenantContext = new TenantContextService(
-      { apiBaseUrl: '/api', sessionMode: 'bearer' },
+      {},
       null,
     );
     tenantContext.setTenant('tenant-a', 'manual');
@@ -139,8 +139,6 @@ describe('@stynx-web/angular', () => {
   it('resolves tenant context from query, subdomain, then default resolver', async () => {
     const tenantContext = new TenantContextService(
       {
-        apiBaseUrl: '/api',
-        sessionMode: 'cookie',
         defaultTenantResolver: async () => 'fallback-tenant',
       },
       {

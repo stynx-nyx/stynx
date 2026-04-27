@@ -1,5 +1,5 @@
 import { CallHandler, ExecutionContext, Inject, Injectable, NestInterceptor, Optional } from '@nestjs/common';
-import type { DbContextApplier, DbSessionContext } from '@stech/stynx-contracts';
+import type { DbContextApplier, DbSessionContext } from '@stynx/contracts';
 import { finalize, from, mergeMap, Observable } from 'rxjs';
 import { getPrincipalFromRequest, type RequestLike } from '../common/request-context';
 import {

@@ -1,4 +1,4 @@
-import type { Principal, RequestPrincipalContext } from '@stech/stynx-contracts';
+import type { Principal, RequestPrincipalContext } from '@stynx/contracts';
 
 export interface RequestLike {
   headers: Record<string, unknown>;

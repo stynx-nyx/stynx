@@ -26,10 +26,9 @@
     "test:int": "jest --config ./jest.integration.config.cjs"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1037.0",
-    "@aws-sdk/s3-request-presigner": "^3.1037.0",
     "@stynx/core": "workspace:*",
     "@stynx/data": "workspace:*",
+    "@stynx/storage": "workspace:*",
     "jszip": "^3.10.1",
     "yaml": "^2.8.3",
     "zod": "^4.3.6"

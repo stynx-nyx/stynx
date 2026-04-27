@@ -1,4 +1,4 @@
-import type { TenantEntitlementContext } from '@stech/stynx-contracts';
+import type { TenantEntitlementContext } from '@stynx/contracts';
 import type { TenantEntitlementFallback } from './claim-first-tenant-entitlement.policy';
 
 type RowResult<T> = { rows: T[] } | T[];

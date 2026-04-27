@@ -1,4 +1,4 @@
-import type { AuthVerificationResult, Principal, PrincipalMapper } from '@stech/stynx-contracts';
+import type { AuthVerificationResult, Principal, PrincipalMapper } from '@stynx/contracts';
 
 export class DefaultPrincipalMapper implements PrincipalMapper {
   map(result: AuthVerificationResult): Principal {

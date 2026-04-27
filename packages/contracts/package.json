@@ -1,0 +1,28 @@
+{
+  "name": "@stynx/contracts",
+  "version": "0.2.0",
+  "description": "Framework-agnostic STYNX contracts shared by backend and integration packages",
+  "main": "dist/contracts/src/index.js",
+  "types": "dist/contracts/src/index.d.ts",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/contracts/src/index.d.ts",
+      "require": "./dist/contracts/src/index.js",
+      "default": "./dist/contracts/src/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist coverage",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint --config ../../tools/eslint-config/lib.mjs \"src/**/*.ts\"",
+    "test": "node --test test/contracts.test.mjs"
+  }
+}

@@ -1,4 +1,4 @@
-import type { PolicyEvaluationContext, PolicyEvaluator } from '@stech/stynx-contracts';
+import type { PolicyEvaluationContext, PolicyEvaluator } from '@stynx/contracts';
 
 function includesMatch(values: string[], required: string[], mode: 'all' | 'any' = 'all'): boolean {
   const set = new Set(values.map((v) => v.toLowerCase()));
