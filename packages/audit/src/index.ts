@@ -1,3 +1,8 @@
+/**
+ * Public audit logging, retention, SQL sink, and test-helper exports.
+ *
+ * @packageDocumentation
+ */
 export * from './audit.controller';
 export * from './audit.module';
 export * from './audit.service';

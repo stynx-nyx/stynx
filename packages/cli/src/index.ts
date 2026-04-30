@@ -1,4 +1,5 @@
 export * from './cli';
+export * from './audit';
 export * from './doctor';
 export * from './init';
 export * from './migrate';

@@ -3,7 +3,12 @@ import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import JSZip from 'jszip';
 import { Database } from '@stynx/data';
-import { createTestApp } from '@stynx/testing';
+import {
+  createTestApp,
+  LGPD_FIXTURE_MIGRATIONS,
+  lgpdFixturePiiMapYaml,
+  seedLgpdFixture,
+} from '@stynx/testing';
 import { PiiMapService } from '../../src/pii-map.service';
 import { PrivacyService } from '../../src/privacy.service';
 import { StynxPrivacyModule } from '../../src/privacy.module';
@@ -42,35 +47,7 @@ describe('StynxPrivacyModule integration', () => {
     mkdirSync(resolve(appRoot, 'app/privacy'), { recursive: true });
     writeFileSync(
       resolve(appRoot, 'app/privacy/pii-map.yaml'),
-      [
-        'rules:',
-        '  - tableSchema: privacy_fixture',
-        '    tableName: subjects',
-        '    columnName: email',
-        '    strategy: nullify',
-        '    category: contact',
-        '    subjectColumn: subject_user_id',
-        '    tenantColumn: tenant_id',
-        '  - tableSchema: privacy_fixture',
-        '    tableName: subjects',
-        '    columnName: phone',
-        '    strategy: hash_with_salt',
-        '    category: contact',
-        '    subjectColumn: subject_user_id',
-        '    tenantColumn: tenant_id',
-        '  - tableSchema: privacy_fixture',
-        '    tableName: subjects',
-        '    columnName: note',
-        '    strategy: tombstone',
-        '    category: note',
-        '    subjectColumn: subject_user_id',
-        '    tenantColumn: tenant_id',
-        '    retention:',
-        '      timestampColumn: created_at',
-        '      olderThanDays: 30',
-        '      target: archive',
-        '      reason: nightly fixture cleanup',
-      ].join('\n'),
+      lgpdFixturePiiMapYaml(),
       'utf8',
     );
 
@@ -92,25 +69,7 @@ describe('StynxPrivacyModule integration', () => {
           }),
         ],
       },
-      migrations: [
-        `
-          create schema if not exists privacy_fixture;
-          grant usage, create on schema privacy_fixture to stynx_owner;
-          grant usage on schema privacy_fixture to stynx_app;
-          grant usage on schema privacy_fixture to stynx_reader;
-          select data.create_soft_deletable_table($$
-            CREATE TABLE privacy_fixture.subjects (
-              id uuid primary key,
-              tenant_id uuid not null references tenancy.tenants(id),
-              subject_user_id uuid not null,
-              email text,
-              phone text,
-              note text,
-              created_at timestamptz not null default clock_timestamp()
-            )
-          $$);
-        `,
-      ],
+      migrations: LGPD_FIXTURE_MIGRATIONS,
     });
 
     try {
@@ -118,67 +77,24 @@ describe('StynxPrivacyModule integration', () => {
       const privacyService = testApp.moduleRef.get(PrivacyService);
       const database = testApp.moduleRef.get(Database);
       const admin = await testApp.adminClient();
+      let ids;
       try {
-        await admin.query(
-          `
-            insert into tenancy.tenants (id, slug, name, is_active, created_at, updated_at)
-            values ($1::uuid, 'privacy-fixture', 'Privacy Fixture', true, clock_timestamp(), clock_timestamp())
-          `,
-          [tenantId],
-        );
-        await admin.query(
-          `
-            insert into core.pii_map (table_schema, table_name, column_name, strategy, category, notes)
-            values
-              ('privacy_fixture', 'subjects', 'email', 'nullify', 'contact', 'fixture email'),
-              ('privacy_fixture', 'subjects', 'phone', 'hash_with_salt', 'contact', 'fixture phone'),
-              ('privacy_fixture', 'subjects', 'note', 'tombstone', 'note', 'fixture note')
-          `,
-        );
-        await admin.query(
-          `
-            insert into privacy_fixture.subjects (id, tenant_id, subject_user_id, email, phone, note, created_at)
-            values
-              ('01978f4a-32bf-7c27-a131-fd73a9e10331', $1::uuid, $2::uuid, 'live@example.com', '5511999999999', 'keep me private', clock_timestamp())
-          `,
-          [tenantId, subjectUserId],
-        );
-        await admin.query(
-          `
-            insert into archive.privacy_fixture_subjects
-              (id, tenant_id, subject_user_id, email, phone, note, created_at, archive_id, archived_at, deleted_at, deleted_by, last_erasure_at)
-            values
-              (
-                '01978f4a-32bf-7c27-a131-fd73a9e10332',
-                $1::uuid,
-                $2::uuid,
-                'old@example.com',
-                '5511888888888',
-                'old archive',
-                clock_timestamp() - interval '60 days',
-                1,
-                clock_timestamp() - interval '60 days',
-                clock_timestamp() - interval '60 days',
-                '00000000-0000-0000-0000-000000000099',
-                null
-              )
-          `,
-          [tenantId, subjectUserId],
-        );
+        ids = await seedLgpdFixture(admin, { tenantId, subjectUserId });
       } finally {
         await admin.end();
       }
 
-      await expect(piiMapService.load()).resolves.toHaveLength(3);
+      await expect(piiMapService.load()).resolves.toHaveLength(5);
 
       const exportResult = await privacyService.exportData({
         subjectUserId,
         tenantId,
         format: 'json',
       });
-      expect(exportResult.tables).toEqual([
+      expect(exportResult.tables).toEqual(expect.arrayContaining([
+        { table: 'privacy_fixture.attachments', liveRows: 1, archiveRows: 1 },
         { table: 'privacy_fixture.subjects', liveRows: 1, archiveRows: 1 },
-      ]);
+      ]));
 
       const zipBuffer = objectStore.objects.get(exportResult.objectKey);
       expect(zipBuffer).toBeDefined();
@@ -186,14 +102,27 @@ describe('StynxPrivacyModule integration', () => {
       const manifest = JSON.parse(await archive.file('manifest.json')!.async('string')) as {
         tables: Array<{ table: string; liveRows: number; archiveRows: number }>;
       };
-      expect(manifest.tables[0]?.table).toBe('privacy_fixture.subjects');
+      expect(manifest.tables).toEqual(expect.arrayContaining([
+        expect.objectContaining({ table: 'privacy_fixture.subjects' }),
+        expect.objectContaining({ table: 'privacy_fixture.attachments' }),
+      ]));
       const liveExport = JSON.parse(
         await archive.file('tables/privacy_fixture.subjects_live.json')!.async('string'),
       ) as Array<Record<string, unknown>>;
       expect(liveExport[0]?.email).toBe('live@example.com');
+      const attachmentExport = JSON.parse(
+        await archive.file('tables/privacy_fixture.attachments_live.json')!.async('string'),
+      ) as Array<Record<string, unknown>>;
+      expect(attachmentExport[0]?.blob_key).toBe('s3://fixture/live');
 
       const erasureResult = await privacyService.eraseSubject({ subjectUserId });
-      expect(erasureResult.actions).toHaveLength(3);
+      expect(erasureResult.actions).toEqual(expect.arrayContaining([
+        expect.objectContaining({ table: 'privacy_fixture.attachments', column: 'blob_key', strategy: 'delete_row', liveAffected: 1, archiveAffected: 1 }),
+        expect.objectContaining({ table: 'privacy_fixture.subjects', column: 'email', strategy: 'nullify', liveAffected: 1, archiveAffected: 1 }),
+        expect.objectContaining({ table: 'privacy_fixture.subjects', column: 'profile_json', strategy: 'nullify', liveAffected: 1, archiveAffected: 1 }),
+        expect.objectContaining({ table: 'privacy_fixture.subjects', column: 'phone', strategy: 'hash_with_salt', liveAffected: 1, archiveAffected: 1 }),
+        expect.objectContaining({ table: 'privacy_fixture.subjects', column: 'note', strategy: 'tombstone', liveAffected: 1, archiveAffected: 1 }),
+      ]));
       expect(cognitoAdmin.disabledUsers).toEqual([subjectUserId]);
 
       const postErasure = await database.withSystemContext('privacy fixture verification', async () =>
@@ -203,9 +132,10 @@ describe('StynxPrivacyModule integration', () => {
               email: string | null;
               phone: string | null;
               note: string | null;
+              profile_json: string | null;
             }>(
               `
-                select email, phone, note
+                select email, phone, note, profile_json::text
                 from privacy_fixture.subjects
                 where subject_user_id = $1::uuid
               `,
@@ -215,18 +145,51 @@ describe('StynxPrivacyModule integration', () => {
               email: string | null;
               phone: string | null;
               note: string | null;
+              profile_json: string | null;
               last_erasure_at: string | null;
             }>(
               `
-                select email, phone, note, last_erasure_at::text
+                select email, phone, note, profile_json::text, last_erasure_at::text
                 from archive.privacy_fixture_subjects
                 where subject_user_id = $1::uuid
               `,
               [subjectUserId],
             );
+            const attachments = await trx.query<{ total: number }>(
+              `
+                select count(*)::int as total
+                from privacy_fixture.attachments
+                where subject_user_id = $1::uuid
+              `,
+              [subjectUserId],
+            );
+            const archivedAttachments = await trx.query<{ total: number }>(
+              `
+                select count(*)::int as total
+                from archive.privacy_fixture_attachments
+                where subject_user_id = $1::uuid
+              `,
+              [subjectUserId],
+            );
+            const erasureAudit = await trx.query<{
+              table_schema: string;
+              table_name: string;
+              operation: string;
+              tags: Record<string, unknown>;
+            }>(
+              `
+                select table_schema, table_name, operation, tags
+                from audit.log
+                where tags @> '{"lgpd_erasure": true}'::jsonb
+                order by id
+              `,
+            );
             return {
               live: live.rows[0],
               archived: archived.rows[0],
+              attachmentCount: attachments.rows[0]?.total,
+              archivedAttachmentCount: archivedAttachments.rows[0]?.total,
+              erasureAudit: erasureAudit.rows,
             };
           },
           { role: 'owner', readonly: true, replica: false },
@@ -236,8 +199,21 @@ describe('StynxPrivacyModule integration', () => {
       expect(postErasure.live?.email).toBeNull();
       expect(postErasure.live?.phone).toContain('hash:');
       expect(postErasure.live?.note).toBe(`[erased:${subjectUserId}]`);
+      expect(postErasure.live?.profile_json).toBeNull();
       expect(postErasure.archived?.email).toBeNull();
+      expect(postErasure.archived?.note).toBe(`[erased:${subjectUserId}]`);
+      expect(postErasure.archived?.profile_json).toBeNull();
       expect(postErasure.archived?.last_erasure_at).toBeTruthy();
+      expect(postErasure.attachmentCount).toBe(0);
+      expect(postErasure.archivedAttachmentCount).toBe(0);
+      expect(postErasure.erasureAudit).toEqual(expect.arrayContaining([
+        expect.objectContaining({ table_schema: 'privacy_fixture', table_name: 'subjects', operation: 'UPDATE' }),
+        expect.objectContaining({ table_schema: 'archive', table_name: 'privacy_fixture_subjects', operation: 'UPDATE' }),
+        expect.objectContaining({ table_schema: 'privacy_fixture', table_name: 'attachments', operation: 'DELETE' }),
+        expect.objectContaining({ table_schema: 'archive', table_name: 'privacy_fixture_attachments', operation: 'DELETE' }),
+      ]));
+      expect(postErasure.erasureAudit.every((row) => row.tags.lgpd_erasure === true)).toBe(true);
+      expect(ids).toBeDefined();
 
       const retentionDryRun = await privacyService.applyRetention(true);
       expect(retentionDryRun.actions).toEqual([

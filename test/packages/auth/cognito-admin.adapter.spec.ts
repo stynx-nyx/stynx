@@ -1,4 +1,4 @@
-import { IdentityAdminError } from '@stech/stynx-contracts';
+import { IdentityAdminError } from '@stynx/contracts';
 import {
   buildCognitoAdminOptionsFromEnv,
   mapCognitoError,

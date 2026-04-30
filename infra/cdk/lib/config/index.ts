@@ -10,6 +10,8 @@ export interface EnvConfig {
   region: string;
   ownerTeam: string;
   domain: string;
+  hostedZoneId: string;
+  hostedZoneName: string;
   certArn: string;
   alarmRecipients: string[];
   vpc: {

@@ -20,6 +20,7 @@ SELECT data.create_soft_deletable_table($ddl$
   )
 $ddl$);
 
+-- @no_soft_delete: document versions are immutable metadata for a soft-deletable document.
 CREATE TABLE IF NOT EXISTS storage.document_versions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL REFERENCES tenancy.tenants(id),
@@ -30,6 +31,7 @@ CREATE TABLE IF NOT EXISTS storage.document_versions (
   UNIQUE (document_id, version_number)
 );
 
+-- @no_soft_delete: ACL rows are replaced in place and audited.
 CREATE TABLE IF NOT EXISTS storage.document_acl (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL REFERENCES tenancy.tenants(id),
@@ -40,3 +42,18 @@ CREATE TABLE IF NOT EXISTS storage.document_acl (
   created_at timestamptz NOT NULL DEFAULT clock_timestamp(),
   UNIQUE (document_id, subject_type, subject_id, permission_key)
 );
+
+ALTER TABLE storage.document_versions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE storage.document_versions FORCE ROW LEVEL SECURITY;
+ALTER TABLE storage.document_acl ENABLE ROW LEVEL SECURITY;
+ALTER TABLE storage.document_acl FORCE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS document_versions_tenant_isolation ON storage.document_versions;
+CREATE POLICY document_versions_tenant_isolation ON storage.document_versions
+  USING (tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid)
+  WITH CHECK (tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid);
+
+DROP POLICY IF EXISTS document_acl_tenant_isolation ON storage.document_acl;
+CREATE POLICY document_acl_tenant_isolation ON storage.document_acl
+  USING (tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid)
+  WITH CHECK (tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid);

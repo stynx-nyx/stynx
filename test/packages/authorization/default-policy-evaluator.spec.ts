@@ -1,4 +1,4 @@
-import { DefaultPolicyEvaluator } from '../../../packages/stynx-backend/src/authorization/default-policy-evaluator';
+import { DefaultPolicyEvaluator } from '../../../packages/backend/src/authorization/default-policy-evaluator';
 
 describe('DefaultPolicyEvaluator', () => {
   const evaluator = new DefaultPolicyEvaluator();

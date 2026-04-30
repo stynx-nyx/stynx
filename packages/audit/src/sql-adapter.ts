@@ -1,4 +1,4 @@
-import type { AuditEventEnvelope, AuditSink } from '@stech/stynx-contracts';
+import type { AuditEventEnvelope, AuditSink } from '@stynx/contracts';
 
 export interface SqlExecutor {
   query(sql: string, params?: unknown[]): Promise<unknown>;

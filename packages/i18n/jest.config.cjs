@@ -7,5 +7,6 @@ module.exports = {
     '^@stynx/core$': '<rootDir>/../core/src/index.ts',
     '^@stynx/data$': '<rootDir>/../data/src/index.ts',
     '^@stynx/i18n$': '<rootDir>/src/index.ts',
+    '^intl-messageformat$': '<rootDir>/test/support/intl-messageformat.stub.ts',
   },
 };

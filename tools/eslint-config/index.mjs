@@ -1,17 +1,59 @@
 import js from '@eslint/js';
 import { existsSync } from 'node:fs';
+import { dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import boundariesPlugin from 'eslint-plugin-boundaries';
+import jsdocPlugin from 'eslint-plugin-jsdoc';
 import globals from 'globals';
 import tsParser from '@typescript-eslint/parser';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
 
 const currentPackageName = () => process.env.npm_package_name ?? '';
+const workspaceRoot = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 
 const deepImportPatterns = [
   {
-    group: ['@stynx/*/*', '@stynx-web/*/*', '@stech/stynx-*/*'],
+    group: ['@stynx/*/*', '@stynx-web/*/*'],
     message: 'Use barrel imports only; deep imports between workspace packages are forbidden.',
   },
 ];
+
+const pgImportPaths = ['pg', 'pg-pool', 'pg-native', 'node-postgres'].map((name) => ({
+  name,
+  message: 'Raw PostgreSQL imports are only allowed inside @stynx/data and @stynx/cli.',
+}));
+
+const s3ImportPatterns = [
+  {
+    group: ['@aws-sdk/client-s3*'],
+    message: 'Direct S3 SDK imports are only allowed inside @stynx/storage.',
+  },
+];
+
+const boundaryElements = [
+  { type: 'core', pattern: 'packages/core/src/**' },
+  { type: 'contracts', pattern: 'packages/contracts/src/**' },
+  { type: 'foundation', pattern: 'packages/{tenancy,logging,health}/src/**' },
+  { type: 'data', pattern: 'packages/data/src/**' },
+  { type: 'sessions', pattern: 'packages/sessions/src/**' },
+  { type: 'auth', pattern: 'packages/auth/src/**' },
+  { type: 'platform', pattern: 'packages/{audit,storage,ratelimit,idempotency,backend}/src/**' },
+  { type: 'experience', pattern: 'packages/{privacy,i18n}/src/**' },
+  { type: 'tooling', pattern: 'packages/{testing,cli}/src/**' },
+  { type: 'web', pattern: 'packages-web/*/src/**' },
+  { type: 'app', pattern: 'apps/*/src/**' },
+];
+
+const tsdocPackages = new Set([
+  '@stynx/core',
+  '@stynx/auth',
+  '@stynx/data',
+  '@stynx/storage',
+  '@stynx/audit',
+  '@stynx/sessions',
+  '@stynx/tenancy',
+  '@stynx/privacy',
+]);
 
 const writeRouteDecoratorNames = new Set(['Post', 'Put', 'Patch']);
 const idempotencyDecoratorNames = new Set(['Idempotent', 'NoIdempotent']);
@@ -45,6 +87,39 @@ function collectDecoratorNames(node) {
 
 const stynxPlugin = {
   rules: {
+    'require-package-index-tsdoc': {
+      meta: {
+        type: 'suggestion',
+        docs: {
+          description: 'Require package barrel files to carry package-level TSDoc.',
+        },
+        schema: [],
+        messages: {
+          missingPackageDocs:
+            'Package public barrel must start with a TSDoc @packageDocumentation block.',
+        },
+      },
+      create(context) {
+        return {
+          Program(node) {
+            const sourceCode = context.sourceCode;
+            const firstComment = sourceCode.getAllComments()[0];
+            if (
+              firstComment?.type === 'Block' &&
+              firstComment.value.includes('*') &&
+              firstComment.value.includes('@packageDocumentation')
+            ) {
+              return;
+            }
+
+            context.report({
+              node,
+              messageId: 'missingPackageDocs',
+            });
+          },
+        };
+      },
+    },
     'require-idempotent-route-decorator': {
       meta: {
         type: 'suggestion',
@@ -94,26 +169,20 @@ const sharedTypescriptRules = {
   'no-undef': 'off',
   '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
   '@typescript-eslint/no-misused-promises': ['error', { checksVoidReturn: false }],
-  'no-restricted-imports': ['error', { patterns: deepImportPatterns }],
 };
 
-const pgPoolRule = (allow) => allow
-  ? {}
-  : {
-      'no-restricted-imports': [
-        'error',
-        {
-          patterns: deepImportPatterns,
-          paths: [
-            {
-              name: 'pg',
-              importNames: ['Pool'],
-              message: 'Import pg.Pool only inside @stynx/data.',
-            },
-          ],
-        },
+const restrictedImportsRule = ({ allowPgImports, allowS3Imports }) => ({
+  'no-restricted-imports': [
+    'error',
+    {
+      patterns: [
+        ...deepImportPatterns,
+        ...(allowS3Imports ? [] : s3ImportPatterns),
       ],
-    };
+      paths: allowPgImports ? [] : pgImportPaths,
+    },
+  ],
+});
 
 const s3FetchRule = (allow) => allow
   ? {}
@@ -155,12 +224,34 @@ const createConfig = ({ files, tsconfig = './tsconfig.json', browser = false, ne
     },
     plugins: {
       '@typescript-eslint': tsPlugin,
+      boundaries: boundariesPlugin,
+      jsdoc: jsdocPlugin,
       stynx: stynxPlugin,
+    },
+    settings: {
+      'boundaries/root-path': workspaceRoot,
+      'boundaries/elements': boundaryElements,
     },
     rules: {
       ...sharedTypescriptRules,
-      ...pgPoolRule(allowPgPool || currentPackageName() === '@stynx/data'),
+      ...restrictedImportsRule({
+        allowPgImports: allowPgPool || ['@stynx/data', '@stynx/cli'].includes(currentPackageName()),
+        allowS3Imports: currentPackageName() === '@stynx/storage',
+      }),
       ...s3FetchRule(allowS3Fetch || currentPackageName() === '@stynx/storage'),
+      'boundaries/dependencies': [
+        'error',
+        {
+          default: 'allow',
+          rules: [
+            {
+              from: { type: '*' },
+              disallow: { to: { type: '*', internalPath: 'internal/**' } },
+              message: 'Internal workspace modules may only be imported by their owning package.',
+            },
+          ],
+        },
+      ],
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',
@@ -181,6 +272,27 @@ const createConfig = ({ files, tsconfig = './tsconfig.json', browser = false, ne
             'stynx/require-idempotent-route-decorator': 'warn',
           }
         : {}),
+    },
+  },
+  {
+    files: ['src/index.ts'],
+    rules: tsdocPackages.has(currentPackageName())
+      ? {
+          'jsdoc/require-jsdoc': [
+            'error',
+            {
+              contexts: ['ExportAllDeclaration', 'ExportNamedDeclaration'],
+              publicOnly: true,
+            },
+          ],
+          'stynx/require-package-index-tsdoc': 'error',
+        }
+      : {},
+  },
+  {
+    files: ['**/*.spec.ts', '**/*.test.ts', 'test/**/*.ts'],
+    rules: {
+      'no-restricted-imports': 'off',
     },
   },
 ];

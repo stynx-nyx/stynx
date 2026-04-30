@@ -1,5 +1,5 @@
-import { ClaimFirstTenantEntitlementPolicy } from '../../../packages/stynx-backend/src/auth/claim-first-tenant-entitlement.policy';
-import { SqlTenantEntitlementFallback } from '../../../packages/stynx-backend/src/auth/sql-tenant-entitlement.fallback';
+import { ClaimFirstTenantEntitlementPolicy } from '../../../packages/backend/src/auth/claim-first-tenant-entitlement.policy';
+import { SqlTenantEntitlementFallback } from '../../../packages/backend/src/auth/sql-tenant-entitlement.fallback';
 
 const principalBase = {
   id: 'user-1',

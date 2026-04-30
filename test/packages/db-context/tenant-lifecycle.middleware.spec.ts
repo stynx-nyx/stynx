@@ -3,8 +3,8 @@ import {
   createTenantLifecycleMiddleware,
   TenantLifecycleMiddleware,
   type TenantLifecycleNext,
-} from '../../../packages/stynx-backend/src/db-context/tenant-lifecycle.middleware';
-import type { ResponseLike } from '../../../packages/stynx-backend/src/db-context/request-db-client-lifecycle';
+} from '../../../packages/backend/src/db-context/tenant-lifecycle.middleware';
+import type { ResponseLike } from '../../../packages/backend/src/db-context/request-db-client-lifecycle';
 
 function createResponseStub() {
   const listeners: Record<'finish' | 'close', Array<() => void>> = {

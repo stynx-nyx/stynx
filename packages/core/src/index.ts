@@ -1,3 +1,8 @@
+/**
+ * Public core runtime exports for request context, configuration, errors, and secrets.
+ *
+ * @packageDocumentation
+ */
 export * from './core.module';
 export * from './config';
 export * from './database';

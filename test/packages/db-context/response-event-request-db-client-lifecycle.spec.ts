@@ -1,7 +1,7 @@
 import {
   ResponseEventRequestDbClientLifecycle,
   type ResponseLike,
-} from '../../../packages/stynx-backend/src/db-context/request-db-client-lifecycle';
+} from '../../../packages/backend/src/db-context/request-db-client-lifecycle';
 
 function createResponseStub() {
   const listeners: Record<'finish' | 'close', Array<() => void>> = {

@@ -1,6 +1,6 @@
 import { URL } from 'node:url';
 import type { JWTPayload, JWTVerifyGetKey } from 'jose';
-import type { AuthVerificationResult, Principal, TokenVerifier } from '@stech/stynx-contracts';
+import type { AuthVerificationResult, Principal, TokenVerifier } from '@stynx/contracts';
 
 export interface CognitoTokenVerifierOptions {
   issuer: string;

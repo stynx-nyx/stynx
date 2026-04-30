@@ -22,6 +22,24 @@ export class StynxMetricsService {
     labelNames: ['method', 'route', 'status', 'tenant_tier'] as const,
     registers: [this.registry],
   });
+  readonly httpRequestsTotal = new Counter({
+    name: 'http_requests_total',
+    help: 'HTTP request count compatibility alias',
+    labelNames: ['method', 'route', 'status', 'tenant_tier'] as const,
+    registers: [this.registry],
+  });
+  readonly dbQueryDuration = new Histogram({
+    name: 'db_query_duration_seconds',
+    help: 'Database query duration',
+    labelNames: ['op'] as const,
+    registers: [this.registry],
+  });
+  readonly auditEventsTotal = new Counter({
+    name: 'audit_events_total',
+    help: 'Audit events emitted',
+    labelNames: ['entity', 'operation'] as const,
+    registers: [this.registry],
+  });
   readonly dbPoolInUse = new Gauge({
     name: 'db_pool_in_use',
     help: 'Database pool in use',

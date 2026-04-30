@@ -1,5 +1,5 @@
-import type { FetchLike, HttpRequestInitLike, HttpResponseLike } from '@stech/stynx-frontend-contracts';
-import { ApiClientError, FrontendSessionManager, InMemoryTokenStore, StynxApiClient } from '@stech/stynx-frontend-client';
+import type { FetchLike, HttpRequestInitLike, HttpResponseLike } from '@stynx-web/sdk';
+import { ApiClientError, FrontendSessionManager, InMemoryTokenStore, StynxApiClient } from '@stynx-web/sdk';
 
 const encodeBase64Url = (value: string): string => {
   return Buffer.from(value, 'utf-8')

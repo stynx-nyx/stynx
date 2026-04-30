@@ -95,5 +95,5 @@ test('cli emits fix suggestions when requested', async () => {
 
 test('repo migrations lint without parser errors', async () => {
   const result = await lintSqlTarget(join(repoRoot, 'packages', 'data', 'migrations'));
-  assert.equal(result.parserIssues.length, 0);
+  assert.equal(result.parserIssues.length, 0, JSON.stringify(result.parserIssues, null, 2));
 });

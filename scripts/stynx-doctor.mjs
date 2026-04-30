@@ -4,6 +4,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 const rootDir = process.cwd();
+const jsonOutput = process.argv.includes('--json') || !process.stdout.isTTY;
 const checks = [];
 const todoPermissionSentinel = 'TODO' + '_PERMISSION';
 
@@ -52,6 +53,62 @@ runCheck('rls-smoke', () => {
   });
   if (result.status !== 0) {
     throw new Error('scripts/check-rls-smoke.sh failed');
+  }
+});
+
+runCheck('engine-version', () => {
+  const result = spawnSync('node', ['scripts/check-engines.mjs'], {
+    cwd: rootDir,
+    stdio: jsonOutput ? 'pipe' : 'inherit',
+    env: process.env,
+    encoding: 'utf8',
+  });
+  if (result.status !== 0) {
+    throw new Error((result.stderr || result.stdout || 'scripts/check-engines.mjs failed').trim());
+  }
+});
+
+runCheck('migration-linter', () => {
+  const result = spawnSync('pnpm', ['lint:migrations'], {
+    cwd: rootDir,
+    stdio: jsonOutput ? 'pipe' : 'inherit',
+    env: process.env,
+    encoding: 'utf8',
+  });
+  if (result.status !== 0) {
+    throw new Error((result.stderr || result.stdout || 'pnpm lint:migrations failed').trim());
+  }
+});
+
+runCheck('object-operations-through-storage', () => {
+  const offenders = [];
+  for (const scope of ['apps', 'backend', 'frontend', 'packages', 'packages-web']) {
+    const scopePath = join(rootDir, scope);
+    try {
+      statSync(scopePath);
+    } catch {
+      continue;
+    }
+    walk(scopePath, (fullPath, relativePath) => {
+      if (!/\.(?:cjs|cts|js|mjs|mts|ts)$/.test(relativePath)) {
+        return;
+      }
+      if (
+        relativePath.startsWith('packages/storage/') ||
+        relativePath.includes('/test/') ||
+        relativePath.endsWith('.spec.ts')
+      ) {
+        return;
+      }
+      const content = readFileSync(fullPath, 'utf8');
+      if (content.includes('@aws-sdk/client-s3')) {
+        offenders.push(relativePath);
+      }
+    });
+  }
+
+  if (offenders.length > 0) {
+    throw new Error(`Direct S3 imports outside @stynx/storage:\n${offenders.join('\n')}`);
   }
 });
 
@@ -120,17 +177,26 @@ runCheck('reference-api-runtime-suite', () => {
 });
 
 const failures = checks.filter((check) => !check.ok);
-for (const check of checks) {
-  if (check.ok) {
-    console.log(`[doctor][ok] ${check.name}`);
-    continue;
+if (jsonOutput) {
+  console.log(JSON.stringify({
+    ok: failures.length === 0,
+    checks,
+  }, null, 2));
+} else {
+  for (const check of checks) {
+    if (check.ok) {
+      console.log(`[doctor][ok] ${check.name}`);
+      continue;
+    }
+    console.error(`[doctor][fail] ${check.name}`);
+    console.error(check.message);
   }
-  console.error(`[doctor][fail] ${check.name}`);
-  console.error(check.message);
 }
 
 if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log(`[doctor] ${checks.length} checks passed`);
+if (!jsonOutput) {
+  console.log(`[doctor] ${checks.length} checks passed`);
+}

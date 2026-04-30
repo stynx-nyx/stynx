@@ -1,3 +1,8 @@
+/**
+ * Public LGPD privacy exports for PII maps, erasure workflows, ROPA, and object storage.
+ *
+ * @packageDocumentation
+ */
 export * from './errors';
 export * from './pii-map.service';
 export * from './privacy.controller';

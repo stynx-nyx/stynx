@@ -1,7 +1,7 @@
 import type { ExecutionContext } from '@nestjs/common';
 import { HttpException, ServiceUnavailableException } from '@nestjs/common';
-import { RateLimitGuard } from '../../../packages/stynx-backend/src/rate-limit/rate-limit.guard';
-import type { RateLimitStore } from '../../../packages/stynx-backend/src/rate-limit/types';
+import { RateLimitGuard } from '../../../packages/backend/src/rate-limit/rate-limit.guard';
+import type { RateLimitStore } from '../../../packages/backend/src/rate-limit/types';
 
 function createExecutionContext(request: Record<string, unknown>): ExecutionContext {
   return {

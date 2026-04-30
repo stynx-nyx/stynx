@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } f
 import { Permission, ReadOnly, StynxAuthGuard, PermissionGuard } from '@stynx/auth';
 import { Idempotent } from '@stynx/idempotency';
 import { RateLimit } from '@stynx/ratelimit';
-import { Audit } from '@stech/stynx-backend';
+import { Audit } from '@stynx/backend';
 import type { CreateRecordNoteDto, ListQuery, UpdateRecordNoteDto } from './dto';
 import { ReferenceSampleService } from './reference-sample.service';
 

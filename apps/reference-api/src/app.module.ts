@@ -12,7 +12,7 @@ import {
   StynxPlatformPipelineModule,
   AuditInterceptor,
   STYNX_AUDIT_SINK,
-} from '@stech/stynx-backend';
+} from '@stynx/backend';
 import { Database, StynxDataModule } from '@stynx/data';
 import { StynxHealthModule } from '@stynx/health';
 import { StynxLoggingModule } from '@stynx/logging';
@@ -183,6 +183,7 @@ async function runReferenceApiMigrations(
       },
       cognito: {
         issuer: env('STYNX_COGNITO_ISSUER', 'https://cognito.local'),
+        ...(process.env.STYNX_COGNITO_JWKS_URI ? { jwksUri: process.env.STYNX_COGNITO_JWKS_URI } : {}),
       },
       ...(process.env.STYNX_REDIS_URL
         ? {

@@ -1,8 +1,8 @@
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
 import { of, lastValueFrom } from 'rxjs';
-import { AuditInterceptor } from '../../../packages/stynx-backend/src/audit/audit.interceptor';
-import { PatternAuditMetadataRedactionPolicy } from '../../../packages/stynx-backend/src/audit/redaction-policy';
-import type { AuditMetadata } from '../../../packages/stynx-backend/src/audit/decorators';
+import { AuditInterceptor } from '../../../packages/backend/src/audit/audit.interceptor';
+import { PatternAuditMetadataRedactionPolicy } from '../../../packages/backend/src/audit/redaction-policy';
+import type { AuditMetadata } from '../../../packages/backend/src/audit/decorators';
 
 function createExecutionContext(request: Record<string, unknown>): ExecutionContext {
   return {

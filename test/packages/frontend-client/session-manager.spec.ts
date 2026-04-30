@@ -1,4 +1,4 @@
-import { FrontendSessionManager, InMemoryTokenStore } from '@stech/stynx-frontend-client';
+import { FrontendSessionManager, InMemoryTokenStore } from '@stynx-web/sdk';
 
 const encodeBase64Url = (value: string): string => {
   return Buffer.from(value, 'utf-8')

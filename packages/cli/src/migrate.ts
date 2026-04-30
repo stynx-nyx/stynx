@@ -93,6 +93,13 @@ async function appliedMigrationIds(client: MigrationClient): Promise<string[]> {
   return (appliedRows.rows as Array<{ id: string }>).map((row) => row.id);
 }
 
+async function promoteBootstrapObjectsToOwner(client: MigrationClient): Promise<void> {
+  await client.query('ALTER SCHEMA core OWNER TO stynx_owner');
+  await client.query('ALTER TABLE core.schema_migrations OWNER TO stynx_owner');
+  await client.query('ALTER TABLE core.schema_migration_journal OWNER TO stynx_owner');
+  await client.query('SET ROLE stynx_owner');
+}
+
 async function latestAppliedIds(client: MigrationClient, limit: number): Promise<string[]> {
   const result = await client.query(
     `
@@ -180,11 +187,18 @@ export async function migrateUp(
     const specs = listMigrationSpecs(rootDir, options);
     const applied = new Set(await appliedMigrationIds(client));
     const pending = specs.filter((spec) => !applied.has(spec.id));
+    const ownerRoleApplied = applied.has('0002_extensions.sql');
     if (dryRun) {
       return pending.map((spec) => spec.id);
     }
+    if (ownerRoleApplied) {
+      await promoteBootstrapObjectsToOwner(client);
+    }
     for (const spec of pending) {
       await applyMigrationUp(client, spec);
+      if (spec.id === '0002_extensions.sql') {
+        await promoteBootstrapObjectsToOwner(client);
+      }
     }
     return pending.map((spec) => spec.id);
   });

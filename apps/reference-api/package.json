@@ -12,13 +12,14 @@
     "start": "node dist/apps/reference-api/src/main.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
-    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config ./jest.config.cjs"
+    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config ./jest.config.cjs",
+    "test:int": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config ./jest.config.cjs --runTestsByPath test/integration/reference-api.runtime.spec.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.19",
     "@nestjs/core": "^11.1.19",
     "@nestjs/platform-express": "^11.1.19",
-    "@stech/stynx-backend": "workspace:*",
+    "@stynx/backend": "workspace:*",
     "@stynx/audit": "workspace:*",
     "@stynx/auth": "workspace:*",
     "@stynx/core": "workspace:*",

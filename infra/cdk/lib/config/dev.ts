@@ -6,6 +6,8 @@ export const dev: EnvConfig = {
   region: 'sa-east-1',
   ownerTeam: 'platform',
   domain: 'dev.api.example.test',
+  hostedZoneId: 'ZDEVEXAMPLETEST',
+  hostedZoneName: 'example.test',
   certArn: 'arn:aws:acm:sa-east-1:111111111111:certificate/dev-placeholder',
   alarmRecipients: ['devops@example.test'],
   vpc: {

@@ -6,7 +6,7 @@ import { RequestContextMutator } from '@stynx/core';
 import { Database } from '@stynx/data';
 import { Idempotent } from '@stynx/idempotency';
 import { RateLimit, STYNX_RATE_LIMIT_STORE, type RateLimitStore } from '@stynx/ratelimit';
-import { Audit } from '@stech/stynx-backend';
+import { Audit } from '@stynx/backend';
 
 interface ResponseLike {
   setHeader(name: string, value: string): void;

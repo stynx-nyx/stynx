@@ -19,6 +19,7 @@ export const options = {
   },
   thresholds: {
     storage_presign_duration_ms: [`p(99)<${storagePresignP99Ms}`],
+    http_req_duration: ['p(95)<1000'],
     http_req_failed: ['rate<0.02'],
   },
 };

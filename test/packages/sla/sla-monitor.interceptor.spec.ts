@@ -5,8 +5,8 @@ import type {
   SlaCategoryResolver,
   SlaEventSink,
   SlaSampleEvent,
-} from '../../../packages/stynx-backend/src/sla/types';
-import { SlaMonitorInterceptor } from '../../../packages/stynx-backend/src/sla/sla-monitor.interceptor';
+} from '../../../packages/backend/src/sla/types';
+import { SlaMonitorInterceptor } from '../../../packages/backend/src/sla/sla-monitor.interceptor';
 
 function createExecutionContext(request: Record<string, unknown>): ExecutionContext {
   return {

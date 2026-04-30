@@ -1,3 +1,8 @@
+/**
+ * Public authentication, authorization, permission-cache, and Cognito exports.
+ *
+ * @packageDocumentation
+ */
 export * from './cognito-token-verifier';
 export * from './cognito-admin.adapter';
 export * from './actor-context.interceptor';

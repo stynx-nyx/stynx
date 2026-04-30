@@ -44,5 +44,8 @@ describe('@stynx-web/angular-sessions', () => {
     await component.revoke('sid-other');
     expect(adapter.revoke).toHaveBeenCalledWith('sid-other');
     expect(component.sessions).toHaveLength(1);
+
+    await component.revokeOthers();
+    expect(adapter.revokeOthers).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,7 +1,7 @@
 import {
   PecIdentityAdminFacade,
   PormIdentityAdminFacade,
-} from '../../../packages/stynx-backend/src/identity-admin/integration-facades';
+} from '../../../packages/backend/src/identity-admin/integration-facades';
 
 function createIdentityAdminServiceStub() {
   return {

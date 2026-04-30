@@ -28,7 +28,6 @@ jobs:
         with:
           version: ${{ env.PNPM_VERSION }}
           run_install: false
-
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -36,15 +35,16 @@ jobs:
           cache-dependency-path: |
             pnpm-lock.yaml
             package.json
-            backend/package.json
-            bootstrap/package.json
-            frontend/package.json
-            test/backend/package.json
-            test/db/package.json
-            test/packages/package.json
-            test/scripts/package.json
+            pnpm-workspace.yaml
+            apps/*/package.json
+            docs/package.json
+            packages/*/package.json
+            packages-web/*/package.json
+            tools/*/package.json
       - name: Install workspace dependencies
         run: pnpm install --frozen-lockfile
+      - name: Check runtime engines
+        run: pnpm check:engines
 
   lint:
     name: lint
@@ -56,7 +56,6 @@ jobs:
         with:
           version: ${{ env.PNPM_VERSION }}
           run_install: false
-
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -64,36 +63,23 @@ jobs:
           cache-dependency-path: |
             pnpm-lock.yaml
             package.json
-            backend/package.json
-            bootstrap/package.json
-            frontend/package.json
-            test/backend/package.json
-            test/db/package.json
-            test/packages/package.json
-            test/scripts/package.json
+            pnpm-workspace.yaml
+            apps/*/package.json
+            docs/package.json
+            packages/*/package.json
+            packages-web/*/package.json
+            tools/*/package.json
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      - name: Lint workspace and legacy surfaces
-        run: |
-          pnpm lint
-          pnpm --dir backend lint
-          pnpm --dir bootstrap lint
-          pnpm --dir frontend lint
-          pnpm --dir test/backend lint
-          pnpm --dir test/db lint
-          pnpm --dir test/packages lint
-          pnpm --dir test/scripts lint
-
-      - name: Dead-code gate (knip)
+      - name: Lint workspace
+        run: pnpm lint
+      - name: Dead-code gate
         run: pnpm lint:deadcode
-
-      - name: Orphaned-dependency gate (depcheck)
+      - name: Orphaned-dependency gate
         run: pnpm lint:deps
-
       - name: Reject unresolved adopt permission sentinels
         run: |
-          if rg -n "TODO_PERMISSION" apps packages packages-web backend frontend bootstrap test; then
+          if rg -n "TODO_PERMISSION" apps packages packages-web tools infra/cdk/bin infra/cdk/lib infra/cdk/test; then
             echo "Unresolved TODO_PERMISSION sentinel found in source surfaces"
             exit 1
           fi
@@ -108,7 +94,6 @@ jobs:
         with:
           version: ${{ env.PNPM_VERSION }}
           run_install: false
-
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -116,33 +101,27 @@ jobs:
           cache-dependency-path: |
             pnpm-lock.yaml
             package.json
-            backend/package.json
-            bootstrap/package.json
-            frontend/package.json
-            test/backend/package.json
-            test/db/package.json
-            test/packages/package.json
-            test/scripts/package.json
+            pnpm-workspace.yaml
+            apps/*/package.json
+            docs/package.json
+            packages/*/package.json
+            packages-web/*/package.json
+            tools/*/package.json
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
       - name: Typecheck workspace
         run: pnpm typecheck
 
-      - name: Typecheck bootstrap surface
-        run: pnpm bootstrap:typecheck
-
-  unit-tests:
-    name: unit-tests
+  lint-cycles:
+    name: lint:cycles
     runs-on: ubuntu-latest
-    needs: typecheck
+    needs: lint
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v5
         with:
           version: ${{ env.PNPM_VERSION }}
           run_install: false
-
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -150,39 +129,71 @@ jobs:
           cache-dependency-path: |
             pnpm-lock.yaml
             package.json
-            backend/package.json
-            bootstrap/package.json
-            frontend/package.json
-            test/backend/package.json
-            test/db/package.json
-            test/packages/package.json
-            test/scripts/package.json
+            pnpm-workspace.yaml
+            apps/*/package.json
+            docs/package.json
+            packages/*/package.json
+            packages-web/*/package.json
+            tools/*/package.json
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Reject circular dependencies
+        run: pnpm lint:cycles
 
-      - name: Run unit test suites with coverage
-        run: pnpm test:unit:cov
-
-      - name: Upload backend coverage
-        uses: actions/upload-artifact@v7
+  migration-lint:
+    name: migration-lint
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v5
         with:
-          name: coverage-backend
-          path: test/backend/coverage
-          if-no-files-found: error
-
-      - name: Upload frontend coverage
-        uses: actions/upload-artifact@v7
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+      - uses: actions/setup-node@v6
         with:
-          name: coverage-frontend
-          path: test/frontend/coverage
-          if-no-files-found: error
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            package.json
+            pnpm-workspace.yaml
+            tools/migration-linter/package.json
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Lint SQL migrations
+        run: pnpm lint:migrations
 
-      - name: Upload package coverage
-        uses: actions/upload-artifact@v7
+  unit-tests:
+    name: unit-tests
+    runs-on: ubuntu-latest
+    needs:
+      - typecheck
+      - lint-cycles
+      - migration-lint
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v5
         with:
-          name: coverage-packages
-          path: test/packages/coverage
-          if-no-files-found: error
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            package.json
+            pnpm-workspace.yaml
+            apps/*/package.json
+            docs/package.json
+            packages/*/package.json
+            packages-web/*/package.json
+            tools/*/package.json
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Run unit tests
+        run: pnpm test
 
   integration-tests:
     name: integration-tests
@@ -211,7 +222,6 @@ jobs:
         with:
           version: ${{ env.PNPM_VERSION }}
           run_install: false
-
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -219,34 +229,28 @@ jobs:
           cache-dependency-path: |
             pnpm-lock.yaml
             package.json
-            backend/package.json
-            bootstrap/package.json
-            frontend/package.json
-            test/backend/package.json
-            test/db/package.json
-            test/packages/package.json
-            test/scripts/package.json
+            pnpm-workspace.yaml
+            apps/*/package.json
+            docs/package.json
+            packages/*/package.json
+            packages-web/*/package.json
+            tools/*/package.json
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
       - name: Install postgres client
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
-
+      - name: Apply platform migrations for runtime verification
+        run: |
+          pnpm --filter @stynx/cli build
+          node packages/cli/dist/cli/src/main.js migrate up --database-url "${DATABASE_URL}"
+      - name: Verify migrated database structure
+        run: pnpm db:verify
       - name: Apply database DDL and seeds
         run: bash scripts/db-reset.sh --database-url "${DATABASE_URL}"
-
       - name: Run RLS smoke check against live database
         run: pnpm check:rls-smoke
-
-      - name: Run integration test suite with coverage
-        run: pnpm test:int:cov
-
-      - name: Upload db coverage
-        uses: actions/upload-artifact@v7
-        with:
-          name: coverage-db
-          path: test/db/coverage
-          if-no-files-found: error
+      - name: Run integration tests
+        run: pnpm test:int
 
   build:
     name: build (${{ matrix.os }})
@@ -264,7 +268,6 @@ jobs:
         with:
           version: ${{ env.PNPM_VERSION }}
           run_install: false
-
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -272,22 +275,16 @@ jobs:
           cache-dependency-path: |
             pnpm-lock.yaml
             package.json
-            backend/package.json
-            bootstrap/package.json
-            frontend/package.json
-            test/backend/package.json
-            test/db/package.json
-            test/packages/package.json
-            test/scripts/package.json
+            pnpm-workspace.yaml
+            apps/*/package.json
+            docs/package.json
+            packages/*/package.json
+            packages-web/*/package.json
+            tools/*/package.json
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      - name: Build workspace and legacy apps
-        run: |
-          pnpm build
-          pnpm --dir bootstrap build
-          pnpm --dir backend build
-          pnpm --dir frontend build
+      - name: Build workspace
+        run: pnpm build
 
   doctor:
     name: doctor
@@ -299,7 +296,6 @@ jobs:
         with:
           version: ${{ env.PNPM_VERSION }}
           run_install: false
-
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -307,16 +303,14 @@ jobs:
           cache-dependency-path: |
             pnpm-lock.yaml
             package.json
-            backend/package.json
-            bootstrap/package.json
-            frontend/package.json
-            test/backend/package.json
-            test/db/package.json
-            test/packages/package.json
-            test/scripts/package.json
+            pnpm-workspace.yaml
+            apps/*/package.json
+            docs/package.json
+            packages/*/package.json
+            packages-web/*/package.json
+            tools/*/package.json
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
       - name: Run doctor
         run: pnpm doctor
 
@@ -331,7 +325,6 @@ jobs:
         with:
           version: ${{ env.PNPM_VERSION }}
           run_install: false
-
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -339,26 +332,15 @@ jobs:
           cache-dependency-path: |
             pnpm-lock.yaml
             package.json
-            apps/reference-api/package.json
-            apps/reference-web/package.json
-            packages-web/angular/package.json
-            packages-web/angular-auth/package.json
-            packages-web/angular-i18n/package.json
-            packages-web/angular-profile/package.json
-            packages-web/angular-sessions/package.json
-            packages-web/angular-storage/package.json
-            packages-web/angular-trash/package.json
-            packages-web/angular-ui/package.json
-            packages-web/sdk/package.json
+            pnpm-workspace.yaml
+            apps/*/package.json
+            packages-web/*/package.json
       - name: Install workspace dependencies
         run: pnpm install --frozen-lockfile
-
       - name: Install Playwright Chromium
         run: pnpm --filter @stynx/reference-web exec playwright install --with-deps chromium
-
       - name: Start reference API stack
         run: docker compose -f apps/reference-api/docker-compose.yml up -d --build
-
       - name: Wait for reference API health gates
         run: |
           set -euo pipefail
@@ -375,12 +357,10 @@ jobs:
               sleep 2
             done
           done
-
       - name: Run reference web E2E
         env:
           CI: 'true'
         run: pnpm --filter @stynx/reference-web test:e2e
-
       - name: Upload Playwright artifacts
         if: failure()
         uses: actions/upload-artifact@v7
@@ -390,7 +370,6 @@ jobs:
             apps/reference-web/test-results
             apps/reference-web/playwright-report
           if-no-files-found: ignore
-
       - name: Stop reference API stack
         if: always()
         run: docker compose -f apps/reference-api/docker-compose.yml down -v

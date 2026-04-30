@@ -15,8 +15,8 @@
     "resolveJsonModule": true,
     "sourceMap": true,
     "paths": {
-      "@stech/stynx-backend": ["../../packages/stynx-backend/src/index.ts"],
-      "@stech/stynx-contracts": ["../../packages/stynx-contracts/src/index.ts"],
+      "@stynx/backend": ["../../packages/backend/src/index.ts"],
+      "@stynx/contracts": ["../../packages/contracts/src/index.ts"],
       "@stynx/auth": ["../../packages/auth/src/index.ts"],
       "@stynx/audit": ["../../packages/audit/src/index.ts"],
       "@stynx/cli": ["../../packages/cli/src/index.ts"],
@@ -36,6 +36,7 @@
       "@stynx/reference-web": ["../../apps/reference-web/src/main.ts"],
       "@stynx-web/sdk": ["../../packages-web/sdk/src/index.ts"],
       "@stynx-web/angular": ["../../packages-web/angular/src/index.ts"],
+      "@stynx-web/angular-tenancy": ["../../packages-web/angular-tenancy/src/index.ts"],
       "@stynx-web/angular-auth": ["../../packages-web/angular-auth/src/index.ts"],
       "@stynx-web/angular-ui": ["../../packages-web/angular-ui/src/index.ts"],
       "@stynx-web/angular-i18n": ["../../packages-web/angular-i18n/src/index.ts"],

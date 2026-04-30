@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@nestjs/schedule": "^6.1.3",
-    "@stech/stynx-contracts": "workspace:*",
+    "@stynx/contracts": "workspace:*",
     "@stynx/auth": "workspace:*",
     "@stynx/core": "workspace:*",
     "@stynx/data": "workspace:*",

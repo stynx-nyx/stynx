@@ -16,6 +16,7 @@
     "clean": "rm -rf dist coverage",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/lib.mjs \"src/**/*.ts\"",
+    "lint:repo": "pnpm run build && node dist/src/cli.js ../../packages/data/migrations",
     "test": "pnpm run build && node --test dist/test/migration-linter.spec.js"
   },
   "dependencies": {

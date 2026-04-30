@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS auth.users (
   updated_at timestamptz NOT NULL DEFAULT clock_timestamp()
 );
 
+-- @no_soft_delete: role rows are managed in place; deletions are controlled by membership cleanup.
 CREATE TABLE IF NOT EXISTS auth.roles (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id uuid REFERENCES tenancy.tenants(id) ON DELETE CASCADE,
@@ -22,6 +23,7 @@ CREATE TABLE IF NOT EXISTS auth.perms (
   description text
 );
 
+-- @no_soft_delete: memberships are deactivated with is_active and audited.
 CREATE TABLE IF NOT EXISTS auth.memberships (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL REFERENCES tenancy.tenants(id) ON DELETE CASCADE,
@@ -50,6 +52,7 @@ CREATE TABLE IF NOT EXISTS auth.direct_perms (
   effect text NOT NULL DEFAULT 'allow'
 );
 
+-- @no_soft_delete: groups are managed in place and cascaded through membership tables.
 CREATE TABLE IF NOT EXISTS auth.groups (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL REFERENCES tenancy.tenants(id) ON DELETE CASCADE,
@@ -72,6 +75,7 @@ CREATE TABLE IF NOT EXISTS auth.group_roles (
   PRIMARY KEY (group_id, role_id)
 );
 
+-- @no_soft_delete: sessions expire by partition retention and status changes.
 CREATE TABLE IF NOT EXISTS auth.sessions (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL REFERENCES tenancy.tenants(id) ON DELETE CASCADE,
@@ -99,6 +103,7 @@ BEGIN
 END
 $$;
 
+-- @no_soft_delete: invitations expire by status and expiry timestamp.
 CREATE TABLE IF NOT EXISTS auth.invitations (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL REFERENCES tenancy.tenants(id) ON DELETE CASCADE,
