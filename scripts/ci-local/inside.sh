@@ -232,10 +232,10 @@ job_install() {
 
 job_lint() {
   install_workspace_once
-  run pnpm lint:stynx
+  run pnpm lint
   run pnpm lint:deadcode
   run pnpm lint:deps
-  run pnpm lint:cycles:stynx
+  run pnpm lint:cycles
 
   log "Reject unresolved adopt permission sentinels"
   if rg -n "TODO""_PERMISSION" packages packages-web tools infra/cdk/bin infra/cdk/lib infra/cdk/test; then
@@ -246,13 +246,13 @@ job_lint() {
 
 job_typecheck() {
   install_workspace_once
-  run pnpm typecheck:stynx
+  run pnpm typecheck
 }
 
 job_unit() {
   local status=0
   install_workspace_once
-  run pnpm test:stynx || status=$?
+  run pnpm test || status=$?
   return "$status"
 }
 
@@ -302,7 +302,7 @@ job_integration() {
     run pnpm check:rls-smoke || status=$?
   fi
   if [[ "$status" -eq 0 ]]; then
-    run pnpm test:int:stynx || status=$?
+    run pnpm test:int || status=$?
   fi
 
   docker logs "$postgres_name" > "$artifact_dir/integration-postgres.log" 2>&1 || true
@@ -312,12 +312,12 @@ job_integration() {
 
 job_build() {
   install_workspace_once
-  run pnpm build:stynx
+  run pnpm build
 }
 
 job_doctor() {
   install_workspace_once
-  run pnpm doctor
+  run pnpm run doctor
 }
 
 job_reference_web_e2e() {

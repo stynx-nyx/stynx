@@ -6,10 +6,5 @@
   "files": [
     "*.json",
     "README.md"
-  ],
-  "scripts": {
-    "build": "node -e \"process.exit(0)\"",
-    "clean": "node -e \"process.exit(0)\"",
-    "typecheck": "node -e \"process.exit(0)\""
-  }
+  ]
 }

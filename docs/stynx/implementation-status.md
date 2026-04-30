@@ -110,9 +110,8 @@
   - `DefaultPolicyEvaluator` role/permission semantics.
   - `IdentityAdminService` error mapping and local-sync adapter delegation.
   - `stynx-auth-cognito-admin` env option builder and provider error mapping.
-- Added workspace scripts:
-  - `npm run test:packages`
-  - `npm run test` (aggregates db + package tests)
+- Added package test harnesses. Current root package tests run through
+  `pnpm test`.
 
 15. Reference frontend module + frontend libraries
 
@@ -264,7 +263,6 @@
   - `npm run typecheck` (workspace): success
   - `npm run build` (workspace): success
   - `npm run check:rls-smoke`: success
-  - `npm run test:db`: success
-  - `npm run test:packages`: success
+  - `npm run test`: success
   - `npm run test`: success
   - `cd backend && npm run build`: success

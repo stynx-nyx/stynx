@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 COMPOSE_FILE="$ROOT_DIR/apps/reference-api/docker-compose.yml"
 BASE_URL="${STYNX_SMOKE_BASE_URL:-http://127.0.0.1:3000}"
 DATABASE_URL="${STYNX_SMOKE_DATABASE_URL:-postgresql://postgres:postgres@127.0.0.1:5432/postgres}"

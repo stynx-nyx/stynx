@@ -2,9 +2,8 @@
 
 Prompt 37 release readiness is **closed** as of 2026-04-27 under the revised
 no-cloud-secret artifact scope. AWS/ECR push and Cosign signing are no longer
-Prompt 37 gates; the release-artifacts workflow now builds the reference images
-inside GitHub Actions and uploads Syft SBOMs plus Docker image metadata as
-reviewable artifacts.
+Prompt 37 gates; reference app image scans and SBOM generation are owned by the
+reference-app workflow instead of the STYNX package release lane.
 
 ## Implemented release-prep surfaces
 
@@ -25,10 +24,10 @@ reviewable artifacts.
   - reference web E2E lane
   - Trivy image scans
   - Syft SBOM generation
-- Release-artifacts GitHub Actions workflow:
-  - builds reference API and web images locally on the runner
-  - generates Syft SBOMs for both images
-  - uploads SBOMs and Docker image metadata as workflow artifacts
+- Reference-app image artifact checks:
+  - build reference API and web images locally on the runner
+  - run Trivy vulnerability scans
+  - generate and upload Syft SBOM artifacts
 - ADRs remain published in the docs site under `Architecture Decisions`.
 - The v1.1 planning issue template is staged under `.github/ISSUE_TEMPLATE/v1_1_planning.md`.
 

@@ -44,7 +44,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build publishable STYNX workspace packages
-        run: pnpm build:stynx
+        run: pnpm build
 
       - name: Run Changesets release flow
         uses: changesets/action@v1

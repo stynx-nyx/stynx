@@ -15,7 +15,7 @@ Jobs:
   unit                Run unit tests with coverage.
   integration         Run PostgreSQL-backed integration gates.
   build               Run the STYNX build commands.
-  doctor              Run pnpm doctor.
+  doctor              Run the STYNX doctor script.
   reference-web-e2e   Run the browser E2E gate from reference-apps.yml.
   docs                Run docs build:ci plus Lighthouse.
   browser             Run reference-web-e2e and docs.
@@ -40,6 +40,10 @@ USAGE
 }
 
 main() {
+  if [[ "${1:-}" == "--" ]]; then
+    shift
+  fi
+
   local job="${1:-browser}"
   if [[ "$job" == "-h" || "$job" == "--help" || "$job" == "help" ]]; then
     usage

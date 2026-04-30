@@ -62,7 +62,7 @@ These are below the high gate and are transitive or false-positive findings afte
 - `pnpm lint`: passed, 39 successful tasks
 - `pnpm lint:deadcode`: passed
 - `pnpm lint:deps`: passed
-- `pnpm test:unit`: passed
+- `pnpm test`: passed
 - `pnpm test:int`: passed
 - `npm_config_cache=/tmp/stynx-npm-cache npm audit --prefix infra/cdk --json`: passed with 0 vulnerabilities
 

@@ -27,8 +27,14 @@ function collectPublishablePackageNames(baseDir, matcher) {
 }
 
 const publishablePackages = new Set([
-  ...collectPublishablePackageNames('packages', (name) => typeof name === 'string' && name.startsWith('@stynx/')),
-  ...collectPublishablePackageNames('packages-web', (name) => typeof name === 'string' && name.startsWith('@stynx-web/')),
+  ...collectPublishablePackageNames(
+    'packages',
+    (name) => typeof name === 'string' && name.startsWith('@stynx/'),
+  ),
+  ...collectPublishablePackageNames(
+    'packages-web',
+    (name) => typeof name === 'string' && name.startsWith('@stynx-web/'),
+  ),
 ]);
 
 const releases = (Array.isArray(status.releases) ? status.releases : []).filter((release) =>
@@ -38,7 +44,7 @@ const releases = (Array.isArray(status.releases) ? status.releases : []).filter(
 rmSync(outDir, { recursive: true, force: true });
 mkdirSync(outDir, { recursive: true });
 
-const sanitize = (name) => name.replace(/^@/u, '').replace(/[\/]/gu, '-');
+const sanitize = (name) => name.replace(/^@/u, '').replace(/\//gu, '-');
 
 for (const release of releases) {
   const lines = [

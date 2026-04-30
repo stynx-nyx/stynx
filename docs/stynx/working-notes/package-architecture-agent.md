@@ -40,8 +40,8 @@ Scope: define concrete workspace/package changes for an installable `stynx` pack
 - `stynx/bootstrap/index.ts`
 - `stynx/bootstrap/lib/backend.ts`
 - `stynx/bootstrap/lib/frontend.ts`
-- `stynx/scripts/pipeline-stub.yml`
-- `stynx/scripts/backend-deploy.sh`
+- legacy deployment script inventory, since removed from the current runnable
+  surface
 - `stynx/README.md`
 - `stynx/docs/sys/architecture.md`
 - `stynx/docs/dev/conventions.md`
@@ -74,7 +74,8 @@ Scope: define concrete workspace/package changes for an installable `stynx` pack
 - `stynx/backend/src/core/storage/storage.service.ts`: storage metadata behavior is app-local and DB-coupled.
 - `stynx/bootstrap/lib/backend.ts` and `stynx/bootstrap/lib/frontend.ts`: build commands already depend on workspace semantics.
 - `stynx/backend/package.json` and `stynx/frontend/package.json`: private app manifests still define primary runtime scripts used by docs/CI.
-- `stynx/scripts/pipeline-stub.yml`: CI currently installs/builds per legacy directories (`backend`, `frontend`, `test/backend`, `test/frontend`).
+- Legacy CI/deploy stubs were removed; GitHub Actions and local CI preflight
+  own the current runnable command surface.
 - `stynx/test/frontend/jest.config.cjs`: hard references to `../../frontend/node_modules`, coupling test infra to legacy app folder.
 - `stynx/README.md`: install/run flow is still per-folder (`cd backend`, `cd frontend`, etc.), not package-family centric.
 

@@ -31,7 +31,7 @@ Each prompt is self-contained and can be re-run independently.
 All six gaps are closed when:
 
 - `pnpm build` passes across all affected packages
-- `pnpm test:unit` passes
+- `pnpm test` passes
 - `pnpm test:int` passes (requires PostgreSQL 16)
 - `pnpm lint` passes with zero warnings
 - `pnpm lint:deadcode` passes

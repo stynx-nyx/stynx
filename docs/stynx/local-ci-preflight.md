@@ -77,14 +77,14 @@ Run the local Linux CI sequence:
 scripts/ci-local/run.sh all-linux
 ```
 
-The root package scripts expose the same entrypoints:
+The root package exposes one local-CI entrypoint. Pass the job name after `--`:
 
 ```sh
-pnpm ci:local:stynx
-pnpm ci:local:stynx-release
-pnpm ci:local:reference-apps
-pnpm ci:local:browser
-pnpm ci:local:all-linux
+pnpm run ci:local -- stynx
+pnpm run ci:local -- stynx-release
+pnpm run ci:local -- reference-apps
+pnpm run ci:local -- browser
+pnpm run ci:local -- all-linux
 ```
 
 Set a lower free-space threshold only when intentionally debugging on a tight
@@ -124,8 +124,8 @@ This runner is intentionally a preflight tool, not release evidence.
 - The local Linux container does not reproduce the `macos-latest` build matrix
   leg from `ci.yml`.
 - Release publishing and GitHub Pages deployment still require their GitHub
-  workflows. Prompt 37 no longer requires AWS/ECR/Cosign secrets; Release
-  Artifacts builds local runner images and uploads SBOM/image metadata artifacts.
+  workflows. Reference-app image scans and SBOM artifacts are owned by
+  `reference-apps.yml`, not the STYNX package release lane.
 
 For faster Apple Silicon smoke tests, `CI_LOCAL_PLATFORM=linux/arm64` can be
 used, but that run has lower browser fidelity because Google Chrome stable is

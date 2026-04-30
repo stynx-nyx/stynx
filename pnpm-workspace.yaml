@@ -3,4 +3,5 @@ packages:
   - 'packages-web/*'
   - 'apps/*'
   - 'tools/*'
+  - 'test/*'
   - 'docs'

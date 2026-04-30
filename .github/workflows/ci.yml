@@ -40,6 +40,7 @@ jobs:
             docs/package.json
             packages/*/package.json
             packages-web/*/package.json
+            test/*/package.json
             tools/*/package.json
       - name: Install workspace dependencies
         run: pnpm install --frozen-lockfile
@@ -68,11 +69,12 @@ jobs:
             docs/package.json
             packages/*/package.json
             packages-web/*/package.json
+            test/*/package.json
             tools/*/package.json
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Lint STYNX framework workspaces
-        run: pnpm lint:stynx
+        run: pnpm lint
       - name: Dead-code gate
         run: pnpm lint:deadcode
       - name: Orphaned-dependency gate
@@ -106,11 +108,12 @@ jobs:
             docs/package.json
             packages/*/package.json
             packages-web/*/package.json
+            test/*/package.json
             tools/*/package.json
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Typecheck STYNX framework workspaces
-        run: pnpm typecheck:stynx
+        run: pnpm typecheck
 
   lint-cycles:
     name: lint:cycles
@@ -134,11 +137,12 @@ jobs:
             docs/package.json
             packages/*/package.json
             packages-web/*/package.json
+            test/*/package.json
             tools/*/package.json
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Reject circular dependencies
-        run: pnpm lint:cycles:stynx
+        run: pnpm lint:cycles
 
   migration-lint:
     name: migration-lint
@@ -189,11 +193,12 @@ jobs:
             docs/package.json
             packages/*/package.json
             packages-web/*/package.json
+            test/*/package.json
             tools/*/package.json
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Run STYNX unit tests
-        run: pnpm test:stynx
+        run: pnpm test
 
   integration-tests:
     name: integration-tests
@@ -234,6 +239,7 @@ jobs:
             docs/package.json
             packages/*/package.json
             packages-web/*/package.json
+            test/*/package.json
             tools/*/package.json
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -250,7 +256,7 @@ jobs:
       - name: Run RLS smoke check against live database
         run: pnpm check:rls-smoke
       - name: Run STYNX integration tests
-        run: pnpm test:int:stynx
+        run: pnpm test:int
 
   build:
     name: build (${{ matrix.os }})
@@ -280,11 +286,12 @@ jobs:
             docs/package.json
             packages/*/package.json
             packages-web/*/package.json
+            test/*/package.json
             tools/*/package.json
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Build STYNX framework workspaces
-        run: pnpm build:stynx
+        run: pnpm build
 
   doctor:
     name: doctor
@@ -308,8 +315,9 @@ jobs:
             docs/package.json
             packages/*/package.json
             packages-web/*/package.json
+            test/*/package.json
             tools/*/package.json
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Run doctor
-        run: pnpm doctor
+        run: pnpm run doctor

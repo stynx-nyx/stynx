@@ -6,21 +6,7 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**", "build/**"]
     },
-    "@stynx-internal/eslint-config#build": {
-      "outputs": []
-    },
-    "@stynx-internal/tsconfig#build": {
-      "outputs": []
-    },
-    "stynx-bootstrap#build": {
-      "dependsOn": ["^build"],
-      "outputs": []
-    },
     "lint": {
-      "outputs": []
-    },
-    "lint:deadcode": {
-      "dependsOn": ["^build"],
       "outputs": []
     },
     "typecheck": {
@@ -34,13 +20,6 @@
     "test:int": {
       "dependsOn": ["^build"],
       "outputs": []
-    },
-    "test:e2e": {
-      "dependsOn": ["^build"],
-      "outputs": ["coverage/**"]
-    },
-    "clean": {
-      "cache": false
     }
   }
 }

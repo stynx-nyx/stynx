@@ -28,7 +28,10 @@ function collectPackages(baseDir, matcher) {
 
 const packages = [
   ...collectPackages('packages', (name) => typeof name === 'string' && name.startsWith('@stynx/')),
-  ...collectPackages('packages-web', (name) => typeof name === 'string' && name.startsWith('@stynx-web/')),
+  ...collectPackages(
+    'packages-web',
+    (name) => typeof name === 'string' && name.startsWith('@stynx-web/'),
+  ),
 ];
 
 const errors = [];
@@ -44,9 +47,10 @@ for (const pkg of packages) {
     }
   }
 
-  const exportKeys = pkg.manifest.exports && typeof pkg.manifest.exports === 'object'
-    ? Object.keys(pkg.manifest.exports)
-    : [];
+  const exportKeys =
+    pkg.manifest.exports && typeof pkg.manifest.exports === 'object'
+      ? Object.keys(pkg.manifest.exports)
+      : [];
   if (exportKeys.length !== 1 || exportKeys[0] !== '.') {
     errors.push(`${pkg.manifest.name}: exports must contain only the "." barrel entry`);
   }

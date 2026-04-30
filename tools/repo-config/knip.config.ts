@@ -6,16 +6,8 @@ const config: KnipConfig = {
 
   workspaces: {
     '.': {
-      entry: [
-        'scripts/**/*.{ts,mjs,cjs}',
-        'turbo.json',
-      ],
-      project: [
-        'packages/**/*.ts',
-        'packages-web/**/*.ts',
-        'apps/**/*.ts',
-        'tools/**/*.ts',
-      ],
+      entry: ['scripts/**/*.{ts,mjs,cjs}', 'turbo.json'],
+      project: ['packages/**/*.ts', 'packages-web/**/*.ts', 'apps/**/*.ts', 'tools/**/*.ts'],
     },
     'packages/*': {
       entry: ['src/index.ts'],
@@ -50,6 +42,8 @@ const config: KnipConfig = {
     'tools/eslint-config/test.mjs',
   ],
   ignoreIssues: {
+    'packages/backend/src/idempotency/types.ts': ['types'],
+    'packages/backend/src/rate-limit/types.ts': ['types'],
     'tools/migration-linter/src/sql.ts': ['exports'],
   },
 };
