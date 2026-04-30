@@ -185,7 +185,9 @@ writeDoc('rfcs/index.md', '# RFCs\n\nRepository RFCs mirrored from `docs/rfcs/`.
 copyMarkdownDir(resolve(repoRoot, 'docs/dev'), 'narrative/dev');
 copyMarkdownDir(resolve(repoRoot, 'docs/sys'), 'narrative/system');
 copyMarkdownDir(resolve(repoRoot, 'docs/user'), 'narrative/user');
-copyMarkdownDir(resolve(repoRoot, 'docs/stynx'), 'narrative/stynx');
+copyMarkdownDirTransformed(resolve(repoRoot, 'docs/stynx'), 'narrative/stynx', (content) =>
+  rewriteGeneratedDocLinks(sanitizeMdxContent(content)),
+);
 copyMarkdownDirTransformed(resolve(repoRoot, 'docs/templates'), 'templates', (content) => rewriteGeneratedDocLinks(sanitizeMdxContent(content)));
 copyMarkdownDirTransformed(resolve(repoRoot, 'docs/rfcs'), 'rfcs', syncRfcContent);
 syncPackageReadmes('packages', 'packages', (name) => typeof name === 'string' && name.startsWith('@stynx/'));

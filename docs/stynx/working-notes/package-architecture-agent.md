@@ -6,7 +6,7 @@ Scope: define concrete workspace/package changes for an installable `stynx` pack
 ## Files inspected
 
 - `stynx/package.json`
-- `stynx/tsconfig.base.json`
+- `stynx/tools/tsconfig/*`
 - `stynx/tsconfig.json`
 - `stynx/packages/README.md`
 - `stynx/packages/stynx-contracts/package.json`
@@ -65,7 +65,7 @@ Scope: define concrete workspace/package changes for an installable `stynx` pack
 
 - `stynx/package.json`: workspace globs are currently limited to `packages/*` and `apps/*`.
 - `stynx/packages/stynx-contracts/package.json`: defines current publishable baseline (`@stech/stynx-contracts`) using CJS-style `exports` + `dist`.
-- `stynx/packages/stynx-contracts/tsconfig.json`: extends `../../tsconfig.base.json`, so shared base config is already package-oriented.
+- `stynx/packages/contracts/tsconfig.json`: extends `../../tools/tsconfig/lib.json`, so shared base config is already package-oriented.
 - `stynx/backend/tsconfig.json`: `module: "commonjs"` and Nest aliases (`@core`, `@shared`, `@config`) indicate CJS-first backend packaging initially.
 - `stynx/backend/src/core/core.module.ts`: central aggregation point for reusable modules and current best extraction seam.
 - `stynx/backend/src/core/auth/auth.service.ts`: Cognito/JWKS token verification + principal mapping logic currently lives in app code.

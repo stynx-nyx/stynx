@@ -110,7 +110,6 @@ docs/work/plan/*
 !docs/work/diag/.gitkeep
 !docs/work/plan/.gitkeep
 
-# Generated release-note drafts
-/.release/drafts/*.md
-!/.release/drafts/README.md
+# Generated release evidence
+/.release/
 /.changeset/status.json

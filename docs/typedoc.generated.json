@@ -26,10 +26,8 @@
     "/Users/aarusso/Development/stech/stynx/packages-web/sdk/src/index.ts"
   ],
   "entryPointStrategy": "resolve",
-  "tsconfig": "/Users/aarusso/Development/stech/stynx/tsconfig.base.json",
-  "plugin": [
-    "typedoc-plugin-markdown"
-  ],
+  "tsconfig": "/Users/aarusso/Development/stech/stynx/tsconfig.json",
+  "plugin": ["typedoc-plugin-markdown"],
   "readme": "none",
   "hideBreadcrumbs": true,
   "hidePageTitle": false,

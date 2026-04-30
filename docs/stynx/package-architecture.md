@@ -3,7 +3,7 @@
 ## Implemented Workspace Shape
 
 - `package.json` (workspace root)
-- `tsconfig.base.json`
+- `tools/tsconfig/*`
 - `packages/stynx-contracts`
 - `packages/backend`
 - `packages/stynx-auth-cognito`

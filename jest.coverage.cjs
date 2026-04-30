@@ -1,1 +1,1 @@
-module.exports = require('./config/jest.coverage.cjs');
+module.exports = require('./tools/repo-config/jest.coverage.cjs');

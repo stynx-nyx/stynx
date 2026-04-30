@@ -113,8 +113,8 @@ Deliverables:
   - rule enforcing no direct `pg.Pool` import outside @stynx/data
   - rule enforcing no `fetch` to S3 URLs outside @stynx/storage
   Use eslint-plugin-boundaries or an equivalent mechanism for the inter-package rules.
-- Root .prettierrc with 2-space indent, 100-col width, single quotes, trailing commas all, semicolons on.
-- config/commitlint.config.cjs with @commitlint/config-conventional + an allowed-scopes list matching package names.
+- Root `package.json` `prettier` field with 2-space indent, 100-col width, single quotes, trailing commas all, semicolons on.
+- tools/repo-config/commitlint.config.cjs with @commitlint/config-conventional + an allowed-scopes list matching package names.
 - husky pre-commit running lint-staged on changed files; commit-msg hook running commitlint.
 - .github/CODEOWNERS: every @stynx/* and @stynx-web/* path requires platform-architects group review.
 

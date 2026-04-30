@@ -111,6 +111,15 @@ function writeTypeDocTsconfig(pkg) {
 }
 
 function typeDocOptionsFor(pkg) {
+  if (pkg.manifest.name === '@stynx/backend') {
+    return [
+      '--intentionallyNotExported',
+      'src/identity-admin/pg-local-sync.adapter.ts:QueryResult',
+      '--intentionallyNotExported',
+      'src/auth/sql-tenant-entitlement.fallback.ts:RowResult',
+    ];
+  }
+
   if (pkg.manifest.name === '@stynx/data') {
     return [
       '--intentionallyNotExported',
@@ -132,6 +141,8 @@ function typeDocOptionsFor(pkg) {
       'src/generated/GeneratedStynxSdk.ts:HttpRequestConstructor',
       '--intentionallyNotExported',
       'src/generated/core/CancelablePromise.ts:OnCancel',
+      '--intentionallyNotExported',
+      'src/token-store.ts:BrowserStorageLike',
     ];
   }
 

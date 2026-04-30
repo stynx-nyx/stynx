@@ -42,13 +42,13 @@ stynx/
 ├── tools/
 │   ├── eslint-config/
 │   ├── tsconfig/
-│   └── migration-linter/
+│   ├── migration-linter/
+│   └── repo-config/                 # Tool config bodies used by explicit CLI flags
 ├── test/
 │   └── perf/k6/                    # k6 scenarios, baselines, generated summaries
 ├── docs/
+│   └── stynx/porting-pack/         # Docs-native adoption and porting material
 ├── specs/                          # Normative root specs
-├── porting-pack/                   # Standalone adoption pack; kept root to preserve copy/paste paths
-├── config/                         # Tool config bodies used by explicit CLI flags
 ├── .changeset/
 ├── turbo.json
 ├── pnpm-workspace.yaml
@@ -66,7 +66,7 @@ The repository still contains legacy runtime and test directories during the ext
 
 They are intentionally preserved for migration work, but they are outside the Prompt 1 workspace graph.
 
-The porting pack intentionally remains at `porting-pack/` instead of moving under `docs/`: its generated prompts and consumer-facing agent context refer to `./porting-pack/` as a drop-in bundle path.
+The porting pack is docs-native at `docs/stynx/porting-pack/`. It is adoption guidance and historical generation context, not a root drop-in bundle.
 
 ## Workspace Commands
 

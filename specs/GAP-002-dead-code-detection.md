@@ -53,9 +53,9 @@ Add to `scripts`:
 
 ---
 
-## Step 3 — Create `config/knip.config.ts`
+## Step 3 — Create `tools/repo-config/knip.config.ts`
 
-Create `config/knip.config.ts` and run it through the root `lint:deadcode` script:
+Create `tools/repo-config/knip.config.ts` and run it through the root `lint:deadcode` script:
 
 ```typescript
 import type { KnipConfig } from 'knip';
