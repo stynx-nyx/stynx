@@ -126,7 +126,7 @@ Spec §11.5 / §17 implies runbooks for:
 
 ## Performance
 
-`perf/k6/`:
+`test/perf/k6/`:
 
 - 5 k6 scripts (`auth.js`, `crud.js`, `cascade-delete.js`, `upload.js`,
   `run-scenarios.mjs`)

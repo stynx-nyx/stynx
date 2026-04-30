@@ -2,7 +2,7 @@
 
 STYNX is a `pnpm` + `Turborepo` monorepo targeting GitHub Packages for the spec-defined `@stynx/*` and `@stynx-web/*` package families.
 
-`1.0.0` release preparation is implemented in-repo, but STYNX is not marked as shipped yet while Prompt 31 and Prompts 34-36 still have open release blockers.
+`1.0.0` release preparation is implemented in-repo and the tracked release-readiness gates are closed. STYNX is not marked as shipped until an explicit versioning and publishing decision is made.
 
 ## Monorepo Layout
 
@@ -43,6 +43,12 @@ stynx/
 │   ├── eslint-config/
 │   ├── tsconfig/
 │   └── migration-linter/
+├── test/
+│   └── perf/k6/                    # k6 scenarios, baselines, generated summaries
+├── docs/
+├── specs/                          # Normative root specs
+├── porting-pack/                   # Standalone adoption pack; kept root to preserve copy/paste paths
+├── config/                         # Tool config bodies used by explicit CLI flags
 ├── .changeset/
 ├── turbo.json
 ├── pnpm-workspace.yaml
@@ -59,6 +65,8 @@ The repository still contains legacy runtime and test directories during the ext
 - `test/`
 
 They are intentionally preserved for migration work, but they are outside the Prompt 1 workspace graph.
+
+The porting pack intentionally remains at `porting-pack/` instead of moving under `docs/`: its generated prompts and consumer-facing agent context refer to `./porting-pack/` as a drop-in bundle path.
 
 ## Workspace Commands
 

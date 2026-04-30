@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-26  
 **Source analysis:** cross-repo comparison of porm, pec, sgp, stynx  
-**Status:** complete for `GAP-001..006`; release-readiness follow-ups remain tracked in `TODO.md`
+**Status:** complete for `GAP-001..006`; release-readiness closure is tracked in `docs/stynx/release-readiness.md`
 
 ## Context
 

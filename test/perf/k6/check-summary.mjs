@@ -12,7 +12,7 @@ const currentPath = process.argv[2];
 const baselinePath = process.argv[3];
 
 if (!currentPath) {
-  throw new Error('Usage: node perf/k6/check-summary.mjs <current-summary.json> [baseline-summary.json]');
+  throw new Error('Usage: node test/perf/k6/check-summary.mjs <current-summary.json> [baseline-summary.json]');
 }
 
 const current = readSummary(currentPath);

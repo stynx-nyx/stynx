@@ -43,26 +43,26 @@ state**, not audit state.
 
 `ls -la` at root yields these top-level entries:
 
-| Entry                                      | Notes                                                                  |
-| ------------------------------------------ | ---------------------------------------------------------------------- |
-| `specs/`                                   | 15 files; spec set + GAP-00x docs (see §2)                             |
-| `packages/`                                | 17 backend packages (see §3)                                           |
-| `packages-web/`                            | 10 frontend packages (see §3)                                          |
-| `apps/`                                    | `reference-api`, `reference-web`                                       |
-| `tools/`                                   | `eslint-config`, `tsconfig`, `migration-linter`, `ci-local`, `stryker` |
-| `infra/`                                   | `cdk/` (CDK app), `github/` (Terraform branch protection)              |
-| `docs/`                                    | Docusaurus + `docs/work/` (audit, rationalization, specs, prompts)     |
-| `.github/`                                 | 8 workflows, CODEOWNERS, PR template                                   |
-| `.husky/`                                  | Git hooks (pre-commit, commit-msg)                                     |
-| `.changeset/`                              | Changesets v2                                                          |
-| `perf/`                                    | k6 scripts + results                                                   |
-| `scripts/`                                 | Operational scripts (`stynx-doctor.mjs`, `ci-local`, etc.)             |
-| `package.json`                             | `stynx-workspace@0.2.0`, pnpm 9.15.0, node `>=24 <25`                  |
-| `pnpm-workspace.yaml`                      | spec-compliant globs (see §1.3)                                        |
-| `turbo.json`                               | build/lint/typecheck/test/test:int/test:e2e tasks                      |
-| `.nvmrc`, `.mise.toml`                     | Node 24, pnpm 9.15.0 pinned                                            |
-| `commitlint.config.cjs`, `CONTRIBUTING.md` | governance docs present                                                |
-| `db/`, `audit/`, `reports/`                | small auxiliary directories (low-priority for porting)                 |
+| Entry                                             | Notes                                                                  |
+| ------------------------------------------------- | ---------------------------------------------------------------------- |
+| `specs/`                                          | 15 files; spec set + GAP-00x docs (see §2)                             |
+| `packages/`                                       | 17 backend packages (see §3)                                           |
+| `packages-web/`                                   | 10 frontend packages (see §3)                                          |
+| `apps/`                                           | `reference-api`, `reference-web`                                       |
+| `tools/`                                          | `eslint-config`, `tsconfig`, `migration-linter`, `ci-local`, `stryker` |
+| `infra/`                                          | `cdk/` (CDK app), `github/` (Terraform branch protection)              |
+| `docs/`                                           | Docusaurus + `docs/work/` (audit, rationalization, specs, prompts)     |
+| `.github/`                                        | 8 workflows, CODEOWNERS, PR template                                   |
+| `.husky/`                                         | Git hooks (pre-commit, commit-msg)                                     |
+| `.changeset/`                                     | Changesets v2                                                          |
+| `perf/`                                           | k6 scripts + results                                                   |
+| `scripts/`                                        | Operational scripts (`stynx-doctor.mjs`, `ci-local`, etc.)             |
+| `package.json`                                    | `stynx-workspace@0.2.0`, pnpm 9.15.0, node `>=24 <25`                  |
+| `pnpm-workspace.yaml`                             | spec-compliant globs (see §1.3)                                        |
+| `turbo.json`                                      | build/lint/typecheck/test/test:int/test:e2e tasks                      |
+| `.nvmrc`, `.mise.toml`                            | Node 24, pnpm 9.15.0 pinned                                            |
+| `config/commitlint.config.cjs`, `CONTRIBUTING.md` | governance docs present                                                |
+| `db/`, `audit/`, `reports/`                       | small auxiliary directories (low-priority for porting)                 |
 
 `pnpm-workspace.yaml`:
 
@@ -312,7 +312,7 @@ through whatever wrapper their app exposes, not via `pnpm exec stynx`.]`
 multi-reviewer policy from spec §17.5 is structurally not yet enforced.
 
 `infra/github/main.tf` declares branch protection in Terraform.
-`commitlint.config.cjs` exists. Husky hooks at `.husky/`.
+`config/commitlint.config.cjs` exists. Husky hooks at `.husky/`.
 
 ## 10. `@stynx/data` exported surface (verified at HEAD)
 

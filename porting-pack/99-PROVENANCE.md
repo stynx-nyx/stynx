@@ -101,7 +101,7 @@ generation. Subagent reads not listed individually.
 - `.github/CODEOWNERS`
 - `.github/workflows/*.yml` (8 files)
 - `package.json`, `pnpm-workspace.yaml`, `turbo.json`,
-  `commitlint.config.cjs`, `.nvmrc`, `.mise.toml`
+  `config/commitlint.config.cjs`, `.nvmrc`, `.mise.toml`
 
 ## Word count
 

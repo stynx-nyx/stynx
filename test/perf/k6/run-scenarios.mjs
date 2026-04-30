@@ -2,8 +2,8 @@ import { chmodSync, existsSync, mkdirSync, rmSync, statSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
 
-const repoRoot = resolve(new URL('..', import.meta.url).pathname, '..');
-const perfDir = resolve(repoRoot, 'perf/k6');
+const repoRoot = resolve(new URL('../../..', import.meta.url).pathname);
+const perfDir = resolve(repoRoot, 'test/perf/k6');
 const resultsDir = resolve(perfDir, 'results');
 const requestedScenario = process.argv.includes('--scenario')
   ? process.argv[process.argv.indexOf('--scenario') + 1]

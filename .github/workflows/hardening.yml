@@ -57,18 +57,18 @@ jobs:
           STYNX_K6_STORAGE_PRESIGN_P99_MS: '500'
         run: |
           set -euo pipefail
-          mkdir -p perf/k6/results
+          mkdir -p test/perf/k6/results
           export STYNX_K6_BASE_URL=http://127.0.0.1:3000
           export STYNX_K6_S3_PUBLIC_BASE_URL=http://127.0.0.1:4566
           export STYNX_K6_SCENARIO_PAUSE_MS=65000
-          node perf/k6/run-scenarios.mjs --scenario "${STYNX_K6_SCENARIO}"
+          node test/perf/k6/run-scenarios.mjs --scenario "${STYNX_K6_SCENARIO}"
 
       - name: Download previous k6 baseline
         env:
           GH_TOKEN: ${{ github.token }}
           K6_ARTIFACT_NAME: ${{ env.K6_ARTIFACT_NAME }}
         run: |
-          mkdir -p perf/k6/baseline
+          mkdir -p test/perf/k6/baseline
           python3 - <<'PY'
           import json
           import os
@@ -108,7 +108,7 @@ jobs:
               if str(run.get("id")) != str(current_run_id)
           ]
           if not workflow_runs:
-              open("perf/k6/baseline/.first-seed-allowed", "w").write("no prior successful hardening.yml runs on main\n")
+              open("test/perf/k6/baseline/.first-seed-allowed", "w").write("no prior successful hardening.yml runs on main\n")
               raise SystemExit(0)
 
           target_run = workflow_runs[0]
@@ -135,31 +135,31 @@ jobs:
               "Authorization": f"Bearer {token}",
               "Accept": "application/vnd.github+json",
           })
-          archive_path = "perf/k6/baseline/baseline.zip"
+          archive_path = "test/perf/k6/baseline/baseline.zip"
           artifact_opener = urllib.request.build_opener(CrossHostRedirectHandler)
           with artifact_opener.open(archive_request) as response, open(archive_path, "wb") as handle:
               handle.write(response.read())
 
           with zipfile.ZipFile(archive_path) as archive:
-              archive.extractall("perf/k6/baseline")
-          open("perf/k6/baseline/.baseline-run", "w").write(str(target_run["id"]) + "\n")
+              archive.extractall("test/perf/k6/baseline")
+          open("test/perf/k6/baseline/.baseline-run", "w").write(str(target_run["id"]) + "\n")
           PY
 
       - name: Compare k6 summaries with prior baseline
         run: |
           set -eu
           found_current=false
-          for current in perf/k6/results/*.summary.json; do
+          for current in test/perf/k6/results/*.summary.json; do
             if [ ! -f "$current" ]; then
               echo "No current k6 summary files were produced"
               exit 1
             fi
             found_current=true
             name="$(basename "$current")"
-            baseline="perf/k6/baseline/$name"
+            baseline="test/perf/k6/baseline/$name"
             if [ -f "$baseline" ]; then
-              node perf/k6/check-summary.mjs "$current" "$baseline"
-            elif [ -f perf/k6/baseline/.first-seed-allowed ]; then
+              node test/perf/k6/check-summary.mjs "$current" "$baseline"
+            elif [ -f test/perf/k6/baseline/.first-seed-allowed ]; then
               echo "No previous k6 baseline exists on main; allowing this first seed run for $name"
             else
               echo "Missing required k6 baseline artifact for $name"
@@ -175,7 +175,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: ${{ env.K6_ARTIFACT_NAME }}
-          path: perf/k6/results
+          path: test/perf/k6/results
           if-no-files-found: error
 
       - name: Stop reference stack

@@ -52,9 +52,9 @@ Add to `scripts`:
 
 ---
 
-## Step 3 — Create `knip.config.ts`
+## Step 3 — Create `config/knip.config.ts`
 
-Create `knip.config.ts` at the repo root:
+Create `config/knip.config.ts` and run it through the root `lint:deadcode` script:
 
 ```typescript
 import type { KnipConfig } from 'knip';

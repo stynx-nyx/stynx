@@ -20,7 +20,7 @@ This repository bundles the reusable scaffolding extracted from previous product
 3. Update documentation and seeds alongside code changes; nothing should be undocumented.
 4. Prefer path aliases (`@core`, `@shared`, `@admin`, `@storage`, `@env`) over deep relative imports.
 5. Do not delete or bypass the generated scripts—they are referenced by CI/CD automation.
-6. When in doubt, study `SUMMARY.md` for the latest merge notes and coordinate unfinished work through `TODO.md`.
+6. When in doubt, study `docs/stynx/release-readiness.md`, `docs/stynx/implementation-status.md`, and recent `git log` output for current merge and release state.
 
 ## Mode Guidelines
 

@@ -8,7 +8,7 @@
 The spec defines 26 first-party packages (16 backend `@stynx/*`, 10 frontend
 `@stynx-web/*`) plus the non-package deliverables `apps/reference-{api,web}`,
 `tools/{eslint-config,tsconfig,migration-linter}`, `infra/cdk` (six stacks),
-`perf/k6`, `docs/`, and `.github/workflows`. The audit prompt's count of "22
+`test/perf/k6`, `docs/`, and `.github/workflows`. The audit prompt's count of "22
 packages" undercounts the spec; this audit measures against the spec's full
 list.
 
@@ -74,7 +74,7 @@ flagged in [03](03-CODE-QUALITY.md) and FIND-019.
 | tools/ci-local          | Y      | Not in spec; no package.json                                                              |
 | tools/stryker           | Y      | Not in spec; mutation testing config                                                      |
 | infra/cdk               | Y      | 6 stack files; **EdgeStack absent** — FIND-005                                            |
-| perf/k6                 | Y      | 5 scenarios + results history; CI integration not verified                                |
+| test/perf/k6            | Y      | 5 scenarios + results history; CI integration not verified                                |
 | .github/workflows       | Y      | 7 workflows: ci, hardening, release-prep, release, release-artifacts, docs, ephemeral-env |
 | docs/                   | Y      | Docusaurus site                                                                           |
 

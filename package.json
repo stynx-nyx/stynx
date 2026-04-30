@@ -20,7 +20,7 @@
     "test:int:cov": "turbo run test:int",
     "test:e2e": "turbo run test:e2e",
     "check:engines": "node scripts/check-engines.mjs",
-    "lint:deadcode": "knip --no-config-hints",
+    "lint:deadcode": "knip --config config/knip.config.ts --no-config-hints",
     "lint:deps": "depcheck --ignore-patterns='**/*.test.ts,**/*.spec.ts' --skip-missing --ignores='@commitlint/cli,@commitlint/config-conventional,@stryker-mutator/jest-runner,@stryker-mutator/typescript-checker,eslint-plugin-boundaries,eslint-plugin-jsdoc,prettier'",
     "lint:migrations": "pnpm --filter migration-linter run lint:repo",
     "lint:cycles": "madge --circular packages/ packages-web/ apps/ --extensions ts --exclude '(^|/)(dist|build|coverage|node_modules)/'",

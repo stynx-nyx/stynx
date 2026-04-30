@@ -196,7 +196,7 @@ Lengths (lines) for tracked READMEs and root coordination docs:
 248 PROMPT_UPDATE_FRONTEND_ENV_WITH_PATCHES.md
  99 README.md
  56 apps/reference-api/README.md
- 41 perf/k6/README.md
+ 41 test/perf/k6/README.md
  34 .release/drafts/README.md
  30 bootstrap/README.md
  27 AGENTS.md

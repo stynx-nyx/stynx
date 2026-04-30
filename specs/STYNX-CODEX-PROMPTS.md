@@ -114,7 +114,7 @@ Deliverables:
   - rule enforcing no `fetch` to S3 URLs outside @stynx/storage
   Use eslint-plugin-boundaries or an equivalent mechanism for the inter-package rules.
 - Root .prettierrc with 2-space indent, 100-col width, single quotes, trailing commas all, semicolons on.
-- commitlint.config.cjs with @commitlint/config-conventional + an allowed-scopes list matching package names.
+- config/commitlint.config.cjs with @commitlint/config-conventional + an allowed-scopes list matching package names.
 - husky pre-commit running lint-staged on changed files; commit-msg hook running commitlint.
 - .github/CODEOWNERS: every @stynx/* and @stynx-web/* path requires platform-architects group review.
 
@@ -1171,7 +1171,7 @@ Verification:
 ```
 Read SPEC §16.1 (Load layer), SPEC §26 (SLOs).
 
-Create a k6 load test suite under perf/k6/.
+Create a k6 load test suite under test/perf/k6/.
 
 Deliverables:
 - Scenarios:
@@ -1194,7 +1194,7 @@ Success criteria:
 - Degradation on the primary branch > 10% over last run fails the job.
 
 Verification:
-- `k6 run perf/k6/crud.js` locally green against docker-compose.
+- `k6 run test/perf/k6/crud.js` locally green against docker-compose.
 ```
 
 ### Prompt 35 — Mutation Tests with Stryker
@@ -1324,4 +1324,4 @@ If an agent session runs long on a prompt, split it at natural seams (e.g., Prom
 
 When a prompt's success criteria can't be met, the agent surfaces the blocker in the PR description rather than force a compromise. Reviewers decide whether to adjust the prompt, amend the spec, or accept scope narrowing.
 
-*End of prompt sequence.*
+_End of prompt sequence._
