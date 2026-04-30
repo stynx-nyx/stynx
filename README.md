@@ -90,18 +90,25 @@ corepack pnpm changeset
 
 ## CI and Release
 
-- CI entrypoints:
-  - `pnpm lint`
-  - `pnpm typecheck`
-  - `pnpm test:unit`
-  - `pnpm test:int`
-  - `pnpm build`
-  - `pnpm doctor`
+- STYNX framework CI entrypoints:
+  - `pnpm ci:stynx`
+  - `pnpm lint:stynx`
+  - `pnpm typecheck:stynx`
+  - `pnpm test:stynx`
+  - `pnpm test:int:stynx`
+  - `pnpm build:stynx`
+- Reference app consumer entrypoint:
+  - `pnpm ci:reference-apps`
+- Local GitHub-compatible evidence entrypoints:
+  - `pnpm ci:local:stynx`
+  - `pnpm ci:local:stynx-release`
+  - `pnpm ci:local:reference-apps`
 - Release entrypoints:
+  - `pnpm ci:stynx:release`
   - `pnpm release:policy`
   - `pnpm release:status`
   - `pnpm release:drafts`
   - `pnpm version-packages`
   - `pnpm release`
-- `.npmrc` resolves GitHub Packages auth from `NODE_AUTH_TOKEN`.
-- In GitHub Actions release publishing, map `NODE_AUTH_TOKEN` to `${{ secrets.GITHUB_TOKEN }}`.
+- `.npmrc` maps the STYNX package scopes to GitHub Packages; release publishing still gets auth from the workflow `NODE_AUTH_TOKEN`.
+- In GitHub Actions release publishing, map `NODE_AUTH_TOKEN` to a token with package publish rights.

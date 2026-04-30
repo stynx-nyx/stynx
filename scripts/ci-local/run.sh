@@ -7,13 +7,16 @@ Usage: scripts/ci-local/run.sh <job>
 
 Jobs:
   install             Run the CI dependency install step.
-  lint                Run the Ubuntu CI lint and dependency gates.
-  typecheck           Run the Ubuntu CI typecheck gates.
+  stynx               Run the framework CI lane locally.
+  stynx-release       Run the framework release-prep lane locally.
+  reference-apps      Run the reference app consumer lane locally.
+  lint                Run the STYNX lint and dependency gates.
+  typecheck           Run the STYNX typecheck gates.
   unit                Run unit tests with coverage.
   integration         Run PostgreSQL-backed integration gates.
-  build               Run the Ubuntu build commands.
+  build               Run the STYNX build commands.
   doctor              Run pnpm doctor.
-  reference-web-e2e   Run the browser E2E gate from ci.yml.
+  reference-web-e2e   Run the browser E2E gate from reference-apps.yml.
   docs                Run docs build:ci plus Lighthouse.
   browser             Run reference-web-e2e and docs.
   all-linux           Run all local Linux CI jobs in order.
@@ -44,7 +47,7 @@ main() {
   fi
 
   case "$job" in
-    install|lint|typecheck|unit|integration|build|doctor|reference-web-e2e|docs|browser|all-linux) ;;
+    install|stynx|stynx-release|reference-apps|lint|typecheck|unit|integration|build|doctor|reference-web-e2e|docs|browser|all-linux) ;;
     *)
       usage >&2
       printf '\nUnknown local CI job: %s\n' "$job" >&2

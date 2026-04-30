@@ -1,4 +1,4 @@
-name: Release Prep
+name: STYNX Release Prep
 
 on:
   workflow_dispatch:
@@ -7,8 +7,6 @@ on:
       - '.changeset/**'
       - '.github/workflows/release-prep.yml'
       - '.semgrepignore'
-      - 'apps/reference-api/**'
-      - 'apps/reference-web/**'
       - 'docs/**'
       - 'infra/cdk/**'
       - 'package.json'
@@ -16,7 +14,8 @@ on:
       - 'packages-web/**'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
-      - 'scripts/**'
+      - 'scripts/generate-release-drafts.mjs'
+      - 'scripts/verify-release-policy.mjs'
   push:
     branches:
       - main
@@ -24,8 +23,6 @@ on:
       - '.changeset/**'
       - '.github/workflows/release-prep.yml'
       - '.semgrepignore'
-      - 'apps/reference-api/**'
-      - 'apps/reference-web/**'
       - 'docs/**'
       - 'infra/cdk/**'
       - 'package.json'
@@ -33,7 +30,8 @@ on:
       - 'packages-web/**'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
-      - 'scripts/**'
+      - 'scripts/generate-release-drafts.mjs'
+      - 'scripts/verify-release-policy.mjs'
 
 permissions:
   actions: read
@@ -150,52 +148,4 @@ jobs:
           path: |
             .changeset/status.json
             .release/drafts
-          if-no-files-found: error
-
-  container-security:
-    name: container-security
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Build reference-api image
-        run: docker build -f apps/reference-api/Dockerfile -t stynx/reference-api:${{ github.sha }} .
-
-      - name: Build reference-web image
-        run: docker build -f apps/reference-web/Dockerfile -t stynx/reference-web:${{ github.sha }} .
-
-      - name: Run Trivy on reference-api
-        uses: aquasecurity/trivy-action@0.35.0
-        with:
-          image-ref: stynx/reference-api:${{ github.sha }}
-          format: table
-          severity: HIGH,CRITICAL
-          ignore-unfixed: true
-          exit-code: '1'
-
-      - name: Run Trivy on reference-web
-        uses: aquasecurity/trivy-action@0.35.0
-        with:
-          image-ref: stynx/reference-web:${{ github.sha }}
-          format: table
-          severity: HIGH,CRITICAL
-          ignore-unfixed: true
-          exit-code: '1'
-
-      - name: Install Syft
-        id: syft
-        uses: anchore/sbom-action/download-syft@v0
-
-      - name: Generate image SBOMs
-        run: |
-          "${{ steps.syft.outputs.cmd }}" stynx/reference-api:${{ github.sha }} -o spdx-json=sbom-reference-api.spdx.json
-          "${{ steps.syft.outputs.cmd }}" stynx/reference-web:${{ github.sha }} -o spdx-json=sbom-reference-web.spdx.json
-
-      - name: Upload image SBOMs
-        uses: actions/upload-artifact@v7
-        with:
-          name: image-sboms
-          path: |
-            sbom-reference-api.spdx.json
-            sbom-reference-web.spdx.json
           if-no-files-found: error

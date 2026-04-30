@@ -1,15 +1,16 @@
-# Local CI Browser Preflight
+# Local CI Preflight
 
-This repository keeps Prompts 31 and 36 tied to GitHub Actions evidence. A local
-pass is useful for debugging and cost control, but it does not close those
-prompts by itself.
+This repository keeps GitHub Actions as the compatibility target while exposing
+local commands that produce comparable debugging evidence. The local pass is
+useful before opening or updating a pull request, but the GitHub workflow run
+remains the merge/release authority.
 
 ## Purpose
 
-Use the local preflight runner before pushing changes that affect browser,
-docs, or Linux CI behavior. It runs the CI commands inside an Ubuntu container
-with Node 24, pnpm 9, Docker-in-Docker, PostgreSQL client tools, Playwright, and
-Chrome/Lighthouse support.
+Use the local preflight runner before pushing changes that affect STYNX
+framework CI, reference app validation, docs, or Linux behavior. It runs the CI
+commands inside an Ubuntu container with Node 24, pnpm 9, Docker-in-Docker,
+PostgreSQL client tools, Playwright, and Chrome/Lighthouse support.
 
 The default platform is `linux/amd64` because that is closest to the
 `ubuntu-latest` GitHub Actions browser jobs.
@@ -34,13 +35,31 @@ volume so installs can reuse hardlinked package content.
 
 ## Commands
 
+Run the STYNX framework lane from `ci.yml`:
+
+```sh
+scripts/ci-local/run.sh stynx
+```
+
+Run the STYNX release-prep lane from `release-prep.yml`:
+
+```sh
+scripts/ci-local/run.sh stynx-release
+```
+
+Run the reference app consumer lane from `reference-apps.yml`:
+
+```sh
+scripts/ci-local/run.sh reference-apps
+```
+
 Run only the browser-dependent gates:
 
 ```sh
 scripts/ci-local/run.sh browser
 ```
 
-Run the reference web E2E gate from `ci.yml`:
+Run only the reference web E2E gate:
 
 ```sh
 scripts/ci-local/run.sh reference-web-e2e
@@ -61,6 +80,9 @@ scripts/ci-local/run.sh all-linux
 The root package scripts expose the same entrypoints:
 
 ```sh
+pnpm ci:local:stynx
+pnpm ci:local:stynx-release
+pnpm ci:local:reference-apps
 pnpm ci:local:browser
 pnpm ci:local:all-linux
 ```
@@ -97,7 +119,7 @@ That path is ignored by git. Relevant files include:
 
 This runner is intentionally a preflight tool, not release evidence.
 
-- Prompt 31 closure evidence comes from GitHub Actions `reference-web-e2e` on Ubuntu.
+- Reference app closure evidence comes from GitHub Actions `reference-apps.yml`.
 - Prompt 36 closure evidence comes from GitHub Actions Docs with Lighthouse artifacts.
 - The local Linux container does not reproduce the `macos-latest` build matrix
   leg from `ci.yml`.

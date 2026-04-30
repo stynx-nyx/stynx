@@ -20,6 +20,9 @@ reviewable artifacts.
   - dependency audit
   - package policy verification
   - release draft artifact generation
+- Reference app GitHub Actions workflow:
+  - reference API build and test lane
+  - reference web E2E lane
   - Trivy image scans
   - Syft SBOM generation
 - Release-artifacts GitHub Actions workflow:
@@ -33,14 +36,15 @@ reviewable artifacts.
 
 The CI-authoritative gates that blocked Prompt 37 are green on `main`:
 
-| Gate | GitHub Actions run | Result |
-|---|---:|---|
-| CI, including Linux `reference-web-e2e` | `24976849184` | success |
-| Docs, including Chrome-backed Lighthouse | `24972209610` | success |
-| Hardening first k6 baseline seed | `24973827712` | success |
-| Hardening second k6 baseline comparison + mutation thresholds | `24976855814` | success |
-| Release Prep | `24977530998` | success |
-| Release workflow | `24976849172` | success |
+| Gate                                                          | GitHub Actions run | Result                        |
+| ------------------------------------------------------------- | -----------------: | ----------------------------- |
+| STYNX CI framework lane                                       |      `24976849184` | success                       |
+| Reference app lane, including Linux `reference-web-e2e`       |      `24976849184` | success before workflow split |
+| Docs, including Chrome-backed Lighthouse                      |      `24972209610` | success                       |
+| Hardening first k6 baseline seed                              |      `24973827712` | success                       |
+| Hardening second k6 baseline comparison + mutation thresholds |      `24976855814` | success                       |
+| Release Prep                                                  |      `24977530998` | success                       |
+| Release workflow                                              |      `24976849172` | success                       |
 
 ## Scope Notes
 

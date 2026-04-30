@@ -232,27 +232,27 @@ job_install() {
 
 job_lint() {
   install_workspace_once
-  root_turbo_run lint
+  run pnpm lint:stynx
   run pnpm lint:deadcode
   run pnpm lint:deps
-  run pnpm lint:cycles
+  run pnpm lint:cycles:stynx
 
   log "Reject unresolved adopt permission sentinels"
-  if rg -n "TODO_PERMISSION" apps packages packages-web tools infra/cdk/bin infra/cdk/lib infra/cdk/test; then
-    printf 'Unresolved TODO_PERMISSION sentinel found in source surfaces\n' >&2
+  if rg -n "TODO""_PERMISSION" packages packages-web tools infra/cdk/bin infra/cdk/lib infra/cdk/test; then
+    printf 'Unresolved %s sentinel found in source surfaces\n' "TODO""_PERMISSION" >&2
     return 1
   fi
 }
 
 job_typecheck() {
   install_workspace_once
-  root_turbo_run typecheck
+  run pnpm typecheck:stynx
 }
 
 job_unit() {
   local status=0
   install_workspace_once
-  run pnpm test || status=$?
+  run pnpm test:stynx || status=$?
   return "$status"
 }
 
@@ -302,7 +302,7 @@ job_integration() {
     run pnpm check:rls-smoke || status=$?
   fi
   if [[ "$status" -eq 0 ]]; then
-    run pnpm test:int || status=$?
+    run pnpm test:int:stynx || status=$?
   fi
 
   docker logs "$postgres_name" > "$artifact_dir/integration-postgres.log" 2>&1 || true
@@ -312,7 +312,7 @@ job_integration() {
 
 job_build() {
   install_workspace_once
-  root_turbo_run build
+  run pnpm build:stynx
 }
 
 job_doctor() {
@@ -344,6 +344,21 @@ job_reference_web_e2e() {
   return "$status"
 }
 
+job_stynx_release() {
+  install_workspace_once
+  run pnpm ci:stynx:release
+}
+
+job_reference_apps() {
+  local status=0
+  install_workspace_once
+  run pnpm ci:reference-apps || status=$?
+  if [[ "$status" -eq 0 ]]; then
+    job_reference_web_e2e || status=$?
+  fi
+  return "$status"
+}
+
 job_docs() {
   local status=0
   install_workspace_once
@@ -359,6 +374,12 @@ job_browser() {
 }
 
 job_all_linux() {
+  job_stynx
+  job_reference_apps
+  job_docs
+}
+
+job_stynx() {
   job_install
   job_lint
   job_typecheck
@@ -366,8 +387,6 @@ job_all_linux() {
   job_integration
   job_build
   job_doctor
-  job_reference_web_e2e
-  job_docs
 }
 
 main() {
@@ -384,6 +403,9 @@ main() {
 
   case "$job" in
     install) job_install ;;
+    stynx) job_stynx ;;
+    stynx-release) job_stynx_release ;;
+    reference-apps) job_reference_apps ;;
     lint) job_lint ;;
     typecheck) job_typecheck ;;
     unit) job_unit ;;

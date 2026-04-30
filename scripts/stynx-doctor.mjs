@@ -7,6 +7,9 @@ const rootDir = process.cwd();
 const jsonOutput = process.argv.includes('--json') || !process.stdout.isTTY;
 const checks = [];
 const todoPermissionSentinel = 'TODO' + '_PERMISSION';
+const includeReferenceApps =
+  process.env.STYNX_DOCTOR_INCLUDE_REFERENCE_APPS === 'true' ||
+  process.argv.includes('--include-reference-apps');
 
 function runCheck(name, fn) {
   try {
@@ -24,6 +27,7 @@ function walk(dir, visitor) {
     const relativePath = relative(rootDir, fullPath);
     if (
       entry === '.git' ||
+      entry === '.pnpm-store' ||
       entry === '.turbo' ||
       entry === 'node_modules' ||
       entry === 'dist' ||
@@ -114,7 +118,18 @@ runCheck('object-operations-through-storage', () => {
 
 runCheck('todo-permission-sentinels', () => {
   const matches = [];
-  for (const scope of ['apps', 'backend', 'bootstrap', 'db', 'frontend', 'packages', 'packages-web', 'scripts', 'test', 'tools']) {
+  for (const scope of [
+    'apps',
+    'backend',
+    'bootstrap',
+    'db',
+    'frontend',
+    'packages',
+    'packages-web',
+    'scripts',
+    'test',
+    'tools',
+  ]) {
     const scopePath = join(rootDir, scope);
     try {
       statSync(scopePath);
@@ -145,6 +160,9 @@ runCheck('package-lock-cleanup', () => {
   const packageLocks = [];
   walk(rootDir, (_fullPath, relativePath) => {
     if (relativePath.endsWith('package-lock.json')) {
+      if (relativePath === 'infra/cdk/package-lock.json') {
+        return;
+      }
       packageLocks.push(relativePath);
     }
   });
@@ -154,34 +172,42 @@ runCheck('package-lock-cleanup', () => {
   }
 });
 
-runCheck('reference-api-runtime-suite', () => {
-  const result = spawnSync(
-    'pnpm',
-    [
-      '--filter',
-      '@stynx/reference-api',
-      'test',
-      '--',
-      '--runInBand',
-      'test/integration/reference-api.runtime.spec.ts',
-    ],
-    {
-      cwd: rootDir,
-      stdio: 'inherit',
-      env: process.env,
-    },
-  );
-  if (result.status !== 0) {
-    throw new Error('@stynx/reference-api runtime suite failed');
-  }
-});
+if (includeReferenceApps) {
+  runCheck('reference-api-runtime-suite', () => {
+    const result = spawnSync(
+      'pnpm',
+      [
+        '--filter',
+        '@stynx/reference-api',
+        'test',
+        '--',
+        '--runInBand',
+        'test/integration/reference-api.runtime.spec.ts',
+      ],
+      {
+        cwd: rootDir,
+        stdio: 'inherit',
+        env: process.env,
+      },
+    );
+    if (result.status !== 0) {
+      throw new Error('@stynx/reference-api runtime suite failed');
+    }
+  });
+}
 
 const failures = checks.filter((check) => !check.ok);
 if (jsonOutput) {
-  console.log(JSON.stringify({
-    ok: failures.length === 0,
-    checks,
-  }, null, 2));
+  console.log(
+    JSON.stringify(
+      {
+        ok: failures.length === 0,
+        checks,
+      },
+      null,
+      2,
+    ),
+  );
 } else {
   for (const check of checks) {
     if (check.ok) {

@@ -1,0 +1,182 @@
+name: STYNX Reference Apps
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/reference-apps.yml'
+      - 'apps/reference-api/**'
+      - 'apps/reference-web/**'
+      - 'package.json'
+      - 'packages/**'
+      - 'packages-web/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'scripts/ci-local/**'
+      - 'tools/**'
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/reference-apps.yml'
+      - 'apps/reference-api/**'
+      - 'apps/reference-web/**'
+      - 'package.json'
+      - 'packages/**'
+      - 'packages-web/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'scripts/ci-local/**'
+      - 'tools/**'
+
+concurrency:
+  group: reference-apps-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  NODE_VERSION: '24'
+  PNPM_VERSION: '9.15.0'
+
+jobs:
+  reference-api:
+    name: reference-api
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v5
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            package.json
+            pnpm-workspace.yaml
+            apps/*/package.json
+            packages/*/package.json
+            packages-web/*/package.json
+            tools/*/package.json
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build and test reference API
+        run: |
+          pnpm --filter @stynx/reference-api build
+          pnpm --filter @stynx/reference-api test
+          pnpm --filter @stynx/reference-api test:int
+
+  reference-web-e2e:
+    name: reference-web-e2e
+    runs-on: ubuntu-latest
+    needs: reference-api
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v5
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            package.json
+            pnpm-workspace.yaml
+            apps/*/package.json
+            packages/*/package.json
+            packages-web/*/package.json
+            tools/*/package.json
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install Playwright Chromium
+        run: pnpm --filter @stynx/reference-web exec playwright install --with-deps chromium
+      - name: Start reference API stack
+        run: docker compose -f apps/reference-api/docker-compose.yml up -d --build
+      - name: Wait for reference API health gates
+        run: |
+          set -euo pipefail
+          for endpoint in healthz readyz; do
+            for i in $(seq 1 120); do
+              if curl -sf "http://127.0.0.1:3000/${endpoint}" >/dev/null; then
+                break
+              fi
+              if [ "$i" -eq 120 ]; then
+                docker compose -f apps/reference-api/docker-compose.yml ps
+                docker compose -f apps/reference-api/docker-compose.yml logs --no-color --timestamps postgres redis localstack reference-api
+                exit 1
+              fi
+              sleep 2
+            done
+          done
+      - name: Run reference web E2E
+        env:
+          CI: 'true'
+        run: pnpm --filter @stynx/reference-web test:e2e
+      - name: Upload Playwright artifacts
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: reference-web-playwright-artifacts
+          path: |
+            apps/reference-web/test-results
+            apps/reference-web/playwright-report
+          if-no-files-found: ignore
+      - name: Stop reference API stack
+        if: always()
+        run: docker compose -f apps/reference-api/docker-compose.yml down -v
+
+  container-security:
+    name: container-security
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Build reference-api image
+        run: docker build -f apps/reference-api/Dockerfile -t stynx/reference-api:${{ github.sha }} .
+
+      - name: Build reference-web image
+        run: docker build -f apps/reference-web/Dockerfile -t stynx/reference-web:${{ github.sha }} .
+
+      - name: Run Trivy on reference-api
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          image-ref: stynx/reference-api:${{ github.sha }}
+          format: table
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+
+      - name: Run Trivy on reference-web
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          image-ref: stynx/reference-web:${{ github.sha }}
+          format: table
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+
+      - name: Install Syft
+        id: syft
+        uses: anchore/sbom-action/download-syft@v0
+
+      - name: Generate image SBOMs
+        run: |
+          "${{ steps.syft.outputs.cmd }}" stynx/reference-api:${{ github.sha }} -o spdx-json=sbom-reference-api.spdx.json
+          "${{ steps.syft.outputs.cmd }}" stynx/reference-web:${{ github.sha }} -o spdx-json=sbom-reference-web.spdx.json
+
+      - name: Upload image SBOMs
+        uses: actions/upload-artifact@v7
+        with:
+          name: reference-app-image-sboms
+          path: |
+            sbom-reference-api.spdx.json
+            sbom-reference-web.spdx.json
+          if-no-files-found: error
