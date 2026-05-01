@@ -81,6 +81,7 @@ export class ComputeStack extends Stack {
         logGroup: appLogGroup,
       }),
       environment: {
+        GLOG_minloglevel: '2',
         NODE_ENV: config.env,
         AWS_REGION: config.region,
         STYNX_ENV: config.env,

@@ -116,6 +116,7 @@ describe('StynxStorageModule integration', () => {
 
     localstack = await new GenericContainer('localstack/localstack:3.8.1')
       .withEnvironment({
+        GLOG_minloglevel: '2',
         SERVICES: 's3',
         AWS_DEFAULT_REGION: 'us-east-1',
       })

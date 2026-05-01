@@ -303,6 +303,9 @@ describe('@stynx/reference-api runtime suite', () => {
     postgres = await createPostgresTestDatabase('reference_api');
 
     redis = await new GenericContainer('redis:7-alpine')
+      .withEnvironment({
+        GLOG_minloglevel: '2',
+      })
       .withExposedPorts(6379)
       .withWaitStrategy(Wait.forLogMessage(/Ready to accept connections/u))
       .start();
@@ -310,6 +313,7 @@ describe('@stynx/reference-api runtime suite', () => {
 
     localstack = await new GenericContainer('localstack/localstack:3.8.1')
       .withEnvironment({
+        GLOG_minloglevel: '2',
         SERVICES: 's3',
         AWS_DEFAULT_REGION: 'us-east-1',
       })

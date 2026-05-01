@@ -124,6 +124,7 @@ main() {
     --volume "$workspace_volume:/workspace"
     --volume "$docker_volume:/var/lib/docker"
     --env CI=true
+    --env GLOG_minloglevel=2
     --env FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true
     --env CI_LOCAL_SOURCE_DIR=/workspace-src
     --env WORKSPACE=/workspace

@@ -5,6 +5,7 @@ services:
     volumes:
       - ./k6:/perf
     environment:
+      GLOG_minloglevel: '2'
       STYNX_K6_BASE_URL: http://reference-api:3000
       K6_SUMMARY_PATH: /perf/results/summary.json
     depends_on:

@@ -26,6 +26,7 @@ async function applySqlSteps(client: StynxPgClient, steps: TestSqlStep[]): Promi
 async function startPostgresContainer(): Promise<StartedPostgresHandle> {
   const container = await new GenericContainer('postgres:16-alpine')
     .withEnvironment({
+      GLOG_minloglevel: '2',
       POSTGRES_DB: 'postgres',
       POSTGRES_USER: 'postgres',
       POSTGRES_PASSWORD: 'postgres',
@@ -46,6 +47,9 @@ async function startPostgresContainer(): Promise<StartedPostgresHandle> {
 
 async function startRedisContainer(): Promise<StartedRedisHandle> {
   const container = await new GenericContainer('redis:7-alpine')
+    .withEnvironment({
+      GLOG_minloglevel: '2',
+    })
     .withExposedPorts(6379)
     .withWaitStrategy(Wait.forLogMessage(/Ready to accept connections/u))
     .start();
@@ -59,6 +63,7 @@ async function startRedisContainer(): Promise<StartedRedisHandle> {
 async function startLocalstackContainer(services: string[]): Promise<StartedLocalstackHandle> {
   const container = await new GenericContainer('localstack/localstack:3.8.1')
     .withEnvironment({
+      GLOG_minloglevel: '2',
       SERVICES: services.join(','),
       AWS_DEFAULT_REGION: 'us-east-1',
     })
@@ -79,6 +84,7 @@ async function startCognitoContainer(image: string): Promise<StartedCognitoHandl
   const clientId = 'local_testing_client';
   const container = await new GenericContainer(image)
     .withEnvironment({
+      GLOG_minloglevel: '2',
       AWS_DEFAULT_REGION: region,
       COGNITO_LOCAL_PORT: '9229',
       COGNITO_LOCAL_USER_POOLS: JSON.stringify([

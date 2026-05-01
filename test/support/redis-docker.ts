@@ -17,7 +17,15 @@ async function sleep(ms: number): Promise<void> {
 export async function startRedisDockerContainer(): Promise<RedisDockerContainer> {
   const { stdout } = await execFileAsync(
     'docker',
-    ['run', '-d', '-p', '127.0.0.1::6379', 'redis:7-alpine'],
+    [
+      'run',
+      '-d',
+      '-e',
+      'GLOG_minloglevel=2',
+      '-p',
+      '127.0.0.1::6379',
+      'redis:7-alpine',
+    ],
     { timeout: DOCKER_TIMEOUT_MS },
   );
   const id = stdout.trim();

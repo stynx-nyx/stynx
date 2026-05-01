@@ -88,6 +88,7 @@ export class DataStack extends Stack {
         }),
       }),
       environment: {
+        GLOG_minloglevel: '2',
         POSTGRESQL_HOST: this.db.instanceEndpoint.hostname,
         POSTGRESQL_PORT_NUMBER: this.db.instanceEndpoint.port.toString(),
         POSTGRESQL_USERNAME: 'stynx_owner',

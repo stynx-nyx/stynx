@@ -14,6 +14,15 @@ log() {
   printf '\n[%s] %s\n' "$(date -u +%H:%M:%SZ)" "$*"
 }
 
+filter_known_container_noise() {
+  sed -E '/\[mutex\.cc : 955\] RAW: pthread_getschedparam failed: [0-9]+/d'
+}
+
+if [[ "${CI_LOCAL_FILTER_KNOWN_NOISE:-1}" != "0" ]]; then
+  exec > >(filter_known_container_noise)
+  exec 2> >(filter_known_container_noise >&2)
+fi
+
 git_head_value() {
   git rev-parse HEAD 2>/dev/null || printf '%s' "${CI_LOCAL_GIT_HEAD:-}"
 }
@@ -268,6 +277,7 @@ job_integration() {
     --env POSTGRES_DB=stynx \
     --env POSTGRES_USER=stynx \
     --env POSTGRES_PASSWORD=stynx \
+    --env GLOG_minloglevel=2 \
     --publish 5432:5432 \
     postgres:16-alpine
 

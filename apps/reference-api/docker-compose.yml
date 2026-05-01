@@ -2,6 +2,7 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
+      GLOG_minloglevel: '2'
       POSTGRES_DB: postgres
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -15,6 +16,8 @@ services:
 
   redis:
     image: redis:7-alpine
+    environment:
+      GLOG_minloglevel: '2'
     healthcheck:
       test: ['CMD', 'redis-cli', 'ping']
       interval: 5s
@@ -26,6 +29,7 @@ services:
   localstack:
     image: localstack/localstack:3.8.1
     environment:
+      GLOG_minloglevel: '2'
       SERVICES: s3
       AWS_DEFAULT_REGION: us-east-1
       STYNX_STORAGE_BUCKET: stynx-docs-local-us-east-1
@@ -46,6 +50,7 @@ services:
   cognito-local:
     image: jagregory/cognito-local:latest
     environment:
+      GLOG_minloglevel: '2'
       AWS_DEFAULT_REGION: us-east-1
       COGNITO_LOCAL_PORT: 9229
       COGNITO_LOCAL_USER_POOLS: '[{"Id":"local_testing_pool","Name":"stynx-local","Clients":[{"ClientId":"local_testing_client","ClientName":"stynx-local-client"}]}]'
@@ -66,6 +71,7 @@ services:
       context: ../..
       dockerfile: apps/reference-api/Dockerfile
     environment:
+      GLOG_minloglevel: '2'
       PORT: 3000
       STYNX_OWNER_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres
       STYNX_APP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres
