@@ -4,7 +4,9 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
+      - '.ci/evidence/**'
       - '.github/workflows/reference-apps.yml'
+      - '.github/workflows/evidence.yml'
       - 'apps/reference-api/**'
       - 'apps/reference-web/**'
       - 'package.json'
@@ -13,12 +15,15 @@ on:
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
       - 'scripts/ci-local/**'
+      - 'scripts/evidence/**'
       - 'tools/**'
   push:
     branches:
       - main
     paths:
+      - '.ci/evidence/**'
       - '.github/workflows/reference-apps.yml'
+      - '.github/workflows/evidence.yml'
       - 'apps/reference-api/**'
       - 'apps/reference-web/**'
       - 'package.json'
@@ -27,6 +32,7 @@ on:
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
       - 'scripts/ci-local/**'
+      - 'scripts/evidence/**'
       - 'tools/**'
 
 concurrency:
@@ -42,9 +48,29 @@ env:
   PNPM_VERSION: '9.15.0'
 
 jobs:
+  evidence-gate:
+    name: evidence-gate
+    runs-on: ubuntu-latest
+    outputs:
+      evidence_mode: ${{ steps.verify.outputs.evidence_mode }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Check local CI evidence mode
+        id: verify
+        run: node scripts/evidence/verify-local-evidence.mjs --mode gate --github-output "$GITHUB_OUTPUT"
+        env:
+          LOCAL_EVIDENCE_TRUSTED_ACTORS: ${{ vars.LOCAL_EVIDENCE_TRUSTED_ACTORS }}
+
   reference-api:
     name: reference-api
     runs-on: ubuntu-latest
+    needs: evidence-gate
+    if: ${{ needs.evidence-gate.outputs.evidence_mode != 'true' }}
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v5
@@ -75,7 +101,10 @@ jobs:
   reference-web-e2e:
     name: reference-web-e2e
     runs-on: ubuntu-latest
-    needs: reference-api
+    needs:
+      - evidence-gate
+      - reference-api
+    if: ${{ needs.evidence-gate.outputs.evidence_mode != 'true' }}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v6
@@ -138,6 +167,8 @@ jobs:
   container-security:
     name: container-security
     runs-on: ubuntu-latest
+    needs: evidence-gate
+    if: ${{ needs.evidence-gate.outputs.evidence_mode != 'true' }}
     steps:
       - uses: actions/checkout@v6
 

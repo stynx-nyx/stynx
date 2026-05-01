@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stynx.local/schemas/local-ci-evidence-v1.json",
+  "title": "STYNX local CI evidence manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schemaVersion",
+    "generatedAt",
+    "sourceHash",
+    "policy",
+    "tools",
+    "platforms",
+    "jobs"
+  ],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "sourceHash": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "value", "fileCount"],
+      "properties": {
+        "algorithm": { "const": "sha256" },
+        "value": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "fileCount": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maxAgeHours", "requiredJobs", "allowedPlatforms"],
+      "properties": {
+        "maxAgeHours": { "const": 24 },
+        "requiredJobs": {
+          "type": "array",
+          "items": { "enum": ["all-linux", "stynx-release"] },
+          "contains": { "const": "all-linux" },
+          "minItems": 2,
+          "uniqueItems": true
+        },
+        "allowedPlatforms": {
+          "type": "array",
+          "items": { "enum": ["linux/arm64", "linux/amd64"] },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
+    },
+    "tools": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["node", "pnpm", "docker", "dockerCompose"],
+      "properties": {
+        "node": { "$ref": "#/$defs/toolEvidence" },
+        "pnpm": { "$ref": "#/$defs/toolEvidence" },
+        "docker": { "$ref": "#/$defs/toolEvidence" },
+        "dockerCompose": { "$ref": "#/$defs/toolEvidence" }
+      }
+    },
+    "platforms": {
+      "type": "array",
+      "items": { "enum": ["linux/arm64", "linux/amd64"] },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "jobs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["all-linux", "stynx-release"],
+      "properties": {
+        "all-linux": { "$ref": "#/$defs/jobEvidence" },
+        "stynx-release": { "$ref": "#/$defs/jobEvidence" }
+      }
+    }
+  },
+  "$defs": {
+    "toolEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "expected": { "type": "string" },
+        "observed": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": ["observed"]
+    },
+    "jobEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["result", "artifactDir", "metadata", "artifactChecksum"],
+      "properties": {
+        "result": { "const": "success" },
+        "artifactDir": { "type": "string" },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "required": ["job", "utc", "platform", "git_head", "node", "pnpm", "docker"]
+        },
+        "artifactChecksum": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["algorithm", "value", "fileCount"],
+          "properties": {
+            "algorithm": { "const": "sha256" },
+            "value": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+            "fileCount": { "type": "integer", "minimum": 1 }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+name: Evidence
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: evidence-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  NODE_VERSION: '24'
+
+jobs:
+  verify:
+    name: evidence/verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Verify local CI evidence policy
+        run: node scripts/evidence/verify-local-evidence.mjs --mode auto
+        env:
+          LOCAL_EVIDENCE_TRUSTED_ACTORS: ${{ vars.LOCAL_EVIDENCE_TRUSTED_ACTORS }}

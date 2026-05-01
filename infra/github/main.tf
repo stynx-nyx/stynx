@@ -32,6 +32,7 @@ resource "github_branch_protection" "main" {
       "migration-lint",
       "doctor",
       "lint:cycles",
+      "evidence/verify",
     ]
   }
 

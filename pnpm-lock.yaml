@@ -58,6 +58,9 @@ importers:
       eslint-plugin-jsdoc:
         specifier: ^62.9.0
         version: 62.9.0(eslint@10.2.1(jiti@2.6.1))
+      github-actionlint:
+        specifier: 1.7.12
+        version: 1.7.12
       globals:
         specifier: ^17.5.0
         version: 17.5.0
@@ -5293,6 +5296,13 @@ packages:
       }
     engines: { node: '>=12' }
 
+  '@isaacs/fs-minipass@4.0.1':
+    resolution:
+      {
+        integrity: sha512-wgm9Ehl2jpeqP3zw/7mo3kRHFp5MEDhqAdwy1fTGkHAwnkGOVsgpvQhL8B5n1qlb01jV3n/bI0ZfZp5lWA1k4w==,
+      }
+    engines: { node: '>=18.0.0' }
+
   '@istanbuljs/load-nyc-config@1.1.0':
     resolution:
       {
@@ -8629,6 +8639,13 @@ packages:
       }
     engines: { node: '>= 10.0.0' }
 
+  adm-zip@0.5.17:
+    resolution:
+      {
+        integrity: sha512-+Ut8d9LLqwEvHHJl1+PIHqoyDxFgVN847JTVM3Izi3xHDWPE4UtzzXysMZQs64DMcrJfBeS/uoEP4AD3HQHnQQ==,
+      }
+    engines: { node: '>=12.0' }
+
   agent-base@7.1.4:
     resolution:
       {
@@ -9657,6 +9674,13 @@ packages:
       {
         integrity: sha512-jJ0bqzaylmJtVnNgzTeSOs8DPavpbYgEr/b0YL8/2GO3xJEhInFmhKMUnEJQjZumK7KXGFhUy89PrsJWlakBVg==,
       }
+
+  chownr@3.0.0:
+    resolution:
+      {
+        integrity: sha512-+IxzY9BZOQd/XuYPRmrvEVjF/nqj5kgT4kEq7VofrDoM1MxoRjEWkrCC3EtLi59TVawxTAn+orJwFQcrqEN1+g==,
+      }
+    engines: { node: '>=18' }
 
   chrome-launcher@0.13.4:
     resolution:
@@ -12541,6 +12565,14 @@ packages:
         integrity: sha512-wIh+gKBI9Nshz2o46B0B3f5k/W+WI9ZAv6y5Dn5WJ5SK1t0TnDimB4WE5rmTD05ZAIn8HALCZVmCsvj0w0v0lw==,
       }
 
+  github-actionlint@1.7.12:
+    resolution:
+      {
+        integrity: sha512-kSVz5clt9voatp2Tdh1BETKNooT358/nPChYseaDC4M6f9Hc/sBRMbhagx2FTu2F/WHzDoxlNPh2EqwBngTYQg==,
+      }
+    engines: { node: '>=18.0.0' }
+    hasBin: true
+
   glob-parent@5.1.2:
     resolution:
       {
@@ -15173,6 +15205,13 @@ packages:
         integrity: sha512-tEBHqDnIoM/1rXME1zgka9g6Q2lcoCkxHLuc7ODJ5BxbP5d4c2Z5cGgtXAku59200Cx7diuHTOYfSBD8n6mm8A==,
       }
     engines: { node: '>=16 || 14 >=14.17' }
+
+  minizlib@3.1.0:
+    resolution:
+      {
+        integrity: sha512-KZxYo1BUkWD2TVFLr0MQoM8vUUigWD3LlD83a/75BqC+4qE0Hb1Vo5v1FgcfaNXvfXzr+5EhQ6ing/CaBijTlw==,
+      }
+    engines: { node: '>= 18' }
 
   mitt@3.0.1:
     resolution:
@@ -18559,6 +18598,13 @@ packages:
       }
     engines: { node: '>=6' }
 
+  tar@7.5.13:
+    resolution:
+      {
+        integrity: sha512-tOG/7GyXpFevhXVh8jOPJrmtRpOTsYqUIkVdVooZYJS/z8WhfQUX8RJILmeuJNinGAMSu1veBr4asSHFt5/hng==,
+      }
+    engines: { node: '>=18' }
+
   tar-fs@2.1.4:
     resolution:
       {
@@ -19894,6 +19940,13 @@ packages:
       {
         integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==,
       }
+
+  yallist@5.0.0:
+    resolution:
+      {
+        integrity: sha512-YgvUTfwqyc7UXVMrB+SImsVYSmTS8X/tSrtdNZMImM+n7+QTriRXyXim0mBrTXNeqzVF0KWGgHPeiyViFFrNDw==,
+      }
+    engines: { node: '>=18' }
 
   yaml@1.10.3:
     resolution:
@@ -23670,6 +23723,10 @@ snapshots:
       wrap-ansi: 8.1.0
       wrap-ansi-cjs: wrap-ansi@7.0.0
 
+  '@isaacs/fs-minipass@4.0.1':
+    dependencies:
+      minipass: 7.1.3
+
   '@istanbuljs/load-nyc-config@1.1.0':
     dependencies:
       camelcase: 5.3.1
@@ -26043,6 +26100,8 @@ snapshots:
 
   address@1.2.2: {}
 
+  adm-zip@0.5.17: {}
+
   agent-base@7.1.4: {}
 
   aggregate-error@3.1.0:
@@ -26708,6 +26767,8 @@ snapshots:
       readdirp: 5.0.0
 
   chownr@1.1.4: {}
+
+  chownr@3.0.0: {}
 
   chrome-launcher@0.13.4:
     dependencies:
@@ -28545,6 +28606,11 @@ snapshots:
       - conventional-commits-parser
 
   github-slugger@1.5.0: {}
+
+  github-actionlint@1.7.12:
+    dependencies:
+      adm-zip: 0.5.17
+      tar: 7.5.13
 
   glob-parent@5.1.2:
     dependencies:
@@ -30649,6 +30715,10 @@ snapshots:
   minimist@1.2.8: {}
 
   minipass@7.1.3: {}
+
+  minizlib@3.1.0:
+    dependencies:
+      minipass: 7.1.3
 
   mitt@3.0.1: {}
 
@@ -32873,6 +32943,14 @@ snapshots:
 
   tapable@2.3.3: {}
 
+  tar@7.5.13:
+    dependencies:
+      '@isaacs/fs-minipass': 4.0.1
+      chownr: 3.0.0
+      minipass: 7.1.3
+      minizlib: 3.1.0
+      yallist: 5.0.0
+
   tar-fs@2.1.4:
     dependencies:
       chownr: 1.1.4
@@ -33713,6 +33791,8 @@ snapshots:
   y18n@5.0.8: {}
 
   yallist@3.1.1: {}
+
+  yallist@5.0.0: {}
 
   yaml@1.10.3: {}
 
