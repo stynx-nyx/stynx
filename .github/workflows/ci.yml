@@ -256,8 +256,12 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     env:
-      DATABASE_URL: postgresql://stynx:stynx@localhost:5432/stynx
-      STYNX_DATABASE_URL: postgresql://stynx:stynx@localhost:5432/stynx
+      DATABASE_URL: postgresql://stynx:stynx@127.0.0.1:5432/stynx
+      STYNX_DATABASE_URL: postgresql://stynx:stynx@127.0.0.1:5432/stynx
+      STYNX_TEST_PG_HOST: 127.0.0.1
+      STYNX_TEST_PG_PORT: '5432'
+      STYNX_TEST_PG_USER: stynx
+      STYNX_TEST_PG_PASSWORD: stynx
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v5
