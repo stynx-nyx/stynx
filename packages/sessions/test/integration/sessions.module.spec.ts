@@ -20,10 +20,11 @@ const execFileAsync = promisify(execFile);
 
 interface RedisDockerContainer {
   id: string;
+  host: string;
   port: number;
 }
 
-jest.setTimeout(30000);
+jest.setTimeout(120_000);
 
 function buildKeySet() {
   const { publicKey, privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
@@ -86,20 +87,25 @@ async function sleep(ms: number): Promise<void> {
 }
 
 async function startRedisDockerContainer(): Promise<RedisDockerContainer> {
-  const { stdout } = await execFileAsync('docker', ['run', '-d', '-p', '127.0.0.1::6379', 'redis:7-alpine']);
+  if (process.env.CI_LOCAL_HOST_DOCKER === '1') {
+    throw new Error('Use in-memory session store when local CI is already using host Docker');
+  }
+  const publish = process.env.TESTCONTAINERS_HOST_OVERRIDE ? '6379' : '127.0.0.1::6379';
+  const { stdout } = await execFileAsync('docker', ['run', '-d', '-p', publish, 'redis:7-alpine']);
   const id = stdout.trim();
+  const host = process.env.TESTCONTAINERS_HOST_OVERRIDE ?? '127.0.0.1';
 
   for (let attempt = 0; attempt < 20; attempt += 1) {
     const portResult = await execFileAsync('docker', ['port', id, '6379/tcp']);
     const match = portResult.stdout.trim().match(/:(\d+)$/u);
     if (match) {
       const port = Number(match[1]);
-      const client = createClient({ url: `redis://127.0.0.1:${port}` });
+      const client = createClient({ url: `redis://${host}:${port}` });
       try {
         await client.connect();
         await client.ping();
         await client.quit();
-        return { id, port };
+        return { id, host, port };
       } catch {
         if (client.isOpen) {
           await client.quit();
@@ -150,7 +156,7 @@ describe('StynxSessionsModule integration', () => {
     let redisUrl = 'redis://127.0.0.1:6379';
     try {
       redisContainer = await startRedisDockerContainer();
-      redisUrl = `redis://127.0.0.1:${redisContainer.port}`;
+      redisUrl = `redis://${redisContainer.host}:${redisContainer.port}`;
     } catch {
       store = new InMemorySessionStore();
     }
@@ -260,7 +266,7 @@ describe('StynxSessionsModule integration', () => {
     let cleanup: (() => Promise<void>) | undefined;
 
     if (redisContainer) {
-      const redisUrl = `redis://127.0.0.1:${redisContainer.port}`;
+      const redisUrl = `redis://${redisContainer.host}:${redisContainer.port}`;
       const subscriber = createClient({ url: redisUrl });
       await subscriber.connect();
       received = new Promise<{ message: string; elapsedMs: number }>((resolve) => {

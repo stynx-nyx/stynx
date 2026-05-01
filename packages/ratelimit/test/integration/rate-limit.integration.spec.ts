@@ -79,7 +79,7 @@ describe('Rate limit integration', () => {
 
   it('applies per-tenant overrides via core.rate_limit_overrides', async () => {
     const resolver = new DatabaseRateLimitPolicyResolver(
-      { redis: { url: `redis://127.0.0.1:${redis?.port}`, keyPrefix: 'stynx:test:ratelimit' } },
+      { redis: { url: `redis://${redis?.host}:${redis?.port}`, keyPrefix: 'stynx:test:ratelimit' } },
       databaseRef,
     );
 
@@ -94,7 +94,7 @@ describe('Rate limit integration', () => {
 
   it('keeps Redis sliding-window atomic under 1000 concurrent hits', async () => {
     const store = new RedisSlidingWindowRateLimitStore({
-      redis: { url: `redis://127.0.0.1:${redis?.port}`, keyPrefix: 'stynx:test:ratelimit' },
+      redis: { url: `redis://${redis?.host}:${redis?.port}`, keyPrefix: 'stynx:test:ratelimit' },
     });
     await store.onModuleInit();
     try {
@@ -135,11 +135,11 @@ describe('Rate limit integration', () => {
     };
 
     const store = new RedisSlidingWindowRateLimitStore({
-      redis: { url: `redis://127.0.0.1:${redis?.port}`, keyPrefix: 'stynx:test:ratelimit:guard' },
+      redis: { url: `redis://${redis?.host}:${redis?.port}`, keyPrefix: 'stynx:test:ratelimit:guard' },
     });
     await store.onModuleInit();
     const resolver = new DatabaseRateLimitPolicyResolver(
-      { redis: { url: `redis://127.0.0.1:${redis?.port}`, keyPrefix: 'stynx:test:ratelimit:guard' } },
+      { redis: { url: `redis://${redis?.host}:${redis?.port}`, keyPrefix: 'stynx:test:ratelimit:guard' } },
       databaseRef,
     );
     const metrics = new InMemoryRateLimitMetrics();

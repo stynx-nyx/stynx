@@ -1,12 +1,15 @@
 import { execFile } from 'node:child_process';
+import { Socket } from 'node:net';
 import { promisify } from 'node:util';
 import { createClient } from 'redis';
 
 const execFileAsync = promisify(execFile);
 const DOCKER_TIMEOUT_MS = 30_000;
+const REDIS_READY_TIMEOUT_MS = 2_000;
 
 export interface RedisDockerContainer {
   id: string;
+  host: string;
   port: number;
 }
 
@@ -14,7 +17,70 @@ async function sleep(ms: number): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function dockerHost(): string {
+  return process.env.TESTCONTAINERS_HOST_OVERRIDE ?? '127.0.0.1';
+}
+
+async function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  let timer: NodeJS.Timeout | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => {
+          reject(new Error(`${label} timed out after ${ms}ms`));
+        }, ms);
+      }),
+    ]);
+  } finally {
+    if (timer) {
+      clearTimeout(timer);
+    }
+  }
+}
+
+async function waitForTcp(host: string, port: number): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    const socket = new Socket();
+    const timer = setTimeout(() => {
+      socket.destroy();
+      reject(new Error(`Timed out connecting to Redis at ${host}:${port}`));
+    }, REDIS_READY_TIMEOUT_MS);
+
+    socket.once('connect', () => {
+      clearTimeout(timer);
+      socket.end();
+      resolve();
+    });
+    socket.once('error', (error) => {
+      clearTimeout(timer);
+      reject(error);
+    });
+    socket.connect(port, host);
+  });
+}
+
+async function assertRedisReady(host: string, port: number): Promise<void> {
+  await waitForTcp(host, port);
+  const client = createClient({
+    socket: {
+      connectTimeout: REDIS_READY_TIMEOUT_MS,
+    },
+    url: `redis://${host}:${port}`,
+  });
+  client.on('error', () => undefined);
+  try {
+    await withTimeout(client.connect(), REDIS_READY_TIMEOUT_MS, `Redis connect ${host}:${port}`);
+    await withTimeout(client.ping(), REDIS_READY_TIMEOUT_MS, `Redis ping ${host}:${port}`);
+  } finally {
+    if (client.isOpen) {
+      await withTimeout(client.quit(), REDIS_READY_TIMEOUT_MS, `Redis quit ${host}:${port}`).catch(() => undefined);
+    }
+  }
+}
+
 export async function startRedisDockerContainer(): Promise<RedisDockerContainer> {
+  const publish = process.env.TESTCONTAINERS_HOST_OVERRIDE ? '0.0.0.0::6379' : '127.0.0.1::6379';
   const { stdout } = await execFileAsync(
     'docker',
     [
@@ -23,7 +89,7 @@ export async function startRedisDockerContainer(): Promise<RedisDockerContainer>
       '-e',
       'GLOG_minloglevel=2',
       '-p',
-      '127.0.0.1::6379',
+      publish,
       'redis:7-alpine',
     ],
     { timeout: DOCKER_TIMEOUT_MS },
@@ -39,17 +105,12 @@ export async function startRedisDockerContainer(): Promise<RedisDockerContainer>
     const match = portResult.stdout.trim().match(/:(\d+)$/u);
     if (match) {
       const port = Number(match[1]);
-      const client = createClient({ url: `redis://127.0.0.1:${port}` });
-      client.on('error', () => undefined);
+      const host = dockerHost();
       try {
-        await client.connect();
-        await client.ping();
-        await client.quit();
-        return { id, port };
+        await assertRedisReady(host, port);
+        return { id, host, port };
       } catch {
-        if (client.isOpen) {
-          await client.quit();
-        }
+        // Redis may have a published port before it accepts connections.
       }
     }
     await sleep(500);

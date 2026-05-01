@@ -22,7 +22,7 @@
     "clean": "rm -rf dist coverage",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/angular.mjs \"src/**/*.ts\"",
-    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config ./jest.config.cjs"
+    "test": "node --disable-warning=ExperimentalWarning --experimental-vm-modules ./node_modules/jest/bin/jest.js --config ./jest.config.cjs"
   },
   "dependencies": {
     "@stynx-web/angular-auth": "workspace:*",

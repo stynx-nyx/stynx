@@ -83,7 +83,9 @@ describe('Idempotency integration', () => {
       await admin.end();
     }
     store = new DatabaseIdempotencyStore(database, { ttlMs: 86_400_000 });
-    backend = new RedisIdempotencyBackend({ redis: { url: `redis://127.0.0.1:${redis.port}`, keyPrefix: 'stynx:test:idempotency' } });
+    backend = new RedisIdempotencyBackend({
+      redis: { url: `redis://${redis.host}:${redis.port}`, keyPrefix: 'stynx:test:idempotency' },
+    });
     await backend.onModuleInit();
     reflector = new Reflector();
     handler = function idempotentHandler() {

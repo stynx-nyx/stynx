@@ -23,7 +23,7 @@ Jobs:
 
 Environment:
   CI_LOCAL_IMAGE      Docker image tag to build/use. Default: stynx-ci-local:node24-pnpm9
-  CI_LOCAL_PLATFORM   Docker platform. Default: linux/amd64
+  CI_LOCAL_PLATFORM   Docker platform. Default: native host Linux architecture.
   CI_LOCAL_ARTIFACT_DIR
                       Repo-relative artifact directory. Default: reports/ci-local/<timestamp>-<job>
   CI_LOCAL_CPUS       Optional docker run --cpus value.
@@ -59,8 +59,8 @@ main() {
       ;;
   esac
 
-  local script_dir repo_root image platform artifact_dir node_major pnpm_version platform_slug
-  local workspace_volume docker_volume
+  local script_dir repo_root image platform default_platform artifact_dir node_major pnpm_version platform_slug
+  local workspace_volume docker_volume docker_host_socket
   script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
   if repo_root="$(git -C "$script_dir/../.." rev-parse --show-toplevel 2>/dev/null)"; then
     :
@@ -79,8 +79,13 @@ main() {
     return 1
   fi
 
+  case "$(uname -m)" in
+    arm64|aarch64) default_platform="linux/arm64" ;;
+    *) default_platform="linux/amd64" ;;
+  esac
+
   image="${CI_LOCAL_IMAGE:-stynx-ci-local:node24-pnpm9}"
-  platform="${CI_LOCAL_PLATFORM:-linux/amd64}"
+  platform="${CI_LOCAL_PLATFORM:-$default_platform}"
   platform_slug="${platform//\//-}"
   platform_slug="${platform_slug//[^a-zA-Z0-9_.-]/-}"
   workspace_volume="${CI_LOCAL_WORKSPACE_VOLUME:-stynx-ci-local-workspace-$platform_slug}"
@@ -88,6 +93,23 @@ main() {
   node_major="${NODE_MAJOR:-24}"
   pnpm_version="${PNPM_VERSION:-9.15.0}"
   artifact_dir="${CI_LOCAL_ARTIFACT_DIR:-reports/ci-local/$(date -u +%Y%m%dT%H%M%SZ)-${job}}"
+  docker_host_socket="${CI_LOCAL_DOCKER_HOST_SOCKET:-}"
+
+  if [[ -z "$docker_host_socket" && -S /var/run/docker.sock ]]; then
+    docker_host_socket="/var/run/docker.sock"
+  fi
+
+  if [[ -z "$docker_host_socket" ]]; then
+    case "${DOCKER_HOST:-}" in
+      unix://*)
+        docker_host_socket="${DOCKER_HOST#unix://}"
+        ;;
+    esac
+  fi
+
+  if [[ -z "$docker_host_socket" && -S "$HOME/.docker/run/docker.sock" ]]; then
+    docker_host_socket="$HOME/.docker/run/docker.sock"
+  fi
 
   case "$artifact_dir" in
     /*)
@@ -120,13 +142,17 @@ main() {
     --name "stynx-ci-local-$$"
     --workdir /workspace
     --volume "$repo_root:/workspace-src:ro"
+    --volume "$repo_root:$repo_root:ro"
     --volume "$artifact_abs:/ci-artifacts"
     --volume "$workspace_volume:/workspace"
     --volume "$docker_volume:/var/lib/docker"
     --env CI=true
     --env GLOG_minloglevel=2
+    --env NODE_OPTIONS=--disable-warning=DEP0169
     --env FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true
+    --env TURBO_TELEMETRY_DISABLED=1
     --env CI_LOCAL_SOURCE_DIR=/workspace-src
+    --env "CI_LOCAL_SOURCE_HOST_DIR=$repo_root"
     --env WORKSPACE=/workspace
     --env CI_LOCAL_ARTIFACT_DIR=/ci-artifacts
     --env "CI_LOCAL_ARTIFACT_HOST_DIR=$artifact_dir"
@@ -139,6 +165,16 @@ main() {
     --env "CI_LOCAL_TURBO_CONCURRENCY=${CI_LOCAL_TURBO_CONCURRENCY:-3}"
     --env "PNPM_VERSION=$pnpm_version"
   )
+
+  if [[ -n "$docker_host_socket" && -S "$docker_host_socket" ]]; then
+    run_args+=(
+      --volume "$docker_host_socket:/var/run/docker.sock"
+      --add-host host.docker.internal:host-gateway
+      --env CI_LOCAL_HOST_DOCKER=1
+      --env DOCKER_HOST=unix:///var/run/docker.sock
+      --env TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal
+    )
+  fi
 
   if [[ -n "${CI_LOCAL_CPUS:-}" ]]; then
     run_args+=(--cpus "$CI_LOCAL_CPUS")

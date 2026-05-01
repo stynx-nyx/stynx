@@ -1,7 +1,9 @@
-import { HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http';
+import type { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
 import { Inject, Injectable } from '@angular/core';
 import type { AuthProvider } from '@stynx-web/sdk';
-import { Observable, catchError, from, switchMap, throwError } from 'rxjs';
+import type { Observable } from 'rxjs';
+import { catchError, from, switchMap, throwError } from 'rxjs';
 import { STYNX_ANGULAR_OPTIONS, STYNX_AUTH_PROVIDER } from './tokens';
 import type { StynxAngularModuleOptions } from './types';
 

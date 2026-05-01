@@ -5,11 +5,16 @@ describe('MembershipAccessCache', () => {
     jest.restoreAllMocks();
   });
 
-  it('expires entries after the configured ttl', async () => {
+  it('expires entries after the configured ttl', () => {
+    const now = 1_000;
+    const dateNow = jest.spyOn(Date, 'now').mockReturnValue(now);
     const cache = new MembershipAccessCache(5, 10);
+
     cache.set('user-1', 'tenant-1', true);
     expect(cache.get('user-1', 'tenant-1')).toBe(true);
-    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    dateNow.mockReturnValue(now + 6);
+
     expect(cache.get('user-1', 'tenant-1')).toBeUndefined();
   });
 

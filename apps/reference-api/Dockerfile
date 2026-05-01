@@ -18,7 +18,7 @@ COPY apps/reference-api ./apps/reference-api
 
 FROM workspace AS build
 
-RUN pnpm install --frozen-lockfile --ignore-scripts
+RUN NODE_OPTIONS=--disable-warning=DEP0169 pnpm install --frozen-lockfile --ignore-scripts
 RUN pnpm --filter @stynx/reference-api... build
 RUN mkdir -p runtime-dist/apps/reference-api runtime-dist/packages \
   && cp -R apps/reference-api/dist runtime-dist/apps/reference-api/dist \
@@ -32,7 +32,7 @@ RUN mkdir -p runtime-dist/apps/reference-api runtime-dist/packages \
 
 FROM workspace AS prod-deps
 
-RUN pnpm install --frozen-lockfile --prod --ignore-scripts
+RUN NODE_OPTIONS=--disable-warning=DEP0169 pnpm install --frozen-lockfile --prod --ignore-scripts
 
 FROM node:24-bookworm-slim AS runtime
 

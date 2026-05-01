@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { Test } from '@nestjs/testing';
-import type { INestApplication } from '@nestjs/common';
+import { Logger, type INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import {
   CreateBucketCommand,
@@ -622,17 +622,22 @@ describe('@stynx/reference-api runtime suite', () => {
   });
 
   it('family 6: enforces read-only routes against writes', async () => {
-    await expectROCannotWrite(async () => {
-      await authRequest(readerAToken)
-        .get('/_probes/readonly-write')
-        .expect(500);
-      throw new Error('READONLY_VIOLATION_NOT_SURFACED');
-    }).catch(async () => {
-      const response = await authRequest(readerAToken)
-        .get('/_probes/readonly-write')
-        .expect(500);
-      expect(response.body.code).toBe('READONLY_VIOLATION');
-    });
+    const expectedErrorLog = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+    try {
+      await expectROCannotWrite(async () => {
+        await authRequest(readerAToken)
+          .get('/_probes/readonly-write')
+          .expect(500);
+        throw new Error('READONLY_VIOLATION_NOT_SURFACED');
+      }).catch(async () => {
+        const response = await authRequest(readerAToken)
+          .get('/_probes/readonly-write')
+          .expect(500);
+        expect(response.body.code).toBe('READONLY_VIOLATION');
+      });
+    } finally {
+      expectedErrorLog.mockRestore();
+    }
   });
 
   it('family 7: replays idempotent record creation without duplicating rows', async () => {

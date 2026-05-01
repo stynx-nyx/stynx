@@ -15,7 +15,7 @@ log() {
 }
 
 filter_known_container_noise() {
-  sed -E '/\[mutex\.cc : 955\] RAW: pthread_getschedparam failed: [0-9]+/d'
+  sed -u -E '/\[mutex\.cc : 955\] RAW: pthread_getschedparam failed: [0-9]+/d'
 }
 
 if [[ "${CI_LOCAL_FILTER_KNOWN_NOISE:-1}" != "0" ]]; then
@@ -55,7 +55,6 @@ prepare_workspace() {
   log "Syncing clean workspace from $source_dir"
   mkdir -p "$workspace"
   rsync -a --delete \
-    --exclude='.git/' \
     --exclude='.pnpm-store/' \
     --exclude='node_modules/' \
     --exclude='**/node_modules/' \
@@ -191,8 +190,42 @@ wait_http() {
   return 1
 }
 
+start_tcp_proxy() {
+  local listen_port="$1"
+  local target_host="$2"
+  local target_port="$3"
+  local label="$4"
+
+  log "Starting $label TCP proxy on 127.0.0.1:$listen_port -> $target_host:$target_port" >&2
+  node - "$listen_port" "$target_host" "$target_port" > "$artifact_dir/$label-proxy.log" 2>&1 <<'NODE' &
+const net = require('node:net');
+
+const [, , listenPort, targetHost, targetPort] = process.argv;
+
+const server = net.createServer((client) => {
+  const upstream = net.connect(Number(targetPort), targetHost);
+  client.pipe(upstream);
+  upstream.pipe(client);
+  client.on('error', () => upstream.destroy());
+  upstream.on('error', () => client.destroy());
+});
+
+server.listen(Number(listenPort), '127.0.0.1');
+NODE
+  printf '%s' "$!"
+}
+
 reference_compose() {
   docker compose -f "$reference_compose_file" "$@"
+}
+
+host_docker_gateway() {
+  if [[ -n "${TESTCONTAINERS_HOST_OVERRIDE:-}" ]]; then
+    printf '%s\n' "$TESTCONTAINERS_HOST_OVERRIDE"
+    return 0
+  fi
+
+  ip route | awk '/default/ { print $3; exit }'
 }
 
 collect_reference_artifacts() {
@@ -267,8 +300,17 @@ job_unit() {
 
 job_integration() {
   local status=0
+  local service_host="127.0.0.1"
+  local service_port="5432"
+  local postgres_publish="5432:5432"
   install_workspace_once
   ensure_dockerd
+
+  if [[ "${CI_LOCAL_HOST_DOCKER:-0}" == "1" ]]; then
+    service_host="$(host_docker_gateway)"
+    export TESTCONTAINERS_HOST_OVERRIDE="$service_host"
+    postgres_publish="0.0.0.0::5432"
+  fi
 
   docker rm -f "$postgres_name" >/dev/null 2>&1 || true
   run docker run \
@@ -278,23 +320,36 @@ job_integration() {
     --env POSTGRES_USER=stynx \
     --env POSTGRES_PASSWORD=stynx \
     --env GLOG_minloglevel=2 \
-    --publish 5432:5432 \
+    --publish "$postgres_publish" \
     postgres:16-alpine
+
+  service_port="$(docker port "$postgres_name" 5432/tcp | sed -E 's/.*:([0-9]+)$/\1/')"
+  if [[ -z "$service_port" ]]; then
+    printf 'Unable to resolve published PostgreSQL port for %s.\n' "$postgres_name" >&2
+    status=1
+  fi
 
   local i
   for i in $(seq 1 60); do
-    if pg_isready -h 127.0.0.1 -p 5432 -U stynx -d stynx >/dev/null 2>&1; then
+    if [[ "$status" -ne 0 ]]; then
+      break
+    fi
+    if pg_isready -h "$service_host" -p "$service_port" -U stynx -d stynx -t 2 >/dev/null 2>&1; then
       break
     fi
     if [[ "$i" -eq 60 ]]; then
-      printf 'Timed out waiting for local PostgreSQL service.\n' >&2
+      printf 'Timed out waiting for local PostgreSQL service at %s:%s.\n' "$service_host" "$service_port" >&2
       status=1
     fi
     sleep 1
   done
 
-  export DATABASE_URL="postgresql://stynx:stynx@localhost:5432/stynx"
+  export DATABASE_URL="postgresql://stynx:stynx@$service_host:$service_port/stynx"
   export STYNX_DATABASE_URL="$DATABASE_URL"
+  export STYNX_TEST_PG_HOST="$service_host"
+  export STYNX_TEST_PG_PORT="$service_port"
+  export STYNX_TEST_PG_USER="stynx"
+  export STYNX_TEST_PG_PASSWORD="stynx"
 
   if [[ "$status" -eq 0 ]]; then
     run pnpm --filter @stynx/cli build || status=$?
@@ -312,11 +367,12 @@ job_integration() {
     run pnpm check:rls-smoke || status=$?
   fi
   if [[ "$status" -eq 0 ]]; then
-    run pnpm test:int || status=$?
+    CI_LOCAL_TURBO_CONCURRENCY=1 root_turbo_run test:int --filter='./packages/*' || status=$?
   fi
 
   docker logs "$postgres_name" > "$artifact_dir/integration-postgres.log" 2>&1 || true
   docker rm -f "$postgres_name" >/dev/null 2>&1 || true
+  unset DATABASE_URL STYNX_DATABASE_URL STYNX_TEST_PG_HOST STYNX_TEST_PG_PORT STYNX_TEST_PG_USER STYNX_TEST_PG_PASSWORD
   return "$status"
 }
 
@@ -332,8 +388,18 @@ job_doctor() {
 
 job_reference_web_e2e() {
   local status=0
+  local service_host="127.0.0.1"
+  local api_proxy_pid=""
   install_workspace_once
   ensure_dockerd
+
+  if [[ "${CI_LOCAL_HOST_DOCKER:-0}" == "1" ]]; then
+    service_host="$(host_docker_gateway)"
+    export TESTCONTAINERS_HOST_OVERRIDE="$service_host"
+    if [[ -n "${CI_LOCAL_SOURCE_HOST_DIR:-}" ]]; then
+      reference_compose_file="$CI_LOCAL_SOURCE_HOST_DIR/$reference_compose_file"
+    fi
+  fi
   cleanup_reference_stack
 
   run pnpm --filter @stynx/reference-web exec playwright install --with-deps chromium || status=$?
@@ -341,15 +407,21 @@ job_reference_web_e2e() {
     run reference_compose up -d --build || status=$?
   fi
   if [[ "$status" -eq 0 ]]; then
-    wait_http "http://127.0.0.1:3000/healthz" "reference API healthz" 120 2 || status=$?
+    wait_http "http://$service_host:3000/healthz" "reference API healthz" 120 2 || status=$?
   fi
   if [[ "$status" -eq 0 ]]; then
-    wait_http "http://127.0.0.1:3000/readyz" "reference API readyz" 120 2 || status=$?
+    wait_http "http://$service_host:3000/readyz" "reference API readyz" 120 2 || status=$?
   fi
   if [[ "$status" -eq 0 ]]; then
+    if [[ "${CI_LOCAL_HOST_DOCKER:-0}" == "1" ]]; then
+      api_proxy_pid="$(start_tcp_proxy 3000 "$service_host" 3000 reference-api)"
+    fi
     run env CI=true pnpm --filter @stynx/reference-web test:e2e || status=$?
   fi
 
+  if [[ -n "$api_proxy_pid" ]]; then
+    kill "$api_proxy_pid" >/dev/null 2>&1 || true
+  fi
   cleanup_reference_stack
   return "$status"
 }
@@ -361,11 +433,66 @@ job_stynx_release() {
 
 job_reference_apps() {
   local status=0
+  local service_host="127.0.0.1"
+  local service_port="5432"
+  local postgres_publish="5432:5432"
   install_workspace_once
-  run pnpm ci:reference-apps || status=$?
+
+  ensure_dockerd
+  if [[ "${CI_LOCAL_HOST_DOCKER:-0}" == "1" ]]; then
+    service_host="$(host_docker_gateway)"
+    export TESTCONTAINERS_HOST_OVERRIDE="$service_host"
+    postgres_publish="0.0.0.0::5432"
+  fi
+
+  docker rm -f "$postgres_name" >/dev/null 2>&1 || true
+  run docker run \
+    --detach \
+    --name "$postgres_name" \
+    --env POSTGRES_DB=stynx \
+    --env POSTGRES_USER=stynx \
+    --env POSTGRES_PASSWORD=stynx \
+    --env GLOG_minloglevel=2 \
+    --publish "$postgres_publish" \
+    postgres:16-alpine
+
+  service_port="$(docker port "$postgres_name" 5432/tcp | sed -E 's/.*:([0-9]+)$/\1/')"
+  if [[ -z "$service_port" ]]; then
+    printf 'Unable to resolve published PostgreSQL port for %s.\n' "$postgres_name" >&2
+    status=1
+  fi
+
+  local i
+  for i in $(seq 1 60); do
+    if [[ "$status" -ne 0 ]]; then
+      break
+    fi
+    if pg_isready -h "$service_host" -p "$service_port" -U stynx -d stynx -t 2 >/dev/null 2>&1; then
+      break
+    fi
+    if [[ "$i" -eq 60 ]]; then
+      printf 'Timed out waiting for reference-app PostgreSQL service at %s:%s.\n' "$service_host" "$service_port" >&2
+      status=1
+    fi
+    sleep 1
+  done
+
+  export DATABASE_URL="postgresql://stynx:stynx@$service_host:$service_port/stynx"
+  export STYNX_DATABASE_URL="$DATABASE_URL"
+  export STYNX_TEST_PG_HOST="$service_host"
+  export STYNX_TEST_PG_PORT="$service_port"
+  export STYNX_TEST_PG_USER="stynx"
+  export STYNX_TEST_PG_PASSWORD="stynx"
+
+  if [[ "$status" -eq 0 ]]; then
+    run pnpm ci:reference-apps || status=$?
+  fi
   if [[ "$status" -eq 0 ]]; then
     job_reference_web_e2e || status=$?
   fi
+  docker logs "$postgres_name" > "$artifact_dir/reference-apps-postgres.log" 2>&1 || true
+  docker rm -f "$postgres_name" >/dev/null 2>&1 || true
+  unset DATABASE_URL STYNX_DATABASE_URL STYNX_TEST_PG_HOST STYNX_TEST_PG_PORT STYNX_TEST_PG_USER STYNX_TEST_PG_PASSWORD
   return "$status"
 }
 
@@ -406,6 +533,7 @@ main() {
   git config --global --add safe.directory "$workspace" >/dev/null 2>&1 || true
   export CI=true
   export FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true
+  export TURBO_TELEMETRY_DISABLED=1
   export DOCKER_BUILDKIT=1
   export COMPOSE_DOCKER_CLI_BUILD=1
 
