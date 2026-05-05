@@ -6,5 +6,5 @@
     "experimentalDecorators": true,
     "rootDir": ".."
   },
-  "include": ["src/**/*.ts", "test/**/*.ts"]
+  "include": ["src/**/*.ts"]
 }

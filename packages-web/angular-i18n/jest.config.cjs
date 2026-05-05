@@ -2,7 +2,7 @@ const { resolve } = require('node:path');
 const { createEsmPreset } = require('jest-preset-angular/presets');
 
 const preset = createEsmPreset({
-  tsconfig: resolve(__dirname, './tsconfig.json'),
+  tsconfig: resolve(__dirname, './tsconfig.spec.json'),
 });
 
 module.exports = {
