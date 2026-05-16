@@ -1,0 +1,151 @@
+# DEVAI gates for stynx (Phase E of C-4 adoption pilot).
+# Runs the seven L0 inventory sensors + spec validation on every PR
+# to surface inventory drift, unbound endpoints, unmapped routes, and
+# invariant violations BEFORE merge.
+#
+# Adopters of DEVAI can copy this file as a starting point. The
+# `cwd = stynx` assumption + `../devai` sibling layout match the
+# C-4 pilot brief; CI environments without that layout should
+# instead `pnpm link --global @devai/cli` from a published artifact
+# and replace the `cd ../devai && pnpm install` block.
+
+name: devai-gates
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.devai/**'
+      - 'docs/architecture/**'
+      - 'docs/product/**'
+      - 'apps/**'
+      - 'packages/**'
+      - 'packages-web/**'
+      - 'domain/**'
+      - '.github/workflows/devai-gates.yml'
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: devai-gates-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  devai-inventory:
+    name: DEVAI inventory + invariant gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout stynx
+        uses: actions/checkout@v4
+        with:
+          path: stynx
+
+      - name: Checkout devai (sibling)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.DEVAI_REPO || 'anthropics/devai' }}
+          ref: ${{ vars.DEVAI_REF  || 'main' }}
+          path: devai
+          # Falls back to a fresh clone of devai's main branch unless
+          # DEVAI_REPO / DEVAI_REF repository variables override it.
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - name: Set up Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: pnpm
+          cache-dependency-path: |
+            stynx/pnpm-lock.yaml
+            devai/pnpm-lock.yaml
+
+      - name: Build + link devai CLI
+        working-directory: devai
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm -w build
+          mkdir -p $HOME/.local/bin
+          cd packages/cli
+          PNPM_HOME=$HOME/.local/bin pnpm link --global
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Provide stack-adapter pack to scaffolders (D-A-7 workaround)
+        working-directory: stynx
+        run: |
+          mkdir -p examples
+          ln -sfn ../../devai/examples/redox-pack-nestjs-postgres-angular \
+                  examples/redox-pack-nestjs-postgres-angular
+
+      - name: Verify pack matches stynx
+        working-directory: stynx
+        run: devai pack-resolve --repo-root ../devai --adopter-root . --human
+
+      - name: Run the seven L0 inventory sensors
+        working-directory: stynx
+        run: |
+          set -euo pipefail
+          devai sense-api          --repo-root . --adopter-root . --packs-root ../devai --pack-tune --human
+          devai sense-routes       --repo-root . --adopter-root . --packs-root ../devai --pack-tune --human
+          devai sense-data-model   --repo-root . --adopter-root . --packs-root ../devai --pack-tune --human
+          devai sense-data-handling --repo-root . --human
+          devai sense-rbac         --repo-root . --human
+          devai sense-dep-graph    --repo-root . --human
+          devai sense-coverage     --repo-root . --routes-path .devai/state/sensors/inventory_routes/routes-angular.json --human
+
+      - name: Validate stynx invariants against the schema
+        working-directory: stynx
+        run: |
+          set -euo pipefail
+          for f in docs/architecture/invariants/*.json; do
+            [ -f "$f" ] || continue
+            echo "::group::validate $f"
+            node -e "
+              const path=require('path');
+              const {Ajv2020}=require(path.resolve('node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/2020'));
+              const s=require(path.resolve('../devai/docs/schemas/invariant.schema.json'));
+              const ajv=new Ajv2020({strict:false,allErrors:true});
+              const v=ajv.compile(s);
+              const inv=require(path.resolve('$f'));
+              if(!v(inv)){console.error(JSON.stringify(v.errors,null,2));process.exit(1);}
+              console.log('PASS', inv.id);
+            "
+            echo "::endgroup::"
+          done
+
+      - name: Refresh invariant candidates (informational)
+        working-directory: stynx
+        run: devai inv-suggest --from-inventory --repo-root . --human
+
+      - name: Validate any module-blueprints in draft
+        working-directory: stynx
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          for f in docs/product/draft/blueprints/*.json; do
+            echo "::group::validate $f"
+            devai blueprint-validate --file "$f" --human
+            echo "::endgroup::"
+          done
+
+      - name: Upload sensor + candidate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: devai-evidence-${{ github.run_id }}
+          path: |
+            stynx/.devai/state/sensors/**
+            stynx/.devai/state/inv-candidates/**
+            stynx/.devai/state/llm-usage.jsonl
+            stynx/.devai/state/agent-runs/**
+            stynx/.devai/state/skills/**
+          if-no-files-found: ignore
+          retention-days: 14
