@@ -1,0 +1,202 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-05-16T03:55:00Z",
+  "roles": ["anonymous", "tenant-member", "tenant-admin", "platform-admin"],
+  "cases": [
+    {
+      "id": "UC-stynx-001",
+      "title": "Member browses, opens, and edits a record",
+      "goal": "A tenant member finds an existing record in their tenant, opens its detail view, and updates a field.",
+      "actors": ["tenant-member"],
+      "preconditions": [
+        "Member is authenticated against the tenant (post-/_reference/dev-login or production auth flow).",
+        "Tenant context is selected (`tenant` route already visited or session-pinned)."
+      ],
+      "triggers": ["Member clicks 'Records' in the shell nav."],
+      "mainFlow": [
+        {
+          "id": "1",
+          "action": "Member navigates to the records list page.",
+          "actorRole": "tenant-member",
+          "refs": { "routeIds": ["angular:5361bf2ca0e6"], "endpointIds": ["GET /records"] }
+        },
+        {
+          "id": "2",
+          "action": "Member clicks a record row to open its detail view.",
+          "actorRole": "tenant-member",
+          "refs": { "routeIds": ["angular:1a29df709ba4"], "endpointIds": ["GET /records/:id"] }
+        },
+        {
+          "id": "3",
+          "action": "Member clicks 'Edit'; the form route loads.",
+          "actorRole": "tenant-member",
+          "refs": { "routeIds": ["angular:55bc456a97bb"], "endpointIds": ["GET /records/:id"] }
+        },
+        {
+          "id": "4",
+          "action": "Member edits a field and submits.",
+          "actorRole": "tenant-member",
+          "refs": { "endpointIds": ["PATCH /records/:id"] }
+        },
+        {
+          "id": "5",
+          "action": "App returns to the detail view showing the update.",
+          "actorRole": "tenant-member",
+          "refs": { "routeIds": ["angular:1a29df709ba4"], "endpointIds": ["GET /records/:id"] }
+        }
+      ],
+      "postconditions": [
+        "The record reflects the edited value.",
+        "An audit event is recorded for the PATCH (per stynx auditing convention)."
+      ],
+      "acceptanceCriteria": [
+        "PATCH /records/:id returns 200 with the updated record body.",
+        "The next GET /records/:id reflects the new field value."
+      ]
+    },
+
+    {
+      "id": "UC-stynx-002",
+      "title": "Member creates a new record",
+      "goal": "A tenant member creates a brand-new record in their tenant.",
+      "actors": ["tenant-member"],
+      "preconditions": [
+        "Member is authenticated against the tenant.",
+        "Tenant context is selected."
+      ],
+      "triggers": ["Member clicks 'New record' from the records list."],
+      "mainFlow": [
+        {
+          "id": "1",
+          "action": "Member navigates to the new-record form.",
+          "actorRole": "tenant-member",
+          "refs": { "routeIds": ["angular:7fa63ba98a7e"] }
+        },
+        {
+          "id": "2",
+          "action": "Member fills the form and submits.",
+          "actorRole": "tenant-member",
+          "refs": { "endpointIds": ["POST /records"] }
+        },
+        {
+          "id": "3",
+          "action": "App navigates to the detail view of the new record.",
+          "actorRole": "tenant-member",
+          "refs": { "routeIds": ["angular:1a29df709ba4"], "endpointIds": ["GET /records/:id"] }
+        }
+      ],
+      "postconditions": ["The new record exists with the supplied values."],
+      "acceptanceCriteria": ["POST /records returns 201 with the new resource id."]
+    },
+
+    {
+      "id": "UC-stynx-003",
+      "title": "Member soft-deletes a record and restores it from trash",
+      "goal": "A tenant member removes a record (soft-delete) and later restores it via the trash view.",
+      "actors": ["tenant-member"],
+      "mainFlow": [
+        {
+          "id": "1",
+          "action": "Member opens the record detail view.",
+          "actorRole": "tenant-member",
+          "refs": { "routeIds": ["angular:1a29df709ba4"], "endpointIds": ["GET /records/:id"] }
+        },
+        {
+          "id": "2",
+          "action": "Member clicks 'Delete'; the API soft-deletes the record.",
+          "actorRole": "tenant-member",
+          "refs": { "endpointIds": ["DELETE /records/:id"] }
+        },
+        {
+          "id": "3",
+          "action": "Member opens the trash route.",
+          "actorRole": "tenant-member",
+          "refs": { "routeIds": ["angular:fb6949272f44"], "endpointIds": ["GET /records/trash"] }
+        },
+        {
+          "id": "4",
+          "action": "Member clicks 'Restore' on the soft-deleted record.",
+          "actorRole": "tenant-member",
+          "refs": { "endpointIds": ["POST /records/:id/restore"] }
+        }
+      ],
+      "alternateFlows": [
+        {
+          "id": "3a",
+          "when": "Tenant-admin chooses hard-delete instead of restore.",
+          "steps": [
+            {
+              "id": "3a.1",
+              "action": "Tenant-admin clicks 'Hard delete'.",
+              "actorRole": "tenant-admin",
+              "refs": { "endpointIds": ["DELETE /records/:id/hard"] }
+            }
+          ]
+        }
+      ],
+      "postconditions": ["After restore: the record is queryable again via GET /records/:id."],
+      "acceptanceCriteria": [
+        "After DELETE /records/:id, GET /records/:id returns 404 (or 410) for the soft-deleted resource.",
+        "After POST /records/:id/restore, GET /records/:id returns the resource with no `deleted_at` set."
+      ]
+    },
+
+    {
+      "id": "UC-stynx-004",
+      "title": "Reference dev-login flow",
+      "goal": "An anonymous user opens the reference app, picks a demo tenant, and obtains a session token via the dev-login endpoint (reference-application convenience; production deployments would use Cognito JWT).",
+      "actors": ["anonymous", "tenant-member"],
+      "preconditions": [
+        "The /_reference/dev-login endpoint is reachable (gated by the reference-app deployment, NOT production)."
+      ],
+      "triggers": ["User visits the app root, sees the login page."],
+      "mainFlow": [
+        {
+          "id": "1",
+          "action": "App routes anonymous user to the login page.",
+          "actorRole": "anonymous",
+          "refs": { "routeIds": ["angular:46fe460b7194"] }
+        },
+        {
+          "id": "2",
+          "action": "App fetches the demo-tenants list.",
+          "actorRole": "anonymous",
+          "refs": { "endpointIds": ["GET /_reference/demo-tenants"] }
+        },
+        {
+          "id": "3",
+          "action": "User selects a demo tenant; app sends a dev-login.",
+          "actorRole": "anonymous",
+          "refs": { "endpointIds": ["POST /_reference/dev-login"] }
+        },
+        {
+          "id": "4",
+          "action": "App stores the session token; user becomes a tenant-member.",
+          "actorRole": "tenant-member"
+        },
+        {
+          "id": "5",
+          "action": "App verifies the issued token round-trips.",
+          "actorRole": "tenant-member",
+          "refs": { "endpointIds": ["GET /_reference/auth-verify"] }
+        },
+        {
+          "id": "6",
+          "action": "App navigates to the tenant-selection or dashboard route.",
+          "actorRole": "tenant-member",
+          "refs": { "routeIds": ["angular:197ead8a8a47", "angular:086c1f6f3e97"] }
+        }
+      ],
+      "postconditions": ["User has an active session in the chosen demo tenant."],
+      "acceptanceCriteria": [
+        "POST /_reference/dev-login returns 201 with a Bearer-shaped token.",
+        "GET /_reference/auth-verify returns 200 against the issued token."
+      ]
+    }
+  ],
+  "stats": {
+    "roleCount": 4,
+    "caseCount": 4,
+    "stepCount": 21
+  }
+}
