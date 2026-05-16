@@ -1,7 +1,16 @@
-// Generated from BP-DEMO-BOOKMARK-001 v0.1.0 sha256:a5553692
-/* Generated for demo/Bookmark — spec: 0.1.0 sha: a5553692 */
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateBookmarkDto } from './create-bookmark.dto';
+// Hand-finished in C-4 Session S3-2 (the scaffolder emitted a duplicate
+// UpdateBookmarkDto class that referenced the wrong base DTO. See D-A-15).
+//
+// BookmarkTag is immutable post-creation (the (bookmark_id, tag) primary key
+// IS the entity). There's no meaningful Update operation; the API exposes
+// list/create/delete only per the blueprint. This file is kept (rather than
+// deleted) for parallelism with other DTOs and in case a future schema
+// addition wants a mutable tag attribute.
+import { IsOptional, IsString, MaxLength } from 'class-validator';
 
-export class UpdateBookmarkDto extends PartialType(CreateBookmarkDto) {}
-
+export class UpdateBookmarkTagDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  tag?: string;
+}

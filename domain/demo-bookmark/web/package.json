@@ -14,6 +14,7 @@
   "dependencies": {
     "@angular/common": "^18.2.13",
     "@angular/core": "^18.2.13",
+    "@angular/router": "^18.2.13",
     "@stynx-web/angular": "workspace:*",
     "rxjs": "^7.8.2"
   },

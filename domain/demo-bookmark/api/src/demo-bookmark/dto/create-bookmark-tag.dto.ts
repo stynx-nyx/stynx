@@ -1,15 +1,15 @@
-// Generated from BP-DEMO-BOOKMARK-001 v0.1.0 sha256:a5553692
-/* Generated for demo/Bookmark — spec: 0.1.0 sha: a5553692 */
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+// Hand-finished in C-4 Session S3-2 (replaces SKILL-scaffold-api template
+// which emitted wrong fields — generic "message"/"recipient" instead of the
+// blueprint's bookmark_id/tag, and duplicated CreateBookmarkDto class name.
+// See D-A-15.)
+import { IsString, IsUUID, Matches, MaxLength } from 'class-validator';
 
-export class CreateBookmarkDto {
-  @IsString()
-  @MaxLength(140)
-  message!: string;
+export class CreateBookmarkTagDto {
+  @IsUUID('4')
+  bookmark_id!: string;
 
-  @IsOptional()
   @IsString()
-  @MaxLength(80)
-  recipient?: string;
+  @Matches(/^[a-z0-9_-]{1,64}$/i, { message: 'tag must be 1-64 chars, alphanumeric/underscore/hyphen' })
+  @MaxLength(64)
+  tag!: string;
 }
-

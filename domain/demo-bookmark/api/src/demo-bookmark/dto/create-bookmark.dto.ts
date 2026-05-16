@@ -1,15 +1,19 @@
-// Generated from BP-DEMO-BOOKMARK-001 v0.1.0 sha256:a5553692
-/* Generated for demo/Bookmark — spec: 0.1.0 sha: a5553692 */
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+// Hand-finished in C-4 Session S3-2 (replaces SKILL-scaffold-api template
+// which emitted wrong fields — generic "message"/"recipient" instead of the
+// blueprint's title/url/notes. See D-A-15 for the underlying scaffolder gap.)
+import { IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
 
 export class CreateBookmarkDto {
-  @IsString()
-  @MaxLength(140)
-  message!: string;
+  @IsUrl({}, { message: 'url must be a valid URL' })
+  @MaxLength(2048)
+  url!: string;
 
   @IsOptional()
   @IsString()
-  @MaxLength(80)
-  recipient?: string;
-}
+  @MaxLength(256)
+  title?: string;
 
+  @IsOptional()
+  @IsString()
+  notes?: string;
+}
