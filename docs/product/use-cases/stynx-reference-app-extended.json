@@ -1,0 +1,418 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-05-16T05:00:00Z",
+  "roles": ["anonymous", "tenant-member", "tenant-admin", "platform-admin"],
+  "cases": [
+    {
+      "id": "UC-stynx-005",
+      "title": "Member browses, opens, and edits a work-item",
+      "goal": "A tenant member finds an existing work-item in their tenant, opens its detail view, and updates a field.",
+      "actors": ["tenant-member"],
+      "mainFlow": [
+        {
+          "id": "1",
+          "action": "Member navigates to the work-items list page.",
+          "actorRole": "tenant-member",
+          "refs": { "routeIds": ["angular:0f8938269c9a"], "endpointIds": ["GET /work-items"] }
+        },
+        {
+          "id": "2",
+          "action": "Member opens a work-item's detail view.",
+          "actorRole": "tenant-member",
+          "refs": { "routeIds": ["angular:1142140126d2"], "endpointIds": ["GET /work-items/:id"] }
+        },
+        {
+          "id": "3",
+          "action": "Member clicks 'Edit'; the form loads.",
+          "actorRole": "tenant-member",
+          "refs": { "routeIds": ["angular:1112587ddc3d"], "endpointIds": ["GET /work-items/:id"] }
+        },
+        {
+          "id": "4",
+          "action": "Member edits a field and submits.",
+          "actorRole": "tenant-member",
+          "refs": { "endpointIds": ["PATCH /work-items/:id"] }
+        },
+        {
+          "id": "5",
+          "action": "App returns to the detail view showing the update.",
+          "actorRole": "tenant-member",
+          "refs": { "routeIds": ["angular:1142140126d2"], "endpointIds": ["GET /work-items/:id"] }
+        }
+      ],
+      "acceptanceCriteria": [
+        "PATCH /work-items/:id returns 200 with the updated record.",
+        "The next GET /work-items/:id reflects the new field value."
+      ]
+    },
+
+    {
+      "id": "UC-stynx-006",
+      "title": "Member creates a new work-item",
+      "goal": "A tenant member creates a new work-item.",
+      "actors": ["tenant-member"],
+      "mainFlow": [
+        {
+          "id": "1",
+          "action": "Member navigates to the new-work-item form.",
+          "actorRole": "tenant-member",
+          "refs": { "routeIds": ["angular:abaf636f1c8e"] }
+        },
+        {
+          "id": "2",
+          "action": "Member fills the form and submits.",
+          "actorRole": "tenant-member",
+          "refs": { "endpointIds": ["POST /work-items"] }
+        },
+        {
+          "id": "3",
+          "action": "App navigates to the new work-item's detail view.",
+          "actorRole": "tenant-member",
+          "refs": { "routeIds": ["angular:1142140126d2"], "endpointIds": ["GET /work-items/:id"] }
+        }
+      ],
+      "acceptanceCriteria": ["POST /work-items returns 201 with the new resource id."]
+    },
+
+    {
+      "id": "UC-stynx-007",
+      "title": "Member soft-deletes a work-item and restores it from trash",
+      "goal": "A tenant member removes a work-item (soft-delete) and later restores it via the trash view.",
+      "actors": ["tenant-member"],
+      "mainFlow": [
+        {
+          "id": "1",
+          "action": "Member opens the work-item detail view.",
+          "actorRole": "tenant-member",
+          "refs": { "routeIds": ["angular:1142140126d2"], "endpointIds": ["GET /work-items/:id"] }
+        },
+        {
+          "id": "2",
+          "action": "Member clicks 'Delete'; API soft-deletes.",
+          "actorRole": "tenant-member",
+          "refs": { "endpointIds": ["DELETE /work-items/:id"] }
+        },
+        {
+          "id": "3",
+          "action": "Member opens the trash route + filters to work-items.",
+          "actorRole": "tenant-member",
+          "refs": { "routeIds": ["angular:fb6949272f44"], "endpointIds": ["GET /work-items/trash"] }
+        },
+        {
+          "id": "4",
+          "action": "Member clicks 'Restore' on the soft-deleted work-item.",
+          "actorRole": "tenant-member",
+          "refs": { "endpointIds": ["POST /work-items/:id/restore"] }
+        }
+      ],
+      "alternateFlows": [
+        {
+          "id": "3a",
+          "when": "Tenant-admin hard-deletes from trash.",
+          "steps": [
+            {
+              "id": "3a.1",
+              "action": "Tenant-admin clicks 'Hard delete'.",
+              "actorRole": "tenant-admin",
+              "refs": { "endpointIds": ["DELETE /work-items/:id/hard"] }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "UC-stynx-008",
+      "title": "Member manages work-item entries (sub-records of a work-item)",
+      "goal": "A tenant member adds, lists, updates, soft-deletes, and restores entries scoped to a work-item.",
+      "actors": ["tenant-member"],
+      "mainFlow": [
+        {
+          "id": "1",
+          "action": "Member opens a work-item detail view (entries surface here).",
+          "actorRole": "tenant-member",
+          "refs": { "routeIds": ["angular:1142140126d2"], "endpointIds": ["GET /work-items/:id"] }
+        },
+        {
+          "id": "2",
+          "action": "Member lists entries for the work-item.",
+          "actorRole": "tenant-member",
+          "refs": { "endpointIds": ["GET /work-item-entries"] }
+        },
+        {
+          "id": "3",
+          "action": "Member opens an entry.",
+          "actorRole": "tenant-member",
+          "refs": { "endpointIds": ["GET /work-item-entries/:id"] }
+        },
+        {
+          "id": "4",
+          "action": "Member creates a new entry.",
+          "actorRole": "tenant-member",
+          "refs": { "endpointIds": ["POST /work-item-entries"] }
+        },
+        {
+          "id": "5",
+          "action": "Member edits an existing entry.",
+          "actorRole": "tenant-member",
+          "refs": { "endpointIds": ["PATCH /work-item-entries/:id"] }
+        },
+        {
+          "id": "6",
+          "action": "Member soft-deletes an entry, optionally restores.",
+          "actorRole": "tenant-member",
+          "refs": {
+            "endpointIds": ["DELETE /work-item-entries/:id", "POST /work-item-entries/:id/restore"]
+          }
+        }
+      ],
+      "alternateFlows": [
+        {
+          "id": "6a",
+          "when": "Tenant-admin hard-deletes an entry.",
+          "steps": [
+            {
+              "id": "6a.1",
+              "action": "Tenant-admin clicks 'Hard delete' on an entry.",
+              "actorRole": "tenant-admin",
+              "refs": { "endpointIds": ["DELETE /work-item-entries/:id/hard"] }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "UC-stynx-009",
+      "title": "Member manages work-item locks (concurrency control on a work-item)",
+      "goal": "A tenant member acquires and releases a lock on a work-item to coordinate concurrent edits with peers.",
+      "actors": ["tenant-member"],
+      "mainFlow": [
+        {
+          "id": "1",
+          "action": "Member lists active locks for the work-item.",
+          "actorRole": "tenant-member",
+          "refs": { "endpointIds": ["GET /work-item-locks"] }
+        },
+        {
+          "id": "2",
+          "action": "Member opens a specific lock to check holder + expiry.",
+          "actorRole": "tenant-member",
+          "refs": { "endpointIds": ["GET /work-item-locks/:id"] }
+        },
+        {
+          "id": "3",
+          "action": "Member acquires a lock.",
+          "actorRole": "tenant-member",
+          "refs": { "endpointIds": ["POST /work-item-locks"] }
+        },
+        {
+          "id": "4",
+          "action": "Member extends/refreshes a held lock.",
+          "actorRole": "tenant-member",
+          "refs": { "endpointIds": ["PATCH /work-item-locks/:id"] }
+        },
+        {
+          "id": "5",
+          "action": "Member releases the lock (soft-delete) or restores if needed.",
+          "actorRole": "tenant-member",
+          "refs": {
+            "endpointIds": ["DELETE /work-item-locks/:id", "POST /work-item-locks/:id/restore"]
+          }
+        }
+      ],
+      "alternateFlows": [
+        {
+          "id": "5a",
+          "when": "Tenant-admin hard-evicts an abandoned lock.",
+          "steps": [
+            {
+              "id": "5a.1",
+              "action": "Tenant-admin hard-deletes the lock record.",
+              "actorRole": "tenant-admin",
+              "refs": { "endpointIds": ["DELETE /work-item-locks/:id/hard"] }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "UC-stynx-010",
+      "title": "Member uploads, downloads, and lifecycles a document",
+      "goal": "A tenant member uploads a document, downloads it via a presigned URL, completes/finalizes it, and optionally soft- or hard-deletes it.",
+      "actors": ["tenant-member"],
+      "mainFlow": [
+        {
+          "id": "1",
+          "action": "Member initiates a document upload (gets a presigned PUT).",
+          "actorRole": "tenant-member",
+          "refs": { "endpointIds": ["POST /documents"] }
+        },
+        {
+          "id": "2",
+          "action": "Member completes the upload after the binary write to S3.",
+          "actorRole": "tenant-member",
+          "refs": { "endpointIds": ["POST /documents/:id/complete"] }
+        },
+        {
+          "id": "3",
+          "action": "Member downloads the document (gets a presigned GET).",
+          "actorRole": "tenant-member",
+          "refs": { "endpointIds": ["GET /documents/:id/download"] }
+        },
+        {
+          "id": "4",
+          "action": "Member soft-deletes the document, may restore.",
+          "actorRole": "tenant-member",
+          "refs": { "endpointIds": ["DELETE /documents/:id", "POST /documents/:id/restore"] }
+        }
+      ],
+      "alternateFlows": [
+        {
+          "id": "4a",
+          "when": "Tenant-admin hard-deletes a document.",
+          "steps": [
+            {
+              "id": "4a.1",
+              "action": "Tenant-admin clicks 'Hard delete'.",
+              "actorRole": "tenant-admin",
+              "refs": { "endpointIds": ["DELETE /documents/:id/hard"] }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "UC-stynx-011",
+      "title": "Member adds, edits, and removes notes on a record",
+      "goal": "A tenant member attaches notes to a record, edits them, and removes them (soft-delete + optional hard-delete).",
+      "actors": ["tenant-member"],
+      "mainFlow": [
+        {
+          "id": "1",
+          "action": "Member opens the record detail view (notes surface here).",
+          "actorRole": "tenant-member",
+          "refs": { "routeIds": ["angular:1a29df709ba4"], "endpointIds": ["GET /records/:id"] }
+        },
+        {
+          "id": "2",
+          "action": "Member lists notes for the record.",
+          "actorRole": "tenant-member",
+          "refs": { "endpointIds": ["GET /record-notes"] }
+        },
+        {
+          "id": "3",
+          "action": "Member opens a specific note.",
+          "actorRole": "tenant-member",
+          "refs": { "endpointIds": ["GET /record-notes/:id"] }
+        },
+        {
+          "id": "4",
+          "action": "Member adds a new note.",
+          "actorRole": "tenant-member",
+          "refs": { "endpointIds": ["POST /record-notes"] }
+        },
+        {
+          "id": "5",
+          "action": "Member edits an existing note.",
+          "actorRole": "tenant-member",
+          "refs": { "endpointIds": ["PATCH /record-notes/:id"] }
+        },
+        {
+          "id": "6",
+          "action": "Member soft-deletes, optionally restores.",
+          "actorRole": "tenant-member",
+          "refs": { "endpointIds": ["DELETE /record-notes/:id", "POST /record-notes/:id/restore"] }
+        }
+      ],
+      "alternateFlows": [
+        {
+          "id": "6a",
+          "when": "Tenant-admin hard-deletes a note.",
+          "steps": [
+            {
+              "id": "6a.1",
+              "action": "Tenant-admin clicks 'Hard delete' on a note.",
+              "actorRole": "tenant-admin",
+              "refs": { "endpointIds": ["DELETE /record-notes/:id/hard"] }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "UC-stynx-012",
+      "title": "Platform-admin probes runtime behaviors",
+      "goal": "A platform-admin (or CI) exercises the four /_probes/* endpoints to verify framework concerns: data-tx, idempotency, rate-limit, readonly-write.",
+      "actors": ["platform-admin"],
+      "preconditions": ["Probes are reachable in the deployment (typically dev/staging only)."],
+      "mainFlow": [
+        {
+          "id": "1",
+          "action": "Caller probes the data-transaction path (`@stynx/data` semantics).",
+          "actorRole": "platform-admin",
+          "refs": { "endpointIds": ["GET /_probes/data-tx"] }
+        },
+        {
+          "id": "2",
+          "action": "Caller probes the idempotency path (`@stynx/idempotency`).",
+          "actorRole": "platform-admin",
+          "refs": { "endpointIds": ["POST /_probes/idempotency"] }
+        },
+        {
+          "id": "3",
+          "action": "Caller probes the rate-limit path (`@stynx/ratelimit`).",
+          "actorRole": "platform-admin",
+          "refs": { "endpointIds": ["GET /_probes/ratelimit"] }
+        },
+        {
+          "id": "4",
+          "action": "Caller probes the readonly-write protection (RLS / role).",
+          "actorRole": "platform-admin",
+          "refs": { "endpointIds": ["GET /_probes/readonly-write"] }
+        }
+      ],
+      "postconditions": [
+        "All four probes return 200 (or documented status code) under expected conditions; non-200 surfaces a framework regression."
+      ]
+    },
+
+    {
+      "id": "UC-stynx-013",
+      "title": "Tenant selection + unauthorized error UX",
+      "goal": "A signed-in member selects (or re-selects) a tenant; an unauthorized navigation lands cleanly on a dedicated page.",
+      "actors": ["tenant-member"],
+      "mainFlow": [
+        {
+          "id": "1",
+          "action": "Signed-in member navigates to tenant-selection.",
+          "actorRole": "tenant-member",
+          "refs": { "routeIds": ["angular:197ead8a8a47"] }
+        },
+        {
+          "id": "2",
+          "action": "Member selects a tenant to operate within.",
+          "actorRole": "tenant-member"
+        },
+        {
+          "id": "3",
+          "action": "On any subsequent authorization failure, app routes to /unauthorized.",
+          "actorRole": "tenant-member",
+          "refs": { "routeIds": ["angular:cd1db7de4f8c"] }
+        }
+      ],
+      "acceptanceCriteria": [
+        "Tenant selection updates the active tenant context on the SDK side.",
+        "Any 403 from the API routes the user to /unauthorized rather than a generic error."
+      ]
+    }
+  ],
+  "stats": {
+    "roleCount": 4,
+    "caseCount": 9,
+    "stepCount": 42
+  }
+}
