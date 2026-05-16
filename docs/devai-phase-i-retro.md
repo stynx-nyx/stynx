@@ -236,3 +236,81 @@ Both are stynx-side engineering work, neither blocks the pilot close.
 Stynx becomes the canonical "DEVAI adopter at maturity" reference. C-5 starts from a strictly easier baseline than C-4 did, with Phase 22's closures further reducing onboarding friction.
 
 **Pilot: complete.**
+
+## 10. Post-Phase-22 sessions update (T1–T8 close, 2026-05-16)
+
+**DEVAI Phase 22 closed at `9e7c063`** (D-68) between S11 and this update, shipping closures for D-A-12 (`@Public()` detection), D-A-13 (`pii_map` extraction — partial), D-A-14 (scorecard cell classifier), D-A-15 (pack-driven scaffolders), D-A-17 (`adherence-reverse` surface preservation), and D-A-18 (`sense-coverage` use-case linking). Stynx then ran 8 follow-up sessions to apply the closures and close residual stynx-side work surfaced during Phase 22.
+
+### What landed across T1–T8
+
+| Session | Commit                | Outcome                                                                                                                                                                                                                                                                                                    |
+| ------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| T6      | `16e6716`             | `/specs/` retired entirely (legacy archive deletion approved); 3 ADRs hand-promoted to F1 substrate                                                                                                                                                                                                        |
+| T7      | `8564198` + `a80c389` | `.codex/` retired entirely; `npm-security-upgrade-auditor` relocated to `tools/`; WIP-sweep revert (capture-restore pattern)                                                                                                                                                                               |
+| T3      | `f62f592`             | 2 ADRs re-authored in DEVAI schema-conformant form (closes F-16)                                                                                                                                                                                                                                           |
+| T2      | `e38ae83`             | demo-bookmark wired to `@stynx/data` + canonical `StynxAuthGuard + PermissionGuard`; 4 spec files (controller + service) green with 6 it.todo deferred to F-20                                                                                                                                             |
+| F-19    | `8441bb8`             | `jose@6` TS1479 suppressed via `@ts-ignore` in `packages/auth/src/cognito-token-verifier.ts`; closes the depth-3 typecheck regression in `domain/demo-bookmark/api`                                                                                                                                        |
+| F-20    | `0f6929e`             | jest + ts-jest wired for demo-bookmark-api; `jest.config.cjs` + `tsconfig.spec.json` authored at 3-level depth; test suite green 12/18 (6 it.todo for per-task-DB integration)                                                                                                                             |
+| T1      | `44b4c05`             | Post-Phase-22 baseline refresh: 7 L0 sensors green; **6/50 endpoints now `auth.required=false` via `@Public()`** (D-A-12 verified); inv-suggest drops 68 → 52 candidates; `sense-coverage` 14 links from 13 use-cases (D-A-18 verified); `inv-adherence-reverse` enumerates 779 surfaces (D-A-17 verified) |
+| T4      | `fc3bdf9`             | **INV-COVERAGE-001 promoted** as third stynx-side invariant — every HTTP endpoint and frontend route MUST be claimed by ≥1 authored use-case; 51 initial violations tracked. Domain taxonomy expanded to recognize PRIVACY/RBAC/COVERAGE; anchor format fixed in PRIVACY-001 + RBAC-001                    |
+| T5      | `6674a81`             | Autonomous-loop wiring verified end-to-end: backlog-add/list/complete, loop-run dispatcher, per-task worktrees + locks. No live LLM iteration completed (claude-cli sub-process spawn ETIMEDOUT — DEVAI follow-up D-A-19)                                                                                  |
+| T8      | this file             | C-4 final-final close                                                                                                                                                                                                                                                                                      |
+
+### Post-Phase-22 D-A register
+
+Phase 22 closures verified by T1 baseline:
+
+| ID     | Phase 22 fix | T1 verification                                                                                                                                                                                                                                                                                                                                                                                 |
+| ------ | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D-A-12 | 22.A         | ✅ Closed. 6 endpoints flip `auth.required=false` (3 `/_reference/*` + 3 `/_probes/*`); RBAC-001 allow-list need shrunk                                                                                                                                                                                                                                                                         |
+| D-A-13 | 22.B         | ⚠️ Partial. `pii_class` heuristic detection works (3 columns: `record.email`, `events.ip_address`, `users.email`) but `core.pii_map` INSERT statements still parse as generic ops — `legal_basis`/`retention` not extracted                                                                                                                                                                     |
+| D-A-14 | 22.C         | ⚠️ Unverified. `SKILL-assess-state` still reports 0/45 cells passing (L1 correctness SRs missing — `sense-type-check` against root tsconfig produces false-positives on test files; needs per-project discovery)                                                                                                                                                                                |
+| D-A-15 | 22.D         | ⚠️ Unverified. Did not re-trigger scaffolders against `BP-DEMO-BOOKMARK-001` in T1; deferred                                                                                                                                                                                                                                                                                                    |
+| D-A-16 | n/a          | Open. Not part of Phase 22 scope                                                                                                                                                                                                                                                                                                                                                                |
+| D-A-17 | 22.G         | ✅ Closed. `inv-adherence-reverse` enumerates 779 surfaces with `{id, file}` preserved                                                                                                                                                                                                                                                                                                          |
+| D-A-18 | 22.H         | ✅ Closed (mechanism). `links[]` populated from use-case `refs.endpointIds`/`routeIds`. **Note:** only step-level refs that include _both_ an endpointId AND a routeId produce links — many of the 38 step-level endpoint refs in `stynx-reference-app-extended.json` don't link because their steps don't carry a routeId. Filed as **D-A-20** (link cardinality should not require both axes) |
+
+New post-Phase-22 D-A entries (DEVAI follow-ups):
+
+| ID     | Surfaced in | One-line description                                                                                                                                                                 |
+| ------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| D-A-19 | T5          | `loop-run --family claude` (with `DEVAI_LLM_BACKEND=claude-cli`) sub-process spawn times out — env/PATH not propagated to child shell                                                |
+| D-A-20 | T1/T8       | `sense-coverage` requires step to have both `endpointId` AND `routeId` to emit a link; endpoint-only or route-only steps are silently dropped                                        |
+| D-A-21 | T1          | `sense-type-check` uses root tsconfig (no `jest` types) and emits TS2304/TS2593 false-positives on test files; needs per-project tsconfig discovery                                  |
+| D-A-22 | T4          | `spec-validate-invariants` scans every `INV-*.json` and fails on `INV-RBAC-001-allowlist.json` (data, not an invariant); needs name-pattern exclusion or sibling data dir convention |
+
+### Post-Phase-22 F register (stynx-side)
+
+| ID   | Status                                                                                                              | One-line                                                    |
+| ---- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| F-9  | step 2/N still open — wire `domain/demo-bookmark/` services per-task-DB integration tests (6 it.todo in spec suite) |
+| F-16 | ✅ closed                                                                                                           | T3 — 2 ADRs re-authored in DEVAI schema                     |
+| F-19 | ✅ closed                                                                                                           | jose@6 TS1479 suppressed in `cognito-token-verifier.ts`     |
+| F-20 | ✅ closed                                                                                                           | jest + ts-jest wired for demo-bookmark-api at 3-level depth |
+
+New residuals tracked rather than blocking:
+
+- **INV-COVERAGE-001: 51 violations** (44 unmapped endpoints + 7 unmapped routes). Closure path: author use-case JSONs (or extend existing ones) under `docs/product/use-cases/` to claim each surface. Sub-blocker: D-A-20 (link cardinality) means many existing step-level refs aren't counted — fixing D-A-20 first could close 10–20 violations without authoring any new use-cases.
+
+### Canonical-adopter promotion
+
+Per the T8 roadmap deliverable, the next DEVAI session should reference stynx in `docs/adopters/` as the canonical "DEVAI adopter at maturity" case study. Anchor commits worth citing:
+
+- **C-4 bootstrap** (`b66286d`): `init --execute` against an existing brownfield monorepo
+- **Phase G** (`4f914a2`, `cb734ac`, `343a5c1`, `de7599b`, plus T6+T7): complete retirement of legacy parallel governance trees
+- **Phase H + S10** (`2435162`, `7350e12`): self-application audit pattern
+- **Phase 22 closures verified** (T1 = `44b4c05`): how an adopter validates an upstream framework release
+- **First post-22 invariant promotion** (T4 = `fc3bdf9`): mechanical inv-suggest → invariant promotion pattern
+
+A companion brief at `../devai-canonical-adopter-promotion.md` is **deferred** to the next session — the in-repo retros (Phase A, H, I, plus this T8 close) already constitute the worked examples DEVAI's docs/adopters/ would link to.
+
+### Final-final verdict
+
+**C-4 is fully complete + maintenance steady-state.** Stynx is a DEVAI-managed repository at maturity:
+
+- 46 commits since `b66286d` form a complete adoption arc Phase A → T8.
+- 3 stynx-side invariants (`INV-RBAC-001`, `INV-PRIVACY-001`, `INV-COVERAGE-001`) all promoted from sensor candidates, all measurable by `devai sense-*`, all carrying initial violations as a burn-down catalog rather than blocking adoption.
+- 4 open DEVAI-side gaps (D-A-19/20/21/22) are post-22 framework refinements DEVAI absorbs in Phase 23 or later, not stynx adoption blockers.
+- 1 stynx-side engineering thread remains (F-9 step 2/N — per-task-DB integration tests for demo-bookmark) and is independent of pilot closure.
+
+Pilot status moves from "complete" (S11) to **"complete + maintenance steady-state"** (T8). No further C-4 sessions planned. The next stynx-side DEVAI work is reactive: Phase 23 verification when DEVAI ships D-A-19/20/21/22 closures.

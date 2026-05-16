@@ -1,5 +1,7 @@
 # STYNX
 
+> **C-4 done** — stynx is a [DEVAI](https://github.com/anthropics/devai)-managed adopter at maturity. See [docs/devai-phase-i-retro.md](docs/devai-phase-i-retro.md) for the full pilot retro (Phases A–I + R1, S1–S11, T1–T8).
+
 STYNX is a `pnpm` + `Turborepo` monorepo targeting GitHub Packages for the spec-defined `@stynx/*` and `@stynx-web/*` package families.
 
 `1.0.0` release preparation is implemented in-repo and the tracked release-readiness gates are closed. STYNX is not marked as shipped until an explicit versioning and publishing decision is made.
