@@ -168,3 +168,71 @@ The C-4 pilot **succeeded as designed.** Stynx now runs DEVAI's full discipline 
 The framework is fit for purpose: a NestJS+Angular+Postgres adopter can clone DEVAI as a sibling, run `devai init --execute`, run the seven L0 sensors, author blueprints + invariants, scaffold modules, wire CI, and ship a documented project under DEVAI's discipline — with the caveats that `devai doctor` overstates its complaints and the autonomous loop is not yet useful without the D-A-8 sensor-readings emission fix.
 
 C-4 is closed. C-5 (the next adopter pilot, post-D-A-7/-8/-9/-10/-11 closure) starts from a strictly easier baseline than C-4 did.
+
+---
+
+## 9. Post-21 sessions update (S11 close, 2026-05-16)
+
+**DEVAI Phase 21 closed at `583ce02`** (D-66) between this retro and S11, shipping all 5 carried-forward closures (D-A-7, D-A-8, D-A-9, D-A-10, D-A-11). Stynx then ran 11 follow-up sessions (R1, F-12, S1, S2, S3-1+2, S4-1+2, S5-1+2+3+4, S7, S8, S9, S10) to apply the Phase 21 closures and complete the adoption.
+
+### What landed across R1 + S\* sessions
+
+| Session | Commit                     | Outcome                                                                                                                                                                                                                              |
+| ------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| R1      | `2c0e0ab`                  | Post-Phase-21 baseline refresh: `.devai/constitution.md` pointer landed; 7 sensors emit SRs (`.devai/state/sensor-readings/`); `devai doctor --adopter` 6/6 PASS; `examples/` symlink dropped; CI workflow updated; **D-A-14** filed |
+| F-12    | `30337cd`                  | Commitlint regex accepts `Architect + Engineer:` style + `@stynx/*` scopes (pre-existing latent bug)                                                                                                                                 |
+| S1      | `47c6ccc`                  | `INV-RBAC-001-allowlist.json` + `core.pii_map` enriched with `legal_basis`/`retention` + new migration `0013`; **D-A-12, D-A-13** filed                                                                                              |
+| S2      | `d3bec7b`                  | `apps/reference-{api,web}` → `reference/{api,web}` (161 files); typecheck 46/46 green                                                                                                                                                |
+| S5-1    | `cb734ac`                  | Commitlint adopter template, GOVERNANCE.md + AGENTS.md rewritten, `.codex/skills/` archived, `.codex/system.md` retired                                                                                                              |
+| S5-2    | `ef47f85`                  | `/specs/` migration finished (10 remaining files routed); `/specs/README.md` is now the forwarding map                                                                                                                               |
+| S5-3    | `343a5c1`                  | `docs/governance/` archived to `docs/legacy/governance-archive/`                                                                                                                                                                     |
+| S5-4    | `de7599b`                  | `.codex/prompts/` retired to `.codex/legacy/prompts/`; README's "Active workspace shape" table replaces the old "Transitional Legacy" pre-extraction note                                                                            |
+| S3-1    | `b1ca7f8`                  | `domain/demo-bookmark/` real DB schema (9-field bookmark + tag join + PII map) + workspace registration                                                                                                                              |
+| S3-2    | `9ba8006`                  | demo-bookmark module compiles end-to-end (api + web typecheck green); 6 missing/broken files rewritten; **D-A-15** filed                                                                                                             |
+| S4-1    | `334f0d4`                  | 4 use-cases (records browse/edit/delete + dev-login) covering 11 of 50 endpoints, 8 of 14 routes                                                                                                                                     |
+| S4-2    | `1988b10`                  | 9 more use-cases (work-items, documents, record-notes, probes, tenant); **50/50 endpoints + 13/14 routes covered**                                                                                                                   |
+| S7      | `9710a8d`                  | Autonomous-loop chain verified end-to-end; backlog correctly empty; **D-A-16** filed                                                                                                                                                 |
+| S8      | `7224689`                  | `trace.json` authored; `inv-adherence-reverse` runs cleanly; **D-A-17** filed                                                                                                                                                        |
+| S9      | `2288340`                  | `tools/migration-linter/README.md` formalizes stynx-idiosyncratic status                                                                                                                                                             |
+| S10     | `7350e12`                  | Phase H redux: doctor 6/6 PASS, sensors 6/7 PASS + 1 REVIEW; **D-A-18** filed; C-4 declared structurally complete                                                                                                                    |
+| S11     | this file + Phase 22 brief | C-4 terminal close                                                                                                                                                                                                                   |
+
+### Final D-A register (open after C-4 close)
+
+7 DEVAI-side gaps surfaced from stynx-side adoption work, all carrying to the next devai alignment session ("Phase 22"):
+
+| ID     | Surfaced in | One-line description                                                                            |
+| ------ | ----------- | ----------------------------------------------------------------------------------------------- |
+| D-A-12 | S1          | `sense-api` should recognize `@Public()` decorators                                             |
+| D-A-13 | S1          | `sense-data-model` should extract `legal_basis`/`retention` from migrations + `pii_map` inserts |
+| D-A-14 | R1          | scorecard cell-classifier should map L0 inventory SRs onto F4 cells                             |
+| D-A-15 | S3-2        | scaffolder API templates should be pack-driven (stynx-shaped, not TypeORM)                      |
+| D-A-16 | S7          | `SKILL-assess-state` narrative should surface actionable advice when 43/45 UNKNOWN              |
+| D-A-17 | S8          | `inv-regen` should preserve per-surface `{id, file}` for `adherence-reverse`                    |
+| D-A-18 | S10         | `sense-coverage` should read `docs/product/use-cases/*.json` to populate `links[]`              |
+
+Companion brief authored at `../devai-phase-22-alignment.md` (next-session kickoff).
+
+### Final F- register (open stynx-side follow-ups)
+
+| ID           | One-line description                                                                                       |
+| ------------ | ---------------------------------------------------------------------------------------------------------- |
+| F-9 step 2/N | Wire `domain/demo-bookmark/` services to `@stynx/data`; real tests; module-level CI green                  |
+| F-16         | Re-author the 2 ADRs at `docs/adr/` in DEVAI's schema-conformant form (check-adrs currently finds 0 files) |
+
+Both are stynx-side engineering work, neither blocks the pilot close.
+
+### Final verdict
+
+**C-4 is fully closed.** Stynx is a DEVAI-managed repository:
+
+- All framework-level governance lives in DEVAI substrates.
+- All legacy stynx governance machinery is either folded in or formally archived (every file under `/specs/`, `docs/governance/`, `.codex/{prompts,system.md}`, plus 2 of 3 `.codex/skills/`).
+- DEVAI gates run on every PR (`.github/workflows/devai-gates.yml`).
+- `devai doctor --adopter` returns 6/6 PASS.
+- The two intentionally-stynx-specific surfaces (`tools/migration-linter/`, `.codex/skills/npm-security-upgrade-auditor/`) are now documented as such.
+- The 7 open D-A entries are framework improvements DEVAI absorbs in the next phase, not stynx gaps.
+
+Stynx becomes the canonical "DEVAI adopter at maturity" reference. C-5 starts from a strictly easier baseline than C-4 did, with Phase 22's closures further reducing onboarding friction.
+
+**Pilot: complete.**
