@@ -47,13 +47,13 @@ Inter‑stack references are via CDK cross‑stack imports (CloudFormation expor
 ```typescript
 // infra/bin/stynx-env.ts
 import { App, Tags } from 'aws-cdk-lib';
-import { NetworkStack }       from '../lib/network-stack';
-import { IdentityStack }      from '../lib/identity-stack';
-import { DataStack }          from '../lib/data-stack';
-import { StorageStack }       from '../lib/storage-stack';
-import { ComputeStack }       from '../lib/compute-stack';
+import { NetworkStack } from '../lib/network-stack';
+import { IdentityStack } from '../lib/identity-stack';
+import { DataStack } from '../lib/data-stack';
+import { StorageStack } from '../lib/storage-stack';
+import { ComputeStack } from '../lib/compute-stack';
 import { ObservabilityStack } from '../lib/observability-stack';
-import { loadEnvConfig }      from '../lib/config';
+import { loadEnvConfig } from '../lib/config';
 
 const app = new App();
 
@@ -63,29 +63,35 @@ if (!['dev', 'stage', 'prod'].includes(envName)) {
   throw new Error(`Invalid env: ${envName}. Expected one of: dev, stage, prod`);
 }
 
-const cfg = loadEnvConfig(envName);   // reads infra/config/{env}.ts
+const cfg = loadEnvConfig(envName); // reads infra/config/{env}.ts
 const awsEnv = { account: cfg.accountId, region: cfg.region };
 
 const network = new NetworkStack(app, `stynx-${envName}-network`, {
-  env: awsEnv, config: cfg,
+  env: awsEnv,
+  config: cfg,
 });
 
 const identity = new IdentityStack(app, `stynx-${envName}-identity`, {
-  env: awsEnv, config: cfg,
+  env: awsEnv,
+  config: cfg,
 });
 
 const data = new DataStack(app, `stynx-${envName}-data`, {
-  env: awsEnv, config: cfg, vpc: network.vpc,
+  env: awsEnv,
+  config: cfg,
+  vpc: network.vpc,
 });
 
 const storage = new StorageStack(app, `stynx-${envName}-storage`, {
-  env: awsEnv, config: cfg,
+  env: awsEnv,
+  config: cfg,
 });
 
 const compute = new ComputeStack(app, `stynx-${envName}-compute`, {
-  env: awsEnv, config: cfg,
-  vpc:        network.vpc,
-  dbSecret:   data.dbSecret,
+  env: awsEnv,
+  config: cfg,
+  vpc: network.vpc,
+  dbSecret: data.dbSecret,
   dbEndpoint: data.pgBouncerEndpoint,
   redisEndpoint: data.redisEndpoint,
   userPoolId: identity.userPool.userPoolId,
@@ -95,9 +101,12 @@ const compute = new ComputeStack(app, `stynx-${envName}-compute`, {
 });
 
 new ObservabilityStack(app, `stynx-${envName}-observability`, {
-  env: awsEnv, config: cfg,
-  alb: compute.alb, ecsService: compute.service,
-  db: data.db, redis: data.redis,
+  env: awsEnv,
+  config: cfg,
+  alb: compute.alb,
+  ecsService: compute.service,
+  db: data.db,
+  redis: data.redis,
 });
 
 // Every resource tagged for cost attribution and governance.
@@ -116,9 +125,9 @@ Per‑environment config lives in versioned TypeScript files:
 // infra/config/prod.ts
 export const prod = {
   accountId: '111122223333',
-  region:    'sa-east-1',
+  region: 'sa-east-1',
   ownerTeam: 'platform',
-  domain:    'api.example.com',
+  domain: 'api.example.com',
 
   vpc: {
     cidr: '10.20.0.0/16',
@@ -127,23 +136,23 @@ export const prod = {
 
   db: {
     instanceClass: 'db.r6g.xlarge',
-    storageGb:     500,
-    multiAz:       true,
+    storageGb: 500,
+    multiAz: true,
     backupRetentionDays: 30,
-    pgVersion:     '16.3',
+    pgVersion: '16.3',
   },
 
   redis: {
-    nodeType:     'cache.r6g.large',
+    nodeType: 'cache.r6g.large',
     replicasPerNodeGroup: 1,
   },
 
   ecs: {
-    cpu:    2048,
+    cpu: 2048,
     memory: 4096,
     desiredCount: 3,
-    minCapacity:  3,
-    maxCapacity:  20,
+    minCapacity: 3,
+    maxCapacity: 20,
     // ...
   },
 };
@@ -158,8 +167,14 @@ Standard three‑tier VPC. Private subnets for app + data. Public subnets for th
 ```typescript
 // infra/lib/network-stack.ts
 import { Stack, StackProps, RemovalPolicy } from 'aws-cdk-lib';
-import { Vpc, SubnetType, GatewayVpcEndpointAwsService, InterfaceVpcEndpointAwsService,
-         FlowLogDestination, FlowLogTrafficType } from 'aws-cdk-lib/aws-ec2';
+import {
+  Vpc,
+  SubnetType,
+  GatewayVpcEndpointAwsService,
+  InterfaceVpcEndpointAwsService,
+  FlowLogDestination,
+  FlowLogTrafficType,
+} from 'aws-cdk-lib/aws-ec2';
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
 import { EnvConfig } from './config';
@@ -176,14 +191,14 @@ export class NetworkStack extends Stack {
       maxAzs: config.vpc.maxAzs,
       natGateways: config.env === 'prod' ? config.vpc.maxAzs : 1,
       subnetConfiguration: [
-        { name: 'public',   subnetType: SubnetType.PUBLIC,                 cidrMask: 24 },
-        { name: 'app',      subnetType: SubnetType.PRIVATE_WITH_EGRESS,    cidrMask: 22 },
-        { name: 'data',     subnetType: SubnetType.PRIVATE_ISOLATED,       cidrMask: 24 },
+        { name: 'public', subnetType: SubnetType.PUBLIC, cidrMask: 24 },
+        { name: 'app', subnetType: SubnetType.PRIVATE_WITH_EGRESS, cidrMask: 22 },
+        { name: 'data', subnetType: SubnetType.PRIVATE_ISOLATED, cidrMask: 24 },
       ],
     });
 
     // Gateway endpoints (free) for S3 and DynamoDB
-    this.vpc.addGatewayEndpoint('S3Endpoint',       { service: GatewayVpcEndpointAwsService.S3 });
+    this.vpc.addGatewayEndpoint('S3Endpoint', { service: GatewayVpcEndpointAwsService.S3 });
 
     // Interface endpoints (metered) for private AWS API access
     for (const svc of [
@@ -194,7 +209,8 @@ export class NetworkStack extends Stack {
       InterfaceVpcEndpointAwsService.ECR_DOCKER,
     ]) {
       this.vpc.addInterfaceEndpoint(`Endpoint-${svc.shortName}`, {
-        service: svc, privateDnsEnabled: true,
+        service: svc,
+        privateDnsEnabled: true,
       });
     }
 
@@ -212,6 +228,7 @@ export class NetworkStack extends Stack {
 ```
 
 **Notes:**
+
 - Three subnet tiers: public (ALB), private‑with‑egress (app pods), isolated (RDS, Redis). Strict separation — the data tier has no default route to the internet.
 - Interface endpoints avoid egress for AWS API calls (Secrets Manager, KMS, CloudWatch, ECR). Cuts NAT cost and keeps traffic inside AWS.
 - Flow logs retained for one month — sufficient for incident investigation without exploding CWL cost.
@@ -225,8 +242,13 @@ Single Cognito User Pool per environment (STYNX‑SPEC §4.1). One app client fo
 ```typescript
 // infra/lib/identity-stack.ts
 import { Stack, StackProps, Duration, RemovalPolicy } from 'aws-cdk-lib';
-import { UserPool, UserPoolClient, OAuthScope, AccountRecovery,
-         AdvancedSecurityMode } from 'aws-cdk-lib/aws-cognito';
+import {
+  UserPool,
+  UserPoolClient,
+  OAuthScope,
+  AccountRecovery,
+  AdvancedSecurityMode,
+} from 'aws-cdk-lib/aws-cognito';
 import { Construct } from 'constructs';
 import { EnvConfig } from './config';
 
@@ -240,19 +262,21 @@ export class IdentityStack extends Stack {
 
     this.userPool = new UserPool(this, 'UserPool', {
       userPoolName: `stynx-${config.env}`,
-      selfSignUpEnabled: false,                 // platform-ops provisioning only (SPEC §4.5)
+      selfSignUpEnabled: false, // platform-ops provisioning only (SPEC §4.5)
       signInAliases: { email: true },
-      autoVerify:    { email: true },
-      mfa: config.env === 'prod' ? 'optional' as any : 'off' as any,
+      autoVerify: { email: true },
+      mfa: config.env === 'prod' ? ('optional' as any) : ('off' as any),
       passwordPolicy: {
-        minLength: 14, requireLowercase: true, requireUppercase: true,
-        requireDigits: true, requireSymbols: true,
+        minLength: 14,
+        requireLowercase: true,
+        requireUppercase: true,
+        requireDigits: true,
+        requireSymbols: true,
         tempPasswordValidity: Duration.days(3),
       },
       accountRecovery: AccountRecovery.EMAIL_ONLY,
-      advancedSecurityMode: config.env === 'prod'
-        ? AdvancedSecurityMode.ENFORCED
-        : AdvancedSecurityMode.AUDIT,
+      advancedSecurityMode:
+        config.env === 'prod' ? AdvancedSecurityMode.ENFORCED : AdvancedSecurityMode.AUDIT,
       customAttributes: {
         // NO tenant_id here — tenancy lives in the STYNX DB, not in Cognito (SPEC §5.1).
         // Keep locale as a user preference.
@@ -263,17 +287,17 @@ export class IdentityStack extends Stack {
 
     this.apiClient = this.userPool.addClient('SpaClient', {
       userPoolClientName: `stynx-${config.env}-spa`,
-      generateSecret: false,              // PKCE — no client secret for SPA
+      generateSecret: false, // PKCE — no client secret for SPA
       authFlows: { userPassword: false, userSrp: true, adminUserPassword: false },
       oAuth: {
-        flows:  { authorizationCodeGrant: true },
+        flows: { authorizationCodeGrant: true },
         scopes: [OAuthScope.OPENID, OAuthScope.EMAIL, OAuthScope.PROFILE],
         callbackUrls: [`https://${config.domain}/auth/callback`],
-        logoutUrls:   [`https://${config.domain}/auth/logout`],
+        logoutUrls: [`https://${config.domain}/auth/logout`],
       },
       refreshTokenValidity: Duration.days(30),
-      accessTokenValidity:  Duration.minutes(60),
-      idTokenValidity:      Duration.minutes(60),
+      accessTokenValidity: Duration.minutes(60),
+      idTokenValidity: Duration.minutes(60),
       preventUserExistenceErrors: true,
     });
 
@@ -292,6 +316,7 @@ export class IdentityStack extends Stack {
 ```
 
 **Notes:**
+
 - `signInAliases: { email: true }` matches `auth.users.email` which is the STYNX side's primary user handle.
 - Self‑signup disabled — tenant admins provision users via STYNX's API, which calls Cognito admin endpoints via the `AdminClient`.
 - Advanced security enforced in prod (impossible‑travel detection, compromised‑credential check). Audit‑only in lower envs to keep friction down.
@@ -306,19 +331,38 @@ RDS PostgreSQL (Multi‑AZ in prod), PgBouncer (transaction mode) as a Fargate s
 ```typescript
 // infra/lib/data-stack.ts
 import { Stack, StackProps, Duration, RemovalPolicy } from 'aws-cdk-lib';
-import { DatabaseInstance, DatabaseInstanceEngine, PostgresEngineVersion,
-         Credentials, StorageType } from 'aws-cdk-lib/aws-rds';
-import { InstanceType, InstanceClass, InstanceSize, SubnetType, Port, Peer,
-         SecurityGroup } from 'aws-cdk-lib/aws-ec2';
+import {
+  DatabaseInstance,
+  DatabaseInstanceEngine,
+  PostgresEngineVersion,
+  Credentials,
+  StorageType,
+} from 'aws-cdk-lib/aws-rds';
+import {
+  InstanceType,
+  InstanceClass,
+  InstanceSize,
+  SubnetType,
+  Port,
+  Peer,
+  SecurityGroup,
+} from 'aws-cdk-lib/aws-ec2';
 import { Cluster, FargateService, ContainerImage, LogDrivers } from 'aws-cdk-lib/aws-ecs';
 import { ApplicationLoadBalancer } from 'aws-cdk-lib/aws-elasticloadbalancingv2';
-import { CfnReplicationGroup, CfnSubnetGroup, CfnParameterGroup } from 'aws-cdk-lib/aws-elasticache';
+import {
+  CfnReplicationGroup,
+  CfnSubnetGroup,
+  CfnParameterGroup,
+} from 'aws-cdk-lib/aws-elasticache';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { Key } from 'aws-cdk-lib/aws-kms';
 import { Construct } from 'constructs';
 import { EnvConfig } from './config';
 
-interface DataStackProps extends StackProps { config: EnvConfig; vpc: Vpc; }
+interface DataStackProps extends StackProps {
+  config: EnvConfig;
+  vpc: Vpc;
+}
 
 export class DataStack extends Stack {
   public readonly db: DatabaseInstance;
@@ -345,7 +389,9 @@ export class DataStack extends Stack {
     });
 
     this.db = new DatabaseInstance(this, 'Postgres', {
-      engine: DatabaseInstanceEngine.postgres({ version: PostgresEngineVersion.of(config.db.pgVersion, '16') }),
+      engine: DatabaseInstanceEngine.postgres({
+        version: PostgresEngineVersion.of(config.db.pgVersion, '16'),
+      }),
       instanceType: new InstanceType(config.db.instanceClass),
       credentials: Credentials.fromSecret(this.dbSecret),
       vpc,
@@ -357,17 +403,17 @@ export class DataStack extends Stack {
       storageEncrypted: true,
       backupRetention: Duration.days(config.db.backupRetentionDays),
       deleteAutomatedBackups: config.env !== 'prod',
-      deletionProtection:     config.env === 'prod',
+      deletionProtection: config.env === 'prod',
       performanceInsightRetention: config.env === 'prod' ? 731 : 7,
       cloudwatchLogsExports: ['postgresql'],
       parameters: {
-        'log_min_duration_statement': '500',            // slow query log > 500ms
-        'log_connections':            'on',
-        'log_disconnections':         'on',
-        'shared_preload_libraries':   'pg_stat_statements',
-        'pg_stat_statements.track':   'all',
+        log_min_duration_statement: '500', // slow query log > 500ms
+        log_connections: 'on',
+        log_disconnections: 'on',
+        shared_preload_libraries: 'pg_stat_statements',
+        'pg_stat_statements.track': 'all',
         // Row-level security enforcement tightened
-        'row_security':               'on',
+        row_security: 'on',
       },
       removalPolicy: config.env === 'prod' ? RemovalPolicy.RETAIN : RemovalPolicy.SNAPSHOT,
     });
@@ -413,24 +459,26 @@ export class DataStack extends Stack {
       cacheParameterGroupFamily: 'redis7',
       description: 'STYNX Redis params',
       properties: {
-        'notify-keyspace-events': 'Ex',          // key expiry notifications for session cleanup
-        'maxmemory-policy':       'volatile-lru',
+        'notify-keyspace-events': 'Ex', // key expiry notifications for session cleanup
+        'maxmemory-policy': 'volatile-lru',
       },
     });
 
     this.redis = new CfnReplicationGroup(this, 'Redis', {
       replicationGroupDescription: `STYNX ${config.env} Redis`,
-      engine: 'redis', engineVersion: '7.1',
+      engine: 'redis',
+      engineVersion: '7.1',
       cacheNodeType: config.redis.nodeType,
-      numNodeGroups: 1, replicasPerNodeGroup: config.redis.replicasPerNodeGroup,
+      numNodeGroups: 1,
+      replicasPerNodeGroup: config.redis.replicasPerNodeGroup,
       automaticFailoverEnabled: config.env === 'prod',
-      multiAzEnabled:           config.env === 'prod',
-      atRestEncryptionEnabled:  true,
+      multiAzEnabled: config.env === 'prod',
+      atRestEncryptionEnabled: true,
       transitEncryptionEnabled: true,
-      cacheSubnetGroupName:     redisSubnetGroup.ref,
-      cacheParameterGroupName:  redisParams.ref,
-      securityGroupIds:         [redisSg.securityGroupId],
-      snapshotRetentionLimit:   config.env === 'prod' ? 7 : 1,
+      cacheSubnetGroupName: redisSubnetGroup.ref,
+      cacheParameterGroupName: redisParams.ref,
+      securityGroupIds: [redisSg.securityGroupId],
+      snapshotRetentionLimit: config.env === 'prod' ? 7 : 1,
     });
 
     this.redisEndpoint = this.redis.attrPrimaryEndPointAddress;
@@ -444,6 +492,7 @@ export class DataStack extends Stack {
 ```
 
 **Notes:**
+
 - `stynx_app` and `stynx_reader` roles are created inside Postgres by STYNX's bootstrap migration, not by CDK. The `stynx_owner` password is the only credential provisioned here.
 - `row_security = on` is a belt‑and‑braces; the app connections always use `stynx_app` which is subject to RLS regardless.
 - PgBouncer on Fargate (not sidecar): one central pooler per environment, two instances in prod for redundancy. Sidecar‑per‑pod is an alternative if connection fan‑out is tight; the central form is simpler for tenant scale in scope.
@@ -459,8 +508,14 @@ Single bucket per environment (STYNX‑SPEC §8.1). KMS CMK. Versioning, block p
 ```typescript
 // infra/lib/storage-stack.ts
 import { Stack, StackProps, Duration, RemovalPolicy } from 'aws-cdk-lib';
-import { Bucket, BucketEncryption, BlockPublicAccess, ObjectOwnership,
-         StorageClass, LifecycleRule } from 'aws-cdk-lib/aws-s3';
+import {
+  Bucket,
+  BucketEncryption,
+  BlockPublicAccess,
+  ObjectOwnership,
+  StorageClass,
+  LifecycleRule,
+} from 'aws-cdk-lib/aws-s3';
 import { Key, KeySpec, KeyUsage } from 'aws-cdk-lib/aws-kms';
 import { Construct } from 'constructs';
 import { EnvConfig } from './config';
@@ -486,17 +541,26 @@ export class StorageStack extends Stack {
       {
         id: 'transition-ia',
         enabled: true,
-        transitions: [{ storageClass: StorageClass.INFREQUENT_ACCESS, transitionAfter: Duration.days(30) }],
+        transitions: [
+          { storageClass: StorageClass.INFREQUENT_ACCESS, transitionAfter: Duration.days(30) },
+        ],
       },
       {
         id: 'transition-glacier-ir',
         enabled: true,
-        transitions: [{ storageClass: StorageClass.GLACIER_INSTANT_RETRIEVAL, transitionAfter: Duration.days(180) }],
+        transitions: [
+          {
+            storageClass: StorageClass.GLACIER_INSTANT_RETRIEVAL,
+            transitionAfter: Duration.days(180),
+          },
+        ],
       },
       {
         id: 'transition-deep-archive',
         enabled: true,
-        transitions: [{ storageClass: StorageClass.DEEP_ARCHIVE, transitionAfter: Duration.days(730) }],
+        transitions: [
+          { storageClass: StorageClass.DEEP_ARCHIVE, transitionAfter: Duration.days(730) },
+        ],
       },
       {
         id: 'expire-noncurrent',
@@ -515,12 +579,12 @@ export class StorageStack extends Stack {
       versioned: true,
       encryption: BucketEncryption.KMS,
       encryptionKey: this.kmsDocsKey,
-      bucketKeyEnabled: true,                 // cheaper KMS ops
+      bucketKeyEnabled: true, // cheaper KMS ops
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
       objectOwnership: ObjectOwnership.BUCKET_OWNER_ENFORCED,
       enforceSSL: true,
       lifecycleRules: lifecycle,
-      eventBridgeEnabled: true,               // future: hook for virus scanning (§24/E8)
+      eventBridgeEnabled: true, // future: hook for virus scanning (§24/E8)
       removalPolicy: config.env === 'prod' ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
       autoDeleteObjects: config.env !== 'prod',
     });
@@ -532,6 +596,7 @@ export class StorageStack extends Stack {
 ```
 
 **Notes:**
+
 - Single shared bucket per environment (STYNX‑SPEC §4.1 decision). Per‑tenant prefix is enforced in `@stynx/storage` at presign time.
 - Lifecycle: IA at 30d, Glacier IR at 180d, Deep Archive at 730d, noncurrent version expire at 90d. Matches SPEC §8.1.
 - `eventBridgeEnabled: true` is the hook for when §24/E8 (document scanning) ships.
@@ -709,6 +774,7 @@ export class ComputeStack extends Stack {
 ```
 
 **Notes:**
+
 - ECS Fargate (not EC2): simpler operational story; patching is AWS's problem.
 - Two ALB listeners — public on 443, private internal for `/metrics` scrapes. Public listener short‑circuits `/metrics` with 403.
 - Auto‑scaling on CPU + memory. For STYNX workloads request latency is also a good trigger (via custom CloudWatch metric); add in ObservabilityStack.
@@ -800,6 +866,7 @@ export class ObservabilityStack extends Stack {
 ```
 
 **Notes:**
+
 - AMP scrapes `/metrics` from the app via a private ALB listener (not shown). Alternative: the OTel Collector sidecar sends OTLP directly to AMP's remote‑write endpoint; either works.
 - AMG with AWS SSO auth. Dashboards provisioned from files under `infra/dashboards/` — one JSON per dashboard, versioned alongside code.
 - Alarms list is the baseline; each consumer app adds its own application‑level alarms (e.g., SLO burn rates).
@@ -840,4 +907,4 @@ Expected deploy time for a fresh environment: ~30 minutes (RDS is the long pole)
 
 ---
 
-*End of CDK infrastructure reference.*
+_End of CDK infrastructure reference._

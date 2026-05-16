@@ -13,36 +13,39 @@
 Three mechanics are serious contenders. Others (temporal tables, event sourcing, audit‑log reconstruction) fail early on operational or teachability grounds and are not evaluated in depth here.
 
 #### A — In‑table flag
+
 `deleted_at timestamptz NULL` column on the live table. Queries filter `WHERE deleted_at IS NULL` by default. Partial unique indexes (`UNIQUE(...) WHERE deleted_at IS NULL`) preserve uniqueness semantics. Hard delete removes the row. This is what v0.3 specified.
 
 #### B — Archive schema, same database
+
 Mirrored tables in a dedicated `archive` schema. Soft delete moves the row from live to archive in a single transaction. Live table is clean (no `deleted_at` column). This is what v0.4 currently specifies.
 
 #### C — Twin archive database
+
 Separate PostgreSQL instance (or separate database on the same instance) holds archived rows. Soft delete requires cross‑database movement.
 
 ### A.2 Trade‑off matrix
 
-| Concern | A (in‑table) | B (archive schema, same DB) | C (twin DB) |
-|---|---|---|---|
-| Mechanical simplicity | **Simplest.** One table, one column, one filter. | Two tables per entity; migration linter required for parity. | Two databases, two connection pools, distributed concerns. |
-| Atomicity of delete | Trivial (`UPDATE`). | Trivial (single‑DB transaction). | **Requires 2PC** or dual‑write with reconciliation. PG 2PC is incompatible with PgBouncer transaction pooling (one of our invariants). |
-| Live‑table performance | Accumulates tombstones; index bloat on filtered predicates. Partial indexes help. At scale, autovacuum works harder. | **Live tables stay pristine.** Better cache locality, smaller indexes, cleaner query plans. | Same as B. |
-| Query ergonomics | Every query must remember the filter. Forgetting it = data leak. ORMs help via global filters. | Default query path hits only live; accessing archive requires explicit `withDeleted()` / `onlyDeleted()`. Hard to leak accidentally. | Archive is a different connection entirely; no accidental leak possible. |
-| Unique constraints | Require partial indexes (`WHERE deleted_at IS NULL`) on every uniqueness rule. Subtle to get right; migration linter needed. | Plain constraints on live. Archive has none. | Plain constraints on live. |
-| Restore | `UPDATE deleted_at = NULL`. Subject to unique conflicts if re‑creation happened. | Move row back; same conflict concern. | Cross‑DB move; 2PC again. |
-| LGPD erasure | Process live rows where `deleted_at IS NOT NULL` alongside active. Single scan. | Process live + archive. Two passes but both in same DB. | Cross‑DB orchestration; operationally painful. |
-| Referential integrity | FKs work normally; soft‑deleted parent still satisfies FK (children may dangle semantically). | Parent DELETE from live triggers `ON DELETE` behavior (RESTRICT/SET NULL/CASCADE). Archive has no outgoing FKs by design. | FK across databases impossible. Application‑level orphan risk. |
-| Backup / DR | One snapshot. | One snapshot. | **Two snapshots, coordinated.** RTO/RPO complexity doubles. |
-| Read replicas | One. | One (serves both live and archive reads). | Two. |
-| Vacuum / bloat | Tombstones stay in live table; autovacuum and index bloat scale with delete volume. | Live vacuum footprint is only truly‑deleted rows (soft delete = DELETE from live); archive grows unbounded but is rarely vacuumed (append‑only). | Same as B but across two instances. |
-| Cognitive load for a new engineer | "Don't forget the `deleted_at IS NULL` filter." Single rule. | "Live and archive are twins; the linter keeps them in sync; query helpers choose which side." More to learn, less to forget. | "Archive is a whole other database with its own pool, its own RLS, its own auth." Highest load. |
-| LGPD defensibility | Regulators see one table with a flag. Deleted data is still present, same schema, same indexes. Technically compliant if queries filter correctly, but easy to misstate during an audit. | Regulators see an explicit `archive` schema. "Deleted data is separated" is a clean sentence to say. Easier to narrate. | Even cleaner separation, but the operational overhead isn't justified by LGPD alone at this scale. |
-| When it breaks down | Tables with very high delete volume (tombstone/bloat eventually forces archive anyway). | Very large archive volumes (needs partitioning — deferred as E9). | Only justified at archive scales that STYNX will not hit at tens–hundreds of tenants. |
+| Concern                           | A (in‑table)                                                                                                                                                                             | B (archive schema, same DB)                                                                                                                      | C (twin DB)                                                                                                                            |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Mechanical simplicity             | **Simplest.** One table, one column, one filter.                                                                                                                                         | Two tables per entity; migration linter required for parity.                                                                                     | Two databases, two connection pools, distributed concerns.                                                                             |
+| Atomicity of delete               | Trivial (`UPDATE`).                                                                                                                                                                      | Trivial (single‑DB transaction).                                                                                                                 | **Requires 2PC** or dual‑write with reconciliation. PG 2PC is incompatible with PgBouncer transaction pooling (one of our invariants). |
+| Live‑table performance            | Accumulates tombstones; index bloat on filtered predicates. Partial indexes help. At scale, autovacuum works harder.                                                                     | **Live tables stay pristine.** Better cache locality, smaller indexes, cleaner query plans.                                                      | Same as B.                                                                                                                             |
+| Query ergonomics                  | Every query must remember the filter. Forgetting it = data leak. ORMs help via global filters.                                                                                           | Default query path hits only live; accessing archive requires explicit `withDeleted()` / `onlyDeleted()`. Hard to leak accidentally.             | Archive is a different connection entirely; no accidental leak possible.                                                               |
+| Unique constraints                | Require partial indexes (`WHERE deleted_at IS NULL`) on every uniqueness rule. Subtle to get right; migration linter needed.                                                             | Plain constraints on live. Archive has none.                                                                                                     | Plain constraints on live.                                                                                                             |
+| Restore                           | `UPDATE deleted_at = NULL`. Subject to unique conflicts if re‑creation happened.                                                                                                         | Move row back; same conflict concern.                                                                                                            | Cross‑DB move; 2PC again.                                                                                                              |
+| LGPD erasure                      | Process live rows where `deleted_at IS NOT NULL` alongside active. Single scan.                                                                                                          | Process live + archive. Two passes but both in same DB.                                                                                          | Cross‑DB orchestration; operationally painful.                                                                                         |
+| Referential integrity             | FKs work normally; soft‑deleted parent still satisfies FK (children may dangle semantically).                                                                                            | Parent DELETE from live triggers `ON DELETE` behavior (RESTRICT/SET NULL/CASCADE). Archive has no outgoing FKs by design.                        | FK across databases impossible. Application‑level orphan risk.                                                                         |
+| Backup / DR                       | One snapshot.                                                                                                                                                                            | One snapshot.                                                                                                                                    | **Two snapshots, coordinated.** RTO/RPO complexity doubles.                                                                            |
+| Read replicas                     | One.                                                                                                                                                                                     | One (serves both live and archive reads).                                                                                                        | Two.                                                                                                                                   |
+| Vacuum / bloat                    | Tombstones stay in live table; autovacuum and index bloat scale with delete volume.                                                                                                      | Live vacuum footprint is only truly‑deleted rows (soft delete = DELETE from live); archive grows unbounded but is rarely vacuumed (append‑only). | Same as B but across two instances.                                                                                                    |
+| Cognitive load for a new engineer | "Don't forget the `deleted_at IS NULL` filter." Single rule.                                                                                                                             | "Live and archive are twins; the linter keeps them in sync; query helpers choose which side." More to learn, less to forget.                     | "Archive is a whole other database with its own pool, its own RLS, its own auth." Highest load.                                        |
+| LGPD defensibility                | Regulators see one table with a flag. Deleted data is still present, same schema, same indexes. Technically compliant if queries filter correctly, but easy to misstate during an audit. | Regulators see an explicit `archive` schema. "Deleted data is separated" is a clean sentence to say. Easier to narrate.                          | Even cleaner separation, but the operational overhead isn't justified by LGPD alone at this scale.                                     |
+| When it breaks down               | Tables with very high delete volume (tombstone/bloat eventually forces archive anyway).                                                                                                  | Very large archive volumes (needs partitioning — deferred as E9).                                                                                | Only justified at archive scales that STYNX will not hit at tens–hundreds of tenants.                                                  |
 
 ### A.3 Ruling out C
 
-*Twin database is the wrong choice here, and I'd push back if you asked to adopt it.* Four concrete reasons:
+_Twin database is the wrong choice here, and I'd push back if you asked to adopt it._ Four concrete reasons:
 
 1. **PgBouncer transaction pooling + 2PC do not compose.** Our I1/I2 invariants require `SET LOCAL` and transaction‑scoped GUC propagation, which is why we picked transaction pooling over session pooling (§13.2). Distributed transactions across two databases need `PREPARE TRANSACTION` on each side — this is supported by PG but incompatible with transaction pooling in practice (PgBouncer loses the prepared state between statements). You would need a dedicated session pool for every soft‑delete operation, which blows up connection economics.
 2. **Without 2PC, you need an outbox or reconciliation saga.** That's a whole subsystem — one of the deferred extensions (E3). Building it to serve soft‑delete only, in v1.0, is a scope explosion.
@@ -51,13 +54,14 @@ Separate PostgreSQL instance (or separate database on the same instance) holds a
 
 Twin DB makes sense under exactly one set of conditions we do not have: archive volumes so large they threaten the operational DB, combined with a compliance regime that requires physical separation (e.g., data residency mandating archive in a separate AWS account or region). Neither applies.
 
-*Source: PostgreSQL docs on prepared transactions and their session‑binding requirements; PgBouncer documentation on transaction pooling limitations ("Features that break: SET/RESET, LISTEN, WITH HOLD CURSOR, PREPARE / DEALLOCATE, PRESERVE/DELETE ROWS temp tables, LOAD, server‑side prepared statements"). The PgBouncer FAQ explicitly lists prepared transactions among the things transaction pooling cannot handle cleanly.*
+_Source: PostgreSQL docs on prepared transactions and their session‑binding requirements; PgBouncer documentation on transaction pooling limitations ("Features that break: SET/RESET, LISTEN, WITH HOLD CURSOR, PREPARE / DEALLOCATE, PRESERVE/DELETE ROWS temp tables, LOAD, server‑side prepared statements"). The PgBouncer FAQ explicitly lists prepared transactions among the things transaction pooling cannot handle cleanly._
 
 ### A.4 A vs B — the real choice
 
-*This is a closer call than I made it look in v0.4, and I want to be honest about that.*
+_This is a closer call than I made it look in v0.4, and I want to be honest about that._
 
 **The case for A (in‑table flag):**
+
 - You pay the complexity cost once, in a well‑tested helper, and never think about it again.
 - Drizzle has clean patterns for automatic global filters (there are several community implementations; one Drizzle‑official pattern is likely within 12 months given the ORM's trajectory).
 - At your scale, table bloat from soft-deleted rows is manageable. A `record` table with 100k active + 20k deleted rows performs identically to one with 120k active, modulo query plans that can use the partial index for the live set.
@@ -66,7 +70,8 @@ Twin DB makes sense under exactly one set of conditions we do not have: archive 
 - The "forgot the filter" failure mode is real but it's a test responsibility, not an architectural one. Our mandatory RLS leak test (§16.3 #1) can be extended to check deleted‑row leakage.
 
 **The case for B (archive schema, same DB):**
-- Live tables stay clean forever. Query plans and index footprints scale with *active* data, not cumulative delete volume. For an app that runs for a decade, this compounds.
+
+- Live tables stay clean forever. Query plans and index footprints scale with _active_ data, not cumulative delete volume. For an app that runs for a decade, this compounds.
 - The "can I accidentally see deleted data?" question has a crisp answer: no, unless you call `withDeleted()` explicitly. A reviewer can verify by grep.
 - Partial unique indexes are an ergonomic tax every time you add a `UNIQUE` constraint. The linter catches it but it slows down PR review.
 - LGPD audits are cleaner to narrate: "deleted data lives in the `archive` schema, which has its own access controls and its own deletion lifecycle." Regulators understand this faster than "deleted data has a flag."
@@ -74,12 +79,12 @@ Twin DB makes sense under exactly one set of conditions we do not have: archive 
 
 **Where I come down, with calibrated confidence:**
 
-*I lean B, at about 60/40. The decisive factor for me is the "can't accidentally leak" property, which I care about more in a foundation library consumed by many apps over many years than in a single‑app codebase. A shared foundation that makes it structurally difficult to leak deleted data is worth more than the mirror‑management overhead, which the linter absorbs.*
+_I lean B, at about 60/40. The decisive factor for me is the "can't accidentally leak" property, which I care about more in a foundation library consumed by many apps over many years than in a single‑app codebase. A shared foundation that makes it structurally difficult to leak deleted data is worth more than the mirror‑management overhead, which the linter absorbs._
 
-*If you lean A instead, I won't argue hard. The two reasonable reasons to flip are:*
+_If you lean A instead, I won't argue hard. The two reasonable reasons to flip are:_
 
-1. *You expect `stynx adopt` to be used heavily on legacy apps where retrofitting archive mirrors for 50+ tables is operationally painful. A is a cheaper retrofit (add a column, add partial indexes).*
-2. *You have a strong intuition that mirror management will become a friction point despite the linter. This is a judgement call I can't make from outside your team's rhythm.*
+1. _You expect `stynx adopt` to be used heavily on legacy apps where retrofitting archive mirrors for 50+ tables is operationally painful. A is a cheaper retrofit (add a column, add partial indexes)._
+2. _You have a strong intuition that mirror management will become a friction point despite the linter. This is a judgement call I can't make from outside your team's rhythm._
 
 **A hybrid ("A now, promote to B later") is not a good path.** Migrating from A to B is possible but expensive — you'd need a one‑shot move of every historical soft‑deleted row, plus a schema flip, plus code changes. Pick one and commit.
 
@@ -87,7 +92,7 @@ Twin DB makes sense under exactly one set of conditions we do not have: archive 
 
 **Stay with B (archive schema, same DB)** as specified in v0.4, but with two refinements to reduce the cost you were reacting to:
 
-1. **Make the helper the primary authoring surface.** In v0.4 §14.3 the helper `data.create_soft_deletable_table(...)` is shown as an option. Make it the *default*. Consumers write one `CREATE TABLE` inside the helper and get the live table + archive mirror + RLS on both + audit wiring + indexes automatically. Hand‑written mirror DDL is an escape hatch, not the common path. This takes the ongoing cognitive load of mirror parity down to near zero.
+1. **Make the helper the primary authoring surface.** In v0.4 §14.3 the helper `data.create_soft_deletable_table(...)` is shown as an option. Make it the _default_. Consumers write one `CREATE TABLE` inside the helper and get the live table + archive mirror + RLS on both + audit wiring + indexes automatically. Hand‑written mirror DDL is an escape hatch, not the common path. This takes the ongoing cognitive load of mirror parity down to near zero.
 2. **Stop emitting `archive.*` in Drizzle schema files.** Archive tables are derived; developers should read and write live tables only. `@stynx/data` exposes query helpers (`.withDeleted()`, `.onlyDeleted()`) that resolve archive access internally. Drizzle types for archive are generated into a separate, ignored module consumed only by the helpers. Result: developers never see the mirror except in migrations.
 
 With those two moves, the day‑to‑day cost of B approaches the cost of A, and you retain the structural‑safety benefits.
@@ -115,10 +120,10 @@ Every FK to a soft‑deletable parent must carry one annotation. No default: the
 ```json
 {
   "code": "SOFT_DELETE_BLOCKED_BY_CHILDREN",
-  "parent": {"schema":"sample","table":"record","id":"..."},
+  "parent": { "schema": "sample", "table": "record", "id": "..." },
   "blocking_children": [
-    {"schema":"sample","table":"work_item","count":47,"sample_ids":["...","...","..."]},
-    {"schema":"sample","table":"record_note","count":2,"sample_ids":["...","..."]}
+    { "schema": "sample", "table": "work_item", "count": 47, "sample_ids": ["...", "...", "..."] },
+    { "schema": "sample", "table": "record_note", "count": 2, "sample_ids": ["...", "..."] }
   ]
 }
 ```
@@ -131,7 +136,7 @@ Every FK to a soft‑deletable parent must carry one annotation. No default: the
 
 **Intent:** children belong to parent; archiving parent archives children atomically.
 
-**DB:** `FOREIGN KEY (...) REFERENCES parent(id) ON DELETE RESTRICT`. *Not* `CASCADE` — Postgres `ON DELETE CASCADE` would hard‑delete the children, losing them. We want them moved to archive, not deleted.
+**DB:** `FOREIGN KEY (...) REFERENCES parent(id) ON DELETE RESTRICT`. _Not_ `CASCADE` — Postgres `ON DELETE CASCADE` would hard‑delete the children, losing them. We want them moved to archive, not deleted.
 
 **Mechanics:** `softDelete(parent, id)` walks the `core.softdelete_fk_registry` for all `cascade` children of the parent table, issues a recursive archive move:
 
@@ -192,13 +197,13 @@ Soft-deleting Sample Demo in one transaction:
 6. Archive the tenant row itself.
 7. Commit.
 
-Postgres handles the `hide` case automatically during step 4: when a `work_item` is DELETEd from live, the `created_by_user_id` FK has `ON DELETE SET NULL`, so any child pointing at the deleted user gets nulled. (This is the reverse direction of our cascade walk, so actually it doesn't apply here — `hide` is relevant when the *user* is deleted, not the tenant.)
+Postgres handles the `hide` case automatically during step 4: when a `work_item` is DELETEd from live, the `created_by_user_id` FK has `ON DELETE SET NULL`, so any child pointing at the deleted user gets nulled. (This is the reverse direction of our cascade walk, so actually it doesn't apply here — `hide` is relevant when the _user_ is deleted, not the tenant.)
 
 Audit trail after commit: one audit row per row DELETEd from live, tagged `{soft_delete, archived}`. No audit rows from the archive INSERT side (suppressed by the GUC).
 
 ### B.4 Depth limit (Q2 in v0.4 §27)
 
-*I proposed a default depth limit of 4 to prevent pathological cascade topologies from accidentally archiving half the database. The rationale: a 4-level hierarchy (tenant -> record -> work_item -> work_item_entry) is a practical upper bound for most consumer models; anything deeper is usually a taxonomy tree that probably should not cascade as soft delete.*
+_I proposed a default depth limit of 4 to prevent pathological cascade topologies from accidentally archiving half the database. The rationale: a 4-level hierarchy (tenant -> record -> work_item -> work_item_entry) is a practical upper bound for most consumer models; anything deeper is usually a taxonomy tree that probably should not cascade as soft delete._
 
 Concretely, `softDelete` tracks recursion depth and raises `CASCADE_TOO_DEEP` if it exceeds the limit. Consumer apps can raise the limit per call via `softDelete(table, id, { maxCascadeDepth: 6 })` if they know what they're doing.
 
@@ -241,17 +246,17 @@ The recursion logic handles self‑references identically to cross‑table refer
 
 Restore does not cascade. If you restore a row whose children were cascade‑archived along with it, those children stay in archive. The restore helper's 409 response (Q7 in v0.4 §27) extends to flag this: if the archive row being restored had cascade children that are still archived, the response includes them so the caller can decide whether to restore them too.
 
-A convenience helper `restoreWithCascade(table, id)` exists for the common "oops, restore the whole thing" case. It performs the inverse walk: restore parent, then walk archive to find children that were cascade‑archived *at the same timestamp*, then restore those, recursively. The match criterion is exact timestamp equality (`deleted_at = parent.deleted_at`) plus FK pointing to the parent's original id. This avoids restoring children that were archived in a *different* operation.
+A convenience helper `restoreWithCascade(table, id)` exists for the common "oops, restore the whole thing" case. It performs the inverse walk: restore parent, then walk archive to find children that were cascade‑archived _at the same timestamp_, then restore those, recursively. The match criterion is exact timestamp equality (`deleted_at = parent.deleted_at`) plus FK pointing to the parent's original id. This avoids restoring children that were archived in a _different_ operation.
 
 ### B.9 Summary table — when to pick which
 
-| Relationship semantics | Annotation |
-|---|---|
-| Child is compositionally part of parent; parent without children is nonsense. | `cascade` |
-| Child has independent lifecycle; parent can't be deleted while children are active. | `block` |
-| Link is informational; child stands alone when parent vanishes. | `hide` (FK must be nullable) |
+| Relationship semantics                                                                                         | Annotation                                                                               |
+| -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Child is compositionally part of parent; parent without children is nonsense.                                  | `cascade`                                                                                |
+| Child has independent lifecycle; parent can't be deleted while children are active.                            | `block`                                                                                  |
+| Link is informational; child stands alone when parent vanishes.                                                | `hide` (FK must be nullable)                                                             |
 | Child count is huge and business logic says cascade is correct but the operation can't fit in one transaction. | Don't use soft delete at this edge. Use offline bulk tooling or the tenant archive flow. |
-| You don't know yet. | Pick `block`. It's the safest default; it fails loudly when you didn't think about it. |
+| You don't know yet.                                                                                            | Pick `block`. It's the safest default; it fails loudly when you didn't think about it.   |
 
 ---
 
@@ -283,4 +288,4 @@ If A.5 is rejected in favor of Option A (in‑table flag):
 3. **Cascade row limit default.** 10 000 is my suggestion.
 4. **`block` as the fallback default** when the linter sees an unannotated FK to a soft‑deletable parent? Currently v0.4 says "reject the migration." Alternative: default to `block` with a warning. I lean "reject" — force the thought.
 
-*End of ADR‑001.*
+_End of ADR‑001._

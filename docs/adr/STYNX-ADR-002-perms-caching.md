@@ -242,4 +242,4 @@ Any change to the set of mutating paths (§2.6) requires an RFC amendment to thi
 
 ---
 
-*End of ADR‑002.*
+_End of ADR‑002._

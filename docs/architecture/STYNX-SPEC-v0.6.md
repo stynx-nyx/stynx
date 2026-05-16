@@ -195,14 +195,14 @@ Resolution order: `X-Tenant-Id` header → bearer `tenant_id` claim → subdomai
 
 STYNX owns six PostgreSQL schemas:
 
-| Schema | Purpose | RLS |
-|---|---|---|
-| `core` | Platform meta: configuration, rate‑limit overrides, idempotency keys, schema migration log, soft‑delete FK registry | Mixed |
-| `tenancy` | Tenant lifecycle: tenants, plans, settings | RLS on tenant‑scoped views |
-| `auth` | Identity/authz: users, roles, perms, groups, memberships, sessions, invitations | RLS |
-| `audit` | Append‑only audit log, partitioned monthly | No RLS; platform role only |
-| `storage` | Document registry | RLS |
-| `archive` | Mirrored tables of every soft‑deletable live table; holds soft‑deleted rows permanently | RLS |
+| Schema    | Purpose                                                                                                             | RLS                        |
+| --------- | ------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `core`    | Platform meta: configuration, rate‑limit overrides, idempotency keys, schema migration log, soft‑delete FK registry | Mixed                      |
+| `tenancy` | Tenant lifecycle: tenants, plans, settings                                                                          | RLS on tenant‑scoped views |
+| `auth`    | Identity/authz: users, roles, perms, groups, memberships, sessions, invitations                                     | RLS                        |
+| `audit`   | Append‑only audit log, partitioned monthly                                                                          | No RLS; platform role only |
+| `storage` | Document registry                                                                                                   | RLS                        |
+| `archive` | Mirrored tables of every soft‑deletable live table; holds soft‑deleted rows permanently                             | RLS                        |
 
 ### 4.4 RLS enforcement [SPEC]
 
@@ -231,11 +231,11 @@ Note: live tables of soft‑deletable entities do **not** carry `deleted_at`/`de
 
 **Three database roles:**
 
-| Role | RLS | Privileges | Used by |
-|---|---|---|---|
-| `stynx_owner` | BYPASSRLS | DDL | Migrations; `withSystemContext(...)` |
-| `stynx_app` | Subject to RLS | DML on live + archive; SELECT on `audit.*` | Default app connections |
-| `stynx_reader` | Subject to RLS | SELECT on live + archive | Read‑only clients |
+| Role           | RLS            | Privileges                                 | Used by                              |
+| -------------- | -------------- | ------------------------------------------ | ------------------------------------ |
+| `stynx_owner`  | BYPASSRLS      | DDL                                        | Migrations; `withSystemContext(...)` |
+| `stynx_app`    | Subject to RLS | DML on live + archive; SELECT on `audit.*` | Default app connections              |
+| `stynx_reader` | Subject to RLS | SELECT on live + archive                   | Read‑only clients                    |
 
 **GUC plumbing.** First statement of every transaction:
 
@@ -268,7 +268,7 @@ Forbidden by default. Two escape hatches (audited): `@System()` controller metho
 
 ### 5.1 Cognito as IdP, STYNX as AuthZ brain [OPINION]
 
-*Cognito strictly as IdP; tenant membership, roles, and permissions in STYNX DB. Source: AWS SaaS Factory Cognito reference patterns.*
+_Cognito strictly as IdP; tenant membership, roles, and permissions in STYNX DB. Source: AWS SaaS Factory Cognito reference patterns._
 
 ### 5.2 Token flow
 
@@ -494,7 +494,7 @@ Soft‑deleting a `storage.documents` row moves the registry row to `archive.sto
 
 ### 9.1 Layer choice [OPINION]
 
-*DB‑trigger audit, not application code. Tamper‑resistant given `stynx_app` cannot `DISABLE TRIGGER`. Source: OWASP ASVS v4 §7; PostgreSQL trigger privilege docs.*
+_DB‑trigger audit, not application code. Tamper‑resistant given `stynx_app` cannot `DISABLE TRIGGER`. Source: OWASP ASVS v4 §7; PostgreSQL trigger privilege docs._
 
 ### 9.2 Audit schema
 
@@ -663,9 +663,9 @@ Soft‑deleting a live row **moves** it to a mirrored table in the `archive` sch
 
 Default ON for every tenant‑scoped table. Opt‑out via `@NoSoftDelete('reason')` on the entity model and a `-- @no_soft_delete: <reason>` migration annotation.
 
-*Rationale: clean live tables (no `deleted_at` columns, no partial indexes, unique constraints work normally), complete separation of "live" vs "deleted" data, auditable move operations, LGPD‑compliant erasure that processes both live and archive on demand. Trade‑offs: every soft‑deletable table requires a mirror (managed by the linter); restore requires conflict handling; archive grows unbounded (acceptable at tenant scale defined in §4.1).* [OPINION]
+_Rationale: clean live tables (no `deleted_at` columns, no partial indexes, unique constraints work normally), complete separation of "live" vs "deleted" data, auditable move operations, LGPD‑compliant erasure that processes both live and archive on demand. Trade‑offs: every soft‑deletable table requires a mirror (managed by the linter); restore requires conflict handling; archive grows unbounded (acceptable at tenant scale defined in §4.1)._ [OPINION]
 
-**`is_active` is not soft delete.** Tables like `auth.users` and `tenancy.tenants` carry a boolean `is_active` column for *temporary suspension* (deactivated account, suspended tenant). This is orthogonal to soft delete, which represents *removed‑with‑recall*. The two states compose: a tenant can be `is_active = false` (suspended) while still live; later it may be soft‑deleted (moved to archive) either directly or after another state transition. `stynx doctor` emits an informational note when a soft‑deletable live table carries `is_active`, reminding reviewers that UI and authorization flows must handle both dimensions explicitly.
+**`is_active` is not soft delete.** Tables like `auth.users` and `tenancy.tenants` carry a boolean `is_active` column for _temporary suspension_ (deactivated account, suspended tenant). This is orthogonal to soft delete, which represents _removed‑with‑recall_. The two states compose: a tenant can be `is_active = false` (suspended) while still live; later it may be soft‑deleted (moved to archive) either directly or after another state transition. `stynx doctor` emits an informational note when a soft‑deletable live table carries `is_active`, reminding reviewers that UI and authorization flows must handle both dimensions explicitly.
 
 ### 14.2 Archive mirror schema [SPEC]
 
@@ -755,9 +755,9 @@ Day‑to‑day application code (services, controllers, queries) never reference
 `@stynx/data` query helpers query live only by default. To include archived rows, opt in explicitly:
 
 ```typescript
-await trx.select().from(table);                       // live only
-await trx.select().from(table).withDeleted();         // live UNION ALL archive (archive columns padded NULL for live rows)
-await trx.select().from(table).onlyDeleted();         // archive only, ordered by deleted_at DESC by default
+await trx.select().from(table); // live only
+await trx.select().from(table).withDeleted(); // live UNION ALL archive (archive columns padded NULL for live rows)
+await trx.select().from(table).onlyDeleted(); // archive only, ordered by deleted_at DESC by default
 ```
 
 The `withDeleted()` helper normalizes the projection across live and archive (archive‑only columns — `archived_at`, `deleted_at`, `deleted_by` — appear as NULL for live rows).
@@ -766,15 +766,15 @@ There is no implicit way to hit archive — developers must call `withDeleted()`
 
 ### 14.5 Operations [SPEC]
 
-| Operation | HTTP | DB effect | Permission | Audit |
-|---|---|---|---|---|
-| Soft delete | `DELETE /things/{id}` | Move row from live to archive (single tx, GUC‑gated audit) | `thing:delete:*` | Live `op=D` + tags `{soft_delete, archived}` |
-| Hard delete (live) | `DELETE /things/{id}?hard=true` | `DELETE FROM live ...` (no archive write) | `thing:hard_delete:*` | Live `op=D` + tags `{hard_delete}` |
-| Hard delete (archive) | Admin only, `DELETE /_archive/{table}/{archive_id}` | `DELETE FROM archive ...` + S3 object purge where applicable | `platform:archive_purge:*` | Archive `op=D` + tags `{hard_delete, from_archive}` |
-| Restore | `POST /things/{id}/restore` | Verify no live conflict; move row from archive back to live (single tx) | `thing:restore:*` | Live `op=I` + tags `{restore, from_archive}` |
-| List | `GET /things` | live only | `thing:read:*` | n/a |
-| List with deleted | `GET /things?include_deleted=true` | live UNION archive | `thing:read_trash:*` | n/a |
-| Trash list | `GET /things/_trash` | archive only | `thing:read_trash:*` | n/a |
+| Operation             | HTTP                                                | DB effect                                                               | Permission                 | Audit                                               |
+| --------------------- | --------------------------------------------------- | ----------------------------------------------------------------------- | -------------------------- | --------------------------------------------------- |
+| Soft delete           | `DELETE /things/{id}`                               | Move row from live to archive (single tx, GUC‑gated audit)              | `thing:delete:*`           | Live `op=D` + tags `{soft_delete, archived}`        |
+| Hard delete (live)    | `DELETE /things/{id}?hard=true`                     | `DELETE FROM live ...` (no archive write)                               | `thing:hard_delete:*`      | Live `op=D` + tags `{hard_delete}`                  |
+| Hard delete (archive) | Admin only, `DELETE /_archive/{table}/{archive_id}` | `DELETE FROM archive ...` + S3 object purge where applicable            | `platform:archive_purge:*` | Archive `op=D` + tags `{hard_delete, from_archive}` |
+| Restore               | `POST /things/{id}/restore`                         | Verify no live conflict; move row from archive back to live (single tx) | `thing:restore:*`          | Live `op=I` + tags `{restore, from_archive}`        |
+| List                  | `GET /things`                                       | live only                                                               | `thing:read:*`             | n/a                                                 |
+| List with deleted     | `GET /things?include_deleted=true`                  | live UNION archive                                                      | `thing:read_trash:*`       | n/a                                                 |
+| Trash list            | `GET /things/_trash`                                | archive only                                                            | `thing:read_trash:*`       | n/a                                                 |
 
 ### 14.6 Restore conflict handling [SPEC]
 
@@ -787,16 +787,16 @@ If multiple archive rows exist for the same original `id` (repeated delete/resto
 ```json
 {
   "code": "RESTORE_HAS_ARCHIVED_CASCADE_CHILDREN",
-  "parent": {"schema":"sample","table":"record","id":"..."},
+  "parent": { "schema": "sample", "table": "record", "id": "..." },
   "archived_cascade_children": [
-    {"schema":"sample","table":"work_item","count":47},
-    {"schema":"sample","table":"record_note","count":3}
+    { "schema": "sample", "table": "work_item", "count": 47 },
+    { "schema": "sample", "table": "record_note", "count": 3 }
   ],
   "hint": "Use POST /record/{id}/restore?cascade=true to restore the whole family."
 }
 ```
 
-A convenience helper `restoreWithCascade(table, id)` performs the inverse walk: restore parent, then find archive rows that were cascade‑archived **at the same `deleted_at` timestamp** as the parent and whose FK still points at the parent's original id, then restore those, recursively. The timestamp‑equality match criterion avoids restoring children that were archived in a *different* operation — if you re‑archive a single child later, restoring the parent family won't drag it back.
+A convenience helper `restoreWithCascade(table, id)` performs the inverse walk: restore parent, then find archive rows that were cascade‑archived **at the same `deleted_at` timestamp** as the parent and whose FK still points at the parent's original id, then restore those, recursively. The timestamp‑equality match criterion avoids restoring children that were archived in a _different_ operation — if you re‑archive a single child later, restoring the parent family won't drag it back.
 
 Surface:
 
@@ -822,12 +822,10 @@ Every FK to a soft‑deletable parent must carry a `-- @softdelete_fk: hide | ca
 ```json
 {
   "code": "SOFT_DELETE_BLOCKED_BY_CHILDREN",
-  "parent": {"schema":"sample","table":"record","id":"..."},
+  "parent": { "schema": "sample", "table": "record", "id": "..." },
   "blocking_children": [
-    {"schema":"sample","table":"work_item","count":47,
-     "sample_ids":["...","...","..."]},
-    {"schema":"sample","table":"record_note","count":2,
-     "sample_ids":["...","..."]}
+    { "schema": "sample", "table": "work_item", "count": 47, "sample_ids": ["...", "...", "..."] },
+    { "schema": "sample", "table": "record_note", "count": 2, "sample_ids": ["...", "..."] }
   ]
 }
 ```
@@ -838,7 +836,7 @@ Every FK to a soft‑deletable parent must carry a `-- @softdelete_fk: hide | ca
 
 **Intent:** children are compositionally part of parent; archiving parent archives children atomically.
 
-**DB‑level:** `FOREIGN KEY (...) REFERENCES parent(id) ON DELETE RESTRICT`. *Not* Postgres `ON DELETE CASCADE` — that would hard‑delete children, losing them.
+**DB‑level:** `FOREIGN KEY (...) REFERENCES parent(id) ON DELETE RESTRICT`. _Not_ Postgres `ON DELETE CASCADE` — that would hard‑delete children, losing them.
 
 **Mechanics:** `trx.softDelete(parent, id)` walks the registry for `cascade` children of the parent table, executes the cascade in leaves‑first order:
 
@@ -879,12 +877,12 @@ All three behaviors work for self‑referencing FKs (`auth.groups.parent_id → 
 
 #### Summary — when to pick which
 
-| Relationship semantics | Annotation |
-|---|---|
-| Child is compositionally part of parent. | `cascade` |
-| Child has independent lifecycle; parent can't be archived while children are active. | `block` |
-| Link is informational; child stands alone. | `hide` (FK must be nullable) |
-| You don't know yet. | Pick `block`. Safest default; fails loudly. |
+| Relationship semantics                                                               | Annotation                                  |
+| ------------------------------------------------------------------------------------ | ------------------------------------------- |
+| Child is compositionally part of parent.                                             | `cascade`                                   |
+| Child has independent lifecycle; parent can't be archived while children are active. | `block`                                     |
+| Link is informational; child stands alone.                                           | `hide` (FK must be nullable)                |
+| You don't know yet.                                                                  | Pick `block`. Safest default; fails loudly. |
 
 ### 14.8 Cascade limits [SPEC]
 
@@ -902,7 +900,7 @@ await trx.softDelete(table, id, { maxCascadeDepth: 6 });
 await trx.softDelete(table, id, { maxCascadeRows: 500 });
 ```
 
-*The 100‑row default matches the stated real‑world expectation of "tens of rows per cascade" with a 10× safety margin. Operations that legitimately need more should be explicit via the override; operations that hit the limit unexpectedly almost certainly indicate a mis‑modeled FK graph. When "delete whole tenant" is the intent, use the tenant archive flow (§4.5) rather than cascading soft‑delete — the tenant lifecycle handles volumes of this class offline.* [OPINION]
+_The 100‑row default matches the stated real‑world expectation of "tens of rows per cascade" with a 10× safety margin. Operations that legitimately need more should be explicit via the override; operations that hit the limit unexpectedly almost certainly indicate a mis‑modeled FK graph. When "delete whole tenant" is the intent, use the tenant archive flow (§4.5) rather than cascading soft‑delete — the tenant lifecycle handles volumes of this class offline._ [OPINION]
 
 Both limits are soft (per‑call overridable) but their defaults are codified in `core.config`; changing them platform‑wide requires an RFC.
 
@@ -1046,7 +1044,7 @@ Frontend: Angular workspace with `@stynx-web/angular` pre‑wired, OIDC template
 
 **Phase 4 — green gate.** Re‑run scan until clean; CI badge flips to "STYNX: compliant".
 
-*Estimated effort for a medium app (~200 endpoints, ~50 tables, raw SQL): 5–10 weeks (slightly more than v0.3 estimate because archive migrations require careful review of FK semantics per table).* [OPINION]
+_Estimated effort for a medium app (~200 endpoints, ~50 tables, raw SQL): 5–10 weeks (slightly more than v0.3 estimate because archive migrations require careful review of FK semantics per table)._ [OPINION]
 
 ### 20.3 Documentation site
 
@@ -1084,7 +1082,7 @@ sample.work_item:
 
 Erasure strategies: `nullify`, `hash_with_salt`, `tombstone_row`, `delete_row`.
 
-*Note: `soft_delete_retention_days` is removed in v0.4 — archive is permanent. LGPD erasure processes archive on demand (§21.4), not on a schedule.*
+_Note: `soft_delete_retention_days` is removed in v0.4 — archive is permanent. LGPD erasure processes archive on demand (§21.4), not on a schedule._
 
 ### 21.3 Export
 
@@ -1134,17 +1132,17 @@ Per v0.3. ICU MessageFormat, `pt-BR` + `en-US`, resolution order: session → Ac
 
 ## 24. Deferred Extensions [v1.1+]
 
-| # | Capability | Target | Notes |
-|---|---|---|---|
-| E1 | Feature flags | v1.1 | Per‑tenant + per‑user, Redis pub/sub invalidation. |
-| E2 | Background jobs | v1.1 | BullMQ; jobs carry `TenantContext` + `ActorContext`. |
-| E3 | Outbox + EventBridge | v1.1 | Transactional outbox; per‑(tenant, aggregate) ordering. |
-| E4 | Webhook subscriptions | v1.2 | Built atop the outbox. |
-| E5 | Blue/green schema migrations | v1.2 | Expand‑contract recipes. |
-| E6 | Offline write queueing in client SDK | v1.2 | PWA outbox; relies on §22. |
-| E7 | Per‑tenant KMS CMK | v1.2 | BYOK. |
-| E8 | Document virus scanning | v1.1 | GuardDuty Malware Protection for S3, ClamAV‑in‑Lambda fallback. |
-| E9 | Archive partitioning by `deleted_at` | v1.2 | If archive growth becomes a concern. |
+| #   | Capability                           | Target | Notes                                                           |
+| --- | ------------------------------------ | ------ | --------------------------------------------------------------- |
+| E1  | Feature flags                        | v1.1   | Per‑tenant + per‑user, Redis pub/sub invalidation.              |
+| E2  | Background jobs                      | v1.1   | BullMQ; jobs carry `TenantContext` + `ActorContext`.            |
+| E3  | Outbox + EventBridge                 | v1.1   | Transactional outbox; per‑(tenant, aggregate) ordering.         |
+| E4  | Webhook subscriptions                | v1.2   | Built atop the outbox.                                          |
+| E5  | Blue/green schema migrations         | v1.2   | Expand‑contract recipes.                                        |
+| E6  | Offline write queueing in client SDK | v1.2   | PWA outbox; relies on §22.                                      |
+| E7  | Per‑tenant KMS CMK                   | v1.2   | BYOK.                                                           |
+| E8  | Document virus scanning              | v1.1   | GuardDuty Malware Protection for S3, ClamAV‑in‑Lambda fallback. |
+| E9  | Archive partitioning by `deleted_at` | v1.2   | If archive growth becomes a concern.                            |
 
 ---
 
@@ -1201,18 +1199,18 @@ Resolved in v0.3: web SPA token storage in `sessionStorage` (Q1); read‑only ro
 
 ## 28. Delivery Plan (suggested, not normative)
 
-| Phase | Weeks | Deliverable |
-|---|---|---|
-| P0 Bootstrap | 1–2 | Monorepo, CI, `@stynx/core`, `@stynx/logging`, `@stynx/health`, reference api |
-| P1 Data + Tenancy + Archive | 3–7 | `@stynx/data` (Drizzle, tx, three roles, RLS GUC, **archive model: mirror helpers, softDelete/restore, FK registry**), `@stynx/tenancy`, migration linter |
-| P2 Auth + Authz + Sessions | 8–11 | `@stynx/auth` (Cognito + STYNX bearer + refresh rotation), `@stynx/sessions`, perms engine |
-| P3 Audit + Storage | 12–14 | `@stynx/audit` (triggers + archive‑move GUC suppression + read API), `@stynx/storage` (S3, pre‑scan defenses, archive‑aware hard delete) |
-| P4 Rate‑limit + Idempotency + Testing | 15–16 | `@stynx/ratelimit`, `@stynx/idempotency`, `@stynx/testing` (archive‑aware matchers), `stynx doctor` |
-| P5 Privacy + i18n | 17–18 | `@stynx/privacy` (live + archive erasure; active‑row retention), `@stynx/i18n` |
-| P6 CLI + Adoption | 19–20 | `@stynx/cli` init/adopt/migrate, codemods (archive mirror generation), pilot adoption |
-| P7 Frontend | 21–24 | `@stynx-web/sdk` + `@stynx-web/angular` family + reference web app (incl. `<stynx-trash-list>`) |
-| P8 Hardening + v1.0 | 25–27 | Load tests, chaos tests, docs site, v1.0 cut |
+| Phase                                 | Weeks | Deliverable                                                                                                                                               |
+| ------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P0 Bootstrap                          | 1–2   | Monorepo, CI, `@stynx/core`, `@stynx/logging`, `@stynx/health`, reference api                                                                             |
+| P1 Data + Tenancy + Archive           | 3–7   | `@stynx/data` (Drizzle, tx, three roles, RLS GUC, **archive model: mirror helpers, softDelete/restore, FK registry**), `@stynx/tenancy`, migration linter |
+| P2 Auth + Authz + Sessions            | 8–11  | `@stynx/auth` (Cognito + STYNX bearer + refresh rotation), `@stynx/sessions`, perms engine                                                                |
+| P3 Audit + Storage                    | 12–14 | `@stynx/audit` (triggers + archive‑move GUC suppression + read API), `@stynx/storage` (S3, pre‑scan defenses, archive‑aware hard delete)                  |
+| P4 Rate‑limit + Idempotency + Testing | 15–16 | `@stynx/ratelimit`, `@stynx/idempotency`, `@stynx/testing` (archive‑aware matchers), `stynx doctor`                                                       |
+| P5 Privacy + i18n                     | 17–18 | `@stynx/privacy` (live + archive erasure; active‑row retention), `@stynx/i18n`                                                                            |
+| P6 CLI + Adoption                     | 19–20 | `@stynx/cli` init/adopt/migrate, codemods (archive mirror generation), pilot adoption                                                                     |
+| P7 Frontend                           | 21–24 | `@stynx-web/sdk` + `@stynx-web/angular` family + reference web app (incl. `<stynx-trash-list>`)                                                           |
+| P8 Hardening + v1.0                   | 25–27 | Load tests, chaos tests, docs site, v1.0 cut                                                                                                              |
 
 ---
 
-*End of specification v0.6. All open questions closed. This document is the v1.0 implementation reference — changes from here require RFC per §17.4.*
+_End of specification v0.6. All open questions closed. This document is the v1.0 implementation reference — changes from here require RFC per §17.4._

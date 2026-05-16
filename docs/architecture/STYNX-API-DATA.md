@@ -12,16 +12,22 @@
 
 ```typescript
 // Root exports from @stynx/data
-export { DataModule }               from './module';
-export { Database }                 from './database';
-export { Transaction }              from './transaction';
-export { withSystemContext }        from './system-context';
+export { DataModule } from './module';
+export { Database } from './database';
+export { Transaction } from './transaction';
+export { withSystemContext } from './system-context';
 
 // Types
 export type {
-  TxOptions, SoftDeleteOptions, RestoreOptions, HardDeleteOptions,
-  QueryBuilder, SoftDeletableTable, LiveOnlyTable,
-  FkBehavior, CascadePlan,
+  TxOptions,
+  SoftDeleteOptions,
+  RestoreOptions,
+  HardDeleteOptions,
+  QueryBuilder,
+  SoftDeletableTable,
+  LiveOnlyTable,
+  FkBehavior,
+  CascadePlan,
 } from './types';
 
 // Errors
@@ -130,7 +136,7 @@ interface CascadePlan {
     schema: string;
     table: string;
     rowCount: number;
-    fkBehavior: 'cascade';                // only cascade rows appear in the plan
+    fkBehavior: 'cascade'; // only cascade rows appear in the plan
   }>;
 
   /** Total rows across the cascade. */
@@ -192,14 +198,17 @@ app.role       = <options.role, default 'app'>
 ```
 
 **Throws** before executing `fn`:
+
 - `TenantContextMissingError` if `TenantContext` is unset and role is not `'owner'`.
 - `ActorContextMissingError` if `ActorContext` is unset.
 
 **Throws** from inside `fn` (re‑raised after rollback):
+
 - `ReadOnlyViolationError` if a DML statement runs under `role: 'reader'`.
 - `TransactionRequiredError` if a nested `trx.execute()` is called outside the current transaction (programming error).
 
 **Behavior:**
+
 - `readonly: true` issues `SET LOCAL TRANSACTION READ ONLY` after GUCs.
 - `role: 'reader'` requires `readonly: true`; misuse fails immediately.
 - `role: 'owner'` is allowed only from a `withSystemContext` frame; direct use from request scope throws `SystemContextRequiredError`.
@@ -216,6 +225,7 @@ withSystemContext<T>(
 ```
 
 Escape from normal tenant‑scoped operation. Inside `fn`:
+
 - `TenantContext` resolution returns `null`; caller must pass explicit `tenant_id` into each `tx` if a specific tenant is targeted, or use `tx` with `role: 'owner'` for platform‑level work.
 - Every call writes a row to `audit.system_op` with `reason`, `actor_id`, and `request_id`.
 
@@ -239,7 +249,7 @@ withReplica<T>(fn: (trx: Transaction) => Promise<T>): Promise<T>;
 ```typescript
 const rows = await trx
   .select()
-  .from(record)                         // Drizzle schema, live table
+  .from(record) // Drizzle schema, live table
   .where(eq(record.isActive, true));
 ```
 
@@ -251,7 +261,7 @@ No archive access. Returns rows from `sample.record` only.
 const rows = await trx
   .select()
   .from(record)
-  .withDeleted()                        // includes archive.sample_record
+  .withDeleted() // includes archive.sample_record
   .orderBy(desc(record.updatedAt));
 ```
 
@@ -317,6 +327,7 @@ Moves the row from live to archive. If FKs with `cascade` annotation point to th
 10. Audit trigger on live DELETE fires with `op='D'`, `tags={"soft_delete":true,"archived":true,"archive_table":"..."}`; archive INSERT trigger observes `app.archive_move='in_progress'` and writes no audit row.
 
 **Errors:**
+
 - `CascadeTooDeepError { maxDepth, attempted }`
 - `CascadeTooLargeError { maxRows, plan: CascadePlan }`
 - `SoftDeleteBlockedError { parent, blockingChildren: Array<{...}> }`
@@ -363,6 +374,7 @@ interface RestoreResult {
 9. Audit on live INSERT fires with `op='I'`, `tags={"restore":true,"from_archive":true}`.
 
 **Errors:**
+
 - `RestoreConflictError { conflictingConstraint, conflictValues }`
 - `RestoreCascadeParentsArchivedError { archivedParents }` (when `cascade: false`)
 - Per‑child `:restore:*` permission missing (from the perms layer, not this module — surfaces as `403 ForbiddenException` upstream)
@@ -429,6 +441,7 @@ Parses the supplied `CREATE TABLE` statement and emits:
 5. Audit trigger enablement on both tables (`audit.enable_for(...)`).
 
 Fails if:
+
 - DDL is not a single `CREATE TABLE`.
 - Table lacks `tenant_id uuid NOT NULL` (violates I5).
 - Archive name would collide with an existing object.
@@ -460,8 +473,8 @@ All errors extend `StynxDataError`:
 
 ```typescript
 abstract class StynxDataError extends Error {
-  abstract readonly code: string;         // stable machine-readable code
-  abstract readonly httpStatus: number;   // suggested HTTP mapping
+  abstract readonly code: string; // stable machine-readable code
+  abstract readonly httpStatus: number; // suggested HTTP mapping
   readonly cause?: unknown;
   readonly context: Record<string, unknown>;
 }
@@ -469,22 +482,22 @@ abstract class StynxDataError extends Error {
 
 The NestJS error filter in `@stynx/core` maps these to HTTP responses automatically:
 
-| Error class | `code` | HTTP | Retryable? |
-|---|---|---|---|
-| `TenantContextMissingError` | `TENANT_CONTEXT_MISSING` | 500 | No (programming error) |
-| `ActorContextMissingError` | `ACTOR_CONTEXT_MISSING` | 500 | No (programming error) |
-| `TransactionRequiredError` | `TRANSACTION_REQUIRED` | 500 | No (programming error) |
-| `SystemContextRequiredError` | `SYSTEM_CONTEXT_REQUIRED` | 500 | No (programming error) |
-| `ReadOnlyViolationError` | `READONLY_VIOLATION` | 500 | No (programming error) |
-| `CascadeTooDeepError` | `CASCADE_TOO_DEEP` | 409 | No (redesign FK graph or raise limit) |
-| `CascadeTooLargeError` | `CASCADE_TOO_LARGE` | 409 | No (same) |
-| `SoftDeleteBlockedError` | `SOFT_DELETE_BLOCKED_BY_CHILDREN` | 409 | Yes after children resolved |
-| `RestoreConflictError` | `RESTORE_CONFLICT` | 409 | Yes after conflict resolved |
-| `RestoreCascadeParentsArchivedError` | `RESTORE_HAS_ARCHIVED_CASCADE_PARENTS` | 409 | Yes with `cascade: true` |
-| `ArchiveMirrorMissingError` | `ARCHIVE_MIRROR_MISSING` | 500 | No (migration error) |
-| `ArchiveMirrorDriftError` | `ARCHIVE_MIRROR_DRIFT` | 500 | No (migration error) |
-| `StatementTimeoutError` | `STATEMENT_TIMEOUT` | 504 | Yes |
-| `SerializationFailureError` (after retries exhausted) | `SERIALIZATION_FAILURE` | 503 | Yes |
+| Error class                                           | `code`                                 | HTTP | Retryable?                            |
+| ----------------------------------------------------- | -------------------------------------- | ---- | ------------------------------------- |
+| `TenantContextMissingError`                           | `TENANT_CONTEXT_MISSING`               | 500  | No (programming error)                |
+| `ActorContextMissingError`                            | `ACTOR_CONTEXT_MISSING`                | 500  | No (programming error)                |
+| `TransactionRequiredError`                            | `TRANSACTION_REQUIRED`                 | 500  | No (programming error)                |
+| `SystemContextRequiredError`                          | `SYSTEM_CONTEXT_REQUIRED`              | 500  | No (programming error)                |
+| `ReadOnlyViolationError`                              | `READONLY_VIOLATION`                   | 500  | No (programming error)                |
+| `CascadeTooDeepError`                                 | `CASCADE_TOO_DEEP`                     | 409  | No (redesign FK graph or raise limit) |
+| `CascadeTooLargeError`                                | `CASCADE_TOO_LARGE`                    | 409  | No (same)                             |
+| `SoftDeleteBlockedError`                              | `SOFT_DELETE_BLOCKED_BY_CHILDREN`      | 409  | Yes after children resolved           |
+| `RestoreConflictError`                                | `RESTORE_CONFLICT`                     | 409  | Yes after conflict resolved           |
+| `RestoreCascadeParentsArchivedError`                  | `RESTORE_HAS_ARCHIVED_CASCADE_PARENTS` | 409  | Yes with `cascade: true`              |
+| `ArchiveMirrorMissingError`                           | `ARCHIVE_MIRROR_MISSING`               | 500  | No (migration error)                  |
+| `ArchiveMirrorDriftError`                             | `ARCHIVE_MIRROR_DRIFT`                 | 500  | No (migration error)                  |
+| `StatementTimeoutError`                               | `STATEMENT_TIMEOUT`                    | 504  | Yes                                   |
+| `SerializationFailureError` (after retries exhausted) | `SERIALIZATION_FAILURE`                | 503  | Yes                                   |
 
 Each error carries `context` with enough detail for logs and UI. Examples:
 
@@ -595,12 +608,12 @@ async remove(@Param('id') id: string, @Query('confirm') confirm?: string) {
 
 ## 9. Interaction with other STYNX packages
 
-| Module | Interaction |
-|---|---|
-| `@stynx/auth` | Permission decorators gate routes; `@stynx/data` itself performs no permission checks. |
-| `@stynx/tenancy` | Supplies `TenantContext`; `@stynx/data` reads it at `tx` entry. |
-| `@stynx/audit` | Triggers fire inside Postgres; `@stynx/data` sets GUCs that the triggers read. |
-| `@stynx/privacy` | Uses `hardDeleteFromArchive` and direct archive access for LGPD erasure (§21.4). Operates under `withSystemContext`. |
+| Module           | Interaction                                                                                                                                        |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@stynx/auth`    | Permission decorators gate routes; `@stynx/data` itself performs no permission checks.                                                             |
+| `@stynx/tenancy` | Supplies `TenantContext`; `@stynx/data` reads it at `tx` entry.                                                                                    |
+| `@stynx/audit`   | Triggers fire inside Postgres; `@stynx/data` sets GUCs that the triggers read.                                                                     |
+| `@stynx/privacy` | Uses `hardDeleteFromArchive` and direct archive access for LGPD erasure (§21.4). Operates under `withSystemContext`.                               |
 | `@stynx/testing` | Provides matchers (`expectInArchive`, `expectNotInLive`, `expectRestoreConflict`, `expectArchiveMirrorInSync`) against the live and archive state. |
 
 ---
@@ -615,4 +628,4 @@ Semantic observable changes to retry policy defaults, cascade limit defaults, or
 
 ---
 
-*End of `@stynx/data` API Reference v1.0.*
+_End of `@stynx/data` API Reference v1.0._
