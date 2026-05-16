@@ -1,0 +1,18 @@
+{
+  "worktrees": [
+    {
+      "id": "WT-TASK-0001",
+      "path": "/Users/aarusso/Development/stech/stynx/.devai/worktrees/WT-TASK-0001",
+      "branch": "TASK-0001",
+      "task_id": "TASK-0001",
+      "created_at": "2026-05-16T17:45:12.159Z"
+    },
+    {
+      "id": "WT-TASK-0002",
+      "path": "/Users/aarusso/Development/stech/stynx/.devai/worktrees/WT-TASK-0002",
+      "branch": "TASK-0002",
+      "task_id": "TASK-0002",
+      "created_at": "2026-05-16T17:46:29.623Z"
+    }
+  ]
+}

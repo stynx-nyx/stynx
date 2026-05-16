@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "TASK-0002",
+  "title": "Remove unsupported /meta field from docs/architecture/trace.json",
+  "discipline": "architect",
+  "target_modules": ["MOD-core"],
+  "target_substrates": ["F2"],
+  "db_isolation": "database",
+  "description": "spec-validate-all flags 3 errors on docs/architecture/trace.json /meta: additionalProperties. The trace.schema.json forbids the 'meta' key but the file uses it for prose context. Closure: delete the entire meta block (lines containing schemaVersion+version+meta), keeping authored_in/purpose/tests_pending prose in a sibling notes.md if useful. Verify: devai spec-validate-all --human shows trace 0 error(s).",
+  "status": "escalated",
+  "iteration_count": 0,
+  "created_at": "2026-05-16T17:46:29.623Z",
+  "worktree_id": "WT-TASK-0002",
+  "branch": "escalated/TASK-0002"
+}

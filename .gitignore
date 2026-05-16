@@ -114,3 +114,8 @@ docs/work/plan/*
 /.release/
 /.changeset/status.json
 
+# DEVAI per-task git worktrees (created by `devai loop-run`).
+# Real git worktrees rooted at .devai/worktrees/WT-TASK-*/; the
+# branches themselves are tracked, just not the checked-out trees.
+/.devai/worktrees/
+

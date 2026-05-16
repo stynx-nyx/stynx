@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "TASK-0001",
+  "title": "Author UC for demo-bookmark API endpoints to satisfy INV-COVERAGE-001",
+  "discipline": "architect",
+  "target_modules": ["MOD-4742c491b6c8e330"],
+  "target_substrates": ["F2"],
+  "db_isolation": "database",
+  "description": "demo-bookmark has 8 backend endpoints (GET/POST/PATCH/DELETE /demo/bookmark/bookmark + /tag variants) and 1 frontend route that are unmapped per sense-coverage post-T1. Author a single use-case JSON under docs/product/use-cases/ with refs.endpointIds + refs.routeIds claiming all 9 surfaces. Closure: sense-coverage --human shows 9 fewer unmapped surfaces; INV-COVERAGE-001 violation count drops from 51 to 42.",
+  "status": "in_progress",
+  "iteration_count": 0,
+  "created_at": "2026-05-16T17:45:12.159Z",
+  "worktree_id": "WT-TASK-0001",
+  "branch": "TASK-0001"
+}
