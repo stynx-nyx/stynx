@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "1.0.0",
+  "version": "1.0.0",
+  "id": "INV-PRIVACY-001",
+  "domain": "PRIVACY",
+  "severity": "gate",
+  "type": "compliance",
+  "title": "Every PII-classified column must declare legal_basis and retention",
+  "statement": "For every column in .devai/state/sensors/inventory_data_handling/data-model-pii.json#/tables[*].columns[*] whose `pii_class` field is set to a non-empty value, the column MUST also declare a non-empty `legal_basis` (LGPD Art. 7 / GDPR Art. 6 lawful basis) and a non-empty `retention` policy. Heuristic auto-classification of PII (set by sense-data-handling) does NOT itself satisfy the invariant — the legal_basis and retention values must be authored by a human with appropriate authority (Owner for legal_basis; Architect for retention).",
+  "rationale": "Stynx-side specialization of DEVAI's INV-INVENTORY-002. Phase A of C-4 surfaced one currently-violating column — record.email, heuristically classified as `contact` PII — missing both legal_basis and retention. The 'gate' severity reflects that LGPD/GDPR compliance review cannot complete with these fields blank: a lawyer reviewing the data inventory needs to see the lawful basis declared at the column level, not inferred. The fix is either (a) author legal_basis + retention for record.email, OR (b) demonstrate via an `inv-override` annotation that record.email is in fact not PII (with rationale). Promoted from INV-CANDIDATE-01KRQD0PQV47VSE79RAW1FTEVQ.",
+  "status": "active",
+  "verification": {
+    "required_suites": ["int"],
+    "oracle": "tests"
+  },
+  "authority": {
+    "docs": [
+      {
+        "doc": "../devai-adoption-by-stynx.md",
+        "anchor": "phase-a-scope"
+      },
+      {
+        "doc": "docs/devai-phase-a-retro.md",
+        "anchor": "phase-b-promotion-priorities"
+      }
+    ]
+  },
+  "scope": {
+    "components": ["data-handling", "compliance"],
+    "code_areas": [
+      "apps/reference-api/migrations",
+      "packages/data/src/schema",
+      "packages/privacy/src"
+    ]
+  },
+  "change_policy": {
+    "breaking_change_requires": ["doc_update", "test_update", "human_approval"],
+    "test_weakening_allowed": false,
+    "human_approval_required": true
+  },
+  "tags": [
+    "phase-b",
+    "c-4",
+    "stynx",
+    "privacy",
+    "compliance",
+    "lgpd",
+    "gdpr",
+    "promoted-from-INV-CANDIDATE"
+  ],
+  "measurable_via": ["sense data-handling"]
+}
