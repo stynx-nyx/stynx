@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "1.0.0",
+  "version": "1.0.0",
+  "meta": {
+    "authored_in": "C-4 Session S8 (post-21 stynx adoption pilot, 2026-05-16)",
+    "purpose": "Map stynx-side invariants to the test suites that verify them. Required by devai inv-adherence-reverse to compute orphan plant surfaces (code that no invariant covers).",
+    "tests_pending": "INV-RBAC-001 and INV-PRIVACY-001 don't yet have dedicated test coverage. The promotions in Phase B established the rules; verification tests are a future Inspector deliverable. Until then, both invariants' `tests` arrays are empty — adherence-reverse will treat them as effectively non-verified."
+  },
+  "invariants": [
+    {
+      "id": "INV-RBAC-001",
+      "docs": [
+        { "doc": "docs/architecture/invariants/INV-RBAC-001.json", "anchor": "statement" },
+        { "doc": "docs/architecture/invariants/INV-RBAC-001-allowlist.json", "anchor": "entries" }
+      ],
+      "tests": []
+    },
+    {
+      "id": "INV-PRIVACY-001",
+      "docs": [
+        { "doc": "docs/architecture/invariants/INV-PRIVACY-001.json", "anchor": "statement" }
+      ],
+      "tests": []
+    }
+  ]
+}

@@ -1,0 +1,1470 @@
+{
+  "schemaVersion": "1.0.0",
+  "generated_at": "2026-05-16T06:00:06.438Z",
+  "integration_head": "000000000000000000000000000000000000000f",
+  "modules": [
+    "MOD-0a581ea4e87e5b9b",
+    "MOD-225b91cd30d28d24",
+    "MOD-265e6982503df38a",
+    "MOD-28f31e7b8236fefb",
+    "MOD-38f4b9eac1bc10cc",
+    "MOD-39a62445b4e7f07d",
+    "MOD-3a0ce60dc19f15e6",
+    "MOD-427a70f711622699",
+    "MOD-4742c491b6c8e330",
+    "MOD-5465a401cce2610c",
+    "MOD-5792847b3676ee18",
+    "MOD-5bbf3cbb5c18b3f4",
+    "MOD-67c9ff56455e9cb7",
+    "MOD-71aa633da8a1b82b",
+    "MOD-81eef4804e46f902",
+    "MOD-82b026225d2c94e2",
+    "MOD-87253426b3b265aa",
+    "MOD-9187c7f66a0ec0bd",
+    "MOD-9cde8a127beef09a",
+    "MOD-a38a75f08c4f69ad",
+    "MOD-a8af13f399233cb4",
+    "MOD-ab18c92dedb4efe7",
+    "MOD-b86bff4f9c860313",
+    "MOD-ba29b23df000b1a3",
+    "MOD-bb69c2951ad514bf",
+    "MOD-c07cbed194895b54",
+    "MOD-c9fa4dcd608a331a",
+    "MOD-daacaff42f190722",
+    "MOD-dfb3babc2b90b252",
+    "MOD-f912531cda726c8e",
+    "MOD-fadf880838910165"
+  ],
+  "routes": [
+    {
+      "method": "DELETE",
+      "path": "/api/demo/bookmark/bookmark-tag/:bookmark_id/:tag",
+      "module": "MOD-41b6b598cd5f3f24"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/demo/bookmark/bookmark/:id",
+      "module": "MOD-ffb4f60e689c197d"
+    },
+    { "method": "DELETE", "path": "/documents/:id", "module": "MOD-a4ddc99cdda5de23" },
+    { "method": "DELETE", "path": "/documents/:id/hard", "module": "MOD-a4ddc99cdda5de23" },
+    { "method": "DELETE", "path": "/record-notes/:id", "module": "MOD-eee9119725c6b246" },
+    { "method": "DELETE", "path": "/record-notes/:id/hard", "module": "MOD-eee9119725c6b246" },
+    { "method": "DELETE", "path": "/records/:id", "module": "MOD-09d269da2515b857" },
+    { "method": "DELETE", "path": "/records/:id", "module": "MOD-1de63d45e62145e0" },
+    { "method": "DELETE", "path": "/records/:id/hard", "module": "MOD-1de63d45e62145e0" },
+    { "method": "DELETE", "path": "/work-item-entries/:id", "module": "MOD-e0fce14f231cba9f" },
+    { "method": "DELETE", "path": "/work-item-entries/:id/hard", "module": "MOD-e0fce14f231cba9f" },
+    { "method": "DELETE", "path": "/work-item-locks/:id", "module": "MOD-eb89acfd5eeef19c" },
+    { "method": "DELETE", "path": "/work-item-locks/:id/hard", "module": "MOD-eb89acfd5eeef19c" },
+    { "method": "DELETE", "path": "/work-items/:id", "module": "MOD-bebfc05b95349e6d" },
+    { "method": "DELETE", "path": "/work-items/:id/hard", "module": "MOD-bebfc05b95349e6d" },
+    { "method": "GET", "path": "/.well-known/jwks.json", "module": "MOD-86ffd2549546418c" },
+    { "method": "GET", "path": "/_audit/log", "module": "MOD-972620951db8a93d", "protected": true },
+    {
+      "method": "GET",
+      "path": "/_platform/perms/:sid",
+      "module": "MOD-9d156e18e19800bc",
+      "protected": true
+    },
+    { "method": "GET", "path": "/_probes/data-tx", "module": "MOD-e758a052a34ee2b5" },
+    { "method": "GET", "path": "/_probes/ratelimit", "module": "MOD-e758a052a34ee2b5" },
+    { "method": "GET", "path": "/_probes/readonly-write", "module": "MOD-e758a052a34ee2b5" },
+    { "method": "GET", "path": "/_reference/auth-verify", "module": "MOD-fb2f2b92c61712d0" },
+    { "method": "GET", "path": "/_reference/demo-tenants", "module": "MOD-fb2f2b92c61712d0" },
+    { "method": "GET", "path": "/_tenancy/i18n/overrides", "module": "MOD-27fa79bb14446928" },
+    { "method": "GET", "path": "/api/demo/bookmark/bookmark", "module": "MOD-ffb4f60e689c197d" },
+    {
+      "method": "GET",
+      "path": "/api/demo/bookmark/bookmark-tag",
+      "module": "MOD-41b6b598cd5f3f24"
+    },
+    {
+      "method": "GET",
+      "path": "/api/demo/bookmark/bookmark/:id",
+      "module": "MOD-ffb4f60e689c197d"
+    },
+    { "method": "GET", "path": "/demo/error", "module": "MOD-edbbabf6315b4b46" },
+    { "method": "GET", "path": "/demo/locale", "module": "MOD-edbbabf6315b4b46" },
+    {
+      "method": "GET",
+      "path": "/docs/delete",
+      "module": "MOD-9af559772caa59ed",
+      "protected": true
+    },
+    { "method": "GET", "path": "/docs/read", "module": "MOD-9af559772caa59ed", "protected": true },
+    { "method": "GET", "path": "/docs/write", "module": "MOD-9af559772caa59ed", "protected": true },
+    { "method": "GET", "path": "/documents/:id/download", "module": "MOD-a4ddc99cdda5de23" },
+    { "method": "GET", "path": "/healthz", "module": "MOD-129944ca32720640" },
+    { "method": "GET", "path": "/info", "module": "MOD-129944ca32720640", "protected": true },
+    { "method": "GET", "path": "/logs", "module": "MOD-ac52449439adcdeb" },
+    { "method": "GET", "path": "/metrics", "module": "MOD-129944ca32720640" },
+    { "method": "GET", "path": "/privacy/retention", "module": "MOD-5e9147e18b870f7f" },
+    { "method": "GET", "path": "/protected", "module": "MOD-3b08e23a99d9748f" },
+    { "method": "GET", "path": "/readyz", "module": "MOD-129944ca32720640" },
+    { "method": "GET", "path": "/record-notes", "module": "MOD-eee9119725c6b246" },
+    { "method": "GET", "path": "/record-notes/:id", "module": "MOD-eee9119725c6b246" },
+    { "method": "GET", "path": "/records", "module": "MOD-09d269da2515b857" },
+    { "method": "GET", "path": "/records", "module": "MOD-1de63d45e62145e0" },
+    { "method": "GET", "path": "/records/:id", "module": "MOD-09d269da2515b857" },
+    { "method": "GET", "path": "/records/:id", "module": "MOD-1de63d45e62145e0" },
+    { "method": "GET", "path": "/records/trash", "module": "MOD-1de63d45e62145e0" },
+    { "method": "GET", "path": "/request-id", "module": "MOD-20bbbff1effc5176" },
+    { "method": "GET", "path": "/system-op", "module": "MOD-20bbbff1effc5176" },
+    { "method": "GET", "path": "/tenants", "module": "MOD-b5c965ee0d375f4c" },
+    { "method": "GET", "path": "/tenants/:id", "module": "MOD-b5c965ee0d375f4c" },
+    { "method": "GET", "path": "/work-item-entries", "module": "MOD-e0fce14f231cba9f" },
+    { "method": "GET", "path": "/work-item-entries/:id", "module": "MOD-e0fce14f231cba9f" },
+    { "method": "GET", "path": "/work-item-locks", "module": "MOD-eb89acfd5eeef19c" },
+    { "method": "GET", "path": "/work-item-locks/:id", "module": "MOD-eb89acfd5eeef19c" },
+    { "method": "GET", "path": "/work-items", "module": "MOD-bebfc05b95349e6d" },
+    { "method": "GET", "path": "/work-items/:id", "module": "MOD-bebfc05b95349e6d" },
+    { "method": "GET", "path": "/work-items/trash", "module": "MOD-bebfc05b95349e6d" },
+    { "method": "PATCH", "path": "/record-notes/:id", "module": "MOD-eee9119725c6b246" },
+    { "method": "PATCH", "path": "/records/:id", "module": "MOD-1de63d45e62145e0" },
+    { "method": "PATCH", "path": "/tenants/:id", "module": "MOD-b5c965ee0d375f4c" },
+    { "method": "PATCH", "path": "/work-item-entries/:id", "module": "MOD-e0fce14f231cba9f" },
+    { "method": "PATCH", "path": "/work-item-locks/:id", "module": "MOD-eb89acfd5eeef19c" },
+    { "method": "PATCH", "path": "/work-items/:id", "module": "MOD-bebfc05b95349e6d" },
+    {
+      "method": "POST",
+      "path": "/_platform/perms/:sid/invalidate",
+      "module": "MOD-9d156e18e19800bc",
+      "protected": true
+    },
+    { "method": "POST", "path": "/_probes/idempotency", "module": "MOD-e758a052a34ee2b5" },
+    { "method": "POST", "path": "/_reference/dev-login", "module": "MOD-fb2f2b92c61712d0" },
+    { "method": "POST", "path": "/api/demo/bookmark/bookmark", "module": "MOD-ffb4f60e689c197d" },
+    {
+      "method": "POST",
+      "path": "/api/demo/bookmark/bookmark-tag",
+      "module": "MOD-41b6b598cd5f3f24"
+    },
+    { "method": "POST", "path": "/documents", "module": "MOD-a4ddc99cdda5de23" },
+    { "method": "POST", "path": "/documents/:id/complete", "module": "MOD-a4ddc99cdda5de23" },
+    { "method": "POST", "path": "/documents/:id/restore", "module": "MOD-a4ddc99cdda5de23" },
+    { "method": "POST", "path": "/privacy/erasures", "module": "MOD-5e9147e18b870f7f" },
+    { "method": "POST", "path": "/privacy/exports", "module": "MOD-5e9147e18b870f7f" },
+    { "method": "POST", "path": "/record-notes", "module": "MOD-eee9119725c6b246" },
+    { "method": "POST", "path": "/record-notes/:id/restore", "module": "MOD-eee9119725c6b246" },
+    { "method": "POST", "path": "/records", "module": "MOD-09d269da2515b857" },
+    { "method": "POST", "path": "/records", "module": "MOD-1de63d45e62145e0" },
+    { "method": "POST", "path": "/records/:id/restore", "module": "MOD-1de63d45e62145e0" },
+    { "method": "POST", "path": "/sessions", "module": "MOD-9d156e18e19800bc" },
+    {
+      "method": "POST",
+      "path": "/sessions/logout",
+      "module": "MOD-9d156e18e19800bc",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/sessions/switch",
+      "module": "MOD-9d156e18e19800bc",
+      "protected": true
+    },
+    { "method": "POST", "path": "/tenants", "module": "MOD-b5c965ee0d375f4c" },
+    { "method": "POST", "path": "/tenants/:id/archive", "module": "MOD-b5c965ee0d375f4c" },
+    { "method": "POST", "path": "/tenants/:id/purge", "module": "MOD-b5c965ee0d375f4c" },
+    { "method": "POST", "path": "/tenants/:id/suspend", "module": "MOD-b5c965ee0d375f4c" },
+    { "method": "POST", "path": "/work-item-entries", "module": "MOD-e0fce14f231cba9f" },
+    {
+      "method": "POST",
+      "path": "/work-item-entries/:id/restore",
+      "module": "MOD-e0fce14f231cba9f"
+    },
+    { "method": "POST", "path": "/work-item-locks", "module": "MOD-eb89acfd5eeef19c" },
+    { "method": "POST", "path": "/work-item-locks/:id/restore", "module": "MOD-eb89acfd5eeef19c" },
+    { "method": "POST", "path": "/work-items", "module": "MOD-bebfc05b95349e6d" },
+    { "method": "POST", "path": "/work-items/:id/restore", "module": "MOD-bebfc05b95349e6d" },
+    { "method": "PUT", "path": "/_tenancy/i18n/overrides", "module": "MOD-27fa79bb14446928" },
+    { "method": "PUT", "path": "/api/demo/bookmark/bookmark/:id", "module": "MOD-ffb4f60e689c197d" }
+  ],
+  "schemas": [{ "kind": "openapi", "name": "openapi", "path": "docs/api/openapi.json" }],
+  "components": [
+    {
+      "kind": "nestjs_controller",
+      "name": "BookmarkTagController",
+      "module": "MOD-1a40c293f8e2e6c3",
+      "path": "domain/demo-bookmark/api/src/demo-bookmark/controllers/bookmark-tag.controller.ts"
+    },
+    {
+      "kind": "nestjs_controller",
+      "name": "BookmarkController",
+      "module": "MOD-650773ee2d7ce634",
+      "path": "domain/demo-bookmark/api/src/demo-bookmark/controllers/bookmark.controller.ts"
+    },
+    {
+      "kind": "service",
+      "name": "BookmarkPolicyGuard",
+      "module": "MOD-fb8ce241974a020d",
+      "path": "domain/demo-bookmark/api/src/demo-bookmark/guards/policy.guard.ts"
+    },
+    {
+      "kind": "service",
+      "name": "BookmarkTagService",
+      "module": "MOD-b191e278f60d7fde",
+      "path": "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark-tag.service.ts"
+    },
+    {
+      "kind": "service",
+      "name": "BookmarkService",
+      "module": "MOD-52d8d67c27053ec2",
+      "path": "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark.service.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "BookmarkDetailComponent",
+      "module": "MOD-e4232be81f57ecc9",
+      "path": "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark-detail.component.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "BookmarkListComponent",
+      "module": "MOD-05ef2b38d697e982",
+      "path": "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark-list.component.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "BookmarkDetailComponent",
+      "module": "MOD-b81c8fa3d8621415",
+      "path": "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark-tag-detail.component.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "BookmarkListComponent",
+      "module": "MOD-3bdaeb3846f17a91",
+      "path": "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark-tag-list.component.ts"
+    },
+    {
+      "kind": "service",
+      "name": "BookmarkService",
+      "module": "MOD-78ad8ae24b2738f3",
+      "path": "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark-tag.service.ts"
+    },
+    {
+      "kind": "service",
+      "name": "BookmarkService",
+      "module": "MOD-ebea4e31c32dbcf3",
+      "path": "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark.service.ts"
+    },
+    {
+      "kind": "angular_directive",
+      "name": "StynxHasPermissionDirective",
+      "module": "MOD-3ffef5678dda1f28",
+      "path": "packages-web/angular-auth/src/has-permission.directive.ts"
+    },
+    {
+      "kind": "service",
+      "name": "HttpAuthBackend",
+      "module": "MOD-667376b65474efce",
+      "path": "packages-web/angular-auth/src/http-auth.backend.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "StynxLoginRedirectComponent",
+      "module": "MOD-26ac83b806c2b5e0",
+      "path": "packages-web/angular-auth/src/login-redirect.component.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "StynxLogoutButtonComponent",
+      "module": "MOD-b9d650750eb8d73b",
+      "path": "packages-web/angular-auth/src/logout-button.component.ts"
+    },
+    {
+      "kind": "service",
+      "name": "OidcClientAdapter",
+      "module": "MOD-d08063c80c055951",
+      "path": "packages-web/angular-auth/src/oidc-client.adapter.ts"
+    },
+    {
+      "kind": "service",
+      "name": "StynxSessionService",
+      "module": "MOD-82b4d9e9e062767e",
+      "path": "packages-web/angular-auth/src/session.service.ts"
+    },
+    {
+      "kind": "service",
+      "name": "StynxI18nService",
+      "module": "MOD-2820edeae707991d",
+      "path": "packages-web/angular-i18n/src/i18n.service.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "LocaleSwitcherComponent",
+      "module": "MOD-2329d780a805a103",
+      "path": "packages-web/angular-i18n/src/locale-switcher.component.ts"
+    },
+    {
+      "kind": "angular_pipe",
+      "name": "StynxTranslatePipe",
+      "module": "MOD-9f9165c02295bebc",
+      "path": "packages-web/angular-i18n/src/translate.pipe.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "StynxPreferencesFormComponent",
+      "module": "MOD-31c3615843a27c78",
+      "path": "packages-web/angular-profile/src/preferences-form.component.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "StynxProfileFormComponent",
+      "module": "MOD-e99fa0c58b4d1fb2",
+      "path": "packages-web/angular-profile/src/profile-form.component.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "StynxActiveSessionsComponent",
+      "module": "MOD-d3c461184ec190c3",
+      "path": "packages-web/angular-sessions/src/active-sessions.component.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "StynxDocumentUploadComponent",
+      "module": "MOD-9bf1e24545d5d03e",
+      "path": "packages-web/angular-storage/src/document-upload.component.ts"
+    },
+    {
+      "kind": "service",
+      "name": "DocumentService",
+      "module": "MOD-c97a786bbdfc31d3",
+      "path": "packages-web/angular-storage/src/document.service.ts"
+    },
+    {
+      "kind": "service",
+      "name": "XhrUploadExecutor",
+      "module": "MOD-e72a49e05563bb56",
+      "path": "packages-web/angular-storage/src/xhr-upload.executor.ts"
+    },
+    {
+      "kind": "service",
+      "name": "TenantContextService",
+      "module": "MOD-8e5f325e717e33ce",
+      "path": "packages-web/angular-tenancy/src/tenant-context.service.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "TenantSwitcherComponent",
+      "module": "MOD-fabc95d835bdb0e2",
+      "path": "packages-web/angular-tenancy/src/tenant-switcher.component.ts"
+    },
+    {
+      "kind": "service",
+      "name": "TenantInterceptor",
+      "module": "MOD-f5c0555ba3b19f21",
+      "path": "packages-web/angular-tenancy/src/tenant.interceptor.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "StynxTrashListComponent",
+      "module": "MOD-296703e8ed9fd3a2",
+      "path": "packages-web/angular-trash/src/trash-list.component.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "StynxBannerComponent",
+      "module": "MOD-e70092a49830f52c",
+      "path": "packages-web/angular-ui/src/banner.component.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "StynxConfirmDialogComponent",
+      "module": "MOD-2183298c443d5f45",
+      "path": "packages-web/angular-ui/src/confirm-dialog.component.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "StynxLoadingSpinnerComponent",
+      "module": "MOD-8b64104232c32cad",
+      "path": "packages-web/angular-ui/src/loading-spinner.component.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "StynxPaginationComponent",
+      "module": "MOD-96b85a8a45efe307",
+      "path": "packages-web/angular-ui/src/pagination.component.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "StynxTableComponent",
+      "module": "MOD-49b199b91296c74e",
+      "path": "packages-web/angular-ui/src/table.component.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "StynxToastContainerComponent",
+      "module": "MOD-d5ef28ebb0c3c4ee",
+      "path": "packages-web/angular-ui/src/toast-container.component.ts"
+    },
+    {
+      "kind": "service",
+      "name": "StynxToastService",
+      "module": "MOD-3c763e9235fb9614",
+      "path": "packages-web/angular-ui/src/toast.service.ts"
+    },
+    {
+      "kind": "service",
+      "name": "AuthInterceptor",
+      "module": "MOD-f6d1a2c2c1de7946",
+      "path": "packages-web/angular/src/auth.interceptor.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "EmptyStateComponent",
+      "module": "MOD-3454230a8a441656",
+      "path": "packages-web/angular/src/empty-state.component.ts"
+    },
+    {
+      "kind": "service",
+      "name": "ErrorBannerService",
+      "module": "MOD-e768f884a757ec33",
+      "path": "packages-web/angular/src/error-banner.service.ts"
+    },
+    {
+      "kind": "service",
+      "name": "ErrorInterceptor",
+      "module": "MOD-7812c2df62468dd5",
+      "path": "packages-web/angular/src/error.interceptor.ts"
+    },
+    {
+      "kind": "service",
+      "name": "RequestIdInterceptor",
+      "module": "MOD-18bf924d87d9b01e",
+      "path": "packages-web/angular/src/request-id.interceptor.ts"
+    },
+    {
+      "kind": "service",
+      "name": "ToastService",
+      "module": "MOD-811fe24e988cac91",
+      "path": "packages-web/angular/src/toast.service.ts"
+    },
+    {
+      "kind": "nestjs_controller",
+      "name": "StynxAuditController",
+      "module": "MOD-ddd6fe3637ab2a0b",
+      "path": "packages/audit/src/audit.controller.ts"
+    },
+    {
+      "kind": "service",
+      "name": "AuditDailyDetachScheduler",
+      "module": "MOD-e4250dc8095cf9e7",
+      "path": "packages/audit/src/audit.module.ts"
+    },
+    {
+      "kind": "service",
+      "name": "StynxAuditService",
+      "module": "MOD-107c1463fb8dafb1",
+      "path": "packages/audit/src/audit.service.ts"
+    },
+    {
+      "kind": "service",
+      "name": "PermissionGuard",
+      "module": "MOD-fc7f5acb0e4ff85d",
+      "path": "packages/audit/test/support/auth-stub.ts"
+    },
+    {
+      "kind": "service",
+      "name": "StynxAuthGuard",
+      "module": "MOD-fc7f5acb0e4ff85d",
+      "path": "packages/audit/test/support/auth-stub.ts"
+    },
+    {
+      "kind": "service",
+      "name": "ActorContextInterceptor",
+      "module": "MOD-c6ce9fc6c280d90d",
+      "path": "packages/auth/src/actor-context.interceptor.ts"
+    },
+    {
+      "kind": "nestjs_controller",
+      "name": "StynxAuthController",
+      "module": "MOD-48dd1d4ddc114a56",
+      "path": "packages/auth/src/auth.controller.ts"
+    },
+    {
+      "kind": "service",
+      "name": "StynxAuthService",
+      "module": "MOD-35f61be24ed4d370",
+      "path": "packages/auth/src/auth.service.ts"
+    },
+    {
+      "kind": "service",
+      "name": "CognitoJwtValidator",
+      "module": "MOD-48f3893e99817ff0",
+      "path": "packages/auth/src/cognito-jwt.validator.ts"
+    },
+    {
+      "kind": "service",
+      "name": "EffectiveHashComputer",
+      "module": "MOD-9dc2118d30d082cc",
+      "path": "packages/auth/src/effective-hash-computer.ts"
+    },
+    {
+      "kind": "service",
+      "name": "PermissionCacheMetrics",
+      "module": "MOD-05ff8043124731a4",
+      "path": "packages/auth/src/permission-cache-metrics.ts"
+    },
+    {
+      "kind": "service",
+      "name": "PermissionCache",
+      "module": "MOD-7edea8090ea07dc7",
+      "path": "packages/auth/src/permission-cache.ts"
+    },
+    {
+      "kind": "service",
+      "name": "PermissionQueryService",
+      "module": "MOD-9bc1f5111ac9f8d3",
+      "path": "packages/auth/src/permission-query.service.ts"
+    },
+    {
+      "kind": "service",
+      "name": "PermissionGuard",
+      "module": "MOD-adc20d5d24ca3d77",
+      "path": "packages/auth/src/permission.guard.ts"
+    },
+    {
+      "kind": "service",
+      "name": "RedisPermissionCacheBackend",
+      "module": "MOD-d73e4ae856602c75",
+      "path": "packages/auth/src/redis-permission-cache-backend.ts"
+    },
+    {
+      "kind": "service",
+      "name": "StynxAuthGuard",
+      "module": "MOD-e2e61a59c690a518",
+      "path": "packages/auth/src/stynx-auth.guard.ts"
+    },
+    {
+      "kind": "service",
+      "name": "StynxJwtValidator",
+      "module": "MOD-03e8e5332ba55967",
+      "path": "packages/auth/src/stynx-jwt.validator.ts"
+    },
+    {
+      "kind": "nestjs_controller",
+      "name": "ProtectedController",
+      "module": "MOD-e4f871e6b68d09be",
+      "path": "packages/auth/test/integration/auth.module.spec.ts"
+    },
+    {
+      "kind": "service",
+      "name": "AuditInterceptor",
+      "module": "MOD-83be7e830a6a9692",
+      "path": "packages/backend/src/audit/audit.interceptor.ts"
+    },
+    {
+      "kind": "service",
+      "name": "AuthContextGuard",
+      "module": "MOD-a620b74f5d120969",
+      "path": "packages/backend/src/auth/auth-context.guard.ts"
+    },
+    {
+      "kind": "service",
+      "name": "AuthorizationGuard",
+      "module": "MOD-891d7ecd7c0eb013",
+      "path": "packages/backend/src/authorization/authorization.guard.ts"
+    },
+    {
+      "kind": "service",
+      "name": "DbContextInterceptor",
+      "module": "MOD-b95c3d0ea449e16a",
+      "path": "packages/backend/src/db-context/db-context.interceptor.ts"
+    },
+    {
+      "kind": "service",
+      "name": "TenantLifecycleMiddleware",
+      "module": "MOD-a8a22c850138b9a4",
+      "path": "packages/backend/src/db-context/tenant-lifecycle.middleware.ts"
+    },
+    {
+      "kind": "service",
+      "name": "IdempotencyInterceptor",
+      "module": "MOD-9880da2fd96e1084",
+      "path": "packages/backend/src/idempotency/idempotency.interceptor.ts"
+    },
+    {
+      "kind": "service",
+      "name": "IdentityAdminService",
+      "module": "MOD-3b1f792e3f4bd8d3",
+      "path": "packages/backend/src/identity-admin/identity-admin.service.ts"
+    },
+    {
+      "kind": "service",
+      "name": "PecIdentityAdminFacade",
+      "module": "MOD-aceedeb326da46e5",
+      "path": "packages/backend/src/identity-admin/integration-facades.ts"
+    },
+    {
+      "kind": "service",
+      "name": "PormIdentityAdminFacade",
+      "module": "MOD-aceedeb326da46e5",
+      "path": "packages/backend/src/identity-admin/integration-facades.ts"
+    },
+    {
+      "kind": "service",
+      "name": "RateLimitGuard",
+      "module": "MOD-cc769a238cafe443",
+      "path": "packages/backend/src/rate-limit/rate-limit.guard.ts"
+    },
+    {
+      "kind": "service",
+      "name": "SlaMonitorInterceptor",
+      "module": "MOD-8ff7f2a2906a0690",
+      "path": "packages/backend/src/sla/sla-monitor.interceptor.ts"
+    },
+    {
+      "kind": "nestjs_controller",
+      "name": "RecordsController",
+      "module": "MOD-0a0c98cf27932b8a",
+      "path": "packages/cli/test/fixtures/adoption-fixture/src/records/records.controller.ts"
+    },
+    {
+      "kind": "service",
+      "name": "StynxConfigService",
+      "module": "MOD-2b494ee38d75cfe6",
+      "path": "packages/core/src/config.ts"
+    },
+    {
+      "kind": "service",
+      "name": "RequestContextInterceptor",
+      "module": "MOD-9d4dd17ee01451e3",
+      "path": "packages/core/src/request-context.interceptor.ts"
+    },
+    {
+      "kind": "service",
+      "name": "RequestContext",
+      "module": "MOD-ebc52758e53ded7c",
+      "path": "packages/core/src/request-context.ts"
+    },
+    {
+      "kind": "service",
+      "name": "RequestContextMutator",
+      "module": "MOD-ebc52758e53ded7c",
+      "path": "packages/core/src/request-context.ts"
+    },
+    {
+      "kind": "service",
+      "name": "SecretLoader",
+      "module": "MOD-f0cb7980f15e2fbb",
+      "path": "packages/core/src/secret-loader.ts"
+    },
+    {
+      "kind": "service",
+      "name": "SystemContext",
+      "module": "MOD-64c1fa23febdbbbd",
+      "path": "packages/core/src/system-context.ts"
+    },
+    {
+      "kind": "nestjs_controller",
+      "name": "TestController",
+      "module": "MOD-a7cf47537f461869",
+      "path": "packages/core/test/integration/core.module.spec.ts"
+    },
+    {
+      "kind": "service",
+      "name": "Database",
+      "module": "MOD-9fdf48f70be9e222",
+      "path": "packages/data/src/database.ts"
+    },
+    {
+      "kind": "service",
+      "name": "StynxMigrationRunner",
+      "module": "MOD-825285b65043f799",
+      "path": "packages/data/src/migration-runner.ts"
+    },
+    {
+      "kind": "service",
+      "name": "StynxPoolRegistry",
+      "module": "MOD-72bb54cb12a75615",
+      "path": "packages/data/src/pools.ts"
+    },
+    {
+      "kind": "nestjs_controller",
+      "name": "StynxHealthController",
+      "module": "MOD-59ad0256960e3f22",
+      "path": "packages/health/src/health.controller.ts"
+    },
+    {
+      "kind": "service",
+      "name": "StynxHealthService",
+      "module": "MOD-c1eb96212d814221",
+      "path": "packages/health/src/health.service.ts"
+    },
+    {
+      "kind": "service",
+      "name": "StynxPlatformInfoGuard",
+      "module": "MOD-47bcbb647b6b5e7a",
+      "path": "packages/health/src/info.guard.ts"
+    },
+    {
+      "kind": "service",
+      "name": "StynxMetricsService",
+      "module": "MOD-2a7aca6de74547a6",
+      "path": "packages/health/src/metrics.service.ts"
+    },
+    {
+      "kind": "service",
+      "name": "CatalogService",
+      "module": "MOD-a04eda103356e51c",
+      "path": "packages/i18n/src/catalog.service.ts"
+    },
+    {
+      "kind": "service",
+      "name": "ErrorTranslatorService",
+      "module": "MOD-63bf719c247f0b10",
+      "path": "packages/i18n/src/error-translator.service.ts"
+    },
+    {
+      "kind": "service",
+      "name": "I18nAdminService",
+      "module": "MOD-83807f1578e80202",
+      "path": "packages/i18n/src/i18n-admin.service.ts"
+    },
+    {
+      "kind": "nestjs_controller",
+      "name": "I18nController",
+      "module": "MOD-076d51eb8ced0f0e",
+      "path": "packages/i18n/src/i18n.controller.ts"
+    },
+    {
+      "kind": "service",
+      "name": "LocaleInterceptor",
+      "module": "MOD-0897e7cfa4871f1c",
+      "path": "packages/i18n/src/locale.interceptor.ts"
+    },
+    {
+      "kind": "service",
+      "name": "LocaleService",
+      "module": "MOD-ee5d8eafd4ad3d49",
+      "path": "packages/i18n/src/locale.service.ts"
+    },
+    {
+      "kind": "nestjs_controller",
+      "name": "DemoController",
+      "module": "MOD-bafa30a4dee81b05",
+      "path": "packages/i18n/test/integration/i18n.module.spec.ts"
+    },
+    {
+      "kind": "service",
+      "name": "DatabaseIdempotencyStore",
+      "module": "MOD-5a2439308f5c6c51",
+      "path": "packages/idempotency/src/database-idempotency.store.ts"
+    },
+    {
+      "kind": "service",
+      "name": "IdempotencyInterceptor",
+      "module": "MOD-d4499f8f1a1a5e6a",
+      "path": "packages/idempotency/src/idempotency.interceptor.ts"
+    },
+    {
+      "kind": "service",
+      "name": "RedisIdempotencyBackend",
+      "module": "MOD-c704db686bff8c2b",
+      "path": "packages/idempotency/src/redis-idempotency.backend.ts"
+    },
+    {
+      "kind": "service",
+      "name": "LoggingDedupeService",
+      "module": "MOD-f1c9fea74d23afad",
+      "path": "packages/logging/src/dedupe.ts"
+    },
+    {
+      "kind": "service",
+      "name": "StynxLogger",
+      "module": "MOD-13ac9652feb2fd50",
+      "path": "packages/logging/src/logger.service.ts"
+    },
+    {
+      "kind": "service",
+      "name": "RequestLogFieldFactory",
+      "module": "MOD-dbfe6ab811912b9e",
+      "path": "packages/logging/src/pino.factory.ts"
+    },
+    {
+      "kind": "service",
+      "name": "RequestLoggingMiddleware",
+      "module": "MOD-276651d6eda2d1db",
+      "path": "packages/logging/src/request-logging.middleware.ts"
+    },
+    {
+      "kind": "nestjs_controller",
+      "name": "LoggingController",
+      "module": "MOD-aa6ddd7a3bb4beac",
+      "path": "packages/logging/test/integration/logging.module.spec.ts"
+    },
+    {
+      "kind": "service",
+      "name": "PiiMapService",
+      "module": "MOD-c2f324768558dfd1",
+      "path": "packages/privacy/src/pii-map.service.ts"
+    },
+    {
+      "kind": "service",
+      "name": "PrivacyObjectStoreService",
+      "module": "MOD-996a57706ff0e2e4",
+      "path": "packages/privacy/src/privacy-object-store.service.ts"
+    },
+    {
+      "kind": "nestjs_controller",
+      "name": "PrivacyController",
+      "module": "MOD-ad392f021f6633a6",
+      "path": "packages/privacy/src/privacy.controller.ts"
+    },
+    {
+      "kind": "service",
+      "name": "PrivacyService",
+      "module": "MOD-d9c260b100d2ce1c",
+      "path": "packages/privacy/src/privacy.service.ts"
+    },
+    {
+      "kind": "service",
+      "name": "DatabaseRateLimitPolicyResolver",
+      "module": "MOD-aa82d9ee51315193",
+      "path": "packages/ratelimit/src/rate-limit-policy.service.ts"
+    },
+    {
+      "kind": "service",
+      "name": "RateLimitGuard",
+      "module": "MOD-b20aafe02f29c46c",
+      "path": "packages/ratelimit/src/rate-limit.guard.ts"
+    },
+    {
+      "kind": "service",
+      "name": "RedisSlidingWindowRateLimitStore",
+      "module": "MOD-dd35cb3ed144cc1c",
+      "path": "packages/ratelimit/src/redis-rate-limit.store.ts"
+    },
+    {
+      "kind": "nestjs_controller",
+      "name": "SessionJwksController",
+      "module": "MOD-45e1ffade4492ca5",
+      "path": "packages/sessions/src/jwks.controller.ts"
+    },
+    {
+      "kind": "service",
+      "name": "SessionJwtSigningService",
+      "module": "MOD-0f08adfcc06cb4fd",
+      "path": "packages/sessions/src/jwt-signing.service.ts"
+    },
+    {
+      "kind": "service",
+      "name": "RedisSessionStore",
+      "module": "MOD-d6c094d0aaf16df1",
+      "path": "packages/sessions/src/redis-session-store.ts"
+    },
+    {
+      "kind": "service",
+      "name": "SessionMirrorWriter",
+      "module": "MOD-cd1e4d5229ee852c",
+      "path": "packages/sessions/src/session-mirror.writer.ts"
+    },
+    {
+      "kind": "service",
+      "name": "SessionService",
+      "module": "MOD-f7563d561a9d7353",
+      "path": "packages/sessions/src/session.service.ts"
+    },
+    {
+      "kind": "service",
+      "name": "DocumentsService",
+      "module": "MOD-6e2ed7a00deffb2a",
+      "path": "packages/storage/src/documents.service.ts"
+    },
+    {
+      "kind": "service",
+      "name": "S3Service",
+      "module": "MOD-c4b258868201524c",
+      "path": "packages/storage/src/s3.service.ts"
+    },
+    {
+      "kind": "service",
+      "name": "TenancyPlatformAdminGuard",
+      "module": "MOD-3b66b3ad6b178198",
+      "path": "packages/tenancy/src/tenancy-platform-admin.guard.ts"
+    },
+    {
+      "kind": "nestjs_controller",
+      "name": "TenancyController",
+      "module": "MOD-dd3608547e9fd424",
+      "path": "packages/tenancy/src/tenancy.controller.ts"
+    },
+    {
+      "kind": "service",
+      "name": "TenancyService",
+      "module": "MOD-5b8dc085b5590e0a",
+      "path": "packages/tenancy/src/tenancy.service.ts"
+    },
+    {
+      "kind": "service",
+      "name": "TenantContextInterceptor",
+      "module": "MOD-bff0efccc2489725",
+      "path": "packages/tenancy/src/tenant-context.interceptor.ts"
+    },
+    {
+      "kind": "service",
+      "name": "TenantSystemOperationSink",
+      "module": "MOD-725061af15977632",
+      "path": "packages/tenancy/src/tenant-system-operation.sink.ts"
+    },
+    {
+      "kind": "nestjs_controller",
+      "name": "ProtectedController",
+      "module": "MOD-ac0f622c6fda1564",
+      "path": "packages/tenancy/test/integration/tenancy.module.spec.ts"
+    },
+    {
+      "kind": "nestjs_controller",
+      "name": "DocumentsController",
+      "module": "MOD-bac75e5027e4df22",
+      "path": "reference/api/src/sample/documents.controller.ts"
+    },
+    {
+      "kind": "nestjs_controller",
+      "name": "RecordNotesController",
+      "module": "MOD-f92a5380dc2fb7d1",
+      "path": "reference/api/src/sample/record-notes.controller.ts"
+    },
+    {
+      "kind": "nestjs_controller",
+      "name": "RecordsController",
+      "module": "MOD-6f8b0e668cc52b80",
+      "path": "reference/api/src/sample/records.controller.ts"
+    },
+    {
+      "kind": "nestjs_controller",
+      "name": "ReferenceDevAuthController",
+      "module": "MOD-fffbfd8bec7f74cb",
+      "path": "reference/api/src/sample/reference-dev-auth.controller.ts"
+    },
+    {
+      "kind": "service",
+      "name": "ReferenceDevAuthService",
+      "module": "MOD-0c0c2cf47e2f9d09",
+      "path": "reference/api/src/sample/reference-dev-auth.service.ts"
+    },
+    {
+      "kind": "nestjs_controller",
+      "name": "ReferenceProbesController",
+      "module": "MOD-36c3a7bf6d16fcc5",
+      "path": "reference/api/src/sample/reference-probes.controller.ts"
+    },
+    {
+      "kind": "service",
+      "name": "ReferenceSampleService",
+      "module": "MOD-baa4a41b423154ec",
+      "path": "reference/api/src/sample/reference-sample.service.ts"
+    },
+    {
+      "kind": "nestjs_controller",
+      "name": "WorkItemEntriesController",
+      "module": "MOD-f83b117f1e2b3b9a",
+      "path": "reference/api/src/sample/work-item-entries.controller.ts"
+    },
+    {
+      "kind": "nestjs_controller",
+      "name": "WorkItemLocksController",
+      "module": "MOD-b87ed30addd69c58",
+      "path": "reference/api/src/sample/work-item-locks.controller.ts"
+    },
+    {
+      "kind": "nestjs_controller",
+      "name": "WorkItemsController",
+      "module": "MOD-dcac8c0846382271",
+      "path": "reference/api/src/sample/work-items.controller.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "AppComponent",
+      "module": "MOD-8ae9f6f047ab9c55",
+      "path": "reference/web/src/app/app.component.ts"
+    },
+    {
+      "kind": "service",
+      "name": "ReferenceWebApiService",
+      "module": "MOD-8057e8ef550cd864",
+      "path": "reference/web/src/app/core/reference-web-api.service.ts"
+    },
+    {
+      "kind": "service",
+      "name": "ReferenceWebDevAuthBackend",
+      "module": "MOD-45059255a7b45a21",
+      "path": "reference/web/src/app/core/reference-web-dev-auth.backend.ts"
+    },
+    {
+      "kind": "service",
+      "name": "ReferenceWebDevOidcAdapter",
+      "module": "MOD-997564b0f9a512a0",
+      "path": "reference/web/src/app/core/reference-web-dev-oidc.adapter.ts"
+    },
+    {
+      "kind": "service",
+      "name": "ReferenceWebI18nService",
+      "module": "MOD-cf53fdcd82c0d7b0",
+      "path": "reference/web/src/app/core/reference-web-i18n.service.ts"
+    },
+    {
+      "kind": "service",
+      "name": "ReferenceWebShellService",
+      "module": "MOD-f8195380973af318",
+      "path": "reference/web/src/app/core/reference-web-shell.service.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "DashboardPageComponent",
+      "module": "MOD-c33abc36435827ce",
+      "path": "reference/web/src/app/pages/dashboard.page.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "LoginPageComponent",
+      "module": "MOD-a4b32aa832dc3114",
+      "path": "reference/web/src/app/pages/login.page.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "RecordDetailPageComponent",
+      "module": "MOD-a9a959df8eb6fdcb",
+      "path": "reference/web/src/app/pages/record-detail.page.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "RecordFormPageComponent",
+      "module": "MOD-0d63a4291fab4d4a",
+      "path": "reference/web/src/app/pages/record-form.page.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "RecordsPageComponent",
+      "module": "MOD-7105846986217f34",
+      "path": "reference/web/src/app/pages/records.page.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "TenantSelectionPageComponent",
+      "module": "MOD-41611a4642067bfe",
+      "path": "reference/web/src/app/pages/tenant-selection.page.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "TrashPageComponent",
+      "module": "MOD-cfb837ced0bbe3eb",
+      "path": "reference/web/src/app/pages/trash.page.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "UnauthorizedPageComponent",
+      "module": "MOD-3f6bbd120a8ff60d",
+      "path": "reference/web/src/app/pages/unauthorized.page.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "WorkItemDetailPageComponent",
+      "module": "MOD-ab078f06c975f8a9",
+      "path": "reference/web/src/app/pages/work-item-detail.page.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "WorkItemFormPageComponent",
+      "module": "MOD-6d834d136182c458",
+      "path": "reference/web/src/app/pages/work-item-form.page.ts"
+    },
+    {
+      "kind": "angular_component",
+      "name": "WorkItemsPageComponent",
+      "module": "MOD-ed6f62309de03dfe",
+      "path": "reference/web/src/app/pages/work-items.page.ts"
+    }
+  ],
+  "test_inventory": [
+    {
+      "path": "domain/demo-bookmark/api/test/bookmark-tag.controller.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "domain/demo-bookmark/api/test/bookmark-tag.service.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "domain/demo-bookmark/api/test/bookmark.controller.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "domain/demo-bookmark/api/test/bookmark.service.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    { "path": "infra/cdk/test/compute-stack.spec.ts", "suite": "unit", "invariants": [] },
+    { "path": "infra/cdk/test/data-stack.spec.ts", "suite": "unit", "invariants": [] },
+    { "path": "infra/cdk/test/edge-stack.spec.ts", "suite": "unit", "invariants": [] },
+    { "path": "infra/cdk/test/identity-stack.spec.ts", "suite": "unit", "invariants": [] },
+    { "path": "infra/cdk/test/network-stack.spec.ts", "suite": "unit", "invariants": [] },
+    { "path": "infra/cdk/test/observability-stack.spec.ts", "suite": "unit", "invariants": [] },
+    { "path": "infra/cdk/test/storage-stack.spec.ts", "suite": "unit", "invariants": [] },
+    {
+      "path": "packages-web/angular-auth/test/angular-auth.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages-web/angular-i18n/test/angular-i18n.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages-web/angular-profile/test/angular-profile.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages-web/angular-sessions/test/angular-sessions.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages-web/angular-storage/test/angular-storage.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages-web/angular-tenancy/test/angular-tenancy.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages-web/angular-trash/test/angular-trash.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages-web/angular-ui/test/angular-ui.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages-web/angular/test/stynx-angular.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    { "path": "packages-web/sdk/test/transport.spec.ts", "suite": "unit", "invariants": [] },
+    {
+      "path": "packages/audit/test/integration/audit.module.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    { "path": "packages/audit/test/unit/chain.spec.ts", "suite": "unit", "invariants": [] },
+    { "path": "packages/audit/test/unit/retention.spec.ts", "suite": "unit", "invariants": [] },
+    {
+      "path": "packages/auth/test/integration/auth.module.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages/auth/test/unit/auth.controller.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    { "path": "packages/auth/test/unit/auth.module.spec.ts", "suite": "unit", "invariants": [] },
+    { "path": "packages/auth/test/unit/auth.runtime.spec.ts", "suite": "unit", "invariants": [] },
+    { "path": "packages/auth/test/unit/auth.service.spec.ts", "suite": "unit", "invariants": [] },
+    { "path": "packages/auth/test/unit/doctor.spec.ts", "suite": "unit", "invariants": [] },
+    {
+      "path": "packages/auth/test/unit/effective-hash-computer.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages/auth/test/unit/permission-cache.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages/auth/test/unit/permission-query.service.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages/auth/test/unit/stynx-auth.guard.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    { "path": "packages/auth/test/unit/utils.spec.ts", "suite": "unit", "invariants": [] },
+    { "path": "packages/auth/test/unit/validators.spec.ts", "suite": "unit", "invariants": [] },
+    { "path": "packages/cli/test/adopt.spec.ts", "suite": "unit", "invariants": [] },
+    { "path": "packages/cli/test/cli.spec.ts", "suite": "unit", "invariants": [] },
+    { "path": "packages/cli/test/migrate.spec.ts", "suite": "unit", "invariants": [] },
+    {
+      "path": "packages/core/test/integration/core.module.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages/core/test/unit/config-ownership.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages/core/test/unit/request-context.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    { "path": "packages/core/test/unit/request-id.spec.ts", "suite": "unit", "invariants": [] },
+    { "path": "packages/core/test/unit/system-context.spec.ts", "suite": "unit", "invariants": [] },
+    {
+      "path": "packages/data/test/integration/data.module.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages/data/test/integration/migrations.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages/data/test/integration/soft-delete.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    { "path": "packages/data/test/unit/database.spec.ts", "suite": "unit", "invariants": [] },
+    { "path": "packages/data/test/unit/query-helpers.spec.ts", "suite": "unit", "invariants": [] },
+    { "path": "packages/data/test/unit/transaction.spec.ts", "suite": "unit", "invariants": [] },
+    {
+      "path": "packages/health/test/integration/health.module.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages/health/test/unit/health.service.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    { "path": "packages/health/test/unit/info.guard.spec.ts", "suite": "unit", "invariants": [] },
+    {
+      "path": "packages/health/test/unit/metrics.service.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages/i18n/test/integration/i18n.module.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages/idempotency/test/integration/idempotency.integration.spec.ts",
+      "suite": "int",
+      "invariants": []
+    },
+    {
+      "path": "packages/idempotency/test/unit/idempotency.interceptor.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages/logging/test/integration/logging.module.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    { "path": "packages/logging/test/unit/dedupe.spec.ts", "suite": "unit", "invariants": [] },
+    {
+      "path": "packages/logging/test/unit/logger.service.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages/logging/test/unit/pino.factory.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages/logging/test/unit/request-logging.middleware.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages/privacy/test/integration/privacy.module.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages/privacy/test/unit/privacy.service.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages/ratelimit/test/integration/rate-limit.integration.spec.ts",
+      "suite": "int",
+      "invariants": []
+    },
+    { "path": "packages/ratelimit/test/unit/metrics.spec.ts", "suite": "unit", "invariants": [] },
+    {
+      "path": "packages/ratelimit/test/unit/rate-limit.guard.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages/sessions/test/integration/sessions.module.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages/sessions/test/unit/session.service.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages/storage/test/integration/storage.module.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages/storage/test/unit/documents.service.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    { "path": "packages/storage/test/unit/s3.service.spec.ts", "suite": "unit", "invariants": [] },
+    {
+      "path": "packages/tenancy/test/integration/tenancy.module.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages/tenancy/test/unit/membership-cache.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages/tenancy/test/unit/tenancy.service.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "packages/tenancy/test/unit/tenant-context.interceptor.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    { "path": "packages/testing/test/testing.spec.ts", "suite": "unit", "invariants": [] },
+    {
+      "path": "reference/api/test/integration/reference-api.runtime.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "reference/api/test/integration/sample.schema.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    { "path": "reference/web/test/e2e/reference-web.spec.ts", "suite": "unit", "invariants": [] },
+    { "path": "test/db/audit.ddl.spec.ts", "suite": "unit", "invariants": [] },
+    { "path": "test/db/auth.ddl.spec.ts", "suite": "unit", "invariants": [] },
+    { "path": "test/db/storage.ddl.spec.ts", "suite": "unit", "invariants": [] },
+    {
+      "path": "test/frontend/admin-users/user-detail.component.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "test/frontend/admin-users/user-list.component.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "test/frontend/unit/language-switcher.component.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "test/packages/audit/audit-interceptor-redaction.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    { "path": "test/packages/audit/hash-chain.spec.ts", "suite": "unit", "invariants": [] },
+    { "path": "test/packages/audit/sql-adapter.spec.ts", "suite": "unit", "invariants": [] },
+    { "path": "test/packages/auth/auth-context.guard.spec.ts", "suite": "unit", "invariants": [] },
+    {
+      "path": "test/packages/auth/cognito-admin.adapter.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    { "path": "test/packages/auth/tenant-entitlement.spec.ts", "suite": "unit", "invariants": [] },
+    {
+      "path": "test/packages/authorization/default-policy-evaluator.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "test/packages/db-context/pg-session-db-context.applier.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "test/packages/db-context/response-event-request-db-client-lifecycle.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "test/packages/db-context/tenant-lifecycle.middleware.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "test/packages/frontend-client/api-client.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "test/packages/frontend-client/session-manager.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "test/packages/idempotency/idempotency.interceptor.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "test/packages/identity-admin/identity-admin.service.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "test/packages/identity-admin/integration-facades.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "test/packages/identity-admin/pg-local-sync.adapter.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "test/packages/pipeline/platform-pipeline.module.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "test/packages/rate-limit/rate-limit.guard.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "test/packages/sla/sla-monitor.interceptor.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    },
+    {
+      "path": "tools/migration-linter/test/migration-linter.spec.ts",
+      "suite": "unit",
+      "invariants": []
+    }
+  ],
+  "dependency_graph_hash": "d413f1afd61ed28cf58364301ea2c87dc3178edef715bca8efafab5db8ffbe35",
+  "checksums": {
+    "AGENTS.md": "5c14a1fd40e50b844ad2b6d77d181ce973793e6c65d28cec5b6cf30c928886e8",
+    "CLAUDE.md": "cd5cc7ad313aa0005928c64ceee5397af3e4fa7fc9a2c9d68b4346add00c72b5",
+    "README.md": "f4f33dc80993bf8992fb36b7fdeb09946926bc74f32ccd6f6c12a99601191b66"
+  }
+}
