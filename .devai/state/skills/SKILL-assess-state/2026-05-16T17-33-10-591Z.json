@@ -1,0 +1,19 @@
+{
+  "skill_id": "SKILL-assess-state",
+  "status": "pass",
+  "evidence": {
+    "schemaVersion": "1.0.0",
+    "id": "AS-20260516T173310-001",
+    "generated_at": "2026-05-16T17:33:10.590Z",
+    "scorecard_id": "SC-20260516T173310-001",
+    "previous_assessment_id": null,
+    "narrative": "Overall: YELLOW. 0/45 cells passing. 44 cell(s) unknown (sensor coverage gap). Your scorecard is heavily UNKNOWN. This usually means correctness sensors (sense-lint, sense-test, sense-build, sense-type-check) aren't emitting SensorReadings yet. To populate the cell matrix, wrap your existing test/lint/build scripts as `devai sense-* --emit-reading` invocations (one per kind) and re-run this assessment. See docs/adopters/first-introspection.md#correctness-sensors for the recommended wrapper pattern.",
+    "deltas": [],
+    "backlog_actions": {
+      "additions": [],
+      "completions": [],
+      "deprioritizations": []
+    },
+    "recommended_priorities": []
+  }
+}

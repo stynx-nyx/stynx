@@ -6,13 +6,13 @@
     "kind": "inventory_routes",
     "version": "1.0.0"
   },
-  "timestamp": "2026-05-16T06:03:31.427Z",
+  "timestamp": "2026-05-16T17:30:56.024Z",
   "status": "pass",
   "deterministic": true,
   "command": "devai sense routes --repo-root .",
   "command_hash": "874d36c5f759e22247bb0de9330d661fa15ac6049a101db8b389415c151cbcbe",
   "tier": "L0",
-  "duration_ms": 28,
+  "duration_ms": 32,
   "evidence_path": ".devai/state/sensors/inventory_routes/routes-angular.json",
   "metrics": {
     "route_count": 14,

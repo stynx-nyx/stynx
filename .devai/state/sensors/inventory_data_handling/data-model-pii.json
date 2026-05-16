@@ -1,9 +1,372 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-05-16T06:03:47.637Z",
+  "generatedAt": "2026-05-16T17:34:14.473Z",
   "dialect": "postgres",
   "sourceRepo": ".",
   "tables": [
+    {
+      "name": "demo__bookmark_bookmark",
+      "schema": "demo",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid PRIMARY",
+          "nullable": true,
+          "default": "gen_random_uuid()"
+        },
+        {
+          "name": "tenant_id",
+          "type": "uuid NOT",
+          "nullable": true
+        },
+        {
+          "name": "owner_id",
+          "type": "uuid NOT",
+          "nullable": true
+        },
+        {
+          "name": "url",
+          "type": "text NOT",
+          "nullable": true
+        },
+        {
+          "name": "title",
+          "type": "varchar(256)",
+          "nullable": true
+        },
+        {
+          "name": "notes",
+          "type": "text NULL",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz NOT",
+          "nullable": true,
+          "default": "now()"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz NOT",
+          "nullable": true,
+          "default": "now()"
+        },
+        {
+          "name": "deleted_at",
+          "type": "timestamptz NULL",
+          "nullable": true
+        }
+      ],
+      "evidence": [
+        {
+          "path": "domain/demo-bookmark/db/migration.sql",
+          "startLine": 10,
+          "endLine": 20
+        }
+      ]
+    },
+    {
+      "name": "demo__bookmark_bookmark_tag",
+      "schema": "demo",
+      "columns": [
+        {
+          "name": "bookmark_id",
+          "type": "uuid NOT",
+          "nullable": true
+        },
+        {
+          "name": "tag",
+          "type": "varchar(64)",
+          "nullable": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz NOT",
+          "nullable": true,
+          "default": "now()"
+        }
+      ],
+      "primary_key": ["bookmark_id", "tag"],
+      "evidence": [
+        {
+          "path": "domain/demo-bookmark/db/migration.sql",
+          "startLine": 32,
+          "endLine": 38
+        }
+      ]
+    },
+    {
+      "name": "events",
+      "schema": "audit",
+      "columns": [
+        {
+          "name": "event_id",
+          "type": "uuid PRIMARY",
+          "nullable": true,
+          "default": "gen_random_uuid()"
+        },
+        {
+          "name": "occurred_at",
+          "type": "timestamptz NOT",
+          "nullable": true,
+          "default": "now()"
+        },
+        {
+          "name": "tenancy_id",
+          "type": "uuid",
+          "nullable": true
+        },
+        {
+          "name": "actor_id",
+          "type": "uuid",
+          "nullable": true
+        },
+        {
+          "name": "actor_role",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "operation",
+          "type": "text NOT",
+          "nullable": true
+        },
+        {
+          "name": "entity",
+          "type": "text NOT",
+          "nullable": true
+        },
+        {
+          "name": "entity_id",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "pk",
+          "type": "jsonb",
+          "nullable": true
+        },
+        {
+          "name": "request_id",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "ip_address",
+          "type": "text",
+          "nullable": true,
+          "pii_class": "ip"
+        },
+        {
+          "name": "station_id",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "metadata",
+          "type": "jsonb NOT",
+          "nullable": true,
+          "default": "'{}'::jsonb"
+        },
+        {
+          "name": "old_data",
+          "type": "jsonb",
+          "nullable": true
+        },
+        {
+          "name": "new_data",
+          "type": "jsonb",
+          "nullable": true
+        },
+        {
+          "name": "previous_hash",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "row_hash",
+          "type": "text NOT",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz NOT",
+          "nullable": true,
+          "default": "now()"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "db/ddl/02-audit.sql",
+          "startLine": 9,
+          "endLine": 28
+        }
+      ]
+    },
+    {
+      "name": "files",
+      "schema": "storage",
+      "columns": [
+        {
+          "name": "file_id",
+          "type": "uuid PRIMARY",
+          "nullable": true,
+          "default": "gen_random_uuid()"
+        },
+        {
+          "name": "tenancy_id",
+          "type": "uuid NOT",
+          "nullable": true
+        },
+        {
+          "name": "owner_id",
+          "type": "uuid REFERENCES",
+          "nullable": true
+        },
+        {
+          "name": "bucket",
+          "type": "text NOT",
+          "nullable": true
+        },
+        {
+          "name": "object_key",
+          "type": "text NOT",
+          "nullable": true,
+          "unique": true
+        },
+        {
+          "name": "filename",
+          "type": "text NOT",
+          "nullable": true
+        },
+        {
+          "name": "mime_type",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "size_bytes",
+          "type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "checksum",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "created_by",
+          "type": "uuid",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz NOT",
+          "nullable": true,
+          "default": "now()"
+        },
+        {
+          "name": "updated_by",
+          "type": "uuid",
+          "nullable": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz NOT",
+          "nullable": true,
+          "default": "now()"
+        },
+        {
+          "name": "metadata",
+          "type": "jsonb NOT",
+          "nullable": true,
+          "default": "'{}'::jsonb"
+        },
+        {
+          "name": "deleted_at",
+          "type": "timestamptz",
+          "nullable": true
+        }
+      ],
+      "evidence": [
+        {
+          "path": "db/ddl/03-storage.sql",
+          "startLine": 8,
+          "endLine": 24
+        }
+      ]
+    },
+    {
+      "name": "group_roles",
+      "schema": "auth",
+      "columns": [
+        {
+          "name": "group_id",
+          "type": "uuid NOT",
+          "nullable": true
+        },
+        {
+          "name": "role_id",
+          "type": "uuid NOT",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz NOT",
+          "nullable": true,
+          "default": "now()"
+        }
+      ],
+      "primary_key": ["group_id", "role_id"],
+      "evidence": [
+        {
+          "path": "db/ddl/01-auth.sql",
+          "startLine": 384,
+          "endLine": 389
+        }
+      ]
+    },
+    {
+      "name": "groups",
+      "schema": "auth",
+      "columns": [
+        {
+          "name": "group_id",
+          "type": "uuid PRIMARY",
+          "nullable": true,
+          "default": "gen_random_uuid()"
+        },
+        {
+          "name": "code",
+          "type": "text NOT",
+          "nullable": true,
+          "unique": true
+        },
+        {
+          "name": "name",
+          "type": "text NOT",
+          "nullable": true
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz NOT",
+          "nullable": true,
+          "default": "now()"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "db/ddl/01-auth.sql",
+          "startLine": 363,
+          "endLine": 369
+        }
+      ]
+    },
     {
       "name": "record",
       "schema": "sample",
@@ -162,6 +525,342 @@
           "path": "reference/api/migrations/0001_reference.sql",
           "startLine": 114,
           "endLine": 134
+        }
+      ]
+    },
+    {
+      "name": "roles",
+      "schema": "auth",
+      "columns": [
+        {
+          "name": "role_id",
+          "type": "uuid PRIMARY",
+          "nullable": true,
+          "default": "gen_random_uuid()"
+        },
+        {
+          "name": "code",
+          "type": "text NOT",
+          "nullable": true,
+          "unique": true
+        },
+        {
+          "name": "name",
+          "type": "text NOT",
+          "nullable": true
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz NOT",
+          "nullable": true,
+          "default": "now()"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz NOT",
+          "nullable": true,
+          "default": "now()"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "db/ddl/01-auth.sql",
+          "startLine": 371,
+          "endLine": 378
+        }
+      ]
+    },
+    {
+      "name": "tenancies",
+      "schema": "auth",
+      "columns": [
+        {
+          "name": "tenancy_id",
+          "type": "uuid PRIMARY",
+          "nullable": true,
+          "default": "gen_random_uuid()"
+        },
+        {
+          "name": "code",
+          "type": "text NOT",
+          "nullable": true,
+          "unique": true
+        },
+        {
+          "name": "name",
+          "type": "text NOT",
+          "nullable": true
+        },
+        {
+          "name": "is_active",
+          "type": "boolean NOT",
+          "nullable": true,
+          "default": "TRUE"
+        },
+        {
+          "name": "created_by",
+          "type": "uuid",
+          "nullable": true
+        },
+        {
+          "name": "updated_by",
+          "type": "uuid",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz NOT",
+          "nullable": true,
+          "default": "now()"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz NOT",
+          "nullable": true,
+          "default": "now()"
+        },
+        {
+          "name": "metadata",
+          "type": "jsonb NOT",
+          "nullable": true,
+          "default": "'{}'::jsonb"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "db/ddl/01-auth.sql",
+          "startLine": 325,
+          "endLine": 335
+        }
+      ]
+    },
+    {
+      "name": "tenancy_members",
+      "schema": "auth",
+      "columns": [
+        {
+          "name": "membership_id",
+          "type": "uuid PRIMARY",
+          "nullable": true,
+          "default": "gen_random_uuid()"
+        },
+        {
+          "name": "tenancy_id",
+          "type": "uuid NOT",
+          "nullable": true
+        },
+        {
+          "name": "user_id",
+          "type": "uuid NOT",
+          "nullable": true
+        },
+        {
+          "name": "default_role",
+          "type": "uuid REFERENCES",
+          "nullable": true
+        },
+        {
+          "name": "invitation_status",
+          "type": "text NOT",
+          "nullable": true,
+          "default": "'active'"
+        },
+        {
+          "name": "created_by",
+          "type": "uuid",
+          "nullable": true
+        },
+        {
+          "name": "updated_by",
+          "type": "uuid",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz NOT",
+          "nullable": true,
+          "default": "now()"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz NOT",
+          "nullable": true,
+          "default": "now()"
+        }
+      ],
+      "unique_constraints": [["tenancy_id", "user_id"]],
+      "evidence": [
+        {
+          "path": "db/ddl/01-auth.sql",
+          "startLine": 407,
+          "endLine": 418
+        }
+      ]
+    },
+    {
+      "name": "user_groups",
+      "schema": "auth",
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "uuid NOT",
+          "nullable": true
+        },
+        {
+          "name": "group_id",
+          "type": "uuid NOT",
+          "nullable": true
+        },
+        {
+          "name": "assigned_at",
+          "type": "timestamptz NOT",
+          "nullable": true,
+          "default": "now()"
+        },
+        {
+          "name": "assigned_by",
+          "type": "uuid",
+          "nullable": true
+        }
+      ],
+      "primary_key": ["user_id", "group_id"],
+      "evidence": [
+        {
+          "path": "db/ddl/01-auth.sql",
+          "startLine": 391,
+          "endLine": 397
+        }
+      ]
+    },
+    {
+      "name": "user_roles",
+      "schema": "auth",
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "uuid NOT",
+          "nullable": true
+        },
+        {
+          "name": "role_id",
+          "type": "uuid NOT",
+          "nullable": true
+        },
+        {
+          "name": "assigned_at",
+          "type": "timestamptz NOT",
+          "nullable": true,
+          "default": "now()"
+        },
+        {
+          "name": "assigned_by",
+          "type": "uuid",
+          "nullable": true
+        }
+      ],
+      "primary_key": ["user_id", "role_id"],
+      "evidence": [
+        {
+          "path": "db/ddl/01-auth.sql",
+          "startLine": 399,
+          "endLine": 405
+        }
+      ]
+    },
+    {
+      "name": "users",
+      "schema": "auth",
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "uuid PRIMARY",
+          "nullable": true
+        },
+        {
+          "name": "external_id",
+          "type": "text UNIQUE",
+          "nullable": true
+        },
+        {
+          "name": "username",
+          "type": "text UNIQUE",
+          "nullable": true
+        },
+        {
+          "name": "email",
+          "type": "text",
+          "nullable": true,
+          "pii_class": "contact"
+        },
+        {
+          "name": "display_name",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "given_name",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "family_name",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "tenancy_id",
+          "type": "uuid REFERENCES",
+          "nullable": true
+        },
+        {
+          "name": "created_by",
+          "type": "uuid",
+          "nullable": true
+        },
+        {
+          "name": "updated_by",
+          "type": "uuid",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz NOT",
+          "nullable": true,
+          "default": "now()"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz NOT",
+          "nullable": true,
+          "default": "now()"
+        },
+        {
+          "name": "last_synced_at",
+          "type": "timestamptz",
+          "nullable": true
+        },
+        {
+          "name": "attributes",
+          "type": "jsonb NOT",
+          "nullable": true,
+          "default": "'{}'::jsonb"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "db/ddl/01-auth.sql",
+          "startLine": 341,
+          "endLine": 357
         }
       ]
     },

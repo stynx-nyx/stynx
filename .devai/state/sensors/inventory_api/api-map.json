@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-05-16T06:03:30.976Z",
+  "generatedAt": "2026-05-16T17:30:31.968Z",
   "sourceRepo": ".",
   "endpoints": [
     {
@@ -21,7 +21,7 @@
       ],
       "auth": {
         "guards": ["StynxAuthGuard", "PermissionGuard"],
-        "required": true
+        "required": false
       },
       "evidence": [
         {
@@ -43,7 +43,7 @@
       },
       "auth": {
         "guards": ["StynxAuthGuard", "PermissionGuard"],
-        "required": true
+        "required": false
       },
       "evidence": [
         {
@@ -71,7 +71,7 @@
       ],
       "auth": {
         "guards": ["StynxAuthGuard", "PermissionGuard"],
-        "required": true
+        "required": false
       },
       "evidence": [
         {
@@ -119,6 +119,9 @@
           "in": "header"
         }
       ],
+      "auth": {
+        "required": false
+      },
       "evidence": [
         {
           "path": "reference/api/src/sample/reference-dev-auth.controller.ts",
@@ -137,6 +140,9 @@
         "startLine": 19,
         "endLine": 23
       },
+      "auth": {
+        "required": false
+      },
       "evidence": [
         {
           "path": "reference/api/src/sample/reference-dev-auth.controller.ts",
@@ -154,6 +160,9 @@
         "methodName": "login",
         "startLine": 25,
         "endLine": 30
+      },
+      "auth": {
+        "required": false
       },
       "evidence": [
         {

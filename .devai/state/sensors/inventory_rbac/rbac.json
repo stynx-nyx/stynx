@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-05-16T06:03:48.091Z",
+  "generatedAt": "2026-05-16T17:31:47.625Z",
   "sourceRepo": ".",
   "rbacIlfTables": [],
   "roles": [
@@ -22,36 +22,6 @@
   ],
   "bindings": {
     "endpointBindings": [
-      {
-        "permissionId": "guard:StynxAuthGuard",
-        "endpointId": "GET /_probes/data-tx",
-        "methods": ["GET"]
-      },
-      {
-        "permissionId": "guard:PermissionGuard",
-        "endpointId": "GET /_probes/data-tx",
-        "methods": ["GET"]
-      },
-      {
-        "permissionId": "guard:StynxAuthGuard",
-        "endpointId": "POST /_probes/idempotency",
-        "methods": ["POST"]
-      },
-      {
-        "permissionId": "guard:PermissionGuard",
-        "endpointId": "POST /_probes/idempotency",
-        "methods": ["POST"]
-      },
-      {
-        "permissionId": "guard:StynxAuthGuard",
-        "endpointId": "GET /_probes/ratelimit",
-        "methods": ["GET"]
-      },
-      {
-        "permissionId": "guard:PermissionGuard",
-        "endpointId": "GET /_probes/ratelimit",
-        "methods": ["GET"]
-      },
       {
         "permissionId": "guard:StynxAuthGuard",
         "endpointId": "GET /_probes/readonly-write",
@@ -499,17 +469,13 @@
   "unmapped": {
     "rolesWithoutPermissions": [],
     "permissionsWithoutBindings": [],
-    "endpointsWithoutRole": [
-      "GET /_reference/auth-verify",
-      "GET /_reference/demo-tenants",
-      "POST /_reference/dev-login"
-    ],
+    "endpointsWithoutRole": [],
     "routesWithoutRole": []
   },
   "stats": {
     "roleCount": 0,
     "permissionCount": 0,
-    "endpointBindingCount": 94,
+    "endpointBindingCount": 88,
     "routeBindingCount": 0,
     "entityBindingCount": 0
   }

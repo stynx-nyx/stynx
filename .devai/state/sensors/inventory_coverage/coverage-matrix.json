@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-05-16T06:03:33.641Z",
+  "generatedAt": "2026-05-16T17:32:04.169Z",
   "routes": [
     "angular:086c1f6f3e97",
     "angular:66ada9255a8c",
@@ -69,23 +69,140 @@
     "POST /work-items/:id/restore",
     "GET /work-items/trash"
   ],
-  "useCases": [],
-  "links": [],
+  "useCases": [
+    {
+      "id": "UC-stynx-005",
+      "title": "Member browses, opens, and edits a work-item"
+    },
+    {
+      "id": "UC-stynx-006",
+      "title": "Member creates a new work-item"
+    },
+    {
+      "id": "UC-stynx-007",
+      "title": "Member soft-deletes a work-item and restores it from trash"
+    },
+    {
+      "id": "UC-stynx-008",
+      "title": "Member manages work-item entries (sub-records of a work-item)"
+    },
+    {
+      "id": "UC-stynx-009",
+      "title": "Member manages work-item locks (concurrency control on a work-item)"
+    },
+    {
+      "id": "UC-stynx-010",
+      "title": "Member uploads, downloads, and lifecycles a document"
+    },
+    {
+      "id": "UC-stynx-011",
+      "title": "Member adds, edits, and removes notes on a record"
+    },
+    {
+      "id": "UC-stynx-012",
+      "title": "Platform-admin probes runtime behaviors"
+    },
+    {
+      "id": "UC-stynx-013",
+      "title": "Tenant selection + unauthorized error UX"
+    },
+    {
+      "id": "UC-stynx-001",
+      "title": "Member browses, opens, and edits a record"
+    },
+    {
+      "id": "UC-stynx-002",
+      "title": "Member creates a new record"
+    },
+    {
+      "id": "UC-stynx-003",
+      "title": "Member soft-deletes a record and restores it from trash"
+    },
+    {
+      "id": "UC-stynx-004",
+      "title": "Reference dev-login flow"
+    }
+  ],
+  "links": [
+    {
+      "routeId": "angular:0f8938269c9a",
+      "endpointId": "GET /work-items",
+      "useCaseId": "UC-stynx-005"
+    },
+    {
+      "routeId": "angular:1142140126d2",
+      "endpointId": "GET /work-items/:id",
+      "useCaseId": "UC-stynx-005"
+    },
+    {
+      "routeId": "angular:1112587ddc3d",
+      "endpointId": "GET /work-items/:id",
+      "useCaseId": "UC-stynx-005"
+    },
+    {
+      "routeId": "angular:1142140126d2",
+      "endpointId": "GET /work-items/:id",
+      "useCaseId": "UC-stynx-006"
+    },
+    {
+      "routeId": "angular:1142140126d2",
+      "endpointId": "GET /work-items/:id",
+      "useCaseId": "UC-stynx-007"
+    },
+    {
+      "routeId": "angular:fb6949272f44",
+      "endpointId": "GET /work-items/trash",
+      "useCaseId": "UC-stynx-007"
+    },
+    {
+      "routeId": "angular:1142140126d2",
+      "endpointId": "GET /work-items/:id",
+      "useCaseId": "UC-stynx-008"
+    },
+    {
+      "routeId": "angular:1a29df709ba4",
+      "endpointId": "GET /records/:id",
+      "useCaseId": "UC-stynx-011"
+    },
+    {
+      "routeId": "angular:5361bf2ca0e6",
+      "endpointId": "GET /records",
+      "useCaseId": "UC-stynx-001"
+    },
+    {
+      "routeId": "angular:1a29df709ba4",
+      "endpointId": "GET /records/:id",
+      "useCaseId": "UC-stynx-001"
+    },
+    {
+      "routeId": "angular:55bc456a97bb",
+      "endpointId": "GET /records/:id",
+      "useCaseId": "UC-stynx-001"
+    },
+    {
+      "routeId": "angular:1a29df709ba4",
+      "endpointId": "GET /records/:id",
+      "useCaseId": "UC-stynx-002"
+    },
+    {
+      "routeId": "angular:1a29df709ba4",
+      "endpointId": "GET /records/:id",
+      "useCaseId": "UC-stynx-003"
+    },
+    {
+      "routeId": "angular:fb6949272f44",
+      "endpointId": "GET /records/trash",
+      "useCaseId": "UC-stynx-003"
+    }
+  ],
   "unmapped": {
     "routes": [
       "angular:086c1f6f3e97",
       "angular:66ada9255a8c",
       "angular:46fe460b7194",
-      "angular:5361bf2ca0e6",
-      "angular:1a29df709ba4",
-      "angular:55bc456a97bb",
       "angular:7fa63ba98a7e",
       "angular:197ead8a8a47",
-      "angular:fb6949272f44",
       "angular:cd1db7de4f8c",
-      "angular:0f8938269c9a",
-      "angular:1142140126d2",
-      "angular:1112587ddc3d",
       "angular:abaf636f1c8e"
     ],
     "endpoints": [
@@ -109,14 +226,11 @@
       "PATCH /record-notes/:id",
       "DELETE /record-notes/:id/hard",
       "POST /record-notes/:id/restore",
-      "GET /records",
       "POST /records",
       "DELETE /records/:id",
-      "GET /records/:id",
       "PATCH /records/:id",
       "DELETE /records/:id/hard",
       "POST /records/:id/restore",
-      "GET /records/trash",
       "GET /work-item-entries",
       "POST /work-item-entries",
       "DELETE /work-item-entries/:id",
@@ -131,20 +245,17 @@
       "PATCH /work-item-locks/:id",
       "DELETE /work-item-locks/:id/hard",
       "POST /work-item-locks/:id/restore",
-      "GET /work-items",
       "POST /work-items",
       "DELETE /work-items/:id",
-      "GET /work-items/:id",
       "PATCH /work-items/:id",
       "DELETE /work-items/:id/hard",
-      "POST /work-items/:id/restore",
-      "GET /work-items/trash"
+      "POST /work-items/:id/restore"
     ]
   },
   "stats": {
     "routeCount": 14,
     "endpointCount": 50,
-    "useCaseCount": 0,
-    "linkCount": 0
+    "useCaseCount": 13,
+    "linkCount": 14
   }
 }
