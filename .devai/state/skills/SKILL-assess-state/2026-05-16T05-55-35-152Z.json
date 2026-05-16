@@ -1,0 +1,19 @@
+{
+  "skill_id": "SKILL-assess-state",
+  "status": "pass",
+  "evidence": {
+    "schemaVersion": "1.0.0",
+    "id": "AS-20260516T055535-001",
+    "generated_at": "2026-05-16T05:55:35.151Z",
+    "scorecard_id": "SC-20260516T055535-001",
+    "previous_assessment_id": null,
+    "narrative": "Overall: YELLOW. 0/45 cells passing. 43 cell(s) unknown (sensor coverage gap).",
+    "deltas": [],
+    "backlog_actions": {
+      "additions": [],
+      "completions": [],
+      "deprioritizations": []
+    },
+    "recommended_priorities": []
+  }
+}
