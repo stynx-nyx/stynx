@@ -4,8 +4,6 @@ STYNX is a `pnpm` + `Turborepo` monorepo targeting GitHub Packages for the spec-
 
 `1.0.0` release preparation is implemented in-repo and the tracked release-readiness gates are closed. STYNX is not marked as shipped until an explicit versioning and publishing decision is made.
 
-## Monorepo Layout
-
 ## Active workspace shape (post-C-4 adoption pilot)
 
 | Tree                                                                      | Purpose                                                                                                                                              |
