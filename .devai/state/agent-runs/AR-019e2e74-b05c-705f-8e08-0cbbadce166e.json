@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "run_id": "AR-019e2e74-b05c-705f-8e08-0cbbadce166e",
+  "started_at": "2026-05-16T01:44:19.800Z",
+  "ended_at": "2026-05-16T01:44:19.804Z",
+  "caller": {
+    "kind": "skill",
+    "name": "SKILL-write-rbac-matrix"
+  },
+  "files_read": [],
+  "files_written": [".devai/state/skills/SKILL-write-rbac-matrix/2026-05-16T01-44-19-803Z.json"],
+  "commands_run": [],
+  "compliance": {
+    "invariant_ids": ["INV-DEVAI-010"]
+  },
+  "outcome": {
+    "status": "fail",
+    "notes": ["LLM response did not parse as { markdown: \"...\" }"]
+  },
+  "prev_hash": "4b86b5a51f79956be53565f70b1b16a6aa170e0e883a870796bbb9a99b6f9538",
+  "hash_algo_version": "2.0",
+  "manifest_hash": "947275d7c1da7dee605a7568fac3db10f4029578a2555555400aa257006f3715"
+}

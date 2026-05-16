@@ -1,0 +1,8 @@
+{
+  "skill_id": "SKILL-write-rbac-matrix",
+  "status": "fail",
+  "notes": ["LLM response did not parse as { markdown: \"...\" }"],
+  "evidence": {
+    "raw_response": "[mock-echo] system:1616b user:6536b"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "run_id": "AR-019e2e74-a00d-73fa-83b5-1b383ee74f63",
+  "started_at": "2026-05-16T01:44:15.622Z",
+  "ended_at": "2026-05-16T01:44:15.629Z",
+  "caller": {
+    "kind": "skill",
+    "name": "SKILL-write-overview"
+  },
+  "files_read": [],
+  "files_written": [".devai/state/skills/SKILL-write-overview/2026-05-16T01-44-15-629Z.json"],
+  "commands_run": [],
+  "compliance": {
+    "invariant_ids": ["INV-DEVAI-010"]
+  },
+  "outcome": {
+    "status": "fail",
+    "notes": ["LLM response did not parse as { markdown: \"...\" }"]
+  },
+  "prev_hash": "GENESIS",
+  "hash_algo_version": "2.0",
+  "manifest_hash": "4f09e6d755b09c07d61c11300ea95bbd4d4b8019c922964fc97893b16b03df2a"
+}

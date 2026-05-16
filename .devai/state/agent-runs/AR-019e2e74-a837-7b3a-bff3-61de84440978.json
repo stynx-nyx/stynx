@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "1.0.0",
+  "run_id": "AR-019e2e74-a837-7b3a-bff3-61de84440978",
+  "started_at": "2026-05-16T01:44:17.714Z",
+  "ended_at": "2026-05-16T01:44:17.718Z",
+  "caller": {
+    "kind": "skill",
+    "name": "SKILL-write-architecture-guide"
+  },
+  "files_read": [],
+  "files_written": [
+    ".devai/state/skills/SKILL-write-architecture-guide/2026-05-16T01-44-17-718Z.json"
+  ],
+  "commands_run": [],
+  "compliance": {
+    "invariant_ids": ["INV-DEVAI-010"]
+  },
+  "outcome": {
+    "status": "fail",
+    "notes": ["LLM response did not parse as { markdown: \"...\" }"]
+  },
+  "prev_hash": "4f09e6d755b09c07d61c11300ea95bbd4d4b8019c922964fc97893b16b03df2a",
+  "hash_algo_version": "2.0",
+  "manifest_hash": "4b86b5a51f79956be53565f70b1b16a6aa170e0e883a870796bbb9a99b6f9538"
+}
