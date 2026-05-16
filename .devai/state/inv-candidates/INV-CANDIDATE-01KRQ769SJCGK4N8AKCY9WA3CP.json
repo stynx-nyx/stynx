@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "INV-CANDIDATE-01KRQ769SJCGK4N8AKCY9WA3CP",
+  "generated_at": "2026-05-16T01:42:39.150Z",
+  "category": "unbound_endpoint",
+  "source_sensor": "inventory_rbac",
+  "confidence": "high",
+  "target": {
+    "kind": "endpoint",
+    "identifier": "GET /_reference/auth-verify"
+  },
+  "suggested_invariant": {
+    "title": "Endpoint GET /_reference/auth-verify has no role binding",
+    "statement": "Endpoint GET /_reference/auth-verify appears in the api-map but has no @UseGuards / @Roles declarations and no entry in rbac.bindings.endpointBindings. Per INV-INVENTORY-003, every endpoint MUST either declare a role binding OR carry an explicit auth.required=false claim before release.",
+    "domain_suggestion": "INVENTORY",
+    "severity_suggestion": "gate",
+    "measurable_via_suggestion": ["sense api", "sense rbac"],
+    "rationale": "Default-deny policy: an endpoint with no declared auth is a discovery gap. Either bind a role (write a guard) OR explicitly mark the endpoint public — ambiguity is not."
+  },
+  "related_invariants": ["INV-INVENTORY-003"],
+  "status": "proposed",
+  "tags": ["phase-17-E", "brownfield", "rbac", "authorization"]
+}
