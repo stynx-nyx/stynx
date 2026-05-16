@@ -353,28 +353,42 @@ ON CONFLICT DO NOTHING;
 -- Platform bootstrap created the table; domain migration adds entries.
 -- ----------------------------------------------------------------------------
 
-INSERT INTO core.pii_map (table_schema, table_name, column_name, category, strategy, notes)
+-- C-4 pilot, Session S1.F-6: legal_basis + retention added per
+-- INV-PRIVACY-001 (specializes INV-INVENTORY-002). New columns
+-- introduced by core platform migration 0013.
+INSERT INTO core.pii_map (table_schema, table_name, column_name, category, strategy, legal_basis, retention, notes)
 VALUES
   ('sample', 'record', 'title',        'direct_pii', 'nullify',
+    'legitimate_interest', 'until_account_closure',
     'Display title may contain personal information; nullify on erasure.'),
   ('sample', 'record', 'email',        'direct_pii', 'hash_with_salt',
+    'contract', 'until_account_closure',
     'Retain hash for deduplication; source email erased.'),
   ('sample', 'record', 'external_ref', 'direct_pii', 'hash_with_salt',
+    'contract', 'until_account_closure',
     'External identifiers may encode user data.'),
 
-  ('sample', 'record_note', 'detail',  'direct_pii', 'nullify', NULL),
-  ('sample', 'record_note', 'detail2', 'direct_pii', 'nullify', NULL),
-  ('sample', 'record_note', 'region',  'incidental_pii', 'nullify', NULL),
-  ('sample', 'record_note', 'code',    'direct_pii', 'nullify', NULL),
+  ('sample', 'record_note', 'detail',  'direct_pii', 'nullify',
+    'legitimate_interest', 'until_account_closure', NULL),
+  ('sample', 'record_note', 'detail2', 'direct_pii', 'nullify',
+    'legitimate_interest', 'until_account_closure', NULL),
+  ('sample', 'record_note', 'region',  'incidental_pii', 'nullify',
+    'legitimate_interest', 'until_account_closure', NULL),
+  ('sample', 'record_note', 'code',    'direct_pii', 'nullify',
+    'legitimate_interest', 'until_account_closure', NULL),
 
   ('sample', 'work_item', 'created_by_user_id', 'subject_link', 'nullify',
+    'contract', 'until_account_closure',
     'Link to user; erasure handled via auth.users pipeline.'),
 
   ('sample', 'work_item_lock', 'external_ref', 'incidental_pii', 'nullify',
+    'legitimate_interest', 'P1Y',
     'External references may contain third-party identifiers.')
 ON CONFLICT (table_schema, table_name, column_name) DO UPDATE
   SET category         = EXCLUDED.category,
       strategy         = EXCLUDED.strategy,
+      legal_basis      = EXCLUDED.legal_basis,
+      retention        = EXCLUDED.retention,
       notes            = EXCLUDED.notes;
 
 -- ----------------------------------------------------------------------------
