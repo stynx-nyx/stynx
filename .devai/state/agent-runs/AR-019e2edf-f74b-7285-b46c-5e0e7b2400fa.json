@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "run_id": "AR-019e2edf-f74b-7285-b46c-5e0e7b2400fa",
+  "started_at": "2026-05-16T03:41:30.314Z",
+  "ended_at": "2026-05-16T03:41:30.314Z",
+  "caller": {
+    "kind": "skill",
+    "name": "SKILL-compile-backlog"
+  },
+  "files_read": ["/tmp/backlog-input.json"],
+  "files_written": [".devai/state/skills/SKILL-compile-backlog/2026-05-16T03-41-30-314Z.json"],
+  "commands_run": [],
+  "compliance": {
+    "invariant_ids": ["INV-DEVAI-010"]
+  },
+  "outcome": {
+    "status": "fail",
+    "notes": ["missing input: scorecard"]
+  },
+  "prev_hash": "38e81f67588562f4d4cf0893bdd8110c5ca7d22e01be229d292fbb784d0acab5",
+  "hash_algo_version": "2.0",
+  "manifest_hash": "e1b526175ad2f3699071eb067fc30d5ef0c73d5e8cd982a182b196149ff1d69f"
+}

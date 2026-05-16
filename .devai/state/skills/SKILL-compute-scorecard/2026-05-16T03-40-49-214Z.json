@@ -1,0 +1,306 @@
+{
+  "skill_id": "SKILL-compute-scorecard",
+  "status": "pass",
+  "evidence": {
+    "schemaVersion": "1.0.0",
+    "id": "SC-20260516T034049-001",
+    "generated_at": "2026-05-16T03:40:49.212Z",
+    "integration_head": "000000000000000000000000000000000000000f",
+    "thresholds_used": {
+      "source": "defaults"
+    },
+    "cells": [
+      {
+        "substrate": "F1",
+        "property": "T1",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F1",
+        "property": "T2",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F1",
+        "property": "T3",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F1",
+        "property": "T4",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F1",
+        "property": "T5",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F1",
+        "property": "T6",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F1",
+        "property": "T7",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F1",
+        "property": "T8",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F1",
+        "property": "T9",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F2",
+        "property": "T1",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F2",
+        "property": "T2",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F2",
+        "property": "T3",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F2",
+        "property": "T4",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F2",
+        "property": "T5",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F2",
+        "property": "T6",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F2",
+        "property": "T7",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F2",
+        "property": "T8",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F2",
+        "property": "T9",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F3",
+        "property": "T1",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F3",
+        "property": "T2",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F3",
+        "property": "T3",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F3",
+        "property": "T4",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F3",
+        "property": "T5",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F3",
+        "property": "T6",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F3",
+        "property": "T7",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F3",
+        "property": "T8",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F3",
+        "property": "T9",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F4",
+        "property": "T1",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F4",
+        "property": "T2",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F4",
+        "property": "T3",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F4",
+        "property": "T4",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F4",
+        "property": "T5",
+        "verdict": "N/A",
+        "deterministic": true
+      },
+      {
+        "substrate": "F4",
+        "property": "T6",
+        "verdict": "N/A",
+        "deterministic": true
+      },
+      {
+        "substrate": "F4",
+        "property": "T7",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F4",
+        "property": "T8",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F4",
+        "property": "T9",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F5",
+        "property": "T1",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F5",
+        "property": "T2",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F5",
+        "property": "T3",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F5",
+        "property": "T4",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F5",
+        "property": "T5",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F5",
+        "property": "T6",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F5",
+        "property": "T7",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F5",
+        "property": "T8",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      },
+      {
+        "substrate": "F5",
+        "property": "T9",
+        "verdict": "UNKNOWN",
+        "deterministic": true
+      }
+    ],
+    "substrate_aggregates": {
+      "F1": {
+        "verdict": "UNKNOWN"
+      },
+      "F2": {
+        "verdict": "UNKNOWN"
+      },
+      "F3": {
+        "verdict": "UNKNOWN"
+      },
+      "F4": {
+        "verdict": "UNKNOWN"
+      },
+      "F5": {
+        "verdict": "UNKNOWN"
+      }
+    },
+    "invariant_rollups": [],
+    "overall": {
+      "verdict": "UNKNOWN"
+    }
+  }
+}
