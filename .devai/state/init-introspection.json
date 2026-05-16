@@ -1,12 +1,12 @@
 {
   "schemaVersion": "1.0.0",
   "target_root": "/Users/aarusso/Development/stech/stynx",
-  "generated_at": "2026-05-16T01:36:15.314Z",
+  "generated_at": "2026-05-16T05:25:47.823Z",
   "package_manager": "pnpm",
   "languages": [
     {
       "name": "typescript",
-      "file_count": 494
+      "file_count": 514
     },
     {
       "name": "javascript",
@@ -14,13 +14,12 @@
     }
   ],
   "frameworks": [],
-  "source_globs": ["packages/*/src/**", "apps/*/src/**"],
+  "source_globs": ["packages/*/src/**"],
   "test_globs": ["test/**", "**/*.spec.*", "**/*.test.*"],
   "protected_surfaces": [],
-  "existing_devai_config": false,
+  "existing_devai_config": true,
   "proposed_project_type": "platform-package",
   "notes": [
-    "No recognized framework dependency in package.json; project_type may be platform-package or framework",
-    "Both packages/*/src and apps/*/src detected — monorepo with apps; source_globs covers both"
+    "No recognized framework dependency in package.json; project_type may be platform-package or framework"
   ]
 }

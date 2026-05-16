@@ -78,16 +78,13 @@ jobs:
           PNPM_HOME=$HOME/.local/bin pnpm link --global
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      - name: Provide stack-adapter pack to scaffolders (D-A-7 workaround)
-        working-directory: stynx
-        run: |
-          mkdir -p examples
-          ln -sfn ../../devai/examples/redox-pack-nestjs-postgres-angular \
-                  examples/redox-pack-nestjs-postgres-angular
-
       - name: Verify pack matches stynx
         working-directory: stynx
         run: devai pack-resolve --repo-root ../devai --adopter-root . --human
+
+      - name: devai doctor --adopter (post-Phase-21.B; expects 6/6 PASS)
+        working-directory: stynx
+        run: devai doctor --adopter --human
 
       - name: Run the seven L0 inventory sensors
         working-directory: stynx
@@ -143,7 +140,9 @@ jobs:
           name: devai-evidence-${{ github.run_id }}
           path: |
             stynx/.devai/state/sensors/**
+            stynx/.devai/state/sensor-readings/**
             stynx/.devai/state/inv-candidates/**
+            stynx/.devai/state/scorecards/**
             stynx/.devai/state/llm-usage.jsonl
             stynx/.devai/state/agent-runs/**
             stynx/.devai/state/skills/**

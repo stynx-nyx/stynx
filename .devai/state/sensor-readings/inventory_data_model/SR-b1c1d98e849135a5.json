@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-b1c1d98e849135a5",
+  "sensor": {
+    "name": "inventory:data-model",
+    "kind": "inventory_data_model",
+    "version": "1.0.0"
+  },
+  "timestamp": "2026-05-16T05:26:24.047Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense data-model --repo-root .",
+  "command_hash": "6a2784cfbaa9836dd5d1dea7fb70e2e7e36ff7419359ac29f0fa18379d72478a",
+  "tier": "L0",
+  "duration_ms": 7,
+  "evidence_path": ".devai/state/sensors/inventory_data_model/data-model.json",
+  "metrics": {
+    "table_count": 5,
+    "column_count": 61,
+    "foreign_key_count": 0,
+    "migration_file_count": 1,
+    "tables_hash": "c8ef544fd49c8e1665966cc831583ce9e90a49ee6a24a738dbfaa6006b3e06b9",
+    "dialect": "postgres"
+  }
+}

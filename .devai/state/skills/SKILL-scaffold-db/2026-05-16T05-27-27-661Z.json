@@ -1,0 +1,67 @@
+{
+  "skill_id": "SKILL-scaffold-db",
+  "status": "review",
+  "evidence": {
+    "schemaVersion": "1.0.0",
+    "skill_id": "SKILL-scaffold-db",
+    "blueprint_id": "BP-DEMO-BOOKMARK-001",
+    "blueprint_version": "0.1.0",
+    "blueprint_sha256": "a5553692743e92326c126b44a0be9d982e0d9e0fac4d261a0c805e36cf674e1f",
+    "stack_adapter_pack": "redox-pack-nestjs-postgres-angular",
+    "files_created": [],
+    "files_modified": [],
+    "files_skipped": [
+      {
+        "path": "domain/demo-bookmark/db/migration.sql",
+        "reason": "drift_detected_no_overwrite",
+        "note": "existing file diverges from rendered template; bump blueprint version + re-run to regenerate intentionally"
+      },
+      {
+        "path": "domain/demo-bookmark/db/seed.sql",
+        "reason": "drift_detected_no_overwrite",
+        "note": "existing file diverges from rendered template; bump blueprint version + re-run to regenerate intentionally"
+      }
+    ],
+    "templates_used": [
+      {
+        "template_id": "db.migration",
+        "rendered_to": "domain/demo-bookmark/db/migration.sql",
+        "rendered_sha256": "bfd3ad228062567a5ca32acb35beda9170606d542e48bac4e16329689a354807"
+      },
+      {
+        "template_id": "db.seed",
+        "rendered_to": "domain/demo-bookmark/db/seed.sql",
+        "rendered_sha256": "78e1d7b62a3d7b783e7cc397089c73caa670a2a7f055f3d33aae8dc69c0cc3c7"
+      }
+    ],
+    "token_map": {
+      "__NAMESPACE__": "demo",
+      "__MODULE__": "Bookmark",
+      "__kebabModule__": "bookmark",
+      "__snake_module__": "bookmark",
+      "__moduleSlug__": "demo-bookmark",
+      "__ENTITY__": "Bookmark",
+      "__classEntity__": "Bookmark",
+      "__kebabEntity__": "bookmark",
+      "__snake_entity__": "bookmark",
+      "__snake_table__": "demo__bookmark_bookmark",
+      "__SPEC_VERSION__": "0.1.0",
+      "__SPEC_SHA__": "a5553692"
+    },
+    "idempotency": "drift-detected",
+    "drift_report": {
+      "differing_files": [
+        {
+          "path": "domain/demo-bookmark/db/migration.sql",
+          "expected_sha256": "bfd3ad228062567a5ca32acb35beda9170606d542e48bac4e16329689a354807",
+          "actual_sha256": "145069ed896859e83627fadeb9d441750799d455ec31d5d650d008b4f928eacc"
+        },
+        {
+          "path": "domain/demo-bookmark/db/seed.sql",
+          "expected_sha256": "78e1d7b62a3d7b783e7cc397089c73caa670a2a7f055f3d33aae8dc69c0cc3c7",
+          "actual_sha256": "74089fb312ed2ceb4ec88af5e6606a6d2556bbf1fee28650cea55dcb6ad60346"
+        }
+      ]
+    }
+  }
+}

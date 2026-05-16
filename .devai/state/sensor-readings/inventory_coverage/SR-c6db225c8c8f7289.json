@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-c6db225c8c8f7289",
+  "sensor": {
+    "name": "inventory:coverage",
+    "kind": "inventory_coverage",
+    "version": "1.0.0"
+  },
+  "timestamp": "2026-05-16T05:26:26.075Z",
+  "status": "review",
+  "deterministic": true,
+  "command": "devai sense coverage --repo-root .",
+  "command_hash": "ce8408d76cac9f9dac515a2998bee4c3928973f7e1cedf1b0d60eb06b6fe03b2",
+  "tier": "L0",
+  "duration_ms": 3,
+  "evidence_path": ".devai/state/sensors/inventory_coverage/coverage-matrix.json",
+  "findings": [
+    {
+      "severity": "warning",
+      "code": "COVERAGE_NO_USE_CASES",
+      "message": "Coverage matrix assembled with 14 routes and 50 endpoints, but useCases=[] and links=[]. Author use-cases (manual or via 17.F SKILL-write-use-cases) to populate triads."
+    }
+  ],
+  "metrics": {
+    "route_count": 14,
+    "endpoint_count": 50,
+    "use_case_count": 0,
+    "link_count": 0,
+    "unmapped_route_count": 14,
+    "unmapped_endpoint_count": 50,
+    "inferred_path_match_count": 0,
+    "coverage_hash": "89d966a015532de002c24f9db1ab001f161dfb944f98b3a6ea523a8b0c77812f"
+  }
+}
