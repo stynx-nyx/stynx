@@ -1,7 +1,22 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-05-16T01:40:40.859Z",
-  "routes": [],
+  "generatedAt": "2026-05-16T03:24:11.433Z",
+  "routes": [
+    "angular:06b7f4594a78",
+    "angular:f18953139030",
+    "angular:b86a30991c03",
+    "angular:a4d3406d7645",
+    "angular:d0c63b785f42",
+    "angular:9abd2276098d",
+    "angular:1e325c22cad4",
+    "angular:6debeec4b121",
+    "angular:40ac57cb6d8c",
+    "angular:ef102312964e",
+    "angular:492409624112",
+    "angular:ed705071698e",
+    "angular:664a07c8a102",
+    "angular:6685b7e87c8e"
+  ],
   "endpoints": [
     "GET /_probes/data-tx",
     "POST /_probes/idempotency",
@@ -57,7 +72,22 @@
   "useCases": [],
   "links": [],
   "unmapped": {
-    "routes": [],
+    "routes": [
+      "angular:06b7f4594a78",
+      "angular:f18953139030",
+      "angular:b86a30991c03",
+      "angular:a4d3406d7645",
+      "angular:d0c63b785f42",
+      "angular:9abd2276098d",
+      "angular:1e325c22cad4",
+      "angular:6debeec4b121",
+      "angular:40ac57cb6d8c",
+      "angular:ef102312964e",
+      "angular:492409624112",
+      "angular:ed705071698e",
+      "angular:664a07c8a102",
+      "angular:6685b7e87c8e"
+    ],
     "endpoints": [
       "GET /_probes/data-tx",
       "POST /_probes/idempotency",
@@ -112,7 +142,7 @@
     ]
   },
   "stats": {
-    "routeCount": 0,
+    "routeCount": 14,
     "endpointCount": 50,
     "useCaseCount": 0,
     "linkCount": 0

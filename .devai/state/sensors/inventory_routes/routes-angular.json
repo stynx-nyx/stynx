@@ -1,0 +1,213 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-05-16T03:23:50.130Z",
+  "framework": "angular",
+  "routes": [
+    {
+      "id": "angular:06b7f4594a78",
+      "path": "",
+      "component": {
+        "file": "apps/reference-web/src/app/app.routes.ts",
+        "name": "DashboardPageComponent"
+      },
+      "evidence": [
+        {
+          "path": "apps/reference-web/src/app/app.routes.ts",
+          "startLine": 32,
+          "endLine": 37
+        }
+      ]
+    },
+    {
+      "id": "angular:f18953139030",
+      "path": "**",
+      "evidence": [
+        {
+          "path": "apps/reference-web/src/app/app.routes.ts",
+          "startLine": 92,
+          "endLine": 95
+        }
+      ]
+    },
+    {
+      "id": "angular:b86a30991c03",
+      "path": "login",
+      "component": {
+        "file": "apps/reference-web/src/app/app.routes.ts",
+        "name": "LoginPageComponent"
+      },
+      "evidence": [
+        {
+          "path": "apps/reference-web/src/app/app.routes.ts",
+          "startLine": 16,
+          "endLine": 20
+        }
+      ]
+    },
+    {
+      "id": "angular:a4d3406d7645",
+      "path": "records",
+      "component": {
+        "file": "apps/reference-web/src/app/app.routes.ts",
+        "name": "RecordsPageComponent"
+      },
+      "evidence": [
+        {
+          "path": "apps/reference-web/src/app/app.routes.ts",
+          "startLine": 38,
+          "endLine": 43
+        }
+      ]
+    },
+    {
+      "id": "angular:d0c63b785f42",
+      "path": "records/:id",
+      "component": {
+        "file": "apps/reference-web/src/app/app.routes.ts",
+        "name": "RecordDetailPageComponent"
+      },
+      "evidence": [
+        {
+          "path": "apps/reference-web/src/app/app.routes.ts",
+          "startLine": 50,
+          "endLine": 55
+        }
+      ]
+    },
+    {
+      "id": "angular:9abd2276098d",
+      "path": "records/:id/edit",
+      "component": {
+        "file": "apps/reference-web/src/app/app.routes.ts",
+        "name": "RecordFormPageComponent"
+      },
+      "evidence": [
+        {
+          "path": "apps/reference-web/src/app/app.routes.ts",
+          "startLine": 56,
+          "endLine": 61
+        }
+      ]
+    },
+    {
+      "id": "angular:1e325c22cad4",
+      "path": "records/new",
+      "component": {
+        "file": "apps/reference-web/src/app/app.routes.ts",
+        "name": "RecordFormPageComponent"
+      },
+      "evidence": [
+        {
+          "path": "apps/reference-web/src/app/app.routes.ts",
+          "startLine": 44,
+          "endLine": 49
+        }
+      ]
+    },
+    {
+      "id": "angular:6debeec4b121",
+      "path": "tenant",
+      "component": {
+        "file": "apps/reference-web/src/app/app.routes.ts",
+        "name": "TenantSelectionPageComponent"
+      },
+      "evidence": [
+        {
+          "path": "apps/reference-web/src/app/app.routes.ts",
+          "startLine": 26,
+          "endLine": 31
+        }
+      ]
+    },
+    {
+      "id": "angular:40ac57cb6d8c",
+      "path": "trash",
+      "component": {
+        "file": "apps/reference-web/src/app/app.routes.ts",
+        "name": "TrashPageComponent"
+      },
+      "evidence": [
+        {
+          "path": "apps/reference-web/src/app/app.routes.ts",
+          "startLine": 86,
+          "endLine": 91
+        }
+      ]
+    },
+    {
+      "id": "angular:ef102312964e",
+      "path": "unauthorized",
+      "component": {
+        "file": "apps/reference-web/src/app/app.routes.ts",
+        "name": "UnauthorizedPageComponent"
+      },
+      "evidence": [
+        {
+          "path": "apps/reference-web/src/app/app.routes.ts",
+          "startLine": 21,
+          "endLine": 25
+        }
+      ]
+    },
+    {
+      "id": "angular:492409624112",
+      "path": "work-items",
+      "component": {
+        "file": "apps/reference-web/src/app/app.routes.ts",
+        "name": "WorkItemsPageComponent"
+      },
+      "evidence": [
+        {
+          "path": "apps/reference-web/src/app/app.routes.ts",
+          "startLine": 62,
+          "endLine": 67
+        }
+      ]
+    },
+    {
+      "id": "angular:ed705071698e",
+      "path": "work-items/:id",
+      "component": {
+        "file": "apps/reference-web/src/app/app.routes.ts",
+        "name": "WorkItemDetailPageComponent"
+      },
+      "evidence": [
+        {
+          "path": "apps/reference-web/src/app/app.routes.ts",
+          "startLine": 80,
+          "endLine": 85
+        }
+      ]
+    },
+    {
+      "id": "angular:664a07c8a102",
+      "path": "work-items/:id/edit",
+      "component": {
+        "file": "apps/reference-web/src/app/app.routes.ts",
+        "name": "WorkItemFormPageComponent"
+      },
+      "evidence": [
+        {
+          "path": "apps/reference-web/src/app/app.routes.ts",
+          "startLine": 74,
+          "endLine": 79
+        }
+      ]
+    },
+    {
+      "id": "angular:6685b7e87c8e",
+      "path": "work-items/new",
+      "component": {
+        "file": "apps/reference-web/src/app/app.routes.ts",
+        "name": "WorkItemFormPageComponent"
+      },
+      "evidence": [
+        {
+          "path": "apps/reference-web/src/app/app.routes.ts",
+          "startLine": 68,
+          "endLine": 73
+        }
+      ]
+    }
+  ]
+}

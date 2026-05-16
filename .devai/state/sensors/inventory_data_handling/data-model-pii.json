@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-05-16T01:40:33.257Z",
+  "generatedAt": "2026-05-16T03:23:51.096Z",
   "dialect": "postgres",
   "sourceRepo": ".",
   "tables": [

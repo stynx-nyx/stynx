@@ -1,12 +1,7 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-05-16T01:39:53.337Z",
+  "generatedAt": "2026-05-16T03:23:49.618Z",
   "sourceRepo": ".",
-  "stack": {
-    "backend": "nestjs",
-    "frontend": "angular",
-    "db": "postgres"
-  },
   "endpoints": [
     {
       "method": "GET",

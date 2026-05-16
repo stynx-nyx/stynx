@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "INV-CANDIDATE-01KRQD0PQV47VSE79RAW1FTEVQ",
+  "generated_at": "2026-05-16T03:24:27.257Z",
+  "category": "unlabeled_pii_column",
+  "source_sensor": "inventory_data_handling",
+  "confidence": "high",
+  "target": {
+    "kind": "column",
+    "identifier": "record.email",
+    "evidence": [
+      {
+        "path": "apps/reference-api/migrations/0001_reference.sql",
+        "startLine": 90,
+        "endLine": 109
+      }
+    ]
+  },
+  "suggested_invariant": {
+    "title": "Column record.email (contact) must have legal_basis + retention",
+    "statement": "Column record.email is classified as contact PII but is missing: legal_basis, retention. Per INV-INVENTORY-002, every PII-flagged column MUST declare both legal_basis and retention before release.",
+    "domain_suggestion": "INVENTORY",
+    "severity_suggestion": "hard-fail",
+    "measurable_via_suggestion": ["sense data-handling", "sense data-model"],
+    "rationale": "Unlabeled PII handling is a regulatory exposure (LGPD / GDPR / HIPAA / CCPA). INV-INVENTORY-002 makes this a hard-fail gate; this candidate names the exact column that needs curation."
+  },
+  "related_invariants": ["INV-INVENTORY-002"],
+  "status": "proposed",
+  "tags": ["phase-17-E", "brownfield", "pii", "contact"]
+}
