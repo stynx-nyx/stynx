@@ -1,0 +1,400 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-05-16T01:40:31.261Z",
+  "dialect": "postgres",
+  "sourceRepo": ".",
+  "tables": [
+    {
+      "name": "record",
+      "schema": "sample",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid PRIMARY",
+          "nullable": true,
+          "default": "gen_random_uuid()"
+        },
+        {
+          "name": "tenant_id",
+          "type": "uuid NOT",
+          "nullable": true
+        },
+        {
+          "name": "title",
+          "type": "text NOT",
+          "nullable": true
+        },
+        {
+          "name": "email",
+          "type": "citext NOT",
+          "nullable": true
+        },
+        {
+          "name": "external_ref",
+          "type": "text NULL",
+          "nullable": true
+        },
+        {
+          "name": "status",
+          "type": "text NOT",
+          "nullable": true,
+          "default": "'active'"
+        },
+        {
+          "name": "owner_user_id",
+          "type": "uuid NULL",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz NOT",
+          "nullable": true,
+          "default": "clock_timestamp()"
+        },
+        {
+          "name": "created_by",
+          "type": "uuid NOT",
+          "nullable": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz NOT",
+          "nullable": true,
+          "default": "clock_timestamp()"
+        },
+        {
+          "name": "updated_by",
+          "type": "uuid NOT",
+          "nullable": true
+        }
+      ],
+      "unique_constraints": [["tenant_id", "email"]],
+      "evidence": [
+        {
+          "path": "apps/reference-api/migrations/0001_reference.sql",
+          "startLine": 90,
+          "endLine": 109
+        }
+      ]
+    },
+    {
+      "name": "record_note",
+      "schema": "sample",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid PRIMARY",
+          "nullable": true,
+          "default": "gen_random_uuid()"
+        },
+        {
+          "name": "tenant_id",
+          "type": "uuid NOT",
+          "nullable": true
+        },
+        {
+          "name": "record_id",
+          "type": "uuid NOT",
+          "nullable": true
+        },
+        {
+          "name": "kind",
+          "type": "text NOT",
+          "nullable": true
+        },
+        {
+          "name": "label",
+          "type": "text NOT",
+          "nullable": true
+        },
+        {
+          "name": "detail",
+          "type": "text NOT",
+          "nullable": true
+        },
+        {
+          "name": "detail2",
+          "type": "text NULL",
+          "nullable": true
+        },
+        {
+          "name": "region",
+          "type": "text NOT",
+          "nullable": true
+        },
+        {
+          "name": "code",
+          "type": "text NOT",
+          "nullable": true
+        },
+        {
+          "name": "locale",
+          "type": "text NOT",
+          "nullable": true,
+          "default": "'en'"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz NOT",
+          "nullable": true,
+          "default": "clock_timestamp()"
+        },
+        {
+          "name": "created_by",
+          "type": "uuid NOT",
+          "nullable": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz NOT",
+          "nullable": true,
+          "default": "clock_timestamp()"
+        },
+        {
+          "name": "updated_by",
+          "type": "uuid NOT",
+          "nullable": true
+        }
+      ],
+      "evidence": [
+        {
+          "path": "apps/reference-api/migrations/0001_reference.sql",
+          "startLine": 114,
+          "endLine": 134
+        }
+      ]
+    },
+    {
+      "name": "work_item",
+      "schema": "sample",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid PRIMARY",
+          "nullable": true,
+          "default": "gen_random_uuid()"
+        },
+        {
+          "name": "tenant_id",
+          "type": "uuid NOT",
+          "nullable": true
+        },
+        {
+          "name": "record_id",
+          "type": "uuid NOT",
+          "nullable": true
+        },
+        {
+          "name": "created_by_user_id",
+          "type": "uuid NULL",
+          "nullable": true
+        },
+        {
+          "name": "code",
+          "type": "text NOT",
+          "nullable": true
+        },
+        {
+          "name": "opened_on",
+          "type": "date NOT",
+          "nullable": true
+        },
+        {
+          "name": "target_on",
+          "type": "date NOT",
+          "nullable": true
+        },
+        {
+          "name": "category",
+          "type": "text NOT",
+          "nullable": true,
+          "default": "'GEN'"
+        },
+        {
+          "name": "total_units",
+          "type": "bigint NOT",
+          "nullable": true,
+          "default": "0"
+        },
+        {
+          "name": "status",
+          "type": "text NOT",
+          "nullable": true,
+          "default": "'draft'"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz NOT",
+          "nullable": true,
+          "default": "clock_timestamp()"
+        },
+        {
+          "name": "created_by",
+          "type": "uuid NOT",
+          "nullable": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz NOT",
+          "nullable": true,
+          "default": "clock_timestamp()"
+        },
+        {
+          "name": "updated_by",
+          "type": "uuid NOT",
+          "nullable": true
+        }
+      ],
+      "unique_constraints": [["tenant_id", "code"]],
+      "evidence": [
+        {
+          "path": "apps/reference-api/migrations/0001_reference.sql",
+          "startLine": 139,
+          "endLine": 167
+        }
+      ]
+    },
+    {
+      "name": "work_item_entry",
+      "schema": "sample",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid PRIMARY",
+          "nullable": true,
+          "default": "gen_random_uuid()"
+        },
+        {
+          "name": "tenant_id",
+          "type": "uuid NOT",
+          "nullable": true
+        },
+        {
+          "name": "work_item_id",
+          "type": "uuid NOT",
+          "nullable": true
+        },
+        {
+          "name": "description",
+          "type": "text NOT",
+          "nullable": true
+        },
+        {
+          "name": "quantity",
+          "type": "numeric(12,3)",
+          "nullable": false
+        },
+        {
+          "name": "unit_units",
+          "type": "bigint NOT",
+          "nullable": true
+        },
+        {
+          "name": "total_units",
+          "type": "bigint NOT",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz NOT",
+          "nullable": true,
+          "default": "clock_timestamp()"
+        },
+        {
+          "name": "created_by",
+          "type": "uuid NOT",
+          "nullable": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz NOT",
+          "nullable": true,
+          "default": "clock_timestamp()"
+        },
+        {
+          "name": "updated_by",
+          "type": "uuid NOT",
+          "nullable": true
+        }
+      ],
+      "evidence": [
+        {
+          "path": "apps/reference-api/migrations/0001_reference.sql",
+          "startLine": 172,
+          "endLine": 189
+        }
+      ]
+    },
+    {
+      "name": "work_item_lock",
+      "schema": "sample",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid PRIMARY",
+          "nullable": true,
+          "default": "gen_random_uuid()"
+        },
+        {
+          "name": "tenant_id",
+          "type": "uuid NOT",
+          "nullable": true
+        },
+        {
+          "name": "work_item_id",
+          "type": "uuid NOT",
+          "nullable": true
+        },
+        {
+          "name": "locked_at",
+          "type": "timestamptz NOT",
+          "nullable": true
+        },
+        {
+          "name": "amount_units",
+          "type": "bigint NOT",
+          "nullable": true
+        },
+        {
+          "name": "reason",
+          "type": "text NOT",
+          "nullable": true
+        },
+        {
+          "name": "external_ref",
+          "type": "text NULL",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz NOT",
+          "nullable": true,
+          "default": "clock_timestamp()"
+        },
+        {
+          "name": "created_by",
+          "type": "uuid NOT",
+          "nullable": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz NOT",
+          "nullable": true,
+          "default": "clock_timestamp()"
+        },
+        {
+          "name": "updated_by",
+          "type": "uuid NOT",
+          "nullable": true
+        }
+      ],
+      "evidence": [
+        {
+          "path": "apps/reference-api/migrations/0001_reference.sql",
+          "startLine": 194,
+          "endLine": 210
+        }
+      ]
+    }
+  ]
+}

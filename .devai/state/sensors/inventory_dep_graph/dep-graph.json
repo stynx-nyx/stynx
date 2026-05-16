@@ -1,0 +1,2646 @@
+{
+  "graph": {
+    "apps/reference-api/src/app.module.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/audit",
+      "@stynx/auth",
+      "@stynx/backend",
+      "@stynx/data",
+      "@stynx/health",
+      "@stynx/logging",
+      "@stynx/sessions",
+      "@stynx/storage",
+      "@stynx/tenancy",
+      "apps/reference-api/src/sample/sample.module",
+      "node:crypto",
+      "node:fs",
+      "node:path"
+    ],
+    "apps/reference-api/src/main.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "apps/reference-api/src/app.module",
+      "reflect-metadata"
+    ],
+    "apps/reference-api/src/sample/documents.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/backend",
+      "@stynx/idempotency",
+      "@stynx/ratelimit",
+      "apps/reference-api/src/sample/dto",
+      "apps/reference-api/src/sample/reference-sample.service"
+    ],
+    "apps/reference-api/src/sample/dto.ts": [],
+    "apps/reference-api/src/sample/record-notes.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/backend",
+      "@stynx/idempotency",
+      "@stynx/ratelimit",
+      "apps/reference-api/src/sample/dto",
+      "apps/reference-api/src/sample/reference-sample.service"
+    ],
+    "apps/reference-api/src/sample/records.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/backend",
+      "@stynx/idempotency",
+      "@stynx/ratelimit",
+      "apps/reference-api/src/sample/dto",
+      "apps/reference-api/src/sample/reference-sample.service"
+    ],
+    "apps/reference-api/src/sample/reference-dev-auth.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/idempotency",
+      "apps/reference-api/src/sample/reference-dev-auth.service"
+    ],
+    "apps/reference-api/src/sample/reference-dev-auth.service.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/auth",
+      "@stynx/data",
+      "@stynx/sessions"
+    ],
+    "apps/reference-api/src/sample/reference-probes.controller.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/auth",
+      "@stynx/backend",
+      "@stynx/core",
+      "@stynx/data",
+      "@stynx/idempotency",
+      "@stynx/ratelimit",
+      "node:crypto"
+    ],
+    "apps/reference-api/src/sample/reference-sample.service.ts": [
+      "@nestjs/common",
+      "@stynx/core",
+      "@stynx/data",
+      "@stynx/storage",
+      "apps/reference-api/src/sample/dto",
+      "apps/reference-api/src/sample/schema",
+      "drizzle-orm",
+      "node:crypto"
+    ],
+    "apps/reference-api/src/sample/sample.module.ts": [
+      "@nestjs/common",
+      "apps/reference-api/src/sample/documents.controller",
+      "apps/reference-api/src/sample/record-notes.controller",
+      "apps/reference-api/src/sample/records.controller",
+      "apps/reference-api/src/sample/reference-dev-auth.controller",
+      "apps/reference-api/src/sample/reference-dev-auth.service",
+      "apps/reference-api/src/sample/reference-probes.controller",
+      "apps/reference-api/src/sample/reference-sample.service",
+      "apps/reference-api/src/sample/work-item-entries.controller",
+      "apps/reference-api/src/sample/work-item-locks.controller",
+      "apps/reference-api/src/sample/work-items.controller"
+    ],
+    "apps/reference-api/src/sample/schema.ts": [
+      "@stynx/data",
+      "drizzle-orm",
+      "drizzle-orm/pg-core"
+    ],
+    "apps/reference-api/src/sample/work-item-entries.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/backend",
+      "@stynx/idempotency",
+      "@stynx/ratelimit",
+      "apps/reference-api/src/sample/dto",
+      "apps/reference-api/src/sample/reference-sample.service"
+    ],
+    "apps/reference-api/src/sample/work-item-locks.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/backend",
+      "@stynx/idempotency",
+      "@stynx/ratelimit",
+      "apps/reference-api/src/sample/dto",
+      "apps/reference-api/src/sample/reference-sample.service"
+    ],
+    "apps/reference-api/src/sample/work-items.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/backend",
+      "@stynx/idempotency",
+      "@stynx/ratelimit",
+      "apps/reference-api/src/sample/dto",
+      "apps/reference-api/src/sample/reference-sample.service"
+    ],
+    "apps/reference-api/test/integration/reference-api.runtime.spec.ts": [
+      "@aws-sdk/client-s3",
+      "@nestjs/common",
+      "@nestjs/testing",
+      "@stynx/auth",
+      "@stynx/core",
+      "@stynx/data",
+      "@stynx/health",
+      "@stynx/sessions",
+      "@stynx/testing",
+      "apps/reference-api/src/sample/schema",
+      "node:crypto",
+      "packages/data/test/support/postgres",
+      "supertest",
+      "testcontainers"
+    ],
+    "apps/reference-api/test/integration/sample.schema.spec.ts": [
+      "apps/reference-api/src/sample/schema",
+      "packages/data/src/index"
+    ],
+    "apps/reference-web/src/app/app.component.ts": [
+      "@angular/common",
+      "@angular/core",
+      "@angular/router",
+      "@stynx-web/angular",
+      "@stynx-web/angular-auth",
+      "@stynx-web/angular-i18n",
+      "@stynx-web/angular-ui",
+      "apps/reference-web/src/app/core/reference-web-i18n.service",
+      "apps/reference-web/src/app/core/reference-web-shell.service"
+    ],
+    "apps/reference-web/src/app/app.routes.ts": [
+      "@angular/router",
+      "@stynx-web/angular-auth",
+      "apps/reference-web/src/app/pages/dashboard.page",
+      "apps/reference-web/src/app/pages/login.page",
+      "apps/reference-web/src/app/pages/record-detail.page",
+      "apps/reference-web/src/app/pages/record-form.page",
+      "apps/reference-web/src/app/pages/records.page",
+      "apps/reference-web/src/app/pages/tenant-selection.page",
+      "apps/reference-web/src/app/pages/trash.page",
+      "apps/reference-web/src/app/pages/unauthorized.page",
+      "apps/reference-web/src/app/pages/work-item-detail.page",
+      "apps/reference-web/src/app/pages/work-item-form.page",
+      "apps/reference-web/src/app/pages/work-items.page"
+    ],
+    "apps/reference-web/src/app/core/reference-models.ts": [],
+    "apps/reference-web/src/app/core/reference-web-api.service.ts": [
+      "@angular/common/http",
+      "@angular/core",
+      "apps/reference-web/src/app/core/reference-models",
+      "apps/reference-web/src/environments/environment",
+      "rxjs"
+    ],
+    "apps/reference-web/src/app/core/reference-web-dev-auth.backend.ts": [
+      "@angular/common/http",
+      "@angular/core",
+      "@stynx-web/angular-auth",
+      "apps/reference-web/src/app/core/reference-web-dev-oidc.adapter",
+      "apps/reference-web/src/environments/environment",
+      "rxjs"
+    ],
+    "apps/reference-web/src/app/core/reference-web-dev-oidc.adapter.ts": [
+      "@angular/core",
+      "@stynx-web/angular-auth",
+      "angular-auth-oidc-client"
+    ],
+    "apps/reference-web/src/app/core/reference-web-i18n.service.ts": [
+      "@angular/core",
+      "@stynx-web/angular-i18n"
+    ],
+    "apps/reference-web/src/app/core/reference-web-shell.service.ts": [
+      "@angular/core",
+      "@angular/router",
+      "@stynx-web/angular-auth",
+      "@stynx-web/angular-tenancy",
+      "apps/reference-web/src/app/core/reference-models",
+      "apps/reference-web/src/app/core/reference-web-api.service",
+      "apps/reference-web/src/app/core/reference-web-dev-oidc.adapter"
+    ],
+    "apps/reference-web/src/app/pages/dashboard.page.ts": [
+      "@angular/common",
+      "@angular/core",
+      "@stynx-web/angular-auth",
+      "@stynx-web/angular-profile",
+      "@stynx-web/angular-sessions",
+      "@stynx-web/angular-storage",
+      "@stynx-web/angular-ui",
+      "apps/reference-web/src/app/core/reference-web-i18n.service",
+      "apps/reference-web/src/app/core/reference-web-shell.service"
+    ],
+    "apps/reference-web/src/app/pages/login.page.ts": [
+      "@angular/common",
+      "@angular/core",
+      "@angular/forms",
+      "@stynx-web/angular-ui",
+      "apps/reference-web/src/app/core/reference-web-shell.service"
+    ],
+    "apps/reference-web/src/app/pages/record-detail.page.ts": [
+      "@angular/common",
+      "@angular/core",
+      "@angular/router",
+      "@stynx-web/angular-storage",
+      "@stynx-web/angular-ui",
+      "apps/reference-web/src/app/core/reference-models",
+      "apps/reference-web/src/app/core/reference-web-api.service"
+    ],
+    "apps/reference-web/src/app/pages/record-form.page.ts": [
+      "@angular/common",
+      "@angular/core",
+      "@angular/forms",
+      "@angular/router",
+      "@stynx-web/angular-ui",
+      "apps/reference-web/src/app/core/reference-web-api.service"
+    ],
+    "apps/reference-web/src/app/pages/records.page.ts": [
+      "@angular/common",
+      "@angular/core",
+      "@angular/router",
+      "@stynx-web/angular-ui",
+      "apps/reference-web/src/app/core/reference-models",
+      "apps/reference-web/src/app/core/reference-web-api.service"
+    ],
+    "apps/reference-web/src/app/pages/tenant-selection.page.ts": [
+      "@angular/common",
+      "@angular/core",
+      "@stynx-web/angular-ui",
+      "apps/reference-web/src/app/core/reference-web-shell.service"
+    ],
+    "apps/reference-web/src/app/pages/trash.page.ts": [
+      "@angular/common",
+      "@angular/core",
+      "@stynx-web/angular-trash",
+      "apps/reference-web/src/app/core/reference-web-api.service"
+    ],
+    "apps/reference-web/src/app/pages/unauthorized.page.ts": [
+      "@angular/core",
+      "@stynx-web/angular-ui"
+    ],
+    "apps/reference-web/src/app/pages/work-item-detail.page.ts": [
+      "@angular/common",
+      "@angular/core",
+      "@angular/router",
+      "@stynx-web/angular-ui",
+      "apps/reference-web/src/app/core/reference-models",
+      "apps/reference-web/src/app/core/reference-web-api.service"
+    ],
+    "apps/reference-web/src/app/pages/work-item-form.page.ts": [
+      "@angular/common",
+      "@angular/core",
+      "@angular/forms",
+      "@angular/router",
+      "@stynx-web/angular-ui",
+      "apps/reference-web/src/app/core/reference-models",
+      "apps/reference-web/src/app/core/reference-web-api.service"
+    ],
+    "apps/reference-web/src/app/pages/work-items.page.ts": [
+      "@angular/common",
+      "@angular/core",
+      "@angular/router",
+      "@stynx-web/angular-ui",
+      "apps/reference-web/src/app/core/reference-models",
+      "apps/reference-web/src/app/core/reference-web-api.service"
+    ],
+    "apps/reference-web/src/app/reference-web.module.ts": [
+      "@angular/core",
+      "@angular/platform-browser",
+      "@angular/router",
+      "@stynx-web/angular",
+      "@stynx-web/angular-auth",
+      "@stynx-web/angular-i18n",
+      "@stynx-web/angular-storage",
+      "apps/reference-web/src/app/app.component",
+      "apps/reference-web/src/app/app.routes",
+      "apps/reference-web/src/app/core/reference-web-api.service",
+      "apps/reference-web/src/app/core/reference-web-dev-auth.backend",
+      "apps/reference-web/src/app/core/reference-web-dev-oidc.adapter",
+      "apps/reference-web/src/app/core/reference-web-i18n.service",
+      "apps/reference-web/src/app/core/reference-web-shell.service",
+      "apps/reference-web/src/environments/environment"
+    ],
+    "apps/reference-web/src/environments/environment.prod.ts": [],
+    "apps/reference-web/src/environments/environment.ts": [],
+    "apps/reference-web/src/main.ts": [
+      "@angular/compiler",
+      "@angular/core",
+      "@angular/platform-browser",
+      "@angular/router",
+      "@stynx-web/angular",
+      "@stynx-web/angular-auth",
+      "@stynx-web/angular-i18n",
+      "@stynx-web/angular-storage",
+      "apps/reference-web/src/app/app.component",
+      "apps/reference-web/src/app/app.routes",
+      "apps/reference-web/src/app/core/reference-web-api.service",
+      "apps/reference-web/src/app/core/reference-web-dev-auth.backend",
+      "apps/reference-web/src/app/core/reference-web-dev-oidc.adapter",
+      "apps/reference-web/src/app/core/reference-web-i18n.service",
+      "apps/reference-web/src/app/core/reference-web-shell.service",
+      "apps/reference-web/src/environments/environment",
+      "zone.js"
+    ],
+    "apps/reference-web/test/e2e/reference-web.spec.ts": ["@playwright/test"],
+    "infra/cdk/bin/stynx-env.ts": [
+      "aws-cdk-lib",
+      "infra/cdk/lib/compute-stack",
+      "infra/cdk/lib/config",
+      "infra/cdk/lib/data-stack",
+      "infra/cdk/lib/edge-stack",
+      "infra/cdk/lib/identity-stack",
+      "infra/cdk/lib/network-stack",
+      "infra/cdk/lib/observability-stack",
+      "infra/cdk/lib/storage-stack",
+      "source-map-support/register"
+    ],
+    "infra/cdk/lib/compute-stack.ts": [
+      "aws-cdk-lib",
+      "aws-cdk-lib/aws-certificatemanager",
+      "aws-cdk-lib/aws-ec2",
+      "aws-cdk-lib/aws-ecr",
+      "aws-cdk-lib/aws-ecs",
+      "aws-cdk-lib/aws-elasticloadbalancingv2",
+      "aws-cdk-lib/aws-kms",
+      "aws-cdk-lib/aws-logs",
+      "aws-cdk-lib/aws-s3",
+      "aws-cdk-lib/aws-secretsmanager",
+      "aws-cdk-lib/aws-wafv2",
+      "constructs",
+      "infra/cdk/lib/config"
+    ],
+    "infra/cdk/lib/config/dev.ts": ["infra/cdk/lib/config/index"],
+    "infra/cdk/lib/config/index.ts": [
+      "infra/cdk/lib/config/dev",
+      "infra/cdk/lib/config/prod",
+      "infra/cdk/lib/config/stage"
+    ],
+    "infra/cdk/lib/config/prod.ts": ["infra/cdk/lib/config/index"],
+    "infra/cdk/lib/config/stage.ts": ["infra/cdk/lib/config/index"],
+    "infra/cdk/lib/data-stack.ts": [
+      "aws-cdk-lib",
+      "aws-cdk-lib/aws-ec2",
+      "aws-cdk-lib/aws-ecs",
+      "aws-cdk-lib/aws-elasticache",
+      "aws-cdk-lib/aws-logs",
+      "aws-cdk-lib/aws-rds",
+      "aws-cdk-lib/aws-secretsmanager",
+      "constructs",
+      "infra/cdk/lib/config"
+    ],
+    "infra/cdk/lib/edge-stack.ts": [
+      "aws-cdk-lib",
+      "aws-cdk-lib/aws-certificatemanager",
+      "aws-cdk-lib/aws-cloudfront",
+      "aws-cdk-lib/aws-cloudfront-origins",
+      "aws-cdk-lib/aws-elasticloadbalancingv2",
+      "aws-cdk-lib/aws-route53",
+      "aws-cdk-lib/aws-route53-targets",
+      "aws-cdk-lib/aws-wafv2",
+      "constructs",
+      "infra/cdk/lib/config"
+    ],
+    "infra/cdk/lib/identity-stack.ts": [
+      "aws-cdk-lib",
+      "aws-cdk-lib/aws-cognito",
+      "constructs",
+      "infra/cdk/lib/config"
+    ],
+    "infra/cdk/lib/network-stack.ts": [
+      "aws-cdk-lib",
+      "aws-cdk-lib/aws-ec2",
+      "constructs",
+      "infra/cdk/lib/config"
+    ],
+    "infra/cdk/lib/observability-stack.ts": [
+      "aws-cdk-lib",
+      "aws-cdk-lib/aws-aps",
+      "aws-cdk-lib/aws-cloudwatch",
+      "aws-cdk-lib/aws-cloudwatch-actions",
+      "aws-cdk-lib/aws-ecs",
+      "aws-cdk-lib/aws-elasticache",
+      "aws-cdk-lib/aws-elasticloadbalancingv2",
+      "aws-cdk-lib/aws-grafana",
+      "aws-cdk-lib/aws-rds",
+      "aws-cdk-lib/aws-sns",
+      "aws-cdk-lib/aws-sns-subscriptions",
+      "constructs",
+      "infra/cdk/lib/config"
+    ],
+    "infra/cdk/lib/storage-stack.ts": [
+      "aws-cdk-lib",
+      "aws-cdk-lib/aws-kms",
+      "aws-cdk-lib/aws-s3",
+      "constructs",
+      "infra/cdk/lib/config"
+    ],
+    "infra/cdk/test/compute-stack.spec.ts": [
+      "aws-cdk-lib",
+      "aws-cdk-lib/assertions",
+      "infra/cdk/lib/compute-stack",
+      "infra/cdk/lib/config/dev",
+      "infra/cdk/lib/data-stack",
+      "infra/cdk/lib/identity-stack",
+      "infra/cdk/lib/network-stack",
+      "infra/cdk/lib/storage-stack"
+    ],
+    "infra/cdk/test/data-stack.spec.ts": [
+      "aws-cdk-lib",
+      "aws-cdk-lib/assertions",
+      "infra/cdk/lib/config/dev",
+      "infra/cdk/lib/data-stack",
+      "infra/cdk/lib/network-stack"
+    ],
+    "infra/cdk/test/edge-stack.spec.ts": [
+      "aws-cdk-lib",
+      "aws-cdk-lib/assertions",
+      "infra/cdk/lib/compute-stack",
+      "infra/cdk/lib/config/dev",
+      "infra/cdk/lib/data-stack",
+      "infra/cdk/lib/edge-stack",
+      "infra/cdk/lib/identity-stack",
+      "infra/cdk/lib/network-stack",
+      "infra/cdk/lib/storage-stack"
+    ],
+    "infra/cdk/test/identity-stack.spec.ts": [
+      "aws-cdk-lib",
+      "aws-cdk-lib/assertions",
+      "infra/cdk/lib/config/dev",
+      "infra/cdk/lib/identity-stack"
+    ],
+    "infra/cdk/test/network-stack.spec.ts": [
+      "aws-cdk-lib",
+      "aws-cdk-lib/assertions",
+      "infra/cdk/lib/config/dev",
+      "infra/cdk/lib/network-stack"
+    ],
+    "infra/cdk/test/observability-stack.spec.ts": [
+      "aws-cdk-lib",
+      "aws-cdk-lib/assertions",
+      "infra/cdk/lib/compute-stack",
+      "infra/cdk/lib/config/dev",
+      "infra/cdk/lib/data-stack",
+      "infra/cdk/lib/identity-stack",
+      "infra/cdk/lib/network-stack",
+      "infra/cdk/lib/observability-stack",
+      "infra/cdk/lib/storage-stack"
+    ],
+    "infra/cdk/test/storage-stack.spec.ts": [
+      "aws-cdk-lib",
+      "aws-cdk-lib/assertions",
+      "infra/cdk/lib/config/dev",
+      "infra/cdk/lib/storage-stack"
+    ],
+    "packages-web/angular-auth/src/auth.guard.ts": [
+      "@angular/core",
+      "@angular/router",
+      "packages-web/angular-auth/src/session.service",
+      "packages-web/angular-auth/src/tokens"
+    ],
+    "packages-web/angular-auth/src/has-permission.directive.ts": [
+      "@angular/core",
+      "packages-web/angular-auth/src/session.service",
+      "rxjs"
+    ],
+    "packages-web/angular-auth/src/http-auth.backend.ts": [
+      "@angular/common/http",
+      "@angular/core",
+      "@stynx-web/angular",
+      "packages-web/angular-auth/src/types",
+      "rxjs"
+    ],
+    "packages-web/angular-auth/src/index.ts": [
+      "packages-web/angular-auth/src/auth.guard",
+      "packages-web/angular-auth/src/has-permission.directive",
+      "packages-web/angular-auth/src/http-auth.backend",
+      "packages-web/angular-auth/src/jwt",
+      "packages-web/angular-auth/src/login-redirect.component",
+      "packages-web/angular-auth/src/logout-button.component",
+      "packages-web/angular-auth/src/oidc-client.adapter",
+      "packages-web/angular-auth/src/permission.guard",
+      "packages-web/angular-auth/src/session.service",
+      "packages-web/angular-auth/src/storage",
+      "packages-web/angular-auth/src/stynx-angular-auth.module",
+      "packages-web/angular-auth/src/tokens",
+      "packages-web/angular-auth/src/types"
+    ],
+    "packages-web/angular-auth/src/jwt.ts": [],
+    "packages-web/angular-auth/src/login-redirect.component.ts": [
+      "@angular/core",
+      "packages-web/angular-auth/src/session.service"
+    ],
+    "packages-web/angular-auth/src/logout-button.component.ts": [
+      "@angular/core",
+      "packages-web/angular-auth/src/session.service"
+    ],
+    "packages-web/angular-auth/src/oidc-client.adapter.ts": [
+      "@angular/core",
+      "angular-auth-oidc-client",
+      "packages-web/angular-auth/src/types",
+      "rxjs"
+    ],
+    "packages-web/angular-auth/src/permission.guard.ts": [
+      "@angular/core",
+      "@angular/router",
+      "packages-web/angular-auth/src/session.service",
+      "packages-web/angular-auth/src/tokens"
+    ],
+    "packages-web/angular-auth/src/session.service.ts": [
+      "@angular/core",
+      "@stynx-web/angular",
+      "@stynx-web/sdk",
+      "packages-web/angular-auth/src/jwt",
+      "packages-web/angular-auth/src/storage",
+      "packages-web/angular-auth/src/tokens",
+      "packages-web/angular-auth/src/types",
+      "rxjs"
+    ],
+    "packages-web/angular-auth/src/storage.ts": [],
+    "packages-web/angular-auth/src/stynx-angular-auth.module.ts": [
+      "@angular/common",
+      "@angular/common/http",
+      "@angular/core",
+      "@stynx-web/angular",
+      "angular-auth-oidc-client",
+      "packages-web/angular-auth/src/has-permission.directive",
+      "packages-web/angular-auth/src/http-auth.backend",
+      "packages-web/angular-auth/src/login-redirect.component",
+      "packages-web/angular-auth/src/logout-button.component",
+      "packages-web/angular-auth/src/oidc-client.adapter",
+      "packages-web/angular-auth/src/session.service",
+      "packages-web/angular-auth/src/tokens",
+      "packages-web/angular-auth/src/types"
+    ],
+    "packages-web/angular-auth/src/tokens.ts": [
+      "@angular/core",
+      "@stynx-web/sdk",
+      "packages-web/angular-auth/src/types"
+    ],
+    "packages-web/angular-auth/src/types.ts": ["angular-auth-oidc-client"],
+    "packages-web/angular-auth/test/angular-auth.spec.ts": [
+      "@angular/compiler",
+      "@angular/core",
+      "@angular/router",
+      "@stynx-web/angular",
+      "packages-web/angular-auth/src/auth.guard",
+      "packages-web/angular-auth/src/has-permission.directive",
+      "packages-web/angular-auth/src/jwt",
+      "packages-web/angular-auth/src/permission.guard",
+      "packages-web/angular-auth/src/session.service",
+      "packages-web/angular-auth/src/storage",
+      "packages-web/angular-auth/src/tokens",
+      "packages-web/angular-auth/src/types"
+    ],
+    "packages-web/angular-i18n/src/i18n.service.ts": [
+      "@angular/core",
+      "packages-web/angular-i18n/src/tokens",
+      "packages-web/angular-i18n/src/types"
+    ],
+    "packages-web/angular-i18n/src/index.ts": [
+      "packages-web/angular-i18n/src/i18n.service",
+      "packages-web/angular-i18n/src/locale-switcher.component",
+      "packages-web/angular-i18n/src/stynx-i18n.module",
+      "packages-web/angular-i18n/src/tokens",
+      "packages-web/angular-i18n/src/translate.pipe",
+      "packages-web/angular-i18n/src/types"
+    ],
+    "packages-web/angular-i18n/src/locale-switcher.component.ts": [
+      "@angular/core",
+      "packages-web/angular-i18n/src/i18n.service"
+    ],
+    "packages-web/angular-i18n/src/stynx-i18n.module.ts": [
+      "@angular/common",
+      "@angular/core",
+      "packages-web/angular-i18n/src/i18n.service",
+      "packages-web/angular-i18n/src/locale-switcher.component",
+      "packages-web/angular-i18n/src/tokens",
+      "packages-web/angular-i18n/src/types"
+    ],
+    "packages-web/angular-i18n/src/tokens.ts": [
+      "@angular/core",
+      "packages-web/angular-i18n/src/types"
+    ],
+    "packages-web/angular-i18n/src/translate.pipe.ts": [
+      "@angular/core",
+      "packages-web/angular-i18n/src/i18n.service"
+    ],
+    "packages-web/angular-i18n/src/types.ts": [],
+    "packages-web/angular-i18n/test/angular-i18n.spec.ts": [
+      "@angular/compiler",
+      "packages-web/angular-i18n/src/i18n.service"
+    ],
+    "packages-web/angular-profile/src/index.ts": [
+      "packages-web/angular-profile/src/preferences-form.component",
+      "packages-web/angular-profile/src/profile-form.component",
+      "packages-web/angular-profile/src/types"
+    ],
+    "packages-web/angular-profile/src/preferences-form.component.ts": [
+      "@angular/core",
+      "@angular/forms",
+      "packages-web/angular-profile/src/types"
+    ],
+    "packages-web/angular-profile/src/profile-form.component.ts": [
+      "@angular/core",
+      "@angular/forms",
+      "packages-web/angular-profile/src/types"
+    ],
+    "packages-web/angular-profile/src/types.ts": [],
+    "packages-web/angular-profile/test/angular-profile.spec.ts": [
+      "@angular/compiler",
+      "@angular/forms",
+      "packages-web/angular-profile/src/preferences-form.component",
+      "packages-web/angular-profile/src/profile-form.component"
+    ],
+    "packages-web/angular-sessions/src/active-sessions.component.ts": [
+      "@angular/core",
+      "@stynx-web/angular-auth",
+      "@stynx-web/angular-ui",
+      "packages-web/angular-sessions/src/types"
+    ],
+    "packages-web/angular-sessions/src/index.ts": [
+      "packages-web/angular-sessions/src/active-sessions.component",
+      "packages-web/angular-sessions/src/types"
+    ],
+    "packages-web/angular-sessions/src/types.ts": [],
+    "packages-web/angular-sessions/test/angular-sessions.spec.ts": [
+      "@angular/compiler",
+      "@jest/globals",
+      "packages-web/angular-sessions/src/active-sessions.component",
+      "packages-web/angular-sessions/src/types"
+    ],
+    "packages-web/angular-storage/src/document-upload.component.ts": [
+      "@angular/core",
+      "@stynx-web/angular-ui",
+      "packages-web/angular-storage/src/document.service",
+      "packages-web/angular-storage/src/tokens",
+      "packages-web/angular-storage/src/types"
+    ],
+    "packages-web/angular-storage/src/document.service.ts": [
+      "@angular/common/http",
+      "@angular/core",
+      "@stynx-web/angular",
+      "packages-web/angular-storage/src/types",
+      "rxjs"
+    ],
+    "packages-web/angular-storage/src/index.ts": [
+      "packages-web/angular-storage/src/document-upload.component",
+      "packages-web/angular-storage/src/document.service",
+      "packages-web/angular-storage/src/tokens",
+      "packages-web/angular-storage/src/types",
+      "packages-web/angular-storage/src/xhr-upload.executor"
+    ],
+    "packages-web/angular-storage/src/tokens.ts": [
+      "@angular/core",
+      "packages-web/angular-storage/src/types"
+    ],
+    "packages-web/angular-storage/src/types.ts": [],
+    "packages-web/angular-storage/src/xhr-upload.executor.ts": [
+      "@angular/core",
+      "packages-web/angular-storage/src/types"
+    ],
+    "packages-web/angular-storage/test/angular-storage.spec.ts": [
+      "@angular/compiler",
+      "@jest/globals",
+      "packages-web/angular-storage/src/document-upload.component",
+      "packages-web/angular-storage/src/document.service",
+      "rxjs"
+    ],
+    "packages-web/angular-tenancy/src/index.ts": [
+      "packages-web/angular-tenancy/src/provide-tenancy",
+      "packages-web/angular-tenancy/src/tenant-context.service",
+      "packages-web/angular-tenancy/src/tenant-switcher.component",
+      "packages-web/angular-tenancy/src/tenant.interceptor",
+      "packages-web/angular-tenancy/src/tokens",
+      "packages-web/angular-tenancy/src/types"
+    ],
+    "packages-web/angular-tenancy/src/provide-tenancy.ts": [
+      "@angular/common/http",
+      "@angular/core",
+      "packages-web/angular-tenancy/src/tenant-context.service",
+      "packages-web/angular-tenancy/src/tenant.interceptor",
+      "packages-web/angular-tenancy/src/tokens",
+      "packages-web/angular-tenancy/src/types"
+    ],
+    "packages-web/angular-tenancy/src/tenant-context.service.ts": [
+      "@angular/core",
+      "packages-web/angular-tenancy/src/tokens",
+      "packages-web/angular-tenancy/src/types",
+      "rxjs"
+    ],
+    "packages-web/angular-tenancy/src/tenant-switcher.component.ts": [
+      "@angular/common",
+      "@angular/core",
+      "packages-web/angular-tenancy/src/tenant-context.service",
+      "packages-web/angular-tenancy/src/types"
+    ],
+    "packages-web/angular-tenancy/src/tenant.interceptor.ts": [
+      "@angular/common/http",
+      "@angular/core",
+      "packages-web/angular-tenancy/src/tenant-context.service",
+      "rxjs"
+    ],
+    "packages-web/angular-tenancy/src/tokens.ts": [
+      "@angular/core",
+      "packages-web/angular-tenancy/src/types"
+    ],
+    "packages-web/angular-tenancy/src/types.ts": [],
+    "packages-web/angular-tenancy/test/angular-tenancy.spec.ts": [
+      "@angular/compiler",
+      "packages-web/angular-tenancy/src/tenant-context.service",
+      "packages-web/angular-tenancy/src/tenant.interceptor",
+      "rxjs"
+    ],
+    "packages-web/angular-trash/src/index.ts": [
+      "packages-web/angular-trash/src/trash-list.component",
+      "packages-web/angular-trash/src/types"
+    ],
+    "packages-web/angular-trash/src/trash-list.component.ts": [
+      "@angular/core",
+      "@stynx-web/angular-auth",
+      "@stynx-web/angular-ui",
+      "packages-web/angular-trash/src/types"
+    ],
+    "packages-web/angular-trash/src/types.ts": [],
+    "packages-web/angular-trash/test/angular-trash.spec.ts": [
+      "@angular/compiler",
+      "@jest/globals",
+      "packages-web/angular-trash/src/trash-list.component",
+      "packages-web/angular-trash/src/types"
+    ],
+    "packages-web/angular-ui/src/banner.component.ts": ["@angular/core"],
+    "packages-web/angular-ui/src/confirm-dialog.component.ts": ["@angular/core"],
+    "packages-web/angular-ui/src/index.ts": [
+      "@stynx-web/angular",
+      "packages-web/angular-ui/src/banner.component",
+      "packages-web/angular-ui/src/confirm-dialog.component",
+      "packages-web/angular-ui/src/loading-spinner.component",
+      "packages-web/angular-ui/src/pagination.component",
+      "packages-web/angular-ui/src/table.component",
+      "packages-web/angular-ui/src/toast-container.component",
+      "packages-web/angular-ui/src/toast.service"
+    ],
+    "packages-web/angular-ui/src/loading-spinner.component.ts": ["@angular/core"],
+    "packages-web/angular-ui/src/pagination.component.ts": ["@angular/core"],
+    "packages-web/angular-ui/src/table.component.ts": ["@angular/core"],
+    "packages-web/angular-ui/src/toast-container.component.ts": [
+      "@angular/core",
+      "packages-web/angular-ui/src/toast.service"
+    ],
+    "packages-web/angular-ui/src/toast.service.ts": ["@angular/core"],
+    "packages-web/angular-ui/test/angular-ui.spec.ts": [
+      "@angular/compiler",
+      "packages-web/angular-ui/src/pagination.component",
+      "packages-web/angular-ui/src/toast.service"
+    ],
+    "packages-web/angular/src/auth.interceptor.ts": [
+      "@angular/common/http",
+      "@angular/core",
+      "@stynx-web/sdk",
+      "packages-web/angular/src/tokens",
+      "packages-web/angular/src/types",
+      "rxjs"
+    ],
+    "packages-web/angular/src/empty-state.component.ts": ["@angular/core"],
+    "packages-web/angular/src/error-banner.service.ts": [
+      "@angular/core",
+      "packages-web/angular/src/types",
+      "rxjs"
+    ],
+    "packages-web/angular/src/error.interceptor.ts": [
+      "@angular/common/http",
+      "@angular/core",
+      "@stynx-web/sdk",
+      "packages-web/angular/src/error-banner.service",
+      "rxjs"
+    ],
+    "packages-web/angular/src/index.ts": [
+      "packages-web/angular/src/auth.interceptor",
+      "packages-web/angular/src/empty-state.component",
+      "packages-web/angular/src/error-banner.service",
+      "packages-web/angular/src/error.interceptor",
+      "packages-web/angular/src/request-id",
+      "packages-web/angular/src/request-id.interceptor",
+      "packages-web/angular/src/stynx-angular.module",
+      "packages-web/angular/src/tenant-context.service",
+      "packages-web/angular/src/tenant.interceptor",
+      "packages-web/angular/src/toast.service",
+      "packages-web/angular/src/tokens",
+      "packages-web/angular/src/types"
+    ],
+    "packages-web/angular/src/request-id.interceptor.ts": [
+      "@angular/common/http",
+      "@angular/core",
+      "packages-web/angular/src/request-id",
+      "rxjs"
+    ],
+    "packages-web/angular/src/request-id.ts": [],
+    "packages-web/angular/src/stynx-angular.module.ts": [
+      "@angular/common",
+      "@angular/common/http",
+      "@angular/core",
+      "@stynx-web/angular-tenancy",
+      "packages-web/angular/src/auth.interceptor",
+      "packages-web/angular/src/empty-state.component",
+      "packages-web/angular/src/error-banner.service",
+      "packages-web/angular/src/error.interceptor",
+      "packages-web/angular/src/request-id.interceptor",
+      "packages-web/angular/src/toast.service",
+      "packages-web/angular/src/tokens",
+      "packages-web/angular/src/types"
+    ],
+    "packages-web/angular/src/tenant-context.service.ts": ["@stynx-web/angular-tenancy"],
+    "packages-web/angular/src/tenant.interceptor.ts": ["@stynx-web/angular-tenancy"],
+    "packages-web/angular/src/toast.service.ts": [
+      "@angular/core",
+      "packages-web/angular/src/types",
+      "rxjs"
+    ],
+    "packages-web/angular/src/tokens.ts": [
+      "@angular/core",
+      "@stynx-web/sdk",
+      "packages-web/angular/src/types"
+    ],
+    "packages-web/angular/src/types.ts": ["@stynx-web/angular-tenancy", "@stynx-web/sdk"],
+    "packages-web/angular/test/stynx-angular.spec.ts": [
+      "@angular/common/http",
+      "@angular/compiler",
+      "@stynx-web/sdk",
+      "packages-web/angular/src/auth.interceptor",
+      "packages-web/angular/src/error-banner.service",
+      "packages-web/angular/src/error.interceptor",
+      "packages-web/angular/src/request-id",
+      "packages-web/angular/src/request-id.interceptor",
+      "packages-web/angular/src/tenant-context.service",
+      "packages-web/angular/src/tenant.interceptor",
+      "rxjs"
+    ],
+    "packages-web/sdk/src/api-client.ts": [
+      "packages-web/sdk/src/http",
+      "packages-web/sdk/src/session-manager"
+    ],
+    "packages-web/sdk/src/auth-provider.ts": [],
+    "packages-web/sdk/src/auth.ts": [],
+    "packages-web/sdk/src/authorization.ts": ["packages-web/sdk/src/auth"],
+    "packages-web/sdk/src/client.ts": [
+      "packages-web/sdk/src/http",
+      "packages-web/sdk/src/transport"
+    ],
+    "packages-web/sdk/src/cognito.ts": [],
+    "packages-web/sdk/src/errors.ts": [],
+    "packages-web/sdk/src/http.ts": [],
+    "packages-web/sdk/src/index.ts": [
+      "packages-web/sdk/src/api-client",
+      "packages-web/sdk/src/auth",
+      "packages-web/sdk/src/auth-provider",
+      "packages-web/sdk/src/authorization",
+      "packages-web/sdk/src/client",
+      "packages-web/sdk/src/cognito",
+      "packages-web/sdk/src/errors",
+      "packages-web/sdk/src/generated",
+      "packages-web/sdk/src/http",
+      "packages-web/sdk/src/jwt",
+      "packages-web/sdk/src/session-manager",
+      "packages-web/sdk/src/tenant-provider",
+      "packages-web/sdk/src/token-store",
+      "packages-web/sdk/src/transport"
+    ],
+    "packages-web/sdk/src/jwt.ts": [],
+    "packages-web/sdk/src/session-manager.ts": [
+      "packages-web/sdk/src/auth",
+      "packages-web/sdk/src/jwt"
+    ],
+    "packages-web/sdk/src/tenant-provider.ts": ["packages-web/sdk/src/auth-provider"],
+    "packages-web/sdk/src/token-store.ts": ["packages-web/sdk/src/auth"],
+    "packages-web/sdk/src/transport.ts": [
+      "packages-web/sdk/src/auth-provider",
+      "packages-web/sdk/src/errors",
+      "packages-web/sdk/src/http",
+      "packages-web/sdk/src/tenant-provider"
+    ],
+    "packages-web/sdk/test/transport.spec.ts": [
+      "packages-web/sdk/src/auth-provider",
+      "packages-web/sdk/src/client",
+      "packages-web/sdk/src/errors",
+      "packages-web/sdk/src/http",
+      "packages-web/sdk/src/tenant-provider"
+    ],
+    "packages/audit/src/audit.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "packages/audit/src/audit.service",
+      "packages/audit/src/types"
+    ],
+    "packages/audit/src/audit.module.ts": [
+      "@nestjs/common",
+      "@stynx/core",
+      "packages/audit/src/audit.controller",
+      "packages/audit/src/audit.service",
+      "packages/audit/src/tokens",
+      "packages/audit/src/types",
+      "zod"
+    ],
+    "packages/audit/src/audit.service.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/data",
+      "node:crypto",
+      "node:fs/promises",
+      "node:os",
+      "node:path",
+      "packages/audit/src/retention",
+      "packages/audit/src/tokens",
+      "packages/audit/src/types"
+    ],
+    "packages/audit/src/index.ts": [
+      "packages/audit/src/audit.controller",
+      "packages/audit/src/audit.module",
+      "packages/audit/src/audit.service",
+      "packages/audit/src/retention",
+      "packages/audit/src/sql-adapter",
+      "packages/audit/src/test-helpers",
+      "packages/audit/src/tokens",
+      "packages/audit/src/types"
+    ],
+    "packages/audit/src/retention.ts": ["packages/audit/src/types"],
+    "packages/audit/src/sql-adapter.ts": ["@stynx/contracts"],
+    "packages/audit/src/test-helpers.ts": [],
+    "packages/audit/src/tokens.ts": [],
+    "packages/audit/src/types.ts": [],
+    "packages/audit/test/integration/audit.module.spec.ts": [
+      "@nestjs/testing",
+      "@stynx/core",
+      "@stynx/data",
+      "node:crypto",
+      "packages/audit/src/audit.module",
+      "packages/audit/src/audit.service",
+      "packages/audit/src/test-helpers",
+      "packages/data/test/support/postgres",
+      "pg"
+    ],
+    "packages/audit/test/support/auth-stub.ts": ["@nestjs/common"],
+    "packages/audit/test/unit/chain.spec.ts": [
+      "@nestjs/core",
+      "node:crypto",
+      "packages/audit/src/audit.service"
+    ],
+    "packages/audit/test/unit/retention.spec.ts": ["packages/audit/src/retention"],
+    "packages/auth/src/actor-context.interceptor.ts": [
+      "@nestjs/common",
+      "@stynx/core",
+      "packages/auth/src/types",
+      "rxjs"
+    ],
+    "packages/auth/src/auth.controller.ts": [
+      "@nestjs/common",
+      "@stynx/idempotency",
+      "packages/auth/src/auth.service",
+      "packages/auth/src/decorators",
+      "packages/auth/src/permission.guard",
+      "packages/auth/src/stynx-auth.guard",
+      "packages/auth/src/types",
+      "packages/auth/src/utils"
+    ],
+    "packages/auth/src/auth.module.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/core",
+      "packages/auth/src/actor-context.interceptor",
+      "packages/auth/src/auth.controller",
+      "packages/auth/src/auth.service",
+      "packages/auth/src/cognito-jwt.validator",
+      "packages/auth/src/effective-hash-computer",
+      "packages/auth/src/permission-cache",
+      "packages/auth/src/permission-cache-metrics",
+      "packages/auth/src/permission-query.service",
+      "packages/auth/src/permission.guard",
+      "packages/auth/src/redis-permission-cache-backend",
+      "packages/auth/src/stynx-auth.guard",
+      "packages/auth/src/stynx-jwt.validator",
+      "packages/auth/src/tokens",
+      "packages/auth/src/types",
+      "zod"
+    ],
+    "packages/auth/src/auth.service.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/core",
+      "@stynx/data",
+      "@stynx/sessions",
+      "node:crypto",
+      "packages/auth/src/cognito-jwt.validator",
+      "packages/auth/src/effective-hash-computer",
+      "packages/auth/src/permission-cache",
+      "packages/auth/src/permission-query.service",
+      "packages/auth/src/types"
+    ],
+    "packages/auth/src/cognito-admin.adapter.ts": [
+      "@aws-sdk/client-cognito-identity-provider",
+      "@aws-sdk/credential-providers",
+      "@aws-sdk/types",
+      "@stynx/contracts"
+    ],
+    "packages/auth/src/cognito-jwt.validator.ts": [
+      "@nestjs/common",
+      "packages/auth/src/tokens",
+      "packages/auth/src/types",
+      "packages/auth/src/utils"
+    ],
+    "packages/auth/src/cognito-token-verifier.ts": ["@stynx/contracts", "jose", "node:url"],
+    "packages/auth/src/decorators.ts": ["@nestjs/common"],
+    "packages/auth/src/doctor.ts": ["packages/auth/src/effective-hash-computer"],
+    "packages/auth/src/effective-hash-computer.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/data",
+      "packages/auth/src/utils"
+    ],
+    "packages/auth/src/in-memory-permission-cache-backend.ts": ["packages/auth/src/types"],
+    "packages/auth/src/index.ts": [
+      "packages/auth/src/actor-context.interceptor",
+      "packages/auth/src/auth.controller",
+      "packages/auth/src/auth.module",
+      "packages/auth/src/auth.service",
+      "packages/auth/src/cognito-admin.adapter",
+      "packages/auth/src/cognito-jwt.validator",
+      "packages/auth/src/cognito-token-verifier",
+      "packages/auth/src/decorators",
+      "packages/auth/src/doctor",
+      "packages/auth/src/effective-hash-computer",
+      "packages/auth/src/in-memory-permission-cache-backend",
+      "packages/auth/src/permission-cache",
+      "packages/auth/src/permission-cache-metrics",
+      "packages/auth/src/permission-query.service",
+      "packages/auth/src/permission.guard",
+      "packages/auth/src/redis-permission-cache-backend",
+      "packages/auth/src/stynx-auth.guard",
+      "packages/auth/src/stynx-jwt.validator",
+      "packages/auth/src/tokens",
+      "packages/auth/src/types"
+    ],
+    "packages/auth/src/permission-cache-metrics.ts": ["@nestjs/common"],
+    "packages/auth/src/permission-cache.ts": [
+      "@nestjs/common",
+      "packages/auth/src/permission-cache-metrics",
+      "packages/auth/src/permission-query.service",
+      "packages/auth/src/tokens",
+      "packages/auth/src/types"
+    ],
+    "packages/auth/src/permission-query.service.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/core",
+      "@stynx/data",
+      "packages/auth/src/utils"
+    ],
+    "packages/auth/src/permission.guard.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "packages/auth/src/decorators",
+      "packages/auth/src/types"
+    ],
+    "packages/auth/src/redis-permission-cache-backend.ts": [
+      "@nestjs/common",
+      "packages/auth/src/tokens",
+      "packages/auth/src/types",
+      "redis"
+    ],
+    "packages/auth/src/stynx-auth.guard.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/sessions",
+      "packages/auth/src/decorators",
+      "packages/auth/src/permission-cache",
+      "packages/auth/src/stynx-jwt.validator",
+      "packages/auth/src/types",
+      "packages/auth/src/utils"
+    ],
+    "packages/auth/src/stynx-jwt.validator.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/sessions",
+      "packages/auth/src/tokens",
+      "packages/auth/src/types",
+      "packages/auth/src/utils"
+    ],
+    "packages/auth/src/tokens.ts": [],
+    "packages/auth/src/types.ts": ["@stynx/contracts"],
+    "packages/auth/src/utils.ts": ["node:crypto"],
+    "packages/auth/test/integration/auth.module.spec.ts": [
+      "@nestjs/common",
+      "@nestjs/testing",
+      "@stynx/core",
+      "@stynx/data",
+      "@stynx/sessions",
+      "node:crypto",
+      "packages/auth/src/auth.module",
+      "packages/auth/src/auth.service",
+      "packages/auth/src/cognito-jwt.validator",
+      "packages/auth/src/decorators",
+      "packages/auth/src/effective-hash-computer",
+      "packages/auth/src/in-memory-permission-cache-backend",
+      "packages/auth/src/permission-cache",
+      "packages/auth/src/permission.guard",
+      "packages/auth/src/redis-permission-cache-backend",
+      "packages/auth/src/stynx-auth.guard",
+      "packages/auth/src/tokens",
+      "packages/data/test/support/postgres",
+      "pg",
+      "supertest"
+    ],
+    "packages/auth/test/unit/auth.controller.spec.ts": [
+      "@nestjs/common",
+      "packages/auth/src/auth.controller"
+    ],
+    "packages/auth/test/unit/auth.module.spec.ts": [
+      "@nestjs/core",
+      "packages/auth/src/actor-context.interceptor",
+      "packages/auth/src/auth.controller",
+      "packages/auth/src/auth.module",
+      "packages/auth/src/auth.service",
+      "packages/auth/src/cognito-jwt.validator",
+      "packages/auth/src/effective-hash-computer",
+      "packages/auth/src/permission-cache",
+      "packages/auth/src/permission-cache-metrics",
+      "packages/auth/src/permission-query.service",
+      "packages/auth/src/permission.guard",
+      "packages/auth/src/redis-permission-cache-backend",
+      "packages/auth/src/stynx-auth.guard",
+      "packages/auth/src/stynx-jwt.validator",
+      "packages/auth/src/tokens"
+    ],
+    "packages/auth/test/unit/auth.runtime.spec.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "packages/auth/src/actor-context.interceptor",
+      "packages/auth/src/decorators",
+      "packages/auth/src/in-memory-permission-cache-backend",
+      "packages/auth/src/permission-cache-metrics",
+      "packages/auth/src/permission.guard",
+      "packages/auth/src/stynx-auth.guard",
+      "packages/auth/src/utils"
+    ],
+    "packages/auth/test/unit/auth.service.spec.ts": [
+      "@nestjs/core",
+      "@stynx/core",
+      "@stynx/sessions",
+      "packages/auth/src/auth.service"
+    ],
+    "packages/auth/test/unit/doctor.spec.ts": ["packages/auth/src/doctor"],
+    "packages/auth/test/unit/effective-hash-computer.spec.ts": [
+      "@nestjs/core",
+      "packages/auth/src/effective-hash-computer"
+    ],
+    "packages/auth/test/unit/permission-cache.spec.ts": [
+      "packages/auth/src/in-memory-permission-cache-backend",
+      "packages/auth/src/permission-cache",
+      "packages/auth/src/permission-cache-metrics",
+      "packages/auth/src/permission-query.service"
+    ],
+    "packages/auth/test/unit/permission-query.service.spec.ts": [
+      "@nestjs/core",
+      "@stynx/core",
+      "@stynx/data",
+      "packages/auth/src/permission-query.service"
+    ],
+    "packages/auth/test/unit/stynx-auth.guard.spec.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/sessions",
+      "packages/auth/src/decorators",
+      "packages/auth/src/stynx-auth.guard"
+    ],
+    "packages/auth/test/unit/utils.spec.ts": ["packages/auth/src/utils"],
+    "packages/auth/test/unit/validators.spec.ts": [
+      "@nestjs/core",
+      "node:crypto",
+      "packages/auth/src/cognito-jwt.validator",
+      "packages/auth/src/stynx-jwt.validator",
+      "packages/auth/src/utils"
+    ],
+    "packages/backend/src/audit/audit.interceptor.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/contracts",
+      "packages/backend/src/audit/constants",
+      "packages/backend/src/audit/decorators",
+      "packages/backend/src/audit/redaction-policy",
+      "packages/backend/src/common/request-context",
+      "rxjs"
+    ],
+    "packages/backend/src/audit/audit.module.ts": [
+      "@nestjs/common",
+      "@stynx/contracts",
+      "packages/backend/src/audit/audit.interceptor",
+      "packages/backend/src/audit/constants",
+      "packages/backend/src/audit/redaction-policy"
+    ],
+    "packages/backend/src/audit/constants.ts": [],
+    "packages/backend/src/audit/decorators.ts": [
+      "@nestjs/common",
+      "packages/backend/src/audit/constants"
+    ],
+    "packages/backend/src/audit/redaction-policy.ts": [
+      "@stynx/contracts",
+      "packages/backend/src/common/request-context"
+    ],
+    "packages/backend/src/auth/auth-context.guard.ts": [
+      "@nestjs/common",
+      "@stynx/contracts",
+      "packages/backend/src/auth/constants",
+      "packages/backend/src/auth/default-principal-mapper",
+      "packages/backend/src/common/request-context"
+    ],
+    "packages/backend/src/auth/auth.module.ts": [
+      "@nestjs/common",
+      "@stynx/contracts",
+      "packages/backend/src/auth/auth-context.guard",
+      "packages/backend/src/auth/constants"
+    ],
+    "packages/backend/src/auth/claim-first-tenant-entitlement.policy.ts": ["@stynx/contracts"],
+    "packages/backend/src/auth/constants.ts": [],
+    "packages/backend/src/auth/current-principal.decorator.ts": [
+      "@nestjs/common",
+      "@stynx/contracts",
+      "packages/backend/src/common/request-context"
+    ],
+    "packages/backend/src/auth/default-principal-mapper.ts": ["@stynx/contracts"],
+    "packages/backend/src/auth/required-tenant-header.resolver.ts": [
+      "@nestjs/common",
+      "@stynx/contracts"
+    ],
+    "packages/backend/src/auth/sql-tenant-entitlement.fallback.ts": [
+      "@stynx/contracts",
+      "packages/backend/src/auth/claim-first-tenant-entitlement.policy"
+    ],
+    "packages/backend/src/authorization/authorization.guard.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/contracts",
+      "packages/backend/src/authorization/constants",
+      "packages/backend/src/authorization/decorators",
+      "packages/backend/src/authorization/default-policy-evaluator",
+      "packages/backend/src/common/request-context"
+    ],
+    "packages/backend/src/authorization/authorization.module.ts": [
+      "@nestjs/common",
+      "@stynx/contracts",
+      "packages/backend/src/authorization/authorization.guard",
+      "packages/backend/src/authorization/constants"
+    ],
+    "packages/backend/src/authorization/constants.ts": [],
+    "packages/backend/src/authorization/decorators.ts": [
+      "@nestjs/common",
+      "@stynx/contracts",
+      "packages/backend/src/authorization/constants"
+    ],
+    "packages/backend/src/authorization/default-policy-evaluator.ts": ["@stynx/contracts"],
+    "packages/backend/src/common/request-context.ts": ["@stynx/contracts"],
+    "packages/backend/src/db-context/constants.ts": [],
+    "packages/backend/src/db-context/db-context.interceptor.ts": [
+      "@nestjs/common",
+      "@stynx/contracts",
+      "packages/backend/src/common/request-context",
+      "packages/backend/src/db-context/constants",
+      "packages/backend/src/db-context/request-db-client-lifecycle",
+      "rxjs"
+    ],
+    "packages/backend/src/db-context/db-context.module.ts": [
+      "@nestjs/common",
+      "@stynx/contracts",
+      "packages/backend/src/db-context/constants",
+      "packages/backend/src/db-context/db-context.interceptor",
+      "packages/backend/src/db-context/pg-session-db-context.applier",
+      "packages/backend/src/db-context/request-db-client-lifecycle"
+    ],
+    "packages/backend/src/db-context/pg-session-db-context.applier.ts": ["@stynx/contracts"],
+    "packages/backend/src/db-context/request-db-client-lifecycle.ts": [
+      "packages/backend/src/common/request-context"
+    ],
+    "packages/backend/src/db-context/tenant-lifecycle.middleware.ts": [
+      "@nestjs/common",
+      "packages/backend/src/common/request-context",
+      "packages/backend/src/db-context/request-db-client-lifecycle"
+    ],
+    "packages/backend/src/idempotency/constants.ts": [],
+    "packages/backend/src/idempotency/idempotency.interceptor.ts": [
+      "@nestjs/common",
+      "packages/backend/src/common/request-context",
+      "packages/backend/src/idempotency/types",
+      "rxjs"
+    ],
+    "packages/backend/src/idempotency/idempotency.module.ts": [
+      "@nestjs/common",
+      "packages/backend/src/idempotency/constants",
+      "packages/backend/src/idempotency/idempotency.interceptor",
+      "packages/backend/src/idempotency/types"
+    ],
+    "packages/backend/src/idempotency/pg-idempotency.store.ts": [
+      "packages/backend/src/idempotency/types"
+    ],
+    "packages/backend/src/idempotency/types.ts": ["packages/backend/src/common/request-context"],
+    "packages/backend/src/identity-admin/constants.ts": [],
+    "packages/backend/src/identity-admin/identity-admin.module.ts": [
+      "@nestjs/common",
+      "@stynx/contracts",
+      "packages/backend/src/identity-admin/constants",
+      "packages/backend/src/identity-admin/identity-admin.service",
+      "packages/backend/src/identity-admin/integration-facades"
+    ],
+    "packages/backend/src/identity-admin/identity-admin.service.ts": [
+      "@nestjs/common",
+      "@stynx/contracts",
+      "packages/backend/src/identity-admin/constants"
+    ],
+    "packages/backend/src/identity-admin/integration-facades.ts": [
+      "@nestjs/common",
+      "@stynx/contracts",
+      "packages/backend/src/identity-admin/identity-admin.service"
+    ],
+    "packages/backend/src/identity-admin/pg-local-sync.adapter.ts": ["@stynx/contracts"],
+    "packages/backend/src/index.ts": [
+      "@stynx/contracts",
+      "@stynx/idempotency",
+      "@stynx/ratelimit",
+      "packages/backend/src/audit/audit.interceptor",
+      "packages/backend/src/audit/audit.module",
+      "packages/backend/src/audit/constants",
+      "packages/backend/src/audit/decorators",
+      "packages/backend/src/audit/redaction-policy",
+      "packages/backend/src/auth/auth-context.guard",
+      "packages/backend/src/auth/auth.module",
+      "packages/backend/src/auth/claim-first-tenant-entitlement.policy",
+      "packages/backend/src/auth/constants",
+      "packages/backend/src/auth/current-principal.decorator",
+      "packages/backend/src/auth/default-principal-mapper",
+      "packages/backend/src/auth/required-tenant-header.resolver",
+      "packages/backend/src/auth/sql-tenant-entitlement.fallback",
+      "packages/backend/src/authorization/authorization.guard",
+      "packages/backend/src/authorization/authorization.module",
+      "packages/backend/src/authorization/constants",
+      "packages/backend/src/authorization/decorators",
+      "packages/backend/src/authorization/default-policy-evaluator",
+      "packages/backend/src/common/request-context",
+      "packages/backend/src/db-context/constants",
+      "packages/backend/src/db-context/db-context.interceptor",
+      "packages/backend/src/db-context/db-context.module",
+      "packages/backend/src/db-context/pg-session-db-context.applier",
+      "packages/backend/src/db-context/request-db-client-lifecycle",
+      "packages/backend/src/db-context/tenant-lifecycle.middleware",
+      "packages/backend/src/identity-admin/constants",
+      "packages/backend/src/identity-admin/identity-admin.module",
+      "packages/backend/src/identity-admin/identity-admin.service",
+      "packages/backend/src/identity-admin/integration-facades",
+      "packages/backend/src/identity-admin/pg-local-sync.adapter",
+      "packages/backend/src/pipeline/platform-pipeline.module",
+      "packages/backend/src/sla/constants",
+      "packages/backend/src/sla/default-sla-category.resolver",
+      "packages/backend/src/sla/logger-sla-event.sink",
+      "packages/backend/src/sla/sla-monitor.interceptor",
+      "packages/backend/src/sla/sla.module",
+      "packages/backend/src/sla/types",
+      "packages/backend/src/storage/constants",
+      "packages/backend/src/storage/storage.module"
+    ],
+    "packages/backend/src/pipeline/platform-pipeline.module.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/idempotency",
+      "@stynx/ratelimit",
+      "packages/backend/src/sla/sla-monitor.interceptor",
+      "packages/backend/src/sla/sla.module"
+    ],
+    "packages/backend/src/rate-limit/constants.ts": [],
+    "packages/backend/src/rate-limit/pg-rate-limit.store.ts": [
+      "packages/backend/src/rate-limit/types"
+    ],
+    "packages/backend/src/rate-limit/rate-limit.guard.ts": [
+      "@nestjs/common",
+      "packages/backend/src/common/request-context",
+      "packages/backend/src/rate-limit/types"
+    ],
+    "packages/backend/src/rate-limit/rate-limit.module.ts": [
+      "@nestjs/common",
+      "packages/backend/src/rate-limit/constants",
+      "packages/backend/src/rate-limit/rate-limit.guard",
+      "packages/backend/src/rate-limit/types"
+    ],
+    "packages/backend/src/rate-limit/types.ts": ["packages/backend/src/common/request-context"],
+    "packages/backend/src/sla/constants.ts": [],
+    "packages/backend/src/sla/default-sla-category.resolver.ts": [
+      "packages/backend/src/common/request-context",
+      "packages/backend/src/sla/types"
+    ],
+    "packages/backend/src/sla/logger-sla-event.sink.ts": [
+      "@nestjs/common",
+      "packages/backend/src/sla/types"
+    ],
+    "packages/backend/src/sla/sla-monitor.interceptor.ts": [
+      "@nestjs/common",
+      "packages/backend/src/common/request-context",
+      "packages/backend/src/sla/default-sla-category.resolver",
+      "packages/backend/src/sla/logger-sla-event.sink",
+      "packages/backend/src/sla/types",
+      "rxjs"
+    ],
+    "packages/backend/src/sla/sla.module.ts": [
+      "@nestjs/common",
+      "packages/backend/src/sla/constants",
+      "packages/backend/src/sla/default-sla-category.resolver",
+      "packages/backend/src/sla/logger-sla-event.sink",
+      "packages/backend/src/sla/sla-monitor.interceptor",
+      "packages/backend/src/sla/types"
+    ],
+    "packages/backend/src/sla/types.ts": ["packages/backend/src/common/request-context"],
+    "packages/backend/src/storage/constants.ts": [],
+    "packages/backend/src/storage/storage.module.ts": [
+      "@nestjs/common",
+      "@stynx/contracts",
+      "packages/backend/src/storage/constants"
+    ],
+    "packages/cli/src/adopt.ts": ["node:fs", "node:path"],
+    "packages/cli/src/audit.ts": ["pg"],
+    "packages/cli/src/cli.ts": [
+      "commander",
+      "node:fs",
+      "node:path",
+      "packages/cli/src/adopt",
+      "packages/cli/src/audit",
+      "packages/cli/src/doctor",
+      "packages/cli/src/init",
+      "packages/cli/src/migrate",
+      "packages/cli/src/privacy-ropa",
+      "yaml"
+    ],
+    "packages/cli/src/doctor.ts": ["node:child_process", "node:path"],
+    "packages/cli/src/index.ts": [
+      "packages/cli/src/adopt",
+      "packages/cli/src/audit",
+      "packages/cli/src/cli",
+      "packages/cli/src/doctor",
+      "packages/cli/src/init",
+      "packages/cli/src/migrate",
+      "packages/cli/src/privacy-ropa"
+    ],
+    "packages/cli/src/init.ts": ["node:fs", "node:path"],
+    "packages/cli/src/main.ts": ["packages/cli/src/cli"],
+    "packages/cli/src/migrate.ts": ["node:fs", "node:path", "pg"],
+    "packages/cli/src/privacy-ropa.ts": ["node:fs", "node:path", "yaml"],
+    "packages/cli/test/adopt.spec.ts": [
+      "node:fs",
+      "node:os",
+      "node:path",
+      "packages/cli/src/adopt"
+    ],
+    "packages/cli/test/cli.spec.ts": [
+      "node:fs",
+      "node:os",
+      "node:path",
+      "packages/cli/src/adopt",
+      "packages/cli/src/audit",
+      "packages/cli/src/doctor",
+      "packages/cli/src/init",
+      "packages/cli/src/privacy-ropa"
+    ],
+    "packages/cli/test/fixtures/adoption-fixture/src/auth.middleware.ts": [],
+    "packages/cli/test/fixtures/adoption-fixture/src/db.ts": ["pg"],
+    "packages/cli/test/fixtures/adoption-fixture/src/records/records.controller.ts": [
+      "@nestjs/common",
+      "packages/cli/test/fixtures/adoption-fixture/src/records/records.service"
+    ],
+    "packages/cli/test/fixtures/adoption-fixture/src/records/records.service.ts": [
+      "packages/cli/test/fixtures/adoption-fixture/src/db"
+    ],
+    "packages/cli/test/migrate.spec.ts": [
+      "node:fs",
+      "node:os",
+      "node:path",
+      "packages/cli/src/migrate"
+    ],
+    "packages/contracts/src/audit.ts": [],
+    "packages/contracts/src/auth.ts": [],
+    "packages/contracts/src/authorization.ts": ["packages/contracts/src/auth"],
+    "packages/contracts/src/db-context.ts": [],
+    "packages/contracts/src/errors.ts": [],
+    "packages/contracts/src/identity-admin.ts": [],
+    "packages/contracts/src/index.ts": [
+      "packages/contracts/src/audit",
+      "packages/contracts/src/auth",
+      "packages/contracts/src/authorization",
+      "packages/contracts/src/db-context",
+      "packages/contracts/src/errors",
+      "packages/contracts/src/identity-admin",
+      "packages/contracts/src/storage",
+      "packages/contracts/src/tenancy"
+    ],
+    "packages/contracts/src/storage.ts": [],
+    "packages/contracts/src/tenancy.ts": ["packages/contracts/src/auth"],
+    "packages/core/jest.config.ts": ["jest", "node:module", "node:path"],
+    "packages/core/jest.integration.config.ts": ["jest", "node:module", "node:path"],
+    "packages/core/src/config.ts": [
+      "@aws-sdk/client-ssm",
+      "@nestjs/common",
+      "packages/core/src/errors",
+      "packages/core/src/tokens",
+      "zod"
+    ],
+    "packages/core/src/core.module.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "nestjs-cls",
+      "packages/core/src/config",
+      "packages/core/src/error.filter",
+      "packages/core/src/request-context",
+      "packages/core/src/request-context.interceptor",
+      "packages/core/src/secret-loader",
+      "packages/core/src/system-context",
+      "packages/core/src/tokens",
+      "zod"
+    ],
+    "packages/core/src/database.ts": [],
+    "packages/core/src/error.filter.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "packages/core/src/errors",
+      "packages/core/src/request-context",
+      "packages/core/src/tokens"
+    ],
+    "packages/core/src/errors.ts": [],
+    "packages/core/src/index.ts": [
+      "packages/core/src/config",
+      "packages/core/src/core.module",
+      "packages/core/src/database",
+      "packages/core/src/error.filter",
+      "packages/core/src/errors",
+      "packages/core/src/request-context",
+      "packages/core/src/request-context.interceptor",
+      "packages/core/src/request-id",
+      "packages/core/src/secret-loader",
+      "packages/core/src/system-context",
+      "packages/core/src/tokens"
+    ],
+    "packages/core/src/request-context.interceptor.ts": [
+      "@nestjs/common",
+      "packages/core/src/request-context",
+      "packages/core/src/request-id",
+      "rxjs"
+    ],
+    "packages/core/src/request-context.ts": [
+      "@nestjs/common",
+      "nestjs-cls",
+      "packages/core/src/database",
+      "packages/core/src/errors",
+      "packages/core/src/request-id"
+    ],
+    "packages/core/src/request-id.ts": ["node:crypto"],
+    "packages/core/src/secret-loader.ts": [
+      "@aws-sdk/client-secrets-manager",
+      "@nestjs/common",
+      "packages/core/src/config",
+      "packages/core/src/errors",
+      "packages/core/src/tokens"
+    ],
+    "packages/core/src/system-context.ts": [
+      "@nestjs/common",
+      "packages/core/src/database",
+      "packages/core/src/errors",
+      "packages/core/src/request-context",
+      "packages/core/src/tokens"
+    ],
+    "packages/core/src/tokens.ts": [],
+    "packages/core/test/integration/core.module.spec.ts": [
+      "@nestjs/common",
+      "@nestjs/testing",
+      "packages/core/src/config",
+      "packages/core/src/core.module",
+      "packages/core/src/request-context",
+      "packages/core/src/request-context.interceptor",
+      "packages/core/src/system-context",
+      "packages/core/src/tokens",
+      "rxjs",
+      "zod"
+    ],
+    "packages/core/test/unit/config-ownership.spec.ts": ["packages/core/src", "zod"],
+    "packages/core/test/unit/request-context.spec.ts": [
+      "packages/core/src/errors",
+      "packages/core/src/request-context"
+    ],
+    "packages/core/test/unit/request-id.spec.ts": ["packages/core/src/request-id"],
+    "packages/core/test/unit/system-context.spec.ts": [
+      "packages/core/src/request-context",
+      "packages/core/src/system-context",
+      "packages/core/src/tokens"
+    ],
+    "packages/data/src/client.ts": ["pg"],
+    "packages/data/src/data.module.ts": [
+      "@nestjs/common",
+      "@stynx/core",
+      "packages/data/src/database",
+      "packages/data/src/migration-runner",
+      "packages/data/src/pools",
+      "packages/data/src/tokens",
+      "zod"
+    ],
+    "packages/data/src/database.ts": [
+      "@nestjs/common",
+      "@stynx/core",
+      "nestjs-cls",
+      "packages/data/src/errors",
+      "packages/data/src/pools",
+      "packages/data/src/tokens",
+      "packages/data/src/transaction",
+      "packages/data/src/types",
+      "pg"
+    ],
+    "packages/data/src/errors.ts": ["@stynx/core"],
+    "packages/data/src/index.ts": [
+      "packages/data/src/client",
+      "packages/data/src/data.module",
+      "packages/data/src/database",
+      "packages/data/src/errors",
+      "packages/data/src/pools",
+      "packages/data/src/query-helpers",
+      "packages/data/src/schema",
+      "packages/data/src/system-context",
+      "packages/data/src/table-markers",
+      "packages/data/src/tokens",
+      "packages/data/src/transaction",
+      "packages/data/src/types"
+    ],
+    "packages/data/src/internal/archive-schema.ts": [
+      "drizzle-orm",
+      "drizzle-orm/pg-core",
+      "packages/data/src/internal/table-meta"
+    ],
+    "packages/data/src/internal/table-meta.ts": ["drizzle-orm/pg-core", "drizzle-orm/utils"],
+    "packages/data/src/migration-runner.ts": [
+      "@nestjs/common",
+      "node:fs/promises",
+      "node:path",
+      "packages/data/src/pools",
+      "packages/data/src/tokens"
+    ],
+    "packages/data/src/pools.ts": [
+      "@nestjs/common",
+      "@stynx/core",
+      "packages/data/src/tokens",
+      "pg"
+    ],
+    "packages/data/src/query-helpers.ts": [
+      "drizzle-orm",
+      "drizzle-orm/pg-core",
+      "packages/data/src/internal/archive-schema",
+      "packages/data/src/internal/table-meta",
+      "packages/data/src/table-markers",
+      "packages/data/src/types",
+      "pg"
+    ],
+    "packages/data/src/schema/audit.ts": ["drizzle-orm/pg-core"],
+    "packages/data/src/schema/auth.ts": ["drizzle-orm/pg-core", "packages/data/src/schema/tenancy"],
+    "packages/data/src/schema/core.ts": ["drizzle-orm/pg-core", "packages/data/src/schema/tenancy"],
+    "packages/data/src/schema/index.ts": [
+      "packages/data/src/schema/audit",
+      "packages/data/src/schema/auth",
+      "packages/data/src/schema/core",
+      "packages/data/src/schema/storage",
+      "packages/data/src/schema/tenancy"
+    ],
+    "packages/data/src/schema/storage.ts": [
+      "drizzle-orm/pg-core",
+      "packages/data/src/schema/auth",
+      "packages/data/src/schema/tenancy",
+      "packages/data/src/table-markers"
+    ],
+    "packages/data/src/schema/tenancy.ts": ["drizzle-orm/pg-core"],
+    "packages/data/src/system-context.ts": ["@stynx/core", "packages/data/src/database"],
+    "packages/data/src/table-markers.ts": ["drizzle-orm/pg-core", "packages/data/src/types"],
+    "packages/data/src/tokens.ts": ["pg"],
+    "packages/data/src/transaction.ts": [
+      "drizzle-orm",
+      "drizzle-orm/node-postgres",
+      "drizzle-orm/pg-core",
+      "packages/data/src/errors",
+      "packages/data/src/internal/table-meta",
+      "packages/data/src/query-helpers",
+      "packages/data/src/schema",
+      "packages/data/src/table-markers",
+      "packages/data/src/tokens",
+      "packages/data/src/types",
+      "pg"
+    ],
+    "packages/data/src/types.ts": ["drizzle-orm", "packages/data/src/tokens"],
+    "packages/data/test/integration/data.module.spec.ts": [
+      "@nestjs/testing",
+      "@stynx/core",
+      "packages/data/src/data.module",
+      "packages/data/src/database",
+      "packages/data/src/errors",
+      "packages/data/test/support/postgres"
+    ],
+    "packages/data/test/integration/migrations.spec.ts": [
+      "@nestjs/testing",
+      "packages/data/src/data.module",
+      "packages/data/src/migration-runner",
+      "packages/data/test/support/postgres",
+      "pg"
+    ],
+    "packages/data/test/integration/soft-delete.spec.ts": [
+      "@nestjs/common",
+      "@nestjs/testing",
+      "@stynx/core",
+      "drizzle-orm",
+      "drizzle-orm/pg-core",
+      "packages/data/src/data.module",
+      "packages/data/src/database",
+      "packages/data/src/errors",
+      "packages/data/src/table-markers",
+      "packages/data/src/tokens",
+      "packages/data/test/support/postgres",
+      "pg"
+    ],
+    "packages/data/test/support/postgres.ts": ["node:crypto", "node:os", "pg"],
+    "packages/data/test/types/transaction-types.ts": [
+      "drizzle-orm/pg-core",
+      "packages/data/src/table-markers",
+      "packages/data/src/transaction"
+    ],
+    "packages/data/test/unit/database.spec.ts": [
+      "@stynx/core",
+      "nestjs-cls",
+      "packages/data/src/database",
+      "packages/data/src/errors",
+      "packages/data/src/pools",
+      "packages/data/src/tokens",
+      "pg"
+    ],
+    "packages/data/test/unit/query-helpers.spec.ts": [
+      "drizzle-orm",
+      "drizzle-orm/pg-core",
+      "packages/data/src/query-helpers",
+      "packages/data/src/schema/storage",
+      "pg"
+    ],
+    "packages/data/test/unit/transaction.spec.ts": [
+      "drizzle-orm",
+      "packages/data/src/errors",
+      "packages/data/src/internal/table-meta",
+      "packages/data/src/schema/storage",
+      "packages/data/src/tokens",
+      "packages/data/src/transaction",
+      "pg"
+    ],
+    "packages/health/src/health.controller.ts": [
+      "@nestjs/common",
+      "@nestjs/terminus",
+      "packages/health/src/health.service",
+      "packages/health/src/info.guard",
+      "packages/health/src/metrics.service",
+      "packages/health/src/tokens"
+    ],
+    "packages/health/src/health.module.ts": [
+      "@nestjs/common",
+      "@nestjs/terminus",
+      "packages/health/src/health.controller",
+      "packages/health/src/health.service",
+      "packages/health/src/info.guard",
+      "packages/health/src/metrics.service",
+      "packages/health/src/tokens"
+    ],
+    "packages/health/src/health.service.ts": [
+      "@nestjs/common",
+      "@nestjs/terminus",
+      "packages/health/src/tokens"
+    ],
+    "packages/health/src/index.ts": [
+      "packages/health/src/health.controller",
+      "packages/health/src/health.module",
+      "packages/health/src/health.service",
+      "packages/health/src/info.guard",
+      "packages/health/src/metrics.service",
+      "packages/health/src/tokens"
+    ],
+    "packages/health/src/info.guard.ts": ["@nestjs/common", "packages/health/src/tokens"],
+    "packages/health/src/metrics.service.ts": ["@nestjs/common", "prom-client"],
+    "packages/health/src/tokens.ts": [],
+    "packages/health/test/integration/health.module.spec.ts": [
+      "@nestjs/common",
+      "@nestjs/testing",
+      "packages/health/src/health.controller",
+      "packages/health/src/health.module"
+    ],
+    "packages/health/test/unit/health.service.spec.ts": ["packages/health/src/health.service"],
+    "packages/health/test/unit/info.guard.spec.ts": ["packages/health/src/info.guard"],
+    "packages/health/test/unit/metrics.service.spec.ts": ["packages/health/src/metrics.service"],
+    "packages/i18n/src/catalog.service.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/data",
+      "intl-messageformat",
+      "node:fs",
+      "node:path",
+      "packages/i18n/src/tokens",
+      "packages/i18n/src/types"
+    ],
+    "packages/i18n/src/error-translator.service.ts": [
+      "@nestjs/common",
+      "@stynx/core",
+      "packages/i18n/src/locale.service"
+    ],
+    "packages/i18n/src/i18n-admin.service.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/data",
+      "packages/i18n/src/catalog.service",
+      "packages/i18n/src/types"
+    ],
+    "packages/i18n/src/i18n.controller.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/core",
+      "@stynx/idempotency",
+      "packages/i18n/src/i18n-admin.service",
+      "packages/i18n/src/types"
+    ],
+    "packages/i18n/src/i18n.module.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/core",
+      "packages/i18n/src/catalog.service",
+      "packages/i18n/src/error-translator.service",
+      "packages/i18n/src/i18n-admin.service",
+      "packages/i18n/src/i18n.controller",
+      "packages/i18n/src/locale.interceptor",
+      "packages/i18n/src/locale.service",
+      "packages/i18n/src/localized-error.filter",
+      "packages/i18n/src/tokens",
+      "packages/i18n/src/types"
+    ],
+    "packages/i18n/src/index.ts": [
+      "packages/i18n/src/catalog.service",
+      "packages/i18n/src/error-translator.service",
+      "packages/i18n/src/i18n-admin.service",
+      "packages/i18n/src/i18n.controller",
+      "packages/i18n/src/i18n.module",
+      "packages/i18n/src/locale.interceptor",
+      "packages/i18n/src/locale.service",
+      "packages/i18n/src/tokens",
+      "packages/i18n/src/types"
+    ],
+    "packages/i18n/src/locale.interceptor.ts": [
+      "@nestjs/common",
+      "packages/i18n/src/locale.service",
+      "rxjs",
+      "rxjs/operators"
+    ],
+    "packages/i18n/src/locale.service.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/core",
+      "@stynx/data",
+      "packages/i18n/src/catalog.service"
+    ],
+    "packages/i18n/src/localized-error.filter.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/core",
+      "packages/i18n/src/error-translator.service"
+    ],
+    "packages/i18n/src/tokens.ts": [],
+    "packages/i18n/src/types.ts": [],
+    "packages/i18n/test/integration/i18n.module.spec.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/core",
+      "@stynx/testing",
+      "node:crypto",
+      "node:path",
+      "packages/i18n/src/i18n-admin.service",
+      "packages/i18n/src/i18n.module",
+      "packages/i18n/src/locale.service",
+      "supertest"
+    ],
+    "packages/i18n/test/support/intl-messageformat.stub.ts": [],
+    "packages/idempotency/src/constants.ts": [],
+    "packages/idempotency/src/database-idempotency.store.ts": [
+      "@nestjs/common",
+      "@stynx/data",
+      "packages/idempotency/src/constants",
+      "packages/idempotency/src/types"
+    ],
+    "packages/idempotency/src/decorators.ts": [
+      "@nestjs/common",
+      "packages/idempotency/src/constants",
+      "packages/idempotency/src/types"
+    ],
+    "packages/idempotency/src/idempotency.interceptor.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "node:crypto",
+      "packages/idempotency/src/constants",
+      "packages/idempotency/src/request-context",
+      "packages/idempotency/src/types",
+      "rxjs"
+    ],
+    "packages/idempotency/src/idempotency.module.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "packages/idempotency/src/constants",
+      "packages/idempotency/src/database-idempotency.store",
+      "packages/idempotency/src/idempotency.interceptor",
+      "packages/idempotency/src/metrics",
+      "packages/idempotency/src/redis-idempotency.backend",
+      "packages/idempotency/src/types"
+    ],
+    "packages/idempotency/src/index.ts": [
+      "packages/idempotency/src/constants",
+      "packages/idempotency/src/database-idempotency.store",
+      "packages/idempotency/src/decorators",
+      "packages/idempotency/src/idempotency.interceptor",
+      "packages/idempotency/src/idempotency.module",
+      "packages/idempotency/src/metrics",
+      "packages/idempotency/src/pg-idempotency.store",
+      "packages/idempotency/src/redis-idempotency.backend",
+      "packages/idempotency/src/request-context",
+      "packages/idempotency/src/types"
+    ],
+    "packages/idempotency/src/metrics.ts": ["packages/idempotency/src/types"],
+    "packages/idempotency/src/pg-idempotency.store.ts": ["packages/idempotency/src/types"],
+    "packages/idempotency/src/redis-idempotency.backend.ts": [
+      "@nestjs/common",
+      "packages/idempotency/src/constants",
+      "packages/idempotency/src/types",
+      "redis"
+    ],
+    "packages/idempotency/src/request-context.ts": [],
+    "packages/idempotency/src/types.ts": ["packages/idempotency/src/request-context"],
+    "packages/idempotency/test/integration/idempotency.integration.spec.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@nestjs/testing",
+      "@stynx/data",
+      "packages/data/test/support/postgres",
+      "packages/idempotency/src/constants",
+      "packages/idempotency/src/database-idempotency.store",
+      "packages/idempotency/src/idempotency.interceptor",
+      "packages/idempotency/src/metrics",
+      "packages/idempotency/src/redis-idempotency.backend",
+      "rxjs",
+      "test/support/redis-docker"
+    ],
+    "packages/idempotency/test/unit/idempotency.interceptor.spec.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "packages/idempotency/src/constants",
+      "packages/idempotency/src/idempotency.interceptor",
+      "packages/idempotency/src/types",
+      "rxjs"
+    ],
+    "packages/logging/src/dedupe.ts": ["@nestjs/common", "packages/logging/src/tokens"],
+    "packages/logging/src/index.ts": [
+      "packages/logging/src/dedupe",
+      "packages/logging/src/logger.service",
+      "packages/logging/src/logging.module",
+      "packages/logging/src/pino.factory",
+      "packages/logging/src/request-logging.middleware",
+      "packages/logging/src/tokens"
+    ],
+    "packages/logging/src/logger.service.ts": [
+      "@nestjs/common",
+      "packages/logging/src/dedupe",
+      "packages/logging/src/pino.factory",
+      "packages/logging/src/tokens",
+      "pino"
+    ],
+    "packages/logging/src/logging.module.ts": [
+      "@nestjs/common",
+      "@stynx/core",
+      "packages/logging/src/dedupe",
+      "packages/logging/src/logger.service",
+      "packages/logging/src/pino.factory",
+      "packages/logging/src/request-logging.middleware",
+      "packages/logging/src/tokens",
+      "zod"
+    ],
+    "packages/logging/src/pino.factory.ts": [
+      "@nestjs/common",
+      "@stynx/core",
+      "packages/logging/src/tokens",
+      "pino"
+    ],
+    "packages/logging/src/request-logging.middleware.ts": [
+      "@nestjs/common",
+      "packages/logging/src/logger.service",
+      "packages/logging/src/tokens"
+    ],
+    "packages/logging/src/tokens.ts": ["pino"],
+    "packages/logging/test/integration/logging.module.spec.ts": [
+      "@nestjs/common",
+      "@nestjs/testing",
+      "@stynx/core",
+      "packages/logging/src/logger.service",
+      "packages/logging/src/logging.module",
+      "rxjs",
+      "zod"
+    ],
+    "packages/logging/test/unit/dedupe.spec.ts": ["packages/logging/src/dedupe"],
+    "packages/logging/test/unit/logger.service.spec.ts": ["packages/logging/src/logger.service"],
+    "packages/logging/test/unit/pino.factory.spec.ts": ["packages/logging/src/pino.factory"],
+    "packages/logging/test/unit/request-logging.middleware.spec.ts": [
+      "packages/logging/src/request-logging.middleware"
+    ],
+    "packages/privacy/src/errors.ts": ["@stynx/core"],
+    "packages/privacy/src/index.ts": [
+      "packages/privacy/src/errors",
+      "packages/privacy/src/pii-map.service",
+      "packages/privacy/src/privacy-object-store.service",
+      "packages/privacy/src/privacy.controller",
+      "packages/privacy/src/privacy.module",
+      "packages/privacy/src/privacy.service",
+      "packages/privacy/src/ropa",
+      "packages/privacy/src/tokens",
+      "packages/privacy/src/types"
+    ],
+    "packages/privacy/src/pii-map.service.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/data",
+      "node:fs",
+      "node:path",
+      "packages/privacy/src/errors",
+      "packages/privacy/src/tokens",
+      "packages/privacy/src/types",
+      "yaml",
+      "zod"
+    ],
+    "packages/privacy/src/privacy-object-store.service.ts": [
+      "@nestjs/common",
+      "@stynx/storage",
+      "packages/privacy/src/tokens",
+      "packages/privacy/src/types"
+    ],
+    "packages/privacy/src/privacy.controller.ts": [
+      "@nestjs/common",
+      "@stynx/idempotency",
+      "packages/privacy/src/privacy.service",
+      "packages/privacy/src/types"
+    ],
+    "packages/privacy/src/privacy.module.ts": [
+      "@nestjs/common",
+      "@stynx/core",
+      "packages/privacy/src/pii-map.service",
+      "packages/privacy/src/privacy-object-store.service",
+      "packages/privacy/src/privacy.controller",
+      "packages/privacy/src/privacy.service",
+      "packages/privacy/src/tokens",
+      "packages/privacy/src/types",
+      "zod"
+    ],
+    "packages/privacy/src/privacy.service.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/data",
+      "jszip",
+      "node:crypto",
+      "packages/privacy/src/errors",
+      "packages/privacy/src/pii-map.service",
+      "packages/privacy/src/ropa",
+      "packages/privacy/src/tokens",
+      "packages/privacy/src/types"
+    ],
+    "packages/privacy/src/ropa.ts": ["packages/privacy/src/types"],
+    "packages/privacy/src/tokens.ts": [],
+    "packages/privacy/src/types.ts": [],
+    "packages/privacy/test/integration/privacy.module.spec.ts": [
+      "@stynx/data",
+      "@stynx/testing",
+      "jszip",
+      "node:fs",
+      "node:os",
+      "node:path",
+      "packages/privacy/src/pii-map.service",
+      "packages/privacy/src/privacy.module",
+      "packages/privacy/src/privacy.service",
+      "packages/privacy/src/types"
+    ],
+    "packages/privacy/test/unit/privacy.service.spec.ts": [
+      "@nestjs/core",
+      "packages/privacy/src/pii-map.service",
+      "packages/privacy/src/privacy.service",
+      "packages/privacy/src/types"
+    ],
+    "packages/ratelimit/src/constants.ts": [],
+    "packages/ratelimit/src/decorators.ts": [
+      "@nestjs/common",
+      "packages/ratelimit/src/constants",
+      "packages/ratelimit/src/types"
+    ],
+    "packages/ratelimit/src/index.ts": [
+      "packages/ratelimit/src/constants",
+      "packages/ratelimit/src/decorators",
+      "packages/ratelimit/src/metrics",
+      "packages/ratelimit/src/pg-rate-limit.store",
+      "packages/ratelimit/src/rate-limit-policy.service",
+      "packages/ratelimit/src/rate-limit.guard",
+      "packages/ratelimit/src/rate-limit.module",
+      "packages/ratelimit/src/redis-rate-limit.store",
+      "packages/ratelimit/src/request-context",
+      "packages/ratelimit/src/types"
+    ],
+    "packages/ratelimit/src/metrics.ts": ["packages/ratelimit/src/types"],
+    "packages/ratelimit/src/pg-rate-limit.store.ts": ["packages/ratelimit/src/types"],
+    "packages/ratelimit/src/rate-limit-policy.service.ts": [
+      "@nestjs/common",
+      "@stynx/data",
+      "packages/ratelimit/src/constants",
+      "packages/ratelimit/src/request-context",
+      "packages/ratelimit/src/types"
+    ],
+    "packages/ratelimit/src/rate-limit.guard.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/auth",
+      "packages/ratelimit/src/constants",
+      "packages/ratelimit/src/request-context",
+      "packages/ratelimit/src/types"
+    ],
+    "packages/ratelimit/src/rate-limit.module.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "packages/ratelimit/src/constants",
+      "packages/ratelimit/src/metrics",
+      "packages/ratelimit/src/rate-limit-policy.service",
+      "packages/ratelimit/src/rate-limit.guard",
+      "packages/ratelimit/src/redis-rate-limit.store",
+      "packages/ratelimit/src/types"
+    ],
+    "packages/ratelimit/src/redis-rate-limit.store.ts": [
+      "@nestjs/common",
+      "packages/ratelimit/src/constants",
+      "packages/ratelimit/src/types",
+      "redis"
+    ],
+    "packages/ratelimit/src/request-context.ts": [],
+    "packages/ratelimit/src/types.ts": ["packages/ratelimit/src/request-context"],
+    "packages/ratelimit/test/integration/rate-limit.integration.spec.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@nestjs/testing",
+      "@stynx/data",
+      "packages/data/test/support/postgres",
+      "packages/ratelimit/src/constants",
+      "packages/ratelimit/src/metrics",
+      "packages/ratelimit/src/rate-limit-policy.service",
+      "packages/ratelimit/src/rate-limit.guard",
+      "packages/ratelimit/src/redis-rate-limit.store",
+      "test/support/redis-docker"
+    ],
+    "packages/ratelimit/test/unit/metrics.spec.ts": ["packages/ratelimit/src/metrics"],
+    "packages/ratelimit/test/unit/rate-limit.guard.spec.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/auth",
+      "packages/ratelimit/src/constants",
+      "packages/ratelimit/src/metrics",
+      "packages/ratelimit/src/rate-limit.guard",
+      "packages/ratelimit/src/types"
+    ],
+    "packages/sessions/src/errors.ts": [],
+    "packages/sessions/src/in-memory-session-store.ts": [
+      "node:events",
+      "packages/sessions/src/types"
+    ],
+    "packages/sessions/src/index.ts": [
+      "packages/sessions/src/errors",
+      "packages/sessions/src/in-memory-session-store",
+      "packages/sessions/src/jwks.controller",
+      "packages/sessions/src/jwt-signing.service",
+      "packages/sessions/src/redis-session-store",
+      "packages/sessions/src/session-mirror.writer",
+      "packages/sessions/src/session.service",
+      "packages/sessions/src/sessions.module",
+      "packages/sessions/src/tokens",
+      "packages/sessions/src/types"
+    ],
+    "packages/sessions/src/jwks.controller.ts": [
+      "@nestjs/common",
+      "packages/sessions/src/jwt-signing.service"
+    ],
+    "packages/sessions/src/jwt-signing.service.ts": [
+      "@nestjs/common",
+      "@stynx/core",
+      "node:crypto",
+      "packages/sessions/src/errors",
+      "packages/sessions/src/tokens",
+      "packages/sessions/src/types"
+    ],
+    "packages/sessions/src/redis-session-store.ts": [
+      "@nestjs/common",
+      "packages/sessions/src/tokens",
+      "packages/sessions/src/types",
+      "redis"
+    ],
+    "packages/sessions/src/session-mirror.writer.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/core",
+      "@stynx/data",
+      "node:crypto",
+      "packages/sessions/src/types"
+    ],
+    "packages/sessions/src/session.service.ts": [
+      "@nestjs/common",
+      "node:crypto",
+      "packages/sessions/src/errors",
+      "packages/sessions/src/jwt-signing.service",
+      "packages/sessions/src/tokens",
+      "packages/sessions/src/types"
+    ],
+    "packages/sessions/src/sessions.module.ts": [
+      "@nestjs/common",
+      "@stynx/core",
+      "packages/sessions/src/jwks.controller",
+      "packages/sessions/src/jwt-signing.service",
+      "packages/sessions/src/redis-session-store",
+      "packages/sessions/src/session-mirror.writer",
+      "packages/sessions/src/session.service",
+      "packages/sessions/src/tokens",
+      "packages/sessions/src/types",
+      "zod"
+    ],
+    "packages/sessions/src/tokens.ts": [],
+    "packages/sessions/src/types.ts": [],
+    "packages/sessions/test/integration/sessions.module.spec.ts": [
+      "@nestjs/common",
+      "@nestjs/testing",
+      "@stynx/data",
+      "node:child_process",
+      "node:crypto",
+      "node:perf_hooks",
+      "node:url",
+      "node:util",
+      "packages/data/test/support/postgres",
+      "packages/sessions/src/in-memory-session-store",
+      "packages/sessions/src/redis-session-store",
+      "packages/sessions/src/session.service",
+      "packages/sessions/src/sessions.module",
+      "packages/sessions/src/tokens",
+      "pg",
+      "redis",
+      "supertest"
+    ],
+    "packages/sessions/test/unit/session.service.spec.ts": [
+      "node:crypto",
+      "packages/sessions/src/errors",
+      "packages/sessions/src/in-memory-session-store",
+      "packages/sessions/src/jwt-signing.service",
+      "packages/sessions/src/session.service",
+      "packages/sessions/src/types"
+    ],
+    "packages/storage/src/documents.service.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/core",
+      "@stynx/data",
+      "drizzle-orm",
+      "node:crypto",
+      "node:path",
+      "packages/storage/src/errors",
+      "packages/storage/src/s3.service",
+      "packages/storage/src/tokens",
+      "packages/storage/src/types"
+    ],
+    "packages/storage/src/errors.ts": ["@stynx/core"],
+    "packages/storage/src/index.ts": [
+      "packages/storage/src/documents.service",
+      "packages/storage/src/errors",
+      "packages/storage/src/object-store.service",
+      "packages/storage/src/s3.service",
+      "packages/storage/src/storage.module",
+      "packages/storage/src/tokens",
+      "packages/storage/src/types"
+    ],
+    "packages/storage/src/object-store.service.ts": [
+      "@aws-sdk/client-s3",
+      "@aws-sdk/s3-request-presigner"
+    ],
+    "packages/storage/src/s3.service.ts": [
+      "@aws-sdk/client-s3",
+      "@aws-sdk/s3-request-presigner",
+      "@nestjs/common",
+      "packages/storage/src/errors",
+      "packages/storage/src/tokens",
+      "packages/storage/src/types"
+    ],
+    "packages/storage/src/storage.module.ts": [
+      "@nestjs/common",
+      "@stynx/core",
+      "packages/storage/src/documents.service",
+      "packages/storage/src/s3.service",
+      "packages/storage/src/tokens",
+      "packages/storage/src/types",
+      "zod"
+    ],
+    "packages/storage/src/tokens.ts": [],
+    "packages/storage/src/types.ts": [],
+    "packages/storage/test/integration/storage.module.spec.ts": [
+      "@aws-sdk/client-s3",
+      "@nestjs/testing",
+      "@stynx/core",
+      "@stynx/data",
+      "node:crypto",
+      "packages/data/test/support/postgres",
+      "packages/storage/src/documents.service",
+      "packages/storage/src/errors",
+      "packages/storage/src/storage.module",
+      "testcontainers"
+    ],
+    "packages/storage/test/unit/documents.service.spec.ts": [
+      "@stynx/core",
+      "drizzle-orm",
+      "packages/storage/src/documents.service",
+      "packages/storage/src/errors"
+    ],
+    "packages/storage/test/unit/s3.service.spec.ts": [
+      "@aws-sdk/client-s3",
+      "@aws-sdk/s3-request-presigner",
+      "packages/storage/src/errors",
+      "packages/storage/src/s3.service"
+    ],
+    "packages/tenancy/src/index.ts": [
+      "packages/tenancy/src/membership-cache",
+      "packages/tenancy/src/tenancy.controller",
+      "packages/tenancy/src/tenancy.module",
+      "packages/tenancy/src/tenancy.platform-admin.guard",
+      "packages/tenancy/src/tenancy.service",
+      "packages/tenancy/src/tenant-context.interceptor",
+      "packages/tenancy/src/tenant-system-operation.sink",
+      "packages/tenancy/src/tokens",
+      "packages/tenancy/src/types",
+      "packages/tenancy/src/utils"
+    ],
+    "packages/tenancy/src/membership-cache.ts": [],
+    "packages/tenancy/src/tenancy-platform-admin.guard.ts": ["@nestjs/common"],
+    "packages/tenancy/src/tenancy.controller.ts": [
+      "@nestjs/common",
+      "@stynx/idempotency",
+      "packages/tenancy/src/tenancy-platform-admin.guard",
+      "packages/tenancy/src/tenancy.service",
+      "packages/tenancy/src/types"
+    ],
+    "packages/tenancy/src/tenancy.module.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/core",
+      "packages/tenancy/src/membership-cache",
+      "packages/tenancy/src/tenancy-platform-admin.guard",
+      "packages/tenancy/src/tenancy.controller",
+      "packages/tenancy/src/tenancy.service",
+      "packages/tenancy/src/tenant-context.interceptor",
+      "packages/tenancy/src/tenant-system-operation.sink",
+      "packages/tenancy/src/tokens",
+      "packages/tenancy/src/types",
+      "zod"
+    ],
+    "packages/tenancy/src/tenancy.platform-admin.guard.ts": [
+      "packages/tenancy/src/tenancy-platform-admin.guard"
+    ],
+    "packages/tenancy/src/tenancy.service.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/data",
+      "packages/tenancy/src/membership-cache",
+      "packages/tenancy/src/tokens",
+      "packages/tenancy/src/types",
+      "packages/tenancy/src/utils"
+    ],
+    "packages/tenancy/src/tenant-context.interceptor.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/core",
+      "@stynx/data",
+      "packages/tenancy/src/membership-cache",
+      "packages/tenancy/src/tokens",
+      "packages/tenancy/src/types",
+      "packages/tenancy/src/utils",
+      "rxjs"
+    ],
+    "packages/tenancy/src/tenant-system-operation.sink.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/core",
+      "@stynx/data"
+    ],
+    "packages/tenancy/src/tokens.ts": ["packages/tenancy/src/types"],
+    "packages/tenancy/src/types.ts": [],
+    "packages/tenancy/src/utils.ts": ["node:crypto"],
+    "packages/tenancy/test/integration/tenancy.module.spec.ts": [
+      "@nestjs/common",
+      "@nestjs/testing",
+      "@stynx/core",
+      "@stynx/data",
+      "packages/data/test/support/postgres",
+      "packages/tenancy/src/tenancy.module",
+      "packages/tenancy/src/tenancy.service",
+      "supertest"
+    ],
+    "packages/tenancy/test/unit/membership-cache.spec.ts": [
+      "packages/tenancy/src/membership-cache"
+    ],
+    "packages/tenancy/test/unit/tenancy.service.spec.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "packages/tenancy/src/tenancy.service"
+    ],
+    "packages/tenancy/test/unit/tenant-context.interceptor.spec.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/core",
+      "packages/tenancy/src/membership-cache",
+      "packages/tenancy/src/tenant-context.interceptor"
+    ],
+    "packages/testing/src/context.ts": ["@stynx/core"],
+    "packages/testing/src/create-test-app.ts": [
+      "@nestjs/common",
+      "@nestjs/testing",
+      "@stynx/core",
+      "@stynx/data",
+      "packages/testing/src/types",
+      "testcontainers"
+    ],
+    "packages/testing/src/doctor.ts": ["node:child_process", "node:path"],
+    "packages/testing/src/fixtures.ts": [
+      "@stynx/data",
+      "node:crypto",
+      "packages/testing/src/types"
+    ],
+    "packages/testing/src/index.ts": [
+      "packages/testing/src/context",
+      "packages/testing/src/create-test-app",
+      "packages/testing/src/doctor",
+      "packages/testing/src/fixtures",
+      "packages/testing/src/lgpd-fixture",
+      "packages/testing/src/matchers",
+      "packages/testing/src/mint-test-session",
+      "packages/testing/src/types"
+    ],
+    "packages/testing/src/lgpd-fixture.ts": [
+      "@stynx/data",
+      "node:crypto",
+      "packages/testing/src/types"
+    ],
+    "packages/testing/src/matchers.ts": ["@stynx/data", "drizzle-orm/pg-core", "drizzle-orm/utils"],
+    "packages/testing/src/mint-test-session.ts": [
+      "@stynx/sessions",
+      "node:crypto",
+      "packages/testing/src/types"
+    ],
+    "packages/testing/src/types.ts": [
+      "@nestjs/common",
+      "@nestjs/testing",
+      "@stynx/core",
+      "@stynx/data",
+      "@stynx/sessions",
+      "testcontainers"
+    ],
+    "packages/testing/test/testing.spec.ts": [
+      "@stynx/core",
+      "@stynx/data",
+      "drizzle-orm/pg-core",
+      "node:crypto",
+      "node:fs",
+      "node:os",
+      "node:path",
+      "packages/testing/src"
+    ],
+    "test/db/audit.ddl.spec.ts": ["node:fs", "node:path"],
+    "test/db/auth.ddl.spec.ts": ["node:fs", "node:path"],
+    "test/db/storage.ddl.spec.ts": ["node:fs", "node:path"],
+    "test/frontend/admin-users/user-detail.component.spec.ts": [
+      "@admin/users/models",
+      "@admin/users/roles.service",
+      "@admin/users/tenancy.service",
+      "@admin/users/user-detail.component",
+      "@admin/users/users.service",
+      "@angular/core/testing",
+      "@angular/material/dialog",
+      "@angular/material/snack-bar",
+      "@angular/router",
+      "@angular/router/testing",
+      "rxjs"
+    ],
+    "test/frontend/admin-users/user-list.component.spec.ts": [
+      "@admin/users/models",
+      "@admin/users/user-list.component",
+      "@admin/users/users.service",
+      "@angular/core/testing",
+      "@angular/router/testing",
+      "rxjs"
+    ],
+    "test/frontend/cypress.config.ts": ["cypress"],
+    "test/frontend/e2e/smoke.cy.ts": [],
+    "test/frontend/jest.config.ts": ["jest", "node:module", "node:path"],
+    "test/frontend/setup-jest.ts": ["jest-preset-angular/setup-env/zone"],
+    "test/frontend/unit/language-switcher.component.spec.ts": [
+      "@angular/core/testing",
+      "@ngx-translate/core",
+      "@shared/components/language-switcher/language-switcher.component"
+    ],
+    "test/packages/audit/audit-interceptor-redaction.spec.ts": [
+      "@nestjs/common",
+      "packages/backend/src/audit/audit.interceptor",
+      "packages/backend/src/audit/decorators",
+      "packages/backend/src/audit/redaction-policy",
+      "rxjs"
+    ],
+    "test/packages/audit/hash-chain.spec.ts": ["@stynx/audit", "node:crypto"],
+    "test/packages/audit/sql-adapter.spec.ts": ["packages/audit/src/index"],
+    "test/packages/auth/auth-context.guard.spec.ts": [
+      "@nestjs/common",
+      "@stynx/contracts",
+      "packages/backend/src/auth/auth-context.guard"
+    ],
+    "test/packages/auth/cognito-admin.adapter.spec.ts": [
+      "@stynx/contracts",
+      "packages/auth/src/cognito-admin.adapter"
+    ],
+    "test/packages/auth/tenant-entitlement.spec.ts": [
+      "packages/backend/src/auth/claim-first-tenant-entitlement.policy",
+      "packages/backend/src/auth/sql-tenant-entitlement.fallback"
+    ],
+    "test/packages/authorization/default-policy-evaluator.spec.ts": [
+      "packages/backend/src/authorization/default-policy-evaluator"
+    ],
+    "test/packages/db-context/pg-session-db-context.applier.spec.ts": [
+      "packages/backend/src/db-context/pg-session-db-context.applier"
+    ],
+    "test/packages/db-context/response-event-request-db-client-lifecycle.spec.ts": [
+      "packages/backend/src/db-context/request-db-client-lifecycle"
+    ],
+    "test/packages/db-context/tenant-lifecycle.middleware.spec.ts": [
+      "@nestjs/common",
+      "packages/backend/src/db-context/request-db-client-lifecycle",
+      "packages/backend/src/db-context/tenant-lifecycle.middleware"
+    ],
+    "test/packages/frontend-client/api-client.spec.ts": ["@stynx-web/sdk"],
+    "test/packages/frontend-client/session-manager.spec.ts": ["@stynx-web/sdk"],
+    "test/packages/idempotency/idempotency.interceptor.spec.ts": [
+      "@nestjs/common",
+      "packages/backend/src/idempotency/idempotency.interceptor",
+      "packages/backend/src/idempotency/types",
+      "rxjs"
+    ],
+    "test/packages/identity-admin/identity-admin.service.spec.ts": [
+      "@nestjs/common",
+      "@stynx/contracts",
+      "packages/backend/src/identity-admin/identity-admin.service"
+    ],
+    "test/packages/identity-admin/integration-facades.spec.ts": [
+      "packages/backend/src/identity-admin/integration-facades"
+    ],
+    "test/packages/identity-admin/pg-local-sync.adapter.spec.ts": [
+      "@stynx/contracts",
+      "packages/backend/src/identity-admin/pg-local-sync.adapter"
+    ],
+    "test/packages/pipeline/platform-pipeline.module.spec.ts": [
+      "@nestjs/core",
+      "@stynx/idempotency",
+      "@stynx/ratelimit",
+      "packages/backend/src/pipeline/platform-pipeline.module",
+      "packages/backend/src/sla/sla-monitor.interceptor"
+    ],
+    "test/packages/rate-limit/rate-limit.guard.spec.ts": [
+      "@nestjs/common",
+      "packages/backend/src/rate-limit/rate-limit.guard",
+      "packages/backend/src/rate-limit/types"
+    ],
+    "test/packages/sla/sla-monitor.interceptor.spec.ts": [
+      "@nestjs/common",
+      "packages/backend/src/sla/sla-monitor.interceptor",
+      "packages/backend/src/sla/types",
+      "rxjs"
+    ],
+    "test/packages/support/auth-stub.ts": ["packages/auth/src/decorators"],
+    "test/packages/support/data-stub.ts": [],
+    "test/support/redis-docker.ts": ["node:child_process", "node:net", "node:util", "redis"],
+    "tools/migration-linter/src/cli.ts": [
+      "node:fs",
+      "node:path",
+      "tools/migration-linter/src/lint.ts"
+    ],
+    "tools/migration-linter/src/index.ts": [
+      "tools/migration-linter/src/lint.ts",
+      "tools/migration-linter/src/types.ts"
+    ],
+    "tools/migration-linter/src/lint.ts": [
+      "node:fs",
+      "node:path",
+      "tools/migration-linter/src/parser.ts",
+      "tools/migration-linter/src/sql.ts",
+      "tools/migration-linter/src/types.ts"
+    ],
+    "tools/migration-linter/src/parser.ts": [],
+    "tools/migration-linter/src/sql.ts": ["tools/migration-linter/src/types.ts"],
+    "tools/migration-linter/src/types.ts": [],
+    "tools/migration-linter/test/migration-linter.spec.ts": [
+      "node:assert/strict",
+      "node:child_process",
+      "node:fs",
+      "node:path",
+      "node:test",
+      "node:url",
+      "node:util",
+      "tools/migration-linter/src/lint.ts"
+    ],
+    "tools/repo-config/knip.config.ts": ["knip"]
+  }
+}

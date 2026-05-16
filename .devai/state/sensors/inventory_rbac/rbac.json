@@ -1,0 +1,516 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-05-16T01:40:35.548Z",
+  "sourceRepo": ".",
+  "rbacIlfTables": [],
+  "roles": [
+    {
+      "id": "__placeholder",
+      "name": "__placeholder",
+      "evidence": []
+    }
+  ],
+  "permissions": [
+    {
+      "id": "guard:StynxAuthGuard",
+      "name": "guard:StynxAuthGuard"
+    },
+    {
+      "id": "guard:PermissionGuard",
+      "name": "guard:PermissionGuard"
+    }
+  ],
+  "bindings": {
+    "endpointBindings": [
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "GET /_probes/data-tx",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "GET /_probes/data-tx",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "POST /_probes/idempotency",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "POST /_probes/idempotency",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "GET /_probes/ratelimit",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "GET /_probes/ratelimit",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "GET /_probes/readonly-write",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "GET /_probes/readonly-write",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "POST /documents",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "POST /documents",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "DELETE /documents/:id",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "DELETE /documents/:id",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "POST /documents/:id/complete",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "POST /documents/:id/complete",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "GET /documents/:id/download",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "GET /documents/:id/download",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "DELETE /documents/:id/hard",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "DELETE /documents/:id/hard",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "POST /documents/:id/restore",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "POST /documents/:id/restore",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "GET /record-notes",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "GET /record-notes",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "POST /record-notes",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "POST /record-notes",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "DELETE /record-notes/:id",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "DELETE /record-notes/:id",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "GET /record-notes/:id",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "GET /record-notes/:id",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "PATCH /record-notes/:id",
+        "methods": ["PATCH"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "PATCH /record-notes/:id",
+        "methods": ["PATCH"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "DELETE /record-notes/:id/hard",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "DELETE /record-notes/:id/hard",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "POST /record-notes/:id/restore",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "POST /record-notes/:id/restore",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "GET /records",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "GET /records",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "POST /records",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "POST /records",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "DELETE /records/:id",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "DELETE /records/:id",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "GET /records/:id",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "GET /records/:id",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "PATCH /records/:id",
+        "methods": ["PATCH"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "PATCH /records/:id",
+        "methods": ["PATCH"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "DELETE /records/:id/hard",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "DELETE /records/:id/hard",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "POST /records/:id/restore",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "POST /records/:id/restore",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "GET /records/trash",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "GET /records/trash",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "GET /work-item-entries",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "GET /work-item-entries",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "POST /work-item-entries",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "POST /work-item-entries",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "DELETE /work-item-entries/:id",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "DELETE /work-item-entries/:id",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "GET /work-item-entries/:id",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "GET /work-item-entries/:id",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "PATCH /work-item-entries/:id",
+        "methods": ["PATCH"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "PATCH /work-item-entries/:id",
+        "methods": ["PATCH"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "DELETE /work-item-entries/:id/hard",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "DELETE /work-item-entries/:id/hard",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "POST /work-item-entries/:id/restore",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "POST /work-item-entries/:id/restore",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "GET /work-item-locks",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "GET /work-item-locks",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "POST /work-item-locks",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "POST /work-item-locks",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "DELETE /work-item-locks/:id",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "DELETE /work-item-locks/:id",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "GET /work-item-locks/:id",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "GET /work-item-locks/:id",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "PATCH /work-item-locks/:id",
+        "methods": ["PATCH"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "PATCH /work-item-locks/:id",
+        "methods": ["PATCH"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "DELETE /work-item-locks/:id/hard",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "DELETE /work-item-locks/:id/hard",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "POST /work-item-locks/:id/restore",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "POST /work-item-locks/:id/restore",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "GET /work-items",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "GET /work-items",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "POST /work-items",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "POST /work-items",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "DELETE /work-items/:id",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "DELETE /work-items/:id",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "GET /work-items/:id",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "GET /work-items/:id",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "PATCH /work-items/:id",
+        "methods": ["PATCH"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "PATCH /work-items/:id",
+        "methods": ["PATCH"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "DELETE /work-items/:id/hard",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "DELETE /work-items/:id/hard",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "POST /work-items/:id/restore",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "POST /work-items/:id/restore",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "guard:StynxAuthGuard",
+        "endpointId": "GET /work-items/trash",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "guard:PermissionGuard",
+        "endpointId": "GET /work-items/trash",
+        "methods": ["GET"]
+      }
+    ],
+    "routeBindings": [],
+    "entityBindings": []
+  },
+  "unmapped": {
+    "rolesWithoutPermissions": [],
+    "permissionsWithoutBindings": [],
+    "endpointsWithoutRole": [
+      "GET /_reference/auth-verify",
+      "GET /_reference/demo-tenants",
+      "POST /_reference/dev-login"
+    ],
+    "routesWithoutRole": []
+  },
+  "stats": {
+    "roleCount": 0,
+    "permissionCount": 0,
+    "endpointBindingCount": 94,
+    "routeBindingCount": 0,
+    "entityBindingCount": 0
+  }
+}
