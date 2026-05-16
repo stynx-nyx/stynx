@@ -21,7 +21,7 @@ Stynx is governed by **DEVAI** ([sibling repo](../devai)). Per session directive
 
 ## What this file used to point at
 
-The pre-pilot `docs/governance/{health, audit, compliance}` tree is **deprecated** as the source of truth. Its content is being migrated into the DEVAI substrates above; references that have not yet migrated should be considered legacy and not authoritative.
+The pre-pilot `docs/governance/{health, audit, compliance}` tree has been archived to [`docs/legacy/governance-archive/`](docs/legacy/governance-archive/) (C-4 Session S5-3). Its content is kept for archeological reference but is NOT authoritative for current stynx governance — run the DEVAI commands above for live signal.
 
 ## How to participate
 
