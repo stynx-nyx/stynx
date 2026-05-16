@@ -1,7 +1,7 @@
 # RFC 0006: GAP-005-s3-lifecycle-lock
 
 - Status: Proposed
-- Source: [GAP-005-s3-lifecycle-lock.md](../../specs/GAP-005-s3-lifecycle-lock.md)
+- Source: [GAP-005-s3-lifecycle-lock.md](../legacy/completed-gap-tasks/GAP-005-s3-lifecycle-lock.md)
 
 ## Problem
 

@@ -1,7 +1,7 @@
 # RFC 0005: GAP-004-session-tenant-exchange
 
 - Status: Proposed
-- Source: [GAP-004-session-tenant-exchange.md](../../specs/GAP-004-session-tenant-exchange.md)
+- Source: [GAP-004-session-tenant-exchange.md](../legacy/completed-gap-tasks/GAP-004-session-tenant-exchange.md)
 
 ## Problem
 

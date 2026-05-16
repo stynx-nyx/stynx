@@ -1,7 +1,7 @@
 # RFC 0007: GAP-006-permission-drift-slo
 
 - Status: Proposed
-- Source: [GAP-006-permission-drift-slo.md](../../specs/GAP-006-permission-drift-slo.md)
+- Source: [GAP-006-permission-drift-slo.md](../legacy/completed-gap-tasks/GAP-006-permission-drift-slo.md)
 
 ## Problem
 

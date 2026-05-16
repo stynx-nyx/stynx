@@ -1,7 +1,7 @@
 # RFC 0004: GAP-003-config-ownership
 
 - Status: Proposed
-- Source: [GAP-003-config-ownership.md](../../specs/GAP-003-config-ownership.md)
+- Source: [GAP-003-config-ownership.md](../legacy/completed-gap-tasks/GAP-003-config-ownership.md)
 
 ## Problem
 

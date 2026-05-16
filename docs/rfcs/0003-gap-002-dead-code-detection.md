@@ -1,7 +1,7 @@
 # RFC 0003: GAP-002-dead-code-detection
 
 - Status: Proposed
-- Source: [GAP-002-dead-code-detection.md](../../specs/GAP-002-dead-code-detection.md)
+- Source: [GAP-002-dead-code-detection.md](../legacy/completed-gap-tasks/GAP-002-dead-code-detection.md)
 
 ## Problem
 

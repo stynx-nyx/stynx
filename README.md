@@ -6,55 +6,6 @@ STYNX is a `pnpm` + `Turborepo` monorepo targeting GitHub Packages for the spec-
 
 ## Monorepo Layout
 
-```text
-stynx/
-├── packages/                       # Backend (Node/NestJS)
-│   ├── core/
-│   ├── auth/
-│   ├── tenancy/
-│   ├── data/
-│   ├── storage/
-│   ├── audit/
-│   ├── logging/
-│   ├── health/
-│   ├── sessions/
-│   ├── ratelimit/
-│   ├── idempotency/
-│   ├── privacy/
-│   ├── i18n/
-│   ├── testing/
-│   ├── contracts/
-│   └── cli/
-├── packages-web/                   # Frontend (Angular / TS)
-│   ├── sdk/
-│   ├── angular/
-│   ├── angular-auth/
-│   ├── angular-tenancy/
-│   ├── angular-storage/
-│   ├── angular-sessions/
-│   ├── angular-profile/
-│   ├── angular-trash/
-│   ├── angular-i18n/
-│   └── angular-ui/
-├── apps/
-│   ├── reference-api/
-│   └── reference-web/
-├── tools/
-│   ├── eslint-config/
-│   ├── tsconfig/
-│   ├── migration-linter/
-│   └── repo-config/                 # Tool config bodies used by explicit CLI flags
-├── test/
-│   └── perf/k6/                    # k6 scenarios, baselines, generated summaries
-├── docs/
-│   └── stynx/porting-pack/         # Docs-native adoption and porting material
-├── specs/                          # Normative root specs
-├── .changeset/
-├── turbo.json
-├── pnpm-workspace.yaml
-└── package.json
-```
-
 ## Active workspace shape (post-C-4 adoption pilot)
 
 | Tree                                                                      | Purpose                                                                                                                                              |

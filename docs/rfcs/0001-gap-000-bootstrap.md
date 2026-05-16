@@ -1,7 +1,7 @@
 # RFC 0001: GAP-000-bootstrap
 
 - Status: Proposed
-- Source: [GAP-000-bootstrap.md](../../specs/GAP-000-bootstrap.md)
+- Source: [GAP-000-bootstrap.md](../legacy/completed-gap-tasks/GAP-000-bootstrap.md)
 
 ## Problem
 

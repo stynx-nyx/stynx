@@ -1,7 +1,7 @@
 # RFC 0002: GAP-001-audit-hash-chain
 
 - Status: Implemented
-- Source: [GAP-001-audit-hash-chain.md](../../specs/GAP-001-audit-hash-chain.md)
+- Source: [GAP-001-audit-hash-chain.md](../legacy/completed-gap-tasks/GAP-001-audit-hash-chain.md)
 
 ## Problem
 
