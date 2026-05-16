@@ -1,0 +1,104 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "BP-DEMO-BOOKMARK-001",
+  "module": {
+    "name": "Bookmark",
+    "namespace": "demo",
+    "version": "0.1.0",
+    "owners": ["c-4-pilot"],
+    "description": "First DEVAI-scaffolded vertical slice in stynx: per-tenant tagged bookmarks. Demonstrates the full NestJS + Angular + Postgres pipeline (DB migration → API controller → Angular feature module) end-to-end against an existing stynx-shaped repo. Minimal but concrete; not a production feature."
+  },
+  "database": {
+    "entities": [
+      {
+        "name": "Bookmark",
+        "primaryKey": ["id"],
+        "fields": [
+          { "name": "id", "type": "uuid", "default": "gen_random_uuid()" },
+          { "name": "tenant_id", "type": "uuid" },
+          { "name": "owner_id", "type": "uuid" },
+          { "name": "url", "type": "text", "check": "char_length(url) BETWEEN 1 AND 2048" },
+          { "name": "title", "type": "varchar(256)", "nullable": true },
+          { "name": "notes", "type": "text", "nullable": true, "pii": "low", "retention": "1y" },
+          { "name": "created_at", "type": "timestamptz", "default": "now()" },
+          { "name": "updated_at", "type": "timestamptz", "default": "now()" },
+          { "name": "deleted_at", "type": "timestamptz", "nullable": true }
+        ],
+        "indexes": [
+          { "name": "ix_bookmark_tenant_owner", "columns": ["tenant_id", "owner_id"] },
+          { "name": "ix_bookmark_tenant_url", "columns": ["tenant_id", "url"], "unique": true }
+        ]
+      },
+      {
+        "name": "BookmarkTag",
+        "primaryKey": ["bookmark_id", "tag"],
+        "fields": [
+          { "name": "bookmark_id", "type": "uuid" },
+          { "name": "tag", "type": "varchar(64)" },
+          { "name": "created_at", "type": "timestamptz", "default": "now()" }
+        ],
+        "relations": [
+          {
+            "type": "many-to-one",
+            "target": "Bookmark",
+            "field": "bookmark_id",
+            "onDelete": "cascade"
+          }
+        ]
+      }
+    ]
+  },
+  "api": {
+    "basePath": "/demo/bookmarks",
+    "resources": [
+      {
+        "entity": "Bookmark",
+        "operations": ["list", "get", "create", "update", "delete"],
+        "pagination": "limit-offset",
+        "sort": ["created_at", "updated_at"],
+        "filter": ["tenant_id", "owner_id"]
+      },
+      {
+        "entity": "BookmarkTag",
+        "operations": ["list", "create", "delete"],
+        "pagination": "none"
+      }
+    ]
+  },
+  "ui": {
+    "routeBase": "/demo/bookmarks",
+    "pages": [
+      {
+        "kind": "list",
+        "entity": "Bookmark",
+        "columns": ["title", "url", "created_at"],
+        "defaultSort": "-created_at"
+      },
+      {
+        "kind": "detail",
+        "entity": "Bookmark",
+        "fields": ["title", "url", "notes", "created_at", "updated_at"]
+      },
+      { "kind": "form", "entity": "Bookmark", "fields": ["title", "url", "notes"] }
+    ]
+  },
+  "auth": {
+    "rbac": {
+      "roles": ["demo-bookmark-reader", "demo-bookmark-writer"],
+      "permissions": [
+        { "role": "demo-bookmark-reader", "allow": ["list", "get"] },
+        { "role": "demo-bookmark-writer", "allow": ["list", "get", "create", "update", "delete"] }
+      ]
+    }
+  },
+  "audit": {
+    "enabled": true,
+    "fields": ["id", "tenant_id", "owner_id", "url"]
+  },
+  "ops": {
+    "featureFlags": {
+      "demo_bookmark_enabled": true
+    },
+    "metrics": { "enabled": true }
+  }
+}
