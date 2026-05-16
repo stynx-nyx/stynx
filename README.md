@@ -55,16 +55,25 @@ stynx/
 └── package.json
 ```
 
-## Transitional Legacy Directories
+## Active workspace shape (post-C-4 adoption pilot)
 
-The repository still contains legacy runtime and test directories during the extraction:
+| Tree                                                                      | Purpose                                                                                                                                              |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/*`                                                              | Backend reusable libraries (`@stynx/*`)                                                                                                              |
+| `packages-web/*`                                                          | Frontend reusable libraries (`@stynx-web/*`)                                                                                                         |
+| `reference/{api,web}/`                                                    | Reference applications demonstrating framework usage (analogous to DEVAI's `examples/`). Relocated here from `apps/reference-*` in Session S2 (C-4). |
+| `domain/<module>/`                                                        | DEVAI-scaffolded modules. First example: `domain/demo-bookmark/` (C-4 Phase D).                                                                      |
+| `tools/*`                                                                 | Internal repo tooling (`@stynx-internal/*`).                                                                                                         |
+| `infra/cdk/`                                                              | AWS CDK infrastructure. Out of DEVAI's purview (stynx-specific).                                                                                     |
+| `test/`                                                                   | Centralized test harness (backend, frontend, perf, scripts).                                                                                         |
+| `db/ddl/`                                                                 | Canonical SQL definitions.                                                                                                                           |
+| `.devai/`                                                                 | DEVAI substrate (config + state + evidence chain + constitution pointer). Auto-generated; do not hand-edit.                                          |
+| `docs/{product,architecture,contracts,adr,operations,security,glossary}/` | DEVAI's Article 6 F1 substrate roots.                                                                                                                |
+| `docs/{stynx,dev,api}/`                                                   | Stynx-specific documentation.                                                                                                                        |
+| `docs/legacy/`                                                            | Pre-pilot governance + completed GAP tasks, archived for archeology. NOT authoritative for current state.                                            |
+| `.codex/{skills/npm-security-upgrade-auditor, legacy/}`                   | Codex-era automation — only `npm-security-upgrade-auditor` is active (idiosyncratic); everything else under `legacy/`.                               |
 
-- `backend/`
-- `frontend/`
-- `bootstrap/`
-- `test/`
-
-They are intentionally preserved for migration work, but they are outside the Prompt 1 workspace graph.
+Pre-extraction `backend/`, `frontend/`, `bootstrap/` trees were removed prior to the C-4 pilot close; root `test/` remains as the centralized test harness (active workspace member).
 
 The porting pack is docs-native at `docs/stynx/porting-pack/`. It is adoption guidance and historical generation context, not a root drop-in bundle.
 
