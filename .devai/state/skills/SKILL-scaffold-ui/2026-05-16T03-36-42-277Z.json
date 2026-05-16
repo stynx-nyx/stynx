@@ -1,0 +1,75 @@
+{
+  "skill_id": "SKILL-scaffold-ui",
+  "status": "pass",
+  "evidence": {
+    "schemaVersion": "1.0.0",
+    "skill_id": "SKILL-scaffold-ui",
+    "blueprint_id": "BP-DEMO-BOOKMARK-001",
+    "blueprint_version": "0.1.0",
+    "blueprint_sha256": "a5553692743e92326c126b44a0be9d982e0d9e0fac4d261a0c805e36cf674e1f",
+    "stack_adapter_pack": "redox-pack-nestjs-postgres-angular",
+    "files_created": [
+      "domain/demo-bookmark/web/src/app/demo-bookmark/demo-bookmark.module.ts",
+      "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark-list.component.ts",
+      "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark-detail.component.ts",
+      "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark.service.ts",
+      "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark-tag-list.component.ts",
+      "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark-tag-detail.component.ts",
+      "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark-tag.service.ts"
+    ],
+    "files_modified": [],
+    "files_skipped": [],
+    "templates_used": [
+      {
+        "template_id": "ui.module",
+        "rendered_to": "domain/demo-bookmark/web/src/app/demo-bookmark/demo-bookmark.module.ts",
+        "rendered_sha256": "cd19a2e4dfd9fb273746ce1b201cca5fae4e38dfd6afd9bc2ac1f9702f0fa74f"
+      },
+      {
+        "template_id": "ui.list-component",
+        "rendered_to": "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark-list.component.ts",
+        "rendered_sha256": "2a5277bae6da7a886846d82fbdf5a6fa3e227b77df42fa55e4f3a2a7e2d9106e"
+      },
+      {
+        "template_id": "ui.detail-component",
+        "rendered_to": "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark-detail.component.ts",
+        "rendered_sha256": "b8f211bfda92d2c843f6403a74510d2b6d40c4e44f6ef6c1a085d7207b3d4e96"
+      },
+      {
+        "template_id": "ui.service",
+        "rendered_to": "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark.service.ts",
+        "rendered_sha256": "5db56060d9f2ee3b038fc4d2e45d6ea69e6b9fea3c8ec67ffa229795058e2a54"
+      },
+      {
+        "template_id": "ui.list-component",
+        "rendered_to": "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark-tag-list.component.ts",
+        "rendered_sha256": "2a5277bae6da7a886846d82fbdf5a6fa3e227b77df42fa55e4f3a2a7e2d9106e"
+      },
+      {
+        "template_id": "ui.detail-component",
+        "rendered_to": "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark-tag-detail.component.ts",
+        "rendered_sha256": "b8f211bfda92d2c843f6403a74510d2b6d40c4e44f6ef6c1a085d7207b3d4e96"
+      },
+      {
+        "template_id": "ui.service",
+        "rendered_to": "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark-tag.service.ts",
+        "rendered_sha256": "5db56060d9f2ee3b038fc4d2e45d6ea69e6b9fea3c8ec67ffa229795058e2a54"
+      }
+    ],
+    "token_map": {
+      "__NAMESPACE__": "demo",
+      "__MODULE__": "Bookmark",
+      "__kebabModule__": "bookmark",
+      "__snake_module__": "bookmark",
+      "__moduleSlug__": "demo-bookmark",
+      "__ENTITY__": "Bookmark",
+      "__classEntity__": "Bookmark",
+      "__kebabEntity__": "bookmark",
+      "__snake_entity__": "bookmark",
+      "__snake_table__": "demo__bookmark_bookmark",
+      "__SPEC_VERSION__": "0.1.0",
+      "__SPEC_SHA__": "a5553692"
+    },
+    "idempotency": "fresh"
+  }
+}

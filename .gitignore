@@ -113,3 +113,12 @@ docs/work/plan/*
 # Generated release evidence
 /.release/
 /.changeset/status.json
+
+# C-4 phase D scaffolding workaround: temporary symlink to devai's
+# bundled stack-adapter pack. Required because resolveStackAdapterPack
+# only walks $repoRoot/examples/, not findDevaiPacksRoot().
+# Recreate locally with:
+#   ln -sf ../../devai/examples/redox-pack-nestjs-postgres-angular \
+#          examples/redox-pack-nestjs-postgres-angular
+# Filed in Phase A retro D-A-7 (next devai alignment session).
+/examples/

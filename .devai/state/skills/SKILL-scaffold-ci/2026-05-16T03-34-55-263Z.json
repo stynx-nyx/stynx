@@ -1,0 +1,11 @@
+{
+  "skill_id": "SKILL-scaffold-ci",
+  "status": "skipped",
+  "notes": [
+    "No stack-adapter pack matched the adopter repo; scaffolders need a matching pack for templates. Use devai pack resolve to inspect candidates."
+  ],
+  "evidence": {
+    "blueprint_id": "BP-DEMO-BOOKMARK-001",
+    "blueprint_version": "0.1.0"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "skill_id": "SKILL-scaffold-docs",
+  "status": "pass",
+  "evidence": {
+    "schemaVersion": "1.0.0",
+    "skill_id": "SKILL-scaffold-docs",
+    "blueprint_id": "BP-DEMO-BOOKMARK-001",
+    "blueprint_version": "0.1.0",
+    "blueprint_sha256": "a5553692743e92326c126b44a0be9d982e0d9e0fac4d261a0c805e36cf674e1f",
+    "stack_adapter_pack": "redox-pack-nestjs-postgres-angular",
+    "files_created": [
+      "domain/demo-bookmark/docs/README.md",
+      "domain/demo-bookmark/docs/ADR-0001.md"
+    ],
+    "files_modified": [],
+    "files_skipped": [],
+    "templates_used": [
+      {
+        "template_id": "docs.readme",
+        "rendered_to": "domain/demo-bookmark/docs/README.md",
+        "rendered_sha256": "42f026658504c92cb741fb6cc35e80294a368965b20f1185da72e9bf85eb995d"
+      },
+      {
+        "template_id": "docs.adr",
+        "rendered_to": "domain/demo-bookmark/docs/ADR-0001.md",
+        "rendered_sha256": "102347312b862a6fe6ec89790dec7e18d3f5a7c1515b3b17ab97ea1ccb71d85f"
+      }
+    ],
+    "token_map": {
+      "__NAMESPACE__": "demo",
+      "__MODULE__": "Bookmark",
+      "__kebabModule__": "bookmark",
+      "__snake_module__": "bookmark",
+      "__moduleSlug__": "demo-bookmark",
+      "__ENTITY__": "Bookmark",
+      "__classEntity__": "Bookmark",
+      "__kebabEntity__": "bookmark",
+      "__snake_entity__": "bookmark",
+      "__snake_table__": "demo__bookmark_bookmark",
+      "__SPEC_VERSION__": "0.1.0",
+      "__SPEC_SHA__": "a5553692"
+    },
+    "idempotency": "fresh"
+  }
+}

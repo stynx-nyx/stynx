@@ -1,0 +1,87 @@
+{
+  "skill_id": "SKILL-scaffold-api",
+  "status": "pass",
+  "evidence": {
+    "schemaVersion": "1.0.0",
+    "skill_id": "SKILL-scaffold-api",
+    "blueprint_id": "BP-DEMO-BOOKMARK-001",
+    "blueprint_version": "0.1.0",
+    "blueprint_sha256": "a5553692743e92326c126b44a0be9d982e0d9e0fac4d261a0c805e36cf674e1f",
+    "stack_adapter_pack": "redox-pack-nestjs-postgres-angular",
+    "files_created": [
+      "domain/demo-bookmark/api/src/demo-bookmark/demo-bookmark.module.ts",
+      "domain/demo-bookmark/api/src/demo-bookmark/controllers/bookmark.controller.ts",
+      "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark.service.ts",
+      "domain/demo-bookmark/api/src/demo-bookmark/dto/create-bookmark.dto.ts",
+      "domain/demo-bookmark/api/src/demo-bookmark/dto/update-bookmark.dto.ts",
+      "domain/demo-bookmark/api/src/demo-bookmark/controllers/bookmark-tag.controller.ts",
+      "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark-tag.service.ts",
+      "domain/demo-bookmark/api/src/demo-bookmark/dto/create-bookmark-tag.dto.ts",
+      "domain/demo-bookmark/api/src/demo-bookmark/dto/update-bookmark-tag.dto.ts"
+    ],
+    "files_modified": [],
+    "files_skipped": [],
+    "templates_used": [
+      {
+        "template_id": "api.module",
+        "rendered_to": "domain/demo-bookmark/api/src/demo-bookmark/demo-bookmark.module.ts",
+        "rendered_sha256": "f72b7cba0f30030eb315b4d28ed46439a431f0fc577a9bec23d9719956b7dc50"
+      },
+      {
+        "template_id": "api.controller",
+        "rendered_to": "domain/demo-bookmark/api/src/demo-bookmark/controllers/bookmark.controller.ts",
+        "rendered_sha256": "9d52f2911d17c2131c24d92967123ba2c1960a40e42dab8fa491a0af849c58bf"
+      },
+      {
+        "template_id": "api.service",
+        "rendered_to": "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark.service.ts",
+        "rendered_sha256": "8e853bb5a4c4890083de21945a5a60d6134a4c5d36e1c29c71cee4e1230b3775"
+      },
+      {
+        "template_id": "api.dto.create",
+        "rendered_to": "domain/demo-bookmark/api/src/demo-bookmark/dto/create-bookmark.dto.ts",
+        "rendered_sha256": "aef6759186d75dec6812295fb863c2abb3659eb140d4e36986075f0d43e91682"
+      },
+      {
+        "template_id": "api.dto.update",
+        "rendered_to": "domain/demo-bookmark/api/src/demo-bookmark/dto/update-bookmark.dto.ts",
+        "rendered_sha256": "4a41b8274171d7464be9f50284b4ecdb35ae114202cb5c4059b175c42ebc4847"
+      },
+      {
+        "template_id": "api.controller",
+        "rendered_to": "domain/demo-bookmark/api/src/demo-bookmark/controllers/bookmark-tag.controller.ts",
+        "rendered_sha256": "9d52f2911d17c2131c24d92967123ba2c1960a40e42dab8fa491a0af849c58bf"
+      },
+      {
+        "template_id": "api.service",
+        "rendered_to": "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark-tag.service.ts",
+        "rendered_sha256": "8e853bb5a4c4890083de21945a5a60d6134a4c5d36e1c29c71cee4e1230b3775"
+      },
+      {
+        "template_id": "api.dto.create",
+        "rendered_to": "domain/demo-bookmark/api/src/demo-bookmark/dto/create-bookmark-tag.dto.ts",
+        "rendered_sha256": "aef6759186d75dec6812295fb863c2abb3659eb140d4e36986075f0d43e91682"
+      },
+      {
+        "template_id": "api.dto.update",
+        "rendered_to": "domain/demo-bookmark/api/src/demo-bookmark/dto/update-bookmark-tag.dto.ts",
+        "rendered_sha256": "4a41b8274171d7464be9f50284b4ecdb35ae114202cb5c4059b175c42ebc4847"
+      }
+    ],
+    "token_map": {
+      "__NAMESPACE__": "demo",
+      "__MODULE__": "Bookmark",
+      "__kebabModule__": "bookmark",
+      "__snake_module__": "bookmark",
+      "__moduleSlug__": "demo-bookmark",
+      "__ENTITY__": "Bookmark",
+      "__classEntity__": "Bookmark",
+      "__kebabEntity__": "bookmark",
+      "__snake_entity__": "bookmark",
+      "__snake_table__": "demo__bookmark_bookmark",
+      "__SPEC_VERSION__": "0.1.0",
+      "__SPEC_SHA__": "a5553692"
+    },
+    "idempotency": "fresh"
+  }
+}

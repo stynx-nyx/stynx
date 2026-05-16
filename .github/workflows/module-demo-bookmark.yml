@@ -1,0 +1,33 @@
+# Generated from BP-DEMO-BOOKMARK-001 v0.1.0 sha256:a5553692
+name: module-demo-bookmark
+
+on:
+  push:
+    paths:
+      - 'domain/demo-bookmark/**'
+  pull_request:
+    paths:
+      - 'domain/demo-bookmark/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter ./domain/demo-bookmark/api run build
+      - run: pnpm --filter ./domain/demo-bookmark/api run test
+      - run: pnpm --filter ./domain/demo-bookmark/api run lint
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          if command -v npm >/dev/null 2>&1; then
+            npm audit --audit-level=high --workspaces || true
+          fi

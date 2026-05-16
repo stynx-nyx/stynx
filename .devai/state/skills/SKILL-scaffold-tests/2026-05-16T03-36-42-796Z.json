@@ -1,0 +1,57 @@
+{
+  "skill_id": "SKILL-scaffold-tests",
+  "status": "pass",
+  "evidence": {
+    "schemaVersion": "1.0.0",
+    "skill_id": "SKILL-scaffold-tests",
+    "blueprint_id": "BP-DEMO-BOOKMARK-001",
+    "blueprint_version": "0.1.0",
+    "blueprint_sha256": "a5553692743e92326c126b44a0be9d982e0d9e0fac4d261a0c805e36cf674e1f",
+    "stack_adapter_pack": "redox-pack-nestjs-postgres-angular",
+    "files_created": [
+      "domain/demo-bookmark/api/test/bookmark.controller.spec.ts",
+      "domain/demo-bookmark/api/test/bookmark.service.spec.ts",
+      "domain/demo-bookmark/api/test/bookmark-tag.controller.spec.ts",
+      "domain/demo-bookmark/api/test/bookmark-tag.service.spec.ts"
+    ],
+    "files_modified": [],
+    "files_skipped": [],
+    "templates_used": [
+      {
+        "template_id": "tests.controller-spec",
+        "rendered_to": "domain/demo-bookmark/api/test/bookmark.controller.spec.ts",
+        "rendered_sha256": "b718897aa0530add0c3e1e4faee64d1a5a4b48642eb6c8b30b3ede4c2e81cade"
+      },
+      {
+        "template_id": "tests.service-spec",
+        "rendered_to": "domain/demo-bookmark/api/test/bookmark.service.spec.ts",
+        "rendered_sha256": "45c4eb7f1416a023b16bfa5187fd72b1c821228b2d8b40b3df065c001647cf23"
+      },
+      {
+        "template_id": "tests.controller-spec",
+        "rendered_to": "domain/demo-bookmark/api/test/bookmark-tag.controller.spec.ts",
+        "rendered_sha256": "b718897aa0530add0c3e1e4faee64d1a5a4b48642eb6c8b30b3ede4c2e81cade"
+      },
+      {
+        "template_id": "tests.service-spec",
+        "rendered_to": "domain/demo-bookmark/api/test/bookmark-tag.service.spec.ts",
+        "rendered_sha256": "45c4eb7f1416a023b16bfa5187fd72b1c821228b2d8b40b3df065c001647cf23"
+      }
+    ],
+    "token_map": {
+      "__NAMESPACE__": "demo",
+      "__MODULE__": "Bookmark",
+      "__kebabModule__": "bookmark",
+      "__snake_module__": "bookmark",
+      "__moduleSlug__": "demo-bookmark",
+      "__ENTITY__": "Bookmark",
+      "__classEntity__": "Bookmark",
+      "__kebabEntity__": "bookmark",
+      "__snake_entity__": "bookmark",
+      "__snake_table__": "demo__bookmark_bookmark",
+      "__SPEC_VERSION__": "0.1.0",
+      "__SPEC_SHA__": "a5553692"
+    },
+    "idempotency": "fresh"
+  }
+}

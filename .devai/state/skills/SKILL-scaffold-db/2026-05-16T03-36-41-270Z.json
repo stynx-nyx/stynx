@@ -1,0 +1,42 @@
+{
+  "skill_id": "SKILL-scaffold-db",
+  "status": "pass",
+  "evidence": {
+    "schemaVersion": "1.0.0",
+    "skill_id": "SKILL-scaffold-db",
+    "blueprint_id": "BP-DEMO-BOOKMARK-001",
+    "blueprint_version": "0.1.0",
+    "blueprint_sha256": "a5553692743e92326c126b44a0be9d982e0d9e0fac4d261a0c805e36cf674e1f",
+    "stack_adapter_pack": "redox-pack-nestjs-postgres-angular",
+    "files_created": ["domain/demo-bookmark/db/migration.sql", "domain/demo-bookmark/db/seed.sql"],
+    "files_modified": [],
+    "files_skipped": [],
+    "templates_used": [
+      {
+        "template_id": "db.migration",
+        "rendered_to": "domain/demo-bookmark/db/migration.sql",
+        "rendered_sha256": "bfd3ad228062567a5ca32acb35beda9170606d542e48bac4e16329689a354807"
+      },
+      {
+        "template_id": "db.seed",
+        "rendered_to": "domain/demo-bookmark/db/seed.sql",
+        "rendered_sha256": "78e1d7b62a3d7b783e7cc397089c73caa670a2a7f055f3d33aae8dc69c0cc3c7"
+      }
+    ],
+    "token_map": {
+      "__NAMESPACE__": "demo",
+      "__MODULE__": "Bookmark",
+      "__kebabModule__": "bookmark",
+      "__snake_module__": "bookmark",
+      "__moduleSlug__": "demo-bookmark",
+      "__ENTITY__": "Bookmark",
+      "__classEntity__": "Bookmark",
+      "__kebabEntity__": "bookmark",
+      "__snake_entity__": "bookmark",
+      "__snake_table__": "demo__bookmark_bookmark",
+      "__SPEC_VERSION__": "0.1.0",
+      "__SPEC_SHA__": "a5553692"
+    },
+    "idempotency": "fresh"
+  }
+}

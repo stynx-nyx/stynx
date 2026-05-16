@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "1.0.0",
+  "run_id": "AR-019e2ed9-f01f-7885-a56f-b01c9e9d7065",
+  "started_at": "2026-05-16T03:34:55.258Z",
+  "ended_at": "2026-05-16T03:34:55.263Z",
+  "caller": {
+    "kind": "skill",
+    "name": "SKILL-scaffold-ci"
+  },
+  "files_read": ["/tmp/scaffold-input.json"],
+  "files_written": [".devai/state/skills/SKILL-scaffold-ci/2026-05-16T03-34-55-263Z.json"],
+  "commands_run": [],
+  "compliance": {
+    "invariant_ids": ["INV-DEVAI-010"]
+  },
+  "outcome": {
+    "status": "skipped",
+    "notes": [
+      "No stack-adapter pack matched the adopter repo; scaffolders need a matching pack for templates. Use devai pack resolve to inspect candidates."
+    ]
+  },
+  "prev_hash": "6f544ffb7a1b8688c46ea3ed77505ca4865f973f87f282952df87ccbc517e7d7",
+  "hash_algo_version": "2.0",
+  "manifest_hash": "d6192ea8ebc4bdc6301f461fd0b66d3ff8e79a592c9f1778a0bce828a4a996d4"
+}

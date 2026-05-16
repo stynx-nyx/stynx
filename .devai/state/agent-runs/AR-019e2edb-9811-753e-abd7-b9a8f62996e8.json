@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "1.0.0",
+  "run_id": "AR-019e2edb-9811-753e-abd7-b9a8f62996e8",
+  "started_at": "2026-05-16T03:36:43.785Z",
+  "ended_at": "2026-05-16T03:36:43.792Z",
+  "caller": {
+    "kind": "skill",
+    "name": "SKILL-scaffold-ci"
+  },
+  "files_read": ["/tmp/scaffold-input.json"],
+  "files_written": [".devai/state/skills/SKILL-scaffold-ci/2026-05-16T03-36-43-792Z.json"],
+  "commands_run": [],
+  "compliance": {
+    "invariant_ids": ["INV-DEVAI-010"]
+  },
+  "outcome": {
+    "status": "pass"
+  },
+  "prev_hash": "398a1e9deaefd1679f9509ac4218dbbceab28eb8a15edd58297d7276c71d2119",
+  "hash_algo_version": "2.0",
+  "manifest_hash": "3c5224f4325a5fedd8e0d5950caade1502fa2816987b466c66c10e02c43e5a0b"
+}
