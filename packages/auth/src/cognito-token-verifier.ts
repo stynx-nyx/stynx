@@ -1,4 +1,13 @@
 import { URL } from 'node:url';
+// C-4 F-19: jose@6 is ESM-only; TS1479 fires for adopters whose tsconfig
+// depth > 2 (reference-api at 2 levels typechecks without this; domain/
+// demo-bookmark/api at 3 levels does not, despite identical resolved
+// tsconfigs). @ts-ignore (not @ts-expect-error) because the error doesn't
+// fire for shallower projects — TS would complain about an unused expect-
+// error there. Type-only import so this is purely a typecheck-time
+// annotation; emits nothing at runtime.
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import type { JWTPayload, JWTVerifyGetKey } from 'jose';
 import type { AuthVerificationResult, Principal, TokenVerifier } from '@stynx/contracts';
 
