@@ -1,11 +1,10 @@
 {
-  "extends": "@stynx-internal/tsconfig/lib.json",
+  "extends": "../../../tools/tsconfig/node24.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "src",
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "rootDir": "../../.."
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["dist", "node_modules", "test"]
+  "include": ["src/**/*.ts"]
 }

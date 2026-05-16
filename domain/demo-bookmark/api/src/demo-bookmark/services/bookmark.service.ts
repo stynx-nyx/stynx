@@ -1,45 +1,130 @@
-// C-4 Session S3-2 — service stub
+// C-4 Session T2 — BookmarkService wired to @stynx/data
 //
-// The scaffolder emitted a TypeORM-shaped service (InjectRepository +
-// Repository<Bookmark>); stynx uses @stynx/data (drizzle-orm based),
-// not TypeORM. Filed as D-A-15.
-//
-// This stub has the right method signatures but every method throws
-// NotImplementedException with a clear hand-finishing pointer. That keeps
-// the module compilable + DI-resolvable while making it loud that S3-2-
-// step-2 needs to wire the real Postgres-backed queries.
-//
-// Hand-finishing reference: reference/api/src/sample/reference-sample.service.ts
-// shows the canonical stynx service shape — constructor injection of
-// `Database`, `RequestContext`, and dependent services from @stynx/*.
+// Replaces the S3-2 NotImplementedException stubs. Follows the stynx
+// pattern from reference/api/src/sample/reference-sample.service.ts:
+// constructor injection of Database + RequestContext, tenant-scoped
+// transactions, role + readonly hints.
 
-import { Injectable, NotImplementedException } from '@nestjs/common';
-import type { Bookmark } from '../entities/bookmark.entity';
+import { randomUUID } from 'node:crypto';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { RequestContext } from '@stynx/core';
+import { Database } from '@stynx/data';
+import { and, desc, eq } from 'drizzle-orm';
+import { bookmarks } from '../schema';
 import type { CreateBookmarkDto } from '../dto/create-bookmark.dto';
 import type { UpdateBookmarkDto } from '../dto/update-bookmark.dto';
 
-const STEP_2_HINT =
-  'Hand-finish in C-4 Session S3-2-step-2: wire to @stynx/data Database + drizzle schema. See reference/api/src/sample/reference-sample.service.ts.';
+function clampLimit(value?: number): number {
+  if (!Number.isFinite(value)) return 50;
+  return Math.min(Math.max(Number(value), 1), 200);
+}
 
 @Injectable()
 export class BookmarkService {
-  findAll(): Promise<Bookmark[]> {
-    throw new NotImplementedException(`BookmarkService.findAll: ${STEP_2_HINT}`);
+  constructor(
+    private readonly database: Database,
+    private readonly requestContext: RequestContext,
+  ) {}
+
+  async findAll(limit?: number) {
+    return this.database.tx(
+      async (trx) =>
+        trx
+          .select()
+          .from(bookmarks)
+          .where(eq(bookmarks.tenantId, this.requireTenantId()))
+          .orderBy(desc(bookmarks.createdAt))
+          .limit(clampLimit(limit)),
+      { role: 'reader', readonly: true },
+    );
   }
 
-  findOne(_id: string): Promise<Bookmark> {
-    throw new NotImplementedException(`BookmarkService.findOne: ${STEP_2_HINT}`);
+  async findOne(id: string) {
+    const rows = await this.database.tx(
+      async (trx) =>
+        trx
+          .select()
+          .from(bookmarks)
+          .where(and(eq(bookmarks.id, id), eq(bookmarks.tenantId, this.requireTenantId())))
+          .limit(1),
+      { role: 'reader', readonly: true },
+    );
+    if (rows.length === 0) {
+      throw new NotFoundException(`BOOKMARK_NOT_FOUND:${id}`);
+    }
+    return rows[0];
   }
 
-  create(_dto: CreateBookmarkDto): Promise<Bookmark> {
-    throw new NotImplementedException(`BookmarkService.create: ${STEP_2_HINT}`);
+  async create(dto: CreateBookmarkDto) {
+    return this.database.tx(async (trx) => {
+      const id = randomUUID();
+      const now = new Date();
+      await trx.insert(bookmarks).values({
+        id,
+        tenantId: this.requireTenantId(),
+        ownerId: this.requireOwnerId(),
+        url: dto.url,
+        title: dto.title ?? null,
+        notes: dto.notes ?? null,
+        createdAt: now,
+        updatedAt: now,
+      });
+      const created = await trx
+        .select()
+        .from(bookmarks)
+        .where(eq(bookmarks.id, id))
+        .limit(1);
+      return created[0];
+    });
   }
 
-  update(_id: string, _dto: UpdateBookmarkDto): Promise<Bookmark> {
-    throw new NotImplementedException(`BookmarkService.update: ${STEP_2_HINT}`);
+  async update(id: string, dto: UpdateBookmarkDto) {
+    return this.database.tx(async (trx) => {
+      const tenantId = this.requireTenantId();
+      const result = await trx
+        .update(bookmarks)
+        .set({
+          ...(dto.url !== undefined && { url: dto.url }),
+          ...(dto.title !== undefined && { title: dto.title }),
+          ...(dto.notes !== undefined && { notes: dto.notes }),
+          updatedAt: new Date(),
+        })
+        .where(and(eq(bookmarks.id, id), eq(bookmarks.tenantId, tenantId)))
+        .returning();
+      if (result.length === 0) {
+        throw new NotFoundException(`BOOKMARK_NOT_FOUND:${id}`);
+      }
+      return result[0];
+    });
   }
 
-  remove(_id: string): Promise<void> {
-    throw new NotImplementedException(`BookmarkService.remove: ${STEP_2_HINT}`);
+  async remove(id: string) {
+    return this.database.tx(async (trx) => {
+      const tenantId = this.requireTenantId();
+      const result = await trx
+        .delete(bookmarks)
+        .where(and(eq(bookmarks.id, id), eq(bookmarks.tenantId, tenantId)))
+        .returning({ id: bookmarks.id });
+      if (result.length === 0) {
+        throw new NotFoundException(`BOOKMARK_NOT_FOUND:${id}`);
+      }
+      return { status: 'soft-deleted', id };
+    });
+  }
+
+  private requireTenantId(): string {
+    const tenantId = this.requestContext.tenantId;
+    if (!tenantId) {
+      throw new NotFoundException('TENANT_CONTEXT_MISSING');
+    }
+    return tenantId;
+  }
+
+  private requireOwnerId(): string {
+    const actorId = this.requestContext.actorId;
+    if (!actorId) {
+      throw new NotFoundException('ACTOR_CONTEXT_MISSING');
+    }
+    return actorId;
   }
 }
