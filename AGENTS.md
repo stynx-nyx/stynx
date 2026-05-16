@@ -4,10 +4,10 @@
 
 This file is the [`agents.md`](https://agents.md) protocol surface. AI sessions operating on stynx should:
 
-1. **Read [`../devai/CLAUDE.md`](../devai/CLAUDE.md) first** — propose-before-producing, cite-the-constitution, validate-before-declaring-done. The discipline applies in stynx as fully as in devai itself (Article 36 self-application, applied transitively to adopters).
+1. **Read [`CLAUDE.md`](CLAUDE.md) first** — stynx's session-governance pointer (created in Phase H so DEVAI's `doctor` agents-claude-sync check passes against stynx). It points at DEVAI's full canonical reading order: `../devai/CLAUDE.md`, `../devai/README.md`, `../devai/CONSTITUTION.md`, `../devai/BUILD-PLAN.md`, `../devai/DESIGN-DECISIONS.md`, and the `../devai/docs/schemas/` registry that every JSON instance in stynx must validate against.
 2. **Read [`../devai/CONSTITUTION.md`](../devai/CONSTITUTION.md), Article 6** — the five human roles (Owner, Architect, Engineer, Inspector, Auditor) and their substrate authority by path. **Declare your role in every commit subject** (e.g., `Architect: ...`); the merged commitlint config (`tools/repo-config/commitlint.config.cjs`) accepts both role-prefix and Conventional Commits shapes.
 3. **Read [`GOVERNANCE.md`](GOVERNANCE.md)** — the canonical pointer to stynx's DEVAI-shaped governance surfaces.
-4. **Read [`docs/devai-phase-a-retro.md`](docs/devai-phase-a-retro.md) and the C-4 pilot brief at `../devai-adoption-by-stynx.md`** — context for how stynx adopts DEVAI and which gaps (D-A-1 … D-A-8) are filed for follow-up devai sessions.
+4. **Read [`docs/devai-phase-a-retro.md`](docs/devai-phase-a-retro.md) and the C-4 pilot brief at `../devai-adoption-by-stynx.md`** — context for how stynx adopts DEVAI and which gaps (D-A-1 … D-A-9) are filed for follow-up devai sessions.
 
 ## Stynx-specific operational notes (NOT superseded by DEVAI)
 
