@@ -3,10 +3,9 @@
     "domain/demo-bookmark/api/src/demo-bookmark/controllers/bookmark-tag.controller.ts": [
       "@nestjs/common",
       "domain/demo-bookmark/api/src/demo-bookmark/decorators/policy.decorator",
-      "domain/demo-bookmark/api/src/demo-bookmark/dto/create-bookmark.dto",
-      "domain/demo-bookmark/api/src/demo-bookmark/dto/update-bookmark.dto",
+      "domain/demo-bookmark/api/src/demo-bookmark/dto/create-bookmark-tag.dto",
       "domain/demo-bookmark/api/src/demo-bookmark/guards/policy.guard",
-      "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark.service"
+      "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark-tag.service"
     ],
     "domain/demo-bookmark/api/src/demo-bookmark/controllers/bookmark.controller.ts": [
       "@nestjs/common",
@@ -16,12 +15,13 @@
       "domain/demo-bookmark/api/src/demo-bookmark/guards/policy.guard",
       "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark.service"
     ],
+    "domain/demo-bookmark/api/src/demo-bookmark/decorators/policy.decorator.ts": ["@nestjs/common"],
     "domain/demo-bookmark/api/src/demo-bookmark/demo-bookmark.module.ts": [
       "@nestjs/common",
-      "@nestjs/typeorm",
+      "domain/demo-bookmark/api/src/demo-bookmark/controllers/bookmark-tag.controller",
       "domain/demo-bookmark/api/src/demo-bookmark/controllers/bookmark.controller",
-      "domain/demo-bookmark/api/src/demo-bookmark/entities/bookmark.entity",
       "domain/demo-bookmark/api/src/demo-bookmark/guards/policy.guard",
+      "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark-tag.service",
       "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark.service"
     ],
     "domain/demo-bookmark/api/src/demo-bookmark/dto/create-bookmark-tag.dto.ts": [
@@ -29,28 +29,24 @@
     ],
     "domain/demo-bookmark/api/src/demo-bookmark/dto/create-bookmark.dto.ts": ["class-validator"],
     "domain/demo-bookmark/api/src/demo-bookmark/dto/update-bookmark-tag.dto.ts": [
-      "@nestjs/mapped-types",
-      "domain/demo-bookmark/api/src/demo-bookmark/dto/create-bookmark.dto"
+      "class-validator"
     ],
     "domain/demo-bookmark/api/src/demo-bookmark/dto/update-bookmark.dto.ts": [
       "@nestjs/mapped-types",
       "domain/demo-bookmark/api/src/demo-bookmark/dto/create-bookmark.dto"
     ],
+    "domain/demo-bookmark/api/src/demo-bookmark/entities/bookmark.entity.ts": [],
+    "domain/demo-bookmark/api/src/demo-bookmark/guards/policy.guard.ts": ["@nestjs/common"],
     "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark-tag.service.ts": [
       "@nestjs/common",
-      "@nestjs/typeorm",
-      "domain/demo-bookmark/api/src/demo-bookmark/dto/create-bookmark.dto",
-      "domain/demo-bookmark/api/src/demo-bookmark/dto/update-bookmark.dto",
-      "domain/demo-bookmark/api/src/demo-bookmark/entities/bookmark.entity",
-      "typeorm"
+      "domain/demo-bookmark/api/src/demo-bookmark/dto/create-bookmark-tag.dto",
+      "domain/demo-bookmark/api/src/demo-bookmark/entities/bookmark.entity"
     ],
     "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark.service.ts": [
       "@nestjs/common",
-      "@nestjs/typeorm",
       "domain/demo-bookmark/api/src/demo-bookmark/dto/create-bookmark.dto",
       "domain/demo-bookmark/api/src/demo-bookmark/dto/update-bookmark.dto",
-      "domain/demo-bookmark/api/src/demo-bookmark/entities/bookmark.entity",
-      "typeorm"
+      "domain/demo-bookmark/api/src/demo-bookmark/entities/bookmark.entity"
     ],
     "domain/demo-bookmark/api/test/bookmark-tag.controller.spec.ts": [
       "@nestjs/testing",
@@ -105,9 +101,7 @@
       "@angular/router",
       "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark-detail.component",
       "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark-list.component",
-      "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark.service",
-      "domain/demo-bookmark/web/src/app/demo-bookmark/guards/cognito.guard",
-      "domain/demo-bookmark/web/src/app/demo-bookmark/policy.guard"
+      "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark.service"
     ],
     "infra/cdk/bin/stynx-env.ts": [
       "aws-cdk-lib",

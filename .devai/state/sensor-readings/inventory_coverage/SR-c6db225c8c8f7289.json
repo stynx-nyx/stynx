@@ -6,7 +6,7 @@
     "kind": "inventory_coverage",
     "version": "1.0.0"
   },
-  "timestamp": "2026-05-16T05:26:26.075Z",
+  "timestamp": "2026-05-16T06:03:33.641Z",
   "status": "review",
   "deterministic": true,
   "command": "devai sense coverage --repo-root .",

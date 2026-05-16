@@ -6,13 +6,13 @@
     "kind": "inventory_data_model",
     "version": "1.0.0"
   },
-  "timestamp": "2026-05-16T05:26:24.047Z",
+  "timestamp": "2026-05-16T06:03:31.871Z",
   "status": "pass",
   "deterministic": true,
   "command": "devai sense data-model --repo-root .",
   "command_hash": "6a2784cfbaa9836dd5d1dea7fb70e2e7e36ff7419359ac29f0fa18379d72478a",
   "tier": "L0",
-  "duration_ms": 7,
+  "duration_ms": 6,
   "evidence_path": ".devai/state/sensors/inventory_data_model/data-model.json",
   "metrics": {
     "table_count": 5,
