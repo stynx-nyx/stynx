@@ -15,7 +15,7 @@ These are stynx-side conventions DEVAI doesn't speak to; they remain authoritati
 
 ### Directory responsibilities
 
-- `apps/reference-{api,web}/` — reference applications (NestJS API + Angular web) that demonstrate stynx framework usage. Per directive 5.4, the canonical naming target is `reference/{api,web}/`; the relocation is deferred to a future Engineer session (see Phase A retro §3).
+- `reference/{api,web}/` — reference applications (NestJS API + Angular web) that demonstrate stynx framework usage. Relocated here in C-4 Session S2 (per directive 5.4), analogous to DEVAI's `examples/`.
 - `packages/*` (16 packages, `@stynx/*`) — backend reusable modules (NestJS-shaped: audit, auth, backend, contracts, core, data, health, i18n, idempotency, logging, privacy, ratelimit, sessions, storage, tenancy, testing).
 - `packages-web/*` (10 packages, `@stynx-web/*`) — Angular reusable modules (sdk, angular, angular-auth, angular-i18n, angular-profile, angular-sessions, angular-storage, angular-tenancy, angular-trash, angular-ui).
 - `tools/*` — internal repo tooling (`@stynx-internal/*`).

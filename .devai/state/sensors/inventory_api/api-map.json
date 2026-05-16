@@ -1,13 +1,13 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-05-16T03:23:49.618Z",
+  "generatedAt": "2026-05-16T04:41:23.734Z",
   "sourceRepo": ".",
   "endpoints": [
     {
       "method": "GET",
       "path": "/_probes/data-tx",
       "controller": {
-        "file": "apps/reference-api/src/sample/reference-probes.controller.ts",
+        "file": "reference/api/src/sample/reference-probes.controller.ts",
         "class": "ReferenceProbesController",
         "methodName": "dataTx",
         "startLine": 32,
@@ -25,7 +25,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/reference-probes.controller.ts",
+          "path": "reference/api/src/sample/reference-probes.controller.ts",
           "startLine": 32,
           "endLine": 76
         }
@@ -35,7 +35,7 @@
       "method": "POST",
       "path": "/_probes/idempotency",
       "controller": {
-        "file": "apps/reference-api/src/sample/reference-probes.controller.ts",
+        "file": "reference/api/src/sample/reference-probes.controller.ts",
         "class": "ReferenceProbesController",
         "methodName": "idempotency",
         "startLine": 122,
@@ -47,7 +47,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/reference-probes.controller.ts",
+          "path": "reference/api/src/sample/reference-probes.controller.ts",
           "startLine": 122,
           "endLine": 127
         }
@@ -57,7 +57,7 @@
       "method": "GET",
       "path": "/_probes/ratelimit",
       "controller": {
-        "file": "apps/reference-api/src/sample/reference-probes.controller.ts",
+        "file": "reference/api/src/sample/reference-probes.controller.ts",
         "class": "ReferenceProbesController",
         "methodName": "rateLimit",
         "startLine": 78,
@@ -75,7 +75,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/reference-probes.controller.ts",
+          "path": "reference/api/src/sample/reference-probes.controller.ts",
           "startLine": 78,
           "endLine": 120
         }
@@ -85,7 +85,7 @@
       "method": "GET",
       "path": "/_probes/readonly-write",
       "controller": {
-        "file": "apps/reference-api/src/sample/reference-probes.controller.ts",
+        "file": "reference/api/src/sample/reference-probes.controller.ts",
         "class": "ReferenceProbesController",
         "methodName": "readonlyWrite",
         "startLine": 129,
@@ -97,7 +97,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/reference-probes.controller.ts",
+          "path": "reference/api/src/sample/reference-probes.controller.ts",
           "startLine": 129,
           "endLine": 150
         }
@@ -107,7 +107,7 @@
       "method": "GET",
       "path": "/_reference/auth-verify",
       "controller": {
-        "file": "apps/reference-api/src/sample/reference-dev-auth.controller.ts",
+        "file": "reference/api/src/sample/reference-dev-auth.controller.ts",
         "class": "ReferenceDevAuthController",
         "methodName": "authVerify",
         "startLine": 32,
@@ -121,7 +121,7 @@
       ],
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/reference-dev-auth.controller.ts",
+          "path": "reference/api/src/sample/reference-dev-auth.controller.ts",
           "startLine": 32,
           "endLine": 51
         }
@@ -131,7 +131,7 @@
       "method": "GET",
       "path": "/_reference/demo-tenants",
       "controller": {
-        "file": "apps/reference-api/src/sample/reference-dev-auth.controller.ts",
+        "file": "reference/api/src/sample/reference-dev-auth.controller.ts",
         "class": "ReferenceDevAuthController",
         "methodName": "listDemoTenants",
         "startLine": 19,
@@ -139,7 +139,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/reference-dev-auth.controller.ts",
+          "path": "reference/api/src/sample/reference-dev-auth.controller.ts",
           "startLine": 19,
           "endLine": 23
         }
@@ -149,7 +149,7 @@
       "method": "POST",
       "path": "/_reference/dev-login",
       "controller": {
-        "file": "apps/reference-api/src/sample/reference-dev-auth.controller.ts",
+        "file": "reference/api/src/sample/reference-dev-auth.controller.ts",
         "class": "ReferenceDevAuthController",
         "methodName": "login",
         "startLine": 25,
@@ -157,7 +157,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/reference-dev-auth.controller.ts",
+          "path": "reference/api/src/sample/reference-dev-auth.controller.ts",
           "startLine": 25,
           "endLine": 30
         }
@@ -167,7 +167,7 @@
       "method": "POST",
       "path": "/documents",
       "controller": {
-        "file": "apps/reference-api/src/sample/documents.controller.ts",
+        "file": "reference/api/src/sample/documents.controller.ts",
         "class": "DocumentsController",
         "methodName": "create",
         "startLine": 37,
@@ -179,7 +179,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/documents.controller.ts",
+          "path": "reference/api/src/sample/documents.controller.ts",
           "startLine": 37,
           "endLine": 47
         }
@@ -189,7 +189,7 @@
       "method": "DELETE",
       "path": "/documents/:id",
       "controller": {
-        "file": "apps/reference-api/src/sample/documents.controller.ts",
+        "file": "reference/api/src/sample/documents.controller.ts",
         "class": "DocumentsController",
         "methodName": "delete",
         "startLine": 67,
@@ -207,7 +207,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/documents.controller.ts",
+          "path": "reference/api/src/sample/documents.controller.ts",
           "startLine": 67,
           "endLine": 74
         }
@@ -217,7 +217,7 @@
       "method": "POST",
       "path": "/documents/:id/complete",
       "controller": {
-        "file": "apps/reference-api/src/sample/documents.controller.ts",
+        "file": "reference/api/src/sample/documents.controller.ts",
         "class": "DocumentsController",
         "methodName": "complete",
         "startLine": 49,
@@ -235,7 +235,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/documents.controller.ts",
+          "path": "reference/api/src/sample/documents.controller.ts",
           "startLine": 49,
           "endLine": 56
         }
@@ -245,7 +245,7 @@
       "method": "GET",
       "path": "/documents/:id/download",
       "controller": {
-        "file": "apps/reference-api/src/sample/documents.controller.ts",
+        "file": "reference/api/src/sample/documents.controller.ts",
         "class": "DocumentsController",
         "methodName": "download",
         "startLine": 58,
@@ -263,7 +263,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/documents.controller.ts",
+          "path": "reference/api/src/sample/documents.controller.ts",
           "startLine": 58,
           "endLine": 65
         }
@@ -273,7 +273,7 @@
       "method": "DELETE",
       "path": "/documents/:id/hard",
       "controller": {
-        "file": "apps/reference-api/src/sample/documents.controller.ts",
+        "file": "reference/api/src/sample/documents.controller.ts",
         "class": "DocumentsController",
         "methodName": "hardDelete",
         "startLine": 85,
@@ -291,7 +291,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/documents.controller.ts",
+          "path": "reference/api/src/sample/documents.controller.ts",
           "startLine": 85,
           "endLine": 92
         }
@@ -301,7 +301,7 @@
       "method": "POST",
       "path": "/documents/:id/restore",
       "controller": {
-        "file": "apps/reference-api/src/sample/documents.controller.ts",
+        "file": "reference/api/src/sample/documents.controller.ts",
         "class": "DocumentsController",
         "methodName": "restore",
         "startLine": 76,
@@ -319,7 +319,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/documents.controller.ts",
+          "path": "reference/api/src/sample/documents.controller.ts",
           "startLine": 76,
           "endLine": 83
         }
@@ -329,7 +329,7 @@
       "method": "GET",
       "path": "/record-notes",
       "controller": {
-        "file": "apps/reference-api/src/sample/record-notes.controller.ts",
+        "file": "reference/api/src/sample/record-notes.controller.ts",
         "class": "RecordNotesController",
         "methodName": "list",
         "startLine": 33,
@@ -347,7 +347,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/record-notes.controller.ts",
+          "path": "reference/api/src/sample/record-notes.controller.ts",
           "startLine": 33,
           "endLine": 40
         }
@@ -357,7 +357,7 @@
       "method": "POST",
       "path": "/record-notes",
       "controller": {
-        "file": "apps/reference-api/src/sample/record-notes.controller.ts",
+        "file": "reference/api/src/sample/record-notes.controller.ts",
         "class": "RecordNotesController",
         "methodName": "create",
         "startLine": 51,
@@ -369,7 +369,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/record-notes.controller.ts",
+          "path": "reference/api/src/sample/record-notes.controller.ts",
           "startLine": 51,
           "endLine": 58
         }
@@ -379,7 +379,7 @@
       "method": "DELETE",
       "path": "/record-notes/:id",
       "controller": {
-        "file": "apps/reference-api/src/sample/record-notes.controller.ts",
+        "file": "reference/api/src/sample/record-notes.controller.ts",
         "class": "RecordNotesController",
         "methodName": "delete",
         "startLine": 69,
@@ -397,7 +397,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/record-notes.controller.ts",
+          "path": "reference/api/src/sample/record-notes.controller.ts",
           "startLine": 69,
           "endLine": 76
         }
@@ -407,7 +407,7 @@
       "method": "GET",
       "path": "/record-notes/:id",
       "controller": {
-        "file": "apps/reference-api/src/sample/record-notes.controller.ts",
+        "file": "reference/api/src/sample/record-notes.controller.ts",
         "class": "RecordNotesController",
         "methodName": "get",
         "startLine": 42,
@@ -425,7 +425,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/record-notes.controller.ts",
+          "path": "reference/api/src/sample/record-notes.controller.ts",
           "startLine": 42,
           "endLine": 49
         }
@@ -435,7 +435,7 @@
       "method": "PATCH",
       "path": "/record-notes/:id",
       "controller": {
-        "file": "apps/reference-api/src/sample/record-notes.controller.ts",
+        "file": "reference/api/src/sample/record-notes.controller.ts",
         "class": "RecordNotesController",
         "methodName": "update",
         "startLine": 60,
@@ -453,7 +453,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/record-notes.controller.ts",
+          "path": "reference/api/src/sample/record-notes.controller.ts",
           "startLine": 60,
           "endLine": 67
         }
@@ -463,7 +463,7 @@
       "method": "DELETE",
       "path": "/record-notes/:id/hard",
       "controller": {
-        "file": "apps/reference-api/src/sample/record-notes.controller.ts",
+        "file": "reference/api/src/sample/record-notes.controller.ts",
         "class": "RecordNotesController",
         "methodName": "hardDelete",
         "startLine": 87,
@@ -481,7 +481,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/record-notes.controller.ts",
+          "path": "reference/api/src/sample/record-notes.controller.ts",
           "startLine": 87,
           "endLine": 94
         }
@@ -491,7 +491,7 @@
       "method": "POST",
       "path": "/record-notes/:id/restore",
       "controller": {
-        "file": "apps/reference-api/src/sample/record-notes.controller.ts",
+        "file": "reference/api/src/sample/record-notes.controller.ts",
         "class": "RecordNotesController",
         "methodName": "restore",
         "startLine": 78,
@@ -509,7 +509,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/record-notes.controller.ts",
+          "path": "reference/api/src/sample/record-notes.controller.ts",
           "startLine": 78,
           "endLine": 85
         }
@@ -519,7 +519,7 @@
       "method": "GET",
       "path": "/records",
       "controller": {
-        "file": "apps/reference-api/src/sample/records.controller.ts",
+        "file": "reference/api/src/sample/records.controller.ts",
         "class": "RecordsController",
         "methodName": "list",
         "startLine": 53,
@@ -537,7 +537,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/records.controller.ts",
+          "path": "reference/api/src/sample/records.controller.ts",
           "startLine": 53,
           "endLine": 60
         }
@@ -547,7 +547,7 @@
       "method": "POST",
       "path": "/records",
       "controller": {
-        "file": "apps/reference-api/src/sample/records.controller.ts",
+        "file": "reference/api/src/sample/records.controller.ts",
         "class": "RecordsController",
         "methodName": "create",
         "startLine": 80,
@@ -559,7 +559,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/records.controller.ts",
+          "path": "reference/api/src/sample/records.controller.ts",
           "startLine": 80,
           "endLine": 87
         }
@@ -569,7 +569,7 @@
       "method": "DELETE",
       "path": "/records/:id",
       "controller": {
-        "file": "apps/reference-api/src/sample/records.controller.ts",
+        "file": "reference/api/src/sample/records.controller.ts",
         "class": "RecordsController",
         "methodName": "delete",
         "startLine": 98,
@@ -587,7 +587,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/records.controller.ts",
+          "path": "reference/api/src/sample/records.controller.ts",
           "startLine": 98,
           "endLine": 105
         }
@@ -597,7 +597,7 @@
       "method": "GET",
       "path": "/records/:id",
       "controller": {
-        "file": "apps/reference-api/src/sample/records.controller.ts",
+        "file": "reference/api/src/sample/records.controller.ts",
         "class": "RecordsController",
         "methodName": "get",
         "startLine": 71,
@@ -615,7 +615,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/records.controller.ts",
+          "path": "reference/api/src/sample/records.controller.ts",
           "startLine": 71,
           "endLine": 78
         }
@@ -625,7 +625,7 @@
       "method": "PATCH",
       "path": "/records/:id",
       "controller": {
-        "file": "apps/reference-api/src/sample/records.controller.ts",
+        "file": "reference/api/src/sample/records.controller.ts",
         "class": "RecordsController",
         "methodName": "update",
         "startLine": 89,
@@ -643,7 +643,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/records.controller.ts",
+          "path": "reference/api/src/sample/records.controller.ts",
           "startLine": 89,
           "endLine": 96
         }
@@ -653,7 +653,7 @@
       "method": "DELETE",
       "path": "/records/:id/hard",
       "controller": {
-        "file": "apps/reference-api/src/sample/records.controller.ts",
+        "file": "reference/api/src/sample/records.controller.ts",
         "class": "RecordsController",
         "methodName": "hardDelete",
         "startLine": 116,
@@ -671,7 +671,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/records.controller.ts",
+          "path": "reference/api/src/sample/records.controller.ts",
           "startLine": 116,
           "endLine": 123
         }
@@ -681,7 +681,7 @@
       "method": "POST",
       "path": "/records/:id/restore",
       "controller": {
-        "file": "apps/reference-api/src/sample/records.controller.ts",
+        "file": "reference/api/src/sample/records.controller.ts",
         "class": "RecordsController",
         "methodName": "restore",
         "startLine": 107,
@@ -699,7 +699,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/records.controller.ts",
+          "path": "reference/api/src/sample/records.controller.ts",
           "startLine": 107,
           "endLine": 114
         }
@@ -709,7 +709,7 @@
       "method": "GET",
       "path": "/records/trash",
       "controller": {
-        "file": "apps/reference-api/src/sample/records.controller.ts",
+        "file": "reference/api/src/sample/records.controller.ts",
         "class": "RecordsController",
         "methodName": "trash",
         "startLine": 62,
@@ -727,7 +727,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/records.controller.ts",
+          "path": "reference/api/src/sample/records.controller.ts",
           "startLine": 62,
           "endLine": 69
         }
@@ -737,7 +737,7 @@
       "method": "GET",
       "path": "/work-item-entries",
       "controller": {
-        "file": "apps/reference-api/src/sample/work-item-entries.controller.ts",
+        "file": "reference/api/src/sample/work-item-entries.controller.ts",
         "class": "WorkItemEntriesController",
         "methodName": "list",
         "startLine": 14,
@@ -755,7 +755,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/work-item-entries.controller.ts",
+          "path": "reference/api/src/sample/work-item-entries.controller.ts",
           "startLine": 14,
           "endLine": 21
         }
@@ -765,7 +765,7 @@
       "method": "POST",
       "path": "/work-item-entries",
       "controller": {
-        "file": "apps/reference-api/src/sample/work-item-entries.controller.ts",
+        "file": "reference/api/src/sample/work-item-entries.controller.ts",
         "class": "WorkItemEntriesController",
         "methodName": "create",
         "startLine": 32,
@@ -777,7 +777,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/work-item-entries.controller.ts",
+          "path": "reference/api/src/sample/work-item-entries.controller.ts",
           "startLine": 32,
           "endLine": 39
         }
@@ -787,7 +787,7 @@
       "method": "DELETE",
       "path": "/work-item-entries/:id",
       "controller": {
-        "file": "apps/reference-api/src/sample/work-item-entries.controller.ts",
+        "file": "reference/api/src/sample/work-item-entries.controller.ts",
         "class": "WorkItemEntriesController",
         "methodName": "delete",
         "startLine": 50,
@@ -805,7 +805,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/work-item-entries.controller.ts",
+          "path": "reference/api/src/sample/work-item-entries.controller.ts",
           "startLine": 50,
           "endLine": 57
         }
@@ -815,7 +815,7 @@
       "method": "GET",
       "path": "/work-item-entries/:id",
       "controller": {
-        "file": "apps/reference-api/src/sample/work-item-entries.controller.ts",
+        "file": "reference/api/src/sample/work-item-entries.controller.ts",
         "class": "WorkItemEntriesController",
         "methodName": "get",
         "startLine": 23,
@@ -833,7 +833,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/work-item-entries.controller.ts",
+          "path": "reference/api/src/sample/work-item-entries.controller.ts",
           "startLine": 23,
           "endLine": 30
         }
@@ -843,7 +843,7 @@
       "method": "PATCH",
       "path": "/work-item-entries/:id",
       "controller": {
-        "file": "apps/reference-api/src/sample/work-item-entries.controller.ts",
+        "file": "reference/api/src/sample/work-item-entries.controller.ts",
         "class": "WorkItemEntriesController",
         "methodName": "update",
         "startLine": 41,
@@ -861,7 +861,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/work-item-entries.controller.ts",
+          "path": "reference/api/src/sample/work-item-entries.controller.ts",
           "startLine": 41,
           "endLine": 48
         }
@@ -871,7 +871,7 @@
       "method": "DELETE",
       "path": "/work-item-entries/:id/hard",
       "controller": {
-        "file": "apps/reference-api/src/sample/work-item-entries.controller.ts",
+        "file": "reference/api/src/sample/work-item-entries.controller.ts",
         "class": "WorkItemEntriesController",
         "methodName": "hardDelete",
         "startLine": 68,
@@ -889,7 +889,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/work-item-entries.controller.ts",
+          "path": "reference/api/src/sample/work-item-entries.controller.ts",
           "startLine": 68,
           "endLine": 75
         }
@@ -899,7 +899,7 @@
       "method": "POST",
       "path": "/work-item-entries/:id/restore",
       "controller": {
-        "file": "apps/reference-api/src/sample/work-item-entries.controller.ts",
+        "file": "reference/api/src/sample/work-item-entries.controller.ts",
         "class": "WorkItemEntriesController",
         "methodName": "restore",
         "startLine": 59,
@@ -917,7 +917,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/work-item-entries.controller.ts",
+          "path": "reference/api/src/sample/work-item-entries.controller.ts",
           "startLine": 59,
           "endLine": 66
         }
@@ -927,7 +927,7 @@
       "method": "GET",
       "path": "/work-item-locks",
       "controller": {
-        "file": "apps/reference-api/src/sample/work-item-locks.controller.ts",
+        "file": "reference/api/src/sample/work-item-locks.controller.ts",
         "class": "WorkItemLocksController",
         "methodName": "list",
         "startLine": 14,
@@ -945,7 +945,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/work-item-locks.controller.ts",
+          "path": "reference/api/src/sample/work-item-locks.controller.ts",
           "startLine": 14,
           "endLine": 21
         }
@@ -955,7 +955,7 @@
       "method": "POST",
       "path": "/work-item-locks",
       "controller": {
-        "file": "apps/reference-api/src/sample/work-item-locks.controller.ts",
+        "file": "reference/api/src/sample/work-item-locks.controller.ts",
         "class": "WorkItemLocksController",
         "methodName": "create",
         "startLine": 32,
@@ -967,7 +967,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/work-item-locks.controller.ts",
+          "path": "reference/api/src/sample/work-item-locks.controller.ts",
           "startLine": 32,
           "endLine": 39
         }
@@ -977,7 +977,7 @@
       "method": "DELETE",
       "path": "/work-item-locks/:id",
       "controller": {
-        "file": "apps/reference-api/src/sample/work-item-locks.controller.ts",
+        "file": "reference/api/src/sample/work-item-locks.controller.ts",
         "class": "WorkItemLocksController",
         "methodName": "delete",
         "startLine": 50,
@@ -995,7 +995,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/work-item-locks.controller.ts",
+          "path": "reference/api/src/sample/work-item-locks.controller.ts",
           "startLine": 50,
           "endLine": 57
         }
@@ -1005,7 +1005,7 @@
       "method": "GET",
       "path": "/work-item-locks/:id",
       "controller": {
-        "file": "apps/reference-api/src/sample/work-item-locks.controller.ts",
+        "file": "reference/api/src/sample/work-item-locks.controller.ts",
         "class": "WorkItemLocksController",
         "methodName": "get",
         "startLine": 23,
@@ -1023,7 +1023,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/work-item-locks.controller.ts",
+          "path": "reference/api/src/sample/work-item-locks.controller.ts",
           "startLine": 23,
           "endLine": 30
         }
@@ -1033,7 +1033,7 @@
       "method": "PATCH",
       "path": "/work-item-locks/:id",
       "controller": {
-        "file": "apps/reference-api/src/sample/work-item-locks.controller.ts",
+        "file": "reference/api/src/sample/work-item-locks.controller.ts",
         "class": "WorkItemLocksController",
         "methodName": "update",
         "startLine": 41,
@@ -1051,7 +1051,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/work-item-locks.controller.ts",
+          "path": "reference/api/src/sample/work-item-locks.controller.ts",
           "startLine": 41,
           "endLine": 48
         }
@@ -1061,7 +1061,7 @@
       "method": "DELETE",
       "path": "/work-item-locks/:id/hard",
       "controller": {
-        "file": "apps/reference-api/src/sample/work-item-locks.controller.ts",
+        "file": "reference/api/src/sample/work-item-locks.controller.ts",
         "class": "WorkItemLocksController",
         "methodName": "hardDelete",
         "startLine": 68,
@@ -1079,7 +1079,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/work-item-locks.controller.ts",
+          "path": "reference/api/src/sample/work-item-locks.controller.ts",
           "startLine": 68,
           "endLine": 75
         }
@@ -1089,7 +1089,7 @@
       "method": "POST",
       "path": "/work-item-locks/:id/restore",
       "controller": {
-        "file": "apps/reference-api/src/sample/work-item-locks.controller.ts",
+        "file": "reference/api/src/sample/work-item-locks.controller.ts",
         "class": "WorkItemLocksController",
         "methodName": "restore",
         "startLine": 59,
@@ -1107,7 +1107,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/work-item-locks.controller.ts",
+          "path": "reference/api/src/sample/work-item-locks.controller.ts",
           "startLine": 59,
           "endLine": 66
         }
@@ -1117,7 +1117,7 @@
       "method": "GET",
       "path": "/work-items",
       "controller": {
-        "file": "apps/reference-api/src/sample/work-items.controller.ts",
+        "file": "reference/api/src/sample/work-items.controller.ts",
         "class": "WorkItemsController",
         "methodName": "list",
         "startLine": 14,
@@ -1135,7 +1135,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/work-items.controller.ts",
+          "path": "reference/api/src/sample/work-items.controller.ts",
           "startLine": 14,
           "endLine": 21
         }
@@ -1145,7 +1145,7 @@
       "method": "POST",
       "path": "/work-items",
       "controller": {
-        "file": "apps/reference-api/src/sample/work-items.controller.ts",
+        "file": "reference/api/src/sample/work-items.controller.ts",
         "class": "WorkItemsController",
         "methodName": "create",
         "startLine": 41,
@@ -1157,7 +1157,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/work-items.controller.ts",
+          "path": "reference/api/src/sample/work-items.controller.ts",
           "startLine": 41,
           "endLine": 48
         }
@@ -1167,7 +1167,7 @@
       "method": "DELETE",
       "path": "/work-items/:id",
       "controller": {
-        "file": "apps/reference-api/src/sample/work-items.controller.ts",
+        "file": "reference/api/src/sample/work-items.controller.ts",
         "class": "WorkItemsController",
         "methodName": "delete",
         "startLine": 59,
@@ -1185,7 +1185,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/work-items.controller.ts",
+          "path": "reference/api/src/sample/work-items.controller.ts",
           "startLine": 59,
           "endLine": 66
         }
@@ -1195,7 +1195,7 @@
       "method": "GET",
       "path": "/work-items/:id",
       "controller": {
-        "file": "apps/reference-api/src/sample/work-items.controller.ts",
+        "file": "reference/api/src/sample/work-items.controller.ts",
         "class": "WorkItemsController",
         "methodName": "get",
         "startLine": 32,
@@ -1213,7 +1213,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/work-items.controller.ts",
+          "path": "reference/api/src/sample/work-items.controller.ts",
           "startLine": 32,
           "endLine": 39
         }
@@ -1223,7 +1223,7 @@
       "method": "PATCH",
       "path": "/work-items/:id",
       "controller": {
-        "file": "apps/reference-api/src/sample/work-items.controller.ts",
+        "file": "reference/api/src/sample/work-items.controller.ts",
         "class": "WorkItemsController",
         "methodName": "update",
         "startLine": 50,
@@ -1241,7 +1241,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/work-items.controller.ts",
+          "path": "reference/api/src/sample/work-items.controller.ts",
           "startLine": 50,
           "endLine": 57
         }
@@ -1251,7 +1251,7 @@
       "method": "DELETE",
       "path": "/work-items/:id/hard",
       "controller": {
-        "file": "apps/reference-api/src/sample/work-items.controller.ts",
+        "file": "reference/api/src/sample/work-items.controller.ts",
         "class": "WorkItemsController",
         "methodName": "hardDelete",
         "startLine": 77,
@@ -1269,7 +1269,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/work-items.controller.ts",
+          "path": "reference/api/src/sample/work-items.controller.ts",
           "startLine": 77,
           "endLine": 84
         }
@@ -1279,7 +1279,7 @@
       "method": "POST",
       "path": "/work-items/:id/restore",
       "controller": {
-        "file": "apps/reference-api/src/sample/work-items.controller.ts",
+        "file": "reference/api/src/sample/work-items.controller.ts",
         "class": "WorkItemsController",
         "methodName": "restore",
         "startLine": 68,
@@ -1297,7 +1297,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/work-items.controller.ts",
+          "path": "reference/api/src/sample/work-items.controller.ts",
           "startLine": 68,
           "endLine": 75
         }
@@ -1307,7 +1307,7 @@
       "method": "GET",
       "path": "/work-items/trash",
       "controller": {
-        "file": "apps/reference-api/src/sample/work-items.controller.ts",
+        "file": "reference/api/src/sample/work-items.controller.ts",
         "class": "WorkItemsController",
         "methodName": "trash",
         "startLine": 23,
@@ -1325,7 +1325,7 @@
       },
       "evidence": [
         {
-          "path": "apps/reference-api/src/sample/work-items.controller.ts",
+          "path": "reference/api/src/sample/work-items.controller.ts",
           "startLine": 23,
           "endLine": 30
         }

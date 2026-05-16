@@ -7,7 +7,7 @@
       "method": "GET",
       "path": "/_reference/auth-verify",
       "controller": "ReferenceDevAuthController",
-      "file": "apps/reference-api/src/sample/reference-dev-auth.controller.ts",
+      "file": "reference/api/src/sample/reference-dev-auth.controller.ts",
       "decorator": "@Public()",
       "justification": "Reference dev-auth endpoint for the reference application. Verifies a STYNX-issued bearer token without requiring an authenticated session. Marked @Public per @stynx/auth contract; intentionally exempt from RBAC binding."
     },
@@ -15,7 +15,7 @@
       "method": "POST",
       "path": "/_reference/dev-login",
       "controller": "ReferenceDevAuthController",
-      "file": "apps/reference-api/src/sample/reference-dev-auth.controller.ts",
+      "file": "reference/api/src/sample/reference-dev-auth.controller.ts",
       "decorator": "@Public()",
       "justification": "Reference dev-auth login that mints session tokens for the reference web app. Public by definition (pre-auth endpoint). Marked @Public + @NoIdempotent per @stynx/auth + @stynx/idempotency contracts."
     },
@@ -23,7 +23,7 @@
       "method": "GET",
       "path": "/_reference/demo-tenants",
       "controller": "ReferenceDevAuthController",
-      "file": "apps/reference-api/src/sample/reference-dev-auth.controller.ts",
+      "file": "reference/api/src/sample/reference-dev-auth.controller.ts",
       "decorator": "@Public()",
       "justification": "Reference endpoint listing demo tenants the dev-login flow can mint sessions for. Pre-auth listing; safe by design (only demo-tenant metadata surfaced)."
     }

@@ -8,7 +8,7 @@ docs/.docusaurus/
 docs/.generated/
 docs/build/
 infra/cdk/cdk.out/
-apps/reference-api/dist/
-apps/reference-web/dist/
+reference/api/dist/
+reference/web/dist/
 packages/**/dist/
 packages-web/**/dist/

@@ -1057,19 +1057,19 @@ Verification:
 
 ## Phase 11 — Reference Applications
 
-### Prompt 30 — apps/reference-api
+### Prompt 30 — reference/api
 
 ```
-Read SPEC §3 (apps/reference-api), STYNX-REFERENCE-MIGRATION.sql.
+Read SPEC §3 (reference/api), STYNX-REFERENCE-MIGRATION.sql.
 
-Create apps/reference-api — the reference NestJS app exercising every @stynx/* package.
+Create reference/api — the reference NestJS app exercising every @stynx/* package.
 
 Deliverables:
 - The sample.* domain from STYNX-REFERENCE-MIGRATION.sql (`record`, `record_note`, `work_item`, `work_item_entry`, `work_item_lock`) as the implemented domain.
 - Full CRUD controllers, services, DTOs for each entity.
 - Every FK annotation exercised (cascade, block, hide).
 - @Permission, @Audit, @RateLimit, @Idempotent, @ReadOnly decorators used correctly across the surface.
-- Migration under apps/reference-api/migrations/ matching STYNX-REFERENCE-MIGRATION.sql.
+- Migration under reference/api/migrations/ matching STYNX-REFERENCE-MIGRATION.sql.
 - Dockerfile + docker-compose.yml for local dev stack.
 - README with how to run locally, how to run tests, how to invoke common operations.
 
@@ -1084,12 +1084,12 @@ Verification:
 - Manual: exercise a soft-delete cascade (delete a record with work items), observe 409 from block, then clear the blocking work-item locks and re-try.
 ```
 
-### Prompt 31 — apps/reference-web
+### Prompt 31 — reference/web
 
 ```
-Read SPEC §3 (apps/reference-web), §19.
+Read SPEC §3 (reference/web), §19.
 
-Create apps/reference-web — the reference Angular app.
+Create reference/web — the reference Angular app.
 
 Deliverables:
 - Angular 18 workspace using @stynx-web/angular + all sub-packages.
@@ -1268,7 +1268,7 @@ Deliverables:
   - Every public function is documented via TSDoc.
   - License: per-package LICENSE file matches the repo's top-level choice.
 - All SLOs from SPEC §26 verified via the k6 suite.
-- stynx doctor against apps/reference-api and apps/reference-web: exit 0.
+- stynx doctor against reference/api and reference/web: exit 0.
 - Architecture Decision Log published as part of the docs site.
 - GitHub Release drafts prepared for each package with changeset-generated notes.
 - SBOM (Syft) attached to every release artifact.

@@ -1,0 +1,52 @@
+{
+  "name": "@stynx/reference-api",
+  "private": true,
+  "version": "0.3.1",
+  "description": "Reference API app exercising the STYNX backend package family",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist coverage",
+    "smoke:local": "bash scripts/smoke-local.sh",
+    "start": "node dist/reference/api/src/main.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+    "test": "node --disable-warning=ExperimentalWarning --experimental-vm-modules ./node_modules/jest/bin/jest.js --config ./jest.config.cjs",
+    "test:int": "node --disable-warning=ExperimentalWarning --experimental-vm-modules ./node_modules/jest/bin/jest.js --config ./jest.config.cjs --runTestsByPath test/integration/reference-api.runtime.spec.ts"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.1.19",
+    "@nestjs/core": "^11.1.19",
+    "@nestjs/platform-express": "^11.1.19",
+    "@stynx/backend": "workspace:*",
+    "@stynx/audit": "workspace:*",
+    "@stynx/auth": "workspace:*",
+    "@stynx/core": "workspace:*",
+    "@stynx/data": "workspace:*",
+    "@stynx/health": "workspace:*",
+    "@stynx/idempotency": "workspace:*",
+    "@stynx/logging": "workspace:*",
+    "@stynx/ratelimit": "workspace:*",
+    "@stynx/sessions": "workspace:*",
+    "@stynx/storage": "workspace:*",
+    "@stynx/tenancy": "workspace:*",
+    "drizzle-orm": "^0.45.2",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-s3": "^3.1037.0",
+    "@nestjs/testing": "^11.1.19",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.6.0",
+    "@types/pg": "^8.20.0",
+    "jest": "^30.3.0",
+    "pg": "^8.20.0",
+    "supertest": "^7.2.2",
+    "testcontainers": "^11.14.0",
+    "ts-jest": "^29.4.9",
+    "typescript": "^6.0.3"
+  }
+}

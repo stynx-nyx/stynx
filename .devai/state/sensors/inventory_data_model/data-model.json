@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-05-16T04:35:13.110Z",
+  "generatedAt": "2026-05-16T04:41:26.879Z",
   "dialect": "postgres",
   "sourceRepo": ".",
   "tables": [
@@ -71,7 +71,7 @@
       "unique_constraints": [["tenant_id", "email"]],
       "evidence": [
         {
-          "path": "apps/reference-api/migrations/0001_reference.sql",
+          "path": "reference/api/migrations/0001_reference.sql",
           "startLine": 90,
           "endLine": 109
         }
@@ -158,7 +158,7 @@
       ],
       "evidence": [
         {
-          "path": "apps/reference-api/migrations/0001_reference.sql",
+          "path": "reference/api/migrations/0001_reference.sql",
           "startLine": 114,
           "endLine": 134
         }
@@ -248,7 +248,7 @@
       "unique_constraints": [["tenant_id", "code"]],
       "evidence": [
         {
-          "path": "apps/reference-api/migrations/0001_reference.sql",
+          "path": "reference/api/migrations/0001_reference.sql",
           "startLine": 139,
           "endLine": 167
         }
@@ -319,7 +319,7 @@
       ],
       "evidence": [
         {
-          "path": "apps/reference-api/migrations/0001_reference.sql",
+          "path": "reference/api/migrations/0001_reference.sql",
           "startLine": 172,
           "endLine": 189
         }
@@ -390,7 +390,7 @@
       ],
       "evidence": [
         {
-          "path": "apps/reference-api/migrations/0001_reference.sql",
+          "path": "reference/api/migrations/0001_reference.sql",
           "startLine": 194,
           "endLine": 210
         }

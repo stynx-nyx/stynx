@@ -10,7 +10,7 @@ Scenarios:
 Local smoke run against the reference stack:
 
 ```bash
-docker compose -f apps/reference-api/docker-compose.yml up -d --build
+docker compose -f reference/api/docker-compose.yml up -d --build
 STYNX_K6_DURATION=10s \
 STYNX_K6_RATE=5 \
 STYNX_K6_PREALLOCATED_VUS=1 \
@@ -18,7 +18,7 @@ STYNX_K6_MAX_VUS=2 \
 node test/perf/k6/run-scenarios.mjs --scenario crud
 ```
 
-The bundled `apps/reference-api/docker-compose.yml` applies a perf-friendly override for
+The bundled `reference/api/docker-compose.yml` applies a perf-friendly override for
 `sample.documents.create` and `sample.documents.complete` so the upload scenario measures
 storage flow latency instead of immediately self-throttling on the demo tenant.
 

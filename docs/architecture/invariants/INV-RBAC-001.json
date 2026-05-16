@@ -27,11 +27,7 @@
   },
   "scope": {
     "components": ["api", "rbac"],
-    "code_areas": [
-      "apps/reference-api/src/sample",
-      "packages/auth/src",
-      "packages/backend/src/auth"
-    ]
+    "code_areas": ["reference/api/src/sample", "packages/auth/src", "packages/backend/src/auth"]
   },
   "change_policy": {
     "breaking_change_requires": ["doc_update", "test_update", "human_approval"],

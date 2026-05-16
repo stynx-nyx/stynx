@@ -25,8 +25,8 @@ const config: KnipConfig = {
 
   ignoreFiles: [
     'tools/migration-linter/dist/**',
-    'apps/reference-web/src/app/reference-web.module.ts',
-    'apps/reference-web/src/environments/environment.prod.ts',
+    'reference/web/src/app/reference-web.module.ts',
+    'reference/web/src/environments/environment.prod.ts',
     'packages/cli/src/main.ts',
     'packages/backend/src/idempotency/constants.ts',
     'packages/backend/src/idempotency/idempotency.interceptor.ts',

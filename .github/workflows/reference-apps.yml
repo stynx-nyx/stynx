@@ -7,8 +7,8 @@ on:
       - '.ci/evidence/**'
       - '.github/workflows/reference-apps.yml'
       - '.github/workflows/evidence.yml'
-      - 'apps/reference-api/**'
-      - 'apps/reference-web/**'
+      - 'reference/api/**'
+      - 'reference/web/**'
       - 'package.json'
       - 'packages/**'
       - 'packages-web/**'
@@ -24,8 +24,8 @@ on:
       - '.ci/evidence/**'
       - '.github/workflows/reference-apps.yml'
       - '.github/workflows/evidence.yml'
-      - 'apps/reference-api/**'
-      - 'apps/reference-web/**'
+      - 'reference/api/**'
+      - 'reference/web/**'
       - 'package.json'
       - 'packages/**'
       - 'packages-web/**'
@@ -151,7 +151,7 @@ jobs:
       - name: Install Playwright Chromium
         run: pnpm --filter @stynx/reference-web exec playwright install --with-deps chromium
       - name: Start reference API stack
-        run: docker compose -f apps/reference-api/docker-compose.yml up -d --build
+        run: docker compose -f reference/api/docker-compose.yml up -d --build
       - name: Wait for reference API health gates
         run: |
           set -euo pipefail
@@ -161,8 +161,8 @@ jobs:
                 break
               fi
               if [ "$i" -eq 120 ]; then
-                docker compose -f apps/reference-api/docker-compose.yml ps
-                docker compose -f apps/reference-api/docker-compose.yml logs --no-color --timestamps postgres redis localstack reference-api
+                docker compose -f reference/api/docker-compose.yml ps
+                docker compose -f reference/api/docker-compose.yml logs --no-color --timestamps postgres redis localstack reference-api
                 exit 1
               fi
               sleep 2
@@ -178,12 +178,12 @@ jobs:
         with:
           name: reference-web-playwright-artifacts
           path: |
-            apps/reference-web/test-results
-            apps/reference-web/playwright-report
+            reference/web/test-results
+            reference/web/playwright-report
           if-no-files-found: ignore
       - name: Stop reference API stack
         if: always()
-        run: docker compose -f apps/reference-api/docker-compose.yml down -v
+        run: docker compose -f reference/api/docker-compose.yml down -v
 
   container-security:
     name: container-security
@@ -194,10 +194,10 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Build reference-api image
-        run: docker build -f apps/reference-api/Dockerfile -t stynx/reference-api:${{ github.sha }} .
+        run: docker build -f reference/api/Dockerfile -t stynx/reference-api:${{ github.sha }} .
 
       - name: Build reference-web image
-        run: docker build -f apps/reference-web/Dockerfile -t stynx/reference-web:${{ github.sha }} .
+        run: docker build -f reference/web/Dockerfile -t stynx/reference-web:${{ github.sha }} .
 
       - name: Run Trivy on reference-api
         uses: aquasecurity/trivy-action@0.35.0

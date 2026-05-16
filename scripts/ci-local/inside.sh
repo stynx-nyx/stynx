@@ -5,7 +5,7 @@ job="${1:-${CI_LOCAL_JOB:-browser}}"
 workspace="${WORKSPACE:-/workspace}"
 source_dir="${CI_LOCAL_SOURCE_DIR:-}"
 artifact_dir="${CI_LOCAL_ARTIFACT_DIR:-reports/ci-local/$(date -u +%Y%m%dT%H%M%SZ)-${job}}"
-reference_compose_file="apps/reference-api/docker-compose.yml"
+reference_compose_file="reference/api/docker-compose.yml"
 postgres_name="stynx-ci-local-postgres"
 workspace_installed=0
 export PLAYWRIGHT_BROWSERS_PATH="${PLAYWRIGHT_BROWSERS_PATH:-$workspace/.cache/ms-playwright}"
@@ -232,8 +232,8 @@ collect_reference_artifacts() {
   mkdir -p "$artifact_dir/reference-web"
   reference_compose ps > "$artifact_dir/reference-web/compose-ps.txt" 2>&1 || true
   reference_compose logs --no-color --timestamps > "$artifact_dir/reference-web/compose.log" 2>&1 || true
-  copy_artifact apps/reference-web/test-results reference-web/test-results
-  copy_artifact apps/reference-web/playwright-report reference-web/playwright-report
+  copy_artifact reference/web/test-results reference-web/test-results
+  copy_artifact reference/web/playwright-report reference-web/playwright-report
 }
 
 cleanup_reference_stack() {

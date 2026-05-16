@@ -1,338 +1,114 @@
 {
   "graph": {
-    "apps/reference-api/src/app.module.ts": [
+    "domain/demo-bookmark/api/src/demo-bookmark/controllers/bookmark-tag.controller.ts": [
       "@nestjs/common",
-      "@nestjs/core",
-      "@stynx/audit",
-      "@stynx/auth",
-      "@stynx/backend",
-      "@stynx/data",
-      "@stynx/health",
-      "@stynx/logging",
-      "@stynx/sessions",
-      "@stynx/storage",
-      "@stynx/tenancy",
-      "apps/reference-api/src/sample/sample.module",
-      "node:crypto",
-      "node:fs",
-      "node:path"
+      "domain/demo-bookmark/api/src/demo-bookmark/decorators/policy.decorator",
+      "domain/demo-bookmark/api/src/demo-bookmark/dto/create-bookmark.dto",
+      "domain/demo-bookmark/api/src/demo-bookmark/dto/update-bookmark.dto",
+      "domain/demo-bookmark/api/src/demo-bookmark/guards/policy.guard",
+      "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark.service"
     ],
-    "apps/reference-api/src/main.ts": [
+    "domain/demo-bookmark/api/src/demo-bookmark/controllers/bookmark.controller.ts": [
       "@nestjs/common",
-      "@nestjs/core",
-      "apps/reference-api/src/app.module",
-      "reflect-metadata"
+      "domain/demo-bookmark/api/src/demo-bookmark/decorators/policy.decorator",
+      "domain/demo-bookmark/api/src/demo-bookmark/dto/create-bookmark.dto",
+      "domain/demo-bookmark/api/src/demo-bookmark/dto/update-bookmark.dto",
+      "domain/demo-bookmark/api/src/demo-bookmark/guards/policy.guard",
+      "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark.service"
     ],
-    "apps/reference-api/src/sample/documents.controller.ts": [
+    "domain/demo-bookmark/api/src/demo-bookmark/demo-bookmark.module.ts": [
       "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/backend",
-      "@stynx/idempotency",
-      "@stynx/ratelimit",
-      "apps/reference-api/src/sample/dto",
-      "apps/reference-api/src/sample/reference-sample.service"
+      "@nestjs/typeorm",
+      "domain/demo-bookmark/api/src/demo-bookmark/controllers/bookmark.controller",
+      "domain/demo-bookmark/api/src/demo-bookmark/entities/bookmark.entity",
+      "domain/demo-bookmark/api/src/demo-bookmark/guards/policy.guard",
+      "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark.service"
     ],
-    "apps/reference-api/src/sample/dto.ts": [],
-    "apps/reference-api/src/sample/record-notes.controller.ts": [
+    "domain/demo-bookmark/api/src/demo-bookmark/dto/create-bookmark-tag.dto.ts": [
+      "class-validator"
+    ],
+    "domain/demo-bookmark/api/src/demo-bookmark/dto/create-bookmark.dto.ts": ["class-validator"],
+    "domain/demo-bookmark/api/src/demo-bookmark/dto/update-bookmark-tag.dto.ts": [
+      "@nestjs/mapped-types",
+      "domain/demo-bookmark/api/src/demo-bookmark/dto/create-bookmark.dto"
+    ],
+    "domain/demo-bookmark/api/src/demo-bookmark/dto/update-bookmark.dto.ts": [
+      "@nestjs/mapped-types",
+      "domain/demo-bookmark/api/src/demo-bookmark/dto/create-bookmark.dto"
+    ],
+    "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark-tag.service.ts": [
       "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/backend",
-      "@stynx/idempotency",
-      "@stynx/ratelimit",
-      "apps/reference-api/src/sample/dto",
-      "apps/reference-api/src/sample/reference-sample.service"
+      "@nestjs/typeorm",
+      "domain/demo-bookmark/api/src/demo-bookmark/dto/create-bookmark.dto",
+      "domain/demo-bookmark/api/src/demo-bookmark/dto/update-bookmark.dto",
+      "domain/demo-bookmark/api/src/demo-bookmark/entities/bookmark.entity",
+      "typeorm"
     ],
-    "apps/reference-api/src/sample/records.controller.ts": [
+    "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark.service.ts": [
       "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/backend",
-      "@stynx/idempotency",
-      "@stynx/ratelimit",
-      "apps/reference-api/src/sample/dto",
-      "apps/reference-api/src/sample/reference-sample.service"
+      "@nestjs/typeorm",
+      "domain/demo-bookmark/api/src/demo-bookmark/dto/create-bookmark.dto",
+      "domain/demo-bookmark/api/src/demo-bookmark/dto/update-bookmark.dto",
+      "domain/demo-bookmark/api/src/demo-bookmark/entities/bookmark.entity",
+      "typeorm"
     ],
-    "apps/reference-api/src/sample/reference-dev-auth.controller.ts": [
-      "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/idempotency",
-      "apps/reference-api/src/sample/reference-dev-auth.service"
-    ],
-    "apps/reference-api/src/sample/reference-dev-auth.service.ts": [
-      "@nestjs/common",
-      "@nestjs/core",
-      "@stynx/auth",
-      "@stynx/data",
-      "@stynx/sessions"
-    ],
-    "apps/reference-api/src/sample/reference-probes.controller.ts": [
-      "@nestjs/common",
-      "@nestjs/core",
-      "@stynx/auth",
-      "@stynx/backend",
-      "@stynx/core",
-      "@stynx/data",
-      "@stynx/idempotency",
-      "@stynx/ratelimit",
-      "node:crypto"
-    ],
-    "apps/reference-api/src/sample/reference-sample.service.ts": [
-      "@nestjs/common",
-      "@stynx/core",
-      "@stynx/data",
-      "@stynx/storage",
-      "apps/reference-api/src/sample/dto",
-      "apps/reference-api/src/sample/schema",
-      "drizzle-orm",
-      "node:crypto"
-    ],
-    "apps/reference-api/src/sample/sample.module.ts": [
-      "@nestjs/common",
-      "apps/reference-api/src/sample/documents.controller",
-      "apps/reference-api/src/sample/record-notes.controller",
-      "apps/reference-api/src/sample/records.controller",
-      "apps/reference-api/src/sample/reference-dev-auth.controller",
-      "apps/reference-api/src/sample/reference-dev-auth.service",
-      "apps/reference-api/src/sample/reference-probes.controller",
-      "apps/reference-api/src/sample/reference-sample.service",
-      "apps/reference-api/src/sample/work-item-entries.controller",
-      "apps/reference-api/src/sample/work-item-locks.controller",
-      "apps/reference-api/src/sample/work-items.controller"
-    ],
-    "apps/reference-api/src/sample/schema.ts": [
-      "@stynx/data",
-      "drizzle-orm",
-      "drizzle-orm/pg-core"
-    ],
-    "apps/reference-api/src/sample/work-item-entries.controller.ts": [
-      "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/backend",
-      "@stynx/idempotency",
-      "@stynx/ratelimit",
-      "apps/reference-api/src/sample/dto",
-      "apps/reference-api/src/sample/reference-sample.service"
-    ],
-    "apps/reference-api/src/sample/work-item-locks.controller.ts": [
-      "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/backend",
-      "@stynx/idempotency",
-      "@stynx/ratelimit",
-      "apps/reference-api/src/sample/dto",
-      "apps/reference-api/src/sample/reference-sample.service"
-    ],
-    "apps/reference-api/src/sample/work-items.controller.ts": [
-      "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/backend",
-      "@stynx/idempotency",
-      "@stynx/ratelimit",
-      "apps/reference-api/src/sample/dto",
-      "apps/reference-api/src/sample/reference-sample.service"
-    ],
-    "apps/reference-api/test/integration/reference-api.runtime.spec.ts": [
-      "@aws-sdk/client-s3",
-      "@nestjs/common",
+    "domain/demo-bookmark/api/test/bookmark-tag.controller.spec.ts": [
       "@nestjs/testing",
-      "@stynx/auth",
-      "@stynx/core",
-      "@stynx/data",
-      "@stynx/health",
-      "@stynx/sessions",
-      "@stynx/testing",
-      "apps/reference-api/src/sample/schema",
-      "node:crypto",
-      "packages/data/test/support/postgres",
-      "supertest",
-      "testcontainers"
+      "domain/demo-bookmark/api/test/controllers/bookmark.controller",
+      "domain/demo-bookmark/api/test/services/bookmark.service"
     ],
-    "apps/reference-api/test/integration/sample.schema.spec.ts": [
-      "apps/reference-api/src/sample/schema",
-      "packages/data/src/index"
+    "domain/demo-bookmark/api/test/bookmark-tag.service.spec.ts": [
+      "@angular/common/http/testing",
+      "@angular/core/testing",
+      "domain/demo-bookmark/api/test/bookmark.service"
     ],
-    "apps/reference-web/src/app/app.component.ts": [
-      "@angular/common",
+    "domain/demo-bookmark/api/test/bookmark.controller.spec.ts": [
+      "@nestjs/testing",
+      "domain/demo-bookmark/api/test/controllers/bookmark.controller",
+      "domain/demo-bookmark/api/test/services/bookmark.service"
+    ],
+    "domain/demo-bookmark/api/test/bookmark.service.spec.ts": [
+      "@angular/common/http/testing",
+      "@angular/core/testing",
+      "domain/demo-bookmark/api/test/bookmark.service"
+    ],
+    "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark-detail.component.ts": [
       "@angular/core",
       "@angular/router",
-      "@stynx-web/angular",
-      "@stynx-web/angular-auth",
-      "@stynx-web/angular-i18n",
-      "@stynx-web/angular-ui",
-      "apps/reference-web/src/app/core/reference-web-i18n.service",
-      "apps/reference-web/src/app/core/reference-web-shell.service"
+      "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark.service"
     ],
-    "apps/reference-web/src/app/app.routes.ts": [
+    "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark-list.component.ts": [
+      "@angular/core",
+      "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark.service"
+    ],
+    "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark-tag-detail.component.ts": [
+      "@angular/core",
       "@angular/router",
-      "@stynx-web/angular-auth",
-      "apps/reference-web/src/app/pages/dashboard.page",
-      "apps/reference-web/src/app/pages/login.page",
-      "apps/reference-web/src/app/pages/record-detail.page",
-      "apps/reference-web/src/app/pages/record-form.page",
-      "apps/reference-web/src/app/pages/records.page",
-      "apps/reference-web/src/app/pages/tenant-selection.page",
-      "apps/reference-web/src/app/pages/trash.page",
-      "apps/reference-web/src/app/pages/unauthorized.page",
-      "apps/reference-web/src/app/pages/work-item-detail.page",
-      "apps/reference-web/src/app/pages/work-item-form.page",
-      "apps/reference-web/src/app/pages/work-items.page"
+      "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark.service"
     ],
-    "apps/reference-web/src/app/core/reference-models.ts": [],
-    "apps/reference-web/src/app/core/reference-web-api.service.ts": [
+    "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark-tag-list.component.ts": [
+      "@angular/core",
+      "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark.service"
+    ],
+    "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark-tag.service.ts": [
+      "@angular/common/http",
+      "@angular/core"
+    ],
+    "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark.service.ts": [
+      "@angular/common/http",
+      "@angular/core"
+    ],
+    "domain/demo-bookmark/web/src/app/demo-bookmark/demo-bookmark.module.ts": [
+      "@angular/common",
       "@angular/common/http",
       "@angular/core",
-      "apps/reference-web/src/app/core/reference-models",
-      "apps/reference-web/src/environments/environment",
-      "rxjs"
-    ],
-    "apps/reference-web/src/app/core/reference-web-dev-auth.backend.ts": [
-      "@angular/common/http",
-      "@angular/core",
-      "@stynx-web/angular-auth",
-      "apps/reference-web/src/app/core/reference-web-dev-oidc.adapter",
-      "apps/reference-web/src/environments/environment",
-      "rxjs"
-    ],
-    "apps/reference-web/src/app/core/reference-web-dev-oidc.adapter.ts": [
-      "@angular/core",
-      "@stynx-web/angular-auth",
-      "angular-auth-oidc-client"
-    ],
-    "apps/reference-web/src/app/core/reference-web-i18n.service.ts": [
-      "@angular/core",
-      "@stynx-web/angular-i18n"
-    ],
-    "apps/reference-web/src/app/core/reference-web-shell.service.ts": [
-      "@angular/core",
       "@angular/router",
-      "@stynx-web/angular-auth",
-      "@stynx-web/angular-tenancy",
-      "apps/reference-web/src/app/core/reference-models",
-      "apps/reference-web/src/app/core/reference-web-api.service",
-      "apps/reference-web/src/app/core/reference-web-dev-oidc.adapter"
+      "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark-detail.component",
+      "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark-list.component",
+      "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark.service",
+      "domain/demo-bookmark/web/src/app/demo-bookmark/guards/cognito.guard",
+      "domain/demo-bookmark/web/src/app/demo-bookmark/policy.guard"
     ],
-    "apps/reference-web/src/app/pages/dashboard.page.ts": [
-      "@angular/common",
-      "@angular/core",
-      "@stynx-web/angular-auth",
-      "@stynx-web/angular-profile",
-      "@stynx-web/angular-sessions",
-      "@stynx-web/angular-storage",
-      "@stynx-web/angular-ui",
-      "apps/reference-web/src/app/core/reference-web-i18n.service",
-      "apps/reference-web/src/app/core/reference-web-shell.service"
-    ],
-    "apps/reference-web/src/app/pages/login.page.ts": [
-      "@angular/common",
-      "@angular/core",
-      "@angular/forms",
-      "@stynx-web/angular-ui",
-      "apps/reference-web/src/app/core/reference-web-shell.service"
-    ],
-    "apps/reference-web/src/app/pages/record-detail.page.ts": [
-      "@angular/common",
-      "@angular/core",
-      "@angular/router",
-      "@stynx-web/angular-storage",
-      "@stynx-web/angular-ui",
-      "apps/reference-web/src/app/core/reference-models",
-      "apps/reference-web/src/app/core/reference-web-api.service"
-    ],
-    "apps/reference-web/src/app/pages/record-form.page.ts": [
-      "@angular/common",
-      "@angular/core",
-      "@angular/forms",
-      "@angular/router",
-      "@stynx-web/angular-ui",
-      "apps/reference-web/src/app/core/reference-web-api.service"
-    ],
-    "apps/reference-web/src/app/pages/records.page.ts": [
-      "@angular/common",
-      "@angular/core",
-      "@angular/router",
-      "@stynx-web/angular-ui",
-      "apps/reference-web/src/app/core/reference-models",
-      "apps/reference-web/src/app/core/reference-web-api.service"
-    ],
-    "apps/reference-web/src/app/pages/tenant-selection.page.ts": [
-      "@angular/common",
-      "@angular/core",
-      "@stynx-web/angular-ui",
-      "apps/reference-web/src/app/core/reference-web-shell.service"
-    ],
-    "apps/reference-web/src/app/pages/trash.page.ts": [
-      "@angular/common",
-      "@angular/core",
-      "@stynx-web/angular-trash",
-      "apps/reference-web/src/app/core/reference-web-api.service"
-    ],
-    "apps/reference-web/src/app/pages/unauthorized.page.ts": [
-      "@angular/core",
-      "@stynx-web/angular-ui"
-    ],
-    "apps/reference-web/src/app/pages/work-item-detail.page.ts": [
-      "@angular/common",
-      "@angular/core",
-      "@angular/router",
-      "@stynx-web/angular-ui",
-      "apps/reference-web/src/app/core/reference-models",
-      "apps/reference-web/src/app/core/reference-web-api.service"
-    ],
-    "apps/reference-web/src/app/pages/work-item-form.page.ts": [
-      "@angular/common",
-      "@angular/core",
-      "@angular/forms",
-      "@angular/router",
-      "@stynx-web/angular-ui",
-      "apps/reference-web/src/app/core/reference-models",
-      "apps/reference-web/src/app/core/reference-web-api.service"
-    ],
-    "apps/reference-web/src/app/pages/work-items.page.ts": [
-      "@angular/common",
-      "@angular/core",
-      "@angular/router",
-      "@stynx-web/angular-ui",
-      "apps/reference-web/src/app/core/reference-models",
-      "apps/reference-web/src/app/core/reference-web-api.service"
-    ],
-    "apps/reference-web/src/app/reference-web.module.ts": [
-      "@angular/core",
-      "@angular/platform-browser",
-      "@angular/router",
-      "@stynx-web/angular",
-      "@stynx-web/angular-auth",
-      "@stynx-web/angular-i18n",
-      "@stynx-web/angular-storage",
-      "apps/reference-web/src/app/app.component",
-      "apps/reference-web/src/app/app.routes",
-      "apps/reference-web/src/app/core/reference-web-api.service",
-      "apps/reference-web/src/app/core/reference-web-dev-auth.backend",
-      "apps/reference-web/src/app/core/reference-web-dev-oidc.adapter",
-      "apps/reference-web/src/app/core/reference-web-i18n.service",
-      "apps/reference-web/src/app/core/reference-web-shell.service",
-      "apps/reference-web/src/environments/environment"
-    ],
-    "apps/reference-web/src/environments/environment.prod.ts": [],
-    "apps/reference-web/src/environments/environment.ts": [],
-    "apps/reference-web/src/main.ts": [
-      "@angular/compiler",
-      "@angular/core",
-      "@angular/platform-browser",
-      "@angular/router",
-      "@stynx-web/angular",
-      "@stynx-web/angular-auth",
-      "@stynx-web/angular-i18n",
-      "@stynx-web/angular-storage",
-      "apps/reference-web/src/app/app.component",
-      "apps/reference-web/src/app/app.routes",
-      "apps/reference-web/src/app/core/reference-web-api.service",
-      "apps/reference-web/src/app/core/reference-web-dev-auth.backend",
-      "apps/reference-web/src/app/core/reference-web-dev-oidc.adapter",
-      "apps/reference-web/src/app/core/reference-web-i18n.service",
-      "apps/reference-web/src/app/core/reference-web-shell.service",
-      "apps/reference-web/src/environments/environment",
-      "zone.js"
-    ],
-    "apps/reference-web/test/e2e/reference-web.spec.ts": ["@playwright/test"],
     "infra/cdk/bin/stynx-env.ts": [
       "aws-cdk-lib",
       "infra/cdk/lib/compute-stack",
@@ -2502,6 +2278,332 @@
       "node:path",
       "packages/testing/src"
     ],
+    "reference/api/src/app.module.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/audit",
+      "@stynx/auth",
+      "@stynx/backend",
+      "@stynx/data",
+      "@stynx/health",
+      "@stynx/logging",
+      "@stynx/sessions",
+      "@stynx/storage",
+      "@stynx/tenancy",
+      "node:crypto",
+      "node:fs",
+      "node:path",
+      "reference/api/src/sample/sample.module"
+    ],
+    "reference/api/src/main.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "reference/api/src/app.module",
+      "reflect-metadata"
+    ],
+    "reference/api/src/sample/documents.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/backend",
+      "@stynx/idempotency",
+      "@stynx/ratelimit",
+      "reference/api/src/sample/dto",
+      "reference/api/src/sample/reference-sample.service"
+    ],
+    "reference/api/src/sample/dto.ts": [],
+    "reference/api/src/sample/record-notes.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/backend",
+      "@stynx/idempotency",
+      "@stynx/ratelimit",
+      "reference/api/src/sample/dto",
+      "reference/api/src/sample/reference-sample.service"
+    ],
+    "reference/api/src/sample/records.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/backend",
+      "@stynx/idempotency",
+      "@stynx/ratelimit",
+      "reference/api/src/sample/dto",
+      "reference/api/src/sample/reference-sample.service"
+    ],
+    "reference/api/src/sample/reference-dev-auth.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/idempotency",
+      "reference/api/src/sample/reference-dev-auth.service"
+    ],
+    "reference/api/src/sample/reference-dev-auth.service.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/auth",
+      "@stynx/data",
+      "@stynx/sessions"
+    ],
+    "reference/api/src/sample/reference-probes.controller.ts": [
+      "@nestjs/common",
+      "@nestjs/core",
+      "@stynx/auth",
+      "@stynx/backend",
+      "@stynx/core",
+      "@stynx/data",
+      "@stynx/idempotency",
+      "@stynx/ratelimit",
+      "node:crypto"
+    ],
+    "reference/api/src/sample/reference-sample.service.ts": [
+      "@nestjs/common",
+      "@stynx/core",
+      "@stynx/data",
+      "@stynx/storage",
+      "drizzle-orm",
+      "node:crypto",
+      "reference/api/src/sample/dto",
+      "reference/api/src/sample/schema"
+    ],
+    "reference/api/src/sample/sample.module.ts": [
+      "@nestjs/common",
+      "reference/api/src/sample/documents.controller",
+      "reference/api/src/sample/record-notes.controller",
+      "reference/api/src/sample/records.controller",
+      "reference/api/src/sample/reference-dev-auth.controller",
+      "reference/api/src/sample/reference-dev-auth.service",
+      "reference/api/src/sample/reference-probes.controller",
+      "reference/api/src/sample/reference-sample.service",
+      "reference/api/src/sample/work-item-entries.controller",
+      "reference/api/src/sample/work-item-locks.controller",
+      "reference/api/src/sample/work-items.controller"
+    ],
+    "reference/api/src/sample/schema.ts": ["@stynx/data", "drizzle-orm", "drizzle-orm/pg-core"],
+    "reference/api/src/sample/work-item-entries.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/backend",
+      "@stynx/idempotency",
+      "@stynx/ratelimit",
+      "reference/api/src/sample/dto",
+      "reference/api/src/sample/reference-sample.service"
+    ],
+    "reference/api/src/sample/work-item-locks.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/backend",
+      "@stynx/idempotency",
+      "@stynx/ratelimit",
+      "reference/api/src/sample/dto",
+      "reference/api/src/sample/reference-sample.service"
+    ],
+    "reference/api/src/sample/work-items.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/backend",
+      "@stynx/idempotency",
+      "@stynx/ratelimit",
+      "reference/api/src/sample/dto",
+      "reference/api/src/sample/reference-sample.service"
+    ],
+    "reference/api/test/integration/reference-api.runtime.spec.ts": [
+      "@aws-sdk/client-s3",
+      "@nestjs/common",
+      "@nestjs/testing",
+      "@stynx/auth",
+      "@stynx/core",
+      "@stynx/data",
+      "@stynx/health",
+      "@stynx/sessions",
+      "@stynx/testing",
+      "node:crypto",
+      "packages/data/test/support/postgres",
+      "reference/api/src/sample/schema",
+      "supertest",
+      "testcontainers"
+    ],
+    "reference/api/test/integration/sample.schema.spec.ts": [
+      "packages/data/src/index",
+      "reference/api/src/sample/schema"
+    ],
+    "reference/web/src/app/app.component.ts": [
+      "@angular/common",
+      "@angular/core",
+      "@angular/router",
+      "@stynx-web/angular",
+      "@stynx-web/angular-auth",
+      "@stynx-web/angular-i18n",
+      "@stynx-web/angular-ui",
+      "reference/web/src/app/core/reference-web-i18n.service",
+      "reference/web/src/app/core/reference-web-shell.service"
+    ],
+    "reference/web/src/app/app.routes.ts": [
+      "@angular/router",
+      "@stynx-web/angular-auth",
+      "reference/web/src/app/pages/dashboard.page",
+      "reference/web/src/app/pages/login.page",
+      "reference/web/src/app/pages/record-detail.page",
+      "reference/web/src/app/pages/record-form.page",
+      "reference/web/src/app/pages/records.page",
+      "reference/web/src/app/pages/tenant-selection.page",
+      "reference/web/src/app/pages/trash.page",
+      "reference/web/src/app/pages/unauthorized.page",
+      "reference/web/src/app/pages/work-item-detail.page",
+      "reference/web/src/app/pages/work-item-form.page",
+      "reference/web/src/app/pages/work-items.page"
+    ],
+    "reference/web/src/app/core/reference-models.ts": [],
+    "reference/web/src/app/core/reference-web-api.service.ts": [
+      "@angular/common/http",
+      "@angular/core",
+      "reference/web/src/app/core/reference-models",
+      "reference/web/src/environments/environment",
+      "rxjs"
+    ],
+    "reference/web/src/app/core/reference-web-dev-auth.backend.ts": [
+      "@angular/common/http",
+      "@angular/core",
+      "@stynx-web/angular-auth",
+      "reference/web/src/app/core/reference-web-dev-oidc.adapter",
+      "reference/web/src/environments/environment",
+      "rxjs"
+    ],
+    "reference/web/src/app/core/reference-web-dev-oidc.adapter.ts": [
+      "@angular/core",
+      "@stynx-web/angular-auth",
+      "angular-auth-oidc-client"
+    ],
+    "reference/web/src/app/core/reference-web-i18n.service.ts": [
+      "@angular/core",
+      "@stynx-web/angular-i18n"
+    ],
+    "reference/web/src/app/core/reference-web-shell.service.ts": [
+      "@angular/core",
+      "@angular/router",
+      "@stynx-web/angular-auth",
+      "@stynx-web/angular-tenancy",
+      "reference/web/src/app/core/reference-models",
+      "reference/web/src/app/core/reference-web-api.service",
+      "reference/web/src/app/core/reference-web-dev-oidc.adapter"
+    ],
+    "reference/web/src/app/pages/dashboard.page.ts": [
+      "@angular/common",
+      "@angular/core",
+      "@stynx-web/angular-auth",
+      "@stynx-web/angular-profile",
+      "@stynx-web/angular-sessions",
+      "@stynx-web/angular-storage",
+      "@stynx-web/angular-ui",
+      "reference/web/src/app/core/reference-web-i18n.service",
+      "reference/web/src/app/core/reference-web-shell.service"
+    ],
+    "reference/web/src/app/pages/login.page.ts": [
+      "@angular/common",
+      "@angular/core",
+      "@angular/forms",
+      "@stynx-web/angular-ui",
+      "reference/web/src/app/core/reference-web-shell.service"
+    ],
+    "reference/web/src/app/pages/record-detail.page.ts": [
+      "@angular/common",
+      "@angular/core",
+      "@angular/router",
+      "@stynx-web/angular-storage",
+      "@stynx-web/angular-ui",
+      "reference/web/src/app/core/reference-models",
+      "reference/web/src/app/core/reference-web-api.service"
+    ],
+    "reference/web/src/app/pages/record-form.page.ts": [
+      "@angular/common",
+      "@angular/core",
+      "@angular/forms",
+      "@angular/router",
+      "@stynx-web/angular-ui",
+      "reference/web/src/app/core/reference-web-api.service"
+    ],
+    "reference/web/src/app/pages/records.page.ts": [
+      "@angular/common",
+      "@angular/core",
+      "@angular/router",
+      "@stynx-web/angular-ui",
+      "reference/web/src/app/core/reference-models",
+      "reference/web/src/app/core/reference-web-api.service"
+    ],
+    "reference/web/src/app/pages/tenant-selection.page.ts": [
+      "@angular/common",
+      "@angular/core",
+      "@stynx-web/angular-ui",
+      "reference/web/src/app/core/reference-web-shell.service"
+    ],
+    "reference/web/src/app/pages/trash.page.ts": [
+      "@angular/common",
+      "@angular/core",
+      "@stynx-web/angular-trash",
+      "reference/web/src/app/core/reference-web-api.service"
+    ],
+    "reference/web/src/app/pages/unauthorized.page.ts": ["@angular/core", "@stynx-web/angular-ui"],
+    "reference/web/src/app/pages/work-item-detail.page.ts": [
+      "@angular/common",
+      "@angular/core",
+      "@angular/router",
+      "@stynx-web/angular-ui",
+      "reference/web/src/app/core/reference-models",
+      "reference/web/src/app/core/reference-web-api.service"
+    ],
+    "reference/web/src/app/pages/work-item-form.page.ts": [
+      "@angular/common",
+      "@angular/core",
+      "@angular/forms",
+      "@angular/router",
+      "@stynx-web/angular-ui",
+      "reference/web/src/app/core/reference-models",
+      "reference/web/src/app/core/reference-web-api.service"
+    ],
+    "reference/web/src/app/pages/work-items.page.ts": [
+      "@angular/common",
+      "@angular/core",
+      "@angular/router",
+      "@stynx-web/angular-ui",
+      "reference/web/src/app/core/reference-models",
+      "reference/web/src/app/core/reference-web-api.service"
+    ],
+    "reference/web/src/app/reference-web.module.ts": [
+      "@angular/core",
+      "@angular/platform-browser",
+      "@angular/router",
+      "@stynx-web/angular",
+      "@stynx-web/angular-auth",
+      "@stynx-web/angular-i18n",
+      "@stynx-web/angular-storage",
+      "reference/web/src/app/app.component",
+      "reference/web/src/app/app.routes",
+      "reference/web/src/app/core/reference-web-api.service",
+      "reference/web/src/app/core/reference-web-dev-auth.backend",
+      "reference/web/src/app/core/reference-web-dev-oidc.adapter",
+      "reference/web/src/app/core/reference-web-i18n.service",
+      "reference/web/src/app/core/reference-web-shell.service",
+      "reference/web/src/environments/environment"
+    ],
+    "reference/web/src/environments/environment.prod.ts": [],
+    "reference/web/src/environments/environment.ts": [],
+    "reference/web/src/main.ts": [
+      "@angular/compiler",
+      "@angular/core",
+      "@angular/platform-browser",
+      "@angular/router",
+      "@stynx-web/angular",
+      "@stynx-web/angular-auth",
+      "@stynx-web/angular-i18n",
+      "@stynx-web/angular-storage",
+      "reference/web/src/app/app.component",
+      "reference/web/src/app/app.routes",
+      "reference/web/src/app/core/reference-web-api.service",
+      "reference/web/src/app/core/reference-web-dev-auth.backend",
+      "reference/web/src/app/core/reference-web-dev-oidc.adapter",
+      "reference/web/src/app/core/reference-web-i18n.service",
+      "reference/web/src/app/core/reference-web-shell.service",
+      "reference/web/src/environments/environment",
+      "zone.js"
+    ],
+    "reference/web/test/e2e/reference-web.spec.ts": ["@playwright/test"],
     "test/db/audit.ddl.spec.ts": ["node:fs", "node:path"],
     "test/db/auth.ddl.spec.ts": ["node:fs", "node:path"],
     "test/db/storage.ddl.spec.ts": ["node:fs", "node:path"],

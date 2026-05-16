@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Start reference stack
-        run: docker compose -f apps/reference-api/docker-compose.yml up -d --build
+        run: docker compose -f reference/api/docker-compose.yml up -d --build
 
       - name: Wait for API
         run: |
@@ -45,7 +45,7 @@ jobs:
             fi
             sleep 5
           done
-          docker compose -f apps/reference-api/docker-compose.yml logs
+          docker compose -f reference/api/docker-compose.yml logs
           exit 1
 
       - name: Run k6 scenarios
@@ -180,7 +180,7 @@ jobs:
 
       - name: Stop reference stack
         if: always()
-        run: docker compose -f apps/reference-api/docker-compose.yml down -v
+        run: docker compose -f reference/api/docker-compose.yml down -v
 
   mutation:
     name: mutation-${{ matrix.package }}

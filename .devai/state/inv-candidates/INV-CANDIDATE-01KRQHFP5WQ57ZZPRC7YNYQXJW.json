@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "INV-CANDIDATE-01KRQHFP5WQ57ZZPRC7YNYQXJW",
+  "generated_at": "2026-05-16T04:42:32.508Z",
+  "category": "unmapped_route",
+  "source_sensor": "inventory_coverage",
+  "confidence": "high",
+  "target": {
+    "kind": "route",
+    "identifier": "angular:086c1f6f3e97"
+  },
+  "suggested_invariant": {
+    "title": "Frontend route angular:086c1f6f3e97 must be claimed by ≥1 use-case",
+    "statement": "Route angular:086c1f6f3e97 appears in the routes inventory but is not covered by any use-case in the coverage matrix. Author a use-case that claims this route, or remove the route if it is dead UI.",
+    "domain_suggestion": "INVENTORY",
+    "severity_suggestion": "gate",
+    "measurable_via_suggestion": ["sense coverage", "sense routes"],
+    "rationale": "Unmapped routes are user-facing flows with no traceable specification. Closing the gap is a precondition to release promotion (INV-INVENTORY-001)."
+  },
+  "related_invariants": ["INV-INVENTORY-001"],
+  "status": "proposed",
+  "tags": ["phase-17-E", "brownfield", "coverage"]
+}
