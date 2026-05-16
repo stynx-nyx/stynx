@@ -1,0 +1,9 @@
+{
+  "extends": "@stynx-internal/tsconfig/angular18.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["dist", "node_modules"]
+}

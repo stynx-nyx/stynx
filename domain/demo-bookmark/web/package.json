@@ -1,0 +1,25 @@
+{
+  "name": "@stynx-domain/demo-bookmark-web",
+  "version": "0.0.1",
+  "private": true,
+  "description": "C-4 pilot Session S3 (BP-DEMO-BOOKMARK-001): Angular feature module for demo Bookmark. Template-shaped components scaffolded by devai SKILL-scaffold-ui; hand-finishing is a future S3 deliverable.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint --max-warnings=0 'src/**/*.ts'",
+    "test": "echo \"@stynx-domain/demo-bookmark-web: tests pending — see ../docs/README.md F-9 follow-up\" && exit 0"
+  },
+  "dependencies": {
+    "@angular/common": "^18.2.13",
+    "@angular/core": "^18.2.13",
+    "@stynx-web/angular": "workspace:*",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@stynx-internal/eslint-config": "workspace:*",
+    "@stynx-internal/tsconfig": "workspace:*",
+    "typescript": "~5.4.5"
+  }
+}

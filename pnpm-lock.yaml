@@ -132,6 +132,65 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
 
+  domain/demo-bookmark/api:
+    dependencies:
+      '@nestjs/common':
+        specifier: ^10.4.20
+        version: 10.4.22(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/core':
+        specifier: ^10.4.20
+        version: 10.4.22(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@stynx/auth':
+        specifier: workspace:*
+        version: link:../../../packages/auth
+      '@stynx/backend':
+        specifier: workspace:*
+        version: link:../../../packages/backend
+      '@stynx/contracts':
+        specifier: workspace:*
+        version: link:../../../packages/contracts
+      '@stynx/data':
+        specifier: workspace:*
+        version: link:../../../packages/data
+      reflect-metadata:
+        specifier: ^0.2.2
+        version: 0.2.2
+    devDependencies:
+      '@stynx-internal/eslint-config':
+        specifier: workspace:*
+        version: link:../../../tools/eslint-config
+      '@stynx-internal/tsconfig':
+        specifier: workspace:*
+        version: link:../../../tools/tsconfig
+      typescript:
+        specifier: ~5.4.5
+        version: 5.4.5
+
+  domain/demo-bookmark/web:
+    dependencies:
+      '@angular/common':
+        specifier: ^18.2.13
+        version: 18.2.14(@angular/core@18.2.14(rxjs@7.8.2)(zone.js@0.16.1))(rxjs@7.8.2)
+      '@angular/core':
+        specifier: ^18.2.13
+        version: 18.2.14(rxjs@7.8.2)(zone.js@0.16.1)
+      '@stynx-web/angular':
+        specifier: workspace:*
+        version: link:../../../packages-web/angular
+      rxjs:
+        specifier: ^7.8.2
+        version: 7.8.2
+    devDependencies:
+      '@stynx-internal/eslint-config':
+        specifier: workspace:*
+        version: link:../../../tools/eslint-config
+      '@stynx-internal/tsconfig':
+        specifier: workspace:*
+        version: link:../../../tools/tsconfig
+      typescript:
+        specifier: ~5.4.5
+        version: 5.4.5
+
   packages-web/angular:
     dependencies:
       '@stynx-web/angular-tenancy':
@@ -1941,6 +2000,16 @@ packages:
     peerDependencies:
       '@angular/core': 21.2.10
 
+  '@angular/common@18.2.14':
+    resolution:
+      {
+        integrity: sha512-ZPRswzaVRiqcfZoowuAM22Hr2/z10ajWOUoFDoQ9tWqz/fH/773kJv2F9VvePIekgNPCzaizqv9gF6tGNqaAwg==,
+      }
+    engines: { node: ^18.19.1 || ^20.11.1 || >=22.0.0 }
+    peerDependencies:
+      '@angular/core': 18.2.14
+      rxjs: ^6.5.3 || ^7.4.0
+
   '@angular/common@21.2.10':
     resolution:
       {
@@ -1971,6 +2040,16 @@ packages:
         integrity: sha512-IrgdFuzzD7NTK3WQaSfowjAPxPbnTqsgR92NsOs5ZaWu3RgLl21dHThNc0BK1KwVwppLUSWmD4qePbcLW71VzQ==,
       }
     engines: { node: ^20.19.0 || ^22.12.0 || >=24.0.0 }
+
+  '@angular/core@18.2.14':
+    resolution:
+      {
+        integrity: sha512-BIPrCs93ZZTY9ym7yfoTgAQ5rs706yoYeAdrgc8kh/bDbM9DawxKlgeKBx2FLt09Y0YQ1bFhKVp0cV4gDEaMxQ==,
+      }
+    engines: { node: ^18.19.1 || ^20.11.1 || >=22.0.0 }
+    peerDependencies:
+      rxjs: ^6.5.3 || ^7.4.0
+      zone.js: ~0.14.10
 
   '@angular/core@21.2.10':
     resolution:
@@ -5797,6 +5876,22 @@ packages:
       '@emnapi/core': ^1.7.1
       '@emnapi/runtime': ^1.7.1
 
+  '@nestjs/common@10.4.22':
+    resolution:
+      {
+        integrity: sha512-fxJ4v85nDHaqT1PmfNCQ37b/jcv2OojtXTaK1P2uAXhzLf9qq6WNUOFvxBrV4fhQek1EQoT1o9oj5xAZmv3NRw==,
+      }
+    peerDependencies:
+      class-transformer: '*'
+      class-validator: '*'
+      reflect-metadata: ^0.1.12 || ^0.2.0
+      rxjs: ^7.1.0
+    peerDependenciesMeta:
+      class-transformer:
+        optional: true
+      class-validator:
+        optional: true
+
   '@nestjs/common@11.1.19':
     resolution:
       {
@@ -5811,6 +5906,26 @@ packages:
       class-transformer:
         optional: true
       class-validator:
+        optional: true
+
+  '@nestjs/core@10.4.22':
+    resolution:
+      {
+        integrity: sha512-6IX9+VwjiKtCjx+mXVPncpkQ5ZjKfmssOZPFexmT+6T9H9wZ3svpYACAo7+9e7Nr9DZSoRZw3pffkJP7Z0UjaA==,
+      }
+    peerDependencies:
+      '@nestjs/common': ^10.0.0
+      '@nestjs/microservices': ^10.0.0
+      '@nestjs/platform-express': ^10.0.0
+      '@nestjs/websockets': ^10.0.0
+      reflect-metadata: ^0.1.12 || ^0.2.0
+      rxjs: ^7.1.0
+    peerDependenciesMeta:
+      '@nestjs/microservices':
+        optional: true
+      '@nestjs/platform-express':
+        optional: true
+      '@nestjs/websockets':
         optional: true
 
   '@nestjs/core@11.1.19':
@@ -6098,6 +6213,14 @@ packages:
         integrity: sha512-GXD3wy50qYbxCJ652bDrDzgMr3NFEkIS374+IgFQKkCvk9yiYcLvX2XDYr7UyQxf4wK0e+yqDYRubZ0DtOxnmQ==,
       }
     engines: { node: ^14.18.0 || >=16.10.0, npm: '>=5.10.0' }
+    hasBin: true
+
+  '@nuxtjs/opencollective@0.3.2':
+    resolution:
+      {
+        integrity: sha512-um0xL3fO7Mf4fDxcqx9KryrB7zgRM5JSlvGN5AGkP6JLM5XEKyjeAiPbNxdXVXQ16isuAhYpvP88NgL2BGd6aA==,
+      }
+    engines: { node: '>=8.0.0', npm: '>=5.0.0' }
     hasBin: true
 
   '@opentelemetry/api@1.9.1':
@@ -7432,6 +7555,13 @@ packages:
         integrity: sha512-+PmQX0PiAYPMeVYe237LJAYvOMYW1j2rH5YROyS3b4CTVJum34HfRvKvAzozHAQG0TnHNdUfY9nCeUyRAs//cw==,
       }
     engines: { node: '>=14.16' }
+
+  '@tokenizer/inflate@0.2.7':
+    resolution:
+      {
+        integrity: sha512-MADQgmZT1eKjp06jpI2yozxaU9uVs4GzzgSL+uEq7bVcJ9V1ZXQkeGNql1fsSI0gMy1vhvNTNbUqrx+pZfJVmg==,
+      }
+    engines: { node: '>=18' }
 
   '@tokenizer/inflate@0.4.1':
     resolution:
@@ -10108,6 +10238,12 @@ packages:
       }
     engines: { node: '>=0.8' }
 
+  consola@2.15.3:
+    resolution:
+      {
+        integrity: sha512-9vAdYbHj6x2fLKC4+oPH0kFzY/orMZyG2Aj+kNylHxKGJ/Ed4dpNyAQYwJOdqO4zdM7XpVHmyejQDcQHrnuXbw==,
+      }
+
   consola@3.4.2:
     resolution:
       {
@@ -12190,6 +12326,12 @@ packages:
       }
     engines: { node: '>=0.4.0' }
 
+  fflate@0.8.3:
+    resolution:
+      {
+        integrity: sha512-tbZNuJrLwGUp3zshBtdy4W+ORxZuIh8a5ilyIEQDC5rY1f3U20JMry0Ll3WBzU58EZKsEuJFXhb5gwv8CsPvgA==,
+      }
+
   figures@2.0.0:
     resolution:
       {
@@ -12219,6 +12361,13 @@ packages:
     engines: { node: '>= 10.13.0' }
     peerDependencies:
       webpack: ^4.0.0 || ^5.0.0
+
+  file-type@20.4.1:
+    resolution:
+      {
+        integrity: sha512-hw9gNZXUfZ02Jo0uafWLaFVPter5/k2rfcrjFJJHX/77xtSDOfJuEFb6oKlFV86FLP1SuyHMW1PSk0U9M5tKkQ==,
+      }
+    engines: { node: '>=18' }
 
   file-type@21.3.4:
     resolution:
@@ -19154,6 +19303,14 @@ packages:
     peerDependencies:
       typescript: 5.0.x || 5.1.x || 5.2.x || 5.3.x || 5.4.x || 5.5.x || 5.6.x || 5.7.x || 5.8.x || 5.9.x || 6.0.x
 
+  typescript@5.4.5:
+    resolution:
+      {
+        integrity: sha512-vcI4UpRgg81oIRUFwR0WSIHKt11nJ7SAVlYNIu+QpqeyXP+gpQJy/Z4+F0aGxSE4MqwjyXvW/TzgkLAx2AGHwQ==,
+      }
+    engines: { node: '>=14.17' }
+    hasBin: true
+
   typescript@5.9.3:
     resolution:
       {
@@ -20227,6 +20384,12 @@ snapshots:
       tslib: 2.8.1
     optional: true
 
+  '@angular/common@18.2.14(@angular/core@18.2.14(rxjs@7.8.2)(zone.js@0.16.1))(rxjs@7.8.2)':
+    dependencies:
+      '@angular/core': 18.2.14(rxjs@7.8.2)(zone.js@0.16.1)
+      rxjs: 7.8.2
+      tslib: 2.8.1
+
   '@angular/common@21.2.10(@angular/core@21.2.10(@angular/compiler@21.2.10)(rxjs@7.8.2)(zone.js@0.16.1))(rxjs@7.8.2)':
     dependencies:
       '@angular/core': 21.2.10(@angular/compiler@21.2.10)(rxjs@7.8.2)(zone.js@0.16.1)
@@ -20252,6 +20415,12 @@ snapshots:
   '@angular/compiler@21.2.10':
     dependencies:
       tslib: 2.8.1
+
+  '@angular/core@18.2.14(rxjs@7.8.2)(zone.js@0.16.1)':
+    dependencies:
+      rxjs: 7.8.2
+      tslib: 2.8.1
+      zone.js: 0.16.1
 
   '@angular/core@21.2.10(@angular/compiler@21.2.10)(rxjs@7.8.2)(zone.js@0.16.1)':
     dependencies:
@@ -24235,6 +24404,20 @@ snapshots:
       '@tybys/wasm-util': 0.10.1
     optional: true
 
+  '@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)':
+    dependencies:
+      file-type: 20.4.1
+      iterare: 1.2.1
+      reflect-metadata: 0.2.2
+      rxjs: 7.8.2
+      tslib: 2.8.1
+      uid: 2.0.2
+    optionalDependencies:
+      class-transformer: 0.5.1
+      class-validator: 0.15.1
+    transitivePeerDependencies:
+      - supports-color
+
   '@nestjs/common@11.1.19(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)':
     dependencies:
       file-type: 21.3.4
@@ -24249,6 +24432,20 @@ snapshots:
       class-validator: 0.15.1
     transitivePeerDependencies:
       - supports-color
+
+  '@nestjs/core@10.4.22(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2)':
+    dependencies:
+      '@nestjs/common': 10.4.22(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nuxtjs/opencollective': 0.3.2
+      fast-safe-stringify: 2.1.1
+      iterare: 1.2.1
+      path-to-regexp: 3.3.0
+      reflect-metadata: 0.2.2
+      rxjs: 7.8.2
+      tslib: 2.8.1
+      uid: 2.0.2
+    transitivePeerDependencies:
+      - encoding
 
   '@nestjs/core@11.1.19(@nestjs/common@11.1.19(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.19)(reflect-metadata@0.2.2)(rxjs@7.8.2)':
     dependencies:
@@ -24384,6 +24581,14 @@ snapshots:
   '@nuxt/opencollective@0.4.1':
     dependencies:
       consola: 3.4.2
+
+  '@nuxtjs/opencollective@0.3.2':
+    dependencies:
+      chalk: 4.1.2
+      consola: 2.15.3
+      node-fetch: 2.7.0
+    transitivePeerDependencies:
+      - encoding
 
   '@opentelemetry/api@1.9.1': {}
 
@@ -25311,6 +25516,14 @@ snapshots:
   '@szmarczak/http-timer@5.0.1':
     dependencies:
       defer-to-connect: 2.0.1
+
+  '@tokenizer/inflate@0.2.7':
+    dependencies:
+      debug: 4.4.3
+      fflate: 0.8.3
+      token-types: 6.1.2
+    transitivePeerDependencies:
+      - supports-color
 
   '@tokenizer/inflate@0.4.1':
     dependencies:
@@ -27007,6 +27220,8 @@ snapshots:
 
   connect-history-api-fallback@2.0.0: {}
 
+  consola@2.15.3: {}
+
   consola@3.4.2: {}
 
   content-disposition@0.5.2: {}
@@ -28360,6 +28575,8 @@ snapshots:
     dependencies:
       xml-js: 1.6.11
 
+  fflate@0.8.3: {}
+
   figures@2.0.0:
     dependencies:
       escape-string-regexp: 1.0.5
@@ -28377,6 +28594,15 @@ snapshots:
       loader-utils: 2.0.4
       schema-utils: 3.3.0
       webpack: 5.106.2
+
+  file-type@20.4.1:
+    dependencies:
+      '@tokenizer/inflate': 0.2.7
+      strtok3: 10.3.5
+      token-types: 6.1.2
+      uint8array-extras: 1.5.0
+    transitivePeerDependencies:
+      - supports-color
 
   file-type@21.3.4:
     dependencies:
@@ -33296,6 +33522,8 @@ snapshots:
       minimatch: 10.2.5
       typescript: 6.0.3
       yaml: 2.8.3
+
+  typescript@5.4.5: {}
 
   typescript@5.9.3: {}
 
