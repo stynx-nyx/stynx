@@ -19,10 +19,11 @@
 | A.2     | `b66286d`   | bootstrap devai under `.devai/` via `init --execute`                                                              |
 | A.3     | `9cec878`   | first inventory pass — seven L0 sensors                                                                           |
 | A.4     | `86ef9c4`   | invariant candidate baseline (no promotion)                                                                       |
-| A.5     | `923f829`   | docs-synthesize wiring smoke (mock; failed; pending real-LLM run)                                                 |
-| A.6     | this file   | retro + skills/governance consolidation map                                                                       |
+| A.5     | `923f829`   | docs-synthesize wiring smoke (mock; failed) — see A.5b                                                            |
+| A.5b    | `49fab65`   | doc-synthesis via `claude -p` CLI bridge (3 docs landed; $0.378 total)                                            |
+| A.6     | this file   | retro + skills/governance consolidation map (revised post-A.5b)                                                   |
 
-Six commits land into stynx. Zero changes under `../devai/`.
+Seven commits land into stynx. Zero changes under `../devai/`.
 
 ---
 
@@ -119,6 +120,13 @@ Numbered for follow-up — these are findings Phase A produced _about_ DEVAI its
 **Resolution this session:** encoded role in `chore(repo)` scope + body. See A.2/A.3/A.4/A.5 commit messages.
 **Long-term (Phase G):** stynx's commitlint config (`tools/repo-config/commitlint.config.cjs`) needs to either (a) add DEVAI roles as valid types/scopes or (b) defer entirely to DEVAI's commit-validation. Per directive 5.2 (DEVAI governance supersedes legacy stynx), option (b) is the target.
 
+### D-A-6 — no first-class CLI-bridge LLM backend
+
+**Where:** `../devai/packages/core/src/llm/factory.js` only knows three families (`mock`, `claude`, `codex`) and both real backends require an API key (`ANTHROPIC_API_KEY` or `OPENAI_API_KEY`).
+**Symptom:** A user with the `claude` (Claude Code) CLI on PATH and a valid OAuth session — but no exported API key — cannot use DEVAI's writer pipeline. They have to either export a key, use mock (broken per D-A-1), or build their own bridge as we did in A.5b.
+**Suggested resolution (DEVAI-side):** add a `claude-cli` (and/or `codex-cli`) backend family in `factory.js` that shells out to the local CLI via `--print --output-format json`. Telemetry can be captured from the envelope's `usage` + `total_cost_usd` fields. Auth is delegated to the CLI's own OAuth, which is already trusted by the host. This makes adopter onboarding trivially cheaper and unblocks "I have Claude Code installed; just use it" — exactly the path the stynx pilot needed.
+**Reference implementation:** `/tmp/devai-prompt-{compose,merge}.mjs` from this session, plus the three commits worth of telemetry now in `.devai/state/`.
+
 ### D-A-5 — lint-staged runs prettier on `.devai/state/**`
 
 **Where:** stynx's lint-staged config formats every staged JSON. The DEVAI evidence chain (`.devai/state/evidence-chain.json`) is hash-chained per Article 32; if a future commit triggers prettier rewriting an existing chained record, the chain breaks.
@@ -127,7 +135,9 @@ Numbered for follow-up — these are findings Phase A produced _about_ DEVAI its
 
 ---
 
-## 5. Doc-synth artifacts (from A.5)
+## 5. Doc-synth artifacts
+
+### A.5 (initial run, mock backend) — FAILED
 
 | Writer                           | Status       | Body file written? | Cost         |
 | -------------------------------- | ------------ | ------------------ | ------------ |
@@ -135,16 +145,20 @@ Numbered for follow-up — these are findings Phase A produced _about_ DEVAI its
 | `SKILL-write-architecture-guide` | FAIL (D-A-1) | No                 | $0.00 (mock) |
 | `SKILL-write-rbac-matrix`        | FAIL (D-A-1) | No                 | $0.00 (mock) |
 
-Telemetry persisted under `.devai/state/{llm-usage.jsonl, agent-runs/, skills/}` even on failure. Per session directive 2, the intent was `DEVAI_LLM_BACKEND=claude`, but `ANTHROPIC_API_KEY` is unset in this Claude Code session and credential discovery beyond env was correctly blocked by the harness. **Action for the user:** export `ANTHROPIC_API_KEY` and re-run:
+### A.5b (redo via `claude -p` CLI bridge) — PASSED
 
-```bash
-export ANTHROPIC_API_KEY=...
-export DEVAI_LLM_BACKEND=claude
-export DEVAI_LLM_BUDGET_USD=2.00
-PATH="/Users/aarusso/Library/pnpm:$PATH" devai docs-synthesize overview --repo-root .
-PATH="/Users/aarusso/Library/pnpm:$PATH" devai docs-synthesize architecture-guide --repo-root .
-PATH="/Users/aarusso/Library/pnpm:$PATH" devai docs-synthesize rbac-matrix --repo-root .
-```
+Per user directive ("both claude and codex are accessible without key, just call cli commands"), the three writers were re-run via the local `claude --print` CLI using host OAuth (no `ANTHROPIC_API_KEY`).
+
+| Writer                           | Status | Body file                    | Chars |       Cost | Cite / Inferred / Gaps |
+| -------------------------------- | ------ | ---------------------------- | ----: | ---------: | ---------------------- |
+| `SKILL-write-overview`           | PASS   | `docs/Overview.md`           |  3115 |    $0.1146 | 30 / 4 / 6             |
+| `SKILL-write-architecture-guide` | PASS   | `docs/Architecture Guide.md` |  4800 |    $0.1306 | 38 / 4 / 6             |
+| `SKILL-write-rbac-matrix`        | PASS   | `docs/RBAC Matrix.md`        |  3672 |    $0.1323 | 26 / 1 / 8             |
+| **total**                        |        |                              | 11587 | **$0.378** | **94 / 9 / 20**        |
+
+Method: `/tmp/devai-prompt-compose.mjs` imported DEVAI's own `loadInventories` / `summarizeForPrompt` / `WRITER_PROMPTS` / `OUTPUT_CONTRACT_INSTRUCTION` so the prompts were byte-identical to what `runWriterSkill` would have built. Three `claude --print --output-format json --json-schema ... --model claude-sonnet-4-6` calls produced structured payloads in `envelope.structured_output` (NOT `envelope.result` — when `--json-schema` is set, `claude -p` puts the parsed object in `structured_output` and the `result` field carries a chat-style status message). `/tmp/devai-prompt-merge.mjs` extracted the markdown and recorded DEVAI-shaped telemetry under `.devai/state/{llm-usage.jsonl, agent-runs/, skills/}`. Both `/tmp/*` scripts are throwaway, not committed.
+
+**Honest deviations from DEVAI's pipeline:** no real `runWriterSkill` invocation, no rate-limit wrapper, no DEVAI budget enforcer (the CLI's own `--max-budget-usd` was used instead). The underlying fix is **D-A-1** (mock backend writer payload) plus a future DEVAI feature: a CLI-bridge backend that uses host OAuth instead of `ANTHROPIC_API_KEY`. Until those land, this CLI bridge is single-session glue, not a long-term substitute. Filed as **D-A-6** below.
 
 Re-run is idempotent — it only rewrites `docs/{Overview, Architecture Guide, RBAC Matrix}.md` and appends new telemetry. No other Phase A step needs to be redone.
 
@@ -205,7 +219,7 @@ Phase B is "promote candidate invariants from `.devai/state/inv-candidates/` int
 ## 9. Open items for the user (across DEVAI and stynx)
 
 1. **DEVAI-side gaps (D-A-1 through D-A-3, D-A-5)** — file as DEVAI tickets. The brief is explicit about not patching across repo boundaries in this session.
-2. **`ANTHROPIC_API_KEY`** — export it and re-run A.5 to land the three doc-synth markdown files.
+2. **`ANTHROPIC_API_KEY`** — no longer blocking (A.5b landed via `claude -p`). Still recommended if you ever want to run DEVAI's `docs-synthesize` directly, e.g., for the writers we didn't run (`software-stack`, `database-reference`, `erd`, `api-map`, `frontend-routes-map`, `compliance-{lgpd,gdpr,ccpa}`, `fp-report`, `threat-model`, `onboarding`).
 3. **Persistent `PNPM_HOME`** — A.0a worked by inlining `PNPM_HOME=/Users/aarusso/Library/pnpm` per command. To make `devai` available without inline `PATH=...`, append to `~/.zshrc`:
    ```
    export PNPM_HOME="/Users/aarusso/Library/pnpm"
@@ -219,18 +233,19 @@ Phase B is "promote candidate invariants from `.devai/state/inv-candidates/` int
 
 ## 10. Phase A self-assessment
 
-| Brief deliverable                                                | Status                                                                                                    |
-| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| A.1 — pack-resolve confirms match                                | ✅ `redox-pack-nestjs-postgres-angular`, 3 signals                                                        |
-| A.2 — `init --execute` bootstraps `.devai/` (+ docs scaffolding) | ✅ 14 files, commit `b66286d`                                                                             |
-| A.3 — seven L0 sensors run                                       | ✅ 5 PASS / 2 REVIEW / 0 FAIL, commit `9cec878`                                                           |
-| A.4 — candidate invariants cataloged (no promotion)              | ✅ 54 candidates, commit `86ef9c4`                                                                        |
-| A.5 — doc-synthesis wiring smoke                                 | ⚠️ Wired, telemetry persisted, output FAILED under mock (D-A-1); pending real-LLM rerun. Commit `923f829` |
-| A.6 — retro file landed                                          | ✅ this file                                                                                              |
-| Six commits, role declared                                       | ✅ commits use `chore(repo)` scope (commitlint constraint) with role declared in body (D-A-4)             |
-| No edits to `../devai/`                                          | ✅ confirmed clean — `git -C ../devai status` (recommend the user verify)                                 |
-| No invariant promotion (Phase B's job)                           | ✅ candidates remain under `.devai/state/inv-candidates/`                                                 |
-| No autonomous loop (Phase F's job)                               | ✅                                                                                                        |
-| No retirement of stynx governance docs (Phase G's job)           | ✅ — flagged in §7 instead                                                                                |
+| Brief deliverable                                                | Status                                                                                        |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| A.1 — pack-resolve confirms match                                | ✅ `redox-pack-nestjs-postgres-angular`, 3 signals                                            |
+| A.2 — `init --execute` bootstraps `.devai/` (+ docs scaffolding) | ✅ 14 files, commit `b66286d`                                                                 |
+| A.3 — seven L0 sensors run                                       | ✅ 5 PASS / 2 REVIEW / 0 FAIL, commit `9cec878`                                               |
+| A.4 — candidate invariants cataloged (no promotion)              | ✅ 54 candidates, commit `86ef9c4`                                                            |
+| A.5 — doc-synthesis wiring smoke                                 | ⚠️ Wired, telemetry persisted, output FAILED under mock (D-A-1). Commit `923f829`             |
+| A.5b — doc-synthesis via `claude -p` CLI bridge                  | ✅ 3 docs (Overview, Architecture Guide, RBAC Matrix) landed; $0.378 total. Commit `49fab65`  |
+| A.6 — retro file landed                                          | ✅ this file                                                                                  |
+| Six commits, role declared                                       | ✅ commits use `chore(repo)` scope (commitlint constraint) with role declared in body (D-A-4) |
+| No edits to `../devai/`                                          | ✅ confirmed clean — `git -C ../devai status` (recommend the user verify)                     |
+| No invariant promotion (Phase B's job)                           | ✅ candidates remain under `.devai/state/inv-candidates/`                                     |
+| No autonomous loop (Phase F's job)                               | ✅                                                                                            |
+| No retirement of stynx governance docs (Phase G's job)           | ✅ — flagged in §7 instead                                                                    |
 
-**Verdict:** Phase A complete with 1 ⚠️ (A.5 awaits a real key) and 5 DEVAI-side findings (D-A-1 … D-A-5) for the DEVAI maintainer to triage.
+**Verdict:** Phase A complete. All deliverables landed (A.5 closed via the A.5b CLI-bridge redo). Six DEVAI-side findings (D-A-1 … D-A-6) for the DEVAI maintainer to triage.
