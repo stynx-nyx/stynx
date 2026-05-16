@@ -7,7 +7,12 @@
  * Two valid header shapes:
  *   1. DEVAI role-prefix:  `Architect: ...`, `Engineer: ...`,
  *                          `Inspector: ...`, `Auditor: ...`, `Owner: ...`
- *      → declares which Constitution Article 6 substrate the commit
+ *                          Combined forms also accepted:
+ *                          `Engineer + Inspector: ...`,
+ *                          `Architect + Engineer + Inspector: ...`
+ *                          (matches DEVAI's own convention — see
+ *                          ../devai commits like b284dc9, 24fd208).
+ *      → declares which Constitution Article 6 substrate(s) the commit
  *        touches; preferred for DEVAI-driven work in stynx.
  *   2. Conventional Commits: `<type>(<scope>): <subject>`
  *      → preferred for legacy stynx work; scope must be in the
@@ -74,9 +79,17 @@ module.exports = {
   extends: ['@commitlint/config-conventional'],
   parserPreset: {
     parserOpts: {
-      // Match `Role: ...` first; fall through to Conventional otherwise.
+      // Match `Role(s): ...` first (single OR `Role + Role [+ Role…]` combos);
+      // fall through to Conventional otherwise.
+      // The role branch's capture is the whole "Role + Role" string so the
+      // role-of-record (for any downstream tooling) is the full combo,
+      // matching the way authors write it.
+      // Scope class admits `@` so `@stynx/*` / `@stynx-web/*` scopes work
+      // (a pre-existing latent bug surfaced during F-12 smoke testing —
+      // the scope enum lists them but the prior regex couldn't match them).
       headerPattern: new RegExp(
-        `^(?:(${DEVAI_ROLES.join('|')})|(${CONVENTIONAL_TYPES.join('|')}))(?:\\(([\\w$.\\-*/ ]*)\\))?!?: (.+)$`,
+        `^(?:(${DEVAI_ROLES.join('|')})(?:\\s*\\+\\s*(?:${DEVAI_ROLES.join('|')}))*` +
+          `|(${CONVENTIONAL_TYPES.join('|')}))(?:\\(([@\\w$.\\-*/ ]*)\\))?!?: (.+)$`,
       ),
       headerCorrespondence: ['role', 'type', 'scope', 'subject'],
     },
