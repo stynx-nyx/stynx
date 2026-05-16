@@ -127,6 +127,7 @@ CREATE INDEX idx_resource_record_org ON resource_record (organization_id);
 ```
 
 Observations that shape adoption:
+
 - No RLS; tenancy enforced by `WHERE` clause convention.
 - Ad-hoc soft delete (`deleted boolean + deleted_at`), no audit, no archive.
 - `organization_id` is STYNX's `tenant_id` semantically.
@@ -332,7 +333,9 @@ import { softDeletable } from '@stynx/data';
 export const resourceRecord = softDeletable(
   pgTable('resource_record', {
     id: uuid('id').primaryKey().defaultRandom(),
-    tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
     externalRef: text('external_ref').notNull(),
     displayName: text('display_name'),
     openedAt: timestamp('opened_at', { withTimezone: true }).notNull(),
@@ -360,19 +363,27 @@ export class RecordsController {
 
   @Get()
   @Permission(TODO_PERMISSION)
-  list() { return this.svc.list(); }
+  list() {
+    return this.svc.list();
+  }
 
   @Get(':id')
   @Permission(TODO_PERMISSION)
-  get(@Param('id') id: string) { return this.svc.get(id); }
+  get(@Param('id') id: string) {
+    return this.svc.get(id);
+  }
 
   @Post()
   @Permission(TODO_PERMISSION)
-  create(@Body() dto: CreateResourceRecordDto) { return this.svc.create(dto); }
+  create(@Body() dto: CreateResourceRecordDto) {
+    return this.svc.create(dto);
+  }
 
   @Delete(':id')
   @Permission(TODO_PERMISSION)
-  remove(@Param('id') id: string) { return this.svc.remove(id); }
+  remove(@Param('id') id: string) {
+    return this.svc.remove(id);
+  }
 }
 ```
 
@@ -459,4 +470,4 @@ At this point the service consumes `@stynx/*` idiomatically. New features are bu
 6. **Complex raw SQL may stay raw.** `stynx adopt apply` preserves untranslatable queries as `sql\`...\`` blocks when necessary.
 7. **Cognito migration is not a codemod.** The helper links identities; it does not provision Cognito users for you.
 
-*End of worked example.*
+_End of worked example._
