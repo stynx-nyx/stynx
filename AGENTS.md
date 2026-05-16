@@ -33,15 +33,10 @@ These are stynx-side conventions DEVAI doesn't speak to; they remain authoritati
 5. Do not delete or bypass generated scripts — they are referenced by CI/CD.
 6. When in doubt about release state, study `docs/stynx/release-readiness.md`, `docs/stynx/implementation-status.md`, and recent `git log`.
 
-### Idiosyncratic stynx skills (kept post-Phase G)
+### Idiosyncratic stynx skills (kept after T7 `.codex/` retirement)
 
-- `.codex/skills/npm-security-upgrade-auditor/` — dependency security audit. No DEVAI equivalent; **kept** per Phase A retro §6.
+- [`tools/npm-security-upgrade-auditor/`](tools/npm-security-upgrade-auditor/) — dependency security audit. No DEVAI equivalent. Relocated from `.codex/skills/` in C-4 Session T7.
 
-### Retired stynx skills
+### Retired Codex-era surfaces
 
-- `.codex/skills/governance-structure-auditor/` — superseded by DEVAI's `SKILL-compute-scorecard` + `SKILL-assess-state` + `SKILL-compile-backlog` triplet. Archived under `.codex/legacy/` (Phase G).
-- `.codex/skills/repo-governance-aligner/` — superseded by `devai init --execute` and DEVAI's substrate scaffolding. Archived under `.codex/legacy/` (Phase G).
-
-## Approval modes (relegated)
-
-The pre-pilot Codex-style approval modes (`danger-full-access`, `workspace-write`, `read-only`, `approval_policy: never`) are **no longer the framing for agent authority in stynx.** DEVAI's five-role authority model takes precedence. The Codex modes are still respected by the `.codex/` runtime when sessions are launched there, but cross-session agent discipline (commit-subject role declaration, substrate authority, evidence chain) follows DEVAI.
+In C-4 Sessions G, S5, T6, T7, the `.codex/` tree was retired entirely. The pre-pilot skills `governance-structure-auditor` + `repo-governance-aligner` were superseded by DEVAI's `SKILL-compute-scorecard` + `SKILL-assess-state` + `SKILL-compile-backlog` triplet and by `devai init --execute` respectively. The Codex-style approval modes (`danger-full-access`, `workspace-write`, `read-only`, `approval_policy: never`) no longer apply — DEVAI's five-role authority (Owner / Architect / Engineer / Inspector / Auditor) is the framing for agent authority in stynx.

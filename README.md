@@ -22,7 +22,7 @@ STYNX is a `pnpm` + `Turborepo` monorepo targeting GitHub Packages for the spec-
 | `docs/{product,architecture,contracts,adr,operations,security,glossary}/` | DEVAI's Article 6 F1 substrate roots.                                                                                                                |
 | `docs/{stynx,dev,api}/`                                                   | Stynx-specific documentation.                                                                                                                        |
 | `docs/legacy/`                                                            | Pre-pilot governance + completed GAP tasks, archived for archeology. NOT authoritative for current state.                                            |
-| `.codex/{skills/npm-security-upgrade-auditor, legacy/}`                   | Codex-era automation — only `npm-security-upgrade-auditor` is active (idiosyncratic); everything else under `legacy/`.                               |
+| `tools/npm-security-upgrade-auditor/`                                     | Stynx-idiosyncratic dep-security skill. Was `.codex/skills/npm-security-upgrade-auditor/`; relocated in C-4 Session T7 when `.codex/` was retired.   |
 
 Pre-extraction `backend/`, `frontend/`, `bootstrap/` trees were removed prior to the C-4 pilot close; root `test/` remains as the centralized test harness (active workspace member).
 

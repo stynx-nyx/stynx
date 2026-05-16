@@ -42,7 +42,7 @@ That would be a Phase G.3 / Phase H opportunity. Until then, this linter stays w
 
 ### Audit trail
 
-The decision to keep this stynx-idiosyncratic was made in C-4 Session S9. Per Phase A retro §6 "Skills consolidation audit," the equivalent decision was already made for `.codex/skills/npm-security-upgrade-auditor/` (kept idiosyncratic). This README captures the same pattern for `tools/migration-linter/`.
+The decision to keep this stynx-idiosyncratic was made in C-4 Session S9. Per Phase A retro §6 "Skills consolidation audit," the equivalent decision was already made for [`tools/npm-security-upgrade-auditor/`](../npm-security-upgrade-auditor/) (kept idiosyncratic; relocated from `.codex/skills/` in Session T7). This README captures the same pattern for `tools/migration-linter/`.
 
 ## Active rules
 

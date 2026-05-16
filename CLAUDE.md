@@ -12,7 +12,7 @@ Read in order:
 4. **[`../devai/BUILD-PLAN.md`](../devai/BUILD-PLAN.md)** — read the Status block. DEVAI is at `4eb4547` (Phase 20.F closeout, D-64) at the time of this writing.
 5. **[`../devai/DESIGN-DECISIONS.md`](../devai/DESIGN-DECISIONS.md)** — the "why is this like that" reference.
 6. **[`../devai/docs/schemas/`](../devai/docs/schemas/)** — the canonical schemas every JSON instance in stynx (under `.devai/state/`, `docs/architecture/invariants/`, `docs/product/draft/blueprints/`) MUST validate against.
-7. **[`AGENTS.md`](AGENTS.md)** — stynx-specific operational notes (RLS reminder, naming, path aliases, idiosyncratic .codex/skills).
+7. **[`AGENTS.md`](AGENTS.md)** — stynx-specific operational notes (RLS reminder, naming, path aliases, idiosyncratic stynx skills under `tools/`).
 8. **[`GOVERNANCE.md`](GOVERNANCE.md)** — pointer to stynx's DEVAI-shaped governance surfaces.
 9. **[`docs/devai-phase-a-retro.md`](docs/devai-phase-a-retro.md) and (when published) [`docs/devai-phase-i-retro.md`](docs/devai-phase-i-retro.md)** — pilot retros documenting the C-4 adoption experience.
 
