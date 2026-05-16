@@ -1,8 +1,56 @@
-# STYNX ADR‑001 — Soft Delete Mechanics and Cascading Semantics
+---
+adr_id: ADR-001
+title: Soft Delete Mechanics and Cascading Semantics
+status: accepted
+date: 2026-05-16
+authors: ['@aarusso']
+tags: [stynx, soft-delete, data-layer, post-c4]
+---
 
-**Status:** Proposed
-**Decision owner:** Platform architecture
-**Related:** STYNX‑SPEC §14, §13.4, §13.5
+# ADR-001 — Soft Delete Mechanics and Cascading Semantics
+
+**Authority:** Architect.
+**Related:** [`docs/architecture/STYNX-SPEC-v0.6.md`](../architecture/STYNX-SPEC-v0.6.md) §14, §13.4, §13.5. Pre-pilot history: file was at `specs/STYNX-ADR-001-soft-delete.md` until C-4 Session S5 (commit `cb734ac`); re-authored to DEVAI ADR schema in C-4 Session T3.
+
+## Status
+
+Accepted on 2026-05-16 (re-authored to DEVAI schema; the underlying decision was made pre-pilot — original Status was "Proposed"; accepted as of stynx v1.0 release prep).
+
+## Context
+
+Stynx supports tenant-scoped data with regulatory erasure requirements (LGPD Art. 18). Two mechanically distinct soft-delete patterns coexisted across the platform — Part A documents the strategy choice and Part B documents the cascading semantics.
+
+The full Context is the analysis in Part A (Soft Delete Strategy) and Part B (Cascading Semantics) below.
+
+## Decisions
+
+The decisions made in this ADR:
+
+1. **Strategy** (Part A): adopt the **archive-schema, same database** approach (option B) over in-table flags (A) and twin-database (C).
+2. **Cascading semantics** (Part B): cascading soft-deletes follow [the rules elaborated in Part B's table and prose].
+
+See Part A and Part B below for the detailed reasoning, trade-off matrices, and operational notes.
+
+## Alternatives Considered
+
+Three soft-delete strategies were evaluated in detail (Part A §A.1):
+
+- **Option A — In-table flag** (`deleted_at timestamptz NULL`)
+- **Option B — Archive schema, same database** (selected)
+- **Option C — Twin archive database**
+
+Plus alternatives dismissed early (temporal tables, event sourcing, audit-log reconstruction) for operational or teachability reasons (Part A §A.1 preamble).
+
+## Affected Rules
+
+- `INV-RBAC-001` references tenant-bound endpoints; soft-delete affects what those endpoints return.
+- `INV-PRIVACY-001` (LGPD/GDPR PII retention) interacts with soft-delete erasure semantics.
+- `tools/migration-linter/` enforces the archive-table pairing pattern that flows from this ADR.
+- `packages/data/`'s `core.create_soft_deletable_table()` helper is the canonical implementation surface.
+
+## Consequences
+
+See "## Consequences" section near the end of this document (line ~263 in the pre-T3 layout).
 
 ---
 

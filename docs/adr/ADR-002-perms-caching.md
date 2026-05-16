@@ -1,8 +1,42 @@
-# STYNX ADR‑002 — Permission Resolution Caching
+---
+adr_id: ADR-002
+title: Permission Resolution Caching
+status: accepted
+date: 2026-05-16
+authors: ['@aarusso']
+tags: [stynx, auth, performance, post-c4]
+---
 
-**Status:** Proposed
-**Decision owner:** Platform architecture
-**Related:** STYNX‑SPEC §5, §6, §7, §12
+# ADR-002 — Permission Resolution Caching
+
+**Authority:** Architect.
+**Related:** [`docs/architecture/STYNX-SPEC-v0.6.md`](../architecture/STYNX-SPEC-v0.6.md) §5, §6, §7, §12. Pre-pilot history: file was at `specs/STYNX-ADR-002-perms-caching.md` until C-4 Session S5 (commit `cb734ac`); re-authored to DEVAI ADR schema in C-4 Session T3.
+
+## Status
+
+Accepted on 2026-05-16 (re-authored to DEVAI schema; underlying decision pre-dates the C-4 pilot — original Status was "Proposed"; accepted as of stynx v1.0 release prep).
+
+## Affected Rules
+
+- `INV-RBAC-001` references endpoint-to-role bindings; the caching strategy here is the runtime that satisfies it.
+- `packages/auth/`'s `PermissionGuard` + `PermissionCache` + `EffectiveHashComputer` are the implementation surfaces.
+- `packages/ratelimit/`'s SLO histograms (GAP-006) are the monitoring surface for cache hit rate + drift detection.
+
+## Decisions
+
+See "## 2. Decision" section below for the full decision detail. The headline: in-process LRU cache keyed by `(tenant_id, user_id, perms_hash)` with TTL, backed by a Redis fallback for cross-instance coherence; cache invalidation via `perms_hash` change detection on every request (cheap; the JWT carries it).
+
+## Alternatives Considered
+
+See "## 3. Alternatives considered" below.
+
+## Consequences
+
+See "## 4. Consequences" below.
+
+## Context
+
+The full context is in §1 below; the headline: every authenticated request carries a STYNX bearer JWT with a `perms_hash` claim; the guard layer converts `@Permission` decorators into O(1) set-membership checks. Question this ADR answers: where does the resolved set live, how does it stay fresh, what does the hot path cost?
 
 ---
 
