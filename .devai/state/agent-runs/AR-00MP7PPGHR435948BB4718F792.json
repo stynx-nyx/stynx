@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "1.0.0",
+  "run_id": "AR-00MP7PPGHR435948BB4718F792",
+  "started_at": "2026-05-16T02:12:29.461Z",
+  "ended_at": "2026-05-16T02:13:29.917Z",
+  "caller": {
+    "kind": "skill",
+    "name": "SKILL-write-overview"
+  },
+  "files_read": [
+    ".devai/state/sensors/inventory_api/api-map.json",
+    ".devai/state/sensors/inventory_routes/routes-react.json",
+    ".devai/state/sensors/inventory_data_model/data-model.json",
+    ".devai/state/sensors/inventory_data_handling/data-model-pii.json",
+    ".devai/state/sensors/inventory_rbac/rbac.json",
+    ".devai/state/sensors/inventory_coverage/coverage-matrix.json",
+    ".devai/state/sensors/inventory_dep_graph/dep-graph.json",
+    ".devai/state/init-introspection.json",
+    ".devai/config/project.json"
+  ],
+  "files_written": [
+    "docs/Overview.md",
+    ".devai/state/skills/SKILL-write-overview/2026-05-16T02-13-29-917Z.json"
+  ],
+  "commands_run": [
+    "claude --print --output-format json --json-schema ... --model claude-sonnet-4-6"
+  ],
+  "compliance": {
+    "invariant_ids": ["INV-DEVAI-010"]
+  },
+  "outcome": {
+    "status": "pass",
+    "notes": [
+      "wrote docs/Overview.md (3115 chars)",
+      "cost_usd=0.11456035",
+      "input_tokens=4 output_tokens=3762",
+      "cache_read=32902 cache_creation=12073",
+      "citations=30 inferred=4 gaps=6"
+    ]
+  },
+  "prev_hash": "GENESIS",
+  "hash_algo_version": "2.0",
+  "manifest_hash": "c8d5be44b2af4f786f801ee802e52be196e5b6333aa82927100bca63a2f99139"
+}

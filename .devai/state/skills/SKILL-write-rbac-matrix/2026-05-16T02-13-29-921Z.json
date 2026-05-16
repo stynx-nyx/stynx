@@ -1,0 +1,131 @@
+{
+  "schemaVersion": "1.0.0",
+  "skill_id": "SKILL-write-rbac-matrix",
+  "invoked_at": "2026-05-16T02:12:20.848Z",
+  "completed_at": "2026-05-16T02:13:29.921Z",
+  "status": "pass",
+  "backend": "claude-cli",
+  "out_path": "docs/RBAC Matrix.md",
+  "citations": [
+    {
+      "kind": "endpoint",
+      "ref": "GET /_probes/data-tx"
+    },
+    {
+      "kind": "endpoint",
+      "ref": "POST /_probes/idempotency"
+    },
+    {
+      "kind": "endpoint",
+      "ref": "GET /_probes/ratelimit"
+    },
+    {
+      "kind": "endpoint",
+      "ref": "GET /_probes/readonly-write"
+    },
+    {
+      "kind": "endpoint",
+      "ref": "GET /_reference/auth-verify"
+    },
+    {
+      "kind": "endpoint",
+      "ref": "GET /_reference/demo-tenants"
+    },
+    {
+      "kind": "endpoint",
+      "ref": "POST /_reference/dev-login"
+    },
+    {
+      "kind": "endpoint",
+      "ref": "POST /documents"
+    },
+    {
+      "kind": "endpoint",
+      "ref": "DELETE /documents/:id"
+    },
+    {
+      "kind": "endpoint",
+      "ref": "POST /documents/:id/complete"
+    },
+    {
+      "kind": "endpoint",
+      "ref": "GET /documents/:id/download"
+    },
+    {
+      "kind": "endpoint",
+      "ref": "DELETE /documents/:id/hard"
+    },
+    {
+      "kind": "endpoint",
+      "ref": "POST /documents/:id/restore"
+    },
+    {
+      "kind": "endpoint",
+      "ref": "GET /record-notes"
+    },
+    {
+      "kind": "endpoint",
+      "ref": "POST /record-notes"
+    },
+    {
+      "kind": "endpoint",
+      "ref": "DELETE /record-notes/:id"
+    },
+    {
+      "kind": "endpoint",
+      "ref": "GET /record-notes/:id"
+    },
+    {
+      "kind": "endpoint",
+      "ref": "PATCH /record-notes/:id"
+    },
+    {
+      "kind": "endpoint",
+      "ref": "DELETE /record-notes/:id/hard"
+    },
+    {
+      "kind": "endpoint",
+      "ref": "POST /record-notes/:id/restore"
+    },
+    {
+      "kind": "table",
+      "ref": "record"
+    },
+    {
+      "kind": "table",
+      "ref": "record_note"
+    },
+    {
+      "kind": "table",
+      "ref": "work_item"
+    },
+    {
+      "kind": "table",
+      "ref": "work_item_entry"
+    },
+    {
+      "kind": "table",
+      "ref": "work_item_lock"
+    },
+    {
+      "kind": "column",
+      "ref": "record.email"
+    }
+  ],
+  "inferred_fields": [
+    "Remaining 30 endpoints (not in input sample) assumed unmapped based on unmapped_endpoint_count: 50"
+  ],
+  "gaps": [
+    "rbac.ilf_tables is empty — no ILF table definitions provided",
+    "roleCount: 0 — no roles in input",
+    "permissionCount: 0 — no permissions in input",
+    "endpointBindings detail absent — only raw count (94) provided, actual binding records not enumerated",
+    "All 50 endpoints unmapped (unmapped_endpoint_count: 50)",
+    "routeBindingCount: 0 and route_count: 0 — frontend RBAC not discoverable",
+    "record.email missing legal_basis and retention metadata",
+    "foreign_key_count: 0 — no FK constraints provided for tenant/ownership verification"
+  ],
+  "notes": [
+    "Generated via claude -p (CLI bridge for Phase A.5 redo). DEVAI runWriterSkill not used because ANTHROPIC_API_KEY is unavailable in the host session; CLI bridge uses host OAuth."
+  ]
+}
