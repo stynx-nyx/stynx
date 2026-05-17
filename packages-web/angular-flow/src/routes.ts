@@ -24,6 +24,11 @@ export const FLOW_ROUTES: Routes = [
     canActivate: [stynxPermissionGuard('flow:read:design')],
   },
   {
+    path: 'forms/:formId/fills/:fillId',
+    component: StynxFlowFillsComponent,
+    canActivate: [stynxPermissionGuard('flow:read:runtime')],
+  },
+  {
     path: 'fills',
     component: StynxFlowFillsComponent,
     canActivate: [stynxPermissionGuard('flow:read:runtime')],
@@ -35,6 +40,11 @@ export const FLOW_ROUTES: Routes = [
   },
   {
     path: 'assignments',
+    component: StynxFlowTaskListComponent,
+    canActivate: [stynxPermissionGuard('flow:read:runtime')],
+  },
+  {
+    path: 'tasks/:taskId',
     component: StynxFlowTaskListComponent,
     canActivate: [stynxPermissionGuard('flow:read:runtime')],
   },
@@ -52,6 +62,11 @@ export const FLOW_ROUTES: Routes = [
     path: 'summary',
     component: StynxFlowRunSummaryComponent,
     canActivate: [stynxPermissionGuard('flow:read:analytics')],
+  },
+  {
+    path: 'policies',
+    component: StynxFlowGraphDesignerComponent,
+    canActivate: [stynxPermissionGuard('flow:read:design')],
   },
 ];
 

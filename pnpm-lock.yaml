@@ -1814,6 +1814,9 @@ importers:
       '@stynx/data':
         specifier: workspace:*
         version: link:../../packages/data
+      '@stynx/flow':
+        specifier: workspace:*
+        version: link:../../packages/flow
       '@stynx/health':
         specifier: workspace:*
         version: link:../../packages/health
@@ -1908,6 +1911,9 @@ importers:
       '@stynx-web/angular-auth':
         specifier: workspace:*
         version: link:../../packages-web/angular-auth
+      '@stynx-web/angular-flow':
+        specifier: workspace:*
+        version: link:../../packages-web/angular-flow
       '@stynx-web/angular-i18n':
         specifier: workspace:*
         version: link:../../packages-web/angular-i18n

@@ -80,6 +80,62 @@ export class FlowAdapterRegistry {
     }
   }
 
+  async applyEffect(input: FlowEffectInput): Promise<FlowEffectResult> {
+    const adapter = this.get(input.adapterKey);
+    if (!adapter) {
+      throw new BadGatewayException({
+        code: 'FLOW_ADAPTER_NOT_FOUND',
+        adapterKey: input.adapterKey,
+        operation: 'applyEffect',
+      });
+    }
+
+    try {
+      return await adapter.applyEffect(input);
+    } catch (error) {
+      throw this.wrapAdapterError(input.adapterKey, 'applyEffect', error);
+    }
+  }
+
+  async canView(input: FlowAccessInput): Promise<boolean> {
+    const adapter = this.get(input.adapterKey);
+    if (!adapter) {
+      return true;
+    }
+
+    try {
+      return await adapter.canView(input);
+    } catch (error) {
+      throw this.wrapAdapterError(input.adapterKey, 'canView', error);
+    }
+  }
+
+  async canManage(input: FlowAccessInput): Promise<boolean> {
+    const adapter = this.get(input.adapterKey);
+    if (!adapter) {
+      return true;
+    }
+
+    try {
+      return await adapter.canManage(input);
+    } catch (error) {
+      throw this.wrapAdapterError(input.adapterKey, 'canManage', error);
+    }
+  }
+
+  async resolveAgents(input: FlowAgentResolutionInput): Promise<FlowResolvedAgent[]> {
+    const adapter = this.get(input.adapterKey);
+    if (!adapter?.resolveAgents) {
+      return [];
+    }
+
+    try {
+      return await adapter.resolveAgents(input);
+    } catch (error) {
+      throw this.wrapAdapterError(input.adapterKey, 'resolveAgents', error);
+    }
+  }
+
   private wrapAdapterError(adapterKey: string, operation: string, error: unknown): BadGatewayException {
     const message = error instanceof Error ? error.message : String(error);
     return new BadGatewayException({

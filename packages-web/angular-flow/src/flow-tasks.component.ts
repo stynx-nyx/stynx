@@ -30,6 +30,11 @@ import type { FlowTask } from './types';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StynxFlowTaskCardComponent {
+  readonly mutationPermissions = {
+    act: 'flow:execute:task',
+    assign: 'flow:assign:task',
+  };
+
   @Input() task: FlowTask | undefined;
   @Output() readonly act = new EventEmitter<string>();
   @Output() readonly assign = new EventEmitter<void>();

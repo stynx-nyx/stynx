@@ -81,4 +81,12 @@ export class FlowPoliciesController {
   deleteRule(@Param('id') id: string) {
     return this.policies.deletePolicyRule(id);
   }
+
+  @Permission('flow:read:runtime')
+  @ReadOnly()
+  @NoIdempotent()
+  @Post('/evaluate')
+  evaluate(@Body() input: unknown) {
+    return this.policies.evaluate(input);
+  }
 }

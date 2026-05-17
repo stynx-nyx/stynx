@@ -1,6 +1,6 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx/auth';
-import { Audit, NoIdempotent } from '@stynx/backend';
+import { Audit, NoIdempotent, RateLimit } from '@stynx/backend';
 import { Idempotent } from '@stynx/idempotency';
 import { FlowFormsService } from '../flow-forms.service';
 
@@ -21,6 +21,14 @@ export class FlowFillsController {
   @Get('/:id')
   get(@Param('id') id: string) {
     return this.forms.getFill(id);
+  }
+
+  @Permission('flow:execute:task')
+  @Audit({ action: 'flow.fill.create', entity: 'flow.fills' })
+  @Idempotent('Idempotency-Key')
+  @Post()
+  create(@Body() input: unknown) {
+    return this.forms.createFillFromBody(input);
   }
 
   @Permission('flow:execute:task')
@@ -54,10 +62,26 @@ export class FlowFillsController {
   }
 
   @Permission('flow:execute:task')
+  @Audit({ action: 'flow.answer.bulk_upsert', entity: 'flow.answers' })
+  @Idempotent('Idempotency-Key')
+  @RateLimit({ bucket: 'user', scope: 'flow.answer.bulk_upsert' })
+  @Put('/:fillId/answers')
+  bulkUpsertAnswers(@Param('fillId') fillId: string, @Body() input: unknown) {
+    return this.forms.bulkUpsertAnswers(fillId, input);
+  }
+
+  @Permission('flow:execute:task')
   @Audit({ action: 'flow.waiver.create', entity: 'flow.waivers' })
   @Idempotent('Idempotency-Key')
   @Post('/:fillId/waivers')
   createWaiver(@Param('fillId') fillId: string, @Body() input: unknown) {
     return this.forms.createFillWaiver(fillId, input);
+  }
+
+  @Permission('flow:read:runtime')
+  @ReadOnly()
+  @Get('/:fillId/waivers')
+  waivers(@Param('fillId') fillId: string) {
+    return this.forms.listFillWaivers(fillId);
   }
 }

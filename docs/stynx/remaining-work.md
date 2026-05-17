@@ -37,16 +37,37 @@
 - pipeline module global provider registration behavior
 - tenant lifecycle middleware compatibility behavior
 
+9. Completed the two-sprint PORM Flow transposition into independent STYNX packages:
+
+- backend/database package `@stynx/flow` with design/runtime services, effect dispatch, resolver expansion, node form-rule gating, aliases, analytics paging/filtering, task privilege checks, and policy evaluation;
+- platform migration `0015_flow_gap_closure.sql`;
+- Angular package `@stynx-web/angular-flow` with real Jest coverage for exports/routes, API facade route families, and component behavior;
+- reference API/web package consumption and release changeset coverage.
+
+10. Closed the next Flow gap-closure bucket after reassessing PORM leftovers:
+
+- verified answer/waiver mutation freshness still needed automatic runtime signaling and added stynx-native DB triggers plus integration evidence;
+- enabled DML audit for current curated Flow live tables and platform curated tables through platform migrations;
+- added generic typed fill execution controls and question-level waiver entry to `@stynx-web/angular-flow`;
+- completed the API completeness review by adding only the package-needed fill-scoped waiver listing route;
+- seeded reference-web Flow route-access E2E coverage.
+
 ## P1
 
 1. Move reusable pieces from legacy `backend/src/core/*` into `packages/backend` adapters incrementally.
 2. Add package-level integration examples for `porm` and `pec` controller/module adoption over `PormIdentityAdminFacade` / `PecIdentityAdminFacade` (code snippets + migration checks).
 3. Execute sibling repo cutovers (`porm`, `pec`, `sgp`) to consume package APIs and remove duplicated legacy implementations.
+4. Execute the original `porm` Flow consumer cutover to `@stynx/flow` and `@stynx-web/angular-flow` once the consuming repo is ready for the dependency swap.
+5. Add representative full HTTP request-pipeline e2e tests for Flow route families beyond current route metadata, service, database, package, and reference tests.
+6. Keep DML audit enabled by default for future mutable curated tables added by any stynx package; exceptions must be explicit and narrow.
+7. Continue the focused PORM Flow E2E port into stynx package/reference surfaces: guarded HTTP pipelines, task assignment/action journeys, form answer/waiver execution, signals, and analytics smoke.
 
 ## P2
 
 1. Publish versioning and release automation (`changesets` or equivalent).
 2. Normalize package docs under one entrypoint (`docs/stynx/package-architecture.md` + consumer quickstarts).
+3. Decide whether a richer graph-editor implementation belongs in `@stynx-web/angular-flow` or remains a host-level extension point.
+4. Add a packaged Angular Flow host store only if richer package screens start duplicating graph/form/task selection, loading, CRUD refresh, and error orchestration. It is not a required backend feature and not a default porting target.
 
 ## Postponed (per current decision)
 
@@ -58,3 +79,4 @@
 - `sgp` verifier hazard found in `../sgp/source/backend/src/auth/cognito-jwt.service.ts#verifySignature` (`this.client` checked before lazy init).
 - SQL sink mode differences (`audit.write` vs table insert) can cause shape drift if not explicitly mapped per consumer.
 - Identity-admin local enrichment boundaries (org/affiliation/catalog semantics) must not leak into provider-generic package APIs.
+- Flow package maturity is "ready with caveats": core package completeness is high, mutation freshness/audit/typed-fill/API review are closed for the current baseline, and remaining risk is full PORM visual/editor richness plus exhaustive HTTP/E2E route-family proof.

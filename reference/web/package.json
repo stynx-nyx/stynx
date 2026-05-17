@@ -25,6 +25,7 @@
     "@angular/router": "^21.2.10",
     "@stynx-web/angular": "workspace:*",
     "@stynx-web/angular-auth": "workspace:*",
+    "@stynx-web/angular-flow": "workspace:*",
     "@stynx-web/angular-tenancy": "workspace:*",
     "@stynx-web/angular-i18n": "workspace:*",
     "@stynx-web/angular-profile": "workspace:*",

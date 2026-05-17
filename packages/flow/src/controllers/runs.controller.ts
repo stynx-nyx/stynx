@@ -40,8 +40,8 @@ export class FlowRunsController {
   @Permission('flow:read:analytics')
   @ReadOnly()
   @Get('/summary')
-  summary() {
-    return this.analytics.runsSummary();
+  summary(@Query() query: Record<string, unknown>) {
+    return this.analytics.runsSummary(query);
   }
 
   @Permission('flow:read:runtime')

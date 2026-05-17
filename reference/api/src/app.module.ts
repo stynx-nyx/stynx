@@ -14,6 +14,7 @@ import {
   STYNX_AUDIT_SINK,
 } from '@stynx/backend';
 import { Database, StynxDataModule } from '@stynx/data';
+import { StynxFlowModule } from '@stynx/flow';
 import { StynxHealthModule } from '@stynx/health';
 import { StynxLoggingModule } from '@stynx/logging';
 import { StynxSessionsModule } from '@stynx/sessions';
@@ -252,6 +253,7 @@ async function runReferenceApiMigrations(
           : {}),
       },
     }),
+    StynxFlowModule,
     SampleModule,
   ],
   providers: [

@@ -13,6 +13,7 @@ import {
 import { camelizeRow, type FlowRow } from './row-utils';
 import {
   answerWriteSchema,
+  bulkAnswerWriteSchema,
   createFillSchema,
   createFormSchema,
   createQuestionSchema,
@@ -255,8 +256,22 @@ export class FlowFormsService {
     return this.getRow('fills', id);
   }
 
+  getFormFill(formId: string, fillId: string): Promise<Record<string, unknown>> {
+    return this.getOne(
+      'select * from flow.fills where form_id = $1::uuid and id = $2::uuid limit 1',
+      [formId, fillId],
+      'Fill not found',
+    );
+  }
+
   createFill(formId: string, input: unknown): Promise<Record<string, unknown>> {
     return this.createRow('fills', parseDto(createFillSchema, { ...this.objectInput(input), formId }));
+  }
+
+  createFillFromBody(input: unknown): Promise<Record<string, unknown>> {
+    const body = this.objectInput(input);
+    const formId = this.stringField(body, 'formId', 'formId is required');
+    return this.createFill(formId, body);
   }
 
   updateFill(id: string, input: unknown): Promise<Record<string, unknown>> {
@@ -271,40 +286,41 @@ export class FlowFormsService {
     return this.listRows('answers', { fill_id: fillId }, 'created_at, id');
   }
 
+  async listFormFillAnswers(formId: string, fillId: string): Promise<Record<string, unknown>[]> {
+    await this.getFormFill(formId, fillId);
+    return this.listAnswers(fillId);
+  }
+
   upsertAnswer(fillId: string, input: unknown): Promise<Record<string, unknown>> {
-    const dto = parseDto(answerWriteSchema, input);
+    const dto = parseDto(answerWriteSchema, this.normalizeAnswerInput(input));
     return this.db.tx(async (trx) => {
       await this.assertExists(trx, 'flow.fills', fillId, 'Fill not found');
-      await this.assertExists(trx, 'flow.questions', dto.questionId, 'Question not found');
+      await this.assertExists(trx, 'flow.questions', dto.questionId ?? '', 'Question not found');
       const tenantId = this.requireTenantId();
       const actorId = this.requestContext.actorId ?? null;
-      const result = await trx.query<FlowRow>(
-        `
-          insert into flow.answers (
-            tenant_id,
-            fill_id,
-            question_id,
-            value,
-            attachment,
-            created_by,
-            updated_by
-          )
-          values ($1::uuid, $2::uuid, $3::uuid, $4::jsonb, $5::jsonb, $6::uuid, $6::uuid)
-          on conflict (tenant_id, fill_id, question_id) do update
-          set value = excluded.value,
-              attachment = excluded.attachment,
-              updated_by = excluded.updated_by,
-              updated_at = clock_timestamp()
-          returning *
-        `,
-        [tenantId, fillId, dto.questionId, dto.value ?? null, dto.attachment ?? null, actorId],
-      );
-      return camelizeRow(result.rows[0] ?? {});
+      return this.upsertAnswerInTx(trx, tenantId, actorId, fillId, dto);
+    });
+  }
+
+  bulkUpsertAnswers(fillId: string, input: unknown): Promise<Record<string, unknown>[]> {
+    const parsed = parseDto(bulkAnswerWriteSchema, input);
+    const answers = Array.isArray(parsed) ? parsed : parsed.answers;
+    return this.db.tx(async (trx) => {
+      await this.assertExists(trx, 'flow.fills', fillId, 'Fill not found');
+      const tenantId = this.requireTenantId();
+      const actorId = this.requestContext.actorId ?? null;
+      const rows: Record<string, unknown>[] = [];
+      for (const answer of answers) {
+        const dto = parseDto(answerWriteSchema, this.normalizeAnswerInput(answer));
+        await this.assertExists(trx, 'flow.questions', dto.questionId ?? '', 'Question not found');
+        rows.push(await this.upsertAnswerInTx(trx, tenantId, actorId, fillId, dto));
+      }
+      return rows;
     });
   }
 
   updateAnswer(id: string, input: unknown): Promise<Record<string, unknown>> {
-    const dto = parseDto(updateAnswerSchema, input);
+    const dto = parseDto(updateAnswerSchema, this.normalizeAnswerInput(input));
     return this.db.tx(async (trx) => {
       if (dto.questionId) {
         await this.assertExists(trx, 'flow.questions', dto.questionId, 'Question not found');
@@ -355,6 +371,70 @@ export class FlowFormsService {
       targetId: this.stringField(fill, 'targetId', 'Fill target id is required'),
       formId: this.stringField(fill, 'formId', 'Fill form is required'),
     });
+  }
+
+  async listFillWaivers(fillId: string): Promise<Record<string, unknown>[]> {
+    const fill = await this.getFill(fillId);
+    return this.listWaivers({
+      scopeId: this.stringField(fill, 'scopeId', 'Fill scope is required'),
+      formId: this.stringField(fill, 'formId', 'Fill form is required'),
+      targetType: this.stringField(fill, 'targetType', 'Fill target type is required'),
+      targetId: this.stringField(fill, 'targetId', 'Fill target id is required'),
+    });
+  }
+
+  async listFormFillWaivers(formId: string, fillId: string): Promise<Record<string, unknown>[]> {
+    const fill = await this.getFormFill(formId, fillId);
+    return this.listWaivers({
+      scopeId: this.stringField(fill, 'scopeId', 'Fill scope is required'),
+      formId,
+      targetType: this.stringField(fill, 'targetType', 'Fill target type is required'),
+      targetId: this.stringField(fill, 'targetId', 'Fill target id is required'),
+    });
+  }
+
+  async createFormFillWaiver(formId: string, fillId: string, input: unknown): Promise<Record<string, unknown>> {
+    await this.getFormFill(formId, fillId);
+    return this.createFillWaiver(fillId, input);
+  }
+
+  private async upsertAnswerInTx(
+    trx: Transaction,
+    tenantId: string,
+    actorId: string | null,
+    fillId: string,
+    dto: { questionId?: string | undefined; value?: unknown; attachment?: unknown },
+  ): Promise<Record<string, unknown>> {
+    const result = await trx.query<FlowRow>(
+      `
+        insert into flow.answers (
+          tenant_id,
+          fill_id,
+          question_id,
+          value,
+          attachment,
+          created_by,
+          updated_by
+        )
+        values ($1::uuid, $2::uuid, $3::uuid, $4::jsonb, $5::jsonb, $6::uuid, $6::uuid)
+        on conflict (tenant_id, fill_id, question_id) do update
+        set value = excluded.value,
+            attachment = excluded.attachment,
+            updated_by = excluded.updated_by,
+            updated_at = clock_timestamp()
+        returning *
+      `,
+      [tenantId, fillId, dto.questionId, dto.value ?? null, dto.attachment ?? null, actorId],
+    );
+    return camelizeRow(result.rows[0] ?? {});
+  }
+
+  private normalizeAnswerInput(input: unknown): Record<string, unknown> {
+    const body = this.objectInput(input);
+    return {
+      ...body,
+      questionId: body.questionId ?? body.itemId,
+    };
   }
 
   private async createRow(key: TableKey, input: Record<string, unknown>): Promise<Record<string, unknown>> {

@@ -5,6 +5,7 @@ import { FlowAnalyticsController } from './controllers/analytics.controller';
 import { FlowAnswersController } from './controllers/answers.controller';
 import { FlowEdgesController } from './controllers/edges.controller';
 import { FlowEventsController } from './controllers/events.controller';
+import { FlowEffectsController } from './controllers/effects.controller';
 import { FlowFillsController } from './controllers/fills.controller';
 import { FlowFormsController } from './controllers/forms.controller';
 import { FlowGraphsController } from './controllers/graphs.controller';
@@ -31,6 +32,7 @@ import { FlowRuntimeService } from './flow-runtime.service';
     FlowAnswersController,
     FlowEdgesController,
     FlowEventsController,
+    FlowEffectsController,
     FlowFillsController,
     FlowFormsController,
     FlowGraphsController,

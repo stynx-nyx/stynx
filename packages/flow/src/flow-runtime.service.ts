@@ -1,10 +1,12 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { RequestContext } from '@stynx/core';
 import { Database, Transaction } from '@stynx/data';
 import { FlowAdapterRegistry } from './adapters';
 import { camelizeRow, pageLimitOffset, requireObject, type FlowRow } from './row-utils';
+import type { FlowJsonObject } from './types';
 import {
   assignTaskSchema,
+  dispatchEffectsSchema,
   ensureRunSchema,
   parseDto,
   signalSchema,
@@ -14,6 +16,27 @@ import {
 } from './validation';
 
 type FilterInput = Record<string, unknown>;
+
+interface PendingEffectRow extends FlowRow {
+  event_id: string;
+  run_id: string;
+  node_id?: string | null;
+  task_id?: string | null;
+  adapter_key: string;
+  target_type: string;
+  target_id: string;
+  node_code?: string | null;
+  action?: string | null;
+  payload: FlowJsonObject;
+}
+
+interface TaskAccessRow extends FlowRow {
+  assignee_user_id?: string | null;
+  is_user_candidate?: boolean;
+  adapter_key: string;
+  target_type: string;
+  target_id: string;
+}
 
 function optionalString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined;
@@ -45,6 +68,12 @@ function addTextFilter(
   }
   values.push(stringValue);
   where.push(`${column} = $${values.length}`);
+}
+
+function asJsonObject(value: unknown): FlowJsonObject {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+    ? value as FlowJsonObject
+    : {};
 }
 
 @Injectable()
@@ -317,6 +346,7 @@ export class FlowRuntimeService {
   async actTask(id: string, input: unknown): Promise<Record<string, unknown>> {
     const dto = parseDto(taskActionSchema, input);
     await this.assertAllowedAction(id, dto.action);
+    await this.assertTaskExecutionAllowed(id);
     return this.callTaskFunction('flow.task_complete($1::uuid, $2::text, $3::text, $4::jsonb)', [
       id,
       dto.action,
@@ -325,8 +355,9 @@ export class FlowRuntimeService {
     ]);
   }
 
-  assignTask(id: string, input: unknown): Promise<Record<string, unknown>> {
+  async assignTask(id: string, input: unknown): Promise<Record<string, unknown>> {
     const dto = parseDto(assignTaskSchema, input);
+    await this.assertTaskManagementAllowed(id);
     return this.callTaskFunction('flow.task_assign($1::uuid, $2::uuid, $3::text)', [
       id,
       dto.userId,
@@ -334,41 +365,94 @@ export class FlowRuntimeService {
     ]);
   }
 
-  unassignTask(id: string, input: unknown): Promise<Record<string, unknown>> {
+  async unassignTask(id: string, input: unknown): Promise<Record<string, unknown>> {
     const dto = parseDto(taskNoteSchema, input);
+    await this.assertTaskManagementAllowed(id);
     return this.callTaskFunction('flow.task_unassign($1::uuid, $2::text)', [id, dto.note ?? null]);
   }
 
-  acceptTask(id: string, input: unknown): Promise<Record<string, unknown>> {
+  async acceptTask(id: string, input: unknown): Promise<Record<string, unknown>> {
     const dto = parseDto(taskNoteSchema, input);
+    await this.assertTaskExecutionAllowed(id);
     return this.callTaskFunction('flow.task_accept($1::uuid, $2::text)', [id, dto.note ?? null]);
   }
 
-  declineTask(id: string, input: unknown): Promise<Record<string, unknown>> {
+  async declineTask(id: string, input: unknown): Promise<Record<string, unknown>> {
     const dto = parseDto(taskNoteSchema, input);
+    await this.assertTaskExecutionAllowed(id);
     return this.callTaskFunction('flow.task_decline($1::uuid, $2::text)', [id, dto.note ?? null]);
   }
 
-  unacceptTask(id: string, input: unknown): Promise<Record<string, unknown>> {
+  async unacceptTask(id: string, input: unknown): Promise<Record<string, unknown>> {
     const dto = parseDto(taskNoteSchema, input);
+    await this.assertTaskExecutionAllowed(id);
     return this.callTaskFunction('flow.task_unaccept($1::uuid, $2::text)', [id, dto.note ?? null]);
   }
 
-  withdrawTask(id: string, input: unknown): Promise<Record<string, unknown>> {
+  async withdrawTask(id: string, input: unknown): Promise<Record<string, unknown>> {
     const dto = parseDto(taskNoteSchema, input);
+    await this.assertTaskExecutionAllowed(id);
     return this.callTaskFunction('flow.task_withdraw($1::uuid, $2::text)', [id, dto.note ?? null]);
   }
 
-  taskCandidates(id: string): Promise<Record<string, unknown>[]> {
-    return this.list(
+  async taskCandidates(id: string): Promise<Record<string, unknown>[]> {
+    await this.assertTaskManagementAllowed(id);
+    const candidates = await this.list(
       `
-        select candidate.*
+        select
+          candidate.*,
+          rule.params,
+          t.run_id,
+          t.node_id,
+          r.adapter_key,
+          r.target_type,
+          r.target_id
         from flow.tasks t
         cross join lateral flow.resolve_agents(t.node_id, t.run_id) candidate
+        left join flow.agent_rules rule on rule.id = candidate.rule_id
+        join flow.runs r on r.id = t.run_id
         where t.id = $1::uuid
       `,
       [id],
     );
+    const resolved: Record<string, unknown>[] = [];
+    for (const candidate of candidates) {
+      if (candidate.agentType !== 'resolver') {
+        resolved.push(candidate);
+        continue;
+      }
+      const resolverKey = String(candidate.agentId ?? '');
+      const adapterKey = optionalString(candidate.adapterKey);
+      if (!this.requestContext.tenantId || !adapterKey || !resolverKey) {
+        resolved.push(candidate);
+        continue;
+      }
+      const agents = await this.adapters.resolveAgents({
+        tenantId: this.requestContext.tenantId,
+        adapterKey,
+        targetType: String(candidate.targetType ?? ''),
+        targetId: String(candidate.targetId ?? ''),
+        runId: String(candidate.runId ?? ''),
+        nodeId: String(candidate.nodeId ?? ''),
+        ruleId: String(candidate.ruleId ?? ''),
+        resolverKey,
+        params: asJsonObject(candidate.params),
+      });
+      if (agents.length === 0) {
+        resolved.push({ ...candidate, unresolved: true, resolverKey });
+        continue;
+      }
+      for (const agent of agents) {
+        resolved.push({
+          agentType: agent.type,
+          agentId: agent.id,
+          ...(agent.label ? { label: agent.label } : {}),
+          ruleId: candidate.ruleId,
+          resolverKey,
+        });
+      }
+    }
+    return resolved;
   }
 
   listUsersForRole(role: string, search?: string): Promise<Record<string, unknown>[]> {
@@ -462,6 +546,105 @@ export class FlowRuntimeService {
     });
   }
 
+  async dispatchPendingEffects(input: unknown = {}): Promise<Record<string, unknown>> {
+    const dto = parseDto(dispatchEffectsSchema, input);
+    const limit = dto.limit ?? 50;
+    const pending = await this.db.tx(async (trx) => {
+      const result = await trx.query<PendingEffectRow>(
+        `
+          select
+            e.id as event_id,
+            e.run_id,
+            e.node_id,
+            e.task_id,
+            e.payload,
+            r.adapter_key,
+            r.target_type,
+            r.target_id,
+            n.code as node_code,
+            t.decided_action as action
+          from flow.events e
+          join flow.runs r on r.id = e.run_id
+          left join flow.nodes n on n.id = e.node_id
+          left join flow.tasks t on t.id = e.task_id
+          where e.kind = 'effect_requested'
+            and ($1::uuid is null or e.run_id = $1::uuid)
+            and ($2::uuid is null or e.id = $2::uuid)
+            and not exists (
+              select 1
+              from flow.events terminal
+              where terminal.run_id = e.run_id
+                and terminal.kind in ('effect_succeeded', 'effect_failed')
+                and terminal.payload ->> 'effectEventId' = e.id::text
+            )
+          order by e.created_at, e.id
+          limit $3
+        `,
+        [dto.runId ?? null, dto.effectEventId ?? null, limit],
+      );
+      return result.rows;
+    }, {
+      role: 'reader',
+      readonly: true,
+    });
+
+    let succeeded = 0;
+    let failed = 0;
+    const diagnostics: Record<string, unknown>[] = [];
+    for (const event of pending) {
+      const payload = asJsonObject(event.payload);
+      const effectKey = optionalString(payload.effectKey);
+      if (!effectKey) {
+        failed += 1;
+        await this.recordEffectResult(event, 'effect_failed', {
+          error: 'effectKey is required',
+          effectEventId: event.event_id,
+        });
+        diagnostics.push({ effectEventId: event.event_id, ok: false, error: 'effectKey is required' });
+        continue;
+      }
+
+      try {
+        const result = await this.adapters.applyEffect({
+          tenantId: this.requireTenantId(),
+          adapterKey: event.adapter_key,
+          targetType: event.target_type,
+          targetId: event.target_id,
+          runId: event.run_id,
+          effectKey,
+          ...(event.node_code ? { nodeCode: event.node_code } : {}),
+          ...(event.action ? { action: event.action } : {}),
+          payload: asJsonObject(payload.payload),
+        });
+        succeeded += 1;
+        await this.recordEffectResult(event, 'effect_succeeded', {
+          effectEventId: event.event_id,
+          effectKey,
+          ok: result.ok,
+          ...(result.payload ? { result: result.payload } : {}),
+        });
+        diagnostics.push({ effectEventId: event.event_id, ok: true });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        failed += 1;
+        await this.recordEffectResult(event, 'effect_failed', {
+          effectEventId: event.event_id,
+          effectKey,
+          error: message,
+        });
+        diagnostics.push({ effectEventId: event.event_id, ok: false, error: message });
+      }
+    }
+
+    return {
+      attempted: pending.length,
+      succeeded,
+      failed,
+      skipped: 0,
+      diagnostics,
+    };
+  }
+
   private async scopeCodeForId(scopeId: string | undefined): Promise<string> {
     if (!scopeId) {
       throw new BadRequestException('scopeId or scopeCode is required');
@@ -513,6 +696,30 @@ export class FlowRuntimeService {
       await this.recordAdapterFailure(input, error);
       throw error;
     }
+  }
+
+  private async recordEffectResult(
+    event: PendingEffectRow,
+    kind: 'effect_succeeded' | 'effect_failed',
+    payload: FlowJsonObject,
+  ): Promise<void> {
+    await this.db.tx(async (trx) => {
+      await trx.query(
+        `
+          insert into flow.events (tenant_id, run_id, node_id, task_id, kind, actor_id, payload)
+          values ($1::uuid, $2::uuid, $3::uuid, $4::uuid, $5::flow.event_kind, $6::uuid, $7::jsonb)
+        `,
+        [
+          this.requireTenantId(),
+          event.run_id,
+          event.node_id ?? null,
+          event.task_id ?? null,
+          kind,
+          this.requestContext.actorId ?? null,
+          payload,
+        ],
+      );
+    });
   }
 
   private async recordAdapterFailure(
@@ -581,6 +788,68 @@ export class FlowRuntimeService {
     });
   }
 
+  private async assertTaskExecutionAllowed(taskId: string): Promise<void> {
+    const actorId = this.requestContext.actorId;
+    if (!actorId) {
+      throw new ForbiddenException('Task actor context is required');
+    }
+    const access = await this.taskAccess(taskId, actorId);
+    if (access.assignee_user_id && access.assignee_user_id !== actorId) {
+      throw new ForbiddenException('Only the current assignee may execute this task');
+    }
+    if (!access.assignee_user_id && !access.is_user_candidate) {
+      throw new ForbiddenException('Actor is not a task candidate');
+    }
+  }
+
+  private async assertTaskManagementAllowed(taskId: string): Promise<void> {
+    const access = await this.taskAccess(taskId, this.requestContext.actorId);
+    const actorId = this.requestContext.actorId;
+    const allowed = await this.adapters.canManage({
+      tenantId: this.requireTenantId(),
+      adapterKey: access.adapter_key,
+      targetType: access.target_type,
+      targetId: access.target_id,
+      ...(actorId ? { actorId } : {}),
+    });
+    if (!allowed) {
+      throw new ForbiddenException('Adapter denied Flow task management');
+    }
+  }
+
+  private async taskAccess(taskId: string, actorId: string | undefined): Promise<TaskAccessRow> {
+    return this.db.tx(async (trx) => {
+      const result = await trx.query<TaskAccessRow>(
+        `
+          select
+            t.assignee_user_id as assignee_user_id,
+            r.adapter_key,
+            r.target_type,
+            r.target_id,
+            exists (
+              select 1
+              from flow.resolve_agents(t.node_id, t.run_id) candidate
+              where candidate.agent_type = 'user'
+                and candidate.agent_id = $2::text
+            ) as is_user_candidate
+          from flow.tasks t
+          join flow.runs r on r.id = t.run_id
+          where t.id = $1::uuid
+          limit 1
+        `,
+        [taskId, actorId ?? ''],
+      );
+      const row = result.rows[0];
+      if (!row) {
+        throw new NotFoundException('Task not found');
+      }
+      return row;
+    }, {
+      role: 'reader',
+      readonly: true,
+    });
+  }
+
   private async getTaskFromTransaction(trx: Transaction, id: string): Promise<Record<string, unknown>> {
     const result = await trx.query<FlowRow>(
       `
@@ -629,5 +898,13 @@ export class FlowRuntimeService {
 
   objectInput(input: unknown): Record<string, unknown> {
     return requireObject(input);
+  }
+
+  private requireTenantId(): string {
+    const tenantId = this.requestContext.tenantId;
+    if (!tenantId) {
+      throw new BadRequestException('Tenant context is required');
+    }
+    return tenantId;
   }
 }

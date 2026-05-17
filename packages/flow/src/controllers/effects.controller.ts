@@ -4,17 +4,17 @@ import { Audit, RateLimit } from '@stynx/backend';
 import { Idempotent } from '@stynx/idempotency';
 import { FlowRuntimeService } from '../flow-runtime.service';
 
-@Controller('/flow/signal')
+@Controller('/flow/effects')
 @UseGuards(StynxAuthGuard, PermissionGuard)
-export class FlowSignalController {
+export class FlowEffectsController {
   constructor(private readonly runtime: FlowRuntimeService) {}
 
-  @Permission('flow:read:runtime')
-  @Audit({ action: 'flow.signal', entity: 'flow.runs' })
+  @Permission('flow:admin:*')
+  @Audit({ action: 'flow.effect.dispatch', entity: 'flow.events' })
   @Idempotent('Idempotency-Key')
-  @RateLimit({ bucket: 'tenant', scope: 'flow.signal' })
-  @Post()
-  signal(@Body() input: unknown) {
-    return this.runtime.signal(input);
+  @RateLimit({ bucket: 'tenant', scope: 'flow.effect.dispatch' })
+  @Post('/dispatch')
+  dispatch(@Body() input: unknown) {
+    return this.runtime.dispatchPendingEffects(input);
   }
 }

@@ -213,6 +213,16 @@ function definedEntries(input: FlowJsonObject, columns: ColumnMap): Array<[strin
   return entries;
 }
 
+function normalizeNodeFormRule(input: FlowJsonObject): FlowJsonObject {
+  if (input.gatingMode === 'any_answered') {
+    return { ...input, gatingMode: 'any' };
+  }
+  if (input.gatingMode === 'score_threshold') {
+    return { ...input, gatingMode: 'threshold' };
+  }
+  return input;
+}
+
 function ensureNonEmptyUpdate(entries: Array<[string, unknown]>): void {
   if (entries.length === 0) {
     throw new BadRequestException('At least one update field is required');
@@ -354,11 +364,14 @@ export class FlowDesignService {
   }
 
   createNodeFormRule(nodeId: string, input: unknown): Promise<FlowJsonObject> {
-    return this.createRow('nodeFormRules', parseDto(createNodeFormRuleSchema, { ...this.objectInput(input), nodeId }));
+    return this.createRow(
+      'nodeFormRules',
+      normalizeNodeFormRule(parseDto(createNodeFormRuleSchema, { ...this.objectInput(input), nodeId })),
+    );
   }
 
   updateNodeFormRule(id: string, input: unknown): Promise<FlowJsonObject> {
-    return this.updateRow('nodeFormRules', id, parseDto(updateNodeFormRuleSchema, input));
+    return this.updateRow('nodeFormRules', id, normalizeNodeFormRule(parseDto(updateNodeFormRuleSchema, input)));
   }
 
   getNodeFormRule(id: string): Promise<FlowJsonObject> {

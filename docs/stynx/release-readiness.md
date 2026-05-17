@@ -31,6 +31,15 @@ reference-app workflow instead of the STYNX package release lane.
 - ADRs remain published in the docs site under `Architecture Decisions`.
 - The v1.1 planning issue template is staged under `.github/ISSUE_TEMPLATE/v1_1_planning.md`.
 
+## Flow Package Addendum (2026-05-17)
+
+The PORM-to-STYNX Flow gap pass added release-visible package evidence for:
+
+- `@stynx/flow`: backend package build/test coverage, platform migrations `0015_flow_gap_closure.sql` and `0016_platform_curated_audit.sql`, answer/waiver mutation signal freshness, curated-table DML audit coverage, reference API import via `StynxFlowModule`, and release changeset `.changeset/flow-gap-closure.md`.
+- `@stynx-web/angular-flow`: Angular package tests with `passWithNoTests` removed, API facade coverage for the Flow contract, typed fill execution controls, reference web route mount under `/flow`, route-access E2E seed, and release changeset `.changeset/flow-gap-closure.md`.
+
+This addendum is factual package-readiness evidence only. It does not change the v1.0 release-scope notes below or assert registry publication.
+
 ## Closure Evidence
 
 The CI-authoritative gates that blocked Prompt 37 are green on `main`:

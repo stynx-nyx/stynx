@@ -327,6 +327,196 @@ async function seedRuntime(client: Client): Promise<RuntimeSeed> {
   });
 }
 
+async function seedBlockedFormGateRuntime(client: Client): Promise<{
+  formId: string;
+  questionId: string;
+  fillId: string;
+  runId: string;
+  taskId: string;
+  nodeRunId: string;
+}> {
+  return withSessionContext(client, tenantA, actorA, async () => {
+    const scope = await client.query<IdRow>(
+      `
+        insert into flow.scopes (tenant_id, code, label, adapter_key, created_by, updated_by)
+        values (current_setting('app.tenant_id')::uuid, 'blocked-form-scope', 'Blocked Form Scope', 'test', current_setting('app.actor_id')::uuid, current_setting('app.actor_id')::uuid)
+        returning id
+      `,
+    );
+    const scopeId = scope.rows[0]?.id ?? '';
+    const graph = await client.query<IdRow>(
+      `
+        insert into flow.graphs (tenant_id, scope_id, code, version, is_active, name, created_by, updated_by)
+        values (current_setting('app.tenant_id')::uuid, $1::uuid, 'blocked-approval', 'v1', true, 'Blocked Approval', current_setting('app.actor_id')::uuid, current_setting('app.actor_id')::uuid)
+        returning id
+      `,
+      [scopeId],
+    );
+    const graphId = graph.rows[0]?.id ?? '';
+    const start = await client.query<IdRow>(
+      `
+        insert into flow.nodes (tenant_id, graph_id, code, kind, sort_order, created_by, updated_by)
+        values (current_setting('app.tenant_id')::uuid, $1::uuid, 'start', 'start', 1, current_setting('app.actor_id')::uuid, current_setting('app.actor_id')::uuid)
+        returning id
+      `,
+      [graphId],
+    );
+    const human = await client.query<IdRow>(
+      `
+        insert into flow.nodes (tenant_id, graph_id, code, kind, decision_policy, allowed_actions, sort_order, created_by, updated_by)
+        values (current_setting('app.tenant_id')::uuid, $1::uuid, 'review', 'human', 'any', ARRAY['approve']::text[], 2, current_setting('app.actor_id')::uuid, current_setting('app.actor_id')::uuid)
+        returning id
+      `,
+      [graphId],
+    );
+    await client.query(
+      `
+        insert into flow.edges (tenant_id, graph_id, from_node_id, to_node_id, sort_order, created_by, updated_by)
+        values (current_setting('app.tenant_id')::uuid, $1::uuid, $2::uuid, $3::uuid, 1, current_setting('app.actor_id')::uuid, current_setting('app.actor_id')::uuid)
+      `,
+      [graphId, start.rows[0]?.id, human.rows[0]?.id],
+    );
+    await client.query(
+      `
+        insert into flow.agent_rules (tenant_id, node_id, rule_type, user_id, created_by, updated_by)
+        values (current_setting('app.tenant_id')::uuid, $1::uuid, 'user', current_setting('app.actor_id')::uuid, current_setting('app.actor_id')::uuid, current_setting('app.actor_id')::uuid)
+      `,
+      [human.rows[0]?.id],
+    );
+    const form = await client.query<IdRow>(
+      `
+        insert into flow.forms (tenant_id, scope_id, code, title, created_by, updated_by)
+        values (current_setting('app.tenant_id')::uuid, $1::uuid, 'gate', 'Gate', current_setting('app.actor_id')::uuid, current_setting('app.actor_id')::uuid)
+        returning id
+      `,
+      [scopeId],
+    );
+    const question = await client.query<IdRow>(
+      `
+        insert into flow.questions (tenant_id, form_id, key, label, field_type, required, created_by, updated_by)
+        values (current_setting('app.tenant_id')::uuid, $1::uuid, 'approved', 'Approved', 'boolean', true, current_setting('app.actor_id')::uuid, current_setting('app.actor_id')::uuid)
+        returning id
+      `,
+      [form.rows[0]?.id],
+    );
+    await client.query(
+      `
+        insert into flow.node_form_rules (tenant_id, node_id, form_id, required, gating_mode, created_by, updated_by)
+        values (current_setting('app.tenant_id')::uuid, $1::uuid, $2::uuid, true, 'all_required', current_setting('app.actor_id')::uuid, current_setting('app.actor_id')::uuid)
+      `,
+      [human.rows[0]?.id, form.rows[0]?.id],
+    );
+    const run = await client.query<IdRow>(
+      `select flow.run_ensure('blocked-approval', 'v1', 'blocked-form-scope', NULL::text, 'generic', 'blocked-target') as id`,
+    );
+    const task = await client.query<{ id: string; node_run_id: string }>(
+      `select id, node_run_id from flow.tasks where run_id = $1::uuid and status = 'open' limit 1`,
+      [run.rows[0]?.id],
+    );
+    const fill = await client.query<IdRow>(
+      `
+        insert into flow.fills (tenant_id, form_id, scope_id, run_id, target_type, target_id, status, created_by, updated_by)
+        values (current_setting('app.tenant_id')::uuid, $1::uuid, $2::uuid, $3::uuid, 'generic', 'blocked-target', 'submitted', current_setting('app.actor_id')::uuid, current_setting('app.actor_id')::uuid)
+        returning id
+      `,
+      [form.rows[0]?.id, scopeId, run.rows[0]?.id],
+    );
+
+    return {
+      formId: form.rows[0]?.id ?? '',
+      questionId: question.rows[0]?.id ?? '',
+      fillId: fill.rows[0]?.id ?? '',
+      runId: run.rows[0]?.id ?? '',
+      taskId: task.rows[0]?.id ?? '',
+      nodeRunId: task.rows[0]?.node_run_id ?? '',
+    };
+  });
+}
+
+async function seedAutoSignalRuntime(client: Client): Promise<{
+  fillId: string;
+  questionId: string;
+  runId: string;
+  autoNodeId: string;
+}> {
+  return withSessionContext(client, tenantA, actorA, async () => {
+    const scope = await client.query<IdRow>(
+      `
+        insert into flow.scopes (tenant_id, code, label, adapter_key, created_by, updated_by)
+        values (current_setting('app.tenant_id')::uuid, 'auto-signal-scope', 'Auto Signal Scope', 'test', current_setting('app.actor_id')::uuid, current_setting('app.actor_id')::uuid)
+        returning id
+      `,
+    );
+    const scopeId = scope.rows[0]?.id ?? '';
+    const graph = await client.query<IdRow>(
+      `
+        insert into flow.graphs (tenant_id, scope_id, code, version, is_active, name, created_by, updated_by)
+        values (current_setting('app.tenant_id')::uuid, $1::uuid, 'auto-signal', 'v1', true, 'Auto Signal', current_setting('app.actor_id')::uuid, current_setting('app.actor_id')::uuid)
+        returning id
+      `,
+      [scopeId],
+    );
+    const graphId = graph.rows[0]?.id ?? '';
+    const start = await client.query<IdRow>(
+      `
+        insert into flow.nodes (tenant_id, graph_id, code, kind, sort_order, created_by, updated_by)
+        values (current_setting('app.tenant_id')::uuid, $1::uuid, 'start', 'start', 1, current_setting('app.actor_id')::uuid, current_setting('app.actor_id')::uuid)
+        returning id
+      `,
+      [graphId],
+    );
+    const auto = await client.query<IdRow>(
+      `
+        insert into flow.nodes (tenant_id, graph_id, code, kind, exit_rule, sort_order, created_by, updated_by)
+        values (current_setting('app.tenant_id')::uuid, $1::uuid, 'gate', 'auto', '$.forms.required.allPass ? (@ == true)', 2, current_setting('app.actor_id')::uuid, current_setting('app.actor_id')::uuid)
+        returning id
+      `,
+      [graphId],
+    );
+    await client.query(
+      `
+        insert into flow.edges (tenant_id, graph_id, from_node_id, to_node_id, sort_order, created_by, updated_by)
+        values (current_setting('app.tenant_id')::uuid, $1::uuid, $2::uuid, $3::uuid, 1, current_setting('app.actor_id')::uuid, current_setting('app.actor_id')::uuid)
+      `,
+      [graphId, start.rows[0]?.id, auto.rows[0]?.id],
+    );
+    const form = await client.query<IdRow>(
+      `
+        insert into flow.forms (tenant_id, scope_id, code, title, created_by, updated_by)
+        values (current_setting('app.tenant_id')::uuid, $1::uuid, 'auto_gate', 'Auto Gate', current_setting('app.actor_id')::uuid, current_setting('app.actor_id')::uuid)
+        returning id
+      `,
+      [scopeId],
+    );
+    const question = await client.query<IdRow>(
+      `
+        insert into flow.questions (tenant_id, form_id, key, label, field_type, required, created_by, updated_by)
+        values (current_setting('app.tenant_id')::uuid, $1::uuid, 'approved', 'Approved', 'boolean', true, current_setting('app.actor_id')::uuid, current_setting('app.actor_id')::uuid)
+        returning id
+      `,
+      [form.rows[0]?.id],
+    );
+    const fill = await client.query<IdRow>(
+      `
+        insert into flow.fills (tenant_id, form_id, scope_id, target_type, target_id, status, created_by, updated_by)
+        values (current_setting('app.tenant_id')::uuid, $1::uuid, $2::uuid, 'generic', 'auto-target', 'submitted', current_setting('app.actor_id')::uuid, current_setting('app.actor_id')::uuid)
+        returning id
+      `,
+      [form.rows[0]?.id, scopeId],
+    );
+    const run = await client.query<IdRow>(
+      `select flow.run_ensure('auto-signal', 'v1', 'auto-signal-scope', NULL::text, 'generic', 'auto-target') as id`,
+    );
+
+    return {
+      fillId: fill.rows[0]?.id ?? '',
+      questionId: question.rows[0]?.id ?? '',
+      runId: run.rows[0]?.id ?? '',
+      autoNodeId: auto.rows[0]?.id ?? '',
+    };
+  });
+}
+
 describe('Flow database and runtime integration', () => {
   jest.setTimeout(180_000);
 
@@ -419,6 +609,55 @@ describe('Flow database and runtime integration', () => {
       `,
     );
     expect(triggers.rows.map((row) => row.name)).toContain('trg_flow_events_append_only');
+
+    const auditTriggers = await adminClient.query<{ table_name: string; trigger_name: string }>(
+      `
+        select c.relname as table_name, t.tgname as trigger_name
+        from pg_trigger t
+        join pg_class c on c.oid = t.tgrelid
+        join pg_namespace n on n.oid = c.relnamespace
+        where n.nspname = 'flow'
+          and t.tgname like 'trg_audit_flow_%'
+          and not t.tgisinternal
+        order by c.relname
+      `,
+    );
+    expect(auditTriggers.rows.map((row) => row.table_name)).toEqual(expect.arrayContaining([
+      'agent_rules',
+      'answers',
+      'edges',
+      'events',
+      'fills',
+      'forms',
+      'graphs',
+      'node_form_rules',
+      'node_runs',
+      'nodes',
+      'policy_rules',
+      'policy_sets',
+      'questions',
+      'runs',
+      'scopes',
+      'scores',
+      'tasks',
+      'transition_effects',
+      'waivers',
+    ]));
+
+    const signalTriggers = await adminClient.query<{ name: string }>(
+      `
+        select tgname as name
+        from pg_trigger
+        where tgrelid in ('flow.answers'::regclass, 'flow.waivers'::regclass)
+          and tgname like 'trg_flow_%_signal_touch'
+          and not tgisinternal
+        order by tgname
+      `,
+    );
+    expect(signalTriggers.rows.map((row) => row.name)).toEqual([
+      'trg_flow_answers_signal_touch',
+      'trg_flow_waivers_signal_touch',
+    ]);
   });
 
   it('enforces tenant isolation on tenant-scoped Flow tables', async () => {
@@ -464,5 +703,106 @@ describe('Flow database and runtime integration', () => {
     await expect(asRole(adminClient, 'stynx_app', tenantA, actorA, async () =>
       adminClient.query(`update flow.events set note = 'mutated' where id = $1::uuid`, [runtime.eventId]),
     )).rejects.toThrow('flow.events is append-only');
+  });
+
+  it('blocks human task completion until required node form rules pass', async () => {
+    const runtime = await seedBlockedFormGateRuntime(adminClient);
+
+    await expect(withSessionContext(adminClient, tenantA, actorA, async () =>
+      adminClient.query(`select flow.task_complete($1::uuid, 'approve', 'blocked', '{}'::jsonb)`, [runtime.taskId]),
+    )).rejects.toThrow('required flow form rules are not satisfied');
+
+    const blockedState = await withSessionContext(adminClient, tenantA, actorA, async () =>
+      adminClient.query<{ task_status: string; node_status: string }>(
+        `
+          select t.status::text as task_status, nr.status::text as node_status
+          from flow.tasks t
+          join flow.node_runs nr on nr.id = t.node_run_id
+          where t.id = $1::uuid
+        `,
+        [runtime.taskId],
+      ),
+    );
+    expect(blockedState.rows[0]).toEqual({
+      task_status: 'open',
+      node_status: 'in_progress',
+    });
+
+    await withSessionContext(adminClient, tenantA, actorA, async () => {
+      await adminClient.query(
+        `
+          insert into flow.answers (tenant_id, fill_id, question_id, value, created_by, updated_by)
+          values (current_setting('app.tenant_id')::uuid, $1::uuid, $2::uuid, '{"value": true}'::jsonb, current_setting('app.actor_id')::uuid, current_setting('app.actor_id')::uuid)
+        `,
+        [runtime.fillId, runtime.questionId],
+      );
+      await adminClient.query(`select flow.task_complete($1::uuid, 'approve', 'approved', '{}'::jsonb)`, [
+        runtime.taskId,
+      ]);
+    });
+
+    const completedState = await withSessionContext(adminClient, tenantA, actorA, async () =>
+      adminClient.query<{ task_status: string; node_status: string }>(
+        `
+          select t.status::text as task_status, nr.status::text as node_status
+          from flow.tasks t
+          join flow.node_runs nr on nr.id = t.node_run_id
+          where t.id = $1::uuid
+        `,
+        [runtime.taskId],
+      ),
+    );
+    expect(completedState.rows[0]).toEqual({
+      task_status: 'completed',
+      node_status: 'completed',
+    });
+  });
+
+  it('re-evaluates active auto nodes when answers change form facts', async () => {
+    const runtime = await seedAutoSignalRuntime(adminClient);
+
+    const before = await withSessionContext(adminClient, tenantA, actorA, async () =>
+      adminClient.query<{ node_status: string; run_status: string }>(
+        `
+          select nr.status::text as node_status, r.status::text as run_status
+          from flow.node_runs nr
+          join flow.runs r on r.id = nr.run_id
+          where nr.run_id = $1::uuid
+            and nr.node_id = $2::uuid
+        `,
+        [runtime.runId, runtime.autoNodeId],
+      ),
+    );
+    expect(before.rows[0]).toEqual({
+      node_status: 'in_progress',
+      run_status: 'active',
+    });
+
+    await withSessionContext(adminClient, tenantA, actorA, async () => {
+      await adminClient.query(
+        `
+          insert into flow.answers (tenant_id, fill_id, question_id, value, created_by, updated_by)
+          values (current_setting('app.tenant_id')::uuid, $1::uuid, $2::uuid, '{"value": true}'::jsonb, current_setting('app.actor_id')::uuid, current_setting('app.actor_id')::uuid)
+        `,
+        [runtime.fillId, runtime.questionId],
+      );
+    });
+
+    const after = await withSessionContext(adminClient, tenantA, actorA, async () =>
+      adminClient.query<{ node_status: string; run_status: string; signal_events: string }>(
+        `
+          select
+            (select status::text from flow.node_runs where run_id = $1::uuid and node_id = $2::uuid) as node_status,
+            (select status::text from flow.runs where id = $1::uuid) as run_status,
+            (select count(*)::text from flow.events where run_id = $1::uuid and kind = 'signal_received') as signal_events
+        `,
+        [runtime.runId, runtime.autoNodeId],
+      ),
+    );
+    expect(after.rows[0]).toEqual({
+      node_status: 'completed',
+      run_status: 'completed',
+      signal_events: '1',
+    });
   });
 });

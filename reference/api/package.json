@@ -25,6 +25,7 @@
     "@stynx/auth": "workspace:*",
     "@stynx/core": "workspace:*",
     "@stynx/data": "workspace:*",
+    "@stynx/flow": "workspace:*",
     "@stynx/health": "workspace:*",
     "@stynx/idempotency": "workspace:*",
     "@stynx/logging": "workspace:*",

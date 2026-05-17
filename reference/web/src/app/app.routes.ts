@@ -1,5 +1,6 @@
 import type { Routes } from '@angular/router';
 import { stynxAuthGuard, stynxPermissionGuard } from '@stynx-web/angular-auth';
+import { flowRoutes } from '@stynx-web/angular-flow';
 import { DashboardPageComponent } from './pages/dashboard.page';
 import { LoginPageComponent } from './pages/login.page';
 import { RecordDetailPageComponent } from './pages/record-detail.page';
@@ -88,6 +89,12 @@ export const APP_ROUTES: Routes = [
     component: TrashPageComponent,
     canActivate: [stynxAuthGuard, stynxPermissionGuard('sample:record:read')],
     title: 'Trash',
+  },
+  {
+    path: 'flow',
+    canActivate: [stynxAuthGuard],
+    children: flowRoutes(),
+    title: 'Flow',
   },
   {
     path: '**',

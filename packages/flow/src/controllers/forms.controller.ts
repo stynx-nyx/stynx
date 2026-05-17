@@ -78,11 +78,40 @@ export class FlowFormsController {
     return this.forms.listFormFills(formId);
   }
 
+  @Permission('flow:read:runtime')
+  @ReadOnly()
+  @Get('/:formId/fills/:fillId')
+  fillDetail(@Param('formId') formId: string, @Param('fillId') fillId: string) {
+    return this.forms.getFormFill(formId, fillId);
+  }
+
+  @Permission('flow:read:runtime')
+  @ReadOnly()
+  @Get('/:formId/fills/:fillId/answers')
+  fillAnswers(@Param('formId') formId: string, @Param('fillId') fillId: string) {
+    return this.forms.listFormFillAnswers(formId, fillId);
+  }
+
+  @Permission('flow:read:runtime')
+  @ReadOnly()
+  @Get('/:formId/fills/:fillId/waivers')
+  fillWaivers(@Param('formId') formId: string, @Param('fillId') fillId: string) {
+    return this.forms.listFormFillWaivers(formId, fillId);
+  }
+
   @Permission('flow:execute:task')
   @Audit({ action: 'flow.fill.create', entity: 'flow.fills' })
   @Idempotent('Idempotency-Key')
   @Post('/:formId/fills')
   createFill(@Param('formId') formId: string, @Body() input: unknown) {
     return this.forms.createFill(formId, input);
+  }
+
+  @Permission('flow:assign:task')
+  @Audit({ action: 'flow.waiver.create', entity: 'flow.waivers' })
+  @Idempotent('Idempotency-Key')
+  @Post('/:formId/fills/:fillId/waivers')
+  createFillWaiver(@Param('formId') formId: string, @Param('fillId') fillId: string, @Body() input: unknown) {
+    return this.forms.createFormFillWaiver(formId, fillId, input);
   }
 }

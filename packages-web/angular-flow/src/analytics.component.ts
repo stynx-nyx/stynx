@@ -45,7 +45,8 @@ export class StynxFlowOpenTasksComponent implements OnInit {
     this.loading = true;
     this.errorMessage = '';
     try {
-      this.tasks = await this.api.openTasks();
+      const page = await this.api.openTasks();
+      this.tasks = page.data;
     } catch (error) {
       this.errorMessage = error instanceof Error ? error.message : 'Open tasks load failed';
     } finally {
@@ -95,7 +96,8 @@ export class StynxFlowRunSummaryComponent implements OnInit {
     this.loading = true;
     this.errorMessage = '';
     try {
-      this.summaries = await this.api.runsSummary();
+      const page = await this.api.runsSummary();
+      this.summaries = page.data;
     } catch (error) {
       this.errorMessage = error instanceof Error ? error.message : 'Run summary load failed';
     } finally {

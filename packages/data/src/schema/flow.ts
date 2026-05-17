@@ -81,6 +81,8 @@ export const flowEventKind = flowSchema.enum('event_kind', [
   'node_complete',
   'transition',
   'effect_requested',
+  'effect_succeeded',
+  'effect_failed',
   'run_complete',
   'run_cancel',
   'facts_changed',

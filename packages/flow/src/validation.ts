@@ -87,7 +87,7 @@ export const createNodeFormRuleSchema = z.object({
   nodeId: uuidSchema,
   formId: uuidSchema,
   required: z.boolean().optional(),
-  gatingMode: z.enum(['all_required', 'any', 'threshold']).optional(),
+  gatingMode: z.enum(['all_required', 'any', 'threshold', 'any_answered', 'score_threshold']).optional(),
   threshold: z.string().optional(),
   applicability: optionalJsonObjectSchema,
   weight: z.string().optional(),
@@ -184,6 +184,13 @@ export const signalSchema = z.object({
   message: 'scopeCode or scopeId is required',
 });
 
+export const dispatchEffectsSchema = z.object({
+  runId: uuidSchema.optional(),
+  effectEventId: uuidSchema.optional(),
+  limit: z.number().int().positive().max(100).optional(),
+  reason: optionalTextSchema,
+});
+
 export const createFormSchema = z.object({
   scopeId: uuidSchema,
   code: textSchema,
@@ -246,12 +253,25 @@ export const updateFillSchema = createFillSchema
   .partial();
 
 export const answerWriteSchema = z.object({
-  questionId: uuidSchema,
+  questionId: uuidSchema.optional(),
+  itemId: uuidSchema.optional(),
+  value: z.unknown().optional(),
+  attachment: z.unknown().optional(),
+}).refine((value) => value.questionId || value.itemId, {
+  message: 'questionId or itemId is required',
+});
+
+export const bulkAnswerWriteSchema = z.union([
+  z.array(answerWriteSchema),
+  z.object({ answers: z.array(answerWriteSchema) }),
+]);
+
+export const updateAnswerSchema = z.object({
+  questionId: uuidSchema.optional(),
+  itemId: uuidSchema.optional(),
   value: z.unknown().optional(),
   attachment: z.unknown().optional(),
 });
-
-export const updateAnswerSchema = answerWriteSchema.partial();
 
 export const createWaiverSchema = z.object({
   scopeId: uuidSchema,
@@ -265,6 +285,23 @@ export const createWaiverSchema = z.object({
 });
 
 export const updateWaiverSchema = createWaiverSchema.partial();
+
+export const policyEvaluationSchema = z.object({
+  scopeId: uuidSchema.optional(),
+  scopeCode: optionalTextSchema,
+  policySetId: uuidSchema.optional(),
+  nodeCode: optionalTextSchema,
+  statusCode: optionalTextSchema,
+  action: optionalTextSchema,
+  capability: optionalTextSchema,
+  facts: optionalJsonObjectSchema,
+  targetType: optionalTextSchema,
+  targetId: optionalTextSchema,
+}).refine((value) => value.scopeId || value.scopeCode || value.policySetId, {
+  message: 'scopeId, scopeCode, or policySetId is required',
+}).refine((value) => Boolean(value.action) !== Boolean(value.capability), {
+  message: 'exactly one of action or capability is required',
+});
 
 export function parseDto<T>(schema: z.ZodType<T>, input: unknown): T {
   const parsed = schema.safeParse(input);

@@ -145,6 +145,33 @@ Resolution:
 - If retry is safe, use the same idempotency key.
 - If retry is not safe, use an admin repair action with explicit reason and audit.
 
+## Dispatch Pending Effects
+
+Use effect dispatch when run events show `effect_requested` entries without matching `effect_succeeded` or `effect_failed` terminal events.
+
+Required inputs:
+
+- tenant id;
+- registered adapter key;
+- optional run id or effect event id;
+- dispatch limit;
+- operator or system reason.
+
+Operational flow:
+
+1. Confirm the adapter is registered for the tenant and can execute `applyEffect`.
+2. Inspect pending effect events by tenant and, if relevant, by run id.
+3. Call the package dispatcher through the system worker or `POST /flow/effects/dispatch` with `flow:admin:*`.
+4. Verify each attempted request appends `effect_succeeded` or `effect_failed` with the original effect event id in the payload.
+5. For failures, inspect adapter logs by request id, tenant id, adapter key, run id, target id, and effect key.
+6. Retry only through the dispatcher. Do not update or delete the original `effect_requested` event.
+
+Expected behavior:
+
+- Re-running the dispatcher skips effect events that already have a terminal result.
+- Adapter partial failure is represented by a failure event and platform audit, not by mutating the workflow ledger.
+- Non-idempotent host effects must be protected by adapter-side natural keys or idempotency keys derived from the effect event id.
+
 ## Verify No Cross-Tenant Leakage
 
 For any suspected tenant isolation issue:

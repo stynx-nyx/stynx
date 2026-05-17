@@ -1,8 +1,16 @@
 import { Test, type TestingModule } from '@nestjs/testing';
+import { readdir } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import type { Client } from 'pg';
 import { StynxDataModule } from '../../src/data.module';
 import { StynxMigrationRunner } from '../../src/migration-runner';
 import { createPostgresTestDatabase } from '../support/postgres';
+
+async function expectedPlatformMigrationIds(): Promise<string[]> {
+  const migrationDir = resolve(__dirname, '../../migrations/platform');
+  const filenames = await readdir(migrationDir);
+  return filenames.filter((filename) => filename.endsWith('.sql')).sort();
+}
 
 async function createMigratedModule(connectionString: string): Promise<TestingModule> {
   const moduleRef = await Test.createTestingModule({
@@ -33,6 +41,7 @@ describe('Stynx platform migrations', () => {
   jest.setTimeout(120_000);
 
   it('boots the platform schema, enforces RLS, and reruns idempotently', async () => {
+    const expectedMigrationIds = await expectedPlatformMigrationIds();
     const testDatabase = await createPostgresTestDatabase('stynx_data_migrations');
     let moduleRef: TestingModule | undefined;
     let adminClient: Client | undefined;
@@ -128,6 +137,45 @@ describe('Stynx platform migrations', () => {
       expect(rlsTables.rows).toHaveLength(10);
       expect(rlsTables.rows.every((row) => row.forced)).toBe(true);
 
+      const curatedAuditTables = await queryExistingNames(
+        adminClient,
+        `
+          select format('%s.%s', n.nspname, c.relname) as name
+          from pg_trigger t
+          join pg_class c on c.oid = t.tgrelid
+          join pg_namespace n on n.oid = c.relnamespace
+          where t.tgname like 'trg_audit_%'
+            and n.nspname in ('auth', 'core', 'storage', 'tenancy')
+            and not t.tgisinternal
+          order by 1
+        `,
+      );
+      expect(curatedAuditTables).toEqual(expect.arrayContaining([
+        'auth.direct_perms',
+        'auth.group_memberships',
+        'auth.group_roles',
+        'auth.groups',
+        'auth.invitations',
+        'auth.membership_roles',
+        'auth.memberships',
+        'auth.perms',
+        'auth.role_perms',
+        'auth.roles',
+        'auth.sessions',
+        'auth.users',
+        'core.config',
+        'core.idempotency_keys',
+        'core.pii_map',
+        'core.rate_limit_overrides',
+        'core.schema_migrations',
+        'core.softdelete_fk_registry',
+        'storage.document_acl',
+        'storage.document_versions',
+        'storage.documents',
+        'tenancy.tenant_settings',
+        'tenancy.tenants',
+      ]));
+
       const tenantId = '11111111-1111-1111-1111-111111111111';
       await adminClient.query('set role stynx_app');
       await adminClient.query('begin');
@@ -166,8 +214,13 @@ describe('Stynx platform migrations', () => {
       const afterCount = await adminClient.query<{ count: string }>(
         `select count(*)::text as count from core.schema_migrations`,
       );
+      const appliedMigrations = await queryExistingNames(
+        adminClient,
+        `select id as name from core.schema_migrations`,
+      );
       expect(afterCount.rows[0]?.count).toBe(beforeCount.rows[0]?.count);
-      expect(afterCount.rows[0]?.count).toBe('13');
+      expect(appliedMigrations).toEqual(expectedMigrationIds);
+      expect(afterCount.rows[0]?.count).toBe(String(expectedMigrationIds.length));
     } finally {
       await adminClient?.end();
       await moduleRef?.close();

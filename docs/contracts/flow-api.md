@@ -31,6 +31,23 @@ Route handlers may require both a STYNX permission and an adapter `canView` or `
 | Rate limit  | Mutation endpoints that a user or external automation can call repeatedly must carry an explicit rate-limit policy.                                                      |
 | System-only | Administrative repair and maintenance routes are either internal providers or `@System`/admin guarded endpoints; they must not be reachable as ordinary user mutations.  |
 
+## Common Response Shapes
+
+Paged list endpoints return:
+
+```ts
+interface FlowPage<T> {
+  data: T[];
+  meta: {
+    page: number;
+    pageSize: number;
+    total: number;
+  };
+}
+```
+
+The default `page` is `1`. The default `pageSize` is `50`. Implementations must clamp `pageSize` to a package-owned maximum and must not expose unbounded tenant data sets.
+
 ## Endpoint Groups
 
 All paths below are canonical logical paths. A host app may mount the package under a global API prefix.
@@ -52,14 +69,17 @@ All paths below are canonical logical paths. A host app may mount the package un
 
 ### Runtime
 
-| Route family                                                                                                                                            | Permission                                                                         | Behavior                                                                      |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `GET /flow/runs`, `GET /flow/runs/:id`, `GET /flow/runs/:id/nodes`, `GET /flow/runs/:id/tasks`, `GET /flow/runs/:id/events`, `GET /flow/runs/:id/facts` | `flow:read:runtime` plus adapter `canView` when target-bound                       | Read-only runtime inspection.                                                 |
-| `POST /flow/runs` and `POST /flow/runs/ensure`                                                                                                          | `flow:read:runtime` plus adapter `canManage` for creation                          | Idempotent run creation or lookup for one graph/target pair. Audited.         |
-| `PATCH /flow/runs/:id`                                                                                                                                  | `flow:admin:*` or adapter `canManage` with a narrow action permission              | Administrative status repair only; audited and rate-limited.                  |
-| `GET /flow/node-runs`, `GET /flow/node-runs/:id`                                                                                                        | `flow:read:runtime`                                                                | Read-only.                                                                    |
-| `GET /flow/events`                                                                                                                                      | `flow:read:runtime`                                                                | Read-only append-only event ledger. No update or delete endpoint.             |
-| `POST /flow/signal`                                                                                                                                     | `flow:read:runtime` plus adapter `canManage` for the target or a system credential | Idempotent, audited, rate-limited. Rebuilds facts and advances eligible runs. |
+| Route family                                                                                                                                            | Permission                                                                         | Behavior                                                                                                                             |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `GET /flow/runs`, `GET /flow/runs/:id`, `GET /flow/runs/:id/nodes`, `GET /flow/runs/:id/tasks`, `GET /flow/runs/:id/events`, `GET /flow/runs/:id/facts` | `flow:read:runtime` plus adapter `canView` when target-bound                       | Read-only runtime inspection.                                                                                                        |
+| `POST /flow/runs` and `POST /flow/runs/ensure`                                                                                                          | `flow:read:runtime` plus adapter `canManage` for creation                          | Idempotent run creation or lookup for one graph/target pair. Audited.                                                                |
+| `PATCH /flow/runs/:id`                                                                                                                                  | `flow:admin:*` or adapter `canManage` with a narrow action permission              | Administrative status repair only; audited and rate-limited.                                                                         |
+| `GET /flow/node-runs`, `GET /flow/node-runs/:id`                                                                                                        | `flow:read:runtime`                                                                | Read-only.                                                                                                                           |
+| `GET /flow/events`                                                                                                                                      | `flow:read:runtime`                                                                | Read-only append-only event ledger. No update or delete endpoint.                                                                    |
+| `POST /flow/signal`                                                                                                                                     | `flow:read:runtime` plus adapter `canManage` for the target or a system credential | Idempotent, audited, rate-limited. Rebuilds facts and advances eligible runs.                                                        |
+| `POST /flow/effects/dispatch`                                                                                                                           | `flow:admin:*` or system worker context                                            | Retryable effect delivery. Calls `FlowDomainAdapter.applyEffect` and appends success/failure events without mutating request events. |
+
+`POST /flow/effects/dispatch` accepts `runId`, `effectEventId`, `limit`, and `reason` filters. A user-facing admin route requires platform audit and rate limiting. A background worker may call the same service under system context. The response is a summary object with attempted, succeeded, failed, and skipped counts plus per-effect diagnostics.
 
 ### Tasks
 
@@ -74,20 +94,54 @@ All paths below are canonical logical paths. A host app may mount the package un
 | `POST /flow/tasks/:id/assign`, `POST /flow/tasks/:id/unassign`                                     | `flow:assign:task`                                                    | Audited; appends event; adapter `canManage` may also be required.       |
 | `GET /flow/tasks/:id/candidates`, `GET /flow/tasks/roles/:role/users`, `GET /flow/tasks/users/:id` | `flow:assign:task`                                                    | Read-only candidate resolution; no mutation.                            |
 
+Task action privilege checks are:
+
+- `accept`, `decline`, and `unaccept`: `flow:execute:task`; allowed for the current assignee or a concrete candidate returned by assignment resolution.
+- `act`: `flow:execute:task`; allowed only for the current assignee or an accepted candidate, and the action key must be in `allowedActions`.
+- `assign` and `unassign`: `flow:assign:task` and adapter `canManage` for target-bound tasks.
+- `withdraw`: current assignee can withdraw with `flow:execute:task`; manager withdrawal requires `flow:assign:task` and adapter `canManage`.
+- `candidates`, role-user lookup, and user lookup: `flow:assign:task`; target-bound task candidate views require adapter `canManage`.
+
 ### Forms
 
-| Route family                                                                                                                                       | Permission                                                                        | Behavior                                                              |
-| -------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `GET /flow/forms`, `GET /flow/forms/:id`, `GET /flow/forms/:formId/questions`                                                                      | `flow:read:design`                                                                | Read-only form design.                                                |
-| `POST /flow/forms`, `PATCH /flow/forms/:id`, `DELETE /flow/forms/:id`                                                                              | `flow:write:design`                                                               | Audited design mutation; delete is soft-delete.                       |
-| `POST /flow/forms/:formId/questions`, `PATCH /flow/questions/:id`, `DELETE /flow/questions/:id`                                                    | `flow:write:design`                                                               | Audited question design mutation.                                     |
-| `GET /flow/questions/:id/score`, `PUT /flow/questions/:id/score`, `DELETE /flow/questions/:id/score`                                               | read uses `flow:read:design`; mutations use `flow:write:design`                   | Optional scoring metadata.                                            |
-| `GET /flow/forms/:formId/fills`, `GET /flow/fills`, `GET /flow/fills/:id`                                                                          | `flow:read:runtime` plus adapter `canView` when target-bound                      | Read-only fill inspection.                                            |
-| `POST /flow/forms/:formId/fills`, `DELETE /flow/fills/:id`                                                                                         | `flow:execute:task` or `flow:admin:*` depending on context                        | Audited; delete is soft-delete or status transition, not hard delete. |
-| `GET /flow/fills/:fillId/answers`, `POST /flow/fills/:fillId/answers`, `PUT /flow/fills/:fillId/answers`                                           | read uses `flow:read:runtime`; mutations use `flow:execute:task`                  | Answer writes are audited and idempotent by fill/question.            |
-| `PATCH /flow/answers/:id`, `DELETE /flow/answers/:id`                                                                                              | `flow:execute:task` or `flow:admin:*`                                             | Audited answer correction.                                            |
-| `GET /flow/waivers`, `POST /flow/waivers`, `PATCH /flow/waivers/:id`, `DELETE /flow/waivers/:id`                                                   | read uses `flow:read:runtime`; mutations use `flow:assign:task` or `flow:admin:*` | Waiver approval/correction; audited.                                  |
-| `GET /flow/nodes/:nodeId/form-rules`, `POST /flow/nodes/:nodeId/form-rules`, `PATCH /flow/node-form-rules/:id`, `DELETE /flow/node-form-rules/:id` | read uses `flow:read:design`; mutations use `flow:write:design`                   | Declarative form gates for task nodes.                                |
+| Route family                                                                                                                                       | Permission                                                                        | Behavior                                                                                                                                                                                                                 |
+| -------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `GET /flow/forms`, `GET /flow/forms/:id`, `GET /flow/forms/:formId/questions`                                                                      | `flow:read:design`                                                                | Read-only form design.                                                                                                                                                                                                   |
+| `POST /flow/forms`, `PATCH /flow/forms/:id`, `DELETE /flow/forms/:id`                                                                              | `flow:write:design`                                                               | Audited design mutation; delete is soft-delete.                                                                                                                                                                          |
+| `POST /flow/forms/:formId/questions`, `PATCH /flow/questions/:id`, `DELETE /flow/questions/:id`                                                    | `flow:write:design`                                                               | Audited question design mutation.                                                                                                                                                                                        |
+| `GET /flow/questions/:id/score`, `PUT /flow/questions/:id/score`, `DELETE /flow/questions/:id/score`                                               | read uses `flow:read:design`; mutations use `flow:write:design`                   | Optional scoring metadata.                                                                                                                                                                                               |
+| `GET /flow/forms/:formId/fills`, `GET /flow/fills`, `GET /flow/fills/:id`                                                                          | `flow:read:runtime` plus adapter `canView` when target-bound                      | Read-only fill inspection.                                                                                                                                                                                               |
+| `POST /flow/forms/:formId/fills`, `POST /flow/fills`, `DELETE /flow/fills/:id`                                                                     | `flow:execute:task` or `flow:admin:*` depending on context                        | Audited; delete is soft-delete or status transition, not hard delete.                                                                                                                                                    |
+| `GET /flow/fills/:fillId/answers`, `POST /flow/fills/:fillId/answers`, `PUT /flow/fills/:fillId/answers`                                           | read uses `flow:read:runtime`; mutations use `flow:execute:task`                  | Answer writes are audited and idempotent by fill/question. Bulk PUT replaces/upserts the submitted answer set for a fill. Answer and waiver mutations re-signal the active target so form-gated auto nodes do not stale. |
+| `PATCH /flow/answers/:id`, `DELETE /flow/answers/:id`                                                                                              | `flow:execute:task` or `flow:admin:*`                                             | Audited answer correction.                                                                                                                                                                                               |
+| `GET /flow/waivers`, `POST /flow/waivers`, `PATCH /flow/waivers/:id`, `DELETE /flow/waivers/:id`                                                   | read uses `flow:read:runtime`; mutations use `flow:assign:task` or `flow:admin:*` | Waiver approval/correction; audited.                                                                                                                                                                                     |
+| `GET /flow/nodes/:nodeId/form-rules`, `POST /flow/nodes/:nodeId/form-rules`, `PATCH /flow/node-form-rules/:id`, `DELETE /flow/node-form-rules/:id` | read uses `flow:read:design`; mutations use `flow:write:design`                   | Declarative form gates for task nodes.                                                                                                                                                                                   |
+
+PORM-compatible aliases are intentionally supported:
+
+| Alias                                            | Canonical behavior                                                                           |
+| ------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| `POST /flow/fills`                               | Creates a fill; body must include `formId`.                                                  |
+| `PUT /flow/fills/:fillId/answers`                | Bulk answer upsert for one fill.                                                             |
+| `GET /flow/fills/:fillId/waivers`                | Lists waivers for the fill target without requiring the host to preserve form route context. |
+| `GET /flow/forms/:formId/fills/:fillId`          | Same as `GET /flow/fills/:id`, with form consistency validation.                             |
+| `GET /flow/forms/:formId/fills/:fillId/answers`  | Same as `GET /flow/fills/:fillId/answers`, with form consistency validation.                 |
+| `GET /flow/forms/:formId/fills/:fillId/waivers`  | Lists waivers for the fill target and form.                                                  |
+| `POST /flow/forms/:formId/fills/:fillId/waivers` | Creates a waiver for the fill target and form.                                               |
+
+Node form rules expose `gatingMode` as `all_required`, `any_answered`, or `score_threshold`. Until the database enum is renamed, the backend maps `any_answered` to `any` and `score_threshold` to `threshold` at persistence boundaries.
+
+### Policies
+
+| Route family                                                                                                       | Permission                                                   | Behavior                                                            |
+| ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------------- |
+| `GET /flow/policies/sets`, `GET /flow/policies/sets/:id`                                                           | `flow:read:design`                                           | Read-only policy set design.                                        |
+| `POST /flow/policies/sets`, `PATCH /flow/policies/sets/:id`, `DELETE /flow/policies/sets/:id`                      | `flow:write:design`                                          | Audited design mutation; delete is soft-delete.                     |
+| `GET /flow/policies/sets/:policySetId/rules`, `GET /flow/policies/rules/:id`                                       | `flow:read:design`                                           | Read-only policy rule design.                                       |
+| `POST /flow/policies/sets/:policySetId/rules`, `PATCH /flow/policies/rules/:id`, `DELETE /flow/policies/rules/:id` | `flow:write:design`                                          | Audited design mutation; delete is soft-delete.                     |
+| `POST /flow/policies/evaluate`                                                                                     | `flow:read:runtime` plus adapter `canView` when target-bound | Evaluates an active or explicit policy set against submitted facts. |
+
+Policy evaluation input includes `scopeId` or `scopeCode`, optional `policySetId`, optional `nodeCode`, optional `statusCode`, exactly one of `action` or `capability`, optional `facts`, and optional target context for adapter checks. The response includes `allowed`, `effect`, `reasonCode`, `matchedRuleId`, and `defaulted`.
 
 ### Analytics
 
@@ -98,6 +152,10 @@ All paths below are canonical logical paths. A host app may mount the package un
 | `GET /flow/events` with aggregate filters | `flow:read:analytics`                                      | Read-only event log reporting. |
 
 Analytics routes must not reveal target data unless the adapter `canView` check permits it or the adapter has provided pre-redacted labels.
+
+`GET /flow/open-tasks` returns `FlowPage<FlowOpenTask>` and supports `page`, `pageSize`, `scopeId`, `scopeCode`, `graphId`, `targetType`, `targetId`, `status`, `assigneeUserId`, `mine`, `dueBefore`, and `dueAfter`.
+
+`GET /flow/runs/summary` returns `FlowPage<FlowRunSummary>` and supports `page`, `pageSize`, `scopeId`, `scopeCode`, `graphId`, `targetType`, `targetId`, `status`, `createdFrom`, and `createdTo`.
 
 ## DTO And Schema Principles
 

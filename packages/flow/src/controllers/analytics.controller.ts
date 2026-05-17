@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx/auth';
 import { FlowAnalyticsService } from '../flow-analytics.service';
 
@@ -10,7 +10,7 @@ export class FlowAnalyticsController {
   @Permission('flow:read:analytics')
   @ReadOnly()
   @Get('/open-tasks')
-  openTasks() {
-    return this.analytics.openTasks();
+  openTasks(@Query() query: Record<string, unknown>) {
+    return this.analytics.openTasks(query);
   }
 }

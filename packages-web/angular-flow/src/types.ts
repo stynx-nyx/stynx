@@ -99,7 +99,7 @@ export interface FlowNodeFormRule {
   nodeId: string;
   formId: string;
   required: boolean;
-  gatingMode: 'all_required' | 'any' | 'threshold';
+  gatingMode: 'all_required' | 'any' | 'threshold' | 'any_answered' | 'score_threshold';
   threshold?: string;
   applicability?: Record<string, unknown>;
   weight?: string;
@@ -162,7 +162,7 @@ export interface FlowQuestion {
   fieldType: FlowFieldType;
   required: boolean;
   blocksSubmit: boolean;
-  options?: unknown[];
+  options?: unknown[] | Record<string, unknown>;
   validators?: Record<string, unknown>;
   visibleIf?: Record<string, unknown>;
   sortOrder?: number;
@@ -220,6 +220,75 @@ export interface FlowRunSummary {
   runCount: number;
   firstCreatedAt?: string;
   lastUpdatedAt?: string;
+}
+
+export interface FlowEvent {
+  id: string;
+  runId: string;
+  nodeId?: string;
+  taskId?: string;
+  kind: string;
+  actorId?: string;
+  note?: string;
+  facts?: Record<string, unknown>;
+  payload?: Record<string, unknown>;
+  createdAt?: string;
+}
+
+export interface FlowTaskCandidate {
+  agentType: 'user' | 'permission' | 'resolver';
+  agentId: string;
+  ruleId?: string;
+  label?: string;
+  resolverKey?: string;
+  unresolved?: boolean;
+}
+
+export interface FlowTaskUser {
+  id: string;
+  email?: string;
+  externalSubject?: string;
+  locale?: string;
+}
+
+export interface FlowPolicySet {
+  id: string;
+  scopeId: string;
+  version: string;
+  isActive: boolean;
+  name?: string;
+  description?: string;
+  meta?: Record<string, unknown>;
+}
+
+export interface FlowPolicyRule {
+  id: string;
+  policySetId: string;
+  nodeCode?: string;
+  statusCode?: string;
+  action?: string;
+  capability?: string;
+  effect: 'allow' | 'deny';
+  priority?: number;
+  reasonCode?: string;
+  conditions?: Record<string, unknown>;
+  meta?: Record<string, unknown>;
+}
+
+export interface FlowPolicyDecision {
+  allowed: boolean;
+  effect: 'allow' | 'deny';
+  reasonCode?: string | null;
+  matchedRuleId?: string | null;
+  defaulted: boolean;
+}
+
+export interface FlowEffectDispatchSummary {
+  attempted: number;
+  succeeded: number;
+  failed: number;
+  skipped: number;
+  diagnostics: Array<Record<string, unknown>>;
 }
 
 export interface FlowGraphExport {

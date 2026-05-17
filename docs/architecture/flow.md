@@ -78,6 +78,70 @@ Required semantics:
 
 The adapter must receive the STYNX tenant context and actor context from the request or system execution context. It must not open raw database connections or bypass `@stynx/data`.
 
+## Runtime Gap-Closure Decisions
+
+The following decisions close the high-risk gaps found during the PORM Flow reassessment and are binding for `@stynx/flow` v1.
+
+### Effect Dispatch
+
+Flow owns effect delivery as a framework concern. Completing a node still appends `effect_requested` events, but those events are not the end of the contract. `@stynx/flow` must expose an explicit retryable dispatcher that:
+
+- selects pending `effect_requested` events inside the current tenant;
+- calls `FlowDomainAdapter.applyEffect` with tenant, actor/system, run, node, target, effect key, action, and payload context;
+- appends exactly one terminal event per delivery attempt outcome, `effect_succeeded` or `effect_failed`;
+- skips events that already have a terminal delivery event for the same request id or parent event id;
+- never mutates the original `effect_requested` event.
+
+Hosts may run the dispatcher from an admin route, a system worker, or a reference app job, but the delivery semantics remain package-owned so adapters do not need to poll the raw event table.
+
+### Resolver Functions
+
+`resolver_fn` agent rules are executable assignment rules, not final task assignees. Database functions may persist a task with `assignee_type = 'resolver'` as an unresolved intermediate, but runtime presentation must expand that resolver through `FlowDomainAdapter.resolveAgents` before returning candidates to callers. Returned agents are concrete STYNX user ids or permission keys whenever possible. If no adapter is registered, no resolver method exists, or the adapter returns no agents, the task remains visible to managers as unresolved with the resolver key and rule id for diagnosis.
+
+### Node Form Rules
+
+`flow.node_form_rules` are enforced gates. Human task completion may satisfy the node decision policy and still remain blocked when required form rules fail. Runtime must evaluate active rules before completing the node run:
+
+- `all_required` requires the form facts for that form to have no missing required questions, considering active waivers;
+- `any_answered` requires at least one answer or waiver for that form;
+- `score_threshold` requires the form score to be greater than or equal to the rule threshold.
+
+The database enum currently carries legacy values `all_required`, `any`, and `threshold`; API and Angular contracts expose the clearer aliases `all_required`, `any_answered`, and `score_threshold`. The backend must accept the aliases and persist the canonical database values until a migration renames the enum.
+
+### PORM-Compatible API Aliases
+
+STYNX keeps PORM-compatible fill and waiver aliases for migration ergonomics where they do not weaken tenancy, audit, or idempotency rules. These aliases are first-class routes over the same service methods as the canonical STYNX routes. Contract-compatible aliases must include `POST /flow/fills`, bulk `PUT /flow/fills/:fillId/answers`, fill-scoped waiver listing, form-scoped fill detail, form-scoped fill answers, and form-scoped fill waivers.
+
+Answer and waiver mutations must refresh runtime facts for active targets. The current implementation does this through database triggers that call `flow.signal_changed(...)` after answer/waiver insert, update, or delete. This preserves PORM's useful freshness behavior without moving host-domain decisions into Flow.
+
+### Analytics Paging And Filtering
+
+Analytics list endpoints must be bounded. `GET /flow/open-tasks` and `GET /flow/runs/summary` return `{ data, meta }`, where `meta` includes `page`, `pageSize`, and `total`. Supported filters are tenant-local and include scope, graph, status, target type/id, assignee user, current-user task view, and date ranges where the underlying query can support them without bypassing RLS.
+
+### Task Privilege Semantics
+
+Route permission is necessary but not sufficient for target-bound task work.
+
+- Read operations require `flow:read:runtime` and adapter `canView` when the run is target-bound.
+- Accept, decline, unaccept, and act require `flow:execute:task` and either the current assignee relation or an actionable candidate relation.
+- Assign, unassign, transfer, manager candidate inspection, and withdraw-as-manager require `flow:assign:task` plus adapter `canManage` for the target.
+- A current assignee may withdraw or unaccept their own accepted task through `flow:execute:task`; manager withdrawal requires `flow:assign:task`.
+- Administrative repair remains `flow:admin:*` and must not be reachable through ordinary task actions.
+
+### Policy Evaluation
+
+Policy set and rule CRUD is not enough for closure. `@stynx/flow` must expose policy evaluation through a service and guarded HTTP route. Evaluation selects the active policy set for a scope unless a policy set id is supplied, applies rule priority, returns the first matching allow/deny decision, and returns a deterministic default allow result when no rule matches. Rule conditions use the same JSONPath rule evaluator as graph edges and node rules.
+
+### Angular Package Minimum
+
+`@stynx-web/angular-flow` is closure-ready only when it has real package tests and a host can build the core PORM-derived workflows from exported package APIs. Minimum closure requires:
+
+- route providers for design, runtime, tasks, forms, fills, waivers, analytics, and policies;
+- a tested API facade for every route family in `docs/contracts/flow-api.md`, including aliases;
+- permission-aware controls for mutating actions;
+- host extension points for labels, links, target badges, and adapter-specific view/manage hints;
+- component tests for route-bound graph, task, form, fill, waiver, and analytics workflows.
+
 ## Generic-Code Rule
 
 `@stynx/flow` and `@stynx-web/angular-flow` must stay host-domain neutral.
@@ -165,7 +229,7 @@ Flow events and STYNX platform audit answer different questions.
 | `flow.events`  | Domain workflow ledger for replay, diagnostics, task history, analytics, and adapter behavior | run started, signal received, node opened, task accepted, transition taken, effect requested |
 | `@stynx/audit` | Platform security and compliance audit for who invoked which protected operation              | user updated graph, user assigned task, system repaired stuck run, admin approved waiver     |
 
-Mutating HTTP handlers must emit platform audit through the normal STYNX audit path. Runtime services must also append Flow events when workflow state changes. One does not replace the other.
+Mutating HTTP handlers must emit platform audit through the normal STYNX audit path. Runtime services must also append Flow events when workflow state changes. One does not replace the other. Current curated Flow live tables have database DML audit enabled; future mutable curated Flow tables must do the same unless an explicit exception is documented.
 
 This rule is captured by `INV-FLOW-003`.
 

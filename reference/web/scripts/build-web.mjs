@@ -24,6 +24,7 @@ await build({
   alias: {
     '@stynx-web/angular': path.resolve(workspaceRoot, 'packages-web/angular/src/index.ts'),
     '@stynx-web/angular-auth': path.resolve(workspaceRoot, 'packages-web/angular-auth/src/index.ts'),
+    '@stynx-web/angular-flow': path.resolve(workspaceRoot, 'packages-web/angular-flow/src/index.ts'),
     '@stynx-web/angular-ui': path.resolve(workspaceRoot, 'packages-web/angular-ui/src/index.ts'),
     '@stynx-web/angular-i18n': path.resolve(workspaceRoot, 'packages-web/angular-i18n/src/index.ts'),
     '@stynx-web/angular-trash': path.resolve(workspaceRoot, 'packages-web/angular-trash/src/index.ts'),

@@ -6,6 +6,13 @@ This package is host-mounted. Applications provide a configured `StynxSdkClient`
 
 The graph canvas intentionally does not bundle Cytoscape. It renders a stable list-based fallback with node and edge selection outputs. Hosts that need richer graph layout can wrap `StynxFlowGraphCanvasComponent` or replace it at the route level while reusing the service and models.
 
+The package includes generic Flow fill execution controls for boolean, number,
+date, select, multiselect, answer serialization, and question-level waiver
+entry. Reference-web route/access E2E coverage is seeded for host mounting. A
+shared host store remains optional; add one only if richer package-owned screens
+need centralized graph/form/task state, selection, loading, refresh, and error
+handling.
+
 ## Exports
 
 - `FlowApiService` for `/flow/*` backend calls.

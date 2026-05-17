@@ -306,7 +306,15 @@ INSERT INTO auth.perms (key, description) VALUES
   ('sample:document:restore', 'Restore soft-deleted documents.'),
   ('sample:document:hard-delete', 'Hard-delete archived documents.'),
 
-  ('sample:probe:read', 'Run internal probe routes used by doctor and CI.')
+  ('sample:probe:read', 'Run internal probe routes used by doctor and CI.'),
+
+  ('flow:read:design', 'Read Flow scopes, graphs, forms, and design rules.'),
+  ('flow:write:design', 'Create or update Flow design definitions.'),
+  ('flow:read:runtime', 'Read Flow runs, tasks, fills, answers, and waivers.'),
+  ('flow:execute:task', 'Execute Flow task and fill-answer mutations.'),
+  ('flow:assign:task', 'Assign Flow tasks and manage waivers.'),
+  ('flow:read:analytics', 'Read Flow analytics summaries.'),
+  ('flow:admin:*', 'Administer Flow runtime and design state.')
 ON CONFLICT (key) DO NOTHING;
 
 -- Map domain perms onto the default tenant roles (owner / admin / member / viewer).
@@ -318,7 +326,7 @@ INSERT INTO auth.role_perms (role_id, perm_id)
 SELECT r.id, p.id
   FROM auth.roles r, auth.perms p
  WHERE r.key = 'owner'
-   AND p.key LIKE 'sample:%'
+   AND (p.key LIKE 'sample:%' OR p.key LIKE 'flow:%')
 ON CONFLICT DO NOTHING;
 
 -- Admin: everything except hard_delete
@@ -326,7 +334,7 @@ INSERT INTO auth.role_perms (role_id, perm_id)
 SELECT r.id, p.id
   FROM auth.roles r, auth.perms p
  WHERE r.key = 'admin'
-   AND p.key LIKE 'sample:%'
+   AND (p.key LIKE 'sample:%' OR p.key LIKE 'flow:%')
    AND p.key NOT LIKE '%:hard-delete'
 ON CONFLICT DO NOTHING;
 
@@ -335,7 +343,11 @@ INSERT INTO auth.role_perms (role_id, perm_id)
 SELECT r.id, p.id
   FROM auth.roles r, auth.perms p
  WHERE r.key = 'member'
-   AND (p.key LIKE '%:read' OR p.key LIKE '%:write')
+   AND (
+     p.key LIKE '%:read'
+     OR p.key LIKE '%:write'
+     OR p.key IN ('flow:read:runtime', 'flow:execute:task')
+   )
 ON CONFLICT DO NOTHING;
 
 -- Viewer: read only
@@ -343,7 +355,10 @@ INSERT INTO auth.role_perms (role_id, perm_id)
 SELECT r.id, p.id
   FROM auth.roles r, auth.perms p
  WHERE r.key = 'viewer'
-   AND p.key LIKE '%:read'
+   AND (
+     p.key LIKE '%:read'
+     OR p.key IN ('flow:read:design', 'flow:read:runtime', 'flow:read:analytics')
+   )
 ON CONFLICT DO NOTHING;
 
 -- ----------------------------------------------------------------------------

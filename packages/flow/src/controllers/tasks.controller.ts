@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx/auth';
-import { Audit } from '@stynx/backend';
+import { Audit, RateLimit } from '@stynx/backend';
 import { Idempotent } from '@stynx/idempotency';
 import { FlowRuntimeService } from '../flow-runtime.service';
 
@@ -47,6 +47,7 @@ export class FlowTasksController {
   @Permission('flow:execute:task')
   @Audit({ action: 'flow.task.act', entity: 'flow.tasks' })
   @Idempotent('Idempotency-Key')
+  @RateLimit({ bucket: 'user', scope: 'flow.task.act' })
   @Post('/:id/act')
   act(@Param('id') id: string, @Body() input: unknown) {
     return this.runtime.actTask(id, input);
