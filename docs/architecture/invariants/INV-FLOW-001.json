@@ -21,7 +21,7 @@
       },
       {
         "doc": "docs/stynx/porting-pack/04-INVARIANTS-AND-CONTRACTS.md",
-        "anchor": "i5-every-tenant-owned-table-carries-tenant-id-and-has-rls-enabled"
+        "anchor": "i5-every-tenant-scoped-table-has-tenant_id-and-an-rls-policy"
       }
     ]
   },

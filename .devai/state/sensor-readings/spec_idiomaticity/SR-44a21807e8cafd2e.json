@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-44a21807e8cafd2e",
+  "sensor": {
+    "name": "spec-idiomaticity",
+    "kind": "spec_idiomaticity"
+  },
+  "timestamp": "2026-05-17T23:10:36.575Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense-spec-idiomaticity",
+  "command_hash": "f954a4b3e34b5d899fff022c0f9e56e9e4078de42594c62e3d2d79965a4a397c",
+  "tier": "L0",
+  "findings": [],
+  "metrics": {
+    "cnl_modal_warnings": 0,
+    "other_errors": 0,
+    "files_scanned": 8
+  }
+}

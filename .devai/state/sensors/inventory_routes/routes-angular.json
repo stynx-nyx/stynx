@@ -1,10 +1,10 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-05-17T21:03:35.472Z",
+  "generatedAt": "2026-05-17T23:10:32.545Z",
   "framework": "angular",
   "routes": [
     {
-      "id": "angular:086c1f6f3e97",
+      "id": "angular:8b48848a52c9",
       "path": "",
       "component": {
         "file": "reference/web/src/app/app.routes.ts",
@@ -13,24 +13,35 @@
       "evidence": [
         {
           "path": "reference/web/src/app/app.routes.ts",
-          "startLine": 32,
-          "endLine": 37
+          "startLine": 33,
+          "endLine": 38
         }
       ]
     },
     {
-      "id": "angular:66ada9255a8c",
+      "id": "angular:ad2457fea1c8",
       "path": "**",
       "evidence": [
         {
           "path": "reference/web/src/app/app.routes.ts",
-          "startLine": 92,
-          "endLine": 95
+          "startLine": 99,
+          "endLine": 102
         }
       ]
     },
     {
-      "id": "angular:46fe460b7194",
+      "id": "angular:2400b850f0ec",
+      "path": "flow",
+      "evidence": [
+        {
+          "path": "reference/web/src/app/app.routes.ts",
+          "startLine": 93,
+          "endLine": 98
+        }
+      ]
+    },
+    {
+      "id": "angular:15406413f939",
       "path": "login",
       "component": {
         "file": "reference/web/src/app/app.routes.ts",
@@ -39,13 +50,13 @@
       "evidence": [
         {
           "path": "reference/web/src/app/app.routes.ts",
-          "startLine": 16,
-          "endLine": 20
+          "startLine": 17,
+          "endLine": 21
         }
       ]
     },
     {
-      "id": "angular:5361bf2ca0e6",
+      "id": "angular:b5aaf65b5cd0",
       "path": "records",
       "component": {
         "file": "reference/web/src/app/app.routes.ts",
@@ -54,13 +65,13 @@
       "evidence": [
         {
           "path": "reference/web/src/app/app.routes.ts",
-          "startLine": 38,
-          "endLine": 43
+          "startLine": 39,
+          "endLine": 44
         }
       ]
     },
     {
-      "id": "angular:1a29df709ba4",
+      "id": "angular:9eca7648fe61",
       "path": "records/:id",
       "component": {
         "file": "reference/web/src/app/app.routes.ts",
@@ -69,13 +80,13 @@
       "evidence": [
         {
           "path": "reference/web/src/app/app.routes.ts",
-          "startLine": 50,
-          "endLine": 55
+          "startLine": 51,
+          "endLine": 56
         }
       ]
     },
     {
-      "id": "angular:55bc456a97bb",
+      "id": "angular:cfcaea8562a5",
       "path": "records/:id/edit",
       "component": {
         "file": "reference/web/src/app/app.routes.ts",
@@ -84,13 +95,13 @@
       "evidence": [
         {
           "path": "reference/web/src/app/app.routes.ts",
-          "startLine": 56,
-          "endLine": 61
+          "startLine": 57,
+          "endLine": 62
         }
       ]
     },
     {
-      "id": "angular:7fa63ba98a7e",
+      "id": "angular:96c3b77f8fbb",
       "path": "records/new",
       "component": {
         "file": "reference/web/src/app/app.routes.ts",
@@ -99,13 +110,13 @@
       "evidence": [
         {
           "path": "reference/web/src/app/app.routes.ts",
-          "startLine": 44,
-          "endLine": 49
+          "startLine": 45,
+          "endLine": 50
         }
       ]
     },
     {
-      "id": "angular:197ead8a8a47",
+      "id": "angular:c208572fa1ec",
       "path": "tenant",
       "component": {
         "file": "reference/web/src/app/app.routes.ts",
@@ -114,13 +125,13 @@
       "evidence": [
         {
           "path": "reference/web/src/app/app.routes.ts",
-          "startLine": 26,
-          "endLine": 31
+          "startLine": 27,
+          "endLine": 32
         }
       ]
     },
     {
-      "id": "angular:fb6949272f44",
+      "id": "angular:30904e5ff042",
       "path": "trash",
       "component": {
         "file": "reference/web/src/app/app.routes.ts",
@@ -129,13 +140,13 @@
       "evidence": [
         {
           "path": "reference/web/src/app/app.routes.ts",
-          "startLine": 86,
-          "endLine": 91
+          "startLine": 87,
+          "endLine": 92
         }
       ]
     },
     {
-      "id": "angular:cd1db7de4f8c",
+      "id": "angular:632343381f95",
       "path": "unauthorized",
       "component": {
         "file": "reference/web/src/app/app.routes.ts",
@@ -144,13 +155,13 @@
       "evidence": [
         {
           "path": "reference/web/src/app/app.routes.ts",
-          "startLine": 21,
-          "endLine": 25
+          "startLine": 22,
+          "endLine": 26
         }
       ]
     },
     {
-      "id": "angular:0f8938269c9a",
+      "id": "angular:aea633964fb0",
       "path": "work-items",
       "component": {
         "file": "reference/web/src/app/app.routes.ts",
@@ -159,13 +170,13 @@
       "evidence": [
         {
           "path": "reference/web/src/app/app.routes.ts",
-          "startLine": 62,
-          "endLine": 67
+          "startLine": 63,
+          "endLine": 68
         }
       ]
     },
     {
-      "id": "angular:1142140126d2",
+      "id": "angular:01340fd7281e",
       "path": "work-items/:id",
       "component": {
         "file": "reference/web/src/app/app.routes.ts",
@@ -174,13 +185,13 @@
       "evidence": [
         {
           "path": "reference/web/src/app/app.routes.ts",
-          "startLine": 80,
-          "endLine": 85
+          "startLine": 81,
+          "endLine": 86
         }
       ]
     },
     {
-      "id": "angular:1112587ddc3d",
+      "id": "angular:423fbdf00d27",
       "path": "work-items/:id/edit",
       "component": {
         "file": "reference/web/src/app/app.routes.ts",
@@ -189,13 +200,13 @@
       "evidence": [
         {
           "path": "reference/web/src/app/app.routes.ts",
-          "startLine": 74,
-          "endLine": 79
+          "startLine": 75,
+          "endLine": 80
         }
       ]
     },
     {
-      "id": "angular:abaf636f1c8e",
+      "id": "angular:e70c1c7ee524",
       "path": "work-items/new",
       "component": {
         "file": "reference/web/src/app/app.routes.ts",
@@ -204,8 +215,8 @@
       "evidence": [
         {
           "path": "reference/web/src/app/app.routes.ts",
-          "startLine": 68,
-          "endLine": 73
+          "startLine": 69,
+          "endLine": 74
         }
       ]
     }

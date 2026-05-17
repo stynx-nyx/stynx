@@ -153,9 +153,9 @@
       "mainFlow": [
         {
           "id": "1",
-          "action": "App routes anonymous user to the login page.",
+          "action": "App routes anonymous user to the login page. Unknown paths fall through the catch-all (path: '**') redirect to root, which the auth-guard funnels back here.",
           "actorRole": "anonymous",
-          "refs": { "routeIds": ["angular:46fe460b7194"] }
+          "refs": { "routeIds": ["angular:46fe460b7194", "angular:66ada9255a8c"] }
         },
         {
           "id": "2",

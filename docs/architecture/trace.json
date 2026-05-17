@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "version": "1.1.0",
   "meta": {
-    "last_updated": "2026-05-17T16:05:48-03:00",
+    "last_updated": "2026-05-17T18:33:34-03:00",
     "completeness": {
       "min_invariants_with_tests_ratio": 0,
       "min_must_invariants_with_tests_ratio": 0,
@@ -17,14 +17,67 @@
         { "doc": "docs/architecture/invariants/INV-RBAC-001.json", "anchor": "statement" },
         { "doc": "docs/architecture/invariants/INV-RBAC-001-allowlist.json", "anchor": "entries" }
       ],
-      "tests": []
+      "tests": [
+        {
+          "suite": "unit",
+          "path": "packages/auth/test/unit/stynx-auth.guard.spec.ts",
+          "names": ["INV-RBAC-001"],
+          "assertions": [
+            "guard rejects requests without a bearer token",
+            "guard rejects tokens that fail Cognito verification",
+            "guard binds principal + permissions to request context on success"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/auth/test/unit/permission-query.service.spec.ts",
+          "names": ["INV-RBAC-001"],
+          "assertions": [
+            "permission resolution honors tenant + actor scoping",
+            "permission cache invalidates on role changes"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "reference/api/test/integration/reference-api.runtime.spec.ts",
+          "names": ["INV-RBAC-001"],
+          "assertions": [
+            "reader role cannot mutate sample tables",
+            "cross-tenant requests are RLS-isolated",
+            "explicitly @Public() endpoints (e.g. /_reference/dev-login) bypass guard"
+          ],
+          "mode": "gray_box"
+        }
+      ]
     },
     {
       "id": "INV-PRIVACY-001",
       "docs": [
         { "doc": "docs/architecture/invariants/INV-PRIVACY-001.json", "anchor": "statement" }
       ],
-      "tests": []
+      "tests": [
+        {
+          "suite": "int",
+          "path": "packages/data/test/integration/migrations.spec.ts",
+          "names": ["INV-PRIVACY-001"],
+          "assertions": [
+            "core.pii_map table exists after platform migrations",
+            "core.pii_map carries category + strategy + legal_basis + retention columns"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "domain/demo-bookmark/api/test/bookmark.service.spec.ts",
+          "names": ["INV-PRIVACY-001"],
+          "assertions": [
+            "demo__bookmark_bookmark.notes column is PII-registered via core.pii_map (incidental_pii, legitimate_interest, P1Y)"
+          ],
+          "mode": "gray_box"
+        }
+      ]
     },
     {
       "id": "INV-FLOW-001",
@@ -67,16 +120,6 @@
           "assertions": [
             "generic Flow backend source has no CMS or PORM domain imports",
             "adapter errors are wrapped behind the generic Flow adapter contract"
-          ],
-          "mode": "white_box"
-        },
-        {
-          "suite": "unit",
-          "path": "packages-web/angular-flow/test/unit/angular-flow-domain-neutrality.spec.ts",
-          "names": ["INV-FLOW-002"],
-          "assertions": [
-            "generic Angular Flow source has no CMS or PORM domain imports",
-            "host labels and links are supplied through extension points"
           ],
           "mode": "white_box"
         }

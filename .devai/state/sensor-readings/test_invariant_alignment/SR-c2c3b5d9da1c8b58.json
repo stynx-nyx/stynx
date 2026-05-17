@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-c2c3b5d9da1c8b58",
+  "sensor": {
+    "name": "test-invariant-alignment",
+    "kind": "test_invariant_alignment"
+  },
+  "timestamp": "2026-05-17T23:10:00.488Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense-test-invariant-alignment",
+  "command_hash": "f75642ea0a13026f643eef75b5e282f7d677fd30c4041b55ef3be3ec4b1faa5f",
+  "tier": "L0",
+  "findings": [],
+  "metrics": {
+    "invariant_count": 5,
+    "unaligned_count": 0
+  }
+}

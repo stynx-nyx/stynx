@@ -456,6 +456,26 @@
     ],
     "packages-web/angular-flow/src/tokens.ts": ["@angular/core", "@stynx-web/sdk"],
     "packages-web/angular-flow/src/types.ts": [],
+    "packages-web/angular-flow/test/components.spec.ts": [
+      "@angular/compiler",
+      "@jest/globals",
+      "packages-web/angular-flow/src/analytics.component",
+      "packages-web/angular-flow/src/flow-api.service",
+      "packages-web/angular-flow/src/flow-fills.component",
+      "packages-web/angular-flow/src/flow-graph-canvas.component",
+      "packages-web/angular-flow/src/flow-graph-designer.component",
+      "packages-web/angular-flow/src/flow-tasks.component"
+    ],
+    "packages-web/angular-flow/test/flow-api.service.spec.ts": [
+      "@angular/compiler",
+      "@jest/globals",
+      "packages-web/angular-flow/src/flow-api.service"
+    ],
+    "packages-web/angular-flow/test/routes-and-exports.spec.ts": [
+      "@angular/compiler",
+      "packages-web/angular-flow/src",
+      "packages-web/angular-flow/src/routes"
+    ],
     "packages-web/angular-i18n/src/i18n.service.ts": [
       "@angular/core",
       "packages-web/angular-i18n/src/tokens",
@@ -1610,6 +1630,8 @@
     ],
     "packages/data/test/integration/migrations.spec.ts": [
       "@nestjs/testing",
+      "node:fs/promises",
+      "node:path",
       "packages/data/src/data.module",
       "packages/data/src/migration-runner",
       "packages/data/test/support/postgres",
@@ -1687,6 +1709,13 @@
       "@stynx/auth",
       "@stynx/backend",
       "packages/flow/src/flow-design.service"
+    ],
+    "packages/flow/src/controllers/effects.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/backend",
+      "@stynx/idempotency",
+      "packages/flow/src/flow-runtime.service"
     ],
     "packages/flow/src/controllers/events.controller.ts": [
       "@nestjs/common",
@@ -1806,8 +1835,10 @@
     ],
     "packages/flow/src/flow-policy.service.ts": [
       "@nestjs/common",
+      "@stynx/data",
       "packages/flow/src/flow-design.service",
-      "packages/flow/src/types"
+      "packages/flow/src/types",
+      "packages/flow/src/validation"
     ],
     "packages/flow/src/flow-runtime.service.ts": [
       "@nestjs/common",
@@ -1815,6 +1846,7 @@
       "@stynx/data",
       "packages/flow/src/adapters",
       "packages/flow/src/row-utils",
+      "packages/flow/src/types",
       "packages/flow/src/validation"
     ],
     "packages/flow/src/flow.module.ts": [
@@ -1824,6 +1856,7 @@
       "packages/flow/src/controllers/analytics.controller",
       "packages/flow/src/controllers/answers.controller",
       "packages/flow/src/controllers/edges.controller",
+      "packages/flow/src/controllers/effects.controller",
       "packages/flow/src/controllers/events.controller",
       "packages/flow/src/controllers/fills.controller",
       "packages/flow/src/controllers/forms.controller",
@@ -1867,13 +1900,22 @@
       "packages/data/test/support/postgres",
       "pg"
     ],
+    "packages/flow/test/unit/gap-contracts.spec.ts": [
+      "@nestjs/common",
+      "packages/flow/src/adapters",
+      "packages/flow/src/flow-analytics.service",
+      "packages/flow/src/flow-policy.service",
+      "packages/flow/src/flow-runtime.service"
+    ],
     "packages/flow/test/unit/route-contracts.spec.ts": [
+      "@nestjs/common/constants",
       "@stynx/auth",
       "@stynx/backend",
       "packages/flow/src/controllers/agent-rules.controller",
       "packages/flow/src/controllers/analytics.controller",
       "packages/flow/src/controllers/answers.controller",
       "packages/flow/src/controllers/edges.controller",
+      "packages/flow/src/controllers/effects.controller",
       "packages/flow/src/controllers/events.controller",
       "packages/flow/src/controllers/fills.controller",
       "packages/flow/src/controllers/forms.controller",
@@ -2629,6 +2671,7 @@
       "@stynx/auth",
       "@stynx/backend",
       "@stynx/data",
+      "@stynx/flow",
       "@stynx/health",
       "@stynx/logging",
       "@stynx/sessions",
@@ -2782,6 +2825,7 @@
     "reference/web/src/app/app.routes.ts": [
       "@angular/router",
       "@stynx-web/angular-auth",
+      "@stynx-web/angular-flow",
       "reference/web/src/app/pages/dashboard.page",
       "reference/web/src/app/pages/login.page",
       "reference/web/src/app/pages/record-detail.page",
@@ -2947,6 +2991,7 @@
       "reference/web/src/environments/environment",
       "zone.js"
     ],
+    "reference/web/test/e2e/flow-access.spec.ts": ["@playwright/test"],
     "reference/web/test/e2e/reference-web.spec.ts": ["@playwright/test"],
     "test/db/audit.ddl.spec.ts": ["node:fs", "node:path"],
     "test/db/auth.ddl.spec.ts": ["node:fs", "node:path"],

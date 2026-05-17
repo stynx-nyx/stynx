@@ -1,11 +1,11 @@
 {
   "schemaVersion": "1.0.0",
-  "id": "SR-e75ca40593170fae",
+  "id": "SR-c770970c61934274",
   "sensor": {
     "name": "harness-green-main",
     "kind": "harness_green_main"
   },
-  "timestamp": "2026-05-17T21:06:17.927Z",
+  "timestamp": "2026-05-17T23:13:30.801Z",
   "status": "fail",
   "deterministic": false,
   "command": "gh run list --branch main --json conclusion --limit 50",
