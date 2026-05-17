@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-43d4ee9dd7f40f1a",
+  "sensor": {
+    "name": "type-check:tools/migration-linter",
+    "kind": "type_check"
+  },
+  "timestamp": "2026-05-17T00:29:58.857Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "npx tsc --noEmit -p tools/migration-linter/tsconfig.json",
+  "command_hash": "5362f08311eb7e92b707ee23ed3dda75da1068d7f6e7bee835ebd1b7fd86f942",
+  "exit_code": 0,
+  "duration_ms": 623,
+  "out_head": "",
+  "err_head": "",
+  "killed": false,
+  "findings": [],
+  "metrics": {
+    "error_count": 0,
+    "project": "tools/migration-linter"
+  }
+}

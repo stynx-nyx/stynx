@@ -1,13 +1,30 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-05-16T17:31:47.625Z",
+  "generatedAt": "2026-05-17T00:25:52.394Z",
   "sourceRepo": ".",
-  "rbacIlfTables": [],
+  "rbacIlfTables": ["roles", "user_roles"],
   "roles": [
     {
-      "id": "__placeholder",
-      "name": "__placeholder",
-      "evidence": []
+      "id": "roles",
+      "name": "roles",
+      "evidence": [
+        {
+          "path": "db/ddl/01-auth.sql",
+          "startLine": 371,
+          "endLine": 378
+        }
+      ]
+    },
+    {
+      "id": "user_roles",
+      "name": "user_roles",
+      "evidence": [
+        {
+          "path": "db/ddl/01-auth.sql",
+          "startLine": 399,
+          "endLine": 405
+        }
+      ]
     }
   ],
   "permissions": [
@@ -467,13 +484,13 @@
     "entityBindings": []
   },
   "unmapped": {
-    "rolesWithoutPermissions": [],
+    "rolesWithoutPermissions": ["roles", "user_roles"],
     "permissionsWithoutBindings": [],
     "endpointsWithoutRole": [],
     "routesWithoutRole": []
   },
   "stats": {
-    "roleCount": 0,
+    "roleCount": 2,
     "permissionCount": 0,
     "endpointBindingCount": 88,
     "routeBindingCount": 0,

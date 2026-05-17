@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-b0acbd48d1c6ad60",
+  "sensor": {
+    "name": "type-check:packages/logging",
+    "kind": "type_check"
+  },
+  "timestamp": "2026-05-17T00:29:36.839Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "npx tsc --noEmit -p packages/logging/tsconfig.json",
+  "command_hash": "1287ee182d1888491711d62db0532c0de34456969077cc7ad64ed9bdfed0228c",
+  "exit_code": 0,
+  "duration_ms": 1166,
+  "out_head": "",
+  "err_head": "",
+  "killed": false,
+  "findings": [],
+  "metrics": {
+    "error_count": 0,
+    "project": "packages/logging"
+  }
+}

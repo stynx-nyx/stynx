@@ -6,7 +6,7 @@
     "kind": "inventory_data_handling",
     "version": "1.0.0"
   },
-  "timestamp": "2026-05-16T17:34:14.473Z",
+  "timestamp": "2026-05-17T00:28:37.518Z",
   "status": "pass",
   "deterministic": true,
   "command": "devai sense data-handling --repo-root .",

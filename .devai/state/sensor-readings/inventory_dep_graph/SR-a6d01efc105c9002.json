@@ -6,13 +6,13 @@
     "kind": "inventory_dep_graph",
     "version": "1.0.0"
   },
-  "timestamp": "2026-05-16T17:31:48.463Z",
+  "timestamp": "2026-05-17T00:25:53.236Z",
   "status": "pass",
   "deterministic": true,
   "command": "devai sense dep-graph --repo-root .",
   "command_hash": "106666185d3f3b83ab13ffba253ed785de58674127b8c511b95c03ce65346631",
   "tier": "L0",
-  "duration_ms": 364,
+  "duration_ms": 371,
   "evidence_path": ".devai/state/sensors/inventory_dep_graph/dep-graph.json",
   "metrics": {
     "node_count": 506,

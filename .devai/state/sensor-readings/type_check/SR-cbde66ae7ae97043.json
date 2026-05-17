@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-cbde66ae7ae97043",
+  "sensor": {
+    "name": "type-check:packages/storage",
+    "kind": "type_check"
+  },
+  "timestamp": "2026-05-17T00:29:47.599Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "npx tsc --noEmit -p packages/storage/tsconfig.json",
+  "command_hash": "05b608762554afb6372292d56b1223377f444c95cc91e2f1a396080d9c1e81d1",
+  "exit_code": 0,
+  "duration_ms": 2128,
+  "out_head": "",
+  "err_head": "",
+  "killed": false,
+  "findings": [],
+  "metrics": {
+    "error_count": 0,
+    "project": "packages/storage"
+  }
+}

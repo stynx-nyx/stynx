@@ -6,7 +6,7 @@
     "kind": "inventory_coverage",
     "version": "1.0.0"
   },
-  "timestamp": "2026-05-16T17:32:04.169Z",
+  "timestamp": "2026-05-17T00:25:53.679Z",
   "status": "review",
   "deterministic": true,
   "command": "devai sense coverage --repo-root .",
@@ -18,7 +18,7 @@
     {
       "severity": "info",
       "code": "COVERAGE_PARTIAL_USE_CASE_LINKING",
-      "message": "13 use-case(s) populate 14 link(s); 7 route(s) and 44 endpoint(s) remain unmapped. Extend use-case refs.routeIds + refs.endpointIds to close."
+      "message": "13 use-case(s) populate 65 link(s); 1 route(s) and 0 endpoint(s) remain unmapped. Extend use-case refs.routeIds + refs.endpointIds to close."
     }
   ],
   "metrics": {

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-cb323c158341a5d5",
+  "sensor": {
+    "name": "type-check:packages/audit",
+    "kind": "type_check"
+  },
+  "timestamp": "2026-05-17T00:29:18.870Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "npx tsc --noEmit -p packages/audit/tsconfig.json",
+  "command_hash": "6857d07587916fd701fe09d4cb24a6965ea5b3cea016c9657c41e1c6b414a464",
+  "exit_code": 0,
+  "duration_ms": 4272,
+  "out_head": "",
+  "err_head": "",
+  "killed": false,
+  "findings": [],
+  "metrics": {
+    "error_count": 0,
+    "project": "packages/audit"
+  }
+}

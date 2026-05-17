@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-78fac7808eb55abd",
+  "sensor": {
+    "name": "type-check:packages/idempotency",
+    "kind": "type_check"
+  },
+  "timestamp": "2026-05-17T00:29:35.673Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "npx tsc --noEmit -p packages/idempotency/tsconfig.json",
+  "command_hash": "973431b4063dee5da1afff83c04521209170e02394c41015c771e986088b6879",
+  "exit_code": 0,
+  "duration_ms": 2636,
+  "out_head": "",
+  "err_head": "",
+  "killed": false,
+  "findings": [],
+  "metrics": {
+    "error_count": 0,
+    "project": "packages/idempotency"
+  }
+}

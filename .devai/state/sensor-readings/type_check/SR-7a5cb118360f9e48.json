@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-7a5cb118360f9e48",
+  "sensor": {
+    "name": "type-check:packages/ratelimit",
+    "kind": "type_check"
+  },
+  "timestamp": "2026-05-17T00:29:42.939Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "npx tsc --noEmit -p packages/ratelimit/tsconfig.json",
+  "command_hash": "4e62fc9bc9031ede45645a404533b4d646a303378420d41af105fd685316f3ae",
+  "exit_code": 0,
+  "duration_ms": 3132,
+  "out_head": "",
+  "err_head": "",
+  "killed": false,
+  "findings": [],
+  "metrics": {
+    "error_count": 0,
+    "project": "packages/ratelimit"
+  }
+}

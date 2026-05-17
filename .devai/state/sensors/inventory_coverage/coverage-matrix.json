@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-05-16T17:32:04.169Z",
+  "generatedAt": "2026-05-17T00:25:53.679Z",
   "routes": [
     "angular:086c1f6f3e97",
     "angular:66ada9255a8c",
@@ -127,135 +127,402 @@
     {
       "routeId": "angular:0f8938269c9a",
       "endpointId": "GET /work-items",
-      "useCaseId": "UC-stynx-005"
+      "useCaseId": "UC-stynx-005",
+      "linkKind": "paired"
     },
     {
       "routeId": "angular:1142140126d2",
       "endpointId": "GET /work-items/:id",
-      "useCaseId": "UC-stynx-005"
+      "useCaseId": "UC-stynx-005",
+      "linkKind": "paired"
     },
     {
       "routeId": "angular:1112587ddc3d",
       "endpointId": "GET /work-items/:id",
-      "useCaseId": "UC-stynx-005"
+      "useCaseId": "UC-stynx-005",
+      "linkKind": "paired"
+    },
+    {
+      "routeId": null,
+      "endpointId": "PATCH /work-items/:id",
+      "useCaseId": "UC-stynx-005",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": "angular:abaf636f1c8e",
+      "endpointId": null,
+      "useCaseId": "UC-stynx-006",
+      "linkKind": "route-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "POST /work-items",
+      "useCaseId": "UC-stynx-006",
+      "linkKind": "endpoint-only"
     },
     {
       "routeId": "angular:1142140126d2",
       "endpointId": "GET /work-items/:id",
-      "useCaseId": "UC-stynx-006"
+      "useCaseId": "UC-stynx-006",
+      "linkKind": "paired"
     },
     {
       "routeId": "angular:1142140126d2",
       "endpointId": "GET /work-items/:id",
-      "useCaseId": "UC-stynx-007"
+      "useCaseId": "UC-stynx-007",
+      "linkKind": "paired"
+    },
+    {
+      "routeId": null,
+      "endpointId": "DELETE /work-items/:id",
+      "useCaseId": "UC-stynx-007",
+      "linkKind": "endpoint-only"
     },
     {
       "routeId": "angular:fb6949272f44",
       "endpointId": "GET /work-items/trash",
-      "useCaseId": "UC-stynx-007"
+      "useCaseId": "UC-stynx-007",
+      "linkKind": "paired"
+    },
+    {
+      "routeId": null,
+      "endpointId": "POST /work-items/:id/restore",
+      "useCaseId": "UC-stynx-007",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "DELETE /work-items/:id/hard",
+      "useCaseId": "UC-stynx-007",
+      "linkKind": "endpoint-only"
     },
     {
       "routeId": "angular:1142140126d2",
       "endpointId": "GET /work-items/:id",
-      "useCaseId": "UC-stynx-008"
+      "useCaseId": "UC-stynx-008",
+      "linkKind": "paired"
+    },
+    {
+      "routeId": null,
+      "endpointId": "GET /work-item-entries",
+      "useCaseId": "UC-stynx-008",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "GET /work-item-entries/:id",
+      "useCaseId": "UC-stynx-008",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "POST /work-item-entries",
+      "useCaseId": "UC-stynx-008",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "PATCH /work-item-entries/:id",
+      "useCaseId": "UC-stynx-008",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "DELETE /work-item-entries/:id",
+      "useCaseId": "UC-stynx-008",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "POST /work-item-entries/:id/restore",
+      "useCaseId": "UC-stynx-008",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "DELETE /work-item-entries/:id/hard",
+      "useCaseId": "UC-stynx-008",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "GET /work-item-locks",
+      "useCaseId": "UC-stynx-009",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "GET /work-item-locks/:id",
+      "useCaseId": "UC-stynx-009",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "POST /work-item-locks",
+      "useCaseId": "UC-stynx-009",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "PATCH /work-item-locks/:id",
+      "useCaseId": "UC-stynx-009",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "DELETE /work-item-locks/:id",
+      "useCaseId": "UC-stynx-009",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "POST /work-item-locks/:id/restore",
+      "useCaseId": "UC-stynx-009",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "DELETE /work-item-locks/:id/hard",
+      "useCaseId": "UC-stynx-009",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "POST /documents",
+      "useCaseId": "UC-stynx-010",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "POST /documents/:id/complete",
+      "useCaseId": "UC-stynx-010",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "GET /documents/:id/download",
+      "useCaseId": "UC-stynx-010",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "DELETE /documents/:id",
+      "useCaseId": "UC-stynx-010",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "POST /documents/:id/restore",
+      "useCaseId": "UC-stynx-010",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "DELETE /documents/:id/hard",
+      "useCaseId": "UC-stynx-010",
+      "linkKind": "endpoint-only"
     },
     {
       "routeId": "angular:1a29df709ba4",
       "endpointId": "GET /records/:id",
-      "useCaseId": "UC-stynx-011"
+      "useCaseId": "UC-stynx-011",
+      "linkKind": "paired"
+    },
+    {
+      "routeId": null,
+      "endpointId": "GET /record-notes",
+      "useCaseId": "UC-stynx-011",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "GET /record-notes/:id",
+      "useCaseId": "UC-stynx-011",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "POST /record-notes",
+      "useCaseId": "UC-stynx-011",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "PATCH /record-notes/:id",
+      "useCaseId": "UC-stynx-011",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "DELETE /record-notes/:id",
+      "useCaseId": "UC-stynx-011",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "POST /record-notes/:id/restore",
+      "useCaseId": "UC-stynx-011",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "DELETE /record-notes/:id/hard",
+      "useCaseId": "UC-stynx-011",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "GET /_probes/data-tx",
+      "useCaseId": "UC-stynx-012",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "POST /_probes/idempotency",
+      "useCaseId": "UC-stynx-012",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "GET /_probes/ratelimit",
+      "useCaseId": "UC-stynx-012",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "GET /_probes/readonly-write",
+      "useCaseId": "UC-stynx-012",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": "angular:197ead8a8a47",
+      "endpointId": null,
+      "useCaseId": "UC-stynx-013",
+      "linkKind": "route-only"
+    },
+    {
+      "routeId": "angular:cd1db7de4f8c",
+      "endpointId": null,
+      "useCaseId": "UC-stynx-013",
+      "linkKind": "route-only"
     },
     {
       "routeId": "angular:5361bf2ca0e6",
       "endpointId": "GET /records",
-      "useCaseId": "UC-stynx-001"
+      "useCaseId": "UC-stynx-001",
+      "linkKind": "paired"
     },
     {
       "routeId": "angular:1a29df709ba4",
       "endpointId": "GET /records/:id",
-      "useCaseId": "UC-stynx-001"
+      "useCaseId": "UC-stynx-001",
+      "linkKind": "paired"
     },
     {
       "routeId": "angular:55bc456a97bb",
       "endpointId": "GET /records/:id",
-      "useCaseId": "UC-stynx-001"
+      "useCaseId": "UC-stynx-001",
+      "linkKind": "paired"
+    },
+    {
+      "routeId": null,
+      "endpointId": "PATCH /records/:id",
+      "useCaseId": "UC-stynx-001",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": "angular:7fa63ba98a7e",
+      "endpointId": null,
+      "useCaseId": "UC-stynx-002",
+      "linkKind": "route-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "POST /records",
+      "useCaseId": "UC-stynx-002",
+      "linkKind": "endpoint-only"
     },
     {
       "routeId": "angular:1a29df709ba4",
       "endpointId": "GET /records/:id",
-      "useCaseId": "UC-stynx-002"
+      "useCaseId": "UC-stynx-002",
+      "linkKind": "paired"
     },
     {
       "routeId": "angular:1a29df709ba4",
       "endpointId": "GET /records/:id",
-      "useCaseId": "UC-stynx-003"
+      "useCaseId": "UC-stynx-003",
+      "linkKind": "paired"
+    },
+    {
+      "routeId": null,
+      "endpointId": "DELETE /records/:id",
+      "useCaseId": "UC-stynx-003",
+      "linkKind": "endpoint-only"
     },
     {
       "routeId": "angular:fb6949272f44",
       "endpointId": "GET /records/trash",
-      "useCaseId": "UC-stynx-003"
+      "useCaseId": "UC-stynx-003",
+      "linkKind": "paired"
+    },
+    {
+      "routeId": null,
+      "endpointId": "POST /records/:id/restore",
+      "useCaseId": "UC-stynx-003",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "DELETE /records/:id/hard",
+      "useCaseId": "UC-stynx-003",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": "angular:46fe460b7194",
+      "endpointId": null,
+      "useCaseId": "UC-stynx-004",
+      "linkKind": "route-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "GET /_reference/demo-tenants",
+      "useCaseId": "UC-stynx-004",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "POST /_reference/dev-login",
+      "useCaseId": "UC-stynx-004",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": null,
+      "endpointId": "GET /_reference/auth-verify",
+      "useCaseId": "UC-stynx-004",
+      "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": "angular:197ead8a8a47",
+      "endpointId": null,
+      "useCaseId": "UC-stynx-004",
+      "linkKind": "route-only"
+    },
+    {
+      "routeId": "angular:086c1f6f3e97",
+      "endpointId": null,
+      "useCaseId": "UC-stynx-004",
+      "linkKind": "route-only"
     }
   ],
   "unmapped": {
-    "routes": [
-      "angular:086c1f6f3e97",
-      "angular:66ada9255a8c",
-      "angular:46fe460b7194",
-      "angular:7fa63ba98a7e",
-      "angular:197ead8a8a47",
-      "angular:cd1db7de4f8c",
-      "angular:abaf636f1c8e"
-    ],
-    "endpoints": [
-      "GET /_probes/data-tx",
-      "POST /_probes/idempotency",
-      "GET /_probes/ratelimit",
-      "GET /_probes/readonly-write",
-      "GET /_reference/auth-verify",
-      "GET /_reference/demo-tenants",
-      "POST /_reference/dev-login",
-      "POST /documents",
-      "DELETE /documents/:id",
-      "POST /documents/:id/complete",
-      "GET /documents/:id/download",
-      "DELETE /documents/:id/hard",
-      "POST /documents/:id/restore",
-      "GET /record-notes",
-      "POST /record-notes",
-      "DELETE /record-notes/:id",
-      "GET /record-notes/:id",
-      "PATCH /record-notes/:id",
-      "DELETE /record-notes/:id/hard",
-      "POST /record-notes/:id/restore",
-      "POST /records",
-      "DELETE /records/:id",
-      "PATCH /records/:id",
-      "DELETE /records/:id/hard",
-      "POST /records/:id/restore",
-      "GET /work-item-entries",
-      "POST /work-item-entries",
-      "DELETE /work-item-entries/:id",
-      "GET /work-item-entries/:id",
-      "PATCH /work-item-entries/:id",
-      "DELETE /work-item-entries/:id/hard",
-      "POST /work-item-entries/:id/restore",
-      "GET /work-item-locks",
-      "POST /work-item-locks",
-      "DELETE /work-item-locks/:id",
-      "GET /work-item-locks/:id",
-      "PATCH /work-item-locks/:id",
-      "DELETE /work-item-locks/:id/hard",
-      "POST /work-item-locks/:id/restore",
-      "POST /work-items",
-      "DELETE /work-items/:id",
-      "PATCH /work-items/:id",
-      "DELETE /work-items/:id/hard",
-      "POST /work-items/:id/restore"
-    ]
+    "routes": ["angular:66ada9255a8c"],
+    "endpoints": []
   },
   "stats": {
     "routeCount": 14,
     "endpointCount": 50,
     "useCaseCount": 13,
-    "linkCount": 14
+    "linkCount": 65
   }
 }

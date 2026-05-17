@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-bd1700aa6bc97ab7",
+  "sensor": {
+    "name": "type-check:packages/sessions",
+    "kind": "type_check"
+  },
+  "timestamp": "2026-05-17T00:29:45.471Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "npx tsc --noEmit -p packages/sessions/tsconfig.json",
+  "command_hash": "34b38a4619b9e23160faa8347b42ea8e703849acb5522e2fff0471c3a7f9d415",
+  "exit_code": 0,
+  "duration_ms": 2531,
+  "out_head": "",
+  "err_head": "",
+  "killed": false,
+  "findings": [],
+  "metrics": {
+    "error_count": 0,
+    "project": "packages/sessions"
+  }
+}

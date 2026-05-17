@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-e72c4574d8e77c37",
+  "sensor": {
+    "name": "type-check:packages/data",
+    "kind": "type_check"
+  },
+  "timestamp": "2026-05-17T00:29:29.630Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "npx tsc --noEmit -p packages/data/tsconfig.json",
+  "command_hash": "51745b7244c344f43aaaae92380950c3ac7f61236969aef693d1ecccd71f0631",
+  "exit_code": 0,
+  "duration_ms": 2021,
+  "out_head": "",
+  "err_head": "",
+  "killed": false,
+  "findings": [],
+  "metrics": {
+    "error_count": 0,
+    "project": "packages/data"
+  }
+}

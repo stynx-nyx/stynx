@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-50e21a1055f8d1cf",
+  "sensor": {
+    "name": "type-check:packages/auth",
+    "kind": "type_check"
+  },
+  "timestamp": "2026-05-17T00:29:21.949Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "npx tsc --noEmit -p packages/auth/tsconfig.json",
+  "command_hash": "c87e6df3834fd8523978f7f7f00c199666e3c7c711b345650fa0b9a2312ec6d6",
+  "exit_code": 0,
+  "duration_ms": 3077,
+  "out_head": "",
+  "err_head": "",
+  "killed": false,
+  "findings": [],
+  "metrics": {
+    "error_count": 0,
+    "project": "packages/auth"
+  }
+}

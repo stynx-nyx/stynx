@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-680ac337553b997b",
+  "sensor": {
+    "name": "type-check:packages/health",
+    "kind": "type_check"
+  },
+  "timestamp": "2026-05-17T00:29:30.368Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "npx tsc --noEmit -p packages/health/tsconfig.json",
+  "command_hash": "58d662464003a7d820ecbb33b5ae16f829cc32c021a0b440a5a56a14ae356429",
+  "exit_code": 0,
+  "duration_ms": 738,
+  "out_head": "",
+  "err_head": "",
+  "killed": false,
+  "findings": [],
+  "metrics": {
+    "error_count": 0,
+    "project": "packages/health"
+  }
+}

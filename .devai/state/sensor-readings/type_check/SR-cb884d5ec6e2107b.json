@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-cb884d5ec6e2107b",
+  "sensor": {
+    "name": "type-check:packages/backend",
+    "kind": "type_check"
+  },
+  "timestamp": "2026-05-17T00:29:25.246Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "npx tsc --noEmit -p packages/backend/tsconfig.json",
+  "command_hash": "8103d0fc05d42925dfa8ce32b1c680671d28fd4688814503f96b2862b3095f37",
+  "exit_code": 0,
+  "duration_ms": 3296,
+  "out_head": "",
+  "err_head": "",
+  "killed": false,
+  "findings": [],
+  "metrics": {
+    "error_count": 0,
+    "project": "packages/backend"
+  }
+}

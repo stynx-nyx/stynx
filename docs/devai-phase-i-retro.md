@@ -314,3 +314,66 @@ A companion brief at `../devai-canonical-adopter-promotion.md` is **deferred** t
 - 1 stynx-side engineering thread remains (F-9 step 2/N — per-task-DB integration tests for demo-bookmark) and is independent of pilot closure.
 
 Pilot status moves from "complete" (S11) to **"complete + maintenance steady-state"** (T8). No further C-4 sessions planned. The next stynx-side DEVAI work is reactive: Phase 23 verification when DEVAI ships D-A-19/20/21/22 closures.
+
+## 11. Post-Phase-23 verification refresh (U1, 2026-05-16)
+
+**DEVAI Phase 23 closed at `4af1c36`** (D-70) the same day as T8, shipping closures for D-A-19 (loop-run env propagation), D-A-20 (sense-coverage single-axis links), D-A-21 (sense-type-check per-package), D-A-22 (spec-validate companion exclusion), D-A-13 residual (pii_map INSERT extraction), D-A-14 residual (scorecard L1 classifier), D-A-15 residual (scaffolder regression fixture), and D-A-16 (assess-state actionable narrative). Stynx then ran a single U1 verification session.
+
+### Verification results (commit `U1`)
+
+| Phase 23 closure | Pre-U1 baseline                                 | Post-U1 measured                                                                                        | Status                                 |
+| ---------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| 23.B / D-A-19    | claude-cli spawn ETIMEDOUT (PATH not inherited) | Pre-flight `claude --version` probe succeeds inside spawn                                               | ✅ **Closed**                          |
+| 23.C / D-A-20    | 14 links from 13 use-cases; 44+7=51 unmapped    | **65 links from 13 use-cases; 0+1=1 unmapped** (50 surfaces flipped)                                    | ✅ **Closed; exceeded prediction**     |
+| 23.D / D-A-21    | Root tsconfig false-positives on test files     | `--typecheck-strategy per-package`: PASS 44.2s; 5 per-project SRs                                       | ✅ **Closed**                          |
+| 23.E / D-A-22    | `spec-validate-all` 16 errors on allowlist      | invariants 3 file(s), 0 error(s) — companion file auto-excluded                                         | ✅ **Closed**                          |
+| 23.F / D-A-13    | 1 PII column metadata (heuristic)               | **3 heuristic-classified columns; pii_map INSERT join not firing** for stynx migrations                 | ⚠️ **Partial — D-A-23 filed**          |
+| 23.G / D-A-14    | 0/45 cells passing; 44 unknown                  | **4/45 passing + 3 review + 38 unknown** with sense-lint + sense-type-check + sense-build SRs persisted | ✅ **Closed; partial cell population** |
+| 23.H / D-A-15    | n/a (DEVAI-internal regression fixture)         | Not stynx-verifiable; trust the DEVAI test suite                                                        | ✅ **Closed (upstream)**               |
+| 23.I / D-A-16    | Generic text-block narrative                    | **Per-cell signals surfaced** (`F2×T5 REVIEW`, `F4×T1 REVIEW: COVERAGE_NO_USE_CASES, …`)                | ✅ **Closed**                          |
+
+INV-COVERAGE-001 violation count: **51 → 1**. The single residual is one Angular route (`angular:086c1f6f3e97`) not yet referenced by any use-case step.
+
+### New D-A entries surfaced during U1
+
+| ID     | Surfaced in | One-line description                                                                                                                                                                                                                                                                                                                                                                      |
+| ------ | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D-A-23 | U1          | `sense-data-handling` doesn't populate `legal_basis`/`retention` for stynx's two `core.pii_map` INSERT shapes (multi-row tuple `('sample','record','title',...)` in reference-api + single-row schema-qualified `('demo','demo__bookmark_bookmark','notes',...)` with `ON CONFLICT … DO UPDATE` in demo-bookmark). 23.F's parser apparently doesn't reach either. Pack-tune doesn't help. |
+| D-A-24 | U1          | `loop-run` LLM-call timeout defaults to 120s, too short for substantive Claude-CLI prompts. Suggested: `--llm-timeout-ms` flag + per-skill defaults (assess-state 60s; feedback-iteration 600s).                                                                                                                                                                                          |
+
+### Stale candidate cleanup
+
+The post-22 `INV-CANDIDATE-*` files under `.devai/state/inv-candidates/` (120 records) are now mostly obsolete — 50+ unmapped_endpoint candidates were closed by 23.C. Cleanup is not strictly required (append-only audit trail) but a `devai inv-suggest --gc-stale` would tidy. Out of scope for U1.
+
+### Updated D-A register at U1 close
+
+| ID     | Status              | Notes                                                                                                                 |
+| ------ | ------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| D-A-12 | ✅ closed           | Phase 22.A                                                                                                            |
+| D-A-13 | ⚠️ partial → D-A-23 | Phase 22.B (heuristic) + Phase 23.F (pii_map parser) shipped, but pii_map join still doesn't fire on stynx migrations |
+| D-A-14 | ✅ closed           | Phase 22.D + Phase 23.G                                                                                               |
+| D-A-15 | ✅ closed           | Phase 22.E + Phase 23.H (upstream regression fixture)                                                                 |
+| D-A-16 | ✅ closed           | Phase 23.I                                                                                                            |
+| D-A-17 | ✅ closed           | Phase 22.G                                                                                                            |
+| D-A-18 | ✅ closed           | Phase 22.H + Phase 23.C (single-axis emission)                                                                        |
+| D-A-19 | ✅ closed           | Phase 23.B (env propagation + pre-flight probe)                                                                       |
+| D-A-20 | ✅ closed           | Phase 23.C                                                                                                            |
+| D-A-21 | ✅ closed           | Phase 23.D                                                                                                            |
+| D-A-22 | ✅ closed           | Phase 23.E                                                                                                            |
+| D-A-23 | 🆕 open             | U1 — pii_map INSERT extraction still not firing on stynx                                                              |
+| D-A-24 | 🆕 open             | U1 — `loop-run` default LLM timeout too short                                                                         |
+
+### Stynx F-register at U1 close
+
+| ID   | Status    | Description                                                                                  |
+| ---- | --------- | -------------------------------------------------------------------------------------------- |
+| F-9  | open      | step 2/N — wire `domain/demo-bookmark/` services per-task-DB integration tests (6 `it.todo`) |
+| F-16 | ✅ closed | T3 — ADRs re-authored in DEVAI schema                                                        |
+| F-19 | ✅ closed | jose@6 TS1479 suppressed                                                                     |
+| F-20 | ✅ closed | jest + ts-jest wired                                                                         |
+
+### Verdict at U1 close
+
+**Pilot status unchanged: complete + maintenance steady-state.** Phase 23 absorbed all the gaps the T8 register called out and shipped two of three carry-forward residuals (D-A-14, D-A-16). The two new gaps (D-A-23, D-A-24) are surface-area refinements, not adoption blockers — flag for a future Phase 24 if and when DEVAI does another alignment pass.
+
+INV-COVERAGE-001 went from "51 violations tracked" to "1 violation tracked" — the invariant is now effectively closed for stynx without authoring any new use-cases, just by DEVAI's sense-coverage learning to read what was already there. This is the strongest demonstration yet of the framework's value: an upstream sensor fix retroactively validates spec authoring work that was previously invisible.

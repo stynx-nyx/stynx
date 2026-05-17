@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-a2b193f012ad363c",
+  "sensor": {
+    "name": "type-check:reference/web",
+    "kind": "type_check"
+  },
+  "timestamp": "2026-05-17T00:29:58.234Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "npx tsc --noEmit -p reference/web/tsconfig.json",
+  "command_hash": "03c4d53ac9790e2dc9f2ad554709f77ccc12969c6e24c1bbfa07e6b13af6c070",
+  "exit_code": 0,
+  "duration_ms": 1289,
+  "out_head": "",
+  "err_head": "",
+  "killed": false,
+  "findings": [],
+  "metrics": {
+    "error_count": 0,
+    "project": "reference/web"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-a8b75be38c7ea66b",
+  "sensor": {
+    "name": "type-check:packages/contracts",
+    "kind": "type_check"
+  },
+  "timestamp": "2026-05-17T00:29:26.481Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "npx tsc --noEmit -p packages/contracts/tsconfig.json",
+  "command_hash": "fdf3a6f50f625f6279ab887c8bf298fd637ad2de8cf8122081ad77ac14286952",
+  "exit_code": 0,
+  "duration_ms": 579,
+  "out_head": "",
+  "err_head": "",
+  "killed": false,
+  "findings": [],
+  "metrics": {
+    "error_count": 0,
+    "project": "packages/contracts"
+  }
+}

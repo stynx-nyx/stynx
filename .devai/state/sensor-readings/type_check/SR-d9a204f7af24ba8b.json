@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-d9a204f7af24ba8b",
+  "sensor": {
+    "name": "type-check:packages/privacy",
+    "kind": "type_check"
+  },
+  "timestamp": "2026-05-17T00:29:39.807Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "npx tsc --noEmit -p packages/privacy/tsconfig.json",
+  "command_hash": "d188186aa542416f24098c5e2dc956a9e4f68ab598170db0e298b9a9cf66cc42",
+  "exit_code": 0,
+  "duration_ms": 2968,
+  "out_head": "",
+  "err_head": "",
+  "killed": false,
+  "findings": [],
+  "metrics": {
+    "error_count": 0,
+    "project": "packages/privacy"
+  }
+}

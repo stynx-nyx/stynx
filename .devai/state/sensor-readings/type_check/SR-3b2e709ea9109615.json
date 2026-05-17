@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-3b2e709ea9109615",
+  "sensor": {
+    "name": "type-check:reference/api",
+    "kind": "type_check"
+  },
+  "timestamp": "2026-05-17T00:29:56.945Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "npx tsc --noEmit -p reference/api/tsconfig.json",
+  "command_hash": "d529bba55ac7fdb3d72ba497cea71f8f378bb60fcd6dc489ab1488c94ba3c3a3",
+  "exit_code": 0,
+  "duration_ms": 3824,
+  "out_head": "",
+  "err_head": "",
+  "killed": false,
+  "findings": [],
+  "metrics": {
+    "error_count": 0,
+    "project": "reference/api"
+  }
+}

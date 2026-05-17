@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-d41a62d603e090a8",
+  "sensor": {
+    "name": "type-check:packages/i18n",
+    "kind": "type_check"
+  },
+  "timestamp": "2026-05-17T00:29:33.037Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "npx tsc --noEmit -p packages/i18n/tsconfig.json",
+  "command_hash": "b14fd458d777bd8077ed216a27a6130427c13705e5684cabf5416cbc5b1fc44a",
+  "exit_code": 0,
+  "duration_ms": 2669,
+  "out_head": "",
+  "err_head": "",
+  "killed": false,
+  "findings": [],
+  "metrics": {
+    "error_count": 0,
+    "project": "packages/i18n"
+  }
+}

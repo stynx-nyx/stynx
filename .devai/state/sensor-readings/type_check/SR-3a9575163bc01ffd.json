@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-3a9575163bc01ffd",
+  "sensor": {
+    "name": "type-check:packages/testing",
+    "kind": "type_check"
+  },
+  "timestamp": "2026-05-17T00:29:53.121Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "npx tsc --noEmit -p packages/testing/tsconfig.json",
+  "command_hash": "9b200013751aae08549d76e5265d91b404fd3d8573026de3a1f80b9fc98ffbbc",
+  "exit_code": 0,
+  "duration_ms": 2744,
+  "out_head": "",
+  "err_head": "",
+  "killed": false,
+  "findings": [],
+  "metrics": {
+    "error_count": 0,
+    "project": "packages/testing"
+  }
+}

@@ -6,7 +6,7 @@
     "kind": "inventory_routes",
     "version": "1.0.0"
   },
-  "timestamp": "2026-05-16T17:30:56.024Z",
+  "timestamp": "2026-05-17T00:25:50.904Z",
   "status": "pass",
   "deterministic": true,
   "command": "devai sense routes --repo-root .",
