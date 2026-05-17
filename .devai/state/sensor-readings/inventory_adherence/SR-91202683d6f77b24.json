@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-91202683d6f77b24",
+  "sensor": {
+    "name": "inventory-adherence",
+    "kind": "inventory_adherence"
+  },
+  "timestamp": "2026-05-17T21:05:25.379Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense-inventory-adherence",
+  "command_hash": "7f08cb76c9a1f4dc2bd5d1be86f022c6ed87e3b49baad79246eed300c7cccfd6",
+  "tier": "L0",
+  "findings": [],
+  "metrics": {
+    "total_count": 0,
+    "claimed_count": 0,
+    "orphan_count": 0,
+    "max_orphans": 50
+  }
+}

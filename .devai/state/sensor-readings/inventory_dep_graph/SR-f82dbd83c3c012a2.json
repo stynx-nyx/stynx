@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-f82dbd83c3c012a2",
+  "sensor": {
+    "name": "inventory:dep-graph",
+    "kind": "inventory_dep_graph",
+    "version": "1.0.0"
+  },
+  "timestamp": "2026-05-17T21:07:02.603Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense-readings-rebuild --repo-root . (synthesized from .devai/state/sensors/inventory_dep_graph/dep-graph.json)",
+  "command_hash": "a51645dfeb391596f9e73126c3fe225caf2599afb09556c9c88c77c8c73f8dc3",
+  "tier": "L0",
+  "evidence_path": ".devai/state/sensors/inventory_dep_graph/dep-graph.json",
+  "findings": [
+    {
+      "severity": "info",
+      "code": "REBUILT_FROM_BODY",
+      "message": "SensorReading synthesized post-hoc from an existing body file by `devai sense-readings-rebuild` (Phase 21.E). Findings + metrics from the original sensor run are not preserved."
+    }
+  ]
+}

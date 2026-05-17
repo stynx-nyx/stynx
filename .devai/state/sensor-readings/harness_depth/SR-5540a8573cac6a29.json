@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-5540a8573cac6a29",
+  "sensor": {
+    "name": "harness-depth",
+    "kind": "harness_depth"
+  },
+  "timestamp": "2026-05-17T21:05:39.953Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense-harness-depth",
+  "command_hash": "eb6e3d4fd4f531b34a604012a272cf19dee306e2a797ec7331616b6bcf4f0007",
+  "tier": "L0",
+  "findings": [],
+  "metrics": {
+    "workflow_count": 10,
+    "jobs_count": 30,
+    "steps_p95": 10,
+    "steps_median": 5,
+    "total_matrix_combinations": 5,
+    "threshold_pass": 3
+  }
+}

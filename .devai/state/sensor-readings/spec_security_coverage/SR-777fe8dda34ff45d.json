@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-777fe8dda34ff45d",
+  "sensor": {
+    "name": "spec-security-coverage",
+    "kind": "spec_security_coverage"
+  },
+  "timestamp": "2026-05-17T21:03:51.733Z",
+  "status": "review",
+  "deterministic": true,
+  "command": "devai sense-spec-security-coverage",
+  "command_hash": "16dea51ec07b7477c4c4ca65b9f7fc90fe8fa63bf79b92be28f52777e37b065c",
+  "tier": "L0",
+  "findings": [
+    {
+      "severity": "warning",
+      "code": "SPEC_SECURITY_NO_THREAT_MODEL",
+      "message": "No threat-model document found under: docs/security"
+    }
+  ],
+  "metrics": {
+    "threat_model_present": 0,
+    "pii_registry_present": 1,
+    "rbac_invariant_present": 1,
+    "signals_present": 2
+  }
+}

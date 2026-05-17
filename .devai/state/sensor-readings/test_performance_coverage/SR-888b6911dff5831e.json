@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-888b6911dff5831e",
+  "sensor": {
+    "name": "test-performance-coverage",
+    "kind": "test_performance_coverage"
+  },
+  "timestamp": "2026-05-17T21:05:15.094Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense-test-performance-coverage",
+  "command_hash": "04737986b31162f24bbf7ead652b123dc1356c3eaf71d97ffba4ed3e3ac4c071",
+  "tier": "L0",
+  "findings": [],
+  "metrics": {
+    "test_files": 59,
+    "perf_tests": 4,
+    "perf_pct": 6.78
+  }
+}

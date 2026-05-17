@@ -1,0 +1,637 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-94dcee2aecd92ecc",
+  "sensor": {
+    "name": "harness-security",
+    "kind": "harness_security"
+  },
+  "timestamp": "2026-05-17T21:06:15.322Z",
+  "status": "review",
+  "deterministic": true,
+  "command": "devai sense-harness-security",
+  "command_hash": "0997fe21464dd19921fd746d4c140219a4db2dbd0053fff866f39e9818654131",
+  "tier": "L0",
+  "findings": [
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/checkout@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/ci.yml",
+      "line": 28
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/setup-node@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/ci.yml",
+      "line": 31
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/checkout@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/ci.yml",
+      "line": 46
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: pnpm/action-setup@v5",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/ci.yml",
+      "line": 47
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/setup-node@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/ci.yml",
+      "line": 51
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/checkout@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/ci.yml",
+      "line": 78
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: pnpm/action-setup@v5",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/ci.yml",
+      "line": 79
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/setup-node@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/ci.yml",
+      "line": 83
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/checkout@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/ci.yml",
+      "line": 120
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: pnpm/action-setup@v5",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/ci.yml",
+      "line": 121
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/setup-node@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/ci.yml",
+      "line": 125
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/checkout@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/ci.yml",
+      "line": 152
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: pnpm/action-setup@v5",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/ci.yml",
+      "line": 153
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/setup-node@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/ci.yml",
+      "line": 157
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/checkout@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/ci.yml",
+      "line": 184
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: pnpm/action-setup@v5",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/ci.yml",
+      "line": 185
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/setup-node@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/ci.yml",
+      "line": 189
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/checkout@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/ci.yml",
+      "line": 213
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: pnpm/action-setup@v5",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/ci.yml",
+      "line": 214
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/setup-node@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/ci.yml",
+      "line": 218
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/checkout@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/ci.yml",
+      "line": 266
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: pnpm/action-setup@v5",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/ci.yml",
+      "line": 267
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/setup-node@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/ci.yml",
+      "line": 271
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/checkout@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/ci.yml",
+      "line": 316
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: pnpm/action-setup@v5",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/ci.yml",
+      "line": 317
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/setup-node@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/ci.yml",
+      "line": 321
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/checkout@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/ci.yml",
+      "line": 348
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: pnpm/action-setup@v5",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/ci.yml",
+      "line": 349
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/setup-node@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/ci.yml",
+      "line": 353
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/checkout@v4",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/devai-gates.yml",
+      "line": 44
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/checkout@v4",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/devai-gates.yml",
+      "line": 49
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: pnpm/action-setup@v4",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/devai-gates.yml",
+      "line": 58
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/setup-node@v4",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/devai-gates.yml",
+      "line": 63
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/upload-artifact@v4",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/devai-gates.yml",
+      "line": 138
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/checkout@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/docs.yml",
+      "line": 52
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/setup-node@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/docs.yml",
+      "line": 55
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/checkout@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/docs.yml",
+      "line": 70
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: pnpm/action-setup@v5",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/docs.yml",
+      "line": 71
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/setup-node@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/docs.yml",
+      "line": 76
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: browser-actions/setup-chrome@v2",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/docs.yml",
+      "line": 84
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/upload-artifact@v7",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/docs.yml",
+      "line": 96
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/upload-pages-artifact@v5",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/docs.yml",
+      "line": 104
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/deploy-pages@v5",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/docs.yml",
+      "line": 122
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/checkout@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/evidence.yml",
+      "line": 25
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/setup-node@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/evidence.yml",
+      "line": 29
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/checkout@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/hardening.yml",
+      "line": 35
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/upload-artifact@v7",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/hardening.yml",
+      "line": 175
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/checkout@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/hardening.yml",
+      "line": 221
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: pnpm/action-setup@v5",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/hardening.yml",
+      "line": 222
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/setup-node@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/hardening.yml",
+      "line": 227
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/upload-artifact@v7",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/hardening.yml",
+      "line": 242
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/checkout@v4",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/module-demo-bookmark.yml",
+      "line": 16
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/setup-node@v4",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/module-demo-bookmark.yml",
+      "line": 17
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/checkout@v4",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/module-demo-bookmark.yml",
+      "line": 29
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_MISSING_PERMISSIONS",
+      "message": "Workflow has no top-level permissions block (defaults to repo-wide write).",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/module-demo-bookmark.yml"
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/checkout@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/reference-apps.yml",
+      "line": 57
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/setup-node@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/reference-apps.yml",
+      "line": 60
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/checkout@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/reference-apps.yml",
+      "line": 96
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: pnpm/action-setup@v5",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/reference-apps.yml",
+      "line": 97
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/setup-node@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/reference-apps.yml",
+      "line": 101
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/checkout@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/reference-apps.yml",
+      "line": 131
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: pnpm/action-setup@v5",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/reference-apps.yml",
+      "line": 132
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/setup-node@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/reference-apps.yml",
+      "line": 136
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/upload-artifact@v7",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/reference-apps.yml",
+      "line": 177
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/checkout@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/reference-apps.yml",
+      "line": 194
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: aquasecurity/trivy-action@0.35.0",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/reference-apps.yml",
+      "line": 203
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: aquasecurity/trivy-action@0.35.0",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/reference-apps.yml",
+      "line": 212
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: anchore/sbom-action/download-syft@v0",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/reference-apps.yml",
+      "line": 222
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/upload-artifact@v7",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/reference-apps.yml",
+      "line": 230
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/checkout@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/release-prep.yml",
+      "line": 61
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/setup-node@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/release-prep.yml",
+      "line": 64
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/checkout@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/release-prep.yml",
+      "line": 79
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/setup-python@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/release-prep.yml",
+      "line": 81
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: github/codeql-action/upload-sarif@v4",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/release-prep.yml",
+      "line": 94
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/checkout@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/release-prep.yml",
+      "line": 104
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/setup-node@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/release-prep.yml",
+      "line": 106
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/checkout@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/release-prep.yml",
+      "line": 119
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: pnpm/action-setup@v5",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/release-prep.yml",
+      "line": 120
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/setup-node@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/release-prep.yml",
+      "line": 125
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/checkout@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/release-prep.yml",
+      "line": 148
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: pnpm/action-setup@v5",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/release-prep.yml",
+      "line": 159
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/setup-node@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/release-prep.yml",
+      "line": 164
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/upload-artifact@v7",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/release-prep.yml",
+      "line": 179
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/checkout@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/release.yml",
+      "line": 30
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: pnpm/action-setup@v5",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/release.yml",
+      "line": 33
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: actions/setup-node@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/release.yml",
+      "line": 38
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: changesets/action@v1",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/release.yml",
+      "line": 52
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_SECURITY_UNPINNED_ACTION",
+      "message": "Action used without SHA pin: amannn/action-semantic-pull-request@v6",
+      "file": "/Users/aarusso/Development/stech/stynx/.github/workflows/semantic-pr-title.yml",
+      "line": 20
+    }
+  ],
+  "metrics": {
+    "workflow_count": 10,
+    "unpinned_action_count": 87,
+    "missing_permissions_block_count": 1,
+    "pwn_request_count": 0
+  }
+}

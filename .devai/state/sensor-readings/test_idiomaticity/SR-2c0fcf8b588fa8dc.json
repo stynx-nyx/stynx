@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-2c0fcf8b588fa8dc",
+  "sensor": {
+    "name": "test-idiomaticity",
+    "kind": "test_idiomaticity"
+  },
+  "timestamp": "2026-05-17T21:05:13.806Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense-test-idiomaticity",
+  "command_hash": "ba9a215bfa7e188ae25b1f24d0fc0e91238fcb9a3db3092089b3588d364451d7",
+  "tier": "L0",
+  "findings": [],
+  "metrics": {
+    "test_files": 59,
+    "mock_calls": 418,
+    "fixture_calls": 23,
+    "snapshot_calls": 0,
+    "mock_heavy_files": 20,
+    "mock_heavy_ratio": 0.339,
+    "mocks_in_integration_files": 0
+  }
+}

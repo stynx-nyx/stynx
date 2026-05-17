@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-197e49f948979851",
+  "sensor": {
+    "name": "test-coverage-depth",
+    "kind": "test_coverage_depth"
+  },
+  "timestamp": "2026-05-17T21:05:12.819Z",
+  "status": "review",
+  "deterministic": true,
+  "command": "devai sense-test-coverage-depth",
+  "command_hash": "d7b2f1c9b6051a6c97d386b14e31285260fa137788e6d75d81d1caaa100be471",
+  "tier": "L2",
+  "findings": [
+    {
+      "severity": "warning",
+      "code": "TEST_COVERAGE_REPORT_MISSING",
+      "message": "Coverage report not found at coverage/coverage-final.json. Run `pnpm test:coverage` first."
+    }
+  ],
+  "metrics": {
+    "lines_total": 0,
+    "lines_covered": 0,
+    "lines_pct": 0,
+    "threshold_pass": 80,
+    "threshold_review": 50
+  }
+}

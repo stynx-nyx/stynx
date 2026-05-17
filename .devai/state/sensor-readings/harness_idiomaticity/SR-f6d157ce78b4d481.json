@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-f6d157ce78b4d481",
+  "sensor": {
+    "name": "harness-idiomaticity",
+    "kind": "harness_idiomaticity"
+  },
+  "timestamp": "2026-05-17T21:05:52.493Z",
+  "status": "fail",
+  "deterministic": true,
+  "command": "devai sense-harness-idiomaticity",
+  "command_hash": "4f6cae04c3a4a4a1c249eb5094fcc34ed9120e1d6199c7c7ff0880e9e3f15b1a",
+  "tier": "L0",
+  "findings": [
+    {
+      "severity": "warning",
+      "code": "HARNESS_IDIOMATICITY_NO_COMPOSITE_ACTIONS",
+      "message": "No composite-action references (./.github/actions/*) found. Consider extracting repeated step sequences."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_IDIOMATICITY_NO_REUSABLE_WORKFLOWS",
+      "message": "No reusable workflow references found. Consider factoring shared CI logic."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_IDIOMATICITY_NO_CACHE",
+      "message": "No cache action usage detected. Dep install will run from scratch every CI run."
+    }
+  ],
+  "metrics": {
+    "workflow_count": 10,
+    "composite_action_uses": 0,
+    "reusable_workflow_uses": 0,
+    "cache_present": 0,
+    "idiomaticity_score": 0
+  }
+}

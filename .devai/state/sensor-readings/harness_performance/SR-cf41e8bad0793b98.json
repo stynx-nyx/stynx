@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-cf41e8bad0793b98",
+  "sensor": {
+    "name": "harness-performance",
+    "kind": "harness_performance"
+  },
+  "timestamp": "2026-05-17T21:05:43.688Z",
+  "status": "pass",
+  "deterministic": false,
+  "command": "gh run list --branch main --json conclusion,createdAt,updatedAt --limit 50",
+  "command_hash": "16f0903c872725772aa57f982fd1ec319c4ca74d96a29b7bfa56a34f9b295a40",
+  "tier": "L2",
+  "findings": [],
+  "metrics": {
+    "run_count": 50,
+    "success_count": 29,
+    "median_ms": 159000,
+    "p95_ms": 892000,
+    "pass_median_ms": 600000,
+    "pass_p95_ms": 1800000
+  }
+}

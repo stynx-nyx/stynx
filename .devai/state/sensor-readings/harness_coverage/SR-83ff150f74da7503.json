@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-83ff150f74da7503",
+  "sensor": {
+    "name": "harness-coverage",
+    "kind": "harness_coverage"
+  },
+  "timestamp": "2026-05-17T21:05:39.419Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense-harness-coverage",
+  "command_hash": "0770e7d9705a873f205cae5992631fa2acaa1bc1a7f6bbb9e5466c884bb541fa",
+  "tier": "L0",
+  "findings": [],
+  "metrics": {
+    "workflow_count": 10,
+    "covered_by_unfiltered_workflow": 1,
+    "coverage_pct": 100
+  }
+}

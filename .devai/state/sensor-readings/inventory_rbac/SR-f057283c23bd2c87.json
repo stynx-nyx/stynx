@@ -6,7 +6,7 @@
     "kind": "inventory_rbac",
     "version": "1.0.0"
   },
-  "timestamp": "2026-05-17T00:25:52.394Z",
+  "timestamp": "2026-05-17T21:03:36.934Z",
   "status": "pass",
   "deterministic": true,
   "command": "devai sense rbac --repo-root .",

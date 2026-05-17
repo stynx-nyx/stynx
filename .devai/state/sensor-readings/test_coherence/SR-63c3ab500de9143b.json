@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-63c3ab500de9143b",
+  "sensor": {
+    "name": "test-coherence",
+    "kind": "test_coherence"
+  },
+  "timestamp": "2026-05-17T21:05:13.317Z",
+  "status": "review",
+  "deterministic": true,
+  "command": "devai sense-test-coherence",
+  "command_hash": "61bbc16d5a32d45d900bed084562635adc680ff04bb11652288da7a66abefaa1",
+  "tier": "L0",
+  "findings": [
+    {
+      "severity": "warning",
+      "code": "TEST_COHERENCE_PACKAGE_BELOW_MIN",
+      "message": "Package /Users/aarusso/Development/stech/stynx/packages/backend has test/source ratio 0.00 (< 0.1).",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_COHERENCE_PACKAGE_BELOW_MIN",
+      "message": "Package /Users/aarusso/Development/stech/stynx/packages/contracts has test/source ratio 0.00 (< 0.1).",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/contracts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_COHERENCE_PACKAGE_BELOW_MIN",
+      "message": "Package /Users/aarusso/Development/stech/stynx/packages/flow has test/source ratio 0.10 (< 0.1).",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_COHERENCE_PACKAGE_BELOW_MIN",
+      "message": "Package /Users/aarusso/Development/stech/stynx/packages/i18n has test/source ratio 0.08 (< 0.1).",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n"
+    }
+  ],
+  "metrics": {
+    "packages_scanned": 18,
+    "source_files": 271,
+    "test_files": 59,
+    "global_ratio": 0.218,
+    "packages_below_min_ratio": 4,
+    "naming_uses_test": 0,
+    "naming_uses_spec": 59,
+    "naming_consistent": 1
+  }
+}

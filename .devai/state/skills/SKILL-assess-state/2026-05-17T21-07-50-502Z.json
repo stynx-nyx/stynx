@@ -1,0 +1,19 @@
+{
+  "skill_id": "SKILL-assess-state",
+  "status": "pass",
+  "evidence": {
+    "schemaVersion": "1.0.0",
+    "id": "AS-20260517T210750-001",
+    "generated_at": "2026-05-17T21:07:50.497Z",
+    "scorecard_id": "SC-20260517T210750-001",
+    "previous_assessment_id": null,
+    "narrative": "Overall: RED. 19/45 cells passing. 8 cell(s) failing. 8 cell(s) in review. 9 cell(s) unknown (sensor coverage gap). Per-cell signals:\n  - F1×T4 FAIL: spec_alignment → SPEC_ALIGNMENT_INVARIANT_HAS_NO_MATCHING_FILES: Invariant INV-FLOW-002 has zero matching files for any of its scope.code_areas[]. (/Users/aarusso/Development/stech/stynx/docs/architecture/invariants/INV-FLOW-002.json)\n  - F1×T5 FAIL: spec_idiomaticity → UNKNOWN: domain 'FLOW' is not in the configured taxonomy (.devai/config/domains.json) (docs/architecture/invariants/INV-FLOW-001.json)\n  - F1×T6 REVIEW: SPEC_SECURITY_NO_THREAT_MODEL\n  - F1×T7 FAIL: spec_performance_targets → SPEC_PERFORMANCE_NO_TARGETS: No perf invariants, no perf use-cases, no perf-relevant code areas detected.\n  - F1×T8 FAIL: spec_robustness_targets → SPEC_ROBUSTNESS_NO_TARGETS: No error_semantics invariants and no error-contract files.\n  - F2×T5 REVIEW: (no review findings cited)\n  - F3×T1 FAIL: integration_test → exit=254 (no findings); unit_test → • turbo 2.9.6\n ERROR  @stynx-internal/migration-linter#test: command (/Users/aarusso/Development/stech/stynx/tools/migration-linter) /Users/aarusso/.nvm/versio…\n  - F3×T2 REVIEW: TEST_COVERAGE_REPORT_MISSING\n  - F3×T3 REVIEW: TEST_COHERENCE_PACKAGE_BELOW_MIN\n  - F3×T4 REVIEW: TEST_INVARIANT_ALIGNMENT_EMPTY_TESTS\n  - F4×T1 REVIEW: COVERAGE_NO_USE_CASES, COVERAGE_PARTIAL_USE_CASE_LINKING, COVERAGE_REQUIRES_ROUTES\n  - F4×T2 REVIEW: COVERAGE_NO_USE_CASES, COVERAGE_PARTIAL_USE_CASE_LINKING, COVERAGE_REQUIRES_ROUTES\n  - F5×T3 FAIL: harness_coherence → HARNESS_COHERENCE_ACTION_VERSION_DRIFT: Action actions/checkout pinned to multiple versions across workflows: v6, v4\n  - F5×T5 FAIL: harness_idiomaticity → HARNESS_IDIOMATICITY_NO_COMPOSITE_ACTIONS: No composite-action references (./.github/actions/*) found. Consider extracting repeated step sequences.\n  - F5×T6 REVIEW: HARNESS_SECURITY_MISSING_PERMISSIONS, HARNESS_SECURITY_UNPINNED_ACTION\n  - F5×T8 UNKNOWN (SR exists but classifier returned UNKNOWN; check rule for kind=harness_robustness)\n  - F5×T9 FAIL: harness_green_main → HARNESS_GREEN_MAIN_BELOW_THRESHOLD: Main branch success rate 58.0% (over last 50 runs) is below review threshold 80%.",
+    "deltas": [],
+    "backlog_actions": {
+      "additions": [],
+      "completions": [],
+      "deprioritizations": []
+    },
+    "recommended_priorities": []
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-2adb04cdc200ef5a",
+  "sensor": {
+    "name": "harness-invariant-alignment",
+    "kind": "harness_invariant_alignment"
+  },
+  "timestamp": "2026-05-17T21:05:41.023Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense-harness-invariant-alignment",
+  "command_hash": "61224e91865dd8ed30c03cb1acf9f4bc08ada5ec450523d7320c53699a26a720",
+  "tier": "L0",
+  "findings": [],
+  "metrics": {
+    "gate_invariants": 6,
+    "misaligned": 0,
+    "workflow_count": 10
+  }
+}

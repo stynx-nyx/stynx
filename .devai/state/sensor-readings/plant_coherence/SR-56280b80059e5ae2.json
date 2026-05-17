@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-56280b80059e5ae2",
+  "sensor": {
+    "name": "plant-coherence",
+    "kind": "plant_coherence"
+  },
+  "timestamp": "2026-05-17T21:05:04.393Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense-plant-coherence",
+  "command_hash": "3b42edf8c321fd356c907dd1a2cd72ac2c357bb02486e4bf9d19106a3a3a7eef",
+  "tier": "L0",
+  "findings": [],
+  "metrics": {
+    "dirs_scanned": 32,
+    "incoherent_dirs": 0,
+    "max_review_incoherent": 3
+  }
+}

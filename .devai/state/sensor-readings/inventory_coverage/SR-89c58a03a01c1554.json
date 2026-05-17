@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-89c58a03a01c1554",
+  "sensor": {
+    "name": "inventory:coverage",
+    "kind": "inventory_coverage",
+    "version": "1.0.0"
+  },
+  "timestamp": "2026-05-17T21:07:02.606Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense-readings-rebuild --repo-root . (synthesized from .devai/state/sensors/inventory_coverage/coverage-matrix.json)",
+  "command_hash": "b3b6372d238830cbc1e9fbf1fc15e6aca05a3a1a29d2a22d23124d249a0646b3",
+  "tier": "L0",
+  "evidence_path": ".devai/state/sensors/inventory_coverage/coverage-matrix.json",
+  "findings": [
+    {
+      "severity": "info",
+      "code": "REBUILT_FROM_BODY",
+      "message": "SensorReading synthesized post-hoc from an existing body file by `devai sense-readings-rebuild` (Phase 21.E). Findings + metrics from the original sensor run are not preserved."
+    }
+  ]
+}

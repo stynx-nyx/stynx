@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-2f86cd6a128aae05",
+  "sensor": {
+    "name": "spec-depth",
+    "kind": "spec_depth"
+  },
+  "timestamp": "2026-05-17T21:03:49.011Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense-spec-depth",
+  "command_hash": "7c1ed1e046ec90b894d82250b5f1998f51be1488e6a361f18debb677288da1d1",
+  "tier": "L0",
+  "findings": [],
+  "metrics": {
+    "invariant_count": 7,
+    "adr_count": 2,
+    "use_case_count": 2,
+    "component_count": 12
+  }
+}

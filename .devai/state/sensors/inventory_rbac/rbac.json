@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-05-17T00:25:52.394Z",
+  "generatedAt": "2026-05-17T21:03:36.934Z",
   "sourceRepo": ".",
   "rbacIlfTables": ["roles", "user_roles"],
   "roles": [

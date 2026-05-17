@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-16e75fbbc4beae33",
+  "sensor": {
+    "name": "inventory:data-model",
+    "kind": "inventory_data_model",
+    "version": "1.0.0"
+  },
+  "timestamp": "2026-05-17T21:07:02.602Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense-readings-rebuild --repo-root . (synthesized from .devai/state/sensors/inventory_data_model/data-model.json)",
+  "command_hash": "7f1a54e2b34e936340a694aab450953846561b8581418e074ff8c269a023ddd0",
+  "tier": "L0",
+  "evidence_path": ".devai/state/sensors/inventory_data_model/data-model.json",
+  "findings": [
+    {
+      "severity": "info",
+      "code": "REBUILT_FROM_BODY",
+      "message": "SensorReading synthesized post-hoc from an existing body file by `devai sense-readings-rebuild` (Phase 21.E). Findings + metrics from the original sensor run are not preserved."
+    }
+  ]
+}

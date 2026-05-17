@@ -62,9 +62,10 @@
       "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark-tag.service"
     ],
     "domain/demo-bookmark/api/test/bookmark-tag.service.spec.ts": [
-      "@stynx/core",
-      "@stynx/data",
-      "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark-tag.service"
+      "@nestjs/common",
+      "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark-tag.service",
+      "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark.service",
+      "domain/demo-bookmark/api/test/support/postgres-fixture"
     ],
     "domain/demo-bookmark/api/test/bookmark.controller.spec.ts": [
       "@nestjs/testing",
@@ -73,9 +74,20 @@
       "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark.service"
     ],
     "domain/demo-bookmark/api/test/bookmark.service.spec.ts": [
+      "@nestjs/common",
+      "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark.service",
+      "domain/demo-bookmark/api/test/support/postgres-fixture"
+    ],
+    "domain/demo-bookmark/api/test/support/postgres-fixture.ts": [
+      "@nestjs/testing",
       "@stynx/core",
       "@stynx/data",
-      "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark.service"
+      "node:crypto",
+      "node:fs",
+      "node:os",
+      "node:path",
+      "packages/data/src/migration-runner",
+      "pg"
     ],
     "domain/demo-bookmark/web/src/app/demo-bookmark/bookmark-detail.component.ts": [
       "@angular/core",
@@ -362,6 +374,88 @@
       "packages-web/angular-auth/src/tokens",
       "packages-web/angular-auth/src/types"
     ],
+    "packages-web/angular-flow/src/analytics.component.ts": [
+      "@angular/core",
+      "@stynx-web/angular-ui",
+      "packages-web/angular-flow/src/flow-api.service",
+      "packages-web/angular-flow/src/types"
+    ],
+    "packages-web/angular-flow/src/flow-api.service.ts": [
+      "@angular/core",
+      "@stynx-web/sdk",
+      "packages-web/angular-flow/src/tokens",
+      "packages-web/angular-flow/src/types"
+    ],
+    "packages-web/angular-flow/src/flow-design-dialogs.component.ts": [
+      "@angular/core",
+      "packages-web/angular-flow/src/types"
+    ],
+    "packages-web/angular-flow/src/flow-fills.component.ts": [
+      "@angular/core",
+      "@stynx-web/angular-auth",
+      "@stynx-web/angular-ui",
+      "packages-web/angular-flow/src/flow-api.service",
+      "packages-web/angular-flow/src/types"
+    ],
+    "packages-web/angular-flow/src/flow-forms.component.ts": [
+      "@angular/core",
+      "@stynx-web/angular-auth",
+      "@stynx-web/angular-ui",
+      "packages-web/angular-flow/src/flow-api.service",
+      "packages-web/angular-flow/src/types"
+    ],
+    "packages-web/angular-flow/src/flow-graph-canvas.component.ts": [
+      "@angular/core",
+      "packages-web/angular-flow/src/types"
+    ],
+    "packages-web/angular-flow/src/flow-graph-designer.component.ts": [
+      "@angular/core",
+      "@stynx-web/angular-auth",
+      "@stynx-web/angular-ui",
+      "packages-web/angular-flow/src/flow-api.service",
+      "packages-web/angular-flow/src/flow-graph-canvas.component",
+      "packages-web/angular-flow/src/types"
+    ],
+    "packages-web/angular-flow/src/flow-tasks.component.ts": [
+      "@angular/core",
+      "@stynx-web/angular-auth",
+      "@stynx-web/angular-ui",
+      "packages-web/angular-flow/src/flow-api.service",
+      "packages-web/angular-flow/src/types"
+    ],
+    "packages-web/angular-flow/src/flow-waivers.component.ts": [
+      "@angular/core",
+      "@stynx-web/angular-auth",
+      "@stynx-web/angular-ui",
+      "packages-web/angular-flow/src/flow-api.service",
+      "packages-web/angular-flow/src/types"
+    ],
+    "packages-web/angular-flow/src/index.ts": [
+      "packages-web/angular-flow/src/analytics.component",
+      "packages-web/angular-flow/src/flow-api.service",
+      "packages-web/angular-flow/src/flow-design-dialogs.component",
+      "packages-web/angular-flow/src/flow-fills.component",
+      "packages-web/angular-flow/src/flow-forms.component",
+      "packages-web/angular-flow/src/flow-graph-canvas.component",
+      "packages-web/angular-flow/src/flow-graph-designer.component",
+      "packages-web/angular-flow/src/flow-tasks.component",
+      "packages-web/angular-flow/src/flow-waivers.component",
+      "packages-web/angular-flow/src/routes",
+      "packages-web/angular-flow/src/tokens",
+      "packages-web/angular-flow/src/types"
+    ],
+    "packages-web/angular-flow/src/routes.ts": [
+      "@angular/router",
+      "@stynx-web/angular-auth",
+      "packages-web/angular-flow/src/analytics.component",
+      "packages-web/angular-flow/src/flow-fills.component",
+      "packages-web/angular-flow/src/flow-forms.component",
+      "packages-web/angular-flow/src/flow-graph-designer.component",
+      "packages-web/angular-flow/src/flow-tasks.component",
+      "packages-web/angular-flow/src/flow-waivers.component"
+    ],
+    "packages-web/angular-flow/src/tokens.ts": ["@angular/core", "@stynx-web/sdk"],
+    "packages-web/angular-flow/src/types.ts": [],
     "packages-web/angular-i18n/src/i18n.service.ts": [
       "@angular/core",
       "packages-web/angular-i18n/src/tokens",
@@ -1468,10 +1562,17 @@
     "packages/data/src/schema/audit.ts": ["drizzle-orm/pg-core"],
     "packages/data/src/schema/auth.ts": ["drizzle-orm/pg-core", "packages/data/src/schema/tenancy"],
     "packages/data/src/schema/core.ts": ["drizzle-orm/pg-core", "packages/data/src/schema/tenancy"],
+    "packages/data/src/schema/flow.ts": [
+      "drizzle-orm/pg-core",
+      "packages/data/src/schema/auth",
+      "packages/data/src/schema/tenancy",
+      "packages/data/src/table-markers"
+    ],
     "packages/data/src/schema/index.ts": [
       "packages/data/src/schema/audit",
       "packages/data/src/schema/auth",
       "packages/data/src/schema/core",
+      "packages/data/src/schema/flow",
       "packages/data/src/schema/storage",
       "packages/data/src/schema/tenancy"
     ],
@@ -1558,6 +1659,245 @@
       "packages/data/src/tokens",
       "packages/data/src/transaction",
       "pg"
+    ],
+    "packages/flow/src/adapters.ts": [
+      "@nestjs/common",
+      "packages/flow/src/tokens",
+      "packages/flow/src/types"
+    ],
+    "packages/flow/src/controllers/agent-rules.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/backend",
+      "packages/flow/src/flow-design.service"
+    ],
+    "packages/flow/src/controllers/analytics.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "packages/flow/src/flow-analytics.service"
+    ],
+    "packages/flow/src/controllers/answers.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/backend",
+      "packages/flow/src/flow-forms.service"
+    ],
+    "packages/flow/src/controllers/edges.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/backend",
+      "packages/flow/src/flow-design.service"
+    ],
+    "packages/flow/src/controllers/events.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "packages/flow/src/flow-runtime.service"
+    ],
+    "packages/flow/src/controllers/fills.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/backend",
+      "@stynx/idempotency",
+      "packages/flow/src/flow-forms.service"
+    ],
+    "packages/flow/src/controllers/forms.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/backend",
+      "@stynx/idempotency",
+      "packages/flow/src/flow-forms.service"
+    ],
+    "packages/flow/src/controllers/graphs.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/backend",
+      "@stynx/idempotency",
+      "packages/flow/src/flow-design.service"
+    ],
+    "packages/flow/src/controllers/node-form-rules.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/backend",
+      "packages/flow/src/flow-design.service"
+    ],
+    "packages/flow/src/controllers/node-runs.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "packages/flow/src/flow-runtime.service"
+    ],
+    "packages/flow/src/controllers/nodes.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/backend",
+      "packages/flow/src/flow-design.service"
+    ],
+    "packages/flow/src/controllers/policies.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/backend",
+      "packages/flow/src/flow-policy.service"
+    ],
+    "packages/flow/src/controllers/questions.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/backend",
+      "@stynx/idempotency",
+      "packages/flow/src/flow-forms.service"
+    ],
+    "packages/flow/src/controllers/runs.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/backend",
+      "@stynx/idempotency",
+      "packages/flow/src/flow-analytics.service",
+      "packages/flow/src/flow-runtime.service"
+    ],
+    "packages/flow/src/controllers/scopes.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/backend",
+      "packages/flow/src/flow-design.service"
+    ],
+    "packages/flow/src/controllers/signal.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/backend",
+      "@stynx/idempotency",
+      "packages/flow/src/flow-runtime.service"
+    ],
+    "packages/flow/src/controllers/tasks.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/backend",
+      "@stynx/idempotency",
+      "packages/flow/src/flow-runtime.service"
+    ],
+    "packages/flow/src/controllers/transition-effects.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/backend",
+      "packages/flow/src/flow-design.service"
+    ],
+    "packages/flow/src/controllers/waivers.controller.ts": [
+      "@nestjs/common",
+      "@stynx/auth",
+      "@stynx/backend",
+      "@stynx/idempotency",
+      "packages/flow/src/flow-forms.service"
+    ],
+    "packages/flow/src/flow-analytics.service.ts": [
+      "@nestjs/common",
+      "@stynx/data",
+      "packages/flow/src/row-utils"
+    ],
+    "packages/flow/src/flow-design.service.ts": [
+      "@nestjs/common",
+      "@stynx/core",
+      "@stynx/data",
+      "packages/flow/src/types",
+      "packages/flow/src/validation"
+    ],
+    "packages/flow/src/flow-forms.service.ts": [
+      "@nestjs/common",
+      "@stynx/core",
+      "@stynx/data",
+      "packages/flow/src/row-utils",
+      "packages/flow/src/validation"
+    ],
+    "packages/flow/src/flow-policy.service.ts": [
+      "@nestjs/common",
+      "packages/flow/src/flow-design.service",
+      "packages/flow/src/types"
+    ],
+    "packages/flow/src/flow-runtime.service.ts": [
+      "@nestjs/common",
+      "@stynx/core",
+      "@stynx/data",
+      "packages/flow/src/adapters",
+      "packages/flow/src/row-utils",
+      "packages/flow/src/validation"
+    ],
+    "packages/flow/src/flow.module.ts": [
+      "@nestjs/common",
+      "packages/flow/src/adapters",
+      "packages/flow/src/controllers/agent-rules.controller",
+      "packages/flow/src/controllers/analytics.controller",
+      "packages/flow/src/controllers/answers.controller",
+      "packages/flow/src/controllers/edges.controller",
+      "packages/flow/src/controllers/events.controller",
+      "packages/flow/src/controllers/fills.controller",
+      "packages/flow/src/controllers/forms.controller",
+      "packages/flow/src/controllers/graphs.controller",
+      "packages/flow/src/controllers/node-form-rules.controller",
+      "packages/flow/src/controllers/node-runs.controller",
+      "packages/flow/src/controllers/nodes.controller",
+      "packages/flow/src/controllers/policies.controller",
+      "packages/flow/src/controllers/questions.controller",
+      "packages/flow/src/controllers/runs.controller",
+      "packages/flow/src/controllers/scopes.controller",
+      "packages/flow/src/controllers/signal.controller",
+      "packages/flow/src/controllers/tasks.controller",
+      "packages/flow/src/controllers/transition-effects.controller",
+      "packages/flow/src/flow-analytics.service",
+      "packages/flow/src/flow-design.service",
+      "packages/flow/src/flow-forms.service",
+      "packages/flow/src/flow-policy.service",
+      "packages/flow/src/flow-runtime.service"
+    ],
+    "packages/flow/src/index.ts": [
+      "packages/flow/src/adapters",
+      "packages/flow/src/flow-analytics.service",
+      "packages/flow/src/flow-design.service",
+      "packages/flow/src/flow-forms.service",
+      "packages/flow/src/flow-policy.service",
+      "packages/flow/src/flow-runtime.service",
+      "packages/flow/src/flow.module",
+      "packages/flow/src/row-utils",
+      "packages/flow/src/tokens",
+      "packages/flow/src/types",
+      "packages/flow/src/validation"
+    ],
+    "packages/flow/src/row-utils.ts": ["@nestjs/common"],
+    "packages/flow/src/tokens.ts": [],
+    "packages/flow/src/types.ts": [],
+    "packages/flow/src/validation.ts": ["@nestjs/common", "zod"],
+    "packages/flow/test/integration/flow.database.spec.ts": [
+      "@nestjs/testing",
+      "@stynx/data",
+      "packages/data/test/support/postgres",
+      "pg"
+    ],
+    "packages/flow/test/unit/route-contracts.spec.ts": [
+      "@stynx/auth",
+      "@stynx/backend",
+      "packages/flow/src/controllers/agent-rules.controller",
+      "packages/flow/src/controllers/analytics.controller",
+      "packages/flow/src/controllers/answers.controller",
+      "packages/flow/src/controllers/edges.controller",
+      "packages/flow/src/controllers/events.controller",
+      "packages/flow/src/controllers/fills.controller",
+      "packages/flow/src/controllers/forms.controller",
+      "packages/flow/src/controllers/graphs.controller",
+      "packages/flow/src/controllers/node-form-rules.controller",
+      "packages/flow/src/controllers/node-runs.controller",
+      "packages/flow/src/controllers/nodes.controller",
+      "packages/flow/src/controllers/policies.controller",
+      "packages/flow/src/controllers/questions.controller",
+      "packages/flow/src/controllers/runs.controller",
+      "packages/flow/src/controllers/scopes.controller",
+      "packages/flow/src/controllers/signal.controller",
+      "packages/flow/src/controllers/tasks.controller",
+      "packages/flow/src/controllers/transition-effects.controller",
+      "packages/flow/src/controllers/waivers.controller",
+      "reflect-metadata"
+    ],
+    "packages/flow/test/unit/validation-and-regression.spec.ts": [
+      "@nestjs/common",
+      "node:fs",
+      "node:path",
+      "packages/flow/src/adapters",
+      "packages/flow/src/flow-design.service",
+      "packages/flow/src/validation"
     ],
     "packages/health/src/health.controller.ts": [
       "@nestjs/common",

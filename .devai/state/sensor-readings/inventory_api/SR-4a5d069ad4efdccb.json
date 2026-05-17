@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-4a5d069ad4efdccb",
+  "sensor": {
+    "name": "inventory:api",
+    "kind": "inventory_api",
+    "version": "1.0.0"
+  },
+  "timestamp": "2026-05-17T21:07:02.599Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense-readings-rebuild --repo-root . (synthesized from .devai/state/sensors/inventory_api/api-map.json)",
+  "command_hash": "832ca8164bb8c985178f664c4ceaa746beb5c18a7509206ac867260bafd03ec5",
+  "tier": "L0",
+  "evidence_path": ".devai/state/sensors/inventory_api/api-map.json",
+  "findings": [
+    {
+      "severity": "info",
+      "code": "REBUILT_FROM_BODY",
+      "message": "SensorReading synthesized post-hoc from an existing body file by `devai sense-readings-rebuild` (Phase 21.E). Findings + metrics from the original sensor run are not preserved."
+    }
+  ]
+}

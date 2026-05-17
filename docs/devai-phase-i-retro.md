@@ -522,3 +522,79 @@ After U3, stynx is in pure maintenance steady-state. Three buckets, none adoptio
 3. **Reactive on future DEVAI phases**: if and when stynx surfaces a new D-A gap during routine framework use, file it and a Phase 26 brief absorbs it. Otherwise: nothing.
 
 **Pilot status: adoption complete, all D-A entries closed, steady-state confirmed.**
+
+## 14. Post-trilogy verification refresh (U4, 2026-05-17)
+
+**DEVAI Phases 26 + 27 + 28 (the substrate-expansion trilogy) closed at `bc5e4a4`** (D-82), shipping 28 new sensor kinds + cell mappings across 34 sub-batches (10 + 11 + 7 sensors with framing + closeout). Stynx ran U4 immediately to verify cell population.
+
+### Headline number
+
+| Skill                          | Pre-trilogy (U3) | Post-trilogy (U4) | Delta      |
+| ------------------------------ | ---------------- | ----------------- | ---------- |
+| `SKILL-compute-scorecard` PASS | 4/45             | **19/45**         | **+15**    |
+| FAIL                           | 1                | 8                 | +7         |
+| REVIEW                         | 3                | 8                 | +5         |
+| UNKNOWN                        | 36               | 9                 | -27        |
+| N/A                            | 1                | 1                 | 0          |
+| Overall verdict                | YELLOW (REVIEW)  | RED (FAIL)        | downgraded |
+
+The RED is **honest signal, not regression**: 27 cells flipped from UNKNOWN (no measurement) to actual verdicts; 7 of those were FAIL because the trilogy sensors found real issues that were always there but never measured. Pre-trilogy stynx's overall verdict was REVIEW because nobody was looking.
+
+### Current scorecard
+
+```
+      T1   T2   T3   T4   T5   T6   T7   T8   T9
+F1     ·    P    ·    F    F    R    F    F    P      ← spec
+F2     P    P    P    ·    R    ·    ·    P    P      ← plant
+F3     F    R    R    R    P    P    P    P    ·      ← observation
+F4     R    R    P    P   N/A   P    ·    P    ·      ← inventory
+F5     P    P    F    P    F    R    P    ·    F      ← harness
+
+· = unknown   R = review   P = pass   F = fail   N/A = not applicable
+```
+
+Overall: **RED (FAIL)** — every substrate has at least one signal; F1, F3, F5 each carry at least one FAIL.
+
+### What the 8 FAILs surface
+
+| Cell  | Sensor                     | What's wrong                                                                                                                                               | Fix surface                                                                            |
+| ----- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| F1×T4 | `spec_alignment`           | INV-FLOW-002, INV-FLOW-003 reference `packages/flow/src/**` paths that don't exist                                                                         | Stynx: delete or fix the FLOW invariants (pre-pilot artifacts from `833f307`)          |
+| F1×T5 | `spec_idiomaticity`        | Domain `FLOW` not in `.devai/config/domains.json` + 3 FLOW invariants reference unresolvable anchors                                                       | Stynx: add FLOW to taxonomy OR delete FLOW invariants                                  |
+| F1×T7 | `spec_performance_targets` | 0 perf invariants, 0 perf use-cases (but probes present)                                                                                                   | Stynx: author `INV-PERF-001` OR mark probes' perf semantics in use-cases               |
+| F1×T8 | `spec_robustness_targets`  | 0 invariants of `type:error_semantics`, no error-contract files                                                                                            | Stynx: author `INV-ERROR-001` OR document error contracts                              |
+| F3×T1 | `unit_test`                | `pnpm test` fails at workspace root because `@stynx-internal/migration-linter#test` exits 1                                                                | Stynx-only engineering: fix or skip migration-linter test                              |
+| F5×T3 | `harness_coherence`        | `actions/checkout` pinned to both v4 and v6; `actions/setup-node` v4 + v6; `pnpm/action-setup` v4 + v5; `actions/upload-artifact` v4 + v7 across workflows | Stynx: normalize action versions across workflows                                      |
+| F5×T5 | `harness_idiomaticity`     | No composite actions, no reusable workflows, no cache action usage                                                                                         | Stynx: extract common steps into composite actions, add dep cache                      |
+| F5×T9 | `harness_green_main`       | Main branch success rate 58% over last 50 runs, below the 80% review threshold                                                                             | Stynx: investigate failing main runs; likely the migration-linter test issue cascading |
+
+None of these are pilot work — they are real engineering improvements the trilogy's new sensors surface. The trilogy is doing exactly what was promised.
+
+### New D-A entries surfaced during U4
+
+| ID     | Surfaced in | One-line description                                                                                                                                                                                                                                                                                              |
+| ------ | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D-A-26 | U4          | `sense-spec-idiomaticity` crashes with `ENOENT: docs/glossary/domains.json` when adopter's domains file is elsewhere (stynx's lives at `.devai/config/domains.json`). Need to either honor the existing `--domains` flag in the default search path, or fall back to `.devai/config/domains.json` before failing. |
+| D-A-27 | U4          | `sense-harness-robustness` calls `gh run list --json attempts` but the actual gh field name is `attempt` (singular). Sensor errors out with `Unknown JSON field: "attempts"`. F5×T8 stays UNKNOWN until fixed.                                                                                                    |
+| D-A-28 | U4          | `sense-migrate-check` defaults to `db/migrations` only; stynx (and likely most adopters) split migrations across multiple dirs (`packages/data/migrations/platform/`, `reference/api/migrations/`, `domain/<module>/db/`). Needs `--migration-dirs` flag analogous to `sense-data-model` + pack config support.   |
+| D-A-29 | U4          | `sense-test-weakening` emits `fatal: path '...' exists on disk, but not in 'HEAD~1'` lines to stdout for files added in the latest commit. Cosmetic noise — should be silenced or routed to stderr; doesn't affect the PASS verdict but pollutes the human-readable output.                                       |
+
+### Cell-classifier verdict-equality verification (25.B regression check)
+
+Both `SKILL-compute-scorecard` and `SKILL-assess-state` returned **19 PASS + 8 FAIL + 8 REVIEW + 9 UNKNOWN + 1 N/A** — identical 45-cell distributions. The shared classifier extracted in Phase 25.B continues to work cleanly even with 28 new sensor kinds added across the trilogy.
+
+### Updated D-A register at U4 close
+
+| ID              | Status    | Notes                                                       |
+| --------------- | --------- | ----------------------------------------------------------- |
+| D-A-1 to D-A-25 | ✅ closed | Across Phases 20-25 (per §3, §10-§13)                       |
+| D-A-26          | 🆕 open   | U4 — sense-spec-idiomaticity ENOENT on missing domains.json |
+| D-A-27          | 🆕 open   | U4 — sense-harness-robustness wrong gh JSON field           |
+| D-A-28          | 🆕 open   | U4 — sense-migrate-check needs --migration-dirs             |
+| D-A-29          | 🆕 open   | U4 — sense-test-weakening cosmetic stdout noise             |
+
+### Trilogy verdict
+
+**The substrate-expansion trilogy did exactly what it promised.** 27 cells flipped from structurally-unknown to measured. The framework moved from "we don't know how good your repo is" to "here's an 8-failure burn-down list." Every failure is actionable. Every REVIEW is a productive nudge.
+
+**Pilot status: adoption complete, framework structurally complete, scorecard populated.** Phase 29 candidates are now: the 4 newly-filed D-A entries (D-A-26/27/28/29) + the 4 hard residuals from the earlier Phase 29 inventory + whatever surfaces if stynx acts on the FAIL recommendations.

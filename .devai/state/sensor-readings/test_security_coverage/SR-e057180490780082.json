@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-e057180490780082",
+  "sensor": {
+    "name": "test-security-coverage",
+    "kind": "test_security_coverage"
+  },
+  "timestamp": "2026-05-17T21:05:14.507Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense-test-security-coverage",
+  "command_hash": "8a34e022880a8a30a8c1e4e26c7ed4d58462282cb9608bcef551a4ba33d02200",
+  "tier": "L0",
+  "findings": [],
+  "metrics": {
+    "test_files": 59,
+    "security_tests": 22,
+    "security_pct": 37.29,
+    "threshold_pass": 5,
+    "threshold_review": 2
+  }
+}

@@ -6,13 +6,13 @@
     "kind": "inventory_coverage",
     "version": "1.0.0"
   },
-  "timestamp": "2026-05-17T00:25:53.679Z",
+  "timestamp": "2026-05-17T21:03:38.311Z",
   "status": "review",
   "deterministic": true,
   "command": "devai sense coverage --repo-root .",
   "command_hash": "ce8408d76cac9f9dac515a2998bee4c3928973f7e1cedf1b0d60eb06b6fe03b2",
   "tier": "L0",
-  "duration_ms": 6,
+  "duration_ms": 7,
   "evidence_path": ".devai/state/sensors/inventory_coverage/coverage-matrix.json",
   "findings": [
     {

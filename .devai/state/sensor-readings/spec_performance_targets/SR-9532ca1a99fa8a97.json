@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-9532ca1a99fa8a97",
+  "sensor": {
+    "name": "spec-performance-targets",
+    "kind": "spec_performance_targets"
+  },
+  "timestamp": "2026-05-17T21:03:53.088Z",
+  "status": "fail",
+  "deterministic": true,
+  "command": "devai sense-spec-performance-targets",
+  "command_hash": "5368e5909e1d93d0f00e7a1437bfbeff5f05f9ec5bb1463a3be513637abc3e02",
+  "tier": "L0",
+  "findings": [
+    {
+      "severity": "error",
+      "code": "SPEC_PERFORMANCE_NO_TARGETS",
+      "message": "No perf invariants, no perf use-cases, no perf-relevant code areas detected."
+    }
+  ],
+  "metrics": {
+    "perf_invariants": 0,
+    "perf_use_cases": 0,
+    "targets_total": 0,
+    "perf_relevant_code_detected": 0
+  }
+}
