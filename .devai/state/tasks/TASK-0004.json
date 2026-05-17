@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "TASK-0004",
+  "title": "Remove unsupported /meta block from docs/architecture/trace.json (re-add of TASK-0002 — 24.C unblocks loop)",
+  "discipline": "architect",
+  "target_modules": ["MOD-core"],
+  "target_substrates": ["F2"],
+  "db_isolation": "database",
+  "description": "Spec-validate-all flags 3 errors on docs/architecture/trace.json /meta: additionalProperties. The trace.schema.json forbids the meta key. Closure: delete the 'meta' block (lines 4-8 in trace.json). Verify: devai spec-validate-all --human shows trace 0 error(s).",
+  "status": "cancelled",
+  "iteration_count": 0,
+  "created_at": "2026-05-17T01:18:46.018Z"
+}

@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-05-17T00:28:37.518Z",
+  "generatedAt": "2026-05-17T01:18:09.378Z",
   "dialect": "postgres",
   "sourceRepo": ".",
   "tables": [
@@ -37,7 +37,10 @@
         {
           "name": "notes",
           "type": "text NULL",
-          "nullable": true
+          "nullable": true,
+          "pii_class": "incidental_pii",
+          "legal_basis": "legitimate_interest",
+          "retention": "P1Y"
         },
         {
           "name": "created_at",
@@ -385,18 +388,26 @@
         {
           "name": "title",
           "type": "text NOT",
-          "nullable": true
+          "nullable": true,
+          "pii_class": "direct_pii",
+          "legal_basis": "legitimate_interest",
+          "retention": "until_account_closure"
         },
         {
           "name": "email",
           "type": "citext NOT",
           "nullable": true,
-          "pii_class": "contact"
+          "pii_class": "contact",
+          "legal_basis": "contract",
+          "retention": "until_account_closure"
         },
         {
           "name": "external_ref",
           "type": "text NULL",
-          "nullable": true
+          "nullable": true,
+          "pii_class": "direct_pii",
+          "legal_basis": "contract",
+          "retention": "until_account_closure"
         },
         {
           "name": "status",
@@ -474,22 +485,34 @@
         {
           "name": "detail",
           "type": "text NOT",
-          "nullable": true
+          "nullable": true,
+          "pii_class": "direct_pii",
+          "legal_basis": "legitimate_interest",
+          "retention": "until_account_closure"
         },
         {
           "name": "detail2",
           "type": "text NULL",
-          "nullable": true
+          "nullable": true,
+          "pii_class": "direct_pii",
+          "legal_basis": "legitimate_interest",
+          "retention": "until_account_closure"
         },
         {
           "name": "region",
           "type": "text NOT",
-          "nullable": true
+          "nullable": true,
+          "pii_class": "incidental_pii",
+          "legal_basis": "legitimate_interest",
+          "retention": "until_account_closure"
         },
         {
           "name": "code",
           "type": "text NOT",
-          "nullable": true
+          "nullable": true,
+          "pii_class": "direct_pii",
+          "legal_basis": "legitimate_interest",
+          "retention": "until_account_closure"
         },
         {
           "name": "locale",
@@ -887,7 +910,10 @@
         {
           "name": "created_by_user_id",
           "type": "uuid NULL",
-          "nullable": true
+          "nullable": true,
+          "pii_class": "subject_link",
+          "legal_basis": "contract",
+          "retention": "until_account_closure"
         },
         {
           "name": "code",
@@ -1063,7 +1089,10 @@
         {
           "name": "external_ref",
           "type": "text NULL",
-          "nullable": true
+          "nullable": true,
+          "pii_class": "incidental_pii",
+          "legal_basis": "legitimate_interest",
+          "retention": "P1Y"
         },
         {
           "name": "created_at",

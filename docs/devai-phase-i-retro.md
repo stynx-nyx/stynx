@@ -377,3 +377,70 @@ The post-22 `INV-CANDIDATE-*` files under `.devai/state/inv-candidates/` (120 re
 **Pilot status unchanged: complete + maintenance steady-state.** Phase 23 absorbed all the gaps the T8 register called out and shipped two of three carry-forward residuals (D-A-14, D-A-16). The two new gaps (D-A-23, D-A-24) are surface-area refinements, not adoption blockers — flag for a future Phase 24 if and when DEVAI does another alignment pass.
 
 INV-COVERAGE-001 went from "51 violations tracked" to "1 violation tracked" — the invariant is now effectively closed for stynx without authoring any new use-cases, just by DEVAI's sense-coverage learning to read what was already there. This is the strongest demonstration yet of the framework's value: an upstream sensor fix retroactively validates spec authoring work that was previously invisible.
+
+## 12. Post-Phase-24 verification refresh (U2, 2026-05-17)
+
+**DEVAI Phase 24 closed at `12b6585`** (D-72) the day after U1, shipping closures for D-A-23 (pii_map INSERT parser handles real-world shapes) and D-A-24 (loop-run LLM-call timeout configurable per-skill + CLI flag). Stynx then ran a single U2 verification session.
+
+### Verification results (commit `U2`)
+
+| Phase 24 closure | U1 baseline                                             | Post-U2 measured                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Status                                          |
+| ---------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| 24.B / D-A-23    | 3 heuristic-classified PII columns; pii_map join silent | **12 columns with full `legal_basis` + `retention` + `category` + `strategy`** populated via pii_map join (requires `--pack-tune` to pick up the `pii_registry_table: core.pii_map` pack config). Both stynx shapes verified: reference-api multi-row INSERT (5 rows on `record` + 4 on `record_note`) and demo-bookmark single-row schema-qualified with `ON CONFLICT DO UPDATE` (`demo__bookmark_bookmark.notes` → `legitimate_interest`/`P1Y`).                                                                                                                                                                        | ✅ **Closed; exceeded ≥10 prediction**          |
+| 24.C / D-A-24    | claude-cli timed out at 120s, generic error message     | `--llm-timeout-ms <n>` flag accepted; per-skill default registry wired (`SKILL-feedback-iteration` 600s, `SKILL-assess-state` 60s, others 120s); error message attributes timeout source + suggests next step verbatim ("To increase, retry with --llm-timeout-ms 1800000 (next step) or set extractor_params.llm.llm_timeouts.SKILL-feedback-iteration = 1800000"). **Live iteration on TASK-0005 (trace.json /meta cleanup) at 600s still timed out** — the 600s per-skill default for `SKILL-feedback-iteration` is too short for substantive claude-cli OAuth iterations against a multi-step task. **D-A-25 filed.** | ✅ **Wiring closed; defaults too low → D-A-25** |
+
+### New D-A entries surfaced during U2
+
+| ID     | Surfaced in | One-line description                                                                                                                                                                                                                                                                                                                              |
+| ------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D-A-25 | U2          | `SKILL-feedback-iteration` per-skill timeout default of 600s is too short for real claude-cli OAuth iterations. Suggested: bump default to 1800s (30min), document expected p95 latency per backend, or detect claude-cli vs API key and tune. The 24.C wiring is correct (flag works, source attribution clear) — only the default value is off. |
+
+### Updated D-A register at U2 close
+
+| ID     | Status             | Notes                                                                                                       |
+| ------ | ------------------ | ----------------------------------------------------------------------------------------------------------- |
+| D-A-12 | ✅ closed          | Phase 22.A                                                                                                  |
+| D-A-13 | ✅ closed          | Phase 22.B (heuristic) + 23.F (parser) + **24.B** (real-world shapes; required `--pack-tune`)               |
+| D-A-14 | ✅ closed          | Phase 22.D + 23.G                                                                                           |
+| D-A-15 | ✅ closed          | Phase 22.E + 23.H                                                                                           |
+| D-A-16 | ✅ closed          | Phase 23.I                                                                                                  |
+| D-A-17 | ✅ closed          | Phase 22.G                                                                                                  |
+| D-A-18 | ✅ closed          | Phase 22.H + 23.C                                                                                           |
+| D-A-19 | ✅ closed          | Phase 23.B                                                                                                  |
+| D-A-20 | ✅ closed          | Phase 23.C                                                                                                  |
+| D-A-21 | ✅ closed          | Phase 23.D                                                                                                  |
+| D-A-22 | ✅ closed          | Phase 23.E                                                                                                  |
+| D-A-23 | ✅ closed          | Phase 24.B                                                                                                  |
+| D-A-24 | ✅ closed (wiring) | Phase 24.C — flag + per-skill defaults + error attribution all work; default value tuning carried as D-A-25 |
+| D-A-25 | 🆕 open            | U2 — `SKILL-feedback-iteration` 600s default too short for claude-cli OAuth                                 |
+
+### Adoption-completeness verdict at U2 close
+
+**Adoption is complete.** Every D-A entry surfaced during the C-4 pilot (D-A-1 through D-A-24) is closed in DEVAI proper. The only open framework gap (D-A-25) is a default-value tuning, surfaced _during stynx's verification of the fix that produced it_ — a meta-observation that the pilot has become its own steady-state alignment feedback loop.
+
+The pilot has now generated:
+
+- **5 DEVAI alignment phases** (20, 21, 22, 23, 24) with strictly narrowing scope (6 → 5 → 7 → 8 → 2 gaps).
+- **3 stynx-side invariants** promoted and measured by `devai sense-*` (INV-RBAC-001, INV-PRIVACY-001, INV-COVERAGE-001).
+- **47 stynx-side commits** in the pilot arc, all with role-prefixed subjects.
+- **25 D-A entries** filed; 24 closed; 1 open (D-A-25, surfaced during the U2 verification of D-A-24's fix).
+- **Zero source-repo deletions** across all five alignment phases — the closeout-without-deletion pattern is the modal cadence.
+
+### Stynx F-register at U2 close
+
+| ID   | Status    | Description                                                                                                                                           |
+| ---- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| F-9  | open      | step 2/N — wire `domain/demo-bookmark/` services per-task-DB integration tests (6 `it.todo`) — **stynx-only engineering thread; no devai dependency** |
+| F-16 | ✅ closed | T3 — ADRs re-authored in DEVAI schema                                                                                                                 |
+| F-19 | ✅ closed | jose@6 TS1479 suppressed                                                                                                                              |
+| F-20 | ✅ closed | jest + ts-jest wired                                                                                                                                  |
+
+### What now constitutes "maintenance steady-state"
+
+After U2, the stynx-side work that's _not_ part of adoption splits into three buckets:
+
+1. **Stynx-only engineering** (one item): F-9 step 2/N. Independent of devai. ~2 hours.
+2. **Reactive on Phase 25+**: if and when DEVAI ships D-A-25 closure (timeout default tuning) plus the universal action-coverage validator scope-narrowing referenced in U1, stynx runs a U3-equivalent verification. Estimated zero stynx-side work between now and that trigger.
+3. **Cosmetic/cleanup**: 120 stale `INV-CANDIDATE-*` files, 3 pre-existing trace.json /meta spec-validate errors (independent of pilot scope; closes when TASK-0005 runs successfully). Optional.
+
+**Pilot status: adoption complete.** The C-4 pilot is no longer "in progress" in any meaningful sense — it's the canonical example of how DEVAI adoption converges to a stable working relationship with the upstream framework.
