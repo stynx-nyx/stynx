@@ -26,5 +26,5 @@ The pre-pilot `docs/governance/{health, audit, compliance}` tree has been archiv
 ## How to participate
 
 - **Contributors**: see [CONTRIBUTING.md](CONTRIBUTING.md) for commit and PR conventions.
-- **Adopters considering DEVAI**: see [`../devai/docs/adopters/`](../devai/docs/adopters/) — stynx is the C-4 reference adopter; the [Phase A retro](docs/devai-phase-a-retro.md) and [Phase I retro](docs/devai-phase-i-retro.md) (when published) document our experience.
+- **Adopters considering DEVAI**: see [`../devai/docs/adopters/`](../devai/docs/adopters/) — stynx is the C-4 reference adopter; the [Phase A retro](docs/pilots/c-4/phase-a-retro.md) and [Phase I retro](docs/pilots/c-4/phase-i-retro.md) document our experience (full set under [`docs/pilots/c-4/`](docs/pilots/c-4/)).
 - **Anyone touching governance**: cite the relevant Constitution article in your commit message body. Per the C-4 pilot, DEVAI's framing wins in any conflict with stynx-legacy framing.

@@ -7,7 +7,7 @@
 **Stynx branch:** `codex/sgp-stynx-web-declarations`. Pilot commits added on top of pre-existing WIP; WIP files (`package.json`, `tools/tsconfig/angular18.json`, `scripts/verify-web-sourcemaps.mjs`) were not touched.
 **Inputs:** [`../devai-adoption-by-stynx.md`](../../../devai-adoption-by-stynx.md) (the kickoff brief, sibling to both repos).
 
-This is the C-4 pilot's terminal retro. Phase A's retro at [`docs/devai-phase-a-retro.md`](devai-phase-a-retro.md) and Phase H's audit at [`docs/devai-phase-h-audit.md`](devai-phase-h-audit.md) are its detailed companions; this file synthesizes across all nine phases.
+This is the C-4 pilot's terminal retro. Phase A's retro at [`phase-a-retro.md`](phase-a-retro.md) and Phase H's audit at [`phase-h-audit.md`](phase-h-audit.md) are its detailed companions; this file synthesizes across all nine phases.
 
 ## 1. What landed (full pilot commit log)
 
