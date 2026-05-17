@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-4f2b0b1fe6ca8729",
+  "sensor": {
+    "name": "trace-resolve",
+    "kind": "trace_resolution"
+  },
+  "timestamp": "2026-05-17T23:24:53.739Z",
+  "status": "review",
+  "deterministic": true,
+  "command": "devai sense trace-resolve --trace docs/architecture/trace.json --invariants-dir docs/architecture/invariants",
+  "command_hash": "eb15f866753b8dd812202cd0661a9695622f7a1b8e58875eb40f66fe5c151c52",
+  "findings": [
+    {
+      "severity": "warning",
+      "code": "untraced_invariant",
+      "message": "invariant INV-COVERAGE-001 has no trace entry"
+    },
+    {
+      "severity": "warning",
+      "code": "untraced_invariant",
+      "message": "invariant INV-ERROR-001 has no trace entry"
+    },
+    {
+      "severity": "warning",
+      "code": "untraced_invariant",
+      "message": "invariant INV-PERF-001 has no trace entry"
+    },
+    {
+      "severity": "warning",
+      "code": "untraced_invariant",
+      "message": "invariant INV-RBAC-001-allowlist has no trace entry"
+    }
+  ],
+  "metrics": {
+    "unresolved_trace_entries": 0,
+    "missing_test_paths": 0,
+    "untraced_invariants": 4,
+    "invariants_total": 9,
+    "traced_invariants": 5
+  }
+}

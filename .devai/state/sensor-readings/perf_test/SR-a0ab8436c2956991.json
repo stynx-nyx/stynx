@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-a0ab8436c2956991",
+  "sensor": {
+    "name": "perf-test",
+    "kind": "perf_test"
+  },
+  "timestamp": "2026-05-17T23:25:33.414Z",
+  "status": "unknown",
+  "deterministic": false,
+  "command": "pnpm test:perf",
+  "command_hash": "43e3d78e937c73fd91a0e9ded708fb5757600b54a7655fbfa3ecd91813d516d0",
+  "tier": "L1",
+  "findings": [
+    {
+      "severity": "info",
+      "code": "PERF_TEST_NO_PERF_SCRIPT",
+      "message": "No 'test:perf' script in package.json — cell unmeasurable."
+    }
+  ],
+  "metrics": {
+    "script_name": "test:perf",
+    "script_present": false
+  }
+}

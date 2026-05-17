@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-283a94d579482198",
+  "sensor": {
+    "name": "inventory:routes",
+    "kind": "inventory_routes",
+    "version": "1.0.0"
+  },
+  "timestamp": "2026-05-17T23:24:54.838Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense-readings-rebuild --repo-root . (synthesized from .devai/state/sensors/inventory_routes/routes-react.json)",
+  "command_hash": "bc816f30ee9cba9ca1bb0f33c0c274d6ede9c59649f3b986b3dd1a5ff161c31a",
+  "tier": "L0",
+  "evidence_path": ".devai/state/sensors/inventory_routes/routes-react.json",
+  "findings": [
+    {
+      "severity": "info",
+      "code": "REBUILT_FROM_BODY",
+      "message": "SensorReading synthesized post-hoc from an existing body file by `devai sense-readings-rebuild` (Phase 21.E). Findings + metrics from the original sensor run are not preserved."
+    }
+  ]
+}

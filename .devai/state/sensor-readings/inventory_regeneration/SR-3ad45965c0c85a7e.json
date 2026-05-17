@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-3ad45965c0c85a7e",
+  "sensor": {
+    "name": "sense-readings-rebuild",
+    "kind": "inventory_regeneration"
+  },
+  "timestamp": "2026-05-17T23:24:54.840Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense-readings-rebuild",
+  "command_hash": "d748ad10f37b330d43ae71e4e47578fdc3b7b03e89efbf4ed14a50148d9a3e70",
+  "tier": "L0",
+  "findings": [],
+  "metrics": {
+    "kinds_touched": 7,
+    "kinds_rebuilt": 2,
+    "kinds_up_to_date": 6,
+    "error_count": 0
+  }
+}

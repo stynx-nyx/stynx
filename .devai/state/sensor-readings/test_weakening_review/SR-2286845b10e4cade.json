@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-2286845b10e4cade",
+  "sensor": {
+    "name": "test-weakening",
+    "kind": "test_weakening_review"
+  },
+  "timestamp": "2026-05-17T23:24:54.383Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense test-weakening --base-ref HEAD~1",
+  "command_hash": "31ac18f50029d734c11200a0fe728bcba3b34138f1133d2d0cf81d7d065188a1",
+  "findings": [],
+  "metrics": {
+    "files_checked": 8,
+    "drift_count": 0
+  }
+}

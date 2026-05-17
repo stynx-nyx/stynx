@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-cd50ffbc08c57578",
+  "sensor": {
+    "name": "harness-robustness",
+    "kind": "harness_robustness"
+  },
+  "timestamp": "2026-05-17T23:24:58.164Z",
+  "status": "pass",
+  "deterministic": false,
+  "command": "gh run list --branch main --json conclusion,attempt --limit 100",
+  "command_hash": "9437543d7fdd3bc552887b8d5911ab941646347b6a37415a526ace4660f2721b",
+  "tier": "L2",
+  "findings": [],
+  "metrics": {
+    "run_count": 100,
+    "flaky_runs": 3,
+    "flakiness_pct": 3,
+    "threshold_pass": 5,
+    "threshold_review": 15
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-68abf21db6d7863b",
+  "sensor": {
+    "name": "security-scan",
+    "kind": "security_scan"
+  },
+  "timestamp": "2026-05-17T23:25:32.830Z",
+  "status": "pass",
+  "deterministic": false,
+  "command": "npm audit --json",
+  "command_hash": "dff7bd39e6f7fa39273c7878e5efb27d2ad23def1f3e68f187ac792565556283",
+  "tier": "L0",
+  "findings": [],
+  "metrics": {
+    "tool": "npm",
+    "total_vulnerabilities": 0,
+    "critical": 0,
+    "high": 0,
+    "moderate": 0,
+    "low": 0,
+    "info": 0,
+    "pass_max_high": 0,
+    "review_max_high": 5
+  }
+}

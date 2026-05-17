@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-826d70bac7b64e60",
+  "sensor": {
+    "name": "inv-contracts",
+    "kind": "contract_validation"
+  },
+  "timestamp": "2026-05-17T23:24:52.737Z",
+  "status": "review",
+  "deterministic": true,
+  "command": "devai inv-contracts",
+  "command_hash": "28ce114eb61b3c9bbcdfe7a3ff8e4a42858f22424252b3930e15dde9d873aa0d",
+  "tier": "L0",
+  "findings": [
+    {
+      "severity": "info",
+      "code": "CONTRACT_VALIDATION_NO_SCHEMAS",
+      "message": "Adopter has no *.schema.json files under docs/schemas/. Cell stays REVIEW."
+    }
+  ],
+  "metrics": {
+    "schema_count": 0,
+    "failing_count": 0,
+    "regen_failing_count": 0
+  }
+}
