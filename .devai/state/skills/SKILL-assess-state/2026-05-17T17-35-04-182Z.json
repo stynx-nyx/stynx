@@ -1,0 +1,19 @@
+{
+  "skill_id": "SKILL-assess-state",
+  "status": "pass",
+  "evidence": {
+    "schemaVersion": "1.0.0",
+    "id": "AS-20260517T173504-001",
+    "generated_at": "2026-05-17T17:35:04.178Z",
+    "scorecard_id": "SC-20260517T173504-001",
+    "previous_assessment_id": null,
+    "narrative": "Overall: RED. 4/45 cells passing. 1 cell(s) failing. 3 cell(s) in review. 36 cell(s) unknown (sensor coverage gap). Your scorecard is heavily UNKNOWN. This usually means correctness sensors (sense-lint, sense-test, sense-build, sense-type-check) aren't emitting SensorReadings yet. To populate the cell matrix, wrap your existing test/lint/build scripts as `devai sense-* --emit-reading` invocations (one per kind) and re-run this assessment. See docs/adopters/first-introspection.md#correctness-sensors for the recommended wrapper pattern. Per-cell signals:\n  - F2×T5 REVIEW: (no review findings cited)\n  - F3×T1 FAIL: integration_test → exit=254 (no findings); unit_test → • turbo 2.9.6\n ERROR  @stynx-internal/migration-linter#test: command (/Users/aarusso/Development/stech/stynx/tools/migration-linter) /Users/aarusso/.nvm/versio…\n  - F4×T1 REVIEW: COVERAGE_NO_USE_CASES, COVERAGE_PARTIAL_USE_CASE_LINKING, COVERAGE_REQUIRES_ROUTES\n  - F4×T2 REVIEW: COVERAGE_NO_USE_CASES, COVERAGE_PARTIAL_USE_CASE_LINKING, COVERAGE_REQUIRES_ROUTES",
+    "deltas": [],
+    "backlog_actions": {
+      "additions": [],
+      "completions": [],
+      "deprioritizations": []
+    },
+    "recommended_priorities": []
+  }
+}

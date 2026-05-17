@@ -1,0 +1,1 @@
+export const FLOW_DOMAIN_ADAPTERS = Symbol('FLOW_DOMAIN_ADAPTERS');

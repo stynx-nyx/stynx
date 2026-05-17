@@ -1,10 +1,14 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "meta": {
-    "authored_in": "C-4 Session S8 (post-21 stynx adoption pilot, 2026-05-16)",
-    "purpose": "Map stynx-side invariants to the test suites that verify them. Required by devai inv-adherence-reverse to compute orphan plant surfaces (code that no invariant covers).",
-    "tests_pending": "INV-RBAC-001 and INV-PRIVACY-001 don't yet have dedicated test coverage. The promotions in Phase B established the rules; verification tests are a future Inspector deliverable. Until then, both invariants' `tests` arrays are empty — adherence-reverse will treat them as effectively non-verified."
+    "last_updated": "2026-05-17T16:05:48-03:00",
+    "completeness": {
+      "min_invariants_with_tests_ratio": 0,
+      "min_must_invariants_with_tests_ratio": 0,
+      "require_doc_links": true,
+      "require_test_links": false
+    }
   },
   "invariants": [
     {
@@ -21,6 +25,99 @@
         { "doc": "docs/architecture/invariants/INV-PRIVACY-001.json", "anchor": "statement" }
       ],
       "tests": []
+    },
+    {
+      "id": "INV-FLOW-001",
+      "docs": [
+        { "doc": "docs/architecture/invariants/INV-FLOW-001.json", "anchor": "statement" },
+        { "doc": "docs/architecture/flow.md", "anchor": "tenant-and-rls-model" }
+      ],
+      "tests": [
+        {
+          "suite": "int",
+          "path": "packages/flow/test/integration/flow.database.spec.ts",
+          "names": ["INV-FLOW-001"],
+          "assertions": [
+            "Flow migration applies from an empty database",
+            "all Flow tables have forced RLS",
+            "soft-deletable Flow tables have archive mirrors",
+            "tenant A cannot read tenant B Flow rows"
+          ],
+          "mode": "gray_box"
+        }
+      ],
+      "code_areas": [
+        "packages/data/migrations/platform/*flow*.sql",
+        "packages/data/src/schema/flow.ts",
+        "packages/flow/src/**"
+      ]
+    },
+    {
+      "id": "INV-FLOW-002",
+      "docs": [
+        { "doc": "docs/architecture/invariants/INV-FLOW-002.json", "anchor": "statement" },
+        { "doc": "docs/architecture/flow.md", "anchor": "generic-code-rule" },
+        { "doc": "docs/architecture/flow.md", "anchor": "domain-adapter-contract" }
+      ],
+      "tests": [
+        {
+          "suite": "unit",
+          "path": "packages/flow/test/unit/validation-and-regression.spec.ts",
+          "names": ["INV-FLOW-002"],
+          "assertions": [
+            "generic Flow backend source has no CMS or PORM domain imports",
+            "adapter errors are wrapped behind the generic Flow adapter contract"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages-web/angular-flow/test/unit/angular-flow-domain-neutrality.spec.ts",
+          "names": ["INV-FLOW-002"],
+          "assertions": [
+            "generic Angular Flow source has no CMS or PORM domain imports",
+            "host labels and links are supplied through extension points"
+          ],
+          "mode": "white_box"
+        }
+      ],
+      "code_areas": ["packages/flow/src/**", "packages-web/angular-flow/src/**"]
+    },
+    {
+      "id": "INV-FLOW-003",
+      "docs": [
+        { "doc": "docs/architecture/invariants/INV-FLOW-003.json", "anchor": "statement" },
+        { "doc": "docs/architecture/flow.md", "anchor": "event-ledger-versus-platform-audit" },
+        { "doc": "docs/operations/runbooks/flow.md", "anchor": "diagnose-adapter-errors" }
+      ],
+      "tests": [
+        {
+          "suite": "int",
+          "path": "packages/flow/test/integration/flow.database.spec.ts",
+          "names": ["INV-FLOW-003"],
+          "assertions": [
+            "workflow mutations append Flow events",
+            "Flow events cannot be updated or deleted",
+            "flow.events has no archive mirror"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/flow/test/unit/route-contracts.spec.ts",
+          "names": ["INV-FLOW-003"],
+          "assertions": [
+            "event endpoints are read-only",
+            "mutation routes are private, permissioned, audited, and idempotent where retryable"
+          ],
+          "mode": "white_box"
+        }
+      ],
+      "code_areas": [
+        "packages/data/migrations/platform/*flow*.sql",
+        "packages/flow/src/**",
+        "packages/audit/src/**"
+      ]
     }
   ]
 }

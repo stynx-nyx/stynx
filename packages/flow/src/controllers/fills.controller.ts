@@ -1,0 +1,63 @@
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx/auth';
+import { Audit, NoIdempotent } from '@stynx/backend';
+import { Idempotent } from '@stynx/idempotency';
+import { FlowFormsService } from '../flow-forms.service';
+
+@Controller('/flow/fills')
+@UseGuards(StynxAuthGuard, PermissionGuard)
+export class FlowFillsController {
+  constructor(private readonly forms: FlowFormsService) {}
+
+  @Permission('flow:read:runtime')
+  @ReadOnly()
+  @Get()
+  list(@Query() query: Record<string, unknown>) {
+    return this.forms.listFills(query);
+  }
+
+  @Permission('flow:read:runtime')
+  @ReadOnly()
+  @Get('/:id')
+  get(@Param('id') id: string) {
+    return this.forms.getFill(id);
+  }
+
+  @Permission('flow:execute:task')
+  @Audit({ action: 'flow.fill.update', entity: 'flow.fills' })
+  @NoIdempotent()
+  @Patch('/:id')
+  update(@Param('id') id: string, @Body() input: unknown) {
+    return this.forms.updateFill(id, input);
+  }
+
+  @Permission('flow:execute:task')
+  @Audit({ action: 'flow.fill.delete', entity: 'flow.fills' })
+  @Delete('/:id')
+  delete(@Param('id') id: string) {
+    return this.forms.deleteFill(id);
+  }
+
+  @Permission('flow:read:runtime')
+  @ReadOnly()
+  @Get('/:fillId/answers')
+  answers(@Param('fillId') fillId: string) {
+    return this.forms.listAnswers(fillId);
+  }
+
+  @Permission('flow:execute:task')
+  @Audit({ action: 'flow.answer.upsert', entity: 'flow.answers' })
+  @Idempotent('Idempotency-Key')
+  @Post('/:fillId/answers')
+  upsertAnswer(@Param('fillId') fillId: string, @Body() input: unknown) {
+    return this.forms.upsertAnswer(fillId, input);
+  }
+
+  @Permission('flow:execute:task')
+  @Audit({ action: 'flow.waiver.create', entity: 'flow.waivers' })
+  @Idempotent('Idempotency-Key')
+  @Post('/:fillId/waivers')
+  createWaiver(@Param('fillId') fillId: string, @Body() input: unknown) {
+    return this.forms.createFillWaiver(fillId, input);
+  }
+}

@@ -5,12 +5,12 @@
     "name": "type-check",
     "kind": "type_check"
   },
-  "timestamp": "2026-05-17T00:29:58.857Z",
+  "timestamp": "2026-05-17T17:33:20.484Z",
   "status": "pass",
   "deterministic": true,
   "command": "npx tsc --noEmit (per-package aggregate)",
   "command_hash": "e1a7f97399b437c594983599479a9c3a0f3854ff61ba7de641589117ea4709b9",
-  "duration_ms": 44255,
+  "duration_ms": 44485,
   "findings": [],
   "metrics": {
     "projects_total": 20,

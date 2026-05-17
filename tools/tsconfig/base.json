@@ -23,6 +23,7 @@
       "@stynx/core": ["../../packages/core/src/index.ts"],
       "@stynx/logging": ["../../packages/logging/src/index.ts"],
       "@stynx/health": ["../../packages/health/src/index.ts"],
+      "@stynx/flow": ["../../packages/flow/src/index.ts"],
       "@stynx/data": ["../../packages/data/src/index.ts"],
       "@stynx/i18n": ["../../packages/i18n/src/index.ts"],
       "@stynx/privacy": ["../../packages/privacy/src/index.ts"],
@@ -43,7 +44,8 @@
       "@stynx-web/angular-trash": ["../../packages-web/angular-trash/src/index.ts"],
       "@stynx-web/angular-storage": ["../../packages-web/angular-storage/src/index.ts"],
       "@stynx-web/angular-sessions": ["../../packages-web/angular-sessions/src/index.ts"],
-      "@stynx-web/angular-profile": ["../../packages-web/angular-profile/src/index.ts"]
+      "@stynx-web/angular-profile": ["../../packages-web/angular-profile/src/index.ts"],
+      "@stynx-web/angular-flow": ["../../packages-web/angular-flow/src/index.ts"]
     }
   }
 }

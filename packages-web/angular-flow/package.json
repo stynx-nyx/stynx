@@ -1,0 +1,54 @@
+{
+  "name": "@stynx-web/angular-flow",
+  "version": "0.1.0",
+  "description": "Angular workflow design and runtime components for stynx Flow",
+  "main": "dist/angular-flow/src/index.js",
+  "types": "dist/angular-flow/src/index.d.ts",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/angular-flow/src/index.d.ts",
+      "require": "./dist/angular-flow/src/index.js",
+      "default": "./dist/angular-flow/src/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist coverage",
+    "typecheck": "tsc -p tsconfig.spec.json --noEmit",
+    "lint": "eslint --config ../../tools/eslint-config/angular.mjs \"src/**/*.ts\"",
+    "test": "node --disable-warning=ExperimentalWarning --experimental-vm-modules ./node_modules/jest/bin/jest.js --config ./jest.config.cjs"
+  },
+  "dependencies": {
+    "@stynx-web/angular-auth": "workspace:*",
+    "@stynx-web/angular-ui": "workspace:*",
+    "@stynx-web/sdk": "workspace:*",
+    "rxjs": "^7.8.2"
+  },
+  "peerDependencies": {
+    "@angular/common": "^20.2.0",
+    "@angular/core": "^20.2.0",
+    "@angular/router": "^20.2.0"
+  },
+  "devDependencies": {
+    "@angular/common": "^21.2.10",
+    "@angular/compiler": "^21.2.10",
+    "@angular/compiler-cli": "^21.2.10",
+    "@angular/core": "^21.2.10",
+    "@angular/router": "^21.2.10",
+    "@jest/globals": "^30.3.0",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.6.0",
+    "jest": "^30.3.0",
+    "jest-environment-jsdom": "^30.3.0",
+    "jest-preset-angular": "^16.1.4",
+    "jsdom": "^29.0.2",
+    "ts-jest": "^29.4.9",
+    "typescript": "^6.0.3"
+  }
+}

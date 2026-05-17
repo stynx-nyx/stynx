@@ -1,0 +1,52 @@
+{
+  "name": "@stynx/flow",
+  "version": "0.1.0",
+  "description": "Tenant-scoped workflow design and runtime primitives for stynx",
+  "main": "dist/flow/src/index.js",
+  "types": "dist/flow/src/index.d.ts",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/flow/src/index.d.ts",
+      "require": "./dist/flow/src/index.js",
+      "default": "./dist/flow/src/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist coverage",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+    "test": "jest --config ./jest.config.cjs",
+    "test:int": "jest --config ./jest.integration.config.cjs"
+  },
+  "dependencies": {
+    "@stynx/auth": "workspace:*",
+    "@stynx/backend": "workspace:*",
+    "@stynx/core": "workspace:*",
+    "@stynx/data": "workspace:*",
+    "@stynx/idempotency": "workspace:*",
+    "zod": "^4.3.6"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^11.1.19",
+    "@nestjs/core": "^11.1.19",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@nestjs/platform-express": "^11.1.19",
+    "@nestjs/testing": "^11.1.19",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.6.0",
+    "jest": "^30.3.0",
+    "ts-jest": "^29.4.9",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.3"
+  }
+}
