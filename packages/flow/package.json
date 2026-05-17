@@ -31,7 +31,7 @@
     "@stynx/core": "workspace:*",
     "@stynx/data": "workspace:*",
     "@stynx/idempotency": "workspace:*",
-    "zod": "^4.3.6"
+    "zod": "^4.4.3"
   },
   "peerDependencies": {
     "@nestjs/common": "^11.1.19",

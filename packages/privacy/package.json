@@ -31,7 +31,7 @@
     "@stynx/storage": "workspace:*",
     "jszip": "^3.10.1",
     "yaml": "^2.8.3",
-    "zod": "^4.3.6"
+    "zod": "^4.4.3"
   },
   "peerDependencies": {
     "@nestjs/common": "^11.1.19",
