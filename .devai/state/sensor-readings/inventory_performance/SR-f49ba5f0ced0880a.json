@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-f49ba5f0ced0880a",
+  "sensor": {
+    "name": "inventory-performance",
+    "kind": "inventory_performance"
+  },
+  "timestamp": "2026-05-17T22:19:21.545Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense-inventory-performance",
+  "command_hash": "ec3a466a92a730be6f15acd079d66bb789519e0b69ce38bfc3876fd15f1a43e6",
+  "tier": "L0",
+  "findings": [],
+  "metrics": {
+    "kinds_observed": 7,
+    "total_observations": 9,
+    "overall_p95_ms": 396,
+    "overall_mean_ms": 54,
+    "threshold_pass": 2000,
+    "threshold_review": 5000,
+    "inventory_api_count": 1,
+    "inventory_api_p95_ms": 25,
+    "inventory_coverage_count": 3,
+    "inventory_coverage_p95_ms": 7,
+    "inventory_data_handling_count": 1,
+    "inventory_data_handling_p95_ms": 4,
+    "inventory_data_model_count": 1,
+    "inventory_data_model_p95_ms": 11,
+    "inventory_dep_graph_count": 1,
+    "inventory_dep_graph_p95_ms": 396,
+    "inventory_rbac_count": 1,
+    "inventory_rbac_p95_ms": 4,
+    "inventory_routes_count": 1,
+    "inventory_routes_p95_ms": 31
+  }
+}
