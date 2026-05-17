@@ -444,3 +444,81 @@ After U2, the stynx-side work that's _not_ part of adoption splits into three bu
 3. **Cosmetic/cleanup**: 120 stale `INV-CANDIDATE-*` files, 3 pre-existing trace.json /meta spec-validate errors (independent of pilot scope; closes when TASK-0005 runs successfully). Optional.
 
 **Pilot status: adoption complete.** The C-4 pilot is no longer "in progress" in any meaningful sense — it's the canonical example of how DEVAI adoption converges to a stable working relationship with the upstream framework.
+
+## 13. Post-Phase-25 scorecard recomputation (U3, 2026-05-17)
+
+**DEVAI Phase 25 closed at `34c1bb3`** (D-74) the same day as U2, shipping D-A-25 closure (per-skill LLM timeout defaults raised; backend-aware multiplier wired) and D-A-26 closure (shared scorecard-input resolver extracted into `packages/core/src/scorecard/`). Stynx ran U3 immediately to verify 25.B's classifier extraction.
+
+### 25.B verification
+
+`SKILL-compute-scorecard` and `SKILL-assess-state` now consume the same per-cell verdict module. Running both against the same stynx state (DEVAI@`34c1bb3`, stynx@`f86dbc0`, sensor-readings populated for 7 L0 + 3 L1 = 10 kinds) produces identical 45-cell verdict distributions:
+
+| Skill                                       | Distribution                           | Overall           |
+| ------------------------------------------- | -------------------------------------- | ----------------- |
+| `SKILL-compute-scorecard` (post-U3)         | 4 PASS + 3 REVIEW + 37 UNKNOWN + 1 N/A | REVIEW            |
+| `SKILL-assess-state` (post-U3)              | 4 PASS + 3 REVIEW + 37 UNKNOWN + 1 N/A | YELLOW (= REVIEW) |
+| `SKILL-compute-scorecard` (pre-U3 baseline) | 0 PASS + 0 REVIEW + 44 UNKNOWN + 1 N/A | UNKNOWN           |
+
+Pre-U3 the two skills disagreed by 7 verdicts. Post-U3 they agree on all 45.
+
+### Current scorecard (full 5 × 9 grid)
+
+```
+      T1   T2   T3   T4   T5   T6   T7   T8   T9
+F1     ·    ·    ·    ·    ·    ·    ·    ·    ·      ← spec
+F2     ·    ·    ·    ·    R    ·    ·    P    P      ← plant
+F3     ·    ·    ·    ·    ·    ·    ·    ·    ·      ← observation
+F4     R    R    P    ·   N/A   P    ·    ·    ·      ← inventory
+F5     ·    ·    ·    ·    ·    ·    ·    ·    ·      ← harness
+
+· = unknown   R = review   P = pass   N/A = not applicable
+```
+
+Substrate aggregates: F1 UNKNOWN · F2 REVIEW · F3 UNKNOWN · F4 REVIEW · F5 UNKNOWN. Overall **REVIEW**.
+
+### 7 populated cells
+
+| Cell  | Verdict | Meaning                                                            |
+| ----- | ------- | ------------------------------------------------------------------ |
+| F2×T5 | REVIEW  | sense-type-check phantom noise (pre-existing)                      |
+| F2×T8 | PASS    | sense-lint or sense-build (correctness sensor populated during U1) |
+| F2×T9 | PASS    | engineering × harness/runtime signal                               |
+| F4×T1 | REVIEW  | INV-COVERAGE-001 — 1 unmapped Angular route remains                |
+| F4×T2 | REVIEW  | same coverage signal                                               |
+| F4×T3 | PASS    | inventory tests / sense-test for F4 surfaces                       |
+| F4×T6 | PASS    | inventory × dep-graph / module integrity                           |
+
+### 25.C verification
+
+Not directly tested in U3 (would require burning LLM budget on another live `loop-run` iteration). Indirect verification: `devai loop-run --help` shows the new defaults (`SKILL-feedback-iteration` 1800s, `SKILL-fix-*` 900s, etc.) — wiring confirmed. A future stynx session that runs a real loop iteration on TASK-0005 (or equivalent) at the new defaults would close the loop. **D-A-25 closure trusted from DEVAI's own test suite** (commit `1d42046` Inspector verification).
+
+### Updated D-A register at U3 close
+
+| ID               | Status    | Notes                                                                                              |
+| ---------------- | --------- | -------------------------------------------------------------------------------------------------- |
+| D-A-12 to D-A-24 | ✅ closed | (per §11 and §12)                                                                                  |
+| D-A-25           | ✅ closed | Phase 25.C (timeout defaults raised) — wiring verified via help output; live verification deferred |
+| D-A-26           | ✅ closed | Phase 25.B (shared classifier) — both skills now produce identical 45-cell distributions           |
+
+**Zero open D-A entries.**
+
+### Adoption-completeness verdict at U3 close
+
+The "adoption complete" verdict from U2 is now stronger: **every D-A gap surfaced during the C-4 pilot is closed in DEVAI proper, including the meta-gap (D-A-26) that surfaced during stynx's own U2 verification.** The framework-adopter feedback loop has fully converged.
+
+The pilot has now generated:
+
+- **6 DEVAI alignment phases** (20-25) with strictly narrowing scope (6 → 5 → 7 → 8 → 2 → 2 gaps).
+- **26 D-A entries filed, 26 closed.**
+- **49 stynx-side commits** in the pilot arc (`b66286d` → this commit).
+- **Zero source-repo deletions** across all six alignment phases.
+
+### What's truly left
+
+After U3, stynx is in pure maintenance steady-state. Three buckets, none adoption-related:
+
+1. **Stynx-only engineering** (one item): F-9 step 2/N. ~2 hours of work, independent of devai.
+2. **Optional scorecard hardening** (toward GREEN): wrap ~8 more correctness sensors per substrate via `devai sense-test <suite> --emit-reading` to populate F1, F3, F5 cells; author one use-case extension to close INV-COVERAGE-001's last violation; investigate F2×T5 phantom-review. None of these are adoption work.
+3. **Reactive on future DEVAI phases**: if and when stynx surfaces a new D-A gap during routine framework use, file it and a Phase 26 brief absorbs it. Otherwise: nothing.
+
+**Pilot status: adoption complete, all D-A entries closed, steady-state confirmed.**
