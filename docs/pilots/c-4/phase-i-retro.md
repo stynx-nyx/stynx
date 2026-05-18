@@ -1569,3 +1569,77 @@ sweep) or stop here (cell PASS achieved, scorecard 41/45).
 | F3×T2 scorecard cell | REVIEW      | **PASS**   | flipped |
 | Test files added     | n/a         | ~17        | ~17     |
 | Tests added          | n/a         | ~300       | ~300    |
+
+## §30 — U20: flow → PASS — 18/18 SWEEP COMPLETE
+
+Final package flipped. F3×T2 was already PASS after U19 (audit); flow
+was polish for the full sweep. Per the U17/18/19 hypothesis, flow's
+three big services share backend's interface-mocked-friendly
+architecture — confirmed in the 15-min recon. ~3 hr of authoring
+across 3 specs.
+
+### What landed
+
+- `packages/flow/test/unit/flow-forms.service.spec.ts` — 37 tests
+  covering full CRUD on forms/questions/scores/fills/answers/waivers,
+  upsertAnswer 3 paths (asserts fill + question + does upsert),
+  bulkUpsertAnswers (object + bare array shapes), createFillWaiver
+  context hydration, requireTenantId enforcement, input-shape
+  validation.
+- `packages/flow/test/unit/flow-design.service.spec.ts` — 43 tests
+  covering scopes/graphs/nodes/edges/agentRules/transitionEffects/
+  nodeFormRules/policySets/policyRules CRUD plus importGraph
+  validation (no start, dup codes, missing edge refs, dup edge keys)
+  - happy-path round-trip via insertRow + exportGraphFromTransaction
+  - exportGraph with empty vs populated policySets.
+- `packages/flow/test/unit/flow-runtime.service.spec.ts` — 40 tests
+  covering ensureRun (scopeId/scopeCode resolution, missing run_id
+  error, adapter failure path), listRuns/listNodeRuns/listTasks/
+  listEvents (filter matrices), task action flows (actTask 5 error
+  paths, assignTask + canManage interaction, unassign/accept/decline/
+  unaccept/withdraw routing), taskCandidates (resolver expansion +
+  unresolved marker), signal (scopeCode/scopeId routing),
+  dispatchPendingEffects (no-effectKey, success, throw, empty),
+  listUsersForRole search clause, getRunFacts merge,
+  signal missing-scope rejection.
+
+### Per-package result
+
+| Package | U19  | U20       | Δ     |
+| ------- | ---- | --------- | ----- |
+| flow    | 43.5 | **81.05** | +37.6 |
+
+### Aggregate state at U20 — FULL SWEEP
+
+| Metric           | U19   | U20       |
+| ---------------- | ----- | --------- |
+| Per-package ≥80% | 17    | **18/18** |
+| Aggregate F3×T2  | 80.15 | **86.19** |
+| F3×T2 cell       | PASS  | **PASS**  |
+
+### Cumulative session (U13 → U20)
+
+| Metric               | Pre-session (U12) | U20        | Δ       |
+| -------------------- | ----------------- | ---------- | ------- |
+| Per-package PASS     | 13/18             | **18/18**  | +5      |
+| Aggregate F3×T2      | 62.8%             | **86.19%** | +23.4pp |
+| F3×T2 scorecard cell | REVIEW            | **PASS**   | flipped |
+| Spec files added     | n/a               | ~20        | ~20     |
+| Tests added          | n/a               | ~420       | ~420    |
+| Commits              | n/a               | 8          | 8       |
+
+### Confirmed hypothesis
+
+U17 (backend), U18 (auth), U19 (audit), U20 (flow) all collapsed
+from "needs integration scaffold against testcontainers" to
+"mockable-interface unit specs" — same shape every time. The
+adopter packages were already designed for testability via small
+interface boundaries at every IO. The U15 effort estimates were
+~2× too high because they assumed real-infra integration work was
+unavoidable. **Useful signal for future pack widening:** distinguish
+"needs int suite + concrete IO clients" from "needs int suite +
+interface-mocked IO" — the latter is much cheaper to lift.
+
+Scorecard: 40/45 PASS (U12) → 41/45 PASS (U19, when F3×T2 flipped) →
+**41/45 PASS** at U20 (no further cell flips, but the F3×T2 margin
+above threshold is now comfortable at +6.2pp).

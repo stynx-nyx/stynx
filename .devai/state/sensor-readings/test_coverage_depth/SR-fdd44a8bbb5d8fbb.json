@@ -5,7 +5,7 @@
     "name": "test-coverage-depth",
     "kind": "test_coverage_depth"
   },
-  "timestamp": "2026-05-18T04:05:32.941Z",
+  "timestamp": "2026-05-18T04:24:44.203Z",
   "status": "pass",
   "deterministic": true,
   "command": "devai sense-test-coverage-depth",
@@ -14,8 +14,8 @@
   "findings": [],
   "metrics": {
     "lines_total": 7427,
-    "lines_covered": 5953,
-    "lines_pct": 80.15,
+    "lines_covered": 6401,
+    "lines_pct": 86.19,
     "threshold_pass": 80,
     "threshold_review": 50
   }
