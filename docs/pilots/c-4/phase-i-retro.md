@@ -1643,3 +1643,85 @@ interface-mocked IO" — the latter is much cheaper to lift.
 Scorecard: 40/45 PASS (U12) → 41/45 PASS (U19, when F3×T2 flipped) →
 **41/45 PASS** at U20 (no further cell flips, but the F3×T2 margin
 above threshold is now comfortable at +6.2pp).
+
+## §31 — U21: state-bookkeeping cleanup → 42/44 PASS (95.5%)
+
+User asked to clean up the F3/T2 stale SR + re-run the F2/T5 lint. Both
+landed; the second surfaced 10 hidden `no-unused-vars` errors that had
+been masked by a stdout-buffer-kill bug in `devai sense-lint`.
+
+### What landed
+
+1. **F3/T2 stale SR removed.** `SR-01d9bca900c51904.json` (the earlier
+   `review` reading) deleted; latest `SR-fdd44a8bbb5d8fbb.json` (`pass`,
+   86.19%) is now the only test_coverage_depth reading. F3/T2 cell now
+   computes as PASS.
+
+2. **F2/T5 lint sensor unstuck.** The earlier runs were dying at ~11s
+   with `killed: true` despite a 300000ms `--timeout-ms`. Root cause:
+   the root `eslint.config.mjs` `ignores: ['dist/**', ...]` only matched
+   `dist/**` relative to repo root, not per-package `packages/*/dist/**`.
+   eslint was traversing every package's `dist/` tree producing megabytes
+   of JSON, and the sensor's internal stdout buffer was being filled,
+   killing the child. Fixed by widening to `**/dist/**` (and same for
+   build/coverage/node_modules/.angular). Sensor now completes in ~5s.
+
+3. **10 real lint errors fixed.** Once the sensor ran to completion, it
+   surfaced unused-imports errors in 7 test files. Trivial fixes (delete
+   unused imports, prefix unused `_params`, prefix 3 schema fixtures with
+   `_` since they're referenced via demoSchema reflection not direct
+   binding).
+
+4. **eslint config tweak**: added `varsIgnorePattern: '^_'` to the
+   `no-unused-vars` rule (was previously argsIgnorePattern only) — so
+   `_`-prefixed top-level bindings are accepted same as `_`-prefixed
+   args. Standard pattern.
+
+5. **Lint SR cleanup**: 4 superseded readings deleted, keeping only the
+   freshest `pass` reading.
+
+### Scorecard state
+
+| Status                    | Count                                      |
+| ------------------------- | ------------------------------------------ |
+| PASS                      | **42**                                     |
+| UNKNOWN                   | 1 (F2/T4)                                  |
+| N/A                       | 1 (F4/T5)                                  |
+| FAIL                      | 1 (F5/T9)                                  |
+| **Effective denominator** | **44** (excluding F4/T5 N/A per Article 5) |
+| **Score**                 | **42/44 = 95.5%**                          |
+
+### Remaining non-greens (post-cleanup)
+
+- **F2/T4 (Plant × Alignment) — UNKNOWN**: no `plant_alignment` sensor
+  reading exists for this adopter. **DEVAI-side gap**: the sensor either
+  isn't implemented for the adopter case or the adapter doesn't run it
+  yet. Worth flagging upstream alongside the U17/U18/U19/U20 finding
+  from §30.
+- **F5/T9 (Harness × Discipline) — FAIL**: main branch CI success rate
+  **58%** (29/50 over last 50 runs). Real engineering: investigate
+  CI flakes (likely testcontainer networking + lint-staged hook
+  interactions). Out of scope for the test-coverage push.
+
+### DEVAI-side observation
+
+The `devai sense-lint` stdout-buffer kill was a latent bug:
+
+- The killed-by-buffer state is reported as `LINT_TIMED_OUT` even though
+  duration was nowhere near the timeout (11s vs 300000ms timeout).
+- The misleading message kept us debugging the wrong axis (timeout,
+  memory) for a while.
+- Real cause was eslint linting every per-package `dist/` tree because
+  the adopter's eslint config used un-anchored ignore globs.
+
+Two ways DEVAI could harden this:
+
+1. Distinguish "killed by timeout" from "killed by stdout buffer
+   overflow" — emit different finding codes (`LINT_TIMED_OUT` vs
+   `LINT_OUTPUT_OVERFLOW`).
+2. Set a larger stdout buffer (or stream-process the JSON) so the
+   sensor can tolerate big eslint runs.
+
+Filed alongside the §30 architectural finding for the next DEVAI session.
+
+Scorecard: 41/44 PASS (U20) → **42/44 PASS (U21)**.

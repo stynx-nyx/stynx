@@ -4,7 +4,7 @@ import { EffectiveHashComputer } from '../../src/effective-hash-computer';
 describe('EffectiveHashComputer', () => {
   function createService() {
     const trx = {
-      query: jest.fn(async (sql: string, params: unknown[]) => {
+      query: jest.fn(async (sql: string, _params: unknown[]) => {
         if (sql.includes('select key from auth.perms')) {
           return {
             rows: [{ key: 'document:read:*' }, { key: 'document:write:*' }, { key: 'document:*:*' }],

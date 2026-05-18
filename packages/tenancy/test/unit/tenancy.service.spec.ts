@@ -1,4 +1,3 @@
-import { NotFoundException } from '@nestjs/common';
 import type { ModuleRef } from '@nestjs/core';
 import { TenancyService } from '../../src/tenancy.service';
 

@@ -28,7 +28,7 @@ const customer = softDeletable(
   }),
 );
 
-const customerAddress = softDeletable(
+const _customerAddress = softDeletable(
   demoSchema.table('customer_address', {
     id: uuid('id').primaryKey(),
     tenantId: uuid('tenant_id').notNull(),
@@ -38,7 +38,7 @@ const customerAddress = softDeletable(
   }),
 );
 
-const customerNote = softDeletable(
+const _customerNote = softDeletable(
   demoSchema.table('customer_note', {
     id: uuid('id').primaryKey(),
     tenantId: uuid('tenant_id').notNull(),
@@ -68,7 +68,7 @@ const invoiceLineItem = softDeletable(
   }),
 );
 
-const invoicePayment = softDeletable(
+const _invoicePayment = softDeletable(
   demoSchema.table('invoice_payment', {
     id: uuid('id').primaryKey(),
     tenantId: uuid('tenant_id').notNull(),

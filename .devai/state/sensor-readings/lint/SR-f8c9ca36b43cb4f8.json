@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-f8c9ca36b43cb4f8",
+  "sensor": {
+    "name": "lint",
+    "kind": "lint"
+  },
+  "timestamp": "2026-05-18T04:47:19.286Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "npx eslint --format=json packages",
+  "command_hash": "62c559588702f4a8cff8fcc617e796facd0584eab1cdf2b22cbfdef1ff540a6f",
+  "exit_code": 0,
+  "duration_ms": 5379,
+  "out_head": "[{\"filePath\":\"/Users/aarusso/Development/stech/stynx/packages/audit/jest.config.cjs\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\":0,\"fixableErrorCount\":0,\"fixableWarningCount\":0,\"usedDeprecatedRules\":[]},{\"filePath\":\"/Users/aarusso/Development/stech/stynx/packages/audit/jest.integration.config.cjs\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\":0,\"fixableErrorCount\":0,\"fixableWarningCount\":0,\"usedDeprecatedRules\":[]},{\"filePath\":\"/Users/aarusso/Development/stech/stynx/packages/audit/src/audit.controller.ts\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\":0,\"fixableErrorCount\":0,\"fixableWarningCount\":0,\"usedDeprecatedRules\":[]},{\"filePath\":\"/Users/aarusso/Development/stech/stynx/packages/audit/src/audit.module.ts\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\":0,\"fixableErrorCount\":0,\"fixableWarningCount\":0,\"usedDeprecatedRules\":[]},{\"filePath\":\"/Users/aarusso/Development/stech/stynx/packages/audit/src/audit.service.ts\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\":0,\"fixableErrorCount\":0,\"fixableWarningCount\":0,\"usedDeprecatedRules\":[]},{\"filePath\":\"/Users/aarusso/Development/stech/stynx/packages/audit/src/index.ts\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\":0,\"fixableErrorCount\":0,\"fixableWarningCount\":0,\"usedDeprecatedRules\":[]},{\"filePath\":\"/Users/aarusso/Development/stech/stynx/packages/audit/src/retention.ts\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\":0,\"fixableErrorCount\":0,\"fixableWarningCount\":0,\"usedDeprecatedRules\":[]},{\"filePath\":\"/Users/aarusso/Development/stech/stynx/packages/audit/src/sql-adapter.ts\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\":0,\"fixableErrorCount\":0,\"fixableWarningCount\":0,\"usedDeprecatedRules\":[]},{\"filePath\":\"/Users/aarusso/Development/stech/sty",
+  "err_head": "",
+  "killed": false,
+  "findings": [],
+  "metrics": {
+    "error_count": 0,
+    "warning_count": 0,
+    "timeout_ms": 300000
+  }
+}

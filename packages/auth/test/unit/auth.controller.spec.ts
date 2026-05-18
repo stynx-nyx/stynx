@@ -1,4 +1,3 @@
-import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { StynxAuthController } from '../../src/auth.controller';
 
 describe('StynxAuthController', () => {

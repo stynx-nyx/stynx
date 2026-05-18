@@ -1,4 +1,4 @@
-import { CanActivate, Controller, Get, Headers, Req, UseGuards } from '@nestjs/common';
+import { CanActivate, Controller, Get, Req, UseGuards } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
