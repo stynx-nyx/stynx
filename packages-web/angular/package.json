@@ -22,7 +22,8 @@
     "clean": "rm -rf dist coverage",
     "typecheck": "tsc -p tsconfig.spec.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/angular.mjs \"src/**/*.ts\"",
-    "test": "node --disable-warning=ExperimentalWarning --experimental-vm-modules ./node_modules/jest/bin/jest.js --config ./jest.config.cjs"
+    "test": "node --disable-warning=ExperimentalWarning --experimental-vm-modules ./node_modules/jest/bin/jest.js --config ./jest.config.cjs",
+    "stryker": "NODE_OPTIONS=\"--disable-warning=ExperimentalWarning --experimental-vm-modules\" pnpm exec stryker run stryker.conf.mjs"
   },
   "dependencies": {
     "@stynx-web/angular-tenancy": "workspace:*",

@@ -23,7 +23,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
     "test": "node ../../scripts/record-test-artifact.mjs turbo-test.log -- jest --config ./jest.config.cjs",
-    "test:coverage": "jest --config ./jest.config.cjs --coverage --coverageReporters=json"
+    "test:coverage": "jest --config ./jest.config.cjs --coverage --coverageReporters=json",
+    "stryker": "pnpm exec stryker run stryker.conf.mjs"
   },
   "dependencies": {
     "@stynx/idempotency": "workspace:*",

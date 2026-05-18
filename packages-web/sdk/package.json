@@ -23,7 +23,8 @@
     "clean": "rm -rf dist coverage src/generated",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/lib.mjs \"src/**/*.ts\" --ignore-pattern \"src/generated/**\"",
-    "test": "pnpm run codegen && jest --config ./jest.config.cjs"
+    "test": "pnpm run codegen && jest --config ./jest.config.cjs",
+    "stryker": "NODE_OPTIONS=\"--disable-warning=ExperimentalWarning --experimental-vm-modules\" pnpm exec stryker run stryker.conf.mjs"
   },
   "devDependencies": {
     "@stynx/core": "workspace:*",

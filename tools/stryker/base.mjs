@@ -1,6 +1,7 @@
 export function createStrykerConfig({
   packageName,
   threshold,
+  checkers = ['typescript'],
   jestConfig = './jest.config.cjs',
   mutate = ['src/**/*.ts', '!src/**/*.d.ts'],
 }) {
@@ -11,7 +12,7 @@ export function createStrykerConfig({
     testRunner: 'jest',
     coverageAnalysis: 'perTest',
     mutate,
-    checkers: ['typescript'],
+    checkers,
     tsconfigFile: 'tsconfig.json',
     tempDirName: '.stryker-tmp',
     cleanTempDir: true,

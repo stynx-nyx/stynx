@@ -26,7 +26,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/lib.mjs \"src/**/*.ts\"",
     "test": "jest --config ./jest.config.cjs",
-    "test:adopt": "jest --config ./jest.config.cjs --runTestsByPath ./test/adopt.spec.ts"
+    "test:adopt": "jest --config ./jest.config.cjs --runTestsByPath ./test/adopt.spec.ts",
+    "stryker": "pnpm exec stryker run stryker.conf.mjs"
   },
   "dependencies": {
     "@stynx/privacy": "workspace:*",
