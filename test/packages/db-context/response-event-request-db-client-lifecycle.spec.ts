@@ -11,7 +11,7 @@ function createResponseStub() {
   const response: ResponseLike = {
     finished: false,
     writableEnded: false,
-    once: jest.fn((event: 'finish' | 'close', listener: () => void) => {
+    once: vi.fn((event: 'finish' | 'close', listener: () => void) => {
       listeners[event].push(listener);
       return response;
     }),
@@ -30,8 +30,8 @@ function createResponseStub() {
 describe('ResponseEventRequestDbClientLifecycle', () => {
   it('binds release to finish/close and releases only once', async () => {
     const delegate = {
-      acquire: jest.fn(async () => ({ id: 'client-1' })),
-      release: jest.fn(async () => undefined),
+      acquire: vi.fn(async () => ({ id: 'client-1' })),
+      release: vi.fn(async () => undefined),
     };
     const wrapped = new ResponseEventRequestDbClientLifecycle(delegate);
     const { response, emit } = createResponseStub();
@@ -54,8 +54,8 @@ describe('ResponseEventRequestDbClientLifecycle', () => {
 
   it('falls back to immediate release when response is missing', async () => {
     const delegate = {
-      acquire: jest.fn(async () => ({ id: 'client-1' })),
-      release: jest.fn(async () => undefined),
+      acquire: vi.fn(async () => ({ id: 'client-1' })),
+      release: vi.fn(async () => undefined),
     };
     const wrapped = new ResponseEventRequestDbClientLifecycle(delegate);
 

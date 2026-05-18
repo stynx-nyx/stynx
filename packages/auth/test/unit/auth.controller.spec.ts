@@ -2,17 +2,17 @@ import { StynxAuthController } from '../../src/auth.controller';
 
 describe('StynxAuthController', () => {
   const authService = {
-    exchangeCognitoToken: jest.fn(),
-    switchTenant: jest.fn(),
-    logout: jest.fn(),
-    inspectPermissions: jest.fn(),
-    invalidatePermissions: jest.fn(),
+    exchangeCognitoToken: vi.fn(),
+    switchTenant: vi.fn(),
+    logout: vi.fn(),
+    inspectPermissions: vi.fn(),
+    invalidatePermissions: vi.fn(),
   };
 
   const controller = new StynxAuthController(authService as never);
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('creates a session from the tenant header and token body', async () => {

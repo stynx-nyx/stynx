@@ -2,7 +2,7 @@ import { PgSessionDbContextApplier } from '../../../packages/backend/src/db-cont
 
 describe('PgSessionDbContextApplier', () => {
   it('applies row_security and session keys with compatibility mappings', async () => {
-    const query = jest.fn(async () => ({}));
+    const query = vi.fn(async () => ({}));
     const applier = new PgSessionDbContextApplier({ defaultLanguage: 'pt-BR' });
 
     await applier.apply(
@@ -37,7 +37,7 @@ describe('PgSessionDbContextApplier', () => {
   });
 
   it('can skip missing values when clearMissing=false', async () => {
-    const query = jest.fn(async () => ({}));
+    const query = vi.fn(async () => ({}));
     const applier = new PgSessionDbContextApplier({
       enableRowSecurity: false,
       clearMissing: false,

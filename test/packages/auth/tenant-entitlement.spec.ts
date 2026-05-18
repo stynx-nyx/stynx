@@ -27,7 +27,7 @@ describe('ClaimFirstTenantEntitlementPolicy', () => {
   });
 
   it('rejects when claim list exists but tenant is absent', async () => {
-    const fallback = { isEntitled: jest.fn(async () => true) };
+    const fallback = { isEntitled: vi.fn(async () => true) };
     const policy = new ClaimFirstTenantEntitlementPolicy({ fallback });
 
     await expect(
@@ -45,7 +45,7 @@ describe('ClaimFirstTenantEntitlementPolicy', () => {
   });
 
   it('uses fallback only when no tenant claims are present', async () => {
-    const fallback = { isEntitled: jest.fn(async () => true) };
+    const fallback = { isEntitled: vi.fn(async () => true) };
     const policy = new ClaimFirstTenantEntitlementPolicy({ fallback });
 
     await expect(
@@ -63,7 +63,7 @@ describe('ClaimFirstTenantEntitlementPolicy', () => {
 
 describe('SqlTenantEntitlementFallback', () => {
   it('queries executor and returns true when membership row exists', async () => {
-    const query = jest.fn(
+    const query = vi.fn(
       async (_sql: string, _params?: ReadonlyArray<unknown>) => ({ rows: [{ one: 1 }] }),
     );
     const fallback = new SqlTenantEntitlementFallback({
@@ -98,7 +98,7 @@ describe('SqlTenantEntitlementFallback', () => {
   });
 
   it('returns false when no subject/email is available', async () => {
-    const query = jest.fn(
+    const query = vi.fn(
       async (_sql: string, _params?: ReadonlyArray<unknown>) => ({ rows: [{ one: 1 }] }),
     );
     const fallback = new SqlTenantEntitlementFallback({

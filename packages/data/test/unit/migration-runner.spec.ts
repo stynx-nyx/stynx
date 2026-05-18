@@ -7,9 +7,9 @@ import { StynxMigrationRunner } from '../../src/migration-runner';
 
 describe('StynxMigrationRunner.onModuleInit', () => {
   function makeRunner(opts: Partial<{ enabled: boolean; runner?: (pools: unknown) => Promise<void> }> = {}) {
-    const pools = { onModuleInit: jest.fn(async () => undefined), pools: { owner: {}, app: {}, reader: {} } } as never;
-    const runPlatformMigrations = jest.fn(async () => undefined);
-    const customRunner = opts.runner ? jest.fn(opts.runner) : undefined;
+    const pools = { onModuleInit: vi.fn(async () => undefined), pools: { owner: {}, app: {}, reader: {} } } as never;
+    const runPlatformMigrations = vi.fn(async () => undefined);
+    const customRunner = opts.runner ? vi.fn(opts.runner) : undefined;
     const runner = new StynxMigrationRunner(
       {
         migrations: opts.enabled === undefined ? undefined : { enabled: opts.enabled, runner: customRunner },
@@ -41,7 +41,7 @@ describe('StynxMigrationRunner.onModuleInit', () => {
   });
 
   it('invokes the adopter-supplied runner after platform migrations', async () => {
-    const adopterRunner = jest.fn(async () => undefined);
+    const adopterRunner = vi.fn(async () => undefined);
     const { runner, runPlatformMigrations, customRunner } = makeRunner({
       enabled: true,
       runner: adopterRunner,
@@ -59,7 +59,7 @@ describe('StynxMigrationRunner.runPlatformMigrations (mocked client)', () => {
   } = {}) {
     const appliedIds = opts.appliedIds ?? [];
     const queryCalls: string[] = [];
-    const query = jest.fn(async (sql: string | unknown[]) => {
+    const query = vi.fn(async (sql: string | unknown[]) => {
       const sqlString = typeof sql === 'string' ? sql : (sql as { text?: string }).text ?? '';
       queryCalls.push(sqlString.slice(0, 60));
       if (sqlString.includes('select id from core.schema_migrations')) {
@@ -70,11 +70,11 @@ describe('StynxMigrationRunner.runPlatformMigrations (mocked client)', () => {
       }
       return { rows: [] };
     });
-    const release = jest.fn();
+    const release = vi.fn();
     const client = { query, release };
-    const owner = { connect: jest.fn(async () => client) };
+    const owner = { connect: vi.fn(async () => client) };
     const pools = {
-      onModuleInit: jest.fn(async () => undefined),
+      onModuleInit: vi.fn(async () => undefined),
       pools: { owner, app: {}, reader: {} },
     } as never;
     const runner = new StynxMigrationRunner(
@@ -115,5 +115,81 @@ describe('StynxMigrationRunner.runPlatformMigrations (mocked client)', () => {
     const { runner, release } = makeRunner();
     await expect(runner.runPlatformMigrations()).resolves.toBeUndefined();
     expect(release).toHaveBeenCalledTimes(1);
+  });
+
+  it('continues migration-dir probing and preserves migration errors when rollback fails', async () => {
+    vi.resetModules();
+    const readdir = vi.fn()
+      .mockRejectedValueOnce(new Error('first candidate missing'))
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce(['0001_test.sql']);
+    const readFile = vi.fn(async () => 'select broken');
+    vi.doMock('node:fs/promises', () => ({ readdir, readFile }));
+    const { StynxMigrationRunner: MockedMigrationRunner } =
+      (await import('../../src/migration-runner')) as typeof import('../../src/migration-runner');
+    const bodyError = new Error('body failed');
+    const query = vi.fn(async (sql: string) => {
+      if (sql.includes('select id from core.schema_migrations')) {
+        return { rows: [] };
+      }
+      if (sql === 'select broken') {
+        throw bodyError;
+      }
+      if (sql === 'ROLLBACK') {
+        throw new Error('rollback failed');
+      }
+      return { rows: [] };
+    });
+    const release = vi.fn();
+    const runner = new MockedMigrationRunner(
+      { migrations: { enabled: false } } as never,
+      {
+        onModuleInit: vi.fn(async () => undefined),
+        pools: { owner: { connect: vi.fn(async () => ({ query, release })) } },
+      } as never,
+    );
+
+    await expect(runner.runPlatformMigrations()).rejects.toBe(bodyError);
+
+    expect(readdir).toHaveBeenCalledTimes(3);
+    expect(query).toHaveBeenCalledWith('ROLLBACK');
+    expect(release).toHaveBeenCalledTimes(1);
+    vi.unmock('node:fs/promises');
+    vi.resetModules();
+  });
+
+  it('falls back to the packaged migration path when every probe misses', async () => {
+    vi.resetModules();
+    const readdir = vi.fn(async () => {
+      throw new Error('missing');
+    });
+    const readFile = vi.fn();
+    vi.doMock('node:fs/promises', () => ({ readdir, readFile }));
+    const { StynxMigrationRunner: MockedMigrationRunner } =
+      (await import('../../src/migration-runner')) as typeof import('../../src/migration-runner');
+    const release = vi.fn();
+    const runner = new MockedMigrationRunner(
+      { migrations: { enabled: false } } as never,
+      {
+        onModuleInit: vi.fn(async () => undefined),
+        pools: {
+          owner: {
+            connect: vi.fn(async () => ({
+              query: vi.fn(async (sql: string) => (
+                sql.includes('select id from core.schema_migrations') ? { rows: [] } : { rows: [] }
+              )),
+              release,
+            })),
+          },
+        },
+      } as never,
+    );
+
+    await expect(runner.runPlatformMigrations()).rejects.toThrow('missing');
+
+    expect(readdir).toHaveBeenCalledTimes(6);
+    expect(release).toHaveBeenCalledTimes(1);
+    vi.unmock('node:fs/promises');
+    vi.resetModules();
   });
 });

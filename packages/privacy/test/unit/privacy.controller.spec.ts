@@ -14,9 +14,9 @@ function handler(name: string): Function {
 describe('PrivacyController API contract', () => {
   it('delegates export, erasure, and retention requests to the privacy service', async () => {
     const service = {
-      exportData: jest.fn(async () => ({ downloadUrl: 'memory://export' })),
-      eraseSubject: jest.fn(async () => ({ actions: [] })),
-      applyRetention: jest.fn(async () => ({ dryRun: true, actions: [] })),
+      exportData: vi.fn(async () => ({ downloadUrl: 'memory://export' })),
+      eraseSubject: vi.fn(async () => ({ actions: [] })),
+      applyRetention: vi.fn(async () => ({ dryRun: true, actions: [] })),
     } as unknown as PrivacyService;
     const controller = new PrivacyController(service);
 

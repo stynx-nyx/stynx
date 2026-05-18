@@ -38,7 +38,7 @@ under `docs/stynx/porting-pack/`.
 | Permissions     | `roles`, `permissions`, `hasRole`, `hasPermission`, `casbin`, `cancan`                           | PERMS       |
 | File upload     | `multer`, `@aws-sdk/client-s3`, `getSignedUrl`, `formidable`, `multipart`                        | STORAGE     |
 | Background jobs | `bull`, `bullmq`, `agenda`, `cron`, `setInterval`, `@nestjs/schedule`                            | BACKGROUND  |
-| Tests           | `jest`, `vitest`, `mocha`, `playwright`, `cypress`                                               | TESTS       |
+| Tests           | `Vitest`, `vitest`, `mocha`, `playwright`, `cypress`                                             | TESTS       |
 | Audit           | `audit_log`, `change_log`, `activity_log`                                                        | AUDIT       |
 | LGPD/GDPR       | `pii`, `gdpr`, `lgpd`, `data_subject`, `erasure`, `right_to_be_forgotten`                        | LGPD        |
 

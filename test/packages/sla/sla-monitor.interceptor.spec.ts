@@ -20,18 +20,18 @@ function createExecutionContext(request: Record<string, unknown>): ExecutionCont
 
 describe('SlaMonitorInterceptor', () => {
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.clearAllMocks();
   });
 
   it('emits sample event with threshold/breach information', async () => {
     const sink: SlaEventSink = {
-      sample: jest.fn((_event: SlaSampleEvent) => undefined),
-      aggregate: jest.fn((_event: SlaAggregateEvent) => undefined),
+      sample: vi.fn((_event: SlaSampleEvent) => undefined),
+      aggregate: vi.fn((_event: SlaAggregateEvent) => undefined),
     };
     const resolver: SlaCategoryResolver = {
-      resolve: jest.fn(() => 'RENACH'),
+      resolve: vi.fn(() => 'RENACH'),
     };
-    const nowSpy = jest
+    const nowSpy = vi
       .spyOn(Date, 'now')
       .mockImplementationOnce(() => 0)
       .mockImplementationOnce(() => 120);
@@ -62,13 +62,13 @@ describe('SlaMonitorInterceptor', () => {
 
   it('emits aggregate event according to configured sample window', async () => {
     const sink: SlaEventSink = {
-      sample: jest.fn((_event: SlaSampleEvent) => undefined),
-      aggregate: jest.fn((_event: SlaAggregateEvent) => undefined),
+      sample: vi.fn((_event: SlaSampleEvent) => undefined),
+      aggregate: vi.fn((_event: SlaAggregateEvent) => undefined),
     };
     const resolver: SlaCategoryResolver = {
-      resolve: jest.fn(() => 'RENACH'),
+      resolve: vi.fn(() => 'RENACH'),
     };
-    jest
+    vi
       .spyOn(Date, 'now')
       .mockImplementationOnce(() => 0)
       .mockImplementationOnce(() => 120)
@@ -101,13 +101,13 @@ describe('SlaMonitorInterceptor', () => {
 
   it('emits error-path sample when downstream handler fails', async () => {
     const sink: SlaEventSink = {
-      sample: jest.fn((_event: SlaSampleEvent) => undefined),
-      aggregate: jest.fn((_event: SlaAggregateEvent) => undefined),
+      sample: vi.fn((_event: SlaSampleEvent) => undefined),
+      aggregate: vi.fn((_event: SlaAggregateEvent) => undefined),
     };
     const resolver: SlaCategoryResolver = {
-      resolve: jest.fn(() => 'SIGNATURE'),
+      resolve: vi.fn(() => 'SIGNATURE'),
     };
-    jest
+    vi
       .spyOn(Date, 'now')
       .mockImplementationOnce(() => 0)
       .mockImplementationOnce(() => 10);

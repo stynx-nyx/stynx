@@ -46,13 +46,13 @@ Scope: define concrete workspace/package changes for an installable `stynx` pack
 - `stynx/docs/sys/architecture.md`
 - `stynx/docs/dev/conventions.md`
 - `stynx/test/backend/package.json`
-- `stynx/test/backend/jest.config.ts`
+- `stynx/test/backend/vitest.config.ts`
 - `stynx/test/db/package.json`
-- `stynx/test/db/jest.config.ts`
+- `stynx/test/db/vitest.config.ts`
 - `stynx/test/scripts/package.json`
-- `stynx/test/frontend/jest.config.cjs`
-- `stynx/test/frontend/jest.config.ts`
-- `stynx/test/frontend/tsconfig.jest.json`
+- `stynx/test/frontend/Vitest.config.cjs`
+- `stynx/test/frontend/vitest.config.ts`
+- `stynx/test/frontend/tsconfig.Vitest.json`
 
 ## Current state summary
 
@@ -76,7 +76,7 @@ Scope: define concrete workspace/package changes for an installable `stynx` pack
 - `stynx/backend/package.json` and `stynx/frontend/package.json`: private app manifests still define primary runtime scripts used by docs/CI.
 - Legacy CI/deploy stubs were removed; GitHub Actions and local CI preflight
   own the current runnable command surface.
-- `stynx/test/frontend/jest.config.cjs`: hard references to `../../frontend/node_modules`, coupling test infra to legacy app folder.
+- `stynx/test/frontend/Vitest.config.cjs`: hard references to `../../frontend/node_modules`, coupling test infra to legacy app folder.
 - `stynx/README.md`: install/run flow is still per-folder (`cd backend`, `cd frontend`, etc.), not package-family centric.
 
 ## Target package layout (concrete)
@@ -142,5 +142,5 @@ Scope: define concrete workspace/package changes for an installable `stynx` pack
 ## Notes on risk and sequencing
 
 - Highest immediate risk is workspace-command mismatch between root/workspace config and bootstrap build calls (`bootstrap/lib/backend.ts`, `bootstrap/lib/frontend.ts`).
-- Second risk is test tooling coupling to `frontend/node_modules` (`test/frontend/jest.config.cjs`), which should be normalized only after app relocation paths stabilize.
+- Second risk is test tooling coupling to `frontend/node_modules` (`test/frontend/Vitest.config.cjs`), which should be normalized only after app relocation paths stabilize.
 - Lowest-risk path is to land package manifests + public entrypoints first, then incrementally move reusable logic from app code.

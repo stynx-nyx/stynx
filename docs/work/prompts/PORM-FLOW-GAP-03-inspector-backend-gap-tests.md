@@ -37,7 +37,7 @@ Read:
 Allowed:
 
 - `packages/flow/test/**`
-- package-local Jest config only if needed for test discovery
+- package-local Vitest config only if needed for test discovery
 - test fixtures/helpers under `packages/flow/test/**`
 - `packages/data/test/**` only if backend behavior requires DB migration assertions
 

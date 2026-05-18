@@ -23,8 +23,8 @@
 ## Testing Strategy
 
 - **Database** – Add snapshot/assertion tests in `test/db` when altering DDL/seed files.
-- **Backend** – Write unit tests in `test/backend/unit` using Jest. Override providers instead of hitting real services.
-- **Frontend** – Place component specs in `test/frontend/unit`. Cypress smoke tests belong to `test/frontend/e2e`.
+- **Backend** – Write unit tests in `packages/<pkg>/test/unit` using Vitest. Override providers instead of hitting real services.
+- **Frontend** – Place component specs in `packages-web/angular*/test`.
 - **Scripts** – Add assertions in `test/scripts` to ensure new scripts have shebangs and are executable.
 
 ## Documentation & CI

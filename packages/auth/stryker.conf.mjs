@@ -3,7 +3,7 @@ import { createStrykerConfig } from '../../tools/stryker/base.mjs';
 export default createStrykerConfig({
   packageName: '@stynx/auth',
   threshold: 85,
-  jestConfig: './jest.stryker.config.cjs',
+  vitestConfig: './vitest.stryker.config.ts',
   mutate: [
     'src/auth.controller.ts',
     'src/auth.service.ts',

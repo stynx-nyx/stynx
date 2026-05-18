@@ -33,10 +33,10 @@ function createExecutionContext(request: Record<string, unknown>): ExecutionCont
 
 describe('auth runtime helpers', () => {
   it('patches actor context only when stynx claims are present', () => {
-    const patch = jest.fn();
+    const patch = vi.fn();
     const interceptor = new ActorContextInterceptor({ patch } as never);
     const next: CallHandler = {
-      handle: jest.fn(() => 'handled'),
+      handle: vi.fn(() => 'handled'),
     };
 
     interceptor.intercept(
@@ -54,7 +54,7 @@ describe('auth runtime helpers', () => {
 
   it('allows public and system routes and enforces permission membership otherwise', () => {
     const reflector = {
-      getAllAndOverride: jest.fn((key: symbol) => {
+      getAllAndOverride: vi.fn((key: symbol) => {
         if (key === STYNX_PUBLIC_ROUTE) return false;
         if (key === STYNX_SYSTEM_ROUTE) return false;
         if (key === STYNX_PERMISSION_ROUTE) return 'document:read:*';
@@ -74,17 +74,42 @@ describe('auth runtime helpers', () => {
     ).toThrow(ForbiddenException);
   });
 
+  it('short-circuits permission checks for route metadata defaults', () => {
+    const publicGuard = new PermissionGuard({
+      getAllAndOverride: vi.fn((key: symbol) => key === STYNX_PUBLIC_ROUTE),
+    } as unknown as Reflector);
+    expect(publicGuard.canActivate(createExecutionContext({}))).toBe(true);
+
+    const systemGuard = new PermissionGuard({
+      getAllAndOverride: vi.fn((key: symbol) => key === STYNX_SYSTEM_ROUTE),
+    } as unknown as Reflector);
+    expect(systemGuard.canActivate(createExecutionContext({}))).toBe(true);
+
+    const defaultGuard = new PermissionGuard({
+      getAllAndOverride: vi.fn(() => undefined),
+    } as unknown as Reflector);
+    expect(defaultGuard.canActivate(createExecutionContext({}))).toBe(true);
+
+    const permissionGuard = new PermissionGuard({
+      getAllAndOverride: vi.fn((key: symbol) => {
+        if (key === STYNX_PERMISSION_ROUTE) return 'document:read:*';
+        return false;
+      }),
+    } as unknown as Reflector);
+    expect(() => permissionGuard.canActivate(createExecutionContext({}))).toThrow(ForbiddenException);
+  });
+
   it('hydrates request auth context and readonly state from a valid bearer token', async () => {
     const moduleRef = {
-      get: jest.fn(() => ({
-        get: jest.fn().mockResolvedValue({ sid: 'sid-1' }),
+      get: vi.fn(() => ({
+        get: vi.fn().mockResolvedValue({ sid: 'sid-1' }),
       })),
     };
     const reflector = {
-      getAllAndOverride: jest.fn((key: symbol) => key === STYNX_READONLY_ROUTE),
+      getAllAndOverride: vi.fn((key: symbol) => key === STYNX_READONLY_ROUTE),
     } as unknown as Reflector;
     const validator = {
-      validate: jest.fn().mockResolvedValue({
+      validate: vi.fn().mockResolvedValue({
         sub: 'user-1',
         sid: 'sid-1',
         tenantId: 'tenant-1',
@@ -92,7 +117,7 @@ describe('auth runtime helpers', () => {
       }),
     };
     const permissionCache = {
-      getForSession: jest.fn().mockResolvedValue({
+      getForSession: vi.fn().mockResolvedValue({
         permissions: ['document:read:*'],
       }),
     };
@@ -115,15 +140,15 @@ describe('auth runtime helpers', () => {
 
   it('rejects missing bearer tokens and inactive sessions', async () => {
     const reflector = {
-      getAllAndOverride: jest.fn(() => false),
+      getAllAndOverride: vi.fn(() => false),
     } as unknown as Reflector;
     const moduleRef = {
-      get: jest.fn(() => ({
-        get: jest.fn().mockResolvedValue(null),
+      get: vi.fn(() => ({
+        get: vi.fn().mockResolvedValue(null),
       })),
     };
     const validator = {
-      validate: jest.fn().mockResolvedValue({
+      validate: vi.fn().mockResolvedValue({
         sub: 'user-1',
         sid: 'sid-1',
         tenantId: 'tenant-1',
@@ -131,7 +156,7 @@ describe('auth runtime helpers', () => {
       }),
     };
     const permissionCache = {
-      getForSession: jest.fn(),
+      getForSession: vi.fn(),
     };
     const guard = new StynxAuthGuard(moduleRef as never, reflector, validator as never, permissionCache as never);
 

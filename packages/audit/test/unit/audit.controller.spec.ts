@@ -27,7 +27,7 @@ describe('StynxAuditController API contract', () => {
 
   it('delegates audit log queries to the audit service', () => {
     const service = {
-      listLog: jest.fn(() => [{ id: 'audit-1' }]),
+      listLog: vi.fn(() => [{ id: 'audit-1' }]),
     } as unknown as StynxAuditService;
     const controller = new StynxAuditController(service);
 

@@ -6,6 +6,7 @@ import {
   RequestContextMutator,
   type RequestContextState,
 } from '../../src/request-context';
+import type { Mock } from 'vitest';
 
 class FakeClsService {
   public store = new Map<PropertyKey, unknown>();
@@ -44,10 +45,10 @@ function makeContext(
   extras: Record<string, unknown> = {},
 ): {
   context: ExecutionContext;
-  response: { setHeader: jest.Mock };
+  response: { setHeader: Mock };
 } {
   const request = { headers, ...extras } as Record<string, unknown>;
-  const response = { setHeader: jest.fn() };
+  const response = { setHeader: vi.fn() };
   const context = {
     switchToHttp: () => ({
       getRequest: () => request,
@@ -107,7 +108,7 @@ describe('RequestContextInterceptor', () => {
 
   it('extracts the first locale from Accept-Language header', async () => {
     const { context } = makeContext({ 'accept-language': 'pt-BR, en;q=0.9' });
-    const spy = jest.spyOn(mutator, 'runWithRequestContext');
+    const spy = vi.spyOn(mutator, 'runWithRequestContext');
     await run(interceptor.intercept(context, makeHandler()));
     const seed = spy.mock.calls[0]?.[0] as RequestContextState;
     expect(seed.locale).toBe('pt-BR');
@@ -115,7 +116,15 @@ describe('RequestContextInterceptor', () => {
 
   it('ignores Accept-Language when only whitespace', async () => {
     const { context } = makeContext({ 'accept-language': '   ' });
-    const spy = jest.spyOn(mutator, 'runWithRequestContext');
+    const spy = vi.spyOn(mutator, 'runWithRequestContext');
+    await run(interceptor.intercept(context, makeHandler()));
+    const seed = spy.mock.calls[0]?.[0] as RequestContextState;
+    expect(seed.locale).toBeUndefined();
+  });
+
+  it('ignores Accept-Language when the first language segment is empty', async () => {
+    const { context } = makeContext({ 'accept-language': ', en;q=0.9' });
+    const spy = vi.spyOn(mutator, 'runWithRequestContext');
     await run(interceptor.intercept(context, makeHandler()));
     const seed = spy.mock.calls[0]?.[0] as RequestContextState;
     expect(seed.locale).toBeUndefined();
@@ -123,14 +132,14 @@ describe('RequestContextInterceptor', () => {
 
   it('binds tenantId from request.tenantId when present', async () => {
     const { context } = makeContext({}, { tenantId: 'tenant-42' });
-    const spy = jest.spyOn(mutator, 'runWithRequestContext');
+    const spy = vi.spyOn(mutator, 'runWithRequestContext');
     await run(interceptor.intercept(context, makeHandler()));
     expect((spy.mock.calls[0]?.[0] as RequestContextState).tenantId).toBe('tenant-42');
   });
 
   it('falls back to stynxClaims.tenantId when request.tenantId absent', async () => {
     const { context } = makeContext({}, { stynxClaims: { tenantId: 'tenant-99' } });
-    const spy = jest.spyOn(mutator, 'runWithRequestContext');
+    const spy = vi.spyOn(mutator, 'runWithRequestContext');
     await run(interceptor.intercept(context, makeHandler()));
     expect((spy.mock.calls[0]?.[0] as RequestContextState).tenantId).toBe('tenant-99');
   });
@@ -142,7 +151,7 @@ describe('RequestContextInterceptor', () => {
       actor: { id: 'actor-1' },
       user: { id: 'user-1' },
     });
-    const spy = jest.spyOn(mutator, 'runWithRequestContext');
+    const spy = vi.spyOn(mutator, 'runWithRequestContext');
     await run(interceptor.intercept(context, makeHandler()));
     const seed = spy.mock.calls[0]?.[0] as RequestContextState;
     expect(seed.actorId).toBe('sub-1');
@@ -159,7 +168,7 @@ describe('RequestContextInterceptor', () => {
       const { context } = makeContext({}, extras);
       const localMutator = new RequestContextMutator(new FakeClsService() as never);
       const local = new RequestContextInterceptor(localMutator);
-      const spy = jest.spyOn(localMutator, 'runWithRequestContext');
+      const spy = vi.spyOn(localMutator, 'runWithRequestContext');
       await run(local.intercept(context, makeHandler()));
       expect((spy.mock.calls[0]?.[0] as RequestContextState).actorId).toBe(expected);
     }
@@ -177,7 +186,7 @@ describe('RequestContextInterceptor', () => {
 
   it('unsubscribes the downstream subscription on teardown', () => {
     const { context } = makeContext({});
-    const unsubscribe = jest.fn();
+    const unsubscribe = vi.fn();
     const inner = new Observable<unknown>(() => unsubscribe);
     const handler: CallHandler = { handle: () => inner };
     const subscription = interceptor.intercept(context, handler).subscribe();
@@ -206,7 +215,7 @@ describe('RequestContextInterceptor', () => {
 
   it('does not set tenantId/actorId/locale/sessionId when none are derivable', async () => {
     const { context } = makeContext({});
-    const spy = jest.spyOn(mutator, 'runWithRequestContext');
+    const spy = vi.spyOn(mutator, 'runWithRequestContext');
     await run(interceptor.intercept(context, makeHandler()));
     const seed = spy.mock.calls[0]?.[0] as RequestContextState;
     expect(seed.tenantId).toBeUndefined();

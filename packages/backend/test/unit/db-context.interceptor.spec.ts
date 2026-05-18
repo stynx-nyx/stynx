@@ -29,7 +29,7 @@ function run(observable: Observable<unknown>): Promise<unknown> {
 
 describe('DbContextInterceptor', () => {
   it('skips applier when there is no principal on the request', async () => {
-    const applier = { apply: jest.fn() };
+    const applier = { apply: vi.fn() };
     const interceptor = new DbContextInterceptor(applier);
     const request = { headers: {}, pgClient: { tag: 'c' } };
     await run(interceptor.intercept(ctx(request), makeHandler()));
@@ -37,7 +37,7 @@ describe('DbContextInterceptor', () => {
   });
 
   it('skips applier when no client is resolvable', async () => {
-    const applier = { apply: jest.fn() };
+    const applier = { apply: vi.fn() };
     const interceptor = new DbContextInterceptor(applier);
     const request = { headers: {}, principal: PRINCIPAL };
     await run(interceptor.intercept(ctx(request), makeHandler()));
@@ -45,7 +45,7 @@ describe('DbContextInterceptor', () => {
   });
 
   it('applies session context when principal + pgClient are present', async () => {
-    const applier = { apply: jest.fn() };
+    const applier = { apply: vi.fn() };
     const interceptor = new DbContextInterceptor(applier);
     const request = {
       headers: {},
@@ -68,8 +68,8 @@ describe('DbContextInterceptor', () => {
   });
 
   it('uses a custom dbClientResolver when provided', async () => {
-    const applier = { apply: jest.fn() };
-    const resolver = jest.fn(() => ({ tag: 'resolved' }));
+    const applier = { apply: vi.fn() };
+    const resolver = vi.fn(() => ({ tag: 'resolved' }));
     const interceptor = new DbContextInterceptor(applier, resolver);
     const request = { headers: {}, principal: PRINCIPAL };
     await run(interceptor.intercept(ctx(request), makeHandler()));
@@ -78,10 +78,10 @@ describe('DbContextInterceptor', () => {
   });
 
   it('acquires + releases via lifecycle when no client is on the request', async () => {
-    const applier = { apply: jest.fn() };
+    const applier = { apply: vi.fn() };
     const lifecycle = {
-      acquire: jest.fn(async () => ({ tag: 'acquired' })),
-      release: jest.fn(async () => undefined),
+      acquire: vi.fn(async () => ({ tag: 'acquired' })),
+      release: vi.fn(async () => undefined),
     };
     const interceptor = new DbContextInterceptor(applier, undefined, lifecycle);
     const request: Record<string, unknown> = {
@@ -102,10 +102,10 @@ describe('DbContextInterceptor', () => {
   });
 
   it('does not call release when no client was acquired by the interceptor', async () => {
-    const applier = { apply: jest.fn() };
+    const applier = { apply: vi.fn() };
     const lifecycle = {
-      acquire: jest.fn(),
-      release: jest.fn(async () => undefined),
+      acquire: vi.fn(),
+      release: vi.fn(async () => undefined),
     };
     const interceptor = new DbContextInterceptor(applier, undefined, lifecycle);
     const request = { headers: {}, principal: PRINCIPAL, pgClient: { tag: 'existing' } };
@@ -115,10 +115,10 @@ describe('DbContextInterceptor', () => {
   });
 
   it('swallows release errors so they do not bubble out of the request', async () => {
-    const applier = { apply: jest.fn() };
+    const applier = { apply: vi.fn() };
     const lifecycle = {
-      acquire: jest.fn(async () => ({ tag: 'acquired' })),
-      release: jest.fn(async () => {
+      acquire: vi.fn(async () => ({ tag: 'acquired' })),
+      release: vi.fn(async () => {
         throw new Error('release failed');
       }),
     };
@@ -132,10 +132,10 @@ describe('DbContextInterceptor', () => {
   });
 
   it('skips lifecycle acquire when no tenantId is on the request', async () => {
-    const applier = { apply: jest.fn() };
+    const applier = { apply: vi.fn() };
     const lifecycle = {
-      acquire: jest.fn(),
-      release: jest.fn(),
+      acquire: vi.fn(),
+      release: vi.fn(),
     };
     const interceptor = new DbContextInterceptor(applier, undefined, lifecycle);
     const request = { headers: {}, principal: PRINCIPAL };

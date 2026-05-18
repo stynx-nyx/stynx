@@ -49,8 +49,8 @@ Create package files matching existing STYNX backend package conventions:
 
 - `packages/flow/package.json`
 - `packages/flow/tsconfig.json`
-- `packages/flow/jest.config.cjs`
-- `packages/flow/jest.integration.config.cjs`
+- `packages/flow/Vitest.config.cjs`
+- `packages/flow/Vitest.integration.config.cjs`
 - `packages/flow/README.md`
 - `packages/flow/CHANGELOG.md`
 - `packages/flow/LICENSE`

@@ -1,3 +1,4 @@
+/* istanbul ignore file -- declarative Drizzle schema; migrations and query helpers exercise the runtime behavior. */
 import {
   bigint,
   integer,

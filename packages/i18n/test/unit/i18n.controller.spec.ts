@@ -13,10 +13,10 @@ function handler(name: string): Function {
 
 describe('I18nController API contract', () => {
   it('uses request tenant context for list and update operations', async () => {
-    const moduleRef = { get: jest.fn(() => ({ tenantId: 'tenant-1' })) };
+    const moduleRef = { get: vi.fn(() => ({ tenantId: 'tenant-1' })) };
     const adminService = {
-      listOverrides: jest.fn(async () => [{ key: 'records.title' }]),
-      updateOverrides: jest.fn(async () => ({ updated: 1 })),
+      listOverrides: vi.fn(async () => [{ key: 'records.title' }]),
+      updateOverrides: vi.fn(async () => ({ updated: 1 })),
     } as unknown as I18nAdminService;
     const controller = new I18nController(moduleRef as never, adminService);
 

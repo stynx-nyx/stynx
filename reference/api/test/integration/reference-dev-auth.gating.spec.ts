@@ -23,7 +23,7 @@ function metadataNames(key: string, target: unknown): string[] {
 }
 
 async function loadSampleModuleWithEnv(nodeEnv?: string, stynxEnvironment?: string) {
-  jest.resetModules();
+  vi.resetModules();
   if (nodeEnv === undefined) {
     delete process.env.NODE_ENV;
   } else {
@@ -38,7 +38,7 @@ async function loadSampleModuleWithEnv(nodeEnv?: string, stynxEnvironment?: stri
 }
 
 afterEach(() => {
-  jest.resetModules();
+  vi.resetModules();
   if (originalNodeEnv === undefined) {
     delete process.env.NODE_ENV;
   } else {

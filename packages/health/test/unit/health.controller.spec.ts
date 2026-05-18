@@ -5,15 +5,15 @@ import type { StynxHealthService } from '../../src/health.service';
 import type { StynxMetricsService } from '../../src/metrics.service';
 
 describe('StynxHealthController API contract', () => {
-  function createController(readiness: () => Promise<unknown>, allowlist: string[] = []) {
+  function createController(readiness: () => Promise<unknown>, allowlist?: string[]) {
     const healthService = { readiness } as unknown as StynxHealthService;
     const metrics = {
       registry: { contentType: 'text/plain; version=0.0.4' },
-      render: jest.fn(async () => 'metric 1\n'),
+      render: vi.fn(async () => 'metric 1\n'),
     } as unknown as StynxMetricsService;
     return {
       controller: new StynxHealthController(healthService, metrics, {
-        metricsIpAllowlist: allowlist,
+        ...(allowlist ? { metricsIpAllowlist: allowlist } : {}),
         appInfo: { name: 'stynx-test' },
       }),
       metrics,
@@ -35,11 +35,20 @@ describe('StynxHealthController API contract', () => {
     await expect(controller.readiness()).rejects.toBeInstanceOf(ServiceUnavailableException);
   });
 
+  it('rethrows non-terminus readiness failures', async () => {
+    const error = new Error('unexpected');
+    const { controller } = createController(async () => {
+      throw error;
+    });
+
+    await expect(controller.readiness()).rejects.toBe(error);
+  });
+
   it('restricts metrics by configured IP allowlist', async () => {
     const { controller, metrics } = createController(async () => ({ status: 'ok' }), ['127.0.0.1']);
     const response = {
-      setHeader: jest.fn(),
-      send: jest.fn(),
+      setHeader: vi.fn(),
+      send: vi.fn(),
     };
 
     await expect(controller.metricsEndpoint({ ip: '10.0.0.1' }, response)).rejects.toBeInstanceOf(
@@ -50,5 +59,28 @@ describe('StynxHealthController API contract', () => {
     expect(response.setHeader).toHaveBeenCalledWith('content-type', 'text/plain; version=0.0.4');
     expect(response.send).toHaveBeenCalledWith('metric 1\n');
     expect(metrics.render).toHaveBeenCalledTimes(1);
+  });
+
+  it('allows metrics without an allowlist and falls back to empty client IP', async () => {
+    const { controller } = createController(async () => ({ status: 'ok' }));
+    const response = {
+      setHeader: vi.fn(),
+      send: vi.fn(),
+    };
+
+    await controller.metricsEndpoint({}, response);
+
+    expect(response.send).toHaveBeenCalledWith('metric 1\n');
+  });
+
+  it('returns base info when app info is omitted', () => {
+    const healthService = { readiness: vi.fn() } as unknown as StynxHealthService;
+    const metrics = {
+      registry: { contentType: 'text/plain' },
+      render: vi.fn(async () => ''),
+    } as unknown as StynxMetricsService;
+    const controller = new StynxHealthController(healthService, metrics, {});
+
+    expect(controller.info()).toEqual({ status: 'ok' });
   });
 });

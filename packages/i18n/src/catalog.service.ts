@@ -144,10 +144,8 @@ export class CatalogService {
       if (!match) {
         continue;
       }
-      const [, locale, catalogKey] = match;
-      if (!locale || !catalogKey) {
-        continue;
-      }
+      const locale = match[1]!;
+      const catalogKey = match[2]!;
       const target = merged.get(locale) ?? new Map<string, string>();
       target.set(catalogKey, value);
       merged.set(locale, target);

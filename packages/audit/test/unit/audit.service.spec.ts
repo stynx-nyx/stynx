@@ -1,35 +1,36 @@
 import { ModuleRef } from '@nestjs/core';
 import { StynxAuditService } from '../../src/audit.service';
+import type { Mock } from 'vitest';
 
 interface FakeTrx {
-  query: jest.Mock<Promise<{ rows: unknown[] }>, [string, unknown[]?]>;
+  query: Mock<Promise<{ rows: unknown[] }>, [string, unknown[]?]>;
 }
 
 function makeDatabase(rowsByCall: Array<unknown[]>) {
   let callIdx = 0;
   const trx: FakeTrx = {
-    query: jest.fn(async () => ({ rows: rowsByCall[callIdx++] ?? [] })),
+    query: vi.fn(async () => ({ rows: rowsByCall[callIdx++] ?? [] })),
   };
   return {
     trx,
     db: {
-      withSystemContext: jest.fn((_reason: string, fn: () => unknown) => fn()),
-      tx: jest.fn(async (fn: (t: FakeTrx) => unknown) => fn(trx)),
+      withSystemContext: vi.fn((_reason: string, fn: () => unknown) => fn()),
+      tx: vi.fn(async (fn: (t: FakeTrx) => unknown) => fn(trx)),
     },
   };
 }
 
 function makeService(
-  database: { withSystemContext: jest.Mock; tx: jest.Mock } | null,
+  database: { withSystemContext: Mock; tx: Mock } | null,
   overrides: {
-    dumpRunner?: { dumpPartition: jest.Mock };
-    archiveStore?: { uploadFile: jest.Mock };
+    dumpRunner?: { dumpPartition: Mock };
+    archiveStore?: { uploadFile: Mock };
     options?: Record<string, unknown>;
     now?: Date;
   } = {},
 ) {
   const moduleRef = {
-    get: jest.fn(() => database),
+    get: vi.fn(() => database),
   } as unknown as ModuleRef;
   return new StynxAuditService(
     moduleRef,

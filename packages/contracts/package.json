@@ -23,14 +23,11 @@
     "clean": "rm -rf dist coverage",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/lib.mjs \"src/**/*.ts\"",
-    "test": "node ../../scripts/record-test-artifact.mjs turbo-test.log -- jest --config ./jest.config.cjs",
-    "test:coverage": "jest --config ./jest.config.cjs --coverage --coverageReporters=json",
+    "test": "vitest run --config ./vitest.config.ts",
+    "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json",
     "stryker": "pnpm exec stryker run stryker.conf.mjs"
   },
   "devDependencies": {
-    "@types/jest": "^30.0.0",
-    "@types/node": "^25.6.0",
-    "jest": "^30.3.0",
-    "ts-jest": "^29.4.9"
+    "@types/node": "^25.6.0"
   }
 }

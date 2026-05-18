@@ -9,7 +9,7 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --max-warnings=0 'src/**/*.ts' 'test/**/*.ts'",
-    "test": "node --disable-warning=ExperimentalWarning --experimental-vm-modules ./node_modules/jest/bin/jest.js --config ./jest.config.cjs"
+    "test": "vitest run --config ./vitest.config.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.19",
@@ -38,12 +38,9 @@
     "@nestjs/testing": "^11.1.19",
     "@stynx-internal/eslint-config": "workspace:*",
     "@stynx-internal/tsconfig": "workspace:*",
-    "@types/jest": "^30.0.0",
     "@types/node": "^25.6.0",
     "@types/pg": "^8.20.0",
-    "jest": "^30.3.0",
     "pg": "^8.20.0",
-    "ts-jest": "^29.4.9",
     "typescript": "^6.0.3"
   }
 }

@@ -104,7 +104,7 @@
 
 14. Package-level unit testing depth (core shared behaviors)
 
-- Added dedicated package harness under `test/packages` (Jest + ts-jest).
+- Added dedicated package harness under `test/packages` (Vitest + Vitest).
 - Added targeted unit tests for:
   - `PgSessionDbContextApplier` behavior and compatibility key mapping.
   - `DefaultPolicyEvaluator` role/permission semantics.

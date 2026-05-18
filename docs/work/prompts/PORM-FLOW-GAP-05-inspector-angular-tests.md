@@ -16,7 +16,7 @@ Read:
 - `docs/work/diag/porm-flow-reassessment.md`
 - updated `docs/contracts/flow-api.md`
 - `packages-web/angular-flow/src/**`
-- `packages-web/angular-flow/jest.config.cjs`
+- `packages-web/angular-flow/Vitest.config.cjs`
 - `packages-web/angular-flow/tsconfig.spec.json`
 - sibling package tests:
   - `packages-web/angular-auth/test/**`
@@ -38,7 +38,7 @@ Read:
 Allowed:
 
 - `packages-web/angular-flow/test/**`
-- `packages-web/angular-flow/jest.config.cjs`
+- `packages-web/angular-flow/Vitest.config.cjs`
 - `packages-web/angular-flow/tsconfig.spec.json`
 - test fixtures/helpers under `packages-web/angular-flow/test/**`
 

@@ -34,7 +34,7 @@ const verified: AuthVerificationResult = {
 describe('AuthContextGuard', () => {
   it('attaches principal, req.user and request.actor compatibility shapes', async () => {
     const tokenVerifier: TokenVerifier = {
-      verifyAuthorizationHeader: jest.fn(async () => verified),
+      verifyAuthorizationHeader: vi.fn(async () => verified),
     };
     const guard = new AuthContextGuard(tokenVerifier);
     const request: Record<string, unknown> = {
@@ -68,7 +68,7 @@ describe('AuthContextGuard', () => {
 
   it('uses tenant resolver and entitlement policy when present', async () => {
     const tokenVerifier: TokenVerifier = {
-      verifyAuthorizationHeader: jest.fn(async () => ({
+      verifyAuthorizationHeader: vi.fn(async () => ({
         ...verified,
         principal: {
           ...verified.principal,
@@ -77,10 +77,10 @@ describe('AuthContextGuard', () => {
       })),
     };
     const tenantResolver: TenantResolver = {
-      resolve: jest.fn(async () => 'tenant-b'),
+      resolve: vi.fn(async () => 'tenant-b'),
     };
     const entitlement: TenantEntitlementPolicy = {
-      isEntitled: jest.fn(async ({ tenantId }) => tenantId === 'tenant-b'),
+      isEntitled: vi.fn(async ({ tenantId }) => tenantId === 'tenant-b'),
     };
 
     const guard = new AuthContextGuard(tokenVerifier, undefined, tenantResolver, entitlement);
@@ -95,7 +95,7 @@ describe('AuthContextGuard', () => {
 
   it('throws forbidden when tenant entitlement fails', async () => {
     const tokenVerifier: TokenVerifier = {
-      verifyAuthorizationHeader: jest.fn(async () => ({
+      verifyAuthorizationHeader: vi.fn(async () => ({
         ...verified,
         principal: {
           ...verified.principal,
@@ -104,10 +104,10 @@ describe('AuthContextGuard', () => {
       })),
     };
     const tenantResolver: TenantResolver = {
-      resolve: jest.fn(async () => 'tenant-b'),
+      resolve: vi.fn(async () => 'tenant-b'),
     };
     const entitlement: TenantEntitlementPolicy = {
-      isEntitled: jest.fn(async () => false),
+      isEntitled: vi.fn(async () => false),
     };
 
     const guard = new AuthContextGuard(tokenVerifier, undefined, tenantResolver, entitlement);
@@ -122,7 +122,7 @@ describe('AuthContextGuard', () => {
 
   it('throws unauthorized when verifier returns no principal', async () => {
     const tokenVerifier: TokenVerifier = {
-      verifyAuthorizationHeader: jest.fn(async () => ({ token: 'token' } as never)),
+      verifyAuthorizationHeader: vi.fn(async () => ({ token: 'token' } as never)),
     };
     const guard = new AuthContextGuard(tokenVerifier);
     const request: Record<string, unknown> = {

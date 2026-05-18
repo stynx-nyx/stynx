@@ -1,8 +1,10 @@
 import { createPublicKey, generateKeyPairSync, verify as verifySignature } from 'node:crypto';
 import { InMemorySessionStore } from '../../src/in-memory-session-store';
 import { SessionJwtSigningService } from '../../src/jwt-signing.service';
+import { SessionMirrorWriter } from '../../src/session-mirror.writer';
 import { SessionService } from '../../src/session.service';
 import {
+  InvalidRefreshTokenError,
   RefreshTokenReuseDetectedError,
   SessionExpiredError,
 } from '../../src/errors';
@@ -62,6 +64,24 @@ class StaticSessionStore implements SessionStore {
   }
 
   async publishInvalidation(): Promise<void> {}
+}
+
+class RefreshFailureStore extends StaticSessionStore {
+  constructor(
+    session: SessionRecord | null,
+    private readonly lookup: RefreshTokenLookup | null,
+    private readonly rotated: SessionRecord | null,
+  ) {
+    super(session);
+  }
+
+  async lookupRefreshToken(): Promise<RefreshTokenLookup | null> {
+    return this.lookup ? { ...this.lookup } : null;
+  }
+
+  async rotateRefreshToken(): Promise<SessionRecord | null> {
+    return this.rotated ? { ...this.rotated } : null;
+  }
 }
 
 function buildKeySet() {
@@ -363,5 +383,262 @@ describe('SessionService', () => {
     })).rejects.toMatchObject({
       code: 'SESSION_NOT_ACTIVE',
     });
+  });
+
+  it('returns null or false for missing session operations and invalid refresh tokens', async () => {
+    const store = new InMemorySessionStore();
+    const mirror = new RecordingMirror();
+    const options = resolveSessionsOptions({
+      issuer: 'https://sessions.test',
+      redis: { url: 'redis://127.0.0.1:6379' },
+      jwt: { keySet: buildKeySet() },
+    });
+    const service = new SessionService(options, store, new SessionJwtSigningService(options), mirror);
+
+    await expect(service.get('missing')).resolves.toBeNull();
+    await expect(service.touch('missing')).resolves.toBeNull();
+    await expect(service.revoke('missing')).resolves.toBe(false);
+    await expect(service.refresh('not-a-refresh-token')).rejects.toBeInstanceOf(InvalidRefreshTokenError);
+  });
+
+  it('rethrows non-expiry inactive session errors from get', async () => {
+    const now = new Date('2026-05-18T12:00:00.000Z');
+    const store = new StaticSessionStore({
+      sid: 'session-1',
+      userId: 'user-1',
+      tenantId: 'tenant-1',
+      cognitoSub: 'cognito-1',
+      refreshFamilyId: 'family-1',
+      refreshTokenHash: 'refresh-hash-1',
+      status: 'revoked',
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+      lastTouchedAt: now.toISOString(),
+      expiresAt: new Date(now.getTime() + 60_000).toISOString(),
+      idleExpiresAt: new Date(now.getTime() + 60_000).toISOString(),
+    });
+    const options = resolveSessionsOptions({
+      issuer: 'https://sessions.test',
+      redis: { url: 'redis://127.0.0.1:6379' },
+      jwt: { keySet: buildKeySet() },
+      clock: () => now,
+    });
+    const service = new SessionService(options, store, new SessionJwtSigningService(options), new RecordingMirror());
+
+    await expect(service.get('session-1')).rejects.toBeInstanceOf(InvalidRefreshTokenError);
+  });
+
+  it('returns null for direct in-memory touch and rotate misses', async () => {
+    const store = new InMemorySessionStore();
+
+    await expect(
+      store.rotateRefreshToken(
+        'missing',
+        'current-hash',
+        'next-hash',
+        new Date().toISOString(),
+        new Date().toISOString(),
+      ),
+    ).resolves.toBeNull();
+    await expect(
+      store.touchSession('missing', new Date().toISOString(), new Date().toISOString()),
+    ).resolves.toBeNull();
+  });
+
+  it('rejects refresh when lookup points at a missing session or rotation fails', async () => {
+    const now = new Date('2026-05-18T12:00:00.000Z');
+    const activeSession: SessionRecord = {
+      sid: 'sid-1',
+      userId: 'user-1',
+      tenantId: 'tenant-1',
+      cognitoSub: 'cognito-1',
+      refreshFamilyId: 'family-1',
+      refreshTokenHash: 'hash-1',
+      status: 'active',
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+      lastTouchedAt: now.toISOString(),
+      expiresAt: new Date(now.getTime() + 60_000).toISOString(),
+      idleExpiresAt: new Date(now.getTime() + 60_000).toISOString(),
+    };
+    const options = resolveSessionsOptions({
+      issuer: 'https://sessions.test',
+      redis: { url: 'redis://127.0.0.1:6379' },
+      jwt: { keySet: buildKeySet() },
+      clock: () => now,
+    });
+    const signing = new SessionJwtSigningService(options);
+
+    await expect(
+      new SessionService(
+        options,
+        new RefreshFailureStore(null, { sid: 'sid-1', familyId: 'family-1', state: 'active' }, null),
+        signing,
+        new RecordingMirror(),
+      ).refresh('refresh-token'),
+    ).rejects.toBeInstanceOf(InvalidRefreshTokenError);
+
+    await expect(
+      new SessionService(
+        options,
+        new RefreshFailureStore(activeSession, { sid: 'sid-1', familyId: 'family-1', state: 'active' }, null),
+        signing,
+        new RecordingMirror(),
+      ).refresh('refresh-token'),
+    ).rejects.toBeInstanceOf(InvalidRefreshTokenError);
+  });
+
+  it('skips session mirroring when infrastructure providers are not available', async () => {
+    const writer = new SessionMirrorWriter({
+      get: vi.fn(() => undefined),
+    } as never);
+
+    await expect(
+      writer.append({
+        sid: 'sid-1',
+        tenantId: 'tenant-1',
+        userId: 'user-1',
+        status: 'active',
+        createdAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 60_000).toISOString(),
+      }),
+    ).resolves.toBeUndefined();
+  });
+
+  it('writes mirror rows with membership ids when infrastructure providers are available', async () => {
+    const values = vi.fn(async () => undefined);
+    const runWithRequestContext = vi.fn(async (_context: unknown, callback: () => Promise<void>) => callback());
+    const writer = new SessionMirrorWriter({
+      get: vi.fn((token: { name?: string }) => {
+        if (token.name === 'Database') {
+          return {
+            tx: vi.fn(async (callback: (trx: unknown) => Promise<void>) =>
+              callback({
+                insert: vi.fn(() => ({ values })),
+              }),
+            ),
+          };
+        }
+        if (token.name === 'RequestContextMutator') {
+          return { runWithRequestContext };
+        }
+        return undefined;
+      }),
+    } as never);
+
+    await writer.append({
+      sid: 'sid-1',
+      tenantId: 'tenant-1',
+      userId: 'user-1',
+      membershipId: 'membership-1',
+      status: 'active',
+      createdAt: '2026-05-18T12:00:00.000Z',
+      expiresAt: '2026-05-18T13:00:00.000Z',
+    });
+
+    expect(runWithRequestContext).toHaveBeenCalledTimes(1);
+    expect(values).toHaveBeenCalledWith(expect.objectContaining({
+      membershipId: 'membership-1',
+      sid: 'sid-1',
+    }));
+  });
+
+  it('resolves optional audience and secret-id session options', () => {
+    expect(
+      resolveSessionsOptions({
+        issuer: 'https://sessions.test',
+        audience: 'aud',
+        redis: { url: 'redis://127.0.0.1:6379' },
+        jwt: { secretId: 'sessions/key' },
+        timeouts: {
+          accessNotBeforeDelaySeconds: 3,
+        },
+      }),
+    ).toMatchObject({
+      audience: 'aud',
+      jwt: {
+        secretId: 'sessions/key',
+        cacheTtlMs: 300_000,
+      },
+      timeouts: {
+        accessNotBeforeDelaySeconds: 3,
+      },
+    });
+  });
+
+  it('exchanges sessions without carrying optional device metadata or create metadata', async () => {
+    const now = new Date('2026-05-18T12:00:00.000Z');
+    const store = new StaticSessionStore({
+      sid: 'session-1',
+      userId: 'user-1',
+      tenantId: 'tenant-1',
+      cognitoSub: 'cognito-1',
+      refreshFamilyId: 'family-1',
+      refreshTokenHash: 'refresh-hash-1',
+      status: 'active',
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+      lastTouchedAt: now.toISOString(),
+      expiresAt: new Date(now.getTime() + 60_000).toISOString(),
+      idleExpiresAt: new Date(now.getTime() + 60_000).toISOString(),
+    });
+    const options = resolveSessionsOptions({
+      issuer: 'https://sessions.test',
+      redis: { url: 'redis://127.0.0.1:6379' },
+      jwt: { keySet: buildKeySet() },
+      clock: () => now,
+    });
+    const mirror = new RecordingMirror();
+    const service = new SessionService(options, store, new SessionJwtSigningService(options), mirror);
+
+    const exchanged = await service.exchange({
+      sessionId: 'session-1',
+      actorUserId: 'user-1',
+      newTenantId: 'tenant-2',
+    });
+
+    expect(exchanged.revokedSessionId).toBe('session-1');
+    expect(exchanged.bundle.sid).toEqual(expect.any(String));
+    expect(mirror.entries.at(-1)).toMatchObject({
+      tenantId: 'tenant-2',
+    });
+    expect(mirror.entries.at(-1)).not.toHaveProperty('membershipId');
+    expect(mirror.entries.at(-1)).not.toHaveProperty('permsHash');
+  });
+
+  it('revokes all sessions for a user or tenant with one invalidation per affected scope', async () => {
+    const store = new InMemorySessionStore();
+    const mirror = new RecordingMirror();
+    const options = resolveSessionsOptions({
+      issuer: 'https://sessions.test',
+      redis: { url: 'redis://127.0.0.1:6379' },
+      jwt: { keySet: buildKeySet() },
+    });
+    const service = new SessionService(options, store, new SessionJwtSigningService(options), mirror);
+
+    await service.create('user-1', 'tenant-1', 'cognito-1', {}, { membershipId: 'm-1' });
+    await service.create('user-1', 'tenant-2', 'cognito-1');
+    await service.create('user-2', 'tenant-2', 'cognito-2');
+
+    await expect(service.revokeAllForUser('user-1')).resolves.toBe(2);
+    expect(store.invalidations).toEqual(expect.arrayContaining(['user-1:tenant-1', 'user-1:tenant-2']));
+    expect(mirror.entries.filter((entry) => entry.status === 'revoked')).toHaveLength(2);
+
+    await expect(service.revokeAllForTenant('tenant-2')).resolves.toBe(1);
+    expect(store.invalidations).toContain('*:tenant-2');
+  });
+
+  it('does not publish tenant invalidation when no tenant sessions are active', async () => {
+    const store = new InMemorySessionStore();
+    const mirror = new RecordingMirror();
+    const options = resolveSessionsOptions({
+      issuer: 'https://sessions.test',
+      redis: { url: 'redis://127.0.0.1:6379' },
+      jwt: { keySet: buildKeySet() },
+    });
+    const service = new SessionService(options, store, new SessionJwtSigningService(options), mirror);
+
+    await expect(service.revokeAllForTenant('tenant-missing')).resolves.toBe(0);
+    expect(store.invalidations).toEqual([]);
   });
 });

@@ -16,7 +16,11 @@ updates:
         patterns:
           - '@angular*'
           - '@angular-devkit/*'
-          - 'jest-preset-angular'
+      vitest:
+        patterns:
+          - 'vitest'
+          - '@vitest/*'
+          - 'unplugin-swc'
       dev:
         patterns:
           - '@changesets/*'
@@ -43,7 +47,10 @@ updates:
           - '@angular*'
           - '@angular-devkit/*'
           - 'angular-oauth2-oidc'
-          - 'jest-preset-angular'
+      vitest:
+        patterns:
+          - 'vitest'
+          - '@vitest/*'
       dev:
         patterns:
           - '@types/*'
@@ -52,7 +59,6 @@ updates:
           - 'cypress'
           - 'eslint'
           - 'globals'
-          - 'jest'
           - 'ts-*'
           - 'typescript'
 
@@ -65,10 +71,13 @@ updates:
       nest:
         patterns:
           - '@nestjs/*'
+      vitest:
+        patterns:
+          - 'vitest'
+          - '@vitest/*'
       dev:
         patterns:
           - '@types/*'
-          - 'jest'
           - 'ts-*'
           - 'typescript'
 
@@ -78,10 +87,13 @@ updates:
       interval: weekly
     open-pull-requests-limit: 10
     groups:
+      vitest:
+        patterns:
+          - 'vitest'
+          - '@vitest/*'
       dev:
         patterns:
           - '@types/*'
-          - 'jest'
           - 'ts-*'
           - 'typescript'
 
@@ -91,10 +103,13 @@ updates:
       interval: weekly
     open-pull-requests-limit: 10
     groups:
+      vitest:
+        patterns:
+          - 'vitest'
+          - '@vitest/*'
       dev:
         patterns:
           - '@types/*'
-          - 'jest'
           - 'ts-*'
           - 'typescript'
 

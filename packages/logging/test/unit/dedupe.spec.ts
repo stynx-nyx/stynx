@@ -6,6 +6,7 @@ describe('LoggingDedupeService', () => {
 
     expect(dedupe.register('boom', 'stack')).toEqual({ shouldLog: true });
     expect(dedupe.register('boom', 'stack')).toEqual({ shouldLog: false });
+    expect(dedupe.register('boom')).toEqual({ shouldLog: true });
   });
 
   it('reports the suppressed duplicate count when the window rolls over', () => {

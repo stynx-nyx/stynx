@@ -270,8 +270,13 @@ describe('@stynx-web/angular-auth', () => {
   it('parses JWT payloads and persists refresh tokens in storage and cookies', () => {
     const token = createJwt({ permissions: ['a', 'b'], scope: 'ignored' });
     expect(normalizePermissions(parseJwtPayload(token))).toEqual(['a', 'b']);
+    expect(normalizePermissions(null)).toEqual([]);
     expect(normalizePermissions({ scope: 'read write ' })).toEqual(['read', 'write']);
+    expect(normalizePermissions({ permissions: ' read  write ' })).toEqual(['read', 'write']);
+    expect(normalizePermissions({ permissions: ['a', 42, '  ', 'b'] })).toEqual(['a', 'b']);
+    expect(normalizePermissions({ permissions: 42 })).toEqual([]);
     expect(parseJwtPayload('not-a-jwt')).toBeNull();
+    expect(parseJwtPayload(`h.${Buffer.from('not-json', 'utf8').toString('base64url')}.s`)).toBeNull();
 
     const backing = new Map<string, string>();
     const storage = new RefreshTokenStorage('refresh', 'session-storage', {
@@ -290,6 +295,15 @@ describe('@stynx-web/angular-auth', () => {
     missingStorage.write('ignored');
     expect(missingStorage.read()).toBeNull();
 
+    const defaultStorage = new RefreshTokenStorage('refresh');
+    defaultStorage.write(null);
+    expect(defaultStorage.read()).toBeNull();
+
+    const serverCookieStorage = new RefreshTokenStorage('refresh', 'cookie', null, null);
+    serverCookieStorage.write('ignored');
+    serverCookieStorage.clear();
+    expect(serverCookieStorage.read()).toBeNull();
+
     const cookieDocument = { cookie: '' };
     const cookieStorage = new RefreshTokenStorage('refresh', 'cookie', null, cookieDocument as Document, {
       name: 'refresh',
@@ -301,6 +315,8 @@ describe('@stynx-web/angular-auth', () => {
     expect(cookieDocument.cookie).toContain('refresh=cookie-token');
     cookieDocument.cookie = 'refresh=cookie-token; other=value';
     expect(cookieStorage.read()).toBe('cookie-token');
+    cookieDocument.cookie = 'other=value';
+    expect(cookieStorage.read()).toBeNull();
     cookieStorage.clear();
     expect(cookieDocument.cookie).toContain('Max-Age=0');
 

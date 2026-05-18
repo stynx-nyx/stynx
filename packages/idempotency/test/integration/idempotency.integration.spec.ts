@@ -42,7 +42,6 @@ function createResponseStub() {
 }
 
 describe('Idempotency integration', () => {
-  jest.setTimeout(120_000);
 
   let redis: RedisDockerContainer | undefined;
   let postgres: PostgresTestDatabase | undefined;

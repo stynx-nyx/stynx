@@ -1,5 +1,6 @@
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { FlowRuntimeService } from '../../src/flow-runtime.service';
+import type { Mock } from 'vitest';
 
 const SCOPE = '0190abcd-1234-7abc-89ab-000000000001';
 const RUN = '0190abcd-1234-7abc-89ab-000000000002';
@@ -9,31 +10,31 @@ const USER = '0190abcd-1234-7abc-89ab-000000000005';
 const EVENT = '0190abcd-1234-7abc-89ab-000000000006';
 
 interface FakeTrx {
-  query: jest.Mock<Promise<{ rows: unknown[] }>, [string, unknown[]?]>;
+  query: Mock<Promise<{ rows: unknown[] }>, [string, unknown[]?]>;
 }
 
 function makeTrx(rowsByCall: Array<unknown[]> = []) {
   let i = 0;
   return {
-    query: jest.fn(async () => ({ rows: rowsByCall[i++] ?? [] })),
+    query: vi.fn(async () => ({ rows: rowsByCall[i++] ?? [] })),
   } as FakeTrx;
 }
 
 function makeDb(rowsByCall: Array<unknown[]> = []) {
   const trx = makeTrx(rowsByCall);
   return {
-    db: { tx: jest.fn(async (fn: (t: FakeTrx) => unknown) => fn(trx)) } as never,
+    db: { tx: vi.fn(async (fn: (t: FakeTrx) => unknown) => fn(trx)) } as never,
     trx,
   };
 }
 
 function makeAdapters(overrides: Partial<Record<string, unknown>> = {}) {
   return {
-    buildFacts: jest.fn(async () => ({ x: 1 })),
-    applyEffect: jest.fn(async () => ({ ok: true, payload: { ok: true } })),
-    canManage: jest.fn(async () => true),
-    canView: jest.fn(async () => true),
-    resolveAgents: jest.fn(async () => [{ type: 'user', id: 'u-1', label: 'U' }]),
+    buildFacts: vi.fn(async () => ({ x: 1 })),
+    applyEffect: vi.fn(async () => ({ ok: true, payload: { ok: true } })),
+    canManage: vi.fn(async () => true),
+    canView: vi.fn(async () => true),
+    resolveAgents: vi.fn(async () => [{ type: 'user', id: 'u-1', label: 'U' }]),
     ...overrides,
   } as never;
 }
@@ -120,7 +121,7 @@ describe('FlowRuntimeService.ensureRun', () => {
     const { service } = makeService(
       [],
       { tenantId: 't-1', actorId: USER },
-      { buildFacts: jest.fn(async () => { throw new Error('adapter boom'); }) },
+      { buildFacts: vi.fn(async () => { throw new Error('adapter boom'); }) },
     );
     await expect(
       service.ensureRun({
@@ -153,6 +154,24 @@ describe('FlowRuntimeService listRuns / listNodeRuns / listTasks / listEvents', 
     await service.listRuns({});
     const [sql] = trx.query.mock.calls[0]!;
     expect(sql).not.toContain('where');
+  });
+
+  it('list methods use default empty queries when omitted', async () => {
+    const a = makeService([[], []]);
+    await a.service.listRuns();
+    expect(a.trx.query.mock.calls[0]?.[1]).toEqual([50, 0]);
+
+    const b = makeService([[], []]);
+    await b.service.listNodeRuns();
+    expect(b.trx.query.mock.calls[0]?.[1]).toEqual([50, 0]);
+
+    const c = makeService([[], []]);
+    await c.service.listTasks();
+    expect(c.trx.query.mock.calls[0]?.[1]).toEqual([50, 0]);
+
+    const d = makeService([[], []]);
+    await d.service.listEvents();
+    expect(d.trx.query.mock.calls[0]?.[1]).toEqual([50, 0]);
   });
 
   it('listNodeRuns filters by runId + status', async () => {
@@ -315,7 +334,7 @@ describe('FlowRuntimeService task action flows', () => {
         [{ assignee_user_id: USER, adapter_key: 'k', target_type: 't', target_id: 't-1' }],
       ],
       { tenantId: 't-1', actorId: USER },
-      { canManage: jest.fn(async () => false) },
+      { canManage: vi.fn(async () => false) },
     );
     await expect(service.assignTask(TASK, { userId: USER })).rejects.toBeInstanceOf(
       ForbiddenException,
@@ -411,10 +430,35 @@ describe('FlowRuntimeService.taskCandidates', () => {
         ],
       ],
       { tenantId: 't-1', actorId: USER },
-      { resolveAgents: jest.fn(async () => []) },
+      { resolveAgents: vi.fn(async () => []) },
     );
     const result = await service.taskCandidates(TASK);
     expect(result[0]).toMatchObject({ unresolved: true });
+  });
+
+  it('leaves resolver candidates unresolved when request context or resolver metadata is incomplete', async () => {
+    const { service, adapters } = makeService(
+      [
+        [{ assignee_user_id: USER, adapter_key: 'k', target_type: 't', target_id: 't-1' }],
+        [
+          {
+            agent_type: 'resolver',
+            agent_id: '',
+            rule_id: 'r-1',
+            params: [],
+            run_id: RUN,
+            node_id: NODE,
+            adapter_key: '',
+            target_type: null,
+            target_id: null,
+          },
+        ],
+      ],
+      { tenantId: 't-1', actorId: USER },
+    );
+    const result = await service.taskCandidates(TASK);
+    expect(result[0]).toMatchObject({ agentType: 'resolver', agentId: '' });
+    expect(adapters.resolveAgents).not.toHaveBeenCalled();
   });
 });
 
@@ -477,6 +521,23 @@ describe('FlowRuntimeService.dispatchPendingEffects', () => {
     expect(adapters.applyEffect).toHaveBeenCalled();
   });
 
+  it('uses dispatch defaults and tolerates non-object effect payload wrappers', async () => {
+    const { service, adapters } = makeService([
+      [effectRow({
+        payload: { effectKey: 'send-email', payload: ['not-object'] },
+        node_code: null,
+        action: null,
+        task_id: null,
+      })],
+      [],
+    ]);
+    const result = await service.dispatchPendingEffects();
+    expect((result as { succeeded: number }).succeeded).toBe(1);
+    expect(adapters.applyEffect).toHaveBeenCalledWith(expect.objectContaining({
+      payload: {},
+    }));
+  });
+
   it('records failure when adapter.applyEffect throws', async () => {
     const { service } = makeService(
       [
@@ -484,7 +545,7 @@ describe('FlowRuntimeService.dispatchPendingEffects', () => {
         [],
       ],
       { tenantId: 't-1', actorId: USER },
-      { applyEffect: jest.fn(async () => { throw new Error('apply-boom'); }) },
+      { applyEffect: vi.fn(async () => { throw new Error('apply-boom'); }) },
     );
     const result = await service.dispatchPendingEffects({});
     expect((result as { failed: number }).failed).toBe(1);

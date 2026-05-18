@@ -4,7 +4,7 @@ import { EffectiveHashComputer } from '../../src/effective-hash-computer';
 describe('EffectiveHashComputer', () => {
   function createService() {
     const trx = {
-      query: jest.fn(async (sql: string, _params: unknown[]) => {
+      query: vi.fn(async (sql: string, _params: unknown[]) => {
         if (sql.includes('select key from auth.perms')) {
           return {
             rows: [{ key: 'document:read:*' }, { key: 'document:write:*' }, { key: 'document:*:*' }],
@@ -32,10 +32,10 @@ describe('EffectiveHashComputer', () => {
       }),
     };
     const database = {
-      tx: jest.fn(async (fn: (value: typeof trx) => Promise<unknown>) => fn(trx)),
+      tx: vi.fn(async (fn: (value: typeof trx) => Promise<unknown>) => fn(trx)),
     };
     const moduleRef = {
-      get: jest.fn(() => database),
+      get: vi.fn(() => database),
     } as unknown as ModuleRef;
 
     return { service: new EffectiveHashComputer(moduleRef), trx, database };

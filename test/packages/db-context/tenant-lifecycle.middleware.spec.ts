@@ -12,7 +12,7 @@ function createResponseStub() {
     close: [],
   };
   const response: ResponseLike = {
-    once: jest.fn((event: 'finish' | 'close', listener: () => void) => {
+    once: vi.fn((event: 'finish' | 'close', listener: () => void) => {
       listeners[event].push(listener);
       return response;
     }),
@@ -31,7 +31,7 @@ function createResponseStub() {
 describe('TenantLifecycleMiddleware', () => {
   it('sets tenantId and releases tenant-bound client on response events', () => {
     const middleware = new TenantLifecycleMiddleware();
-    const release = jest.fn(() => undefined);
+    const release = vi.fn(() => undefined);
     const request: Record<string, unknown> = {
       headers: {
         'x-tenant-id': '11111111-1111-1111-1111-111111111111',
@@ -39,7 +39,7 @@ describe('TenantLifecycleMiddleware', () => {
       pgClient: { release },
     };
     const { response, emit } = createResponseStub();
-    const next = jest.fn((_error?: unknown) => undefined) as TenantLifecycleNext;
+    const next = vi.fn((_error?: unknown) => undefined) as TenantLifecycleNext;
 
     middleware.use(request, response, next);
     expect(next).toHaveBeenCalledTimes(1);
@@ -81,7 +81,7 @@ describe('TenantLifecycleMiddleware', () => {
     const request: Record<string, unknown> = {
       headers: {},
     };
-    const next = jest.fn((_error?: unknown) => undefined) as TenantLifecycleNext;
+    const next = vi.fn((_error?: unknown) => undefined) as TenantLifecycleNext;
 
     middleware.use(request, undefined, next);
 
@@ -95,7 +95,7 @@ describe('TenantLifecycleMiddleware', () => {
       enforceTenantUuid: false,
     });
     const request: Record<string, unknown> = { headers: {} };
-    const next = jest.fn((_error?: unknown) => undefined) as TenantLifecycleNext;
+    const next = vi.fn((_error?: unknown) => undefined) as TenantLifecycleNext;
 
     handler(request, undefined, next);
 

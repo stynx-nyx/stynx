@@ -21,7 +21,6 @@ function createExecutionContext(request: Record<string, unknown>, handler: Funct
 }
 
 describe('Rate limit integration', () => {
-  jest.setTimeout(120_000);
 
   let redis: RedisDockerContainer | undefined;
   let databaseRef: Database | undefined;

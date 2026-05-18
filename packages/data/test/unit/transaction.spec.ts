@@ -13,6 +13,7 @@ import { documentVersions, documents } from '../../src/schema/storage';
 import { Transaction, type StynxDrizzleDatabase } from '../../src/transaction';
 import type { StynxDataMetricsSink } from '../../src/tokens';
 import type { TableMeta } from '../../src/internal/table-meta';
+import type { Mock } from 'vitest';
 
 describe('Transaction', () => {
   const parentMeta: TableMeta = {
@@ -38,15 +39,15 @@ describe('Transaction', () => {
     metrics?: StynxDataMetricsSink,
   ) => {
     const client = {
-      query: jest.fn(async () => ({ rows: [], rowCount: 0 })),
-    } as unknown as PoolClient & { query: jest.Mock };
+      query: vi.fn(async () => ({ rows: [], rowCount: 0 })),
+    } as unknown as PoolClient & { query: Mock };
     const db = {
-      select: jest.fn(() => ({ from: jest.fn(() => ({ live: true })) })),
-      insert: jest.fn(() => ({ insert: true })),
-      update: jest.fn(() => ({ update: true })),
-      delete: jest.fn(() => ({ delete: true })),
-      execute: jest.fn(async () => ({ rows: [{ ok: 1 }], rowCount: 1 })),
-    } as unknown as StynxDrizzleDatabase & Record<string, jest.Mock>;
+      select: vi.fn(() => ({ from: vi.fn(() => ({ live: true })) })),
+      insert: vi.fn(() => ({ insert: true })),
+      update: vi.fn(() => ({ update: true })),
+      delete: vi.fn(() => ({ delete: true })),
+      execute: vi.fn(async () => ({ rows: [{ ok: 1 }], rowCount: 1 })),
+    } as unknown as StynxDrizzleDatabase & Record<string, Mock>;
 
     return {
       tx: new Transaction(client, db, role, metrics),
@@ -107,6 +108,19 @@ describe('Transaction', () => {
     });
   });
 
+  it('forces cascade restore options through restoreWithCascade defaults', async () => {
+    const { tx } = createTx();
+    const restoreFromArchive = vi.spyOn(tx, 'restoreFromArchive').mockResolvedValue({
+      id: 'doc-1',
+      restoredAt: '2026-01-01T00:00:00.000Z',
+    });
+
+    await expect(tx.restoreWithCascade(documents, 'doc-1')).resolves.toMatchObject({ id: 'doc-1' });
+
+    expect(restoreFromArchive).toHaveBeenCalledWith(documents, 'doc-1', { cascade: true });
+    restoreFromArchive.mockRestore();
+  });
+
   it('softDelete returns dry-run plans and filters the root archive entry from committed cascades', async () => {
     const { tx } = createTx();
     const plan = {
@@ -117,13 +131,13 @@ describe('Transaction', () => {
       withinLimits: true,
     };
     const api = tx as unknown as {
-      ensureMirrorExists: jest.Mock;
-      buildCascadePlan: jest.Mock;
-      softDeleteByReference: jest.Mock;
+      ensureMirrorExists: Mock;
+      buildCascadePlan: Mock;
+      softDeleteByReference: Mock;
     };
-    api.ensureMirrorExists = jest.fn(async () => undefined);
-    api.buildCascadePlan = jest.fn(async () => plan);
-    api.softDeleteByReference = jest.fn(async (...args: unknown[]) => {
+    api.ensureMirrorExists = vi.fn(async () => undefined);
+    api.buildCascadePlan = vi.fn(async () => plan);
+    api.softDeleteByReference = vi.fn(async (...args: unknown[]) => {
       const cascaded = args[6] as Array<{ schema: string; table: string; archiveId: bigint; id: string }>;
       cascaded.push(
         { schema: 'storage', table: 'document_versions', archiveId: 8n, id: 'doc-version-1' },
@@ -152,8 +166,8 @@ describe('Transaction', () => {
       archiveSize: Array<{ table: string; bytes: number }>;
     } = { hardDelete: [], archiveSize: [] };
     const metrics: StynxDataMetricsSink = {
-      incrementSoftDelete: jest.fn(),
-      incrementRestore: jest.fn(),
+      incrementSoftDelete: vi.fn(),
+      incrementRestore: vi.fn(),
       incrementHardDelete: (table) => metricsEvents.hardDelete.push(table),
       setArchiveSizeBytes: (table, bytes) => metricsEvents.archiveSize.push({ table, bytes }),
     };
@@ -163,6 +177,8 @@ describe('Transaction', () => {
       .mockResolvedValueOnce({ rows: [{ bytes: '2048' }], rowCount: 1 })
       .mockResolvedValueOnce({ rows: [], rowCount: 1 })
       .mockResolvedValueOnce({ rows: [{ bytes: 'not-a-number' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [], rowCount: 1 })
       .mockResolvedValueOnce({ rows: [], rowCount: 1 });
 
     await expect(
@@ -176,6 +192,10 @@ describe('Transaction', () => {
       archiveTable: 'custom_archive_table',
       confirm: 'I understand this is irrecoverable',
     });
+    await tx.hardDeleteFromArchive(14n, {
+      archiveTable: 'archive.',
+      confirm: 'I understand this is irrecoverable',
+    });
     await tx.hardDelete(documents, 'doc-2', { confirm: 'I understand this is irrecoverable' });
 
     expect(client.query).toHaveBeenCalledWith(
@@ -186,24 +206,32 @@ describe('Transaction', () => {
       'delete from "archive"."custom_archive_table" where archive_id = $1',
       ['13'],
     );
+    expect(client.query).toHaveBeenCalledWith(
+      'delete from "archive"."archive." where archive_id = $1',
+      ['14'],
+    );
     expect(client.query).toHaveBeenCalledWith('delete from "storage"."documents" where id = $1', ['doc-2']);
     expect(metricsEvents.hardDelete).toEqual([
       'archive.storage_documents',
       'custom_archive_table',
+      'archive.',
       'storage.documents',
     ]);
-    expect(metricsEvents.archiveSize).toEqual([{ table: 'storage.documents', bytes: 2048 }]);
+    expect(metricsEvents.archiveSize).toEqual([
+      { table: 'storage.documents', bytes: 2048 },
+      { table: 'archive.', bytes: 0 },
+    ]);
   });
 
   it('builds recursive cascade plans with exact row counts and depth limits', async () => {
     const { tx } = createTx();
     const api = tx as unknown as {
       buildCascadePlan: (meta: TableMeta, id: string, maxDepth: number, maxRows: number, depth?: number) => Promise<unknown>;
-      loadRegistryByParent: jest.Mock;
-      listChildIds: jest.Mock;
-      loadColumnNames: jest.Mock;
+      loadRegistryByParent: Mock;
+      listChildIds: Mock;
+      loadColumnNames: Mock;
     };
-    api.loadRegistryByParent = jest.fn(async (_schema: string, table: string) =>
+    api.loadRegistryByParent = vi.fn(async (_schema: string, table: string) =>
       table === 'customer'
         ? [
           childRegistryEntry,
@@ -211,8 +239,8 @@ describe('Transaction', () => {
         ]
         : [],
     );
-    api.listChildIds = jest.fn(async (_entry, id: string) => (id === 'customer-1' ? ['invoice-1', 'invoice-2'] : []));
-    api.loadColumnNames = jest.fn(async () => ['id', 'customer_id']);
+    api.listChildIds = vi.fn(async (_entry, id: string) => (id === 'customer-1' ? ['invoice-1', 'invoice-2'] : []));
+    api.loadColumnNames = vi.fn(async () => ['id', 'customer_id']);
 
     await expect(api.buildCascadePlan(parentMeta, 'customer-1', 4, 3)).resolves.toEqual({
       parent: { schema: 'demo', table: 'customer', id: 'customer-1' },
@@ -249,10 +277,10 @@ describe('Transaction', () => {
 
   it('soft-deletes one reference and maps missing rows and FK delete failures', async () => {
     const metrics = {
-      incrementSoftDelete: jest.fn(),
-      incrementRestore: jest.fn(),
-      incrementHardDelete: jest.fn(),
-      setArchiveSizeBytes: jest.fn(),
+      incrementSoftDelete: vi.fn(),
+      incrementRestore: vi.fn(),
+      incrementHardDelete: vi.fn(),
+      setArchiveSizeBytes: vi.fn(),
     };
     const { tx } = createTx('app', metrics);
     const api = tx as unknown as {
@@ -265,17 +293,17 @@ describe('Transaction', () => {
         depth: number,
         cascaded: Array<{ schema: string; table: string; archiveId: bigint; id: string }>,
       ) => Promise<void>;
-      ensureMirrorExists: jest.Mock;
-      loadRegistryByParent: jest.Mock;
-      describeBlockingChildren: jest.Mock;
-      sampleArchiveSize: jest.Mock;
-      query: jest.Mock;
+      ensureMirrorExists: Mock;
+      loadRegistryByParent: Mock;
+      describeBlockingChildren: Mock;
+      sampleArchiveSize: Mock;
+      query: Mock;
     };
-    api.ensureMirrorExists = jest.fn(async () => undefined);
-    api.loadRegistryByParent = jest.fn(async () => []);
-    api.describeBlockingChildren = jest.fn(async () => []);
-    api.sampleArchiveSize = jest.fn(async () => undefined);
-    api.query = jest.fn(async (text: string) => {
+    api.ensureMirrorExists = vi.fn(async () => undefined);
+    api.loadRegistryByParent = vi.fn(async () => []);
+    api.describeBlockingChildren = vi.fn(async () => []);
+    api.sampleArchiveSize = vi.fn(async () => undefined);
+    api.query = vi.fn(async (text: string) => {
       if (text.includes('insert into')) {
         return { rows: [{ archive_id: '44' }], rowCount: 1 };
       }
@@ -289,7 +317,24 @@ describe('Transaction', () => {
     expect(api.query).toHaveBeenCalledWith(`select set_config('app.archive_reason', 'soft_delete', true)`);
     expect(metrics.incrementSoftDelete).toHaveBeenCalledWith('demo.customer');
 
-    api.query = jest.fn(async (text: string) => (
+    api.query = vi.fn(async (text: string) => (
+      text.includes('insert into') ? { rows: [{}], rowCount: 1 } : { rows: [], rowCount: 1 }
+    ));
+    const missingArchiveId: Array<{ schema: string; table: string; archiveId: bigint; id: string }> = [];
+    await api.softDeleteByReference(
+      parentMeta,
+      'missing-archive-id',
+      '2026-01-01T00:00:00.000Z',
+      2,
+      5,
+      0,
+      missingArchiveId,
+    );
+    expect(missingArchiveId).toEqual([
+      { schema: 'demo', table: 'customer', archiveId: 0n, id: 'missing-archive-id' },
+    ]);
+
+    api.query = vi.fn(async (text: string) => (
       text.includes('insert into') ? { rows: [], rowCount: 0 } : { rows: [], rowCount: 1 }
     ));
     await expect(
@@ -301,7 +346,7 @@ describe('Transaction', () => {
 
     const fkError = new Error('fk') as Error & { code: string };
     fkError.code = '23503';
-    api.query = jest.fn(async (text: string) => {
+    api.query = vi.fn(async (text: string) => {
       if (text.includes('insert into')) {
         return { rows: [{ archive_id: '45' }], rowCount: 1 };
       }
@@ -322,7 +367,7 @@ describe('Transaction', () => {
 
     const restrictError = new Error('restrict') as Error & { code: string };
     restrictError.code = '23001';
-    api.query = jest.fn(async (text: string) => {
+    api.query = vi.fn(async (text: string) => {
       if (text.includes('insert into')) {
         return { rows: [{ archive_id: '46' }], rowCount: 1 };
       }
@@ -336,7 +381,7 @@ describe('Transaction', () => {
     ).rejects.toBeInstanceOf(SoftDeleteBlockedError);
 
     const unknownDeleteError = new Error('other failure');
-    api.query = jest.fn(async (text: string) => {
+    api.query = vi.fn(async (text: string) => {
       if (text.includes('insert into')) {
         return { rows: [{ archive_id: '47' }], rowCount: 1 };
       }
@@ -362,10 +407,10 @@ describe('Transaction', () => {
         depth: number,
         cascaded: unknown[],
       ) => Promise<void>;
-      ensureMirrorExists: jest.Mock;
-      loadRegistryByParent: jest.Mock;
-      listChildIds: jest.Mock;
-      describeBlockingChildren: jest.Mock;
+      ensureMirrorExists: Mock;
+      loadRegistryByParent: Mock;
+      listChildIds: Mock;
+      describeBlockingChildren: Mock;
     };
     await expect(
       api.softDeleteByReference(parentMeta, 'too-deep', '2026-01-01T00:00:00.000Z', 1, 10, 2, []),
@@ -377,9 +422,9 @@ describe('Transaction', () => {
       },
     });
 
-    api.ensureMirrorExists = jest.fn(async () => undefined);
-    api.loadRegistryByParent = jest.fn(async () => [childRegistryEntry]);
-    api.listChildIds = jest.fn(async () => ['child-1', 'child-2']);
+    api.ensureMirrorExists = vi.fn(async () => undefined);
+    api.loadRegistryByParent = vi.fn(async () => [childRegistryEntry]);
+    api.listChildIds = vi.fn(async () => ['child-1', 'child-2']);
     await expect(
       api.softDeleteByReference(parentMeta, 'too-large', '2026-01-01T00:00:00.000Z', 4, 2, 0, []),
     ).rejects.toMatchObject({
@@ -390,24 +435,24 @@ describe('Transaction', () => {
       },
     });
 
-    api.loadRegistryByParent = jest.fn(async (_schema: string, table: string) =>
+    api.loadRegistryByParent = vi.fn(async (_schema: string, table: string) =>
       table === 'customer' ? [childRegistryEntry] : [],
     );
-    api.listChildIds = jest.fn(async () => ['child-1']);
-    api.describeBlockingChildren = jest.fn(async () => []);
-    (api as unknown as { query: jest.Mock; sampleArchiveSize: jest.Mock }).query = jest.fn(async (text: string) => {
+    api.listChildIds = vi.fn(async () => ['child-1']);
+    api.describeBlockingChildren = vi.fn(async () => []);
+    (api as unknown as { query: Mock; sampleArchiveSize: Mock }).query = vi.fn(async (text: string) => {
       if (text.includes('insert into')) {
         return { rows: [{ archive_id: '48' }], rowCount: 1 };
       }
       return { rows: [], rowCount: 1 };
     });
-    (api as unknown as { sampleArchiveSize: jest.Mock }).sampleArchiveSize = jest.fn(async () => undefined);
+    (api as unknown as { sampleArchiveSize: Mock }).sampleArchiveSize = vi.fn(async () => undefined);
     await expect(
       api.softDeleteByReference(parentMeta, 'at-limit', '2026-01-01T00:00:00.000Z', 4, 2, 0, []),
     ).resolves.toBeUndefined();
 
-    api.loadRegistryByParent = jest.fn(async () => []);
-    api.describeBlockingChildren = jest.fn(async () => [{ schema: 'demo', table: 'payment', count: 1 }]);
+    api.loadRegistryByParent = vi.fn(async () => []);
+    api.describeBlockingChildren = vi.fn(async () => [{ schema: 'demo', table: 'payment', count: 1 }]);
     await expect(
       api.softDeleteByReference(parentMeta, 'blocked', '2026-01-01T00:00:00.000Z', 4, 10, 0, []),
     ).rejects.toMatchObject({
@@ -420,10 +465,10 @@ describe('Transaction', () => {
 
   it('restores archived references, maps restore conflicts, and cascades child restores', async () => {
     const metrics = {
-      incrementSoftDelete: jest.fn(),
-      incrementRestore: jest.fn(),
-      incrementHardDelete: jest.fn(),
-      setArchiveSizeBytes: jest.fn(),
+      incrementSoftDelete: vi.fn(),
+      incrementRestore: vi.fn(),
+      incrementHardDelete: vi.fn(),
+      setArchiveSizeBytes: vi.fn(),
     };
     const { tx } = createTx('app', metrics);
     const api = tx as unknown as {
@@ -433,22 +478,22 @@ describe('Transaction', () => {
         options: Record<string, unknown>,
         restored: Array<{ schema: string; table: string; id: string }>,
       ) => Promise<unknown>;
-      loadArchivedRow: jest.Mock;
-      findArchivedParents: jest.Mock;
-      findRestoreConflict: jest.Mock;
-      loadRegistryByParent: jest.Mock;
-      loadColumnNames: jest.Mock;
-      sampleArchiveSize: jest.Mock;
-      query: jest.Mock;
+      loadArchivedRow: Mock;
+      findArchivedParents: Mock;
+      findRestoreConflict: Mock;
+      loadRegistryByParent: Mock;
+      loadColumnNames: Mock;
+      sampleArchiveSize: Mock;
+      query: Mock;
     };
-    api.loadArchivedRow = jest.fn(async (_meta, id: string) => ({
+    api.loadArchivedRow = vi.fn(async (_meta, id: string) => ({
       archive_id: id === 'customer-1' ? '501' : '601',
       deleted_at: '2026-01-01T00:00:00.000Z',
       row_data: { id },
     }));
-    api.findArchivedParents = jest.fn(async () => []);
-    api.findRestoreConflict = jest.fn(async () => undefined);
-    api.loadRegistryByParent = jest.fn(async (_schema: string, table: string) =>
+    api.findArchivedParents = vi.fn(async () => []);
+    api.findRestoreConflict = vi.fn(async () => undefined);
+    api.loadRegistryByParent = vi.fn(async (_schema: string, table: string) =>
       table === 'customer'
         ? [
           childRegistryEntry,
@@ -456,9 +501,9 @@ describe('Transaction', () => {
         ]
         : [],
     );
-    api.loadColumnNames = jest.fn(async () => ['id', 'customer_id']);
-    api.sampleArchiveSize = jest.fn(async () => undefined);
-    api.query = jest.fn(async (text: string) => {
+    api.loadColumnNames = vi.fn(async () => ['id', 'customer_id']);
+    api.sampleArchiveSize = vi.fn(async () => undefined);
+    api.query = vi.fn(async (text: string) => {
       if (text.includes('select id') && text.includes('"archive"."demo_invoice"')) {
         return { rows: [{ id: 'invoice-1' }], rowCount: 1 };
       }
@@ -474,17 +519,17 @@ describe('Transaction', () => {
     expect(api.query).toHaveBeenCalledWith(`select set_config('app.archive_reason', 'restore', true)`);
     expect(metrics.incrementRestore).toHaveBeenCalledWith('demo.customer');
 
-    api.loadArchivedRow = jest.fn(async () => ({
+    api.loadArchivedRow = vi.fn(async () => ({
       archive_id: '777',
       deleted_at: '2026-01-01T00:00:00.000Z',
       row_data: {},
     }));
-    api.findArchivedParents = jest.fn(async () => []);
-    api.findRestoreConflict = jest.fn(async () => undefined);
-    api.loadRegistryByParent = jest.fn(async () => {
+    api.findArchivedParents = vi.fn(async () => []);
+    api.findRestoreConflict = vi.fn(async () => undefined);
+    api.loadRegistryByParent = vi.fn(async () => {
       throw new Error('cascade registry should not be loaded');
     });
-    api.query = jest.fn(async (text: string) => {
+    api.query = vi.fn(async (text: string) => {
       expect(text).not.toBe('');
       return { rows: [], rowCount: 1 };
     });
@@ -493,7 +538,7 @@ describe('Transaction', () => {
       restoredAt: expect.any(String),
     });
 
-    api.loadArchivedRow = jest.fn(async () => undefined);
+    api.loadArchivedRow = vi.fn(async () => undefined);
     await expect(api.restoreByReference(parentMeta, 'missing', {}, [])).rejects.toBeInstanceOf(
       ArchiveMirrorMissingError,
     );
@@ -501,8 +546,8 @@ describe('Transaction', () => {
       context: { table: '"archive"."demo_customer"', id: 'missing' },
     });
 
-    api.loadArchivedRow = jest.fn(async () => ({ archive_id: '1', deleted_at: 'now', row_data: {} }));
-    api.findArchivedParents = jest.fn(async () => [{ schema: 'demo', table: 'parent', id: 'parent-1' }]);
+    api.loadArchivedRow = vi.fn(async () => ({ archive_id: '1', deleted_at: 'now', row_data: {} }));
+    api.findArchivedParents = vi.fn(async () => [{ schema: 'demo', table: 'parent', id: 'parent-1' }]);
     await expect(api.restoreByReference(parentMeta, 'child', {}, [])).rejects.toBeInstanceOf(
       RestoreCascadeParentsArchivedError,
     );
@@ -510,16 +555,16 @@ describe('Transaction', () => {
       context: { archivedParents: [{ schema: 'demo', table: 'parent', id: 'parent-1' }] },
     });
 
-    api.findArchivedParents = jest.fn(async () => []);
-    api.findRestoreConflict = jest.fn(async () => ({ conflictingConstraint: 'uq_demo', blockingLiveId: 'live-1' }));
+    api.findArchivedParents = vi.fn(async () => []);
+    api.findRestoreConflict = vi.fn(async () => ({ conflictingConstraint: 'uq_demo', blockingLiveId: 'live-1' }));
     await expect(api.restoreByReference(parentMeta, 'conflict', {}, [])).rejects.toBeInstanceOf(
       RestoreConflictError,
     );
 
-    api.findRestoreConflict = jest.fn(async () => undefined);
+    api.findRestoreConflict = vi.fn(async () => undefined);
     const unique = new Error('unique') as Error & { code: string; constraint?: string };
     unique.code = '23505';
-    api.query = jest.fn(async (text: string) => {
+    api.query = vi.fn(async (text: string) => {
       if (text.includes('insert into')) {
         throw unique;
       }
@@ -528,21 +573,31 @@ describe('Transaction', () => {
     await expect(api.restoreByReference(parentMeta, 'unique', {}, [])).rejects.toMatchObject({
       context: expect.objectContaining({ conflictingConstraint: 'unique_violation', blockingLiveId: 'unique' }),
     });
+
+    const insertError = new Error('insert failed') as Error & { code: string };
+    insertError.code = '22000';
+    api.query = vi.fn(async (text: string) => {
+      if (text.includes('insert into')) {
+        throw insertError;
+      }
+      return { rows: [], rowCount: 1 };
+    });
+    await expect(api.restoreByReference(parentMeta, 'insert-error', {}, [])).rejects.toBe(insertError);
   });
 
   it('describes blocking children with counts and samples only for non-empty block rows', async () => {
     const { tx } = createTx();
     const api = tx as unknown as {
       describeBlockingChildren: (meta: TableMeta, id: string) => Promise<Array<Record<string, unknown>>>;
-      loadRegistryByParent: jest.Mock;
-      query: jest.Mock;
+      loadRegistryByParent: Mock;
+      query: Mock;
     };
-    api.loadRegistryByParent = jest.fn(async () => [
+    api.loadRegistryByParent = vi.fn(async () => [
       { ...childRegistryEntry, childTable: 'hidden_note', behavior: 'hide' },
       { ...childRegistryEntry, childTable: 'empty_payment', behavior: 'block' },
       { ...childRegistryEntry, childTable: 'payment', behavior: 'block' },
     ]);
-    api.query = jest.fn(async (_text: string, values: unknown[]) => {
+    api.query = vi.fn(async (_text: string, values: unknown[]) => {
       if (values[0] !== 'customer-1') {
         throw new Error('unexpected parent id');
       }
@@ -559,23 +614,27 @@ describe('Transaction', () => {
     await expect(api.describeBlockingChildren(parentMeta, 'customer-1')).resolves.toEqual([
       { schema: 'demo', table: 'payment', count: 2, sampleIds: ['payment-1', 'payment-2'] },
     ]);
+
+    api.loadRegistryByParent = vi.fn(async () => [{ ...childRegistryEntry, behavior: 'block' }]);
+    api.query = vi.fn(async () => ({ rows: [] }));
+    await expect(api.describeBlockingChildren(parentMeta, 'empty-default')).resolves.toEqual([]);
   });
 
   it('finds archived parents only when the parent is absent from live rows and present in archive', async () => {
     const { tx } = createTx();
     const api = tx as unknown as {
       findArchivedParents: (meta: TableMeta, rowData: Record<string, unknown>) => Promise<unknown>;
-      loadRegistryByChild: jest.Mock;
-      query: jest.Mock;
+      loadRegistryByChild: Mock;
+      query: Mock;
     };
-    api.loadRegistryByChild = jest.fn(async () => [
+    api.loadRegistryByChild = vi.fn(async () => [
       { ...childRegistryEntry, behavior: 'hide', childColumn: 'hidden_parent_id' },
       { ...childRegistryEntry, behavior: 'block', childColumn: 'empty_parent_id' },
       { ...childRegistryEntry, behavior: 'block', childColumn: 'live_parent_id' },
       { ...childRegistryEntry, behavior: 'cascade', childColumn: 'archived_parent_id' },
       { ...childRegistryEntry, behavior: 'cascade', childColumn: 'missing_parent_id' },
     ]);
-    api.query = jest.fn(async (_text: string, values: unknown[]) => {
+    api.query = vi.fn(async (_text: string, values: unknown[]) => {
       const id = values[0];
       if (id === 'live-parent') {
         return { rows: [{ exists: true }], rowCount: 1 };
@@ -608,9 +667,9 @@ describe('Transaction', () => {
         rowData: Record<string, unknown>,
         id: string,
       ) => Promise<Record<string, unknown> | undefined>;
-      query: jest.Mock;
+      query: Mock;
     };
-    api.query = jest.fn(async (_text: string, values?: unknown[]) => {
+    api.query = vi.fn(async (_text: string, values?: unknown[]) => {
       if (!values || values[0] === 'demo') {
         return {
           rows: [
@@ -634,7 +693,15 @@ describe('Transaction', () => {
       blockingLiveId: 'live-1',
     });
 
-    api.query = jest.fn(async (_text: string, values?: unknown[]) => (
+    api.query = vi.fn(async (_text: string, values?: unknown[]) => (
+      !values || values[0] === 'demo'
+        ? { rows: [{ constraint_name: 'uq_email', columns: ['email'] }], rowCount: 1 }
+        : { rows: [{ blocking_id: 'live-without-row-count' }] }
+    ));
+    await expect(api.findRestoreConflict(parentMeta, { email: 'row-count@example.com' }, 'archived-row-count'))
+      .resolves.toBeUndefined();
+
+    api.query = vi.fn(async (_text: string, values?: unknown[]) => (
       !values || values[0] === 'demo'
         ? { rows: [{ constraint_name: 'uq_email', columns: ['email'] }], rowCount: 1 }
         : { rows: [], rowCount: 0 }
@@ -645,10 +712,10 @@ describe('Transaction', () => {
 
   it('loads column names, checks mirrors, normalizes labels, and samples archive sizes defensively', async () => {
     const metrics = {
-      incrementSoftDelete: jest.fn(),
-      incrementRestore: jest.fn(),
-      incrementHardDelete: jest.fn(),
-      setArchiveSizeBytes: jest.fn(),
+      incrementSoftDelete: vi.fn(),
+      incrementRestore: vi.fn(),
+      incrementHardDelete: vi.fn(),
+      setArchiveSizeBytes: vi.fn(),
     };
     const { tx } = createTx('app', metrics);
     const api = tx as unknown as {
@@ -656,9 +723,9 @@ describe('Transaction', () => {
       ensureMirrorExists: (meta: TableMeta) => Promise<void>;
       sampleArchiveSizeByName: (qualified: string, label?: string) => Promise<void>;
       normalizeArchiveMetricLabel: (table: string) => string;
-      query: jest.Mock;
+      query: Mock;
     };
-    api.query = jest.fn(async (text: string, values?: unknown[]): Promise<Partial<QueryResult>> => {
+    api.query = vi.fn(async (text: string, values?: unknown[]): Promise<Partial<QueryResult>> => {
       if (text.includes('information_schema.columns')) {
         return { rows: [{ column_name: 'id' }, { column_name: 'tenant_id' }] };
       }
@@ -689,5 +756,8 @@ describe('Transaction', () => {
 
     await api.sampleArchiveSizeByName('"archive"."demo_customer"');
     expect(metrics.setArchiveSizeBytes).toHaveBeenCalledWith('"archive"."demo_customer"', 4096);
+    api.query = vi.fn(async () => ({ rows: [] }));
+    await api.sampleArchiveSizeByName('"archive"."demo_customer"', 'demo.customer');
+    expect(metrics.setArchiveSizeBytes).toHaveBeenCalledWith('demo.customer', 0);
   });
 });

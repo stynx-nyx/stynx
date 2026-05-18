@@ -9,16 +9,16 @@ import { IdentityAdminService } from '../../../packages/backend/src/identity-adm
 
 function createAdapterStub() {
   return {
-    listUsers: jest.fn(async () => ({ items: [] })),
-    getUser: jest.fn(async () => ({ username: 'u1', enabled: true, attributes: {} })),
-    updateUser: jest.fn(async () => ({ username: 'u1', enabled: true, attributes: {} })),
-    disableUser: jest.fn(async () => undefined),
-    enableUser: jest.fn(async () => undefined),
-    listGroupsForUser: jest.fn(async () => []),
-    listGroups: jest.fn(async () => ({ items: [] })),
-    addUserToGroup: jest.fn(async () => undefined),
-    removeUserFromGroup: jest.fn(async () => undefined),
-    resetUserPassword: jest.fn(async () => undefined),
+    listUsers: vi.fn(async () => ({ items: [] })),
+    getUser: vi.fn(async () => ({ username: 'u1', enabled: true, attributes: {} })),
+    updateUser: vi.fn(async () => ({ username: 'u1', enabled: true, attributes: {} })),
+    disableUser: vi.fn(async () => undefined),
+    enableUser: vi.fn(async () => undefined),
+    listGroupsForUser: vi.fn(async () => []),
+    listGroups: vi.fn(async () => ({ items: [] })),
+    addUserToGroup: vi.fn(async () => undefined),
+    removeUserFromGroup: vi.fn(async () => undefined),
+    resetUserPassword: vi.fn(async () => undefined),
   };
 }
 
@@ -53,9 +53,9 @@ describe('IdentityAdminService', () => {
   it('delegates local sync methods when adapter is provided', async () => {
     const adapter = createAdapterStub();
     const localSync = {
-      syncToLocal: jest.fn(async () => ({ ok: true, groups: 1, users: 2, memberships: 3 })),
-      syncUser: jest.fn(async () => ({ ok: true, groups: 1, users: 1, memberships: 1 })),
-      listGroupsWithMetaByUserId: jest.fn(async () => ({ groups: [] })),
+      syncToLocal: vi.fn(async () => ({ ok: true, groups: 1, users: 2, memberships: 3 })),
+      syncUser: vi.fn(async () => ({ ok: true, groups: 1, users: 1, memberships: 1 })),
+      listGroupsWithMetaByUserId: vi.fn(async () => ({ groups: [] })),
     };
     const service = new IdentityAdminService(adapter as never, localSync as never);
 

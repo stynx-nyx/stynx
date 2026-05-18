@@ -3,6 +3,7 @@ import { FlowAdapterRegistry, type FlowDomainAdapter } from '../../src/adapters'
 import { FlowAnalyticsService } from '../../src/flow-analytics.service';
 import { FlowPolicyService } from '../../src/flow-policy.service';
 import { FlowRuntimeService } from '../../src/flow-runtime.service';
+import type { Mock } from 'vitest';
 
 const tenantId = '01978f4a-32bf-7c27-a131-fd73a9e101a1';
 const actorId = '01978f4a-32bf-7c27-a131-fd73a9e201a1';
@@ -25,9 +26,9 @@ function requestContext(actor = actorId) {
   };
 }
 
-function dbWithQuery(query: jest.Mock) {
+function dbWithQuery(query: Mock) {
   return {
-    tx: jest.fn(async (callback: (trx: { query: jest.Mock }) => Promise<unknown>) =>
+    tx: vi.fn(async (callback: (trx: { query: Mock }) => Promise<unknown>) =>
       callback({ query }),
     ),
   };
@@ -36,7 +37,7 @@ function dbWithQuery(query: jest.Mock) {
 describe('Flow backend gap contracts', () => {
   it('dispatches pending effects through the adapter and skips already terminal events on retry', async () => {
     const terminalEffectEventIds = new Set<string>();
-    const applyEffect = jest.fn(async () => ({ ok: true, payload: { delivered: true } }));
+    const applyEffect = vi.fn(async () => ({ ok: true, payload: { delivered: true } }));
     const adapter: FlowDomainAdapter = {
       key: 'test',
       buildFacts: async () => ({}),
@@ -44,7 +45,7 @@ describe('Flow backend gap contracts', () => {
       canManage: async () => true,
       canView: async () => true,
     };
-    const query = jest.fn(async (sql: string, values?: unknown[]) => {
+    const query = vi.fn(async (sql: string, values?: unknown[]) => {
       if (sql.includes("e.kind = 'effect_requested'")) {
         return {
           rows: terminalEffectEventIds.has(effectEventId)
@@ -119,7 +120,7 @@ describe('Flow backend gap contracts', () => {
       canManage: async () => true,
       canView: async () => true,
     };
-    const query = jest.fn(async (sql: string) => {
+    const query = vi.fn(async (sql: string) => {
       if (sql.includes("e.kind = 'effect_requested'")) {
         return {
           rows: [{
@@ -157,7 +158,7 @@ describe('Flow backend gap contracts', () => {
   });
 
   it('expands resolver_fn candidates through the registered adapter', async () => {
-    const resolveAgents = jest.fn(async () => [
+    const resolveAgents = vi.fn(async () => [
       { type: 'user' as const, id: otherActorId, label: 'Reviewer' },
       { type: 'permission' as const, id: 'flow:execute:task' },
     ]);
@@ -169,7 +170,7 @@ describe('Flow backend gap contracts', () => {
       canView: async () => true,
       resolveAgents,
     };
-    const query = jest.fn(async (sql: string) => {
+    const query = vi.fn(async (sql: string) => {
       if (sql.includes('flow.resolve_agents')) {
         return {
           rows: [{
@@ -222,7 +223,7 @@ describe('Flow backend gap contracts', () => {
   });
 
   it('rejects task actions from actors that are neither assignees nor concrete candidates', async () => {
-    const query = jest.fn(async (sql: string) => {
+    const query = vi.fn(async (sql: string) => {
       if (sql.includes('allowed_actions')) {
         return { rows: [{ allowed: true }] };
       }
@@ -249,7 +250,7 @@ describe('Flow backend gap contracts', () => {
   });
 
   it('returns paged analytics envelopes with stable metadata', async () => {
-    const query = jest.fn(async (sql: string) => {
+    const query = vi.fn(async (sql: string) => {
       if (sql.includes('count(*)::text as total')) {
         return { rows: [{ total: '2' }] };
       }
@@ -278,7 +279,7 @@ describe('Flow backend gap contracts', () => {
   });
 
   it('evaluates policies deterministically with highest priority and deny-on-tie ordering', async () => {
-    const query = jest.fn(async (sql: string) => {
+    const query = vi.fn(async (sql: string) => {
       if (sql.includes('from flow.policy_sets')) {
         return { rows: [{ id: policySetId }] };
       }

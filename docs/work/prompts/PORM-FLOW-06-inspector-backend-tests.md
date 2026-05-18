@@ -30,8 +30,8 @@ Read:
 Allowed:
 
 - `packages/flow/test/**`
-- `packages/flow/jest.config.cjs`
-- `packages/flow/jest.integration.config.cjs`
+- `packages/flow/Vitest.config.cjs`
+- `packages/flow/Vitest.integration.config.cjs`
 - test fixtures/helpers under `packages/flow/test`
 - test-intent config if needed
 

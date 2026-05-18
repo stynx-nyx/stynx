@@ -5,8 +5,8 @@ import {
 
 function makeAdminService(overrides: Partial<Record<string, unknown>> = {}) {
   return {
-    listUsers: jest.fn(async () => ({ items: [], nextToken: 'next-x' })),
-    getUser: jest.fn(async () => ({
+    listUsers: vi.fn(async () => ({ items: [], nextToken: 'next-x' })),
+    getUser: vi.fn(async () => ({
       username: 'u',
       enabled: true,
       attributes: { foo: 'bar' },
@@ -16,22 +16,22 @@ function makeAdminService(overrides: Partial<Record<string, unknown>> = {}) {
       email: 'a@b',
       phoneNumber: '+1',
     })),
-    getUserBySubject: jest.fn(async () => ({ username: 'u' })),
-    listGroupsForUser: jest.fn(async () => [
+    getUserBySubject: vi.fn(async () => ({ username: 'u' })),
+    listGroupsForUser: vi.fn(async () => [
       { name: 'admins', description: 'admin role' },
     ]),
-    listGroups: jest.fn(async () => ({ items: [{ name: 'g' }], nextToken: 'next-g' })),
-    updateUser: jest.fn(async () => ({ username: 'u', enabled: true, attributes: {} })),
-    disableUser: jest.fn(async () => ({ ok: true })),
-    enableUser: jest.fn(async () => ({ ok: true })),
-    addUserToGroup: jest.fn(async () => ({ ok: true })),
-    removeUserFromGroup: jest.fn(async () => ({ ok: true })),
-    verifyUserChannels: jest.fn(async () => ({ ok: true })),
-    resetUserPassword: jest.fn(async () => ({ ok: true })),
-    setUserPassword: jest.fn(async () => ({ ok: true })),
-    syncToLocal: jest.fn(async () => ({ inserted: 0, updated: 0 })),
-    syncUser: jest.fn(async () => ({ id: 'u', inserted: 0, updated: 1 })),
-    listGroupsWithMetaByUserId: jest.fn(async () => ({ groups: [] })),
+    listGroups: vi.fn(async () => ({ items: [{ name: 'g' }], nextToken: 'next-g' })),
+    updateUser: vi.fn(async () => ({ username: 'u', enabled: true, attributes: {} })),
+    disableUser: vi.fn(async () => ({ ok: true })),
+    enableUser: vi.fn(async () => ({ ok: true })),
+    addUserToGroup: vi.fn(async () => ({ ok: true })),
+    removeUserFromGroup: vi.fn(async () => ({ ok: true })),
+    verifyUserChannels: vi.fn(async () => ({ ok: true })),
+    resetUserPassword: vi.fn(async () => ({ ok: true })),
+    setUserPassword: vi.fn(async () => ({ ok: true })),
+    syncToLocal: vi.fn(async () => ({ inserted: 0, updated: 0 })),
+    syncUser: vi.fn(async () => ({ id: 'u', inserted: 0, updated: 1 })),
+    listGroupsWithMetaByUserId: vi.fn(async () => ({ groups: [] })),
     ...overrides,
   } as never;
 }
@@ -39,7 +39,7 @@ function makeAdminService(overrides: Partial<Record<string, unknown>> = {}) {
 describe('PormIdentityAdminFacade', () => {
   it('list() expands each item via get() to include groups + attributes', async () => {
     const service = makeAdminService({
-      listUsers: jest.fn(async () => ({ items: [{ username: 'alice', enabled: true }] })),
+      listUsers: vi.fn(async () => ({ items: [{ username: 'alice', enabled: true }] })),
     });
     const facade = new PormIdentityAdminFacade(service);
     const result = await facade.list({ limit: 1 });
@@ -50,7 +50,7 @@ describe('PormIdentityAdminFacade', () => {
 
   it('list() handles items without a username inline', async () => {
     const service = makeAdminService({
-      listUsers: jest.fn(async () => ({
+      listUsers: vi.fn(async () => ({
         items: [{ enabled: false, status: 'UNCONFIRMED' }],
         nextToken: 'tok',
       })),
@@ -155,7 +155,7 @@ describe('PormIdentityAdminFacade', () => {
 describe('PecIdentityAdminFacade', () => {
   it('list() maps items into PEC summary shape with parsed dates', async () => {
     const service = makeAdminService({
-      listUsers: jest.fn(async () => ({
+      listUsers: vi.fn(async () => ({
         items: [
           {
             username: 'u',
@@ -181,7 +181,7 @@ describe('PecIdentityAdminFacade', () => {
 
   it('list() emits null email/phone when adapter returns undefined', async () => {
     const service = makeAdminService({
-      listUsers: jest.fn(async () => ({
+      listUsers: vi.fn(async () => ({
         items: [{ username: 'u', enabled: true }],
       })),
     });
@@ -201,7 +201,7 @@ describe('PecIdentityAdminFacade', () => {
 
   it('update() filters undefined fields, calls updateUser, returns mapped detail', async () => {
     const service = makeAdminService({
-      updateUser: jest.fn(async () => ({
+      updateUser: vi.fn(async () => ({
         username: 'u',
         enabled: false,
         attributes: { bar: 'baz' },

@@ -1,0 +1,38 @@
+{
+  "contracts": {
+    "total": 9,
+    "killed": 5,
+    "survived": 1,
+    "timeout": 0,
+    "compile": 3,
+    "noCoverage": 0,
+    "mutationScore": "83.33%"
+  },
+  "core": {
+    "total": 297,
+    "killed": 113,
+    "survived": 59,
+    "timeout": 5,
+    "compile": 115,
+    "noCoverage": 5,
+    "mutationScore": "66.67%"
+  },
+  "audit": {
+    "total": 539,
+    "killed": 244,
+    "survived": 112,
+    "timeout": 0,
+    "compile": 145,
+    "noCoverage": 38,
+    "mutationScore": "68.54%"
+  },
+  "angular-tenancy": {
+    "total": 132,
+    "killed": 55,
+    "survived": 22,
+    "timeout": 0,
+    "compile": 55,
+    "noCoverage": 0,
+    "mutationScore": "71.43%"
+  }
+}

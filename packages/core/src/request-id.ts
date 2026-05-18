@@ -16,8 +16,8 @@ export function generateRequestId(): string {
     timestamp >>= 8n;
   }
 
-  bytes[6] = ((bytes[6] ?? 0) & 0x0f) | 0x70;
-  bytes[8] = ((bytes[8] ?? 0) & 0x3f) | 0x80;
+  bytes[6] = (bytes[6]! & 0x0f) | 0x70;
+  bytes[8] = (bytes[8]! & 0x3f) | 0x80;
 
   const hex = toHex(bytes);
   return [

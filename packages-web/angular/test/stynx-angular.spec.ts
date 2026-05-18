@@ -71,6 +71,39 @@ describe('@stynx-web/angular', () => {
     expect(generateClientRequestId()).toMatch(REQUEST_ID_PATTERN);
   });
 
+  it('falls back to Math.random when web crypto is unavailable', () => {
+    const originalCrypto = globalThis.crypto;
+    const random = vi.spyOn(Math, 'random').mockReturnValue(0.5);
+    const now = vi.spyOn(Date, 'now').mockReturnValue(1_700_000_000_000);
+    Object.defineProperty(globalThis, 'crypto', {
+      configurable: true,
+      value: undefined,
+    });
+
+    try {
+      expect(generateClientRequestId()).toMatch(REQUEST_ID_PATTERN);
+    } finally {
+      Object.defineProperty(globalThis, 'crypto', {
+        configurable: true,
+        value: originalCrypto,
+      });
+      random.mockRestore();
+      now.mockRestore();
+    }
+  });
+
+  it('preserves caller request ids', async () => {
+    const requestId = new RequestIdInterceptor();
+    const handler = new FakeHandler([of({ ok: true }) as Observable<unknown>]);
+
+    await expect(firstValueFrom(requestId.intercept(
+      new FakeRequest(new FakeHeaders({ 'X-Request-Id': 'caller-id' })) as never,
+      handler as never,
+    ))).resolves.toEqual({ ok: true });
+
+    expect(handler.seen[0]?.headers.get('x-request-id')).toBe('caller-id');
+  });
+
   it('applies request-id, tenant, and auth headers and refreshes after 401', async () => {
     let token = 'expired-token';
     let getAccessTokenCalls = 0;
@@ -150,6 +183,54 @@ describe('@stynx-web/angular', () => {
     expect(authFailures).toBe(1);
   });
 
+  it('skips auth without a provider and does not retry non-retryable errors', async () => {
+    const noProvider = new AuthInterceptor(
+      { apiBaseUrl: '/api', sessionMode: 'bearer' },
+      null,
+    );
+    const noProviderHandler = new FakeHandler([of({ ok: true }) as Observable<unknown>]);
+    await expect(firstValueFrom(noProvider.intercept(new FakeRequest() as never, noProviderHandler as never))).resolves.toEqual({ ok: true });
+    expect(noProviderHandler.seen[0]?.headers.get('authorization')).toBeNull();
+
+    const auth = new AuthInterceptor(
+      { apiBaseUrl: '/api', sessionMode: 'bearer' },
+      {
+        getAccessToken: async () => 'token',
+        refresh: async () => {
+          throw new Error('refresh should not run');
+        },
+      },
+    );
+    const retried = new FakeRequest(new FakeHeaders({ 'x-stynx-auth-retried': 'true' }));
+    const retriedError = new HttpErrorResponse({ status: 401, error: { message: 'still expired' } });
+    await expect(firstValueFrom(auth.intercept(
+      retried as never,
+      new FakeHandler([throwError(() => retriedError)]) as never,
+    ))).rejects.toBe(retriedError);
+
+    const plainError = new Error('plain');
+    await expect(firstValueFrom(auth.intercept(
+      new FakeRequest() as never,
+      new FakeHandler([throwError(() => plainError)]) as never,
+    ))).rejects.toBe(plainError);
+  });
+
+  it('leaves bearer requests unchanged when the provider has no token', async () => {
+    const auth = new AuthInterceptor(
+      { apiBaseUrl: '/api', sessionMode: 'bearer' },
+      {
+        getAccessToken: async () => null,
+        refresh: async () => {
+          throw new Error('refresh should not run');
+        },
+      },
+    );
+    const handler = new FakeHandler([of({ ok: true }) as Observable<unknown>]);
+
+    await expect(firstValueFrom(auth.intercept(new FakeRequest() as never, handler as never))).resolves.toEqual({ ok: true });
+    expect(handler.seen[0]?.headers.get('authorization')).toBeNull();
+  });
+
   it('maps server errors through ErrorBannerService', async () => {
     const banners = new ErrorBannerService();
     const interceptor = new ErrorInterceptor(banners);
@@ -167,6 +248,56 @@ describe('@stynx-web/angular', () => {
     expect(banners.current()?.message).toBe('forbidden');
     banners.clear();
     expect(banners.current()).toBeNull();
+  });
+
+  it('maps HTTP error context and omits falsy status from banners', async () => {
+    const banners = new ErrorBannerService();
+    const interceptor = new ErrorInterceptor(banners);
+
+    await expect(firstValueFrom(interceptor.intercept(
+      new FakeRequest() as never,
+      new FakeHandler([
+        throwError(() => new HttpErrorResponse({
+          status: 422,
+          error: {
+            code: 'STORAGE_VALIDATION_ERROR',
+            message: 'invalid file',
+            context: { field: 'mimeType' },
+          },
+        })),
+      ]) as never,
+    ))).rejects.toThrow('invalid file');
+    expect(banners.current()).toEqual({
+      message: 'invalid file',
+      code: 'STORAGE_VALIDATION_ERROR',
+      status: 422,
+      context: { field: 'mimeType' },
+    });
+
+    await expect(firstValueFrom(interceptor.intercept(
+      new FakeRequest() as never,
+      new FakeHandler([throwError(() => new HttpErrorResponse({ status: 0, error: {} }))]) as never,
+    ))).rejects.toThrow('Request failed with status 0');
+    expect(banners.current()).toEqual({
+      message: 'Request failed with status 0',
+    });
+  });
+
+  it('maps HTTP errors without optional code, status, or context fields', async () => {
+    const banners = new ErrorBannerService();
+    const interceptor = new ErrorInterceptor(banners);
+    const handler = new FakeHandler([
+      throwError(() => new HttpErrorResponse({
+        status: 500,
+        error: 'server exploded',
+      })),
+    ]);
+
+    await expect(firstValueFrom(interceptor.intercept(new FakeRequest() as never, handler as never))).rejects.toThrow('Request failed with status 500');
+    expect(banners.current()).toEqual({
+      message: 'Request failed with status 500',
+      status: 500,
+    });
   });
 
   it('passes non-HTTP errors through without showing a banner', async () => {

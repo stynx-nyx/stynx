@@ -1,5 +1,4 @@
 import '@angular/compiler';
-import { jest } from '@jest/globals';
 import { StynxTrashListComponent } from '../src/trash-list.component';
 import type { StynxTrashAdapter, StynxTrashQuery } from '../src/types';
 
@@ -14,14 +13,14 @@ describe('@stynx-web/angular-trash', () => {
       },
     ];
     const adapter: StynxTrashAdapter = {
-      list: jest.fn(async () => ({
+      list: vi.fn(async () => ({
         items,
         total: items.length,
       })),
-      restore: jest.fn(async () => {
+      restore: vi.fn(async () => {
         items.splice(0, 1);
       }),
-      hardDelete: jest.fn(async () => undefined),
+      hardDelete: vi.fn(async () => undefined),
     };
 
     const component = new StynxTrashListComponent(
@@ -34,6 +33,11 @@ describe('@stynx-web/angular-trash', () => {
     );
     component.resource = 'records';
     component.adapter = adapter;
+
+    expect(component.resolvedColumns).toEqual([
+      { key: 'label', label: 'Item' },
+      { key: 'deletedAt', label: 'Deleted at' },
+    ]);
 
     await component.load();
     expect(component.items()).toHaveLength(1);
@@ -54,15 +58,15 @@ describe('@stynx-web/angular-trash', () => {
     ];
     const toastMessages: string[] = [];
     const adapter: StynxTrashAdapter = {
-      list: jest.fn(async (_resource: string, query: StynxTrashQuery) => ({
+      list: vi.fn(async (_resource: string, query: StynxTrashQuery) => ({
         items,
         total: query.pageSize,
       })),
-      restore: jest.fn(async () => {
+      restore: vi.fn(async () => {
         throw { code: 'RESTORE_PARENT_ARCHIVED', message: 'needs cascade' };
       }),
-      restoreWithCascade: jest.fn(async () => undefined),
-      hardDelete: jest.fn(async () => undefined),
+      restoreWithCascade: vi.fn(async () => undefined),
+      hardDelete: vi.fn(async () => undefined),
     };
     const component = new StynxTrashListComponent(
       {
@@ -97,8 +101,8 @@ describe('@stynx-web/angular-trash', () => {
     );
     noDelete.resource = 'records';
     noDelete.adapter = {
-      list: jest.fn(async () => ({ items: [], total: 0 })),
-      restore: jest.fn(async () => {
+      list: vi.fn(async () => ({ items: [], total: 0 })),
+      restore: vi.fn(async () => {
         throw new Error('plain restore failure');
       }),
     };
@@ -107,5 +111,14 @@ describe('@stynx-web/angular-trash', () => {
     await noDelete.restore('missing');
     expect(noDelete.errorMessage()).toBe('plain restore failure');
     expect(noDelete.mayHardDelete(items[0] ?? { id: '', label: '', deletedAt: '' })).toBe(false);
+
+    noDelete.adapter = {
+      list: vi.fn(async () => ({ items: [], total: 0 })),
+      restore: vi.fn(async () => {
+        throw 'offline';
+      }),
+    };
+    await noDelete.restore('missing');
+    expect(noDelete.errorMessage()).toBe('Unable to update trash item.');
   });
 });

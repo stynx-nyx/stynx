@@ -2,6 +2,7 @@ import type { ModuleRef } from '@nestjs/core';
 import { Database } from '@stynx/data';
 import { RequestContext, RequestContextMutator } from '@stynx/core';
 import { PermissionQueryService } from '../../src/permission-query.service';
+import type { Mock } from 'vitest';
 
 function createQueryResult(rows: unknown[]) {
   return { rows };
@@ -10,7 +11,7 @@ function createQueryResult(rows: unknown[]) {
 describe('PermissionQueryService', () => {
   it('resolves membership permissions inside an existing request context', async () => {
     const trx = {
-      query: jest
+      query: vi
         .fn()
         .mockResolvedValueOnce(
           createQueryResult([
@@ -35,17 +36,17 @@ describe('PermissionQueryService', () => {
         ),
     };
     const database = {
-      tx: jest.fn(async (fn: (arg: typeof trx) => Promise<unknown>) => fn(trx)),
+      tx: vi.fn(async (fn: (arg: typeof trx) => Promise<unknown>) => fn(trx)),
     };
     const requestContextMutator = {
-      patch: jest.fn(),
-      runWithRequestContext: jest.fn(),
+      patch: vi.fn(),
+      runWithRequestContext: vi.fn(),
     };
     const requestContext = {
-      hasActiveContext: jest.fn(() => true),
+      hasActiveContext: vi.fn(() => true),
     };
     const moduleRef = {
-      get: jest.fn((token: unknown) => {
+      get: vi.fn((token: unknown) => {
         if (token === Database) return database;
         if (token === RequestContext) return requestContext;
         if (token === RequestContextMutator) return requestContextMutator;
@@ -66,24 +67,24 @@ describe('PermissionQueryService', () => {
 
   it('creates a request context when none is active and supports probeHash', async () => {
     const trx = {
-      query: jest.fn().mockResolvedValue(
+      query: vi.fn().mockResolvedValue(
         createQueryResult([
           { effective_hash: 'hash-1', effective_hash_generation: 3 },
         ]),
       ),
     };
     const database = {
-      tx: jest.fn(async (fn: (arg: typeof trx) => Promise<unknown>) => fn(trx)),
+      tx: vi.fn(async (fn: (arg: typeof trx) => Promise<unknown>) => fn(trx)),
     };
     const requestContextMutator = {
-      patch: jest.fn(),
-      runWithRequestContext: jest.fn(async (_ctx: unknown, fn: () => Promise<unknown>) => fn()),
+      patch: vi.fn(),
+      runWithRequestContext: vi.fn(async (_ctx: unknown, fn: () => Promise<unknown>) => fn()),
     };
     const requestContext = {
-      hasActiveContext: jest.fn(() => false),
+      hasActiveContext: vi.fn(() => false),
     };
     const moduleRef = {
-      get: jest.fn((token: unknown) => {
+      get: vi.fn((token: unknown) => {
         if (token === Database) return database;
         if (token === RequestContext) return requestContext;
         if (token === RequestContextMutator) return requestContextMutator;
@@ -102,19 +103,19 @@ describe('PermissionQueryService', () => {
 
   it('creates a request context when the mutator exists but RequestContext is unavailable', async () => {
     const trx = {
-      query: jest.fn().mockResolvedValue(createQueryResult([
+      query: vi.fn().mockResolvedValue(createQueryResult([
         { effective_hash: 'hash-missing-context', effective_hash_generation: 4 },
       ])),
     };
     const database = {
-      tx: jest.fn(async (fn: (arg: typeof trx) => Promise<unknown>) => fn(trx)),
+      tx: vi.fn(async (fn: (arg: typeof trx) => Promise<unknown>) => fn(trx)),
     };
     const requestContextMutator = {
-      patch: jest.fn(),
-      runWithRequestContext: jest.fn(async (_ctx: unknown, fn: () => Promise<unknown>) => fn()),
+      patch: vi.fn(),
+      runWithRequestContext: vi.fn(async (_ctx: unknown, fn: () => Promise<unknown>) => fn()),
     };
     const moduleRef = {
-      get: jest.fn((token: unknown) => {
+      get: vi.fn((token: unknown) => {
         if (token === Database) return database;
         if (token === RequestContextMutator) return requestContextMutator;
         return undefined;
@@ -135,12 +136,12 @@ describe('PermissionQueryService', () => {
 
   it('throws when membership is missing or database provider is unavailable', async () => {
     const database = {
-      tx: jest.fn(async (fn: (arg: { query: jest.Mock }) => Promise<unknown>) => fn({
-        query: jest.fn().mockResolvedValue(createQueryResult([])),
+      tx: vi.fn(async (fn: (arg: { query: Mock }) => Promise<unknown>) => fn({
+        query: vi.fn().mockResolvedValue(createQueryResult([])),
       })),
     };
     const moduleRef = {
-      get: jest.fn((token: unknown) => {
+      get: vi.fn((token: unknown) => {
         if (token === Database) return database;
         if (token === RequestContextMutator) return undefined;
         if (token === RequestContext) return undefined;
@@ -152,7 +153,7 @@ describe('PermissionQueryService', () => {
     await expect(service.resolveForUser('user-1', 'tenant-1')).rejects.toThrow('TENANT_ACCESS_DENIED');
 
     const missingDbModuleRef = {
-      get: jest.fn(() => undefined),
+      get: vi.fn(() => undefined),
     } as unknown as ModuleRef;
     const missingDbService = new PermissionQueryService(missingDbModuleRef);
     await expect(missingDbService.probeHash('user-1', 'tenant-1')).rejects.toThrow(
@@ -162,7 +163,7 @@ describe('PermissionQueryService', () => {
 
   it('runs without a request context mutator and issues the expected membership queries', async () => {
     const trx = {
-      query: jest
+      query: vi
         .fn()
         .mockImplementation((sql: string) => {
           if (sql.includes('from auth.memberships') && sql.includes('limit 1')) {
@@ -184,10 +185,10 @@ describe('PermissionQueryService', () => {
         }),
     };
     const database = {
-      tx: jest.fn(async (fn: (arg: typeof trx) => Promise<unknown>) => fn(trx)),
+      tx: vi.fn(async (fn: (arg: typeof trx) => Promise<unknown>) => fn(trx)),
     };
     const moduleRef = {
-      get: jest.fn((token: unknown) => {
+      get: vi.fn((token: unknown) => {
         if (token === Database) return database;
         return undefined;
       }),
@@ -207,20 +208,20 @@ describe('PermissionQueryService', () => {
 
   it('returns null hash and zero generation when probeHash finds no active membership', async () => {
     const trx = {
-      query: jest.fn().mockResolvedValue(createQueryResult([])),
+      query: vi.fn().mockResolvedValue(createQueryResult([])),
     };
     const database = {
-      tx: jest.fn(async (fn: (arg: typeof trx) => Promise<unknown>) => fn(trx)),
+      tx: vi.fn(async (fn: (arg: typeof trx) => Promise<unknown>) => fn(trx)),
     };
     const requestContextMutator = {
-      patch: jest.fn(),
-      runWithRequestContext: jest.fn(),
+      patch: vi.fn(),
+      runWithRequestContext: vi.fn(),
     };
     const requestContext = {
-      hasActiveContext: jest.fn(() => true),
+      hasActiveContext: vi.fn(() => true),
     };
     const moduleRef = {
-      get: jest.fn((token: unknown) => {
+      get: vi.fn((token: unknown) => {
         if (token === Database) return database;
         if (token === RequestContext) return requestContext;
         if (token === RequestContextMutator) return requestContextMutator;

@@ -106,7 +106,6 @@ function compileOrderBy(
   if (columns.length === 0) {
     return undefined;
   }
-
   const compiled = compileFragment(builder, sql.join(columns, sql.raw(', ')));
   return rewriteQualifier(compiled, sourceQualifier, targetQualifier);
 }

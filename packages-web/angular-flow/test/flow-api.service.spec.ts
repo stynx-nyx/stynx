@@ -1,5 +1,4 @@
 import '@angular/compiler';
-import { jest } from '@jest/globals';
 import { FlowApiService } from '../src/flow-api.service';
 
 type Call = {
@@ -13,25 +12,25 @@ function createClient() {
   const calls: Call[] = [];
   const client = {
     calls,
-    get: jest.fn(async (path: string, options?: unknown) => {
+    get: vi.fn(async (path: string, options?: unknown) => {
       calls.push({ method: 'GET', path, options });
       return path.includes('/summary') || path.includes('/open-tasks') || path === '/flow/tasks'
         ? { data: [], meta: { page: 1, pageSize: 50, total: 0 } }
         : [];
     }),
-    post: jest.fn(async (path: string, body?: unknown, options?: unknown) => {
+    post: vi.fn(async (path: string, body?: unknown, options?: unknown) => {
       calls.push({ method: 'POST', path, body, options });
       return {};
     }),
-    put: jest.fn(async (path: string, body?: unknown, options?: unknown) => {
+    put: vi.fn(async (path: string, body?: unknown, options?: unknown) => {
       calls.push({ method: 'PUT', path, body, options });
       return {};
     }),
-    patch: jest.fn(async (path: string, body?: unknown, options?: unknown) => {
+    patch: vi.fn(async (path: string, body?: unknown, options?: unknown) => {
       calls.push({ method: 'PATCH', path, body, options });
       return {};
     }),
-    delete: jest.fn(async (path: string, options?: unknown) => {
+    delete: vi.fn(async (path: string, options?: unknown) => {
       calls.push({ method: 'DELETE', path, options });
       return {};
     }),
@@ -214,6 +213,40 @@ describe('FlowApiService endpoint contract', () => {
       { method: 'POST', path: '/flow/tasks/task-1/unaccept', body: { note: 'undo' }, options: undefined },
       { method: 'POST', path: '/flow/tasks/task-1/withdraw', body: { note: 'withdraw' }, options: undefined },
       { method: 'POST', path: '/flow/tasks/task-1/unassign', body: { note: 'unassign' }, options: undefined },
+    ]));
+  });
+
+  it('omits query options for absent or undefined filters', async () => {
+    const client = createClient();
+    const api = new FlowApiService(client as never);
+
+    await api.listGraphs();
+    await api.listRuns();
+    await api.listNodeRuns();
+    await api.listTasks();
+    await api.usersByRole('reviewer');
+    await api.listForms();
+    await api.listFills();
+    await api.listWaivers();
+    await api.listEvents();
+    await api.openTasks();
+    await api.runsSummary();
+    await api.listPolicySets();
+    await api.listFills({ formId: undefined, targetId: undefined });
+
+    expect(client.calls).toEqual(expect.arrayContaining([
+      { method: 'GET', path: '/flow/graphs', options: {} },
+      { method: 'GET', path: '/flow/runs', options: {} },
+      { method: 'GET', path: '/flow/node-runs', options: {} },
+      { method: 'GET', path: '/flow/tasks', options: {} },
+      { method: 'GET', path: '/flow/tasks/roles/reviewer/users', options: {} },
+      { method: 'GET', path: '/flow/forms', options: {} },
+      { method: 'GET', path: '/flow/fills', options: {} },
+      { method: 'GET', path: '/flow/waivers', options: {} },
+      { method: 'GET', path: '/flow/events', options: {} },
+      { method: 'GET', path: '/flow/open-tasks', options: {} },
+      { method: 'GET', path: '/flow/runs/summary', options: {} },
+      { method: 'GET', path: '/flow/policies/sets', options: {} },
     ]));
   });
 });

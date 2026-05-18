@@ -1,7 +1,7 @@
 import { PgSessionDbContextApplier } from '../../src/db-context/pg-session-db-context.applier';
 
 function makeClient() {
-  return { query: jest.fn(async () => undefined) };
+  return { query: vi.fn(async () => undefined) };
 }
 
 describe('PgSessionDbContextApplier', () => {

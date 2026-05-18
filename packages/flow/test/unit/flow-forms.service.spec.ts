@@ -1,9 +1,10 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { FlowFormsService } from '../../src/flow-forms.service';
+import type { Mock } from 'vitest';
 
 interface FakeTrx {
-  query: jest.Mock<Promise<{ rows: unknown[] }>, [string, unknown[]?]>;
-  softDelete: jest.Mock<Promise<void>, [unknown, string]>;
+  query: Mock<Promise<{ rows: unknown[] }>, [string, unknown[]?]>;
+  softDelete: Mock<Promise<void>, [unknown, string]>;
 }
 
 const SCOPE = '0190abcd-1234-7abc-89ab-000000000001';
@@ -17,8 +18,8 @@ const SCORE = '0190abcd-1234-7abc-89ab-000000000007';
 function makeTrx(rowsByCall: Array<unknown[]> = []) {
   let callIdx = 0;
   return {
-    query: jest.fn(async () => ({ rows: rowsByCall[callIdx++] ?? [] })),
-    softDelete: jest.fn(async () => undefined),
+    query: vi.fn(async () => ({ rows: rowsByCall[callIdx++] ?? [] })),
+    softDelete: vi.fn(async () => undefined),
   } as FakeTrx;
 }
 
@@ -26,7 +27,7 @@ function makeDb(rowsByCall: Array<unknown[]> = []) {
   const trx = makeTrx(rowsByCall);
   return {
     db: {
-      tx: jest.fn(async (fn: (t: FakeTrx) => unknown) => fn(trx)),
+      tx: vi.fn(async (fn: (t: FakeTrx) => unknown) => fn(trx)),
     } as never,
     trx,
   };

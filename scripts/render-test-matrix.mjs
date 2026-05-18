@@ -98,7 +98,7 @@ Reads existing result artifacts only; it does not run tests.
 
 Sources:
   - scripts/test-matrix.config.json for meaningless cells and coverage thresholds
-  - */.turbo/turbo-test*.log for Jest, Node test, and custom test summaries
+  - */.turbo/turbo-test*.log for Vitest, Node test, and custom test summaries
   - */.turbo/turbo-test*.log.meta.json for recorder timing metadata
   - reference/web/test-results/.last-run.json for Playwright E2E status
   - packages/*/reports/mutation/mutation.json when present
@@ -125,7 +125,9 @@ Color:
 }
 
 function discoverWorkspaces() {
-  const roots = ['packages', 'packages-web', 'reference', 'test', 'tools'];
+  const roots = aspect === 'coverage'
+    ? ['packages', 'packages-web']
+    : ['packages', 'packages-web', 'reference', 'test', 'tools'];
   const entries = [];
 
   for (const root of roots) {
@@ -208,10 +210,10 @@ function readDbResult(ws) {
 }
 
 function readE2EResult(ws) {
-  if (ws.name !== '@stynx/reference-web') return null;
   const e2eArtifact =
     readTurboArtifact(ws.dir, 'turbo-test$colon$e2e.log') ??
     readTurboArtifact(ws.dir, 'turbo-test-e2e.log');
+  if (ws.name !== '@stynx/reference-web') return e2eArtifact;
   const lastRunPath = join(ws.dir, 'test-results', '.last-run.json');
   if (!existsSync(lastRunPath)) return e2eArtifact;
 
@@ -263,10 +265,10 @@ function calculateStrykerMutationScore(payload) {
 
 function parseTestLog(raw) {
   const text = stripAnsi(raw).replace(/\r/g, '\n');
-  return parseJestOrCustomLog(text) ?? parseNodeTestLog(text);
+  return parseVitestOrCustomLog(text) ?? parseNodeTestLog(text);
 }
 
-function parseJestOrCustomLog(text) {
+function parseVitestOrCustomLog(text) {
   const suiteSummary = lastSummary(text, 'Test Suites');
   const testSummary = lastSummary(text, 'Tests');
   if (!suiteSummary && !testSummary) return null;
@@ -279,7 +281,7 @@ function parseJestOrCustomLog(text) {
     suitesTotal: suites.total ?? null,
     testsPassed: tests.passed ?? null,
     testsTotal: tests.total ?? null,
-    durationMs: parseJestDurationMs(text),
+    durationMs: parseVitestDurationMs(text),
     status: failed > 0 ? 'failed' : 'passed',
   };
 }
@@ -317,7 +319,7 @@ function parseSummaryCounts(summary) {
   return { passed, total, failed };
 }
 
-function parseJestDurationMs(text) {
+function parseVitestDurationMs(text) {
   const matches = [...text.matchAll(/Time:\s+([\d.]+)\s*(ms|s|m)?/g)];
   if (matches.length === 0) return null;
   const [, value, unit = 's'] = matches.at(-1);
@@ -428,12 +430,12 @@ function hasAnyCoverageProducingLevel(ws) {
 }
 
 function hasCoverageConfigured(ws) {
-  return hasAnyFile(ws.dir, ['jest.config.cjs', 'jest.config.mjs']);
+  return hasAnyFile(ws.dir, ['vitest.config.ts', 'vitest.config.mjs']);
 }
 
 function hasConfiguredLevel(ws, level) {
   if (level === 'Unit') {
-    return Boolean(ws.scripts.test) || hasAnyFile(ws.dir, ['jest.config.cjs', 'jest.config.mjs', 'vitest.config.ts']);
+    return Boolean(ws.scripts.test) || hasAnyFile(ws.dir, ['vitest.config.ts', 'vitest.config.mjs']);
   }
   if (level === 'API') {
     return (
@@ -446,7 +448,7 @@ function hasConfiguredLevel(ws, level) {
     return (
       (ws.root === 'test' && basename(ws.dir) === 'db') ||
       Boolean(ws.scripts['test:int']) ||
-      hasAnyFile(ws.dir, ['jest.integration.config.cjs', 'jest.integration.config.mjs'])
+      hasAnyFile(ws.dir, ['vitest.int.config.ts', 'vitest.int.config.mjs'])
     );
   }
   if (level === 'E2E') {
@@ -520,6 +522,7 @@ function summarizeCoverage(path, workspaces) {
   const coverage = JSON.parse(readFileSync(path, 'utf8'));
 
   for (const [file, fileCoverage] of Object.entries(coverage)) {
+    if (isNonBehavioralCoverageFile(file)) continue;
     const ws = findWorkspaceForFile(file, workspaces);
     if (!ws) continue;
     addFileCoverage(byWorkspace.get(ws.dir), fileCoverage);
@@ -536,6 +539,17 @@ function summarizeCoverage(path, workspaces) {
     });
   }
   return summaries;
+}
+
+function isNonBehavioralCoverageFile(file) {
+  const normalized = file.split(sep).join('/');
+  return (
+    normalized.endsWith('/src/index.ts') ||
+    normalized.endsWith('/src/tokens.ts') ||
+    normalized.includes('/src/generated/') ||
+    normalized.includes('/src/schema/') ||
+    normalized.endsWith('/schema.ts')
+  );
 }
 
 function findWorkspaceForFile(file, workspaces) {
@@ -598,7 +612,7 @@ function printMatrix(rows) {
     process.stdout.write('Coverage columns: lines, statements, branches, functions.\n');
     process.stdout.write('Source: coverage/coverage-final.json.\n');
   } else if (aspect === 'timing') {
-    process.stdout.write('Timing prefers recorder sidecar durationMs, then Jest Time, then Node duration_ms.\n');
+    process.stdout.write('Timing prefers recorder sidecar durationMs, then Vitest Time, then Node duration_ms.\n');
   } else {
     process.stdout.write('Status cell order: suites_passed/suites_total | tests_passed/tests_total.\n');
   }

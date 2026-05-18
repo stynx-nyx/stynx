@@ -7,8 +7,8 @@ describe('PermissionCache', () => {
   it('serves a matching in-memory record without recomputing and records the in-memory metric', async () => {
     const backend = new InMemoryPermissionCacheBackend();
     const queries = {
-      resolveForUser: jest.fn(),
-      probeHash: jest.fn().mockResolvedValue({ hash: 'hash-read', generation: 1 }),
+      resolveForUser: vi.fn(),
+      probeHash: vi.fn().mockResolvedValue({ hash: 'hash-read', generation: 1 }),
     } as unknown as PermissionQueryService;
     const metrics = new PermissionCacheMetrics();
     const cache = new PermissionCache(
@@ -51,8 +51,8 @@ describe('PermissionCache', () => {
   it('hydrates from the backend when the in-memory entry is absent and records the redis metric', async () => {
     const backend = new InMemoryPermissionCacheBackend();
     const queries = {
-      resolveForUser: jest.fn(),
-      probeHash: jest.fn().mockResolvedValue({ hash: 'hash-read', generation: 1 }),
+      resolveForUser: vi.fn(),
+      probeHash: vi.fn().mockResolvedValue({ hash: 'hash-read', generation: 1 }),
     } as unknown as PermissionQueryService;
     const metrics = new PermissionCacheMetrics();
     const cache = new PermissionCache(
@@ -93,8 +93,8 @@ describe('PermissionCache', () => {
   it('invalidates fan-out for 100 sessions in the same tenant', async () => {
     const backend = new InMemoryPermissionCacheBackend();
     const queries = {
-      resolveForUser: jest.fn(),
-      probeHash: jest.fn().mockResolvedValue({ hash: 'hash', generation: 1 }),
+      resolveForUser: vi.fn(),
+      probeHash: vi.fn().mockResolvedValue({ hash: 'hash', generation: 1 }),
     } as unknown as PermissionQueryService;
     const cache = new PermissionCache(
       {
@@ -132,22 +132,22 @@ describe('PermissionCache', () => {
 
   it('falls back to DB resolution when the backend is unavailable and records the db tier metric', async () => {
     const backend = {
-      get: jest.fn().mockRejectedValue(new Error('redis unavailable')),
-      set: jest.fn(),
-      delete: jest.fn(),
-      invalidateScope: jest.fn(),
-      subscribe: jest.fn(),
-      publish: jest.fn(),
-      close: jest.fn(),
+      get: vi.fn().mockRejectedValue(new Error('redis unavailable')),
+      set: vi.fn(),
+      delete: vi.fn(),
+      invalidateScope: vi.fn(),
+      subscribe: vi.fn(),
+      publish: vi.fn(),
+      close: vi.fn(),
     };
     const queries = {
-      resolveForUser: jest.fn().mockResolvedValue({
+      resolveForUser: vi.fn().mockResolvedValue({
         membershipId: 'membership-1',
         permissions: ['document:read:*'],
         hash: 'hash-read',
         generation: 2,
       }),
-      probeHash: jest.fn(),
+      probeHash: vi.fn(),
     } as unknown as PermissionQueryService;
     const metrics = new PermissionCacheMetrics();
     const cache = new PermissionCache(
@@ -174,17 +174,17 @@ describe('PermissionCache', () => {
 
   it('rethrows backend failures when DB fallback is disabled', async () => {
     const backend = {
-      get: jest.fn().mockRejectedValue(new Error('redis unavailable')),
-      set: jest.fn(),
-      delete: jest.fn(),
-      invalidateScope: jest.fn(),
-      subscribe: jest.fn(),
-      publish: jest.fn(),
-      close: jest.fn(),
+      get: vi.fn().mockRejectedValue(new Error('redis unavailable')),
+      set: vi.fn(),
+      delete: vi.fn(),
+      invalidateScope: vi.fn(),
+      subscribe: vi.fn(),
+      publish: vi.fn(),
+      close: vi.fn(),
     };
     const queries = {
-      resolveForUser: jest.fn(),
-      probeHash: jest.fn(),
+      resolveForUser: vi.fn(),
+      probeHash: vi.fn(),
     } as unknown as PermissionQueryService;
     const cache = new PermissionCache(
       {
@@ -210,13 +210,13 @@ describe('PermissionCache', () => {
   it('recomputes when cached permissions do not match the token hash', async () => {
     const backend = new InMemoryPermissionCacheBackend();
     const queries = {
-      resolveForUser: jest.fn().mockResolvedValue({
+      resolveForUser: vi.fn().mockResolvedValue({
         membershipId: 'membership-1',
         permissions: ['document:write:*'],
         hash: 'fresh-hash',
         generation: 2,
       }),
-      probeHash: jest.fn(),
+      probeHash: vi.fn(),
     } as unknown as PermissionQueryService;
     const metrics = new PermissionCacheMetrics();
     const cache = new PermissionCache(
@@ -261,14 +261,14 @@ describe('PermissionCache', () => {
 
   it('invalidates a single sid in memory and backend storage', async () => {
     const backend = new InMemoryPermissionCacheBackend();
-    const deleteSpy = jest.spyOn(backend, 'delete');
+    const deleteSpy = vi.spyOn(backend, 'delete');
     const cache = new PermissionCache(
       {
         stynx: { issuer: 'https://stynx.test' },
         permissions: { dbFallbackOnRedisDown: true },
       },
       backend,
-      { resolveForUser: jest.fn(), probeHash: jest.fn() } as unknown as PermissionQueryService,
+      { resolveForUser: vi.fn(), probeHash: vi.fn() } as unknown as PermissionQueryService,
       new PermissionCacheMetrics(),
     );
 
@@ -294,10 +294,10 @@ describe('PermissionCache', () => {
 
   it('clears all cached sessions on global invalidation and ignores malformed invalidation messages', async () => {
     const backend = new InMemoryPermissionCacheBackend();
-    const invalidateScope = jest.spyOn(backend, 'invalidateScope');
+    const invalidateScope = vi.spyOn(backend, 'invalidateScope');
     const queries = {
-      resolveForUser: jest.fn(),
-      probeHash: jest.fn().mockResolvedValue({ hash: 'hash', generation: 1 }),
+      resolveForUser: vi.fn(),
+      probeHash: vi.fn().mockResolvedValue({ hash: 'hash', generation: 1 }),
     } as unknown as PermissionQueryService;
     const cache = new PermissionCache(
       {
@@ -357,8 +357,8 @@ describe('PermissionCache', () => {
       },
       backend,
       {
-        resolveForUser: jest.fn(),
-        probeHash: jest.fn().mockResolvedValue({ hash: 'hash', generation: 1 }),
+        resolveForUser: vi.fn(),
+        probeHash: vi.fn().mockResolvedValue({ hash: 'hash', generation: 1 }),
       } as unknown as PermissionQueryService,
       new PermissionCacheMetrics(),
     );
@@ -391,15 +391,15 @@ describe('PermissionCache', () => {
 
   it('expires in-memory entries and clamps backend ttl to at least one second', async () => {
     const startedAt = 1_000_000;
-    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(startedAt);
+    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(startedAt);
     const backend = {
-      get: jest.fn(),
-      set: jest.fn(),
-      delete: jest.fn(),
-      invalidateScope: jest.fn(),
-      subscribe: jest.fn(),
-      publish: jest.fn(),
-      close: jest.fn(),
+      get: vi.fn(),
+      set: vi.fn(),
+      delete: vi.fn(),
+      invalidateScope: vi.fn(),
+      subscribe: vi.fn(),
+      publish: vi.fn(),
+      close: vi.fn(),
     };
     const cache = new PermissionCache(
       {
@@ -407,7 +407,7 @@ describe('PermissionCache', () => {
         permissions: { dbFallbackOnRedisDown: true },
       },
       backend,
-      { resolveForUser: jest.fn(), probeHash: jest.fn() } as unknown as PermissionQueryService,
+      { resolveForUser: vi.fn(), probeHash: vi.fn() } as unknown as PermissionQueryService,
       new PermissionCacheMetrics(),
     );
     const record = {
@@ -442,7 +442,7 @@ describe('PermissionCache', () => {
         permissions: { dbFallbackOnRedisDown: true },
       },
       null,
-      { resolveForUser: jest.fn(), probeHash: jest.fn() } as unknown as PermissionQueryService,
+      { resolveForUser: vi.fn(), probeHash: vi.fn() } as unknown as PermissionQueryService,
       new PermissionCacheMetrics(),
     );
     const internalCache = (cache as unknown as { inMemory: { constructor: new (ttlMs: number, maxSize: number) => unknown } }).inMemory;
@@ -471,22 +471,22 @@ describe('PermissionCache', () => {
 
   it('writes recomputed records to the backend with the one-day fallback ttl', async () => {
     const backend = {
-      get: jest.fn().mockResolvedValue(null),
-      set: jest.fn(),
-      delete: jest.fn(),
-      invalidateScope: jest.fn(),
-      subscribe: jest.fn(),
-      publish: jest.fn(),
-      close: jest.fn(),
+      get: vi.fn().mockResolvedValue(null),
+      set: vi.fn(),
+      delete: vi.fn(),
+      invalidateScope: vi.fn(),
+      subscribe: vi.fn(),
+      publish: vi.fn(),
+      close: vi.fn(),
     };
     const queries = {
-      resolveForUser: jest.fn().mockResolvedValue({
+      resolveForUser: vi.fn().mockResolvedValue({
         membershipId: 'membership-db',
         permissions: ['document:read:*'],
         hash: 'hash-db',
         generation: 9,
       }),
-      probeHash: jest.fn(),
+      probeHash: vi.fn(),
     } as unknown as PermissionQueryService;
     const cache = new PermissionCache(
       {
@@ -512,10 +512,10 @@ describe('PermissionCache', () => {
 
   it('keeps a cached record when the drift probe has no active membership hash', async () => {
     const startedAt = 2_000_000;
-    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(startedAt);
+    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(startedAt);
     const queries = {
-      resolveForUser: jest.fn(),
-      probeHash: jest.fn().mockResolvedValue({ hash: null, generation: 0 }),
+      resolveForUser: vi.fn(),
+      probeHash: vi.fn().mockResolvedValue({ hash: null, generation: 0 }),
     } as unknown as PermissionQueryService;
     const metrics = new PermissionCacheMetrics();
     const cache = new PermissionCache(
@@ -559,13 +559,13 @@ describe('PermissionCache', () => {
 
   it('recomputes when the cached hash probe detects drift before querying the database again', async () => {
     const queries = {
-      resolveForUser: jest.fn().mockResolvedValue({
+      resolveForUser: vi.fn().mockResolvedValue({
         membershipId: 'membership-fresh',
         permissions: ['document:write:*'],
         hash: 'fresh-hash',
         generation: 2,
       }),
-      probeHash: jest.fn(),
+      probeHash: vi.fn(),
     } as unknown as PermissionQueryService;
     const cache = new PermissionCache(
       {
@@ -609,17 +609,17 @@ describe('PermissionCache', () => {
   it('keeps wildcard invalidations scoped to the requested user or tenant', async () => {
     let subscriber: ((message: string) => Promise<void>) | undefined;
     const backend = {
-      get: jest.fn().mockResolvedValue(null),
-      set: jest.fn(),
-      delete: jest.fn(),
-      invalidateScope: jest.fn(),
-      subscribe: jest.fn(async (handler: (message: string) => Promise<void>) => {
+      get: vi.fn().mockResolvedValue(null),
+      set: vi.fn(),
+      delete: vi.fn(),
+      invalidateScope: vi.fn(),
+      subscribe: vi.fn(async (handler: (message: string) => Promise<void>) => {
         subscriber = handler;
       }),
-      publish: jest.fn(async (message: string) => {
+      publish: vi.fn(async (message: string) => {
         await subscriber?.(message);
       }),
-      close: jest.fn(),
+      close: vi.fn(),
     };
     const invalidateScope = backend.invalidateScope;
     const cache = new PermissionCache(
@@ -629,8 +629,8 @@ describe('PermissionCache', () => {
       },
       backend,
       {
-        resolveForUser: jest.fn(),
-        probeHash: jest.fn().mockResolvedValue({ hash: 'hash', generation: 1 }),
+        resolveForUser: vi.fn(),
+        probeHash: vi.fn().mockResolvedValue({ hash: 'hash', generation: 1 }),
       } as unknown as PermissionQueryService,
       new PermissionCacheMetrics(),
     );
@@ -671,14 +671,14 @@ describe('PermissionCache', () => {
 
   it('closes the backend on module destroy', async () => {
     const backend = new InMemoryPermissionCacheBackend();
-    const closeSpy = jest.spyOn(backend, 'close');
+    const closeSpy = vi.spyOn(backend, 'close');
     const cache = new PermissionCache(
       {
         stynx: { issuer: 'https://stynx.test' },
         permissions: { dbFallbackOnRedisDown: true },
       },
       backend,
-      { resolveForUser: jest.fn(), probeHash: jest.fn() } as unknown as PermissionQueryService,
+      { resolveForUser: vi.fn(), probeHash: vi.fn() } as unknown as PermissionQueryService,
       new PermissionCacheMetrics(),
     );
 
@@ -688,18 +688,18 @@ describe('PermissionCache', () => {
   });
 
   it('proactively re-syncs stale in-memory permission entries', async () => {
-    jest.useFakeTimers();
-    jest.setSystemTime(new Date('2026-04-26T12:00:00.000Z'));
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-26T12:00:00.000Z'));
 
     const backend = new InMemoryPermissionCacheBackend();
     const queries = {
-      resolveForUser: jest.fn().mockResolvedValue({
+      resolveForUser: vi.fn().mockResolvedValue({
         membershipId: 'membership-fresh',
         permissions: ['document:write:*'],
         hash: 'fresh-hash',
         generation: 2,
       }),
-      probeHash: jest.fn(),
+      probeHash: vi.fn(),
     } as unknown as PermissionQueryService;
     const cache = new PermissionCache(
       {
@@ -730,7 +730,7 @@ describe('PermissionCache', () => {
       );
 
       await cache.onModuleInit();
-      await jest.advanceTimersByTimeAsync(100);
+      await vi.advanceTimersByTimeAsync(100);
 
       expect(queries.resolveForUser).toHaveBeenCalledWith('user-1', 'tenant-1');
       await expect(cache.inspectSid('sid-resync')).resolves.toMatchObject({
@@ -742,7 +742,7 @@ describe('PermissionCache', () => {
       });
     } finally {
       await cache.onModuleDestroy();
-      jest.useRealTimers();
+      vi.useRealTimers();
     }
   });
 });

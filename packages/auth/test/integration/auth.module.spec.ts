@@ -25,7 +25,6 @@ import { STYNX_PERMISSION_CACHE_BACKEND } from '../../src/tokens';
 import { RedisPermissionCacheBackend } from '../../src/redis-permission-cache-backend';
 import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
 
-jest.setTimeout(30000);
 
 @Controller()
 class ProtectedController {

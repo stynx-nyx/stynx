@@ -1,5 +1,9 @@
 import {
+  DeleteObjectCommand,
+  DeleteObjectsCommand,
   GetObjectCommand,
+  HeadObjectCommand,
+  ListObjectVersionsCommand,
   PutBucketLifecycleConfigurationCommand,
   PutObjectRetentionCommand,
   type PutBucketLifecycleConfigurationCommandInput,
@@ -9,9 +13,10 @@ import {
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { StorageValidationError } from '../../src/errors';
 import { S3Service } from '../../src/s3.service';
+import type { Mock } from 'vitest';
 
-jest.mock('@aws-sdk/s3-request-presigner', () => ({
-  getSignedUrl: jest.fn().mockResolvedValue('https://signed.example.test/object'),
+vi.mock('@aws-sdk/s3-request-presigner', () => ({
+  getSignedUrl: vi.fn().mockResolvedValue('https://signed.example.test/object'),
 }));
 
 type CommandWithInput<TInput> = {
@@ -20,12 +25,12 @@ type CommandWithInput<TInput> = {
 
 describe('S3Service', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    jest.spyOn(Date, 'now').mockReturnValue(new Date('2026-04-26T12:00:00.000Z').getTime());
+    vi.clearAllMocks();
+    vi.spyOn(Date, 'now').mockReturnValue(new Date('2026-04-26T12:00:00.000Z').getTime());
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.clearAllMocks();
   });
 
   it('rejects bucket names outside the required pattern', () => {
@@ -63,8 +68,13 @@ describe('S3Service', () => {
     ).rejects.toBeInstanceOf(StorageValidationError);
 
     expect(getSignedUrl).toHaveBeenCalledTimes(2);
-    const signedCommand = (getSignedUrl as jest.Mock).mock.calls[0]?.[1];
+    const signedCommand = (getSignedUrl as Mock).mock.calls[0]?.[1];
     expect(signedCommand).toBeInstanceOf(GetObjectCommand);
+
+    vi.spyOn(Date, 'now').mockReturnValue(new Date('2026-04-26T12:01:01.000Z').getTime());
+    await expect(
+      service.presignDownloadForTenant({ key: 'tenant-a/docs/four.pdf', tenantId: 'tenant-a', expiresInSeconds: 10 }),
+    ).resolves.toBe('https://signed.example.test/object');
   });
 
   it('configures lifecycle transition and expiration rules', async () => {
@@ -74,7 +84,7 @@ describe('S3Service', () => {
       kmsAlias: 'stynx-docs',
       collections: {},
     });
-    const send = jest.fn().mockResolvedValue({});
+    const send = vi.fn().mockResolvedValue({});
     Object.defineProperty(service, 'client', {
       value: { send } satisfies Pick<S3Client, 'send'>,
     });
@@ -110,6 +120,27 @@ describe('S3Service', () => {
     });
   });
 
+  it('configures empty lifecycle filters when optional lifecycle fields are absent', async () => {
+    const service = new S3Service({
+      environment: 'prod',
+      region: 'us-east-1',
+      kmsAlias: 'stynx-docs',
+      collections: {},
+    });
+    const send = vi.fn().mockResolvedValue({});
+    Object.defineProperty(service, 'client', { value: { send } satisfies Pick<S3Client, 'send'> });
+
+    await service.configureLifecycle([{ name: 'empty-rule' }]);
+
+    const command = send.mock.calls[0]?.[0] as CommandWithInput<PutBucketLifecycleConfigurationCommandInput>;
+    expect(command.input.LifecycleConfiguration?.Rules?.[0]).toEqual({
+      ID: 'empty-rule',
+      Status: 'Enabled',
+      Filter: {},
+      Transitions: [],
+    });
+  });
+
   it('applies object-lock retention to a specific object version', async () => {
     const service = new S3Service({
       environment: 'prod',
@@ -117,7 +148,7 @@ describe('S3Service', () => {
       kmsAlias: 'stynx-docs',
       collections: {},
     });
-    const send = jest.fn().mockResolvedValue({});
+    const send = vi.fn().mockResolvedValue({});
     Object.defineProperty(service, 'client', {
       value: { send } satisfies Pick<S3Client, 'send'>,
     });
@@ -191,7 +222,7 @@ describe('S3Service', () => {
       expect(result.url).toBe('https://signed.example.test/object');
       expect(result.expiresInSeconds).toBe(300);
       expect(getSignedUrl).toHaveBeenCalled();
-      const cmd = (getSignedUrl as jest.Mock).mock.calls[0]?.[1] as GetObjectCommand;
+      const cmd = (getSignedUrl as Mock).mock.calls[0]?.[1] as GetObjectCommand;
       expect(cmd.input.Bucket).toBe('stynx-docs-prod-us-east-1');
       expect(cmd.input.Key).toBe('tenant-a/docs/file.pdf');
       expect(cmd.input.ResponseContentDisposition).toBe('attachment; filename="report.pdf"');
@@ -217,5 +248,124 @@ describe('S3Service', () => {
       collections: {},
     });
     expect(service.bucket()).toBe('stynx-docs-dev-us-east-1');
+  });
+
+  it('passes endpoint and path-style client options and supports custom default expiries', async () => {
+    const service = new S3Service({
+      environment: 'dev',
+      region: 'us-east-1',
+      kmsAlias: 'k',
+      collections: {},
+      endpoint: 'http://localhost:4566',
+      forcePathStyle: true,
+      uploadExpiresInSeconds: 111,
+      downloadExpiresInSeconds: 222,
+    });
+
+    await expect(service.presignUpload({ key: 'k', contentType: 'text/plain', checksumSha256: 'sha' })).resolves.toMatchObject({
+      expiresInSeconds: 111,
+    });
+    await expect(service.presignDownload({ key: 'k', filename: 'file.txt' })).resolves.toMatchObject({
+      expiresInSeconds: 222,
+    });
+  });
+
+  it('heads objects and deletes object versions or the base object fallback', async () => {
+    const service = new S3Service({
+      environment: 'prod',
+      region: 'us-east-1',
+      kmsAlias: 'stynx-docs',
+      collections: {},
+    });
+    const send = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ContentType: 'application/pdf',
+        ContentLength: 10,
+        Metadata: { sha256: 'abc' },
+        VersionId: 'v1',
+      })
+      .mockResolvedValueOnce({
+        Versions: [{ Key: 'key', VersionId: 'v1' }, { Key: 'other', VersionId: 'v2' }],
+        DeleteMarkers: [{ Key: 'key', VersionId: 'd1' }],
+      })
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({ Versions: [], DeleteMarkers: [] })
+      .mockResolvedValueOnce({});
+    Object.defineProperty(service, 'client', { value: { send } satisfies Pick<S3Client, 'send'> });
+
+    await expect(service.headObject('key')).resolves.toEqual({
+      contentType: 'application/pdf',
+      contentLength: 10,
+      metadata: { sha256: 'abc' },
+      versionId: 'v1',
+    });
+    await service.deleteAllVersions('key');
+    await service.deleteAllVersions('missing-key');
+
+    expect(send.mock.calls[0]?.[0]).toBeInstanceOf(HeadObjectCommand);
+    expect(send.mock.calls[1]?.[0]).toBeInstanceOf(ListObjectVersionsCommand);
+    expect(send.mock.calls[2]?.[0]).toBeInstanceOf(DeleteObjectsCommand);
+    expect(send.mock.calls[4]?.[0]).toBeInstanceOf(DeleteObjectCommand);
+  });
+
+  it('omits absent object metadata fields and deletes unversioned matches', async () => {
+    const service = new S3Service({
+      environment: 'prod',
+      region: 'us-east-1',
+      kmsAlias: 'stynx-docs',
+      collections: {},
+    });
+    const send = vi
+      .fn()
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({
+        Versions: [{ Key: 'key' }],
+        DeleteMarkers: [{ Key: 'key' }],
+      })
+      .mockResolvedValueOnce({});
+    Object.defineProperty(service, 'client', { value: { send } satisfies Pick<S3Client, 'send'> });
+
+    await expect(service.headObject('key')).resolves.toEqual({});
+    await service.deleteAllVersions('key');
+
+    const command = send.mock.calls[2]?.[0] as DeleteObjectsCommand;
+    expect(command).toBeInstanceOf(DeleteObjectsCommand);
+    expect(command.input.Delete?.Objects).toEqual([{ Key: 'key' }, { Key: 'key' }]);
+  });
+
+  it('deletes matching delete markers when version listings are omitted', async () => {
+    const service = new S3Service({
+      environment: 'prod',
+      region: 'us-east-1',
+      kmsAlias: 'stynx-docs',
+      collections: {},
+    });
+    const send = vi
+      .fn()
+      .mockResolvedValueOnce({
+        DeleteMarkers: [{ Key: 'key', VersionId: 'deleted-v1' }],
+      })
+      .mockResolvedValueOnce({});
+    Object.defineProperty(service, 'client', { value: { send } satisfies Pick<S3Client, 'send'> });
+
+    await service.deleteAllVersions('key');
+
+    const command = send.mock.calls[1]?.[0] as DeleteObjectsCommand;
+    expect(command).toBeInstanceOf(DeleteObjectsCommand);
+    expect(command.input.Delete?.Objects).toEqual([{ Key: 'key', VersionId: 'deleted-v1' }]);
+  });
+
+  it('uses the default presign rate limit when no compliance override is configured', async () => {
+    const service = new S3Service({
+      environment: 'prod',
+      region: 'us-east-1',
+      kmsAlias: 'stynx-docs',
+      collections: {},
+    });
+
+    await expect(
+      service.presignDownloadForTenant({ key: 'tenant-a/docs/file.pdf', tenantId: 'tenant-a' }),
+    ).resolves.toBe('https://signed.example.test/object');
   });
 });

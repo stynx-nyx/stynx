@@ -16,7 +16,7 @@ function createExecutionContext(request: Record<string, unknown>): ExecutionCont
 describe('RateLimitGuard', () => {
   it('bypasses health-check path', async () => {
     const store: RateLimitStore = {
-      increment: jest.fn(async () => 999),
+      increment: vi.fn(async () => 999),
     };
     const guard = new RateLimitGuard(
       {
@@ -58,11 +58,11 @@ describe('RateLimitGuard', () => {
 
   it('uses distributed store when tenant is present', async () => {
     const store: RateLimitStore = {
-      increment: jest
+      increment: vi
         .fn<Promise<number | null>, [unknown]>()
         .mockResolvedValueOnce(1)
         .mockResolvedValueOnce(2),
-      cleanup: jest.fn(async () => undefined),
+      cleanup: vi.fn(async () => undefined),
     };
     const guard = new RateLimitGuard({ limit: 2, cleanupEvery: 1 }, store);
     const request = {
@@ -81,7 +81,7 @@ describe('RateLimitGuard', () => {
 
   it('throws 429 when distributed hits exceed limit', async () => {
     const store: RateLimitStore = {
-      increment: jest.fn(async () => 3),
+      increment: vi.fn(async () => 3),
     };
     const guard = new RateLimitGuard({ limit: 2 }, store);
     const request = {
@@ -99,7 +99,7 @@ describe('RateLimitGuard', () => {
 
   it('throws service unavailable when strict distributed mode fails', async () => {
     const store: RateLimitStore = {
-      increment: jest.fn(async () => {
+      increment: vi.fn(async () => {
         throw new Error('db down');
       }),
     };

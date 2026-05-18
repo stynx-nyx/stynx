@@ -1,5 +1,4 @@
 import '@angular/compiler';
-import { jest } from '@jest/globals';
 import { StynxActiveSessionsComponent } from '../src/active-sessions.component';
 import type { StynxActiveSession, StynxSessionsAdapter } from '../src/types';
 
@@ -20,12 +19,12 @@ describe('@stynx-web/angular-sessions', () => {
       },
     ];
     const adapter: StynxSessionsAdapter = {
-      list: jest.fn(async () => [...state]),
-      revoke: jest.fn(async (sid: string) => {
+      list: vi.fn(async () => [...state]),
+      revoke: vi.fn(async (sid: string) => {
         const index = state.findIndex((entry) => entry.sid === sid);
         state.splice(index, 1);
       }),
-      revokeOthers: jest.fn(async () => undefined),
+      revokeOthers: vi.fn(async () => undefined),
     };
 
     const component = new StynxActiveSessionsComponent(

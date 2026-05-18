@@ -24,7 +24,6 @@ interface RedisDockerContainer {
   port: number;
 }
 
-jest.setTimeout(120_000);
 
 function buildKeySet() {
   const { publicKey, privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });

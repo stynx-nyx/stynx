@@ -1,0 +1,1598 @@
+{
+  "files": {
+    "src/provide-tenancy.ts": {
+      "language": "typescript",
+      "mutants": [
+        {
+          "id": "0",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "src/provide-tenancy.ts(9,66): error TS2355: A function whose declared type is neither 'undefined', 'void', nor 'any' must return a value.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["0"],
+          "location": { "end": { "column": 2, "line": 11 }, "start": { "column": 86, "line": 9 } }
+        },
+        {
+          "id": "1",
+          "mutatorName": "ArrowFunction",
+          "replacement": "() => undefined",
+          "statusReason": "src/provide-tenancy.ts(10,16): error TS2322: Type 'undefined' is not assignable to type 'Promise<void>'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["0"],
+          "location": { "end": { "column": 36, "line": 10 }, "start": { "column": 10, "line": 10 } }
+        },
+        {
+          "id": "2",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "src/provide-tenancy.ts(13,63): error TS2355: A function whose declared type is neither 'undefined', 'void', nor 'any' must return a value.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["0"],
+          "location": { "end": { "column": 2, "line": 36 }, "start": { "column": 74, "line": 13 } }
+        },
+        {
+          "id": "3",
+          "mutatorName": "ArrayDeclaration",
+          "replacement": "[]",
+          "statusReason": "Error: expect(received).toContain(expected) // indexOf\n\nExpected value: [Function TenantContextService]\nReceived array: []\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:70:23)\n    at Promise.finally.completed (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)\n    at _callCircusTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)\n    at _runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:947:3)\n    at /Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:849:7\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:862:11)\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:857:11)\n    at run (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:761:3)\n    at runAndTransformResultsToJestFormat (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)\n    at jestAdapter (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/runner.js:101:19)\n    at runTestInternal (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:275:16)\n    at runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:343:7)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 1,
+          "killedBy": ["0"],
+          "coveredBy": ["0"],
+          "location": { "end": { "column": 4, "line": 35 }, "start": { "column": 10, "line": 14 } }
+        },
+        {
+          "id": "4",
+          "mutatorName": "ObjectLiteral",
+          "replacement": "{}",
+          "statusReason": "src/provide-tenancy.ts(15,5): error TS2322: Type '{}' is not assignable to type 'Provider'.\n  Type '{}' is missing the following properties from type 'Type<any>': apply, call, bind, prototype, and 5 more.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["0"],
+          "location": { "end": { "column": 6, "line": 18 }, "start": { "column": 5, "line": 15 } }
+        },
+        {
+          "id": "5",
+          "mutatorName": "ObjectLiteral",
+          "replacement": "{}",
+          "statusReason": "src/provide-tenancy.ts(19,5): error TS2322: Type '{}' is not assignable to type 'Provider'.\n  Type '{}' is missing the following properties from type 'Type<any>': apply, call, bind, prototype, and 5 more.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["0"],
+          "location": { "end": { "column": 6, "line": 22 }, "start": { "column": 5, "line": 19 } }
+        },
+        {
+          "id": "6",
+          "mutatorName": "ArrowFunction",
+          "replacement": "() => undefined",
+          "statusReason": "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: [Window]\nReceived: undefined\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:72:44)\n    at Promise.finally.completed (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)\n    at _callCircusTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)\n    at _runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:947:3)\n    at /Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:849:7\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:862:11)\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:857:11)\n    at run (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:761:3)\n    at runAndTransformResultsToJestFormat (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)\n    at jestAdapter (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/runner.js:101:19)\n    at runTestInternal (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:275:16)\n    at runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:343:7)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 1,
+          "killedBy": ["0"],
+          "coveredBy": ["0"],
+          "location": { "end": { "column": 72, "line": 21 }, "start": { "column": 19, "line": 21 } }
+        },
+        {
+          "id": "7",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "statusReason": "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: [Window]\nReceived: null\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:72:44)\n    at Promise.finally.completed (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)\n    at _callCircusTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)\n    at _runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:947:3)\n    at /Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:849:7\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:862:11)\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:857:11)\n    at run (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:761:3)\n    at runAndTransformResultsToJestFormat (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)\n    at jestAdapter (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/runner.js:101:19)\n    at runTestInternal (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:275:16)\n    at runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:343:7)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 1,
+          "killedBy": ["0"],
+          "coveredBy": ["0"],
+          "location": { "end": { "column": 55, "line": 21 }, "start": { "column": 26, "line": 21 } }
+        },
+        {
+          "id": "8",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Survived",
+          "static": false,
+          "testsCompleted": 1,
+          "coveredBy": ["0"],
+          "location": { "end": { "column": 55, "line": 21 }, "start": { "column": 26, "line": 21 } }
+        },
+        {
+          "id": "9",
+          "mutatorName": "EqualityOperator",
+          "replacement": "typeof window !== 'undefined'",
+          "statusReason": "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: [Window]\nReceived: null\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:72:44)\n    at Promise.finally.completed (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)\n    at _callCircusTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)\n    at _runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:947:3)\n    at /Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:849:7\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:862:11)\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:857:11)\n    at run (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:761:3)\n    at runAndTransformResultsToJestFormat (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)\n    at jestAdapter (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/runner.js:101:19)\n    at runTestInternal (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:275:16)\n    at runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:343:7)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 1,
+          "killedBy": ["0"],
+          "coveredBy": ["0"],
+          "location": { "end": { "column": 55, "line": 21 }, "start": { "column": 26, "line": 21 } }
+        },
+        {
+          "id": "10",
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "statusReason": "src/provide-tenancy.ts(21,26): error TS2367: This comparison appears to be unintentional because the types '\"string\" | \"number\" | \"bigint\" | \"boolean\" | \"symbol\" | \"undefined\" | \"object\" | \"function\"' and '\"\"' have no overlap.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["0"],
+          "location": { "end": { "column": 55, "line": 21 }, "start": { "column": 44, "line": 21 } }
+        },
+        {
+          "id": "11",
+          "mutatorName": "ObjectLiteral",
+          "replacement": "{}",
+          "statusReason": "src/provide-tenancy.ts(24,5): error TS2322: Type '{}' is not assignable to type 'Provider'.\n  Type '{}' is missing the following properties from type 'Type<any>': apply, call, bind, prototype, and 5 more.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["0"],
+          "location": { "end": { "column": 6, "line": 29 }, "start": { "column": 5, "line": 24 } }
+        },
+        {
+          "id": "12",
+          "mutatorName": "ArrayDeclaration",
+          "replacement": "[]",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 3\n+ Received  + 1\n\n- Array [\n-   [Function TenantContextService],\n- ]\n+ Array []\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:73:56)\n    at Promise.finally.completed (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)\n    at _callCircusTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)\n    at _runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:947:3)\n    at /Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:849:7\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:862:11)\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:857:11)\n    at run (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:761:3)\n    at runAndTransformResultsToJestFormat (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)\n    at jestAdapter (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/runner.js:101:19)\n    at runTestInternal (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:275:16)\n    at runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:343:7)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 1,
+          "killedBy": ["0"],
+          "coveredBy": ["0"],
+          "location": { "end": { "column": 35, "line": 27 }, "start": { "column": 13, "line": 27 } }
+        },
+        {
+          "id": "13",
+          "mutatorName": "BooleanLiteral",
+          "replacement": "false",
+          "statusReason": "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:74:42)\n    at Promise.finally.completed (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)\n    at _callCircusTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)\n    at _runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:947:3)\n    at /Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:849:7\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:862:11)\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:857:11)\n    at run (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:761:3)\n    at runAndTransformResultsToJestFormat (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)\n    at jestAdapter (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/runner.js:101:19)\n    at runTestInternal (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:275:16)\n    at runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:343:7)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 1,
+          "killedBy": ["0"],
+          "coveredBy": ["0"],
+          "location": { "end": { "column": 18, "line": 28 }, "start": { "column": 14, "line": 28 } }
+        },
+        {
+          "id": "14",
+          "mutatorName": "ObjectLiteral",
+          "replacement": "{}",
+          "statusReason": "src/provide-tenancy.ts(30,5): error TS2322: Type '{}' is not assignable to type 'Provider'.\n  Type '{}' is missing the following properties from type 'Type<any>': apply, call, bind, prototype, and 5 more.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["0"],
+          "location": { "end": { "column": 6, "line": 34 }, "start": { "column": 5, "line": 30 } }
+        },
+        {
+          "id": "15",
+          "mutatorName": "BooleanLiteral",
+          "replacement": "false",
+          "statusReason": "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:78:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 1,
+          "killedBy": ["0"],
+          "coveredBy": ["0"],
+          "location": { "end": { "column": 18, "line": 33 }, "start": { "column": 14, "line": 33 } }
+        }
+      ],
+      "source": "import { APP_INITIALIZER } from '@angular/core';\nimport { HTTP_INTERCEPTORS } from '@angular/common/http';\nimport { TenantContextService } from './tenant-context.service';\nimport { TenantInterceptor } from './tenant.interceptor';\nimport { STYNX_TENANCY_OPTIONS, STYNX_TENANCY_WINDOW } from './tokens';\nimport type { Provider } from '@angular/core';\nimport type { TenancyOptions } from './types';\n\nfunction initializeTenantContext(service: TenantContextService): () => Promise<void> {\n  return () => service.initialize();\n}\n\nexport function provideTenancy(options: TenancyOptions = {}): Provider[] {\n  return [\n    {\n      provide: STYNX_TENANCY_OPTIONS,\n      useValue: options,\n    },\n    {\n      provide: STYNX_TENANCY_WINDOW,\n      useFactory: () => (typeof window === 'undefined' ? null : window),\n    },\n    TenantContextService,\n    {\n      provide: APP_INITIALIZER,\n      useFactory: initializeTenantContext,\n      deps: [TenantContextService],\n      multi: true,\n    },\n    {\n      provide: HTTP_INTERCEPTORS,\n      useClass: TenantInterceptor,\n      multi: true,\n    },\n  ];\n}\n"
+    },
+    "src/tenant-switcher.component.ts": {
+      "language": "typescript",
+      "mutants": [
+        {
+          "id": "116",
+          "mutatorName": "ArrayDeclaration",
+          "replacement": "[\"Stryker was here\"]",
+          "statusReason": "src/tenant-switcher.component.ts(21,57): error TS2322: Type 'string' is not assignable to type 'TenantOption'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": [],
+          "location": { "end": { "column": 58, "line": 21 }, "start": { "column": 56, "line": 21 } }
+        },
+        {
+          "id": "117",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "Error: expect(jest.fn()).toHaveBeenCalledWith(...expected)\n\nExpected: \"tenant-b\", \"manual\"\n\nNumber of calls: 0\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:205:37)\n    at Promise.finally.completed (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)\n    at _callCircusTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)\n    at _runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:947:3)\n    at /Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:849:7\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:862:11)\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:857:11)\n    at run (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:761:3)\n    at runAndTransformResultsToJestFormat (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)\n    at jestAdapter (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/runner.js:101:19)\n    at runTestInternal (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:275:16)\n    at runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:343:7)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 1,
+          "killedBy": ["6"],
+          "coveredBy": ["6"],
+          "location": { "end": { "column": 4, "line": 32 }, "start": { "column": 36, "line": 25 } }
+        },
+        {
+          "id": "118",
+          "mutatorName": "BooleanLiteral",
+          "replacement": "tenantId",
+          "statusReason": "Error: expect(jest.fn()).not.toHaveBeenCalled()\n\nExpected number of calls: 0\nReceived number of calls: 1\n\n1: \"\", \"manual\"\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:201:41)\n    at Promise.finally.completed (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)\n    at _callCircusTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)\n    at _runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:947:3)\n    at /Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:849:7\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:862:11)\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:857:11)\n    at run (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:761:3)\n    at runAndTransformResultsToJestFormat (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)\n    at jestAdapter (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/runner.js:101:19)\n    at runTestInternal (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:275:16)\n    at runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:343:7)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 1,
+          "killedBy": ["6"],
+          "coveredBy": ["6"],
+          "location": { "end": { "column": 18, "line": 27 }, "start": { "column": 9, "line": 27 } }
+        },
+        {
+          "id": "119",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "statusReason": "Error: expect(jest.fn()).toHaveBeenCalledWith(...expected)\n\nExpected: \"tenant-b\", \"manual\"\n\nNumber of calls: 0\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:205:37)\n    at Promise.finally.completed (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)\n    at _callCircusTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)\n    at _runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:947:3)\n    at /Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:849:7\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:862:11)\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:857:11)\n    at run (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:761:3)\n    at runAndTransformResultsToJestFormat (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)\n    at jestAdapter (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/runner.js:101:19)\n    at runTestInternal (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:275:16)\n    at runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:343:7)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 1,
+          "killedBy": ["6"],
+          "coveredBy": ["6"],
+          "location": { "end": { "column": 18, "line": 27 }, "start": { "column": 9, "line": 27 } }
+        },
+        {
+          "id": "120",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "statusReason": "Error: expect(jest.fn()).not.toHaveBeenCalled()\n\nExpected number of calls: 0\nReceived number of calls: 1\n\n1: \"\", \"manual\"\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:201:41)\n    at Promise.finally.completed (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)\n    at _callCircusTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)\n    at _runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:947:3)\n    at /Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:849:7\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:862:11)\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:857:11)\n    at run (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:761:3)\n    at runAndTransformResultsToJestFormat (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)\n    at jestAdapter (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/runner.js:101:19)\n    at runTestInternal (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:275:16)\n    at runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:343:7)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 1,
+          "killedBy": ["6"],
+          "coveredBy": ["6"],
+          "location": { "end": { "column": 18, "line": 27 }, "start": { "column": 9, "line": 27 } }
+        },
+        {
+          "id": "121",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "Error: expect(jest.fn()).not.toHaveBeenCalled()\n\nExpected number of calls: 0\nReceived number of calls: 1\n\n1: \"\", \"manual\"\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:201:41)\n    at Promise.finally.completed (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)\n    at _callCircusTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)\n    at _runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:947:3)\n    at /Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:849:7\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:862:11)\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:857:11)\n    at run (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:761:3)\n    at runAndTransformResultsToJestFormat (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)\n    at jestAdapter (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/runner.js:101:19)\n    at runTestInternal (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:275:16)\n    at runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:343:7)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 1,
+          "killedBy": ["6"],
+          "coveredBy": ["6"],
+          "location": { "end": { "column": 6, "line": 29 }, "start": { "column": 20, "line": 27 } }
+        },
+        {
+          "id": "122",
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "statusReason": "src/tenant-switcher.component.ts(30,44): error TS2345: Argument of type '\"\"' is not assignable to parameter of type '\"query\" | \"subdomain\" | \"default\" | \"manual\" | undefined'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["6"],
+          "location": { "end": { "column": 52, "line": 30 }, "start": { "column": 44, "line": 30 } }
+        }
+      ],
+      "source": "import { CommonModule } from '@angular/common';\nimport { Component, EventEmitter, inject, Input, Output } from '@angular/core';\nimport { TenantContextService } from './tenant-context.service';\nimport type { TenantOption } from './types';\n\n@Component({\n  selector: 'stynx-tenant-switcher',\n  standalone: true,\n  imports: [CommonModule],\n  template: `\n    <label>\n      <span>Tenant</span>\n      <select [value]=\"tenantContext.tenantId() ?? ''\" (change)=\"selectTenant($event)\">\n        <option value=\"\" disabled>Select tenant</option>\n        <option *ngFor=\"let tenant of tenants\" [value]=\"tenant.id\">{{ tenant.label }}</option>\n      </select>\n    </label>\n  `,\n})\nexport class TenantSwitcherComponent {\n  @Input({ required: true }) tenants: TenantOption[] = [];\n  @Output() readonly tenantChange = new EventEmitter<string>();\n  readonly tenantContext = inject(TenantContextService);\n\n  selectTenant(event: Event): void {\n    const tenantId = (event.target as HTMLSelectElement).value;\n    if (!tenantId) {\n      return;\n    }\n    this.tenantContext.setTenant(tenantId, 'manual');\n    this.tenantChange.emit(tenantId);\n  }\n}\n"
+    },
+    "src/tenant-context.service.ts": {
+      "language": "typescript",
+      "mutants": [
+        {
+          "id": "16",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "src/tenant-context.service.ts(6,36): error TS2355: A function whose declared type is neither 'undefined', 'void', nor 'any' must return a value.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 2, "line": 8 }, "start": { "column": 44, "line": 6 } }
+        },
+        {
+          "id": "17",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "statusReason": "TypeError: Invalid URL: /dashboard?tenant=tenant-query\n    at new URLImpl (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/whatwg-url@14.2.0/node_modules/whatwg-url/lib/URL-impl.js:20:13)\n    at Object.exports.setup (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/whatwg-url@14.2.0/node_modules/whatwg-url/lib/URL.js:54:12)\n    at new URL (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/whatwg-url@14.2.0/node_modules/whatwg-url/lib/URL.js:115:22)\n    at resolveUrl (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/src/tenant-context.service.ts:71:16)\n    at TenantContextService.initialize (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/src/tenant-context.service.ts:137:19)\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:91:25)\n    at Promise.finally.completed (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)\n    at _callCircusTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)\n    at _runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:947:3)\n    at /Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:849:7\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:862:11)\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:857:11)\n    at run (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:761:3)\n    at runAndTransformResultsToJestFormat (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)\n    at jestAdapter (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/runner.js:101:19)\n    at runTestInternal (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:275:16)\n    at runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:343:7)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 3,
+          "killedBy": ["1"],
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 69, "line": 7 }, "start": { "column": 10, "line": 7 } }
+        },
+        {
+          "id": "18",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Survived",
+          "static": false,
+          "testsCompleted": 3,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 69, "line": 7 }, "start": { "column": 10, "line": 7 } }
+        },
+        {
+          "id": "19",
+          "mutatorName": "LogicalOperator",
+          "replacement": "value.startsWith('http://') && value.startsWith('https://')",
+          "status": "Survived",
+          "static": false,
+          "testsCompleted": 3,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 69, "line": 7 }, "start": { "column": 10, "line": 7 } }
+        },
+        {
+          "id": "20",
+          "mutatorName": "MethodExpression",
+          "replacement": "value.endsWith('http://')",
+          "status": "Survived",
+          "static": false,
+          "testsCompleted": 3,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 37, "line": 7 }, "start": { "column": 10, "line": 7 } }
+        },
+        {
+          "id": "21",
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "statusReason": "TypeError: Invalid URL: /dashboard?tenant=tenant-query\n    at new URLImpl (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/whatwg-url@14.2.0/node_modules/whatwg-url/lib/URL-impl.js:20:13)\n    at Object.exports.setup (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/whatwg-url@14.2.0/node_modules/whatwg-url/lib/URL.js:54:12)\n    at new URL (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/whatwg-url@14.2.0/node_modules/whatwg-url/lib/URL.js:115:22)\n    at resolveUrl (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/src/tenant-context.service.ts:71:16)\n    at TenantContextService.initialize (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/src/tenant-context.service.ts:137:19)\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:91:25)\n    at Promise.finally.completed (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)\n    at _callCircusTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)\n    at _runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:947:3)\n    at /Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:849:7\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:862:11)\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:857:11)\n    at run (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:761:3)\n    at runAndTransformResultsToJestFormat (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)\n    at jestAdapter (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/runner.js:101:19)\n    at runTestInternal (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:275:16)\n    at runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:343:7)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 3,
+          "killedBy": ["1"],
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 36, "line": 7 }, "start": { "column": 27, "line": 7 } }
+        },
+        {
+          "id": "22",
+          "mutatorName": "MethodExpression",
+          "replacement": "value.endsWith('https://')",
+          "status": "Survived",
+          "static": false,
+          "testsCompleted": 3,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 69, "line": 7 }, "start": { "column": 41, "line": 7 } }
+        },
+        {
+          "id": "23",
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "statusReason": "TypeError: Invalid URL: /dashboard?tenant=tenant-query\n    at new URLImpl (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/whatwg-url@14.2.0/node_modules/whatwg-url/lib/URL-impl.js:20:13)\n    at Object.exports.setup (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/whatwg-url@14.2.0/node_modules/whatwg-url/lib/URL.js:54:12)\n    at new URL (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/whatwg-url@14.2.0/node_modules/whatwg-url/lib/URL.js:115:22)\n    at resolveUrl (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/src/tenant-context.service.ts:71:16)\n    at TenantContextService.initialize (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/src/tenant-context.service.ts:137:19)\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:91:25)\n    at Promise.finally.completed (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)\n    at _callCircusTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)\n    at _runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:947:3)\n    at /Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:849:7\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:862:11)\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:857:11)\n    at run (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:761:3)\n    at runAndTransformResultsToJestFormat (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)\n    at jestAdapter (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/runner.js:101:19)\n    at runTestInternal (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:275:16)\n    at runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:343:7)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 3,
+          "killedBy": ["1"],
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 68, "line": 7 }, "start": { "column": 58, "line": 7 } }
+        },
+        {
+          "id": "24",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "src/tenant-context.service.ts(10,76): error TS2355: A function whose declared type is neither 'undefined', 'void', nor 'any' must return a value.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 2, "line": 19 }, "start": { "column": 80, "line": 10 } }
+        },
+        {
+          "id": "25",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "statusReason": "TypeError: Invalid base URL: https://\n    at new URLImpl (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/whatwg-url@14.2.0/node_modules/whatwg-url/lib/URL-impl.js:14:15)\n    at Object.exports.setup (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/whatwg-url@14.2.0/node_modules/whatwg-url/lib/URL.js:54:12)\n    at new URL (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/whatwg-url@14.2.0/node_modules/whatwg-url/lib/URL.js:115:22)\n    at resolveUrl (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/src/tenant-context.service.ts:79:16)\n    at TenantContextService.initialize (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/src/tenant-context.service.ts:137:19)\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:156:25)\n    at Promise.finally.completed (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)\n    at _callCircusTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)\n    at _runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:947:3)\n    at /Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:849:7\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:862:11)\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:857:11)\n    at run (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:761:3)\n    at runAndTransformResultsToJestFormat (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)\n    at jestAdapter (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/runner.js:101:19)\n    at runTestInternal (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:275:16)\n    at runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:343:7)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 3,
+          "killedBy": ["3"],
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 47, "line": 11 }, "start": { "column": 24, "line": 11 } }
+        },
+        {
+          "id": "26",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 1\n+ Received  + 1\n\n  Object {\n    \"host\": \"127.0.0.1:4200\",\n-   \"url\": \"https://127.0.0.1:4200/from-window?x=1\",\n+   \"url\": \"https://localhost/from-window?x=1\",\n  }\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:133:21)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 3,
+          "killedBy": ["2"],
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 47, "line": 11 }, "start": { "column": 24, "line": 11 } }
+        },
+        {
+          "id": "27",
+          "mutatorName": "LogicalOperator",
+          "replacement": "host || host.length > 0",
+          "statusReason": "src/tenant-context.service.ts(11,32): error TS18048: 'host' is possibly 'undefined'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 47, "line": 11 }, "start": { "column": 24, "line": 11 } }
+        },
+        {
+          "id": "28",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Survived",
+          "static": false,
+          "testsCompleted": 2,
+          "coveredBy": ["1", "2"],
+          "location": { "end": { "column": 47, "line": 11 }, "start": { "column": 32, "line": 11 } }
+        },
+        {
+          "id": "29",
+          "mutatorName": "EqualityOperator",
+          "replacement": "host.length >= 0",
+          "status": "Survived",
+          "static": false,
+          "testsCompleted": 2,
+          "coveredBy": ["1", "2"],
+          "location": { "end": { "column": 47, "line": 11 }, "start": { "column": 32, "line": 11 } }
+        },
+        {
+          "id": "30",
+          "mutatorName": "EqualityOperator",
+          "replacement": "host.length <= 0",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 1\n+ Received  + 1\n\n  Object {\n    \"host\": \"127.0.0.1:4200\",\n-   \"url\": \"https://127.0.0.1:4200/from-window?x=1\",\n+   \"url\": \"https://localhost/from-window?x=1\",\n  }\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:133:21)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 2,
+          "killedBy": ["2"],
+          "coveredBy": ["1", "2"],
+          "location": { "end": { "column": 47, "line": 11 }, "start": { "column": 32, "line": 11 } }
+        },
+        {
+          "id": "31",
+          "mutatorName": "StringLiteral",
+          "replacement": "``",
+          "statusReason": "TypeError: Invalid base URL: \n    at new URLImpl (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/whatwg-url@14.2.0/node_modules/whatwg-url/lib/URL-impl.js:14:15)\n    at Object.exports.setup (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/whatwg-url@14.2.0/node_modules/whatwg-url/lib/URL.js:54:12)\n    at new URL (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/whatwg-url@14.2.0/node_modules/whatwg-url/lib/URL.js:115:22)\n    at resolveUrl (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/src/tenant-context.service.ts:79:16)\n    at TenantContextService.initialize (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/src/tenant-context.service.ts:137:19)\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:91:25)\n    at Promise.finally.completed (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)\n    at _callCircusTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)\n    at _runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:947:3)\n    at /Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:849:7\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:862:11)\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:857:11)\n    at run (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:761:3)\n    at runAndTransformResultsToJestFormat (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)\n    at jestAdapter (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/runner.js:101:19)\n    at runTestInternal (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:275:16)\n    at runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:343:7)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 2,
+          "killedBy": ["1"],
+          "coveredBy": ["1", "2"],
+          "location": { "end": { "column": 67, "line": 11 }, "start": { "column": 50, "line": 11 } }
+        },
+        {
+          "id": "32",
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "statusReason": "TypeError: Invalid base URL: \n    at new URLImpl (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/whatwg-url@14.2.0/node_modules/whatwg-url/lib/URL-impl.js:14:15)\n    at Object.exports.setup (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/whatwg-url@14.2.0/node_modules/whatwg-url/lib/URL.js:54:12)\n    at new URL (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/whatwg-url@14.2.0/node_modules/whatwg-url/lib/URL.js:115:22)\n    at resolveUrl (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/src/tenant-context.service.ts:79:16)\n    at TenantContextService.initialize (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/src/tenant-context.service.ts:137:19)\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:156:25)\n    at Promise.finally.completed (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)\n    at _callCircusTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)\n    at _runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:947:3)\n    at /Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:849:7\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:862:11)\n    at _runTestsForDescribeBlock (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:857:11)\n    at run (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:761:3)\n    at runAndTransformResultsToJestFormat (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)\n    at jestAdapter (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-circus@30.3.0/node_modules/jest-circus/build/runner.js:101:19)\n    at runTestInternal (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:275:16)\n    at runTest (/Users/aarusso/Development/stech/stynx/node_modules/.pnpm/jest-runner@30.3.0/node_modules/jest-runner/build/index.js:343:7)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 1,
+          "killedBy": ["3"],
+          "coveredBy": ["3"],
+          "location": { "end": { "column": 89, "line": 11 }, "start": { "column": 70, "line": 11 } }
+        },
+        {
+          "id": "33",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "statusReason": "src/tenant-context.service.ts(13,20): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string | URL'.\n  Type 'undefined' is not assignable to type 'string | URL'.\nsrc/tenant-context.service.ts(16,20): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string | URL'.\n  Type 'undefined' is not assignable to type 'string | URL'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 34, "line": 12 }, "start": { "column": 7, "line": 12 } }
+        },
+        {
+          "id": "34",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "statusReason": "src/tenant-context.service.ts(13,20): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string | URL'.\n  Type 'undefined' is not assignable to type 'string | URL'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 34, "line": 12 }, "start": { "column": 7, "line": 12 } }
+        },
+        {
+          "id": "35",
+          "mutatorName": "LogicalOperator",
+          "replacement": "rawUrl || isUrlLike(rawUrl)",
+          "statusReason": "src/tenant-context.service.ts(12,27): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.\n  Type 'undefined' is not assignable to type 'string'.\nsrc/tenant-context.service.ts(13,20): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string | URL'.\n  Type 'undefined' is not assignable to type 'string | URL'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 34, "line": 12 }, "start": { "column": 7, "line": 12 } }
+        },
+        {
+          "id": "36",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Survived",
+          "static": false,
+          "testsCompleted": 2,
+          "coveredBy": ["1", "2"],
+          "location": { "end": { "column": 4, "line": 14 }, "start": { "column": 36, "line": 12 } }
+        },
+        {
+          "id": "37",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "statusReason": "src/tenant-context.service.ts(16,20): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string | URL'.\n  Type 'undefined' is not assignable to type 'string | URL'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 13, "line": 15 }, "start": { "column": 7, "line": 15 } }
+        },
+        {
+          "id": "38",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "statusReason": "src/tenant-context.service.ts(16,20): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string | URL'.\n  Type 'undefined' is not assignable to type 'string | URL'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 13, "line": 15 }, "start": { "column": 7, "line": 15 } }
+        },
+        {
+          "id": "39",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 2\n+ Received  + 2\n\n  Object {\n-   \"id\": \"tenant-query\",\n-   \"source\": \"query\",\n+   \"id\": \"app\",\n+   \"source\": \"subdomain\",\n  }\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:95:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 3,
+          "killedBy": ["1"],
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 4, "line": 17 }, "start": { "column": 15, "line": 15 } }
+        },
+        {
+          "id": "40",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "src/tenant-context.service.ts(21,50): error TS2355: A function whose declared type is neither 'undefined', 'void', nor 'any' must return a value.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 2, "line": 34 }, "start": { "column": 64, "line": 21 } }
+        },
+        {
+          "id": "41",
+          "mutatorName": "MethodExpression",
+          "replacement": "host.replace(/:\\d+$/, '').toUpperCase()",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 1\n+ Received  + 1\n\n  Object {\n-   \"id\": \"tenant-sub\",\n+   \"id\": \"TENANT-SUB\",\n    \"source\": \"subdomain\",\n  }\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:101:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 3,
+          "killedBy": ["1"],
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 59, "line": 22 }, "start": { "column": 20, "line": 22 } }
+        },
+        {
+          "id": "42",
+          "mutatorName": "Regex",
+          "replacement": "/:\\d+/",
+          "status": "Survived",
+          "static": false,
+          "testsCompleted": 3,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 40, "line": 22 }, "start": { "column": 33, "line": 22 } }
+        },
+        {
+          "id": "43",
+          "mutatorName": "Regex",
+          "replacement": "/:\\d$/",
+          "status": "Survived",
+          "static": false,
+          "testsCompleted": 3,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 40, "line": 22 }, "start": { "column": 33, "line": 22 } }
+        },
+        {
+          "id": "44",
+          "mutatorName": "Regex",
+          "replacement": "/:\\D+$/",
+          "status": "Survived",
+          "static": false,
+          "testsCompleted": 3,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 40, "line": 22 }, "start": { "column": 33, "line": 22 } }
+        },
+        {
+          "id": "45",
+          "mutatorName": "StringLiteral",
+          "replacement": "\"Stryker was here!\"",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 2\n+ Received  + 2\n\n  Object {\n-   \"id\": \"fallback-tenant\",\n-   \"source\": \"default\",\n+   \"id\": \"127\",\n+   \"source\": \"subdomain\",\n  }\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:132:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 3,
+          "killedBy": ["2"],
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 44, "line": 22 }, "start": { "column": 42, "line": 22 } }
+        },
+        {
+          "id": "46",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "statusReason": "src/tenant-context.service.ts(30,43): error TS2322: Type 'string | undefined' is not assignable to type 'string | null'.\n  Type 'undefined' is not assignable to type 'string | null'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 47, "line": 27 }, "start": { "column": 5, "line": 24 } }
+        },
+        {
+          "id": "47",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 2\n+ Received  + 2\n\n  Object {\n-   \"id\": \"fallback-tenant\",\n-   \"source\": \"default\",\n+   \"id\": \"127\",\n+   \"source\": \"subdomain\",\n  }\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:132:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 3,
+          "killedBy": ["2"],
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 47, "line": 27 }, "start": { "column": 5, "line": 24 } }
+        },
+        {
+          "id": "48",
+          "mutatorName": "LogicalOperator",
+          "replacement": "(hostname === 'localhost' || hostname.endsWith('.localhost') || hostname.includes(':')) && /^\\d{1,3}(?:\\.\\d{1,3}){3}$/.test(hostname)",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 2\n+ Received  + 2\n\n  Object {\n-   \"id\": \"fallback-tenant\",\n-   \"source\": \"default\",\n+   \"id\": \"127\",\n+   \"source\": \"subdomain\",\n  }\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:132:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 3,
+          "killedBy": ["2"],
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 47, "line": 27 }, "start": { "column": 5, "line": 24 } }
+        },
+        {
+          "id": "49",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 2\n+ Received  + 2\n\n  Object {\n-   \"id\": \"fallback-tenant\",\n-   \"source\": \"default\",\n+   \"id\": \"tenant\",\n+   \"source\": \"subdomain\",\n  }\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:143:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 3,
+          "killedBy": ["2"],
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 27, "line": 26 }, "start": { "column": 5, "line": 24 } }
+        },
+        {
+          "id": "50",
+          "mutatorName": "LogicalOperator",
+          "replacement": "(hostname === 'localhost' || hostname.endsWith('.localhost')) && hostname.includes(':')",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 2\n+ Received  + 2\n\n  Object {\n-   \"id\": \"fallback-tenant\",\n-   \"source\": \"default\",\n+   \"id\": \"tenant\",\n+   \"source\": \"subdomain\",\n  }\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:143:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 3,
+          "killedBy": ["2"],
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 27, "line": 26 }, "start": { "column": 5, "line": 24 } }
+        },
+        {
+          "id": "51",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 2\n+ Received  + 2\n\n  Object {\n-   \"id\": \"fallback-tenant\",\n-   \"source\": \"default\",\n+   \"id\": \"tenant\",\n+   \"source\": \"subdomain\",\n  }\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:143:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 3,
+          "killedBy": ["2"],
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 36, "line": 25 }, "start": { "column": 5, "line": 24 } }
+        },
+        {
+          "id": "52",
+          "mutatorName": "LogicalOperator",
+          "replacement": "hostname === 'localhost' && hostname.endsWith('.localhost')",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 2\n+ Received  + 2\n\n  Object {\n-   \"id\": \"fallback-tenant\",\n-   \"source\": \"default\",\n+   \"id\": \"tenant\",\n+   \"source\": \"subdomain\",\n  }\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:143:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 3,
+          "killedBy": ["2"],
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 36, "line": 25 }, "start": { "column": 5, "line": 24 } }
+        },
+        {
+          "id": "53",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Survived",
+          "static": false,
+          "testsCompleted": 3,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 29, "line": 24 }, "start": { "column": 5, "line": 24 } }
+        },
+        {
+          "id": "54",
+          "mutatorName": "EqualityOperator",
+          "replacement": "hostname !== 'localhost'",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 2\n+ Received  + 2\n\n  Object {\n-   \"id\": \"tenant-sub\",\n-   \"source\": \"subdomain\",\n+   \"id\": \"tenant-query\",\n+   \"source\": \"query\",\n  }\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:101:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 3,
+          "killedBy": ["1"],
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 29, "line": 24 }, "start": { "column": 5, "line": 24 } }
+        },
+        {
+          "id": "55",
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Survived",
+          "static": false,
+          "testsCompleted": 3,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 29, "line": 24 }, "start": { "column": 18, "line": 24 } }
+        },
+        {
+          "id": "56",
+          "mutatorName": "MethodExpression",
+          "replacement": "hostname.startsWith('.localhost')",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 2\n+ Received  + 2\n\n  Object {\n-   \"id\": \"fallback-tenant\",\n-   \"source\": \"default\",\n+   \"id\": \"tenant\",\n+   \"source\": \"subdomain\",\n  }\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:143:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 3,
+          "killedBy": ["2"],
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 36, "line": 25 }, "start": { "column": 5, "line": 25 } }
+        },
+        {
+          "id": "57",
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 2\n+ Received  + 2\n\n  Object {\n-   \"id\": \"tenant-sub\",\n-   \"source\": \"subdomain\",\n+   \"id\": \"tenant-query\",\n+   \"source\": \"query\",\n  }\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:101:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 3,
+          "killedBy": ["1"],
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 35, "line": 25 }, "start": { "column": 23, "line": 25 } }
+        },
+        {
+          "id": "58",
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 2\n+ Received  + 2\n\n  Object {\n-   \"id\": \"tenant-sub\",\n-   \"source\": \"subdomain\",\n+   \"id\": \"tenant-query\",\n+   \"source\": \"query\",\n  }\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:101:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 3,
+          "killedBy": ["1"],
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 26, "line": 26 }, "start": { "column": 23, "line": 26 } }
+        },
+        {
+          "id": "59",
+          "mutatorName": "Regex",
+          "replacement": "/\\d{1,3}(?:\\.\\d{1,3}){3}$/",
+          "status": "Survived",
+          "static": false,
+          "testsCompleted": 3,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 32, "line": 27 }, "start": { "column": 5, "line": 27 } }
+        },
+        {
+          "id": "60",
+          "mutatorName": "Regex",
+          "replacement": "/^\\d{1,3}(?:\\.\\d{1,3}){3}/",
+          "status": "Survived",
+          "static": false,
+          "testsCompleted": 3,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 32, "line": 27 }, "start": { "column": 5, "line": 27 } }
+        },
+        {
+          "id": "61",
+          "mutatorName": "Regex",
+          "replacement": "/^\\d(?:\\.\\d{1,3}){3}$/",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 2\n+ Received  + 2\n\n  Object {\n-   \"id\": \"fallback-tenant\",\n-   \"source\": \"default\",\n+   \"id\": \"127\",\n+   \"source\": \"subdomain\",\n  }\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:132:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 3,
+          "killedBy": ["2"],
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 32, "line": 27 }, "start": { "column": 5, "line": 27 } }
+        },
+        {
+          "id": "62",
+          "mutatorName": "Regex",
+          "replacement": "/^\\D{1,3}(?:\\.\\d{1,3}){3}$/",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 2\n+ Received  + 2\n\n  Object {\n-   \"id\": \"fallback-tenant\",\n-   \"source\": \"default\",\n+   \"id\": \"127\",\n+   \"source\": \"subdomain\",\n  }\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:132:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 3,
+          "killedBy": ["2"],
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 32, "line": 27 }, "start": { "column": 5, "line": 27 } }
+        },
+        {
+          "id": "63",
+          "mutatorName": "Regex",
+          "replacement": "/^\\d{1,3}(?:\\.\\d{1,3})$/",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 2\n+ Received  + 2\n\n  Object {\n-   \"id\": \"fallback-tenant\",\n-   \"source\": \"default\",\n+   \"id\": \"127\",\n+   \"source\": \"subdomain\",\n  }\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:132:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 3,
+          "killedBy": ["2"],
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 32, "line": 27 }, "start": { "column": 5, "line": 27 } }
+        },
+        {
+          "id": "64",
+          "mutatorName": "Regex",
+          "replacement": "/^\\d{1,3}(?:\\.\\d){3}$/",
+          "status": "Survived",
+          "static": false,
+          "testsCompleted": 3,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 32, "line": 27 }, "start": { "column": 5, "line": 27 } }
+        },
+        {
+          "id": "65",
+          "mutatorName": "Regex",
+          "replacement": "/^\\d{1,3}(?:\\.\\D{1,3}){3}$/",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 2\n+ Received  + 2\n\n  Object {\n-   \"id\": \"fallback-tenant\",\n-   \"source\": \"default\",\n+   \"id\": \"127\",\n+   \"source\": \"subdomain\",\n  }\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:132:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 3,
+          "killedBy": ["2"],
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 32, "line": 27 }, "start": { "column": 5, "line": 27 } }
+        },
+        {
+          "id": "66",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 2\n+ Received  + 2\n\n  Object {\n-   \"id\": \"fallback-tenant\",\n-   \"source\": \"default\",\n+   \"id\": \"127\",\n+   \"source\": \"subdomain\",\n  }\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:132:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 2,
+          "killedBy": ["2"],
+          "coveredBy": ["1", "2"],
+          "location": { "end": { "column": 4, "line": 30 }, "start": { "column": 5, "line": 28 } }
+        },
+        {
+          "id": "67",
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 1\n+ Received  + 1\n\n  Object {\n-   \"id\": \"tenant-sub\",\n+   \"id\": \"t\",\n    \"source\": \"subdomain\",\n  }\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:101:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 2,
+          "killedBy": ["1"],
+          "coveredBy": ["1", "3"],
+          "location": { "end": { "column": 37, "line": 32 }, "start": { "column": 34, "line": 32 } }
+        },
+        {
+          "id": "68",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "statusReason": "src/tenant-context.service.ts(33,17): error TS2322: Type 'string | undefined' is not assignable to type 'string | null'.\n  Type 'undefined' is not assignable to type 'string | null'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "3"],
+          "location": { "end": { "column": 40, "line": 33 }, "start": { "column": 10, "line": 33 } }
+        },
+        {
+          "id": "69",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "statusReason": "src/tenant-context.service.ts(33,18): error TS2322: Type 'string | undefined' is not assignable to type 'string | null'.\n  Type 'undefined' is not assignable to type 'string | null'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "3"],
+          "location": { "end": { "column": 40, "line": 33 }, "start": { "column": 10, "line": 33 } }
+        },
+        {
+          "id": "70",
+          "mutatorName": "LogicalOperator",
+          "replacement": "first || first !== 'localhost'",
+          "statusReason": "src/tenant-context.service.ts(33,43): error TS2322: Type 'string | undefined' is not assignable to type 'string | null'.\n  Type 'undefined' is not assignable to type 'string | null'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "3"],
+          "location": { "end": { "column": 40, "line": 33 }, "start": { "column": 10, "line": 33 } }
+        },
+        {
+          "id": "71",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Survived",
+          "static": false,
+          "testsCompleted": 1,
+          "coveredBy": ["1"],
+          "location": { "end": { "column": 40, "line": 33 }, "start": { "column": 19, "line": 33 } }
+        },
+        {
+          "id": "72",
+          "mutatorName": "EqualityOperator",
+          "replacement": "first === 'localhost'",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 2\n+ Received  + 2\n\n  Object {\n-   \"id\": \"tenant-sub\",\n-   \"source\": \"subdomain\",\n+   \"id\": \"tenant-query\",\n+   \"source\": \"query\",\n  }\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:101:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 1,
+          "killedBy": ["1"],
+          "coveredBy": ["1"],
+          "location": { "end": { "column": 40, "line": 33 }, "start": { "column": 19, "line": 33 } }
+        },
+        {
+          "id": "73",
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Survived",
+          "static": false,
+          "testsCompleted": 1,
+          "coveredBy": ["1"],
+          "location": { "end": { "column": 40, "line": 33 }, "start": { "column": 29, "line": 33 } }
+        },
+        {
+          "id": "74",
+          "mutatorName": "ArrowFunction",
+          "replacement": "() => undefined",
+          "statusReason": "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: \"tenant-a\"\nReceived: null\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:176:57)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 5,
+          "killedBy": ["4"],
+          "coveredBy": ["1", "2", "3", "4", "5"],
+          "location": { "end": { "column": 58, "line": 42 }, "start": { "column": 32, "line": 42 } }
+        },
+        {
+          "id": "75",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "src/tenant-context.service.ts(45,66): error TS2345: Argument of type '() => void' is not assignable to parameter of type '() => TenantContextSnapshot | null'.\n  Type 'void' is not assignable to type 'TenantContextSnapshot | null'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 4, "line": 49 }, "start": { "column": 72, "line": 45 } }
+        },
+        {
+          "id": "76",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "statusReason": "src/tenant-context.service.ts(45,66): error TS2345: Argument of type '() => { id: string | null; source: \"query\" | \"subdomain\" | \"default\" | \"manual\" | null; } | null' is not assignable to parameter of type '() => TenantContextSnapshot | null'.\n  Type '{ id: string | null; source: \"query\" | \"subdomain\" | \"default\" | \"manual\" | null; } | null' is not assignable to type 'TenantContextSnapshot | null'.\n    Type '{ id: string | null; source: \"query\" | \"subdomain\" | \"default\" | \"manual\" | null; }' is not assignable to type 'TenantContextSnapshot'.\n      Types of property 'id' are incompatible.\n        Type 'string | null' is not assignable to type 'string'.\n          Type 'null' is not assignable to type 'string'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 24, "line": 48 }, "start": { "column": 12, "line": 48 } }
+        },
+        {
+          "id": "77",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "statusReason": "src/tenant-context.service.ts(45,66): error TS2345: Argument of type '() => { id: string | null; source: \"query\" | \"subdomain\" | \"default\" | \"manual\" | null; } | null' is not assignable to parameter of type '() => TenantContextSnapshot | null'.\n  Type '{ id: string | null; source: \"query\" | \"subdomain\" | \"default\" | \"manual\" | null; } | null' is not assignable to type 'TenantContextSnapshot | null'.\n    Type '{ id: string | null; source: \"query\" | \"subdomain\" | \"default\" | \"manual\" | null; }' is not assignable to type 'TenantContextSnapshot'.\n      Types of property 'id' are incompatible.\n        Type 'string | null' is not assignable to type 'string'.\n          Type 'null' is not assignable to type 'string'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 24, "line": 48 }, "start": { "column": 12, "line": 48 } }
+        },
+        {
+          "id": "78",
+          "mutatorName": "LogicalOperator",
+          "replacement": "id || source",
+          "statusReason": "src/tenant-context.service.ts(45,66): error TS2345: Argument of type '() => { id: string | null; source: \"query\" | \"subdomain\" | \"default\" | \"manual\" | null; } | null' is not assignable to parameter of type '() => TenantContextSnapshot | null'.\n  Type '{ id: string | null; source: \"query\" | \"subdomain\" | \"default\" | \"manual\" | null; } | null' is not assignable to type 'TenantContextSnapshot | null'.\n    Type '{ id: string | null; source: \"query\" | \"subdomain\" | \"default\" | \"manual\" | null; }' is not assignable to type 'TenantContextSnapshot'.\n      Types of property 'id' are incompatible.\n        Type 'string | null' is not assignable to type 'string'.\n          Type 'null' is not assignable to type 'string'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 24, "line": 48 }, "start": { "column": 12, "line": 48 } }
+        },
+        {
+          "id": "79",
+          "mutatorName": "ObjectLiteral",
+          "replacement": "{}",
+          "statusReason": "src/tenant-context.service.ts(45,66): error TS2345: Argument of type '() => {} | null' is not assignable to parameter of type '() => TenantContextSnapshot | null'.\n  Type '{} | null' is not assignable to type 'TenantContextSnapshot | null'.\n    Type '{}' is missing the following properties from type 'TenantContextSnapshot': id, source\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 41, "line": 48 }, "start": { "column": 27, "line": 48 } }
+        },
+        {
+          "id": "80",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\nExpected: {\"id\": \"tenant-query\", \"source\": \"query\"}\nReceived: null\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:95:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 3,
+          "killedBy": ["1"],
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 4, "line": 79 }, "start": { "column": 75, "line": 59 } }
+        },
+        {
+          "id": "81",
+          "mutatorName": "LogicalOperator",
+          "replacement": "seed?.url && this.browserWindow?.location?.href",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 2\n+ Received  + 2\n\n  Object {\n-   \"id\": \"tenant-query\",\n-   \"source\": \"query\",\n+   \"id\": \"app\",\n+   \"source\": \"subdomain\",\n  }\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:95:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 3,
+          "killedBy": ["1"],
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 75, "line": 60 }, "start": { "column": 28, "line": 60 } }
+        },
+        {
+          "id": "82",
+          "mutatorName": "OptionalChaining",
+          "replacement": "seed.url",
+          "statusReason": "src/tenant-context.service.ts(60,28): error TS18048: 'seed' is possibly 'undefined'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 37, "line": 60 }, "start": { "column": 28, "line": 60 } }
+        },
+        {
+          "id": "83",
+          "mutatorName": "OptionalChaining",
+          "replacement": "this.browserWindow?.location.href",
+          "status": "Survived",
+          "static": false,
+          "testsCompleted": 1,
+          "coveredBy": ["2"],
+          "location": { "end": { "column": 75, "line": 60 }, "start": { "column": 41, "line": 60 } }
+        },
+        {
+          "id": "84",
+          "mutatorName": "OptionalChaining",
+          "replacement": "this.browserWindow.location",
+          "statusReason": "src/tenant-context.service.ts(60,41): error TS2531: Object is possibly 'null'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["2"],
+          "location": { "end": { "column": 69, "line": 60 }, "start": { "column": 41, "line": 60 } }
+        },
+        {
+          "id": "85",
+          "mutatorName": "LogicalOperator",
+          "replacement": "seed?.host && this.browserWindow?.location?.host",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 1\n+ Received  + 1\n\n  Object {\n    \"host\": \"127.0.0.1:4200\",\n-   \"url\": \"https://127.0.0.1:4200/from-window?x=1\",\n+   \"url\": \"https://localhost/from-window?x=1\",\n  }\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:133:21)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 3,
+          "killedBy": ["2"],
+          "coveredBy": ["1", "2", "3"],
+          "location": {
+            "end": { "column": 125, "line": 60 },
+            "start": { "column": 77, "line": 60 }
+          }
+        },
+        {
+          "id": "86",
+          "mutatorName": "OptionalChaining",
+          "replacement": "seed.host",
+          "statusReason": "src/tenant-context.service.ts(60,77): error TS18048: 'seed' is possibly 'undefined'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 87, "line": 60 }, "start": { "column": 77, "line": 60 } }
+        },
+        {
+          "id": "87",
+          "mutatorName": "OptionalChaining",
+          "replacement": "this.browserWindow?.location.host",
+          "status": "Survived",
+          "static": false,
+          "testsCompleted": 1,
+          "coveredBy": ["2"],
+          "location": {
+            "end": { "column": 125, "line": 60 },
+            "start": { "column": 91, "line": 60 }
+          }
+        },
+        {
+          "id": "88",
+          "mutatorName": "OptionalChaining",
+          "replacement": "this.browserWindow.location",
+          "statusReason": "src/tenant-context.service.ts(60,91): error TS2531: Object is possibly 'null'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["2"],
+          "location": {
+            "end": { "column": 119, "line": 60 },
+            "start": { "column": 91, "line": 60 }
+          }
+        },
+        {
+          "id": "89",
+          "mutatorName": "LogicalOperator",
+          "replacement": "(seed?.host ?? this.browserWindow?.location?.host) && url.host",
+          "statusReason": "src/tenant-context.service.ts(69,54): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.\n  Type 'undefined' is not assignable to type 'string'.\nsrc/tenant-context.service.ts(75,72): error TS2322: Type 'string | undefined' is not assignable to type 'string'.\n  Type 'undefined' is not assignable to type 'string'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 78, "line": 61 }, "start": { "column": 18, "line": 61 } }
+        },
+        {
+          "id": "90",
+          "mutatorName": "LogicalOperator",
+          "replacement": "seed?.host && this.browserWindow?.location?.host",
+          "statusReason": "src/tenant-context.service.ts(61,18): error TS5076: '&&' and '??' operations cannot be mixed without parentheses.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 66, "line": 61 }, "start": { "column": 18, "line": 61 } }
+        },
+        {
+          "id": "91",
+          "mutatorName": "OptionalChaining",
+          "replacement": "seed.host",
+          "statusReason": "src/tenant-context.service.ts(61,18): error TS18048: 'seed' is possibly 'undefined'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 28, "line": 61 }, "start": { "column": 18, "line": 61 } }
+        },
+        {
+          "id": "92",
+          "mutatorName": "OptionalChaining",
+          "replacement": "this.browserWindow?.location.host",
+          "status": "Survived",
+          "static": false,
+          "testsCompleted": 1,
+          "coveredBy": ["2"],
+          "location": { "end": { "column": 66, "line": 61 }, "start": { "column": 32, "line": 61 } }
+        },
+        {
+          "id": "93",
+          "mutatorName": "OptionalChaining",
+          "replacement": "this.browserWindow.location",
+          "statusReason": "src/tenant-context.service.ts(61,32): error TS2531: Object is possibly 'null'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["2"],
+          "location": { "end": { "column": 60, "line": 61 }, "start": { "column": 32, "line": 61 } }
+        },
+        {
+          "id": "94",
+          "mutatorName": "LogicalOperator",
+          "replacement": "url.searchParams.get('tenantId') && url.searchParams.get('tenant')",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 2\n+ Received  + 2\n\n  Object {\n-   \"id\": \"tenant-query\",\n-   \"source\": \"query\",\n+   \"id\": \"app\",\n+   \"source\": \"subdomain\",\n  }\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:95:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 3,
+          "killedBy": ["1"],
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 91, "line": 63 }, "start": { "column": 25, "line": 63 } }
+        },
+        {
+          "id": "95",
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Survived",
+          "static": false,
+          "testsCompleted": 3,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 56, "line": 63 }, "start": { "column": 46, "line": 63 } }
+        },
+        {
+          "id": "96",
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 2\n+ Received  + 2\n\n  Object {\n-   \"id\": \"tenant-query\",\n-   \"source\": \"query\",\n+   \"id\": \"app\",\n+   \"source\": \"subdomain\",\n  }\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:95:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 3,
+          "killedBy": ["1"],
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 90, "line": 63 }, "start": { "column": 82, "line": 63 } }
+        },
+        {
+          "id": "97",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "statusReason": "src/tenant-context.service.ts(65,22): error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string'.\n  Type 'null' is not assignable to type 'string'.\nsrc/tenant-context.service.ts(71,22): error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string'.\n  Type 'null' is not assignable to type 'string'.\nsrc/tenant-context.service.ts(77,22): error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string'.\n  Type 'null' is not assignable to type 'string'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 20, "line": 64 }, "start": { "column": 9, "line": 64 } }
+        },
+        {
+          "id": "98",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "statusReason": "src/tenant-context.service.ts(65,22): error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string'.\n  Type 'null' is not assignable to type 'string'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 20, "line": 64 }, "start": { "column": 9, "line": 64 } }
+        },
+        {
+          "id": "99",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 2\n+ Received  + 2\n\n  Object {\n-   \"id\": \"tenant-query\",\n-   \"source\": \"query\",\n+   \"id\": \"app\",\n+   \"source\": \"subdomain\",\n  }\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:95:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 1,
+          "killedBy": ["1"],
+          "coveredBy": ["1"],
+          "location": { "end": { "column": 6, "line": 67 }, "start": { "column": 22, "line": 64 } }
+        },
+        {
+          "id": "100",
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "statusReason": "src/tenant-context.service.ts(65,35): error TS2345: Argument of type '\"\"' is not assignable to parameter of type '\"query\" | \"subdomain\" | \"default\" | \"manual\" | undefined'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1"],
+          "location": { "end": { "column": 42, "line": 65 }, "start": { "column": 35, "line": 65 } }
+        },
+        {
+          "id": "101",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "statusReason": "src/tenant-context.service.ts(71,22): error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string'.\n  Type 'null' is not assignable to type 'string'.\nsrc/tenant-context.service.ts(77,22): error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string'.\n  Type 'null' is not assignable to type 'string'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 24, "line": 70 }, "start": { "column": 9, "line": 70 } }
+        },
+        {
+          "id": "102",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "statusReason": "src/tenant-context.service.ts(71,22): error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string'.\n  Type 'null' is not assignable to type 'string'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 24, "line": 70 }, "start": { "column": 9, "line": 70 } }
+        },
+        {
+          "id": "103",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 2\n+ Received  + 2\n\n  Object {\n-   \"id\": \"tenant-sub\",\n-   \"source\": \"subdomain\",\n+   \"id\": \"tenant-query\",\n+   \"source\": \"query\",\n  }\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:101:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 1,
+          "killedBy": ["1"],
+          "coveredBy": ["1"],
+          "location": { "end": { "column": 6, "line": 73 }, "start": { "column": 26, "line": 70 } }
+        },
+        {
+          "id": "104",
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "statusReason": "src/tenant-context.service.ts(71,39): error TS2345: Argument of type '\"\"' is not assignable to parameter of type '\"query\" | \"subdomain\" | \"default\" | \"manual\" | undefined'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1"],
+          "location": { "end": { "column": 50, "line": 71 }, "start": { "column": 39, "line": 71 } }
+        },
+        {
+          "id": "105",
+          "mutatorName": "LogicalOperator",
+          "replacement": "(await this.options.defaultTenantResolver?.({\n  url,\n  host\n})) && null",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 2\n+ Received  + 2\n\n  Object {\n-   \"id\": \"fallback-tenant\",\n-   \"source\": \"default\",\n+   \"id\": \"tenant-sub\",\n+   \"source\": \"subdomain\",\n  }\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:107:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 3,
+          "killedBy": ["1"],
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 87, "line": 75 }, "start": { "column": 22, "line": 75 } }
+        },
+        {
+          "id": "106",
+          "mutatorName": "OptionalChaining",
+          "replacement": "this.options.defaultTenantResolver({\n  url,\n  host\n})",
+          "statusReason": "src/tenant-context.service.ts(75,28): error TS2722: Cannot invoke an object which is possibly 'undefined'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 79, "line": 75 }, "start": { "column": 28, "line": 75 } }
+        },
+        {
+          "id": "107",
+          "mutatorName": "ObjectLiteral",
+          "replacement": "{}",
+          "statusReason": "src/tenant-context.service.ts(75,65): error TS2345: Argument of type '{}' is not assignable to parameter of type 'TenantResolutionContext'.\n  Type '{}' is missing the following properties from type 'TenantResolutionContext': url, host\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "2"],
+          "location": { "end": { "column": 78, "line": 75 }, "start": { "column": 65, "line": 75 } }
+        },
+        {
+          "id": "108",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "statusReason": "src/tenant-context.service.ts(77,22): error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string'.\n  Type 'null' is not assignable to type 'string'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 17, "line": 76 }, "start": { "column": 9, "line": 76 } }
+        },
+        {
+          "id": "109",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "statusReason": "src/tenant-context.service.ts(77,22): error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string'.\n  Type 'null' is not assignable to type 'string'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "2", "3"],
+          "location": { "end": { "column": 17, "line": 76 }, "start": { "column": 9, "line": 76 } }
+        },
+        {
+          "id": "110",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 2\n+ Received  + 2\n\n  Object {\n-   \"id\": \"fallback-tenant\",\n-   \"source\": \"default\",\n+   \"id\": \"tenant-sub\",\n+   \"source\": \"subdomain\",\n  }\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:107:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 2,
+          "killedBy": ["1"],
+          "coveredBy": ["1", "2"],
+          "location": { "end": { "column": 6, "line": 78 }, "start": { "column": 19, "line": 76 } }
+        },
+        {
+          "id": "111",
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "statusReason": "src/tenant-context.service.ts(77,32): error TS2345: Argument of type '\"\"' is not assignable to parameter of type '\"query\" | \"subdomain\" | \"default\" | \"manual\" | undefined'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "2"],
+          "location": { "end": { "column": 41, "line": 77 }, "start": { "column": 32, "line": 77 } }
+        },
+        {
+          "id": "112",
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "statusReason": "src/tenant-context.service.ts(81,25): error TS2322: Type '\"\"' is not assignable to type '\"query\" | \"subdomain\" | \"default\" | \"manual\"'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["3"],
+          "location": { "end": { "column": 75, "line": 81 }, "start": { "column": 67, "line": 81 } }
+        },
+        {
+          "id": "113",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "Error: expect(received).toEqual(expected) // deep equality\n\nExpected: {\"id\": \"tenant-query\", \"source\": \"query\"}\nReceived: null\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:95:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 5,
+          "killedBy": ["1"],
+          "coveredBy": ["1", "2", "3", "4", "5"],
+          "location": { "end": { "column": 4, "line": 86 }, "start": { "column": 83, "line": 81 } }
+        },
+        {
+          "id": "114",
+          "mutatorName": "ObjectLiteral",
+          "replacement": "{}",
+          "statusReason": "src/tenant-context.service.ts(85,35): error TS2345: Argument of type '{}' is not assignable to parameter of type 'TenantContextSnapshot'.\n  Type '{}' is missing the following properties from type 'TenantContextSnapshot': id, source\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["1", "2", "3", "4", "5"],
+          "location": { "end": { "column": 49, "line": 85 }, "start": { "column": 35, "line": 85 } }
+        },
+        {
+          "id": "115",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "Error: expect(received).toBeNull()\n\nReceived: {\"id\": \"fallback-tenant\", \"source\": \"default\"}\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:110:42)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 2,
+          "killedBy": ["1"],
+          "coveredBy": ["1", "2"],
+          "location": { "end": { "column": 4, "line": 93 }, "start": { "column": 17, "line": 88 } }
+        }
+      ],
+      "source": "import { computed, Inject, Injectable, signal } from '@angular/core';\nimport { BehaviorSubject } from 'rxjs';\nimport { STYNX_TENANCY_OPTIONS, STYNX_TENANCY_WINDOW } from './tokens';\nimport type { TenancyOptions, TenantContextSnapshot } from './types';\n\nfunction isUrlLike(value: string): boolean {\n  return value.startsWith('http://') || value.startsWith('https://');\n}\n\nfunction resolveUrl(rawUrl: string | undefined, host: string | undefined): URL {\n  const fallbackHost = host && host.length > 0 ? `https://${host}` : 'https://localhost';\n  if (rawUrl && isUrlLike(rawUrl)) {\n    return new URL(rawUrl);\n  }\n  if (rawUrl) {\n    return new URL(rawUrl, fallbackHost);\n  }\n  return new URL(fallbackHost);\n}\n\nfunction resolveSubdomainTenantId(host: string): string | null {\n  const hostname = host.replace(/:\\d+$/, '').toLowerCase();\n  if (\n    hostname === 'localhost' ||\n    hostname.endsWith('.localhost') ||\n    hostname.includes(':') ||\n    /^\\d{1,3}(?:\\.\\d{1,3}){3}$/.test(hostname)\n  ) {\n    return null;\n  }\n\n  const [first] = hostname.split('.');\n  return first && first !== 'localhost' ? first : null;\n}\n\n@Injectable()\nexport class TenantContextService {\n  private readonly tenantIdState = signal<string | null>(null);\n  private readonly sourceState = signal<TenantContextSnapshot['source'] | null>(null);\n  private readonly tenantIdSubject = new BehaviorSubject<string | null>(null);\n  private readonly activeTenantSubject = new BehaviorSubject<TenantContextSnapshot | null>(null);\n  readonly tenantId = computed(() => this.tenantIdState());\n  readonly currentTenantId$ = this.tenantIdSubject.asObservable();\n  readonly tenantId$ = this.currentTenantId$;\n  readonly activeTenant = computed<TenantContextSnapshot | null>(() => {\n    const id = this.tenantIdState();\n    const source = this.sourceState();\n    return id && source ? { id, source } : null;\n  });\n  readonly activeTenant$ = this.activeTenantSubject.asObservable();\n\n  constructor(\n    @Inject(STYNX_TENANCY_OPTIONS)\n    private readonly options: TenancyOptions,\n    @Inject(STYNX_TENANCY_WINDOW)\n    private readonly browserWindow: Window | null,\n  ) {}\n\n  async initialize(seed?: { url?: string; host?: string }): Promise<void> {\n    const url = resolveUrl(seed?.url ?? this.browserWindow?.location?.href, seed?.host ?? this.browserWindow?.location?.host);\n    const host = seed?.host ?? this.browserWindow?.location?.host ?? url.host;\n\n    const queryTenant = url.searchParams.get('tenantId') ?? url.searchParams.get('tenant');\n    if (queryTenant) {\n      this.setTenant(queryTenant, 'query');\n      return;\n    }\n\n    const subdomainTenant = resolveSubdomainTenantId(host);\n    if (subdomainTenant) {\n      this.setTenant(subdomainTenant, 'subdomain');\n      return;\n    }\n\n    const fallback = await this.options.defaultTenantResolver?.({ url, host }) ?? null;\n    if (fallback) {\n      this.setTenant(fallback, 'default');\n    }\n  }\n\n  setTenant(id: string, source: TenantContextSnapshot['source'] = 'manual'): void {\n    this.tenantIdState.set(id);\n    this.sourceState.set(source);\n    this.tenantIdSubject.next(id);\n    this.activeTenantSubject.next({ id, source });\n  }\n\n  clear(): void {\n    this.tenantIdState.set(null);\n    this.sourceState.set(null);\n    this.tenantIdSubject.next(null);\n    this.activeTenantSubject.next(null);\n  }\n}\n"
+    },
+    "src/tenant.interceptor.ts": {
+      "language": "typescript",
+      "mutants": [
+        {
+          "id": "123",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "src/tenant.interceptor.ts(10,64): error TS2355: A function whose declared type is neither 'undefined', 'void', nor 'any' must return a value.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["4", "5"],
+          "location": { "end": { "column": 4, "line": 23 }, "start": { "column": 95, "line": 10 } }
+        },
+        {
+          "id": "124",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "statusReason": "src/tenant.interceptor.ts(19,11): error TS2769: No overload matches this call.\n  Overload 1 of 3, '(update: { headers?: HttpHeaders; context?: HttpContext; reportProgress?: boolean; params?: HttpParams; responseType?: \"arraybuffer\" | \"blob\" | \"json\" | \"text\"; ... 16 more ...; setParams?: { ...; }; }): HttpRequest<...>', gave the following error.\n    Type 'string | null' is not assignable to type 'string | string[]'.\n      Type 'null' is not assignable to type 'string | string[]'.\n  Overload 2 of 3, '(update: { headers?: HttpHeaders; context?: HttpContext; reportProgress?: boolean; params?: HttpParams; responseType?: \"arraybuffer\" | \"blob\" | \"json\" | \"text\"; ... 16 more ...; setParams?: { ...; }; }): HttpRequest<...>', gave the following error.\n    Type 'string | null' is not assignable to type 'string | string[]'.\n      Type 'null' is not assignable to type 'string | string[]'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["4", "5"],
+          "location": { "end": { "column": 56, "line": 12 }, "start": { "column": 9, "line": 12 } }
+        },
+        {
+          "id": "125",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "statusReason": "src/tenant.interceptor.ts(19,11): error TS2769: No overload matches this call.\n  Overload 1 of 3, '(update: { headers?: HttpHeaders; context?: HttpContext; reportProgress?: boolean; params?: HttpParams; responseType?: \"arraybuffer\" | \"blob\" | \"json\" | \"text\"; ... 16 more ...; setParams?: { ...; }; }): HttpRequest<...>', gave the following error.\n    Type 'string | null' is not assignable to type 'string | string[]'.\n      Type 'null' is not assignable to type 'string | string[]'.\n  Overload 2 of 3, '(update: { headers?: HttpHeaders; context?: HttpContext; reportProgress?: boolean; params?: HttpParams; responseType?: \"arraybuffer\" | \"blob\" | \"json\" | \"text\"; ... 16 more ...; setParams?: { ...; }; }): HttpRequest<...>', gave the following error.\n    Type 'string | null' is not assignable to type 'string | string[]'.\n      Type 'null' is not assignable to type 'string | string[]'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["4", "5"],
+          "location": { "end": { "column": 56, "line": 12 }, "start": { "column": 9, "line": 12 } }
+        },
+        {
+          "id": "126",
+          "mutatorName": "LogicalOperator",
+          "replacement": "!tenantId && request.headers.has('X-Tenant-Id')",
+          "statusReason": "src/tenant.interceptor.ts(19,11): error TS2769: No overload matches this call.\n  Overload 1 of 3, '(update: { headers?: HttpHeaders; context?: HttpContext; reportProgress?: boolean; params?: HttpParams; responseType?: \"arraybuffer\" | \"blob\" | \"json\" | \"text\"; ... 16 more ...; setParams?: { ...; }; }): HttpRequest<...>', gave the following error.\n    Type 'string | null' is not assignable to type 'string | string[]'.\n      Type 'null' is not assignable to type 'string | string[]'.\n  Overload 2 of 3, '(update: { headers?: HttpHeaders; context?: HttpContext; reportProgress?: boolean; params?: HttpParams; responseType?: \"arraybuffer\" | \"blob\" | \"json\" | \"text\"; ... 16 more ...; setParams?: { ...; }; }): HttpRequest<...>', gave the following error.\n    Type 'string | null' is not assignable to type 'string | string[]'.\n      Type 'null' is not assignable to type 'string | string[]'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["4", "5"],
+          "location": { "end": { "column": 56, "line": 12 }, "start": { "column": 9, "line": 12 } }
+        },
+        {
+          "id": "127",
+          "mutatorName": "BooleanLiteral",
+          "replacement": "tenantId",
+          "statusReason": "src/tenant.interceptor.ts(19,11): error TS2769: No overload matches this call.\n  Overload 1 of 3, '(update: { headers?: HttpHeaders; context?: HttpContext; reportProgress?: boolean; params?: HttpParams; responseType?: \"arraybuffer\" | \"blob\" | \"json\" | \"text\"; ... 16 more ...; setParams?: { ...; }; }): HttpRequest<...>', gave the following error.\n    Type 'string | null' is not assignable to type 'string | string[]'.\n      Type 'null' is not assignable to type 'string | string[]'.\n  Overload 2 of 3, '(update: { headers?: HttpHeaders; context?: HttpContext; reportProgress?: boolean; params?: HttpParams; responseType?: \"arraybuffer\" | \"blob\" | \"json\" | \"text\"; ... 16 more ...; setParams?: { ...; }; }): HttpRequest<...>', gave the following error.\n    Type 'string | null' is not assignable to type 'string | string[]'.\n      Type 'null' is not assignable to type 'string | string[]'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["4", "5"],
+          "location": { "end": { "column": 18, "line": 12 }, "start": { "column": 9, "line": 12 } }
+        },
+        {
+          "id": "128",
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "statusReason": "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: \"tenant-existing\"\nReceived: \"tenant-a\"\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:190:57)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 2,
+          "killedBy": ["5"],
+          "coveredBy": ["4", "5"],
+          "location": { "end": { "column": 55, "line": 12 }, "start": { "column": 42, "line": 12 } }
+        },
+        {
+          "id": "129",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "src/tenant.interceptor.ts(17,11): error TS2769: No overload matches this call.\n  Overload 1 of 3, '(update: { headers?: HttpHeaders; context?: HttpContext; reportProgress?: boolean; params?: HttpParams; responseType?: \"arraybuffer\" | \"blob\" | \"json\" | \"text\"; ... 16 more ...; setParams?: { ...; }; }): HttpRequest<...>', gave the following error.\n    Type 'string | null' is not assignable to type 'string | string[]'.\n      Type 'null' is not assignable to type 'string | string[]'.\n  Overload 2 of 3, '(update: { headers?: HttpHeaders; context?: HttpContext; reportProgress?: boolean; params?: HttpParams; responseType?: \"arraybuffer\" | \"blob\" | \"json\" | \"text\"; ... 16 more ...; setParams?: { ...; }; }): HttpRequest<...>', gave the following error.\n    Type 'string | null' is not assignable to type 'string | string[]'.\n      Type 'null' is not assignable to type 'string | string[]'.\n",
+          "status": "CompileError",
+          "static": false,
+          "coveredBy": ["5"],
+          "location": { "end": { "column": 6, "line": 14 }, "start": { "column": 58, "line": 12 } }
+        },
+        {
+          "id": "130",
+          "mutatorName": "ObjectLiteral",
+          "replacement": "{}",
+          "statusReason": "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: \"tenant-a\"\nReceived: null\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:176:57)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 1,
+          "killedBy": ["4"],
+          "coveredBy": ["4"],
+          "location": { "end": { "column": 8, "line": 21 }, "start": { "column": 21, "line": 17 } }
+        },
+        {
+          "id": "131",
+          "mutatorName": "ObjectLiteral",
+          "replacement": "{}",
+          "statusReason": "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: \"tenant-a\"\nReceived: null\n    at Object.<anonymous> (/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts:176:57)",
+          "status": "Killed",
+          "static": false,
+          "testsCompleted": 1,
+          "killedBy": ["4"],
+          "coveredBy": ["4"],
+          "location": { "end": { "column": 10, "line": 20 }, "start": { "column": 21, "line": 18 } }
+        }
+      ],
+      "source": "import { Inject, Injectable } from '@angular/core';\nimport { TenantContextService } from './tenant-context.service';\nimport type { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';\nimport type { Observable } from 'rxjs';\n\n@Injectable()\nexport class TenantInterceptor implements HttpInterceptor {\n  constructor(@Inject(TenantContextService) private readonly tenantContext: TenantContextService) {}\n\n  intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {\n    const tenantId = this.tenantContext.tenantId();\n    if (!tenantId || request.headers.has('X-Tenant-Id')) {\n      return next.handle(request);\n    }\n\n    return next.handle(\n      request.clone({\n        setHeaders: {\n          'X-Tenant-Id': tenantId,\n        },\n      }),\n    );\n  }\n}\n"
+    }
+  },
+  "schemaVersion": "1.0",
+  "thresholds": { "high": 60, "low": 60, "break": 60 },
+  "testFiles": {
+    "test/angular-tenancy.spec.ts": {
+      "tests": [
+        {
+          "id": "0",
+          "name": "@stynx-web/angular-tenancy provides tenancy options, browser window fallback, initializer, and interceptor providers",
+          "location": { "start": { "column": 4, "line": 52 } }
+        },
+        {
+          "id": "1",
+          "name": "@stynx-web/angular-tenancy initializes tenants from query, subdomain, default resolver, and clear",
+          "location": { "start": { "column": 4, "line": 80 } }
+        },
+        {
+          "id": "2",
+          "name": "@stynx-web/angular-tenancy normalizes URL and host edge cases before using the default resolver",
+          "location": { "start": { "column": 4, "line": 113 } }
+        },
+        {
+          "id": "3",
+          "name": "@stynx-web/angular-tenancy leaves tenant unset when no source resolves and supports manual source default",
+          "location": { "start": { "column": 4, "line": 152 } }
+        },
+        {
+          "id": "4",
+          "name": "@stynx-web/angular-tenancy adds X-Tenant-Id from the current tenant context",
+          "location": { "start": { "column": 4, "line": 165 } }
+        },
+        {
+          "id": "5",
+          "name": "@stynx-web/angular-tenancy does not override an existing tenant header",
+          "location": { "start": { "column": 4, "line": 178 } }
+        },
+        {
+          "id": "6",
+          "name": "@stynx-web/angular-tenancy tenant switcher ignores empty selections and emits manual tenant changes",
+          "location": { "start": { "column": 4, "line": 192 } }
+        }
+      ],
+      "source": "import '@angular/compiler';\nimport { APP_INITIALIZER, type Provider } from '@angular/core';\nimport { HTTP_INTERCEPTORS } from '@angular/common/http';\nimport { jest } from '@jest/globals';\nimport { of, firstValueFrom, type Observable } from 'rxjs';\nimport { provideTenancy } from '../src/provide-tenancy';\nimport { TenantContextService } from '../src/tenant-context.service';\nimport { TenantInterceptor } from '../src/tenant.interceptor';\nimport { TenantSwitcherComponent } from '../src/tenant-switcher.component';\nimport { STYNX_TENANCY_OPTIONS, STYNX_TENANCY_WINDOW } from '../src/tokens';\n\nclass FakeHeaders {\n  private readonly values = new Map<string, string>();\n\n  constructor(seed?: Record<string, string>) {\n    for (const [key, value] of Object.entries(seed ?? {})) {\n      this.values.set(key.toLowerCase(), value);\n    }\n  }\n\n  has(name: string): boolean {\n    return this.values.has(name.toLowerCase());\n  }\n\n  get(name: string): string | null {\n    return this.values.get(name.toLowerCase()) ?? null;\n  }\n\n  toObject(): Record<string, string> {\n    return Object.fromEntries(this.values.entries());\n  }\n}\n\nclass FakeRequest {\n  constructor(readonly headers = new FakeHeaders()) {}\n\n  clone(options: { setHeaders?: Record<string, string> }): FakeRequest {\n    return new FakeRequest(new FakeHeaders({ ...this.headers.toObject(), ...(options.setHeaders ?? {}) }));\n  }\n}\n\nclass FakeHandler {\n  readonly seen: FakeRequest[] = [];\n\n  handle(request: FakeRequest): Observable<{ ok: true }> {\n    this.seen.push(request);\n    return of({ ok: true });\n  }\n}\n\ndescribe('@stynx-web/angular-tenancy', () => {\n  it('provides tenancy options, browser window fallback, initializer, and interceptor providers', async () => {\n    const options = { defaultTenantResolver: async () => 'tenant-default' };\n    const providers = provideTenancy(options) as Array<Provider | Record<string, unknown>>;\n    const optionProvider = providers.find((provider) =>\n      typeof provider === 'object' && provider !== null && provider['provide'] === STYNX_TENANCY_OPTIONS,\n    ) as Record<string, unknown>;\n    const windowProvider = providers.find((provider) =>\n      typeof provider === 'object' && provider !== null && provider['provide'] === STYNX_TENANCY_WINDOW,\n    ) as Record<string, () => Window | null>;\n    const initializerProvider = providers.find((provider) =>\n      typeof provider === 'object' && provider !== null && provider['provide'] === APP_INITIALIZER,\n    ) as Record<string, unknown>;\n    const interceptorProvider = providers.find((provider) =>\n      typeof provider === 'object' && provider !== null && provider['provide'] === HTTP_INTERCEPTORS,\n    ) as Record<string, unknown>;\n    const service = { initialize: jest.fn().mockResolvedValue(undefined) };\n\n    expect(providers).toContain(TenantContextService);\n    expect(optionProvider['useValue']).toBe(options);\n    expect(windowProvider['useFactory']()).toBe(window);\n    expect((initializerProvider['deps'] as unknown[])).toEqual([TenantContextService]);\n    expect(initializerProvider['multi']).toBe(true);\n    await expect((initializerProvider['useFactory'] as (input: typeof service) => () => Promise<void>)(service)()).resolves.toBeUndefined();\n    expect(service.initialize).toHaveBeenCalledTimes(1);\n    expect(interceptorProvider['useClass']).toBe(TenantInterceptor);\n    expect(interceptorProvider['multi']).toBe(true);\n  });\n\n  it('initializes tenants from query, subdomain, default resolver, and clear', async () => {\n    const emitted: Array<string | null> = [];\n    const tenantContext = new TenantContextService(\n      {\n        defaultTenantResolver: async ({ host }) => host === 'localhost' ? 'fallback-tenant' : null,\n      },\n      null,\n    );\n    tenantContext.currentTenantId$.subscribe((tenantId) => emitted.push(tenantId));\n\n    await tenantContext.initialize({\n      url: '/dashboard?tenant=tenant-query',\n      host: 'app.example.test',\n    });\n    expect(tenantContext.activeTenant()).toEqual({ id: 'tenant-query', source: 'query' });\n\n    await tenantContext.initialize({\n      url: 'https://tenant-sub.example.test/home',\n      host: 'tenant-sub.example.test',\n    });\n    expect(tenantContext.activeTenant()).toEqual({ id: 'tenant-sub', source: 'subdomain' });\n\n    await tenantContext.initialize({\n      url: 'https://localhost/home',\n      host: 'localhost',\n    });\n    expect(tenantContext.activeTenant()).toEqual({ id: 'fallback-tenant', source: 'default' });\n\n    tenantContext.clear();\n    expect(tenantContext.activeTenant()).toBeNull();\n    expect(emitted).toContain(null);\n  });\n\n  it('normalizes URL and host edge cases before using the default resolver', async () => {\n    const seen: Array<{ url: string; host: string }> = [];\n    const tenantContext = new TenantContextService(\n      {\n        defaultTenantResolver: async ({ url, host }) => {\n          seen.push({ url: url.href, host });\n          return 'fallback-tenant';\n        },\n      },\n      {\n        location: {\n          href: '/from-window?x=1',\n          host: '127.0.0.1:4200',\n        },\n      } as Window,\n    );\n\n    await tenantContext.initialize();\n    expect(tenantContext.activeTenant()).toEqual({ id: 'fallback-tenant', source: 'default' });\n    expect(seen[0]).toEqual({\n      url: 'https://127.0.0.1:4200/from-window?x=1',\n      host: '127.0.0.1:4200',\n    });\n\n    tenantContext.clear();\n    await tenantContext.initialize({\n      url: '/portal',\n      host: 'tenant.localhost',\n    });\n    expect(tenantContext.activeTenant()).toEqual({ id: 'fallback-tenant', source: 'default' });\n\n    tenantContext.clear();\n    await tenantContext.initialize({\n      url: 'https://[::1]/portal',\n      host: '[::1]',\n    });\n    expect(tenantContext.activeTenant()).toEqual({ id: 'fallback-tenant', source: 'default' });\n  });\n\n  it('leaves tenant unset when no source resolves and supports manual source default', async () => {\n    const tenantContext = new TenantContextService({}, null);\n\n    await tenantContext.initialize({\n      url: '/dashboard',\n      host: '',\n    });\n    expect(tenantContext.activeTenant()).toBeNull();\n\n    tenantContext.setTenant('tenant-manual');\n    expect(tenantContext.activeTenant()).toEqual({ id: 'tenant-manual', source: 'manual' });\n  });\n\n  it('adds X-Tenant-Id from the current tenant context', async () => {\n    const tenantContext = new TenantContextService({}, null);\n    tenantContext.setTenant('tenant-a', 'manual');\n    const interceptor = new TenantInterceptor(tenantContext);\n    const handler = new FakeHandler();\n\n    await expect(firstValueFrom(interceptor.intercept(new FakeRequest() as never, handler as never))).resolves.toEqual({\n      ok: true,\n    });\n\n    expect(handler.seen[0]?.headers.get('x-tenant-id')).toBe('tenant-a');\n  });\n\n  it('does not override an existing tenant header', async () => {\n    const tenantContext = new TenantContextService({}, null);\n    tenantContext.setTenant('tenant-a', 'manual');\n    const interceptor = new TenantInterceptor(tenantContext);\n    const handler = new FakeHandler();\n\n    await firstValueFrom(interceptor.intercept(\n      new FakeRequest(new FakeHeaders({ 'x-tenant-id': 'tenant-existing' })) as never,\n      handler as never,\n    ));\n\n    expect(handler.seen[0]?.headers.get('x-tenant-id')).toBe('tenant-existing');\n  });\n\n  it('tenant switcher ignores empty selections and emits manual tenant changes', () => {\n    const component = Object.create(TenantSwitcherComponent.prototype) as TenantSwitcherComponent;\n    const tenantContext = { setTenant: jest.fn() };\n    const tenantChange = { emit: jest.fn() };\n    Object.defineProperty(component, 'tenantContext', { value: tenantContext });\n    Object.defineProperty(component, 'tenantChange', { value: tenantChange });\n\n    component.selectTenant({ target: { value: '' } } as unknown as Event);\n    expect(tenantContext.setTenant).not.toHaveBeenCalled();\n    expect(tenantChange.emit).not.toHaveBeenCalled();\n\n    component.selectTenant({ target: { value: 'tenant-b' } } as unknown as Event);\n    expect(tenantContext.setTenant).toHaveBeenCalledWith('tenant-b', 'manual');\n    expect(tenantChange.emit).toHaveBeenCalledWith('tenant-b');\n  });\n});\n"
+    }
+  },
+  "projectRoot": "/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy",
+  "config": {
+    "packageManager": "pnpm",
+    "plugins": ["@stryker-mutator/jest-runner", "@stryker-mutator/typescript-checker"],
+    "testRunner": "jest",
+    "coverageAnalysis": "perTest",
+    "mutate": [
+      "src/provide-tenancy.ts",
+      "src/tenant-context.service.ts",
+      "src/tenant-switcher.component.ts",
+      "src/tenant.interceptor.ts"
+    ],
+    "checkers": ["typescript"],
+    "tsconfigFile": "tsconfig.json",
+    "tempDirName": ".stryker-tmp",
+    "cleanTempDir": true,
+    "inPlace": true,
+    "concurrency": 2,
+    "incremental": false,
+    "jest": {
+      "projectType": "custom",
+      "configFile": "./jest.config.cjs",
+      "enableFindRelatedTests": true
+    },
+    "reporters": ["clear-text", "progress", "html", "json"],
+    "thresholds": { "high": 60, "low": 60, "break": 60 },
+    "htmlReporter": { "fileName": "reports/mutation/-stynx-web-angular-tenancy/index.html" },
+    "jsonReporter": { "fileName": "reports/mutation/mutation.json" },
+    "configFile": "stryker.conf.mjs",
+    "allowConsoleColors": true,
+    "checkerNodeArgs": [],
+    "commandRunner": { "command": "npm test" },
+    "clearTextReporter": {
+      "allowColor": true,
+      "allowEmojis": false,
+      "logTests": true,
+      "maxTestsToLog": 3,
+      "reportTests": true,
+      "reportMutants": true,
+      "reportScoreTable": true,
+      "skipFull": false
+    },
+    "dashboard": {
+      "baseUrl": "https://dashboard.stryker-mutator.io/api/reports",
+      "reportType": "full"
+    },
+    "dryRunOnly": false,
+    "eventReporter": { "baseDir": "reports/mutation/events" },
+    "ignorePatterns": [],
+    "ignoreStatic": false,
+    "incrementalFile": "reports/stryker-incremental.json",
+    "force": false,
+    "fileLogLevel": "off",
+    "logLevel": "info",
+    "maxConcurrentTestRunners": 9007199254740991,
+    "maxTestRunnerReuse": 0,
+    "mutator": { "plugins": null, "excludedMutations": [] },
+    "appendPlugins": [],
+    "disableTypeChecks": true,
+    "symlinkNodeModules": true,
+    "testRunnerNodeArgs": [],
+    "timeoutFactor": 1.5,
+    "timeoutMS": 5000,
+    "dryRunTimeoutMinutes": 5,
+    "warnings": true,
+    "disableBail": false,
+    "allowEmpty": false,
+    "ignorers": [],
+    "testFiles": [],
+    "typescriptChecker": { "prioritizePerformanceOverAccuracy": true }
+  },
+  "framework": {
+    "name": "StrykerJS",
+    "version": "9.6.1",
+    "branding": {
+      "homepageUrl": "https://stryker-mutator.io",
+      "imageUrl": "data:image/svg+xml;utf8,%3Csvg viewBox='0 0 1458 1458' xmlns='http://www.w3.org/2000/svg' fill-rule='evenodd' clip-rule='evenodd' stroke-linejoin='round' stroke-miterlimit='2'%3E%3Cpath fill='none' d='M0 0h1458v1458H0z'/%3E%3CclipPath id='a'%3E%3Cpath d='M0 0h1458v1458H0z'/%3E%3C/clipPath%3E%3Cg clip-path='url(%23a)'%3E%3Cpath d='M1458 729c0 402.655-326.345 729-729 729S0 1131.655 0 729C0 326.445 326.345 0 729 0s729 326.345 729 729' fill='%23e74c3c' fill-rule='nonzero'/%3E%3Cpath d='M778.349 1456.15L576.6 1254.401l233-105 85-78.668v-64.332l-257-257-44-187-50-208 251.806-82.793L1076.6 389.401l380.14 379.15c-19.681 367.728-311.914 663.049-678.391 687.599z' fill-opacity='.3'/%3E%3Cpath d='M753.4 329.503c41.79 0 74.579 7.83 97.925 25.444 23.571 18.015 41.69 43.956 55.167 77.097l11.662 28.679 165.733-58.183-14.137-32.13c-26.688-60.655-64.896-108.61-114.191-144.011-49.329-35.423-117.458-54.302-204.859-54.302-50.78 0-95.646 7.376-134.767 21.542-40.093 14.671-74.09 34.79-102.239 60.259-28.84 26.207-50.646 57.06-65.496 92.701-14.718 35.052-22.101 72.538-22.101 112.401 0 72.536 20.667 133.294 61.165 182.704 38.624 47.255 98.346 88.037 179.861 121.291 42.257 17.475 78.715 33.125 109.227 46.994 27.193 12.361 49.294 26.124 66.157 41.751 15.309 14.186 26.497 30.584 33.63 49.258 7.721 20.214 11.16 45.69 11.16 76.402 0 28.021-4.251 51.787-13.591 71.219-8.832 18.374-20.171 33.178-34.523 44.219-14.787 11.374-31.193 19.591-49.393 24.466-19.68 5.359-39.14 7.993-58.69 7.993-29.359 0-54.387-3.407-75.182-10.747-20.112-7.013-37.144-16.144-51.259-27.486-13.618-11.009-24.971-23.766-33.744-38.279-9.64-15.8-17.272-31.924-23.032-48.408l-10.965-31.376-161.669 60.585 10.734 30.124c10.191 28.601 24.197 56.228 42.059 82.748 18.208 27.144 41.322 51.369 69.525 72.745 27.695 21.075 60.904 38.218 99.481 51.041 37.777 12.664 82.004 19.159 132.552 19.159 49.998 0 95.818-8.321 137.611-24.622 42.228-16.471 78.436-38.992 108.835-67.291 30.719-28.597 54.631-62.103 71.834-100.642 17.263-38.56 25.923-79.392 25.923-122.248 0-54.339-8.368-100.37-24.208-138.32-16.29-38.759-38.252-71.661-65.948-98.797-26.965-26.418-58.269-48.835-93.858-67.175-33.655-17.241-69.196-33.11-106.593-47.533-35.934-13.429-65.822-26.601-89.948-39.525-22.153-11.868-40.009-24.21-53.547-37.309-11.429-11.13-19.83-23.678-24.718-37.664-5.413-15.49-7.98-33.423-7.98-53.577 0-40.883 11.293-71.522 37.086-90.539 28.443-20.825 64.985-30.658 109.311-30.658z' fill='%23f1c40f' fill-rule='nonzero'/%3E%3Cpath d='M720 0h18v113h-18zM1458 738v-18h-113v18h113zM720 1345h18v113h-18zM113 738v-18H0v18h113z'/%3E%3C/g%3E%3C/svg%3E"
+    },
+    "dependencies": {
+      "@stryker-mutator/jest-runner": "9.6.1",
+      "@stryker-mutator/typescript-checker": "9.6.1",
+      "jest": "30.3.0",
+      "typescript": "6.0.3",
+      "webpack": "5.106.2",
+      "ts-jest": "29.4.9"
+    }
+  }
+}

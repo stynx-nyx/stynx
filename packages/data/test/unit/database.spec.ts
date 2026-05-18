@@ -11,6 +11,7 @@ import {
 import { Database } from '../../src/database';
 import { StynxPoolRegistry } from '../../src/pools';
 import type { StynxDataModuleOptions } from '../../src/tokens';
+import type { Mock } from 'vitest';
 
 describe('Database', () => {
   const options: StynxDataModuleOptions = {
@@ -54,14 +55,14 @@ describe('Database', () => {
   const createClient = () => {
     const queries: Array<{ text: string; values?: unknown[] }> = [];
     const client = {
-      query: jest.fn(async (text: string, values?: unknown[]) => {
+      query: vi.fn(async (text: string, values?: unknown[]) => {
         queries.push({ text, values });
         return { rows: [], rowCount: 0 };
       }),
-      release: jest.fn(),
+      release: vi.fn(),
     } as unknown as PoolClient & {
-      query: jest.Mock;
-      release: jest.Mock;
+      query: Mock;
+      release: Mock;
     };
     return { client, queries };
   };
@@ -89,14 +90,14 @@ describe('Database', () => {
         } as unknown as RequestContext),
       overrides.systemContext ?? failingSystemContext,
       {
-        get: jest.fn((_role: string, _replica: boolean) => ({
-          connect: jest.fn(async () => client),
+        get: vi.fn((_role: string, _replica: boolean) => ({
+          connect: vi.fn(async () => client),
         })),
       } as unknown as StynxPoolRegistry,
       overrides.cls
         ?? ({
-          get: jest.fn(() => undefined),
-          set: jest.fn(),
+          get: vi.fn(() => undefined),
+          set: vi.fn(),
         } as unknown as ClsService<Record<PropertyKey, unknown>>),
       overrides.moduleOptions ?? options,
     );
@@ -167,8 +168,8 @@ describe('Database', () => {
     const { client, queries } = createClient();
     let activeContext: unknown;
     const cls = {
-      get: jest.fn(() => activeContext),
-      set: jest.fn((_key: PropertyKey, value: unknown) => {
+      get: vi.fn(() => activeContext),
+      set: vi.fn((_key: PropertyKey, value: unknown) => {
         activeContext = value;
       }),
     } as unknown as ClsService<Record<PropertyKey, unknown>>;
@@ -222,6 +223,26 @@ describe('Database', () => {
     }
   });
 
+  it('preserves the original transaction error when rollback also fails', async () => {
+    const { client } = createClient();
+    const original = new Error('transaction failed');
+    const rollback = new Error('rollback failed');
+    client.query.mockImplementation(async (text: string, values?: unknown[]) => {
+      if (text === 'ROLLBACK') {
+        throw rollback;
+      }
+      return { rows: [], rowCount: 0, values };
+    });
+    const database = createPoolBackedDatabase(client);
+
+    await expect(database.tx(async () => {
+      throw original;
+    }, { retry: false })).rejects.toBe(original);
+
+    expect(client.query).toHaveBeenCalledWith('ROLLBACK');
+    expect(client.release).toHaveBeenCalledTimes(1);
+  });
+
   it('does not retry non-PostgreSQL errors or retryable codes when retry is disabled', async () => {
     const plain = new Error('plain');
     const nonRetryableClient = createClient();
@@ -248,7 +269,7 @@ describe('Database', () => {
     const database = createPoolBackedDatabase(client);
     const serialization = new Error('serialization') as Error & { code: string };
     serialization.code = '40001';
-    const fn = jest.fn(async () => {
+    const fn = vi.fn(async () => {
       throw serialization;
     });
 
@@ -267,9 +288,9 @@ describe('Database', () => {
   });
 
   it('waits the computed jitter before retrying retryable transaction failures', async () => {
-    jest.useFakeTimers();
-    const timeoutSpy = jest.spyOn(global, 'setTimeout');
-    const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.5);
+    vi.useFakeTimers();
+    const timeoutSpy = vi.spyOn(global, 'setTimeout');
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0.5);
     const { client } = createClient();
     const database = createPoolBackedDatabase(client);
     let attempts = 0;
@@ -284,14 +305,14 @@ describe('Database', () => {
       return 'retried';
     }, { retry: { attempts: 2, jitterMs: [10, 20] } });
 
-    await jest.advanceTimersByTimeAsync(15);
+    await vi.advanceTimersByTimeAsync(15);
     await expect(promise).resolves.toBe('retried');
     expect(timeoutSpy).toHaveBeenCalledWith(expect.any(Function), 15);
     expect(client.release).toHaveBeenCalledTimes(2);
 
     randomSpy.mockRestore();
     timeoutSpy.mockRestore();
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   it('does not classify non-Error retry codes or null transaction errors as retryable', async () => {
@@ -314,8 +335,8 @@ describe('Database', () => {
   it('does not clear a CLS transaction slot that is already inactive in finally', async () => {
     const { client } = createClient();
     const cls = {
-      get: jest.fn(() => undefined),
-      set: jest.fn(),
+      get: vi.fn(() => undefined),
+      set: vi.fn(),
     } as unknown as ClsService<Record<PropertyKey, unknown>>;
     const database = createPoolBackedDatabase(client, { cls });
 
@@ -335,8 +356,8 @@ describe('Database', () => {
         },
       } as unknown as StynxPoolRegistry,
       {
-        get: jest.fn(() => undefined),
-        set: jest.fn(),
+        get: vi.fn(() => undefined),
+        set: vi.fn(),
       } as unknown as ClsService<Record<PropertyKey, unknown>>,
       options,
     );
@@ -349,10 +370,10 @@ describe('Database', () => {
   it('uses replica pool options through withReplica', async () => {
     const { client } = createClient();
     const pool = {
-      connect: jest.fn(async () => client),
+      connect: vi.fn(async () => client),
     };
     const registry = {
-      get: jest.fn(() => pool),
+      get: vi.fn(() => pool),
     } as unknown as StynxPoolRegistry;
     const database = new Database(
       {
@@ -367,8 +388,8 @@ describe('Database', () => {
       failingSystemContext,
       registry,
       {
-        get: jest.fn(() => undefined),
-        set: jest.fn(),
+        get: vi.fn(() => undefined),
+        set: vi.fn(),
       } as unknown as ClsService<Record<PropertyKey, unknown>>,
       options,
     );
@@ -382,10 +403,10 @@ describe('Database', () => {
   it('delegates system context without changing the provided execution context', async () => {
     const systemContext = {
       current: () => ({ requestId: 'sys-1' }),
-      withSystemContext: jest.fn(async (_reason: string, fn: (context: unknown) => Promise<string>) =>
+      withSystemContext: vi.fn(async (_reason: string, fn: (context: unknown) => Promise<string>) =>
         fn({ system: true }),
       ),
-    } as unknown as SystemContext & { withSystemContext: jest.Mock };
+    } as unknown as SystemContext & { withSystemContext: Mock };
     const database = new Database(
       inactiveRequestContext,
       systemContext,
@@ -395,8 +416,8 @@ describe('Database', () => {
         },
       } as unknown as StynxPoolRegistry,
       {
-        get: jest.fn(() => undefined),
-        set: jest.fn(),
+        get: vi.fn(() => undefined),
+        set: vi.fn(),
       } as unknown as ClsService<Record<PropertyKey, unknown>>,
       options,
     );
@@ -411,13 +432,13 @@ describe('Database', () => {
     const { client } = createClient();
     const active = {
       client,
-      db: { select: jest.fn() },
+      db: { select: vi.fn() },
       savepointCounter: 0,
     };
     const database = createPoolBackedDatabase(client, {
       cls: {
-        get: jest.fn(() => active),
-        set: jest.fn(),
+        get: vi.fn(() => active),
+        set: vi.fn(),
       } as unknown as ClsService<Record<PropertyKey, unknown>>,
     });
 
@@ -441,7 +462,7 @@ describe('Database', () => {
 
   it('resolves owner execution context from the system context', async () => {
     const { client, queries } = createClient();
-    const current = jest.fn(() => ({ requestId: 'sys-req', actorId: 'sys-actor' }));
+    const current = vi.fn(() => ({ requestId: 'sys-req', actorId: 'sys-actor' }));
     const database = createPoolBackedDatabase(client, {
       requestContext: inactiveRequestContext,
       systemContext: {

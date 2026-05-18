@@ -6,8 +6,8 @@ import { StynxAuthGuard } from '../../src/stynx-auth.guard';
 
 function createExecutionContext(request: Record<string, unknown>): ExecutionContext {
   return {
-    getHandler: jest.fn(() => 'handler'),
-    getClass: jest.fn(() => 'controller'),
+    getHandler: vi.fn(() => 'handler'),
+    getClass: vi.fn(() => 'controller'),
     switchToHttp: () => ({
       getRequest: () => request,
     }),
@@ -23,10 +23,10 @@ describe('StynxAuthGuard', () => {
     sessionProvider?: boolean;
   } = {}) {
     const sessionService = {
-      get: jest.fn().mockResolvedValue(options.activeSession === false ? null : { sid: 'sid-1' }),
+      get: vi.fn().mockResolvedValue(options.activeSession === false ? null : { sid: 'sid-1' }),
     };
     const moduleRef = {
-      get: jest.fn((token: unknown) => {
+      get: vi.fn((token: unknown) => {
         if (token === SessionService) {
           return options.sessionProvider === false ? undefined : sessionService;
         }
@@ -34,7 +34,7 @@ describe('StynxAuthGuard', () => {
       }),
     } as unknown as ModuleRef;
     const reflector = {
-      getAllAndOverride: jest.fn((key: symbol) => {
+      getAllAndOverride: vi.fn((key: symbol) => {
         if (key === STYNX_PUBLIC_ROUTE) return Boolean(options.publicRoute);
         if (key === STYNX_SYSTEM_ROUTE) return Boolean(options.systemRoute);
         if (key === STYNX_READONLY_ROUTE) return Boolean(options.readonlyRoute);
@@ -42,7 +42,7 @@ describe('StynxAuthGuard', () => {
       }),
     };
     const validator = {
-      validate: jest.fn().mockResolvedValue({
+      validate: vi.fn().mockResolvedValue({
         sid: 'sid-1',
         sub: 'user-1',
         tenantId: 'tenant-1',
@@ -50,7 +50,7 @@ describe('StynxAuthGuard', () => {
       }),
     };
     const permissionCache = {
-      getForSession: jest.fn().mockResolvedValue({
+      getForSession: vi.fn().mockResolvedValue({
         permissions: ['records:read:*'],
       }),
     };
@@ -85,12 +85,12 @@ describe('StynxAuthGuard', () => {
 
   it('validates bearer tokens, resolves permissions, and writes request principal state', async () => {
     const { guard, validator, permissionCache, sessionService } = createGuard({ readonlyRoute: true });
-    const response = { setHeader: jest.fn() };
+    const response = { setHeader: vi.fn() };
     const request = {
       headers: { authorization: 'Bearer token-with-trailing-space  ' },
       res: response,
     };
-    const nowSpy = jest
+    const nowSpy = vi
       .spyOn(performance, 'now')
       .mockReturnValueOnce(100)
       .mockReturnValueOnce(112.345);
@@ -134,7 +134,7 @@ describe('StynxAuthGuard', () => {
 
   it('accepts authorization header arrays and response aliases without a session provider', async () => {
     const { guard, validator, permissionCache, sessionService } = createGuard({ sessionProvider: false });
-    const response = { setHeader: jest.fn() };
+    const response = { setHeader: vi.fn() };
     const request = {
       headers: { authorization: ['Bearer array-token'] },
       response,

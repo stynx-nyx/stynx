@@ -49,14 +49,14 @@ describe('ClaimFirstTenantEntitlementPolicy', () => {
   });
 
   it('delegates to fallback when no tenant claim and fallback configured', async () => {
-    const fallback = { isEntitled: jest.fn(async () => true) };
+    const fallback = { isEntitled: vi.fn(async () => true) };
     const policy = new ClaimFirstTenantEntitlementPolicy({ fallback });
     await expect(policy.isEntitled(mkContext({}))).resolves.toBe(true);
     expect(fallback.isEntitled).toHaveBeenCalled();
   });
 
   it('does NOT delegate to fallback when a tenant claim exists but excludes the tenantId', async () => {
-    const fallback = { isEntitled: jest.fn(async () => true) };
+    const fallback = { isEntitled: vi.fn(async () => true) };
     const policy = new ClaimFirstTenantEntitlementPolicy({ fallback });
     await expect(policy.isEntitled(mkContext({ tenant_id: 't-other' }))).resolves.toBe(false);
     expect(fallback.isEntitled).not.toHaveBeenCalled();
@@ -86,7 +86,7 @@ describe('ClaimFirstTenantEntitlementPolicy', () => {
 
 describe('SqlTenantEntitlementFallback', () => {
   function makeExecutor(rows: unknown[]) {
-    return { query: jest.fn(async () => ({ rows })) };
+    return { query: vi.fn(async () => ({ rows })) };
   }
 
   it('returns true when a row matches subject + tenant', async () => {
@@ -132,7 +132,7 @@ describe('SqlTenantEntitlementFallback', () => {
   });
 
   it('handles array-form query result (no .rows wrapper)', async () => {
-    const executor = { query: jest.fn(async () => [{ one: 1 }]) };
+    const executor = { query: vi.fn(async () => [{ one: 1 }]) };
     const fb = new SqlTenantEntitlementFallback({ executor: executor as never });
     await expect(fb.isEntitled(mkContext({}))).resolves.toBe(true);
   });

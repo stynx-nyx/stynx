@@ -1,21 +1,22 @@
 import { DatabaseRateLimitPolicyResolver } from '../../src/rate-limit-policy.service';
 import type { RateLimitMetadata } from '../../src/types';
 import type { RequestLike } from '../../src/request-context';
+import type { Mock } from 'vitest';
 
 interface FakeTrx {
-  query: jest.Mock<Promise<{ rows: unknown[] }>, [string, unknown[]?]>;
+  query: Mock<Promise<{ rows: unknown[] }>, [string, unknown[]?]>;
 }
 
 function makeDatabase(rowsByCall: Array<unknown[]>) {
   const trx: FakeTrx = {
-    query: jest.fn(),
+    query: vi.fn(),
   };
   let callIdx = 0;
   trx.query.mockImplementation(async () => ({ rows: rowsByCall[callIdx++] ?? [] }));
   return {
     db: {
-      withSystemContext: jest.fn(async (_reason: string, fn: () => Promise<unknown>) => fn()),
-      tx: jest.fn(async (fn: (t: FakeTrx) => Promise<unknown>) => fn(trx)),
+      withSystemContext: vi.fn(async (_reason: string, fn: () => Promise<unknown>) => fn()),
+      tx: vi.fn(async (fn: (t: FakeTrx) => Promise<unknown>) => fn(trx)),
     },
     trx,
   };
@@ -95,6 +96,23 @@ describe('DatabaseRateLimitPolicyResolver', () => {
     const resolved = await resolver.resolve(request, metadata);
     expect(resolved.limit).toBe(88);
     expect(resolved.windowSeconds).toBe(22);
+  });
+
+  it('tries the colon platform config key when the dot key is not present', async () => {
+    const { db } = makeDatabase([
+      [], // lookupLimit -> no override
+      [], // lookupLimit -> ratelimit.documents.write
+      [{ value: { limit: 44 } }], // lookupLimit -> ratelimit:documents.write
+      [], // lookupWindow -> no override
+      [], // lookupWindow -> ratelimit.documents.write
+      [{ value: { windowSeconds: 12 } }], // lookupWindow -> ratelimit:documents.write
+    ]);
+    const resolver = new DatabaseRateLimitPolicyResolver({}, db as never);
+
+    const resolved = await resolver.resolve(request, metadata);
+
+    expect(resolved.limit).toBe(44);
+    expect(resolved.windowSeconds).toBe(12);
   });
 
   it('skips override lookup when tenantId is undefined', async () => {

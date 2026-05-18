@@ -2,14 +2,16 @@ export function createStrykerConfig({
   packageName,
   threshold,
   checkers = ['typescript'],
-  jestConfig = './jest.config.cjs',
+  concurrency = 2,
+  vitestConfig = './vitest.config.ts',
   mutate = ['src/**/*.ts', '!src/**/*.d.ts'],
+  timeoutMS,
 }) {
   const incremental = process.env.STRYKER_INCREMENTAL !== 'false';
   return {
     packageManager: 'pnpm',
-    plugins: ['@stryker-mutator/jest-runner', '@stryker-mutator/typescript-checker'],
-    testRunner: 'jest',
+    plugins: ['@stryker-mutator/vitest-runner', '@stryker-mutator/typescript-checker'],
+    testRunner: 'vitest',
     coverageAnalysis: 'perTest',
     mutate,
     checkers,
@@ -17,12 +19,11 @@ export function createStrykerConfig({
     tempDirName: '.stryker-tmp',
     cleanTempDir: true,
     inPlace: true,
-    concurrency: 2,
+    concurrency,
     incremental,
-    jest: {
-      projectType: 'custom',
-      configFile: jestConfig,
-      enableFindRelatedTests: true,
+    ...(timeoutMS ? { timeoutMS } : {}),
+    vitest: {
+      configFile: vitestConfig,
     },
     reporters: ['clear-text', 'progress', 'html', 'json'],
     thresholds: {

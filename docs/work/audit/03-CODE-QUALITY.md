@@ -18,7 +18,7 @@ because CI gating against engine drift is the spec's posture (FIND-013).
 
 ## Test Coverage
 
-Coverage thresholds (`/config/jest.coverage.cjs`):
+Coverage thresholds (`/config/Vitest.coverage.cjs`):
 
 | Group            | Stmts | Branches | Funcs | Lines |
 | ---------------- | ----- | -------- | ----- | ----- |

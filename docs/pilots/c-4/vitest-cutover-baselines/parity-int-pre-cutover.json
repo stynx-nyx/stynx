@@ -1,0 +1,259 @@
+{
+  "lane": "int",
+  "generatedAt": "2026-05-18T19:59:19.600Z",
+  "allOk": true,
+  "packages": [
+    {
+      "pkg": "packages/audit",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 5,
+        "pass": 5,
+        "fail": 0,
+        "durationMs": 2175
+      },
+      "vitest": {
+        "success": true,
+        "total": 5,
+        "pass": 5,
+        "fail": 0,
+        "durationMs": 2589
+      }
+    },
+    {
+      "pkg": "packages/auth",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 7,
+        "pass": 7,
+        "fail": 0,
+        "durationMs": 3903
+      },
+      "vitest": {
+        "success": true,
+        "total": 7,
+        "pass": 7,
+        "fail": 0,
+        "durationMs": 3755
+      }
+    },
+    {
+      "pkg": "packages/core",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 2,
+        "pass": 2,
+        "fail": 0,
+        "durationMs": 1393
+      },
+      "vitest": {
+        "success": true,
+        "total": 2,
+        "pass": 2,
+        "fail": 0,
+        "durationMs": 1486
+      }
+    },
+    {
+      "pkg": "packages/data",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 12,
+        "pass": 12,
+        "fail": 0,
+        "durationMs": 7369
+      },
+      "vitest": {
+        "success": true,
+        "total": 12,
+        "pass": 12,
+        "fail": 0,
+        "durationMs": 7016
+      }
+    },
+    {
+      "pkg": "packages/flow",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 5,
+        "pass": 5,
+        "fail": 0,
+        "durationMs": 2284
+      },
+      "vitest": {
+        "success": true,
+        "total": 5,
+        "pass": 5,
+        "fail": 0,
+        "durationMs": 2827
+      }
+    },
+    {
+      "pkg": "packages/health",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 2,
+        "pass": 2,
+        "fail": 0,
+        "durationMs": 1309
+      },
+      "vitest": {
+        "success": true,
+        "total": 2,
+        "pass": 2,
+        "fail": 0,
+        "durationMs": 1418
+      }
+    },
+    {
+      "pkg": "packages/i18n",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 1,
+        "pass": 1,
+        "fail": 0,
+        "durationMs": 7015
+      },
+      "vitest": {
+        "success": true,
+        "total": 1,
+        "pass": 1,
+        "fail": 0,
+        "durationMs": 6575
+      }
+    },
+    {
+      "pkg": "packages/idempotency",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 3,
+        "pass": 3,
+        "fail": 0,
+        "durationMs": 3005
+      },
+      "vitest": {
+        "success": true,
+        "total": 3,
+        "pass": 3,
+        "fail": 0,
+        "durationMs": 3397
+      }
+    },
+    {
+      "pkg": "packages/logging",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 1,
+        "pass": 1,
+        "fail": 0,
+        "durationMs": 1331
+      },
+      "vitest": {
+        "success": true,
+        "total": 1,
+        "pass": 1,
+        "fail": 0,
+        "durationMs": 1521
+      }
+    },
+    {
+      "pkg": "packages/privacy",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 1,
+        "pass": 1,
+        "fail": 0,
+        "durationMs": 7733
+      },
+      "vitest": {
+        "success": true,
+        "total": 1,
+        "pass": 1,
+        "fail": 0,
+        "durationMs": 6802
+      }
+    },
+    {
+      "pkg": "packages/ratelimit",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 3,
+        "pass": 3,
+        "fail": 0,
+        "durationMs": 4520
+      },
+      "vitest": {
+        "success": true,
+        "total": 3,
+        "pass": 3,
+        "fail": 0,
+        "durationMs": 3836
+      }
+    },
+    {
+      "pkg": "packages/sessions",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 2,
+        "pass": 2,
+        "fail": 0,
+        "durationMs": 3017
+      },
+      "vitest": {
+        "success": true,
+        "total": 2,
+        "pass": 2,
+        "fail": 0,
+        "durationMs": 3431
+      }
+    },
+    {
+      "pkg": "packages/storage",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 4,
+        "pass": 4,
+        "fail": 0,
+        "durationMs": 8042
+      },
+      "vitest": {
+        "success": true,
+        "total": 4,
+        "pass": 4,
+        "fail": 0,
+        "durationMs": 6033
+      }
+    },
+    {
+      "pkg": "packages/tenancy",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 4,
+        "pass": 4,
+        "fail": 0,
+        "durationMs": 2187
+      },
+      "vitest": {
+        "success": true,
+        "total": 4,
+        "pass": 4,
+        "fail": 0,
+        "durationMs": 2206
+      }
+    }
+  ]
+}

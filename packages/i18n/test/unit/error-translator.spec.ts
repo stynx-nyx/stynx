@@ -2,7 +2,7 @@ import { ErrorTranslatorService } from '../../src/error-translator.service';
 
 describe('ErrorTranslatorService', () => {
   it('delegates translate(key, locale, vars) to LocaleService.t', () => {
-    const t = jest.fn().mockReturnValue('translated');
+    const t = vi.fn().mockReturnValue('translated');
     const localeService = { t } as unknown as import('../../src/locale.service').LocaleService;
     const svc = new ErrorTranslatorService(localeService);
 
@@ -13,7 +13,7 @@ describe('ErrorTranslatorService', () => {
   });
 
   it('passes empty vars when none provided', () => {
-    const t = jest.fn().mockReturnValue('translated');
+    const t = vi.fn().mockReturnValue('translated');
     const localeService = { t } as unknown as import('../../src/locale.service').LocaleService;
     const svc = new ErrorTranslatorService(localeService);
 

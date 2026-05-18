@@ -1,0 +1,619 @@
+{
+  "lane": "unit",
+  "generatedAt": "2026-05-18T20:22:39.508Z",
+  "allOk": true,
+  "packages": [
+    {
+      "pkg": "packages/audit",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 41,
+        "pass": 41,
+        "fail": 0,
+        "durationMs": 1975
+      },
+      "vitest": {
+        "success": true,
+        "total": 41,
+        "pass": 41,
+        "fail": 0,
+        "durationMs": 2563
+      }
+    },
+    {
+      "pkg": "packages/auth",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 156,
+        "pass": 156,
+        "fail": 0,
+        "durationMs": 3324
+      },
+      "vitest": {
+        "success": true,
+        "total": 156,
+        "pass": 156,
+        "fail": 0,
+        "durationMs": 4018
+      }
+    },
+    {
+      "pkg": "packages/backend",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 169,
+        "pass": 169,
+        "fail": 0,
+        "durationMs": 3686
+      },
+      "vitest": {
+        "success": true,
+        "total": 169,
+        "pass": 169,
+        "fail": 0,
+        "durationMs": 5149
+      }
+    },
+    {
+      "pkg": "packages/cli",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 18,
+        "pass": 18,
+        "fail": 0,
+        "durationMs": 974
+      },
+      "vitest": {
+        "success": true,
+        "total": 18,
+        "pass": 18,
+        "fail": 0,
+        "durationMs": 1191
+      }
+    },
+    {
+      "pkg": "packages/contracts",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 8,
+        "pass": 8,
+        "fail": 0,
+        "durationMs": 859
+      },
+      "vitest": {
+        "success": true,
+        "total": 8,
+        "pass": 8,
+        "fail": 0,
+        "durationMs": 1016
+      }
+    },
+    {
+      "pkg": "packages/core",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 61,
+        "pass": 61,
+        "fail": 0,
+        "durationMs": 1835
+      },
+      "vitest": {
+        "success": true,
+        "total": 61,
+        "pass": 61,
+        "fail": 0,
+        "durationMs": 1867
+      }
+    },
+    {
+      "pkg": "packages/data",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 73,
+        "pass": 73,
+        "fail": 0,
+        "durationMs": 2056
+      },
+      "vitest": {
+        "success": true,
+        "total": 73,
+        "pass": 73,
+        "fail": 0,
+        "durationMs": 2498
+      }
+    },
+    {
+      "pkg": "packages/flow",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 152,
+        "pass": 152,
+        "fail": 0,
+        "durationMs": 2435
+      },
+      "vitest": {
+        "success": true,
+        "total": 152,
+        "pass": 152,
+        "fail": 0,
+        "durationMs": 3328
+      }
+    },
+    {
+      "pkg": "packages/health",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 14,
+        "pass": 14,
+        "fail": 0,
+        "durationMs": 1376
+      },
+      "vitest": {
+        "success": true,
+        "total": 14,
+        "pass": 14,
+        "fail": 0,
+        "durationMs": 1480
+      }
+    },
+    {
+      "pkg": "packages/i18n",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 24,
+        "pass": 24,
+        "fail": 0,
+        "durationMs": 7669
+      },
+      "vitest": {
+        "success": true,
+        "total": 24,
+        "pass": 24,
+        "fail": 0,
+        "durationMs": 7050
+      }
+    },
+    {
+      "pkg": "packages/idempotency",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 23,
+        "pass": 23,
+        "fail": 0,
+        "durationMs": 979
+      },
+      "vitest": {
+        "success": true,
+        "total": 23,
+        "pass": 23,
+        "fail": 0,
+        "durationMs": 1150
+      }
+    },
+    {
+      "pkg": "packages/logging",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 23,
+        "pass": 23,
+        "fail": 0,
+        "durationMs": 1636
+      },
+      "vitest": {
+        "success": true,
+        "total": 23,
+        "pass": 23,
+        "fail": 0,
+        "durationMs": 1622
+      }
+    },
+    {
+      "pkg": "packages/privacy",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 15,
+        "pass": 15,
+        "fail": 0,
+        "durationMs": 6067
+      },
+      "vitest": {
+        "success": true,
+        "total": 15,
+        "pass": 15,
+        "fail": 0,
+        "durationMs": 5869
+      }
+    },
+    {
+      "pkg": "packages/ratelimit",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 32,
+        "pass": 32,
+        "fail": 0,
+        "durationMs": 1205
+      },
+      "vitest": {
+        "success": true,
+        "total": 32,
+        "pass": 32,
+        "fail": 0,
+        "durationMs": 1760
+      }
+    },
+    {
+      "pkg": "packages/sessions",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 36,
+        "pass": 36,
+        "fail": 0,
+        "durationMs": 3109
+      },
+      "vitest": {
+        "success": true,
+        "total": 36,
+        "pass": 36,
+        "fail": 0,
+        "durationMs": 3022
+      }
+    },
+    {
+      "pkg": "packages/storage",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 38,
+        "pass": 38,
+        "fail": 0,
+        "durationMs": 1559
+      },
+      "vitest": {
+        "success": true,
+        "total": 38,
+        "pass": 38,
+        "fail": 0,
+        "durationMs": 1968
+      }
+    },
+    {
+      "pkg": "packages/tenancy",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 32,
+        "pass": 32,
+        "fail": 0,
+        "durationMs": 1896
+      },
+      "vitest": {
+        "success": true,
+        "total": 32,
+        "pass": 32,
+        "fail": 0,
+        "durationMs": 2398
+      }
+    },
+    {
+      "pkg": "packages/testing",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 38,
+        "pass": 38,
+        "fail": 0,
+        "durationMs": 16195
+      },
+      "vitest": {
+        "success": true,
+        "total": 38,
+        "pass": 38,
+        "fail": 0,
+        "durationMs": 14293
+      }
+    },
+    {
+      "pkg": "packages-web/sdk",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 9,
+        "pass": 9,
+        "fail": 0,
+        "durationMs": 875
+      },
+      "vitest": {
+        "success": true,
+        "total": 9,
+        "pass": 9,
+        "fail": 0,
+        "durationMs": 1026
+      }
+    },
+    {
+      "pkg": "packages-web/angular",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 12,
+        "pass": 12,
+        "fail": 0,
+        "durationMs": 1421
+      },
+      "vitest": {
+        "success": true,
+        "total": 12,
+        "pass": 12,
+        "fail": 0,
+        "durationMs": 1783
+      }
+    },
+    {
+      "pkg": "packages-web/angular-auth",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 7,
+        "pass": 7,
+        "fail": 0,
+        "durationMs": 1231
+      },
+      "vitest": {
+        "success": true,
+        "total": 7,
+        "pass": 7,
+        "fail": 0,
+        "durationMs": 1662
+      }
+    },
+    {
+      "pkg": "packages-web/angular-flow",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 18,
+        "pass": 18,
+        "fail": 0,
+        "durationMs": 1475
+      },
+      "vitest": {
+        "success": true,
+        "total": 18,
+        "pass": 18,
+        "fail": 0,
+        "durationMs": 2075
+      }
+    },
+    {
+      "pkg": "packages-web/angular-i18n",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 2,
+        "pass": 2,
+        "fail": 0,
+        "durationMs": 1136
+      },
+      "vitest": {
+        "success": true,
+        "total": 2,
+        "pass": 2,
+        "fail": 0,
+        "durationMs": 1577
+      }
+    },
+    {
+      "pkg": "packages-web/angular-profile",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 2,
+        "pass": 2,
+        "fail": 0,
+        "durationMs": 1193
+      },
+      "vitest": {
+        "success": true,
+        "total": 2,
+        "pass": 2,
+        "fail": 0,
+        "durationMs": 1473
+      }
+    },
+    {
+      "pkg": "packages-web/angular-sessions",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 1,
+        "pass": 1,
+        "fail": 0,
+        "durationMs": 1229
+      },
+      "vitest": {
+        "success": true,
+        "total": 1,
+        "pass": 1,
+        "fail": 0,
+        "durationMs": 1656
+      }
+    },
+    {
+      "pkg": "packages-web/angular-storage",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 5,
+        "pass": 5,
+        "fail": 0,
+        "durationMs": 1188
+      },
+      "vitest": {
+        "success": true,
+        "total": 5,
+        "pass": 5,
+        "fail": 0,
+        "durationMs": 1565
+      }
+    },
+    {
+      "pkg": "packages-web/angular-tenancy",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 10,
+        "pass": 10,
+        "fail": 0,
+        "durationMs": 1310
+      },
+      "vitest": {
+        "success": true,
+        "total": 10,
+        "pass": 10,
+        "fail": 0,
+        "durationMs": 1477
+      }
+    },
+    {
+      "pkg": "packages-web/angular-trash",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 2,
+        "pass": 2,
+        "fail": 0,
+        "durationMs": 1229
+      },
+      "vitest": {
+        "success": true,
+        "total": 2,
+        "pass": 2,
+        "fail": 0,
+        "durationMs": 1700
+      }
+    },
+    {
+      "pkg": "packages-web/angular-ui",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 4,
+        "pass": 4,
+        "fail": 0,
+        "durationMs": 1133
+      },
+      "vitest": {
+        "success": true,
+        "total": 4,
+        "pass": 4,
+        "fail": 0,
+        "durationMs": 1635
+      }
+    },
+    {
+      "pkg": "infra/cdk",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 9,
+        "pass": 9,
+        "fail": 0,
+        "durationMs": 14331
+      },
+      "vitest": {
+        "success": true,
+        "total": 9,
+        "pass": 9,
+        "fail": 0,
+        "durationMs": 2373
+      }
+    },
+    {
+      "pkg": "reference/api",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 40,
+        "pass": 40,
+        "fail": 0,
+        "durationMs": 15253
+      },
+      "vitest": {
+        "success": true,
+        "total": 40,
+        "pass": 40,
+        "fail": 0,
+        "durationMs": 12448
+      }
+    },
+    {
+      "pkg": "domain/demo-bookmark/api",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 18,
+        "pass": 18,
+        "fail": 0,
+        "durationMs": 2596
+      },
+      "vitest": {
+        "success": true,
+        "total": 18,
+        "pass": 18,
+        "fail": 0,
+        "durationMs": 2956
+      }
+    },
+    {
+      "pkg": "test/db",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 10,
+        "pass": 10,
+        "fail": 0,
+        "durationMs": 879
+      },
+      "vitest": {
+        "success": true,
+        "total": 10,
+        "pass": 10,
+        "fail": 0,
+        "durationMs": 1062
+      }
+    },
+    {
+      "pkg": "test/packages",
+      "parity": true,
+      "jest": {
+        "success": true,
+        "total": 66,
+        "pass": 66,
+        "fail": 0,
+        "durationMs": 2433
+      },
+      "vitest": {
+        "success": true,
+        "total": 66,
+        "pass": 66,
+        "fail": 0,
+        "durationMs": 2600
+      }
+    }
+  ]
+}

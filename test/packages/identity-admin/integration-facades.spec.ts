@@ -5,22 +5,22 @@ import {
 
 function createIdentityAdminServiceStub() {
   return {
-    listUsers: jest.fn(),
-    getUser: jest.fn(),
-    getUserBySubject: jest.fn(),
-    updateUser: jest.fn(),
-    disableUser: jest.fn(),
-    enableUser: jest.fn(),
-    listGroupsForUser: jest.fn(),
-    listGroups: jest.fn(),
-    addUserToGroup: jest.fn(),
-    removeUserFromGroup: jest.fn(),
-    resetUserPassword: jest.fn(),
-    setUserPassword: jest.fn(),
-    verifyUserChannels: jest.fn(),
-    syncToLocal: jest.fn(),
-    syncUser: jest.fn(),
-    listGroupsWithMetaByUserId: jest.fn(),
+    listUsers: vi.fn(),
+    getUser: vi.fn(),
+    getUserBySubject: vi.fn(),
+    updateUser: vi.fn(),
+    disableUser: vi.fn(),
+    enableUser: vi.fn(),
+    listGroupsForUser: vi.fn(),
+    listGroups: vi.fn(),
+    addUserToGroup: vi.fn(),
+    removeUserFromGroup: vi.fn(),
+    resetUserPassword: vi.fn(),
+    setUserPassword: vi.fn(),
+    verifyUserChannels: vi.fn(),
+    syncToLocal: vi.fn(),
+    syncUser: vi.fn(),
+    listGroupsWithMetaByUserId: vi.fn(),
   };
 }
 

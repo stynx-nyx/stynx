@@ -9,11 +9,7 @@
     "forceConsistentCasingInFileNames": true,
     "rootDir": ".",
     "outDir": "dist",
-    "types": ["node", "jest"]
+    "types": ["node"]
   },
-  "include": [
-    "bin/**/*.ts",
-    "lib/**/*.ts",
-    "test/**/*.ts"
-  ]
+  "include": ["bin/**/*.ts", "lib/**/*.ts", "test/**/*.ts"]
 }

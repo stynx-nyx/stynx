@@ -82,7 +82,7 @@ function toPath(request: RequestLike): string {
   const withOriginal = request as RequestLike & { originalUrl?: string };
   const withUrl = request as RequestLike & { url?: string };
   const raw = withOriginal.originalUrl ?? withUrl.url ?? '';
-  return raw.split('?')[0] ?? '';
+  return raw.split('?')[0]!;
 }
 
 function toBody(request: RequestLike): unknown {
@@ -276,7 +276,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
       if (waited) {
         this.metrics?.incrementReplay();
         setLookupTimingHeader(response, performance.now() - lookupStartedAt);
-        this.applyReplayHeaders(response, decisionContext.headerValue, waited.statusCode ?? 200, waited.headers);
+        this.applyReplayHeaders(response, decisionContext.headerValue, waited.statusCode, waited.headers);
         return waited.body;
       }
       if (this.options.durableStrict) {

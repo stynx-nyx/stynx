@@ -214,7 +214,7 @@ In `test/packages/` add `permission-drift-resync.test.ts`:
 // 5. Verify the entry's cachedAt was updated
 ```
 
-Use `jest.useFakeTimers()` and `jest.advanceTimersByTimeAsync()` to avoid
+Use `Vitest.useFakeTimers()` and `Vitest.advanceTimersByTimeAsync()` to avoid
 real-time waits.
 
 ---

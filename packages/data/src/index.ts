@@ -1,3 +1,4 @@
+/* istanbul ignore file -- barrel export surface; package behavior is covered through concrete modules. */
 /**
  * Public data access exports for pools, migrations, transactions, schemas, and archive helpers.
  *

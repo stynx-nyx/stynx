@@ -1,5 +1,5 @@
 import type { AuthProvider } from './auth-provider';
-import { createStynxSdkError, UnauthorizedError } from './errors';
+import { createStynxSdkError } from './errors';
 import type { ApiRequestOptions, FetchLike, HttpRequestInitLike, HttpResponseLike } from './http';
 import type { TenantProvider } from './tenant-provider';
 
@@ -142,9 +142,6 @@ export class StynxHttpTransport {
 
     if (!response.ok) {
       const error = createStynxSdkError(response.status, parsedBody);
-      if (error instanceof UnauthorizedError && this.options.authProvider && allowRefresh) {
-        await this.options.authProvider.onAuthFailure?.(error);
-      }
       throw error;
     }
 

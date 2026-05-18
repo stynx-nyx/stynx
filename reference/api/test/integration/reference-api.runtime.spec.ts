@@ -37,7 +37,6 @@ import {
   workItems as liveWorkItems,
 } from '../../src/sample/schema';
 
-jest.setTimeout(240_000);
 
 const tenantA = '01978f4a-32bf-7c27-a131-fd73a9e001a1';
 const tenantB = '01978f4a-32bf-7c27-a131-fd73a9e001a2';
@@ -938,7 +937,7 @@ describe('@stynx/reference-api runtime suite', () => {
   });
 
   it('family 6: enforces read-only routes against writes', async () => {
-    const expectedErrorLog = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+    const expectedErrorLog = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
     try {
       await expectROCannotWrite(async () => {
         await authRequest(readerAToken)

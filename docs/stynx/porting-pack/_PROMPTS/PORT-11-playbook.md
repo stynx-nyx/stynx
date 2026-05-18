@@ -43,7 +43,7 @@ phase has entry criteria, exit criteria, and verification commands.
 | Permissions | `roles`, `permissions`, `hasRole`, `hasPermission` | PERMS |
 | File upload | `multer`, `S3Client`, `getSignedUrl`, `formidable` | STORAGE |
 | Background jobs | `bull`, `queue`, `cron`, `setInterval` | BACKGROUND |
-| Tests | `jest`, `vitest`, `mocha` | TESTS |
+| Tests | `Vitest`, `vitest`, `mocha` | TESTS |
 
 **Entry criteria:** foreign repo accessible.
 **Exit criteria:** `./adoption/ASSESSMENT.md` exists.

@@ -10,28 +10,28 @@ import { IdentityAdminService } from '../../src/identity-admin/identity-admin.se
 
 function makeAdapter(overrides: Partial<Record<string, unknown>> = {}) {
   return {
-    listUsers: jest.fn(async () => ({ users: [], nextToken: null })),
-    getUser: jest.fn(async () => ({ username: 'u' })),
-    getUserBySubject: jest.fn(async () => ({ username: 'u' })),
-    updateUser: jest.fn(async () => ({ username: 'u' })),
-    disableUser: jest.fn(async () => undefined),
-    enableUser: jest.fn(async () => undefined),
-    listGroupsForUser: jest.fn(async () => []),
-    listGroups: jest.fn(async () => ({ groups: [], nextToken: null })),
-    addUserToGroup: jest.fn(async () => undefined),
-    removeUserFromGroup: jest.fn(async () => undefined),
-    resetUserPassword: jest.fn(async () => undefined),
-    setUserPassword: jest.fn(async () => undefined),
-    verifyUserChannels: jest.fn(async () => undefined),
+    listUsers: vi.fn(async () => ({ users: [], nextToken: null })),
+    getUser: vi.fn(async () => ({ username: 'u' })),
+    getUserBySubject: vi.fn(async () => ({ username: 'u' })),
+    updateUser: vi.fn(async () => ({ username: 'u' })),
+    disableUser: vi.fn(async () => undefined),
+    enableUser: vi.fn(async () => undefined),
+    listGroupsForUser: vi.fn(async () => []),
+    listGroups: vi.fn(async () => ({ groups: [], nextToken: null })),
+    addUserToGroup: vi.fn(async () => undefined),
+    removeUserFromGroup: vi.fn(async () => undefined),
+    resetUserPassword: vi.fn(async () => undefined),
+    setUserPassword: vi.fn(async () => undefined),
+    verifyUserChannels: vi.fn(async () => undefined),
     ...overrides,
   } as never;
 }
 
 function makeLocalSync(overrides: Partial<Record<string, unknown>> = {}) {
   return {
-    syncToLocal: jest.fn(async () => ({ inserted: 0, updated: 0 })),
-    syncUser: jest.fn(async () => ({ username: 'u' })),
-    listGroupsWithMetaByUserId: jest.fn(async () => []),
+    syncToLocal: vi.fn(async () => ({ inserted: 0, updated: 0 })),
+    syncUser: vi.fn(async () => ({ username: 'u' })),
+    listGroupsWithMetaByUserId: vi.fn(async () => []),
     ...overrides,
   } as never;
 }
@@ -98,7 +98,7 @@ describe('IdentityAdminService', () => {
       ['UNKNOWN_CODE', ServiceUnavailableException],
     ])('%s maps to %p', async (code, ExpectedException) => {
       const adapter = makeAdapter({
-        getUser: jest.fn(async () => {
+        getUser: vi.fn(async () => {
           throw new IdentityAdminError(code as never, `${code} msg`);
         }),
       });
@@ -109,7 +109,7 @@ describe('IdentityAdminService', () => {
 
   it('passes through non-IdentityAdminError throws unchanged', async () => {
     const adapter = makeAdapter({
-      getUser: jest.fn(async () => {
+      getUser: vi.fn(async () => {
         throw new Error('downstream');
       }),
     });

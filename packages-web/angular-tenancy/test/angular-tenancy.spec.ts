@@ -1,7 +1,12 @@
 import '@angular/compiler';
+import { APP_INITIALIZER, Injector, runInInjectionContext, type Provider } from '@angular/core';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { of, firstValueFrom, type Observable } from 'rxjs';
+import { provideTenancy } from '../src/provide-tenancy';
 import { TenantContextService } from '../src/tenant-context.service';
 import { TenantInterceptor } from '../src/tenant.interceptor';
+import { TenantSwitcherComponent } from '../src/tenant-switcher.component';
+import { STYNX_TENANCY_OPTIONS, STYNX_TENANCY_WINDOW } from '../src/tokens';
 
 class FakeHeaders {
   private readonly values = new Map<string, string>();
@@ -43,6 +48,43 @@ class FakeHandler {
 }
 
 describe('@stynx-web/angular-tenancy', () => {
+  it('provides tenancy options, browser window fallback, initializer, and interceptor providers', async () => {
+    const options = { defaultTenantResolver: async () => 'tenant-default' };
+    const providers = provideTenancy(options) as Array<Provider | Record<string, unknown>>;
+    const optionProvider = providers.find((provider) =>
+      typeof provider === 'object' && provider !== null && provider['provide'] === STYNX_TENANCY_OPTIONS,
+    ) as Record<string, unknown>;
+    const windowProvider = providers.find((provider) =>
+      typeof provider === 'object' && provider !== null && provider['provide'] === STYNX_TENANCY_WINDOW,
+    ) as Record<string, () => Window | null>;
+    const initializerProvider = providers.find((provider) =>
+      typeof provider === 'object' && provider !== null && provider['provide'] === APP_INITIALIZER,
+    ) as Record<string, unknown>;
+    const interceptorProvider = providers.find((provider) =>
+      typeof provider === 'object' && provider !== null && provider['provide'] === HTTP_INTERCEPTORS,
+    ) as Record<string, unknown>;
+    const service = { initialize: vi.fn().mockResolvedValue(undefined) };
+
+    expect(providers).toContain(TenantContextService);
+    expect(optionProvider['useValue']).toBe(options);
+    expect(windowProvider['useFactory']()).toBe(window);
+    expect((initializerProvider['deps'] as unknown[])).toEqual([TenantContextService]);
+    expect(initializerProvider['multi']).toBe(true);
+    await expect((initializerProvider['useFactory'] as (input: typeof service) => () => Promise<void>)(service)()).resolves.toBeUndefined();
+    expect(service.initialize).toHaveBeenCalledTimes(1);
+    expect(interceptorProvider['useClass']).toBe(TenantInterceptor);
+    expect(interceptorProvider['multi']).toBe(true);
+  });
+
+  it('provides default tenancy options', () => {
+    const providers = provideTenancy() as Array<Provider | Record<string, unknown>>;
+    const optionProvider = providers.find((provider) =>
+      typeof provider === 'object' && provider !== null && provider['provide'] === STYNX_TENANCY_OPTIONS,
+    ) as Record<string, unknown>;
+
+    expect(optionProvider['useValue']).toEqual({});
+  });
+
   it('initializes tenants from query, subdomain, default resolver, and clear', async () => {
     const emitted: Array<string | null> = [];
     const tenantContext = new TenantContextService(
@@ -76,6 +118,61 @@ describe('@stynx-web/angular-tenancy', () => {
     expect(emitted).toContain(null);
   });
 
+  it('normalizes URL and host edge cases before using the default resolver', async () => {
+    const seen: Array<{ url: string; host: string }> = [];
+    const tenantContext = new TenantContextService(
+      {
+        defaultTenantResolver: async ({ url, host }) => {
+          seen.push({ url: url.href, host });
+          return 'fallback-tenant';
+        },
+      },
+      {
+        location: {
+          href: '/from-window?x=1',
+          host: '127.0.0.1:4200',
+        },
+      } as Window,
+    );
+
+    await tenantContext.initialize();
+    expect(tenantContext.activeTenant()).toEqual({ id: 'fallback-tenant', source: 'default' });
+    expect(seen[0]).toEqual({
+      url: 'https://127.0.0.1:4200/from-window?x=1',
+      host: '127.0.0.1:4200',
+    });
+
+    tenantContext.clear();
+    await tenantContext.initialize({
+      url: '/portal',
+      host: 'tenant.localhost',
+    });
+    expect(tenantContext.activeTenant()).toEqual({ id: 'fallback-tenant', source: 'default' });
+
+    tenantContext.clear();
+    await tenantContext.initialize({
+      url: 'https://[::1]/portal',
+      host: '[::1]',
+    });
+    expect(tenantContext.activeTenant()).toEqual({ id: 'fallback-tenant', source: 'default' });
+  });
+
+  it('leaves tenant unset when no source resolves and supports manual source default', async () => {
+    const tenantContext = new TenantContextService({}, null);
+
+    await tenantContext.initialize();
+    expect(tenantContext.activeTenant()).toBeNull();
+
+    await tenantContext.initialize({
+      url: '/dashboard',
+      host: '',
+    });
+    expect(tenantContext.activeTenant()).toBeNull();
+
+    tenantContext.setTenant('tenant-manual');
+    expect(tenantContext.activeTenant()).toEqual({ id: 'tenant-manual', source: 'manual' });
+  });
+
   it('adds X-Tenant-Id from the current tenant context', async () => {
     const tenantContext = new TenantContextService({}, null);
     tenantContext.setTenant('tenant-a', 'manual');
@@ -101,5 +198,37 @@ describe('@stynx-web/angular-tenancy', () => {
     ));
 
     expect(handler.seen[0]?.headers.get('x-tenant-id')).toBe('tenant-existing');
+  });
+
+  it('tenant switcher ignores empty selections and emits manual tenant changes', () => {
+    const component = Object.create(TenantSwitcherComponent.prototype) as TenantSwitcherComponent;
+    const tenantContext = { setTenant: vi.fn() };
+    const tenantChange = { emit: vi.fn() };
+    Object.defineProperty(component, 'tenantContext', { value: tenantContext });
+    Object.defineProperty(component, 'tenantChange', { value: tenantChange });
+
+    component.selectTenant({ target: { value: '' } } as unknown as Event);
+    expect(tenantContext.setTenant).not.toHaveBeenCalled();
+    expect(tenantChange.emit).not.toHaveBeenCalled();
+
+    component.selectTenant({ target: { value: 'tenant-b' } } as unknown as Event);
+    expect(tenantContext.setTenant).toHaveBeenCalledWith('tenant-b', 'manual');
+    expect(tenantChange.emit).toHaveBeenCalledWith('tenant-b');
+  });
+
+  it('constructs the tenant switcher in an injection context', () => {
+    const tenantContext = { tenantId: () => null, setTenant: vi.fn() };
+    const injector = Injector.create({
+      providers: [
+        { provide: STYNX_TENANCY_OPTIONS, useValue: {} },
+        { provide: STYNX_TENANCY_WINDOW, useValue: null },
+        { provide: TenantContextService, useValue: tenantContext },
+      ],
+    });
+
+    const component = runInInjectionContext(injector, () => new TenantSwitcherComponent());
+
+    expect(component.tenants).toEqual([]);
+    expect(component.tenantContext).toBe(tenantContext);
   });
 });

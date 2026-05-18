@@ -20,7 +20,7 @@ const PRINCIPAL = {
 
 describe('AuthContextGuard', () => {
   it('throws Unauthorized when verifier returns no principal', async () => {
-    const verifier = { verifyAuthorizationHeader: jest.fn(async () => null) };
+    const verifier = { verifyAuthorizationHeader: vi.fn(async () => null) };
     const guard = new AuthContextGuard(verifier as never);
     await expect(guard.canActivate(ctx({ headers: {} }))).rejects.toBeInstanceOf(
       UnauthorizedException,
@@ -29,7 +29,7 @@ describe('AuthContextGuard', () => {
 
   it('attaches principal + compatibility user/actor + tenantId on the request', async () => {
     const verifier = {
-      verifyAuthorizationHeader: jest.fn(async () => ({ principal: PRINCIPAL })),
+      verifyAuthorizationHeader: vi.fn(async () => ({ principal: PRINCIPAL })),
     };
     const guard = new AuthContextGuard(verifier as never);
     const request: Record<string, unknown> = { headers: {} };
@@ -42,10 +42,10 @@ describe('AuthContextGuard', () => {
 
   it('uses tenantResolver when configured and respects its result', async () => {
     const verifier = {
-      verifyAuthorizationHeader: jest.fn(async () => ({ principal: PRINCIPAL })),
+      verifyAuthorizationHeader: vi.fn(async () => ({ principal: PRINCIPAL })),
     };
     const tenantResolver = {
-      resolve: jest.fn(async () => 't-resolved'),
+      resolve: vi.fn(async () => 't-resolved'),
     };
     const guard = new AuthContextGuard(verifier as never, undefined, tenantResolver as never);
     const request: Record<string, unknown> = { headers: { 'x-tenant-id': 't-header' } };
@@ -58,7 +58,7 @@ describe('AuthContextGuard', () => {
 
   it('honors x-tenant-id header when no resolver is configured', async () => {
     const verifier = {
-      verifyAuthorizationHeader: jest.fn(async () => ({
+      verifyAuthorizationHeader: vi.fn(async () => ({
         principal: { ...PRINCIPAL, tenants: ['t-1', 't-2'] },
       })),
     };
@@ -70,7 +70,7 @@ describe('AuthContextGuard', () => {
 
   it('selects the single principal tenant when no header and resolver absent', async () => {
     const verifier = {
-      verifyAuthorizationHeader: jest.fn(async () => ({ principal: PRINCIPAL })),
+      verifyAuthorizationHeader: vi.fn(async () => ({ principal: PRINCIPAL })),
     };
     const guard = new AuthContextGuard(verifier as never);
     const request: Record<string, unknown> = { headers: {} };
@@ -80,7 +80,7 @@ describe('AuthContextGuard', () => {
 
   it('leaves tenantId undefined when principal has multiple tenants and no header/resolver', async () => {
     const verifier = {
-      verifyAuthorizationHeader: jest.fn(async () => ({
+      verifyAuthorizationHeader: vi.fn(async () => ({
         principal: { ...PRINCIPAL, tenants: ['t-a', 't-b'] },
       })),
     };
@@ -92,9 +92,9 @@ describe('AuthContextGuard', () => {
 
   it('throws Forbidden when tenantEntitlementPolicy denies the tenant', async () => {
     const verifier = {
-      verifyAuthorizationHeader: jest.fn(async () => ({ principal: PRINCIPAL })),
+      verifyAuthorizationHeader: vi.fn(async () => ({ principal: PRINCIPAL })),
     };
-    const policy = { isEntitled: jest.fn(async () => false) };
+    const policy = { isEntitled: vi.fn(async () => false) };
     const guard = new AuthContextGuard(
       verifier as never,
       undefined,
@@ -108,9 +108,9 @@ describe('AuthContextGuard', () => {
 
   it('passes through when tenantEntitlementPolicy approves', async () => {
     const verifier = {
-      verifyAuthorizationHeader: jest.fn(async () => ({ principal: PRINCIPAL })),
+      verifyAuthorizationHeader: vi.fn(async () => ({ principal: PRINCIPAL })),
     };
-    const policy = { isEntitled: jest.fn(async () => true) };
+    const policy = { isEntitled: vi.fn(async () => true) };
     const guard = new AuthContextGuard(
       verifier as never,
       undefined,
@@ -124,9 +124,9 @@ describe('AuthContextGuard', () => {
 
   it('honors a custom principalMapper when provided', async () => {
     const verifier = {
-      verifyAuthorizationHeader: jest.fn(async () => ({ principal: PRINCIPAL })),
+      verifyAuthorizationHeader: vi.fn(async () => ({ principal: PRINCIPAL })),
     };
-    const mapper = { map: jest.fn(() => ({ ...PRINCIPAL, id: 'mapped' })) };
+    const mapper = { map: vi.fn(() => ({ ...PRINCIPAL, id: 'mapped' })) };
     const guard = new AuthContextGuard(verifier as never, mapper as never);
     const request: Record<string, unknown> = { headers: {} };
     await guard.canActivate(ctx(request));
@@ -136,7 +136,7 @@ describe('AuthContextGuard', () => {
 
   it('accepts array-form authorization header (passed through to verifier)', async () => {
     const verifier = {
-      verifyAuthorizationHeader: jest.fn(async () => ({ principal: PRINCIPAL })),
+      verifyAuthorizationHeader: vi.fn(async () => ({ principal: PRINCIPAL })),
     };
     const guard = new AuthContextGuard(verifier as never);
     const request: Record<string, unknown> = {
@@ -151,7 +151,7 @@ describe('AuthContextGuard', () => {
 
   it('preserves correlationId in principalContext when present', async () => {
     const verifier = {
-      verifyAuthorizationHeader: jest.fn(async () => ({ principal: PRINCIPAL })),
+      verifyAuthorizationHeader: vi.fn(async () => ({ principal: PRINCIPAL })),
     };
     const guard = new AuthContextGuard(verifier as never);
     const request: Record<string, unknown> = {

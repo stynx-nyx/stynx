@@ -38,7 +38,6 @@ async function queryExistingNames(client: Client, sql: string): Promise<string[]
 }
 
 describe('Stynx platform migrations', () => {
-  jest.setTimeout(120_000);
 
   it('boots the platform schema, enforces RLS, and reruns idempotently', async () => {
     const expectedMigrationIds = await expectedPlatformMigrationIds();

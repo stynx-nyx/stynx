@@ -24,7 +24,7 @@ Read:
 - `packages/data/test/integration/migrations.spec.ts`
 - `packages/data/src/migration-runner.ts`
 - `packages/data/migrations/platform/`
-- `packages/data/jest.integration.config.cjs`
+- `packages/data/Vitest.integration.config.cjs`
 - `packages/data/test/support/postgres.ts`
 
 ## Write Scope

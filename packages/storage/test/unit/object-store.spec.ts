@@ -1,14 +1,15 @@
 import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { StynxObjectStore } from '../../src/object-store.service';
+import type { Mock } from 'vitest';
 
-jest.mock('@aws-sdk/s3-request-presigner', () => ({
-  getSignedUrl: jest.fn().mockResolvedValue('https://signed.example/object'),
+vi.mock('@aws-sdk/s3-request-presigner', () => ({
+  getSignedUrl: vi.fn().mockResolvedValue('https://signed.example/object'),
 }));
 
 describe('StynxObjectStore', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('constructs an S3Client with the configured region', () => {
@@ -30,7 +31,7 @@ describe('StynxObjectStore', () => {
   });
 
   it('putObject sends PutObjectCommand with body + contentType', async () => {
-    const send = jest.fn().mockResolvedValue(undefined);
+    const send = vi.fn().mockResolvedValue(undefined);
     const store = new StynxObjectStore({ bucketName: 'b', region: 'us-east-1' });
     (store as unknown as { client: { send: typeof send } }).client = { send } as never;
 
@@ -49,7 +50,7 @@ describe('StynxObjectStore', () => {
   });
 
   it('putObject honors expiresAt when provided', async () => {
-    const send = jest.fn().mockResolvedValue(undefined);
+    const send = vi.fn().mockResolvedValue(undefined);
     const store = new StynxObjectStore({ bucketName: 'b', region: 'us-east-1' });
     (store as unknown as { client: { send: typeof send } }).client = { send } as never;
     const expires = new Date('2026-12-31T00:00:00.000Z');
@@ -72,7 +73,7 @@ describe('StynxObjectStore', () => {
 
     expect(url).toBe('https://signed.example/object');
     expect(getSignedUrl).toHaveBeenCalledTimes(1);
-    const callArgs = (getSignedUrl as jest.Mock).mock.calls[0];
+    const callArgs = (getSignedUrl as Mock).mock.calls[0];
     expect(callArgs[0]).toBeInstanceOf(S3Client);
     expect(callArgs[1]).toBeInstanceOf(GetObjectCommand);
     expect(callArgs[2]).toEqual({ expiresIn: 600 });

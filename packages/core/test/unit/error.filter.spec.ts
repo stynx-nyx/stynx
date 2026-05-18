@@ -3,14 +3,15 @@ import type { ArgumentsHost } from '@nestjs/common';
 import type { ModuleRef } from '@nestjs/core';
 import { StynxErrorFilter } from '../../src/error.filter';
 import { StynxError } from '../../src/errors';
+import type { Mock } from 'vitest';
 
 function makeHost(): {
   host: ArgumentsHost;
-  status: jest.Mock;
-  json: jest.Mock;
+  status: Mock;
+  json: Mock;
 } {
-  const json = jest.fn();
-  const status = jest.fn(function status(this: { json: jest.Mock }) {
+  const json = vi.fn();
+  const status = vi.fn(function status(this: { json: Mock }) {
     return this;
   });
   const response = { status, json };
@@ -24,7 +25,7 @@ function makeHost(): {
 
 describe('StynxErrorFilter', () => {
   it('forwards plain HttpException with its status + response body', () => {
-    const moduleRef = { get: jest.fn() } as unknown as ModuleRef;
+    const moduleRef = { get: vi.fn() } as unknown as ModuleRef;
     const filter = new StynxErrorFilter(moduleRef);
     const { host, status, json } = makeHost();
     const ex = new BadRequestException({ message: 'bad input' });
@@ -37,7 +38,7 @@ describe('StynxErrorFilter', () => {
 
   it('translates StynxError into the standard envelope at exception.status', () => {
     const moduleRef = {
-      get: jest.fn(() => undefined),
+      get: vi.fn(() => undefined),
     } as unknown as ModuleRef;
     const filter = new StynxErrorFilter(moduleRef);
     const { host, status, json } = makeHost();
@@ -58,7 +59,7 @@ describe('StynxErrorFilter', () => {
   });
 
   it('omits context from the body when StynxError carries none', () => {
-    const moduleRef = { get: jest.fn(() => undefined) } as unknown as ModuleRef;
+    const moduleRef = { get: vi.fn(() => undefined) } as unknown as ModuleRef;
     const filter = new StynxErrorFilter(moduleRef);
     const { host, json } = makeHost();
     const ex = new StynxError('M', { code: 'C', status: 500 });
@@ -74,10 +75,10 @@ describe('StynxErrorFilter', () => {
       locale: 'pt-BR',
     };
     const translator = {
-      translate: jest.fn(() => 'Mensagem traduzida'),
+      translate: vi.fn(() => 'Mensagem traduzida'),
     };
     const moduleRef = {
-      get: jest.fn((token: unknown) => {
+      get: vi.fn((token: unknown) => {
         if (typeof token === 'function') return requestContext;
         return translator;
       }),
@@ -102,7 +103,7 @@ describe('StynxErrorFilter', () => {
   });
 
   it('rethrows when the exception is neither HttpException nor StynxError', () => {
-    const moduleRef = { get: jest.fn() } as unknown as ModuleRef;
+    const moduleRef = { get: vi.fn() } as unknown as ModuleRef;
     const filter = new StynxErrorFilter(moduleRef);
     const { host } = makeHost();
     const ex = new Error('opaque');
@@ -112,7 +113,7 @@ describe('StynxErrorFilter', () => {
 
   it('moduleRef resolution gracefully returns undefined when token unknown', () => {
     const moduleRef = {
-      get: jest.fn(() => {
+      get: vi.fn(() => {
         throw new Error('unknown token');
       }),
     } as unknown as ModuleRef;

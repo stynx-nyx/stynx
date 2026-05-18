@@ -16,23 +16,23 @@
     },
     {
       "packagePattern": "@stynx/backend",
-      "levels": ["API", "DB"]
+      "levels": ["API", "DB", "E2E"]
     },
     {
       "packagePattern": "@stynx/cli",
-      "levels": ["API", "DB"]
+      "levels": ["API", "DB", "E2E"]
     },
     {
       "packagePattern": "@stynx/contracts",
-      "levels": ["API", "DB"]
+      "levels": ["API", "DB", "E2E"]
     },
     {
       "packagePattern": "@stynx/core",
-      "levels": ["API"]
+      "levels": ["API", "E2E"]
     },
     {
       "packagePattern": "@stynx/data",
-      "levels": ["API"]
+      "levels": ["API", "E2E"]
     },
     {
       "packagePattern": "@stynx/flow",
@@ -48,11 +48,11 @@
     },
     {
       "packagePattern": "@stynx/idempotency",
-      "levels": ["API"]
+      "levels": ["API", "E2E"]
     },
     {
       "packagePattern": "@stynx/logging",
-      "levels": ["API"]
+      "levels": ["API", "E2E"]
     },
     {
       "packagePattern": "@stynx/privacy",
@@ -60,7 +60,7 @@
     },
     {
       "packagePattern": "@stynx/ratelimit",
-      "levels": ["API"]
+      "levels": ["API", "E2E"]
     },
     {
       "packagePattern": "@stynx/sessions",
@@ -68,7 +68,7 @@
     },
     {
       "packagePattern": "@stynx/storage",
-      "levels": ["API"]
+      "levels": ["API", "E2E"]
     },
     {
       "packagePattern": "@stynx/tenancy",
@@ -76,7 +76,7 @@
     },
     {
       "packagePattern": "@stynx/testing",
-      "levels": ["API", "DB"]
+      "levels": ["API", "DB", "E2E"]
     },
     {
       "packagePattern": "@stynx-web/*",

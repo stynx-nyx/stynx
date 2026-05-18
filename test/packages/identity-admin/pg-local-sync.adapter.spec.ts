@@ -6,15 +6,15 @@ import {
 
 function createIdentityAdminStub() {
   return {
-    listUsers: jest.fn(),
-    getUser: jest.fn(),
-    listGroupsForUser: jest.fn(),
-    listGroups: jest.fn(),
+    listUsers: vi.fn(),
+    getUser: vi.fn(),
+    listGroupsForUser: vi.fn(),
+    listGroups: vi.fn(),
   };
 }
 
 function createDbStub() {
-  const query = jest.fn(async (sql: string, params: unknown[]) => {
+  const query = vi.fn(async (sql: string, params: unknown[]) => {
     if (sql.includes('INSERT INTO auth.roles')) {
       return { rows: [{ role_id: `role-${String(params?.[0])}` }] };
     }
@@ -37,7 +37,7 @@ function createDbStub() {
     }
     return { rows: [] };
   });
-  const withTransaction = jest.fn(
+  const withTransaction = vi.fn(
     async (
       run: (client: unknown) => Promise<unknown>,
       _context?: unknown,

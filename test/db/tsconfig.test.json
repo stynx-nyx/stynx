@@ -1,7 +1,7 @@
 {
   "extends": "../../tools/tsconfig/node24.json",
   "compilerOptions": {
-    "types": ["node", "jest"]
+    "types": ["node"]
   },
   "include": ["./**/*.ts"]
 }

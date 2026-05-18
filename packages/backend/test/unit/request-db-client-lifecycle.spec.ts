@@ -16,7 +16,7 @@ function fakeResponse() {
 describe('PgTenantDbClientLifecycle', () => {
   it('acquire delegates to factory.connectWithTenant with the tenantId', async () => {
     const factory: TenantBoundDbClientFactory = {
-      connectWithTenant: jest.fn(async (tid: string) => ({ tag: tid })),
+      connectWithTenant: vi.fn(async (tid: string) => ({ tag: tid })),
     };
     const lifecycle = new PgTenantDbClientLifecycle(factory);
     const client = await lifecycle.acquire({ request: { headers: {} } as never, tenantId: 'tenant-1' });
@@ -25,9 +25,9 @@ describe('PgTenantDbClientLifecycle', () => {
   });
 
   it('release calls client.release() by default', async () => {
-    const factory: TenantBoundDbClientFactory = { connectWithTenant: jest.fn() };
+    const factory: TenantBoundDbClientFactory = { connectWithTenant: vi.fn() };
     const lifecycle = new PgTenantDbClientLifecycle(factory);
-    const release = jest.fn();
+    const release = vi.fn();
     await lifecycle.release({
       request: { headers: {} } as never,
       tenantId: 't',
@@ -37,9 +37,9 @@ describe('PgTenantDbClientLifecycle', () => {
   });
 
   it('release honors releaseMethodName override (e.g. "close")', async () => {
-    const factory: TenantBoundDbClientFactory = { connectWithTenant: jest.fn() };
+    const factory: TenantBoundDbClientFactory = { connectWithTenant: vi.fn() };
     const lifecycle = new PgTenantDbClientLifecycle(factory, { releaseMethodName: 'close' });
-    const close = jest.fn();
+    const close = vi.fn();
     await lifecycle.release({
       request: { headers: {} } as never,
       tenantId: 't',
@@ -49,7 +49,7 @@ describe('PgTenantDbClientLifecycle', () => {
   });
 
   it('release is a no-op when the client does not expose the release method', async () => {
-    const factory: TenantBoundDbClientFactory = { connectWithTenant: jest.fn() };
+    const factory: TenantBoundDbClientFactory = { connectWithTenant: vi.fn() };
     const lifecycle = new PgTenantDbClientLifecycle(factory);
     await expect(
       lifecycle.release({ request: { headers: {} } as never, tenantId: 't', client: {} }),
@@ -60,8 +60,8 @@ describe('PgTenantDbClientLifecycle', () => {
 describe('ResponseEventRequestDbClientLifecycle', () => {
   function makeDelegate() {
     return {
-      acquire: jest.fn(async () => ({ tag: 'client' })),
-      release: jest.fn(async () => undefined),
+      acquire: vi.fn(async () => ({ tag: 'client' })),
+      release: vi.fn(async () => undefined),
     };
   }
 

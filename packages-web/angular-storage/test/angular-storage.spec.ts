@@ -1,5 +1,4 @@
 import '@angular/compiler';
-import { jest } from '@jest/globals';
 import { of } from 'rxjs';
 import { DocumentService } from '../src/document.service';
 import { StynxDocumentUploadComponent } from '../src/document-upload.component';
@@ -9,7 +8,7 @@ describe('@stynx-web/angular-storage', () => {
     const seen: string[] = [];
     const component = new StynxDocumentUploadComponent(
       {
-        initiate: jest.fn(async () => {
+        initiate: vi.fn(async () => {
           seen.push('initiating');
           return {
             id: 'doc-1',
@@ -22,7 +21,7 @@ describe('@stynx-web/angular-storage', () => {
             },
           };
         }),
-        complete: jest.fn(async () => {
+        complete: vi.fn(async () => {
           seen.push('completed');
           return { id: 'doc-1', scanStatus: 'completed' as const };
         }),
@@ -51,19 +50,86 @@ describe('@stynx-web/angular-storage', () => {
     expect(seen).toEqual(['initiating', 'uploading', 'completed']);
     expect(component.progress).toBe(100);
     expect(component.status).toBe('completed');
+
+    component.status = 'initiating';
+    expect(component.statusLabel).toBe('Preparing upload');
+    component.status = 'uploading';
+    expect(component.statusLabel).toBe('Uploading file');
+  });
+
+  it('handles selected files, quarantine completion, and generic failures', async () => {
+    const toasts: unknown[] = [];
+    const completed: unknown[] = [];
+    const component = new StynxDocumentUploadComponent(
+      {
+        initiate: vi.fn(async () => ({
+          id: 'doc-3',
+          s3Key: 'storage/doc-3',
+          upload: {
+            method: 'PUT',
+            url: 'https://upload.example.test',
+            headers: {},
+            expiresInSeconds: 60,
+          },
+        })),
+        complete: vi.fn(async () => ({ id: 'doc-3', scanStatus: 'quarantined' as const })),
+      } as never,
+      {
+        push: (...args: unknown[]) => toasts.push(args),
+      } as never,
+      {
+        upload: vi.fn(async (_url, _file, _headers, onProgress) => onProgress(55)),
+      },
+    );
+    component.collection = 'attachments';
+    component.completed.subscribe((value) => completed.push(value));
+
+    await component.onFileSelected({
+      target: {
+        files: {
+          item: () => ({ name: 'note.txt', type: 'text/plain', size: 5 }),
+        },
+      },
+    } as never);
+
+    expect(component.status).toBe('completed');
+    expect(component.progress).toBe(55);
+    expect(toasts).toEqual([['Upload completed', 'warning']]);
+    expect(completed).toEqual([{ id: 'doc-3', filename: 'note.txt', scanStatus: 'quarantined' }]);
+
+    const failing = new StynxDocumentUploadComponent(
+      {
+        initiate: vi.fn(async () => ({
+          id: 'doc-4',
+          s3Key: 'storage/doc-4',
+          upload: { method: 'PUT', url: 'https://upload.example.test', headers: {}, expiresInSeconds: 60 },
+        })),
+        complete: vi.fn(async () => ({ id: 'doc-4', scanStatus: 'completed' as const })),
+      } as never,
+      { push: () => undefined } as never,
+      {
+        upload: async () => {
+          throw 'offline';
+        },
+      },
+    );
+
+    await failing.upload({ name: 'test.txt', type: 'text/plain', size: 5 } as File);
+    expect(failing.status).toBe('errored');
+    expect(failing.errorMessage).toBe('Upload failed');
   });
 
   it('rejects invalid files and surfaces upload failures', async () => {
     const component = new StynxDocumentUploadComponent(
       {
-        initiate: jest.fn(async () => {
+        initiate: vi.fn(async () => {
           throw new Error('should not initiate invalid files');
         }),
-        complete: jest.fn(async () => ({ id: 'doc-1', scanStatus: 'completed' as const })),
+        complete: vi.fn(async () => ({ id: 'doc-1', scanStatus: 'completed' as const })),
       } as never,
       { push: () => undefined } as never,
       {
-        upload: jest.fn(async () => undefined),
+        upload: vi.fn(async () => undefined),
       },
     );
     component.collection = 'attachments';
@@ -79,7 +145,7 @@ describe('@stynx-web/angular-storage', () => {
 
     const failing = new StynxDocumentUploadComponent(
       {
-        initiate: jest.fn(async () => ({
+        initiate: vi.fn(async () => ({
           id: 'doc-2',
           s3Key: 'storage/doc-2',
           upload: {
@@ -89,7 +155,7 @@ describe('@stynx-web/angular-storage', () => {
             expiresInSeconds: 60,
           },
         })),
-        complete: jest.fn(async () => ({ id: 'doc-2', scanStatus: 'completed' as const })),
+        complete: vi.fn(async () => ({ id: 'doc-2', scanStatus: 'completed' as const })),
       } as never,
       { push: () => undefined } as never,
       {
@@ -108,13 +174,13 @@ describe('@stynx-web/angular-storage', () => {
   it('ignores empty file selection events', async () => {
     const component = new StynxDocumentUploadComponent(
       {
-        initiate: jest.fn(async () => {
+        initiate: vi.fn(async () => {
           throw new Error('not used');
         }),
-        complete: jest.fn(async () => ({ id: 'doc-1', scanStatus: 'completed' as const })),
+        complete: vi.fn(async () => ({ id: 'doc-1', scanStatus: 'completed' as const })),
       } as never,
       { push: () => undefined } as never,
-      { upload: jest.fn(async () => undefined) },
+      { upload: vi.fn(async () => undefined) },
     );
 
     await component.onFileSelected({ target: { files: { item: () => null } } } as never);

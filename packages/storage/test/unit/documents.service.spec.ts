@@ -1,6 +1,12 @@
 import { RequestContext } from '@stynx/core';
 import { DocumentsService } from '../../src/documents.service';
-import { StorageValidationError } from '../../src/errors';
+import {
+  StorageCollectionNotFoundError,
+  StorageDocumentNotFoundError,
+  StorageTenantMismatchError,
+  StorageValidationError,
+} from '../../src/errors';
+import type { Mock } from 'vitest';
 
 describe('DocumentsService', () => {
   const baseOptions = {
@@ -17,23 +23,23 @@ describe('DocumentsService', () => {
   };
 
   function createService(overrides: {
-    db?: { tx: jest.Mock };
-    s3?: Record<string, jest.Mock>;
+    db?: { tx: Mock };
+    s3?: Record<string, Mock>;
     requestContext?: Partial<RequestContext>;
   } = {}) {
-    const db = overrides.db ?? { tx: jest.fn() };
+    const db = overrides.db ?? { tx: vi.fn() };
     const s3 = overrides.s3 ?? {
-      presignUpload: jest.fn(),
-      presignDownload: jest.fn(),
-      headObject: jest.fn(),
-      deleteAllVersions: jest.fn(),
+      presignUpload: vi.fn(),
+      presignDownload: vi.fn(),
+      headObject: vi.fn(),
+      deleteAllVersions: vi.fn(),
     };
     const requestContext = overrides.requestContext ?? {
       tenantId: 'tenant-1',
       actorId: 'user-1',
     };
     const moduleRef = {
-      get: jest.fn((token: unknown) => {
+      get: vi.fn((token: unknown) => {
         if ((token as { name?: string })?.name === 'Database') {
           return db;
         }
@@ -93,6 +99,48 @@ describe('DocumentsService', () => {
     ).rejects.toBeInstanceOf(StorageValidationError);
   });
 
+  it('rejects unknown collections, disallowed mime types, bad checksums, and missing context', async () => {
+    await expect(createService().service.initiate({
+      collection: 'missing',
+      filename: 'invoice.pdf',
+      mimeType: 'application/pdf',
+      byteSize: 1,
+      checksumSha256: 'a'.repeat(64),
+    })).rejects.toBeInstanceOf(StorageCollectionNotFoundError);
+
+    await expect(createService().service.initiate({
+      collection: 'invoices',
+      filename: 'invoice.pdf',
+      mimeType: 'image/png',
+      byteSize: 1,
+      checksumSha256: 'a'.repeat(64),
+    })).rejects.toBeInstanceOf(StorageValidationError);
+
+    await expect(createService().service.initiate({
+      collection: 'invoices',
+      filename: 'invoice.pdf',
+      mimeType: 'application/pdf',
+      byteSize: 1,
+      checksumSha256: 'not-hex',
+    })).rejects.toBeInstanceOf(StorageValidationError);
+
+    await expect(createService({ requestContext: { actorId: 'user-1' } }).service.initiate({
+      collection: 'invoices',
+      filename: 'invoice.pdf',
+      mimeType: 'application/pdf',
+      byteSize: 1,
+      checksumSha256: 'a'.repeat(64),
+    })).rejects.toThrow('Tenant context is required');
+
+    await expect(createService({ requestContext: { tenantId: 'tenant-1' } }).service.initiate({
+      collection: 'invoices',
+      filename: 'invoice.pdf',
+      mimeType: 'application/pdf',
+      byteSize: 1,
+      checksumSha256: 'a'.repeat(64),
+    })).rejects.toThrow('Actor context is required');
+  });
+
   it('quarantines a document when the uploaded metadata does not match', async () => {
     const { service, db, s3 } = createService();
     db.tx
@@ -120,14 +168,14 @@ describe('DocumentsService', () => {
           }),
         }),
       )
-      .mockImplementationOnce(async (fn: (trx: { update: () => { set: () => { where: (clause: unknown) => Promise<void> } }; softDelete: jest.Mock }) => Promise<unknown>) =>
+      .mockImplementationOnce(async (fn: (trx: { update: () => { set: () => { where: (clause: unknown) => Promise<void> } }; softDelete: Mock }) => Promise<unknown>) =>
         fn({
           update: () => ({
             set: () => ({
               where: async (_clause: unknown) => undefined,
             }),
           }),
-          softDelete: jest.fn(async () => undefined),
+          softDelete: vi.fn(async () => undefined),
         }),
       );
     s3.headObject.mockResolvedValue({
@@ -166,13 +214,13 @@ describe('DocumentsService', () => {
 
   it('completes scan + persists scanDetail when content + checksum match', async () => {
     const { service, db, s3 } = createService();
-    let update: jest.Mock;
+    let update: Mock;
     db.tx
       .mockImplementationOnce(async (fn: never) => (fn as unknown as (trx: unknown) => Promise<unknown>)(ownedDocumentMock()))
       .mockImplementationOnce(async (fn: never) => {
-        update = jest.fn(() => ({
-          set: jest.fn(() => ({
-            where: jest.fn(async () => undefined),
+        update = vi.fn(() => ({
+          set: vi.fn(() => ({
+            where: vi.fn(async () => undefined),
           })),
         }));
         return (fn as unknown as (trx: unknown) => Promise<unknown>)({ update });
@@ -185,6 +233,40 @@ describe('DocumentsService', () => {
 
     const result = await service.complete('doc-1');
     expect(result.scanStatus).toBe('completed');
+  });
+
+  it('uses completion headers when object metadata is absent', async () => {
+    const { service, db, s3 } = createService();
+    db.tx
+      .mockImplementationOnce(async (fn: never) => (fn as unknown as (trx: unknown) => Promise<unknown>)(ownedDocumentMock()))
+      .mockImplementationOnce(async (fn: never) =>
+        (fn as unknown as (trx: unknown) => Promise<unknown>)({
+          update: () => ({ set: () => ({ where: async () => undefined }) }),
+        }),
+      );
+    s3.headObject.mockResolvedValue({});
+
+    await expect(service.complete('doc-1', {
+      contentType: 'application/pdf',
+      checksumSha256: 'a'.repeat(64),
+    })).resolves.toEqual({ id: 'doc-1', scanStatus: 'completed' });
+  });
+
+  it('quarantines completion when object metadata and completion headers are absent', async () => {
+    const { service, db, s3 } = createService();
+    const softDelete = vi.fn(async () => undefined);
+    db.tx
+      .mockImplementationOnce(async (fn: never) => (fn as unknown as (trx: unknown) => Promise<unknown>)(ownedDocumentMock()))
+      .mockImplementationOnce(async (fn: never) =>
+        (fn as unknown as (trx: unknown) => Promise<unknown>)({
+          update: () => ({ set: () => ({ where: async () => undefined }) }),
+          softDelete,
+        }),
+      );
+    s3.headObject.mockResolvedValue({});
+
+    await expect(service.complete('doc-1')).resolves.toEqual({ id: 'doc-1', scanStatus: 'quarantined' });
+    expect(softDelete).toHaveBeenCalledTimes(1);
   });
 
   it('getDownloadUrl returns a signed URL via s3.presignDownload', async () => {
@@ -206,7 +288,7 @@ describe('DocumentsService', () => {
 
   it('softRemove looks up the owned document + calls trx.softDelete', async () => {
     const { service, db } = createService();
-    const softDelete = jest.fn(async () => undefined);
+    const softDelete = vi.fn(async () => undefined);
     db.tx
       .mockImplementationOnce(async (fn: never) =>
         (fn as unknown as (trx: unknown) => Promise<unknown>)(ownedDocumentMock()),
@@ -221,12 +303,95 @@ describe('DocumentsService', () => {
 
   it('restore calls trx.restoreFromArchive without requiring document ownership lookup', async () => {
     const { service, db } = createService();
-    const restoreFromArchive = jest.fn(async () => undefined);
+    const restoreFromArchive = vi.fn(async () => undefined);
     db.tx.mockImplementationOnce(async (fn: never) =>
       (fn as unknown as (trx: unknown) => Promise<unknown>)({ restoreFromArchive }),
     );
 
     await service.restore('doc-1');
     expect(restoreFromArchive).toHaveBeenCalledTimes(1);
+  });
+
+  it('reports missing, cross-tenant, and unavailable database cases', async () => {
+    const missing = createService();
+    missing.db.tx.mockImplementationOnce(async (fn: never) =>
+      (fn as unknown as (trx: unknown) => Promise<unknown>)({
+        select: () => ({ from: () => ({ where: () => ({ limit: async () => [] }) }) }),
+      }),
+    );
+    await expect(missing.service.getDownloadUrl('doc-missing')).rejects.toBeInstanceOf(StorageDocumentNotFoundError);
+
+    const crossTenant = createService();
+    crossTenant.db.tx.mockImplementationOnce(async (fn: never) =>
+      (fn as unknown as (trx: unknown) => Promise<unknown>)({
+        select: () => ({
+          from: () => ({
+            where: () => ({
+              limit: async () => [
+                {
+                  id: 'doc-1',
+                  tenantId: 'tenant-2',
+                  collection: 'invoices',
+                  s3Key: 'tenant-2/invoices/key',
+                  filename: 'invoice.pdf',
+                  mimeType: 'application/pdf',
+                  byteSize: 32,
+                  checksumSha256: 'a'.repeat(64),
+                  scanStatus: 'not_scanned',
+                  scanDetail: {},
+                },
+              ],
+            }),
+          }),
+        }),
+      }),
+    );
+    await expect(crossTenant.service.getDownloadUrl('doc-1')).rejects.toBeInstanceOf(StorageTenantMismatchError);
+
+    const moduleRef = { get: vi.fn(() => undefined) };
+    const service = new DocumentsService(
+      moduleRef as never,
+      { tenantId: 'tenant-1', actorId: 'user-1' } as RequestContext,
+      {} as never,
+      baseOptions,
+    );
+    await expect(service.restore('doc-1')).rejects.toThrow('Database provider is unavailable');
+  });
+
+  it('hard-deletes archived documents only for the current tenant', async () => {
+    const { service, db, s3 } = createService();
+    const hardDeleteFromArchive = vi.fn(async () => undefined);
+    db.tx.mockImplementationOnce(async (fn: never) =>
+      (fn as unknown as (trx: unknown) => Promise<unknown>)({
+        query: vi.fn(async () => ({
+          rows: [{ archive_id: '12', tenant_id: 'tenant-1', s3_key: 'tenant-1/invoices/key' }],
+        })),
+        hardDeleteFromArchive,
+      }),
+    );
+
+    await service.hardRemove('doc-1');
+    expect(s3.deleteAllVersions).toHaveBeenCalledWith('tenant-1/invoices/key');
+    expect(hardDeleteFromArchive).toHaveBeenCalledWith(12n, expect.objectContaining({
+      archiveTable: 'archive.storage_documents',
+    }));
+
+    const missing = createService();
+    missing.db.tx.mockImplementationOnce(async (fn: never) =>
+      (fn as unknown as (trx: unknown) => Promise<unknown>)({
+        query: vi.fn(async () => ({ rows: [] })),
+      }),
+    );
+    await expect(missing.service.hardRemove('doc-missing')).rejects.toBeInstanceOf(StorageDocumentNotFoundError);
+
+    const mismatch = createService();
+    mismatch.db.tx.mockImplementationOnce(async (fn: never) =>
+      (fn as unknown as (trx: unknown) => Promise<unknown>)({
+        query: vi.fn(async () => ({
+          rows: [{ archive_id: '12', tenant_id: 'tenant-2', s3_key: 'tenant-2/invoices/key' }],
+        })),
+      }),
+    );
+    await expect(mismatch.service.hardRemove('doc-1')).rejects.toBeInstanceOf(StorageTenantMismatchError);
   });
 });

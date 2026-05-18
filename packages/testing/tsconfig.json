@@ -4,7 +4,7 @@
     "outDir": "dist",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "types": ["node", "jest"],
+    "types": ["node", "vitest/globals"],
     "rootDir": ".."
   },
   "include": ["src/**/*.ts", "test/**/*.ts"]

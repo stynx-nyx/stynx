@@ -1,11 +1,12 @@
 import { createSign, generateKeyPairSync } from 'node:crypto';
 import type { ModuleRef } from '@nestjs/core';
+import type { Mock } from 'vitest';
 
-jest.mock('../../src/utils', () => {
-  const actual = jest.requireActual('../../src/utils');
+vi.mock('../../src/utils', async () => {
+  const actual = await vi.importActual('../../src/utils');
   return {
     ...actual,
-    verifyJwtWithJwk: jest.fn(),
+    verifyJwtWithJwk: vi.fn(),
   };
 });
 
@@ -15,11 +16,11 @@ import { base64UrlEncode, decodeJwtClaims, verifyJwtWithJwk } from '../../src/ut
 
 describe('auth validators', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('validates cognito access tokens and authorization headers', async () => {
-    const jwtVerify = jest.fn().mockResolvedValue({
+    const jwtVerify = vi.fn().mockResolvedValue({
       payload: {
         sub: 'user-1',
         email: 'user@example.com',
@@ -27,8 +28,8 @@ describe('auth validators', () => {
         'cognito:username': 'cognito-user',
       },
     });
-    jest.spyOn(joseLoader, 'load').mockResolvedValue({
-      createRemoteJWKSet: jest.fn(() => 'jwks'),
+    vi.spyOn(joseLoader, 'load').mockResolvedValue({
+      createRemoteJWKSet: vi.fn(() => 'jwks'),
       jwtVerify,
     } as never);
 
@@ -55,15 +56,15 @@ describe('auth validators', () => {
   });
 
   it('accepts bearer header arrays and preserves optional cognito username/email claims', async () => {
-    const createRemoteJWKSet = jest.fn(() => 'jwks');
-    const jwtVerify = jest.fn().mockResolvedValue({
+    const createRemoteJWKSet = vi.fn(() => 'jwks');
+    const jwtVerify = vi.fn().mockResolvedValue({
       payload: {
         sub: 'user-2',
         username: 'preferred-name',
         email: 'user2@example.com',
       },
     });
-    jest.spyOn(joseLoader, 'load').mockResolvedValue({
+    vi.spyOn(joseLoader, 'load').mockResolvedValue({
       createRemoteJWKSet,
       jwtVerify,
     } as never);
@@ -91,7 +92,7 @@ describe('auth validators', () => {
       stynx: { issuer: 'https://stynx.test' },
       permissions: { dbFallbackOnRedisDown: true },
     } as never);
-    const validateAccessToken = jest.spyOn(validator, 'validateAccessToken').mockResolvedValue({
+    const validateAccessToken = vi.spyOn(validator, 'validateAccessToken').mockResolvedValue({
       sub: 'user-3',
       claims: {},
     });
@@ -101,9 +102,9 @@ describe('auth validators', () => {
   });
 
   it('returns empty cognito sub and omits username when optional identity claims are absent', async () => {
-    jest.spyOn(joseLoader, 'load').mockResolvedValue({
-      createRemoteJWKSet: jest.fn(() => 'jwks'),
-      jwtVerify: jest.fn().mockResolvedValue({ payload: {} }),
+    vi.spyOn(joseLoader, 'load').mockResolvedValue({
+      createRemoteJWKSet: vi.fn(() => 'jwks'),
+      jwtVerify: vi.fn().mockResolvedValue({ payload: {} }),
     } as never);
     const validator = new CognitoJwtValidator({
       cognito: { issuer: 'https://issuer.test' },
@@ -119,9 +120,9 @@ describe('auth validators', () => {
   });
 
   it('rejects invalid cognito token_use values and missing configuration', async () => {
-    jest.spyOn(joseLoader, 'load').mockResolvedValue({
-      createRemoteJWKSet: jest.fn(() => 'jwks'),
-      jwtVerify: jest.fn().mockResolvedValue({
+    vi.spyOn(joseLoader, 'load').mockResolvedValue({
+      createRemoteJWKSet: vi.fn(() => 'jwks'),
+      jwtVerify: vi.fn().mockResolvedValue({
         payload: {
           sub: 'user-1',
           token_use: 'id',
@@ -147,14 +148,14 @@ describe('auth validators', () => {
 
   it('validates stynx jwt claims using the injected signing service and remote jwks fallback', async () => {
     const signingService = {
-      getJwks: jest.fn().mockResolvedValue({
+      getJwks: vi.fn().mockResolvedValue({
         keys: [{ kid: 'key-1' }],
       }),
     };
     const moduleRef = {
-      get: jest.fn(() => signingService),
+      get: vi.fn(() => signingService),
     } as unknown as ModuleRef;
-    const verifyJwtWithJwkMock = verifyJwtWithJwk as jest.Mock;
+    const verifyJwtWithJwkMock = verifyJwtWithJwk as Mock;
     verifyJwtWithJwkMock.mockImplementation((_token: string, key: Record<string, unknown>) => {
       if (key.kid === 'key-1') {
         return {
@@ -198,16 +199,16 @@ describe('auth validators', () => {
 
   it('falls back to remote jwks and rejects inactive or expired tokens', async () => {
     const moduleRef = {
-      get: jest.fn(() => undefined),
+      get: vi.fn(() => undefined),
     } as unknown as ModuleRef;
-    const fetchMock = jest.fn().mockResolvedValue({
+    const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ keys: [{ kid: 'remote' }] }),
     });
     const originalFetch = global.fetch;
     global.fetch = fetchMock as never;
 
-    const verifyJwtWithJwkMock = verifyJwtWithJwk as jest.Mock;
+    const verifyJwtWithJwkMock = verifyJwtWithJwk as Mock;
     verifyJwtWithJwkMock.mockReturnValue({
       iss: 'https://stynx.test',
       aud: 'aud-1',
@@ -240,15 +241,15 @@ describe('auth validators', () => {
 
   it('forces a signing-service key refresh after an initial verification failure', async () => {
     const signingService = {
-      getJwks: jest
+      getJwks: vi
         .fn()
         .mockResolvedValueOnce({ keys: [{ kid: 'stale' }] })
         .mockResolvedValueOnce({ keys: [{ kid: 'fresh' }] }),
     };
     const moduleRef = {
-      get: jest.fn(() => signingService),
+      get: vi.fn(() => signingService),
     } as unknown as ModuleRef;
-    const verifyJwtWithJwkMock = verifyJwtWithJwk as jest.Mock;
+    const verifyJwtWithJwkMock = verifyJwtWithJwk as Mock;
     verifyJwtWithJwkMock.mockImplementation((_token: string, key: Record<string, unknown>) => {
       if (key.kid === 'fresh') {
         return {
@@ -273,12 +274,12 @@ describe('auth validators', () => {
 
   it('tries later jwks keys before refreshing and preserves empty stynx claim defaults', async () => {
     const signingService = {
-      getJwks: jest.fn().mockResolvedValue({ keys: [{ kid: 'bad' }, { kid: 'good' }] }),
+      getJwks: vi.fn().mockResolvedValue({ keys: [{ kid: 'bad' }, { kid: 'good' }] }),
     };
     const moduleRef = {
-      get: jest.fn(() => signingService),
+      get: vi.fn(() => signingService),
     } as unknown as ModuleRef;
-    const verifyJwtWithJwkMock = verifyJwtWithJwk as jest.Mock;
+    const verifyJwtWithJwkMock = verifyJwtWithJwk as Mock;
     verifyJwtWithJwkMock.mockImplementation((_token: string, key: Record<string, unknown>) => {
       if (key.kid === 'good') {
         return { iss: 'https://stynx.test' };
@@ -301,9 +302,9 @@ describe('auth validators', () => {
 
   it('reuses cached jwks until refresh is forced and rejects failed remote jwks loads', async () => {
     const moduleRef = {
-      get: jest.fn(() => undefined),
+      get: vi.fn(() => undefined),
     } as unknown as ModuleRef;
-    const fetchMock = jest
+    const fetchMock = vi
       .fn()
       .mockResolvedValueOnce({
         ok: true,
@@ -316,7 +317,7 @@ describe('auth validators', () => {
     const originalFetch = global.fetch;
     global.fetch = fetchMock as never;
 
-    const verifyJwtWithJwkMock = verifyJwtWithJwk as jest.Mock;
+    const verifyJwtWithJwkMock = verifyJwtWithJwk as Mock;
     verifyJwtWithJwkMock.mockImplementation((_token: string, key: Record<string, unknown>) => ({
       iss: 'https://stynx.test',
       aud: 'aud-1',
@@ -346,9 +347,9 @@ describe('auth validators', () => {
 
   it('rejects issuer mismatches and missing jwks configuration for stynx tokens', async () => {
     const moduleRef = {
-      get: jest.fn(() => undefined),
+      get: vi.fn(() => undefined),
     } as unknown as ModuleRef;
-    const verifyJwtWithJwkMock = verifyJwtWithJwk as jest.Mock;
+    const verifyJwtWithJwkMock = verifyJwtWithJwk as Mock;
     verifyJwtWithJwkMock.mockReturnValue({
       iss: 'https://wrong-issuer.test',
       sub: 'user-1',
@@ -362,7 +363,7 @@ describe('auth validators', () => {
       permissions: { dbFallbackOnRedisDown: true },
     } as never);
     const originalFetch = global.fetch;
-    global.fetch = jest.fn().mockResolvedValue({
+    global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ keys: [{ kid: 'remote' }] }),
     }) as never;
@@ -379,12 +380,12 @@ describe('auth validators', () => {
 
   it('rejects empty key sets and supports tokens without optional stynx claims', async () => {
     const signingService = {
-      getJwks: jest.fn().mockResolvedValueOnce({ keys: [] }).mockResolvedValueOnce({ keys: [{ kid: 'key-optional' }] }),
+      getJwks: vi.fn().mockResolvedValueOnce({ keys: [] }).mockResolvedValueOnce({ keys: [{ kid: 'key-optional' }] }),
     };
     const moduleRef = {
-      get: jest.fn(() => signingService),
+      get: vi.fn(() => signingService),
     } as unknown as ModuleRef;
-    const verifyJwtWithJwkMock = verifyJwtWithJwk as jest.Mock;
+    const verifyJwtWithJwkMock = verifyJwtWithJwk as Mock;
     verifyJwtWithJwkMock.mockReturnValue({
       iss: 'https://stynx.test',
       sub: 'user-optional',
@@ -405,8 +406,10 @@ describe('auth validators', () => {
     expect(signingService.getJwks).toHaveBeenCalledTimes(2);
   });
 
-  it('rejects invalid signatures from verifyJwtWithJwk', () => {
-    const { verifyJwtWithJwk: actualVerifyJwtWithJwk } = jest.requireActual('../../src/utils') as typeof import('../../src/utils');
+  it('rejects invalid signatures from verifyJwtWithJwk', async () => {
+    // Get the un-mocked verifyJwtWithJwk — bypasses the module-level vi.mock.
+    const { verifyJwtWithJwk: actualVerifyJwtWithJwk } =
+      await vi.importActual<typeof import('../../src/utils')>('../../src/utils');
     const { privateKey, publicKey } = generateKeyPairSync('rsa', { modulusLength: 1024 });
     const header = base64UrlEncode(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
     const payload = base64UrlEncode(JSON.stringify({ sub: 'user-1' }));
@@ -425,11 +428,11 @@ describe('auth validators', () => {
 
   it('enforces stynx token time boundaries and refreshes expired remote jwks cache', async () => {
     const nowSeconds = 1_800_000_000;
-    jest.spyOn(Date, 'now').mockReturnValue(nowSeconds * 1000);
+    vi.spyOn(Date, 'now').mockReturnValue(nowSeconds * 1000);
     const moduleRef = {
-      get: jest.fn(() => undefined),
+      get: vi.fn(() => undefined),
     } as unknown as ModuleRef;
-    const fetchMock = jest
+    const fetchMock = vi
       .fn()
       .mockResolvedValueOnce({
         ok: true,
@@ -441,7 +444,7 @@ describe('auth validators', () => {
       });
     const originalFetch = global.fetch;
     global.fetch = fetchMock as never;
-    const verifyJwtWithJwkMock = verifyJwtWithJwk as jest.Mock;
+    const verifyJwtWithJwkMock = verifyJwtWithJwk as Mock;
     verifyJwtWithJwkMock.mockImplementation((_token: string, key: Record<string, unknown>) => ({
       iss: 'https://stynx.test',
       sub: String(key.kid),
@@ -475,22 +478,22 @@ describe('auth validators', () => {
     });
     await expect(validator.validate('token-expired')).rejects.toThrow('STYNX token expired');
     global.fetch = originalFetch;
-    jest.restoreAllMocks();
+    vi.clearAllMocks();
   });
 
   it('keeps signing-service jwks cached for the full configured lifetime', async () => {
     const startedAt = 5_000_000_000_000;
-    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(startedAt);
+    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(startedAt);
     const signingService = {
-      getJwks: jest
+      getJwks: vi
         .fn()
         .mockResolvedValueOnce({ keys: [{ kid: 'cached-a' }] })
         .mockResolvedValueOnce({ keys: [{ kid: 'cached-b' }] }),
     };
     const moduleRef = {
-      get: jest.fn(() => signingService),
+      get: vi.fn(() => signingService),
     } as unknown as ModuleRef;
-    const verifyJwtWithJwkMock = verifyJwtWithJwk as jest.Mock;
+    const verifyJwtWithJwkMock = verifyJwtWithJwk as Mock;
     verifyJwtWithJwkMock.mockImplementation((_token: string, key: Record<string, unknown>) => ({
       iss: 'https://stynx.test',
       sub: String(key.kid),

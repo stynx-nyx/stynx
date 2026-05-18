@@ -5,13 +5,14 @@ import type {
   ResolvedStynxSessionsModuleOptions,
   SessionRecord,
 } from '../../src/types';
+import type { Mock } from 'vitest';
 
 interface FakeSecretLoader {
-  getSecretString: jest.Mock<Promise<string>, [string]>;
+  getSecretString: Mock<Promise<string>, [string]>;
 }
 
 function makeSecretLoader(raw: string): FakeSecretLoader {
-  return { getSecretString: jest.fn(async () => raw) };
+  return { getSecretString: vi.fn(async () => raw) };
 }
 
 function genKeyPair() {

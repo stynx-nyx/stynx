@@ -18,8 +18,9 @@ import {
   buildCognitoAdminOptionsFromEnv,
   mapCognitoError,
 } from '../../src/cognito-admin.adapter';
+import type { Mock } from 'vitest';
 
-function makeAdapter(send: jest.Mock) {
+function makeAdapter(send: Mock) {
   const adapter = new CognitoIdentityAdminAdapter({
     region: 'us-east-1',
     userPoolId: 'pool-1',
@@ -67,7 +68,7 @@ describe('mapCognitoError', () => {
 
 describe('CognitoIdentityAdminAdapter', () => {
   it('listUsers calls ListUsersCommand with the email filter when present', async () => {
-    const send = jest.fn(async () => ({ Users: [cognitoUser], PaginationToken: 'next' }));
+    const send = vi.fn(async () => ({ Users: [cognitoUser], PaginationToken: 'next' }));
     const adapter = makeAdapter(send);
     const result = await adapter.listUsers({ email: 'a@b' });
     const command = send.mock.calls[0]?.[0] as ListUsersCommand;
@@ -78,7 +79,7 @@ describe('CognitoIdentityAdminAdapter', () => {
   });
 
   it('listUsers uses the phone filter when only phone is set', async () => {
-    const send = jest.fn(async () => ({ Users: [] }));
+    const send = vi.fn(async () => ({ Users: [] }));
     const adapter = makeAdapter(send);
     await adapter.listUsers({ phone: '+5511' });
     const command = send.mock.calls[0]?.[0] as ListUsersCommand;
@@ -86,14 +87,14 @@ describe('CognitoIdentityAdminAdapter', () => {
   });
 
   it('listUsers routes through ListUsersInGroupCommand when group is set', async () => {
-    const send = jest.fn(async () => ({ Users: [cognitoUser] }));
+    const send = vi.fn(async () => ({ Users: [cognitoUser] }));
     const adapter = makeAdapter(send);
     await adapter.listUsers({ group: 'admins' });
     expect(send.mock.calls[0]?.[0]).toBeInstanceOf(ListUsersInGroupCommand);
   });
 
   it('listUsers clamps limit to 60 when caller requests more', async () => {
-    const send = jest.fn(async () => ({ Users: [] }));
+    const send = vi.fn(async () => ({ Users: [] }));
     const adapter = makeAdapter(send);
     await adapter.listUsers({ limit: 500 });
     const command = send.mock.calls[0]?.[0] as ListUsersCommand;
@@ -101,7 +102,7 @@ describe('CognitoIdentityAdminAdapter', () => {
   });
 
   it('listUsers maps mapCognitoError on failure', async () => {
-    const send = jest.fn(async () => {
+    const send = vi.fn(async () => {
       throw { name: 'NotAuthorizedException', message: 'no' };
     });
     const adapter = makeAdapter(send);
@@ -109,7 +110,7 @@ describe('CognitoIdentityAdminAdapter', () => {
   });
 
   it('getUser calls AdminGetUserCommand and returns a IdentityUserDetail', async () => {
-    const send = jest.fn(async () => ({
+    const send = vi.fn(async () => ({
       Username: 'alice',
       Enabled: true,
       UserStatus: 'CONFIRMED',
@@ -124,7 +125,7 @@ describe('CognitoIdentityAdminAdapter', () => {
   });
 
   it('getUserBySubject lists users by sub filter then fetches details', async () => {
-    const send = jest
+    const send = vi
       .fn()
       .mockResolvedValueOnce({ Users: [cognitoUser] }) // ListUsersCommand
       .mockResolvedValueOnce({
@@ -141,13 +142,13 @@ describe('CognitoIdentityAdminAdapter', () => {
   });
 
   it('getUserBySubject throws IDENTITY_NOT_FOUND when nothing matches', async () => {
-    const send = jest.fn(async () => ({ Users: [] }));
+    const send = vi.fn(async () => ({ Users: [] }));
     const adapter = makeAdapter(send);
     await expect(adapter.getUserBySubject('sub-x')).rejects.toBeInstanceOf(IdentityAdminError);
   });
 
   it('getUserBySubject preserves IdentityAdminError thrown from getUser', async () => {
-    const send = jest
+    const send = vi
       .fn()
       .mockResolvedValueOnce({ Users: [cognitoUser] })
       .mockRejectedValueOnce({ name: 'UserNotFoundException', message: 'gone' });
@@ -156,11 +157,11 @@ describe('CognitoIdentityAdminAdapter', () => {
   });
 
   it('updateUser composes the right attribute list including custom: prefix', async () => {
-    const send = jest.fn(async () => ({}));
+    const send = vi.fn(async () => ({}));
     const adapter = makeAdapter(send);
     Object.defineProperty(adapter, 'client', {
       value: {
-        send: jest
+        send: vi
           .fn()
           .mockResolvedValueOnce(undefined) // AdminUpdateUserAttributes
           .mockResolvedValueOnce({
@@ -179,7 +180,7 @@ describe('CognitoIdentityAdminAdapter', () => {
       familyName: 'L',
       custom: { dept: 'eng' },
     });
-    const send2 = (adapter as unknown as { client: { send: jest.Mock } }).client.send;
+    const send2 = (adapter as unknown as { client: { send: Mock } }).client.send;
     const update = send2.mock.calls[0]?.[0] as AdminUpdateUserAttributesCommand;
     expect(update).toBeInstanceOf(AdminUpdateUserAttributesCommand);
     const attrs = update.input.UserAttributes ?? [];
@@ -190,7 +191,7 @@ describe('CognitoIdentityAdminAdapter', () => {
   });
 
   it('updateUser short-circuits attribute push when nothing changes', async () => {
-    const send = jest.fn(async () => ({
+    const send = vi.fn(async () => ({
       Username: 'alice',
       Enabled: true,
       UserAttributes: [],
@@ -203,7 +204,7 @@ describe('CognitoIdentityAdminAdapter', () => {
   });
 
   it('disableUser / enableUser issue the right commands', async () => {
-    const send = jest.fn(async () => ({}));
+    const send = vi.fn(async () => ({}));
     const adapter = makeAdapter(send);
     await adapter.disableUser('alice');
     expect(send.mock.calls[0]?.[0]).toBeInstanceOf(AdminDisableUserCommand);
@@ -212,7 +213,7 @@ describe('CognitoIdentityAdminAdapter', () => {
   });
 
   it('listGroupsForUser maps response.Groups and filters blanks', async () => {
-    const send = jest.fn(async () => ({
+    const send = vi.fn(async () => ({
       Groups: [{ GroupName: 'admins', Description: 'admins desc' }, { GroupName: '' }, {}],
     }));
     const adapter = makeAdapter(send);
@@ -223,7 +224,7 @@ describe('CognitoIdentityAdminAdapter', () => {
   });
 
   it('listGroups paginates via NextToken and maps items', async () => {
-    const send = jest.fn(async () => ({
+    const send = vi.fn(async () => ({
       Groups: [{ GroupName: 'g1' }],
       NextToken: 'tok',
     }));
@@ -235,7 +236,7 @@ describe('CognitoIdentityAdminAdapter', () => {
   });
 
   it('addUserToGroup / removeUserFromGroup issue correct commands', async () => {
-    const send = jest.fn(async () => ({}));
+    const send = vi.fn(async () => ({}));
     const adapter = makeAdapter(send);
     await adapter.addUserToGroup('alice', 'admins');
     expect(send.mock.calls[0]?.[0]).toBeInstanceOf(AdminAddUserToGroupCommand);
@@ -244,7 +245,7 @@ describe('CognitoIdentityAdminAdapter', () => {
   });
 
   it('resetUserPassword + setUserPassword issue correct commands', async () => {
-    const send = jest.fn(async () => ({}));
+    const send = vi.fn(async () => ({}));
     const adapter = makeAdapter(send);
     await adapter.resetUserPassword('alice');
     expect(send.mock.calls[0]?.[0]).toBeInstanceOf(AdminResetUserPasswordCommand);
@@ -255,7 +256,7 @@ describe('CognitoIdentityAdminAdapter', () => {
   });
 
   it('verifyUserChannels marks email_verified + phone_number_verified', async () => {
-    const send = jest.fn(async () => ({}));
+    const send = vi.fn(async () => ({}));
     const adapter = makeAdapter(send);
     await adapter.verifyUserChannels('alice', { email: true, phone: true });
     const cmd = send.mock.calls[0]?.[0] as AdminUpdateUserAttributesCommand;
@@ -268,7 +269,7 @@ describe('CognitoIdentityAdminAdapter', () => {
   });
 
   it('verifyUserChannels skips the call when neither channel is requested', async () => {
-    const send = jest.fn(async () => ({}));
+    const send = vi.fn(async () => ({}));
     const adapter = makeAdapter(send);
     await adapter.verifyUserChannels('alice', {});
     expect(send).not.toHaveBeenCalled();
@@ -327,7 +328,7 @@ describe('CognitoIdentityAdminAdapter', () => {
   });
 
   it('username fallback uses the configured order when Username is undefined', async () => {
-    const send = jest.fn(async () => ({
+    const send = vi.fn(async () => ({
       Username: undefined,
       Enabled: true,
       UserAttributes: [{ Name: 'email', Value: 'fallback@b' }],

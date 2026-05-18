@@ -4,6 +4,7 @@
 
 import { Pool } from 'pg';
 import { createStynxPgPool, StynxPoolRegistry } from '../../src/pools';
+import type { Mock } from 'vitest';
 
 describe('createStynxPgPool', () => {
   let pools: Pool[] = [];
@@ -17,6 +18,13 @@ describe('createStynxPgPool', () => {
     const pool = createStynxPgPool({ connectionString: 'postgresql://user@localhost/db' });
     pools.push(pool);
     expect(pool).toBeInstanceOf(Pool);
+  });
+
+  it('swallows idle pool errors from the factory-created pool', () => {
+    const pool = createStynxPgPool({ connectionString: 'postgresql://user@localhost/db' });
+    pools.push(pool);
+
+    expect(() => pool.emit('error', new Error('idle error'))).not.toThrow();
   });
 
   it('passes ssl: true through as { rejectUnauthorized: false }', () => {
@@ -55,10 +63,10 @@ describe('StynxPoolRegistry', () => {
     owner?: string;
     app?: string;
     reader?: string;
-    secretLoader?: { getSecretString: jest.Mock };
+    secretLoader?: { getSecretString: Mock };
   } = {}): StynxPoolRegistry {
     const loader = opts.secretLoader ?? {
-      getSecretString: jest.fn(async (id: string) => `postgresql://${id}@localhost/db`),
+      getSecretString: vi.fn(async (id: string) => `postgresql://${id}@localhost/db`),
     };
     const registry = new StynxPoolRegistry(
       {
@@ -109,7 +117,7 @@ describe('StynxPoolRegistry', () => {
   });
 
   it('resolves connection strings via secretId when no connectionString provided', async () => {
-    const getSecretString = jest.fn(async (id: string) => `postgresql://${id}@localhost/db`);
+    const getSecretString = vi.fn(async (id: string) => `postgresql://${id}@localhost/db`);
     const registry = new StynxPoolRegistry(
       {
         connections: {
@@ -127,7 +135,7 @@ describe('StynxPoolRegistry', () => {
   });
 
   it('honors JSON-shaped secrets via parseSecretConnection (connectionString field)', async () => {
-    const getSecretString = jest.fn(async () =>
+    const getSecretString = vi.fn(async () =>
       JSON.stringify({ connectionString: 'postgresql://json-owner@localhost/db' }),
     );
     const registry = new StynxPoolRegistry(
@@ -148,7 +156,7 @@ describe('StynxPoolRegistry', () => {
   });
 
   it('honors JSON-shaped secrets with `url` field', async () => {
-    const getSecretString = jest.fn(async () =>
+    const getSecretString = vi.fn(async () =>
       JSON.stringify({ url: 'postgresql://json-url@localhost/db' }),
     );
     const registry = new StynxPoolRegistry(
@@ -166,8 +174,30 @@ describe('StynxPoolRegistry', () => {
     expect(registry.pools.owner).toBeInstanceOf(Pool);
   });
 
+  it('falls through to raw secret when JSON lacks a connection field', async () => {
+    const getSecretString = vi.fn(async () => JSON.stringify({ username: 'owner' }));
+    const registry = new StynxPoolRegistry(
+      {
+        connections: {
+          owner: { secretId: 'owner-secret' },
+          app: { connectionString: 'postgresql://app@localhost/db', max: 11 },
+          reader: { connectionString: 'postgresql://reader@localhost/db', max: 12 },
+        },
+      } as never,
+      { getSecretString } as never,
+    );
+    registries.push(registry);
+
+    await registry.onModuleInit();
+
+    expect(registry.pools.owner).toBeInstanceOf(Pool);
+    expect(registry.pools.app.options.max).toBe(11);
+    expect(registry.pools.reader.options.max).toBe(12);
+    expect(() => registry.pools.owner.emit('error', new Error('idle owner error'))).not.toThrow();
+  });
+
   it('falls through to raw secret when JSON parse fails', async () => {
-    const getSecretString = jest.fn(async () => 'postgresql://raw@localhost/db');
+    const getSecretString = vi.fn(async () => 'postgresql://raw@localhost/db');
     const registry = new StynxPoolRegistry(
       {
         connections: {
@@ -192,7 +222,7 @@ describe('StynxPoolRegistry', () => {
           reader: { connectionString: 'postgresql://reader@localhost/db' },
         },
       } as never,
-      { getSecretString: jest.fn() } as never,
+      { getSecretString: vi.fn() } as never,
     );
     registries.push(registry);
     await expect(registry.onModuleInit()).rejects.toThrow(

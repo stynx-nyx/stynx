@@ -65,7 +65,6 @@ const FIXTURE_MIGRATIONS = [
 ];
 
 describe('@stynx/testing', () => {
-  jest.setTimeout(240_000);
 
   it('creates an isolated app, seeds fixtures, and exercises archive-aware matchers', async () => {
     const testApp = await createTestApp({

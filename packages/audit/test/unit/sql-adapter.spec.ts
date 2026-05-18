@@ -2,7 +2,7 @@ import { AuditSqlReader, AuditSqlSink } from '../../src/sql-adapter';
 
 function makeExecutor(responses: unknown[] = []) {
   let i = 0;
-  const query = jest.fn(async () => responses[i++] ?? { rows: [] });
+  const query = vi.fn(async () => responses[i++] ?? { rows: [] });
   return { query };
 }
 
@@ -263,7 +263,7 @@ describe('AuditSqlReader.list', () => {
 
     it('accepts array-shaped executor results (no .rows wrapper)', async () => {
       const executor = {
-        query: jest.fn(async () => [
+        query: vi.fn(async () => [
           {
             occurred_at: '2026',
             table_schema: 's',

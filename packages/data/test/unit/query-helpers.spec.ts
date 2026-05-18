@@ -3,6 +3,7 @@ import { pgSchema, text, uuid } from 'drizzle-orm/pg-core';
 import type { PoolClient } from 'pg';
 import { documentVersions, documents } from '../../src/schema/storage';
 import { ArchiveSelectQuery, createTransactionSelectRoot } from '../../src/query-helpers';
+import type { Mock } from 'vitest';
 
 describe('query helpers', () => {
   const localSchema = pgSchema('local');
@@ -17,7 +18,7 @@ describe('query helpers', () => {
   ) => ({
     config,
     dialect: {
-      sqlToQuery: jest.fn(() => {
+      sqlToQuery: vi.fn(() => {
         const next = compiled.shift();
         if (!next) {
           throw new Error('unexpected SQL compilation');
@@ -49,7 +50,7 @@ describe('query helpers', () => {
     });
 
     const compiled = new ArchiveSelectQuery(
-      { query: jest.fn() } as unknown as PoolClient,
+      { query: vi.fn() } as unknown as PoolClient,
       builder as never,
       documents,
       'withDeleted',
@@ -72,7 +73,7 @@ describe('query helpers', () => {
     const builder = createBuilder([], {});
 
     const compiled = new ArchiveSelectQuery(
-      { query: jest.fn() } as unknown as PoolClient,
+      { query: vi.fn() } as unknown as PoolClient,
       builder as never,
       auditEvent,
       'onlyDeleted',
@@ -102,7 +103,7 @@ describe('query helpers', () => {
     });
 
     const compiled = new ArchiveSelectQuery(
-      { query: jest.fn() } as unknown as PoolClient,
+      { query: vi.fn() } as unknown as PoolClient,
       builder as never,
       documents,
       'onlyDeleted',
@@ -120,9 +121,48 @@ describe('query helpers', () => {
     expect(compiled.sql).not.toContain('Stryker was here');
   });
 
+  it('builds onlyDeleted predicates for non-tenant tables without a tenant guard', () => {
+    const builder = createBuilder([
+      {
+        sql: `"local"."audit_event"."message" = $1`,
+        params: ['deleted'],
+      },
+    ], {
+      where: sql`where-clause`,
+    });
+
+    const compiled = new ArchiveSelectQuery(
+      { query: vi.fn() } as unknown as PoolClient,
+      builder as never,
+      auditEvent,
+      'onlyDeleted',
+    ).toSQL();
+
+    expect(compiled.params).toEqual(['deleted']);
+    expect(compiled.sql).toContain('where "archive"."local_audit_event"."message" = $1');
+    expect(compiled.sql).not.toContain('app.tenant_id');
+  });
+
+  it('builds withDeleted SQL without predicates, ordering, limits, or tenant guard', () => {
+    const builder = createBuilder([], {});
+
+    const compiled = new ArchiveSelectQuery(
+      { query: vi.fn() } as unknown as PoolClient,
+      builder as never,
+      auditEvent,
+      'withDeleted',
+    ).toSQL();
+
+    expect(compiled.params).toEqual([]);
+    expect(compiled.sql).not.toContain('where');
+    expect(compiled.sql).not.toContain('order by');
+    expect(compiled.sql).not.toContain('limit');
+    expect(compiled.sql).not.toContain('offset');
+  });
+
   it('maps archived rows and keeps promise helpers delegated to execute', async () => {
     const client = {
-      query: jest.fn(async () => ({
+      query: vi.fn(async () => ({
         rows: [
           {
             id: 'doc-1',
@@ -155,14 +195,16 @@ describe('query helpers', () => {
           },
         ],
       })),
-    } as unknown as PoolClient & { query: jest.Mock };
+    } as unknown as PoolClient & { query: Mock };
     const builder = createBuilder([], {});
     const query = new ArchiveSelectQuery(client, builder as never, documents, 'withDeleted');
-    const finallyCallback = jest.fn();
+    const finallyCallback = vi.fn();
 
     await expect(query.then((rows) => rows.map((row) => row.archiveId))).resolves.toEqual([42n, null, null]);
     await expect(query.catch(() => [])).resolves.toHaveLength(3);
+    await expect(query.catch(null)).resolves.toHaveLength(3);
     await expect(query.finally(finallyCallback)).resolves.toHaveLength(3);
+    await expect(query.finally(null)).resolves.toHaveLength(3);
     expect(finallyCallback).toHaveBeenCalledTimes(1);
     expect(client.query).toHaveBeenCalledWith(expect.stringContaining('select * from'), []);
   });
@@ -170,7 +212,7 @@ describe('query helpers', () => {
   it('delegates rejected executions through then and catch callbacks', async () => {
     const failure = new Error('archive query failed');
     const client = {
-      query: jest.fn(async () => {
+      query: vi.fn(async () => {
         throw failure;
       }),
     } as unknown as PoolClient;
@@ -181,17 +223,17 @@ describe('query helpers', () => {
   });
 
   it('proxies soft-deletable select builders and leaves live-only builders unchanged', () => {
-    const returningTarget = jest.fn();
-    const returningOther = jest.fn(() => 'other');
+    const returningTarget = vi.fn();
+    const returningOther = vi.fn(() => 'other');
     const softBuilder = {
       config: {},
       dialect: {
-        sqlToQuery: jest.fn(() => ({ sql: '', params: [] })),
+        sqlToQuery: vi.fn(() => ({ sql: '', params: [] })),
       },
-      from: jest.fn(function from() {
+      from: vi.fn(function from() {
         return this;
       }),
-      where: jest.fn(function where() {
+      where: vi.fn(function where() {
         return this;
       }),
       returningTarget,
@@ -200,11 +242,11 @@ describe('query helpers', () => {
     };
     returningTarget.mockImplementation(() => softBuilder);
     const liveBuilder = {
-      from: jest.fn(() => ({ marker: 'live-builder' })),
+      from: vi.fn(() => ({ marker: 'live-builder' })),
     };
     const root = createTransactionSelectRoot(
-      { query: jest.fn() } as unknown as PoolClient,
-      jest.fn()
+      { query: vi.fn() } as unknown as PoolClient,
+      vi.fn()
         .mockReturnValueOnce(softBuilder)
         .mockReturnValueOnce(liveBuilder) as never,
     );

@@ -2,12 +2,12 @@ import { MembershipAccessCache } from '../../src/membership-cache';
 
 describe('MembershipAccessCache', () => {
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.clearAllMocks();
   });
 
   it('expires entries after the configured ttl', () => {
     const now = 1_000;
-    const dateNow = jest.spyOn(Date, 'now').mockReturnValue(now);
+    const dateNow = vi.spyOn(Date, 'now').mockReturnValue(now);
     const cache = new MembershipAccessCache(5, 10);
 
     cache.set('user-1', 'tenant-1', true);
@@ -28,7 +28,7 @@ describe('MembershipAccessCache', () => {
 
   it('treats entries as expired exactly at the ttl boundary', () => {
     const now = 1_000;
-    const dateNow = jest.spyOn(Date, 'now').mockReturnValue(now);
+    const dateNow = vi.spyOn(Date, 'now').mockReturnValue(now);
     const cache = new MembershipAccessCache(25, 10);
 
     cache.set('user-1', 'tenant-1', true);

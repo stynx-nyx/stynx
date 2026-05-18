@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { ModuleRef } from '@nestjs/core';
 import { StynxAuditService } from '../../src/audit.service';
+import type { Mock } from 'vitest';
 
 interface TestAuditChainRow {
   event_id: string;
@@ -65,15 +66,15 @@ function buildRows(): TestAuditChainRow[] {
 
 function createService(rows: TestAuditChainRow[]): StynxAuditService {
   const database = {
-    withSystemContext: jest.fn((_reason: string, fn: () => unknown) => fn()),
-    tx: jest.fn((fn: (trx: { query: jest.Mock }) => unknown) =>
+    withSystemContext: vi.fn((_reason: string, fn: () => unknown) => fn()),
+    tx: vi.fn((fn: (trx: { query: Mock }) => unknown) =>
       fn({
-        query: jest.fn(async () => ({ rows })),
+        query: vi.fn(async () => ({ rows })),
       }),
     ),
   };
   const moduleRef = {
-    get: jest.fn(() => database),
+    get: vi.fn(() => database),
   } as unknown as ModuleRef;
   return new StynxAuditService(
     moduleRef,

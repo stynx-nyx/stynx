@@ -3,7 +3,7 @@ import { createStrykerConfig } from '../../tools/stryker/base.mjs';
 export default createStrykerConfig({
   packageName: '@stynx/audit',
   threshold: 60,
-  jestConfig: './jest.stryker.config.cjs',
+  vitestConfig: './vitest.stryker.config.ts',
   mutate: [
     'src/audit.service.ts',
     'src/retention.ts',

@@ -26,13 +26,13 @@ function tenantRow(overrides: Record<string, unknown> = {}) {
 
 describe('TenancyService', () => {
   function createService() {
-    const txQuery = jest.fn();
+    const txQuery = vi.fn();
     const database = {
-      withSystemContext: jest.fn(async (_reason: string, fn: () => Promise<unknown>) => fn()),
-      tx: jest.fn(async (fn: (trx: { query: typeof txQuery }) => Promise<unknown>) => fn({ query: txQuery })),
+      withSystemContext: vi.fn(async (_reason: string, fn: () => Promise<unknown>) => fn()),
+      tx: vi.fn(async (fn: (trx: { query: typeof txQuery }) => Promise<unknown>) => fn({ query: txQuery })),
     };
     const moduleRef = {
-      get: jest.fn((token: unknown) => {
+      get: vi.fn((token: unknown) => {
         if (typeof token === 'function' && token.name === 'Database') {
           return database;
         }
@@ -40,19 +40,19 @@ describe('TenancyService', () => {
       }),
     } as unknown as ModuleRef;
     const membershipCache = {
-      invalidateTenant: jest.fn(),
+      invalidateTenant: vi.fn(),
     };
     const prefixProvisioner = {
-      ensurePrefix: jest.fn(),
+      ensurePrefix: vi.fn(),
     };
     const inviteSender = {
-      sendOwnerInvite: jest.fn(),
+      sendOwnerInvite: vi.fn(),
     };
     const archiveExporter = {
-      exportPlaceholder: jest.fn().mockResolvedValue('exports/tenant.json'),
+      exportPlaceholder: vi.fn().mockResolvedValue('exports/tenant.json'),
     };
     const purgeDelegate = {
-      purgeTenant: jest.fn(),
+      purgeTenant: vi.fn(),
     };
 
     const service = new TenancyService(
@@ -328,7 +328,7 @@ describe('TenancyService', () => {
   });
 
   it('uses default tenant side-effect adapters when none are provided', async () => {
-    const txQuery = jest.fn((sql: string) => {
+    const txQuery = vi.fn((sql: string) => {
       if (sql.includes('where tenant.id = $1::uuid limit 1')) {
         return Promise.resolve({ rows: [tenantRow({ archived_at: '2026-04-25T00:00:00.000Z' })] });
       }
@@ -338,13 +338,13 @@ describe('TenancyService', () => {
       throw new Error(`Unexpected SQL: ${sql}`);
     });
     const database = {
-      withSystemContext: jest.fn(async (_reason: string, fn: () => Promise<unknown>) => fn()),
-      tx: jest.fn(async (fn: (trx: { query: typeof txQuery }) => Promise<unknown>) => fn({ query: txQuery })),
+      withSystemContext: vi.fn(async (_reason: string, fn: () => Promise<unknown>) => fn()),
+      tx: vi.fn(async (fn: (trx: { query: typeof txQuery }) => Promise<unknown>) => fn({ query: txQuery })),
     };
     const moduleRef = {
-      get: jest.fn(() => database),
+      get: vi.fn(() => database),
     } as unknown as ModuleRef;
-    const membershipCache = { invalidateTenant: jest.fn() };
+    const membershipCache = { invalidateTenant: vi.fn() };
     const service = new TenancyService(moduleRef, membershipCache as never);
 
     await expect(service.archiveTenant(TENANT_ID)).resolves.toMatchObject({

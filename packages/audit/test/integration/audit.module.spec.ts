@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { Test } from '@nestjs/testing';
+import { Test, type TestingModule } from '@nestjs/testing';
 import { Client } from 'pg';
 import { generateRequestId, RequestContextMutator } from '@stynx/core';
 import { Database, StynxDataModule } from '@stynx/data';
@@ -7,6 +7,7 @@ import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../
 import { StynxAuditService } from '../../src/audit.service';
 import { StynxAuditModule } from '../../src/audit.module';
 import { findAuditRows } from '../../src/test-helpers';
+
 
 async function bootstrapSchema(client: Client): Promise<void> {
   await client.query('create schema demo');
@@ -46,13 +47,14 @@ async function seedTenant(client: Client, tenantId: string): Promise<void> {
 
 describe('StynxAuditModule integration', () => {
   let database: PostgresTestDatabase;
+  let moduleRef: TestingModule;
   let databaseRef: Database;
   let auditService: StynxAuditService;
   let requestContextMutator: RequestContextMutator;
 
   beforeAll(async () => {
     database = await createPostgresTestDatabase('stynx_audit');
-    const moduleRef = await Test.createTestingModule({
+    moduleRef = await Test.createTestingModule({
       imports: [
         StynxDataModule.forRoot({
           connections: {
@@ -83,7 +85,8 @@ describe('StynxAuditModule integration', () => {
   });
 
   afterAll(async () => {
-    await database.dispose();
+    await moduleRef?.close();
+    await database?.dispose();
   });
 
   async function runWithRequestContext<T>(tenantId: string, actorId: string, fn: () => Promise<T>): Promise<T> {

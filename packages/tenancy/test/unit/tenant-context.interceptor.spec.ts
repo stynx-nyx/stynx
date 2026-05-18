@@ -19,13 +19,13 @@ describe('TenantContextInterceptor', () => {
     cached?: boolean | undefined;
     allowSubdomain?: boolean;
   } = {}) {
-    const txQuery = jest.fn().mockResolvedValue({ rows: [{ allowed: options.allowed ?? true }] });
+    const txQuery = vi.fn().mockResolvedValue({ rows: [{ allowed: options.allowed ?? true }] });
     const database = {
-      withSystemContext: jest.fn(async (_reason: string, fn: () => Promise<unknown>) => fn()),
-      tx: jest.fn(async (fn: (trx: { query: typeof txQuery }) => Promise<unknown>) => fn({ query: txQuery })),
+      withSystemContext: vi.fn(async (_reason: string, fn: () => Promise<unknown>) => fn()),
+      tx: vi.fn(async (fn: (trx: { query: typeof txQuery }) => Promise<unknown>) => fn({ query: txQuery })),
     };
     const moduleRef = {
-      get: jest.fn((token: unknown) => {
+      get: vi.fn((token: unknown) => {
         if (typeof token === 'function' && token.name === 'Database') {
           return database;
         }
@@ -33,14 +33,14 @@ describe('TenantContextInterceptor', () => {
       }),
     } as unknown as ModuleRef;
     const requestContext = {
-      snapshot: jest.fn(() => ({ requestId: 'req-1', startedAt: new Date() })),
+      snapshot: vi.fn(() => ({ requestId: 'req-1', startedAt: new Date() })),
     } as unknown as RequestContext;
     const requestContextMutator = {
-      runWithRequestContext: jest.fn((_next, fn: () => unknown) => fn()),
+      runWithRequestContext: vi.fn((_next, fn: () => unknown) => fn()),
     } as unknown as RequestContextMutator;
     const membershipCache = {
-      get: jest.fn().mockReturnValue(options.cached),
-      set: jest.fn(),
+      get: vi.fn().mockReturnValue(options.cached),
+      set: vi.fn(),
     } as unknown as MembershipAccessCache;
     const interceptor = new TenantContextInterceptor(
       moduleRef,
@@ -61,7 +61,7 @@ describe('TenantContextInterceptor', () => {
 
   it('skips optional paths without hitting the database', async () => {
     const { interceptor, txQuery } = createInterceptor();
-    const next: CallHandler = { handle: jest.fn(() => ({ subscribe: jest.fn() })) };
+    const next: CallHandler = { handle: vi.fn(() => ({ subscribe: vi.fn() })) };
 
     interceptor.intercept(createExecutionContext({ originalUrl: '/healthz', headers: {} }), next);
 
@@ -175,12 +175,12 @@ describe('TenantContextInterceptor', () => {
   });
 
   it('fails explicitly when membership validation has no database provider', async () => {
-    const moduleRef = { get: jest.fn(() => undefined) } as unknown as ModuleRef;
+    const moduleRef = { get: vi.fn(() => undefined) } as unknown as ModuleRef;
     const interceptor = new TenantContextInterceptor(
       moduleRef,
-      { snapshot: jest.fn(() => ({ requestId: 'req-1', startedAt: new Date() })) } as unknown as RequestContext,
-      { runWithRequestContext: jest.fn((_next, fn: () => unknown) => fn()) } as unknown as RequestContextMutator,
-      { get: jest.fn(), set: jest.fn() } as unknown as MembershipAccessCache,
+      { snapshot: vi.fn(() => ({ requestId: 'req-1', startedAt: new Date() })) } as unknown as RequestContext,
+      { runWithRequestContext: vi.fn((_next, fn: () => unknown) => fn()) } as unknown as RequestContextMutator,
+      { get: vi.fn(), set: vi.fn() } as unknown as MembershipAccessCache,
       {
         headerName: 'X-Tenant-Id',
         allowSubdomain: false,

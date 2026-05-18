@@ -47,7 +47,6 @@ async function seedTenantAndUser(
 }
 
 describe('StynxStorageModule integration', () => {
-  jest.setTimeout(180_000);
 
   const originalAwsAccessKeyId = process.env.AWS_ACCESS_KEY_ID;
   const originalAwsSecretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;

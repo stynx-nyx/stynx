@@ -8,7 +8,6 @@ import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../
 import { StynxTenancyModule } from '../../src/tenancy.module';
 import { TenancyService } from '../../src/tenancy.service';
 
-jest.setTimeout(30000);
 
 interface TestRequest {
   headers: Record<string, unknown>;

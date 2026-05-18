@@ -5,11 +5,11 @@
 // (each spec file gets its own fresh DB via createDemoBookmarkFixture).
 
 import { NotFoundException } from '@nestjs/common';
+import { RequestContext } from '@stynx/core';
 import { BookmarkService } from '../src/demo-bookmark/services/bookmark.service';
 import { BookmarkTagService } from '../src/demo-bookmark/services/bookmark-tag.service';
 import { createDemoBookmarkFixture, type DemoBookmarkFixture } from './support/postgres-fixture';
 
-jest.setTimeout(120_000);
 
 describe('BookmarkTagService (per-task-DB integration)', () => {
   let fixture: DemoBookmarkFixture;
@@ -24,10 +24,7 @@ describe('BookmarkTagService (per-task-DB integration)', () => {
 
   it('instantiates with Database + RequestContext dependencies', async () => {
     await fixture.runAs(fixture.tenantA, fixture.userA, async (db) => {
-      const ctx = fixture.module.get<import('@stynx/core').RequestContext>(
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        require('@stynx/core').RequestContext,
-      );
+      const ctx = fixture.module.get<RequestContext>(RequestContext);
       const svc = new BookmarkTagService(db, ctx);
       expect(svc).toBeDefined();
     });
@@ -36,10 +33,7 @@ describe('BookmarkTagService (per-task-DB integration)', () => {
   it('findAll returns tag rows joined via parent tenant scope (F-20)', async () => {
     // Seed: tenant A has 1 bookmark with 2 tags; tenant B has 1 bookmark with 1 tag.
     const aBookmark = await fixture.runAs(fixture.tenantA, fixture.userA, async (db) => {
-      const ctx = fixture.module.get<import('@stynx/core').RequestContext>(
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        require('@stynx/core').RequestContext,
-      );
+      const ctx = fixture.module.get<RequestContext>(RequestContext);
       const bookmarkSvc = new BookmarkService(db, ctx);
       const tagSvc = new BookmarkTagService(db, ctx);
       const bm = await bookmarkSvc.create({ url: 'https://tag-a.example/', title: 'A', notes: null });
@@ -49,10 +43,7 @@ describe('BookmarkTagService (per-task-DB integration)', () => {
       return id;
     });
     await fixture.runAs(fixture.tenantB, fixture.userB, async (db) => {
-      const ctx = fixture.module.get<import('@stynx/core').RequestContext>(
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        require('@stynx/core').RequestContext,
-      );
+      const ctx = fixture.module.get<RequestContext>(RequestContext);
       const bookmarkSvc = new BookmarkService(db, ctx);
       const tagSvc = new BookmarkTagService(db, ctx);
       const bm = await bookmarkSvc.create({ url: 'https://tag-b.example/', title: 'B', notes: null });
@@ -61,10 +52,7 @@ describe('BookmarkTagService (per-task-DB integration)', () => {
 
     // Tenant A's findAll (no filter) must see only A's 2 tags, never B's 'b-only'.
     const aTags = await fixture.runAs(fixture.tenantA, fixture.userA, async (db) => {
-      const ctx = fixture.module.get<import('@stynx/core').RequestContext>(
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        require('@stynx/core').RequestContext,
-      );
+      const ctx = fixture.module.get<RequestContext>(RequestContext);
       const tagSvc = new BookmarkTagService(db, ctx);
       return tagSvc.findAll();
     });
@@ -74,10 +62,7 @@ describe('BookmarkTagService (per-task-DB integration)', () => {
 
     // Filter by aBookmark id still returns those 2 tags.
     const aFiltered = await fixture.runAs(fixture.tenantA, fixture.userA, async (db) => {
-      const ctx = fixture.module.get<import('@stynx/core').RequestContext>(
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        require('@stynx/core').RequestContext,
-      );
+      const ctx = fixture.module.get<RequestContext>(RequestContext);
       const tagSvc = new BookmarkTagService(db, ctx);
       return tagSvc.findAll(aBookmark);
     });
@@ -87,19 +72,13 @@ describe('BookmarkTagService (per-task-DB integration)', () => {
   it('create rejects cross-tenant bookmark_id (F-20)', async () => {
     // Tenant B owns a bookmark; tenant A tries to tag it — must throw NotFoundException.
     const bBookmark = await fixture.runAs(fixture.tenantB, fixture.userB, async (db) => {
-      const ctx = fixture.module.get<import('@stynx/core').RequestContext>(
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        require('@stynx/core').RequestContext,
-      );
+      const ctx = fixture.module.get<RequestContext>(RequestContext);
       const svc = new BookmarkService(db, ctx);
       const bm = await svc.create({ url: 'https://cross-tag.example/', title: null, notes: null });
       return (bm as { id: string }).id;
     });
     await fixture.runAs(fixture.tenantA, fixture.userA, async (db) => {
-      const ctx = fixture.module.get<import('@stynx/core').RequestContext>(
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        require('@stynx/core').RequestContext,
-      );
+      const ctx = fixture.module.get<RequestContext>(RequestContext);
       const tagSvc = new BookmarkTagService(db, ctx);
       await expect(tagSvc.create({ bookmark_id: bBookmark, tag: 'hijack' })).rejects.toBeInstanceOf(
         NotFoundException,
@@ -110,10 +89,7 @@ describe('BookmarkTagService (per-task-DB integration)', () => {
   it('remove enforces tenant scope before delete (F-20)', async () => {
     // Tenant B creates a bookmark + tag; tenant A tries to remove that tag — must throw.
     const ctxB = await fixture.runAs(fixture.tenantB, fixture.userB, async (db) => {
-      const ctx = fixture.module.get<import('@stynx/core').RequestContext>(
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        require('@stynx/core').RequestContext,
-      );
+      const ctx = fixture.module.get<RequestContext>(RequestContext);
       const bookmarkSvc = new BookmarkService(db, ctx);
       const tagSvc = new BookmarkTagService(db, ctx);
       const bm = await bookmarkSvc.create({ url: 'https://remove-scope.example/', title: null, notes: null });
@@ -123,20 +99,14 @@ describe('BookmarkTagService (per-task-DB integration)', () => {
     });
 
     await fixture.runAs(fixture.tenantA, fixture.userA, async (db) => {
-      const ctx = fixture.module.get<import('@stynx/core').RequestContext>(
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        require('@stynx/core').RequestContext,
-      );
+      const ctx = fixture.module.get<RequestContext>(RequestContext);
       const tagSvc = new BookmarkTagService(db, ctx);
       await expect(tagSvc.remove(ctxB, 'protected')).rejects.toBeInstanceOf(NotFoundException);
     });
 
     // Confirm tenant B's tag is still present.
     const stillThere = await fixture.runAs(fixture.tenantB, fixture.userB, async (db) => {
-      const ctx = fixture.module.get<import('@stynx/core').RequestContext>(
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        require('@stynx/core').RequestContext,
-      );
+      const ctx = fixture.module.get<RequestContext>(RequestContext);
       const tagSvc = new BookmarkTagService(db, ctx);
       return tagSvc.findAll(ctxB);
     });

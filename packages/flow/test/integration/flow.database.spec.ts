@@ -518,7 +518,6 @@ async function seedAutoSignalRuntime(client: Client): Promise<{
 }
 
 describe('Flow database and runtime integration', () => {
-  jest.setTimeout(180_000);
 
   let testDatabase: PostgresTestDatabase;
   let moduleRef: TestingModule;

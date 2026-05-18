@@ -23,7 +23,7 @@
 
 import { spawnSync } from 'node:child_process';
 
-const PROBE = process.env.STYNX_PERF_PROBE ?? 'pnpm --filter @stynx/data jest --silent --testPathPattern=unit';
+const PROBE = process.env.STYNX_PERF_PROBE ?? 'pnpm --filter @stynx/data exec vitest run --silent --dir test/unit';
 const SAMPLES = Number(process.env.STYNX_PERF_SAMPLES ?? '5');
 const PROBE_ARGS = PROBE.split(/\s+/);
 

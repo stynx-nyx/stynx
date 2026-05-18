@@ -5,7 +5,7 @@ import {
 
 describe('AuditSqlSink parity', () => {
   it('writes using audit.write function mode', async () => {
-    const query = jest.fn(
+    const query = vi.fn(
       async (_sql: string, _params?: ReadonlyArray<unknown>) => ({ rows: [] }),
     );
     const sink = new AuditSqlSink(
@@ -44,7 +44,7 @@ describe('AuditSqlSink parity', () => {
   });
 
   it('writes using table sink mode', async () => {
-    const query = jest.fn(
+    const query = vi.fn(
       async (_sql: string, _params?: ReadonlyArray<unknown>) => ({ rows: [] }),
     );
     const sink = new AuditSqlSink(
@@ -83,7 +83,7 @@ describe('AuditSqlSink parity', () => {
 
 describe('AuditSqlReader parity', () => {
   it('maps stynx_events shape', async () => {
-    const query = jest.fn(async (_sql: string, _params?: ReadonlyArray<unknown>) => ({
+    const query = vi.fn(async (_sql: string, _params?: ReadonlyArray<unknown>) => ({
       rows: [
         {
           occurred_at: '2026-04-24T00:00:00.000Z',
@@ -126,7 +126,7 @@ describe('AuditSqlReader parity', () => {
   });
 
   it('maps porm_logged_actions shape', async () => {
-    const query = jest.fn(async (_sql: string, _params?: ReadonlyArray<unknown>) => ({
+    const query = vi.fn(async (_sql: string, _params?: ReadonlyArray<unknown>) => ({
       rows: [
         {
           occurred_at: '2026-04-24T00:00:00.000Z',

@@ -25,6 +25,14 @@ describe('@stynx/cli', () => {
     expect(readFileSync(resolve(root, 'demo-app/migrations/0001_init.sql'), 'utf8')).toContain('create_soft_deletable_table');
   });
 
+  it('scaffolds without Angular files when angular=false', () => {
+    const root = mkdtempSync(resolve(tmpdir(), 'stynx-cli-init-api-'));
+    scaffoldApp(resolve(root, 'api-app'), 'api-app');
+
+    expect(readFileSync(resolve(root, 'api-app/package.json'), 'utf8')).toContain('"name": "api-app"');
+    expect(() => readFileSync(resolve(root, 'api-app/angular.json'), 'utf8')).toThrow();
+  });
+
   it('runs doctor against a fixture directory', () => {
     const root = mkdtempSync(resolve(tmpdir(), 'stynx-cli-doctor-'));
     mkdirSync(resolve(root, 'scripts'), { recursive: true });
@@ -34,11 +42,35 @@ describe('@stynx/cli', () => {
     expect(result.stdout).toContain('[doctor][ok]');
   });
 
+  it('reports doctor spawn failures with fallback exit code and empty output strings', () => {
+    const root = mkdtempSync(resolve(tmpdir(), 'stynx-cli-doctor-missing-'));
+    const result = runDoctor(root);
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stdout).toBe('');
+    expect(typeof result.stderr).toBe('string');
+  });
+
   it('generates ROPA markdown from privacy yaml', () => {
     const root = mkdtempSync(resolve(tmpdir(), 'stynx-cli-ropa-'));
     mkdirSync(resolve(root, 'app/privacy'), { recursive: true });
     writeFileSync(resolve(root, 'app/privacy/pii-map.yaml'), 'rules:\n  - tableSchema: auth\n    tableName: users\n    columnName: email\n    strategy: nullify\n    subjectColumn: id\n', 'utf8');
     expect(generateRopaFromApp(root)).toContain('auth.users');
+  });
+
+  it('generates empty and retention-aware ROPA markdown', () => {
+    const missing = mkdtempSync(resolve(tmpdir(), 'stynx-cli-ropa-missing-'));
+    expect(generateRopaFromApp(missing)).toContain('| Table | Column | Strategy |');
+
+    const root = mkdtempSync(resolve(tmpdir(), 'stynx-cli-ropa-retention-'));
+    mkdirSync(resolve(root, 'app/privacy'), { recursive: true });
+    writeFileSync(
+      resolve(root, 'app/privacy/pii-map.yaml'),
+      'rules:\n  - tableSchema: audit\n    tableName: events\n    columnName: payload\n    strategy: redact\n    retention:\n      timestampColumn: occurred_at\n      olderThanDays: 365\n    notes: redact payload fields\n',
+      'utf8',
+    );
+    const markdown = generateRopaFromApp(root);
+    expect(markdown).toContain('both 365d via occurred_at');
+    expect(markdown).toContain('redact payload fields');
   });
 
   it('scans and applies the neutral adoption fixture with richer outputs', () => {
@@ -130,5 +162,49 @@ describe('@stynx/cli', () => {
       ],
     });
     expect(calls[1]?.values).toEqual(['01990000-0000-7000-8000-000000000001', 50]);
+  });
+
+  it('verifies one audit tenant, clamps invalid limits, and always closes the client', async () => {
+    const calls: Array<{ sql: string; values?: unknown[] }> = [];
+    let ended = false;
+    const client = {
+      async connect(): Promise<void> {},
+      async end(): Promise<void> {
+        ended = true;
+      },
+      async query<T>(sql: string, values?: unknown[]): Promise<{ rows: T[] }> {
+        calls.push({ sql, values });
+        return { rows: [{ event_id: 'event-1', chain_valid: true }] as T[] };
+      },
+    };
+
+    await expect(verifyAuditChain('postgres://fixture', {
+      tenantId: '01990000-0000-7000-8000-000000000001',
+      limit: -1,
+      clientFactory: () => client,
+    })).resolves.toMatchObject({
+      valid: true,
+      totalChecked: 1,
+    });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.values).toEqual(['01990000-0000-7000-8000-000000000001', 1000]);
+    expect(ended).toBe(true);
+  });
+
+  it('clamps audit limits above the maximum', async () => {
+    const client = {
+      async connect(): Promise<void> {},
+      async end(): Promise<void> {},
+      async query<T>(_sql: string, values?: unknown[]): Promise<{ rows: T[] }> {
+        expect(values?.[1]).toBe(10_000);
+        return { rows: [] };
+      },
+    };
+
+    await expect(verifyAuditChain('postgres://fixture', {
+      tenantId: '01990000-0000-7000-8000-000000000001',
+      limit: 50_001.9,
+      clientFactory: () => client,
+    })).resolves.toMatchObject({ valid: true, totalChecked: 0 });
   });
 });

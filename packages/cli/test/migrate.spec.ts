@@ -2,6 +2,7 @@ import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import {
+  listMigrations,
   migrateDown,
   migrateRedo,
   migrateUp,
@@ -15,6 +16,7 @@ class FakeMigrationClient implements MigrationClient {
   readonly journal: Array<{ id: string; direction: string }> = [];
   readonly executedSql: string[] = [];
   connected = false;
+  failOnSql: RegExp | null = null;
 
   async connect(): Promise<void> {
     this.connected = true;
@@ -26,6 +28,9 @@ class FakeMigrationClient implements MigrationClient {
 
   async query(sql: string, values: unknown[] = []): Promise<{ rows: unknown[]; rowCount?: number | null }> {
     this.executedSql.push(sql.trim());
+    if (this.failOnSql?.test(sql)) {
+      throw new Error('query failed');
+    }
 
     if (/select id from core\.schema_migrations order by id/u.test(sql)) {
       return { rows: [...this.applied.keys()].sort().map((id) => ({ id })) };
@@ -125,5 +130,66 @@ describe('migrate command surface', () => {
       down: ['0001_first.sql'],
       up: ['0001_first.sql'],
     });
+  });
+
+  it('lists migrations and supports dry-run up/down/redo without applying changes', async () => {
+    const migrationDir = createFixtureDir();
+    const fake = new FakeMigrationClient();
+    fake.applied.set('0001_first.sql', 'checksum-1');
+
+    expect(listMigrations(process.cwd(), { migrationDir }).map((spec) => spec.id)).toEqual([
+      '0001_first.sql',
+      '0002_second.sql',
+    ]);
+    await expect(migrateUp(process.cwd(), 'postgresql://example', true, {
+      migrationDir,
+      clientFactory: clientFactoryFor(fake),
+    })).resolves.toEqual(['0002_second.sql']);
+    await expect(migrateDown(process.cwd(), 'postgresql://example', 1, true, {
+      migrationDir,
+      clientFactory: clientFactoryFor(fake),
+    })).resolves.toEqual(['0001_first.sql']);
+    await expect(migrateRedo(process.cwd(), 'postgresql://example', true, {
+      migrationDir,
+      clientFactory: clientFactoryFor(fake),
+    })).resolves.toEqual({
+      down: ['0001_first.sql'],
+      up: ['0001_first.sql'],
+    });
+    expect(fake.journal).toEqual([]);
+  });
+
+  it('rejects rollback of migrations without a down pair', async () => {
+    const root = mkdtempSync(resolve(tmpdir(), 'stynx-cli-migrate-nodown-'));
+    const dir = resolve(root, 'migrations');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(resolve(dir, '0001_missing_down.sql'), 'select 1;', 'utf8');
+    const fake = new FakeMigrationClient();
+    fake.applied.set('0001_missing_down.sql', 'checksum-1');
+
+    await expect(migrateDown(process.cwd(), 'postgresql://example', 1, false, {
+      migrationDir: dir,
+      clientFactory: clientFactoryFor(fake),
+    })).rejects.toThrow('not rollbackable');
+  });
+
+  it('rolls back SQL transactions when migration up or down execution fails', async () => {
+    const migrationDir = createFixtureDir();
+    const upFailure = new FakeMigrationClient();
+    upFailure.failOnSql = /select 1;/u;
+    await expect(migrateUp(process.cwd(), 'postgresql://example', false, {
+      migrationDir,
+      clientFactory: clientFactoryFor(upFailure),
+    })).rejects.toThrow('query failed');
+    expect(upFailure.executedSql).toContain('rollback');
+
+    const downFailure = new FakeMigrationClient();
+    downFailure.applied.set('0001_first.sql', 'checksum-1');
+    downFailure.failOnSql = /select 11;/u;
+    await expect(migrateDown(process.cwd(), 'postgresql://example', 1, false, {
+      migrationDir,
+      clientFactory: clientFactoryFor(downFailure),
+    })).rejects.toThrow('query failed');
+    expect(downFailure.executedSql).toContain('rollback');
   });
 });

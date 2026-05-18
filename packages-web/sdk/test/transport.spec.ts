@@ -1,5 +1,12 @@
 import type { AuthProvider } from '../src/auth-provider';
-import { ForbiddenError, UnauthorizedError, ValidationError } from '../src/errors';
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  RateLimitError,
+  UnauthorizedError,
+  ValidationError,
+} from '../src/errors';
 import type { FetchLike, HttpHeadersLike, HttpRequestInitLike, HttpResponseLike } from '../src/http';
 import { StynxSdkClient } from '../src/client';
 import type { TenantProvider } from '../src/tenant-provider';
@@ -59,6 +66,72 @@ describe('@stynx-web/sdk transport', () => {
       'x-tenant-id': 'tenant-1',
       'x-stynx-source': 'sdk-test',
     });
+  });
+
+  it('preserves caller headers and omits empty query and tenant values', async () => {
+    const calls: Array<{ url: string; init?: HttpRequestInitLike }> = [];
+    const client = new StynxSdkClient({
+      baseUrl: 'https://api.example.test///',
+      fetchFn: async (url, init) => {
+        calls.push({ url, init });
+        return response(200, 'plain ok', { 'content-type': 'text/plain' });
+      },
+      authProvider: {
+        getAccessToken: async () => 'provider-token',
+        refresh: async () => null,
+      },
+      tenantProvider: {
+        getTenantId: async () => 'tenant-provider',
+      },
+    });
+
+    await expect(client.get('/health', {
+      tenantId: null,
+      query: { keep: 'yes', skipNull: null, skipUndefined: undefined },
+      headers: {
+        authorization: 'Bearer caller-token',
+        'X-Tenant-Id': 'tenant-caller',
+      },
+    })).resolves.toBe('plain ok');
+
+    expect(calls[0]?.url).toBe('https://api.example.test/health?keep=yes');
+    expect(calls[0]?.init?.headers).toMatchObject({
+      authorization: 'Bearer caller-token',
+      'X-Tenant-Id': 'tenant-caller',
+    });
+  });
+
+  it('omits empty query strings and forwards request signal options', async () => {
+    const calls: Array<{ url: string; init?: HttpRequestInitLike }> = [];
+    const signal = new AbortController().signal;
+    const client = new StynxSdkClient({
+      baseUrl: 'https://api.example.test',
+      fetchFn: async (url, init) => {
+        calls.push({ url, init });
+        return response(200, '{"ok":true}', { 'content-type': 'application/json' });
+      },
+    });
+
+    await client.get('/health', {
+      query: { skipNull: null, skipUndefined: undefined },
+      signal,
+    });
+
+    expect(calls[0]?.url).toBe('https://api.example.test/health');
+    expect(calls[0]?.init?.signal).toBe(signal);
+  });
+
+  it('uses client method default options and parses empty or inferred JSON bodies', async () => {
+    const bodies = ['', '[1,2]', '{bad', '{}'];
+    const client = new StynxSdkClient({
+      baseUrl: 'https://api.example.test',
+      fetchFn: async () => response(200, bodies.shift() ?? '{}'),
+    });
+
+    await expect(client.get('/empty')).resolves.toBeUndefined();
+    await expect(client.put('/array', { ok: true })).resolves.toEqual([1, 2]);
+    await expect(client.patch('/invalid-json', { ok: true })).resolves.toBe('{bad');
+    await expect(client.delete('/default-options')).resolves.toEqual({});
   });
 
   it('refreshes once after a 401 and replays the request', async () => {
@@ -136,5 +209,74 @@ describe('@stynx-web/sdk transport', () => {
       }),
     });
     await expect(validationClient.post('/storage', { bad: true })).rejects.toBeInstanceOf(ValidationError);
+  });
+
+  it('preserves content-type headers and surfaces repeated 401 responses after refresh', async () => {
+    const authFailures: unknown[] = [];
+    const calls: Array<{ init?: HttpRequestInitLike }> = [];
+    const authProvider: AuthProvider = {
+      getAccessToken: async () => 'expired-token',
+      refresh: async () => 'fresh-token',
+      onAuthFailure: async (error) => {
+        authFailures.push(error);
+      },
+    };
+    const client = new StynxSdkClient({
+      baseUrl: 'https://api.example.test',
+      fetchFn: async (_url, init) => {
+        calls.push({ init });
+        return response(401, '{"message":"still expired"}', { 'content-type': 'application/json' });
+      },
+      authProvider,
+    });
+
+    await expect(client.post('/secure', { ok: true }, {
+      headers: { 'Content-Type': 'application/vnd.api+json' },
+    })).rejects.toBeInstanceOf(UnauthorizedError);
+
+    expect(calls).toHaveLength(2);
+    expect(calls[1]?.init?.headers?.['Content-Type']).toBe('application/vnd.api+json');
+    expect(authFailures).toHaveLength(0);
+  });
+
+  it('maps remaining status codes and validation code suffixes', async () => {
+    const cases: Array<[number, string, unknown]> = [
+      [404, '{"message":"missing"}', NotFoundError],
+      [409, '{"message":"conflict"}', ConflictError],
+      [429, '{"message":"slow down"}', RateLimitError],
+      [400, '{"message":"bad request"}', ValidationError],
+      [500, '{"code":"CUSTOM_VALIDATION_ERROR"}', ValidationError],
+      [503, '"unavailable"', Error],
+    ];
+
+    for (const [status, body, errorClass] of cases) {
+      const client = new StynxSdkClient({
+        baseUrl: 'https://api.example.test',
+        fetchFn: async () => response(status, body, { 'content-type': 'application/json' }),
+      });
+      await expect(client.get('/error')).rejects.toBeInstanceOf(errorClass as never);
+    }
+  });
+
+  it('maps context payloads and 401 responses without an auth provider', async () => {
+    const contextClient = new StynxSdkClient({
+      baseUrl: 'https://api.example.test',
+      fetchFn: async () => response(409, '{"message":"conflict","context":{"field":"email"}}', {
+        'content-type': 'application/json',
+      }),
+    });
+
+    await expect(contextClient.get('/conflict')).rejects.toMatchObject({
+      context: { field: 'email' },
+    });
+
+    const anonymousClient = new StynxSdkClient({
+      baseUrl: 'https://api.example.test',
+      fetchFn: async () => response(401, '{"message":"login required"}', {
+        'content-type': 'application/json',
+      }),
+    });
+
+    await expect(anonymousClient.get('/secure')).rejects.toBeInstanceOf(UnauthorizedError);
   });
 });

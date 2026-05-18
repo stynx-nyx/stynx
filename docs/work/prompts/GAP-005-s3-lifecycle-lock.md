@@ -234,7 +234,7 @@ pnpm --filter @stynx/storage build && node -e "const m = require('./packages/sto
 In `test/packages/` add `storage-compliance.test.ts`:
 
 ```typescript
-// 1. Instantiate S3Service with a mock S3Client (jest.fn() on send)
+// 1. Instantiate S3Service with a mock S3Client (Vitest.fn() on send)
 // 2. Call presignDownloadForTenant() twice with the same tenantId within a window
 //    of 60 requests — expect no error
 // 3. Call presignDownloadForTenant() 61 times within a window — expect

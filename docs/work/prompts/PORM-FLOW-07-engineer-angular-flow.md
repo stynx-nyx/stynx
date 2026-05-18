@@ -49,7 +49,7 @@ Create package files matching existing Angular packages:
 - `packages-web/angular-flow/package.json`
 - `packages-web/angular-flow/tsconfig.json`
 - `packages-web/angular-flow/tsconfig.spec.json`
-- `packages-web/angular-flow/jest.config.cjs`
+- `packages-web/angular-flow/Vitest.config.cjs`
 - `packages-web/angular-flow/README.md`
 - `packages-web/angular-flow/CHANGELOG.md`
 - `packages-web/angular-flow/LICENSE`

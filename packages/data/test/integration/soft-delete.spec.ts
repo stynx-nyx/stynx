@@ -375,7 +375,6 @@ async function seedCustomerGraph(
 }
 
 describe('Transaction soft delete operations', () => {
-  jest.setTimeout(120_000);
 
   it('dry-run and cascade limits do not mutate state', async () => {
     const testDatabase = await createPostgresTestDatabase('stynx_soft_delete_limits');

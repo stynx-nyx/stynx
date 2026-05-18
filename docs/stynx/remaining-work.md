@@ -41,7 +41,7 @@
 
 - backend/database package `@stynx/flow` with design/runtime services, effect dispatch, resolver expansion, node form-rule gating, aliases, analytics paging/filtering, task privilege checks, and policy evaluation;
 - platform migration `0015_flow_gap_closure.sql`;
-- Angular package `@stynx-web/angular-flow` with real Jest coverage for exports/routes, API facade route families, and component behavior;
+- Angular package `@stynx-web/angular-flow` with real Vitest coverage for exports/routes, API facade route families, and component behavior;
 - reference API/web package consumption and release changeset coverage.
 
 10. Closed the next Flow gap-closure bucket after reassessing PORM leftovers:

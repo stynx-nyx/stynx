@@ -36,7 +36,7 @@ const PRINCIPAL = {
 
 describe('AuditInterceptor', () => {
   it('passes through when no audit metadata is set on the handler', async () => {
-    const sink = { write: jest.fn() };
+    const sink = { write: vi.fn() };
     const interceptor = new AuditInterceptor(new FakeReflector(undefined), sink);
     const result = await lastValueFrom(interceptor.intercept(ctx({ headers: {} }), makeHandler()));
     expect(result).toEqual({ id: 'entity-1' });
@@ -44,7 +44,7 @@ describe('AuditInterceptor', () => {
   });
 
   it('writes an envelope with action/entity/entityId/tenantId/actorId/role', async () => {
-    const sink = { write: jest.fn(async () => undefined) };
+    const sink = { write: vi.fn(async () => undefined) };
     const reflector = new FakeReflector({ action: 'doc.created', entity: 'Document' });
     const interceptor = new AuditInterceptor(reflector, sink);
     const request = { headers: {}, principal: PRINCIPAL, tenantId: 't-1', requestId: 'req-1' };
@@ -63,7 +63,7 @@ describe('AuditInterceptor', () => {
   });
 
   it('falls back to the controller class name when entity is not set', async () => {
-    const sink = { write: jest.fn(async () => undefined) };
+    const sink = { write: vi.fn(async () => undefined) };
     const reflector = new FakeReflector({ action: 'a' });
     const interceptor = new AuditInterceptor(reflector, sink);
     await lastValueFrom(interceptor.intercept(ctx({ headers: {} }), makeHandler()));
@@ -71,7 +71,7 @@ describe('AuditInterceptor', () => {
   });
 
   it('honors entityIdSelector and metadataSelector', async () => {
-    const sink = { write: jest.fn(async () => undefined) };
+    const sink = { write: vi.fn(async () => undefined) };
     const reflector = new FakeReflector({
       action: 'a',
       entityIdSelector: (req: Record<string, unknown>) => (req.body as { customId: string }).customId,
@@ -88,8 +88,8 @@ describe('AuditInterceptor', () => {
   });
 
   it('runs metadata through the redaction policy when configured', async () => {
-    const sink = { write: jest.fn(async () => undefined) };
-    const policy = { redact: jest.fn((meta: unknown) => ({ redacted: true, _: meta })) };
+    const sink = { write: vi.fn(async () => undefined) };
+    const policy = { redact: vi.fn((meta: unknown) => ({ redacted: true, _: meta })) };
     const reflector = new FakeReflector({
       action: 'a',
       metadataSelector: () => ({ password: 'secret' }),
@@ -104,7 +104,7 @@ describe('AuditInterceptor', () => {
   });
 
   it('omits entityId when inference yields nothing', async () => {
-    const sink = { write: jest.fn(async () => undefined) };
+    const sink = { write: vi.fn(async () => undefined) };
     const reflector = new FakeReflector({ action: 'a' });
     const interceptor = new AuditInterceptor(reflector, sink);
     await lastValueFrom(interceptor.intercept(ctx({ headers: {} }), makeHandler(null)));
@@ -113,7 +113,7 @@ describe('AuditInterceptor', () => {
   });
 
   it('logs but does not fail the request when sink.write throws', async () => {
-    const sink = { write: jest.fn(async () => { throw new Error('sink down'); }) };
+    const sink = { write: vi.fn(async () => { throw new Error('sink down'); }) };
     const reflector = new FakeReflector({ action: 'a' });
     const interceptor = new AuditInterceptor(reflector, sink);
     const result = await lastValueFrom(
@@ -123,7 +123,7 @@ describe('AuditInterceptor', () => {
   });
 
   it('propagates handler errors', async () => {
-    const sink = { write: jest.fn() };
+    const sink = { write: vi.fn() };
     const reflector = new FakeReflector({ action: 'a' });
     const interceptor = new AuditInterceptor(reflector, sink);
     const handler = makeHandler(undefined, throwError(() => new Error('boom')));

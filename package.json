@@ -17,7 +17,7 @@
     "test:int": "turbo run test:int --filter='./packages/*'",
     "check:engines": "node scripts/check-engines.mjs",
     "lint:deadcode": "knip --config tools/repo-config/knip.config.ts --no-config-hints",
-    "lint:deps": "depcheck --ignore-patterns='**/*.test.ts,**/*.spec.ts' --skip-missing --ignores='@commitlint/cli,@commitlint/config-conventional,@stryker-mutator/jest-runner,@stryker-mutator/typescript-checker,eslint-plugin-boundaries,eslint-plugin-jsdoc,prettier'",
+    "lint:deps": "depcheck --ignore-patterns='**/*.test.ts,**/*.spec.ts' --skip-missing --ignores='@commitlint/cli,@commitlint/config-conventional,@stryker-mutator/typescript-checker,eslint-plugin-boundaries,eslint-plugin-jsdoc,prettier'",
     "lint:migrations": "pnpm --filter migration-linter run lint:repo",
     "lint:cycles": "madge --circular packages/ packages-web/ tools/ --extensions ts,mjs --exclude '(^|/)(dist|build|coverage|node_modules)/'",
     "lint:workflows": "github-actionlint .github/workflows/*.yml",
@@ -40,6 +40,7 @@
     "release": "changeset publish",
     "release:publish:ci": "node scripts/changesets-publish-ci.mjs",
     "doctor": "node scripts/stynx-doctor.mjs",
+    "test:e2e": "turbo run test:e2e --filter='./packages/*' --filter='./packages-web/*'",
     "test:mutation": "pnpm -r --filter \"./packages/*\" --filter \"./packages-web/*\" --workspace-concurrency=1 stryker",
     "test:matrix": "node scripts/render-test-matrix.mjs",
     "test:matrix:coverage": "node scripts/render-test-matrix.mjs --coverage",
@@ -47,7 +48,7 @@
     "check:rls-smoke": "bash scripts/check-rls-smoke.sh",
     "smoke:local": "pnpm --filter @stynx/reference-api smoke:local",
     "prepare": "husky",
-    "test:coverage": "turbo run test:coverage --filter=\"./packages/*\"",
+    "test:coverage": "node scripts/aggregate-coverage.mjs",
     "test:coverage:aggregate": "node scripts/aggregate-coverage.mjs",
     "test:perf": "node scripts/perf-smoke.mjs"
   },
@@ -57,11 +58,13 @@
     "@commitlint/config-conventional": "^20.5.0",
     "@eslint/js": "^10.0.1",
     "@stryker-mutator/core": "^9.6.1",
-    "@stryker-mutator/jest-runner": "^9.6.1",
     "@stryker-mutator/typescript-checker": "^9.6.1",
+    "@stryker-mutator/vitest-runner": "^9.6.1",
+    "@swc/core": "^1.15.33",
     "@types/node": "^25.6.0",
     "@typescript-eslint/eslint-plugin": "^8.59.0",
     "@typescript-eslint/parser": "^8.59.0",
+    "@vitest/coverage-v8": "^3",
     "depcheck": "^1.4.7",
     "eslint": "^10.2.1",
     "eslint-plugin-boundaries": "^6.0.2",
@@ -75,7 +78,9 @@
     "madge": "^8.0.0",
     "prettier": "^3.8.3",
     "turbo": "^2.9.6",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "unplugin-swc": "^1.5.9",
+    "vitest": "^3"
   },
   "lint-staged": {
     "*.{js,cjs,mjs,ts,tsx,cts,mts}": [

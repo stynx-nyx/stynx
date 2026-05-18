@@ -13,6 +13,7 @@ import { StynxAuthService } from '../../src/auth.service';
 import { StynxAuthGuard } from '../../src/stynx-auth.guard';
 import { StynxJwtValidator } from '../../src/stynx-jwt.validator';
 import { STYNX_AUTH_OPTIONS, STYNX_PERMISSION_CACHE_BACKEND } from '../../src/tokens';
+import { resolveAuthOptions } from '../../src/types';
 
 describe('StynxAuthModule', () => {
   it('builds the dynamic module with the expected controller, providers, and exports', () => {
@@ -95,5 +96,42 @@ describe('StynxAuthModule', () => {
     ) as { useFactory: (backend: RedisPermissionCacheBackend) => RedisPermissionCacheBackend | null };
 
     expect(backendProvider.useFactory({} as RedisPermissionCacheBackend)).toBeNull();
+  });
+
+  it('resolves auth options with defaults and optional redis/permission overrides', () => {
+    expect(resolveAuthOptions({})).toEqual({
+      stynx: { issuer: 'https://stynx.local' },
+      permissions: { dbFallbackOnRedisDown: true },
+    });
+
+    expect(resolveAuthOptions({
+      cognito: { issuer: 'https://cognito.test', audience: 'web' },
+      stynx: {
+        issuer: 'https://stynx.test',
+        audience: 'api',
+        jwksUri: 'https://stynx.test/jwks',
+      },
+      redis: { url: 'redis://local' },
+      permissions: {
+        dbFallbackOnRedisDown: false,
+        driftResyncIntervalMs: 250,
+      },
+    })).toEqual({
+      cognito: { issuer: 'https://cognito.test', audience: 'web' },
+      stynx: {
+        issuer: 'https://stynx.test',
+        audience: 'api',
+        jwksUri: 'https://stynx.test/jwks',
+      },
+      redis: {
+        url: 'redis://local',
+        keyPrefix: 'stynx:auth',
+        invalidateChannel: 'perms:invalidate',
+      },
+      permissions: {
+        dbFallbackOnRedisDown: false,
+        driftResyncIntervalMs: 250,
+      },
+    });
   });
 });

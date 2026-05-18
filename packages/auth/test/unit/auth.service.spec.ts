@@ -5,18 +5,18 @@ import { StynxAuthService } from '../../src/auth.service';
 
 describe('StynxAuthService', () => {
   const permissionCache = {
-    prime: jest.fn(),
-    invalidateSid: jest.fn(),
-    inspectSid: jest.fn(),
+    prime: vi.fn(),
+    invalidateSid: vi.fn(),
+    inspectSid: vi.fn(),
   };
   const permissionQueries = {
-    resolveForUser: jest.fn(),
+    resolveForUser: vi.fn(),
   };
   const effectiveHashComputer = {
-    ensureMembershipHash: jest.fn(),
+    ensureMembershipHash: vi.fn(),
   };
   const cognitoValidator = {
-    validateAccessToken: jest.fn(),
+    validateAccessToken: vi.fn(),
   };
 
   const sessionBundle: SessionBundle = {
@@ -29,7 +29,7 @@ describe('StynxAuthService', () => {
   let moduleRef: ModuleRef;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   function createService(
@@ -40,7 +40,7 @@ describe('StynxAuthService', () => {
       withRequestContext?: boolean;
     } = {},
   ) {
-    const txQuery = jest.fn().mockImplementation((sql: string) => {
+    const txQuery = vi.fn().mockImplementation((sql: string) => {
       if (sql.includes('from auth.users')) {
         return Promise.resolve({ rows: options.userLookupRows ?? [] });
       }
@@ -53,25 +53,25 @@ describe('StynxAuthService', () => {
       return Promise.resolve({ rows: [] });
     });
     const database = {
-      tx: jest.fn(async (fn: (trx: { query: typeof txQuery }) => Promise<unknown>) =>
+      tx: vi.fn(async (fn: (trx: { query: typeof txQuery }) => Promise<unknown>) =>
         fn({ query: txQuery }),
       ),
-      withSystemContext: jest.fn((_reason: string, fn: () => Promise<unknown>) => fn()),
+      withSystemContext: vi.fn((_reason: string, fn: () => Promise<unknown>) => fn()),
     };
     const sessionService = {
-      create: jest.fn().mockResolvedValue(sessionBundle),
-      revoke: jest.fn().mockResolvedValue(true),
+      create: vi.fn().mockResolvedValue(sessionBundle),
+      revoke: vi.fn().mockResolvedValue(true),
     };
     const requestContext = {
-      hasActiveContext: jest.fn().mockReturnValue(Boolean(options.requestContextActive)),
+      hasActiveContext: vi.fn().mockReturnValue(Boolean(options.requestContextActive)),
     } as unknown as RequestContext;
     const requestContextMutator = {
-      patch: jest.fn(),
-      runWithRequestContext: jest.fn((_context, fn: () => Promise<unknown>) => fn()),
+      patch: vi.fn(),
+      runWithRequestContext: vi.fn((_context, fn: () => Promise<unknown>) => fn()),
     } as unknown as RequestContextMutator;
 
     moduleRef = {
-      get: jest.fn((token: unknown) => {
+      get: vi.fn((token: unknown) => {
         if (token === RequestContext) {
           return options.withRequestContext === false ? undefined : requestContext;
         }
@@ -259,7 +259,7 @@ describe('StynxAuthService', () => {
 
   it('fails clearly when the database or session service provider is unavailable', async () => {
     moduleRef = {
-      get: jest.fn((token: unknown) => {
+      get: vi.fn((token: unknown) => {
         if (token === RequestContext) {
           return { hasActiveContext: () => false };
         }
@@ -290,7 +290,7 @@ describe('StynxAuthService', () => {
       claims: {},
     });
     moduleRef = {
-      get: jest.fn((token: unknown) => {
+      get: vi.fn((token: unknown) => {
         if (token === RequestContext) {
           return { hasActiveContext: () => false };
         }
@@ -299,8 +299,8 @@ describe('StynxAuthService', () => {
         }
         if (typeof token === 'function' && token.name === 'SessionService') {
           return {
-            create: jest.fn().mockResolvedValue(sessionBundle),
-            revoke: jest.fn().mockResolvedValue(true),
+            create: vi.fn().mockResolvedValue(sessionBundle),
+            revoke: vi.fn().mockResolvedValue(true),
           };
         }
         return undefined;

@@ -8,6 +8,12 @@ describe('@stynx-web/angular-profile', () => {
     const component = new StynxProfileFormComponent(new FormBuilder());
     const seen: unknown[] = [];
     component.save.subscribe((value) => seen.push(value));
+    component.value = null;
+    expect(component.form.getRawValue()).toEqual({
+      name: '',
+      email: '',
+      locale: 'en-US',
+    });
 
     component.value = {
       name: 'Ana',
@@ -42,6 +48,11 @@ describe('@stynx-web/angular-profile', () => {
     const component = new StynxPreferencesFormComponent(new FormBuilder());
     const seen: unknown[] = [];
     component.save.subscribe((value) => seen.push(value));
+    component.value = null;
+    expect(component.form.getRawValue()).toEqual({
+      locale: 'en-US',
+      notifications: false,
+    });
     component.value = {
       locale: 'en-US',
       notifications: false,

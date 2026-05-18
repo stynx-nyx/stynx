@@ -12,7 +12,7 @@ function fakeDb(
   withTransaction = true,
 ) {
   let callIdx = 0;
-  const query = jest.fn(async () => {
+  const query = vi.fn(async () => {
     const rows = responsesByOrder[callIdx++] ?? [];
     return { rows };
   });
@@ -20,7 +20,7 @@ function fakeDb(
     query,
     ...(withTransaction
       ? {
-          withTransaction: jest.fn(async <T>(run: (c: unknown) => Promise<T>) => run('client-handle')),
+          withTransaction: vi.fn(async <T>(run: (c: unknown) => Promise<T>) => run('client-handle')),
         }
       : {}),
   };
@@ -28,10 +28,10 @@ function fakeDb(
 
 function fakeAdmin(overrides: Partial<Record<string, unknown>> = {}) {
   return {
-    listUsers: jest.fn(async () => ({ items: [], nextToken: undefined })),
-    listGroups: jest.fn(async () => ({ items: [], nextToken: undefined })),
-    listGroupsForUser: jest.fn(async () => []),
-    getUser: jest.fn(),
+    listUsers: vi.fn(async () => ({ items: [], nextToken: undefined })),
+    listGroups: vi.fn(async () => ({ items: [], nextToken: undefined })),
+    listGroupsForUser: vi.fn(async () => []),
+    getUser: vi.fn(),
     ...overrides,
   };
 }
@@ -39,10 +39,10 @@ function fakeAdmin(overrides: Partial<Record<string, unknown>> = {}) {
 describe('PgIdentityLocalSyncAdapter', () => {
   it('syncToLocal skips users without a username or UUID subject', async () => {
     const admin = fakeAdmin({
-      listUsers: jest.fn(async () => ({
+      listUsers: vi.fn(async () => ({
         items: [{ username: '   ' }, { username: 'alice' }, { username: 'bob' }],
       })),
-      getUser: jest.fn(async (u: string) =>
+      getUser: vi.fn(async (u: string) =>
         u === 'alice'
           ? {
               username: 'alice',
@@ -51,7 +51,7 @@ describe('PgIdentityLocalSyncAdapter', () => {
             }
           : { username: 'bob', enabled: true, attributes: { sub: 'not-a-uuid' } },
       ),
-      listGroupsForUser: jest.fn(async () => []),
+      listGroupsForUser: vi.fn(async () => []),
     });
     const db = fakeDb([
       // persistRecords loop: for users list (no groups, so no role insert).
@@ -71,18 +71,18 @@ describe('PgIdentityLocalSyncAdapter', () => {
 
   it('syncToLocal aggregates group memberships and upserts roles', async () => {
     const admin = fakeAdmin({
-      listGroups: jest.fn(async () => ({
+      listGroups: vi.fn(async () => ({
         items: [{ name: 'admins', description: 'Admin group' }],
       })),
-      listUsers: jest.fn(async () => ({
+      listUsers: vi.fn(async () => ({
         items: [{ username: 'alice' }],
       })),
-      getUser: jest.fn(async () => ({
+      getUser: vi.fn(async () => ({
         username: 'alice',
         enabled: true,
         attributes: { sub: UUID_A, email: 'a@b', name: 'Alice' },
       })),
-      listGroupsForUser: jest.fn(async () => [{ name: 'admins' }, { name: 'admins' }]),
+      listGroupsForUser: vi.fn(async () => [{ name: 'admins' }, { name: 'admins' }]),
     });
     const db = fakeDb([
       [{ role_id: 'role-1' }], // role upsert
@@ -102,11 +102,11 @@ describe('PgIdentityLocalSyncAdapter', () => {
 
   it('syncToLocal paginates listUsers + listGroups via nextToken', async () => {
     const admin = fakeAdmin({
-      listUsers: jest
+      listUsers: vi
         .fn()
         .mockResolvedValueOnce({ items: [], nextToken: 'tok-1' })
         .mockResolvedValueOnce({ items: [], nextToken: undefined }),
-      listGroups: jest
+      listGroups: vi
         .fn()
         .mockResolvedValueOnce({ items: [], nextToken: 'tok-g' })
         .mockResolvedValueOnce({ items: [], nextToken: undefined }),
@@ -123,7 +123,7 @@ describe('PgIdentityLocalSyncAdapter', () => {
 
   it('syncUser throws IDENTITY_VALIDATION_ERROR when sub is not a UUID', async () => {
     const admin = fakeAdmin({
-      getUser: jest.fn(async () => ({
+      getUser: vi.fn(async () => ({
         username: 'alice',
         enabled: true,
         attributes: { sub: 'not-a-uuid' },
@@ -139,12 +139,12 @@ describe('PgIdentityLocalSyncAdapter', () => {
 
   it('syncUser returns the resolved user id', async () => {
     const admin = fakeAdmin({
-      getUser: jest.fn(async () => ({
+      getUser: vi.fn(async () => ({
         username: 'alice',
         enabled: true,
         attributes: { sub: UUID_A, email: 'a@b' },
       })),
-      listGroupsForUser: jest.fn(async () => []),
+      listGroupsForUser: vi.fn(async () => []),
     });
     const db = fakeDb([[]]); // user upsert
     const adapter = new PgIdentityLocalSyncAdapter({
@@ -169,10 +169,10 @@ describe('PgIdentityLocalSyncAdapter', () => {
 
   it('listGroupsWithMetaByUserId merges adapter groups with isIn flag and meta sort', async () => {
     const admin = fakeAdmin({
-      listGroups: jest.fn(async () => ({
+      listGroups: vi.fn(async () => ({
         items: [{ name: 'admins' }, { name: 'editors' }],
       })),
-      listGroupsForUser: jest.fn(async () => [{ name: 'admins' }]),
+      listGroupsForUser: vi.fn(async () => [{ name: 'admins' }]),
     });
     const db = fakeDb([
       [{ external_id: 'alice' }], // resolveUsername
@@ -180,7 +180,7 @@ describe('PgIdentityLocalSyncAdapter', () => {
     const adapter = new PgIdentityLocalSyncAdapter({
       identityAdmin: admin as never,
       db: db as never,
-      loadGroupMetaRows: jest.fn(async () => [
+      loadGroupMetaRows: vi.fn(async () => [
         { code: 'admin', label: 'Admin', sortOrder: 1 },
         { code: 'editor', label: 'Editor', sortOrder: 2 },
       ]),
@@ -194,10 +194,10 @@ describe('PgIdentityLocalSyncAdapter', () => {
 
   it('listGroupsWithMetaByUserId handles missing meta loader (default empty)', async () => {
     const admin = fakeAdmin({
-      listGroups: jest.fn(async () => ({
+      listGroups: vi.fn(async () => ({
         items: [{ name: 'g1' }],
       })),
-      listGroupsForUser: jest.fn(async () => []),
+      listGroupsForUser: vi.fn(async () => []),
     });
     const db = fakeDb([[{ external_id: 'alice' }]]);
     const adapter = new PgIdentityLocalSyncAdapter({
@@ -222,12 +222,12 @@ describe('PgIdentityLocalSyncAdapter', () => {
 
   it('honors custom roleCodeFromGroupName and roleDescriptionFromGroup', async () => {
     const admin = fakeAdmin({
-      listGroups: jest.fn(async () => ({ items: [{ name: 'AdminGroup' }] })),
-      listUsers: jest.fn(async () => ({ items: [] })),
+      listGroups: vi.fn(async () => ({ items: [{ name: 'AdminGroup' }] })),
+      listUsers: vi.fn(async () => ({ items: [] })),
     });
     const db = fakeDb([[{ role_id: 'r-1' }]]);
-    const roleCodeFromGroupName = jest.fn((n: string) => `custom-${n}`);
-    const roleDescriptionFromGroup = jest.fn(() => 'custom-desc');
+    const roleCodeFromGroupName = vi.fn((n: string) => `custom-${n}`);
+    const roleDescriptionFromGroup = vi.fn(() => 'custom-desc');
     const adapter = new PgIdentityLocalSyncAdapter({
       identityAdmin: admin as never,
       db: db as never,
@@ -241,15 +241,15 @@ describe('PgIdentityLocalSyncAdapter', () => {
 
   it('honors custom userIdFromDetail override (e.g. external_id strategy)', async () => {
     const admin = fakeAdmin({
-      listUsers: jest.fn(async () => ({ items: [{ username: 'alice' }] })),
-      getUser: jest.fn(async () => ({
+      listUsers: vi.fn(async () => ({ items: [{ username: 'alice' }] })),
+      getUser: vi.fn(async () => ({
         username: 'alice',
         enabled: true,
         attributes: {},
       })),
     });
     const db = fakeDb([[]]);
-    const userIdFromDetail = jest.fn(() => UUID_B);
+    const userIdFromDetail = vi.fn(() => UUID_B);
     const adapter = new PgIdentityLocalSyncAdapter({
       identityAdmin: admin as never,
       db: db as never,
@@ -262,15 +262,15 @@ describe('PgIdentityLocalSyncAdapter', () => {
 
   it('honors custom displayNameFromDetail override', async () => {
     const admin = fakeAdmin({
-      listUsers: jest.fn(async () => ({ items: [{ username: 'alice' }] })),
-      getUser: jest.fn(async () => ({
+      listUsers: vi.fn(async () => ({ items: [{ username: 'alice' }] })),
+      getUser: vi.fn(async () => ({
         username: 'alice',
         enabled: true,
         attributes: { sub: UUID_A },
       })),
     });
     const db = fakeDb([[]]);
-    const displayNameFromDetail = jest.fn(() => 'Custom Display');
+    const displayNameFromDetail = vi.fn(() => 'Custom Display');
     const adapter = new PgIdentityLocalSyncAdapter({
       identityAdmin: admin as never,
       db: db as never,
@@ -282,8 +282,8 @@ describe('PgIdentityLocalSyncAdapter', () => {
 
   it('default display name falls back through name → custom:displayName → email → username', async () => {
     const admin = fakeAdmin({
-      listUsers: jest.fn(async () => ({ items: [{ username: 'alice' }] })),
-      getUser: jest.fn(async () => ({
+      listUsers: vi.fn(async () => ({ items: [{ username: 'alice' }] })),
+      getUser: vi.fn(async () => ({
         username: 'alice',
         enabled: true,
         attributes: { sub: UUID_A }, // no name/email
@@ -300,8 +300,8 @@ describe('PgIdentityLocalSyncAdapter', () => {
 
   it('default role-code strategy strips trailing s from plural group names', async () => {
     const admin = fakeAdmin({
-      listGroups: jest.fn(async () => ({ items: [{ name: 'admins' }, { name: 'editor' }] })),
-      listUsers: jest.fn(async () => ({ items: [] })),
+      listGroups: vi.fn(async () => ({ items: [{ name: 'admins' }, { name: 'editor' }] })),
+      listUsers: vi.fn(async () => ({ items: [] })),
     });
     const db = fakeDb([
       [{ role_id: 'r-1' }],
@@ -322,7 +322,7 @@ describe('PgIdentityLocalSyncAdapter', () => {
 describe('loadPormRoleMetaRows', () => {
   it('queries the PORM enum view + maps rows to IdentityGroupMetaRow', async () => {
     const db = {
-      query: jest.fn(async () => ({
+      query: vi.fn(async () => ({
         rows: [
           {
             code: 'admin',
@@ -348,7 +348,7 @@ describe('loadPormRoleMetaRows', () => {
 
   it('honors viewName and roleDomain overrides + falls back to sort_order when order missing', async () => {
     const db = {
-      query: jest.fn(async () => ({
+      query: vi.fn(async () => ({
         rows: [{ code: 'c', sort_order: 7 }],
       })),
     };

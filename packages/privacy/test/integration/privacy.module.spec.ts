@@ -40,7 +40,6 @@ class CapturingCognitoAdmin implements PrivacyCognitoAdmin {
 }
 
 describe('StynxPrivacyModule integration', () => {
-  jest.setTimeout(180_000);
 
   it('loads PII rules, exports live and archive rows, erases data, and reports retention', async () => {
     const appRoot = mkdtempSync(resolve(tmpdir(), 'stynx-privacy-fixture-'));

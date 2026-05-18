@@ -3,7 +3,7 @@ import type { SystemExecutionContext } from '@stynx/core';
 
 describe('withSystemContext', () => {
   it('delegates to database.withSystemContext with the same reason + fn', async () => {
-    const withSystemContextSpy = jest.fn(
+    const withSystemContextSpy = vi.fn(
       async (_reason: string, fn: (ctx: SystemExecutionContext) => Promise<string>) =>
         fn({ reason: 'inner', requestId: 'rid', startedAt: new Date() } as never),
     );

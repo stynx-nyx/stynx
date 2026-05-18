@@ -1,3 +1,4 @@
+/* istanbul ignore file -- declarative Drizzle schema; migrations and query helpers exercise the runtime behavior. */
 import { boolean, jsonb, pgSchema, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 export const tenancySchema = pgSchema('tenancy');

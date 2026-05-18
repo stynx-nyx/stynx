@@ -928,7 +928,7 @@ Four dimensions (IP, tenant, user, route × tenant), sliding window in Redis (Lu
 
 ### 16.1 Layers
 
-Per v0.3: Unit (Jest), Integration (Testcontainers PG + Redis, LocalStack S3, cognito‑local), Contract (Pact), E2E backend (supertest), E2E frontend (Cypress/Playwright), Load (k6), Mutation (Stryker), Security (Semgrep, `npm audit`, Trivy).
+Per v0.3: Unit (Vitest), Integration (Testcontainers PG + Redis, LocalStack S3, cognito‑local), Contract (Pact), E2E backend (supertest), E2E frontend (Cypress/Playwright), Load (k6), Mutation (Stryker), Security (Semgrep, `npm audit`, Trivy).
 
 ### 16.2 `@stynx/testing` exports
 

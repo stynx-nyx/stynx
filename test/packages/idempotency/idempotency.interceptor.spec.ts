@@ -30,11 +30,11 @@ function createResponseStub() {
   return {
     statusCode: 200,
     headers: {} as Record<string, string>,
-    status: jest.fn(function status(this: { statusCode: number }, code: number) {
+    status: vi.fn(function status(this: { statusCode: number }, code: number) {
       this.statusCode = code;
       return this;
     }),
-    setHeader: jest.fn(function setHeader(
+    setHeader: vi.fn(function setHeader(
       this: { headers: Record<string, string> },
       name: string,
       value: string,
@@ -137,10 +137,10 @@ describe('IdempotencyInterceptor', () => {
 
   it('uses durable store when configured and tenant exists', async () => {
     const store: IdempotencyStore = {
-      lookup: jest.fn(async (_ctx: IdempotencyDecisionContext) => null),
-      reserve: jest.fn(async () => true),
-      persistResponse: jest.fn(async () => true),
-      clearReservation: jest.fn(async () => undefined),
+      lookup: vi.fn(async (_ctx: IdempotencyDecisionContext) => null),
+      reserve: vi.fn(async () => true),
+      persistResponse: vi.fn(async () => true),
+      clearReservation: vi.fn(async () => undefined),
     };
     const interceptor = new IdempotencyInterceptor({}, store);
     const request = {

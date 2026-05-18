@@ -23,16 +23,14 @@
     "clean": "rm -rf dist coverage src/generated",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/lib.mjs \"src/**/*.ts\" --ignore-pattern \"src/generated/**\"",
-    "test": "pnpm run codegen && jest --config ./jest.config.cjs",
-    "stryker": "NODE_OPTIONS=\"--disable-warning=ExperimentalWarning --experimental-vm-modules\" pnpm exec stryker run stryker.conf.mjs"
+    "test": "vitest run --config ./vitest.config.ts",
+    "stryker": "NODE_OPTIONS=\"--disable-warning=ExperimentalWarning --experimental-vm-modules\" pnpm exec stryker run stryker.conf.mjs",
+    "test:e2e": "echo \"test:e2e removed during V6 cutover; convert to vitest if needed\" && false"
   },
   "devDependencies": {
     "@stynx/core": "workspace:*",
-    "@types/jest": "^30.0.0",
     "@types/node": "^25.6.0",
-    "jest": "^30.3.0",
     "openapi-typescript-codegen": "^0.30.0",
-    "ts-jest": "^29.4.9",
     "typescript": "^6.0.3"
   }
 }

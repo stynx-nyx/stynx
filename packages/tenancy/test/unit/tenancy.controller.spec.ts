@@ -20,13 +20,13 @@ describe('TenancyController API contract', () => {
 
   it('delegates tenant read and mutation operations to the service', async () => {
     const service = {
-      listTenants: jest.fn(async () => [{ id: 'tenant-1' }]),
-      getTenant: jest.fn(async () => ({ id: 'tenant-1' })),
-      provisionTenant: jest.fn(async () => ({ id: 'tenant-2' })),
-      updateTenant: jest.fn(async () => ({ id: 'tenant-1', name: 'Updated' })),
-      suspendTenant: jest.fn(async () => ({ id: 'tenant-1', state: 'suspended' })),
-      archiveTenant: jest.fn(async () => ({ id: 'tenant-1', state: 'archived' })),
-      purgeTenant: jest.fn(async () => ({ id: 'tenant-1', state: 'purged' })),
+      listTenants: vi.fn(async () => [{ id: 'tenant-1' }]),
+      getTenant: vi.fn(async () => ({ id: 'tenant-1' })),
+      provisionTenant: vi.fn(async () => ({ id: 'tenant-2' })),
+      updateTenant: vi.fn(async () => ({ id: 'tenant-1', name: 'Updated' })),
+      suspendTenant: vi.fn(async () => ({ id: 'tenant-1', state: 'suspended' })),
+      archiveTenant: vi.fn(async () => ({ id: 'tenant-1', state: 'archived' })),
+      purgeTenant: vi.fn(async () => ({ id: 'tenant-1', state: 'purged' })),
     } as unknown as TenancyService;
     const controller = new TenancyController(service);
 

@@ -43,14 +43,14 @@ function withHash(row: Omit<AuditChainRow, 'row_hash'>): AuditChainRow {
 
 function createService(rows: AuditChainRow[]): StynxAuditService {
   const trx = {
-    query: jest.fn(async () => ({ rows })),
+    query: vi.fn(async () => ({ rows })),
   };
   const database = {
-    withSystemContext: jest.fn(async (_reason: string, fn: () => Promise<unknown>) => fn()),
-    tx: jest.fn(async (fn: (queryable: typeof trx) => Promise<unknown>) => fn(trx)),
+    withSystemContext: vi.fn(async (_reason: string, fn: () => Promise<unknown>) => fn()),
+    tx: vi.fn(async (fn: (queryable: typeof trx) => Promise<unknown>) => fn(trx)),
   };
   const moduleRef = {
-    get: jest.fn(() => database),
+    get: vi.fn(() => database),
   };
   return new StynxAuditService(
     moduleRef as never,

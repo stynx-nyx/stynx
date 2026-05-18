@@ -13,13 +13,13 @@ describe('BookmarkTagController', () => {
   };
 
   let controller: BookmarkTagController;
-  let service: Record<string, jest.Mock>;
+  let service: Record<string, Mock>;
 
   beforeEach(async () => {
     service = {
-      findAll: jest.fn().mockResolvedValue([fakeTag]),
-      create: jest.fn().mockResolvedValue(fakeTag),
-      remove: jest.fn().mockResolvedValue({ status: 'deleted', bookmarkId: fakeTag.bookmarkId, tag: fakeTag.tag }),
+      findAll: vi.fn().mockResolvedValue([fakeTag]),
+      create: vi.fn().mockResolvedValue(fakeTag),
+      remove: vi.fn().mockResolvedValue({ status: 'deleted', bookmarkId: fakeTag.bookmarkId, tag: fakeTag.tag }),
     };
     const moduleRef = await Test.createTestingModule({
       controllers: [BookmarkTagController],

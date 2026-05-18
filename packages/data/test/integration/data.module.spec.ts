@@ -6,7 +6,6 @@ import { StynxDataModule } from '../../src/data.module';
 import { createPostgresTestDatabase } from '../support/postgres';
 
 describe('StynxDataModule integration', () => {
-  jest.setTimeout(120_000);
 
   it('configures GUCs, retries serialization failures, and isolates the three pools', async () => {
     const testDatabase = await createPostgresTestDatabase('stynx_data_module');

@@ -1,3 +1,4 @@
+/* istanbul ignore file -- declarative Drizzle schema; reference API behavior is covered through services/controllers. */
 import { sql } from 'drizzle-orm';
 import {
   bigint,

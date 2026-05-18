@@ -139,8 +139,8 @@ recommending action:
   has 5 spec files for backend's 44 source files (0.11). The latter ratio
   is low — but **only the audit prompt should make claims about whether
   coverage is _sufficient_**; rationalization just notes it.
-- **Two parallel jest configs** referenced from root `package.json`
-  scripts: `test/packages/jest.config.cjs` and `test/backend/jest.config.cjs`
+- **Two parallel Vitest configs** referenced from root `package.json`
+  scripts: `test/packages/Vitest.config.cjs` and `test/backend/Vitest.config.cjs`
   - `frontend/test:unit`. Cross-config consistency was not exhaustively
     diffed in this pass; no obvious drift surfaced.
 
@@ -315,7 +315,7 @@ build` (not the `typecheck` task) — naming drift, low priority.
 
 - `pnpm lint:deps` (depcheck): **"No depcheck issue"** — zero unused or
   phantom deps under the curated ignore list (`@commitlint/cli`,
-  `@commitlint/config-conventional`, `@stryker-mutator/jest-runner`,
+  `@commitlint/config-conventional`, `@stryker-mutator/Vitest-runner`,
   `@stryker-mutator/typescript-checker`, `eslint-plugin-boundaries`,
   `prettier`).
 - `pnpm audit --prod --json` not run in this pass to avoid network

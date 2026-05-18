@@ -29,10 +29,10 @@ describe('AuditInterceptor metadata redaction', () => {
       }),
     };
     const reflector = {
-      getAllAndOverride: jest.fn(() => metadata),
+      getAllAndOverride: vi.fn(() => metadata),
     };
     const sink = {
-      write: jest.fn(async (_event: unknown) => undefined),
+      write: vi.fn(async (_event: unknown) => undefined),
     };
     const interceptor = new AuditInterceptor(
       reflector as never,
@@ -85,10 +85,10 @@ describe('AuditInterceptor metadata redaction', () => {
       }),
     };
     const reflector = {
-      getAllAndOverride: jest.fn(() => metadata),
+      getAllAndOverride: vi.fn(() => metadata),
     };
     const sink = {
-      write: jest.fn(async (_event: unknown) => undefined),
+      write: vi.fn(async (_event: unknown) => undefined),
     };
     const interceptor = new AuditInterceptor(reflector as never, sink as never);
     const next: CallHandler = {
