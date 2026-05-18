@@ -267,4 +267,98 @@ describe('IdempotencyInterceptor', () => {
       lastValueFrom(interceptor.intercept(createExecutionContext(request, response, annotatedHandler(reflector)), next)),
     ).rejects.toBeInstanceOf(ServiceUnavailableException);
   });
+
+  it('persists 4xx HTTP exception responses for replay', async () => {
+    const reflector = createReflector();
+    const backend = createBackend();
+    const interceptor = new IdempotencyInterceptor(reflector, {}, undefined, backend);
+    const request = {
+      method: 'POST',
+      url: '/v1/items',
+      tenantId: 'tenant-a',
+      actor: { id: 'user-a' },
+      headers: { 'Idempotency-Key': 'k-4xx' },
+      body: { a: 1 },
+    };
+    const response = createResponseStub();
+    const next: CallHandler = {
+      handle: () =>
+        throwError(() => new BadRequestException({ statusCode: 400, message: 'validation failed' })),
+    };
+
+    await expect(
+      lastValueFrom(interceptor.intercept(createExecutionContext(request, response, annotatedHandler(reflector)), next)),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    expect(backend.set).toHaveBeenCalledTimes(1);
+    const [, persisted] = (backend.set as jest.Mock).mock.calls[0];
+    expect(persisted.statusCode).toBe(400);
+    expect(persisted.status).toBe('completed');
+  });
+
+  it('does not persist 5xx HTTP exception responses (allows retry)', async () => {
+    const reflector = createReflector();
+    const backend = createBackend();
+    const interceptor = new IdempotencyInterceptor(reflector, {}, undefined, backend);
+    const request = {
+      method: 'POST',
+      url: '/v1/items',
+      tenantId: 'tenant-a',
+      actor: { id: 'user-a' },
+      headers: { 'Idempotency-Key': 'k-5xx' },
+      body: { a: 1 },
+    };
+    const response = createResponseStub();
+    const next: CallHandler = {
+      handle: () =>
+        throwError(() => new ServiceUnavailableException('upstream timeout')),
+    };
+
+    await expect(
+      lastValueFrom(interceptor.intercept(createExecutionContext(request, response, annotatedHandler(reflector)), next)),
+    ).rejects.toBeInstanceOf(ServiceUnavailableException);
+
+    expect(backend.set).not.toHaveBeenCalled();
+  });
+
+  it('replays cached responses from the durable store after a backend miss', async () => {
+    const reflector = createReflector();
+    const backend = createBackend();
+    // Fingerprint is sha256(method:path:body); the durable mock
+    // returns whatever fingerprint the sensor computes so the
+    // assertFingerprintMatches guard passes.
+    const durable: IdempotencyStore = {
+      lookup: jest.fn(async (ctx: IdempotencyDecisionContext) => {
+        return {
+          requestFingerprint: ctx.requestFingerprint,
+          statusCode: 201,
+          body: { id: 'durable-cached' },
+          headers: {},
+          expiresAt: Date.now() + 60_000,
+          status: 'completed' as const,
+        };
+      }),
+      reserve: jest.fn(async () => true),
+      persistResponse: jest.fn(async () => undefined),
+      clearReservation: jest.fn(async () => undefined),
+    };
+    const interceptor = new IdempotencyInterceptor(reflector, {}, durable, backend);
+    const request = {
+      method: 'POST',
+      url: '/v1/items',
+      tenantId: 'tenant-a',
+      actor: { id: 'user-a' },
+      headers: { 'Idempotency-Key': 'k-durable' },
+      body: { a: 1 },
+    };
+    const response = createResponseStub();
+    const next: CallHandler = { handle: () => of({ id: 'fresh' }) };
+
+    const result = await lastValueFrom(
+      interceptor.intercept(createExecutionContext(request, response, annotatedHandler(reflector)), next),
+    );
+    expect(result).toEqual({ id: 'durable-cached' });
+    expect(backend.set).toHaveBeenCalledTimes(1); // cache promotion
+    expect(durable.lookup).toHaveBeenCalledTimes(1);
+  });
 });

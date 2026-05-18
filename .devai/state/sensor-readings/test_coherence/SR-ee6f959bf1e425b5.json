@@ -5,7 +5,7 @@
     "name": "test-coherence",
     "kind": "test_coherence"
   },
-  "timestamp": "2026-05-18T00:38:35.386Z",
+  "timestamp": "2026-05-18T01:40:58.815Z",
   "status": "pass",
   "deterministic": true,
   "command": "devai sense-test-coherence",
@@ -14,12 +14,12 @@
   "findings": [],
   "metrics": {
     "packages_scanned": 18,
-    "source_files": 272,
-    "test_files": 82,
-    "global_ratio": 0.301,
+    "source_files": 271,
+    "test_files": 84,
+    "global_ratio": 0.31,
     "packages_below_min_ratio": 0,
     "naming_uses_test": 0,
-    "naming_uses_spec": 82,
+    "naming_uses_spec": 84,
     "naming_consistent": 1
   }
 }

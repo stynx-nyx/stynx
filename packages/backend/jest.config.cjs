@@ -1,0 +1,25 @@
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  roots: ['<rootDir>/test'],
+  moduleFileExtensions: ['ts', 'js', 'json'],
+  moduleNameMapper: {
+    '^@stynx/core$': '<rootDir>/../core/src/index.ts',
+    '^@stynx/data$': '<rootDir>/../data/src/index.ts',
+    '^@stynx/auth$': '<rootDir>/../auth/src/index.ts',
+    '^@stynx/audit$': '<rootDir>/../audit/src/index.ts',
+    '^@stynx/contracts$': '<rootDir>/../contracts/src/index.ts',
+    '^@stynx/idempotency$': '<rootDir>/../idempotency/src/index.ts',
+    '^@stynx/sessions$': '<rootDir>/../sessions/src/index.ts',
+    '^@stynx/storage$': '<rootDir>/../storage/src/index.ts',
+    '^@stynx/ratelimit$': '<rootDir>/../ratelimit/src/index.ts',
+    '^@stynx/tenancy$': '<rootDir>/../tenancy/src/index.ts',
+    '^@stynx/health$': '<rootDir>/../health/src/index.ts',
+    '^@stynx/logging$': '<rootDir>/../logging/src/index.ts',
+    '^@stynx/i18n$': '<rootDir>/../i18n/src/index.ts',
+    '^@stynx/privacy$': '<rootDir>/../privacy/src/index.ts',
+  },
+  transform: {
+    '^.+\\.ts$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.json' }],
+  },
+};
