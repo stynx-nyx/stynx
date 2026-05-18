@@ -1,0 +1,236 @@
+import {
+  PecIdentityAdminFacade,
+  PormIdentityAdminFacade,
+} from '../../src/identity-admin/integration-facades';
+
+function makeAdminService(overrides: Partial<Record<string, unknown>> = {}) {
+  return {
+    listUsers: jest.fn(async () => ({ items: [], nextToken: 'next-x' })),
+    getUser: jest.fn(async () => ({
+      username: 'u',
+      enabled: true,
+      attributes: { foo: 'bar' },
+      status: 'CONFIRMED',
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-02-01T00:00:00Z',
+      email: 'a@b',
+      phoneNumber: '+1',
+    })),
+    getUserBySubject: jest.fn(async () => ({ username: 'u' })),
+    listGroupsForUser: jest.fn(async () => [
+      { name: 'admins', description: 'admin role' },
+    ]),
+    listGroups: jest.fn(async () => ({ items: [{ name: 'g' }], nextToken: 'next-g' })),
+    updateUser: jest.fn(async () => ({ username: 'u', enabled: true, attributes: {} })),
+    disableUser: jest.fn(async () => ({ ok: true })),
+    enableUser: jest.fn(async () => ({ ok: true })),
+    addUserToGroup: jest.fn(async () => ({ ok: true })),
+    removeUserFromGroup: jest.fn(async () => ({ ok: true })),
+    verifyUserChannels: jest.fn(async () => ({ ok: true })),
+    resetUserPassword: jest.fn(async () => ({ ok: true })),
+    setUserPassword: jest.fn(async () => ({ ok: true })),
+    syncToLocal: jest.fn(async () => ({ inserted: 0, updated: 0 })),
+    syncUser: jest.fn(async () => ({ id: 'u', inserted: 0, updated: 1 })),
+    listGroupsWithMetaByUserId: jest.fn(async () => ({ groups: [] })),
+    ...overrides,
+  } as never;
+}
+
+describe('PormIdentityAdminFacade', () => {
+  it('list() expands each item via get() to include groups + attributes', async () => {
+    const service = makeAdminService({
+      listUsers: jest.fn(async () => ({ items: [{ username: 'alice', enabled: true }] })),
+    });
+    const facade = new PormIdentityAdminFacade(service);
+    const result = await facade.list({ limit: 1 });
+    expect(result.users).toHaveLength(1);
+    expect(result.users[0].groups).toEqual(['admins']);
+    expect(result.users[0].attributes).toEqual({ foo: 'bar' });
+  });
+
+  it('list() handles items without a username inline', async () => {
+    const service = makeAdminService({
+      listUsers: jest.fn(async () => ({
+        items: [{ enabled: false, status: 'UNCONFIRMED' }],
+        nextToken: 'tok',
+      })),
+    });
+    const facade = new PormIdentityAdminFacade(service);
+    const result = await facade.list({});
+    expect(result.users[0].username).toBe('');
+    expect(result.users[0].status).toBe('UNCONFIRMED');
+    expect(result.nextToken).toBe('tok');
+  });
+
+  it('get() composes user details + group names', async () => {
+    const facade = new PormIdentityAdminFacade(makeAdminService());
+    const result = await facade.get('alice');
+    expect(result.username).toBe('u');
+    expect(result.groups).toEqual(['admins']);
+    expect(result.attributes).toEqual({ foo: 'bar' });
+  });
+
+  it('getBySub() resolves username via getUserBySubject then composes', async () => {
+    const facade = new PormIdentityAdminFacade(makeAdminService());
+    const result = await facade.getBySub('sub-1');
+    expect(result.username).toBe('u');
+  });
+
+  it('update() short-circuits when no updatable attributes are set', async () => {
+    const service = makeAdminService();
+    const facade = new PormIdentityAdminFacade(service);
+    await expect(facade.update('alice', {})).resolves.toEqual({ updated: false });
+    expect(service.updateUser).not.toHaveBeenCalled();
+  });
+
+  it('update() short-circuits when custom is empty', async () => {
+    const service = makeAdminService();
+    const facade = new PormIdentityAdminFacade(service);
+    await expect(facade.update('alice', { custom: {} })).resolves.toEqual({ updated: false });
+    expect(service.updateUser).not.toHaveBeenCalled();
+  });
+
+  it('update() passes through every present field to updateUser', async () => {
+    const service = makeAdminService();
+    const facade = new PormIdentityAdminFacade(service);
+    await facade.update('alice', {
+      email: 'a@b',
+      phone_number: '+1',
+      name: 'Alice',
+      given_name: 'A',
+      family_name: 'L',
+      custom: { dept: 'eng' },
+    });
+    expect(service.updateUser).toHaveBeenCalledWith('alice', {
+      email: 'a@b',
+      phoneNumber: '+1',
+      name: 'Alice',
+      givenName: 'A',
+      familyName: 'L',
+      custom: { dept: 'eng' },
+    });
+  });
+
+  it('disable/enable/addToGroup/removeFromGroup/resetPassword/setPassword return their tags', async () => {
+    const facade = new PormIdentityAdminFacade(makeAdminService());
+    await expect(facade.disable('u')).resolves.toEqual({ disabled: true });
+    await expect(facade.enable('u')).resolves.toEqual({ enabled: true });
+    await expect(facade.addToGroup('u', 'g')).resolves.toEqual({ added: true });
+    await expect(facade.removeFromGroup('u', 'g')).resolves.toEqual({ removed: true });
+    await expect(facade.resetPassword('u')).resolves.toEqual({ reset: true });
+    await expect(facade.setPassword('u', 'pw')).resolves.toEqual({ updated: true });
+  });
+
+  it('verify() short-circuits when neither email nor phone is requested', async () => {
+    const service = makeAdminService();
+    const facade = new PormIdentityAdminFacade(service);
+    await expect(facade.verify('u', {})).resolves.toEqual({ verified: false });
+    expect(service.verifyUserChannels).not.toHaveBeenCalled();
+  });
+
+  it('verify() delegates when email or phone is requested', async () => {
+    const facade = new PormIdentityAdminFacade(makeAdminService());
+    await expect(facade.verify('u', { email: true })).resolves.toEqual({ verified: true });
+  });
+
+  it('listGroups / listGroupsWithMetaByUserId / listAllGroups delegate', async () => {
+    const facade = new PormIdentityAdminFacade(makeAdminService());
+    await expect(facade.listGroups('u')).resolves.toEqual({
+      groups: [{ name: 'admins', description: 'admin role' }],
+    });
+    await expect(facade.listGroupsWithMetaByUserId('uid')).resolves.toEqual({ groups: [] });
+    await expect(facade.listAllGroups({ limit: 5 })).resolves.toEqual({
+      groups: [{ name: 'g' }],
+      nextToken: 'next-g',
+    });
+  });
+
+  it('syncToLocal / syncUser delegate', async () => {
+    const facade = new PormIdentityAdminFacade(makeAdminService());
+    await expect(facade.syncToLocal()).resolves.toEqual({ inserted: 0, updated: 0 });
+    await expect(facade.syncUser('u')).resolves.toEqual({ id: 'u', inserted: 0, updated: 1 });
+  });
+});
+
+describe('PecIdentityAdminFacade', () => {
+  it('list() maps items into PEC summary shape with parsed dates', async () => {
+    const service = makeAdminService({
+      listUsers: jest.fn(async () => ({
+        items: [
+          {
+            username: 'u',
+            status: 'CONFIRMED',
+            enabled: true,
+            createdAt: '2026-01-01T00:00:00Z',
+            updatedAt: 'invalid-date',
+            email: 'a@b',
+            phoneNumber: '+1',
+          },
+        ],
+        nextToken: 'next-y',
+      })),
+    });
+    const facade = new PecIdentityAdminFacade(service);
+    const result = await facade.list({});
+    expect(result.items[0].createdAt).toBeInstanceOf(Date);
+    expect(result.items[0].updatedAt).toBeUndefined();
+    expect(result.items[0].email).toBe('a@b');
+    expect(result.items[0].phone_number).toBe('+1');
+    expect(result.nextToken).toBe('next-y');
+  });
+
+  it('list() emits null email/phone when adapter returns undefined', async () => {
+    const service = makeAdminService({
+      listUsers: jest.fn(async () => ({
+        items: [{ username: 'u', enabled: true }],
+      })),
+    });
+    const facade = new PecIdentityAdminFacade(service);
+    const result = await facade.list({});
+    expect(result.items[0].email).toBeNull();
+    expect(result.items[0].phone_number).toBeNull();
+  });
+
+  it('get() maps user detail with parsed dates', async () => {
+    const facade = new PecIdentityAdminFacade(makeAdminService());
+    const result = await facade.get('u');
+    expect(result.username).toBe('u');
+    expect(result.status).toBe('CONFIRMED');
+    expect(result.attributes).toEqual({ foo: 'bar' });
+  });
+
+  it('update() filters undefined fields, calls updateUser, returns mapped detail', async () => {
+    const service = makeAdminService({
+      updateUser: jest.fn(async () => ({
+        username: 'u',
+        enabled: false,
+        attributes: { bar: 'baz' },
+      })),
+    });
+    const facade = new PecIdentityAdminFacade(service);
+    const result = await facade.update('u', { email: 'new@b' });
+    expect(service.updateUser).toHaveBeenCalledWith('u', { email: 'new@b' });
+    expect(result.enabled).toBe(false);
+  });
+
+  it('disable/enable/listGroups/addToGroup/removeFromGroup/verify/resetPassword delegate', async () => {
+    const facade = new PecIdentityAdminFacade(makeAdminService());
+    await expect(facade.disable('u')).resolves.toEqual({ ok: true });
+    await expect(facade.enable('u')).resolves.toEqual({ ok: true });
+    await expect(facade.listGroups('u')).resolves.toEqual([
+      { name: 'admins', description: 'admin role' },
+    ]);
+    await expect(facade.addToGroup('u', 'g')).resolves.toEqual({ ok: true });
+    await expect(facade.removeFromGroup('u', 'g')).resolves.toEqual({ ok: true });
+    await expect(facade.verify('u', { email: true })).resolves.toEqual({ ok: true });
+    await expect(facade.resetPassword('u')).resolves.toEqual({ ok: true });
+  });
+
+  it('listAllGroups() maps items + nextToken', async () => {
+    const facade = new PecIdentityAdminFacade(makeAdminService());
+    await expect(facade.listAllGroups({ limit: 5 })).resolves.toEqual({
+      items: [{ name: 'g' }],
+      nextToken: 'next-g',
+    });
+  });
+});

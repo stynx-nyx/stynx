@@ -1348,3 +1348,75 @@ real Postgres (via the `@stynx/testing` create-test-app helper that
 already provisions Postgres + Redis + LocalStack containers).
 
 Scorecard unchanged at 40/45 PASS (89%).
+
+## §27 — U17: backend → PASS via mocked-interface unit tests
+
+Backend was the load-bearing flip in the U15 sequencing. Originally
+scoped as a "scaffold a NestJS TestBed harness against real Postgres"
+~6-8 hr lift; after surveying the source, the **real architecture
+made this much cheaper**: every external dependency in backend is
+behind an interface (PgQueryableClient, IdentityAdminAdapter,
+IdentityLocalSyncSqlExecutor, TenantBoundDbClientFactory, AuditSink,
+DbContextApplier, TokenVerifier, etc.). No real Postgres needed —
+hand-rolled fakes for the interfaces give the same coverage with
+better isolation and faster CI.
+
+### What landed (10 new unit spec files)
+
+| Spec                                                    | Tests       | File covered (before → after)                      |
+| ------------------------------------------------------- | ----------- | -------------------------------------------------- |
+| pg-session-db-context.applier.spec.ts                   | 14          | 7% → ~100%                                         |
+| request-db-client-lifecycle.spec.ts                     | 12          | 8% → ~100%                                         |
+| tenant-lifecycle.middleware.spec.ts                     | 13          | 11% → ~95%                                         |
+| auth-context.guard.spec.ts                              | 11          | 11% → ~100%                                        |
+| tenant-entitlement.spec.ts (claim-first + sql-fallback) | 17          | 5% / 4% → ~95% each                                |
+| identity-admin.service.spec.ts                          | 15          | 7% → ~100%                                         |
+| integration-facades.spec.ts                             | 18          | 6% → ~95% (covers both Porm + Pec facades)         |
+| pg-local-sync.adapter.spec.ts                           | 16          | 2% → ~80% (largest single file in backend)         |
+| db-context.interceptor.spec.ts                          | 14          | 13% → ~100% (incl. getPrincipalFromRequest helper) |
+| audit.interceptor.spec.ts + redaction-policy.spec.ts    | 8 + 10 = 18 | 21% / 7% → ~95% each                               |
+
+Total: ~150 tests, ~10 spec files.
+
+### Per-package result
+
+| Package | U16  | U17       | Δ      |
+| ------- | ---- | --------- | ------ |
+| backend | 22.5 | **83.83** | +61.33 |
+
+### Aggregate state at U17
+
+| Metric           | U16    | U17      |
+| ---------------- | ------ | -------- |
+| Per-package ≥80% | 14     | **15**   |
+| Aggregate F3×T2  | 67.2   | **75.2** |
+| F3×T2 cell       | REVIEW | REVIEW   |
+
+Backend was the largest single unlock in the workspace (~520 lines).
+Per the U15 math, this brings aggregate from 67.2 → 75.2 — confirming
+the prediction within 0.1pp. Cell still REVIEW; needs ~330 more
+covered lines to hit 80%.
+
+### Key architectural insight
+
+The original sequencing called backend "auth-shaped (needs new
+specs)" and "needs scaffold." The first label held; the second did
+not. Backend is well-architected for testability: every IO boundary
+is a small interface with a fake-able shape. The "no int suite at
+all" status was accurate but misleading — it implied integration
+infra was _required_, when in fact the package was already designed
+for the cheaper unit-test path. This is a useful sensor signal to
+add to a future pack widening: "package has no int suite" should be
+qualified by "and depends on concrete IO clients vs interfaces."
+
+### Next move
+
+Per the U15 math, the next package to flip the F3×T2 cell from REVIEW
+to PASS is **flow** (+~360 lines, +5.2pp aggregate, projected
+~80.4%). Flow's three big services (flow-runtime, flow-design,
+flow-forms) likely share the same architecture-for-testability — the
+DB executor is injected as an interface. Hypothesis: U18 looks like
+U17 in shape (~8-10 unit spec files, ~150 tests, ~6-8 hr of
+authoring).
+
+Scorecard unchanged at 40/45 PASS (89%).
