@@ -23,7 +23,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
     "test": "jest --config ./jest.config.cjs",
-    "test:int": "NODE_OPTIONS='--experimental-vm-modules --disable-warning=ExperimentalWarning' jest --config ./jest.integration.config.cjs"
+    "test:int": "node ../../scripts/record-test-artifact.mjs 'turbo-test$colon$int.log' -- node --experimental-vm-modules --disable-warning=ExperimentalWarning ./node_modules/jest/bin/jest.js --config ./jest.integration.config.cjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1037.0",

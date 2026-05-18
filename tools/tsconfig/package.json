@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.2.0",
   "description": "Shared TypeScript presets for the STYNX monorepo",
+  "scripts": {
+    "test": "node ../../scripts/record-test-artifact.mjs turbo-test.log -- node --test test/tsconfig.spec.mjs"
+  },
   "files": [
     "*.json",
     "README.md"

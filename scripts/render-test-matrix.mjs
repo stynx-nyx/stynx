@@ -8,25 +8,40 @@ const args = parseArgs(process.argv.slice(2));
 const useColor = args.color === true;
 const compact = args.compact === true;
 const showEmpty = args.empty === true;
+const aspect = args.aspect;
 const matrixConfig = loadMatrixConfig();
 
 const levels = ['Unit', 'API', 'DB', 'E2E', 'Mutation'];
 const coverageColumn = 'Coverage (lines|stat/brch|func)';
 const columns = [...levels, coverageColumn];
 const workspaces = discoverWorkspaces();
-const coverageByWorkspace = loadCoverageByWorkspace(workspaces);
+const aggregateCoverageByWorkspace = loadCoverageByWorkspace(workspaces);
 const unitCoverageByWorkspace = loadScratchCoverageByWorkspace(workspaces, 'unit');
+const integrationCoverageByWorkspace = loadScratchCoverageByWorkspace(workspaces, 'integration');
 const rows = [];
 
 for (const ws of workspaces) {
-  const cells = {
-    Unit: buildTestCell(ws, 'Unit', readTurboResult(ws.dir, 'turbo-test.log'), unitCoverageByWorkspace.get(ws.dir)),
-    API: buildTestCell(ws, 'API', readApiResult(ws), null),
-    DB: buildTestCell(ws, 'DB', readDbResult(ws), null),
-    E2E: buildTestCell(ws, 'E2E', readE2EResult(ws), null),
-    Mutation: buildTestCell(ws, 'Mutation', readMutationResult(ws), null),
-    [coverageColumn]: buildCoverageCell(ws, coverageByWorkspace.get(ws.dir)),
+  const results = {
+    Unit: readTurboArtifact(ws.dir, 'turbo-test.log'),
+    API: readApiResult(ws),
+    DB: readDbResult(ws),
+    E2E: readE2EResult(ws),
+    Mutation: readMutationResult(ws),
+    [coverageColumn]: aggregateCoverageByWorkspace.has(ws.dir)
+      ? { status: 'passed', source: 'coverage' }
+      : null,
   };
+  const coverage = {
+    Unit: unitCoverageByWorkspace.get(ws.dir),
+    API: null,
+    DB: integrationCoverageByWorkspace.get(ws.dir),
+    E2E: null,
+    Mutation: null,
+    [coverageColumn]: aggregateCoverageByWorkspace.get(ws.dir),
+  };
+  const cells = Object.fromEntries(
+    columns.map((column) => [column, buildCell(ws, column, results[column], coverage[column])]),
+  );
 
   if (!showEmpty && Object.values(cells).every((cell) => !isInterestingCell(cell))) {
     continue;
@@ -38,46 +53,67 @@ for (const ws of workspaces) {
 printMatrix(rows);
 
 function parseArgs(values) {
-  const parsed = { color: false, compact: false, empty: false };
+  const parsed = { color: false, compact: false, empty: false, aspect: 'status' };
+  const aspectFlags = [];
+
   for (const value of values) {
+    if (value === '--') continue;
     if (value === '--color' || value === '--color=always') parsed.color = true;
-    if (value === '--no-color' || value === '--color=never') parsed.color = false;
-    if (value === '--compact') parsed.compact = true;
-    if (value === '--empty') parsed.empty = true;
-    if (value === '--help' || value === '-h') {
-      process.stdout.write(`Usage: node scripts/render-test-matrix.mjs [--color] [--compact] [--empty]
+    else if (value === '--no-color' || value === '--color=never') parsed.color = false;
+    else if (value === '--compact') parsed.compact = true;
+    else if (value === '--empty') parsed.empty = true;
+    else if (value === '--status') aspectFlags.push('status');
+    else if (value === '--coverage') aspectFlags.push('coverage');
+    else if (value === '--timing') aspectFlags.push('timing');
+    else if (value === '--help' || value === '-h') {
+      printUsage();
+      process.exit(0);
+    } else {
+      process.stderr.write(`Unknown option: ${value}\n\n`);
+      printUsage(process.stderr);
+      process.exit(2);
+    }
+  }
+
+  const uniqueAspectFlags = [...new Set(aspectFlags)];
+  if (uniqueAspectFlags.length > 1) {
+    process.stderr.write(`Incompatible aspect flags: ${aspectFlags.map((flag) => `--${flag}`).join(' ')}\n`);
+    process.exit(2);
+  }
+  if (uniqueAspectFlags.length === 1) parsed.aspect = uniqueAspectFlags[0];
+  return parsed;
+}
+
+function printUsage(stream = process.stdout) {
+  stream.write(`Usage: node scripts/render-test-matrix.mjs [--status|--coverage|--timing] [--color] [--compact] [--empty]
 
 Reads existing result artifacts only; it does not run tests.
 
 Sources:
   - scripts/test-matrix.config.json for meaningless cells and coverage thresholds
-  - */.turbo/turbo-test*.log for Jest pass counts
-  - reference/web/test-results/.last-run.json for Playwright status
+  - */.turbo/turbo-test*.log for Jest, Node test, and custom test summaries
+  - */.turbo/turbo-test*.log.meta.json for recorder timing metadata
+  - reference/web/test-results/.last-run.json for Playwright E2E status
   - packages/*/reports/mutation/mutation.json when present
   - coverage/coverage-final.json for aggregate coverage
   - coverage/.aggregate-scratch/<pkg>/unit/coverage-final.json for unit coverage
+  - coverage/.aggregate-scratch/<pkg>/integration/coverage-final.json for DB coverage
 
-Cell format:
-  [pass/all]
-  lines | statements
-  branches | functions
+Modes:
+  --status    state plus [suites_passed/suites_total | tests_passed/tests_total] counts
+  --coverage  coverage only: lines | statements / branches | functions
+  --timing    runtime only: 842ms, 3.1s, or 1:24
 
 States:
   '   '     configured as meaningless for that package/level
   ' - '     no package script/config for that level
-  ' 0 '     package has that test level, but no current result artifact exists
-  NO COUNTS coverage exists, but no pass/all result artifact exists
-  FAIL     result artifact exists and did not pass all tests
+  ' 0 '     package has that level, but no current artifact exists
+  FAIL      current artifact exists and did not pass
 
 Color:
-  GREEN  >= configured threshold
-  YELLOW >= 50 and below threshold
-  RED    < 50
+  Status/timing states use emoji glyphs under --color.
+  Coverage numbers keep ANSI threshold coloring under --color.
 `);
-      process.exit(0);
-    }
-  }
-  return parsed;
 }
 
 function discoverWorkspaces() {
@@ -114,34 +150,66 @@ function loadMatrixConfig() {
   return JSON.parse(readFileSync(path, 'utf8'));
 }
 
-function readTurboResult(dir, fileName) {
+function readTurboArtifact(dir, fileName) {
   const path = join(dir, '.turbo', fileName);
   if (!existsSync(path)) return null;
-  return parseJestLog(readFileSync(path, 'utf8'));
+
+  const parsed = parseTestLog(readFileSync(path, 'utf8')) ?? { status: 'present' };
+  const meta = readArtifactMeta(path);
+  return mergeArtifactMeta(parsed, meta);
+}
+
+function readArtifactMeta(logPath) {
+  const metaPath = `${logPath}.meta.json`;
+  if (!existsSync(metaPath)) return null;
+  try {
+    return JSON.parse(readFileSync(metaPath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function mergeArtifactMeta(result, meta) {
+  if (!meta) return result;
+  const merged = { ...result };
+  if (typeof meta.durationMs === 'number' && Number.isFinite(meta.durationMs)) {
+    merged.durationMs = meta.durationMs;
+  }
+  if (meta.signal || (typeof meta.exitCode === 'number' && meta.exitCode !== 0)) {
+    merged.status = 'failed';
+  } else if (!merged.status || merged.status === 'present') {
+    merged.status = 'passed';
+  }
+  return merged;
 }
 
 function readApiResult(ws) {
   if (ws.name !== '@stynx/reference-api') return null;
-  return readTurboResult(ws.dir, 'turbo-test$colon$int.log') ?? readTurboResult(ws.dir, 'turbo-test.log');
+  return readTurboArtifact(ws.dir, 'turbo-test$colon$int.log') ?? readTurboArtifact(ws.dir, 'turbo-test.log');
 }
 
 function readDbResult(ws) {
-  if (ws.root === 'test' && basename(ws.dir) === 'db') return readTurboResult(ws.dir, 'turbo-test.log');
-  if (ws.scripts['test:int']) return readTurboResult(ws.dir, 'turbo-test$colon$int.log');
+  if (ws.root === 'test' && basename(ws.dir) === 'db') return readTurboArtifact(ws.dir, 'turbo-test.log');
+  if (ws.scripts['test:int']) return readTurboArtifact(ws.dir, 'turbo-test$colon$int.log');
   if (!ws.dir.includes(`${sep}packages${sep}`)) return null;
-  return readTurboResult(ws.dir, 'turbo-test$colon$int.log');
+  return readTurboArtifact(ws.dir, 'turbo-test$colon$int.log');
 }
 
 function readE2EResult(ws) {
   if (ws.name !== '@stynx/reference-web') return null;
-  const path = join(ws.dir, 'test-results', '.last-run.json');
-  if (!existsSync(path)) return null;
-  const payload = JSON.parse(readFileSync(path, 'utf8'));
-  if (payload.status === 'passed') return { passed: null, total: null, status: 'passed' };
-  if (Array.isArray(payload.failedTests)) {
-    return { passed: 0, total: payload.failedTests.length, status: 'failed' };
-  }
-  return { passed: null, total: null, status: payload.status ?? 'unknown' };
+  const e2eArtifact =
+    readTurboArtifact(ws.dir, 'turbo-test$colon$e2e.log') ??
+    readTurboArtifact(ws.dir, 'turbo-test-e2e.log');
+  const lastRunPath = join(ws.dir, 'test-results', '.last-run.json');
+  if (!existsSync(lastRunPath)) return e2eArtifact;
+
+  const payload = JSON.parse(readFileSync(lastRunPath, 'utf8'));
+  const status = payload.status === 'passed' ? 'passed' : payload.status === 'failed' ? 'failed' : 'present';
+  return {
+    ...(e2eArtifact ?? {}),
+    status,
+    source: 'playwright-last-run',
+  };
 }
 
 function readMutationResult(ws) {
@@ -149,47 +217,89 @@ function readMutationResult(ws) {
   if (!existsSync(path)) return null;
   const payload = JSON.parse(readFileSync(path, 'utf8'));
   const score = payload?.systemUnderTestMetrics?.mutationScore;
-  if (typeof score !== 'number') return { passed: null, total: null, status: 'present' };
+  if (typeof score !== 'number') return { status: 'present', source: 'mutation' };
   return {
-    passed: Math.round(score),
-    total: 100,
-    status: 'score',
-    note: `${score.toFixed(1)}%`,
+    suitesPassed: null,
+    suitesTotal: null,
+    testsPassed: Math.round(score),
+    testsTotal: 100,
+    status: 'passed',
+    source: 'mutation',
   };
 }
 
-function parseJestLog(raw) {
+function parseTestLog(raw) {
   const text = stripAnsi(raw).replace(/\r/g, '\n');
-  const matches = [...text.matchAll(/Tests:\s+([^\n]+)/g)];
-  if (matches.length > 0) {
-    const summary = matches.at(-1)[1];
-    const total = numberBefore(summary, 'total');
-    const passed =
-      numberBefore(summary, 'passed') ??
-      (total != null ? total - (numberBefore(summary, 'failed') ?? 0) : null);
-    const status = (numberBefore(summary, 'failed') ?? 0) > 0 ? 'failed' : 'passed';
-    return { passed, total, status };
-  }
-
-  return parseNodeTestLog(text);
+  return parseJestOrCustomLog(text) ?? parseNodeTestLog(text);
 }
 
-function parseNodeTestLog(text) {
-  const total = lastNumberAfterInfo(text, 'tests');
-  const passed = lastNumberAfterInfo(text, 'pass');
-  const failed = lastNumberAfterInfo(text, 'fail') ?? 0;
-  if (total == null && passed == null) return null;
+function parseJestOrCustomLog(text) {
+  const suiteSummary = lastSummary(text, 'Test Suites');
+  const testSummary = lastSummary(text, 'Tests');
+  if (!suiteSummary && !testSummary) return null;
+
+  const suites = suiteSummary ? parseSummaryCounts(suiteSummary) : {};
+  const tests = testSummary ? parseSummaryCounts(testSummary) : {};
+  const failed = (suites.failed ?? 0) + (tests.failed ?? 0);
   return {
-    passed: passed ?? (total != null ? total - failed : null),
-    total: total ?? passed,
+    suitesPassed: suites.passed ?? null,
+    suitesTotal: suites.total ?? null,
+    testsPassed: tests.passed ?? null,
+    testsTotal: tests.total ?? null,
+    durationMs: parseJestDurationMs(text),
     status: failed > 0 ? 'failed' : 'passed',
   };
 }
 
-function lastNumberAfterInfo(text, word) {
-  const matches = [...text.matchAll(new RegExp(`(?:ℹ|i)\\s+${word}\\s+(\\d+)`, 'g'))];
+function parseNodeTestLog(text) {
+  const suitesTotal = lastNumberAfterInfo(text, 'suites');
+  const testsTotal = lastNumberAfterInfo(text, 'tests');
+  const testsPassed = lastNumberAfterInfo(text, 'pass');
+  const failed = lastNumberAfterInfo(text, 'fail') ?? 0;
+  const durationMs = lastNumberAfterInfo(text, 'duration_ms');
+  if (suitesTotal == null && testsTotal == null && testsPassed == null && durationMs == null) {
+    return null;
+  }
+
+  return {
+    suitesPassed: suitesTotal != null && failed === 0 ? suitesTotal : null,
+    suitesTotal,
+    testsPassed: testsPassed ?? (testsTotal != null ? testsTotal - failed : null),
+    testsTotal: testsTotal ?? testsPassed,
+    durationMs,
+    status: failed > 0 ? 'failed' : 'passed',
+  };
+}
+
+function lastSummary(text, label) {
+  const matches = [...text.matchAll(new RegExp(`${label}:\\s+([^\\n]+)`, 'g'))];
   if (matches.length === 0) return null;
-  return Number(matches.at(-1)[1]);
+  return matches.at(-1)[1];
+}
+
+function parseSummaryCounts(summary) {
+  const total = numberBefore(summary, 'total');
+  const failed = numberBefore(summary, 'failed') ?? 0;
+  const passed = numberBefore(summary, 'passed') ?? (total != null ? total - failed : null);
+  return { passed, total, failed };
+}
+
+function parseJestDurationMs(text) {
+  const matches = [...text.matchAll(/Time:\s+([\d.]+)\s*(ms|s|m)?/g)];
+  if (matches.length === 0) return null;
+  const [, value, unit = 's'] = matches.at(-1);
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return null;
+  if (unit === 'ms') return numeric;
+  if (unit === 'm') return numeric * 60_000;
+  return numeric * 1000;
+}
+
+function lastNumberAfterInfo(text, word) {
+  const matches = [...text.matchAll(new RegExp(`(?:ℹ|i)\\s+${word}\\s+([\\d.]+)`, 'g'))];
+  if (matches.length === 0) return null;
+  const value = Number(matches.at(-1)[1]);
+  return Number.isFinite(value) ? value : null;
 }
 
 function numberBefore(text, word) {
@@ -197,17 +307,20 @@ function numberBefore(text, word) {
   return match ? Number(match[1]) : null;
 }
 
-function buildTestCell(ws, level, result, coverage) {
-  if (isNotApplicable(ws, level)) {
+function buildCell(ws, column, result, coverage) {
+  if (aspect === 'coverage') return buildCoverageCell(ws, column, coverage);
+  if (aspect === 'timing') return buildTimingCell(ws, column, result);
+  return buildStatusCell(ws, column, result);
+}
+
+function buildStatusCell(ws, column, result) {
+  if (isNotApplicable(ws, column)) {
     return { state: 'not-applicable' };
   }
 
-  const configured = hasConfiguredLevel(ws, level);
-  if (!configured && !result && !coverage) {
+  const configured = isConfiguredColumn(ws, column);
+  if (!configured && !result) {
     return { state: 'no-tests' };
-  }
-  if (!result && coverage) {
-    return { state: 'no-counts', coverage };
   }
   if (!result) {
     return { state: 'not-run' };
@@ -216,21 +329,45 @@ function buildTestCell(ws, level, result, coverage) {
   return {
     state: resultFailed(result) ? 'failed' : 'passed',
     result,
-    coverage,
   };
 }
 
-function buildCoverageCell(ws, coverage) {
-  if (isNotApplicable(ws, 'Coverage')) {
+function buildCoverageCell(ws, column, coverage) {
+  if (isNotApplicable(ws, column) || !['Unit', 'DB', coverageColumn].includes(column)) {
     return { state: 'not-applicable' };
   }
   if (coverage) {
     return { state: 'coverage', coverage };
   }
-  if (hasAnyCoverageProducingLevel(ws)) {
+  if (isConfiguredColumn(ws, column)) {
     return { state: 'not-run' };
   }
   return { state: 'no-tests' };
+}
+
+function buildTimingCell(ws, column, result) {
+  if (isNotApplicable(ws, column) || column === coverageColumn) {
+    return { state: 'not-applicable' };
+  }
+  const configured = isConfiguredColumn(ws, column);
+  if (!configured && !result) {
+    return { state: 'no-tests' };
+  }
+  if (!result) {
+    return { state: 'not-run' };
+  }
+  if (typeof result.durationMs === 'number' && Number.isFinite(result.durationMs)) {
+    return {
+      state: resultFailed(result) ? 'failed' : 'passed',
+      durationMs: result.durationMs,
+    };
+  }
+  return { state: 'unknown-timing' };
+}
+
+function isConfiguredColumn(ws, column) {
+  if (column === coverageColumn) return hasAnyCoverageProducingLevel(ws);
+  return hasConfiguredLevel(ws, column);
 }
 
 function isInterestingCell(cell) {
@@ -240,8 +377,12 @@ function isInterestingCell(cell) {
 function resultFailed(result) {
   if (!result) return false;
   if (result.status === 'failed') return true;
-  if (result.status === 'score' || result.status === 'present') return false;
-  return result.passed != null && result.total != null && result.total > 0 && result.passed < result.total;
+  return (
+    result.testsPassed != null &&
+    result.testsTotal != null &&
+    result.testsTotal > 0 &&
+    result.testsPassed < result.testsTotal
+  );
 }
 
 function hasAnyCoverageProducingLevel(ws) {
@@ -275,7 +416,8 @@ function hasAnyFile(dir, names) {
   return names.some((name) => existsSync(join(dir, name)));
 }
 
-function isNotApplicable(ws, level) {
+function isNotApplicable(ws, column) {
+  const level = column === coverageColumn ? 'Coverage' : column;
   return (matrixConfig.notApplicable ?? []).some((entry) => {
     if (!entry.levels?.includes(level)) return false;
     return matchesPattern(ws.name, entry.packagePattern);
@@ -383,44 +525,74 @@ function printMatrix(rows) {
   const body = rows.map((row) => [row.name, ...columns.map((level) => renderCell(row.cells[level]))]);
   const table = renderTable([headers, ...body]);
   process.stdout.write(`${table}\n\n`);
-  process.stdout.write('Coverage cell order: lines | statements / branches | functions.\n');
-  process.stdout.write('Coverage column uses coverage/coverage-final.json; level cells use level-specific scratch coverage when present.\n');
-  process.stdout.write("'   ' = configured meaningless; ' - ' = no package script/config; ' 0 ' = test exists but has no current artifact.\n");
-  process.stdout.write('NO COUNTS = coverage exists but no pass/all artifact; FAIL = current artifact did not pass all tests.\n');
+
+  if (aspect === 'coverage') {
+    process.stdout.write('Coverage cell order: lines | statements / branches | functions.\n');
+    process.stdout.write('Unit uses unit scratch coverage; DB uses integration scratch coverage; Coverage uses coverage/coverage-final.json.\n');
+  } else if (aspect === 'timing') {
+    process.stdout.write('Timing prefers recorder sidecar durationMs, then Jest Time, then Node duration_ms.\n');
+  } else {
+    process.stdout.write('Status cell order: suites_passed/suites_total | tests_passed/tests_total.\n');
+  }
+  process.stdout.write("'   ' = configured meaningless; ' - ' = no package script/config; ' 0 ' = applicable level has no current artifact.\n");
 }
 
 function renderCell(cell) {
-  if (!cell) return colorize(' - ', 'dim');
+  if (!cell) return renderNoTests();
   if (cell.state === 'not-applicable') return colorize('   ', 'dim');
-  if (cell.state === 'no-tests') return colorize(' - ', 'dim');
-  if (cell.state === 'not-run') return colorize(' 0 ', 'yellow');
+  if (cell.state === 'no-tests') return renderNoTests();
+  if (cell.state === 'not-run') return renderNotRun();
   if (cell.state === 'coverage') return renderCoverage(cell.coverage);
+  if (cell.state === 'unknown-timing') return renderNotRun();
+  if (aspect === 'timing') return renderTiming(cell);
+  return renderStatusResult(cell);
+}
 
-  const result = renderStatefulResult(cell);
-  const coverage = renderCoverage(cell.coverage);
-  if (compact) {
-    return [result, coverage].filter((part) => part && part !== '—').join(' ');
+function renderNoTests() {
+  return useColor ? colorize('·', 'dim') : colorize(' - ', 'dim');
+}
+
+function renderNotRun() {
+  return useColor ? `${stateGlyph('not-run')} 0` : colorize(' 0 ', 'yellow');
+}
+
+function renderTiming(cell) {
+  return `${stateGlyph(cell.state)}${formatDuration(cell.durationMs)}`;
+}
+
+function renderStatusResult(cell) {
+  const counts = renderCounts(cell.result);
+  if (cell.state === 'failed') {
+    return `${stateGlyph('failed')}FAIL ${counts}`;
   }
-  return [result, coverage].filter((part) => part && part !== '—').join('\n');
+  return `${stateGlyph('passed')}${counts}`;
 }
 
-function renderStatefulResult(cell) {
-  if (cell.state === 'no-counts') return colorize('NO COUNTS', 'yellow');
-  if (cell.state === 'failed') return `${colorize('FAIL', 'red')} ${renderResult(cell.result)}`;
-  return renderResult(cell.result);
+function stateGlyph(state) {
+  if (!useColor) return '';
+  if (state === 'failed') return '🔴 ';
+  if (state === 'not-run') return '🟡';
+  return '🟢 ';
 }
 
-function renderResult(result) {
+function renderCounts(result) {
   if (!result) return '';
-  if (result.status === 'score') return colorize(`[${result.note ?? `${result.passed}/${result.total}`}]`, 'yellow');
-  if (result.passed == null || result.total == null) return `[${result.status}]`;
-  const text = `[${result.passed}/${result.total}]`;
-  if (result.total === 0) return text;
-  return colorize(text, result.passed === result.total ? 'green' : 'red');
+  return `[${renderCountPair(result.suitesPassed, result.suitesTotal)} | ${renderCountPair(
+    result.testsPassed,
+    result.testsTotal,
+  )}]`;
+}
+
+function renderCountPair(passed, total) {
+  return `${formatCount(passed)}/${formatCount(total)}`;
+}
+
+function formatCount(value) {
+  return value == null ? ' ' : String(value);
 }
 
 function renderCoverage(coverage) {
-  if (!coverage) return '—';
+  if (!coverage) return '  |    /    |   ';
   const first = `${formatMetric(coverage.lines, 'lines')} | ${formatMetric(coverage.statements, 'statements')}`;
   const second = `${formatMetric(coverage.branches, 'branches')} | ${formatMetric(coverage.functions, 'functions')}`;
   return compact ? `${first} / ${second}` : `${first}\n${second}`;
@@ -441,6 +613,18 @@ function formatMetric(value, metric) {
 
 function thresholdFor(metric) {
   return matrixConfig.thresholds?.[metric] ?? (metric === 'branches' ? 80 : 85);
+}
+
+function formatDuration(durationMs) {
+  if (durationMs < 1000) return `${Math.max(0, Math.round(durationMs))}ms`;
+  if (durationMs < 60_000) {
+    const seconds = durationMs / 1000;
+    return `${seconds < 10 ? seconds.toFixed(1) : Math.round(seconds)}s`;
+  }
+  const totalSeconds = Math.round(durationMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = String(totalSeconds % 60).padStart(2, '0');
+  return `${minutes}:${seconds}`;
 }
 
 function renderTable(rows) {
@@ -473,7 +657,7 @@ function padVisible(value, width) {
 }
 
 function visibleLength(value) {
-  return stripAnsi(value).length;
+  return Array.from(stripAnsi(value)).length;
 }
 
 function stripAnsi(value) {

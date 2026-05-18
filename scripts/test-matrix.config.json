@@ -7,6 +7,78 @@
   },
   "notApplicable": [
     {
+      "packagePattern": "@stynx/audit",
+      "levels": ["API"]
+    },
+    {
+      "packagePattern": "@stynx/auth",
+      "levels": ["API"]
+    },
+    {
+      "packagePattern": "@stynx/backend",
+      "levels": ["API", "DB"]
+    },
+    {
+      "packagePattern": "@stynx/cli",
+      "levels": ["API", "DB"]
+    },
+    {
+      "packagePattern": "@stynx/contracts",
+      "levels": ["API", "DB"]
+    },
+    {
+      "packagePattern": "@stynx/core",
+      "levels": ["API"]
+    },
+    {
+      "packagePattern": "@stynx/data",
+      "levels": ["API"]
+    },
+    {
+      "packagePattern": "@stynx/flow",
+      "levels": ["API"]
+    },
+    {
+      "packagePattern": "@stynx/health",
+      "levels": ["API"]
+    },
+    {
+      "packagePattern": "@stynx/i18n",
+      "levels": ["API"]
+    },
+    {
+      "packagePattern": "@stynx/idempotency",
+      "levels": ["API"]
+    },
+    {
+      "packagePattern": "@stynx/logging",
+      "levels": ["API"]
+    },
+    {
+      "packagePattern": "@stynx/privacy",
+      "levels": ["API"]
+    },
+    {
+      "packagePattern": "@stynx/ratelimit",
+      "levels": ["API"]
+    },
+    {
+      "packagePattern": "@stynx/sessions",
+      "levels": ["API"]
+    },
+    {
+      "packagePattern": "@stynx/storage",
+      "levels": ["API"]
+    },
+    {
+      "packagePattern": "@stynx/tenancy",
+      "levels": ["API"]
+    },
+    {
+      "packagePattern": "@stynx/testing",
+      "levels": ["API", "DB"]
+    },
+    {
       "packagePattern": "@stynx-web/*",
       "levels": ["API", "DB"]
     },
