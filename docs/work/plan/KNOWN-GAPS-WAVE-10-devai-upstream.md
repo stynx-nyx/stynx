@@ -1,5 +1,13 @@
 # Wave 10 — DEVAI Upstream
 
+**Status:** Closed / superseded by DEVAI Phase 33 (`2331ac9`, D-90 closeout) and
+the stynx Auditor closeout commit carrying the subject `Auditor: Wave 10
+closeout — DEVAI Phase 33 ratifies DV-01..DV-04 stale, closes D-A-35`. The Wave
+10 re-evaluation ratified DV-01..DV-04 as stale upstream rows and discovered
+D-A-35, which DEVAI closed in Phase 33.B (`dd28dcd`, with regression tests at
+`6f71524`). This plan is preserved as the forensic trail; do not reopen it for
+new DEVAI findings.
+
 **Roles:** Architect/Engineer in `../devai`; Auditor updates stynx references.
 **Branch suggestion:** work in `../devai`, not stynx.
 **Primary gaps:** DV-01, DV-02, DV-03, DV-04.
