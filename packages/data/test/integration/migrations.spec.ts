@@ -47,7 +47,9 @@ describe('Stynx platform migrations', () => {
     let adminClient: Client | undefined;
 
     try {
-      moduleRef = await createMigratedModule(testDatabase.connectionString('stynx-migration-owner'));
+      moduleRef = await createMigratedModule(
+        testDatabase.connectionString('stynx-migration-owner'),
+      );
       adminClient = await testDatabase.connectAsAdmin();
 
       const schemas = await queryExistingNames(
@@ -150,31 +152,59 @@ describe('Stynx platform migrations', () => {
           order by 1
         `,
       );
-      expect(curatedAuditTables).toEqual(expect.arrayContaining([
-        'auth.direct_perms',
-        'auth.group_memberships',
-        'auth.group_roles',
-        'auth.groups',
-        'auth.invitations',
-        'auth.membership_roles',
-        'auth.memberships',
-        'auth.perms',
-        'auth.role_perms',
-        'auth.roles',
-        'auth.sessions',
-        'auth.users',
-        'core.config',
-        'core.idempotency_keys',
-        'core.pii_map',
-        'core.rate_limit_overrides',
-        'core.schema_migrations',
-        'core.softdelete_fk_registry',
-        'storage.document_acl',
-        'storage.document_versions',
-        'storage.documents',
-        'tenancy.tenant_settings',
-        'tenancy.tenants',
-      ]));
+      expect(curatedAuditTables).toEqual(
+        expect.arrayContaining([
+          'auth.direct_perms',
+          'auth.group_memberships',
+          'auth.group_roles',
+          'auth.groups',
+          'auth.invitations',
+          'auth.membership_roles',
+          'auth.memberships',
+          'auth.perms',
+          'auth.role_perms',
+          'auth.roles',
+          'auth.sessions',
+          'auth.users',
+          'core.config',
+          'core.idempotency_keys',
+          'core.pii_map',
+          'core.rate_limit_overrides',
+          'core.schema_migrations',
+          'core.softdelete_fk_registry',
+          'storage.document_acl',
+          'storage.document_versions',
+          'storage.documents',
+          'tenancy.tenant_settings',
+          'tenancy.tenants',
+        ]),
+      );
+
+      const curatedTablesMissingAudit = await queryExistingNames(
+        adminClient,
+        `
+          with curated_tables as (
+            select c.oid, format('%s.%s', n.nspname, c.relname) as name
+            from pg_class c
+            join pg_namespace n on n.oid = c.relnamespace
+            left join pg_inherits inherited on inherited.inhrelid = c.oid
+            where n.nspname in ('auth', 'core', 'flow', 'storage', 'tenancy')
+              and c.relkind in ('r', 'p')
+              and inherited.inhrelid is null
+          )
+          select name
+          from curated_tables curated
+          where not exists (
+            select 1
+            from pg_trigger trg
+            where trg.tgrelid = curated.oid
+              and trg.tgname like 'trg_audit_%'
+              and not trg.tgisinternal
+          )
+          order by name
+        `,
+      );
+      expect(curatedTablesMissingAudit).toEqual([]);
 
       const tenantId = '11111111-1111-1111-1111-111111111111';
       await adminClient.query('set role stynx_app');

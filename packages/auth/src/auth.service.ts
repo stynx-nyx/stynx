@@ -16,6 +16,14 @@ interface UserRow {
   email: string;
 }
 
+interface AuthDatabase {
+  tx<T>(
+    fn: (trx: Transaction) => Promise<T>,
+    options?: { role?: 'owner' | 'app' | 'reader'; readonly?: boolean },
+  ): Promise<T>;
+  withSystemContext<T>(reason: string, fn: () => Promise<T>): Promise<T>;
+}
+
 export interface SessionActor {
   sid: string;
   sub: string;
@@ -38,8 +46,8 @@ export class StynxAuthService {
     deviceMeta: Record<string, unknown> = {},
   ): Promise<SessionBundle> {
     const claims = await this.cognitoValidator.validateAccessToken(cognitoToken);
-    return this.runWithActorContext(tenantId, claims.sub, async () => {
-      const user = await this.findOrCreateUser(claims);
+    const user = await this.findOrCreateUser(claims, tenantId);
+    return this.runWithActorContext(tenantId, user.id, async () => {
       await this.effectiveHashComputer.ensureMembershipHash(user.id, tenantId);
       const permissions = await this.permissionQueries.resolveForUser(user.id, tenantId);
       const session = await this.requireSessionService().create(
@@ -74,7 +82,12 @@ export class StynxAuthService {
     tenantId: string,
     deviceMeta: Record<string, unknown> = {},
   ): Promise<SessionBundle> {
-    const session = await this.exchangeExistingIdentity(actor.sub, actor.cognitoSub, tenantId, deviceMeta);
+    const session = await this.exchangeExistingIdentity(
+      actor.sub,
+      actor.cognitoSub,
+      tenantId,
+      deviceMeta,
+    );
     await this.requireSessionService().revoke(actor.sid);
     await this.permissionCache.invalidateSid(actor.sid);
     return session;
@@ -156,50 +169,64 @@ export class StynxAuthService {
     );
   }
 
-  private async findOrCreateUser(claims: CognitoAccessTokenClaims): Promise<{ id: string; cognitoSub: string }> {
-    return this.requireDatabase().tx(async (trx) => {
-      const existing = await trx.query<UserRow>(
-        `
-          select id, external_subject, email
-          from auth.users
-          where external_subject = $1
-             or ($2::text is not null and email = $2)
-          limit 1
-        `,
-        [claims.sub, claims.email ?? null],
-      );
+  private async findOrCreateUser(
+    claims: CognitoAccessTokenClaims,
+    tenantId: string,
+  ): Promise<{ id: string; cognitoSub: string }> {
+    const database = this.requireDatabase();
+    const existing = await database.withSystemContext('auth cognito user lookup', () =>
+      database.tx(
+        async (trx) =>
+          trx.query<UserRow>(
+            `
+            select id, external_subject, email
+            from auth.users
+            where external_subject = $1
+               or ($2::text is not null and email = $2)
+            limit 1
+          `,
+            [claims.sub, claims.email ?? null],
+          ),
+        { role: 'owner', readonly: true },
+      ),
+    );
 
-      const current = existing.rows[0];
-      if (current) {
+    const current = existing.rows[0];
+    if (current) {
+      return this.runWithActorContext(tenantId, current.id, async () => {
+        await database.tx(async (trx) => {
+          await trx.query(
+            `
+              update auth.users
+              set external_subject = $2,
+                  email = $3,
+                  updated_at = clock_timestamp()
+              where id = $1::uuid
+            `,
+            [current.id, claims.sub, claims.email ?? current.email],
+          );
+        });
+        return { id: current.id, cognitoSub: claims.sub };
+      });
+    }
+
+    const userId = randomUUID();
+    return this.runWithActorContext(tenantId, userId, async () => {
+      await database.tx(async (trx) => {
         await trx.query(
           `
-            update auth.users
-            set external_subject = $2,
-                email = $3,
-                updated_at = clock_timestamp()
-            where id = $1::uuid
+            insert into auth.users (id, email, external_subject, locale, created_at, updated_at)
+            values ($1::uuid, $2, $3, 'pt-BR', clock_timestamp(), clock_timestamp())
           `,
-          [current.id, claims.sub, claims.email ?? current.email],
+          [userId, claims.email ?? `${claims.sub}@stynx.local`, claims.sub],
         );
-        return { id: current.id, cognitoSub: claims.sub };
-      }
-
-      const userId = randomUUID();
-      await trx.query(
-        `
-          insert into auth.users (id, email, external_subject, locale, created_at, updated_at)
-          values ($1::uuid, $2, $3, 'pt-BR', clock_timestamp(), clock_timestamp())
-        `,
-        [userId, claims.email ?? `${claims.sub}@stynx.local`, claims.sub],
-      );
+      });
       return { id: userId, cognitoSub: claims.sub };
     });
   }
 
-  private requireDatabase() {
-    const database = this.moduleRef.get(Database, { strict: false }) as {
-      tx<T>(fn: (trx: Transaction) => Promise<T>): Promise<T>;
-    } | undefined;
+  private requireDatabase(): AuthDatabase {
+    const database = this.moduleRef.get(Database, { strict: false }) as AuthDatabase | undefined;
     if (!database) {
       throw new Error('Database provider is unavailable to StynxAuthService');
     }
@@ -207,10 +234,12 @@ export class StynxAuthService {
   }
 
   private requireSessionService() {
-    const service = this.moduleRef.get(SessionService, { strict: false }) as {
-      create: (...args: unknown[]) => Promise<SessionBundle>;
-      revoke: (sid: string) => Promise<boolean>;
-    } | undefined;
+    const service = this.moduleRef.get(SessionService, { strict: false }) as
+      | {
+          create: (...args: unknown[]) => Promise<SessionBundle>;
+          revoke: (sid: string) => Promise<boolean>;
+        }
+      | undefined;
     if (!service) {
       throw new Error('SessionService provider is unavailable to StynxAuthService');
     }

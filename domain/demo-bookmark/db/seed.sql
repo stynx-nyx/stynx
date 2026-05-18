@@ -7,21 +7,21 @@
 INSERT INTO demo.demo__bookmark_bookmark
   (id, tenant_id, owner_id, url, title, notes)
 VALUES
-  ('00000000-0000-4000-8000-000000bk0001'::uuid,
-   '00000000-0000-4000-8000-000000ten001'::uuid,
-   '00000000-0000-4000-8000-00000000user'::uuid,
+  ('00000000-0000-4000-8000-000000b40001'::uuid,
+   '00000000-0000-4000-8000-000000fe0001'::uuid,
+   '00000000-0000-4000-8000-00000000fee0'::uuid,
    'https://devai.example/architecture',
    'DEVAI architecture',
    'Useful reference for the C-4 pilot.'),
-  ('00000000-0000-4000-8000-000000bk0002'::uuid,
-   '00000000-0000-4000-8000-000000ten001'::uuid,
-   '00000000-0000-4000-8000-00000000user'::uuid,
+  ('00000000-0000-4000-8000-000000b40002'::uuid,
+   '00000000-0000-4000-8000-000000fe0001'::uuid,
+   '00000000-0000-4000-8000-00000000fee0'::uuid,
    'https://devai.example/adopters',
    'Adopter docs',
    NULL),
-  ('00000000-0000-4000-8000-000000bk0003'::uuid,
-   '00000000-0000-4000-8000-000000ten001'::uuid,
-   '00000000-0000-4000-8000-00000000user'::uuid,
+  ('00000000-0000-4000-8000-000000b40003'::uuid,
+   '00000000-0000-4000-8000-000000fe0001'::uuid,
+   '00000000-0000-4000-8000-00000000fee0'::uuid,
    'https://stynx.example/specs',
    'Stynx specs index',
    'Reading-order anchor for stynx.')
@@ -30,9 +30,9 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO demo.demo__bookmark_bookmark_tag
   (bookmark_id, tag)
 VALUES
-  ('00000000-0000-4000-8000-000000bk0001'::uuid, 'devai'),
-  ('00000000-0000-4000-8000-000000bk0001'::uuid, 'architecture'),
-  ('00000000-0000-4000-8000-000000bk0002'::uuid, 'devai'),
-  ('00000000-0000-4000-8000-000000bk0002'::uuid, 'adopters'),
-  ('00000000-0000-4000-8000-000000bk0003'::uuid, 'stynx')
+  ('00000000-0000-4000-8000-000000b40001'::uuid, 'devai'),
+  ('00000000-0000-4000-8000-000000b40001'::uuid, 'architecture'),
+  ('00000000-0000-4000-8000-000000b40002'::uuid, 'devai'),
+  ('00000000-0000-4000-8000-000000b40002'::uuid, 'adopters'),
+  ('00000000-0000-4000-8000-000000b40003'::uuid, 'stynx')
 ON CONFLICT (bookmark_id, tag) DO NOTHING;

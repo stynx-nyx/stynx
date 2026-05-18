@@ -43,7 +43,8 @@
     "test:mutation": "pnpm --filter @stynx/auth stryker && pnpm --filter @stynx/tenancy stryker && pnpm --filter @stynx/data stryker",
     "check:rls-smoke": "bash scripts/check-rls-smoke.sh",
     "prepare": "husky",
-    "test:coverage": "turbo run test:coverage --filter=\"./packages/*\""
+    "test:coverage": "turbo run test:coverage --filter=\"./packages/*\"",
+    "test:perf": "node scripts/perf-smoke.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.0",

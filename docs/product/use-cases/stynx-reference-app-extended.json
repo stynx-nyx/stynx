@@ -13,19 +13,19 @@
           "id": "1",
           "action": "Member navigates to the work-items list page.",
           "actorRole": "tenant-member",
-          "refs": { "routeIds": ["angular:0f8938269c9a"], "endpointIds": ["GET /work-items"] }
+          "refs": { "routeIds": ["angular:aea633964fb0"], "endpointIds": ["GET /work-items"] }
         },
         {
           "id": "2",
           "action": "Member opens a work-item's detail view.",
           "actorRole": "tenant-member",
-          "refs": { "routeIds": ["angular:1142140126d2"], "endpointIds": ["GET /work-items/:id"] }
+          "refs": { "routeIds": ["angular:01340fd7281e"], "endpointIds": ["GET /work-items/:id"] }
         },
         {
           "id": "3",
           "action": "Member clicks 'Edit'; the form loads.",
           "actorRole": "tenant-member",
-          "refs": { "routeIds": ["angular:1112587ddc3d"], "endpointIds": ["GET /work-items/:id"] }
+          "refs": { "routeIds": ["angular:423fbdf00d27"], "endpointIds": ["GET /work-items/:id"] }
         },
         {
           "id": "4",
@@ -37,7 +37,7 @@
           "id": "5",
           "action": "App returns to the detail view showing the update.",
           "actorRole": "tenant-member",
-          "refs": { "routeIds": ["angular:1142140126d2"], "endpointIds": ["GET /work-items/:id"] }
+          "refs": { "routeIds": ["angular:01340fd7281e"], "endpointIds": ["GET /work-items/:id"] }
         }
       ],
       "acceptanceCriteria": [
@@ -56,7 +56,7 @@
           "id": "1",
           "action": "Member navigates to the new-work-item form.",
           "actorRole": "tenant-member",
-          "refs": { "routeIds": ["angular:abaf636f1c8e"] }
+          "refs": { "routeIds": ["angular:e70c1c7ee524"] }
         },
         {
           "id": "2",
@@ -68,7 +68,7 @@
           "id": "3",
           "action": "App navigates to the new work-item's detail view.",
           "actorRole": "tenant-member",
-          "refs": { "routeIds": ["angular:1142140126d2"], "endpointIds": ["GET /work-items/:id"] }
+          "refs": { "routeIds": ["angular:01340fd7281e"], "endpointIds": ["GET /work-items/:id"] }
         }
       ],
       "acceptanceCriteria": ["POST /work-items returns 201 with the new resource id."]
@@ -84,7 +84,7 @@
           "id": "1",
           "action": "Member opens the work-item detail view.",
           "actorRole": "tenant-member",
-          "refs": { "routeIds": ["angular:1142140126d2"], "endpointIds": ["GET /work-items/:id"] }
+          "refs": { "routeIds": ["angular:01340fd7281e"], "endpointIds": ["GET /work-items/:id"] }
         },
         {
           "id": "2",
@@ -96,7 +96,7 @@
           "id": "3",
           "action": "Member opens the trash route + filters to work-items.",
           "actorRole": "tenant-member",
-          "refs": { "routeIds": ["angular:fb6949272f44"], "endpointIds": ["GET /work-items/trash"] }
+          "refs": { "routeIds": ["angular:30904e5ff042"], "endpointIds": ["GET /work-items/trash"] }
         },
         {
           "id": "4",
@@ -131,7 +131,7 @@
           "id": "1",
           "action": "Member opens a work-item detail view (entries surface here).",
           "actorRole": "tenant-member",
-          "refs": { "routeIds": ["angular:1142140126d2"], "endpointIds": ["GET /work-items/:id"] }
+          "refs": { "routeIds": ["angular:01340fd7281e"], "endpointIds": ["GET /work-items/:id"] }
         },
         {
           "id": "2",
@@ -294,7 +294,7 @@
           "id": "1",
           "action": "Member opens the record detail view (notes surface here).",
           "actorRole": "tenant-member",
-          "refs": { "routeIds": ["angular:1a29df709ba4"], "endpointIds": ["GET /records/:id"] }
+          "refs": { "routeIds": ["angular:9eca7648fe61"], "endpointIds": ["GET /records/:id"] }
         },
         {
           "id": "2",
@@ -390,7 +390,7 @@
           "id": "1",
           "action": "Signed-in member navigates to tenant-selection.",
           "actorRole": "tenant-member",
-          "refs": { "routeIds": ["angular:197ead8a8a47"] }
+          "refs": { "routeIds": ["angular:c208572fa1ec"] }
         },
         {
           "id": "2",
@@ -401,18 +401,47 @@
           "id": "3",
           "action": "On any subsequent authorization failure, app routes to /unauthorized.",
           "actorRole": "tenant-member",
-          "refs": { "routeIds": ["angular:cd1db7de4f8c"] }
+          "refs": { "routeIds": ["angular:632343381f95"] }
         }
       ],
       "acceptanceCriteria": [
         "Tenant selection updates the active tenant context on the SDK side.",
         "Any 403 from the API routes the user to /unauthorized rather than a generic error."
       ]
+    },
+
+    {
+      "id": "UC-stynx-014",
+      "title": "Member opens the mounted Flow package routes",
+      "goal": "A tenant member reaches the reference app's host-mounted Flow package surface and loads representative design, runtime, and analytics views.",
+      "actors": ["tenant-member"],
+      "mainFlow": [
+        {
+          "id": "1",
+          "action": "Member navigates to the Flow route mounted by the reference shell.",
+          "actorRole": "tenant-member",
+          "refs": { "routeIds": ["angular:2400b850f0ec"] }
+        },
+        {
+          "id": "2",
+          "action": "Member opens form/runtime package screens.",
+          "actorRole": "tenant-member"
+        },
+        {
+          "id": "3",
+          "action": "Member opens analytics package screens.",
+          "actorRole": "tenant-member"
+        }
+      ],
+      "acceptanceCriteria": [
+        "The /flow route is reachable to authenticated users.",
+        "Child Flow package routes enforce their own Flow permission guards."
+      ]
     }
   ],
   "stats": {
     "roleCount": 4,
-    "caseCount": 9,
-    "stepCount": 42
+    "caseCount": 10,
+    "stepCount": 45
   }
 }

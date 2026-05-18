@@ -8,109 +8,69 @@ updates:
     groups:
       aws-sdk:
         patterns:
-          - "@aws-sdk/*"
+          - '@aws-sdk/*'
       nest:
         patterns:
-          - "@nestjs/*"
+          - '@nestjs/*'
       angular:
         patterns:
-          - "@angular*"
-          - "@angular-devkit/*"
-          - "jest-preset-angular"
+          - '@angular*'
+          - '@angular-devkit/*'
+          - 'jest-preset-angular'
       dev:
         patterns:
-          - "@changesets/*"
-          - "@commitlint/*"
-          - "@eslint/*"
-          - "@types/*"
-          - "@typescript-eslint/*"
-          - "eslint"
-          - "globals"
-          - "husky"
-          - "lint-staged"
-          - "prettier"
-          - "turbo"
-          - "typescript"
+          - '@changesets/*'
+          - '@commitlint/*'
+          - '@eslint/*'
+          - '@types/*'
+          - '@typescript-eslint/*'
+          - 'eslint'
+          - 'globals'
+          - 'husky'
+          - 'lint-staged'
+          - 'prettier'
+          - 'turbo'
+          - 'typescript'
 
   - package-ecosystem: npm
-    directory: /backend
-    schedule:
-      interval: weekly
-    open-pull-requests-limit: 10
-    groups:
-      aws-sdk:
-        patterns:
-          - "@aws-sdk/*"
-      nest:
-        patterns:
-          - "@nestjs/*"
-      dev:
-        patterns:
-          - "@types/*"
-          - "@typescript-eslint/*"
-          - "eslint"
-          - "eslint-*"
-          - "jest"
-          - "prettier"
-          - "rimraf"
-          - "ts-*"
-          - "typescript"
-
-  - package-ecosystem: npm
-    directory: /bootstrap
-    schedule:
-      interval: weekly
-    open-pull-requests-limit: 10
-    groups:
-      aws-sdk:
-        patterns:
-          - "@aws-sdk/*"
-      dev:
-        patterns:
-          - "@eslint/*"
-          - "@types/*"
-          - "@typescript-eslint/*"
-          - "eslint"
-          - "globals"
-          - "tsx"
-          - "typescript"
-
-  - package-ecosystem: npm
-    directory: /frontend
+    directory: /reference/web
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
     groups:
       angular:
         patterns:
-          - "@angular*"
-          - "@angular-devkit/*"
-          - "angular-oauth2-oidc"
-          - "jest-preset-angular"
+          - '@angular*'
+          - '@angular-devkit/*'
+          - 'angular-oauth2-oidc'
+          - 'jest-preset-angular'
       dev:
         patterns:
-          - "@types/*"
-          - "@typescript-eslint/*"
-          - "cross-env"
-          - "cypress"
-          - "eslint"
-          - "globals"
-          - "jest"
-          - "ts-*"
-          - "typescript"
+          - '@types/*'
+          - '@typescript-eslint/*'
+          - 'cross-env'
+          - 'cypress'
+          - 'eslint'
+          - 'globals'
+          - 'jest'
+          - 'ts-*'
+          - 'typescript'
 
   - package-ecosystem: npm
-    directory: /test/backend
+    directory: /reference/api
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
     groups:
+      nest:
+        patterns:
+          - '@nestjs/*'
       dev:
         patterns:
-          - "@types/*"
-          - "jest"
-          - "ts-*"
-          - "typescript"
+          - '@types/*'
+          - 'jest'
+          - 'ts-*'
+          - 'typescript'
 
   - package-ecosystem: npm
     directory: /test/db
@@ -120,10 +80,10 @@ updates:
     groups:
       dev:
         patterns:
-          - "@types/*"
-          - "jest"
-          - "ts-*"
-          - "typescript"
+          - '@types/*'
+          - 'jest'
+          - 'ts-*'
+          - 'typescript'
 
   - package-ecosystem: npm
     directory: /test/packages
@@ -133,10 +93,10 @@ updates:
     groups:
       dev:
         patterns:
-          - "@types/*"
-          - "jest"
-          - "ts-*"
-          - "typescript"
+          - '@types/*'
+          - 'jest'
+          - 'ts-*'
+          - 'typescript'
 
   - package-ecosystem: github-actions
     directory: /

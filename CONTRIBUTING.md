@@ -1,13 +1,22 @@
 # Contributing
 
-STYNX uses Conventional Commits for local commits and pull request titles. Run
-the normal hooks and CI gates before asking for review:
+STYNX accepts the same two subject shapes for local commits and pull request
+titles:
+
+- DEVAI role-prefix subjects, for example `Engineer: close migration gate`.
+- Conventional Commits, for example `fix(repo): close migration gate`.
+
+Run the normal hooks and CI gates before asking for review:
 
 ```bash
 pnpm lint
 pnpm typecheck
 pnpm -r --if-present test --silent
 ```
+
+The authoritative parser is `tools/repo-config/commitlint.config.cjs`; the PR
+title workflow pipes the title through that same config so role-prefix work is
+not blocked by a separate conventional-only rule.
 
 ## Hook Policy
 

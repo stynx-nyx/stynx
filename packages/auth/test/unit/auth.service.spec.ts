@@ -32,28 +32,31 @@ describe('StynxAuthService', () => {
     jest.clearAllMocks();
   });
 
-  function createService(options: {
-    userLookupRows?: Array<{ id: string; external_subject: string | null; email: string }>;
-    requestContextActive?: boolean;
-    withMutator?: boolean;
-    withRequestContext?: boolean;
-  } = {}) {
-    const txQuery = jest
-      .fn()
-      .mockImplementation((sql: string) => {
-        if (sql.includes('from auth.users')) {
-          return Promise.resolve({ rows: options.userLookupRows ?? [] });
-        }
-        if (sql.includes('update auth.users')) {
-          return Promise.resolve({ rows: [] });
-        }
-        if (sql.includes('insert into auth.users')) {
-          return Promise.resolve({ rows: [] });
-        }
+  function createService(
+    options: {
+      userLookupRows?: Array<{ id: string; external_subject: string | null; email: string }>;
+      requestContextActive?: boolean;
+      withMutator?: boolean;
+      withRequestContext?: boolean;
+    } = {},
+  ) {
+    const txQuery = jest.fn().mockImplementation((sql: string) => {
+      if (sql.includes('from auth.users')) {
+        return Promise.resolve({ rows: options.userLookupRows ?? [] });
+      }
+      if (sql.includes('update auth.users')) {
         return Promise.resolve({ rows: [] });
-      });
+      }
+      if (sql.includes('insert into auth.users')) {
+        return Promise.resolve({ rows: [] });
+      }
+      return Promise.resolve({ rows: [] });
+    });
     const database = {
-      tx: jest.fn(async (fn: (trx: { query: typeof txQuery }) => Promise<unknown>) => fn({ query: txQuery })),
+      tx: jest.fn(async (fn: (trx: { query: typeof txQuery }) => Promise<unknown>) =>
+        fn({ query: txQuery }),
+      ),
+      withSystemContext: jest.fn((_reason: string, fn: () => Promise<unknown>) => fn()),
     };
     const sessionService = {
       create: jest.fn().mockResolvedValue(sessionBundle),
@@ -113,10 +116,15 @@ describe('StynxAuthService', () => {
       requestContextActive: true,
     });
 
-    await expect(service.exchangeCognitoToken('token', 'tenant-1', { device: 'browser' })).resolves.toEqual(sessionBundle);
+    await expect(
+      service.exchangeCognitoToken('token', 'tenant-1', { device: 'browser' }),
+    ).resolves.toEqual(sessionBundle);
 
     expect(cognitoValidator.validateAccessToken).toHaveBeenCalledWith('token');
-    expect(txQuery).toHaveBeenCalledWith(expect.stringContaining('from auth.users'), ['cognito-1', 'user@example.com']);
+    expect(txQuery).toHaveBeenCalledWith(expect.stringContaining('from auth.users'), [
+      'cognito-1',
+      'user@example.com',
+    ]);
     expect(effectiveHashComputer.ensureMembershipHash).toHaveBeenCalledWith('user-1', 'tenant-1');
     expect(permissionQueries.resolveForUser).toHaveBeenCalledWith('user-1', 'tenant-1');
     expect(sessionService.create).toHaveBeenCalledWith(
@@ -127,7 +135,10 @@ describe('StynxAuthService', () => {
       { membershipId: 'membership-1', permsHash: 'hash-1' },
     );
     expect(permissionCache.prime).toHaveBeenCalled();
-    expect(requestContextMutator.patch).toHaveBeenCalledWith({ tenantId: 'tenant-1', actorId: 'cognito-1' });
+    expect(requestContextMutator.patch).toHaveBeenCalledWith({
+      tenantId: 'tenant-1',
+      actorId: 'user-1',
+    });
   });
 
   it('creates a user when cognito subject is unseen and there is no active request context', async () => {
@@ -176,7 +187,7 @@ describe('StynxAuthService', () => {
 
     expect(requestContextMutator.patch).not.toHaveBeenCalled();
     expect(requestContextMutator.runWithRequestContext).toHaveBeenCalledWith(
-      expect.objectContaining({ tenantId: 'tenant-6', actorId: 'cognito-6' }),
+      expect.objectContaining({ tenantId: 'tenant-6', actorId: 'user-6' }),
       expect.any(Function),
     );
   });
@@ -198,10 +209,11 @@ describe('StynxAuthService', () => {
 
     await service.exchangeCognitoToken('token', 'tenant-4');
 
-    expect(txQuery).toHaveBeenCalledWith(
-      expect.stringContaining('update auth.users'),
-      ['user-4', 'cognito-4', 'user4@example.com'],
-    );
+    expect(txQuery).toHaveBeenCalledWith(expect.stringContaining('update auth.users'), [
+      'user-4',
+      'cognito-4',
+      'user4@example.com',
+    ]);
   });
 
   it('switches tenant, revokes the old session, and invalidates the old sid', async () => {
@@ -216,7 +228,9 @@ describe('StynxAuthService', () => {
     });
 
     await expect(
-      service.switchTenant({ sid: 'sid-old', sub: 'user-3', cognitoSub: 'cognito-3' }, 'tenant-3', { browser: true }),
+      service.switchTenant({ sid: 'sid-old', sub: 'user-3', cognitoSub: 'cognito-3' }, 'tenant-3', {
+        browser: true,
+      }),
     ).resolves.toEqual(sessionBundle);
 
     expect(sessionService.create).toHaveBeenCalledWith(

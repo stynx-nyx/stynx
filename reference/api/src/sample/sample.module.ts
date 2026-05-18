@@ -10,18 +10,32 @@ import { WorkItemEntriesController } from './work-item-entries.controller';
 import { WorkItemLocksController } from './work-item-locks.controller';
 import { WorkItemsController } from './work-items.controller';
 
+function normalizedEnvironment(): string {
+  return (process.env.NODE_ENV ?? process.env.STYNX_ENVIRONMENT ?? 'development')
+    .trim()
+    .toLowerCase();
+}
+
+export function isReferenceDevAuthEnabled(): boolean {
+  const environment = normalizedEnvironment();
+  return environment !== 'production' && environment !== 'prod';
+}
+
+const referenceDevAuthControllers = isReferenceDevAuthEnabled() ? [ReferenceDevAuthController] : [];
+const referenceDevAuthProviders = isReferenceDevAuthEnabled() ? [ReferenceDevAuthService] : [];
+
 @Module({
   controllers: [
     RecordsController,
     RecordNotesController,
     DocumentsController,
     ReferenceProbesController,
-    ReferenceDevAuthController,
+    ...referenceDevAuthControllers,
     WorkItemsController,
     WorkItemEntriesController,
     WorkItemLocksController,
   ],
-  providers: [ReferenceSampleService, ReferenceDevAuthService],
-  exports: [ReferenceSampleService, ReferenceDevAuthService],
+  providers: [ReferenceSampleService, ...referenceDevAuthProviders],
+  exports: [ReferenceSampleService, ...referenceDevAuthProviders],
 })
 export class SampleModule {}

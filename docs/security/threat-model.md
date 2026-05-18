@@ -56,12 +56,12 @@ stynx assumes the following actors with distinct authority:
 **Mitigations:**
 
 - Production: Cognito User Pool with rotating JWKS; `@stynx/auth`'s `CognitoTokenVerifier` validates `iss`, `aud`, `exp`, `jwks_uri` per request.
-- Dev: `/_reference/dev-login` endpoint is `@Public()` BUT only exists in reference-app builds (gated by `process.env.NODE_ENV !== 'production'` check in module assembly).
+- Dev: `/_reference/dev-login` endpoint is `@Public()` BUT only exists in non-production reference-app builds (`SampleModule` omits `ReferenceDevAuthController` and `ReferenceDevAuthService` when `NODE_ENV` or `STYNX_ENVIRONMENT` is `production`/`prod`).
 - Idempotency keys reduce replay damage for state-mutating endpoints.
 
 **Invariants:** `INV-RBAC-001` (covers `@Public()` discipline).
 **Tests:** `packages/auth/test/unit/cognito-token-verifier.spec.ts`.
-**Residual risk:** If a deployment accidentally ships the reference app to production with dev-login enabled, anonymous tenant impersonation is trivial. Mitigation: production deployments use a separate api app entrypoint that omits `ReferenceDevAuthModule`.
+**Residual risk:** Production deployments must not override both environment markers to non-production values. The reference API test suite asserts the module assembly omits dev-login under production configuration.
 
 ### T-4 — PII exposure via insufficient erasure on request
 

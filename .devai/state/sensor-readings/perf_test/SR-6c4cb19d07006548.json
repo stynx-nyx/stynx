@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-6c4cb19d07006548",
+  "sensor": {
+    "name": "perf-test",
+    "kind": "perf_test"
+  },
+  "timestamp": "2026-05-18T00:22:49.049Z",
+  "status": "pass",
+  "deterministic": false,
+  "command": "pnpm test:perf",
+  "command_hash": "43e3d78e937c73fd91a0e9ded708fb5757600b54a7655fbfa3ecd91813d516d0",
+  "tier": "L1",
+  "exit_code": 0,
+  "duration_ms": 1573,
+  "out_head": "\n> stynx-workspace@0.2.0 test:perf /Users/aarusso/Development/stech/stynx\n> node scripts/perf-smoke.mjs\n\n{\"p50_ms\":244,\"p95_ms\":312,\"throughput_rps\":4.1}\n",
+  "err_head": "[perf-smoke] sample 1/5: 270ms ok\n[perf-smoke] sample 2/5: 241ms ok\n[perf-smoke] sample 3/5: 244ms ok\n[perf-smoke] sample 4/5: 312ms ok\n[perf-smoke] sample 5/5: 237ms ok\n",
+  "killed": false,
+  "findings": [],
+  "metrics": {
+    "script_name": "test:perf",
+    "exit_code": 0,
+    "duration_ms": 1573,
+    "p50_ms": 244,
+    "p95_ms": 312,
+    "throughput_rps": 4.1
+  }
+}

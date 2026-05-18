@@ -1,0 +1,497 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-05-17T23:55:00.000Z",
+  "sourceRepo": ".",
+  "stack": {
+    "backend": "nestjs",
+    "frontend": "angular",
+    "db": "postgres"
+  },
+  "rbacIlfTables": [
+    "auth.roles",
+    "auth.perms",
+    "auth.role_perms",
+    "auth.membership_roles",
+    "auth.direct_perms"
+  ],
+  "roles": [
+    {
+      "id": "owner",
+      "name": "Owner",
+      "description": "Tenant owner; receives every sample and Flow permission.",
+      "evidence": [
+        {
+          "path": "reference/api/migrations/0001_reference.sql",
+          "startLine": 324,
+          "endLine": 330
+        }
+      ]
+    },
+    {
+      "id": "admin",
+      "name": "Admin",
+      "description": "Tenant administrator; receives every sample and Flow permission except hard-delete permissions.",
+      "evidence": [
+        {
+          "path": "reference/api/migrations/0001_reference.sql",
+          "startLine": 332,
+          "endLine": 339
+        }
+      ]
+    },
+    {
+      "id": "member",
+      "name": "Member",
+      "description": "Tenant member; receives read/write sample permissions and task-execution Flow permissions.",
+      "evidence": [
+        {
+          "path": "reference/api/migrations/0001_reference.sql",
+          "startLine": 341,
+          "endLine": 351
+        }
+      ]
+    },
+    {
+      "id": "viewer",
+      "name": "Viewer",
+      "description": "Tenant viewer; receives read-only sample and Flow permissions.",
+      "evidence": [
+        {
+          "path": "reference/api/migrations/0001_reference.sql",
+          "startLine": 353,
+          "endLine": 362
+        }
+      ]
+    }
+  ],
+  "permissions": [
+    { "id": "sample:record:read", "name": "Read records", "actions": ["read"] },
+    {
+      "id": "sample:record:write",
+      "name": "Create or update records",
+      "actions": ["create", "update"]
+    },
+    { "id": "sample:record:delete", "name": "Soft-delete records", "actions": ["delete"] },
+    { "id": "sample:record:restore", "name": "Restore records", "actions": ["update"] },
+    {
+      "id": "sample:record:hard-delete",
+      "name": "Hard-delete archived records",
+      "actions": ["delete"]
+    },
+    { "id": "sample:record-note:read", "name": "Read record notes", "actions": ["read"] },
+    {
+      "id": "sample:record-note:write",
+      "name": "Create or update record notes",
+      "actions": ["create", "update"]
+    },
+    {
+      "id": "sample:record-note:delete",
+      "name": "Soft-delete record notes",
+      "actions": ["delete"]
+    },
+    { "id": "sample:record-note:restore", "name": "Restore record notes", "actions": ["update"] },
+    {
+      "id": "sample:record-note:hard-delete",
+      "name": "Hard-delete archived record notes",
+      "actions": ["delete"]
+    },
+    { "id": "sample:work-item:read", "name": "Read work items", "actions": ["read"] },
+    {
+      "id": "sample:work-item:write",
+      "name": "Create or update work items",
+      "actions": ["create", "update"]
+    },
+    { "id": "sample:work-item:delete", "name": "Soft-delete work items", "actions": ["delete"] },
+    { "id": "sample:work-item:restore", "name": "Restore work items", "actions": ["update"] },
+    {
+      "id": "sample:work-item:hard-delete",
+      "name": "Hard-delete archived work items",
+      "actions": ["delete"]
+    },
+    { "id": "sample:work-item-entry:read", "name": "Read work item entries", "actions": ["read"] },
+    {
+      "id": "sample:work-item-entry:write",
+      "name": "Create or update work item entries",
+      "actions": ["create", "update"]
+    },
+    {
+      "id": "sample:work-item-entry:delete",
+      "name": "Soft-delete work item entries",
+      "actions": ["delete"]
+    },
+    {
+      "id": "sample:work-item-entry:restore",
+      "name": "Restore work item entries",
+      "actions": ["update"]
+    },
+    {
+      "id": "sample:work-item-entry:hard-delete",
+      "name": "Hard-delete archived work item entries",
+      "actions": ["delete"]
+    },
+    { "id": "sample:work-item-lock:read", "name": "Read work item locks", "actions": ["read"] },
+    {
+      "id": "sample:work-item-lock:write",
+      "name": "Create or update work item locks",
+      "actions": ["create", "update"]
+    },
+    {
+      "id": "sample:work-item-lock:delete",
+      "name": "Soft-delete work item locks",
+      "actions": ["delete"]
+    },
+    {
+      "id": "sample:work-item-lock:restore",
+      "name": "Restore work item locks",
+      "actions": ["update"]
+    },
+    {
+      "id": "sample:work-item-lock:hard-delete",
+      "name": "Hard-delete archived work item locks",
+      "actions": ["delete"]
+    },
+    {
+      "id": "sample:document:read",
+      "name": "Read document metadata and download URLs",
+      "actions": ["read"]
+    },
+    {
+      "id": "sample:document:write",
+      "name": "Create document uploads and complete them",
+      "actions": ["create", "update"]
+    },
+    { "id": "sample:document:delete", "name": "Soft-delete documents", "actions": ["delete"] },
+    { "id": "sample:document:restore", "name": "Restore documents", "actions": ["update"] },
+    {
+      "id": "sample:document:hard-delete",
+      "name": "Hard-delete archived documents",
+      "actions": ["delete"]
+    },
+    { "id": "sample:probe:read", "name": "Run internal probe routes", "actions": ["read"] },
+    { "id": "flow:read:design", "name": "Read Flow design state", "actions": ["read"] },
+    {
+      "id": "flow:write:design",
+      "name": "Write Flow design state",
+      "actions": ["create", "update"]
+    },
+    { "id": "flow:read:runtime", "name": "Read Flow runtime state", "actions": ["read"] },
+    { "id": "flow:execute:task", "name": "Execute Flow task mutations", "actions": ["update"] },
+    { "id": "flow:assign:task", "name": "Assign Flow tasks and waivers", "actions": ["update"] },
+    { "id": "flow:read:analytics", "name": "Read Flow analytics", "actions": ["read"] },
+    {
+      "id": "flow:admin:*",
+      "name": "Administer Flow",
+      "actions": ["create", "read", "update", "delete"]
+    }
+  ],
+  "roleBindings": [],
+  "bindings": {
+    "endpointBindings": [
+      {
+        "permissionId": "sample:document:write",
+        "endpointId": "POST /documents",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "sample:document:delete",
+        "endpointId": "DELETE /documents/:id",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "sample:document:write",
+        "endpointId": "POST /documents/:id/complete",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "sample:document:read",
+        "endpointId": "GET /documents/:id/download",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "sample:document:hard-delete",
+        "endpointId": "DELETE /documents/:id/hard",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "sample:document:restore",
+        "endpointId": "POST /documents/:id/restore",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "sample:probe:read",
+        "endpointId": "GET /_probes/readonly-write",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "sample:record-note:read",
+        "endpointId": "GET /record-notes",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "sample:record-note:write",
+        "endpointId": "POST /record-notes",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "sample:record-note:delete",
+        "endpointId": "DELETE /record-notes/:id",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "sample:record-note:read",
+        "endpointId": "GET /record-notes/:id",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "sample:record-note:write",
+        "endpointId": "PATCH /record-notes/:id",
+        "methods": ["PATCH"]
+      },
+      {
+        "permissionId": "sample:record-note:hard-delete",
+        "endpointId": "DELETE /record-notes/:id/hard",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "sample:record-note:restore",
+        "endpointId": "POST /record-notes/:id/restore",
+        "methods": ["POST"]
+      },
+      { "permissionId": "sample:record:read", "endpointId": "GET /records", "methods": ["GET"] },
+      { "permissionId": "sample:record:write", "endpointId": "POST /records", "methods": ["POST"] },
+      {
+        "permissionId": "sample:record:delete",
+        "endpointId": "DELETE /records/:id",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "sample:record:read",
+        "endpointId": "GET /records/:id",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "sample:record:write",
+        "endpointId": "PATCH /records/:id",
+        "methods": ["PATCH"]
+      },
+      {
+        "permissionId": "sample:record:hard-delete",
+        "endpointId": "DELETE /records/:id/hard",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "sample:record:restore",
+        "endpointId": "POST /records/:id/restore",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "sample:record:read",
+        "endpointId": "GET /records/trash",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "sample:work-item-entry:read",
+        "endpointId": "GET /work-item-entries",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "sample:work-item-entry:write",
+        "endpointId": "POST /work-item-entries",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "sample:work-item-entry:delete",
+        "endpointId": "DELETE /work-item-entries/:id",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "sample:work-item-entry:read",
+        "endpointId": "GET /work-item-entries/:id",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "sample:work-item-entry:write",
+        "endpointId": "PATCH /work-item-entries/:id",
+        "methods": ["PATCH"]
+      },
+      {
+        "permissionId": "sample:work-item-entry:hard-delete",
+        "endpointId": "DELETE /work-item-entries/:id/hard",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "sample:work-item-entry:restore",
+        "endpointId": "POST /work-item-entries/:id/restore",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "sample:work-item-lock:read",
+        "endpointId": "GET /work-item-locks",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "sample:work-item-lock:write",
+        "endpointId": "POST /work-item-locks",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "sample:work-item-lock:delete",
+        "endpointId": "DELETE /work-item-locks/:id",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "sample:work-item-lock:read",
+        "endpointId": "GET /work-item-locks/:id",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "sample:work-item-lock:write",
+        "endpointId": "PATCH /work-item-locks/:id",
+        "methods": ["PATCH"]
+      },
+      {
+        "permissionId": "sample:work-item-lock:hard-delete",
+        "endpointId": "DELETE /work-item-locks/:id/hard",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "sample:work-item-lock:restore",
+        "endpointId": "POST /work-item-locks/:id/restore",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "sample:work-item:read",
+        "endpointId": "GET /work-items",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "sample:work-item:write",
+        "endpointId": "POST /work-items",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "sample:work-item:delete",
+        "endpointId": "DELETE /work-items/:id",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "sample:work-item:read",
+        "endpointId": "GET /work-items/:id",
+        "methods": ["GET"]
+      },
+      {
+        "permissionId": "sample:work-item:write",
+        "endpointId": "PATCH /work-items/:id",
+        "methods": ["PATCH"]
+      },
+      {
+        "permissionId": "sample:work-item:hard-delete",
+        "endpointId": "DELETE /work-items/:id/hard",
+        "methods": ["DELETE"]
+      },
+      {
+        "permissionId": "sample:work-item:restore",
+        "endpointId": "POST /work-items/:id/restore",
+        "methods": ["POST"]
+      },
+      {
+        "permissionId": "sample:work-item:read",
+        "endpointId": "GET /work-items/trash",
+        "methods": ["GET"]
+      }
+    ],
+    "routeBindings": [
+      { "permissionId": "sample:record:read", "routeId": "angular:b5aaf65b5cd0" },
+      { "permissionId": "sample:record:write", "routeId": "angular:96c3b77f8fbb" },
+      { "permissionId": "sample:record:read", "routeId": "angular:9eca7648fe61" },
+      { "permissionId": "sample:record:write", "routeId": "angular:cfcaea8562a5" },
+      { "permissionId": "sample:work-item:read", "routeId": "angular:aea633964fb0" },
+      { "permissionId": "sample:work-item:write", "routeId": "angular:e70c1c7ee524" },
+      { "permissionId": "sample:work-item:write", "routeId": "angular:423fbdf00d27" },
+      { "permissionId": "sample:work-item:read", "routeId": "angular:01340fd7281e" },
+      { "permissionId": "sample:record:read", "routeId": "angular:30904e5ff042" }
+    ],
+    "entityBindings": [
+      { "permissionId": "sample:record:read", "entity": "sample.record", "operations": ["read"] },
+      {
+        "permissionId": "sample:record:write",
+        "entity": "sample.record",
+        "operations": ["create", "update"]
+      },
+      {
+        "permissionId": "sample:record-note:read",
+        "entity": "sample.record_note",
+        "operations": ["read"]
+      },
+      {
+        "permissionId": "sample:record-note:write",
+        "entity": "sample.record_note",
+        "operations": ["create", "update"]
+      },
+      {
+        "permissionId": "sample:work-item:read",
+        "entity": "sample.work_item",
+        "operations": ["read"]
+      },
+      {
+        "permissionId": "sample:work-item:write",
+        "entity": "sample.work_item",
+        "operations": ["create", "update"]
+      },
+      {
+        "permissionId": "sample:work-item-entry:read",
+        "entity": "sample.work_item_entry",
+        "operations": ["read"]
+      },
+      {
+        "permissionId": "sample:work-item-entry:write",
+        "entity": "sample.work_item_entry",
+        "operations": ["create", "update"]
+      },
+      {
+        "permissionId": "sample:work-item-lock:read",
+        "entity": "sample.work_item_lock",
+        "operations": ["read"]
+      },
+      {
+        "permissionId": "sample:work-item-lock:write",
+        "entity": "sample.work_item_lock",
+        "operations": ["create", "update"]
+      },
+      {
+        "permissionId": "sample:document:read",
+        "entity": "storage.documents",
+        "operations": ["read"]
+      },
+      {
+        "permissionId": "sample:document:write",
+        "entity": "storage.documents",
+        "operations": ["create", "update"]
+      }
+    ]
+  },
+  "defaults": {
+    "unknownEndpointPolicy": "deny",
+    "unknownRoutePolicy": "deny"
+  },
+  "unmapped": {
+    "rolesWithoutPermissions": [],
+    "permissionsWithoutBindings": [],
+    "endpointsWithoutRole": [],
+    "routesWithoutRole": [
+      "angular:8b48848a52c9",
+      "angular:ad2457fea1c8",
+      "angular:2400b850f0ec",
+      "angular:15406413f939",
+      "angular:c208572fa1ec",
+      "angular:632343381f95"
+    ]
+  },
+  "stats": {
+    "roleCount": 4,
+    "permissionCount": 38,
+    "endpointBindingCount": 44,
+    "routeBindingCount": 9,
+    "entityBindingCount": 12
+  }
+}

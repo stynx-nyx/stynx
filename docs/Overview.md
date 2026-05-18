@@ -12,18 +12,18 @@ Stynx is a multi-tenant document and work-item management platform (inferred) bu
 | Package manager  | pnpm                                          |
 | Primary language | TypeScript (494 files), JavaScript (99 files) |
 
-Source roots: `packages/*/src`, `apps/*/src`.
+Source roots: `packages/*/src`, `packages-web/*/src`, `reference/{api,web}/src`, `domain/*`.
 
 ## Surface
 
-| Surface                 | Count                       |
-| ----------------------- | --------------------------- |
-| REST endpoints          | 50                          |
-| Frontend routes         | 0 (not detected — see Gaps) |
-| DB tables               | 5                           |
-| DB columns              | 61                          |
-| PII columns             | 1                           |
-| Dep-graph nodes / edges | 484 / 1,989                 |
+| Surface                 | Count                      |
+| ----------------------- | -------------------------- |
+| REST endpoints          | 50                         |
+| Frontend routes         | 15 Angular routes detected |
+| DB tables               | 5                          |
+| DB columns              | 61                         |
+| PII columns             | 1                          |
+| Dep-graph nodes / edges | 484 / 1,989                |
 
 **Controllers and their prefixes:**
 
@@ -36,17 +36,14 @@ Source roots: `packages/*/src`, `apps/*/src`.
 
 ## Notable gaps
 
-- **Zero foreign keys across 5 tables** — referential integrity between `record_note.record_id → record`, `work_item.record_id → record`, and `work_item_entry.work_item_id → work_item` is either enforced at the application layer (inferred) or absent.
-- **PII without governance** — `record.email` (contact class) has no `legal_basis` or `retention` policy recorded; a compliance gap before any data export or retention automation.
-- **All 50 endpoints unmapped** — zero coverage links between endpoints and use cases; no test-traceability exists.
-- **RBAC shell only** — 0 roles and 0 permissions despite 94 endpoint bindings in the graph; access-control logic is either undiscovered or not yet implemented.
-- **`work_item`, `work_item_entry`, `work_item_lock` have no visible API** — three of five tables have no owning controller in the sampled endpoints; the feature may be incomplete (inferred).
-- **Frontend routes undetected** — scanner reports framework "react" with 0 routes, conflicting with the declared Angular front-end; Angular lazy-loaded routing was not scanned or does not yet exist.
+- **Reference app RBAC is authored outside the current sensor body** — the durable source is [architecture/reference-app-rbac.json](architecture/reference-app-rbac.json), because current DEVAI `sense-rbac` still emits empty route bindings.
+- **Operations and infra gaps remain** — see [KNOWN_GAPS.md](KNOWN_GAPS.md) for the current open runbook, EdgeStack, Docker healthcheck, and local Cognito gaps.
+- **Frontend/package test depth remains uneven** — the reference app is now visible to route/use-case coverage, but package-level frontend coverage still needs a broader audit.
 
 ## Where to look next
 
 - `DocumentsController` (`/documents`) — core lifecycle logic; start here for the primary business flow.
-- `record.email` — sole PII column; audit retention and legal-basis before any data pipeline work.
-- `/_reference/dev-login` (`ReferenceDevAuthController`) — dev auth bypass; confirm it is environment-gated before production traffic reaches this service.
+- `record.email` — PII column registered in `core.pii_map` with legal basis and retention.
+- `/_reference/dev-login` (`ReferenceDevAuthController`) — non-production reference auth convenience; `SampleModule` omits it when `NODE_ENV` or `STYNX_ENVIRONMENT` is production/prod.
 - `/_probes/*` (`ReferenceProbesController`) — idempotency, rate-limit, and read/write health signals; review before infrastructure changes.
-- `work_item*` tables — significant unmapped data surface; locate the owning module or confirm the feature is in-progress.
+- `work_item*` tables — reference work-item APIs are present under `/work-items`, `/work-item-entries`, and `/work-item-locks`.

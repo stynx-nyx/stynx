@@ -2,23 +2,39 @@
 
 **Generated:** 2026-05-16 | **Endpoints:** 50 | **Routes:** 0 | **Tables:** 5
 
+**Role:** generated diagnostic/template artifact for the current
+repository/reference-app inventory. It is not the canonical framework RBAC
+implementation; see [ADR-003](adr/ADR-003-rbac-matrix-role.md).
+
+**Wave 04 update:** the authored reference-app RBAC inventory is
+[architecture/reference-app-rbac.json](architecture/reference-app-rbac.json).
+It records 4 roles, 38 permission keys, 44 permissioned endpoint bindings, 9
+Angular route bindings, and 12 entity bindings. This generated matrix remains
+useful as a historical sensor diagnostic, but its empty role/permission counts
+are superseded for the reference app by the authored inventory and tests.
+
 ---
 
 ## RBAC ILF Tables
 
-No ILF tables were discovered. `rbac.ilf_tables` is empty — no database-level role or permission tables are registered with the RBAC inventory sensor. Automated binding verification is blocked without them.
+The historical sensor body did not discover RBAC ILF tables. The reference
+migration seeds the canonical platform tables `auth.roles`, `auth.perms`,
+`auth.role_perms`, `auth.membership_roles`, and `auth.direct_perms`; see
+[architecture/reference-app-rbac.json](architecture/reference-app-rbac.json).
 
 ---
 
 ## Roles
 
-**0 roles discovered.** No named principals exist in the RBAC inventory.
+The authored reference-app roles are `owner`, `admin`, `member`, and `viewer`.
 
 ---
 
 ## Permissions
 
-**0 permissions discovered.** No named actions exist in the RBAC inventory.
+The authored reference-app permission catalog contains the sample CRUD
+permissions plus Flow permissions seeded by
+`reference/api/migrations/0001_reference.sql`.
 
 ---
 
@@ -57,15 +73,17 @@ _20 of 50 sampled endpoints shown. Remaining 30 are not present in the input sam
 
 ## Data Model
 
-| Table             | Sensitive Columns                                                   |
-| ----------------- | ------------------------------------------------------------------- |
-| `record`          | **email** (PII — contact class; missing `legal_basis`, `retention`) |
-| `record_note`     | none flagged                                                        |
-| `work_item`       | none flagged                                                        |
-| `work_item_entry` | none flagged                                                        |
-| `work_item_lock`  | none flagged                                                        |
+| Table             | Sensitive Columns                                     |
+| ----------------- | ----------------------------------------------------- |
+| `record`          | **email** (PII — `contract`, `until_account_closure`) |
+| `record_note`     | none flagged                                          |
+| `work_item`       | none flagged                                          |
+| `work_item_entry` | none flagged                                          |
+| `work_item_lock`  | none flagged                                          |
 
-No foreign keys declared (`foreign_key_count: 0`) — tenant and ownership referential integrity is unverified at the DB layer.
+The reference migration declares DB foreign keys and registers STYNX
+soft-delete FK behavior. The old `foreign_key_count: 0` signal is stale for the
+current source.
 
 ---
 

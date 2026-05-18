@@ -4,14 +4,15 @@
 
 pnpm monorepo; source lives under two glob families:
 
-- `packages/*/src/**` — shared libraries / platform packages
-- `apps/*/src/**` — deployable applications
+- `packages/*/src/**` — shared backend libraries / platform packages
+- `packages-web/*/src/**` — shared Angular libraries
+- `reference/{api,web}/src/**` — deployable reference applications
 
 494 TypeScript + 99 JavaScript files across 484 dependency-graph nodes with 1,989 edges (~4.1 average fan-out per node).
 
 **Stack:** NestJS (backend API) · Angular (frontend, per stack config) · PostgreSQL
 
-> The routes introspector identified a React framework with 0 routes — this conflicts with the declared Angular frontend. Either a React sub-app exists in the monorepo or the introspector targeted the wrong app root. (inferred)
+> The Angular routes introspector now identifies 15 reference-web routes. Route ids in the use-case files and [architecture/reference-app-rbac.json](architecture/reference-app-rbac.json) are tied to that inventory.
 
 ---
 
@@ -32,7 +33,7 @@ Per-package fan-in / fan-out breakdowns are (inferred) unavailable; the dep grap
 
 ### Data Model
 
-5 tables, 61 columns, **0 declared foreign keys** — referential integrity is application-enforced only.
+5 reference-app domain tables. The reference migration declares DB foreign keys and soft-delete FK registry entries for record notes, work items, work item entries, and work item locks.
 
 ```
 record           → anchor entity; tenant_id, owner_user_id, status, email (PII)
@@ -44,7 +45,7 @@ work_item_lock   → immutable locks on work_item (amount_units, locked_at, exte
 
 All five tables carry `tenant_id` (row-level multi-tenant isolation) and `created_at/by` + `updated_at/by` audit columns.
 
-**PII:** `record.email` is classified `contact`. Fields `legal_basis` and `retention` are missing — treat as a compliance gap before production.
+**PII:** `record.email` is registered in `core.pii_map` with legal basis `contract`, retention `until_account_closure`, and `hash_with_salt` erasure strategy.
 
 ---
 
@@ -52,8 +53,8 @@ All five tables carry `tenant_id` (row-level multi-tenant isolation) and `create
 
 **Auth / RBAC**
 
-- Dev-login surface: `POST /_reference/dev-login`, `GET /_reference/auth-verify`, `GET /_reference/demo-tenants` (all `ReferenceDevAuthController`). Production auth mechanism is not visible in inputs. (inferred)
-- RBAC stats: **0 roles, 0 permissions** but **94 endpoint bindings** recorded — bindings exceed the sampled endpoint count (50). Role/permission definitions are absent; this is a gap.
+- Dev-login surface: `POST /_reference/dev-login`, `GET /_reference/auth-verify`, `GET /_reference/demo-tenants` (all `ReferenceDevAuthController`) is mounted only outside production by `SampleModule`.
+- RBAC stats: reference roles, permissions, endpoint bindings, route bindings, and entity bindings are authored in [architecture/reference-app-rbac.json](architecture/reference-app-rbac.json). Current `sense-rbac` still cannot read STYNX `@Permission(...)` decorators or Angular `stynxPermissionGuard(...)` route bindings directly.
 
 **Multi-tenancy**
 
@@ -69,11 +70,11 @@ All five tables carry `tenant_id` (row-level multi-tenant isolation) and `create
 
 **Persistence**
 
-- PostgreSQL; no migration tool identified in inputs. Logical FK relationships (`record_note.record_id → record`, `work_item.record_id → record`, `work_item_entry.work_item_id → work_item`, `work_item_lock.work_item_id → work_item`) are all application-enforced.
+- PostgreSQL; reference migrations run through `runReferenceApiMigrations` in `reference/api/src/app.module.ts` and are linted by `pnpm lint:migrations`. Logical FK relationships (`record_note.record_id → record`, `work_item.record_id → record`, `work_item_entry.work_item_id → work_item`, `work_item_lock.work_item_id → work_item`) are DB-enforced and registered for STYNX soft-delete behavior.
 
 **Frontend ↔ Backend**
 
-- Declared stack is Angular; 0 frontend routes were captured. All 50 API endpoints are currently unmapped to any frontend use-case.
+- Declared stack is Angular; 15 frontend routes are captured. Reference API endpoints and primary Angular routes are linked from `docs/product/use-cases/stynx-reference-app*.json`.
 
 ---
 
@@ -85,7 +86,7 @@ All five tables carry `tenant_id` (row-level multi-tenant isolation) and `create
 
 ### Unmapped Endpoints
 
-All 50 endpoints are unmapped (0 use-case links, 0 route bindings). Concentration by controller:
+Use-case coverage now claims the 50 reference endpoints. The authored route-binding inventory lives in [architecture/reference-app-rbac.json](architecture/reference-app-rbac.json). Current sensor route-binding output remains empty until DEVAI can read STYNX Angular permission guards.
 
 - `RecordNotesController` — 7 endpoints: list, create, get, patch, delete, hard-delete, restore
 - `DocumentsController` — 6 endpoints: create, delete, hard-delete, restore, complete, download
@@ -98,9 +99,5 @@ All 50 endpoints are unmapped (0 use-case links, 0 route bindings). Concentratio
 
 ### Gaps
 
-- Frontend routes: 0 captured — frontend coverage is blind despite Angular/React stack.
-- No DB-level FK constraints; referential integrity model is undocumented.
-- RBAC role and permission definitions absent despite 94 endpoint bindings.
-- `record.email` PII is missing `legal_basis` and `retention` policy fields.
-- No database migration tooling identified.
-- 0 use-case links across all 50 endpoints.
+- DEVAI `sense-rbac` still emits empty route bindings for STYNX Angular permission guards.
+- Operations, infra, and package test-depth gaps remain in [KNOWN_GAPS.md](KNOWN_GAPS.md).

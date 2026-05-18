@@ -1,0 +1,33 @@
+# Declarative main-branch protection baseline.
+#
+# This file is the repository-owned policy record. Apply it through the
+# repository settings API, Terraform, or a repository-settings action when that
+# automation is available.
+branches:
+  - name: main
+    protection:
+      enforce_admins: true
+      required_linear_history: true
+      allow_force_pushes: false
+      allow_deletions: false
+      required_pull_request_reviews:
+        required_approving_review_count: 1
+        dismiss_stale_reviews: true
+        require_code_owner_reviews: true
+      required_status_checks:
+        strict: true
+        contexts:
+          - semantic-pr-title
+          - evidence-gate
+          - lint
+          - typecheck
+          - lint:cycles
+          - migration-lint
+          - unit-tests
+          - integration-tests
+          - build
+          - doctor
+          - reference-api
+          - reference-web-e2e
+          - package-policy
+          - dependency-audit

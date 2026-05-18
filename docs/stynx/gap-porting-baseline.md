@@ -35,6 +35,21 @@ tests, and package build output:
 - `GAP-006`: rate-limit latency histograms and proactive permission drift
   resync behavior are exported and covered, including fake-timer unit coverage.
 
+## 2026-05-17 Revalidation
+
+Wave 05 of the known-gaps remediation sequence revalidated the audit/privacy
+claims against the current workspace:
+
+- `pnpm --filter @stynx/audit test` passed 2 suites / 3 tests, including the
+  hash-chain unit coverage.
+- `pnpm --filter @stynx/privacy test` passed 2 suites / 7 tests. The LGPD
+  fixture now proves live rows, archive mirrors, PII map loading, erasure across
+  all supported strategies, Cognito disablement, `audit.log` LGPD tags, and
+  hashed `audit.events` preservation.
+- `STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx/data test:int` passed 3
+  suites / 12 tests with the curated-table DML audit invariant enabled.
+- `pnpm test` passed across the workspace (`Tasks: 63 successful, 63 total`).
+
 ## Local Closure Gate
 
 Commands were run from the repository root on 2026-04-26:
