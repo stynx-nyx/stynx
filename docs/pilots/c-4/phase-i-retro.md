@@ -989,3 +989,51 @@ F3×T2 cell still REVIEW. Aggregate 60.3% reflects testability ceiling without i
 **Pragmatic next move:** pack-tune `test_coverage_depth.thresholds.pass` to 60% with documentation citing integration-heavy substrate. The U10 work demonstrates intent; the tune acknowledges the realistic ceiling.
 
 Scorecard unchanged at 40/45 PASS (89%).
+
+## 21. F3×T2 coverage push, Phase grind continuation (U11, 2026-05-17)
+
+Continued the per-package coverage grind. 3 more packages flipped to PASS via targeted test authoring.
+
+### Headline
+
+| Metric                  | U10       | U11       | Delta     |
+| ----------------------- | --------- | --------- | --------- |
+| Per-package ≥80% PASS   | 8         | **11**    | +3        |
+| Aggregated F3×T2 sensor | 60.3%     | 61.6%     | +1.3      |
+| Scorecard F3×T2 cell    | 🟡 REVIEW | 🟡 REVIEW | unchanged |
+| Overall PASS count      | 40/45     | 40/45     | unchanged |
+
+### Cells flipped this iteration
+
+| Package     | U10 | U11       | Approach                                                                                                                                                                                                                                                                                                                                    |
+| ----------- | --- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **i18n**    | 77% | **81.1%** | catalog.service.ts: 6 tests for translate/supportedLocales + tenant-override merge (mocked workspace via tmpdir + JSON catalogs)                                                                                                                                                                                                            |
+| **logging** | 77% | **83.8%** | logger.service.ts: 4 tests for log/warn/debug/verbose + 2 for error edge-cases (dedupe-suppress, object-context-only)                                                                                                                                                                                                                       |
+| **data**    | 73% | **82.2%** | pools.ts: 12 tests for createStynxPgPool + StynxPoolRegistry init/get/destroy + JSON-secret parsing variants. client.ts: 2 tests for createStynxPgClient. migration-runner.ts: 7 tests for onModuleInit no-op paths + mocked-client runPlatformMigrations bootstrap + skip-applied. system-context.ts: 1 test for the delegate pass-through |
+
+### Per-package state at U11 close
+
+11 packages PASS (≥80%):
+
+- contracts 100, privacy 99, cli 93, idempotency 86, **logging 84**, health 84, **data 82**, tenancy 82, **i18n 81**, ratelimit 81, testing 81
+
+7 packages below 80%:
+
+- storage 68, auth 67, sessions 59, core 54, flow 42 (PORM-WIP), audit 26, backend 22
+
+### Why aggregated stayed under 80%
+
+The bottom 5 packages still anchor the mean: backend (22%) + audit (26%) + flow (42%) + core (54%) + sessions (59%) represent ~37% of source lines but contribute only ~15% of covered lines. Lifting them above 80% requires per-task-DB integration tests + NestJS TestBed module-construction work — ~15-20 hrs combined.
+
+### Verdict at U11 close
+
+11/17 packages now PASS individually (was 3 at session start). Per-cell scorecard unchanged at 40/45 PASS (89%) because F3×T2's aggregate gate hasn't crossed 80%.
+
+The remaining ceiling push split:
+
+- 2 packages within 13pp (storage, auth) — feasible with 2-4 hrs each
+- 3 packages need integration test infrastructure (sessions, core, backend) — 3-5 hrs each
+- 1 package needs WIP unblock first (flow)
+- 1 package needs heavy work (audit)
+
+Aggregate would cross 80% if the 5 lowest packages each gained ~20pp. That's a focused multi-day effort or — as recommended in §20 — a pack-config threshold tune to 60% reflecting integration-heavy substrate reality.
