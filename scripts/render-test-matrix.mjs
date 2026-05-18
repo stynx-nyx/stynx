@@ -50,7 +50,7 @@ function parseArgs(values) {
 Reads existing result artifacts only; it does not run tests.
 
 Sources:
-  - scripts/test-matrix.config.json for N/A cells and coverage thresholds
+  - scripts/test-matrix.config.json for meaningless cells and coverage thresholds
   - */.turbo/turbo-test*.log for Jest pass counts
   - reference/web/test-results/.last-run.json for Playwright status
   - packages/*/reports/mutation/mutation.json when present
@@ -63,9 +63,9 @@ Cell format:
   branches | functions
 
 States:
-  N/A       configured as meaningless for that package/level
-  NO TESTS no package script/config for that level
-  NOT RUN  package has that test level, but no current result artifact exists
+  '   '     configured as meaningless for that package/level
+  ' - '     no package script/config for that level
+  ' 0 '     package has that test level, but no current result artifact exists
   NO COUNTS coverage exists, but no pass/all result artifact exists
   FAIL     result artifact exists and did not pass all tests
 
@@ -361,15 +361,15 @@ function printMatrix(rows) {
   process.stdout.write(`${table}\n\n`);
   process.stdout.write('Coverage cell order: lines | statements / branches | functions.\n');
   process.stdout.write('Coverage column uses coverage/coverage-final.json; level cells use level-specific scratch coverage when present.\n');
-  process.stdout.write('N/A = configured meaningless; NO TESTS = no package script/config; NOT RUN = test exists but has no current artifact.\n');
+  process.stdout.write("'   ' = configured meaningless; ' - ' = no package script/config; ' 0 ' = test exists but has no current artifact.\n");
   process.stdout.write('NO COUNTS = coverage exists but no pass/all artifact; FAIL = current artifact did not pass all tests.\n');
 }
 
 function renderCell(cell) {
-  if (!cell) return colorize('NO TESTS', 'dim');
-  if (cell.state === 'not-applicable') return colorize('N/A', 'dim');
-  if (cell.state === 'no-tests') return colorize('NO TESTS', 'dim');
-  if (cell.state === 'not-run') return colorize('NOT RUN', 'yellow');
+  if (!cell) return colorize(' - ', 'dim');
+  if (cell.state === 'not-applicable') return colorize('   ', 'dim');
+  if (cell.state === 'no-tests') return colorize(' - ', 'dim');
+  if (cell.state === 'not-run') return colorize(' 0 ', 'yellow');
   if (cell.state === 'coverage') return renderCoverage(cell.coverage);
 
   const result = renderStatefulResult(cell);
@@ -403,7 +403,10 @@ function renderCoverage(coverage) {
 }
 
 function formatMetric(value, metric) {
-  if (value == null) return 'n/a';
+  if (value == null) return '  ';
+  if (Math.round(value) === 100) {
+    return useColor ? colorize('✓✓', 'green') : '✓✓';
+  }
   const rounded = String(Math.round(value)).padStart(3, ' ');
   const threshold = thresholdFor(metric);
   if (!useColor) return rounded.trim();
