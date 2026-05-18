@@ -12,9 +12,9 @@
     "test": "echo \"@stynx-domain/demo-bookmark-web: tests pending — see ../docs/README.md F-9 follow-up\" && exit 0"
   },
   "dependencies": {
-    "@angular/common": "^18.2.13",
-    "@angular/core": "^18.2.13",
-    "@angular/router": "^18.2.13",
+    "@angular/common": "^21.2.13",
+    "@angular/core": "^21.2.13",
+    "@angular/router": "^21.2.13",
     "@stynx-web/angular": "workspace:*",
     "rxjs": "^7.8.2"
   },
