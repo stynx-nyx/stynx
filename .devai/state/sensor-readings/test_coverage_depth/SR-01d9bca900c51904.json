@@ -5,7 +5,7 @@
     "name": "test-coverage-depth",
     "kind": "test_coverage_depth"
   },
-  "timestamp": "2026-05-18T03:49:23.487Z",
+  "timestamp": "2026-05-18T03:59:54.990Z",
   "status": "review",
   "deterministic": true,
   "command": "devai sense-test-coverage-depth",
@@ -15,13 +15,13 @@
     {
       "severity": "warning",
       "code": "TEST_COVERAGE_PARTIAL",
-      "message": "Lines coverage 75.2% is between review (50%) and pass (80%) thresholds."
+      "message": "Lines coverage 77.8% is between review (50%) and pass (80%) thresholds."
     }
   ],
   "metrics": {
     "lines_total": 7427,
-    "lines_covered": 5583,
-    "lines_pct": 75.17,
+    "lines_covered": 5775,
+    "lines_pct": 77.76,
     "threshold_pass": 80,
     "threshold_review": 50
   }

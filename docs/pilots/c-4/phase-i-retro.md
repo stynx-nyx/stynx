@@ -1420,3 +1420,72 @@ U17 in shape (~8-10 unit spec files, ~150 tests, ~6-8 hr of
 authoring).
 
 Scorecard unchanged at 40/45 PASS (89%).
+
+## §28 — U18: auth → PASS via 2 mocked-interface specs
+
+Auth was scoped as a 2-3 hr "auth-shaped" lift in U15 (needs new int
+specs against Cognito-local + Redis testcontainers). Same realization
+as U17 backend: the architecture is interface-shaped. Two unit specs
+flipped the package — no testcontainers, no real Cognito-local.
+
+### What landed
+
+- `packages/auth/test/unit/cognito-admin.adapter.spec.ts` — 41 tests
+  covering: mapCognitoError 10-case mapping table, listUsers (email
+  filter, phone filter, group routing, limit clamping, error mapping),
+  getUser, getUserBySubject (incl. not-found + IdentityAdminError
+  preservation), updateUser (attribute composition incl. custom: prefix,
+  no-change short-circuit), disable/enable, listGroupsForUser (blank
+  filter), listGroups (pagination), addUserToGroup, removeUserFromGroup,
+  resetUserPassword, setUserPassword (Permanent=false), verifyUserChannels
+  (both channels + zero-channel skip), resolveCredentials 4-strategy
+  matrix, username fallback, buildCognitoAdminOptionsFromEnv (8 cases
+  incl. profile/strategy env var routing). client.send mocked via
+  Object.defineProperty pattern from prior storage/backend specs.
+- `packages/auth/test/unit/redis-permission-cache-backend.spec.ts` —
+  18 tests covering: no-options short-circuits (init, get, set, delete,
+  invalidateScope, publish), get JSON parse + null handling, set multi
+  pipeline composition (record + 2 indexes + 2 expires), delete with
+  and without indexed record, invalidateScope 4 variants (per-user,
+  tenant-wide _:t, global _:\* via scanIterator, malformed message),
+  subscribe/publish/close lifecycle. Redis client mocked via
+  Object.defineProperty.
+
+### Per-package result
+
+| Package | U17  | U18       | Δ      |
+| ------- | ---- | --------- | ------ |
+| auth    | 68.6 | **89.93** | +21.33 |
+
+### Aggregate state at U18
+
+| Metric           | U17    | U18      |
+| ---------------- | ------ | -------- |
+| Per-package ≥80% | 15     | **16**   |
+| Aggregate F3×T2  | 75.2   | **77.8** |
+| F3×T2 cell       | REVIEW | REVIEW   |
+
+### What was not done
+
+The third gap file in auth — `cognito-token-verifier.ts` at 19% — uses
+`await import('jose')` for both `jwtVerify` and `createRemoteJWKSet`.
+Per the prior summary, ts-jest can't intercept dynamic imports with
+`jest.mock('jose')` under the current config. Not blocking: auth hit
+PASS without it. The verifier remains a candidate for a future
+integration spec against Cognito-local's JWKS endpoint, but that's
+deferred. Coverage gain skipped: ~30 lines, ~0.4pp aggregate.
+
+### Architectural insight
+
+Same pattern as U17: a package previously thought to need testcontainer
+integration was already designed for the cheaper unit-test path. Both
+gap files (Cognito IDP, Redis) are thin wrappers over external clients
+where the wrapping logic — error mapping, attribute composition, multi-
+pipeline construction — is the part worth testing. The clients themselves
+are well-mocked via standard fakes.
+
+Next move per the user sequence: audit. Audit's gap is in `sql-adapter.ts`
+(2%/126L) which builds real SQL strings — the unit-vs-real-DB tradeoff
+will be more interesting here than for auth or backend.
+
+Scorecard unchanged at 40/45 PASS (89%).
