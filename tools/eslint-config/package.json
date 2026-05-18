@@ -11,7 +11,7 @@
     "./angular": "./angular.mjs"
   },
   "scripts": {
-    "test": "node --test test/eslint-config.spec.mjs"
+    "test": "node ../../scripts/record-test-artifact.mjs turbo-test.log -- node --test test/eslint-config.spec.mjs"
   },
   "files": [
     "*.mjs",

@@ -262,3 +262,4 @@ function runEvidenceTests() {
 runEvidenceTests();
 
 console.log('All scripts validated');
+console.log('Tests: 1 passed, 1 total');

@@ -22,7 +22,7 @@
     "clean": "rm -rf dist",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
-    "test": "jest --config ./jest.config.cjs",
+    "test": "node ../../scripts/record-test-artifact.mjs turbo-test.log -- jest --config ./jest.config.cjs",
     "test:coverage": "jest --config ./jest.config.cjs --coverage --coverageReporters=json"
   },
   "dependencies": {

@@ -2,7 +2,7 @@
   "name": "stynx-script-tests",
   "private": true,
   "scripts": {
-    "test": "node validate.js",
+    "test": "node ../../scripts/record-test-artifact.mjs turbo-test.log -- node validate.js",
     "lint": "eslint --config ../../tools/eslint-config/scripts.mjs \"./**/*.js\""
   }
 }

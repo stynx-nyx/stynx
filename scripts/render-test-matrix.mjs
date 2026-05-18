@@ -127,6 +127,7 @@ function readApiResult(ws) {
 
 function readDbResult(ws) {
   if (ws.root === 'test' && basename(ws.dir) === 'db') return readTurboResult(ws.dir, 'turbo-test.log');
+  if (ws.scripts['test:int']) return readTurboResult(ws.dir, 'turbo-test$colon$int.log');
   if (!ws.dir.includes(`${sep}packages${sep}`)) return null;
   return readTurboResult(ws.dir, 'turbo-test$colon$int.log');
 }
@@ -160,12 +161,35 @@ function readMutationResult(ws) {
 function parseJestLog(raw) {
   const text = stripAnsi(raw).replace(/\r/g, '\n');
   const matches = [...text.matchAll(/Tests:\s+([^\n]+)/g)];
+  if (matches.length > 0) {
+    const summary = matches.at(-1)[1];
+    const total = numberBefore(summary, 'total');
+    const passed =
+      numberBefore(summary, 'passed') ??
+      (total != null ? total - (numberBefore(summary, 'failed') ?? 0) : null);
+    const status = (numberBefore(summary, 'failed') ?? 0) > 0 ? 'failed' : 'passed';
+    return { passed, total, status };
+  }
+
+  return parseNodeTestLog(text);
+}
+
+function parseNodeTestLog(text) {
+  const total = lastNumberAfterInfo(text, 'tests');
+  const passed = lastNumberAfterInfo(text, 'pass');
+  const failed = lastNumberAfterInfo(text, 'fail') ?? 0;
+  if (total == null && passed == null) return null;
+  return {
+    passed: passed ?? (total != null ? total - failed : null),
+    total: total ?? passed,
+    status: failed > 0 ? 'failed' : 'passed',
+  };
+}
+
+function lastNumberAfterInfo(text, word) {
+  const matches = [...text.matchAll(new RegExp(`(?:ℹ|i)\\s+${word}\\s+(\\d+)`, 'g'))];
   if (matches.length === 0) return null;
-  const summary = matches.at(-1)[1];
-  const total = numberBefore(summary, 'total');
-  const passed = numberBefore(summary, 'passed') ?? (total != null ? total - (numberBefore(summary, 'failed') ?? 0) : null);
-  const status = (numberBefore(summary, 'failed') ?? 0) > 0 ? 'failed' : 'passed';
-  return { passed, total, status };
+  return Number(matches.at(-1)[1]);
 }
 
 function numberBefore(text, word) {
