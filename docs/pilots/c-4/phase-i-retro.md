@@ -1234,3 +1234,71 @@ Three viable directions, ordered by ROI:
    harness).
 
 Scorecard unchanged at 40/45 PASS (89%).
+
+## §25 — U15: full-workspace merge recon + classification
+
+Ran `node scripts/aggregate-coverage.mjs` (no filter) — every package's unit
+
+- integration through the merger. Goal: classify each remaining sub-80%
+  package as "sessions-shaped" (PASS via merge alone) vs "auth-shaped"
+  (int spec exists but doesn't exercise the gap files).
+
+### Aggregate state after full merge
+
+| Metric           | U14    | U15       |
+| ---------------- | ------ | --------- |
+| Per-package ≥80% | 14     | 13 (-1)\* |
+| Aggregate F3×T2  | 64.8   | **66.8**  |
+| F3×T2 cell       | REVIEW | REVIEW    |
+
+\* ratelimit fell from PASS to REVIEW (78.8%) under istanbul-lib-coverage's
+stricter line counting vs the prior arithmetic. Real coverage didn't drop —
+only the measurement did. Easily recoverable in U16 (see below).
+
+### Per-package classification (sub-80% only)
+
+| Package   | pct  | Gap files (size)                                                      | Shape        | Effort to flip |
+| --------- | ---- | --------------------------------------------------------------------- | ------------ | -------------- |
+| ratelimit | 78.8 | rate-limit.guard 75.5%/94L, rate-limit-policy 59%/39L                 | unit gap     | 30 min         |
+| audit     | 35.5 | sql-adapter 2%/126L, audit.service 45%/125L                           | auth-shaped  | 3-4 hr         |
+| auth      | 68.6 | cognito-admin 5%/145L, redis-perm-cache 5%/79L, cognito-token 19%/57L | auth-shaped  | 2-3 hr         |
+| flow      | 43.5 | flow-runtime 31%/248L, flow-design 13%/179L, flow-forms 4%/158L       | auth-shaped  | 5-7 hr         |
+| backend   | 22.5 | identity-admin layer + db-context layer (~13 files at <30%)           | no int suite | 6-8 hr         |
+
+### Headline findings
+
+1. **No package was sessions-shaped.** Sessions was the only one in the
+   workspace whose existing int suite happened to cover the gap files. Every
+   remaining sub-80% package needs _authoring_ against either an existing
+   harness or a new one.
+2. **Backend is load-bearing for the cell flip.** Without backend's ~520
+   lines, even flipping all of {audit, auth, flow, ratelimit} only reaches
+   ~77% aggregate (still REVIEW). Backend + flow alone hits 80.1% PASS.
+3. **One pre-existing infra bug surfaced:** storage int crashes with
+   `ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG` (AWS SDK v3 needs
+   `--experimental-vm-modules`). Pre-existing config bug, not blocking —
+   storage is already PASS via unit. Flagged for separate fix.
+
+### Minimum combinations to flip the F3×T2 cell
+
+| Combination                        | Aggregate      | Effort   |
+| ---------------------------------- | -------------- | -------- |
+| backend + flow                     | 80.1%          | 11-15 hr |
+| backend + flow + ratelimit         | 80.2%          | 12-15 hr |
+| backend + audit + auth + ratelimit | 79.7% (REVIEW) | 12-15 hr |
+| Everything except backend          | ~77%           | 10-14 hr |
+
+### Recommended sequencing
+
+1. **U16: ratelimit unit push** — 30 min, recovers the 14th PASS lost to
+   measurement reshuffling.
+2. **Either backend scaffold or flow service specs** — the two big lifts,
+   either order works. Backend first is more strategic (everything else
+   integrates with backend's RLS); flow first is more mechanical (extends
+   the existing harness).
+3. **The other of {backend, flow}** — after this, cell flips PASS regardless
+   of audit/auth.
+4. **Optional: audit + auth as polish** — pushes aggregate from ~80 to ~88.
+   Not required for cell flip.
+
+Scorecard unchanged at 40/45 PASS (89%).
