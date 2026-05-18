@@ -35,7 +35,7 @@
     "@stynx-web/angular-ui": "workspace:*",
     "angular-auth-oidc-client": "^21.0.1",
     "rxjs": "^7.8.2",
-    "zone.js": "^0.16.1"
+    "zone.js": "^0.16.2"
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",
