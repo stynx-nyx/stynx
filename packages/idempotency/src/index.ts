@@ -1,3 +1,8 @@
+/**
+ * Public idempotency decorators, interceptors, stores, metrics, and module exports.
+ *
+ * @packageDocumentation
+ */
 export * from './constants';
 export * from './database-idempotency.store';
 export * from './decorators';

@@ -1,18 +1,86 @@
 # @stynx/tenancy
 
-Tenant resolution and lifecycle primitives for STYNX, including:
+Tenant resolution, membership validation, tenant lifecycle services, platform-admin guards, and lifecycle system-operation recording.
 
-- request-scoped tenant resolution from header, bearer claim, or subdomain
-- active-membership validation with a short-lived in-pod LRU cache
-- tenant provisioning, suspension, archive, and purge orchestration
-- platform admin endpoints for tenant lifecycle operations
+## Purpose
 
-Lifecycle model:
+Tenant resolution, membership validation, tenant lifecycle services, platform-admin guards, and lifecycle system-operation recording.
 
-- `provisioning -> active -> suspended -> archived -> purged`
-- `is_active` remains the hard access gate used by request validation and RLS-adjacent checks
+## Install And Import
 
-Operational notes:
+```ts
+import {} from /* public exports */ '@stynx/tenancy';
+```
 
-- `/sessions`, `/.well-known/jwks.json`, and health/metrics/info routes are exempt from tenant resolution
-- platform admin routes use an env-flag guard for now; auth permission wiring can replace that later
+In this monorepo, use the workspace package. Published consumers should install matching `@stynx/*` versions from the same release train.
+
+## Module Setup
+
+Import `StynxTenancyModule` before tenant-scoped feature modules.
+
+```ts
+@Module({
+  imports: [StynxTenancyModule.forRoot({ membershipCache, prefixProvisioner })],
+})
+export class TenancyHostModule {}
+```
+
+## Data And Security Model
+
+Tenant state is the hard access gate for request validation and RLS-adjacent checks. Optional paths such as health, metrics, JWKS, and session bootstrap stay outside tenant resolution.
+
+## Example
+
+```ts
+import { TenancyService } from '@stynx/tenancy';
+
+const tenant = await tenancy.provisionTenant({ slug, displayName, requestedBy });
+```
+
+## Public API
+
+- StynxTenancyModule
+- TenancyService
+- TenantContextInterceptor
+- membership cache
+- platform admin guard
+- tenant system operation sink
+- tokens, types, and utils
+
+Current barrel highlights:
+
+- `export * from './membership-cache'`
+- `export * from './tenant-context.interceptor'`
+- `export * from './tenant-system-operation.sink'`
+- `export * from './tenancy.controller'`
+- `export * from './tenancy.module'`
+- `export * from './tenancy.platform-admin.guard'`
+- `export * from './tenancy.service'`
+- `export * from './tokens'`
+- `export * from './types'`
+- `export * from './utils'`
+
+## Verification
+
+```sh
+pnpm --filter @stynx/tenancy build
+pnpm --filter @stynx/tenancy test
+STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx/tenancy test:int
+```
+
+## Documentation Standard
+
+The public barrel must carry package-level `@packageDocumentation`. Add symbol-level TSDoc for exported services, modules, guards, interceptors, decorators, adapters, errors, and public options when the type name is not self-explanatory.
+
+## Compatibility
+
+| Package version | Node | pnpm | STYNX spec              |
+| --------------- | ---- | ---- | ----------------------- |
+| 1.x             | 24.x | 9.x  | v0.6 / v1.0 remediation |
+
+## References
+
+- [docs/architecture/developer-documentation.md](../../docs/architecture/developer-documentation.md)
+- [docs/stynx/package-architecture.md](../../docs/stynx/package-architecture.md)
+- [docs/operations/runbooks/tenant-suspension.md](../../docs/operations/runbooks/tenant-suspension.md)
+- [docs/security/README.md](../../docs/security/README.md)

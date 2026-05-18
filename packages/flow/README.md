@@ -1,43 +1,92 @@
 # @stynx/flow
 
-Backend workflow module for tenant-scoped Flow design and runtime state.
+Tenant-scoped workflow design, runtime, forms, policies, analytics, and PORM-compatible migration aliases.
 
-This package implements the STYNX Flow architecture in `docs/architecture/flow.md`.
-It is generic framework code: host-domain behavior is provided through adapter
-contracts and declarative effect payloads, not through CMS or PORM imports.
+## Purpose
 
-## Current Surface
+Tenant-scoped workflow design, runtime, forms, policies, analytics, and PORM-compatible migration aliases.
 
-- Design CRUD for scopes, graphs, nodes, edges, agent rules, transition effects,
-  node form rules, policy sets, and policy rules.
-- Graph import/export for tenant-local workflow definitions.
-- Runtime services for run creation, signals, node/task progression, task
-  candidates, assignment/action flows, form fact rebuilding, effect dispatch,
-  and policy evaluation.
-- PORM-compatible migration aliases for fill creation, bulk answer upsert,
-  form-scoped fill detail, fill-scoped waiver listing, fill answers, and fill
-  waivers.
-- Bounded analytics envelopes for open tasks and run summary views.
-- Database triggers that re-signal active targets after answer/waiver mutation
-  so form-gated auto nodes do not stale.
-- DML audit enabled for current curated Flow live tables.
+## Install And Import
 
-## Verification Status
+```ts
+import {} from /* public exports */ '@stynx/flow';
+```
 
-Current package maturity is ready with caveats:
+In this monorepo, use the workspace package. Published consumers should install matching `@stynx/*` versions from the same release train.
 
-- `pnpm --filter @stynx/flow test` covers route contracts, validation, effect
-  dispatch, resolver expansion, analytics, task privilege, and policy behavior.
-- `STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx/flow test:int` covers
-  tenant-scoped database/runtime behavior, audit trigger coverage, and
-  answer-mutation signal freshness against PostgreSQL.
-- Full HTTP request-pipeline coverage for every Flow route family is still a
-  follow-up target.
-- API additions should be driven by stynx package completeness, Angular package
-  needs, E2E evidence, or consumer deprecation work rather than absolute PORM
-  route parity. The current reviewed addition is `GET /flow/fills/:fillId/waivers`.
+## Module Setup
 
-## Required Host Modules
+Import `StynxFlowModule` after auth, data, tenancy, idempotency, and platform request context are configured.
 
-Host applications must configure the STYNX platform pipeline, `@stynx/data`,
-`@stynx/auth`, and tenancy context before mounting `StynxFlowModule`.
+```ts
+@Module({
+  imports: [StynxFlowModule.forRoot({ adapters: [domainAdapter] })],
+})
+export class FlowHostModule {}
+```
+
+## Data And Security Model
+
+Stores Flow design/runtime data under the flow schema, emits signals on answer/waiver mutation, and requires DML audit triggers on current curated Flow live tables. Domain behavior enters through adapters and declarative effect payloads.
+
+## Example
+
+```ts
+import { FlowRuntimeService } from '@stynx/flow';
+
+await flowRuntime.signal({
+  tenantId,
+  kind: 'record.changed',
+  subjectId: recordId,
+});
+```
+
+## Public API
+
+- FlowDesignService
+- FlowFormsService
+- FlowRuntimeService
+- FlowAnalyticsService
+- FlowPolicyService
+- StynxFlowModule
+- domain adapter contracts
+- row utils, validation schemas, tokens, and types
+
+Current barrel highlights:
+
+- `export * from './flow-design.service'`
+- `export * from './flow-forms.service'`
+- `export * from './flow-analytics.service'`
+- `export * from './flow-policy.service'`
+- `export * from './flow-runtime.service'`
+- `export * from './flow.module'`
+- `export * from './adapters'`
+- `export * from './tokens'`
+- `export * from './row-utils'`
+- `export * from './types'`
+- `export * from './validation'`
+
+## Verification
+
+```sh
+pnpm --filter @stynx/flow build
+pnpm --filter @stynx/flow test
+STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx/flow test:int
+```
+
+## Documentation Standard
+
+The public barrel must carry package-level `@packageDocumentation`. Add symbol-level TSDoc for exported services, modules, guards, interceptors, decorators, adapters, errors, and public options when the type name is not self-explanatory.
+
+## Compatibility
+
+| Package version | Node | pnpm | STYNX spec              |
+| --------------- | ---- | ---- | ----------------------- |
+| 1.x             | 24.x | 9.x  | v0.6 / v1.0 remediation |
+
+## References
+
+- [docs/architecture/developer-documentation.md](../../docs/architecture/developer-documentation.md)
+- [docs/stynx/package-architecture.md](../../docs/stynx/package-architecture.md)
+- [docs/architecture/flow.md](../../docs/architecture/flow.md)
+- [docs/contracts/flow-api.md](../../docs/contracts/flow-api.md)

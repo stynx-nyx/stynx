@@ -1,3 +1,8 @@
+/**
+ * Compatibility backend barrel for shared NestJS modules and contracts.
+ *
+ * @packageDocumentation
+ */
 export * from '@stynx/contracts';
 
 export * from './common/request-context';

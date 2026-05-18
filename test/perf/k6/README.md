@@ -22,6 +22,17 @@ The bundled `reference/api/docker-compose.yml` applies a perf-friendly override 
 `sample.documents.create` and `sample.documents.complete` so the upload scenario measures
 storage flow latency instead of immediately self-throttling on the demo tenant.
 
+## Thresholds and CI
+
+Each scenario declares k6 `thresholds` for HTTP failure rate and p95/p99 latency.
+The `run-scenarios.mjs` wrapper propagates the k6 process exit code, so a threshold
+breach fails local runs and `.github/workflows/hardening.yml`.
+
+The hardening workflow also uploads `*.summary.json` artifacts and compares the
+current p99 custom metrics with the most recent successful `main` baseline through
+`check-summary.mjs`. The first successful main run may seed a baseline; later runs
+must either find the matching baseline artifact or fail.
+
 Supported env overrides:
 
 - `STYNX_K6_BASE_URL`

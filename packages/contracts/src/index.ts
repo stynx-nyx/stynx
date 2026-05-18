@@ -1,3 +1,8 @@
+/**
+ * Public framework-agnostic contract exports shared by STYNX packages.
+ *
+ * @packageDocumentation
+ */
 export * from './auth';
 export * from './authorization';
 export * from './audit';

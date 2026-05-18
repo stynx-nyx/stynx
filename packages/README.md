@@ -1,21 +1,45 @@
 # stynx Packages
 
-This workspace contains the reusable, installable platform packages.
+This workspace contains reusable, installable backend packages published as
+`@stynx/*`. Web packages live under `../packages-web`.
 
-- `contracts`: framework-agnostic contracts and error types.
-- `backend`: NestJS shared infrastructure modules.
-- `core`: core runtime primitives, request context, config, and shared error handling.
-- `data`: data access foundation, migrations, archive-aware delete/restore helpers, and query extensions.
-- `health`: health, readiness, metrics, and `/info` endpoints.
-- `logging`: structured logging primitives and dedupe behavior.
-- `sessions`: Redis-backed sessions, refresh rotation, JWT/JWKS signing, and durable session mirrors.
-- `auth`: authentication adapters and runtime primitives, including Cognito token verification and admin operations.
-- `storage`: storage adapters and document primitives, including the S3 object storage service.
-- `tenancy`: tenant resolution, membership validation, and tenant lifecycle orchestration.
-- `audit`: audit adapters and helpers, including the SQL audit sink and reader.
-- `ratelimit`: request throttling primitives and durable store adapters.
-- `idempotency`: response replay primitives and durable store adapters.
-- `testing`: container-backed app harnesses, matchers, fixtures, and doctor helpers for consumer apps.
-- `privacy`: PII map loading, subject export/erasure flows, retention planning, and ROPA generation.
-- `i18n`: catalog aggregation, locale resolution, and localized error rendering.
-- `cli`: workspace bootstrapping, migrations, doctor checks, privacy ROPA output, and adoption helpers.
+## Package Groups
+
+| Group                        | Packages                                                  | Purpose                                                                                           |
+| ---------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Contracts                    | `contracts`                                               | Framework-agnostic interfaces and error types.                                                    |
+| Runtime foundation           | `core`, `data`, `backend`                                 | Request context, config, data access, migrations, and aggregate NestJS wiring.                    |
+| Security and tenancy         | `auth`, `sessions`, `tenancy`, `ratelimit`, `idempotency` | Auth, session lifecycle, tenant validation, throttling, and mutation replay protection.           |
+| Governance and observability | `audit`, `health`, `logging`, `privacy`                   | Audit evidence, metrics/readiness, structured logs, LGPD export/erasure, and ROPA.                |
+| Platform features            | `storage`, `i18n`, `flow`                                 | Documents/object storage, localized messages, and workflow machinery.                             |
+| Tooling                      | `cli`, `testing`                                          | Consumer commands, migrations, doctor checks, fixtures, matchers, and integration-test harnesses. |
+
+## Documentation Baseline
+
+Every active package directory has a README with:
+
+- purpose and ownership boundary;
+- install/import guidance;
+- module, CLI, or test-harness setup;
+- data/security model;
+- minimal usage example;
+- public API summary;
+- package-local verification commands.
+
+The canonical standard is
+[`docs/architecture/developer-documentation.md`](../docs/architecture/developer-documentation.md)
+and the reusable template is
+[`docs/templates/package-README.md`](../docs/templates/package-README.md).
+
+## Public Barrel Baseline
+
+Every active backend package exports through `src/index.ts`, and every public
+barrel carries package-level `@packageDocumentation` for TypeDoc generation.
+Symbol-level TSDoc is required when exported services, modules, guards,
+interceptors, decorators, adapters, errors, or options have non-obvious runtime
+or security behavior.
+
+## Consumer Entry Point
+
+See [`docs/stynx/package-architecture.md`](../docs/stynx/package-architecture.md)
+for the package topology and recommended host composition order.

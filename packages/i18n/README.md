@@ -1,8 +1,53 @@
 # @stynx/i18n
 
-Localization catalog, locale resolution, ICU message rendering, and error translation support.
+Catalog aggregation, locale resolution, localized error rendering, and tenant override administration.
+
+## Purpose
+
+Catalog aggregation, locale resolution, localized error rendering, and tenant override administration.
+
+## Install And Import
+
+```ts
+import {} from /* public exports */ '@stynx/i18n';
+```
+
+In this monorepo, use the workspace package. Published consumers should install matching `@stynx/*` versions from the same release train.
+
+## Module Setup
+
+Import `StynxI18nModule` when a host needs localized platform messages.
+
+```ts
+@Module({
+  imports: [StynxI18nModule.forRoot({ defaultLocale: 'en' })],
+})
+export class I18nHostModule {}
+```
+
+## Data And Security Model
+
+May read tenant overrides from the data package. Locale selection must not bypass tenant context or leak tenant-specific override data across requests.
+
+## Example
+
+```ts
+import { ErrorTranslatorService } from '@stynx/i18n';
+
+const message = translator.translate(error, { locale: 'pt-BR', tenantId });
+```
 
 ## Public API
+
+- CatalogService
+- ErrorTranslatorService
+- I18nAdminService
+- I18nController
+- StynxI18nModule
+- LocaleInterceptor and LocaleService
+- tokens and types
+
+Current barrel highlights:
 
 - `export * from './catalog.service'`
 - `export * from './error-translator.service'`
@@ -14,20 +59,26 @@ Localization catalog, locale resolution, ICU message rendering, and error transl
 - `export * from './tokens'`
 - `export * from './types'`
 
-## Peer Dependencies
+## Verification
 
-- `@nestjs/common` ^11.1.19
-- `@nestjs/core` ^11.1.19
-- `reflect-metadata` ^0.2.2
-- `rxjs` ^7.8.2
+```sh
+pnpm --filter @stynx/i18n build
+pnpm --filter @stynx/i18n test
+STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx/i18n test:int
+```
+
+## Documentation Standard
+
+The public barrel must carry package-level `@packageDocumentation`. Add symbol-level TSDoc for exported services, modules, guards, interceptors, decorators, adapters, errors, and public options when the type name is not self-explanatory.
 
 ## Compatibility
 
 | Package version | Node | pnpm | STYNX spec              |
 | --------------- | ---- | ---- | ----------------------- |
-| 0.1.0           | 24.x | 9.x  | v0.6 / v1.0 remediation |
+| 1.x             | 24.x | 9.x  | v0.6 / v1.0 remediation |
 
 ## References
 
-- [STYNX Spec section 3](../../specs/STYNX-SPEC-v0.6.md)
-- [Package README template](../../docs/templates/package-README.md)
+- [docs/architecture/developer-documentation.md](../../docs/architecture/developer-documentation.md)
+- [docs/stynx/package-architecture.md](../../docs/stynx/package-architecture.md)
+- [docs/glossary/README.md](../../docs/glossary/README.md)

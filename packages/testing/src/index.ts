@@ -1,3 +1,8 @@
+/**
+ * Public STYNX testing harness, fixture, matcher, doctor, and session helper exports.
+ *
+ * @packageDocumentation
+ */
 export * from './context';
 export * from './create-test-app';
 export * from './doctor';

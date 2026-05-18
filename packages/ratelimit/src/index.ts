@@ -1,3 +1,8 @@
+/**
+ * Public rate-limit decorators, guards, policies, stores, metrics, and module exports.
+ *
+ * @packageDocumentation
+ */
 export * from './constants';
 export * from './decorators';
 export * from './metrics';

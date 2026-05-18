@@ -1,146 +1,95 @@
 # stynx Package Architecture
 
-## Implemented Workspace Shape
+This document is the consumer entrypoint for the installable package topology.
+Canonical package docs live in each package README; this page explains how the
+packages fit together.
 
-- `package.json` (workspace root)
-- `tools/tsconfig/*`
-- `packages/stynx-contracts`
-- `packages/backend`
-- `packages/stynx-auth-cognito`
-- `packages/stynx-auth-cognito-admin`
-- `packages/stynx-storage-s3`
-- `packages/stynx-audit-sql`
-- `packages/stynx-frontend-contracts`
-- `packages/stynx-frontend-client`
-- `apps/reference-backend`
-- `apps/reference-frontend`
+## Workspace Shape
 
-## Public Package Roles
+- `packages/*` — backend, data, contracts, CLI, and testing packages published
+  as `@stynx/*`.
+- `packages-web/*` — Angular/browser packages published as `@stynx-web/*`.
+- `reference/api` and `reference/web` — host applications proving package
+  composition.
+- `infra/cdk` — standalone AWS CDK reference app for deployed environments.
 
-### `@stech/stynx-contracts`
+Legacy `backend/`, `frontend/`, `bootstrap/`, and `test/` roots are not the
+package API surface.
 
-Framework-agnostic contracts:
+## Backend Package Groups
 
-- principal/auth verification contracts
-- policy evaluator contracts
-- audit envelope/sink contracts
-- storage contracts
-- DB context contracts
-- tenancy contracts
-- identity-admin contracts
-- common error/result envelopes
+| Group                   | Packages                                                                                     | Purpose                                                                                                          |
+| ----------------------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Contracts               | `@stynx/contracts`                                                                           | Type-only interfaces and error envelopes shared across packages.                                                 |
+| Runtime foundation      | `@stynx/core`, `@stynx/data`, `@stynx/backend`                                               | Request context, config/secrets, data access, and aggregate NestJS platform wiring.                              |
+| Security and tenancy    | `@stynx/auth`, `@stynx/sessions`, `@stynx/tenancy`, `@stynx/ratelimit`, `@stynx/idempotency` | Authentication, authorization, session lifecycle, tenant resolution, throttling, and mutation replay protection. |
+| Observability and audit | `@stynx/health`, `@stynx/logging`, `@stynx/audit`                                            | Health/readiness/metrics, structured logs, audit writing, retention, and evidence queries.                       |
+| Data governance         | `@stynx/privacy`, `@stynx/storage`, `@stynx/i18n`                                            | LGPD export/erasure/ROPA, document metadata/object storage, and localized messages.                              |
+| Workflow                | `@stynx/flow`                                                                                | Tenant-scoped workflow design, runtime, forms, policy, analytics, and PORM-compatible migration aliases.         |
+| Tooling                 | `@stynx/cli`, `@stynx/testing`                                                               | Adoption/migration commands plus reusable test harnesses, fixtures, and matchers.                                |
 
-### `@stynx/backend`
+## Web Package Groups
 
-NestJS infrastructure modules:
+| Group            | Packages                                                                                                                                                                                                                             | Purpose                                                          |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| Core browser SDK | `@stynx-web/sdk`, `@stynx-web/angular`, `@stynx-web/angular-ui`                                                                                                                                                                      | Fetch/auth helpers, Angular providers, and shared UI primitives. |
+| Feature packages | `@stynx-web/angular-auth`, `@stynx-web/angular-sessions`, `@stynx-web/angular-tenancy`, `@stynx-web/angular-storage`, `@stynx-web/angular-trash`, `@stynx-web/angular-profile`, `@stynx-web/angular-flow`, `@stynx-web/angular-i18n` | Host-mounted Angular surfaces for framework features.            |
 
-- `StynxAuthModule.forRoot(...)`
-- `StynxAuthorizationModule.forRoot(...)`
-- `StynxAuditModule.forRoot(...)`
-- `StynxDbContextModule.forRoot(...)`
-- `StynxStorageModule.forRoot(...)`
-- `StynxIdentityAdminModule.forRoot(...)`
-- `StynxRateLimitModule.forRoot(...)`
-- `StynxSlaModule.forRoot(...)`
-- `StynxIdempotencyModule.forRoot(...)`
-- `StynxPlatformPipelineModule.forRoot(...)` (PEC-style global stack composition)
+## Recommended Backend Wiring
 
-Identity-admin runtime surface:
+For a NestJS host, start with the foundation packages and add features:
 
-- `IdentityAdminService` (provider-generic operations + optional local sync/meta adapter hooks)
+```ts
+@Module({
+  imports: [
+    StynxCoreModule.forRoot(coreOptions),
+    StynxDataModule.forRoot(dataOptions),
+    StynxAuthModule.forRoot(authOptions),
+    StynxTenancyModule.forRoot(tenancyOptions),
+    StynxAuditModule.forRoot(auditOptions),
+    StynxStorageModule.forRoot(storageOptions),
+    StynxHealthModule.forRoot(healthOptions),
+  ],
+})
+export class AppModule {}
+```
 
-Also includes shared guards/decorators/interceptors:
+`@stynx/backend` remains the compatibility aggregation package for existing
+hosts that want one import surface for shared backend modules. New code should
+prefer direct package imports when that keeps ownership clearer.
 
-- `AuthContextGuard`
-- `CurrentPrincipal`
-- `RequireRoles`, `RequirePermissions`
-- `AuthorizationGuard`
-- `Audit`, `AuditInterceptor`
-- `DbContextInterceptor`
-- `RateLimitGuard`
-- `SlaMonitorInterceptor`
-- `IdempotencyInterceptor`
+## Data And Security Invariants
 
-Tenant isolation toolkit (PEC-style):
+- New mutable curated tables must carry tenant/RLS behavior where applicable
+  and DML audit triggers by default.
+- Direct PostgreSQL imports stay in `@stynx/data` and approved CLI/test
+  utilities.
+- Storage, privacy, audit, tenancy, and sessions must not bypass their owning
+  package abstractions.
+- Reference apps are examples of composition; they are not package internals.
 
-- `RequiredTenantHeaderResolver`
-- `ClaimFirstTenantEntitlementPolicy`
-- `SqlTenantEntitlementFallback`
-- `RequestDbClientLifecycle`, `PgTenantDbClientLifecycle`
-- `TenantLifecycleMiddleware`, `createTenantLifecycleMiddleware(...)`
-- `PgSessionDbContextApplier` (default Postgres session context applier with `row_security` + `set_config`)
-- `StynxDbContextModule.forRoot({ requestDbClientLifecycle })`
+## Documentation Contract
 
-### `@stech/stynx-auth-cognito`
+Every active backend package has a package README. The baseline is documented in
+[Developer Documentation Standard](../architecture/developer-documentation.md)
+and [Package README Template](../templates/package-README.md).
 
-Cognito/OIDC token verifier adapter:
+Public package barrels must carry package-level `@packageDocumentation`.
+Symbol-level TSDoc is required when an exported contract has non-obvious
+runtime, data, tenant, privacy, or security implications.
 
-- `CognitoTokenVerifier`
-- supports issuer/audience/token_use validation
-- configurable claim-key sets for roles/permissions/tenants
+## Verification
 
-### `@stech/stynx-auth-cognito-admin`
+Use package-local commands for focused work:
 
-Cognito identity-admin adapter:
+```sh
+pnpm --filter @stynx/data test
+pnpm --filter @stynx/flow test
+pnpm --filter @stynx-web/angular-flow test
+```
 
-- `CognitoIdentityAdminAdapter`
-- `buildCognitoAdminOptionsFromEnv(...)`
-- standard credentials strategy (`default-chain`, `profile`, `provided`)
-- shared provider error mapping policy
+Use docs build to verify package API reference generation:
 
-### `@stech/stynx-storage-s3`
-
-S3 adapter:
-
-- `S3ObjectStorageService`
-- presign upload/download
-- object exists/delete
-
-### `@stech/stynx-audit-sql`
-
-SQL audit sink adapter:
-
-- `AuditSqlSink`
-- modes: `audit_write_function` and `audit_event_table`
-
-### `@stynx-web/sdk`
-
-Framework-agnostic frontend contracts:
-
-- token store contract (`FrontendTokenStore`)
-- token/principal/auth-state contracts
-- API request/fetch-like transport contracts
-
-### `@stynx-web/sdk`
-
-Frontend shared toolkit:
-
-- `FrontendSessionManager` (token hydration, expiry checks, claim-to-principal mapping)
-- `BrowserLocalStorageTokenStore`, `InMemoryTokenStore`
-- `StynxApiClient` (auth + tenant headers, query/body normalization)
-- authorization helpers (`hasAnyRole`, `hasAnyPermission`, `hasAllPermissions`)
-- Cognito hosted-UI login URL helper (`buildCognitoHostedUiLoginUrl`)
-
-## Compatibility Surface
-
-`AuthContextGuard` intentionally attaches:
-
-- `req.user` style context (`porm`, `pec` compatibility)
-- `request.actor` style context (`sgp` compatibility)
-
-Evidence:
-
-- `../porm/backend/src/core/auth/jwt-auth.guard.ts`
-- `../pec/src/@core/security/jwt-auth.guard.ts`
-- `../sgp/source/backend/src/auth/cognito-jwt.guard.ts`
-
-## Why Scaffold Is No Longer Primary API
-
-- publishable surface is now in `packages/*`
-- scaffold consumption shown in `apps/reference-backend` and `apps/reference-frontend`
-- no package exports point to app code
-
-## Current Coupling Still Present
-
-- Legacy runnable scaffold remains in `backend/` and `frontend/` until staged migration completes.
-- CI/build scripts still target legacy folders.
+```sh
+pnpm --filter docs build
+```

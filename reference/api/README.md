@@ -30,6 +30,15 @@ Default runtime environment variables:
 If the three database URLs are absent, they fall back to `postgresql://postgres:postgres@localhost:5432/postgres`.
 If `STYNX_REDIS_URL` is absent, it falls back to `redis://127.0.0.1:6379`.
 
+The root `pnpm smoke:local` command runs this app through `docker compose`. Its
+host-side migration connection defaults to PostgreSQL port `55432` through
+`STYNX_SMOKE_POSTGRES_PORT`, so it can coexist with a developer PostgreSQL on
+`5432`. The API container still connects to `postgres:5432` inside the compose
+network. The compose API service sets `NODE_ENV=development` and
+`STYNX_ENVIRONMENT=local` so the reference-only `/_reference/dev-login` helper is
+available to local smoke and k6 runs; the Docker image itself keeps
+`NODE_ENV=production` by default.
+
 ## Tests
 
 ```bash

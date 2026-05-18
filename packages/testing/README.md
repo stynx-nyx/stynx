@@ -1,8 +1,47 @@
 # @stynx/testing
 
-Reusable integration-test harness, fixtures, archive-aware matchers, and session helpers.
+Reusable integration-test harnesses, fixtures, archive-aware matchers, LGPD fixtures, and session helpers for STYNX consumers.
+
+## Purpose
+
+Reusable integration-test harnesses, fixtures, archive-aware matchers, LGPD fixtures, and session helpers for STYNX consumers.
+
+## Install And Import
+
+```ts
+import {} from /* public exports */ '@stynx/testing';
+```
+
+In this monorepo, use the workspace package. Published consumers should install matching `@stynx/*` versions from the same release train.
+
+## Module Setup
+
+No production NestJS module setup is required. Import helpers from test code only.
+
+## Data And Security Model
+
+May start local PostgreSQL, Redis, LocalStack, or Cognito test services. Test helpers must not leak production credentials and should default to disposable databases or containers.
+
+## Example
+
+```ts
+import { createTestApp, expectArchivedRow } from '@stynx/testing';
+
+const app = await createTestApp({ imports: [FeatureModule] });
+expectArchivedRow(result).toMatchObject({ deletedBy: actorId });
+```
 
 ## Public API
+
+- context helpers
+- createTestApp
+- doctor helpers
+- fixtures and LGPD fixture
+- archive-aware matchers
+- mintTestSession
+- test harness types
+
+Current barrel highlights:
 
 - `export * from './context'`
 - `export * from './create-test-app'`
@@ -13,17 +52,24 @@ Reusable integration-test harness, fixtures, archive-aware matchers, and session
 - `export * from './mint-test-session'`
 - `export * from './types'`
 
-## Peer Dependencies
+## Verification
 
-- No peer dependencies declared.
+```sh
+pnpm --filter @stynx/testing build
+pnpm --filter @stynx/testing test
+```
+
+## Documentation Standard
+
+The public barrel must carry package-level `@packageDocumentation`. Add symbol-level TSDoc for exported services, modules, guards, interceptors, decorators, adapters, errors, and public options when the type name is not self-explanatory.
 
 ## Compatibility
 
 | Package version | Node | pnpm | STYNX spec              |
 | --------------- | ---- | ---- | ----------------------- |
-| 0.1.0           | 24.x | 9.x  | v0.6 / v1.0 remediation |
+| 1.x             | 24.x | 9.x  | v0.6 / v1.0 remediation |
 
 ## References
 
-- [STYNX Spec section 3](../../specs/STYNX-SPEC-v0.6.md)
-- [Package README template](../../docs/templates/package-README.md)
+- [docs/architecture/developer-documentation.md](../../docs/architecture/developer-documentation.md)
+- [docs/stynx/package-architecture.md](../../docs/stynx/package-architecture.md)

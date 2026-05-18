@@ -4,7 +4,9 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 COMPOSE_FILE="$ROOT_DIR/reference/api/docker-compose.yml"
 BASE_URL="${STYNX_SMOKE_BASE_URL:-http://127.0.0.1:3000}"
-DATABASE_URL="${STYNX_SMOKE_DATABASE_URL:-postgresql://postgres:postgres@127.0.0.1:5432/postgres}"
+POSTGRES_PORT="${STYNX_SMOKE_POSTGRES_PORT:-${STYNX_POSTGRES_PORT:-55432}}"
+export STYNX_POSTGRES_PORT="$POSTGRES_PORT"
+DATABASE_URL="${STYNX_SMOKE_DATABASE_URL:-postgresql://postgres:postgres@127.0.0.1:${POSTGRES_PORT}/postgres}"
 TENANT_ID="${STYNX_SMOKE_TENANT_ID:-01978f4a-32bf-7c27-a131-fd73a9e001a1}"
 EMAIL="${STYNX_SMOKE_EMAIL:-admin@sample-demo.test}"
 
@@ -45,7 +47,22 @@ expect_status() {
   echo "[smoke][ok] $label"
 }
 
+wait_for_postgres() {
+  for _ in $(seq 1 60); do
+    if psql "$DATABASE_URL" -Atc 'select 1' >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 1
+  done
+  echo "[smoke][fail] postgres did not become ready at $DATABASE_URL" >&2
+  return 1
+}
+
+cd "$ROOT_DIR"
+
+docker compose -f "$COMPOSE_FILE" down -v >/dev/null 2>&1 || true
 docker compose -f "$COMPOSE_FILE" up -d --build postgres redis localstack
+wait_for_postgres
 
 pnpm --filter @stynx/cli build
 node "$ROOT_DIR/packages/cli/dist/cli/src/main.js" migrate up --database-url "$DATABASE_URL"

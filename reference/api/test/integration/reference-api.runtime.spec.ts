@@ -132,6 +132,13 @@ async function seedBaseState(database: PostgresTestDatabase): Promise<void> {
       'sample:document:restore',
       'sample:document:hard-delete',
       'sample:probe:read',
+      'flow:read:design',
+      'flow:write:design',
+      'flow:read:runtime',
+      'flow:execute:task',
+      'flow:assign:task',
+      'flow:read:analytics',
+      'flow:admin:*',
     ];
 
     for (const perm of perms) {
@@ -216,9 +223,28 @@ describe('@stynx/reference-api runtime suite', () => {
     return {
       get: (path: string) => request(app.getHttpServer()).get(path).set('authorization', `Bearer ${token}`),
       post: (path: string) => request(app.getHttpServer()).post(path).set('authorization', `Bearer ${token}`).set('Idempotency-Key', nextKey('post')),
+      put: (path: string) => request(app.getHttpServer()).put(path).set('authorization', `Bearer ${token}`).set('Idempotency-Key', nextKey('put')),
       patch: (path: string) => request(app.getHttpServer()).patch(path).set('authorization', `Bearer ${token}`).set('Idempotency-Key', nextKey('patch')),
       delete: (path: string) => request(app.getHttpServer()).delete(path).set('authorization', `Bearer ${token}`).set('Idempotency-Key', nextKey('delete')),
     };
+  }
+
+  type AuthenticatedRequester = ReturnType<typeof authRequest>;
+
+  interface FlowRowBody {
+    id: string;
+    code?: string;
+    createdBy?: string;
+  }
+
+  interface FlowScenario {
+    scope: FlowRowBody & { code: string };
+    graph: FlowRowBody & { code: string };
+    reviewNode: FlowRowBody;
+    form: FlowRowBody;
+    requiredQuestion: FlowRowBody;
+    waivedQuestion: FlowRowBody;
+    targetId: string;
   }
 
   async function createTokenViaSessionRoute(): Promise<string> {
@@ -233,6 +259,100 @@ describe('@stynx/reference-api runtime suite', () => {
   async function createDirectToken(userId: string, tenantId: string, membershipId: string): Promise<string> {
     const bundle = await sessionService.create(userId, tenantId, userId, {}, { membershipId });
     return bundle.accessToken;
+  }
+
+  async function createFlowScenario(admin: AuthenticatedRequester, suffix: string): Promise<FlowScenario> {
+    const scope = (await admin.post('/flow/scopes').send({
+      code: `wave09-${suffix}`,
+      label: `Wave 09 ${suffix}`,
+      adapterKey: 'reference',
+    }).expect(201)).body as FlowScenario['scope'];
+    expect(scope.createdBy).toBe(adminAUser);
+
+    const graph = (await admin.post('/flow/graphs').send({
+      scopeId: scope.id,
+      code: `approval-${suffix}`,
+      version: 'v1',
+      isActive: true,
+      name: `Approval ${suffix}`,
+    }).expect(201)).body as FlowScenario['graph'];
+
+    const start = (await admin.post(`/flow/graphs/${graph.id}/nodes`).send({
+      code: 'start',
+      kind: 'start',
+      sortOrder: 1,
+    }).expect(201)).body as FlowRowBody;
+    const reviewNode = (await admin.post(`/flow/graphs/${graph.id}/nodes`).send({
+      code: 'review',
+      name: 'Review',
+      kind: 'human',
+      decisionPolicy: 'any',
+      allowedActions: ['approve', 'reject'],
+      sortOrder: 2,
+    }).expect(201)).body as FlowRowBody;
+    const end = (await admin.post(`/flow/graphs/${graph.id}/nodes`).send({
+      code: 'end',
+      kind: 'end',
+      sortOrder: 3,
+    }).expect(201)).body as FlowRowBody;
+
+    await admin.post(`/flow/graphs/${graph.id}/edges`).send({
+      fromNodeId: start.id,
+      toNodeId: reviewNode.id,
+      sortOrder: 1,
+    }).expect(201);
+    await admin.post(`/flow/graphs/${graph.id}/edges`).send({
+      fromNodeId: reviewNode.id,
+      toNodeId: end.id,
+      action: 'approve',
+      sortOrder: 2,
+    }).expect(201);
+    await admin.post(`/flow/nodes/${reviewNode.id}/agent-rules`).send({
+      ruleType: 'user',
+      userId: adminAUser,
+      sortOrder: 1,
+    }).expect(201);
+
+    const form = (await admin.post('/flow/forms').send({
+      scopeId: scope.id,
+      code: `screen-${suffix}`,
+      title: `Review screen ${suffix}`,
+      isActive: true,
+    }).expect(201)).body as FlowRowBody;
+    const requiredQuestion = (await admin.post(`/flow/forms/${form.id}/questions`).send({
+      key: 'approved',
+      label: 'Approved',
+      fieldType: 'boolean',
+      required: true,
+      sortOrder: 1,
+    }).expect(201)).body as FlowRowBody;
+    const waivedQuestion = (await admin.post(`/flow/forms/${form.id}/questions`).send({
+      key: 'evidence',
+      label: 'Evidence',
+      fieldType: 'file',
+      required: true,
+      sortOrder: 2,
+    }).expect(201)).body as FlowRowBody;
+
+    await admin.put(`/flow/questions/${requiredQuestion.id}/score`).send({
+      passPoints: '2',
+      failPoints: '0',
+    }).expect(200);
+    await admin.post(`/flow/nodes/${reviewNode.id}/form-rules`).send({
+      formId: form.id,
+      required: true,
+      gatingMode: 'all_required',
+    }).expect(201);
+
+    return {
+      scope,
+      graph,
+      reviewNode,
+      form,
+      requiredQuestion,
+      waivedQuestion,
+      targetId: `target-${suffix}`,
+    };
   }
 
   async function uploadPresigned(url: string, headers: Record<string, string>, body: Buffer): Promise<void> {
@@ -515,21 +635,42 @@ describe('@stynx/reference-api runtime suite', () => {
     metricsService.httpRequestsTotal.labels('GET', '/healthz', '200', 'standard').inc();
     metricsService.dbQueryDuration.labels('select').observe(0.001);
     metricsService.auditEventsTotal.labels('sample.record', 'INSERT').inc();
+    metricsService.authzDenyTotal.labels('missing-permission').inc();
+    metricsService.rateLimitBlockTotal.labels('sample.record.create').inc();
+    metricsService.idempotencyReplayTotal.inc();
     metricsService.lgpdErasureTotal.labels('sample.record', 'nullify').inc();
     metricsService.storagePresignTotal.labels('upload').inc();
+    metricsService.softDeleteTotal.labels('sample.record').inc();
+    metricsService.hardDeleteTotal.labels('sample.record').inc();
+    metricsService.restoreTotal.labels('sample.record').inc();
+    metricsService.archiveSizeBytes.labels('sample.record').set(1024);
+    metricsService.sessionActiveTotal.set(1);
 
     const response = await request(app.getHttpServer()).get('/metrics').expect(200);
+    expect(response.headers['content-type']).toContain('text/plain');
     for (const metricName of [
       'http_request_duration_seconds',
       'http_request_total',
       'http_requests_total',
       'db_query_duration_seconds',
       'audit_events_total',
+      'db_pool_in_use',
+      'db_pool_idle',
+      'db_pool_waiting',
+      'authz_deny_total',
+      'ratelimit_block_total',
+      'idempotency_replay_total',
       'lgpd_erasure_total',
       'storage_presign_total',
+      'soft_delete_total',
+      'hard_delete_total',
+      'restore_total',
+      'archive_size_bytes',
+      'session_active_total',
     ]) {
       expect(response.text).toContain(metricName);
     }
+    expect(response.text).toContain('authz_deny_total{reason="missing-permission"}');
     expect(response.text).toContain('lgpd_erasure_total{table="sample.record",strategy="nullify"}');
   });
 
@@ -552,6 +693,181 @@ describe('@stynx/reference-api runtime suite', () => {
       schema: 'sample',
       rowId: created.body.id,
     });
+  });
+
+  it('flow family: keeps Flow routes behind STYNX auth and permission guards', async () => {
+    await request(app.getHttpServer()).get('/flow/scopes').expect(401);
+
+    await authRequest(readerAToken)
+      .get('/flow/scopes')
+      .expect(403);
+
+    await authRequest(adminAToken)
+      .get('/flow/scopes')
+      .expect(200);
+  });
+
+  it('flow family: runs design, runtime, forms, tasks, signals, analytics, audit, and idempotency through HTTP', async () => {
+    const admin = authRequest(adminAToken);
+    const suffix = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+    const scenario = await createFlowScenario(admin, suffix);
+
+    await auditExpect(database, 'scopes', 'flow.scope.create', {
+      schema: 'flow',
+      rowId: scenario.scope.id,
+    });
+
+    const ensureBody = {
+      graphCode: scenario.graph.code,
+      version: 'v1',
+      scopeCode: scenario.scope.code,
+      targetType: 'generic',
+      targetId: scenario.targetId,
+    };
+    const ensureKey = `flow-run-${suffix}`;
+    const ensured = await admin.post('/flow/runs/ensure')
+      .set('Idempotency-Key', ensureKey)
+      .send(ensureBody)
+      .expect(201);
+    const replayedEnsure = await admin.post('/flow/runs/ensure')
+      .set('Idempotency-Key', ensureKey)
+      .send(ensureBody)
+      .expect(201);
+    expect(replayedEnsure.headers['idempotency-replayed']).toBe('true');
+    expect(replayedEnsure.body.runId).toBe(ensured.body.runId);
+    await auditExpect(database, 'runs', 'flow.run.ensure', { schema: 'flow' });
+
+    const tasks = await admin.get(`/flow/runs/${ensured.body.runId}/tasks`).expect(200);
+    expect(tasks.body).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        status: 'open',
+        assigneeUserId: adminAUser,
+      }),
+    ]));
+    const task = tasks.body[0] as { id: string };
+
+    const candidates = await admin.get(`/flow/tasks/${task.id}/candidates`).expect(200);
+    expect(candidates.body).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        agentType: 'user',
+        agentId: adminAUser,
+      }),
+    ]));
+
+    const openTasks = await admin.get(`/flow/open-tasks?scopeCode=${scenario.scope.code}`).expect(200);
+    expect(openTasks.body.meta.total).toBeGreaterThanOrEqual(1);
+
+    const fillBody = {
+      scopeId: scenario.scope.id,
+      runId: ensured.body.runId,
+      taskId: task.id,
+      targetType: 'generic',
+      targetId: scenario.targetId,
+      status: 'submitted',
+    };
+    const fillKey = `flow-fill-${suffix}`;
+    const fill = await admin.post(`/flow/forms/${scenario.form.id}/fills`)
+      .set('Idempotency-Key', fillKey)
+      .send(fillBody)
+      .expect(201);
+    const replayedFill = await admin.post(`/flow/forms/${scenario.form.id}/fills`)
+      .set('Idempotency-Key', fillKey)
+      .send(fillBody)
+      .expect(201);
+    expect(replayedFill.headers['idempotency-replayed']).toBe('true');
+    expect(replayedFill.body.id).toBe(fill.body.id);
+    expect(fill.body.createdBy).toBe(adminAUser);
+    await expect(
+      countAdmin(
+        `select count(*)::int as value from flow.fills where tenant_id = $1::uuid and target_id = $2`,
+        [tenantA, scenario.targetId],
+      ),
+    ).resolves.toBe(1);
+    await auditExpect(database, 'fills', 'flow.fill.create', {
+      schema: 'flow',
+      rowId: fill.body.id,
+    });
+
+    const answer = await admin.post(`/flow/fills/${fill.body.id}/answers`)
+      .set('Idempotency-Key', `flow-answer-${suffix}`)
+      .send({
+        questionId: scenario.requiredQuestion.id,
+        value: { value: true },
+      })
+      .expect(201);
+    expect(answer.body.createdBy).toBe(adminAUser);
+    await auditExpect(database, 'answers', 'flow.answer.upsert', {
+      schema: 'flow',
+      rowId: answer.body.id,
+    });
+
+    const waiver = await admin.post(`/flow/fills/${fill.body.id}/waivers`)
+      .set('Idempotency-Key', `flow-waiver-${suffix}`)
+      .send({
+        questionId: scenario.waivedQuestion.id,
+        reason: 'Evidence not required for reference smoke',
+        waivedBy: adminAUser,
+      })
+      .expect(201);
+    expect(waiver.body.waivedBy).toBe(adminAUser);
+    await auditExpect(database, 'waivers', 'flow.waiver.create', {
+      schema: 'flow',
+      rowId: waiver.body.id,
+    });
+
+    const waivers = await admin.get(`/flow/fills/${fill.body.id}/waivers`).expect(200);
+    expect(waivers.body).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: waiver.body.id }),
+    ]));
+
+    await admin.post('/flow/signal')
+      .set('Idempotency-Key', `flow-signal-${suffix}`)
+      .send({
+        scopeCode: scenario.scope.code,
+        targetType: 'generic',
+        targetId: scenario.targetId,
+      })
+      .expect(201);
+    const signalEvents = await admin.get(`/flow/events?runId=${ensured.body.runId}&kind=signal_received`).expect(200);
+    expect(signalEvents.body.meta.total).toBeGreaterThanOrEqual(1);
+    await auditExpect(database, 'runs', 'flow.signal', { schema: 'flow' });
+
+    const assigned = await admin.post(`/flow/tasks/${task.id}/assign`)
+      .set('Idempotency-Key', `flow-assign-${suffix}`)
+      .send({ userId: adminAUser, note: 'Reference assignment' })
+      .expect(201);
+    expect(assigned.body.assigneeUserId).toBe(adminAUser);
+    await auditExpect(database, 'tasks', 'flow.task.assign', {
+      schema: 'flow',
+      rowId: task.id,
+    });
+
+    await admin.post(`/flow/tasks/${task.id}/accept`)
+      .set('Idempotency-Key', `flow-accept-${suffix}`)
+      .send({ note: 'Accepted in reference pipeline' })
+      .expect(201);
+
+    const acted = await admin.post(`/flow/tasks/${task.id}/act`)
+      .set('Idempotency-Key', `flow-act-${suffix}`)
+      .send({ action: 'approve', note: 'Approved in reference pipeline' })
+      .expect(201);
+    expect(acted.body.status).toBe('completed');
+    expect(acted.body.decidedAction).toBe('approve');
+    await auditExpect(database, 'tasks', 'flow.task.act', {
+      schema: 'flow',
+      rowId: task.id,
+    });
+
+    const run = await admin.get(`/flow/runs/${ensured.body.runId}`).expect(200);
+    expect(run.body.status).toBe('completed');
+
+    const summary = await admin.get(`/flow/runs/summary?scopeCode=${scenario.scope.code}`).expect(200);
+    expect(summary.body.data).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        status: 'completed',
+        runCount: 1,
+      }),
+    ]));
   });
 
   it('family 4: enforces collection scope on document download', async () => {

@@ -86,9 +86,56 @@ function copyMarkdownDirTransformed(sourceDir, targetDir, transform) {
 
 function rewriteGeneratedDocLinks(content) {
   return content
+    .replace(/\]\(\.\.\/architecture\/invariants\/?\)/gu, '](/docs/architecture/invariants)')
+    .replace(/\]\(\.\.\/architecture\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/architecture$1)')
+    .replace(
+      /\]\(\.\.\/architecture\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
+      (_match, filename, hash = '') => `](/docs/architecture/${filename}${hash})`,
+    )
+    .replace(/\]\(\.\.\/adr\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu, '](/docs/adr/$1$2)')
+    .replace(/\]\(\.\.\/contracts\/?\)/gu, '](/docs/contracts)')
+    .replace(/\]\(\.\.\/contracts\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/contracts$1)')
+    .replace(/\]\(\.\.\/security\/?\)/gu, '](/docs/security)')
+    .replace(/\]\(\.\.\/security\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/security$1)')
+    .replace(/\]\(\.\.\/operations\/?\)/gu, '](/docs/operations)')
+    .replace(/\]\(\.\.\/operations\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/operations$1)')
+    .replace(
+      /\]\(\.\.\/stynx\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
+      (_match, filename, hash = '') => `](/docs/narrative/stynx/${filename}${hash})`,
+    )
+    .replace(/\]\(\.\.\/templates\/package-README\.md((?:#[^)]+)?)\)/gu, '](/docs/templates/package-README$1)')
     .replace(/\]\(\.\.\/\.\.\/specs\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu, (_match, filename, hash = '') => {
       return `](/docs/specifications/${filename.toLowerCase()}${hash})`;
     })
+    .replace(/\]\(\.\.\/\.\.\/docs\/architecture\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/architecture$1)')
+    .replace(
+      /\]\(\.\.\/\.\.\/docs\/architecture\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
+      (_match, filename, hash = '') => `](/docs/architecture/${filename}${hash})`,
+    )
+    .replace(/\]\(\.\.\/\.\.\/docs\/contracts\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/contracts$1)')
+    .replace(
+      /\]\(\.\.\/\.\.\/docs\/contracts\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
+      (_match, filename, hash = '') => `](/docs/contracts/${filename}${hash})`,
+    )
+    .replace(/\]\(\.\.\/\.\.\/docs\/security\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/security$1)')
+    .replace(
+      /\]\(\.\.\/\.\.\/docs\/security\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
+      (_match, filename, hash = '') => `](/docs/security/${filename}${hash})`,
+    )
+    .replace(/\]\(\.\.\/\.\.\/docs\/glossary\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/glossary$1)')
+    .replace(
+      /\]\(\.\.\/\.\.\/docs\/glossary\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
+      (_match, filename, hash = '') => `](/docs/glossary/${filename}${hash})`,
+    )
+    .replace(/\]\(\.\.\/\.\.\/docs\/operations\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/operations$1)')
+    .replace(
+      /\]\(\.\.\/\.\.\/docs\/operations\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
+      (_match, filename, hash = '') => `](/docs/operations/${filename}${hash})`,
+    )
+    .replace(
+      /\]\(\.\.\/\.\.\/docs\/stynx\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
+      (_match, filename, hash = '') => `](/docs/narrative/stynx/${filename}${hash})`,
+    )
     .replace(/\]\(\.\.\/\.\.\/docs\/templates\/package-README\.md((?:#[^)]+)?)\)/gu, '](/docs/templates/package-README$1)')
     .replace(/\]\(\.\.\/\.\.\/docs\/rfcs\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu, '](/docs/rfcs/$1$2)');
 }
@@ -99,10 +146,15 @@ function rewritePackageReadmeLinks(content) {
 
 function syncRfcContent(content, relativePath) {
   const slug = relativePath.replace(/\.mdx?$/u, '');
-  const body = rewriteGeneratedDocLinks(content).replace(
-    /\[Rationalization work\]\(\.\.\/work\/rationalization\/\)/gu,
-    '`docs/work/rationalization/`',
-  );
+  const body = rewriteGeneratedDocLinks(content)
+    .replace(
+      /\]\(\.\.\/legacy\/completed-gap-tasks\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
+      (_match, filename, hash = '') => `](/docs/legacy/completed-gap-tasks/${filename}${hash})`,
+    )
+    .replace(
+      /\[Rationalization work\]\(\.\.\/work\/rationalization\/\)/gu,
+      '`docs/work/rationalization/`',
+    );
   if (body.startsWith('---\n')) {
     return body;
   }
@@ -138,6 +190,31 @@ function syncPackageReadmes(baseDir, targetDir, prefixMatcher) {
 
 function syncSpecs() {
   const specsDir = resolve(repoRoot, 'specs');
+  if (!existsSync(specsDir)) {
+    const fallbackDocs = [
+      {
+        source: resolve(repoRoot, 'docs/dev/STYNX-ADOPT-EXAMPLE.md'),
+        target: 'adoption-guide.md',
+        title: 'Adoption Guide',
+      },
+      {
+        source: resolve(repoRoot, 'docs/architecture/STYNX-CDK-SKELETON.md'),
+        target: 'infrastructure-guide.md',
+        title: 'Infrastructure Guide',
+      },
+      {
+        source: resolve(repoRoot, 'docs/architecture/STYNX-SPEC-v0.6.md'),
+        target: 'specifications/stynx-spec-v0.6.md',
+        title: 'Stynx Spec v0.6',
+      },
+    ];
+    for (const doc of fallbackDocs) {
+      if (existsSync(doc.source)) {
+        writeDoc(doc.target, sanitizeMdxContent(readFileSync(doc.source, 'utf8')), doc.title);
+      }
+    }
+    return;
+  }
   const entries = readdirSync(specsDir);
 
   for (const entry of entries) {
@@ -176,15 +253,37 @@ function syncSpecs() {
 resetOutDir();
 writeDoc('packages/index.md', '# Packages\n\nNarrative package documentation aggregated from each `README.md` or package manifest.\n', 'Packages');
 writeDoc('packages-web/index.md', '# Web Packages\n\nNarrative Angular and SDK package documentation.\n', 'Web Packages');
-writeDoc('specifications/index.md', '# Specifications\n\nNormative and reference documents mirrored from `specs/`.\n', 'Specifications');
-writeDoc('architecture-decisions/index.md', '# Architecture Decisions\n\nArchitecture Decision Records mirrored from `specs/`.\n', 'Architecture Decisions');
+writeDoc('specifications/index.md', '# Specifications\n\nNormative and reference documents mirrored from `specs/` when that source directory is present.\n', 'Specifications');
+writeDoc('architecture-decisions/index.md', '# Architecture Decisions\n\nArchitecture Decision Records mirrored from `specs/` when that source directory is present.\n', 'Architecture Decisions');
 writeDoc('api-reference/index.md', '# API Reference\n\nGenerated API reference for every `@stynx/*` and `@stynx-web/*` package.\n', 'API Reference');
 writeDoc('templates/index.md', '# Templates\n\nDocumentation templates mirrored from `docs/templates/`.\n', 'Templates');
 writeDoc('rfcs/index.md', '# RFCs\n\nRepository RFCs mirrored from `docs/rfcs/`.\n', 'RFCs');
 
 copyMarkdownDir(resolve(repoRoot, 'docs/dev'), 'narrative/dev');
+copyMarkdownDir(resolve(repoRoot, 'docs/legacy/completed-gap-tasks'), 'legacy/completed-gap-tasks');
 copyMarkdownDir(resolve(repoRoot, 'docs/sys'), 'narrative/system');
 copyMarkdownDir(resolve(repoRoot, 'docs/user'), 'narrative/user');
+copyMarkdownDirTransformed(resolve(repoRoot, 'docs/product'), 'product', (content) =>
+  rewriteGeneratedDocLinks(sanitizeMdxContent(content)),
+);
+copyMarkdownDirTransformed(resolve(repoRoot, 'docs/architecture'), 'architecture', (content) =>
+  rewriteGeneratedDocLinks(sanitizeMdxContent(content)),
+);
+copyMarkdownDirTransformed(resolve(repoRoot, 'docs/contracts'), 'contracts', (content) =>
+  rewriteGeneratedDocLinks(sanitizeMdxContent(content)),
+);
+copyMarkdownDirTransformed(resolve(repoRoot, 'docs/security'), 'security', (content) =>
+  rewriteGeneratedDocLinks(sanitizeMdxContent(content)),
+);
+copyMarkdownDirTransformed(resolve(repoRoot, 'docs/glossary'), 'glossary', (content) =>
+  rewriteGeneratedDocLinks(sanitizeMdxContent(content)),
+);
+copyMarkdownDirTransformed(resolve(repoRoot, 'docs/operations'), 'operations', (content) =>
+  rewriteGeneratedDocLinks(sanitizeMdxContent(content)),
+);
+copyMarkdownDirTransformed(resolve(repoRoot, 'docs/adr'), 'adr', (content) =>
+  rewriteGeneratedDocLinks(sanitizeMdxContent(content)),
+);
 copyMarkdownDirTransformed(resolve(repoRoot, 'docs/stynx'), 'narrative/stynx', (content) =>
   rewriteGeneratedDocLinks(sanitizeMdxContent(content)),
 );

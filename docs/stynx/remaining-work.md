@@ -52,22 +52,29 @@
 - completed the API completeness review by adding only the package-needed fill-scoped waiver listing route;
 - seeded reference-web Flow route-access E2E coverage.
 
+11. Completed Flow deprecation-readiness proof for the STYNX package side:
+
+- added reference API HTTP-pipeline E2E coverage for Flow guards, request context, idempotency, audit, design, runtime, forms, waivers, signals, task actions, and analytics;
+- expanded reference-web Flow route-access coverage across generic package screens;
+- documented the `../porm` consumer cutover plan and the explicit decisions to keep rich visual editing and host store orchestration outside the package baseline for now.
+
 ## P1
 
 1. Move reusable pieces from legacy `backend/src/core/*` into `packages/backend` adapters incrementally.
 2. Add package-level integration examples for `porm` and `pec` controller/module adoption over `PormIdentityAdminFacade` / `PecIdentityAdminFacade` (code snippets + migration checks).
 3. Execute sibling repo cutovers (`porm`, `pec`, `sgp`) to consume package APIs and remove duplicated legacy implementations.
-4. Execute the original `porm` Flow consumer cutover to `@stynx/flow` and `@stynx-web/angular-flow` once the consuming repo is ready for the dependency swap.
-5. Add representative full HTTP request-pipeline e2e tests for Flow route families beyond current route metadata, service, database, package, and reference tests.
-6. Keep DML audit enabled by default for future mutable curated tables added by any stynx package; exceptions must be explicit and narrow.
-7. Continue the focused PORM Flow E2E port into stynx package/reference surfaces: guarded HTTP pipelines, task assignment/action journeys, form answer/waiver execution, signals, and analytics smoke.
+4. Execute the original `porm` Flow consumer cutover to `@stynx/flow` and `@stynx-web/angular-flow` using [porm-flow-deprecation-readiness.md](porm-flow-deprecation-readiness.md) once the consuming repo is ready for the dependency swap.
+5. Keep DML audit enabled by default for future mutable curated tables added by any stynx package; exceptions must be explicit and narrow.
 
 ## P2
 
 1. Publish versioning and release automation (`changesets` or equivalent).
-2. Normalize package docs under one entrypoint (`docs/stynx/package-architecture.md` + consumer quickstarts).
-3. Decide whether a richer graph-editor implementation belongs in `@stynx-web/angular-flow` or remains a host-level extension point.
-4. Add a packaged Angular Flow host store only if richer package screens start duplicating graph/form/task selection, loading, CRUD refresh, and error orchestration. It is not a required backend feature and not a default porting target.
+2. Keep package docs current as exports move. The Wave 08 baseline now has
+   package READMEs, `docs/stynx/package-architecture.md`, and the developer
+   documentation standard; future work should update those with public API
+   changes rather than reopening the old README-absence gap.
+3. Revisit richer graph-editor implementation only after multiple consumers need the same package-level visual authoring behavior. Current decision: keep it a host extension point.
+4. Revisit a packaged Angular Flow host store only if richer package screens start duplicating graph/form/task selection, loading, CRUD refresh, and error orchestration. Current decision: not needed for the baseline.
 
 ## Postponed (per current decision)
 
@@ -79,4 +86,4 @@
 - `sgp` verifier hazard found in `../sgp/source/backend/src/auth/cognito-jwt.service.ts#verifySignature` (`this.client` checked before lazy init).
 - SQL sink mode differences (`audit.write` vs table insert) can cause shape drift if not explicitly mapped per consumer.
 - Identity-admin local enrichment boundaries (org/affiliation/catalog semantics) must not leak into provider-generic package APIs.
-- Flow package maturity is "ready with caveats": core package completeness is high, mutation freshness/audit/typed-fill/API review are closed for the current baseline, and remaining risk is full PORM visual/editor richness plus exhaustive HTTP/E2E route-family proof.
+- Flow package maturity is "ready for PORM consumer cutover planning": core package completeness, mutation freshness, audit, typed-fill UX, API review, representative HTTP-pipeline proof, and reference-web route E2E are closed for the package baseline. Remaining risk is the separate `../porm` migration plus any host-specific rich visual editor behavior.

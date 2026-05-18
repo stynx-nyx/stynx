@@ -1,24 +1,27 @@
 import { App } from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import { ComputeStack } from '../lib/compute-stack';
-import { dev } from '../lib/config/dev';
+import type { EnvConfig } from '../lib/config';
 import { DataStack } from '../lib/data-stack';
+import { dev } from '../lib/config/dev';
 import { EdgeStack } from '../lib/edge-stack';
 import { IdentityStack } from '../lib/identity-stack';
 import { NetworkStack } from '../lib/network-stack';
+import { prod } from '../lib/config/prod';
+import { stage } from '../lib/config/stage';
 import { StorageStack } from '../lib/storage-stack';
 
 describe('EdgeStack', () => {
-  it('creates CloudFront, global WAF, ACM, and DNS alias records', () => {
+  function createEdgeTemplate(config: EnvConfig): Template {
     const app = new App();
-    const regionalEnv = { account: dev.accountId, region: dev.region };
-    const edgeEnv = { account: dev.accountId, region: 'us-east-1' };
-    const network = new NetworkStack(app, 'network-test', { config: dev, env: regionalEnv });
-    const identity = new IdentityStack(app, 'identity-test', { config: dev, env: regionalEnv });
-    const data = new DataStack(app, 'data-test', { config: dev, vpc: network.vpc, env: regionalEnv });
-    const storage = new StorageStack(app, 'storage-test', { config: dev, env: regionalEnv });
-    const compute = new ComputeStack(app, 'compute-test', {
-      config: dev,
+    const regionalEnv = { account: config.accountId, region: config.region };
+    const edgeEnv = { account: config.accountId, region: 'us-east-1' };
+    const network = new NetworkStack(app, `${config.env}-network-test`, { config, env: regionalEnv });
+    const identity = new IdentityStack(app, `${config.env}-identity-test`, { config, env: regionalEnv });
+    const data = new DataStack(app, `${config.env}-data-test`, { config, vpc: network.vpc, env: regionalEnv });
+    const storage = new StorageStack(app, `${config.env}-storage-test`, { config, env: regionalEnv });
+    const compute = new ComputeStack(app, `${config.env}-compute-test`, {
+      config,
       env: regionalEnv,
       crossRegionReferences: true,
       vpc: network.vpc,
@@ -29,15 +32,19 @@ describe('EdgeStack', () => {
       userPoolClientId: identity.apiClient.userPoolClientId,
       docsBucket: storage.docsBucket,
       kmsDocsKey: storage.kmsDocsKey,
-      imageTag: 'test-tag',
+      imageTag: `${config.env}-test-tag`,
     });
-    const stack = new EdgeStack(app, 'edge-test', {
-      config: dev,
+    const stack = new EdgeStack(app, `${config.env}-edge-test`, {
+      config,
       alb: compute.alb,
       env: edgeEnv,
       crossRegionReferences: true,
     });
-    const template = Template.fromStack(stack);
+    return Template.fromStack(stack);
+  }
+
+  it.each([dev, stage, prod])('creates CloudFront, global WAF, ACM, DNS aliases, and outputs for %s', (config) => {
+    const template = createEdgeTemplate(config);
 
     template.resourceCountIs('AWS::CloudFront::Distribution', 1);
     template.resourceCountIs('AWS::WAFv2::WebACL', 1);
@@ -82,7 +89,8 @@ describe('EdgeStack', () => {
     });
     template.hasResourceProperties('AWS::CloudFront::Distribution', {
       DistributionConfig: Match.objectLike({
-        Aliases: [dev.domain],
+        Aliases: [config.domain],
+        PriceClass: config.env === 'prod' ? 'PriceClass_All' : 'PriceClass_100',
         Origins: Match.arrayWith([
           Match.objectLike({
             DomainName: Match.anyValue(),
@@ -93,5 +101,19 @@ describe('EdgeStack', () => {
         ]),
       }),
     });
+    for (const outputName of [
+      'CloudFrontDistributionId',
+      'CloudFrontDomainName',
+      'EdgeWebAclArn',
+      'EdgeCertificateArn',
+      'EdgeHostedZoneId',
+    ]) {
+      template.hasOutput(outputName, {
+        Value: Match.anyValue(),
+        Export: {
+          Name: Match.stringLikeRegexp(`^stynx-${config.env}-edge-`),
+        },
+      });
+    }
   });
 });

@@ -1,8 +1,54 @@
 # @stynx/idempotency
 
-Idempotency decorators, interceptors, stores, and metrics for write-route replay protection.
+Mutation idempotency primitives, response replay, durable stores, Redis backend, and HTTP interceptor wiring.
+
+## Purpose
+
+Mutation idempotency primitives, response replay, durable stores, Redis backend, and HTTP interceptor wiring.
+
+## Install And Import
+
+```ts
+import {} from /* public exports */ '@stynx/idempotency';
+```
+
+In this monorepo, use the workspace package. Published consumers should install matching `@stynx/*` versions from the same release train.
+
+## Module Setup
+
+Import `StynxIdempotencyModule` above mutation controllers and configure a store/backend.
+
+```ts
+@Module({
+  imports: [StynxIdempotencyModule.forRoot({ store, backend })],
+})
+export class IdempotencyHostModule {}
+```
+
+## Data And Security Model
+
+Stores idempotency keys and replay envelopes by tenant/user/request context. Auth/session bootstrap routes can opt out with the documented decorator exception.
+
+## Example
+
+```ts
+import { Idempotent } from '@stynx/idempotency';
+
+@Idempotent({ scope: 'tenant' })
+@Post('/records')
+createRecord() {}
+```
 
 ## Public API
+
+- StynxIdempotencyModule
+- IdempotencyInterceptor
+- DatabaseIdempotencyStore
+- PgIdempotencyStore
+- RedisIdempotencyBackend
+- decorators, metrics, request context, tokens, and types
+
+Current barrel highlights:
 
 - `export * from './constants'`
 - `export * from './database-idempotency.store'`
@@ -15,20 +61,26 @@ Idempotency decorators, interceptors, stores, and metrics for write-route replay
 - `export * from './request-context'`
 - `export * from './types'`
 
-## Peer Dependencies
+## Verification
 
-- `@nestjs/common` ^11.1.19
-- `@nestjs/core` ^11.1.19
-- `reflect-metadata` ^0.2.2
-- `rxjs` ^7.8.2
+```sh
+pnpm --filter @stynx/idempotency build
+pnpm --filter @stynx/idempotency test
+STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx/idempotency test:int
+```
+
+## Documentation Standard
+
+The public barrel must carry package-level `@packageDocumentation`. Add symbol-level TSDoc for exported services, modules, guards, interceptors, decorators, adapters, errors, and public options when the type name is not self-explanatory.
 
 ## Compatibility
 
 | Package version | Node | pnpm | STYNX spec              |
 | --------------- | ---- | ---- | ----------------------- |
-| 0.1.0           | 24.x | 9.x  | v0.6 / v1.0 remediation |
+| 1.x             | 24.x | 9.x  | v0.6 / v1.0 remediation |
 
 ## References
 
-- [STYNX Spec section 3](../../specs/STYNX-SPEC-v0.6.md)
-- [Package README template](../../docs/templates/package-README.md)
+- [docs/architecture/developer-documentation.md](../../docs/architecture/developer-documentation.md)
+- [docs/stynx/package-architecture.md](../../docs/stynx/package-architecture.md)
+- [docs/rfcs/0008-auth-idempotency-layering.md](../../docs/rfcs/0008-auth-idempotency-layering.md)

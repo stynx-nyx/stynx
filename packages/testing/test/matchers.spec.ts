@@ -17,7 +17,7 @@ describe('expectROCannotWrite', () => {
   it('resolves when fn throws ReadOnlyViolationError', async () => {
     await expect(
       expectROCannotWrite(async () => {
-        throw new ReadOnlyViolationError('ro violation', { table: 'demo' });
+        throw new ReadOnlyViolationError({ table: 'demo' });
       }),
     ).resolves.toBeUndefined();
   });
@@ -41,7 +41,7 @@ describe('expectRestoreConflict', () => {
   it('resolves when fn throws RestoreConflictError', async () => {
     await expect(
       expectRestoreConflict(async () => {
-        throw new RestoreConflictError('conflict', { table: 'demo' });
+        throw new RestoreConflictError({ table: 'demo' });
       }),
     ).resolves.toBeUndefined();
   });
@@ -65,7 +65,7 @@ describe('expectSoftDeleteBlocked', () => {
   it('resolves when fn throws SoftDeleteBlockedError', async () => {
     await expect(
       expectSoftDeleteBlocked(async () => {
-        throw new SoftDeleteBlockedError('blocked', { table: 'demo' });
+        throw new SoftDeleteBlockedError({ table: 'demo' });
       }),
     ).resolves.toBeUndefined();
   });

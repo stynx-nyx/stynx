@@ -8,6 +8,7 @@ import { DocumentService, STYNX_UPLOAD_EXECUTOR, XhrUploadExecutor } from '@styn
 import { AppComponent } from './app.component';
 import { APP_ROUTES } from './app.routes';
 import { ReferenceWebApiService } from './core/reference-web-api.service';
+import { provideReferenceFlowClient } from './core/reference-flow-client.provider';
 import { ReferenceWebDevAuthBackend } from './core/reference-web-dev-auth.backend';
 import { ReferenceWebDevOidcAdapter } from './core/reference-web-dev-oidc.adapter';
 import { ReferenceWebI18nService } from './core/reference-web-i18n.service';
@@ -56,6 +57,7 @@ function initializeShell(shell: ReferenceWebShellService): () => Promise<void> {
     ReferenceWebDevAuthBackend,
     ReferenceWebI18nService,
     ReferenceWebShellService,
+    provideReferenceFlowClient(),
     DocumentService,
     XhrUploadExecutor,
     {

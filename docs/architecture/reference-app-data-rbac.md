@@ -50,10 +50,9 @@ Reference migrations use the same visible toolchain as platform migrations:
 
 ## RBAC Inventory
 
-The authored RBAC and route-binding inventory is
-[`reference-app-rbac.json`](reference-app-rbac.json). It records the named
-roles, permission keys, endpoint bindings, route bindings, and entity bindings
-that are currently implemented by:
+The authored RBAC and route-binding inventory is `reference-app-rbac.json` in
+this directory. It records the named roles, permission keys, endpoint bindings,
+route bindings, and entity bindings that are currently implemented by:
 
 - `reference/api/migrations/0001_reference.sql` permission and role seed rows;
 - `@Permission(...)` decorators in `reference/api/src/sample/*controller.ts`;

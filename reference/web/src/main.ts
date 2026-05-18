@@ -11,6 +11,7 @@ import { environment } from './environments/environment';
 import { AppComponent } from './app/app.component';
 import { APP_ROUTES } from './app/app.routes';
 import { ReferenceWebApiService } from './app/core/reference-web-api.service';
+import { provideReferenceFlowClient } from './app/core/reference-flow-client.provider';
 import { ReferenceWebDevAuthBackend } from './app/core/reference-web-dev-auth.backend';
 import { ReferenceWebDevOidcAdapter } from './app/core/reference-web-dev-oidc.adapter';
 import { ReferenceWebI18nService } from './app/core/reference-web-i18n.service';
@@ -56,6 +57,7 @@ void bootstrapApplication(AppComponent, {
     ReferenceWebDevAuthBackend,
     ReferenceWebI18nService,
     ReferenceWebShellService,
+    provideReferenceFlowClient(),
     DocumentService,
     XhrUploadExecutor,
     {

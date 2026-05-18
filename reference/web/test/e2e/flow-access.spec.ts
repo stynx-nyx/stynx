@@ -24,7 +24,16 @@ test.describe('Flow route access', () => {
     await page.goto('/flow/fills');
     await expect(page.getByRole('heading', { name: 'Fills' })).toBeVisible();
 
+    await page.goto('/flow/assignments');
+    await expect(page.getByRole('heading', { name: 'Assignments' })).toBeVisible();
+
+    await page.goto('/flow/waivers');
+    await expect(page.getByRole('heading', { name: 'Waivers' })).toBeVisible();
+
     await page.goto('/flow/open-tasks');
     await expect(page.getByRole('heading', { name: 'Open tasks' })).toBeVisible();
+
+    await page.goto('/flow/summary');
+    await expect(page.getByRole('heading', { name: 'Run summary' })).toBeVisible();
   });
 });

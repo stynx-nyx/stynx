@@ -1,4 +1,4 @@
-import { Stack, type StackProps } from 'aws-cdk-lib';
+import { CfnOutput, Stack, type StackProps } from 'aws-cdk-lib';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
@@ -142,6 +142,27 @@ export class EdgeStack extends Stack {
       zone: hostedZone,
       recordName: config.domain,
       target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(this.distribution)),
+    });
+
+    new CfnOutput(this, 'CloudFrontDistributionId', {
+      value: this.distribution.distributionId,
+      exportName: `stynx-${config.env}-edge-distribution-id`,
+    });
+    new CfnOutput(this, 'CloudFrontDomainName', {
+      value: this.distribution.distributionDomainName,
+      exportName: `stynx-${config.env}-edge-domain-name`,
+    });
+    new CfnOutput(this, 'EdgeWebAclArn', {
+      value: webAcl.attrArn,
+      exportName: `stynx-${config.env}-edge-web-acl-arn`,
+    });
+    new CfnOutput(this, 'EdgeCertificateArn', {
+      value: certificate.certificateArn,
+      exportName: `stynx-${config.env}-edge-certificate-arn`,
+    });
+    new CfnOutput(this, 'EdgeHostedZoneId', {
+      value: config.hostedZoneId,
+      exportName: `stynx-${config.env}-edge-hosted-zone-id`,
     });
   }
 }

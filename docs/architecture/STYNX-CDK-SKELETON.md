@@ -10,7 +10,7 @@
 
 ## 1. Stack composition
 
-The full environment is one CDK app, six stacks, deployed in order:
+The full environment is one CDK app, seven stacks, deployed in order:
 
 ```
 ┌────────────────────────────┐
@@ -30,11 +30,15 @@ The full environment is one CDK app, six stacks, deployed in order:
 └────────────────────────────┘
 
 ┌────────────────────────────┐
-│ 5. ComputeStack            │  ECS Fargate service(s), ALB, WAF, ACM
+│ 5. ComputeStack            │  ECS Fargate service(s), ALB, regional WAF, ACM
 └──────────────┬─────────────┘
                │
 ┌──────────────┴─────────────┐
-│ 6. ObservabilityStack      │  Log groups, AMP, AMG, alarms, dashboards
+│ 6. EdgeStack               │  CloudFront, global WAF, us-east-1 ACM, DNS aliases
+└──────────────┬─────────────┘
+               │
+┌──────────────┴─────────────┐
+│ 7. ObservabilityStack      │  Log groups, AMP, AMG, alarms, dashboards
 └────────────────────────────┘
 ```
 
@@ -52,6 +56,7 @@ import { IdentityStack } from '../lib/identity-stack';
 import { DataStack } from '../lib/data-stack';
 import { StorageStack } from '../lib/storage-stack';
 import { ComputeStack } from '../lib/compute-stack';
+import { EdgeStack } from '../lib/edge-stack';
 import { ObservabilityStack } from '../lib/observability-stack';
 import { loadEnvConfig } from '../lib/config';
 
@@ -89,6 +94,7 @@ const storage = new StorageStack(app, `stynx-${envName}-storage`, {
 
 const compute = new ComputeStack(app, `stynx-${envName}-compute`, {
   env: awsEnv,
+  crossRegionReferences: true,
   config: cfg,
   vpc: network.vpc,
   dbSecret: data.dbSecret,
@@ -100,7 +106,14 @@ const compute = new ComputeStack(app, `stynx-${envName}-compute`, {
   kmsDocsKey: storage.kmsDocsKey,
 });
 
-new ObservabilityStack(app, `stynx-${envName}-observability`, {
+const edge = new EdgeStack(app, `stynx-${envName}-edge`, {
+  env: { account: cfg.accountId, region: 'us-east-1' },
+  crossRegionReferences: true,
+  config: cfg,
+  alb: compute.alb,
+});
+
+const observability = new ObservabilityStack(app, `stynx-${envName}-observability`, {
   env: awsEnv,
   config: cfg,
   alb: compute.alb,
@@ -110,7 +123,7 @@ new ObservabilityStack(app, `stynx-${envName}-observability`, {
 });
 
 // Every resource tagged for cost attribution and governance.
-for (const stack of [network, identity, data, storage, compute]) {
+for (const stack of [network, identity, data, storage, compute, edge, observability]) {
   Tags.of(stack).add('stynx:env', envName);
   Tags.of(stack).add('stynx:managed', 'true');
   Tags.of(stack).add('stynx:owner', cfg.ownerTeam);
@@ -782,7 +795,112 @@ export class ComputeStack extends Stack {
 
 ---
 
-## 8. ObservabilityStack
+## 8. EdgeStack
+
+CloudFront distribution in front of the regional ALB, with WAFv2 global scope,
+an ACM certificate issued in `us-east-1`, and Route 53 alias records for the
+configured API domain.
+
+```typescript
+// infra/lib/edge-stack.ts
+export class EdgeStack extends Stack {
+  public readonly distribution: cloudfront.Distribution;
+
+  constructor(scope: Construct, id: string, props: EdgeStackProps) {
+    super(scope, id, props);
+    const { config, alb } = props;
+
+    const hostedZone = route53.HostedZone.fromHostedZoneAttributes(this, 'HostedZone', {
+      hostedZoneId: config.hostedZoneId,
+      zoneName: config.hostedZoneName,
+    });
+
+    const certificate = new acm.Certificate(this, 'EdgeCertificate', {
+      domainName: config.domain,
+      validation: acm.CertificateValidation.fromDns(hostedZone),
+    });
+
+    const webAcl = new wafv2.CfnWebACL(this, 'WebAcl', {
+      name: `stynx-${config.env}-edge-waf`,
+      scope: 'CLOUDFRONT',
+      defaultAction: { allow: {} },
+      rules: [
+        {
+          name: 'AWS-CoreRuleSet',
+          priority: 0,
+          overrideAction: { none: {} },
+          statement: {
+            managedRuleGroupStatement: {
+              vendorName: 'AWS',
+              name: 'AWSManagedRulesCommonRuleSet',
+            },
+          },
+          visibilityConfig: {
+            sampledRequestsEnabled: true,
+            cloudWatchMetricsEnabled: true,
+            metricName: 'edge-core',
+          },
+        },
+        // KnownBadInputs and AmazonIpReputation managed rule groups follow
+        // the same shape, then a 2000 requests / 5 minutes IP rate limit.
+      ],
+      visibilityConfig: {
+        sampledRequestsEnabled: true,
+        cloudWatchMetricsEnabled: true,
+        metricName: `stynx-${config.env}-edge-waf`,
+      },
+    });
+
+    this.distribution = new cloudfront.Distribution(this, 'CloudFrontDistribution', {
+      domainNames: [config.domain],
+      certificate,
+      webAclId: webAcl.attrArn,
+      defaultBehavior: {
+        origin: new origins.HttpOrigin(alb.loadBalancerDnsName, {
+          protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
+        }),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+        originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+      },
+      priceClass:
+        config.env === 'prod'
+          ? cloudfront.PriceClass.PRICE_CLASS_ALL
+          : cloudfront.PriceClass.PRICE_CLASS_100,
+    });
+
+    new route53.ARecord(this, 'ApiAliasA', {
+      zone: hostedZone,
+      recordName: config.domain,
+      target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(this.distribution)),
+    });
+
+    new route53.AaaaRecord(this, 'ApiAliasAAAA', {
+      zone: hostedZone,
+      recordName: config.domain,
+      target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(this.distribution)),
+    });
+  }
+}
+```
+
+**Notes:**
+
+- Edge resources synthesize in `us-east-1` because CloudFront requires ACM
+  certificates and WAFv2 global web ACLs there. The workload stacks remain in
+  the configured regional environment, usually `sa-east-1`.
+- Environment config must name an existing Route 53 hosted zone through
+  `hostedZoneId` and `hostedZoneName`. The `domain` must already be delegated to
+  that hosted zone; if DNS lives in a platform account, share or pre-create the
+  zone before deployment.
+- `certArn` remains the regional ALB listener certificate consumed by
+  ComputeStack. EdgeStack issues its own DNS-validated CloudFront certificate.
+- EdgeStack exports the CloudFront distribution id/domain, WAF ARN, certificate
+  ARN, and hosted zone id for operations and downstream automation.
+
+---
+
+## 9. ObservabilityStack
 
 Amazon Managed Prometheus + Amazon Managed Grafana (STYNX‑SPEC §11.5). Alarms as per §11.4.
 
@@ -873,7 +991,7 @@ export class ObservabilityStack extends Stack {
 
 ---
 
-## 9. IAM principles applied
+## 10. IAM principles applied
 
 Task role (ECS): read DB/Cognito/S3 secrets, read/write docs bucket (scoped to the env's bucket), encrypt/decrypt with the docs KMS key, admin‑API on the Cognito user pool, CloudWatch Logs write.
 
@@ -885,21 +1003,23 @@ DB admin bootstrap: one‑shot job that assumes `stynx_owner` and creates `stynx
 
 ---
 
-## 10. What's deliberately omitted
+## 11. What's deliberately omitted
 
-- **CloudFront** in front of the ALB. Recommended for prod for caching + edge; orthogonal to STYNX's mechanism and depends on whether static assets are served from the app or a separate origin. Add as a thin extension to ComputeStack when needed.
-- **Route 53 hosted zone and records.** Environment config carries the domain; DNS is managed in a separate upstream account by the platform team. CDK stacks assume records are provisioned out‑of‑band.
+- **Hosted zone ownership and delegation.** EdgeStack creates the CloudFront
+  distribution and A/AAAA aliases, but the hosted zone itself is an environment
+  prerequisite. Cross-account DNS ownership belongs in account vending or
+  platform bootstrap, not in this application skeleton.
 - **GuardDuty / Security Hub / Config**. Security baseline lives in the AWS account landing zone, not in STYNX's stacks.
 - **Backup / DR orchestration beyond RDS snapshot retention**. AWS Backup across accounts is recommended for prod, out‑of‑scope for this skeleton.
 - **Cost allocation tags beyond the basics** — consumers can add `stynx:cost-center`, `stynx:product` as needed via the `Tags.of()` call in `bin/stynx-env.ts`.
 
 ---
 
-## 11. Using this skeleton
+## 12. Using this skeleton
 
 1. Copy `infra/` into a new consumer repo (or use `stynx init`'s CDK scaffolding, which emits this structure pre‑filled with the consumer's name).
 2. Customize `infra/config/{env}.ts` with the consumer's account IDs, domains, instance classes, capacity.
-3. `cdk deploy -c env=dev` — deploys all six stacks to dev.
+3. `cdk deploy -c env=dev` — deploys all seven stacks to dev.
 4. Run the STYNX bootstrap migration (`stynx migrate up`) against the new DB.
 5. Point `stynx init`'s generated app Docker image at this environment; deploy via CI.
 

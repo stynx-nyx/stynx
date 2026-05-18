@@ -1,8 +1,55 @@
 # @stynx/ratelimit
 
-Rate-limit decorators, guards, policy resolution, metrics, and Redis/Postgres stores.
+Request throttling primitives, policy resolution, durable rate-limit stores, Redis sliding-window store, and guard wiring.
+
+## Purpose
+
+Request throttling primitives, policy resolution, durable rate-limit stores, Redis sliding-window store, and guard wiring.
+
+## Install And Import
+
+```ts
+import {} from /* public exports */ '@stynx/ratelimit';
+```
+
+In this monorepo, use the workspace package. Published consumers should install matching `@stynx/*` versions from the same release train.
+
+## Module Setup
+
+Import `StynxRateLimitModule` before controllers that use rate-limit decorators.
+
+```ts
+@Module({
+  imports: [StynxRateLimitModule.forRoot({ store, policyResolver })],
+})
+export class RateLimitHostModule {}
+```
+
+## Data And Security Model
+
+Decisions can be scoped by IP, tenant, user, and route. Stores must preserve tenant isolation and avoid exposing rate-limit state across tenants.
+
+## Example
+
+```ts
+import { RateLimit } from '@stynx/ratelimit';
+
+@RateLimit({ bucket: 'tenant', limit: 120, windowSeconds: 60 })
+@Post('/records')
+createRecord() {}
+```
 
 ## Public API
+
+- StynxRateLimitModule
+- RateLimitGuard
+- RateLimit decorator
+- DatabaseRateLimitPolicyResolver
+- PgRateLimitStore
+- RedisSlidingWindowRateLimitStore
+- metrics, tokens, request context, and types
+
+Current barrel highlights:
 
 - `export * from './constants'`
 - `export * from './decorators'`
@@ -15,20 +62,26 @@ Rate-limit decorators, guards, policy resolution, metrics, and Redis/Postgres st
 - `export * from './request-context'`
 - `export * from './types'`
 
-## Peer Dependencies
+## Verification
 
-- `@nestjs/common` ^11.1.19
-- `@nestjs/core` ^11.1.19
-- `reflect-metadata` ^0.2.2
-- `rxjs` ^7.8.2
+```sh
+pnpm --filter @stynx/ratelimit build
+pnpm --filter @stynx/ratelimit test
+STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx/ratelimit test:int
+```
+
+## Documentation Standard
+
+The public barrel must carry package-level `@packageDocumentation`. Add symbol-level TSDoc for exported services, modules, guards, interceptors, decorators, adapters, errors, and public options when the type name is not self-explanatory.
 
 ## Compatibility
 
 | Package version | Node | pnpm | STYNX spec              |
 | --------------- | ---- | ---- | ----------------------- |
-| 0.1.0           | 24.x | 9.x  | v0.6 / v1.0 remediation |
+| 1.x             | 24.x | 9.x  | v0.6 / v1.0 remediation |
 
 ## References
 
-- [STYNX Spec section 3](../../specs/STYNX-SPEC-v0.6.md)
-- [Package README template](../../docs/templates/package-README.md)
+- [docs/architecture/developer-documentation.md](../../docs/architecture/developer-documentation.md)
+- [docs/stynx/package-architecture.md](../../docs/stynx/package-architecture.md)
+- [docs/security/README.md](../../docs/security/README.md)
