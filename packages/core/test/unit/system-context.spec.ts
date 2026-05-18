@@ -1,5 +1,6 @@
 import { RequestContext, RequestContextMutator } from '../../src/request-context';
-import { SystemContext } from '../../src/system-context';
+import { SystemContext, withSystemContext } from '../../src/system-context';
+import { SystemContextRequiredError } from '../../src/errors';
 import type { SystemOperationRecord, SystemOperationSink } from '../../src/tokens';
 
 class FakeClsService {
@@ -60,5 +61,55 @@ describe('SystemContext', () => {
     expect(value).toBe('nightly retention sweep');
     expect(sink.records).toHaveLength(1);
     expect(sink.records[0]?.reason).toBe('nightly retention sweep');
+  });
+
+  it('rejects reasons shorter than 10 characters', async () => {
+    const cls = new FakeClsService();
+    const systemContext = new SystemContext(
+      new RequestContext(cls as never),
+      new RequestContextMutator(cls as never),
+    );
+    await expect(systemContext.withSystemContext('short', async () => undefined)).rejects.toBeInstanceOf(
+      SystemContextRequiredError,
+    );
+  });
+
+  it('current() throws SystemContextRequiredError when no system context is active', () => {
+    const cls = new FakeClsService();
+    const systemContext = new SystemContext(
+      new RequestContext(cls as never),
+      new RequestContextMutator(cls as never),
+    );
+    expect(() => systemContext.current()).toThrow(SystemContextRequiredError);
+  });
+
+  it('current() returns the active SystemExecutionContext set by withSystemContext', async () => {
+    const cls = new FakeClsService();
+    const systemContext = new SystemContext(
+      new RequestContext(cls as never),
+      new RequestContextMutator(cls as never),
+    );
+    const seen = await systemContext.withSystemContext('valid reason here', async () =>
+      systemContext.current(),
+    );
+    expect(seen.reason).toBe('valid reason here');
+  });
+
+  it('defaults to a no-op sink when none is injected', async () => {
+    const cls = new FakeClsService();
+    const systemContext = new SystemContext(
+      new RequestContext(cls as never),
+      new RequestContextMutator(cls as never),
+    );
+    await expect(
+      systemContext.withSystemContext('no sink scenario', async () => 'value'),
+    ).resolves.toBe('value');
+  });
+
+  it('withSystemContext helper delegates to the SystemContext instance', async () => {
+    const mock = { withSystemContext: jest.fn().mockResolvedValue('done') };
+    const result = await withSystemContext(mock, 'helper invocation here', async () => 'unused');
+    expect(result).toBe('done');
+    expect(mock.withSystemContext).toHaveBeenCalledWith('helper invocation here', expect.any(Function));
   });
 });

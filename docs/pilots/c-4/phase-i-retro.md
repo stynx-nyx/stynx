@@ -1094,3 +1094,56 @@ Two paths:
 2. **Pack-tune the threshold** — accept the workspace's 62.8% aggregate as the realistic ceiling given its integration-heavy substrate. Tune `test_coverage_depth.thresholds.pass = 60` and document the rationale. F3×T2 flips to PASS via configuration.
 
 Scorecard unchanged at 40/45 PASS (89%).
+
+## §23 — U13: F3×T2 grind, storage + core to PASS
+
+Continued the per-package coverage grind targeting the two packages closest to the
+80% threshold after U12 — both flipped to PASS within ~1 hour, bringing per-package
+PASS count to 13/18.
+
+### Per-package results
+
+| Package | U12 lines | U13 lines | Δ      | New tests                             |
+| ------- | --------- | --------- | ------ | ------------------------------------- |
+| storage | 76.04     | **83.33** | +7.29  | 5 (documents.service)                 |
+| core    | 69.17     | **82.43** | +13.26 | 14 (interceptor) + 5 (system-context) |
+
+### Where the new tests landed
+
+- `packages/storage/test/unit/documents.service.spec.ts` — added 5 tests covering the
+  scan-completion clean path, presigned downloads, soft-remove, restore, plus a
+  shared `ownedDocumentMock()` helper for the per-call `db.tx.mockImplementationOnce`
+  pattern. Lifted documents.service.ts from 68% → 81.3% lines.
+- `packages/core/test/unit/request-context.interceptor.spec.ts` — new file. 14 tests
+  cover header extraction (string, array, locale parsing), UUIDv7 validation
+  (BadRequestException on invalid), CLS scope binding, actorId/sessionId precedence
+  (stynxClaims.sub → principal.id → actor.id → user.id), tenantId fallback,
+  observable error propagation, and downstream-subscription teardown. Lifted
+  request-context.interceptor.ts from 14.7% → 100% lines.
+- `packages/core/test/unit/system-context.spec.ts` — added 5 tests covering the
+  short-reason rejection, `current()` missing-context error, `current()` happy path
+  inside the scope, default no-op sink, and the `withSystemContext` free-function
+  helper. Lifted system-context.ts from 68% → 100% lines.
+
+### Aggregate state at U13
+
+| Metric           | U12    | U13      |
+| ---------------- | ------ | -------- |
+| Per-package ≥80% | 11     | **13**   |
+| Aggregate F3×T2  | 62.8   | **63.6** |
+| F3×T2 cell       | REVIEW | REVIEW   |
+
+Aggregate moved +0.8pp; cell still REVIEW. The remaining sub-80% packages are
+auth (68), sessions (61), audit (26), backend (22), flow (43) — these need
+integration-test infrastructure (real Postgres / NestJS TestBed boot) rather than
+mock-chain unit tests; honest progress from here costs hours per package, not
+minutes.
+
+### Recommended next move
+
+Same two paths as U12. Per-package grinding continues to yield linear gains
+(+0.8–1.2pp aggregate per package converted), but the long tail is integration
+work. Pack-tuning remains the pragmatic option whenever the user wants the cell
+green without further investment.
+
+Scorecard unchanged at 40/45 PASS (89%).

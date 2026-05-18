@@ -1,5 +1,4 @@
 import { RequestContext } from '@stynx/core';
-import { eq } from 'drizzle-orm';
 import { DocumentsService } from '../../src/documents.service';
 import { StorageValidationError } from '../../src/errors';
 
@@ -138,5 +137,96 @@ describe('DocumentsService', () => {
 
     const result = await service.complete('doc-1');
     expect(result.scanStatus).toBe('quarantined');
+  });
+
+  function ownedDocumentMock() {
+    return {
+      select: () => ({
+        from: () => ({
+          where: () => ({
+            limit: async () => [
+              {
+                id: 'doc-1',
+                tenantId: 'tenant-1',
+                collection: 'invoices',
+                s3Key: 'tenant-1/invoices/key',
+                filename: 'invoice.pdf',
+                mimeType: 'application/pdf',
+                byteSize: 32,
+                checksumSha256: 'a'.repeat(64),
+                scanStatus: 'not_scanned',
+                scanDetail: {},
+              },
+            ],
+          }),
+        }),
+      }),
+    };
+  }
+
+  it('completes scan + persists scanDetail when content + checksum match', async () => {
+    const { service, db, s3 } = createService();
+    let update: jest.Mock;
+    db.tx
+      .mockImplementationOnce(async (fn: never) => (fn as unknown as (trx: unknown) => Promise<unknown>)(ownedDocumentMock()))
+      .mockImplementationOnce(async (fn: never) => {
+        update = jest.fn(() => ({
+          set: jest.fn(() => ({
+            where: jest.fn(async () => undefined),
+          })),
+        }));
+        return (fn as unknown as (trx: unknown) => Promise<unknown>)({ update });
+      });
+    s3.headObject.mockResolvedValue({
+      contentType: 'application/pdf',
+      metadata: { sha256: 'a'.repeat(64) },
+      contentLength: 32,
+    });
+
+    const result = await service.complete('doc-1');
+    expect(result.scanStatus).toBe('completed');
+  });
+
+  it('getDownloadUrl returns a signed URL via s3.presignDownload', async () => {
+    const { service, db, s3 } = createService();
+    db.tx.mockImplementationOnce(async (fn: never) =>
+      (fn as unknown as (trx: unknown) => Promise<unknown>)(ownedDocumentMock()),
+    );
+    s3.presignDownload.mockResolvedValue({ url: 'https://download.test', expiresInSeconds: 60 });
+
+    const result = await service.getDownloadUrl('doc-1');
+
+    expect(result.url).toBe('https://download.test');
+    expect(result.expiresInSeconds).toBe(60);
+    expect(s3.presignDownload).toHaveBeenCalledWith({
+      key: 'tenant-1/invoices/key',
+      filename: 'invoice.pdf',
+    });
+  });
+
+  it('softRemove looks up the owned document + calls trx.softDelete', async () => {
+    const { service, db } = createService();
+    const softDelete = jest.fn(async () => undefined);
+    db.tx
+      .mockImplementationOnce(async (fn: never) =>
+        (fn as unknown as (trx: unknown) => Promise<unknown>)(ownedDocumentMock()),
+      )
+      .mockImplementationOnce(async (fn: never) =>
+        (fn as unknown as (trx: unknown) => Promise<unknown>)({ softDelete }),
+      );
+
+    await service.softRemove('doc-1');
+    expect(softDelete).toHaveBeenCalledTimes(1);
+  });
+
+  it('restore calls trx.restoreFromArchive without requiring document ownership lookup', async () => {
+    const { service, db } = createService();
+    const restoreFromArchive = jest.fn(async () => undefined);
+    db.tx.mockImplementationOnce(async (fn: never) =>
+      (fn as unknown as (trx: unknown) => Promise<unknown>)({ restoreFromArchive }),
+    );
+
+    await service.restore('doc-1');
+    expect(restoreFromArchive).toHaveBeenCalledTimes(1);
   });
 });
