@@ -1,11 +1,11 @@
 {
   "schemaVersion": "1.0.0",
-  "id": "SR-197e49f948979851",
+  "id": "SR-01d9bca900c51904",
   "sensor": {
     "name": "test-coverage-depth",
     "kind": "test_coverage_depth"
   },
-  "timestamp": "2026-05-17T21:05:12.819Z",
+  "timestamp": "2026-05-18T00:02:23.077Z",
   "status": "review",
   "deterministic": true,
   "command": "devai sense-test-coverage-depth",
@@ -14,14 +14,14 @@
   "findings": [
     {
       "severity": "warning",
-      "code": "TEST_COVERAGE_REPORT_MISSING",
-      "message": "Coverage report not found at coverage/coverage-final.json. Run `pnpm test:coverage` first."
+      "code": "TEST_COVERAGE_PARTIAL",
+      "message": "Lines coverage 63.9% is between review (50%) and pass (80%) thresholds."
     }
   ],
   "metrics": {
-    "lines_total": 0,
-    "lines_covered": 0,
-    "lines_pct": 0,
+    "lines_total": 3340,
+    "lines_covered": 2135,
+    "lines_pct": 63.92,
     "threshold_pass": 80,
     "threshold_review": 50
   }

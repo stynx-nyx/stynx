@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-dac8f6d286c12ecb",
+  "sensor": {
+    "name": "harness-security",
+    "kind": "harness_security"
+  },
+  "timestamp": "2026-05-18T00:07:08.272Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense-harness-security",
+  "command_hash": "0997fe21464dd19921fd746d4c140219a4db2dbd0053fff866f39e9818654131",
+  "tier": "L0",
+  "findings": [],
+  "metrics": {
+    "workflow_count": 10,
+    "unpinned_action_count": 0,
+    "missing_permissions_block_count": 0,
+    "pwn_request_count": 0
+  }
+}

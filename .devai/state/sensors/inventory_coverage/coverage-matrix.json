@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-05-17T23:10:35.542Z",
+  "generatedAt": "2026-05-18T00:06:29.650Z",
   "routes": [
     "angular:8b48848a52c9",
     "angular:ad2457fea1c8",
@@ -108,6 +108,10 @@
       "title": "Tenant selection + unauthorized error UX"
     },
     {
+      "id": "UC-stynx-014",
+      "title": "Member opens the mounted Flow package routes"
+    },
+    {
       "id": "UC-stynx-001",
       "title": "Member browses, opens, and edits a record"
     },
@@ -126,16 +130,22 @@
   ],
   "links": [
     {
-      "routeId": null,
+      "routeId": "angular:aea633964fb0",
       "endpointId": "GET /work-items",
       "useCaseId": "UC-stynx-005",
-      "linkKind": "endpoint-only"
+      "linkKind": "paired"
     },
     {
-      "routeId": null,
+      "routeId": "angular:01340fd7281e",
       "endpointId": "GET /work-items/:id",
       "useCaseId": "UC-stynx-005",
-      "linkKind": "endpoint-only"
+      "linkKind": "paired"
+    },
+    {
+      "routeId": "angular:423fbdf00d27",
+      "endpointId": "GET /work-items/:id",
+      "useCaseId": "UC-stynx-005",
+      "linkKind": "paired"
     },
     {
       "routeId": null,
@@ -144,22 +154,28 @@
       "linkKind": "endpoint-only"
     },
     {
+      "routeId": "angular:e70c1c7ee524",
+      "endpointId": null,
+      "useCaseId": "UC-stynx-006",
+      "linkKind": "route-only"
+    },
+    {
       "routeId": null,
       "endpointId": "POST /work-items",
       "useCaseId": "UC-stynx-006",
       "linkKind": "endpoint-only"
     },
     {
-      "routeId": null,
+      "routeId": "angular:01340fd7281e",
       "endpointId": "GET /work-items/:id",
       "useCaseId": "UC-stynx-006",
-      "linkKind": "endpoint-only"
+      "linkKind": "paired"
     },
     {
-      "routeId": null,
+      "routeId": "angular:01340fd7281e",
       "endpointId": "GET /work-items/:id",
       "useCaseId": "UC-stynx-007",
-      "linkKind": "endpoint-only"
+      "linkKind": "paired"
     },
     {
       "routeId": null,
@@ -168,10 +184,10 @@
       "linkKind": "endpoint-only"
     },
     {
-      "routeId": null,
+      "routeId": "angular:30904e5ff042",
       "endpointId": "GET /work-items/trash",
       "useCaseId": "UC-stynx-007",
-      "linkKind": "endpoint-only"
+      "linkKind": "paired"
     },
     {
       "routeId": null,
@@ -186,10 +202,10 @@
       "linkKind": "endpoint-only"
     },
     {
-      "routeId": null,
+      "routeId": "angular:01340fd7281e",
       "endpointId": "GET /work-items/:id",
       "useCaseId": "UC-stynx-008",
-      "linkKind": "endpoint-only"
+      "linkKind": "paired"
     },
     {
       "routeId": null,
@@ -312,10 +328,10 @@
       "linkKind": "endpoint-only"
     },
     {
-      "routeId": null,
+      "routeId": "angular:9eca7648fe61",
       "endpointId": "GET /records/:id",
       "useCaseId": "UC-stynx-011",
-      "linkKind": "endpoint-only"
+      "linkKind": "paired"
     },
     {
       "routeId": null,
@@ -384,16 +400,40 @@
       "linkKind": "endpoint-only"
     },
     {
-      "routeId": null,
-      "endpointId": "GET /records",
-      "useCaseId": "UC-stynx-001",
-      "linkKind": "endpoint-only"
+      "routeId": "angular:c208572fa1ec",
+      "endpointId": null,
+      "useCaseId": "UC-stynx-013",
+      "linkKind": "route-only"
     },
     {
-      "routeId": null,
+      "routeId": "angular:632343381f95",
+      "endpointId": null,
+      "useCaseId": "UC-stynx-013",
+      "linkKind": "route-only"
+    },
+    {
+      "routeId": "angular:2400b850f0ec",
+      "endpointId": null,
+      "useCaseId": "UC-stynx-014",
+      "linkKind": "route-only"
+    },
+    {
+      "routeId": "angular:b5aaf65b5cd0",
+      "endpointId": "GET /records",
+      "useCaseId": "UC-stynx-001",
+      "linkKind": "paired"
+    },
+    {
+      "routeId": "angular:9eca7648fe61",
       "endpointId": "GET /records/:id",
       "useCaseId": "UC-stynx-001",
-      "linkKind": "endpoint-only"
+      "linkKind": "paired"
+    },
+    {
+      "routeId": "angular:cfcaea8562a5",
+      "endpointId": "GET /records/:id",
+      "useCaseId": "UC-stynx-001",
+      "linkKind": "paired"
     },
     {
       "routeId": null,
@@ -402,22 +442,28 @@
       "linkKind": "endpoint-only"
     },
     {
+      "routeId": "angular:96c3b77f8fbb",
+      "endpointId": null,
+      "useCaseId": "UC-stynx-002",
+      "linkKind": "route-only"
+    },
+    {
       "routeId": null,
       "endpointId": "POST /records",
       "useCaseId": "UC-stynx-002",
       "linkKind": "endpoint-only"
     },
     {
-      "routeId": null,
+      "routeId": "angular:9eca7648fe61",
       "endpointId": "GET /records/:id",
       "useCaseId": "UC-stynx-002",
-      "linkKind": "endpoint-only"
+      "linkKind": "paired"
     },
     {
-      "routeId": null,
+      "routeId": "angular:9eca7648fe61",
       "endpointId": "GET /records/:id",
       "useCaseId": "UC-stynx-003",
-      "linkKind": "endpoint-only"
+      "linkKind": "paired"
     },
     {
       "routeId": null,
@@ -426,10 +472,10 @@
       "linkKind": "endpoint-only"
     },
     {
-      "routeId": null,
+      "routeId": "angular:30904e5ff042",
       "endpointId": "GET /records/trash",
       "useCaseId": "UC-stynx-003",
-      "linkKind": "endpoint-only"
+      "linkKind": "paired"
     },
     {
       "routeId": null,
@@ -442,6 +488,18 @@
       "endpointId": "DELETE /records/:id/hard",
       "useCaseId": "UC-stynx-003",
       "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": "angular:15406413f939",
+      "endpointId": null,
+      "useCaseId": "UC-stynx-004",
+      "linkKind": "route-only"
+    },
+    {
+      "routeId": "angular:ad2457fea1c8",
+      "endpointId": null,
+      "useCaseId": "UC-stynx-004",
+      "linkKind": "route-only"
     },
     {
       "routeId": null,
@@ -460,32 +518,28 @@
       "endpointId": "GET /_reference/auth-verify",
       "useCaseId": "UC-stynx-004",
       "linkKind": "endpoint-only"
+    },
+    {
+      "routeId": "angular:c208572fa1ec",
+      "endpointId": null,
+      "useCaseId": "UC-stynx-004",
+      "linkKind": "route-only"
+    },
+    {
+      "routeId": "angular:8b48848a52c9",
+      "endpointId": null,
+      "useCaseId": "UC-stynx-004",
+      "linkKind": "route-only"
     }
   ],
   "unmapped": {
-    "routes": [
-      "angular:8b48848a52c9",
-      "angular:ad2457fea1c8",
-      "angular:2400b850f0ec",
-      "angular:15406413f939",
-      "angular:b5aaf65b5cd0",
-      "angular:9eca7648fe61",
-      "angular:cfcaea8562a5",
-      "angular:96c3b77f8fbb",
-      "angular:c208572fa1ec",
-      "angular:30904e5ff042",
-      "angular:632343381f95",
-      "angular:aea633964fb0",
-      "angular:01340fd7281e",
-      "angular:423fbdf00d27",
-      "angular:e70c1c7ee524"
-    ],
+    "routes": [],
     "endpoints": []
   },
   "stats": {
     "routeCount": 15,
     "endpointCount": 50,
-    "useCaseCount": 13,
-    "linkCount": 56
+    "useCaseCount": 14,
+    "linkCount": 67
   }
 }

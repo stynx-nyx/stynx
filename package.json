@@ -42,7 +42,8 @@
     "doctor": "node scripts/stynx-doctor.mjs",
     "test:mutation": "pnpm --filter @stynx/auth stryker && pnpm --filter @stynx/tenancy stryker && pnpm --filter @stynx/data stryker",
     "check:rls-smoke": "bash scripts/check-rls-smoke.sh",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test:coverage": "turbo run test:coverage --filter=\"./packages/*\""
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.0",

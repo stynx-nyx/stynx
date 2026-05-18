@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "1.0.0",
+  "run_id": "AR-019e3853-86a1-7fb2-b8c2-af1a01d609ea",
+  "started_at": "2026-05-17T23:44:18.568Z",
+  "ended_at": "2026-05-17T23:44:18.592Z",
+  "caller": {
+    "kind": "skill",
+    "name": "SKILL-compute-scorecard"
+  },
+  "files_read": [],
+  "files_written": [".devai/state/skills/SKILL-compute-scorecard/2026-05-17T23-44-18-592Z.json"],
+  "commands_run": [],
+  "compliance": {
+    "invariant_ids": ["INV-DEVAI-010"]
+  },
+  "outcome": {
+    "status": "pass"
+  },
+  "prev_hash": "0baa7ead67ba9b852a2c3d03e8bfd701d0a5775262c2ea2e5a1e3d0b44248349",
+  "hash_algo_version": "2.0",
+  "manifest_hash": "8a343b55d2a08834e1f1ffb00a4b4d9580d8c9549c1293276192567fd3e762aa"
+}

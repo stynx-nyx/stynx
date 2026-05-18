@@ -5,7 +5,15 @@ import tsPlugin from '@typescript-eslint/eslint-plugin';
 
 export default [
   {
-    ignores: ['dist/**', 'build/**', 'coverage/**', 'node_modules/**', '.angular/**'],
+    ignores: [
+      'dist/**',
+      'build/**',
+      'coverage/**',
+      'node_modules/**',
+      '.angular/**',
+      'docs/.docusaurus/**',
+      'docs/build/**',
+    ],
   },
   {
     files: ['**/*.ts', '**/*.mts', '**/*.cts'],

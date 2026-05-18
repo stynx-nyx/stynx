@@ -18,19 +18,19 @@
           "id": "1",
           "action": "Member navigates to the records list page.",
           "actorRole": "tenant-member",
-          "refs": { "routeIds": ["angular:5361bf2ca0e6"], "endpointIds": ["GET /records"] }
+          "refs": { "routeIds": ["angular:b5aaf65b5cd0"], "endpointIds": ["GET /records"] }
         },
         {
           "id": "2",
           "action": "Member clicks a record row to open its detail view.",
           "actorRole": "tenant-member",
-          "refs": { "routeIds": ["angular:1a29df709ba4"], "endpointIds": ["GET /records/:id"] }
+          "refs": { "routeIds": ["angular:9eca7648fe61"], "endpointIds": ["GET /records/:id"] }
         },
         {
           "id": "3",
           "action": "Member clicks 'Edit'; the form route loads.",
           "actorRole": "tenant-member",
-          "refs": { "routeIds": ["angular:55bc456a97bb"], "endpointIds": ["GET /records/:id"] }
+          "refs": { "routeIds": ["angular:cfcaea8562a5"], "endpointIds": ["GET /records/:id"] }
         },
         {
           "id": "4",
@@ -42,7 +42,7 @@
           "id": "5",
           "action": "App returns to the detail view showing the update.",
           "actorRole": "tenant-member",
-          "refs": { "routeIds": ["angular:1a29df709ba4"], "endpointIds": ["GET /records/:id"] }
+          "refs": { "routeIds": ["angular:9eca7648fe61"], "endpointIds": ["GET /records/:id"] }
         }
       ],
       "postconditions": [
@@ -51,7 +51,8 @@
       ],
       "acceptanceCriteria": [
         "PATCH /records/:id returns 200 with the updated record body.",
-        "The next GET /records/:id reflects the new field value."
+        "The next GET /records/:id reflects the new field value.",
+        "Read endpoints meet stynx SLO: p50 latency < 200ms, p95 < 800ms under nominal load."
       ]
     },
 
@@ -70,7 +71,7 @@
           "id": "1",
           "action": "Member navigates to the new-record form.",
           "actorRole": "tenant-member",
-          "refs": { "routeIds": ["angular:7fa63ba98a7e"] }
+          "refs": { "routeIds": ["angular:96c3b77f8fbb"] }
         },
         {
           "id": "2",
@@ -82,7 +83,7 @@
           "id": "3",
           "action": "App navigates to the detail view of the new record.",
           "actorRole": "tenant-member",
-          "refs": { "routeIds": ["angular:1a29df709ba4"], "endpointIds": ["GET /records/:id"] }
+          "refs": { "routeIds": ["angular:9eca7648fe61"], "endpointIds": ["GET /records/:id"] }
         }
       ],
       "postconditions": ["The new record exists with the supplied values."],
@@ -99,7 +100,7 @@
           "id": "1",
           "action": "Member opens the record detail view.",
           "actorRole": "tenant-member",
-          "refs": { "routeIds": ["angular:1a29df709ba4"], "endpointIds": ["GET /records/:id"] }
+          "refs": { "routeIds": ["angular:9eca7648fe61"], "endpointIds": ["GET /records/:id"] }
         },
         {
           "id": "2",
@@ -111,7 +112,7 @@
           "id": "3",
           "action": "Member opens the trash route.",
           "actorRole": "tenant-member",
-          "refs": { "routeIds": ["angular:fb6949272f44"], "endpointIds": ["GET /records/trash"] }
+          "refs": { "routeIds": ["angular:30904e5ff042"], "endpointIds": ["GET /records/trash"] }
         },
         {
           "id": "4",
@@ -155,7 +156,7 @@
           "id": "1",
           "action": "App routes anonymous user to the login page. Unknown paths fall through the catch-all (path: '**') redirect to root, which the auth-guard funnels back here.",
           "actorRole": "anonymous",
-          "refs": { "routeIds": ["angular:46fe460b7194", "angular:66ada9255a8c"] }
+          "refs": { "routeIds": ["angular:15406413f939", "angular:ad2457fea1c8"] }
         },
         {
           "id": "2",
@@ -184,7 +185,7 @@
           "id": "6",
           "action": "App navigates to the tenant-selection or dashboard route.",
           "actorRole": "tenant-member",
-          "refs": { "routeIds": ["angular:197ead8a8a47", "angular:086c1f6f3e97"] }
+          "refs": { "routeIds": ["angular:c208572fa1ec", "angular:8b48848a52c9"] }
         }
       ],
       "postconditions": ["User has an active session in the chosen demo tenant."],

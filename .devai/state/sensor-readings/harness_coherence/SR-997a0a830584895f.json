@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-997a0a830584895f",
+  "sensor": {
+    "name": "harness-coherence",
+    "kind": "harness_coherence"
+  },
+  "timestamp": "2026-05-18T00:04:14.934Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense-harness-coherence",
+  "command_hash": "b6c6e606ff19573cb165f392dbd2eaf5adf8f8d5b7febe611b3123414b7641fe",
+  "tier": "L0",
+  "findings": [],
+  "metrics": {
+    "workflow_count": 10,
+    "action_version_drift_count": 0,
+    "permissions_mixed": 0,
+    "concurrency_mixed": 0,
+    "incoherence_score": 0,
+    "max_review_incoherence": 3
+  }
+}

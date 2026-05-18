@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-b5680499dc45550e",
+  "sensor": {
+    "name": "lint",
+    "kind": "lint"
+  },
+  "timestamp": "2026-05-17T23:59:47.788Z",
+  "status": "review",
+  "deterministic": true,
+  "command": "npx eslint --format=json packages",
+  "command_hash": "62c559588702f4a8cff8fcc617e796facd0584eab1cdf2b22cbfdef1ff540a6f",
+  "exit_code": -1,
+  "duration_ms": 11313,
+  "out_head": "[{\"filePath\":\"/Users/aarusso/Development/stech/stynx/packages/audit/dist/audit/src/audit.controller.d.ts\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\":0,\"fixableErrorCount\":0,\"fixableWarningCount\":0,\"usedDeprecatedRules\":[]},{\"filePath\":\"/Users/aarusso/Development/stech/stynx/packages/audit/dist/audit/src/audit.controller.js\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\":0,\"fixableErrorCount\":0,\"fixableWarningCount\":0,\"usedDeprecatedRules\":[]},{\"filePath\":\"/Users/aarusso/Development/stech/stynx/packages/audit/dist/audit/src/audit.module.d.ts\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\":0,\"fixableErrorCount\":0,\"fixableWarningCount\":0,\"usedDeprecatedRules\":[]},{\"filePath\":\"/Users/aarusso/Development/stech/stynx/packages/audit/dist/audit/src/audit.module.js\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\":0,\"fixableErrorCount\":0,\"fixableWarningCount\":0,\"usedDeprecatedRules\":[]},{\"filePath\":\"/Users/aarusso/Development/stech/stynx/packages/audit/dist/audit/src/audit.service.d.ts\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\":0,\"fixableErrorCount\":0,\"fixableWarningCount\":0,\"usedDeprecatedRules\":[]},{\"filePath\":\"/Users/aarusso/Development/stech/stynx/packages/audit/dist/audit/src/audit.service.js\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\":0,\"fixableErrorCount\":0,\"fixableWarningCount\":0,\"usedDeprecatedRules\":[]},{\"filePath\":\"/Users/aarusso/Development/stech/stynx/packages/audit/dist/audit/src/index.d.ts\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\":0,\"fixableErrorCount\":0,\"fixableWarningCount\":0,\"usedDeprecatedRules\":[]},{\"filePath\":\"/Users/aarusso/Development/stech/stynx/packages/audit/dist/audit/src/index.js\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\":0,\"fixableErrorCount\":0,\"fixa",
+  "err_head": "",
+  "killed": true,
+  "findings": [],
+  "metrics": {
+    "error_count": 0,
+    "warning_count": 0
+  }
+}
