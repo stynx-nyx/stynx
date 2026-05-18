@@ -1147,3 +1147,90 @@ work. Pack-tuning remains the pragmatic option whenever the user wants the cell
 green without further investment.
 
 Scorecard unchanged at 40/45 PASS (89%).
+
+## §24 — U14: integration-coverage merge plumbing + sessions to PASS
+
+Built the missing piece of the F3×T2 pipeline: a coverage-merge tool that
+combines per-package unit + integration coverage into the aggregate the
+`test-coverage-depth` sensor reads. Verified the lift end-to-end on auth
+and sessions.
+
+### What landed
+
+- `scripts/aggregate-coverage.mjs` — runs `pnpm jest --coverage` for both
+  `jest.config.cjs` and `jest.integration.config.cjs` (when present), merges
+  the per-file outputs via `istanbul-lib-coverage` (proper counter merging,
+  not max-by-file), and writes `coverage/coverage-final.json`. Targeted mode
+  (`--packages=foo,bar`) refreshes only those packages and preserves the rest
+  of the aggregate.
+- `package.json` — root devDep `istanbul-lib-coverage@^3.2.2` (already a
+  transitive of jest, now declared directly) plus `pnpm test:coverage:aggregate`
+  script.
+- `packages/sessions/test/unit/jwt-signing.spec.ts` — 7 added tests covering
+  the SecretLoader path: happy-path JSON-parsed key set, plus 5 negative cases
+  exercising every branch in `validateKeySet` (non-object, missing currentKid,
+  empty keys, non-object entry, incomplete entry), plus activatesAt/expiresAt
+  preservation. Lifted jwt-signing.service.ts 71.9 → ~90%.
+
+### Per-package results
+
+| Package  | U13 lines | U14 lines | Δ      | Source of lift                                                                                                                                                   |
+| -------- | --------- | --------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| sessions | 60.82     | **84.11** | +23.29 | int suite (redis-store, session-mirror) + 7 new validateKeySet unit tests                                                                                        |
+| auth     | 68.40     | 68.63     | +0.23  | int suite covers same paths as unit; the gap files (cognito-admin 4.8, cognito-token-verifier 19.3, redis-permission-cache 5.1) aren't exercised by either suite |
+
+### Aggregate state at U14
+
+| Metric           | U13    | U14      |
+| ---------------- | ------ | -------- |
+| Per-package ≥80% | 13     | **14**   |
+| Aggregate F3×T2  | 63.6   | **64.8** |
+| F3×T2 cell       | REVIEW | REVIEW   |
+
+### Validation of the integration-infra hypothesis
+
+The diagnosis from the previous response was that integration-test infrastructure
+already exists for 15 packages and just isn't being measured — merging would
+unlock packages whose existing int suites cover their gap files. U14 confirms
+this **per package**, not in aggregate:
+
+- **sessions PASSED** — the existing int suite covers redis-session-store
+  (4.7→62.4) and session-mirror.writer (42.9→92.9), and combined with unit
+  these two files alone close most of the 19pp gap.
+- **auth did NOT lift meaningfully** — the int suite exercises the JWT validator
+  - permission cache, both already at 90+% from unit. The gap files
+    (CognitoAdminAdapter, CognitoTokenVerifier, RedisPermissionCacheBackend) are
+    not touched by the existing int spec. Meaningful auth lift requires
+    _authoring_ int specs that exercise those adapters against Cognito-local +
+    Redis containers (both are already provisioned by `@stynx/testing`).
+
+### What this means for the remaining four sub-80% packages
+
+The merge unlock is a strict _necessary_ but not sufficient condition. Each
+package's integration spec needs to actually exercise its gap files:
+
+| Package  | Int spec exists? | Gap files exercised?                                 | Status             |
+| -------- | ---------------- | ---------------------------------------------------- | ------------------ |
+| sessions | yes              | yes (redis-store, mirror-writer)                     | **PASS via merge** |
+| auth     | yes              | no — needs CognitoAdmin + RedisPermissionCache specs | needs authoring    |
+| audit    | yes              | unknown — sql-adapter is the big gap                 | needs verification |
+| flow     | yes              | partial — design/forms/runtime services              | needs authoring    |
+| backend  | **no int suite** | n/a — needs scaffold                                 | needs new infra    |
+
+### Next move
+
+Three viable directions, ordered by ROI:
+
+1. **Run the merge across all packages** (one command, ~5 min) — picks up
+   whatever existing int specs happen to cover and reveals which packages
+   are in the "sessions" category (already PASS via merge) vs the "auth"
+   category (need new int specs).
+2. **Author missing auth/audit/flow int specs** against the existing
+   `@stynx/testing` harness (Cognito-local for auth, Postgres for audit's
+   sql-adapter, Postgres for flow design/forms/runtime). Estimated 3-5 hr
+   total to flip 2-3 more packages.
+3. **Scaffold backend int suite** — ~3-4 hr. Largest single unlock (22%→~70%)
+   but requires new infrastructure (NestJS TestBed app + per-request DB context
+   harness).
+
+Scorecard unchanged at 40/45 PASS (89%).

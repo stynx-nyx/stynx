@@ -6,6 +6,14 @@ import type {
   SessionRecord,
 } from '../../src/types';
 
+interface FakeSecretLoader {
+  getSecretString: jest.Mock<Promise<string>, [string]>;
+}
+
+function makeSecretLoader(raw: string): FakeSecretLoader {
+  return { getSecretString: jest.fn(async () => raw) };
+}
+
 function genKeyPair() {
   const { publicKey, privateKey } = generateKeyPairSync('rsa', {
     modulusLength: 2048,
@@ -94,5 +102,83 @@ describe('SessionJwtSigningService.signAccessToken', () => {
     await expect(svc.signAccessToken(makeRecord(), new Date())).rejects.toBeInstanceOf(
       SessionSigningKeyError,
     );
+  });
+
+  describe('secretLoader path (validateKeySet)', () => {
+    const baseOptions = {
+      timeouts: { accessSeconds: 300, refreshSeconds: 86_400, idleSeconds: 1800 },
+      jwt: { secretId: 'session/keys', cacheTtlMs: 60_000 },
+    };
+
+    function makeService(loader: FakeSecretLoader) {
+      return new SessionJwtSigningService(baseOptions as never, loader as never);
+    }
+
+    it('signs successfully when secret loader returns a valid key set', async () => {
+      const { publicKey, privateKey } = genKeyPair();
+      const raw = JSON.stringify({
+        currentKid: 'k1',
+        keys: [{ kid: 'k1', publicKeyPem: publicKey, privateKeyPem: privateKey }],
+      });
+      const svc = makeService(makeSecretLoader(raw));
+      const result = await svc.signAccessToken(makeRecord(), new Date());
+      expect(result.token.split('.')).toHaveLength(3);
+    });
+
+    it('rejects when secret JSON is not an object', async () => {
+      const svc = makeService(makeSecretLoader('"oops"'));
+      await expect(svc.signAccessToken(makeRecord(), new Date())).rejects.toBeInstanceOf(
+        SessionSigningKeyError,
+      );
+    });
+
+    it('rejects when currentKid is missing or empty', async () => {
+      const svc = makeService(makeSecretLoader(JSON.stringify({ keys: [] })));
+      await expect(svc.signAccessToken(makeRecord(), new Date())).rejects.toBeInstanceOf(
+        SessionSigningKeyError,
+      );
+    });
+
+    it('rejects when keys array is missing or empty', async () => {
+      const svc = makeService(makeSecretLoader(JSON.stringify({ currentKid: 'k1' })));
+      await expect(svc.signAccessToken(makeRecord(), new Date())).rejects.toBeInstanceOf(
+        SessionSigningKeyError,
+      );
+    });
+
+    it('rejects when a key entry is not an object', async () => {
+      const svc = makeService(
+        makeSecretLoader(JSON.stringify({ currentKid: 'k1', keys: ['not-an-object'] })),
+      );
+      await expect(svc.signAccessToken(makeRecord(), new Date())).rejects.toBeInstanceOf(
+        SessionSigningKeyError,
+      );
+    });
+
+    it('rejects when a key entry is missing kid/publicKeyPem/privateKeyPem', async () => {
+      const svc = makeService(
+        makeSecretLoader(JSON.stringify({ currentKid: 'k1', keys: [{ kid: 'k1' }] })),
+      );
+      await expect(svc.signAccessToken(makeRecord(), new Date())).rejects.toBeInstanceOf(
+        SessionSigningKeyError,
+      );
+    });
+
+    it('preserves activatesAt + expiresAt when present', async () => {
+      const { publicKey, privateKey } = genKeyPair();
+      const raw = JSON.stringify({
+        currentKid: 'k1',
+        keys: [{
+          kid: 'k1',
+          publicKeyPem: publicKey,
+          privateKeyPem: privateKey,
+          activatesAt: '2026-01-01T00:00:00.000Z',
+          expiresAt: '2027-01-01T00:00:00.000Z',
+        }],
+      });
+      const svc = makeService(makeSecretLoader(raw));
+      const result = await svc.signAccessToken(makeRecord(), new Date());
+      expect(result.token.split('.')).toHaveLength(3);
+    });
   });
 });

@@ -67,6 +67,9 @@ importers:
       husky:
         specifier: ^9.1.7
         version: 9.1.7
+      istanbul-lib-coverage:
+        specifier: ^3.2.2
+        version: 3.2.2
       knip:
         specifier: ^6.7.0
         version: 6.7.0(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)

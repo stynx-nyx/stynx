@@ -45,6 +45,7 @@
     "smoke:local": "pnpm --filter @stynx/reference-api smoke:local",
     "prepare": "husky",
     "test:coverage": "turbo run test:coverage --filter=\"./packages/*\"",
+    "test:coverage:aggregate": "node scripts/aggregate-coverage.mjs",
     "test:perf": "node scripts/perf-smoke.mjs"
   },
   "devDependencies": {
@@ -65,6 +66,7 @@
     "github-actionlint": "1.7.12",
     "globals": "^17.5.0",
     "husky": "^9.1.7",
+    "istanbul-lib-coverage": "^3.2.2",
     "knip": "^6.7.0",
     "lint-staged": "^16.4.0",
     "madge": "^8.0.0",
