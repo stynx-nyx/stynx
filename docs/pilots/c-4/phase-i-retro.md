@@ -1037,3 +1037,60 @@ The remaining ceiling push split:
 - 1 package needs heavy work (audit)
 
 Aggregate would cross 80% if the 5 lowest packages each gained ~20pp. That's a focused multi-day effort or — as recommended in §20 — a pack-config threshold tune to 60% reflecting integration-heavy substrate reality.
+
+## 22. F3×T2 coverage push, second wave (U12, 2026-05-17)
+
+Continued grinding storage, auth, sessions, core. Per-package gains of 0-12pp; none of the four crossed 80% within the time budget. Aggregate F3×T2 sensor: 61.6% → 62.8% (+1.2).
+
+### Per-package deltas
+
+| Package  | U11   | U12       | Tests added                                                                                                                                                                 |
+| -------- | ----- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| storage  | 67.7  | **76.04** | object-store full (100%) + errors full (100%) + S3 presignUpload/Download/bucket tests                                                                                      |
+| auth     | 67.36 | 68.40     | cognito-token-verifier constructor + header-shape tests (dynamic `import('jose')` blocks deeper mocking)                                                                    |
+| sessions | 59.17 | 60.82     | jwt-signing.service: 5 tests covering signAccessToken happy path + cache + 3 error paths                                                                                    |
+| core     | 53.76 | **69.17** | error.filter.ts (100% — 6 tests for plain HttpException + StynxError envelope + translation + rethrow) + secret-loader.ts (64% — 8 tests for cache + refresh + error paths) |
+
+### Per-package state at U12 close
+
+11 packages ≥80% (unchanged from U11):
+contracts 100, privacy 99, cli 93, idempotency 86, health 84, logging 84, data 82, tenancy 82, i18n 81, ratelimit 81, testing 81.
+
+5 packages 60-79%:
+storage 76, core 69, auth 68, sessions 61, audit 26.
+
+2 packages <60%:
+flow 43 (PORM-WIP), backend 22.
+
+### Why none of the 4 flipped to PASS
+
+- **storage**: The remaining gap is documents.service.ts (68%, lines 154-225 — virus-scan completion + getDownloadUrl + soft/hard remove). Requires mocked Database + s3 head with the right object shape. 2-3 hrs.
+- **auth**: cognito-admin.adapter.ts (484 lines, 4.6%) + cognito-token-verifier.ts (146 lines, dynamic `import('jose')`). The verifier needs ESM-friendly mocking (jest --experimental-vm-modules); the adapter needs Cognito service stubs. 4+ hrs.
+- **sessions**: redis-session-store.ts (220 lines, 5%) + session.service.ts (75% — uncovered lines 146-173 are the durable mirror path) + session-mirror.writer.ts (43%). Mostly integration-test territory.
+- **core**: Remaining: request-context.interceptor.ts (15%, ~80 lines), config.ts (52%, ~70 lines). Both are NestJS interceptor + Zod-config code that benefits from TestBed integration over unit tests.
+
+### Aggregate state
+
+| Metric           | U10    | U11    | U12       |
+| ---------------- | ------ | ------ | --------- |
+| Aggregated F3×T2 | 60.3%  | 61.6%  | **62.8%** |
+| Per-package PASS | 8      | 11     | 11        |
+| F3×T2 cell       | REVIEW | REVIEW | REVIEW    |
+
+### Cumulative session impact (U10 + U11 + U12)
+
+| Metric                        | U9 baseline | U12                             |
+| ----------------------------- | ----------- | ------------------------------- |
+| Per-package ≥80%              | 3           | **11**                          |
+| Aggregate F3×T2               | 63.9%       | 62.8% (more packages averaged)  |
+| Test infrastructure           | 10 packages | **18 packages** measurable      |
+| Tests authored across U10-U12 | n/a         | ~50 new test files, ~150+ tests |
+
+### Recommended next move
+
+Two paths:
+
+1. **Continue grinding** — focus on storage's mocked Database tests (2-3 hrs), core's TestBed interceptor tests (2 hrs) — feasible to flip both to PASS, brings count to 13/18. Auth, sessions, audit, backend still need integration test infrastructure.
+2. **Pack-tune the threshold** — accept the workspace's 62.8% aggregate as the realistic ceiling given its integration-heavy substrate. Tune `test_coverage_depth.thresholds.pass = 60` and document the rationale. F3×T2 flips to PASS via configuration.
+
+Scorecard unchanged at 40/45 PASS (89%).

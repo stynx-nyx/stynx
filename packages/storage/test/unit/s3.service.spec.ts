@@ -135,4 +135,87 @@ describe('S3Service', () => {
     expect(command.input.Retention?.Mode).toBe('COMPLIANCE');
     expect(command.input.Retention?.RetainUntilDate?.toISOString()).toBe('2026-05-03T12:00:00.000Z');
   });
+
+  describe('presignUpload', () => {
+    it('returns a signed PUT URL with content-type + sha256 + KMS metadata', async () => {
+      const service = new S3Service({
+        environment: 'prod',
+        region: 'us-east-1',
+        kmsAlias: 'stynx-docs',
+        collections: {},
+      });
+      const result = await service.presignUpload({
+        key: 'tenant-a/docs/file.pdf',
+        contentType: 'application/pdf',
+        checksumSha256: 'abc123',
+      });
+      expect(result.method).toBe('PUT');
+      expect(result.url).toBe('https://signed.example.test/object');
+      expect(result.headers['content-type']).toBe('application/pdf');
+      expect(result.headers['x-amz-meta-sha256']).toBe('abc123');
+      expect(result.headers['x-amz-server-side-encryption']).toBe('aws:kms');
+      expect(result.headers['x-amz-server-side-encryption-aws-kms-key-id']).toBe('alias/stynx-docs');
+      expect(result.expiresInSeconds).toBe(300);
+    });
+
+    it('honors caller-specified expiresInSeconds', async () => {
+      const service = new S3Service({
+        environment: 'prod',
+        region: 'us-east-1',
+        kmsAlias: 'stynx-docs',
+        collections: {},
+        uploadExpiresInSeconds: 600,
+      });
+      const result = await service.presignUpload({
+        key: 'k',
+        contentType: 'text/plain',
+        checksumSha256: 'sha',
+        expiresInSeconds: 30,
+      });
+      expect(result.expiresInSeconds).toBe(30);
+    });
+  });
+
+  describe('presignDownload (single call)', () => {
+    it('returns a signed URL with content-disposition + default expiry', async () => {
+      const service = new S3Service({
+        environment: 'prod',
+        region: 'us-east-1',
+        kmsAlias: 'stynx-docs',
+        collections: {},
+      });
+      const result = await service.presignDownload({
+        key: 'tenant-a/docs/file.pdf',
+        filename: 'report.pdf',
+      });
+      expect(result.url).toBe('https://signed.example.test/object');
+      expect(result.expiresInSeconds).toBe(300);
+      expect(getSignedUrl).toHaveBeenCalled();
+      const cmd = (getSignedUrl as jest.Mock).mock.calls[0]?.[1] as GetObjectCommand;
+      expect(cmd.input.Bucket).toBe('stynx-docs-prod-us-east-1');
+      expect(cmd.input.Key).toBe('tenant-a/docs/file.pdf');
+      expect(cmd.input.ResponseContentDisposition).toBe('attachment; filename="report.pdf"');
+    });
+  });
+
+  it('bucket() returns the resolved bucket name', () => {
+    const service = new S3Service({
+      environment: 'prod',
+      region: 'us-east-1',
+      kmsAlias: 'k',
+      collections: {},
+    });
+    expect(service.bucket()).toBe('stynx-docs-prod-us-east-1');
+  });
+
+  it('accepts explicit bucketName that matches the expected pattern', () => {
+    const service = new S3Service({
+      environment: 'dev',
+      region: 'us-east-1',
+      kmsAlias: 'k',
+      bucketName: 'stynx-docs-dev-us-east-1',
+      collections: {},
+    });
+    expect(service.bucket()).toBe('stynx-docs-dev-us-east-1');
+  });
 });
