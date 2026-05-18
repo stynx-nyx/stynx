@@ -1489,3 +1489,83 @@ Next move per the user sequence: audit. Audit's gap is in `sql-adapter.ts`
 will be more interesting here than for auth or backend.
 
 Scorecard unchanged at 40/45 PASS (89%).
+
+## §29 — U19: audit → PASS — F3×T2 CELL FLIPS TO PASS
+
+Per the user sequence: auth → audit → flow. Audit was scoped 3-4 hr
+in U15 ("sql-adapter is the canonical 'real SQL needs real DB' case").
+Same realization as U17/U18: the architecture is interface-shaped.
+`SqlExecutor` is a one-method interface (`query(sql, params)`) — the
+SQL strings themselves are the unit under test. ~2 hr authoring, two
+specs, audit flipped.
+
+### What landed
+
+- `packages/audit/test/unit/sql-adapter.spec.ts` — 19 tests covering:
+  - `AuditSqlSink.write` in both modes (`audit_write_function` 13-param
+    invocation, `audit_event_table` INSERT) with pk synthesis from
+    entityId, correlationId fallback when requestId absent, nulls for
+    missing fields, custom schema/table.
+  - `AuditSqlReader.list` across all 3 modes (`audit_log`,
+    `stynx_events`, `porm_logged_actions`) with full filter coverage
+    (tenantId, entity, operation, actorId, requestId, from/to), limit
+    sanitization (clamped to [1, 500]), offset sanitization, custom
+    schema/table, both array-shape and `.rows`-wrapped executor results,
+    full row→item mapping for each mode.
+- `packages/audit/test/unit/audit.service.spec.ts` — 12 tests covering:
+  - `listLog` cursor encode/decode, full filter matrix, limit clamp
+    [1, 200], nextCursor emission, no-cursor case.
+  - `dryRunDetachEligible` partition-name regex filtering.
+  - `detachEligible` empty + missing-config error paths.
+  - `runDailyDetachJob` empty-result path.
+  - `verifyChain` limit clamping [1, 10000], empty-rows valid case,
+    non-null-previous-hash on first row → broken chain detection.
+  - `requireDatabase` missing-provider error.
+
+### Per-package result
+
+| Package | U18  | U19       | Δ     |
+| ------- | ---- | --------- | ----- |
+| audit   | 35.5 | **90.88** | +55.4 |
+
+### Aggregate state at U19 — CELL FLIPPED
+
+| Metric           | U18    | U19        |
+| ---------------- | ------ | ---------- |
+| Per-package ≥80% | 16     | **17**     |
+| Aggregate F3×T2  | 77.8   | **80.15**  |
+| F3×T2 cell       | REVIEW | **PASS** ✓ |
+
+The sensor's measurement (statement-level + branch-aware) credits +2.4pp
+to the aggregate from audit's lift, just enough to clear the 80%
+threshold. The cell flipping was the headline goal of the whole U13-U20
+authoring push.
+
+### Where this leaves us
+
+- **17/18 packages PASS**: only flow remains sub-80% (43.5%).
+- **F3×T2 cell PASS**: the original gate driving this work is now green.
+- **Scorecard moves**: previously 40/45 PASS (F3×T2 was REVIEW); now
+  41/45 PASS (89% → 91%).
+
+### What's still open
+
+Flow is no longer load-bearing for the cell flip; it's polish work that
+takes scorecard quality even higher (flow at PASS would put 18/18 and
+aggregate to ~85%). Per the U15 estimate: flow needs ~5-7 hr of
+interface-mocked spec authoring against three large services
+(flow-runtime ~248L, flow-design ~179L, flow-forms ~158L).
+
+User sequence said auth → audit → flow; the cell flipped before flow
+became necessary. Up to the user whether to continue to flow (full PASS
+sweep) or stop here (cell PASS achieved, scorecard 41/45).
+
+### Cumulative session (U13 → U19)
+
+| Metric               | Pre-session | U19        | Δ       |
+| -------------------- | ----------- | ---------- | ------- |
+| Per-package PASS     | 13/18       | 17/18      | +4      |
+| Aggregate F3×T2      | 62.8%       | **80.15%** | +17.4pp |
+| F3×T2 scorecard cell | REVIEW      | **PASS**   | flipped |
+| Test files added     | n/a         | ~17        | ~17     |
+| Tests added          | n/a         | ~300       | ~300    |
