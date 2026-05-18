@@ -1,0 +1,51 @@
+# Reusable workflow — workspace typecheck
+#
+# Invokable via:
+#   jobs:
+#     typecheck:
+#       uses: ./.github/workflows/reusable-typecheck.yml
+#       with:
+#         node-version: '24'
+#
+# Runs `pnpm typecheck` across the workspace. Authored U9 (2026-05-17)
+# to close F5×T5 harness_idiomaticity (alongside the setup-stynx
+# composite action). Reusable-workflow form chosen over composite for
+# this case because typecheck is a complete job (not a step sequence),
+# carries its own runner + concurrency semantics, and can be invoked
+# from release workflows that need it as a gate independent of the
+# parent workflow's matrix.
+name: reusable-typecheck
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: Node major version
+        type: string
+        required: false
+        default: '24'
+      pnpm-version:
+        description: pnpm version
+        type: string
+        required: false
+        default: '9.15.0'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reusable-typecheck-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  typecheck:
+    name: typecheck (Node ${{ inputs.node-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: ./.github/actions/setup-stynx
+        with:
+          node-version: ${{ inputs.node-version }}
+          pnpm-version: ${{ inputs.pnpm-version }}
+      - name: Workspace typecheck
+        run: pnpm typecheck

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-1bb5731059d62458",
+  "sensor": {
+    "name": "harness-idiomaticity",
+    "kind": "harness_idiomaticity"
+  },
+  "timestamp": "2026-05-18T00:33:12.870Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense-harness-idiomaticity",
+  "command_hash": "4f6cae04c3a4a4a1c249eb5094fcc34ed9120e1d6199c7c7ff0880e9e3f15b1a",
+  "tier": "L0",
+  "findings": [],
+  "metrics": {
+    "workflow_count": 11,
+    "composite_action_uses": 3,
+    "reusable_workflow_uses": 1,
+    "cache_present": 1,
+    "idiomaticity_score": 3
+  }
+}

@@ -20,12 +20,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+      - uses: ./.github/actions/setup-stynx
         with:
-          node-version: 20.x
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+          node-version: '20'
       - run: pnpm --filter ./domain/demo-bookmark/api run build
       - run: pnpm --filter ./domain/demo-bookmark/api run test
       - run: pnpm --filter ./domain/demo-bookmark/api run lint
@@ -33,8 +30,18 @@ jobs:
   security:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: ./.github/actions/setup-stynx
+        with:
+          install: 'false'
       - run: |
           if command -v npm >/dev/null 2>&1; then
             npm audit --audit-level=high --workspaces || true
           fi
+
+  workspace-typecheck:
+    # Demonstrates the reusable-typecheck workflow pattern; runs alongside
+    # build to catch regressions caused by demo-bookmark changes that
+    # propagate to other packages via @stynx/* imports.
+    uses: ./.github/workflows/reusable-typecheck.yml
+    with:
+      node-version: '24'

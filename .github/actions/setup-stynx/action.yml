@@ -1,0 +1,101 @@
+# Composite action — stynx workspace setup
+#
+# Standardizes the checkout + pnpm + Node + dependency install + cache
+# sequence repeated across stynx workflows. Authored U9 (2026-05-17)
+# to close F5×T5 harness_idiomaticity. Use this in place of the
+# inline 4-step prelude in any workflow that needs the workspace
+# ready to run.
+#
+# Caches:
+#   - pnpm store (~/.local/share/pnpm/store) keyed on pnpm-lock.yaml
+#   - Node modules (handled by actions/setup-node cache: pnpm)
+#
+# Inputs:
+#   node-version      Node major (default 24).
+#   pnpm-version      pnpm version (default 9.15.0).
+#   fetch-depth       Checkout depth (default 1; pass 0 for full history).
+#   install           Run pnpm install (default true; pass 'false' for
+#                     evidence-gate-style jobs that only need the tree).
+#   frozen-lockfile   Pass --frozen-lockfile to pnpm install (default true).
+#
+# Outputs:
+#   pnpm-store-path   Absolute path to the pnpm content-addressed store.
+#
+# Why composite instead of reusable workflow: composite actions inherit
+# the parent job's permissions + secrets directly, whereas reusable
+# workflows require explicit pass-through. Setup is simple enough that
+# composite is the lighter-weight choice. Reusable workflows are reserved
+# for multi-job orchestrations (e.g. a hypothetical `release-train.yml`).
+name: setup-stynx
+description: Checkout + pnpm + Node + cached install (composite)
+
+inputs:
+  node-version:
+    description: Node major version
+    required: false
+    default: '24'
+  pnpm-version:
+    description: pnpm version
+    required: false
+    default: '9.15.0'
+  fetch-depth:
+    description: git fetch depth
+    required: false
+    default: '1'
+  install:
+    description: Run pnpm install
+    required: false
+    default: 'true'
+  frozen-lockfile:
+    description: Use --frozen-lockfile during install
+    required: false
+    default: 'true'
+
+outputs:
+  pnpm-store-path:
+    description: Path to the pnpm content-addressed store
+    value: ${{ steps.pnpm-store.outputs.path }}
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        fetch-depth: ${{ inputs.fetch-depth }}
+
+    - name: Set up pnpm
+      uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5
+      with:
+        version: ${{ inputs.pnpm-version }}
+        run_install: false
+
+    - name: Set up Node ${{ inputs.node-version }}
+      uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: pnpm
+
+    - name: Resolve pnpm store path
+      id: pnpm-store
+      shell: bash
+      run: |
+        echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+    - name: Cache pnpm store
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+      with:
+        path: ${{ steps.pnpm-store.outputs.path }}
+        key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+        restore-keys: |
+          pnpm-store-${{ runner.os }}-
+
+    - name: Install dependencies
+      if: inputs.install == 'true'
+      shell: bash
+      run: |
+        if [ "${{ inputs.frozen-lockfile }}" = "true" ]; then
+          pnpm install --frozen-lockfile
+        else
+          pnpm install
+        fi
