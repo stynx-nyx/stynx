@@ -24,7 +24,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
     "test": "jest --config ./jest.config.cjs",
-    "test:int": "node ../../scripts/record-test-artifact.mjs 'turbo-test$colon$int.log' -- jest --config ./jest.integration.config.cjs"
+    "test:int": "node ../../scripts/record-test-artifact.mjs 'turbo-test$colon$int.log' -- jest --config ./jest.integration.config.cjs",
+    "stryker": "pnpm exec stryker run stryker.conf.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-secrets-manager": "^3.1037.0",

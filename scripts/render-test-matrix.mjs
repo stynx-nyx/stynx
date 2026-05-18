@@ -8,36 +8,42 @@ const args = parseArgs(process.argv.slice(2));
 const useColor = args.color === true;
 const compact = args.compact === true;
 const showEmpty = args.empty === true;
+const showResume = args.resume === true;
 const aspect = args.aspect;
 const matrixConfig = loadMatrixConfig();
 
 const levels = ['Unit', 'API', 'DB', 'E2E', 'Mutation'];
 const coverageColumn = 'Coverage (lines|stat/brch|func)';
-const columns = [...levels, coverageColumn];
+const coverageMetricColumns = ['Lines', 'Statements', 'Branches', 'Functions'];
+const coverageMetricByColumn = {
+  Lines: 'lines',
+  Statements: 'statements',
+  Branches: 'branches',
+  Functions: 'functions',
+};
+const timingValueWidth = 13;
+const columns = aspect === 'coverage' ? coverageMetricColumns : levels;
 const workspaces = discoverWorkspaces();
-const aggregateCoverageByWorkspace = loadCoverageByWorkspace(workspaces);
-const unitCoverageByWorkspace = loadScratchCoverageByWorkspace(workspaces, 'unit');
-const integrationCoverageByWorkspace = loadScratchCoverageByWorkspace(workspaces, 'integration');
+const coverageByWorkspace = aspect === 'coverage' ? loadCoverageByWorkspace(workspaces) : new Map();
 const rows = [];
 
 for (const ws of workspaces) {
+  const coverageSummary = coverageByWorkspace.get(ws.dir);
   const results = {
     Unit: readTurboArtifact(ws.dir, 'turbo-test.log'),
     API: readApiResult(ws),
     DB: readDbResult(ws),
     E2E: readE2EResult(ws),
     Mutation: readMutationResult(ws),
-    [coverageColumn]: aggregateCoverageByWorkspace.has(ws.dir)
-      ? { status: 'passed', source: 'coverage' }
-      : null,
   };
   const coverage = {
-    Unit: unitCoverageByWorkspace.get(ws.dir),
     API: null,
-    DB: integrationCoverageByWorkspace.get(ws.dir),
     E2E: null,
     Mutation: null,
-    [coverageColumn]: aggregateCoverageByWorkspace.get(ws.dir),
+    Lines: coverageSummary,
+    Statements: coverageSummary,
+    Branches: coverageSummary,
+    Functions: coverageSummary,
   };
   const cells = Object.fromEntries(
     columns.map((column) => [column, buildCell(ws, column, results[column], coverage[column])]),
@@ -53,7 +59,7 @@ for (const ws of workspaces) {
 printMatrix(rows);
 
 function parseArgs(values) {
-  const parsed = { color: false, compact: false, empty: false, aspect: 'status' };
+  const parsed = { color: true, compact: false, empty: false, resume: false, aspect: 'status' };
   const aspectFlags = [];
 
   for (const value of values) {
@@ -62,6 +68,7 @@ function parseArgs(values) {
     else if (value === '--no-color' || value === '--color=never') parsed.color = false;
     else if (value === '--compact') parsed.compact = true;
     else if (value === '--empty') parsed.empty = true;
+    else if (value === '--resume') parsed.resume = true;
     else if (value === '--status') aspectFlags.push('status');
     else if (value === '--coverage') aspectFlags.push('coverage');
     else if (value === '--timing') aspectFlags.push('timing');
@@ -85,7 +92,7 @@ function parseArgs(values) {
 }
 
 function printUsage(stream = process.stdout) {
-  stream.write(`Usage: node scripts/render-test-matrix.mjs [--status|--coverage|--timing] [--color] [--compact] [--empty]
+  stream.write(`Usage: node scripts/render-test-matrix.mjs [--status|--coverage|--timing] [--color|--no-color] [--compact] [--empty] [--resume]
 
 Reads existing result artifacts only; it does not run tests.
 
@@ -95,14 +102,15 @@ Sources:
   - */.turbo/turbo-test*.log.meta.json for recorder timing metadata
   - reference/web/test-results/.last-run.json for Playwright E2E status
   - packages/*/reports/mutation/mutation.json when present
-  - coverage/coverage-final.json for aggregate coverage
-  - coverage/.aggregate-scratch/<pkg>/unit/coverage-final.json for unit coverage
-  - coverage/.aggregate-scratch/<pkg>/integration/coverage-final.json for DB coverage
+  - coverage/coverage-final.json for workspace coverage
 
 Modes:
   --status    state plus [suites_passed/suites_total | tests_passed/tests_total] counts
-  --coverage  coverage only: lines | statements / branches | functions
-  --timing    runtime only: 842ms, 3.1s, or 1:24
+  --coverage  coverage only: lines, statements, branches, functions
+  --timing    runtime only: fixed-width [hh:][mm:]ss.mmm rendering
+  --compact   glyph-only cells: 🟢 pass/at threshold, 🟡 not run/fail/below threshold,
+              🔴 below 50% coverage, · no config, blank meaningless
+  --resume    append summary totals for the selected mode
 
 States:
   '   '     configured as meaningless for that package/level
@@ -111,8 +119,8 @@ States:
   FAIL      current artifact exists and did not pass
 
 Color:
-  Status/timing states use emoji glyphs under --color.
-  Coverage numbers keep ANSI threshold coloring under --color.
+  Enabled by default; pass --no-color to disable.
+  Coverage is green at/above threshold, yellow from 50% to threshold, red below 50%.
 `);
 }
 
@@ -184,8 +192,12 @@ function mergeArtifactMeta(result, meta) {
 }
 
 function readApiResult(ws) {
-  if (ws.name !== '@stynx/reference-api') return null;
-  return readTurboArtifact(ws.dir, 'turbo-test$colon$int.log') ?? readTurboArtifact(ws.dir, 'turbo-test.log');
+  if (!hasConfiguredLevel(ws, 'API')) return null;
+  return (
+    readTurboArtifact(ws.dir, 'turbo-test$colon$api.log') ??
+    readTurboArtifact(ws.dir, 'turbo-test$colon$int.log') ??
+    readTurboArtifact(ws.dir, 'turbo-test.log')
+  );
 }
 
 function readDbResult(ws) {
@@ -216,16 +228,37 @@ function readMutationResult(ws) {
   const path = join(ws.dir, 'reports', 'mutation', 'mutation.json');
   if (!existsSync(path)) return null;
   const payload = JSON.parse(readFileSync(path, 'utf8'));
-  const score = payload?.systemUnderTestMetrics?.mutationScore;
+  const score = payload?.systemUnderTestMetrics?.mutationScore ?? calculateStrykerMutationScore(payload);
   if (typeof score !== 'number') return { status: 'present', source: 'mutation' };
+  const breakThreshold = payload?.thresholds?.break;
   return {
     suitesPassed: null,
     suitesTotal: null,
     testsPassed: Math.round(score),
     testsTotal: 100,
-    status: 'passed',
+    status: typeof breakThreshold === 'number' && score < breakThreshold ? 'failed' : 'passed',
     source: 'mutation',
   };
+}
+
+function calculateStrykerMutationScore(payload) {
+  const files = payload?.files;
+  if (!files || typeof files !== 'object') return null;
+  let killed = 0;
+  let detected = 0;
+  let undetected = 0;
+  for (const file of Object.values(files)) {
+    for (const mutant of file?.mutants ?? []) {
+      if (mutant.status === 'Killed' || mutant.status === 'TimedOut') {
+        killed += 1;
+        detected += 1;
+      } else if (mutant.status === 'Survived' || mutant.status === 'NoCoverage') {
+        undetected += 1;
+      }
+    }
+  }
+  const total = detected + undetected;
+  return total > 0 ? (killed / total) * 100 : null;
 }
 
 function parseTestLog(raw) {
@@ -333,16 +366,20 @@ function buildStatusCell(ws, column, result) {
 }
 
 function buildCoverageCell(ws, column, coverage) {
-  if (isNotApplicable(ws, column) || !['Unit', 'DB', coverageColumn].includes(column)) {
+  if (isNotApplicable(ws, 'Coverage')) {
     return { state: 'not-applicable' };
   }
+  const metric = coverageMetricByColumn[column];
+  if (!metric) {
+    return { state: 'not-applicable' };
+  }
+  if (!hasCoverageConfigured(ws)) {
+    return { state: 'no-tests' };
+  }
   if (coverage) {
-    return { state: 'coverage', coverage };
+    return { state: 'coverage-metric', value: coverage[metric], metric };
   }
-  if (isConfiguredColumn(ws, column)) {
-    return { state: 'not-run' };
-  }
-  return { state: 'no-tests' };
+  return { state: 'not-run' };
 }
 
 function buildTimingCell(ws, column, result) {
@@ -377,6 +414,7 @@ function isInterestingCell(cell) {
 function resultFailed(result) {
   if (!result) return false;
   if (result.status === 'failed') return true;
+  if (result.source === 'mutation') return false;
   return (
     result.testsPassed != null &&
     result.testsTotal != null &&
@@ -389,12 +427,20 @@ function hasAnyCoverageProducingLevel(ws) {
   return ['Unit', 'API', 'DB', 'E2E'].some((level) => hasConfiguredLevel(ws, level));
 }
 
+function hasCoverageConfigured(ws) {
+  return hasAnyFile(ws.dir, ['jest.config.cjs', 'jest.config.mjs']);
+}
+
 function hasConfiguredLevel(ws, level) {
   if (level === 'Unit') {
     return Boolean(ws.scripts.test) || hasAnyFile(ws.dir, ['jest.config.cjs', 'jest.config.mjs', 'vitest.config.ts']);
   }
   if (level === 'API') {
-    return ws.name === '@stynx/reference-api' && Boolean(ws.scripts['test:int'] || ws.scripts.test);
+    return (
+      Boolean(ws.scripts['test:api']) ||
+      (ws.name === '@stynx/reference-api' && Boolean(ws.scripts['test:int'] || ws.scripts.test)) ||
+      hasControllerSource(ws.dir)
+    );
   }
   if (level === 'DB') {
     return (
@@ -414,6 +460,25 @@ function hasConfiguredLevel(ws, level) {
 
 function hasAnyFile(dir, names) {
   return names.some((name) => existsSync(join(dir, name)));
+}
+
+function hasControllerSource(dir) {
+  const srcDir = join(dir, 'src');
+  if (!existsSync(srcDir)) return false;
+  return hasFileMatching(srcDir, (name) => name.endsWith('.controller.ts'));
+}
+
+function hasFileMatching(dir, predicate) {
+  for (const child of readdirSync(dir, { withFileTypes: true })) {
+    const childPath = join(dir, child.name);
+    if (child.isDirectory()) {
+      if (child.name === 'dist' || child.name === 'node_modules' || child.name.startsWith('.')) continue;
+      if (hasFileMatching(childPath, predicate)) return true;
+    } else if (predicate(child.name)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function isNotApplicable(ws, column) {
@@ -521,14 +586,17 @@ function pct(counter) {
 }
 
 function printMatrix(rows) {
-  const headers = ['Package', ...columns];
-  const body = rows.map((row) => [row.name, ...columns.map((level) => renderCell(row.cells[level]))]);
-  const table = renderTable([headers, ...body]);
+  const tableColumns = showResume && aspect === 'timing' ? [...columns, 'Total'] : columns;
+  const headers = ['Package', ...tableColumns.map((column) => renderHeader(column))];
+  const body = rows.map((row) => renderMatrixRow(row, tableColumns));
+  const resumeRows = renderResumeRows(rows, tableColumns);
+  const tableRows = [headers, ...body, ...resumeRows];
+  const table = renderTable(tableRows, { separatorBeforeLast: resumeRows.length > 0 });
   process.stdout.write(`${table}\n\n`);
 
   if (aspect === 'coverage') {
-    process.stdout.write('Coverage cell order: lines | statements / branches | functions.\n');
-    process.stdout.write('Unit uses unit scratch coverage; DB uses integration scratch coverage; Coverage uses coverage/coverage-final.json.\n');
+    process.stdout.write('Coverage columns: lines, statements, branches, functions.\n');
+    process.stdout.write('Source: coverage/coverage-final.json.\n');
   } else if (aspect === 'timing') {
     process.stdout.write('Timing prefers recorder sidecar durationMs, then Jest Time, then Node duration_ms.\n');
   } else {
@@ -537,42 +605,159 @@ function printMatrix(rows) {
   process.stdout.write("'   ' = configured meaningless; ' - ' = no package script/config; ' 0 ' = applicable level has no current artifact.\n");
 }
 
+function renderMatrixRow(row, tableColumns) {
+  const rendered = [row.name, ...columns.map((level) => renderCell(row.cells[level]))];
+  if (tableColumns.includes('Total')) {
+    rendered.push(renderTimingTotal(sumTimingRow(row)));
+  }
+  return rendered;
+}
+
+function renderResumeRows(rows, tableColumns) {
+  if (!showResume) return [];
+  if (aspect === 'coverage') {
+    return [['Resume', ...columns.map((column) => renderCoverageResume(rows, column))]];
+  }
+  if (aspect === 'timing') {
+    return [
+      [
+        'Total',
+        ...columns.map((column) => renderTimingTotal(sumTimingColumn(rows, column))),
+        renderTimingTotal(sumTimingRows(rows)),
+      ],
+    ];
+  }
+  return [['Resume', ...columns.map((column) => renderStatusResume(rows, column))]];
+}
+
+function renderStatusResume(rows, column) {
+  const expectedRows = rows.filter((row) => isExpectedCell(row.cells[column]));
+  const green = expectedRows.filter((row) => row.cells[column]?.state === 'passed').length;
+  return `${green}/${expectedRows.length}`;
+}
+
+function renderCoverageResume(rows, column) {
+  const metric = coverageMetricByColumn[column];
+  const expectedRows = rows.filter((row) => isExpectedCoverageCell(row.cells[column]));
+  let above = 0;
+  for (const row of expectedRows) {
+    const cell = row.cells[column];
+    if (cell?.state === 'coverage-metric' && cell.value != null && cell.value >= thresholdFor(metric)) {
+      above += 1;
+    }
+  }
+  return `${above}/${expectedRows.length}`;
+}
+
+function isExpectedCoverageCell(cell) {
+  if (!isExpectedCell(cell)) return false;
+  return cell.state !== 'coverage-metric' || cell.value != null;
+}
+
+function isExpectedCell(cell) {
+  return Boolean(cell && !['not-applicable', 'no-tests'].includes(cell.state));
+}
+
+function sumTimingRows(rows) {
+  return rows.reduce((total, row) => total + sumTimingRow(row), 0);
+}
+
+function sumTimingRow(row) {
+  return columns.reduce((total, column) => total + timingDuration(row.cells[column]), 0);
+}
+
+function sumTimingColumn(rows, column) {
+  return rows.reduce((total, row) => total + timingDuration(row.cells[column]), 0);
+}
+
+function timingDuration(cell) {
+  return typeof cell?.durationMs === 'number' && Number.isFinite(cell.durationMs) ? cell.durationMs : 0;
+}
+
+function renderTimingTotal(durationMs) {
+  if (durationMs <= 0) return '';
+  return formatDuration(durationMs);
+}
+
+function renderHeader(column) {
+  if (!compact) return column;
+  return (
+    {
+      Unit: 'U',
+      API: 'A',
+      DB: 'D',
+      E2E: 'E',
+      Mutation: 'M',
+      Lines: 'L',
+      Statements: 'S',
+      Branches: 'B',
+      Functions: 'F',
+      Total: 'T',
+    }[column] ?? column
+  );
+}
+
 function renderCell(cell) {
+  if (compact) return renderCompactCell(cell);
   if (!cell) return renderNoTests();
   if (cell.state === 'not-applicable') return colorize('   ', 'dim');
   if (cell.state === 'no-tests') return renderNoTests();
   if (cell.state === 'not-run') return renderNotRun();
   if (cell.state === 'coverage') return renderCoverage(cell.coverage);
+  if (cell.state === 'coverage-metric') return formatMetric(cell.value, cell.metric);
   if (cell.state === 'unknown-timing') return renderNotRun();
   if (aspect === 'timing') return renderTiming(cell);
   return renderStatusResult(cell);
 }
 
+function renderCompactCell(cell) {
+  if (!cell) return renderCompactNoTests();
+  if (cell.state === 'not-applicable') return ' ';
+  if (cell.state === 'no-tests') return renderCompactNoTests();
+  if (cell.state === 'not-run' || cell.state === 'unknown-timing') return renderCompactState('not-run');
+  if (cell.state === 'coverage-metric') return renderCompactCoverage(cell.value, cell.metric);
+  if (cell.state === 'coverage') return renderCompactState(cell.coverage ? 'passed' : 'not-run');
+  return renderCompactState(cell.state);
+}
+
+function renderCompactNoTests() {
+  return useColor ? '·' : '-';
+}
+
+function renderCompactState(state) {
+  if (state === 'passed') return useColor ? '🟢' : 'P';
+  if (state === 'failed' || state === 'not-run') return useColor ? '🟡' : '!';
+  return useColor ? colorize('·', 'dim') : '-';
+}
+
+function renderCompactCoverage(value, metric) {
+  if (value == null) return ' ';
+  const threshold = thresholdFor(metric);
+  if (value >= threshold) return useColor ? '🟢' : 'G';
+  if (value >= 50) return useColor ? '🟡' : 'Y';
+  return useColor ? '🔴' : 'R';
+}
+
 function renderNoTests() {
-  return useColor ? colorize('·', 'dim') : colorize(' - ', 'dim');
+  return colorize(' - ', 'dim');
 }
 
 function renderNotRun() {
-  return useColor ? `${stateGlyph('not-run')} 0` : colorize(' 0 ', 'yellow');
+  return colorize(' 0 ', 'yellow');
 }
 
 function renderTiming(cell) {
-  return `${stateGlyph(cell.state)}${formatDuration(cell.durationMs)}`;
+  const duration = formatDuration(cell.durationMs);
+  if (!useColor) return duration;
+  return colorize(duration, cell.state === 'failed' ? 'yellow' : 'green');
 }
 
 function renderStatusResult(cell) {
   const counts = renderCounts(cell.result);
   if (cell.state === 'failed') {
-    return `${stateGlyph('failed')}FAIL ${counts}`;
+    return colorize(`FAIL ${counts}`, 'yellow');
   }
-  return `${stateGlyph('passed')}${counts}`;
-}
-
-function stateGlyph(state) {
-  if (!useColor) return '';
-  if (state === 'failed') return '🔴 ';
-  if (state === 'not-run') return '🟡';
-  return '🟢 ';
+  return counts;
 }
 
 function renderCounts(result) {
@@ -595,20 +780,21 @@ function renderCoverage(coverage) {
   if (!coverage) return '  |    /    |   ';
   const first = `${formatMetric(coverage.lines, 'lines')} | ${formatMetric(coverage.statements, 'statements')}`;
   const second = `${formatMetric(coverage.branches, 'branches')} | ${formatMetric(coverage.functions, 'functions')}`;
-  return compact ? `${first} / ${second}` : `${first}\n${second}`;
+  return `${first}\n${second}`;
 }
 
 function formatMetric(value, metric) {
-  if (value == null) return '  ';
+  if (value == null) return '   ';
   if (Math.round(value) === 100) {
-    return useColor ? colorize('✓✓', 'green') : '✓✓';
+    const perfect = '✓✓'.padStart(3, ' ');
+    return useColor ? colorize(perfect, 'green') : perfect;
   }
   const rounded = String(Math.round(value)).padStart(3, ' ');
   const threshold = thresholdFor(metric);
-  if (!useColor) return rounded.trim();
-  if (value >= threshold) return colorize(rounded.trim(), 'green');
-  if (value >= 50) return colorize(rounded.trim(), 'yellow');
-  return colorize(rounded.trim(), 'red');
+  if (!useColor) return rounded;
+  if (value >= threshold) return colorize(rounded, 'green');
+  if (value >= 50) return colorize(rounded, 'yellow');
+  return colorize(rounded, 'red');
 }
 
 function thresholdFor(metric) {
@@ -616,24 +802,36 @@ function thresholdFor(metric) {
 }
 
 function formatDuration(durationMs) {
-  if (durationMs < 1000) return `${Math.max(0, Math.round(durationMs))}ms`;
-  if (durationMs < 60_000) {
-    const seconds = durationMs / 1000;
-    return `${seconds < 10 ? seconds.toFixed(1) : Math.round(seconds)}s`;
-  }
-  const totalSeconds = Math.round(durationMs / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = String(totalSeconds % 60).padStart(2, '0');
-  return `${minutes}:${seconds}`;
+  const totalMs = Math.max(0, Math.round(durationMs));
+  const ms = String(totalMs % 1000).padStart(3, '0');
+  const totalSeconds = Math.floor(totalMs / 1000);
+  const seconds = totalSeconds % 60;
+  const totalMinutes = Math.floor(totalSeconds / 60);
+  const minutes = totalMinutes % 60;
+  const hours = Math.floor(totalMinutes / 60);
+
+  const secondsText = hours > 0 || totalMinutes > 0 ? String(seconds).padStart(2, '0') : String(seconds);
+  const value =
+    hours > 0
+      ? `${hours}:${String(minutes).padStart(2, '0')}:${secondsText}.${ms}s`
+      : totalMinutes > 0
+        ? `${totalMinutes}:${secondsText}.${ms}s`
+        : `${secondsText}.${ms}s`;
+  return value.padStart(timingValueWidth);
 }
 
-function renderTable(rows) {
+function renderTable(rows, options = {}) {
   const splitRows = rows.map((row) => row.map((cell) => String(cell).split('\n')));
   const widths = [];
   for (const row of splitRows) {
     row.forEach((cell, index) => {
       widths[index] = Math.max(widths[index] ?? 0, ...cell.map((line) => visibleLength(line)));
     });
+  }
+  if (aspect === 'timing' && !compact) {
+    for (let index = 1; index < widths.length; index += 1) {
+      widths[index] = Math.max(widths[index] ?? 0, timingValueWidth);
+    }
   }
 
   const sepLine = widths.map((width) => '-'.repeat(width)).join('-+-');
@@ -648,6 +846,7 @@ function renderTable(rows) {
       );
     }
     if (rowIndex === 0) rendered.push(sepLine);
+    if (options.separatorBeforeLast && rowIndex === rows.length - 2) rendered.push(sepLine);
   });
   return rendered.join('\n');
 }
@@ -657,7 +856,19 @@ function padVisible(value, width) {
 }
 
 function visibleLength(value) {
-  return Array.from(stripAnsi(value)).length;
+  return Array.from(stripAnsi(value)).reduce((width, char) => width + charWidth(char), 0);
+}
+
+function charWidth(char) {
+  const codePoint = char.codePointAt(0);
+  if (codePoint == null) return 0;
+  if (codePoint === 0xfe0f) return 0;
+  if (isWideGlyph(codePoint)) return 2;
+  return 1;
+}
+
+function isWideGlyph(codePoint) {
+  return codePoint >= 0x1f300 && codePoint <= 0x1faff;
 }
 
 function stripAnsi(value) {

@@ -221,6 +221,30 @@ jobs:
           - package: data
             filter: '@stynx/data'
             report_path: packages/data/reports/mutation
+          - package: flow
+            filter: '@stynx/flow'
+            report_path: packages/flow/reports/mutation
+          - package: idempotency
+            filter: '@stynx/idempotency'
+            report_path: packages/idempotency/reports/mutation
+          - package: ratelimit
+            filter: '@stynx/ratelimit'
+            report_path: packages/ratelimit/reports/mutation
+          - package: audit
+            filter: '@stynx/audit'
+            report_path: packages/audit/reports/mutation
+          - package: storage
+            filter: '@stynx/storage'
+            report_path: packages/storage/reports/mutation
+          - package: privacy
+            filter: '@stynx/privacy'
+            report_path: packages/privacy/reports/mutation
+          - package: core
+            filter: '@stynx/core'
+            report_path: packages/core/reports/mutation
+          - package: sessions
+            filter: '@stynx/sessions'
+            report_path: packages/sessions/reports/mutation
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5

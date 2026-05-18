@@ -8,11 +8,11 @@
   "notApplicable": [
     {
       "packagePattern": "@stynx/audit",
-      "levels": ["API"]
+      "levels": []
     },
     {
       "packagePattern": "@stynx/auth",
-      "levels": ["API"]
+      "levels": []
     },
     {
       "packagePattern": "@stynx/backend",
@@ -36,15 +36,15 @@
     },
     {
       "packagePattern": "@stynx/flow",
-      "levels": ["API"]
+      "levels": []
     },
     {
       "packagePattern": "@stynx/health",
-      "levels": ["API"]
+      "levels": []
     },
     {
       "packagePattern": "@stynx/i18n",
-      "levels": ["API"]
+      "levels": []
     },
     {
       "packagePattern": "@stynx/idempotency",
@@ -56,7 +56,7 @@
     },
     {
       "packagePattern": "@stynx/privacy",
-      "levels": ["API"]
+      "levels": []
     },
     {
       "packagePattern": "@stynx/ratelimit",
@@ -64,7 +64,7 @@
     },
     {
       "packagePattern": "@stynx/sessions",
-      "levels": ["API"]
+      "levels": []
     },
     {
       "packagePattern": "@stynx/storage",
@@ -72,7 +72,7 @@
     },
     {
       "packagePattern": "@stynx/tenancy",
-      "levels": ["API"]
+      "levels": []
     },
     {
       "packagePattern": "@stynx/testing",

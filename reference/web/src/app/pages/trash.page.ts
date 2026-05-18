@@ -108,6 +108,9 @@ export class TrashPageComponent implements AfterViewInit {
 
   async switchResource(resource: 'records' | 'work-items'): Promise<void> {
     this.activeResource = resource;
+    if (this.trashList) {
+      this.trashList.resource = resource;
+    }
     await this.trashList?.load();
   }
 }

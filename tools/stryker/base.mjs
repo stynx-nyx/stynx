@@ -23,7 +23,7 @@ export function createStrykerConfig({
       configFile: jestConfig,
       enableFindRelatedTests: true,
     },
-    reporters: ['clear-text', 'progress', 'html'],
+    reporters: ['clear-text', 'progress', 'html', 'json'],
     thresholds: {
       high: threshold,
       low: Math.max(60, threshold - 10),
@@ -31,6 +31,9 @@ export function createStrykerConfig({
     },
     htmlReporter: {
       fileName: `reports/mutation/${packageName.replace(/[@/]/g, '-')}/index.html`,
+    },
+    jsonReporter: {
+      fileName: 'reports/mutation/mutation.json',
     },
   };
 }

@@ -1,27 +1,28 @@
 #!/usr/bin/env node
-// Aggregates per-package jest coverage (unit + integration) into
-// coverage/coverage-final.json for the F3×T2 sensor.
+// Aggregates per-workspace jest coverage (unit + integration) into
+// coverage/coverage-final.json for the F3xT2 sensor.
 //
 // Usage:
 //   node scripts/aggregate-coverage.mjs [--packages=auth,sessions]
 //                                       [--no-integration]
 //                                       [--no-unit]
 //
-// Without --packages, runs every workspace package under packages/* that has a
-// jest.config.cjs. Always also runs jest.integration.config.cjs when present,
-// unless --no-integration is set. Coverage from both modes is merged per file
-// via istanbul-lib-coverage so statement/branch/function counters add up
-// properly when both runs share the same instrumentation.
+// Without --packages, runs every coverage-producing workspace under packages/*,
+// packages-web/*, and reference/* that has a jest.config.cjs. Always also runs
+// jest.integration.config.cjs when present, unless --no-integration is set.
+// Coverage from both modes is merged per file via istanbul-lib-coverage so
+// statement/branch/function counters add up properly when both runs share the
+// same instrumentation.
 
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import libCoverage from 'istanbul-lib-coverage';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '..');
-const packagesRoot = join(repoRoot, 'packages');
+const coverageRootNames = ['packages', 'packages-web', 'reference'];
 const aggregateOut = join(repoRoot, 'coverage', 'coverage-final.json');
 const scratchRoot = join(repoRoot, 'coverage', '.aggregate-scratch');
 
@@ -34,19 +35,65 @@ const packageFilter = args
 const skipIntegration = args.includes('--no-integration');
 const skipUnit = args.includes('--no-unit');
 
-function listPackages() {
-  return readdirSync(packagesRoot)
-    .filter((name) => existsSync(join(packagesRoot, name, 'jest.config.cjs')))
-    .sort();
+function listCoverageTargets() {
+  const targets = [];
+  for (const rootName of coverageRootNames) {
+    const root = join(repoRoot, rootName);
+    if (!existsSync(root)) continue;
+    for (const child of readdirSync(root, { withFileTypes: true })) {
+      if (!child.isDirectory()) continue;
+      const dir = join(root, child.name);
+      if (!existsSync(join(dir, 'jest.config.cjs'))) continue;
+      targets.push({
+        dir,
+        displayName: readPackageName(dir) ?? `${rootName}/${child.name}`,
+        filterNames: filterNamesForTarget(dir, rootName, child.name),
+        scratchId: relative(repoRoot, dir).split(sep).join('__'),
+      });
+    }
+  }
+  return targets.sort((a, b) => a.displayName.localeCompare(b.displayName));
+}
+
+function readPackageName(dir) {
+  const packagePath = join(dir, 'package.json');
+  if (!existsSync(packagePath)) return null;
+  try {
+    return JSON.parse(readFileSync(packagePath, 'utf8')).name ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function filterNamesForTarget(dir, rootName, childName) {
+  const pkgName = readPackageName(dir);
+  const unscoped = pkgName?.startsWith('@') ? pkgName.split('/').at(-1) : pkgName;
+  return new Set(
+    [
+      childName,
+      `${rootName}/${childName}`,
+      pkgName,
+      unscoped,
+      rootName === 'reference' ? `reference-${childName}` : null,
+    ].filter(Boolean),
+  );
+}
+
+function selectTargets() {
+  const targets = listCoverageTargets();
+  if (!packageFilter || packageFilter.length === 0) return targets;
+  const requested = new Set(packageFilter);
+  return targets.filter((target) => [...target.filterNames].some((name) => requested.has(name)));
 }
 
 function runJest(packageDir, configFile, outDir) {
   const configArgs = configFile ? ['--config', configFile] : [];
   const result = spawnSync(
-    'pnpm',
+    'node',
     [
-      'exec',
-      'jest',
+      '--disable-warning=ExperimentalWarning',
+      '--experimental-vm-modules',
+      './node_modules/jest/bin/jest.js',
       ...configArgs,
       '--coverage',
       '--coverageReporters=json',
@@ -74,7 +121,7 @@ function loadCoverageMap(jsonPath) {
   return libCoverage.createCoverageMap(data);
 }
 
-function aggregate(packages) {
+function aggregate(targets) {
   rmSync(scratchRoot, { recursive: true, force: true });
   mkdirSync(scratchRoot, { recursive: true });
 
@@ -87,10 +134,10 @@ function aggregate(packages) {
   const merged = existsSync(aggregateOut)
     ? libCoverage.createCoverageMap(JSON.parse(readFileSync(aggregateOut, 'utf8')))
     : libCoverage.createCoverageMap({});
-  // For the targeted packages, drop their existing entries before re-merging
+  // For the targeted workspaces, drop their existing entries before re-merging
   // so the new run's counters replace (not add to) the prior aggregate.
-  for (const pkg of packages) {
-    const prefix = join(packagesRoot, pkg) + '/';
+  for (const target of targets) {
+    const prefix = target.dir + '/';
     for (const file of merged.files()) {
       if (file.startsWith(prefix)) {
         delete merged.data[file];
@@ -99,25 +146,24 @@ function aggregate(packages) {
   }
   let failureCount = 0;
 
-  for (const pkg of packages) {
-    const pkgDir = join(packagesRoot, pkg);
-    if (!skipUnit && existsSync(join(pkgDir, 'jest.config.cjs'))) {
-      const out = join(scratchRoot, pkg, 'unit');
+  for (const target of targets) {
+    if (!skipUnit && existsSync(join(target.dir, 'jest.config.cjs'))) {
+      const out = join(scratchRoot, target.scratchId, 'unit');
       mkdirSync(out, { recursive: true });
-      process.stdout.write(`[${pkg}] unit ... `);
-      const ok = runJest(pkgDir, null, out);
+      process.stdout.write(`[${target.displayName}] unit ... `);
+      const ok = runJest(target.dir, null, out);
       process.stdout.write(ok ? 'ok\n' : 'failed\n');
       if (!ok) failureCount += 1;
       const map = loadCoverageMap(join(out, 'coverage-final.json'));
       if (map) merged.merge(map);
     }
 
-    const intConfig = join(pkgDir, 'jest.integration.config.cjs');
+    const intConfig = join(target.dir, 'jest.integration.config.cjs');
     if (!skipIntegration && existsSync(intConfig)) {
-      const out = join(scratchRoot, pkg, 'integration');
+      const out = join(scratchRoot, target.scratchId, 'integration');
       mkdirSync(out, { recursive: true });
-      process.stdout.write(`[${pkg}] int  ... `);
-      const ok = runJest(pkgDir, intConfig, out);
+      process.stdout.write(`[${target.displayName}] int  ... `);
+      const ok = runJest(target.dir, intConfig, out);
       process.stdout.write(ok ? 'ok\n' : 'failed\n');
       if (!ok) failureCount += 1;
       const map = loadCoverageMap(join(out, 'coverage-final.json'));
@@ -148,5 +194,13 @@ function aggregate(packages) {
   }
 }
 
-const targets = packageFilter && packageFilter.length > 0 ? packageFilter : listPackages();
+const targets = selectTargets();
+if (targets.length === 0) {
+  process.stderr.write(
+    packageFilter?.length
+      ? `No coverage targets matched: ${packageFilter.join(', ')}\n`
+      : 'No coverage targets found.\n',
+  );
+  process.exit(1);
+}
 aggregate(targets);
