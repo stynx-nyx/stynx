@@ -1,5 +1,5 @@
 import type { ExecutionContext } from '@nestjs/common';
-import { HttpException, SetMetadata } from '@nestjs/common';
+import { HttpException, ServiceUnavailableException, SetMetadata } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { STYNX_SYSTEM_ROUTE } from '@stynx/auth';
 import { STYNX_RATE_LIMIT_ROUTE } from '../../src/constants';
@@ -170,5 +170,280 @@ describe('RateLimitGuard', () => {
 
     expect(response.headers['Retry-After']).toBe('10');
     expect(metrics.snapshot()).toEqual({ 'documents.write': 1 });
+  });
+
+  it('allows the request when no rate-limit metadata is set on the handler', async () => {
+    const handler = function unmetered() {
+      return undefined;
+    };
+    const policyResolver: RateLimitPolicyResolver = {
+      resolve: jest.fn(),
+    };
+    const guard = new RateLimitGuard(reflector, {}, undefined, policyResolver);
+    await expect(
+      guard.canActivate(
+        createExecutionContext(
+          { headers: {}, method: 'GET', path: '/x', res: createResponse() },
+          handler,
+          TestController,
+        ),
+      ),
+    ).resolves.toBe(true);
+    expect(policyResolver.resolve).not.toHaveBeenCalled();
+  });
+
+  it('allows the request when no policyResolver is wired even if metadata is set', async () => {
+    const handler = function noResolver() {
+      return undefined;
+    };
+    Reflect.defineMetadata(STYNX_RATE_LIMIT_ROUTE, { bucket: 'tenant', scope: 's', cost: 1 }, handler);
+    const guard = new RateLimitGuard(reflector, {}, undefined, undefined);
+    await expect(
+      guard.canActivate(
+        createExecutionContext(
+          { headers: {}, method: 'GET', path: '/x', res: createResponse() },
+          handler,
+          TestController,
+        ),
+      ),
+    ).resolves.toBe(true);
+  });
+
+  it('open-circuits to allow when the store is missing', async () => {
+    const handler = function noStore() {
+      return undefined;
+    };
+    Reflect.defineMetadata(STYNX_RATE_LIMIT_ROUTE, { bucket: 'tenant', scope: 's', cost: 1 }, handler);
+    const policyResolver: RateLimitPolicyResolver = {
+      resolve: jest.fn(async () => ({ bucket: 'tenant', scope: 's', cost: 1, limit: 5, windowSeconds: 60 })),
+    };
+    const guard = new RateLimitGuard(reflector, {}, undefined, policyResolver);
+    await expect(
+      guard.canActivate(
+        createExecutionContext(
+          { headers: {}, method: 'GET', path: '/x', tenantId: 't1', res: createResponse() },
+          handler,
+          TestController,
+        ),
+      ),
+    ).resolves.toBe(true);
+  });
+
+  it('open-circuits to allow when the store throws a non-Http error', async () => {
+    const handler = function storeBoom() {
+      return undefined;
+    };
+    Reflect.defineMetadata(STYNX_RATE_LIMIT_ROUTE, { bucket: 'tenant', scope: 's', cost: 1 }, handler);
+    const store: RateLimitStore = {
+      consume: jest.fn(async () => {
+        throw new Error('redis down');
+      }),
+    };
+    const policyResolver: RateLimitPolicyResolver = {
+      resolve: jest.fn(async () => ({ bucket: 'tenant', scope: 's', cost: 1, limit: 5, windowSeconds: 60 })),
+    };
+    const guard = new RateLimitGuard(reflector, {}, store, policyResolver);
+    await expect(
+      guard.canActivate(
+        createExecutionContext(
+          { headers: {}, method: 'GET', path: '/x', tenantId: 't1', res: createResponse() },
+          handler,
+          TestController,
+        ),
+      ),
+    ).resolves.toBe(true);
+  });
+
+  it('rethrows when the store throws ServiceUnavailableException', async () => {
+    const handler = function storeUnavailable() {
+      return undefined;
+    };
+    Reflect.defineMetadata(STYNX_RATE_LIMIT_ROUTE, { bucket: 'tenant', scope: 's', cost: 1 }, handler);
+    const store: RateLimitStore = {
+      consume: jest.fn(async () => {
+        throw new ServiceUnavailableException('down');
+      }),
+    };
+    const policyResolver: RateLimitPolicyResolver = {
+      resolve: jest.fn(async () => ({ bucket: 'tenant', scope: 's', cost: 1, limit: 5, windowSeconds: 60 })),
+    };
+    const guard = new RateLimitGuard(reflector, {}, store, policyResolver);
+    await expect(
+      guard.canActivate(
+        createExecutionContext(
+          { headers: {}, method: 'GET', path: '/x', tenantId: 't1', res: createResponse() },
+          handler,
+          TestController,
+        ),
+      ),
+    ).rejects.toBeInstanceOf(ServiceUnavailableException);
+  });
+
+  it('throws 503 under distributedStrict when the store returns null (resolver missing)', async () => {
+    const handler = function strictBackend() {
+      return undefined;
+    };
+    Reflect.defineMetadata(STYNX_RATE_LIMIT_ROUTE, { bucket: 'tenant', scope: 's', cost: 1 }, handler);
+    const store: RateLimitStore = {
+      consume: jest.fn(async () => {
+        throw new Error('transient');
+      }),
+    };
+    const policyResolver: RateLimitPolicyResolver = {
+      resolve: jest.fn(async () => ({ bucket: 'tenant', scope: 's', cost: 1, limit: 5, windowSeconds: 60 })),
+    };
+    const guard = new RateLimitGuard(
+      reflector,
+      { distributedStrict: true },
+      store,
+      policyResolver,
+    );
+    await expect(
+      guard.canActivate(
+        createExecutionContext(
+          { headers: {}, method: 'GET', path: '/x', tenantId: 't1', res: createResponse() },
+          handler,
+          TestController,
+        ),
+      ),
+    ).rejects.toBeInstanceOf(ServiceUnavailableException);
+  });
+
+  it('builds bucket keys for ip / user / route buckets', async () => {
+    const cases = [
+      { bucket: 'ip' as const, expectedKey: 's:ip:9.9.9.9' },
+      { bucket: 'user' as const, expectedKey: 's:user:user-x' },
+      { bucket: 'route' as const, expectedKey: 's:route:tenant-a:POST:/x' },
+    ];
+    for (const { bucket, expectedKey } of cases) {
+      const handler = function h() {
+        return undefined;
+      };
+      Reflect.defineMetadata(STYNX_RATE_LIMIT_ROUTE, { bucket, scope: 's', cost: 1 }, handler);
+      let observedKey: string | undefined;
+      const store: RateLimitStore = {
+        consume: jest.fn(async (ctx) => {
+          observedKey = ctx.bucketKey;
+          return { allowed: true, limit: 1, remaining: 1, resetAtEpochMs: 0, retryAfterSeconds: 0, used: 1 };
+        }),
+      };
+      const policyResolver: RateLimitPolicyResolver = {
+        resolve: jest.fn(async () => ({ bucket, scope: 's', cost: 1, limit: 1, windowSeconds: 60 })),
+      };
+      const guard = new RateLimitGuard(reflector, {}, store, policyResolver);
+      await guard.canActivate(
+        createExecutionContext(
+          {
+            headers: {},
+            method: 'POST',
+            path: '/x',
+            ip: '9.9.9.9',
+            tenantId: 'tenant-a',
+            user: { id: 'user-x' },
+            res: createResponse(),
+          },
+          handler,
+          TestController,
+        ),
+      );
+      expect(observedKey).toBe(expectedKey);
+    }
+  });
+
+  it('extracts tenantId + userId from a Bearer JWT payload as fallback', async () => {
+    const handler = function jwtFallback() {
+      return undefined;
+    };
+    Reflect.defineMetadata(STYNX_RATE_LIMIT_ROUTE, { bucket: 'tenant', scope: 's', cost: 1 }, handler);
+    const claims = { sub: 'user-jwt', tenant_id: 'tenant-jwt' };
+    const fakeJwt = `header.${Buffer.from(JSON.stringify(claims)).toString('base64url')}.sig`;
+    let observedKey: string | undefined;
+    const store: RateLimitStore = {
+      consume: jest.fn(async (ctx) => {
+        observedKey = ctx.bucketKey;
+        return { allowed: true, limit: 1, remaining: 1, resetAtEpochMs: 0, retryAfterSeconds: 0, used: 1 };
+      }),
+    };
+    const policyResolver: RateLimitPolicyResolver = {
+      resolve: jest.fn(async () => ({ bucket: 'tenant', scope: 's', cost: 1, limit: 1, windowSeconds: 60 })),
+    };
+    const guard = new RateLimitGuard(reflector, {}, store, policyResolver);
+    await guard.canActivate(
+      createExecutionContext(
+        {
+          headers: { authorization: `Bearer ${fakeJwt}` },
+          method: 'GET',
+          path: '/x',
+          res: createResponse(),
+        },
+        handler,
+        TestController,
+      ),
+    );
+    expect(observedKey).toBe('s:tenant:tenant-jwt');
+  });
+
+  it('ignores malformed Bearer tokens silently', async () => {
+    const handler = function malformedJwt() {
+      return undefined;
+    };
+    Reflect.defineMetadata(STYNX_RATE_LIMIT_ROUTE, { bucket: 'tenant', scope: 's', cost: 1 }, handler);
+    let observedKey: string | undefined;
+    const store: RateLimitStore = {
+      consume: jest.fn(async (ctx) => {
+        observedKey = ctx.bucketKey;
+        return { allowed: true, limit: 1, remaining: 1, resetAtEpochMs: 0, retryAfterSeconds: 0, used: 1 };
+      }),
+    };
+    const policyResolver: RateLimitPolicyResolver = {
+      resolve: jest.fn(async () => ({ bucket: 'tenant', scope: 's', cost: 1, limit: 1, windowSeconds: 60 })),
+    };
+    const guard = new RateLimitGuard(reflector, {}, store, policyResolver);
+    await guard.canActivate(
+      createExecutionContext(
+        {
+          headers: { authorization: 'Bearer not-a-jwt' },
+          method: 'GET',
+          path: '/x',
+          res: createResponse(),
+        },
+        handler,
+        TestController,
+      ),
+    );
+    expect(observedKey).toBe('s:tenant:public');
+  });
+
+  it('accepts authorization header passed as an array (takes first element)', async () => {
+    const handler = function arrayAuth() {
+      return undefined;
+    };
+    Reflect.defineMetadata(STYNX_RATE_LIMIT_ROUTE, { bucket: 'tenant', scope: 's', cost: 1 }, handler);
+    const claims = { sub: 'u', tenant_id: 'tenant-arr' };
+    const fakeJwt = `h.${Buffer.from(JSON.stringify(claims)).toString('base64url')}.s`;
+    let observedKey: string | undefined;
+    const store: RateLimitStore = {
+      consume: jest.fn(async (ctx) => {
+        observedKey = ctx.bucketKey;
+        return { allowed: true, limit: 1, remaining: 1, resetAtEpochMs: 0, retryAfterSeconds: 0, used: 1 };
+      }),
+    };
+    const policyResolver: RateLimitPolicyResolver = {
+      resolve: jest.fn(async () => ({ bucket: 'tenant', scope: 's', cost: 1, limit: 1, windowSeconds: 60 })),
+    };
+    const guard = new RateLimitGuard(reflector, {}, store, policyResolver);
+    await guard.canActivate(
+      createExecutionContext(
+        {
+          headers: { authorization: [`Bearer ${fakeJwt}`, 'Bearer second'] },
+          method: 'GET',
+          path: '/x',
+          res: createResponse(),
+        },
+        handler,
+        TestController,
+      ),
+    );
+    expect(observedKey).toBe('s:tenant:tenant-arr');
   });
 });

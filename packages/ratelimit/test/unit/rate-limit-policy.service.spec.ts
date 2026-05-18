@@ -1,0 +1,123 @@
+import { DatabaseRateLimitPolicyResolver } from '../../src/rate-limit-policy.service';
+import type { RateLimitMetadata } from '../../src/types';
+import type { RequestLike } from '../../src/request-context';
+
+interface FakeTrx {
+  query: jest.Mock<Promise<{ rows: unknown[] }>, [string, unknown[]?]>;
+}
+
+function makeDatabase(rowsByCall: Array<unknown[]>) {
+  const trx: FakeTrx = {
+    query: jest.fn(),
+  };
+  let callIdx = 0;
+  trx.query.mockImplementation(async () => ({ rows: rowsByCall[callIdx++] ?? [] }));
+  return {
+    db: {
+      withSystemContext: jest.fn(async (_reason: string, fn: () => Promise<unknown>) => fn()),
+      tx: jest.fn(async (fn: (t: FakeTrx) => Promise<unknown>) => fn(trx)),
+    },
+    trx,
+  };
+}
+
+const request: RequestLike = { headers: {}, tenantId: 'tenant-1' } as never;
+const metadata: RateLimitMetadata = {
+  bucket: 'tenant',
+  scope: 'documents.write',
+  cost: 2,
+};
+
+describe('DatabaseRateLimitPolicyResolver', () => {
+  it('uses explicit metadata.limit and metadata.windowSeconds without touching the DB', async () => {
+    const { db } = makeDatabase([]);
+    const resolver = new DatabaseRateLimitPolicyResolver({}, db as never);
+    const resolved = await resolver.resolve(request, {
+      ...metadata,
+      limit: 999,
+      windowSeconds: 30,
+    });
+    expect(resolved.limit).toBe(999);
+    expect(resolved.windowSeconds).toBe(30);
+    expect(resolved.cost).toBe(2);
+    expect(db.tx).not.toHaveBeenCalled();
+  });
+
+  it('falls back to per-scope defaults from options when DB returns no rows', async () => {
+    const { db } = makeDatabase([[], [], [], []]);
+    const resolver = new DatabaseRateLimitPolicyResolver(
+      { defaults: { 'documents.write': { limit: 50, windowSeconds: 15 } } },
+      db as never,
+    );
+    const resolved = await resolver.resolve(request, metadata);
+    expect(resolved.limit).toBe(50);
+    expect(resolved.windowSeconds).toBe(15);
+  });
+
+  it('falls back to defaultLimit / defaultWindowSeconds when no per-scope default', async () => {
+    const { db } = makeDatabase([[], [], [], []]);
+    const resolver = new DatabaseRateLimitPolicyResolver(
+      { defaultLimit: 7, defaultWindowSeconds: 11 },
+      db as never,
+    );
+    const resolved = await resolver.resolve(request, metadata);
+    expect(resolved.limit).toBe(7);
+    expect(resolved.windowSeconds).toBe(11);
+  });
+
+  it('falls back to the hardcoded 120 / 60 when no defaults are configured', async () => {
+    const { db } = makeDatabase([[], [], [], []]);
+    const resolver = new DatabaseRateLimitPolicyResolver({}, db as never);
+    const resolved = await resolver.resolve(request, metadata);
+    expect(resolved.limit).toBe(120);
+    expect(resolved.windowSeconds).toBe(60);
+  });
+
+  it('uses tenant override when present', async () => {
+    const { db } = makeDatabase([
+      [{ limit_value: 33, window_seconds: 7 }], // lookupLimit -> override
+      [{ limit_value: 33, window_seconds: 7 }], // lookupWindow -> override
+    ]);
+    const resolver = new DatabaseRateLimitPolicyResolver({}, db as never);
+    const resolved = await resolver.resolve(request, metadata);
+    expect(resolved.limit).toBe(33);
+    expect(resolved.windowSeconds).toBe(7);
+  });
+
+  it('falls back to platform config (core.config) when no override', async () => {
+    const { db } = makeDatabase([
+      [], // lookupLimit -> no override
+      [{ value: { limit: 88, windowSeconds: 22 } }], // lookupPlatformConfig
+      [], // lookupWindow -> no override
+      [{ value: { limit: 88, windowSeconds: 22 } }],
+    ]);
+    const resolver = new DatabaseRateLimitPolicyResolver({}, db as never);
+    const resolved = await resolver.resolve(request, metadata);
+    expect(resolved.limit).toBe(88);
+    expect(resolved.windowSeconds).toBe(22);
+  });
+
+  it('skips override lookup when tenantId is undefined', async () => {
+    const { db, trx } = makeDatabase([[]]);
+    const resolver = new DatabaseRateLimitPolicyResolver({ defaultLimit: 9, defaultWindowSeconds: 9 }, db as never);
+    const resolved = await resolver.resolve({ headers: {} } as never, metadata);
+    expect(resolved.limit).toBe(9);
+    expect(resolved.windowSeconds).toBe(9);
+    // Override lookup is skipped (no tenant); platform config runs once per
+    // {lookupLimit, lookupWindow} and tries 2 key variants each = 4 queries.
+    expect(trx.query).toHaveBeenCalledTimes(4);
+  });
+
+  it('returns nulls (then falls back) when no Database is wired', async () => {
+    const resolver = new DatabaseRateLimitPolicyResolver({ defaultLimit: 4, defaultWindowSeconds: 5 });
+    const resolved = await resolver.resolve(request, metadata);
+    expect(resolved.limit).toBe(4);
+    expect(resolved.windowSeconds).toBe(5);
+  });
+
+  it('defaults cost to 1 when metadata.cost is undefined', async () => {
+    const resolver = new DatabaseRateLimitPolicyResolver({ defaultLimit: 1, defaultWindowSeconds: 1 });
+    const resolved = await resolver.resolve(request, { bucket: 'tenant', scope: 's' });
+    expect(resolved.cost).toBe(1);
+  });
+});

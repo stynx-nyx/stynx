@@ -1302,3 +1302,49 @@ only the measurement did. Easily recoverable in U16 (see below).
    Not required for cell flip.
 
 Scorecard unchanged at 40/45 PASS (89%).
+
+## §26 — U16: ratelimit quick-win → 14th PASS
+
+Recovered the package count slip from U15 with ~30 min of unit-test
+authoring. ratelimit's gap was two files: rate-limit.guard.ts had
+several un-tested branches (open-circuit paths, distributedStrict,
+JWT-fallback bucket key extraction), and rate-limit-policy.service.ts
+had no spec at all (DB-backed override + platform-config lookup).
+
+### What landed
+
+- `packages/ratelimit/test/unit/rate-limit.guard.spec.ts` — 10 added
+  tests covering: no-metadata bypass, no-resolver bypass, store-missing
+  open-circuit, store-error open-circuit, ServiceUnavailableException
+  rethrow, distributedStrict 503, ip/user/route bucket keys, Bearer-JWT
+  tenant/user extraction, malformed-token graceful fallback, array-form
+  authorization header.
+- `packages/ratelimit/test/unit/rate-limit-policy.service.spec.ts` —
+  new file, 9 tests covering: explicit metadata limit, per-scope
+  defaults, defaultLimit fallback, hardcoded 120/60 fallback, tenant
+  override, platform config lookup, missing tenant skip, missing DB
+  short-circuit, default cost.
+
+### Per-package result
+
+| Package   | U15  | U16       | Δ      |
+| --------- | ---- | --------- | ------ |
+| ratelimit | 78.8 | **96.89** | +18.09 |
+
+### Aggregate state at U16
+
+| Metric           | U15    | U16      |
+| ---------------- | ------ | -------- |
+| Per-package ≥80% | 13     | **14**   |
+| Aggregate F3×T2  | 66.8   | **67.2** |
+| F3×T2 cell       | REVIEW | REVIEW   |
+
+### What's next
+
+Per the U15 sequencing plan, the next move is the backend integration
+scaffold (the load-bearing flip for the F3×T2 cell). Backend has no
+existing int suite; needs a NestJS TestBed harness booting against a
+real Postgres (via the `@stynx/testing` create-test-app helper that
+already provisions Postgres + Redis + LocalStack containers).
+
+Scorecard unchanged at 40/45 PASS (89%).
