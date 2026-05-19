@@ -36,7 +36,7 @@
     "@stynx-web/angular": "workspace:*",
     "@stynx-web/angular-i18n": "workspace:*",
     "@stynx-web/sdk": "workspace:*",
-    "angular-auth-oidc-client": "^21.0.1",
+    "angular-auth-oidc-client": "^21.0.2",
     "rxjs": "^7.8.2"
   },
   "peerDependencies": {
