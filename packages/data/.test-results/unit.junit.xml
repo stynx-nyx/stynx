@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="73" failures="0" errors="0" time="1.112993749">
+    <testsuite name="test/unit/barrel-load.spec.ts" timestamp="2026-05-19T01:36:30.206Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.001425375">
+        <testcase classname="test/unit/barrel-load.spec.ts" name="@stynx/data barrel &gt; exports at least one symbol" time="0.000756333">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/client.spec.ts" timestamp="2026-05-19T01:36:30.208Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.016819083">
+        <testcase classname="test/unit/client.spec.ts" name="createStynxPgClient &gt; constructs a pg.Client from a connection string" time="0.007976833">
+        </testcase>
+        <testcase classname="test/unit/client.spec.ts" name="createStynxPgClient &gt; passes through host/port/user/database options" time="0.00256325">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/database.spec.ts" timestamp="2026-05-19T01:36:30.209Z" hostname="thiamat-1903.local" tests="18" failures="0" errors="0" skipped="0" time="0.030836792">
+        <testcase classname="test/unit/database.spec.ts" name="Database &gt; rejects reader transactions that are not readonly" time="0.001760916">
+        </testcase>
+        <testcase classname="test/unit/database.spec.ts" name="Database &gt; rejects app transactions without tenant context" time="0.000265333">
+        </testcase>
+        <testcase classname="test/unit/database.spec.ts" name="Database &gt; rejects owner transactions outside system context" time="0.000140125">
+        </testcase>
+        <testcase classname="test/unit/database.spec.ts" name="Database &gt; rejects app transactions without actor context when tenant context exists" time="0.000167042">
+        </testcase>
+        <testcase classname="test/unit/database.spec.ts" name="Database &gt; applies request session state, readonly mode, deadline, commit, context cleanup, and release" time="0.00381275">
+        </testcase>
+        <testcase classname="test/unit/database.spec.ts" name="Database &gt; maps PostgreSQL readonly and statement-timeout errors during rollback" time="0.003627709">
+        </testcase>
+        <testcase classname="test/unit/database.spec.ts" name="Database &gt; preserves the original transaction error when rollback also fails" time="0.000730042">
+        </testcase>
+        <testcase classname="test/unit/database.spec.ts" name="Database &gt; does not retry non-PostgreSQL errors or retryable codes when retry is disabled" time="0.000902083">
+        </testcase>
+        <testcase classname="test/unit/database.spec.ts" name="Database &gt; retries retryable errors and reports the final serialization failure context" time="0.002470583">
+        </testcase>
+        <testcase classname="test/unit/database.spec.ts" name="Database &gt; waits the computed jitter before retrying retryable transaction failures" time="0.008004625">
+        </testcase>
+        <testcase classname="test/unit/database.spec.ts" name="Database &gt; does not classify non-Error retry codes or null transaction errors as retryable" time="0.002214958">
+        </testcase>
+        <testcase classname="test/unit/database.spec.ts" name="Database &gt; does not clear a CLS transaction slot that is already inactive in finally" time="0.000469">
+        </testcase>
+        <testcase classname="test/unit/database.spec.ts" name="Database &gt; rejects replica write transactions before resolving tenant context" time="0.000706542">
+        </testcase>
+        <testcase classname="test/unit/database.spec.ts" name="Database &gt; uses replica pool options through withReplica" time="0.000504542">
+        </testcase>
+        <testcase classname="test/unit/database.spec.ts" name="Database &gt; delegates system context without changing the provided execution context" time="0.000237667">
+        </testcase>
+        <testcase classname="test/unit/database.spec.ts" name="Database &gt; runs nested transactions with savepoints and maps nested errors" time="0.000856292">
+        </testcase>
+        <testcase classname="test/unit/database.spec.ts" name="Database &gt; resolves owner execution context from the system context" time="0.002123791">
+        </testcase>
+        <testcase classname="test/unit/database.spec.ts" name="Database &gt; omits optional owner request and actor GUCs when system context lacks them" time="0.000388625">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/errors.spec.ts" timestamp="2026-05-19T01:36:30.213Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.00393625">
+        <testcase classname="test/unit/errors.spec.ts" name="data errors &gt; exposes stable error codes and context" time="0.002757042">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/migration-runner.spec.ts" timestamp="2026-05-19T01:36:30.213Z" hostname="thiamat-1903.local" tests="9" failures="0" errors="0" skipped="0" time="0.787142833">
+        <testcase classname="test/unit/migration-runner.spec.ts" name="StynxMigrationRunner.onModuleInit &gt; no-ops when migrations option is missing" time="0.016862916">
+        </testcase>
+        <testcase classname="test/unit/migration-runner.spec.ts" name="StynxMigrationRunner.onModuleInit &gt; no-ops when migrations.enabled is false" time="0.000240791">
+        </testcase>
+        <testcase classname="test/unit/migration-runner.spec.ts" name="StynxMigrationRunner.onModuleInit &gt; runs platform migrations when migrations.enabled is true" time="0.000337">
+        </testcase>
+        <testcase classname="test/unit/migration-runner.spec.ts" name="StynxMigrationRunner.onModuleInit &gt; invokes the adopter-supplied runner after platform migrations" time="0.000464417">
+        </testcase>
+        <testcase classname="test/unit/migration-runner.spec.ts" name="StynxMigrationRunner.runPlatformMigrations (mocked client) &gt; initializes pools + creates schema_migrations table + releases client" time="0.221619458">
+        </testcase>
+        <testcase classname="test/unit/migration-runner.spec.ts" name="StynxMigrationRunner.runPlatformMigrations (mocked client) &gt; skips migrations whose id is already in core.schema_migrations" time="0.285423166">
+        </testcase>
+        <testcase classname="test/unit/migration-runner.spec.ts" name="StynxMigrationRunner.runPlatformMigrations (mocked client) &gt; rolls back when a migration body throws and rethrows the error" time="0.015581542">
+        </testcase>
+        <testcase classname="test/unit/migration-runner.spec.ts" name="StynxMigrationRunner.runPlatformMigrations (mocked client) &gt; continues migration-dir probing and preserves migration errors when rollback fails" time="0.147272917">
+        </testcase>
+        <testcase classname="test/unit/migration-runner.spec.ts" name="StynxMigrationRunner.runPlatformMigrations (mocked client) &gt; falls back to the packaged migration path when every probe misses" time="0.051004792">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/pools.spec.ts" timestamp="2026-05-19T01:36:30.215Z" hostname="thiamat-1903.local" tests="15" failures="0" errors="0" skipped="0" time="0.043854166">
+        <testcase classname="test/unit/pools.spec.ts" name="createStynxPgPool &gt; creates a Pool from a connection string" time="0.009030417">
+        </testcase>
+        <testcase classname="test/unit/pools.spec.ts" name="createStynxPgPool &gt; swallows idle pool errors from the factory-created pool" time="0.003346041">
+        </testcase>
+        <testcase classname="test/unit/pools.spec.ts" name="createStynxPgPool &gt; passes ssl: true through as { rejectUnauthorized: false }" time="0.000420542">
+        </testcase>
+        <testcase classname="test/unit/pools.spec.ts" name="createStynxPgPool &gt; honors host/port/user/password/database/max/applicationName options" time="0.000677792">
+        </testcase>
+        <testcase classname="test/unit/pools.spec.ts" name="StynxPoolRegistry &gt; creates owner + app + reader pools on init" time="0.012614542">
+        </testcase>
+        <testcase classname="test/unit/pools.spec.ts" name="StynxPoolRegistry &gt; is idempotent — re-init does not re-create pools" time="0.000646458">
+        </testcase>
+        <testcase classname="test/unit/pools.spec.ts" name="StynxPoolRegistry &gt; get(owner) returns the owner pool by default" time="0.00096225">
+        </testcase>
+        <testcase classname="test/unit/pools.spec.ts" name="StynxPoolRegistry &gt; get(app, replica=true) returns the reader pool" time="0.000155083">
+        </testcase>
+        <testcase classname="test/unit/pools.spec.ts" name="StynxPoolRegistry &gt; get(reader) always returns the reader pool" time="0.000128708">
+        </testcase>
+        <testcase classname="test/unit/pools.spec.ts" name="StynxPoolRegistry &gt; resolves connection strings via secretId when no connectionString provided" time="0.001627542">
+        </testcase>
+        <testcase classname="test/unit/pools.spec.ts" name="StynxPoolRegistry &gt; honors JSON-shaped secrets via parseSecretConnection (connectionString field)" time="0.000441375">
+        </testcase>
+        <testcase classname="test/unit/pools.spec.ts" name="StynxPoolRegistry &gt; honors JSON-shaped secrets with `url` field" time="0.000329125">
+        </testcase>
+        <testcase classname="test/unit/pools.spec.ts" name="StynxPoolRegistry &gt; falls through to raw secret when JSON lacks a connection field" time="0.006214458">
+        </testcase>
+        <testcase classname="test/unit/pools.spec.ts" name="StynxPoolRegistry &gt; falls through to raw secret when JSON parse fails" time="0.000275584">
+        </testcase>
+        <testcase classname="test/unit/pools.spec.ts" name="StynxPoolRegistry &gt; throws when a connection has neither connectionString nor secretId" time="0.005274375">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/query-helpers.spec.ts" timestamp="2026-05-19T01:36:30.217Z" hostname="thiamat-1903.local" tests="9" failures="0" errors="0" skipped="0" time="0.1840605">
+        <testcase classname="test/unit/query-helpers.spec.ts" name="query helpers &gt; builds withDeleted SQL with shifted placeholders, tenant guard, ordering, limit, and offset" time="0.117438709">
+        </testcase>
+        <testcase classname="test/unit/query-helpers.spec.ts" name="query helpers &gt; builds onlyDeleted SQL with default archive ordering and no tenant guard for non-tenant tables" time="0.0004975">
+        </testcase>
+        <testcase classname="test/unit/query-helpers.spec.ts" name="query helpers &gt; builds onlyDeleted SQL with explicit predicates, archive ordering, limit, and offset" time="0.000396375">
+        </testcase>
+        <testcase classname="test/unit/query-helpers.spec.ts" name="query helpers &gt; builds onlyDeleted predicates for non-tenant tables without a tenant guard" time="0.006115584">
+        </testcase>
+        <testcase classname="test/unit/query-helpers.spec.ts" name="query helpers &gt; builds withDeleted SQL without predicates, ordering, limits, or tenant guard" time="0.00029825">
+        </testcase>
+        <testcase classname="test/unit/query-helpers.spec.ts" name="query helpers &gt; accepts undefined where clauses and empty ordering lists" time="0.000186833">
+        </testcase>
+        <testcase classname="test/unit/query-helpers.spec.ts" name="query helpers &gt; maps archived rows and keeps promise helpers delegated to execute" time="0.002690291">
+        </testcase>
+        <testcase classname="test/unit/query-helpers.spec.ts" name="query helpers &gt; delegates rejected executions through then and catch callbacks" time="0.005867958">
+        </testcase>
+        <testcase classname="test/unit/query-helpers.spec.ts" name="query helpers &gt; proxies soft-deletable select builders and leaves live-only builders unchanged" time="0.049504167">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/system-context.spec.ts" timestamp="2026-05-19T01:36:30.230Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.024302375">
+        <testcase classname="test/unit/system-context.spec.ts" name="withSystemContext &gt; delegates to database.withSystemContext with the same reason + fn" time="0.004306334">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/table-meta.spec.ts" timestamp="2026-05-19T01:36:30.230Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.003055">
+        <testcase classname="test/unit/table-meta.spec.ts" name="table metadata helpers &gt; quotes identifiers and builds qualified relation names" time="0.0009985">
+        </testcase>
+        <testcase classname="test/unit/table-meta.spec.ts" name="table metadata helpers &gt; defaults unschemed tables to public metadata" time="0.000876125">
+        </testcase>
+        <testcase classname="test/unit/table-meta.spec.ts" name="table metadata helpers &gt; uses explicit schema metadata when present" time="0.0004935">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/transaction.spec.ts" timestamp="2026-05-19T01:36:30.231Z" hostname="thiamat-1903.local" tests="14" failures="0" errors="0" skipped="0" time="0.017561375">
+        <testcase classname="test/unit/transaction.spec.ts" name="Transaction &gt; delegates active read/write primitives and rejects all primitives after close" time="0.003592083">
+        </testcase>
+        <testcase classname="test/unit/transaction.spec.ts" name="Transaction &gt; guards write operations for reader transactions" time="0.001322209">
+        </testcase>
+        <testcase classname="test/unit/transaction.spec.ts" name="Transaction &gt; rejects non-soft-deletable archive operations before querying mirrors" time="0.0017625">
+        </testcase>
+        <testcase classname="test/unit/transaction.spec.ts" name="Transaction &gt; forces cascade restore options through restoreWithCascade defaults" time="0.001942458">
+        </testcase>
+        <testcase classname="test/unit/transaction.spec.ts" name="Transaction &gt; softDelete returns dry-run plans and filters the root archive entry from committed cascades" time="0.000917917">
+        </testcase>
+        <testcase classname="test/unit/transaction.spec.ts" name="Transaction &gt; uses archive table parsing, confirmation, metrics, and archive-size labels for hard deletes" time="0.000752208">
+        </testcase>
+        <testcase classname="test/unit/transaction.spec.ts" name="Transaction &gt; builds recursive cascade plans with exact row counts and depth limits" time="0.000673417">
+        </testcase>
+        <testcase classname="test/unit/transaction.spec.ts" name="Transaction &gt; soft-deletes one reference and maps missing rows and FK delete failures" time="0.000939459">
+        </testcase>
+        <testcase classname="test/unit/transaction.spec.ts" name="Transaction &gt; blocks soft-delete references when cascade depth, row count, or blocking children fail" time="0.000725292">
+        </testcase>
+        <testcase classname="test/unit/transaction.spec.ts" name="Transaction &gt; restores archived references, maps restore conflicts, and cascades child restores" time="0.002034958">
+        </testcase>
+        <testcase classname="test/unit/transaction.spec.ts" name="Transaction &gt; describes blocking children with counts and samples only for non-empty block rows" time="0.000357375">
+        </testcase>
+        <testcase classname="test/unit/transaction.spec.ts" name="Transaction &gt; finds archived parents only when the parent is absent from live rows and present in archive" time="0.0002605">
+        </testcase>
+        <testcase classname="test/unit/transaction.spec.ts" name="Transaction &gt; detects restore conflicts from array and text constraint column metadata" time="0.000401041">
+        </testcase>
+        <testcase classname="test/unit/transaction.spec.ts" name="Transaction &gt; loads column names, checks mirrors, normalizes labels, and samples archive sizes defensively" time="0.000468541">
+        </testcase>
+    </testsuite>
+</testsuites>

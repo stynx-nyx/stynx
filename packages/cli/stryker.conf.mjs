@@ -2,7 +2,6 @@ import { createStrykerConfig } from '../../tools/stryker/base.mjs';
 
 export default createStrykerConfig({
   packageName: '@stynx/cli',
-  threshold: 60,
   mutate: [
     'src/adopt.ts',
     'src/audit.ts',

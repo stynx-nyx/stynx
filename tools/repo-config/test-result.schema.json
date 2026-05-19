@@ -146,6 +146,14 @@
       "properties": {
         "raw": { "type": "string", "description": "Captured stdout/stderr text log." },
         "junit": { "type": "string", "description": "JUnit XML for CI summary integrations." },
+        "json": {
+          "type": "string",
+          "description": "Machine-readable runner report, when available."
+        },
+        "report": {
+          "type": "string",
+          "description": "Machine-readable tool report, when available."
+        },
         "html": {
           "type": "string",
           "description": "Human report (Stryker HTML, lcov-html, etc.)."

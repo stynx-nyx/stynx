@@ -5,13 +5,14 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T01:06:22.033Z",
-  "endedAt": "2026-05-19T01:06:26.679Z",
-  "durationMs": 4643,
+  "startedAt": "2026-05-19T01:38:03.870Z",
+  "endedAt": "2026-05-19T01:38:18.455Z",
+  "durationMs": 14582,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
-    "raw": ".test-results/unit.log"
+    "raw": ".test-results/unit.log",
+    "junit": ".test-results/unit.junit.xml"
   },
   "env": {
     "node": "26.0.0",
@@ -25,7 +26,9 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-7459-1779152782033.json"
+      "--outputFile.json=/tmp/vitest-59078-1779154683870.json",
+      "--reporter=junit",
+      "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/flow/.test-results/unit.junit.xml"
     ],
     "cwd": "/Users/aarusso/Development/stech/stynx/packages/flow"
   },
@@ -42,54 +45,54 @@
   },
   "slowestTests": [
     {
-      "name": "Flow route contracts keeps every Flow route private and permissioned",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/route-contracts.spec.ts",
-      "durationMs": 6.6744589999998425
-    },
-    {
-      "name": "FlowRuntimeService.ensureRun resolves scope code from scopeId when scopeCode is absent",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-runtime.service.spec.ts",
-      "durationMs": 4.823249999999916
-    },
-    {
-      "name": "Flow backend gap contracts dispatches pending effects through the adapter and skips already terminal events on retry",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/gap-contracts.spec.ts",
-      "durationMs": 4.32950000000028
-    },
-    {
-      "name": "Flow validation and regression guards rejects invalid workflow DTOs before they reach the database",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/validation-and-regression.spec.ts",
-      "durationMs": 4.256875000000036
-    },
-    {
-      "name": "Flow validation and regression guards keeps generic Flow source free of PORM/CMS domain coupling",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/validation-and-regression.spec.ts",
-      "durationMs": 3.576459000000341
-    },
-    {
-      "name": "FlowRuntimeService getRun / updateRun / getNodeRun / getTask updateRun returns the camelized updated row",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-runtime.service.spec.ts",
-      "durationMs": 3.0192910000000666
-    },
-    {
-      "name": "Flow controllers delegates design controller methods to FlowDesignService",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/controllers.spec.ts",
-      "durationMs": 2.7289160000000265
-    },
-    {
-      "name": "FlowRuntimeService.taskCandidates passes through non-resolver candidates unchanged",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-runtime.service.spec.ts",
-      "durationMs": 2.183542000000216
-    },
-    {
-      "name": "FlowFormsService forms CRUD listForms scopes by scope_id when provided",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-forms.service.spec.ts",
-      "durationMs": 2.0853329999999914
+      "name": "FlowPolicyService delegates policy set and rule CRUD to the design service",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/branch-helpers.spec.ts",
+      "durationMs": 32.27266700000018
     },
     {
       "name": "Flow row utilities camelizes rows and clamps pagination inputs",
       "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/branch-helpers.spec.ts",
-      "durationMs": 2.0524169999998776
+      "durationMs": 23.882458000000042
+    },
+    {
+      "name": "FlowAnalyticsService adds runs summary filters only for non-empty string values",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/branch-helpers.spec.ts",
+      "durationMs": 23.290750000000116
+    },
+    {
+      "name": "Flow validation and regression guards rejects invalid workflow DTOs before they reach the database",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/validation-and-regression.spec.ts",
+      "durationMs": 17.951749999999265
+    },
+    {
+      "name": "FlowDesignService — scopes createScope INSERTs and returns the new row",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-design.service.spec.ts",
+      "durationMs": 16.073832999999468
+    },
+    {
+      "name": "FlowDesignService — scopes listScopes returns camelized rows",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-design.service.spec.ts",
+      "durationMs": 12.426750000000538
+    },
+    {
+      "name": "Flow backend gap contracts dispatches pending effects through the adapter and skips already terminal events on retry",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/gap-contracts.spec.ts",
+      "durationMs": 11.77954200000022
+    },
+    {
+      "name": "Flow validation and regression guards keeps generic Flow source free of PORM/CMS domain coupling",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/validation-and-regression.spec.ts",
+      "durationMs": 10.780999999999949
+    },
+    {
+      "name": "FlowRuntimeService.dispatchPendingEffects calls adapter.applyEffect and records success",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-runtime.service.spec.ts",
+      "durationMs": 10.723332999999911
+    },
+    {
+      "name": "FlowPolicyService defaults allow when no active policy set resolves",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/branch-helpers.spec.ts",
+      "durationMs": 10.505666999999448
     }
   ]
 }

@@ -5,13 +5,14 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T01:05:19.464Z",
-  "endedAt": "2026-05-19T01:05:27.489Z",
-  "durationMs": 8024,
+  "startedAt": "2026-05-19T01:36:35.991Z",
+  "endedAt": "2026-05-19T01:36:43.319Z",
+  "durationMs": 7327,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
-    "raw": ".test-results/unit.log"
+    "raw": ".test-results/unit.log",
+    "junit": ".test-results/unit.junit.xml"
   },
   "env": {
     "node": "26.0.0",
@@ -25,7 +26,9 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-973-1779152719464.json"
+      "--outputFile.json=/tmp/vitest-55762-1779154595991.json",
+      "--reporter=junit",
+      "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages-web/angular-i18n/.test-results/unit.junit.xml"
     ],
     "cwd": "/Users/aarusso/Development/stech/stynx/packages-web/angular-i18n"
   },
@@ -44,17 +47,17 @@
     {
       "name": "@stynx-web/angular-i18n switches locale through the component and marks the translate pipe for check on locale changes",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-i18n/test/angular-i18n.spec.ts",
-      "durationMs": 4.509624999999687
-    },
-    {
-      "name": "@stynx-web/angular-i18n uses default supported locale and missing interpolation values",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-i18n/test/angular-i18n.spec.ts",
-      "durationMs": 3.2322079999994457
+      "durationMs": 91.49179099999947
     },
     {
       "name": "@stynx-web/angular-i18n switches locale at runtime and updates translations",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-i18n/test/angular-i18n.spec.ts",
-      "durationMs": 2.34637500000008
+      "durationMs": 3.0094579999995403
+    },
+    {
+      "name": "@stynx-web/angular-i18n uses default supported locale and missing interpolation values",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-i18n/test/angular-i18n.spec.ts",
+      "durationMs": 1.1618330000001151
     }
   ]
 }

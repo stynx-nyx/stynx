@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="19" failures="0" errors="0" time="0.018254625">
+    <testsuite name="test/components.spec.ts" timestamp="2026-05-19T01:36:50.603Z" hostname="thiamat-1903.local" tests="12" failures="0" errors="0" skipped="0" time="0.007739875">
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-flow components &gt; binds graph designer inputs to route-like scope and graph ids" time="0.002918916">
+        </testcase>
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-flow components &gt; renders graph canvas selection outputs without mutating layout inputs" time="0.000594375">
+        </testcase>
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-flow components &gt; loads paged open-task analytics envelopes" time="0.000536667">
+        </testcase>
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-flow components &gt; omits query options when API filters are absent" time="0.000278667">
+        </testcase>
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-flow components &gt; captures analytics load failures from Error and non-Error throwables" time="0.000173125">
+        </testcase>
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-flow components &gt; loads run summaries and captures non-Error failures" time="0.000304917">
+        </testcase>
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-flow components &gt; loads forms, fills, tasks, and waivers with optional filters and error branches" time="0.000915042">
+        </testcase>
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-flow components &gt; supports fill editor answer lookup and bulk save intent" time="0.000281">
+        </testcase>
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-flow components &gt; covers form and dialog event defaults" time="0.000221166">
+        </testcase>
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-flow components &gt; normalizes typed fill editor values for package hosts" time="0.000375333">
+        </testcase>
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-flow components &gt; covers fill editor empty, object option, and fallback serialization branches" time="0.000294458">
+        </testcase>
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-flow components &gt; keeps task card action outputs permission-scoped by intent" time="0.000112375">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/flow-api.service.spec.ts" timestamp="2026-05-19T01:36:50.626Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.006696625">
+        <testcase classname="test/flow-api.service.spec.ts" name="FlowApiService endpoint contract &gt; covers design route families for scopes, graphs, nodes, edges, rules, effects, and form gates" time="0.002889125">
+        </testcase>
+        <testcase classname="test/flow-api.service.spec.ts" name="FlowApiService endpoint contract &gt; covers forms, fills, answers, waivers, policies, analytics, signal, and effect routes" time="0.001618833">
+        </testcase>
+        <testcase classname="test/flow-api.service.spec.ts" name="FlowApiService endpoint contract &gt; covers runtime, task action, candidate, user lookup, and event routes" time="0.001143666">
+        </testcase>
+        <testcase classname="test/flow-api.service.spec.ts" name="FlowApiService endpoint contract &gt; omits query options for absent or undefined filters" time="0.0003405">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/routes-and-exports.spec.ts" timestamp="2026-05-19T01:36:50.628Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.003818125">
+        <testcase classname="test/routes-and-exports.spec.ts" name="@stynx-web/angular-flow exports and routes &gt; exports the package API needed by host shells" time="0.00105125">
+        </testcase>
+        <testcase classname="test/routes-and-exports.spec.ts" name="@stynx-web/angular-flow exports and routes &gt; returns a defensive copy of host-mountable routes" time="0.000500708">
+        </testcase>
+        <testcase classname="test/routes-and-exports.spec.ts" name="@stynx-web/angular-flow exports and routes &gt; keeps PORM-derived route concepts and STYNX route names visible" time="0.000440625">
+        </testcase>
+    </testsuite>
+</testsuites>

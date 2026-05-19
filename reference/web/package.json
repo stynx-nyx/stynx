@@ -14,7 +14,7 @@
     "lint": "eslint --config ../../tools/eslint-config/angular.mjs \"src/**/*.ts\"",
     "serve": "node scripts/serve-static.mjs",
     "test": "node ../../scripts/run-and-record.mjs --package @stynx/reference-web --level unit --runner node-test -- node --test test/unit/reference-web-config.spec.mjs",
-    "test:e2e": "playwright test"
+    "test:e2e": "node ../../scripts/run-and-record.mjs --package @stynx/reference-web --level e2e --runner playwright -- playwright test"
   },
   "dependencies": {
     "@angular/common": "^21.2.10",

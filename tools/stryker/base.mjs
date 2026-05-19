@@ -1,3 +1,5 @@
+import { getMutationThreshold } from '../repo-config/test-thresholds.mjs';
+
 export function createStrykerConfig({
   packageName,
   threshold,
@@ -8,6 +10,11 @@ export function createStrykerConfig({
   timeoutMS,
 }) {
   const incremental = process.env.STRYKER_INCREMENTAL !== 'false';
+  // `threshold` argument is optional — resolves from
+  // scripts/test-matrix.config.json via test-thresholds.mjs when absent.
+  const resolvedThreshold = typeof threshold === 'number'
+    ? threshold
+    : getMutationThreshold(packageName);
   return {
     packageManager: 'pnpm',
     plugins: ['@stryker-mutator/vitest-runner', '@stryker-mutator/typescript-checker'],
@@ -27,9 +34,9 @@ export function createStrykerConfig({
     },
     reporters: ['clear-text', 'progress', 'html', 'json'],
     thresholds: {
-      high: threshold,
-      low: Math.max(60, threshold - 10),
-      break: threshold,
+      high: resolvedThreshold,
+      low: Math.max(60, resolvedThreshold - 10),
+      break: resolvedThreshold,
     },
     htmlReporter: {
       fileName: `reports/mutation/${packageName.replace(/[@/]/g, '-')}/index.html`,

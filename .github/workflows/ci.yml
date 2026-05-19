@@ -233,6 +233,29 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Run STYNX unit tests
         run: pnpm test
+      - name: Upload canonical test-result artifacts (unit)
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-unit
+          path: |
+            packages/*/.test-results/**
+            packages-web/*/.test-results/**
+            tools/*/.test-results/**
+            test/*/.test-results/**
+            reference/*/.test-results/**
+            domain/*/*/.test-results/**
+            infra/*/.test-results/**
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Publish JUnit summary (unit)
+        if: ${{ always() }}
+        uses: mikepenz/action-junit-report@v4
+        with:
+          report_paths: '**/.test-results/unit.junit.xml'
+          check_name: unit-tests
+          fail_on_failure: false
+          require_tests: false
 
   integration-tests:
     name: integration-tests
@@ -298,6 +321,26 @@ jobs:
         run: pnpm check:rls-smoke
       - name: Run STYNX integration tests
         run: pnpm test:int
+      - name: Upload canonical test-result artifacts (integration + smoke)
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-integration
+          path: |
+            packages/*/.test-results/**
+            reference/*/.test-results/**
+            domain/*/*/.test-results/**
+            .test-results/**
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Publish JUnit summary (integration)
+        if: ${{ always() }}
+        uses: mikepenz/action-junit-report@v4
+        with:
+          report_paths: '**/.test-results/integration.junit.xml'
+          check_name: integration-tests
+          fail_on_failure: false
+          require_tests: false
 
   build:
     name: build (${{ matrix.os }})

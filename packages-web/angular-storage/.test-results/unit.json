@@ -5,13 +5,14 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T01:05:20.065Z",
-  "endedAt": "2026-05-19T01:05:28.698Z",
-  "durationMs": 8620,
+  "startedAt": "2026-05-19T01:36:36.829Z",
+  "endedAt": "2026-05-19T01:36:45.029Z",
+  "durationMs": 8197,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
-    "raw": ".test-results/unit.log"
+    "raw": ".test-results/unit.log",
+    "junit": ".test-results/unit.junit.xml"
   },
   "env": {
     "node": "26.0.0",
@@ -25,7 +26,9 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-1214-1779152720064.json"
+      "--outputFile.json=/tmp/vitest-55790-1779154596829.json",
+      "--reporter=junit",
+      "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/.test-results/unit.junit.xml"
     ],
     "cwd": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage"
   },
@@ -42,34 +45,34 @@
   },
   "slowestTests": [
     {
-      "name": "@stynx-web/angular-storage moves through initiating, uploading, and completed states",
+      "name": "@stynx-web/angular-storage calls the document API endpoints with normalized base URLs",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
-      "durationMs": 12.620833000000857
+      "durationMs": 15.274916999999732
     },
     {
       "name": "@stynx-web/angular-storage uploads files through XMLHttpRequest with progress, success, and failure paths",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
-      "durationMs": 4.465499999999338
-    },
-    {
-      "name": "@stynx-web/angular-storage handles selected files, quarantine completion, and generic failures",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
-      "durationMs": 4.165334000000257
-    },
-    {
-      "name": "@stynx-web/angular-storage calls the document API endpoints with normalized base URLs",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
-      "durationMs": 1.4383340000003955
+      "durationMs": 7.968124999999418
     },
     {
       "name": "@stynx-web/angular-storage rejects invalid files and surfaces upload failures",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
-      "durationMs": 0.4054169999999431
+      "durationMs": 4.864875000000211
+    },
+    {
+      "name": "@stynx-web/angular-storage handles selected files, quarantine completion, and generic failures",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
+      "durationMs": 3.5053750000006403
+    },
+    {
+      "name": "@stynx-web/angular-storage moves through initiating, uploading, and completed states",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
+      "durationMs": 2.557292000000416
     },
     {
       "name": "@stynx-web/angular-storage ignores empty file selection events",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
-      "durationMs": 0.12604100000044127
+      "durationMs": 0.7066659999991316
     }
   ]
 }

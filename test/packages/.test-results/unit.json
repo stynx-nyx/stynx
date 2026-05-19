@@ -5,13 +5,14 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T01:04:43.149Z",
-  "endedAt": "2026-05-19T01:04:52.132Z",
-  "durationMs": 8982,
+  "startedAt": "2026-05-19T01:35:46.917Z",
+  "endedAt": "2026-05-19T01:35:59.436Z",
+  "durationMs": 12516,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
-    "raw": ".test-results/unit.log"
+    "raw": ".test-results/unit.log",
+    "junit": ".test-results/unit.junit.xml"
   },
   "env": {
     "node": "26.0.0",
@@ -25,7 +26,9 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-97345-1779152683149.json"
+      "--outputFile.json=/tmp/vitest-53989-1779154546916.json",
+      "--reporter=junit",
+      "--outputFile.junit=/Users/aarusso/Development/stech/stynx/test/packages/.test-results/unit.junit.xml"
     ],
     "cwd": "/Users/aarusso/Development/stech/stynx/test/packages"
   },
@@ -42,54 +45,54 @@
   },
   "slowestTests": [
     {
-      "name": "PgSessionDbContextApplier applies row_security and session keys with compatibility mappings",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/db-context/pg-session-db-context.applier.spec.ts",
-      "durationMs": 28.667209000000184
-    },
-    {
-      "name": "RateLimitGuard throws service unavailable when strict distributed mode fails",
+      "name": "RateLimitGuard bypasses health-check path",
       "file": "/Users/aarusso/Development/stech/stynx/test/packages/rate-limit/rate-limit.guard.spec.ts",
-      "durationMs": 22.622125000000096
+      "durationMs": 115.44624999999996
     },
     {
-      "name": "PgIdentityLocalSyncAdapter syncs users/groups into local tables and returns counters",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/identity-admin/pg-local-sync.adapter.spec.ts",
-      "durationMs": 13.872125000000324
+      "name": "RateLimitGuard enforces in-memory limit when distributed path is unavailable",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/rate-limit/rate-limit.guard.spec.ts",
+      "durationMs": 72.5574160000001
     },
     {
-      "name": "AuthContextGuard attaches principal, req.user and request.actor compatibility shapes",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/auth/auth-context.guard.spec.ts",
-      "durationMs": 13.713541999999961
+      "name": "StynxAuditService hash-chain verification accepts a valid chain",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/audit/hash-chain.spec.ts",
+      "durationMs": 58.819375000000036
     },
     {
-      "name": "SlaMonitorInterceptor emits sample event with threshold/breach information",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/sla/sla-monitor.interceptor.spec.ts",
-      "durationMs": 6.880833000000166
-    },
-    {
-      "name": "StynxApiClient injects auth and tenant headers",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/frontend-client/api-client.spec.ts",
-      "durationMs": 6.22204099999999
+      "name": "RateLimitGuard uses distributed store when tenant is present",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/rate-limit/rate-limit.guard.spec.ts",
+      "durationMs": 24.33895900000016
     },
     {
       "name": "PormIdentityAdminFacade maps list/get to porm-compatible shape with attributes and groups",
       "file": "/Users/aarusso/Development/stech/stynx/test/packages/identity-admin/integration-facades.spec.ts",
-      "durationMs": 6.12762500000008
+      "durationMs": 17.97820799999954
     },
     {
-      "name": "ClaimFirstTenantEntitlementPolicy accepts when tenant appears in claim list",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/auth/tenant-entitlement.spec.ts",
-      "durationMs": 5.938125000000127
+      "name": "IdempotencyInterceptor rejects write request without idempotency key when required",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/idempotency/idempotency.interceptor.spec.ts",
+      "durationMs": 17.517832999999882
+    },
+    {
+      "name": "SlaMonitorInterceptor emits sample event with threshold/breach information",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/sla/sla-monitor.interceptor.spec.ts",
+      "durationMs": 15.726541999999881
+    },
+    {
+      "name": "SlaMonitorInterceptor emits error-path sample when downstream handler fails",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/sla/sla-monitor.interceptor.spec.ts",
+      "durationMs": 13.543999999999869
     },
     {
       "name": "IdentityAdminService maps IdentityAdminError to Nest exceptions",
       "file": "/Users/aarusso/Development/stech/stynx/test/packages/identity-admin/identity-admin.service.spec.ts",
-      "durationMs": 5.500792000000274
+      "durationMs": 10.771958000000268
     },
     {
-      "name": "SqlTenantEntitlementFallback queries executor and returns true when membership row exists",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/auth/tenant-entitlement.spec.ts",
-      "durationMs": 5.238084000000072
+      "name": "PgSessionDbContextApplier applies row_security and session keys with compatibility mappings",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/db-context/pg-session-db-context.applier.spec.ts",
+      "durationMs": 5.845458000000008
     }
   ]
 }

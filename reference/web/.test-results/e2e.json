@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx/reference-web",
+  "level": "e2e",
+  "runner": "playwright",
+  "status": "passed",
+  "startedAt": "2026-05-19T01:31:58.308Z",
+  "endedAt": "2026-05-19T01:32:06.527Z",
+  "durationMs": 8219,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/e2e.log",
+    "json": ".test-results/e2e.playwright.json"
+  },
+  "env": {
+    "node": "24.15.0",
+    "ci": false
+  },
+  "command": {
+    "argv": ["playwright", "test", "--reporter=line,json"],
+    "cwd": "/Users/aarusso/Development/stech/stynx/reference/web"
+  },
+  "metric": {
+    "kind": "none"
+  },
+  "totals": {
+    "files": 3,
+    "tests": 4,
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "slowestTests": [
+    {
+      "name": "login -> create record -> create work-item -> soft-delete -> restore -> logout",
+      "file": "reference-web.spec.ts",
+      "durationMs": 5833
+    },
+    {
+      "name": "record soft-delete appears in trash and can be restored",
+      "file": "record-trash.spec.ts",
+      "durationMs": 5705
+    },
+    {
+      "name": "mounts generic Flow package routes for an authorized reference tenant admin",
+      "file": "flow-access.spec.ts",
+      "durationMs": 3516
+    },
+    {
+      "name": "requires a session before mounting Flow routes",
+      "file": "flow-access.spec.ts",
+      "durationMs": 832
+    }
+  ]
+}

@@ -25,15 +25,23 @@
     },
     "test": {
       "dependsOn": ["build", "^build"],
-      "outputs": [".test-results/unit.json", ".test-results/unit.log"]
+      "outputs": [
+        ".test-results/unit.json",
+        ".test-results/unit.log",
+        ".test-results/unit.junit.xml"
+      ]
     },
     "test:int": {
       "dependsOn": ["build", "^build"],
-      "outputs": [".test-results/integration.json", ".test-results/integration.log"]
+      "outputs": [
+        ".test-results/integration.json",
+        ".test-results/integration.log",
+        ".test-results/integration.junit.xml"
+      ]
     },
     "test:e2e": {
       "dependsOn": ["build", "^build"],
-      "outputs": [".test-results/e2e.json", ".test-results/e2e.log"]
+      "outputs": [".test-results/e2e.json", ".test-results/e2e.log", ".test-results/e2e.junit.xml"]
     }
   }
 }

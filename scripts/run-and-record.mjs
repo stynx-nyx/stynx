@@ -12,9 +12,9 @@
 //   node scripts/run-and-record.mjs \
 //     --package <name>     # e.g. @stynx/contracts
 //     --level   <level>    # unit|integration|e2e|mutation|perf|coverage|smoke
-//     --runner  <runner>   # vitest|stryker-vitest|perf-smoke|rls-smoke
+//     --runner  <runner>   # vitest|stryker-vitest|playwright|node-test|perf-smoke|rls-smoke
 //     [--output-dir <path>] # default: <cwd>/.test-results
-//     [--keep-junit]       # keep the JUnit XML companion (default off for now)
+//     [--no-junit]         # suppress the JUnit XML companion (default on)
 //     [--coverage-source <path>]
 //                          # for --level=coverage: explicit path to a vitest
 //                          # coverage-final.json to read percentages from.
@@ -52,13 +52,16 @@ const VALID_LEVELS = new Set([
 const VALID_RUNNERS = new Set([
   'vitest',
   'stryker-vitest',
+  'playwright',
   'perf-smoke',
   'rls-smoke',
   'node-test',
 ]);
 
 function parseArgs(argv) {
-  const args = { command: [], keepJunit: false };
+  // JUnit emission is on by default (R5). Pass `--no-junit` to suppress —
+  // useful for very-large-suite runs where the XML file is a hot artifact.
+  const args = { command: [], keepJunit: true };
   const flags = argv.slice(2);
   const sepIdx = flags.indexOf('--');
   if (sepIdx === -1) {
@@ -76,6 +79,7 @@ function parseArgs(argv) {
     else if (a === '--runner') args.runner = head[++i];
     else if (a === '--output-dir') args.outputDir = head[++i];
     else if (a === '--keep-junit') args.keepJunit = true;
+    else if (a === '--no-junit') args.keepJunit = false;
     else if (a === '--coverage-source') args.coverageSource = head[++i];
     else throw new Error(`Unknown flag: ${a}`);
   }
@@ -99,6 +103,7 @@ async function main() {
   const junitPath = join(outputDir, `${args.level}.junit.xml`);
 
   const tmpVitestReport = join(tmpdir(), `vitest-${process.pid}-${Date.now()}.json`);
+  const playwrightReportPath = join(outputDir, `${args.level}.playwright.json`);
 
   // For Vitest, inject reporters and the JSON outputFile via env. Vitest 3
   // honours VITEST_REPORTER and --outputFile flags, but the simplest path is
@@ -107,6 +112,7 @@ async function main() {
   // when --runner=vitest. The default reporter keeps developer UX; the json
   // reporter gives us machine-readable results.
   let commandArgs = [...args.command];
+  const commandEnv = { ...process.env };
   if (args.runner === 'vitest') {
     commandArgs.push(
       '--reporter=default',
@@ -116,6 +122,16 @@ async function main() {
     if (args.keepJunit) {
       commandArgs.push('--reporter=junit', `--outputFile.junit=${junitPath}`);
     }
+  } else if (args.runner === 'playwright') {
+    commandArgs.push('--reporter=line,json');
+    commandEnv.PLAYWRIGHT_JSON_OUTPUT_NAME = playwrightReportPath;
+  }
+  while (/^[A-Za-z_][A-Za-z0-9_]*=/.test(commandArgs[0] ?? '')) {
+    const [name, ...valueParts] = commandArgs.shift().split('=');
+    commandEnv[name] = valueParts.join('=');
+  }
+  if (args.runner === 'stryker-vitest') {
+    rmSync(join(cwd, 'reports', 'mutation', 'mutation.json'), { force: true });
   }
 
   const startedAt = new Date();
@@ -125,7 +141,7 @@ async function main() {
 
   const child = spawn(commandArgs[0], commandArgs.slice(1), {
     cwd,
-    env: process.env,
+    env: commandEnv,
     stdio: ['inherit', 'pipe', 'pipe'],
   });
 
@@ -184,6 +200,8 @@ async function main() {
     rmSync(tmpVitestReport, { force: true });
   } else if (args.runner === 'stryker-vitest') {
     enrichFromStryker(artifact, cwd);
+  } else if (args.runner === 'playwright' && existsSync(playwrightReportPath)) {
+    enrichFromPlaywright(artifact, playwrightReportPath, cwd);
   } else if (args.runner === 'perf-smoke') {
     enrichFromPerfSmoke(artifact, stdoutBuf);
   } else if (args.runner === 'rls-smoke') {
@@ -236,6 +254,18 @@ async function detectRunnerVersion(runner) {
       try {
         const req = (await import('node:module')).createRequire(import.meta.url);
         return req('vitest/package.json').version;
+      } catch {
+        return undefined;
+      }
+    }
+  }
+  if (runner === 'playwright') {
+    try {
+      return (await import('@playwright/test/package.json', { with: { type: 'json' } })).default.version;
+    } catch {
+      try {
+        const req = (await import('node:module')).createRequire(import.meta.url);
+        return req('@playwright/test/package.json').version;
       } catch {
         return undefined;
       }
@@ -332,6 +362,57 @@ function enrichFromStryker(artifact, cwd) {
   }
 }
 
+function enrichFromPlaywright(artifact, reportPath, cwd) {
+  let payload;
+  try {
+    payload = JSON.parse(readFileSync(reportPath, 'utf8'));
+  } catch {
+    return;
+  }
+
+  const files = new Set();
+  const totals = { files: 0, tests: 0, passed: 0, failed: 0, skipped: 0, todo: 0 };
+  const slowest = [];
+
+  function walkSuite(suite, inheritedFile) {
+    const suiteFile = suite.file ?? inheritedFile;
+    for (const child of suite.suites ?? []) walkSuite(child, suiteFile);
+    for (const spec of suite.specs ?? []) {
+      const file = spec.file ?? suiteFile;
+      if (file) files.add(file);
+      for (const test of spec.tests ?? []) {
+        totals.tests += 1;
+        const statuses = (test.results ?? []).map((r) => r.status);
+        const durationMs = (test.results ?? []).reduce((sum, r) => sum + (r.duration ?? 0), 0);
+        const outcome = test.outcome ?? '';
+        if (statuses.includes('skipped') || outcome === 'skipped') {
+          totals.skipped += 1;
+        } else if (outcome === 'expected' || outcome === 'flaky' || statuses.includes('passed')) {
+          totals.passed += 1;
+        } else {
+          totals.failed += 1;
+        }
+        if (durationMs > 0) {
+          slowest.push({
+            name: [...(test.titlePath ?? []), spec.title].filter(Boolean).join(' > ') || spec.title || '(unnamed)',
+            file,
+            durationMs,
+          });
+        }
+      }
+    }
+  }
+
+  for (const suite of payload.suites ?? []) walkSuite(suite);
+  totals.files = files.size;
+  artifact.totals = totals;
+  slowest.sort((a, b) => b.durationMs - a.durationMs);
+  artifact.slowestTests = slowest.slice(0, 10);
+  artifact.artifacts.json = relativeTo(cwd, reportPath);
+  if (totals.failed > 0) artifact.status = 'failed';
+  if (artifact.status === 'passed' && totals.tests === 0) artifact.status = 'skipped';
+}
+
 // perf-smoke emits one JSON line on stdout: { p50_ms, p95_ms, throughput_rps }.
 function enrichFromPerfSmoke(artifact, stdout) {
   const lines = stdout.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
@@ -425,18 +506,26 @@ function round2(n) {
 //   # duration_ms <n>
 // when run with the default spec reporter.
 function enrichFromNodeTest(artifact, stdout) {
-  const totals = { files: null, tests: 0, passed: 0, failed: 0, skipped: 0, todo: 0 };
-  const re = /^\s*[#ℹ]\s+(tests|pass|fail|skipped|todo|duration_ms)\b[^\d]*([\d.]+)/im;
+  const totals = { files: 0, tests: 0, passed: 0, failed: 0, skipped: 0, todo: 0 };
+  const re = /^\s*[#ℹ]?\s*(tests|suites|pass|fail|skipped|todo|duration_ms)\b[^\d]*([\d.]+)/i;
   for (const line of stdout.split(/\r?\n/)) {
     const m = line.match(re);
-    if (!m) continue;
-    const n = Number(m[2]);
-    if (Number.isNaN(n)) continue;
-    if (m[1] === 'tests') totals.tests = n;
-    else if (m[1] === 'pass') totals.passed = n;
-    else if (m[1] === 'fail') totals.failed = n;
-    else if (m[1] === 'skipped') totals.skipped = n;
-    else if (m[1] === 'todo') totals.todo = n;
+    if (m) {
+      const n = Number(m[2]);
+      if (!Number.isNaN(n)) {
+        if (m[1].toLowerCase() === 'tests') totals.tests = n;
+        else if (m[1].toLowerCase() === 'suites') totals.files = n;
+        else if (m[1].toLowerCase() === 'pass') totals.passed = n;
+        else if (m[1].toLowerCase() === 'fail') totals.failed = n;
+        else if (m[1].toLowerCase() === 'skipped') totals.skipped = n;
+        else if (m[1].toLowerCase() === 'todo') totals.todo = n;
+      }
+    }
+    const simple = line.match(/Tests:\s+(\d+)\s+passed,\s+(\d+)\s+total/i);
+    if (simple) {
+      totals.passed = Number(simple[1]);
+      totals.tests = Number(simple[2]);
+    }
   }
   if (totals.tests > 0) {
     artifact.totals = totals;

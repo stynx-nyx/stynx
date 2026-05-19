@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="10" failures="0" errors="0" time="0.064855083">
+    <testsuite name="test/angular-tenancy.spec.ts" timestamp="2026-05-19T01:36:03.340Z" hostname="thiamat-1903.local" tests="9" failures="0" errors="0" skipped="0" time="0.049115041">
+        <testcase classname="test/angular-tenancy.spec.ts" name="@stynx-web/angular-tenancy &gt; provides tenancy options, browser window fallback, initializer, and interceptor providers" time="0.005138834">
+        </testcase>
+        <testcase classname="test/angular-tenancy.spec.ts" name="@stynx-web/angular-tenancy &gt; provides default tenancy options" time="0.006407084">
+        </testcase>
+        <testcase classname="test/angular-tenancy.spec.ts" name="@stynx-web/angular-tenancy &gt; initializes tenants from query, subdomain, default resolver, and clear" time="0.008984584">
+        </testcase>
+        <testcase classname="test/angular-tenancy.spec.ts" name="@stynx-web/angular-tenancy &gt; normalizes URL and host edge cases before using the default resolver" time="0.000780209">
+        </testcase>
+        <testcase classname="test/angular-tenancy.spec.ts" name="@stynx-web/angular-tenancy &gt; leaves tenant unset when no source resolves and supports manual source default" time="0.000306709">
+        </testcase>
+        <testcase classname="test/angular-tenancy.spec.ts" name="@stynx-web/angular-tenancy &gt; adds X-Tenant-Id from the current tenant context" time="0.005535209">
+        </testcase>
+        <testcase classname="test/angular-tenancy.spec.ts" name="@stynx-web/angular-tenancy &gt; does not override an existing tenant header" time="0.000463792">
+        </testcase>
+        <testcase classname="test/angular-tenancy.spec.ts" name="@stynx-web/angular-tenancy &gt; tenant switcher ignores empty selections and emits manual tenant changes" time="0.010150958">
+        </testcase>
+        <testcase classname="test/angular-tenancy.spec.ts" name="@stynx-web/angular-tenancy &gt; constructs the tenant switcher in an injection context" time="0.008168209">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/provide-tenancy.node.spec.ts" timestamp="2026-05-19T01:36:03.373Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.015740042">
+        <testcase classname="test/provide-tenancy.node.spec.ts" name="provideTenancy SSR window provider &gt; returns null when no browser window is available" time="0.001269875">
+        </testcase>
+    </testsuite>
+</testsuites>

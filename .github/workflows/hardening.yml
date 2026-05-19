@@ -266,9 +266,12 @@ jobs:
           STRYKER_INCREMENTAL: 'false'
         run: pnpm --filter "${{ matrix.filter }}" stryker
 
-      - name: Upload mutation reports
+      - name: Upload mutation reports (legacy + canonical)
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: mutation-report-${{ matrix.package }}
-          path: ${{ matrix.report_path }}
+          path: |
+            ${{ matrix.report_path }}
+            packages/${{ matrix.package }}/.test-results/mutation.json
+            packages/${{ matrix.package }}/.test-results/mutation.log
           if-no-files-found: error

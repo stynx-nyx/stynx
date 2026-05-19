@@ -5,13 +5,14 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T01:05:22.129Z",
-  "endedAt": "2026-05-19T01:05:32.252Z",
-  "durationMs": 10118,
+  "startedAt": "2026-05-19T01:36:43.051Z",
+  "endedAt": "2026-05-19T01:36:50.894Z",
+  "durationMs": 7837,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
-    "raw": ".test-results/unit.log"
+    "raw": ".test-results/unit.log",
+    "junit": ".test-results/unit.junit.xml"
   },
   "env": {
     "node": "26.0.0",
@@ -25,7 +26,9 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-1658-1779152722129.json"
+      "--outputFile.json=/tmp/vitest-56028-1779154603051.json",
+      "--reporter=junit",
+      "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/.test-results/unit.junit.xml"
     ],
     "cwd": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow"
   },
@@ -42,54 +45,54 @@
   },
   "slowestTests": [
     {
-      "name": "@stynx-web/angular-flow components omits query options when API filters are absent",
+      "name": "@stynx-web/angular-flow components binds graph designer inputs to route-like scope and graph ids",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
-      "durationMs": 23.907459000000017
-    },
-    {
-      "name": "@stynx-web/angular-flow components loads run summaries and captures non-Error failures",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
-      "durationMs": 12.372082999999293
-    },
-    {
-      "name": "@stynx-web/angular-flow components loads forms, fills, tasks, and waivers with optional filters and error branches",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
-      "durationMs": 12.135041000000456
-    },
-    {
-      "name": "@stynx-web/angular-flow components normalizes typed fill editor values for package hosts",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
-      "durationMs": 11.57299999999941
+      "durationMs": 2.9189159999996264
     },
     {
       "name": "FlowApiService endpoint contract covers design route families for scopes, graphs, nodes, edges, rules, effects, and form gates",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/flow-api.service.spec.ts",
-      "durationMs": 7.533042000000023
+      "durationMs": 2.889125000000604
     },
     {
       "name": "FlowApiService endpoint contract covers forms, fills, answers, waivers, policies, analytics, signal, and effect routes",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/flow-api.service.spec.ts",
-      "durationMs": 6.069375000000036
+      "durationMs": 1.6188330000004498
     },
     {
-      "name": "@stynx-web/angular-flow components captures analytics load failures from Error and non-Error throwables",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
-      "durationMs": 5.671165999999175
-    },
-    {
-      "name": "@stynx-web/angular-flow components covers fill editor empty, object option, and fallback serialization branches",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
-      "durationMs": 5.658750000000509
-    },
-    {
-      "name": "@stynx-web/angular-flow components binds graph designer inputs to route-like scope and graph ids",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
-      "durationMs": 3.1530830000001515
+      "name": "FlowApiService endpoint contract covers runtime, task action, candidate, user lookup, and event routes",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/flow-api.service.spec.ts",
+      "durationMs": 1.1436659999999392
     },
     {
       "name": "@stynx-web/angular-flow exports and routes exports the package API needed by host shells",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/routes-and-exports.spec.ts",
-      "durationMs": 2.47387499999968
+      "durationMs": 1.051249999999527
+    },
+    {
+      "name": "@stynx-web/angular-flow components loads forms, fills, tasks, and waivers with optional filters and error branches",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
+      "durationMs": 0.9150420000005397
+    },
+    {
+      "name": "@stynx-web/angular-flow components renders graph canvas selection outputs without mutating layout inputs",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
+      "durationMs": 0.5943750000005821
+    },
+    {
+      "name": "@stynx-web/angular-flow components loads paged open-task analytics envelopes",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
+      "durationMs": 0.5366670000003069
+    },
+    {
+      "name": "@stynx-web/angular-flow exports and routes returns a defensive copy of host-mountable routes",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/routes-and-exports.spec.ts",
+      "durationMs": 0.5007080000004862
+    },
+    {
+      "name": "@stynx-web/angular-flow exports and routes keeps PORM-derived route concepts and STYNX route names visible",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/routes-and-exports.spec.ts",
+      "durationMs": 0.4406249999992724
     }
   ]
 }

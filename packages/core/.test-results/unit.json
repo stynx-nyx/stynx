@@ -5,13 +5,14 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T01:04:53.060Z",
-  "endedAt": "2026-05-19T01:04:58.638Z",
-  "durationMs": 5577,
+  "startedAt": "2026-05-19T01:36:00.429Z",
+  "endedAt": "2026-05-19T01:36:08.201Z",
+  "durationMs": 7771,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
-    "raw": ".test-results/unit.log"
+    "raw": ".test-results/unit.log",
+    "junit": ".test-results/unit.junit.xml"
   },
   "env": {
     "node": "26.0.0",
@@ -25,7 +26,9 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-98094-1779152693060.json"
+      "--outputFile.json=/tmp/vitest-54716-1779154560428.json",
+      "--reporter=junit",
+      "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/core/.test-results/unit.junit.xml"
     ],
     "cwd": "/Users/aarusso/Development/stech/stynx/packages/core"
   },
@@ -42,54 +45,54 @@
   },
   "slowestTests": [
     {
-      "name": "StynxErrorFilter forwards plain HttpException with its status + response body",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/error.filter.spec.ts",
-      "durationMs": 41.2292910000001
-    },
-    {
-      "name": "StynxErrorFilter translates StynxError into the standard envelope at exception.status",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/error.filter.spec.ts",
-      "durationMs": 33.758790999999746
-    },
-    {
-      "name": "RequestContextInterceptor generates a UUIDv7 request id when none provided and sets X-Request-Id",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/request-context.interceptor.spec.ts",
-      "durationMs": 24.592290999999932
+      "name": "SecretLoader caches the secret value within ttlMs",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/secret-loader.spec.ts",
+      "durationMs": 110.41320799999994
     },
     {
       "name": "StynxErrorFilter omits context from the body when StynxError carries none",
       "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/error.filter.spec.ts",
-      "durationMs": 15.99408399999993
+      "durationMs": 81.09266700000035
     },
     {
-      "name": "SecretLoader caches the secret value within ttlMs",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/secret-loader.spec.ts",
-      "durationMs": 13.217000000000098
-    },
-    {
-      "name": "loadStynxConfiguration SSM loading loads paged SSM values using the default environment prefix",
+      "name": "loadStynxConfiguration SSM loading reports schema validation failures after merging defaults and env",
       "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/config-ssm.spec.ts",
-      "durationMs": 8.38287500000024
+      "durationMs": 80.47958400000016
+    },
+    {
+      "name": "SecretLoader refetches when the cached secret expires exactly at the current time",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/secret-loader.spec.ts",
+      "durationMs": 71.03749999999991
+    },
+    {
+      "name": "loadStynxConfiguration SSM loading uses the dev SSM prefix fallback and accepts empty parameter pages",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/config-ssm.spec.ts",
+      "durationMs": 45.61320800000021
+    },
+    {
+      "name": "loadStynxConfiguration SSM loading ignores empty ownership metadata entries",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/config-ssm.spec.ts",
+      "durationMs": 42.302790999999615
+    },
+    {
+      "name": "StynxErrorFilter rethrows when the exception is neither HttpException nor StynxError",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/error.filter.spec.ts",
+      "durationMs": 29.01520900000014
+    },
+    {
+      "name": "SecretLoader throws SecretLoadError when the SDK returns no SecretString",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/secret-loader.spec.ts",
+      "durationMs": 27.635249999999814
     },
     {
       "name": "StynxCoreModule wires sync and async option providers plus global infrastructure",
       "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/core.module.spec.ts",
-      "durationMs": 4.840750000000298
+      "durationMs": 25.506207999999788
     },
     {
       "name": "SystemContext requires a readable reason and records an audit event",
       "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/system-context.spec.ts",
-      "durationMs": 2.917124999999942
-    },
-    {
-      "name": "request id helpers generates a UUIDv7-shaped request id",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/request-id.spec.ts",
-      "durationMs": 1.8851250000000164
-    },
-    {
-      "name": "SecretLoader refreshes a cached secret after a connection-like run failure",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/secret-loader.spec.ts",
-      "durationMs": 1.786583999999948
+      "durationMs": 17.180667000000085
     }
   ]
 }

@@ -5,13 +5,14 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T01:06:11.379Z",
-  "endedAt": "2026-05-19T01:06:33.591Z",
-  "durationMs": 22198,
+  "startedAt": "2026-05-19T01:37:49.030Z",
+  "endedAt": "2026-05-19T01:38:30.872Z",
+  "durationMs": 41840,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
-    "raw": ".test-results/unit.log"
+    "raw": ".test-results/unit.log",
+    "junit": ".test-results/unit.junit.xml"
   },
   "env": {
     "node": "26.0.0",
@@ -25,7 +26,9 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-5485-1779152771379.json"
+      "--outputFile.json=/tmp/vitest-58879-1779154669030.json",
+      "--reporter=junit",
+      "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/i18n/.test-results/unit.junit.xml"
     ],
     "cwd": "/Users/aarusso/Development/stech/stynx/packages/i18n"
   },
@@ -44,52 +47,52 @@
     {
       "name": "StynxI18nModule integration resolves locale order, applies tenant overrides, renders ICU messages, and localizes errors",
       "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/integration/i18n.module.spec.ts",
-      "durationMs": 11596.227499999999
+      "durationMs": 29801.526834
     },
     {
-      "name": "CatalogService.translate returns the locale-specific message when present",
+      "name": "CatalogService.supportedLocales skips package entries whose i18n path is not a directory and uses the built-in default locale",
       "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/unit/catalog.spec.ts",
-      "durationMs": 26.950208000000202
+      "durationMs": 52.04874999999993
     },
     {
-      "name": "LocalizedErrorFilter passes non-STYNX HTTP exceptions through unchanged",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/unit/localized-error.filter.spec.ts",
-      "durationMs": 18.872041999999965
-    },
-    {
-      "name": "LocaleService returns the active request locale without patching context",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/unit/locale.spec.ts",
-      "durationMs": 16.457416000000194
-    },
-    {
-      "name": "LocalizedErrorFilter localizes STYNX errors and logs warn/error branches",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/unit/localized-error.filter.spec.ts",
-      "durationMs": 15.985584000000017
-    },
-    {
-      "name": "ErrorTranslatorService delegates translate(key, locale, vars) to LocaleService.t",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/unit/error-translator.spec.ts",
-      "durationMs": 15.46033400000033
-    },
-    {
-      "name": "ErrorTranslatorService passes empty vars when none provided",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/unit/error-translator.spec.ts",
-      "durationMs": 11.203583000000435
-    },
-    {
-      "name": "CatalogService.supportedLocales always includes en-US even if no catalog file provided one",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/unit/catalog.spec.ts",
-      "durationMs": 9.482250000000022
+      "name": "I18nAdminService lists only i18n override settings for a tenant",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/unit/i18n-admin.service.spec.ts",
+      "durationMs": 45.35883300000023
     },
     {
       "name": "LocaleService uses the first supported Accept-Language entry and patches context",
       "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/unit/locale.spec.ts",
-      "durationMs": 6.957665999999335
+      "durationMs": 30.00841599999967
+    },
+    {
+      "name": "CatalogService.translate returns the locale-specific message when present",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/unit/catalog.spec.ts",
+      "durationMs": 27.218042000000423
+    },
+    {
+      "name": "CatalogService.translate uses process cwd when no workspace root is configured",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/unit/catalog.spec.ts",
+      "durationMs": 13.49487500000032
+    },
+    {
+      "name": "CatalogService.translate merges tenant overrides over the base catalog",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/unit/catalog.spec.ts",
+      "durationMs": 13.082208000000719
+    },
+    {
+      "name": "CatalogService.supportedLocales reads packages-web catalogs and handles null tenant settings",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/unit/catalog.spec.ts",
+      "durationMs": 11.415791999999783
+    },
+    {
+      "name": "CatalogService.supportedLocales always includes en-US even if no catalog file provided one",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/unit/catalog.spec.ts",
+      "durationMs": 11.046417000000474
     },
     {
       "name": "CatalogService.translate returns the key when no catalog has the message",
       "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/unit/catalog.spec.ts",
-      "durationMs": 5.593166999999994
+      "durationMs": 11.040999999999258
     }
   ]
 }

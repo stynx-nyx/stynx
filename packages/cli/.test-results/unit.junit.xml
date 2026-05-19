@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="27" failures="0" errors="0" time="1.450158583">
+    <testsuite name="test/adopt.spec.ts" timestamp="2026-05-19T01:38:07.261Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.130072541">
+        <testcase classname="test/adopt.spec.ts" name="adopt command family &gt; is idempotent on the fixture repo" time="0.111704917">
+        </testcase>
+        <testcase classname="test/adopt.spec.ts" name="adopt command family &gt; handles clean reports, skipped directories, dry-runs, and mixed schema generation" time="0.016442416">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/audit.spec.ts" timestamp="2026-05-19T01:38:07.267Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.007994083">
+        <testcase classname="test/audit.spec.ts" name="verifyAuditChain &gt; uses the default pg client factory when no override is supplied" time="0.006820417">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/cli-program.spec.ts" timestamp="2026-05-19T01:38:07.271Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.055979">
+        <testcase classname="test/cli-program.spec.ts" name="buildProgram &gt; runs init, doctor, and privacy commands" time="0.0339675">
+        </testcase>
+        <testcase classname="test/cli-program.spec.ts" name="buildProgram &gt; runs migration commands and emits JSON output" time="0.006224875">
+        </testcase>
+        <testcase classname="test/cli-program.spec.ts" name="buildProgram &gt; runs audit verification in json, valid-human, and broken-human modes" time="0.002124333">
+        </testcase>
+        <testcase classname="test/cli-program.spec.ts" name="buildProgram &gt; runs adoption scan/apply/link commands" time="0.012873417">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/cli.spec.ts" timestamp="2026-05-19T01:38:07.284Z" hostname="thiamat-1903.local" tests="11" failures="0" errors="0" skipped="0" time="1.156594667">
+        <testcase classname="test/cli.spec.ts" name="@stynx/cli &gt; scaffolds a consumer app skeleton" time="0.027127">
+        </testcase>
+        <testcase classname="test/cli.spec.ts" name="@stynx/cli &gt; scaffolds without Angular files when angular=false" time="0.006397917">
+        </testcase>
+        <testcase classname="test/cli.spec.ts" name="@stynx/cli &gt; runs doctor against a fixture directory" time="0.40970475">
+        </testcase>
+        <testcase classname="test/cli.spec.ts" name="@stynx/cli &gt; reports doctor spawn failures with fallback exit code and empty output strings" time="0.627842625">
+        </testcase>
+        <testcase classname="test/cli.spec.ts" name="@stynx/cli &gt; generates ROPA markdown from privacy yaml" time="0.015069042">
+        </testcase>
+        <testcase classname="test/cli.spec.ts" name="@stynx/cli &gt; generates empty and retention-aware ROPA markdown" time="0.004238958">
+        </testcase>
+        <testcase classname="test/cli.spec.ts" name="@stynx/cli &gt; scans and applies the neutral adoption fixture with richer outputs" time="0.055372667">
+        </testcase>
+        <testcase classname="test/cli.spec.ts" name="@stynx/cli &gt; matches cognito users by email" time="0.000807">
+        </testcase>
+        <testcase classname="test/cli.spec.ts" name="@stynx/cli &gt; verifies audit hash chains across tenants" time="0.003169042">
+        </testcase>
+        <testcase classname="test/cli.spec.ts" name="@stynx/cli &gt; verifies one audit tenant, clamps invalid limits, and always closes the client" time="0.00119375">
+        </testcase>
+        <testcase classname="test/cli.spec.ts" name="@stynx/cli &gt; clamps audit limits above the maximum" time="0.000236208">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/migrate.spec.ts" timestamp="2026-05-19T01:38:07.498Z" hostname="thiamat-1903.local" tests="9" failures="0" errors="0" skipped="0" time="0.099518292">
+        <testcase classname="test/migrate.spec.ts" name="migrate command surface &gt; reports pending/applied/rollbackable migrations" time="0.022156292">
+        </testcase>
+        <testcase classname="test/migrate.spec.ts" name="migrate command surface &gt; uses the default pg client factory when no factory override is supplied" time="0.008782042">
+        </testcase>
+        <testcase classname="test/migrate.spec.ts" name="migrate command surface &gt; applies, rolls back, and redoes paired migrations" time="0.025940042">
+        </testcase>
+        <testcase classname="test/migrate.spec.ts" name="migrate command surface &gt; lists migrations and supports dry-run up/down/redo without applying changes" time="0.012493333">
+        </testcase>
+        <testcase classname="test/migrate.spec.ts" name="migrate command surface &gt; rejects rollback of migrations without a down pair" time="0.00161675">
+        </testcase>
+        <testcase classname="test/migrate.spec.ts" name="migrate command surface &gt; keeps dry-run rollback validation for migrations without a down pair" time="0.0006345">
+        </testcase>
+        <testcase classname="test/migrate.spec.ts" name="migrate command surface &gt; fails redo when a migration file disappears between rollback and replay" time="0.004515541">
+        </testcase>
+        <testcase classname="test/migrate.spec.ts" name="migrate command surface &gt; rolls back SQL transactions when migration up or down execution fails" time="0.003296">
+        </testcase>
+        <testcase classname="test/migrate.spec.ts" name="migrate command surface &gt; promotes bootstrap objects when the extension migration is already applied or just applied" time="0.003724166">
+        </testcase>
+    </testsuite>
+</testsuites>

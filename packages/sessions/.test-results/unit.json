@@ -5,13 +5,14 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T01:05:26.883Z",
-  "endedAt": "2026-05-19T01:05:36.670Z",
-  "durationMs": 9786,
+  "startedAt": "2026-05-19T01:36:41.977Z",
+  "endedAt": "2026-05-19T01:36:52.749Z",
+  "durationMs": 10612,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
-    "raw": ".test-results/unit.log"
+    "raw": ".test-results/unit.log",
+    "junit": ".test-results/unit.junit.xml"
   },
   "env": {
     "node": "26.0.0",
@@ -25,7 +26,9 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-1852-1779152726883.json"
+      "--outputFile.json=/tmp/vitest-55985-1779154601977.json",
+      "--reporter=junit",
+      "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/sessions/.test-results/unit.junit.xml"
     ],
     "cwd": "/Users/aarusso/Development/stech/stynx/packages/sessions"
   },
@@ -44,52 +47,52 @@
     {
       "name": "SessionService survives 1000 sequential refresh cycles without leaking live session records",
       "file": "/Users/aarusso/Development/stech/stynx/packages/sessions/test/unit/session.service.spec.ts",
-      "durationMs": 1145.8732090000003
-    },
-    {
-      "name": "SessionJwtSigningService.signAccessToken secretLoader path (validateKeySet) signs successfully when secret loader returns a valid key set",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/sessions/test/unit/jwt-signing.spec.ts",
-      "durationMs": 261.37000000000035
-    },
-    {
-      "name": "SessionJwtSigningService.signAccessToken throws SessionSigningKeyError when activeKid is not present in keys",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/sessions/test/unit/jwt-signing.spec.ts",
-      "durationMs": 252.86020899999994
-    },
-    {
-      "name": "SessionJwtSigningService.signAccessToken secretLoader path (validateKeySet) preserves activatesAt + expiresAt when present",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/sessions/test/unit/jwt-signing.spec.ts",
-      "durationMs": 242.08433300000024
+      "durationMs": 1294.234292
     },
     {
       "name": "SessionJwtSigningService.signAccessToken caches resolved keys across calls (singleton)",
       "file": "/Users/aarusso/Development/stech/stynx/packages/sessions/test/unit/jwt-signing.spec.ts",
-      "durationMs": 215.90462500000012
+      "durationMs": 673.915708
     },
     {
-      "name": "SessionJwtSigningService.signAccessToken produces a 3-segment JWT signed by the active key",
+      "name": "SessionJwtSigningService.signAccessToken throws SessionSigningKeyError when activeKid is not present in keys",
       "file": "/Users/aarusso/Development/stech/stynx/packages/sessions/test/unit/jwt-signing.spec.ts",
-      "durationMs": 186.5999999999999
-    },
-    {
-      "name": "SessionService creates, reads, and revokes a session",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/sessions/test/unit/session.service.spec.ts",
-      "durationMs": 148.46808299999975
-    },
-    {
-      "name": "SessionService rejects tenant exchange for a missing session",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/sessions/test/unit/session.service.spec.ts",
-      "durationMs": 137.7457919999997
-    },
-    {
-      "name": "SessionService rejects refresh when lookup points at a missing session or rotation fails",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/sessions/test/unit/session.service.spec.ts",
-      "durationMs": 131.44066700000076
+      "durationMs": 556.4638750000004
     },
     {
       "name": "SessionService enforces absolute and idle timeout windows",
       "file": "/Users/aarusso/Development/stech/stynx/packages/sessions/test/unit/session.service.spec.ts",
-      "durationMs": 126.42662500000006
+      "durationMs": 166.8905420000001
+    },
+    {
+      "name": "SessionJwtSigningService.signAccessToken secretLoader path (validateKeySet) signs successfully when secret loader returns a valid key set",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/sessions/test/unit/jwt-signing.spec.ts",
+      "durationMs": 162.51800000000003
+    },
+    {
+      "name": "SessionService exchanges sessions without carrying optional device metadata or create metadata",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/sessions/test/unit/session.service.spec.ts",
+      "durationMs": 157.33166600000004
+    },
+    {
+      "name": "SessionService creates, reads, and revokes a session",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/sessions/test/unit/session.service.spec.ts",
+      "durationMs": 140.26370899999984
+    },
+    {
+      "name": "SessionService supports clock skew when access tokens have a slightly future nbf",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/sessions/test/unit/session.service.spec.ts",
+      "durationMs": 127.5249589999994
+    },
+    {
+      "name": "SessionService rotates refresh tokens and kills the family when an old token is reused",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/sessions/test/unit/session.service.spec.ts",
+      "durationMs": 76.44487499999923
+    },
+    {
+      "name": "SessionService revokes all sessions for a user or tenant with one invalidation per affected scope",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/sessions/test/unit/session.service.spec.ts",
+      "durationMs": 69.08241700000053
     }
   ]
 }

@@ -5,13 +5,14 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T01:06:16.935Z",
-  "endedAt": "2026-05-19T01:06:22.289Z",
-  "durationMs": 5335,
+  "startedAt": "2026-05-19T01:38:01.578Z",
+  "endedAt": "2026-05-19T01:38:08.233Z",
+  "durationMs": 6630,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
-    "raw": ".test-results/unit.log"
+    "raw": ".test-results/unit.log",
+    "junit": ".test-results/unit.junit.xml"
   },
   "env": {
     "node": "26.0.0",
@@ -25,7 +26,9 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-7369-1779152776935.json"
+      "--outputFile.json=/tmp/vitest-59047-1779154681578.json",
+      "--reporter=junit",
+      "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/cli/.test-results/unit.junit.xml"
     ],
     "cwd": "/Users/aarusso/Development/stech/stynx/packages/cli"
   },
@@ -42,54 +45,54 @@
   },
   "slowestTests": [
     {
-      "name": "@stynx/cli runs doctor against a fixture directory",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli.spec.ts",
-      "durationMs": 152.78220799999986
-    },
-    {
       "name": "@stynx/cli reports doctor spawn failures with fallback exit code and empty output strings",
       "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli.spec.ts",
-      "durationMs": 147.50083299999983
+      "durationMs": 627.8426250000002
+    },
+    {
+      "name": "@stynx/cli runs doctor against a fixture directory",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli.spec.ts",
+      "durationMs": 409.7047499999999
     },
     {
       "name": "adopt command family is idempotent on the fixture repo",
       "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/adopt.spec.ts",
-      "durationMs": 34.740540999999894
-    },
-    {
-      "name": "buildProgram runs adoption scan/apply/link commands",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli-program.spec.ts",
-      "durationMs": 23.79558299999985
-    },
-    {
-      "name": "migrate command surface reports pending/applied/rollbackable migrations",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/migrate.spec.ts",
-      "durationMs": 22.601374999999962
+      "durationMs": 111.70491700000002
     },
     {
       "name": "@stynx/cli scans and applies the neutral adoption fixture with richer outputs",
       "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli.spec.ts",
-      "durationMs": 11.72458400000005
+      "durationMs": 55.37266700000009
     },
     {
       "name": "buildProgram runs init, doctor, and privacy commands",
       "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli-program.spec.ts",
-      "durationMs": 8.243208999999979
-    },
-    {
-      "name": "adopt command family handles clean reports, skipped directories, dry-runs, and mixed schema generation",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/adopt.spec.ts",
-      "durationMs": 6.093540999999959
-    },
-    {
-      "name": "@stynx/cli generates ROPA markdown from privacy yaml",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli.spec.ts",
-      "durationMs": 5.053749999999809
+      "durationMs": 33.96749999999997
     },
     {
       "name": "@stynx/cli scaffolds a consumer app skeleton",
       "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli.spec.ts",
-      "durationMs": 4.600125000000162
+      "durationMs": 27.126999999999953
+    },
+    {
+      "name": "migrate command surface applies, rolls back, and redoes paired migrations",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/migrate.spec.ts",
+      "durationMs": 25.940042000000176
+    },
+    {
+      "name": "migrate command surface reports pending/applied/rollbackable migrations",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/migrate.spec.ts",
+      "durationMs": 22.15629200000012
+    },
+    {
+      "name": "adopt command family handles clean reports, skipped directories, dry-runs, and mixed schema generation",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/adopt.spec.ts",
+      "durationMs": 16.442415999999866
+    },
+    {
+      "name": "@stynx/cli generates ROPA markdown from privacy yaml",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli.spec.ts",
+      "durationMs": 15.069042000000081
     }
   ]
 }

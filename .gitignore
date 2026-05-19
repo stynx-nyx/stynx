@@ -119,3 +119,4 @@ docs/work/plan/*
 # Real git worktrees rooted at .devai/worktrees/WT-TASK-*/; the
 # branches themselves are tracked, just not the checked-out trees.
 /.devai/worktrees/
+stryker-setup-*.js

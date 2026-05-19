@@ -2,7 +2,6 @@ import { createStrykerConfig } from '../../tools/stryker/base.mjs';
 
 export default createStrykerConfig({
   packageName: '@stynx/testing',
-  threshold: 60,
   checkers: [],
   mutate: [
     'src/context.ts',

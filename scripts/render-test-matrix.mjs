@@ -99,8 +99,12 @@ Reads existing result artifacts only; it does not run tests.
 Sources:
   - scripts/test-matrix.config.json for meaningless cells and coverage thresholds
   - */.test-results/<level>.json (canonical, schema v1) for every level
-  - reference/web/test-results/.last-run.json for Playwright E2E status
+  - reference/web/test-results/.last-run.json as a legacy Playwright fallback
   - coverage/coverage-final.json for aggregate workspace coverage
+
+Note: */.turbo/turbo-test*.log are Turbo's own cache (stdout replay tape
+for cache-hit task runs). They are NOT a canonical artifact and are
+deliberately ignored by this renderer — see docs/operations/test-result-contract.md.
 
 Modes:
   --status    state plus [suites_passed/suites_total | tests_passed/tests_total] counts
@@ -213,12 +217,16 @@ function readApiResult(ws) {
 
 function readDbResult(ws) {
   if (!hasConfiguredLevel(ws, 'DB')) return null;
+  if (ws.root === 'test' && basename(ws.dir) === 'db') {
+    return readCanonicalResult(ws.dir, 'integration') ?? readCanonicalResult(ws.dir, 'unit');
+  }
   return readCanonicalResult(ws.dir, 'integration');
 }
 
 function readE2EResult(ws) {
   if (!hasConfiguredLevel(ws, 'E2E')) return null;
   const e2eArtifact = readCanonicalResult(ws.dir, 'e2e');
+  if (e2eArtifact) return e2eArtifact;
   if (ws.name !== '@stynx/reference-web') return e2eArtifact;
   const lastRunPath = join(ws.dir, 'test-results', '.last-run.json');
   if (!existsSync(lastRunPath)) return e2eArtifact;

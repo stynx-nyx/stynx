@@ -4,9 +4,9 @@
   "level": "unit",
   "runner": "node-test",
   "status": "passed",
-  "startedAt": "2026-05-19T01:04:43.236Z",
-  "endedAt": "2026-05-19T01:04:43.814Z",
-  "durationMs": 576,
+  "startedAt": "2026-05-19T01:35:46.934Z",
+  "endedAt": "2026-05-19T01:35:47.567Z",
+  "durationMs": 627,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -24,7 +24,7 @@
     "kind": "none"
   },
   "totals": {
-    "files": null,
+    "files": 0,
     "tests": 3,
     "passed": 3,
     "failed": 0,

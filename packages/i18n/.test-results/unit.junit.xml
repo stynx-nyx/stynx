@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="29" failures="0" errors="0" time="30.141291542">
+    <testsuite name="test/integration/i18n.module.spec.ts" timestamp="2026-05-19T01:38:30.598Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="29.805576792">
+        <testcase classname="test/integration/i18n.module.spec.ts" name="StynxI18nModule integration &gt; resolves locale order, applies tenant overrides, renders ICU messages, and localizes errors" time="29.801526834">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/catalog.spec.ts" timestamp="2026-05-19T01:38:30.600Z" hostname="thiamat-1903.local" tests="11" failures="0" errors="0" skipped="0" time="0.155194416">
+        <testcase classname="test/unit/catalog.spec.ts" name="CatalogService.translate &gt; returns the locale-specific message when present" time="0.027218042">
+        </testcase>
+        <testcase classname="test/unit/catalog.spec.ts" name="CatalogService.translate &gt; falls back to en-US when the requested locale lacks the key" time="0.005624333">
+        </testcase>
+        <testcase classname="test/unit/catalog.spec.ts" name="CatalogService.translate &gt; returns the key when no catalog has the message" time="0.011041">
+        </testcase>
+        <testcase classname="test/unit/catalog.spec.ts" name="CatalogService.translate &gt; uses process cwd when no workspace root is configured" time="0.013494875">
+        </testcase>
+        <testcase classname="test/unit/catalog.spec.ts" name="CatalogService.translate &gt; merges tenant overrides over the base catalog" time="0.013082208">
+        </testcase>
+        <testcase classname="test/unit/catalog.spec.ts" name="CatalogService.translate &gt; ignores override entries that do not match the i18n.override.&lt;locale&gt;.&lt;key&gt; shape" time="0.002144875">
+        </testcase>
+        <testcase classname="test/unit/catalog.spec.ts" name="CatalogService.supportedLocales &gt; includes every locale discovered across all packages" time="0.002130959">
+        </testcase>
+        <testcase classname="test/unit/catalog.spec.ts" name="CatalogService.supportedLocales &gt; always includes en-US even if no catalog file provided one" time="0.011046417">
+        </testcase>
+        <testcase classname="test/unit/catalog.spec.ts" name="CatalogService.supportedLocales &gt; skips package entries whose i18n path is not a directory and uses the built-in default locale" time="0.05204875">
+        </testcase>
+        <testcase classname="test/unit/catalog.spec.ts" name="CatalogService.supportedLocales &gt; loads tenant overrides once and reuses the cache" time="0.002513875">
+        </testcase>
+        <testcase classname="test/unit/catalog.spec.ts" name="CatalogService.supportedLocales &gt; reads packages-web catalogs and handles null tenant settings" time="0.011415792">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/error-translator.spec.ts" timestamp="2026-05-19T01:38:30.604Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.023979375">
+        <testcase classname="test/unit/error-translator.spec.ts" name="ErrorTranslatorService &gt; delegates translate(key, locale, vars) to LocaleService.t" time="0.00224025">
+        </testcase>
+        <testcase classname="test/unit/error-translator.spec.ts" name="ErrorTranslatorService &gt; passes empty vars when none provided" time="0.000171666">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/i18n-admin.service.spec.ts" timestamp="2026-05-19T01:38:30.605Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.057105">
+        <testcase classname="test/unit/i18n-admin.service.spec.ts" name="I18nAdminService &gt; lists only i18n override settings for a tenant" time="0.045358833">
+        </testcase>
+        <testcase classname="test/unit/i18n-admin.service.spec.ts" name="I18nAdminService &gt; updates override settings and refreshes the catalog cache" time="0.002180625">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/i18n.controller.spec.ts" timestamp="2026-05-19T01:38:30.607Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.022899334">
+        <testcase classname="test/unit/i18n.controller.spec.ts" name="I18nController API contract &gt; uses request tenant context for list and update operations" time="0.0064145">
+        </testcase>
+        <testcase classname="test/unit/i18n.controller.spec.ts" name="I18nController API contract &gt; keeps override writes outside the idempotency interceptor" time="0.000178625">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/locale.spec.ts" timestamp="2026-05-19T01:38:30.608Z" hostname="thiamat-1903.local" tests="8" failures="0" errors="0" skipped="0" time="0.062214958">
+        <testcase classname="test/unit/locale.spec.ts" name="LocaleService &gt; returns the active request locale without patching context" time="0.007480042">
+        </testcase>
+        <testcase classname="test/unit/locale.spec.ts" name="LocaleService &gt; uses the first supported Accept-Language entry and patches context" time="0.030008416">
+        </testcase>
+        <testcase classname="test/unit/locale.spec.ts" name="LocaleService &gt; loads tenant overrides and tenant locale when the header has no supported locale" time="0.000757834">
+        </testcase>
+        <testcase classname="test/unit/locale.spec.ts" name="LocaleService &gt; falls through tenant lookup when settings have no locale" time="0.000326625">
+        </testcase>
+        <testcase classname="test/unit/locale.spec.ts" name="LocaleService &gt; falls back to pt-BR when supported and translates with explicit or contextual locale" time="0.00033875">
+        </testcase>
+        <testcase classname="test/unit/locale.spec.ts" name="LocaleService &gt; uses contextual locale and tenant when translate is called without explicit locale" time="0.000192625">
+        </testcase>
+        <testcase classname="test/unit/locale.spec.ts" name="LocaleService &gt; falls back to en-US and default translation locale when no request context is active" time="0.000299583">
+        </testcase>
+        <testcase classname="test/unit/locale.spec.ts" name="LocaleService &gt; uses en-US when the catalog reports no supported locales" time="0.000207375">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/localized-error.filter.spec.ts" timestamp="2026-05-19T01:38:30.610Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.014321667">
+        <testcase classname="test/unit/localized-error.filter.spec.ts" name="LocalizedErrorFilter &gt; passes non-STYNX HTTP exceptions through unchanged" time="0.004140417">
+        </testcase>
+        <testcase classname="test/unit/localized-error.filter.spec.ts" name="LocalizedErrorFilter &gt; localizes STYNX errors and logs warn/error branches" time="0.008936041">
+        </testcase>
+        <testcase classname="test/unit/localized-error.filter.spec.ts" name="LocalizedErrorFilter &gt; rethrows unknown errors" time="0.000345375">
+        </testcase>
+    </testsuite>
+</testsuites>

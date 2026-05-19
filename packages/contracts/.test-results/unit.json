@@ -5,13 +5,14 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T01:04:48.575Z",
-  "endedAt": "2026-05-19T01:04:52.832Z",
-  "durationMs": 4253,
+  "startedAt": "2026-05-19T01:35:54.412Z",
+  "endedAt": "2026-05-19T01:35:58.859Z",
+  "durationMs": 4446,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
-    "raw": ".test-results/unit.log"
+    "raw": ".test-results/unit.log",
+    "junit": ".test-results/unit.junit.xml"
   },
   "env": {
     "node": "26.0.0",
@@ -25,7 +26,9 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-97797-1779152688575.json"
+      "--outputFile.json=/tmp/vitest-54357-1779154554412.json",
+      "--reporter=junit",
+      "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/contracts/.test-results/unit.junit.xml"
     ],
     "cwd": "/Users/aarusso/Development/stech/stynx/packages/contracts"
   },
@@ -42,44 +45,44 @@
   },
   "slowestTests": [
     {
-      "name": "@stynx/contracts barrel re-exports core error classes",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/contracts/test/index.spec.ts",
-      "durationMs": 2.1646670000000086
-    },
-    {
       "name": "@stynx/contracts errors StynxError inherits from Error",
       "file": "/Users/aarusso/Development/stech/stynx/packages/contracts/test/errors.spec.ts",
-      "durationMs": 1.3500839999999243
+      "durationMs": 1.7085830000000897
     },
     {
-      "name": "@stynx/contracts errors IdentityAdminError accepts IDENTITY_NOT_FOUND as a code",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/contracts/test/errors.spec.ts",
-      "durationMs": 0.7859169999999267
-    },
-    {
-      "name": "@stynx/contracts errors IdentityAdminError accepts IDENTITY_FORBIDDEN as a code",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/contracts/test/errors.spec.ts",
-      "durationMs": 0.3046669999998812
-    },
-    {
-      "name": "@stynx/contracts barrel barrel has multiple exports",
+      "name": "@stynx/contracts barrel re-exports core error classes",
       "file": "/Users/aarusso/Development/stech/stynx/packages/contracts/test/index.spec.ts",
-      "durationMs": 0.1580420000000231
-    },
-    {
-      "name": "@stynx/contracts errors StynxError details optional",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/contracts/test/errors.spec.ts",
-      "durationMs": 0.1369999999999436
+      "durationMs": 0.7999159999999392
     },
     {
       "name": "@stynx/contracts errors AuthenticationError carries the AUTHENTICATION_ERROR code",
       "file": "/Users/aarusso/Development/stech/stynx/packages/contracts/test/errors.spec.ts",
-      "durationMs": 0.13574999999991633
+      "durationMs": 0.1612089999998716
+    },
+    {
+      "name": "@stynx/contracts barrel barrel has multiple exports",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/contracts/test/index.spec.ts",
+      "durationMs": 0.15499999999997272
+    },
+    {
+      "name": "@stynx/contracts errors StynxError details optional",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/contracts/test/errors.spec.ts",
+      "durationMs": 0.13724999999999454
     },
     {
       "name": "@stynx/contracts errors AuthorizationError carries the AUTHORIZATION_ERROR code",
       "file": "/Users/aarusso/Development/stech/stynx/packages/contracts/test/errors.spec.ts",
-      "durationMs": 0.12104199999998855
+      "durationMs": 0.12649999999985084
+    },
+    {
+      "name": "@stynx/contracts errors IdentityAdminError accepts IDENTITY_NOT_FOUND as a code",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/contracts/test/errors.spec.ts",
+      "durationMs": 0.09875000000010914
+    },
+    {
+      "name": "@stynx/contracts errors IdentityAdminError accepts IDENTITY_FORBIDDEN as a code",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/contracts/test/errors.spec.ts",
+      "durationMs": 0.06816600000001927
     }
   ]
 }

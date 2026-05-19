@@ -6,6 +6,7 @@
   },
   "scripts": {
     "test": "node ./../../scripts/run-and-record.mjs --package stynx-db-tests --level unit --runner vitest -- vitest run --config ./vitest.config.ts",
+    "test:db": "node ./../../scripts/run-and-record.mjs --package stynx-db-tests --level integration --runner vitest -- vitest run --config ./vitest.config.ts",
     "lint": "eslint --config ../../tools/eslint-config/test.mjs \"./**/*.ts\""
   },
   "devDependencies": {

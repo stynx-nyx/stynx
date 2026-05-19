@@ -2,7 +2,6 @@ import { createStrykerConfig } from '../../tools/stryker/base.mjs';
 
 export default createStrykerConfig({
   packageName: '@stynx/i18n',
-  threshold: 60,
   mutate: [
     'src/catalog.service.ts',
     'src/error-translator.service.ts',

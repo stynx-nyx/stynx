@@ -5,13 +5,14 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T01:05:23.061Z",
-  "endedAt": "2026-05-19T01:05:32.487Z",
-  "durationMs": 9413,
+  "startedAt": "2026-05-19T01:36:38.720Z",
+  "endedAt": "2026-05-19T01:36:48.538Z",
+  "durationMs": 9805,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
-    "raw": ".test-results/unit.log"
+    "raw": ".test-results/unit.log",
+    "junit": ".test-results/unit.junit.xml"
   },
   "env": {
     "node": "26.0.0",
@@ -25,7 +26,9 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-1714-1779152723061.json"
+      "--outputFile.json=/tmp/vitest-55861-1779154598720.json",
+      "--reporter=junit",
+      "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/storage/.test-results/unit.junit.xml"
     ],
     "cwd": "/Users/aarusso/Development/stech/stynx/packages/storage"
   },
@@ -42,54 +45,54 @@
   },
   "slowestTests": [
     {
-      "name": "StynxObjectStore putObject sends PutObjectCommand with body + contentType",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/object-store.spec.ts",
-      "durationMs": 70.04149999999981
-    },
-    {
-      "name": "StynxObjectStore passes endpoint + forcePathStyle through when set",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/object-store.spec.ts",
-      "durationMs": 15.126500000000306
-    },
-    {
-      "name": "StynxObjectStore constructs an S3Client with the configured region",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/object-store.spec.ts",
-      "durationMs": 9.233416999999918
-    },
-    {
-      "name": "DocumentsService initiates a document with a tenant-scoped key and presigned upload",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/documents.service.spec.ts",
-      "durationMs": 6.131083000000217
+      "name": "storage errors StorageCollectionNotFoundError carries 404 + collection context",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/errors.spec.ts",
+      "durationMs": 15.34945800000014
     },
     {
       "name": "S3Service rate-limits tenant download presigns by minute",
       "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/s3.service.spec.ts",
-      "durationMs": 5.370750000000044
+      "durationMs": 11.018375000000106
     },
     {
-      "name": "S3Service applies object-lock retention to a specific object version",
+      "name": "StynxObjectStore constructs an S3Client with the configured region",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/object-store.spec.ts",
+      "durationMs": 7.440417000000025
+    },
+    {
+      "name": "DocumentsService initiates a document with a tenant-scoped key and presigned upload",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/documents.service.spec.ts",
+      "durationMs": 3.1993750000001455
+    },
+    {
+      "name": "@stynx/storage barrel exports at least one symbol",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/barrel-load.spec.ts",
+      "durationMs": 2.7000000000007276
+    },
+    {
+      "name": "S3Service heads objects and deletes object versions or the base object fallback",
       "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/s3.service.spec.ts",
-      "durationMs": 3.1868749999998727
+      "durationMs": 2.2317920000000413
     },
     {
       "name": "S3Service rejects bucket names outside the required pattern",
       "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/s3.service.spec.ts",
-      "durationMs": 1.5486250000003565
+      "durationMs": 2.0037499999998545
     },
     {
-      "name": "S3Service configures lifecycle transition and expiration rules",
+      "name": "S3Service passes endpoint and path-style client options and supports custom default expiries",
       "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/s3.service.spec.ts",
-      "durationMs": 1.1945000000000618
+      "durationMs": 1.9475830000001224
     },
     {
-      "name": "storage errors StorageCollectionNotFoundError carries 404 + collection context",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/errors.spec.ts",
-      "durationMs": 1.1288340000000971
+      "name": "StynxObjectStore passes endpoint + forcePathStyle through when set",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/object-store.spec.ts",
+      "durationMs": 1.450249999999869
     },
     {
-      "name": "DocumentsService rejects unknown collections, disallowed mime types, bad checksums, and missing context",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/documents.service.spec.ts",
-      "durationMs": 1.1258749999997235
+      "name": "StynxObjectStore putObject sends PutObjectCommand with body + contentType",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/object-store.spec.ts",
+      "durationMs": 1.424874999999929
     }
   ]
 }

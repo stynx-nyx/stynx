@@ -4,6 +4,7 @@ import { createRequire } from 'node:module';
 import { existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { getCoverageThreshold } from './test-thresholds.mjs';
 
 // unplugin-swc exports its plugin factories as `{ vite, esbuild, ... }` on the
 // default export. Vite's config loader sometimes double-wraps the default, so
@@ -57,33 +58,14 @@ const drizzleIsPatch = {
   },
 };
 
-const baseCoverageThreshold = {
-  statements: 85,
-  branches: 80,
-  functions: 85,
-  lines: 85,
-};
-
-const strictCoverageThreshold = {
-  statements: 95,
-  branches: 95,
-  functions: 95,
-  lines: 95,
-};
-
-const completeCoverageThreshold = {
-  statements: 100,
-  branches: 100,
-  functions: 100,
-  lines: 100,
-};
-
-const disabledCoverageThreshold = {
-  statements: 0,
-  branches: 0,
-  functions: 0,
-  lines: 0,
-};
+// Coverage thresholds resolve from tools/repo-config/test-thresholds.mjs
+// (which reads scripts/test-matrix.config.json). Keep these named exports
+// as transitional aliases for configs that import them directly; prefer
+// `getCoverageThreshold(packageName)` going forward.
+const baseCoverageThreshold     = { statements: 85,  branches: 80,  functions: 85,  lines: 85  };
+const strictCoverageThreshold   = { statements: 95,  branches: 95,  functions: 95,  lines: 95  };
+const completeCoverageThreshold = { statements: 100, branches: 100, functions: 100, lines: 100 };
+const disabledCoverageThreshold = { statements: 0,   branches: 0,   functions: 0,   lines: 0   };
 
 export function createVitestConfig({
   packageDir,
@@ -105,7 +87,7 @@ export function createVitestConfig({
   const threshold =
     process.env.STYNX_AGGREGATE_COVERAGE === '1'
       ? disabledCoverageThreshold
-      : (coverageThreshold ?? completeCoverageThreshold);
+      : (coverageThreshold ?? getCoverageThreshold(packageName));
 
   const drizzleAlias = patchDrizzle
     ? { 'drizzle-orm/entity': resolve(repoRoot, 'tools/repo-config/drizzle-entity-shim.mjs') }

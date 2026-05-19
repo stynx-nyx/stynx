@@ -2,7 +2,6 @@ import { createStrykerConfig } from '../../tools/stryker/base.mjs';
 
 export default createStrykerConfig({
   packageName: '@stynx-web/angular-storage',
-  threshold: 60,
   mutate: [
     'src/document-upload.component.ts',
     'src/document.service.ts',

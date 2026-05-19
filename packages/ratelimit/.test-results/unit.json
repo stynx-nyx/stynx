@@ -5,13 +5,14 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T01:05:49.341Z",
-  "endedAt": "2026-05-19T01:05:55.188Z",
-  "durationMs": 5843,
+  "startedAt": "2026-05-19T01:37:08.227Z",
+  "endedAt": "2026-05-19T01:37:16.823Z",
+  "durationMs": 8593,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
-    "raw": ".test-results/unit.log"
+    "raw": ".test-results/unit.log",
+    "junit": ".test-results/unit.junit.xml"
   },
   "env": {
     "node": "26.0.0",
@@ -25,7 +26,9 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-4963-1779152749341.json"
+      "--outputFile.json=/tmp/vitest-58388-1779154628227.json",
+      "--reporter=junit",
+      "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/ratelimit/.test-results/unit.junit.xml"
     ],
     "cwd": "/Users/aarusso/Development/stech/stynx/packages/ratelimit"
   },
@@ -42,54 +45,54 @@
   },
   "slowestTests": [
     {
-      "name": "RedisSlidingWindowRateLimitStore loads the sliding-window script, maps Redis numeric responses, and quits open clients",
+      "name": "RedisSlidingWindowRateLimitStore does not initialize a Redis client without redis options",
       "file": "/Users/aarusso/Development/stech/stynx/packages/ratelimit/test/unit/redis-rate-limit.store.spec.ts",
-      "durationMs": 6.186749999999847
+      "durationMs": 15.968374999999924
     },
     {
-      "name": "RateLimit decorator attaches route metadata",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/ratelimit/test/unit/decorators.spec.ts",
-      "durationMs": 2.76299999999992
+      "name": "RedisSlidingWindowRateLimitStore loads the sliding-window script, maps Redis numeric responses, and quits open clients",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/ratelimit/test/unit/redis-rate-limit.store.spec.ts",
+      "durationMs": 14.778124999999818
     },
     {
       "name": "RateLimitGuard bypasses health-check routes without touching the store",
       "file": "/Users/aarusso/Development/stech/stynx/packages/ratelimit/test/unit/rate-limit.guard.spec.ts",
-      "durationMs": 1.931583000000046
-    },
-    {
-      "name": "RateLimitGuard builds fallback bucket keys from originalUrl, url, defaults, and alternate principals",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/ratelimit/test/unit/rate-limit.guard.spec.ts",
-      "durationMs": 1.8906669999996666
-    },
-    {
-      "name": "RedisSlidingWindowRateLimitStore does not initialize a Redis client without redis options",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/ratelimit/test/unit/redis-rate-limit.store.spec.ts",
-      "durationMs": 1.8240000000000691
+      "durationMs": 8.37545799999998
     },
     {
       "name": "PgRateLimitStore upserts distributed windows and maps allowed and blocked decisions",
       "file": "/Users/aarusso/Development/stech/stynx/packages/ratelimit/test/unit/pg-rate-limit.store.spec.ts",
-      "durationMs": 1.7218340000001717
+      "durationMs": 7.235208000000057
+    },
+    {
+      "name": "RateLimitGuard throws 503 under distributedStrict when the store returns null (resolver missing)",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/ratelimit/test/unit/rate-limit.guard.spec.ts",
+      "durationMs": 6.463624999999865
     },
     {
       "name": "PgRateLimitStore validates configured SQL identifiers",
       "file": "/Users/aarusso/Development/stech/stynx/packages/ratelimit/test/unit/pg-rate-limit.store.spec.ts",
-      "durationMs": 1.6769160000001193
+      "durationMs": 4.901916999999685
     },
     {
-      "name": "DatabaseRateLimitPolicyResolver uses explicit metadata.limit and metadata.windowSeconds without touching the DB",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/ratelimit/test/unit/rate-limit-policy.service.spec.ts",
-      "durationMs": 1.400499999999738
-    },
-    {
-      "name": "InMemoryRateLimitMetrics tracks blocked counters, latency percentiles, and histogram buckets",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/ratelimit/test/unit/metrics.spec.ts",
-      "durationMs": 1.2090829999999642
+      "name": "RateLimit decorator attaches route metadata",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/ratelimit/test/unit/decorators.spec.ts",
+      "durationMs": 4.531332999999904
     },
     {
       "name": "PgRateLimitStore returns an allowed local decision without a tenant",
       "file": "/Users/aarusso/Development/stech/stynx/packages/ratelimit/test/unit/pg-rate-limit.store.spec.ts",
-      "durationMs": 1.0698750000001382
+      "durationMs": 4.024540999999772
+    },
+    {
+      "name": "RateLimitGuard throws 429, emits Retry-After, and increments metrics on block",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/ratelimit/test/unit/rate-limit.guard.spec.ts",
+      "durationMs": 3.7593329999999696
+    },
+    {
+      "name": "RateLimitGuard bypasses routes marked as @System()",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/ratelimit/test/unit/rate-limit.guard.spec.ts",
+      "durationMs": 3.309624999999869
     }
   ]
 }

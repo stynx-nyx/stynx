@@ -20,7 +20,10 @@ test('reference-web package scripts point at local build and runtime inputs', ()
   assert.equal(pkg.scripts.build, 'tsc -p tsconfig.json');
   assert.equal(pkg.scripts['build:web'], 'node scripts/build-web.mjs');
   assert.equal(pkg.scripts.serve, 'node scripts/serve-static.mjs');
-  assert.equal(pkg.scripts['test:e2e'], 'playwright test');
+  assert.equal(
+    pkg.scripts['test:e2e'],
+    'node ../../scripts/run-and-record.mjs --package @stynx/reference-web --level e2e --runner playwright -- playwright test',
+  );
 
   for (const relativePath of [
     'scripts/build-web.mjs',

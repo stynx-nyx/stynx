@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="1" failures="0" errors="0" time="0.009358583">
+    <testsuite name="test/angular-sessions.spec.ts" timestamp="2026-05-19T01:36:48.430Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.009358583">
+        <testcase classname="test/angular-sessions.spec.ts" name="@stynx-web/angular-sessions &gt; loads sessions and revokes a non-current session" time="0.006845875">
+        </testcase>
+    </testsuite>
+</testsuites>

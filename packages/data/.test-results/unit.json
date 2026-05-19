@@ -5,13 +5,14 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T01:05:05.170Z",
-  "endedAt": "2026-05-19T01:05:14.518Z",
-  "durationMs": 9347,
+  "startedAt": "2026-05-19T01:36:14.917Z",
+  "endedAt": "2026-05-19T01:36:31.204Z",
+  "durationMs": 16283,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
-    "raw": ".test-results/unit.log"
+    "raw": ".test-results/unit.log",
+    "junit": ".test-results/unit.junit.xml"
   },
   "env": {
     "node": "26.0.0",
@@ -25,7 +26,9 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-540-1779152705170.json"
+      "--outputFile.json=/tmp/vitest-55164-1779154574917.json",
+      "--reporter=junit",
+      "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/data/.test-results/unit.junit.xml"
     ],
     "cwd": "/Users/aarusso/Development/stech/stynx/packages/data"
   },
@@ -42,54 +45,54 @@
   },
   "slowestTests": [
     {
+      "name": "StynxMigrationRunner.runPlatformMigrations (mocked client) skips migrations whose id is already in core.schema_migrations",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/migration-runner.spec.ts",
+      "durationMs": 285.4231660000005
+    },
+    {
       "name": "StynxMigrationRunner.runPlatformMigrations (mocked client) initializes pools + creates schema_migrations table + releases client",
       "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/migration-runner.spec.ts",
-      "durationMs": 161.21320800000012
+      "durationMs": 221.61945800000012
     },
     {
       "name": "StynxMigrationRunner.runPlatformMigrations (mocked client) continues migration-dir probing and preserves migration errors when rollback fails",
       "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/migration-runner.spec.ts",
-      "durationMs": 87.26529200000004
+      "durationMs": 147.27291699999932
+    },
+    {
+      "name": "query helpers builds withDeleted SQL with shifted placeholders, tenant guard, ordering, limit, and offset",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/query-helpers.spec.ts",
+      "durationMs": 117.43870900000002
     },
     {
       "name": "StynxMigrationRunner.runPlatformMigrations (mocked client) falls back to the packaged migration path when every probe misses",
       "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/migration-runner.spec.ts",
-      "durationMs": 41.569082999999864
+      "durationMs": 51.004791999999725
     },
     {
-      "name": "StynxMigrationRunner.runPlatformMigrations (mocked client) skips migrations whose id is already in core.schema_migrations",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/migration-runner.spec.ts",
-      "durationMs": 22.97425000000021
-    },
-    {
-      "name": "StynxMigrationRunner.runPlatformMigrations (mocked client) rolls back when a migration body throws and rethrows the error",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/migration-runner.spec.ts",
-      "durationMs": 16.407874999999876
-    },
-    {
-      "name": "withSystemContext delegates to database.withSystemContext with the same reason + fn",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/system-context.spec.ts",
-      "durationMs": 13.906917000000021
-    },
-    {
-      "name": "Database waits the computed jitter before retrying retryable transaction failures",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/database.spec.ts",
-      "durationMs": 12.706458000000566
+      "name": "query helpers proxies soft-deletable select builders and leaves live-only builders unchanged",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/query-helpers.spec.ts",
+      "durationMs": 49.50416700000005
     },
     {
       "name": "StynxMigrationRunner.onModuleInit no-ops when migrations option is missing",
       "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/migration-runner.spec.ts",
-      "durationMs": 8.134791999999834
+      "durationMs": 16.86291600000004
     },
     {
-      "name": "Transaction softDelete returns dry-run plans and filters the root archive entry from committed cascades",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/transaction.spec.ts",
-      "durationMs": 6.610665999999583
+      "name": "StynxMigrationRunner.runPlatformMigrations (mocked client) rolls back when a migration body throws and rethrows the error",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/migration-runner.spec.ts",
+      "durationMs": 15.5815419999999
     },
     {
-      "name": "Transaction delegates active read/write primitives and rejects all primitives after close",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/transaction.spec.ts",
-      "durationMs": 5.079208999999992
+      "name": "StynxPoolRegistry creates owner + app + reader pools on init",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/pools.spec.ts",
+      "durationMs": 12.614542000000256
+    },
+    {
+      "name": "createStynxPgPool creates a Pool from a connection string",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/pools.spec.ts",
+      "durationMs": 9.030416999999943
     }
   ]
 }

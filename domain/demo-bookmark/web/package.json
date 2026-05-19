@@ -8,8 +8,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "eslint --max-warnings=0 'src/**/*.ts'",
-    "test": "echo \"@stynx-domain/demo-bookmark-web: tests pending — see ../docs/README.md F-9 follow-up\" && exit 0"
+    "lint": "eslint --max-warnings=0 'src/**/*.ts'"
   },
   "dependencies": {
     "@angular/common": "^18.2.13",

@@ -5,13 +5,14 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T01:04:58.385Z",
-  "endedAt": "2026-05-19T01:05:00.781Z",
-  "durationMs": 2395,
+  "startedAt": "2026-05-19T01:36:07.888Z",
+  "endedAt": "2026-05-19T01:36:11.630Z",
+  "durationMs": 3737,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
-    "raw": ".test-results/unit.log"
+    "raw": ".test-results/unit.log",
+    "junit": ".test-results/unit.junit.xml"
   },
   "env": {
     "node": "26.0.0",
@@ -25,7 +26,9 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-98258-1779152698385.json"
+      "--outputFile.json=/tmp/vitest-54864-1779154567888.json",
+      "--reporter=junit",
+      "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/health/.test-results/unit.junit.xml"
     ],
     "cwd": "/Users/aarusso/Development/stech/stynx/packages/health"
   },
@@ -42,54 +45,54 @@
   },
   "slowestTests": [
     {
-      "name": "StynxHealthService captures non-Error dependency failures and down indicators without details",
+      "name": "StynxHealthService returns a structured success payload when dependencies are healthy",
       "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/unit/health.service.spec.ts",
-      "durationMs": 59.852334000000155
-    },
-    {
-      "name": "StynxHealthController API contract returns liveness and app info payloads",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/unit/health.controller.spec.ts",
-      "durationMs": 5.4368750000001
-    },
-    {
-      "name": "StynxHealthController API contract restricts metrics by configured IP allowlist",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/unit/health.controller.spec.ts",
-      "durationMs": 4.215750000000071
-    },
-    {
-      "name": "StynxMetricsService renders baseline prometheus metrics",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/unit/metrics.service.spec.ts",
-      "durationMs": 4.169167000000016
-    },
-    {
-      "name": "StynxPlatformInfoGuard blocks access when the platform flag is disabled",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/unit/info.guard.spec.ts",
-      "durationMs": 3.583082999999988
+      "durationMs": 31.90108299999997
     },
     {
       "name": "StynxHealthService fails readiness when a dependency is down",
       "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/unit/health.service.spec.ts",
-      "durationMs": 3.378500000000031
+      "durationMs": 27.13870799999995
     },
     {
-      "name": "@stynx/health barrel exports at least one symbol",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/unit/barrel-load.spec.ts",
-      "durationMs": 1.785916000000043
+      "name": "StynxHealthService captures non-Error dependency failures and down indicators without details",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/unit/health.service.spec.ts",
+      "durationMs": 6.072750000000042
+    },
+    {
+      "name": "StynxMetricsService renders baseline prometheus metrics",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/unit/metrics.service.spec.ts",
+      "durationMs": 5.929665999999997
+    },
+    {
+      "name": "StynxPlatformInfoGuard blocks access when the platform flag is disabled",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/unit/info.guard.spec.ts",
+      "durationMs": 4.839541000000054
     },
     {
       "name": "StynxHealthModule.forRoot wires default module options and indicators",
       "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/unit/health.module.spec.ts",
-      "durationMs": 1.0753749999998945
+      "durationMs": 4.484208000000081
+    },
+    {
+      "name": "StynxHealthController API contract restricts metrics by configured IP allowlist",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/unit/health.controller.spec.ts",
+      "durationMs": 2.489332999999988
+    },
+    {
+      "name": "StynxHealthController API contract returns liveness and app info payloads",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/unit/health.controller.spec.ts",
+      "durationMs": 1.368249999999989
     },
     {
       "name": "StynxHealthController API contract maps terminus readiness failures to 503 responses",
       "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/unit/health.controller.spec.ts",
-      "durationMs": 0.878582999999935
+      "durationMs": 0.7169160000000829
     },
     {
-      "name": "StynxHealthController API contract rethrows non-terminus readiness failures",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/unit/health.controller.spec.ts",
-      "durationMs": 0.6577079999999569
+      "name": "@stynx/health barrel exports at least one symbol",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/unit/barrel-load.spec.ts",
+      "durationMs": 0.6874170000000959
     }
   ]
 }

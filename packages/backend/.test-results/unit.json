@@ -5,13 +5,14 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T01:05:59.392Z",
-  "endedAt": "2026-05-19T01:06:09.937Z",
-  "durationMs": 10520,
+  "startedAt": "2026-05-19T01:37:22.941Z",
+  "endedAt": "2026-05-19T01:37:48.143Z",
+  "durationMs": 25201,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
-    "raw": ".test-results/unit.log"
+    "raw": ".test-results/unit.log",
+    "junit": ".test-results/unit.junit.xml"
   },
   "env": {
     "node": "26.0.0",
@@ -25,7 +26,9 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-5271-1779152759392.json"
+      "--outputFile.json=/tmp/vitest-58659-1779154642941.json",
+      "--reporter=junit",
+      "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/backend/.test-results/unit.junit.xml"
     ],
     "cwd": "/Users/aarusso/Development/stech/stynx/packages/backend"
   },
@@ -42,54 +45,54 @@
   },
   "slowestTests": [
     {
-      "name": "IdentityAdminService local-sync adapter delegations delegates syncToLocal / syncUser / listGroupsWithMetaByUserId to the local-sync adapter",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/identity-admin.service.spec.ts",
-      "durationMs": 58.232750000000124
-    },
-    {
-      "name": "PecIdentityAdminFacade listAllGroups() maps items + nextToken",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/integration-facades.spec.ts",
-      "durationMs": 47.34045900000001
+      "name": "AuditInterceptor writes an envelope with action/entity/entityId/tenantId/actorId/role",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/audit.interceptor.spec.ts",
+      "durationMs": 84.34579100000019
     },
     {
       "name": "AuditInterceptor passes through when no audit metadata is set on the handler",
       "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/audit.interceptor.spec.ts",
-      "durationMs": 30.08658300000002
+      "durationMs": 78.58958299999995
     },
     {
-      "name": "PormIdentityAdminFacade disable/enable/addToGroup/removeFromGroup/resetPassword/setPassword return their tags",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/integration-facades.spec.ts",
-      "durationMs": 20.28412500000013
+      "name": "ResponseEventRequestDbClientLifecycle releases immediately when the response is already finished",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/request-db-client-lifecycle.spec.ts",
+      "durationMs": 39.634791999999834
     },
     {
-      "name": "AuditInterceptor writes an envelope with action/entity/entityId/tenantId/actorId/role",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/audit.interceptor.spec.ts",
-      "durationMs": 14.273083000000042
+      "name": "DbContextInterceptor skips applier when there is no principal on the request",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/db-context.interceptor.spec.ts",
+      "durationMs": 36.089750000000095
+    },
+    {
+      "name": "backend durable stores covers backend PgIdempotencyStore query branches",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/pg-durable-stores.spec.ts",
+      "durationMs": 31.83395900000005
     },
     {
       "name": "ResponseEventRequestDbClientLifecycle honors custom releaseEvents config",
       "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/request-db-client-lifecycle.spec.ts",
-      "durationMs": 13.981208999999922
-    },
-    {
-      "name": "backend idempotency behavior covers durable direct replay, conflict, wait timeout, and cache cleanup",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/behavior-coverage.spec.ts",
-      "durationMs": 13.010584000000563
-    },
-    {
-      "name": "TenantLifecycleMiddleware throws BadRequestException when tenant header missing and required",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/tenant-lifecycle.middleware.spec.ts",
-      "durationMs": 12.156124999999975
+      "durationMs": 26.74416700000006
     },
     {
       "name": "backend SLA behavior samples requests, skips NONE categories, aggregates by window, and records errors",
       "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/behavior-coverage.spec.ts",
-      "durationMs": 11.717416999999841
+      "durationMs": 25.971749999998792
     },
     {
-      "name": "PgIdentityLocalSyncAdapter sorts groups by name when sort order ties or is absent",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/pg-local-sync.adapter.spec.ts",
-      "durationMs": 10.447041000000127
+      "name": "ResponseEventRequestDbClientLifecycle release defers to the response finish event when response is open",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/request-db-client-lifecycle.spec.ts",
+      "durationMs": 25.666750000000093
+    },
+    {
+      "name": "AuditInterceptor runs metadata through the redaction policy when configured",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/audit.interceptor.spec.ts",
+      "durationMs": 24.806874999999764
+    },
+    {
+      "name": "DbContextInterceptor applies session context when principal + pgClient are present",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/db-context.interceptor.spec.ts",
+      "durationMs": 22.397707999999966
     }
   ]
 }

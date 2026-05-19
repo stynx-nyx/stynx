@@ -2,7 +2,6 @@ import { createStrykerConfig } from '../../tools/stryker/base.mjs';
 
 export default createStrykerConfig({
   packageName: '@stynx-web/sdk',
-  threshold: 60,
   mutate: [
     'src/api-client.ts',
     'src/auth-provider.ts',

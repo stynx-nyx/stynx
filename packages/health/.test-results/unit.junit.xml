@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="14" failures="0" errors="0" time="0.10232625">
+    <testsuite name="test/unit/barrel-load.spec.ts" timestamp="2026-05-19T01:36:10.786Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.001720042">
+        <testcase classname="test/unit/barrel-load.spec.ts" name="@stynx/health barrel &gt; exports at least one symbol" time="0.000687417">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/health.controller.spec.ts" timestamp="2026-05-19T01:36:10.791Z" hostname="thiamat-1903.local" tests="6" failures="0" errors="0" skipped="0" time="0.006859291">
+        <testcase classname="test/unit/health.controller.spec.ts" name="StynxHealthController API contract &gt; returns liveness and app info payloads" time="0.00136825">
+        </testcase>
+        <testcase classname="test/unit/health.controller.spec.ts" name="StynxHealthController API contract &gt; maps terminus readiness failures to 503 responses" time="0.000716916">
+        </testcase>
+        <testcase classname="test/unit/health.controller.spec.ts" name="StynxHealthController API contract &gt; rethrows non-terminus readiness failures" time="0.000192208">
+        </testcase>
+        <testcase classname="test/unit/health.controller.spec.ts" name="StynxHealthController API contract &gt; restricts metrics by configured IP allowlist" time="0.002489333">
+        </testcase>
+        <testcase classname="test/unit/health.controller.spec.ts" name="StynxHealthController API contract &gt; allows metrics without an allowlist and falls back to empty client IP" time="0.000518833">
+        </testcase>
+        <testcase classname="test/unit/health.controller.spec.ts" name="StynxHealthController API contract &gt; returns base info when app info is omitted" time="0.000365">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/health.module.spec.ts" timestamp="2026-05-19T01:36:10.795Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.005191667">
+        <testcase classname="test/unit/health.module.spec.ts" name="StynxHealthModule.forRoot &gt; wires default module options and indicators" time="0.004484208">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/health.service.spec.ts" timestamp="2026-05-19T01:36:10.801Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.071042">
+        <testcase classname="test/unit/health.service.spec.ts" name="StynxHealthService &gt; fails readiness when a dependency is down" time="0.027138708">
+        </testcase>
+        <testcase classname="test/unit/health.service.spec.ts" name="StynxHealthService &gt; captures non-Error dependency failures and down indicators without details" time="0.00607275">
+        </testcase>
+        <testcase classname="test/unit/health.service.spec.ts" name="StynxHealthService &gt; returns a structured success payload when dependencies are healthy" time="0.031901083">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/info.guard.spec.ts" timestamp="2026-05-19T01:36:10.810Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.011004667">
+        <testcase classname="test/unit/info.guard.spec.ts" name="StynxPlatformInfoGuard &gt; blocks access when the platform flag is disabled" time="0.004839541">
+        </testcase>
+        <testcase classname="test/unit/info.guard.spec.ts" name="StynxPlatformInfoGuard &gt; allows access when the platform flag is enabled" time="0.000166708">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/metrics.service.spec.ts" timestamp="2026-05-19T01:36:10.836Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.006508583">
+        <testcase classname="test/unit/metrics.service.spec.ts" name="StynxMetricsService &gt; renders baseline prometheus metrics" time="0.005929666">
+        </testcase>
+    </testsuite>
+</testsuites>
