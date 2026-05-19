@@ -28,8 +28,8 @@
     "stryker": "node ./../../scripts/run-and-record.mjs --package @stynx/core --level mutation --runner stryker-vitest -- pnpm exec stryker run stryker.conf.mjs"
   },
   "dependencies": {
-    "@aws-sdk/client-secrets-manager": "^3.1037.0",
-    "@aws-sdk/client-ssm": "^3.1037.0",
+    "@aws-sdk/client-secrets-manager": "^3.1049.0",
+    "@aws-sdk/client-ssm": "^3.1049.0",
     "nestjs-cls": "^6.2.0",
     "zod": "^4.3.6"
   },

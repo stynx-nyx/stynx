@@ -27,8 +27,8 @@
     "stryker": "node ./../../scripts/run-and-record.mjs --package @stynx/auth --level mutation --runner stryker-vitest -- pnpm exec stryker run stryker.conf.mjs"
   },
   "dependencies": {
-    "@aws-sdk/client-cognito-identity-provider": "^3.1037.0",
-    "@aws-sdk/credential-providers": "^3.1037.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.1049.0",
+    "@aws-sdk/credential-providers": "^3.1049.0",
     "@aws-sdk/types": "^3.973.8",
     "@stynx/contracts": "workspace:*",
     "@stynx/core": "workspace:*",
