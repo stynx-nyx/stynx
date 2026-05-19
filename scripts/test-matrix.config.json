@@ -37,6 +37,8 @@
     "perf": "default"
   },
   "perPackage": {
+    "@stynx-web/angular-audit": { "coverage": "default", "mutation": 70 },
+    "@stynx-web/angular-iam": { "coverage": "default", "mutation": 70 },
     "@stynx/auth": { "mutation": "strictest" },
     "@stynx/data": { "mutation": "strictest" },
     "@stynx/tenancy": { "mutation": "strict" }

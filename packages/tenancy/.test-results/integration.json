@@ -5,13 +5,14 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T00:48:56.335Z",
-  "endedAt": "2026-05-19T00:49:01.345Z",
-  "durationMs": 5010,
+  "startedAt": "2026-05-19T15:29:17.408Z",
+  "endedAt": "2026-05-19T15:29:39.515Z",
+  "durationMs": 22107,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
-    "raw": ".test-results/integration.log"
+    "raw": ".test-results/integration.log",
+    "junit": ".test-results/integration.junit.xml"
   },
   "env": {
     "node": "24.15.0",
@@ -25,41 +26,73 @@
       "./vitest.int.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-65666-1779151736335.json"
+      "--outputFile.json=/tmp/vitest-86091-1779204557407.json",
+      "--reporter=junit",
+      "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/tenancy/.test-results/integration.junit.xml"
     ],
     "cwd": "/Users/aarusso/Development/stech/stynx/packages/tenancy"
   },
+  "metric": {
+    "kind": "none"
+  },
   "totals": {
-    "files": 1,
-    "tests": 4,
-    "passed": 4,
+    "files": 2,
+    "tests": 26,
+    "passed": 26,
     "failed": 0,
     "skipped": 0,
     "todo": 0
   },
   "slowestTests": [
     {
+      "name": "TenancyController API error matrix POST /tenants returns 201 after provisioning a tenant",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/integration/tenancy.api-matrix.spec.ts",
+      "durationMs": 274.3642499999987
+    },
+    {
       "name": "StynxTenancyModule integration provisions tenants idempotently under concurrent retries",
       "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/integration/tenancy.module.spec.ts",
-      "durationMs": 97.64533400000073
+      "durationMs": 109.91854199999943
     },
     {
-      "name": "StynxTenancyModule integration resolves tenant from header, bearer claim, and subdomain",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/integration/tenancy.module.spec.ts",
-      "durationMs": 66.73099999999977
+      "name": "TenancyController API error matrix POST /tenants/:id/purge returns 201 after purging a tenant",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/integration/tenancy.api-matrix.spec.ts",
+      "durationMs": 78.86012500000288
     },
     {
-      "name": "StynxTenancyModule integration suspends a tenant and blocks subsequent access",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/integration/tenancy.module.spec.ts",
-      "durationMs": 32.61229099999946
+      "name": "TenancyController API error matrix POST /tenants/:id/suspend returns 404 for an unknown tenant id",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/integration/tenancy.api-matrix.spec.ts",
+      "durationMs": 73.31387499999983
     },
     {
-      "name": "StynxTenancyModule integration rejects missing or invalid tenant context and wrong tenant access",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/integration/tenancy.module.spec.ts",
-      "durationMs": 18.20966700000008
+      "name": "TenancyController API error matrix POST /tenants/:id/archive returns 404 for an unknown tenant id",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/integration/tenancy.api-matrix.spec.ts",
+      "durationMs": 72.00616700000319
+    },
+    {
+      "name": "TenancyController API error matrix PATCH /tenants/:id returns 200 after updating tenant metadata and settings",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/integration/tenancy.api-matrix.spec.ts",
+      "durationMs": 59.971582999998645
+    },
+    {
+      "name": "TenancyController API error matrix GET /tenants returns 200 with tenant summaries",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/integration/tenancy.api-matrix.spec.ts",
+      "durationMs": 55.87066699999923
+    },
+    {
+      "name": "TenancyController API error matrix POST /tenants/:id/suspend returns 201 after suspending a tenant",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/integration/tenancy.api-matrix.spec.ts",
+      "durationMs": 45.02187500000218
+    },
+    {
+      "name": "TenancyController API error matrix POST /tenants/:id/archive returns 201 after archiving a tenant",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/integration/tenancy.api-matrix.spec.ts",
+      "durationMs": 43.143042000003334
+    },
+    {
+      "name": "TenancyController API error matrix GET /tenants/:id returns 404 for an unknown tenant id",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/integration/tenancy.api-matrix.spec.ts",
+      "durationMs": 40.61583400000018
     }
-  ],
-  "metric": {
-    "kind": "none"
-  }
+  ]
 }

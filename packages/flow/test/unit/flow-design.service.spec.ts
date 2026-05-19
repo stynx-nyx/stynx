@@ -1,4 +1,4 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { FlowDesignService } from '../../src/flow-design.service';
 import type { Mock } from 'vitest';
 
@@ -107,6 +107,34 @@ describe('FlowDesignService — graphs / nodes / edges', () => {
     expect(sql).not.toContain('where');
   });
 
+  it('listGraphs derives draft and published presentation state from graph metadata', async () => {
+    const { service } = makeService([[
+      { id: GRAPH, code: 'draft', meta: {} },
+      {
+        id: '0190abcd-1234-7abc-89ab-000000000009',
+        code: 'published',
+        meta: {
+          publish: {
+            publishedVersion: 3,
+            publishedAt: '2026-05-19T00:00:00.000Z',
+            publishedBy: '0190abcd-1234-7abc-89ab-000000000010',
+          },
+        },
+      },
+    ]]);
+
+    await expect(service.listGraphs()).resolves.toEqual([
+      expect.objectContaining({ id: GRAPH, status: 'draft' }),
+      expect.objectContaining({
+        code: 'published',
+        status: 'published',
+        publishedVersion: 3,
+        publishedAt: '2026-05-19T00:00:00.000Z',
+        publishedBy: '0190abcd-1234-7abc-89ab-000000000010',
+      }),
+    ]);
+  });
+
   it('getGraph, updateGraph, and deleteGraph route through shared CRUD helpers', async () => {
     const get = makeService([[{ id: GRAPH }]]);
     await expect(get.service.getGraph(GRAPH)).resolves.toMatchObject({ id: GRAPH });
@@ -127,6 +155,58 @@ describe('FlowDesignService — graphs / nodes / edges', () => {
     await service.createGraph({ scopeId: SCOPE, code: 'g' });
     const [sql] = trx.query.mock.calls[0]!;
     expect(sql).toContain('insert into flow.graphs');
+  });
+
+  it('publishGraph validates and records package-owned publish metadata', async () => {
+    const { service, trx } = makeService([
+      [{ id: GRAPH, version: 'v2', meta: {} }],
+      [
+        { id: NODE, code: 'start', kind: 'start' },
+        { id: '0190abcd-1234-7abc-89ab-000000000009', code: 'end', kind: 'end' },
+      ],
+      [{ id: EDGE, from_node_id: NODE, to_node_id: '0190abcd-1234-7abc-89ab-000000000009' }],
+      [{ id: GRAPH }],
+    ]);
+
+    const result = await service.publishGraph(GRAPH, {
+      expectedDraftVersion: 'v2',
+      notes: 'Ship',
+    });
+
+    expect(result).toMatchObject({
+      graphId: GRAPH,
+      status: 'published',
+      draftVersion: 'v2',
+      publishedVersion: 1,
+      publishedBy: 'u-1',
+      runtimeGraphRef: { graphId: GRAPH, version: 1 },
+    });
+    const [sql, params] = trx.query.mock.calls[3]!;
+    expect(sql).toContain('update flow.graphs');
+    expect(params?.[1]).toMatchObject({
+      publish: {
+        publishedVersion: 1,
+        publishedBy: 'u-1',
+        draftVersion: 'v2',
+        notes: 'Ship',
+      },
+    });
+  });
+
+  it('publishGraph rejects stale draft versions and invalid graph structure', async () => {
+    const stale = makeService([[{ id: GRAPH, version: 'v2', meta: {} }]]);
+    await expect(stale.service.publishGraph(GRAPH, { expectedDraftVersion: 'v1' })).rejects.toBeInstanceOf(
+      ConflictException,
+    );
+
+    const invalid = makeService([
+      [{ id: GRAPH, version: 'v2', meta: {} }],
+      [{ id: NODE, code: 'start', kind: 'start' }],
+      [],
+    ]);
+    await expect(invalid.service.publishGraph(GRAPH, { expectedDraftVersion: 'v2' })).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
   });
 
   it('listGraphNodes filters by graph_id', async () => {
@@ -297,11 +377,23 @@ describe('FlowDesignService — policySets / policyRules', () => {
     expect(sql).toContain('scope_id = $1::uuid');
   });
 
+  it('listPolicySets without scopeId omits WHERE', async () => {
+    const { service, trx } = makeService([[]]);
+    await service.listPolicySets();
+    expect(trx.query.mock.calls[0]?.[0]).not.toContain('where');
+  });
+
   it('createPolicySet INSERTs', async () => {
     const { service, trx } = makeService([[{ id: POLICYSET }]]);
     await service.createPolicySet({ scopeId: SCOPE, version: 'v1' });
     const [sql] = trx.query.mock.calls[0]!;
     expect(sql).toContain('insert into flow.policy_sets');
+  });
+
+  it('createPolicySet records nullable audit actors when actor context is absent', async () => {
+    const { service, trx } = makeService([[{ id: POLICYSET }]], { tenantId: 't-1' });
+    await service.createPolicySet({ scopeId: SCOPE, version: 'v1' });
+    expect((trx.query.mock.calls[0]?.[1] as unknown[]).slice(-2)).toEqual([null, null]);
   });
 
   it('updatePolicySet, getPolicySet, and deletePolicySet route through shared helpers', async () => {
@@ -346,6 +438,12 @@ describe('FlowDesignService — policySets / policyRules', () => {
     const d = makeService([[{ id: POLICYRULE }]]);
     await d.service.deletePolicyRule(POLICYRULE);
     expect(d.trx.softDelete).toHaveBeenCalled();
+  });
+
+  it('updatePolicySet records a nullable audit actor when actor context is absent', async () => {
+    const { service, trx } = makeService([[{ id: POLICYSET }]], { tenantId: 't-1' });
+    await service.updatePolicySet(POLICYSET, { name: 'Policy' });
+    expect((trx.query.mock.calls[0]?.[1] as unknown[])[2]).toBeNull();
   });
 });
 
@@ -401,6 +499,23 @@ describe('FlowDesignService.importGraph', () => {
         ],
       }),
     ).toThrow(BadRequestException);
+  });
+
+  it('rejects duplicate edge keys when action is omitted', () => {
+    const { service } = makeService([]);
+    expect(() =>
+      service.importGraph({
+        graph: { scopeId: SCOPE, code: 'g' },
+        nodes: [
+          { code: 'a', kind: 'start' },
+          { code: 'b', kind: 'end' },
+        ],
+        edges: [
+          { fromNodeCode: 'a', toNodeCode: 'b' },
+          { fromNodeCode: 'a', toNodeCode: 'b' },
+        ],
+      }),
+    ).toThrow('Duplicate graph edge: a::b');
   });
 
   it('inserts graph + nodes + edges and returns an export document', async () => {

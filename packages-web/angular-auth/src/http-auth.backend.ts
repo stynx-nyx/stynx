@@ -1,5 +1,5 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Inject, Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { STYNX_ANGULAR_OPTIONS } from '@stynx-web/angular';
 import type { StynxAngularModuleOptions } from '@stynx-web/angular';
@@ -11,12 +11,8 @@ function trimEdgeSlash(value: string): string {
 
 @Injectable()
 export class HttpAuthBackend implements StynxAuthBackend {
-  constructor(
-    @Inject(HttpClient)
-    private readonly http: HttpClient,
-    @Inject(STYNX_ANGULAR_OPTIONS)
-    private readonly angularOptions: StynxAngularModuleOptions,
-  ) {}
+  private readonly http = inject(HttpClient);
+  private readonly angularOptions = inject<StynxAngularModuleOptions>(STYNX_ANGULAR_OPTIONS);
 
   async exchangeCognitoToken(cognitoToken: string, tenantId: string): Promise<StynxSessionBundle> {
     return firstValueFrom(this.http.post<StynxSessionBundle>(

@@ -2,6 +2,9 @@ import js from '@eslint/js';
 import { existsSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import angularPlugin from '@angular-eslint/eslint-plugin';
+import angularTemplatePlugin from '@angular-eslint/eslint-plugin-template';
+import angularTemplateParser from '@angular-eslint/template-parser';
 import boundariesPlugin from 'eslint-plugin-boundaries';
 import jsdocPlugin from 'eslint-plugin-jsdoc';
 import globals from 'globals';
@@ -84,90 +87,6 @@ function collectDecoratorNames(node) {
     .map((decorator) => getDecoratorName(decorator))
     .filter((name) => typeof name === 'string');
 }
-
-function getPropertyName(property) {
-  if (property.type !== 'Property' || property.computed) {
-    return null;
-  }
-
-  if (property.key.type === 'Identifier') {
-    return property.key.name;
-  }
-
-  if (property.key.type === 'Literal' && typeof property.key.value === 'string') {
-    return property.key.value;
-  }
-
-  return null;
-}
-
-function isOnPushExpression(node) {
-  return (
-    node.type === 'MemberExpression' &&
-    !node.computed &&
-    node.object.type === 'Identifier' &&
-    node.object.name === 'ChangeDetectionStrategy' &&
-    node.property.type === 'Identifier' &&
-    node.property.name === 'OnPush'
-  );
-}
-
-function getComponentMetadata(decorator) {
-  if (decorator.expression?.type !== 'CallExpression') {
-    return null;
-  }
-
-  const call = decorator.expression;
-  if (call.callee.type !== 'Identifier' || call.callee.name !== 'Component') {
-    return null;
-  }
-
-  const [metadata] = call.arguments;
-  return metadata?.type === 'ObjectExpression' ? metadata : null;
-}
-
-const angularEslintPlugin = {
-  rules: {
-    'prefer-on-push-component-change-detection': {
-      meta: {
-        type: 'suggestion',
-        docs: {
-          description: 'Require Angular components to use ChangeDetectionStrategy.OnPush.',
-        },
-        schema: [],
-        messages: {
-          preferOnPush:
-            'Components must declare changeDetection: ChangeDetectionStrategy.OnPush.',
-        },
-      },
-      create(context) {
-        return {
-          ClassDeclaration(node) {
-            for (const decorator of node.decorators ?? []) {
-              const metadata = getComponentMetadata(decorator);
-              if (!metadata) {
-                continue;
-              }
-
-              const changeDetection = metadata.properties.find(
-                (property) => getPropertyName(property) === 'changeDetection',
-              );
-
-              if (changeDetection?.type === 'Property' && isOnPushExpression(changeDetection.value)) {
-                continue;
-              }
-
-              context.report({
-                node: changeDetection ?? decorator,
-                messageId: 'preferOnPush',
-              });
-            }
-          },
-        };
-      },
-    },
-  },
-};
 
 const stynxPlugin = {
   rules: {
@@ -290,7 +209,7 @@ const resolveTsconfigProject = (tsconfig) => {
   return tsconfig;
 };
 
-const createConfig = ({ files, tsconfig = './tsconfig.json', browser = false, nest = false, angular = false, allowPgPool = false, allowS3Fetch = false }) => [
+const createConfig = ({ files, tsconfig = './tsconfig.json', browser = false, nest = false, angular = false, allowPgPool = false, allowS3Fetch = false, processor = undefined }) => [
   {
     ignores: ['dist/**', 'build/**', 'coverage/**', 'node_modules/**', '.angular/**'],
   },
@@ -308,11 +227,13 @@ const createConfig = ({ files, tsconfig = './tsconfig.json', browser = false, ne
     },
     plugins: {
       '@typescript-eslint': tsPlugin,
-      '@angular-eslint': angularEslintPlugin,
+      '@angular-eslint': angularPlugin,
+      '@angular-eslint/template': angularTemplatePlugin,
       boundaries: boundariesPlugin,
       jsdoc: jsdocPlugin,
       stynx: stynxPlugin,
     },
+    ...(processor ? { processor } : {}),
     settings: {
       'boundaries/root-path': workspaceRoot,
       'boundaries/elements': boundaryElements,
@@ -349,7 +270,12 @@ const createConfig = ({ files, tsconfig = './tsconfig.json', browser = false, ne
         : {}),
       ...(angular
         ? {
+            ...angularPlugin.configs.recommended.rules,
             '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
+            '@angular-eslint/component-class-suffix': 'error',
+            '@angular-eslint/no-input-rename': 'error',
+            '@angular-eslint/no-output-on-prefix': 'error',
+            '@angular-eslint/no-output-rename': 'error',
             '@angular-eslint/prefer-on-push-component-change-detection': 'error',
           }
         : {}),
@@ -381,6 +307,23 @@ const createConfig = ({ files, tsconfig = './tsconfig.json', browser = false, ne
       'no-restricted-imports': 'off',
     },
   },
+  ...(angular
+    ? [
+        {
+          files: ['**/*.html'],
+          languageOptions: {
+            parser: angularTemplateParser,
+          },
+          plugins: {
+            '@angular-eslint/template': angularTemplatePlugin,
+          },
+          rules: {
+            ...angularTemplatePlugin.configs.recommended.rules,
+            '@angular-eslint/template/click-events-have-key-events': 'warn',
+          },
+        },
+      ]
+    : []),
 ];
 
 export const createLibConfig = (options = {}) => createConfig({ files: ['src/**/*.ts', 'lib/**/*.ts'], ...options });
@@ -391,6 +334,7 @@ export const createAngularConfig = (options = {}) =>
     browser: true,
     angular: true,
     tsconfig: ['./tsconfig.app.json', './tsconfig.json'],
+    processor: angularTemplatePlugin.processors['extract-inline-html'],
     ...options,
   });
 

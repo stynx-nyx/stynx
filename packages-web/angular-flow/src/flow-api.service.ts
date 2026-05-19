@@ -28,17 +28,20 @@ import type {
   FlowWaiver,
   FlowEffectDispatchSummary,
   FlowEvent,
+  PublishFlowGraphRequest,
+  PublishFlowGraphResponse,
 } from './types';
 
 type QueryValue = string | number | boolean | null | undefined;
 type FlowQuery = Record<string, QueryValue>;
 
 function query(input: FlowQuery): Record<string, Exclude<QueryValue, undefined>> | undefined {
-  const filtered = Object.fromEntries(
-    Object.entries(input).filter((entry): entry is [string, Exclude<QueryValue, undefined>] =>
-      entry[1] !== undefined,
-    ),
-  );
+  const filtered: Record<string, Exclude<QueryValue, undefined>> = {};
+  for (const [key, value] of Object.entries(input)) {
+    if (value !== undefined) {
+      filtered[key] = value;
+    }
+  }
   return Object.keys(filtered).length > 0 ? filtered : undefined;
 }
 
@@ -93,6 +96,18 @@ export class FlowApiService {
 
   updateGraph(id: string, input: Partial<FlowGraph>): Promise<FlowGraph> {
     return this.client.patch<FlowGraph>(`/flow/graphs/${id}`, input);
+  }
+
+  publishGraph(
+    id: string,
+    input: PublishFlowGraphRequest = {},
+    idempotencyKey?: string,
+  ): Promise<PublishFlowGraphResponse> {
+    return this.client.post<PublishFlowGraphResponse>(
+      `/flow/graphs/${id}/publish`,
+      input,
+      idempotencyKey ? { headers: { 'Idempotency-Key': idempotencyKey } } : undefined,
+    );
   }
 
   deleteGraph(id: string): Promise<{ id: string; deleted: boolean }> {

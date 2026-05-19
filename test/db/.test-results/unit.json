@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T04:24:58.912Z",
-  "endedAt": "2026-05-19T04:25:05.652Z",
-  "durationMs": 6740,
+  "startedAt": "2026-05-19T15:48:22.238Z",
+  "endedAt": "2026-05-19T15:48:34.431Z",
+  "durationMs": 12193,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -15,7 +15,7 @@
     "junit": ".test-results/unit.junit.xml"
   },
   "env": {
-    "node": "26.0.0",
+    "node": "24.15.0",
     "ci": false
   },
   "command": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-45188-1779164698912.json",
+      "--outputFile.json=/tmp/vitest-19275-1779205702238.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/test/db/.test-results/unit.junit.xml"
     ],
@@ -36,63 +36,63 @@
     "kind": "none"
   },
   "totals": {
-    "files": 3,
-    "tests": 10,
-    "passed": 10,
+    "files": 16,
+    "tests": 54,
+    "passed": 54,
     "failed": 0,
     "skipped": 0,
     "todo": 0
   },
   "slowestTests": [
     {
-      "name": "storage schema DDL defines storage schema and files table",
-      "file": "/Users/aarusso/Development/stech/stynx/test/db/storage.ddl.spec.ts",
-      "durationMs": 4.808875000000171
+      "name": "auth runtime RLS policies filters auth.tenancies through the tenant_isolation policy",
+      "file": "/Users/aarusso/Development/stech/stynx/test/db/runtime/auth/rls-policies.runtime.spec.ts",
+      "durationMs": 333.429666
     },
     {
-      "name": "auth schema DDL defines auth schema",
-      "file": "/Users/aarusso/Development/stech/stynx/test/db/auth.ddl.spec.ts",
-      "durationMs": 2.043666999999914
+      "name": "auth runtime RLS policies filters auth.tenancy_members through tenant_isolation and membership_isolation",
+      "file": "/Users/aarusso/Development/stech/stynx/test/db/runtime/auth/rls-policies.runtime.spec.ts",
+      "durationMs": 316.620958
     },
     {
-      "name": "audit schema DDL exposes audit.write helper",
-      "file": "/Users/aarusso/Development/stech/stynx/test/db/audit.ddl.spec.ts",
-      "durationMs": 1.83849999999984
+      "name": "storage.files runtime behavior applies tenant_scope RLS so a non-owner role sees only the current tenant files",
+      "file": "/Users/aarusso/Development/stech/stynx/test/db/runtime/storage/files-touch.runtime.spec.ts",
+      "durationMs": 290.68370900000036
     },
     {
-      "name": "audit schema DDL creates audit.events table with metadata and pk columns",
-      "file": "/Users/aarusso/Development/stech/stynx/test/db/audit.ddl.spec.ts",
-      "durationMs": 1.6665419999999358
+      "name": "audit.events tenant_scope RLS runtime behavior limits non-owner reads to auth.current_tenant plus tenantless audit events",
+      "file": "/Users/aarusso/Development/stech/stynx/test/db/runtime/audit/tenant-scope.runtime.spec.ts",
+      "durationMs": 220.05349999999999
     },
     {
-      "name": "auth schema DDL defines reusable tenant/RLS helper functions",
-      "file": "/Users/aarusso/Development/stech/stynx/test/db/auth.ddl.spec.ts",
-      "durationMs": 0.9662500000004002
+      "name": "auth runtime RLS policies filters auth.user_groups through user_groups_isolation",
+      "file": "/Users/aarusso/Development/stech/stynx/test/db/runtime/auth/rls-policies.runtime.spec.ts",
+      "durationMs": 206.21166600000015
     },
     {
-      "name": "auth schema DDL exposes tenancy membership with RLS policies",
-      "file": "/Users/aarusso/Development/stech/stynx/test/db/auth.ddl.spec.ts",
-      "durationMs": 0.9655409999995754
+      "name": "auth tenant context runtime helpers keeps tenant context isolated per database connection",
+      "file": "/Users/aarusso/Development/stech/stynx/test/db/runtime/auth/tenant-context.runtime.spec.ts",
+      "durationMs": 202.18841599999996
     },
     {
-      "name": "storage schema DDL enables row level security",
-      "file": "/Users/aarusso/Development/stech/stynx/test/db/storage.ddl.spec.ts",
-      "durationMs": 0.28700000000026193
+      "name": "auth runtime RLS policies filters auth.users through users_isolation and hides cross-tenant updates",
+      "file": "/Users/aarusso/Development/stech/stynx/test/db/runtime/auth/rls-policies.runtime.spec.ts",
+      "durationMs": 196.0421669999996
     },
     {
-      "name": "audit schema DDL extracts primary key data for trigger events",
-      "file": "/Users/aarusso/Development/stech/stynx/test/db/audit.ddl.spec.ts",
-      "durationMs": 0.16550000000006548
+      "name": "auth tenant context runtime helpers enforces tenancy_id with auth.create_tenant_enforcement_trigger and auth.apply_tenant",
+      "file": "/Users/aarusso/Development/stech/stynx/test/db/runtime/auth/tenant-context.runtime.spec.ts",
+      "durationMs": 177.58091700000023
     },
     {
-      "name": "auth schema DDL sets up Cognito mirror tables",
-      "file": "/Users/aarusso/Development/stech/stynx/test/db/auth.ddl.spec.ts",
-      "durationMs": 0.16020799999978408
+      "name": "audit hash-chain runtime behavior formats timestamps, computes hashes, and sets pinned row hashes on insert",
+      "file": "/Users/aarusso/Development/stech/stynx/test/db/runtime/audit/hash-chain.runtime.spec.ts",
+      "durationMs": 170.45133299999998
     },
     {
-      "name": "audit schema DDL exposes audit.verify_chain helper",
-      "file": "/Users/aarusso/Development/stech/stynx/test/db/audit.ddl.spec.ts",
-      "durationMs": 0.078125
+      "name": "auth tenant context runtime helpers enforces tenant_id through auth.attach_tenant_enforcement_triggers and auth.apply_tenant_id",
+      "file": "/Users/aarusso/Development/stech/stynx/test/db/runtime/auth/tenant-context.runtime.spec.ts",
+      "durationMs": 164.8739999999998
     }
   ]
 }

@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { FlowAdapterRegistry, type FlowDomainAdapter } from '../../src/adapters';
 import { FlowDesignService } from '../../src/flow-design.service';
 import {
+  answerWriteSchema,
   createNodeSchema,
   ensureRunSchema,
   parseDto,
@@ -34,6 +35,13 @@ describe('Flow validation and regression guards', () => {
       graphCode: 'approval',
       targetId: 'target-1',
     })).toThrow(BadRequestException);
+  });
+
+  it('accepts answer writes identified by itemId before normalization', () => {
+    expect(parseDto(answerWriteSchema, {
+      itemId: '01978f4a-32bf-7c27-a131-fd73a9e001a1',
+      value: true,
+    })).toMatchObject({ itemId: '01978f4a-32bf-7c27-a131-fd73a9e001a1' });
   });
 
   it('rejects invalid graph imports with duplicate or missing node references', () => {

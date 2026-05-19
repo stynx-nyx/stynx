@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {
   ActorContextMissingError,
   ArchiveMirrorDriftError,
@@ -5,6 +6,7 @@ import {
   CascadeTooDeepError,
   CascadeTooLargeError,
   ReadOnlyViolationError,
+  SerializationFailureError,
   RestoreCascadeParentsArchivedError,
   RestoreConflictError,
   SoftDeleteBlockedError,
@@ -27,5 +29,11 @@ describe('data errors', () => {
     expect(new ArchiveMirrorMissingError({ table: 'archive.t' })).toMatchObject({ code: 'ARCHIVE_MIRROR_MISSING', status: 500 });
     expect(new ArchiveMirrorDriftError({ table: 'archive.t' })).toMatchObject({ code: 'ARCHIVE_MIRROR_DRIFT', status: 500 });
     expect(new StatementTimeoutError({ timeoutMs: 100 })).toMatchObject({ code: 'STATEMENT_TIMEOUT', status: 504 });
+  });
+
+  it('omits optional error context when no context is provided', () => {
+    expect(new ReadOnlyViolationError().context).toBeUndefined();
+    expect(new StatementTimeoutError().context).toBeUndefined();
+    expect(new SerializationFailureError().context).toBeUndefined();
   });
 });

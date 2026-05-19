@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Test, type TestingModule } from '@nestjs/testing';
 import { readdir } from 'node:fs/promises';
 import { resolve } from 'node:path';

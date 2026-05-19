@@ -295,7 +295,7 @@ export class FlowFormsService {
     const dto = parseDto(answerWriteSchema, this.normalizeAnswerInput(input));
     return this.db.tx(async (trx) => {
       await this.assertExists(trx, 'flow.fills', fillId, 'Fill not found');
-      await this.assertExists(trx, 'flow.questions', dto.questionId ?? '', 'Question not found');
+      await this.assertExists(trx, 'flow.questions', dto.questionId!, 'Question not found');
       const tenantId = this.requireTenantId();
       const actorId = this.requestContext.actorId ?? null;
       return this.upsertAnswerInTx(trx, tenantId, actorId, fillId, dto);
@@ -312,7 +312,7 @@ export class FlowFormsService {
       const rows: Record<string, unknown>[] = [];
       for (const answer of answers) {
         const dto = parseDto(answerWriteSchema, this.normalizeAnswerInput(answer));
-        await this.assertExists(trx, 'flow.questions', dto.questionId ?? '', 'Question not found');
+        await this.assertExists(trx, 'flow.questions', dto.questionId!, 'Question not found');
         rows.push(await this.upsertAnswerInTx(trx, tenantId, actorId, fillId, dto));
       }
       return rows;
@@ -431,10 +431,14 @@ export class FlowFormsService {
 
   private normalizeAnswerInput(input: unknown): Record<string, unknown> {
     const body = this.objectInput(input);
-    return {
-      ...body,
-      questionId: body.questionId ?? body.itemId,
-    };
+    const normalized = { ...body };
+    const questionId = body.questionId ?? body.itemId;
+    if (questionId === undefined) {
+      delete normalized.questionId;
+    } else {
+      normalized.questionId = questionId;
+    }
+    return normalized;
   }
 
   private async createRow(key: TableKey, input: Record<string, unknown>): Promise<Record<string, unknown>> {

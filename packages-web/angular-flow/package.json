@@ -11,6 +11,8 @@
       "types": "./dist/types/stynx-web-angular-flow-testing.d.ts",
       "default": "./dist/fesm2022/stynx-web-angular-flow-testing.mjs"
     },
+    "./catalogs/en.json": "./dist/catalogs/en.json",
+    "./catalogs/pt-BR.json": "./dist/catalogs/pt-BR.json",
     "./package.json": "./package.json"
   },
   "sideEffects": false,
@@ -21,16 +23,18 @@
     "dist"
   ],
   "scripts": {
-    "build": "ng-packagr -p ng-package.json -c tsconfig.apf.json",
+    "build": "ng-packagr -p ng-package.json && pnpm run normalize:dist-exports",
     "clean": "rm -rf dist coverage",
     "typecheck": "tsc -p tsconfig.spec.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/angular.mjs \"src/**/*.ts\"",
     "test": "node ./../../scripts/run-and-record.mjs --package @stynx-web/angular-flow --level unit --runner vitest -- vitest run --config ./vitest.config.ts",
     "stryker": "node ./../../scripts/run-and-record.mjs --package @stynx-web/angular-flow --level mutation --runner stryker-vitest -- NODE_OPTIONS=\"--disable-warning=ExperimentalWarning --experimental-vm-modules\" pnpm exec stryker run stryker.conf.mjs",
-    "build:tsc": "tsc -p tsconfig.json"
+    "build:tsc": "tsc -p tsconfig.json",
+    "normalize:dist-exports": "node -e \"const fs=require('node:fs');const path='dist/package.json';const pkg=JSON.parse(fs.readFileSync(path,'utf8'));pkg.exports['./catalogs/en.json']='./catalogs/en.json';pkg.exports['./catalogs/pt-BR.json']='./catalogs/pt-BR.json';fs.writeFileSync(path, JSON.stringify(pkg,null,2)+'\\n');\""
   },
   "dependencies": {
     "@stynx-web/angular-auth": "workspace:*",
+    "@stynx-web/angular-i18n": "workspace:*",
     "@stynx-web/angular-ui": "workspace:*",
     "@stynx-web/sdk": "workspace:*",
     "rxjs": "^7.8.2"

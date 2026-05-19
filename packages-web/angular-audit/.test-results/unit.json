@@ -1,0 +1,68 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx-web/angular-audit",
+  "level": "unit",
+  "runner": "vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T15:49:08.902Z",
+  "endedAt": "2026-05-19T15:49:17.061Z",
+  "durationMs": 8159,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/unit.log",
+    "junit": ".test-results/unit.junit.xml"
+  },
+  "env": {
+    "node": "24.15.0",
+    "ci": false
+  },
+  "command": {
+    "argv": [
+      "vitest",
+      "run",
+      "--config",
+      "./vitest.config.ts",
+      "--reporter=default",
+      "--reporter=json",
+      "--outputFile.json=/tmp/vitest-22155-1779205748901.json",
+      "--reporter=junit",
+      "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages-web/angular-audit/.test-results/unit.junit.xml"
+    ],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages-web/angular-audit"
+  },
+  "metric": {
+    "kind": "none"
+  },
+  "totals": {
+    "files": 1,
+    "tests": 4,
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "slowestTests": [
+    {
+      "name": "@stynx-web/angular-audit wraps the pinned audit event and integrity endpoints",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-audit/test/angular-audit.spec.ts",
+      "durationMs": 7.014499999999316
+    },
+    {
+      "name": "@stynx-web/angular-audit resolves the configured audit client from Angular injection",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-audit/test/angular-audit.spec.ts",
+      "durationMs": 1.7267080000001442
+    },
+    {
+      "name": "@stynx-web/angular-audit exports the audit SDK client token through the public entrypoint",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-audit/test/angular-audit.spec.ts",
+      "durationMs": 1.3540000000002692
+    },
+    {
+      "name": "@stynx-web/angular-audit omits empty list query options and URL-encodes path segments",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-audit/test/angular-audit.spec.ts",
+      "durationMs": 0.5215840000000753
+    }
+  ]
+}

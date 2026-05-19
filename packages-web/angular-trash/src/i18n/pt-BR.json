@@ -1,0 +1,20 @@
+{
+  "trash.bulk.clear": "Limpar",
+  "trash.bulk.hardDelete": "Excluir selecionados para sempre",
+  "trash.bulk.restore": "Restaurar selecionados",
+  "trash.bulk.selected": "{count, plural, one {# selecionado} other {# selecionados}}",
+  "trash.confirmHardDelete.confirm": "Excluir para sempre",
+  "trash.confirmHardDelete.message": "Isto remove permanentemente a linha arquivada.",
+  "trash.confirmHardDelete.title": "Exclusao definitiva",
+  "trash.empty.description": "Registros excluidos aparecerao aqui.",
+  "trash.empty.title": "Lixeira vazia",
+  "trash.filters.ariaLabel": "Filtros da lixeira",
+  "trash.filters.byActor": "Por ator",
+  "trash.filters.byMe": "Por mim",
+  "trash.filters.last7Days": "Ultimos 7 dias",
+  "trash.item.deletedBy": "Excluido por {actor}",
+  "trash.item.hardDelete": "Excluir definitivamente",
+  "trash.item.restore": "Restaurar",
+  "trash.item.select": "Selecionar",
+  "trash.tabs.ariaLabel": "Tipos de recursos da lixeira"
+}

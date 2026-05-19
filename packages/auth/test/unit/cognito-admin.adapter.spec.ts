@@ -67,6 +67,17 @@ describe('mapCognitoError', () => {
 });
 
 describe('CognitoIdentityAdminAdapter', () => {
+  it('constructs with an explicit endpoint override', () => {
+    expect(
+      () =>
+        new CognitoIdentityAdminAdapter({
+          region: 'us-east-1',
+          userPoolId: 'pool-1',
+          endpoint: 'http://localhost:4566',
+        }),
+    ).not.toThrow();
+  });
+
   it('listUsers calls ListUsersCommand with the email filter when present', async () => {
     const send = vi.fn(async () => ({ Users: [cognitoUser], PaginationToken: 'next' }));
     const adapter = makeAdapter(send);
@@ -91,6 +102,45 @@ describe('CognitoIdentityAdminAdapter', () => {
     const adapter = makeAdapter(send);
     await adapter.listUsers({ group: 'admins' });
     expect(send.mock.calls[0]?.[0]).toBeInstanceOf(ListUsersInGroupCommand);
+  });
+
+  it('listUsers maps empty grouped responses with pagination token', async () => {
+    const send = vi.fn(async () => ({ NextToken: 'next-group' }));
+    const adapter = makeAdapter(send);
+
+    await expect(adapter.listUsers({ group: 'admins' })).resolves.toEqual({
+      items: [],
+      nextToken: 'next-group',
+    });
+  });
+
+  it('listUsers maps empty ungrouped responses without pagination', async () => {
+    const send = vi.fn(async () => ({}));
+    const adapter = makeAdapter(send);
+
+    await expect(adapter.listUsers({})).resolves.toEqual({ items: [] });
+  });
+
+  it('listUsers omits optional summary fields when Cognito omits them', async () => {
+    const send = vi.fn(async () => ({
+      Users: [{ Username: 'minimal', Enabled: false }],
+    }));
+    const adapter = makeAdapter(send);
+
+    await expect(adapter.listUsers({})).resolves.toEqual({
+      items: [{ username: 'minimal', enabled: false }],
+    });
+  });
+
+  it('listUsers falls back to username attributes when Cognito omits Username', async () => {
+    const send = vi.fn(async () => ({
+      Users: [{ Username: undefined, Enabled: true, Attributes: [{ Name: 'email', Value: 'fallback@b' }] }],
+    }));
+    const adapter = makeAdapter(send);
+
+    await expect(adapter.listUsers({})).resolves.toEqual({
+      items: [{ username: 'fallback@b', enabled: true, email: 'fallback@b' }],
+    });
   });
 
   it('listUsers clamps limit to 60 when caller requests more', async () => {
@@ -122,6 +172,45 @@ describe('CognitoIdentityAdminAdapter', () => {
     expect(send.mock.calls[0]?.[0]).toBeInstanceOf(AdminGetUserCommand);
     expect(result.username).toBe('alice');
     expect(result.email).toBe('a@b');
+  });
+
+  it('getUser preserves blank attribute values and optional update metadata', async () => {
+    const send = vi.fn(async () => ({
+      Username: 'alice',
+      Enabled: true,
+      UserStatus: 'CONFIRMED',
+      UserLastModifiedDate: new Date('2026-02-01T00:00:00Z'),
+      UserAttributes: [
+        { Name: 'phone_number', Value: '+1' },
+        { Name: 'custom:blank' },
+      ],
+    }));
+    const adapter = makeAdapter(send);
+
+    await expect(adapter.getUser('alice')).resolves.toMatchObject({
+      username: 'alice',
+      updatedAt: '2026-02-01T00:00:00.000Z',
+      phoneNumber: '+1',
+      attributes: {
+        phone_number: '+1',
+        'custom:blank': '',
+      },
+    });
+  });
+
+  it('getUser handles an undefined attributes array', async () => {
+    const send = vi.fn(async () => ({
+      Username: 'alice',
+      Enabled: false,
+      UserAttributes: undefined,
+    }));
+    const adapter = makeAdapter(send);
+
+    await expect(adapter.getUser('alice')).resolves.toEqual({
+      username: 'alice',
+      enabled: false,
+      attributes: {},
+    });
   });
 
   it('getUserBySubject lists users by sub filter then fetches details', async () => {
@@ -233,6 +322,14 @@ describe('CognitoIdentityAdminAdapter', () => {
     expect(result[0]).toEqual({ name: 'admins', description: 'admins desc' });
   });
 
+  it('listGroupsForUser handles missing groups and descriptions', async () => {
+    const missingGroups = makeAdapter(vi.fn(async () => ({})));
+    await expect(missingGroups.listGroupsForUser('alice')).resolves.toEqual([]);
+
+    const noDescription = makeAdapter(vi.fn(async () => ({ Groups: [{ GroupName: 'auditors' }] })));
+    await expect(noDescription.listGroupsForUser('alice')).resolves.toEqual([{ name: 'auditors' }]);
+  });
+
   it('listGroups paginates via NextToken and maps items', async () => {
     const send = vi.fn(async () => ({
       Groups: [{ GroupName: 'g1' }],
@@ -243,6 +340,22 @@ describe('CognitoIdentityAdminAdapter', () => {
     expect(send.mock.calls[0]?.[0]).toBeInstanceOf(ListGroupsCommand);
     expect(result.nextToken).toBe('tok');
     expect(result.items[0].name).toBe('g1');
+  });
+
+  it('listGroups handles missing groups and omits absent pagination', async () => {
+    const send = vi.fn(async () => ({}));
+    const adapter = makeAdapter(send);
+
+    await expect(adapter.listGroups()).resolves.toEqual({ items: [] });
+  });
+
+  it('listGroups preserves group descriptions when present', async () => {
+    const send = vi.fn(async () => ({ Groups: [{ GroupName: 'g1', Description: 'desc' }] }));
+    const adapter = makeAdapter(send);
+
+    await expect(adapter.listGroups()).resolves.toEqual({
+      items: [{ name: 'g1', description: 'desc' }],
+    });
   });
 
   it('addUserToGroup / removeUserFromGroup issue correct commands', async () => {

@@ -72,7 +72,7 @@ function toPath(request: RequestLike): string {
   const withOriginal = request as RequestLike & { originalUrl?: string };
   const withUrl = request as RequestLike & { url?: string };
   const raw = withOriginal.originalUrl ?? withUrl.url ?? '';
-  return raw.split('?')[0] ?? '';
+  return raw.replace(/\?.*$/u, '');
 }
 
 function toBody(request: RequestLike): unknown {
@@ -127,6 +127,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
         cacheKey,
         idempotencyKey,
         fingerprint,
+        tenantId,
       );
     }
 
@@ -305,13 +306,14 @@ export class IdempotencyInterceptor implements NestInterceptor {
     request: RequestLike,
     idempotencyKey: string,
     requestFingerprint: string,
+    tenantId: string,
   ): IdempotencyDecisionContext {
     return {
       request,
       idempotencyKey,
       requestFingerprint,
       ttlMs: this.options.ttlMs,
-      ...(request.tenantId ? { tenantId: request.tenantId } : {}),
+      tenantId,
     };
   }
 
@@ -322,6 +324,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
     cacheKey: string,
     idempotencyKey: string,
     fingerprint: string,
+    tenantId: string,
   ): Observable<unknown> {
     const replay = this.resolveLocalReplay(
       response,
@@ -336,6 +339,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
         request,
         idempotencyKey,
         fingerprint,
+        tenantId,
       );
       const existing = await this.durableStore!.lookup(decisionContext);
       if (existing) {

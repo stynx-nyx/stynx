@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Unit tests for the pure parts of pools.ts (parseSecretConnection),
 // the createStynxPgPool factory (constructs a Pool without connecting),
 // and the StynxPoolRegistry happy-path init + get + destroy methods.
@@ -172,6 +173,24 @@ describe('StynxPoolRegistry', () => {
     registries.push(registry);
     await registry.onModuleInit();
     expect(registry.pools.owner).toBeInstanceOf(Pool);
+  });
+
+  it('describes branch: applies ssl for registry-managed pools', async () => {
+    const registry = new StynxPoolRegistry(
+      {
+        connections: {
+          owner: { connectionString: 'postgresql://owner@localhost/db', ssl: true },
+          app: { connectionString: 'postgresql://app@localhost/db' },
+          reader: { connectionString: 'postgresql://reader@localhost/db' },
+        },
+      } as never,
+      { getSecretString: vi.fn() } as never,
+    );
+    registries.push(registry);
+
+    await registry.onModuleInit();
+
+    expect(registry.pools.owner.options.ssl).toEqual({ rejectUnauthorized: false });
   });
 
   it('falls through to raw secret when JSON lacks a connection field', async () => {

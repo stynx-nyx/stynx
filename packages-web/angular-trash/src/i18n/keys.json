@@ -1,0 +1,20 @@
+[
+  "trash.bulk.clear",
+  "trash.bulk.hardDelete",
+  "trash.bulk.restore",
+  "trash.bulk.selected",
+  "trash.confirmHardDelete.confirm",
+  "trash.confirmHardDelete.message",
+  "trash.confirmHardDelete.title",
+  "trash.empty.description",
+  "trash.empty.title",
+  "trash.filters.ariaLabel",
+  "trash.filters.byActor",
+  "trash.filters.byMe",
+  "trash.filters.last7Days",
+  "trash.item.deletedBy",
+  "trash.item.hardDelete",
+  "trash.item.restore",
+  "trash.item.select",
+  "trash.tabs.ariaLabel"
+]

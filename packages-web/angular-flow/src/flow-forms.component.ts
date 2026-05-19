@@ -1,29 +1,33 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import type { OnChanges } from '@angular/core';
 import { StynxHasPermissionDirective } from '@stynx-web/angular-auth';
-import { StynxBannerComponent, StynxLoadingSpinnerComponent } from '@stynx-web/angular-ui';
+import { StynxTranslatePipe } from '@stynx-web/angular-i18n';
+import { StynxBannerComponent, StynxIconComponent, StynxLoadingSpinnerComponent } from '@stynx-web/angular-ui';
 import { FlowApiService } from './flow-api.service';
 import type { FlowForm, FlowQuestion, FlowScore } from './types';
 
 @Component({
   selector: 'stynx-flow-forms',
   standalone: true,
-  imports: [StynxBannerComponent, StynxHasPermissionDirective, StynxLoadingSpinnerComponent],
+  imports: [StynxBannerComponent, StynxHasPermissionDirective, StynxIconComponent, StynxLoadingSpinnerComponent, StynxTranslatePipe],
   template: `
     <section class="surface">
       <header>
-        <h2>Forms</h2>
-        <button type="button" *stynxHasPermission="'flow:write:design'" (click)="create.emit()">New form</button>
+        <h2>{{ 'flow.forms.title' | stynxTranslate }}</h2>
+        <button type="button" *stynxHasPermission="'flow:write:design'" (click)="create.emit()">
+          <stynx-icon name="plus" aria-hidden="true"></stynx-icon>
+          {{ 'flow.forms.actions.create' | stynxTranslate }}
+        </button>
       </header>
       @if (loading) {
-        <stynx-loading-spinner label="Loading forms"></stynx-loading-spinner>
+        <stynx-loading-spinner [label]="'flow.forms.loading' | stynxTranslate"></stynx-loading-spinner>
       }
       @if (errorMessage) {
         <stynx-banner tone="error" [message]="errorMessage"></stynx-banner>
       }
       <div class="list">
         @for (form of forms; track form.id) {
-          <button type="button" class="item" (click)="select.emit(form)">
+          <button type="button" class="item" (click)="selected.emit(form)">
             <strong>{{ form.title }}</strong>
             <span>{{ form.code }} {{ form.version }}</span>
           </button>
@@ -50,6 +54,16 @@ import type { FlowForm, FlowQuestion, FlowScore } from './types';
       margin: 0;
     }
 
+    button {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    stynx-icon {
+      --stynx-icon-size: 1rem;
+    }
+
     .item {
       border: 1px solid var(--mat-sys-outline-variant, #d8dee9);
       border-radius: 8px;
@@ -65,7 +79,7 @@ export class StynxFlowFormsComponent implements OnChanges {
 
   @Input() scopeId = '';
   @Output() readonly create = new EventEmitter<void>();
-  @Output() readonly select = new EventEmitter<FlowForm>();
+  @Output() readonly selected = new EventEmitter<FlowForm>();
 
   forms: FlowForm[] = [];
   loading = false;
@@ -91,12 +105,15 @@ export class StynxFlowFormsComponent implements OnChanges {
 @Component({
   selector: 'stynx-flow-form-editor',
   standalone: true,
-  imports: [StynxHasPermissionDirective],
+  imports: [StynxHasPermissionDirective, StynxIconComponent, StynxTranslatePipe],
   template: `
     <section class="surface">
       <header>
-        <h2>{{ form?.title || 'Form' }}</h2>
-        <button type="button" *stynxHasPermission="'flow:write:design'" (click)="save.emit(form || {})">Save</button>
+        <h2>{{ form?.title || ('flow.formEditor.fallbackTitle' | stynxTranslate) }}</h2>
+        <button type="button" *stynxHasPermission="'flow:write:design'" (click)="save.emit(form || {})">
+          <stynx-icon name="save" aria-hidden="true"></stynx-icon>
+          {{ 'flow.common.save' | stynxTranslate }}
+        </button>
       </header>
       <div class="questions">
         @for (question of questions; track question.id) {
@@ -104,14 +121,14 @@ export class StynxFlowFormsComponent implements OnChanges {
             <strong>{{ question.label }}</strong>
             <span>{{ question.key }} {{ question.fieldType }}</span>
             @if (question.required) {
-              <small>Required</small>
+              <small>{{ 'flow.common.required' | stynxTranslate }}</small>
             }
           </article>
         }
       </div>
     </section>
   `,
-  styles: [`.surface, .questions { display: grid; gap: 0.75rem; } header { display: flex; justify-content: space-between; align-items: center; } h2 { margin: 0; } .question { border: 1px solid #d8dee9; border-radius: 8px; padding: 0.75rem; display: grid; gap: 0.25rem; }`],
+  styles: [`.surface, .questions { display: grid; gap: 0.75rem; } header { display: flex; justify-content: space-between; align-items: center; } h2 { margin: 0; } button { display: inline-flex; align-items: center; gap: 0.4rem; } stynx-icon { --stynx-icon-size: 1rem; } .question { border: 1px solid #d8dee9; border-radius: 8px; padding: 0.75rem; display: grid; gap: 0.25rem; }`],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StynxFlowFormEditorComponent {
@@ -124,14 +141,18 @@ export class StynxFlowFormEditorComponent {
 @Component({
   selector: 'stynx-flow-question-score',
   standalone: true,
+  imports: [StynxIconComponent, StynxTranslatePipe],
   template: `
     <article class="score">
-      <strong>{{ question?.label || 'Question score' }}</strong>
+      <strong>{{ question?.label || ('flow.questionScore.fallbackTitle' | stynxTranslate) }}</strong>
       <span>{{ score?.passPoints || '1' }} / {{ score?.failPoints || '0' }}</span>
-      <button type="button" (click)="save.emit(score || {})">Save score</button>
+      <button type="button" (click)="save.emit(score || {})">
+        <stynx-icon name="save" aria-hidden="true"></stynx-icon>
+        {{ 'flow.questionScore.actions.save' | stynxTranslate }}
+      </button>
     </article>
   `,
-  styles: [`.score { display: grid; gap: 0.5rem; border: 1px solid #d8dee9; border-radius: 8px; padding: 0.75rem; }`],
+  styles: [`.score { display: grid; gap: 0.5rem; border: 1px solid #d8dee9; border-radius: 8px; padding: 0.75rem; } button { display: inline-flex; align-items: center; gap: 0.4rem; justify-self: start; } stynx-icon { --stynx-icon-size: 1rem; }`],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StynxFlowQuestionScoreComponent {

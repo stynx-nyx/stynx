@@ -61,6 +61,7 @@ describe('FlowApiService endpoint contract', () => {
     await api.getGraph('graph-1');
     await api.createGraph({ scopeId: 'scope-1', code: 'approval' });
     await api.updateGraph('graph-1', { name: 'Approval' });
+    await api.publishGraph('graph-1', { expectedDraftVersion: 'v1', notes: 'Release' }, 'publish-key');
     await api.deleteGraph('graph-1');
     await api.exportGraph('graph-1');
     await api.importGraph({ graph: { code: 'approval' }, nodes: [] });
@@ -90,6 +91,12 @@ describe('FlowApiService endpoint contract', () => {
       { method: 'GET', path: '/flow/scopes/scope-1', options: undefined },
       { method: 'PATCH', path: '/flow/scopes/scope-1', body: { label: 'Scope' }, options: undefined },
       { method: 'DELETE', path: '/flow/scopes/scope-1', options: undefined },
+      {
+        method: 'POST',
+        path: '/flow/graphs/graph-1/publish',
+        body: { expectedDraftVersion: 'v1', notes: 'Release' },
+        options: { headers: { 'Idempotency-Key': 'publish-key' } },
+      },
       { method: 'DELETE', path: '/flow/graphs/graph-1', options: undefined },
       { method: 'DELETE', path: '/flow/nodes/node-1', options: undefined },
       { method: 'DELETE', path: '/flow/edges/edge-1', options: undefined },
@@ -241,7 +248,8 @@ describe('FlowApiService endpoint contract', () => {
     await api.openTasks();
     await api.runsSummary();
     await api.listPolicySets();
-    await api.listFills({ formId: undefined, targetId: undefined });
+    const undefinedFilters = { formId: undefined, targetId: undefined } as unknown as Parameters<FlowApiService['listFills']>[0];
+    await api.listFills(undefinedFilters);
 
     expect(client.calls).toEqual(expect.arrayContaining([
       { method: 'GET', path: '/flow/graphs', options: {} },

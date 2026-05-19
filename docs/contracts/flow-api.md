@@ -11,6 +11,7 @@ This contract defines the API shape that the STYNX Flow backend must expose and 
 | --------------------- | -------------------------------------------------------------------------------------------------- |
 | `flow:read:design`    | Read scopes, graphs, nodes, edges, rules, effects, forms, questions, and design metadata.          |
 | `flow:write:design`   | Create, update, import, export, soft-delete, or restore workflow design records.                   |
+| `flow:publish:design` | Validate a draft graph and publish an immutable runtime version.                                   |
 | `flow:read:runtime`   | Read runs, node runs, tasks, events, fills, answers, waivers, and target workflow status.          |
 | `flow:execute:task`   | Accept, decline, act on, withdraw, or complete a task the actor is allowed to work.                |
 | `flow:assign:task`    | Assign, unassign, transfer, or candidate-list tasks.                                               |
@@ -60,6 +61,7 @@ All paths below are canonical logical paths. A host app may mount the package un
 | `POST /flow/scopes`, `PATCH /flow/scopes/:id`, `DELETE /flow/scopes/:id`                                                                     | `flow:write:design`                                             | Audited, rate-limited, soft-delete for delete.                          |
 | `GET /flow/graphs`, `GET /flow/graphs/:id`, `GET /flow/graphs/:id/export`                                                                    | `flow:read:design`                                              | Read-only graph catalog/export.                                         |
 | `POST /flow/graphs`, `POST /flow/graphs/import`, `PATCH /flow/graphs/:id`, `DELETE /flow/graphs/:id`                                         | `flow:write:design`                                             | Audited, idempotent where creation/import can be retried, rate-limited. |
+| `POST /flow/graphs/:id/publish`                                                                                                              | `flow:publish:design`                                           | Audited, idempotent publish of the current draft to a runtime version.  |
 | `GET /flow/graphs/:graphId/nodes`, `GET /flow/graphs/:graphId/edges`, `GET /flow/graphs/:graphId/transition-effects`                         | `flow:read:design`                                              | Read-only graph composition.                                            |
 | `POST /flow/graphs/:graphId/nodes`, `POST /flow/graphs/:graphId/edges`, `POST /flow/graphs/:graphId/transition-effects`                      | `flow:write:design`                                             | Audited design mutations.                                               |
 | `PATCH /flow/nodes/:id`, `DELETE /flow/nodes/:id`                                                                                            | `flow:write:design`                                             | Audited; delete is soft-delete.                                         |
@@ -143,6 +145,87 @@ Node form rules expose `gatingMode` as `all_required`, `any_answered`, or `score
 
 Policy evaluation input includes `scopeId` or `scopeCode`, optional `policySetId`, optional `nodeCode`, optional `statusCode`, exactly one of `action` or `capability`, optional `facts`, and optional target context for adapter checks. The response includes `allowed`, `effect`, `reasonCode`, `matchedRuleId`, and `defaulted`.
 
+### Graph Publishing
+
+Draft graph editing and runtime graph execution are separate contracts.
+
+`FlowGraph` DTOs returned by graph list/detail/export must expose:
+
+```ts
+interface FlowGraph {
+  id: string;
+  scopeId: string;
+  code: string;
+  version: string;
+  status: 'draft' | 'published';
+  publishedVersion?: number;
+  publishedAt?: string;
+  publishedBy?: string | null;
+  name?: string | null;
+  description?: string | null;
+  meta: Record<string, unknown>;
+}
+```
+
+`status` is a presentation/runtime contract. Implementations may derive it from
+first-class columns or from package-owned publish metadata, but API responses
+must not require Angular clients to inspect internal persistence fields such as
+`isActive`.
+
+`POST /flow/graphs/:id/publish` accepts:
+
+```ts
+interface PublishFlowGraphRequest {
+  expectedDraftVersion?: string;
+  notes?: string;
+}
+```
+
+The request must also honor the standard `Idempotency-Key` header.
+
+The response is:
+
+```ts
+interface PublishFlowGraphResponse {
+  graphId: string;
+  status: 'published';
+  draftVersion: string;
+  publishedVersion: number;
+  publishedAt: string;
+  publishedBy?: string | null;
+  runtimeGraphRef: {
+    graphId: string;
+    version: number;
+  };
+}
+```
+
+Publish semantics:
+
+- publishing validates that the graph has exactly one start node, at least one
+  terminal node, no dangling edges, and no invalid rule/effect/form references;
+- publish creates or updates a tenant-local immutable runtime snapshot and
+  increments `publishedVersion` monotonically for the graph id;
+- repeated publish with the same idempotency key returns the original response;
+- `PATCH /flow/graphs/:id` and child design mutations affect the draft only and
+  must not mutate an already published runtime snapshot;
+- new runs and `POST /flow/runs/ensure` resolve the latest published version
+  unless an explicit published version is supplied;
+- draft-only graphs return `409` when used for runtime creation.
+
+Publish errors:
+
+| Status | Meaning |
+| ------ | ------- |
+| `400` | Draft graph is structurally invalid; response details identify validation failures by node/edge/effect/form key where possible. |
+| `403` | Actor lacks `flow:publish:design`. |
+| `404` | Graph is not visible in the active tenant. |
+| `409` | `expectedDraftVersion` does not match the current draft, a conflicting idempotency key was reused, or runtime attempted to use a draft-only graph. |
+
+Publish is a platform-audited mutation with action `flow.graph.publish` and
+entity `flow.graphs`. It may also append a Flow event for design diagnostics,
+but platform audit remains the security/compliance record.
+
 ### Analytics
 
 | Route family                              | Permission                                                 | Behavior                       |
@@ -166,6 +249,7 @@ DTOs must follow these rules:
 - Soft-deleted records are excluded by default. Admin/read-design APIs may opt into deleted records only through an explicit query option and permission.
 - Design DTOs separate identity from graph shape. Import/export DTOs may carry nested graph documents, but regular mutation DTOs operate on one aggregate root or child collection at a time.
 - Runtime DTOs expose opaque target identifiers and adapter labels/links, not host-domain table internals.
+- Graph DTOs expose `status` and `publishedVersion` for UI behavior; Angular clients must not derive publish state from persistence-only fields.
 - JSON rule/effect payloads must be validated against package-owned schemas or adapter-declared schemas before persistence.
 - Task action DTOs carry an action key, optional payload, optional idempotency key, and optional comment/reason.
 - Form answer DTOs carry question id, value, optional evidence metadata, and idempotency key when written in bulk.

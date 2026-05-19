@@ -4,20 +4,24 @@
   "level": "unit",
   "runner": "node-test",
   "status": "passed",
-  "startedAt": "2026-05-19T04:25:13.049Z",
-  "endedAt": "2026-05-19T04:25:14.538Z",
-  "durationMs": 1487,
+  "startedAt": "2026-05-19T15:48:45.219Z",
+  "endedAt": "2026-05-19T15:48:51.663Z",
+  "durationMs": 6444,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
     "raw": ".test-results/unit.log"
   },
   "env": {
-    "node": "26.0.0",
+    "node": "24.15.0",
     "ci": false
   },
   "command": {
-    "argv": ["node", "--test", "dist/test/migration-linter.spec.js"],
+    "argv": [
+      "node",
+      "--test",
+      "dist/test/migration-linter.spec.js"
+    ],
     "cwd": "/Users/aarusso/Development/stech/stynx/tools/migration-linter"
   },
   "metric": {

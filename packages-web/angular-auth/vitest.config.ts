@@ -9,6 +9,7 @@ export default createVitestConfig({
   alias: {
     '@stynx-web/sdk': resolve(__dirname, '../sdk/src/index.ts'),
     '@stynx-web/angular': resolve(__dirname, '../angular/src/index.ts'),
+    '@stynx-web/angular-i18n': resolve(__dirname, '../angular-i18n/src/index.ts'),
     '@stynx-web/angular-tenancy': resolve(__dirname, '../angular-tenancy/src/index.ts'),
     '@stynx-web/angular-auth': resolve(__dirname, 'src/index.ts'),
     rxjs: resolve(__dirname, 'node_modules/rxjs/dist/cjs/index.js'),

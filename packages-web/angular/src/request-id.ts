@@ -9,10 +9,10 @@ export function generateClientRequestId(): string {
     }
   }
 
-  let timestamp = BigInt(Date.now());
+  let timestamp = Date.now();
   for (let index = 5; index >= 0; index -= 1) {
-    bytes[index] = Number(timestamp & 0xffn);
-    timestamp >>= 8n;
+    bytes[index] = timestamp % 256;
+    timestamp = Math.floor(timestamp / 256);
   }
 
   bytes[6] = (bytes[6]! & 0x0f) | 0x70;

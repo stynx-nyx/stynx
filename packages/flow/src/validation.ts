@@ -30,6 +30,11 @@ export const createGraphSchema = z.object({
 
 export const updateGraphSchema = createGraphSchema.omit({ scopeId: true }).partial();
 
+export const publishGraphSchema = z.object({
+  expectedDraftVersion: optionalTextSchema,
+  notes: optionalTextSchema,
+});
+
 export const createNodeSchema = z.object({
   graphId: uuidSchema,
   code: textSchema,

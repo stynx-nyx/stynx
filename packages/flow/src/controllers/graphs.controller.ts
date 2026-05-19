@@ -64,6 +64,14 @@ export class FlowGraphsController {
     return this.design.updateGraph(id, input);
   }
 
+  @Permission('flow:publish:design')
+  @Audit({ action: 'flow.graph.publish', entity: 'flow.graphs' })
+  @Idempotent('Idempotency-Key')
+  @Post('/:id/publish')
+  publish(@Param('id') id: string, @Body() input: unknown) {
+    return this.design.publishGraph(id, input);
+  }
+
   @Permission('flow:write:design')
   @Audit({ action: 'flow.graph.delete', entity: 'flow.graphs' })
   @Delete('/:id')

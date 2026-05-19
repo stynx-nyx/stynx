@@ -1,13 +1,19 @@
 import { ChangeDetectionStrategy, Component, Input, inject } from '@angular/core';
 import { StynxI18nService } from './i18n.service';
+import { StynxTranslatePipe } from './translate.pipe';
 
 @Component({
   selector: 'stynx-locale-switcher',
   standalone: true,
+  imports: [StynxTranslatePipe],
   template: `
     <label class="stynx-locale-switcher">
-      <span>Locale</span>
-      <select [value]="i18n.locale()" (change)="switchLocale($any($event.target).value)">
+      <span>{{ 'i18n.localeSwitcher.label' | stynxTranslate }}</span>
+      <select
+        data-testid="locale-switcher-select"
+        [value]="i18n.locale()"
+        (change)="switchLocale($any($event.target).value)"
+      >
         @for (locale of locales; track locale) {
           <option [value]="locale">{{ locale }}</option>
         }

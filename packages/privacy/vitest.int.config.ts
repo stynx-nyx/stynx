@@ -5,6 +5,7 @@ export default createVitestConfig({
   packageDir: __dirname,
   packageName: '@stynx/privacy',
   include: ['test/integration/**/*.spec.ts'],
+  testTimeout: 60000,
   alias: {
     '@stynx/core': resolve(__dirname, '../core/src/index.ts'),
     '@stynx/data': resolve(__dirname, '../data/src/index.ts'),

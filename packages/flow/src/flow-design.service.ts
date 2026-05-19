@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { RequestContext } from '@stynx/core';
 import {
   Database,
@@ -25,6 +25,7 @@ import {
   createTransitionEffectSchema,
   graphImportSchema,
   parseDto,
+  publishGraphSchema,
   updateAgentRuleSchema,
   updateEdgeSchema,
   updateGraphSchema,
@@ -39,6 +40,12 @@ import type { FlowGraphExportDocument, FlowGraphImportDocument, FlowJsonObject }
 
 type FlowRow = Record<string, unknown>;
 type ColumnMap = Record<string, string>;
+type PublishGraphInput = {
+  expectedDraftVersion?: string;
+  notes?: string;
+};
+
+const GRAPH_PUBLISH_META_KEY = 'publish';
 
 interface TableConfig {
   readonly sqlName: string;
@@ -196,6 +203,52 @@ function camelizeRow(row: FlowRow): FlowJsonObject {
   return mapped;
 }
 
+function withGraphPublishState(row: FlowJsonObject): FlowJsonObject {
+  const publish = graphPublishMeta(row.meta);
+  return {
+    ...row,
+    status: publish ? 'published' : 'draft',
+    ...(publish
+      ? {
+          publishedVersion: publish.publishedVersion,
+          publishedAt: publish.publishedAt,
+          publishedBy: publish.publishedBy ?? null,
+        }
+      : {}),
+  };
+}
+
+function graphPublishMeta(meta: unknown): {
+  publishedVersion: number;
+  publishedAt: string;
+  publishedBy?: string | null;
+} | null {
+  if (meta === null || typeof meta !== 'object' || Array.isArray(meta)) {
+    return null;
+  }
+  const publish = (meta as Record<string, unknown>)[GRAPH_PUBLISH_META_KEY];
+  if (publish === null || typeof publish !== 'object' || Array.isArray(publish)) {
+    return null;
+  }
+  const publishedVersion = (publish as Record<string, unknown>).publishedVersion;
+  const publishedAt = (publish as Record<string, unknown>).publishedAt;
+  if (typeof publishedVersion !== 'number' || !Number.isFinite(publishedVersion) || typeof publishedAt !== 'string') {
+    return null;
+  }
+  const publishedBy = (publish as Record<string, unknown>).publishedBy;
+  return {
+    publishedVersion,
+    publishedAt,
+    publishedBy: typeof publishedBy === 'string' ? publishedBy : null,
+  };
+}
+
+function jsonObject(value: unknown): FlowJsonObject {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+    ? value as FlowJsonObject
+    : {};
+}
+
 function requireString(value: unknown, label: string): string {
   if (typeof value === 'string' && value.length > 0) {
     return value;
@@ -274,6 +327,62 @@ export class FlowDesignService {
 
   deleteGraph(id: string): Promise<FlowJsonObject> {
     return this.softDeleteRow('graphs', id);
+  }
+
+  publishGraph(id: string, input: unknown = {}): Promise<FlowJsonObject> {
+    const body = parseDto(publishGraphSchema, input) as PublishGraphInput;
+
+    return this.db.tx(async (trx) => {
+      const graph = await this.getGraphForUpdate(trx, id);
+      const draftVersion = requireString(graph.version, 'graph.version');
+      if (body.expectedDraftVersion && body.expectedDraftVersion !== draftVersion) {
+        throw new ConflictException('Draft version does not match the current graph version');
+      }
+
+      const [nodes, edges] = await Promise.all([
+        trx.query<FlowRow>('select id, code, kind from flow.nodes where graph_id = $1::uuid order by sort_order, code', [id]),
+        trx.query<FlowRow>('select id, from_node_id, to_node_id from flow.edges where graph_id = $1::uuid', [id]),
+      ]);
+      this.validatePublishableGraph(nodes.rows, edges.rows);
+
+      const existingPublish = graphPublishMeta(graph.meta);
+      const publishedVersion = (existingPublish?.publishedVersion ?? 0) + 1;
+      const publishedAt = new Date();
+      const publishedBy = this.requestContext.actorId ?? null;
+      const meta = {
+        ...jsonObject(graph.meta),
+        [GRAPH_PUBLISH_META_KEY]: {
+          publishedVersion,
+          publishedAt: publishedAt.toISOString(),
+          publishedBy,
+          draftVersion,
+          ...(body.notes ? { notes: body.notes } : {}),
+        },
+      };
+
+      await trx.query<FlowRow>(
+        `
+          update flow.graphs
+          set meta = $2::jsonb, updated_by = $3::uuid, updated_at = $4::timestamptz
+          where id = $1::uuid
+          returning *
+        `,
+        [id, meta, publishedBy, publishedAt],
+      );
+
+      return {
+        graphId: id,
+        status: 'published',
+        draftVersion,
+        publishedVersion,
+        publishedAt: publishedAt.toISOString(),
+        publishedBy,
+        runtimeGraphRef: {
+          graphId: id,
+          version: publishedVersion,
+        },
+      };
+    });
   }
 
   listGraphNodes(graphId: string): Promise<FlowJsonObject[]> {
@@ -490,7 +599,7 @@ export class FlowDesignService {
         `select * from ${config.sqlName}${where} order by ${orderBy}`,
         values,
       );
-      return result.rows.map(camelizeRow);
+      return result.rows.map((row) => this.presentRow(key, camelizeRow(row)));
     }, {
       role: 'reader',
       readonly: true,
@@ -499,14 +608,14 @@ export class FlowDesignService {
 
   private async getRow(key: TableKey, id: string): Promise<FlowJsonObject> {
     const config = TABLES[key];
-    return this.db.tx(async (trx) => this.getRowFromTransaction(trx, config, id), {
+    return this.db.tx(async (trx) => this.presentRow(key, await this.getRowFromTransaction(trx, config, id)), {
       role: 'reader',
       readonly: true,
     });
   }
 
   private async createRow(key: TableKey, input: FlowJsonObject): Promise<FlowJsonObject> {
-    return this.db.tx((trx) => this.insertRow(trx, key, input));
+    return this.db.tx(async (trx) => this.presentRow(key, await this.insertRow(trx, key, input)));
   }
 
   private async updateRow(key: TableKey, id: string, input: FlowJsonObject): Promise<FlowJsonObject> {
@@ -530,7 +639,7 @@ export class FlowDesignService {
       if (!row) {
         throw new NotFoundException('Flow row not found');
       }
-      return camelizeRow(row);
+      return this.presentRow(key, camelizeRow(row));
     });
   }
 
@@ -565,7 +674,7 @@ export class FlowDesignService {
     if (!row) {
       throw new BadRequestException('Flow insert did not return a row');
     }
-    return camelizeRow(row);
+    return this.presentRow(key, camelizeRow(row));
   }
 
   private async getRowFromTransaction(
@@ -584,11 +693,23 @@ export class FlowDesignService {
     return camelizeRow(row);
   }
 
+  private async getGraphForUpdate(trx: Transaction, id: string): Promise<FlowJsonObject> {
+    const result = await trx.query<FlowRow>(
+      'select * from flow.graphs where id = $1::uuid limit 1 for update',
+      [id],
+    );
+    const row = result.rows[0];
+    if (!row) {
+      throw new NotFoundException('Flow row not found');
+    }
+    return camelizeRow(row);
+  }
+
   private async exportGraphFromTransaction(
     trx: Transaction,
     id: string,
   ): Promise<FlowGraphExportDocument> {
-    const graph = await this.getRowFromTransaction(trx, TABLES.graphs, id);
+    const graph = withGraphPublishState(await this.getRowFromTransaction(trx, TABLES.graphs, id));
     const scopeId = requireString(graph.scopeId, 'graph.scopeId');
 
     const [nodes, edges, transitionEffects, agentRules, nodeFormRules, policySets] = await Promise.all([
@@ -683,6 +804,30 @@ export class FlowDesignService {
       }
       edgeKeys.add(edgeKey);
     }
+  }
+
+  private validatePublishableGraph(nodes: FlowRow[], edges: FlowRow[]): void {
+    const startNodes = nodes.filter((node) => node.kind === 'start');
+    if (startNodes.length !== 1) {
+      throw new BadRequestException('Graph publish requires exactly one start node');
+    }
+    if (!nodes.some((node) => node.kind === 'end')) {
+      throw new BadRequestException('Graph publish requires at least one terminal node');
+    }
+
+    const nodeIds = new Set(nodes.map((node) => node.id).filter((value): value is string => typeof value === 'string'));
+    for (const edge of edges) {
+      if (typeof edge.from_node_id !== 'string' || typeof edge.to_node_id !== 'string') {
+        throw new BadRequestException('Graph publish edge references a missing node');
+      }
+      if (!nodeIds.has(edge.from_node_id) || !nodeIds.has(edge.to_node_id)) {
+        throw new BadRequestException('Graph publish edge references a missing node');
+      }
+    }
+  }
+
+  private presentRow(key: TableKey, row: FlowJsonObject): FlowJsonObject {
+    return key === 'graphs' ? withGraphPublishState(row) : row;
   }
 
   private buildWhere(filters: Record<string, string>): { where: string; values: string[] } {

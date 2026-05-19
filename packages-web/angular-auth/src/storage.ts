@@ -12,6 +12,7 @@ export interface CookieOptions {
 }
 
 export type RefreshTokenStorageMode = 'session-storage' | 'cookie';
+type ResolvedCookieOptions = Required<CookieOptions>;
 
 function resolveDocument(): Document | null {
   return typeof document === 'undefined' ? null : document;
@@ -19,7 +20,7 @@ function resolveDocument(): Document | null {
 
 export class RefreshTokenStorage {
   private readonly storage: SessionStorageLike | null;
-  private readonly cookie: CookieOptions;
+  private readonly cookie: ResolvedCookieOptions;
 
   constructor(
     private readonly key: string,
@@ -69,7 +70,7 @@ export class RefreshTokenStorage {
 
   private readCookie(): string | null {
     const cookieSource = this.browserDocument?.cookie ?? '';
-    const prefix = `${encodeURIComponent(this.cookie.name ?? this.key)}=`;
+    const prefix = `${encodeURIComponent(this.cookie.name)}=`;
     for (const rawEntry of cookieSource.split(';')) {
       const entry = rawEntry.trim();
       if (entry.startsWith(prefix)) {
@@ -83,7 +84,7 @@ export class RefreshTokenStorage {
     if (!this.browserDocument) {
       return;
     }
-    const name = encodeURIComponent(this.cookie.name ?? this.key);
+    const name = encodeURIComponent(this.cookie.name);
     if (!token) {
       this.browserDocument.cookie = `${name}=; Max-Age=0; Path=${this.cookie.path}`;
       return;

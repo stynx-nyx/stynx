@@ -1,97 +1,97 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="41" failures="0" errors="0" time="0.10558575">
-    <testsuite name="test/unit/decorators.spec.ts" timestamp="2026-05-19T04:32:20.753Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.00849325">
-        <testcase classname="test/unit/decorators.spec.ts" name="RateLimit decorator &gt; attaches route metadata" time="0.007422083">
+<testsuites name="vitest tests" tests="41" failures="0" errors="0" time="0.065172207">
+    <testsuite name="test/unit/decorators.spec.ts" timestamp="2026-05-19T15:49:13.914Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.001938584">
+        <testcase classname="test/unit/decorators.spec.ts" name="RateLimit decorator &gt; attaches route metadata" time="0.0009285">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/metrics.spec.ts" timestamp="2026-05-19T04:32:20.756Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.004994916">
-        <testcase classname="test/unit/metrics.spec.ts" name="InMemoryRateLimitMetrics &gt; tracks blocked counters, latency percentiles, and histogram buckets" time="0.00421375">
+    <testsuite name="test/unit/metrics.spec.ts" timestamp="2026-05-19T15:49:13.916Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.002458166">
+        <testcase classname="test/unit/metrics.spec.ts" name="InMemoryRateLimitMetrics &gt; tracks blocked counters, latency percentiles, and histogram buckets" time="0.001850541">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/pg-rate-limit.store.spec.ts" timestamp="2026-05-19T04:32:20.756Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.027227375">
-        <testcase classname="test/unit/pg-rate-limit.store.spec.ts" name="PgRateLimitStore &gt; validates configured SQL identifiers" time="0.00671225">
+    <testsuite name="test/unit/pg-rate-limit.store.spec.ts" timestamp="2026-05-19T15:49:13.918Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.007665541">
+        <testcase classname="test/unit/pg-rate-limit.store.spec.ts" name="PgRateLimitStore &gt; validates configured SQL identifiers" time="0.001490875">
         </testcase>
-        <testcase classname="test/unit/pg-rate-limit.store.spec.ts" name="PgRateLimitStore &gt; returns an allowed local decision without a tenant" time="0.003344458">
+        <testcase classname="test/unit/pg-rate-limit.store.spec.ts" name="PgRateLimitStore &gt; returns an allowed local decision without a tenant" time="0.000972708">
         </testcase>
-        <testcase classname="test/unit/pg-rate-limit.store.spec.ts" name="PgRateLimitStore &gt; upserts distributed windows and maps allowed and blocked decisions" time="0.013573542">
+        <testcase classname="test/unit/pg-rate-limit.store.spec.ts" name="PgRateLimitStore &gt; upserts distributed windows and maps allowed and blocked decisions" time="0.00265825">
         </testcase>
-        <testcase classname="test/unit/pg-rate-limit.store.spec.ts" name="PgRateLimitStore &gt; falls back to request cost when the upsert returns no rows" time="0.0002195">
-        </testcase>
-    </testsuite>
-    <testsuite name="test/unit/rate-limit-policy.service.spec.ts" timestamp="2026-05-19T04:32:20.758Z" hostname="thiamat-1903.local" tests="10" failures="0" errors="0" skipped="0" time="0.003896875">
-        <testcase classname="test/unit/rate-limit-policy.service.spec.ts" name="DatabaseRateLimitPolicyResolver &gt; uses explicit metadata.limit and metadata.windowSeconds without touching the DB" time="0.001669959">
-        </testcase>
-        <testcase classname="test/unit/rate-limit-policy.service.spec.ts" name="DatabaseRateLimitPolicyResolver &gt; falls back to per-scope defaults from options when DB returns no rows" time="0.000538958">
-        </testcase>
-        <testcase classname="test/unit/rate-limit-policy.service.spec.ts" name="DatabaseRateLimitPolicyResolver &gt; falls back to defaultLimit / defaultWindowSeconds when no per-scope default" time="0.000141375">
-        </testcase>
-        <testcase classname="test/unit/rate-limit-policy.service.spec.ts" name="DatabaseRateLimitPolicyResolver &gt; falls back to the hardcoded 120 / 60 when no defaults are configured" time="0.000121375">
-        </testcase>
-        <testcase classname="test/unit/rate-limit-policy.service.spec.ts" name="DatabaseRateLimitPolicyResolver &gt; uses tenant override when present" time="0.000105459">
-        </testcase>
-        <testcase classname="test/unit/rate-limit-policy.service.spec.ts" name="DatabaseRateLimitPolicyResolver &gt; falls back to platform config (core.config) when no override" time="0.000113625">
-        </testcase>
-        <testcase classname="test/unit/rate-limit-policy.service.spec.ts" name="DatabaseRateLimitPolicyResolver &gt; tries the colon platform config key when the dot key is not present" time="0.000109959">
-        </testcase>
-        <testcase classname="test/unit/rate-limit-policy.service.spec.ts" name="DatabaseRateLimitPolicyResolver &gt; skips override lookup when tenantId is undefined" time="0.000157042">
-        </testcase>
-        <testcase classname="test/unit/rate-limit-policy.service.spec.ts" name="DatabaseRateLimitPolicyResolver &gt; returns nulls (then falls back) when no Database is wired" time="0.000080458">
-        </testcase>
-        <testcase classname="test/unit/rate-limit-policy.service.spec.ts" name="DatabaseRateLimitPolicyResolver &gt; defaults cost to 1 when metadata.cost is undefined" time="0.000054709">
+        <testcase classname="test/unit/pg-rate-limit.store.spec.ts" name="PgRateLimitStore &gt; falls back to request cost when the upsert returns no rows" time="0.000247125">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/rate-limit.guard.spec.ts" timestamp="2026-05-19T04:32:20.760Z" hostname="thiamat-1903.local" tests="21" failures="0" errors="0" skipped="0" time="0.034394667">
-        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; bypasses health-check routes without touching the store" time="0.004951625">
+    <testsuite name="test/unit/rate-limit-policy.service.spec.ts" timestamp="2026-05-19T15:49:13.920Z" hostname="thiamat-1903.local" tests="10" failures="0" errors="0" skipped="0" time="0.018710375">
+        <testcase classname="test/unit/rate-limit-policy.service.spec.ts" name="DatabaseRateLimitPolicyResolver &gt; uses explicit metadata.limit and metadata.windowSeconds without touching the DB" time="0.0070085">
         </testcase>
-        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; bypasses routes marked as @System()" time="0.000530292">
+        <testcase classname="test/unit/rate-limit-policy.service.spec.ts" name="DatabaseRateLimitPolicyResolver &gt; falls back to per-scope defaults from options when DB returns no rows" time="0.005518166">
         </testcase>
-        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; applies headers and allows when the store accepts the request" time="0.002320542">
+        <testcase classname="test/unit/rate-limit-policy.service.spec.ts" name="DatabaseRateLimitPolicyResolver &gt; falls back to defaultLimit / defaultWindowSeconds when no per-scope default" time="0.000809084">
         </testcase>
-        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; throws 429, emits Retry-After, and increments metrics on block" time="0.004410458">
+        <testcase classname="test/unit/rate-limit-policy.service.spec.ts" name="DatabaseRateLimitPolicyResolver &gt; falls back to the hardcoded 120 / 60 when no defaults are configured" time="0.000343417">
         </testcase>
-        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; allows the request when no rate-limit metadata is set on the handler" time="0.000642458">
+        <testcase classname="test/unit/rate-limit-policy.service.spec.ts" name="DatabaseRateLimitPolicyResolver &gt; uses tenant override when present" time="0.000163917">
         </testcase>
-        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; uses default options when only the reflector is provided" time="0.000329125">
+        <testcase classname="test/unit/rate-limit-policy.service.spec.ts" name="DatabaseRateLimitPolicyResolver &gt; falls back to platform config (core.config) when no override" time="0.000142291">
         </testcase>
-        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; allows the request when no policyResolver is wired even if metadata is set" time="0.000351084">
+        <testcase classname="test/unit/rate-limit-policy.service.spec.ts" name="DatabaseRateLimitPolicyResolver &gt; tries the colon platform config key when the dot key is not present" time="0.000133709">
         </testcase>
-        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; open-circuits to allow when the store is missing" time="0.000563292">
+        <testcase classname="test/unit/rate-limit-policy.service.spec.ts" name="DatabaseRateLimitPolicyResolver &gt; skips override lookup when tenantId is undefined" time="0.000166625">
         </testcase>
-        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; open-circuits to allow when the store throws a non-Http error" time="0.000688667">
+        <testcase classname="test/unit/rate-limit-policy.service.spec.ts" name="DatabaseRateLimitPolicyResolver &gt; returns nulls (then falls back) when no Database is wired" time="0.000106791">
         </testcase>
-        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; rethrows when the store throws ServiceUnavailableException" time="0.012863625">
-        </testcase>
-        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; throws 503 under distributedStrict when the store returns null (resolver missing)" time="0.000751583">
-        </testcase>
-        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; open-circuits on backend errors when distributedStrict is explicitly false" time="0.000869125">
-        </testcase>
-        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; builds bucket keys for ip / user / route buckets" time="0.001270792">
-        </testcase>
-        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; builds fallback bucket keys from originalUrl, url, defaults, and alternate principals" time="0.001278042">
-        </testcase>
-        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; allows requests without a response object while still consuming the store" time="0.000237792">
-        </testcase>
-        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; extracts tenantId + userId from a Bearer JWT payload as fallback" time="0.000307375">
-        </testcase>
-        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; ignores malformed Bearer tokens silently" time="0.000135166">
-        </testcase>
-        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; ignores Bearer tokens whose payload is not valid JSON" time="0.000172292">
-        </testcase>
-        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; ignores non-string JWT subject and tenant claims" time="0.000139166">
-        </testcase>
-        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; ignores non-Bearer and non-string authorization headers" time="0.000204459">
-        </testcase>
-        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; accepts authorization header passed as an array (takes first element)" time="0.000250292">
+        <testcase classname="test/unit/rate-limit-policy.service.spec.ts" name="DatabaseRateLimitPolicyResolver &gt; defaults cost to 1 when metadata.cost is undefined" time="0.000089083">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/redis-rate-limit.store.spec.ts" timestamp="2026-05-19T04:32:20.763Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.026578667">
-        <testcase classname="test/unit/redis-rate-limit.store.spec.ts" name="RedisSlidingWindowRateLimitStore &gt; does not initialize a Redis client without redis options" time="0.003768958">
+    <testsuite name="test/unit/rate-limit.guard.spec.ts" timestamp="2026-05-19T15:49:13.925Z" hostname="thiamat-1903.local" tests="21" failures="0" errors="0" skipped="0" time="0.013692958">
+        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; bypasses health-check routes without touching the store" time="0.001927">
         </testcase>
-        <testcase classname="test/unit/redis-rate-limit.store.spec.ts" name="RedisSlidingWindowRateLimitStore &gt; loads the sliding-window script, maps Redis numeric responses, and quits open clients" time="0.008897">
+        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; bypasses routes marked as @System()" time="0.00015375">
         </testcase>
-        <testcase classname="test/unit/redis-rate-limit.store.spec.ts" name="RedisSlidingWindowRateLimitStore &gt; skips quit for closed clients" time="0.000127417">
+        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; applies headers and allows when the store accepts the request" time="0.000874208">
         </testcase>
-        <testcase classname="test/unit/redis-rate-limit.store.spec.ts" name="RedisSlidingWindowRateLimitStore &gt; uses the default Redis key prefix when keyPrefix is omitted" time="0.00031025">
+        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; throws 429, emits Retry-After, and increments metrics on block" time="0.004912208">
+        </testcase>
+        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; allows the request when no rate-limit metadata is set on the handler" time="0.00068525">
+        </testcase>
+        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; uses default options when only the reflector is provided" time="0.00018525">
+        </testcase>
+        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; allows the request when no policyResolver is wired even if metadata is set" time="0.000134333">
+        </testcase>
+        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; open-circuits to allow when the store is missing" time="0.000840709">
+        </testcase>
+        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; open-circuits to allow when the store throws a non-Http error" time="0.000549625">
+        </testcase>
+        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; rethrows when the store throws ServiceUnavailableException" time="0.000298708">
+        </testcase>
+        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; throws 503 under distributedStrict when the store returns null (resolver missing)" time="0.000176625">
+        </testcase>
+        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; open-circuits on backend errors when distributedStrict is explicitly false" time="0.000142">
+        </testcase>
+        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; builds bucket keys for ip / user / route buckets" time="0.000333083">
+        </testcase>
+        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; builds fallback bucket keys from originalUrl, url, defaults, and alternate principals" time="0.000470916">
+        </testcase>
+        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; allows requests without a response object while still consuming the store" time="0.000173209">
+        </testcase>
+        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; extracts tenantId + userId from a Bearer JWT payload as fallback" time="0.000204666">
+        </testcase>
+        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; ignores malformed Bearer tokens silently" time="0.000115">
+        </testcase>
+        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; ignores Bearer tokens whose payload is not valid JSON" time="0.000145167">
+        </testcase>
+        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; ignores non-string JWT subject and tenant claims" time="0.000132">
+        </testcase>
+        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; ignores non-Bearer and non-string authorization headers" time="0.00015375">
+        </testcase>
+        <testcase classname="test/unit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; accepts authorization header passed as an array (takes first element)" time="0.000118792">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/redis-rate-limit.store.spec.ts" timestamp="2026-05-19T15:49:13.966Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.020706583">
+        <testcase classname="test/unit/redis-rate-limit.store.spec.ts" name="RedisSlidingWindowRateLimitStore &gt; does not initialize a Redis client without redis options" time="0.006842875">
+        </testcase>
+        <testcase classname="test/unit/redis-rate-limit.store.spec.ts" name="RedisSlidingWindowRateLimitStore &gt; loads the sliding-window script, maps Redis numeric responses, and quits open clients" time="0.009940834">
+        </testcase>
+        <testcase classname="test/unit/redis-rate-limit.store.spec.ts" name="RedisSlidingWindowRateLimitStore &gt; skips quit for closed clients" time="0.000126708">
+        </testcase>
+        <testcase classname="test/unit/redis-rate-limit.store.spec.ts" name="RedisSlidingWindowRateLimitStore &gt; uses the default Redis key prefix when keyPrefix is omitted" time="0.000323125">
         </testcase>
     </testsuite>
 </testsuites>

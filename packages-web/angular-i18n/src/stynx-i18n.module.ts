@@ -3,6 +3,7 @@ import type { ModuleWithProviders } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LocaleSwitcherComponent } from './locale-switcher.component';
 import { StynxI18nService } from './i18n.service';
+import { StynxIntlCurrencyPipe, StynxIntlDatePipe, StynxIntlNumberPipe } from './intl.pipes';
 import { STYNX_I18N_OPTIONS } from './tokens';
 import type { StynxI18nModuleOptions } from './types';
 
@@ -11,8 +12,19 @@ function initializeI18n(service: StynxI18nService): () => Promise<void> {
 }
 
 @NgModule({
-  imports: [CommonModule, LocaleSwitcherComponent],
-  exports: [LocaleSwitcherComponent],
+  imports: [
+    CommonModule,
+    LocaleSwitcherComponent,
+    StynxIntlCurrencyPipe,
+    StynxIntlDatePipe,
+    StynxIntlNumberPipe,
+  ],
+  exports: [
+    LocaleSwitcherComponent,
+    StynxIntlCurrencyPipe,
+    StynxIntlDatePipe,
+    StynxIntlNumberPipe,
+  ],
 })
 export class StynxI18nModule {
   static forRoot(options: StynxI18nModuleOptions): ModuleWithProviders<StynxI18nModule> {

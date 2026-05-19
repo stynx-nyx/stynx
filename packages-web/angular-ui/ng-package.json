@@ -4,5 +4,13 @@
   "lib": {
     "entryFile": "src/index.ts"
   },
+  "assets": [
+    "assets",
+    {
+      "glob": "*.json",
+      "input": "src/i18n",
+      "output": "catalogs"
+    }
+  ],
   "allowedNonPeerDependencies": ["@stynx-web/*", "angular-auth-oidc-client", "rxjs"]
 }

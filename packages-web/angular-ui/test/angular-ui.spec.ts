@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { StynxBannerComponent } from '../src/banner.component';
 import { StynxConfirmDialogComponent } from '../src/confirm-dialog.component';
+import { STYNX_ICON_NAMES, StynxIconComponent } from '../src/icon/icon.component';
 import { StynxLoadingSpinnerComponent } from '../src/loading-spinner.component';
 import { StynxPaginationComponent } from '../src/pagination.component';
 import { StynxTableComponent } from '../src/table.component';
@@ -99,21 +100,23 @@ describe('@stynx-web/angular-ui', () => {
   it('keeps simple component inputs and emitters wired', () => {
     const banner = new StynxBannerComponent();
     expect(banner).toMatchObject({ title: '', message: '', tone: 'info' });
+    expect(banner.toneIcon).toBe('info');
     banner.title = 'Heads up';
     banner.message = 'Policy changed';
     banner.tone = 'warning';
     expect(banner).toMatchObject({ title: 'Heads up', message: 'Policy changed', tone: 'warning' });
+    expect(banner.toneIcon).toBe('warning');
 
     const confirm = new StynxConfirmDialogComponent();
     const seen: string[] = [];
     confirm.confirm.subscribe(() => seen.push('confirm'));
-    confirm.cancel.subscribe(() => seen.push('cancel'));
+    confirm.dismissed.subscribe(() => seen.push('cancel'));
     confirm.open = true;
     confirm.title = 'Delete';
     confirm.message = 'Delete this item?';
     confirm.confirmLabel = 'Delete';
     confirm.confirm.emit();
-    confirm.cancel.emit();
+    confirm.dismissed.emit();
     expect(seen).toEqual(['confirm', 'cancel']);
 
     const spinner = new StynxLoadingSpinnerComponent();
@@ -121,6 +124,18 @@ describe('@stynx-web/angular-ui', () => {
     spinner.size = 2;
     spinner.label = 'Loading';
     expect(spinner).toMatchObject({ size: 2, label: 'Loading' });
+  });
+
+  it('exposes the shared icon sprite names and href contract', () => {
+    expect(STYNX_ICON_NAMES).toContain('arrow-right');
+    expect(STYNX_ICON_NAMES).toContain('plus');
+
+    const icon = new StynxIconComponent();
+    expect(icon.href).toBe('#info');
+    icon.name = 'arrow-right';
+    icon.label = 'Next';
+    expect(icon.href).toBe('#arrow-right');
+    expect(icon.label).toBe('Next');
   });
 
   it('tracks table rows with custom or JSON identity', () => {

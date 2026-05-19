@@ -1,35 +1,39 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import type { OnChanges } from '@angular/core';
 import { StynxHasPermissionDirective } from '@stynx-web/angular-auth';
-import { StynxBannerComponent, StynxLoadingSpinnerComponent } from '@stynx-web/angular-ui';
+import { StynxTranslatePipe } from '@stynx-web/angular-i18n';
+import { StynxBannerComponent, StynxIconComponent, StynxLoadingSpinnerComponent } from '@stynx-web/angular-ui';
 import { FlowApiService } from './flow-api.service';
 import type { FlowAnswer, FlowFill, FlowQuestion } from './types';
 
 @Component({
   selector: 'stynx-flow-fills',
   standalone: true,
-  imports: [StynxBannerComponent, StynxHasPermissionDirective, StynxLoadingSpinnerComponent],
+  imports: [StynxBannerComponent, StynxHasPermissionDirective, StynxIconComponent, StynxLoadingSpinnerComponent, StynxTranslatePipe],
   template: `
     <section class="surface">
       <header>
-        <h2>Fills</h2>
-        <button type="button" *stynxHasPermission="'flow:execute:task'" (click)="create.emit()">New fill</button>
+        <h2>{{ 'flow.fills.title' | stynxTranslate }}</h2>
+        <button type="button" *stynxHasPermission="'flow:execute:task'" (click)="create.emit()">
+          <stynx-icon name="plus" aria-hidden="true"></stynx-icon>
+          {{ 'flow.fills.actions.create' | stynxTranslate }}
+        </button>
       </header>
       @if (loading) {
-        <stynx-loading-spinner label="Loading fills"></stynx-loading-spinner>
+        <stynx-loading-spinner [label]="'flow.fills.loading' | stynxTranslate"></stynx-loading-spinner>
       }
       @if (errorMessage) {
         <stynx-banner tone="error" [message]="errorMessage"></stynx-banner>
       }
       @for (fill of fills; track fill.id) {
-        <button type="button" class="item" (click)="select.emit(fill)">
+        <button type="button" class="item" (click)="selected.emit(fill)">
           <strong>{{ fill.targetType }} {{ fill.targetId }}</strong>
           <span>{{ fill.status }}</span>
         </button>
       }
     </section>
   `,
-  styles: [`.surface { display: grid; gap: 0.75rem; } header { display: flex; justify-content: space-between; align-items: center; } h2 { margin: 0; } .item { border: 1px solid #d8dee9; border-radius: 8px; padding: 0.75rem; text-align: left; background: #ffffff; display: grid; gap: 0.25rem; }`],
+  styles: [`.surface { display: grid; gap: 0.75rem; } header { display: flex; justify-content: space-between; align-items: center; } h2 { margin: 0; } button { display: inline-flex; align-items: center; gap: 0.4rem; } stynx-icon { --stynx-icon-size: 1rem; } .item { border: 1px solid #d8dee9; border-radius: 8px; padding: 0.75rem; text-align: left; background: #ffffff; display: grid; gap: 0.25rem; }`],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StynxFlowFillsComponent implements OnChanges {
@@ -39,7 +43,7 @@ export class StynxFlowFillsComponent implements OnChanges {
   @Input() targetType = '';
   @Input() targetId = '';
   @Output() readonly create = new EventEmitter<void>();
-  @Output() readonly select = new EventEmitter<FlowFill>();
+  @Output() readonly selected = new EventEmitter<FlowFill>();
 
   fills: FlowFill[] = [];
   loading = false;
@@ -75,14 +79,19 @@ export class StynxFlowFillsComponent implements OnChanges {
 @Component({
   selector: 'stynx-flow-fill-editor',
   standalone: true,
-  imports: [StynxHasPermissionDirective],
+  imports: [StynxHasPermissionDirective, StynxIconComponent, StynxTranslatePipe],
   template: `
     <section class="surface">
       <header>
         <h2>{{ fill?.targetId || 'Fill' }}</h2>
         <div class="actions">
-          <button type="button" *stynxHasPermission="'flow:execute:task'" (click)="saveAllAnswers()">Save answers</button>
-          <button type="button" *stynxHasPermission="'flow:execute:task'" (click)="submit.emit(fill || {})">Submit</button>
+          <button type="button" *stynxHasPermission="'flow:execute:task'" (click)="saveAllAnswers()">
+            <stynx-icon name="save" aria-hidden="true"></stynx-icon>
+            {{ 'flow.fillEditor.actions.saveAnswers' | stynxTranslate }}
+          </button>
+          <button type="button" *stynxHasPermission="'flow:execute:task'" (click)="submitted.emit(fill || {})">
+            {{ 'flow.fillEditor.actions.submit' | stynxTranslate }}
+          </button>
         </div>
       </header>
       @for (question of questions; track question.id) {
@@ -90,7 +99,7 @@ export class StynxFlowFillsComponent implements OnChanges {
           <label [attr.for]="'flow-answer-' + question.id">
             <strong>{{ question.label }}</strong>
             @if (question.required) {
-              <small>Required</small>
+              <small>{{ 'flow.common.required' | stynxTranslate }}</small>
             }
           </label>
           @switch (question.fieldType) {
@@ -158,20 +167,20 @@ export class StynxFlowFillsComponent implements OnChanges {
             }
           }
           <button type="button" class="secondary" *stynxHasPermission="'flow:assign:task'" (click)="waiveQuestion.emit(question)">
-            Waive
+            {{ 'flow.fillEditor.actions.waive' | stynxTranslate }}
           </button>
         </article>
       }
     </section>
   `,
-  styles: [`.surface { display: grid; gap: 0.75rem; } header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; } h2 { margin: 0; } .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; } .answer { border: 1px solid #d8dee9; border-radius: 8px; padding: 0.75rem; display: grid; gap: 0.5rem; } label { display: flex; gap: 0.5rem; align-items: baseline; justify-content: space-between; } input:not([type="checkbox"]), select, textarea { width: 100%; box-sizing: border-box; border: 1px solid #c7d0dd; border-radius: 6px; padding: 0.5rem; } textarea { min-height: 6rem; resize: vertical; } .secondary { justify-self: start; }`],
+  styles: [`.surface { display: grid; gap: 0.75rem; } header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; } h2 { margin: 0; } .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; } button { display: inline-flex; align-items: center; gap: 0.4rem; } stynx-icon { --stynx-icon-size: 1rem; } .answer { border: 1px solid #d8dee9; border-radius: 8px; padding: 0.75rem; display: grid; gap: 0.5rem; } label { display: flex; gap: 0.5rem; align-items: baseline; justify-content: space-between; } input:not([type="checkbox"]), select, textarea { width: 100%; box-sizing: border-box; border: 1px solid #c7d0dd; border-radius: 6px; padding: 0.5rem; } textarea { min-height: 6rem; resize: vertical; } .secondary { justify-self: start; }`],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StynxFlowFillEditorComponent implements OnChanges {
   @Input() fill: Partial<FlowFill> | undefined;
   @Input() questions: FlowQuestion[] = [];
   @Input() answers: FlowAnswer[] = [];
-  @Output() readonly submit = new EventEmitter<Partial<FlowFill>>();
+  @Output() readonly submitted = new EventEmitter<Partial<FlowFill>>();
   @Output() readonly answer = new EventEmitter<Partial<FlowAnswer>>();
   @Output() readonly saveAnswers = new EventEmitter<Array<Partial<FlowAnswer>>>();
   @Output() readonly waiveQuestion = new EventEmitter<FlowQuestion>();
@@ -299,7 +308,7 @@ export class StynxFlowFillEditorComponent implements OnChanges {
       case 'select':
         return value === '' ? null : value;
       case 'multiselect':
-        return Array.isArray(value) ? value : [];
+        return value;
       case 'date':
         return value || null;
       default:

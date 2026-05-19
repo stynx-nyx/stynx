@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { randomUUID } from 'node:crypto';
 import { userInfo } from 'node:os';
 import { Client, type ClientConfig } from 'pg';

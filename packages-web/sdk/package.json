@@ -22,7 +22,7 @@
   ],
   "scripts": {
     "codegen": "node ./scripts/codegen.mjs",
-    "build": "pnpm run codegen && ng-packagr -p ng-package.json -c tsconfig.apf.json",
+    "build": "pnpm run codegen && ng-packagr -p ng-package.json",
     "clean": "rm -rf dist coverage src/generated",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/lib.mjs \"src/**/*.ts\" --ignore-pattern \"src/generated/**\"",

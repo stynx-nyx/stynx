@@ -11,11 +11,12 @@ import { ErrorInterceptor } from '../src/error.interceptor';
 import { provideStynxDefaults } from '../src/provide-defaults';
 import { generateClientRequestId } from '../src/request-id';
 import { RequestIdInterceptor } from '../src/request-id.interceptor';
+import { StynxAngularModule } from '../src/stynx-angular.module';
 import { EmptyStateComponent } from '../src/empty-state.component';
 import { TenantContextService } from '../src/tenant-context.service';
 import { TenantInterceptor } from '../src/tenant.interceptor';
 import { ToastService } from '../src/toast.service';
-import { ForbiddenError } from '@stynx-web/sdk';
+import { ForbiddenError, UnauthorizedError } from '@stynx-web/sdk';
 import { STYNX_ANGULAR_OPTIONS, STYNX_AUTH_PROVIDER, STYNX_WINDOW } from '../src/tokens';
 import { STYNX_TENANCY_OPTIONS, STYNX_TENANCY_WINDOW, type TenancyOptions } from '@stynx-web/angular-tenancy';
 
@@ -86,8 +87,48 @@ function createTenantContext(options: TenancyOptions = {}, browserWindow: Window
   return runInInjectionContext(injector, () => new TenantContextService());
 }
 
-function createErrorBannerService(): ErrorBannerService {
-  return TestBed.runInInjectionContext(() => new ErrorBannerService());
+function createTenantInterceptor(tenantContext: TenantContextService): TenantInterceptor {
+  const injector = Injector.create({
+    parent: TestBed.inject(Injector),
+    providers: [{ provide: TenantContextService, useValue: tenantContext }],
+  });
+  return runInInjectionContext(injector, () => new TenantInterceptor());
+}
+
+function createAuthInterceptor(
+  options: { apiBaseUrl: string; sessionMode: 'bearer' | 'cookie' },
+  authProvider: unknown,
+  errorBanner?: ErrorBannerService,
+): AuthInterceptor {
+  const injector = Injector.create({
+    parent: TestBed.inject(Injector),
+    providers: [
+      { provide: STYNX_ANGULAR_OPTIONS, useValue: options },
+      { provide: STYNX_AUTH_PROVIDER, useValue: authProvider },
+      ...(errorBanner ? [{ provide: ErrorBannerService, useValue: errorBanner }] : []),
+    ],
+  });
+  return runInInjectionContext(injector, () => new AuthInterceptor());
+}
+
+function createErrorInterceptor(errorBanner: ErrorBannerService): ErrorInterceptor {
+  const injector = Injector.create({
+    parent: TestBed.inject(Injector),
+    providers: [{ provide: ErrorBannerService, useValue: errorBanner }],
+  });
+  return runInInjectionContext(injector, () => new ErrorInterceptor());
+}
+
+function createErrorBannerService(tenantContext?: TenantContextService): ErrorBannerService {
+  if (!tenantContext) {
+    return TestBed.runInInjectionContext(() => new ErrorBannerService());
+  }
+
+  const injector = Injector.create({
+    parent: TestBed.inject(Injector),
+    providers: [{ provide: TenantContextService, useValue: tenantContext }],
+  });
+  return runInInjectionContext(injector, () => new ErrorBannerService());
 }
 
 function createToastService(): ToastService {
@@ -162,8 +203,8 @@ describe('@stynx-web/angular', () => {
       null,
     );
     tenantContext.setTenant('tenant-a', 'manual');
-    const tenant = new TenantInterceptor(tenantContext);
-    const auth = new AuthInterceptor(
+    const tenant = createTenantInterceptor(tenantContext);
+    const auth = createAuthInterceptor(
       { apiBaseUrl: '/api', sessionMode: 'bearer' },
       authProvider,
     );
@@ -188,9 +229,36 @@ describe('@stynx-web/angular', () => {
     expect(refreshCalls).toBe(1);
   });
 
-  it('passes auth through when bearer mode is disabled and reports auth failure when refresh is empty', async () => {
+  it('refreshes after a mapped unauthorized SDK error', async () => {
+    let token = 'expired-token';
+    let refreshCalls = 0;
+    const auth = createAuthInterceptor(
+      { apiBaseUrl: '/api', sessionMode: 'bearer' },
+      {
+        getAccessToken: async () => token,
+        refresh: async () => {
+          refreshCalls += 1;
+          token = 'fresh-token';
+          return token;
+        },
+      },
+    );
+    const handler = new FakeHandler([
+      throwError(() => new UnauthorizedError('expired', 401, 'AUTHENTICATION_ERROR')),
+      of({ ok: true }) as Observable<unknown>,
+    ]);
+
+    await expect(firstValueFrom(auth.intercept(new FakeRequest() as never, handler as never))).resolves.toEqual({ ok: true });
+    expect(handler.seen[0]?.headers.get('authorization')).toBe('Bearer expired-token');
+    expect(handler.seen[1]?.headers.get('authorization')).toBe('Bearer fresh-token');
+    expect(handler.seen[1]?.headers.get('x-stynx-auth-retried')).toBe('true');
+    expect(refreshCalls).toBe(1);
+  });
+
+  it('passes auth through when bearer mode is disabled and shows a re-login action when refresh is empty', async () => {
     let authFailures = 0;
-    const passthrough = new AuthInterceptor(
+    let loginRedirects = 0;
+    const passthrough = createAuthInterceptor(
       { apiBaseUrl: '/api', sessionMode: 'cookie' },
       {
         getAccessToken: async () => 'token',
@@ -202,25 +270,38 @@ describe('@stynx-web/angular', () => {
     await expect(firstValueFrom(passthrough.intercept(new FakeRequest() as never, passthroughHandler as never))).resolves.toEqual({ ok: true });
     expect(passthroughHandler.seen[0]?.headers.get('authorization')).toBeNull();
 
-    const auth = new AuthInterceptor(
+    const error = new HttpErrorResponse({ status: 401, error: { code: 'AUTHENTICATION_ERROR' } });
+    const handler = new FakeHandler([throwError(() => error)]);
+    const banners = createErrorBannerService();
+
+    const reloginAuth = createAuthInterceptor(
       { apiBaseUrl: '/api', sessionMode: 'bearer' },
       {
         getAccessToken: async () => 'expired-token',
         refresh: async () => null,
+        loginRedirect: () => {
+          loginRedirects += 1;
+        },
         onAuthFailure: async () => {
           authFailures += 1;
         },
       },
+      banners,
     );
-    const error = new HttpErrorResponse({ status: 401, error: { code: 'AUTHENTICATION_ERROR' } });
-    const handler = new FakeHandler([throwError(() => error)]);
 
-    await expect(firstValueFrom(auth.intercept(new FakeRequest() as never, handler as never))).rejects.toBe(error);
+    await expect(firstValueFrom(reloginAuth.intercept(new FakeRequest() as never, handler as never))).rejects.toBe(error);
     expect(authFailures).toBe(1);
+    expect(banners.current()).toMatchObject({
+      message: 'Your session expired. Please log in again.',
+      tone: 'error',
+      actionLabel: 'log in',
+    });
+    await banners.current()?.action?.();
+    expect(loginRedirects).toBe(1);
   });
 
   it('skips auth without a provider and does not retry non-retryable errors', async () => {
-    const noProvider = new AuthInterceptor(
+    const noProvider = createAuthInterceptor(
       { apiBaseUrl: '/api', sessionMode: 'bearer' },
       null,
     );
@@ -228,7 +309,7 @@ describe('@stynx-web/angular', () => {
     await expect(firstValueFrom(noProvider.intercept(new FakeRequest() as never, noProviderHandler as never))).resolves.toEqual({ ok: true });
     expect(noProviderHandler.seen[0]?.headers.get('authorization')).toBeNull();
 
-    const auth = new AuthInterceptor(
+    const auth = createAuthInterceptor(
       { apiBaseUrl: '/api', sessionMode: 'bearer' },
       {
         getAccessToken: async () => 'token',
@@ -252,7 +333,8 @@ describe('@stynx-web/angular', () => {
   });
 
   it('leaves bearer requests unchanged when the provider has no token', async () => {
-    const auth = new AuthInterceptor(
+    const unauthorized = new HttpErrorResponse({ status: 401, error: { message: 'login failed' } });
+    const auth = createAuthInterceptor(
       { apiBaseUrl: '/api', sessionMode: 'bearer' },
       {
         getAccessToken: async () => null,
@@ -265,11 +347,52 @@ describe('@stynx-web/angular', () => {
 
     await expect(firstValueFrom(auth.intercept(new FakeRequest() as never, handler as never))).resolves.toEqual({ ok: true });
     expect(handler.seen[0]?.headers.get('authorization')).toBeNull();
+
+    await expect(firstValueFrom(auth.intercept(
+      new FakeRequest() as never,
+      new FakeHandler([throwError(() => unauthorized)]) as never,
+    ))).rejects.toBe(unauthorized);
+  });
+
+  it('passes unauthenticated mapped 401 errors through without refresh', async () => {
+    let refreshCalls = 0;
+    const auth = createAuthInterceptor(
+      { apiBaseUrl: '/api', sessionMode: 'bearer' },
+      {
+        getAccessToken: async () => null,
+        refresh: async () => {
+          refreshCalls += 1;
+          return 'fresh-token';
+        },
+      },
+    );
+    const banners = createErrorBannerService();
+    const error = new HttpErrorResponse({
+      status: 401,
+      error: { code: 'AUTHENTICATION_ERROR', message: 'login failed' },
+    });
+    const handler = new FakeHandler([throwError(() => error)]);
+
+    await expect(firstValueFrom(auth.intercept(new FakeRequest() as never, {
+      handle: (request: unknown) => createErrorInterceptor(banners).intercept(request as never, handler as never),
+    } as never))).rejects.toBeInstanceOf(UnauthorizedError);
+
+    expect(handler.seen).toHaveLength(1);
+    expect(handler.seen[0]?.headers.get('authorization')).toBeNull();
+    expect(refreshCalls).toBe(0);
+    expect(banners.current()).toMatchObject({
+      message: 'login failed',
+      code: 'AUTHENTICATION_ERROR',
+      status: 401,
+    });
   });
 
   it('maps server errors through ErrorBannerService', async () => {
-    const banners = createErrorBannerService();
-    const interceptor = new ErrorInterceptor(banners);
+    const tenantContext = createTenantContext({}, null);
+    tenantContext.setAvailableTenants([{ id: 'tenant-a', label: 'Tenant A' }]);
+    tenantContext.setTenant('tenant-a', 'manual');
+    const banners = createErrorBannerService(tenantContext);
+    const interceptor = createErrorInterceptor(banners);
     const handler = new FakeHandler([
       throwError(() => new HttpErrorResponse({
         status: 403,
@@ -281,14 +404,15 @@ describe('@stynx-web/angular', () => {
 
     await expect(firstValueFrom(request)).rejects.toBeInstanceOf(ForbiddenError);
     expect(banners.current()?.code).toBe('TENANT_ACCESS_DENIED');
-    expect(banners.current()?.message).toBe('forbidden');
+    expect(banners.current()?.message).toBe('[Tenant A] forbidden');
+    expect(banners.current()?.context).toEqual({ tenantLabel: 'Tenant A' });
     banners.clear();
     expect(banners.current()).toBeNull();
   });
 
   it('maps HTTP error context and omits falsy status from banners', async () => {
     const banners = createErrorBannerService();
-    const interceptor = new ErrorInterceptor(banners);
+    const interceptor = createErrorInterceptor(banners);
 
     await expect(firstValueFrom(interceptor.intercept(
       new FakeRequest() as never,
@@ -321,7 +445,7 @@ describe('@stynx-web/angular', () => {
 
   it('maps HTTP errors without optional code, status, or context fields', async () => {
     const banners = createErrorBannerService();
-    const interceptor = new ErrorInterceptor(banners);
+    const interceptor = createErrorInterceptor(banners);
     const handler = new FakeHandler([
       throwError(() => new HttpErrorResponse({
         status: 500,
@@ -338,7 +462,7 @@ describe('@stynx-web/angular', () => {
 
   it('passes non-HTTP errors through without showing a banner', async () => {
     const banners = createErrorBannerService();
-    const interceptor = new ErrorInterceptor(banners);
+    const interceptor = createErrorInterceptor(banners);
     const error = new Error('plain failure');
 
     await expect(firstValueFrom(interceptor.intercept(
@@ -391,17 +515,17 @@ describe('@stynx-web/angular', () => {
     const snapshots: unknown[] = [];
     const subscription = service.messages$.subscribe((messages) => snapshots.push(messages));
 
-    const id = service.push({ title: 'Saved', description: 'Document saved', tone: 'success' });
+    const id = service.push({ kind: 'success', message: 'Document saved' });
     expect(id).toBe('toast-1700000000000-8');
     expect(service.messages()).toEqual([
-      { id, title: 'Saved', description: 'Document saved', tone: 'success' },
+      { id, kind: 'success', message: 'Document saved' },
     ]);
 
     service.remove('missing');
     expect(service.messages()).toHaveLength(1);
     service.remove(id);
     expect(service.messages()).toEqual([]);
-    service.push({ title: 'Warning', description: 'Check input', tone: 'warning' });
+    service.push({ kind: 'warning', message: 'Check input' });
     service.clear();
     expect(service.messages()).toEqual([]);
     expect(snapshots.at(-1)).toEqual([]);
@@ -461,5 +585,26 @@ describe('@stynx-web/angular', () => {
     expect(interceptors.some((interceptor) => interceptor instanceof RequestIdInterceptor)).toBe(true);
     expect(interceptors.some((interceptor) => interceptor instanceof AuthInterceptor)).toBe(true);
     expect(interceptors.some((interceptor) => interceptor instanceof ErrorInterceptor)).toBe(true);
+  });
+
+  it('registers module error mapping outside auth refresh handling', () => {
+    TestBed.configureTestingModule({
+      imports: [
+        StynxAngularModule.forRoot({
+          apiBaseUrl: '/api',
+          sessionMode: 'bearer',
+          authProvider: {
+            getAccessToken: async () => null,
+            refresh: async () => null,
+          },
+        }),
+      ],
+    });
+
+    const interceptors = TestBed.inject(HTTP_INTERCEPTORS);
+    const authIndex = interceptors.findIndex((interceptor) => interceptor instanceof AuthInterceptor);
+    const errorIndex = interceptors.findIndex((interceptor) => interceptor instanceof ErrorInterceptor);
+    expect(errorIndex).toBeGreaterThanOrEqual(0);
+    expect(authIndex).toBeGreaterThan(errorIndex);
   });
 });

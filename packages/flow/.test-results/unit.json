@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T04:42:31.934Z",
-  "endedAt": "2026-05-19T04:42:35.660Z",
-  "durationMs": 3726,
+  "startedAt": "2026-05-19T15:49:53.389Z",
+  "endedAt": "2026-05-19T15:50:01.138Z",
+  "durationMs": 7749,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-99653-1779165751934.json",
+      "--outputFile.json=/tmp/vitest-23609-1779205793389.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/flow/.test-results/unit.junit.xml"
     ],
@@ -36,63 +36,63 @@
     "kind": "none"
   },
   "totals": {
-    "files": 10,
-    "tests": 177,
-    "passed": 177,
+    "files": 9,
+    "tests": 196,
+    "passed": 196,
     "failed": 0,
     "skipped": 0,
     "todo": 0
   },
   "slowestTests": [
     {
-      "name": "FlowFormsService questions / scores deleteQuestionScore looks up then softDeletes the score row",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-forms.service.spec.ts",
-      "durationMs": 6.0157500000000255
+      "name": "FlowDesignService.importGraph imports optional transition effects, agent rules, and node form rules",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-design.service.spec.ts",
+      "durationMs": 33.704125000000204
     },
     {
-      "name": "Flow backend gap contracts dispatches pending effects through the adapter and skips already terminal events on retry",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/gap-contracts.spec.ts",
-      "durationMs": 5.547208000000182
+      "name": "FlowRuntimeService getRun / updateRun / getNodeRun / getTask getRun returns one or throws NotFound",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-runtime.service.spec.ts",
+      "durationMs": 21.360415999999532
+    },
+    {
+      "name": "FlowRuntimeService task action flows actTask asserts allowed action + execution allowed, then calls task_complete",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-runtime.service.spec.ts",
+      "durationMs": 14.225709000000279
+    },
+    {
+      "name": "FlowDesignService — graphs / nodes / edges publishGraph validates and records package-owned publish metadata",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-design.service.spec.ts",
+      "durationMs": 11.022249999999985
     },
     {
       "name": "Flow validation and regression guards keeps generic Flow source free of PORM/CMS domain coupling",
       "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/validation-and-regression.spec.ts",
-      "durationMs": 5.295208000000002
+      "durationMs": 7.375042000000576
     },
     {
-      "name": "FlowDesignService — scopes deleteScope throws NotFound when row absent",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-design.service.spec.ts",
-      "durationMs": 4.569375000000036
+      "name": "FlowFormsService questions / scores createQuestion attaches formId to the input",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-forms.service.spec.ts",
+      "durationMs": 7.297499999999673
     },
     {
-      "name": "Flow route contracts keeps every Flow route private and permissioned",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/route-contracts.spec.ts",
-      "durationMs": 3.9306249999999636
-    },
-    {
-      "name": "Flow validation and regression guards rejects invalid workflow DTOs before they reach the database",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/validation-and-regression.spec.ts",
-      "durationMs": 3.7294160000001284
-    },
-    {
-      "name": "Flow row utilities camelizes rows and clamps pagination inputs",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/branch-helpers.spec.ts",
-      "durationMs": 3.610875000000078
-    },
-    {
-      "name": "FlowDesignService.exportGraph queries graph + nodes + edges + transitionEffects + agentRules + nodeFormRules + policySets",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-design.service.spec.ts",
-      "durationMs": 3.348500000000058
+      "name": "Flow backend gap contracts dispatches pending effects through the adapter and skips already terminal events on retry",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/gap-contracts.spec.ts",
+      "durationMs": 6.279375000000073
     },
     {
       "name": "FlowRuntimeService.ensureRun resolves scope code from scopeId when scopeCode is absent",
       "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-runtime.service.spec.ts",
-      "durationMs": 3.0789170000000468
+      "durationMs": 5.685707999999977
     },
     {
-      "name": "FlowDesignService — agentRules / transitionEffects / nodeFormRules transition effect read, list, update, and delete routes are covered",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-design.service.spec.ts",
-      "durationMs": 3.038875000000189
+      "name": "FlowRuntimeService.ensureRun passes optional signal facts to the adapter before ensuring a run",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-runtime.service.spec.ts",
+      "durationMs": 5.535958999999821
+    },
+    {
+      "name": "FlowFormsService questions / scores listQuestions filters by form_id",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-forms.service.spec.ts",
+      "durationMs": 4.6565419999997175
     }
   ]
 }

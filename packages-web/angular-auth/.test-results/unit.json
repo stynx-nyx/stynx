@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T05:11:35.577Z",
-  "endedAt": "2026-05-19T05:11:39.287Z",
-  "durationMs": 3709,
+  "startedAt": "2026-05-19T15:48:52.752Z",
+  "endedAt": "2026-05-19T15:49:05.013Z",
+  "durationMs": 12261,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -15,7 +15,7 @@
     "junit": ".test-results/unit.junit.xml"
   },
   "env": {
-    "node": "26.0.0",
+    "node": "24.15.0",
     "ci": false
   },
   "command": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-85164-1779167495577.json",
+      "--outputFile.json=/tmp/vitest-21501-1779205732752.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages-web/angular-auth/.test-results/unit.junit.xml"
     ],
@@ -37,62 +37,62 @@
   },
   "totals": {
     "files": 1,
-    "tests": 12,
-    "passed": 12,
+    "tests": 18,
+    "passed": 18,
     "failed": 0,
     "skipped": 0,
     "todo": 0
   },
   "slowestTests": [
     {
+      "name": "@stynx-web/angular-auth ships the permission-denied component and default route provider",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-auth/test/angular-auth.spec.ts",
+      "durationMs": 201.25883299999987
+    },
+    {
+      "name": "@stynx-web/angular-auth calls auth backend endpoints with normalized URLs and headers",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-auth/test/angular-auth.spec.ts",
+      "durationMs": 43.36804200000006
+    },
+    {
       "name": "@stynx-web/angular-auth switches tenant and updates both session state and tenant context",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-auth/test/angular-auth.spec.ts",
-      "durationMs": 23.504249999999956
+      "durationMs": 43.27900000000045
     },
     {
-      "name": "@stynx-web/angular-auth handles inactive login, refresh failure, login redirect, logout, and permission helpers",
+      "name": "@stynx-web/angular-auth resolves configured hosted auth action links without guessing provider URLs",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-auth/test/angular-auth.spec.ts",
-      "durationMs": 3.4720839999999953
-    },
-    {
-      "name": "@stynx-web/angular-auth resolves tenant from callback URL, refreshes active sessions, and rejects tenant switch without a token",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-auth/test/angular-auth.spec.ts",
-      "durationMs": 3.27795900000001
-    },
-    {
-      "name": "@stynx-web/angular-auth permission guard denies and allows based on session permissions",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-auth/test/angular-auth.spec.ts",
-      "durationMs": 3.0543330000000424
-    },
-    {
-      "name": "@stynx-web/angular-auth refreshes and logs out inactive sessions without backend calls",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-auth/test/angular-auth.spec.ts",
-      "durationMs": 2.404667000000245
-    },
-    {
-      "name": "@stynx-web/angular-auth has-permission directive renders only when the session grants the permission",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-auth/test/angular-auth.spec.ts",
-      "durationMs": 2.0870410000002266
-    },
-    {
-      "name": "@stynx-web/angular-auth resolves tenant ids from token claims and rejects missing tenant context",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-auth/test/angular-auth.spec.ts",
-      "durationMs": 1.9920419999998558
+      "durationMs": 5.260874999999942
     },
     {
       "name": "@stynx-web/angular-auth parses JWT payloads and persists refresh tokens in storage and cookies",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-auth/test/angular-auth.spec.ts",
-      "durationMs": 1.8198750000001382
+      "durationMs": 4.515583000000333
+    },
+    {
+      "name": "@stynx-web/angular-auth handles inactive login, refresh failure, login redirect, logout, and permission helpers",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-auth/test/angular-auth.spec.ts",
+      "durationMs": 3.045917000001282
+    },
+    {
+      "name": "@stynx-web/angular-auth resolves tenant from callback URL, refreshes active sessions, and rejects tenant switch without a token",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-auth/test/angular-auth.spec.ts",
+      "durationMs": 2.99554199999875
+    },
+    {
+      "name": "@stynx-web/angular-auth has-permission directive renders only when the session grants the permission",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-auth/test/angular-auth.spec.ts",
+      "durationMs": 2.4120419999999285
     },
     {
       "name": "@stynx-web/angular-auth auth guard redirects to the login route when no session is active",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-auth/test/angular-auth.spec.ts",
-      "durationMs": 1.457749999999578
+      "durationMs": 2.313125000000582
     },
     {
-      "name": "@stynx-web/angular-auth adapts OIDC calls and redirect/logout components to session methods",
+      "name": "@stynx-web/angular-auth permission guard denies and allows based on session permissions",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-auth/test/angular-auth.spec.ts",
-      "durationMs": 1.4074580000001333
+      "durationMs": 2.2376250000015716
     }
   ]
 }

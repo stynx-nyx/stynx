@@ -116,6 +116,7 @@ describe('Flow route contracts', () => {
     const auditedRoutes: Array<[ControllerClass, string, string]> = [
       [FlowScopesController, 'create', 'flow.scope.create'],
       [FlowGraphsController, 'import', 'flow.graph.import'],
+      [FlowGraphsController, 'publish', 'flow.graph.publish'],
       [FlowFormsController, 'createFill', 'flow.fill.create'],
       [FlowFormsController, 'createFillWaiver', 'flow.waiver.create'],
       [FlowFillsController, 'create', 'flow.fill.create'],
@@ -141,6 +142,7 @@ describe('Flow route contracts', () => {
       [FlowFillsController, 'bulkUpsertAnswers'],
       [FlowFillsController, 'createWaiver'],
       [FlowWaiversController, 'create'],
+      [FlowGraphsController, 'publish'],
       [FlowTasksController, 'act'],
       [FlowTasksController, 'assign'],
       [FlowEffectsController, 'dispatch'],

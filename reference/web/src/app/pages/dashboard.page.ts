@@ -7,6 +7,8 @@ import { StynxHasPermissionDirective, StynxSessionService } from '@stynx-web/ang
 import { StynxBannerComponent, StynxToastService } from '@stynx-web/angular-ui';
 import { StynxPreferencesFormComponent, StynxProfileFormComponent } from '@stynx-web/angular-profile';
 import type { StynxSessionsAdapter } from '@stynx-web/angular-sessions';
+import { StynxIntlCurrencyPipe } from '@stynx-web/angular-i18n';
+import { environment } from '../../environments/environment';
 import { ReferenceWebI18nService } from '../core/reference-web-i18n.service';
 import { ReferenceWebShellService } from '../core/reference-web-shell.service';
 
@@ -21,23 +23,26 @@ import { ReferenceWebShellService } from '../core/reference-web-shell.service';
     StynxProfileFormComponent,
     StynxPreferencesFormComponent,
     StynxHasPermissionDirective,
+    StynxIntlCurrencyPipe,
   ],
   template: `
     <section class="stack">
       <article class="hero">
         <div>
           <p class="eyebrow">Prompt 31</p>
-          <h2>{{ i18n.t('dashboard.title') }}</h2>
+          <h2 data-testid="dashboard-title">{{ i18n.t('dashboard.title') }}</h2>
           <p class="tenant-label">{{ shell.activeTenantLabel() }}</p>
+          <p data-testid="i18n-number-sample">{{ 1234.56 | stynxIntlCurrency:'USD' }}</p>
           <p>Dashboard, storage, sessions, profile, locale switching, and auth wiring are all mounted here.</p>
         </div>
         <stynx-banner tone="info" [message]="'Signed in as ' + shell.activeUserLabel()"></stynx-banner>
       </article>
 
       <section class="grid">
-        <article class="card" *stynxHasPermission="'sample:document:write'">
+        <article class="card" data-testid="dashboard-document-upload-card" *stynxHasPermission="'sample:document:write'">
           <h3>Document upload</h3>
           <stynx-document-upload
+            data-testid="dashboard-document-upload"
             collection="records"
             [allowedMimes]="['application/pdf', 'image/png', 'image/jpeg']"
             [maxBytes]="25000000"
@@ -48,7 +53,7 @@ import { ReferenceWebShellService } from '../core/reference-web-shell.service';
           }
         </article>
 
-        <article class="card">
+        <article class="card" data-testid="dashboard-active-sessions">
           <h3>Active sessions</h3>
           <stynx-active-sessions [adapter]="sessionsAdapter"></stynx-active-sessions>
         </article>
@@ -117,6 +122,14 @@ export class DashboardPageComponent implements AfterViewInit {
     locale: 'en-US',
     notifications: true,
   };
+  private devSecondarySession = environment.production
+    ? null
+    : {
+        sid: 'sid-reference-dev-secondary',
+        tenantId: 'reference-dev-secondary',
+        createdAt: '2026-05-19T00:00:00.000Z',
+        expiresAt: '2026-05-19T01:00:00.000Z',
+      };
   protected readonly sessionsAdapter: StynxSessionsAdapter = {
     list: async () => {
       const snapshot = this.session.snapshot();
@@ -128,15 +141,21 @@ export class DashboardPageComponent implements AfterViewInit {
             expiresAt: typeof snapshot.claims?.exp === 'number'
               ? new Date(snapshot.claims.exp * 1000).toISOString()
               : 'unknown',
-          }]
+          }, ...(this.devSecondarySession ? [this.devSecondarySession] : [])]
         : [];
     },
     revoke: async (sid: string) => {
       if (sid === this.session.snapshot().sid) {
         await this.session.logout();
+        return;
+      }
+      if (sid === this.devSecondarySession?.sid) {
+        this.devSecondarySession = null;
       }
     },
-    revokeOthers: async () => undefined,
+    revokeOthers: async () => {
+      this.devSecondarySession = null;
+    },
   };
 
   @ViewChild(StynxActiveSessionsComponent)

@@ -221,6 +221,7 @@ async function main() {
   }
 
   writeFileSync(artifactPath, JSON.stringify(artifact, null, 2) + '\n');
+  writeCompanionCoverageArtifact({ artifact, args, commandArgs, cwd, outputDir });
 
   // Best-effort schema validation (warns but doesn't fail the run).
   validateAgainstSchema(artifact);
@@ -492,6 +493,26 @@ function enrichCoverage(artifact, args, cwd) {
     },
   };
   artifact.artifacts.coverage = source.startsWith(cwd) ? source.slice(cwd.length + 1) : source;
+}
+
+function writeCompanionCoverageArtifact({ artifact, args, commandArgs, cwd, outputDir }) {
+  if (args.runner !== 'vitest' || args.level === 'coverage') return;
+  if (!vitestCoverageRequested(commandArgs)) return;
+
+  const coverageArtifact = {
+    ...artifact,
+    level: 'coverage',
+    artifacts: { ...artifact.artifacts },
+    metric: { kind: 'none' },
+  };
+  enrichCoverage(coverageArtifact, args, cwd);
+  if (coverageArtifact.metric?.kind !== 'coverage') return;
+
+  writeFileSync(join(outputDir, 'coverage.json'), JSON.stringify(coverageArtifact, null, 2) + '\n');
+}
+
+function vitestCoverageRequested(commandArgs) {
+  return commandArgs.some((arg) => arg === '--coverage' || arg.startsWith('--coverage.'));
 }
 
 function round2(n) {

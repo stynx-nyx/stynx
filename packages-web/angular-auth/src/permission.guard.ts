@@ -1,6 +1,7 @@
 import { inject } from '@angular/core';
 import type { CanActivateFn } from '@angular/router';
 import { Router } from '@angular/router';
+import { permissionDeniedPath } from './provide-auth';
 import { StynxSessionService } from './session.service';
 import { STYNX_ANGULAR_AUTH_OPTIONS } from './tokens';
 
@@ -14,6 +15,6 @@ export function stynxPermissionGuard(...permissions: string[]): CanActivateFn {
       return true;
     }
 
-    return router.parseUrl(options.unauthorizedRoute ?? '/unauthorized');
+    return router.parseUrl(permissionDeniedPath(options));
   };
 }

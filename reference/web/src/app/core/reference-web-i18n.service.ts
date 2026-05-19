@@ -1,7 +1,10 @@
 import { Injectable, inject } from '@angular/core';
+import { STYNX_IAM_CATALOGS } from '@stynx-web/angular-iam';
 import { StynxI18nService } from '@stynx-web/angular-i18n';
 
-const CATALOGS: Record<string, Record<string, string>> = {
+type Catalog = Record<string, string>;
+
+const REFERENCE_CATALOGS: Record<string, Catalog> = {
   'en-US': {
     'app.title': 'Reference workflow cockpit',
     'dashboard.title': 'Operational overview',
@@ -27,7 +30,10 @@ export class ReferenceWebI18nService {
     return this.i18n.translate(key, params);
   }
 
-  static catalog(locale: string): Promise<Record<string, string>> {
-    return Promise.resolve(CATALOGS[locale] ?? CATALOGS['en-US'] ?? {});
+  static catalog(locale: string): Promise<Catalog> {
+    return Promise.resolve({
+      ...(REFERENCE_CATALOGS[locale] ?? REFERENCE_CATALOGS['en-US'] ?? {}),
+      ...(STYNX_IAM_CATALOGS[locale] ?? STYNX_IAM_CATALOGS.en ?? {}),
+    });
   }
 }

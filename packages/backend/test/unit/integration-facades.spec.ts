@@ -93,6 +93,18 @@ describe('PormIdentityAdminFacade', () => {
     expect(result.nextToken).toBe('tok');
   });
 
+  it('describes branch: list() omits optional inline fields and next token when absent', async () => {
+    const service = makeAdminService({
+      listUsers: vi.fn(async () => ({
+        items: [{ enabled: true }],
+      })),
+    });
+    const result = await new PormIdentityAdminFacade(service).list({});
+    expect(result).toEqual({
+      users: [{ username: '', enabled: true, attributes: {}, groups: [] }],
+    });
+  });
+
   it('get() composes user details + group names', async () => {
     const facade = new PormIdentityAdminFacade(makeAdminService());
     const result = await facade.get('alice');
@@ -103,6 +115,23 @@ describe('PormIdentityAdminFacade', () => {
     expect(result.updatedAt).toBe('2026-02-01T00:00:00Z');
     expect(result.groups).toEqual(['admins']);
     expect(result.attributes).toEqual({ foo: 'bar' });
+  });
+
+  it('describes branch: get() omits optional status and timestamp fields', async () => {
+    const service = makeAdminService({
+      getUser: vi.fn(async () => ({
+        username: 'u',
+        enabled: true,
+        attributes: {},
+      })),
+      listGroupsForUser: vi.fn(async () => []),
+    });
+    await expect(new PormIdentityAdminFacade(service).get('u')).resolves.toEqual({
+      username: 'u',
+      enabled: true,
+      attributes: {},
+      groups: [],
+    });
   });
 
   it('getBySub() resolves username via getUserBySubject then composes', async () => {
@@ -191,6 +220,15 @@ describe('PormIdentityAdminFacade', () => {
     await expect(facade.listAllGroups({ limit: 5 })).resolves.toEqual({
       groups: [{ name: 'g' }],
       nextToken: 'next-g',
+    });
+  });
+
+  it('describes branch: listAllGroups omits next token when provider has no token', async () => {
+    const service = makeAdminService({
+      listGroups: vi.fn(async () => ({ items: [{ name: 'g' }] })),
+    });
+    await expect(new PormIdentityAdminFacade(service).listAllGroups()).resolves.toEqual({
+      groups: [{ name: 'g' }],
     });
   });
 
@@ -299,6 +337,26 @@ describe('PecIdentityAdminFacade', () => {
     expect(result.updatedAt).toBeUndefined();
   });
 
+  it('describes branch: PEC update passes an empty patch when all fields are undefined', async () => {
+    const service = makeAdminService({
+      updateUser: vi.fn(async () => ({
+        username: 'u',
+        enabled: true,
+        attributes: {},
+      })),
+    });
+    const result = await new PecIdentityAdminFacade(service).update('u', {});
+    expect(service.updateUser).toHaveBeenCalledWith('u', {});
+    expect(result).toEqual({
+      username: 'u',
+      status: undefined,
+      enabled: true,
+      createdAt: undefined,
+      updatedAt: undefined,
+      attributes: {},
+    });
+  });
+
   it('disable/enable/listGroups/addToGroup/removeFromGroup/verify/resetPassword delegate', async () => {
     const facade = new PecIdentityAdminFacade(makeAdminService());
     await expect(facade.disable('u')).resolves.toEqual({ ok: true });
@@ -317,6 +375,15 @@ describe('PecIdentityAdminFacade', () => {
     await expect(facade.listAllGroups({ limit: 5 })).resolves.toEqual({
       items: [{ name: 'g' }],
       nextToken: 'next-g',
+    });
+  });
+
+  it('describes branch: PEC listAllGroups omits next token when absent', async () => {
+    const service = makeAdminService({
+      listGroups: vi.fn(async () => ({ items: [{ name: 'g' }] })),
+    });
+    await expect(new PecIdentityAdminFacade(service).listAllGroups()).resolves.toEqual({
+      items: [{ name: 'g' }],
     });
   });
 });

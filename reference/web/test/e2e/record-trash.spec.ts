@@ -6,7 +6,7 @@ async function loginAsAdmin(page: Page): Promise<void> {
   await page.getByTestId('login-email').fill('admin@sample-demo.test');
   await page.getByTestId('login-tenant').selectOption('01978f4a-32bf-7c27-a131-fd73a9e001a1');
   await page.getByTestId('login-submit').click();
-  await expect(page.getByText('Operational overview')).toBeVisible();
+  await expect(page.getByTestId('logout-button')).toBeEnabled();
 }
 
 test('record soft-delete appears in trash and can be restored', async ({ page }) => {

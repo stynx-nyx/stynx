@@ -1,6 +1,7 @@
 export * from './analytics.component';
 export * from './flow-api.service';
 export * from './flow-design-dialogs.component';
+export * from './flow-empty-state.component';
 export * from './flow-fills.component';
 export * from './flow-forms.component';
 export * from './flow-graph-canvas.component';

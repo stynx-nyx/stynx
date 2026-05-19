@@ -5,13 +5,14 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T00:48:44.859Z",
-  "endedAt": "2026-05-19T00:48:56.256Z",
-  "durationMs": 11397,
+  "startedAt": "2026-05-19T15:29:07.471Z",
+  "endedAt": "2026-05-19T15:29:15.835Z",
+  "durationMs": 8364,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
-    "raw": ".test-results/integration.log"
+    "raw": ".test-results/integration.log",
+    "junit": ".test-results/integration.junit.xml"
   },
   "env": {
     "node": "24.15.0",
@@ -25,14 +26,19 @@
       "./vitest.int.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-65312-1779151724859.json"
+      "--outputFile.json=/tmp/vitest-85591-1779204547471.json",
+      "--reporter=junit",
+      "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/sessions/.test-results/integration.junit.xml"
     ],
     "cwd": "/Users/aarusso/Development/stech/stynx/packages/sessions"
   },
+  "metric": {
+    "kind": "none"
+  },
   "totals": {
-    "files": 1,
-    "tests": 2,
-    "passed": 2,
+    "files": 2,
+    "tests": 3,
+    "passed": 3,
     "failed": 0,
     "skipped": 0,
     "todo": 0
@@ -41,15 +47,17 @@
     {
       "name": "StynxSessionsModule integration publishes JWKS publicly and mirrors create/revoke events into auth.sessions",
       "file": "/Users/aarusso/Development/stech/stynx/packages/sessions/test/integration/sessions.module.spec.ts",
-      "durationMs": 351.1482500000002
+      "durationMs": 177.81862499999988
     },
     {
       "name": "StynxSessionsModule integration propagates tenant revocation over Redis pubsub within 100ms",
       "file": "/Users/aarusso/Development/stech/stynx/packages/sessions/test/integration/sessions.module.spec.ts",
-      "durationMs": 101.72041700000045
+      "durationMs": 57.79937500000051
+    },
+    {
+      "name": "SessionJwksController API error matrix GET /.well-known/jwks.json returns 200/201 when JWKS signing material is configured",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/sessions/test/integration/session-jwks.api-matrix.spec.ts",
+      "durationMs": 32.61579100000017
     }
-  ],
-  "metric": {
-    "kind": "none"
-  }
+  ]
 }

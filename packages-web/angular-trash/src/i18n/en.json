@@ -1,0 +1,20 @@
+{
+  "trash.bulk.clear": "Clear",
+  "trash.bulk.hardDelete": "Delete selected forever",
+  "trash.bulk.restore": "Restore selected",
+  "trash.bulk.selected": "{count, plural, one {# selected} other {# selected}}",
+  "trash.confirmHardDelete.confirm": "Delete forever",
+  "trash.confirmHardDelete.message": "This permanently removes the archived row.",
+  "trash.confirmHardDelete.title": "Hard delete",
+  "trash.empty.description": "Deleted records will appear here.",
+  "trash.empty.title": "Trash is empty",
+  "trash.filters.ariaLabel": "Trash filters",
+  "trash.filters.byActor": "By actor",
+  "trash.filters.byMe": "By me",
+  "trash.filters.last7Days": "Last 7 days",
+  "trash.item.deletedBy": "Deleted by {actor}",
+  "trash.item.hardDelete": "Hard delete",
+  "trash.item.restore": "Restore",
+  "trash.item.select": "Select",
+  "trash.tabs.ariaLabel": "Trash resource kinds"
+}

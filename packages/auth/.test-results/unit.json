@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T01:36:56.763Z",
-  "endedAt": "2026-05-19T01:37:05.361Z",
-  "durationMs": 8598,
+  "startedAt": "2026-05-19T15:48:46.220Z",
+  "endedAt": "2026-05-19T15:49:07.546Z",
+  "durationMs": 21326,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -15,7 +15,7 @@
     "junit": ".test-results/unit.junit.xml"
   },
   "env": {
-    "node": "26.0.0",
+    "node": "24.15.0",
     "ci": false
   },
   "command": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-57575-1779154616762.json",
+      "--outputFile.json=/tmp/vitest-21248-1779205726220.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/auth/.test-results/unit.junit.xml"
     ],
@@ -37,62 +37,62 @@
   },
   "totals": {
     "files": 17,
-    "tests": 181,
-    "passed": 181,
+    "tests": 198,
+    "passed": 198,
     "failed": 0,
     "skipped": 0,
     "todo": 0
   },
   "slowestTests": [
     {
-      "name": "CognitoTokenVerifier — header-shape early validation verifies a signed bearer token and maps principal metadata",
+      "name": "CognitoTokenVerifier — header-shape early validation omits optional principal and timestamp metadata when claims are absent",
       "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/unit/cognito-token-verifier.spec.ts",
-      "durationMs": 179.689667
+      "durationMs": 422.50350000000026
     },
     {
-      "name": "CognitoIdentityAdminAdapter listUsers calls ListUsersCommand with the email filter when present",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/unit/cognito-admin.adapter.spec.ts",
-      "durationMs": 75.92283399999997
+      "name": "CognitoTokenVerifier — header-shape early validation verifies a signed bearer token and maps principal metadata",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/unit/cognito-token-verifier.spec.ts",
+      "durationMs": 232.24524999999994
+    },
+    {
+      "name": "StynxAuthService creates a user when cognito subject is unseen and there is no active request context",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/unit/auth.service.spec.ts",
+      "durationMs": 181.93595800000003
+    },
+    {
+      "name": "auth utils verifies a valid RS256 JWT with the supplied JWK",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/unit/utils.spec.ts",
+      "durationMs": 123.18983299999991
     },
     {
       "name": "auth validators rejects invalid signatures from verifyJwtWithJwk",
       "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/unit/validators.spec.ts",
-      "durationMs": 20.732082999999875
+      "durationMs": 121.32616599999892
     },
     {
-      "name": "StynxAuthModule builds the dynamic module with the expected controller, providers, and exports",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/unit/auth.module.spec.ts",
-      "durationMs": 20.139083000000028
+      "name": "PermissionCache invalidates fan-out for 100 sessions in the same tenant",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/unit/permission-cache.spec.ts",
+      "durationMs": 87.61179099999936
+    },
+    {
+      "name": "StynxAuthService exchanges a cognito token using an existing user and active request context",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/unit/auth.service.spec.ts",
+      "durationMs": 84.59266600000046
+    },
+    {
+      "name": "PermissionCache recomputes when cached permissions do not match the token hash",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/unit/permission-cache.spec.ts",
+      "durationMs": 72.527333
+    },
+    {
+      "name": "PermissionQueryService throws when membership is missing or database provider is unavailable",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/unit/permission-query.service.spec.ts",
+      "durationMs": 71.22395900000083
     },
     {
       "name": "auth validators loads jose through the default lazy loader",
       "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/unit/validators.spec.ts",
-      "durationMs": 19.37820899999997
-    },
-    {
-      "name": "verifyAuthMutationCoverage tracks the six ADR-002 mutation paths exactly",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/unit/doctor.spec.ts",
-      "durationMs": 14.40541600000006
-    },
-    {
-      "name": "CognitoIdentityAdminAdapter getUserBySubject maps provider failures while listing by subject",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/unit/cognito-admin.adapter.spec.ts",
-      "durationMs": 14.075791999999979
-    },
-    {
-      "name": "auth utils deduplicates trimmed wildcard universes and keeps unmatched grants explicit",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/unit/utils.spec.ts",
-      "durationMs": 13.948125000000005
-    },
-    {
-      "name": "auth runtime helpers handles jwt and permission utility helpers deterministically",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/unit/auth.runtime.spec.ts",
-      "durationMs": 11.964457999999922
-    },
-    {
-      "name": "StynxAuthController creates a session from the tenant header and token body",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/unit/auth.controller.spec.ts",
-      "durationMs": 11.444958000000042
+      "durationMs": 62.54270800000086
     }
   ]
 }

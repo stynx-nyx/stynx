@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="9" failures="0" errors="0" time="0.797879959">
+    <testsuite name="test/integration/health.api-matrix.spec.ts" timestamp="2026-05-19T15:50:26.262Z" hostname="thiamat-1903.local" tests="7" failures="0" errors="0" skipped="0" time="0.762113">
+        <testcase classname="test/integration/health.api-matrix.spec.ts" name="StynxHealthController API error matrix &gt; GET /healthz &gt; returns 200 for liveness" time="0.436799667">
+        </testcase>
+        <testcase classname="test/integration/health.api-matrix.spec.ts" name="StynxHealthController API error matrix &gt; GET /info &gt; returns 200 when platform info is enabled" time="0.018800542">
+        </testcase>
+        <testcase classname="test/integration/health.api-matrix.spec.ts" name="StynxHealthController API error matrix &gt; GET /info &gt; returns 403 when platform info is disabled" time="0.009915917">
+        </testcase>
+        <testcase classname="test/integration/health.api-matrix.spec.ts" name="StynxHealthController API error matrix &gt; GET /metrics &gt; returns 200 with Prometheus metrics when no IP allowlist is configured" time="0.069019125">
+        </testcase>
+        <testcase classname="test/integration/health.api-matrix.spec.ts" name="StynxHealthController API error matrix &gt; GET /metrics &gt; returns 403 when the client IP is outside the metrics allowlist" time="0.046400375">
+        </testcase>
+        <testcase classname="test/integration/health.api-matrix.spec.ts" name="StynxHealthController API error matrix &gt; GET /readyz &gt; returns 200 when downstream checks are healthy" time="0.098472792">
+        </testcase>
+        <testcase classname="test/integration/health.api-matrix.spec.ts" name="StynxHealthController API error matrix &gt; GET /readyz &gt; returns 503 when a downstream readiness check is unhealthy" time="0.081943875">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/integration/health.module.spec.ts" timestamp="2026-05-19T15:50:26.368Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.035766959">
+        <testcase classname="test/integration/health.module.spec.ts" name="StynxHealthModule integration &gt; exposes the expected health endpoints through the controller surface" time="0.026947917">
+        </testcase>
+        <testcase classname="test/integration/health.module.spec.ts" name="StynxHealthModule integration &gt; surfaces readiness failures as 503 errors" time="0.008008666">
+        </testcase>
+    </testsuite>
+</testsuites>

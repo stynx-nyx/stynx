@@ -1,0 +1,7 @@
+{
+  "sessions.active.actions.revoke": "Revoke",
+  "sessions.active.actions.revokeOthers": "Revoke all other sessions",
+  "sessions.active.current": "Current session",
+  "sessions.active.empty.description": "Your active sessions will appear here.",
+  "sessions.active.empty.title": "No active sessions"
+}

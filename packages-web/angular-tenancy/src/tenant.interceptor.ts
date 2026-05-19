@@ -1,11 +1,11 @@
-import { Inject, Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { TenantContextService } from './tenant-context.service';
 import type { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
 import type { Observable } from 'rxjs';
 
 @Injectable()
 export class TenantInterceptor implements HttpInterceptor {
-  constructor(@Inject(TenantContextService) private readonly tenantContext: TenantContextService) {}
+  private readonly tenantContext = inject(TenantContextService);
 
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     const tenantId = this.tenantContext.tenantId();

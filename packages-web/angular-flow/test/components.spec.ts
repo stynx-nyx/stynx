@@ -6,6 +6,7 @@ import {
   StynxFlowFillsComponent,
 } from '../src/flow-fills.component';
 import { FlowApiService } from '../src/flow-api.service';
+import { StynxFlowEmptyStateComponent } from '../src/flow-empty-state.component';
 import {
   StynxFlowFormEditorComponent,
   StynxFlowFormsComponent,
@@ -28,7 +29,16 @@ import type { Mock } from 'vitest';
 function createApi(): FlowApiService {
   return {
     listScopes: vi.fn(async () => [{ id: 'scope-1', code: 'scope', label: 'Scope', adapterKey: 'test' }]),
-    listGraphs: vi.fn(async () => [{ id: 'graph-1', scopeId: 'scope-1', code: 'approval', version: 'v1', isActive: true, name: 'Approval' }]),
+    listGraphs: vi.fn(async () => [{ id: 'graph-1', scopeId: 'scope-1', code: 'approval', version: 'v1', status: 'draft', isActive: true, name: 'Approval' }]),
+    publishGraph: vi.fn(async () => ({
+      graphId: 'graph-1',
+      status: 'published',
+      draftVersion: 'v1',
+      publishedVersion: 1,
+      publishedAt: '2026-05-19T00:00:00.000Z',
+      publishedBy: 'user-1',
+      runtimeGraphRef: { graphId: 'graph-1', version: 1 },
+    })),
     listGraphNodes: vi.fn(async () => [{ id: 'node-1', graphId: 'graph-1', code: 'review', kind: 'human', allowedActions: ['approve'] }]),
     listGraphEdges: vi.fn(async () => [{ id: 'edge-1', graphId: 'graph-1', fromNodeId: 'start', toNodeId: 'review' }]),
     openTasks: vi.fn(async () => ({ data: [{ id: 'task-1', runId: 'run-1', nodeRunId: 'nr-1', nodeId: 'node-1', assigneeType: 'user', status: 'open', allowedActions: ['approve'], targetType: 'generic', targetId: 'target-1' }], meta: { page: 1, pageSize: 50, total: 1 } })),
@@ -69,6 +79,7 @@ describe('@stynx-web/angular-flow components', () => {
     expect(api.listGraphNodes).toHaveBeenCalledWith('graph-1');
     expect(component.activeScope?.code).toBe('scope');
     expect(component.activeGraph?.code).toBe('approval');
+    expect(component.graphStatusLabel(component.activeGraph!)).toBe('flow.graphDesigner.status.draft');
     expect(component.nodes).toHaveLength(1);
     expect(component.edges).toHaveLength(1);
     expect(component.loading).toBe(false);
@@ -77,6 +88,95 @@ describe('@stynx-web/angular-flow components', () => {
     (api.listScopes as Mock).mockRejectedValueOnce('offline');
     await component.load();
     expect(component.errorMessage).toBe('Flow graph load failed');
+  });
+
+  it('publishes the active draft graph through the Flow API contract', async () => {
+    const api = createApi();
+    const component = createWithApi(api, () => new StynxFlowGraphDesignerComponent());
+    component.scopeId = 'scope-1';
+    component.graphId = 'graph-1';
+
+    await component.load();
+    await component.publishActiveGraph();
+
+    expect(api.publishGraph).toHaveBeenCalledWith('graph-1', { expectedDraftVersion: 'v1' });
+    expect(api.listGraphs).toHaveBeenCalledTimes(2);
+    expect(component.publishingGraphId).toBe('');
+    expect(component.errorMessage).toBe('');
+  });
+
+  it('surfaces publish failures and labels published versions', async () => {
+    const api = createApi();
+    (api.listGraphs as Mock).mockResolvedValueOnce([{
+      id: 'graph-1',
+      scopeId: 'scope-1',
+      code: 'approval',
+      version: 'v1',
+      status: 'published',
+      publishedVersion: 3,
+      isActive: true,
+    }]);
+    const component = createWithApi(api, () => new StynxFlowGraphDesignerComponent());
+    component.scopeId = 'scope-1';
+    component.graphId = 'graph-1';
+
+    await component.load();
+    expect(component.graphStatusLabel(component.activeGraph!)).toBe('flow.graphDesigner.status.published');
+
+    (api.publishGraph as Mock).mockRejectedValueOnce(new Error('publish rejected'));
+    await component.publishActiveGraph();
+    expect(component.errorMessage).toBe('publish rejected');
+  });
+
+  it('surfaces the first-run scope empty state intent', async () => {
+    const api = createApi();
+    (api.listScopes as Mock).mockResolvedValueOnce([]);
+    const component = createWithApi(api, () => new StynxFlowGraphDesignerComponent());
+    const emitted: unknown[] = [];
+    component.createScope.subscribe(() => emitted.push('scope'));
+
+    await component.load();
+    component.createScope.emit();
+
+    expect(component.hasNoScopes).toBe(true);
+    expect(component.hasNoGraphsForActiveScope).toBe(false);
+    expect(component.nodes).toEqual([]);
+    expect(component.edges).toEqual([]);
+    expect(api.listGraphs).not.toHaveBeenCalled();
+    expect(emitted).toEqual(['scope']);
+  });
+
+  it('surfaces the active-scope empty graph intent without stale canvas data', async () => {
+    const api = createApi();
+    (api.listGraphs as Mock).mockResolvedValueOnce([]);
+    const component = createWithApi(api, () => new StynxFlowGraphDesignerComponent());
+    const emitted: unknown[] = [];
+    component.scopeId = 'scope-1';
+    component.createGraph.subscribe((value) => emitted.push(value));
+
+    await component.load();
+    component.createGraph.emit(component.activeScope);
+
+    expect(component.hasNoScopes).toBe(false);
+    expect(component.hasNoGraphsForActiveScope).toBe(true);
+    expect(component.nodes).toEqual([]);
+    expect(component.edges).toEqual([]);
+    expect(api.listGraphNodes).not.toHaveBeenCalled();
+    expect(api.listGraphEdges).not.toHaveBeenCalled();
+    expect(emitted).toEqual([expect.objectContaining({ id: 'scope-1' })]);
+  });
+
+  it('keeps the empty state action output host-controlled', () => {
+    const component = new StynxFlowEmptyStateComponent();
+    const emitted: string[] = [];
+    component.heading = 'No flow scopes yet';
+    component.actionLabel = 'Create your first scope';
+    component.action.subscribe(() => emitted.push(component.actionLabel));
+
+    component.action.emit();
+
+    expect(component.heading).toBe('No flow scopes yet');
+    expect(emitted).toEqual(['Create your first scope']);
   });
 
   it('renders graph canvas selection outputs without mutating layout inputs', () => {
@@ -220,6 +320,37 @@ describe('@stynx-web/angular-flow components', () => {
     expect(api.listWaivers).toHaveBeenLastCalledWith({});
   });
 
+  it('describes branch: distinguishes empty filters and fallback load errors across flow lists', async () => {
+    const api = createApi();
+    const forms = createWithApi(api, () => new StynxFlowFormsComponent());
+    await forms.load();
+    expect(api.listForms).toHaveBeenLastCalledWith(undefined);
+
+    (api.listForms as Mock).mockRejectedValueOnce('offline');
+    await forms.load();
+    expect(forms.errorMessage).toBe('Forms load failed');
+
+    const fills = createWithApi(api, () => new StynxFlowFillsComponent());
+    (api.listFills as Mock).mockRejectedValueOnce(new Error('fills down'));
+    await fills.load();
+    expect(fills.errorMessage).toBe('fills down');
+
+    const graph = createWithApi(api, () => new StynxFlowGraphDesignerComponent());
+    (api.listScopes as Mock).mockRejectedValueOnce(new Error('graph down'));
+    await graph.load();
+    expect(graph.errorMessage).toBe('graph down');
+
+    const tasks = createWithApi(api, () => new StynxFlowTaskListComponent());
+    (api.listTasks as Mock).mockRejectedValueOnce('offline');
+    await tasks.load();
+    expect(tasks.errorMessage).toBe('Tasks load failed');
+
+    const waivers = createWithApi(api, () => new StynxFlowWaiversComponent());
+    (api.listWaivers as Mock).mockRejectedValueOnce(new Error('waivers down'));
+    await waivers.load();
+    expect(waivers.errorMessage).toBe('waivers down');
+  });
+
   it('supports fill editor answer lookup and bulk save intent', () => {
     const component = new StynxFlowFillEditorComponent();
     const saved: unknown[] = [];
@@ -251,17 +382,17 @@ describe('@stynx-web/angular-flow components', () => {
     formEditor.save.subscribe((value) => emitted.push(value));
     score.save.subscribe((value) => emitted.push(value));
     assignment.assign.subscribe((value) => emitted.push(value));
-    assignment.cancel.subscribe(() => emitted.push('assignment-cancel'));
+    assignment.dismissed.subscribe(() => emitted.push('assignment-cancel'));
     waiverDialog.save.subscribe((value) => emitted.push(value));
-    waiverDialog.cancel.subscribe(() => emitted.push('waiver-cancel'));
+    waiverDialog.dismissed.subscribe(() => emitted.push('waiver-cancel'));
 
     formEditor.save.emit(formEditor.form || {});
     score.save.emit(score.score || {});
     assignment.userId = 'user-1';
     assignment.assign.emit(assignment.userId);
-    assignment.cancel.emit();
+    assignment.dismissed.emit();
     waiverDialog.save.emit(waiverDialog.waiver || {});
-    waiverDialog.cancel.emit();
+    waiverDialog.dismissed.emit();
 
     expect(emitted).toEqual([{}, {}, 'user-1', 'assignment-cancel', {}, 'waiver-cancel']);
   });
@@ -371,6 +502,72 @@ describe('@stynx-web/angular-flow components', () => {
       { questionId: 'date-question', value: null },
       { questionId: 'email-question', value: 'ana@example.test' },
     ]);
+  });
+
+  it('describes branch: normalizes nullish persisted fill values and sparse option records', () => {
+    const component = new StynxFlowFillEditorComponent();
+    const saved: unknown[] = [];
+    component.questions = [
+      { id: 'text-null', formId: 'form-1', key: 'textNull', label: 'Text null', fieldType: 'text', required: false, blocksSubmit: false },
+      { id: 'number-native', formId: 'form-1', key: 'count', label: 'Count', fieldType: 'number', required: false, blocksSubmit: false },
+      { id: 'date-null', formId: 'form-1', key: 'dateNull', label: 'Date null', fieldType: 'date', required: false, blocksSubmit: false },
+      { id: 'multi-null', formId: 'form-1', key: 'multiNull', label: 'Multi null', fieldType: 'multiselect', required: false, blocksSubmit: false },
+      { id: 'multi-default', formId: 'form-1', key: 'multiDefault', label: 'Multi default', fieldType: 'multiselect', required: false, blocksSubmit: false },
+    ];
+    component.answers = [
+      { id: 'text-null-answer', fillId: 'fill-1', questionId: 'text-null', value: null },
+      { id: 'number-native-answer', fillId: 'fill-1', questionId: 'number-native', value: 7 },
+      { id: 'date-null-answer', fillId: 'fill-1', questionId: 'date-null', value: null },
+      { id: 'multi-null-answer', fillId: 'fill-1', questionId: 'multi-null', value: null },
+    ];
+    component.saveAnswers.subscribe((value) => saved.push(value));
+
+    expect(component.textValue(component.questions[0]!)).toBe('');
+    expect(component.numberValue(component.questions[1]!)).toBe('7');
+    expect(component.dateValue(component.questions[2]!)).toBe('');
+    expect(component.isSelected(component.questions[3]!, 'a')).toBe(false);
+    expect(component.questionOptions(component.questions[4]!)).toEqual([]);
+    expect(component.questionOptions({
+      id: 'sparse-options',
+      formId: 'form-1',
+      key: 'sparse',
+      label: 'Sparse',
+      fieldType: 'select',
+      required: false,
+      blocksSubmit: false,
+      options: { fallback: undefined },
+    })).toEqual([{ label: 'fallback', value: 'fallback', key: 'fallback' }]);
+    expect(component.questionOptions({
+      id: 'object-options',
+      formId: 'form-1',
+      key: 'object',
+      label: 'Object',
+      fieldType: 'select',
+      required: false,
+      blocksSubmit: false,
+      options: [{ value: 'value-only' }, { id: 'id-only' }, {}],
+    })).toEqual([
+      { label: 'value-only', value: 'value-only', key: 'value-only' },
+      { label: 'id-only', value: 'id-only', key: 'id-only' },
+      { label: '{}', value: {}, key: '{}' },
+    ]);
+    expect(component.optionKey(undefined)).toBe('');
+
+    component.setValue(component.questions[0]!, undefined);
+    component.setValue(component.questions[2]!, undefined);
+    expect(component.textValue(component.questions[0]!)).toBe('');
+    expect(component.dateValue(component.questions[2]!)).toBe('');
+    component.setValue(component.questions[0]!, null);
+    component.setValue(component.questions[2]!, null);
+
+    component.saveAllAnswers();
+    expect(saved).toEqual([[
+      { questionId: 'text-null', value: null },
+      { questionId: 'number-native', value: 7 },
+      { questionId: 'date-null', value: null },
+      { questionId: 'multi-null', value: [] },
+      { questionId: 'multi-default', value: [] },
+    ]]);
   });
 
   it('keeps task card action outputs permission-scoped by intent', () => {

@@ -51,12 +51,12 @@ export class StynxAngularModule {
         },
         {
           provide: HTTP_INTERCEPTORS,
-          useClass: AuthInterceptor,
+          useClass: ErrorInterceptor,
           multi: true,
         },
         {
           provide: HTTP_INTERCEPTORS,
-          useClass: ErrorInterceptor,
+          useClass: AuthInterceptor,
           multi: true,
         },
       ],

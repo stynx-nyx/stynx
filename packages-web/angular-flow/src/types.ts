@@ -1,5 +1,6 @@
 export type FlowNodeKind = 'human' | 'auto' | 'system' | 'start' | 'end' | 'gateway';
 export type FlowDecisionPolicy = 'all' | 'any' | 'quorum';
+export type FlowGraphStatus = 'draft' | 'published';
 export type FlowRunStatus = 'active' | 'completed' | 'canceled';
 export type FlowTaskStatus = 'open' | 'completed' | 'canceled';
 export type FlowFieldType =
@@ -38,10 +39,32 @@ export interface FlowGraph {
   scopeId: string;
   code: string;
   version: string;
+  status: FlowGraphStatus;
+  publishedVersion?: number;
+  publishedAt?: string;
+  publishedBy?: string | null;
   isActive: boolean;
   name?: string;
   description?: string;
   meta?: Record<string, unknown>;
+}
+
+export interface PublishFlowGraphRequest {
+  expectedDraftVersion?: string;
+  notes?: string;
+}
+
+export interface PublishFlowGraphResponse {
+  graphId: string;
+  status: 'published';
+  draftVersion: string;
+  publishedVersion: number;
+  publishedAt: string;
+  publishedBy?: string | null;
+  runtimeGraphRef: {
+    graphId: string;
+    version: number;
+  };
 }
 
 export interface FlowNode {

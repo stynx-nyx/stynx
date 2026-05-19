@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="26" failures="0" errors="0" time="16.995471624">
+    <testsuite name="test/integration/tenancy.api-matrix.spec.ts" timestamp="2026-05-19T15:29:39.353Z" hostname="thiamat-1903.local" tests="22" failures="0" errors="0" skipped="0" time="15.917230291">
+        <testcase classname="test/integration/tenancy.api-matrix.spec.ts" name="TenancyController API error matrix &gt; GET /tenants &gt; returns 200 with tenant summaries" time="0.055870667">
+        </testcase>
+        <testcase classname="test/integration/tenancy.api-matrix.spec.ts" name="TenancyController API error matrix &gt; GET /tenants &gt; returns 403 when the platform admin guard is disabled" time="0.007709292">
+        </testcase>
+        <testcase classname="test/integration/tenancy.api-matrix.spec.ts" name="TenancyController API error matrix &gt; POST /tenants &gt; returns 201 after provisioning a tenant" time="0.27436425">
+        </testcase>
+        <testcase classname="test/integration/tenancy.api-matrix.spec.ts" name="TenancyController API error matrix &gt; POST /tenants &gt; returns 400 for malformed JSON" time="0.003717958">
+        </testcase>
+        <testcase classname="test/integration/tenancy.api-matrix.spec.ts" name="TenancyController API error matrix &gt; POST /tenants &gt; returns 403 when the platform admin guard is disabled" time="0.003020291">
+        </testcase>
+        <testcase classname="test/integration/tenancy.api-matrix.spec.ts" name="TenancyController API error matrix &gt; GET /tenants/:id &gt; returns 200 with tenant detail" time="0.033644709">
+        </testcase>
+        <testcase classname="test/integration/tenancy.api-matrix.spec.ts" name="TenancyController API error matrix &gt; GET /tenants/:id &gt; returns 403 when the platform admin guard is disabled" time="0.004856375">
+        </testcase>
+        <testcase classname="test/integration/tenancy.api-matrix.spec.ts" name="TenancyController API error matrix &gt; GET /tenants/:id &gt; returns 404 for an unknown tenant id" time="0.040615834">
+        </testcase>
+        <testcase classname="test/integration/tenancy.api-matrix.spec.ts" name="TenancyController API error matrix &gt; PATCH /tenants/:id &gt; returns 200 after updating tenant metadata and settings" time="0.059971583">
+        </testcase>
+        <testcase classname="test/integration/tenancy.api-matrix.spec.ts" name="TenancyController API error matrix &gt; PATCH /tenants/:id &gt; returns 400 for malformed JSON" time="0.004009875">
+        </testcase>
+        <testcase classname="test/integration/tenancy.api-matrix.spec.ts" name="TenancyController API error matrix &gt; PATCH /tenants/:id &gt; returns 403 when the platform admin guard is disabled" time="0.008439709">
+        </testcase>
+        <testcase classname="test/integration/tenancy.api-matrix.spec.ts" name="TenancyController API error matrix &gt; PATCH /tenants/:id &gt; returns 404 for an unknown tenant id" time="0.033769625">
+        </testcase>
+        <testcase classname="test/integration/tenancy.api-matrix.spec.ts" name="TenancyController API error matrix &gt; POST /tenants/:id/suspend &gt; returns 201 after suspending a tenant" time="0.045021875">
+        </testcase>
+        <testcase classname="test/integration/tenancy.api-matrix.spec.ts" name="TenancyController API error matrix &gt; POST /tenants/:id/suspend &gt; returns 400 for malformed JSON" time="0.0018925">
+        </testcase>
+        <testcase classname="test/integration/tenancy.api-matrix.spec.ts" name="TenancyController API error matrix &gt; POST /tenants/:id/suspend &gt; returns 403 when the platform admin guard is disabled" time="0.003092">
+        </testcase>
+        <testcase classname="test/integration/tenancy.api-matrix.spec.ts" name="TenancyController API error matrix &gt; POST /tenants/:id/suspend &gt; returns 404 for an unknown tenant id" time="0.073313875">
+        </testcase>
+        <testcase classname="test/integration/tenancy.api-matrix.spec.ts" name="TenancyController API error matrix &gt; POST /tenants/:id/archive &gt; returns 201 after archiving a tenant" time="0.043143042">
+        </testcase>
+        <testcase classname="test/integration/tenancy.api-matrix.spec.ts" name="TenancyController API error matrix &gt; POST /tenants/:id/archive &gt; returns 403 when the platform admin guard is disabled" time="0.001842667">
+        </testcase>
+        <testcase classname="test/integration/tenancy.api-matrix.spec.ts" name="TenancyController API error matrix &gt; POST /tenants/:id/archive &gt; returns 404 for an unknown tenant id" time="0.072006167">
+        </testcase>
+        <testcase classname="test/integration/tenancy.api-matrix.spec.ts" name="TenancyController API error matrix &gt; POST /tenants/:id/purge &gt; returns 201 after purging a tenant" time="0.078860125">
+        </testcase>
+        <testcase classname="test/integration/tenancy.api-matrix.spec.ts" name="TenancyController API error matrix &gt; POST /tenants/:id/purge &gt; returns 403 when the platform admin guard is disabled" time="0.001346834">
+        </testcase>
+        <testcase classname="test/integration/tenancy.api-matrix.spec.ts" name="TenancyController API error matrix &gt; POST /tenants/:id/purge &gt; returns 404 for an unknown tenant id" time="0.036973875">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/integration/tenancy.module.spec.ts" timestamp="2026-05-19T15:29:39.467Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="1.078241333">
+        <testcase classname="test/integration/tenancy.module.spec.ts" name="StynxTenancyModule integration &gt; resolves tenant from header, bearer claim, and subdomain" time="0.018128">
+        </testcase>
+        <testcase classname="test/integration/tenancy.module.spec.ts" name="StynxTenancyModule integration &gt; rejects missing or invalid tenant context and wrong tenant access" time="0.010663708">
+        </testcase>
+        <testcase classname="test/integration/tenancy.module.spec.ts" name="StynxTenancyModule integration &gt; provisions tenants idempotently under concurrent retries" time="0.109918542">
+        </testcase>
+        <testcase classname="test/integration/tenancy.module.spec.ts" name="StynxTenancyModule integration &gt; suspends a tenant and blocks subsequent access" time="0.03193825">
+        </testcase>
+    </testsuite>
+</testsuites>

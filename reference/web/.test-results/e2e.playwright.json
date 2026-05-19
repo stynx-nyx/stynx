@@ -11,7 +11,7 @@
     "grepInvert": null,
     "maxFailures": 0,
     "metadata": {
-      "actualWorkers": 3
+      "actualWorkers": 4
     },
     "preserveOutput": "always",
     "projects": [
@@ -20,18 +20,67 @@
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
-          "actualWorkers": 3
+          "actualWorkers": 4
         },
-        "id": "",
-        "name": "",
+        "id": "legacy-api",
+        "name": "legacy-api",
         "testDir": "/Users/aarusso/Development/stech/stynx/reference/web/test/e2e",
         "testIgnore": [],
-        "testMatch": ["**/*.@(spec|test).?(c|m)[jt]s?(x)"],
+        "testMatch": [
+          "*.spec.ts"
+        ],
+        "timeout": 90000
+      },
+      {
+        "outputDir": "/Users/aarusso/Development/stech/stynx/reference/web/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 4
+        },
+        "id": "spa-only",
+        "name": "spa-only",
+        "testDir": "/Users/aarusso/Development/stech/stynx/reference/web/test/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "auth/**/*.spec.ts",
+          "smoke/**/*.spec.ts",
+          "profile/**/*.spec.ts",
+          "tenant/**/*.spec.ts",
+          "i18n/**/*.spec.ts",
+          "records/**/*.spec.ts",
+          "documents/**/*.spec.ts",
+          "sessions/**/*.spec.ts",
+          "work-items/**/*.spec.ts"
+        ],
+        "timeout": 90000
+      },
+      {
+        "outputDir": "/Users/aarusso/Development/stech/stynx/reference/web/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 4
+        },
+        "id": "spa+api",
+        "name": "spa+api",
+        "testDir": "/Users/aarusso/Development/stech/stynx/reference/web/test/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
         "timeout": 90000
       }
     ],
     "quiet": false,
-    "reporter": [["line"], ["json"]],
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
     "reportSlowTests": {
       "max": 5,
       "threshold": 300000
@@ -42,15 +91,997 @@
     "updateSourceMethod": "patch",
     "version": "1.59.1",
     "workers": 4,
-    "webServer": {
-      "command": "pnpm build:web && node scripts/serve-static.mjs",
-      "cwd": "/Users/aarusso/Development/stech/stynx/reference/web/",
-      "port": 3100,
-      "reuseExistingServer": true,
-      "timeout": 120000
-    }
+    "webServer": null
   },
   "suites": [
+    {
+      "title": "auth/login-failure.spec.ts",
+      "file": "auth/login-failure.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "keeps the user on login when dev auth rejects the request",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1170,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:28.664Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1e184378ba70012b9d46-3a3f964ab09259ee891e",
+          "file": "auth/login-failure.spec.ts",
+          "line": 3,
+          "column": 5
+        },
+        {
+          "title": "keeps the user on login when dev auth rejects the request",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 2,
+                  "status": "passed",
+                  "duration": 700,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:42.949Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1e184378ba70012b9d46-683141b3de78b26880b2",
+          "file": "auth/login-failure.spec.ts",
+          "line": 3,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "auth/login-success.spec.ts",
+      "file": "auth/login-success.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "logs in a reference admin through spa-only dev auth",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 1308,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:28.668Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e5a41bd71c244bb1aa23-0dc728a844952d5a6b5e",
+          "file": "auth/login-success.spec.ts",
+          "line": 4,
+          "column": 5
+        },
+        {
+          "title": "logs in a reference admin through spa-only dev auth",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 847,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:43.290Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e5a41bd71c244bb1aa23-509a3cc38aafae2d22d2",
+          "file": "auth/login-success.spec.ts",
+          "line": 4,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "auth/logout-clears-state.spec.ts",
+      "file": "auth/logout-clears-state.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "logout clears the active shell and returns to login",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 2,
+                  "status": "passed",
+                  "duration": 1361,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:28.664Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "27451f7d075b014a1855-fc51e9e654b113604e84",
+          "file": "auth/logout-clears-state.spec.ts",
+          "line": 3,
+          "column": 5
+        },
+        {
+          "title": "logout clears the active shell and returns to login",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 6,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 1071,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:44.520Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "27451f7d075b014a1855-aa4448a7190b1f3deb40",
+          "file": "auth/logout-clears-state.spec.ts",
+          "line": 3,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "auth/permission-denied-banner.spec.ts",
+      "file": "auth/permission-denied-banner.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "redirects a reader without write permission to the unauthorized route",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 3,
+                  "status": "passed",
+                  "duration": 1575,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:28.664Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c73b70ecd13917bfd990-373b7dea1383c4387741",
+          "file": "auth/permission-denied-banner.spec.ts",
+          "line": 3,
+          "column": 5
+        },
+        {
+          "title": "redirects a reader without write permission to the unauthorized route",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 2,
+                  "status": "passed",
+                  "duration": 1092,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:43.808Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c73b70ecd13917bfd990-ab4e2cc3a649222c6402",
+          "file": "auth/permission-denied-banner.spec.ts",
+          "line": 3,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "auth/refresh-on-401.spec.ts",
+      "file": "auth/refresh-on-401.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "refreshes and retries a records request after one 401",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1075,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:30.111Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "7bb5341e816311ef7cce-1eab9da1c36a4efe84db",
+          "file": "auth/refresh-on-401.spec.ts",
+          "line": 4,
+          "column": 5
+        },
+        {
+          "title": "refreshes and retries a records request after one 401",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 7,
+                  "parallelIndex": 3,
+                  "status": "passed",
+                  "duration": 1245,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:45.180Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "7bb5341e816311ef7cce-d61d775e66d898533ef3",
+          "file": "auth/refresh-on-401.spec.ts",
+          "line": 4,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "documents/dashboard-upload-card.spec.ts",
+      "file": "documents/dashboard-upload-card.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "renders the dashboard document upload card for a document writer",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 837,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:30.248Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6a6cd045a65932998b29-facf94cbf92367fa6aff",
+          "file": "documents/dashboard-upload-card.spec.ts",
+          "line": 3,
+          "column": 5
+        },
+        {
+          "title": "renders the dashboard document upload card for a document writer",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 738,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:44.336Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6a6cd045a65932998b29-ca2c864792755ddfd24c",
+          "file": "documents/dashboard-upload-card.spec.ts",
+          "line": 3,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "documents/download-content-error.spec.ts",
+      "file": "documents/download-content-error.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "surfaces signed document content fetch failures during download",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 2,
+                  "status": "passed",
+                  "duration": 1839,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:30.303Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "9a401d2a8dc47005382e-85ff91e043e47ae2fd43",
+          "file": "documents/download-content-error.spec.ts",
+          "line": 9,
+          "column": 5
+        },
+        {
+          "title": "surfaces signed document content fetch failures during download",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 2,
+                  "status": "passed",
+                  "duration": 1486,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:44.919Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "9a401d2a8dc47005382e-666668085fb403495280",
+          "file": "documents/download-content-error.spec.ts",
+          "line": 9,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "documents/forbidden-download.spec.ts",
+      "file": "documents/forbidden-download.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "surfaces forbidden document download responses on the record detail page",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 3,
+                  "status": "passed",
+                  "duration": 1835,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:30.532Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "9c407fa5e7307a4928ee-0e58ff0900b57c418c59",
+          "file": "documents/forbidden-download.spec.ts",
+          "line": 9,
+          "column": 5
+        },
+        {
+          "title": "surfaces forbidden document download responses on the record detail page",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1542,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:45.087Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "9c407fa5e7307a4928ee-5f20314232ff8e745590",
+          "file": "documents/forbidden-download.spec.ts",
+          "line": 9,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "documents/record-upload-card.spec.ts",
+      "file": "documents/record-upload-card.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "renders the record detail document upload surface",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 1411,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:31.115Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "cc3f2c27e94ae52507ea-3e0a06dccf8d4dc765ad",
+          "file": "documents/record-upload-card.spec.ts",
+          "line": 4,
+          "column": 5
+        },
+        {
+          "title": "renders the record detail document upload surface",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 6,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 1192,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:45.856Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "cc3f2c27e94ae52507ea-cd447783d497059bbc96",
+          "file": "documents/record-upload-card.spec.ts",
+          "line": 4,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "documents/upload-and-download.spec.ts",
+      "file": "documents/upload-and-download.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "uploads a record document and downloads it from the mounted detail surface",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1817,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:31.205Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "66ccbf7116494160a457-14072844feadb26fa95f",
+          "file": "documents/upload-and-download.spec.ts",
+          "line": 9,
+          "column": 5
+        },
+        {
+          "title": "uploads a record document and downloads it from the mounted detail surface",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 2,
+                  "status": "passed",
+                  "duration": 1524,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:46.420Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "66ccbf7116494160a457-9d7062b871aaec9f1b73",
+          "file": "documents/upload-and-download.spec.ts",
+          "line": 9,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "documents/upload-image-document.spec.ts",
+      "file": "documents/upload-image-document.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "uploads an allowed image document through the record detail surface",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 2,
+                  "status": "passed",
+                  "duration": 1384,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:32.170Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ea9c1fe982ccbe0b5ea8-0bd72e555c81711f4e04",
+          "file": "documents/upload-image-document.spec.ts",
+          "line": 9,
+          "column": 5
+        },
+        {
+          "title": "uploads an allowed image document through the record detail surface",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1483,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:46.645Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ea9c1fe982ccbe0b5ea8-6b2b9cb592aab39a9de9",
+          "file": "documents/upload-image-document.spec.ts",
+          "line": 9,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "documents/upload-rejects-size.spec.ts",
+      "file": "documents/upload-rejects-size.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "rejects an oversized document before calling the API",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 3,
+                  "status": "passed",
+                  "duration": 3508,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:32.385Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "27814a9fdd46bb043555-897c7bcdcd2a88348d8b",
+          "file": "documents/upload-rejects-size.spec.ts",
+          "line": 9,
+          "column": 5
+        },
+        {
+          "title": "rejects an oversized document before calling the API",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 7,
+                  "parallelIndex": 3,
+                  "status": "passed",
+                  "duration": 3637,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:46.654Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "27814a9fdd46bb043555-ff633914c0511c83c278",
+          "file": "documents/upload-rejects-size.spec.ts",
+          "line": 9,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "documents/upload-rejects-type.spec.ts",
+      "file": "documents/upload-rejects-type.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "rejects an unsupported document MIME type before calling the API",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 1189,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:32.543Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f0698ffd2d54ffc2d55-924cad9a64700dc44a42",
+          "file": "documents/upload-rejects-type.spec.ts",
+          "line": 9,
+          "column": 5
+        },
+        {
+          "title": "rejects an unsupported document MIME type before calling the API",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 6,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 1296,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:47.068Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f0698ffd2d54ffc2d55-033a71bc76eed504cd92",
+          "file": "documents/upload-rejects-type.spec.ts",
+          "line": 9,
+          "column": 5
+        }
+      ]
+    },
     {
       "title": "flow-access.spec.ts",
       "file": "flow-access.spec.ts",
@@ -73,19 +1104,19 @@
                   "timeout": 90000,
                   "annotations": [],
                   "expectedStatus": "passed",
-                  "projectId": "",
-                  "projectName": "",
+                  "projectId": "legacy-api",
+                  "projectName": "legacy-api",
                   "results": [
                     {
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 832,
+                      "duration": 587,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-05-19T01:32:00.302Z",
+                      "startTime": "2026-05-19T10:58:33.052Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -93,7 +1124,7 @@
                   "status": "expected"
                 }
               ],
-              "id": "d57e718d8f411de15e4a-ab6ff53e3dd07d9e7253",
+              "id": "d57e718d8f411de15e4a-aa0746a8428f8f452e81",
               "file": "flow-access.spec.ts",
               "line": 13,
               "column": 7
@@ -107,19 +1138,19 @@
                   "timeout": 90000,
                   "annotations": [],
                   "expectedStatus": "passed",
-                  "projectId": "",
-                  "projectName": "",
+                  "projectId": "legacy-api",
+                  "projectName": "legacy-api",
                   "results": [
                     {
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3516,
+                      "duration": 5196,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-05-19T01:32:01.471Z",
+                      "startTime": "2026-05-19T10:58:33.676Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -127,12 +1158,300 @@
                   "status": "expected"
                 }
               ],
-              "id": "d57e718d8f411de15e4a-d71251ae04489a8e08ab",
+              "id": "d57e718d8f411de15e4a-dd6fa911656752c13b16",
               "file": "flow-access.spec.ts",
               "line": 18,
               "column": 7
             }
           ]
+        }
+      ]
+    },
+    {
+      "title": "i18n/locale-switch.spec.ts",
+      "file": "i18n/locale-switch.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "switches dashboard locale strings and currency formatting",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 2,
+                  "status": "passed",
+                  "duration": 934,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:33.604Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d2d22f1548e4944224f2-1de514c25f842ad7436f",
+          "file": "i18n/locale-switch.spec.ts",
+          "line": 10,
+          "column": 5
+        },
+        {
+          "title": "switches dashboard locale strings and currency formatting",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 2,
+                  "status": "passed",
+                  "duration": 1088,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:47.968Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d2d22f1548e4944224f2-642cddabf2ade312afa0",
+          "file": "i18n/locale-switch.spec.ts",
+          "line": 10,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "profile/profile-forms.spec.ts",
+      "file": "profile/profile-forms.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "saves profile form changes on the authenticated dashboard",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 967,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:33.768Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "03d2cc917a0703a192e0-96c0ab55bd9e2f3be691",
+          "file": "profile/profile-forms.spec.ts",
+          "line": 78,
+          "column": 5
+        },
+        {
+          "title": "surfaces profile save failures without leaving the dashboard",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 857,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:34.753Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "03d2cc917a0703a192e0-230f079ab563c1d4fafd",
+          "file": "profile/profile-forms.spec.ts",
+          "line": 98,
+          "column": 5
+        },
+        {
+          "title": "saves preference changes on the authenticated dashboard",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 921,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:35.629Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "03d2cc917a0703a192e0-86918b0be2bc08e65d50",
+          "file": "profile/profile-forms.spec.ts",
+          "line": 125,
+          "column": 5
+        },
+        {
+          "title": "saves profile form changes on the authenticated dashboard",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1081,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:48.157Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "03d2cc917a0703a192e0-5e4d86a67b198fa23344",
+          "file": "profile/profile-forms.spec.ts",
+          "line": 78,
+          "column": 5
+        },
+        {
+          "title": "surfaces profile save failures without leaving the dashboard",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 997,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:49.253Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "03d2cc917a0703a192e0-4db83e642390991a4f7a",
+          "file": "profile/profile-forms.spec.ts",
+          "line": 98,
+          "column": 5
+        },
+        {
+          "title": "saves preference changes on the authenticated dashboard",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1030,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:50.262Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "03d2cc917a0703a192e0-44b2d9c3af861e1ee110",
+          "file": "profile/profile-forms.spec.ts",
+          "line": 125,
+          "column": 5
         }
       ]
     },
@@ -151,19 +1470,19 @@
               "timeout": 90000,
               "annotations": [],
               "expectedStatus": "passed",
-              "projectId": "",
-              "projectName": "",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
               "results": [
                 {
-                  "workerIndex": 1,
-                  "parallelIndex": 1,
+                  "workerIndex": 2,
+                  "parallelIndex": 2,
                   "status": "passed",
-                  "duration": 5705,
+                  "duration": 7167,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T01:32:00.311Z",
+                  "startTime": "2026-05-19T10:58:34.557Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -171,9 +1490,161 @@
               "status": "expected"
             }
           ],
-          "id": "542f84665bb6e4a713fa-44d90751a3be208bbe1e",
+          "id": "542f84665bb6e4a713fa-fa79bf895ddcbd781d47",
           "file": "record-trash.spec.ts",
           "line": 12,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "records/crud.spec.ts",
+      "file": "records/crud.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "creates, edits, lists, and soft-deletes a record",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 3,
+                  "status": "passed",
+                  "duration": 2461,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:35.935Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a1166a7039def3649a75-393b977719011b602243",
+          "file": "records/crud.spec.ts",
+          "line": 122,
+          "column": 5
+        },
+        {
+          "title": "creates, edits, lists, and soft-deletes a record",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 6,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 2969,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:48.384Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a1166a7039def3649a75-1b22c90543200aa3ab61",
+          "file": "records/crud.spec.ts",
+          "line": 122,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "records/soft-delete-restore.spec.ts",
+      "file": "records/soft-delete-restore.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "restores a soft-deleted record from trash",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 2249,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:36.572Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "52c22dd47880fce2f952-d545bce66b3faa5b4d89",
+          "file": "records/soft-delete-restore.spec.ts",
+          "line": 152,
+          "column": 5
+        },
+        {
+          "title": "restores a soft-deleted record from trash",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 2,
+                  "status": "passed",
+                  "duration": 2869,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:49.095Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "52c22dd47880fce2f952-c54df8e1a880bcd53a31",
+          "file": "records/soft-delete-restore.spec.ts",
+          "line": 152,
           "column": 5
         }
       ]
@@ -193,19 +1664,19 @@
               "timeout": 90000,
               "annotations": [],
               "expectedStatus": "passed",
-              "projectId": "",
-              "projectName": "",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
               "results": [
                 {
-                  "workerIndex": 2,
-                  "parallelIndex": 2,
+                  "workerIndex": 3,
+                  "parallelIndex": 3,
                   "status": "passed",
-                  "duration": 5833,
+                  "duration": 5558,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T01:32:00.301Z",
+                  "startTime": "2026-05-19T10:58:38.416Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -213,9 +1684,525 @@
               "status": "expected"
             }
           ],
-          "id": "8ff14680818a235ee42b-0c698a0b827e24188388",
+          "id": "8ff14680818a235ee42b-d816877f45dc2dae605b",
           "file": "reference-web.spec.ts",
           "line": 3,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "sessions/active-sessions-list.spec.ts",
+      "file": "sessions/active-sessions-list.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "renders the active sessions list on the authenticated dashboard",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 1408,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:38.841Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d4bf374a43d78b902d80-36e0ac26a6d1b84c1c25",
+          "file": "sessions/active-sessions-list.spec.ts",
+          "line": 6,
+          "column": 5
+        },
+        {
+          "title": "renders the active sessions list on the authenticated dashboard",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 7,
+                  "parallelIndex": 3,
+                  "status": "passed",
+                  "duration": 1714,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:50.309Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d4bf374a43d78b902d80-53d2e0d78a963622cc26",
+          "file": "sessions/active-sessions-list.spec.ts",
+          "line": 6,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "sessions/revoke-another-session.spec.ts",
+      "file": "sessions/revoke-another-session.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "revokes another active session without clearing the current session",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1434,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:38.890Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ab983543b5cc1752721f-10f6b106184cd88197dc",
+          "file": "sessions/revoke-another-session.spec.ts",
+          "line": 6,
+          "column": 5
+        },
+        {
+          "title": "revokes another active session without clearing the current session",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1572,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:51.316Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ab983543b5cc1752721f-f689318ca3596469564c",
+          "file": "sessions/revoke-another-session.spec.ts",
+          "line": 6,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "smoke/home-renders.spec.ts",
+      "file": "smoke/home-renders.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "renders the authenticated reference shell within the smoke budget",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 659,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:40.264Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d970258cb250078a75bd-e7c64cabcea1a69458d7",
+          "file": "smoke/home-renders.spec.ts",
+          "line": 5,
+          "column": 5
+        },
+        {
+          "title": "renders the authenticated reference shell within the smoke budget",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 6,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 904,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:51.386Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d970258cb250078a75bd-ee3db4e25103b73c3a50",
+          "file": "smoke/home-renders.spec.ts",
+          "line": 5,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "tenant/switch-tenant.spec.ts",
+      "file": "tenant/switch-tenant.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "renders tenant selection cards after spa-only dev auth",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 935,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:40.341Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "72189af54d77369fd564-53ebbb976fa85e7b73de",
+          "file": "tenant/switch-tenant.spec.ts",
+          "line": 4,
+          "column": 5
+        },
+        {
+          "title": "switches the active tenant and mints a replacement session bundle",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1171,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:41.290Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "72189af54d77369fd564-c25f2379dc348fe4c71a",
+          "file": "tenant/switch-tenant.spec.ts",
+          "line": 20,
+          "column": 5
+        },
+        {
+          "title": "renders tenant selection cards after spa-only dev auth",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 2,
+                  "status": "passed",
+                  "duration": 1031,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:51.990Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "72189af54d77369fd564-e9e944d5bb7be02e4337",
+          "file": "tenant/switch-tenant.spec.ts",
+          "line": 4,
+          "column": 5
+        },
+        {
+          "title": "switches the active tenant and mints a replacement session bundle",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 2,
+                  "status": "passed",
+                  "duration": 869,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:53.032Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "72189af54d77369fd564-0351ee00b43ff0205bf3",
+          "file": "tenant/switch-tenant.spec.ts",
+          "line": 20,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "work-items/work-items.spec.ts",
+      "file": "work-items/work-items.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "creates a work item and opens its detail page",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 1348,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:40.938Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b83e4c68a06a741f3ee0-0412f8ea7c6642eee632",
+          "file": "work-items/work-items.spec.ts",
+          "line": 177,
+          "column": 5
+        },
+        {
+          "title": "lists work items and soft-deletes a selected row",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 1171,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:42.306Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b83e4c68a06a741f3ee0-3107ed0bccda97222338",
+          "file": "work-items/work-items.spec.ts",
+          "line": 199,
+          "column": 5
+        },
+        {
+          "title": "creates a work item and opens its detail page",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 7,
+                  "parallelIndex": 3,
+                  "status": "passed",
+                  "duration": 1282,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:52.048Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b83e4c68a06a741f3ee0-e846f6df6975f03365e6",
+          "file": "work-items/work-items.spec.ts",
+          "line": 177,
+          "column": 5
+        },
+        {
+          "title": "lists work items and soft-deletes a selected row",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 7,
+                  "parallelIndex": 3,
+                  "status": "passed",
+                  "duration": 995,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-19T10:58:53.347Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b83e4c68a06a741f3ee0-2dc561dce434c45e8751",
+          "file": "work-items/work-items.spec.ts",
+          "line": 199,
           "column": 5
         }
       ]
@@ -223,9 +2210,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-05-19T01:31:58.878Z",
-    "duration": 7632.0509999999995,
-    "expected": 4,
+    "startTime": "2026-05-19T10:58:13.380Z",
+    "duration": 41014.724,
+    "expected": 56,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0

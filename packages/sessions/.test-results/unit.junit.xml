@@ -1,85 +1,85 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="36" failures="0" errors="0" time="4.670622125">
-    <testsuite name="test/unit/barrel-load.spec.ts" timestamp="2026-05-19T04:25:33.639Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.002016625">
-        <testcase classname="test/unit/barrel-load.spec.ts" name="@stynx/sessions barrel &gt; exports at least one symbol" time="0.0008475">
+<testsuites name="vitest tests" tests="36" failures="0" errors="0" time="20.07104625">
+    <testsuite name="test/unit/barrel-load.spec.ts" timestamp="2026-05-19T15:49:06.549Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.002736666">
+        <testcase classname="test/unit/barrel-load.spec.ts" name="@stynx/sessions barrel &gt; exports at least one symbol" time="0.001265208">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/jwks.controller.spec.ts" timestamp="2026-05-19T04:25:33.642Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.038923541">
-        <testcase classname="test/unit/jwks.controller.spec.ts" name="SessionJwksController API contract &gt; publishes the signing service JWKS payload" time="0.008954417">
+    <testsuite name="test/unit/jwks.controller.spec.ts" timestamp="2026-05-19T15:49:06.550Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.013902958">
+        <testcase classname="test/unit/jwks.controller.spec.ts" name="SessionJwksController API contract &gt; publishes the signing service JWKS payload" time="0.013174375">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/jwt-signing.spec.ts" timestamp="2026-05-19T04:25:33.645Z" hostname="thiamat-1903.local" tests="12" failures="0" errors="0" skipped="0" time="2.384553292">
-        <testcase classname="test/unit/jwt-signing.spec.ts" name="SessionJwtSigningService.signAccessToken &gt; produces a 3-segment JWT signed by the active key" time="0.555738208">
+    <testsuite name="test/unit/jwt-signing.spec.ts" timestamp="2026-05-19T15:49:06.550Z" hostname="thiamat-1903.local" tests="12" failures="0" errors="0" skipped="0" time="4.367013959">
+        <testcase classname="test/unit/jwt-signing.spec.ts" name="SessionJwtSigningService.signAccessToken &gt; produces a 3-segment JWT signed by the active key" time="0.224345416">
         </testcase>
-        <testcase classname="test/unit/jwt-signing.spec.ts" name="SessionJwtSigningService.signAccessToken &gt; caches resolved keys across calls (singleton)" time="0.491009584">
+        <testcase classname="test/unit/jwt-signing.spec.ts" name="SessionJwtSigningService.signAccessToken &gt; caches resolved keys across calls (singleton)" time="0.868446">
         </testcase>
-        <testcase classname="test/unit/jwt-signing.spec.ts" name="SessionJwtSigningService.signAccessToken &gt; throws SessionSigningKeyError when activeKid is not present in keys" time="0.928919083">
+        <testcase classname="test/unit/jwt-signing.spec.ts" name="SessionJwtSigningService.signAccessToken &gt; throws SessionSigningKeyError when activeKid is not present in keys" time="1.631030542">
         </testcase>
-        <testcase classname="test/unit/jwt-signing.spec.ts" name="SessionJwtSigningService.signAccessToken &gt; throws when neither jwt.keySet nor jwt.secretId is configured" time="0.001124209">
+        <testcase classname="test/unit/jwt-signing.spec.ts" name="SessionJwtSigningService.signAccessToken &gt; throws when neither jwt.keySet nor jwt.secretId is configured" time="0.000265583">
         </testcase>
-        <testcase classname="test/unit/jwt-signing.spec.ts" name="SessionJwtSigningService.signAccessToken &gt; throws when jwt.secretId is set but SecretLoader is unavailable" time="0.000173917">
+        <testcase classname="test/unit/jwt-signing.spec.ts" name="SessionJwtSigningService.signAccessToken &gt; throws when jwt.secretId is set but SecretLoader is unavailable" time="0.000117292">
         </testcase>
-        <testcase classname="test/unit/jwt-signing.spec.ts" name="SessionJwtSigningService.signAccessToken &gt; secretLoader path (validateKeySet) &gt; signs successfully when secret loader returns a valid key set" time="0.181445459">
+        <testcase classname="test/unit/jwt-signing.spec.ts" name="SessionJwtSigningService.signAccessToken &gt; secretLoader path (validateKeySet) &gt; signs successfully when secret loader returns a valid key set" time="0.491598375">
         </testcase>
-        <testcase classname="test/unit/jwt-signing.spec.ts" name="SessionJwtSigningService.signAccessToken &gt; secretLoader path (validateKeySet) &gt; rejects when secret JSON is not an object" time="0.0052015">
+        <testcase classname="test/unit/jwt-signing.spec.ts" name="SessionJwtSigningService.signAccessToken &gt; secretLoader path (validateKeySet) &gt; rejects when secret JSON is not an object" time="0.00023325">
         </testcase>
-        <testcase classname="test/unit/jwt-signing.spec.ts" name="SessionJwtSigningService.signAccessToken &gt; secretLoader path (validateKeySet) &gt; rejects when currentKid is missing or empty" time="0.000311125">
+        <testcase classname="test/unit/jwt-signing.spec.ts" name="SessionJwtSigningService.signAccessToken &gt; secretLoader path (validateKeySet) &gt; rejects when currentKid is missing or empty" time="0.00024375">
         </testcase>
-        <testcase classname="test/unit/jwt-signing.spec.ts" name="SessionJwtSigningService.signAccessToken &gt; secretLoader path (validateKeySet) &gt; rejects when keys array is missing or empty" time="0.000156667">
+        <testcase classname="test/unit/jwt-signing.spec.ts" name="SessionJwtSigningService.signAccessToken &gt; secretLoader path (validateKeySet) &gt; rejects when keys array is missing or empty" time="0.0001875">
         </testcase>
-        <testcase classname="test/unit/jwt-signing.spec.ts" name="SessionJwtSigningService.signAccessToken &gt; secretLoader path (validateKeySet) &gt; rejects when a key entry is not an object" time="0.00051775">
+        <testcase classname="test/unit/jwt-signing.spec.ts" name="SessionJwtSigningService.signAccessToken &gt; secretLoader path (validateKeySet) &gt; rejects when a key entry is not an object" time="0.001368083">
         </testcase>
-        <testcase classname="test/unit/jwt-signing.spec.ts" name="SessionJwtSigningService.signAccessToken &gt; secretLoader path (validateKeySet) &gt; rejects when a key entry is missing kid/publicKeyPem/privateKeyPem" time="0.000514083">
+        <testcase classname="test/unit/jwt-signing.spec.ts" name="SessionJwtSigningService.signAccessToken &gt; secretLoader path (validateKeySet) &gt; rejects when a key entry is missing kid/publicKeyPem/privateKeyPem" time="0.000227459">
         </testcase>
-        <testcase classname="test/unit/jwt-signing.spec.ts" name="SessionJwtSigningService.signAccessToken &gt; secretLoader path (validateKeySet) &gt; preserves activatesAt + expiresAt when present" time="0.213082167">
-        </testcase>
-    </testsuite>
-    <testsuite name="test/unit/redis-session-store.spec.ts" timestamp="2026-05-19T04:25:33.653Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.018421167">
-        <testcase classname="test/unit/redis-session-store.spec.ts" name="RedisSessionStore &gt; requires initialization and closes only open clients" time="0.00603825">
-        </testcase>
-        <testcase classname="test/unit/redis-session-store.spec.ts" name="RedisSessionStore &gt; creates, rotates, touches, revokes, indexes, and publishes sessions" time="0.005567375">
-        </testcase>
-        <testcase classname="test/unit/redis-session-store.spec.ts" name="RedisSessionStore &gt; prunes stale ids from indexes" time="0.003430042">
+        <testcase classname="test/unit/jwt-signing.spec.ts" name="SessionJwtSigningService.signAccessToken &gt; secretLoader path (validateKeySet) &gt; preserves activatesAt + expiresAt when present" time="1.146038667">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/session.service.spec.ts" timestamp="2026-05-19T04:25:33.655Z" hostname="thiamat-1903.local" tests="19" failures="0" errors="0" skipped="0" time="2.2267075">
-        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; creates, reads, and revokes a session" time="0.076349167">
+    <testsuite name="test/unit/redis-session-store.spec.ts" timestamp="2026-05-19T15:49:06.554Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.03443125">
+        <testcase classname="test/unit/redis-session-store.spec.ts" name="RedisSessionStore &gt; requires initialization and closes only open clients" time="0.003517834">
         </testcase>
-        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; rotates refresh tokens and kills the family when an old token is reused" time="0.18233175">
+        <testcase classname="test/unit/redis-session-store.spec.ts" name="RedisSessionStore &gt; creates, rotates, touches, revokes, indexes, and publishes sessions" time="0.027259042">
         </testcase>
-        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; enforces absolute and idle timeout windows" time="0.02791">
+        <testcase classname="test/unit/redis-session-store.spec.ts" name="RedisSessionStore &gt; prunes stale ids from indexes" time="0.000460584">
         </testcase>
-        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; supports clock skew when access tokens have a slightly future nbf" time="0.0547345">
+    </testsuite>
+    <testsuite name="test/unit/session.service.spec.ts" timestamp="2026-05-19T15:49:06.555Z" hostname="thiamat-1903.local" tests="19" failures="0" errors="0" skipped="0" time="15.652961417">
+        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; creates, reads, and revokes a session" time="0.604671459">
         </testcase>
-        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; survives 1000 sequential refresh cycles without leaking live session records" time="0.909311625">
+        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; rotates refresh tokens and kills the family when an old token is reused" time="0.783605917">
         </testcase>
-        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; exchanges an active session for a new tenant-scoped session" time="0.053134583">
+        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; enforces absolute and idle timeout windows" time="1.060956459">
         </testcase>
-        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; rejects tenant exchange for a mismatched actor" time="0.03911675">
+        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; supports clock skew when access tokens have a slightly future nbf" time="0.437561542">
         </testcase>
-        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; rejects tenant exchange for a missing session" time="0.05706275">
+        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; survives 1000 sequential refresh cycles without leaking live session records" time="7.729388292">
         </testcase>
-        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; rejects tenant exchange for an inactive session" time="0.022316666">
+        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; exchanges an active session for a new tenant-scoped session" time="0.319571542">
         </testcase>
-        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; returns null or false for missing session operations and invalid refresh tokens" time="0.22987375">
+        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; rejects tenant exchange for a mismatched actor" time="0.373137666">
         </testcase>
-        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; rethrows non-expiry inactive session errors from get" time="0.08917875">
+        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; rejects tenant exchange for a missing session" time="0.899579084">
         </testcase>
-        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; returns null for direct in-memory touch and rotate misses" time="0.000467167">
+        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; rejects tenant exchange for an inactive session" time="0.248554125">
         </testcase>
-        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; rejects refresh when lookup points at a missing session or rotation fails" time="0.132490458">
+        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; returns null or false for missing session operations and invalid refresh tokens" time="0.5832925">
         </testcase>
-        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; skips session mirroring when infrastructure providers are not available" time="0.001844">
+        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; rethrows non-expiry inactive session errors from get" time="0.209395208">
         </testcase>
-        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; writes mirror rows with membership ids when infrastructure providers are available" time="0.003455958">
+        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; returns null for direct in-memory touch and rotate misses" time="0.00015675">
         </testcase>
-        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; resolves optional audience and secret-id session options" time="0.000538875">
+        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; rejects refresh when lookup points at a missing session or rotation fails" time="0.831320625">
         </testcase>
-        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; exchanges sessions without carrying optional device metadata or create metadata" time="0.042731125">
+        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; skips session mirroring when infrastructure providers are not available" time="0.002135542">
         </testcase>
-        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; revokes all sessions for a user or tenant with one invalidation per affected scope" time="0.153498458">
+        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; writes mirror rows with membership ids when infrastructure providers are available" time="0.002465166">
         </testcase>
-        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; does not publish tenant invalidation when no tenant sessions are active" time="0.147302542">
+        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; resolves optional audience and secret-id session options" time="0.000185875">
+        </testcase>
+        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; exchanges sessions without carrying optional device metadata or create metadata" time="0.593985625">
+        </testcase>
+        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; revokes all sessions for a user or tenant with one invalidation per affected scope" time="0.482400167">
+        </testcase>
+        <testcase classname="test/unit/session.service.spec.ts" name="SessionService &gt; does not publish tenant invalidation when no tenant sessions are active" time="0.485324125">
         </testcase>
     </testsuite>
 </testsuites>

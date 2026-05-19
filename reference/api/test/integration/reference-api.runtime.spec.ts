@@ -492,14 +492,14 @@ describe('@stynx/reference-api runtime suite', () => {
     adminAToken = await createTokenViaSessionRoute();
     readerAToken = await createDirectToken(readerAUser, tenantA, readerAMembership);
     adminBToken = await createDirectToken(adminBUser, tenantB, adminBMembership);
-  });
+  }, 90_000);
 
   afterAll(async () => {
     await app?.close();
     await localstack?.stop();
     await redis?.stop();
     await postgres?.dispose();
-  });
+  }, 90_000);
 
   beforeEach(async () => {
     if (!redis) {

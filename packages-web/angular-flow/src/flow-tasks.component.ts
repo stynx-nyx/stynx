@@ -1,32 +1,37 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import type { OnChanges } from '@angular/core';
 import { StynxHasPermissionDirective } from '@stynx-web/angular-auth';
-import { StynxBannerComponent, StynxLoadingSpinnerComponent } from '@stynx-web/angular-ui';
+import { StynxTranslatePipe } from '@stynx-web/angular-i18n';
+import { StynxBannerComponent, StynxIconComponent, StynxLoadingSpinnerComponent } from '@stynx-web/angular-ui';
 import { FlowApiService } from './flow-api.service';
 import type { FlowTask } from './types';
 
 @Component({
   selector: 'stynx-flow-task-card',
   standalone: true,
-  imports: [StynxHasPermissionDirective],
+  imports: [StynxHasPermissionDirective, StynxIconComponent, StynxTranslatePipe],
   template: `
     <article class="task">
       <header>
-        <strong>{{ task?.nodeName || task?.nodeCode || 'Task' }}</strong>
+        <strong>{{ task?.nodeName || task?.nodeCode || ('flow.tasks.card.fallbackTitle' | stynxTranslate) }}</strong>
         <span>{{ task?.status || '' }}</span>
       </header>
       <p>{{ task?.note || '' }}</p>
       <footer>
         @for (action of task?.allowedActions || []; track action) {
           <button type="button" *stynxHasPermission="'flow:execute:task'" (click)="act.emit(action)">
+            <stynx-icon name="check" aria-hidden="true"></stynx-icon>
             {{ action }}
           </button>
         }
-        <button type="button" *stynxHasPermission="'flow:assign:task'" (click)="assign.emit()">Assign</button>
+        <button type="button" *stynxHasPermission="'flow:assign:task'" (click)="assign.emit()">
+          <stynx-icon name="user" aria-hidden="true"></stynx-icon>
+          {{ 'flow.tasks.actions.assign' | stynxTranslate }}
+        </button>
       </footer>
     </article>
   `,
-  styles: [`.task { display: grid; gap: 0.75rem; border: 1px solid #d8dee9; border-radius: 8px; padding: 0.75rem; background: #ffffff; } header, footer { display: flex; justify-content: space-between; gap: 0.75rem; align-items: center; } p { margin: 0; }`],
+  styles: [`.task { display: grid; gap: 0.75rem; border: 1px solid #d8dee9; border-radius: 8px; padding: 0.75rem; background: #ffffff; } header, footer { display: flex; justify-content: space-between; gap: 0.75rem; align-items: center; } button { display: inline-flex; align-items: center; gap: 0.4rem; } stynx-icon { --stynx-icon-size: 1rem; } p { margin: 0; }`],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StynxFlowTaskCardComponent {
@@ -43,14 +48,14 @@ export class StynxFlowTaskCardComponent {
 @Component({
   selector: 'stynx-flow-task-list',
   standalone: true,
-  imports: [StynxBannerComponent, StynxFlowTaskCardComponent, StynxLoadingSpinnerComponent],
+  imports: [StynxBannerComponent, StynxFlowTaskCardComponent, StynxLoadingSpinnerComponent, StynxTranslatePipe],
   template: `
     <section class="surface">
       <header>
-        <h2>Assignments</h2>
+        <h2>{{ 'flow.tasks.assignments.title' | stynxTranslate }}</h2>
       </header>
       @if (loading) {
-        <stynx-loading-spinner label="Loading tasks"></stynx-loading-spinner>
+        <stynx-loading-spinner [label]="'flow.tasks.loading' | stynxTranslate"></stynx-loading-spinner>
       }
       @if (errorMessage) {
         <stynx-banner tone="error" [message]="errorMessage"></stynx-banner>
@@ -100,24 +105,28 @@ export class StynxFlowTaskListComponent implements OnChanges {
 @Component({
   selector: 'stynx-flow-task-assignment-dialog',
   standalone: true,
+  imports: [StynxIconComponent, StynxTranslatePipe],
   template: `
     @if (open) {
       <section class="dialog">
-        <h3>Assign task</h3>
+        <h3>{{ 'flow.tasks.assignmentDialog.title' | stynxTranslate }}</h3>
         <ng-content></ng-content>
         <footer>
-          <button type="button" (click)="cancel.emit()">Cancel</button>
-          <button type="button" (click)="assign.emit(userId)">Assign</button>
+          <button type="button" (click)="dismissed.emit()">{{ 'flow.common.cancel' | stynxTranslate }}</button>
+          <button type="button" (click)="assign.emit(userId)">
+            <stynx-icon name="user" aria-hidden="true"></stynx-icon>
+            {{ 'flow.tasks.actions.assign' | stynxTranslate }}
+          </button>
         </footer>
       </section>
     }
   `,
-  styles: [`.dialog { display: grid; gap: 1rem; border: 1px solid #d8dee9; border-radius: 8px; padding: 1rem; } footer { display: flex; justify-content: flex-end; gap: 0.75rem; }`],
+  styles: [`.dialog { display: grid; gap: 1rem; border: 1px solid #d8dee9; border-radius: 8px; padding: 1rem; } footer { display: flex; justify-content: flex-end; gap: 0.75rem; } button { display: inline-flex; align-items: center; gap: 0.4rem; } stynx-icon { --stynx-icon-size: 1rem; }`],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StynxFlowTaskAssignmentDialogComponent {
   @Input() open = false;
   @Input() userId = '';
   @Output() readonly assign = new EventEmitter<string>();
-  @Output() readonly cancel = new EventEmitter<void>();
+  @Output() readonly dismissed = new EventEmitter<void>();
 }

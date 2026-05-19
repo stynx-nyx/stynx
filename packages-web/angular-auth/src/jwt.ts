@@ -1,10 +1,40 @@
+const base64Alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+function decodeBase64(value: string): string {
+  if (typeof atob === 'function') {
+    return atob(value);
+  }
+
+  let output = '';
+  let buffer = 0;
+  let bits = 0;
+  for (const character of value) {
+    if (character === '=') {
+      break;
+    }
+    const sextet = base64Alphabet.indexOf(character);
+    if (sextet < 0) {
+      throw new Error('Invalid base64 input');
+    }
+    buffer = (buffer << 6) | sextet;
+    bits += 6;
+    if (bits >= 8) {
+      bits -= 8;
+      output += String.fromCharCode((buffer >> bits) & 0xff);
+    }
+  }
+  return output;
+}
+
 function decodeBase64Url(value: string): string {
   const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
   const padding = normalized.length % 4 === 0 ? '' : '='.repeat(4 - (normalized.length % 4));
-  if (typeof atob === 'function') {
-    return atob(`${normalized}${padding}`);
+  const binary = decodeBase64(`${normalized}${padding}`);
+  if (typeof TextDecoder === 'function') {
+    const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+    return new TextDecoder().decode(bytes);
   }
-  return Buffer.from(`${normalized}${padding}`, 'base64').toString('utf8');
+  return binary;
 }
 
 export function parseJwtPayload(token: string): Record<string, unknown> | null {

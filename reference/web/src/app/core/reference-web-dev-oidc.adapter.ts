@@ -29,6 +29,10 @@ export class ReferenceWebDevOidcAdapter implements StynxOidcAdapter {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ email }));
   }
 
+  clear(): void {
+    sessionStorage.removeItem(STORAGE_KEY);
+  }
+
   currentEmail(): string | null {
     return loadState()?.email ?? null;
   }
@@ -48,7 +52,7 @@ export class ReferenceWebDevOidcAdapter implements StynxOidcAdapter {
   authorize(_authOptions?: AuthOptions): void {}
 
   async logoff(): Promise<void> {
-    sessionStorage.removeItem(STORAGE_KEY);
+    this.clear();
   }
 
   forceRefreshSession(): Promise<LoginResponse> {

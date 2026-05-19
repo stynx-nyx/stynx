@@ -27,6 +27,9 @@ export interface ToastMessage {
 
 export interface ErrorBannerState {
   message: string;
+  tone?: 'info' | 'success' | 'warning' | 'error';
+  actionLabel?: string;
+  action?: () => void | Promise<void>;
   code?: string;
   status?: number;
   context?: Record<string, unknown>;

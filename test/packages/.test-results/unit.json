@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T04:25:06.176Z",
-  "endedAt": "2026-05-19T04:25:13.165Z",
-  "durationMs": 6988,
+  "startedAt": "2026-05-19T15:48:22.247Z",
+  "endedAt": "2026-05-19T15:48:39.309Z",
+  "durationMs": 17062,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -15,7 +15,7 @@
     "junit": ".test-results/unit.junit.xml"
   },
   "env": {
-    "node": "26.0.0",
+    "node": "24.15.0",
     "ci": false
   },
   "command": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-45416-1779164706176.json",
+      "--outputFile.json=/tmp/vitest-19325-1779205702247.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/test/packages/.test-results/unit.junit.xml"
     ],
@@ -45,54 +45,54 @@
   },
   "slowestTests": [
     {
-      "name": "StynxApiClient injects auth and tenant headers",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/frontend-client/api-client.spec.ts",
-      "durationMs": 26.876457999999957
+      "name": "SlaMonitorInterceptor emits sample event with threshold/breach information",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/sla/sla-monitor.interceptor.spec.ts",
+      "durationMs": 111.80683300000055
     },
     {
-      "name": "PgSessionDbContextApplier applies row_security and session keys with compatibility mappings",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/db-context/pg-session-db-context.applier.spec.ts",
-      "durationMs": 14.893167000000176
+      "name": "AuditInterceptor metadata redaction applies metadata redaction policy before sink write",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/audit/audit-interceptor-redaction.spec.ts",
+      "durationMs": 86.88841700000012
     },
     {
-      "name": "IdentityAdminService maps IdentityAdminError to Nest exceptions",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/identity-admin/identity-admin.service.spec.ts",
-      "durationMs": 9.623624999999947
-    },
-    {
-      "name": "PormIdentityAdminFacade returns updated=false when update payload is empty",
+      "name": "PecIdentityAdminFacade maps list and update request/response to pec-compatible shape",
       "file": "/Users/aarusso/Development/stech/stynx/test/packages/identity-admin/integration-facades.spec.ts",
-      "durationMs": 8.863084000000072
-    },
-    {
-      "name": "PecIdentityAdminFacade delegates group/password/verify operations",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/identity-admin/integration-facades.spec.ts",
-      "durationMs": 8.594125000000076
-    },
-    {
-      "name": "PormIdentityAdminFacade maps list/get to porm-compatible shape with attributes and groups",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/identity-admin/integration-facades.spec.ts",
-      "durationMs": 8.46466600000008
-    },
-    {
-      "name": "AuditSqlSink parity writes using audit.write function mode",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/audit/sql-adapter.spec.ts",
-      "durationMs": 7.935833000000002
+      "durationMs": 70.21729200000027
     },
     {
       "name": "PgIdentityLocalSyncAdapter syncs users/groups into local tables and returns counters",
       "file": "/Users/aarusso/Development/stech/stynx/test/packages/identity-admin/pg-local-sync.adapter.spec.ts",
-      "durationMs": 7.1388749999999845
+      "durationMs": 53.999041000000034
     },
     {
-      "name": "AuditSqlReader parity maps stynx_events shape",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/audit/sql-adapter.spec.ts",
-      "durationMs": 6.029417000000194
+      "name": "TenantLifecycleMiddleware sets tenantId and releases tenant-bound client on response events",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/db-context/tenant-lifecycle.middleware.spec.ts",
+      "durationMs": 44.51254199999994
     },
     {
-      "name": "@stynx/auth cognito admin adapter builds options from env and infers profile strategy when AWS_PROFILE exists",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/auth/cognito-admin.adapter.spec.ts",
-      "durationMs": 5.988916999999901
+      "name": "IdentityAdminService maps IdentityAdminError to Nest exceptions",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/identity-admin/identity-admin.service.spec.ts",
+      "durationMs": 36.094750000000204
+    },
+    {
+      "name": "SlaMonitorInterceptor emits aggregate event according to configured sample window",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/sla/sla-monitor.interceptor.spec.ts",
+      "durationMs": 17.123459000000366
+    },
+    {
+      "name": "TenantLifecycleMiddleware throws when required tenant header is missing",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/db-context/tenant-lifecycle.middleware.spec.ts",
+      "durationMs": 14.372041000000081
+    },
+    {
+      "name": "DefaultPolicyEvaluator allows when all role+permission requirements are met",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/authorization/default-policy-evaluator.spec.ts",
+      "durationMs": 13.374707999999828
+    },
+    {
+      "name": "TenantLifecycleMiddleware throws when tenant header is not a UUID",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/db-context/tenant-lifecycle.middleware.spec.ts",
+      "durationMs": 12.86345799999981
     }
   ]
 }

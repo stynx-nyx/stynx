@@ -1,18 +1,21 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, inject, Input, Output } from '@angular/core';
+import { StynxTranslatePipe } from '@stynx-web/angular-i18n';
 import { TenantContextService } from './tenant-context.service';
 import type { TenantOption } from './types';
 
 @Component({
   selector: 'stynx-tenant-switcher',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, StynxTranslatePipe],
   template: `
     <label>
-      <span>Tenant</span>
+      <span>{{ 'tenancy.switcher.label' | stynxTranslate }}</span>
       <select [value]="tenantContext.tenantId() ?? ''" (change)="selectTenant($event)">
-        <option value="" disabled>Select tenant</option>
-        <option *ngFor="let tenant of tenants" [value]="tenant.id">{{ tenant.label }}</option>
+        <option value="" disabled>{{ 'tenancy.switcher.placeholder' | stynxTranslate }}</option>
+        @for (tenant of tenants; track tenant.id) {
+          <option [value]="tenant.id">{{ tenant.label }}</option>
+        }
       </select>
     </label>
   `,

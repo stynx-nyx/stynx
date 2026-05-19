@@ -66,6 +66,21 @@ describe('backend durable stores', () => {
     );
   });
 
+  it('describes branch: PgIdempotencyStore handles sparse rows and array row counts', async () => {
+    const executor: IdempotencySqlExecutor = {
+      query: vi.fn()
+        .mockResolvedValueOnce([undefined])
+        .mockResolvedValueOnce([{ updated: true }])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce({ rows: [] }),
+    };
+    const store = new PgIdempotencyStore({ executor });
+    await expect(store.lookup(idempotencyContext())).resolves.toBeNull();
+    await expect(store.persistResponse(idempotencyContext(), 201, { ok: true })).resolves.toBe(true);
+    await expect(store.persistResponse(idempotencyContext(), 201, { ok: true })).resolves.toBe(false);
+    await expect(store.persistResponse(idempotencyContext(), 201, { ok: true })).resolves.toBe(false);
+  });
+
   it('covers backend PgRateLimitStore query branches', async () => {
     expect(() => new PgRateLimitStore({
       executor: { query: vi.fn() },
@@ -93,5 +108,17 @@ describe('backend durable stores', () => {
     } finally {
       nowSpy.mockRestore();
     }
+  });
+
+  it('describes branch: PgRateLimitStore uses default SQL identifiers', async () => {
+    const executor: RateLimitSqlExecutor = {
+      query: vi.fn(async () => ({ rows: [{ hitCount: 1 }] })),
+    };
+    const store = new PgRateLimitStore({ executor });
+    await expect(store.increment(rateLimitContext())).resolves.toBe(1);
+    expect(executor.query).toHaveBeenCalledWith(
+      expect.stringContaining('INSERT INTO integration.rate_limit_windows'),
+      expect.any(Array),
+    );
   });
 });

@@ -37,6 +37,7 @@ describe('Flow controllers', () => {
       'createGraph',
       'importGraph',
       'updateGraph',
+      'publishGraph',
       'deleteGraph',
       'listGraphNodes',
       'createGraphNode',
@@ -79,6 +80,7 @@ describe('Flow controllers', () => {
     graphs.create({ code: 'graph' });
     graphs.import({ code: 'imported' });
     graphs.update('graph-1', { name: 'Graph' });
+    graphs.publish('graph-1', { expectedDraftVersion: 'v1' });
     graphs.delete('graph-1');
     graphs.listNodes('graph-1');
     graphs.createNode('graph-1', { code: 'node' });
@@ -110,6 +112,7 @@ describe('Flow controllers', () => {
     new FlowNodeFormRulesController(design as never).delete('form-rule-1');
 
     expect(design.createGraphNode).toHaveBeenCalledWith('graph-1', { code: 'node' });
+    expect(design.publishGraph).toHaveBeenCalledWith('graph-1', { expectedDraftVersion: 'v1' });
     expect(design.createNodeAgentRule).toHaveBeenCalledWith('node-1', { ruleType: 'permission' });
     expect(design.updateTransitionEffect).toHaveBeenCalledWith('effect-1', { effectKey: 'email' });
   });

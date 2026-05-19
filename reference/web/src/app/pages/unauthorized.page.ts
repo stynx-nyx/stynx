@@ -7,8 +7,8 @@ import { StynxBannerComponent } from '@stynx-web/angular-ui';
   imports: [StynxBannerComponent],
   template: `
     <section class="panel">
-      <h2>Unauthorized</h2>
-      <stynx-banner tone="warning" message="The current session is missing the required permission for this route."></stynx-banner>
+      <h2 data-testid="unauthorized-title">Unauthorized</h2>
+      <stynx-banner tone="warning" message="The current session is missing the required permission for this route." data-testid="unauthorized-banner"></stynx-banner>
     </section>
   `,
   styles: [`

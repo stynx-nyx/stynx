@@ -1,0 +1,98 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx-web/angular-iam",
+  "level": "unit",
+  "runner": "vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T15:49:27.348Z",
+  "endedAt": "2026-05-19T15:49:48.904Z",
+  "durationMs": 21556,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/unit.log",
+    "junit": ".test-results/unit.junit.xml"
+  },
+  "env": {
+    "node": "24.15.0",
+    "ci": false
+  },
+  "command": {
+    "argv": [
+      "vitest",
+      "run",
+      "--config",
+      "./vitest.config.ts",
+      "--reporter=default",
+      "--reporter=json",
+      "--outputFile.json=/tmp/vitest-22983-1779205767347.json",
+      "--reporter=junit",
+      "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/.test-results/unit.junit.xml"
+    ],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam"
+  },
+  "metric": {
+    "kind": "none"
+  },
+  "totals": {
+    "files": 2,
+    "tests": 27,
+    "passed": 27,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "slowestTests": [
+    {
+      "name": "@stynx-web/angular-iam component TestBed specs renders the users admin table and drives search, pagination, creation, and selection",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
+      "durationMs": 2430.0011250000007
+    },
+    {
+      "name": "@stynx-web/angular-iam component TestBed specs drives role admin list, clone/create dialog, deletes, and system-role guard",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
+      "durationMs": 596.9695830000001
+    },
+    {
+      "name": "@stynx-web/angular-iam component TestBed specs renders user create and disable dialogs with validated output payloads",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
+      "durationMs": 506.92804199999955
+    },
+    {
+      "name": "@stynx-web/angular-iam component TestBed specs loads and saves role and group detail overview forms",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
+      "durationMs": 253.99324999999953
+    },
+    {
+      "name": "@stynx-web/angular-iam component TestBed specs drives group admin list, create dialog, delete, and search branches",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
+      "durationMs": 214.96454200000153
+    },
+    {
+      "name": "@stynx-web/angular-iam component TestBed specs loads and saves user detail overview, memberships, and lifecycle actions",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
+      "durationMs": 180.51887500000157
+    },
+    {
+      "name": "@stynx-web/angular-iam component TestBed specs renders role create dialog and emits create versus clone payloads",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
+      "durationMs": 150.51754100000107
+    },
+    {
+      "name": "@stynx-web/angular-iam component TestBed specs covers remaining fallback translation and default-value branches",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
+      "durationMs": 87.16337500000009
+    },
+    {
+      "name": "@stynx-web/angular-iam component TestBed specs filters, mutates, and saves the permission matrix",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
+      "durationMs": 81.8996670000015
+    },
+    {
+      "name": "@stynx-web/angular-iam component TestBed specs records component error branches without weakening assertions",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
+      "durationMs": 40.94291700000031
+    }
+  ]
+}

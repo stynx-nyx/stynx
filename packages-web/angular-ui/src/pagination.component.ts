@@ -1,4 +1,6 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, computed, signal } from '@angular/core';
+import { StynxTranslatePipe } from '@stynx-web/angular-i18n';
+import { StynxIconComponent } from './icon/icon.component';
 
 export interface StynxPageChange {
   pageIndex: number;
@@ -8,11 +10,18 @@ export interface StynxPageChange {
 @Component({
   selector: 'stynx-pagination',
   standalone: true,
+  imports: [StynxIconComponent, StynxTranslatePipe],
   template: `
     <nav class="stynx-pagination">
-      <button type="button" (click)="previous()" [disabled]="pageIndex() <= 0">Previous</button>
-      <span>Page {{ pageIndex() + 1 }} / {{ pageCount() }}</span>
-      <button type="button" (click)="next()" [disabled]="pageIndex() + 1 >= pageCount()">Next</button>
+      <button type="button" (click)="previous()" [disabled]="pageIndex() <= 0">
+        <stynx-icon name="chevron-left" aria-hidden="true"></stynx-icon>
+        {{ 'ui.pagination.previous' | stynxTranslate }}
+      </button>
+      <span>{{ 'ui.pagination.pageStatus' | stynxTranslate: { page: pageIndex() + 1, count: pageCount() } }}</span>
+      <button type="button" (click)="next()" [disabled]="pageIndex() + 1 >= pageCount()">
+        {{ 'ui.pagination.next' | stynxTranslate }}
+        <stynx-icon name="chevron-right" aria-hidden="true"></stynx-icon>
+      </button>
     </nav>
   `,
   styles: [`
@@ -29,6 +38,13 @@ export interface StynxPageChange {
       border: 1px solid var(--mat-sys-outline-variant, #cbd5e1);
       background: white;
       padding: 0.4rem 0.8rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    stynx-icon {
+      --stynx-icon-size: 0.95rem;
     }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,

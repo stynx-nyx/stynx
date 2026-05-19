@@ -5,13 +5,14 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T00:49:05.880Z",
-  "endedAt": "2026-05-19T00:49:15.960Z",
-  "durationMs": 10080,
+  "startedAt": "2026-05-19T15:29:29.913Z",
+  "endedAt": "2026-05-19T15:29:40.128Z",
+  "durationMs": 10215,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
-    "raw": ".test-results/integration.log"
+    "raw": ".test-results/integration.log",
+    "junit": ".test-results/integration.junit.xml"
   },
   "env": {
     "node": "24.15.0",
@@ -25,9 +26,14 @@
       "./vitest.int.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-65890-1779151745880.json"
+      "--outputFile.json=/tmp/vitest-86559-1779204569913.json",
+      "--reporter=junit",
+      "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/ratelimit/.test-results/integration.junit.xml"
     ],
     "cwd": "/Users/aarusso/Development/stech/stynx/packages/ratelimit"
+  },
+  "metric": {
+    "kind": "none"
   },
   "totals": {
     "files": 1,
@@ -41,20 +47,17 @@
     {
       "name": "Rate limit integration emits headers and blocks above the resolved limit",
       "file": "/Users/aarusso/Development/stech/stynx/packages/ratelimit/test/integration/rate-limit.integration.spec.ts",
-      "durationMs": 1508.1292080000003
+      "durationMs": 1574.2145419999997
     },
     {
       "name": "Rate limit integration keeps Redis sliding-window atomic under 1000 concurrent hits",
       "file": "/Users/aarusso/Development/stech/stynx/packages/ratelimit/test/integration/rate-limit.integration.spec.ts",
-      "durationMs": 143.76679200000035
+      "durationMs": 230.109958
     },
     {
       "name": "Rate limit integration applies per-tenant overrides via core.rate_limit_overrides",
       "file": "/Users/aarusso/Development/stech/stynx/packages/ratelimit/test/integration/rate-limit.integration.spec.ts",
-      "durationMs": 23.83770800000002
+      "durationMs": 12.106582999999773
     }
-  ],
-  "metric": {
-    "kind": "none"
-  }
+  ]
 }

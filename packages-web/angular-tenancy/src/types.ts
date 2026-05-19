@@ -3,6 +3,12 @@ export interface TenantContextSnapshot {
   source: 'query' | 'subdomain' | 'default' | 'manual';
 }
 
+export interface TenantTransition {
+  from: string | null;
+  to: string | null;
+  at: number;
+}
+
 export interface TenantResolutionContext {
   url: URL;
   host: string;
@@ -15,4 +21,11 @@ export interface TenancyOptions {
 export interface TenantOption {
   id: string;
   label: string;
+  description?: string;
+}
+
+export interface TenantPickerLabels {
+  title: string;
+  description: string;
+  availableTenants: string;
 }

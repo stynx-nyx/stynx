@@ -1,5 +1,5 @@
 import { NgFor } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { ReactiveFormsModule, Validators, FormBuilder } from '@angular/forms';
 import { StynxBannerComponent } from '@stynx-web/angular-ui';
 import { ReferenceWebShellService } from '../core/reference-web-shell.service';
@@ -31,7 +31,7 @@ import { ReferenceWebShellService } from '../core/reference-web-shell.service';
         </label>
 
         @if (errorMessage) {
-          <stynx-banner tone="error" [message]="errorMessage"></stynx-banner>
+          <stynx-banner tone="error" [message]="errorMessage" data-testid="login-error-banner"></stynx-banner>
         }
 
         <button type="submit" [disabled]="form.invalid || pending" data-testid="login-submit">
@@ -79,6 +79,7 @@ import { ReferenceWebShellService } from '../core/reference-web-shell.service';
   `],
 })
 export class LoginPageComponent {
+  private readonly changeDetector = inject(ChangeDetectorRef);
   private readonly formBuilder = inject(FormBuilder);
   protected readonly shell = inject(ReferenceWebShellService);
   protected readonly form = this.formBuilder.nonNullable.group({
@@ -101,6 +102,7 @@ export class LoginPageComponent {
       this.errorMessage = error instanceof Error ? error.message : 'Unable to sign in.';
     } finally {
       this.pending = false;
+      this.changeDetector.detectChanges();
     }
   }
 }

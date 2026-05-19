@@ -1,91 +1,10 @@
 import js from '@eslint/js';
+import angularPlugin from '@angular-eslint/eslint-plugin';
+import angularTemplatePlugin from '@angular-eslint/eslint-plugin-template';
+import angularTemplateParser from '@angular-eslint/template-parser';
 import globals from 'globals';
 import tsParser from '@typescript-eslint/parser';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
-
-function getPropertyName(property) {
-  if (property.type !== 'Property' || property.computed) {
-    return null;
-  }
-
-  if (property.key.type === 'Identifier') {
-    return property.key.name;
-  }
-
-  if (property.key.type === 'Literal' && typeof property.key.value === 'string') {
-    return property.key.value;
-  }
-
-  return null;
-}
-
-function isOnPushExpression(node) {
-  return (
-    node.type === 'MemberExpression' &&
-    !node.computed &&
-    node.object.type === 'Identifier' &&
-    node.object.name === 'ChangeDetectionStrategy' &&
-    node.property.type === 'Identifier' &&
-    node.property.name === 'OnPush'
-  );
-}
-
-function getComponentMetadata(decorator) {
-  if (decorator.expression?.type !== 'CallExpression') {
-    return null;
-  }
-
-  const call = decorator.expression;
-  if (call.callee.type !== 'Identifier' || call.callee.name !== 'Component') {
-    return null;
-  }
-
-  const [metadata] = call.arguments;
-  return metadata?.type === 'ObjectExpression' ? metadata : null;
-}
-
-const angularEslintPlugin = {
-  rules: {
-    'prefer-on-push-component-change-detection': {
-      meta: {
-        type: 'suggestion',
-        docs: {
-          description: 'Require Angular components to use ChangeDetectionStrategy.OnPush.',
-        },
-        schema: [],
-        messages: {
-          preferOnPush:
-            'Components must declare changeDetection: ChangeDetectionStrategy.OnPush.',
-        },
-      },
-      create(context) {
-        return {
-          ClassDeclaration(node) {
-            for (const decorator of node.decorators ?? []) {
-              const metadata = getComponentMetadata(decorator);
-              if (!metadata) {
-                continue;
-              }
-
-              const changeDetection = metadata.properties.find(
-                (property) => getPropertyName(property) === 'changeDetection',
-              );
-
-              if (changeDetection?.type === 'Property' && isOnPushExpression(changeDetection.value)) {
-                continue;
-              }
-
-              context.report({
-                node: changeDetection ?? decorator,
-                messageId: 'preferOnPush',
-              });
-            }
-          },
-        };
-      },
-    },
-  },
-};
 
 export default [
   {
@@ -114,16 +33,36 @@ export default [
     },
     plugins: {
       '@typescript-eslint': tsPlugin,
-      '@angular-eslint': angularEslintPlugin,
+      '@angular-eslint': angularPlugin,
+      '@angular-eslint/template': angularTemplatePlugin,
     },
+    processor: angularTemplatePlugin.processors['extract-inline-html'],
     rules: {
       ...js.configs.recommended.rules,
       ...tsPlugin.configs.recommended.rules,
+      ...angularPlugin.configs.recommended.rules,
       'no-undef': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unsafe-function-type': 'off',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      '@angular-eslint/component-class-suffix': 'error',
+      '@angular-eslint/no-input-rename': 'error',
+      '@angular-eslint/no-output-on-prefix': 'error',
+      '@angular-eslint/no-output-rename': 'error',
       '@angular-eslint/prefer-on-push-component-change-detection': 'error',
+    },
+  },
+  {
+    files: ['**/*.html'],
+    languageOptions: {
+      parser: angularTemplateParser,
+    },
+    plugins: {
+      '@angular-eslint/template': angularTemplatePlugin,
+    },
+    rules: {
+      ...angularTemplatePlugin.configs.recommended.rules,
+      '@angular-eslint/template/click-events-have-key-events': 'warn',
     },
   },
 ];

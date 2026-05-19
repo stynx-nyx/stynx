@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { StynxTranslatePipe } from '@stynx-web/angular-i18n';
 
 @Component({
   selector: 'stynx-confirm-dialog',
   standalone: true,
+  imports: [StynxTranslatePipe],
   template: `
     @if (open) {
       <section class="stynx-confirm-backdrop">
@@ -10,7 +12,7 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from 
           <h3>{{ title }}</h3>
           <p>{{ message }}</p>
           <footer>
-            <button type="button" (click)="cancel.emit()">Cancel</button>
+            <button type="button" (click)="dismissed.emit()">{{ 'ui.confirmDialog.cancel' | stynxTranslate }}</button>
             <button type="button" (click)="confirm.emit()">{{ confirmLabel }}</button>
           </footer>
         </div>
@@ -49,5 +51,5 @@ export class StynxConfirmDialogComponent {
   @Input() message = '';
   @Input() confirmLabel = 'Confirm';
   @Output() readonly confirm = new EventEmitter<void>();
-  @Output() readonly cancel = new EventEmitter<void>();
+  @Output() readonly dismissed = new EventEmitter<void>();
 }

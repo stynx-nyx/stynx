@@ -177,6 +177,15 @@ describe('FlowFormsService', () => {
       expect(sqlUpsert).toContain('insert into flow.scores');
     });
 
+    it('putQuestionScore defaults scores and nullable actor when omitted', async () => {
+      const { service, trx } = makeService([
+        [{ exists: true }],
+        [],
+      ], { tenantId: 't-1' });
+      await expect(service.putQuestionScore(QUESTION, {})).resolves.toEqual({});
+      expect(trx.query.mock.calls[1]?.[1]).toEqual(['t-1', QUESTION, '1', '0', {}, null]);
+    });
+
     it('putQuestionScore propagates NotFound from assertExists', async () => {
       const { service } = makeService([[{ exists: false }]]);
       await expect(service.putQuestionScore(QUESTION, { passPoints: '3' })).rejects.toBeInstanceOf(
@@ -305,6 +314,23 @@ describe('FlowFormsService', () => {
       expect(params[2]).toBe(QUESTION);
     });
 
+    it('upsertAnswer defaults nullable answer fields and actor', async () => {
+      const { service, trx } = makeService([
+        [{ exists: true }],
+        [{ exists: true }],
+        [],
+      ], { tenantId: 't-1' });
+      await expect(service.upsertAnswer(FILL, { questionId: QUESTION })).resolves.toEqual({});
+      expect(trx.query.mock.calls[2]?.[1]).toEqual([
+        't-1',
+        FILL,
+        QUESTION,
+        null,
+        null,
+        null,
+      ]);
+    });
+
     it('bulkUpsertAnswers iterates and upserts each, asserting question existence per row', async () => {
       const Q2 = '0190abcd-1234-7abc-89ab-000000000099';
       const { service } = makeService([
@@ -335,6 +361,16 @@ describe('FlowFormsService', () => {
       expect(result).toHaveLength(1);
     });
 
+    it('bulkUpsertAnswers uses a nullable actor when the context has none', async () => {
+      const { service, trx } = makeService([
+        [{ exists: true }],
+        [{ exists: true }],
+        [{ id: ANSWER }],
+      ], { tenantId: 't-1' });
+      await service.bulkUpsertAnswers(FILL, [{ questionId: QUESTION, value: 1 }]);
+      expect((trx.query.mock.calls[2]?.[1] as unknown[])[5]).toBeNull();
+    });
+
     it('updateAnswer asserts question when questionId is set', async () => {
       const { service, trx } = makeService([
         [{ exists: true }],
@@ -351,6 +387,15 @@ describe('FlowFormsService', () => {
       ]);
       await service.updateAnswer(ANSWER, { value: 'x' });
       expect(trx.query.mock.calls.length).toBe(1);
+      expect(trx.query.mock.calls[0]?.[0]).not.toContain('question_id');
+    });
+
+    it('updateAnswer records a nullable actor when the context has none', async () => {
+      const { service, trx } = makeService([
+        [{ id: ANSWER, value: 'x' }],
+      ], { tenantId: 't-1' });
+      await service.updateAnswer(ANSWER, { value: 'x' });
+      expect((trx.query.mock.calls[0]?.[1] as unknown[])[2]).toBeNull();
     });
 
     it('listFormFillAnswers verifies fill belongs to form, then lists answers', async () => {
@@ -498,6 +543,16 @@ describe('FlowFormsService', () => {
     it('createQuestion rejects an array as input body', () => {
       const { service } = makeService([]);
       expect(() => service.createQuestion(FORM, [])).toThrow(BadRequestException);
+    });
+
+    it('createForm accepts missing actor and empty insert result', async () => {
+      const { service, trx } = makeService([[]], { tenantId: 't-1' });
+      await expect(service.createForm({
+        scopeId: SCOPE,
+        code: 'C',
+        title: 'T',
+      })).resolves.toEqual({});
+      expect((trx.query.mock.calls[0]?.[1] as unknown[]).slice(-2)).toEqual([null, null]);
     });
 
     it('upsertAnswer rejects when the body is not an object', () => {

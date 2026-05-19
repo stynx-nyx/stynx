@@ -17,15 +17,40 @@ export interface StynxDocumentUploadInitResponse {
   };
 }
 
+export type StynxDocumentScanStatus = 'pending' | 'scanning' | 'completed' | 'quarantined' | 'failed';
+
+export interface StynxDocumentScanEvent {
+  id: string;
+  status: StynxDocumentScanStatus;
+  checkedAt?: string;
+  message?: string;
+}
+
+export interface StynxDocumentScanStatusOptions {
+  pollIntervalMs?: number;
+}
+
 export interface StynxDocumentCompleteResponse {
   id: string;
-  scanStatus: 'completed' | 'quarantined';
+  scanStatus: StynxDocumentScanStatus;
 }
 
 export interface StynxDocumentDownloadResponse {
   id: string;
   url: string;
   expiresInSeconds: number;
+}
+
+export interface StynxDocumentDownloadProgressEvent {
+  loadedBytes: number;
+  totalBytes: number | null;
+  percentage: number;
+}
+
+export interface StynxDocumentDownloadCompletedEvent {
+  id: string;
+  filename: string;
+  byteSize: number;
 }
 
 export interface StynxDocumentListItem {
@@ -45,8 +70,57 @@ export interface StynxUploadExecutor {
   ): Promise<void>;
 }
 
+export interface StynxMultipartUploadExecutorOptions {
+  chunkThreshold: number;
+  chunkSize: number;
+  concurrency: number;
+  retryAttempts: number;
+}
+
+export interface StynxMultipartUploadInitiateRequest {
+  uploadUrl: string;
+  filename: string;
+  mimeType: string;
+  byteSize: number;
+  chunkSize: number;
+  chunkCount: number;
+  headers: Record<string, string>;
+}
+
+export interface StynxMultipartUploadChunk {
+  partNumber: number;
+  url: string;
+  headers?: Record<string, string>;
+}
+
+export interface StynxMultipartUploadInitiateResponse {
+  uploadId: string;
+  chunks: StynxMultipartUploadChunk[];
+  completeUrl?: string;
+}
+
+export interface StynxMultipartUploadedPart {
+  partNumber: number;
+  etag?: string;
+}
+
+export interface StynxMultipartUploadStatusResponse {
+  uploadId: string;
+  completedParts: Array<number | StynxMultipartUploadedPart>;
+}
+
+export interface StynxMultipartUploadCompleteRequest {
+  uploadId: string;
+  parts: StynxMultipartUploadedPart[];
+}
+
+export interface StynxMultipartUploadCompleteResponse {
+  uploadId: string;
+  completed: boolean;
+}
+
 export interface StynxDocumentUploadCompletedEvent {
   id: string;
   filename: string;
-  scanStatus: 'completed' | 'quarantined';
+  scanStatus: StynxDocumentScanStatus;
 }

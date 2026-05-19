@@ -1,45 +1,45 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="19" failures="0" errors="0" time="0.069102792">
-    <testsuite name="test/runtime.spec.ts" timestamp="2026-05-19T05:11:31.167Z" hostname="thiamat-1903.local" tests="10" failures="0" errors="0" skipped="0" time="0.026462375">
-        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; hydrates, derives, expires, and clears frontend sessions" time="0.008019">
+<testsuites name="vitest tests" tests="19" failures="0" errors="0" time="0.089483333">
+    <testsuite name="test/runtime.spec.ts" timestamp="2026-05-19T15:48:39.382Z" hostname="thiamat-1903.local" tests="10" failures="0" errors="0" skipped="0" time="0.066014875">
+        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; hydrates, derives, expires, and clears frontend sessions" time="0.00719575">
         </testcase>
-        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; supports custom claim keys and invalid token fallbacks" time="0.000303167">
+        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; supports custom claim keys and invalid token fallbacks" time="0.000848334">
         </testcase>
-        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; derives tenant identifiers from fallback claims and empty claims" time="0.000212083">
+        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; derives tenant identifiers from fallback claims and empty claims" time="0.000260459">
         </testcase>
-        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; stores tokens in memory and browser-local storage variants" time="0.0016225">
+        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; stores tokens in memory and browser-local storage variants" time="0.001112542">
         </testcase>
-        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; uses global localStorage when no storage provider is supplied" time="0.000315042">
+        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; uses global localStorage when no storage provider is supplied" time="0.000233708">
         </testcase>
-        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; falls back to unavailable storage when global localStorage is absent" time="0.001434583">
+        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; falls back to unavailable storage when global localStorage is absent" time="0.00014825">
         </testcase>
-        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; evaluates frontend authorization helpers case-insensitively" time="0.001033542">
+        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; evaluates frontend authorization helpers case-insensitively" time="0.000195708">
         </testcase>
-        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; builds Cognito URLs and parses JWT payloads" time="0.009086625">
+        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; builds Cognito URLs and parses JWT payloads" time="0.052527208">
         </testcase>
-        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; sends StynxApiClient requests with auth, tenant, body, query, and response variants" time="0.00230925">
+        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; sends StynxApiClient requests with auth, tenant, body, query, and response variants" time="0.001188417">
         </testcase>
-        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; surfaces StynxApiClient error responses" time="0.00028475">
+        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; surfaces StynxApiClient error responses" time="0.000242417">
         </testcase>
     </testsuite>
-    <testsuite name="test/transport.spec.ts" timestamp="2026-05-19T05:11:31.273Z" hostname="thiamat-1903.local" tests="9" failures="0" errors="0" skipped="0" time="0.042640417">
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; injects bearer and tenant headers on requests" time="0.01141025">
+    <testsuite name="test/transport.spec.ts" timestamp="2026-05-19T15:48:39.442Z" hostname="thiamat-1903.local" tests="9" failures="0" errors="0" skipped="0" time="0.023468458">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; injects bearer and tenant headers on requests" time="0.010144583">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; preserves caller headers and omits empty query and tenant values" time="0.007361708">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; preserves caller headers and omits empty query and tenant values" time="0.001238291">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; omits empty query strings and forwards request signal options" time="0.000456167">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; omits empty query strings and forwards request signal options" time="0.000376125">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; uses client method default options and parses empty or inferred JSON bodies" time="0.0012655">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; uses client method default options and parses empty or inferred JSON bodies" time="0.001196458">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; refreshes once after a 401 and replays the request" time="0.001395375">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; refreshes once after a 401 and replays the request" time="0.00047025">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; maps response codes to typed error instances and calls onAuthFailure after unrecoverable 401" time="0.014115541">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; maps response codes to typed error instances and calls onAuthFailure after unrecoverable 401" time="0.006697625">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; preserves content-type headers and surfaces repeated 401 responses after refresh" time="0.001659292">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; preserves content-type headers and surfaces repeated 401 responses after refresh" time="0.001786083">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; maps remaining status codes and validation code suffixes" time="0.00123225">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; maps remaining status codes and validation code suffixes" time="0.000443625">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; maps context payloads and 401 responses without an auth provider" time="0.000285375">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; maps context payloads and 401 responses without an auth provider" time="0.000300834">
         </testcase>
     </testsuite>
 </testsuites>

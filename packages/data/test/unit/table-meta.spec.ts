@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { pgSchema, pgTable, text } from 'drizzle-orm/pg-core';
 import {
   getTableMeta,

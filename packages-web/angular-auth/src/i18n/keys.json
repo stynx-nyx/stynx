@@ -1,0 +1,7 @@
+[
+  "auth.loginRedirect.completing",
+  "auth.logoutButton.label",
+  "auth.permissionDenied.actions.loginAgain",
+  "auth.permissionDenied.message",
+  "auth.permissionDenied.title"
+]

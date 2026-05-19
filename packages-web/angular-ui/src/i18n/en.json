@@ -1,0 +1,6 @@
+{
+  "ui.confirmDialog.cancel": "Cancel",
+  "ui.pagination.next": "Next",
+  "ui.pagination.pageStatus": "Page {page} / {count}",
+  "ui.pagination.previous": "Previous"
+}

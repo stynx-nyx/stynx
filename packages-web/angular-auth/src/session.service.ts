@@ -49,6 +49,10 @@ export class StynxSessionService implements AuthProvider {
     this.oidc.authorize();
   }
 
+  loginRedirect(): void {
+    this.login();
+  }
+
   async completeLogin(url?: string): Promise<StynxSessionState> {
     const login = await this.oidc.checkAuth(url);
     if (!login.isAuthenticated || !login.accessToken) {

@@ -1,0 +1,4 @@
+{
+  "storage.upload.dropzone": "Drop a document here",
+  "storage.upload.scanStatus": "Scan status: {status}"
+}

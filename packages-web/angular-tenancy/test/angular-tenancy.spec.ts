@@ -7,9 +7,14 @@ import { of, firstValueFrom, type Observable } from 'rxjs';
 import { provideTenancy } from '../src/provide-tenancy';
 import { TenantContextService } from '../src/tenant-context.service';
 import { TenantInterceptor } from '../src/tenant.interceptor';
+import { StynxTenantPickerComponent } from '../src/tenant-picker.component';
 import { TenantSwitcherComponent } from '../src/tenant-switcher.component';
 import { STYNX_TENANCY_OPTIONS, STYNX_TENANCY_WINDOW } from '../src/tokens';
-import type { TenancyOptions } from '../src/types';
+import type { TenancyOptions, TenantTransition } from '../src/types';
+
+type ProviderRecord = Provider & Record<string, unknown> & {
+  provide: unknown;
+};
 
 class FakeHeaders {
   private readonly values = new Map<string, string>();
@@ -61,6 +66,33 @@ function createTenantContext(options: TenancyOptions = {}, browserWindow: Window
   return runInInjectionContext(injector, () => new TenantContextService());
 }
 
+function createTenantInterceptor(tenantContext: TenantContextService): TenantInterceptor {
+  const injector = Injector.create({
+    parent: TestBed.inject(Injector),
+    providers: [{ provide: TenantContextService, useValue: tenantContext }],
+  });
+  return runInInjectionContext(injector, () => new TenantInterceptor());
+}
+
+function isProviderRecord(provider: Provider): provider is ProviderRecord {
+  return typeof provider === 'object' && provider !== null && !Array.isArray(provider) && 'provide' in provider;
+}
+
+function findProvider(providers: Provider[], token: unknown): ProviderRecord {
+  const provider = providers.find((candidate): candidate is ProviderRecord =>
+    isProviderRecord(candidate) && candidate.provide === token,
+  );
+  if (!provider) {
+    throw new Error(`Expected provider for ${String(token)}`);
+  }
+  return provider;
+}
+
+function providerFactory<TArgs extends unknown[], TResult>(provider: ProviderRecord): (...args: TArgs) => TResult {
+  expect(provider.useFactory).toEqual(expect.any(Function));
+  return provider.useFactory as (...args: TArgs) => TResult;
+}
+
 beforeAll(() => {
   TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
 });
@@ -72,37 +104,27 @@ afterEach(() => {
 describe('@stynx-web/angular-tenancy', () => {
   it('provides tenancy options, browser window fallback, initializer, and interceptor providers', async () => {
     const options = { defaultTenantResolver: async () => 'tenant-default' };
-    const providers = provideTenancy(options) as Array<Provider | Record<string, unknown>>;
-    const optionProvider = providers.find((provider) =>
-      typeof provider === 'object' && provider !== null && provider['provide'] === STYNX_TENANCY_OPTIONS,
-    ) as Record<string, unknown>;
-    const windowProvider = providers.find((provider) =>
-      typeof provider === 'object' && provider !== null && provider['provide'] === STYNX_TENANCY_WINDOW,
-    ) as Record<string, () => Window | null>;
-    const initializerProvider = providers.find((provider) =>
-      typeof provider === 'object' && provider !== null && provider['provide'] === APP_INITIALIZER,
-    ) as Record<string, unknown>;
-    const interceptorProvider = providers.find((provider) =>
-      typeof provider === 'object' && provider !== null && provider['provide'] === HTTP_INTERCEPTORS,
-    ) as Record<string, unknown>;
+    const providers = provideTenancy(options);
+    const optionProvider = findProvider(providers, STYNX_TENANCY_OPTIONS);
+    const windowProvider = findProvider(providers, STYNX_TENANCY_WINDOW);
+    const initializerProvider = findProvider(providers, APP_INITIALIZER);
+    const interceptorProvider = findProvider(providers, HTTP_INTERCEPTORS);
     const service = { initialize: vi.fn().mockResolvedValue(undefined) };
 
     expect(providers).toContain(TenantContextService);
     expect(optionProvider['useValue']).toBe(options);
-    expect(windowProvider['useFactory']()).toBe(window);
+    expect(providerFactory<[], Window | null>(windowProvider)()).toBe(window);
     expect((initializerProvider['deps'] as unknown[])).toEqual([TenantContextService]);
     expect(initializerProvider['multi']).toBe(true);
-    await expect((initializerProvider['useFactory'] as (input: typeof service) => () => Promise<void>)(service)()).resolves.toBeUndefined();
+    await expect(providerFactory<[typeof service], () => Promise<void>>(initializerProvider)(service)()).resolves.toBeUndefined();
     expect(service.initialize).toHaveBeenCalledTimes(1);
     expect(interceptorProvider['useClass']).toBe(TenantInterceptor);
     expect(interceptorProvider['multi']).toBe(true);
   });
 
   it('provides default tenancy options', () => {
-    const providers = provideTenancy() as Array<Provider | Record<string, unknown>>;
-    const optionProvider = providers.find((provider) =>
-      typeof provider === 'object' && provider !== null && provider['provide'] === STYNX_TENANCY_OPTIONS,
-    ) as Record<string, unknown>;
+    const providers = provideTenancy();
+    const optionProvider = findProvider(providers, STYNX_TENANCY_OPTIONS);
 
     expect(optionProvider['useValue']).toEqual({});
   });
@@ -195,10 +217,50 @@ describe('@stynx-web/angular-tenancy', () => {
     expect(tenantContext.activeTenant()).toEqual({ id: 'tenant-manual', source: 'manual' });
   });
 
+  it('stores available tenants for first-load chooser surfaces', () => {
+    const tenantContext = createTenantContext({}, null);
+
+    tenantContext.setAvailableTenants([
+      { id: 'tenant-a', label: 'Tenant A' },
+      { id: 'tenant-b', label: 'Tenant B', description: 'Operations workspace' },
+    ]);
+    tenantContext.setTenant('tenant-b', 'manual');
+
+    expect(tenantContext.availableTenants()).toEqual([
+      { id: 'tenant-a', label: 'Tenant A' },
+      { id: 'tenant-b', label: 'Tenant B', description: 'Operations workspace' },
+    ]);
+    expect(tenantContext.tenantLabel()).toBe('Tenant B');
+
+    tenantContext.setTenant('tenant-c', 'manual');
+    expect(tenantContext.tenantLabel()).toBe('tenant-c');
+  });
+
+  it('emits tenantChanged$ only when the tenant id changes', () => {
+    const emitted: TenantTransition[] = [];
+    const tenantContext = createTenantContext({}, null);
+    tenantContext.tenantChanged$.subscribe((transition) => emitted.push(transition));
+
+    tenantContext.setTenant('tenant-a', 'manual');
+    tenantContext.setTenant('tenant-a', 'query');
+    tenantContext.setTenant('tenant-b', 'manual');
+    tenantContext.clear();
+    tenantContext.clear();
+
+    expect(emitted).toHaveLength(3);
+    expect(emitted.map(({ from, to }) => ({ from, to }))).toEqual([
+      { from: null, to: 'tenant-a' },
+      { from: 'tenant-a', to: 'tenant-b' },
+      { from: 'tenant-b', to: null },
+    ]);
+    expect(emitted.every(({ at }) => Number.isInteger(at) && at > 0)).toBe(true);
+    expect(tenantContext.activeTenant()).toBeNull();
+  });
+
   it('adds X-Tenant-Id from the current tenant context', async () => {
     const tenantContext = createTenantContext({}, null);
     tenantContext.setTenant('tenant-a', 'manual');
-    const interceptor = new TenantInterceptor(tenantContext);
+    const interceptor = createTenantInterceptor(tenantContext);
     const handler = new FakeHandler();
 
     await expect(firstValueFrom(interceptor.intercept(new FakeRequest() as never, handler as never))).resolves.toEqual({
@@ -211,7 +273,7 @@ describe('@stynx-web/angular-tenancy', () => {
   it('does not override an existing tenant header', async () => {
     const tenantContext = createTenantContext({}, null);
     tenantContext.setTenant('tenant-a', 'manual');
-    const interceptor = new TenantInterceptor(tenantContext);
+    const interceptor = createTenantInterceptor(tenantContext);
     const handler = new FakeHandler();
 
     await firstValueFrom(interceptor.intercept(
@@ -252,5 +314,66 @@ describe('@stynx-web/angular-tenancy', () => {
 
     expect(component.tenants).toEqual([]);
     expect(component.tenantContext).toBe(tenantContext);
+  });
+
+  it('tenant picker renders only on multi-tenant first load and projects content after selection', () => {
+    TestBed.configureTestingModule({
+      imports: [StynxTenantPickerComponent],
+      providers: [
+        TenantContextService,
+        { provide: STYNX_TENANCY_OPTIONS, useValue: {} },
+        { provide: STYNX_TENANCY_WINDOW, useValue: null },
+      ],
+    });
+    const tenantContext = TestBed.inject(TenantContextService);
+    tenantContext.setAvailableTenants([
+      { id: 'tenant-a', label: 'Tenant A' },
+      { id: 'tenant-b', label: 'Tenant B', description: 'Operations workspace' },
+    ]);
+    const fixture = TestBed.createComponent(StynxTenantPickerComponent);
+    const emitted: string[] = [];
+    fixture.componentInstance.tenantChange.subscribe((tenantId) => emitted.push(tenantId));
+
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Choose a tenant');
+    expect(fixture.nativeElement.textContent).toContain('Tenant A');
+    expect(fixture.nativeElement.textContent).toContain('Operations workspace');
+
+    const buttons = fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>;
+    buttons[1]?.click();
+    fixture.detectChanges();
+
+    expect(tenantContext.tenantId()).toBe('tenant-b');
+    expect(emitted).toEqual(['tenant-b']);
+    expect(fixture.nativeElement.textContent).not.toContain('Choose a tenant');
+  });
+
+  it('tenant picker accepts explicit tenant options and stays passive for single tenants or active contexts', () => {
+    TestBed.configureTestingModule({
+      imports: [StynxTenantPickerComponent],
+      providers: [
+        TenantContextService,
+        { provide: STYNX_TENANCY_OPTIONS, useValue: {} },
+        { provide: STYNX_TENANCY_WINDOW, useValue: null },
+      ],
+    });
+    const tenantContext = TestBed.inject(TenantContextService);
+    const fixture = TestBed.createComponent(StynxTenantPickerComponent);
+
+    fixture.componentRef.setInput('tenants', [{ id: 'tenant-a', label: 'Tenant A' }]);
+    fixture.detectChanges();
+    expect(fixture.componentInstance.shouldRenderPicker()).toBe(false);
+    expect(fixture.nativeElement.textContent).not.toContain('Choose a tenant');
+
+    fixture.componentRef.setInput('tenants', [
+      { id: 'tenant-a', label: 'Tenant A' },
+      { id: 'tenant-b', label: 'Tenant B' },
+    ]);
+    fixture.detectChanges();
+    expect(fixture.componentInstance.shouldRenderPicker()).toBe(true);
+
+    tenantContext.setTenant('tenant-a', 'manual');
+    fixture.detectChanges();
+    expect(fixture.componentInstance.shouldRenderPicker()).toBe(false);
   });
 });

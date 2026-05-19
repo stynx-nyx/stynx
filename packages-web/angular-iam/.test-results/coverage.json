@@ -1,0 +1,107 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx-web/angular-iam",
+  "level": "coverage",
+  "runner": "vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T15:06:59.154Z",
+  "endedAt": "2026-05-19T15:07:02.768Z",
+  "durationMs": 3614,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/unit.log",
+    "junit": ".test-results/unit.junit.xml",
+    "coverage": "coverage-vitest/coverage-final.json"
+  },
+  "env": {
+    "node": "24.15.0",
+    "ci": false
+  },
+  "command": {
+    "argv": [
+      "vitest",
+      "run",
+      "--config",
+      "./vitest.config.ts",
+      "--coverage",
+      "--reporter=verbose",
+      "--reporter=default",
+      "--reporter=json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-47540-1779203219153.json",
+      "--reporter=junit",
+      "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/.test-results/unit.junit.xml"
+    ],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam"
+  },
+  "metric": {
+    "kind": "coverage",
+    "coverage": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100,
+      "statements": 100
+    }
+  },
+  "totals": {
+    "files": 2,
+    "tests": 27,
+    "passed": 27,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "slowestTests": [
+    {
+      "name": "@stynx-web/angular-iam component TestBed specs renders the users admin table and drives search, pagination, creation, and selection",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
+      "durationMs": 194.8985
+    },
+    {
+      "name": "@stynx-web/angular-iam component TestBed specs loads and saves role and group detail overview forms",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
+      "durationMs": 80.98029200000019
+    },
+    {
+      "name": "@stynx-web/angular-iam component TestBed specs covers remaining fallback translation and default-value branches",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
+      "durationMs": 69.66550000000007
+    },
+    {
+      "name": "@stynx-web/angular-iam component TestBed specs covers remaining detail and editor translation fallbacks",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
+      "durationMs": 65.2859169999997
+    },
+    {
+      "name": "@stynx-web/angular-iam component TestBed specs loads and saves user detail overview, memberships, and lifecycle actions",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
+      "durationMs": 53.96616700000004
+    },
+    {
+      "name": "@stynx-web/angular-iam component TestBed specs drives role admin list, clone/create dialog, deletes, and system-role guard",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
+      "durationMs": 51.78320900000017
+    },
+    {
+      "name": "@stynx-web/angular-iam component TestBed specs drives group admin list, create dialog, delete, and search branches",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
+      "durationMs": 43.856832999999824
+    },
+    {
+      "name": "@stynx-web/angular-iam component TestBed specs records component error branches without weakening assertions",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
+      "durationMs": 33.46195800000032
+    },
+    {
+      "name": "@stynx-web/angular-iam component TestBed specs renders user create and disable dialogs with validated output payloads",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
+      "durationMs": 31.66866600000003
+    },
+    {
+      "name": "@stynx-web/angular-iam component TestBed specs covers effective permission fallback normalization, source fallbacks, and load errors",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
+      "durationMs": 31.034541999999874
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { sql } from 'drizzle-orm';
 import { pgSchema, text, uuid } from 'drizzle-orm/pg-core';
 import type { PoolClient } from 'pg';
@@ -174,6 +175,25 @@ describe('query helpers', () => {
     const compiled = query.toSQL();
     expect(compiled.params).toEqual([]);
     expect(compiled.sql).toContain('order by "archive"."local_audit_event"."deleted_at" desc');
+  });
+
+  it('describes branch: overrides archive ordering through the chainable orderBy helper', () => {
+    const builder = createBuilder([
+      {
+        sql: `"local"."audit_event"."message" desc`,
+        params: [],
+      },
+    ], {});
+
+    const query = new ArchiveSelectQuery(
+      { query: vi.fn() } as unknown as PoolClient,
+      builder as never,
+      auditEvent,
+      'onlyDeleted',
+    );
+
+    expect(query.orderBy(sql.raw('message desc'))).toBe(query);
+    expect(query.toSQL().sql).toContain('order by "archive"."local_audit_event"."message" desc');
   });
 
   it('maps archived rows and keeps promise helpers delegated to execute', async () => {

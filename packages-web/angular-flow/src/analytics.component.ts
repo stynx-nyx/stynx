@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import type { OnInit } from '@angular/core';
+import { StynxTranslatePipe } from '@stynx-web/angular-i18n';
 import { StynxBannerComponent, StynxLoadingSpinnerComponent } from '@stynx-web/angular-ui';
 import { FlowApiService } from './flow-api.service';
 import type { FlowOpenTask, FlowRunSummary } from './types';
@@ -7,14 +8,14 @@ import type { FlowOpenTask, FlowRunSummary } from './types';
 @Component({
   selector: 'stynx-flow-open-tasks',
   standalone: true,
-  imports: [StynxBannerComponent, StynxLoadingSpinnerComponent],
+  imports: [StynxBannerComponent, StynxLoadingSpinnerComponent, StynxTranslatePipe],
   template: `
     <section class="surface">
       <header>
-        <h2>Open tasks</h2>
+        <h2>{{ 'flow.analytics.openTasks.title' | stynxTranslate }}</h2>
       </header>
       @if (loading) {
-        <stynx-loading-spinner label="Loading open tasks"></stynx-loading-spinner>
+        <stynx-loading-spinner [label]="'flow.analytics.openTasks.loading' | stynxTranslate"></stynx-loading-spinner>
       }
       @if (errorMessage) {
         <stynx-banner tone="error" [message]="errorMessage"></stynx-banner>
@@ -58,14 +59,14 @@ export class StynxFlowOpenTasksComponent implements OnInit {
 @Component({
   selector: 'stynx-flow-run-summary',
   standalone: true,
-  imports: [StynxBannerComponent, StynxLoadingSpinnerComponent],
+  imports: [StynxBannerComponent, StynxLoadingSpinnerComponent, StynxTranslatePipe],
   template: `
     <section class="surface">
       <header>
-        <h2>Run summary</h2>
+        <h2>{{ 'flow.analytics.runSummary.title' | stynxTranslate }}</h2>
       </header>
       @if (loading) {
-        <stynx-loading-spinner label="Loading run summary"></stynx-loading-spinner>
+        <stynx-loading-spinner [label]="'flow.analytics.runSummary.loading' | stynxTranslate"></stynx-loading-spinner>
       }
       @if (errorMessage) {
         <stynx-banner tone="error" [message]="errorMessage"></stynx-banner>

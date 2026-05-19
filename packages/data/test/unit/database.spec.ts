@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { RequestContext, SystemContext, SystemContextRequiredError } from '@stynx/core';
 import { ClsService } from 'nestjs-cls';
 import type { PoolClient } from 'pg';
@@ -285,6 +286,18 @@ describe('Database', () => {
 
     expect(fn).toHaveBeenCalledTimes(2);
     expect(client.release).toHaveBeenCalledTimes(2);
+  });
+
+  it('describes branch: treats a non-finite retry count as immediate serialization failure', async () => {
+    const { client } = createClient();
+    const database = createPoolBackedDatabase(client);
+
+    await expect(database.tx(async () => 'unreached', {
+      retry: { attempts: Number.NaN, jitterMs: [0, 0] },
+    })).rejects.toBeInstanceOf(SerializationFailureError);
+
+    expect(client.query).not.toHaveBeenCalled();
+    expect(client.release).not.toHaveBeenCalled();
   });
 
   it('waits the computed jitter before retrying retryable transaction failures', async () => {

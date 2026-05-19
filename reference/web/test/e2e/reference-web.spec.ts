@@ -7,7 +7,7 @@ test('login -> create record -> create work-item -> soft-delete -> restore -> lo
   await page.getByTestId('login-tenant').selectOption('01978f4a-32bf-7c27-a131-fd73a9e001a1');
   await page.getByTestId('login-submit').click();
 
-  await expect(page.getByText('Operational overview')).toBeVisible();
+  await expect(page.getByTestId('logout-button')).toBeEnabled();
 
   await page.goto('/records/new');
   const recordTitle = `Record ${Date.now()}`;

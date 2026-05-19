@@ -85,6 +85,23 @@ describe('FlowRuntimeService.ensureRun', () => {
     expect(result).toEqual({ runId: RUN });
   });
 
+  it('passes optional signal facts to the adapter before ensuring a run', async () => {
+    const { service, adapters } = makeService([[{ run_id: RUN }]]);
+    await service.ensureRun({
+      graphCode: 'g',
+      scopeCode: 'direct-scope',
+      adapterKey: 'docs',
+      targetType: 'doc',
+      targetId: 'doc-1',
+      signalKey: 'changed',
+      payload: { id: 'doc-1' },
+    });
+    expect(adapters.buildFacts).toHaveBeenCalledWith(expect.objectContaining({
+      signalKey: 'changed',
+      payload: { id: 'doc-1' },
+    }));
+  });
+
   it('throws when flow.run_ensure returns no run_id', async () => {
     const { service } = makeService([
       [{ /* no run_id */ }],
@@ -201,6 +218,12 @@ describe('FlowRuntimeService listRuns / listNodeRuns / listTasks / listEvents', 
     expect(params).toContain(USER);
   });
 
+  it('listTasks uses an empty actor filter for mine=true without actor context', async () => {
+    const { service, trx } = makeService([[], [{ total: '0' }]], { tenantId: 't-1' });
+    await service.listTasks({ mine: true });
+    expect((trx.query.mock.calls[0]?.[1] as unknown[])[0]).toBe('');
+  });
+
   it('listTasks filters by runId + assigneeUserId + status', async () => {
     const { service, trx } = makeService([[], [{ total: '0' }]]);
     await service.listTasks({ runId: RUN, assigneeUserId: USER, status: 'open' });
@@ -239,6 +262,12 @@ describe('FlowRuntimeService getRun / updateRun / getNodeRun / getTask', () => {
       id: RUN,
       status: 'completed',
     });
+  });
+
+  it('updateRun records a nullable actor when actor context is absent', async () => {
+    const { service, trx } = makeService([[{ id: RUN }]], { tenantId: 't-1' });
+    await service.updateRun(RUN, { status: 'completed' });
+    expect(trx.query.mock.calls[0]?.[1]).toEqual([RUN, 'completed', null]);
   });
 
   it('updateRun throws NotFoundException when row is absent', async () => {
@@ -357,6 +386,20 @@ describe('FlowRuntimeService task action flows', () => {
     await expect(service.assignTask(TASK, { userId: USER })).rejects.toBeInstanceOf(
       NotFoundException,
     );
+  });
+
+  it('assignTask omits actorId from adapter checks when actor context is absent', async () => {
+    const { service, adapters, trx } = makeService(
+      [
+        [{ assignee_user_id: null, adapter_key: 'k', target_type: 't', target_id: 't-1' }],
+        [],
+        [{ id: TASK }],
+      ],
+      { tenantId: 't-1' },
+    );
+    await service.assignTask(TASK, { userId: USER });
+    expect(adapters.canManage).toHaveBeenCalledWith(expect.not.objectContaining({ actorId: expect.anything() }));
+    expect(trx.query.mock.calls[0]?.[1]).toEqual([TASK, '']);
   });
 
   it('unassignTask + acceptTask + declineTask + unacceptTask + withdrawTask route to their sql functions', async () => {
@@ -478,6 +521,50 @@ describe('FlowRuntimeService.taskCandidates', () => {
     expect(result[0]).toMatchObject({ agentType: 'resolver', agentId: '' });
     expect(adapters.resolveAgents).not.toHaveBeenCalled();
   });
+
+  it('leaves resolver candidates unresolved when resolver id is null', async () => {
+    const { service, adapters } = makeService([
+      [{ assignee_user_id: USER, adapter_key: 'k', target_type: 't', target_id: 't-1' }],
+      [{
+        agent_type: 'resolver',
+        agent_id: null,
+        rule_id: 'r-1',
+        run_id: RUN,
+        node_id: NODE,
+        adapter_key: 'k',
+        target_type: 't',
+        target_id: 't-1',
+      }],
+    ]);
+    const result = await service.taskCandidates(TASK);
+    expect(result[0]).toMatchObject({ agentType: 'resolver', agentId: null });
+    expect(adapters.resolveAgents).not.toHaveBeenCalled();
+  });
+
+  it('passes empty strings for nullable resolver candidate context', async () => {
+    const { service, adapters } = makeService([
+      [{ assignee_user_id: USER, adapter_key: 'k', target_type: 't', target_id: 't-1' }],
+      [{
+        agent_type: 'resolver',
+        agent_id: 'resolver-key',
+        rule_id: null,
+        params: null,
+        run_id: null,
+        node_id: null,
+        adapter_key: 'k',
+        target_type: null,
+        target_id: null,
+      }],
+    ]);
+    await service.taskCandidates(TASK);
+    expect(adapters.resolveAgents).toHaveBeenCalledWith(expect.objectContaining({
+      targetType: '',
+      targetId: '',
+      runId: '',
+      nodeId: '',
+      ruleId: '',
+    }));
+  });
 });
 
 describe('FlowRuntimeService.signal', () => {
@@ -539,6 +626,27 @@ describe('FlowRuntimeService.dispatchPendingEffects', () => {
     expect(adapters.applyEffect).toHaveBeenCalled();
   });
 
+  it('records successful effects without optional result payload or actor', async () => {
+    const { service, trx } = makeService(
+      [
+        [effectRow({ node_id: null })],
+        [],
+      ],
+      { tenantId: 't-1' },
+      { applyEffect: vi.fn(async () => ({ ok: true })) },
+    );
+    await service.dispatchPendingEffects({});
+    expect(trx.query.mock.calls[1]?.[1]).toEqual([
+      't-1',
+      RUN,
+      null,
+      TASK,
+      'effect_succeeded',
+      null,
+      { effectEventId: EVENT, effectKey: 'send-email', ok: true },
+    ]);
+  });
+
   it('uses dispatch defaults and tolerates non-object effect payload wrappers', async () => {
     const { service, adapters } = makeService([
       [effectRow({
@@ -571,6 +679,22 @@ describe('FlowRuntimeService.dispatchPendingEffects', () => {
       'apply-boom',
     );
   });
+
+  it('records string effect failures without losing diagnostics', async () => {
+    const { service } = makeService(
+      [
+        [effectRow()],
+        [],
+      ],
+      { tenantId: 't-1', actorId: USER },
+      { applyEffect: vi.fn(async () => { throw 'apply-string'; }) },
+    );
+    const result = await service.dispatchPendingEffects({});
+    expect((result as { diagnostics: Array<{ error: string }> }).diagnostics[0].error).toBe(
+      'apply-string',
+    );
+  });
+
 
   it('returns zero counts when no pending events', async () => {
     const { service } = makeService([[]]);
@@ -612,6 +736,14 @@ describe('FlowRuntimeService — small helpers + edges', () => {
     expect((result as { adapter: unknown }).adapter).toBeDefined();
   });
 
+  it('getRunFacts defaults missing SQL facts to an empty object', async () => {
+    const { service } = makeService([
+      [{ id: RUN, scope_id: SCOPE, adapter_key: 'k', target_type: 't', target_id: 't-1' }],
+      [],
+    ]);
+    await expect(service.getRunFacts(RUN)).resolves.toEqual({ adapter: { x: 1 } });
+  });
+
   it('signal rejects when neither scopeCode nor scopeId is provided', async () => {
     const { service } = makeService([[]]);
     await expect(
@@ -650,6 +782,30 @@ describe('FlowRuntimeService — small helpers + edges', () => {
         targetType: 'doc',
         targetId: 'doc-1',
         error: 'facts failed',
+      },
+    ]);
+  });
+
+  it('records string adapter fact failures with a nullable actor', async () => {
+    const { service, trx } = makeService(
+      [
+        [{ id: RUN, scope_id: SCOPE, adapter_key: 'k', target_type: 'doc', target_id: 'doc-1' }],
+        [],
+      ],
+      { tenantId: 't-1' },
+      { buildFacts: vi.fn(async () => { throw 'facts-string'; }) },
+    );
+
+    await expect(service.getRunFacts(RUN)).rejects.toBe('facts-string');
+    expect(trx.query.mock.calls[1]?.[1]).toEqual([
+      't-1',
+      RUN,
+      null,
+      {
+        adapterKey: 'k',
+        targetType: 'doc',
+        targetId: 'doc-1',
+        error: 'facts-string',
       },
     ]);
   });

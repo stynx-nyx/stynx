@@ -156,7 +156,7 @@ function writeCanonicalCoverage(target, mergedMap) {
     }
   }
   if (files === 0) return;
-  const pct = (b) => (b.total > 0 ? (b.covered / b.total) * 100 : 0);
+  const pct = (b) => (b.total > 0 ? (b.covered / b.total) * 100 : 100);
   const artifactDir = join(target.dir, '.test-results');
   mkdirSync(artifactDir, { recursive: true });
   const now = new Date();

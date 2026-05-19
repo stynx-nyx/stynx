@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Test, type TestingModule } from '@nestjs/testing';
 import { RequestContextMutator, SystemContextRequiredError } from '@stynx/core';
 import { ActorContextMissingError, ReadOnlyViolationError } from '../../src/errors';

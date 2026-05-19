@@ -1,11 +1,14 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { StynxTranslatePipe } from '@stynx-web/angular-i18n';
+import { StynxIconComponent } from '@stynx-web/angular-ui';
 import type { FlowEdge, FlowNode } from './types';
 
 @Component({
   selector: 'stynx-flow-graph-canvas',
   standalone: true,
+  imports: [StynxIconComponent, StynxTranslatePipe],
   template: `
-    <section class="stynx-flow-canvas" aria-label="Flow graph">
+    <section class="stynx-flow-canvas" [attr.aria-label]="'flow.graphCanvas.ariaLabel' | stynxTranslate">
       <div class="nodes">
         @for (node of nodes; track node.id) {
           <button type="button" class="node" [attr.data-kind]="node.kind" (click)="nodeSelected.emit(node)">
@@ -20,7 +23,10 @@ import type { FlowEdge, FlowNode } from './types';
         @for (edge of edges; track edge.id) {
           <button type="button" class="edge" (click)="edgeSelected.emit(edge)">
             <span>{{ edge.fromNodeCode || edge.fromNodeId }}</span>
-            <span>{{ edge.action || 'next' }}</span>
+            <span class="edge-action">
+              <span>{{ edge.action || ('flow.graphCanvas.defaultAction' | stynxTranslate) }}</span>
+              <stynx-icon name="arrow-right" aria-hidden="true"></stynx-icon>
+            </span>
             <span>{{ edge.toNodeCode || edge.toNodeId }}</span>
           </button>
         }
@@ -76,6 +82,17 @@ import type { FlowEdge, FlowNode } from './types';
       grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
       align-items: center;
       min-height: 2.75rem;
+    }
+
+    .edge-action {
+      display: inline-flex;
+      gap: 0.35rem;
+      align-items: center;
+      color: var(--mat-sys-on-surface-variant, #475569);
+    }
+
+    stynx-icon {
+      --stynx-icon-size: 0.95rem;
     }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,

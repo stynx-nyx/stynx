@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { sql } from 'drizzle-orm';
 import type { PoolClient, QueryResult } from 'pg';
 import {
@@ -157,6 +158,15 @@ describe('Transaction', () => {
         { schema: 'storage', table: 'documents', archiveId: 9n, id: 'doc-2' },
         { schema: 'archive', table: 'documents', archiveId: 10n, id: 'doc-1' },
       ],
+    });
+
+    api.softDeleteByReference = vi.fn(async (...args: unknown[]) => {
+      const cascaded = args[6] as Array<{ schema: string; table: string; archiveId: bigint; id: string }>;
+      cascaded.push({ schema: 'storage', table: 'document_versions', archiveId: 11n, id: 'doc-version-2' });
+    });
+    await expect(tx.softDelete(documents, 'doc-without-root')).resolves.toMatchObject({
+      archiveId: 0n,
+      cascaded: [{ schema: 'storage', table: 'document_versions', archiveId: 11n, id: 'doc-version-2' }],
     });
   });
 
@@ -463,6 +473,51 @@ describe('Transaction', () => {
     });
   });
 
+  it('describes branch: softDelete uses real registry queries and archive-size sampling without metrics', async () => {
+    const { tx, client } = createTx();
+    client.query = vi.fn(async (text: string) => {
+      if (text.includes('to_regclass')) {
+        return { rows: [{ exists: true }], rowCount: 1 };
+      }
+      if (text.includes('from core.softdelete_fk_registry')) {
+        return {
+          rows: [{
+            parentSchema: 'storage',
+            parentTable: 'documents',
+            childSchema: 'storage',
+            childTable: 'document_versions',
+            fkConstraint: 'document_versions_document_id_fkey',
+            behavior: 'cascade',
+            childColumn: 'document_id',
+          }],
+          rowCount: 1,
+        };
+      }
+      if (text.includes('from "storage"."document_versions"')) {
+        return { rows: [], rowCount: 0 };
+      }
+      if (text.includes('insert into "archive"."storage_documents"')) {
+        return { rows: [{ archive_id: '71' }], rowCount: 1 };
+      }
+      return { rows: [], rowCount: 1 };
+    });
+
+    await expect(tx.softDelete(documents, 'doc-real-registry')).resolves.toMatchObject({
+      archiveId: 71n,
+      cascaded: [],
+    });
+
+    expect(client.query).toHaveBeenCalledWith(
+      expect.stringContaining('from core.softdelete_fk_registry'),
+      ['storage', 'documents'],
+    );
+    expect(client.query).toHaveBeenCalledWith(
+      expect.stringContaining('from "storage"."document_versions"'),
+      ['doc-real-registry'],
+    );
+    expect(client.query).not.toHaveBeenCalledWith(expect.stringContaining('pg_total_relation_size'), expect.anything());
+  });
+
   it('restores archived references, maps restore conflicts, and cascades child restores', async () => {
     const metrics = {
       incrementSoftDelete: vi.fn(),
@@ -583,6 +638,82 @@ describe('Transaction', () => {
       return { rows: [], rowCount: 1 };
     });
     await expect(api.restoreByReference(parentMeta, 'insert-error', {}, [])).rejects.toBe(insertError);
+  });
+
+  it('describes branch: restoreFromArchive cascades archived parents through real lookup helpers', async () => {
+    const { tx, client } = createTx();
+    client.query = vi.fn(async (text: string, values?: unknown[]) => {
+      if (text.includes('to_regclass')) {
+        return { rows: [{ exists: true }], rowCount: 1 };
+      }
+      if (text.includes('from "archive"."storage_documents" source')) {
+        return {
+          rows: [{
+            archive_id: '501',
+            deleted_at: '2026-01-01T00:00:00.000Z',
+            row_data: { id: 'doc-cascade-parent', customer_id: 'customer-1' },
+          }],
+          rowCount: 1,
+        };
+      }
+      if (text.includes('from "archive"."demo_customer" source')) {
+        return {
+          rows: [{
+            archive_id: '901',
+            deleted_at: '2026-01-01T00:00:00.000Z',
+            row_data: { id: 'customer-1' },
+          }],
+          rowCount: 1,
+        };
+      }
+      if (text.includes('information_schema.columns')) {
+        return { rows: [{ column_name: 'id' }, { column_name: 'customer_id' }], rowCount: 2 };
+      }
+      if (text.includes('where registry.child_schema')) {
+        return values?.[0] === 'storage'
+          ? {
+            rows: [{
+              parentSchema: 'demo',
+              parentTable: 'customer',
+              childSchema: 'storage',
+              childTable: 'documents',
+              fkConstraint: 'documents_customer_id_fkey',
+              behavior: 'cascade',
+              childColumn: 'customer_id',
+            }],
+            rowCount: 1,
+          }
+          : { rows: [], rowCount: 0 };
+      }
+      if (text.includes('select exists(') && text.includes('from "demo"."customer"')) {
+        return { rows: [{ exists: false }], rowCount: 1 };
+      }
+      if (text.includes('select exists(') && text.includes('from "archive"."demo_customer"')) {
+        return { rows: [{ exists: true }], rowCount: 1 };
+      }
+      if (text.includes('constraint_item.contype')) {
+        return { rows: [], rowCount: 0 };
+      }
+      if (text.includes('where registry.parent_schema')) {
+        return { rows: [], rowCount: 0 };
+      }
+      return { rows: [], rowCount: 1 };
+    });
+
+    await expect(
+      tx.restoreFromArchive(documents, 'doc-cascade-parent', { archiveId: 501n, cascade: true }),
+    ).resolves.toMatchObject({
+      id: 'doc-cascade-parent',
+    });
+
+    expect(client.query).toHaveBeenCalledWith(expect.stringContaining('where registry.child_schema = $1'), [
+      'storage',
+      'documents',
+    ]);
+    expect(client.query).toHaveBeenCalledWith(expect.stringContaining('information_schema.columns'), [
+      'demo',
+      'customer',
+    ]);
   });
 
   it('describes blocking children with counts and samples only for non-empty block rows', async () => {

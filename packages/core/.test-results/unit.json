@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T04:24:58.917Z",
-  "endedAt": "2026-05-19T04:25:08.690Z",
-  "durationMs": 9772,
+  "startedAt": "2026-05-19T15:48:22.309Z",
+  "endedAt": "2026-05-19T15:48:34.707Z",
+  "durationMs": 12398,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -15,7 +15,7 @@
     "junit": ".test-results/unit.junit.xml"
   },
   "env": {
-    "node": "26.0.0",
+    "node": "24.15.0",
     "ci": false
   },
   "command": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-45201-1779164698917.json",
+      "--outputFile.json=/tmp/vitest-19392-1779205702309.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/core/.test-results/unit.junit.xml"
     ],
@@ -45,54 +45,54 @@
   },
   "slowestTests": [
     {
-      "name": "RequestContextInterceptor ignores Accept-Language when only whitespace",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/request-context.interceptor.spec.ts",
-      "durationMs": 90.81374999999935
-    },
-    {
-      "name": "SecretLoader caches the secret value within ttlMs",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/secret-loader.spec.ts",
-      "durationMs": 53.502833000000464
-    },
-    {
-      "name": "RequestContextInterceptor binds tenantId from request.tenantId when present",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/request-context.interceptor.spec.ts",
-      "durationMs": 42.82479200000034
-    },
-    {
-      "name": "StynxErrorFilter rethrows when the exception is neither HttpException nor StynxError",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/error.filter.spec.ts",
-      "durationMs": 38.53520800000024
-    },
-    {
-      "name": "RequestContextInterceptor ignores Accept-Language when the first language segment is empty",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/request-context.interceptor.spec.ts",
-      "durationMs": 31.541125000000648
-    },
-    {
-      "name": "StynxErrorFilter translates StynxError into the standard envelope at exception.status",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/error.filter.spec.ts",
-      "durationMs": 27.894624999999905
-    },
-    {
-      "name": "SecretLoader refetches when forceRefresh=true",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/secret-loader.spec.ts",
-      "durationMs": 27.75904199999968
-    },
-    {
-      "name": "StynxErrorFilter forwards plain HttpException with its status + response body",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/error.filter.spec.ts",
-      "durationMs": 27.723542000000634
-    },
-    {
-      "name": "loadStynxConfiguration SSM loading reports schema validation failures after merging defaults and env",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/config-ssm.spec.ts",
-      "durationMs": 26.931750000000648
+      "name": "SystemContext withSystemContext helper delegates to the SystemContext instance",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/system-context.spec.ts",
+      "durationMs": 152.418584
     },
     {
       "name": "SecretLoader refreshes a cached secret after a connection-like run failure",
       "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/secret-loader.spec.ts",
-      "durationMs": 24.98937500000011
+      "durationMs": 144.12675000000036
+    },
+    {
+      "name": "SystemContext requires a readable reason and records an audit event",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/system-context.spec.ts",
+      "durationMs": 61.09112499999992
+    },
+    {
+      "name": "RequestContextInterceptor generates a UUIDv7 request id when none provided and sets X-Request-Id",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/request-context.interceptor.spec.ts",
+      "durationMs": 46.52691699999923
+    },
+    {
+      "name": "StynxCoreModule wires sync and async option providers plus global infrastructure",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/core.module.spec.ts",
+      "durationMs": 36.31037500000002
+    },
+    {
+      "name": "RequestContextInterceptor honors a valid X-Request-Id header from the caller",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/request-context.interceptor.spec.ts",
+      "durationMs": 34.44658399999935
+    },
+    {
+      "name": "SecretLoader caches the secret value within ttlMs",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/secret-loader.spec.ts",
+      "durationMs": 27.463333000000603
+    },
+    {
+      "name": "SecretLoader does not refresh after non-connection run failures",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/secret-loader.spec.ts",
+      "durationMs": 24.28033400000004
+    },
+    {
+      "name": "SystemContext records active actor id from the request context when available",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/system-context.spec.ts",
+      "durationMs": 20.658250000000407
+    },
+    {
+      "name": "SecretLoader constructs a SecretsManagerClient with configured client options",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/secret-loader.spec.ts",
+      "durationMs": 10.953708000000006
     }
   ]
 }

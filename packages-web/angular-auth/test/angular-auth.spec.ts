@@ -1,10 +1,12 @@
 import '@angular/compiler';
-import { HttpHeaders } from '@angular/common/http';
-import { Injector, runInInjectionContext } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Injector, TemplateRef, ViewContainerRef, runInInjectionContext } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
-import { Router } from '@angular/router';
-import { TenantContextService } from '@stynx-web/angular';
+import { ROUTES, Router } from '@angular/router';
+import { STYNX_ANGULAR_OPTIONS, TenantContextService } from '@stynx-web/angular';
+import { StynxI18nService } from '@stynx-web/angular-i18n';
+import { OidcSecurityService } from 'angular-auth-oidc-client';
 import { of } from 'rxjs';
 import { parseJwtPayload, normalizePermissions } from '../src/jwt';
 import { RefreshTokenStorage } from '../src/storage';
@@ -14,7 +16,9 @@ import { StynxHasPermissionDirective } from '../src/has-permission.directive';
 import { StynxLoginRedirectComponent } from '../src/login-redirect.component';
 import { StynxLogoutButtonComponent } from '../src/logout-button.component';
 import { OidcClientAdapter } from '../src/oidc-client.adapter';
+import { StynxPermissionDeniedComponent } from '../src/permission-denied.component';
 import { stynxPermissionGuard } from '../src/permission.guard';
+import { provideStynxAuth } from '../src/provide-auth';
 import { StynxSessionService } from '../src/session.service';
 import { STYNX_ANGULAR_AUTH_OPTIONS, STYNX_AUTH_BACKEND, STYNX_OIDC_ADAPTER } from '../src/tokens';
 import type { StynxAngularAuthModuleOptions, StynxAuthBackend, StynxOidcAdapter, StynxSessionBundle } from '../src/types';
@@ -67,6 +71,72 @@ function createSessionService(
     ],
   });
   return runInInjectionContext(injector, () => new StynxSessionService());
+}
+
+function createHasPermissionDirective(
+  templateRef: FakeTemplateRef,
+  viewContainerRef: FakeViewContainerRef,
+  session: StynxSessionService,
+): StynxHasPermissionDirective {
+  const injector = Injector.create({
+    parent: TestBed.inject(Injector),
+    providers: [
+      { provide: StynxSessionService, useValue: session },
+      { provide: TemplateRef, useValue: templateRef },
+      { provide: ViewContainerRef, useValue: viewContainerRef },
+    ],
+  });
+  return runInInjectionContext(injector, () => new StynxHasPermissionDirective());
+}
+
+function createHttpAuthBackend(http: HttpClient, options: { apiBaseUrl: string }): HttpAuthBackend {
+  const injector = Injector.create({
+    parent: TestBed.inject(Injector),
+    providers: [
+      { provide: HttpClient, useValue: http },
+      { provide: STYNX_ANGULAR_OPTIONS, useValue: options },
+    ],
+  });
+  return runInInjectionContext(injector, () => new HttpAuthBackend());
+}
+
+function createOidcClientAdapter(
+  oidcSecurity: OidcSecurityService,
+  options?: Partial<StynxAngularAuthModuleOptions>,
+): OidcClientAdapter {
+  const injector = Injector.create({
+    parent: TestBed.inject(Injector),
+    providers: [
+      { provide: OidcSecurityService, useValue: oidcSecurity },
+      {
+        provide: STYNX_ANGULAR_AUTH_OPTIONS,
+        useValue: {
+          oidc: {
+            authority: 'https://issuer.example.test',
+            clientId: 'client-id',
+            redirectUrl: 'https://app.example.test/login/callback',
+            postLogoutRedirectUri: 'https://app.example.test',
+            scope: 'openid',
+            responseType: 'code',
+          },
+          ...options,
+        },
+      },
+    ],
+  });
+  return runInInjectionContext(injector, () => new OidcClientAdapter());
+}
+
+function setGlobalValue(name: 'document' | 'sessionStorage' | 'window', value: unknown): () => void {
+  const descriptor = Object.getOwnPropertyDescriptor(globalThis, name);
+  Object.defineProperty(globalThis, name, { value, configurable: true });
+  return () => {
+    if (descriptor) {
+      Object.defineProperty(globalThis, name, descriptor);
+      return;
+    }
+    delete (globalThis as Record<string, unknown>)[name];
+  };
 }
 
 beforeAll(() => {
@@ -131,6 +201,23 @@ describe('@stynx-web/angular-auth', () => {
     });
 
     expect(runInInjectionContext(injector, () => stynxAuthGuard({} as never, {} as never))).toBe(true);
+  });
+
+  it('auth guard uses the default login route when no override is configured', () => {
+    const injector = Injector.create({
+      providers: [
+        {
+          provide: StynxSessionService,
+          useValue: {
+            snapshot: () => ({ active: false }),
+          },
+        },
+        { provide: Router, useValue: { parseUrl: (value: string) => `URL:${value}` } },
+        { provide: STYNX_ANGULAR_AUTH_OPTIONS, useValue: {} },
+      ],
+    });
+
+    expect(runInInjectionContext(injector, () => stynxAuthGuard({} as never, {} as never))).toBe('URL:/login');
   });
 
   it('switches tenant and updates both session state and tenant context', async () => {
@@ -259,6 +346,8 @@ describe('@stynx-web/angular-auth', () => {
 
     service.login();
     expect(authorizeCalls).toBe(1);
+    service.loginRedirect();
+    expect(authorizeCalls).toBe(2);
     await expect(service.completeLogin()).resolves.toMatchObject({ active: false });
     await expect(service.refresh()).resolves.toBeNull();
     expect(service.hasAnyPermissions(['missing'])).toBe(false);
@@ -390,7 +479,16 @@ describe('@stynx-web/angular-auth', () => {
     const originalAtob = globalThis.atob;
     Object.defineProperty(globalThis, 'atob', { value: undefined, configurable: true });
     expect(parseJwtPayload(createJwt({ scope: ['array-scope', 42] }))).toEqual({ scope: ['array-scope', 42] });
+    expect(parseJwtPayload('header.@.sig')).toBeNull();
     Object.defineProperty(globalThis, 'atob', { value: originalAtob, configurable: true });
+
+    const originalTextDecoder = globalThis.TextDecoder;
+    Object.defineProperty(globalThis, 'TextDecoder', { value: undefined, configurable: true });
+    try {
+      expect(parseJwtPayload(createJwt({ sub: 'without-text-decoder' }))).toEqual({ sub: 'without-text-decoder' });
+    } finally {
+      Object.defineProperty(globalThis, 'TextDecoder', { value: originalTextDecoder, configurable: true });
+    }
   });
 
   it('permission guard denies and allows based on session permissions', async () => {
@@ -488,6 +586,85 @@ describe('@stynx-web/angular-auth', () => {
     expect(deny).toBe('URL:/forbidden');
   });
 
+  it('ships the permission-denied component and default route provider', () => {
+    let redirectCalls = 0;
+    TestBed.configureTestingModule({
+      imports: [StynxPermissionDeniedComponent],
+      providers: [
+        {
+          provide: StynxI18nService,
+          useValue: {
+            locale: () => 'en',
+            translate: (key: string) => ({
+              'auth.permissionDenied.actions.loginAgain': 'Log in again',
+              'auth.permissionDenied.message': 'You do not have permission to view this page.',
+              'auth.permissionDenied.title': 'Permission denied',
+            })[key] ?? key,
+          },
+        },
+        {
+          provide: StynxSessionService,
+          useValue: {
+            loginRedirect: () => {
+              redirectCalls += 1;
+            },
+          },
+        },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(StynxPermissionDeniedComponent);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Permission denied');
+    fixture.nativeElement.querySelector('button')?.click();
+    expect(redirectCalls).toBe(1);
+
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        provideStynxAuth({
+          oidc: {
+            authority: 'https://issuer.example.test',
+            clientId: 'client-id',
+            redirectUrl: 'https://app.example.test/login/callback',
+            postLogoutRedirectUri: 'https://app.example.test',
+            scope: 'openid profile email offline_access',
+            responseType: 'code',
+            silentRenew: true,
+            useRefreshToken: true,
+          },
+        }),
+      ],
+    });
+
+    const routes = TestBed.inject(ROUTES).flat();
+    expect(routes).toContainEqual({
+      path: 'forbidden',
+      component: StynxPermissionDeniedComponent,
+    });
+
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        provideStynxAuth({
+          oidc: {
+            authority: 'https://issuer.example.test',
+            clientId: 'client-id',
+            redirectUrl: 'https://app.example.test/login/callback',
+            postLogoutRedirectUri: 'https://app.example.test',
+            scope: 'openid profile email offline_access',
+            responseType: 'code',
+          },
+          permissionDeniedPath: '/',
+        }),
+      ],
+    });
+    expect(TestBed.inject(ROUTES).flat()).toContainEqual({
+      path: 'forbidden',
+      component: StynxPermissionDeniedComponent,
+    });
+  });
+
   it('has-permission directive renders only when the session grants the permission', () => {
     const tenantContext = createTenantContext(
       {},
@@ -545,12 +722,11 @@ describe('@stynx-web/angular-auth', () => {
 
     return service.completeLogin().then(() => {
       const view = new FakeViewContainerRef();
-      const directive = new StynxHasPermissionDirective(
-        new FakeTemplateRef() as never,
-        view as never,
-        service,
-      );
+      const directive = createHasPermissionDirective(new FakeTemplateRef(), view, service);
       directive.stynxHasPermission = 'document:write:*';
+      expect(view.rendered).toBe(1);
+
+      directive.stynxHasPermission = ['document:write:*'];
       expect(view.rendered).toBe(1);
 
       directive.stynxHasPermission = 'document:delete:*';
@@ -569,7 +745,7 @@ describe('@stynx-web/angular-auth', () => {
       idleExpiresAt: '2026-01-01T00:00:00.000Z',
     };
     const calls: Array<{ url: string; body: unknown; headers: HttpHeaders }> = [];
-    const backend = new HttpAuthBackend(
+    const backend = createHttpAuthBackend(
       {
         post: (url: string, body: unknown, options: { headers: HttpHeaders }) => {
           calls.push({ url, body, headers: options.headers });
@@ -599,7 +775,7 @@ describe('@stynx-web/angular-auth', () => {
 
   it('adapts OIDC calls and redirect/logout components to session methods', async () => {
     const oidcCalls: unknown[] = [];
-    const adapter = new OidcClientAdapter({
+    const adapter = createOidcClientAdapter({
       checkAuth: (url?: string) => {
         oidcCalls.push(['checkAuth', url]);
         return of({ isAuthenticated: true, accessToken: 'token', idToken: '', userData: {}, configId: 'default' });
@@ -646,6 +822,105 @@ describe('@stynx-web/angular-auth', () => {
       ['completeLogin', globalThis.window?.location.href],
       ['logout'],
     ]);
+  });
+
+  it('resolves configured hosted auth action links without guessing provider URLs', () => {
+    globalThis.window.history.pushState({}, '', '/login/callback?code=abc&state=oidc&keep=1#id_token=token');
+    const adapter = createOidcClientAdapter({
+      checkAuth: () => of({ isAuthenticated: true, accessToken: 'token', idToken: '', userData: {}, configId: 'default' }),
+      authorize: () => undefined,
+      logoff: () => of(null),
+      forceRefreshSession: () => of({ isAuthenticated: true, accessToken: 'token', idToken: '', userData: {}, configId: 'default' }),
+    } as never, {
+      hostedActions: {
+        changePassword: 'https://idp.example.test/password?return={returnUrl}&state={state}&tenant={tenantId}&locale={locale}',
+        mfaEnrolment: ({ returnUrl }) => ({
+          action: 'mfa-enrolment',
+          url: `/mfa/setup?return=${encodeURIComponent(returnUrl)}`,
+          method: 'browser-redirect',
+          opensIn: 'new-tab',
+        }),
+      },
+    });
+
+    expect(adapter.getHostedActionLink('change-password', {
+      state: 'next step',
+      tenantId: 'tenant/a',
+      locale: 'pt-BR',
+    })).toEqual({
+      action: 'change-password',
+      url: 'https://idp.example.test/password?return=http%3A%2F%2Flocalhost%3A3000%2Flogin%2Fcallback%3Fkeep%3D1&state=next%20step&tenant=tenant%2Fa&locale=pt-BR',
+      method: 'browser-redirect',
+    });
+
+    expect(adapter.getHostedActionLink('mfa-enrolment', {
+      returnUrl: 'https://app.example.test/profile/security',
+    })).toEqual({
+      action: 'mfa-enrolment',
+      url: '/mfa/setup?return=https%3A%2F%2Fapp.example.test%2Fprofile%2Fsecurity',
+      method: 'browser-redirect',
+      opensIn: 'new-tab',
+    });
+  });
+
+  it('reports unavailable and invalid hosted auth action configuration', () => {
+    const oidcSecurity = {
+      checkAuth: () => of({ isAuthenticated: true, accessToken: 'token', idToken: '', userData: {}, configId: 'default' }),
+      authorize: () => undefined,
+      logoff: () => of(null),
+      forceRefreshSession: () => of({ isAuthenticated: true, accessToken: 'token', idToken: '', userData: {}, configId: 'default' }),
+    } as never;
+
+    const unavailable = createOidcClientAdapter(oidcSecurity, {
+      hostedActions: {
+        changePassword: () => null,
+      },
+    });
+    expect(unavailable.getHostedActionLink('change-password')).toBeNull();
+    expect(unavailable.getHostedActionLink('mfa-enrolment')).toBeNull();
+
+    const invalid = createOidcClientAdapter(oidcSecurity, {
+      hostedActions: {
+        changePassword: 'http://[',
+      },
+    });
+    expect(() => invalid.getHostedActionLink('change-password')).toThrow();
+  });
+
+  it('login redirect passes no callback URL when no browser window is available', async () => {
+    const restoreWindow = setGlobalValue('window', undefined);
+    const sessionCalls: unknown[] = [];
+    try {
+      const injector = Injector.create({
+        providers: [{
+          provide: StynxSessionService,
+          useValue: {
+            completeLogin: async (url?: string) => {
+              sessionCalls.push(['completeLogin', url]);
+            },
+          },
+        }],
+      });
+
+      await runInInjectionContext(injector, () => new StynxLoginRedirectComponent()).ngOnInit();
+      expect(sessionCalls).toEqual([['completeLogin', undefined]]);
+    } finally {
+      restoreWindow();
+    }
+  });
+
+  it('refresh token storage tolerates missing browser storage globals', () => {
+    const restoreDocument = setGlobalValue('document', undefined);
+    const restoreSessionStorage = setGlobalValue('sessionStorage', undefined);
+    try {
+      const storage = new RefreshTokenStorage('refresh');
+      storage.write('ignored');
+      expect(storage.read()).toBeNull();
+      storage.clear();
+    } finally {
+      restoreSessionStorage();
+      restoreDocument();
+    }
   });
 
   it('refreshes and logs out inactive sessions without backend calls', async () => {

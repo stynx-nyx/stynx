@@ -4,9 +4,9 @@
   "level": "e2e",
   "runner": "playwright",
   "status": "passed",
-  "startedAt": "2026-05-19T01:31:58.308Z",
-  "endedAt": "2026-05-19T01:32:06.527Z",
-  "durationMs": 8219,
+  "startedAt": "2026-05-19T10:58:12.995Z",
+  "endedAt": "2026-05-19T10:58:54.411Z",
+  "durationMs": 41416,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -18,40 +18,74 @@
     "ci": false
   },
   "command": {
-    "argv": ["playwright", "test", "--reporter=line,json"],
+    "argv": [
+      "playwright",
+      "test",
+      "--reporter=line,json"
+    ],
     "cwd": "/Users/aarusso/Development/stech/stynx/reference/web"
   },
   "metric": {
     "kind": "none"
   },
   "totals": {
-    "files": 3,
-    "tests": 4,
-    "passed": 4,
+    "files": 25,
+    "tests": 56,
+    "passed": 56,
     "failed": 0,
     "skipped": 0,
     "todo": 0
   },
   "slowestTests": [
     {
-      "name": "login -> create record -> create work-item -> soft-delete -> restore -> logout",
-      "file": "reference-web.spec.ts",
-      "durationMs": 5833
-    },
-    {
       "name": "record soft-delete appears in trash and can be restored",
       "file": "record-trash.spec.ts",
-      "durationMs": 5705
+      "durationMs": 7167
+    },
+    {
+      "name": "login -> create record -> create work-item -> soft-delete -> restore -> logout",
+      "file": "reference-web.spec.ts",
+      "durationMs": 5558
     },
     {
       "name": "mounts generic Flow package routes for an authorized reference tenant admin",
       "file": "flow-access.spec.ts",
-      "durationMs": 3516
+      "durationMs": 5196
     },
     {
-      "name": "requires a session before mounting Flow routes",
-      "file": "flow-access.spec.ts",
-      "durationMs": 832
+      "name": "rejects an oversized document before calling the API",
+      "file": "documents/upload-rejects-size.spec.ts",
+      "durationMs": 3637
+    },
+    {
+      "name": "rejects an oversized document before calling the API",
+      "file": "documents/upload-rejects-size.spec.ts",
+      "durationMs": 3508
+    },
+    {
+      "name": "creates, edits, lists, and soft-deletes a record",
+      "file": "records/crud.spec.ts",
+      "durationMs": 2969
+    },
+    {
+      "name": "restores a soft-deleted record from trash",
+      "file": "records/soft-delete-restore.spec.ts",
+      "durationMs": 2869
+    },
+    {
+      "name": "creates, edits, lists, and soft-deletes a record",
+      "file": "records/crud.spec.ts",
+      "durationMs": 2461
+    },
+    {
+      "name": "restores a soft-deleted record from trash",
+      "file": "records/soft-delete-restore.spec.ts",
+      "durationMs": 2249
+    },
+    {
+      "name": "surfaces signed document content fetch failures during download",
+      "file": "documents/download-content-error.spec.ts",
+      "durationMs": 1839
     }
   ]
 }

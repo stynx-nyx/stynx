@@ -1,9 +1,11 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { StynxIconComponent } from './icon/icon.component';
 import { StynxToastService } from './toast.service';
 
 @Component({
   selector: 'stynx-toast-container',
   standalone: true,
+  imports: [StynxIconComponent],
   template: `
     <aside class="stynx-toast-stack">
       @for (toast of service.toasts(); track toast.id) {
@@ -13,7 +15,8 @@ import { StynxToastService } from './toast.service';
           [attr.data-tone]="toast.tone"
           (click)="service.dismiss(toast.id)"
         >
-          {{ toast.message }}
+          <span>{{ toast.message }}</span>
+          <stynx-icon name="close" aria-hidden="true"></stynx-icon>
         </button>
       }
     </aside>
@@ -37,6 +40,15 @@ import { StynxToastService } from './toast.service';
       background: var(--mat-sys-surface-container-high, #e2e8f0);
       color: var(--mat-sys-on-surface, #0f172a);
       box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    stynx-icon {
+      --stynx-icon-size: 1rem;
+      opacity: 0.72;
     }
 
     .stynx-toast[data-tone='success'] {

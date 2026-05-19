@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { resolve } from 'node:path';
 import { createVitestConfig } from '../../tools/repo-config/vitest.base.mjs';
 

@@ -48,6 +48,17 @@ describe('Flow row utilities', () => {
       pageSize: 50,
       offset: 0,
     });
+    expect(pageLimitOffset({ page: 'bad' })).toMatchObject({
+      page: 1,
+      pageSize: 50,
+      offset: 0,
+    });
+    expect(pageLimitOffset({})).toEqual({
+      page: 1,
+      pageSize: 50,
+      limit: 50,
+      offset: 0,
+    });
   });
 
   it('accepts object bodies and rejects null, arrays, and primitives', () => {
@@ -260,6 +271,15 @@ describe('FlowPolicyService', () => {
     expect(trx.query).toHaveBeenCalledTimes(1);
   });
 
+  it('resolves policy sets by scopeCode when scopeId is omitted', async () => {
+    const { db, trx } = makeDb([[]]);
+    await new FlowPolicyService({} as never, db as never).evaluate({
+      scopeCode: 'main',
+      capability: 'view',
+    });
+    expect(trx.query.mock.calls[0]?.[1]).toEqual([null, 'main']);
+  });
+
   it('returns the first matching rule using empty, jsonpath, and object conditions', async () => {
     const { db } = makeDb([
       [{
@@ -314,5 +334,21 @@ describe('FlowPolicyService', () => {
       capability: 'view',
       facts: { region: 'north' },
     })).resolves.toMatchObject({ defaulted: true });
+  });
+
+  it('treats null rule conditions as an unconditional match', async () => {
+    const { db } = makeDb([
+      [{
+        id: 'rule-null',
+        effect: 'allow',
+        priority: 1,
+        reason_code: null,
+        conditions: null,
+      }],
+    ]);
+    await expect(new FlowPolicyService({} as never, db as never).evaluate({
+      policySetId: POLICY_SET,
+      action: 'approve',
+    })).resolves.toMatchObject({ allowed: true, matchedRuleId: 'rule-null' });
   });
 });

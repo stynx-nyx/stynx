@@ -1,11 +1,13 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { StynxTranslatePipe } from '@stynx-web/angular-i18n';
 import { StynxSessionService } from './session.service';
 
 @Component({
   selector: 'stynx-logout-button',
   standalone: true,
+  imports: [StynxTranslatePipe],
   template: `
-    <button type="button" (click)="logout()">Logout</button>
+    <button type="button" (click)="logout()">{{ 'auth.logoutButton.label' | stynxTranslate }}</button>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

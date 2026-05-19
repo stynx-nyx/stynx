@@ -1,13 +1,15 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import type { OnInit } from '@angular/core';
+import { StynxTranslatePipe } from '@stynx-web/angular-i18n';
 import { StynxSessionService } from './session.service';
 
 @Component({
   selector: 'stynx-login-redirect',
   standalone: true,
+  imports: [StynxTranslatePipe],
   template: `
     <section class="stynx-login-redirect">
-      <p>Completing sign in...</p>
+      <p>{{ 'auth.loginRedirect.completing' | stynxTranslate }}</p>
     </section>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

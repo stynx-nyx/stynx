@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx/auth",
+  "level": "mutation",
+  "runner": "stryker-vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T05:17:44.197Z",
+  "endedAt": "2026-05-19T05:31:31.286Z",
+  "durationMs": 827089,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/mutation.log",
+    "report": "reports/mutation/mutation.json",
+    "html": "reports/mutation/-stynx-auth/index.html"
+  },
+  "env": {
+    "node": "24.15.0",
+    "ci": false
+  },
+  "command": {
+    "argv": [
+      "pnpm",
+      "exec",
+      "stryker",
+      "run",
+      "stryker.conf.mjs"
+    ],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages/auth"
+  },
+  "metric": {
+    "kind": "score",
+    "score": 93.13725490196079,
+    "thresholds": {
+      "high": 85,
+      "low": 75,
+      "break": 85
+    }
+  },
+  "totals": {
+    "files": 8,
+    "tests": 657,
+    "passed": 285,
+    "failed": 21,
+    "skipped": 0,
+    "todo": 0
+  }
+}

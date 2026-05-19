@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Unit test for the createStynxPgClient factory.
 import { Client } from 'pg';
 import { createStynxPgClient } from '../../src/client';

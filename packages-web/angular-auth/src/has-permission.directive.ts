@@ -1,6 +1,6 @@
 import {
   Directive,
-  Inject,
+  inject,
   Input,
   TemplateRef,
   ViewContainerRef,
@@ -14,18 +14,14 @@ import { StynxSessionService } from './session.service';
   standalone: true,
 })
 export class StynxHasPermissionDirective implements OnDestroy {
+  private readonly templateRef = inject<TemplateRef<unknown>>(TemplateRef);
+  private readonly viewContainerRef = inject(ViewContainerRef);
+  private readonly session = inject(StynxSessionService);
   private permissions: string[] = [];
   private readonly subscription: Subscription;
   private rendered = false;
 
-  constructor(
-    @Inject(TemplateRef)
-    private readonly templateRef: TemplateRef<unknown>,
-    @Inject(ViewContainerRef)
-    private readonly viewContainerRef: ViewContainerRef,
-    @Inject(StynxSessionService)
-    private readonly session: StynxSessionService,
-  ) {
+  constructor() {
     this.subscription = this.session.active$.subscribe(() => this.render());
   }
 

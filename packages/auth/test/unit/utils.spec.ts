@@ -1,4 +1,4 @@
-import { base64UrlDecode, base64UrlEncode, computePermissionsHash, decodeJwtClaims, expandPermissionWildcards, headerToString } from '../../src/utils';
+import { base64UrlDecode, base64UrlEncode, computePermissionsHash, decodeJwtClaims, expandPermissionWildcards, headerToString, verifyJwtWithJwk } from '../../src/utils';
 
 describe('auth utils', () => {
   it('normalizes permissions before hashing', () => {
@@ -54,6 +54,18 @@ describe('auth utils', () => {
         ['billing.invoice+read', 'billingXinvoice+read', 'billing.invoice-write'],
       ),
     ).toEqual(['billing.invoice+*', 'billing.invoice+read']);
+  });
+
+  it('verifies a valid RS256 JWT with the supplied JWK', async () => {
+    const { SignJWT, exportJWK, generateKeyPair } = await import('jose');
+    const { privateKey, publicKey } = await generateKeyPair('RS256');
+    const token = await new SignJWT({ sub: 'user-1' })
+      .setProtectedHeader({ alg: 'RS256' })
+      .sign(privateKey);
+
+    await expect(verifyJwtWithJwk(token, await exportJWK(publicKey))).toMatchObject({
+      sub: 'user-1',
+    });
   });
 
   it('deduplicates trimmed wildcard universes and keeps unmatched grants explicit', () => {

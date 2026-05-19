@@ -10,6 +10,8 @@ shape package boundaries, generated diagnostics, or adoption policy.
 - [ADR-001 — Soft Delete](ADR-001-soft-delete.md)
 - [ADR-002 — Permissions Caching](ADR-002-perms-caching.md)
 - [ADR-003 — RBAC Matrix Role in a Framework Repository](ADR-003-rbac-matrix-role.md)
+- [ADR-FE-CONTRACTS-0001 — Frontend Completeness Contract Pins](ADR-FE-CONTRACTS-0001-frontend-completeness-contract-pins.md)
+- [ADR-FE-PACKAGING-0001 — Angular Package Format for packages-web](ADR-FE-PACKAGING-0001-ng-packagr-adoption.md)
 
 ## Related RFCs
 

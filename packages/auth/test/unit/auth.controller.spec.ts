@@ -35,6 +35,18 @@ describe('StynxAuthController', () => {
     );
   });
 
+  it('defaults session device metadata when the body omits it', async () => {
+    authService.exchangeCognitoToken.mockResolvedValue({ accessToken: 'token' });
+
+    await controller.createSession({ cognitoToken: 'cognito-token' }, 'tenant-1');
+
+    expect(authService.exchangeCognitoToken).toHaveBeenCalledWith(
+      'cognito-token',
+      'tenant-1',
+      {},
+    );
+  });
+
   it('rejects session creation without a tenant header', async () => {
     await expect(
       controller.createSession({ cognitoToken: 'token' }, undefined),

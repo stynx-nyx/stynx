@@ -244,6 +244,26 @@ describe('StynxAuthService', () => {
     expect(permissionCache.invalidateSid).toHaveBeenCalledWith('sid-old');
   });
 
+  it('uses the stynx subject when switching without a cognito subject', async () => {
+    permissionQueries.resolveForUser.mockResolvedValue({
+      membershipId: 'membership-local',
+      permissions: ['document:read:*'],
+      hash: 'hash-local',
+      generation: 4,
+    });
+    const { service, sessionService } = createService();
+
+    await service.switchTenant({ sid: 'sid-old', sub: 'user-local' }, 'tenant-local');
+
+    expect(sessionService.create).toHaveBeenCalledWith(
+      'user-local',
+      'tenant-local',
+      'user-local',
+      {},
+      { membershipId: 'membership-local', permsHash: 'hash-local' },
+    );
+  });
+
   it('logs out, inspects, and invalidates permissions through the cache', async () => {
     const { service, sessionService } = createService();
     permissionCache.inspectSid.mockResolvedValue({ sid: 'sid-1' });

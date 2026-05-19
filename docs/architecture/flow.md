@@ -132,12 +132,30 @@ Route permission is necessary but not sufficient for target-bound task work.
 
 Policy set and rule CRUD is not enough for closure. `@stynx/flow` must expose policy evaluation through a service and guarded HTTP route. Evaluation selects the active policy set for a scope unless a policy set id is supplied, applies rule priority, returns the first matching allow/deny decision, and returns a deterministic default allow result when no rule matches. Rule conditions use the same JSONPath rule evaluator as graph edges and node rules.
 
+### Publish Versus Draft
+
+Graph design edits are draft edits. Runtime execution must be bound to an
+immutable published graph version.
+
+`@stynx/flow` must expose `POST /flow/graphs/:id/publish` as the only public
+transition from draft design state to runtime-eligible state. Publishing
+validates graph structure, records a monotonically increasing
+`publishedVersion`, and stores a runtime snapshot that later draft edits cannot
+change. The implementation may choose the persistence model, but the API
+contract in `docs/contracts/flow-api.md` is stable: Angular clients see
+`status: 'draft' | 'published'` and `publishedVersion`, and runtime APIs resolve
+only published versions.
+
+This keeps `@stynx-web/angular-flow` presentation simple without moving runtime
+selection rules into the browser.
+
 ### Angular Package Minimum
 
 `@stynx-web/angular-flow` is closure-ready only when it has real package tests and a host can build the core PORM-derived workflows from exported package APIs. Minimum closure requires:
 
 - route providers for design, runtime, tasks, forms, fills, waivers, analytics, and policies;
 - a tested API facade for every route family in `docs/contracts/flow-api.md`, including aliases;
+- publish/draft presentation backed by the `POST /flow/graphs/:id/publish` contract;
 - permission-aware controls for mutating actions;
 - host extension points for labels, links, target badges, and adapter-specific view/manage hints;
 - component tests for route-bound graph, task, form, fill, waiver, and analytics workflows.

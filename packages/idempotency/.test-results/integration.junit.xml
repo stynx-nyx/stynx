@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="4" failures="1" errors="0" time="10.018476458">
+    <testsuite name="test/integration/idempotency.integration.spec.ts" timestamp="2026-05-19T15:51:19.569Z" hostname="thiamat-1903.local" tests="4" failures="1" errors="0" skipped="3" time="10.018476458">
+        <testcase classname="test/integration/idempotency.integration.spec.ts" name="Idempotency integration &gt; replays the exact response on the second call" time="0">
+            <skipped/>
+        </testcase>
+        <testcase classname="test/integration/idempotency.integration.spec.ts" name="Idempotency integration &gt; blocks concurrent identical requests until the first finishes and then replays" time="0">
+            <skipped/>
+        </testcase>
+        <testcase classname="test/integration/idempotency.integration.spec.ts" name="Idempotency integration &gt; returns 422 for body mismatch and does not store 5xx responses" time="0">
+            <skipped/>
+        </testcase>
+        <testcase classname="test/integration/idempotency.integration.spec.ts" name="Idempotency integration" time="10.017068917">
+            <failure message="Hook timed out in 10000ms.
+If this is a long-running hook, pass a timeout value as the last argument or configure it globally with &quot;hookTimeout&quot;." type="Error">
+Error: Hook timed out in 10000ms.
+If this is a long-running hook, pass a timeout value as the last argument or configure it globally with &quot;hookTimeout&quot;.
+ ❯ test/integration/idempotency.integration.spec.ts:55:3
+            </failure>
+        </testcase>
+    </testsuite>
+</testsuites>

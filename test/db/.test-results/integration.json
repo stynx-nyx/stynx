@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T01:27:33.904Z",
-  "endedAt": "2026-05-19T01:27:34.638Z",
-  "durationMs": 734,
+  "startedAt": "2026-05-19T07:58:19.448Z",
+  "endedAt": "2026-05-19T07:58:21.741Z",
+  "durationMs": 2293,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -24,9 +24,11 @@
       "run",
       "--config",
       "./vitest.config.ts",
+      "--",
+      "--runInBand",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-37969-1779154053904.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-25080-1779177499447.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/test/db/.test-results/integration.junit.xml"
     ],
@@ -34,65 +36,5 @@
   },
   "metric": {
     "kind": "none"
-  },
-  "totals": {
-    "files": 3,
-    "tests": 10,
-    "passed": 10,
-    "failed": 0,
-    "skipped": 0,
-    "todo": 0
-  },
-  "slowestTests": [
-    {
-      "name": "audit schema DDL creates audit.events table with metadata and pk columns",
-      "file": "/Users/aarusso/Development/stech/stynx/test/db/audit.ddl.spec.ts",
-      "durationMs": 0.7690000000000055
-    },
-    {
-      "name": "storage schema DDL defines storage schema and files table",
-      "file": "/Users/aarusso/Development/stech/stynx/test/db/storage.ddl.spec.ts",
-      "durationMs": 0.671957999999961
-    },
-    {
-      "name": "auth schema DDL defines auth schema",
-      "file": "/Users/aarusso/Development/stech/stynx/test/db/auth.ddl.spec.ts",
-      "durationMs": 0.6255829999999492
-    },
-    {
-      "name": "auth schema DDL exposes tenancy membership with RLS policies",
-      "file": "/Users/aarusso/Development/stech/stynx/test/db/auth.ddl.spec.ts",
-      "durationMs": 0.18437499999998863
-    },
-    {
-      "name": "storage schema DDL enables row level security",
-      "file": "/Users/aarusso/Development/stech/stynx/test/db/storage.ddl.spec.ts",
-      "durationMs": 0.17133300000000418
-    },
-    {
-      "name": "audit schema DDL exposes audit.write helper",
-      "file": "/Users/aarusso/Development/stech/stynx/test/db/audit.ddl.spec.ts",
-      "durationMs": 0.11445900000001075
-    },
-    {
-      "name": "auth schema DDL sets up Cognito mirror tables",
-      "file": "/Users/aarusso/Development/stech/stynx/test/db/auth.ddl.spec.ts",
-      "durationMs": 0.09745800000001736
-    },
-    {
-      "name": "auth schema DDL defines reusable tenant/RLS helper functions",
-      "file": "/Users/aarusso/Development/stech/stynx/test/db/auth.ddl.spec.ts",
-      "durationMs": 0.08620799999999917
-    },
-    {
-      "name": "audit schema DDL exposes audit.verify_chain helper",
-      "file": "/Users/aarusso/Development/stech/stynx/test/db/audit.ddl.spec.ts",
-      "durationMs": 0.06599999999997408
-    },
-    {
-      "name": "audit schema DDL extracts primary key data for trigger events",
-      "file": "/Users/aarusso/Development/stech/stynx/test/db/audit.ddl.spec.ts",
-      "durationMs": 0.06291599999997288
-    }
-  ]
+  }
 }

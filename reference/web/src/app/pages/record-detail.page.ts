@@ -2,7 +2,7 @@ import { DatePipe, NgIf } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import type { OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { StynxDocumentUploadComponent } from '@stynx-web/angular-storage';
+import { StynxDocumentDownloadComponent, StynxDocumentUploadComponent } from '@stynx-web/angular-storage';
 import { StynxBannerComponent } from '@stynx-web/angular-ui';
 import { ReferenceWebApiService } from '../core/reference-web-api.service';
 import type { RecordItem } from '../core/reference-models';
@@ -10,7 +10,7 @@ import type { RecordItem } from '../core/reference-models';
 @Component({
   selector: 'stynx-reference-record-detail-page',
   standalone: true,
-  imports: [DatePipe, NgIf, RouterLink, StynxBannerComponent, StynxDocumentUploadComponent],
+  imports: [DatePipe, NgIf, RouterLink, StynxBannerComponent, StynxDocumentDownloadComponent, StynxDocumentUploadComponent],
   template: `
     <section class="panel">
       @if (record(); as currentRecord) {
@@ -32,13 +32,26 @@ import type { RecordItem } from '../core/reference-models';
           <div><dt>Updated</dt><dd>{{ currentRecord.updatedAt | date:'medium' }}</dd></div>
         </dl>
 
-        <article class="upload-card">
+        <article class="upload-card" data-testid="record-document-card">
           <h3>Record documents</h3>
-          <stynx-document-upload
-            collection="records"
-            [allowedMimes]="['application/pdf', 'image/png', 'image/jpeg']"
-            [maxBytes]="25000000"
-          ></stynx-document-upload>
+          <div data-testid="record-document-upload-surface">
+            <stynx-document-upload
+              data-testid="record-document-upload"
+              collection="records"
+              [allowedMimes]="['application/pdf', 'image/png', 'image/jpeg']"
+              [maxBytes]="25000000"
+              (completed)="uploadedDocumentId.set($event.id)"
+            ></stynx-document-upload>
+          </div>
+          @if (uploadedDocumentId(); as documentId) {
+            <div data-testid="record-document-download-surface" [attr.data-document-id]="documentId">
+              <stynx-document-download
+                data-testid="record-document-download"
+                [documentId]="documentId"
+                buttonLabel="Download uploaded document"
+              ></stynx-document-download>
+            </div>
+          }
         </article>
       } @else if (errorMessage()) {
         <stynx-banner tone="error" [message]="errorMessage()"></stynx-banner>
@@ -95,6 +108,7 @@ export class RecordDetailPageComponent implements OnInit {
   private readonly api = inject(ReferenceWebApiService);
   protected readonly record = signal<RecordItem | null>(null);
   protected readonly errorMessage = signal('');
+  protected readonly uploadedDocumentId = signal('');
 
   async ngOnInit(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('id');

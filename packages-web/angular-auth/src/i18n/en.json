@@ -1,0 +1,7 @@
+{
+  "auth.loginRedirect.completing": "Completing sign in...",
+  "auth.logoutButton.label": "Logout",
+  "auth.permissionDenied.actions.loginAgain": "Log in again",
+  "auth.permissionDenied.message": "You do not have permission to view this page.",
+  "auth.permissionDenied.title": "Permission denied"
+}

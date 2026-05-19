@@ -5,13 +5,14 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T00:49:25.773Z",
-  "endedAt": "2026-05-19T00:49:28.387Z",
-  "durationMs": 2614,
+  "startedAt": "2026-05-19T07:31:03.648Z",
+  "endedAt": "2026-05-19T07:31:21.501Z",
+  "durationMs": 17853,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
-    "raw": ".test-results/integration.log"
+    "raw": ".test-results/integration.log",
+    "junit": ".test-results/integration.junit.xml"
   },
   "env": {
     "node": "24.15.0",
@@ -25,46 +26,73 @@
       "./vitest.int.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-66309-1779151765773.json"
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-62421-1779175863647.json",
+      "--reporter=junit",
+      "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/flow/.test-results/integration.junit.xml"
     ],
     "cwd": "/Users/aarusso/Development/stech/stynx/packages/flow"
   },
+  "metric": {
+    "kind": "none"
+  },
   "totals": {
-    "files": 1,
-    "tests": 5,
-    "passed": 5,
+    "files": 8,
+    "tests": 60,
+    "passed": 60,
     "failed": 0,
     "skipped": 0,
     "todo": 0
   },
   "slowestTests": [
     {
-      "name": "Flow database and runtime integration runs the workflow lifecycle, task actions, events, and form facts without PORM domains",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/flow.database.spec.ts",
-      "durationMs": 71.53183400000012
+      "name": "FlowEffectsController API error matrix POST /flow/effects/dispatch returns 201 after dispatching a pending effect",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/effects.api-matrix.spec.ts",
+      "durationMs": 433.21054099999856
     },
     {
-      "name": "Flow database and runtime integration blocks human task completion until required node form rules pass",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/flow.database.spec.ts",
-      "durationMs": 24.14066600000001
+      "name": "FlowSignalController API error matrix POST /flow/signal returns 201 after signaling an active flow target",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/signal.api-matrix.spec.ts",
+      "durationMs": 311.908875000001
     },
     {
-      "name": "Flow database and runtime integration re-evaluates active auto nodes when answers change form facts",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/flow.database.spec.ts",
-      "durationMs": 20.10954199999992
+      "name": "FlowSignalController API error matrix POST /flow/signal returns 429 when the flow signal tenant bucket is exhausted",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/signal.api-matrix.spec.ts",
+      "durationMs": 271.9102920000005
     },
     {
-      "name": "Flow database and runtime integration applies Flow DDL with RLS, archive mirrors, and an append-only event ledger",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/flow.database.spec.ts",
-      "durationMs": 11.661916999999903
+      "name": "FlowAnalyticsController API error matrix GET /flow/open-tasks returns 200 with open task analytics for the authorized tenant",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/analytics.api-matrix.spec.ts",
+      "durationMs": 236.7426660000001
     },
     {
-      "name": "Flow database and runtime integration enforces tenant isolation on tenant-scoped Flow tables",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/flow.database.spec.ts",
-      "durationMs": 7.773625000000038
+      "name": "FlowAnswersController API error matrix DELETE /flow/answers/:id returns 200 after soft-deleting an answer for the authorized tenant",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/answers.api-matrix.spec.ts",
+      "durationMs": 212.51783400000022
+    },
+    {
+      "name": "FlowEventsController API error matrix GET /flow/events returns 200 with flow events for the authorized tenant",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/events.api-matrix.spec.ts",
+      "durationMs": 208.4294170000012
+    },
+    {
+      "name": "FlowAnswersController API error matrix PATCH /flow/answers/:id returns 200 after updating an answer for the authorized tenant",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/answers.api-matrix.spec.ts",
+      "durationMs": 207.74637500000063
+    },
+    {
+      "name": "FlowEffectsController API error matrix POST /flow/effects/dispatch returns 422 when an idempotency key is reused with a different body",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/effects.api-matrix.spec.ts",
+      "durationMs": 173.488292
+    },
+    {
+      "name": "FlowEdgesController API error matrix DELETE /flow/edges/:id returns 200 after soft-deleting an edge for the authorized tenant",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/edges.api-matrix.spec.ts",
+      "durationMs": 171.72991700000057
+    },
+    {
+      "name": "FlowEdgesController API error matrix GET /flow/edges/:id returns 200 for an authorized design edge lookup",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/edges.api-matrix.spec.ts",
+      "durationMs": 165.10379199999988
     }
-  ],
-  "metric": {
-    "kind": "none"
-  }
+  ]
 }

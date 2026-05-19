@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T05:09:18.149Z",
-  "endedAt": "2026-05-19T05:09:25.371Z",
-  "durationMs": 7222,
+  "startedAt": "2026-05-19T15:49:39.131Z",
+  "endedAt": "2026-05-19T15:49:47.726Z",
+  "durationMs": 8595,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -24,11 +24,9 @@
       "run",
       "--config",
       "./vitest.config.ts",
-      "--coverage",
-      "--reporter=verbose",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-75050-1779167358149.json",
+      "--outputFile.json=/tmp/vitest-23240-1779205779129.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/cli/.test-results/unit.junit.xml"
     ],
@@ -49,52 +47,52 @@
     {
       "name": "@stynx/cli runs doctor against a fixture directory",
       "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli.spec.ts",
-      "durationMs": 434.9205000000002
+      "durationMs": 511.4566669999999
     },
     {
       "name": "@stynx/cli reports doctor spawn failures with fallback exit code and empty output strings",
       "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli.spec.ts",
-      "durationMs": 391.9052079999992
+      "durationMs": 327.64016600000014
     },
     {
       "name": "buildProgram runs adoption scan/apply/link commands",
       "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli-program.spec.ts",
-      "durationMs": 180.11679099999947
+      "durationMs": 180.56054200000017
+    },
+    {
+      "name": "verifyAuditChain uses the default pg client factory when no override is supplied",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/audit.spec.ts",
+      "durationMs": 72.51275000000032
     },
     {
       "name": "adopt command family is idempotent on the fixture repo",
       "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/adopt.spec.ts",
-      "durationMs": 113.80845899999986
-    },
-    {
-      "name": "@stynx/cli scaffolds without Angular files when angular=false",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli.spec.ts",
-      "durationMs": 78.3916250000002
-    },
-    {
-      "name": "adopt command family handles clean reports, skipped directories, dry-runs, and mixed schema generation",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/adopt.spec.ts",
-      "durationMs": 51.7329579999996
-    },
-    {
-      "name": "@stynx/cli scaffolds a consumer app skeleton",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli.spec.ts",
-      "durationMs": 40.0840419999995
+      "durationMs": 52.885959000000184
     },
     {
       "name": "@stynx/cli scans and applies the neutral adoption fixture with richer outputs",
       "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli.spec.ts",
-      "durationMs": 31.669707999999446
+      "durationMs": 46.932832999999846
     },
     {
-      "name": "migrate command surface applies, rolls back, and redoes paired migrations",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/migrate.spec.ts",
-      "durationMs": 25.364082999999937
+      "name": "@stynx/cli scaffolds a consumer app skeleton",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli.spec.ts",
+      "durationMs": 45.96245799999997
+    },
+    {
+      "name": "adopt command family handles clean reports, skipped directories, dry-runs, and mixed schema generation",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/adopt.spec.ts",
+      "durationMs": 33.39762500000006
     },
     {
       "name": "migrate command surface uses the default pg client factory when no factory override is supplied",
       "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/migrate.spec.ts",
-      "durationMs": 21.071791999999732
+      "durationMs": 32.80962499999987
+    },
+    {
+      "name": "buildProgram runs init, doctor, and privacy commands",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli-program.spec.ts",
+      "durationMs": 22.17133300000023
     }
   ]
 }

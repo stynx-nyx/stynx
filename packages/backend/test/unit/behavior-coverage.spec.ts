@@ -12,11 +12,15 @@ import { StynxAuthModule } from '../../src/auth/auth.module';
 import { ClaimFirstTenantEntitlementPolicy } from '../../src/auth/claim-first-tenant-entitlement.policy';
 import { RequiredTenantHeaderResolver } from '../../src/auth/required-tenant-header.resolver';
 import { getPrincipalFromRequest } from '../../src/common/request-context';
+import { AuditInterceptor } from '../../src/audit/audit.interceptor';
 import { StynxAuditModule } from '../../src/audit/audit.module';
 import { AuthorizationGuard } from '../../src/authorization/authorization.guard';
 import { StynxAuthorizationModule } from '../../src/authorization/authorization.module';
 import { DefaultPolicyEvaluator } from '../../src/authorization/default-policy-evaluator';
+import { DbContextInterceptor } from '../../src/db-context/db-context.interceptor';
 import { StynxDbContextModule } from '../../src/db-context/db-context.module';
+import { PgSessionDbContextApplier } from '../../src/db-context/pg-session-db-context.applier';
+import { TenantLifecycleMiddleware } from '../../src/db-context/tenant-lifecycle.middleware';
 import { IdempotencyInterceptor } from '../../src/idempotency/idempotency.interceptor';
 import type { IdempotencyStore } from '../../src/idempotency/types';
 import { StynxPlatformPipelineModule } from '../../src/pipeline/platform-pipeline.module';
@@ -67,6 +71,16 @@ function responseStub(statusCode = 200) {
   };
 }
 
+function responseWithoutStatusCode() {
+  return {
+    status: vi.fn(function status(this: { statusCode?: number }, nextStatus: number) {
+      this.statusCode = nextStatus;
+      return this;
+    }),
+    setHeader: vi.fn(),
+  };
+}
+
 describe('backend SLA behavior', () => {
   it('resolves URL categories and falls back to NONE', () => {
     const resolver = new DefaultSlaCategoryResolver();
@@ -74,6 +88,7 @@ describe('backend SLA behavior', () => {
     expect(resolver.resolve({ headers: {}, url: '/transmissions/renach' })).toBe('RENACH');
     expect(resolver.resolve({ headers: {}, url: '/documents/sign' })).toBe('SIGNATURE');
     expect(resolver.resolve({ headers: {}, url: '/health' })).toBe('NONE');
+    expect(resolver.resolve({ headers: {} })).toBe('NONE');
   });
 
   it('samples requests, skips NONE categories, aggregates by window, and records errors', async () => {
@@ -148,6 +163,47 @@ describe('backend SLA behavior', () => {
     expect(logger.log).toHaveBeenCalledTimes(3);
     expect(logger.warn).toHaveBeenCalledTimes(1);
   });
+
+  it('describes branch: default SLA dependencies resolve URL and sample through logger sink', async () => {
+    await expect(lastValueFrom(new SlaMonitorInterceptor().intercept(
+      httpContext({ headers: {}, url: '/biometrics/1' }) as never,
+      { handle: () => of('ok') },
+    ))).resolves.toBe('ok');
+  });
+
+  it('describes branch: unknown SLA category uses fallback threshold and default percentile index', async () => {
+    const sink = { sample: vi.fn(), aggregate: vi.fn() };
+    const interceptor = new SlaMonitorInterceptor(
+      { aggregateEvery: 1 },
+      { resolve: vi.fn(() => 'CUSTOM') },
+      sink,
+    );
+    await lastValueFrom(interceptor.intercept(httpContext({ headers: {} }) as never, {
+      handle: () => of('ok'),
+    }));
+    expect(sink.sample).toHaveBeenCalledWith(expect.objectContaining({
+      category: 'CUSTOM',
+      thresholdMs: 15_000,
+    }));
+    expect(sink.aggregate).toHaveBeenCalledWith(expect.objectContaining({ samples: 1 }));
+  });
+
+  it('describes branch: zero-sized SLA windows aggregate empty percentile histories', async () => {
+    const sink = { sample: vi.fn(), aggregate: vi.fn() };
+    const interceptor = new SlaMonitorInterceptor(
+      { aggregateEvery: 1, windowSize: 0 },
+      { resolve: vi.fn(() => 'CUSTOM') },
+      sink,
+    );
+    await lastValueFrom(interceptor.intercept(httpContext({ headers: {} }) as never, {
+      handle: () => of('ok'),
+    }));
+    expect(sink.aggregate).toHaveBeenCalledWith(expect.objectContaining({
+      p50Ms: 0,
+      p95Ms: 0,
+      p99Ms: 0,
+    }));
+  });
 });
 
 describe('backend authorization and auth behavior', () => {
@@ -189,6 +245,15 @@ describe('backend authorization and auth behavior', () => {
     await expect(denyGuard.canActivate(httpContext({ headers: {} }) as never)).rejects.toBeInstanceOf(ForbiddenException);
   });
 
+  it('describes branch: authorization default evaluator receives role-only and permission-only metadata', async () => {
+    const reflector = { getAllAndOverride: vi.fn() };
+    const guard = new AuthorizationGuard(reflector as unknown as Reflector);
+    reflector.getAllAndOverride.mockReturnValueOnce({ roles: { roles: ['admin'] } });
+    await expect(guard.canActivate(httpContext({ headers: {}, principal }) as never)).resolves.toBe(true);
+    reflector.getAllAndOverride.mockReturnValueOnce({ permissions: { permissions: ['records:read'] } });
+    await expect(guard.canActivate(httpContext({ headers: {}, principal }) as never)).resolves.toBe(true);
+  });
+
   it('maps principals from request compatibility locations', () => {
     expect(getPrincipalFromRequest({ headers: {}, principal })).toBe(principal);
     expect(getPrincipalFromRequest({ headers: {}, principalContext: { principal } })).toBe(principal);
@@ -201,6 +266,33 @@ describe('backend authorization and auth behavior', () => {
       actor: { id: 'a', roles: [], permissions: [], tenants: [], claims: {} },
     })).toMatchObject({ id: 'a' });
     expect(getPrincipalFromRequest({ headers: {}, user: {}, actor: {} })).toBeUndefined();
+  });
+
+  it('describes branch: actor fallback preserves optional email and username', () => {
+    expect(getPrincipalFromRequest({
+      headers: {},
+      actor: {
+        id: 'actor-1',
+        roles: ['r'],
+        permissions: ['p'],
+        tenants: ['t'],
+        claims: {},
+        email: 'actor@example.com',
+        username: 'actor',
+      },
+    })).toMatchObject({ email: 'actor@example.com', username: 'actor' });
+  });
+
+  it('describes branch: actor fallback defaults malformed principal arrays', () => {
+    expect(getPrincipalFromRequest({
+      headers: {},
+      actor: {
+        id: 'actor-1',
+        roles: ['r'],
+        permissions: 'not-array',
+        tenants: 'not-array',
+      },
+    })).toMatchObject({ id: 'actor-1', permissions: [], tenants: [], claims: {} });
   });
 
   it('resolves tenant headers and claim-first entitlement branches', async () => {
@@ -247,6 +339,33 @@ describe('backend authorization and auth behavior', () => {
     await expect(headerGuard.canActivate(httpContext({
       headers: { authorization: ['Bearer t'], 'x-tenant-id': ' tenant-2 ' },
     }) as never)).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('describes branch: auth guard accepts non-string array headers and omits blank resolver header', async () => {
+    const multiTenantPrincipal = { ...principal, tenants: ['tenant-1', 'tenant-2'] };
+    const verifier = { verifyAuthorizationHeader: vi.fn(async () => ({ principal: multiTenantPrincipal })) };
+    const resolver = { resolve: vi.fn(async () => undefined) };
+    const guard = new AuthContextGuard(verifier, undefined, resolver);
+    const request = { headers: { authorization: [123], 'x-tenant-id': '   ' } };
+    await expect(guard.canActivate(httpContext(request) as never)).resolves.toBe(true);
+    expect(verifier.verifyAuthorizationHeader).toHaveBeenCalledWith([123]);
+    expect(resolver.resolve).toHaveBeenCalledWith({ principal: multiTenantPrincipal });
+    expect(request).not.toHaveProperty('tenantId');
+  });
+
+  it('describes branch: auth guard extracts array tenant headers and omits undefined claims spread', async () => {
+    const principalWithoutClaims = {
+      id: 'user-2',
+      roles: [],
+      permissions: [],
+      tenants: ['tenant-array'],
+    };
+    const verifier = { verifyAuthorizationHeader: vi.fn(async () => ({ principal: principalWithoutClaims })) };
+    const guard = new AuthContextGuard(verifier);
+    const request = { headers: { authorization: 'Bearer t', 'x-tenant-id': [' tenant-array '] } };
+    await expect(guard.canActivate(httpContext(request) as never)).resolves.toBe(true);
+    expect(request).toMatchObject({ tenantId: 'tenant-array' });
+    expect((request as { user?: Record<string, unknown> }).user?.claims).toBeUndefined();
   });
 });
 
@@ -299,6 +418,21 @@ describe('backend idempotency behavior', () => {
     const writeNext = { handle: vi.fn(() => of({ write: true })) };
     await expect(lastValueFrom(optional.intercept(
       httpContextWithResponse({ method: 'POST', headers: {}, url: '/items' }, responseStub()) as never,
+      writeNext,
+    ))).resolves.toEqual({ write: true });
+  });
+
+  it('describes branch: header arrays without strings and missing methods bypass idempotency', async () => {
+    const missingMethodNext = { handle: vi.fn(() => of({ read: true })) };
+    await expect(lastValueFrom(new IdempotencyInterceptor().intercept(
+      httpContextWithResponse({ headers: {}, url: '/items' }, responseStub()) as never,
+      missingMethodNext,
+    ))).resolves.toEqual({ read: true });
+
+    const optional = new IdempotencyInterceptor({ requireKeyOnWrite: false });
+    const writeNext = { handle: vi.fn(() => of({ write: true })) };
+    await expect(lastValueFrom(optional.intercept(
+      httpContextWithResponse({ method: 'POST', headers: { 'x-idempotency-key': [123] } }, responseStub()) as never,
       writeNext,
     ))).resolves.toEqual({ write: true });
   });
@@ -383,6 +517,33 @@ describe('backend idempotency behavior', () => {
     await expect(second).resolves.toEqual({ complete: true });
     expect(secondResponse.status).toHaveBeenCalledWith(202);
     expect(next.handle).toHaveBeenCalledTimes(1);
+    interceptor.onModuleDestroy();
+  });
+
+  it('describes branch: in-memory execution defaults status and path when response/url absent', async () => {
+    const interceptor = new IdempotencyInterceptor({ cacheCleanupMs: 10_000 });
+    const response = responseWithoutStatusCode();
+    await expect(lastValueFrom(interceptor.intercept(
+      httpContextWithResponse({
+        method: 'POST',
+        headers: { 'x-idempotency-key': 'default-status' },
+      }, response) as never,
+      { handle: () => of({ ok: true }) },
+    ))).resolves.toEqual({ ok: true });
+    expect(response.setHeader).toHaveBeenCalledWith('X-Idempotency-Key', 'default-status');
+    interceptor.onModuleDestroy();
+  });
+
+  it('describes branch: idempotency accepts array-form key headers', async () => {
+    const interceptor = new IdempotencyInterceptor({ cacheCleanupMs: 10_000 });
+    await expect(lastValueFrom(interceptor.intercept(
+      httpContextWithResponse({
+        method: 'POST',
+        headers: { 'x-idempotency-key': ['array-key'] },
+        url: '/array-key',
+      }, responseStub()) as never,
+      { handle: () => of({ ok: true }) },
+    ))).resolves.toEqual({ ok: true });
     interceptor.onModuleDestroy();
   });
 
@@ -658,6 +819,160 @@ describe('backend idempotency behavior', () => {
     expect([...cache.keys()]).toEqual(['fresh']);
     interceptor.onModuleDestroy();
   });
+
+  it('describes branch: durable replay/cache paths default status codes', async () => {
+    const replayStore: IdempotencyStore = {
+      lookup: vi.fn(async (ctx) => ({
+        requestFingerprint: ctx.requestFingerprint,
+        statusCode: undefined as never,
+        body: { replayed: true },
+        expiresAt: Date.now() + 1000,
+      })),
+      reserve: vi.fn(async () => true),
+      persistResponse: vi.fn(async () => true),
+      clearReservation: vi.fn(async () => undefined),
+    };
+    const replayResponse = responseStub();
+    await expect(lastValueFrom(new IdempotencyInterceptor({}, replayStore).intercept(
+      httpContextWithResponse({
+        method: 'POST',
+        tenantId: 'tenant-1',
+        headers: { 'x-idempotency-key': 'replay-default' },
+        url: '/durable-default',
+      }, replayResponse) as never,
+      { handle: () => of({ unused: true }) },
+    ))).resolves.toEqual({ replayed: true });
+    expect(replayResponse.status).toHaveBeenCalledWith(200);
+
+    const persistStore: IdempotencyStore = {
+      lookup: vi.fn(async () => null),
+      reserve: vi.fn(async () => true),
+      persistResponse: vi.fn(async () => true),
+      clearReservation: vi.fn(async () => undefined),
+    };
+    await expect(lastValueFrom(new IdempotencyInterceptor({}, persistStore).intercept(
+      httpContextWithResponse({
+        method: 'POST',
+        tenantId: 'tenant-1',
+        headers: { 'x-idempotency-key': 'persist-default' },
+        url: '/persist-default',
+      }, responseWithoutStatusCode()) as never,
+      { handle: () => of({ persisted: true }) },
+    ))).resolves.toEqual({ persisted: true });
+
+    const raceStore: IdempotencyStore = {
+      lookup: vi.fn()
+        .mockResolvedValueOnce(null)
+        .mockImplementationOnce(async (ctx) => ({
+          requestFingerprint: ctx.requestFingerprint,
+          statusCode: undefined,
+          body: { race: true },
+          expiresAt: Date.now() + 1000,
+        })),
+      reserve: vi.fn(async () => false),
+      persistResponse: vi.fn(async () => true),
+      clearReservation: vi.fn(async () => undefined),
+    };
+    const raceResponse = responseStub();
+    await expect(lastValueFrom(new IdempotencyInterceptor({}, raceStore).intercept(
+      httpContextWithResponse({
+        method: 'POST',
+        tenantId: 'tenant-1',
+        headers: { 'x-idempotency-key': 'race-default' },
+        url: '/race-default',
+      }, raceResponse) as never,
+      { handle: () => of({ unused: true }) },
+    ))).resolves.toEqual({ race: true });
+    expect(raceResponse.status).toHaveBeenCalledWith(200);
+  });
+
+  it('describes branch: durable wait and fallback paths default missing status codes', async () => {
+    const waitStore: IdempotencyStore = {
+      lookup: vi.fn()
+        .mockImplementationOnce(async (ctx) => ({
+          requestFingerprint: ctx.requestFingerprint,
+          statusCode: null,
+          body: null,
+          expiresAt: Date.now() + 1000,
+        }))
+        .mockImplementationOnce(async (ctx) => ({
+          requestFingerprint: ctx.requestFingerprint,
+          statusCode: undefined,
+          body: { waited: true },
+          expiresAt: Date.now() + 1000,
+        })),
+      reserve: vi.fn(async () => true),
+      persistResponse: vi.fn(async () => true),
+      clearReservation: vi.fn(async () => undefined),
+    };
+    const waitResponse = responseStub();
+    await expect(lastValueFrom(new IdempotencyInterceptor({
+      waitAttempts: 1,
+      waitIntervalMs: 0,
+    }, waitStore).intercept(
+      httpContextWithResponse({
+        method: 'POST',
+        tenantId: 'tenant-1',
+        headers: { 'x-idempotency-key': 'wait-default' },
+        url: '/wait-default',
+      }, waitResponse) as never,
+      { handle: () => of({ unused: true }) },
+    ))).resolves.toEqual({ waited: true });
+    expect(waitResponse.status).toHaveBeenCalledWith(200);
+
+    const fallbackStore: IdempotencyStore = {
+      lookup: vi.fn(async () => null),
+      reserve: vi.fn(async () => false),
+      persistResponse: vi.fn(async () => true),
+      clearReservation: vi.fn(async () => undefined),
+    };
+    await expect(lastValueFrom(new IdempotencyInterceptor({
+      waitAttempts: 1,
+      waitIntervalMs: 0,
+    }, fallbackStore).intercept(
+      httpContextWithResponse({
+        method: 'POST',
+        tenantId: 'tenant-1',
+        headers: { 'x-idempotency-key': 'fallback-default' },
+        url: '/fallback-default',
+      }, responseWithoutStatusCode()) as never,
+      { handle: () => of({ fallback: true }) },
+    ))).resolves.toEqual({ fallback: true });
+  });
+
+  it('describes branch: durable local replay returns before another lookup', async () => {
+    const store: IdempotencyStore = {
+      lookup: vi.fn(async () => null),
+      reserve: vi.fn(async () => true),
+      persistResponse: vi.fn(async () => true),
+      clearReservation: vi.fn(async () => undefined),
+    };
+    const interceptor = new IdempotencyInterceptor({ cacheCleanupMs: 10_000 }, store);
+    let resolveBody!: (body: unknown) => void;
+    const bodyPromise = new Promise((resolve) => {
+      resolveBody = resolve;
+    });
+    const request = {
+      method: 'POST',
+      tenantId: 'tenant-1',
+      headers: { 'x-idempotency-key': 'local-durable' },
+      url: '/local-durable',
+    };
+    const first = lastValueFrom(interceptor.intercept(
+      httpContextWithResponse(request, responseStub()) as never,
+      { handle: () => from(bodyPromise) },
+    ));
+    const replayResponse = responseStub();
+    const replay = lastValueFrom(interceptor.intercept(
+      httpContextWithResponse(request, replayResponse) as never,
+      { handle: () => of({ second: true }) },
+    ));
+    resolveBody({ first: true });
+    await expect(first).resolves.toEqual({ first: true });
+    await expect(replay).resolves.toEqual({ first: true });
+    expect(store.lookup).toHaveBeenCalledTimes(1);
+    interceptor.onModuleDestroy();
+  });
 });
 
 describe('backend rate-limit behavior', () => {
@@ -671,6 +986,13 @@ describe('backend rate-limit behavior', () => {
     const request = { headers: {}, ip: '127.0.0.1', method: 'POST', url: '/items' };
     await expect(guard.canActivate(httpContext(request) as never)).resolves.toBe(true);
     await expect(guard.canActivate(httpContext(request) as never)).rejects.toBeInstanceOf(HttpException);
+  });
+
+  it('describes branch: rate-limit defaults request identity and constructor options', async () => {
+    const guard = new RateLimitGuard();
+    await expect(guard.canActivate(httpContext({ headers: {} }) as never)).resolves.toBe(true);
+    const buckets = (guard as unknown as { buckets: Map<string, unknown> }).buckets;
+    expect([...buckets.keys()]).toEqual(['unknown:GET:/']);
   });
 
   it('resets expired buckets and prunes overflow entries', async () => {
@@ -772,5 +1094,98 @@ describe('backend rate-limit behavior', () => {
       tenantId: 'tenant-1',
     }) as never))
       .resolves.toBe(true);
+  });
+
+  it('describes branch: distributed cleanup no-ops when store lacks cleanup method', async () => {
+    const store: RateLimitStore = { increment: vi.fn(async () => 1) };
+    const guard = new RateLimitGuard({ cleanupEvery: 1 }, store);
+    await expect(guard.canActivate(httpContext({
+      headers: {},
+      tenantId: 'tenant-1',
+      ip: 'ip',
+      method: 'POST',
+      path: '/distributed',
+    }) as never)).resolves.toBe(true);
+  });
+});
+
+describe('backend audit and db context branch closure', () => {
+  it('describes branch: audit logs non-Error sink failures and omits optional principal fields', async () => {
+    const reflector = { getAllAndOverride: vi.fn(() => ({ action: 'WRITE' })) };
+    const sink = { write: vi.fn(async () => { throw 'sink-down'; }) };
+    const interceptor = new AuditInterceptor(reflector as unknown as Reflector, sink);
+    const logger = { error: vi.fn() };
+    Object.defineProperty(interceptor, 'logger', { value: logger });
+    await lastValueFrom(interceptor.intercept(
+      httpContext({ headers: {}, correlationId: 'c-1' }) as never,
+      { handle: () => of({ id: 123 }) },
+    ));
+    expect(logger.error).toHaveBeenCalledWith('Audit sink write failed: sink-down');
+    expect(sink.write).toHaveBeenCalledWith(expect.not.objectContaining({
+      actorId: expect.anything(),
+      entityId: expect.anything(),
+    }));
+  });
+
+  it('describes branch: audit redaction context includes present principal', async () => {
+    const reflector = { getAllAndOverride: vi.fn(() => ({ action: 'WRITE', metadataSelector: () => ({ x: 1 }) })) };
+    const sink = { write: vi.fn(async () => undefined) };
+    const policy = { redact: vi.fn(() => ({ redacted: true })) };
+    await lastValueFrom(new AuditInterceptor(
+      reflector as unknown as Reflector,
+      sink,
+      policy,
+    ).intercept(
+      httpContext({
+        headers: {},
+        principal: { id: 'u', roles: [], permissions: [], tenants: [], claims: {} },
+      }) as never,
+      { handle: () => of({ id: 'entity-1' }) },
+    ));
+    expect(policy.redact).toHaveBeenCalledWith({ x: 1 }, expect.objectContaining({
+      principal: expect.objectContaining({ id: 'u' }),
+    }));
+  });
+
+  it('describes branch: db context finalizer skips release when preparation never completed', async () => {
+    const lifecycle = { acquire: vi.fn(), release: vi.fn() };
+    const interceptor = new DbContextInterceptor({
+      apply: vi.fn(async () => { throw new Error('apply failed'); }),
+    }, undefined, lifecycle);
+    await expect(lastValueFrom(interceptor.intercept(
+      httpContext({
+        headers: {},
+        tenantId: 'tenant-1',
+        principal: { id: 'u', roles: [], permissions: [], tenants: [], claims: {} },
+        pgClient: {},
+      }) as never,
+      { handle: () => of('ok') },
+    ))).rejects.toThrow('apply failed');
+    expect(lifecycle.release).not.toHaveBeenCalled();
+  });
+
+  it('describes branch: session applier drops blank list/scalar values', async () => {
+    const client = { query: vi.fn(async () => undefined) };
+    await new PgSessionDbContextApplier({
+      settings: {
+        roles: ['app.roles'],
+        permissions: ['app.permissions'],
+        correlationId: ['app.correlation_id'],
+      },
+    }).apply(client, {
+      userId: 'u',
+      roles: ['   '],
+      permissions: ['read', '   '],
+      correlationId: '   ',
+    });
+    expect(client.query).toHaveBeenCalledWith('select set_config($1, $2, false)', ['app.roles', '']);
+    expect(client.query).toHaveBeenCalledWith('select set_config($1, $2, false)', ['app.permissions', 'read']);
+    expect(client.query).toHaveBeenCalledWith('select set_config($1, $2, false)', ['app.correlation_id', '']);
+  });
+
+  it('describes branch: tenant lifecycle tolerates missing headers object', () => {
+    const next = vi.fn();
+    new TenantLifecycleMiddleware({ requireTenantHeader: false }).use({}, undefined, next);
+    expect(next).toHaveBeenCalled();
   });
 });

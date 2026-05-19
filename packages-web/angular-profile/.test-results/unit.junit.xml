@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="2" failures="0" errors="0" time="0.007633709">
-    <testsuite name="test/angular-profile.spec.ts" timestamp="2026-05-19T05:11:50.252Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.007633709">
-        <testcase classname="test/angular-profile.spec.ts" name="@stynx-web/angular-profile &gt; validates the profile form and emits only when dirty and valid" time="0.006499084">
+<testsuites name="vitest tests" tests="5" failures="0" errors="0" time="0.016473916">
+    <testsuite name="test/angular-profile.spec.ts" timestamp="2026-05-19T15:49:49.419Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="0.016473916">
+        <testcase classname="test/angular-profile.spec.ts" name="@stynx-web/angular-profile &gt; validates the profile form and emits only when dirty and valid" time="0.011048041">
         </testcase>
-        <testcase classname="test/angular-profile.spec.ts" name="@stynx-web/angular-profile &gt; tracks dirty state in the preferences form" time="0.000500584">
+        <testcase classname="test/angular-profile.spec.ts" name="@stynx-web/angular-profile &gt; tracks dirty state in the preferences form" time="0.000657417">
+        </testcase>
+        <testcase classname="test/angular-profile.spec.ts" name="@stynx-web/angular-profile &gt; opens the configured change-password hosted action" time="0.002832958">
+        </testcase>
+        <testcase classname="test/angular-profile.spec.ts" name="@stynx-web/angular-profile &gt; marks MFA enrolment unavailable when no hosted action URL is configured" time="0.000320917">
+        </testcase>
+        <testcase classname="test/angular-profile.spec.ts" name="@stynx-web/angular-profile &gt; reports hosted action configuration errors to the standard error banner" time="0.000704791">
         </testcase>
     </testsuite>
 </testsuites>

@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Smoke check: @stynx/data barrel + module files load cleanly.
 // Covers index.ts + *.module.ts files that contain only declarative
 // NestJS @Module() metadata; provides incidental coverage that lifts

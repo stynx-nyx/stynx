@@ -29,4 +29,11 @@ describe('InMemoryPermissionCacheBackend edge branches', () => {
     expect(seen).toEqual(['user-1:tenant-1']);
     await expect(backend.get('sid-1')).resolves.toBeNull();
   });
+
+  it('ignores tenant and user invalidation misses', async () => {
+    const backend = new InMemoryPermissionCacheBackend();
+
+    await expect(backend.invalidateScope('*:missing-tenant')).resolves.toBeUndefined();
+    await expect(backend.invalidateScope('missing-user:tenant-1')).resolves.toBeUndefined();
+  });
 });

@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T05:11:39.441Z",
-  "endedAt": "2026-05-19T05:11:46.121Z",
-  "durationMs": 6679,
+  "startedAt": "2026-05-19T15:49:08.850Z",
+  "endedAt": "2026-05-19T15:49:19.525Z",
+  "durationMs": 10675,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -15,7 +15,7 @@
     "junit": ".test-results/unit.junit.xml"
   },
   "env": {
-    "node": "26.0.0",
+    "node": "24.15.0",
     "ci": false
   },
   "command": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-85325-1779167499441.json",
+      "--outputFile.json=/tmp/vitest-22140-1779205748850.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/.test-results/unit.junit.xml"
     ],
@@ -37,42 +37,62 @@
   },
   "totals": {
     "files": 1,
-    "tests": 6,
-    "passed": 6,
+    "tests": 13,
+    "passed": 13,
     "failed": 0,
     "skipped": 0,
     "todo": 0
   },
   "slowestTests": [
     {
-      "name": "@stynx-web/angular-storage moves through initiating, uploading, and completed states",
+      "name": "@stynx-web/angular-storage downloads a document through a signed URL and emits progress",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
-      "durationMs": 6.618083000000297
+      "durationMs": 26.23370799999975
+    },
+    {
+      "name": "@stynx-web/angular-storage delegates small files from multipart executor to the XHR executor",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
+      "durationMs": 22.86279200000172
     },
     {
       "name": "@stynx-web/angular-storage uploads files through XMLHttpRequest with progress, success, and failure paths",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
-      "durationMs": 4.2960000000002765
+      "durationMs": 16.277459000000817
+    },
+    {
+      "name": "@stynx-web/angular-storage moves through initiating, uploading, and completed states",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
+      "durationMs": 9.101291000000856
+    },
+    {
+      "name": "@stynx-web/angular-storage surfaces download validation and network failures",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
+      "durationMs": 5.698707999999897
+    },
+    {
+      "name": "@stynx-web/angular-storage long-polls scan status until a terminal status is returned",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
+      "durationMs": 4.2862499999992
+    },
+    {
+      "name": "@stynx-web/angular-storage uploads large files as resumable multipart chunks",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
+      "durationMs": 3.0956249999999272
     },
     {
       "name": "@stynx-web/angular-storage handles selected files, quarantine completion, and generic failures",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
-      "durationMs": 1.3694169999998849
+      "durationMs": 1.3138340000004973
     },
     {
-      "name": "@stynx-web/angular-storage calls the document API endpoints with normalized base URLs",
+      "name": "@stynx-web/angular-storage emits scan-status updates after an upload completes with a pending scan",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
-      "durationMs": 1.0379579999998896
+      "durationMs": 1.0080830000006245
     },
     {
-      "name": "@stynx-web/angular-storage rejects invalid files and surfaces upload failures",
+      "name": "@stynx-web/angular-storage uploads dropped files when drag-and-drop is enabled",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
-      "durationMs": 0.6527089999999589
-    },
-    {
-      "name": "@stynx-web/angular-storage ignores empty file selection events",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
-      "durationMs": 0.1587920000001759
+      "durationMs": 0.8006249999998545
     }
   ]
 }

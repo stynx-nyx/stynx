@@ -1,6 +1,7 @@
 import type { Routes } from '@angular/router';
 import { stynxAuthGuard, stynxPermissionGuard } from '@stynx-web/angular-auth';
 import { flowRoutes } from '@stynx-web/angular-flow';
+import { iamRoutes } from '@stynx-web/angular-iam';
 import { DashboardPageComponent } from './pages/dashboard.page';
 import { LoginPageComponent } from './pages/login.page';
 import { RecordDetailPageComponent } from './pages/record-detail.page';
@@ -95,6 +96,19 @@ export const APP_ROUTES: Routes = [
     canActivate: [stynxAuthGuard],
     children: flowRoutes(),
     title: 'Flow',
+  },
+  {
+    path: 'admin',
+    canActivate: [stynxAuthGuard],
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: 'users',
+      },
+      ...iamRoutes(),
+    ],
+    title: 'Admin',
   },
   {
     path: '**',

@@ -21,7 +21,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "ng-packagr -p ng-package.json -c tsconfig.apf.json",
+    "build": "ng-packagr -p ng-package.json",
     "clean": "rm -rf dist coverage",
     "typecheck": "tsc -p tsconfig.spec.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/angular.mjs \"src/**/*.ts\"",

@@ -45,6 +45,8 @@
       "@stynx-web/angular-storage": ["../../packages-web/angular-storage/src/index.ts"],
       "@stynx-web/angular-sessions": ["../../packages-web/angular-sessions/src/index.ts"],
       "@stynx-web/angular-profile": ["../../packages-web/angular-profile/src/index.ts"],
+      "@stynx-web/angular-iam": ["../../packages-web/angular-iam/src/index.ts"],
+      "@stynx-web/angular-iam/catalogs/*": ["../../packages-web/angular-iam/src/i18n/*"],
       "@stynx-web/angular-flow": ["../../packages-web/angular-flow/src/index.ts"]
     }
   }

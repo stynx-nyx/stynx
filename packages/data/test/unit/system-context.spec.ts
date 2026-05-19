@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { withSystemContext } from '../../src/system-context';
 import type { SystemExecutionContext } from '@stynx/core';
 

@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T05:25:01.040Z",
-  "endedAt": "2026-05-19T05:25:21.074Z",
-  "durationMs": 20034,
+  "startedAt": "2026-05-19T15:49:09.214Z",
+  "endedAt": "2026-05-19T15:49:41.229Z",
+  "durationMs": 32015,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -24,11 +24,9 @@
       "run",
       "--config",
       "./vitest.config.ts",
-      "--coverage",
-      "--reporter=verbose",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-18912-1779168301040.json",
+      "--outputFile.json=/tmp/vitest-22192-1779205749214.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/backend/.test-results/unit.junit.xml"
     ],
@@ -47,54 +45,54 @@
   },
   "slowestTests": [
     {
-      "name": "backend decorators attaches authorization and audit metadata",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/decorators.spec.ts",
-      "durationMs": 129.85450000000014
-    },
-    {
-      "name": "AuthContextGuard throws Forbidden when tenantEntitlementPolicy denies the tenant",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/auth-context.guard.spec.ts",
-      "durationMs": 74.69370900000001
-    },
-    {
-      "name": "backend idempotency behavior describes branch: durable replay/cache paths default status codes",
+      "name": "backend idempotency behavior bypasses read methods and optional write keys",
       "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/behavior-coverage.spec.ts",
-      "durationMs": 57.67254200000025
+      "durationMs": 129.15637499999866
     },
     {
-      "name": "backend audit and db context branch closure describes branch: audit logs non-Error sink failures and omits optional principal fields",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/behavior-coverage.spec.ts",
-      "durationMs": 53.55987499999901
-    },
-    {
-      "name": "DbContextInterceptor applies session context when principal + pgClient are present",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/db-context.interceptor.spec.ts",
-      "durationMs": 50.76804199999992
-    },
-    {
-      "name": "ResponseEventRequestDbClientLifecycle resolves response from request.res when request.response is absent",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/request-db-client-lifecycle.spec.ts",
-      "durationMs": 24.90220899999997
-    },
-    {
-      "name": "backend durable stores covers backend PgIdempotencyStore query branches",
+      "name": "backend durable stores describes branch: PgRateLimitStore uses default SQL identifiers",
       "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/pg-durable-stores.spec.ts",
-      "durationMs": 24.231457999999975
+      "durationMs": 88.58375000000001
+    },
+    {
+      "name": "backend idempotency behavior uses durable entries, reservations, races, fallbacks, and cleanup branches",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/behavior-coverage.spec.ts",
+      "durationMs": 86.10254199999872
+    },
+    {
+      "name": "backend idempotency behavior caches in-memory writes, replays them, and detects payload conflicts",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/behavior-coverage.spec.ts",
+      "durationMs": 77.80924999999843
+    },
+    {
+      "name": "backend module wiring branches wires db-context variants and validates missing applier config",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/behavior-coverage.spec.ts",
+      "durationMs": 56.91308300000128
     },
     {
       "name": "PgIdentityLocalSyncAdapter sorts groups by name when sort order ties or is absent",
       "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/pg-local-sync.adapter.spec.ts",
-      "durationMs": 17.696666999999934
+      "durationMs": 40.996250000000146
     },
     {
-      "name": "ClaimFirstTenantEntitlementPolicy delegates to fallback when no tenant claim and fallback configured",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/tenant-entitlement.spec.ts",
-      "durationMs": 17.12350000000015
+      "name": "@stynx/backend exports surface for auth barrel surfaces at least one export",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/auth-export.spec.ts",
+      "durationMs": 39.77741700000115
     },
     {
-      "name": "backend idempotency behavior describes branch: durable local replay returns before another lookup",
+      "name": "backend idempotency behavior describes branch: header arrays without strings and missing methods bypass idempotency",
       "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/behavior-coverage.spec.ts",
-      "durationMs": 16.86320799999885
+      "durationMs": 31.616125000000466
+    },
+    {
+      "name": "backend durable stores covers backend PgIdempotencyStore query branches",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/pg-durable-stores.spec.ts",
+      "durationMs": 27.889208000000053
+    },
+    {
+      "name": "@stynx/backend exports surface for common barrel surfaces at least one export",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/common-export.spec.ts",
+      "durationMs": 25.99645899999996
     }
   ]
 }

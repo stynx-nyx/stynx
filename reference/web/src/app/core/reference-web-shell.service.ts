@@ -32,7 +32,13 @@ export class ReferenceWebShellService {
   async login(email: string, tenantId: string): Promise<void> {
     this.devOidc.beginLogin(email);
     this.tenantContext.setTenant(tenantId, 'manual');
-    await this.session.completeLogin(`${window.location.origin}/login?tenantId=${tenantId}`);
+    try {
+      await this.session.completeLogin(`${window.location.origin}/login?tenantId=${tenantId}`);
+    } catch (error) {
+      this.devOidc.clear();
+      this.tenantContext.clear();
+      throw error;
+    }
     await this.router.navigate(['/']);
   }
 

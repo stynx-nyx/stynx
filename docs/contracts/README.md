@@ -8,6 +8,10 @@ can compile or validate against without importing implementation internals.
 
 ## Contract Surfaces
 
+- [auth-hosted-actions.md](auth-hosted-actions.md) — hosted identity-provider
+  action URLs consumed by profile security handoff components.
+- [audit-events-api.md](audit-events-api.md) — HTTP contract for
+  `@stynx-web/angular-audit` list, detail, entity-history, and integrity views.
 - [flow-api.md](flow-api.md) — HTTP contract for `@stynx/flow` and
   `@stynx-web/angular-flow`.
 - `errors.json` — shared error taxonomy and envelope metadata.

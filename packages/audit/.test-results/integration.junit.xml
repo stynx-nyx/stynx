@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="8" failures="0" errors="0" time="2.772887082">
+    <testsuite name="test/integration/audit.api-matrix.spec.ts" timestamp="2026-05-19T15:29:35.837Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="1.356271291">
+        <testcase classname="test/integration/audit.api-matrix.spec.ts" name="StynxAuditController API error matrix &gt; GET /_audit/log &gt; returns 200 with audit log entries for an authorized audit reader" time="0.03569475">
+        </testcase>
+        <testcase classname="test/integration/audit.api-matrix.spec.ts" name="StynxAuditController API error matrix &gt; GET /_audit/log &gt; returns 401 when the bearer token is missing" time="0.005101583">
+        </testcase>
+        <testcase classname="test/integration/audit.api-matrix.spec.ts" name="StynxAuditController API error matrix &gt; GET /_audit/log &gt; returns 403 when the principal lacks platform:audit:read:*" time="0.001987458">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/integration/audit.module.spec.ts" timestamp="2026-05-19T15:29:35.848Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="1.416615791">
+        <testcase classname="test/integration/audit.module.spec.ts" name="StynxAuditModule integration &gt; writes one soft-delete row for the live delete and no archive insert row" time="0.073234291">
+        </testcase>
+        <testcase classname="test/integration/audit.module.spec.ts" name="StynxAuditModule integration &gt; writes one restore row for the live insert and no archive delete row" time="0.014392791">
+        </testcase>
+        <testcase classname="test/integration/audit.module.spec.ts" name="StynxAuditModule integration &gt; tags archive-side erasure updates as lgpd erasure" time="0.009653834">
+        </testcase>
+        <testcase classname="test/integration/audit.module.spec.ts" name="StynxAuditModule integration &gt; verifies the audit.events hash chain and detects direct row tampering" time="0.085984708">
+        </testcase>
+        <testcase classname="test/integration/audit.module.spec.ts" name="StynxAuditModule integration &gt; retains lgpd partitions longer in detach dry-run" time="0.0611855">
+        </testcase>
+    </testsuite>
+</testsuites>

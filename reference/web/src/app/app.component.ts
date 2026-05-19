@@ -27,7 +27,7 @@ import { ReferenceWebShellService } from './core/reference-web-shell.service';
       <header class="shell__header">
         <div>
           <p class="shell__eyebrow">STYNX Reference Web</p>
-          <h1>{{ i18n.t('app.title') }}</h1>
+          <h1 data-testid="app-title">{{ i18n.t('app.title') }}</h1>
         </div>
         <div class="shell__toolbar">
           <stynx-locale-switcher [locales]="i18n.locales"></stynx-locale-switcher>
@@ -62,6 +62,7 @@ import { ReferenceWebShellService } from './core/reference-web-shell.service';
         <a routerLink="/records" routerLinkActive="is-active" data-testid="nav-records">Records</a>
         <a routerLink="/work-items" routerLinkActive="is-active" data-testid="nav-work-items">Work items</a>
         <a routerLink="/trash" routerLinkActive="is-active" data-testid="nav-trash">Trash</a>
+        <a routerLink="/admin/users" routerLinkActive="is-active" data-testid="nav-admin">Admin</a>
       </nav>
 
       <main class="shell__main">

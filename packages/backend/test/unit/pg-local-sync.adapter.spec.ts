@@ -69,6 +69,22 @@ describe('PgIdentityLocalSyncAdapter', () => {
     expect(db.withTransaction).toHaveBeenCalled();
   });
 
+  it('describes branch: syncToLocal skips users whose subject is missing entirely', async () => {
+    const admin = fakeAdmin({
+      listUsers: vi.fn(async () => ({ items: [{ username: 'alice' }] })),
+      getUser: vi.fn(async () => ({
+        username: 'alice',
+        enabled: true,
+        attributes: {},
+      })),
+    });
+    const adapter = new PgIdentityLocalSyncAdapter({
+      identityAdmin: admin as never,
+      db: fakeDb() as never,
+    });
+    await expect(adapter.syncToLocal()).resolves.toMatchObject({ skipped: 1, users: 0 });
+  });
+
   it('syncToLocal aggregates group memberships and upserts roles', async () => {
     const admin = fakeAdmin({
       listGroups: vi.fn(async () => ({
@@ -121,6 +137,28 @@ describe('PgIdentityLocalSyncAdapter', () => {
       3,
       expect.stringContaining('INSERT INTO auth.user_roles'),
       [UUID_A, 'role-1'],
+      'client-handle',
+    );
+  });
+
+  it('describes branch: syncToLocal persists optional status when provider supplies it', async () => {
+    const admin = fakeAdmin({
+      listUsers: vi.fn(async () => ({ items: [{ username: 'alice' }] })),
+      getUser: vi.fn(async () => ({
+        username: 'alice',
+        enabled: true,
+        status: 'CONFIRMED',
+        attributes: { sub: UUID_A },
+      })),
+    });
+    const db = fakeDb([[]]);
+    await new PgIdentityLocalSyncAdapter({
+      identityAdmin: admin as never,
+      db: db as never,
+    }).syncToLocal();
+    expect(db.query).toHaveBeenCalledWith(
+      expect.stringContaining('INSERT INTO auth.users'),
+      expect.arrayContaining(['CONFIRMED']),
       'client-handle',
     );
   });
@@ -191,6 +229,34 @@ describe('PgIdentityLocalSyncAdapter', () => {
         'a@b',
         'CONFIRMED',
         expect.stringContaining('"groups":["admins"]'),
+      ],
+      'client-handle',
+    );
+  });
+
+  it('describes branch: syncUser omits optional status and email when absent', async () => {
+    const admin = fakeAdmin({
+      getUser: vi.fn(async () => ({
+        username: 'alice',
+        enabled: true,
+        attributes: { sub: UUID_A },
+      })),
+      listGroupsForUser: vi.fn(async () => []),
+    });
+    const db = fakeDb([[]]);
+    await new PgIdentityLocalSyncAdapter({
+      identityAdmin: admin as never,
+      db: db as never,
+    }).syncUser('alice');
+    expect(db.query).toHaveBeenCalledWith(
+      expect.stringContaining('INSERT INTO auth.users'),
+      [
+        UUID_A,
+        'alice',
+        null,
+        'alice',
+        null,
+        expect.stringContaining('"groups":[]'),
       ],
       'client-handle',
     );
@@ -453,6 +519,24 @@ describe('PgIdentityLocalSyncAdapter', () => {
     expect(codes).toContain('editor');
   });
 
+  it('describes branch: missing returned role ids skip group and membership counts', async () => {
+    const admin = fakeAdmin({
+      listGroups: vi.fn(async () => ({ items: [{ name: 'admins' }] })),
+      listUsers: vi.fn(async () => ({ items: [{ username: 'alice' }] })),
+      getUser: vi.fn(async () => ({
+        username: 'alice',
+        enabled: true,
+        attributes: { sub: UUID_A },
+      })),
+      listGroupsForUser: vi.fn(async () => [{ name: 'admins' }]),
+    });
+    const result = await new PgIdentityLocalSyncAdapter({
+      identityAdmin: admin as never,
+      db: fakeDb([[], []]) as never,
+    }).syncToLocal();
+    expect(result).toMatchObject({ groups: 0, users: 1, memberships: 0 });
+  });
+
   it('rejects UUID-looking subjects only when the full string matches', async () => {
     const admin = fakeAdmin({
       getUser: vi.fn(async () => ({
@@ -513,5 +597,20 @@ describe('loadPormRoleMetaRows', () => {
     expect(sql).toContain('my.view');
     expect(params).toEqual(['my_domain']);
     expect(rows[0].sortOrder).toBe(7);
+  });
+
+  it('describes branch: loadPormRoleMetaRows accepts array results and null sort order', async () => {
+    const db = {
+      query: vi.fn(async () => [{ code: 'c', label: undefined, order: undefined, sort_order: undefined }]),
+    };
+    const rows = await loadPormRoleMetaRows(db as never);
+    expect(rows[0]).toEqual({
+      code: 'c',
+      label: null,
+      caption: null,
+      icon: null,
+      meta: null,
+      sortOrder: null,
+    });
   });
 });

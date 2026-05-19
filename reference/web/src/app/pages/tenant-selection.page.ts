@@ -11,18 +11,18 @@ import { ReferenceWebShellService } from '../core/reference-web-shell.service';
     <section class="panel">
       <div class="panel__header">
         <div>
-          <h2>Tenant selection</h2>
+          <h2 data-testid="tenant-selection-title">Tenant selection</h2>
           <p>Switch the active tenant and force a new STYNX session bundle.</p>
         </div>
-        <stynx-banner tone="info" [message]="'Current: ' + shell.activeTenantLabel()"></stynx-banner>
+        <stynx-banner tone="info" [message]="'Current: ' + shell.activeTenantLabel()" data-testid="tenant-current-banner"></stynx-banner>
       </div>
 
       <div class="tenant-grid">
         @for (tenant of shell.tenants(); track tenant.id) {
-          <article class="tenant-card">
+          <article class="tenant-card" [attr.data-testid]="'tenant-card-' + tenant.id">
             <strong>{{ tenant.name }}</strong>
             <span>{{ tenant.slug }}</span>
-            <button type="button" (click)="switchTenant(tenant.id)" [disabled]="pendingTenantId === tenant.id">
+            <button type="button" (click)="switchTenant(tenant.id)" [disabled]="pendingTenantId === tenant.id" [attr.data-testid]="'tenant-switch-' + tenant.id">
               {{ pendingTenantId === tenant.id ? 'Switching...' : 'Use tenant' }}
             </button>
           </article>

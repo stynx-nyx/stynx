@@ -1,8 +1,8 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { distinctUntilChanged, startWith } from 'rxjs';
+import { distinctUntilChanged, startWith, Subject } from 'rxjs';
 import { STYNX_TENANCY_OPTIONS, STYNX_TENANCY_WINDOW } from './tokens';
-import type { TenantContextSnapshot } from './types';
+import type { TenantContextSnapshot, TenantOption, TenantTransition } from './types';
 
 function isUrlLike(value: string): boolean {
   return value.startsWith('http://') || value.startsWith('https://');
@@ -40,7 +40,19 @@ export class TenantContextService {
   private readonly browserWindow = inject(STYNX_TENANCY_WINDOW);
   private readonly tenantIdState = signal<string | null>(null);
   private readonly sourceState = signal<TenantContextSnapshot['source'] | null>(null);
+  private readonly availableTenantsState = signal<readonly TenantOption[]>([]);
+  private readonly tenantChangedSubject = new Subject<TenantTransition>();
   readonly tenantId = computed(() => this.tenantIdState());
+  readonly availableTenants = computed(() => this.availableTenantsState());
+  readonly tenantLabel = computed(() => {
+    const tenantId = this.tenantIdState();
+    if (!tenantId) {
+      return null;
+    }
+
+    return this.availableTenantsState().find((tenant) => tenant.id === tenantId)?.label ?? tenantId;
+  });
+  readonly tenantChanged$ = this.tenantChangedSubject.asObservable();
   /**
    * @deprecated since: 1.x — use toObservable(this.tenantId) or the signal directly.
    */
@@ -88,12 +100,29 @@ export class TenantContextService {
   }
 
   setTenant(id: string, source: TenantContextSnapshot['source'] = 'manual'): void {
+    const previousId = this.tenantIdState();
+    if (previousId === id) {
+      this.sourceState.set(source);
+      return;
+    }
+
     this.tenantIdState.set(id);
     this.sourceState.set(source);
+    this.tenantChangedSubject.next({ from: previousId, to: id, at: Date.now() });
+  }
+
+  setAvailableTenants(tenants: readonly TenantOption[]): void {
+    this.availableTenantsState.set([...tenants]);
   }
 
   clear(): void {
+    const previousId = this.tenantIdState();
+    if (!previousId) {
+      return;
+    }
+
     this.tenantIdState.set(null);
     this.sourceState.set(null);
+    this.tenantChangedSubject.next({ from: previousId, to: null, at: Date.now() });
   }
 }

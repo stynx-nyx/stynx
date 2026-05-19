@@ -116,6 +116,28 @@ describe('CognitoTokenVerifier — header-shape early validation', () => {
       },
     });
   });
+
+  it('omits optional principal and timestamp metadata when claims are absent', async () => {
+    const { SignJWT, generateKeyPair } = await import('jose');
+    const { privateKey, publicKey } = await generateKeyPair('RS256');
+    const token = await new SignJWT({ sub: 'subject-1' })
+      .setProtectedHeader({ alg: 'RS256' })
+      .setIssuer('https://issuer.example.test')
+      .sign(privateKey);
+    const verifier = new CognitoTokenVerifier({ issuer: 'https://issuer.example.test' });
+    (verifier as unknown as { jwks: () => Promise<unknown> }).jwks = async () => publicKey;
+
+    await expect(verifier.verifyAuthorizationHeader(`Bearer ${token}`)).resolves.toEqual({
+      token,
+      principal: {
+        id: 'subject-1',
+        roles: [],
+        permissions: [],
+        tenants: [],
+        claims: expect.objectContaining({ sub: 'subject-1' }),
+      },
+    });
+  });
 });
 
 describe('CognitoTokenVerifier — payload branch helpers', () => {
@@ -157,6 +179,12 @@ describe('CognitoTokenVerifier — payload branch helpers', () => {
     expect(() => privateVerifier.assertAudience({ client_id: 'app-1' })).not.toThrow();
     expect(() => privateVerifier.assertAudience({ azp: 'app-1' })).not.toThrow();
     expect(() => privateVerifier.assertAudience({ aud: 'other' })).toThrow('Token audience mismatch');
+    expect(
+      () =>
+        (new CognitoTokenVerifier({ issuer: 'https://i' }) as unknown as {
+          assertAudience(payload: Record<string, unknown>): void;
+        }).assertAudience({ aud: 'other' }),
+    ).not.toThrow();
   });
 
   it('enforces token_use only when configured', () => {

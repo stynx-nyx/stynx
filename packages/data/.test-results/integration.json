@@ -5,13 +5,14 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T00:48:36.438Z",
-  "endedAt": "2026-05-19T00:48:50.987Z",
-  "durationMs": 14549,
+  "startedAt": "2026-05-19T15:50:33.310Z",
+  "endedAt": "2026-05-19T15:51:02.730Z",
+  "durationMs": 29420,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
-    "raw": ".test-results/integration.log"
+    "raw": ".test-results/integration.log",
+    "junit": ".test-results/integration.junit.xml"
   },
   "env": {
     "node": "24.15.0",
@@ -25,9 +26,14 @@
       "./vitest.int.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-65108-1779151716438.json"
+      "--outputFile.json=/tmp/vitest-24837-1779205833310.json",
+      "--reporter=junit",
+      "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/data/.test-results/integration.junit.xml"
     ],
     "cwd": "/Users/aarusso/Development/stech/stynx/packages/data"
+  },
+  "metric": {
+    "kind": "none"
   },
   "totals": {
     "files": 3,
@@ -39,57 +45,54 @@
   },
   "slowestTests": [
     {
-      "name": "Transaction soft delete operations orders onlyDeleted by deleted_at desc by default",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/integration/soft-delete.spec.ts",
-      "durationMs": 1377.621666
-    },
-    {
       "name": "Transaction soft delete operations dry-run and cascade limits do not mutate state",
       "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/integration/soft-delete.spec.ts",
-      "durationMs": 1232.9452500000002
-    },
-    {
-      "name": "Transaction soft delete operations archives cascade families, preserves deleted_at, and applies hide semantics",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/integration/soft-delete.spec.ts",
-      "durationMs": 1227.2253340000007
-    },
-    {
-      "name": "Transaction soft delete operations restores archived parents when cascade is requested and detects restore conflicts",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/integration/soft-delete.spec.ts",
-      "durationMs": 1222.1582090000002
-    },
-    {
-      "name": "Transaction soft delete operations raises a structured blocked error and supports hard delete on live and archive rows",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/integration/soft-delete.spec.ts",
-      "durationMs": 1193.0171659999996
-    },
-    {
-      "name": "Transaction soft delete operations emits Prompt 10 metrics hooks for soft delete, restore, hard delete, and archive size",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/integration/soft-delete.spec.ts",
-      "durationMs": 1152.1997499999998
-    },
-    {
-      "name": "Transaction soft delete operations keeps live queries default-only, exposes explicit archive helpers, and respects tenant RLS",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/integration/soft-delete.spec.ts",
-      "durationMs": 996.4677920000004
-    },
-    {
-      "name": "Stynx platform migrations creates soft-deletable live/archive pairs and rejects invalid registry behavior",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/integration/migrations.spec.ts",
-      "durationMs": 990.9014590000006
+      "durationMs": 3291.6928750000006
     },
     {
       "name": "Stynx platform migrations boots the platform schema, enforces RLS, and reruns idempotently",
       "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/integration/migrations.spec.ts",
-      "durationMs": 967.2624169999999
+      "durationMs": 2394.6492080000025
+    },
+    {
+      "name": "Transaction soft delete operations archives cascade families, preserves deleted_at, and applies hide semantics",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/integration/soft-delete.spec.ts",
+      "durationMs": 2269.9472079999996
+    },
+    {
+      "name": "Transaction soft delete operations restores archived parents when cascade is requested and detects restore conflicts",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/integration/soft-delete.spec.ts",
+      "durationMs": 1997.2549999999992
+    },
+    {
+      "name": "Stynx platform migrations creates soft-deletable live/archive pairs and rejects invalid registry behavior",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/integration/migrations.spec.ts",
+      "durationMs": 1479.8719579999997
+    },
+    {
+      "name": "Transaction soft delete operations orders onlyDeleted by deleted_at desc by default",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/integration/soft-delete.spec.ts",
+      "durationMs": 1400.3157920000012
+    },
+    {
+      "name": "Transaction soft delete operations raises a structured blocked error and supports hard delete on live and archive rows",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/integration/soft-delete.spec.ts",
+      "durationMs": 1399.63825
+    },
+    {
+      "name": "Transaction soft delete operations keeps live queries default-only, exposes explicit archive helpers, and respects tenant RLS",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/integration/soft-delete.spec.ts",
+      "durationMs": 1301.9582500000015
+    },
+    {
+      "name": "Transaction soft delete operations emits Prompt 10 metrics hooks for soft delete, restore, hard delete, and archive size",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/integration/soft-delete.spec.ts",
+      "durationMs": 1281.338208000001
     },
     {
       "name": "StynxDataModule integration configures GUCs, retries serialization failures, and isolates the three pools",
       "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/integration/data.module.spec.ts",
-      "durationMs": 336.3958330000005
+      "durationMs": 673.5731659999983
     }
-  ],
-  "metric": {
-    "kind": "none"
-  }
+  ]
 }

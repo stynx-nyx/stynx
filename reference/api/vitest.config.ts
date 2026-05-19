@@ -15,7 +15,7 @@ const stynxAlias = Object.fromEntries(
 export default createVitestConfig({
   packageDir: __dirname,
   packageName: '@stynx/reference-api',
-  include: ['test/**/*.spec.ts', 'test/**/*.test.ts'],
+  include: ['test/**/*.spec.ts', 'test/**/*.test.ts', 'test/e2e/**/*.e2e.ts'],
   coverageThreshold: { statements: 0, branches: 0, functions: 0, lines: 0 },
   alias: stynxAlias,
 });

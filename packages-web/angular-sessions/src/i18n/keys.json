@@ -1,0 +1,7 @@
+[
+  "sessions.active.actions.revoke",
+  "sessions.active.actions.revokeOthers",
+  "sessions.active.current",
+  "sessions.active.empty.description",
+  "sessions.active.empty.title"
+]

@@ -9,6 +9,7 @@ import { HttpAuthBackend } from './http-auth.backend';
 import { StynxLoginRedirectComponent } from './login-redirect.component';
 import { StynxLogoutButtonComponent } from './logout-button.component';
 import { OidcClientAdapter } from './oidc-client.adapter';
+import { StynxPermissionDeniedComponent } from './permission-denied.component';
 import { StynxSessionService } from './session.service';
 import {
   STYNX_ANGULAR_AUTH_OPTIONS,
@@ -24,11 +25,13 @@ import type { StynxAngularAuthModuleOptions } from './types';
     StynxHasPermissionDirective,
     StynxLoginRedirectComponent,
     StynxLogoutButtonComponent,
+    StynxPermissionDeniedComponent,
   ],
   exports: [
     StynxHasPermissionDirective,
     StynxLoginRedirectComponent,
     StynxLogoutButtonComponent,
+    StynxPermissionDeniedComponent,
   ],
 })
 export class StynxAngularAuthModule {

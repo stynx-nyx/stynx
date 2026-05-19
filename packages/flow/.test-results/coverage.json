@@ -4,8 +4,8 @@
   "level": "coverage",
   "runner": "vitest",
   "status": "passed",
-  "startedAt": "2026-05-19T04:35:13.972Z",
-  "endedAt": "2026-05-19T04:35:13.972Z",
+  "startedAt": "2026-05-19T14:53:37.081Z",
+  "endedAt": "2026-05-19T14:53:37.081Z",
   "durationMs": 0,
   "exitCode": 0,
   "signal": null,
@@ -20,10 +20,10 @@
   "metric": {
     "kind": "coverage",
     "coverage": {
-      "lines": 91.92,
-      "branches": 33.14,
+      "lines": 100,
+      "branches": 100,
       "functions": 100,
-      "statements": 91.92
+      "statements": 100
     }
   },
   "artifacts": {

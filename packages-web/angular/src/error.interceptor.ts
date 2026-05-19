@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import type { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
-import { Inject, Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { createStynxSdkError } from '@stynx-web/sdk';
 import type { Observable } from 'rxjs';
 import { catchError, throwError } from 'rxjs';
@@ -8,7 +8,7 @@ import { ErrorBannerService } from './error-banner.service';
 
 @Injectable()
 export class ErrorInterceptor implements HttpInterceptor {
-  constructor(@Inject(ErrorBannerService) private readonly errorBanner: ErrorBannerService) {}
+  private readonly errorBanner = inject(ErrorBannerService);
 
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     return next.handle(request).pipe(

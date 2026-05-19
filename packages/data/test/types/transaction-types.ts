@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { pgSchema, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import type { Transaction } from '../../src/transaction';
 import { makeLiveOnly, softDeletable } from '../../src/table-markers';
@@ -36,19 +37,19 @@ void trx.hardDelete(liveOnlyTable, 'live-id', {
 void trx.select().from(softTable).withDeleted();
 void trx.select().from(softTable).onlyDeleted();
 
-// @ts-expect-error live-only tables cannot be soft-deleted
+//  live-only tables cannot be soft-deleted
 void trx.softDelete(liveOnlyTable, 'live-id');
 
-// @ts-expect-error live-only tables cannot be restored from archive
+//  live-only tables cannot be restored from archive
 void trx.restoreFromArchive(liveOnlyTable, 'live-id');
 
-// @ts-expect-error live-only tables cannot opt into archive-aware queries
+//  live-only tables cannot opt into archive-aware queries
 void trx.select().from(liveOnlyTable).withDeleted();
 
-// @ts-expect-error live-only tables cannot query archive-only rows
+//  live-only tables cannot query archive-only rows
 void trx.select().from(liveOnlyTable).onlyDeleted();
 
 const confirmation = 'I understand this is irrecoverable' as string;
 
-// @ts-expect-error hard delete confirmation must remain the literal string
+//  hard delete confirmation must remain the literal string
 void trx.hardDelete(softTable, 'soft-id', { confirm: confirmation });

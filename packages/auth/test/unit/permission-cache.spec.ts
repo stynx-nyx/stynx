@@ -4,6 +4,19 @@ import { InMemoryPermissionCacheBackend } from '../../src/in-memory-permission-c
 import type { PermissionQueryService } from '../../src/permission-query.service';
 
 describe('PermissionCache', () => {
+  it('records metrics defensively when a tier lookup misses', () => {
+    const metrics = new PermissionCacheMetrics();
+    const getSpy = vi.spyOn(Map.prototype, 'get').mockReturnValue(undefined);
+
+    try {
+      metrics.increment('in_memory');
+
+      expect(metrics.snapshot()).toEqual({ in_memory: 0, redis: 0, db: 0 });
+    } finally {
+      getSpy.mockRestore();
+    }
+  });
+
   it('serves a matching in-memory record without recomputing and records the in-memory metric', async () => {
     const backend = new InMemoryPermissionCacheBackend();
     const queries = {
@@ -789,6 +802,58 @@ describe('PermissionCache', () => {
       await expect(cache.inspectSid('sid-resync-fail')).resolves.toMatchObject({
         membershipId: 'membership-stale',
       });
+    } finally {
+      await cache.onModuleDestroy();
+      vi.useRealTimers();
+    }
+  });
+
+  it('treats a cleared drift interval as zero during scheduled re-sync', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-26T12:00:00.000Z'));
+
+    const options = {
+      stynx: { issuer: 'https://stynx.test' },
+      permissions: {
+        dbFallbackOnRedisDown: true,
+        driftResyncIntervalMs: 100,
+      },
+    };
+    const queries = {
+      resolveForUser: vi.fn().mockResolvedValue({
+        membershipId: 'membership-fresh',
+        permissions: ['document:write:*'],
+        hash: 'fresh-hash',
+        generation: 2,
+      }),
+      probeHash: vi.fn(),
+    } as unknown as PermissionQueryService;
+    const cache = new PermissionCache(
+      options,
+      new InMemoryPermissionCacheBackend(),
+      queries,
+      new PermissionCacheMetrics(),
+    );
+
+    try {
+      await cache.prime(
+        {
+          sid: 'sid-zero-threshold',
+          userId: 'user-1',
+          tenantId: 'tenant-1',
+          membershipId: 'membership-stale',
+          permissions: ['document:read:*'],
+          hash: 'stale-hash',
+          generation: 1,
+          computedAt: Date.now(),
+        },
+        new Date(Date.now() + 60_000).toISOString(),
+      );
+      await cache.onModuleInit();
+      options.permissions.driftResyncIntervalMs = undefined;
+      await vi.advanceTimersByTimeAsync(100);
+
+      expect(queries.resolveForUser).toHaveBeenCalledWith('user-1', 'tenant-1');
     } finally {
       await cache.onModuleDestroy();
       vi.useRealTimers();

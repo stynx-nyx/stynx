@@ -1,399 +1,433 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="181" failures="0" errors="0" time="0.565834583">
-    <testsuite name="test/unit/auth.controller.spec.ts" timestamp="2026-05-19T01:37:05.079Z" hostname="thiamat-1903.local" tests="9" failures="0" errors="0" skipped="0" time="0.014695625">
-        <testcase classname="test/unit/auth.controller.spec.ts" name="StynxAuthController &gt; creates a session from the tenant header and token body" time="0.011444958">
+<testsuites name="vitest tests" tests="198" failures="0" errors="0" time="1.925153417">
+    <testsuite name="test/unit/auth.controller.spec.ts" timestamp="2026-05-19T15:49:07.149Z" hostname="thiamat-1903.local" tests="10" failures="0" errors="0" skipped="0" time="0.005276125">
+        <testcase classname="test/unit/auth.controller.spec.ts" name="StynxAuthController &gt; creates a session from the tenant header and token body" time="0.002540334">
         </testcase>
-        <testcase classname="test/unit/auth.controller.spec.ts" name="StynxAuthController &gt; rejects session creation without a tenant header" time="0.000672541">
+        <testcase classname="test/unit/auth.controller.spec.ts" name="StynxAuthController &gt; defaults session device metadata when the body omits it" time="0.000209708">
         </testcase>
-        <testcase classname="test/unit/auth.controller.spec.ts" name="StynxAuthController &gt; rejects session creation without a cognito token" time="0.000139459">
+        <testcase classname="test/unit/auth.controller.spec.ts" name="StynxAuthController &gt; rejects session creation without a tenant header" time="0.0006055">
         </testcase>
-        <testcase classname="test/unit/auth.controller.spec.ts" name="StynxAuthController &gt; switches tenant using the request claims and optional cognito subject" time="0.000256542">
+        <testcase classname="test/unit/auth.controller.spec.ts" name="StynxAuthController &gt; rejects session creation without a cognito token" time="0.0001545">
         </testcase>
-        <testcase classname="test/unit/auth.controller.spec.ts" name="StynxAuthController &gt; prefers the body tenant id when switching sessions" time="0.000183375">
+        <testcase classname="test/unit/auth.controller.spec.ts" name="StynxAuthController &gt; switches tenant using the request claims and optional cognito subject" time="0.000283792">
         </testcase>
-        <testcase classname="test/unit/auth.controller.spec.ts" name="StynxAuthController &gt; rejects session switching without request claims or tenant" time="0.000110875">
+        <testcase classname="test/unit/auth.controller.spec.ts" name="StynxAuthController &gt; prefers the body tenant id when switching sessions" time="0.000185166">
         </testcase>
-        <testcase classname="test/unit/auth.controller.spec.ts" name="StynxAuthController &gt; logs out the current session and returns ok" time="0.000132667">
+        <testcase classname="test/unit/auth.controller.spec.ts" name="StynxAuthController &gt; rejects session switching without request claims or tenant" time="0.0001075">
         </testcase>
-        <testcase classname="test/unit/auth.controller.spec.ts" name="StynxAuthController &gt; rejects logout without a session claim" time="0.000086917">
+        <testcase classname="test/unit/auth.controller.spec.ts" name="StynxAuthController &gt; logs out the current session and returns ok" time="0.000137166">
         </testcase>
-        <testcase classname="test/unit/auth.controller.spec.ts" name="StynxAuthController &gt; delegates inspect and invalidate actions" time="0.000179416">
+        <testcase classname="test/unit/auth.controller.spec.ts" name="StynxAuthController &gt; rejects logout without a session claim" time="0.000099917">
         </testcase>
-    </testsuite>
-    <testsuite name="test/unit/auth.module.spec.ts" timestamp="2026-05-19T01:37:05.101Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.026135958">
-        <testcase classname="test/unit/auth.module.spec.ts" name="StynxAuthModule &gt; builds the dynamic module with the expected controller, providers, and exports" time="0.020139083">
-        </testcase>
-        <testcase classname="test/unit/auth.module.spec.ts" name="StynxAuthModule &gt; returns a null cache backend when redis support is disabled" time="0.000420959">
-        </testcase>
-        <testcase classname="test/unit/auth.module.spec.ts" name="StynxAuthModule &gt; resolves auth options with defaults and optional redis/permission overrides" time="0.000186417">
+        <testcase classname="test/unit/auth.controller.spec.ts" name="StynxAuthController &gt; delegates inspect and invalidate actions" time="0.000210292">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/auth.runtime.spec.ts" timestamp="2026-05-19T01:37:05.111Z" hostname="thiamat-1903.local" tests="7" failures="0" errors="0" skipped="0" time="0.024584084">
-        <testcase classname="test/unit/auth.runtime.spec.ts" name="auth runtime helpers &gt; patches actor context only when stynx claims are present" time="0.003344375">
+    <testsuite name="test/unit/auth.module.spec.ts" timestamp="2026-05-19T15:49:07.154Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.006093875">
+        <testcase classname="test/unit/auth.module.spec.ts" name="StynxAuthModule &gt; builds the dynamic module with the expected controller, providers, and exports" time="0.004464417">
         </testcase>
-        <testcase classname="test/unit/auth.runtime.spec.ts" name="auth runtime helpers &gt; allows public and system routes and enforces permission membership otherwise" time="0.001446625">
+        <testcase classname="test/unit/auth.module.spec.ts" name="StynxAuthModule &gt; returns a null cache backend when redis support is disabled" time="0.000258584">
         </testcase>
-        <testcase classname="test/unit/auth.runtime.spec.ts" name="auth runtime helpers &gt; short-circuits permission checks for route metadata defaults" time="0.001038333">
-        </testcase>
-        <testcase classname="test/unit/auth.runtime.spec.ts" name="auth runtime helpers &gt; hydrates request auth context and readonly state from a valid bearer token" time="0.002727125">
-        </testcase>
-        <testcase classname="test/unit/auth.runtime.spec.ts" name="auth runtime helpers &gt; rejects missing bearer tokens and inactive sessions" time="0.002581708">
-        </testcase>
-        <testcase classname="test/unit/auth.runtime.spec.ts" name="auth runtime helpers &gt; manages in-memory permission cache records and metrics snapshots" time="0.000402709">
-        </testcase>
-        <testcase classname="test/unit/auth.runtime.spec.ts" name="auth runtime helpers &gt; handles jwt and permission utility helpers deterministically" time="0.011964458">
+        <testcase classname="test/unit/auth.module.spec.ts" name="StynxAuthModule &gt; resolves auth options with defaults and optional redis/permission overrides" time="0.000154917">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/auth.service.spec.ts" timestamp="2026-05-19T01:37:05.117Z" hostname="thiamat-1903.local" tests="8" failures="0" errors="0" skipped="0" time="0.010130292">
-        <testcase classname="test/unit/auth.service.spec.ts" name="StynxAuthService &gt; exchanges a cognito token using an existing user and active request context" time="0.004064833">
+    <testsuite name="test/unit/auth.runtime.spec.ts" timestamp="2026-05-19T15:49:07.155Z" hostname="thiamat-1903.local" tests="7" failures="0" errors="0" skipped="0" time="0.0106655">
+        <testcase classname="test/unit/auth.runtime.spec.ts" name="auth runtime helpers &gt; patches actor context only when stynx claims are present" time="0.002342917">
         </testcase>
-        <testcase classname="test/unit/auth.service.spec.ts" name="StynxAuthService &gt; creates a user when cognito subject is unseen and there is no active request context" time="0.001081625">
+        <testcase classname="test/unit/auth.runtime.spec.ts" name="auth runtime helpers &gt; allows public and system routes and enforces permission membership otherwise" time="0.000607834">
         </testcase>
-        <testcase classname="test/unit/auth.service.spec.ts" name="StynxAuthService &gt; creates a request context when only the mutator provider is available" time="0.000610584">
+        <testcase classname="test/unit/auth.runtime.spec.ts" name="auth runtime helpers &gt; short-circuits permission checks for route metadata defaults" time="0.000351417">
         </testcase>
-        <testcase classname="test/unit/auth.service.spec.ts" name="StynxAuthService &gt; reuses the current email when an existing user is found and cognito omits email" time="0.000701791">
+        <testcase classname="test/unit/auth.runtime.spec.ts" name="auth runtime helpers &gt; hydrates request auth context and readonly state from a valid bearer token" time="0.001694333">
         </testcase>
-        <testcase classname="test/unit/auth.service.spec.ts" name="StynxAuthService &gt; switches tenant, revokes the old session, and invalidates the old sid" time="0.000512208">
+        <testcase classname="test/unit/auth.runtime.spec.ts" name="auth runtime helpers &gt; rejects missing bearer tokens and inactive sessions" time="0.000976166">
         </testcase>
-        <testcase classname="test/unit/auth.service.spec.ts" name="StynxAuthService &gt; logs out, inspects, and invalidates permissions through the cache" time="0.0012175">
+        <testcase classname="test/unit/auth.runtime.spec.ts" name="auth runtime helpers &gt; manages in-memory permission cache records and metrics snapshots" time="0.000362708">
         </testcase>
-        <testcase classname="test/unit/auth.service.spec.ts" name="StynxAuthService &gt; fails clearly when the database or session service provider is unavailable" time="0.000734708">
-        </testcase>
-        <testcase classname="test/unit/auth.service.spec.ts" name="StynxAuthService &gt; fails clearly when the database provider is unavailable during cognito exchange" time="0.000275084">
+        <testcase classname="test/unit/auth.runtime.spec.ts" name="auth runtime helpers &gt; handles jwt and permission utility helpers deterministically" time="0.002841917">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/barrel-load.spec.ts" timestamp="2026-05-19T01:37:05.127Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.001431625">
-        <testcase classname="test/unit/barrel-load.spec.ts" name="@stynx/auth barrel &gt; exports at least one symbol" time="0.000686458">
+    <testsuite name="test/unit/auth.service.spec.ts" timestamp="2026-05-19T15:49:07.156Z" hostname="thiamat-1903.local" tests="9" failures="0" errors="0" skipped="0" time="0.314349959">
+        <testcase classname="test/unit/auth.service.spec.ts" name="StynxAuthService &gt; exchanges a cognito token using an existing user and active request context" time="0.084592666">
+        </testcase>
+        <testcase classname="test/unit/auth.service.spec.ts" name="StynxAuthService &gt; creates a user when cognito subject is unseen and there is no active request context" time="0.181935958">
+        </testcase>
+        <testcase classname="test/unit/auth.service.spec.ts" name="StynxAuthService &gt; creates a request context when only the mutator provider is available" time="0.0044305">
+        </testcase>
+        <testcase classname="test/unit/auth.service.spec.ts" name="StynxAuthService &gt; reuses the current email when an existing user is found and cognito omits email" time="0.001503667">
+        </testcase>
+        <testcase classname="test/unit/auth.service.spec.ts" name="StynxAuthService &gt; switches tenant, revokes the old session, and invalidates the old sid" time="0.000660291">
+        </testcase>
+        <testcase classname="test/unit/auth.service.spec.ts" name="StynxAuthService &gt; uses the stynx subject when switching without a cognito subject" time="0.017403125">
+        </testcase>
+        <testcase classname="test/unit/auth.service.spec.ts" name="StynxAuthService &gt; logs out, inspects, and invalidates permissions through the cache" time="0.002080833">
+        </testcase>
+        <testcase classname="test/unit/auth.service.spec.ts" name="StynxAuthService &gt; fails clearly when the database or session service provider is unavailable" time="0.008584583">
+        </testcase>
+        <testcase classname="test/unit/auth.service.spec.ts" name="StynxAuthService &gt; fails clearly when the database provider is unavailable during cognito exchange" time="0.000358125">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/cognito-admin.adapter.spec.ts" timestamp="2026-05-19T01:37:05.129Z" hostname="thiamat-1903.local" tests="56" failures="0" errors="0" skipped="0" time="0.113656167">
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="mapCognitoError &gt; maps UserNotFoundException → IDENTITY_NOT_FOUND" time="0.000853542">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="mapCognitoError &gt; maps ResourceNotFoundException → IDENTITY_NOT_FOUND" time="0.000095834">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="mapCognitoError &gt; maps NotAuthorizedException → IDENTITY_FORBIDDEN" time="0.0000775">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="mapCognitoError &gt; maps AccessDeniedException → IDENTITY_FORBIDDEN" time="0.000057083">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="mapCognitoError &gt; maps UsernameExistsException → IDENTITY_CONFLICT" time="0.0000635">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="mapCognitoError &gt; maps AliasExistsException → IDENTITY_CONFLICT" time="0.0000665">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="mapCognitoError &gt; maps TooManyRequestsException → IDENTITY_RATE_LIMITED" time="0.000056333">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="mapCognitoError &gt; maps InvalidParameterException → IDENTITY_VALIDATION_ERROR" time="0.000049167">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="mapCognitoError &gt; maps InvalidPasswordException → IDENTITY_VALIDATION_ERROR" time="0.000065834">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="mapCognitoError &gt; maps SomeOtherException → IDENTITY_PROVIDER_ERROR" time="0.000095708">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="mapCognitoError &gt; produces a default IDENTITY_PROVIDER_ERROR for unknown shapes" time="0.00006075">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; listUsers calls ListUsersCommand with the email filter when present" time="0.075922834">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; listUsers uses the phone filter when only phone is set" time="0.000470041">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; listUsers routes through ListUsersInGroupCommand when group is set" time="0.000302208">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; listUsers clamps limit to 60 when caller requests more" time="0.000252084">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; listUsers maps mapCognitoError on failure" time="0.0005665">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; getUser calls AdminGetUserCommand and returns a IdentityUserDetail" time="0.000360583">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; getUserBySubject lists users by sub filter then fetches details" time="0.000295709">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; getUserBySubject throws IDENTITY_NOT_FOUND when nothing matches" time="0.000233458">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; getUserBySubject preserves IdentityAdminError thrown from getUser" time="0.000296542">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; getUserBySubject maps provider failures while listing by subject" time="0.014075792">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; updateUser composes the right attribute list including custom: prefix" time="0.002892792">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; updateUser short-circuits attribute push when nothing changes" time="0.004275916">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; disableUser / enableUser issue the right commands" time="0.000866167">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; listGroupsForUser maps response.Groups and filters blanks" time="0.000685125">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; listGroups paginates via NextToken and maps items" time="0.000884959">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; addUserToGroup / removeUserFromGroup issue correct commands" time="0.001206">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; resetUserPassword + setUserPassword issue correct commands" time="0.000731334">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; verifyUserChannels marks email_verified + phone_number_verified" time="0.000718708">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; verifyUserChannels skips the call when neither channel is requested" time="0.000777125">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; resolveCredentials default-chain returns undefined (uses AWS SDK default)" time="0.001218834">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; resolveCredentials with strategy=profile throws when no profile is set" time="0.000132958">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; resolveCredentials with strategy=provided throws without explicit credentials" time="0.000078333">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; resolveCredentials with strategy=provided + credentials accepts them" time="0.00025875">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; username fallback uses the configured order when Username is undefined" time="0.000240041">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; username fallback returns an empty string when no fallback attributes are present" time="0.000336834">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; resolveCredentials with strategy=profile accepts explicit profile names" time="0.000180084">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; getUser maps provider failures to IdentityAdminError" time="0.000193792">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; updateUser maps provider failures to IdentityAdminError" time="0.000155833">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; disableUser maps provider failures to IdentityAdminError" time="0.000146541">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; enableUser maps provider failures to IdentityAdminError" time="0.00013925">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; listGroupsForUser maps provider failures to IdentityAdminError" time="0.000150708">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; listGroups maps provider failures to IdentityAdminError" time="0.000154375">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; addUserToGroup maps provider failures to IdentityAdminError" time="0.000136292">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; removeUserFromGroup maps provider failures to IdentityAdminError" time="0.000117292">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; resetUserPassword maps provider failures to IdentityAdminError" time="0.00012025">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; setUserPassword maps provider failures to IdentityAdminError" time="0.000130916">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; verifyUserChannels maps provider failures to IdentityAdminError" time="0.000135334">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="buildCognitoAdminOptionsFromEnv &gt; reads region + userPoolId from environment" time="0.000109875">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="buildCognitoAdminOptionsFromEnv &gt; falls back to AWS_REGION and AWS_DEFAULT_REGION" time="0.000050042">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="buildCognitoAdminOptionsFromEnv &gt; honors overrides over env" time="0.000045708">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="buildCognitoAdminOptionsFromEnv &gt; throws IDENTITY_VALIDATION_ERROR when region is missing" time="0.00005225">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="buildCognitoAdminOptionsFromEnv &gt; throws IDENTITY_VALIDATION_ERROR when userPoolId is missing" time="0.000044042">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="buildCognitoAdminOptionsFromEnv &gt; uses profile strategy when AWS_PROFILE is set" time="0.000048334">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="buildCognitoAdminOptionsFromEnv &gt; respects STYNX_IDENTITY_ADMIN_CREDENTIALS_STRATEGY env var" time="0.000032583">
-        </testcase>
-        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="buildCognitoAdminOptionsFromEnv &gt; includes endpoint, credentials, and fallback-order overrides when provided" time="0.000132667">
+    <testsuite name="test/unit/barrel-load.spec.ts" timestamp="2026-05-19T15:49:07.157Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.001273333">
+        <testcase classname="test/unit/barrel-load.spec.ts" name="@stynx/auth barrel &gt; exports at least one symbol" time="0.000672542">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/cognito-token-verifier.spec.ts" timestamp="2026-05-19T01:37:05.172Z" hostname="thiamat-1903.local" tests="13" failures="0" errors="0" skipped="0" time="0.190858125">
-        <testcase classname="test/unit/cognito-token-verifier.spec.ts" name="CognitoTokenVerifier — constructor &gt; defaults jwksUri to &lt;issuer&gt;/.well-known/jwks.json" time="0.000709833">
+    <testsuite name="test/unit/cognito-admin.adapter.spec.ts" timestamp="2026-05-19T15:49:07.157Z" hostname="thiamat-1903.local" tests="66" failures="0" errors="0" skipped="0" time="0.059034917">
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="mapCognitoError &gt; maps UserNotFoundException → IDENTITY_NOT_FOUND" time="0.000854875">
         </testcase>
-        <testcase classname="test/unit/cognito-token-verifier.spec.ts" name="CognitoTokenVerifier — constructor &gt; honors explicit jwksUri override" time="0.000086167">
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="mapCognitoError &gt; maps ResourceNotFoundException → IDENTITY_NOT_FOUND" time="0.000092042">
         </testcase>
-        <testcase classname="test/unit/cognito-token-verifier.spec.ts" name="CognitoTokenVerifier — constructor &gt; uses default claim names when none provided" time="0.000419167">
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="mapCognitoError &gt; maps NotAuthorizedException → IDENTITY_FORBIDDEN" time="0.000106833">
         </testcase>
-        <testcase classname="test/unit/cognito-token-verifier.spec.ts" name="CognitoTokenVerifier — constructor &gt; honors custom claim names" time="0.000107875">
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="mapCognitoError &gt; maps AccessDeniedException → IDENTITY_FORBIDDEN" time="0.000058167">
         </testcase>
-        <testcase classname="test/unit/cognito-token-verifier.spec.ts" name="CognitoTokenVerifier — header-shape early validation &gt; throws on undefined header" time="0.000874083">
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="mapCognitoError &gt; maps UsernameExistsException → IDENTITY_CONFLICT" time="0.000061916">
         </testcase>
-        <testcase classname="test/unit/cognito-token-verifier.spec.ts" name="CognitoTokenVerifier — header-shape early validation &gt; throws on header without Bearer prefix" time="0.000141167">
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="mapCognitoError &gt; maps AliasExistsException → IDENTITY_CONFLICT" time="0.000062625">
         </testcase>
-        <testcase classname="test/unit/cognito-token-verifier.spec.ts" name="CognitoTokenVerifier — header-shape early validation &gt; throws on empty array" time="0.000109542">
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="mapCognitoError &gt; maps TooManyRequestsException → IDENTITY_RATE_LIMITED" time="0.000176625">
         </testcase>
-        <testcase classname="test/unit/cognito-token-verifier.spec.ts" name="CognitoTokenVerifier — header-shape early validation &gt; throws on array whose first element lacks Bearer prefix" time="0.000094916">
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="mapCognitoError &gt; maps InvalidParameterException → IDENTITY_VALIDATION_ERROR" time="0.000077125">
         </testcase>
-        <testcase classname="test/unit/cognito-token-verifier.spec.ts" name="CognitoTokenVerifier — header-shape early validation &gt; verifies a signed bearer token and maps principal metadata" time="0.179689667">
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="mapCognitoError &gt; maps InvalidPasswordException → IDENTITY_VALIDATION_ERROR" time="0.000067792">
         </testcase>
-        <testcase classname="test/unit/cognito-token-verifier.spec.ts" name="CognitoTokenVerifier — payload branch helpers &gt; resolves principals, optional profile claims, and de-duplicated authorization claims" time="0.000352625">
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="mapCognitoError &gt; maps SomeOtherException → IDENTITY_PROVIDER_ERROR" time="0.000099458">
         </testcase>
-        <testcase classname="test/unit/cognito-token-verifier.spec.ts" name="CognitoTokenVerifier — payload branch helpers &gt; accepts audience matches through aud, client_id, or azp and rejects mismatches" time="0.0003115">
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="mapCognitoError &gt; produces a default IDENTITY_PROVIDER_ERROR for unknown shapes" time="0.000067417">
         </testcase>
-        <testcase classname="test/unit/cognito-token-verifier.spec.ts" name="CognitoTokenVerifier — payload branch helpers &gt; enforces token_use only when configured" time="0.000199375">
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; constructs with an explicit endpoint override" time="0.004013542">
         </testcase>
-        <testcase classname="test/unit/cognito-token-verifier.spec.ts" name="CognitoTokenVerifier — payload branch helpers &gt; creates and reuses the remote JWKS resolver" time="0.006741042">
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; listUsers calls ListUsersCommand with the email filter when present" time="0.001560667">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; listUsers uses the phone filter when only phone is set" time="0.000318375">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; listUsers routes through ListUsersInGroupCommand when group is set" time="0.000283083">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; listUsers maps empty grouped responses with pagination token" time="0.000736292">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; listUsers maps empty ungrouped responses without pagination" time="0.000760042">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; listUsers omits optional summary fields when Cognito omits them" time="0.000604333">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; listUsers falls back to username attributes when Cognito omits Username" time="0.000358292">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; listUsers clamps limit to 60 when caller requests more" time="0.000285833">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; listUsers maps mapCognitoError on failure" time="0.000487709">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; getUser calls AdminGetUserCommand and returns a IdentityUserDetail" time="0.000368041">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; getUser preserves blank attribute values and optional update metadata" time="0.000543792">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; getUser handles an undefined attributes array" time="0.000273916">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; getUserBySubject lists users by sub filter then fetches details" time="0.001090541">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; getUserBySubject throws IDENTITY_NOT_FOUND when nothing matches" time="0.001820458">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; getUserBySubject preserves IdentityAdminError thrown from getUser" time="0.000539209">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; getUserBySubject maps provider failures while listing by subject" time="0.000303709">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; updateUser composes the right attribute list including custom: prefix" time="0.00175775">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; updateUser short-circuits attribute push when nothing changes" time="0.001925875">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; disableUser / enableUser issue the right commands" time="0.001151792">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; listGroupsForUser maps response.Groups and filters blanks" time="0.001014958">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; listGroupsForUser handles missing groups and descriptions" time="0.001152708">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; listGroups paginates via NextToken and maps items" time="0.000696166">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; listGroups handles missing groups and omits absent pagination" time="0.000632542">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; listGroups preserves group descriptions when present" time="0.000670958">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; addUserToGroup / removeUserFromGroup issue correct commands" time="0.000777667">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; resetUserPassword + setUserPassword issue correct commands" time="0.000597416">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; verifyUserChannels marks email_verified + phone_number_verified" time="0.000328667">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; verifyUserChannels skips the call when neither channel is requested" time="0.000303292">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; resolveCredentials default-chain returns undefined (uses AWS SDK default)" time="0.000179292">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; resolveCredentials with strategy=profile throws when no profile is set" time="0.000083625">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; resolveCredentials with strategy=provided throws without explicit credentials" time="0.000051959">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; resolveCredentials with strategy=provided + credentials accepts them" time="0.000212625">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; username fallback uses the configured order when Username is undefined" time="0.000193083">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; username fallback returns an empty string when no fallback attributes are present" time="0.000259584">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; resolveCredentials with strategy=profile accepts explicit profile names" time="0.000222375">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; getUser maps provider failures to IdentityAdminError" time="0.001578">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; updateUser maps provider failures to IdentityAdminError" time="0.000785125">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; disableUser maps provider failures to IdentityAdminError" time="0.000592541">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; enableUser maps provider failures to IdentityAdminError" time="0.000541084">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; listGroupsForUser maps provider failures to IdentityAdminError" time="0.000597667">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; listGroups maps provider failures to IdentityAdminError" time="0.000688792">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; addUserToGroup maps provider failures to IdentityAdminError" time="0.01721875">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; removeUserFromGroup maps provider failures to IdentityAdminError" time="0.000893959">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; resetUserPassword maps provider failures to IdentityAdminError" time="0.001010541">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; setUserPassword maps provider failures to IdentityAdminError" time="0.000838875">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="CognitoIdentityAdminAdapter &gt; verifyUserChannels maps provider failures to IdentityAdminError" time="0.001876875">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="buildCognitoAdminOptionsFromEnv &gt; reads region + userPoolId from environment" time="0.000940416">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="buildCognitoAdminOptionsFromEnv &gt; falls back to AWS_REGION and AWS_DEFAULT_REGION" time="0.000067875">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="buildCognitoAdminOptionsFromEnv &gt; honors overrides over env" time="0.000046584">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="buildCognitoAdminOptionsFromEnv &gt; throws IDENTITY_VALIDATION_ERROR when region is missing" time="0.00021325">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="buildCognitoAdminOptionsFromEnv &gt; throws IDENTITY_VALIDATION_ERROR when userPoolId is missing" time="0.000049291">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="buildCognitoAdminOptionsFromEnv &gt; uses profile strategy when AWS_PROFILE is set" time="0.000051084">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="buildCognitoAdminOptionsFromEnv &gt; respects STYNX_IDENTITY_ADMIN_CREDENTIALS_STRATEGY env var" time="0.000031583">
+        </testcase>
+        <testcase classname="test/unit/cognito-admin.adapter.spec.ts" name="buildCognitoAdminOptionsFromEnv &gt; includes endpoint, credentials, and fallback-order overrides when provided" time="0.000099583">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/decorators-runtime.spec.ts" timestamp="2026-05-19T01:37:05.179Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.001539375">
-        <testcase classname="test/unit/decorators-runtime.spec.ts" name="auth decorators &gt; attaches public, system, readonly, and permission metadata" time="0.000921167">
+    <testsuite name="test/unit/cognito-token-verifier.spec.ts" timestamp="2026-05-19T15:49:07.314Z" hostname="thiamat-1903.local" tests="14" failures="0" errors="0" skipped="0" time="0.663825083">
+        <testcase classname="test/unit/cognito-token-verifier.spec.ts" name="CognitoTokenVerifier — constructor &gt; defaults jwksUri to &lt;issuer&gt;/.well-known/jwks.json" time="0.000976458">
+        </testcase>
+        <testcase classname="test/unit/cognito-token-verifier.spec.ts" name="CognitoTokenVerifier — constructor &gt; honors explicit jwksUri override" time="0.000132541">
+        </testcase>
+        <testcase classname="test/unit/cognito-token-verifier.spec.ts" name="CognitoTokenVerifier — constructor &gt; uses default claim names when none provided" time="0.000949125">
+        </testcase>
+        <testcase classname="test/unit/cognito-token-verifier.spec.ts" name="CognitoTokenVerifier — constructor &gt; honors custom claim names" time="0.000205833">
+        </testcase>
+        <testcase classname="test/unit/cognito-token-verifier.spec.ts" name="CognitoTokenVerifier — header-shape early validation &gt; throws on undefined header" time="0.002159916">
+        </testcase>
+        <testcase classname="test/unit/cognito-token-verifier.spec.ts" name="CognitoTokenVerifier — header-shape early validation &gt; throws on header without Bearer prefix" time="0.000560625">
+        </testcase>
+        <testcase classname="test/unit/cognito-token-verifier.spec.ts" name="CognitoTokenVerifier — header-shape early validation &gt; throws on empty array" time="0.000397084">
+        </testcase>
+        <testcase classname="test/unit/cognito-token-verifier.spec.ts" name="CognitoTokenVerifier — header-shape early validation &gt; throws on array whose first element lacks Bearer prefix" time="0.000342166">
+        </testcase>
+        <testcase classname="test/unit/cognito-token-verifier.spec.ts" name="CognitoTokenVerifier — header-shape early validation &gt; verifies a signed bearer token and maps principal metadata" time="0.23224525">
+        </testcase>
+        <testcase classname="test/unit/cognito-token-verifier.spec.ts" name="CognitoTokenVerifier — header-shape early validation &gt; omits optional principal and timestamp metadata when claims are absent" time="0.4225035">
+        </testcase>
+        <testcase classname="test/unit/cognito-token-verifier.spec.ts" name="CognitoTokenVerifier — payload branch helpers &gt; resolves principals, optional profile claims, and de-duplicated authorization claims" time="0.000311833">
+        </testcase>
+        <testcase classname="test/unit/cognito-token-verifier.spec.ts" name="CognitoTokenVerifier — payload branch helpers &gt; accepts audience matches through aud, client_id, or azp and rejects mismatches" time="0.000428208">
+        </testcase>
+        <testcase classname="test/unit/cognito-token-verifier.spec.ts" name="CognitoTokenVerifier — payload branch helpers &gt; enforces token_use only when configured" time="0.000190334">
+        </testcase>
+        <testcase classname="test/unit/cognito-token-verifier.spec.ts" name="CognitoTokenVerifier — payload branch helpers &gt; creates and reuses the remote JWKS resolver" time="0.001054375">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/doctor.spec.ts" timestamp="2026-05-19T01:37:05.180Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.015824">
-        <testcase classname="test/unit/doctor.spec.ts" name="verifyAuthMutationCoverage &gt; tracks the six ADR-002 mutation paths exactly" time="0.014405416">
+    <testsuite name="test/unit/decorators-runtime.spec.ts" timestamp="2026-05-19T15:49:07.339Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.002555458">
+        <testcase classname="test/unit/decorators-runtime.spec.ts" name="auth decorators &gt; attaches public, system, readonly, and permission metadata" time="0.001948125">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/effective-hash-computer.spec.ts" timestamp="2026-05-19T01:37:05.182Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.010375125">
-        <testcase classname="test/unit/effective-hash-computer.spec.ts" name="EffectiveHashComputer &gt; recomputes membership hashes for direct and grouped role mutations" time="0.00760325">
-        </testcase>
-        <testcase classname="test/unit/effective-hash-computer.spec.ts" name="EffectiveHashComputer &gt; recomputes the active membership hash for a user and tenant pair" time="0.000464875">
-        </testcase>
-        <testcase classname="test/unit/effective-hash-computer.spec.ts" name="EffectiveHashComputer &gt; short-circuits empty mutation inputs" time="0.00024825">
-        </testcase>
-        <testcase classname="test/unit/effective-hash-computer.spec.ts" name="EffectiveHashComputer &gt; throws when the database provider is unavailable" time="0.000848042">
+    <testsuite name="test/unit/doctor.spec.ts" timestamp="2026-05-19T15:49:07.340Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.001530334">
+        <testcase classname="test/unit/doctor.spec.ts" name="verifyAuthMutationCoverage &gt; tracks the six ADR-002 mutation paths exactly" time="0.000969458">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/in-memory-permission-cache-backend.spec.ts" timestamp="2026-05-19T01:37:05.198Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.007031666">
-        <testcase classname="test/unit/in-memory-permission-cache-backend.spec.ts" name="InMemoryPermissionCacheBackend edge branches &gt; ignores delete and malformed invalidation misses" time="0.001952875">
+    <testsuite name="test/unit/effective-hash-computer.spec.ts" timestamp="2026-05-19T15:49:07.340Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.006109">
+        <testcase classname="test/unit/effective-hash-computer.spec.ts" name="EffectiveHashComputer &gt; recomputes membership hashes for direct and grouped role mutations" time="0.003057625">
         </testcase>
-        <testcase classname="test/unit/in-memory-permission-cache-backend.spec.ts" name="InMemoryPermissionCacheBackend edge branches &gt; publishes to subscribers and clears records on close" time="0.000590208">
+        <testcase classname="test/unit/effective-hash-computer.spec.ts" name="EffectiveHashComputer &gt; recomputes the active membership hash for a user and tenant pair" time="0.000344417">
         </testcase>
-    </testsuite>
-    <testsuite name="test/unit/permission-cache.spec.ts" timestamp="2026-05-19T01:37:05.199Z" hostname="thiamat-1903.local" tests="18" failures="0" errors="0" skipped="0" time="0.035776375">
-        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; serves a matching in-memory record without recomputing and records the in-memory metric" time="0.00575475">
+        <testcase classname="test/unit/effective-hash-computer.spec.ts" name="EffectiveHashComputer &gt; short-circuits empty mutation inputs" time="0.000221416">
         </testcase>
-        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; hydrates from the backend when the in-memory entry is absent and records the redis metric" time="0.000935417">
-        </testcase>
-        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; invalidates fan-out for 100 sessions in the same tenant" time="0.004414167">
-        </testcase>
-        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; falls back to DB resolution when the backend is unavailable and records the db tier metric" time="0.000932458">
-        </testcase>
-        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; rethrows backend failures when DB fallback is disabled" time="0.0009105">
-        </testcase>
-        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; recomputes when cached permissions do not match the token hash" time="0.006711666">
-        </testcase>
-        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; invalidates a single sid in memory and backend storage" time="0.000388958">
-        </testcase>
-        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; clears all cached sessions on global invalidation and ignores malformed invalidation messages" time="0.000310667">
-        </testcase>
-        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; invalidates only matching sessions for user and tenant scoped messages" time="0.000274125">
-        </testcase>
-        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; expires in-memory entries and clamps backend ttl to at least one second" time="0.000679667">
-        </testcase>
-        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; evicts the oldest in-memory entry when the local cache reaches capacity" time="0.004195791">
-        </testcase>
-        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; writes recomputed records to the backend with the one-day fallback ttl" time="0.003307209">
-        </testcase>
-        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; keeps a cached record when the drift probe has no active membership hash" time="0.000484666">
-        </testcase>
-        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; recomputes when the cached hash probe detects drift before querying the database again" time="0.000592417">
-        </testcase>
-        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; keeps wildcard invalidations scoped to the requested user or tenant" time="0.00049475">
-        </testcase>
-        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; closes the backend on module destroy" time="0.000137041">
-        </testcase>
-        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; proactively re-syncs stale in-memory permission entries" time="0.002975333">
-        </testcase>
-        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; swallows background re-sync failures for stale in-memory entries" time="0.001187291">
+        <testcase classname="test/unit/effective-hash-computer.spec.ts" name="EffectiveHashComputer &gt; throws when the database provider is unavailable" time="0.001751291">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/permission-query.service.spec.ts" timestamp="2026-05-19T01:37:05.226Z" hostname="thiamat-1903.local" tests="6" failures="0" errors="0" skipped="0" time="0.018747125">
-        <testcase classname="test/unit/permission-query.service.spec.ts" name="PermissionQueryService &gt; resolves membership permissions inside an existing request context" time="0.008129916">
+    <testsuite name="test/unit/in-memory-permission-cache-backend.spec.ts" timestamp="2026-05-19T15:49:07.341Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.026552375">
+        <testcase classname="test/unit/in-memory-permission-cache-backend.spec.ts" name="InMemoryPermissionCacheBackend edge branches &gt; ignores delete and malformed invalidation misses" time="0.014816">
         </testcase>
-        <testcase classname="test/unit/permission-query.service.spec.ts" name="PermissionQueryService &gt; creates a request context when none is active and supports probeHash" time="0.00427575">
+        <testcase classname="test/unit/in-memory-permission-cache-backend.spec.ts" name="InMemoryPermissionCacheBackend edge branches &gt; publishes to subscribers and clears records on close" time="0.008777042">
         </testcase>
-        <testcase classname="test/unit/permission-query.service.spec.ts" name="PermissionQueryService &gt; creates a request context when the mutator exists but RequestContext is unavailable" time="0.001904667">
-        </testcase>
-        <testcase classname="test/unit/permission-query.service.spec.ts" name="PermissionQueryService &gt; throws when membership is missing or database provider is unavailable" time="0.000936958">
-        </testcase>
-        <testcase classname="test/unit/permission-query.service.spec.ts" name="PermissionQueryService &gt; runs without a request context mutator and issues the expected membership queries" time="0.000659875">
-        </testcase>
-        <testcase classname="test/unit/permission-query.service.spec.ts" name="PermissionQueryService &gt; returns null hash and zero generation when probeHash finds no active membership" time="0.000264625">
+        <testcase classname="test/unit/in-memory-permission-cache-backend.spec.ts" name="InMemoryPermissionCacheBackend edge branches &gt; ignores tenant and user invalidation misses" time="0.00014325">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/redis-permission-cache-backend.spec.ts" timestamp="2026-05-19T01:37:05.238Z" hostname="thiamat-1903.local" tests="26" failures="0" errors="0" skipped="0" time="0.014532208">
-        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; onModuleInit is a no-op when redis options are absent" time="0.000970208">
+    <testsuite name="test/unit/permission-cache.spec.ts" timestamp="2026-05-19T15:49:07.341Z" hostname="thiamat-1903.local" tests="20" failures="0" errors="0" skipped="0" time="0.264519292">
+        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; records metrics defensively when a tier lookup misses" time="0.005483458">
         </testcase>
-        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; onModuleInit does not reconnect when both redis clients are already open" time="0.000470375">
+        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; serves a matching in-memory record without recomputing and records the in-memory metric" time="0.000866334">
         </testcase>
-        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; onModuleInit creates, connects, subscribes, and forwards invalidation messages" time="0.00344">
+        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; hydrates from the backend when the in-memory entry is absent and records the redis metric" time="0.00077175">
         </testcase>
-        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; subscribes immediately when a subscriber client is already attached" time="0.000464958">
+        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; invalidates fan-out for 100 sessions in the same tenant" time="0.087611791">
         </testcase>
-        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; get returns null when no client is configured" time="0.00015075">
+        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; falls back to DB resolution when the backend is unavailable and records the db tier metric" time="0.005680917">
         </testcase>
-        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; get parses JSON value when present" time="0.0003145">
+        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; rethrows backend failures when DB fallback is disabled" time="0.000728">
         </testcase>
-        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; get returns null when redis returns nothing" time="0.000152708">
+        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; recomputes when cached permissions do not match the token hash" time="0.072527333">
         </testcase>
-        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; set is a no-op when no client is configured" time="0.00009375">
+        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; invalidates a single sid in memory and backend storage" time="0.022167625">
         </testcase>
-        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; set writes record + user/tenant indexes with TTL" time="0.000377125">
+        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; clears all cached sessions on global invalidation and ignores malformed invalidation messages" time="0.03703425">
         </testcase>
-        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; delete is a no-op when no client is configured" time="0.000115042">
+        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; invalidates only matching sessions for user and tenant scoped messages" time="0.000383">
         </testcase>
-        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; delete removes record and (when known) sids from user/tenant indexes" time="0.000296292">
+        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; expires in-memory entries and clamps backend ttl to at least one second" time="0.000568708">
         </testcase>
-        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; delete only deletes the record when no record exists in the index" time="0.000747834">
+        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; evicts the oldest in-memory entry when the local cache reaches capacity" time="0.000162041">
         </testcase>
-        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; invalidateScope is a no-op when no client is configured" time="0.000416417">
+        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; writes recomputed records to the backend with the one-day fallback ttl" time="0.005587209">
         </testcase>
-        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; invalidateScope ignores malformed messages without both parts" time="0.000485959">
+        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; keeps a cached record when the drift probe has no active membership hash" time="0.000370459">
         </testcase>
-        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; invalidateScope handles per-user scope by listing user sids" time="0.000964">
+        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; recomputes when the cached hash probe detects drift before querying the database again" time="0.0001945">
         </testcase>
-        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; invalidateScope leaves user-indexed records alone when tenant does not match" time="0.002624167">
+        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; keeps wildcard invalidations scoped to the requested user or tenant" time="0.000372459">
         </testcase>
-        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; invalidateScope handles tenant-wide scope (userId=*)" time="0.00030975">
+        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; closes the backend on module destroy" time="0.00011375">
         </testcase>
-        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; invalidateScope handles global scope (*:*) by scanning keys" time="0.000246792">
+        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; proactively re-syncs stale in-memory permission entries" time="0.015556875">
         </testcase>
-        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; invalidateScope accepts scanIterator string keys as well as key arrays" time="0.000228417">
+        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; swallows background re-sync failures for stale in-memory entries" time="0.002425167">
         </testcase>
-        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; subscribe records the handler and re-subscribes when subscriber is present" time="0.000142166">
-        </testcase>
-        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; subscribe only records the handler when redis subscriber or options are absent" time="0.000104">
-        </testcase>
-        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; publish forwards messages on the configured invalidate channel" time="0.000133125">
-        </testcase>
-        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; publish is a no-op without redis options or without a client" time="0.000153458">
-        </testcase>
-        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; close quits both client and subscriber when open" time="0.000110209">
-        </testcase>
-        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; close skips quit calls when clients are already closed" time="0.000091125">
-        </testcase>
-        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; onModuleDestroy delegates to close" time="0.000056792">
+        <testcase classname="test/unit/permission-cache.spec.ts" name="PermissionCache &gt; treats a cleared drift interval as zero during scheduled re-sync" time="0.003546833">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/stynx-auth.guard.spec.ts" timestamp="2026-05-19T01:37:05.260Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.008095375">
-        <testcase classname="test/unit/stynx-auth.guard.spec.ts" name="StynxAuthGuard &gt; allows public and system routes without reading the request" time="0.00277025">
+    <testsuite name="test/unit/permission-query.service.spec.ts" timestamp="2026-05-19T15:49:07.344Z" hostname="thiamat-1903.local" tests="6" failures="0" errors="0" skipped="0" time="0.147277125">
+        <testcase classname="test/unit/permission-query.service.spec.ts" name="PermissionQueryService &gt; resolves membership permissions inside an existing request context" time="0.035936084">
         </testcase>
-        <testcase classname="test/unit/stynx-auth.guard.spec.ts" name="StynxAuthGuard &gt; rejects missing bearer tokens and inactive sessions" time="0.001887417">
+        <testcase classname="test/unit/permission-query.service.spec.ts" name="PermissionQueryService &gt; creates a request context when none is active and supports probeHash" time="0.001969916">
         </testcase>
-        <testcase classname="test/unit/stynx-auth.guard.spec.ts" name="StynxAuthGuard &gt; validates bearer tokens, resolves permissions, and writes request principal state" time="0.002059292">
+        <testcase classname="test/unit/permission-query.service.spec.ts" name="PermissionQueryService &gt; creates a request context when the mutator exists but RequestContext is unavailable" time="0.015732042">
         </testcase>
-        <testcase classname="test/unit/stynx-auth.guard.spec.ts" name="StynxAuthGuard &gt; accepts authorization header arrays and response aliases without a session provider" time="0.000714583">
+        <testcase classname="test/unit/permission-query.service.spec.ts" name="PermissionQueryService &gt; throws when membership is missing or database provider is unavailable" time="0.071223959">
         </testcase>
-    </testsuite>
-    <testsuite name="test/unit/utils.spec.ts" timestamp="2026-05-19T01:37:05.263Z" hostname="thiamat-1903.local" tests="6" failures="0" errors="0" skipped="0" time="0.024447708">
-        <testcase classname="test/unit/utils.spec.ts" name="auth utils &gt; normalizes permissions before hashing" time="0.003659334">
+        <testcase classname="test/unit/permission-query.service.spec.ts" name="PermissionQueryService &gt; runs without a request context mutator and issues the expected membership queries" time="0.006894458">
         </testcase>
-        <testcase classname="test/unit/utils.spec.ts" name="auth utils &gt; expands wildcard grants deterministically and preserves explicit grants" time="0.001044667">
-        </testcase>
-        <testcase classname="test/unit/utils.spec.ts" name="auth utils &gt; converts supported header forms to strings" time="0.000405416">
-        </testcase>
-        <testcase classname="test/unit/utils.spec.ts" name="auth utils &gt; round-trips base64url values without padding and rejects malformed JWT shapes" time="0.002053166">
-        </testcase>
-        <testcase classname="test/unit/utils.spec.ts" name="auth utils &gt; decodes JWT claims and expands wildcard grants with regex metacharacters literally" time="0.001512">
-        </testcase>
-        <testcase classname="test/unit/utils.spec.ts" name="auth utils &gt; deduplicates trimmed wildcard universes and keeps unmatched grants explicit" time="0.013948125">
+        <testcase classname="test/unit/permission-query.service.spec.ts" name="PermissionQueryService &gt; returns null hash and zero generation when probeHash finds no active membership" time="0.000424542">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/validators.spec.ts" timestamp="2026-05-19T01:37:05.265Z" hostname="thiamat-1903.local" tests="16" failures="0" errors="0" skipped="0" time="0.04797375">
-        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; loads jose through the default lazy loader" time="0.019378209">
+    <testsuite name="test/unit/redis-permission-cache-backend.spec.ts" timestamp="2026-05-19T15:49:07.346Z" hostname="thiamat-1903.local" tests="26" failures="0" errors="0" skipped="0" time="0.010940917">
+        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; onModuleInit is a no-op when redis options are absent" time="0.0009415">
         </testcase>
-        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; validates cognito access tokens and authorization headers" time="0.001842209">
+        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; onModuleInit does not reconnect when both redis clients are already open" time="0.000650667">
         </testcase>
-        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; accepts bearer header arrays and preserves optional cognito username/email claims" time="0.001634209">
+        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; onModuleInit creates, connects, subscribes, and forwards invalidation messages" time="0.004465583">
         </testcase>
-        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; trims cognito bearer tokens before validation" time="0.00021525">
+        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; subscribes immediately when a subscriber client is already attached" time="0.000648875">
         </testcase>
-        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; returns empty cognito sub and omits username when optional identity claims are absent" time="0.000263833">
+        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; get returns null when no client is configured" time="0.000133291">
         </testcase>
-        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; rejects invalid cognito token_use values and missing configuration" time="0.000348583">
+        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; get parses JSON value when present" time="0.000238834">
         </testcase>
-        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; validates stynx jwt claims using the injected signing service and remote jwks fallback" time="0.000519125">
+        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; get returns null when redis returns nothing" time="0.000145625">
         </testcase>
-        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; falls back to remote jwks and rejects inactive or expired tokens" time="0.000241708">
+        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; set is a no-op when no client is configured" time="0.000086375">
         </testcase>
-        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; forces a signing-service key refresh after an initial verification failure" time="0.000242542">
+        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; set writes record + user/tenant indexes with TTL" time="0.000342334">
         </testcase>
-        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; tries later jwks keys before refreshing and preserves empty stynx claim defaults" time="0.000187959">
+        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; delete is a no-op when no client is configured" time="0.000108292">
         </testcase>
-        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; reuses cached jwks until refresh is forced and rejects failed remote jwks loads" time="0.000260834">
+        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; delete removes record and (when known) sids from user/tenant indexes" time="0.000247375">
         </testcase>
-        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; rejects issuer mismatches and missing jwks configuration for stynx tokens" time="0.000228041">
+        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; delete only deletes the record when no record exists in the index" time="0.000211167">
         </testcase>
-        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; rejects empty key sets and supports tokens without optional stynx claims" time="0.000274041">
+        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; invalidateScope is a no-op when no client is configured" time="0.000137459">
         </testcase>
-        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; rejects invalid signatures from verifyJwtWithJwk" time="0.020732083">
+        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; invalidateScope ignores malformed messages without both parts" time="0.000138083">
         </testcase>
-        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; enforces stynx token time boundaries and refreshes expired remote jwks cache" time="0.00055375">
+        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; invalidateScope handles per-user scope by listing user sids" time="0.00023775">
         </testcase>
-        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; keeps signing-service jwks cached for the full configured lifetime" time="0.000284583">
+        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; invalidateScope leaves user-indexed records alone when tenant does not match" time="0.000189792">
+        </testcase>
+        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; invalidateScope handles tenant-wide scope (userId=*)" time="0.000201667">
+        </testcase>
+        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; invalidateScope handles global scope (*:*) by scanning keys" time="0.000186917">
+        </testcase>
+        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; invalidateScope accepts scanIterator string keys as well as key arrays" time="0.000180667">
+        </testcase>
+        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; subscribe records the handler and re-subscribes when subscriber is present" time="0.000128458">
+        </testcase>
+        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; subscribe only records the handler when redis subscriber or options are absent" time="0.000092291">
+        </testcase>
+        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; publish forwards messages on the configured invalidate channel" time="0.000109416">
+        </testcase>
+        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; publish is a no-op without redis options or without a client" time="0.000134459">
+        </testcase>
+        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; close quits both client and subscriber when open" time="0.000097208">
+        </testcase>
+        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; close skips quit calls when clients are already closed" time="0.000076459">
+        </testcase>
+        <testcase classname="test/unit/redis-permission-cache-backend.spec.ts" name="RedisPermissionCacheBackend &gt; onModuleDestroy delegates to close" time="0.000050875">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/stynx-auth.guard.spec.ts" timestamp="2026-05-19T15:49:07.348Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.009092208">
+        <testcase classname="test/unit/stynx-auth.guard.spec.ts" name="StynxAuthGuard &gt; allows public and system routes without reading the request" time="0.002738041">
+        </testcase>
+        <testcase classname="test/unit/stynx-auth.guard.spec.ts" name="StynxAuthGuard &gt; rejects missing bearer tokens and inactive sessions" time="0.002937916">
+        </testcase>
+        <testcase classname="test/unit/stynx-auth.guard.spec.ts" name="StynxAuthGuard &gt; validates bearer tokens, resolves permissions, and writes request principal state" time="0.0015905">
+        </testcase>
+        <testcase classname="test/unit/stynx-auth.guard.spec.ts" name="StynxAuthGuard &gt; accepts authorization header arrays and response aliases without a session provider" time="0.000619084">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/utils.spec.ts" timestamp="2026-05-19T15:49:07.349Z" hostname="thiamat-1903.local" tests="7" failures="0" errors="0" skipped="0" time="0.130487125">
+        <testcase classname="test/unit/utils.spec.ts" name="auth utils &gt; normalizes permissions before hashing" time="0.002082417">
+        </testcase>
+        <testcase classname="test/unit/utils.spec.ts" name="auth utils &gt; expands wildcard grants deterministically and preserves explicit grants" time="0.001319416">
+        </testcase>
+        <testcase classname="test/unit/utils.spec.ts" name="auth utils &gt; converts supported header forms to strings" time="0.00022875">
+        </testcase>
+        <testcase classname="test/unit/utils.spec.ts" name="auth utils &gt; round-trips base64url values without padding and rejects malformed JWT shapes" time="0.001213541">
+        </testcase>
+        <testcase classname="test/unit/utils.spec.ts" name="auth utils &gt; decodes JWT claims and expands wildcard grants with regex metacharacters literally" time="0.000629667">
+        </testcase>
+        <testcase classname="test/unit/utils.spec.ts" name="auth utils &gt; verifies a valid RS256 JWT with the supplied JWK" time="0.123189833">
+        </testcase>
+        <testcase classname="test/unit/utils.spec.ts" name="auth utils &gt; deduplicates trimmed wildcard universes and keeps unmatched grants explicit" time="0.000283625">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/validators.spec.ts" timestamp="2026-05-19T15:49:07.351Z" hostname="thiamat-1903.local" tests="16" failures="0" errors="0" skipped="0" time="0.265570791">
+        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; loads jose through the default lazy loader" time="0.062542708">
+        </testcase>
+        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; validates cognito access tokens and authorization headers" time="0.002899666">
+        </testcase>
+        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; accepts bearer header arrays and preserves optional cognito username/email claims" time="0.000717792">
+        </testcase>
+        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; trims cognito bearer tokens before validation" time="0.000204042">
+        </testcase>
+        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; returns empty cognito sub and omits username when optional identity claims are absent" time="0.000356959">
+        </testcase>
+        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; rejects invalid cognito token_use values and missing configuration" time="0.000350333">
+        </testcase>
+        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; validates stynx jwt claims using the injected signing service and remote jwks fallback" time="0.000479292">
+        </testcase>
+        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; falls back to remote jwks and rejects inactive or expired tokens" time="0.000244875">
+        </testcase>
+        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; forces a signing-service key refresh after an initial verification failure" time="0.000215167">
+        </testcase>
+        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; tries later jwks keys before refreshing and preserves empty stynx claim defaults" time="0.000182792">
+        </testcase>
+        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; reuses cached jwks until refresh is forced and rejects failed remote jwks loads" time="0.000250666">
+        </testcase>
+        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; rejects issuer mismatches and missing jwks configuration for stynx tokens" time="0.000216916">
+        </testcase>
+        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; rejects empty key sets and supports tokens without optional stynx claims" time="0.0002765">
+        </testcase>
+        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; rejects invalid signatures from verifyJwtWithJwk" time="0.121326166">
+        </testcase>
+        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; enforces stynx token time boundaries and refreshes expired remote jwks cache" time="0.038825583">
+        </testcase>
+        <testcase classname="test/unit/validators.spec.ts" name="auth validators &gt; keeps signing-service jwks cached for the full configured lifetime" time="0.002142875">
         </testcase>
     </testsuite>
 </testsuites>

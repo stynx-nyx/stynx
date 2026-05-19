@@ -1,0 +1,13 @@
+{
+  "extends": "../../tools/tsconfig/angular18.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "types": ["node"],
+    "experimentalDecorators": true,
+    "rootDir": ".."
+  },
+  "include": ["src/**/*.ts"],
+  "angularCompilerOptions": {
+    "compilationMode": "partial"
+  }
+}

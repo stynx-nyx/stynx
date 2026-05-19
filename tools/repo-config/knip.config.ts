@@ -14,8 +14,28 @@ const config: KnipConfig = {
       project: ['src/**/*.ts'],
     },
     'packages-web/*': {
-      entry: ['src/index.ts', 'src/public-api.ts'],
+      entry: ['src/index.ts', 'src/public-api.ts', 'src/testing/index.ts'],
       project: ['src/**/*.ts'],
+    },
+    'domain/*/api': {
+      entry: ['src/**/*.module.ts'],
+      project: ['src/**/*.ts'],
+    },
+    'domain/*/web': {
+      entry: ['src/**/*.module.ts'],
+      project: ['src/**/*.ts'],
+    },
+    'reference/*': {
+      entry: ['src/main.ts', 'scripts/**/*.{mjs,cjs,js,sh}', 'playwright.config.mjs', 'vitest.config.ts'],
+      project: [
+        'src/**/*.{ts,js,mjs,cjs}',
+        'scripts/**/*.{ts,js,mjs,cjs}',
+        'test/**/*.{ts,js,mjs,cjs}',
+      ],
+    },
+    'test/*': {
+      entry: ['validate.js', 'vitest.config.ts', 'support/*.ts'],
+      project: ['**/*.{ts,js,mjs,cjs}'],
     },
     'apps/*': {
       entry: ['src/main.ts', 'src/app.module.ts'],
@@ -40,6 +60,11 @@ const config: KnipConfig = {
     'packages/backend/src/rate-limit/types.ts',
     'tools/eslint-config/scripts.mjs',
     'tools/eslint-config/test.mjs',
+    'domain/demo-bookmark/api/src/demo-bookmark/dto/update-bookmark-tag.dto.ts',
+    'domain/demo-bookmark/api/src/demo-bookmark/entities/bookmark.entity.ts',
+    'domain/demo-bookmark/web/src/app/demo-bookmark/bookmark-tag-detail.component.ts',
+    'domain/demo-bookmark/web/src/app/demo-bookmark/bookmark-tag-list.component.ts',
+    'domain/demo-bookmark/web/src/app/demo-bookmark/bookmark-tag.service.ts',
   ],
   ignoreIssues: {
     'packages/backend/src/idempotency/types.ts': ['types'],
