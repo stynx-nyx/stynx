@@ -48,10 +48,36 @@ describe('PormIdentityAdminFacade', () => {
     expect(result.users[0].attributes).toEqual({ foo: 'bar' });
   });
 
+  it('list() forwards every supported filter to listUsers', async () => {
+    const service = makeAdminService();
+    const facade = new PormIdentityAdminFacade(service);
+    await facade.list({
+      email: 'a@b',
+      phone: '+1',
+      group: 'admins',
+      limit: 25,
+      token: 'next-token',
+    });
+    expect(service.listUsers).toHaveBeenCalledWith({
+      email: 'a@b',
+      phone: '+1',
+      group: 'admins',
+      limit: 25,
+      token: 'next-token',
+    });
+  });
+
   it('list() handles items without a username inline', async () => {
     const service = makeAdminService({
       listUsers: vi.fn(async () => ({
-        items: [{ enabled: false, status: 'UNCONFIRMED' }],
+        items: [
+          {
+            enabled: false,
+            status: 'UNCONFIRMED',
+            createdAt: '2026-01-01T00:00:00Z',
+            updatedAt: '2026-02-01T00:00:00Z',
+          },
+        ],
         nextToken: 'tok',
       })),
     });
@@ -59,6 +85,11 @@ describe('PormIdentityAdminFacade', () => {
     const result = await facade.list({});
     expect(result.users[0].username).toBe('');
     expect(result.users[0].status).toBe('UNCONFIRMED');
+    expect(result.users[0].enabled).toBe(false);
+    expect(result.users[0].attributes).toEqual({});
+    expect(result.users[0].groups).toEqual([]);
+    expect(result.users[0].createdAt).toBe('2026-01-01T00:00:00Z');
+    expect(result.users[0].updatedAt).toBe('2026-02-01T00:00:00Z');
     expect(result.nextToken).toBe('tok');
   });
 
@@ -66,6 +97,10 @@ describe('PormIdentityAdminFacade', () => {
     const facade = new PormIdentityAdminFacade(makeAdminService());
     const result = await facade.get('alice');
     expect(result.username).toBe('u');
+    expect(result.enabled).toBe(true);
+    expect(result.status).toBe('CONFIRMED');
+    expect(result.createdAt).toBe('2026-01-01T00:00:00Z');
+    expect(result.updatedAt).toBe('2026-02-01T00:00:00Z');
     expect(result.groups).toEqual(['admins']);
     expect(result.attributes).toEqual({ foo: 'bar' });
   });
@@ -111,6 +146,20 @@ describe('PormIdentityAdminFacade', () => {
     });
   });
 
+  it.each([
+    ['email', { email: 'a@b' }, { email: 'a@b' }],
+    ['phone', { phone_number: '+1' }, { phoneNumber: '+1' }],
+    ['name', { name: 'Alice' }, { name: 'Alice' }],
+    ['given name', { given_name: 'A' }, { givenName: 'A' }],
+    ['family name', { family_name: 'L' }, { familyName: 'L' }],
+    ['custom', { custom: { dept: 'eng' } }, { custom: { dept: 'eng' } }],
+  ])('update() treats %s as independently updatable', async (_label, input, expected) => {
+    const service = makeAdminService();
+    const facade = new PormIdentityAdminFacade(service);
+    await expect(facade.update('alice', input)).resolves.toEqual({ updated: true });
+    expect(service.updateUser).toHaveBeenCalledWith('alice', expected);
+  });
+
   it('disable/enable/addToGroup/removeFromGroup/resetPassword/setPassword return their tags', async () => {
     const facade = new PormIdentityAdminFacade(makeAdminService());
     await expect(facade.disable('u')).resolves.toEqual({ disabled: true });
@@ -146,9 +195,13 @@ describe('PormIdentityAdminFacade', () => {
   });
 
   it('syncToLocal / syncUser delegate', async () => {
-    const facade = new PormIdentityAdminFacade(makeAdminService());
-    await expect(facade.syncToLocal()).resolves.toEqual({ inserted: 0, updated: 0 });
-    await expect(facade.syncUser('u')).resolves.toEqual({ id: 'u', inserted: 0, updated: 1 });
+    const service = makeAdminService();
+    const facade = new PormIdentityAdminFacade(service);
+    const context = { actorId: 'actor-1' };
+    await expect(facade.syncToLocal(context)).resolves.toEqual({ inserted: 0, updated: 0 });
+    await expect(facade.syncUser('u', context)).resolves.toEqual({ id: 'u', inserted: 0, updated: 1 });
+    expect(service.syncToLocal).toHaveBeenCalledWith(context);
+    expect(service.syncUser).toHaveBeenCalledWith('u', context);
   });
 });
 
@@ -171,9 +224,25 @@ describe('PecIdentityAdminFacade', () => {
       })),
     });
     const facade = new PecIdentityAdminFacade(service);
-    const result = await facade.list({});
+    const result = await facade.list({
+      email: 'a@b',
+      phone: '+1',
+      group: 'admins',
+      limit: 10,
+      token: 'next',
+    });
+    expect(service.listUsers).toHaveBeenCalledWith({
+      email: 'a@b',
+      phone: '+1',
+      group: 'admins',
+      limit: 10,
+      token: 'next',
+    });
     expect(result.items[0].createdAt).toBeInstanceOf(Date);
     expect(result.items[0].updatedAt).toBeUndefined();
+    expect(result.items[0].username).toBe('u');
+    expect(result.items[0].status).toBe('CONFIRMED');
+    expect(result.items[0].enabled).toBe(true);
     expect(result.items[0].email).toBe('a@b');
     expect(result.items[0].phone_number).toBe('+1');
     expect(result.nextToken).toBe('next-y');
@@ -196,6 +265,9 @@ describe('PecIdentityAdminFacade', () => {
     const result = await facade.get('u');
     expect(result.username).toBe('u');
     expect(result.status).toBe('CONFIRMED');
+    expect(result.enabled).toBe(true);
+    expect(result.createdAt).toBeInstanceOf(Date);
+    expect(result.updatedAt).toBeInstanceOf(Date);
     expect(result.attributes).toEqual({ foo: 'bar' });
   });
 
@@ -203,14 +275,28 @@ describe('PecIdentityAdminFacade', () => {
     const service = makeAdminService({
       updateUser: vi.fn(async () => ({
         username: 'u',
+        status: 'UPDATED',
         enabled: false,
+        createdAt: '2026-03-01T00:00:00Z',
+        updatedAt: 'invalid-date',
         attributes: { bar: 'baz' },
       })),
     });
     const facade = new PecIdentityAdminFacade(service);
-    const result = await facade.update('u', { email: 'new@b' });
-    expect(service.updateUser).toHaveBeenCalledWith('u', { email: 'new@b' });
+    const result = await facade.update('u', {
+      email: 'new@b',
+      phone_number: '+2',
+      custom: { team: 'ops' },
+    });
+    expect(service.updateUser).toHaveBeenCalledWith('u', {
+      email: 'new@b',
+      phoneNumber: '+2',
+      custom: { team: 'ops' },
+    });
+    expect(result.status).toBe('UPDATED');
     expect(result.enabled).toBe(false);
+    expect(result.createdAt).toBeInstanceOf(Date);
+    expect(result.updatedAt).toBeUndefined();
   });
 
   it('disable/enable/listGroups/addToGroup/removeFromGroup/verify/resetPassword delegate', async () => {
