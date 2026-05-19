@@ -102,14 +102,7 @@ test/perf/k6/results/
 test/perf/k6/baseline/
 *.stryker-tmp/
 reports/
-docs/work/inv/*
-docs/work/diag/*
-docs/work/plan/*
-!docs/work/inv/.gitkeep
-!docs/work/inv/README.md
-!docs/work/inv/REPO-GAP-ANALYSIS.md
-!docs/work/diag/.gitkeep
-!docs/work/plan/.gitkeep
+docs/work/
 
 # Generated release evidence
 /.release/
