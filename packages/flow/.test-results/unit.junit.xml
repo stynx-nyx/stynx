@@ -1,413 +1,413 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="196" failures="0" errors="0" time="0.258782625">
-    <testsuite name="test/unit/branch-helpers.spec.ts" timestamp="2026-05-19T15:50:00.879Z" hostname="thiamat-1903.local" tests="13" failures="0" errors="0" skipped="0" time="0.013543125">
-        <testcase classname="test/unit/branch-helpers.spec.ts" name="Flow row utilities &gt; camelizes rows and clamps pagination inputs" time="0.00205375">
+<testsuites name="vitest tests" tests="196" failures="0" errors="0" time="0.466960292">
+    <testsuite name="test/unit/branch-helpers.spec.ts" timestamp="2026-05-19T15:58:26.643Z" hostname="thiamat-1903.local" tests="13" failures="0" errors="0" skipped="0" time="0.068687584">
+        <testcase classname="test/unit/branch-helpers.spec.ts" name="Flow row utilities &gt; camelizes rows and clamps pagination inputs" time="0.003656667">
         </testcase>
-        <testcase classname="test/unit/branch-helpers.spec.ts" name="Flow row utilities &gt; accepts object bodies and rejects null, arrays, and primitives" time="0.002001708">
+        <testcase classname="test/unit/branch-helpers.spec.ts" name="Flow row utilities &gt; accepts object bodies and rejects null, arrays, and primitives" time="0.002687375">
         </testcase>
-        <testcase classname="test/unit/branch-helpers.spec.ts" name="FlowAdapterRegistry &gt; returns safe defaults when optional adapters or capabilities are absent" time="0.001331625">
+        <testcase classname="test/unit/branch-helpers.spec.ts" name="FlowAdapterRegistry &gt; returns safe defaults when optional adapters or capabilities are absent" time="0.024788917">
         </testcase>
-        <testcase classname="test/unit/branch-helpers.spec.ts" name="FlowAdapterRegistry &gt; delegates adapter operations and wraps adapter failures" time="0.001313083">
+        <testcase classname="test/unit/branch-helpers.spec.ts" name="FlowAdapterRegistry &gt; delegates adapter operations and wraps adapter failures" time="0.009455458">
         </testcase>
-        <testcase classname="test/unit/branch-helpers.spec.ts" name="FlowAnalyticsService &gt; assembles open task filters and maps snake_case rows" time="0.000472791">
+        <testcase classname="test/unit/branch-helpers.spec.ts" name="FlowAnalyticsService &gt; assembles open task filters and maps snake_case rows" time="0.003163792">
         </testcase>
-        <testcase classname="test/unit/branch-helpers.spec.ts" name="FlowAnalyticsService &gt; omits runs summary WHERE when no filters and defaults total to zero" time="0.000272583">
+        <testcase classname="test/unit/branch-helpers.spec.ts" name="FlowAnalyticsService &gt; omits runs summary WHERE when no filters and defaults total to zero" time="0.004977792">
         </testcase>
-        <testcase classname="test/unit/branch-helpers.spec.ts" name="FlowAnalyticsService &gt; uses open task default query values when no query is supplied" time="0.000128459">
+        <testcase classname="test/unit/branch-helpers.spec.ts" name="FlowAnalyticsService &gt; uses open task default query values when no query is supplied" time="0.000194875">
         </testcase>
-        <testcase classname="test/unit/branch-helpers.spec.ts" name="FlowAnalyticsService &gt; adds runs summary filters only for non-empty string values" time="0.000107417">
+        <testcase classname="test/unit/branch-helpers.spec.ts" name="FlowAnalyticsService &gt; adds runs summary filters only for non-empty string values" time="0.00012575">
         </testcase>
-        <testcase classname="test/unit/branch-helpers.spec.ts" name="FlowPolicyService &gt; delegates policy set and rule CRUD to the design service" time="0.000846417">
+        <testcase classname="test/unit/branch-helpers.spec.ts" name="FlowPolicyService &gt; delegates policy set and rule CRUD to the design service" time="0.007028375">
         </testcase>
-        <testcase classname="test/unit/branch-helpers.spec.ts" name="FlowPolicyService &gt; defaults allow when no active policy set resolves" time="0.001098291">
+        <testcase classname="test/unit/branch-helpers.spec.ts" name="FlowPolicyService &gt; defaults allow when no active policy set resolves" time="0.0035945">
         </testcase>
-        <testcase classname="test/unit/branch-helpers.spec.ts" name="FlowPolicyService &gt; resolves policy sets by scopeCode when scopeId is omitted" time="0.000138542">
+        <testcase classname="test/unit/branch-helpers.spec.ts" name="FlowPolicyService &gt; resolves policy sets by scopeCode when scopeId is omitted" time="0.001255541">
         </testcase>
-        <testcase classname="test/unit/branch-helpers.spec.ts" name="FlowPolicyService &gt; returns the first matching rule using empty, jsonpath, and object conditions" time="0.000779125">
+        <testcase classname="test/unit/branch-helpers.spec.ts" name="FlowPolicyService &gt; returns the first matching rule using empty, jsonpath, and object conditions" time="0.00370475">
         </testcase>
-        <testcase classname="test/unit/branch-helpers.spec.ts" name="FlowPolicyService &gt; treats null rule conditions as an unconditional match" time="0.000135041">
-        </testcase>
-    </testsuite>
-    <testsuite name="test/unit/controllers.spec.ts" timestamp="2026-05-19T15:50:00.885Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.008391459">
-        <testcase classname="test/unit/controllers.spec.ts" name="Flow controllers &gt; delegates design controller methods to FlowDesignService" time="0.004345541">
-        </testcase>
-        <testcase classname="test/unit/controllers.spec.ts" name="Flow controllers &gt; delegates form and fill controller methods to FlowFormsService" time="0.0009325">
-        </testcase>
-        <testcase classname="test/unit/controllers.spec.ts" name="Flow controllers &gt; delegates runtime, analytics, policy, signal, and effect methods" time="0.001559958">
+        <testcase classname="test/unit/branch-helpers.spec.ts" name="FlowPolicyService &gt; treats null rule conditions as an unconditional match" time="0.001527917">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/flow-design.service.spec.ts" timestamp="2026-05-19T15:50:00.885Z" hostname="thiamat-1903.local" tests="57" failures="0" errors="0" skipped="0" time="0.073724416">
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — scopes &gt; listScopes returns camelized rows" time="0.0020815">
+    <testsuite name="test/unit/controllers.spec.ts" timestamp="2026-05-19T15:58:26.655Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.008529417">
+        <testcase classname="test/unit/controllers.spec.ts" name="Flow controllers &gt; delegates design controller methods to FlowDesignService" time="0.004635792">
         </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — scopes &gt; getScope returns one or throws NotFound" time="0.002557584">
+        <testcase classname="test/unit/controllers.spec.ts" name="Flow controllers &gt; delegates form and fill controller methods to FlowFormsService" time="0.001719667">
         </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — scopes &gt; createScope INSERTs and returns the new row" time="0.001275375">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — scopes &gt; updateScope rejects empty patch (no defined entries + no audit columns on scope)" time="0.0005655">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — scopes &gt; updateScope returns NotFound when row absent" time="0.000203417">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — scopes &gt; updateScope returns the camelized row" time="0.000175875">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — scopes &gt; deleteScope asserts existence then softDeletes" time="0.000573375">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — scopes &gt; deleteScope throws NotFound when row absent" time="0.000162542">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; listGraphs filters by scope_id when provided" time="0.000146416">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; listGraphs without scopeId omits WHERE" time="0.000121542">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; listGraphs derives draft and published presentation state from graph metadata" time="0.000545041">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; getGraph, updateGraph, and deleteGraph route through shared CRUD helpers" time="0.002065583">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; createGraph INSERTs into flow.graphs" time="0.000558875">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; publishGraph validates and records package-owned publish metadata" time="0.01102225">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; publishGraph rejects stale draft versions and invalid graph structure" time="0.000406125">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; listGraphNodes filters by graph_id" time="0.000140292">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; createGraphNode attaches graphId to the input" time="0.000960542">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; createGraphNode rejects non-object input" time="0.000210334">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; getNode returns one or throws NotFound" time="0.000226708">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; updateNode requires at least one defined field" time="0.000487958">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; updateNode returns NotFound when row absent" time="0.000138083">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; deleteNode asserts existence then softDeletes" time="0.000113958">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; listGraphEdges filters by graph_id and orders by sort_order/action" time="0.00009775">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; createGraphEdge attaches graphId" time="0.001988625">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; updateEdge returns the camelized row" time="0.000493166">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; getEdge throws NotFound when missing" time="0.000230458">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; deleteEdge softDeletes after assertion" time="0.000111167">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — agentRules / transitionEffects / nodeFormRules &gt; createNodeAgentRule attaches nodeId" time="0.000324167">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — agentRules / transitionEffects / nodeFormRules &gt; updateAgentRule + getAgentRule + deleteAgentRule round-trip" time="0.000492666">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — agentRules / transitionEffects / nodeFormRules &gt; createGraphTransitionEffect attaches graphId" time="0.000247458">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — agentRules / transitionEffects / nodeFormRules &gt; createNodeFormRule normalizes score_threshold → threshold gating mode" time="0.00026175">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — agentRules / transitionEffects / nodeFormRules &gt; lists node-scoped rules and normalizes any_answered node-form rules" time="0.000471667">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — agentRules / transitionEffects / nodeFormRules &gt; transition effect read, list, update, and delete routes are covered" time="0.000574166">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — agentRules / transitionEffects / nodeFormRules &gt; updateNodeFormRule passes through partial updates" time="0.0002905">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — agentRules / transitionEffects / nodeFormRules &gt; getNodeFormRule + deleteNodeFormRule round-trip" time="0.000144833">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — policySets / policyRules &gt; listPolicySets filters by scope_id when provided" time="0.00008725">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — policySets / policyRules &gt; listPolicySets without scopeId omits WHERE" time="0.000062375">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — policySets / policyRules &gt; createPolicySet INSERTs" time="0.000227625">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — policySets / policyRules &gt; createPolicySet records nullable audit actors when actor context is absent" time="0.000105041">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — policySets / policyRules &gt; updatePolicySet, getPolicySet, and deletePolicySet route through shared helpers" time="0.000417">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — policySets / policyRules &gt; listPolicyRules filters by policy_set_id" time="0.00009075">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — policySets / policyRules &gt; createPolicyRule attaches policySetId" time="0.000311375">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — policySets / policyRules &gt; updatePolicyRule / getPolicyRule / deletePolicyRule work" time="0.001858292">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — policySets / policyRules &gt; updatePolicySet records a nullable audit actor when actor context is absent" time="0.000186542">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService.importGraph &gt; rejects when no start node is present" time="0.000806625">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService.importGraph &gt; rejects duplicate node codes" time="0.000264459">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService.importGraph &gt; rejects edges referencing missing node codes" time="0.000376834">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService.importGraph &gt; rejects duplicate edge keys" time="0.000165125">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService.importGraph &gt; rejects duplicate edge keys when action is omitted" time="0.000430875">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService.importGraph &gt; inserts graph + nodes + edges and returns an export document" time="0.000412292">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService.importGraph &gt; imports optional transition effects, agent rules, and node form rules" time="0.033704125">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService.importGraph &gt; throws when an insert returns no row" time="0.00021975">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService.importGraph &gt; throws when import graph insertion returns a non-string graph id" time="0.000160375">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService.exportGraph &gt; queries graph + nodes + edges + transitionEffects + agentRules + nodeFormRules + policySets" time="0.0007255">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService.exportGraph &gt; skips the policyRules query when no policySets matched" time="0.000321959">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — tenant + input validation &gt; requireTenantId throws when no tenant in context" time="0.000206833">
-        </testcase>
-        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — tenant + input validation &gt; objectInput rejects arrays + null via createNodeAgentRule" time="0.000559708">
+        <testcase classname="test/unit/controllers.spec.ts" name="Flow controllers &gt; delegates runtime, analytics, policy, signal, and effect methods" time="0.000840667">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/flow-forms.service.spec.ts" timestamp="2026-05-19T15:50:00.914Z" hostname="thiamat-1903.local" tests="48" failures="0" errors="0" skipped="0" time="0.043686042">
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; forms CRUD &gt; listForms scopes by scope_id when provided" time="0.003221083">
+    <testsuite name="test/unit/flow-design.service.spec.ts" timestamp="2026-05-19T15:58:26.656Z" hostname="thiamat-1903.local" tests="57" failures="0" errors="0" skipped="0" time="0.074743833">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — scopes &gt; listScopes returns camelized rows" time="0.008696958">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; forms CRUD &gt; listForms without scopeId omits WHERE" time="0.000410416">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — scopes &gt; getScope returns one or throws NotFound" time="0.006483625">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; forms CRUD &gt; getForm returns row by id" time="0.000636958">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — scopes &gt; createScope INSERTs and returns the new row" time="0.008975833">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; forms CRUD &gt; getForm throws NotFoundException when missing" time="0.000875458">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — scopes &gt; updateScope rejects empty patch (no defined entries + no audit columns on scope)" time="0.00072325">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; forms CRUD &gt; createForm INSERTs and returns the new row" time="0.001987875">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — scopes &gt; updateScope returns NotFound when row absent" time="0.000234708">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; forms CRUD &gt; updateRow throws BadRequest when no updatable column fields are present (waiver delete)" time="0.000911375">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — scopes &gt; updateScope returns the camelized row" time="0.000174417">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; forms CRUD &gt; updateForm throws NotFoundException when no row returned" time="0.001580459">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — scopes &gt; deleteScope asserts existence then softDeletes" time="0.000322084">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; forms CRUD &gt; updateForm returns the camelized updated row" time="0.000202875">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — scopes &gt; deleteScope throws NotFound when row absent" time="0.000120083">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; forms CRUD &gt; deleteForm asserts existence then calls trx.softDelete" time="0.000313125">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; listGraphs filters by scope_id when provided" time="0.000148541">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; forms CRUD &gt; deleteForm throws NotFoundException when row does not exist" time="0.002739834">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; listGraphs without scopeId omits WHERE" time="0.000134959">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; questions / scores &gt; listQuestions filters by form_id" time="0.004656542">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; listGraphs derives draft and published presentation state from graph metadata" time="0.002952166">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; questions / scores &gt; createQuestion attaches formId to the input" time="0.0072975">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; getGraph, updateGraph, and deleteGraph route through shared CRUD helpers" time="0.001710375">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; questions / scores &gt; createQuestion rejects non-object input" time="0.000291125">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; createGraph INSERTs into flow.graphs" time="0.003116625">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; questions / scores &gt; question get, update, and delete methods route through shared helpers" time="0.002856167">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; publishGraph validates and records package-owned publish metadata" time="0.005420459">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; questions / scores &gt; putQuestionScore upserts and returns the camelized row" time="0.000426125">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; publishGraph rejects stale draft versions and invalid graph structure" time="0.000419875">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; questions / scores &gt; putQuestionScore defaults scores and nullable actor when omitted" time="0.000183667">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; listGraphNodes filters by graph_id" time="0.000142583">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; questions / scores &gt; putQuestionScore propagates NotFound from assertExists" time="0.000163167">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; createGraphNode attaches graphId to the input" time="0.000906917">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; questions / scores &gt; getQuestionScore returns one row or throws NotFound" time="0.000213208">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; createGraphNode rejects non-object input" time="0.000888375">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; questions / scores &gt; deleteQuestionScore looks up then softDeletes the score row" time="0.000137208">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; getNode returns one or throws NotFound" time="0.000227292">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; fills &gt; listFills filters by all known query keys (string values only)" time="0.000136709">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; updateNode requires at least one defined field" time="0.000528583">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; fills &gt; listFormFills filters by form_id and orders by created_at desc" time="0.000107083">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; updateNode returns NotFound when row absent" time="0.000149875">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; fills &gt; getFormFill returns row matched by form + fill ids" time="0.00038825">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; deleteNode asserts existence then softDeletes" time="0.000107459">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; fills &gt; createFillFromBody requires formId in the body" time="0.000340041">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; listGraphEdges filters by graph_id and orders by sort_order/action" time="0.000096709">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; fills &gt; createFillFromBody routes to createFill when formId is present" time="0.00054925">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; createGraphEdge attaches graphId" time="0.00254925">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; fills &gt; get, update, and delete fill methods route through shared helpers" time="0.001689791">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; updateEdge returns the camelized row" time="0.001986875">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; answers &gt; upsertAnswer asserts fill + question, then upserts via TX" time="0.000466459">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; getEdge throws NotFound when missing" time="0.000734625">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; answers &gt; upsertAnswer rejects when fill does not exist" time="0.000155584">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — graphs / nodes / edges &gt; deleteEdge softDeletes after assertion" time="0.000341333">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; answers &gt; upsertAnswer maps itemId → questionId via normalizeAnswerInput" time="0.000110125">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — agentRules / transitionEffects / nodeFormRules &gt; createNodeAgentRule attaches nodeId" time="0.001211334">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; answers &gt; upsertAnswer defaults nullable answer fields and actor" time="0.000143541">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — agentRules / transitionEffects / nodeFormRules &gt; updateAgentRule + getAgentRule + deleteAgentRule round-trip" time="0.000646959">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; answers &gt; bulkUpsertAnswers iterates and upserts each, asserting question existence per row" time="0.001589125">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — agentRules / transitionEffects / nodeFormRules &gt; createGraphTransitionEffect attaches graphId" time="0.000285167">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; answers &gt; bulkUpsertAnswers accepts a bare array as input" time="0.000221792">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — agentRules / transitionEffects / nodeFormRules &gt; createNodeFormRule normalizes score_threshold → threshold gating mode" time="0.000296416">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; answers &gt; bulkUpsertAnswers uses a nullable actor when the context has none" time="0.000152834">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — agentRules / transitionEffects / nodeFormRules &gt; lists node-scoped rules and normalizes any_answered node-form rules" time="0.000510291">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; answers &gt; updateAnswer asserts question when questionId is set" time="0.000363167">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — agentRules / transitionEffects / nodeFormRules &gt; transition effect read, list, update, and delete routes are covered" time="0.002907792">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; answers &gt; updateAnswer with no questionId skips the assertExists" time="0.000146208">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — agentRules / transitionEffects / nodeFormRules &gt; updateNodeFormRule passes through partial updates" time="0.001335709">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; answers &gt; updateAnswer records a nullable actor when the context has none" time="0.000108">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — agentRules / transitionEffects / nodeFormRules &gt; getNodeFormRule + deleteNodeFormRule round-trip" time="0.000784959">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; answers &gt; listFormFillAnswers verifies fill belongs to form, then lists answers" time="0.000367667">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — policySets / policyRules &gt; listPolicySets filters by scope_id when provided" time="0.00015675">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; answers &gt; deleteAnswer soft deletes after existence check" time="0.00057025">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — policySets / policyRules &gt; listPolicySets without scopeId omits WHERE" time="0.000077208">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; waivers &gt; listWaivers filters by allowed keys" time="0.000329542">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — policySets / policyRules &gt; createPolicySet INSERTs" time="0.000311042">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; waivers &gt; createWaiver inserts a row" time="0.000430791">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — policySets / policyRules &gt; createPolicySet records nullable audit actors when actor context is absent" time="0.000341458">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; waivers &gt; createFillWaiver hydrates context from the parent fill" time="0.000637042">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — policySets / policyRules &gt; updatePolicySet, getPolicySet, and deletePolicySet route through shared helpers" time="0.000886042">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; waivers &gt; createFillWaiver rejects when the parent fill lacks required fields" time="0.000196458">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — policySets / policyRules &gt; listPolicyRules filters by policy_set_id" time="0.00012175">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; waivers &gt; update and delete waiver methods route through shared helpers" time="0.000277417">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — policySets / policyRules &gt; createPolicyRule attaches policySetId" time="0.000367083">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; waivers &gt; lists fill waivers and form-fill waivers from hydrated fill context" time="0.000390958">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — policySets / policyRules &gt; updatePolicyRule / getPolicyRule / deletePolicyRule work" time="0.000835459">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; waivers &gt; creates form-fill waivers after verifying fill ownership" time="0.000271916">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — policySets / policyRules &gt; updatePolicySet records a nullable audit actor when actor context is absent" time="0.000152625">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; tenant requirement &gt; requireTenantId throws when no tenant is in request context" time="0.000220959">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService.importGraph &gt; rejects when no start node is present" time="0.001083167">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; input validation &gt; createQuestion rejects an array as input body" time="0.000106042">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService.importGraph &gt; rejects duplicate node codes" time="0.000526584">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; input validation &gt; createForm accepts missing actor and empty insert result" time="0.0001925">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService.importGraph &gt; rejects edges referencing missing node codes" time="0.000922">
         </testcase>
-        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; input validation &gt; upsertAnswer rejects when the body is not an object" time="0.000100625">
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService.importGraph &gt; rejects duplicate edge keys" time="0.0022725">
+        </testcase>
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService.importGraph &gt; rejects duplicate edge keys when action is omitted" time="0.001434917">
+        </testcase>
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService.importGraph &gt; inserts graph + nodes + edges and returns an export document" time="0.001235458">
+        </testcase>
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService.importGraph &gt; imports optional transition effects, agent rules, and node form rules" time="0.000985041">
+        </testcase>
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService.importGraph &gt; throws when an insert returns no row" time="0.00018925">
+        </testcase>
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService.importGraph &gt; throws when import graph insertion returns a non-string graph id" time="0.000144208">
+        </testcase>
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService.exportGraph &gt; queries graph + nodes + edges + transitionEffects + agentRules + nodeFormRules + policySets" time="0.002090542">
+        </testcase>
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService.exportGraph &gt; skips the policyRules query when no policySets matched" time="0.000619709">
+        </testcase>
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — tenant + input validation &gt; requireTenantId throws when no tenant in context" time="0.000620666">
+        </testcase>
+        <testcase classname="test/unit/flow-design.service.spec.ts" name="FlowDesignService — tenant + input validation &gt; objectInput rejects arrays + null via createNodeAgentRule" time="0.000359708">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/flow-module-export.spec.ts" timestamp="2026-05-19T15:50:01.001Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.001519083">
-        <testcase classname="test/unit/flow-module-export.spec.ts" name="@stynx/flow module barrel &gt; top-level index.ts is importable" time="0.0007955">
+    <testsuite name="test/unit/flow-forms.service.spec.ts" timestamp="2026-05-19T15:58:26.669Z" hostname="thiamat-1903.local" tests="48" failures="0" errors="0" skipped="0" time="0.066987625">
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; forms CRUD &gt; listForms scopes by scope_id when provided" time="0.0075345">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; forms CRUD &gt; listForms without scopeId omits WHERE" time="0.002753625">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; forms CRUD &gt; getForm returns row by id" time="0.000328584">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; forms CRUD &gt; getForm throws NotFoundException when missing" time="0.005356875">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; forms CRUD &gt; createForm INSERTs and returns the new row" time="0.005838459">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; forms CRUD &gt; updateRow throws BadRequest when no updatable column fields are present (waiver delete)" time="0.003157334">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; forms CRUD &gt; updateForm throws NotFoundException when no row returned" time="0.001582667">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; forms CRUD &gt; updateForm returns the camelized updated row" time="0.00042">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; forms CRUD &gt; deleteForm asserts existence then calls trx.softDelete" time="0.00382825">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; forms CRUD &gt; deleteForm throws NotFoundException when row does not exist" time="0.000246333">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; questions / scores &gt; listQuestions filters by form_id" time="0.000415167">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; questions / scores &gt; createQuestion attaches formId to the input" time="0.001145917">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; questions / scores &gt; createQuestion rejects non-object input" time="0.00021425">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; questions / scores &gt; question get, update, and delete methods route through shared helpers" time="0.000907625">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; questions / scores &gt; putQuestionScore upserts and returns the camelized row" time="0.000291958">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; questions / scores &gt; putQuestionScore defaults scores and nullable actor when omitted" time="0.000138208">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; questions / scores &gt; putQuestionScore propagates NotFound from assertExists" time="0.000117834">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; questions / scores &gt; getQuestionScore returns one row or throws NotFound" time="0.000176208">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; questions / scores &gt; deleteQuestionScore looks up then softDeletes the score row" time="0.002169208">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; fills &gt; listFills filters by all known query keys (string values only)" time="0.000887292">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; fills &gt; listFormFills filters by form_id and orders by created_at desc" time="0.001505917">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; fills &gt; getFormFill returns row matched by form + fill ids" time="0.000375167">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; fills &gt; createFillFromBody requires formId in the body" time="0.000357625">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; fills &gt; createFillFromBody routes to createFill when formId is present" time="0.0015635">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; fills &gt; get, update, and delete fill methods route through shared helpers" time="0.0014985">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; answers &gt; upsertAnswer asserts fill + question, then upserts via TX" time="0.001966209">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; answers &gt; upsertAnswer rejects when fill does not exist" time="0.000408625">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; answers &gt; upsertAnswer maps itemId → questionId via normalizeAnswerInput" time="0.000133042">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; answers &gt; upsertAnswer defaults nullable answer fields and actor" time="0.00016725">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; answers &gt; bulkUpsertAnswers iterates and upserts each, asserting question existence per row" time="0.001869">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; answers &gt; bulkUpsertAnswers accepts a bare array as input" time="0.00060625">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; answers &gt; bulkUpsertAnswers uses a nullable actor when the context has none" time="0.000184416">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; answers &gt; updateAnswer asserts question when questionId is set" time="0.000355417">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; answers &gt; updateAnswer with no questionId skips the assertExists" time="0.000111708">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; answers &gt; updateAnswer records a nullable actor when the context has none" time="0.000099958">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; answers &gt; listFormFillAnswers verifies fill belongs to form, then lists answers" time="0.000170333">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; answers &gt; deleteAnswer soft deletes after existence check" time="0.007781542">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; waivers &gt; listWaivers filters by allowed keys" time="0.000309666">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; waivers &gt; createWaiver inserts a row" time="0.005952958">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; waivers &gt; createFillWaiver hydrates context from the parent fill" time="0.000375334">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; waivers &gt; createFillWaiver rejects when the parent fill lacks required fields" time="0.000219416">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; waivers &gt; update and delete waiver methods route through shared helpers" time="0.0007915">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; waivers &gt; lists fill waivers and form-fill waivers from hydrated fill context" time="0.00039775">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; waivers &gt; creates form-fill waivers after verifying fill ownership" time="0.000195708">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; tenant requirement &gt; requireTenantId throws when no tenant is in request context" time="0.000152709">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; input validation &gt; createQuestion rejects an array as input body" time="0.000097334">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; input validation &gt; createForm accepts missing actor and empty insert result" time="0.000169292">
+        </testcase>
+        <testcase classname="test/unit/flow-forms.service.spec.ts" name="FlowFormsService &gt; input validation &gt; upsertAnswer rejects when the body is not an object" time="0.000366917">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/flow-runtime.service.spec.ts" timestamp="2026-05-19T15:50:01.004Z" hostname="thiamat-1903.local" tests="59" failures="0" errors="0" skipped="0" time="0.085030417">
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.ensureRun &gt; resolves scope code from scopeId when scopeCode is absent" time="0.005685708">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.ensureRun &gt; uses scopeCode directly when provided" time="0.000324916">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.ensureRun &gt; passes optional signal facts to the adapter before ensuring a run" time="0.005535959">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.ensureRun &gt; throws when flow.run_ensure returns no run_id" time="0.0007655">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.ensureRun &gt; requires scopeId when scopeCode is absent" time="0.000470042">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.ensureRun &gt; calls adapter.buildFacts when adapterKey + tenantId are present" time="0.000203084">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.ensureRun &gt; records adapter failure when buildFacts throws + runId is known" time="0.000541583">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService listRuns / listNodeRuns / listTasks / listEvents &gt; listRuns assembles filtered query + total count + meta" time="0.003276833">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService listRuns / listNodeRuns / listTasks / listEvents &gt; listRuns omits WHERE when no filters" time="0.000241291">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService listRuns / listNodeRuns / listTasks / listEvents &gt; list methods use default empty queries when omitted" time="0.001696292">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService listRuns / listNodeRuns / listTasks / listEvents &gt; listNodeRuns filters by runId + status" time="0.000186625">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService listRuns / listNodeRuns / listTasks / listEvents &gt; listTasks honors mine=true (assignee = current actor)" time="0.0002585">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService listRuns / listNodeRuns / listTasks / listEvents &gt; listTasks uses an empty actor filter for mine=true without actor context" time="0.001371583">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService listRuns / listNodeRuns / listTasks / listEvents &gt; listTasks filters by runId + assigneeUserId + status" time="0.000203833">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService listRuns / listNodeRuns / listTasks / listEvents &gt; listEvents filters by runId + nodeId + taskId + kind + actorId" time="0.000132">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService getRun / updateRun / getNodeRun / getTask &gt; getRun returns one or throws NotFound" time="0.021360416">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService getRun / updateRun / getNodeRun / getTask &gt; updateRun returns the camelized updated row" time="0.000604875">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService getRun / updateRun / getNodeRun / getTask &gt; updateRun records a nullable actor when actor context is absent" time="0.000138375">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService getRun / updateRun / getNodeRun / getTask &gt; updateRun throws NotFoundException when row is absent" time="0.000163708">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService getRun / updateRun / getNodeRun / getTask &gt; getNodeRun returns one or throws NotFound" time="0.000229791">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService getRun / updateRun / getNodeRun / getTask &gt; getTask returns one or throws NotFound" time="0.000206667">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService getRun / updateRun / getNodeRun / getTask &gt; listRunNodeRuns / listRunTasks / listRunEvents share the same list shape" time="0.001675542">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService task action flows &gt; actTask asserts allowed action + execution allowed, then calls task_complete" time="0.014225709">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService task action flows &gt; actTask rejects when assertAllowedAction returns allowed=false" time="0.000232375">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService task action flows &gt; actTask throws NotFound when no task row exists" time="0.000128667">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService task action flows &gt; actTask throws Forbidden when actorId is missing" time="0.000149875">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService task action flows &gt; actTask throws Forbidden when assignee belongs to another actor" time="0.000115667">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService task action flows &gt; actTask throws Forbidden when no assignee and actor is not a candidate" time="0.000102125">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService task action flows &gt; assignTask asserts management allowed and calls task_assign" time="0.002544125">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService task action flows &gt; assignTask throws Forbidden when canManage denies" time="0.000359708">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService task action flows &gt; assignTask throws NotFound when task access has no row" time="0.000193959">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService task action flows &gt; assignTask omits actorId from adapter checks when actor context is absent" time="0.00030675">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService task action flows &gt; unassignTask + acceptTask + declineTask + unacceptTask + withdrawTask route to their sql functions" time="0.000458042">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.taskCandidates &gt; passes through non-resolver candidates unchanged" time="0.00117275">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.taskCandidates &gt; expands resolver candidates via adapters.resolveAgents" time="0.000274125">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.taskCandidates &gt; marks resolver as unresolved when no agents returned" time="0.000147416">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.taskCandidates &gt; leaves resolver candidates unresolved when request context or resolver metadata is incomplete" time="0.000122875">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.taskCandidates &gt; leaves resolver candidates unresolved when resolver id is null" time="0.000228541">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.taskCandidates &gt; passes empty strings for nullable resolver candidate context" time="0.0002515">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.signal &gt; resolves scopeId from scopeCode when needed and calls signal_changed" time="0.000927333">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.signal &gt; uses scopeId directly when provided" time="0.000182166">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.dispatchPendingEffects &gt; skips events with no effectKey and marks them failed" time="0.00051925">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.dispatchPendingEffects &gt; calls adapter.applyEffect and records success" time="0.000174625">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.dispatchPendingEffects &gt; records successful effects without optional result payload or actor" time="0.000167667">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.dispatchPendingEffects &gt; uses dispatch defaults and tolerates non-object effect payload wrappers" time="0.0002095">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.dispatchPendingEffects &gt; records failure when adapter.applyEffect throws" time="0.000273333">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.dispatchPendingEffects &gt; records string effect failures without losing diagnostics" time="0.000138959">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.dispatchPendingEffects &gt; returns zero counts when no pending events" time="0.000195583">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService — small helpers + edges &gt; listUsersForRole adds an ilike search clause when search is provided" time="0.000196875">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService — small helpers + edges &gt; listUsersForRole omits the ilike clause when search is undefined" time="0.001533209">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService — small helpers + edges &gt; getTaskUser returns one or throws NotFound" time="0.000402875">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService — small helpers + edges &gt; getRunFacts merges flow.build_facts result with adapter facts" time="0.000210583">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService — small helpers + edges &gt; getRunFacts defaults missing SQL facts to an empty object" time="0.000143958">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService — small helpers + edges &gt; signal rejects when neither scopeCode nor scopeId is provided" time="0.001560833">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService — small helpers + edges &gt; scope resolver helpers require either scope id or scope code" time="0.000190083">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService — small helpers + edges &gt; records adapter fact failures when a run id is available" time="0.000276459">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService — small helpers + edges &gt; records string adapter fact failures with a nullable actor" time="0.000165917">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService — small helpers + edges &gt; throws when a task function cannot reload the task" time="0.000122084">
-        </testcase>
-        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService — small helpers + edges &gt; exposes object input validation and tenant requirement edges" time="0.004337791">
+    <testsuite name="test/unit/flow-module-export.spec.ts" timestamp="2026-05-19T15:58:26.683Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.001229875">
+        <testcase classname="test/unit/flow-module-export.spec.ts" name="@stynx/flow module barrel &gt; top-level index.ts is importable" time="0.0006425">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/gap-contracts.spec.ts" timestamp="2026-05-19T15:50:01.060Z" hostname="thiamat-1903.local" tests="6" failures="0" errors="0" skipped="0" time="0.010272125">
-        <testcase classname="test/unit/gap-contracts.spec.ts" name="Flow backend gap contracts &gt; dispatches pending effects through the adapter and skips already terminal events on retry" time="0.006279375">
+    <testsuite name="test/unit/flow-runtime.service.spec.ts" timestamp="2026-05-19T15:58:26.683Z" hostname="thiamat-1903.local" tests="59" failures="0" errors="0" skipped="0" time="0.131733167">
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.ensureRun &gt; resolves scope code from scopeId when scopeCode is absent" time="0.017991291">
         </testcase>
-        <testcase classname="test/unit/gap-contracts.spec.ts" name="Flow backend gap contracts &gt; records failed adapter effect delivery as an effect_failed event" time="0.000677125">
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.ensureRun &gt; uses scopeCode directly when provided" time="0.000348208">
         </testcase>
-        <testcase classname="test/unit/gap-contracts.spec.ts" name="Flow backend gap contracts &gt; expands resolver_fn candidates through the registered adapter" time="0.000758125">
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.ensureRun &gt; passes optional signal facts to the adapter before ensuring a run" time="0.001734417">
         </testcase>
-        <testcase classname="test/unit/gap-contracts.spec.ts" name="Flow backend gap contracts &gt; rejects task actions from actors that are neither assignees nor concrete candidates" time="0.000743459">
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.ensureRun &gt; throws when flow.run_ensure returns no run_id" time="0.001103583">
         </testcase>
-        <testcase classname="test/unit/gap-contracts.spec.ts" name="Flow backend gap contracts &gt; returns paged analytics envelopes with stable metadata" time="0.000380458">
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.ensureRun &gt; requires scopeId when scopeCode is absent" time="0.004268375">
         </testcase>
-        <testcase classname="test/unit/gap-contracts.spec.ts" name="Flow backend gap contracts &gt; evaluates policies deterministically with highest priority and deny-on-tie ordering" time="0.0008665">
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.ensureRun &gt; calls adapter.buildFacts when adapterKey + tenantId are present" time="0.001478917">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.ensureRun &gt; records adapter failure when buildFacts throws + runId is known" time="0.000792917">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService listRuns / listNodeRuns / listTasks / listEvents &gt; listRuns assembles filtered query + total count + meta" time="0.001432167">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService listRuns / listNodeRuns / listTasks / listEvents &gt; listRuns omits WHERE when no filters" time="0.001977833">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService listRuns / listNodeRuns / listTasks / listEvents &gt; list methods use default empty queries when omitted" time="0.001952041">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService listRuns / listNodeRuns / listTasks / listEvents &gt; listNodeRuns filters by runId + status" time="0.00018225">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService listRuns / listNodeRuns / listTasks / listEvents &gt; listTasks honors mine=true (assignee = current actor)" time="0.000516583">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService listRuns / listNodeRuns / listTasks / listEvents &gt; listTasks uses an empty actor filter for mine=true without actor context" time="0.000418583">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService listRuns / listNodeRuns / listTasks / listEvents &gt; listTasks filters by runId + assigneeUserId + status" time="0.003004125">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService listRuns / listNodeRuns / listTasks / listEvents &gt; listEvents filters by runId + nodeId + taskId + kind + actorId" time="0.000727583">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService getRun / updateRun / getNodeRun / getTask &gt; getRun returns one or throws NotFound" time="0.003424125">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService getRun / updateRun / getNodeRun / getTask &gt; updateRun returns the camelized updated row" time="0.000584375">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService getRun / updateRun / getNodeRun / getTask &gt; updateRun records a nullable actor when actor context is absent" time="0.000141875">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService getRun / updateRun / getNodeRun / getTask &gt; updateRun throws NotFoundException when row is absent" time="0.000150916">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService getRun / updateRun / getNodeRun / getTask &gt; getNodeRun returns one or throws NotFound" time="0.000220208">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService getRun / updateRun / getNodeRun / getTask &gt; getTask returns one or throws NotFound" time="0.000207292">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService getRun / updateRun / getNodeRun / getTask &gt; listRunNodeRuns / listRunTasks / listRunEvents share the same list shape" time="0.001904958">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService task action flows &gt; actTask asserts allowed action + execution allowed, then calls task_complete" time="0.00235325">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService task action flows &gt; actTask rejects when assertAllowedAction returns allowed=false" time="0.000419875">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService task action flows &gt; actTask throws NotFound when no task row exists" time="0.000706542">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService task action flows &gt; actTask throws Forbidden when actorId is missing" time="0.001323583">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService task action flows &gt; actTask throws Forbidden when assignee belongs to another actor" time="0.000184334">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService task action flows &gt; actTask throws Forbidden when no assignee and actor is not a candidate" time="0.000114875">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService task action flows &gt; assignTask asserts management allowed and calls task_assign" time="0.003299958">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService task action flows &gt; assignTask throws Forbidden when canManage denies" time="0.000222083">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService task action flows &gt; assignTask throws NotFound when task access has no row" time="0.000142209">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService task action flows &gt; assignTask omits actorId from adapter checks when actor context is absent" time="0.003185083">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService task action flows &gt; unassignTask + acceptTask + declineTask + unacceptTask + withdrawTask route to their sql functions" time="0.00140225">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.taskCandidates &gt; passes through non-resolver candidates unchanged" time="0.007382209">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.taskCandidates &gt; expands resolver candidates via adapters.resolveAgents" time="0.012943208">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.taskCandidates &gt; marks resolver as unresolved when no agents returned" time="0.000962916">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.taskCandidates &gt; leaves resolver candidates unresolved when request context or resolver metadata is incomplete" time="0.003867458">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.taskCandidates &gt; leaves resolver candidates unresolved when resolver id is null" time="0.000217958">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.taskCandidates &gt; passes empty strings for nullable resolver candidate context" time="0.000268959">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.signal &gt; resolves scopeId from scopeCode when needed and calls signal_changed" time="0.007612458">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.signal &gt; uses scopeId directly when provided" time="0.000344416">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.dispatchPendingEffects &gt; skips events with no effectKey and marks them failed" time="0.000506042">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.dispatchPendingEffects &gt; calls adapter.applyEffect and records success" time="0.000165917">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.dispatchPendingEffects &gt; records successful effects without optional result payload or actor" time="0.000221541">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.dispatchPendingEffects &gt; uses dispatch defaults and tolerates non-object effect payload wrappers" time="0.002217208">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.dispatchPendingEffects &gt; records failure when adapter.applyEffect throws" time="0.013258042">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.dispatchPendingEffects &gt; records string effect failures without losing diagnostics" time="0.001613334">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService.dispatchPendingEffects &gt; returns zero counts when no pending events" time="0.000509583">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService — small helpers + edges &gt; listUsersForRole adds an ilike search clause when search is provided" time="0.000500166">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService — small helpers + edges &gt; listUsersForRole omits the ilike clause when search is undefined" time="0.000126333">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService — small helpers + edges &gt; getTaskUser returns one or throws NotFound" time="0.000706875">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService — small helpers + edges &gt; getRunFacts merges flow.build_facts result with adapter facts" time="0.000410083">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService — small helpers + edges &gt; getRunFacts defaults missing SQL facts to an empty object" time="0.001620375">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService — small helpers + edges &gt; signal rejects when neither scopeCode nor scopeId is provided" time="0.0005325">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService — small helpers + edges &gt; scope resolver helpers require either scope id or scope code" time="0.000486041">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService — small helpers + edges &gt; records adapter fact failures when a run id is available" time="0.000466417">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService — small helpers + edges &gt; records string adapter fact failures with a nullable actor" time="0.000731292">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService — small helpers + edges &gt; throws when a task function cannot reload the task" time="0.000808875">
+        </testcase>
+        <testcase classname="test/unit/flow-runtime.service.spec.ts" name="FlowRuntimeService — small helpers + edges &gt; exposes object input validation and tenant requirement edges" time="0.002366042">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/route-contracts.spec.ts" timestamp="2026-05-19T15:50:01.062Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.007431625">
-        <testcase classname="test/unit/route-contracts.spec.ts" name="Flow route contracts &gt; keeps every Flow route private and permissioned" time="0.004056834">
+    <testsuite name="test/unit/gap-contracts.spec.ts" timestamp="2026-05-19T15:58:26.711Z" hostname="thiamat-1903.local" tests="6" failures="0" errors="0" skipped="0" time="0.07124825">
+        <testcase classname="test/unit/gap-contracts.spec.ts" name="Flow backend gap contracts &gt; dispatches pending effects through the adapter and skips already terminal events on retry" time="0.026484167">
         </testcase>
-        <testcase classname="test/unit/route-contracts.spec.ts" name="Flow route contracts &gt; marks read routes as read-only" time="0.000860708">
+        <testcase classname="test/unit/gap-contracts.spec.ts" name="Flow backend gap contracts &gt; records failed adapter effect delivery as an effect_failed event" time="0.00060575">
         </testcase>
-        <testcase classname="test/unit/route-contracts.spec.ts" name="Flow route contracts &gt; audits mutations and idempotently protects retryable task/form writes" time="0.001198708">
+        <testcase classname="test/unit/gap-contracts.spec.ts" name="Flow backend gap contracts &gt; expands resolver_fn candidates through the registered adapter" time="0.010771125">
         </testcase>
-        <testcase classname="test/unit/route-contracts.spec.ts" name="Flow route contracts &gt; rate-limits user-triggered runtime mutations" time="0.0004375">
+        <testcase classname="test/unit/gap-contracts.spec.ts" name="Flow backend gap contracts &gt; rejects task actions from actors that are neither assignees nor concrete candidates" time="0.006388666">
+        </testcase>
+        <testcase classname="test/unit/gap-contracts.spec.ts" name="Flow backend gap contracts &gt; returns paged analytics envelopes with stable metadata" time="0.021239167">
+        </testcase>
+        <testcase classname="test/unit/gap-contracts.spec.ts" name="Flow backend gap contracts &gt; evaluates policies deterministically with highest priority and deny-on-tie ordering" time="0.004665458">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/validation-and-regression.spec.ts" timestamp="2026-05-19T15:50:01.066Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="0.015184333">
-        <testcase classname="test/unit/validation-and-regression.spec.ts" name="Flow validation and regression guards &gt; rejects invalid workflow DTOs before they reach the database" time="0.002987834">
+    <testsuite name="test/unit/route-contracts.spec.ts" timestamp="2026-05-19T15:58:26.716Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.015946833">
+        <testcase classname="test/unit/route-contracts.spec.ts" name="Flow route contracts &gt; keeps every Flow route private and permissioned" time="0.007701083">
         </testcase>
-        <testcase classname="test/unit/validation-and-regression.spec.ts" name="Flow validation and regression guards &gt; accepts answer writes identified by itemId before normalization" time="0.0022525">
+        <testcase classname="test/unit/route-contracts.spec.ts" name="Flow route contracts &gt; marks read routes as read-only" time="0.003668792">
         </testcase>
-        <testcase classname="test/unit/validation-and-regression.spec.ts" name="Flow validation and regression guards &gt; rejects invalid graph imports with duplicate or missing node references" time="0.001343167">
+        <testcase classname="test/unit/route-contracts.spec.ts" name="Flow route contracts &gt; audits mutations and idempotently protects retryable task/form writes" time="0.002840833">
         </testcase>
-        <testcase classname="test/unit/validation-and-regression.spec.ts" name="Flow validation and regression guards &gt; wraps domain adapter failures without leaking domain implementation details" time="0.000495833">
+        <testcase classname="test/unit/route-contracts.spec.ts" name="Flow route contracts &gt; rate-limits user-triggered runtime mutations" time="0.000354042">
         </testcase>
-        <testcase classname="test/unit/validation-and-regression.spec.ts" name="Flow validation and regression guards &gt; keeps generic Flow source free of PORM/CMS domain coupling" time="0.007375042">
+    </testsuite>
+    <testsuite name="test/unit/validation-and-regression.spec.ts" timestamp="2026-05-19T15:58:26.717Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="0.027853708">
+        <testcase classname="test/unit/validation-and-regression.spec.ts" name="Flow validation and regression guards &gt; rejects invalid workflow DTOs before they reach the database" time="0.011471583">
+        </testcase>
+        <testcase classname="test/unit/validation-and-regression.spec.ts" name="Flow validation and regression guards &gt; accepts answer writes identified by itemId before normalization" time="0.002423458">
+        </testcase>
+        <testcase classname="test/unit/validation-and-regression.spec.ts" name="Flow validation and regression guards &gt; rejects invalid graph imports with duplicate or missing node references" time="0.002613833">
+        </testcase>
+        <testcase classname="test/unit/validation-and-regression.spec.ts" name="Flow validation and regression guards &gt; wraps domain adapter failures without leaking domain implementation details" time="0.000523208">
+        </testcase>
+        <testcase classname="test/unit/validation-and-regression.spec.ts" name="Flow validation and regression guards &gt; keeps generic Flow source free of PORM/CMS domain coupling" time="0.008840791">
         </testcase>
     </testsuite>
 </testsuites>

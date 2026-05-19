@@ -1,61 +1,123 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="27" failures="0" errors="0" time="4.819343709">
-    <testsuite name="test/components.spec.ts" timestamp="2026-05-19T15:49:48.694Z" hostname="thiamat-1903.local" tests="22" failures="0" errors="0" skipped="0" time="4.76380675">
-        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; renders the users admin table and drives search, pagination, creation, and selection" time="2.430001125">
+<testsuites name="vitest tests" tests="43" failures="0" errors="0" time="102.427419541">
+    <testsuite name="test/components.spec.ts" timestamp="2026-05-19T16:16:57.959Z" hostname="thiamat-1903.local" tests="22" failures="0" errors="0" skipped="0" time="17.168487583">
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; renders the users admin table and drives search, pagination, creation, and selection" time="6.249884084">
         </testcase>
-        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; renders user create and disable dialogs with validated output payloads" time="0.506928042">
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; renders user create and disable dialogs with validated output payloads" time="1.115069167">
         </testcase>
-        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; drives role admin list, clone/create dialog, deletes, and system-role guard" time="0.596969583">
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; drives role admin list, clone/create dialog, deletes, and system-role guard" time="1.340866417">
         </testcase>
-        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; renders role create dialog and emits create versus clone payloads" time="0.150517541">
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; renders role create dialog and emits create versus clone payloads" time="0.644709875">
         </testcase>
-        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; drives group admin list, create dialog, delete, and search branches" time="0.214964542">
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; drives group admin list, create dialog, delete, and search branches" time="1.253300834">
         </testcase>
-        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; renders group create dialog and trims optional description" time="0.019366541">
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; renders group create dialog and trims optional description" time="0.038253583">
         </testcase>
-        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; loads and saves user detail overview, memberships, and lifecycle actions" time="0.180518875">
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; loads and saves user detail overview, memberships, and lifecycle actions" time="1.186634875">
         </testcase>
-        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; loads and saves role and group detail overview forms" time="0.25399325">
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; loads and saves role and group detail overview forms" time="1.33795725">
         </testcase>
-        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; filters, mutates, and saves the permission matrix" time="0.081899667">
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; filters, mutates, and saves the permission matrix" time="0.396194042">
         </testcase>
-        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; loads and saves group roles and members editors" time="0.022849792">
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; loads and saves group roles and members editors" time="0.331071083">
         </testcase>
-        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; renders effective permissions, filters grant sources, refreshes, and handles empty input" time="0.021820625">
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; renders effective permissions, filters grant sources, refreshes, and handles empty input" time="0.5219235">
         </testcase>
-        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; records component error branches without weakening assertions" time="0.040942917">
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; records component error branches without weakening assertions" time="0.871576">
         </testcase>
-        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; covers dialog validation, clone initial state, and optional payload fields" time="0.018985333">
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; covers dialog validation, clone initial state, and optional payload fields" time="0.045197375">
         </testcase>
-        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; covers admin navigation, close, and dialog error branches" time="0.033856042">
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; covers admin navigation, close, and dialog error branches" time="0.091806625">
         </testcase>
-        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; covers role admin close, clone guard, load, clone, and create failures" time="0.012247375">
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; covers role admin close, clone guard, load, clone, and create failures" time="0.07945475">
         </testcase>
-        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; covers role and group detail guard, load, save, and fallback error branches" time="0.0137725">
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; covers role and group detail guard, load, save, and fallback error branches" time="0.104901917">
         </testcase>
-        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; covers user detail no-id guards and every save/load failure callback" time="0.006289458">
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; covers user detail no-id guards and every save/load failure callback" time="0.270729458">
         </testcase>
-        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; covers group role and member editor reset, removal, no-id, and error branches" time="0.009251083">
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; covers group role and member editor reset, removal, no-id, and error branches" time="0.030958">
         </testcase>
-        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; covers permission matrix synthetic permissions, no-id save, and fallback errors" time="0.004204375">
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; covers permission matrix synthetic permissions, no-id save, and fallback errors" time="0.041481667">
         </testcase>
-        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; covers effective permission fallback normalization, source fallbacks, and load errors" time="0.012839542">
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; covers effective permission fallback normalization, source fallbacks, and load errors" time="0.251649208">
         </testcase>
-        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; covers remaining fallback translation and default-value branches" time="0.087163375">
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; covers remaining fallback translation and default-value branches" time="0.302452709">
         </testcase>
-        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; covers remaining detail and editor translation fallbacks" time="0.032492458">
+        <testcase classname="test/components.spec.ts" name="@stynx-web/angular-iam component TestBed specs &gt; covers remaining detail and editor translation fallbacks" time="0.53521175">
         </testcase>
     </testsuite>
-    <testsuite name="test/iam-api-and-routes.spec.ts" timestamp="2026-05-19T15:49:48.728Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="0.055536959">
-        <testcase classname="test/iam-api-and-routes.spec.ts" name="@stynx-web/angular-iam API and routes &gt; exports the host-facing IAM package API" time="0.007831958">
+    <testsuite name="test/iam-api-and-routes.spec.ts" timestamp="2026-05-19T16:16:58.285Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="0.348831375">
+        <testcase classname="test/iam-api-and-routes.spec.ts" name="@stynx-web/angular-iam API and routes &gt; exposes a host-facing provider and defensive IAM route factory" time="0.010943083">
         </testcase>
-        <testcase classname="test/iam-api-and-routes.spec.ts" name="@stynx-web/angular-iam API and routes &gt; wraps every IAM SDK endpoint and updates list caches" time="0.029099917">
+        <testcase classname="test/iam-api-and-routes.spec.ts" name="@stynx-web/angular-iam API and routes &gt; wraps every IAM SDK endpoint and updates list caches" time="0.184580875">
         </testcase>
-        <testcase classname="test/iam-api-and-routes.spec.ts" name="@stynx-web/angular-iam API and routes &gt; omits empty query options while preserving explicit tenant scope" time="0.009036167">
+        <testcase classname="test/iam-api-and-routes.spec.ts" name="@stynx-web/angular-iam API and routes &gt; omits empty query options while preserving explicit tenant scope" time="0.086504459">
         </testcase>
-        <testcase classname="test/iam-api-and-routes.spec.ts" name="@stynx-web/angular-iam API and routes &gt; returns defensive IAM route copies with permission metadata" time="0.004094167">
+        <testcase classname="test/iam-api-and-routes.spec.ts" name="@stynx-web/angular-iam API and routes &gt; returns defensive IAM route copies with permission metadata" time="0.049973958">
         </testcase>
-        <testcase classname="test/iam-api-and-routes.spec.ts" name="@stynx-web/angular-iam API and routes &gt; allows and denies route activation through the IAM permission guards" time="0.003247875">
+        <testcase classname="test/iam-api-and-routes.spec.ts" name="@stynx-web/angular-iam API and routes &gt; allows and denies route activation through the IAM permission guards" time="0.007134">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/routing/angular-iam-routes.spec.ts" timestamp="2026-05-19T16:16:58.366Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="11.470827083">
+        <testcase classname="test/routing/angular-iam-routes.spec.ts" name="angular-iam routes &gt; activates each IAM admin route for users, roles, and groups when permissions allow" time="11.150574125">
+        </testcase>
+        <testcase classname="test/routing/angular-iam-routes.spec.ts" name="angular-iam routes &gt; redirects denied IAM route activation to the configured permission-denied route" time="0.130523583">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/effective-permissions.component.spec.ts" timestamp="2026-05-19T16:16:58.377Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="3.685330083">
+        <testcase classname="test/unit/effective-permissions.component.spec.ts" name="StynxEffectivePermissionsComponent &gt; loads effective grants, filters by grant source, refreshes, and clears search state" time="3.683996416">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/group-create-dialog.component.spec.ts" timestamp="2026-05-19T16:16:58.379Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="3.1817395">
+        <testcase classname="test/unit/group-create-dialog.component.spec.ts" name="StynxGroupCreateDialogComponent &gt; validates required fields and emits trimmed optional description" time="3.175742">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/group-detail.component.spec.ts" timestamp="2026-05-19T16:16:58.380Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="8.43114125">
+        <testcase classname="test/unit/group-detail.component.spec.ts" name="StynxGroupDetailComponent &gt; loads a group and saves overview changes without blank descriptions" time="8.353298042">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/group-members-editor.component.spec.ts" timestamp="2026-05-19T16:16:58.391Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="1.517073125">
+        <testcase classname="test/unit/group-members-editor.component.spec.ts" name="StynxGroupMembersEditorComponent &gt; filters available users, toggles membership, and emits saved user ids" time="1.512577875">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/group-roles-editor.component.spec.ts" timestamp="2026-05-19T16:16:58.392Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="1.406124209">
+        <testcase classname="test/unit/group-roles-editor.component.spec.ts" name="StynxGroupRolesEditorComponent &gt; loads group roles, toggles assignment, and emits saved role ids" time="1.402841">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/groups-admin.component.spec.ts" timestamp="2026-05-19T16:16:58.396Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="4.890537625">
+        <testcase classname="test/unit/groups-admin.component.spec.ts" name="StynxGroupsAdminComponent &gt; filters groups, creates, deletes, and navigates to group detail" time="4.887952583">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/permission-matrix.component.spec.ts" timestamp="2026-05-19T16:16:58.418Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="7.486659292">
+        <testcase classname="test/unit/permission-matrix.component.spec.ts" name="StynxPermissionMatrixComponent &gt; filters permissions, toggles grants, selects resources, and saves changes" time="7.303106917">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/role-create-dialog.component.spec.ts" timestamp="2026-05-19T16:16:58.449Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="8.324770833">
+        <testcase classname="test/unit/role-create-dialog.component.spec.ts" name="StynxRoleCreateDialogComponent &gt; emits create and clone payloads with optional description trimming" time="8.277196167">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/role-detail.component.spec.ts" timestamp="2026-05-19T16:16:58.451Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="8.943581375">
+        <testcase classname="test/unit/role-detail.component.spec.ts" name="StynxRoleDetailComponent &gt; loads a role, saves overview changes, and identifies system roles" time="8.936191667">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/roles-admin.component.spec.ts" timestamp="2026-05-19T16:16:58.507Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="4.868163875">
+        <testcase classname="test/unit/roles-admin.component.spec.ts" name="StynxRolesAdminComponent &gt; filters roles, creates, clones, deletes non-system roles, and navigates to detail" time="4.858463583">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/user-create-dialog.component.spec.ts" timestamp="2026-05-19T16:16:58.536Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="3.72827825">
+        <testcase classname="test/unit/user-create-dialog.component.spec.ts" name="StynxUserCreateDialogComponent &gt; validates form input and emits a trimmed create payload" time="3.714492208">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/user-detail.component.spec.ts" timestamp="2026-05-19T16:16:58.539Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="8.422793542">
+        <testcase classname="test/unit/user-detail.component.spec.ts" name="StynxUserDetailComponent &gt; loads user detail and persists overview, role, group, and lifecycle actions" time="8.421136625">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/user-disable-confirm-dialog.component.spec.ts" timestamp="2026-05-19T16:16:58.543Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="2.699395458">
+        <testcase classname="test/unit/user-disable-confirm-dialog.component.spec.ts" name="StynxUserDisableConfirmDialogComponent &gt; renders the target user and emits confirm or dismiss actions" time="2.525330833">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/users-admin.component.spec.ts" timestamp="2026-05-19T16:16:58.544Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="5.853685083">
+        <testcase classname="test/unit/users-admin.component.spec.ts" name="StynxUsersAdminComponent &gt; renders user rows and drives search, pagination, creation, and selection" time="5.594682292">
         </testcase>
     </testsuite>
 </testsuites>

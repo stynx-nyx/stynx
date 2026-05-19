@@ -1,3 +1,4 @@
+import '@angular/compiler';
 import { InjectionToken, Injector, runInInjectionContext } from '@angular/core';
 import type { StynxSdkClient } from '@stynx-web/sdk';
 import { firstValueFrom } from 'rxjs';

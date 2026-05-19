@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T15:50:19.026Z",
-  "endedAt": "2026-05-19T15:50:22.931Z",
-  "durationMs": 3905,
+  "startedAt": "2026-05-19T15:58:42.904Z",
+  "endedAt": "2026-05-19T15:58:45.564Z",
+  "durationMs": 2660,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.int.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-24334-1779205819026.json",
+      "--outputFile.json=/tmp/vitest-44772-1779206322904.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/core/.test-results/integration.junit.xml"
     ],
@@ -47,12 +47,12 @@
     {
       "name": "StynxCoreModule integration propagates request ids and config values through the module",
       "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/integration/core.module.spec.ts",
-      "durationMs": 128.55445899999995
+      "durationMs": 24.951082999999926
     },
     {
       "name": "StynxCoreModule integration fails fast on invalid configuration during module boot",
       "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/integration/core.module.spec.ts",
-      "durationMs": 7.124582999999802
+      "durationMs": 8.302042000000029
     }
   ]
 }

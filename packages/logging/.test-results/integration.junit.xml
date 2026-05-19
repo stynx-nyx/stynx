@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="1" failures="0" errors="0" time="0.084971833">
-    <testsuite name="test/integration/logging.module.spec.ts" timestamp="2026-05-19T15:50:31.903Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.084971833">
-        <testcase classname="test/integration/logging.module.spec.ts" name="StynxLoggingModule integration &gt; emits JSON logs with the active request id" time="0.0843105">
+<testsuites name="vitest tests" tests="1" failures="0" errors="0" time="0.020271666">
+    <testsuite name="test/integration/logging.module.spec.ts" timestamp="2026-05-19T15:58:48.018Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.020271666">
+        <testcase classname="test/integration/logging.module.spec.ts" name="StynxLoggingModule integration &gt; emits JSON logs with the active request id" time="0.019633958">
         </testcase>
     </testsuite>
 </testsuites>

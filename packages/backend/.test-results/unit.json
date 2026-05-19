@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T15:49:09.214Z",
-  "endedAt": "2026-05-19T15:49:41.229Z",
-  "durationMs": 32015,
+  "startedAt": "2026-05-19T15:56:48.280Z",
+  "endedAt": "2026-05-19T15:58:00.417Z",
+  "durationMs": 72137,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-22192-1779205749214.json",
+      "--outputFile.json=/tmp/vitest-41373-1779206208278.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/backend/.test-results/unit.junit.xml"
     ],
@@ -45,54 +45,54 @@
   },
   "slowestTests": [
     {
-      "name": "backend idempotency behavior bypasses read methods and optional write keys",
+      "name": "PecIdentityAdminFacade list() maps items into PEC summary shape with parsed dates",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/integration-facades.spec.ts",
+      "durationMs": 186.14974999999959
+    },
+    {
+      "name": "DbContextInterceptor applies session context when principal + pgClient are present",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/db-context.interceptor.spec.ts",
+      "durationMs": 185.96533399999862
+    },
+    {
+      "name": "PormIdentityAdminFacade verify() short-circuits when neither email nor phone is requested",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/integration-facades.spec.ts",
+      "durationMs": 149.18787499999962
+    },
+    {
+      "name": "TenantLifecycleMiddleware throws BadRequestException when tenant header missing and required",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/tenant-lifecycle.middleware.spec.ts",
+      "durationMs": 137.100958
+    },
+    {
+      "name": "PormIdentityAdminFacade list() expands each item via get() to include groups + attributes",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/integration-facades.spec.ts",
+      "durationMs": 136.69579200000044
+    },
+    {
+      "name": "getPrincipalFromRequest falls back to request.actor",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/db-context.interceptor.spec.ts",
+      "durationMs": 135.90337499999987
+    },
+    {
+      "name": "backend SLA behavior resolves URL categories and falls back to NONE",
       "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/behavior-coverage.spec.ts",
-      "durationMs": 129.15637499999866
+      "durationMs": 133.8572920000006
     },
     {
-      "name": "backend durable stores describes branch: PgRateLimitStore uses default SQL identifiers",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/pg-durable-stores.spec.ts",
-      "durationMs": 88.58375000000001
-    },
-    {
-      "name": "backend idempotency behavior uses durable entries, reservations, races, fallbacks, and cleanup branches",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/behavior-coverage.spec.ts",
-      "durationMs": 86.10254199999872
-    },
-    {
-      "name": "backend idempotency behavior caches in-memory writes, replays them, and detects payload conflicts",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/behavior-coverage.spec.ts",
-      "durationMs": 77.80924999999843
-    },
-    {
-      "name": "backend module wiring branches wires db-context variants and validates missing applier config",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/behavior-coverage.spec.ts",
-      "durationMs": 56.91308300000128
-    },
-    {
-      "name": "PgIdentityLocalSyncAdapter sorts groups by name when sort order ties or is absent",
+      "name": "PgIdentityLocalSyncAdapter syncToLocal skips users without a username or UUID subject",
       "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/pg-local-sync.adapter.spec.ts",
-      "durationMs": 40.996250000000146
+      "durationMs": 132.58287500000006
     },
     {
-      "name": "@stynx/backend exports surface for auth barrel surfaces at least one export",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/auth-export.spec.ts",
-      "durationMs": 39.77741700000115
+      "name": "@stynx/backend exports surface for idempotency barrel surfaces at least one export",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/idempotency-export.spec.ts",
+      "durationMs": 124.19150000000081
     },
     {
-      "name": "backend idempotency behavior describes branch: header arrays without strings and missing methods bypass idempotency",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/behavior-coverage.spec.ts",
-      "durationMs": 31.616125000000466
-    },
-    {
-      "name": "backend durable stores covers backend PgIdempotencyStore query branches",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/pg-durable-stores.spec.ts",
-      "durationMs": 27.889208000000053
-    },
-    {
-      "name": "@stynx/backend exports surface for common barrel surfaces at least one export",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/common-export.spec.ts",
-      "durationMs": 25.99645899999996
+      "name": "DbContextInterceptor acquires + releases via lifecycle when no client is on the request",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/db-context.interceptor.spec.ts",
+      "durationMs": 102.14637499999844
     }
   ]
 }

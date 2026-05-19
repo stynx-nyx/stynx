@@ -15,6 +15,7 @@ import {
 import { StynxFlowGraphCanvasComponent } from '../src/flow-graph-canvas.component';
 import { StynxFlowGraphDesignerComponent } from '../src/flow-graph-designer.component';
 import {
+  StynxFlowMyTasksInboxComponent,
   StynxFlowTaskAssignmentDialogComponent,
   StynxFlowTaskCardComponent,
   StynxFlowTaskListComponent,
@@ -23,8 +24,9 @@ import {
   StynxFlowWaiverDialogComponent,
   StynxFlowWaiversComponent,
 } from '../src/flow-waivers.component';
-import { STYNX_FLOW_CLIENT } from '../src/tokens';
+import { STYNX_FLOW_CLIENT, STYNX_FLOW_TENANT_CHANGED } from '../src/tokens';
 import type { Mock } from 'vitest';
+import { Subject } from 'rxjs';
 
 function createApi(): FlowApiService {
   return {
@@ -62,6 +64,16 @@ function createWithApi<T>(api: FlowApiService, factory: () => T): T {
     providers: [{ provide: FlowApiService, useValue: api }],
   });
   return runInInjectionContext(injector, factory);
+}
+
+function createInbox(api: FlowApiService, tenantChanged: Subject<void>): StynxFlowMyTasksInboxComponent {
+  const injector = Injector.create({
+    providers: [
+      { provide: FlowApiService, useValue: api },
+      { provide: STYNX_FLOW_TENANT_CHANGED, useValue: tenantChanged.asObservable() },
+    ],
+  });
+  return runInInjectionContext(injector, () => new StynxFlowMyTasksInboxComponent());
 }
 
 describe('@stynx-web/angular-flow components', () => {
@@ -349,6 +361,53 @@ describe('@stynx-web/angular-flow components', () => {
     (api.listWaivers as Mock).mockRejectedValueOnce(new Error('waivers down'));
     await waivers.load();
     expect(waivers.errorMessage).toBe('waivers down');
+  });
+
+  it('loads the my-tasks inbox with signal state and tenant refreshes', async () => {
+    const api = createApi();
+    const tenantChanged = new Subject<void>();
+    const component = createInbox(api, tenantChanged);
+    const actions: unknown[] = [];
+    const assignments: unknown[] = [];
+    component.pollingIntervalMs = 0;
+    component.act.subscribe((value) => actions.push(value));
+    component.assign.subscribe((value) => assignments.push(value));
+
+    await component.refresh();
+    expect(api.listTasks).toHaveBeenCalledWith({ assignee: 'me', status: 'open' });
+    expect(component.tasks()).toHaveLength(1);
+    expect(component.loading()).toBe(false);
+    expect(component.errorMessage()).toBe('');
+
+    component.act.emit({ task: component.tasks()[0]!, action: 'approve' });
+    component.assign.emit(component.tasks()[0]!);
+    expect(actions).toEqual([{ task: component.tasks()[0], action: 'approve' }]);
+    expect(assignments).toEqual([component.tasks()[0]]);
+
+    (api.listTasks as Mock).mockClear();
+    component.ngOnInit();
+    await Promise.resolve();
+    (api.listTasks as Mock).mockClear();
+    tenantChanged.next();
+    await Promise.resolve();
+    expect(api.listTasks).toHaveBeenCalledWith({ assignee: 'me', status: 'open' });
+  });
+
+  it('normalizes my-tasks polling input and captures fallback load errors', async () => {
+    const api = createApi();
+    const component = createWithApi(api, () => new StynxFlowMyTasksInboxComponent());
+
+    component.pollingIntervalMs = '1500';
+    expect(component.pollingIntervalMs).toBe(1500);
+    component.pollingIntervalMs = -1;
+    expect(component.pollingIntervalMs).toBe(0);
+    component.pollingIntervalMs = 'not-a-number';
+    expect(component.pollingIntervalMs).toBe(30000);
+
+    (api.listTasks as Mock).mockRejectedValueOnce('offline');
+    await component.refresh();
+    expect(component.errorMessage()).toBe('My tasks load failed');
+    expect(component.loading()).toBe(false);
   });
 
   it('supports fill editor answer lookup and bulk save intent', () => {

@@ -4,9 +4,9 @@
   "level": "unit",
   "runner": "node-test",
   "status": "passed",
-  "startedAt": "2026-05-19T15:48:22.248Z",
-  "endedAt": "2026-05-19T15:48:28.017Z",
-  "durationMs": 5769,
+  "startedAt": "2026-05-19T15:54:45.062Z",
+  "endedAt": "2026-05-19T15:55:04.770Z",
+  "durationMs": 19708,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -17,10 +17,7 @@
     "ci": false
   },
   "command": {
-    "argv": [
-      "node",
-      "validate.js"
-    ],
+    "argv": ["node", "validate.js"],
     "cwd": "/Users/aarusso/Development/stech/stynx/test/scripts"
   },
   "metric": {

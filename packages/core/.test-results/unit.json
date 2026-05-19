@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T15:48:22.309Z",
-  "endedAt": "2026-05-19T15:48:34.707Z",
-  "durationMs": 12398,
+  "startedAt": "2026-05-19T15:54:45.405Z",
+  "endedAt": "2026-05-19T15:55:09.760Z",
+  "durationMs": 24355,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-19392-1779205702309.json",
+      "--outputFile.json=/tmp/vitest-36036-1779206085405.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/core/.test-results/unit.junit.xml"
     ],
@@ -45,54 +45,54 @@
   },
   "slowestTests": [
     {
-      "name": "SystemContext withSystemContext helper delegates to the SystemContext instance",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/system-context.spec.ts",
-      "durationMs": 152.418584
-    },
-    {
-      "name": "SecretLoader refreshes a cached secret after a connection-like run failure",
+      "name": "SecretLoader refetches after invalidating a cached secret",
       "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/secret-loader.spec.ts",
-      "durationMs": 144.12675000000036
+      "durationMs": 242.32995800000026
     },
     {
-      "name": "SystemContext requires a readable reason and records an audit event",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/system-context.spec.ts",
-      "durationMs": 61.09112499999992
+      "name": "StynxErrorFilter omits context from the body when StynxError carries none",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/error.filter.spec.ts",
+      "durationMs": 211.73825000000033
     },
     {
-      "name": "RequestContextInterceptor generates a UUIDv7 request id when none provided and sets X-Request-Id",
+      "name": "loadStynxConfiguration SSM loading loads paged SSM values using the default environment prefix",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/config-ssm.spec.ts",
+      "durationMs": 186.4782499999983
+    },
+    {
+      "name": "loadStynxConfiguration SSM loading reports schema validation failures after merging defaults and env",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/config-ssm.spec.ts",
+      "durationMs": 184.18791600000077
+    },
+    {
+      "name": "RequestContext exposes values inside an active request context and allows internal patching",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/request-context.spec.ts",
+      "durationMs": 128.96712500000103
+    },
+    {
+      "name": "SecretLoader refetches when forceRefresh=true",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/secret-loader.spec.ts",
+      "durationMs": 77.24479100000099
+    },
+    {
+      "name": "SecretLoader uses configured secretCacheTtlMs",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/secret-loader.spec.ts",
+      "durationMs": 75.5882500000007
+    },
+    {
+      "name": "RequestContextInterceptor exposes seed state inside the CLS scope during handler execution",
       "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/request-context.interceptor.spec.ts",
-      "durationMs": 46.52691699999923
+      "durationMs": 73.30699999999888
     },
     {
-      "name": "StynxCoreModule wires sync and async option providers plus global infrastructure",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/core.module.spec.ts",
-      "durationMs": 36.31037500000002
-    },
-    {
-      "name": "RequestContextInterceptor honors a valid X-Request-Id header from the caller",
+      "name": "RequestContextInterceptor resolves actorId from stynxClaims.sub first and sessionId from sid",
       "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/request-context.interceptor.spec.ts",
-      "durationMs": 34.44658399999935
+      "durationMs": 68.15166700000009
     },
     {
-      "name": "SecretLoader caches the secret value within ttlMs",
+      "name": "SecretLoader does not refresh after non-Error run failures",
       "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/secret-loader.spec.ts",
-      "durationMs": 27.463333000000603
-    },
-    {
-      "name": "SecretLoader does not refresh after non-connection run failures",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/secret-loader.spec.ts",
-      "durationMs": 24.28033400000004
-    },
-    {
-      "name": "SystemContext records active actor id from the request context when available",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/system-context.spec.ts",
-      "durationMs": 20.658250000000407
-    },
-    {
-      "name": "SecretLoader constructs a SecretsManagerClient with configured client options",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/secret-loader.spec.ts",
-      "durationMs": 10.953708000000006
+      "durationMs": 65.08662499999991
     }
   ]
 }

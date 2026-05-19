@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T15:50:22.434Z",
-  "endedAt": "2026-05-19T15:50:27.478Z",
-  "durationMs": 5044,
+  "startedAt": "2026-05-19T15:58:45.040Z",
+  "endedAt": "2026-05-19T15:58:47.347Z",
+  "durationMs": 2307,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.int.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-24475-1779205822434.json",
+      "--outputFile.json=/tmp/vitest-44848-1779206325040.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/health/.test-results/integration.junit.xml"
     ],
@@ -47,47 +47,47 @@
     {
       "name": "StynxHealthController API error matrix GET /healthz returns 200 for liveness",
       "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/integration/health.api-matrix.spec.ts",
-      "durationMs": 436.799667
-    },
-    {
-      "name": "StynxHealthController API error matrix GET /readyz returns 200 when downstream checks are healthy",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/integration/health.api-matrix.spec.ts",
-      "durationMs": 98.47279200000003
-    },
-    {
-      "name": "StynxHealthController API error matrix GET /readyz returns 503 when a downstream readiness check is unhealthy",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/integration/health.api-matrix.spec.ts",
-      "durationMs": 81.94387499999993
-    },
-    {
-      "name": "StynxHealthController API error matrix GET /metrics returns 200 with Prometheus metrics when no IP allowlist is configured",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/integration/health.api-matrix.spec.ts",
-      "durationMs": 69.0191249999998
-    },
-    {
-      "name": "StynxHealthController API error matrix GET /metrics returns 403 when the client IP is outside the metrics allowlist",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/integration/health.api-matrix.spec.ts",
-      "durationMs": 46.40037499999971
+      "durationMs": 178.0219169999998
     },
     {
       "name": "StynxHealthModule integration exposes the expected health endpoints through the controller surface",
       "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/integration/health.module.spec.ts",
-      "durationMs": 26.94791699999996
+      "durationMs": 23.960417000000007
     },
     {
       "name": "StynxHealthController API error matrix GET /info returns 200 when platform info is enabled",
       "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/integration/health.api-matrix.spec.ts",
-      "durationMs": 18.80054199999995
+      "durationMs": 15.595000000000027
+    },
+    {
+      "name": "StynxHealthController API error matrix GET /metrics returns 200 with Prometheus metrics when no IP allowlist is configured",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/integration/health.api-matrix.spec.ts",
+      "durationMs": 9.185999999999922
     },
     {
       "name": "StynxHealthController API error matrix GET /info returns 403 when platform info is disabled",
       "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/integration/health.api-matrix.spec.ts",
-      "durationMs": 9.915917000000263
+      "durationMs": 7.8631249999998545
     },
     {
       "name": "StynxHealthModule integration surfaces readiness failures as 503 errors",
       "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/integration/health.module.spec.ts",
-      "durationMs": 8.008666000000176
+      "durationMs": 7.7791249999997945
+    },
+    {
+      "name": "StynxHealthController API error matrix GET /readyz returns 200 when downstream checks are healthy",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/integration/health.api-matrix.spec.ts",
+      "durationMs": 6.792165999999952
+    },
+    {
+      "name": "StynxHealthController API error matrix GET /readyz returns 503 when a downstream readiness check is unhealthy",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/integration/health.api-matrix.spec.ts",
+      "durationMs": 5.630499999999984
+    },
+    {
+      "name": "StynxHealthController API error matrix GET /metrics returns 403 when the client IP is outside the metrics allowlist",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/integration/health.api-matrix.spec.ts",
+      "durationMs": 5.3892090000001645
     }
   ]
 }

@@ -34,6 +34,13 @@ import type {
 
 type QueryValue = string | number | boolean | null | undefined;
 type FlowQuery = Record<string, QueryValue>;
+type FlowTaskFilters = {
+  runId?: string;
+  assignee?: string;
+  assigneeUserId?: string;
+  status?: string;
+  mine?: boolean;
+};
 
 function query(input: FlowQuery): Record<string, Exclude<QueryValue, undefined>> | undefined {
   const filtered: Record<string, Exclude<QueryValue, undefined>> = {};
@@ -234,8 +241,14 @@ export class FlowApiService {
     return this.client.get<FlowNodeRun>(`/flow/node-runs/${id}`);
   }
 
-  listTasks(filters: { runId?: string; assigneeUserId?: string; status?: string; mine?: boolean } = {}): Promise<FlowPage<FlowTask>> {
-    return this.client.get<FlowPage<FlowTask>>('/flow/tasks', options(filters));
+  listTasks(filters: FlowTaskFilters = {}): Promise<FlowPage<FlowTask>> {
+    const { assignee, ...rest } = filters;
+    const normalized = assignee === 'me'
+      ? { ...rest, mine: true }
+      : assignee
+        ? { ...rest, assigneeUserId: assignee }
+        : rest;
+    return this.client.get<FlowPage<FlowTask>>('/flow/tasks', options(normalized));
   }
 
   getTask(id: string): Promise<FlowTask> {

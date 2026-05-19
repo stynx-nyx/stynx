@@ -1,119 +1,119 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="51" failures="0" errors="0" time="0.10392829">
-    <testsuite name="test/unit/barrel-load.spec.ts" timestamp="2026-05-19T15:49:48.141Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.001433083">
-        <testcase classname="test/unit/barrel-load.spec.ts" name="@stynx/tenancy barrel &gt; exports at least one symbol" time="0.000832708">
+<testsuites name="vitest tests" tests="51" failures="0" errors="0" time="1.481123876">
+    <testsuite name="test/unit/barrel-load.spec.ts" timestamp="2026-05-19T15:57:53.989Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.006696792">
+        <testcase classname="test/unit/barrel-load.spec.ts" name="@stynx/tenancy barrel &gt; exports at least one symbol" time="0.004751334">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/membership-cache.spec.ts" timestamp="2026-05-19T15:49:48.143Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.008150541">
-        <testcase classname="test/unit/membership-cache.spec.ts" name="MembershipAccessCache &gt; expires entries after the configured ttl" time="0.00437225">
+    <testsuite name="test/unit/membership-cache.spec.ts" timestamp="2026-05-19T15:57:54.023Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.003613917">
+        <testcase classname="test/unit/membership-cache.spec.ts" name="MembershipAccessCache &gt; expires entries after the configured ttl" time="0.001760542">
         </testcase>
-        <testcase classname="test/unit/membership-cache.spec.ts" name="MembershipAccessCache &gt; evicts the oldest entry when it exceeds capacity" time="0.000447458">
+        <testcase classname="test/unit/membership-cache.spec.ts" name="MembershipAccessCache &gt; evicts the oldest entry when it exceeds capacity" time="0.000184958">
         </testcase>
-        <testcase classname="test/unit/membership-cache.spec.ts" name="MembershipAccessCache &gt; treats entries as expired exactly at the ttl boundary" time="0.001570125">
+        <testcase classname="test/unit/membership-cache.spec.ts" name="MembershipAccessCache &gt; treats entries as expired exactly at the ttl boundary" time="0.000593875">
         </testcase>
-        <testcase classname="test/unit/membership-cache.spec.ts" name="MembershipAccessCache &gt; clears all entries and invalidates only the requested tenant" time="0.000227625">
-        </testcase>
-    </testsuite>
-    <testsuite name="test/unit/platform-admin-and-sink.spec.ts" timestamp="2026-05-19T15:49:48.147Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="0.004942208">
-        <testcase classname="test/unit/platform-admin-and-sink.spec.ts" name="TenancyPlatformAdminGuard &gt; allows only when the platform admin flag is enabled" time="0.001025459">
-        </testcase>
-        <testcase classname="test/unit/platform-admin-and-sink.spec.ts" name="TenantSystemOperationSink &gt; skips tenant membership validation records" time="0.0006825">
-        </testcase>
-        <testcase classname="test/unit/platform-admin-and-sink.spec.ts" name="TenantSystemOperationSink &gt; persists system operation records and exposes the provider binding" time="0.00159825">
-        </testcase>
-        <testcase classname="test/unit/platform-admin-and-sink.spec.ts" name="TenantSystemOperationSink &gt; persists system operation records without an actor id" time="0.000296416">
-        </testcase>
-        <testcase classname="test/unit/platform-admin-and-sink.spec.ts" name="TenantSystemOperationSink &gt; fails explicitly when no database provider is available" time="0.0006675">
+        <testcase classname="test/unit/membership-cache.spec.ts" name="MembershipAccessCache &gt; clears all entries and invalidates only the requested tenant" time="0.000356542">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/tenancy.controller.spec.ts" timestamp="2026-05-19T15:49:48.149Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.006763708">
-        <testcase classname="test/unit/tenancy.controller.spec.ts" name="TenancyController API contract &gt; keeps tenant administration behind the platform admin guard" time="0.002430333">
+    <testsuite name="test/unit/platform-admin-and-sink.spec.ts" timestamp="2026-05-19T15:57:54.124Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="0.0377655">
+        <testcase classname="test/unit/platform-admin-and-sink.spec.ts" name="TenancyPlatformAdminGuard &gt; allows only when the platform admin flag is enabled" time="0.007270583">
         </testcase>
-        <testcase classname="test/unit/tenancy.controller.spec.ts" name="TenancyController API contract &gt; delegates tenant read and mutation operations to the service" time="0.003280875">
+        <testcase classname="test/unit/platform-admin-and-sink.spec.ts" name="TenantSystemOperationSink &gt; skips tenant membership validation records" time="0.007196792">
         </testcase>
-        <testcase classname="test/unit/tenancy.controller.spec.ts" name="TenancyController API contract &gt; keeps tenant mutations outside the idempotency interceptor" time="0.000229375">
+        <testcase classname="test/unit/platform-admin-and-sink.spec.ts" name="TenantSystemOperationSink &gt; persists system operation records and exposes the provider binding" time="0.008080541">
         </testcase>
-    </testsuite>
-    <testsuite name="test/unit/tenancy.service.spec.ts" timestamp="2026-05-19T15:49:48.150Z" hostname="thiamat-1903.local" tests="18" failures="0" errors="0" skipped="0" time="0.040536708">
-        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; provisions a new tenant and fans out the expected side effects" time="0.007181666">
+        <testcase classname="test/unit/platform-admin-and-sink.spec.ts" name="TenantSystemOperationSink &gt; persists system operation records without an actor id" time="0.003678416">
         </testcase>
-        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; provisions a new tenant with the requested owner id when user lookup returns no row" time="0.003225708">
-        </testcase>
-        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; archives and purges tenants while invalidating membership cache" time="0.001500333">
-        </testcase>
-        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; reuses existing tenants by creating a fresh owner invitation when no pending invite exists" time="0.000527875">
-        </testcase>
-        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; lists, gets, and updates tenants with owner-scoped database calls" time="0.0031805">
-        </testcase>
-        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; maps null tenant state and settings to active defaults" time="0.000523042">
-        </testcase>
-        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; updates core tenant fields without writing settings when settings inputs are absent" time="0.001139209">
-        </testcase>
-        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; updates tenant settings when only one settings field is supplied" time="0.002601333">
-        </testcase>
-        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; falls back to null settings fields when the current row has no settings row" time="0.0009485">
-        </testcase>
-        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; falls back to empty settings when the current settings field is absent" time="0.0002635">
-        </testcase>
-        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; uses owner readonly transactions for single-tenant reads" time="0.000323791">
-        </testcase>
-        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; suspends tenants with a trimmed reason and returns active session count" time="0.006893584">
-        </testcase>
-        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; returns zero active sessions when suspension finds no active session count row" time="0.000959916">
-        </testcase>
-        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; uses default tenant side-effect adapters when none are provided" time="0.002078334">
-        </testcase>
-        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; throws when a tenant cannot be found" time="0.0061655">
-        </testcase>
-        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; reuses an existing pending invitation when it still has a membership user" time="0.000750334">
-        </testcase>
-        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; creates a fresh owner invitation for an existing user when no pending invitation remains" time="0.00027375">
-        </testcase>
-        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; throws when a tenant disappears after an update and when the database provider is missing" time="0.000700917">
+        <testcase classname="test/unit/platform-admin-and-sink.spec.ts" name="TenantSystemOperationSink &gt; fails explicitly when no database provider is available" time="0.002501583">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/tenant-context.interceptor.spec.ts" timestamp="2026-05-19T15:49:48.156Z" hostname="thiamat-1903.local" tests="14" failures="0" errors="0" skipped="0" time="0.025349">
-        <testcase classname="test/unit/tenant-context.interceptor.spec.ts" name="TenantContextInterceptor &gt; skips optional paths without hitting the database" time="0.002099167">
+    <testsuite name="test/unit/tenancy.controller.spec.ts" timestamp="2026-05-19T15:57:54.166Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.038091167">
+        <testcase classname="test/unit/tenancy.controller.spec.ts" name="TenancyController API contract &gt; keeps tenant administration behind the platform admin guard" time="0.01675175">
         </testcase>
-        <testcase classname="test/unit/tenant-context.interceptor.spec.ts" name="TenantContextInterceptor &gt; runs the downstream handler with tenant context and unsubscribes cleanly" time="0.004179542">
+        <testcase classname="test/unit/tenancy.controller.spec.ts" name="TenancyController API contract &gt; delegates tenant read and mutation operations to the service" time="0.0199325">
         </testcase>
-        <testcase classname="test/unit/tenant-context.interceptor.spec.ts" name="TenantContextInterceptor &gt; runs optional paths without adding tenant context" time="0.002061792">
-        </testcase>
-        <testcase classname="test/unit/tenant-context.interceptor.spec.ts" name="TenantContextInterceptor &gt; forwards downstream handler errors to the subscriber" time="0.00090975">
-        </testcase>
-        <testcase classname="test/unit/tenant-context.interceptor.spec.ts" name="TenantContextInterceptor &gt; rejects missing tenant context and mismatched header/claim pairs" time="0.001855167">
-        </testcase>
-        <testcase classname="test/unit/tenant-context.interceptor.spec.ts" name="TenantContextInterceptor &gt; uses cached membership decisions and resolves tenant ids from subdomains" time="0.001503917">
-        </testcase>
-        <testcase classname="test/unit/tenant-context.interceptor.spec.ts" name="TenantContextInterceptor &gt; trims tenant sources, validates membership through owner readonly tx, and caches the decision" time="0.002244708">
-        </testcase>
-        <testcase classname="test/unit/tenant-context.interceptor.spec.ts" name="TenantContextInterceptor &gt; trims tenant ids from stynx claims and returns optional paths without a tenant" time="0.000423334">
-        </testcase>
-        <testcase classname="test/unit/tenant-context.interceptor.spec.ts" name="TenantContextInterceptor &gt; resolves tenant and actor identities from bearer claims" time="0.001484125">
-        </testcase>
-        <testcase classname="test/unit/tenant-context.interceptor.spec.ts" name="TenantContextInterceptor &gt; falls back from host to hostname when resolving subdomain tenants" time="0.004819542">
-        </testcase>
-        <testcase classname="test/unit/tenant-context.interceptor.spec.ts" name="TenantContextInterceptor &gt; rejects malformed tenant identifiers before membership lookup" time="0.000778042">
-        </testcase>
-        <testcase classname="test/unit/tenant-context.interceptor.spec.ts" name="TenantContextInterceptor &gt; rejects inactive memberships and caches the negative membership decision" time="0.000463459">
-        </testcase>
-        <testcase classname="test/unit/tenant-context.interceptor.spec.ts" name="TenantContextInterceptor &gt; rejects requests without an actor identity" time="0.000310375">
-        </testcase>
-        <testcase classname="test/unit/tenant-context.interceptor.spec.ts" name="TenantContextInterceptor &gt; fails explicitly when membership validation has no database provider" time="0.000994">
+        <testcase classname="test/unit/tenancy.controller.spec.ts" name="TenancyController API contract &gt; keeps tenant mutations outside the idempotency interceptor" time="0.000258416">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/utils.spec.ts" timestamp="2026-05-19T15:49:48.163Z" hostname="thiamat-1903.local" tests="6" failures="0" errors="0" skipped="0" time="0.016753042">
-        <testcase classname="test/unit/utils.spec.ts" name="tenancy utils &gt; normalizes headers, paths, optional tenancy routes, and UUIDv7 values" time="0.004540166">
+    <testsuite name="test/unit/tenancy.service.spec.ts" timestamp="2026-05-19T15:57:54.201Z" hostname="thiamat-1903.local" tests="18" failures="0" errors="0" skipped="0" time="0.675474333">
+        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; provisions a new tenant and fans out the expected side effects" time="0.078725709">
         </testcase>
-        <testcase classname="test/unit/utils.spec.ts" name="tenancy utils &gt; parses bearer tenant claims defensively" time="0.000764">
+        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; provisions a new tenant with the requested owner id when user lookup returns no row" time="0.003171125">
         </testcase>
-        <testcase classname="test/unit/utils.spec.ts" name="tenancy utils &gt; treats malformed bearer tokens with missing payload parts as invalid" time="0.000666583">
+        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; archives and purges tenants while invalidating membership cache" time="0.354876">
         </testcase>
-        <testcase classname="test/unit/utils.spec.ts" name="tenancy utils &gt; resolves subdomain tenants with default UUIDv7 and custom patterns" time="0.00039225">
+        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; reuses existing tenants by creating a fresh owner invitation when no pending invite exists" time="0.004677625">
         </testcase>
-        <testcase classname="test/unit/utils.spec.ts" name="tenancy utils &gt; ignores custom matchers that produce no tenant candidate" time="0.000071625">
+        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; lists, gets, and updates tenants with owner-scoped database calls" time="0.004019208">
         </testcase>
-        <testcase classname="test/unit/utils.spec.ts" name="tenancy utils &gt; creates UUIDv7 values when entropy bytes are missing variant positions" time="0.009222333">
+        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; maps null tenant state and settings to active defaults" time="0.00065475">
+        </testcase>
+        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; updates core tenant fields without writing settings when settings inputs are absent" time="0.011937834">
+        </testcase>
+        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; updates tenant settings when only one settings field is supplied" time="0.002206292">
+        </testcase>
+        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; falls back to null settings fields when the current row has no settings row" time="0.001047583">
+        </testcase>
+        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; falls back to empty settings when the current settings field is absent" time="0.0015015">
+        </testcase>
+        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; uses owner readonly transactions for single-tenant reads" time="0.001462125">
+        </testcase>
+        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; suspends tenants with a trimmed reason and returns active session count" time="0.002007209">
+        </testcase>
+        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; returns zero active sessions when suspension finds no active session count row" time="0.003871708">
+        </testcase>
+        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; uses default tenant side-effect adapters when none are provided" time="0.146908791">
+        </testcase>
+        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; throws when a tenant cannot be found" time="0.013779417">
+        </testcase>
+        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; reuses an existing pending invitation when it still has a membership user" time="0.000887834">
+        </testcase>
+        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; creates a fresh owner invitation for an existing user when no pending invitation remains" time="0.000891666">
+        </testcase>
+        <testcase classname="test/unit/tenancy.service.spec.ts" name="TenancyService &gt; throws when a tenant disappears after an update and when the database provider is missing" time="0.002156166">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/tenant-context.interceptor.spec.ts" timestamp="2026-05-19T15:57:54.394Z" hostname="thiamat-1903.local" tests="14" failures="0" errors="0" skipped="0" time="0.551387958">
+        <testcase classname="test/unit/tenant-context.interceptor.spec.ts" name="TenantContextInterceptor &gt; skips optional paths without hitting the database" time="0.097260084">
+        </testcase>
+        <testcase classname="test/unit/tenant-context.interceptor.spec.ts" name="TenantContextInterceptor &gt; runs the downstream handler with tenant context and unsubscribes cleanly" time="0.006738834">
+        </testcase>
+        <testcase classname="test/unit/tenant-context.interceptor.spec.ts" name="TenantContextInterceptor &gt; runs optional paths without adding tenant context" time="0.008832542">
+        </testcase>
+        <testcase classname="test/unit/tenant-context.interceptor.spec.ts" name="TenantContextInterceptor &gt; forwards downstream handler errors to the subscriber" time="0.001955917">
+        </testcase>
+        <testcase classname="test/unit/tenant-context.interceptor.spec.ts" name="TenantContextInterceptor &gt; rejects missing tenant context and mismatched header/claim pairs" time="0.013137084">
+        </testcase>
+        <testcase classname="test/unit/tenant-context.interceptor.spec.ts" name="TenantContextInterceptor &gt; uses cached membership decisions and resolves tenant ids from subdomains" time="0.000671709">
+        </testcase>
+        <testcase classname="test/unit/tenant-context.interceptor.spec.ts" name="TenantContextInterceptor &gt; trims tenant sources, validates membership through owner readonly tx, and caches the decision" time="0.377968667">
+        </testcase>
+        <testcase classname="test/unit/tenant-context.interceptor.spec.ts" name="TenantContextInterceptor &gt; trims tenant ids from stynx claims and returns optional paths without a tenant" time="0.009571417">
+        </testcase>
+        <testcase classname="test/unit/tenant-context.interceptor.spec.ts" name="TenantContextInterceptor &gt; resolves tenant and actor identities from bearer claims" time="0.010448667">
+        </testcase>
+        <testcase classname="test/unit/tenant-context.interceptor.spec.ts" name="TenantContextInterceptor &gt; falls back from host to hostname when resolving subdomain tenants" time="0.001417125">
+        </testcase>
+        <testcase classname="test/unit/tenant-context.interceptor.spec.ts" name="TenantContextInterceptor &gt; rejects malformed tenant identifiers before membership lookup" time="0.0020975">
+        </testcase>
+        <testcase classname="test/unit/tenant-context.interceptor.spec.ts" name="TenantContextInterceptor &gt; rejects inactive memberships and caches the negative membership decision" time="0.001503792">
+        </testcase>
+        <testcase classname="test/unit/tenant-context.interceptor.spec.ts" name="TenantContextInterceptor &gt; rejects requests without an actor identity" time="0.000776875">
+        </testcase>
+        <testcase classname="test/unit/tenant-context.interceptor.spec.ts" name="TenantContextInterceptor &gt; fails explicitly when membership validation has no database provider" time="0.010106209">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/utils.spec.ts" timestamp="2026-05-19T15:57:54.411Z" hostname="thiamat-1903.local" tests="6" failures="0" errors="0" skipped="0" time="0.168094209">
+        <testcase classname="test/unit/utils.spec.ts" name="tenancy utils &gt; normalizes headers, paths, optional tenancy routes, and UUIDv7 values" time="0.005600666">
+        </testcase>
+        <testcase classname="test/unit/utils.spec.ts" name="tenancy utils &gt; parses bearer tenant claims defensively" time="0.001396209">
+        </testcase>
+        <testcase classname="test/unit/utils.spec.ts" name="tenancy utils &gt; treats malformed bearer tokens with missing payload parts as invalid" time="0.001526458">
+        </testcase>
+        <testcase classname="test/unit/utils.spec.ts" name="tenancy utils &gt; resolves subdomain tenants with default UUIDv7 and custom patterns" time="0.001297292">
+        </testcase>
+        <testcase classname="test/unit/utils.spec.ts" name="tenancy utils &gt; ignores custom matchers that produce no tenant candidate" time="0.00010325">
+        </testcase>
+        <testcase classname="test/unit/utils.spec.ts" name="tenancy utils &gt; creates UUIDv7 values when entropy bytes are missing variant positions" time="0.155717708">
         </testcase>
     </testsuite>
 </testsuites>

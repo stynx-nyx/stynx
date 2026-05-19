@@ -1,143 +1,143 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="54" failures="0" errors="0" time="18.404663917">
-    <testsuite name="audit.ddl.spec.ts" timestamp="2026-05-19T15:48:33.999Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.150977083">
-        <testcase classname="audit.ddl.spec.ts" name="audit schema DDL &gt; creates audit.events table with metadata and pk columns" time="0.035791583">
+<testsuites name="vitest tests" tests="54" failures="0" errors="0" time="31.425148998">
+    <testsuite name="audit.ddl.spec.ts" timestamp="2026-05-19T15:55:08.609Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.0202625">
+        <testcase classname="audit.ddl.spec.ts" name="audit schema DDL &gt; creates audit.events table with metadata and pk columns" time="0.002454333">
         </testcase>
-        <testcase classname="audit.ddl.spec.ts" name="audit schema DDL &gt; exposes audit.write helper" time="0.010033">
+        <testcase classname="audit.ddl.spec.ts" name="audit schema DDL &gt; exposes audit.write helper" time="0.000235792">
         </testcase>
-        <testcase classname="audit.ddl.spec.ts" name="audit schema DDL &gt; extracts primary key data for trigger events" time="0.013616">
+        <testcase classname="audit.ddl.spec.ts" name="audit schema DDL &gt; extracts primary key data for trigger events" time="0.000069041">
         </testcase>
-        <testcase classname="audit.ddl.spec.ts" name="audit schema DDL &gt; exposes audit.verify_chain helper" time="0.000265458">
-        </testcase>
-    </testsuite>
-    <testsuite name="auth.ddl.spec.ts" timestamp="2026-05-19T15:48:34.061Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.002555">
-        <testcase classname="auth.ddl.spec.ts" name="auth schema DDL &gt; defines auth schema" time="0.000776916">
-        </testcase>
-        <testcase classname="auth.ddl.spec.ts" name="auth schema DDL &gt; exposes tenancy membership with RLS policies" time="0.000751625">
-        </testcase>
-        <testcase classname="auth.ddl.spec.ts" name="auth schema DDL &gt; sets up Cognito mirror tables" time="0.000134417">
-        </testcase>
-        <testcase classname="auth.ddl.spec.ts" name="auth schema DDL &gt; defines reusable tenant/RLS helper functions" time="0.000100458">
+        <testcase classname="audit.ddl.spec.ts" name="audit schema DDL &gt; exposes audit.verify_chain helper" time="0.000065125">
         </testcase>
     </testsuite>
-    <testsuite name="storage.ddl.spec.ts" timestamp="2026-05-19T15:48:34.161Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.021432959">
-        <testcase classname="storage.ddl.spec.ts" name="storage schema DDL &gt; defines storage schema and files table" time="0.000844584">
+    <testsuite name="auth.ddl.spec.ts" timestamp="2026-05-19T15:55:08.730Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.019046458">
+        <testcase classname="auth.ddl.spec.ts" name="auth schema DDL &gt; defines auth schema" time="0.000673">
         </testcase>
-        <testcase classname="storage.ddl.spec.ts" name="storage schema DDL &gt; enables row level security" time="0.000196542">
+        <testcase classname="auth.ddl.spec.ts" name="auth schema DDL &gt; exposes tenancy membership with RLS policies" time="0.00022475">
         </testcase>
-    </testsuite>
-    <testsuite name="invariants/audit-attach-completeness.spec.ts" timestamp="2026-05-19T15:48:34.180Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="1.071333208">
-        <testcase classname="invariants/audit-attach-completeness.spec.ts" name="db invariant: audit attach completeness &gt; proves audit.attach_dml_triggers attaches audit_log_dml to an explicit scratch table" time="0.103633875">
+        <testcase classname="auth.ddl.spec.ts" name="auth schema DDL &gt; sets up Cognito mirror tables" time="0.000110958">
         </testcase>
-        <testcase classname="invariants/audit-attach-completeness.spec.ts" name="db invariant: audit attach completeness &gt; keeps current DDL explicit: no built-in app table has audit_log_dml pre-attached" time="0.002981666">
+        <testcase classname="auth.ddl.spec.ts" name="auth schema DDL &gt; defines reusable tenant/RLS helper functions" time="0.017332834">
         </testcase>
     </testsuite>
-    <testsuite name="invariants/extension-list.spec.ts" timestamp="2026-05-19T15:48:34.181Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="1.4387175">
-        <testcase classname="invariants/extension-list.spec.ts" name="db invariant: extension list &gt; loads exactly the current DDL-declared extensions beyond plpgsql" time="0.042740625">
+    <testsuite name="storage.ddl.spec.ts" timestamp="2026-05-19T15:55:08.754Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.022989083">
+        <testcase classname="storage.ddl.spec.ts" name="storage schema DDL &gt; defines storage schema and files table" time="0.000769958">
+        </testcase>
+        <testcase classname="storage.ddl.spec.ts" name="storage schema DDL &gt; enables row level security" time="0.000181708">
         </testcase>
     </testsuite>
-    <testsuite name="invariants/rls-policy-completeness.spec.ts" timestamp="2026-05-19T15:48:34.192Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.764641375">
-        <testcase classname="invariants/rls-policy-completeness.spec.ts" name="db invariant: RLS policy completeness &gt; keeps the current DDL tenant-scoped table set deterministic" time="0.007772958">
+    <testsuite name="invariants/audit-attach-completeness.spec.ts" timestamp="2026-05-19T15:55:08.867Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="1.588418625">
+        <testcase classname="invariants/audit-attach-completeness.spec.ts" name="db invariant: audit attach completeness &gt; proves audit.attach_dml_triggers attaches audit_log_dml to an explicit scratch table" time="0.010688125">
         </testcase>
-        <testcase classname="invariants/rls-policy-completeness.spec.ts" name="db invariant: RLS policy completeness &gt; enables and forces RLS on the current DDL tenant-scoped tables" time="0.002162875">
-        </testcase>
-        <testcase classname="invariants/rls-policy-completeness.spec.ts" name="db invariant: RLS policy completeness &gt; keeps the expected policy names attached to the expected targets" time="0.000787125">
+        <testcase classname="invariants/audit-attach-completeness.spec.ts" name="db invariant: audit attach completeness &gt; keeps current DDL explicit: no built-in app table has audit_log_dml pre-attached" time="0.004080917">
         </testcase>
     </testsuite>
-    <testsuite name="invariants/soft-delete-archive-mirrors.spec.ts" timestamp="2026-05-19T15:48:34.248Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.998618541">
-        <testcase classname="invariants/soft-delete-archive-mirrors.spec.ts" name="db invariant: soft-delete archive mirrors &gt; reports the current DDL soft-delete columns without expanding the policy contract" time="0.01324725">
-        </testcase>
-        <testcase classname="invariants/soft-delete-archive-mirrors.spec.ts" name="db invariant: soft-delete archive mirrors &gt; keeps current DDL explicit: storage.files has no declared archive mirror table" time="0.001478">
+    <testsuite name="invariants/extension-list.spec.ts" timestamp="2026-05-19T15:55:08.924Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="2.518074083">
+        <testcase classname="invariants/extension-list.spec.ts" name="db invariant: extension list &gt; loads exactly the current DDL-declared extensions beyond plpgsql" time="0.053629959">
         </testcase>
     </testsuite>
-    <testsuite name="runtime/extensions.runtime.spec.ts" timestamp="2026-05-19T15:48:34.289Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.646566667">
-        <testcase classname="runtime/extensions.runtime.spec.ts" name="db runtime extensions &gt; applies DDL and seed files in lexical order" time="0.000844666">
+    <testsuite name="invariants/rls-policy-completeness.spec.ts" timestamp="2026-05-19T15:55:08.948Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="1.093088334">
+        <testcase classname="invariants/rls-policy-completeness.spec.ts" name="db invariant: RLS policy completeness &gt; keeps the current DDL tenant-scoped table set deterministic" time="0.033009667">
         </testcase>
-        <testcase classname="runtime/extensions.runtime.spec.ts" name="db runtime extensions &gt; loads the extensions declared by db/ddl/00-extensions.sql" time="0.001061417">
+        <testcase classname="invariants/rls-policy-completeness.spec.ts" name="db invariant: RLS policy completeness &gt; enables and forces RLS on the current DDL tenant-scoped tables" time="0.003640292">
         </testcase>
-        <testcase classname="runtime/extensions.runtime.spec.ts" name="db runtime extensions &gt; exposes functions backed by the declared extensions" time="0.001275625">
-        </testcase>
-    </testsuite>
-    <testsuite name="seed/base.shape.spec.ts" timestamp="2026-05-19T15:48:34.298Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="1.235977208">
-        <testcase classname="seed/base.shape.spec.ts" name="db seed base shape &gt; loads the canonical row counts from db/seed/00-base.sql" time="0.030298958">
-        </testcase>
-        <testcase classname="seed/base.shape.spec.ts" name="db seed base shape &gt; pins the default tenancy and admin user identity" time="0.022900667">
-        </testcase>
-        <testcase classname="seed/base.shape.spec.ts" name="db seed base shape &gt; pins role and group mappings used by the base admin identity" time="0.04809325">
+        <testcase classname="invariants/rls-policy-completeness.spec.ts" name="db invariant: RLS policy completeness &gt; keeps the expected policy names attached to the expected targets" time="0.003241625">
         </testcase>
     </testsuite>
-    <testsuite name="runtime/audit/hash-chain.runtime.spec.ts" timestamp="2026-05-19T15:48:34.299Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="1.309512542">
-        <testcase classname="runtime/audit/hash-chain.runtime.spec.ts" name="audit hash-chain runtime behavior &gt; formats timestamps, computes hashes, and sets pinned row hashes on insert" time="0.170451333">
+    <testsuite name="invariants/soft-delete-archive-mirrors.spec.ts" timestamp="2026-05-19T15:55:08.960Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="1.94134675">
+        <testcase classname="invariants/soft-delete-archive-mirrors.spec.ts" name="db invariant: soft-delete archive mirrors &gt; reports the current DDL soft-delete columns without expanding the policy contract" time="0.015624041">
         </testcase>
-        <testcase classname="runtime/audit/hash-chain.runtime.spec.ts" name="audit hash-chain runtime behavior &gt; audit.write appends tenant-local hashes and uses auth.current_tenant when tenant is omitted" time="0.141478583">
-        </testcase>
-        <testcase classname="runtime/audit/hash-chain.runtime.spec.ts" name="audit hash-chain runtime behavior &gt; verify_chain accepts the pinned chain and reports payload tampering" time="0.052481625">
+        <testcase classname="invariants/soft-delete-archive-mirrors.spec.ts" name="db invariant: soft-delete archive mirrors &gt; keeps current DDL explicit: storage.files has no declared archive mirror table" time="0.07417475">
         </testcase>
     </testsuite>
-    <testsuite name="runtime/audit/log-dml.runtime.spec.ts" timestamp="2026-05-19T15:48:34.299Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="1.468693208">
-        <testcase classname="runtime/audit/log-dml.runtime.spec.ts" name="audit DML trigger runtime behavior &gt; extract_primary_key returns ordered primary-key JSON and null for unsupported rows" time="0.033149291">
+    <testsuite name="seed/base.shape.spec.ts" timestamp="2026-05-19T15:55:08.960Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="2.03243025">
+        <testcase classname="seed/base.shape.spec.ts" name="db seed base shape &gt; loads the canonical row counts from db/seed/00-base.sql" time="0.069924">
         </testcase>
-        <testcase classname="runtime/audit/log-dml.runtime.spec.ts" name="audit DML trigger runtime behavior &gt; fn_log_dml records INSERT, UPDATE, and DELETE through audit.attach_dml_triggers" time="0.136899667">
+        <testcase classname="seed/base.shape.spec.ts" name="db seed base shape &gt; pins the default tenancy and admin user identity" time="0.114772209">
         </testcase>
-        <testcase classname="runtime/audit/log-dml.runtime.spec.ts" name="audit DML trigger runtime behavior &gt; audit.attach_dml_triggers replaces an existing audit trigger without duplicating events" time="0.038909708">
-        </testcase>
-    </testsuite>
-    <testsuite name="runtime/audit/tenant-scope.runtime.spec.ts" timestamp="2026-05-19T15:48:34.299Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="1.517429375">
-        <testcase classname="runtime/audit/tenant-scope.runtime.spec.ts" name="audit.events tenant_scope RLS runtime behavior &gt; limits non-owner reads to auth.current_tenant plus tenantless audit events" time="0.2200535">
-        </testcase>
-        <testcase classname="runtime/audit/tenant-scope.runtime.spec.ts" name="audit.events tenant_scope RLS runtime behavior &gt; allows platform:superadmin context to read all tenant-scoped audit events" time="0.076146208">
-        </testcase>
-        <testcase classname="runtime/audit/tenant-scope.runtime.spec.ts" name="audit.events tenant_scope RLS runtime behavior &gt; rejects inserts for another tenant under the non-owner application role" time="0.092211375">
+        <testcase classname="seed/base.shape.spec.ts" name="db seed base shape &gt; pins role and group mappings used by the base admin identity" time="0.064802209">
         </testcase>
     </testsuite>
-    <testsuite name="runtime/auth/rls-policies.runtime.spec.ts" timestamp="2026-05-19T15:48:34.300Z" hostname="thiamat-1903.local" tests="7" failures="0" errors="0" skipped="0" time="2.538639334">
-        <testcase classname="runtime/auth/rls-policies.runtime.spec.ts" name="auth runtime RLS policies &gt; filters auth.tenancies through the tenant_isolation policy" time="0.333429666">
+    <testsuite name="runtime/extensions.runtime.spec.ts" timestamp="2026-05-19T15:55:08.961Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="1.677807458">
+        <testcase classname="runtime/extensions.runtime.spec.ts" name="db runtime extensions &gt; applies DDL and seed files in lexical order" time="0.001114375">
         </testcase>
-        <testcase classname="runtime/auth/rls-policies.runtime.spec.ts" name="auth runtime RLS policies &gt; rejects cross-tenant tenancy inserts through tenant_isolation WITH CHECK" time="0.076164458">
+        <testcase classname="runtime/extensions.runtime.spec.ts" name="db runtime extensions &gt; loads the extensions declared by db/ddl/00-extensions.sql" time="0.012627042">
         </testcase>
-        <testcase classname="runtime/auth/rls-policies.runtime.spec.ts" name="auth runtime RLS policies &gt; filters auth.tenancy_members through tenant_isolation and membership_isolation" time="0.316620958">
-        </testcase>
-        <testcase classname="runtime/auth/rls-policies.runtime.spec.ts" name="auth runtime RLS policies &gt; filters auth.users through users_isolation and hides cross-tenant updates" time="0.196042167">
-        </testcase>
-        <testcase classname="runtime/auth/rls-policies.runtime.spec.ts" name="auth runtime RLS policies &gt; filters auth.user_roles through user_roles_isolation" time="0.055864375">
-        </testcase>
-        <testcase classname="runtime/auth/rls-policies.runtime.spec.ts" name="auth runtime RLS policies &gt; filters auth.user_groups through user_groups_isolation" time="0.206211666">
-        </testcase>
-        <testcase classname="runtime/auth/rls-policies.runtime.spec.ts" name="auth runtime RLS policies &gt; honors auth.set_user_context roles when platform:superadmin is present" time="0.088936083">
+        <testcase classname="runtime/extensions.runtime.spec.ts" name="db runtime extensions &gt; exposes functions backed by the declared extensions" time="0.014257667">
         </testcase>
     </testsuite>
-    <testsuite name="runtime/auth/tenant-context.runtime.spec.ts" timestamp="2026-05-19T15:48:34.301Z" hostname="thiamat-1903.local" tests="6" failures="0" errors="0" skipped="0" time="1.841845375">
-        <testcase classname="runtime/auth/tenant-context.runtime.spec.ts" name="auth tenant context runtime helpers &gt; sets and clears user, role, language, and tenant context on the current connection" time="0.150222042">
+    <testsuite name="runtime/storage/files-touch.runtime.spec.ts" timestamp="2026-05-19T15:55:08.961Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="3.139240125">
+        <testcase classname="runtime/storage/files-touch.runtime.spec.ts" name="storage.files runtime behavior &gt; inserts a storage file with generated identity, defaults, and current-tenant enforcement" time="0.425885958">
         </testcase>
-        <testcase classname="runtime/auth/tenant-context.runtime.spec.ts" name="auth tenant context runtime helpers &gt; rejects a non-UUID user context value with SQLSTATE 22023" time="0.04523625">
+        <testcase classname="runtime/storage/files-touch.runtime.spec.ts" name="storage.files runtime behavior &gt; fires storage.touch_updated_at on update and leaves explicit insert timestamps untouched" time="0.45277975">
         </testcase>
-        <testcase classname="runtime/auth/tenant-context.runtime.spec.ts" name="auth tenant context runtime helpers &gt; keeps tenant context isolated per database connection" time="0.202188416">
+        <testcase classname="runtime/storage/files-touch.runtime.spec.ts" name="storage.files runtime behavior &gt; rejects storage file inserts when the provided tenant mismatches auth.current_tenant" time="0.2792095">
         </testcase>
-        <testcase classname="runtime/auth/tenant-context.runtime.spec.ts" name="auth tenant context runtime helpers &gt; enforces tenancy_id with auth.create_tenant_enforcement_trigger and auth.apply_tenant" time="0.177580917">
-        </testcase>
-        <testcase classname="runtime/auth/tenant-context.runtime.spec.ts" name="auth tenant context runtime helpers &gt; enforces tenant_id through auth.attach_tenant_enforcement_triggers and auth.apply_tenant_id" time="0.164874">
-        </testcase>
-        <testcase classname="runtime/auth/tenant-context.runtime.spec.ts" name="auth tenant context runtime helpers &gt; permits cross-tenant insert only when the session role context includes platform:superadmin" time="0.101387209">
+        <testcase classname="runtime/storage/files-touch.runtime.spec.ts" name="storage.files runtime behavior &gt; applies tenant_scope RLS so a non-owner role sees only the current tenant files" time="0.046454875">
         </testcase>
     </testsuite>
-    <testsuite name="runtime/auth/touch-triggers.runtime.spec.ts" timestamp="2026-05-19T15:48:34.301Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="1.489546208">
-        <testcase classname="runtime/auth/touch-triggers.runtime.spec.ts" name="auth touch triggers &gt; updates auth.tenancies.updated_at on UPDATE and leaves it stable on INSERT" time="0.020382833">
+    <testsuite name="runtime/audit/hash-chain.runtime.spec.ts" timestamp="2026-05-19T15:55:08.961Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="3.003202875">
+        <testcase classname="runtime/audit/hash-chain.runtime.spec.ts" name="audit hash-chain runtime behavior &gt; formats timestamps, computes hashes, and sets pinned row hashes on insert" time="0.500169833">
         </testcase>
-        <testcase classname="runtime/auth/touch-triggers.runtime.spec.ts" name="auth touch triggers &gt; updates auth.users.updated_at on UPDATE and leaves it stable on INSERT" time="0.003175334">
+        <testcase classname="runtime/audit/hash-chain.runtime.spec.ts" name="audit hash-chain runtime behavior &gt; audit.write appends tenant-local hashes and uses auth.current_tenant when tenant is omitted" time="0.19156">
         </testcase>
-        <testcase classname="runtime/auth/touch-triggers.runtime.spec.ts" name="auth touch triggers &gt; updates auth.roles.updated_at on UPDATE and leaves it stable on INSERT" time="0.0109185">
-        </testcase>
-        <testcase classname="runtime/auth/touch-triggers.runtime.spec.ts" name="auth touch triggers &gt; updates auth.tenancy_members.updated_at on UPDATE and leaves it stable on INSERT" time="0.007781875">
+        <testcase classname="runtime/audit/hash-chain.runtime.spec.ts" name="audit hash-chain runtime behavior &gt; verify_chain accepts the pinned chain and reports payload tampering" time="0.228286209">
         </testcase>
     </testsuite>
-    <testsuite name="runtime/storage/files-touch.runtime.spec.ts" timestamp="2026-05-19T15:48:34.302Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="1.908178334">
-        <testcase classname="runtime/storage/files-touch.runtime.spec.ts" name="storage.files runtime behavior &gt; inserts a storage file with generated identity, defaults, and current-tenant enforcement" time="0.100511916">
+    <testsuite name="runtime/audit/log-dml.runtime.spec.ts" timestamp="2026-05-19T15:55:08.962Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="2.067797375">
+        <testcase classname="runtime/audit/log-dml.runtime.spec.ts" name="audit DML trigger runtime behavior &gt; extract_primary_key returns ordered primary-key JSON and null for unsupported rows" time="0.031978292">
         </testcase>
-        <testcase classname="runtime/storage/files-touch.runtime.spec.ts" name="storage.files runtime behavior &gt; fires storage.touch_updated_at on update and leaves explicit insert timestamps untouched" time="0.056114167">
+        <testcase classname="runtime/audit/log-dml.runtime.spec.ts" name="audit DML trigger runtime behavior &gt; fn_log_dml records INSERT, UPDATE, and DELETE through audit.attach_dml_triggers" time="0.431386292">
         </testcase>
-        <testcase classname="runtime/storage/files-touch.runtime.spec.ts" name="storage.files runtime behavior &gt; rejects storage file inserts when the provided tenant mismatches auth.current_tenant" time="0.034819208">
+        <testcase classname="runtime/audit/log-dml.runtime.spec.ts" name="audit DML trigger runtime behavior &gt; audit.attach_dml_triggers replaces an existing audit trigger without duplicating events" time="0.064186708">
         </testcase>
-        <testcase classname="runtime/storage/files-touch.runtime.spec.ts" name="storage.files runtime behavior &gt; applies tenant_scope RLS so a non-owner role sees only the current tenant files" time="0.290683709">
+    </testsuite>
+    <testsuite name="runtime/audit/tenant-scope.runtime.spec.ts" timestamp="2026-05-19T15:55:08.962Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="2.970399208">
+        <testcase classname="runtime/audit/tenant-scope.runtime.spec.ts" name="audit.events tenant_scope RLS runtime behavior &gt; limits non-owner reads to auth.current_tenant plus tenantless audit events" time="0.425124917">
+        </testcase>
+        <testcase classname="runtime/audit/tenant-scope.runtime.spec.ts" name="audit.events tenant_scope RLS runtime behavior &gt; allows platform:superadmin context to read all tenant-scoped audit events" time="0.042520375">
+        </testcase>
+        <testcase classname="runtime/audit/tenant-scope.runtime.spec.ts" name="audit.events tenant_scope RLS runtime behavior &gt; rejects inserts for another tenant under the non-owner application role" time="0.039400583">
+        </testcase>
+    </testsuite>
+    <testsuite name="runtime/auth/rls-policies.runtime.spec.ts" timestamp="2026-05-19T15:55:08.962Z" hostname="thiamat-1903.local" tests="7" failures="0" errors="0" skipped="0" time="3.34118225">
+        <testcase classname="runtime/auth/rls-policies.runtime.spec.ts" name="auth runtime RLS policies &gt; filters auth.tenancies through the tenant_isolation policy" time="0.389964125">
+        </testcase>
+        <testcase classname="runtime/auth/rls-policies.runtime.spec.ts" name="auth runtime RLS policies &gt; rejects cross-tenant tenancy inserts through tenant_isolation WITH CHECK" time="0.280032792">
+        </testcase>
+        <testcase classname="runtime/auth/rls-policies.runtime.spec.ts" name="auth runtime RLS policies &gt; filters auth.tenancy_members through tenant_isolation and membership_isolation" time="0.044575291">
+        </testcase>
+        <testcase classname="runtime/auth/rls-policies.runtime.spec.ts" name="auth runtime RLS policies &gt; filters auth.users through users_isolation and hides cross-tenant updates" time="0.009374708">
+        </testcase>
+        <testcase classname="runtime/auth/rls-policies.runtime.spec.ts" name="auth runtime RLS policies &gt; filters auth.user_roles through user_roles_isolation" time="0.39781575">
+        </testcase>
+        <testcase classname="runtime/auth/rls-policies.runtime.spec.ts" name="auth runtime RLS policies &gt; filters auth.user_groups through user_groups_isolation" time="0.104621334">
+        </testcase>
+        <testcase classname="runtime/auth/rls-policies.runtime.spec.ts" name="auth runtime RLS policies &gt; honors auth.set_user_context roles when platform:superadmin is present" time="0.127362333">
+        </testcase>
+    </testsuite>
+    <testsuite name="runtime/auth/tenant-context.runtime.spec.ts" timestamp="2026-05-19T15:55:08.963Z" hostname="thiamat-1903.local" tests="6" failures="0" errors="0" skipped="0" time="3.264538333">
+        <testcase classname="runtime/auth/tenant-context.runtime.spec.ts" name="auth tenant context runtime helpers &gt; sets and clears user, role, language, and tenant context on the current connection" time="0.360470041">
+        </testcase>
+        <testcase classname="runtime/auth/tenant-context.runtime.spec.ts" name="auth tenant context runtime helpers &gt; rejects a non-UUID user context value with SQLSTATE 22023" time="0.273037833">
+        </testcase>
+        <testcase classname="runtime/auth/tenant-context.runtime.spec.ts" name="auth tenant context runtime helpers &gt; keeps tenant context isolated per database connection" time="0.080459417">
+        </testcase>
+        <testcase classname="runtime/auth/tenant-context.runtime.spec.ts" name="auth tenant context runtime helpers &gt; enforces tenancy_id with auth.create_tenant_enforcement_trigger and auth.apply_tenant" time="0.2757495">
+        </testcase>
+        <testcase classname="runtime/auth/tenant-context.runtime.spec.ts" name="auth tenant context runtime helpers &gt; enforces tenant_id through auth.attach_tenant_enforcement_triggers and auth.apply_tenant_id" time="0.487008708">
+        </testcase>
+        <testcase classname="runtime/auth/tenant-context.runtime.spec.ts" name="auth tenant context runtime helpers &gt; permits cross-tenant insert only when the session role context includes platform:superadmin" time="0.1617905">
+        </testcase>
+    </testsuite>
+    <testsuite name="runtime/auth/touch-triggers.runtime.spec.ts" timestamp="2026-05-19T15:55:08.964Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="2.725325291">
+        <testcase classname="runtime/auth/touch-triggers.runtime.spec.ts" name="auth touch triggers &gt; updates auth.tenancies.updated_at on UPDATE and leaves it stable on INSERT" time="0.500687667">
+        </testcase>
+        <testcase classname="runtime/auth/touch-triggers.runtime.spec.ts" name="auth touch triggers &gt; updates auth.users.updated_at on UPDATE and leaves it stable on INSERT" time="0.004723833">
+        </testcase>
+        <testcase classname="runtime/auth/touch-triggers.runtime.spec.ts" name="auth touch triggers &gt; updates auth.roles.updated_at on UPDATE and leaves it stable on INSERT" time="0.012167083">
+        </testcase>
+        <testcase classname="runtime/auth/touch-triggers.runtime.spec.ts" name="auth touch triggers &gt; updates auth.tenancy_members.updated_at on UPDATE and leaves it stable on INSERT" time="0.005125667">
         </testcase>
     </testsuite>
 </testsuites>

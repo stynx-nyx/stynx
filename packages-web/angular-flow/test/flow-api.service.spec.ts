@@ -203,6 +203,8 @@ describe('FlowApiService endpoint contract', () => {
     await api.getNodeRun('node-run-1');
     await api.listEvents({ runId: 'run-1', kind: 'task_done' });
     await api.listTasks({ mine: true, status: 'open' });
+    await api.listTasks({ assignee: 'me', status: 'open' });
+    await api.listTasks({ assignee: 'user-1', status: 'open' });
     await api.getTask('task-1');
     await api.taskCandidates('task-1');
     await api.usersByRole('reviewer', 'ana');
@@ -221,6 +223,8 @@ describe('FlowApiService endpoint contract', () => {
       { method: 'GET', path: '/flow/runs/run-1/events', options: undefined },
       { method: 'GET', path: '/flow/runs/run-1/facts', options: undefined },
       { method: 'GET', path: '/flow/node-runs/node-run-1', options: undefined },
+      { method: 'GET', path: '/flow/tasks', options: { query: { mine: true, status: 'open' } } },
+      { method: 'GET', path: '/flow/tasks', options: { query: { assigneeUserId: 'user-1', status: 'open' } } },
       { method: 'GET', path: '/flow/tasks/task-1/candidates', options: undefined },
       { method: 'GET', path: '/flow/tasks/roles/reviewer/users', options: { query: { search: 'ana' } } },
       { method: 'GET', path: '/flow/tasks/users/user-1', options: undefined },

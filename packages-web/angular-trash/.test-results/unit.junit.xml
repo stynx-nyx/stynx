@@ -1,13 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="4" failures="0" errors="0" time="0.710963833">
-    <testsuite name="test/angular-trash.spec.ts" timestamp="2026-05-19T15:49:34.029Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.710963833">
-        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; loads trash items and restores them through the adapter" time="0.0211575">
+<testsuites name="vitest tests" tests="9" failures="0" errors="0" time="0.028650208">
+    <testsuite name="test/angular-trash.spec.ts" timestamp="2026-05-19T16:46:29.281Z" hostname="thiamat-1903.local" tests="9" failures="0" errors="0" skipped="0" time="0.028650208">
+        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; loads trash items and restores them through the adapter" time="0.004364875">
         </testcase>
-        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; handles pagination, cascade restore, hard delete, and fallback errors" time="0.003818375">
+        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; handles pagination, cascade restore, hard delete, and fallback errors" time="0.002297291">
         </testcase>
-        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; ships a default SDK adapter provider and multiplexes configured kinds" time="0.266021">
+        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; ships a default SDK adapter provider and multiplexes configured kinds" time="0.001817209">
         </testcase>
-        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; supports provider-backed components, tabs, filters, bulk actions, and retention countdowns" time="0.417067333">
+        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; supports provider-backed components, tabs, filters, bulk actions, and retention countdowns" time="0.015864084">
+        </testcase>
+        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; falls back to per-item bulk operations and filters by the current session" time="0.000468875">
+        </testcase>
+        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; prunes stale selections, clears load errors, and preserves row fields" time="0.000292709">
+        </testcase>
+        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; honors default kind, selection/filter toggles, empty bulk guards, and missing adapters" time="0.001740333">
+        </testcase>
+        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; checks hard-delete permission names, invalid purge dates, and today countdowns" time="0.000489709">
+        </testcase>
+        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; does not cascade unrelated restore errors and preserves exact toast messages" time="0.000603042">
         </testcase>
     </testsuite>
 </testsuites>

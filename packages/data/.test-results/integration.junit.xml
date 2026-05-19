@@ -1,33 +1,33 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="12" failures="0" errors="0" time="18.263659125">
-    <testsuite name="test/integration/data.module.spec.ts" timestamp="2026-05-19T15:51:01.204Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="1.409787833">
-        <testcase classname="test/integration/data.module.spec.ts" name="StynxDataModule integration &gt; configures GUCs, retries serialization failures, and isolates the three pools" time="0.673573166">
+<testsuites name="vitest tests" tests="12" failures="0" errors="0" time="13.105233334">
+    <testsuite name="test/integration/data.module.spec.ts" timestamp="2026-05-19T15:59:05.361Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.865760542">
+        <testcase classname="test/integration/data.module.spec.ts" name="StynxDataModule integration &gt; configures GUCs, retries serialization failures, and isolates the three pools" time="0.413695125">
         </testcase>
-        <testcase classname="test/integration/data.module.spec.ts" name="StynxDataModule integration &gt; rejects owner role outside system context" time="0.439129084">
+        <testcase classname="test/integration/data.module.spec.ts" name="StynxDataModule integration &gt; rejects owner role outside system context" time="0.193381083">
         </testcase>
-        <testcase classname="test/integration/data.module.spec.ts" name="StynxDataModule integration &gt; rejects app role when actor context is missing" time="0.256924708">
-        </testcase>
-    </testsuite>
-    <testsuite name="test/integration/migrations.spec.ts" timestamp="2026-05-19T15:51:01.216Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="3.907844375">
-        <testcase classname="test/integration/migrations.spec.ts" name="Stynx platform migrations &gt; boots the platform schema, enforces RLS, and reruns idempotently" time="2.394649208">
-        </testcase>
-        <testcase classname="test/integration/migrations.spec.ts" name="Stynx platform migrations &gt; creates soft-deletable live/archive pairs and rejects invalid registry behavior" time="1.479871958">
+        <testcase classname="test/integration/data.module.spec.ts" name="StynxDataModule integration &gt; rejects app role when actor context is missing" time="0.258290666">
         </testcase>
     </testsuite>
-    <testsuite name="test/integration/soft-delete.spec.ts" timestamp="2026-05-19T15:51:01.243Z" hostname="thiamat-1903.local" tests="7" failures="0" errors="0" skipped="0" time="12.946026917">
-        <testcase classname="test/integration/soft-delete.spec.ts" name="Transaction soft delete operations &gt; dry-run and cascade limits do not mutate state" time="3.291692875">
+    <testsuite name="test/integration/migrations.spec.ts" timestamp="2026-05-19T15:59:05.371Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="2.269332042">
+        <testcase classname="test/integration/migrations.spec.ts" name="Stynx platform migrations &gt; boots the platform schema, enforces RLS, and reruns idempotently" time="1.299584833">
         </testcase>
-        <testcase classname="test/integration/soft-delete.spec.ts" name="Transaction soft delete operations &gt; archives cascade families, preserves deleted_at, and applies hide semantics" time="2.269947208">
+        <testcase classname="test/integration/migrations.spec.ts" name="Stynx platform migrations &gt; creates soft-deletable live/archive pairs and rejects invalid registry behavior" time="0.96922825">
         </testcase>
-        <testcase classname="test/integration/soft-delete.spec.ts" name="Transaction soft delete operations &gt; keeps live queries default-only, exposes explicit archive helpers, and respects tenant RLS" time="1.30195825">
+    </testsuite>
+    <testsuite name="test/integration/soft-delete.spec.ts" timestamp="2026-05-19T15:59:05.376Z" hostname="thiamat-1903.local" tests="7" failures="0" errors="0" skipped="0" time="9.97014075">
+        <testcase classname="test/integration/soft-delete.spec.ts" name="Transaction soft delete operations &gt; dry-run and cascade limits do not mutate state" time="1.390410875">
         </testcase>
-        <testcase classname="test/integration/soft-delete.spec.ts" name="Transaction soft delete operations &gt; orders onlyDeleted by deleted_at desc by default" time="1.400315792">
+        <testcase classname="test/integration/soft-delete.spec.ts" name="Transaction soft delete operations &gt; archives cascade families, preserves deleted_at, and applies hide semantics" time="1.23360475">
         </testcase>
-        <testcase classname="test/integration/soft-delete.spec.ts" name="Transaction soft delete operations &gt; restores archived parents when cascade is requested and detects restore conflicts" time="1.997255">
+        <testcase classname="test/integration/soft-delete.spec.ts" name="Transaction soft delete operations &gt; keeps live queries default-only, exposes explicit archive helpers, and respects tenant RLS" time="1.282832375">
         </testcase>
-        <testcase classname="test/integration/soft-delete.spec.ts" name="Transaction soft delete operations &gt; raises a structured blocked error and supports hard delete on live and archive rows" time="1.39963825">
+        <testcase classname="test/integration/soft-delete.spec.ts" name="Transaction soft delete operations &gt; orders onlyDeleted by deleted_at desc by default" time="1.298898042">
         </testcase>
-        <testcase classname="test/integration/soft-delete.spec.ts" name="Transaction soft delete operations &gt; emits Prompt 10 metrics hooks for soft delete, restore, hard delete, and archive size" time="1.281338208">
+        <testcase classname="test/integration/soft-delete.spec.ts" name="Transaction soft delete operations &gt; restores archived parents when cascade is requested and detects restore conflicts" time="2.159683292">
+        </testcase>
+        <testcase classname="test/integration/soft-delete.spec.ts" name="Transaction soft delete operations &gt; raises a structured blocked error and supports hard delete on live and archive rows" time="1.225569083">
+        </testcase>
+        <testcase classname="test/integration/soft-delete.spec.ts" name="Transaction soft delete operations &gt; emits Prompt 10 metrics hooks for soft delete, restore, hard delete, and archive size" time="1.353030208">
         </testcase>
     </testsuite>
 </testsuites>

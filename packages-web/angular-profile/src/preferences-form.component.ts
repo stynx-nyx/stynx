@@ -1,10 +1,13 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject, signal } from '@angular/core';
+import type { OnDestroy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ErrorBannerService } from '@stynx-web/angular';
 import { StynxI18nService, StynxTranslatePipe } from '@stynx-web/angular-i18n';
 import { StynxBannerComponent, StynxIconComponent, StynxLoadingSpinnerComponent, StynxToastService } from '@stynx-web/angular-ui';
 import { ProfileService } from './profile.service';
 import type { StynxPreferences, StynxPreferencesValue } from './types';
+import { UnsavedChangesRegistry } from './unsaved-changes.guard';
+import type { StynxUnsavedChangesAware } from './unsaved-changes.guard';
 
 export type StynxPreferencesFormStatus = 'idle' | 'saving' | 'saved' | 'error';
 
@@ -153,12 +156,13 @@ const DEFAULT_PREFERENCES_FORM_VALUE = {
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class StynxPreferencesFormComponent {
+export class StynxPreferencesFormComponent implements OnDestroy, StynxUnsavedChangesAware {
   private readonly formBuilder = inject(FormBuilder);
   private readonly profile = inject(ProfileService, { optional: true });
   private readonly toast = inject(StynxToastService, { optional: true });
   private readonly errorBanner = inject(ErrorBannerService, { optional: true });
   private readonly i18n = inject(StynxI18nService, { optional: true });
+  private readonly unsavedChanges = inject(UnsavedChangesRegistry, { optional: true });
 
   readonly status = signal<StynxPreferencesFormStatus>('idle');
   readonly errorMessage = signal('');
@@ -169,6 +173,7 @@ export class StynxPreferencesFormComponent {
     locale: [DEFAULT_PREFERENCES_FORM_VALUE.locale, [Validators.required]],
     notifications: [DEFAULT_PREFERENCES_FORM_VALUE.notifications],
   });
+  private readonly unregisterUnsavedChanges = this.unsavedChanges?.register(this) ?? (() => undefined);
 
   @Output() readonly save = new EventEmitter<StynxPreferencesValue>();
 
@@ -216,6 +221,20 @@ export class StynxPreferencesFormComponent {
         });
       },
     });
+  }
+
+  ngOnDestroy(): void {
+    this.unregisterUnsavedChanges();
+  }
+
+  hasUnsavedChanges(): boolean {
+    return this.form.dirty;
+  }
+
+  confirmDiscardChanges(): boolean {
+    return typeof globalThis.window === 'object'
+      ? globalThis.window.confirm(this.translate('profile.unsaved.confirm'))
+      : true;
   }
 
   private applyPreferencesValue(value: StynxPreferences | StynxPreferencesValue): void {

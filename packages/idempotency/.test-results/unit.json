@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T15:48:38.155Z",
-  "endedAt": "2026-05-19T15:48:51.748Z",
-  "durationMs": 13593,
+  "startedAt": "2026-05-19T15:55:17.751Z",
+  "endedAt": "2026-05-19T15:55:53.847Z",
+  "durationMs": 36096,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-20742-1779205718154.json",
+      "--outputFile.json=/tmp/vitest-38001-1779206117751.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/idempotency/.test-results/unit.junit.xml"
     ],
@@ -45,54 +45,54 @@
   },
   "slowestTests": [
     {
-      "name": "IdempotencyInterceptor accepts canonical lower-case array headers and user principal fallbacks",
+      "name": "IdempotencyInterceptor rejects annotated routes without the configured header",
       "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/unit/idempotency.interceptor.spec.ts",
-      "durationMs": 86.41358300000002
+      "durationMs": 232.96045799999956
     },
     {
       "name": "idempotency decorators and metrics attaches idempotency metadata with default and custom options",
       "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/unit/decorators-and-metrics.spec.ts",
-      "durationMs": 68.31320900000037
-    },
-    {
-      "name": "IdempotencyInterceptor uses the default header name and rejects blank header values",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/unit/idempotency.interceptor.spec.ts",
-      "durationMs": 48.35224999999991
-    },
-    {
-      "name": "IdempotencyInterceptor bypasses routes explicitly marked as non-idempotent",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/unit/idempotency.interceptor.spec.ts",
-      "durationMs": 27.86508300000014
-    },
-    {
-      "name": "IdempotencyInterceptor returns 422 when the same key is reused with a different body",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/unit/idempotency.interceptor.spec.ts",
-      "durationMs": 27.590999999999894
+      "durationMs": 144.62954099999934
     },
     {
       "name": "IdempotencyInterceptor replays cached responses for the same key and payload",
       "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/unit/idempotency.interceptor.spec.ts",
-      "durationMs": 23.9734169999997
+      "durationMs": 135.53712500000074
     },
     {
-      "name": "PgIdempotencyStore validates configured SQL identifiers",
+      "name": "IdempotencyInterceptor replays backend entries with the default status code",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/unit/idempotency.interceptor.spec.ts",
+      "durationMs": 116.40662499999962
+    },
+    {
+      "name": "PgIdempotencyStore maps lookup rows for pending, completed, empty, and array result shapes",
       "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/unit/pg-idempotency.store.spec.ts",
-      "durationMs": 21.359750000000076
+      "durationMs": 72.92837499999996
     },
     {
-      "name": "IdempotencyInterceptor rejects annotated routes without the configured header",
+      "name": "IdempotencyInterceptor uses the default header name and rejects blank header values",
       "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/unit/idempotency.interceptor.spec.ts",
-      "durationMs": 20.55220799999961
+      "durationMs": 68.88354199999958
     },
     {
-      "name": "IdempotencyInterceptor bypasses non-annotated routes",
+      "name": "IdempotencyInterceptor bypasses routes explicitly marked as non-idempotent",
       "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/unit/idempotency.interceptor.spec.ts",
-      "durationMs": 17.688166999999794
+      "durationMs": 47.55091700000048
     },
     {
-      "name": "DatabaseIdempotencyStore maps lookup rows and fallback expiry values inside system transactions",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/unit/runtime-stores.spec.ts",
-      "durationMs": 10.026750000000902
+      "name": "IdempotencyInterceptor accepts canonical lower-case array headers and user principal fallbacks",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/unit/idempotency.interceptor.spec.ts",
+      "durationMs": 44.92441599999984
+    },
+    {
+      "name": "IdempotencyInterceptor waits for a completed durable entry and applies default replay headers",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/unit/idempotency.interceptor.spec.ts",
+      "durationMs": 34.651708000001236
+    },
+    {
+      "name": "PgIdempotencyStore reserves, persists, and clears rows with expected parameters",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/unit/pg-idempotency.store.spec.ts",
+      "durationMs": 15.925374999999804
     }
   ]
 }

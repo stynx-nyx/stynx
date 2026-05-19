@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx-web/angular-iam",
+  "level": "mutation",
+  "runner": "stryker-vitest",
+  "runnerVersion": "3.2.4",
+  "status": "failed",
+  "startedAt": "2026-05-19T16:17:18.567Z",
+  "endedAt": "2026-05-19T16:52:18.046Z",
+  "durationMs": 2099479,
+  "exitCode": 1,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/mutation.log",
+    "report": "reports/mutation/mutation.json",
+    "html": "reports/mutation/-stynx-web-angular-iam/index.html"
+  },
+  "env": {
+    "node": "24.15.0",
+    "ci": false
+  },
+  "command": {
+    "argv": ["pnpm", "exec", "stryker", "run", "stryker.conf.mjs"],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam"
+  },
+  "metric": {
+    "kind": "score",
+    "score": 53.94736842105263,
+    "thresholds": {
+      "high": 70,
+      "low": 60,
+      "break": 70
+    }
+  },
+  "totals": {
+    "files": 17,
+    "tests": 1388,
+    "passed": 533,
+    "failed": 455,
+    "skipped": 0,
+    "todo": 0
+  }
+}

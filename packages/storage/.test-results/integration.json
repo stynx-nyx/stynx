@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T15:29:06.167Z",
-  "endedAt": "2026-05-19T15:29:29.994Z",
-  "durationMs": 23827,
+  "startedAt": "2026-05-19T15:58:56.711Z",
+  "endedAt": "2026-05-19T15:59:28.103Z",
+  "durationMs": 31392,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.int.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-85524-1779204546166.json",
+      "--outputFile.json=/tmp/vitest-45277-1779206336707.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/storage/.test-results/integration.junit.xml"
     ],
@@ -47,22 +47,22 @@
     {
       "name": "StynxStorageModule integration presigns an upload, completes it, and returns a working download URL",
       "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/integration/storage.module.spec.ts",
-      "durationMs": 529.3596249999973
+      "durationMs": 435.47258299999885
     },
     {
       "name": "StynxStorageModule integration hard-removes archived documents and purges all S3 versions",
       "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/integration/storage.module.spec.ts",
-      "durationMs": 160.01133400000253
+      "durationMs": 344.0930410000001
     },
     {
       "name": "StynxStorageModule integration quarantines documents whose uploaded object metadata does not match",
       "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/integration/storage.module.spec.ts",
-      "durationMs": 116.15787500000079
+      "durationMs": 98.64720899999884
     },
     {
       "name": "StynxStorageModule integration rejects cross-tenant download presign attempts",
       "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/integration/storage.module.spec.ts",
-      "durationMs": 67.74629199999981
+      "durationMs": 63.99733399999968
     }
   ]
 }

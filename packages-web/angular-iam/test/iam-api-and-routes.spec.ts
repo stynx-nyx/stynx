@@ -96,20 +96,19 @@ function createService(client: StynxSdkClient): IamApiService {
 }
 
 describe('@stynx-web/angular-iam API and routes', () => {
-  it('exports the host-facing IAM package API', () => {
-    expect(iam.IamApiService).toBeDefined();
-    expect(iam.provideStynxIam).toBeDefined();
-    expect(iam.STYNX_IAM_CLIENT).toBeDefined();
-    expect(iam.iamRoutes).toBeDefined();
-    expect(iam.StynxUsersAdminComponent).toBeDefined();
-    expect(iam.StynxUserDetailComponent).toBeDefined();
-    expect(iam.StynxRolesAdminComponent).toBeDefined();
-    expect(iam.StynxRoleDetailComponent).toBeDefined();
-    expect(iam.StynxGroupsAdminComponent).toBeDefined();
-    expect(iam.StynxGroupDetailComponent).toBeDefined();
-    expect(iam.StynxPermissionMatrixComponent).toBeDefined();
-    expect(iam.StynxEffectivePermissionsComponent).toBeDefined();
-    expect(iam.provideStynxIam({ clientFactory: createClient })).toBeDefined();
+  it('exposes a host-facing provider and defensive IAM route factory', () => {
+    expect(typeof iam.provideStynxIam).toBe('function');
+    expect(typeof iam.iamRoutes).toBe('function');
+    expect(iam.STYNX_IAM_CLIENT.toString()).toContain('STYNX_IAM_CLIENT');
+    expect(iam.provideStynxIam({ clientFactory: createClient })).toEqual(expect.any(Object));
+    expect(iam.iamRoutes().map((route) => route.path)).toEqual([
+      'users',
+      'users/:userId',
+      'roles',
+      'roles/:roleId',
+      'groups',
+      'groups/:groupId',
+    ]);
   });
 
   it('wraps every IAM SDK endpoint and updates list caches', async () => {

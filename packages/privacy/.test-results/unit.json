@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T15:49:19.774Z",
-  "endedAt": "2026-05-19T15:50:05.605Z",
-  "durationMs": 45831,
+  "startedAt": "2026-05-19T15:57:31.408Z",
+  "endedAt": "2026-05-19T15:58:28.213Z",
+  "durationMs": 56805,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-22731-1779205759773.json",
+      "--outputFile.json=/tmp/vitest-42767-1779206251407.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/privacy/.test-results/unit.junit.xml"
     ],
@@ -47,52 +47,52 @@
     {
       "name": "StynxPrivacyModule integration loads PII rules, exports live and archive rows, erases data, and reports retention",
       "file": "/Users/aarusso/Development/stech/stynx/packages/privacy/test/integration/privacy.module.spec.ts",
-      "durationMs": 25806.755666999998
-    },
-    {
-      "name": "privacy runtime helpers generates ROPA markdown with defaults and data-flow metadata",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/privacy/test/unit/privacy-runtime.spec.ts",
-      "durationMs": 26.10058299999946
-    },
-    {
-      "name": "privacy runtime helpers loads database PII rules, auth user defaults, overrides, and validates subject metadata",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/privacy/test/unit/privacy-runtime.spec.ts",
-      "durationMs": 19.086417000000438
-    },
-    {
-      "name": "PrivacyService branch coverage rejects export requests without a selector",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/privacy/test/unit/privacy.service.spec.ts",
-      "durationMs": 9.23583299999882
-    },
-    {
-      "name": "PrivacyService branch coverage exports an empty bundle when rules match no rows",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/privacy/test/unit/privacy.service.spec.ts",
-      "durationMs": 8.004125000001295
-    },
-    {
-      "name": "PrivacyController API contract delegates export, erasure, and retention requests to the privacy service",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/privacy/test/unit/privacy.controller.spec.ts",
-      "durationMs": 7.291957999999795
+      "durationMs": 27431.422625
     },
     {
       "name": "PrivacyService branch coverage exports live and archive rows using subject and tenant filters",
       "file": "/Users/aarusso/Development/stech/stynx/packages/privacy/test/unit/privacy.service.spec.ts",
-      "durationMs": 4.983208999999988
+      "durationMs": 108.82995800000208
     },
     {
       "name": "PrivacyService branch coverage exports unfiltered table snapshots and uses the default export TTL",
       "file": "/Users/aarusso/Development/stech/stynx/packages/privacy/test/unit/privacy.service.spec.ts",
-      "durationMs": 3.92699999999968
+      "durationMs": 56.775666999998066
+    },
+    {
+      "name": "privacy runtime helpers loads database PII rules, auth user defaults, overrides, and validates subject metadata",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/privacy/test/unit/privacy-runtime.spec.ts",
+      "durationMs": 19.84100000000035
+    },
+    {
+      "name": "PrivacyService branch coverage exports an empty bundle when rules match no rows",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/privacy/test/unit/privacy.service.spec.ts",
+      "durationMs": 14.865333999998256
     },
     {
       "name": "privacy runtime helpers loads override-only PII rules and falls back to the process working directory",
       "file": "/Users/aarusso/Development/stech/stynx/packages/privacy/test/unit/privacy-runtime.spec.ts",
-      "durationMs": 3.567917000000307
+      "durationMs": 10.713208000001032
+    },
+    {
+      "name": "privacy runtime helpers delegates privacy object store operations with configured defaults and overrides",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/privacy/test/unit/privacy-runtime.spec.ts",
+      "durationMs": 9.74750000000131
+    },
+    {
+      "name": "PrivacyController API contract delegates export, erasure, and retention requests to the privacy service",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/privacy/test/unit/privacy.controller.spec.ts",
+      "durationMs": 6.884291999998823
     },
     {
       "name": "PrivacyService branch coverage applies every erasure strategy to live and archive targets and disables Cognito user",
       "file": "/Users/aarusso/Development/stech/stynx/packages/privacy/test/unit/privacy.service.spec.ts",
-      "durationMs": 3.442291999999725
+      "durationMs": 5.306957999997394
+    },
+    {
+      "name": "PrivacyService branch coverage rejects export requests without a selector",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/privacy/test/unit/privacy.service.spec.ts",
+      "durationMs": 3.8317500000011933
     }
   ]
 }

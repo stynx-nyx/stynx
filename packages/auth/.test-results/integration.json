@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T15:29:17.745Z",
-  "endedAt": "2026-05-19T15:29:28.061Z",
-  "durationMs": 10316,
+  "startedAt": "2026-05-19T15:59:20.757Z",
+  "endedAt": "2026-05-19T15:59:33.548Z",
+  "durationMs": 12791,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.int.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-86143-1779204557745.json",
+      "--outputFile.json=/tmp/vitest-46079-1779206360757.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/auth/.test-results/integration.junit.xml"
     ],
@@ -47,52 +47,52 @@
     {
       "name": "StynxAuthModule integration detects hash drift when pubsub invalidation is missed",
       "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/integration/auth.module.spec.ts",
-      "durationMs": 1203.9357920000002
+      "durationMs": 1224.4535840000008
     },
     {
       "name": "StynxAuthModule integration maintains generation ordering across concurrent mutations",
       "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/integration/auth.module.spec.ts",
-      "durationMs": 292.6010839999999
+      "durationMs": 332.17425000000003
     },
     {
       "name": "StynxAuthModule integration exchanges a Cognito token for a STYNX session and enforces route permissions",
       "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/integration/auth.module.spec.ts",
-      "durationMs": 234.92100000000028
-    },
-    {
-      "name": "StynxAuthModule integration rotates session state when switching tenants",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/integration/auth.module.spec.ts",
-      "durationMs": 133.14816700000029
+      "durationMs": 166.54979099999946
     },
     {
       "name": "StynxAuthModule integration keeps session caches isolated for impersonation-style parallel sessions",
       "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/integration/auth.module.spec.ts",
-      "durationMs": 105.70854099999997
-    },
-    {
-      "name": "StynxAuthController API error matrix POST /_platform/perms/:sid/invalidate returns 200/201 after invalidating an existing permission cache entry",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/integration/auth.api-matrix.spec.ts",
-      "durationMs": 97.97249999999985
+      "durationMs": 152.68812499999876
     },
     {
       "name": "StynxAuthModule integration refreshes permissions through pubsub invalidation within 2 seconds",
       "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/integration/auth.module.spec.ts",
-      "durationMs": 83.69200000000001
+      "durationMs": 66.7443749999984
     },
     {
       "name": "StynxAuthController API error matrix GET /_platform/perms/:sid returns 200/201 with cached permission state for an existing session",
       "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/integration/auth.api-matrix.spec.ts",
-      "durationMs": 77.38608299999942
+      "durationMs": 61.50987499999974
     },
     {
-      "name": "StynxAuthController API error matrix GET /_platform/perms/:sid returns 403 when the authenticated actor lacks platform inspect permission",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/integration/auth.api-matrix.spec.ts",
-      "durationMs": 61.48883299999943
-    },
-    {
-      "name": "StynxAuthModule integration expands wildcard permissions into the concrete cache set",
+      "name": "StynxAuthModule integration rotates session state when switching tenants",
       "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/integration/auth.module.spec.ts",
-      "durationMs": 61.00016700000015
+      "durationMs": 57.574540999999954
+    },
+    {
+      "name": "StynxAuthController API error matrix POST /sessions/switch returns 200/201 after rotating into the requested tenant",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/integration/auth.api-matrix.spec.ts",
+      "durationMs": 51.39795799999956
+    },
+    {
+      "name": "StynxAuthController API error matrix POST /sessions/switch returns 403 when the target tenant is missing",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/integration/auth.api-matrix.spec.ts",
+      "durationMs": 50.15299999999843
+    },
+    {
+      "name": "StynxAuthController API error matrix POST /_platform/perms/:sid/invalidate returns 200/201 after invalidating an existing permission cache entry",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/integration/auth.api-matrix.spec.ts",
+      "durationMs": 48.057833000000755
     }
   ]
 }

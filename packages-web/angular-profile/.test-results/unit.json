@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T15:49:39.202Z",
-  "endedAt": "2026-05-19T15:49:49.615Z",
-  "durationMs": 10413,
+  "startedAt": "2026-05-19T16:01:50.230Z",
+  "endedAt": "2026-05-19T16:02:03.384Z",
+  "durationMs": 13154,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-23244-1779205779202.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-52092-1779206510230.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages-web/angular-profile/.test-results/unit.junit.xml"
     ],
@@ -47,27 +47,27 @@
     {
       "name": "@stynx-web/angular-profile validates the profile form and emits only when dirty and valid",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-profile/test/angular-profile.spec.ts",
-      "durationMs": 11.048041000000012
-    },
-    {
-      "name": "@stynx-web/angular-profile opens the configured change-password hosted action",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-profile/test/angular-profile.spec.ts",
-      "durationMs": 2.8329579999999623
-    },
-    {
-      "name": "@stynx-web/angular-profile reports hosted action configuration errors to the standard error banner",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-profile/test/angular-profile.spec.ts",
-      "durationMs": 0.7047909999992044
+      "durationMs": 8.346917000000758
     },
     {
       "name": "@stynx-web/angular-profile tracks dirty state in the preferences form",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-profile/test/angular-profile.spec.ts",
-      "durationMs": 0.6574170000003505
+      "durationMs": 0.7542079999984708
+    },
+    {
+      "name": "@stynx-web/angular-profile opens the configured change-password hosted action",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-profile/test/angular-profile.spec.ts",
+      "durationMs": 0.45366699999976845
+    },
+    {
+      "name": "@stynx-web/angular-profile reports hosted action configuration errors to the standard error banner",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-profile/test/angular-profile.spec.ts",
+      "durationMs": 0.21516700000029232
     },
     {
       "name": "@stynx-web/angular-profile marks MFA enrolment unavailable when no hosted action URL is configured",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-profile/test/angular-profile.spec.ts",
-      "durationMs": 0.32091700000000856
+      "durationMs": 0.1735420000004524
     }
   ]
 }

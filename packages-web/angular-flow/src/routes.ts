@@ -4,7 +4,7 @@ import { StynxFlowOpenTasksComponent, StynxFlowRunSummaryComponent } from './ana
 import { StynxFlowFillsComponent } from './flow-fills.component';
 import { StynxFlowFormsComponent } from './flow-forms.component';
 import { StynxFlowGraphDesignerComponent } from './flow-graph-designer.component';
-import { StynxFlowTaskListComponent } from './flow-tasks.component';
+import { StynxFlowMyTasksInboxComponent, StynxFlowTaskListComponent } from './flow-tasks.component';
 import { StynxFlowWaiversComponent } from './flow-waivers.component';
 
 export const FLOW_ROUTES: Routes = [
@@ -41,6 +41,11 @@ export const FLOW_ROUTES: Routes = [
   {
     path: 'assignments',
     component: StynxFlowTaskListComponent,
+    canActivate: [stynxPermissionGuard('flow:read:runtime')],
+  },
+  {
+    path: 'my-tasks',
+    component: StynxFlowMyTasksInboxComponent,
     canActivate: [stynxPermissionGuard('flow:read:runtime')],
   },
   {

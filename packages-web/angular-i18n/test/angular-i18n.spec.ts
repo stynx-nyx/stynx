@@ -72,6 +72,22 @@ describe('@stynx-web/angular-i18n', () => {
     expect(service.translate('tasks', { count: 3 })).toBe('Voce tem 3 tarefas.');
   });
 
+  it('detects ICU messages with flexible whitespace around arguments and types', async () => {
+    const service = createI18nService({
+      defaultLocale: 'en-US',
+      loadCatalog: async () => ({
+        compact: '{count,plural,one {# compact task} other {# compact tasks}}',
+        spaced: '{ count , plural , one {# spaced task} other {# spaced tasks}}',
+      }),
+    });
+
+    await service.initialize();
+
+    expect(service.translate('compact', { count: 2 })).toBe('2 compact tasks');
+    expect(service.translate('spaced', { count: 1 })).toBe('1 spaced task');
+    expect(service.translate('spaced', { count: 4 })).toBe('4 spaced tasks');
+  });
+
   it('refreshes cached ICU formatters when a locale catalog is reloaded', async () => {
     let version = 0;
     const service = createI18nService({
@@ -121,6 +137,8 @@ describe('@stynx-web/angular-i18n', () => {
     const pipe = runInInjectionContext(injector, () => new StynxTranslatePipe());
 
     expect(pipe.transform('greeting', { name: 'Ana' })).toBe('Ola, Ana!');
+    expect(pipe.transform('greeting', { name: 'Bia' })).toBe('Ola, Bia!');
+    expect(markForCheck).not.toHaveBeenCalled();
     await service.use('en-US');
     expect(pipe.transform('greeting', { name: 'Ana' })).toBe('Hello, Ana!');
     expect(markForCheck).toHaveBeenCalledTimes(1);
@@ -206,5 +224,67 @@ describe('@stynx-web/angular-i18n', () => {
     expect(currencyPipe.transform(null, 'USD')).toBe('');
     expect(currencyPipe.transform('', 'USD')).toBe('');
     expect(currencyPipe.transform('not-a-number', 'USD')).toBe('');
+  });
+
+  it('caches Intl formatters by locale and options', async () => {
+    const service = createI18nService({
+      defaultLocale: 'en-US',
+      loadCatalog: async () => ({}),
+    });
+    await service.initialize();
+
+    const originalDateTimeFormat = Intl.DateTimeFormat;
+    const originalNumberFormat = Intl.NumberFormat;
+    const dateConstructors: string[] = [];
+    const numberConstructors: string[] = [];
+    Object.defineProperty(Intl, 'DateTimeFormat', {
+      configurable: true,
+      value: function DateTimeFormat(locale: string, options: Intl.DateTimeFormatOptions) {
+        dateConstructors.push(`${locale}:${JSON.stringify(options)}`);
+        return new originalDateTimeFormat(locale, options);
+      },
+    });
+    Object.defineProperty(Intl, 'NumberFormat', {
+      configurable: true,
+      value: function NumberFormat(locale: string, options: Intl.NumberFormatOptions) {
+        numberConstructors.push(`${locale}:${JSON.stringify(options)}`);
+        return new originalNumberFormat(locale, options);
+      },
+    });
+
+    try {
+      const injector = Injector.create({
+        providers: [
+          { provide: StynxI18nService, useValue: service },
+          { provide: ChangeDetectorRef, useValue: { markForCheck: vi.fn() } },
+        ],
+      });
+      const datePipe = runInInjectionContext(injector, () => new StynxIntlDatePipe());
+      const numberPipe = runInInjectionContext(injector, () => new StynxIntlNumberPipe());
+      const currencyPipe = runInInjectionContext(injector, () => new StynxIntlCurrencyPipe());
+      const date = new Date(Date.UTC(2026, 4, 19, 12));
+      const dateOptions: Intl.DateTimeFormatOptions = { month: 'short', timeZone: 'UTC' };
+      const numberOptions: Intl.NumberFormatOptions = { maximumFractionDigits: 1 };
+
+      datePipe.transform(date, dateOptions);
+      datePipe.transform(date, dateOptions);
+      datePipe.transform(date, { ...dateOptions, year: 'numeric' });
+      numberPipe.transform(1.23, numberOptions);
+      numberPipe.transform(4.56, numberOptions);
+      currencyPipe.transform(7.89, 'USD');
+      currencyPipe.transform(8.9, 'USD');
+
+      expect(dateConstructors).toHaveLength(2);
+      expect(numberConstructors).toHaveLength(2);
+    } finally {
+      Object.defineProperty(Intl, 'DateTimeFormat', {
+        configurable: true,
+        value: originalDateTimeFormat,
+      });
+      Object.defineProperty(Intl, 'NumberFormat', {
+        configurable: true,
+        value: originalNumberFormat,
+      });
+    }
   });
 });

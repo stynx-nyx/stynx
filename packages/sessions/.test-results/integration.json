@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T15:29:07.471Z",
-  "endedAt": "2026-05-19T15:29:15.835Z",
-  "durationMs": 8364,
+  "startedAt": "2026-05-19T15:59:00.287Z",
+  "endedAt": "2026-05-19T15:59:18.030Z",
+  "durationMs": 17743,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.int.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-85591-1779204547471.json",
+      "--outputFile.json=/tmp/vitest-45371-1779206340285.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/sessions/.test-results/integration.junit.xml"
     ],
@@ -45,19 +45,19 @@
   },
   "slowestTests": [
     {
+      "name": "SessionJwksController API error matrix GET /.well-known/jwks.json returns 200/201 when JWKS signing material is configured",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/sessions/test/integration/session-jwks.api-matrix.spec.ts",
+      "durationMs": 163.95012499999984
+    },
+    {
       "name": "StynxSessionsModule integration publishes JWKS publicly and mirrors create/revoke events into auth.sessions",
       "file": "/Users/aarusso/Development/stech/stynx/packages/sessions/test/integration/sessions.module.spec.ts",
-      "durationMs": 177.81862499999988
+      "durationMs": 148.2435000000005
     },
     {
       "name": "StynxSessionsModule integration propagates tenant revocation over Redis pubsub within 100ms",
       "file": "/Users/aarusso/Development/stech/stynx/packages/sessions/test/integration/sessions.module.spec.ts",
-      "durationMs": 57.79937500000051
-    },
-    {
-      "name": "SessionJwksController API error matrix GET /.well-known/jwks.json returns 200/201 when JWKS signing material is configured",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/sessions/test/integration/session-jwks.api-matrix.spec.ts",
-      "durationMs": 32.61579100000017
+      "durationMs": 68.1661669999994
     }
   ]
 }

@@ -1,10 +1,13 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject, signal } from '@angular/core';
+import type { OnDestroy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ErrorBannerService } from '@stynx-web/angular';
 import { StynxI18nService, StynxTranslatePipe } from '@stynx-web/angular-i18n';
 import { StynxBannerComponent, StynxIconComponent, StynxLoadingSpinnerComponent, StynxToastService } from '@stynx-web/angular-ui';
 import { ProfileService } from './profile.service';
 import type { StynxProfile, StynxProfileValue } from './types';
+import { UnsavedChangesRegistry } from './unsaved-changes.guard';
+import type { StynxUnsavedChangesAware } from './unsaved-changes.guard';
 
 export type StynxProfileFormStatus = 'idle' | 'saving' | 'saved' | 'error';
 
@@ -152,12 +155,13 @@ const DEFAULT_PROFILE_FORM_VALUE = {
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class StynxProfileFormComponent {
+export class StynxProfileFormComponent implements OnDestroy, StynxUnsavedChangesAware {
   private readonly formBuilder = inject(FormBuilder);
   private readonly profile = inject(ProfileService, { optional: true });
   private readonly toast = inject(StynxToastService, { optional: true });
   private readonly errorBanner = inject(ErrorBannerService, { optional: true });
   private readonly i18n = inject(StynxI18nService, { optional: true });
+  private readonly unsavedChanges = inject(UnsavedChangesRegistry, { optional: true });
 
   readonly status = signal<StynxProfileFormStatus>('idle');
   readonly errorMessage = signal('');
@@ -168,6 +172,7 @@ export class StynxProfileFormComponent {
     email: ['', [Validators.required, Validators.email]],
     locale: ['en-US', [Validators.required]],
   });
+  private readonly unregisterUnsavedChanges = this.unsavedChanges?.register(this) ?? (() => undefined);
 
   @Output() readonly save = new EventEmitter<StynxProfileValue>();
 
@@ -221,6 +226,20 @@ export class StynxProfileFormComponent {
         });
       },
     });
+  }
+
+  ngOnDestroy(): void {
+    this.unregisterUnsavedChanges();
+  }
+
+  hasUnsavedChanges(): boolean {
+    return this.form.dirty;
+  }
+
+  confirmDiscardChanges(): boolean {
+    return typeof globalThis.window === 'object'
+      ? globalThis.window.confirm(this.translate('profile.unsaved.confirm'))
+      : true;
   }
 
   private applyProfileValue(value: StynxProfile | StynxProfileValue): void {

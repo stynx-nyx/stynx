@@ -1,9 +1,11 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject } from '@angular/core';
-import type { OnChanges } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, EventEmitter, Input, Output, inject, signal } from '@angular/core';
+import type { OnChanges, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { StynxHasPermissionDirective } from '@stynx-web/angular-auth';
 import { StynxTranslatePipe } from '@stynx-web/angular-i18n';
 import { StynxBannerComponent, StynxIconComponent, StynxLoadingSpinnerComponent } from '@stynx-web/angular-ui';
 import { FlowApiService } from './flow-api.service';
+import { STYNX_FLOW_TENANT_CHANGED } from './tokens';
 import type { FlowTask } from './types';
 
 @Component({
@@ -98,6 +100,124 @@ export class StynxFlowTaskListComponent implements OnChanges {
       this.errorMessage = error instanceof Error ? error.message : 'Tasks load failed';
     } finally {
       this.loading = false;
+    }
+  }
+}
+
+@Component({
+  selector: 'stynx-flow-my-tasks-inbox',
+  standalone: true,
+  imports: [StynxBannerComponent, StynxFlowTaskCardComponent, StynxIconComponent, StynxLoadingSpinnerComponent, StynxTranslatePipe],
+  template: `
+    <section class="surface">
+      <header>
+        <h2>{{ 'flow.tasks.inbox.title' | stynxTranslate }}</h2>
+        <button type="button" (click)="refresh()">
+          <stynx-icon name="clock" aria-hidden="true"></stynx-icon>
+          {{ 'flow.tasks.inbox.refresh' | stynxTranslate }}
+        </button>
+      </header>
+      @if (loading()) {
+        <stynx-loading-spinner [label]="'flow.tasks.loading' | stynxTranslate"></stynx-loading-spinner>
+      }
+      @if (errorMessage()) {
+        <stynx-banner tone="error" [message]="errorMessage()"></stynx-banner>
+      }
+      @if (!loading() && !errorMessage() && tasks().length === 0) {
+        <stynx-banner tone="info" [message]="'flow.tasks.inbox.empty' | stynxTranslate"></stynx-banner>
+      }
+      @for (task of tasks(); track task.id) {
+        <stynx-flow-task-card
+          [task]="task"
+          (act)="act.emit({ task, action: $event })"
+          (assign)="assign.emit(task)"
+        ></stynx-flow-task-card>
+      }
+    </section>
+  `,
+  styles: [`.surface { display: grid; gap: 0.75rem; } header { display: flex; justify-content: space-between; gap: 0.75rem; align-items: center; } h2 { margin: 0; } button { display: inline-flex; align-items: center; gap: 0.4rem; } stynx-icon { --stynx-icon-size: 1rem; }`],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class StynxFlowMyTasksInboxComponent implements OnInit {
+  private readonly api = inject(FlowApiService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly tenantChanges = inject(STYNX_FLOW_TENANT_CHANGED, { optional: true });
+  private readonly pollingIntervalMsState = signal(30_000);
+  private pollHandle: ReturnType<typeof setInterval> | undefined;
+  private started = false;
+  private refreshId = 0;
+
+  readonly tasks = signal<FlowTask[]>([]);
+  readonly loading = signal(false);
+  readonly errorMessage = signal('');
+
+  @Input()
+  set pollingIntervalMs(value: number | string | null | undefined) {
+    this.pollingIntervalMsState.set(this.normalizePollingInterval(value));
+    this.configurePolling();
+  }
+
+  get pollingIntervalMs(): number {
+    return this.pollingIntervalMsState();
+  }
+
+  @Output() readonly act = new EventEmitter<{ task: FlowTask; action: string }>();
+  @Output() readonly assign = new EventEmitter<FlowTask>();
+
+  ngOnInit(): void {
+    this.started = true;
+    this.destroyRef.onDestroy(() => this.stopPolling());
+    this.tenantChanges
+      ?.pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        void this.refresh();
+      });
+    this.configurePolling();
+    void this.refresh();
+  }
+
+  async refresh(): Promise<void> {
+    const refreshId = ++this.refreshId;
+    this.loading.set(true);
+    this.errorMessage.set('');
+    try {
+      const page = await this.api.listTasks({ assignee: 'me', status: 'open' });
+      if (refreshId === this.refreshId) {
+        this.tasks.set(page.data);
+      }
+    } catch (error) {
+      if (refreshId === this.refreshId) {
+        this.errorMessage.set(error instanceof Error ? error.message : 'My tasks load failed');
+      }
+    } finally {
+      if (refreshId === this.refreshId) {
+        this.loading.set(false);
+      }
+    }
+  }
+
+  private normalizePollingInterval(value: number | string | null | undefined): number {
+    if (value === null || value === undefined || value === '') {
+      return 30_000;
+    }
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? Math.max(0, parsed) : 30_000;
+  }
+
+  private configurePolling(): void {
+    this.stopPolling();
+    if (!this.started || this.pollingIntervalMsState() === 0) {
+      return;
+    }
+    this.pollHandle = setInterval(() => {
+      void this.refresh();
+    }, this.pollingIntervalMsState());
+  }
+
+  private stopPolling(): void {
+    if (this.pollHandle) {
+      clearInterval(this.pollHandle);
+      this.pollHandle = undefined;
     }
   }
 }

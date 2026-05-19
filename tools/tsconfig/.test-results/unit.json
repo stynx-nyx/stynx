@@ -4,9 +4,9 @@
   "level": "unit",
   "runner": "node-test",
   "status": "passed",
-  "startedAt": "2026-05-19T15:48:22.285Z",
-  "endedAt": "2026-05-19T15:48:22.485Z",
-  "durationMs": 200,
+  "startedAt": "2026-05-19T15:54:45.238Z",
+  "endedAt": "2026-05-19T15:54:45.684Z",
+  "durationMs": 446,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -17,11 +17,7 @@
     "ci": false
   },
   "command": {
-    "argv": [
-      "node",
-      "--test",
-      "test/tsconfig.spec.mjs"
-    ],
+    "argv": ["node", "--test", "test/tsconfig.spec.mjs"],
     "cwd": "/Users/aarusso/Development/stech/stynx/tools/tsconfig"
   },
   "metric": {

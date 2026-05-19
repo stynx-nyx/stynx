@@ -6,6 +6,7 @@ export default createVitestConfig({
   packageName: '@stynx-web/angular-iam',
   include: ['test/**/*.spec.ts'],
   environment: 'jsdom',
+  setupFiles: ['./test/setup.ts'],
   passWithNoTests: true,
   alias: {
     '@stynx-web/sdk': resolve(__dirname, '../sdk/src/index.ts'),

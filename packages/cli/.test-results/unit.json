@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T15:49:39.131Z",
-  "endedAt": "2026-05-19T15:49:47.726Z",
-  "durationMs": 8595,
+  "startedAt": "2026-05-19T15:58:02.383Z",
+  "endedAt": "2026-05-19T15:58:05.643Z",
+  "durationMs": 3260,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-23240-1779205779129.json",
+      "--outputFile.json=/tmp/vitest-43510-1779206282383.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/cli/.test-results/unit.junit.xml"
     ],
@@ -47,52 +47,52 @@
     {
       "name": "@stynx/cli runs doctor against a fixture directory",
       "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli.spec.ts",
-      "durationMs": 511.4566669999999
+      "durationMs": 164.07166599999982
     },
     {
       "name": "@stynx/cli reports doctor spawn failures with fallback exit code and empty output strings",
       "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli.spec.ts",
-      "durationMs": 327.64016600000014
+      "durationMs": 146.72083299999986
     },
     {
       "name": "buildProgram runs adoption scan/apply/link commands",
       "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli-program.spec.ts",
-      "durationMs": 180.56054200000017
-    },
-    {
-      "name": "verifyAuditChain uses the default pg client factory when no override is supplied",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/audit.spec.ts",
-      "durationMs": 72.51275000000032
-    },
-    {
-      "name": "adopt command family is idempotent on the fixture repo",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/adopt.spec.ts",
-      "durationMs": 52.885959000000184
+      "durationMs": 56.581707999999935
     },
     {
       "name": "@stynx/cli scans and applies the neutral adoption fixture with richer outputs",
       "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli.spec.ts",
-      "durationMs": 46.932832999999846
+      "durationMs": 32.390959000000066
+    },
+    {
+      "name": "adopt command family is idempotent on the fixture repo",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/adopt.spec.ts",
+      "durationMs": 26.52041700000018
+    },
+    {
+      "name": "@stynx/cli generates empty and retention-aware ROPA markdown",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli.spec.ts",
+      "durationMs": 23.2632500000002
+    },
+    {
+      "name": "@stynx/cli generates ROPA markdown from privacy yaml",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli.spec.ts",
+      "durationMs": 16.897290999999996
     },
     {
       "name": "@stynx/cli scaffolds a consumer app skeleton",
       "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli.spec.ts",
-      "durationMs": 45.96245799999997
+      "durationMs": 11.230874999999969
     },
     {
-      "name": "adopt command family handles clean reports, skipped directories, dry-runs, and mixed schema generation",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/adopt.spec.ts",
-      "durationMs": 33.39762500000006
+      "name": "verifyAuditChain uses the default pg client factory when no override is supplied",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/audit.spec.ts",
+      "durationMs": 11.023791999999958
     },
     {
-      "name": "migrate command surface uses the default pg client factory when no factory override is supplied",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/migrate.spec.ts",
-      "durationMs": 32.80962499999987
-    },
-    {
-      "name": "buildProgram runs init, doctor, and privacy commands",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli-program.spec.ts",
-      "durationMs": 22.17133300000023
+      "name": "runDoctor normalizes nullish spawn status and captured output",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/doctor.spec.ts",
+      "durationMs": 9.066916999999876
     }
   ]
 }

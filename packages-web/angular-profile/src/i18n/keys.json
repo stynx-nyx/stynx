@@ -22,11 +22,17 @@
   "profile.preferences.status.saving",
   "profile.preferences.toast.saved",
   "profile.preferences.validation.localeRequired",
+  "profile.routes.preferences",
+  "profile.routes.profile",
+  "profile.routes.security",
   "profile.save_failed",
   "profile.security.changePassword.action",
   "profile.security.changePassword.error",
   "profile.security.changePassword.unavailable",
+  "profile.security.description",
   "profile.security.mfaEnrolment.action",
   "profile.security.mfaEnrolment.error",
-  "profile.security.mfaEnrolment.unavailable"
+  "profile.security.mfaEnrolment.unavailable",
+  "profile.security.title",
+  "profile.unsaved.confirm"
 ]

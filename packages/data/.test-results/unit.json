@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T15:48:34.478Z",
-  "endedAt": "2026-05-19T15:48:51.443Z",
-  "durationMs": 16965,
+  "startedAt": "2026-05-19T15:55:10.015Z",
+  "endedAt": "2026-05-19T15:55:46.440Z",
+  "durationMs": 36425,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-20408-1779205714478.json",
+      "--outputFile.json=/tmp/vitest-37517-1779206110015.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/data/.test-results/unit.junit.xml"
     ],
@@ -45,54 +45,54 @@
   },
   "slowestTests": [
     {
+      "name": "StynxMigrationRunner.runPlatformMigrations (mocked client) initializes pools + creates schema_migrations table + releases client",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/migration-runner.spec.ts",
+      "durationMs": 373.95066600000064
+    },
+    {
       "name": "StynxMigrationRunner.runPlatformMigrations (mocked client) continues migration-dir probing and preserves migration errors when rollback fails",
       "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/migration-runner.spec.ts",
-      "durationMs": 345.60054200000013
-    },
-    {
-      "name": "Transaction blocks soft-delete references when cascade depth, row count, or blocking children fail",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/transaction.spec.ts",
-      "durationMs": 196.3483329999999
-    },
-    {
-      "name": "StynxMigrationRunner.runPlatformMigrations (mocked client) rolls back when a migration body throws and rethrows the error",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/migration-runner.spec.ts",
-      "durationMs": 178.67774999999983
-    },
-    {
-      "name": "StynxMigrationRunner.runPlatformMigrations (mocked client) falls back to the packaged migration path when every probe misses",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/migration-runner.spec.ts",
-      "durationMs": 127.21512499999972
-    },
-    {
-      "name": "StynxMigrationRunner.runPlatformMigrations (mocked client) skips migrations whose id is already in core.schema_migrations",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/migration-runner.spec.ts",
-      "durationMs": 106.29066700000021
-    },
-    {
-      "name": "table metadata helpers uses explicit schema metadata when present",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/table-meta.spec.ts",
-      "durationMs": 80.16749999999956
+      "durationMs": 267.51908300000105
     },
     {
       "name": "Transaction restores archived references, maps restore conflicts, and cascades child restores",
       "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/transaction.spec.ts",
-      "durationMs": 79.15149999999994
+      "durationMs": 194.6083749999998
     },
     {
-      "name": "StynxMigrationRunner.runPlatformMigrations (mocked client) initializes pools + creates schema_migrations table + releases client",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/migration-runner.spec.ts",
-      "durationMs": 76.78575000000001
+      "name": "Transaction soft-deletes one reference and maps missing rows and FK delete failures",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/transaction.spec.ts",
+      "durationMs": 164.11095800000112
+    },
+    {
+      "name": "Database waits the computed jitter before retrying retryable transaction failures",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/database.spec.ts",
+      "durationMs": 150.559874999999
+    },
+    {
+      "name": "StynxPoolRegistry describes branch: applies ssl for registry-managed pools",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/pools.spec.ts",
+      "durationMs": 64.3080829999999
+    },
+    {
+      "name": "withSystemContext delegates to database.withSystemContext with the same reason + fn",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/system-context.spec.ts",
+      "durationMs": 61.87095900000031
+    },
+    {
+      "name": "Transaction detects restore conflicts from array and text constraint column metadata",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/transaction.spec.ts",
+      "durationMs": 61.740874999999505
     },
     {
       "name": "StynxPoolRegistry throws when a connection has neither connectionString nor secretId",
       "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/pools.spec.ts",
-      "durationMs": 61.137666999999965
+      "durationMs": 60.868875000000116
     },
     {
-      "name": "Transaction describes branch: softDelete uses real registry queries and archive-size sampling without metrics",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/transaction.spec.ts",
-      "durationMs": 54.67041599999902
+      "name": "query helpers maps archived rows and keeps promise helpers delegated to execute",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/query-helpers.spec.ts",
+      "durationMs": 53.60545900000034
     }
   ]
 }

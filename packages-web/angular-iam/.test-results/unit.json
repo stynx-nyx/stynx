@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T15:49:27.348Z",
-  "endedAt": "2026-05-19T15:49:48.904Z",
-  "durationMs": 21556,
+  "startedAt": "2026-05-19T16:15:25.512Z",
+  "endedAt": "2026-05-19T16:16:59.121Z",
+  "durationMs": 93609,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-22983-1779205767347.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-66770-1779207325512.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/.test-results/unit.junit.xml"
     ],
@@ -36,63 +36,63 @@
     "kind": "none"
   },
   "totals": {
-    "files": 2,
-    "tests": 27,
-    "passed": 27,
+    "files": 17,
+    "tests": 43,
+    "passed": 43,
     "failed": 0,
     "skipped": 0,
     "todo": 0
   },
   "slowestTests": [
     {
+      "name": "angular-iam routes activates each IAM admin route for users, roles, and groups when permissions allow",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/routing/angular-iam-routes.spec.ts",
+      "durationMs": 11150.574124999996
+    },
+    {
+      "name": "StynxRoleDetailComponent loads a role, saves overview changes, and identifies system roles",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/unit/role-detail.component.spec.ts",
+      "durationMs": 8936.191667000001
+    },
+    {
+      "name": "StynxUserDetailComponent loads user detail and persists overview, role, group, and lifecycle actions",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/unit/user-detail.component.spec.ts",
+      "durationMs": 8421.136625
+    },
+    {
+      "name": "StynxGroupDetailComponent loads a group and saves overview changes without blank descriptions",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/unit/group-detail.component.spec.ts",
+      "durationMs": 8353.298042000002
+    },
+    {
+      "name": "StynxRoleCreateDialogComponent emits create and clone payloads with optional description trimming",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/unit/role-create-dialog.component.spec.ts",
+      "durationMs": 8277.196166999998
+    },
+    {
+      "name": "StynxPermissionMatrixComponent filters permissions, toggles grants, selects resources, and saves changes",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/unit/permission-matrix.component.spec.ts",
+      "durationMs": 7303.106917000001
+    },
+    {
       "name": "@stynx-web/angular-iam component TestBed specs renders the users admin table and drives search, pagination, creation, and selection",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
-      "durationMs": 2430.0011250000007
+      "durationMs": 6249.884084000005
     },
     {
-      "name": "@stynx-web/angular-iam component TestBed specs drives role admin list, clone/create dialog, deletes, and system-role guard",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
-      "durationMs": 596.9695830000001
+      "name": "StynxUsersAdminComponent renders user rows and drives search, pagination, creation, and selection",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/unit/users-admin.component.spec.ts",
+      "durationMs": 5594.682291999998
     },
     {
-      "name": "@stynx-web/angular-iam component TestBed specs renders user create and disable dialogs with validated output payloads",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
-      "durationMs": 506.92804199999955
+      "name": "StynxGroupsAdminComponent filters groups, creates, deletes, and navigates to group detail",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/unit/groups-admin.component.spec.ts",
+      "durationMs": 4887.952582999998
     },
     {
-      "name": "@stynx-web/angular-iam component TestBed specs loads and saves role and group detail overview forms",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
-      "durationMs": 253.99324999999953
-    },
-    {
-      "name": "@stynx-web/angular-iam component TestBed specs drives group admin list, create dialog, delete, and search branches",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
-      "durationMs": 214.96454200000153
-    },
-    {
-      "name": "@stynx-web/angular-iam component TestBed specs loads and saves user detail overview, memberships, and lifecycle actions",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
-      "durationMs": 180.51887500000157
-    },
-    {
-      "name": "@stynx-web/angular-iam component TestBed specs renders role create dialog and emits create versus clone payloads",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
-      "durationMs": 150.51754100000107
-    },
-    {
-      "name": "@stynx-web/angular-iam component TestBed specs covers remaining fallback translation and default-value branches",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
-      "durationMs": 87.16337500000009
-    },
-    {
-      "name": "@stynx-web/angular-iam component TestBed specs filters, mutates, and saves the permission matrix",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
-      "durationMs": 81.8996670000015
-    },
-    {
-      "name": "@stynx-web/angular-iam component TestBed specs records component error branches without weakening assertions",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
-      "durationMs": 40.94291700000031
+      "name": "StynxRolesAdminComponent filters roles, creates, clones, deletes non-system roles, and navigates to detail",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/unit/roles-admin.component.spec.ts",
+      "durationMs": 4858.463583000001
     }
   ]
 }

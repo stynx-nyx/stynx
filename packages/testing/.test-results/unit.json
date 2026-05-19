@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T15:49:16.843Z",
-  "endedAt": "2026-05-19T15:50:16.403Z",
-  "durationMs": 59560,
+  "startedAt": "2026-05-19T15:57:08.737Z",
+  "endedAt": "2026-05-19T15:58:39.404Z",
+  "durationMs": 90667,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-22541-1779205756843.json",
+      "--outputFile.json=/tmp/vitest-41877-1779206228715.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/testing/.test-results/unit.junit.xml"
     ],
@@ -47,52 +47,52 @@
     {
       "name": "@stynx/testing creates an isolated app, seeds fixtures, and exercises archive-aware matchers",
       "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/testing.spec.ts",
-      "durationMs": 32841.746916
+      "durationMs": 41074.214792
     },
     {
       "name": "@stynx/testing exercises restore-conflict and soft-delete-blocked matchers against custom fixture tables",
       "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/testing.spec.ts",
-      "durationMs": 6299.776832999996
+      "durationMs": 13185.485791999992
     },
     {
       "name": "@stynx/testing reads context helpers through the shared request context",
       "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/testing.spec.ts",
-      "durationMs": 3927.016875000001
-    },
-    {
-      "name": "mintTestSession mints with an audience and omits permsHash when permissions are empty",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/mint-test-session.unit.spec.ts",
-      "durationMs": 180.60599999999977
+      "durationMs": 5534.800000000003
     },
     {
       "name": "@stynx/testing mints a test session only in NODE_ENV=test and runs doctor helper",
       "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/testing.spec.ts",
-      "durationMs": 114.64433299999655
-    },
-    {
-      "name": "createTestApp starts optional services, applies SQL steps, exposes tx/admin helpers, and tears down",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/create-test-app.unit.spec.ts",
-      "durationMs": 50.02287500000011
-    },
-    {
-      "name": "createStynxFixtures unit defaults generates tenant and user defaults when optional fields are omitted",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/fixtures.unit.spec.ts",
-      "durationMs": 13.648042000000032
-    },
-    {
-      "name": "expectROCannotWrite throws when fn resolves without error",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/matchers.spec.ts",
-      "durationMs": 9.530957999999373
-    },
-    {
-      "name": "LGPD fixture helpers seeds generated ids and preserves caller-provided ids",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/lgpd-fixture.spec.ts",
-      "durationMs": 8.781000000000176
+      "durationMs": 60.84787500000675
     },
     {
       "name": "auditExpect finds an audit row whose tags match every requested tag",
       "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/matchers.spec.ts",
-      "durationMs": 4.948667000000569
+      "durationMs": 40.921540999999706
+    },
+    {
+      "name": "mintTestSession mints with an audience and omits permsHash when permissions are empty",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/mint-test-session.unit.spec.ts",
+      "durationMs": 21.30412499999875
+    },
+    {
+      "name": "LGPD fixture helpers seeds generated ids and preserves caller-provided ids",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/lgpd-fixture.spec.ts",
+      "durationMs": 8.0034169999999
+    },
+    {
+      "name": "mintTestSession rejects use outside NODE_ENV=test",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/mint-test-session.unit.spec.ts",
+      "durationMs": 7.001416000002791
+    },
+    {
+      "name": "createStynxFixtures unit defaults generates tenant and user defaults when optional fields are omitted",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/fixtures.unit.spec.ts",
+      "durationMs": 6.9051250000002256
+    },
+    {
+      "name": "createTestApp starts optional services, applies SQL steps, exposes tx/admin helpers, and tears down",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/create-test-app.unit.spec.ts",
+      "durationMs": 6.258582999999817
     }
   ]
 }

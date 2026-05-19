@@ -1,173 +1,173 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="66" failures="0" errors="0" time="0.765637751">
-    <testsuite name="audit/audit-interceptor-redaction.spec.ts" timestamp="2026-05-19T15:48:37.841Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.117775">
-        <testcase classname="audit/audit-interceptor-redaction.spec.ts" name="AuditInterceptor metadata redaction &gt; applies metadata redaction policy before sink write" time="0.086888417">
+<testsuites name="vitest tests" tests="66" failures="0" errors="0" time="1.94536329">
+    <testsuite name="audit/audit-interceptor-redaction.spec.ts" timestamp="2026-05-19T15:55:10.852Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.00935125">
+        <testcase classname="audit/audit-interceptor-redaction.spec.ts" name="AuditInterceptor metadata redaction &gt; applies metadata redaction policy before sink write" time="0.007349166">
         </testcase>
-        <testcase classname="audit/audit-interceptor-redaction.spec.ts" name="AuditInterceptor metadata redaction &gt; writes raw metadata when no redaction policy is configured" time="0.006865">
-        </testcase>
-    </testsuite>
-    <testsuite name="audit/hash-chain.spec.ts" timestamp="2026-05-19T15:48:37.847Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.006778625">
-        <testcase classname="audit/hash-chain.spec.ts" name="StynxAuditService hash-chain verification &gt; accepts a valid chain" time="0.004797959">
-        </testcase>
-        <testcase classname="audit/hash-chain.spec.ts" name="StynxAuditService hash-chain verification &gt; reports the upstream row when a later previous_hash no longer matches it" time="0.000932875">
+        <testcase classname="audit/audit-interceptor-redaction.spec.ts" name="AuditInterceptor metadata redaction &gt; writes raw metadata when no redaction policy is configured" time="0.00048075">
         </testcase>
     </testsuite>
-    <testsuite name="audit/sql-adapter.spec.ts" timestamp="2026-05-19T15:48:37.848Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.0059125">
-        <testcase classname="audit/sql-adapter.spec.ts" name="AuditSqlSink parity &gt; writes using audit.write function mode" time="0.002057958">
+    <testsuite name="audit/hash-chain.spec.ts" timestamp="2026-05-19T15:55:10.876Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.003138333">
+        <testcase classname="audit/hash-chain.spec.ts" name="StynxAuditService hash-chain verification &gt; accepts a valid chain" time="0.002105333">
         </testcase>
-        <testcase classname="audit/sql-adapter.spec.ts" name="AuditSqlSink parity &gt; writes using table sink mode" time="0.000575084">
-        </testcase>
-        <testcase classname="audit/sql-adapter.spec.ts" name="AuditSqlReader parity &gt; maps stynx_events shape" time="0.00062775">
-        </testcase>
-        <testcase classname="audit/sql-adapter.spec.ts" name="AuditSqlReader parity &gt; maps porm_logged_actions shape" time="0.00179275">
+        <testcase classname="audit/hash-chain.spec.ts" name="StynxAuditService hash-chain verification &gt; reports the upstream row when a later previous_hash no longer matches it" time="0.000259917">
         </testcase>
     </testsuite>
-    <testsuite name="authorization/default-policy-evaluator.spec.ts" timestamp="2026-05-19T15:48:37.850Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.014287791">
-        <testcase classname="authorization/default-policy-evaluator.spec.ts" name="DefaultPolicyEvaluator &gt; allows when all role+permission requirements are met" time="0.013374708">
+    <testsuite name="audit/sql-adapter.spec.ts" timestamp="2026-05-19T15:55:10.892Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.004935125">
+        <testcase classname="audit/sql-adapter.spec.ts" name="AuditSqlSink parity &gt; writes using audit.write function mode" time="0.00136">
         </testcase>
-        <testcase classname="authorization/default-policy-evaluator.spec.ts" name="DefaultPolicyEvaluator &gt; denies when any requirement set fails" time="0.0001635">
+        <testcase classname="audit/sql-adapter.spec.ts" name="AuditSqlSink parity &gt; writes using table sink mode" time="0.000578875">
         </testcase>
-        <testcase classname="authorization/default-policy-evaluator.spec.ts" name="DefaultPolicyEvaluator &gt; supports any-mode matching" time="0.000100875">
+        <testcase classname="audit/sql-adapter.spec.ts" name="AuditSqlReader parity &gt; maps stynx_events shape" time="0.001217666">
         </testcase>
-    </testsuite>
-    <testsuite name="auth/auth-context.guard.spec.ts" timestamp="2026-05-19T15:48:37.851Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.006948666">
-        <testcase classname="auth/auth-context.guard.spec.ts" name="AuthContextGuard &gt; attaches principal, req.user and request.actor compatibility shapes" time="0.004095667">
-        </testcase>
-        <testcase classname="auth/auth-context.guard.spec.ts" name="AuthContextGuard &gt; uses tenant resolver and entitlement policy when present" time="0.000453875">
-        </testcase>
-        <testcase classname="auth/auth-context.guard.spec.ts" name="AuthContextGuard &gt; throws forbidden when tenant entitlement fails" time="0.000786833">
-        </testcase>
-        <testcase classname="auth/auth-context.guard.spec.ts" name="AuthContextGuard &gt; throws unauthorized when verifier returns no principal" time="0.000735917">
+        <testcase classname="audit/sql-adapter.spec.ts" name="AuditSqlReader parity &gt; maps porm_logged_actions shape" time="0.00099275">
         </testcase>
     </testsuite>
-    <testsuite name="auth/cognito-admin.adapter.spec.ts" timestamp="2026-05-19T15:48:37.872Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.003743375">
-        <testcase classname="auth/cognito-admin.adapter.spec.ts" name="@stynx/auth cognito admin adapter &gt; builds options from env and infers profile strategy when AWS_PROFILE exists" time="0.001898166">
+    <testsuite name="auth/auth-context.guard.spec.ts" timestamp="2026-05-19T15:55:10.926Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.024525458">
+        <testcase classname="auth/auth-context.guard.spec.ts" name="AuthContextGuard &gt; attaches principal, req.user and request.actor compatibility shapes" time="0.015053792">
         </testcase>
-        <testcase classname="auth/cognito-admin.adapter.spec.ts" name="@stynx/auth cognito admin adapter &gt; allows overriding credential strategy" time="0.000257125">
+        <testcase classname="auth/auth-context.guard.spec.ts" name="AuthContextGuard &gt; uses tenant resolver and entitlement policy when present" time="0.004185458">
         </testcase>
-        <testcase classname="auth/cognito-admin.adapter.spec.ts" name="@stynx/auth cognito admin adapter &gt; throws validation error when required env is missing" time="0.000336">
+        <testcase classname="auth/auth-context.guard.spec.ts" name="AuthContextGuard &gt; throws forbidden when tenant entitlement fails" time="0.002423708">
         </testcase>
-        <testcase classname="auth/cognito-admin.adapter.spec.ts" name="@stynx/auth cognito admin adapter &gt; maps cognito errors into canonical identity-admin errors" time="0.000178584">
-        </testcase>
-    </testsuite>
-    <testsuite name="auth/tenant-entitlement.spec.ts" timestamp="2026-05-19T15:48:37.873Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="0.014305375">
-        <testcase classname="auth/tenant-entitlement.spec.ts" name="ClaimFirstTenantEntitlementPolicy &gt; accepts when tenant appears in claim list" time="0.001716958">
-        </testcase>
-        <testcase classname="auth/tenant-entitlement.spec.ts" name="ClaimFirstTenantEntitlementPolicy &gt; rejects when claim list exists but tenant is absent" time="0.0081825">
-        </testcase>
-        <testcase classname="auth/tenant-entitlement.spec.ts" name="ClaimFirstTenantEntitlementPolicy &gt; uses fallback only when no tenant claims are present" time="0.00101225">
-        </testcase>
-        <testcase classname="auth/tenant-entitlement.spec.ts" name="SqlTenantEntitlementFallback &gt; queries executor and returns true when membership row exists" time="0.001326708">
-        </testcase>
-        <testcase classname="auth/tenant-entitlement.spec.ts" name="SqlTenantEntitlementFallback &gt; returns false when no subject/email is available" time="0.000200917">
+        <testcase classname="auth/auth-context.guard.spec.ts" name="AuthContextGuard &gt; throws unauthorized when verifier returns no principal" time="0.000910125">
         </testcase>
     </testsuite>
-    <testsuite name="db-context/pg-session-db-context.applier.spec.ts" timestamp="2026-05-19T15:48:37.892Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.005762417">
-        <testcase classname="db-context/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; applies row_security and session keys with compatibility mappings" time="0.004675875">
+    <testsuite name="auth/cognito-admin.adapter.spec.ts" timestamp="2026-05-19T15:55:11.035Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.007092041">
+        <testcase classname="auth/cognito-admin.adapter.spec.ts" name="@stynx/auth cognito admin adapter &gt; builds options from env and infers profile strategy when AWS_PROFILE exists" time="0.0037785">
         </testcase>
-        <testcase classname="db-context/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; can skip missing values when clearMissing=false" time="0.000352958">
+        <testcase classname="auth/cognito-admin.adapter.spec.ts" name="@stynx/auth cognito admin adapter &gt; allows overriding credential strategy" time="0.000606959">
         </testcase>
-    </testsuite>
-    <testsuite name="db-context/response-event-request-db-client-lifecycle.spec.ts" timestamp="2026-05-19T15:48:37.907Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.0074775">
-        <testcase classname="db-context/response-event-request-db-client-lifecycle.spec.ts" name="ResponseEventRequestDbClientLifecycle &gt; binds release to finish/close and releases only once" time="0.003906958">
+        <testcase classname="auth/cognito-admin.adapter.spec.ts" name="@stynx/auth cognito admin adapter &gt; throws validation error when required env is missing" time="0.0005855">
         </testcase>
-        <testcase classname="db-context/response-event-request-db-client-lifecycle.spec.ts" name="ResponseEventRequestDbClientLifecycle &gt; falls back to immediate release when response is missing" time="0.002428209">
+        <testcase classname="auth/cognito-admin.adapter.spec.ts" name="@stynx/auth cognito admin adapter &gt; maps cognito errors into canonical identity-admin errors" time="0.000418667">
         </testcase>
     </testsuite>
-    <testsuite name="db-context/tenant-lifecycle.middleware.spec.ts" timestamp="2026-05-19T15:48:37.920Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="0.150494167">
-        <testcase classname="db-context/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; sets tenantId and releases tenant-bound client on response events" time="0.044512542">
+    <testsuite name="auth/tenant-entitlement.spec.ts" timestamp="2026-05-19T15:55:11.040Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="0.019663458">
+        <testcase classname="auth/tenant-entitlement.spec.ts" name="ClaimFirstTenantEntitlementPolicy &gt; accepts when tenant appears in claim list" time="0.005805166">
         </testcase>
-        <testcase classname="db-context/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; throws when required tenant header is missing" time="0.014372041">
+        <testcase classname="auth/tenant-entitlement.spec.ts" name="ClaimFirstTenantEntitlementPolicy &gt; rejects when claim list exists but tenant is absent" time="0.006530625">
         </testcase>
-        <testcase classname="db-context/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; throws when tenant header is not a UUID" time="0.012863458">
+        <testcase classname="auth/tenant-entitlement.spec.ts" name="ClaimFirstTenantEntitlementPolicy &gt; uses fallback only when no tenant claims are present" time="0.0003465">
         </testcase>
-        <testcase classname="db-context/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; allows missing tenant header when requirement is disabled" time="0.00754925">
+        <testcase classname="auth/tenant-entitlement.spec.ts" name="SqlTenantEntitlementFallback &gt; queries executor and returns true when membership row exists" time="0.003031625">
         </testcase>
-        <testcase classname="db-context/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; exposes factory helper for middleware-consumer use" time="0.010244958">
-        </testcase>
-    </testsuite>
-    <testsuite name="idempotency/idempotency.interceptor.spec.ts" timestamp="2026-05-19T15:48:38.052Z" hostname="thiamat-1903.local" tests="6" failures="0" errors="0" skipped="0" time="0.006654709">
-        <testcase classname="idempotency/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; rejects write request without idempotency key when required" time="0.001381833">
-        </testcase>
-        <testcase classname="idempotency/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; allows GET without idempotency key" time="0.001783167">
-        </testcase>
-        <testcase classname="idempotency/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; replays in-memory cached response for same key/fingerprint" time="0.001581167">
-        </testcase>
-        <testcase classname="idempotency/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; throws conflict when same key is reused with different payload" time="0.00043275">
-        </testcase>
-        <testcase classname="idempotency/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; uses durable store when configured and tenant exists" time="0.000485167">
-        </testcase>
-        <testcase classname="idempotency/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; throws service unavailable when durableStrict and no durable store path" time="0.000164083">
+        <testcase classname="auth/tenant-entitlement.spec.ts" name="SqlTenantEntitlementFallback &gt; returns false when no subject/email is available" time="0.002201333">
         </testcase>
     </testsuite>
-    <testsuite name="identity-admin/identity-admin.service.spec.ts" timestamp="2026-05-19T15:48:38.169Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.04010025">
-        <testcase classname="identity-admin/identity-admin.service.spec.ts" name="IdentityAdminService &gt; maps IdentityAdminError to Nest exceptions" time="0.03609475">
+    <testsuite name="authorization/default-policy-evaluator.spec.ts" timestamp="2026-05-19T15:55:11.080Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.002999458">
+        <testcase classname="authorization/default-policy-evaluator.spec.ts" name="DefaultPolicyEvaluator &gt; allows when all role+permission requirements are met" time="0.001305459">
         </testcase>
-        <testcase classname="identity-admin/identity-admin.service.spec.ts" name="IdentityAdminService &gt; returns provider error when local sync adapter is not configured" time="0.000725542">
+        <testcase classname="authorization/default-policy-evaluator.spec.ts" name="DefaultPolicyEvaluator &gt; denies when any requirement set fails" time="0.00012325">
         </testcase>
-        <testcase classname="identity-admin/identity-admin.service.spec.ts" name="IdentityAdminService &gt; delegates local sync methods when adapter is provided" time="0.00180325">
-        </testcase>
-    </testsuite>
-    <testsuite name="identity-admin/integration-facades.spec.ts" timestamp="2026-05-19T15:48:38.170Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="0.092251375">
-        <testcase classname="identity-admin/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; maps list/get to porm-compatible shape with attributes and groups" time="0.012441042">
-        </testcase>
-        <testcase classname="identity-admin/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; returns updated=false when update payload is empty" time="0.000664583">
-        </testcase>
-        <testcase classname="identity-admin/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; maps verify and sync operations for porm compatibility" time="0.001900458">
-        </testcase>
-        <testcase classname="identity-admin/integration-facades.spec.ts" name="PecIdentityAdminFacade &gt; maps list and update request/response to pec-compatible shape" time="0.070217292">
-        </testcase>
-        <testcase classname="identity-admin/integration-facades.spec.ts" name="PecIdentityAdminFacade &gt; delegates group/password/verify operations" time="0.000629958">
+        <testcase classname="authorization/default-policy-evaluator.spec.ts" name="DefaultPolicyEvaluator &gt; supports any-mode matching" time="0.000091458">
         </testcase>
     </testsuite>
-    <testsuite name="identity-admin/pg-local-sync.adapter.spec.ts" timestamp="2026-05-19T15:48:38.273Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.069243792">
-        <testcase classname="identity-admin/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; syncs users/groups into local tables and returns counters" time="0.053999041">
+    <testsuite name="db-context/pg-session-db-context.applier.spec.ts" timestamp="2026-05-19T15:55:11.082Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.006498625">
+        <testcase classname="db-context/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; applies row_security and session keys with compatibility mappings" time="0.003194417">
         </testcase>
-        <testcase classname="identity-admin/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; syncUser throws validation error when detail has invalid subject" time="0.002174083">
-        </testcase>
-        <testcase classname="identity-admin/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; returns group metadata by user id using optional meta loader" time="0.000568875">
+        <testcase classname="db-context/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; can skip missing values when clearMissing=false" time="0.002557208">
         </testcase>
     </testsuite>
-    <testsuite name="frontend-client/api-client.spec.ts" timestamp="2026-05-19T15:48:38.337Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.009016583">
-        <testcase classname="frontend-client/api-client.spec.ts" name="StynxApiClient &gt; injects auth and tenant headers" time="0.006182334">
+    <testsuite name="db-context/response-event-request-db-client-lifecycle.spec.ts" timestamp="2026-05-19T15:55:11.189Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.009664">
+        <testcase classname="db-context/response-event-request-db-client-lifecycle.spec.ts" name="ResponseEventRequestDbClientLifecycle &gt; binds release to finish/close and releases only once" time="0.008357458">
         </testcase>
-        <testcase classname="frontend-client/api-client.spec.ts" name="StynxApiClient &gt; throws ApiClientError on non-ok status" time="0.001038417">
-        </testcase>
-        <testcase classname="frontend-client/api-client.spec.ts" name="StynxApiClient &gt; serializes query params and request body" time="0.000747125">
+        <testcase classname="db-context/response-event-request-db-client-lifecycle.spec.ts" name="ResponseEventRequestDbClientLifecycle &gt; falls back to immediate release when response is missing" time="0.000186875">
         </testcase>
     </testsuite>
-    <testsuite name="frontend-client/session-manager.spec.ts" timestamp="2026-05-19T15:48:38.377Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.004164125">
-        <testcase classname="frontend-client/session-manager.spec.ts" name="FrontendSessionManager &gt; hydrates principal from token claims" time="0.002788125">
+    <testsuite name="db-context/tenant-lifecycle.middleware.spec.ts" timestamp="2026-05-19T15:55:11.191Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="0.047245375">
+        <testcase classname="db-context/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; sets tenantId and releases tenant-bound client on response events" time="0.037698458">
         </testcase>
-        <testcase classname="frontend-client/session-manager.spec.ts" name="FrontendSessionManager &gt; clears expired token on hydrate" time="0.000320792">
+        <testcase classname="db-context/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; throws when required tenant header is missing" time="0.000344333">
         </testcase>
-        <testcase classname="frontend-client/session-manager.spec.ts" name="FrontendSessionManager &gt; splits whitespace permissions from scope claims" time="0.000167291">
+        <testcase classname="db-context/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; throws when tenant header is not a UUID" time="0.000182667">
         </testcase>
-    </testsuite>
-    <testsuite name="pipeline/platform-pipeline.module.spec.ts" timestamp="2026-05-19T15:48:38.493Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.021055167">
-        <testcase classname="pipeline/platform-pipeline.module.spec.ts" name="StynxPlatformPipelineModule &gt; registers PEC-like global stack by default" time="0.001830708">
+        <testcase classname="db-context/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; allows missing tenant header when requirement is disabled" time="0.000155041">
         </testcase>
-        <testcase classname="pipeline/platform-pipeline.module.spec.ts" name="StynxPlatformPipelineModule &gt; supports disabling specific global concerns" time="0.000247666">
+        <testcase classname="db-context/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; exposes factory helper for middleware-consumer use" time="0.000135875">
         </testcase>
     </testsuite>
-    <testsuite name="sla/sla-monitor.interceptor.spec.ts" timestamp="2026-05-19T15:48:38.582Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.18098125">
-        <testcase classname="sla/sla-monitor.interceptor.spec.ts" name="SlaMonitorInterceptor &gt; emits sample event with threshold/breach information" time="0.111806833">
+    <testsuite name="frontend-client/api-client.spec.ts" timestamp="2026-05-19T15:55:11.192Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.01042325">
+        <testcase classname="frontend-client/api-client.spec.ts" name="StynxApiClient &gt; injects auth and tenant headers" time="0.008285833">
         </testcase>
-        <testcase classname="sla/sla-monitor.interceptor.spec.ts" name="SlaMonitorInterceptor &gt; emits aggregate event according to configured sample window" time="0.017123459">
+        <testcase classname="frontend-client/api-client.spec.ts" name="StynxApiClient &gt; throws ApiClientError on non-ok status" time="0.000418958">
         </testcase>
-        <testcase classname="sla/sla-monitor.interceptor.spec.ts" name="SlaMonitorInterceptor &gt; emits error-path sample when downstream handler fails" time="0.001646542">
+        <testcase classname="frontend-client/api-client.spec.ts" name="StynxApiClient &gt; serializes query params and request body" time="0.000322042">
         </testcase>
     </testsuite>
-    <testsuite name="rate-limit/rate-limit.guard.spec.ts" timestamp="2026-05-19T15:48:38.681Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="0.008685084">
-        <testcase classname="rate-limit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; bypasses health-check path" time="0.003614542">
+    <testsuite name="frontend-client/session-manager.spec.ts" timestamp="2026-05-19T15:55:11.192Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.009505083">
+        <testcase classname="frontend-client/session-manager.spec.ts" name="FrontendSessionManager &gt; hydrates principal from token claims" time="0.005642958">
         </testcase>
-        <testcase classname="rate-limit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; enforces in-memory limit when distributed path is unavailable" time="0.003187167">
+        <testcase classname="frontend-client/session-manager.spec.ts" name="FrontendSessionManager &gt; clears expired token on hydrate" time="0.000260167">
         </testcase>
-        <testcase classname="rate-limit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; uses distributed store when tenant is present" time="0.00058175">
+        <testcase classname="frontend-client/session-manager.spec.ts" name="FrontendSessionManager &gt; splits whitespace permissions from scope claims" time="0.000451917">
         </testcase>
-        <testcase classname="rate-limit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; throws 429 when distributed hits exceed limit" time="0.000175917">
+    </testsuite>
+    <testsuite name="idempotency/idempotency.interceptor.spec.ts" timestamp="2026-05-19T15:55:11.194Z" hostname="thiamat-1903.local" tests="6" failures="0" errors="0" skipped="0" time="0.039397583">
+        <testcase classname="idempotency/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; rejects write request without idempotency key when required" time="0.032359417">
         </testcase>
-        <testcase classname="rate-limit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; throws service unavailable when strict distributed mode fails" time="0.000325666">
+        <testcase classname="idempotency/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; allows GET without idempotency key" time="0.002090959">
+        </testcase>
+        <testcase classname="idempotency/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; replays in-memory cached response for same key/fingerprint" time="0.001220958">
+        </testcase>
+        <testcase classname="idempotency/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; throws conflict when same key is reused with different payload" time="0.000321084">
+        </testcase>
+        <testcase classname="idempotency/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; uses durable store when configured and tenant exists" time="0.000483375">
+        </testcase>
+        <testcase classname="idempotency/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; throws service unavailable when durableStrict and no durable store path" time="0.000456542">
+        </testcase>
+    </testsuite>
+    <testsuite name="identity-admin/identity-admin.service.spec.ts" timestamp="2026-05-19T15:55:11.246Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.157288417">
+        <testcase classname="identity-admin/identity-admin.service.spec.ts" name="IdentityAdminService &gt; maps IdentityAdminError to Nest exceptions" time="0.152939791">
+        </testcase>
+        <testcase classname="identity-admin/identity-admin.service.spec.ts" name="IdentityAdminService &gt; returns provider error when local sync adapter is not configured" time="0.001799292">
+        </testcase>
+        <testcase classname="identity-admin/identity-admin.service.spec.ts" name="IdentityAdminService &gt; delegates local sync methods when adapter is provided" time="0.001460541">
+        </testcase>
+    </testsuite>
+    <testsuite name="identity-admin/integration-facades.spec.ts" timestamp="2026-05-19T15:55:11.248Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="0.628570416">
+        <testcase classname="identity-admin/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; maps list/get to porm-compatible shape with attributes and groups" time="0.265412084">
+        </testcase>
+        <testcase classname="identity-admin/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; returns updated=false when update payload is empty" time="0.067042875">
+        </testcase>
+        <testcase classname="identity-admin/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; maps verify and sync operations for porm compatibility" time="0.000658042">
+        </testcase>
+        <testcase classname="identity-admin/integration-facades.spec.ts" name="PecIdentityAdminFacade &gt; maps list and update request/response to pec-compatible shape" time="0.048082708">
+        </testcase>
+        <testcase classname="identity-admin/integration-facades.spec.ts" name="PecIdentityAdminFacade &gt; delegates group/password/verify operations" time="0.018304542">
+        </testcase>
+    </testsuite>
+    <testsuite name="identity-admin/pg-local-sync.adapter.spec.ts" timestamp="2026-05-19T15:55:11.249Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.110913709">
+        <testcase classname="identity-admin/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; syncs users/groups into local tables and returns counters" time="0.08469625">
+        </testcase>
+        <testcase classname="identity-admin/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; syncUser throws validation error when detail has invalid subject" time="0.002246084">
+        </testcase>
+        <testcase classname="identity-admin/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; returns group metadata by user id using optional meta loader" time="0.019853125">
+        </testcase>
+    </testsuite>
+    <testsuite name="pipeline/platform-pipeline.module.spec.ts" timestamp="2026-05-19T15:55:11.260Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.141757958">
+        <testcase classname="pipeline/platform-pipeline.module.spec.ts" name="StynxPlatformPipelineModule &gt; registers PEC-like global stack by default" time="0.136614583">
+        </testcase>
+        <testcase classname="pipeline/platform-pipeline.module.spec.ts" name="StynxPlatformPipelineModule &gt; supports disabling specific global concerns" time="0.002647209">
+        </testcase>
+    </testsuite>
+    <testsuite name="rate-limit/rate-limit.guard.spec.ts" timestamp="2026-05-19T15:55:11.261Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="0.070285417">
+        <testcase classname="rate-limit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; bypasses health-check path" time="0.061737583">
+        </testcase>
+        <testcase classname="rate-limit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; enforces in-memory limit when distributed path is unavailable" time="0.001059542">
+        </testcase>
+        <testcase classname="rate-limit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; uses distributed store when tenant is present" time="0.000416084">
+        </testcase>
+        <testcase classname="rate-limit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; throws 429 when distributed hits exceed limit" time="0.000223916">
+        </testcase>
+        <testcase classname="rate-limit/rate-limit.guard.spec.ts" name="RateLimitGuard &gt; throws service unavailable when strict distributed mode fails" time="0.000252958">
+        </testcase>
+    </testsuite>
+    <testsuite name="sla/sla-monitor.interceptor.spec.ts" timestamp="2026-05-19T15:55:11.262Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.642108334">
+        <testcase classname="sla/sla-monitor.interceptor.spec.ts" name="SlaMonitorInterceptor &gt; emits sample event with threshold/breach information" time="0.26711075">
+        </testcase>
+        <testcase classname="sla/sla-monitor.interceptor.spec.ts" name="SlaMonitorInterceptor &gt; emits aggregate event according to configured sample window" time="0.038069">
+        </testcase>
+        <testcase classname="sla/sla-monitor.interceptor.spec.ts" name="SlaMonitorInterceptor &gt; emits error-path sample when downstream handler fails" time="0.131734708">
         </testcase>
     </testsuite>
 </testsuites>

@@ -1,13 +1,13 @@
 import '@angular/compiler';
 import { HttpClient } from '@angular/common/http';
 import { Injector, runInInjectionContext } from '@angular/core';
-import { firstValueFrom, of, toArray } from 'rxjs';
+import { firstValueFrom, of, throwError, toArray } from 'rxjs';
 import { STYNX_ANGULAR_OPTIONS } from '@stynx-web/angular';
 import { StynxToastService } from '@stynx-web/angular-ui';
 import { StynxDocumentDownloadComponent } from '../src/document-download.component';
 import { DocumentService } from '../src/document.service';
 import { StynxDocumentUploadComponent } from '../src/document-upload.component';
-import { MultipartUploadExecutor } from '../src/multipart-upload.executor';
+import { MultipartUploadExecutor, provideStynxMultipartUploadExecutor } from '../src/multipart-upload.executor';
 import { STYNX_DEFAULT_MULTIPART_UPLOAD_OPTIONS, STYNX_MULTIPART_UPLOAD_OPTIONS, STYNX_UPLOAD_EXECUTOR } from '../src/tokens';
 import type { StynxDocumentScanEvent, StynxUploadExecutor } from '../src/types';
 import { XhrUploadExecutor } from '../src/xhr-upload.executor';
@@ -232,6 +232,224 @@ describe('@stynx-web/angular-storage', () => {
     expect(component.errorMessage()).toBe('Download failed with status 503');
   });
 
+  it('uses explicit download filenames before encoded headers and URL fallbacks', async () => {
+    const originalFetch = globalThis.fetch;
+    const originalCreateObjectUrl = URL.createObjectURL;
+    const originalRevokeObjectUrl = URL.revokeObjectURL;
+    const originalCreateElement = document.createElement.bind(document);
+    const downloadedNames: string[] = [];
+    const createElementSpy = vi.spyOn(document, 'createElement').mockImplementation(((tagName: string, options?: ElementCreationOptions) => {
+      const element = originalCreateElement(tagName, options);
+      if (tagName.toLowerCase() === 'a') {
+        vi.spyOn(element as HTMLAnchorElement, 'click').mockImplementation(function click(this: HTMLAnchorElement): void {
+          downloadedNames.push(this.download);
+        });
+      }
+      return element;
+    }) as typeof document.createElement);
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      value: () => 'blob:download-name',
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      configurable: true,
+      value: vi.fn(),
+    });
+    Object.defineProperty(globalThis, 'fetch', {
+      configurable: true,
+      value: vi
+        .fn()
+        .mockResolvedValueOnce(makeResponse('body', {
+          headers: {
+            'content-disposition': "attachment; filename*=UTF-8''relat%C3%B3rio.pdf",
+            'content-type': 'application/pdf',
+          },
+        }))
+        .mockResolvedValueOnce(makeResponse('body')),
+    });
+
+    try {
+      const explicit = createDownloadComponent({
+        getSignedUrl: vi.fn(async () => ({
+          id: 'doc-explicit',
+          url: 'https://download.example.test/files/ignored.pdf',
+          expiresInSeconds: 60,
+        })),
+      } as never);
+      explicit.documentId = 'doc-explicit';
+      explicit.filename = 'chosen.pdf';
+      await explicit.download();
+
+      const fallback = createDownloadComponent({
+        getSignedUrl: vi.fn(async () => ({
+          id: 'doc-url',
+          url: 'https://download.example.test/files/fallback%20name.pdf',
+          expiresInSeconds: 60,
+        })),
+      } as never);
+      fallback.documentId = 'doc-url';
+      await fallback.download();
+    } finally {
+      createElementSpy.mockRestore();
+      Object.defineProperty(globalThis, 'fetch', {
+        configurable: true,
+        value: originalFetch,
+      });
+      Object.defineProperty(URL, 'createObjectURL', {
+        configurable: true,
+        value: originalCreateObjectUrl,
+      });
+      Object.defineProperty(URL, 'revokeObjectURL', {
+        configurable: true,
+        value: originalRevokeObjectUrl,
+      });
+    }
+
+    expect(downloadedNames).toEqual(['chosen.pdf', 'fallback name.pdf']);
+  });
+
+  it('resolves encoded, plain, and id fallback download names', async () => {
+    const originalFetch = globalThis.fetch;
+    const originalCreateObjectUrl = URL.createObjectURL;
+    const originalRevokeObjectUrl = URL.revokeObjectURL;
+    const originalCreateElement = document.createElement.bind(document);
+    const downloadedNames: string[] = [];
+    const createElementSpy = vi.spyOn(document, 'createElement').mockImplementation(((tagName: string, options?: ElementCreationOptions) => {
+      const element = originalCreateElement(tagName, options);
+      if (tagName.toLowerCase() === 'a') {
+        vi.spyOn(element as HTMLAnchorElement, 'click').mockImplementation(function click(this: HTMLAnchorElement): void {
+          downloadedNames.push(this.download);
+        });
+      }
+      return element;
+    }) as typeof document.createElement);
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      value: () => 'blob:download-name',
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      configurable: true,
+      value: vi.fn(),
+    });
+    Object.defineProperty(globalThis, 'fetch', {
+      configurable: true,
+      value: vi
+        .fn()
+        .mockResolvedValueOnce(makeResponse('body', {
+          headers: {
+            'content-disposition': "attachment; filename*=UTF-8''report%20final.pdf",
+          },
+        }))
+        .mockResolvedValueOnce(makeResponse('body', {
+          headers: {
+            'content-disposition': 'attachment; filename=plain.pdf',
+          },
+        }))
+        .mockResolvedValueOnce(makeResponse('body')),
+    });
+
+    try {
+      for (const id of ['encoded', 'plain', 'empty-url']) {
+        const component = createDownloadComponent({
+          getSignedUrl: vi.fn(async () => ({
+            id,
+            url: id === 'empty-url' ? 'https://download.example.test/' : `https://download.example.test/files/${id}`,
+            expiresInSeconds: 60,
+          })),
+        } as never);
+        component.documentId = ` ${id} `;
+        await component.download();
+      }
+    } finally {
+      createElementSpy.mockRestore();
+      Object.defineProperty(globalThis, 'fetch', {
+        configurable: true,
+        value: originalFetch,
+      });
+      Object.defineProperty(URL, 'createObjectURL', {
+        configurable: true,
+        value: originalCreateObjectUrl,
+      });
+      Object.defineProperty(URL, 'revokeObjectURL', {
+        configurable: true,
+        value: originalRevokeObjectUrl,
+      });
+    }
+
+    expect(downloadedNames).toEqual(['report final.pdf', 'plain.pdf', 'document-empty-url']);
+  });
+
+  it('tracks download busy labels and bodyless browser fallbacks', async () => {
+    const component = createDownloadComponent({
+      getSignedUrl: vi.fn(async () => ({
+        id: 'doc-bodyless',
+        url: 'https://download.example.test/bodyless',
+        expiresInSeconds: 60,
+      })),
+    } as never);
+    const progress: unknown[] = [];
+    component.downloadProgress.subscribe((value) => progress.push(value));
+    component.status.set('resolving');
+    expect(component.isBusy()).toBe(true);
+    expect(component.statusLabel()).toBe('Preparing download');
+    component.status.set('downloading');
+    expect(component.isBusy()).toBe(true);
+    expect(component.statusLabel()).toBe('Downloading document');
+    component.status.set('idle');
+    expect(component.isBusy()).toBe(false);
+
+    const originalFetch = globalThis.fetch;
+    const originalCreateObjectUrl = URL.createObjectURL;
+    const originalRevokeObjectUrl = URL.revokeObjectURL;
+    const originalCreateElement = document.createElement.bind(document);
+    vi.spyOn(document, 'createElement').mockImplementation(((tagName: string, options?: ElementCreationOptions) => {
+      const element = originalCreateElement(tagName, options);
+      if (tagName.toLowerCase() === 'a') {
+        vi.spyOn(element as HTMLAnchorElement, 'click').mockImplementation(() => undefined);
+      }
+      return element;
+    }) as typeof document.createElement);
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      value: () => 'blob:bodyless',
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      configurable: true,
+      value: vi.fn(),
+    });
+    Object.defineProperty(globalThis, 'fetch', {
+      configurable: true,
+      value: vi.fn(async () => ({
+        ok: true,
+        status: 200,
+        body: null,
+        headers: new Headers({ 'content-length': '0' }),
+        blob: async () => new Blob(['fallback']),
+      })),
+    });
+
+    try {
+      component.documentId = 'doc-bodyless';
+      await component.download();
+    } finally {
+      vi.restoreAllMocks();
+      Object.defineProperty(globalThis, 'fetch', {
+        configurable: true,
+        value: originalFetch,
+      });
+      Object.defineProperty(URL, 'createObjectURL', {
+        configurable: true,
+        value: originalCreateObjectUrl,
+      });
+      Object.defineProperty(URL, 'revokeObjectURL', {
+        configurable: true,
+        value: originalRevokeObjectUrl,
+      });
+    }
+
+    expect(progress.at(-1)).toEqual({ loadedBytes: 8, totalBytes: 8, percentage: 100 });
+  });
+
   it('moves through initiating, uploading, and completed states', async () => {
     const seen: string[] = [];
     const component = createUploadComponent(
@@ -391,6 +609,28 @@ describe('@stynx-web/angular-storage', () => {
     expect(component.progress).toBe(100);
   });
 
+  it('ignores drag events while drag-and-drop is disabled', async () => {
+    const component = createUploadComponent(
+      {
+        initiate: vi.fn(async () => {
+          throw new Error('drop should not upload while disabled');
+        }),
+        complete: vi.fn(async () => ({ id: 'doc-drop', scanStatus: 'completed' as const })),
+      },
+      { push: () => undefined } as never,
+      { upload: vi.fn(async () => undefined) },
+    );
+    const event = createDragEvent(new File(['dropped'], 'dropped.pdf', { type: 'application/pdf' }));
+
+    component.onDragOver(event);
+    await component.onDrop(event);
+
+    expect(event.preventDefault).not.toHaveBeenCalled();
+    expect(event.stopPropagation).not.toHaveBeenCalled();
+    expect(component.isDragActive).toBe(false);
+    expect(component.status).toBe('idle');
+  });
+
   it('emits scan-status updates after an upload completes with a pending scan', async () => {
     const toasts: unknown[] = [];
     const scanEvents: StynxDocumentScanEvent[] = [
@@ -492,6 +732,35 @@ describe('@stynx-web/angular-storage', () => {
     expect(failing.errorMessage).toBe('network failed');
   });
 
+  it('accepts files exactly at the configured byte limit', async () => {
+    const component = createUploadComponent(
+      {
+        initiate: vi.fn(async () => ({
+          id: 'doc-limit',
+          s3Key: 'storage/doc-limit',
+          upload: {
+            method: 'PUT' as const,
+            url: 'https://upload.example.test',
+            headers: {},
+            expiresInSeconds: 60,
+          },
+        })),
+        complete: vi.fn(async () => ({ id: 'doc-limit', scanStatus: 'completed' as const })),
+      },
+      { push: () => undefined } as never,
+      {
+        upload: vi.fn(async (_url, _file, _headers, onProgress) => onProgress(100)),
+      },
+    );
+    component.collection = 'attachments';
+    component.maxBytes = 10;
+
+    await component.upload(new File(['1234567890'], 'limit.txt', { type: 'text/plain' }));
+
+    expect(component.status).toBe('completed');
+    expect(component.errorMessage).toBe('');
+  });
+
   it('ignores empty file selection events', async () => {
     const component = createUploadComponent(
       {
@@ -553,6 +822,52 @@ describe('@stynx-web/angular-storage', () => {
       'https://api.example.test/documents/doc-1/download',
       'https://api.example.test/documents',
     ]);
+    expect(calls.at(-1)?.options).toEqual({ params: { collection: 'records' } });
+  });
+
+  it('normalizes repeated API slashes and fills blank scan event ids', async () => {
+    const responses: StynxDocumentScanEvent[] = [
+      { id: '', status: 'pending', checkedAt: '2026-05-19T06:40:00.000Z', message: 'queued' },
+      { id: '', status: 'pending', checkedAt: '2026-05-19T06:40:00.000Z', message: 'still queued' },
+      { id: '', status: 'quarantined', checkedAt: '2026-05-19T06:40:01.000Z' },
+    ];
+    const calls: string[] = [];
+    const service = runInInjectionContext(
+      Injector.create({
+        providers: [
+          {
+            provide: HttpClient,
+            useValue: {
+              get: vi.fn((url: string) => {
+                calls.push(url);
+                return of(responses.shift() ?? { id: '', status: 'quarantined' as const });
+              }),
+            },
+          },
+          {
+            provide: STYNX_ANGULAR_OPTIONS,
+            useValue: {
+              apiBaseUrl: 'https://api.example.test///',
+              sessionMode: 'bearer',
+            },
+          },
+        ],
+      }),
+      () => new DocumentService(),
+    );
+
+    const events = await firstValueFrom(service.scanStatus$('doc/fallback', { pollIntervalMs: 0 }).pipe(toArray()));
+
+    expect(events).toEqual([
+      { id: 'doc/fallback', status: 'pending', checkedAt: '2026-05-19T06:40:00.000Z', message: 'queued' },
+      { id: 'doc/fallback', status: 'pending', checkedAt: '2026-05-19T06:40:00.000Z', message: 'still queued' },
+      { id: 'doc/fallback', status: 'quarantined', checkedAt: '2026-05-19T06:40:01.000Z' },
+    ]);
+    expect(calls).toEqual([
+      'https://api.example.test/storage/documents/doc%2Ffallback/scan-status',
+      'https://api.example.test/storage/documents/doc%2Ffallback/scan-status',
+      'https://api.example.test/storage/documents/doc%2Ffallback/scan-status',
+    ]);
   });
 
   it('long-polls scan status until a terminal status is returned', async () => {
@@ -595,6 +910,58 @@ describe('@stynx-web/angular-storage', () => {
     expect(() => service.scanStatus$('   ')).toThrow('Document id is required.');
   });
 
+  it('deduplicates repeated scan events and surfaces scan-status errors', async () => {
+    const repeated: StynxDocumentScanEvent[] = [
+      { id: 'doc-scan', status: 'pending', checkedAt: '2026-05-19T06:40:00.000Z' },
+      { id: 'doc-scan', status: 'pending', checkedAt: '2026-05-19T06:40:00.000Z' },
+      { id: 'doc-scan', status: 'completed', checkedAt: '2026-05-19T06:40:01.000Z' },
+    ];
+    const service = runInInjectionContext(
+      Injector.create({
+        providers: [
+          {
+            provide: HttpClient,
+            useValue: {
+              get: vi.fn(() => of(repeated.shift() ?? { id: 'doc-scan', status: 'completed' as const })),
+            },
+          },
+          {
+            provide: STYNX_ANGULAR_OPTIONS,
+            useValue: {
+              apiBaseUrl: 'https://api.example.test/',
+              sessionMode: 'bearer',
+            },
+          },
+        ],
+      }),
+      () => new DocumentService(),
+    );
+
+    await expect(firstValueFrom(service.scanStatus$('doc-scan', { pollIntervalMs: 1 }).pipe(toArray())))
+      .resolves.toEqual([
+        { id: 'doc-scan', status: 'pending', checkedAt: '2026-05-19T06:40:00.000Z' },
+        { id: 'doc-scan', status: 'completed', checkedAt: '2026-05-19T06:40:01.000Z' },
+      ]);
+
+    const failing = createUploadComponent(
+      {
+        initiate: vi.fn(async () => ({
+          id: 'doc-failing-scan',
+          s3Key: 'storage/doc-failing-scan',
+          upload: { method: 'PUT', url: 'https://upload.example.test', headers: {}, expiresInSeconds: 60 },
+        })),
+        complete: vi.fn(async () => ({ id: 'doc-failing-scan', scanStatus: 'pending' as const })),
+        scanStatus$: vi.fn(() => throwError(() => new Error('scan channel offline'))),
+      },
+      { push: () => undefined } as never,
+      { upload: vi.fn(async (_url, _file, _headers, onProgress) => onProgress(100)) },
+    );
+
+    await failing.upload(new File(['body'], 'scan.pdf', { type: 'application/pdf' }));
+
+    expect(failing.errorMessage).toBe('scan channel offline');
+  });
+
   it('uploads files through XMLHttpRequest with progress, success, and failure paths', async () => {
     const original = globalThis.XMLHttpRequest;
     Object.defineProperty(globalThis, 'XMLHttpRequest', {
@@ -628,14 +995,24 @@ describe('@stynx-web/angular-storage', () => {
       await expect(success).resolves.toBeUndefined();
       expect(progress).toEqual([30, 100]);
 
+      const status200 = executor.upload('https://upload.example.test/ok-200', {} as File, {}, () => undefined);
+      FakeXmlHttpRequest.instances[1]!.status = 200;
+      FakeXmlHttpRequest.instances[1]?.onload?.();
+      await expect(status200).resolves.toBeUndefined();
+
+      const status300 = executor.upload('https://upload.example.test/ok-300', {} as File, {}, () => undefined);
+      FakeXmlHttpRequest.instances[2]!.status = 300;
+      FakeXmlHttpRequest.instances[2]?.onload?.();
+      await expect(status300).rejects.toThrow('Upload failed with status 300');
+
       const statusFailure = executor.upload('https://upload.example.test/fail', {} as File, {}, () => undefined);
-      const failed = FakeXmlHttpRequest.instances[1];
+      const failed = FakeXmlHttpRequest.instances[3];
       failed!.status = 500;
       failed?.onload?.();
       await expect(statusFailure).rejects.toThrow('Upload failed with status 500');
 
       const networkFailure = executor.upload('https://upload.example.test/offline', {} as File, {}, () => undefined);
-      FakeXmlHttpRequest.instances[2]?.onerror?.();
+      FakeXmlHttpRequest.instances[4]?.onerror?.();
       await expect(networkFailure).rejects.toThrow('Upload failed');
     } finally {
       Object.defineProperty(globalThis, 'XMLHttpRequest', {
@@ -678,6 +1055,30 @@ describe('@stynx-web/angular-storage', () => {
     expect(progress).toEqual([100]);
   });
 
+  it('delegates files exactly at the multipart threshold', async () => {
+    const delegate: StynxUploadExecutor = {
+      upload: vi.fn(async () => undefined),
+    };
+    const executor = createMultipartExecutor(
+      {
+        chunkThreshold: 5,
+        chunkSize: 2,
+        concurrency: 1,
+      },
+      delegate,
+    );
+    const file = new File(['12345'], 'threshold.txt', { type: 'text/plain' });
+
+    await executor.upload('https://upload.example.test/single', file, {}, () => undefined);
+
+    expect(delegate.upload).toHaveBeenCalledWith(
+      'https://upload.example.test/single',
+      file,
+      {},
+      expect.any(Function),
+    );
+  });
+
   it('uploads large files as resumable multipart chunks', async () => {
     const originalFetch = globalThis.fetch;
     const calls: Array<{ url: string; init?: RequestInit }> = [];
@@ -691,9 +1092,9 @@ describe('@stynx-web/angular-storage', () => {
         return makeResponse(JSON.stringify({
           uploadId: 'upload-1',
           chunks: [
+            { partNumber: 3, url: 'https://upload.example.test/chunk-3' },
             { partNumber: 1, url: 'https://upload.example.test/chunk-1', headers: { 'x-part': '1' } },
             { partNumber: 2, url: 'https://upload.example.test/chunk-2' },
-            { partNumber: 3, url: 'https://upload.example.test/chunk-3' },
           ],
         }), {
           headers: { 'content-type': 'application/json' },
@@ -765,6 +1166,10 @@ describe('@stynx-web/angular-storage', () => {
       chunkCount: 3,
       headers: { 'x-upload': 'multi' },
     });
+    expect(calls[0]?.init).toMatchObject({
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+    });
     expect(firstChunkAttempts).toHaveLength(1);
     expect(calls.map((call) => call.url)).toContain('https://api.example.test/storage/uploads/upload-1');
     expect(chunkBodySizes).toEqual([4, 4, 2]);
@@ -776,6 +1181,193 @@ describe('@stynx-web/angular-storage', () => {
         { partNumber: 3, etag: 'etag-3' },
       ],
     });
+    expect(completeCall?.init).toMatchObject({
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+    });
     expect(progress).toEqual([0, 40, 80, 99, 100]);
+  });
+
+  it('uses multipart status numbers, explicit completion URL, and failure statuses', async () => {
+    const originalFetch = globalThis.fetch;
+    const calls: string[] = [];
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      calls.push(url);
+      if (url.endsWith('/storage/uploads/initiate-multipart')) {
+        return makeResponse(JSON.stringify({
+          uploadId: 'upload-explicit',
+          completeUrl: 'https://upload.example.test/custom-complete',
+          chunks: [
+            { partNumber: 1, url: 'https://upload.example.test/chunk-1' },
+            { partNumber: 2, url: 'https://upload.example.test/chunk-2' },
+          ],
+        }), {
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+      if (url === 'https://upload.example.test/chunk-1') {
+        return makeResponse('', { status: 503 });
+      }
+      if (url.endsWith('/storage/uploads/upload-explicit')) {
+        return makeResponse(JSON.stringify({
+          uploadId: 'upload-explicit',
+          completedParts: [1],
+        }), {
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+      if (url === 'https://upload.example.test/chunk-2') {
+        return makeResponse('', { headers: { etag: 'etag-2' } });
+      }
+      if (url === 'https://upload.example.test/custom-complete') {
+        return makeResponse(JSON.stringify({ uploadId: 'upload-explicit', completed: true }), {
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+      throw new Error(`Unexpected fetch ${url}`);
+    });
+    Object.defineProperty(globalThis, 'fetch', {
+      configurable: true,
+      value: fetchMock,
+    });
+
+    try {
+      await createMultipartExecutor({
+        chunkThreshold: 5,
+        chunkSize: 4,
+        concurrency: 1,
+        retryAttempts: 1,
+      }).upload(
+        'https://upload.example.test/original',
+        new File(['0123456789'], 'large.bin', { type: 'application/octet-stream' }),
+        {},
+        () => undefined,
+      );
+    } finally {
+      Object.defineProperty(globalThis, 'fetch', {
+        configurable: true,
+        value: originalFetch,
+      });
+    }
+
+    expect(calls).toContain('https://upload.example.test/custom-complete');
+
+    Object.defineProperty(globalThis, 'fetch', {
+      configurable: true,
+      value: vi.fn(async (input: RequestInfo | URL) =>
+        String(input).endsWith('/storage/uploads/initiate-multipart')
+          ? makeResponse('', { status: 503 })
+          : makeResponse(''),
+      ),
+    });
+    try {
+      await expect(createMultipartExecutor({
+        chunkThreshold: 1,
+        chunkSize: 1,
+        concurrency: 1,
+        retryAttempts: 0,
+      }).upload('https://upload.example.test/original', new File(['large'], 'large.bin'), {}, () => undefined))
+        .rejects.toThrow('Multipart upload initiation failed with status 503');
+    } finally {
+      Object.defineProperty(globalThis, 'fetch', {
+        configurable: true,
+        value: originalFetch,
+      });
+    }
+  });
+
+  it('surfaces exhausted multipart retries, completion failures, and provider wiring', async () => {
+    const originalFetch = globalThis.fetch;
+    Object.defineProperty(globalThis, 'fetch', {
+      configurable: true,
+      value: vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.endsWith('/storage/uploads/initiate-multipart')) {
+          return makeResponse(JSON.stringify({
+            uploadId: 'upload-fail',
+            chunks: [{ partNumber: 1, url: 'https://upload.example.test/chunk-1' }],
+          }), {
+            headers: { 'content-type': 'application/json' },
+          });
+        }
+        if (url === 'https://upload.example.test/chunk-1') {
+          return makeResponse('', { status: 500 });
+        }
+        if (url.endsWith('/storage/uploads/upload-fail')) {
+          return makeResponse(JSON.stringify({ uploadId: 'upload-fail', completedParts: [] }), {
+            headers: { 'content-type': 'application/json' },
+          });
+        }
+        return makeResponse('');
+      }),
+    });
+
+    try {
+      await expect(createMultipartExecutor({
+        chunkThreshold: 1,
+        chunkSize: 2,
+        concurrency: 1,
+        retryAttempts: 1,
+      }).upload('https://upload.example.test/original', new File(['large'], 'large.bin'), {}, () => undefined))
+        .rejects.toThrow('Multipart chunk 1 failed with status 500');
+    } finally {
+      Object.defineProperty(globalThis, 'fetch', {
+        configurable: true,
+        value: originalFetch,
+      });
+    }
+
+    Object.defineProperty(globalThis, 'fetch', {
+      configurable: true,
+      value: vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.endsWith('/storage/uploads/initiate-multipart')) {
+          return makeResponse(JSON.stringify({
+            uploadId: 'upload-complete-fail',
+            chunks: [{ partNumber: 1, url: 'https://upload.example.test/chunk-1' }],
+          }), {
+            headers: { 'content-type': 'application/json' },
+          });
+        }
+        if (url === 'https://upload.example.test/chunk-1') {
+          return makeResponse('', { headers: { etag: 'etag-1' } });
+        }
+        if (url.endsWith('/storage/uploads/complete-multipart')) {
+          return makeResponse('', { status: 409 });
+        }
+        return makeResponse('');
+      }),
+    });
+    try {
+      await expect(createMultipartExecutor({
+        chunkThreshold: 1,
+        chunkSize: 2,
+        concurrency: 1,
+        retryAttempts: 0,
+      }).upload('https://upload.example.test/original', new File(['large'], 'large.bin'), {}, () => undefined))
+        .rejects.toThrow('Multipart upload completion failed with status 409');
+    } finally {
+      Object.defineProperty(globalThis, 'fetch', {
+        configurable: true,
+        value: originalFetch,
+      });
+    }
+
+    expect(provideStynxMultipartUploadExecutor({ chunkSize: 8 })).toEqual([
+      XhrUploadExecutor,
+      MultipartUploadExecutor,
+      {
+        provide: STYNX_MULTIPART_UPLOAD_OPTIONS,
+        useValue: {
+          ...STYNX_DEFAULT_MULTIPART_UPLOAD_OPTIONS,
+          chunkSize: 8,
+        },
+      },
+      {
+        provide: STYNX_UPLOAD_EXECUTOR,
+        useExisting: MultipartUploadExecutor,
+      },
+    ]);
   });
 });

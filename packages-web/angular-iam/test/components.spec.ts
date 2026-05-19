@@ -277,7 +277,13 @@ function setup<T>(component: Type<T>, extraProviders: Provider[] = []) {
 }
 
 beforeAll(() => {
-  TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
+  try {
+    TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
+  } catch (error) {
+    if (!String(error).includes('Cannot set base providers')) {
+      throw error;
+    }
+  }
 });
 
 afterEach(() => {

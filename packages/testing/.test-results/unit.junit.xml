@@ -1,95 +1,95 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="39" failures="0" errors="0" time="43.488745666">
-    <testsuite name="test/create-test-app.unit.spec.ts" timestamp="2026-05-19T15:50:16.287Z" hostname="thiamat-1903.local" tests="6" failures="0" errors="0" skipped="0" time="0.056588041">
-        <testcase classname="test/create-test-app.unit.spec.ts" name="createTestApp &gt; starts optional services, applies SQL steps, exposes tx/admin helpers, and tears down" time="0.050022875">
+<testsuites name="vitest tests" tests="39" failures="0" errors="0" time="60.010853082">
+    <testsuite name="test/create-test-app.unit.spec.ts" timestamp="2026-05-19T15:58:39.246Z" hostname="thiamat-1903.local" tests="6" failures="0" errors="0" skipped="0" time="0.013057875">
+        <testcase classname="test/create-test-app.unit.spec.ts" name="createTestApp &gt; starts optional services, applies SQL steps, exposes tx/admin helpers, and tears down" time="0.006258583">
         </testcase>
-        <testcase classname="test/create-test-app.unit.spec.ts" name="createTestApp &gt; uses default LocalStack services and omits Cognito when disabled" time="0.000457375">
+        <testcase classname="test/create-test-app.unit.spec.ts" name="createTestApp &gt; uses default LocalStack services and omits Cognito when disabled" time="0.001576042">
         </testcase>
-        <testcase classname="test/create-test-app.unit.spec.ts" name="createTestApp &gt; starts LocalStack with caller-provided services" time="0.000182958">
+        <testcase classname="test/create-test-app.unit.spec.ts" name="createTestApp &gt; starts LocalStack with caller-provided services" time="0.000775084">
         </testcase>
-        <testcase classname="test/create-test-app.unit.spec.ts" name="createTestApp &gt; applies seed-only SQL setup without requiring migrations" time="0.000183375">
+        <testcase classname="test/create-test-app.unit.spec.ts" name="createTestApp &gt; applies seed-only SQL setup without requiring migrations" time="0.001022458">
         </testcase>
-        <testcase classname="test/create-test-app.unit.spec.ts" name="createTestApp &gt; stops started containers when app initialization fails" time="0.000716083">
+        <testcase classname="test/create-test-app.unit.spec.ts" name="createTestApp &gt; stops started containers when app initialization fails" time="0.0013475">
         </testcase>
-        <testcase classname="test/create-test-app.unit.spec.ts" name="createTestApp &gt; preserves the initialization error when cleanup also fails" time="0.000316375">
-        </testcase>
-    </testsuite>
-    <testsuite name="test/doctor.unit.spec.ts" timestamp="2026-05-19T15:50:16.290Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.004087833">
-        <testcase classname="test/doctor.unit.spec.ts" name="runDoctorForApp &gt; returns exit code and captured output from the doctor process" time="0.002313292">
-        </testcase>
-        <testcase classname="test/doctor.unit.spec.ts" name="runDoctorForApp &gt; defaults a null close code to failure" time="0.000457458">
-        </testcase>
-        <testcase classname="test/doctor.unit.spec.ts" name="runDoctorForApp &gt; rejects when process spawning fails" time="0.000585958">
+        <testcase classname="test/create-test-app.unit.spec.ts" name="createTestApp &gt; preserves the initialization error when cleanup also fails" time="0.00038025">
         </testcase>
     </testsuite>
-    <testsuite name="test/fixtures.unit.spec.ts" timestamp="2026-05-19T15:50:16.291Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.016253042">
-        <testcase classname="test/fixtures.unit.spec.ts" name="createStynxFixtures unit defaults &gt; generates tenant and user defaults when optional fields are omitted" time="0.013648042">
+    <testsuite name="test/doctor.unit.spec.ts" timestamp="2026-05-19T15:58:39.280Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.003932916">
+        <testcase classname="test/doctor.unit.spec.ts" name="runDoctorForApp &gt; returns exit code and captured output from the doctor process" time="0.002068916">
         </testcase>
-        <testcase classname="test/fixtures.unit.spec.ts" name="createStynxFixtures unit defaults &gt; generates document defaults and preserves explicit optional fields" time="0.001675125">
+        <testcase classname="test/doctor.unit.spec.ts" name="runDoctorForApp &gt; defaults a null close code to failure" time="0.000402208">
         </testcase>
-    </testsuite>
-    <testsuite name="test/lgpd-fixture.spec.ts" timestamp="2026-05-19T15:50:16.292Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.012029083">
-        <testcase classname="test/lgpd-fixture.spec.ts" name="LGPD fixture helpers &gt; emits a PII map with every fixture strategy" time="0.001089833">
-        </testcase>
-        <testcase classname="test/lgpd-fixture.spec.ts" name="LGPD fixture helpers &gt; seeds generated ids and preserves caller-provided ids" time="0.008781">
-        </testcase>
-        <testcase classname="test/lgpd-fixture.spec.ts" name="LGPD fixture helpers &gt; generates tenant and actor ids when no input is provided" time="0.001239375">
+        <testcase classname="test/doctor.unit.spec.ts" name="runDoctorForApp &gt; rejects when process spawning fails" time="0.000773208">
         </testcase>
     </testsuite>
-    <testsuite name="test/matchers.spec.ts" timestamp="2026-05-19T15:50:16.293Z" hostname="thiamat-1903.local" tests="19" failures="0" errors="0" skipped="0" time="0.02933975">
-        <testcase classname="test/matchers.spec.ts" name="expectROCannotWrite &gt; resolves when fn throws ReadOnlyViolationError" time="0.003312833">
+    <testsuite name="test/fixtures.unit.spec.ts" timestamp="2026-05-19T15:58:39.280Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.009692208">
+        <testcase classname="test/fixtures.unit.spec.ts" name="createStynxFixtures unit defaults &gt; generates tenant and user defaults when optional fields are omitted" time="0.006905125">
         </testcase>
-        <testcase classname="test/matchers.spec.ts" name="expectROCannotWrite &gt; rethrows non-RO errors" time="0.001742208">
-        </testcase>
-        <testcase classname="test/matchers.spec.ts" name="expectROCannotWrite &gt; throws when fn resolves without error" time="0.009530958">
-        </testcase>
-        <testcase classname="test/matchers.spec.ts" name="archive-aware matchers &gt; accepts archive and live row counts for moved and restored rows" time="0.00418225">
-        </testcase>
-        <testcase classname="test/matchers.spec.ts" name="archive-aware matchers &gt; reports rows missing from archive or still present in live tables" time="0.001583291">
-        </testcase>
-        <testcase classname="test/matchers.spec.ts" name="archive-aware matchers &gt; uses public schema metadata for tables without an explicit schema" time="0.000296166">
-        </testcase>
-        <testcase classname="test/matchers.spec.ts" name="archive-aware matchers &gt; checks archive mirror existence and column parity" time="0.000382042">
-        </testcase>
-        <testcase classname="test/matchers.spec.ts" name="archive-aware matchers &gt; reports missing archive mirrors and mirror drift" time="0.00045225">
-        </testcase>
-        <testcase classname="test/matchers.spec.ts" name="auditExpect &gt; finds an audit row whose tags match every requested tag" time="0.004948667">
-        </testcase>
-        <testcase classname="test/matchers.spec.ts" name="auditExpect &gt; uses schema, row id, and tags defaults when only entity and operation are provided" time="0.00049875">
-        </testcase>
-        <testcase classname="test/matchers.spec.ts" name="auditExpect &gt; reports when no audit row matches the requested tags" time="0.000246042">
-        </testcase>
-        <testcase classname="test/matchers.spec.ts" name="expectRLSIsolated &gt; allows rows for the queried tenant and ignores tenant_id snake-case shape" time="0.000144">
-        </testcase>
-        <testcase classname="test/matchers.spec.ts" name="expectRLSIsolated &gt; reports leaked rows from another tenant" time="0.000105375">
-        </testcase>
-        <testcase classname="test/matchers.spec.ts" name="expectRestoreConflict &gt; resolves when fn throws RestoreConflictError" time="0.000123042">
-        </testcase>
-        <testcase classname="test/matchers.spec.ts" name="expectRestoreConflict &gt; rethrows non-conflict errors" time="0.000088833">
-        </testcase>
-        <testcase classname="test/matchers.spec.ts" name="expectRestoreConflict &gt; throws when fn resolves without error" time="0.00007125">
-        </testcase>
-        <testcase classname="test/matchers.spec.ts" name="expectSoftDeleteBlocked &gt; resolves when fn throws SoftDeleteBlockedError" time="0.0001295">
-        </testcase>
-        <testcase classname="test/matchers.spec.ts" name="expectSoftDeleteBlocked &gt; rethrows non-blocked errors" time="0.000083916">
-        </testcase>
-        <testcase classname="test/matchers.spec.ts" name="expectSoftDeleteBlocked &gt; throws when fn resolves without error" time="0.000069292">
+        <testcase classname="test/fixtures.unit.spec.ts" name="createStynxFixtures unit defaults &gt; generates document defaults and preserves explicit optional fields" time="0.001174667">
         </testcase>
     </testsuite>
-    <testsuite name="test/mint-test-session.unit.spec.ts" timestamp="2026-05-19T15:50:16.301Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.184864708">
-        <testcase classname="test/mint-test-session.unit.spec.ts" name="mintTestSession &gt; rejects use outside NODE_ENV=test" time="0.003126416">
+    <testsuite name="test/lgpd-fixture.spec.ts" timestamp="2026-05-19T15:58:39.281Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.010808375">
+        <testcase classname="test/lgpd-fixture.spec.ts" name="LGPD fixture helpers &gt; emits a PII map with every fixture strategy" time="0.000742">
         </testcase>
-        <testcase classname="test/mint-test-session.unit.spec.ts" name="mintTestSession &gt; mints with an audience and omits permsHash when permissions are empty" time="0.180606">
+        <testcase classname="test/lgpd-fixture.spec.ts" name="LGPD fixture helpers &gt; seeds generated ids and preserves caller-provided ids" time="0.008003417">
+        </testcase>
+        <testcase classname="test/lgpd-fixture.spec.ts" name="LGPD fixture helpers &gt; generates tenant and actor ids when no input is provided" time="0.000823917">
         </testcase>
     </testsuite>
-    <testsuite name="test/testing.spec.ts" timestamp="2026-05-19T15:50:16.302Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="43.185583209">
-        <testcase classname="test/testing.spec.ts" name="@stynx/testing &gt; creates an isolated app, seeds fixtures, and exercises archive-aware matchers" time="32.841746916">
+    <testsuite name="test/matchers.spec.ts" timestamp="2026-05-19T15:58:39.281Z" hostname="thiamat-1903.local" tests="19" failures="0" errors="0" skipped="0" time="0.081255209">
+        <testcase classname="test/matchers.spec.ts" name="expectROCannotWrite &gt; resolves when fn throws ReadOnlyViolationError" time="0.003232458">
         </testcase>
-        <testcase classname="test/testing.spec.ts" name="@stynx/testing &gt; exercises restore-conflict and soft-delete-blocked matchers against custom fixture tables" time="6.299776833">
+        <testcase classname="test/matchers.spec.ts" name="expectROCannotWrite &gt; rethrows non-RO errors" time="0.000832333">
         </testcase>
-        <testcase classname="test/testing.spec.ts" name="@stynx/testing &gt; mints a test session only in NODE_ENV=test and runs doctor helper" time="0.114644333">
+        <testcase classname="test/matchers.spec.ts" name="expectROCannotWrite &gt; throws when fn resolves without error" time="0.000515667">
         </testcase>
-        <testcase classname="test/testing.spec.ts" name="@stynx/testing &gt; reads context helpers through the shared request context" time="3.927016875">
+        <testcase classname="test/matchers.spec.ts" name="archive-aware matchers &gt; accepts archive and live row counts for moved and restored rows" time="0.004760292">
+        </testcase>
+        <testcase classname="test/matchers.spec.ts" name="archive-aware matchers &gt; reports rows missing from archive or still present in live tables" time="0.00169025">
+        </testcase>
+        <testcase classname="test/matchers.spec.ts" name="archive-aware matchers &gt; uses public schema metadata for tables without an explicit schema" time="0.000945708">
+        </testcase>
+        <testcase classname="test/matchers.spec.ts" name="archive-aware matchers &gt; checks archive mirror existence and column parity" time="0.004276">
+        </testcase>
+        <testcase classname="test/matchers.spec.ts" name="archive-aware matchers &gt; reports missing archive mirrors and mirror drift" time="0.002490708">
+        </testcase>
+        <testcase classname="test/matchers.spec.ts" name="auditExpect &gt; finds an audit row whose tags match every requested tag" time="0.040921541">
+        </testcase>
+        <testcase classname="test/matchers.spec.ts" name="auditExpect &gt; uses schema, row id, and tags defaults when only entity and operation are provided" time="0.003940208">
+        </testcase>
+        <testcase classname="test/matchers.spec.ts" name="auditExpect &gt; reports when no audit row matches the requested tags" time="0.002018167">
+        </testcase>
+        <testcase classname="test/matchers.spec.ts" name="expectRLSIsolated &gt; allows rows for the queried tenant and ignores tenant_id snake-case shape" time="0.0003035">
+        </testcase>
+        <testcase classname="test/matchers.spec.ts" name="expectRLSIsolated &gt; reports leaked rows from another tenant" time="0.00023175">
+        </testcase>
+        <testcase classname="test/matchers.spec.ts" name="expectRestoreConflict &gt; resolves when fn throws RestoreConflictError" time="0.000217792">
+        </testcase>
+        <testcase classname="test/matchers.spec.ts" name="expectRestoreConflict &gt; rethrows non-conflict errors" time="0.00013525">
+        </testcase>
+        <testcase classname="test/matchers.spec.ts" name="expectRestoreConflict &gt; throws when fn resolves without error" time="0.000219209">
+        </testcase>
+        <testcase classname="test/matchers.spec.ts" name="expectSoftDeleteBlocked &gt; resolves when fn throws SoftDeleteBlockedError" time="0.000161042">
+        </testcase>
+        <testcase classname="test/matchers.spec.ts" name="expectSoftDeleteBlocked &gt; rethrows non-blocked errors" time="0.000092125">
+        </testcase>
+        <testcase classname="test/matchers.spec.ts" name="expectSoftDeleteBlocked &gt; throws when fn resolves without error" time="0.000095958">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/mint-test-session.unit.spec.ts" timestamp="2026-05-19T15:58:39.283Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.029945208">
+        <testcase classname="test/mint-test-session.unit.spec.ts" name="mintTestSession &gt; rejects use outside NODE_ENV=test" time="0.007001416">
+        </testcase>
+        <testcase classname="test/mint-test-session.unit.spec.ts" name="mintTestSession &gt; mints with an audience and omits permsHash when permissions are empty" time="0.021304125">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/testing.spec.ts" timestamp="2026-05-19T15:58:39.283Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="59.862161291">
+        <testcase classname="test/testing.spec.ts" name="@stynx/testing &gt; creates an isolated app, seeds fixtures, and exercises archive-aware matchers" time="41.074214792">
+        </testcase>
+        <testcase classname="test/testing.spec.ts" name="@stynx/testing &gt; exercises restore-conflict and soft-delete-blocked matchers against custom fixture tables" time="13.185485792">
+        </testcase>
+        <testcase classname="test/testing.spec.ts" name="@stynx/testing &gt; mints a test session only in NODE_ENV=test and runs doctor helper" time="0.060847875">
+        </testcase>
+        <testcase classname="test/testing.spec.ts" name="@stynx/testing &gt; reads context helpers through the shared request context" time="5.5348">
         </testcase>
     </testsuite>
 </testsuites>

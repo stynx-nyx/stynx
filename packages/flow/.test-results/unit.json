@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T15:49:53.389Z",
-  "endedAt": "2026-05-19T15:50:01.138Z",
-  "durationMs": 7749,
+  "startedAt": "2026-05-19T15:58:14.811Z",
+  "endedAt": "2026-05-19T15:58:26.824Z",
+  "durationMs": 12013,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-23609-1779205793389.json",
+      "--outputFile.json=/tmp/vitest-43917-1779206294811.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/flow/.test-results/unit.junit.xml"
     ],
@@ -45,54 +45,54 @@
   },
   "slowestTests": [
     {
-      "name": "FlowDesignService.importGraph imports optional transition effects, agent rules, and node form rules",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-design.service.spec.ts",
-      "durationMs": 33.704125000000204
-    },
-    {
-      "name": "FlowRuntimeService getRun / updateRun / getNodeRun / getTask getRun returns one or throws NotFound",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-runtime.service.spec.ts",
-      "durationMs": 21.360415999999532
-    },
-    {
-      "name": "FlowRuntimeService task action flows actTask asserts allowed action + execution allowed, then calls task_complete",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-runtime.service.spec.ts",
-      "durationMs": 14.225709000000279
-    },
-    {
-      "name": "FlowDesignService — graphs / nodes / edges publishGraph validates and records package-owned publish metadata",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-design.service.spec.ts",
-      "durationMs": 11.022249999999985
-    },
-    {
-      "name": "Flow validation and regression guards keeps generic Flow source free of PORM/CMS domain coupling",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/validation-and-regression.spec.ts",
-      "durationMs": 7.375042000000576
-    },
-    {
-      "name": "FlowFormsService questions / scores createQuestion attaches formId to the input",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-forms.service.spec.ts",
-      "durationMs": 7.297499999999673
-    },
-    {
       "name": "Flow backend gap contracts dispatches pending effects through the adapter and skips already terminal events on retry",
       "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/gap-contracts.spec.ts",
-      "durationMs": 6.279375000000073
+      "durationMs": 26.484166999999616
+    },
+    {
+      "name": "FlowAdapterRegistry returns safe defaults when optional adapters or capabilities are absent",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/branch-helpers.spec.ts",
+      "durationMs": 24.788916999999856
+    },
+    {
+      "name": "Flow backend gap contracts returns paged analytics envelopes with stable metadata",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/gap-contracts.spec.ts",
+      "durationMs": 21.239166999999725
     },
     {
       "name": "FlowRuntimeService.ensureRun resolves scope code from scopeId when scopeCode is absent",
       "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-runtime.service.spec.ts",
-      "durationMs": 5.685707999999977
+      "durationMs": 17.991291000000274
     },
     {
-      "name": "FlowRuntimeService.ensureRun passes optional signal facts to the adapter before ensuring a run",
+      "name": "FlowRuntimeService.dispatchPendingEffects records failure when adapter.applyEffect throws",
       "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-runtime.service.spec.ts",
-      "durationMs": 5.535958999999821
+      "durationMs": 13.258042000000387
     },
     {
-      "name": "FlowFormsService questions / scores listQuestions filters by form_id",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-forms.service.spec.ts",
-      "durationMs": 4.6565419999997175
+      "name": "FlowRuntimeService.taskCandidates expands resolver candidates via adapters.resolveAgents",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-runtime.service.spec.ts",
+      "durationMs": 12.943207999999686
+    },
+    {
+      "name": "Flow validation and regression guards rejects invalid workflow DTOs before they reach the database",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/validation-and-regression.spec.ts",
+      "durationMs": 11.471582999999555
+    },
+    {
+      "name": "Flow backend gap contracts expands resolver_fn candidates through the registered adapter",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/gap-contracts.spec.ts",
+      "durationMs": 10.771125000000211
+    },
+    {
+      "name": "FlowAdapterRegistry delegates adapter operations and wraps adapter failures",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/branch-helpers.spec.ts",
+      "durationMs": 9.455458000000363
+    },
+    {
+      "name": "FlowDesignService — scopes createScope INSERTs and returns the new row",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-design.service.spec.ts",
+      "durationMs": 8.97583300000042
     }
   ]
 }

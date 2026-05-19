@@ -22,11 +22,17 @@
   "profile.preferences.status.saving": "Salvando preferencias",
   "profile.preferences.toast.saved": "Preferencias salvas.",
   "profile.preferences.validation.localeRequired": "Locale e obrigatorio.",
+  "profile.routes.preferences": "Preferencias",
+  "profile.routes.profile": "Perfil",
+  "profile.routes.security": "Seguranca",
   "profile.save_failed": "Nao foi possivel salvar o perfil.",
   "profile.security.changePassword.action": "Alterar senha",
   "profile.security.changePassword.error": "A alteracao de senha nao esta configurada corretamente.",
   "profile.security.changePassword.unavailable": "A alteracao de senha nao esta configurada para esta aplicacao.",
+  "profile.security.description": "Gerencie acoes de seguranca da conta pelo provedor de identidade.",
   "profile.security.mfaEnrolment.action": "Configurar MFA",
   "profile.security.mfaEnrolment.error": "A configuracao de MFA nao esta configurada corretamente.",
-  "profile.security.mfaEnrolment.unavailable": "A configuracao de MFA nao esta configurada para esta aplicacao."
+  "profile.security.mfaEnrolment.unavailable": "A configuracao de MFA nao esta configurada para esta aplicacao.",
+  "profile.security.title": "Seguranca",
+  "profile.unsaved.confirm": "Descartar alteracoes nao salvas do perfil?"
 }

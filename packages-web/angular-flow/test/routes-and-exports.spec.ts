@@ -12,6 +12,7 @@ describe('@stynx-web/angular-flow exports and routes', () => {
     expect(flow.StynxFlowFormsComponent).toBeDefined();
     expect(flow.StynxFlowFormEditorComponent).toBeDefined();
     expect(flow.StynxFlowFillEditorComponent).toBeDefined();
+    expect(flow.StynxFlowMyTasksInboxComponent).toBeDefined();
     expect(flow.StynxFlowTaskCardComponent).toBeDefined();
     expect(flow.StynxFlowWaiverDialogComponent).toBeDefined();
     expect(flow.StynxFlowOpenTasksComponent).toBeDefined();
@@ -34,6 +35,7 @@ describe('@stynx-web/angular-flow exports and routes', () => {
       'fills',
       'fills/:fillId',
       'assignments',
+      'my-tasks',
       'tasks/:taskId',
       'waivers',
       'open-tasks',

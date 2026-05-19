@@ -38,12 +38,14 @@
     "@stynx-web/angular-i18n": "workspace:*",
     "@stynx-web/angular-storage": "workspace:*",
     "@stynx-web/angular-ui": "workspace:*",
+    "@stynx-web/sdk": "workspace:*",
     "rxjs": "^7.8.2"
   },
   "peerDependencies": {
     "@angular/common": "^20.2.0",
     "@angular/core": "^20.2.0",
-    "@angular/forms": "^20.2.0"
+    "@angular/forms": "^20.2.0",
+    "@angular/router": "^20.2.0"
   },
   "devDependencies": {
     "@angular/common": "22.0.0-rc.0",
@@ -51,6 +53,8 @@
     "@angular/compiler-cli": "22.0.0-rc.0",
     "@angular/core": "22.0.0-rc.0",
     "@angular/forms": "22.0.0-rc.0",
+    "@angular/router": "22.0.0-rc.0",
+    "@stynx-web/sdk": "workspace:*",
     "@types/node": "^25.6.0",
     "jsdom": "^29.0.2",
     "ng-packagr": "22.0.0-rc.0",

@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T15:49:18.690Z",
-  "endedAt": "2026-05-19T15:49:37.215Z",
-  "durationMs": 18525,
+  "startedAt": "2026-05-19T16:02:02.666Z",
+  "endedAt": "2026-05-19T16:02:07.595Z",
+  "durationMs": 4929,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-22648-1779205758689.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-52436-1779206522665.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/.test-results/unit.junit.xml"
     ],
@@ -37,62 +37,62 @@
   },
   "totals": {
     "files": 3,
-    "tests": 26,
-    "passed": 26,
+    "tests": 28,
+    "passed": 28,
     "failed": 0,
     "skipped": 0,
     "todo": 0
   },
   "slowestTests": [
     {
-      "name": "@stynx-web/angular-flow components describes branch: distinguishes empty filters and fallback load errors across flow lists",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
-      "durationMs": 160.43137500000012
+      "name": "FlowApiService endpoint contract covers forms, fills, answers, waivers, policies, analytics, signal, and effect routes",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/flow-api.service.spec.ts",
+      "durationMs": 5.614832999999635
     },
     {
       "name": "FlowApiService endpoint contract covers design route families for scopes, graphs, nodes, edges, rules, effects, and form gates",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/flow-api.service.spec.ts",
-      "durationMs": 23.180875000000015
-    },
-    {
-      "name": "FlowApiService endpoint contract covers runtime, task action, candidate, user lookup, and event routes",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/flow-api.service.spec.ts",
-      "durationMs": 9.84349999999904
+      "durationMs": 4.8737500000002
     },
     {
       "name": "@stynx-web/angular-flow components binds graph designer inputs to route-like scope and graph ids",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
-      "durationMs": 8.677583000000595
+      "durationMs": 4.301582999999937
     },
     {
-      "name": "FlowApiService endpoint contract covers forms, fills, answers, waivers, policies, analytics, signal, and effect routes",
+      "name": "@stynx-web/angular-flow components loads paged open-task analytics envelopes",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
+      "durationMs": 3.1625420000000304
+    },
+    {
+      "name": "FlowApiService endpoint contract covers runtime, task action, candidate, user lookup, and event routes",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/flow-api.service.spec.ts",
-      "durationMs": 8.06958300000042
-    },
-    {
-      "name": "@stynx-web/angular-flow exports and routes exports the package API needed by host shells",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/routes-and-exports.spec.ts",
-      "durationMs": 3.275832999999693
-    },
-    {
-      "name": "@stynx-web/angular-flow components normalizes typed fill editor values for package hosts",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
-      "durationMs": 2.67645900000025
-    },
-    {
-      "name": "@stynx-web/angular-flow components surfaces the first-run scope empty state intent",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
-      "durationMs": 2.582416999999623
-    },
-    {
-      "name": "@stynx-web/angular-flow components publishes the active draft graph through the Flow API contract",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
-      "durationMs": 1.955208000001221
+      "durationMs": 2.1432919999997466
     },
     {
       "name": "@stynx-web/angular-flow components surfaces the active-scope empty graph intent without stale canvas data",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
-      "durationMs": 1.6691670000000158
+      "durationMs": 1.6965419999996811
+    },
+    {
+      "name": "@stynx-web/angular-flow components surfaces the first-run scope empty state intent",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
+      "durationMs": 1.5922499999996944
+    },
+    {
+      "name": "@stynx-web/angular-flow components loads the my-tasks inbox with signal state and tenant refreshes",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
+      "durationMs": 1.5432499999997162
+    },
+    {
+      "name": "@stynx-web/angular-flow exports and routes returns a defensive copy of host-mountable routes",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/routes-and-exports.spec.ts",
+      "durationMs": 1.393167000000176
+    },
+    {
+      "name": "FlowApiService endpoint contract omits query options for absent or undefined filters",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/flow-api.service.spec.ts",
+      "durationMs": 1.2376250000002074
     }
   ]
 }

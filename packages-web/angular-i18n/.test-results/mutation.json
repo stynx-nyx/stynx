@@ -5,9 +5,9 @@
   "runner": "stryker-vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T07:30:21.194Z",
-  "endedAt": "2026-05-19T07:31:29.410Z",
-  "durationMs": 68216,
+  "startedAt": "2026-05-19T16:17:59.037Z",
+  "endedAt": "2026-05-19T16:26:50.161Z",
+  "durationMs": 531124,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -16,22 +16,16 @@
     "html": "reports/mutation/-stynx-web-angular-i18n/index.html"
   },
   "env": {
-    "node": "26.0.0",
+    "node": "24.15.0",
     "ci": false
   },
   "command": {
-    "argv": [
-      "pnpm",
-      "exec",
-      "stryker",
-      "run",
-      "stryker.conf.mjs"
-    ],
+    "argv": ["pnpm", "exec", "stryker", "run", "stryker.conf.mjs"],
     "cwd": "/Users/aarusso/Development/stech/stynx/packages-web/angular-i18n"
   },
   "metric": {
     "kind": "score",
-    "score": 74.13793103448276,
+    "score": 82.75862068965517,
     "thresholds": {
       "high": 60,
       "low": 60,
@@ -41,8 +35,8 @@
   "totals": {
     "files": 4,
     "tests": 116,
-    "passed": 43,
-    "failed": 15,
+    "passed": 48,
+    "failed": 10,
     "skipped": 0,
     "todo": 0
   }

@@ -321,4 +321,182 @@ describe('@stynx-web/angular-trash', () => {
       deletedBy: 'actor-2',
     });
   });
+
+  it('falls back to per-item bulk operations and filters by the current session', async () => {
+    vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-05-19T00:00:00.000Z'));
+    const adapter: StynxTrashAdapter = {
+      list: vi.fn(async () => ({
+        items: [
+          { id: 'trash-1', label: 'One', deletedAt: '2026-05-18T00:00:00.000Z', canHardDelete: true },
+          { id: 'trash-2', label: 'Two', deletedAt: '2026-05-17T00:00:00.000Z', canHardDelete: true },
+        ],
+        total: 2,
+      })),
+      restore: vi.fn(async () => undefined),
+      hardDelete: vi.fn(async () => undefined),
+    };
+    const component = createComponent(
+      createSession(),
+      { push: vi.fn() },
+      adapter,
+    );
+
+    await component.load();
+    component.toggleSelected('trash-1');
+    component.toggleSelected('trash-2');
+    await component.bulkRestore();
+    expect(adapter.restore).toHaveBeenCalledWith('record', 'trash-1');
+    expect(adapter.restore).toHaveBeenCalledWith('record', 'trash-2');
+
+    component.toggleSelected('trash-1');
+    await component.bulkHardDelete();
+    expect(adapter.hardDelete).toHaveBeenCalledWith('record', 'trash-1');
+
+    await component.toggleFilter('by_me');
+    expect(adapter.list).toHaveBeenLastCalledWith('record', {
+      pageIndex: 0,
+      pageSize: 10,
+      sort: 'deleted_at_desc',
+      deletedBy: 'user-1',
+    });
+  });
+
+  it('prunes stale selections, clears load errors, and preserves row fields', async () => {
+    const adapter: StynxTrashAdapter = {
+      list: vi.fn(async () => ({
+        items: [
+          {
+            id: 'kept',
+            label: 'Kept row',
+            deletedAt: '2026-05-18T00:00:00.000Z',
+            deletedBy: 'user-1',
+            canHardDelete: true,
+          },
+        ],
+        total: 1,
+      })),
+      restore: vi.fn(async () => undefined),
+    };
+    const component = createComponent(
+      createSession(),
+      { push: vi.fn() },
+      adapter,
+    );
+    component.errorMessage.set('previous failure');
+    component.toggleSelected('kept');
+    component.toggleSelected('stale');
+
+    await component.load();
+
+    expect(component.errorMessage()).toBe('');
+    expect([...component.selectedIds()]).toEqual(['kept']);
+    expect(component.rows()).toEqual([
+      {
+        label: 'Kept row',
+        deletedAt: '2026-05-18T00:00:00.000Z',
+        deletedBy: 'user-1',
+        retention: 'No purge scheduled',
+      },
+    ]);
+  });
+
+  it('honors default kind, selection/filter toggles, empty bulk guards, and missing adapters', async () => {
+    const adapter: StynxTrashAdapter = {
+      list: vi.fn(async () => ({ items: [], total: 0 })),
+      restore: vi.fn(async () => undefined),
+    };
+    const component = createComponent(
+      createSession(),
+      { push: vi.fn() },
+      adapter,
+    );
+    component.resource = '' as never;
+    component.kinds = [];
+
+    expect(component.activeKind()).toBe('record');
+    component.toggleSelected('one');
+    component.toggleSelected('one');
+    expect(component.selectedCount()).toBe(0);
+
+    await component.toggleFilter('last_7_days');
+    await component.toggleFilter('last_7_days');
+    expect(component.isFilterActive('last_7_days')).toBe(false);
+
+    await component.bulkRestore();
+    await component.bulkHardDelete();
+    expect(adapter.restore).not.toHaveBeenCalled();
+
+    const missingAdapter = createComponent(createSession(), { push: vi.fn() });
+    expect(() => missingAdapter.activeKind()).not.toThrow();
+    await expect(missingAdapter.load()).rejects.toThrow('StynxTrashListComponent requires an adapter input or provideStynxTrash(...).');
+  });
+
+  it('checks hard-delete permission names, invalid purge dates, and today countdowns', () => {
+    const requestedPermissions: string[][] = [];
+    const component = createComponent(
+      {
+        hasAllPermissions: (permissions: string[]) => {
+          requestedPermissions.push(permissions);
+          return permissions.includes('trash:purge');
+        },
+        snapshot: () => ({ sid: 'session-1', claims: null }),
+      },
+      { push: vi.fn() },
+      {
+        list: vi.fn(async () => ({ items: [], total: 0 })),
+        restore: vi.fn(async () => undefined),
+      },
+    );
+    component.hardDeletePermission = 'trash:purge';
+    vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-05-19T00:00:00.000Z'));
+
+    expect(component.mayHardDelete({
+      id: 'trash-1',
+      label: 'One',
+      deletedAt: '2026-05-18T00:00:00.000Z',
+      canHardDelete: true,
+    })).toBe(true);
+    expect(requestedPermissions).toEqual([['trash:purge']]);
+    expect(component.retentionCountdown({
+      id: 'invalid',
+      label: 'Invalid',
+      deletedAt: '2026-05-18T00:00:00.000Z',
+      autoPurgeAt: 'not-a-date',
+    })).toBe('No purge scheduled');
+    expect(component.retentionCountdown({
+      id: 'today',
+      label: 'Today',
+      deletedAt: '2026-05-18T00:00:00.000Z',
+      autoPurgeAt: '2026-05-19T00:00:00.000Z',
+    })).toBe('Purges today');
+  });
+
+  it('does not cascade unrelated restore errors and preserves exact toast messages', async () => {
+    const toastMessages: Array<[string, string]> = [];
+    const adapter: StynxTrashAdapter = {
+      list: vi.fn(async () => ({ items: [], total: 0 })),
+      restore: vi.fn(async () => {
+        throw { code: 'NOT_ALLOWED', message: 'restore denied' };
+      }),
+      restoreWithCascade: vi.fn(async () => undefined),
+      hardDelete: vi.fn(async () => undefined),
+    };
+    const component = createComponent(
+      createSession(),
+      { push: (message: string, tone: string) => toastMessages.push([message, tone]) },
+      adapter,
+    );
+
+    await component.restore('trash-1');
+    expect(adapter.restoreWithCascade).not.toHaveBeenCalled();
+    expect(component.errorMessage()).toBe('restore denied');
+
+    adapter.restore = vi.fn(async () => undefined);
+    await component.restore('trash-1');
+    expect(toastMessages).toContainEqual(['Restored from trash', 'success']);
+
+    component.openConfirm('trash-1');
+    await component.confirmHardDelete();
+    expect(toastMessages).toContainEqual(['Archived row removed permanently', 'warning']);
+  });
 });

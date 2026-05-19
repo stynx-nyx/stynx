@@ -22,11 +22,17 @@
   "profile.preferences.status.saving": "Saving preferences",
   "profile.preferences.toast.saved": "Preferences saved.",
   "profile.preferences.validation.localeRequired": "Locale is required.",
+  "profile.routes.preferences": "Preferences",
+  "profile.routes.profile": "Profile",
+  "profile.routes.security": "Security",
   "profile.save_failed": "Profile could not be saved.",
   "profile.security.changePassword.action": "Change password",
   "profile.security.changePassword.error": "Password change is not configured correctly.",
   "profile.security.changePassword.unavailable": "Password change is not configured for this application.",
+  "profile.security.description": "Manage hosted account security actions through your identity provider.",
   "profile.security.mfaEnrolment.action": "Set up MFA",
   "profile.security.mfaEnrolment.error": "MFA enrolment is not configured correctly.",
-  "profile.security.mfaEnrolment.unavailable": "MFA enrolment is not configured for this application."
+  "profile.security.mfaEnrolment.unavailable": "MFA enrolment is not configured for this application.",
+  "profile.security.title": "Security",
+  "profile.unsaved.confirm": "Discard unsaved profile changes?"
 }

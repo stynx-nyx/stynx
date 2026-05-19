@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T15:48:22.247Z",
-  "endedAt": "2026-05-19T15:48:39.309Z",
-  "durationMs": 17062,
+  "startedAt": "2026-05-19T15:54:45.093Z",
+  "endedAt": "2026-05-19T15:55:11.533Z",
+  "durationMs": 26440,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-19325-1779205702247.json",
+      "--outputFile.json=/tmp/vitest-35882-1779206085093.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/test/packages/.test-results/unit.junit.xml"
     ],
@@ -47,52 +47,52 @@
     {
       "name": "SlaMonitorInterceptor emits sample event with threshold/breach information",
       "file": "/Users/aarusso/Development/stech/stynx/test/packages/sla/sla-monitor.interceptor.spec.ts",
-      "durationMs": 111.80683300000055
+      "durationMs": 267.1107499999998
     },
     {
-      "name": "AuditInterceptor metadata redaction applies metadata redaction policy before sink write",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/audit/audit-interceptor-redaction.spec.ts",
-      "durationMs": 86.88841700000012
-    },
-    {
-      "name": "PecIdentityAdminFacade maps list and update request/response to pec-compatible shape",
+      "name": "PormIdentityAdminFacade maps list/get to porm-compatible shape with attributes and groups",
       "file": "/Users/aarusso/Development/stech/stynx/test/packages/identity-admin/integration-facades.spec.ts",
-      "durationMs": 70.21729200000027
-    },
-    {
-      "name": "PgIdentityLocalSyncAdapter syncs users/groups into local tables and returns counters",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/identity-admin/pg-local-sync.adapter.spec.ts",
-      "durationMs": 53.999041000000034
-    },
-    {
-      "name": "TenantLifecycleMiddleware sets tenantId and releases tenant-bound client on response events",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/db-context/tenant-lifecycle.middleware.spec.ts",
-      "durationMs": 44.51254199999994
+      "durationMs": 265.4120839999996
     },
     {
       "name": "IdentityAdminService maps IdentityAdminError to Nest exceptions",
       "file": "/Users/aarusso/Development/stech/stynx/test/packages/identity-admin/identity-admin.service.spec.ts",
-      "durationMs": 36.094750000000204
+      "durationMs": 152.9397909999998
+    },
+    {
+      "name": "StynxPlatformPipelineModule registers PEC-like global stack by default",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/pipeline/platform-pipeline.module.spec.ts",
+      "durationMs": 136.61458299999867
+    },
+    {
+      "name": "SlaMonitorInterceptor emits error-path sample when downstream handler fails",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/sla/sla-monitor.interceptor.spec.ts",
+      "durationMs": 131.73470799999996
+    },
+    {
+      "name": "PgIdentityLocalSyncAdapter syncs users/groups into local tables and returns counters",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/identity-admin/pg-local-sync.adapter.spec.ts",
+      "durationMs": 84.69624999999996
+    },
+    {
+      "name": "PormIdentityAdminFacade returns updated=false when update payload is empty",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/identity-admin/integration-facades.spec.ts",
+      "durationMs": 67.0428750000001
+    },
+    {
+      "name": "RateLimitGuard bypasses health-check path",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/rate-limit/rate-limit.guard.spec.ts",
+      "durationMs": 61.737583000000086
+    },
+    {
+      "name": "PecIdentityAdminFacade maps list and update request/response to pec-compatible shape",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/identity-admin/integration-facades.spec.ts",
+      "durationMs": 48.08270799999991
     },
     {
       "name": "SlaMonitorInterceptor emits aggregate event according to configured sample window",
       "file": "/Users/aarusso/Development/stech/stynx/test/packages/sla/sla-monitor.interceptor.spec.ts",
-      "durationMs": 17.123459000000366
-    },
-    {
-      "name": "TenantLifecycleMiddleware throws when required tenant header is missing",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/db-context/tenant-lifecycle.middleware.spec.ts",
-      "durationMs": 14.372041000000081
-    },
-    {
-      "name": "DefaultPolicyEvaluator allows when all role+permission requirements are met",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/authorization/default-policy-evaluator.spec.ts",
-      "durationMs": 13.374707999999828
-    },
-    {
-      "name": "TenantLifecycleMiddleware throws when tenant header is not a UUID",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/db-context/tenant-lifecycle.middleware.spec.ts",
-      "durationMs": 12.86345799999981
+      "durationMs": 38.069000000000415
     }
   ]
 }
