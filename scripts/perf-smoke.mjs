@@ -22,10 +22,15 @@
  */
 
 import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
-const PROBE = process.env.STYNX_PERF_PROBE ?? 'pnpm --filter @stynx/data exec vitest run --silent --dir test/unit';
+import { getPerfThreshold } from '../tools/repo-config/test-thresholds.mjs';
+
+const DEFAULT_PROBE = 'pnpm --dir packages/data exec vitest run --silent --config ./vitest.config.ts test/unit/query-helpers.spec.ts';
+const PROBE = process.env.STYNX_PERF_PROBE ?? DEFAULT_PROBE;
 const SAMPLES = Number(process.env.STYNX_PERF_SAMPLES ?? '5');
 const PROBE_ARGS = PROBE.split(/\s+/);
+const PACKAGE_NAME = process.env.STYNX_PERF_PACKAGE ?? 'stynx-workspace';
 
 function runOnce() {
   const start = process.hrtime.bigint();
@@ -38,12 +43,46 @@ function runOnce() {
   return { ok: result.status === 0, ms };
 }
 
-function percentile(sorted, pct) {
+export function percentile(sorted, pct) {
   const idx = Math.min(sorted.length - 1, Math.floor((pct / 100) * sorted.length));
   return sorted[idx];
 }
 
+export function evaluatePerf({ p50_ms, p95_ms, throughput_rps }, threshold) {
+  const failures = [];
+  if (p50_ms > threshold.p50_ms) {
+    failures.push(`p50 ${p50_ms}ms > ${threshold.p50_ms}ms`);
+  }
+  if (p95_ms > threshold.p95_ms) {
+    failures.push(`p95 ${p95_ms}ms > ${threshold.p95_ms}ms`);
+  }
+  if (throughput_rps < threshold.rps_min) {
+    failures.push(`rps ${throughput_rps} < ${threshold.rps_min}`);
+  }
+  return { ok: failures.length === 0, failures };
+}
+
+export function summarizeSamples(samples, threshold) {
+  const sorted = [...samples].sort((a, b) => a - b);
+  const p50 = percentile(sorted, 50);
+  const p95 = percentile(sorted, 95);
+  const median_s = p50 / 1000;
+  const throughput_rps = median_s > 0 ? 1 / median_s : 0;
+  const observed = {
+    p50_ms: Math.round(p50),
+    p95_ms: Math.round(p95),
+    throughput_rps: Number(throughput_rps.toFixed(2)),
+  };
+  return {
+    ...observed,
+    samples: samples.length,
+    threshold,
+    pass: evaluatePerf(observed, threshold).ok,
+  };
+}
+
 function main() {
+  const threshold = getPerfThreshold(PACKAGE_NAME);
   const samples = [];
   let okCount = 0;
   for (let i = 0; i < SAMPLES; i++) {
@@ -52,23 +91,19 @@ function main() {
     if (ok) okCount += 1;
     process.stderr.write(`[perf-smoke] sample ${i + 1}/${SAMPLES}: ${ms.toFixed(0)}ms ${ok ? 'ok' : 'FAIL'}\n`);
   }
-  samples.sort((a, b) => a - b);
-  const p50 = percentile(samples, 50);
-  const p95 = percentile(samples, 95);
-  const median_s = p50 / 1000;
-  const throughput_rps = median_s > 0 ? 1 / median_s : 0;
   if (okCount < SAMPLES) {
     process.stderr.write(`[perf-smoke] ${SAMPLES - okCount} of ${SAMPLES} probes failed\n`);
   }
   // Final JSON line on stdout — sense-perf-test parses the last { ... } line.
-  process.stdout.write(
-    JSON.stringify({
-      p50_ms: Math.round(p50),
-      p95_ms: Math.round(p95),
-      throughput_rps: Number(throughput_rps.toFixed(2)),
-    }) + '\n',
-  );
-  process.exit(okCount === SAMPLES ? 0 : 1);
+  const summary = summarizeSamples(samples, threshold);
+  const evaluation = evaluatePerf(summary, threshold);
+  if (!evaluation.ok) {
+    process.stderr.write(`[perf-smoke] threshold failed: ${evaluation.failures.join('; ')}\n`);
+  }
+  process.stdout.write(JSON.stringify(summary) + '\n');
+  process.exit(okCount === SAMPLES && evaluation.ok ? 0 : 1);
 }
 
-main();
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main();
+}

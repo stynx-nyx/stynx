@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Inject, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import type { StynxPreferencesValue } from './types';
 
@@ -20,14 +20,14 @@ import type { StynxPreferencesValue } from './types';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StynxPreferencesFormComponent {
+  private readonly formBuilder = inject(FormBuilder);
+
   readonly form = this.formBuilder.nonNullable.group({
     locale: ['en-US'],
     notifications: [false],
   });
 
   @Output() readonly save = new EventEmitter<StynxPreferencesValue>();
-
-  constructor(@Inject(FormBuilder) private readonly formBuilder: FormBuilder) {}
 
   @Input()
   set value(value: StynxPreferencesValue | null) {

@@ -97,6 +97,27 @@ describe('@stynx-web/sdk runtime helpers', () => {
     expect(manager.getTenantId()).toBeNull();
   });
 
+  it('derives tenant identifiers from fallback claims and empty claims', () => {
+    const store = new InMemoryTokenStore();
+    const manager = new FrontendSessionManager(store);
+
+    expect(manager.setTokens({
+      accessToken: token({ sub: 'user-3', tenant_ids: ['tenant-fallback'] }),
+    }).principal).toMatchObject({
+      tenantId: 'tenant-fallback',
+      tenantIds: ['tenant-fallback'],
+    });
+    expect(manager.getTenantId()).toBe('tenant-fallback');
+
+    expect(manager.setTokens({
+      accessToken: token({ sub: 'user-4' }),
+    }).principal).toMatchObject({
+      tenantId: null,
+      tenantIds: [],
+    });
+    expect(manager.getTenantId()).toBeNull();
+  });
+
   it('stores tokens in memory and browser-local storage variants', () => {
     const memory = new InMemoryTokenStore();
     const original = { accessToken: 'a', refreshToken: 'r' };
@@ -131,6 +152,49 @@ describe('@stynx-web/sdk runtime helpers', () => {
       removeItem: vi.fn(),
     });
     expect(emptyStorage.read()).toBeNull();
+  });
+
+  it('uses global localStorage when no storage provider is supplied', () => {
+    const values = new Map<string, string>();
+    const original = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      value: {
+        getItem: vi.fn((key: string) => values.get(key) ?? null),
+        setItem: vi.fn((key: string, value: string) => values.set(key, value)),
+        removeItem: vi.fn((key: string) => values.delete(key)),
+      },
+    });
+
+    try {
+      const browser = new BrowserLocalStorageTokenStore('global-tokens');
+      browser.write({ accessToken: 'global' });
+      expect(browser.read()).toEqual({ accessToken: 'global' });
+      browser.clear();
+      expect(values.has('global-tokens')).toBe(false);
+    } finally {
+      if (original) {
+        Object.defineProperty(globalThis, 'localStorage', original);
+      } else {
+        Reflect.deleteProperty(globalThis, 'localStorage');
+      }
+    }
+  });
+
+  it('falls back to unavailable storage when global localStorage is absent', () => {
+    const original = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+    Reflect.deleteProperty(globalThis, 'localStorage');
+
+    try {
+      const browser = new BrowserLocalStorageTokenStore();
+      expect(browser.read()).toBeNull();
+      expect(() => browser.write({ accessToken: 'ignored' })).not.toThrow();
+      expect(() => browser.clear()).not.toThrow();
+    } finally {
+      if (original) {
+        Object.defineProperty(globalThis, 'localStorage', original);
+      }
+    }
   });
 
   it('evaluates frontend authorization helpers case-insensitively', () => {
@@ -206,6 +270,9 @@ describe('@stynx-web/sdk runtime helpers', () => {
     await expect(client.get('/records', {
       query: { page: 1, skip: null, missing: undefined },
     })).resolves.toEqual({ ok: true });
+    await expect(client.get('/records', {
+      query: { skip: null, missing: undefined },
+    })).resolves.toEqual({ ok: true });
     await expect(client.post('/records', { name: 'demo' }, {
       headers: {
         authorization: 'Bearer caller',
@@ -219,18 +286,19 @@ describe('@stynx-web/sdk runtime helpers', () => {
     await expect(client.request('PATCH', '/empty')).resolves.toBeUndefined();
 
     expect(calls[0]?.url).toBe('https://api.example.test/records?page=1');
+    expect(calls[1]?.url).toBe('https://api.example.test/records');
     expect(calls[0]?.init?.headers).toMatchObject({
       Authorization: 'Bearer token-1',
       'x-tenant-id': 'tenant-1',
       'x-source': 'sdk',
     });
-    expect(calls[1]?.init?.headers).toMatchObject({
+    expect(calls[2]?.init?.headers).toMatchObject({
       authorization: 'Bearer caller',
       'Content-Type': 'custom/type',
       'X-Tenant-Id': 'caller-tenant',
     });
-    expect(calls[1]?.init?.headers?.['x-tenant-id']).toBeUndefined();
-    expect(calls[2]?.init?.headers?.['content-type']).toBe('application/json');
+    expect(calls[2]?.init?.headers?.['x-tenant-id']).toBeUndefined();
+    expect(calls[3]?.init?.headers?.['content-type']).toBe('application/json');
   });
 
   it('surfaces StynxApiClient error responses', async () => {

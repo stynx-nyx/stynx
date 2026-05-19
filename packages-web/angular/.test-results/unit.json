@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T01:36:14.796Z",
-  "endedAt": "2026-05-19T01:36:28.389Z",
-  "durationMs": 13585,
+  "startedAt": "2026-05-19T05:11:32.968Z",
+  "endedAt": "2026-05-19T05:11:35.421Z",
+  "durationMs": 2451,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-55150-1779154574796.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-85082-1779167492968.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages-web/angular/.test-results/unit.junit.xml"
     ],
@@ -37,62 +37,62 @@
   },
   "totals": {
     "files": 1,
-    "tests": 14,
-    "passed": 14,
+    "tests": 15,
+    "passed": 15,
     "failed": 0,
     "skipped": 0,
     "todo": 0
   },
   "slowestTests": [
     {
-      "name": "@stynx-web/angular resolves tenant context from query, subdomain, then default resolver",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular/test/stynx-angular.spec.ts",
-      "durationMs": 4.691208000000188
-    },
-    {
-      "name": "@stynx-web/angular preserves caller request ids",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular/test/stynx-angular.spec.ts",
-      "durationMs": 3.8371670000015
-    },
-    {
-      "name": "@stynx-web/angular generates UUIDv7-shaped request ids for API headers",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular/test/stynx-angular.spec.ts",
-      "durationMs": 3.0688330000011774
-    },
-    {
       "name": "@stynx-web/angular applies request-id, tenant, and auth headers and refreshes after 401",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular/test/stynx-angular.spec.ts",
-      "durationMs": 2.3459169999987353
+      "durationMs": 17.443292000000156
     },
     {
       "name": "@stynx-web/angular tracks toast service signal and observable lifecycles",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular/test/stynx-angular.spec.ts",
-      "durationMs": 1.9153330000008282
+      "durationMs": 3.9257920000000013
+    },
+    {
+      "name": "@stynx-web/angular provides standalone stynx defaults with feature-provider overrides",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular/test/stynx-angular.spec.ts",
+      "durationMs": 3.8006659999998647
+    },
+    {
+      "name": "@stynx-web/angular resolves tenant context from query, subdomain, then default resolver",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular/test/stynx-angular.spec.ts",
+      "durationMs": 3.068416999999954
     },
     {
       "name": "@stynx-web/angular maps HTTP error context and omits falsy status from banners",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular/test/stynx-angular.spec.ts",
-      "durationMs": 1.6555829999997513
+      "durationMs": 2.4284170000000813
+    },
+    {
+      "name": "@stynx-web/angular generates UUIDv7-shaped request ids for API headers",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular/test/stynx-angular.spec.ts",
+      "durationMs": 2.399167000000034
     },
     {
       "name": "@stynx-web/angular falls back to Math.random when web crypto is unavailable",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular/test/stynx-angular.spec.ts",
-      "durationMs": 1.0358329999999114
+      "durationMs": 2.046875
     },
     {
       "name": "@stynx-web/angular maps server errors through ErrorBannerService",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular/test/stynx-angular.spec.ts",
-      "durationMs": 0.6436669999984588
+      "durationMs": 1.9518749999999727
     },
     {
-      "name": "@stynx-web/angular passes auth through when bearer mode is disabled and reports auth failure when refresh is empty",
+      "name": "@stynx-web/angular passes non-HTTP errors through without showing a banner",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular/test/stynx-angular.spec.ts",
-      "durationMs": 0.566832999998951
+      "durationMs": 1.80537500000014
     },
     {
-      "name": "@stynx-web/angular keeps empty-state component inputs as configured",
+      "name": "@stynx-web/angular maps HTTP errors without optional code, status, or context fields",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular/test/stynx-angular.spec.ts",
-      "durationMs": 0.4049169999998412
+      "durationMs": 1.7564159999999447
     }
   ]
 }

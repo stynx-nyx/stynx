@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Inject, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, inject } from '@angular/core';
 import { StynxSessionService } from '@stynx-web/angular-auth';
 import { EmptyStateComponent, StynxToastService } from '@stynx-web/angular-ui';
 import type { StynxActiveSession, StynxSessionsAdapter } from './types';
@@ -49,16 +49,12 @@ import type { StynxActiveSession, StynxSessionsAdapter } from './types';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StynxActiveSessionsComponent {
+  private readonly session = inject(StynxSessionService);
+  private readonly toast = inject(StynxToastService);
+
   @Input({ required: true }) adapter!: StynxSessionsAdapter;
 
   sessions: StynxActiveSession[] = [];
-
-  constructor(
-    @Inject(StynxSessionService)
-    private readonly session: StynxSessionService,
-    @Inject(StynxToastService)
-    private readonly toast: StynxToastService,
-  ) {}
 
   async load(): Promise<void> {
     const currentSid = this.session.snapshot().sid;

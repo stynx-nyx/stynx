@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx/health",
+  "level": "mutation",
+  "runner": "stryker-vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T01:54:43.841Z",
+  "endedAt": "2026-05-19T01:55:49.211Z",
+  "durationMs": 65370,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/mutation.log",
+    "report": "reports/mutation/mutation.json",
+    "html": "reports/mutation/-stynx-health/index.html"
+  },
+  "env": {
+    "node": "24.15.0",
+    "ci": false
+  },
+  "command": {
+    "argv": ["pnpm", "exec", "stryker", "run", "stryker.conf.mjs"],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages/health"
+  },
+  "metric": {
+    "kind": "score",
+    "score": 74.13793103448276,
+    "thresholds": {
+      "high": 60,
+      "low": 60,
+      "break": 60
+    }
+  },
+  "totals": {
+    "files": 4,
+    "tests": 159,
+    "passed": 86,
+    "failed": 30,
+    "skipped": 0,
+    "todo": 0
+  }
+}

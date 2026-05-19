@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { ModuleRef } from '@nestjs/core';
 import { StynxAuditService } from '../../src/audit.service';
 import type { Mock } from 'vitest';
@@ -68,6 +69,28 @@ describe('StynxAuditService.listLog', () => {
     const page = await service.listLog();
     expect(page.items).toEqual([]);
     expect(page.nextCursor).toBeUndefined();
+  });
+
+  it('maps Date occurred_at values to ISO strings', async () => {
+    const { db } = makeDatabase([[
+      {
+        id: 1,
+        occurred_at: new Date('2026-05-18T01:00:00Z'),
+        table_schema: 'app',
+        table_name: 'users',
+        row_id: null,
+        operation: 'INSERT',
+        tenant_id: null,
+        actor_id: null,
+        request_id: null,
+        session_id: null,
+        tags: null,
+        payload: null,
+      },
+    ]]);
+    const service = makeService(db);
+    const page = await service.listLog();
+    expect(page.items[0]?.occurredAt).toBe('2026-05-18T01:00:00.000Z');
   });
 
   it('applies all filters and the cursor when set', async () => {
@@ -171,6 +194,21 @@ describe('StynxAuditService.detachEligible', () => {
       expect.stringContaining('alter table audit.log detach partition audit."log_2025_01"'),
       expect.stringContaining('drop table audit."log_2025_01"'),
     ]));
+  });
+
+  it('uses the default archive key prefix when module options omit keyPrefix', async () => {
+    const { db } = makeDatabase([
+      [{ partition_name: 'log_2025_01' }],
+      [{ keep_longer: false }],
+    ]);
+    const service = makeService(db, {
+      now: new Date('2026-12-01T00:00:00Z'),
+      options: { keyPrefix: undefined },
+    });
+
+    await expect(service.dryRunDetachEligible()).resolves.toEqual([
+      expect.objectContaining({ objectKey: 'audit/2025-01.sql.gz' }),
+    ]);
   });
 });
 
@@ -300,5 +338,27 @@ describe('StynxAuditService.verifyChain', () => {
     const live = makeService(makeDatabase([[row1, row2]]).db);
 
     await expect(live.verifyChain('tenant')).resolves.toEqual({ valid: true, totalChecked: 2 });
+  });
+
+  it('accepts chain rows with nullable audit payload fields and hashes empty defaults', async () => {
+    const row = {
+      event_id: 'e-nullable',
+      occurred_at_text: null,
+      tenancy_id_text: null,
+      actor_id_text: null,
+      entity: null,
+      entity_id: null,
+      operation_text: null,
+      old_data_text: null,
+      new_data_text: null,
+      previous_hash: null,
+      row_hash: '',
+    };
+    row.row_hash = createHash('sha256')
+      .update('e-nullable|||||||||GENESIS')
+      .digest('hex');
+    const service = makeService(makeDatabase([[row]]).db);
+
+    await expect(service.verifyChain('tenant')).resolves.toEqual({ valid: true, totalChecked: 1 });
   });
 });

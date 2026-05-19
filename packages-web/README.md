@@ -11,3 +11,30 @@ Reserved for the spec-defined `@stynx-web/*` package family.
 - `angular-storage`: document upload service and upload component over STYNX presigned PUT flows.
 - `angular-sessions`: active-session list UI integrated with the Angular auth session state.
 - `angular-profile`: profile and preferences forms for reference and consumer apps.
+
+## Standalone defaults
+
+Standalone Angular consumers can bootstrap the core web providers through
+`provideStynxDefaults()` from `@stynx-web/angular`:
+
+```ts
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideStynxDefaults({
+      angular: {
+        apiBaseUrl: '/api',
+        sessionMode: 'bearer',
+      },
+      auth: importProvidersFrom(StynxAngularAuthModule.forRoot(authOptions)),
+      i18n: importProvidersFrom(StynxI18nModule.forRoot(i18nOptions)),
+      flow: provideStynxFlow(flowClient),
+    }),
+  ],
+});
+```
+
+The `angular` entry wires request-id, tenant, auth, and error interceptors plus
+`ErrorBannerService` and `ToastService`. Optional feature entries accept the
+provider bundle returned by the package that owns the feature, so consumers only
+import `angular-auth`, `angular-i18n`, `angular-flow`, or UI packages when they
+need them.

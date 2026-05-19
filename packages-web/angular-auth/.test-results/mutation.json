@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx-web/angular-auth",
+  "level": "mutation",
+  "runner": "stryker-vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T02:46:14.474Z",
+  "endedAt": "2026-05-19T02:48:53.285Z",
+  "durationMs": 158811,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/mutation.log",
+    "report": "reports/mutation/mutation.json",
+    "html": "reports/mutation/-stynx-web-angular-auth/index.html"
+  },
+  "env": {
+    "node": "24.15.0",
+    "ci": false
+  },
+  "command": {
+    "argv": ["pnpm", "exec", "stryker", "run", "stryker.conf.mjs"],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages-web/angular-auth"
+  },
+  "metric": {
+    "kind": "score",
+    "score": 74.58563535911603,
+    "thresholds": {
+      "high": 60,
+      "low": 60,
+      "break": 60
+    }
+  },
+  "totals": {
+    "files": 10,
+    "tests": 309,
+    "passed": 135,
+    "failed": 46,
+    "skipped": 2,
+    "todo": 0
+  }
+}

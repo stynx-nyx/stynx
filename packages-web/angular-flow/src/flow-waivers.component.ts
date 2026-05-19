@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Inject, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import type { OnChanges } from '@angular/core';
 import { StynxHasPermissionDirective } from '@stynx-web/angular-auth';
 import { StynxBannerComponent, StynxLoadingSpinnerComponent } from '@stynx-web/angular-ui';
@@ -33,6 +33,8 @@ import type { FlowWaiver } from './types';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StynxFlowWaiversComponent implements OnChanges {
+  private readonly api = inject(FlowApiService);
+
   @Input() scopeId = '';
   @Input() targetType = '';
   @Input() targetId = '';
@@ -42,8 +44,6 @@ export class StynxFlowWaiversComponent implements OnChanges {
   waivers: FlowWaiver[] = [];
   loading = false;
   errorMessage = '';
-
-  constructor(@Inject(FlowApiService) private readonly api: FlowApiService) {}
 
   async ngOnChanges(): Promise<void> {
     await this.load();

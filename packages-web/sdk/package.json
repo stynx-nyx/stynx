@@ -2,35 +2,42 @@
   "name": "@stynx-web/sdk",
   "version": "1.0.0",
   "description": "Framework-agnostic TypeScript SDK for stynx APIs",
-  "main": "dist/sdk/src/index.js",
-  "types": "dist/sdk/src/index.d.ts",
-  "engines": {
-    "node": ">=24 <25"
-  },
   "exports": {
     ".": {
-      "types": "./dist/sdk/src/index.d.ts",
-      "require": "./dist/sdk/src/index.js",
-      "default": "./dist/sdk/src/index.js"
-    }
+      "types": "./dist/types/stynx-web-sdk.d.ts",
+      "default": "./dist/fesm2022/stynx-web-sdk.mjs"
+    },
+    "./testing": {
+      "types": "./dist/types/stynx-web-sdk-testing.d.ts",
+      "default": "./dist/fesm2022/stynx-web-sdk-testing.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
+  "engines": {
+    "node": ">=24 <25"
   },
   "files": [
     "dist"
   ],
   "scripts": {
     "codegen": "node ./scripts/codegen.mjs",
-    "build": "pnpm run codegen && tsc -p tsconfig.json",
+    "build": "pnpm run codegen && ng-packagr -p ng-package.json -c tsconfig.apf.json",
     "clean": "rm -rf dist coverage src/generated",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/lib.mjs \"src/**/*.ts\" --ignore-pattern \"src/generated/**\"",
     "test": "node ./../../scripts/run-and-record.mjs --package @stynx-web/sdk --level unit --runner vitest -- vitest run --config ./vitest.config.ts",
     "stryker": "node ./../../scripts/run-and-record.mjs --package @stynx-web/sdk --level mutation --runner stryker-vitest -- NODE_OPTIONS=\"--disable-warning=ExperimentalWarning --experimental-vm-modules\" pnpm exec stryker run stryker.conf.mjs",
-    "test:e2e": "echo \"test:e2e removed during V6 cutover; convert to vitest if needed\" && false"
+    "build:tsc": "pnpm run codegen && tsc -p tsconfig.json"
   },
   "devDependencies": {
+    "@angular/compiler": "22.0.0-rc.0",
+    "@angular/compiler-cli": "22.0.0-rc.0",
     "@stynx/core": "workspace:*",
     "@types/node": "^25.6.0",
+    "ng-packagr": "22.0.0-rc.0",
     "openapi-typescript-codegen": "^0.30.0",
+    "tslib": "^2.8.1",
     "typescript": "^6.0.3"
   }
 }

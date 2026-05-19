@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="10" failures="0" errors="0" time="0.032468668">
-    <testsuite name="audit.ddl.spec.ts" timestamp="2026-05-19T01:35:53.124Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.004685542">
-        <testcase classname="audit.ddl.spec.ts" name="audit schema DDL &gt; creates audit.events table with metadata and pk columns" time="0.002215875">
+<testsuites name="vitest tests" tests="10" failures="0" errors="0" time="0.016142667">
+    <testsuite name="audit.ddl.spec.ts" timestamp="2026-05-19T04:25:04.025Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.004802833">
+        <testcase classname="audit.ddl.spec.ts" name="audit schema DDL &gt; creates audit.events table with metadata and pk columns" time="0.001666542">
         </testcase>
-        <testcase classname="audit.ddl.spec.ts" name="audit schema DDL &gt; exposes audit.write helper" time="0.000336667">
+        <testcase classname="audit.ddl.spec.ts" name="audit schema DDL &gt; exposes audit.write helper" time="0.0018385">
         </testcase>
-        <testcase classname="audit.ddl.spec.ts" name="audit schema DDL &gt; extracts primary key data for trigger events" time="0.000204709">
+        <testcase classname="audit.ddl.spec.ts" name="audit schema DDL &gt; extracts primary key data for trigger events" time="0.0001655">
         </testcase>
-        <testcase classname="audit.ddl.spec.ts" name="audit schema DDL &gt; exposes audit.verify_chain helper" time="0.000084042">
-        </testcase>
-    </testsuite>
-    <testsuite name="auth.ddl.spec.ts" timestamp="2026-05-19T01:35:53.127Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.024666792">
-        <testcase classname="auth.ddl.spec.ts" name="auth schema DDL &gt; defines auth schema" time="0.015226042">
-        </testcase>
-        <testcase classname="auth.ddl.spec.ts" name="auth schema DDL &gt; exposes tenancy membership with RLS policies" time="0.000340584">
-        </testcase>
-        <testcase classname="auth.ddl.spec.ts" name="auth schema DDL &gt; sets up Cognito mirror tables" time="0.000113291">
-        </testcase>
-        <testcase classname="auth.ddl.spec.ts" name="auth schema DDL &gt; defines reusable tenant/RLS helper functions" time="0.000091625">
+        <testcase classname="audit.ddl.spec.ts" name="audit schema DDL &gt; exposes audit.verify_chain helper" time="0.000078125">
         </testcase>
     </testsuite>
-    <testsuite name="storage.ddl.spec.ts" timestamp="2026-05-19T01:35:53.128Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.003116334">
-        <testcase classname="storage.ddl.spec.ts" name="storage schema DDL &gt; defines storage schema and files table" time="0.001282166">
+    <testsuite name="auth.ddl.spec.ts" timestamp="2026-05-19T04:25:04.031Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.005466667">
+        <testcase classname="auth.ddl.spec.ts" name="auth schema DDL &gt; defines auth schema" time="0.002043667">
         </testcase>
-        <testcase classname="storage.ddl.spec.ts" name="storage schema DDL &gt; enables row level security" time="0.000283459">
+        <testcase classname="auth.ddl.spec.ts" name="auth schema DDL &gt; exposes tenancy membership with RLS policies" time="0.000965541">
+        </testcase>
+        <testcase classname="auth.ddl.spec.ts" name="auth schema DDL &gt; sets up Cognito mirror tables" time="0.000160208">
+        </testcase>
+        <testcase classname="auth.ddl.spec.ts" name="auth schema DDL &gt; defines reusable tenant/RLS helper functions" time="0.00096625">
+        </testcase>
+    </testsuite>
+    <testsuite name="storage.ddl.spec.ts" timestamp="2026-05-19T04:25:04.033Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.005873167">
+        <testcase classname="storage.ddl.spec.ts" name="storage schema DDL &gt; defines storage schema and files table" time="0.004808875">
+        </testcase>
+        <testcase classname="storage.ddl.spec.ts" name="storage schema DDL &gt; enables row level security" time="0.000287">
         </testcase>
     </testsuite>
 </testsuites>

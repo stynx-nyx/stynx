@@ -69,6 +69,28 @@ describe('TenantSystemOperationSink', () => {
     expect(TENANT_SYSTEM_OPERATION_SINK_PROVIDER.useClass).toBe(TenantSystemOperationSink);
   });
 
+  it('persists system operation records without an actor id', async () => {
+    const query = vi.fn(async () => ({ rows: [] }));
+    const database = {
+      tx: vi.fn(async (callback: (trx: { query: typeof query }) => Promise<unknown>) => callback({ query })),
+    };
+    const sink = sinkWithDatabase(database);
+
+    await sink.write({
+      reason: 'tenant purge',
+      requestId: 'req-1',
+      occurredAt: '2026-05-18T12:00:00.000Z',
+    });
+
+    expect(query).toHaveBeenCalledWith(expect.stringContaining('insert into audit.system_op'), [
+      '2026-05-18T12:00:00.000Z',
+      'tenant purge',
+      null,
+      'req-1',
+      JSON.stringify({ source: '@stynx/tenancy' }),
+    ]);
+  });
+
   it('fails explicitly when no database provider is available', async () => {
     const sink = sinkWithDatabase(undefined);
 

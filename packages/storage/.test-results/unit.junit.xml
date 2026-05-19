@@ -1,89 +1,89 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="38" failures="0" errors="0" time="0.087304751">
-    <testsuite name="test/unit/barrel-load.spec.ts" timestamp="2026-05-19T01:36:47.512Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.003399">
-        <testcase classname="test/unit/barrel-load.spec.ts" name="@stynx/storage barrel &gt; exports at least one symbol" time="0.0027">
+<testsuites name="vitest tests" tests="38" failures="0" errors="0" time="0.263038792">
+    <testsuite name="test/unit/barrel-load.spec.ts" timestamp="2026-05-19T04:25:31.165Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.003258875">
+        <testcase classname="test/unit/barrel-load.spec.ts" name="@stynx/storage barrel &gt; exports at least one symbol" time="0.001802666">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/documents.service.spec.ts" timestamp="2026-05-19T01:36:47.518Z" hostname="thiamat-1903.local" tests="12" failures="0" errors="0" skipped="0" time="0.011447417">
-        <testcase classname="test/unit/documents.service.spec.ts" name="DocumentsService &gt; initiates a document with a tenant-scoped key and presigned upload" time="0.003199375">
+    <testsuite name="test/unit/documents.service.spec.ts" timestamp="2026-05-19T04:25:31.167Z" hostname="thiamat-1903.local" tests="12" failures="0" errors="0" skipped="0" time="0.02283375">
+        <testcase classname="test/unit/documents.service.spec.ts" name="DocumentsService &gt; initiates a document with a tenant-scoped key and presigned upload" time="0.007277542">
         </testcase>
-        <testcase classname="test/unit/documents.service.spec.ts" name="DocumentsService &gt; rejects collection size overflow" time="0.000872166">
+        <testcase classname="test/unit/documents.service.spec.ts" name="DocumentsService &gt; rejects collection size overflow" time="0.000955458">
         </testcase>
-        <testcase classname="test/unit/documents.service.spec.ts" name="DocumentsService &gt; rejects unknown collections, disallowed mime types, bad checksums, and missing context" time="0.001284583">
+        <testcase classname="test/unit/documents.service.spec.ts" name="DocumentsService &gt; rejects unknown collections, disallowed mime types, bad checksums, and missing context" time="0.003597209">
         </testcase>
-        <testcase classname="test/unit/documents.service.spec.ts" name="DocumentsService &gt; quarantines a document when the uploaded metadata does not match" time="0.00066025">
+        <testcase classname="test/unit/documents.service.spec.ts" name="DocumentsService &gt; quarantines a document when the uploaded metadata does not match" time="0.001197">
         </testcase>
-        <testcase classname="test/unit/documents.service.spec.ts" name="DocumentsService &gt; completes scan + persists scanDetail when content + checksum match" time="0.000320792">
+        <testcase classname="test/unit/documents.service.spec.ts" name="DocumentsService &gt; completes scan + persists scanDetail when content + checksum match" time="0.000466708">
         </testcase>
-        <testcase classname="test/unit/documents.service.spec.ts" name="DocumentsService &gt; uses completion headers when object metadata is absent" time="0.000503042">
+        <testcase classname="test/unit/documents.service.spec.ts" name="DocumentsService &gt; uses completion headers when object metadata is absent" time="0.000744209">
         </testcase>
-        <testcase classname="test/unit/documents.service.spec.ts" name="DocumentsService &gt; quarantines completion when object metadata and completion headers are absent" time="0.000264917">
+        <testcase classname="test/unit/documents.service.spec.ts" name="DocumentsService &gt; quarantines completion when object metadata and completion headers are absent" time="0.0008885">
         </testcase>
-        <testcase classname="test/unit/documents.service.spec.ts" name="DocumentsService &gt; getDownloadUrl returns a signed URL via s3.presignDownload" time="0.000435417">
+        <testcase classname="test/unit/documents.service.spec.ts" name="DocumentsService &gt; getDownloadUrl returns a signed URL via s3.presignDownload" time="0.001184375">
         </testcase>
-        <testcase classname="test/unit/documents.service.spec.ts" name="DocumentsService &gt; softRemove looks up the owned document + calls trx.softDelete" time="0.001106459">
+        <testcase classname="test/unit/documents.service.spec.ts" name="DocumentsService &gt; softRemove looks up the owned document + calls trx.softDelete" time="0.00033575">
         </testcase>
-        <testcase classname="test/unit/documents.service.spec.ts" name="DocumentsService &gt; restore calls trx.restoreFromArchive without requiring document ownership lookup" time="0.00029225">
+        <testcase classname="test/unit/documents.service.spec.ts" name="DocumentsService &gt; restore calls trx.restoreFromArchive without requiring document ownership lookup" time="0.000207791">
         </testcase>
-        <testcase classname="test/unit/documents.service.spec.ts" name="DocumentsService &gt; reports missing, cross-tenant, and unavailable database cases" time="0.000877875">
+        <testcase classname="test/unit/documents.service.spec.ts" name="DocumentsService &gt; reports missing, cross-tenant, and unavailable database cases" time="0.003809917">
         </testcase>
-        <testcase classname="test/unit/documents.service.spec.ts" name="DocumentsService &gt; hard-deletes archived documents only for the current tenant" time="0.000807167">
-        </testcase>
-    </testsuite>
-    <testsuite name="test/unit/errors.spec.ts" timestamp="2026-05-19T01:36:47.521Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="0.033419">
-        <testcase classname="test/unit/errors.spec.ts" name="storage errors &gt; StorageCollectionNotFoundError carries 404 + collection context" time="0.015349458">
-        </testcase>
-        <testcase classname="test/unit/errors.spec.ts" name="storage errors &gt; StorageValidationError defaults to 400 + accepts context" time="0.000243041">
-        </testcase>
-        <testcase classname="test/unit/errors.spec.ts" name="storage errors &gt; StorageValidationError works with no context" time="0.000075292">
-        </testcase>
-        <testcase classname="test/unit/errors.spec.ts" name="storage errors &gt; StorageTenantMismatchError carries 403 + documentId" time="0.0001365">
-        </testcase>
-        <testcase classname="test/unit/errors.spec.ts" name="storage errors &gt; StorageDocumentNotFoundError carries 404 + documentId" time="0.000111792">
+        <testcase classname="test/unit/documents.service.spec.ts" name="DocumentsService &gt; hard-deletes archived documents only for the current tenant" time="0.000885209">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/object-store.spec.ts" timestamp="2026-05-19T01:36:47.522Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="0.013126709">
-        <testcase classname="test/unit/object-store.spec.ts" name="StynxObjectStore &gt; constructs an S3Client with the configured region" time="0.007440417">
+    <testsuite name="test/unit/errors.spec.ts" timestamp="2026-05-19T04:25:31.233Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="0.008164875">
+        <testcase classname="test/unit/errors.spec.ts" name="storage errors &gt; StorageCollectionNotFoundError carries 404 + collection context" time="0.003977792">
         </testcase>
-        <testcase classname="test/unit/object-store.spec.ts" name="StynxObjectStore &gt; passes endpoint + forcePathStyle through when set" time="0.00145025">
+        <testcase classname="test/unit/errors.spec.ts" name="storage errors &gt; StorageValidationError defaults to 400 + accepts context" time="0.000572333">
         </testcase>
-        <testcase classname="test/unit/object-store.spec.ts" name="StynxObjectStore &gt; putObject sends PutObjectCommand with body + contentType" time="0.001424875">
+        <testcase classname="test/unit/errors.spec.ts" name="storage errors &gt; StorageValidationError works with no context" time="0.000205542">
         </testcase>
-        <testcase classname="test/unit/object-store.spec.ts" name="StynxObjectStore &gt; putObject honors expiresAt when provided" time="0.000917625">
+        <testcase classname="test/unit/errors.spec.ts" name="storage errors &gt; StorageTenantMismatchError carries 403 + documentId" time="0.001748125">
         </testcase>
-        <testcase classname="test/unit/object-store.spec.ts" name="StynxObjectStore &gt; presignDownload returns a signed URL via getSignedUrl" time="0.000485959">
+        <testcase classname="test/unit/errors.spec.ts" name="storage errors &gt; StorageDocumentNotFoundError carries 404 + documentId" time="0.000495125">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/s3.service.spec.ts" timestamp="2026-05-19T01:36:47.522Z" hostname="thiamat-1903.local" tests="15" failures="0" errors="0" skipped="0" time="0.025912625">
-        <testcase classname="test/unit/s3.service.spec.ts" name="S3Service &gt; rejects bucket names outside the required pattern" time="0.00200375">
+    <testsuite name="test/unit/object-store.spec.ts" timestamp="2026-05-19T04:25:31.288Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="0.140333333">
+        <testcase classname="test/unit/object-store.spec.ts" name="StynxObjectStore &gt; constructs an S3Client with the configured region" time="0.095740166">
         </testcase>
-        <testcase classname="test/unit/s3.service.spec.ts" name="S3Service &gt; rate-limits tenant download presigns by minute" time="0.011018375">
+        <testcase classname="test/unit/object-store.spec.ts" name="StynxObjectStore &gt; passes endpoint + forcePathStyle through when set" time="0.005495958">
         </testcase>
-        <testcase classname="test/unit/s3.service.spec.ts" name="S3Service &gt; configures lifecycle transition and expiration rules" time="0.00095075">
+        <testcase classname="test/unit/object-store.spec.ts" name="StynxObjectStore &gt; putObject sends PutObjectCommand with body + contentType" time="0.011055209">
         </testcase>
-        <testcase classname="test/unit/s3.service.spec.ts" name="S3Service &gt; configures empty lifecycle filters when optional lifecycle fields are absent" time="0.00040775">
+        <testcase classname="test/unit/object-store.spec.ts" name="StynxObjectStore &gt; putObject honors expiresAt when provided" time="0.00442475">
         </testcase>
-        <testcase classname="test/unit/s3.service.spec.ts" name="S3Service &gt; applies object-lock retention to a specific object version" time="0.000607292">
+        <testcase classname="test/unit/object-store.spec.ts" name="StynxObjectStore &gt; presignDownload returns a signed URL via getSignedUrl" time="0.001086459">
         </testcase>
-        <testcase classname="test/unit/s3.service.spec.ts" name="S3Service &gt; presignUpload &gt; returns a signed PUT URL with content-type + sha256 + KMS metadata" time="0.0004535">
+    </testsuite>
+    <testsuite name="test/unit/s3.service.spec.ts" timestamp="2026-05-19T04:25:31.295Z" hostname="thiamat-1903.local" tests="15" failures="0" errors="0" skipped="0" time="0.088447959">
+        <testcase classname="test/unit/s3.service.spec.ts" name="S3Service &gt; rejects bucket names outside the required pattern" time="0.011550625">
         </testcase>
-        <testcase classname="test/unit/s3.service.spec.ts" name="S3Service &gt; presignUpload &gt; honors caller-specified expiresInSeconds" time="0.0002935">
+        <testcase classname="test/unit/s3.service.spec.ts" name="S3Service &gt; rate-limits tenant download presigns by minute" time="0.026228958">
         </testcase>
-        <testcase classname="test/unit/s3.service.spec.ts" name="S3Service &gt; presignDownload (single call) &gt; returns a signed URL with content-disposition + default expiry" time="0.000464">
+        <testcase classname="test/unit/s3.service.spec.ts" name="S3Service &gt; configures lifecycle transition and expiration rules" time="0.002155083">
         </testcase>
-        <testcase classname="test/unit/s3.service.spec.ts" name="S3Service &gt; bucket() returns the resolved bucket name" time="0.000264042">
+        <testcase classname="test/unit/s3.service.spec.ts" name="S3Service &gt; configures empty lifecycle filters when optional lifecycle fields are absent" time="0.001347958">
         </testcase>
-        <testcase classname="test/unit/s3.service.spec.ts" name="S3Service &gt; accepts explicit bucketName that matches the expected pattern" time="0.000294958">
+        <testcase classname="test/unit/s3.service.spec.ts" name="S3Service &gt; applies object-lock retention to a specific object version" time="0.000817708">
         </testcase>
-        <testcase classname="test/unit/s3.service.spec.ts" name="S3Service &gt; passes endpoint and path-style client options and supports custom default expiries" time="0.001947583">
+        <testcase classname="test/unit/s3.service.spec.ts" name="S3Service &gt; presignUpload &gt; returns a signed PUT URL with content-type + sha256 + KMS metadata" time="0.000514459">
         </testcase>
-        <testcase classname="test/unit/s3.service.spec.ts" name="S3Service &gt; heads objects and deletes object versions or the base object fallback" time="0.002231792">
+        <testcase classname="test/unit/s3.service.spec.ts" name="S3Service &gt; presignUpload &gt; honors caller-specified expiresInSeconds" time="0.002605041">
         </testcase>
-        <testcase classname="test/unit/s3.service.spec.ts" name="S3Service &gt; omits absent object metadata fields and deletes unversioned matches" time="0.00135">
+        <testcase classname="test/unit/s3.service.spec.ts" name="S3Service &gt; presignDownload (single call) &gt; returns a signed URL with content-disposition + default expiry" time="0.000709792">
         </testcase>
-        <testcase classname="test/unit/s3.service.spec.ts" name="S3Service &gt; deletes matching delete markers when version listings are omitted" time="0.001243291">
+        <testcase classname="test/unit/s3.service.spec.ts" name="S3Service &gt; bucket() returns the resolved bucket name" time="0.009359375">
         </testcase>
-        <testcase classname="test/unit/s3.service.spec.ts" name="S3Service &gt; uses the default presign rate limit when no compliance override is configured" time="0.000706583">
+        <testcase classname="test/unit/s3.service.spec.ts" name="S3Service &gt; accepts explicit bucketName that matches the expected pattern" time="0.011746">
+        </testcase>
+        <testcase classname="test/unit/s3.service.spec.ts" name="S3Service &gt; passes endpoint and path-style client options and supports custom default expiries" time="0.006310875">
+        </testcase>
+        <testcase classname="test/unit/s3.service.spec.ts" name="S3Service &gt; heads objects and deletes object versions or the base object fallback" time="0.002369792">
+        </testcase>
+        <testcase classname="test/unit/s3.service.spec.ts" name="S3Service &gt; omits absent object metadata fields and deletes unversioned matches" time="0.0061565">
+        </testcase>
+        <testcase classname="test/unit/s3.service.spec.ts" name="S3Service &gt; deletes matching delete markers when version listings are omitted" time="0.003679542">
+        </testcase>
+        <testcase classname="test/unit/s3.service.spec.ts" name="S3Service &gt; uses the default presign rate limit when no compliance override is configured" time="0.001825209">
         </testcase>
     </testsuite>
 </testsuites>

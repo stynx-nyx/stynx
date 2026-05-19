@@ -60,6 +60,10 @@ describe('privacy runtime helpers', () => {
       code: 'PRIVACY_CONFIGURATION_ERROR',
       status: 500,
     });
+    expect(new PrivacyConfigurationError('bad config')).toMatchObject({
+      code: 'PRIVACY_CONFIGURATION_ERROR',
+      status: 500,
+    });
     expect(new PrivacyValidationError('bad input')).toMatchObject({
       code: 'PRIVACY_VALIDATION_ERROR',
       status: 400,
@@ -156,6 +160,55 @@ describe('privacy runtime helpers', () => {
     );
 
     await expect(service.load()).rejects.toBeInstanceOf(PrivacyConfigurationError);
+  });
+
+  it('loads override-only PII rules and falls back to the process working directory', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'stynx-privacy-'));
+    mkdirSync(join(root, 'app/privacy'), { recursive: true });
+    writeFileSync(join(root, 'app/privacy/pii-map.yaml'), [
+      'rules:',
+      '  - tableSchema: app',
+      '    tableName: customers',
+      '    columnName: email',
+      '    strategy: nullify',
+      '    subjectColumn: person_id',
+      '',
+    ].join('\n'));
+    const query = vi.fn(async () => ({ rows: [] }));
+    const database = {
+      withSystemContext: vi.fn((_reason: string, fn: () => unknown) => fn()),
+      tx: vi.fn((fn: (input: { query: typeof query }) => unknown) => fn({ query })),
+    };
+    const service = new PiiMapService(
+      { get: vi.fn(() => database) } as unknown as ModuleRef,
+      { environment: 'test', region: 'us-east-1' },
+    );
+
+    try {
+      vi.spyOn(process, 'cwd').mockReturnValue(root);
+      await expect(service.load()).resolves.toEqual([
+        expect.objectContaining({
+          tableSchema: 'app',
+          tableName: 'customers',
+          columnName: 'email',
+          subjectColumn: 'person_id',
+        }),
+      ]);
+    } finally {
+      vi.restoreAllMocks();
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('renders data-flow metadata when controllers or processors are provided alone', () => {
+    expect(generateRopaMarkdown([], { controllers: ['STYNX'] }))
+      .toContain('Controllers: STYNX');
+    expect(generateRopaMarkdown([], { controllers: ['STYNX'] }))
+      .not.toContain('Processors:');
+    expect(generateRopaMarkdown([], { processors: ['AWS'] }))
+      .toContain('Processors: AWS');
+    expect(generateRopaMarkdown([], { processors: ['AWS'] }))
+      .not.toContain('Controllers:');
   });
 
   it('delegates privacy object store operations with configured defaults and overrides', async () => {

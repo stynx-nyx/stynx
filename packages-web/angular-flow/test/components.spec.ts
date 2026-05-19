@@ -1,4 +1,5 @@
 import '@angular/compiler';
+import { Injector, runInInjectionContext } from '@angular/core';
 import { StynxFlowOpenTasksComponent, StynxFlowRunSummaryComponent } from '../src/analytics.component';
 import {
   StynxFlowFillEditorComponent,
@@ -21,6 +22,7 @@ import {
   StynxFlowWaiverDialogComponent,
   StynxFlowWaiversComponent,
 } from '../src/flow-waivers.component';
+import { STYNX_FLOW_CLIENT } from '../src/tokens';
 import type { Mock } from 'vitest';
 
 function createApi(): FlowApiService {
@@ -38,10 +40,24 @@ function createApi(): FlowApiService {
   } as unknown as FlowApiService;
 }
 
+function createFlowApi(client: unknown): FlowApiService {
+  const injector = Injector.create({
+    providers: [{ provide: STYNX_FLOW_CLIENT, useValue: client }],
+  });
+  return runInInjectionContext(injector, () => new FlowApiService());
+}
+
+function createWithApi<T>(api: FlowApiService, factory: () => T): T {
+  const injector = Injector.create({
+    providers: [{ provide: FlowApiService, useValue: api }],
+  });
+  return runInInjectionContext(injector, factory);
+}
+
 describe('@stynx-web/angular-flow components', () => {
   it('binds graph designer inputs to route-like scope and graph ids', async () => {
     const api = createApi();
-    const component = new StynxFlowGraphDesignerComponent(api);
+    const component = createWithApi(api, () => new StynxFlowGraphDesignerComponent());
     component.scopeId = 'scope-1';
     component.graphId = 'graph-1';
 
@@ -85,7 +101,7 @@ describe('@stynx-web/angular-flow components', () => {
 
   it('loads paged open-task analytics envelopes', async () => {
     const api = createApi();
-    const component = new StynxFlowOpenTasksComponent(api);
+    const component = createWithApi(api, () => new StynxFlowOpenTasksComponent());
 
     await component.ngOnInit();
     expect(component.tasks).toHaveLength(1);
@@ -100,7 +116,7 @@ describe('@stynx-web/angular-flow components', () => {
     const client = {
       get: vi.fn(async () => ({ data: [], meta: { page: 1, pageSize: 50, total: 0 } })),
     };
-    const api = new FlowApiService(client as never);
+    const api = createFlowApi(client);
 
     await api.openTasks();
 
@@ -109,7 +125,7 @@ describe('@stynx-web/angular-flow components', () => {
 
   it('captures analytics load failures from Error and non-Error throwables', async () => {
     const api = createApi();
-    const tasks = new StynxFlowOpenTasksComponent(api);
+    const tasks = createWithApi(api, () => new StynxFlowOpenTasksComponent());
     (api.openTasks as Mock).mockRejectedValueOnce(new Error('open tasks down'));
     await tasks.load();
     expect(tasks.errorMessage).toBe('open tasks down');
@@ -121,7 +137,7 @@ describe('@stynx-web/angular-flow components', () => {
 
   it('loads run summaries and captures non-Error failures', async () => {
     const api = createApi();
-    const component = new StynxFlowRunSummaryComponent(api);
+    const component = createWithApi(api, () => new StynxFlowRunSummaryComponent());
 
     await component.ngOnInit();
     expect(component.summaries).toHaveLength(1);
@@ -140,7 +156,7 @@ describe('@stynx-web/angular-flow components', () => {
 
   it('loads forms, fills, tasks, and waivers with optional filters and error branches', async () => {
     const api = createApi();
-    const forms = new StynxFlowFormsComponent(api);
+    const forms = createWithApi(api, () => new StynxFlowFormsComponent());
     forms.scopeId = 'scope-1';
     await forms.ngOnChanges();
     expect(forms.forms).toHaveLength(1);
@@ -150,7 +166,7 @@ describe('@stynx-web/angular-flow components', () => {
     await forms.load();
     expect(forms.errorMessage).toBe('forms down');
 
-    const fills = new StynxFlowFillsComponent(api);
+    const fills = createWithApi(api, () => new StynxFlowFillsComponent());
     fills.formId = 'form-1';
     fills.targetType = 'record';
     fills.targetId = 'record-1';
@@ -171,7 +187,7 @@ describe('@stynx-web/angular-flow components', () => {
     await fills.load();
     expect(api.listFills).toHaveBeenLastCalledWith({});
 
-    const tasks = new StynxFlowTaskListComponent(api);
+    const tasks = createWithApi(api, () => new StynxFlowTaskListComponent());
     tasks.mine = true;
     tasks.status = 'assigned';
     await tasks.ngOnChanges();
@@ -182,7 +198,7 @@ describe('@stynx-web/angular-flow components', () => {
     await tasks.load();
     expect(tasks.errorMessage).toBe('tasks down');
 
-    const waivers = new StynxFlowWaiversComponent(api);
+    const waivers = createWithApi(api, () => new StynxFlowWaiversComponent());
     waivers.scopeId = 'scope-1';
     waivers.targetType = 'question';
     waivers.targetId = 'q-1';

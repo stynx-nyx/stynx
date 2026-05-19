@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Inject, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import type { OnChanges } from '@angular/core';
 import { StynxHasPermissionDirective } from '@stynx-web/angular-auth';
 import { StynxBannerComponent, StynxLoadingSpinnerComponent } from '@stynx-web/angular-ui';
@@ -68,6 +68,8 @@ export class StynxFlowTaskCardComponent {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StynxFlowTaskListComponent implements OnChanges {
+  private readonly api = inject(FlowApiService);
+
   @Input() mine = false;
   @Input() status = 'open';
   @Output() readonly act = new EventEmitter<{ task: FlowTask; action: string }>();
@@ -76,8 +78,6 @@ export class StynxFlowTaskListComponent implements OnChanges {
   tasks: FlowTask[] = [];
   loading = false;
   errorMessage = '';
-
-  constructor(@Inject(FlowApiService) private readonly api: FlowApiService) {}
 
   async ngOnChanges(): Promise<void> {
     await this.load();

@@ -1,4 +1,6 @@
 import { Injectable, computed, signal } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { distinctUntilChanged, startWith } from 'rxjs';
 
 export interface StynxToast {
   id: number;
@@ -11,6 +13,13 @@ export class StynxToastService {
   private nextId = 1;
   private readonly toastsState = signal<StynxToast[]>([]);
   readonly toasts = computed(() => this.toastsState());
+  /**
+   * @deprecated since: 1.x — use toObservable(this.toasts) or the signal directly.
+   */
+  readonly toasts$ = toObservable(this.toasts).pipe(
+    startWith(this.toasts()),
+    distinctUntilChanged(),
+  );
 
   push(
     message: string,

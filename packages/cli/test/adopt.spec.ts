@@ -28,6 +28,8 @@ describe('adopt command family', () => {
     mkdirSync(resolve(root, 'node_modules/ignored'), { recursive: true });
     writeFileSync(resolve(root, 'node_modules/ignored/noise.ts'), '@Get() ignored() {}\n', 'utf8');
     writeFileSync(resolve(root, 'src/routes.ts'), [
+      '@Get()',
+      'async rootList() {}',
       "import { Public } from '@stynx/auth';",
       '@Public()',
       '@Get()',
@@ -72,6 +74,7 @@ describe('adopt command family', () => {
     const report = adoptScan(root);
     expect(report.nodeFiles).toBe(2);
     expect(report.invariants.routePermissions).toEqual([
+      { file: 'src/routes.ts', method: 'GET', handler: 'rootList' },
       { file: 'src/routes.ts', method: 'POST', handler: 'createThing' },
     ]);
     expect(report.invariants.tenancy.organizationIdTables).toContain('org_records');

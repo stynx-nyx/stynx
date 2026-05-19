@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { StynxSessionService } from './session.service';
 
 @Component({
@@ -10,7 +10,7 @@ import { StynxSessionService } from './session.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StynxLogoutButtonComponent {
-  constructor(@Inject(StynxSessionService) private readonly session: StynxSessionService) {}
+  private readonly session = inject(StynxSessionService);
 
   async logout(): Promise<void> {
     await this.session.logout();

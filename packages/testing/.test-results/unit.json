@@ -4,18 +4,18 @@
   "level": "unit",
   "runner": "vitest",
   "runnerVersion": "3.2.4",
-  "status": "failed",
-  "startedAt": "2026-05-19T01:41:04.825Z",
-  "endedAt": "2026-05-19T01:42:41.463Z",
-  "durationMs": 96634,
-  "exitCode": 1,
+  "status": "passed",
+  "startedAt": "2026-05-19T04:33:02.579Z",
+  "endedAt": "2026-05-19T04:34:15.165Z",
+  "durationMs": 72586,
+  "exitCode": 0,
   "signal": null,
   "artifacts": {
     "raw": ".test-results/unit.log",
     "junit": ".test-results/unit.junit.xml"
   },
   "env": {
-    "node": "26.0.0",
+    "node": "24.15.0",
     "ci": false
   },
   "command": {
@@ -24,9 +24,10 @@
       "run",
       "--config",
       "./vitest.config.ts",
+      "--coverage",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-62243-1779154864825.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-65984-1779165182578.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/testing/.test-results/unit.junit.xml"
     ],
@@ -37,62 +38,62 @@
   },
   "totals": {
     "files": 7,
-    "tests": 38,
-    "passed": 36,
-    "failed": 2,
+    "tests": 39,
+    "passed": 39,
+    "failed": 0,
     "skipped": 0,
     "todo": 0
   },
   "slowestTests": [
     {
-      "name": "@stynx/testing creates an isolated app, seeds fixtures, and exercises archive-aware matchers",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/testing.spec.ts",
-      "durationMs": 30014.843959
-    },
-    {
       "name": "@stynx/testing exercises restore-conflict and soft-delete-blocked matchers against custom fixture tables",
       "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/testing.spec.ts",
-      "durationMs": 30004.188334
+      "durationMs": 23904.549166999997
     },
     {
       "name": "@stynx/testing reads context helpers through the shared request context",
       "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/testing.spec.ts",
-      "durationMs": 28628.40954200001
+      "durationMs": 21827.008500000004
+    },
+    {
+      "name": "@stynx/testing creates an isolated app, seeds fixtures, and exercises archive-aware matchers",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/testing.spec.ts",
+      "durationMs": 20354.994959
     },
     {
       "name": "@stynx/testing mints a test session only in NODE_ENV=test and runs doctor helper",
       "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/testing.spec.ts",
-      "durationMs": 267.1641249999957
+      "durationMs": 103.51333400000294
+    },
+    {
+      "name": "LGPD fixture helpers seeds generated ids and preserves caller-provided ids",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/lgpd-fixture.spec.ts",
+      "durationMs": 52.43641600000001
+    },
+    {
+      "name": "createTestApp stops started containers when app initialization fails",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/create-test-app.unit.spec.ts",
+      "durationMs": 40.383042000000046
+    },
+    {
+      "name": "LGPD fixture helpers emits a PII map with every fixture strategy",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/lgpd-fixture.spec.ts",
+      "durationMs": 28.419042000000104
     },
     {
       "name": "mintTestSession mints with an audience and omits permsHash when permissions are empty",
       "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/mint-test-session.unit.spec.ts",
-      "durationMs": 123.1110409999992
+      "durationMs": 24.973625000000084
     },
     {
       "name": "createTestApp starts optional services, applies SQL steps, exposes tx/admin helpers, and tears down",
       "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/create-test-app.unit.spec.ts",
-      "durationMs": 56.82224999999994
+      "durationMs": 24.003541999999925
     },
     {
-      "name": "runDoctorForApp returns exit code and captured output from the doctor process",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/doctor.unit.spec.ts",
-      "durationMs": 8.518041999999923
-    },
-    {
-      "name": "expectROCannotWrite rethrows non-RO errors",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/matchers.spec.ts",
-      "durationMs": 6.4844160000002375
-    },
-    {
-      "name": "createStynxFixtures unit defaults generates tenant and user defaults when optional fields are omitted",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/fixtures.unit.spec.ts",
-      "durationMs": 5.871708000000012
-    },
-    {
-      "name": "createStynxFixtures unit defaults generates document defaults and preserves explicit optional fields",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/fixtures.unit.spec.ts",
-      "durationMs": 5.024167000000034
+      "name": "createTestApp preserves the initialization error when cleanup also fails",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/create-test-app.unit.spec.ts",
+      "durationMs": 22.692334000000074
     }
   ]
 }

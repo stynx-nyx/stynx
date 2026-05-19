@@ -1,8 +1,7 @@
 import { HttpClient } from '@angular/common/http';
-import { Inject, Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { STYNX_ANGULAR_OPTIONS } from '@stynx-web/angular';
-import type { StynxAngularModuleOptions } from '@stynx-web/angular';
 import type {
   StynxDocumentCompleteResponse,
   StynxDocumentDownloadResponse,
@@ -17,12 +16,8 @@ function trimEdgeSlash(value: string): string {
 
 @Injectable()
 export class DocumentService {
-  constructor(
-    @Inject(HttpClient)
-    private readonly http: HttpClient,
-    @Inject(STYNX_ANGULAR_OPTIONS)
-    private readonly angularOptions: StynxAngularModuleOptions,
-  ) {}
+  private readonly http = inject(HttpClient);
+  private readonly angularOptions = inject(STYNX_ANGULAR_OPTIONS);
 
   async initiate(input: StynxDocumentUploadInitRequest): Promise<StynxDocumentUploadInitResponse> {
     return firstValueFrom(

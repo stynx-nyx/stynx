@@ -1,61 +1,61 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="23" failures="0" errors="0" time="0.031714334">
-    <testsuite name="test/unit/barrel-load.spec.ts" timestamp="2026-05-19T01:36:13.942Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.001445084">
-        <testcase classname="test/unit/barrel-load.spec.ts" name="@stynx/logging barrel &gt; exports at least one symbol" time="0.000841667">
+<testsuites name="vitest tests" tests="23" failures="0" errors="0" time="0.281281376">
+    <testsuite name="test/unit/barrel-load.spec.ts" timestamp="2026-05-19T04:25:21.130Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.001362084">
+        <testcase classname="test/unit/barrel-load.spec.ts" name="@stynx/logging barrel &gt; exports at least one symbol" time="0.000738166">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/dedupe.spec.ts" timestamp="2026-05-19T01:36:13.943Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.002612125">
-        <testcase classname="test/unit/dedupe.spec.ts" name="LoggingDedupeService &gt; suppresses duplicate errors inside the same window" time="0.001036833">
+    <testsuite name="test/unit/dedupe.spec.ts" timestamp="2026-05-19T04:25:21.134Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.0142265">
+        <testcase classname="test/unit/dedupe.spec.ts" name="LoggingDedupeService &gt; suppresses duplicate errors inside the same window" time="0.001062667">
         </testcase>
-        <testcase classname="test/unit/dedupe.spec.ts" name="LoggingDedupeService &gt; reports the suppressed duplicate count when the window rolls over" time="0.000196708">
-        </testcase>
-    </testsuite>
-    <testsuite name="test/unit/logger.service.spec.ts" timestamp="2026-05-19T01:36:13.945Z" hostname="thiamat-1903.local" tests="7" failures="0" errors="0" skipped="0" time="0.004281708">
-        <testcase classname="test/unit/logger.service.spec.ts" name="StynxLogger &gt; attaches trace and suppressed duplicate count to error logs" time="0.002085">
-        </testcase>
-        <testcase classname="test/unit/logger.service.spec.ts" name="StynxLogger.log/warn/debug/verbose &gt; log emits at info level with the passed message" time="0.000171958">
-        </testcase>
-        <testcase classname="test/unit/logger.service.spec.ts" name="StynxLogger.log/warn/debug/verbose &gt; warn emits at warn level" time="0.000109208">
-        </testcase>
-        <testcase classname="test/unit/logger.service.spec.ts" name="StynxLogger.log/warn/debug/verbose &gt; debug emits at debug level" time="0.000083375">
-        </testcase>
-        <testcase classname="test/unit/logger.service.spec.ts" name="StynxLogger.log/warn/debug/verbose &gt; verbose emits at trace level" time="0.00021675">
-        </testcase>
-        <testcase classname="test/unit/logger.service.spec.ts" name="StynxLogger.error edge cases &gt; suppresses error log when dedupe says so" time="0.000487">
-        </testcase>
-        <testcase classname="test/unit/logger.service.spec.ts" name="StynxLogger.error edge cases &gt; passes only fields when called with object context (no trace string)" time="0.000319833">
+        <testcase classname="test/unit/dedupe.spec.ts" name="LoggingDedupeService &gt; reports the suppressed duplicate count when the window rolls over" time="0.010597125">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/logging.module.spec.ts" timestamp="2026-05-19T01:36:13.948Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.005769125">
-        <testcase classname="test/unit/logging.module.spec.ts" name="StynxLoggingModule &gt; wires default options and applies the request middleware" time="0.005106875">
+    <testsuite name="test/unit/logger.service.spec.ts" timestamp="2026-05-19T04:25:21.135Z" hostname="thiamat-1903.local" tests="7" failures="0" errors="0" skipped="0" time="0.016908541">
+        <testcase classname="test/unit/logger.service.spec.ts" name="StynxLogger &gt; attaches trace and suppressed duplicate count to error logs" time="0.00167575">
+        </testcase>
+        <testcase classname="test/unit/logger.service.spec.ts" name="StynxLogger.log/warn/debug/verbose &gt; log emits at info level with the passed message" time="0.000182958">
+        </testcase>
+        <testcase classname="test/unit/logger.service.spec.ts" name="StynxLogger.log/warn/debug/verbose &gt; warn emits at warn level" time="0.000105167">
+        </testcase>
+        <testcase classname="test/unit/logger.service.spec.ts" name="StynxLogger.log/warn/debug/verbose &gt; debug emits at debug level" time="0.000087833">
+        </testcase>
+        <testcase classname="test/unit/logger.service.spec.ts" name="StynxLogger.log/warn/debug/verbose &gt; verbose emits at trace level" time="0.00590525">
+        </testcase>
+        <testcase classname="test/unit/logger.service.spec.ts" name="StynxLogger.error edge cases &gt; suppresses error log when dedupe says so" time="0.004229583">
+        </testcase>
+        <testcase classname="test/unit/logger.service.spec.ts" name="StynxLogger.error edge cases &gt; passes only fields when called with object context (no trace string)" time="0.000210625">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/pino.factory.spec.ts" timestamp="2026-05-19T01:36:13.948Z" hostname="thiamat-1903.local" tests="9" failures="0" errors="0" skipped="0" time="0.008752042">
-        <testcase classname="test/unit/pino.factory.spec.ts" name="createPinoLogger &gt; redacts sensitive values" time="0.001931459">
-        </testcase>
-        <testcase classname="test/unit/pino.factory.spec.ts" name="createPinoLogger &gt; refuses an empty redact list in production" time="0.000651917">
-        </testcase>
-        <testcase classname="test/unit/pino.factory.spec.ts" name="createPinoLogger &gt; deduplicates and filters redact paths while honoring explicit level" time="0.000572209">
-        </testcase>
-        <testcase classname="test/unit/pino.factory.spec.ts" name="createPinoLogger &gt; uses default redact paths and LOG_LEVEL defaults" time="0.000648042">
-        </testcase>
-        <testcase classname="test/unit/pino.factory.spec.ts" name="createPinoLogger &gt; uses stdout destination defaults in production when no destination is injected" time="0.000469959">
-        </testcase>
-        <testcase classname="test/unit/pino.factory.spec.ts" name="createPinoLogger &gt; uses the development pretty transport when no destination is injected outside production" time="0.003099625">
-        </testcase>
-        <testcase classname="test/unit/pino.factory.spec.ts" name="RequestLogFieldFactory &gt; returns only extra fields when no request context is active" time="0.000161291">
-        </testcase>
-        <testcase classname="test/unit/pino.factory.spec.ts" name="RequestLogFieldFactory &gt; projects active request context fields" time="0.000365375">
-        </testcase>
-        <testcase classname="test/unit/pino.factory.spec.ts" name="RequestLogFieldFactory &gt; omits optional request context fields when they are unset" time="0.000079708">
+    <testsuite name="test/unit/logging.module.spec.ts" timestamp="2026-05-19T04:25:21.140Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.147799209">
+        <testcase classname="test/unit/logging.module.spec.ts" name="StynxLoggingModule &gt; wires default options and applies the request middleware" time="0.087028792">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/request-logging.middleware.spec.ts" timestamp="2026-05-19T01:36:13.954Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.00885425">
-        <testcase classname="test/unit/request-logging.middleware.spec.ts" name="RequestLoggingMiddleware &gt; logs one request completion record for non-health routes" time="0.006956792">
+    <testsuite name="test/unit/pino.factory.spec.ts" timestamp="2026-05-19T04:25:21.142Z" hostname="thiamat-1903.local" tests="9" failures="0" errors="0" skipped="0" time="0.084334167">
+        <testcase classname="test/unit/pino.factory.spec.ts" name="createPinoLogger &gt; redacts sensitive values" time="0.018276042">
         </testcase>
-        <testcase classname="test/unit/request-logging.middleware.spec.ts" name="RequestLoggingMiddleware &gt; skips health endpoints" time="0.000206625">
+        <testcase classname="test/unit/pino.factory.spec.ts" name="createPinoLogger &gt; refuses an empty redact list in production" time="0.015299292">
         </testcase>
-        <testcase classname="test/unit/request-logging.middleware.spec.ts" name="RequestLoggingMiddleware &gt; uses default request values and custom skip paths" time="0.000154625">
+        <testcase classname="test/unit/pino.factory.spec.ts" name="createPinoLogger &gt; deduplicates and filters redact paths while honoring explicit level" time="0.001119292">
+        </testcase>
+        <testcase classname="test/unit/pino.factory.spec.ts" name="createPinoLogger &gt; uses default redact paths and LOG_LEVEL defaults" time="0.000493333">
+        </testcase>
+        <testcase classname="test/unit/pino.factory.spec.ts" name="createPinoLogger &gt; uses stdout destination defaults in production when no destination is injected" time="0.0004415">
+        </testcase>
+        <testcase classname="test/unit/pino.factory.spec.ts" name="createPinoLogger &gt; uses the development pretty transport when no destination is injected outside production" time="0.005458958">
+        </testcase>
+        <testcase classname="test/unit/pino.factory.spec.ts" name="RequestLogFieldFactory &gt; returns only extra fields when no request context is active" time="0.000752667">
+        </testcase>
+        <testcase classname="test/unit/pino.factory.spec.ts" name="RequestLogFieldFactory &gt; projects active request context fields" time="0.021959875">
+        </testcase>
+        <testcase classname="test/unit/pino.factory.spec.ts" name="RequestLogFieldFactory &gt; omits optional request context fields when they are unset" time="0.005219792">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/request-logging.middleware.spec.ts" timestamp="2026-05-19T04:25:21.148Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.016650875">
+        <testcase classname="test/unit/request-logging.middleware.spec.ts" name="RequestLoggingMiddleware &gt; logs one request completion record for non-health routes" time="0.012914334">
+        </testcase>
+        <testcase classname="test/unit/request-logging.middleware.spec.ts" name="RequestLoggingMiddleware &gt; skips health endpoints" time="0.000229166">
+        </testcase>
+        <testcase classname="test/unit/request-logging.middleware.spec.ts" name="RequestLoggingMiddleware &gt; uses default request values and custom skip paths" time="0.000167416">
         </testcase>
     </testsuite>
 </testsuites>

@@ -1,6 +1,8 @@
 import '@angular/compiler';
 import { HttpHeaders } from '@angular/common/http';
 import { Injector, runInInjectionContext } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { Router } from '@angular/router';
 import { TenantContextService } from '@stynx-web/angular';
 import { of } from 'rxjs';
@@ -14,8 +16,9 @@ import { StynxLogoutButtonComponent } from '../src/logout-button.component';
 import { OidcClientAdapter } from '../src/oidc-client.adapter';
 import { stynxPermissionGuard } from '../src/permission.guard';
 import { StynxSessionService } from '../src/session.service';
-import { STYNX_ANGULAR_AUTH_OPTIONS } from '../src/tokens';
-import type { StynxAuthBackend, StynxOidcAdapter, StynxSessionBundle } from '../src/types';
+import { STYNX_ANGULAR_AUTH_OPTIONS, STYNX_AUTH_BACKEND, STYNX_OIDC_ADAPTER } from '../src/tokens';
+import type { StynxAngularAuthModuleOptions, StynxAuthBackend, StynxOidcAdapter, StynxSessionBundle } from '../src/types';
+import { STYNX_TENANCY_OPTIONS, STYNX_TENANCY_WINDOW, type TenancyOptions } from '@stynx-web/angular-tenancy';
 
 function createJwt(payload: Record<string, unknown>): string {
   const encode = (value: object) => Buffer.from(JSON.stringify(value), 'utf8').toString('base64url');
@@ -36,6 +39,43 @@ class FakeViewContainerRef {
     this.cleared += 1;
   }
 }
+
+function createTenantContext(options: TenancyOptions = {}, browserWindow: Window | null = null): TenantContextService {
+  const injector = Injector.create({
+    parent: TestBed.inject(Injector),
+    providers: [
+      { provide: STYNX_TENANCY_OPTIONS, useValue: options },
+      { provide: STYNX_TENANCY_WINDOW, useValue: browserWindow },
+    ],
+  });
+  return runInInjectionContext(injector, () => new TenantContextService());
+}
+
+function createSessionService(
+  tenantContext: TenantContextService,
+  oidc: StynxOidcAdapter,
+  backend: StynxAuthBackend,
+  options: StynxAngularAuthModuleOptions,
+): StynxSessionService {
+  const injector = Injector.create({
+    parent: TestBed.inject(Injector),
+    providers: [
+      { provide: TenantContextService, useValue: tenantContext },
+      { provide: STYNX_OIDC_ADAPTER, useValue: oidc },
+      { provide: STYNX_AUTH_BACKEND, useValue: backend },
+      { provide: STYNX_ANGULAR_AUTH_OPTIONS, useValue: options },
+    ],
+  });
+  return runInInjectionContext(injector, () => new StynxSessionService());
+}
+
+beforeAll(() => {
+  TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
+});
+
+afterEach(() => {
+  TestBed.resetTestingModule();
+});
 
 describe('@stynx-web/angular-auth', () => {
   it('auth guard redirects to the login route when no session is active', () => {
@@ -128,7 +168,7 @@ describe('@stynx-web/angular-auth', () => {
       logout: async () => undefined,
     };
 
-    const tenantContext = new TenantContextService(
+    const tenantContext = createTenantContext(
       {},
       {
         location: {
@@ -138,7 +178,7 @@ describe('@stynx-web/angular-auth', () => {
       } as never,
     );
 
-    const service = new StynxSessionService(
+    const service = createSessionService(
       tenantContext,
       oidc,
       backend,
@@ -168,9 +208,9 @@ describe('@stynx-web/angular-auth', () => {
   it('handles inactive login, refresh failure, login redirect, logout, and permission helpers', async () => {
     let authorizeCalls = 0;
     let logoffCalls = 0;
-    const tenantContext = new TenantContextService({}, null);
+    const tenantContext = createTenantContext({}, null);
     tenantContext.setTenant('tenant-a', 'manual');
-    const service = new StynxSessionService(
+    const service = createSessionService(
       tenantContext,
       {
         checkAuth: async () => ({
@@ -228,9 +268,9 @@ describe('@stynx-web/angular-auth', () => {
 
   it('resolves tenant from callback URL, refreshes active sessions, and rejects tenant switch without a token', async () => {
     let logoutToken = '';
-    const tenantContext = new TenantContextService({}, null);
+    const tenantContext = createTenantContext({}, null);
     const refreshedToken = createJwt({ sub: 'user-1', tenant_id: 'tenant-url', scope: 'document:read:* document:write:*' });
-    const service = new StynxSessionService(
+    const service = createSessionService(
       tenantContext,
       {
         checkAuth: async () => ({
@@ -354,13 +394,13 @@ describe('@stynx-web/angular-auth', () => {
   });
 
   it('permission guard denies and allows based on session permissions', async () => {
-    const tenantContext = new TenantContextService(
+    const tenantContext = createTenantContext(
       {},
       null,
     );
     tenantContext.setTenant('tenant-a', 'manual');
 
-    const service = new StynxSessionService(
+    const service = createSessionService(
       tenantContext,
       {
         checkAuth: async () => ({
@@ -449,13 +489,13 @@ describe('@stynx-web/angular-auth', () => {
   });
 
   it('has-permission directive renders only when the session grants the permission', () => {
-    const tenantContext = new TenantContextService(
+    const tenantContext = createTenantContext(
       {},
       null,
     );
     tenantContext.setTenant('tenant-a', 'manual');
 
-    const service = new StynxSessionService(
+    const service = createSessionService(
       tenantContext,
       {
         checkAuth: async () => ({
@@ -597,8 +637,11 @@ describe('@stynx-web/angular-auth', () => {
         sessionCalls.push(['logout']);
       },
     };
-    await new StynxLoginRedirectComponent(session as never).ngOnInit();
-    await new StynxLogoutButtonComponent(session as never).logout();
+    const componentInjector = Injector.create({
+      providers: [{ provide: StynxSessionService, useValue: session }],
+    });
+    await runInInjectionContext(componentInjector, () => new StynxLoginRedirectComponent()).ngOnInit();
+    await runInInjectionContext(componentInjector, () => new StynxLogoutButtonComponent()).logout();
     expect(sessionCalls).toEqual([
       ['completeLogin', globalThis.window?.location.href],
       ['logout'],
@@ -608,8 +651,8 @@ describe('@stynx-web/angular-auth', () => {
   it('refreshes and logs out inactive sessions without backend calls', async () => {
     let logoffCalls = 0;
     let backendLogoutCalls = 0;
-    const service = new StynxSessionService(
-      new TenantContextService({}, null),
+    const service = createSessionService(
+      createTenantContext({}, null),
       {
         checkAuth: async () => ({ isAuthenticated: false, accessToken: '', idToken: '', userData: {}, configId: 'default' }),
         authorize: () => undefined,
@@ -651,8 +694,8 @@ describe('@stynx-web/angular-auth', () => {
   });
 
   it('resolves tenant ids from token claims and rejects missing tenant context', async () => {
-    const tenantContext = new TenantContextService({}, null);
-    const service = new StynxSessionService(
+    const tenantContext = createTenantContext({}, null);
+    const service = createSessionService(
       tenantContext,
       {
         checkAuth: async () => ({
@@ -694,8 +737,8 @@ describe('@stynx-web/angular-auth', () => {
 
     await expect(service.completeLogin()).resolves.toMatchObject({ tenantId: 'tenant-token' });
 
-    const missingTenant = new StynxSessionService(
-      new TenantContextService({}, null),
+    const missingTenant = createSessionService(
+      createTenantContext({}, null),
       {
         checkAuth: async () => ({
           isAuthenticated: true,

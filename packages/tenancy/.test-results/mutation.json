@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx/tenancy",
+  "level": "mutation",
+  "runner": "stryker-vitest",
+  "status": "failed",
+  "startedAt": "2026-05-19T05:21:10.800Z",
+  "endedAt": "2026-05-19T05:22:52.644Z",
+  "durationMs": 101844,
+  "exitCode": 1,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/mutation.log"
+  },
+  "env": {
+    "node": "24.15.0",
+    "ci": false
+  },
+  "command": {
+    "argv": ["pnpm", "exec", "stryker", "run", "stryker.conf.mjs"],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages/tenancy"
+  },
+  "metric": {
+    "kind": "none"
+  }
+}

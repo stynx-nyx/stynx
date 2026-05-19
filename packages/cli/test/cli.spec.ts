@@ -61,6 +61,11 @@ describe('@stynx/cli', () => {
     const missing = mkdtempSync(resolve(tmpdir(), 'stynx-cli-ropa-missing-'));
     expect(generateRopaFromApp(missing)).toContain('| Table | Column | Strategy |');
 
+    const empty = mkdtempSync(resolve(tmpdir(), 'stynx-cli-ropa-empty-'));
+    mkdirSync(resolve(empty, 'app/privacy'), { recursive: true });
+    writeFileSync(resolve(empty, 'app/privacy/pii-map.yaml'), '{}\n', 'utf8');
+    expect(generateRopaFromApp(empty)).toContain('| Table | Column | Strategy |');
+
     const root = mkdtempSync(resolve(tmpdir(), 'stynx-cli-ropa-retention-'));
     mkdirSync(resolve(root, 'app/privacy'), { recursive: true });
     writeFileSync(

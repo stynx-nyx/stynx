@@ -1,79 +1,99 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="34" failures="0" errors="0" time="0.156215709">
-    <testsuite name="test/unit/decorators-and-metrics.spec.ts" timestamp="2026-05-19T01:36:50.804Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.022337584">
-        <testcase classname="test/unit/decorators-and-metrics.spec.ts" name="idempotency decorators and metrics &gt; attaches idempotency metadata with default and custom options" time="0.015551458">
+<testsuites name="vitest tests" tests="44" failures="0" errors="0" time="0.43485596">
+    <testsuite name="test/unit/decorators-and-metrics.spec.ts" timestamp="2026-05-19T05:09:35.251Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.01633">
+        <testcase classname="test/unit/decorators-and-metrics.spec.ts" name="idempotency decorators and metrics &gt; attaches idempotency metadata with default and custom options" time="0.014906125">
         </testcase>
-        <testcase classname="test/unit/decorators-and-metrics.spec.ts" name="idempotency decorators and metrics &gt; tracks replay counts in memory" time="0.00042925">
-        </testcase>
-    </testsuite>
-    <testsuite name="test/unit/idempotency.interceptor.spec.ts" timestamp="2026-05-19T01:36:50.806Z" hostname="thiamat-1903.local" tests="23" failures="0" errors="0" skipped="0" time="0.085397208">
-        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; rejects annotated routes without the configured header" time="0.00408375">
-        </testcase>
-        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; uses the default header name and rejects blank header values" time="0.004231375">
-        </testcase>
-        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; bypasses non-annotated routes" time="0.000311083">
-        </testcase>
-        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; bypasses routes explicitly marked as non-idempotent" time="0.000236542">
-        </testcase>
-        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; replays cached responses for the same key and payload" time="0.001117209">
-        </testcase>
-        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; replays backend entries with the default status code" time="0.011882042">
-        </testcase>
-        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; accepts canonical lower-case array headers and user principal fallbacks" time="0.001317375">
-        </testcase>
-        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; continues without durable ownership when no backend is configured and strict mode is off" time="0.000855666">
-        </testcase>
-        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; falls through pending backend and durable entries before executing the request" time="0.010429">
-        </testcase>
-        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; returns 422 when the same key is reused with a different body" time="0.000793583">
-        </testcase>
-        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; uses the durable store when configured" time="0.000382292">
-        </testcase>
-        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; does not persist 5xx responses and allows retry" time="0.002256875">
-        </testcase>
-        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; throws service unavailable when lock cannot be obtained in strict mode" time="0.008556208">
-        </testcase>
-        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; waits for a completed backend entry when lock ownership is already held" time="0.000515333">
-        </testcase>
-        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; waits for a completed durable entry and applies default replay headers" time="0.005696625">
-        </testcase>
-        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; continues waiting over pending durable entries until a completed one is ready" time="0.000755375">
-        </testcase>
-        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; continues past pending backend entries while waiting for ownership" time="0.000295458">
-        </testcase>
-        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; executes the request after wait attempts are exhausted in non-strict mode" time="0.026658417">
-        </testcase>
-        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; fails strict mode when durable reservation is refused and releases the lock" time="0.000408833">
-        </testcase>
-        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; persists 4xx HTTP exception responses for replay" time="0.000436">
-        </testcase>
-        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; does not persist 5xx HTTP exception responses (allows retry)" time="0.000775166">
-        </testcase>
-        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; clears durable reservations for normal 5xx responses and non-HTTP errors" time="0.000918584">
-        </testcase>
-        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; replays cached responses from the durable store after a backend miss" time="0.000286459">
+        <testcase classname="test/unit/decorators-and-metrics.spec.ts" name="idempotency decorators and metrics &gt; tracks replay counts in memory" time="0.000361709">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/pg-idempotency.store.spec.ts" timestamp="2026-05-19T01:36:50.810Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.035346167">
-        <testcase classname="test/unit/pg-idempotency.store.spec.ts" name="PgIdempotencyStore &gt; validates configured SQL identifiers" time="0.029721208">
+    <testsuite name="test/unit/idempotency.interceptor.spec.ts" timestamp="2026-05-19T05:09:35.261Z" hostname="thiamat-1903.local" tests="29" failures="0" errors="0" skipped="0" time="0.089878042">
+        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; rejects annotated routes without the configured header" time="0.016838416">
         </testcase>
-        <testcase classname="test/unit/pg-idempotency.store.spec.ts" name="PgIdempotencyStore &gt; returns null or false for tenantless contexts without querying" time="0.001520459">
+        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; uses the default header name and rejects blank header values" time="0.00524075">
         </testcase>
-        <testcase classname="test/unit/pg-idempotency.store.spec.ts" name="PgIdempotencyStore &gt; maps lookup rows for pending, completed, empty, and array result shapes" time="0.000911917">
+        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; bypasses non-annotated routes" time="0.004496792">
         </testcase>
-        <testcase classname="test/unit/pg-idempotency.store.spec.ts" name="PgIdempotencyStore &gt; reserves, persists, and clears rows with expected parameters" time="0.000573208">
+        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; bypasses routes explicitly marked as non-idempotent" time="0.001355208">
+        </testcase>
+        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; replays cached responses for the same key and payload" time="0.002109834">
+        </testcase>
+        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; replays backend entries with the default status code" time="0.000395583">
+        </testcase>
+        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; accepts canonical lower-case array headers and user principal fallbacks" time="0.002170208">
+        </testcase>
+        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; continues without durable ownership when no backend is configured and strict mode is off" time="0.001171792">
+        </testcase>
+        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; falls through pending backend and durable entries before executing the request" time="0.000624209">
+        </testcase>
+        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; returns 422 when the same key is reused with a different body" time="0.000599875">
+        </testcase>
+        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; uses the durable store when configured" time="0.000349959">
+        </testcase>
+        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; does not persist 5xx responses and allows retry" time="0.0004345">
+        </testcase>
+        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; throws service unavailable when lock cannot be obtained in strict mode" time="0.007240458">
+        </testcase>
+        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; waits for a completed backend entry when lock ownership is already held" time="0.000476">
+        </testcase>
+        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; records metrics when waiting returns a completed backend entry" time="0.000290625">
+        </testcase>
+        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; waits for a completed durable entry and applies default replay headers" time="0.000291208">
+        </testcase>
+        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; records metrics when replaying a completed durable entry" time="0.000401125">
+        </testcase>
+        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; continues waiting over pending durable entries until a completed one is ready" time="0.003599">
+        </testcase>
+        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; continues past pending backend entries while waiting for ownership" time="0.003174458">
+        </testcase>
+        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; executes the request after wait attempts are exhausted in non-strict mode" time="0.002891291">
+        </testcase>
+        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; fails strict mode when durable reservation is refused and releases the lock" time="0.000545833">
+        </testcase>
+        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; persists 4xx HTTP exception responses for replay" time="0.001135042">
+        </testcase>
+        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; persists 4xx HTTP exception responses to the durable store" time="0.01124375">
+        </testcase>
+        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; does not persist 5xx HTTP exception responses (allows retry)" time="0.000482">
+        </testcase>
+        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; clears durable reservations for normal 5xx responses and non-HTTP errors" time="0.00136675">
+        </testcase>
+        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; releases the lock when the handler throws synchronously" time="0.000978792">
+        </testcase>
+        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; does not release a backend lock that was never acquired after a handler failure" time="0.000600792">
+        </testcase>
+        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; clears durable reservations after a handler failure without a backend" time="0.007261584">
+        </testcase>
+        <testcase classname="test/unit/idempotency.interceptor.spec.ts" name="IdempotencyInterceptor &gt; replays cached responses from the durable store after a backend miss" time="0.000977833">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/runtime-stores.spec.ts" timestamp="2026-05-19T01:36:50.811Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="0.01313475">
-        <testcase classname="test/unit/runtime-stores.spec.ts" name="DatabaseIdempotencyStore &gt; returns null/false/noop without a configured database" time="0.001491125">
+    <testsuite name="test/unit/pg-idempotency.store.spec.ts" timestamp="2026-05-19T05:09:35.268Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="0.227477834">
+        <testcase classname="test/unit/pg-idempotency.store.spec.ts" name="PgIdempotencyStore &gt; validates configured SQL identifiers" time="0.110481166">
         </testcase>
-        <testcase classname="test/unit/runtime-stores.spec.ts" name="DatabaseIdempotencyStore &gt; maps lookup rows and fallback expiry values inside system transactions" time="0.005200458">
+        <testcase classname="test/unit/pg-idempotency.store.spec.ts" name="PgIdempotencyStore &gt; returns null or false for tenantless contexts without querying" time="0.058831875">
         </testcase>
-        <testcase classname="test/unit/runtime-stores.spec.ts" name="DatabaseIdempotencyStore &gt; reserves, persists bigint-safe responses, and clears reservations" time="0.003255166">
+        <testcase classname="test/unit/pg-idempotency.store.spec.ts" name="PgIdempotencyStore &gt; maps lookup rows for pending, completed, empty, and array result shapes" time="0.001124542">
         </testcase>
-        <testcase classname="test/unit/runtime-stores.spec.ts" name="RedisIdempotencyBackend &gt; is inert without redis options" time="0.00057075">
+        <testcase classname="test/unit/pg-idempotency.store.spec.ts" name="PgIdempotencyStore &gt; reserves, persists, and clears rows with expected parameters" time="0.003432042">
         </testcase>
-        <testcase classname="test/unit/runtime-stores.spec.ts" name="RedisIdempotencyBackend &gt; stores entries, manages locks, and closes open redis clients" time="0.001370208">
+        <testcase classname="test/unit/pg-idempotency.store.spec.ts" name="PgIdempotencyStore &gt; persists defined bodies and maps alternate executor result shapes" time="0.001018292">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/runtime-stores.spec.ts" timestamp="2026-05-19T05:09:35.269Z" hostname="thiamat-1903.local" tests="8" failures="0" errors="0" skipped="0" time="0.101170084">
+        <testcase classname="test/unit/runtime-stores.spec.ts" name="DatabaseIdempotencyStore &gt; returns null/false/noop without a configured database" time="0.005252459">
+        </testcase>
+        <testcase classname="test/unit/runtime-stores.spec.ts" name="DatabaseIdempotencyStore &gt; maps lookup rows and fallback expiry values inside system transactions" time="0.062366083">
+        </testcase>
+        <testcase classname="test/unit/runtime-stores.spec.ts" name="DatabaseIdempotencyStore &gt; maps null durable row fields and default expiry fallbacks" time="0.017134958">
+        </testcase>
+        <testcase classname="test/unit/runtime-stores.spec.ts" name="DatabaseIdempotencyStore &gt; reserves, persists bigint-safe responses, and clears reservations" time="0.003396959">
+        </testcase>
+        <testcase classname="test/unit/runtime-stores.spec.ts" name="DatabaseIdempotencyStore &gt; returns false for skipped durable writes and uses null tenant parameters" time="0.003102709">
+        </testcase>
+        <testcase classname="test/unit/runtime-stores.spec.ts" name="RedisIdempotencyBackend &gt; is inert without redis options" time="0.000864375">
+        </testcase>
+        <testcase classname="test/unit/runtime-stores.spec.ts" name="RedisIdempotencyBackend &gt; stores entries, manages locks, and closes open redis clients" time="0.0010695">
+        </testcase>
+        <testcase classname="test/unit/runtime-stores.spec.ts" name="RedisIdempotencyBackend &gt; returns null cache misses and uses the default redis prefix" time="0.000390041">
         </testcase>
     </testsuite>
 </testsuites>

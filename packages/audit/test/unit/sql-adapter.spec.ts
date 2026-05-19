@@ -277,6 +277,27 @@ describe('AuditSqlReader.list', () => {
       expect(result.items).toHaveLength(1);
       expect(result.total).toBe(3);
     });
+
+    it('treats non-array rows wrappers as empty results', async () => {
+      const executor = makeExecutor([{ rows: null }]);
+      const result = await reader(executor).list();
+      expect(result).toEqual({ items: [], total: 0 });
+    });
+
+    it('maps audit log rows with missing optional fields to public defaults', async () => {
+      const executor = makeExecutor([
+        {
+          rows: [{ occurred_at: '2026-05-18T00:00:00Z', total: 1 }],
+        },
+      ]);
+      const result = await reader(executor).list();
+      expect(result.items[0]).toMatchObject({
+        actorId: null,
+        operation: 'UNKNOWN',
+        entity: 'unknown.unknown',
+        entityId: null,
+      });
+    });
   });
 
   describe('mode: stynx_events', () => {
@@ -390,6 +411,22 @@ describe('AuditSqlReader.list', () => {
         requestId: 'r-1',
       });
       expect(result.total).toBe(2);
+    });
+
+    it('maps PORM rows with missing optional fields to public defaults', async () => {
+      const executor = makeExecutor([
+        {
+          rows: [{ occurred_at: '2026-05-18T00:00:00Z', total: 1 }],
+        },
+      ]);
+      const result = await new AuditSqlReader(executor, { mode: 'porm_logged_actions' }).list();
+      expect(result.items[0]).toMatchObject({
+        operation: 'UNKNOWN',
+        entity: 'unknown.unknown',
+        requestId: null,
+        oldData: null,
+        newData: null,
+      });
     });
   });
 });

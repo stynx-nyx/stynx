@@ -497,6 +497,50 @@ describe('IdempotencyInterceptor', () => {
     expect(response.setHeader).toHaveBeenCalledWith('x-replay', 'backend');
   });
 
+  it('records metrics when waiting returns a completed backend entry', async () => {
+    const reflector = createReflector();
+    let getCalls = 0;
+    const backend: IdempotencyBackend = {
+      get: vi.fn(async (ctx: IdempotencyDecisionContext) => {
+        getCalls += 1;
+        return getCalls === 1
+          ? null
+          : {
+              requestFingerprint: ctx.requestFingerprint,
+              statusCode: 200,
+              body: { replayed: 'waited' },
+              headers: {},
+              expiresAt: Date.now() + 1000,
+              status: 'completed' as const,
+            };
+      }),
+      set: vi.fn(async () => undefined),
+      acquireLock: vi.fn(async () => false),
+      releaseLock: vi.fn(async () => undefined),
+      isLocked: vi.fn(async () => true),
+    };
+    const metrics = { incrementReplay: vi.fn() };
+    const interceptor = new IdempotencyInterceptor(
+      reflector,
+      { waitAttempts: 1, waitIntervalMs: 1 },
+      undefined,
+      backend,
+      metrics,
+    );
+
+    await expect(
+      lastValueFrom(interceptor.intercept(
+        createExecutionContext(
+          { method: 'POST', url: '/v1/items', headers: { 'Idempotency-Key': 'k-wait-metrics' }, body: { a: 1 } },
+          createResponseStub(),
+          annotatedHandler(reflector),
+        ),
+        { handle: () => of({ fresh: true }) },
+      )),
+    ).resolves.toEqual({ replayed: 'waited' });
+    expect(metrics.incrementReplay).toHaveBeenCalledTimes(1);
+  });
+
   it('waits for a completed durable entry and applies default replay headers', async () => {
     const reflector = createReflector();
     const backend: IdempotencyBackend = {
@@ -537,6 +581,37 @@ describe('IdempotencyInterceptor', () => {
       )),
     ).resolves.toEqual({ replayed: 'durable' });
     expect(response.status).toHaveBeenCalledWith(200);
+  });
+
+  it('records metrics when replaying a completed durable entry', async () => {
+    const reflector = createReflector();
+    const metrics = { incrementReplay: vi.fn() };
+    const store: IdempotencyStore = {
+      lookup: vi.fn(async (ctx: IdempotencyDecisionContext) => ({
+        requestFingerprint: ctx.requestFingerprint,
+        statusCode: 207,
+        body: { replayed: 'durable-hit' },
+        headers: {},
+        expiresAt: Date.now() + 1000,
+        status: 'completed',
+      })),
+      reserve: vi.fn(async () => true),
+      persistResponse: vi.fn(async () => undefined),
+      clearReservation: vi.fn(async () => undefined),
+    };
+    const interceptor = new IdempotencyInterceptor(reflector, {}, store, createBackend(), metrics);
+
+    await expect(
+      lastValueFrom(interceptor.intercept(
+        createExecutionContext(
+          { method: 'POST', url: '/v1/items', headers: { 'Idempotency-Key': 'k-durable-metrics' }, body: { a: 1 } },
+          createResponseStub(),
+          annotatedHandler(reflector),
+        ),
+        { handle: () => of({ fresh: true }) },
+      )),
+    ).resolves.toEqual({ replayed: 'durable-hit' });
+    expect(metrics.incrementReplay).toHaveBeenCalledTimes(1);
   });
 
   it('continues waiting over pending durable entries until a completed one is ready', async () => {
@@ -710,6 +785,34 @@ describe('IdempotencyInterceptor', () => {
     expect(persisted.status).toBe('completed');
   });
 
+  it('persists 4xx HTTP exception responses to the durable store', async () => {
+    const reflector = createReflector();
+    const store: IdempotencyStore = {
+      lookup: vi.fn(async () => null),
+      reserve: vi.fn(async () => true),
+      persistResponse: vi.fn(async () => true),
+      clearReservation: vi.fn(async () => undefined),
+    };
+    const interceptor = new IdempotencyInterceptor(reflector, {}, store, createBackend());
+
+    await expect(
+      lastValueFrom(interceptor.intercept(
+        createExecutionContext(
+          { method: 'POST', url: '/v1/items', headers: { 'Idempotency-Key': 'k-4xx-durable' }, body: { a: 1 } },
+          createResponseStub(),
+          annotatedHandler(reflector),
+        ),
+        { handle: () => throwError(() => new BadRequestException({ message: 'validation failed' })) },
+      )),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(store.persistResponse).toHaveBeenCalledWith(
+      expect.objectContaining({ headerValue: 'k-4xx-durable' }),
+      400,
+      expect.any(Object),
+      expect.any(Object),
+    );
+  });
+
   it('does not persist 5xx HTTP exception responses (allows retry)', async () => {
     const reflector = createReflector();
     const backend = createBackend();
@@ -768,6 +871,85 @@ describe('IdempotencyInterceptor', () => {
       )),
     ).rejects.toThrow('plain failure');
     expect(store.clearReservation).toHaveBeenCalledTimes(2);
+  });
+
+  it('releases the lock when the handler throws synchronously', async () => {
+    const reflector = createReflector();
+    const backend = createBackend();
+    const store: IdempotencyStore = {
+      lookup: vi.fn(async () => null),
+      reserve: vi.fn(async () => true),
+      persistResponse: vi.fn(async () => undefined),
+      clearReservation: vi.fn(async () => undefined),
+    };
+    const interceptor = new IdempotencyInterceptor(reflector, {}, store, backend);
+
+    await expect(
+      lastValueFrom(interceptor.intercept(
+        createExecutionContext(
+          { method: 'POST', url: '/v1/items', headers: { 'Idempotency-Key': 'k-sync-error' }, body: { a: 1 } },
+          createResponseStub(),
+          annotatedHandler(reflector),
+        ),
+        { handle: () => { throw new Error('sync failure'); } },
+      )),
+    ).rejects.toThrow('sync failure');
+    expect(store.clearReservation).toHaveBeenCalledTimes(1);
+    expect(backend.releaseLock).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not release a backend lock that was never acquired after a handler failure', async () => {
+    const reflector = createReflector();
+    const backend: IdempotencyBackend = {
+      get: vi.fn(async () => null),
+      set: vi.fn(async () => undefined),
+      acquireLock: vi.fn(async () => false),
+      releaseLock: vi.fn(async () => undefined),
+      isLocked: vi.fn(async () => false),
+    };
+    const store: IdempotencyStore = {
+      lookup: vi.fn(async () => null),
+      reserve: vi.fn(async () => true),
+      persistResponse: vi.fn(async () => undefined),
+      clearReservation: vi.fn(async () => undefined),
+    };
+    const interceptor = new IdempotencyInterceptor(reflector, { waitAttempts: 1, waitIntervalMs: 1 }, store, backend);
+
+    await expect(
+      lastValueFrom(interceptor.intercept(
+        createExecutionContext(
+          { method: 'POST', url: '/v1/items', headers: { 'Idempotency-Key': 'k-unowned-error' }, body: { a: 1 } },
+          createResponseStub(),
+          annotatedHandler(reflector),
+        ),
+        { handle: () => throwError(() => new Error('unowned failure')) },
+      )),
+    ).rejects.toThrow('unowned failure');
+    expect(store.clearReservation).toHaveBeenCalledTimes(1);
+    expect(backend.releaseLock).not.toHaveBeenCalled();
+  });
+
+  it('clears durable reservations after a handler failure without a backend', async () => {
+    const reflector = createReflector();
+    const store: IdempotencyStore = {
+      lookup: vi.fn(async () => null),
+      reserve: vi.fn(async () => true),
+      persistResponse: vi.fn(async () => undefined),
+      clearReservation: vi.fn(async () => undefined),
+    };
+    const interceptor = new IdempotencyInterceptor(reflector, {}, store);
+
+    await expect(
+      lastValueFrom(interceptor.intercept(
+        createExecutionContext(
+          { method: 'POST', url: '/v1/items', headers: { 'Idempotency-Key': 'k-no-backend-error' }, body: { a: 1 } },
+          createResponseStub(),
+          annotatedHandler(reflector),
+        ),
+        { handle: () => throwError(() => new Error('no backend failure')) },
+      )),
+    ).rejects.toThrow('no backend failure');
+    expect(store.clearReservation).toHaveBeenCalledTimes(1);
   });
 
   it('replays cached responses from the durable store after a backend miss', async () => {

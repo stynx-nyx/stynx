@@ -73,4 +73,22 @@ describe('PgRateLimitStore', () => {
       nowSpy.mockRestore();
     }
   });
+
+  it('falls back to request cost when the upsert returns no rows', async () => {
+    const executor: RateLimitSqlExecutor = {
+      query: vi.fn(async () => ({ rows: [] })),
+    };
+    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(61_000);
+    try {
+      await expect(new PgRateLimitStore({ executor }).consume(context())).resolves.toMatchObject({
+        allowed: true,
+        remaining: 3,
+        resetAtEpochMs: 120_000,
+        retryAfterSeconds: 59,
+        used: 2,
+      });
+    } finally {
+      nowSpy.mockRestore();
+    }
+  });
 });

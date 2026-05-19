@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Inject, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import type { OnChanges } from '@angular/core';
 import { StynxHasPermissionDirective } from '@stynx-web/angular-auth';
 import { StynxBannerComponent, StynxLoadingSpinnerComponent } from '@stynx-web/angular-ui';
@@ -75,6 +75,8 @@ import type { FlowEdge, FlowGraph, FlowNode, FlowScope } from './types';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StynxFlowGraphDesignerComponent implements OnChanges {
+  private readonly api = inject(FlowApiService);
+
   @Input() scopeId = '';
   @Input() graphId = '';
   @Output() readonly createGraph = new EventEmitter<FlowScope | undefined>();
@@ -87,8 +89,6 @@ export class StynxFlowGraphDesignerComponent implements OnChanges {
   edges: FlowEdge[] = [];
   loading = false;
   errorMessage = '';
-
-  constructor(@Inject(FlowApiService) private readonly api: FlowApiService) {}
 
   get activeScope(): FlowScope | undefined {
     return this.scopes.find((scope) => scope.id === this.scopeId);

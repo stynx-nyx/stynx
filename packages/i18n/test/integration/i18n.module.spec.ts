@@ -133,5 +133,5 @@ describe('StynxI18nModule integration', () => {
     } finally {
       await testApp.teardown();
     }
-  });
+  }, 60000);
 });

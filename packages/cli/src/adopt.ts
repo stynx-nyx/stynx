@@ -84,6 +84,10 @@ function rel(targetDir: string, filePath: string): string {
   return relative(targetDir, filePath);
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
+}
+
 function parseSqlTables(targetDir: string): SqlTableDefinition[] {
   const tables: SqlTableDefinition[] = [];
   for (const filePath of walk(targetDir)) {
@@ -96,7 +100,7 @@ function parseSqlTables(targetDir: string): SqlTableDefinition[] {
     while ((match = createTablePattern.exec(content)) !== null) {
       tables.push({
         name: match[1]!.replace(/"/gu, ''),
-        body: match[2] ?? '',
+        body: match[2]!,
         file: rel(targetDir, filePath),
       });
     }
@@ -128,17 +132,17 @@ function scanTables(targetDir: string): TableScanResult[] {
 }
 
 function hasRlsForTable(sqlContent: string, tableName: string): boolean {
-  const unqualified = tableName.split('.').pop() ?? tableName;
+  const unqualified = tableName.split('.').pop()!;
   return new RegExp(`alter\\s+table\\s+${unqualified.replace('.', '\\.')}\\s+enable\\s+row\\s+level\\s+security`, 'iu').test(sqlContent);
 }
 
 function hasAuditForTable(sqlContent: string, tableName: string): boolean {
-  const unqualified = tableName.split('.').pop() ?? tableName;
+  const unqualified = tableName.split('.').pop()!;
   return new RegExp(`audit\\.enable_for\\([^)]*${unqualified.replace('.', '\\.')}`, 'iu').test(sqlContent);
 }
 
 function hasSoftDeleteMirror(sqlContent: string, tableName: string): boolean {
-  const unqualified = tableName.split('.').pop() ?? tableName;
+  const unqualified = tableName.split('.').pop()!;
   return new RegExp(`(create_soft_deletable_table|adopt_soft_deletable_table)[\\s\\S]*${unqualified.replace('.', '\\.')}`, 'iu').test(sqlContent)
     || new RegExp(`archive\\.${unqualified.replace('.', '_')}`, 'iu').test(sqlContent);
 }
@@ -160,18 +164,18 @@ function routeCandidates(targetDir: string): RouteCandidate[] {
     const routePattern = /((?:@[A-Za-z():'"\s,*-]+\n)*)\s*(?:async\s+)?([A-Za-z0-9_]+)\s*\(/gu;
     let match: RegExpExecArray | null;
     while ((match = routePattern.exec(content)) !== null) {
-      const decorators = match[1] ?? '';
+      const decorators = match[1]!;
       if (!/@(?:Get|Post|Put|Patch|Delete)\(/u.test(decorators)) {
         continue;
       }
       if (/@(?:Permission|Public|System)\(/u.test(decorators)) {
         continue;
       }
-      const methodDecorator = /@(Get|Post|Put|Patch|Delete)\(/u.exec(decorators)?.[1] ?? 'Unknown';
+      const methodDecorator = /@(Get|Post|Put|Patch|Delete)\(/u.exec(decorators)![1]!;
       candidates.push({
         file: rel(targetDir, filePath),
         method: methodDecorator.toUpperCase(),
-        handler: match[2] ?? 'unknown',
+        handler: match[2]!,
       });
     }
   }
@@ -304,7 +308,7 @@ export function formatAdoptScanHuman(report: AdoptScanReport): string {
 }
 
 function ensureImport(content: string, statement: string): string {
-  return content.includes(statement) ? content : `${statement}\n${content}`;
+  return content.replace(new RegExp(`^(?![\\s\\S]*${escapeRegExp(statement)})`, 'u'), `${statement}\n`);
 }
 
 function injectPermissionImports(content: string): string {
@@ -327,7 +331,7 @@ function codemodRoutePermissions(content: string): string {
     if (/^\s*@(Get|Post|Put|Patch|Delete)\(/u.test(line)) {
       const previousLine = nextLines[nextLines.length - 1] ?? '';
       if (!/@(?:Permission|Public|System)\(/u.test(previousLine)) {
-        const indent = line.match(/^\s*/u)?.[0] ?? '';
+        const indent = /^\s*/u.exec(line)![0]!;
         nextLines.push(`${indent}@Permission(${proposedPermissionPlaceholder})`);
       }
     }
@@ -394,7 +398,7 @@ function generateSchemaFile(targetDir: string, tables: TableScanResult[]): strin
         continue;
       }
       const [, columnName, sqlType, constraints] = match;
-      const drizzle = sqlTypeToDrizzle(columnName!, sqlType!, constraints ?? '');
+      const drizzle = sqlTypeToDrizzle(columnName!, sqlType!, constraints!);
       if (drizzle.startsWith('uuid(')) imports.add('uuid');
       if (drizzle.startsWith('timestamp(')) imports.add('timestamp');
       if (drizzle.startsWith('boolean(')) imports.add('boolean');

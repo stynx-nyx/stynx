@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="8" failures="0" errors="0" time="0.0054735">
-    <testsuite name="test/errors.spec.ts" timestamp="2026-05-19T01:35:58.337Z" hostname="thiamat-1903.local" tests="6" failures="0" errors="0" skipped="0" time="0.003854625">
-        <testcase classname="test/errors.spec.ts" name="@stynx/contracts errors &gt; StynxError &gt; inherits from Error" time="0.001708583">
+<testsuites name="vitest tests" tests="8" failures="0" errors="0" time="0.043655167">
+    <testsuite name="test/errors.spec.ts" timestamp="2026-05-19T04:25:04.040Z" hostname="thiamat-1903.local" tests="6" failures="0" errors="0" skipped="0" time="0.038995333">
+        <testcase classname="test/errors.spec.ts" name="@stynx/contracts errors &gt; StynxError &gt; inherits from Error" time="0.002887292">
         </testcase>
-        <testcase classname="test/errors.spec.ts" name="@stynx/contracts errors &gt; StynxError &gt; details optional" time="0.00013725">
+        <testcase classname="test/errors.spec.ts" name="@stynx/contracts errors &gt; StynxError &gt; details optional" time="0.000227">
         </testcase>
-        <testcase classname="test/errors.spec.ts" name="@stynx/contracts errors &gt; AuthenticationError &gt; carries the AUTHENTICATION_ERROR code" time="0.000161209">
+        <testcase classname="test/errors.spec.ts" name="@stynx/contracts errors &gt; AuthenticationError &gt; carries the AUTHENTICATION_ERROR code" time="0.000213167">
         </testcase>
-        <testcase classname="test/errors.spec.ts" name="@stynx/contracts errors &gt; AuthorizationError &gt; carries the AUTHORIZATION_ERROR code" time="0.0001265">
+        <testcase classname="test/errors.spec.ts" name="@stynx/contracts errors &gt; AuthorizationError &gt; carries the AUTHORIZATION_ERROR code" time="0.003773792">
         </testcase>
-        <testcase classname="test/errors.spec.ts" name="@stynx/contracts errors &gt; IdentityAdminError &gt; accepts IDENTITY_NOT_FOUND as a code" time="0.00009875">
+        <testcase classname="test/errors.spec.ts" name="@stynx/contracts errors &gt; IdentityAdminError &gt; accepts IDENTITY_NOT_FOUND as a code" time="0.0001475">
         </testcase>
-        <testcase classname="test/errors.spec.ts" name="@stynx/contracts errors &gt; IdentityAdminError &gt; accepts IDENTITY_FORBIDDEN as a code" time="0.000068166">
+        <testcase classname="test/errors.spec.ts" name="@stynx/contracts errors &gt; IdentityAdminError &gt; accepts IDENTITY_FORBIDDEN as a code" time="0.003121666">
         </testcase>
     </testsuite>
-    <testsuite name="test/index.spec.ts" timestamp="2026-05-19T01:35:58.339Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.001618875">
-        <testcase classname="test/index.spec.ts" name="@stynx/contracts barrel &gt; re-exports core error classes" time="0.000799916">
+    <testsuite name="test/index.spec.ts" timestamp="2026-05-19T04:25:04.195Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.004659834">
+        <testcase classname="test/index.spec.ts" name="@stynx/contracts barrel &gt; re-exports core error classes" time="0.003190208">
         </testcase>
-        <testcase classname="test/index.spec.ts" name="@stynx/contracts barrel &gt; barrel has multiple exports" time="0.000155">
+        <testcase classname="test/index.spec.ts" name="@stynx/contracts barrel &gt; barrel has multiple exports" time="0.000175667">
         </testcase>
     </testsuite>
 </testsuites>

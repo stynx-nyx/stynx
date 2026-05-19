@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import type { OnInit } from '@angular/core';
 import { StynxBannerComponent, StynxLoadingSpinnerComponent } from '@stynx-web/angular-ui';
 import { FlowApiService } from './flow-api.service';
@@ -31,11 +31,11 @@ import type { FlowOpenTask, FlowRunSummary } from './types';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StynxFlowOpenTasksComponent implements OnInit {
+  private readonly api = inject(FlowApiService);
+
   tasks: FlowOpenTask[] = [];
   loading = false;
   errorMessage = '';
-
-  constructor(@Inject(FlowApiService) private readonly api: FlowApiService) {}
 
   async ngOnInit(): Promise<void> {
     await this.load();
@@ -82,11 +82,11 @@ export class StynxFlowOpenTasksComponent implements OnInit {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StynxFlowRunSummaryComponent implements OnInit {
+  private readonly api = inject(FlowApiService);
+
   summaries: FlowRunSummary[] = [];
   loading = false;
   errorMessage = '';
-
-  constructor(@Inject(FlowApiService) private readonly api: FlowApiService) {}
 
   async ngOnInit(): Promise<void> {
     await this.load();

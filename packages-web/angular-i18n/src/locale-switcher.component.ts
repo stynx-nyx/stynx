@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Inject, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, inject } from '@angular/core';
 import { StynxI18nService } from './i18n.service';
 
 @Component({
@@ -26,7 +26,7 @@ import { StynxI18nService } from './i18n.service';
 export class LocaleSwitcherComponent {
   @Input() locales: string[] = [];
 
-  constructor(@Inject(StynxI18nService) protected readonly i18n: StynxI18nService) {}
+  protected readonly i18n = inject(StynxI18nService);
 
   async switchLocale(locale: string): Promise<void> {
     await this.i18n.use(locale);

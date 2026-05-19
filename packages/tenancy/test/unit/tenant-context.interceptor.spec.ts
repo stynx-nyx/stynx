@@ -5,6 +5,9 @@ import { RequestContext, RequestContextMutator } from '@stynx/core';
 import { TenantContextInterceptor } from '../../src/tenant-context.interceptor';
 import { MembershipAccessCache } from '../../src/membership-cache';
 
+const TENANT_ID = '018f53e4-28a1-7cd8-a0ff-5b22c3a07111';
+const ACTOR_ID = '018f53e4-28a1-7cd8-a0ff-5b22c3a07112';
+
 function createExecutionContext(request: Record<string, unknown>): ExecutionContext {
   return {
     switchToHttp: () => ({
@@ -14,6 +17,10 @@ function createExecutionContext(request: Record<string, unknown>): ExecutionCont
 }
 
 describe('TenantContextInterceptor', () => {
+  function bearer(payload: Record<string, unknown>): string {
+    return `Bearer header.${Buffer.from(JSON.stringify(payload)).toString('base64url')}.sig`;
+  }
+
   function createInterceptor(options: {
     allowed?: boolean;
     cached?: boolean | undefined;
@@ -67,6 +74,82 @@ describe('TenantContextInterceptor', () => {
 
     await new Promise((resolve) => setImmediate(resolve));
     expect(txQuery).not.toHaveBeenCalled();
+  });
+
+  it('runs the downstream handler with tenant context and unsubscribes cleanly', async () => {
+    const { interceptor, requestContextMutator } = createInterceptor({ cached: true });
+    const unsubscribe = vi.fn();
+    const next: CallHandler = {
+      handle: vi.fn(() => ({
+        subscribe: vi.fn((observer) => {
+          observer.next('ok');
+          return { unsubscribe };
+        }),
+      })),
+    };
+    const received: unknown[] = [];
+
+    const subscription = interceptor
+      .intercept(createExecutionContext({
+        headers: { 'x-tenant-id': TENANT_ID },
+        originalUrl: '/records',
+        principal: { id: ACTOR_ID },
+      }), next)
+      .subscribe({ next: (value) => received.push(value) });
+    await new Promise((resolve) => setImmediate(resolve));
+    subscription.unsubscribe();
+
+    expect(received).toEqual(['ok']);
+    expect(requestContextMutator.runWithRequestContext).toHaveBeenCalledWith(
+      expect.objectContaining({ tenantId: TENANT_ID }),
+      expect.any(Function),
+    );
+    expect(unsubscribe).toHaveBeenCalled();
+  });
+
+  it('runs optional paths without adding tenant context', async () => {
+    const { interceptor, requestContextMutator } = createInterceptor({ cached: true });
+    const next: CallHandler = {
+      handle: vi.fn(() => ({
+        subscribe: vi.fn((observer) => {
+          observer.complete();
+          return { unsubscribe: vi.fn() };
+        }),
+      })),
+    };
+
+    interceptor.intercept(createExecutionContext({ headers: {}, originalUrl: '/readyz' }), next).subscribe();
+    await new Promise((resolve) => setImmediate(resolve));
+
+    expect(requestContextMutator.runWithRequestContext).toHaveBeenCalledWith(
+      expect.not.objectContaining({ tenantId: expect.any(String) }),
+      expect.any(Function),
+    );
+  });
+
+  it('forwards downstream handler errors to the subscriber', async () => {
+    const { interceptor } = createInterceptor({ cached: true });
+    const error = new Error('downstream failed');
+    const next: CallHandler = {
+      handle: vi.fn(() => ({
+        subscribe: vi.fn((observer) => {
+          observer.error(error);
+          return { unsubscribe: vi.fn() };
+        }),
+      })),
+    };
+
+    const received = await new Promise<unknown>((resolve) => {
+      interceptor
+        .intercept(createExecutionContext({
+          headers: { 'x-tenant-id': TENANT_ID },
+          originalUrl: '/records',
+          principal: { id: ACTOR_ID },
+        }), next)
+        .subscribe({ error: resolve });
+    });
+
+    expect(received).toBe(error);
   });
 
   it('rejects missing tenant context and mismatched header/claim pairs', async () => {
@@ -143,6 +226,49 @@ describe('TenantContextInterceptor', () => {
       (interceptor as never).resolveAndValidate({ headers: {}, originalUrl: '/readyz' }),
     ).resolves.toEqual({});
     expect(txQuery).toHaveBeenCalledTimes(1);
+  });
+
+  it('resolves tenant and actor identities from bearer claims', async () => {
+    const { interceptor, txQuery } = createInterceptor({ allowed: true });
+
+    await expect(
+      (interceptor as never).resolveAndValidate({
+        headers: { authorization: bearer({ sub: ACTOR_ID, tenant_id: TENANT_ID }) },
+        originalUrl: '/records',
+      }),
+    ).resolves.toEqual({ tenantId: TENANT_ID });
+
+    expect(txQuery).toHaveBeenCalledWith(expect.stringContaining('from auth.memberships membership'), [
+      ACTOR_ID,
+      TENANT_ID,
+    ]);
+  });
+
+  it('falls back from host to hostname when resolving subdomain tenants', async () => {
+    const { interceptor } = createInterceptor({ allowed: true, allowSubdomain: true });
+
+    await expect(
+      (interceptor as never).resolveAndValidate({
+        headers: {},
+        originalUrl: '/records',
+        hostname: `${TENANT_ID}.example.test`,
+        user: { id: ACTOR_ID },
+      }),
+    ).resolves.toEqual({ tenantId: TENANT_ID });
+  });
+
+  it('rejects malformed tenant identifiers before membership lookup', async () => {
+    const { interceptor, txQuery } = createInterceptor({ allowed: true });
+
+    await expect(
+      (interceptor as never).resolveAndValidate({
+        headers: { 'x-tenant-id': 'tenant-alpha' },
+        originalUrl: '/records',
+        principal: { id: ACTOR_ID },
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    expect(txQuery).not.toHaveBeenCalled();
   });
 
   it('rejects inactive memberships and caches the negative membership decision', async () => {

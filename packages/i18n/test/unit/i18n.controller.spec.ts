@@ -31,6 +31,21 @@ describe('I18nController API contract', () => {
     });
   });
 
+  it('uses an empty tenant id when request context has no tenant', async () => {
+    const moduleRef = { get: vi.fn(() => ({})) };
+    const adminService = {
+      listOverrides: vi.fn(async () => ({})),
+      updateOverrides: vi.fn(async () => ({})),
+    } as unknown as I18nAdminService;
+    const controller = new I18nController(moduleRef as never, adminService);
+
+    await expect(controller.listOverrides()).resolves.toEqual({});
+    await expect(controller.updateOverrides({ locale: 'pt-BR', catalog: {} })).resolves.toEqual({});
+
+    expect(adminService.listOverrides).toHaveBeenCalledWith('');
+    expect(adminService.updateOverrides).toHaveBeenCalledWith('', { locale: 'pt-BR', catalog: {} });
+  });
+
   it('keeps override writes outside the idempotency interceptor', () => {
     expect(Reflect.getMetadata(STYNX_NO_IDEMPOTENT_ROUTE, handler('updateOverrides'))).toBe(true);
   });

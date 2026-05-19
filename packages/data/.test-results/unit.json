@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T01:36:14.917Z",
-  "endedAt": "2026-05-19T01:36:31.204Z",
-  "durationMs": 16283,
+  "startedAt": "2026-05-19T04:57:51.570Z",
+  "endedAt": "2026-05-19T04:58:06.607Z",
+  "durationMs": 15037,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -15,7 +15,7 @@
     "junit": ".test-results/unit.junit.xml"
   },
   "env": {
-    "node": "26.0.0",
+    "node": "24.15.0",
     "ci": false
   },
   "command": {
@@ -24,9 +24,11 @@
       "run",
       "--config",
       "./vitest.config.ts",
+      "--coverage",
+      "--reporter=verbose",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-55164-1779154574917.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-50573-1779166671570.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/data/.test-results/unit.junit.xml"
     ],
@@ -37,62 +39,62 @@
   },
   "totals": {
     "files": 10,
-    "tests": 73,
-    "passed": 73,
+    "tests": 79,
+    "passed": 79,
     "failed": 0,
     "skipped": 0,
     "todo": 0
   },
   "slowestTests": [
     {
-      "name": "StynxMigrationRunner.runPlatformMigrations (mocked client) skips migrations whose id is already in core.schema_migrations",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/migration-runner.spec.ts",
-      "durationMs": 285.4231660000005
-    },
-    {
-      "name": "StynxMigrationRunner.runPlatformMigrations (mocked client) initializes pools + creates schema_migrations table + releases client",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/migration-runner.spec.ts",
-      "durationMs": 221.61945800000012
+      "name": "Database applies request session state, readonly mode, deadline, commit, context cleanup, and release",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/database.spec.ts",
+      "durationMs": 349.45004100000006
     },
     {
       "name": "StynxMigrationRunner.runPlatformMigrations (mocked client) continues migration-dir probing and preserves migration errors when rollback fails",
       "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/migration-runner.spec.ts",
-      "durationMs": 147.27291699999932
-    },
-    {
-      "name": "query helpers builds withDeleted SQL with shifted placeholders, tenant guard, ordering, limit, and offset",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/query-helpers.spec.ts",
-      "durationMs": 117.43870900000002
+      "durationMs": 269.3782080000001
     },
     {
       "name": "StynxMigrationRunner.runPlatformMigrations (mocked client) falls back to the packaged migration path when every probe misses",
       "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/migration-runner.spec.ts",
-      "durationMs": 51.004791999999725
+      "durationMs": 219.42416700000012
     },
     {
-      "name": "query helpers proxies soft-deletable select builders and leaves live-only builders unchanged",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/query-helpers.spec.ts",
-      "durationMs": 49.50416700000005
+      "name": "Transaction restores archived references, maps restore conflicts, and cascades child restores",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/transaction.spec.ts",
+      "durationMs": 153.68095800000083
     },
     {
-      "name": "StynxMigrationRunner.onModuleInit no-ops when migrations option is missing",
+      "name": "withSystemContext delegates to database.withSystemContext with the same reason + fn",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/system-context.spec.ts",
+      "durationMs": 118.67391700000007
+    },
+    {
+      "name": "Transaction delegates active read/write primitives and rejects all primitives after close",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/transaction.spec.ts",
+      "durationMs": 110.09299999999894
+    },
+    {
+      "name": "Transaction soft-deletes one reference and maps missing rows and FK delete failures",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/transaction.spec.ts",
+      "durationMs": 84.04004199999872
+    },
+    {
+      "name": "Transaction describes branch: softDelete uses real registry queries and archive-size sampling without metrics",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/transaction.spec.ts",
+      "durationMs": 76.88229200000023
+    },
+    {
+      "name": "Transaction softDelete returns dry-run plans and filters the root archive entry from committed cascades",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/transaction.spec.ts",
+      "durationMs": 76.01929100000052
+    },
+    {
+      "name": "StynxMigrationRunner.runPlatformMigrations (mocked client) initializes pools + creates schema_migrations table + releases client",
       "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/migration-runner.spec.ts",
-      "durationMs": 16.86291600000004
-    },
-    {
-      "name": "StynxMigrationRunner.runPlatformMigrations (mocked client) rolls back when a migration body throws and rethrows the error",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/migration-runner.spec.ts",
-      "durationMs": 15.5815419999999
-    },
-    {
-      "name": "StynxPoolRegistry creates owner + app + reader pools on init",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/pools.spec.ts",
-      "durationMs": 12.614542000000256
-    },
-    {
-      "name": "createStynxPgPool creates a Pool from a connection string",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/pools.spec.ts",
-      "durationMs": 9.030416999999943
+      "durationMs": 69.60129200000029
     }
   ]
 }

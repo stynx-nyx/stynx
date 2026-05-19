@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="3" failures="0" errors="0" time="0.096950042">
-    <testsuite name="test/angular-i18n.spec.ts" timestamp="2026-05-19T01:36:42.148Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.096950042">
-        <testcase classname="test/angular-i18n.spec.ts" name="@stynx-web/angular-i18n &gt; switches locale at runtime and updates translations" time="0.003009458">
+<testsuites name="vitest tests" tests="3" failures="0" errors="0" time="0.010151291">
+    <testsuite name="test/angular-i18n.spec.ts" timestamp="2026-05-19T05:11:45.256Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.010151291">
+        <testcase classname="test/angular-i18n.spec.ts" name="@stynx-web/angular-i18n &gt; switches locale at runtime and updates translations" time="0.004670458">
         </testcase>
-        <testcase classname="test/angular-i18n.spec.ts" name="@stynx-web/angular-i18n &gt; uses default supported locale and missing interpolation values" time="0.001161833">
+        <testcase classname="test/angular-i18n.spec.ts" name="@stynx-web/angular-i18n &gt; uses default supported locale and missing interpolation values" time="0.001955458">
         </testcase>
-        <testcase classname="test/angular-i18n.spec.ts" name="@stynx-web/angular-i18n &gt; switches locale through the component and marks the translate pipe for check on locale changes" time="0.091491791">
+        <testcase classname="test/angular-i18n.spec.ts" name="@stynx-web/angular-i18n &gt; switches locale through the component and marks the translate pipe for check on locale changes" time="0.001610041">
         </testcase>
     </testsuite>
 </testsuites>

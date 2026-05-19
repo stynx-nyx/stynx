@@ -1,4 +1,6 @@
 import '@angular/compiler';
+import { TestBed } from '@angular/core/testing';
+import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { StynxBannerComponent } from '../src/banner.component';
 import { StynxConfirmDialogComponent } from '../src/confirm-dialog.component';
 import { StynxLoadingSpinnerComponent } from '../src/loading-spinner.component';
@@ -7,13 +9,25 @@ import { StynxTableComponent } from '../src/table.component';
 import { StynxToastContainerComponent } from '../src/toast-container.component';
 import { StynxToastService } from '../src/toast.service';
 
+function createToastService(): StynxToastService {
+  return TestBed.runInInjectionContext(() => new StynxToastService());
+}
+
+beforeAll(() => {
+  TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
+});
+
+afterEach(() => {
+  TestBed.resetTestingModule();
+});
+
 describe('@stynx-web/angular-ui', () => {
   afterEach(() => {
     vi.useRealTimers();
   });
 
   it('tracks toast lifecycle through the toast service', () => {
-    const service = new StynxToastService();
+    const service = createToastService();
     const toast = service.push('Saved', 'success');
     expect(service.toasts()).toEqual([toast]);
     service.dismiss(toast.id);
@@ -22,7 +36,7 @@ describe('@stynx-web/angular-ui', () => {
 
   it('supports sticky, timed, and clear toast lifecycle paths', () => {
     vi.useFakeTimers();
-    const service = new StynxToastService();
+    const service = createToastService();
     const sticky = service.push('Pinned', 'warning', 0);
     const timed = service.push('Saved', undefined, 25);
 

@@ -1,21 +1,25 @@
 import { Injectable, computed, signal } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { distinctUntilChanged, startWith } from 'rxjs';
 import type { ErrorBannerState } from './types';
 
 @Injectable()
 export class ErrorBannerService {
   private readonly state = signal<ErrorBannerState | null>(null);
-  private readonly state$ = new BehaviorSubject<ErrorBannerState | null>(null);
   readonly current = computed(() => this.state());
-  readonly current$ = this.state$.asObservable();
+  /**
+   * @deprecated since: 1.x — use toObservable(this.current) or the signal directly.
+   */
+  readonly current$ = toObservable(this.current).pipe(
+    startWith(this.current()),
+    distinctUntilChanged(),
+  );
 
   show(error: ErrorBannerState): void {
     this.state.set(error);
-    this.state$.next(error);
   }
 
   clear(): void {
     this.state.set(null);
-    this.state$.next(null);
   }
 }

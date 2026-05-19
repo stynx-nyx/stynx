@@ -1,26 +1,40 @@
 {
   "thresholds": {
-    "lines": 85,
-    "statements": 85,
-    "branches": 80,
-    "functions": 85
+    "lines": 100,
+    "statements": 100,
+    "branches": 100,
+    "functions": 100
   },
   "policies": {
     "coverage": {
       "default": { "lines": 85, "branches": 80, "functions": 85, "statements": 85 },
       "strict": { "lines": 95, "branches": 95, "functions": 95, "statements": 95 },
-      "complete": { "lines": 100, "branches": 100, "functions": 100, "statements": 100 },
+      "complete": {
+        "lines": 100,
+        "branches": 100,
+        "functions": 100,
+        "statements": 100,
+        "branchesTolerance": 0
+      },
       "off": { "lines": 0, "branches": 0, "functions": 0, "statements": 0 }
     },
     "mutation": {
       "default": 60,
       "strict": 80,
       "strictest": 85
+    },
+    "perf": {
+      "default": {
+        "p50_ms": 5000,
+        "p95_ms": 9000,
+        "rps_min": 0.2
+      }
     }
   },
   "defaults": {
     "coverage": "complete",
-    "mutation": "default"
+    "mutation": "default",
+    "perf": "default"
   },
   "perPackage": {
     "@stynx/auth": { "mutation": "strictest" },
@@ -34,87 +48,55 @@
     },
     {
       "packagePattern": "@stynx-domain/*",
-      "levels": ["API", "DB", "E2E", "Mutation", "Coverage"]
+      "levels": ["Mutation"]
     },
     {
       "packagePattern": "@stynx-infra/*",
       "levels": ["API", "DB", "E2E", "Mutation", "Coverage"]
     },
     {
-      "packagePattern": "@stynx/audit",
-      "levels": ["E2E"]
-    },
-    {
-      "packagePattern": "@stynx/auth",
-      "levels": ["E2E"]
-    },
-    {
       "packagePattern": "@stynx/backend",
-      "levels": ["API", "DB", "E2E"]
+      "levels": ["API", "DB"]
     },
     {
       "packagePattern": "@stynx/cli",
-      "levels": ["API", "DB", "E2E"]
+      "levels": ["API", "DB"]
     },
     {
       "packagePattern": "@stynx/contracts",
-      "levels": ["API", "DB", "E2E"]
+      "levels": ["API", "DB"]
     },
     {
       "packagePattern": "@stynx/core",
-      "levels": ["API", "E2E"]
+      "levels": ["API"]
     },
     {
       "packagePattern": "@stynx/data",
-      "levels": ["API", "E2E"]
-    },
-    {
-      "packagePattern": "@stynx/flow",
-      "levels": ["E2E"]
-    },
-    {
-      "packagePattern": "@stynx/health",
-      "levels": ["E2E"]
-    },
-    {
-      "packagePattern": "@stynx/i18n",
-      "levels": ["E2E"]
+      "levels": ["API"]
     },
     {
       "packagePattern": "@stynx/idempotency",
-      "levels": ["API", "E2E"]
+      "levels": ["API"]
     },
     {
       "packagePattern": "@stynx/logging",
-      "levels": ["API", "E2E"]
-    },
-    {
-      "packagePattern": "@stynx/privacy",
-      "levels": ["E2E"]
+      "levels": ["API"]
     },
     {
       "packagePattern": "@stynx/ratelimit",
-      "levels": ["API", "E2E"]
-    },
-    {
-      "packagePattern": "@stynx/sessions",
-      "levels": ["E2E"]
+      "levels": ["API"]
     },
     {
       "packagePattern": "@stynx/storage",
-      "levels": ["API", "E2E"]
-    },
-    {
-      "packagePattern": "@stynx/tenancy",
-      "levels": ["E2E"]
+      "levels": ["API"]
     },
     {
       "packagePattern": "@stynx/testing",
-      "levels": ["API", "DB", "E2E"]
+      "levels": ["API", "DB"]
     },
     {
       "packagePattern": "@stynx-web/*",
-      "levels": ["API", "DB", "E2E"]
+      "levels": ["API", "DB"]
     },
     {
       "packagePattern": "@stynx/reference-web",

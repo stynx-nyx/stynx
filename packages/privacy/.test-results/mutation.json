@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx/privacy",
+  "level": "mutation",
+  "runner": "stryker-vitest",
+  "status": "failed",
+  "startedAt": "2026-05-19T05:16:15.628Z",
+  "endedAt": "2026-05-19T05:22:50.719Z",
+  "durationMs": 395091,
+  "exitCode": 1,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/mutation.log"
+  },
+  "env": {
+    "node": "24.15.0",
+    "ci": false
+  },
+  "command": {
+    "argv": ["pnpm", "exec", "stryker", "run", "stryker.conf.mjs"],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages/privacy"
+  },
+  "metric": {
+    "kind": "none"
+  }
+}

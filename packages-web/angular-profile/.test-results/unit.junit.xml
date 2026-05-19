@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="2" failures="0" errors="0" time="0.0096885">
-    <testsuite name="test/angular-profile.spec.ts" timestamp="2026-05-19T01:36:47.363Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.0096885">
-        <testcase classname="test/angular-profile.spec.ts" name="@stynx-web/angular-profile &gt; validates the profile form and emits only when dirty and valid" time="0.005779667">
+<testsuites name="vitest tests" tests="2" failures="0" errors="0" time="0.007633709">
+    <testsuite name="test/angular-profile.spec.ts" timestamp="2026-05-19T05:11:50.252Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.007633709">
+        <testcase classname="test/angular-profile.spec.ts" name="@stynx-web/angular-profile &gt; validates the profile form and emits only when dirty and valid" time="0.006499084">
         </testcase>
-        <testcase classname="test/angular-profile.spec.ts" name="@stynx-web/angular-profile &gt; tracks dirty state in the preferences form" time="0.002787083">
+        <testcase classname="test/angular-profile.spec.ts" name="@stynx-web/angular-profile &gt; tracks dirty state in the preferences form" time="0.000500584">
         </testcase>
     </testsuite>
 </testsuites>

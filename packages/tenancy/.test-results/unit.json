@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T01:36:54.525Z",
-  "endedAt": "2026-05-19T01:36:58.274Z",
-  "durationMs": 3749,
+  "startedAt": "2026-05-19T05:24:32.848Z",
+  "endedAt": "2026-05-19T05:24:37.470Z",
+  "durationMs": 4622,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -15,7 +15,7 @@
     "junit": ".test-results/unit.junit.xml"
   },
   "env": {
-    "node": "26.0.0",
+    "node": "24.15.0",
     "ci": false
   },
   "command": {
@@ -24,9 +24,11 @@
       "run",
       "--config",
       "./vitest.config.ts",
+      "--coverage",
+      "--reporter=verbose",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-57495-1779154614524.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-18105-1779168272848.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/tenancy/.test-results/unit.junit.xml"
     ],
@@ -37,62 +39,62 @@
   },
   "totals": {
     "files": 7,
-    "tests": 34,
-    "passed": 34,
+    "tests": 51,
+    "passed": 51,
     "failed": 0,
     "skipped": 0,
     "todo": 0
   },
   "slowestTests": [
     {
-      "name": "TenancyService throws when a tenant cannot be found",
+      "name": "TenancyService provisions a new tenant and fans out the expected side effects",
       "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/tenancy.service.spec.ts",
-      "durationMs": 11.758665999999721
+      "durationMs": 7.81191600000011
     },
     {
-      "name": "tenancy utils resolves subdomain tenants with default UUIDv7 and custom patterns",
+      "name": "TenantSystemOperationSink persists system operation records and exposes the provider binding",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/platform-admin-and-sink.spec.ts",
+      "durationMs": 6.619250000000193
+    },
+    {
+      "name": "tenancy utils creates UUIDv7 values when entropy bytes are missing variant positions",
       "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/utils.spec.ts",
-      "durationMs": 11.052791999999954
+      "durationMs": 6.515374999999949
     },
     {
-      "name": "TenancyService updates core tenant fields without writing settings when settings inputs are absent",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/tenancy.service.spec.ts",
-      "durationMs": 10.282791999999972
+      "name": "tenancy utils normalizes headers, paths, optional tenancy routes, and UUIDv7 values",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/utils.spec.ts",
+      "durationMs": 4.033708000000047
     },
     {
-      "name": "TenancyService lists, gets, and updates tenants with owner-scoped database calls",
+      "name": "TenancyService provisions a new tenant with the requested owner id when user lookup returns no row",
       "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/tenancy.service.spec.ts",
-      "durationMs": 8.862250000000131
+      "durationMs": 3.5988330000000133
+    },
+    {
+      "name": "TenancyController API contract delegates tenant read and mutation operations to the service",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/tenancy.controller.spec.ts",
+      "durationMs": 3.5080830000001697
+    },
+    {
+      "name": "TenantContextInterceptor runs the downstream handler with tenant context and unsubscribes cleanly",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/tenant-context.interceptor.spec.ts",
+      "durationMs": 3.254707999999937
     },
     {
       "name": "TenancyService archives and purges tenants while invalidating membership cache",
       "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/tenancy.service.spec.ts",
-      "durationMs": 7.918874999999844
+      "durationMs": 2.8301669999996193
     },
     {
-      "name": "TenancyService uses owner readonly transactions for single-tenant reads",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/tenancy.service.spec.ts",
-      "durationMs": 6.088666999999987
-    },
-    {
-      "name": "TenancyService updates tenant settings when only one settings field is supplied",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/tenancy.service.spec.ts",
-      "durationMs": 5.334957999999915
-    },
-    {
-      "name": "TenancyService provisions a new tenant and fans out the expected side effects",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/tenancy.service.spec.ts",
-      "durationMs": 4.519458000000213
-    },
-    {
-      "name": "TenantContextInterceptor trims tenant sources, validates membership through owner readonly tx, and caches the decision",
+      "name": "TenantContextInterceptor rejects missing tenant context and mismatched header/claim pairs",
       "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/tenant-context.interceptor.spec.ts",
-      "durationMs": 3.799833000000035
+      "durationMs": 2.5501250000002074
     },
     {
-      "name": "@stynx/tenancy barrel exports at least one symbol",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/barrel-load.spec.ts",
-      "durationMs": 2.4745419999999285
+      "name": "TenantSystemOperationSink skips tenant membership validation records",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/platform-admin-and-sink.spec.ts",
+      "durationMs": 2.0789589999999407
     }
   ]
 }

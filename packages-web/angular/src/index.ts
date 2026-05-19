@@ -2,6 +2,7 @@ export * from './auth.interceptor';
 export * from './empty-state.component';
 export * from './error-banner.service';
 export * from './error.interceptor';
+export * from './provide-defaults';
 export * from './request-id.interceptor';
 export * from './request-id';
 export * from './stynx-angular.module';

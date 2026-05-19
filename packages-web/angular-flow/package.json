@@ -2,29 +2,32 @@
   "name": "@stynx-web/angular-flow",
   "version": "0.1.0",
   "description": "Angular workflow design and runtime components for stynx Flow",
-  "main": "dist/angular-flow/src/index.js",
-  "types": "dist/angular-flow/src/index.d.ts",
-  "engines": {
-    "node": ">=24 <25"
-  },
   "exports": {
     ".": {
-      "types": "./dist/angular-flow/src/index.d.ts",
-      "require": "./dist/angular-flow/src/index.js",
-      "default": "./dist/angular-flow/src/index.js"
-    }
+      "types": "./dist/types/stynx-web-angular-flow.d.ts",
+      "default": "./dist/fesm2022/stynx-web-angular-flow.mjs"
+    },
+    "./testing": {
+      "types": "./dist/types/stynx-web-angular-flow-testing.d.ts",
+      "default": "./dist/fesm2022/stynx-web-angular-flow-testing.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
+  "engines": {
+    "node": ">=24 <25"
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "ng-packagr -p ng-package.json -c tsconfig.apf.json",
     "clean": "rm -rf dist coverage",
     "typecheck": "tsc -p tsconfig.spec.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/angular.mjs \"src/**/*.ts\"",
     "test": "node ./../../scripts/run-and-record.mjs --package @stynx-web/angular-flow --level unit --runner vitest -- vitest run --config ./vitest.config.ts",
     "stryker": "node ./../../scripts/run-and-record.mjs --package @stynx-web/angular-flow --level mutation --runner stryker-vitest -- NODE_OPTIONS=\"--disable-warning=ExperimentalWarning --experimental-vm-modules\" pnpm exec stryker run stryker.conf.mjs",
-    "test:e2e": "echo \"test:e2e removed during V6 cutover; convert to vitest if needed\" && false"
+    "build:tsc": "tsc -p tsconfig.json"
   },
   "dependencies": {
     "@stynx-web/angular-auth": "workspace:*",
@@ -38,13 +41,15 @@
     "@angular/router": "^20.2.0"
   },
   "devDependencies": {
-    "@angular/common": "^21.2.10",
-    "@angular/compiler": "^21.2.10",
-    "@angular/compiler-cli": "^21.2.10",
-    "@angular/core": "^21.2.10",
-    "@angular/router": "^21.2.10",
+    "@angular/common": "22.0.0-rc.0",
+    "@angular/compiler": "22.0.0-rc.0",
+    "@angular/compiler-cli": "22.0.0-rc.0",
+    "@angular/core": "22.0.0-rc.0",
+    "@angular/router": "22.0.0-rc.0",
     "@types/node": "^25.6.0",
     "jsdom": "^29.0.2",
+    "ng-packagr": "22.0.0-rc.0",
+    "tslib": "^2.8.1",
     "typescript": "^6.0.3"
   }
 }

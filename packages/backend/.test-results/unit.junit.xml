@@ -1,171 +1,213 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="190" failures="0" errors="0" time="0.911345624">
-    <testsuite name="test/unit/audit-export.spec.ts" timestamp="2026-05-19T01:37:47.646Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.001820375">
-        <testcase classname="test/unit/audit-export.spec.ts" name="@stynx/backend exports surface for audit &gt; barrel surfaces at least one export" time="0.001143834">
+<testsuites name="vitest tests" tests="232" failures="0" errors="0" time="1.16349004">
+    <testsuite name="test/unit/audit-export.spec.ts" timestamp="2026-05-19T05:25:20.831Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.002708083">
+        <testcase classname="test/unit/audit-export.spec.ts" name="@stynx/backend exports surface for audit &gt; barrel surfaces at least one export" time="0.001813792">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/audit.interceptor.spec.ts" timestamp="2026-05-19T01:37:47.661Z" hostname="thiamat-1903.local" tests="8" failures="0" errors="0" skipped="0" time="0.287070333">
-        <testcase classname="test/unit/audit.interceptor.spec.ts" name="AuditInterceptor &gt; passes through when no audit metadata is set on the handler" time="0.078589583">
+    <testsuite name="test/unit/audit.interceptor.spec.ts" timestamp="2026-05-19T05:25:20.832Z" hostname="thiamat-1903.local" tests="8" failures="0" errors="0" skipped="0" time="0.017581625">
+        <testcase classname="test/unit/audit.interceptor.spec.ts" name="AuditInterceptor &gt; passes through when no audit metadata is set on the handler" time="0.002353959">
         </testcase>
-        <testcase classname="test/unit/audit.interceptor.spec.ts" name="AuditInterceptor &gt; writes an envelope with action/entity/entityId/tenantId/actorId/role" time="0.084345791">
+        <testcase classname="test/unit/audit.interceptor.spec.ts" name="AuditInterceptor &gt; writes an envelope with action/entity/entityId/tenantId/actorId/role" time="0.003996834">
         </testcase>
-        <testcase classname="test/unit/audit.interceptor.spec.ts" name="AuditInterceptor &gt; falls back to the controller class name when entity is not set" time="0.000471333">
+        <testcase classname="test/unit/audit.interceptor.spec.ts" name="AuditInterceptor &gt; falls back to the controller class name when entity is not set" time="0.000709291">
         </testcase>
-        <testcase classname="test/unit/audit.interceptor.spec.ts" name="AuditInterceptor &gt; honors entityIdSelector and metadataSelector" time="0.000282333">
+        <testcase classname="test/unit/audit.interceptor.spec.ts" name="AuditInterceptor &gt; honors entityIdSelector and metadataSelector" time="0.000907792">
         </testcase>
-        <testcase classname="test/unit/audit.interceptor.spec.ts" name="AuditInterceptor &gt; runs metadata through the redaction policy when configured" time="0.024806875">
+        <testcase classname="test/unit/audit.interceptor.spec.ts" name="AuditInterceptor &gt; runs metadata through the redaction policy when configured" time="0.00080325">
         </testcase>
-        <testcase classname="test/unit/audit.interceptor.spec.ts" name="AuditInterceptor &gt; omits entityId when inference yields nothing" time="0.000626167">
+        <testcase classname="test/unit/audit.interceptor.spec.ts" name="AuditInterceptor &gt; omits entityId when inference yields nothing" time="0.000986625">
         </testcase>
-        <testcase classname="test/unit/audit.interceptor.spec.ts" name="AuditInterceptor &gt; logs but does not fail the request when sink.write throws" time="0.001437375">
+        <testcase classname="test/unit/audit.interceptor.spec.ts" name="AuditInterceptor &gt; logs but does not fail the request when sink.write throws" time="0.004264834">
         </testcase>
-        <testcase classname="test/unit/audit.interceptor.spec.ts" name="AuditInterceptor &gt; propagates handler errors" time="0.0009145">
-        </testcase>
-    </testsuite>
-    <testsuite name="test/unit/auth-context.guard.spec.ts" timestamp="2026-05-19T01:37:47.683Z" hostname="thiamat-1903.local" tests="11" failures="0" errors="0" skipped="0" time="0.024504666">
-        <testcase classname="test/unit/auth-context.guard.spec.ts" name="AuthContextGuard &gt; throws Unauthorized when verifier returns no principal" time="0.001839209">
-        </testcase>
-        <testcase classname="test/unit/auth-context.guard.spec.ts" name="AuthContextGuard &gt; attaches principal + compatibility user/actor + tenantId on the request" time="0.000800667">
-        </testcase>
-        <testcase classname="test/unit/auth-context.guard.spec.ts" name="AuthContextGuard &gt; uses tenantResolver when configured and respects its result" time="0.001468833">
-        </testcase>
-        <testcase classname="test/unit/auth-context.guard.spec.ts" name="AuthContextGuard &gt; honors x-tenant-id header when no resolver is configured" time="0.006859709">
-        </testcase>
-        <testcase classname="test/unit/auth-context.guard.spec.ts" name="AuthContextGuard &gt; selects the single principal tenant when no header and resolver absent" time="0.004762666">
-        </testcase>
-        <testcase classname="test/unit/auth-context.guard.spec.ts" name="AuthContextGuard &gt; leaves tenantId undefined when principal has multiple tenants and no header/resolver" time="0.000604792">
-        </testcase>
-        <testcase classname="test/unit/auth-context.guard.spec.ts" name="AuthContextGuard &gt; throws Forbidden when tenantEntitlementPolicy denies the tenant" time="0.000666416">
-        </testcase>
-        <testcase classname="test/unit/auth-context.guard.spec.ts" name="AuthContextGuard &gt; passes through when tenantEntitlementPolicy approves" time="0.0008">
-        </testcase>
-        <testcase classname="test/unit/auth-context.guard.spec.ts" name="AuthContextGuard &gt; honors a custom principalMapper when provided" time="0.000976292">
-        </testcase>
-        <testcase classname="test/unit/auth-context.guard.spec.ts" name="AuthContextGuard &gt; accepts array-form authorization header (passed through to verifier)" time="0.004130666">
-        </testcase>
-        <testcase classname="test/unit/auth-context.guard.spec.ts" name="AuthContextGuard &gt; preserves correlationId in principalContext when present" time="0.000185583">
+        <testcase classname="test/unit/audit.interceptor.spec.ts" name="AuditInterceptor &gt; propagates handler errors" time="0.002556917">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/auth-export.spec.ts" timestamp="2026-05-19T01:37:47.696Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.001931209">
-        <testcase classname="test/unit/auth-export.spec.ts" name="@stynx/backend exports surface for auth &gt; barrel surfaces at least one export" time="0.001201375">
+    <testsuite name="test/unit/auth-context.guard.spec.ts" timestamp="2026-05-19T05:25:20.847Z" hostname="thiamat-1903.local" tests="11" failures="0" errors="0" skipped="0" time="0.090675541">
+        <testcase classname="test/unit/auth-context.guard.spec.ts" name="AuthContextGuard &gt; throws Unauthorized when verifier returns no principal" time="0.003983416">
+        </testcase>
+        <testcase classname="test/unit/auth-context.guard.spec.ts" name="AuthContextGuard &gt; attaches principal + compatibility user/actor + tenantId on the request" time="0.0011065">
+        </testcase>
+        <testcase classname="test/unit/auth-context.guard.spec.ts" name="AuthContextGuard &gt; uses tenantResolver when configured and respects its result" time="0.00302225">
+        </testcase>
+        <testcase classname="test/unit/auth-context.guard.spec.ts" name="AuthContextGuard &gt; honors x-tenant-id header when no resolver is configured" time="0.000503042">
+        </testcase>
+        <testcase classname="test/unit/auth-context.guard.spec.ts" name="AuthContextGuard &gt; selects the single principal tenant when no header and resolver absent" time="0.000257583">
+        </testcase>
+        <testcase classname="test/unit/auth-context.guard.spec.ts" name="AuthContextGuard &gt; leaves tenantId undefined when principal has multiple tenants and no header/resolver" time="0.000362875">
+        </testcase>
+        <testcase classname="test/unit/auth-context.guard.spec.ts" name="AuthContextGuard &gt; throws Forbidden when tenantEntitlementPolicy denies the tenant" time="0.074693709">
+        </testcase>
+        <testcase classname="test/unit/auth-context.guard.spec.ts" name="AuthContextGuard &gt; passes through when tenantEntitlementPolicy approves" time="0.000284625">
+        </testcase>
+        <testcase classname="test/unit/auth-context.guard.spec.ts" name="AuthContextGuard &gt; honors a custom principalMapper when provided" time="0.000210041">
+        </testcase>
+        <testcase classname="test/unit/auth-context.guard.spec.ts" name="AuthContextGuard &gt; accepts array-form authorization header (passed through to verifier)" time="0.000260209">
+        </testcase>
+        <testcase classname="test/unit/auth-context.guard.spec.ts" name="AuthContextGuard &gt; preserves correlationId in principalContext when present" time="0.000099167">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/authorization-export.spec.ts" timestamp="2026-05-19T01:37:47.696Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.00380975">
-        <testcase classname="test/unit/authorization-export.spec.ts" name="@stynx/backend exports surface for authorization &gt; barrel surfaces at least one export" time="0.002024959">
+    <testsuite name="test/unit/auth-export.spec.ts" timestamp="2026-05-19T05:25:20.849Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.004060208">
+        <testcase classname="test/unit/auth-export.spec.ts" name="@stynx/backend exports surface for auth &gt; barrel surfaces at least one export" time="0.003002042">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/behavior-coverage.spec.ts" timestamp="2026-05-19T01:37:47.698Z" hostname="thiamat-1903.local" tests="21" failures="0" errors="0" skipped="0" time="0.142578834">
-        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend SLA behavior &gt; resolves URL categories and falls back to NONE" time="0.0014985">
-        </testcase>
-        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend SLA behavior &gt; samples requests, skips NONE categories, aggregates by window, and records errors" time="0.02597175">
-        </testcase>
-        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend SLA behavior &gt; wires SLA module defaults and logger sink warning branch" time="0.0063695">
-        </testcase>
-        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend authorization and auth behavior &gt; evaluates role and permission policies with all/any modes" time="0.000737417">
-        </testcase>
-        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend authorization and auth behavior &gt; guards authorization metadata with default and injected evaluators" time="0.020007208">
-        </testcase>
-        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend authorization and auth behavior &gt; maps principals from request compatibility locations" time="0.000906375">
-        </testcase>
-        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend authorization and auth behavior &gt; resolves tenant headers and claim-first entitlement branches" time="0.014423833">
-        </testcase>
-        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend authorization and auth behavior &gt; auth guard attaches principal context and resolves tenant paths" time="0.01087375">
-        </testcase>
-        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend module wiring branches &gt; wires optional module providers and disabled platform pipeline features" time="0.01903725">
-        </testcase>
-        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend module wiring branches &gt; wires db-context variants and validates missing applier config" time="0.001829541">
-        </testcase>
-        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend idempotency behavior &gt; bypasses read methods and optional write keys" time="0.000749542">
-        </testcase>
-        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend idempotency behavior &gt; rejects missing keys and strict non-durable writes" time="0.001521458">
-        </testcase>
-        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend idempotency behavior &gt; caches in-memory writes, replays them, and detects payload conflicts" time="0.00262125">
-        </testcase>
-        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend idempotency behavior &gt; waits on in-flight in-memory work for concurrent matching writes" time="0.000372917">
-        </testcase>
-        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend idempotency behavior &gt; uses durable entries, reservations, races, fallbacks, and cleanup branches" time="0.00545675">
-        </testcase>
-        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend idempotency behavior &gt; clears durable reservations on handler errors and enforces strict race failure" time="0.003827417">
-        </testcase>
-        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend idempotency behavior &gt; covers durable direct replay, conflict, wait timeout, and cache cleanup" time="0.004072958">
-        </testcase>
-        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend rate-limit behavior &gt; bypasses health checks and enforces in-memory buckets" time="0.006045958">
-        </testcase>
-        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend rate-limit behavior &gt; resets expired buckets and prunes overflow entries" time="0.000801417">
-        </testcase>
-        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend rate-limit behavior &gt; uses distributed stores, cleanup, fallback, and strict failures" time="0.00171175">
-        </testcase>
-        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend rate-limit behavior &gt; covers in-memory bucket increment, cleanup no-op, cleanup error, and overflow deletion" time="0.000283417">
+    <testsuite name="test/unit/authorization-export.spec.ts" timestamp="2026-05-19T05:25:20.849Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.004674625">
+        <testcase classname="test/unit/authorization-export.spec.ts" name="@stynx/backend exports surface for authorization &gt; barrel surfaces at least one export" time="0.001997">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/common-export.spec.ts" timestamp="2026-05-19T01:37:47.702Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.002661084">
-        <testcase classname="test/unit/common-export.spec.ts" name="@stynx/backend exports surface for common &gt; barrel surfaces at least one export" time="0.001768583">
+    <testsuite name="test/unit/behavior-coverage.spec.ts" timestamp="2026-05-19T05:25:20.849Z" hostname="thiamat-1903.local" tests="42" failures="0" errors="0" skipped="0" time="0.271965">
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend SLA behavior &gt; resolves URL categories and falls back to NONE" time="0.005362459">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend SLA behavior &gt; samples requests, skips NONE categories, aggregates by window, and records errors" time="0.015664834">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend SLA behavior &gt; wires SLA module defaults and logger sink warning branch" time="0.001063917">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend SLA behavior &gt; describes branch: default SLA dependencies resolve URL and sample through logger sink" time="0.001335292">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend SLA behavior &gt; describes branch: unknown SLA category uses fallback threshold and default percentile index" time="0.00086025">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend SLA behavior &gt; describes branch: zero-sized SLA windows aggregate empty percentile histories" time="0.000903917">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend authorization and auth behavior &gt; evaluates role and permission policies with all/any modes" time="0.00127575">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend authorization and auth behavior &gt; guards authorization metadata with default and injected evaluators" time="0.013381083">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend authorization and auth behavior &gt; describes branch: authorization default evaluator receives role-only and permission-only metadata" time="0.000353083">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend authorization and auth behavior &gt; maps principals from request compatibility locations" time="0.002610167">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend authorization and auth behavior &gt; describes branch: actor fallback preserves optional email and username" time="0.000109334">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend authorization and auth behavior &gt; describes branch: actor fallback defaults malformed principal arrays" time="0.000199625">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend authorization and auth behavior &gt; resolves tenant headers and claim-first entitlement branches" time="0.001695584">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend authorization and auth behavior &gt; auth guard attaches principal context and resolves tenant paths" time="0.00263075">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend authorization and auth behavior &gt; describes branch: auth guard accepts non-string array headers and omits blank resolver header" time="0.008789875">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend authorization and auth behavior &gt; describes branch: auth guard extracts array tenant headers and omits undefined claims spread" time="0.000737041">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend module wiring branches &gt; wires optional module providers and disabled platform pipeline features" time="0.005720208">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend module wiring branches &gt; wires db-context variants and validates missing applier config" time="0.000823958">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend idempotency behavior &gt; bypasses read methods and optional write keys" time="0.00264125">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend idempotency behavior &gt; describes branch: header arrays without strings and missing methods bypass idempotency" time="0.001891208">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend idempotency behavior &gt; rejects missing keys and strict non-durable writes" time="0.000961666">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend idempotency behavior &gt; caches in-memory writes, replays them, and detects payload conflicts" time="0.0093555">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend idempotency behavior &gt; waits on in-flight in-memory work for concurrent matching writes" time="0.00051325">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend idempotency behavior &gt; describes branch: in-memory execution defaults status and path when response/url absent" time="0.000929542">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend idempotency behavior &gt; describes branch: idempotency accepts array-form key headers" time="0.000924417">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend idempotency behavior &gt; uses durable entries, reservations, races, fallbacks, and cleanup branches" time="0.004993208">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend idempotency behavior &gt; clears durable reservations on handler errors and enforces strict race failure" time="0.001891375">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend idempotency behavior &gt; covers durable direct replay, conflict, wait timeout, and cache cleanup" time="0.00909725">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend idempotency behavior &gt; describes branch: durable replay/cache paths default status codes" time="0.057672542">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend idempotency behavior &gt; describes branch: durable wait and fallback paths default missing status codes" time="0.00581025">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend idempotency behavior &gt; describes branch: durable local replay returns before another lookup" time="0.016863208">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend rate-limit behavior &gt; bypasses health checks and enforces in-memory buckets" time="0.001316459">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend rate-limit behavior &gt; describes branch: rate-limit defaults request identity and constructor options" time="0.000381958">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend rate-limit behavior &gt; resets expired buckets and prunes overflow entries" time="0.000721292">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend rate-limit behavior &gt; uses distributed stores, cleanup, fallback, and strict failures" time="0.002119333">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend rate-limit behavior &gt; covers in-memory bucket increment, cleanup no-op, cleanup error, and overflow deletion" time="0.000493625">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend rate-limit behavior &gt; describes branch: distributed cleanup no-ops when store lacks cleanup method" time="0.000131041">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend audit and db context branch closure &gt; describes branch: audit logs non-Error sink failures and omits optional principal fields" time="0.053559875">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend audit and db context branch closure &gt; describes branch: audit redaction context includes present principal" time="0.001079875">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend audit and db context branch closure &gt; describes branch: db context finalizer skips release when preparation never completed" time="0.001177667">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend audit and db context branch closure &gt; describes branch: session applier drops blank list/scalar values" time="0.002722875">
+        </testcase>
+        <testcase classname="test/unit/behavior-coverage.spec.ts" name="backend audit and db context branch closure &gt; describes branch: tenant lifecycle tolerates missing headers object" time="0.000887708">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/db-context-export.spec.ts" timestamp="2026-05-19T01:37:47.702Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.00340575">
-        <testcase classname="test/unit/db-context-export.spec.ts" name="@stynx/backend exports surface for db-context &gt; barrel surfaces at least one export" time="0.001739334">
+    <testsuite name="test/unit/common-export.spec.ts" timestamp="2026-05-19T05:25:20.867Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.006074">
+        <testcase classname="test/unit/common-export.spec.ts" name="@stynx/backend exports surface for common &gt; barrel surfaces at least one export" time="0.004619708">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/db-context.interceptor.spec.ts" timestamp="2026-05-19T01:37:47.703Z" hostname="thiamat-1903.local" tests="15" failures="0" errors="0" skipped="0" time="0.084895125">
-        <testcase classname="test/unit/db-context.interceptor.spec.ts" name="DbContextInterceptor &gt; skips applier when there is no principal on the request" time="0.03608975">
-        </testcase>
-        <testcase classname="test/unit/db-context.interceptor.spec.ts" name="DbContextInterceptor &gt; skips applier when no client is resolvable" time="0.004282834">
-        </testcase>
-        <testcase classname="test/unit/db-context.interceptor.spec.ts" name="DbContextInterceptor &gt; applies session context when principal + pgClient are present" time="0.022397708">
-        </testcase>
-        <testcase classname="test/unit/db-context.interceptor.spec.ts" name="DbContextInterceptor &gt; uses a custom dbClientResolver when provided" time="0.011006333">
-        </testcase>
-        <testcase classname="test/unit/db-context.interceptor.spec.ts" name="DbContextInterceptor &gt; acquires + releases via lifecycle when no client is on the request" time="0.000840958">
-        </testcase>
-        <testcase classname="test/unit/db-context.interceptor.spec.ts" name="DbContextInterceptor &gt; continues without applying db context when lifecycle acquisition returns nothing" time="0.000319417">
-        </testcase>
-        <testcase classname="test/unit/db-context.interceptor.spec.ts" name="DbContextInterceptor &gt; does not call release when no client was acquired by the interceptor" time="0.00015775">
-        </testcase>
-        <testcase classname="test/unit/db-context.interceptor.spec.ts" name="DbContextInterceptor &gt; swallows release errors so they do not bubble out of the request" time="0.000548459">
-        </testcase>
-        <testcase classname="test/unit/db-context.interceptor.spec.ts" name="DbContextInterceptor &gt; skips lifecycle acquire when no tenantId is on the request" time="0.000146458">
-        </testcase>
-        <testcase classname="test/unit/db-context.interceptor.spec.ts" name="getPrincipalFromRequest &gt; returns request.principal when present" time="0.000072875">
-        </testcase>
-        <testcase classname="test/unit/db-context.interceptor.spec.ts" name="getPrincipalFromRequest &gt; falls back to principalContext.principal" time="0.00511175">
-        </testcase>
-        <testcase classname="test/unit/db-context.interceptor.spec.ts" name="getPrincipalFromRequest &gt; falls back to request.user" time="0.000353166">
-        </testcase>
-        <testcase classname="test/unit/db-context.interceptor.spec.ts" name="getPrincipalFromRequest &gt; falls back to request.actor" time="0.000176417">
-        </testcase>
-        <testcase classname="test/unit/db-context.interceptor.spec.ts" name="getPrincipalFromRequest &gt; returns undefined when no principal sources are present" time="0.000178167">
-        </testcase>
-        <testcase classname="test/unit/db-context.interceptor.spec.ts" name="getPrincipalFromRequest &gt; treats non-array roles/permissions/tenants/claims on user as empty/defaults" time="0.000255625">
+    <testsuite name="test/unit/db-context-export.spec.ts" timestamp="2026-05-19T05:25:20.867Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.00161175">
+        <testcase classname="test/unit/db-context-export.spec.ts" name="@stynx/backend exports surface for db-context &gt; barrel surfaces at least one export" time="0.000846541">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/decorators.spec.ts" timestamp="2026-05-19T01:37:47.725Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.013475916">
-        <testcase classname="test/unit/decorators.spec.ts" name="backend decorators &gt; attaches authorization and audit metadata" time="0.009386958">
+    <testsuite name="test/unit/db-context.interceptor.spec.ts" timestamp="2026-05-19T05:25:20.867Z" hostname="thiamat-1903.local" tests="15" failures="0" errors="0" skipped="0" time="0.111296916">
+        <testcase classname="test/unit/db-context.interceptor.spec.ts" name="DbContextInterceptor &gt; skips applier when there is no principal on the request" time="0.002350209">
         </testcase>
-        <testcase classname="test/unit/decorators.spec.ts" name="backend decorators &gt; exports the current-principal decorator factory" time="0.000779459">
+        <testcase classname="test/unit/db-context.interceptor.spec.ts" name="DbContextInterceptor &gt; skips applier when no client is resolvable" time="0.000210833">
         </testcase>
-        <testcase classname="test/unit/decorators.spec.ts" name="backend decorators &gt; resolves the current principal from request metadata" time="0.000341292">
+        <testcase classname="test/unit/db-context.interceptor.spec.ts" name="DbContextInterceptor &gt; applies session context when principal + pgClient are present" time="0.050768042">
+        </testcase>
+        <testcase classname="test/unit/db-context.interceptor.spec.ts" name="DbContextInterceptor &gt; uses a custom dbClientResolver when provided" time="0.004376791">
+        </testcase>
+        <testcase classname="test/unit/db-context.interceptor.spec.ts" name="DbContextInterceptor &gt; acquires + releases via lifecycle when no client is on the request" time="0.0064505">
+        </testcase>
+        <testcase classname="test/unit/db-context.interceptor.spec.ts" name="DbContextInterceptor &gt; continues without applying db context when lifecycle acquisition returns nothing" time="0.001637875">
+        </testcase>
+        <testcase classname="test/unit/db-context.interceptor.spec.ts" name="DbContextInterceptor &gt; does not call release when no client was acquired by the interceptor" time="0.000616125">
+        </testcase>
+        <testcase classname="test/unit/db-context.interceptor.spec.ts" name="DbContextInterceptor &gt; swallows release errors so they do not bubble out of the request" time="0.003161709">
+        </testcase>
+        <testcase classname="test/unit/db-context.interceptor.spec.ts" name="DbContextInterceptor &gt; skips lifecycle acquire when no tenantId is on the request" time="0.000453542">
+        </testcase>
+        <testcase classname="test/unit/db-context.interceptor.spec.ts" name="getPrincipalFromRequest &gt; returns request.principal when present" time="0.000076">
+        </testcase>
+        <testcase classname="test/unit/db-context.interceptor.spec.ts" name="getPrincipalFromRequest &gt; falls back to principalContext.principal" time="0.000394166">
+        </testcase>
+        <testcase classname="test/unit/db-context.interceptor.spec.ts" name="getPrincipalFromRequest &gt; falls back to request.user" time="0.000328333">
+        </testcase>
+        <testcase classname="test/unit/db-context.interceptor.spec.ts" name="getPrincipalFromRequest &gt; falls back to request.actor" time="0.000178125">
+        </testcase>
+        <testcase classname="test/unit/db-context.interceptor.spec.ts" name="getPrincipalFromRequest &gt; returns undefined when no principal sources are present" time="0.000074625">
+        </testcase>
+        <testcase classname="test/unit/db-context.interceptor.spec.ts" name="getPrincipalFromRequest &gt; treats non-array roles/permissions/tenants/claims on user as empty/defaults" time="0.001545125">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/idempotency-export.spec.ts" timestamp="2026-05-19T01:37:47.726Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.006977666">
-        <testcase classname="test/unit/idempotency-export.spec.ts" name="@stynx/backend exports surface for idempotency &gt; barrel surfaces at least one export" time="0.001248417">
+    <testsuite name="test/unit/decorators.spec.ts" timestamp="2026-05-19T05:25:20.871Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.261051292">
+        <testcase classname="test/unit/decorators.spec.ts" name="backend decorators &gt; attaches authorization and audit metadata" time="0.1298545">
+        </testcase>
+        <testcase classname="test/unit/decorators.spec.ts" name="backend decorators &gt; exports the current-principal decorator factory" time="0.000314709">
+        </testcase>
+        <testcase classname="test/unit/decorators.spec.ts" name="backend decorators &gt; resolves the current principal from request metadata" time="0.000657709">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/identity-admin-export.spec.ts" timestamp="2026-05-19T01:37:47.726Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.001713625">
-        <testcase classname="test/unit/identity-admin-export.spec.ts" name="@stynx/backend exports surface for identity-admin &gt; barrel surfaces at least one export" time="0.000751375">
+    <testsuite name="test/unit/idempotency-export.spec.ts" timestamp="2026-05-19T05:25:20.872Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.001534333">
+        <testcase classname="test/unit/idempotency-export.spec.ts" name="@stynx/backend exports surface for idempotency &gt; barrel surfaces at least one export" time="0.000801584">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/identity-admin.service.spec.ts" timestamp="2026-05-19T01:37:47.727Z" hostname="thiamat-1903.local" tests="16" failures="0" errors="0" skipped="0" time="0.033522375">
-        <testcase classname="test/unit/identity-admin.service.spec.ts" name="IdentityAdminService &gt; delegates list/get/update/disable/enable to the adapter" time="0.017226542">
+    <testsuite name="test/unit/identity-admin-export.spec.ts" timestamp="2026-05-19T05:25:20.872Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.002188125">
+        <testcase classname="test/unit/identity-admin-export.spec.ts" name="@stynx/backend exports surface for identity-admin &gt; barrel surfaces at least one export" time="0.001361375">
         </testcase>
-        <testcase classname="test/unit/identity-admin.service.spec.ts" name="IdentityAdminService &gt; delegates group / password / verify operations" time="0.000899292">
+    </testsuite>
+    <testsuite name="test/unit/identity-admin.service.spec.ts" timestamp="2026-05-19T05:25:20.873Z" hostname="thiamat-1903.local" tests="16" failures="0" errors="0" skipped="0" time="0.03059125">
+        <testcase classname="test/unit/identity-admin.service.spec.ts" name="IdentityAdminService &gt; delegates list/get/update/disable/enable to the adapter" time="0.009318042">
         </testcase>
-        <testcase classname="test/unit/identity-admin.service.spec.ts" name="IdentityAdminService &gt; throws ServiceUnavailableException for getUserBySubject when adapter lacks support" time="0.0010705">
+        <testcase classname="test/unit/identity-admin.service.spec.ts" name="IdentityAdminService &gt; delegates group / password / verify operations" time="0.002610041">
         </testcase>
-        <testcase classname="test/unit/identity-admin.service.spec.ts" name="IdentityAdminService &gt; delegates getUserBySubject when the adapter supports it" time="0.0003445">
+        <testcase classname="test/unit/identity-admin.service.spec.ts" name="IdentityAdminService &gt; throws ServiceUnavailableException for getUserBySubject when adapter lacks support" time="0.001832917">
         </testcase>
-        <testcase classname="test/unit/identity-admin.service.spec.ts" name="IdentityAdminService &gt; throws ServiceUnavailableException for setUserPassword when adapter lacks support" time="0.000322">
+        <testcase classname="test/unit/identity-admin.service.spec.ts" name="IdentityAdminService &gt; delegates getUserBySubject when the adapter supports it" time="0.000871291">
         </testcase>
-        <testcase classname="test/unit/identity-admin.service.spec.ts" name="IdentityAdminService &gt; throws ServiceUnavailableException for verifyUserChannels when adapter lacks support" time="0.0002605">
+        <testcase classname="test/unit/identity-admin.service.spec.ts" name="IdentityAdminService &gt; throws ServiceUnavailableException for setUserPassword when adapter lacks support" time="0.000877041">
+        </testcase>
+        <testcase classname="test/unit/identity-admin.service.spec.ts" name="IdentityAdminService &gt; throws ServiceUnavailableException for verifyUserChannels when adapter lacks support" time="0.001491417">
         </testcase>
         <testcase classname="test/unit/identity-admin.service.spec.ts" name="IdentityAdminService &gt; IdentityAdminError → HttpException mapping &gt; IDENTITY_NOT_FOUND maps to %p class NotFoundException extends http_exception_1.HttpException {
     /**
@@ -196,7 +238,7 @@
         const { description, httpExceptionOptions } = http_exception_1.HttpException.extractDescriptionAndOptionsFrom(descriptionOrOptions);
         super(http_exception_1.HttpException.createBody(objectOrError, description, http_status_enum_1.HttpStatus.NOT_FOUND), http_status_enum_1.HttpStatus.NOT_FOUND, httpExceptionOptions);
     }
-}" time="0.000371208">
+}" time="0.003374125">
         </testcase>
         <testcase classname="test/unit/identity-admin.service.spec.ts" name="IdentityAdminService &gt; IdentityAdminError → HttpException mapping &gt; IDENTITY_FORBIDDEN maps to %p class ForbiddenException extends http_exception_1.HttpException {
     /**
@@ -227,7 +269,7 @@
         const { description, httpExceptionOptions } = http_exception_1.HttpException.extractDescriptionAndOptionsFrom(descriptionOrOptions);
         super(http_exception_1.HttpException.createBody(objectOrError, description, http_status_enum_1.HttpStatus.FORBIDDEN), http_status_enum_1.HttpStatus.FORBIDDEN, httpExceptionOptions);
     }
-}" time="0.00026325">
+}" time="0.001044916">
         </testcase>
         <testcase classname="test/unit/identity-admin.service.spec.ts" name="IdentityAdminService &gt; IdentityAdminError → HttpException mapping &gt; IDENTITY_CONFLICT maps to %p class ConflictException extends http_exception_1.HttpException {
     /**
@@ -258,7 +300,7 @@
         const { description, httpExceptionOptions } = http_exception_1.HttpException.extractDescriptionAndOptionsFrom(descriptionOrOptions);
         super(http_exception_1.HttpException.createBody(objectOrError, description, http_status_enum_1.HttpStatus.CONFLICT), http_status_enum_1.HttpStatus.CONFLICT, httpExceptionOptions);
     }
-}" time="0.000456167">
+}" time="0.000817292">
         </testcase>
         <testcase classname="test/unit/identity-admin.service.spec.ts" name="IdentityAdminService &gt; IdentityAdminError → HttpException mapping &gt; IDENTITY_VALIDATION_ERROR maps to %p class BadRequestException extends http_exception_1.HttpException {
     /**
@@ -289,7 +331,7 @@
         const { description, httpExceptionOptions } = http_exception_1.HttpException.extractDescriptionAndOptionsFrom(descriptionOrOptions);
         super(http_exception_1.HttpException.createBody(objectOrError, description, http_status_enum_1.HttpStatus.BAD_REQUEST), http_status_enum_1.HttpStatus.BAD_REQUEST, httpExceptionOptions);
     }
-}" time="0.001393459">
+}" time="0.000765167">
         </testcase>
         <testcase classname="test/unit/identity-admin.service.spec.ts" name="IdentityAdminService &gt; IdentityAdminError → HttpException mapping &gt; IDENTITY_RATE_LIMITED maps to %p class ServiceUnavailableException extends http_exception_1.HttpException {
     /**
@@ -320,7 +362,7 @@
         const { description, httpExceptionOptions } = http_exception_1.HttpException.extractDescriptionAndOptionsFrom(descriptionOrOptions);
         super(http_exception_1.HttpException.createBody(objectOrError, description, http_status_enum_1.HttpStatus.SERVICE_UNAVAILABLE), http_status_enum_1.HttpStatus.SERVICE_UNAVAILABLE, httpExceptionOptions);
     }
-}" time="0.000346333">
+}" time="0.000312125">
         </testcase>
         <testcase classname="test/unit/identity-admin.service.spec.ts" name="IdentityAdminService &gt; IdentityAdminError → HttpException mapping &gt; IDENTITY_PROVIDER_ERROR maps to %p class ServiceUnavailableException extends http_exception_1.HttpException {
     /**
@@ -351,7 +393,7 @@
         const { description, httpExceptionOptions } = http_exception_1.HttpException.extractDescriptionAndOptionsFrom(descriptionOrOptions);
         super(http_exception_1.HttpException.createBody(objectOrError, description, http_status_enum_1.HttpStatus.SERVICE_UNAVAILABLE), http_status_enum_1.HttpStatus.SERVICE_UNAVAILABLE, httpExceptionOptions);
     }
-}" time="0.000219958">
+}" time="0.00017">
         </testcase>
         <testcase classname="test/unit/identity-admin.service.spec.ts" name="IdentityAdminService &gt; IdentityAdminError → HttpException mapping &gt; UNKNOWN_CODE maps to %p class ServiceUnavailableException extends http_exception_1.HttpException {
     /**
@@ -382,255 +424,297 @@
         const { description, httpExceptionOptions } = http_exception_1.HttpException.extractDescriptionAndOptionsFrom(descriptionOrOptions);
         super(http_exception_1.HttpException.createBody(objectOrError, description, http_status_enum_1.HttpStatus.SERVICE_UNAVAILABLE), http_status_enum_1.HttpStatus.SERVICE_UNAVAILABLE, httpExceptionOptions);
     }
-}" time="0.000256208">
+}" time="0.000158084">
         </testcase>
-        <testcase classname="test/unit/identity-admin.service.spec.ts" name="IdentityAdminService &gt; passes through non-IdentityAdminError throws unchanged" time="0.000897792">
+        <testcase classname="test/unit/identity-admin.service.spec.ts" name="IdentityAdminService &gt; passes through non-IdentityAdminError throws unchanged" time="0.002847084">
         </testcase>
-        <testcase classname="test/unit/identity-admin.service.spec.ts" name="IdentityAdminService &gt; local-sync adapter delegations &gt; throws ServiceUnavailableException when no local-sync adapter is wired" time="0.000960042">
+        <testcase classname="test/unit/identity-admin.service.spec.ts" name="IdentityAdminService &gt; local-sync adapter delegations &gt; throws ServiceUnavailableException when no local-sync adapter is wired" time="0.000557792">
         </testcase>
-        <testcase classname="test/unit/identity-admin.service.spec.ts" name="IdentityAdminService &gt; local-sync adapter delegations &gt; delegates syncToLocal / syncUser / listGroupsWithMetaByUserId to the local-sync adapter" time="0.00052075">
-        </testcase>
-    </testsuite>
-    <testsuite name="test/unit/integration-facades.spec.ts" timestamp="2026-05-19T01:37:47.730Z" hostname="thiamat-1903.local" tests="18" failures="0" errors="0" skipped="0" time="0.027551333">
-        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; list() expands each item via get() to include groups + attributes" time="0.004767">
-        </testcase>
-        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; list() handles items without a username inline" time="0.000401958">
-        </testcase>
-        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; get() composes user details + group names" time="0.000376917">
-        </testcase>
-        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; getBySub() resolves username via getUserBySubject then composes" time="0.001327584">
-        </testcase>
-        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; update() short-circuits when no updatable attributes are set" time="0.001970791">
-        </testcase>
-        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; update() short-circuits when custom is empty" time="0.000348375">
-        </testcase>
-        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; update() passes through every present field to updateUser" time="0.00085875">
-        </testcase>
-        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; disable/enable/addToGroup/removeFromGroup/resetPassword/setPassword return their tags" time="0.000842166">
-        </testcase>
-        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; verify() short-circuits when neither email nor phone is requested" time="0.0004135">
-        </testcase>
-        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; verify() delegates when email or phone is requested" time="0.000232958">
-        </testcase>
-        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; listGroups / listGroupsWithMetaByUserId / listAllGroups delegate" time="0.000318291">
-        </testcase>
-        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; syncToLocal / syncUser delegate" time="0.000266125">
-        </testcase>
-        <testcase classname="test/unit/integration-facades.spec.ts" name="PecIdentityAdminFacade &gt; list() maps items into PEC summary shape with parsed dates" time="0.00083525">
-        </testcase>
-        <testcase classname="test/unit/integration-facades.spec.ts" name="PecIdentityAdminFacade &gt; list() emits null email/phone when adapter returns undefined" time="0.004695333">
-        </testcase>
-        <testcase classname="test/unit/integration-facades.spec.ts" name="PecIdentityAdminFacade &gt; get() maps user detail with parsed dates" time="0.000585708">
-        </testcase>
-        <testcase classname="test/unit/integration-facades.spec.ts" name="PecIdentityAdminFacade &gt; update() filters undefined fields, calls updateUser, returns mapped detail" time="0.00361875">
-        </testcase>
-        <testcase classname="test/unit/integration-facades.spec.ts" name="PecIdentityAdminFacade &gt; disable/enable/listGroups/addToGroup/removeFromGroup/verify/resetPassword delegate" time="0.000469958">
-        </testcase>
-        <testcase classname="test/unit/integration-facades.spec.ts" name="PecIdentityAdminFacade &gt; listAllGroups() maps items + nextToken" time="0.000189875">
+        <testcase classname="test/unit/identity-admin.service.spec.ts" name="IdentityAdminService &gt; local-sync adapter delegations &gt; delegates syncToLocal / syncUser / listGroupsWithMetaByUserId to the local-sync adapter" time="0.002100458">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/pg-durable-stores.spec.ts" timestamp="2026-05-19T01:37:47.731Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.037638875">
-        <testcase classname="test/unit/pg-durable-stores.spec.ts" name="backend durable stores &gt; covers backend PgIdempotencyStore query branches" time="0.031833959">
+    <testsuite name="test/unit/integration-facades.spec.ts" timestamp="2026-05-19T05:25:20.876Z" hostname="thiamat-1903.local" tests="30" failures="0" errors="0" skipped="0" time="0.089380083">
+        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; list() expands each item via get() to include groups + attributes" time="0.00493575">
         </testcase>
-        <testcase classname="test/unit/pg-durable-stores.spec.ts" name="backend durable stores &gt; covers backend PgRateLimitStore query branches" time="0.0043155">
+        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; list() forwards every supported filter to listUsers" time="0.000905958">
         </testcase>
-    </testsuite>
-    <testsuite name="test/unit/pg-local-sync.adapter.spec.ts" timestamp="2026-05-19T01:37:47.731Z" hostname="thiamat-1903.local" tests="18" failures="0" errors="0" skipped="0" time="0.02801">
-        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; syncToLocal skips users without a username or UUID subject" time="0.008759792">
+        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; list() handles items without a username inline" time="0.000439458">
         </testcase>
-        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; syncToLocal aggregates group memberships and upserts roles" time="0.000685333">
+        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; describes branch: list() omits optional inline fields and next token when absent" time="0.000264708">
         </testcase>
-        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; syncToLocal paginates listUsers + listGroups via nextToken" time="0.000256708">
+        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; get() composes user details + group names" time="0.000311125">
         </testcase>
-        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; syncUser throws IDENTITY_VALIDATION_ERROR when sub is not a UUID" time="0.000612084">
+        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; describes branch: get() omits optional status and timestamp fields" time="0.001362167">
         </testcase>
-        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; syncUser returns the resolved user id" time="0.000225875">
+        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; getBySub() resolves username via getUserBySubject then composes" time="0.005021959">
         </testcase>
-        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; listGroupsWithMetaByUserId throws IDENTITY_NOT_FOUND when no username row exists" time="0.000238542">
+        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; update() short-circuits when no updatable attributes are set" time="0.001280625">
         </testcase>
-        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; listGroupsWithMetaByUserId merges adapter groups with isIn flag and meta sort" time="0.00134425">
+        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; update() short-circuits when custom is empty" time="0.004400458">
         </testcase>
-        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; listGroupsWithMetaByUserId handles missing meta loader (default empty)" time="0.000580417">
+        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; update() passes through every present field to updateUser" time="0.000730459">
         </testcase>
-        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; falls back to direct run() when db.withTransaction is not present" time="0.000164417">
+        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; update() treats email as independently updatable" time="0.001331958">
         </testcase>
-        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; honors custom roleCodeFromGroupName and roleDescriptionFromGroup" time="0.000951583">
+        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; update() treats phone as independently updatable" time="0.00025575">
         </testcase>
-        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; honors custom userIdFromDetail override (e.g. external_id strategy)" time="0.000333125">
+        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; update() treats name as independently updatable" time="0.007915542">
         </testcase>
-        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; honors custom displayNameFromDetail override" time="0.000253875">
+        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; update() treats given name as independently updatable" time="0.003318583">
         </testcase>
-        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; default display name falls back through name → custom:displayName → email → username" time="0.00021675">
+        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; update() treats family name as independently updatable" time="0.000982458">
         </testcase>
-        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; allows default display-name resolution to return undefined when all candidates are blank" time="0.000237084">
+        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; update() treats custom as independently updatable" time="0.016602959">
         </testcase>
-        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; sorts groups by name when sort order ties or is absent" time="0.010930542">
+        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; disable/enable/addToGroup/removeFromGroup/resetPassword/setPassword return their tags" time="0.006771375">
         </testcase>
-        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; default role-code strategy strips trailing s from plural group names" time="0.000681375">
+        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; verify() short-circuits when neither email nor phone is requested" time="0.009037292">
         </testcase>
-        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="loadPormRoleMetaRows &gt; queries the PORM enum view + maps rows to IdentityGroupMetaRow" time="0.000189">
+        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; verify() delegates when email or phone is requested" time="0.001318041">
         </testcase>
-        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="loadPormRoleMetaRows &gt; honors viewName and roleDomain overrides + falls back to sort_order when order missing" time="0.000172333">
+        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; listGroups / listGroupsWithMetaByUserId / listAllGroups delegate" time="0.000484167">
         </testcase>
-    </testsuite>
-    <testsuite name="test/unit/pg-session-db-context.applier.spec.ts" timestamp="2026-05-19T01:37:47.747Z" hostname="thiamat-1903.local" tests="14" failures="0" errors="0" skipped="0" time="0.023246916">
-        <testcase classname="test/unit/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; issues SET row_security = on by default" time="0.001882959">
+        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; describes branch: listAllGroups omits next token when provider has no token" time="0.000206167">
         </testcase>
-        <testcase classname="test/unit/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; skips SET row_security when enableRowSecurity=false" time="0.000229708">
+        <testcase classname="test/unit/integration-facades.spec.ts" name="PormIdentityAdminFacade &gt; syncToLocal / syncUser delegate" time="0.000300292">
         </testcase>
-        <testcase classname="test/unit/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; writes tenantId via set_config to all default tenant setting names" time="0.000535958">
+        <testcase classname="test/unit/integration-facades.spec.ts" name="PecIdentityAdminFacade &gt; list() maps items into PEC summary shape with parsed dates" time="0.000977875">
         </testcase>
-        <testcase classname="test/unit/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; writes userId, correlationId, requestId via set_config" time="0.010235625">
+        <testcase classname="test/unit/integration-facades.spec.ts" name="PecIdentityAdminFacade &gt; list() emits null email/phone when adapter returns undefined" time="0.000216542">
         </testcase>
-        <testcase classname="test/unit/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; joins roles and permissions arrays into comma-separated strings" time="0.002726666">
+        <testcase classname="test/unit/integration-facades.spec.ts" name="PecIdentityAdminFacade &gt; get() maps user detail with parsed dates" time="0.000223917">
         </testcase>
-        <testcase classname="test/unit/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; clears settings to empty string when value is undefined and clearMissing=true (default)" time="0.000202042">
+        <testcase classname="test/unit/integration-facades.spec.ts" name="PecIdentityAdminFacade &gt; update() filters undefined fields, calls updateUser, returns mapped detail" time="0.000393917">
         </testcase>
-        <testcase classname="test/unit/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; skips set_config for absent values when clearMissing=false" time="0.000137334">
+        <testcase classname="test/unit/integration-facades.spec.ts" name="PecIdentityAdminFacade &gt; describes branch: PEC update passes an empty patch when all fields are undefined" time="0.0119495">
         </testcase>
-        <testcase classname="test/unit/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; honors custom setting name overrides and deduplicates" time="0.002488875">
+        <testcase classname="test/unit/integration-facades.spec.ts" name="PecIdentityAdminFacade &gt; disable/enable/listGroups/addToGroup/removeFromGroup/verify/resetPassword delegate" time="0.000463375">
         </testcase>
-        <testcase classname="test/unit/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; resolves language from extras[&quot;lang&quot;] over defaultLanguage" time="0.000207166">
+        <testcase classname="test/unit/integration-facades.spec.ts" name="PecIdentityAdminFacade &gt; listAllGroups() maps items + nextToken" time="0.000201583">
         </testcase>
-        <testcase classname="test/unit/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; falls back to defaultLanguage when no extras key matches" time="0.000177708">
-        </testcase>
-        <testcase classname="test/unit/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; reads orgCnpj from extras[&quot;orgCnpj&quot;] or [&quot;org_cnpj&quot;]" time="0.000111792">
-        </testcase>
-        <testcase classname="test/unit/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; honors custom languageExtraKeys ordering" time="0.000094416">
-        </testcase>
-        <testcase classname="test/unit/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; skips applying when settings list is empty (zero-length override)" time="0.000135583">
-        </testcase>
-        <testcase classname="test/unit/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; coerces non-string scalar values to strings via String()" time="0.00009">
+        <testcase classname="test/unit/integration-facades.spec.ts" name="PecIdentityAdminFacade &gt; describes branch: PEC listAllGroups omits next token when absent" time="0.000172458">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/pipeline-export.spec.ts" timestamp="2026-05-19T01:37:47.781Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.005949">
-        <testcase classname="test/unit/pipeline-export.spec.ts" name="@stynx/backend exports surface for pipeline &gt; barrel surfaces at least one export" time="0.000953917">
+    <testsuite name="test/unit/pg-durable-stores.spec.ts" timestamp="2026-05-19T05:25:20.881Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="0.040071792">
+        <testcase classname="test/unit/pg-durable-stores.spec.ts" name="backend durable stores &gt; covers backend PgIdempotencyStore query branches" time="0.024231458">
+        </testcase>
+        <testcase classname="test/unit/pg-durable-stores.spec.ts" name="backend durable stores &gt; describes branch: PgIdempotencyStore handles sparse rows and array row counts" time="0.000840917">
+        </testcase>
+        <testcase classname="test/unit/pg-durable-stores.spec.ts" name="backend durable stores &gt; covers backend PgRateLimitStore query branches" time="0.002187">
+        </testcase>
+        <testcase classname="test/unit/pg-durable-stores.spec.ts" name="backend durable stores &gt; describes branch: PgRateLimitStore uses default SQL identifiers" time="0.005920583">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/rate-limit-export.spec.ts" timestamp="2026-05-19T01:37:47.782Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.005285541">
-        <testcase classname="test/unit/rate-limit-export.spec.ts" name="@stynx/backend exports surface for rate-limit &gt; barrel surfaces at least one export" time="0.000834708">
+    <testsuite name="test/unit/pg-local-sync.adapter.spec.ts" timestamp="2026-05-19T05:25:20.882Z" hostname="thiamat-1903.local" tests="25" failures="0" errors="0" skipped="0" time="0.070023417">
+        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; syncToLocal skips users without a username or UUID subject" time="0.010998959">
+        </testcase>
+        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; describes branch: syncToLocal skips users whose subject is missing entirely" time="0.004475459">
+        </testcase>
+        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; syncToLocal aggregates group memberships and upserts roles" time="0.002943083">
+        </testcase>
+        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; describes branch: syncToLocal persists optional status when provider supplies it" time="0.003951958">
+        </testcase>
+        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; syncToLocal paginates listUsers + listGroups via nextToken" time="0.005441209">
+        </testcase>
+        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; syncUser throws IDENTITY_VALIDATION_ERROR when sub is not a UUID" time="0.006409958">
+        </testcase>
+        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; syncUser returns the resolved user id" time="0.003126292">
+        </testcase>
+        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; describes branch: syncUser omits optional status and email when absent" time="0.00172925">
+        </testcase>
+        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; listGroupsWithMetaByUserId throws IDENTITY_NOT_FOUND when no username row exists" time="0.003057375">
+        </testcase>
+        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; listGroupsWithMetaByUserId merges adapter groups with isIn flag and meta sort" time="0.001245667">
+        </testcase>
+        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; listGroupsWithMetaByUserId handles missing meta loader (default empty)" time="0.000271458">
+        </testcase>
+        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; falls back to direct run() when db.withTransaction is not present" time="0.000136041">
+        </testcase>
+        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; honors custom roleCodeFromGroupName and roleDescriptionFromGroup" time="0.00026575">
+        </testcase>
+        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; default role descriptions normalize group names when descriptions are blank" time="0.000504917">
+        </testcase>
+        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; honors custom userIdFromDetail override (e.g. external_id strategy)" time="0.000826334">
+        </testcase>
+        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; honors custom displayNameFromDetail override" time="0.000652875">
+        </testcase>
+        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; default display name falls back through name → custom:displayName → email → username" time="0.000961875">
+        </testcase>
+        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; allows default display-name resolution to return undefined when all candidates are blank" time="0.000402667">
+        </testcase>
+        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; sorts groups by name when sort order ties or is absent" time="0.017696667">
+        </testcase>
+        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; default role-code strategy strips trailing s from plural group names" time="0.000549917">
+        </testcase>
+        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; describes branch: missing returned role ids skip group and membership counts" time="0.000667791">
+        </testcase>
+        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="PgIdentityLocalSyncAdapter &gt; rejects UUID-looking subjects only when the full string matches" time="0.000611125">
+        </testcase>
+        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="loadPormRoleMetaRows &gt; queries the PORM enum view + maps rows to IdentityGroupMetaRow" time="0.000244958">
+        </testcase>
+        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="loadPormRoleMetaRows &gt; honors viewName and roleDomain overrides + falls back to sort_order when order missing" time="0.000141208">
+        </testcase>
+        <testcase classname="test/unit/pg-local-sync.adapter.spec.ts" name="loadPormRoleMetaRows &gt; describes branch: loadPormRoleMetaRows accepts array results and null sort order" time="0.00009525">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/redaction-policy.spec.ts" timestamp="2026-05-19T01:37:47.783Z" hostname="thiamat-1903.local" tests="10" failures="0" errors="0" skipped="0" time="0.007431917">
-        <testcase classname="test/unit/redaction-policy.spec.ts" name="PatternAuditMetadataRedactionPolicy &gt; returns undefined when metadata is undefined" time="0.002356792">
+    <testsuite name="test/unit/pg-session-db-context.applier.spec.ts" timestamp="2026-05-19T05:25:20.888Z" hostname="thiamat-1903.local" tests="14" failures="0" errors="0" skipped="0" time="0.015697875">
+        <testcase classname="test/unit/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; issues SET row_security = on by default" time="0.006867041">
         </testcase>
-        <testcase classname="test/unit/redaction-policy.spec.ts" name="PatternAuditMetadataRedactionPolicy &gt; returns the value unchanged for trivial scalar values inside objects" time="0.000731291">
+        <testcase classname="test/unit/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; skips SET row_security when enableRowSecurity=false" time="0.00051975">
         </testcase>
-        <testcase classname="test/unit/redaction-policy.spec.ts" name="PatternAuditMetadataRedactionPolicy &gt; redacts values under sensitive keys (default pattern)" time="0.000123583">
+        <testcase classname="test/unit/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; writes tenantId via set_config to all default tenant setting names" time="0.002170791">
         </testcase>
-        <testcase classname="test/unit/redaction-policy.spec.ts" name="PatternAuditMetadataRedactionPolicy &gt; honors custom sensitiveKeyPattern + replacement" time="0.000127292">
+        <testcase classname="test/unit/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; writes userId, correlationId, requestId via set_config" time="0.000254333">
         </testcase>
-        <testcase classname="test/unit/redaction-policy.spec.ts" name="PatternAuditMetadataRedactionPolicy &gt; truncates long strings to maxStringLength with ellipsis" time="0.000486125">
+        <testcase classname="test/unit/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; joins roles and permissions arrays into comma-separated strings" time="0.000159417">
         </testcase>
-        <testcase classname="test/unit/redaction-policy.spec.ts" name="PatternAuditMetadataRedactionPolicy &gt; truncates large arrays to maxArrayLength" time="0.000820958">
+        <testcase classname="test/unit/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; clears settings to empty string when value is undefined and clearMissing=true (default)" time="0.000135042">
         </testcase>
-        <testcase classname="test/unit/redaction-policy.spec.ts" name="PatternAuditMetadataRedactionPolicy &gt; serializes Date values as ISO strings" time="0.000640084">
+        <testcase classname="test/unit/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; skips set_config for absent values when clearMissing=false" time="0.000114125">
         </testcase>
-        <testcase classname="test/unit/redaction-policy.spec.ts" name="PatternAuditMetadataRedactionPolicy &gt; emits [MaxDepth] beyond maxDepth" time="0.000124958">
+        <testcase classname="test/unit/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; honors custom setting name overrides and deduplicates" time="0.000185167">
         </testcase>
-        <testcase classname="test/unit/redaction-policy.spec.ts" name="PatternAuditMetadataRedactionPolicy &gt; returns undefined when metadata sanitizes to an array (root-level array)" time="0.00007475">
+        <testcase classname="test/unit/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; resolves language from extras[&quot;lang&quot;] over defaultLanguage" time="0.001639375">
         </testcase>
-        <testcase classname="test/unit/redaction-policy.spec.ts" name="PatternAuditMetadataRedactionPolicy &gt; emits [Unsupported] for function/symbol values" time="0.00020325">
+        <testcase classname="test/unit/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; falls back to defaultLanguage when no extras key matches" time="0.000194791">
         </testcase>
-    </testsuite>
-    <testsuite name="test/unit/request-db-client-lifecycle.spec.ts" timestamp="2026-05-19T01:37:47.808Z" hostname="thiamat-1903.local" tests="12" failures="0" errors="0" skipped="0" time="0.137831583">
-        <testcase classname="test/unit/request-db-client-lifecycle.spec.ts" name="PgTenantDbClientLifecycle &gt; acquire delegates to factory.connectWithTenant with the tenantId" time="0.004233583">
+        <testcase classname="test/unit/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; reads orgCnpj from extras[&quot;orgCnpj&quot;] or [&quot;org_cnpj&quot;]" time="0.000111542">
         </testcase>
-        <testcase classname="test/unit/request-db-client-lifecycle.spec.ts" name="PgTenantDbClientLifecycle &gt; release calls client.release() by default" time="0.000544375">
+        <testcase classname="test/unit/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; honors custom languageExtraKeys ordering" time="0.000094">
         </testcase>
-        <testcase classname="test/unit/request-db-client-lifecycle.spec.ts" name="PgTenantDbClientLifecycle &gt; release honors releaseMethodName override (e.g. &quot;close&quot;)" time="0.000220333">
+        <testcase classname="test/unit/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; skips applying when settings list is empty (zero-length override)" time="0.000142708">
         </testcase>
-        <testcase classname="test/unit/request-db-client-lifecycle.spec.ts" name="PgTenantDbClientLifecycle &gt; release is a no-op when the client does not expose the release method" time="0.000625125">
-        </testcase>
-        <testcase classname="test/unit/request-db-client-lifecycle.spec.ts" name="ResponseEventRequestDbClientLifecycle &gt; acquire delegates straight through" time="0.000839417">
-        </testcase>
-        <testcase classname="test/unit/request-db-client-lifecycle.spec.ts" name="ResponseEventRequestDbClientLifecycle &gt; release defers to the response finish event when response is open" time="0.02566675">
-        </testcase>
-        <testcase classname="test/unit/request-db-client-lifecycle.spec.ts" name="ResponseEventRequestDbClientLifecycle &gt; releases immediately when the response is already finished" time="0.039634792">
-        </testcase>
-        <testcase classname="test/unit/request-db-client-lifecycle.spec.ts" name="ResponseEventRequestDbClientLifecycle &gt; releases immediately when there is no response to listen on" time="0.006976791">
-        </testcase>
-        <testcase classname="test/unit/request-db-client-lifecycle.spec.ts" name="ResponseEventRequestDbClientLifecycle &gt; does not double-release when both finish and close fire" time="0.0126485">
-        </testcase>
-        <testcase classname="test/unit/request-db-client-lifecycle.spec.ts" name="ResponseEventRequestDbClientLifecycle &gt; resolves response from request.res when request.response is absent" time="0.000387625">
-        </testcase>
-        <testcase classname="test/unit/request-db-client-lifecycle.spec.ts" name="ResponseEventRequestDbClientLifecycle &gt; skips the second release call when invoked twice for the same request" time="0.000112958">
-        </testcase>
-        <testcase classname="test/unit/request-db-client-lifecycle.spec.ts" name="ResponseEventRequestDbClientLifecycle &gt; honors custom releaseEvents config" time="0.026744167">
+        <testcase classname="test/unit/pg-session-db-context.applier.spec.ts" name="PgSessionDbContextApplier &gt; coerces non-string scalar values to strings via String()" time="0.00008875">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/sla-export.spec.ts" timestamp="2026-05-19T01:37:47.840Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.001319125">
-        <testcase classname="test/unit/sla-export.spec.ts" name="@stynx/backend exports surface for sla &gt; barrel surfaces at least one export" time="0.000707375">
+    <testsuite name="test/unit/pipeline-export.spec.ts" timestamp="2026-05-19T05:25:20.891Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.006636792">
+        <testcase classname="test/unit/pipeline-export.spec.ts" name="@stynx/backend exports surface for pipeline &gt; barrel surfaces at least one export" time="0.004762292">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/storage-export.spec.ts" timestamp="2026-05-19T01:37:47.844Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.004011542">
-        <testcase classname="test/unit/storage-export.spec.ts" name="@stynx/backend exports surface for storage &gt; barrel surfaces at least one export" time="0.002492917">
+    <testsuite name="test/unit/rate-limit-export.spec.ts" timestamp="2026-05-19T05:25:20.892Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.009717084">
+        <testcase classname="test/unit/rate-limit-export.spec.ts" name="@stynx/backend exports surface for rate-limit &gt; barrel surfaces at least one export" time="0.006134209">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/tenant-entitlement.spec.ts" timestamp="2026-05-19T01:37:47.850Z" hostname="thiamat-1903.local" tests="18" failures="0" errors="0" skipped="0" time="0.010033792">
-        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="ClaimFirstTenantEntitlementPolicy &gt; grants when a string claim contains the tenantId" time="0.002794083">
+    <testsuite name="test/unit/redaction-policy.spec.ts" timestamp="2026-05-19T05:25:20.892Z" hostname="thiamat-1903.local" tests="10" failures="0" errors="0" skipped="0" time="0.016082958">
+        <testcase classname="test/unit/redaction-policy.spec.ts" name="PatternAuditMetadataRedactionPolicy &gt; returns undefined when metadata is undefined" time="0.002243208">
         </testcase>
-        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="ClaimFirstTenantEntitlementPolicy &gt; grants when an array claim contains the tenantId" time="0.000187084">
+        <testcase classname="test/unit/redaction-policy.spec.ts" name="PatternAuditMetadataRedactionPolicy &gt; returns the value unchanged for trivial scalar values inside objects" time="0.000758583">
         </testcase>
-        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="ClaimFirstTenantEntitlementPolicy &gt; grants via JSON-array string claim" time="0.000108625">
+        <testcase classname="test/unit/redaction-policy.spec.ts" name="PatternAuditMetadataRedactionPolicy &gt; redacts values under sensitive keys (default pattern)" time="0.000113334">
         </testcase>
-        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="ClaimFirstTenantEntitlementPolicy &gt; grants via CSV string claim" time="0.000089208">
+        <testcase classname="test/unit/redaction-policy.spec.ts" name="PatternAuditMetadataRedactionPolicy &gt; honors custom sensitiveKeyPattern + replacement" time="0.00075375">
         </testcase>
-        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="ClaimFirstTenantEntitlementPolicy &gt; denies when a tenant claim is present but does not include the tenantId" time="0.000083333">
+        <testcase classname="test/unit/redaction-policy.spec.ts" name="PatternAuditMetadataRedactionPolicy &gt; truncates long strings to maxStringLength with ellipsis" time="0.000113042">
         </testcase>
-        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="ClaimFirstTenantEntitlementPolicy &gt; denies when no tenant claim exists and no fallback configured" time="0.000081167">
+        <testcase classname="test/unit/redaction-policy.spec.ts" name="PatternAuditMetadataRedactionPolicy &gt; truncates large arrays to maxArrayLength" time="0.006023583">
         </testcase>
-        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="ClaimFirstTenantEntitlementPolicy &gt; delegates to fallback when no tenant claim and fallback configured" time="0.000684459">
+        <testcase classname="test/unit/redaction-policy.spec.ts" name="PatternAuditMetadataRedactionPolicy &gt; serializes Date values as ISO strings" time="0.000530208">
         </testcase>
-        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="ClaimFirstTenantEntitlementPolicy &gt; does NOT delegate to fallback when a tenant claim exists but excludes the tenantId" time="0.000158084">
+        <testcase classname="test/unit/redaction-policy.spec.ts" name="PatternAuditMetadataRedactionPolicy &gt; emits [MaxDepth] beyond maxDepth" time="0.000081125">
         </testcase>
-        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="ClaimFirstTenantEntitlementPolicy &gt; falls back through invalid JSON to CSV parsing" time="0.000208375">
+        <testcase classname="test/unit/redaction-policy.spec.ts" name="PatternAuditMetadataRedactionPolicy &gt; returns undefined when metadata sanitizes to an array (root-level array)" time="0.000058042">
         </testcase>
-        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="ClaimFirstTenantEntitlementPolicy &gt; ignores non-string and blank string claims" time="0.000119791">
-        </testcase>
-        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="ClaimFirstTenantEntitlementPolicy &gt; ignores non-string entries in array claims" time="0.000059459">
-        </testcase>
-        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="ClaimFirstTenantEntitlementPolicy &gt; honors custom claimKeys list" time="0.000085875">
-        </testcase>
-        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="SqlTenantEntitlementFallback &gt; returns true when a row matches subject + tenant" time="0.000449833">
-        </testcase>
-        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="SqlTenantEntitlementFallback &gt; returns false when no rows match" time="0.000136084">
-        </testcase>
-        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="SqlTenantEntitlementFallback &gt; returns false when both subject and email are missing" time="0.000166167">
-        </testcase>
-        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="SqlTenantEntitlementFallback &gt; omits active predicate when activeColumn is null" time="0.000705291">
-        </testcase>
-        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="SqlTenantEntitlementFallback &gt; rejects table identifiers that fail the SQL identifier pattern" time="0.001456167">
-        </testcase>
-        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="SqlTenantEntitlementFallback &gt; handles array-form query result (no .rows wrapper)" time="0.000564791">
+        <testcase classname="test/unit/redaction-policy.spec.ts" name="PatternAuditMetadataRedactionPolicy &gt; emits [Unsupported] for function/symbol values" time="0.000057583">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/tenant-lifecycle.middleware.spec.ts" timestamp="2026-05-19T01:37:47.914Z" hostname="thiamat-1903.local" tests="13" failures="0" errors="0" skipped="0" time="0.014669292">
-        <testcase classname="test/unit/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; throws BadRequestException when tenant header missing and required" time="0.003786334">
+    <testsuite name="test/unit/request-db-client-lifecycle.spec.ts" timestamp="2026-05-19T05:25:20.894Z" hostname="thiamat-1903.local" tests="12" failures="0" errors="0" skipped="0" time="0.044695791">
+        <testcase classname="test/unit/request-db-client-lifecycle.spec.ts" name="PgTenantDbClientLifecycle &gt; acquire delegates to factory.connectWithTenant with the tenantId" time="0.007618666">
         </testcase>
-        <testcase classname="test/unit/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; allows missing header when requireTenantHeader=false" time="0.001554375">
+        <testcase classname="test/unit/request-db-client-lifecycle.spec.ts" name="PgTenantDbClientLifecycle &gt; release calls client.release() by default" time="0.002257458">
         </testcase>
-        <testcase classname="test/unit/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; throws when header present but not a UUID and enforceTenantUuid=true" time="0.000262709">
+        <testcase classname="test/unit/request-db-client-lifecycle.spec.ts" name="PgTenantDbClientLifecycle &gt; release honors releaseMethodName override (e.g. &quot;close&quot;)" time="0.000638791">
         </testcase>
-        <testcase classname="test/unit/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; accepts a non-UUID header when enforceTenantUuid=false" time="0.000171833">
+        <testcase classname="test/unit/request-db-client-lifecycle.spec.ts" name="PgTenantDbClientLifecycle &gt; release is a no-op when the client does not expose the release method" time="0.000471708">
         </testcase>
-        <testcase classname="test/unit/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; binds request.tenantId from the valid UUID header" time="0.000146125">
+        <testcase classname="test/unit/request-db-client-lifecycle.spec.ts" name="ResponseEventRequestDbClientLifecycle &gt; acquire delegates straight through" time="0.000265583">
         </testcase>
-        <testcase classname="test/unit/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; reads from the array form of the header (takes first element)" time="0.000126167">
+        <testcase classname="test/unit/request-db-client-lifecycle.spec.ts" name="ResponseEventRequestDbClientLifecycle &gt; release defers to the response finish event when response is open" time="0.002885541">
         </testcase>
-        <testcase classname="test/unit/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; falls back to the lowercased variant of the configured header name" time="0.000102708">
+        <testcase classname="test/unit/request-db-client-lifecycle.spec.ts" name="ResponseEventRequestDbClientLifecycle &gt; releases immediately when the response is already finished" time="0.000497">
         </testcase>
-        <testcase classname="test/unit/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; releases the pgClient on response finish" time="0.000440458">
+        <testcase classname="test/unit/request-db-client-lifecycle.spec.ts" name="ResponseEventRequestDbClientLifecycle &gt; releases immediately when there is no response to listen on" time="0.0001765">
         </testcase>
-        <testcase classname="test/unit/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; does not double-release on finish + close" time="0.000816083">
+        <testcase classname="test/unit/request-db-client-lifecycle.spec.ts" name="ResponseEventRequestDbClientLifecycle &gt; does not double-release when both finish and close fire" time="0.000228209">
         </testcase>
-        <testcase classname="test/unit/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; falls back to dbClient when pgClient is absent" time="0.001810125">
+        <testcase classname="test/unit/request-db-client-lifecycle.spec.ts" name="ResponseEventRequestDbClientLifecycle &gt; resolves response from request.res when request.response is absent" time="0.024902209">
         </testcase>
-        <testcase classname="test/unit/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; is a no-op when no client is attached to the request" time="0.000904">
+        <testcase classname="test/unit/request-db-client-lifecycle.spec.ts" name="ResponseEventRequestDbClientLifecycle &gt; skips the second release call when invoked twice for the same request" time="0.000819833">
         </testcase>
-        <testcase classname="test/unit/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; skips release bindings when response is not an EventEmitter" time="0.00013325">
+        <testcase classname="test/unit/request-db-client-lifecycle.spec.ts" name="ResponseEventRequestDbClientLifecycle &gt; honors custom releaseEvents config" time="0.0015565">
         </testcase>
-        <testcase classname="test/unit/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; createTenantLifecycleMiddleware returns a bound function form" time="0.000218416">
+    </testsuite>
+    <testsuite name="test/unit/sla-export.spec.ts" timestamp="2026-05-19T05:25:20.898Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.004763375">
+        <testcase classname="test/unit/sla-export.spec.ts" name="@stynx/backend exports surface for sla &gt; barrel surfaces at least one export" time="0.002466542">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/storage-export.spec.ts" timestamp="2026-05-19T05:25:20.898Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.001783459">
+        <testcase classname="test/unit/storage-export.spec.ts" name="@stynx/backend exports surface for storage &gt; barrel surfaces at least one export" time="0.00096525">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/tenant-entitlement.spec.ts" timestamp="2026-05-19T05:25:20.898Z" hostname="thiamat-1903.local" tests="18" failures="0" errors="0" skipped="0" time="0.047328">
+        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="ClaimFirstTenantEntitlementPolicy &gt; grants when a string claim contains the tenantId" time="0.006247375">
+        </testcase>
+        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="ClaimFirstTenantEntitlementPolicy &gt; grants when an array claim contains the tenantId" time="0.000244583">
+        </testcase>
+        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="ClaimFirstTenantEntitlementPolicy &gt; grants via JSON-array string claim" time="0.0001015">
+        </testcase>
+        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="ClaimFirstTenantEntitlementPolicy &gt; grants via CSV string claim" time="0.000077125">
+        </testcase>
+        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="ClaimFirstTenantEntitlementPolicy &gt; denies when a tenant claim is present but does not include the tenantId" time="0.000069042">
+        </testcase>
+        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="ClaimFirstTenantEntitlementPolicy &gt; denies when no tenant claim exists and no fallback configured" time="0.000061791">
+        </testcase>
+        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="ClaimFirstTenantEntitlementPolicy &gt; delegates to fallback when no tenant claim and fallback configured" time="0.0171235">
+        </testcase>
+        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="ClaimFirstTenantEntitlementPolicy &gt; does NOT delegate to fallback when a tenant claim exists but excludes the tenantId" time="0.003483958">
+        </testcase>
+        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="ClaimFirstTenantEntitlementPolicy &gt; falls back through invalid JSON to CSV parsing" time="0.003141666">
+        </testcase>
+        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="ClaimFirstTenantEntitlementPolicy &gt; ignores non-string and blank string claims" time="0.000471458">
+        </testcase>
+        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="ClaimFirstTenantEntitlementPolicy &gt; ignores non-string entries in array claims" time="0.00034525">
+        </testcase>
+        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="ClaimFirstTenantEntitlementPolicy &gt; honors custom claimKeys list" time="0.000627125">
+        </testcase>
+        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="SqlTenantEntitlementFallback &gt; returns true when a row matches subject + tenant" time="0.000397625">
+        </testcase>
+        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="SqlTenantEntitlementFallback &gt; returns false when no rows match" time="0.000105458">
+        </testcase>
+        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="SqlTenantEntitlementFallback &gt; returns false when both subject and email are missing" time="0.000108042">
+        </testcase>
+        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="SqlTenantEntitlementFallback &gt; omits active predicate when activeColumn is null" time="0.000168417">
+        </testcase>
+        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="SqlTenantEntitlementFallback &gt; rejects table identifiers that fail the SQL identifier pattern" time="0.0009065">
+        </testcase>
+        <testcase classname="test/unit/tenant-entitlement.spec.ts" name="SqlTenantEntitlementFallback &gt; handles array-form query result (no .rows wrapper)" time="0.000149584">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/tenant-lifecycle.middleware.spec.ts" timestamp="2026-05-19T05:25:20.900Z" hostname="thiamat-1903.local" tests="13" failures="0" errors="0" skipped="0" time="0.011296666">
+        <testcase classname="test/unit/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; throws BadRequestException when tenant header missing and required" time="0.004088666">
+        </testcase>
+        <testcase classname="test/unit/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; allows missing header when requireTenantHeader=false" time="0.000804167">
+        </testcase>
+        <testcase classname="test/unit/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; throws when header present but not a UUID and enforceTenantUuid=true" time="0.000230583">
+        </testcase>
+        <testcase classname="test/unit/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; accepts a non-UUID header when enforceTenantUuid=false" time="0.000168208">
+        </testcase>
+        <testcase classname="test/unit/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; binds request.tenantId from the valid UUID header" time="0.000482875">
+        </testcase>
+        <testcase classname="test/unit/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; reads from the array form of the header (takes first element)" time="0.0000915">
+        </testcase>
+        <testcase classname="test/unit/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; falls back to the lowercased variant of the configured header name" time="0.000085584">
+        </testcase>
+        <testcase classname="test/unit/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; releases the pgClient on response finish" time="0.000353917">
+        </testcase>
+        <testcase classname="test/unit/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; does not double-release on finish + close" time="0.000429209">
+        </testcase>
+        <testcase classname="test/unit/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; falls back to dbClient when pgClient is absent" time="0.000568875">
+        </testcase>
+        <testcase classname="test/unit/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; is a no-op when no client is attached to the request" time="0.001376417">
+        </testcase>
+        <testcase classname="test/unit/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; skips release bindings when response is not an EventEmitter" time="0.000274583">
+        </testcase>
+        <testcase classname="test/unit/tenant-lifecycle.middleware.spec.ts" name="TenantLifecycleMiddleware &gt; createTenantLifecycleMiddleware returns a bound function form" time="0.000381959">
         </testcase>
     </testsuite>
 </testsuites>

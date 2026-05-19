@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Inject, Input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, inject, signal } from '@angular/core';
 import { StynxSessionService } from '@stynx-web/angular-auth';
 import { StynxBannerComponent, StynxConfirmDialogComponent, EmptyStateComponent, StynxPaginationComponent, StynxTableComponent } from '@stynx-web/angular-ui';
 import { StynxToastService } from '@stynx-web/angular-ui';
@@ -81,6 +81,9 @@ import type { StynxTrashAdapter, StynxTrashColumn, StynxTrashItem } from './type
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StynxTrashListComponent {
+  private readonly session = inject(StynxSessionService);
+  private readonly toast = inject(StynxToastService);
+
   @Input({ required: true }) resource = '';
   @Input({ required: true }) adapter!: StynxTrashAdapter;
   @Input() columns: StynxTrashColumn[] = [
@@ -96,13 +99,6 @@ export class StynxTrashListComponent {
   readonly pageSize = signal(10);
   readonly errorMessage = signal('');
   readonly confirmingId = signal<string | null>(null);
-
-  constructor(
-    @Inject(StynxSessionService)
-    private readonly session: StynxSessionService,
-    @Inject(StynxToastService)
-    private readonly toast: StynxToastService,
-  ) {}
 
   get resolvedColumns(): StynxTrashColumn[] {
     return this.columns;

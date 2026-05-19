@@ -6,5 +6,8 @@
     "experimentalDecorators": true,
     "rootDir": ".."
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "angularCompilerOptions": {
+    "compilationMode": "partial"
+  }
 }

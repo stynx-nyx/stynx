@@ -1,9 +1,14 @@
 import '@angular/compiler';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { HttpErrorResponse } from '@angular/common/http';
+import { Injector, runInInjectionContext } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { of, throwError, firstValueFrom, type Observable } from 'rxjs';
 import { AuthInterceptor } from '../src/auth.interceptor';
 import { ErrorBannerService } from '../src/error-banner.service';
 import { ErrorInterceptor } from '../src/error.interceptor';
+import { provideStynxDefaults } from '../src/provide-defaults';
 import { generateClientRequestId } from '../src/request-id';
 import { RequestIdInterceptor } from '../src/request-id.interceptor';
 import { EmptyStateComponent } from '../src/empty-state.component';
@@ -11,6 +16,8 @@ import { TenantContextService } from '../src/tenant-context.service';
 import { TenantInterceptor } from '../src/tenant.interceptor';
 import { ToastService } from '../src/toast.service';
 import { ForbiddenError } from '@stynx-web/sdk';
+import { STYNX_ANGULAR_OPTIONS, STYNX_AUTH_PROVIDER, STYNX_WINDOW } from '../src/tokens';
+import { STYNX_TENANCY_OPTIONS, STYNX_TENANCY_WINDOW, type TenancyOptions } from '@stynx-web/angular-tenancy';
 
 const REQUEST_ID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -68,6 +75,33 @@ class FakeHandler {
   }
 }
 
+function createTenantContext(options: TenancyOptions = {}, browserWindow: Window | null = null): TenantContextService {
+  const injector = Injector.create({
+    parent: TestBed.inject(Injector),
+    providers: [
+      { provide: STYNX_TENANCY_OPTIONS, useValue: options },
+      { provide: STYNX_TENANCY_WINDOW, useValue: browserWindow },
+    ],
+  });
+  return runInInjectionContext(injector, () => new TenantContextService());
+}
+
+function createErrorBannerService(): ErrorBannerService {
+  return TestBed.runInInjectionContext(() => new ErrorBannerService());
+}
+
+function createToastService(): ToastService {
+  return TestBed.runInInjectionContext(() => new ToastService());
+}
+
+beforeAll(() => {
+  TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
+});
+
+afterEach(() => {
+  TestBed.resetTestingModule();
+});
+
 describe('@stynx-web/angular', () => {
   it('generates UUIDv7-shaped request ids for API headers', () => {
     expect(generateClientRequestId()).toMatch(REQUEST_ID_PATTERN);
@@ -123,7 +157,7 @@ describe('@stynx-web/angular', () => {
     };
 
     const requestId = new RequestIdInterceptor();
-    const tenantContext = new TenantContextService(
+    const tenantContext = createTenantContext(
       {},
       null,
     );
@@ -234,7 +268,7 @@ describe('@stynx-web/angular', () => {
   });
 
   it('maps server errors through ErrorBannerService', async () => {
-    const banners = new ErrorBannerService();
+    const banners = createErrorBannerService();
     const interceptor = new ErrorInterceptor(banners);
     const handler = new FakeHandler([
       throwError(() => new HttpErrorResponse({
@@ -253,7 +287,7 @@ describe('@stynx-web/angular', () => {
   });
 
   it('maps HTTP error context and omits falsy status from banners', async () => {
-    const banners = new ErrorBannerService();
+    const banners = createErrorBannerService();
     const interceptor = new ErrorInterceptor(banners);
 
     await expect(firstValueFrom(interceptor.intercept(
@@ -286,7 +320,7 @@ describe('@stynx-web/angular', () => {
   });
 
   it('maps HTTP errors without optional code, status, or context fields', async () => {
-    const banners = new ErrorBannerService();
+    const banners = createErrorBannerService();
     const interceptor = new ErrorInterceptor(banners);
     const handler = new FakeHandler([
       throwError(() => new HttpErrorResponse({
@@ -303,7 +337,7 @@ describe('@stynx-web/angular', () => {
   });
 
   it('passes non-HTTP errors through without showing a banner', async () => {
-    const banners = new ErrorBannerService();
+    const banners = createErrorBannerService();
     const interceptor = new ErrorInterceptor(banners);
     const error = new Error('plain failure');
 
@@ -316,7 +350,7 @@ describe('@stynx-web/angular', () => {
   });
 
   it('resolves tenant context from query, subdomain, then default resolver', async () => {
-    const tenantContext = new TenantContextService(
+    const tenantContext = createTenantContext(
       {
         defaultTenantResolver: async () => 'fallback-tenant',
       },
@@ -353,7 +387,7 @@ describe('@stynx-web/angular', () => {
   it('tracks toast service signal and observable lifecycles', () => {
     vi.spyOn(Date, 'now').mockReturnValue(1_700_000_000_000);
     vi.spyOn(Math, 'random').mockReturnValue(0.5);
-    const service = new ToastService();
+    const service = createToastService();
     const snapshots: unknown[] = [];
     const subscription = service.messages$.subscribe((messages) => snapshots.push(messages));
 
@@ -385,5 +419,47 @@ describe('@stynx-web/angular', () => {
       description: 'Create a record to continue',
       tone: 'warning',
     });
+  });
+
+  it('provides standalone stynx defaults with feature-provider overrides', () => {
+    const authProvider = {
+      getAccessToken: async () => 'feature-token',
+      refresh: async () => 'feature-token',
+    };
+    const defaultTenantResolver = () => 'tenant-from-angular';
+    const tenancyResolver = () => 'tenant-from-tenancy';
+
+    TestBed.configureTestingModule({
+      providers: [
+        provideStynxDefaults({
+          angular: {
+            apiBaseUrl: '/api',
+            sessionMode: 'bearer',
+            defaultTenantResolver,
+          },
+          tenancy: {
+            defaultTenantResolver: tenancyResolver,
+          },
+          auth: {
+            provide: STYNX_AUTH_PROVIDER,
+            useValue: authProvider,
+          },
+        }),
+      ],
+    });
+
+    expect(TestBed.inject(STYNX_ANGULAR_OPTIONS)).toMatchObject({
+      apiBaseUrl: '/api',
+      sessionMode: 'bearer',
+    });
+    expect(TestBed.inject(STYNX_AUTH_PROVIDER)).toBe(authProvider);
+    expect(TestBed.inject(STYNX_WINDOW)).toBe(window);
+    expect(TestBed.inject(STYNX_TENANCY_OPTIONS).defaultTenantResolver).toBe(tenancyResolver);
+    expect(TestBed.inject(STYNX_TENANCY_WINDOW)).toBe(window);
+
+    const interceptors = TestBed.inject(HTTP_INTERCEPTORS);
+    expect(interceptors.some((interceptor) => interceptor instanceof RequestIdInterceptor)).toBe(true);
+    expect(interceptors.some((interceptor) => interceptor instanceof AuthInterceptor)).toBe(true);
+    expect(interceptors.some((interceptor) => interceptor instanceof ErrorInterceptor)).toBe(true);
   });
 });

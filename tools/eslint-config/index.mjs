@@ -85,6 +85,90 @@ function collectDecoratorNames(node) {
     .filter((name) => typeof name === 'string');
 }
 
+function getPropertyName(property) {
+  if (property.type !== 'Property' || property.computed) {
+    return null;
+  }
+
+  if (property.key.type === 'Identifier') {
+    return property.key.name;
+  }
+
+  if (property.key.type === 'Literal' && typeof property.key.value === 'string') {
+    return property.key.value;
+  }
+
+  return null;
+}
+
+function isOnPushExpression(node) {
+  return (
+    node.type === 'MemberExpression' &&
+    !node.computed &&
+    node.object.type === 'Identifier' &&
+    node.object.name === 'ChangeDetectionStrategy' &&
+    node.property.type === 'Identifier' &&
+    node.property.name === 'OnPush'
+  );
+}
+
+function getComponentMetadata(decorator) {
+  if (decorator.expression?.type !== 'CallExpression') {
+    return null;
+  }
+
+  const call = decorator.expression;
+  if (call.callee.type !== 'Identifier' || call.callee.name !== 'Component') {
+    return null;
+  }
+
+  const [metadata] = call.arguments;
+  return metadata?.type === 'ObjectExpression' ? metadata : null;
+}
+
+const angularEslintPlugin = {
+  rules: {
+    'prefer-on-push-component-change-detection': {
+      meta: {
+        type: 'suggestion',
+        docs: {
+          description: 'Require Angular components to use ChangeDetectionStrategy.OnPush.',
+        },
+        schema: [],
+        messages: {
+          preferOnPush:
+            'Components must declare changeDetection: ChangeDetectionStrategy.OnPush.',
+        },
+      },
+      create(context) {
+        return {
+          ClassDeclaration(node) {
+            for (const decorator of node.decorators ?? []) {
+              const metadata = getComponentMetadata(decorator);
+              if (!metadata) {
+                continue;
+              }
+
+              const changeDetection = metadata.properties.find(
+                (property) => getPropertyName(property) === 'changeDetection',
+              );
+
+              if (changeDetection?.type === 'Property' && isOnPushExpression(changeDetection.value)) {
+                continue;
+              }
+
+              context.report({
+                node: changeDetection ?? decorator,
+                messageId: 'preferOnPush',
+              });
+            }
+          },
+        };
+      },
+    },
+  },
+};
+
 const stynxPlugin = {
   rules: {
     'require-package-index-tsdoc': {
@@ -224,6 +308,7 @@ const createConfig = ({ files, tsconfig = './tsconfig.json', browser = false, ne
     },
     plugins: {
       '@typescript-eslint': tsPlugin,
+      '@angular-eslint': angularEslintPlugin,
       boundaries: boundariesPlugin,
       jsdoc: jsdocPlugin,
       stynx: stynxPlugin,
@@ -265,6 +350,7 @@ const createConfig = ({ files, tsconfig = './tsconfig.json', browser = false, ne
       ...(angular
         ? {
             '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
+            '@angular-eslint/prefer-on-push-component-change-detection': 'error',
           }
         : {}),
       ...(nest

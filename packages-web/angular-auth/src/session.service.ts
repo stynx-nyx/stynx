@@ -1,14 +1,12 @@
-import { Injectable, Inject, computed, signal } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { distinctUntilChanged, startWith } from 'rxjs';
 import { TenantContextService } from '@stynx-web/angular';
 import type { AuthProvider } from '@stynx-web/sdk';
 import { STYNX_ANGULAR_AUTH_OPTIONS, STYNX_AUTH_BACKEND, STYNX_OIDC_ADAPTER } from './tokens';
 import { parseJwtPayload, normalizePermissions } from './jwt';
 import { RefreshTokenStorage } from './storage';
 import type {
-  StynxAngularAuthModuleOptions,
-  StynxAuthBackend,
-  StynxOidcAdapter,
   StynxSessionBundle,
   StynxSessionState,
 } from './types';
@@ -25,30 +23,27 @@ const INACTIVE_STATE: StynxSessionState = {
 
 @Injectable()
 export class StynxSessionService implements AuthProvider {
+  private readonly tenantContext = inject(TenantContextService);
+  private readonly oidc = inject(STYNX_OIDC_ADAPTER);
+  private readonly backend = inject(STYNX_AUTH_BACKEND);
+  private readonly options = inject(STYNX_ANGULAR_AUTH_OPTIONS);
   private readonly stateSignal = signal<StynxSessionState>({ ...INACTIVE_STATE });
-  private readonly stateSubject = new BehaviorSubject<StynxSessionState>({ ...INACTIVE_STATE });
-  private readonly refreshStorage: RefreshTokenStorage;
+  private readonly refreshStorage = new RefreshTokenStorage(
+    this.options.sessionStorageKey ?? 'stynx.angular-auth.refresh-token',
+    this.options.refreshTokenStorage ?? 'session-storage',
+    undefined,
+    undefined,
+    this.options.refreshTokenCookie,
+  );
+  readonly state = this.stateSignal.asReadonly();
   readonly active = computed(() => this.stateSignal().active);
-  readonly active$ = this.stateSubject.asObservable();
-
-  constructor(
-    @Inject(TenantContextService)
-    private readonly tenantContext: TenantContextService,
-    @Inject(STYNX_OIDC_ADAPTER)
-    private readonly oidc: StynxOidcAdapter,
-    @Inject(STYNX_AUTH_BACKEND)
-    private readonly backend: StynxAuthBackend,
-    @Inject(STYNX_ANGULAR_AUTH_OPTIONS)
-    private readonly options: StynxAngularAuthModuleOptions,
-  ) {
-    this.refreshStorage = new RefreshTokenStorage(
-      options.sessionStorageKey ?? 'stynx.angular-auth.refresh-token',
-      options.refreshTokenStorage ?? 'session-storage',
-      undefined,
-      undefined,
-      options.refreshTokenCookie,
-    );
-  }
+  /**
+   * @deprecated since: 1.x — use toObservable(this.state) or the signal directly.
+   */
+  readonly active$ = toObservable(this.state).pipe(
+    startWith(this.state()),
+    distinctUntilChanged(),
+  );
 
   login(): void {
     this.oidc.authorize();
@@ -155,13 +150,11 @@ export class StynxSessionService implements AuthProvider {
       claims,
     };
     this.stateSignal.set(next);
-    this.stateSubject.next(next);
     return next;
   }
 
   private clearState(): void {
     this.refreshStorage.clear();
     this.stateSignal.set({ ...INACTIVE_STATE });
-    this.stateSubject.next({ ...INACTIVE_STATE });
   }
 }

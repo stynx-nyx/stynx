@@ -2,29 +2,32 @@
   "name": "@stynx-web/angular-ui",
   "version": "1.0.0",
   "description": "Angular 20 UI primitives for stynx web apps",
-  "main": "dist/angular-ui/src/index.js",
-  "types": "dist/angular-ui/src/index.d.ts",
-  "engines": {
-    "node": ">=24 <25"
-  },
   "exports": {
     ".": {
-      "types": "./dist/angular-ui/src/index.d.ts",
-      "require": "./dist/angular-ui/src/index.js",
-      "default": "./dist/angular-ui/src/index.js"
-    }
+      "types": "./dist/types/stynx-web-angular-ui.d.ts",
+      "default": "./dist/fesm2022/stynx-web-angular-ui.mjs"
+    },
+    "./testing": {
+      "types": "./dist/types/stynx-web-angular-ui-testing.d.ts",
+      "default": "./dist/fesm2022/stynx-web-angular-ui-testing.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
+  "engines": {
+    "node": ">=24 <25"
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "ng-packagr -p ng-package.json -c tsconfig.apf.json",
     "clean": "rm -rf dist coverage",
     "typecheck": "tsc -p tsconfig.spec.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/angular.mjs \"src/**/*.ts\"",
     "test": "node ./../../scripts/run-and-record.mjs --package @stynx-web/angular-ui --level unit --runner vitest -- vitest run --config ./vitest.config.ts",
     "stryker": "node ./../../scripts/run-and-record.mjs --package @stynx-web/angular-ui --level mutation --runner stryker-vitest -- NODE_OPTIONS=\"--disable-warning=ExperimentalWarning --experimental-vm-modules\" pnpm exec stryker run stryker.conf.mjs",
-    "test:e2e": "echo \"test:e2e removed during V6 cutover; convert to vitest if needed\" && false"
+    "build:tsc": "tsc -p tsconfig.json"
   },
   "dependencies": {
     "@stynx-web/angular": "workspace:*",
@@ -35,12 +38,14 @@
     "@angular/core": "^20.2.0"
   },
   "devDependencies": {
-    "@angular/common": "^21.2.10",
-    "@angular/compiler": "^21.2.10",
-    "@angular/compiler-cli": "^21.2.10",
-    "@angular/core": "^21.2.10",
+    "@angular/common": "22.0.0-rc.0",
+    "@angular/compiler": "22.0.0-rc.0",
+    "@angular/compiler-cli": "22.0.0-rc.0",
+    "@angular/core": "22.0.0-rc.0",
     "@types/node": "^25.6.0",
     "jsdom": "^29.0.2",
+    "ng-packagr": "22.0.0-rc.0",
+    "tslib": "^2.8.1",
     "typescript": "^6.0.3"
   }
 }

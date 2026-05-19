@@ -1,6 +1,19 @@
 import '@angular/compiler';
+import { Injector, runInInjectionContext } from '@angular/core';
+import { StynxSessionService } from '@stynx-web/angular-auth';
+import { StynxToastService } from '@stynx-web/angular-ui';
 import { StynxActiveSessionsComponent } from '../src/active-sessions.component';
 import type { StynxActiveSession, StynxSessionsAdapter } from '../src/types';
+
+function createComponent(session: unknown, toast: unknown): StynxActiveSessionsComponent {
+  const injector = Injector.create({
+    providers: [
+      { provide: StynxSessionService, useValue: session },
+      { provide: StynxToastService, useValue: toast },
+    ],
+  });
+  return runInInjectionContext(injector, () => new StynxActiveSessionsComponent());
+}
 
 describe('@stynx-web/angular-sessions', () => {
   it('loads sessions and revokes a non-current session', async () => {
@@ -27,7 +40,7 @@ describe('@stynx-web/angular-sessions', () => {
       revokeOthers: vi.fn(async () => undefined),
     };
 
-    const component = new StynxActiveSessionsComponent(
+    const component = createComponent(
       {
         snapshot: () => ({ sid: 'sid-current' }),
       } as never,

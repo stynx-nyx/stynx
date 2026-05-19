@@ -1,6 +1,5 @@
-import { Inject, Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { STYNX_FLOW_CLIENT } from './tokens';
-import type { StynxSdkClient } from '@stynx-web/sdk';
 import type {
   FlowAgentRule,
   FlowAnswer,
@@ -50,7 +49,7 @@ function options(input: FlowQuery): { query?: Record<string, Exclude<QueryValue,
 
 @Injectable({ providedIn: 'root' })
 export class FlowApiService {
-  constructor(@Inject(STYNX_FLOW_CLIENT) private readonly client: StynxSdkClient) {}
+  private readonly client = inject(STYNX_FLOW_CLIENT);
 
   listScopes(): Promise<FlowScope[]> {
     return this.client.get<FlowScope[]>('/flow/scopes');

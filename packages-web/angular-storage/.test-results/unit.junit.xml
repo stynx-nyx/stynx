@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="6" failures="0" errors="0" time="0.035754458">
-    <testsuite name="test/angular-storage.spec.ts" timestamp="2026-05-19T01:36:44.241Z" hostname="thiamat-1903.local" tests="6" failures="0" errors="0" skipped="0" time="0.035754458">
-        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; moves through initiating, uploading, and completed states" time="0.002557292">
+<testsuites name="vitest tests" tests="6" failures="0" errors="0" time="0.015126542">
+    <testsuite name="test/angular-storage.spec.ts" timestamp="2026-05-19T05:11:45.788Z" hostname="thiamat-1903.local" tests="6" failures="0" errors="0" skipped="0" time="0.015126542">
+        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; moves through initiating, uploading, and completed states" time="0.006618083">
         </testcase>
-        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; handles selected files, quarantine completion, and generic failures" time="0.003505375">
+        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; handles selected files, quarantine completion, and generic failures" time="0.001369417">
         </testcase>
-        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; rejects invalid files and surfaces upload failures" time="0.004864875">
+        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; rejects invalid files and surfaces upload failures" time="0.000652709">
         </testcase>
-        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; ignores empty file selection events" time="0.000706666">
+        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; ignores empty file selection events" time="0.000158792">
         </testcase>
-        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; calls the document API endpoints with normalized base URLs" time="0.015274917">
+        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; calls the document API endpoints with normalized base URLs" time="0.001037958">
         </testcase>
-        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; uploads files through XMLHttpRequest with progress, success, and failure paths" time="0.007968125">
+        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; uploads files through XMLHttpRequest with progress, success, and failure paths" time="0.004296">
         </testcase>
     </testsuite>
 </testsuites>

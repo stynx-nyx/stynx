@@ -163,7 +163,7 @@ export class TenancyService {
         );
 
         if (input.timezone !== undefined || input.locale !== undefined || input.settings !== undefined) {
-          const nextSettings = input.settings ?? current.settings ?? {};
+          const nextSettings = input.settings ?? current.settings;
           await trx.query(
             `
               insert into tenancy.tenant_settings (tenant_id, timezone, locale, settings, updated_at)

@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T01:36:37.706Z",
-  "endedAt": "2026-05-19T01:36:47.729Z",
-  "durationMs": 10022,
+  "startedAt": "2026-05-19T05:11:45.878Z",
+  "endedAt": "2026-05-19T05:11:48.820Z",
+  "durationMs": 2941,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-55816-1779154597706.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-85573-1779167505878.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages-web/angular-trash/.test-results/unit.junit.xml"
     ],
@@ -47,12 +47,12 @@
     {
       "name": "@stynx-web/angular-trash loads trash items and restores them through the adapter",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-trash/test/angular-trash.spec.ts",
-      "durationMs": 3.514291000000412
+      "durationMs": 4.562541999999667
     },
     {
       "name": "@stynx-web/angular-trash handles pagination, cascade restore, hard delete, and fallback errors",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-trash/test/angular-trash.spec.ts",
-      "durationMs": 1.4332500000000437
+      "durationMs": 1.125583000000006
     }
   ]
 }

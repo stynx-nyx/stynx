@@ -3,11 +3,11 @@
   "package": "stynx-workspace",
   "level": "perf",
   "runner": "perf-smoke",
-  "status": "failed",
-  "startedAt": "2026-05-19T00:52:21.804Z",
-  "endedAt": "2026-05-19T00:52:25.915Z",
-  "durationMs": 4110,
-  "exitCode": 1,
+  "status": "passed",
+  "startedAt": "2026-05-19T03:42:35.404Z",
+  "endedAt": "2026-05-19T03:42:53.922Z",
+  "durationMs": 18517,
+  "exitCode": 0,
   "signal": null,
   "artifacts": {
     "raw": ".test-results/perf.log"
@@ -23,9 +23,10 @@
   "metric": {
     "kind": "perf",
     "perf": {
-      "p50Ms": 792,
-      "p95Ms": 891,
-      "rps": 1.26
+      "p50Ms": 3619,
+      "p95Ms": 4091,
+      "rps": 0.28,
+      "samples": 5
     }
   }
 }

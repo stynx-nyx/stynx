@@ -192,6 +192,20 @@ describe('migrate command surface', () => {
     expect(fake.journal).toEqual([]);
   });
 
+  it('uses the default platform migration directory when none is supplied', () => {
+    const root = mkdtempSync(resolve(tmpdir(), 'stynx-cli-migrate-default-dir-'));
+    const dir = resolve(root, 'packages/data/migrations/platform');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(resolve(dir, '0001_platform.sql'), 'select 1;', 'utf8');
+    writeFileSync(resolve(dir, '0001_platform.down.sql'), 'select 11;', 'utf8');
+
+    expect(listMigrations(root)).toEqual([{
+      id: '0001_platform.sql',
+      upPath: resolve(dir, '0001_platform.sql'),
+      downPath: resolve(dir, '0001_platform.down.sql'),
+    }]);
+  });
+
   it('rejects rollback of migrations without a down pair', async () => {
     const root = mkdtempSync(resolve(tmpdir(), 'stynx-cli-migrate-nodown-'));
     const dir = resolve(root, 'migrations');

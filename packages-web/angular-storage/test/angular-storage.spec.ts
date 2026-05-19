@@ -1,7 +1,13 @@
 import '@angular/compiler';
+import { HttpClient } from '@angular/common/http';
+import { Injector, runInInjectionContext } from '@angular/core';
 import { of } from 'rxjs';
+import { STYNX_ANGULAR_OPTIONS } from '@stynx-web/angular';
+import { StynxToastService } from '@stynx-web/angular-ui';
 import { DocumentService } from '../src/document.service';
 import { StynxDocumentUploadComponent } from '../src/document-upload.component';
+import { STYNX_UPLOAD_EXECUTOR } from '../src/tokens';
+import type { StynxUploadExecutor } from '../src/types';
 import { XhrUploadExecutor } from '../src/xhr-upload.executor';
 
 class FakeXmlHttpRequest {
@@ -35,10 +41,25 @@ class FakeXmlHttpRequest {
   }
 }
 
+function createUploadComponent(
+  documents: Pick<DocumentService, 'initiate' | 'complete'>,
+  toast: Pick<StynxToastService, 'push'>,
+  executor: StynxUploadExecutor,
+): StynxDocumentUploadComponent {
+  const injector = Injector.create({
+    providers: [
+      { provide: DocumentService, useValue: documents },
+      { provide: STYNX_UPLOAD_EXECUTOR, useValue: executor },
+      { provide: StynxToastService, useValue: toast },
+    ],
+  });
+  return runInInjectionContext(injector, () => new StynxDocumentUploadComponent());
+}
+
 describe('@stynx-web/angular-storage', () => {
   it('moves through initiating, uploading, and completed states', async () => {
     const seen: string[] = [];
-    const component = new StynxDocumentUploadComponent(
+    const component = createUploadComponent(
       {
         initiate: vi.fn(async () => {
           seen.push('initiating');
@@ -92,7 +113,7 @@ describe('@stynx-web/angular-storage', () => {
   it('handles selected files, quarantine completion, and generic failures', async () => {
     const toasts: unknown[] = [];
     const completed: unknown[] = [];
-    const component = new StynxDocumentUploadComponent(
+    const component = createUploadComponent(
       {
         initiate: vi.fn(async () => ({
           id: 'doc-3',
@@ -129,7 +150,7 @@ describe('@stynx-web/angular-storage', () => {
     expect(toasts).toEqual([['Upload completed', 'warning']]);
     expect(completed).toEqual([{ id: 'doc-3', filename: 'note.txt', scanStatus: 'quarantined' }]);
 
-    const failing = new StynxDocumentUploadComponent(
+    const failing = createUploadComponent(
       {
         initiate: vi.fn(async () => ({
           id: 'doc-4',
@@ -152,7 +173,7 @@ describe('@stynx-web/angular-storage', () => {
   });
 
   it('rejects invalid files and surfaces upload failures', async () => {
-    const component = new StynxDocumentUploadComponent(
+    const component = createUploadComponent(
       {
         initiate: vi.fn(async () => {
           throw new Error('should not initiate invalid files');
@@ -175,7 +196,7 @@ describe('@stynx-web/angular-storage', () => {
     await component.upload({ name: 'large.pdf', type: 'application/pdf', size: 11 } as File);
     expect(component.errorMessage).toContain('byte limit');
 
-    const failing = new StynxDocumentUploadComponent(
+    const failing = createUploadComponent(
       {
         initiate: vi.fn(async () => ({
           id: 'doc-2',
@@ -204,7 +225,7 @@ describe('@stynx-web/angular-storage', () => {
   });
 
   it('ignores empty file selection events', async () => {
-    const component = new StynxDocumentUploadComponent(
+    const component = createUploadComponent(
       {
         initiate: vi.fn(async () => {
           throw new Error('not used');
@@ -231,10 +252,21 @@ describe('@stynx-web/angular-storage', () => {
         return of(url.endsWith('/download') ? { id: 'doc-1', url: 'https://download.example.test' } : []);
       },
     };
-    const service = new DocumentService(http as never, {
-      apiBaseUrl: 'https://api.example.test/',
-      sessionMode: 'bearer',
-    });
+    const service = runInInjectionContext(
+      Injector.create({
+        providers: [
+          { provide: HttpClient, useValue: http },
+          {
+            provide: STYNX_ANGULAR_OPTIONS,
+            useValue: {
+              apiBaseUrl: 'https://api.example.test/',
+              sessionMode: 'bearer',
+            },
+          },
+        ],
+      }),
+      () => new DocumentService(),
+    );
 
     await service.initiate({
       collection: 'records',

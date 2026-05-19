@@ -111,4 +111,31 @@ describe('RedisSlidingWindowRateLimitStore', () => {
     await store.onModuleDestroy();
     expect(redisMock.client.quit).not.toHaveBeenCalled();
   });
+
+  it('uses the default Redis key prefix when keyPrefix is omitted', async () => {
+    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(20_000);
+    try {
+      const store = new RedisSlidingWindowRateLimitStore({
+        redis: { url: 'redis://localhost:6379' },
+      });
+      await store.onModuleInit();
+      redisMock.client.evalSha.mockResolvedValueOnce([1, 5, 3, 80_000, 60, 2]);
+
+      await expect(store.consume(context())).resolves.toMatchObject({
+        allowed: true,
+        remaining: 3,
+      });
+
+      expect(redisMock.client.evalSha).toHaveBeenCalledWith('sha-1', {
+        keys: [
+          'stynx:ratelimit:tenant:records:tenant:route:events',
+          'stynx:ratelimit:tenant:records:tenant:route:weights',
+          'stynx:ratelimit:tenant:records:tenant:route:total',
+        ],
+        arguments: ['20000', '60000', '5', '2', '20000:1'],
+      });
+    } finally {
+      nowSpy.mockRestore();
+    }
+  });
 });

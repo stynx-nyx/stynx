@@ -12,7 +12,7 @@ const showResume = args.resume === true;
 const aspect = args.aspect;
 const matrixConfig = loadMatrixConfig();
 
-const levels = ['Unit', 'API', 'DB', 'E2E', 'Mutation'];
+const levels = ['Unit', 'API', 'DB', 'E2E', 'Mutation', 'Perf'];
 const coverageColumn = 'Coverage (lines|stat/brch|func)';
 const coverageMetricColumns = ['Lines', 'Statements', 'Branches', 'Functions'];
 const coverageMetricByColumn = {
@@ -35,6 +35,7 @@ for (const ws of workspaces) {
     DB: readDbResult(ws),
     E2E: readE2EResult(ws),
     Mutation: readMutationResult(ws),
+    Perf: readPerfResult(ws),
   };
   const coverage = {
     API: null,
@@ -100,7 +101,8 @@ Sources:
   - scripts/test-matrix.config.json for meaningless cells and coverage thresholds
   - */.test-results/<level>.json (canonical, schema v1) for every level
   - reference/web/test-results/.last-run.json as a legacy Playwright fallback
-  - coverage/coverage-final.json for aggregate workspace coverage
+  - coverage/test-evidence.json for package coverage metrics
+  - coverage/coverage-final.json as a fallback aggregate workspace coverage source
 
 Note: */.turbo/turbo-test*.log are Turbo's own cache (stdout replay tape
 for cache-hit task runs). They are NOT a canonical artifact and are
@@ -113,6 +115,9 @@ Modes:
   --compact   glyph-only cells: 🟢 pass/at threshold, 🟡 not run/fail/below threshold,
               🔴 below 50% coverage, · no config, blank meaningless
   --resume    append summary totals for the selected mode
+
+Levels:
+  Unit, API, DB, E2E, Mutation, Perf.
 
 States:
   '   '     configured as meaningless for that package/level
@@ -130,7 +135,15 @@ function discoverWorkspaces() {
   const roots = aspect === 'coverage'
     ? ['packages', 'packages-web']
     : ['packages', 'packages-web', 'domain', 'infra', 'reference', 'test', 'tools'];
-  const entries = [];
+  const entries = aspect === 'coverage'
+    ? []
+    : [{
+        dir: repoRoot,
+        root: '.',
+        name: 'stynx-workspace',
+        label: 'stynx-workspace',
+        scripts: {},
+      }];
 
   for (const root of roots) {
     const absRoot = join(repoRoot, root);
@@ -260,6 +273,11 @@ function readMutationResult(ws) {
     status: typeof breakThreshold === 'number' && score < breakThreshold ? 'failed' : 'passed',
     source: 'mutation',
   };
+}
+
+function readPerfResult(ws) {
+  if (ws.name !== 'stynx-workspace') return null;
+  return readCanonicalResult(ws.dir, 'perf');
 }
 
 function calculateStrykerMutationScore(payload) {
@@ -397,6 +415,9 @@ function hasConfiguredLevel(ws, level) {
   if (level === 'Mutation') {
     return Boolean(ws.scripts.stryker || ws.scripts.mutation) || hasAnyFile(ws.dir, ['stryker.conf.mjs', 'stryker.conf.cjs']);
   }
+  if (level === 'Perf') {
+    return ws.name === 'stynx-workspace';
+  }
   return false;
 }
 
@@ -446,8 +467,40 @@ function matchesPattern(value, pattern) {
 }
 
 function loadCoverageByWorkspace(workspaces) {
+  const evidence = loadCoverageFromEvidence(workspaces);
+  if (evidence.size > 0) return evidence;
+
   const path = join(repoRoot, 'coverage', 'coverage-final.json');
   return existsSync(path) ? summarizeCoverage(path, workspaces) : new Map();
+}
+
+function loadCoverageFromEvidence(workspaces) {
+  const path = join(repoRoot, 'coverage', 'test-evidence.json');
+  if (!existsSync(path)) return new Map();
+
+  try {
+    const evidence = JSON.parse(readFileSync(path, 'utf8'));
+    const byName = new Map(workspaces.map((ws) => [ws.name, ws.dir]));
+    const out = new Map();
+    for (const result of evidence.levels?.coverage?.results ?? []) {
+      const coverage = result.metric?.coverage;
+      const dir = byName.get(result.package);
+      if (!dir || !coverage) continue;
+      out.set(dir, {
+        lines: numberOrNull(coverage.lines),
+        statements: numberOrNull(coverage.statements),
+        branches: numberOrNull(coverage.branches),
+        functions: numberOrNull(coverage.functions),
+      });
+    }
+    return out;
+  } catch {
+    return new Map();
+  }
+}
+
+function numberOrNull(value) {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
 
 function loadScratchCoverageByWorkspace(workspaces, level) {
@@ -555,7 +608,7 @@ function printMatrix(rows) {
 
   if (aspect === 'coverage') {
     process.stdout.write('Coverage columns: lines, statements, branches, functions.\n');
-    process.stdout.write('Source: coverage/coverage-final.json.\n');
+    process.stdout.write('Source: coverage/test-evidence.json; falls back to coverage/coverage-final.json when evidence is absent.\n');
   } else if (aspect === 'timing') {
     process.stdout.write('Timing prefers recorder sidecar durationMs, then Vitest Time, then Node duration_ms.\n');
   } else {
@@ -647,6 +700,7 @@ function renderHeader(column) {
       DB: 'D',
       E2E: 'E',
       Mutation: 'M',
+      Perf: 'P',
       Lines: 'L',
       Statements: 'S',
       Branches: 'B',
@@ -744,16 +798,17 @@ function renderCoverage(coverage) {
 
 function formatMetric(value, metric) {
   if (value == null) return '   ';
-  if (Math.round(value) === 100) {
+  const threshold = thresholdFor(metric);
+  if (value >= threshold && value >= 100) {
     const perfect = '✓✓'.padStart(3, ' ');
     return useColor ? colorize(perfect, 'green') : perfect;
   }
   const rounded = String(Math.round(value)).padStart(3, ' ');
-  const threshold = thresholdFor(metric);
-  if (!useColor) return rounded;
-  if (value >= threshold) return colorize(rounded, 'green');
-  if (value >= 50) return colorize(rounded, 'yellow');
-  return colorize(rounded, 'red');
+  const rendered = value >= threshold ? rounded : `!${String(Math.round(value)).padStart(2, ' ')}`;
+  if (!useColor) return rendered;
+  if (value >= threshold) return colorize(rendered, 'green');
+  if (value >= 50) return colorize(rendered, 'yellow');
+  return colorize(rendered, 'red');
 }
 
 function thresholdFor(metric) {

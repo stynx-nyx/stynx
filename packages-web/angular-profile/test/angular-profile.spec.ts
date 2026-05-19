@@ -1,11 +1,19 @@
 import '@angular/compiler';
+import { Injector, runInInjectionContext } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { StynxPreferencesFormComponent } from '../src/preferences-form.component';
 import { StynxProfileFormComponent } from '../src/profile-form.component';
 
+function createWithFormBuilder<T>(factory: () => T): T {
+  const injector = Injector.create({
+    providers: [{ provide: FormBuilder, useValue: new FormBuilder() }],
+  });
+  return runInInjectionContext(injector, factory);
+}
+
 describe('@stynx-web/angular-profile', () => {
   it('validates the profile form and emits only when dirty and valid', () => {
-    const component = new StynxProfileFormComponent(new FormBuilder());
+    const component = createWithFormBuilder(() => new StynxProfileFormComponent());
     const seen: unknown[] = [];
     component.save.subscribe((value) => seen.push(value));
     component.value = null;
@@ -45,7 +53,7 @@ describe('@stynx-web/angular-profile', () => {
   });
 
   it('tracks dirty state in the preferences form', () => {
-    const component = new StynxPreferencesFormComponent(new FormBuilder());
+    const component = createWithFormBuilder(() => new StynxPreferencesFormComponent());
     const seen: unknown[] = [];
     component.save.subscribe((value) => seen.push(value));
     component.value = null;

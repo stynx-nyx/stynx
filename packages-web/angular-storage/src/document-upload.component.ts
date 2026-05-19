@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Inject, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { StynxBannerComponent, StynxLoadingSpinnerComponent, StynxToastService } from '@stynx-web/angular-ui';
 import { DocumentService } from './document.service';
 import { STYNX_UPLOAD_EXECUTOR } from './tokens';
-import type { StynxDocumentUploadCompletedEvent, StynxUploadExecutor } from './types';
+import type { StynxDocumentUploadCompletedEvent } from './types';
 
 @Component({
   selector: 'stynx-document-upload',
@@ -29,6 +29,10 @@ import type { StynxDocumentUploadCompletedEvent, StynxUploadExecutor } from './t
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StynxDocumentUploadComponent {
+  private readonly documents = inject(DocumentService);
+  private readonly toast = inject(StynxToastService);
+  private readonly executor = inject(STYNX_UPLOAD_EXECUTOR);
+
   @Input({ required: true }) collection = '';
   @Input() allowedMimes: string[] = [];
   @Input() maxBytes = Number.POSITIVE_INFINITY;
@@ -37,15 +41,6 @@ export class StynxDocumentUploadComponent {
   status: 'idle' | 'initiating' | 'uploading' | 'completed' | 'errored' = 'idle';
   progress = 0;
   errorMessage = '';
-
-  constructor(
-    @Inject(DocumentService)
-    private readonly documents: DocumentService,
-    @Inject(StynxToastService)
-    private readonly toast: StynxToastService,
-    @Inject(STYNX_UPLOAD_EXECUTOR)
-    private readonly executor: StynxUploadExecutor,
-  ) {}
 
   get statusLabel(): string {
     return this.status === 'initiating' ? 'Preparing upload' : 'Uploading file';

@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T01:35:46.917Z",
-  "endedAt": "2026-05-19T01:35:59.436Z",
-  "durationMs": 12516,
+  "startedAt": "2026-05-19T04:25:06.176Z",
+  "endedAt": "2026-05-19T04:25:13.165Z",
+  "durationMs": 6988,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-53989-1779154546916.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-45416-1779164706176.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/test/packages/.test-results/unit.junit.xml"
     ],
@@ -45,54 +45,54 @@
   },
   "slowestTests": [
     {
-      "name": "RateLimitGuard bypasses health-check path",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/rate-limit/rate-limit.guard.spec.ts",
-      "durationMs": 115.44624999999996
-    },
-    {
-      "name": "RateLimitGuard enforces in-memory limit when distributed path is unavailable",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/rate-limit/rate-limit.guard.spec.ts",
-      "durationMs": 72.5574160000001
-    },
-    {
-      "name": "StynxAuditService hash-chain verification accepts a valid chain",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/audit/hash-chain.spec.ts",
-      "durationMs": 58.819375000000036
-    },
-    {
-      "name": "RateLimitGuard uses distributed store when tenant is present",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/rate-limit/rate-limit.guard.spec.ts",
-      "durationMs": 24.33895900000016
-    },
-    {
-      "name": "PormIdentityAdminFacade maps list/get to porm-compatible shape with attributes and groups",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/identity-admin/integration-facades.spec.ts",
-      "durationMs": 17.97820799999954
-    },
-    {
-      "name": "IdempotencyInterceptor rejects write request without idempotency key when required",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/idempotency/idempotency.interceptor.spec.ts",
-      "durationMs": 17.517832999999882
-    },
-    {
-      "name": "SlaMonitorInterceptor emits sample event with threshold/breach information",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/sla/sla-monitor.interceptor.spec.ts",
-      "durationMs": 15.726541999999881
-    },
-    {
-      "name": "SlaMonitorInterceptor emits error-path sample when downstream handler fails",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/sla/sla-monitor.interceptor.spec.ts",
-      "durationMs": 13.543999999999869
-    },
-    {
-      "name": "IdentityAdminService maps IdentityAdminError to Nest exceptions",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/identity-admin/identity-admin.service.spec.ts",
-      "durationMs": 10.771958000000268
+      "name": "StynxApiClient injects auth and tenant headers",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/frontend-client/api-client.spec.ts",
+      "durationMs": 26.876457999999957
     },
     {
       "name": "PgSessionDbContextApplier applies row_security and session keys with compatibility mappings",
       "file": "/Users/aarusso/Development/stech/stynx/test/packages/db-context/pg-session-db-context.applier.spec.ts",
-      "durationMs": 5.845458000000008
+      "durationMs": 14.893167000000176
+    },
+    {
+      "name": "IdentityAdminService maps IdentityAdminError to Nest exceptions",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/identity-admin/identity-admin.service.spec.ts",
+      "durationMs": 9.623624999999947
+    },
+    {
+      "name": "PormIdentityAdminFacade returns updated=false when update payload is empty",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/identity-admin/integration-facades.spec.ts",
+      "durationMs": 8.863084000000072
+    },
+    {
+      "name": "PecIdentityAdminFacade delegates group/password/verify operations",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/identity-admin/integration-facades.spec.ts",
+      "durationMs": 8.594125000000076
+    },
+    {
+      "name": "PormIdentityAdminFacade maps list/get to porm-compatible shape with attributes and groups",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/identity-admin/integration-facades.spec.ts",
+      "durationMs": 8.46466600000008
+    },
+    {
+      "name": "AuditSqlSink parity writes using audit.write function mode",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/audit/sql-adapter.spec.ts",
+      "durationMs": 7.935833000000002
+    },
+    {
+      "name": "PgIdentityLocalSyncAdapter syncs users/groups into local tables and returns counters",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/identity-admin/pg-local-sync.adapter.spec.ts",
+      "durationMs": 7.1388749999999845
+    },
+    {
+      "name": "AuditSqlReader parity maps stynx_events shape",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/audit/sql-adapter.spec.ts",
+      "durationMs": 6.029417000000194
+    },
+    {
+      "name": "@stynx/auth cognito admin adapter builds options from env and infers profile strategy when AWS_PROFILE exists",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/auth/cognito-admin.adapter.spec.ts",
+      "durationMs": 5.988916999999901
     }
   ]
 }

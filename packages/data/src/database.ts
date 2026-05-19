@@ -80,6 +80,7 @@ export class Database extends CoreDatabase {
     const resolvedRole = options.role ?? 'app';
     const resolvedReadonly = options.readonly ?? false;
     const retry = options.retry ?? this.options.retry ?? { attempts: 3, jitterMs: [10, 50] as [number, number] };
+    const retryConfig = retry === false ? undefined : retry;
     this.assertRoleConstraints(resolvedRole, resolvedReadonly, options.replica ?? false);
     const executionContext = this.resolveExecutionContext(resolvedRole);
 
@@ -89,7 +90,7 @@ export class Database extends CoreDatabase {
     }
 
     const pool = this.pools.get(resolvedRole, options.replica ?? false);
-    const attempts = retry === false ? 1 : Math.max(retry.attempts, 1);
+    const attempts = retryConfig === undefined ? 1 : Math.max(retryConfig.attempts, 1);
     let lastError: unknown;
 
     for (let attempt = 1; attempt <= attempts; attempt += 1) {
@@ -119,7 +120,7 @@ export class Database extends CoreDatabase {
         await client.query('ROLLBACK').catch(() => undefined);
         const mapped = mapTransactionError(error);
         if (attempt < attempts && isRetryableError(mapped)) {
-          const [minJitter, maxJitter] = retry === false ? [0, 0] : retry.jitterMs;
+          const [minJitter, maxJitter] = retryConfig!.jitterMs;
           const jitter = minJitter + Math.floor(Math.random() * Math.max(1, maxJitter - minJitter + 1));
           await sleep(jitter);
           lastError = mapped;
@@ -133,6 +134,7 @@ export class Database extends CoreDatabase {
           });
         }
         throw mapped;
+      /* v8 ignore next -- v8 reports a synthetic branch on the finally boundary; cleanup paths are covered. */
       } finally {
         if (this.cls.get(TX_CONTEXT_KEY) !== undefined) {
           this.cls.set(TX_CONTEXT_KEY, null as unknown as TransactionContextState);

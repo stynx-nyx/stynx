@@ -1,4 +1,4 @@
-// Single source of truth for coverage + mutation thresholds across the
+// Single source of truth for coverage + mutation + perf thresholds across the
 // workspace. Reads scripts/test-matrix.config.json and resolves per-package
 // values. Imported by:
 //   - tools/repo-config/vitest.base.mjs       (coverage gates)
@@ -8,7 +8,7 @@
 // Per-package overrides live under `perPackage[packageName]` in the config:
 //   "perPackage": { "@stynx/auth": { "coverage": "strict", "mutation": "strictest" } }
 //
-// Policies (under `policies.coverage` and `policies.mutation`) define named
+// Policies (under `policies.coverage`, `policies.mutation`, and `policies.perf`) define named
 // presets; `defaults` picks which preset applies workspace-wide when no
 // per-package override exists.
 
@@ -62,6 +62,22 @@ export function getMutationThreshold(packageName) {
     throw new Error(`[test-thresholds] unknown mutation policy '${policyName}' for ${packageName}`);
   }
   return policy;
+}
+
+/**
+ * Resolve the perf smoke thresholds for a package/workspace.
+ * @param {string} packageName
+ * @returns {{p50_ms:number, p95_ms:number, rps_min:number}}
+ */
+export function getPerfThreshold(packageName = 'stynx-workspace') {
+  const cfg = load();
+  const override = cfg.perPackage?.[packageName]?.perf;
+  const policyName = override ?? cfg.defaults?.perf ?? 'default';
+  const policy = cfg.policies?.perf?.[policyName];
+  if (!policy || typeof policy !== 'object') {
+    throw new Error(`[test-thresholds] unknown perf policy '${policyName}' for ${packageName}`);
+  }
+  return { ...policy };
 }
 
 /**

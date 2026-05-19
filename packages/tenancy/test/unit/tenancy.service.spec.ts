@@ -141,6 +141,43 @@ describe('TenancyService', () => {
     );
   });
 
+  it('provisions a new tenant with the requested owner id when user lookup returns no row', async () => {
+    const { service, txQuery } = createService();
+    txQuery.mockImplementation((sql: string) => {
+      if (sql.includes('pg_advisory_xact_lock') || sql.includes('insert into tenancy.tenants')) {
+        return Promise.resolve({ rows: [] });
+      }
+      if (sql.includes('where tenant.slug = $1') || sql.includes('select id::text as id from auth.users')) {
+        return Promise.resolve({ rows: [] });
+      }
+      if (sql.includes('insert into auth.users') || sql.includes('insert into auth.roles')) {
+        return Promise.resolve({ rows: [] });
+      }
+      if (sql.includes('returning id::text as id')) {
+        return Promise.resolve({ rows: [] });
+      }
+      if (sql.includes("select id::text as id from auth.roles") || sql.includes("set state = 'active'")) {
+        return Promise.resolve({ rows: [] });
+      }
+      if (sql.includes('insert into auth.invitations')) {
+        return Promise.resolve({ rows: [] });
+      }
+      if (sql.includes('where tenant.id = $1::uuid limit 1')) {
+        return Promise.resolve({ rows: [tenantRow()] });
+      }
+      throw new Error(`Unexpected SQL: ${sql}`);
+    });
+
+    await expect(service.provisionTenant({
+      slug: 'tenant-alpha',
+      name: 'Tenant Alpha',
+      ownerEmail: 'owner@example.test',
+      ownerUserId: OWNER_ID,
+    })).resolves.toMatchObject({ ownerUserId: OWNER_ID });
+
+    expect(txQuery).not.toHaveBeenCalledWith(expect.stringContaining('insert into auth.membership_roles'), expect.anything());
+  });
+
   it('archives and purges tenants while invalidating membership cache', async () => {
     const { service, txQuery, database, membershipCache, archiveExporter, purgeDelegate } = createService();
     txQuery.mockImplementation((sql: string, values?: unknown[]) => {
@@ -272,6 +309,18 @@ describe('TenancyService', () => {
     expect(database.tx).toHaveBeenCalledWith(expect.any(Function), { role: 'owner' });
   });
 
+  it('maps null tenant state and settings to active defaults', async () => {
+    const { service, txQuery } = createService();
+    txQuery.mockResolvedValue({
+      rows: [tenantRow({ state: null, settings: null })],
+    });
+
+    await expect(service.getTenant(TENANT_ID)).resolves.toMatchObject({
+      state: 'active',
+      settings: {},
+    });
+  });
+
   it('updates core tenant fields without writing settings when settings inputs are absent', async () => {
     const { service, txQuery } = createService();
     txQuery.mockImplementation((sql: string, values?: unknown[]) => {
@@ -324,6 +373,45 @@ describe('TenancyService', () => {
     expect(database.tx).toHaveBeenCalledWith(expect.any(Function), { role: 'owner' });
   });
 
+  it('falls back to null settings fields when the current row has no settings row', async () => {
+    const { service, txQuery } = createService();
+    txQuery.mockImplementation((sql: string, values?: unknown[]) => {
+      if (sql.includes('where tenant.id = $1::uuid limit 1')) {
+        expect(values).toEqual([TENANT_ID]);
+        return Promise.resolve({ rows: [tenantRow({ timezone: null, locale: null, settings: null })] });
+      }
+      if (sql.includes('update tenancy.tenants')) {
+        return Promise.resolve({ rows: [] });
+      }
+      if (sql.includes('insert into tenancy.tenant_settings')) {
+        expect(values).toEqual([TENANT_ID, null, null, JSON.stringify({})]);
+        return Promise.resolve({ rows: [] });
+      }
+      throw new Error(`Unexpected SQL: ${sql}`);
+    });
+
+    await expect(service.updateTenant(TENANT_ID, { timezone: null })).resolves.toMatchObject({ id: TENANT_ID });
+  });
+
+  it('falls back to empty settings when the current settings field is absent', async () => {
+    const { service, txQuery } = createService();
+    txQuery.mockImplementation((sql: string, values?: unknown[]) => {
+      if (sql.includes('where tenant.id = $1::uuid limit 1')) {
+        return Promise.resolve({ rows: [tenantRow({ settings: undefined })] });
+      }
+      if (sql.includes('update tenancy.tenants')) {
+        return Promise.resolve({ rows: [] });
+      }
+      if (sql.includes('insert into tenancy.tenant_settings')) {
+        expect(values?.[3]).toBe(JSON.stringify({}));
+        return Promise.resolve({ rows: [] });
+      }
+      throw new Error(`Unexpected SQL: ${sql}`);
+    });
+
+    await expect(service.updateTenant(TENANT_ID, { locale: null })).resolves.toMatchObject({ id: TENANT_ID });
+  });
+
   it('uses owner readonly transactions for single-tenant reads', async () => {
     const { service, txQuery, database } = createService();
     txQuery.mockResolvedValue({ rows: [tenantRow()] });
@@ -369,8 +457,43 @@ describe('TenancyService', () => {
     expect(membershipCache.invalidateTenant).toHaveBeenCalledWith(TENANT_ID);
   });
 
+  it('returns zero active sessions when suspension finds no active session count row', async () => {
+    const { service, txQuery } = createService();
+    txQuery.mockImplementation((sql: string) => {
+      if (sql.includes('where tenant.id = $1::uuid limit 1')) {
+        return Promise.resolve({ rows: [tenantRow({ state: 'suspended', is_active: false })] });
+      }
+      if (sql.includes("state = 'suspended'") || sql.includes('from auth.sessions')) {
+        return Promise.resolve({ rows: [] });
+      }
+      throw new Error(`Unexpected SQL: ${sql}`);
+    });
+
+    await expect(service.suspendTenant(TENANT_ID, { reason: 'policy' })).resolves.toMatchObject({
+      activeSessionCount: 0,
+    });
+  });
+
   it('uses default tenant side-effect adapters when none are provided', async () => {
     const txQuery = vi.fn((sql: string) => {
+      if (sql.includes('pg_advisory_xact_lock') || sql.includes('insert into tenancy.tenants')) {
+        return Promise.resolve({ rows: [] });
+      }
+      if (sql.includes('where tenant.slug = $1') || sql.includes('select id::text as id from auth.users')) {
+        return Promise.resolve({ rows: [] });
+      }
+      if (sql.includes('insert into auth.users') || sql.includes('insert into auth.roles')) {
+        return Promise.resolve({ rows: [] });
+      }
+      if (sql.includes('returning id::text as id')) {
+        return Promise.resolve({ rows: [] });
+      }
+      if (sql.includes("select id::text as id from auth.roles") || sql.includes("set state = 'active'")) {
+        return Promise.resolve({ rows: [] });
+      }
+      if (sql.includes('insert into auth.invitations')) {
+        return Promise.resolve({ rows: [] });
+      }
       if (sql.includes('where tenant.id = $1::uuid limit 1')) {
         return Promise.resolve({ rows: [tenantRow({ archived_at: '2026-04-25T00:00:00.000Z' })] });
       }
@@ -389,6 +512,13 @@ describe('TenancyService', () => {
     const membershipCache = { invalidateTenant: vi.fn() };
     const service = new TenancyService(moduleRef, membershipCache as never);
 
+    await expect(service.provisionTenant({
+      slug: 'tenant-alpha',
+      name: 'Tenant Alpha',
+      ownerEmail: 'owner@example.test',
+    })).resolves.toMatchObject({
+      tenant: expect.objectContaining({ id: TENANT_ID }),
+    });
     await expect(service.archiveTenant(TENANT_ID)).resolves.toMatchObject({
       exportKey: `tenants/${TENANT_ID}/exports/placeholder.json`,
     });
@@ -410,6 +540,59 @@ describe('TenancyService', () => {
     });
     await expect(service.archiveTenant(TENANT_ID)).rejects.toMatchObject({ message: 'TENANT_NOT_FOUND' });
     await expect(service.purgeTenant(TENANT_ID)).rejects.toMatchObject({ message: 'TENANT_NOT_FOUND' });
+  });
+
+  it('reuses an existing pending invitation when it still has a membership user', async () => {
+    const { service, txQuery } = createService();
+    txQuery.mockImplementation((sql: string) => {
+      if (sql.includes('pg_advisory_xact_lock')) {
+        return Promise.resolve({ rows: [] });
+      }
+      if (sql.includes('where tenant.slug = $1')) {
+        return Promise.resolve({ rows: [tenantRow()] });
+      }
+      if (sql.includes('select invitation.token::text as token')) {
+        return Promise.resolve({ rows: [{ token: 'pending-token', user_id: OWNER_ID }] });
+      }
+      throw new Error(`Unexpected SQL: ${sql}`);
+    });
+
+    await expect(service.provisionTenant({
+      slug: 'tenant-alpha',
+      name: 'Tenant Alpha',
+      ownerEmail: 'owner@example.test',
+    })).resolves.toMatchObject({
+      invitationToken: 'pending-token',
+      ownerUserId: OWNER_ID,
+    });
+  });
+
+  it('creates a fresh owner invitation for an existing user when no pending invitation remains', async () => {
+    const { service, txQuery } = createService();
+    txQuery.mockImplementation((sql: string) => {
+      if (sql.includes('pg_advisory_xact_lock')) {
+        return Promise.resolve({ rows: [] });
+      }
+      if (sql.includes('where tenant.slug = $1')) {
+        return Promise.resolve({ rows: [tenantRow()] });
+      }
+      if (sql.includes('select invitation.token::text as token')) {
+        return Promise.resolve({ rows: [] });
+      }
+      if (sql.includes('select id::text as id from auth.users')) {
+        return Promise.resolve({ rows: [{ id: OWNER_ID }] });
+      }
+      if (sql.includes('insert into auth.invitations')) {
+        return Promise.resolve({ rows: [] });
+      }
+      throw new Error(`Unexpected SQL: ${sql}`);
+    });
+
+    await expect(service.provisionTenant({
+      slug: 'tenant-alpha',
+      name: 'Tenant Alpha',
+      ownerEmail: 'owner@example.test',
+    })).resolves.toMatchObject({ ownerUserId: OWNER_ID });
   });
 
   it('throws when a tenant disappears after an update and when the database provider is missing', async () => {

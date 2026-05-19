@@ -1,5 +1,7 @@
 import '@angular/compiler';
+import { Injector, runInInjectionContext } from '@angular/core';
 import { FlowApiService } from '../src/flow-api.service';
+import { STYNX_FLOW_CLIENT } from '../src/tokens';
 
 type Call = {
   method: string;
@@ -38,10 +40,17 @@ function createClient() {
   return client;
 }
 
+function createApi(client: unknown): FlowApiService {
+  const injector = Injector.create({
+    providers: [{ provide: STYNX_FLOW_CLIENT, useValue: client }],
+  });
+  return runInInjectionContext(injector, () => new FlowApiService());
+}
+
 describe('FlowApiService endpoint contract', () => {
   it('covers design route families for scopes, graphs, nodes, edges, rules, effects, and form gates', async () => {
     const client = createClient();
-    const api = new FlowApiService(client as never);
+    const api = createApi(client);
 
     await api.listScopes();
     await api.getScope('scope-1');
@@ -98,7 +107,7 @@ describe('FlowApiService endpoint contract', () => {
 
   it('covers forms, fills, answers, waivers, policies, analytics, signal, and effect routes', async () => {
     const client = createClient();
-    const api = new FlowApiService(client as never);
+    const api = createApi(client);
 
     await api.listForms('scope-1');
     await api.getForm('form-1');
@@ -173,7 +182,7 @@ describe('FlowApiService endpoint contract', () => {
 
   it('covers runtime, task action, candidate, user lookup, and event routes', async () => {
     const client = createClient();
-    const api = new FlowApiService(client as never);
+    const api = createApi(client);
 
     await api.listRuns({ scopeId: 'scope-1' });
     await api.ensureRun({ graphCode: 'approval', scopeCode: 'scope', targetId: 'target-1' });
@@ -218,7 +227,7 @@ describe('FlowApiService endpoint contract', () => {
 
   it('omits query options for absent or undefined filters', async () => {
     const client = createClient();
-    const api = new FlowApiService(client as never);
+    const api = createApi(client);
 
     await api.listGraphs();
     await api.listRuns();

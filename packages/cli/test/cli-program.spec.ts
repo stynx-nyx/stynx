@@ -149,6 +149,14 @@ describe('buildProgram', () => {
     await runCli(['audit', 'verify', '--database-url', 'postgres://db']);
     expect(logs.at(-1)).toContain('BROKEN audit chain tenant=tenant-2 event=event-1');
     expect(process.exitCode).toBe(1);
+
+    mocks.verifyAuditChain.mockResolvedValueOnce({
+      valid: false,
+      totalChecked: 0,
+      tenants: [],
+    });
+    await runCli(['audit', 'verify', '--database-url', 'postgres://db']);
+    expect(logs.at(-1)).toContain('BROKEN audit chain tenant=unknown event=unknown');
   });
 
   it('runs adoption scan/apply/link commands', async () => {

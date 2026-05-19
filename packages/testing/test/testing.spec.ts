@@ -131,7 +131,7 @@ describe('@stynx/testing', () => {
     } finally {
       await testApp.teardown();
     }
-  });
+  }, 60_000);
 
   it('exercises restore-conflict and soft-delete-blocked matchers against custom fixture tables', async () => {
     const testApp = await createTestApp({

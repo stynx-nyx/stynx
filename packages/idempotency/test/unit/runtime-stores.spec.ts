@@ -93,6 +93,58 @@ describe('DatabaseIdempotencyStore', () => {
     }
   });
 
+  it('maps null durable row fields and default expiry fallbacks', async () => {
+    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(2000);
+    try {
+      const pending = databaseWithRows([{
+        request_fingerprint: null,
+        response: null,
+        response_headers: null,
+        status: 'pending',
+        expires_at: '2026-01-01T00:00:00.000Z',
+      }]);
+      await expect(new DatabaseIdempotencyStore(pending.database as never).lookup(context({
+        tenantId: undefined,
+      }))).resolves.toMatchObject({
+        requestFingerprint: '',
+        statusCode: null,
+        body: null,
+        headers: {},
+        expiresAt: Date.parse('2026-01-01T00:00:00.000Z'),
+        status: 'pending',
+      });
+      expect(pending.query).toHaveBeenCalledWith(expect.any(String), [null, 'tenant-1:k1']);
+
+      const defaultTtl = databaseWithRows([{
+        request_fingerprint: 'fp-1',
+        response: {},
+        response_headers: {},
+        status: 'completed',
+        expires_at: null,
+      }]);
+      await expect(new DatabaseIdempotencyStore(defaultTtl.database as never).lookup(context({
+        ttlMs: undefined as never,
+      }))).resolves.toMatchObject({
+        expiresAt: 86_402_000,
+      });
+
+      const defaultOptionsTtl = databaseWithRows([{
+        request_fingerprint: 'fp-1',
+        response: {},
+        response_headers: {},
+        status: 'completed',
+        expires_at: null,
+      }]);
+      await expect(new DatabaseIdempotencyStore(defaultOptionsTtl.database as never, {}).lookup(context({
+        ttlMs: undefined as never,
+      }))).resolves.toMatchObject({
+        expiresAt: 86_402_000,
+      });
+    } finally {
+      nowSpy.mockRestore();
+    }
+  });
+
   it('reserves, persists bigint-safe responses, and clears reservations', async () => {
     const reserved = databaseWithRows([{ reserved: 1 }], 1);
     const store = new DatabaseIdempotencyStore(reserved.database as never);
@@ -120,6 +172,52 @@ describe('DatabaseIdempotencyStore', () => {
       expect.stringContaining('delete from core.idempotency_keys'),
       expect.arrayContaining(['tenant-1:k1']),
     );
+  });
+
+  it('returns false for skipped durable writes and uses null tenant parameters', async () => {
+    const unreserved = databaseWithRows([], 0);
+    await expect(new DatabaseIdempotencyStore(unreserved.database as never).reserve(context({
+      tenantId: undefined,
+      ttlMs: 0,
+    }))).resolves.toBe(false);
+    expect(unreserved.query).toHaveBeenCalledWith(expect.any(String), [
+      null,
+      'tenant-1:k1',
+      'fp-1',
+      1,
+    ]);
+
+    const notPersisted = databaseWithRows([], undefined);
+    await expect(new DatabaseIdempotencyStore(notPersisted.database as never).persistResponse(
+      context({ tenantId: undefined, ttlMs: 0 }),
+      200,
+      { ok: true },
+    )).resolves.toBe(false);
+    expect(notPersisted.query).toHaveBeenCalledWith(expect.any(String), expect.arrayContaining([
+      null,
+      'tenant-1:k1',
+      1,
+    ]));
+
+    const persisted = databaseWithRows([], 1);
+    await expect(new DatabaseIdempotencyStore(persisted.database as never).persistResponse(
+      context(),
+      200,
+      { ok: true },
+    )).resolves.toBe(true);
+
+    const nullRowCount = databaseWithRows([], null as never);
+    await expect(new DatabaseIdempotencyStore(nullRowCount.database as never).persistResponse(
+      context(),
+      200,
+      { ok: true },
+    )).resolves.toBe(false);
+
+    const cleared = databaseWithRows([], 0);
+    await new DatabaseIdempotencyStore(cleared.database as never).clearReservation(context({
+      tenantId: undefined,
+    }));
+    expect(cleared.query).toHaveBeenCalledWith(expect.any(String), [null, 'tenant-1:k1']);
   });
 });
 
@@ -196,5 +294,23 @@ describe('RedisIdempotencyBackend', () => {
 
     await backend.onModuleDestroy();
     expect(redisMock.client.quit).toHaveBeenCalled();
+  });
+
+  it('returns null cache misses and uses the default redis prefix', async () => {
+    const backend = new RedisIdempotencyBackend({
+      redis: { url: 'redis://localhost:6379' },
+    });
+    await backend.onModuleInit();
+
+    redisMock.client.get.mockResolvedValueOnce(null);
+    await expect(backend.get(context())).resolves.toBeNull();
+    expect(redisMock.client.get).toHaveBeenCalledWith('stynx:idempotency:entry:tenant-1:k1');
+
+    redisMock.client.set.mockResolvedValueOnce('OK');
+    await expect(backend.acquireLock(context(), 'token')).resolves.toBe(true);
+    expect(redisMock.client.set).toHaveBeenCalledWith('stynx:idempotency:lock:tenant-1:k1', 'token', {
+      PX: 2500,
+      NX: true,
+    });
   });
 });

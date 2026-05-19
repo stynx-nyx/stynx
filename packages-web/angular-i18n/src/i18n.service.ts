@@ -1,6 +1,6 @@
-import { Inject, Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { STYNX_I18N_OPTIONS } from './tokens';
-import type { StynxCatalog, StynxI18nModuleOptions } from './types';
+import type { StynxCatalog } from './types';
 
 function interpolate(template: string, params: Record<string, string | number>): string {
   return template.replace(/\{([^}]+)\}/g, (_match, key: string) => `${params[key] ?? ''}`);
@@ -8,18 +8,16 @@ function interpolate(template: string, params: Record<string, string | number>):
 
 @Injectable()
 export class StynxI18nService {
+  private readonly options = inject(STYNX_I18N_OPTIONS);
   private readonly localeState = signal<string>('');
   private readonly catalogState = signal<StynxCatalog>({});
   readonly locale = computed(() => this.localeState());
   readonly catalog = computed(() => this.catalogState());
   readonly supportedLocales: string[];
 
-  constructor(
-    @Inject(STYNX_I18N_OPTIONS)
-    private readonly options: StynxI18nModuleOptions,
-  ) {
-    this.localeState.set(options.defaultLocale);
-    this.supportedLocales = options.supportedLocales ?? [options.defaultLocale];
+  constructor() {
+    this.localeState.set(this.options.defaultLocale);
+    this.supportedLocales = this.options.supportedLocales ?? [this.options.defaultLocale];
   }
 
   async initialize(): Promise<void> {

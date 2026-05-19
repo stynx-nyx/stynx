@@ -1,7 +1,8 @@
-import { computed, Inject, Injectable, signal } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { computed, inject, Injectable, signal } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { distinctUntilChanged, startWith } from 'rxjs';
 import { STYNX_TENANCY_OPTIONS, STYNX_TENANCY_WINDOW } from './tokens';
-import type { TenancyOptions, TenantContextSnapshot } from './types';
+import type { TenantContextSnapshot } from './types';
 
 function isUrlLike(value: string): boolean {
   return value.startsWith('http://') || value.startsWith('https://');
@@ -35,26 +36,34 @@ function resolveSubdomainTenantId(host: string): string | null {
 
 @Injectable()
 export class TenantContextService {
+  private readonly options = inject(STYNX_TENANCY_OPTIONS);
+  private readonly browserWindow = inject(STYNX_TENANCY_WINDOW);
   private readonly tenantIdState = signal<string | null>(null);
   private readonly sourceState = signal<TenantContextSnapshot['source'] | null>(null);
-  private readonly tenantIdSubject = new BehaviorSubject<string | null>(null);
-  private readonly activeTenantSubject = new BehaviorSubject<TenantContextSnapshot | null>(null);
   readonly tenantId = computed(() => this.tenantIdState());
-  readonly currentTenantId$ = this.tenantIdSubject.asObservable();
+  /**
+   * @deprecated since: 1.x — use toObservable(this.tenantId) or the signal directly.
+   */
+  readonly currentTenantId$ = toObservable(this.tenantId).pipe(
+    startWith(this.tenantId()),
+    distinctUntilChanged(),
+  );
+  /**
+   * @deprecated since: 1.x — use toObservable(this.tenantId) or the signal directly.
+   */
   readonly tenantId$ = this.currentTenantId$;
   readonly activeTenant = computed<TenantContextSnapshot | null>(() => {
     const id = this.tenantIdState();
     const source = this.sourceState();
     return id && source ? { id, source } : null;
   });
-  readonly activeTenant$ = this.activeTenantSubject.asObservable();
-
-  constructor(
-    @Inject(STYNX_TENANCY_OPTIONS)
-    private readonly options: TenancyOptions,
-    @Inject(STYNX_TENANCY_WINDOW)
-    private readonly browserWindow: Window | null,
-  ) {}
+  /**
+   * @deprecated since: 1.x — use toObservable(this.activeTenant) or the signal directly.
+   */
+  readonly activeTenant$ = toObservable(this.activeTenant).pipe(
+    startWith(this.activeTenant()),
+    distinctUntilChanged(),
+  );
 
   async initialize(seed?: { url?: string; host?: string }): Promise<void> {
     const url = resolveUrl(seed?.url ?? this.browserWindow?.location?.href, seed?.host ?? this.browserWindow?.location?.host);
@@ -81,14 +90,10 @@ export class TenantContextService {
   setTenant(id: string, source: TenantContextSnapshot['source'] = 'manual'): void {
     this.tenantIdState.set(id);
     this.sourceState.set(source);
-    this.tenantIdSubject.next(id);
-    this.activeTenantSubject.next({ id, source });
   }
 
   clear(): void {
     this.tenantIdState.set(null);
     this.sourceState.set(null);
-    this.tenantIdSubject.next(null);
-    this.activeTenantSubject.next(null);
   }
 }

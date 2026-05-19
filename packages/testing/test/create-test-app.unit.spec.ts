@@ -120,6 +120,20 @@ describe('createTestApp', () => {
     await app.teardown();
   });
 
+  it('starts LocalStack with caller-provided services', async () => {
+    const app = await createTestApp({
+      localstack: { services: ['sqs'] },
+    });
+
+    expect(app.localstack).toEqual(
+      expect.objectContaining({
+        endpoint: 'http://127.0.0.1:14566',
+        region: 'us-east-1',
+      }),
+    );
+    await app.teardown();
+  });
+
   it('applies seed-only SQL setup without requiring migrations', async () => {
     const app = await createTestApp({
       localstack: { enabled: false },

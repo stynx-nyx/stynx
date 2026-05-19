@@ -9,9 +9,7 @@ import { getCoverageThreshold } from './test-thresholds.mjs';
 // unplugin-swc exports its plugin factories as `{ vite, esbuild, ... }` on the
 // default export. Vite's config loader sometimes double-wraps the default, so
 // unwrap defensively.
-const swc = (swcMod && typeof swcMod.vite === 'function')
-  ? swcMod
-  : (swcMod?.default ?? swcMod);
+const swc = swcMod && typeof swcMod.vite === 'function' ? swcMod : (swcMod?.default ?? swcMod);
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '../..');
@@ -26,7 +24,8 @@ const workspaceFallbackResolve = {
   enforce: 'post',
   async resolveId(source, importer) {
     if (!source || source.startsWith('.') || source.startsWith('/')) return null;
-    if (source.startsWith('node:') || source.startsWith('virtual:') || source.startsWith('\0')) return null;
+    if (source.startsWith('node:') || source.startsWith('virtual:') || source.startsWith('\0'))
+      return null;
     const resolved = await this.resolve(source, importer, { skipSelf: true });
     if (resolved) return null;
     const hoistedRoot = resolve(repoRoot, 'node_modules/.pnpm/node_modules');
@@ -62,10 +61,19 @@ const drizzleIsPatch = {
 // (which reads scripts/test-matrix.config.json). Keep these named exports
 // as transitional aliases for configs that import them directly; prefer
 // `getCoverageThreshold(packageName)` going forward.
-const baseCoverageThreshold     = { statements: 85,  branches: 80,  functions: 85,  lines: 85  };
-const strictCoverageThreshold   = { statements: 95,  branches: 95,  functions: 95,  lines: 95  };
+const baseCoverageThreshold = { statements: 85, branches: 80, functions: 85, lines: 85 };
+const strictCoverageThreshold = { statements: 95, branches: 95, functions: 95, lines: 95 };
 const completeCoverageThreshold = { statements: 100, branches: 100, functions: 100, lines: 100 };
-const disabledCoverageThreshold = { statements: 0,   branches: 0,   functions: 0,   lines: 0   };
+const disabledCoverageThreshold = { statements: 0, branches: 0, functions: 0, lines: 0 };
+const coverageMetricKeys = ['statements', 'branches', 'functions', 'lines'];
+
+function coverageThresholdValues(threshold) {
+  return Object.fromEntries(coverageMetricKeys.map((key) => [key, threshold[key]]));
+}
+
+function isCompleteCoverageThreshold(threshold) {
+  return coverageMetricKeys.every((key) => threshold[key] === completeCoverageThreshold[key]);
+}
 
 export function createVitestConfig({
   packageDir,
@@ -88,6 +96,7 @@ export function createVitestConfig({
     process.env.STYNX_AGGREGATE_COVERAGE === '1'
       ? disabledCoverageThreshold
       : (coverageThreshold ?? getCoverageThreshold(packageName));
+  const thresholdValues = coverageThresholdValues(threshold);
 
   const drizzleAlias = patchDrizzle
     ? { 'drizzle-orm/entity': resolve(repoRoot, 'tools/repo-config/drizzle-entity-shim.mjs') }
@@ -143,7 +152,10 @@ export function createVitestConfig({
           'src/**/*.d.ts',
           ...coverageExclude,
         ],
-        thresholds: { ...threshold },
+        thresholds: {
+          ...thresholdValues,
+          ...(isCompleteCoverageThreshold(thresholdValues) ? { autoUpdate: false } : {}),
+        },
       },
     },
   });

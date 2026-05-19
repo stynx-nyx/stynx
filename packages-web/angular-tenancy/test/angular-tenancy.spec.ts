@@ -1,5 +1,7 @@
 import '@angular/compiler';
 import { APP_INITIALIZER, Injector, runInInjectionContext, type Provider } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { of, firstValueFrom, type Observable } from 'rxjs';
 import { provideTenancy } from '../src/provide-tenancy';
@@ -7,6 +9,7 @@ import { TenantContextService } from '../src/tenant-context.service';
 import { TenantInterceptor } from '../src/tenant.interceptor';
 import { TenantSwitcherComponent } from '../src/tenant-switcher.component';
 import { STYNX_TENANCY_OPTIONS, STYNX_TENANCY_WINDOW } from '../src/tokens';
+import type { TenancyOptions } from '../src/types';
 
 class FakeHeaders {
   private readonly values = new Map<string, string>();
@@ -46,6 +49,25 @@ class FakeHandler {
     return of({ ok: true });
   }
 }
+
+function createTenantContext(options: TenancyOptions = {}, browserWindow: Window | null = null): TenantContextService {
+  const injector = Injector.create({
+    parent: TestBed.inject(Injector),
+    providers: [
+      { provide: STYNX_TENANCY_OPTIONS, useValue: options },
+      { provide: STYNX_TENANCY_WINDOW, useValue: browserWindow },
+    ],
+  });
+  return runInInjectionContext(injector, () => new TenantContextService());
+}
+
+beforeAll(() => {
+  TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
+});
+
+afterEach(() => {
+  TestBed.resetTestingModule();
+});
 
 describe('@stynx-web/angular-tenancy', () => {
   it('provides tenancy options, browser window fallback, initializer, and interceptor providers', async () => {
@@ -87,7 +109,7 @@ describe('@stynx-web/angular-tenancy', () => {
 
   it('initializes tenants from query, subdomain, default resolver, and clear', async () => {
     const emitted: Array<string | null> = [];
-    const tenantContext = new TenantContextService(
+    const tenantContext = createTenantContext(
       {
         defaultTenantResolver: async ({ host }) => host === 'localhost' ? 'fallback-tenant' : null,
       },
@@ -120,7 +142,7 @@ describe('@stynx-web/angular-tenancy', () => {
 
   it('normalizes URL and host edge cases before using the default resolver', async () => {
     const seen: Array<{ url: string; host: string }> = [];
-    const tenantContext = new TenantContextService(
+    const tenantContext = createTenantContext(
       {
         defaultTenantResolver: async ({ url, host }) => {
           seen.push({ url: url.href, host });
@@ -158,7 +180,7 @@ describe('@stynx-web/angular-tenancy', () => {
   });
 
   it('leaves tenant unset when no source resolves and supports manual source default', async () => {
-    const tenantContext = new TenantContextService({}, null);
+    const tenantContext = createTenantContext({}, null);
 
     await tenantContext.initialize();
     expect(tenantContext.activeTenant()).toBeNull();
@@ -174,7 +196,7 @@ describe('@stynx-web/angular-tenancy', () => {
   });
 
   it('adds X-Tenant-Id from the current tenant context', async () => {
-    const tenantContext = new TenantContextService({}, null);
+    const tenantContext = createTenantContext({}, null);
     tenantContext.setTenant('tenant-a', 'manual');
     const interceptor = new TenantInterceptor(tenantContext);
     const handler = new FakeHandler();
@@ -187,7 +209,7 @@ describe('@stynx-web/angular-tenancy', () => {
   });
 
   it('does not override an existing tenant header', async () => {
-    const tenantContext = new TenantContextService({}, null);
+    const tenantContext = createTenantContext({}, null);
     tenantContext.setTenant('tenant-a', 'manual');
     const interceptor = new TenantInterceptor(tenantContext);
     const handler = new FakeHandler();

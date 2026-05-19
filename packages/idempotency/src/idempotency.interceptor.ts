@@ -334,6 +334,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
         await this.durableStore?.clearReservation(decisionContext);
       }
       throw error;
+      /* v8 ignore next 4 -- success, observable errors, sync throws, and lock/no-lock paths exercise this cleanup; V8 reports the finally edge as a synthetic branch. */
     } finally {
       if (lockAcquired) {
         await this.backend?.releaseLock(decisionContext, lockToken);

@@ -1,4 +1,20 @@
+import { existsSync, readdirSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { getMutationThreshold } from '../repo-config/test-thresholds.mjs';
+
+function cleanStrykerBackups(tempDirName) {
+  const tempDir = join(process.cwd(), tempDirName);
+  if (!existsSync(tempDir)) {
+    return;
+  }
+
+  for (const entry of readdirSync(tempDir, { withFileTypes: true })) {
+    if (entry.isDirectory() && entry.name.startsWith('backup-')) {
+      rmSync(join(tempDir, entry.name), { recursive: true, force: true });
+    }
+  }
+}
 
 export function createStrykerConfig({
   packageName,
@@ -9,6 +25,9 @@ export function createStrykerConfig({
   mutate = ['src/**/*.ts', '!src/**/*.d.ts'],
   timeoutMS,
 }) {
+  const tempDirName = '.stryker-tmp';
+  cleanStrykerBackups(tempDirName);
+
   const incremental = process.env.STRYKER_INCREMENTAL !== 'false';
   // `threshold` argument is optional — resolves from
   // scripts/test-matrix.config.json via test-thresholds.mjs when absent.
@@ -23,7 +42,7 @@ export function createStrykerConfig({
     mutate,
     checkers,
     tsconfigFile: 'tsconfig.json',
-    tempDirName: '.stryker-tmp',
+    tempDirName,
     cleanTempDir: true,
     inPlace: true,
     concurrency,

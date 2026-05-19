@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx-web/angular-ui",
+  "level": "mutation",
+  "runner": "stryker-vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T02:48:53.356Z",
+  "endedAt": "2026-05-19T02:49:28.925Z",
+  "durationMs": 35569,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/mutation.log",
+    "report": "reports/mutation/mutation.json",
+    "html": "reports/mutation/-stynx-web-angular-ui/index.html"
+  },
+  "env": {
+    "node": "24.15.0",
+    "ci": false
+  },
+  "command": {
+    "argv": ["pnpm", "exec", "stryker", "run", "stryker.conf.mjs"],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages-web/angular-ui"
+  },
+  "metric": {
+    "kind": "score",
+    "score": 83.33333333333334,
+    "thresholds": {
+      "high": 60,
+      "low": 60,
+      "break": 60
+    }
+  },
+  "totals": {
+    "files": 6,
+    "tests": 57,
+    "passed": 35,
+    "failed": 7,
+    "skipped": 0,
+    "todo": 0
+  }
+}

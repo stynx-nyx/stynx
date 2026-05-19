@@ -1,6 +1,19 @@
 import '@angular/compiler';
+import { Injector, runInInjectionContext } from '@angular/core';
+import { StynxSessionService } from '@stynx-web/angular-auth';
+import { StynxToastService } from '@stynx-web/angular-ui';
 import { StynxTrashListComponent } from '../src/trash-list.component';
 import type { StynxTrashAdapter, StynxTrashQuery } from '../src/types';
+
+function createComponent(session: unknown, toast: unknown): StynxTrashListComponent {
+  const injector = Injector.create({
+    providers: [
+      { provide: StynxSessionService, useValue: session },
+      { provide: StynxToastService, useValue: toast },
+    ],
+  });
+  return runInInjectionContext(injector, () => new StynxTrashListComponent());
+}
 
 describe('@stynx-web/angular-trash', () => {
   it('loads trash items and restores them through the adapter', async () => {
@@ -23,7 +36,7 @@ describe('@stynx-web/angular-trash', () => {
       hardDelete: vi.fn(async () => undefined),
     };
 
-    const component = new StynxTrashListComponent(
+    const component = createComponent(
       {
         hasAllPermissions: () => true,
       } as never,
@@ -68,7 +81,7 @@ describe('@stynx-web/angular-trash', () => {
       restoreWithCascade: vi.fn(async () => undefined),
       hardDelete: vi.fn(async () => undefined),
     };
-    const component = new StynxTrashListComponent(
+    const component = createComponent(
       {
         hasAllPermissions: () => true,
       } as never,
@@ -95,7 +108,7 @@ describe('@stynx-web/angular-trash', () => {
     await component.confirmHardDelete();
     expect(adapter.hardDelete).toHaveBeenCalledWith('records', 'trash-1');
 
-    const noDelete = new StynxTrashListComponent(
+    const noDelete = createComponent(
       { hasAllPermissions: () => false } as never,
       { push: () => undefined } as never,
     );

@@ -54,16 +54,16 @@ const outputPath = args.get('output') ?? join(repoRoot, 'coverage', 'test-eviden
 
 const dirsToWalk = ['packages', 'packages-web', 'infra', 'reference', 'domain', 'test', 'tools'];
 
-function* walkArtifacts() {
+function* walkArtifacts(workspace = repoRoot) {
   // Workspace-root .test-results (perf, smoke) come first.
-  const rootResults = join(repoRoot, '.test-results');
+  const rootResults = join(workspace, '.test-results');
   if (existsSync(rootResults)) {
     for (const f of readdirSync(rootResults)) {
       if (f.endsWith('.json')) yield join(rootResults, f);
     }
   }
   for (const root of dirsToWalk) {
-    yield* walkUnder(join(repoRoot, root));
+    yield* walkUnder(join(workspace, root));
   }
 }
 
@@ -71,7 +71,12 @@ function* walkUnder(dir) {
   if (!existsSync(dir) || !statSync(dir).isDirectory()) return;
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     if (!entry.isDirectory()) continue;
-    if (entry.name === 'node_modules' || entry.name === 'dist' || entry.name.startsWith('.stryker-tmp')) continue;
+    if (
+      entry.name === 'node_modules' ||
+      entry.name === 'dist' ||
+      entry.name.startsWith('.stryker-tmp')
+    )
+      continue;
     const child = join(dir, entry.name);
     if (entry.name === '.test-results') {
       for (const f of readdirSync(child)) {
@@ -83,32 +88,35 @@ function* walkUnder(dir) {
   }
 }
 
-const all = [];
-for (const path of walkArtifacts()) {
-  try {
-    const r = JSON.parse(readFileSync(path, 'utf8'));
-    if (r.schemaVersion !== '1') continue;
-    const entry = {
-      package: r.package,
-      level: r.level,
-      runner: r.runner,
-      status: r.status,
-      startedAt: r.startedAt,
-      endedAt: r.endedAt,
-      durationMs: r.durationMs,
-      exitCode: r.exitCode,
-      totals: r.totals,
-      metric: r.metric,
-      artifacts: r.artifacts,
-    };
-    if (includeSlowest && r.slowestTests) entry.slowestTests = r.slowestTests;
-    all.push(entry);
-  } catch {
-    // skip malformed
+function collectResults({ workspace = repoRoot, withSlowest = false } = {}) {
+  const results = [];
+  for (const path of walkArtifacts(workspace)) {
+    try {
+      const r = JSON.parse(readFileSync(path, 'utf8'));
+      if (r.schemaVersion !== '1') continue;
+      const entry = {
+        package: r.package,
+        level: r.level,
+        runner: r.runner,
+        status: r.status,
+        startedAt: r.startedAt,
+        endedAt: r.endedAt,
+        durationMs: r.durationMs,
+        exitCode: r.exitCode,
+        totals: r.totals,
+        metric: r.metric,
+        artifacts: r.artifacts,
+      };
+      if (withSlowest && r.slowestTests) entry.slowestTests = r.slowestTests;
+      results.push(entry);
+    } catch {
+      // skip malformed
+    }
   }
+  return results;
 }
 
-function summariseLevel(level) {
+function summariseLevel(all, level) {
   const slice = all.filter((r) => r.level === level);
   if (slice.length === 0) return null;
   const passed = slice.filter((r) => r.status === 'passed').length;
@@ -128,9 +136,7 @@ function summariseLevel(level) {
     results: slice,
   };
   if (level === 'mutation') {
-    const scores = slice
-      .map((r) => r.metric?.score)
-      .filter((s) => typeof s === 'number');
+    const scores = slice.map((r) => r.metric?.score).filter((s) => typeof s === 'number');
     if (scores.length > 0) {
       summary.scoreAvg = scores.reduce((s, n) => s + n, 0) / scores.length;
       summary.scoreMin = Math.min(...scores);
@@ -152,31 +158,38 @@ function summariseLevel(level) {
   return summary;
 }
 
-const evidence = {
-  schemaVersion: SCHEMA_VERSION,
-  generatedAt: new Date().toISOString(),
-  workspace: repoRoot,
-  levels: {
-    unit: summariseLevel('unit'),
-    integration: summariseLevel('integration'),
-    e2e: summariseLevel('e2e'),
-    mutation: summariseLevel('mutation'),
-    coverage: summariseLevel('coverage'),
-    perf: summariseLevel('perf'),
-    smoke: summariseLevel('smoke'),
-  },
-  all,
-};
+export function aggregateEvidence({ workspace = repoRoot, withSlowest = false } = {}) {
+  const all = collectResults({ workspace, withSlowest });
+  return {
+    schemaVersion: SCHEMA_VERSION,
+    generatedAt: new Date().toISOString(),
+    workspace,
+    levels: {
+      unit: summariseLevel(all, 'unit'),
+      integration: summariseLevel(all, 'integration'),
+      e2e: summariseLevel(all, 'e2e'),
+      mutation: summariseLevel(all, 'mutation'),
+      coverage: summariseLevel(all, 'coverage'),
+      perf: summariseLevel(all, 'perf'),
+      smoke: summariseLevel(all, 'smoke'),
+    },
+    all,
+  };
+}
 
-mkdirSync(dirname(outputPath), { recursive: true });
-writeFileSync(outputPath, JSON.stringify(evidence, null, 2) + '\n');
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const evidence = aggregateEvidence({ workspace: repoRoot, withSlowest: includeSlowest });
 
-if (printToStdout) {
-  process.stdout.write(JSON.stringify(evidence, null, 2) + '\n');
-} else {
-  const counts = Object.entries(evidence.levels)
-    .filter(([, v]) => v)
-    .map(([k, v]) => `${k}=${v.packages}`)
-    .join(' ');
-  process.stderr.write(`[test-evidence] wrote ${outputPath} (${counts})\n`);
+  mkdirSync(dirname(outputPath), { recursive: true });
+  writeFileSync(outputPath, JSON.stringify(evidence, null, 2) + '\n');
+
+  if (printToStdout) {
+    process.stdout.write(JSON.stringify(evidence, null, 2) + '\n');
+  } else {
+    const counts = Object.entries(evidence.levels)
+      .filter(([, v]) => v)
+      .map(([k, v]) => `${k}=${v.packages}`)
+      .join(' ');
+    process.stderr.write(`[test-evidence] wrote ${outputPath} (${counts})\n`);
+  }
 }

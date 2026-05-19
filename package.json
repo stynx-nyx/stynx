@@ -23,6 +23,7 @@
     "lint:workflows": "github-actionlint .github/workflows/*.yml",
     "db:verify": "node scripts/db-verify.mjs",
     "ci:stynx": "pnpm check:engines && pnpm lint && pnpm lint:deadcode && pnpm lint:deps && pnpm lint:cycles && pnpm typecheck && pnpm test && pnpm test:int && pnpm build && pnpm run doctor",
+    "ci:stynx:full": "pnpm ci:stynx && pnpm test:e2e && pnpm test:mutation && pnpm test:perf && pnpm check:rls-smoke",
     "ci:stynx:release": "pnpm release:policy && pnpm release:drafts",
     "ci:reference-apps": "pnpm --filter @stynx/reference-api build && pnpm --filter @stynx/reference-api test && pnpm --filter @stynx/reference-api test:int && pnpm --filter @stynx/reference-web build && pnpm --filter @stynx/reference-web build:web",
     "ci:local": "bash scripts/ci-local/run.sh",

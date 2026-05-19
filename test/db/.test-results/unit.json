@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T01:35:46.980Z",
-  "endedAt": "2026-05-19T01:35:54.671Z",
-  "durationMs": 7687,
+  "startedAt": "2026-05-19T04:24:58.912Z",
+  "endedAt": "2026-05-19T04:25:05.652Z",
+  "durationMs": 6740,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-54061-1779154546980.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-45188-1779164698912.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/test/db/.test-results/unit.junit.xml"
     ],
@@ -45,54 +45,54 @@
   },
   "slowestTests": [
     {
-      "name": "auth schema DDL defines auth schema",
-      "file": "/Users/aarusso/Development/stech/stynx/test/db/auth.ddl.spec.ts",
-      "durationMs": 15.22604199999978
-    },
-    {
-      "name": "audit schema DDL creates audit.events table with metadata and pk columns",
-      "file": "/Users/aarusso/Development/stech/stynx/test/db/audit.ddl.spec.ts",
-      "durationMs": 2.215874999999869
-    },
-    {
       "name": "storage schema DDL defines storage schema and files table",
       "file": "/Users/aarusso/Development/stech/stynx/test/db/storage.ddl.spec.ts",
-      "durationMs": 1.282165999999961
+      "durationMs": 4.808875000000171
     },
     {
-      "name": "auth schema DDL exposes tenancy membership with RLS policies",
+      "name": "auth schema DDL defines auth schema",
       "file": "/Users/aarusso/Development/stech/stynx/test/db/auth.ddl.spec.ts",
-      "durationMs": 0.3405840000000353
+      "durationMs": 2.043666999999914
     },
     {
       "name": "audit schema DDL exposes audit.write helper",
       "file": "/Users/aarusso/Development/stech/stynx/test/db/audit.ddl.spec.ts",
-      "durationMs": 0.336667000000034
+      "durationMs": 1.83849999999984
     },
     {
-      "name": "storage schema DDL enables row level security",
-      "file": "/Users/aarusso/Development/stech/stynx/test/db/storage.ddl.spec.ts",
-      "durationMs": 0.2834589999997661
-    },
-    {
-      "name": "audit schema DDL extracts primary key data for trigger events",
+      "name": "audit schema DDL creates audit.events table with metadata and pk columns",
       "file": "/Users/aarusso/Development/stech/stynx/test/db/audit.ddl.spec.ts",
-      "durationMs": 0.2047090000000935
-    },
-    {
-      "name": "auth schema DDL sets up Cognito mirror tables",
-      "file": "/Users/aarusso/Development/stech/stynx/test/db/auth.ddl.spec.ts",
-      "durationMs": 0.11329099999966274
+      "durationMs": 1.6665419999999358
     },
     {
       "name": "auth schema DDL defines reusable tenant/RLS helper functions",
       "file": "/Users/aarusso/Development/stech/stynx/test/db/auth.ddl.spec.ts",
-      "durationMs": 0.09162500000002183
+      "durationMs": 0.9662500000004002
+    },
+    {
+      "name": "auth schema DDL exposes tenancy membership with RLS policies",
+      "file": "/Users/aarusso/Development/stech/stynx/test/db/auth.ddl.spec.ts",
+      "durationMs": 0.9655409999995754
+    },
+    {
+      "name": "storage schema DDL enables row level security",
+      "file": "/Users/aarusso/Development/stech/stynx/test/db/storage.ddl.spec.ts",
+      "durationMs": 0.28700000000026193
+    },
+    {
+      "name": "audit schema DDL extracts primary key data for trigger events",
+      "file": "/Users/aarusso/Development/stech/stynx/test/db/audit.ddl.spec.ts",
+      "durationMs": 0.16550000000006548
+    },
+    {
+      "name": "auth schema DDL sets up Cognito mirror tables",
+      "file": "/Users/aarusso/Development/stech/stynx/test/db/auth.ddl.spec.ts",
+      "durationMs": 0.16020799999978408
     },
     {
       "name": "audit schema DDL exposes audit.verify_chain helper",
       "file": "/Users/aarusso/Development/stech/stynx/test/db/audit.ddl.spec.ts",
-      "durationMs": 0.08404199999995399
+      "durationMs": 0.078125
     }
   ]
 }

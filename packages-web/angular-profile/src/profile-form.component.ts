@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Inject, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import type { StynxProfileValue } from './types';
 
@@ -17,6 +17,8 @@ import type { StynxProfileValue } from './types';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StynxProfileFormComponent {
+  private readonly formBuilder = inject(FormBuilder);
+
   /** @ignore */
   readonly form = this.formBuilder.nonNullable.group({
     name: ['', [Validators.required]],
@@ -25,8 +27,6 @@ export class StynxProfileFormComponent {
   });
 
   @Output() readonly save = new EventEmitter<StynxProfileValue>();
-
-  constructor(@Inject(FormBuilder) private readonly formBuilder: FormBuilder) {}
 
   @Input()
   set value(value: StynxProfileValue | null) {

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="2" failures="0" errors="0" time="0.005773708">
-    <testsuite name="test/angular-trash.spec.ts" timestamp="2026-05-19T01:36:46.598Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.005773708">
-        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; loads trash items and restores them through the adapter" time="0.003514291">
+<testsuites name="vitest tests" tests="2" failures="0" errors="0" time="0.006320375">
+    <testsuite name="test/angular-trash.spec.ts" timestamp="2026-05-19T05:11:48.664Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.006320375">
+        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; loads trash items and restores them through the adapter" time="0.004562542">
         </testcase>
-        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; handles pagination, cascade restore, hard delete, and fallback errors" time="0.00143325">
+        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; handles pagination, cascade restore, hard delete, and fallback errors" time="0.001125583">
         </testcase>
     </testsuite>
 </testsuites>
