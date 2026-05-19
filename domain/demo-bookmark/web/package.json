@@ -20,6 +20,6 @@
   "devDependencies": {
     "@stynx-internal/eslint-config": "workspace:*",
     "@stynx-internal/tsconfig": "workspace:*",
-    "typescript": "~5.4.5"
+    "typescript": "~6.0.3"
   }
 }

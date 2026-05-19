@@ -28,6 +28,6 @@
     "stryker": "node ../../scripts/run-and-record.mjs --package @stynx/contracts --level mutation --runner stryker-vitest -- pnpm exec stryker run stryker.conf.mjs"
   },
   "devDependencies": {
-    "@types/node": "^25.6.0"
+    "@types/node": "^25.9.1"
   }
 }
