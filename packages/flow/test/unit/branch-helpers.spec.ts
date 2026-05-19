@@ -97,7 +97,9 @@ describe('FlowAdapterRegistry', () => {
   it('delegates adapter operations and wraps adapter failures', async () => {
     const adapter = makeAdapter({
       canView: vi.fn(async () => { throw new Error('no view'); }),
+      canManage: vi.fn(async () => { throw new Error('no manage'); }),
       applyEffect: vi.fn(async () => { throw 'bad effect'; }),
+      resolveAgents: vi.fn(async () => { throw new Error('no agents'); }),
     });
     const registry = new FlowAdapterRegistry([adapter]);
 
@@ -112,7 +114,7 @@ describe('FlowAdapterRegistry', () => {
       adapterKey: 'docs',
       targetType: 'doc',
       targetId: 'd-1',
-    })).resolves.toBe(false);
+    })).rejects.toBeInstanceOf(BadGatewayException);
     await expect(registry.canView({
       tenantId: 't-1',
       adapterKey: 'docs',
@@ -125,6 +127,15 @@ describe('FlowAdapterRegistry', () => {
       targetType: 'doc',
       targetId: 'd-1',
       effectKey: 'email',
+    })).rejects.toBeInstanceOf(BadGatewayException);
+    await expect(registry.resolveAgents({
+      tenantId: 't-1',
+      adapterKey: 'docs',
+      targetType: 'doc',
+      targetId: 'd-1',
+      nodeId: 'n-1',
+      ruleId: 'r-1',
+      resolverKey: 'owner',
     })).rejects.toBeInstanceOf(BadGatewayException);
     await expect(registry.applyEffect({
       tenantId: 't-1',

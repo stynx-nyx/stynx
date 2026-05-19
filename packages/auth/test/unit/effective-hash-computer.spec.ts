@@ -44,6 +44,9 @@ describe('EffectiveHashComputer', () => {
   it('recomputes membership hashes for direct and grouped role mutations', async () => {
     const { service, trx } = createService();
 
+    await service.afterMembershipRoleMutation(trx as never, ['membership-0']);
+    await service.afterDirectPermissionMutation(trx as never, ['membership-0']);
+    await service.afterGroupMembershipMutation(trx as never, ['membership-0']);
     await service.afterRolePermissionMutation(trx as never, ['role-1']);
     await service.afterGroupRoleMutation(trx as never, ['group-1']);
     await service.afterPlatformRoleChange(trx as never);
@@ -62,9 +65,20 @@ describe('EffectiveHashComputer', () => {
   it('short-circuits empty mutation inputs', async () => {
     const { service, trx } = createService();
 
+    await service.afterMembershipRoleMutation(trx as never, []);
+    await service.afterDirectPermissionMutation(trx as never, []);
+    await service.afterGroupMembershipMutation(trx as never, []);
     await service.afterRolePermissionMutation(trx as never, []);
     await service.afterGroupRoleMutation(trx as never, []);
 
     expect(trx.query).not.toHaveBeenCalledWith(expect.stringContaining('select distinct membership_id as id'), []);
+  });
+
+  it('throws when the database provider is unavailable', async () => {
+    const service = new EffectiveHashComputer({ get: vi.fn(() => undefined) } as unknown as ModuleRef);
+
+    await expect(service.ensureMembershipHash('user-1', 'tenant-1')).rejects.toThrow(
+      'Database provider is unavailable to EffectiveHashComputer',
+    );
   });
 });

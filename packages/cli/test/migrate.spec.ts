@@ -1,6 +1,21 @@
-import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
+
+const mockPg = vi.hoisted(() => ({
+  clients: [] as unknown[],
+  Client: vi.fn((options: { connectionString: string }) => {
+    const client = mockPg.clients.shift() as { connectionString?: string } | undefined;
+    if (!client) {
+      throw new Error('Missing mocked pg client');
+    }
+    client.connectionString = options.connectionString;
+    return client;
+  }),
+}));
+
+vi.mock('pg', () => ({ Client: mockPg.Client }));
+
 import {
   listMigrations,
   migrateDown,
@@ -16,7 +31,9 @@ class FakeMigrationClient implements MigrationClient {
   readonly journal: Array<{ id: string; direction: string }> = [];
   readonly executedSql: string[] = [];
   connected = false;
+  connectionString?: string;
   failOnSql: RegExp | null = null;
+  onQuery: ((sql: string, values: unknown[]) => void) | null = null;
 
   async connect(): Promise<void> {
     this.connected = true;
@@ -31,6 +48,7 @@ class FakeMigrationClient implements MigrationClient {
     if (this.failOnSql?.test(sql)) {
       throw new Error('query failed');
     }
+    this.onQuery?.(sql, values);
 
     if (/select id from core\.schema_migrations order by id/u.test(sql)) {
       return { rows: [...this.applied.keys()].sort().map((id) => ({ id })) };
@@ -98,6 +116,21 @@ describe('migrate command surface', () => {
     expect(status.pending).toEqual(['0001_first.sql', '0002_second.sql']);
     expect(status.applied).toEqual([]);
     expect(status.rollbackable).toEqual([]);
+  });
+
+  it('uses the default pg client factory when no factory override is supplied', async () => {
+    const migrationDir = createFixtureDir();
+    const fake = new FakeMigrationClient();
+    mockPg.clients.push(fake);
+
+    await expect(migrationStatus(process.cwd(), 'postgresql://default-client', { migrationDir })).resolves.toEqual({
+      applied: [],
+      pending: ['0001_first.sql', '0002_second.sql'],
+      rollbackable: [],
+    });
+
+    expect(mockPg.Client).toHaveBeenCalledWith({ connectionString: 'postgresql://default-client' });
+    expect(fake.connectionString).toBe('postgresql://default-client');
   });
 
   it('applies, rolls back, and redoes paired migrations', async () => {
@@ -173,6 +206,37 @@ describe('migrate command surface', () => {
     })).rejects.toThrow('not rollbackable');
   });
 
+  it('keeps dry-run rollback validation for migrations without a down pair', async () => {
+    const root = mkdtempSync(resolve(tmpdir(), 'stynx-cli-migrate-nodown-dry-'));
+    const dir = resolve(root, 'migrations');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(resolve(dir, '0001_missing_down.sql'), 'select 1;', 'utf8');
+    const fake = new FakeMigrationClient();
+    fake.applied.set('0001_missing_down.sql', 'checksum-1');
+
+    await expect(migrateDown(process.cwd(), 'postgresql://example', 1, true, {
+      migrationDir: dir,
+      clientFactory: clientFactoryFor(fake),
+    })).rejects.toThrow('not rollbackable');
+  });
+
+  it('fails redo when a migration file disappears between rollback and replay', async () => {
+    const migrationDir = createFixtureDir();
+    const missingPath = resolve(migrationDir, '0001_first.sql');
+    const fake = new FakeMigrationClient();
+    fake.applied.set('0001_first.sql', 'checksum-1');
+    fake.onQuery = (sql) => {
+      if (/delete from core\.schema_migrations/u.test(sql)) {
+        rmSync(missingPath, { force: true });
+      }
+    };
+
+    await expect(migrateRedo(process.cwd(), 'postgresql://example', false, {
+      migrationDir,
+      clientFactory: clientFactoryFor(fake),
+    })).rejects.toThrow('missing from the migration directory');
+  });
+
   it('rolls back SQL transactions when migration up or down execution fails', async () => {
     const migrationDir = createFixtureDir();
     const upFailure = new FakeMigrationClient();
@@ -191,5 +255,38 @@ describe('migrate command surface', () => {
       clientFactory: clientFactoryFor(downFailure),
     })).rejects.toThrow('query failed');
     expect(downFailure.executedSql).toContain('rollback');
+  });
+
+  it('promotes bootstrap objects when the extension migration is already applied or just applied', async () => {
+    const root = mkdtempSync(resolve(tmpdir(), 'stynx-cli-migrate-promote-'));
+    const dir = resolve(root, 'migrations');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(resolve(dir, '0002_extensions.sql'), 'select 2;', 'utf8');
+    writeFileSync(resolve(dir, '0002_extensions.down.sql'), 'select 22;', 'utf8');
+    writeFileSync(resolve(dir, '0003_next.sql'), 'select 3;', 'utf8');
+    writeFileSync(resolve(dir, '0003_next.down.sql'), 'select 33;', 'utf8');
+
+    const alreadyApplied = new FakeMigrationClient();
+    alreadyApplied.applied.set('0002_extensions.sql', 'checksum-2');
+    await expect(migrateUp(process.cwd(), 'postgresql://example', false, {
+      migrationDir: dir,
+      clientFactory: clientFactoryFor(alreadyApplied),
+    })).resolves.toEqual(['0003_next.sql']);
+    expect(alreadyApplied.executedSql).toEqual(expect.arrayContaining([
+      'ALTER SCHEMA core OWNER TO stynx_owner',
+      'ALTER TABLE core.schema_migrations OWNER TO stynx_owner',
+      'ALTER TABLE core.schema_migration_journal OWNER TO stynx_owner',
+      'SET ROLE stynx_owner',
+    ]));
+
+    const justApplied = new FakeMigrationClient();
+    await expect(migrateUp(process.cwd(), 'postgresql://example', false, {
+      migrationDir: dir,
+      clientFactory: clientFactoryFor(justApplied),
+    })).resolves.toEqual(['0002_extensions.sql', '0003_next.sql']);
+    expect(justApplied.executedSql).toEqual(expect.arrayContaining([
+      'ALTER SCHEMA core OWNER TO stynx_owner',
+      'SET ROLE stynx_owner',
+    ]));
   });
 });

@@ -9,12 +9,7 @@ export default createVitestConfig({
     'src/**/*.ts',
     '!src/index.ts',
     '!src/tokens.ts',
-    '!src/errors.ts',
-    '!src/pii-map.service.ts',
-    '!src/privacy.controller.ts',
     '!src/privacy.module.ts',
-    '!src/privacy-object-store.service.ts',
-    '!src/ropa.ts',
   ],
   alias: {
     '@stynx/core': resolve(__dirname, '../core/src/index.ts'),

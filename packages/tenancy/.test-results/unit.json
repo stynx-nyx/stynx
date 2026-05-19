@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx/tenancy",
+  "level": "unit",
+  "runner": "vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T01:05:38.239Z",
+  "endedAt": "2026-05-19T01:05:42.687Z",
+  "durationMs": 4447,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/unit.log"
+  },
+  "env": {
+    "node": "26.0.0",
+    "ci": false
+  },
+  "command": {
+    "argv": [
+      "vitest",
+      "run",
+      "--config",
+      "./vitest.config.ts",
+      "--reporter=default",
+      "--reporter=json",
+      "--outputFile.json=/tmp/vitest-3927-1779152738239.json"
+    ],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages/tenancy"
+  },
+  "metric": {
+    "kind": "none"
+  },
+  "totals": {
+    "files": 7,
+    "tests": 34,
+    "passed": 34,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "slowestTests": [
+    {
+      "name": "TenancyService provisions a new tenant and fans out the expected side effects",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/tenancy.service.spec.ts",
+      "durationMs": 9.69458399999985
+    },
+    {
+      "name": "TenantContextInterceptor rejects inactive memberships and caches the negative membership decision",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/tenant-context.interceptor.spec.ts",
+      "durationMs": 9.655166000000008
+    },
+    {
+      "name": "TenantContextInterceptor trims tenant sources, validates membership through owner readonly tx, and caches the decision",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/tenant-context.interceptor.spec.ts",
+      "durationMs": 7.819833000000017
+    },
+    {
+      "name": "TenancyPlatformAdminGuard allows only when the platform admin flag is enabled",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/platform-admin-and-sink.spec.ts",
+      "durationMs": 6.91800000000012
+    },
+    {
+      "name": "TenantContextInterceptor trims tenant ids from stynx claims and returns optional paths without a tenant",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/tenant-context.interceptor.spec.ts",
+      "durationMs": 2.6029169999997066
+    },
+    {
+      "name": "TenantContextInterceptor skips optional paths without hitting the database",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/tenant-context.interceptor.spec.ts",
+      "durationMs": 2.3895830000001297
+    },
+    {
+      "name": "TenancyController API contract keeps tenant administration behind the platform admin guard",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/tenancy.controller.spec.ts",
+      "durationMs": 2.198833000000377
+    },
+    {
+      "name": "TenancyService archives and purges tenants while invalidating membership cache",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/tenancy.service.spec.ts",
+      "durationMs": 1.8643750000001091
+    },
+    {
+      "name": "TenantSystemOperationSink persists system operation records and exposes the provider binding",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/platform-admin-and-sink.spec.ts",
+      "durationMs": 1.7115420000000086
+    },
+    {
+      "name": "TenantContextInterceptor fails explicitly when membership validation has no database provider",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/tenant-context.interceptor.spec.ts",
+      "durationMs": 1.6079580000000533
+    }
+  ]
+}

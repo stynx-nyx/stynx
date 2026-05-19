@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx-web/sdk",
+  "level": "unit",
+  "runner": "vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T01:04:59.644Z",
+  "endedAt": "2026-05-19T01:05:03.414Z",
+  "durationMs": 3768,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/unit.log"
+  },
+  "env": {
+    "node": "26.0.0",
+    "ci": false
+  },
+  "command": {
+    "argv": [
+      "vitest",
+      "run",
+      "--config",
+      "./vitest.config.ts",
+      "--reporter=default",
+      "--reporter=json",
+      "--outputFile.json=/tmp/vitest-98317-1779152699644.json"
+    ],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages-web/sdk"
+  },
+  "metric": {
+    "kind": "none"
+  },
+  "totals": {
+    "files": 2,
+    "tests": 16,
+    "passed": 16,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "slowestTests": [
+    {
+      "name": "@stynx-web/sdk transport preserves caller headers and omits empty query and tenant values",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/sdk/test/transport.spec.ts",
+      "durationMs": 24.09404100000006
+    },
+    {
+      "name": "@stynx-web/sdk runtime helpers hydrates, derives, expires, and clears frontend sessions",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/sdk/test/runtime.spec.ts",
+      "durationMs": 11.260833000000048
+    },
+    {
+      "name": "@stynx-web/sdk runtime helpers builds Cognito URLs and parses JWT payloads",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/sdk/test/runtime.spec.ts",
+      "durationMs": 10.108833000000004
+    },
+    {
+      "name": "@stynx-web/sdk transport maps response codes to typed error instances and calls onAuthFailure after unrecoverable 401",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/sdk/test/transport.spec.ts",
+      "durationMs": 8.834290999999894
+    },
+    {
+      "name": "@stynx-web/sdk runtime helpers sends StynxApiClient requests with auth, tenant, body, query, and response variants",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/sdk/test/runtime.spec.ts",
+      "durationMs": 7.342209000000139
+    },
+    {
+      "name": "@stynx-web/sdk runtime helpers stores tokens in memory and browser-local storage variants",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/sdk/test/runtime.spec.ts",
+      "durationMs": 5.181667000000061
+    },
+    {
+      "name": "@stynx-web/sdk transport injects bearer and tenant headers on requests",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/sdk/test/transport.spec.ts",
+      "durationMs": 3.641542000000072
+    },
+    {
+      "name": "@stynx-web/sdk runtime helpers surfaces StynxApiClient error responses",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/sdk/test/runtime.spec.ts",
+      "durationMs": 3.2708329999998114
+    },
+    {
+      "name": "@stynx-web/sdk transport refreshes once after a 401 and replays the request",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/sdk/test/transport.spec.ts",
+      "durationMs": 1.6742920000001504
+    },
+    {
+      "name": "@stynx-web/sdk transport maps context payloads and 401 responses without an auth provider",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/sdk/test/transport.spec.ts",
+      "durationMs": 1.3950830000001133
+    }
+  ]
+}

@@ -71,6 +71,13 @@ describe('IdentityAdminService', () => {
     await expect(svc.getUserBySubject('sub-1')).rejects.toBeInstanceOf(ServiceUnavailableException);
   });
 
+  it('delegates getUserBySubject when the adapter supports it', async () => {
+    const adapter = makeAdapter();
+    const svc = new IdentityAdminService(adapter);
+    await expect(svc.getUserBySubject('sub-1')).resolves.toEqual({ username: 'u' });
+    expect(adapter.getUserBySubject).toHaveBeenCalledWith('sub-1');
+  });
+
   it('throws ServiceUnavailableException for setUserPassword when adapter lacks support', async () => {
     const adapter = makeAdapter({ setUserPassword: undefined });
     const svc = new IdentityAdminService(adapter);

@@ -34,10 +34,7 @@ import type {
 type QueryValue = string | number | boolean | null | undefined;
 type FlowQuery = Record<string, QueryValue>;
 
-function query(input?: FlowQuery): Record<string, Exclude<QueryValue, undefined>> | undefined {
-  if (!input) {
-    return undefined;
-  }
+function query(input: FlowQuery): Record<string, Exclude<QueryValue, undefined>> | undefined {
   const filtered = Object.fromEntries(
     Object.entries(input).filter((entry): entry is [string, Exclude<QueryValue, undefined>] =>
       entry[1] !== undefined,
@@ -46,7 +43,7 @@ function query(input?: FlowQuery): Record<string, Exclude<QueryValue, undefined>
   return Object.keys(filtered).length > 0 ? filtered : undefined;
 }
 
-function options(input?: FlowQuery): { query?: Record<string, Exclude<QueryValue, undefined>> } {
+function options(input: FlowQuery): { query?: Record<string, Exclude<QueryValue, undefined>> } {
   const filtered = query(input);
   return filtered ? { query: filtered } : {};
 }

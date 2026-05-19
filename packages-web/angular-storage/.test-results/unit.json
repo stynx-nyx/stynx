@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx-web/angular-storage",
+  "level": "unit",
+  "runner": "vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T01:05:20.065Z",
+  "endedAt": "2026-05-19T01:05:28.698Z",
+  "durationMs": 8620,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/unit.log"
+  },
+  "env": {
+    "node": "26.0.0",
+    "ci": false
+  },
+  "command": {
+    "argv": [
+      "vitest",
+      "run",
+      "--config",
+      "./vitest.config.ts",
+      "--reporter=default",
+      "--reporter=json",
+      "--outputFile.json=/tmp/vitest-1214-1779152720064.json"
+    ],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage"
+  },
+  "metric": {
+    "kind": "none"
+  },
+  "totals": {
+    "files": 1,
+    "tests": 6,
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "slowestTests": [
+    {
+      "name": "@stynx-web/angular-storage moves through initiating, uploading, and completed states",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
+      "durationMs": 12.620833000000857
+    },
+    {
+      "name": "@stynx-web/angular-storage uploads files through XMLHttpRequest with progress, success, and failure paths",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
+      "durationMs": 4.465499999999338
+    },
+    {
+      "name": "@stynx-web/angular-storage handles selected files, quarantine completion, and generic failures",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
+      "durationMs": 4.165334000000257
+    },
+    {
+      "name": "@stynx-web/angular-storage calls the document API endpoints with normalized base URLs",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
+      "durationMs": 1.4383340000003955
+    },
+    {
+      "name": "@stynx-web/angular-storage rejects invalid files and surfaces upload failures",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
+      "durationMs": 0.4054169999999431
+    },
+    {
+      "name": "@stynx-web/angular-storage ignores empty file selection events",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
+      "durationMs": 0.12604100000044127
+    }
+  ]
+}

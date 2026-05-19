@@ -23,9 +23,9 @@
     "clean": "rm -rf dist coverage",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/lib.mjs \"src/**/*.ts\"",
-    "test": "vitest run --config ./vitest.config.ts",
+    "test": "node ../../scripts/run-and-record.mjs --package @stynx/contracts --level unit --runner vitest -- vitest run --config ./vitest.config.ts",
     "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json",
-    "stryker": "pnpm exec stryker run stryker.conf.mjs"
+    "stryker": "node ../../scripts/run-and-record.mjs --package @stynx/contracts --level mutation --runner stryker-vitest -- pnpm exec stryker run stryker.conf.mjs"
   },
   "devDependencies": {
     "@types/node": "^25.6.0"

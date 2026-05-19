@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx/data",
+  "level": "coverage",
+  "runner": "vitest",
+  "status": "passed",
+  "startedAt": "2026-05-19T00:59:27.263Z",
+  "endedAt": "2026-05-19T00:59:27.263Z",
+  "durationMs": 0,
+  "exitCode": 0,
+  "signal": null,
+  "totals": {
+    "files": 17,
+    "tests": 0,
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "metric": {
+    "kind": "coverage",
+    "coverage": {
+      "lines": 100,
+      "branches": 98.19,
+      "functions": 100,
+      "statements": 100
+    }
+  },
+  "artifacts": {
+    "coverage": "../../coverage/coverage-final.json"
+  },
+  "env": {
+    "node": "24.15.0",
+    "ci": false
+  }
+}

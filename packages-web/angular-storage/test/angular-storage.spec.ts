@@ -2,6 +2,38 @@ import '@angular/compiler';
 import { of } from 'rxjs';
 import { DocumentService } from '../src/document.service';
 import { StynxDocumentUploadComponent } from '../src/document-upload.component';
+import { XhrUploadExecutor } from '../src/xhr-upload.executor';
+
+class FakeXmlHttpRequest {
+  static instances: FakeXmlHttpRequest[] = [];
+  readonly upload: { onprogress: ((event: ProgressEvent) => void) | null } = { onprogress: null };
+  readonly headers: Record<string, string> = {};
+  method = '';
+  url = '';
+  async = false;
+  status = 0;
+  body: unknown;
+  onload: (() => void) | null = null;
+  onerror: (() => void) | null = null;
+
+  constructor() {
+    FakeXmlHttpRequest.instances.push(this);
+  }
+
+  open(method: string, url: string, async: boolean): void {
+    this.method = method;
+    this.url = url;
+    this.async = async;
+  }
+
+  setRequestHeader(key: string, value: string): void {
+    this.headers[key] = value;
+  }
+
+  send(body: unknown): void {
+    this.body = body;
+  }
+}
 
 describe('@stynx-web/angular-storage', () => {
   it('moves through initiating, uploading, and completed states', async () => {
@@ -221,5 +253,55 @@ describe('@stynx-web/angular-storage', () => {
       'https://api.example.test/documents/doc-1/download',
       'https://api.example.test/documents',
     ]);
+  });
+
+  it('uploads files through XMLHttpRequest with progress, success, and failure paths', async () => {
+    const original = globalThis.XMLHttpRequest;
+    Object.defineProperty(globalThis, 'XMLHttpRequest', {
+      configurable: true,
+      value: FakeXmlHttpRequest,
+    });
+    FakeXmlHttpRequest.instances = [];
+    const executor = new XhrUploadExecutor();
+    const progress: number[] = [];
+
+    try {
+      const success = executor.upload(
+        'https://upload.example.test/file',
+        { name: 'test.pdf' } as File,
+        { 'content-type': 'application/pdf' },
+        (value) => progress.push(value),
+      );
+      const request = FakeXmlHttpRequest.instances[0];
+      expect(request).toMatchObject({
+        method: 'PUT',
+        url: 'https://upload.example.test/file',
+        async: true,
+        headers: { 'content-type': 'application/pdf' },
+        body: { name: 'test.pdf' },
+      });
+      request?.upload.onprogress?.({ lengthComputable: false, loaded: 5, total: 10 } as ProgressEvent);
+      request?.upload.onprogress?.({ lengthComputable: true, loaded: 5, total: 0 } as ProgressEvent);
+      request?.upload.onprogress?.({ lengthComputable: true, loaded: 3, total: 10 } as ProgressEvent);
+      request!.status = 204;
+      request?.onload?.();
+      await expect(success).resolves.toBeUndefined();
+      expect(progress).toEqual([30, 100]);
+
+      const statusFailure = executor.upload('https://upload.example.test/fail', {} as File, {}, () => undefined);
+      const failed = FakeXmlHttpRequest.instances[1];
+      failed!.status = 500;
+      failed?.onload?.();
+      await expect(statusFailure).rejects.toThrow('Upload failed with status 500');
+
+      const networkFailure = executor.upload('https://upload.example.test/offline', {} as File, {}, () => undefined);
+      FakeXmlHttpRequest.instances[2]?.onerror?.();
+      await expect(networkFailure).rejects.toThrow('Upload failed');
+    } finally {
+      Object.defineProperty(globalThis, 'XMLHttpRequest', {
+        configurable: true,
+        value: original,
+      });
+    }
   });
 });

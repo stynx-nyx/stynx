@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx/data",
+  "level": "unit",
+  "runner": "vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T01:05:05.170Z",
+  "endedAt": "2026-05-19T01:05:14.518Z",
+  "durationMs": 9347,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/unit.log"
+  },
+  "env": {
+    "node": "26.0.0",
+    "ci": false
+  },
+  "command": {
+    "argv": [
+      "vitest",
+      "run",
+      "--config",
+      "./vitest.config.ts",
+      "--reporter=default",
+      "--reporter=json",
+      "--outputFile.json=/tmp/vitest-540-1779152705170.json"
+    ],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages/data"
+  },
+  "metric": {
+    "kind": "none"
+  },
+  "totals": {
+    "files": 10,
+    "tests": 73,
+    "passed": 73,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "slowestTests": [
+    {
+      "name": "StynxMigrationRunner.runPlatformMigrations (mocked client) initializes pools + creates schema_migrations table + releases client",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/migration-runner.spec.ts",
+      "durationMs": 161.21320800000012
+    },
+    {
+      "name": "StynxMigrationRunner.runPlatformMigrations (mocked client) continues migration-dir probing and preserves migration errors when rollback fails",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/migration-runner.spec.ts",
+      "durationMs": 87.26529200000004
+    },
+    {
+      "name": "StynxMigrationRunner.runPlatformMigrations (mocked client) falls back to the packaged migration path when every probe misses",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/migration-runner.spec.ts",
+      "durationMs": 41.569082999999864
+    },
+    {
+      "name": "StynxMigrationRunner.runPlatformMigrations (mocked client) skips migrations whose id is already in core.schema_migrations",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/migration-runner.spec.ts",
+      "durationMs": 22.97425000000021
+    },
+    {
+      "name": "StynxMigrationRunner.runPlatformMigrations (mocked client) rolls back when a migration body throws and rethrows the error",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/migration-runner.spec.ts",
+      "durationMs": 16.407874999999876
+    },
+    {
+      "name": "withSystemContext delegates to database.withSystemContext with the same reason + fn",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/system-context.spec.ts",
+      "durationMs": 13.906917000000021
+    },
+    {
+      "name": "Database waits the computed jitter before retrying retryable transaction failures",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/database.spec.ts",
+      "durationMs": 12.706458000000566
+    },
+    {
+      "name": "StynxMigrationRunner.onModuleInit no-ops when migrations option is missing",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/migration-runner.spec.ts",
+      "durationMs": 8.134791999999834
+    },
+    {
+      "name": "Transaction softDelete returns dry-run plans and filters the root archive entry from committed cascades",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/transaction.spec.ts",
+      "durationMs": 6.610665999999583
+    },
+    {
+      "name": "Transaction delegates active read/write primitives and rejects all primitives after close",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/unit/transaction.spec.ts",
+      "durationMs": 5.079208999999992
+    }
+  ]
+}

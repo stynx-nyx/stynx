@@ -107,6 +107,21 @@ describe('FlowDesignService — graphs / nodes / edges', () => {
     expect(sql).not.toContain('where');
   });
 
+  it('getGraph, updateGraph, and deleteGraph route through shared CRUD helpers', async () => {
+    const get = makeService([[{ id: GRAPH }]]);
+    await expect(get.service.getGraph(GRAPH)).resolves.toMatchObject({ id: GRAPH });
+
+    const update = makeService([[{ id: GRAPH, name: 'New graph' }]]);
+    await expect(update.service.updateGraph(GRAPH, { name: 'New graph' })).resolves.toMatchObject({
+      id: GRAPH,
+      name: 'New graph',
+    });
+
+    const del = makeService([[{ id: GRAPH }]]);
+    await expect(del.service.deleteGraph(GRAPH)).resolves.toEqual({ id: GRAPH, deleted: true });
+    expect(del.trx.softDelete).toHaveBeenCalled();
+  });
+
   it('createGraph INSERTs into flow.graphs', async () => {
     const { service, trx } = makeService([[{ id: GRAPH }]]);
     await service.createGraph({ scopeId: SCOPE, code: 'g' });
@@ -225,6 +240,39 @@ describe('FlowDesignService — agentRules / transitionEffects / nodeFormRules',
     expect(columns).toContain('insert into flow.node_form_rules');
   });
 
+  it('lists node-scoped rules and normalizes any_answered node-form rules', async () => {
+    const agentRules = makeService([[{ id: RULE }]]);
+    await expect(agentRules.service.listNodeAgentRules(NODE)).resolves.toHaveLength(1);
+    expect(agentRules.trx.query.mock.calls[0]?.[0]).toContain('node_id = $1::uuid');
+
+    const formRules = makeService([[{ id: 'fr-1' }]]);
+    await expect(formRules.service.listNodeFormRules(NODE)).resolves.toHaveLength(1);
+    expect(formRules.trx.query.mock.calls[0]?.[0]).toContain('node_id = $1::uuid');
+
+    const normalized = makeService([[{ id: 'fr-2' }]]);
+    await normalized.service.createNodeFormRule(NODE, { formId: FORM, gatingMode: 'any_answered' });
+    expect(normalized.trx.query.mock.calls[0]?.[1]).toContain('any');
+  });
+
+  it('transition effect read, list, update, and delete routes are covered', async () => {
+    const list = makeService([[{ id: 'te-1' }]]);
+    await expect(list.service.listGraphTransitionEffects(GRAPH)).resolves.toHaveLength(1);
+    expect(list.trx.query.mock.calls[0]?.[0]).toContain('graph_id = $1::uuid');
+
+    const update = makeService([[{ id: 'te-1', effect_key: 'email' }]]);
+    await expect(update.service.updateTransitionEffect('te-1', { effectKey: 'email' })).resolves.toMatchObject({
+      id: 'te-1',
+      effectKey: 'email',
+    });
+
+    const get = makeService([[{ id: 'te-1' }]]);
+    await expect(get.service.getTransitionEffect('te-1')).resolves.toMatchObject({ id: 'te-1' });
+
+    const del = makeService([[{ id: 'te-1' }]]);
+    await expect(del.service.deleteTransitionEffect('te-1')).resolves.toEqual({ id: 'te-1', deleted: true });
+    expect(del.trx.softDelete).toHaveBeenCalled();
+  });
+
   it('updateNodeFormRule passes through partial updates', async () => {
     const { service } = makeService([[{ id: 'fr-1' }]]);
     await expect(service.updateNodeFormRule('fr-1', { required: false })).resolves.toMatchObject({
@@ -254,6 +302,24 @@ describe('FlowDesignService — policySets / policyRules', () => {
     await service.createPolicySet({ scopeId: SCOPE, version: 'v1' });
     const [sql] = trx.query.mock.calls[0]!;
     expect(sql).toContain('insert into flow.policy_sets');
+  });
+
+  it('updatePolicySet, getPolicySet, and deletePolicySet route through shared helpers', async () => {
+    const update = makeService([[{ id: POLICYSET, name: 'Policy' }]]);
+    await expect(update.service.updatePolicySet(POLICYSET, { name: 'Policy' })).resolves.toMatchObject({
+      id: POLICYSET,
+      name: 'Policy',
+    });
+
+    const get = makeService([[{ id: POLICYSET }]]);
+    await expect(get.service.getPolicySet(POLICYSET)).resolves.toMatchObject({ id: POLICYSET });
+
+    const del = makeService([[{ id: POLICYSET }]]);
+    await expect(del.service.deletePolicySet(POLICYSET)).resolves.toEqual({
+      id: POLICYSET,
+      deleted: true,
+    });
+    expect(del.trx.softDelete).toHaveBeenCalled();
   });
 
   it('listPolicyRules filters by policy_set_id', async () => {
@@ -363,6 +429,57 @@ describe('FlowDesignService.importGraph', () => {
       edges: [{ fromNodeCode: 'a', toNodeCode: 'b', action: 'go' }],
     });
     expect(result.graph).toMatchObject({ id: GRAPH });
+  });
+
+  it('imports optional transition effects, agent rules, and node form rules', async () => {
+    const NODE_A = '0190abcd-1234-7abc-89ab-aaaaaaaaaaaa';
+    const NODE_B = '0190abcd-1234-7abc-89ab-bbbbbbbbbbbb';
+    const { service, trx } = makeService([
+      [{ id: GRAPH, scope_id: SCOPE }],
+      [{ id: NODE_A, code: 'a' }],
+      [{ id: NODE_B, code: 'b' }],
+      [{ id: 'te-1' }],
+      [{ id: 'ar-1' }],
+      [{ id: 'fr-1' }],
+      [{ id: GRAPH, scope_id: SCOPE }],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+    ]);
+
+    await service.importGraph({
+      graph: { scopeId: SCOPE, code: 'g' },
+      nodes: [
+        { code: 'a', kind: 'start' },
+        { code: 'b', kind: 'end' },
+      ],
+      transitionEffects: [{ nodeCode: 'a', effectKey: 'notify' }],
+      agentRules: [{ nodeCode: 'a', ruleType: 'permission', permissionKey: 'doc:read' }],
+      nodeFormRules: [{ nodeCode: 'b', formId: FORM, gatingMode: 'any' }],
+    });
+
+    expect(trx.query.mock.calls.map(([sql]) => sql)).toEqual(expect.arrayContaining([
+      expect.stringContaining('insert into flow.transition_effects'),
+      expect.stringContaining('insert into flow.agent_rules'),
+      expect.stringContaining('insert into flow.node_form_rules'),
+    ]));
+  });
+
+  it('throws when an insert returns no row', async () => {
+    const { service } = makeService([[]]);
+    await expect(service.createScope({ code: 'c', label: 'L', adapterKey: 'foo' }))
+      .rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('throws when import graph insertion returns a non-string graph id', async () => {
+    const { service } = makeService([[{ id: null }]]);
+    await expect(service.importGraph({
+      graph: { scopeId: SCOPE, code: 'g' },
+      nodes: [{ code: 'a', kind: 'start' }],
+    })).rejects.toBeInstanceOf(BadRequestException);
   });
 });
 

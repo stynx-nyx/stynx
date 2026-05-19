@@ -156,6 +156,16 @@ describe('CognitoIdentityAdminAdapter', () => {
     await expect(adapter.getUserBySubject('sub-1')).rejects.toBeInstanceOf(IdentityAdminError);
   });
 
+  it('getUserBySubject maps provider failures while listing by subject', async () => {
+    const send = vi.fn(async () => {
+      throw { name: 'AccessDeniedException', message: 'denied' };
+    });
+    const adapter = makeAdapter(send);
+    await expect(adapter.getUserBySubject('sub-1')).rejects.toMatchObject({
+      code: 'IDENTITY_FORBIDDEN',
+    });
+  });
+
   it('updateUser composes the right attribute list including custom: prefix', async () => {
     const send = vi.fn(async () => ({}));
     const adapter = makeAdapter(send);
@@ -337,6 +347,48 @@ describe('CognitoIdentityAdminAdapter', () => {
     const result = await adapter.getUser('any');
     expect(result.username).toBe('fallback@b');
   });
+
+  it('username fallback returns an empty string when no fallback attributes are present', async () => {
+    const send = vi.fn(async () => ({
+      Username: undefined,
+      Enabled: false,
+      UserAttributes: [{ Name: 'email', Value: '' }],
+    }));
+    const adapter = makeAdapter(send);
+    await expect(adapter.getUser('any')).resolves.toMatchObject({ username: '' });
+  });
+
+  it('resolveCredentials with strategy=profile accepts explicit profile names', () => {
+    expect(
+      () =>
+        new CognitoIdentityAdminAdapter({
+          region: 'us-east-1',
+          userPoolId: 'p',
+          credentialsStrategy: 'profile',
+          profile: 'unit-profile',
+        }),
+    ).not.toThrow();
+  });
+
+  it.each([
+    ['getUser', (adapter: CognitoIdentityAdminAdapter) => adapter.getUser('alice')],
+    ['updateUser', (adapter: CognitoIdentityAdminAdapter) => adapter.updateUser('alice', { email: 'a@b.test' })],
+    ['disableUser', (adapter: CognitoIdentityAdminAdapter) => adapter.disableUser('alice')],
+    ['enableUser', (adapter: CognitoIdentityAdminAdapter) => adapter.enableUser('alice')],
+    ['listGroupsForUser', (adapter: CognitoIdentityAdminAdapter) => adapter.listGroupsForUser('alice')],
+    ['listGroups', (adapter: CognitoIdentityAdminAdapter) => adapter.listGroups()],
+    ['addUserToGroup', (adapter: CognitoIdentityAdminAdapter) => adapter.addUserToGroup('alice', 'admins')],
+    ['removeUserFromGroup', (adapter: CognitoIdentityAdminAdapter) => adapter.removeUserFromGroup('alice', 'admins')],
+    ['resetUserPassword', (adapter: CognitoIdentityAdminAdapter) => adapter.resetUserPassword('alice')],
+    ['setUserPassword', (adapter: CognitoIdentityAdminAdapter) => adapter.setUserPassword('alice', 'pw')],
+    ['verifyUserChannels', (adapter: CognitoIdentityAdminAdapter) => adapter.verifyUserChannels('alice', { email: true })],
+  ])('%s maps provider failures to IdentityAdminError', async (_name, call) => {
+    const send = vi.fn(async () => {
+      throw { name: 'TooManyRequestsException', message: 'slow down' };
+    });
+    const adapter = makeAdapter(send);
+    await expect(call(adapter)).rejects.toBeInstanceOf(IdentityAdminError);
+  });
 });
 
 describe('buildCognitoAdminOptionsFromEnv', () => {
@@ -400,5 +452,25 @@ describe('buildCognitoAdminOptionsFromEnv', () => {
       STYNX_IDENTITY_ADMIN_CREDENTIALS_STRATEGY: 'default-chain',
     });
     expect(options.credentialsStrategy).toBe('default-chain');
+  });
+
+  it('includes endpoint, credentials, and fallback-order overrides when provided', () => {
+    const credentials = { accessKeyId: 'a', secretAccessKey: 's' };
+    const options = buildCognitoAdminOptionsFromEnv(
+      { AWS_REGION: 'us-east-1', COGNITO_POOL_ID: 'p', COGNITO_IDP_ENDPOINT: 'http://localhost:4566' },
+      {
+        credentialsStrategy: 'provided',
+        credentials,
+        usernameAttributeFallbackOrder: ['sub'],
+      },
+    );
+    expect(options).toMatchObject({
+      region: 'us-east-1',
+      userPoolId: 'p',
+      endpoint: 'http://localhost:4566',
+      credentialsStrategy: 'provided',
+      credentials,
+      usernameAttributeFallbackOrder: ['sub'],
+    });
   });
 });

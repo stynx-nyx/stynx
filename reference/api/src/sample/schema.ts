@@ -11,7 +11,7 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { authSchemaTables, softDeletable, tenancySchemaTables } from '@stynx/data';
+import { softDeletable, tenants, users } from '@stynx/data';
 
 export const sampleSchema = pgSchema('sample');
 
@@ -19,12 +19,12 @@ export const records = softDeletable(sampleSchema.table(
   'record',
   {
     id: uuid('id').primaryKey(),
-    tenantId: uuid('tenant_id').notNull().references(() => tenancySchemaTables.tenants.id),
+    tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
     title: text('title').notNull(),
     email: text('email').notNull(),
     externalRef: text('external_ref'),
     status: text('status').notNull().default('active'),
-    ownerUserId: uuid('owner_user_id').references(() => authSchemaTables.users.id),
+    ownerUserId: uuid('owner_user_id').references(() => users.id),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull(),
     createdBy: uuid('created_by').notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull(),
@@ -39,7 +39,7 @@ export const recordNotes = softDeletable(sampleSchema.table(
   'record_note',
   {
     id: uuid('id').primaryKey(),
-    tenantId: uuid('tenant_id').notNull().references(() => tenancySchemaTables.tenants.id),
+    tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
     recordId: uuid('record_id').notNull().references(() => records.id),
     kind: text('kind').notNull(),
     label: text('label').notNull(),
@@ -62,9 +62,9 @@ export const workItems = softDeletable(sampleSchema.table(
   'work_item',
   {
     id: uuid('id').primaryKey(),
-    tenantId: uuid('tenant_id').notNull().references(() => tenancySchemaTables.tenants.id),
+    tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
     recordId: uuid('record_id').notNull().references(() => records.id),
-    createdByUserId: uuid('created_by_user_id').references(() => authSchemaTables.users.id),
+    createdByUserId: uuid('created_by_user_id').references(() => users.id),
     code: text('code').notNull(),
     openedOn: date('opened_on').notNull(),
     targetOn: date('target_on').notNull(),
@@ -83,7 +83,7 @@ export const workItems = softDeletable(sampleSchema.table(
 
 export const workItemEntries = softDeletable(sampleSchema.table('work_item_entry', {
   id: uuid('id').primaryKey(),
-  tenantId: uuid('tenant_id').notNull().references(() => tenancySchemaTables.tenants.id),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   workItemId: uuid('work_item_id').notNull().references(() => workItems.id),
   description: text('description').notNull(),
   quantity: numeric('quantity', { precision: 12, scale: 3 }).notNull(),
@@ -99,7 +99,7 @@ export const workItemLocks = softDeletable(sampleSchema.table(
   'work_item_lock',
   {
     id: uuid('id').primaryKey(),
-    tenantId: uuid('tenant_id').notNull().references(() => tenancySchemaTables.tenants.id),
+    tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
     workItemId: uuid('work_item_id').notNull().references(() => workItems.id),
     lockedAt: timestamp('locked_at', { withTimezone: true }).notNull(),
     amountUnits: bigint('amount_units', { mode: 'number' }).notNull(),

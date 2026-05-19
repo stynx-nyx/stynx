@@ -45,7 +45,9 @@ describe('adopt command family', () => {
       '  id uuid primary key,',
       '  name text not null,',
       '  created_at timestamptz,',
-      '  enabled boolean',
+      '  enabled boolean,',
+      '  constraint plain_table_pk primary key (id),',
+      '  malformed',
       ');',
       'create table tenant_records (',
       '  id uuid primary key,',
@@ -92,6 +94,8 @@ describe('adopt command family', () => {
     const applied = adoptApply(root);
     expect(applied.generatedFiles).toContain('generated/stynx-adopt/migrations/0002_stynx_adopt_org_records.sql');
     expect(readFileSync(resolve(root, 'generated/stynx-adopt/schema.ts'), 'utf8')).toContain("boolean('deleted')");
+    expect(readFileSync(resolve(root, 'generated/stynx-adopt/schema.ts'), 'utf8')).toContain("uuid('id').primaryKey()");
+    expect(readFileSync(resolve(root, 'generated/stynx-adopt/schema.ts'), 'utf8')).toContain("text('name').notNull()");
     expect(readFileSync(resolve(root, 'generated/stynx-adopt/migrations/0002_stynx_adopt_org_records.sql'), 'utf8')).toContain('RENAME COLUMN organization_id TO tenant_id');
     expect(adoptApplyProposedPermissions(root, { DOES_NOT_EXIST: 'x' })).toBe(0);
   });

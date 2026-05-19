@@ -99,6 +99,17 @@ describe('FlowRuntimeService.ensureRun', () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
+  it('requires scopeId when scopeCode is absent', async () => {
+    const { service } = makeService([]);
+    await expect(
+      service.ensureRun({
+        graphCode: 'g',
+        targetType: 'doc',
+        targetId: 'doc-1',
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
   it('calls adapter.buildFacts when adapterKey + tenantId are present', async () => {
     const { service, adapters } = makeService(
       [[{ run_id: RUN }]],
@@ -338,6 +349,13 @@ describe('FlowRuntimeService task action flows', () => {
     );
     await expect(service.assignTask(TASK, { userId: USER })).rejects.toBeInstanceOf(
       ForbiddenException,
+    );
+  });
+
+  it('assignTask throws NotFound when task access has no row', async () => {
+    const { service } = makeService([[]]);
+    await expect(service.assignTask(TASK, { userId: USER })).rejects.toBeInstanceOf(
+      NotFoundException,
     );
   });
 
@@ -599,5 +617,69 @@ describe('FlowRuntimeService — small helpers + edges', () => {
     await expect(
       service.signal({ targetType: 'doc', targetId: 'd-1' }),
     ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('scope resolver helpers require either scope id or scope code', async () => {
+    const { service } = makeService([[]]);
+    await expect(
+      (service as unknown as { scopeCodeForId: (scopeId?: string) => Promise<string> }).scopeCodeForId(undefined),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    await expect(
+      (service as unknown as { scopeIdForCode: (scopeCode?: string) => Promise<string> }).scopeIdForCode(undefined),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('records adapter fact failures when a run id is available', async () => {
+    const { service, trx } = makeService(
+      [
+        [{ id: RUN, scope_id: SCOPE, adapter_key: 'k', target_type: 'doc', target_id: 'doc-1' }],
+        [],
+      ],
+      { tenantId: 't-1', actorId: USER },
+      { buildFacts: vi.fn(async () => { throw new Error('facts failed'); }) },
+    );
+
+    await expect(service.getRunFacts(RUN)).rejects.toThrow('facts failed');
+    expect(trx.query.mock.calls[1]?.[0]).toContain('insert into flow.events');
+    expect(trx.query.mock.calls[1]?.[1]).toEqual([
+      't-1',
+      RUN,
+      USER,
+      {
+        adapterKey: 'k',
+        targetType: 'doc',
+        targetId: 'doc-1',
+        error: 'facts failed',
+      },
+    ]);
+  });
+
+  it('throws when a task function cannot reload the task', async () => {
+    const { service } = makeService([
+      [{ assignee_user_id: USER, adapter_key: 'k', target_type: 't', target_id: 't-1', is_user_candidate: true }],
+      [],
+      [],
+    ]);
+    await expect(service.acceptTask(TASK, {})).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('exposes object input validation and tenant requirement edges', async () => {
+    const { service } = makeService([]);
+    expect(() => service.objectInput('not-object')).toThrow(BadRequestException);
+
+    const noTenant = makeService(
+      [[{
+        event_id: EVENT,
+        run_id: RUN,
+        node_id: NODE,
+        task_id: TASK,
+        payload: { effectKey: 'send-email' },
+        adapter_key: 'k',
+        target_type: 't',
+        target_id: 't-1',
+      }]],
+      { actorId: USER },
+    );
+    await expect(noTenant.service.dispatchPendingEffects({})).rejects.toBeInstanceOf(BadRequestException);
   });
 });

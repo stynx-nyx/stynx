@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx/sessions",
+  "level": "integration",
+  "runner": "vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T00:48:44.859Z",
+  "endedAt": "2026-05-19T00:48:56.256Z",
+  "durationMs": 11397,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/integration.log"
+  },
+  "env": {
+    "node": "24.15.0",
+    "ci": false
+  },
+  "command": {
+    "argv": [
+      "vitest",
+      "run",
+      "--config",
+      "./vitest.int.config.ts",
+      "--reporter=default",
+      "--reporter=json",
+      "--outputFile.json=/tmp/vitest-65312-1779151724859.json"
+    ],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages/sessions"
+  },
+  "totals": {
+    "files": 1,
+    "tests": 2,
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "slowestTests": [
+    {
+      "name": "StynxSessionsModule integration publishes JWKS publicly and mirrors create/revoke events into auth.sessions",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/sessions/test/integration/sessions.module.spec.ts",
+      "durationMs": 351.1482500000002
+    },
+    {
+      "name": "StynxSessionsModule integration propagates tenant revocation over Redis pubsub within 100ms",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/sessions/test/integration/sessions.module.spec.ts",
+      "durationMs": 101.72041700000045
+    }
+  ],
+  "metric": {
+    "kind": "none"
+  }
+}

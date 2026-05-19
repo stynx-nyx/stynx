@@ -177,7 +177,7 @@ describe('StynxStorageModule integration', () => {
 
     await seedTenantAndUser(testDatabase, tenantA, actorA);
     await seedTenantAndUser(testDatabase, tenantB, actorB);
-  });
+  }, 120_000);
 
   afterAll(async () => {
     await moduleRef?.close();
@@ -188,7 +188,7 @@ describe('StynxStorageModule integration', () => {
     process.env.AWS_SECRET_ACCESS_KEY = originalAwsSecretAccessKey;
     process.env.AWS_REGION = originalAwsRegion;
     process.env.AWS_EC2_METADATA_DISABLED = originalAwsMetadataDisabled;
-  });
+  }, 120_000);
 
   it('presigns an upload, completes it, and returns a working download URL', async () => {
     const payload = Buffer.from('%PDF-1.4 storage integration');

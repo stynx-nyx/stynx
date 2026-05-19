@@ -30,7 +30,7 @@ const rows = [];
 for (const ws of workspaces) {
   const coverageSummary = coverageByWorkspace.get(ws.dir);
   const results = {
-    Unit: readTurboArtifact(ws.dir, 'turbo-test.log'),
+    Unit: readCanonicalResult(ws.dir, 'unit'),
     API: readApiResult(ws),
     DB: readDbResult(ws),
     E2E: readE2EResult(ws),
@@ -98,11 +98,9 @@ Reads existing result artifacts only; it does not run tests.
 
 Sources:
   - scripts/test-matrix.config.json for meaningless cells and coverage thresholds
-  - */.turbo/turbo-test*.log for Vitest, Node test, and custom test summaries
-  - */.turbo/turbo-test*.log.meta.json for recorder timing metadata
+  - */.test-results/<level>.json (canonical, schema v1) for every level
   - reference/web/test-results/.last-run.json for Playwright E2E status
-  - packages/*/reports/mutation/mutation.json when present
-  - coverage/coverage-final.json for workspace coverage
+  - coverage/coverage-final.json for aggregate workspace coverage
 
 Modes:
   --status    state plus [suites_passed/suites_total | tests_passed/tests_total] counts
@@ -127,29 +125,38 @@ Color:
 function discoverWorkspaces() {
   const roots = aspect === 'coverage'
     ? ['packages', 'packages-web']
-    : ['packages', 'packages-web', 'reference', 'test', 'tools'];
+    : ['packages', 'packages-web', 'domain', 'infra', 'reference', 'test', 'tools'];
   const entries = [];
 
   for (const root of roots) {
     const absRoot = join(repoRoot, root);
     if (!existsSync(absRoot)) continue;
-    for (const child of readdirSync(absRoot, { withFileTypes: true })) {
-      if (!child.isDirectory()) continue;
-      const dir = join(absRoot, child.name);
-      const pkgPath = join(dir, 'package.json');
-      if (!existsSync(pkgPath)) continue;
-      const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
-      entries.push({
-        dir,
-        root,
-        name: pkg.name ?? child.name,
-        label: pkg.name ?? `${root}/${child.name}`,
-        scripts: pkg.scripts ?? {},
-      });
-    }
+    entries.push(...discoverWorkspacesUnder(root, absRoot));
   }
 
   return entries.sort((a, b) => a.label.localeCompare(b.label));
+}
+
+function discoverWorkspacesUnder(root, dir) {
+  const pkgPath = join(dir, 'package.json');
+  if (existsSync(pkgPath)) {
+    const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
+    return [{
+      dir,
+      root,
+      name: pkg.name ?? relative(repoRoot, dir),
+      label: pkg.name ?? relative(repoRoot, dir),
+      scripts: pkg.scripts ?? {},
+    }];
+  }
+
+  const entries = [];
+  for (const child of readdirSync(dir, { withFileTypes: true })) {
+    if (!child.isDirectory()) continue;
+    if (child.name === 'node_modules' || child.name === 'dist' || child.name.startsWith('.')) continue;
+    entries.push(...discoverWorkspacesUnder(root, join(dir, child.name)));
+  }
+  return entries;
 }
 
 function loadMatrixConfig() {
@@ -160,59 +167,58 @@ function loadMatrixConfig() {
   return JSON.parse(readFileSync(path, 'utf8'));
 }
 
-function readTurboArtifact(dir, fileName) {
-  const path = join(dir, '.turbo', fileName);
+function readCanonicalResult(dir, level) {
+  const path = join(dir, '.test-results', `${level}.json`);
   if (!existsSync(path)) return null;
-
-  const parsed = parseTestLog(readFileSync(path, 'utf8')) ?? { status: 'present' };
-  const meta = readArtifactMeta(path);
-  return mergeArtifactMeta(parsed, meta);
-}
-
-function readArtifactMeta(logPath) {
-  const metaPath = `${logPath}.meta.json`;
-  if (!existsSync(metaPath)) return null;
   try {
-    return JSON.parse(readFileSync(metaPath, 'utf8'));
+    const r = JSON.parse(readFileSync(path, 'utf8'));
+    if (r.schemaVersion !== '1') return null;
+    // For mutation, surface the score as testsPassed/total = score/100 so the
+    // matrix renders 'XX/100' in count mode and the threshold-aware status
+    // colour still works.
+    if (r.level === 'mutation' && typeof r.metric?.score === 'number') {
+      return {
+        status: r.status === 'passed' ? 'passed' : r.status === 'failed' ? 'failed' : 'present',
+        durationMs: r.durationMs,
+        suitesPassed: null,
+        suitesTotal: null,
+        testsPassed: Math.round(r.metric.score),
+        testsTotal: 100,
+        // Tag as 'mutation' so resultFailed() defers to the artifact's
+        // own status (which the wrapper already set from Stryker's break
+        // threshold) instead of treating score<100 as a failure.
+        source: 'mutation',
+      };
+    }
+    return {
+      status: r.status === 'passed' ? 'passed' : r.status === 'failed' ? 'failed' : 'present',
+      durationMs: r.durationMs,
+      suitesPassed: r.totals?.files ?? null,
+      suitesTotal: r.totals?.files ?? null,
+      testsPassed: r.totals?.passed ?? null,
+      testsTotal: r.totals?.tests ?? null,
+      source: 'test-result/v1',
+    };
   } catch {
     return null;
   }
 }
 
-function mergeArtifactMeta(result, meta) {
-  if (!meta) return result;
-  const merged = { ...result };
-  if (typeof meta.durationMs === 'number' && Number.isFinite(meta.durationMs)) {
-    merged.durationMs = meta.durationMs;
-  }
-  if (meta.signal || (typeof meta.exitCode === 'number' && meta.exitCode !== 0)) {
-    merged.status = 'failed';
-  } else if (!merged.status || merged.status === 'present') {
-    merged.status = 'passed';
-  }
-  return merged;
-}
-
 function readApiResult(ws) {
   if (!hasConfiguredLevel(ws, 'API')) return null;
-  return (
-    readTurboArtifact(ws.dir, 'turbo-test$colon$api.log') ??
-    readTurboArtifact(ws.dir, 'turbo-test$colon$int.log') ??
-    readTurboArtifact(ws.dir, 'turbo-test.log')
-  );
+  // API column is satisfied by the package's integration tests; same artifact
+  // as the DB column reads.
+  return readCanonicalResult(ws.dir, 'integration');
 }
 
 function readDbResult(ws) {
-  if (ws.root === 'test' && basename(ws.dir) === 'db') return readTurboArtifact(ws.dir, 'turbo-test.log');
-  if (ws.scripts['test:int']) return readTurboArtifact(ws.dir, 'turbo-test$colon$int.log');
-  if (!ws.dir.includes(`${sep}packages${sep}`)) return null;
-  return readTurboArtifact(ws.dir, 'turbo-test$colon$int.log');
+  if (!hasConfiguredLevel(ws, 'DB')) return null;
+  return readCanonicalResult(ws.dir, 'integration');
 }
 
 function readE2EResult(ws) {
-  const e2eArtifact =
-    readTurboArtifact(ws.dir, 'turbo-test$colon$e2e.log') ??
-    readTurboArtifact(ws.dir, 'turbo-test-e2e.log');
+  if (!hasConfiguredLevel(ws, 'E2E')) return null;
+  const e2eArtifact = readCanonicalResult(ws.dir, 'e2e');
   if (ws.name !== '@stynx/reference-web') return e2eArtifact;
   const lastRunPath = join(ws.dir, 'test-results', '.last-run.json');
   if (!existsSync(lastRunPath)) return e2eArtifact;
@@ -227,6 +233,11 @@ function readE2EResult(ws) {
 }
 
 function readMutationResult(ws) {
+  // Canonical only after R3.
+  const canonical = readCanonicalResult(ws.dir, 'mutation');
+  if (canonical) return canonical;
+  // Legacy fallback for in-flight migrations only; remove once every package
+  // has run through the wrapper at least once.
   const path = join(ws.dir, 'reports', 'mutation', 'mutation.json');
   if (!existsSync(path)) return null;
   const payload = JSON.parse(readFileSync(path, 'utf8'));
@@ -261,85 +272,6 @@ function calculateStrykerMutationScore(payload) {
   }
   const total = detected + undetected;
   return total > 0 ? (killed / total) * 100 : null;
-}
-
-function parseTestLog(raw) {
-  const text = stripAnsi(raw).replace(/\r/g, '\n');
-  return parseVitestOrCustomLog(text) ?? parseNodeTestLog(text);
-}
-
-function parseVitestOrCustomLog(text) {
-  const suiteSummary = lastSummary(text, 'Test Suites');
-  const testSummary = lastSummary(text, 'Tests');
-  if (!suiteSummary && !testSummary) return null;
-
-  const suites = suiteSummary ? parseSummaryCounts(suiteSummary) : {};
-  const tests = testSummary ? parseSummaryCounts(testSummary) : {};
-  const failed = (suites.failed ?? 0) + (tests.failed ?? 0);
-  return {
-    suitesPassed: suites.passed ?? null,
-    suitesTotal: suites.total ?? null,
-    testsPassed: tests.passed ?? null,
-    testsTotal: tests.total ?? null,
-    durationMs: parseVitestDurationMs(text),
-    status: failed > 0 ? 'failed' : 'passed',
-  };
-}
-
-function parseNodeTestLog(text) {
-  const suitesTotal = lastNumberAfterInfo(text, 'suites');
-  const testsTotal = lastNumberAfterInfo(text, 'tests');
-  const testsPassed = lastNumberAfterInfo(text, 'pass');
-  const failed = lastNumberAfterInfo(text, 'fail') ?? 0;
-  const durationMs = lastNumberAfterInfo(text, 'duration_ms');
-  if (suitesTotal == null && testsTotal == null && testsPassed == null && durationMs == null) {
-    return null;
-  }
-
-  return {
-    suitesPassed: suitesTotal != null && failed === 0 ? suitesTotal : null,
-    suitesTotal,
-    testsPassed: testsPassed ?? (testsTotal != null ? testsTotal - failed : null),
-    testsTotal: testsTotal ?? testsPassed,
-    durationMs,
-    status: failed > 0 ? 'failed' : 'passed',
-  };
-}
-
-function lastSummary(text, label) {
-  const matches = [...text.matchAll(new RegExp(`${label}:\\s+([^\\n]+)`, 'g'))];
-  if (matches.length === 0) return null;
-  return matches.at(-1)[1];
-}
-
-function parseSummaryCounts(summary) {
-  const total = numberBefore(summary, 'total');
-  const failed = numberBefore(summary, 'failed') ?? 0;
-  const passed = numberBefore(summary, 'passed') ?? (total != null ? total - failed : null);
-  return { passed, total, failed };
-}
-
-function parseVitestDurationMs(text) {
-  const matches = [...text.matchAll(/Time:\s+([\d.]+)\s*(ms|s|m)?/g)];
-  if (matches.length === 0) return null;
-  const [, value, unit = 's'] = matches.at(-1);
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) return null;
-  if (unit === 'ms') return numeric;
-  if (unit === 'm') return numeric * 60_000;
-  return numeric * 1000;
-}
-
-function lastNumberAfterInfo(text, word) {
-  const matches = [...text.matchAll(new RegExp(`(?:ℹ|i)\\s+${word}\\s+([\\d.]+)`, 'g'))];
-  if (matches.length === 0) return null;
-  const value = Number(matches.at(-1)[1]);
-  return Number.isFinite(value) ? value : null;
-}
-
-function numberBefore(text, word) {
-  const match = text.match(new RegExp(`(\\d+)\\s+${word}`));
-  return match ? Number(match[1]) : null;
 }
 
 function buildCell(ws, column, result, coverage) {
@@ -452,12 +384,17 @@ function hasConfiguredLevel(ws, level) {
     );
   }
   if (level === 'E2E') {
-    return Boolean(ws.scripts['test:e2e']) || hasAnyFile(ws.dir, ['playwright.config.mjs', 'playwright.config.ts']);
+    return isRunnableScript(ws.scripts['test:e2e']) || hasAnyFile(ws.dir, ['playwright.config.mjs', 'playwright.config.ts']);
   }
   if (level === 'Mutation') {
     return Boolean(ws.scripts.stryker || ws.scripts.mutation) || hasAnyFile(ws.dir, ['stryker.conf.mjs', 'stryker.conf.cjs']);
   }
   return false;
+}
+
+function isRunnableScript(script) {
+  if (!script) return false;
+  return !/removed during V6 cutover|tests pending/i.test(script);
 }
 
 function hasAnyFile(dir, names) {

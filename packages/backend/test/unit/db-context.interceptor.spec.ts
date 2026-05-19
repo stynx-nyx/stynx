@@ -101,6 +101,26 @@ describe('DbContextInterceptor', () => {
     expect(request.pgClient).toEqual({ tag: 'acquired' });
   });
 
+  it('continues without applying db context when lifecycle acquisition returns nothing', async () => {
+    const applier = { apply: vi.fn() };
+    const lifecycle = {
+      acquire: vi.fn(async () => undefined),
+      release: vi.fn(async () => undefined),
+    };
+    const interceptor = new DbContextInterceptor(applier, undefined, lifecycle);
+    const request: Record<string, unknown> = {
+      headers: {},
+      principal: PRINCIPAL,
+      tenantId: 't-1',
+    };
+
+    await run(interceptor.intercept(ctx(request), makeHandler()));
+
+    expect(lifecycle.acquire).toHaveBeenCalledWith(expect.objectContaining({ tenantId: 't-1' }));
+    expect(applier.apply).not.toHaveBeenCalled();
+    expect(lifecycle.release).not.toHaveBeenCalled();
+  });
+
   it('does not call release when no client was acquired by the interceptor', async () => {
     const applier = { apply: vi.fn() };
     const lifecycle = {

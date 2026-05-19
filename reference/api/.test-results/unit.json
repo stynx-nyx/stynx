@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx/reference-api",
+  "level": "unit",
+  "runner": "vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T00:49:37.694Z",
+  "endedAt": "2026-05-19T00:49:52.995Z",
+  "durationMs": 15301,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/unit.log"
+  },
+  "env": {
+    "node": "24.15.0",
+    "ci": false
+  },
+  "command": {
+    "argv": [
+      "vitest",
+      "run",
+      "--config",
+      "./vitest.config.ts",
+      "--reporter=default",
+      "--reporter=json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-66535-1779151777694.json"
+    ],
+    "cwd": "/Users/aarusso/Development/stech/stynx/reference/api"
+  },
+  "totals": {
+    "files": 5,
+    "tests": 40,
+    "passed": 40,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "slowestTests": [
+    {
+      "name": "reference dev-auth production gate mounts the reference dev-auth surface outside production",
+      "file": "/Users/aarusso/Development/stech/stynx/reference/api/test/integration/reference-dev-auth.gating.spec.ts",
+      "durationMs": 2335.0211249999998
+    },
+    {
+      "name": "@stynx/reference-api runtime suite family 1: isolates live and archive rows by tenant across sample tables",
+      "file": "/Users/aarusso/Development/stech/stynx/reference/api/test/integration/reference-api.runtime.spec.ts",
+      "durationMs": 900.453125
+    },
+    {
+      "name": "@stynx/reference-api runtime suite flow family: runs design, runtime, forms, tasks, signals, analytics, audit, and idempotency through HTTP",
+      "file": "/Users/aarusso/Development/stech/stynx/reference/api/test/integration/reference-api.runtime.spec.ts",
+      "durationMs": 653.6005420000001
+    },
+    {
+      "name": "@stynx/reference-api runtime suite family 13: demonstrates cascade size behavior within limits and on breach",
+      "file": "/Users/aarusso/Development/stech/stynx/reference/api/test/integration/reference-api.runtime.spec.ts",
+      "durationMs": 627.7952089999999
+    },
+    {
+      "name": "@stynx/reference-api runtime suite family 11: enforces cascade and block FK annotations",
+      "file": "/Users/aarusso/Development/stech/stynx/reference/api/test/integration/reference-api.runtime.spec.ts",
+      "durationMs": 583.7247079999997
+    },
+    {
+      "name": "@stynx/reference-api runtime suite family 4: enforces collection scope on document download",
+      "file": "/Users/aarusso/Development/stech/stynx/reference/api/test/integration/reference-api.runtime.spec.ts",
+      "durationMs": 272.3472920000004
+    },
+    {
+      "name": "@stynx/reference-api runtime suite family 10: returns 409 on restore conflicts against natural unique keys",
+      "file": "/Users/aarusso/Development/stech/stynx/reference/api/test/integration/reference-api.runtime.spec.ts",
+      "durationMs": 242.794249999999
+    },
+    {
+      "name": "@stynx/reference-api runtime suite family 8: performs a soft-delete round trip through trash and restore",
+      "file": "/Users/aarusso/Development/stech/stynx/reference/api/test/integration/reference-api.runtime.spec.ts",
+      "durationMs": 232.51137500000004
+    },
+    {
+      "name": "@stynx/reference-api runtime suite family 5: rate-limit blocks repeated high-cost route usage",
+      "file": "/Users/aarusso/Development/stech/stynx/reference/api/test/integration/reference-api.runtime.spec.ts",
+      "durationMs": 204.8025409999991
+    },
+    {
+      "name": "@stynx/reference-api runtime suite family 9: rejects hard delete without the hard-delete permission",
+      "file": "/Users/aarusso/Development/stech/stynx/reference/api/test/integration/reference-api.runtime.spec.ts",
+      "durationMs": 191.98258299999907
+    }
+  ],
+  "metric": {
+    "kind": "none"
+  }
+}

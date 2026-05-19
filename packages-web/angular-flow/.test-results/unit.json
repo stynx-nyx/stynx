@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx-web/angular-flow",
+  "level": "unit",
+  "runner": "vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T01:05:22.129Z",
+  "endedAt": "2026-05-19T01:05:32.252Z",
+  "durationMs": 10118,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/unit.log"
+  },
+  "env": {
+    "node": "26.0.0",
+    "ci": false
+  },
+  "command": {
+    "argv": [
+      "vitest",
+      "run",
+      "--config",
+      "./vitest.config.ts",
+      "--reporter=default",
+      "--reporter=json",
+      "--outputFile.json=/tmp/vitest-1658-1779152722129.json"
+    ],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow"
+  },
+  "metric": {
+    "kind": "none"
+  },
+  "totals": {
+    "files": 3,
+    "tests": 19,
+    "passed": 19,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "slowestTests": [
+    {
+      "name": "@stynx-web/angular-flow components omits query options when API filters are absent",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
+      "durationMs": 23.907459000000017
+    },
+    {
+      "name": "@stynx-web/angular-flow components loads run summaries and captures non-Error failures",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
+      "durationMs": 12.372082999999293
+    },
+    {
+      "name": "@stynx-web/angular-flow components loads forms, fills, tasks, and waivers with optional filters and error branches",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
+      "durationMs": 12.135041000000456
+    },
+    {
+      "name": "@stynx-web/angular-flow components normalizes typed fill editor values for package hosts",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
+      "durationMs": 11.57299999999941
+    },
+    {
+      "name": "FlowApiService endpoint contract covers design route families for scopes, graphs, nodes, edges, rules, effects, and form gates",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/flow-api.service.spec.ts",
+      "durationMs": 7.533042000000023
+    },
+    {
+      "name": "FlowApiService endpoint contract covers forms, fills, answers, waivers, policies, analytics, signal, and effect routes",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/flow-api.service.spec.ts",
+      "durationMs": 6.069375000000036
+    },
+    {
+      "name": "@stynx-web/angular-flow components captures analytics load failures from Error and non-Error throwables",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
+      "durationMs": 5.671165999999175
+    },
+    {
+      "name": "@stynx-web/angular-flow components covers fill editor empty, object option, and fallback serialization branches",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
+      "durationMs": 5.658750000000509
+    },
+    {
+      "name": "@stynx-web/angular-flow components binds graph designer inputs to route-like scope and graph ids",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
+      "durationMs": 3.1530830000001515
+    },
+    {
+      "name": "@stynx-web/angular-flow exports and routes exports the package API needed by host shells",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/routes-and-exports.spec.ts",
+      "durationMs": 2.47387499999968
+    }
+  ]
+}

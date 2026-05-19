@@ -36,10 +36,7 @@ export class MembershipAccessCache {
 
     while (this.entries.size > this.maxEntries) {
       const oldest = this.entries.keys().next().value;
-      if (!oldest) {
-        break;
-      }
-      this.entries.delete(oldest);
+      this.entries.delete(oldest!);
     }
   }
 

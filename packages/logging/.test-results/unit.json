@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx/logging",
+  "level": "unit",
+  "runner": "vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T01:05:00.225Z",
+  "endedAt": "2026-05-19T01:05:04.657Z",
+  "durationMs": 4431,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/unit.log"
+  },
+  "env": {
+    "node": "26.0.0",
+    "ci": false
+  },
+  "command": {
+    "argv": [
+      "vitest",
+      "run",
+      "--config",
+      "./vitest.config.ts",
+      "--reporter=default",
+      "--reporter=json",
+      "--outputFile.json=/tmp/vitest-98340-1779152700225.json"
+    ],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages/logging"
+  },
+  "metric": {
+    "kind": "none"
+  },
+  "totals": {
+    "files": 6,
+    "tests": 23,
+    "passed": 23,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "slowestTests": [
+    {
+      "name": "createPinoLogger redacts sensitive values",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/logging/test/unit/pino.factory.spec.ts",
+      "durationMs": 3.7288330000001224
+    },
+    {
+      "name": "StynxLoggingModule wires default options and applies the request middleware",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/logging/test/unit/logging.module.spec.ts",
+      "durationMs": 3.090125000000171
+    },
+    {
+      "name": "createPinoLogger uses the development pretty transport when no destination is injected outside production",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/logging/test/unit/pino.factory.spec.ts",
+      "durationMs": 2.9424169999997503
+    },
+    {
+      "name": "StynxLogger attaches trace and suppressed duplicate count to error logs",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/logging/test/unit/logger.service.spec.ts",
+      "durationMs": 2.217250000000149
+    },
+    {
+      "name": "RequestLoggingMiddleware logs one request completion record for non-health routes",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/logging/test/unit/request-logging.middleware.spec.ts",
+      "durationMs": 1.7457919999997102
+    },
+    {
+      "name": "LoggingDedupeService suppresses duplicate errors inside the same window",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/logging/test/unit/dedupe.spec.ts",
+      "durationMs": 1.028250000000071
+    },
+    {
+      "name": "createPinoLogger uses stdout destination defaults in production when no destination is injected",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/logging/test/unit/pino.factory.spec.ts",
+      "durationMs": 0.805417000000034
+    },
+    {
+      "name": "@stynx/logging barrel exports at least one symbol",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/logging/test/unit/barrel-load.spec.ts",
+      "durationMs": 0.6909169999998994
+    },
+    {
+      "name": "StynxLogger.log/warn/debug/verbose log emits at info level with the passed message",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/logging/test/unit/logger.service.spec.ts",
+      "durationMs": 0.6740840000002208
+    },
+    {
+      "name": "createPinoLogger refuses an empty redact list in production",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/logging/test/unit/pino.factory.spec.ts",
+      "durationMs": 0.6055420000002414
+    }
+  ]
+}

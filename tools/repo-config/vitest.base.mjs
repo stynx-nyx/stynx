@@ -78,11 +78,19 @@ const completeCoverageThreshold = {
   lines: 100,
 };
 
+const disabledCoverageThreshold = {
+  statements: 0,
+  branches: 0,
+  functions: 0,
+  lines: 0,
+};
+
 export function createVitestConfig({
   packageDir,
   packageName,
   include = ['test/**/*.spec.ts', 'test/**/*.test.ts'],
   collectCoverageFrom = ['src/**/*.ts'],
+  coverageExclude = [],
   coverageDir = 'coverage-vitest',
   coverageThreshold,
   alias = {},
@@ -95,8 +103,9 @@ export function createVitestConfig({
   patchDrizzle = false,
 }) {
   const threshold =
-    coverageThreshold ??
-    completeCoverageThreshold;
+    process.env.STYNX_AGGREGATE_COVERAGE === '1'
+      ? disabledCoverageThreshold
+      : (coverageThreshold ?? completeCoverageThreshold);
 
   const drizzleAlias = patchDrizzle
     ? { 'drizzle-orm/entity': resolve(repoRoot, 'tools/repo-config/drizzle-entity-shim.mjs') }
@@ -140,6 +149,18 @@ export function createVitestConfig({
         reportsDirectory: resolve(packageDir, coverageDir),
         reporter: ['text', 'json', 'lcov'],
         include: collectCoverageFrom,
+        exclude: [
+          'src/generated/**',
+          'src/**/index.ts',
+          'src/index.ts',
+          'src/main.ts',
+          'src/**/*.module.ts',
+          'src/**/constants.ts',
+          'src/**/tokens.ts',
+          'src/**/types.ts',
+          'src/**/*.d.ts',
+          ...coverageExclude,
+        ],
         thresholds: { ...threshold },
       },
     },

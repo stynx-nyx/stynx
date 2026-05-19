@@ -33,4 +33,28 @@ describe('planAuditDetach', () => {
 
     expect(plan).toBeNull();
   });
+
+  it('rejects malformed partition months and detaches expired lgpd partitions', () => {
+    expect(planAuditDetach(
+      {
+        partitionName: 'log_bad',
+        month: 'bad',
+        containsLgpdRetentionTags: false,
+      },
+      new Date('2026-04-24T00:00:00.000Z'),
+    )).toBeNull();
+
+    expect(planAuditDetach(
+      {
+        partitionName: 'log_2020_01',
+        month: '2020-01',
+        containsLgpdRetentionTags: true,
+      },
+      new Date('2026-04-24T00:00:00.000Z'),
+      'audit/',
+    )).toMatchObject({
+      retentionClass: 'lgpd_5y',
+      objectKey: 'audit/2020-01.sql.gz',
+    });
+  });
 });

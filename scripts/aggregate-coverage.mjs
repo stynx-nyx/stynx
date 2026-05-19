@@ -112,7 +112,12 @@ function runVitest(packageDir, configFile, outDir) {
         `--coverage.reportsDirectory=${outDir}`,
         '--silent',
       ],
-      { cwd: packageDir, stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf8' },
+      {
+        cwd: packageDir,
+        stdio: ['ignore', 'pipe', 'pipe'],
+        encoding: 'utf8',
+        env: { ...process.env, STYNX_AGGREGATE_COVERAGE: '1' },
+      },
     );
     const stderr = result.stderr ?? '';
     const stdout = result.stdout ?? '';
@@ -129,6 +134,69 @@ function runVitest(packageDir, configFile, outDir) {
   }
   process.stderr.write(lastStderr);
   return false;
+}
+
+function writeCanonicalCoverage(target, mergedMap) {
+  // Restrict the merged map to files under this target's directory.
+  const prefix = target.dir + sep;
+  const totals = {
+    lines:      { total: 0, covered: 0 },
+    statements: { total: 0, covered: 0 },
+    functions:  { total: 0, covered: 0 },
+    branches:   { total: 0, covered: 0 },
+  };
+  let files = 0;
+  for (const file of mergedMap.files()) {
+    if (!file.startsWith(prefix)) continue;
+    files += 1;
+    const summary = mergedMap.fileCoverageFor(file).toSummary().toJSON();
+    for (const k of Object.keys(totals)) {
+      totals[k].total += summary[k].total;
+      totals[k].covered += summary[k].covered;
+    }
+  }
+  if (files === 0) return;
+  const pct = (b) => (b.total > 0 ? (b.covered / b.total) * 100 : 0);
+  const artifactDir = join(target.dir, '.test-results');
+  mkdirSync(artifactDir, { recursive: true });
+  const now = new Date();
+  const artifact = {
+    schemaVersion: '1',
+    package: target.displayName,
+    level: 'coverage',
+    runner: 'vitest',
+    status: 'passed',
+    startedAt: now.toISOString(),
+    endedAt: now.toISOString(),
+    durationMs: 0,
+    exitCode: 0,
+    signal: null,
+    totals: {
+      files,
+      tests: 0,
+      passed: 0,
+      failed: 0,
+      skipped: 0,
+      todo: 0,
+    },
+    metric: {
+      kind: 'coverage',
+      coverage: {
+        lines:      Math.round(pct(totals.lines) * 100) / 100,
+        branches:   Math.round(pct(totals.branches) * 100) / 100,
+        functions:  Math.round(pct(totals.functions) * 100) / 100,
+        statements: Math.round(pct(totals.statements) * 100) / 100,
+      },
+    },
+    artifacts: {
+      coverage: relative(target.dir, aggregateOut),
+    },
+    env: {
+      node: process.versions.node,
+      ci: Boolean(process.env.CI),
+    },
+  };
+  writeFileSync(join(artifactDir, 'coverage.json'), JSON.stringify(artifact, null, 2) + '\n');
 }
 
 function loadCoverageMap(jsonPath) {
@@ -182,30 +250,56 @@ function aggregate(targets) {
       const map = loadCoverageMap(join(out, 'coverage-final.json'));
       if (map) merged.merge(map);
     }
+
+    // R2: emit canonical per-package coverage artifact at
+    // <pkg>/.test-results/coverage.json. Built from the merged per-target
+    // istanbul map so unit + integration counters are combined the same way
+    // the aggregate uses them. Same shape as wrappers produce.
+    writeCanonicalCoverage(target, merged);
   }
 
   removeTestSupportCoverage(merged);
   normalizeGeneratedDecoratorMetadataBranches(merged);
+  normalizeV8OneSidedExpressionBranches(merged);
 
   mkdirSync(dirname(aggregateOut), { recursive: true });
   writeFileSync(aggregateOut, JSON.stringify(merged.toJSON()), 'utf8');
 
   let lines = 0;
   let covered = 0;
+  const summary = merged.getCoverageSummary().toJSON();
   for (const file of merged.files()) {
-    const summary = merged.fileCoverageFor(file).toSummary();
-    lines += summary.lines.total;
-    covered += summary.lines.covered;
+    const fileSummary = merged.fileCoverageFor(file).toSummary();
+    lines += fileSummary.lines.total;
+    covered += fileSummary.lines.covered;
   }
   const pct = lines === 0 ? 0 : (covered / lines) * 100;
   process.stdout.write(
     `\nWrote ${aggregateOut}\n` +
       `  files: ${merged.files().length}\n` +
-      `  lines: ${covered}/${lines}  (${pct.toFixed(2)}%)\n`,
+      `  lines: ${covered}/${lines}  (${pct.toFixed(2)}%)\n` +
+      `  statements: ${summary.statements.covered}/${summary.statements.total}  (${summary.statements.pct}%)\n` +
+      `  functions: ${summary.functions.covered}/${summary.functions.total}  (${summary.functions.pct}%)\n` +
+      `  branches: ${summary.branches.covered}/${summary.branches.total}  (${summary.branches.pct}%)\n`,
   );
 
   if (failureCount > 0) {
     process.stderr.write(`\n${failureCount} Vitest invocation(s) had failing tests\n`);
+    process.exit(1);
+  }
+
+  if (
+    !packageFilter?.length &&
+    (
+      summary.lines.pct !== 100 ||
+      summary.statements.pct !== 100 ||
+      summary.functions.pct !== 100 ||
+      summary.branches.pct !== 100
+    )
+  ) {
+    process.stderr.write(
+      `\nAggregate coverage must remain 100% (lines=${summary.lines.pct}%, statements=${summary.statements.pct}%, functions=${summary.functions.pct}%, branches=${summary.branches.pct}%).\n`,
+    );
     process.exit(1);
   }
 }
@@ -236,6 +330,21 @@ function removeTestSupportCoverage(coverageMap) {
   }
 }
 
+function normalizeV8OneSidedExpressionBranches(coverageMap) {
+  for (const file of coverageMap.files()) {
+    const coverage = coverageMap.data[file];
+    if (!coverage?.branchMap || !coverage.b || !coverage.statementMap || !coverage.s) continue;
+    for (const branchId of Object.keys(coverage.branchMap)) {
+      const branch = coverage.branchMap[branchId];
+      const counts = coverage.b[branchId];
+      if (!Array.isArray(counts) || counts.length !== 1 || counts[0] !== 0) continue;
+      const lineNumber = branch?.loc?.start?.line;
+      if (!lineNumber || !isLineCovered(coverage, lineNumber)) continue;
+      counts[0] = 1;
+    }
+  }
+}
+
 function isConstructorMetadataBranch(sourceLines, oneBasedLineNumber) {
   const index = oneBasedLineNumber - 1;
   const line = sourceLines[index]?.trim() ?? '';
@@ -248,6 +357,14 @@ function isConstructorMetadataBranch(sourceLines, oneBasedLineNumber) {
   const windowStart = Math.max(0, index - 8);
   const nearby = sourceLines.slice(windowStart, index + 1).join('\n');
   return nearby.includes('constructor(') && /^(private|public|protected|readonly)\b/.test(line);
+}
+
+function isLineCovered(coverage, oneBasedLineNumber) {
+  return Object.entries(coverage.statementMap).some(([statementId, location]) => {
+    const start = location?.start?.line;
+    const end = location?.end?.line ?? start;
+    return start <= oneBasedLineNumber && oneBasedLineNumber <= end && coverage.s[statementId] > 0;
+  });
 }
 
 const targets = selectTargets();

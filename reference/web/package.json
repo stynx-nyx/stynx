@@ -13,7 +13,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/angular.mjs \"src/**/*.ts\"",
     "serve": "node scripts/serve-static.mjs",
-    "test": "node ../../scripts/record-test-artifact.mjs turbo-test.log -- node --test test/unit/reference-web-config.spec.mjs",
+    "test": "node ../../scripts/run-and-record.mjs --package @stynx/reference-web --level unit --runner node-test -- node --test test/unit/reference-web-config.spec.mjs",
     "test:e2e": "playwright test"
   },
   "dependencies": {

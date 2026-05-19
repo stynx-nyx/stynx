@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx/testing",
+  "level": "unit",
+  "runner": "vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T01:05:57.980Z",
+  "endedAt": "2026-05-19T01:06:39.126Z",
+  "durationMs": 41136,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/unit.log"
+  },
+  "env": {
+    "node": "26.0.0",
+    "ci": false
+  },
+  "command": {
+    "argv": [
+      "vitest",
+      "run",
+      "--config",
+      "./vitest.config.ts",
+      "--reporter=default",
+      "--reporter=json",
+      "--outputFile.json=/tmp/vitest-5218-1779152757980.json"
+    ],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages/testing"
+  },
+  "metric": {
+    "kind": "none"
+  },
+  "totals": {
+    "files": 7,
+    "tests": 38,
+    "passed": 38,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "slowestTests": [
+    {
+      "name": "@stynx/testing creates an isolated app, seeds fixtures, and exercises archive-aware matchers",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/testing.spec.ts",
+      "durationMs": 24893.937833
+    },
+    {
+      "name": "@stynx/testing exercises restore-conflict and soft-delete-blocked matchers against custom fixture tables",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/testing.spec.ts",
+      "durationMs": 7060.740000000002
+    },
+    {
+      "name": "@stynx/testing reads context helpers through the shared request context",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/testing.spec.ts",
+      "durationMs": 3505.164499999999
+    },
+    {
+      "name": "mintTestSession mints with an audience and omits permsHash when permissions are empty",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/mint-test-session.unit.spec.ts",
+      "durationMs": 214.78416599999946
+    },
+    {
+      "name": "@stynx/testing mints a test session only in NODE_ENV=test and runs doctor helper",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/testing.spec.ts",
+      "durationMs": 127.96175000000221
+    },
+    {
+      "name": "auditExpect finds an audit row whose tags match every requested tag",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/matchers.spec.ts",
+      "durationMs": 97.84087499999987
+    },
+    {
+      "name": "runDoctorForApp returns exit code and captured output from the doctor process",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/doctor.unit.spec.ts",
+      "durationMs": 15.553708000000029
+    },
+    {
+      "name": "createTestApp starts optional services, applies SQL steps, exposes tx/admin helpers, and tears down",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/create-test-app.unit.spec.ts",
+      "durationMs": 5.975083000000041
+    },
+    {
+      "name": "auditExpect uses schema, row id, and tags defaults when only entity and operation are provided",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/matchers.spec.ts",
+      "durationMs": 5.15341699999999
+    },
+    {
+      "name": "createStynxFixtures unit defaults generates tenant and user defaults when optional fields are omitted",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/testing/test/fixtures.unit.spec.ts",
+      "durationMs": 3.4519579999999905
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx-infra/cdk",
+  "level": "unit",
+  "runner": "vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T00:57:26.972Z",
+  "endedAt": "2026-05-19T00:57:29.875Z",
+  "durationMs": 2903,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/unit.log"
+  },
+  "env": {
+    "node": "24.15.0",
+    "ci": false
+  },
+  "command": {
+    "argv": [
+      "vitest",
+      "run",
+      "--config",
+      "./vitest.config.ts",
+      "--reporter=default",
+      "--reporter=json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-86879-1779152246972.json"
+    ],
+    "cwd": "/Users/aarusso/Development/stech/stynx/infra/cdk"
+  },
+  "metric": {
+    "kind": "none"
+  },
+  "totals": {
+    "files": 7,
+    "tests": 9,
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "slowestTests": [
+    {
+      "name": "StorageStack creates a KMS-encrypted versioned docs bucket with lifecycle rules",
+      "file": "/Users/aarusso/Development/stech/stynx/infra/cdk/test/storage-stack.spec.ts",
+      "durationMs": 329.64812499999994
+    },
+    {
+      "name": "EdgeStack creates CloudFront, global WAF, ACM, DNS aliases, and outputs for { env: 'dev', accountId: '111111111111', region: 'sa-east-1', ownerTeam: 'platform', domain: 'dev.api.example.test', hostedZoneId: 'ZDEVEXAMPLETEST', hostedZoneName: 'example.test', certArn: 'arn:aws:acm:sa-east-1:111111111111:certificate/dev-placeholder', alarmRecipients: [ 'devops@example.test' ], vpc: { cidr: '10.10.0.0/16', maxAzs: 2 }, db: { instanceClass: 't4g.medium', storageGb: 100, multiAz: false, backupRetentionDays: 7, pgVersion: '16.3' }, redis: { nodeType: 'cache.t4g.small', replicasPerNodeGroup: 1 }, ecs: { imageRepositoryName: 'stynx-reference-api', cpu: 512, memory: 1024, desiredCount: 1, minCapacity: 1, maxCapacity: 2 } }",
+      "file": "/Users/aarusso/Development/stech/stynx/infra/cdk/test/edge-stack.spec.ts",
+      "durationMs": 319.26483299999995
+    },
+    {
+      "name": "ComputeStack creates ECS, ALB, listeners, and WAF wiring",
+      "file": "/Users/aarusso/Development/stech/stynx/infra/cdk/test/compute-stack.spec.ts",
+      "durationMs": 316.1814999999999
+    },
+    {
+      "name": "ObservabilityStack creates AMP, AMG, SNS alerts, and baseline alarms",
+      "file": "/Users/aarusso/Development/stech/stynx/infra/cdk/test/observability-stack.spec.ts",
+      "durationMs": 311.47462500000006
+    },
+    {
+      "name": "DataStack creates postgres, redis, and pgbouncer resources",
+      "file": "/Users/aarusso/Development/stech/stynx/infra/cdk/test/data-stack.spec.ts",
+      "durationMs": 255.2339159999999
+    },
+    {
+      "name": "NetworkStack creates a VPC with flow logs and endpoints",
+      "file": "/Users/aarusso/Development/stech/stynx/infra/cdk/test/network-stack.spec.ts",
+      "durationMs": 177.38850000000002
+    },
+    {
+      "name": "IdentityStack creates one user pool and two app clients",
+      "file": "/Users/aarusso/Development/stech/stynx/infra/cdk/test/identity-stack.spec.ts",
+      "durationMs": 120.09537499999999
+    },
+    {
+      "name": "EdgeStack creates CloudFront, global WAF, ACM, DNS aliases, and outputs for { env: 'stage', accountId: '222222222222', region: 'sa-east-1', ownerTeam: 'platform', domain: 'stage.api.example.test', hostedZoneId: 'ZSTAGEEXAMPLETEST', hostedZoneName: 'example.test', certArn: 'arn:aws:acm:sa-east-1:222222222222:certificate/stage-placeholder', alarmRecipients: [ 'stage-ops@example.test' ], vpc: { cidr: '10.15.0.0/16', maxAzs: 2 }, db: { instanceClass: 't4g.large', storageGb: 200, multiAz: true, backupRetentionDays: 14, pgVersion: '16.3' }, redis: { nodeType: 'cache.t4g.medium', replicasPerNodeGroup: 1 }, ecs: { imageRepositoryName: 'stynx-reference-api', cpu: 1024, memory: 2048, desiredCount: 2, minCapacity: 2, maxCapacity: 6 } }",
+      "file": "/Users/aarusso/Development/stech/stynx/infra/cdk/test/edge-stack.spec.ts",
+      "durationMs": 102.00074999999993
+    },
+    {
+      "name": "EdgeStack creates CloudFront, global WAF, ACM, DNS aliases, and outputs for { env: 'prod', accountId: '333333333333', region: 'sa-east-1', ownerTeam: 'platform', domain: 'api.example.com', hostedZoneId: 'ZPRODEXAMPLECOM', hostedZoneName: 'example.com', certArn: 'arn:aws:acm:sa-east-1:333333333333:certificate/prod-placeholder', alarmRecipients: [ 'platform@example.com' ], vpc: { cidr: '10.20.0.0/16', maxAzs: 3 }, db: { instanceClass: 'r6g.xlarge', storageGb: 500, multiAz: true, backupRetentionDays: 30, pgVersion: '16.3' }, redis: { nodeType: 'cache.r6g.large', replicasPerNodeGroup: 1 }, ecs: { imageRepositoryName: 'stynx-reference-api', cpu: 2048, memory: 4096, desiredCount: 3, minCapacity: 3, maxCapacity: 20 } }",
+      "file": "/Users/aarusso/Development/stech/stynx/infra/cdk/test/edge-stack.spec.ts",
+      "durationMs": 86.99754200000007
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx/storage",
+  "level": "integration",
+  "runner": "vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T00:48:42.739Z",
+  "endedAt": "2026-05-19T00:49:07.607Z",
+  "durationMs": 24868,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/integration.log"
+  },
+  "env": {
+    "node": "24.15.0",
+    "ci": false
+  },
+  "command": {
+    "argv": [
+      "vitest",
+      "run",
+      "--config",
+      "./vitest.int.config.ts",
+      "--reporter=default",
+      "--reporter=json",
+      "--outputFile.json=/tmp/vitest-65241-1779151722739.json"
+    ],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages/storage"
+  },
+  "totals": {
+    "files": 1,
+    "tests": 4,
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "slowestTests": [
+    {
+      "name": "StynxStorageModule integration presigns an upload, completes it, and returns a working download URL",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/integration/storage.module.spec.ts",
+      "durationMs": 241.29120899999907
+    },
+    {
+      "name": "StynxStorageModule integration hard-removes archived documents and purges all S3 versions",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/integration/storage.module.spec.ts",
+      "durationMs": 122.23029200000019
+    },
+    {
+      "name": "StynxStorageModule integration quarantines documents whose uploaded object metadata does not match",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/integration/storage.module.spec.ts",
+      "durationMs": 102.85683300000164
+    },
+    {
+      "name": "StynxStorageModule integration rejects cross-tenant download presign attempts",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/integration/storage.module.spec.ts",
+      "durationMs": 55.372833999997965
+    }
+  ],
+  "metric": {
+    "kind": "none"
+  }
+}

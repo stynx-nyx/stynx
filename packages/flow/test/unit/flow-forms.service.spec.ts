@@ -148,6 +148,24 @@ describe('FlowFormsService', () => {
       expect(() => service.createQuestion(FORM, null)).toThrow(BadRequestException);
     });
 
+    it('question get, update, and delete methods route through shared helpers', async () => {
+      const get = makeService([[{ id: QUESTION }]]);
+      await expect(get.service.getQuestion(QUESTION)).resolves.toMatchObject({ id: QUESTION });
+
+      const update = makeService([[{ id: QUESTION, label: 'Updated' }]]);
+      await expect(update.service.updateQuestion(QUESTION, { label: 'Updated' })).resolves.toMatchObject({
+        id: QUESTION,
+        label: 'Updated',
+      });
+
+      const del = makeService([[{ exists: true }]]);
+      await expect(del.service.deleteQuestion(QUESTION)).resolves.toEqual({
+        id: QUESTION,
+        deleted: true,
+      });
+      expect(del.trx.softDelete).toHaveBeenCalled();
+    });
+
     it('putQuestionScore upserts and returns the camelized row', async () => {
       const { service, trx } = makeService([
         [{ exists: true }],
@@ -237,6 +255,21 @@ describe('FlowFormsService', () => {
       expect(result.id).toBe(FILL);
       const [sql] = trx.query.mock.calls[0]!;
       expect(sql).toContain('insert into flow.fills');
+    });
+
+    it('get, update, and delete fill methods route through shared helpers', async () => {
+      const get = makeService([[{ id: FILL }]]);
+      await expect(get.service.getFill(FILL)).resolves.toMatchObject({ id: FILL });
+
+      const update = makeService([[{ id: FILL, status: 'submitted' }]]);
+      await expect(update.service.updateFill(FILL, { status: 'submitted' })).resolves.toMatchObject({
+        id: FILL,
+        status: 'submitted',
+      });
+
+      const del = makeService([[{ exists: true }]]);
+      await expect(del.service.deleteFill(FILL)).resolves.toEqual({ id: FILL, deleted: true });
+      expect(del.trx.softDelete).toHaveBeenCalled();
     });
   });
 
@@ -329,6 +362,12 @@ describe('FlowFormsService', () => {
       expect(result).toHaveLength(1);
       expect(trx.query.mock.calls.length).toBe(2);
     });
+
+    it('deleteAnswer soft deletes after existence check', async () => {
+      const { service, trx } = makeService([[{ exists: true }]]);
+      await expect(service.deleteAnswer(ANSWER)).resolves.toEqual({ id: ANSWER, deleted: true });
+      expect(trx.softDelete).toHaveBeenCalled();
+    });
   });
 
   describe('waivers', () => {
@@ -378,6 +417,67 @@ describe('FlowFormsService', () => {
       await expect(service.createFillWaiver(FILL, { reason: 'b' })).rejects.toBeInstanceOf(
         BadRequestException,
       );
+    });
+
+    it('update and delete waiver methods route through shared helpers', async () => {
+      const update = makeService([[{ id: WAIVER, reason: 'updated' }]]);
+      await expect(update.service.updateWaiver(WAIVER, { reason: 'updated' })).resolves.toMatchObject({
+        id: WAIVER,
+        reason: 'updated',
+      });
+
+      const del = makeService([[{ exists: true }]]);
+      await expect(del.service.deleteWaiver(WAIVER)).resolves.toEqual({
+        id: WAIVER,
+        deleted: true,
+      });
+      expect(del.trx.softDelete).toHaveBeenCalled();
+    });
+
+    it('lists fill waivers and form-fill waivers from hydrated fill context', async () => {
+      const fillWaivers = makeService([
+        [{
+          id: FILL,
+          scope_id: SCOPE,
+          target_type: 'doc',
+          target_id: 't-1',
+          form_id: FORM,
+        }],
+        [{ id: WAIVER }],
+      ]);
+      await expect(fillWaivers.service.listFillWaivers(FILL)).resolves.toHaveLength(1);
+      expect(fillWaivers.trx.query.mock.calls[1]?.[1]).toEqual([SCOPE, FORM, 't-1', 'doc']);
+
+      const formFillWaivers = makeService([
+        [{
+          id: FILL,
+          scope_id: SCOPE,
+          target_type: 'doc',
+          target_id: 't-1',
+          form_id: FORM,
+        }],
+        [{ id: WAIVER }],
+      ]);
+      await expect(formFillWaivers.service.listFormFillWaivers(FORM, FILL)).resolves.toHaveLength(1);
+      expect(formFillWaivers.trx.query.mock.calls[1]?.[1]).toEqual([SCOPE, FORM, 't-1', 'doc']);
+    });
+
+    it('creates form-fill waivers after verifying fill ownership', async () => {
+      const { service, trx } = makeService([
+        [{ id: FILL, form_id: FORM }],
+        [{
+          id: FILL,
+          scope_id: SCOPE,
+          target_type: 'doc',
+          target_id: 't-1',
+          form_id: FORM,
+        }],
+        [{ id: WAIVER }],
+      ]);
+      await expect(service.createFormFillWaiver(FORM, FILL, { reason: 'approved' })).resolves.toMatchObject({
+        id: WAIVER,
+      });
+      expect(trx.query.mock.calls).toHaveLength(3);
     });
   });
 

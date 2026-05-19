@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx/audit",
+  "level": "integration",
+  "runner": "vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T00:49:05.799Z",
+  "endedAt": "2026-05-19T00:49:11.677Z",
+  "durationMs": 5878,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/integration.log"
+  },
+  "env": {
+    "node": "24.15.0",
+    "ci": false
+  },
+  "command": {
+    "argv": [
+      "vitest",
+      "run",
+      "--config",
+      "./vitest.int.config.ts",
+      "--reporter=default",
+      "--reporter=json",
+      "--outputFile.json=/tmp/vitest-65846-1779151745799.json"
+    ],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages/audit"
+  },
+  "totals": {
+    "files": 1,
+    "tests": 5,
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "slowestTests": [
+    {
+      "name": "StynxAuditModule integration writes one soft-delete row for the live delete and no archive insert row",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/audit/test/integration/audit.module.spec.ts",
+      "durationMs": 139.0370409999996
+    },
+    {
+      "name": "StynxAuditModule integration verifies the audit.events hash chain and detects direct row tampering",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/audit/test/integration/audit.module.spec.ts",
+      "durationMs": 85.6181660000002
+    },
+    {
+      "name": "StynxAuditModule integration retains lgpd partitions longer in detach dry-run",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/audit/test/integration/audit.module.spec.ts",
+      "durationMs": 63.5287500000004
+    },
+    {
+      "name": "StynxAuditModule integration writes one restore row for the live insert and no archive delete row",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/audit/test/integration/audit.module.spec.ts",
+      "durationMs": 27.1528330000001
+    },
+    {
+      "name": "StynxAuditModule integration tags archive-side erasure updates as lgpd erasure",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/audit/test/integration/audit.module.spec.ts",
+      "durationMs": 12.930041999999958
+    }
+  ],
+  "metric": {
+    "kind": "none"
+  }
+}

@@ -745,4 +745,53 @@ describe('PermissionCache', () => {
       vi.useRealTimers();
     }
   });
+
+  it('swallows background re-sync failures for stale in-memory entries', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-26T12:00:00.000Z'));
+
+    const cache = new PermissionCache(
+      {
+        stynx: { issuer: 'https://stynx.test' },
+        permissions: {
+          dbFallbackOnRedisDown: true,
+          driftResyncIntervalMs: 100,
+        },
+      },
+      new InMemoryPermissionCacheBackend(),
+      {
+        resolveForUser: vi.fn(async () => {
+          throw new Error('resync failed');
+        }),
+        probeHash: vi.fn(),
+      } as unknown as PermissionQueryService,
+      new PermissionCacheMetrics(),
+    );
+
+    try {
+      await cache.prime(
+        {
+          sid: 'sid-resync-fail',
+          userId: 'user-1',
+          tenantId: 'tenant-1',
+          membershipId: 'membership-stale',
+          permissions: ['document:read:*'],
+          hash: 'stale-hash',
+          generation: 1,
+          computedAt: Date.now() - 200,
+        },
+        new Date(Date.now() + 60_000).toISOString(),
+      );
+
+      await cache.onModuleInit();
+      await vi.advanceTimersByTimeAsync(100);
+
+      await expect(cache.inspectSid('sid-resync-fail')).resolves.toMatchObject({
+        membershipId: 'membership-stale',
+      });
+    } finally {
+      await cache.onModuleDestroy();
+      vi.useRealTimers();
+    }
+  });
 });

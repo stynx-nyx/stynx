@@ -1,0 +1,85 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx/contracts",
+  "level": "unit",
+  "runner": "vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T01:04:48.575Z",
+  "endedAt": "2026-05-19T01:04:52.832Z",
+  "durationMs": 4253,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/unit.log"
+  },
+  "env": {
+    "node": "26.0.0",
+    "ci": false
+  },
+  "command": {
+    "argv": [
+      "vitest",
+      "run",
+      "--config",
+      "./vitest.config.ts",
+      "--reporter=default",
+      "--reporter=json",
+      "--outputFile.json=/tmp/vitest-97797-1779152688575.json"
+    ],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages/contracts"
+  },
+  "metric": {
+    "kind": "none"
+  },
+  "totals": {
+    "files": 2,
+    "tests": 8,
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "slowestTests": [
+    {
+      "name": "@stynx/contracts barrel re-exports core error classes",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/contracts/test/index.spec.ts",
+      "durationMs": 2.1646670000000086
+    },
+    {
+      "name": "@stynx/contracts errors StynxError inherits from Error",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/contracts/test/errors.spec.ts",
+      "durationMs": 1.3500839999999243
+    },
+    {
+      "name": "@stynx/contracts errors IdentityAdminError accepts IDENTITY_NOT_FOUND as a code",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/contracts/test/errors.spec.ts",
+      "durationMs": 0.7859169999999267
+    },
+    {
+      "name": "@stynx/contracts errors IdentityAdminError accepts IDENTITY_FORBIDDEN as a code",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/contracts/test/errors.spec.ts",
+      "durationMs": 0.3046669999998812
+    },
+    {
+      "name": "@stynx/contracts barrel barrel has multiple exports",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/contracts/test/index.spec.ts",
+      "durationMs": 0.1580420000000231
+    },
+    {
+      "name": "@stynx/contracts errors StynxError details optional",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/contracts/test/errors.spec.ts",
+      "durationMs": 0.1369999999999436
+    },
+    {
+      "name": "@stynx/contracts errors AuthenticationError carries the AUTHENTICATION_ERROR code",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/contracts/test/errors.spec.ts",
+      "durationMs": 0.13574999999991633
+    },
+    {
+      "name": "@stynx/contracts errors AuthorizationError carries the AUTHORIZATION_ERROR code",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/contracts/test/errors.spec.ts",
+      "durationMs": 0.12104199999998855
+    }
+  ]
+}

@@ -1,5 +1,10 @@
 import '@angular/compiler';
+import { StynxBannerComponent } from '../src/banner.component';
+import { StynxConfirmDialogComponent } from '../src/confirm-dialog.component';
+import { StynxLoadingSpinnerComponent } from '../src/loading-spinner.component';
 import { StynxPaginationComponent } from '../src/pagination.component';
+import { StynxTableComponent } from '../src/table.component';
+import { StynxToastContainerComponent } from '../src/toast-container.component';
 import { StynxToastService } from '../src/toast.service';
 
 describe('@stynx-web/angular-ui', () => {
@@ -75,5 +80,48 @@ describe('@stynx-web/angular-ui', () => {
       { pageIndex: 0, pageSize: 1 },
       { pageIndex: 1, pageSize: 1 },
     ]);
+  });
+
+  it('keeps simple component inputs and emitters wired', () => {
+    const banner = new StynxBannerComponent();
+    expect(banner).toMatchObject({ title: '', message: '', tone: 'info' });
+    banner.title = 'Heads up';
+    banner.message = 'Policy changed';
+    banner.tone = 'warning';
+    expect(banner).toMatchObject({ title: 'Heads up', message: 'Policy changed', tone: 'warning' });
+
+    const confirm = new StynxConfirmDialogComponent();
+    const seen: string[] = [];
+    confirm.confirm.subscribe(() => seen.push('confirm'));
+    confirm.cancel.subscribe(() => seen.push('cancel'));
+    confirm.open = true;
+    confirm.title = 'Delete';
+    confirm.message = 'Delete this item?';
+    confirm.confirmLabel = 'Delete';
+    confirm.confirm.emit();
+    confirm.cancel.emit();
+    expect(seen).toEqual(['confirm', 'cancel']);
+
+    const spinner = new StynxLoadingSpinnerComponent();
+    expect(spinner).toMatchObject({ size: 1.4, label: '' });
+    spinner.size = 2;
+    spinner.label = 'Loading';
+    expect(spinner).toMatchObject({ size: 2, label: 'Loading' });
+  });
+
+  it('tracks table rows with custom or JSON identity', () => {
+    const component = new StynxTableComponent<{ id: number; name: string }>();
+    component.columns = [{ key: 'name', label: 'Name' }];
+    component.rows = [{ id: 7, name: 'Ada' }];
+    expect((component as unknown as { trackBy: (row: { id: number; name: string }) => string | number }).trackBy(component.rows[0]!))
+      .toBe('{"id":7,"name":"Ada"}');
+
+    component.rowTrackBy = (row) => row.id;
+    expect((component as unknown as { trackBy: (row: { id: number; name: string }) => string | number }).trackBy(component.rows[0]!))
+      .toBe(7);
+  });
+
+  it('declares the toast container service dependency', () => {
+    expect(StynxToastContainerComponent).toBeDefined();
   });
 });

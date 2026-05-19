@@ -65,7 +65,14 @@ describe('ClaimFirstTenantEntitlementPolicy', () => {
   it('falls back through invalid JSON to CSV parsing', async () => {
     const policy = new ClaimFirstTenantEntitlementPolicy();
     await expect(policy.isEntitled(mkContext({ tenant_ids: '[not-json' }))).resolves.toBe(false);
+    await expect(policy.isEntitled(mkContext({ tenant_ids: '[not-json]' }))).resolves.toBe(false);
     await expect(policy.isEntitled(mkContext({ tenant_ids: 't-1' }))).resolves.toBe(true);
+  });
+
+  it('ignores non-string and blank string claims', async () => {
+    const policy = new ClaimFirstTenantEntitlementPolicy();
+    await expect(policy.isEntitled(mkContext({ tenants: 123 }))).resolves.toBe(false);
+    await expect(policy.isEntitled(mkContext({ tenants: '   ' }))).resolves.toBe(false);
   });
 
   it('ignores non-string entries in array claims', async () => {

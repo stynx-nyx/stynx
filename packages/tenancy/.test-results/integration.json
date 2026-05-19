@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx/tenancy",
+  "level": "integration",
+  "runner": "vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T00:48:56.335Z",
+  "endedAt": "2026-05-19T00:49:01.345Z",
+  "durationMs": 5010,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/integration.log"
+  },
+  "env": {
+    "node": "24.15.0",
+    "ci": false
+  },
+  "command": {
+    "argv": [
+      "vitest",
+      "run",
+      "--config",
+      "./vitest.int.config.ts",
+      "--reporter=default",
+      "--reporter=json",
+      "--outputFile.json=/tmp/vitest-65666-1779151736335.json"
+    ],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages/tenancy"
+  },
+  "totals": {
+    "files": 1,
+    "tests": 4,
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "slowestTests": [
+    {
+      "name": "StynxTenancyModule integration provisions tenants idempotently under concurrent retries",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/integration/tenancy.module.spec.ts",
+      "durationMs": 97.64533400000073
+    },
+    {
+      "name": "StynxTenancyModule integration resolves tenant from header, bearer claim, and subdomain",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/integration/tenancy.module.spec.ts",
+      "durationMs": 66.73099999999977
+    },
+    {
+      "name": "StynxTenancyModule integration suspends a tenant and blocks subsequent access",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/integration/tenancy.module.spec.ts",
+      "durationMs": 32.61229099999946
+    },
+    {
+      "name": "StynxTenancyModule integration rejects missing or invalid tenant context and wrong tenant access",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/integration/tenancy.module.spec.ts",
+      "durationMs": 18.20966700000008
+    }
+  ],
+  "metric": {
+    "kind": "none"
+  }
+}

@@ -1,0 +1,178 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stynx.dev/schemas/test-result/v1",
+  "title": "stynx test-result",
+  "description": "Canonical per-(package, level) test-result artifact. One file per run of a given level in a given package. Written by scripts/run-and-record.mjs; read by render-test-matrix.mjs, aggregate-coverage.mjs, DEVAI sensors, CI summary jobs.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "package",
+    "level",
+    "runner",
+    "status",
+    "startedAt",
+    "endedAt",
+    "durationMs",
+    "exitCode"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1",
+      "description": "Bump on breaking changes. Readers must reject other values."
+    },
+    "package": {
+      "type": "string",
+      "description": "npm name of the package this result belongs to. e.g. '@stynx/auth'."
+    },
+    "level": {
+      "enum": ["unit", "integration", "e2e", "mutation", "perf", "coverage", "smoke"],
+      "description": "Which testing surface this artifact covers."
+    },
+    "runner": {
+      "type": "string",
+      "description": "Identifier for the actual runner. e.g. 'vitest', 'stryker-vitest', 'perf-smoke', 'rls-smoke'."
+    },
+    "runnerVersion": {
+      "type": "string",
+      "description": "Optional. Version of the runner."
+    },
+    "status": {
+      "enum": ["passed", "failed", "skipped", "no-run", "error"],
+      "description": "passed = all assertions ok and exit 0; failed = some assertion failed or threshold broke; skipped = runner reported all tests skipped; no-run = level not configured for this package; error = runner crashed before producing usable output."
+    },
+    "startedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "endedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "durationMs": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "endedAt - startedAt in milliseconds. Authoritative timing source for the matrix renderer."
+    },
+    "exitCode": {
+      "type": ["integer", "null"],
+      "description": "Child process exit code. null when killed by signal."
+    },
+    "signal": {
+      "type": ["string", "null"],
+      "description": "POSIX signal name if the runner was killed (e.g. 'SIGTERM'). null otherwise."
+    },
+    "totals": {
+      "type": "object",
+      "description": "Test-count totals. Populated for unit / integration / e2e; null-ish for mutation, perf, smoke.",
+      "additionalProperties": false,
+      "properties": {
+        "files": { "type": "integer", "minimum": 0 },
+        "tests": { "type": "integer", "minimum": 0 },
+        "passed": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "skipped": { "type": "integer", "minimum": 0 },
+        "todo": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "metric": {
+      "type": "object",
+      "description": "Level-specific metric envelope. `kind` selects which sibling property is populated.",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": {
+          "enum": ["none", "score", "coverage", "perf"]
+        },
+        "score": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Mutation score percentage (kind=score)."
+        },
+        "coverage": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "lines": { "type": "number", "minimum": 0, "maximum": 100 },
+            "branches": { "type": "number", "minimum": 0, "maximum": 100 },
+            "functions": { "type": "number", "minimum": 0, "maximum": 100 },
+            "statements": { "type": "number", "minimum": 0, "maximum": 100 }
+          },
+          "description": "Coverage percentages (kind=coverage)."
+        },
+        "perf": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "p50Ms": { "type": "number", "minimum": 0 },
+            "p95Ms": { "type": "number", "minimum": 0 },
+            "rps": { "type": "number", "minimum": 0 },
+            "samples": { "type": "integer", "minimum": 1 }
+          },
+          "description": "Latency + throughput (kind=perf)."
+        },
+        "thresholds": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "high": { "type": "number" },
+            "low": { "type": "number" },
+            "break": { "type": "number" }
+          },
+          "description": "Pass/fail breakpoints, e.g. mutation score >= break to pass."
+        }
+      }
+    },
+    "slowestTests": {
+      "type": "array",
+      "description": "Top N slowest test cases this run. Capped at 10 by the wrapper. Useful for slow-test budgets without keeping the full per-test report.",
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "durationMs"],
+        "properties": {
+          "name": { "type": "string" },
+          "file": { "type": "string" },
+          "durationMs": { "type": "number", "minimum": 0 }
+        }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "description": "Paths to companion files written alongside this artifact (all relative to the package dir).",
+      "additionalProperties": false,
+      "properties": {
+        "raw": { "type": "string", "description": "Captured stdout/stderr text log." },
+        "junit": { "type": "string", "description": "JUnit XML for CI summary integrations." },
+        "html": {
+          "type": "string",
+          "description": "Human report (Stryker HTML, lcov-html, etc.)."
+        },
+        "coverage": { "type": "string", "description": "Istanbul coverage-final.json." }
+      }
+    },
+    "env": {
+      "type": "object",
+      "description": "Runtime context for reproducibility / drift detection.",
+      "additionalProperties": false,
+      "properties": {
+        "node": { "type": "string" },
+        "ci": { "type": "boolean" },
+        "branch": { "type": "string" },
+        "commit": { "type": "string" }
+      }
+    },
+    "command": {
+      "type": "object",
+      "description": "Verbatim invocation, for forensic reproducibility.",
+      "additionalProperties": false,
+      "required": ["argv"],
+      "properties": {
+        "argv": { "type": "array", "items": { "type": "string" } },
+        "cwd": { "type": "string" }
+      }
+    }
+  }
+}

@@ -178,6 +178,48 @@ describe('TenancyService', () => {
     expect(database.tx).toHaveBeenCalledWith(expect.any(Function), { role: 'owner' });
   });
 
+  it('reuses existing tenants by creating a fresh owner invitation when no pending invite exists', async () => {
+    const { service, txQuery } = createService();
+    txQuery.mockImplementation((sql: string, values?: unknown[]) => {
+      if (sql.includes('pg_advisory_xact_lock')) {
+        return Promise.resolve({ rows: [] });
+      }
+      if (sql.includes('where tenant.slug = $1')) {
+        expect(values).toEqual(['tenant-alpha']);
+        return Promise.resolve({ rows: [tenantRow()] });
+      }
+      if (sql.includes('select invitation.token::text as token')) {
+        expect(values).toEqual([TENANT_ID, 'owner@example.test']);
+        return Promise.resolve({ rows: [] });
+      }
+      if (sql.includes('select id::text as id from auth.users')) {
+        expect(values).toEqual(['owner@example.test']);
+        return Promise.resolve({ rows: [] });
+      }
+      if (sql.includes('insert into auth.invitations')) {
+        expect(values).toEqual([
+          expect.any(String),
+          TENANT_ID,
+          'owner@example.test',
+          expect.any(String),
+          expect.any(String),
+        ]);
+        return Promise.resolve({ rows: [] });
+      }
+      throw new Error(`Unexpected SQL: ${sql}`);
+    });
+
+    await expect(service.provisionTenant({
+      slug: 'tenant-alpha',
+      name: 'Tenant Alpha',
+      ownerEmail: 'owner@example.test',
+    })).resolves.toMatchObject({
+      tenant: expect.objectContaining({ id: TENANT_ID }),
+      invitationToken: expect.any(String),
+      ownerUserId: expect.any(String),
+    });
+  });
+
   it('lists, gets, and updates tenants with owner-scoped database calls', async () => {
     const { service, txQuery, database } = createService();
     txQuery.mockImplementation((sql: string, values?: unknown[]) => {
@@ -332,7 +374,7 @@ describe('TenancyService', () => {
       if (sql.includes('where tenant.id = $1::uuid limit 1')) {
         return Promise.resolve({ rows: [tenantRow({ archived_at: '2026-04-25T00:00:00.000Z' })] });
       }
-      if (sql.includes("state = 'archived'")) {
+      if (sql.includes("state = 'archived'") || sql.includes("state = 'purged'")) {
         return Promise.resolve({ rows: [] });
       }
       throw new Error(`Unexpected SQL: ${sql}`);
@@ -350,6 +392,9 @@ describe('TenancyService', () => {
     await expect(service.archiveTenant(TENANT_ID)).resolves.toMatchObject({
       exportKey: `tenants/${TENANT_ID}/exports/placeholder.json`,
     });
+    await expect(service.purgeTenant(TENANT_ID)).resolves.toMatchObject({
+      tenant: expect.objectContaining({ id: TENANT_ID }),
+    });
   });
 
   it('throws when a tenant cannot be found', async () => {
@@ -365,5 +410,26 @@ describe('TenancyService', () => {
     });
     await expect(service.archiveTenant(TENANT_ID)).rejects.toMatchObject({ message: 'TENANT_NOT_FOUND' });
     await expect(service.purgeTenant(TENANT_ID)).rejects.toMatchObject({ message: 'TENANT_NOT_FOUND' });
+  });
+
+  it('throws when a tenant disappears after an update and when the database provider is missing', async () => {
+    const { service, txQuery } = createService();
+    txQuery
+      .mockResolvedValueOnce({ rows: [tenantRow()] })
+      .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rows: [] });
+
+    await expect(service.updateTenant(TENANT_ID, { name: 'Gone' })).rejects.toMatchObject({
+      message: 'TENANT_NOT_FOUND',
+    });
+
+    const missingDatabaseService = new TenancyService(
+      { get: vi.fn(() => undefined) } as unknown as ModuleRef,
+      { invalidateTenant: vi.fn() } as never,
+    );
+
+    await expect(missingDatabaseService.getTenant(TENANT_ID)).rejects.toThrow(
+      'Database provider is unavailable to TenancyService',
+    );
   });
 });

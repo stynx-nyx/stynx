@@ -6,8 +6,10 @@ import { ErrorBannerService } from '../src/error-banner.service';
 import { ErrorInterceptor } from '../src/error.interceptor';
 import { generateClientRequestId } from '../src/request-id';
 import { RequestIdInterceptor } from '../src/request-id.interceptor';
+import { EmptyStateComponent } from '../src/empty-state.component';
 import { TenantContextService } from '../src/tenant-context.service';
 import { TenantInterceptor } from '../src/tenant.interceptor';
+import { ToastService } from '../src/toast.service';
 import { ForbiddenError } from '@stynx-web/sdk';
 
 const REQUEST_ID_PATTERN =
@@ -346,5 +348,42 @@ describe('@stynx-web/angular', () => {
       host: '127.0.0.1:3100',
     });
     expect(tenantContext.activeTenant()).toEqual({ id: 'fallback-tenant', source: 'default' });
+  });
+
+  it('tracks toast service signal and observable lifecycles', () => {
+    vi.spyOn(Date, 'now').mockReturnValue(1_700_000_000_000);
+    vi.spyOn(Math, 'random').mockReturnValue(0.5);
+    const service = new ToastService();
+    const snapshots: unknown[] = [];
+    const subscription = service.messages$.subscribe((messages) => snapshots.push(messages));
+
+    const id = service.push({ title: 'Saved', description: 'Document saved', tone: 'success' });
+    expect(id).toBe('toast-1700000000000-8');
+    expect(service.messages()).toEqual([
+      { id, title: 'Saved', description: 'Document saved', tone: 'success' },
+    ]);
+
+    service.remove('missing');
+    expect(service.messages()).toHaveLength(1);
+    service.remove(id);
+    expect(service.messages()).toEqual([]);
+    service.push({ title: 'Warning', description: 'Check input', tone: 'warning' });
+    service.clear();
+    expect(service.messages()).toEqual([]);
+    expect(snapshots.at(-1)).toEqual([]);
+    subscription.unsubscribe();
+  });
+
+  it('keeps empty-state component inputs as configured', () => {
+    const component = new EmptyStateComponent();
+    expect(component.tone).toBe('info');
+    component.title = 'No records';
+    component.description = 'Create a record to continue';
+    component.tone = 'warning';
+    expect(component).toMatchObject({
+      title: 'No records',
+      description: 'Create a record to continue',
+      tone: 'warning',
+    });
   });
 });

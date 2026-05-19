@@ -216,12 +216,12 @@ export async function migrateDown(
     const specs = new Map(listMigrationSpecs(rootDir, options).map((spec) => [spec.id, spec]));
     const latest = await latestAppliedIds(client, steps);
     const targets = latest.map((id) => specs.get(id)).filter((value): value is MigrationSpec => value !== undefined);
-    for (const target of targets) {
-      if (!target.downPath) {
-        throw new Error(`Migration ${target.id} is not rollbackable: missing .down.sql pair`);
-      }
-    }
     if (dryRun) {
+      for (const target of targets) {
+        if (!target.downPath) {
+          throw new Error(`Migration ${target.id} is not rollbackable: missing .down.sql pair`);
+        }
+      }
       return targets.map((target) => target.id);
     }
     for (const target of targets) {

@@ -1,6 +1,12 @@
-import { BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  HttpException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { lastValueFrom, of, throwError } from 'rxjs';
+import { from, lastValueFrom, of, throwError } from 'rxjs';
 import { AuthContextGuard } from '../../src/auth/auth-context.guard';
 import { StynxAuthModule } from '../../src/auth/auth.module';
 import { ClaimFirstTenantEntitlementPolicy } from '../../src/auth/claim-first-tenant-entitlement.policy';
@@ -11,7 +17,11 @@ import { AuthorizationGuard } from '../../src/authorization/authorization.guard'
 import { StynxAuthorizationModule } from '../../src/authorization/authorization.module';
 import { DefaultPolicyEvaluator } from '../../src/authorization/default-policy-evaluator';
 import { StynxDbContextModule } from '../../src/db-context/db-context.module';
+import { IdempotencyInterceptor } from '../../src/idempotency/idempotency.interceptor';
+import type { IdempotencyStore } from '../../src/idempotency/types';
 import { StynxPlatformPipelineModule } from '../../src/pipeline/platform-pipeline.module';
+import { RateLimitGuard } from '../../src/rate-limit/rate-limit.guard';
+import type { RateLimitStore } from '../../src/rate-limit/types';
 import { DefaultSlaCategoryResolver } from '../../src/sla/default-sla-category.resolver';
 import { LoggerSlaEventSink } from '../../src/sla/logger-sla-event.sink';
 import { StynxSlaModule } from '../../src/sla/sla.module';
@@ -29,6 +39,31 @@ function httpContext(request: Record<string, unknown>, handlerName = 'handler') 
     }),
     getHandler: () => ({ name: handlerName }),
     getClass: () => ({ name: 'ControllerClass' }),
+  };
+}
+
+function httpContextWithResponse(
+  request: Record<string, unknown>,
+  response: Record<string, unknown>,
+) {
+  return {
+    switchToHttp: () => ({
+      getRequest: () => request,
+      getResponse: () => response,
+    }),
+    getHandler: () => ({ name: 'handler' }),
+    getClass: () => ({ name: 'ControllerClass' }),
+  };
+}
+
+function responseStub(statusCode = 200) {
+  return {
+    statusCode,
+    status: vi.fn(function status(this: { statusCode: number }, nextStatus: number) {
+      this.statusCode = nextStatus;
+      return this;
+    }),
+    setHeader: vi.fn(),
   };
 }
 
@@ -248,5 +283,494 @@ describe('backend module wiring branches', () => {
     expect(StynxDbContextModule.forRoot({
       pgSessionApplier: { mode: 'local' } as never,
     }).providers).toHaveLength(2);
+  });
+});
+
+describe('backend idempotency behavior', () => {
+  it('bypasses read methods and optional write keys', async () => {
+    const readNext = { handle: vi.fn(() => of({ read: true })) };
+    const read = new IdempotencyInterceptor();
+    await expect(lastValueFrom(read.intercept(
+      httpContextWithResponse({ method: 'GET', headers: {}, url: '/items' }, responseStub()) as never,
+      readNext,
+    ))).resolves.toEqual({ read: true });
+
+    const optional = new IdempotencyInterceptor({ requireKeyOnWrite: () => false });
+    const writeNext = { handle: vi.fn(() => of({ write: true })) };
+    await expect(lastValueFrom(optional.intercept(
+      httpContextWithResponse({ method: 'POST', headers: {}, url: '/items' }, responseStub()) as never,
+      writeNext,
+    ))).resolves.toEqual({ write: true });
+  });
+
+  it('rejects missing keys and strict non-durable writes', () => {
+    expect(() => new IdempotencyInterceptor().intercept(
+      httpContextWithResponse({ method: 'POST', headers: {}, url: '/items' }, responseStub()) as never,
+      { handle: () => of({}) },
+    )).toThrow(BadRequestException);
+
+    expect(() => new IdempotencyInterceptor({ durableStrict: true }).intercept(
+      httpContextWithResponse({
+        method: 'POST',
+        headers: { 'x-idempotency-key': 'k1' },
+        url: '/items',
+      }, responseStub()) as never,
+      { handle: () => of({}) },
+    )).toThrow(ServiceUnavailableException);
+  });
+
+  it('caches in-memory writes, replays them, and detects payload conflicts', async () => {
+    const interceptor = new IdempotencyInterceptor({ ttlMs: 10_000, cacheCleanupMs: 10_000 });
+    const next = { handle: vi.fn(() => of({ ok: true })) };
+    const firstResponse = responseStub(201);
+    const baseRequest = {
+      method: 'POST',
+      tenantId: 'tenant-1',
+      headers: { 'x-idempotency-key': 'k1' },
+      url: '/items?ignored=true',
+      body: { b: 2, a: 1 },
+    };
+
+    await expect(lastValueFrom(interceptor.intercept(
+      httpContextWithResponse(baseRequest, firstResponse) as never,
+      next,
+    ))).resolves.toEqual({ ok: true });
+    expect(firstResponse.setHeader).toHaveBeenCalledWith('X-Idempotency-Key', 'k1');
+
+    const replayResponse = responseStub();
+    await expect(lastValueFrom(interceptor.intercept(
+      httpContextWithResponse({ ...baseRequest, body: { a: 1, b: 2 } }, replayResponse) as never,
+      next,
+    ))).resolves.toEqual({ ok: true });
+    expect(replayResponse.status).toHaveBeenCalledWith(201);
+    expect(replayResponse.setHeader).toHaveBeenCalledWith('X-Idempotency-Replay', 'true');
+    expect(next.handle).toHaveBeenCalledTimes(1);
+
+    expect(() => interceptor.intercept(
+      httpContextWithResponse({ ...baseRequest, body: { a: 99 } }, responseStub()) as never,
+      next,
+    )).toThrow(ConflictException);
+    interceptor.onModuleDestroy();
+  });
+
+  it('waits on in-flight in-memory work for concurrent matching writes', async () => {
+    let resolveBody!: (body: unknown) => void;
+    const bodyPromise = new Promise((resolve) => {
+      resolveBody = resolve;
+    });
+    const interceptor = new IdempotencyInterceptor({ ttlMs: 10_000, cacheCleanupMs: 10_000 });
+    const next = { handle: vi.fn(() => from(bodyPromise)) };
+    const request = {
+      method: 'POST',
+      tenantId: 'tenant-1',
+      headers: { 'x-idempotency-key': 'k2' },
+      url: '/slow',
+      body: ['stable'],
+    };
+
+    const first = lastValueFrom(interceptor.intercept(
+      httpContextWithResponse(request, responseStub(202)) as never,
+      next,
+    ));
+    const secondResponse = responseStub();
+    const second = lastValueFrom(interceptor.intercept(
+      httpContextWithResponse(request, secondResponse) as never,
+      next,
+    ));
+    resolveBody({ complete: true });
+
+    await expect(first).resolves.toEqual({ complete: true });
+    await expect(second).resolves.toEqual({ complete: true });
+    expect(secondResponse.status).toHaveBeenCalledWith(202);
+    expect(next.handle).toHaveBeenCalledTimes(1);
+    interceptor.onModuleDestroy();
+  });
+
+  it('uses durable entries, reservations, races, fallbacks, and cleanup branches', async () => {
+    const contextSnapshots: unknown[] = [];
+    const store: IdempotencyStore = {
+      lookup: vi
+        .fn()
+        .mockImplementationOnce(async (ctx) => {
+          contextSnapshots.push(ctx);
+          return {
+            requestFingerprint: ctx.requestFingerprint,
+            statusCode: null,
+            body: null,
+            expiresAt: Date.now() + 1000,
+          };
+        })
+        .mockImplementationOnce(async (ctx) => ({
+          requestFingerprint: ctx.requestFingerprint,
+          statusCode: 202,
+          body: { ready: true },
+          expiresAt: Date.now() + 1000,
+        }))
+        .mockImplementationOnce(async () => null)
+        .mockImplementationOnce(async (ctx) => ({
+          requestFingerprint: ctx.requestFingerprint,
+          statusCode: 203,
+          body: { raced: true },
+          expiresAt: Date.now() + 1000,
+        }))
+        .mockImplementationOnce(async () => null)
+        .mockImplementationOnce(async () => null),
+      reserve: vi.fn(async () => false),
+      persistResponse: vi.fn(async () => false),
+      clearReservation: vi.fn(async () => undefined),
+    };
+    const interceptor = new IdempotencyInterceptor({
+      waitAttempts: 1,
+      waitIntervalMs: 0,
+      ttlMs: 10_000,
+      cacheCleanupMs: 10_000,
+    }, store);
+    const request = {
+      method: 'POST',
+      tenantId: 'tenant-1',
+      headers: { 'x-idempotency-key': 'durable' },
+      originalUrl: '/durable?x=1',
+      body: { a: 1 },
+    };
+
+    await expect(lastValueFrom(interceptor.intercept(
+      httpContextWithResponse(request, responseStub()) as never,
+      { handle: () => of({ unused: true }) },
+    ))).resolves.toEqual({ ready: true });
+    expect(contextSnapshots[0]).toMatchObject({ tenantId: 'tenant-1', idempotencyKey: 'durable' });
+
+    await expect(lastValueFrom(interceptor.intercept(
+      httpContextWithResponse({ ...request, headers: { 'x-idempotency-key': 'race' } }, responseStub()) as never,
+      { handle: () => of({ unused: true }) },
+    ))).resolves.toEqual({ raced: true });
+
+    const fallbackResponse = responseStub(204);
+    await expect(lastValueFrom(interceptor.intercept(
+      httpContextWithResponse({ ...request, headers: { 'x-idempotency-key': 'fallback' } }, fallbackResponse) as never,
+      { handle: () => of({ fallback: true }) },
+    ))).resolves.toEqual({ fallback: true });
+    expect(fallbackResponse.setHeader).toHaveBeenCalledWith('X-Idempotency-Key', 'fallback');
+
+    const readyRaceStore: IdempotencyStore = {
+      lookup: vi
+        .fn()
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null)
+        .mockImplementationOnce(async (ctx) => ({
+          requestFingerprint: ctx.requestFingerprint,
+          statusCode: 206,
+          body: { becameReady: true },
+          expiresAt: Date.now() + 1000,
+        })),
+      reserve: vi.fn(async () => false),
+      persistResponse: vi.fn(async () => true),
+      clearReservation: vi.fn(async () => undefined),
+    };
+    const readyRaceResponse = responseStub();
+    await expect(lastValueFrom(new IdempotencyInterceptor({
+      waitAttempts: 1,
+      waitIntervalMs: 0,
+    }, readyRaceStore).intercept(
+      httpContextWithResponse({ ...request, headers: { 'x-idempotency-key': 'ready-race' } }, readyRaceResponse) as never,
+      { handle: () => of({ unused: true }) },
+    ))).resolves.toEqual({ becameReady: true });
+    expect(readyRaceResponse.status).toHaveBeenCalledWith(206);
+    interceptor.onModuleDestroy();
+  });
+
+  it('clears durable reservations on handler errors and enforces strict race failure', async () => {
+    const strictStore: IdempotencyStore = {
+      lookup: vi.fn(async () => null),
+      reserve: vi.fn(async () => false),
+      persistResponse: vi.fn(async () => true),
+      clearReservation: vi.fn(async () => undefined),
+    };
+    await expect(lastValueFrom(new IdempotencyInterceptor({
+      durableStrict: true,
+      waitAttempts: 1,
+      waitIntervalMs: 0,
+    }, strictStore).intercept(
+      httpContextWithResponse({
+        method: 'POST',
+        tenantId: 'tenant-1',
+        headers: { 'x-idempotency-key': 'strict' },
+        url: '/strict',
+      }, responseStub()) as never,
+      { handle: () => of({}) },
+    ))).rejects.toBeInstanceOf(ServiceUnavailableException);
+
+    const errorStore: IdempotencyStore = {
+      lookup: vi.fn(async () => null),
+      reserve: vi.fn(async () => true),
+      persistResponse: vi.fn(async () => true),
+      clearReservation: vi.fn(async () => undefined),
+    };
+    await expect(lastValueFrom(new IdempotencyInterceptor({}, errorStore).intercept(
+      httpContextWithResponse({
+        method: 'POST',
+        tenantId: 'tenant-1',
+        headers: { 'x-idempotency-key': 'error' },
+        url: '/error',
+      }, responseStub()) as never,
+      { handle: () => throwError(() => new Error('handler failed')) },
+    ))).rejects.toThrow('handler failed');
+    expect(errorStore.clearReservation).toHaveBeenCalled();
+  });
+
+  it('covers durable direct replay, conflict, wait timeout, and cache cleanup', async () => {
+    const directStore: IdempotencyStore = {
+      lookup: vi.fn(async (ctx) => ({
+        requestFingerprint: ctx.requestFingerprint,
+        statusCode: 207,
+        body: { direct: true },
+        expiresAt: Date.now() + 1000,
+      })),
+      reserve: vi.fn(async () => true),
+      persistResponse: vi.fn(async () => true),
+      clearReservation: vi.fn(async () => undefined),
+    };
+    const directResponse = responseStub();
+    await expect(lastValueFrom(new IdempotencyInterceptor({}, directStore).intercept(
+      httpContextWithResponse({
+        method: 'POST',
+        tenantId: 'tenant-1',
+        headers: { 'x-idempotency-key': 'direct' },
+        url: '/direct',
+        body: { a: 1 },
+      }, directResponse) as never,
+      { handle: () => of({ unused: true }) },
+    ))).resolves.toEqual({ direct: true });
+    expect(directResponse.status).toHaveBeenCalledWith(207);
+
+    const conflictStore: IdempotencyStore = {
+      lookup: vi.fn(async () => ({
+        requestFingerprint: 'different',
+        statusCode: 200,
+        body: { direct: true },
+        expiresAt: Date.now() + 1000,
+      })),
+      reserve: vi.fn(async () => true),
+      persistResponse: vi.fn(async () => true),
+      clearReservation: vi.fn(async () => undefined),
+    };
+    await expect(lastValueFrom(new IdempotencyInterceptor({}, conflictStore).intercept(
+      httpContextWithResponse({
+        method: 'POST',
+        tenantId: 'tenant-1',
+        headers: { 'x-idempotency-key': 'direct' },
+        url: '/direct',
+        body: { a: 1 },
+      }, responseStub()) as never,
+      { handle: () => of({ unused: true }) },
+    ))).rejects.toBeInstanceOf(ConflictException);
+
+    const timeoutStore: IdempotencyStore = {
+      lookup: vi.fn(async () => null),
+      reserve: vi.fn(async () => false),
+      persistResponse: vi.fn(async () => true),
+      clearReservation: vi.fn(async () => undefined),
+    };
+    await expect(lastValueFrom(new IdempotencyInterceptor({
+      waitAttempts: 2,
+      waitIntervalMs: 0,
+    }, timeoutStore).intercept(
+      httpContextWithResponse({
+        method: 'POST',
+        tenantId: 'tenant-1',
+        headers: { 'x-idempotency-key': 'timeout' },
+        url: '/timeout',
+      }, responseStub()) as never,
+      { handle: () => of({ afterTimeout: true }) },
+    ))).resolves.toEqual({ afterTimeout: true });
+    expect(timeoutStore.lookup).toHaveBeenCalledTimes(3);
+
+    const conflictInFlightStore: IdempotencyStore = {
+      lookup: vi
+        .fn()
+        .mockImplementationOnce(async (ctx) => ({
+          requestFingerprint: ctx.requestFingerprint,
+          statusCode: null,
+          body: null,
+          expiresAt: Date.now() + 1000,
+        }))
+        .mockImplementation(async (ctx) => ({
+          requestFingerprint: ctx.requestFingerprint,
+          statusCode: null,
+          body: null,
+          expiresAt: Date.now() + 1000,
+        })),
+      reserve: vi.fn(async () => true),
+      persistResponse: vi.fn(async () => true),
+      clearReservation: vi.fn(async () => undefined),
+    };
+    await expect(lastValueFrom(new IdempotencyInterceptor({
+      waitAttempts: 2,
+      waitIntervalMs: 0,
+    }, conflictInFlightStore).intercept(
+      httpContextWithResponse({
+        method: 'POST',
+        tenantId: 'tenant-1',
+        headers: { 'x-idempotency-key': 'busy' },
+        url: '/busy',
+      }, responseStub()) as never,
+      { handle: () => of({ unused: true }) },
+    ))).rejects.toBeInstanceOf(ConflictException);
+
+    const persistFallbackStore: IdempotencyStore = {
+      lookup: vi.fn(async () => null),
+      reserve: vi.fn(async () => true),
+      persistResponse: vi.fn(async () => false),
+      clearReservation: vi.fn(async () => undefined),
+    };
+    const persistFallbackResponse = responseStub(undefined);
+    await expect(lastValueFrom(new IdempotencyInterceptor({}, persistFallbackStore).intercept(
+      httpContextWithResponse({
+        method: 'POST',
+        tenantId: 'tenant-1',
+        headers: { 'x-idempotency-key': 'persist-fallback' },
+        url: '/persist-fallback',
+      }, persistFallbackResponse) as never,
+      { handle: () => of({ persisted: false }) },
+    ))).resolves.toEqual({ persisted: false });
+    expect(persistFallbackResponse.setHeader).toHaveBeenCalledWith('X-Idempotency-Key', 'persist-fallback');
+
+    const strictPersistStore: IdempotencyStore = {
+      lookup: vi.fn(async () => null),
+      reserve: vi.fn(async () => true),
+      persistResponse: vi.fn(async () => false),
+      clearReservation: vi.fn(async () => undefined),
+    };
+    await expect(lastValueFrom(new IdempotencyInterceptor({ durableStrict: true }, strictPersistStore).intercept(
+      httpContextWithResponse({
+        method: 'POST',
+        tenantId: 'tenant-1',
+        headers: { 'x-idempotency-key': 'strict-persist' },
+        url: '/strict-persist',
+      }, responseStub()) as never,
+      { handle: () => of({ persisted: false }) },
+    ))).rejects.toBeInstanceOf(ServiceUnavailableException);
+
+    const interceptor = new IdempotencyInterceptor({ cacheCleanupMs: 10_000 });
+    const cache = (interceptor as unknown as { cache: Map<string, { expiresAt: number }> }).cache;
+    cache.set('expired', { expiresAt: Date.now() - 1 });
+    cache.set('fresh', { expiresAt: Date.now() + 10_000 });
+    (interceptor as unknown as { cleanup: () => void }).cleanup();
+    expect([...cache.keys()]).toEqual(['fresh']);
+    interceptor.onModuleDestroy();
+  });
+});
+
+describe('backend rate-limit behavior', () => {
+  it('bypasses health checks and enforces in-memory buckets', async () => {
+    const guard = new RateLimitGuard({ limit: 1, ttlSeconds: 60 });
+    await expect(guard.canActivate(httpContext({
+      headers: {},
+      path: '/api/v1/system/health/ready',
+    }) as never)).resolves.toBe(true);
+
+    const request = { headers: {}, ip: '127.0.0.1', method: 'POST', url: '/items' };
+    await expect(guard.canActivate(httpContext(request) as never)).resolves.toBe(true);
+    await expect(guard.canActivate(httpContext(request) as never)).rejects.toBeInstanceOf(HttpException);
+  });
+
+  it('resets expired buckets and prunes overflow entries', async () => {
+    let now = 1_000;
+    const nowSpy = vi.spyOn(Date, 'now').mockImplementation(() => now);
+    try {
+      const guard = new RateLimitGuard({ limit: 1, ttlSeconds: 1, cleanupEvery: 1, maxBuckets: 1 });
+      await expect(guard.canActivate(httpContext({
+        headers: {},
+        ip: 'a',
+        method: 'GET',
+        originalUrl: '/one',
+      }) as never)).resolves.toBe(true);
+      now = 3_000;
+      await expect(guard.canActivate(httpContext({
+        headers: {},
+        ip: 'a',
+        method: 'GET',
+        originalUrl: '/one',
+      }) as never)).resolves.toBe(true);
+      await expect(guard.canActivate(httpContext({
+        headers: {},
+        ip: 'b',
+        method: 'GET',
+        originalUrl: '/two',
+      }) as never)).resolves.toBe(true);
+    } finally {
+      nowSpy.mockRestore();
+    }
+  });
+
+  it('uses distributed stores, cleanup, fallback, and strict failures', async () => {
+    const store: RateLimitStore = {
+      increment: vi.fn()
+        .mockResolvedValueOnce(1)
+        .mockResolvedValueOnce(2)
+        .mockResolvedValueOnce(null)
+        .mockRejectedValueOnce(new Error('store down')),
+      cleanup: vi.fn()
+        .mockResolvedValueOnce(undefined)
+        .mockRejectedValueOnce(new Error('cleanup down')),
+    };
+    const guard = new RateLimitGuard({ limit: 1, cleanupEvery: 1 }, store);
+    const request = { headers: {}, ip: 'ip', method: 'GET', url: '/distributed', tenantId: 'tenant-1' };
+
+    await expect(guard.canActivate(httpContext(request) as never)).resolves.toBe(true);
+    expect(store.cleanup).toHaveBeenCalledTimes(1);
+    await expect(guard.canActivate(httpContext(request) as never)).rejects.toBeInstanceOf(HttpException);
+    await expect(guard.canActivate(httpContext({ ...request, url: '/fallback-null' }) as never)).resolves.toBe(true);
+    await expect(guard.canActivate(httpContext({ ...request, url: '/fallback-error' }) as never)).resolves.toBe(true);
+
+    const strict = new RateLimitGuard({ distributedStrict: true }, {
+      increment: vi.fn(async () => {
+        throw new Error('store down');
+      }),
+    });
+    await expect(strict.canActivate(httpContext(request) as never)).rejects.toBeInstanceOf(
+      ServiceUnavailableException,
+    );
+
+    const delayedCleanupStore: RateLimitStore = {
+      increment: vi.fn(async () => 1),
+      cleanup: vi.fn(async () => undefined),
+    };
+    const delayedCleanup = new RateLimitGuard({ cleanupEvery: 2 }, delayedCleanupStore);
+    await expect(delayedCleanup.canActivate(httpContext({ ...request, url: '/delayed-1' }) as never)).resolves.toBe(true);
+    expect(delayedCleanupStore.cleanup).not.toHaveBeenCalled();
+    await expect(delayedCleanup.canActivate(httpContext({ ...request, url: '/delayed-2' }) as never)).resolves.toBe(true);
+    expect(delayedCleanupStore.cleanup).toHaveBeenCalledTimes(1);
+  });
+
+  it('covers in-memory bucket increment, cleanup no-op, cleanup error, and overflow deletion', async () => {
+    const guard = new RateLimitGuard({ limit: 3, ttlSeconds: 60, cleanupEvery: 10, maxBuckets: 1 });
+    const request = { headers: {}, ip: 'ip', method: 'GET', url: '/bucket' };
+    await expect(guard.canActivate(httpContext(request) as never)).resolves.toBe(true);
+    await expect(guard.canActivate(httpContext(request) as never)).resolves.toBe(true);
+
+    const buckets = (guard as unknown as { buckets: Map<string, { resetAt: number; count: number }> }).buckets;
+    (guard as unknown as { maybeCleanupInMemory: () => void }).maybeCleanupInMemory();
+    buckets.set('old', { count: 1, resetAt: Date.now() - 1 });
+    (guard as unknown as { maybeCleanupInMemory: () => void }).maybeCleanupInMemory();
+    expect(buckets.has('old')).toBe(false);
+    buckets.set('one', { count: 1, resetAt: Date.now() + 1000 });
+    buckets.set('two', { count: 1, resetAt: Date.now() + 1000 });
+    (guard as unknown as { maybeCleanupInMemory: () => void }).maybeCleanupInMemory();
+    expect(buckets.size).toBe(1);
+
+    const cleanupFail = new RateLimitGuard({ cleanupEvery: 1 }, {
+      increment: vi.fn(async () => 1),
+      cleanup: vi.fn(async () => {
+        throw new Error('cleanup failed');
+      }),
+    });
+    await expect(cleanupFail.canActivate(httpContext({
+      headers: {},
+      ip: 'ip',
+      method: 'GET',
+      url: '/x',
+      tenantId: 'tenant-1',
+    }) as never))
+      .resolves.toBe(true);
   });
 });

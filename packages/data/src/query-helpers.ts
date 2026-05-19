@@ -215,7 +215,7 @@ export class ArchiveSelectQuery<TTable extends AnyPgTable, TMode extends Archive
     const liveWhere = combineClauses(livePredicate, tenantGuard);
     const archiveWhere = combineClauses(archivePredicate, tenantGuard);
 
-    const orderBy = this.orderByClause && this.orderByClause.length > 0
+    const orderBy = this.orderByClause
       ? appendFragment(
           built,
           compileOrderBy(

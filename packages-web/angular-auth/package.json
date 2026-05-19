@@ -22,8 +22,8 @@
     "clean": "rm -rf dist coverage",
     "typecheck": "tsc -p tsconfig.spec.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/angular.mjs \"src/**/*.ts\"",
-    "test": "vitest run --config ./vitest.config.ts",
-    "stryker": "NODE_OPTIONS=\"--disable-warning=ExperimentalWarning --experimental-vm-modules\" pnpm exec stryker run stryker.conf.mjs",
+    "test": "node ./../../scripts/run-and-record.mjs --package @stynx-web/angular-auth --level unit --runner vitest -- vitest run --config ./vitest.config.ts",
+    "stryker": "node ./../../scripts/run-and-record.mjs --package @stynx-web/angular-auth --level mutation --runner stryker-vitest -- NODE_OPTIONS=\"--disable-warning=ExperimentalWarning --experimental-vm-modules\" pnpm exec stryker run stryker.conf.mjs",
     "test:e2e": "echo \"test:e2e removed during V6 cutover; convert to vitest if needed\" && false"
   },
   "dependencies": {

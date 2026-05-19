@@ -160,6 +160,22 @@ describe('query helpers', () => {
     expect(compiled.sql).not.toContain('offset');
   });
 
+  it('accepts undefined where clauses and empty ordering lists', () => {
+    const builder = createBuilder([], { orderBy: [] });
+
+    const query = new ArchiveSelectQuery(
+      { query: vi.fn() } as unknown as PoolClient,
+      builder as never,
+      auditEvent,
+      'onlyDeleted',
+    );
+    expect(query.where(undefined)).toBe(query);
+
+    const compiled = query.toSQL();
+    expect(compiled.params).toEqual([]);
+    expect(compiled.sql).toContain('order by "archive"."local_audit_event"."deleted_at" desc');
+  });
+
   it('maps archived rows and keeps promise helpers delegated to execute', async () => {
     const client = {
       query: vi.fn(async () => ({

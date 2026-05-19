@@ -389,7 +389,7 @@ function generateSchemaFile(targetDir: string, tables: TableScanResult[]): strin
       .filter((entry) => entry.length > 0 && !/^constraint\b/iu.test(entry));
     const fieldLines: string[] = [];
     for (const line of bodyLines) {
-      const match = /^([a-zA-Z0-9_]+)\s+([a-zA-Z0-9_ ]+)([\s\S]*)$/u.exec(line);
+      const match = /^([a-zA-Z0-9_]+)\s+([a-zA-Z0-9_]+(?:\s+with(?:out)?\s+time\s+zone)?)([\s\S]*)$/u.exec(line);
       if (!match) {
         continue;
       }

@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx-web/angular-trash",
+  "level": "unit",
+  "runner": "vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T01:05:21.333Z",
+  "endedAt": "2026-05-19T01:05:31.260Z",
+  "durationMs": 9925,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/unit.log"
+  },
+  "env": {
+    "node": "26.0.0",
+    "ci": false
+  },
+  "command": {
+    "argv": [
+      "vitest",
+      "run",
+      "--config",
+      "./vitest.config.ts",
+      "--reporter=default",
+      "--reporter=json",
+      "--outputFile.json=/tmp/vitest-1542-1779152721333.json"
+    ],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages-web/angular-trash"
+  },
+  "metric": {
+    "kind": "none"
+  },
+  "totals": {
+    "files": 1,
+    "tests": 2,
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "slowestTests": [
+    {
+      "name": "@stynx-web/angular-trash loads trash items and restores them through the adapter",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-trash/test/angular-trash.spec.ts",
+      "durationMs": 13.04412499999944
+    },
+    {
+      "name": "@stynx-web/angular-trash handles pagination, cascade restore, hard delete, and fallback errors",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-trash/test/angular-trash.spec.ts",
+      "durationMs": 10.073542000000089
+    }
+  ]
+}

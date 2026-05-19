@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx/health",
+  "level": "integration",
+  "runner": "vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T00:48:33.183Z",
+  "endedAt": "2026-05-19T00:48:34.746Z",
+  "durationMs": 1563,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/integration.log"
+  },
+  "env": {
+    "node": "24.15.0",
+    "ci": false
+  },
+  "command": {
+    "argv": [
+      "vitest",
+      "run",
+      "--config",
+      "./vitest.int.config.ts",
+      "--reporter=default",
+      "--reporter=json",
+      "--outputFile.json=/tmp/vitest-64981-1779151713182.json"
+    ],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages/health"
+  },
+  "totals": {
+    "files": 1,
+    "tests": 2,
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "slowestTests": [
+    {
+      "name": "StynxHealthModule integration exposes the expected health endpoints through the controller surface",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/integration/health.module.spec.ts",
+      "durationMs": 17.190165999999977
+    },
+    {
+      "name": "StynxHealthModule integration surfaces readiness failures as 503 errors",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/health/test/integration/health.module.spec.ts",
+      "durationMs": 4.919624999999996
+    }
+  ],
+  "metric": {
+    "kind": "none"
+  }
+}

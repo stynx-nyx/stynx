@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx/audit",
+  "level": "unit",
+  "runner": "vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T01:05:49.105Z",
+  "endedAt": "2026-05-19T01:05:55.143Z",
+  "durationMs": 6033,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/unit.log"
+  },
+  "env": {
+    "node": "26.0.0",
+    "ci": false
+  },
+  "command": {
+    "argv": [
+      "vitest",
+      "run",
+      "--config",
+      "./vitest.config.ts",
+      "--reporter=default",
+      "--reporter=json",
+      "--outputFile.json=/tmp/vitest-4928-1779152749105.json"
+    ],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages/audit"
+  },
+  "metric": {
+    "kind": "none"
+  },
+  "totals": {
+    "files": 8,
+    "tests": 46,
+    "passed": 46,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "slowestTests": [
+    {
+      "name": "StynxAuditService hash-chain verification accepts sequential audit rows and rejects tampered payloads",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/audit/test/unit/chain.spec.ts",
+      "durationMs": 10.328292000000147
+    },
+    {
+      "name": "audit test helpers returns all rows when no tag subset is requested",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/audit/test/unit/test-helpers.spec.ts",
+      "durationMs": 9.910167000000001
+    },
+    {
+      "name": "StynxAuditService.listLog queries audit.log with no filters and clamps limit to [1, 200]",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/audit/test/unit/audit.service.spec.ts",
+      "durationMs": 8.114832999999635
+    },
+    {
+      "name": "AuditSqlSink mode: audit_event_table INSERTs into the default audit_event table with the expected 8 params",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/audit/test/unit/sql-adapter.spec.ts",
+      "durationMs": 7.780500000000075
+    },
+    {
+      "name": "StynxAuditService.detachEligible dumps, uploads, detaches, and drops eligible partitions",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/audit/test/unit/audit.service.spec.ts",
+      "durationMs": 5.908625000000029
+    },
+    {
+      "name": "StynxAuditController API contract keeps audit log access guarded and permission-bound",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/audit/test/unit/audit.controller.spec.ts",
+      "durationMs": 5.655791000000136
+    },
+    {
+      "name": "planAuditDetach detaches standard partitions after 90 days",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/audit/test/unit/retention.spec.ts",
+      "durationMs": 5.365833000000066
+    },
+    {
+      "name": "StynxAuditModule.forRoot wires default options and provider classes",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/audit/test/unit/audit.module.spec.ts",
+      "durationMs": 4.2711249999993015
+    },
+    {
+      "name": "AuditSqlSink mode: audit_write_function calls SELECT audit.write with the 13 expected params",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/audit/test/unit/sql-adapter.spec.ts",
+      "durationMs": 2.2211249999998017
+    },
+    {
+      "name": "StynxAuditModule.forRoot starts and clears the daily detach scheduler only when all dependencies are configured",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/audit/test/unit/audit.module.spec.ts",
+      "durationMs": 2.0998749999998836
+    }
+  ]
+}

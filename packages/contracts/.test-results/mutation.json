@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx/contracts",
+  "level": "mutation",
+  "runner": "stryker-vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T00:51:40.886Z",
+  "endedAt": "2026-05-19T00:51:45.835Z",
+  "durationMs": 4948,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/mutation.log",
+    "report": "reports/mutation/mutation.json",
+    "html": "reports/mutation/-stynx-contracts/index.html"
+  },
+  "env": {
+    "node": "26.0.0",
+    "ci": false
+  },
+  "command": {
+    "argv": ["pnpm", "exec", "stryker", "run", "stryker.conf.mjs"],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages/contracts"
+  },
+  "metric": {
+    "kind": "score",
+    "score": 83.33333333333334,
+    "thresholds": {
+      "high": 60,
+      "low": 60,
+      "break": 60
+    }
+  },
+  "totals": {
+    "files": 1,
+    "tests": 9,
+    "passed": 5,
+    "failed": 1,
+    "skipped": 0,
+    "todo": 0
+  }
+}

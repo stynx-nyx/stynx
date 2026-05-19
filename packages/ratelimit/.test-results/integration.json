@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx/ratelimit",
+  "level": "integration",
+  "runner": "vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T00:49:05.880Z",
+  "endedAt": "2026-05-19T00:49:15.960Z",
+  "durationMs": 10080,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/integration.log"
+  },
+  "env": {
+    "node": "24.15.0",
+    "ci": false
+  },
+  "command": {
+    "argv": [
+      "vitest",
+      "run",
+      "--config",
+      "./vitest.int.config.ts",
+      "--reporter=default",
+      "--reporter=json",
+      "--outputFile.json=/tmp/vitest-65890-1779151745880.json"
+    ],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages/ratelimit"
+  },
+  "totals": {
+    "files": 1,
+    "tests": 3,
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "slowestTests": [
+    {
+      "name": "Rate limit integration emits headers and blocks above the resolved limit",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/ratelimit/test/integration/rate-limit.integration.spec.ts",
+      "durationMs": 1508.1292080000003
+    },
+    {
+      "name": "Rate limit integration keeps Redis sliding-window atomic under 1000 concurrent hits",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/ratelimit/test/integration/rate-limit.integration.spec.ts",
+      "durationMs": 143.76679200000035
+    },
+    {
+      "name": "Rate limit integration applies per-tenant overrides via core.rate_limit_overrides",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/ratelimit/test/integration/rate-limit.integration.spec.ts",
+      "durationMs": 23.83770800000002
+    }
+  ],
+  "metric": {
+    "kind": "none"
+  }
+}

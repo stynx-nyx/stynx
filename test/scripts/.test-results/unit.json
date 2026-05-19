@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "1",
+  "package": "stynx-script-tests",
+  "level": "unit",
+  "runner": "node-test",
+  "status": "passed",
+  "startedAt": "2026-05-19T01:04:43.134Z",
+  "endedAt": "2026-05-19T01:04:50.355Z",
+  "durationMs": 7219,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/unit.log"
+  },
+  "env": {
+    "node": "26.0.0",
+    "ci": false
+  },
+  "command": {
+    "argv": ["node", "validate.js"],
+    "cwd": "/Users/aarusso/Development/stech/stynx/test/scripts"
+  },
+  "metric": {
+    "kind": "none"
+  }
+}

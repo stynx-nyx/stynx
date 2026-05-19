@@ -298,6 +298,40 @@ describe('PgIdentityLocalSyncAdapter', () => {
     expect(result.users).toBe(1);
   });
 
+  it('allows default display-name resolution to return undefined when all candidates are blank', async () => {
+    const admin = fakeAdmin({
+      getUser: vi.fn(async () => ({
+        username: undefined,
+        enabled: true,
+        attributes: { sub: UUID_A, name: '   ', 'custom:displayName': '', email: '' },
+      })),
+      listGroupsForUser: vi.fn(async () => []),
+    });
+    const db = fakeDb([[]]);
+    const adapter = new PgIdentityLocalSyncAdapter({
+      identityAdmin: admin as never,
+      db: db as never,
+    });
+    const result = await adapter.syncUser('alice');
+    expect(result.users).toBe(1);
+  });
+
+  it('sorts groups by name when sort order ties or is absent', async () => {
+    const admin = fakeAdmin({
+      listGroups: vi.fn(async () => ({
+        items: [{ name: 'zeta' }, { name: 'alpha' }],
+      })),
+      listGroupsForUser: vi.fn(async () => []),
+    });
+    const db = fakeDb([[{ external_id: 'alice' }]]);
+    const adapter = new PgIdentityLocalSyncAdapter({
+      identityAdmin: admin as never,
+      db: db as never,
+    });
+    const result = await adapter.listGroupsWithMetaByUserId(UUID_A);
+    expect(result.groups.map((group) => group.name)).toEqual(['alpha', 'zeta']);
+  });
+
   it('default role-code strategy strips trailing s from plural group names', async () => {
     const admin = fakeAdmin({
       listGroups: vi.fn(async () => ({ items: [{ name: 'admins' }, { name: 'editor' }] })),

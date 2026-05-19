@@ -134,7 +134,7 @@ export class RateLimitGuard implements CanActivate {
     try {
       await this.store.cleanup(context);
     } catch {
-      // best-effort cleanup
+      return;
     }
   }
 

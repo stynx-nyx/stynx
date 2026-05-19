@@ -45,12 +45,12 @@
     "test:matrix": "node scripts/render-test-matrix.mjs",
     "test:matrix:coverage": "node scripts/render-test-matrix.mjs --coverage",
     "test:matrix:timings": "node scripts/render-test-matrix.mjs --timing",
-    "check:rls-smoke": "bash scripts/check-rls-smoke.sh",
+    "check:rls-smoke": "node scripts/run-and-record.mjs --package stynx-workspace --level smoke --runner rls-smoke -- bash scripts/check-rls-smoke.sh",
     "smoke:local": "pnpm --filter @stynx/reference-api smoke:local",
     "prepare": "husky",
     "test:coverage": "node scripts/aggregate-coverage.mjs",
     "test:coverage:aggregate": "node scripts/aggregate-coverage.mjs",
-    "test:perf": "node scripts/perf-smoke.mjs"
+    "test:perf": "node scripts/run-and-record.mjs --package stynx-workspace --level perf --runner perf-smoke -- node scripts/perf-smoke.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.0",

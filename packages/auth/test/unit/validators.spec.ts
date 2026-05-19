@@ -19,6 +19,14 @@ describe('auth validators', () => {
     vi.clearAllMocks();
   });
 
+  it('loads jose through the default lazy loader', async () => {
+    vi.spyOn(joseLoader, 'load').mockRestore();
+    await expect(joseLoader.load()).resolves.toMatchObject({
+      createRemoteJWKSet: expect.any(Function),
+      jwtVerify: expect.any(Function),
+    });
+  });
+
   it('validates cognito access tokens and authorization headers', async () => {
     const jwtVerify = vi.fn().mockResolvedValue({
       payload: {

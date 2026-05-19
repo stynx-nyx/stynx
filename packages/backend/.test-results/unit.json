@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx/backend",
+  "level": "unit",
+  "runner": "vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T01:05:59.392Z",
+  "endedAt": "2026-05-19T01:06:09.937Z",
+  "durationMs": 10520,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/unit.log"
+  },
+  "env": {
+    "node": "26.0.0",
+    "ci": false
+  },
+  "command": {
+    "argv": [
+      "vitest",
+      "run",
+      "--config",
+      "./vitest.config.ts",
+      "--reporter=default",
+      "--reporter=json",
+      "--outputFile.json=/tmp/vitest-5271-1779152759392.json"
+    ],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages/backend"
+  },
+  "metric": {
+    "kind": "none"
+  },
+  "totals": {
+    "files": 25,
+    "tests": 190,
+    "passed": 190,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "slowestTests": [
+    {
+      "name": "IdentityAdminService local-sync adapter delegations delegates syncToLocal / syncUser / listGroupsWithMetaByUserId to the local-sync adapter",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/identity-admin.service.spec.ts",
+      "durationMs": 58.232750000000124
+    },
+    {
+      "name": "PecIdentityAdminFacade listAllGroups() maps items + nextToken",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/integration-facades.spec.ts",
+      "durationMs": 47.34045900000001
+    },
+    {
+      "name": "AuditInterceptor passes through when no audit metadata is set on the handler",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/audit.interceptor.spec.ts",
+      "durationMs": 30.08658300000002
+    },
+    {
+      "name": "PormIdentityAdminFacade disable/enable/addToGroup/removeFromGroup/resetPassword/setPassword return their tags",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/integration-facades.spec.ts",
+      "durationMs": 20.28412500000013
+    },
+    {
+      "name": "AuditInterceptor writes an envelope with action/entity/entityId/tenantId/actorId/role",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/audit.interceptor.spec.ts",
+      "durationMs": 14.273083000000042
+    },
+    {
+      "name": "ResponseEventRequestDbClientLifecycle honors custom releaseEvents config",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/request-db-client-lifecycle.spec.ts",
+      "durationMs": 13.981208999999922
+    },
+    {
+      "name": "backend idempotency behavior covers durable direct replay, conflict, wait timeout, and cache cleanup",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/behavior-coverage.spec.ts",
+      "durationMs": 13.010584000000563
+    },
+    {
+      "name": "TenantLifecycleMiddleware throws BadRequestException when tenant header missing and required",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/tenant-lifecycle.middleware.spec.ts",
+      "durationMs": 12.156124999999975
+    },
+    {
+      "name": "backend SLA behavior samples requests, skips NONE categories, aggregates by window, and records errors",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/behavior-coverage.spec.ts",
+      "durationMs": 11.717416999999841
+    },
+    {
+      "name": "PgIdentityLocalSyncAdapter sorts groups by name when sort order ties or is absent",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/pg-local-sync.adapter.spec.ts",
+      "durationMs": 10.447041000000127
+    }
+  ]
+}

@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx-domain/demo-bookmark-api",
+  "level": "unit",
+  "runner": "vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T00:49:34.473Z",
+  "endedAt": "2026-05-19T00:49:37.207Z",
+  "durationMs": 2734,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/unit.log"
+  },
+  "env": {
+    "node": "24.15.0",
+    "ci": false
+  },
+  "command": {
+    "argv": [
+      "vitest",
+      "run",
+      "--config",
+      "./vitest.config.ts",
+      "--reporter=default",
+      "--reporter=json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-66436-1779151774473.json"
+    ],
+    "cwd": "/Users/aarusso/Development/stech/stynx/domain/demo-bookmark/api"
+  },
+  "totals": {
+    "files": 4,
+    "tests": 18,
+    "passed": 18,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "slowestTests": [
+    {
+      "name": "BookmarkTagService (per-task-DB integration) findAll returns tag rows joined via parent tenant scope (F-20)",
+      "file": "/Users/aarusso/Development/stech/stynx/domain/demo-bookmark/api/test/bookmark-tag.service.spec.ts",
+      "durationMs": 60.938416999999845
+    },
+    {
+      "name": "BookmarkService (per-task-DB integration) findAll returns tenant-scoped bookmarks (F-20)",
+      "file": "/Users/aarusso/Development/stech/stynx/domain/demo-bookmark/api/test/bookmark.service.spec.ts",
+      "durationMs": 49.25645900000018
+    },
+    {
+      "name": "BookmarkService (per-task-DB integration) update + remove respect tenant scoping (F-20)",
+      "file": "/Users/aarusso/Development/stech/stynx/domain/demo-bookmark/api/test/bookmark.service.spec.ts",
+      "durationMs": 8.449540999999954
+    },
+    {
+      "name": "BookmarkTagService (per-task-DB integration) remove enforces tenant scope before delete (F-20)",
+      "file": "/Users/aarusso/Development/stech/stynx/domain/demo-bookmark/api/test/bookmark-tag.service.spec.ts",
+      "durationMs": 8.004208999999719
+    },
+    {
+      "name": "BookmarkController compiles",
+      "file": "/Users/aarusso/Development/stech/stynx/domain/demo-bookmark/api/test/bookmark.controller.spec.ts",
+      "durationMs": 6.751666999999998
+    },
+    {
+      "name": "BookmarkTagController compiles",
+      "file": "/Users/aarusso/Development/stech/stynx/domain/demo-bookmark/api/test/bookmark-tag.controller.spec.ts",
+      "durationMs": 6.2590419999999085
+    },
+    {
+      "name": "BookmarkTagController list(bookmark_id) delegates to service.findAll",
+      "file": "/Users/aarusso/Development/stech/stynx/domain/demo-bookmark/api/test/bookmark-tag.controller.spec.ts",
+      "durationMs": 4.107209000000012
+    },
+    {
+      "name": "BookmarkTagService (per-task-DB integration) create rejects cross-tenant bookmark_id (F-20)",
+      "file": "/Users/aarusso/Development/stech/stynx/domain/demo-bookmark/api/test/bookmark-tag.service.spec.ts",
+      "durationMs": 3.9441249999999854
+    },
+    {
+      "name": "BookmarkController list() delegates to service.findAll",
+      "file": "/Users/aarusso/Development/stech/stynx/domain/demo-bookmark/api/test/bookmark.controller.spec.ts",
+      "durationMs": 3.2368329999999332
+    },
+    {
+      "name": "BookmarkService (per-task-DB integration) create persists with current actor as owner (F-20)",
+      "file": "/Users/aarusso/Development/stech/stynx/domain/demo-bookmark/api/test/bookmark.service.spec.ts",
+      "durationMs": 2.645208999999795
+    }
+  ],
+  "metric": {
+    "kind": "none"
+  }
+}

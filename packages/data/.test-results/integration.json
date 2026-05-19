@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx/data",
+  "level": "integration",
+  "runner": "vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T00:48:36.438Z",
+  "endedAt": "2026-05-19T00:48:50.987Z",
+  "durationMs": 14549,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/integration.log"
+  },
+  "env": {
+    "node": "24.15.0",
+    "ci": false
+  },
+  "command": {
+    "argv": [
+      "vitest",
+      "run",
+      "--config",
+      "./vitest.int.config.ts",
+      "--reporter=default",
+      "--reporter=json",
+      "--outputFile.json=/tmp/vitest-65108-1779151716438.json"
+    ],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages/data"
+  },
+  "totals": {
+    "files": 3,
+    "tests": 12,
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "slowestTests": [
+    {
+      "name": "Transaction soft delete operations orders onlyDeleted by deleted_at desc by default",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/integration/soft-delete.spec.ts",
+      "durationMs": 1377.621666
+    },
+    {
+      "name": "Transaction soft delete operations dry-run and cascade limits do not mutate state",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/integration/soft-delete.spec.ts",
+      "durationMs": 1232.9452500000002
+    },
+    {
+      "name": "Transaction soft delete operations archives cascade families, preserves deleted_at, and applies hide semantics",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/integration/soft-delete.spec.ts",
+      "durationMs": 1227.2253340000007
+    },
+    {
+      "name": "Transaction soft delete operations restores archived parents when cascade is requested and detects restore conflicts",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/integration/soft-delete.spec.ts",
+      "durationMs": 1222.1582090000002
+    },
+    {
+      "name": "Transaction soft delete operations raises a structured blocked error and supports hard delete on live and archive rows",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/integration/soft-delete.spec.ts",
+      "durationMs": 1193.0171659999996
+    },
+    {
+      "name": "Transaction soft delete operations emits Prompt 10 metrics hooks for soft delete, restore, hard delete, and archive size",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/integration/soft-delete.spec.ts",
+      "durationMs": 1152.1997499999998
+    },
+    {
+      "name": "Transaction soft delete operations keeps live queries default-only, exposes explicit archive helpers, and respects tenant RLS",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/integration/soft-delete.spec.ts",
+      "durationMs": 996.4677920000004
+    },
+    {
+      "name": "Stynx platform migrations creates soft-deletable live/archive pairs and rejects invalid registry behavior",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/integration/migrations.spec.ts",
+      "durationMs": 990.9014590000006
+    },
+    {
+      "name": "Stynx platform migrations boots the platform schema, enforces RLS, and reruns idempotently",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/integration/migrations.spec.ts",
+      "durationMs": 967.2624169999999
+    },
+    {
+      "name": "StynxDataModule integration configures GUCs, retries serialization failures, and isolates the three pools",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/data/test/integration/data.module.spec.ts",
+      "durationMs": 336.3958330000005
+    }
+  ],
+  "metric": {
+    "kind": "none"
+  }
+}

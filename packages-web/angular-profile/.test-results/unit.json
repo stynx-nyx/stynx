@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx-web/angular-profile",
+  "level": "unit",
+  "runner": "vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T01:05:23.618Z",
+  "endedAt": "2026-05-19T01:05:32.246Z",
+  "durationMs": 8563,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/unit.log"
+  },
+  "env": {
+    "node": "26.0.0",
+    "ci": false
+  },
+  "command": {
+    "argv": [
+      "vitest",
+      "run",
+      "--config",
+      "./vitest.config.ts",
+      "--reporter=default",
+      "--reporter=json",
+      "--outputFile.json=/tmp/vitest-1745-1779152723618.json"
+    ],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages-web/angular-profile"
+  },
+  "metric": {
+    "kind": "none"
+  },
+  "totals": {
+    "files": 1,
+    "tests": 2,
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "slowestTests": [
+    {
+      "name": "@stynx-web/angular-profile validates the profile form and emits only when dirty and valid",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-profile/test/angular-profile.spec.ts",
+      "durationMs": 8.145708999999442
+    },
+    {
+      "name": "@stynx-web/angular-profile tracks dirty state in the preferences form",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-profile/test/angular-profile.spec.ts",
+      "durationMs": 0.4153329999999187
+    }
+  ]
+}

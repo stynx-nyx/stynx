@@ -74,6 +74,48 @@ describe('CognitoTokenVerifier — header-shape early validation', () => {
   it('throws on array whose first element lacks Bearer prefix', async () => {
     await expect(v.verifyAuthorizationHeader(['raw-token'])).rejects.toThrow('Missing bearer token');
   });
+
+  it('verifies a signed bearer token and maps principal metadata', async () => {
+    const { SignJWT, generateKeyPair } = await import('jose');
+    const { privateKey, publicKey } = await generateKeyPair('RS256');
+    const issuedAt = Math.floor(Date.now() / 1000);
+    const token = await new SignJWT({
+      sub: 'subject-1',
+      email: 'user@example.test',
+      username: 'user-1',
+      permissions: ['Records:Read', 'records:read'],
+      tenants: ['Tenant-A'],
+      roles: ['Admin'],
+      token_use: 'access',
+    })
+      .setProtectedHeader({ alg: 'RS256' })
+      .setIssuer('https://issuer.example.test')
+      .setAudience('client-1')
+      .setIssuedAt(issuedAt)
+      .setExpirationTime(issuedAt + 3_600)
+      .sign(privateKey);
+    const verifier = new CognitoTokenVerifier({
+      issuer: 'https://issuer.example.test',
+      audience: 'client-1',
+      enforceTokenUse: 'access',
+    });
+    (verifier as unknown as { jwks: () => Promise<unknown> }).jwks = async () => publicKey;
+
+    await expect(verifier.verifyAuthorizationHeader([`Bearer ${token}`])).resolves.toMatchObject({
+      token,
+      issuedAt,
+      expiresAt: issuedAt + 3_600,
+      tokenUse: 'access',
+      principal: {
+        id: 'subject-1',
+        username: 'user-1',
+        email: 'user@example.test',
+        roles: ['admin'],
+        permissions: ['records:read'],
+        tenants: ['tenant-a'],
+      },
+    });
+  });
 });
 
 describe('CognitoTokenVerifier — payload branch helpers', () => {
@@ -132,5 +174,17 @@ describe('CognitoTokenVerifier — payload branch helpers', () => {
     expect(() => strict.assertTokenUse({ token_use: 'access' })).not.toThrow();
     expect(() => strict.assertTokenUse({ token_use: 'id' })).toThrow('Token use mismatch');
     expect(() => strict.assertTokenUse({})).toThrow('Token use mismatch');
+  });
+
+  it('creates and reuses the remote JWKS resolver', async () => {
+    const verifier = new CognitoTokenVerifier({
+      issuer: 'https://issuer.example.test',
+      jwksUri: 'https://issuer.example.test/custom/jwks.json',
+    }) as unknown as {
+      resolveJwks(): Promise<unknown>;
+    };
+
+    const first = await verifier.resolveJwks();
+    await expect(verifier.resolveJwks()).resolves.toBe(first);
   });
 });

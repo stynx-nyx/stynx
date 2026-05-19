@@ -25,15 +25,15 @@
     },
     "test": {
       "dependsOn": ["build", "^build"],
-      "outputs": []
+      "outputs": [".test-results/unit.json", ".test-results/unit.log"]
     },
     "test:int": {
       "dependsOn": ["build", "^build"],
-      "outputs": []
+      "outputs": [".test-results/integration.json", ".test-results/integration.log"]
     },
     "test:e2e": {
       "dependsOn": ["build", "^build"],
-      "outputs": []
+      "outputs": [".test-results/e2e.json", ".test-results/e2e.log"]
     }
   }
 }

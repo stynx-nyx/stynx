@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "1",
+  "package": "stynx-workspace",
+  "level": "perf",
+  "runner": "perf-smoke",
+  "status": "failed",
+  "startedAt": "2026-05-19T00:52:21.804Z",
+  "endedAt": "2026-05-19T00:52:25.915Z",
+  "durationMs": 4110,
+  "exitCode": 1,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/perf.log"
+  },
+  "env": {
+    "node": "26.0.0",
+    "ci": false
+  },
+  "command": {
+    "argv": ["node", "scripts/perf-smoke.mjs"],
+    "cwd": "/Users/aarusso/Development/stech/stynx"
+  },
+  "metric": {
+    "kind": "perf",
+    "perf": {
+      "p50Ms": 792,
+      "p95Ms": 891,
+      "rps": 1.26
+    }
+  }
+}

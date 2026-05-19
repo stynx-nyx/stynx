@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx/logging",
+  "level": "integration",
+  "runner": "vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-19T00:48:34.312Z",
+  "endedAt": "2026-05-19T00:48:35.976Z",
+  "durationMs": 1664,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/integration.log"
+  },
+  "env": {
+    "node": "24.15.0",
+    "ci": false
+  },
+  "command": {
+    "argv": [
+      "vitest",
+      "run",
+      "--config",
+      "./vitest.int.config.ts",
+      "--reporter=default",
+      "--reporter=json",
+      "--outputFile.json=/tmp/vitest-65031-1779151714312.json"
+    ],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages/logging"
+  },
+  "totals": {
+    "files": 1,
+    "tests": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "slowestTests": [
+    {
+      "name": "StynxLoggingModule integration emits JSON logs with the active request id",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/logging/test/integration/logging.module.spec.ts",
+      "durationMs": 16.53245800000002
+    }
+  ],
+  "metric": {
+    "kind": "none"
+  }
+}

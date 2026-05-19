@@ -4,6 +4,7 @@ import {
   StynxFlowFillEditorComponent,
   StynxFlowFillsComponent,
 } from '../src/flow-fills.component';
+import { FlowApiService } from '../src/flow-api.service';
 import {
   StynxFlowFormEditorComponent,
   StynxFlowFormsComponent,
@@ -20,7 +21,6 @@ import {
   StynxFlowWaiverDialogComponent,
   StynxFlowWaiversComponent,
 } from '../src/flow-waivers.component';
-import type { FlowApiService } from '../src/flow-api.service';
 import type { Mock } from 'vitest';
 
 function createApi(): FlowApiService {
@@ -45,6 +45,8 @@ describe('@stynx-web/angular-flow components', () => {
     component.scopeId = 'scope-1';
     component.graphId = 'graph-1';
 
+    await component.ngOnChanges();
+    expect(component.nodes).toHaveLength(1);
     await component.load();
 
     expect(api.listGraphs).toHaveBeenCalledWith('scope-1');
@@ -55,6 +57,10 @@ describe('@stynx-web/angular-flow components', () => {
     expect(component.edges).toHaveLength(1);
     expect(component.loading).toBe(false);
     expect(component.errorMessage).toBe('');
+
+    (api.listScopes as Mock).mockRejectedValueOnce('offline');
+    await component.load();
+    expect(component.errorMessage).toBe('Flow graph load failed');
   });
 
   it('renders graph canvas selection outputs without mutating layout inputs', () => {
@@ -81,11 +87,24 @@ describe('@stynx-web/angular-flow components', () => {
     const api = createApi();
     const component = new StynxFlowOpenTasksComponent(api);
 
+    await component.ngOnInit();
+    expect(component.tasks).toHaveLength(1);
     await component.load();
 
     expect(component.tasks).toEqual([expect.objectContaining({ id: 'task-1', targetId: 'target-1' })]);
     expect(component.loading).toBe(false);
     expect(component.errorMessage).toBe('');
+  });
+
+  it('omits query options when API filters are absent', async () => {
+    const client = {
+      get: vi.fn(async () => ({ data: [], meta: { page: 1, pageSize: 50, total: 0 } })),
+    };
+    const api = new FlowApiService(client as never);
+
+    await api.openTasks();
+
+    expect(client.get).toHaveBeenCalledWith('/flow/open-tasks', {});
   });
 
   it('captures analytics load failures from Error and non-Error throwables', async () => {
@@ -104,6 +123,8 @@ describe('@stynx-web/angular-flow components', () => {
     const api = createApi();
     const component = new StynxFlowRunSummaryComponent(api);
 
+    await component.ngOnInit();
+    expect(component.summaries).toHaveLength(1);
     await component.load();
     expect(component.summaries).toEqual([expect.objectContaining({ status: 'active', runCount: 2 })]);
 
@@ -121,6 +142,8 @@ describe('@stynx-web/angular-flow components', () => {
     const api = createApi();
     const forms = new StynxFlowFormsComponent(api);
     forms.scopeId = 'scope-1';
+    await forms.ngOnChanges();
+    expect(forms.forms).toHaveLength(1);
     await forms.load();
     expect(api.listForms).toHaveBeenCalledWith('scope-1');
     (api.listForms as Mock).mockRejectedValueOnce(new Error('forms down'));
@@ -131,6 +154,8 @@ describe('@stynx-web/angular-flow components', () => {
     fills.formId = 'form-1';
     fills.targetType = 'record';
     fills.targetId = 'record-1';
+    await fills.ngOnChanges();
+    expect(fills.fills).toHaveLength(1);
     await fills.load();
     expect(api.listFills).toHaveBeenCalledWith({
       formId: 'form-1',
@@ -149,6 +174,8 @@ describe('@stynx-web/angular-flow components', () => {
     const tasks = new StynxFlowTaskListComponent(api);
     tasks.mine = true;
     tasks.status = 'assigned';
+    await tasks.ngOnChanges();
+    expect(tasks.tasks).toHaveLength(1);
     await tasks.load();
     expect(api.listTasks).toHaveBeenCalledWith({ mine: true, status: 'assigned' });
     (api.listTasks as Mock).mockRejectedValueOnce(new Error('tasks down'));
@@ -159,6 +186,8 @@ describe('@stynx-web/angular-flow components', () => {
     waivers.scopeId = 'scope-1';
     waivers.targetType = 'question';
     waivers.targetId = 'q-1';
+    await waivers.ngOnChanges();
+    expect(waivers.waivers).toHaveLength(1);
     await waivers.load();
     expect(api.listWaivers).toHaveBeenCalledWith({
       scopeId: 'scope-1',
@@ -186,6 +215,7 @@ describe('@stynx-web/angular-flow components', () => {
     component.saveAnswers.subscribe((value) => saved.push(value));
     component.waiveQuestion.subscribe((value) => waivers.push(value));
 
+    component.ngOnChanges();
     component.setValue(component.questions[0]!, false);
     component.saveAllAnswers();
     component.waiveQuestion.emit(component.questions[0]!);
@@ -247,6 +277,12 @@ describe('@stynx-web/angular-flow components', () => {
     component.setValue(component.questions[1]!, component.optionValueFromKey(component.questions[1]!, 'a'));
     component.setValue(component.questions[2]!, ['a', 'b']);
     component.setValue(component.questions[3]!, '2026-05-17');
+    component.setMultiselectValue(component.questions[2]!, {
+      0: { value: 'a' },
+      1: { value: 'b' },
+      length: 2,
+      item: (index: number) => [{ value: 'a' }, { value: 'b' }][index] ?? null,
+    } as unknown as HTMLCollectionOf<HTMLOptionElement>);
     component.saveAllAnswers();
 
     expect(saved).toEqual([[
@@ -276,10 +312,12 @@ describe('@stynx-web/angular-flow components', () => {
       { id: 'multi-array-answer', fillId: 'fill-1', questionId: 'multi-question', value: ['a'] },
       { id: 'date-answer', fillId: 'fill-1', questionId: 'date-question', value: '2026-05-18T12:00:00Z' },
     ];
+    component.ngOnChanges();
 
     expect(component.textValue(component.questions[0]!)).toBe('');
     expect(component.numberValue(component.questions[1]!)).toBe('');
     expect(component.booleanValue(component.questions[2]!)).toBe(true);
+    expect(component.isSelected(component.questions[4]!, 'a')).toBe(true);
     expect(component.dateValue(component.questions[5]!)).toBe('2026-05-18');
     expect(component.questionOptions(component.questions[3]!)[0]).toEqual({
       label: 'Option A',
