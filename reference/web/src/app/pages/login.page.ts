@@ -1,5 +1,5 @@
 import { NgFor } from '@angular/common';
-import { ChangeDetectorRef, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject } from '@angular/core';
 import { ReactiveFormsModule, Validators, FormBuilder } from '@angular/forms';
 import { StynxBannerComponent } from '@stynx-web/angular-ui';
 import { ReferenceWebShellService } from '../core/reference-web-shell.service';
@@ -8,22 +8,23 @@ import { ReferenceWebShellService } from '../core/reference-web-shell.service';
   selector: 'stynx-reference-login-page',
   standalone: true,
   imports: [NgFor, ReactiveFormsModule, StynxBannerComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="panel">
+    <section class="panel" aria-labelledby="login-title">
       <div>
-        <h2 data-testid="login-title">Sign in to reference-web</h2>
+        <h2 id="login-title" data-testid="login-title">Sign in to reference-web</h2>
         <p>Prompt 31 uses a deterministic app-local auth seam over the live STYNX session stack.</p>
       </div>
 
       <form class="form" [formGroup]="form" (ngSubmit)="submit()" data-testid="login-form">
-        <label>
-          Email
-          <input type="email" formControlName="email" data-testid="login-email" />
+        <label for="login-email-input">
+          <span>Email</span>
+          <input id="login-email-input" type="email" formControlName="email" autocomplete="email" data-testid="login-email" />
         </label>
 
-        <label>
-          Tenant
-          <select formControlName="tenantId" data-testid="login-tenant">
+        <label for="login-tenant-select">
+          <span>Tenant</span>
+          <select id="login-tenant-select" formControlName="tenantId" data-testid="login-tenant">
             @for (tenant of shell.tenants(); track tenant.id) {
               <option [value]="tenant.id">{{ tenant.name }}</option>
             }

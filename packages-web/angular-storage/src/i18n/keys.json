@@ -1,4 +1,1 @@
-[
-  "storage.upload.dropzone",
-  "storage.upload.scanStatus"
-]
+["storage.upload.dropzone", "storage.upload.fileInput", "storage.upload.scanStatus"]

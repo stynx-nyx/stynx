@@ -1,17 +1,42 @@
 # @stynx-web/sdk
 
-Framework-agnostic TypeScript SDK for STYNX APIs.
+Framework-agnostic TypeScript SDK for STYNX APIs. It provides fetch-based HTTP transport, auth/tenant provider hooks, token/session helpers, authorization helpers, STYNX error mapping, Cognito hosted-UI URL helpers, and generated OpenAPI artifacts.
 
-It combines:
-- OpenAPI-generated artifacts under `src/generated`
-- typed STYNX error mapping
-- pluggable auth and tenant providers
-- fetch-based HTTP transport with `401 -> refresh -> replay`
-
-Key commands:
+## Install
 
 ```bash
-pnpm --filter @stynx/core build
-pnpm --filter @stynx-web/sdk codegen
-pnpm --filter @stynx-web/sdk build
+pnpm add @stynx-web/sdk
 ```
+
+## Peer Dependencies
+
+- None.
+
+## Use
+
+```ts
+import { StynxSdkClient } from '@stynx-web/sdk';
+
+const client = new StynxSdkClient({
+  baseUrl: '/api',
+  fetchFn: fetch,
+  authProvider,
+  tenantProvider,
+});
+
+const records = await client.get('/sample/records');
+```
+
+## Public Surface
+
+- Clients/transport: `StynxSdkClient`, `StynxApiClient`, `StynxHttpTransport`.
+- Auth/session/tenant: auth provider, token store, frontend session manager, tenant provider, Cognito URL helpers, JWT helpers.
+- Authorization/errors/http: permission/role helpers, `StynxSdkError`, `createStynxSdkError`, HTTP request/response option types.
+- Generated API: exports from `src/generated`.
+- Secondary exports: `@stynx-web/sdk/testing`.
+
+## See Also
+
+- [`@stynx-web/angular`](../angular/README.md)
+- [`@stynx-web/angular-auth`](../angular-auth/README.md)
+- [Reference app demo](../../reference/web/README.md#demo-surfaces)

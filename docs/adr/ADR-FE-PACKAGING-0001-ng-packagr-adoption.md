@@ -12,6 +12,10 @@ tags: [stynx, frontend, angular, packaging, apf]
 **Authority:** Architect.
 **Related:** `docs/work/plan/FE-WAVE-A-public-surface.md`, `docs/work/diag/FE-03-standards-compliance.md`.
 
+Decision summary: `packages-web/*` packages publish Angular Package Format
+artifacts through `ng-packagr` while preserving explicit `exports`, tree-shaking
+metadata, and `./testing` secondary entry points for adopters.
+
 ## Status
 
 Accepted on 2026-05-19 for FE-A.6.

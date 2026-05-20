@@ -4,9 +4,9 @@
   "level": "e2e",
   "runner": "playwright",
   "status": "passed",
-  "startedAt": "2026-05-19T10:58:12.995Z",
-  "endedAt": "2026-05-19T10:58:54.411Z",
-  "durationMs": 41416,
+  "startedAt": "2026-05-20T19:34:35.727Z",
+  "endedAt": "2026-05-20T19:35:02.922Z",
+  "durationMs": 27195,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -21,6 +21,12 @@
     "argv": [
       "playwright",
       "test",
+      "--",
+      "--project=spa-only",
+      "auth/login-success.spec.ts",
+      "iam",
+      "flows",
+      "permissions",
       "--reporter=line,json"
     ],
     "cwd": "/Users/aarusso/Development/stech/stynx/reference/web"

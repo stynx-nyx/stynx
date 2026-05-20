@@ -21,12 +21,15 @@ function isTerminalScanStatus(status: StynxDocumentScanStatus): boolean {
       [attr.data-upload-status]="status"
       [attr.data-scan-status]="scanStatus || null"
     >
-      <input
-        type="file"
-        data-testid="document-upload-file-input"
-        [attr.accept]="acceptAttribute"
-        (change)="onFileSelected($event)"
-      />
+      <label class="stynx-document-upload__file-label">
+        <span>{{ 'storage.upload.fileInput' | stynxTranslate }}</span>
+        <input
+          type="file"
+          data-testid="document-upload-file-input"
+          [attr.accept]="acceptAttribute"
+          (change)="onFileSelected($event)"
+        />
+      </label>
       @if (enableDragAndDrop) {
         <div
           class="stynx-document-upload__dropzone"
@@ -64,6 +67,11 @@ function isTerminalScanStatus(status: StynxDocumentScanStatus): boolean {
     .stynx-document-upload {
       display: grid;
       gap: 0.75rem;
+    }
+
+    .stynx-document-upload__file-label {
+      display: grid;
+      gap: 0.35rem;
     }
 
     .stynx-document-upload__dropzone {

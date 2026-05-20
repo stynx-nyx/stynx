@@ -1,4 +1,5 @@
 {
   "storage.upload.dropzone": "Solte um documento aqui",
+  "storage.upload.fileInput": "Selecione um documento",
   "storage.upload.scanStatus": "Status da verificacao: {status}"
 }

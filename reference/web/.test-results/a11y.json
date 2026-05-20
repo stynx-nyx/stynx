@@ -1,1 +1,146 @@
-[]
+[
+  {
+    "title": "logs in a reference admin through spa-only dev auth",
+    "file": "/Users/aarusso/Development/stech/stynx/reference/web/test/e2e/auth/login-success.spec.ts",
+    "project": "legacy-api",
+    "url": "http://127.0.0.1:3100/",
+    "status": "passed",
+    "violationCount": 0,
+    "violations": []
+  },
+  {
+    "title": "renders the Flow design forms route",
+    "file": "/Users/aarusso/Development/stech/stynx/reference/web/test/e2e/flows/design.spec.ts",
+    "project": "legacy-api",
+    "url": "http://127.0.0.1:3100/flow/forms",
+    "status": "passed",
+    "violationCount": 0,
+    "violations": []
+  },
+  {
+    "title": "renders the Flow runtime fills route",
+    "file": "/Users/aarusso/Development/stech/stynx/reference/web/test/e2e/flows/runtime.spec.ts",
+    "project": "legacy-api",
+    "url": "http://127.0.0.1:3100/flow/fills",
+    "status": "passed",
+    "violationCount": 0,
+    "violations": []
+  },
+  {
+    "title": "renders the Flow analytics dashboard route",
+    "file": "/Users/aarusso/Development/stech/stynx/reference/web/test/e2e/flows/analytics.spec.ts",
+    "project": "legacy-api",
+    "url": "http://127.0.0.1:3100/flow/dashboard",
+    "status": "passed",
+    "violationCount": 0,
+    "violations": []
+  },
+  {
+    "title": "renders the IAM users admin list",
+    "file": "/Users/aarusso/Development/stech/stynx/reference/web/test/e2e/iam/users.spec.ts",
+    "project": "legacy-api",
+    "url": "http://127.0.0.1:3100/admin/users",
+    "status": "passed",
+    "violationCount": 0,
+    "violations": []
+  },
+  {
+    "title": "renders the IAM groups admin list",
+    "file": "/Users/aarusso/Development/stech/stynx/reference/web/test/e2e/iam/groups.spec.ts",
+    "project": "legacy-api",
+    "url": "http://127.0.0.1:3100/admin/groups",
+    "status": "passed",
+    "violationCount": 0,
+    "violations": []
+  },
+  {
+    "title": "renders the IAM roles admin list",
+    "file": "/Users/aarusso/Development/stech/stynx/reference/web/test/e2e/iam/roles.spec.ts",
+    "project": "legacy-api",
+    "url": "http://127.0.0.1:3100/admin/roles",
+    "status": "passed",
+    "violationCount": 0,
+    "violations": []
+  },
+  {
+    "title": "shows permission denial for a reader without admin grants",
+    "file": "/Users/aarusso/Development/stech/stynx/reference/web/test/e2e/permissions/effective-permissions.spec.ts",
+    "project": "legacy-api",
+    "url": "http://127.0.0.1:3100/unauthorized",
+    "status": "passed",
+    "violationCount": 0,
+    "violations": []
+  },
+  {
+    "title": "logs in a reference admin through spa-only dev auth",
+    "file": "/Users/aarusso/Development/stech/stynx/reference/web/test/e2e/auth/login-success.spec.ts",
+    "project": "spa-only",
+    "url": "http://127.0.0.1:3100/",
+    "status": "passed",
+    "violationCount": 0,
+    "violations": []
+  },
+  {
+    "title": "renders the Flow analytics dashboard route",
+    "file": "/Users/aarusso/Development/stech/stynx/reference/web/test/e2e/flows/analytics.spec.ts",
+    "project": "spa-only",
+    "url": "http://127.0.0.1:3100/flow/dashboard",
+    "status": "passed",
+    "violationCount": 0,
+    "violations": []
+  },
+  {
+    "title": "renders the Flow design forms route",
+    "file": "/Users/aarusso/Development/stech/stynx/reference/web/test/e2e/flows/design.spec.ts",
+    "project": "spa-only",
+    "url": "http://127.0.0.1:3100/flow/forms",
+    "status": "passed",
+    "violationCount": 0,
+    "violations": []
+  },
+  {
+    "title": "renders the Flow runtime fills route",
+    "file": "/Users/aarusso/Development/stech/stynx/reference/web/test/e2e/flows/runtime.spec.ts",
+    "project": "spa-only",
+    "url": "http://127.0.0.1:3100/flow/fills",
+    "status": "passed",
+    "violationCount": 0,
+    "violations": []
+  },
+  {
+    "title": "renders the IAM roles admin list",
+    "file": "/Users/aarusso/Development/stech/stynx/reference/web/test/e2e/iam/roles.spec.ts",
+    "project": "spa-only",
+    "url": "http://127.0.0.1:3100/admin/roles",
+    "status": "passed",
+    "violationCount": 0,
+    "violations": []
+  },
+  {
+    "title": "renders the IAM groups admin list",
+    "file": "/Users/aarusso/Development/stech/stynx/reference/web/test/e2e/iam/groups.spec.ts",
+    "project": "spa-only",
+    "url": "http://127.0.0.1:3100/admin/groups",
+    "status": "passed",
+    "violationCount": 0,
+    "violations": []
+  },
+  {
+    "title": "renders the IAM users admin list",
+    "file": "/Users/aarusso/Development/stech/stynx/reference/web/test/e2e/iam/users.spec.ts",
+    "project": "spa-only",
+    "url": "http://127.0.0.1:3100/admin/users",
+    "status": "passed",
+    "violationCount": 0,
+    "violations": []
+  },
+  {
+    "title": "shows permission denial for a reader without admin grants",
+    "file": "/Users/aarusso/Development/stech/stynx/reference/web/test/e2e/permissions/effective-permissions.spec.ts",
+    "project": "spa-only",
+    "url": "http://127.0.0.1:3100/unauthorized",
+    "status": "passed",
+    "violationCount": 0,
+    "violations": []
+  }
+]

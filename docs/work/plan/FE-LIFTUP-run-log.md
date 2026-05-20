@@ -295,3 +295,47 @@ Auditor validation:
 Remaining FE-G blocker:
 
 - Current reference-web Playwright/a11y browser evidence is still blocked by local Chromium launch failure: `bootstrap_check_in org.chromium.Chromium.MachPortRendezvousServer... Permission denied (1100)`. The matrix `e2e` pass is from the older artifact ending `2026-05-19T10:58:54.411Z`, and `reference/web/.test-results/a11y.json` remains an empty `[]` until a browser run can open a page.
+
+### FE-G Reference-Web Browser Closure
+
+Operator terminal validation cleared the prior local Chromium boundary and reran the reference-web browser gates:
+
+- `PLAYWRIGHT_USE_REAL_OIDC=1 PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers pnpm exec playwright test --project=spa-only auth/login-success.spec.ts --reporter=list` passed 1/1.
+- `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers pnpm test:e2e -- --project=spa-only auth/login-success.spec.ts iam flows permissions` wrote a fresh canonical e2e artifact ending `2026-05-20T19:35:02.922Z` with `56` passed / `0` failed.
+- `reference/web/.test-results/a11y.json` was rewritten at `2026-05-20T19:35:02.839Z` with `16` entries and `0` total violations.
+- `pnpm test:evidence` regenerated `coverage/test-evidence.json` at `2026-05-20T19:35:03.837Z`.
+- Parent reran `pnpm test:matrix --no-color --compact`, `pnpm test:matrix --no-color --coverage`, and `git diff --check`; all exited 0.
+
+Auditor action:
+
+- Marked FE-G closed in `docs/work/plan/FE-CLOSURE-REGISTRY.md`.
+- Added the closure audit paragraph to `docs/work/plan/FE-WAVE-G-report.md`.
+- Unblocked FE-H by moving it from `BLOCKED` to `READY`.
+
+### FE-H Reference App And Docs Closure
+
+Spawned three Codex workers for FE-H:
+
+- `Scope: FE-H H.1 create-stynx-app starter`
+- `Scope: FE-H H.2-H.4 reference app and packages-web README docs`
+- `Scope: FE-H H.5-H.6 ADR consolidation and migration guide`
+
+Worker changes:
+
+- Added `tools/create-stynx-app/**` with a Node CLI and Angular 20 starter template using `provideStynxDefaults(...)`.
+- Rewrote `reference/web/README.md`, `packages-web/README.md`, and every `packages-web/*/README.md`; added missing `angular-iam` and `angular-audit` package READMEs.
+- Added FE i18n, Flow publish, and audit contract ADRs; linked them from `docs/adr/README.md`; added `packages-web/MIGRATING.md`.
+
+Auditor validation:
+
+- `node tools/create-stynx-app/bin.mjs --help` exited 0.
+- `pnpm --filter @stynx-internal/create-stynx-app build` exited 0.
+- A `/tmp` scaffold smoke with `--no-install` exited 0 and generated `package.json` plus `src/app/app.config.ts` containing `provideStynxDefaults`, `provideStynxAuth`, and `provideStynxFlow`.
+- `find packages-web -maxdepth 2 -name README.md | sort` returned the top-level README plus all 13 package READMEs.
+- README and ADR `rg` checks found `@stynx-web/angular-iam`, `@stynx-web/angular-audit`, `create-stynx-app`, `graph LR`, `dev-auth`, all four FE ADR IDs, and `MIGRATING`.
+- `pnpm test:matrix --no-color --compact`, `pnpm test:matrix --no-color --coverage`, and full-tree `git diff --check` exited 0.
+
+Auditor action:
+
+- Added H.1-H.6 rows plus parent audit summary to `docs/work/plan/FE-WAVE-H-report.md`.
+- Marked FE-H closed in `docs/work/plan/FE-CLOSURE-REGISTRY.md`.

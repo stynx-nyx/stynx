@@ -1,80 +1,52 @@
 # @stynx-web/angular-flow
 
-Angular standalone components and route helpers for STYNX Flow.
+Angular standalone components and route helpers for STYNX Flow design, runtime, fill execution, task assignment, waivers, run activity, and analytics. The package is host-mounted: apps provide a configured Flow client, then mount `flowRoutes()` under any route prefix.
 
-This package is host-mounted. Applications provide a configured `StynxSdkClient` or compatible transport through `provideStynxFlow(...)`, then mount `flowRoutes()` under any route prefix.
+## Install
 
-The graph canvas intentionally does not bundle Cytoscape. It renders a stable list-based fallback with node and edge selection outputs. Hosts that need richer graph layout can wrap `StynxFlowGraphCanvasComponent` or replace it at the route level while reusing the service and models.
+```bash
+pnpm add @stynx-web/angular-flow
+```
 
-The package includes generic Flow fill execution controls for boolean, number,
-date, select, multiselect, answer serialization, and question-level waiver
-entry. Reference-web route/access E2E coverage is seeded for host mounting. A
-shared host store remains optional; add one only if richer package-owned screens
-need centralized graph/form/task state, selection, loading, refresh, and error
-handling.
+## Peer Dependencies
 
-## Exports
+- `@angular/common ^20.2.0`
+- `@angular/core ^20.2.0`
+- `@angular/router ^20.2.0`
 
-- `FlowApiService` for `/flow/*` backend calls.
-- Flow design, runtime, form, fill, waiver, task, and analytics models.
-- Standalone components for graph design, forms, fills, waivers, tasks, and open-task analytics.
-- `FLOW_ROUTES` and `flowRoutes()` for host routing.
-
-## Minimal Setup
+## Use
 
 ```ts
-import { provideStynxFlow, flowRoutes } from '@stynx-web/angular-flow';
+import { provideStynxDefaults } from '@stynx-web/angular';
+import { flowRoutes, provideStynxFlow } from '@stynx-web/angular-flow';
 import { StynxSdkClient } from '@stynx-web/sdk';
 
-const client = new StynxSdkClient({
-  baseUrl: '/api',
-  fetchFn: fetch,
-});
+const client = new StynxSdkClient({ baseUrl: '/api', fetchFn: fetch });
 
-export const appConfig = {
-  providers: [provideStynxFlow(client)],
-};
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideStynxDefaults({
+      flow: provideStynxFlow({
+        clientFactory: () => client,
+      }),
+    }),
+  ],
+});
 
 export const routes = [{ path: 'flow', children: flowRoutes() }];
 ```
 
-## Provider Recipes
+## Public Surface
 
-SDK-backed applications can defer SDK construction to Angular injection:
+- Providers/routes: `provideStynxFlow`, `FLOW_ROUTES`, `flowRoutes`.
+- Services/tokens: `FlowApiService`, `STYNX_FLOW_CLIENT`, `STYNX_FLOW_TENANT_CHANGED`.
+- Components: graph canvas/designer/dialogs, forms, fills, tasks, waivers, run activity, dashboard, open tasks, run summary, empty state.
+- Types: Flow design/runtime/form/fill/task/waiver/analytics client and model types.
+- Secondary exports: `@stynx-web/angular-flow/testing`, locale catalogs.
 
-```ts
-import { inject } from '@angular/core';
-import { provideStynxFlow } from '@stynx-web/angular-flow';
-import { StynxSdkClient } from '@stynx-web/sdk';
+## See Also
 
-export const providers = [
-  provideStynxFlow({
-    clientFactory: () => inject(StynxSdkClient),
-  }),
-];
-```
-
-Demo hosts can use a mock transport with the same `get`, `post`, `put`, `patch`, and `delete` shape:
-
-```ts
-import { provideStynxFlow } from '@stynx-web/angular-flow';
-
-export const providers = [
-  provideStynxFlow({
-    clientFactory: () => new MockFlowClient(),
-  }),
-];
-```
-
-Custom-backed applications can inject their own compatible client:
-
-```ts
-import { inject } from '@angular/core';
-import { provideStynxFlow } from '@stynx-web/angular-flow';
-
-export const providers = [
-  provideStynxFlow({
-    clientFactory: () => inject(MyFlowClient),
-  }),
-];
-```
+- [`@stynx-web/angular-auth`](../angular-auth/README.md)
+- [`@stynx-web/angular-storage`](../angular-storage/README.md)
+- [`@stynx-web/angular-ui`](../angular-ui/README.md)
+- [Reference app Flow demo](../../reference/web/README.md#demo-surfaces)

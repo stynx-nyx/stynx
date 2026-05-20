@@ -1,0 +1,21 @@
+{
+  "name": "@stynx-internal/create-stynx-app",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "description": "Thin STYNX Angular starter scaffold CLI",
+  "bin": {
+    "create-stynx-app": "./bin.mjs"
+  },
+  "files": [
+    "bin.mjs",
+    "template",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "node --check bin.mjs"
+  },
+  "engines": {
+    "node": ">=24 <25"
+  }
+}

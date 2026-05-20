@@ -1,13 +1,47 @@
 # @stynx-web/angular-trash
 
-Angular integration module for STYNX trash recovery workflows. Provides a standalone trash-list component and shared types for applications that expose soft-delete review and restore screens.
+Angular 20 trash recovery UI for STYNX soft-delete workflows. It provides a reusable list component and SDK-backed adapter for browsing, restoring, and hard-deleting archived resources.
 
-## Usage
+## Install
 
-Import `TrashListComponent` in your Angular component or route definition:
-
-```typescript
-import { TrashListComponent } from '@stynx-web/angular-trash';
+```bash
+pnpm add @stynx-web/angular-trash
 ```
 
-See the [STYNX API reference](/docs/api-reference/stynx-web-angular-trash) for full API details.
+## Peer Dependencies
+
+- `@angular/common ^20.2.0`
+- `@angular/core ^20.2.0`
+
+## Use
+
+```ts
+import { provideStynxTrash, StynxTrashListComponent } from '@stynx-web/angular-trash';
+import { StynxSdkClient } from '@stynx-web/sdk';
+
+const client = new StynxSdkClient({ baseUrl: '/api', fetchFn: fetch });
+
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideStynxTrash(client, {
+      kinds: [{ key: 'records', label: 'Records' }],
+    }),
+  ],
+});
+```
+
+Use `StynxTrashListComponent` in a standalone screen.
+
+## Public Surface
+
+- Providers: `provideStynxTrash`.
+- Components: `StynxTrashListComponent`.
+- Adapters/tokens: `SdkTrashAdapter`, `STYNX_TRASH_CLIENT`, `STYNX_TRASH_OPTIONS`, `STYNX_TRASH_ADAPTER`, `STYNX_DEFAULT_TRASH_KINDS`.
+- Types: trash item, kind config, adapter, page, options, restore, and hard-delete types.
+- Secondary exports: `@stynx-web/angular-trash/testing`, locale catalogs.
+
+## See Also
+
+- [`@stynx-web/angular-storage`](../angular-storage/README.md)
+- [`@stynx-web/angular-auth`](../angular-auth/README.md)
+- [Reference app trash demo](../../reference/web/README.md#demo-surfaces)

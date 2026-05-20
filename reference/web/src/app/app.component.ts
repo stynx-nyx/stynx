@@ -1,5 +1,5 @@
 import { AsyncPipe, NgIf } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { ErrorBannerService } from '@stynx-web/angular';
 import { StynxSessionService, StynxHasPermissionDirective } from '@stynx-web/angular-auth';
@@ -22,6 +22,7 @@ import { ReferenceWebShellService } from './core/reference-web-shell.service';
     StynxToastContainerComponent,
     StynxHasPermissionDirective,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="shell">
       <header class="shell__header">
@@ -37,7 +38,7 @@ import { ReferenceWebShellService } from './core/reference-web-shell.service';
         </div>
       </header>
 
-      <section class="shell__context">
+      <section class="shell__context" aria-label="Session context">
         <div>
           <strong>Tenant:</strong>
           <span>{{ shell.activeTenantLabel() }}</span>
@@ -57,7 +58,7 @@ import { ReferenceWebShellService } from './core/reference-web-shell.service';
         ></stynx-banner>
       }
 
-      <nav class="shell__nav">
+      <nav class="shell__nav" aria-label="Primary navigation">
         <a routerLink="/" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }" data-testid="nav-dashboard">Dashboard</a>
         <a routerLink="/records" routerLinkActive="is-active" data-testid="nav-records">Records</a>
         <a routerLink="/work-items" routerLinkActive="is-active" data-testid="nav-work-items">Work items</a>
