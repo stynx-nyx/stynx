@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T15:58:07.144Z",
-  "endedAt": "2026-05-19T15:58:33.510Z",
-  "durationMs": 26366,
+  "startedAt": "2026-05-20T03:44:25.797Z",
+  "endedAt": "2026-05-20T03:44:42.511Z",
+  "durationMs": 16714,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-43745-1779206287143.json",
+      "--outputFile.json=/tmp/vitest-50435-1779248665796.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/i18n/.test-results/unit.junit.xml"
     ],
@@ -47,52 +47,52 @@
     {
       "name": "StynxI18nModule integration resolves locale order, applies tenant overrides, renders ICU messages, and localizes errors",
       "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/integration/i18n.module.spec.ts",
-      "durationMs": 16962.451833
-    },
-    {
-      "name": "CatalogService.supportedLocales includes every locale discovered across all packages",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/unit/catalog.spec.ts",
-      "durationMs": 91.26800000000003
+      "durationMs": 11576.4445
     },
     {
       "name": "I18nController API error matrix GET /_tenancy/i18n/overrides returns 200 with tenant overrides and request id propagation",
       "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/integration/i18n.api-matrix.spec.ts",
-      "durationMs": 55.69554100000096
+      "durationMs": 109.91820799999914
     },
     {
       "name": "I18nController API error matrix PUT /_tenancy/i18n/overrides returns 200 after updating tenant overrides",
       "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/integration/i18n.api-matrix.spec.ts",
-      "durationMs": 34.58216700000048
+      "durationMs": 37.57237499999974
     },
     {
-      "name": "CatalogService.translate returns the locale-specific message when present",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/unit/catalog.spec.ts",
-      "durationMs": 16.496083
+      "name": "LocalizedErrorFilter passes non-STYNX HTTP exceptions through unchanged",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/unit/localized-error.filter.spec.ts",
+      "durationMs": 37.481874999999945
     },
     {
-      "name": "I18nController API error matrix GET /_tenancy/i18n/overrides returns 403 when the actor is not a member of the requested tenant",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/integration/i18n.api-matrix.spec.ts",
-      "durationMs": 11.976665999998659
-    },
-    {
-      "name": "CatalogService.translate returns the key when no catalog has the message",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/unit/catalog.spec.ts",
-      "durationMs": 9.48804199999995
-    },
-    {
-      "name": "CatalogService.translate merges tenant overrides over the base catalog",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/unit/catalog.spec.ts",
-      "durationMs": 8.906541999999718
-    },
-    {
-      "name": "I18nAdminService lists only i18n override settings for a tenant",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/unit/i18n-admin.service.spec.ts",
-      "durationMs": 8.65216700000019
+      "name": "LocalizedErrorFilter localizes STYNX errors and logs warn/error branches",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/unit/localized-error.filter.spec.ts",
+      "durationMs": 34.7473329999998
     },
     {
       "name": "CatalogService.translate ignores override entries that do not match the i18n.override.<locale>.<key> shape",
       "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/unit/catalog.spec.ts",
-      "durationMs": 7.624250000000757
+      "durationMs": 30.471000000000004
+    },
+    {
+      "name": "LocaleService uses the first supported Accept-Language entry and patches context",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/unit/locale.spec.ts",
+      "durationMs": 24.035875000000033
+    },
+    {
+      "name": "I18nAdminService lists only i18n override settings for a tenant",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/unit/i18n-admin.service.spec.ts",
+      "durationMs": 20.98633299999983
+    },
+    {
+      "name": "CatalogService.supportedLocales loads tenant overrides once and reuses the cache",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/unit/catalog.spec.ts",
+      "durationMs": 18.35220900000013
+    },
+    {
+      "name": "LocaleService loads tenant overrides and tenant locale when the header has no supported locale",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/unit/locale.spec.ts",
+      "durationMs": 18.024709000000257
     }
   ]
 }

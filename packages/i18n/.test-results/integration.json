@@ -3,11 +3,12 @@
   "package": "@stynx/i18n",
   "level": "integration",
   "runner": "vitest",
-  "status": "error",
-  "startedAt": "2026-05-19T16:01:09.173Z",
-  "endedAt": "2026-05-19T16:01:09.177Z",
-  "durationMs": 4,
-  "exitCode": null,
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-20T02:02:43.996Z",
+  "endedAt": "2026-05-20T02:03:03.565Z",
+  "durationMs": 19569,
+  "exitCode": 0,
   "signal": null,
   "artifacts": {
     "raw": ".test-results/integration.log",
@@ -25,7 +26,7 @@
       "./vitest.int.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-48894-1779206469173.json",
+      "--outputFile.json=/tmp/vitest-88881-1779242563996.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/i18n/.test-results/integration.junit.xml"
     ],
@@ -33,5 +34,50 @@
   },
   "metric": {
     "kind": "none"
-  }
+  },
+  "totals": {
+    "files": 2,
+    "tests": 7,
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "slowestTests": [
+    {
+      "name": "StynxI18nModule integration resolves locale order, applies tenant overrides, renders ICU messages, and localizes errors",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/integration/i18n.module.spec.ts",
+      "durationMs": 16060.034791000002
+    },
+    {
+      "name": "I18nController API error matrix GET /_tenancy/i18n/overrides returns 200 with tenant overrides and request id propagation",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/integration/i18n.api-matrix.spec.ts",
+      "durationMs": 142.1330829999988
+    },
+    {
+      "name": "I18nController API error matrix PUT /_tenancy/i18n/overrides returns 200 after updating tenant overrides",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/integration/i18n.api-matrix.spec.ts",
+      "durationMs": 39.81183299999975
+    },
+    {
+      "name": "I18nController API error matrix GET /_tenancy/i18n/overrides returns 403 when the actor is not a member of the requested tenant",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/integration/i18n.api-matrix.spec.ts",
+      "durationMs": 23.51366599999892
+    },
+    {
+      "name": "I18nController API error matrix GET /_tenancy/i18n/overrides returns 400 when tenant context is missing",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/integration/i18n.api-matrix.spec.ts",
+      "durationMs": 6.723374999999578
+    },
+    {
+      "name": "I18nController API error matrix PUT /_tenancy/i18n/overrides returns 400 for malformed JSON",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/integration/i18n.api-matrix.spec.ts",
+      "durationMs": 5.258458000000246
+    },
+    {
+      "name": "I18nController API error matrix PUT /_tenancy/i18n/overrides returns 403 when the actor is not a member of the requested tenant",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/i18n/test/integration/i18n.api-matrix.spec.ts",
+      "durationMs": 4.304000000000087
+    }
+  ]
 }

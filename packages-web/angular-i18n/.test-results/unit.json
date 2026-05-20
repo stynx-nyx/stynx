@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T16:46:14.786Z",
-  "endedAt": "2026-05-19T16:46:17.220Z",
-  "durationMs": 2434,
+  "startedAt": "2026-05-20T03:42:49.982Z",
+  "endedAt": "2026-05-20T03:43:01.131Z",
+  "durationMs": 11149,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-98203-1779209174786.json",
+      "--outputFile.json=/tmp/vitest-45992-1779248569982.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages-web/angular-i18n/.test-results/unit.junit.xml"
     ],
@@ -47,47 +47,47 @@
     {
       "name": "@stynx-web/angular-i18n formats ICU plural messages through the active locale catalog",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-i18n/test/angular-i18n.spec.ts",
-      "durationMs": 16.925666999999976
+      "durationMs": 120.88416599999982
     },
     {
       "name": "@stynx-web/angular-i18n formats dates, numbers, and currencies through the active locale",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-i18n/test/angular-i18n.spec.ts",
-      "durationMs": 7.82425000000012
+      "durationMs": 7.277624999998807
     },
     {
       "name": "@stynx-web/angular-i18n switches locale at runtime and updates translations",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-i18n/test/angular-i18n.spec.ts",
-      "durationMs": 3.6295829999999114
+      "durationMs": 4.797500000000582
     },
     {
       "name": "@stynx-web/angular-i18n switches locale through the component and marks the translate pipe for check on locale changes",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-i18n/test/angular-i18n.spec.ts",
-      "durationMs": 1.6239160000000084
-    },
-    {
-      "name": "@stynx-web/angular-i18n refreshes cached ICU formatters when a locale catalog is reloaded",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-i18n/test/angular-i18n.spec.ts",
-      "durationMs": 1.4626250000001164
+      "durationMs": 1.7357079999983398
     },
     {
       "name": "@stynx-web/angular-i18n detects ICU messages with flexible whitespace around arguments and types",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-i18n/test/angular-i18n.spec.ts",
-      "durationMs": 1.3473330000001624
+      "durationMs": 1.5623340000001917
     },
     {
       "name": "@stynx-web/angular-i18n caches Intl formatters by locale and options",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-i18n/test/angular-i18n.spec.ts",
-      "durationMs": 1.1277499999998781
+      "durationMs": 0.9831249999988358
     },
     {
       "name": "@stynx-web/angular-i18n uses default supported locale and missing interpolation values",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-i18n/test/angular-i18n.spec.ts",
-      "durationMs": 0.5919160000000829
+      "durationMs": 0.8471669999998994
+    },
+    {
+      "name": "@stynx-web/angular-i18n refreshes cached ICU formatters when a locale catalog is reloaded",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-i18n/test/angular-i18n.spec.ts",
+      "durationMs": 0.4787500000002183
     },
     {
       "name": "@stynx-web/angular-i18n returns an empty string for empty and invalid Intl pipe inputs",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-i18n/test/angular-i18n.spec.ts",
-      "durationMs": 0.3949170000000777
+      "durationMs": 0.39545900000121037
     }
   ]
 }

@@ -1,123 +1,123 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="52" failures="0" errors="0" time="2.658354876">
-    <testsuite name="test/unit/audit.controller.spec.ts" timestamp="2026-05-19T15:57:21.256Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.167805417">
-        <testcase classname="test/unit/audit.controller.spec.ts" name="StynxAuditController API contract &gt; keeps audit log access guarded and permission-bound" time="0.126379208">
+<testsuites name="vitest tests" tests="52" failures="0" errors="0" time="0.199659751">
+    <testsuite name="test/unit/audit.controller.spec.ts" timestamp="2026-05-20T03:43:39.258Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.007577875">
+        <testcase classname="test/unit/audit.controller.spec.ts" name="StynxAuditController API contract &gt; keeps audit log access guarded and permission-bound" time="0.004224208">
         </testcase>
-        <testcase classname="test/unit/audit.controller.spec.ts" name="StynxAuditController API contract &gt; delegates audit log queries to the audit service" time="0.019816333">
-        </testcase>
-    </testsuite>
-    <testsuite name="test/unit/audit.module.spec.ts" timestamp="2026-05-19T15:57:21.257Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.541711708">
-        <testcase classname="test/unit/audit.module.spec.ts" name="StynxAuditModule.forRoot &gt; wires default options and provider classes" time="0.21037025">
-        </testcase>
-        <testcase classname="test/unit/audit.module.spec.ts" name="StynxAuditModule.forRoot &gt; starts and clears the daily detach scheduler only when all dependencies are configured" time="0.104662541">
+        <testcase classname="test/unit/audit.controller.spec.ts" name="StynxAuditController API contract &gt; delegates audit log queries to the audit service" time="0.001612333">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/audit.service.spec.ts" timestamp="2026-05-19T15:57:21.258Z" hostname="thiamat-1903.local" tests="19" failures="0" errors="0" skipped="0" time="0.365087084">
-        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.listLog &gt; queries audit.log with no filters and clamps limit to [1, 200]" time="0.004153125">
+    <testsuite name="test/unit/audit.module.spec.ts" timestamp="2026-05-20T03:43:39.262Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.015688334">
+        <testcase classname="test/unit/audit.module.spec.ts" name="StynxAuditModule.forRoot &gt; wires default options and provider classes" time="0.005446125">
         </testcase>
-        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.listLog &gt; returns nextCursor when there is a tail row beyond the limit" time="0.004705958">
-        </testcase>
-        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.listLog &gt; omits nextCursor when no tail row" time="0.003261958">
-        </testcase>
-        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.listLog &gt; maps Date occurred_at values to ISO strings" time="0.000420542">
-        </testcase>
-        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.listLog &gt; applies all filters and the cursor when set" time="0.000388875">
-        </testcase>
-        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.listLog &gt; throws when Database provider is unavailable" time="0.006869541">
-        </testcase>
-        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.dryRunDetachEligible &gt; skips partitions whose name does not match log_YYYY_MM" time="0.006741083">
-        </testcase>
-        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.detachEligible &gt; returns [] when there are no eligible plans" time="0.000354791">
-        </testcase>
-        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.detachEligible &gt; throws when partitions exist but no bucket/dumpRunner/archive are configured" time="0.032529667">
-        </testcase>
-        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.detachEligible &gt; dumps, uploads, detaches, and drops eligible partitions" time="0.250379334">
-        </testcase>
-        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.detachEligible &gt; uses the default archive key prefix when module options omit keyPrefix" time="0.001910958">
-        </testcase>
-        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.runDailyDetachJob &gt; runs detach but logs nothing when nothing detached" time="0.00735625">
-        </testcase>
-        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.runDailyDetachJob &gt; logs when the daily detach job detaches partitions" time="0.009160291">
-        </testcase>
-        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.verifyChain &gt; clamps limit to [1, 10000]" time="0.000325958">
-        </testcase>
-        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.verifyChain &gt; returns valid=true with totalChecked=0 when no rows" time="0.014172083">
-        </testcase>
-        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.verifyChain &gt; rejects a chain whose first row has a non-null previous_hash" time="0.008161">
-        </testcase>
-        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.verifyChain &gt; rejects a chain whose previous_hash points at the wrong predecessor" time="0.006345917">
-        </testcase>
-        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.verifyChain &gt; accepts a valid two-event chain" time="0.000333458">
-        </testcase>
-        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.verifyChain &gt; accepts chain rows with nullable audit payload fields and hashes empty defaults" time="0.000162625">
+        <testcase classname="test/unit/audit.module.spec.ts" name="StynxAuditModule.forRoot &gt; starts and clears the daily detach scheduler only when all dependencies are configured" time="0.001955">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/barrel-load.spec.ts" timestamp="2026-05-19T15:57:21.262Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.002566167">
-        <testcase classname="test/unit/barrel-load.spec.ts" name="@stynx/audit barrel &gt; exports at least one symbol" time="0.001264084">
+    <testsuite name="test/unit/audit.service.spec.ts" timestamp="2026-05-20T03:43:39.295Z" hostname="thiamat-1903.local" tests="19" failures="0" errors="0" skipped="0" time="0.140588417">
+        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.listLog &gt; queries audit.log with no filters and clamps limit to [1, 200]" time="0.003766709">
+        </testcase>
+        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.listLog &gt; returns nextCursor when there is a tail row beyond the limit" time="0.001047417">
+        </testcase>
+        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.listLog &gt; omits nextCursor when no tail row" time="0.00134575">
+        </testcase>
+        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.listLog &gt; maps Date occurred_at values to ISO strings" time="0.000434917">
+        </testcase>
+        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.listLog &gt; applies all filters and the cursor when set" time="0.000411625">
+        </testcase>
+        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.listLog &gt; throws when Database provider is unavailable" time="0.000778875">
+        </testcase>
+        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.dryRunDetachEligible &gt; skips partitions whose name does not match log_YYYY_MM" time="0.000438416">
+        </testcase>
+        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.detachEligible &gt; returns [] when there are no eligible plans" time="0.00101225">
+        </testcase>
+        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.detachEligible &gt; throws when partitions exist but no bucket/dumpRunner/archive are configured" time="0.00205775">
+        </testcase>
+        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.detachEligible &gt; dumps, uploads, detaches, and drops eligible partitions" time="0.106011333">
+        </testcase>
+        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.detachEligible &gt; uses the default archive key prefix when module options omit keyPrefix" time="0.002345584">
+        </testcase>
+        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.runDailyDetachJob &gt; runs detach but logs nothing when nothing detached" time="0.000566208">
+        </testcase>
+        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.runDailyDetachJob &gt; logs when the daily detach job detaches partitions" time="0.000512625">
+        </testcase>
+        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.verifyChain &gt; clamps limit to [1, 10000]" time="0.000376875">
+        </testcase>
+        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.verifyChain &gt; returns valid=true with totalChecked=0 when no rows" time="0.0003095">
+        </testcase>
+        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.verifyChain &gt; rejects a chain whose first row has a non-null previous_hash" time="0.002953625">
+        </testcase>
+        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.verifyChain &gt; rejects a chain whose previous_hash points at the wrong predecessor" time="0.001088542">
+        </testcase>
+        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.verifyChain &gt; accepts a valid two-event chain" time="0.000322375">
+        </testcase>
+        <testcase classname="test/unit/audit.service.spec.ts" name="StynxAuditService.verifyChain &gt; accepts chain rows with nullable audit payload fields and hashes empty defaults" time="0.004918625">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/chain.spec.ts" timestamp="2026-05-19T15:57:21.262Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.043582833">
-        <testcase classname="test/unit/chain.spec.ts" name="StynxAuditService hash-chain verification &gt; accepts sequential audit rows and rejects tampered payloads" time="0.0428055">
+    <testsuite name="test/unit/barrel-load.spec.ts" timestamp="2026-05-20T03:43:39.310Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.001896166">
+        <testcase classname="test/unit/barrel-load.spec.ts" name="@stynx/audit barrel &gt; exports at least one symbol" time="0.00086475">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/retention.spec.ts" timestamp="2026-05-19T15:57:21.262Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.126836375">
-        <testcase classname="test/unit/retention.spec.ts" name="planAuditDetach &gt; detaches standard partitions after 90 days" time="0.089266084">
-        </testcase>
-        <testcase classname="test/unit/retention.spec.ts" name="planAuditDetach &gt; retains lgpd-tagged partitions hot for five years" time="0.000779417">
-        </testcase>
-        <testcase classname="test/unit/retention.spec.ts" name="planAuditDetach &gt; rejects malformed partition months and detaches expired lgpd partitions" time="0.035471708">
+    <testsuite name="test/unit/chain.spec.ts" timestamp="2026-05-20T03:43:39.311Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.005301917">
+        <testcase classname="test/unit/chain.spec.ts" name="StynxAuditService hash-chain verification &gt; accepts sequential audit rows and rejects tampered payloads" time="0.004703583">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/sql-adapter.spec.ts" timestamp="2026-05-19T15:57:21.264Z" hostname="thiamat-1903.local" tests="22" failures="0" errors="0" skipped="0" time="0.979242292">
-        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlSink &gt; mode: audit_write_function &gt; calls SELECT audit.write with the 13 expected params" time="0.473483042">
+    <testsuite name="test/unit/retention.spec.ts" timestamp="2026-05-20T03:43:39.311Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.005741167">
+        <testcase classname="test/unit/retention.spec.ts" name="planAuditDetach &gt; detaches standard partitions after 90 days" time="0.003853917">
         </testcase>
-        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlSink &gt; mode: audit_write_function &gt; synthesizes pk from entityId when pk not provided" time="0.016494333">
+        <testcase classname="test/unit/retention.spec.ts" name="planAuditDetach &gt; retains lgpd-tagged partitions hot for five years" time="0.000214625">
         </testcase>
-        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlSink &gt; mode: audit_write_function &gt; passes pk through when provided explicitly" time="0.004659875">
-        </testcase>
-        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlSink &gt; mode: audit_write_function &gt; uses correlationId when requestId is absent" time="0.021934625">
-        </testcase>
-        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlSink &gt; mode: audit_write_function &gt; sends nulls for absent fields" time="0.012418208">
-        </testcase>
-        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlSink &gt; mode: audit_event_table &gt; INSERTs into the default audit_event table with the expected 8 params" time="0.023399875">
-        </testcase>
-        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlSink &gt; mode: audit_event_table &gt; honors custom schema + table options" time="0.051177541">
-        </testcase>
-        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlReader.list &gt; mode: audit_log &gt; queries audit.log with no filters when query is empty" time="0.02753075">
-        </testcase>
-        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlReader.list &gt; mode: audit_log &gt; applies tenantId / entity / operation / actorId / requestId / from / to filters" time="0.017236458">
-        </testcase>
-        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlReader.list &gt; mode: audit_log &gt; maps row shape into AuditSqlListItem (audit_log mode)" time="0.053993542">
-        </testcase>
-        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlReader.list &gt; mode: audit_log &gt; passes through string occurredAt unchanged" time="0.000599625">
-        </testcase>
-        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlReader.list &gt; mode: audit_log &gt; sanitizes invalid limit/offset (negative, NaN, oversize) to safe defaults" time="0.042368291">
-        </testcase>
-        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlReader.list &gt; mode: audit_log &gt; honors custom schema + table options" time="0.00069975">
-        </testcase>
-        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlReader.list &gt; mode: audit_log &gt; accepts array-shaped executor results (no .rows wrapper)" time="0.000451667">
-        </testcase>
-        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlReader.list &gt; mode: audit_log &gt; treats non-array rows wrappers as empty results" time="0.000326375">
-        </testcase>
-        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlReader.list &gt; mode: audit_log &gt; maps audit log rows with missing optional fields to public defaults" time="0.000702333">
-        </testcase>
-        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlReader.list &gt; mode: stynx_events &gt; queries stynx_events with full filter set" time="0.033399875">
-        </testcase>
-        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlReader.list &gt; mode: stynx_events &gt; maps row shape into AuditSqlListItem with metadata + previousHash + rowHash" time="0.038583417">
-        </testcase>
-        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlReader.list &gt; mode: stynx_events &gt; uses defaults for missing operation/entity/tenancy fields" time="0.00021525">
-        </testcase>
-        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlReader.list &gt; mode: porm_logged_actions &gt; queries porm logged_actions with entity/operation/requestId/from/to filters" time="0.000246708">
-        </testcase>
-        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlReader.list &gt; mode: porm_logged_actions &gt; maps PORM rows into AuditSqlListItem shape" time="0.000382708">
-        </testcase>
-        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlReader.list &gt; mode: porm_logged_actions &gt; maps PORM rows with missing optional fields to public defaults" time="0.000347208">
+        <testcase classname="test/unit/retention.spec.ts" name="planAuditDetach &gt; rejects malformed partition months and detaches expired lgpd partitions" time="0.000227167">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/test-helpers.spec.ts" timestamp="2026-05-19T15:57:21.267Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.431523">
-        <testcase classname="test/unit/test-helpers.spec.ts" name="audit test helpers &gt; returns all rows when no tag subset is requested" time="0.116593333">
+    <testsuite name="test/unit/sql-adapter.spec.ts" timestamp="2026-05-20T03:43:39.312Z" hostname="thiamat-1903.local" tests="22" failures="0" errors="0" skipped="0" time="0.01264425">
+        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlSink &gt; mode: audit_write_function &gt; calls SELECT audit.write with the 13 expected params" time="0.001880291">
         </testcase>
-        <testcase classname="test/unit/test-helpers.spec.ts" name="audit test helpers &gt; filters rows by tag subset and reports missing audit rows" time="0.168030375">
+        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlSink &gt; mode: audit_write_function &gt; synthesizes pk from entityId when pk not provided" time="0.000148958">
+        </testcase>
+        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlSink &gt; mode: audit_write_function &gt; passes pk through when provided explicitly" time="0.000117208">
+        </testcase>
+        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlSink &gt; mode: audit_write_function &gt; uses correlationId when requestId is absent" time="0.000183125">
+        </testcase>
+        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlSink &gt; mode: audit_write_function &gt; sends nulls for absent fields" time="0.000168666">
+        </testcase>
+        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlSink &gt; mode: audit_event_table &gt; INSERTs into the default audit_event table with the expected 8 params" time="0.000690125">
+        </testcase>
+        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlSink &gt; mode: audit_event_table &gt; honors custom schema + table options" time="0.000109583">
+        </testcase>
+        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlReader.list &gt; mode: audit_log &gt; queries audit.log with no filters when query is empty" time="0.000307958">
+        </testcase>
+        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlReader.list &gt; mode: audit_log &gt; applies tenantId / entity / operation / actorId / requestId / from / to filters" time="0.000192666">
+        </testcase>
+        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlReader.list &gt; mode: audit_log &gt; maps row shape into AuditSqlListItem (audit_log mode)" time="0.004255916">
+        </testcase>
+        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlReader.list &gt; mode: audit_log &gt; passes through string occurredAt unchanged" time="0.000446625">
+        </testcase>
+        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlReader.list &gt; mode: audit_log &gt; sanitizes invalid limit/offset (negative, NaN, oversize) to safe defaults" time="0.0001505">
+        </testcase>
+        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlReader.list &gt; mode: audit_log &gt; honors custom schema + table options" time="0.000121916">
+        </testcase>
+        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlReader.list &gt; mode: audit_log &gt; accepts array-shaped executor results (no .rows wrapper)" time="0.000233625">
+        </testcase>
+        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlReader.list &gt; mode: audit_log &gt; treats non-array rows wrappers as empty results" time="0.000181916">
+        </testcase>
+        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlReader.list &gt; mode: audit_log &gt; maps audit log rows with missing optional fields to public defaults" time="0.000182167">
+        </testcase>
+        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlReader.list &gt; mode: stynx_events &gt; queries stynx_events with full filter set" time="0.000283166">
+        </testcase>
+        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlReader.list &gt; mode: stynx_events &gt; maps row shape into AuditSqlListItem with metadata + previousHash + rowHash" time="0.000273">
+        </testcase>
+        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlReader.list &gt; mode: stynx_events &gt; uses defaults for missing operation/entity/tenancy fields" time="0.00016225">
+        </testcase>
+        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlReader.list &gt; mode: porm_logged_actions &gt; queries porm logged_actions with entity/operation/requestId/from/to filters" time="0.000263708">
+        </testcase>
+        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlReader.list &gt; mode: porm_logged_actions &gt; maps PORM rows into AuditSqlListItem shape" time="0.000248292">
+        </testcase>
+        <testcase classname="test/unit/sql-adapter.spec.ts" name="AuditSqlReader.list &gt; mode: porm_logged_actions &gt; maps PORM rows with missing optional fields to public defaults" time="0.000132167">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/test-helpers.spec.ts" timestamp="2026-05-20T03:43:39.314Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.010221625">
+        <testcase classname="test/unit/test-helpers.spec.ts" name="audit test helpers &gt; returns all rows when no tag subset is requested" time="0.007920417">
+        </testcase>
+        <testcase classname="test/unit/test-helpers.spec.ts" name="audit test helpers &gt; filters rows by tag subset and reports missing audit rows" time="0.0014065">
         </testcase>
     </testsuite>
 </testsuites>

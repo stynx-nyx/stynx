@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="8" failures="0" errors="0" time="0.266703791">
-    <testsuite name="test/angular-ui.spec.ts" timestamp="2026-05-19T15:55:58.525Z" hostname="thiamat-1903.local" tests="8" failures="0" errors="0" skipped="0" time="0.266703791">
-        <testcase classname="test/angular-ui.spec.ts" name="@stynx-web/angular-ui &gt; tracks toast lifecycle through the toast service" time="0.119806959">
+<testsuites name="vitest tests" tests="8" failures="0" errors="0" time="0.0314585">
+    <testsuite name="test/angular-ui.spec.ts" timestamp="2026-05-20T03:43:18.724Z" hostname="thiamat-1903.local" tests="8" failures="0" errors="0" skipped="0" time="0.0314585">
+        <testcase classname="test/angular-ui.spec.ts" name="@stynx-web/angular-ui &gt; tracks toast lifecycle through the toast service" time="0.016390208">
         </testcase>
-        <testcase classname="test/angular-ui.spec.ts" name="@stynx-web/angular-ui &gt; supports sticky, timed, and clear toast lifecycle paths" time="0.127061875">
+        <testcase classname="test/angular-ui.spec.ts" name="@stynx-web/angular-ui &gt; supports sticky, timed, and clear toast lifecycle paths" time="0.009552166">
         </testcase>
-        <testcase classname="test/angular-ui.spec.ts" name="@stynx-web/angular-ui &gt; clamps pagination changes and emits page-change events" time="0.000645667">
+        <testcase classname="test/angular-ui.spec.ts" name="@stynx-web/angular-ui &gt; clamps pagination changes and emits page-change events" time="0.000478833">
         </testcase>
-        <testcase classname="test/angular-ui.spec.ts" name="@stynx-web/angular-ui &gt; normalizes pagination inputs and clamps navigation at both ends" time="0.003813583">
+        <testcase classname="test/angular-ui.spec.ts" name="@stynx-web/angular-ui &gt; normalizes pagination inputs and clamps navigation at both ends" time="0.000263">
         </testcase>
-        <testcase classname="test/angular-ui.spec.ts" name="@stynx-web/angular-ui &gt; keeps simple component inputs and emitters wired" time="0.000812125">
+        <testcase classname="test/angular-ui.spec.ts" name="@stynx-web/angular-ui &gt; keeps simple component inputs and emitters wired" time="0.000652791">
         </testcase>
-        <testcase classname="test/angular-ui.spec.ts" name="@stynx-web/angular-ui &gt; exposes the shared icon sprite names and href contract" time="0.00092175">
+        <testcase classname="test/angular-ui.spec.ts" name="@stynx-web/angular-ui &gt; exposes the shared icon sprite names and href contract" time="0.000715542">
         </testcase>
-        <testcase classname="test/angular-ui.spec.ts" name="@stynx-web/angular-ui &gt; tracks table rows with custom or JSON identity" time="0.000382167">
+        <testcase classname="test/angular-ui.spec.ts" name="@stynx-web/angular-ui &gt; tracks table rows with custom or JSON identity" time="0.0001605">
         </testcase>
-        <testcase classname="test/angular-ui.spec.ts" name="@stynx-web/angular-ui &gt; declares the toast container service dependency" time="0.000160708">
+        <testcase classname="test/angular-ui.spec.ts" name="@stynx-web/angular-ui &gt; declares the toast container service dependency" time="0.000105959">
         </testcase>
     </testsuite>
 </testsuites>

@@ -1,0 +1,19 @@
+{
+  "skill_id": "SKILL-assess-state",
+  "status": "pass",
+  "evidence": {
+    "schemaVersion": "1.0.0",
+    "id": "AS-20260520T015124-001",
+    "generated_at": "2026-05-20T01:51:24.145Z",
+    "scorecard_id": "SC-20260520T015124-001",
+    "previous_assessment_id": null,
+    "narrative": "Overall: RED. 41/45 cells passing. 1 cell(s) failing. 2 cell(s) unknown (sensor coverage gap). Per-cell signals:\n  - F5×T9 FAIL: harness_green_main → HARNESS_GREEN_MAIN_BELOW_THRESHOLD: Main branch success rate 64.0% (over last 50 runs) is below review threshold 80%.; harness_green_main → HARNESS_GREEN_MAIN_BELOW_THRESHOLD: Main branch success rate 58.0% (over last 50 runs) is below review threshold 80%.",
+    "deltas": [],
+    "backlog_actions": {
+      "additions": [],
+      "completions": [],
+      "deprioritizations": []
+    },
+    "recommended_priorities": []
+  }
+}

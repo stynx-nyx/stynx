@@ -1,55 +1,55 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="22" failures="0" errors="0" time="27.701391584">
-    <testsuite name="test/integration/privacy.module.spec.ts" timestamp="2026-05-19T15:58:28.060Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="27.434871583">
-        <testcase classname="test/integration/privacy.module.spec.ts" name="StynxPrivacyModule integration &gt; loads PII rules, exports live and archive rows, erases data, and reports retention" time="27.431422625">
+<testsuites name="vitest tests" tests="22" failures="0" errors="0" time="24.338091375">
+    <testsuite name="test/integration/privacy.module.spec.ts" timestamp="2026-05-20T03:44:36.871Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="23.691304209">
+        <testcase classname="test/integration/privacy.module.spec.ts" name="StynxPrivacyModule integration &gt; loads PII rules, exports live and archive rows, erases data, and reports retention" time="23.689229375">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/privacy-runtime.spec.ts" timestamp="2026-05-19T15:58:28.061Z" hostname="thiamat-1903.local" tests="7" failures="0" errors="0" skipped="0" time="0.047016084">
-        <testcase classname="test/unit/privacy-runtime.spec.ts" name="privacy runtime helpers &gt; generates ROPA markdown with defaults and data-flow metadata" time="0.001188833">
+    <testsuite name="test/unit/privacy-runtime.spec.ts" timestamp="2026-05-20T03:44:36.872Z" hostname="thiamat-1903.local" tests="7" failures="0" errors="0" skipped="0" time="0.101871541">
+        <testcase classname="test/unit/privacy-runtime.spec.ts" name="privacy runtime helpers &gt; generates ROPA markdown with defaults and data-flow metadata" time="0.046933583">
         </testcase>
-        <testcase classname="test/unit/privacy-runtime.spec.ts" name="privacy runtime helpers &gt; wraps privacy errors with stable codes and optional context" time="0.001354917">
+        <testcase classname="test/unit/privacy-runtime.spec.ts" name="privacy runtime helpers &gt; wraps privacy errors with stable codes and optional context" time="0.003122042">
         </testcase>
-        <testcase classname="test/unit/privacy-runtime.spec.ts" name="privacy runtime helpers &gt; loads database PII rules, auth user defaults, overrides, and validates subject metadata" time="0.019841">
+        <testcase classname="test/unit/privacy-runtime.spec.ts" name="privacy runtime helpers &gt; loads database PII rules, auth user defaults, overrides, and validates subject metadata" time="0.012049333">
         </testcase>
-        <testcase classname="test/unit/privacy-runtime.spec.ts" name="privacy runtime helpers &gt; throws when loaded PII rules still lack subject metadata" time="0.001350084">
+        <testcase classname="test/unit/privacy-runtime.spec.ts" name="privacy runtime helpers &gt; throws when loaded PII rules still lack subject metadata" time="0.001060708">
         </testcase>
-        <testcase classname="test/unit/privacy-runtime.spec.ts" name="privacy runtime helpers &gt; loads override-only PII rules and falls back to the process working directory" time="0.010713208">
+        <testcase classname="test/unit/privacy-runtime.spec.ts" name="privacy runtime helpers &gt; loads override-only PII rules and falls back to the process working directory" time="0.005278834">
         </testcase>
-        <testcase classname="test/unit/privacy-runtime.spec.ts" name="privacy runtime helpers &gt; renders data-flow metadata when controllers or processors are provided alone" time="0.000446458">
+        <testcase classname="test/unit/privacy-runtime.spec.ts" name="privacy runtime helpers &gt; renders data-flow metadata when controllers or processors are provided alone" time="0.000189833">
         </testcase>
-        <testcase classname="test/unit/privacy-runtime.spec.ts" name="privacy runtime helpers &gt; delegates privacy object store operations with configured defaults and overrides" time="0.0097475">
-        </testcase>
-    </testsuite>
-    <testsuite name="test/unit/privacy.controller.spec.ts" timestamp="2026-05-19T15:58:28.063Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.008325167">
-        <testcase classname="test/unit/privacy.controller.spec.ts" name="PrivacyController API contract &gt; delegates export, erasure, and retention requests to the privacy service" time="0.006884292">
-        </testcase>
-        <testcase classname="test/unit/privacy.controller.spec.ts" name="PrivacyController API contract &gt; keeps privacy mutations explicitly non-idempotent" time="0.00050525">
+        <testcase classname="test/unit/privacy-runtime.spec.ts" name="privacy runtime helpers &gt; delegates privacy object store operations with configured defaults and overrides" time="0.002751584">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/privacy.service.spec.ts" timestamp="2026-05-19T15:58:28.064Z" hostname="thiamat-1903.local" tests="12" failures="0" errors="0" skipped="0" time="0.21117875">
-        <testcase classname="test/unit/privacy.service.spec.ts" name="PrivacyService branch coverage &gt; rejects export requests without a selector" time="0.00383175">
+    <testsuite name="test/unit/privacy.controller.spec.ts" timestamp="2026-05-20T03:44:36.874Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.039495375">
+        <testcase classname="test/unit/privacy.controller.spec.ts" name="PrivacyController API contract &gt; delegates export, erasure, and retention requests to the privacy service" time="0.015488958">
         </testcase>
-        <testcase classname="test/unit/privacy.service.spec.ts" name="PrivacyService branch coverage &gt; exports an empty bundle when rules match no rows" time="0.014865334">
+        <testcase classname="test/unit/privacy.controller.spec.ts" name="PrivacyController API contract &gt; keeps privacy mutations explicitly non-idempotent" time="0.000456458">
         </testcase>
-        <testcase classname="test/unit/privacy.service.spec.ts" name="PrivacyService branch coverage &gt; exports live and archive rows using subject and tenant filters" time="0.108829958">
+    </testsuite>
+    <testsuite name="test/unit/privacy.service.spec.ts" timestamp="2026-05-20T03:44:36.875Z" hostname="thiamat-1903.local" tests="12" failures="0" errors="0" skipped="0" time="0.50542025">
+        <testcase classname="test/unit/privacy.service.spec.ts" name="PrivacyService branch coverage &gt; rejects export requests without a selector" time="0.036436208">
         </testcase>
-        <testcase classname="test/unit/privacy.service.spec.ts" name="PrivacyService branch coverage &gt; exports unfiltered table snapshots and uses the default export TTL" time="0.056775667">
+        <testcase classname="test/unit/privacy.service.spec.ts" name="PrivacyService branch coverage &gt; exports an empty bundle when rules match no rows" time="0.09409125">
         </testcase>
-        <testcase classname="test/unit/privacy.service.spec.ts" name="PrivacyService branch coverage &gt; skips export rules that do not describe a subject column" time="0.002118708">
+        <testcase classname="test/unit/privacy.service.spec.ts" name="PrivacyService branch coverage &gt; exports live and archive rows using subject and tenant filters" time="0.079417583">
         </testcase>
-        <testcase classname="test/unit/privacy.service.spec.ts" name="PrivacyService branch coverage &gt; fails erasure when a rule lacks subject metadata" time="0.001498834">
+        <testcase classname="test/unit/privacy.service.spec.ts" name="PrivacyService branch coverage &gt; exports unfiltered table snapshots and uses the default export TTL" time="0.07370225">
         </testcase>
-        <testcase classname="test/unit/privacy.service.spec.ts" name="PrivacyService branch coverage &gt; applies every erasure strategy to live and archive targets and disables Cognito user" time="0.005306958">
+        <testcase classname="test/unit/privacy.service.spec.ts" name="PrivacyService branch coverage &gt; skips export rules that do not describe a subject column" time="0.025767292">
         </testcase>
-        <testcase classname="test/unit/privacy.service.spec.ts" name="PrivacyService branch coverage &gt; treats missing row counts as zero during erasure" time="0.000806208">
+        <testcase classname="test/unit/privacy.service.spec.ts" name="PrivacyService branch coverage &gt; fails erasure when a rule lacks subject metadata" time="0.009636541">
         </testcase>
-        <testcase classname="test/unit/privacy.service.spec.ts" name="PrivacyService branch coverage &gt; executes retention delete branches across live and archive targets" time="0.000878125">
+        <testcase classname="test/unit/privacy.service.spec.ts" name="PrivacyService branch coverage &gt; applies every erasure strategy to live and archive targets and disables Cognito user" time="0.022484167">
         </testcase>
-        <testcase classname="test/unit/privacy.service.spec.ts" name="PrivacyService branch coverage &gt; keeps dry-run retention from deleting and rejects unsafe identifiers" time="0.002940125">
+        <testcase classname="test/unit/privacy.service.spec.ts" name="PrivacyService branch coverage &gt; treats missing row counts as zero during erasure" time="0.018578584">
         </testcase>
-        <testcase classname="test/unit/privacy.service.spec.ts" name="PrivacyService branch coverage &gt; treats empty retention count results as zero and defaults target to both" time="0.001097583">
+        <testcase classname="test/unit/privacy.service.spec.ts" name="PrivacyService branch coverage &gt; executes retention delete branches across live and archive targets" time="0.042006541">
         </testcase>
-        <testcase classname="test/unit/privacy.service.spec.ts" name="PrivacyService branch coverage &gt; renders ROPA markdown from loaded rules" time="0.000928458">
+        <testcase classname="test/unit/privacy.service.spec.ts" name="PrivacyService branch coverage &gt; keeps dry-run retention from deleting and rejects unsafe identifiers" time="0.011194">
+        </testcase>
+        <testcase classname="test/unit/privacy.service.spec.ts" name="PrivacyService branch coverage &gt; treats empty retention count results as zero and defaults target to both" time="0.018947334">
+        </testcase>
+        <testcase classname="test/unit/privacy.service.spec.ts" name="PrivacyService branch coverage &gt; renders ROPA markdown from loaded rules" time="0.047743125">
         </testcase>
     </testsuite>
 </testsuites>

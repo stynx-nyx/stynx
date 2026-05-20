@@ -3,14 +3,17 @@
   "package": "@stynx/tenancy",
   "level": "mutation",
   "runner": "stryker-vitest",
-  "status": "failed",
-  "startedAt": "2026-05-19T05:21:10.800Z",
-  "endedAt": "2026-05-19T05:22:52.644Z",
-  "durationMs": 101844,
-  "exitCode": 1,
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-20T02:12:12.056Z",
+  "endedAt": "2026-05-20T02:12:21.719Z",
+  "durationMs": 9663,
+  "exitCode": 0,
   "signal": null,
   "artifacts": {
-    "raw": ".test-results/mutation.log"
+    "raw": ".test-results/mutation.log",
+    "report": "reports/mutation/mutation.json",
+    "html": "reports/mutation/-stynx-tenancy/index.html"
   },
   "env": {
     "node": "24.15.0",
@@ -21,6 +24,20 @@
     "cwd": "/Users/aarusso/Development/stech/stynx/packages/tenancy"
   },
   "metric": {
-    "kind": "none"
+    "kind": "score",
+    "score": 90.33816425120773,
+    "thresholds": {
+      "high": 80,
+      "low": 70,
+      "break": 80
+    }
+  },
+  "totals": {
+    "files": 3,
+    "tests": 341,
+    "passed": 187,
+    "failed": 20,
+    "skipped": 0,
+    "todo": 0
   }
 }

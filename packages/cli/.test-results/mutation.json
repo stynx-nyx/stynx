@@ -4,11 +4,11 @@
   "level": "mutation",
   "runner": "stryker-vitest",
   "runnerVersion": "3.2.4",
-  "status": "failed",
-  "startedAt": "2026-05-19T04:50:56.212Z",
-  "endedAt": "2026-05-19T05:00:47.356Z",
-  "durationMs": 591144,
-  "exitCode": 1,
+  "status": "passed",
+  "startedAt": "2026-05-20T03:37:29.005Z",
+  "endedAt": "2026-05-20T03:39:36.944Z",
+  "durationMs": 127939,
+  "exitCode": 0,
   "signal": null,
   "artifacts": {
     "raw": ".test-results/mutation.log",
@@ -25,7 +25,7 @@
   },
   "metric": {
     "kind": "score",
-    "score": 47.48858447488584,
+    "score": 68.05111821086261,
     "thresholds": {
       "high": 60,
       "low": 60,
@@ -33,10 +33,10 @@
     }
   },
   "totals": {
-    "files": 8,
-    "tests": 1054,
-    "passed": 416,
-    "failed": 460,
+    "files": 7,
+    "tests": 404,
+    "passed": 213,
+    "failed": 100,
     "skipped": 5,
     "todo": 0
   }

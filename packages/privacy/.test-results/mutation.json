@@ -3,14 +3,17 @@
   "package": "@stynx/privacy",
   "level": "mutation",
   "runner": "stryker-vitest",
-  "status": "failed",
-  "startedAt": "2026-05-19T05:16:15.628Z",
-  "endedAt": "2026-05-19T05:22:50.719Z",
-  "durationMs": 395091,
-  "exitCode": 1,
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-20T03:21:51.007Z",
+  "endedAt": "2026-05-20T03:37:28.946Z",
+  "durationMs": 937939,
+  "exitCode": 0,
   "signal": null,
   "artifacts": {
-    "raw": ".test-results/mutation.log"
+    "raw": ".test-results/mutation.log",
+    "report": "reports/mutation/mutation.json",
+    "html": "reports/mutation/-stynx-privacy/index.html"
   },
   "env": {
     "node": "24.15.0",
@@ -21,6 +24,20 @@
     "cwd": "/Users/aarusso/Development/stech/stynx/packages/privacy"
   },
   "metric": {
-    "kind": "none"
+    "kind": "score",
+    "score": 75.42662116040955,
+    "thresholds": {
+      "high": 60,
+      "low": 60,
+      "break": 60
+    }
+  },
+  "totals": {
+    "files": 3,
+    "tests": 409,
+    "passed": 221,
+    "failed": 72,
+    "skipped": 0,
+    "todo": 0
   }
 }

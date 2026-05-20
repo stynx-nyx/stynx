@@ -4,16 +4,16 @@
   "level": "perf",
   "runner": "perf-smoke",
   "status": "passed",
-  "startedAt": "2026-05-19T03:42:35.404Z",
-  "endedAt": "2026-05-19T03:42:53.922Z",
-  "durationMs": 18517,
+  "startedAt": "2026-05-20T01:49:24.354Z",
+  "endedAt": "2026-05-20T01:49:29.679Z",
+  "durationMs": 5325,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
     "raw": ".test-results/perf.log"
   },
   "env": {
-    "node": "26.0.0",
+    "node": "24.15.0",
     "ci": false
   },
   "command": {
@@ -23,9 +23,9 @@
   "metric": {
     "kind": "perf",
     "perf": {
-      "p50Ms": 3619,
-      "p95Ms": 4091,
-      "rps": 0.28,
+      "p50Ms": 1018,
+      "p95Ms": 1147,
+      "rps": 0.98,
       "samples": 5
     }
   }

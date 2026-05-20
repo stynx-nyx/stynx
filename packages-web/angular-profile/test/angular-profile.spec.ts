@@ -1,20 +1,24 @@
 import '@angular/compiler';
 import { Injector, runInInjectionContext } from '@angular/core';
+import type { Provider } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { ErrorBannerService } from '@stynx-web/angular';
 import { StynxI18nService } from '@stynx-web/angular-i18n';
 import { STYNX_OIDC_ADAPTER } from '@stynx-web/angular-auth';
+import { StynxToastService } from '@stynx-web/angular-ui';
+import { of, throwError } from 'rxjs';
 import {
   StynxChangePasswordHandoffComponent,
   StynxMfaEnrolmentHandoffComponent,
 } from '../src/hosted-auth-action-handoff.component';
 import { StynxPreferencesFormComponent } from '../src/preferences-form.component';
 import { StynxProfileFormComponent } from '../src/profile-form.component';
+import { ProfileService } from '../src/profile.service';
 import type { StynxHostedAuthAction } from '@stynx-web/angular-auth';
 
-function createWithFormBuilder<T>(factory: () => T): T {
+function createWithFormBuilder<T>(factory: () => T, providers: Provider[] = []): T {
   const injector = Injector.create({
-    providers: [{ provide: FormBuilder, useValue: new FormBuilder() }],
+    providers: [{ provide: FormBuilder, useValue: new FormBuilder() }, ...providers],
   });
   return runInInjectionContext(injector, factory);
 }
@@ -71,6 +75,8 @@ describe('@stynx-web/angular-profile', () => {
     });
     component.submit();
     expect(seen).toHaveLength(0);
+    expect(component.status()).toBe('error');
+    expect(component.errorMessage()).toBe('profile.form.error.invalid');
 
     component.form.patchValue({
       email: 'ana@example.test',
@@ -86,6 +92,58 @@ describe('@stynx-web/angular-profile', () => {
         locale: 'pt-BR',
       },
     ]);
+  });
+
+  it('saves profile changes through ProfileService and reports failures', () => {
+    const toast = { push: vi.fn() };
+    const errorBanner = { clear: vi.fn(), show: vi.fn() };
+    const profile = {
+      patch: vi.fn((value: unknown) => of({
+        id: 'profile-1',
+        displayName: 'Ana Saved',
+        name: 'Ana Saved',
+        email: 'ana@example.test',
+        locale: 'pt-BR',
+        received: value,
+      })),
+    };
+    const component = createWithFormBuilder(
+      () => new StynxProfileFormComponent(),
+      [
+        { provide: ProfileService, useValue: profile },
+        { provide: StynxI18nService, useValue: { translate: (key: string) => key } },
+        { provide: ErrorBannerService, useValue: errorBanner },
+        { provide: StynxToastService, useValue: toast },
+      ],
+    );
+
+    component.value = { name: 'Ana', email: 'ana@example.test', locale: 'en-US' };
+    component.form.patchValue({ locale: 'pt-BR' });
+    component.form.markAsDirty();
+    component.submit();
+
+    expect(profile.patch).toHaveBeenCalledWith({
+      displayName: 'Ana',
+      name: 'Ana',
+      email: 'ana@example.test',
+      locale: 'pt-BR',
+    });
+    expect(errorBanner.clear).toHaveBeenCalled();
+    expect(component.status()).toBe('saved');
+    expect(component.form.dirty).toBe(false);
+
+    profile.patch.mockReturnValueOnce(throwError(() => new Error('profile save failed')));
+    component.form.patchValue({ name: 'Ana Failed' });
+    component.form.markAsDirty();
+    component.submit();
+
+    expect(component.status()).toBe('error');
+    expect(component.errorMessage()).toBe('profile.form.error.saveFailed');
+    expect(errorBanner.show).toHaveBeenCalledWith({
+      message: 'profile.form.error.saveFailed',
+      tone: 'error',
+      code: 'profile.save_failed',
+    });
   });
 
   it('tracks dirty state in the preferences form', () => {
@@ -111,6 +169,57 @@ describe('@stynx-web/angular-profile', () => {
     component.submit();
     expect(seen).toEqual([{ locale: 'en-US', notifications: true }]);
     expect(component.form.dirty).toBe(false);
+  });
+
+  it('saves preferences through ProfileService, changes locale, and reports failures', () => {
+    const toast = { push: vi.fn() };
+    const errorBanner = { clear: vi.fn(), show: vi.fn() };
+    const i18n = {
+      translate: (key: string) => key,
+      use: vi.fn(() => Promise.resolve()),
+    };
+    const profile = {
+      setPreferences: vi.fn(() => of({ locale: 'pt-BR', notifications: true })),
+    };
+    const component = createWithFormBuilder(
+      () => new StynxPreferencesFormComponent(),
+      [
+        { provide: ProfileService, useValue: profile },
+        { provide: StynxI18nService, useValue: i18n },
+        { provide: ErrorBannerService, useValue: errorBanner },
+        { provide: StynxToastService, useValue: toast },
+      ],
+    );
+
+    component.value = { locale: 'en-US', notifications: false };
+    component.form.patchValue({ locale: '', notifications: true });
+    component.form.markAsDirty();
+    component.submit();
+    expect(component.status()).toBe('error');
+    expect(component.errorMessage()).toBe('profile.preferences.error.invalid');
+
+    component.form.patchValue({ locale: 'pt-BR' });
+    component.form.markAsDirty();
+    component.submit();
+
+    expect(profile.setPreferences).toHaveBeenCalledWith({ locale: 'pt-BR', notifications: true });
+    expect(errorBanner.clear).toHaveBeenCalled();
+    expect(i18n.use).toHaveBeenCalledWith('pt-BR');
+    expect(component.status()).toBe('saved');
+    expect(component.form.getRawValue()).toEqual({ locale: 'pt-BR', notifications: true });
+
+    profile.setPreferences.mockReturnValueOnce(throwError(() => new Error('preferences save failed')));
+    component.form.patchValue({ notifications: false });
+    component.form.markAsDirty();
+    component.submit();
+
+    expect(component.status()).toBe('error');
+    expect(component.errorMessage()).toBe('profile.preferences.error.saveFailed');
+    expect(errorBanner.show).toHaveBeenCalledWith({
+      message: 'profile.preferences.error.saveFailed',
+      tone: 'error',
+      code: 'profile.preferences_save_failed',
+    });
   });
 
   it('opens the configured change-password hosted action', () => {

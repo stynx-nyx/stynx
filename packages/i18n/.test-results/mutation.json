@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "1",
+  "package": "@stynx/i18n",
+  "level": "mutation",
+  "runner": "stryker-vitest",
+  "runnerVersion": "3.2.4",
+  "status": "passed",
+  "startedAt": "2026-05-20T03:13:32.698Z",
+  "endedAt": "2026-05-20T03:21:50.950Z",
+  "durationMs": 498252,
+  "exitCode": 0,
+  "signal": null,
+  "artifacts": {
+    "raw": ".test-results/mutation.log",
+    "report": "reports/mutation/mutation.json",
+    "html": "reports/mutation/-stynx-i18n/index.html"
+  },
+  "env": {
+    "node": "24.15.0",
+    "ci": false
+  },
+  "command": {
+    "argv": ["pnpm", "exec", "stryker", "run", "stryker.conf.mjs"],
+    "cwd": "/Users/aarusso/Development/stech/stynx/packages/i18n"
+  },
+  "metric": {
+    "kind": "score",
+    "score": 80.85106382978722,
+    "thresholds": {
+      "high": 60,
+      "low": 60,
+      "break": 60
+    }
+  },
+  "totals": {
+    "files": 7,
+    "tests": 233,
+    "passed": 114,
+    "failed": 27,
+    "skipped": 0,
+    "todo": 0
+  }
+}

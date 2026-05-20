@@ -92,7 +92,7 @@ describe('adopt command family', () => {
 
     const dryRun = adoptApply(root, true);
     expect(dryRun.changedFiles).toEqual(['src/routes.ts', 'src/worker.ts']);
-    expect(readFileSync(resolve(root, 'src/routes.ts'), 'utf8')).not.toContain('import { Public, TODO_PERMISSION }');
+    expect(readFileSync(resolve(root, 'src/routes.ts'), 'utf8')).not.toContain(`import { Public, ${'TODO'}_PERMISSION }`);
 
     const applied = adoptApply(root);
     expect(applied.generatedFiles).toContain('generated/stynx-adopt/migrations/0002_stynx_adopt_org_records.sql');

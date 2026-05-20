@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T15:54:45.405Z",
-  "endedAt": "2026-05-19T15:55:09.760Z",
-  "durationMs": 24355,
+  "startedAt": "2026-05-20T03:42:50.001Z",
+  "endedAt": "2026-05-20T03:43:00.749Z",
+  "durationMs": 10748,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-36036-1779206085405.json",
+      "--outputFile.json=/tmp/vitest-45934-1779248570001.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/core/.test-results/unit.junit.xml"
     ],
@@ -45,54 +45,54 @@
   },
   "slowestTests": [
     {
-      "name": "SecretLoader refetches after invalidating a cached secret",
+      "name": "SecretLoader caches the secret value within ttlMs",
       "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/secret-loader.spec.ts",
-      "durationMs": 242.32995800000026
+      "durationMs": 185.92174999999952
     },
     {
-      "name": "StynxErrorFilter omits context from the body when StynxError carries none",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/error.filter.spec.ts",
-      "durationMs": 211.73825000000033
+      "name": "config ownership metadata accepts present required values",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/config-ownership.spec.ts",
+      "durationMs": 127.13404100000025
     },
     {
       "name": "loadStynxConfiguration SSM loading loads paged SSM values using the default environment prefix",
       "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/config-ssm.spec.ts",
-      "durationMs": 186.4782499999983
+      "durationMs": 76.31308400000034
     },
     {
-      "name": "loadStynxConfiguration SSM loading reports schema validation failures after merging defaults and env",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/config-ssm.spec.ts",
-      "durationMs": 184.18791600000077
-    },
-    {
-      "name": "RequestContext exposes values inside an active request context and allows internal patching",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/request-context.spec.ts",
-      "durationMs": 128.96712500000103
-    },
-    {
-      "name": "SecretLoader refetches when forceRefresh=true",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/secret-loader.spec.ts",
-      "durationMs": 77.24479100000099
-    },
-    {
-      "name": "SecretLoader uses configured secretCacheTtlMs",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/secret-loader.spec.ts",
-      "durationMs": 75.5882500000007
-    },
-    {
-      "name": "RequestContextInterceptor exposes seed state inside the CLS scope during handler execution",
+      "name": "RequestContextInterceptor generates a UUIDv7 request id when none provided and sets X-Request-Id",
       "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/request-context.interceptor.spec.ts",
-      "durationMs": 73.30699999999888
+      "durationMs": 68.1411250000001
     },
     {
-      "name": "RequestContextInterceptor resolves actorId from stynxClaims.sub first and sessionId from sid",
+      "name": "RequestContextInterceptor propagates handler errors through the observable",
       "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/request-context.interceptor.spec.ts",
-      "durationMs": 68.15166700000009
+      "durationMs": 56.08508299999994
     },
     {
-      "name": "SecretLoader does not refresh after non-Error run failures",
+      "name": "SecretLoader rethrows non-connection errors",
       "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/secret-loader.spec.ts",
-      "durationMs": 65.08662499999991
+      "durationMs": 54.15695799999958
+    },
+    {
+      "name": "config ownership metadata validates ownership after loading configuration",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/config-ownership.spec.ts",
+      "durationMs": 52.09529199999997
+    },
+    {
+      "name": "RequestContextInterceptor honors a valid X-Request-Id header from the caller",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/request-context.interceptor.spec.ts",
+      "durationMs": 45.08520900000076
+    },
+    {
+      "name": "request id helpers generates a UUIDv7-shaped request id",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/request-id.spec.ts",
+      "durationMs": 43.16266599999972
+    },
+    {
+      "name": "StynxErrorFilter omits context from the body when StynxError carries none",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/error.filter.spec.ts",
+      "durationMs": 34.70954200000051
     }
   ]
 }

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-a7093cbd1b1c4f0b",
+  "sensor": {
+    "name": "harness-green-main",
+    "kind": "harness_green_main"
+  },
+  "timestamp": "2026-05-20T01:51:05.180Z",
+  "status": "fail",
+  "deterministic": false,
+  "command": "gh run list --branch main --json conclusion,createdAt --limit 50",
+  "command_hash": "4deb295189d175aedfcf6746614b1c2e5b45e30809d6bcc03485e6d62a3004b0",
+  "tier": "L2",
+  "findings": [
+    {
+      "severity": "error",
+      "code": "HARNESS_GREEN_MAIN_BELOW_THRESHOLD",
+      "message": "Main branch success rate 64.0% (over last 50 runs) is below review threshold 80%."
+    }
+  ],
+  "metrics": {
+    "run_count": 50,
+    "success_count": 32,
+    "success_pct": 64,
+    "threshold_pass": 95,
+    "threshold_review": 80
+  }
+}

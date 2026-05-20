@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T15:59:00.546Z",
-  "endedAt": "2026-05-19T15:59:18.138Z",
-  "durationMs": 17592,
+  "startedAt": "2026-05-20T03:45:04.496Z",
+  "endedAt": "2026-05-20T03:45:14.618Z",
+  "durationMs": 10122,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.int.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-45448-1779206340546.json",
+      "--outputFile.json=/tmp/vitest-52194-1779248704496.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/idempotency/.test-results/integration.junit.xml"
     ],
@@ -47,17 +47,17 @@
     {
       "name": "Idempotency integration returns 422 for body mismatch and does not store 5xx responses",
       "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/integration/idempotency.integration.spec.ts",
-      "durationMs": 136.1578329999993
-    },
-    {
-      "name": "Idempotency integration blocks concurrent identical requests until the first finishes and then replays",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/integration/idempotency.integration.spec.ts",
-      "durationMs": 123.34850000000006
+      "durationMs": 191.43825000000015
     },
     {
       "name": "Idempotency integration replays the exact response on the second call",
       "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/integration/idempotency.integration.spec.ts",
-      "durationMs": 103.56175000000076
+      "durationMs": 64.70074999999997
+    },
+    {
+      "name": "Idempotency integration blocks concurrent identical requests until the first finishes and then replays",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/integration/idempotency.integration.spec.ts",
+      "durationMs": 53.03533399999924
     }
   ]
 }

@@ -948,7 +948,7 @@ describe('@stynx-web/angular-storage', () => {
         initiate: vi.fn(async () => ({
           id: 'doc-failing-scan',
           s3Key: 'storage/doc-failing-scan',
-          upload: { method: 'PUT', url: 'https://upload.example.test', headers: {}, expiresInSeconds: 60 },
+          upload: { method: 'PUT' as const, url: 'https://upload.example.test', headers: {}, expiresInSeconds: 60 },
         })),
         complete: vi.fn(async () => ({ id: 'doc-failing-scan', scanStatus: 'pending' as const })),
         scanStatus$: vi.fn(() => throwError(() => new Error('scan channel offline'))),

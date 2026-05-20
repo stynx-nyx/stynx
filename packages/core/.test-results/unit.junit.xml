@@ -1,143 +1,143 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="61" failures="0" errors="0" time="1.927085251">
-    <testsuite name="test/unit/config-ownership.spec.ts" timestamp="2026-05-19T15:55:09.230Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.003902084">
-        <testcase classname="test/unit/config-ownership.spec.ts" name="config ownership metadata &gt; reports required ownership violations" time="0.001404042">
+<testsuites name="vitest tests" tests="61" failures="0" errors="0" time="1.005117332">
+    <testsuite name="test/unit/config-ownership.spec.ts" timestamp="2026-05-20T03:43:00.224Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.183223208">
+        <testcase classname="test/unit/config-ownership.spec.ts" name="config ownership metadata &gt; reports required ownership violations" time="0.0026965">
         </testcase>
-        <testcase classname="test/unit/config-ownership.spec.ts" name="config ownership metadata &gt; accepts present required values" time="0.0005045">
+        <testcase classname="test/unit/config-ownership.spec.ts" name="config ownership metadata &gt; accepts present required values" time="0.127134041">
         </testcase>
-        <testcase classname="test/unit/config-ownership.spec.ts" name="config ownership metadata &gt; validates ownership after loading configuration" time="0.001373167">
-        </testcase>
-    </testsuite>
-    <testsuite name="test/unit/config-ssm.spec.ts" timestamp="2026-05-19T15:55:09.232Z" hostname="thiamat-1903.local" tests="6" failures="0" errors="0" skipped="0" time="0.373952167">
-        <testcase classname="test/unit/config-ssm.spec.ts" name="loadStynxConfiguration SSM loading &gt; loads paged SSM values using the default environment prefix" time="0.18647825">
-        </testcase>
-        <testcase classname="test/unit/config-ssm.spec.ts" name="loadStynxConfiguration SSM loading &gt; loads SSM values using an explicit prefix and default client config" time="0.0006355">
-        </testcase>
-        <testcase classname="test/unit/config-ssm.spec.ts" name="loadStynxConfiguration SSM loading &gt; uses the dev SSM prefix fallback and accepts empty parameter pages" time="0.00046425">
-        </testcase>
-        <testcase classname="test/unit/config-ssm.spec.ts" name="loadStynxConfiguration SSM loading &gt; reports schema validation failures after merging defaults and env" time="0.184187916">
-        </testcase>
-        <testcase classname="test/unit/config-ssm.spec.ts" name="loadStynxConfiguration SSM loading &gt; ignores empty ownership metadata entries" time="0.000567875">
-        </testcase>
-        <testcase classname="test/unit/config-ssm.spec.ts" name="loadStynxConfiguration SSM loading &gt; exposes config values and optional module metadata through StynxConfigService" time="0.000306791">
+        <testcase classname="test/unit/config-ownership.spec.ts" name="config ownership metadata &gt; validates ownership after loading configuration" time="0.052095292">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/core.module.spec.ts" timestamp="2026-05-19T15:55:09.235Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.028379834">
-        <testcase classname="test/unit/core.module.spec.ts" name="StynxCoreModule &gt; wires sync and async option providers plus global infrastructure" time="0.027667625">
+    <testsuite name="test/unit/config-ssm.spec.ts" timestamp="2026-05-20T03:43:00.225Z" hostname="thiamat-1903.local" tests="6" failures="0" errors="0" skipped="0" time="0.098219916">
+        <testcase classname="test/unit/config-ssm.spec.ts" name="loadStynxConfiguration SSM loading &gt; loads paged SSM values using the default environment prefix" time="0.076313084">
+        </testcase>
+        <testcase classname="test/unit/config-ssm.spec.ts" name="loadStynxConfiguration SSM loading &gt; loads SSM values using an explicit prefix and default client config" time="0.002140375">
+        </testcase>
+        <testcase classname="test/unit/config-ssm.spec.ts" name="loadStynxConfiguration SSM loading &gt; uses the dev SSM prefix fallback and accepts empty parameter pages" time="0.001564833">
+        </testcase>
+        <testcase classname="test/unit/config-ssm.spec.ts" name="loadStynxConfiguration SSM loading &gt; reports schema validation failures after merging defaults and env" time="0.002375458">
+        </testcase>
+        <testcase classname="test/unit/config-ssm.spec.ts" name="loadStynxConfiguration SSM loading &gt; ignores empty ownership metadata entries" time="0.000609125">
+        </testcase>
+        <testcase classname="test/unit/config-ssm.spec.ts" name="loadStynxConfiguration SSM loading &gt; exposes config values and optional module metadata through StynxConfigService" time="0.000573125">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/error.filter.spec.ts" timestamp="2026-05-19T15:55:09.236Z" hostname="thiamat-1903.local" tests="6" failures="0" errors="0" skipped="0" time="0.326144917">
-        <testcase classname="test/unit/error.filter.spec.ts" name="StynxErrorFilter &gt; forwards plain HttpException with its status + response body" time="0.013777417">
-        </testcase>
-        <testcase classname="test/unit/error.filter.spec.ts" name="StynxErrorFilter &gt; translates StynxError into the standard envelope at exception.status" time="0.034919916">
-        </testcase>
-        <testcase classname="test/unit/error.filter.spec.ts" name="StynxErrorFilter &gt; omits context from the body when StynxError carries none" time="0.21173825">
-        </testcase>
-        <testcase classname="test/unit/error.filter.spec.ts" name="StynxErrorFilter &gt; translates via ErrorTranslator when locale + translator are available" time="0.02311175">
-        </testcase>
-        <testcase classname="test/unit/error.filter.spec.ts" name="StynxErrorFilter &gt; rethrows when the exception is neither HttpException nor StynxError" time="0.000798209">
-        </testcase>
-        <testcase classname="test/unit/error.filter.spec.ts" name="StynxErrorFilter &gt; moduleRef resolution gracefully returns undefined when token unknown" time="0.00139375">
+    <testsuite name="test/unit/core.module.spec.ts" timestamp="2026-05-20T03:43:00.227Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.005228375">
+        <testcase classname="test/unit/core.module.spec.ts" name="StynxCoreModule &gt; wires sync and async option providers plus global infrastructure" time="0.004584625">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/request-context.interceptor.spec.ts" timestamp="2026-05-19T15:55:09.238Z" hostname="thiamat-1903.local" tests="15" failures="0" errors="0" skipped="0" time="0.248855125">
-        <testcase classname="test/unit/request-context.interceptor.spec.ts" name="RequestContextInterceptor &gt; generates a UUIDv7 request id when none provided and sets X-Request-Id" time="0.012089708">
+    <testsuite name="test/unit/error.filter.spec.ts" timestamp="2026-05-20T03:43:00.228Z" hostname="thiamat-1903.local" tests="6" failures="0" errors="0" skipped="0" time="0.052131084">
+        <testcase classname="test/unit/error.filter.spec.ts" name="StynxErrorFilter &gt; forwards plain HttpException with its status + response body" time="0.00613175">
         </testcase>
-        <testcase classname="test/unit/request-context.interceptor.spec.ts" name="RequestContextInterceptor &gt; honors a valid X-Request-Id header from the caller" time="0.001692792">
+        <testcase classname="test/unit/error.filter.spec.ts" name="StynxErrorFilter &gt; translates StynxError into the standard envelope at exception.status" time="0.007365542">
         </testcase>
-        <testcase classname="test/unit/request-context.interceptor.spec.ts" name="RequestContextInterceptor &gt; throws BadRequestException when X-Request-Id is provided but invalid" time="0.000593834">
+        <testcase classname="test/unit/error.filter.spec.ts" name="StynxErrorFilter &gt; omits context from the body when StynxError carries none" time="0.034709542">
         </testcase>
-        <testcase classname="test/unit/request-context.interceptor.spec.ts" name="RequestContextInterceptor &gt; extracts header from first element when value is an array" time="0.006619917">
+        <testcase classname="test/unit/error.filter.spec.ts" name="StynxErrorFilter &gt; translates via ErrorTranslator when locale + translator are available" time="0.001342542">
         </testcase>
-        <testcase classname="test/unit/request-context.interceptor.spec.ts" name="RequestContextInterceptor &gt; extracts the first locale from Accept-Language header" time="0.005010958">
+        <testcase classname="test/unit/error.filter.spec.ts" name="StynxErrorFilter &gt; rethrows when the exception is neither HttpException nor StynxError" time="0.000613125">
         </testcase>
-        <testcase classname="test/unit/request-context.interceptor.spec.ts" name="RequestContextInterceptor &gt; ignores Accept-Language when only whitespace" time="0.000329125">
-        </testcase>
-        <testcase classname="test/unit/request-context.interceptor.spec.ts" name="RequestContextInterceptor &gt; ignores Accept-Language when the first language segment is empty" time="0.000208083">
-        </testcase>
-        <testcase classname="test/unit/request-context.interceptor.spec.ts" name="RequestContextInterceptor &gt; binds tenantId from request.tenantId when present" time="0.000782">
-        </testcase>
-        <testcase classname="test/unit/request-context.interceptor.spec.ts" name="RequestContextInterceptor &gt; falls back to stynxClaims.tenantId when request.tenantId absent" time="0.000596583">
-        </testcase>
-        <testcase classname="test/unit/request-context.interceptor.spec.ts" name="RequestContextInterceptor &gt; resolves actorId from stynxClaims.sub first and sessionId from sid" time="0.068151667">
-        </testcase>
-        <testcase classname="test/unit/request-context.interceptor.spec.ts" name="RequestContextInterceptor &gt; falls back to principal.id, then actor.id, then user.id" time="0.041213833">
-        </testcase>
-        <testcase classname="test/unit/request-context.interceptor.spec.ts" name="RequestContextInterceptor &gt; propagates handler errors through the observable" time="0.02420575">
-        </testcase>
-        <testcase classname="test/unit/request-context.interceptor.spec.ts" name="RequestContextInterceptor &gt; unsubscribes the downstream subscription on teardown" time="0.000295">
-        </testcase>
-        <testcase classname="test/unit/request-context.interceptor.spec.ts" name="RequestContextInterceptor &gt; exposes seed state inside the CLS scope during handler execution" time="0.073307">
-        </testcase>
-        <testcase classname="test/unit/request-context.interceptor.spec.ts" name="RequestContextInterceptor &gt; does not set tenantId/actorId/locale/sessionId when none are derivable" time="0.011891583">
+        <testcase classname="test/unit/error.filter.spec.ts" name="StynxErrorFilter &gt; moduleRef resolution gracefully returns undefined when token unknown" time="0.000532708">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/request-context.spec.ts" timestamp="2026-05-19T15:55:09.248Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="0.189230083">
-        <testcase classname="test/unit/request-context.spec.ts" name="RequestContext &gt; throws when read outside an active request context" time="0.000844125">
+    <testsuite name="test/unit/request-context.interceptor.spec.ts" timestamp="2026-05-20T03:43:00.228Z" hostname="thiamat-1903.local" tests="15" failures="0" errors="0" skipped="0" time="0.259953791">
+        <testcase classname="test/unit/request-context.interceptor.spec.ts" name="RequestContextInterceptor &gt; generates a UUIDv7 request id when none provided and sets X-Request-Id" time="0.068141125">
         </testcase>
-        <testcase classname="test/unit/request-context.spec.ts" name="RequestContext &gt; exposes values inside an active request context and allows internal patching" time="0.128967125">
+        <testcase classname="test/unit/request-context.interceptor.spec.ts" name="RequestContextInterceptor &gt; honors a valid X-Request-Id header from the caller" time="0.045085209">
         </testcase>
-        <testcase classname="test/unit/request-context.spec.ts" name="RequestContext &gt; throws when patching outside an active request context" time="0.024564708">
+        <testcase classname="test/unit/request-context.interceptor.spec.ts" name="RequestContextInterceptor &gt; throws BadRequestException when X-Request-Id is provided but invalid" time="0.003312667">
         </testcase>
-        <testcase classname="test/unit/request-context.spec.ts" name="RequestContext &gt; reports inactive state and opens system context without inherited actor" time="0.014174917">
+        <testcase classname="test/unit/request-context.interceptor.spec.ts" name="RequestContextInterceptor &gt; extracts header from first element when value is an array" time="0.005989458">
         </testcase>
-        <testcase classname="test/unit/request-context.spec.ts" name="RequestContext &gt; inherits actor id when opening a system context from an active request" time="0.000470292">
+        <testcase classname="test/unit/request-context.interceptor.spec.ts" name="RequestContextInterceptor &gt; extracts the first locale from Accept-Language header" time="0.005454709">
         </testcase>
-    </testsuite>
-    <testsuite name="test/unit/request-id.spec.ts" timestamp="2026-05-19T15:55:09.249Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.119912583">
-        <testcase classname="test/unit/request-id.spec.ts" name="request id helpers &gt; generates a UUIDv7-shaped request id" time="0.001519125">
+        <testcase classname="test/unit/request-context.interceptor.spec.ts" name="RequestContextInterceptor &gt; ignores Accept-Language when only whitespace" time="0.02331975">
         </testcase>
-        <testcase classname="test/unit/request-id.spec.ts" name="request id helpers &gt; normalizes valid external request ids" time="0.000249625">
+        <testcase classname="test/unit/request-context.interceptor.spec.ts" name="RequestContextInterceptor &gt; ignores Accept-Language when the first language segment is empty" time="0.003936959">
         </testcase>
-        <testcase classname="test/unit/request-id.spec.ts" name="request id helpers &gt; rejects UUIDv7-shaped substrings embedded in longer values" time="0.000093833">
+        <testcase classname="test/unit/request-context.interceptor.spec.ts" name="RequestContextInterceptor &gt; binds tenantId from request.tenantId when present" time="0.000548708">
         </testcase>
-    </testsuite>
-    <testsuite name="test/unit/secret-loader.spec.ts" timestamp="2026-05-19T15:55:09.249Z" hostname="thiamat-1903.local" tests="14" failures="0" errors="0" skipped="0" time="0.61440875">
-        <testcase classname="test/unit/secret-loader.spec.ts" name="SecretLoader &gt; caches the secret value within ttlMs" time="0.037481041">
+        <testcase classname="test/unit/request-context.interceptor.spec.ts" name="RequestContextInterceptor &gt; falls back to stynxClaims.tenantId when request.tenantId absent" time="0.007580625">
         </testcase>
-        <testcase classname="test/unit/secret-loader.spec.ts" name="SecretLoader &gt; refetches when forceRefresh=true" time="0.077244791">
+        <testcase classname="test/unit/request-context.interceptor.spec.ts" name="RequestContextInterceptor &gt; resolves actorId from stynxClaims.sub first and sessionId from sid" time="0.000416334">
         </testcase>
-        <testcase classname="test/unit/secret-loader.spec.ts" name="SecretLoader &gt; refetches when the cached secret expires exactly at the current time" time="0.060971125">
+        <testcase classname="test/unit/request-context.interceptor.spec.ts" name="RequestContextInterceptor &gt; falls back to principal.id, then actor.id, then user.id" time="0.000310208">
         </testcase>
-        <testcase classname="test/unit/secret-loader.spec.ts" name="SecretLoader &gt; refetches after invalidating a cached secret" time="0.242329958">
+        <testcase classname="test/unit/request-context.interceptor.spec.ts" name="RequestContextInterceptor &gt; propagates handler errors through the observable" time="0.056085083">
         </testcase>
-        <testcase classname="test/unit/secret-loader.spec.ts" name="SecretLoader &gt; uses default 5-minute TTL when not configured" time="0.000465959">
+        <testcase classname="test/unit/request-context.interceptor.spec.ts" name="RequestContextInterceptor &gt; unsubscribes the downstream subscription on teardown" time="0.004202459">
         </testcase>
-        <testcase classname="test/unit/secret-loader.spec.ts" name="SecretLoader &gt; uses configured secretCacheTtlMs" time="0.07558825">
+        <testcase classname="test/unit/request-context.interceptor.spec.ts" name="RequestContextInterceptor &gt; exposes seed state inside the CLS scope during handler execution" time="0.002786375">
         </testcase>
-        <testcase classname="test/unit/secret-loader.spec.ts" name="SecretLoader &gt; constructs a SecretsManagerClient with no config when none provided" time="0.000520209">
-        </testcase>
-        <testcase classname="test/unit/secret-loader.spec.ts" name="SecretLoader &gt; constructs a SecretsManagerClient with configured client options" time="0.000267375">
-        </testcase>
-        <testcase classname="test/unit/secret-loader.spec.ts" name="SecretLoader &gt; throws SecretLoadError when the SDK returns no SecretString" time="0.000616666">
-        </testcase>
-        <testcase classname="test/unit/secret-loader.spec.ts" name="SecretLoader &gt; throws SecretLoadError on connection-like errors" time="0.000411875">
-        </testcase>
-        <testcase classname="test/unit/secret-loader.spec.ts" name="SecretLoader &gt; rethrows non-connection errors" time="0.008757084">
-        </testcase>
-        <testcase classname="test/unit/secret-loader.spec.ts" name="SecretLoader &gt; refreshes a cached secret after a connection-like run failure" time="0.026095458">
-        </testcase>
-        <testcase classname="test/unit/secret-loader.spec.ts" name="SecretLoader &gt; does not refresh after non-connection run failures" time="0.002903375">
-        </testcase>
-        <testcase classname="test/unit/secret-loader.spec.ts" name="SecretLoader &gt; does not refresh after non-Error run failures" time="0.065086625">
+        <testcase classname="test/unit/request-context.interceptor.spec.ts" name="RequestContextInterceptor &gt; does not set tenantId/actorId/locale/sessionId when none are derivable" time="0.000340709">
         </testcase>
     </testsuite>
-    <testsuite name="test/unit/system-context.spec.ts" timestamp="2026-05-19T15:55:09.252Z" hostname="thiamat-1903.local" tests="8" failures="0" errors="0" skipped="0" time="0.022299708">
-        <testcase classname="test/unit/system-context.spec.ts" name="SystemContext &gt; requires a readable reason and records an audit event" time="0.009279041">
+    <testsuite name="test/unit/request-context.spec.ts" timestamp="2026-05-20T03:43:00.234Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="0.005182083">
+        <testcase classname="test/unit/request-context.spec.ts" name="RequestContext &gt; throws when read outside an active request context" time="0.001282458">
         </testcase>
-        <testcase classname="test/unit/system-context.spec.ts" name="SystemContext &gt; records active actor id from the request context when available" time="0.00023025">
+        <testcase classname="test/unit/request-context.spec.ts" name="RequestContext &gt; exposes values inside an active request context and allows internal patching" time="0.002224541">
         </testcase>
-        <testcase classname="test/unit/system-context.spec.ts" name="SystemContext &gt; rejects reasons shorter than 10 characters" time="0.0004565">
+        <testcase classname="test/unit/request-context.spec.ts" name="RequestContext &gt; throws when patching outside an active request context" time="0.000131917">
         </testcase>
-        <testcase classname="test/unit/system-context.spec.ts" name="SystemContext &gt; accepts a trimmed 10-character reason and stores the trimmed value" time="0.000233792">
+        <testcase classname="test/unit/request-context.spec.ts" name="RequestContext &gt; reports inactive state and opens system context without inherited actor" time="0.000584625">
         </testcase>
-        <testcase classname="test/unit/system-context.spec.ts" name="SystemContext &gt; current() throws SystemContextRequiredError when no system context is active" time="0.00015325">
+        <testcase classname="test/unit/request-context.spec.ts" name="RequestContext &gt; inherits actor id when opening a system context from an active request" time="0.000166041">
         </testcase>
-        <testcase classname="test/unit/system-context.spec.ts" name="SystemContext &gt; current() returns the active SystemExecutionContext set by withSystemContext" time="0.000120792">
+    </testsuite>
+    <testsuite name="test/unit/request-id.spec.ts" timestamp="2026-05-20T03:43:00.235Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.08547925">
+        <testcase classname="test/unit/request-id.spec.ts" name="request id helpers &gt; generates a UUIDv7-shaped request id" time="0.043162666">
         </testcase>
-        <testcase classname="test/unit/system-context.spec.ts" name="SystemContext &gt; defaults to a no-op sink when none is injected" time="0.004694709">
+        <testcase classname="test/unit/request-id.spec.ts" name="request id helpers &gt; normalizes valid external request ids" time="0.011324417">
         </testcase>
-        <testcase classname="test/unit/system-context.spec.ts" name="SystemContext &gt; withSystemContext helper delegates to the SystemContext instance" time="0.002695375">
+        <testcase classname="test/unit/request-id.spec.ts" name="request id helpers &gt; rejects UUIDv7-shaped substrings embedded in longer values" time="0.000155167">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/secret-loader.spec.ts" timestamp="2026-05-20T03:43:00.237Z" hostname="thiamat-1903.local" tests="14" failures="0" errors="0" skipped="0" time="0.299680833">
+        <testcase classname="test/unit/secret-loader.spec.ts" name="SecretLoader &gt; caches the secret value within ttlMs" time="0.18592175">
+        </testcase>
+        <testcase classname="test/unit/secret-loader.spec.ts" name="SecretLoader &gt; refetches when forceRefresh=true" time="0.000508">
+        </testcase>
+        <testcase classname="test/unit/secret-loader.spec.ts" name="SecretLoader &gt; refetches when the cached secret expires exactly at the current time" time="0.021134083">
+        </testcase>
+        <testcase classname="test/unit/secret-loader.spec.ts" name="SecretLoader &gt; refetches after invalidating a cached secret" time="0.000486458">
+        </testcase>
+        <testcase classname="test/unit/secret-loader.spec.ts" name="SecretLoader &gt; uses default 5-minute TTL when not configured" time="0.000204459">
+        </testcase>
+        <testcase classname="test/unit/secret-loader.spec.ts" name="SecretLoader &gt; uses configured secretCacheTtlMs" time="0.000189334">
+        </testcase>
+        <testcase classname="test/unit/secret-loader.spec.ts" name="SecretLoader &gt; constructs a SecretsManagerClient with no config when none provided" time="0.0002315">
+        </testcase>
+        <testcase classname="test/unit/secret-loader.spec.ts" name="SecretLoader &gt; constructs a SecretsManagerClient with configured client options" time="0.000173333">
+        </testcase>
+        <testcase classname="test/unit/secret-loader.spec.ts" name="SecretLoader &gt; throws SecretLoadError when the SDK returns no SecretString" time="0.00056425">
+        </testcase>
+        <testcase classname="test/unit/secret-loader.spec.ts" name="SecretLoader &gt; throws SecretLoadError on connection-like errors" time="0.032575083">
+        </testcase>
+        <testcase classname="test/unit/secret-loader.spec.ts" name="SecretLoader &gt; rethrows non-connection errors" time="0.054156958">
+        </testcase>
+        <testcase classname="test/unit/secret-loader.spec.ts" name="SecretLoader &gt; refreshes a cached secret after a connection-like run failure" time="0.000941959">
+        </testcase>
+        <testcase classname="test/unit/secret-loader.spec.ts" name="SecretLoader &gt; does not refresh after non-connection run failures" time="0.000671917">
+        </testcase>
+        <testcase classname="test/unit/secret-loader.spec.ts" name="SecretLoader &gt; does not refresh after non-Error run failures" time="0.000234958">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/system-context.spec.ts" timestamp="2026-05-20T03:43:00.241Z" hostname="thiamat-1903.local" tests="8" failures="0" errors="0" skipped="0" time="0.016018792">
+        <testcase classname="test/unit/system-context.spec.ts" name="SystemContext &gt; requires a readable reason and records an audit event" time="0.005364292">
+        </testcase>
+        <testcase classname="test/unit/system-context.spec.ts" name="SystemContext &gt; records active actor id from the request context when available" time="0.000744292">
+        </testcase>
+        <testcase classname="test/unit/system-context.spec.ts" name="SystemContext &gt; rejects reasons shorter than 10 characters" time="0.001065542">
+        </testcase>
+        <testcase classname="test/unit/system-context.spec.ts" name="SystemContext &gt; accepts a trimmed 10-character reason and stores the trimmed value" time="0.000674875">
+        </testcase>
+        <testcase classname="test/unit/system-context.spec.ts" name="SystemContext &gt; current() throws SystemContextRequiredError when no system context is active" time="0.000401792">
+        </testcase>
+        <testcase classname="test/unit/system-context.spec.ts" name="SystemContext &gt; current() returns the active SystemExecutionContext set by withSystemContext" time="0.000742917">
+        </testcase>
+        <testcase classname="test/unit/system-context.spec.ts" name="SystemContext &gt; defaults to a no-op sink when none is injected" time="0.000397041">
+        </testcase>
+        <testcase classname="test/unit/system-context.spec.ts" name="SystemContext &gt; withSystemContext helper delegates to the SystemContext instance" time="0.005739291">
         </testcase>
     </testsuite>
 </testsuites>

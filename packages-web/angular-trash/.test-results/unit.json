@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T16:46:26.269Z",
-  "endedAt": "2026-05-19T16:46:29.390Z",
-  "durationMs": 3121,
+  "startedAt": "2026-05-20T03:43:28.313Z",
+  "endedAt": "2026-05-20T03:43:40.250Z",
+  "durationMs": 11937,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-98492-1779209186269.json",
+      "--outputFile.json=/tmp/vitest-48354-1779248608312.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages-web/angular-trash/.test-results/unit.junit.xml"
     ],
@@ -47,47 +47,47 @@
     {
       "name": "@stynx-web/angular-trash supports provider-backed components, tabs, filters, bulk actions, and retention countdowns",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-trash/test/angular-trash.spec.ts",
-      "durationMs": 15.86408399999982
+      "durationMs": 18.751374999999825
     },
     {
       "name": "@stynx-web/angular-trash loads trash items and restores them through the adapter",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-trash/test/angular-trash.spec.ts",
-      "durationMs": 4.364875000000211
-    },
-    {
-      "name": "@stynx-web/angular-trash handles pagination, cascade restore, hard delete, and fallback errors",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-trash/test/angular-trash.spec.ts",
-      "durationMs": 2.297291000000314
+      "durationMs": 8.54949999999917
     },
     {
       "name": "@stynx-web/angular-trash ships a default SDK adapter provider and multiplexes configured kinds",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-trash/test/angular-trash.spec.ts",
-      "durationMs": 1.8172090000002754
+      "durationMs": 6.942791999999827
+    },
+    {
+      "name": "@stynx-web/angular-trash handles pagination, cascade restore, hard delete, and fallback errors",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-trash/test/angular-trash.spec.ts",
+      "durationMs": 4.71020899999894
     },
     {
       "name": "@stynx-web/angular-trash honors default kind, selection/filter toggles, empty bulk guards, and missing adapters",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-trash/test/angular-trash.spec.ts",
-      "durationMs": 1.7403329999997368
-    },
-    {
-      "name": "@stynx-web/angular-trash does not cascade unrelated restore errors and preserves exact toast messages",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-trash/test/angular-trash.spec.ts",
-      "durationMs": 0.6030419999997321
-    },
-    {
-      "name": "@stynx-web/angular-trash checks hard-delete permission names, invalid purge dates, and today countdowns",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-trash/test/angular-trash.spec.ts",
-      "durationMs": 0.489708999999948
+      "durationMs": 1.0493749999986903
     },
     {
       "name": "@stynx-web/angular-trash falls back to per-item bulk operations and filters by the current session",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-trash/test/angular-trash.spec.ts",
-      "durationMs": 0.46887500000002547
+      "durationMs": 0.46045799999956216
+    },
+    {
+      "name": "@stynx-web/angular-trash does not cascade unrelated restore errors and preserves exact toast messages",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-trash/test/angular-trash.spec.ts",
+      "durationMs": 0.42583399999966787
+    },
+    {
+      "name": "@stynx-web/angular-trash checks hard-delete permission names, invalid purge dates, and today countdowns",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-trash/test/angular-trash.spec.ts",
+      "durationMs": 0.39266700000007404
     },
     {
       "name": "@stynx-web/angular-trash prunes stale selections, clears load errors, and preserves row fields",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-trash/test/angular-trash.spec.ts",
-      "durationMs": 0.2927089999998316
+      "durationMs": 0.25420800000028976
     }
   ]
 }

@@ -26,11 +26,14 @@ export const PROFILE_ROUTES: Routes = [
 ];
 
 function cloneRoute(route: Route): Route {
-  return {
-    ...route,
-    canDeactivate: route.canDeactivate ? [...route.canDeactivate] : undefined,
-    data: route.data ? { ...route.data } : undefined,
-  };
+  const cloned: Route = { ...route };
+  if (route.canDeactivate) {
+    cloned.canDeactivate = [...route.canDeactivate];
+  }
+  if (route.data) {
+    cloned.data = { ...route.data };
+  }
+  return cloned;
 }
 
 export function profileRoutes(): Routes {

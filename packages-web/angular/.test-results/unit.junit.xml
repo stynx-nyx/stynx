@@ -1,41 +1,41 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="18" failures="0" errors="0" time="0.903085083">
-    <testsuite name="test/stynx-angular.spec.ts" timestamp="2026-05-19T15:55:45.233Z" hostname="thiamat-1903.local" tests="18" failures="0" errors="0" skipped="0" time="0.903085083">
-        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; generates UUIDv7-shaped request ids for API headers" time="0.002994125">
+<testsuites name="vitest tests" tests="18" failures="0" errors="0" time="0.442413875">
+    <testsuite name="test/stynx-angular.spec.ts" timestamp="2026-05-20T03:43:14.119Z" hostname="thiamat-1903.local" tests="18" failures="0" errors="0" skipped="0" time="0.442413875">
+        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; generates UUIDv7-shaped request ids for API headers" time="0.006637167">
         </testcase>
-        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; falls back to Math.random when web crypto is unavailable" time="0.0016635">
+        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; falls back to Math.random when web crypto is unavailable" time="0.007510583">
         </testcase>
-        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; preserves caller request ids" time="0.002667833">
+        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; preserves caller request ids" time="0.013378958">
         </testcase>
-        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; applies request-id, tenant, and auth headers and refreshes after 401" time="0.03478075">
+        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; applies request-id, tenant, and auth headers and refreshes after 401" time="0.051773208">
         </testcase>
-        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; refreshes after a mapped unauthorized SDK error" time="0.006591708">
+        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; refreshes after a mapped unauthorized SDK error" time="0.009981167">
         </testcase>
-        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; passes auth through when bearer mode is disabled and shows a re-login action when refresh is empty" time="0.002687542">
+        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; passes auth through when bearer mode is disabled and shows a re-login action when refresh is empty" time="0.018778875">
         </testcase>
-        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; skips auth without a provider and does not retry non-retryable errors" time="0.001464416">
+        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; skips auth without a provider and does not retry non-retryable errors" time="0.075687">
         </testcase>
-        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; leaves bearer requests unchanged when the provider has no token" time="0.00162375">
+        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; leaves bearer requests unchanged when the provider has no token" time="0.033754542">
         </testcase>
-        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; passes unauthenticated mapped 401 errors through without refresh" time="0.020175667">
+        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; passes unauthenticated mapped 401 errors through without refresh" time="0.018702583">
         </testcase>
-        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; maps server errors through ErrorBannerService" time="0.350827417">
+        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; maps server errors through ErrorBannerService" time="0.013877084">
         </testcase>
-        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; maps HTTP error context and omits falsy status from banners" time="0.12969375">
+        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; maps HTTP error context and omits falsy status from banners" time="0.006686583">
         </testcase>
-        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; maps HTTP errors without optional code, status, or context fields" time="0.038249583">
+        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; maps HTTP errors without optional code, status, or context fields" time="0.00593775">
         </testcase>
-        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; passes non-HTTP errors through without showing a banner" time="0.060777333">
+        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; passes non-HTTP errors through without showing a banner" time="0.00403525">
         </testcase>
-        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; resolves tenant context from query, subdomain, then default resolver" time="0.016624167">
+        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; resolves tenant context from query, subdomain, then default resolver" time="0.01432125">
         </testcase>
-        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; tracks toast service signal and observable lifecycles" time="0.009874375">
+        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; tracks toast service signal and observable lifecycles" time="0.136269292">
         </testcase>
-        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; keeps empty-state component inputs as configured" time="0.008514416">
+        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; keeps empty-state component inputs as configured" time="0.000129125">
         </testcase>
-        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; provides standalone stynx defaults with feature-provider overrides" time="0.020112375">
+        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; provides standalone stynx defaults with feature-provider overrides" time="0.003689625">
         </testcase>
-        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; registers module error mapping outside auth refresh handling" time="0.18497275">
+        <testcase classname="test/stynx-angular.spec.ts" name="@stynx-web/angular &gt; registers module error mapping outside auth refresh handling" time="0.015363292">
         </testcase>
     </testsuite>
 </testsuites>

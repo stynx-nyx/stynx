@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T15:55:13.019Z",
-  "endedAt": "2026-05-19T15:55:46.606Z",
-  "durationMs": 33587,
+  "startedAt": "2026-05-20T03:43:07.589Z",
+  "endedAt": "2026-05-20T03:43:18.402Z",
+  "durationMs": 10813,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-37675-1779206113013.json",
+      "--outputFile.json=/tmp/vitest-47499-1779248587589.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/storage/.test-results/unit.junit.xml"
     ],
@@ -45,54 +45,54 @@
   },
   "slowestTests": [
     {
-      "name": "StynxObjectStore constructs an S3Client with the configured region",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/object-store.spec.ts",
-      "durationMs": 173.34591700000055
-    },
-    {
-      "name": "S3Service configures lifecycle transition and expiration rules",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/s3.service.spec.ts",
-      "durationMs": 86.37295799999993
-    },
-    {
       "name": "S3Service rate-limits tenant download presigns by minute",
       "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/s3.service.spec.ts",
-      "durationMs": 25.546582999999373
+      "durationMs": 86.9300830000002
     },
     {
       "name": "DocumentsService initiates a document with a tenant-scoped key and presigned upload",
       "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/documents.service.spec.ts",
-      "durationMs": 15.249582999997074
+      "durationMs": 82.0292500000005
     },
     {
-      "name": "DocumentsService rejects unknown collections, disallowed mime types, bad checksums, and missing context",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/documents.service.spec.ts",
-      "durationMs": 13.167958999998518
+      "name": "StynxObjectStore constructs an S3Client with the configured region",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/object-store.spec.ts",
+      "durationMs": 57.599083000000064
     },
     {
-      "name": "S3Service configures empty lifecycle filters when optional lifecycle fields are absent",
+      "name": "S3Service omits absent object metadata fields and deletes unversioned matches",
       "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/s3.service.spec.ts",
-      "durationMs": 8.693208000000595
+      "durationMs": 40.59941700000036
     },
     {
-      "name": "DocumentsService reports missing, cross-tenant, and unavailable database cases",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/documents.service.spec.ts",
-      "durationMs": 7.850207999999839
+      "name": "S3Service passes endpoint and path-style client options and supports custom default expiries",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/s3.service.spec.ts",
+      "durationMs": 32.52600000000075
     },
     {
-      "name": "DocumentsService quarantines a document when the uploaded metadata does not match",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/documents.service.spec.ts",
-      "durationMs": 6.678500000001804
+      "name": "S3Service uses the default presign rate limit when no compliance override is configured",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/s3.service.spec.ts",
+      "durationMs": 12.106207999999242
     },
     {
-      "name": "DocumentsService rejects collection size overflow",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/documents.service.spec.ts",
-      "durationMs": 6.412333000000217
+      "name": "S3Service heads objects and deletes object versions or the base object fallback",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/s3.service.spec.ts",
+      "durationMs": 4.616416999999274
     },
     {
-      "name": "@stynx/storage barrel exports at least one symbol",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/barrel-load.spec.ts",
-      "durationMs": 5.313333000001876
+      "name": "StynxObjectStore presignDownload returns a signed URL via getSignedUrl",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/object-store.spec.ts",
+      "durationMs": 3.7265000000002146
+    },
+    {
+      "name": "S3Service configures lifecycle transition and expiration rules",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/s3.service.spec.ts",
+      "durationMs": 3.3812079999997877
+    },
+    {
+      "name": "S3Service rejects bucket names outside the required pattern",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/storage/test/unit/s3.service.spec.ts",
+      "durationMs": 3.3145409999997355
     }
   ]
 }

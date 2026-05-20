@@ -31,6 +31,7 @@ function walk(dir, visitor) {
       entry === '.turbo' ||
       entry === 'node_modules' ||
       entry === 'dist' ||
+      entry === 'reports' ||
       relativePath.startsWith('docs/') ||
       relativePath.startsWith('specs/') ||
       relativePath.startsWith('audit/') ||

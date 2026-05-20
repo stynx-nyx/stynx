@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T15:57:26.588Z",
-  "endedAt": "2026-05-19T15:57:55.141Z",
-  "durationMs": 28553,
+  "startedAt": "2026-05-20T03:43:44.334Z",
+  "endedAt": "2026-05-20T03:44:14.130Z",
+  "durationMs": 29796,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-42606-1779206246587.json",
+      "--outputFile.json=/tmp/vitest-49084-1779248624333.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/tenancy/.test-results/unit.junit.xml"
     ],
@@ -45,54 +45,54 @@
   },
   "slowestTests": [
     {
-      "name": "TenantContextInterceptor trims tenant sources, validates membership through owner readonly tx, and caches the decision",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/tenant-context.interceptor.spec.ts",
-      "durationMs": 377.96866699999737
-    },
-    {
-      "name": "TenancyService archives and purges tenants while invalidating membership cache",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/tenancy.service.spec.ts",
-      "durationMs": 354.8760000000002
-    },
-    {
       "name": "tenancy utils creates UUIDv7 values when entropy bytes are missing variant positions",
       "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/utils.spec.ts",
-      "durationMs": 155.71770799999922
-    },
-    {
-      "name": "TenancyService uses default tenant side-effect adapters when none are provided",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/tenancy.service.spec.ts",
-      "durationMs": 146.90879099999802
-    },
-    {
-      "name": "TenantContextInterceptor skips optional paths without hitting the database",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/tenant-context.interceptor.spec.ts",
-      "durationMs": 97.26008400000137
-    },
-    {
-      "name": "TenancyService provisions a new tenant and fans out the expected side effects",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/tenancy.service.spec.ts",
-      "durationMs": 78.72570899999846
+      "durationMs": 662.2285419999998
     },
     {
       "name": "TenancyController API contract delegates tenant read and mutation operations to the service",
       "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/tenancy.controller.spec.ts",
-      "durationMs": 19.93249999999898
+      "durationMs": 78.04208300000028
     },
     {
       "name": "TenancyController API contract keeps tenant administration behind the platform admin guard",
       "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/tenancy.controller.spec.ts",
-      "durationMs": 16.751749999999447
+      "durationMs": 75.1150830000006
+    },
+    {
+      "name": "tenancy utils normalizes headers, paths, optional tenancy routes, and UUIDv7 values",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/utils.spec.ts",
+      "durationMs": 55.42545799999971
+    },
+    {
+      "name": "TenantContextInterceptor resolves tenant and actor identities from bearer claims",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/tenant-context.interceptor.spec.ts",
+      "durationMs": 35.46729100000084
+    },
+    {
+      "name": "TenantContextInterceptor rejects inactive memberships and caches the negative membership decision",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/tenant-context.interceptor.spec.ts",
+      "durationMs": 33.877958000000945
     },
     {
       "name": "TenancyService throws when a tenant cannot be found",
       "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/tenancy.service.spec.ts",
-      "durationMs": 13.779417000001558
+      "durationMs": 30.605625000000146
     },
     {
-      "name": "TenantContextInterceptor rejects missing tenant context and mismatched header/claim pairs",
+      "name": "MembershipAccessCache expires entries after the configured ttl",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/membership-cache.spec.ts",
+      "durationMs": 29.990834000000177
+    },
+    {
+      "name": "TenantContextInterceptor trims tenant ids from stynx claims and returns optional paths without a tenant",
       "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/tenant-context.interceptor.spec.ts",
-      "durationMs": 13.137084000001778
+      "durationMs": 27.426500000001397
+    },
+    {
+      "name": "TenancyService throws when a tenant disappears after an update and when the database provider is missing",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/tenancy/test/unit/tenancy.service.spec.ts",
+      "durationMs": 24.64708299999984
     }
   ]
 }

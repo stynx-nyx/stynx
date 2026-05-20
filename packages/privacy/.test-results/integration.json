@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T15:33:27.940Z",
-  "endedAt": "2026-05-19T15:33:40.728Z",
-  "durationMs": 12788,
+  "startedAt": "2026-05-20T02:02:44.679Z",
+  "endedAt": "2026-05-20T02:03:05.636Z",
+  "durationMs": 20957,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.int.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-93275-1779204807940.json",
+      "--outputFile.json=/tmp/vitest-88956-1779242564678.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/privacy/.test-results/integration.junit.xml"
     ],
@@ -47,7 +47,7 @@
     {
       "name": "StynxPrivacyModule integration loads PII rules, exports live and archive rows, erases data, and reports retention",
       "file": "/Users/aarusso/Development/stech/stynx/packages/privacy/test/integration/privacy.module.spec.ts",
-      "durationMs": 9768.885708000002
+      "durationMs": 17211.341208
     }
   ]
 }

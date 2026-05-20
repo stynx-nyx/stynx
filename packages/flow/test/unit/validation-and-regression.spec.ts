@@ -8,6 +8,8 @@ import {
   createNodeSchema,
   ensureRunSchema,
   parseDto,
+  policyEvaluationSchema,
+  signalSchema,
 } from '../../src/validation';
 
 function sourceFiles(dir: string): string[] {
@@ -42,6 +44,32 @@ describe('Flow validation and regression guards', () => {
       itemId: '01978f4a-32bf-7c27-a131-fd73a9e001a1',
       value: true,
     })).toMatchObject({ itemId: '01978f4a-32bf-7c27-a131-fd73a9e001a1' });
+  });
+
+  it('rejects ambiguous flow DTO identifiers', () => {
+    expect(() => parseDto(signalSchema, {
+      targetType: 'document',
+      targetId: 'doc-1',
+    })).toThrow(BadRequestException);
+
+    expect(() => parseDto(answerWriteSchema, {
+      value: true,
+    })).toThrow(BadRequestException);
+
+    expect(() => parseDto(policyEvaluationSchema, {
+      action: 'approve',
+    })).toThrow(BadRequestException);
+
+    expect(() => parseDto(policyEvaluationSchema, {
+      policySetId: '01978f4a-32bf-7c27-a131-fd73a9e001a1',
+      action: 'approve',
+      capability: 'flow.approve',
+    })).toThrow(BadRequestException);
+
+    expect(parseDto(policyEvaluationSchema, {
+      policySetId: '01978f4a-32bf-7c27-a131-fd73a9e001a1',
+      capability: 'flow.view',
+    })).toMatchObject({ capability: 'flow.view' });
   });
 
   it('rejects invalid graph imports with duplicate or missing node references', () => {

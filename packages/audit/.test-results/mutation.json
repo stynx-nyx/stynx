@@ -4,14 +4,16 @@
   "level": "mutation",
   "runner": "stryker-vitest",
   "runnerVersion": "3.2.4",
-  "status": "failed",
-  "startedAt": "2026-05-19T04:46:17.984Z",
-  "endedAt": "2026-05-19T04:46:39.825Z",
-  "durationMs": 21841,
-  "exitCode": 1,
+  "status": "passed",
+  "startedAt": "2026-05-20T02:12:29.943Z",
+  "endedAt": "2026-05-20T02:12:40.663Z",
+  "durationMs": 10720,
+  "exitCode": 0,
   "signal": null,
   "artifacts": {
-    "raw": ".test-results/mutation.log"
+    "raw": ".test-results/mutation.log",
+    "report": "reports/mutation/mutation.json",
+    "html": "reports/mutation/-stynx-audit/index.html"
   },
   "env": {
     "node": "24.15.0",
@@ -22,6 +24,20 @@
     "cwd": "/Users/aarusso/Development/stech/stynx/packages/audit"
   },
   "metric": {
-    "kind": "none"
+    "kind": "score",
+    "score": 75.38071065989847,
+    "thresholds": {
+      "high": 60,
+      "low": 60,
+      "break": 60
+    }
+  },
+  "totals": {
+    "files": 3,
+    "tests": 539,
+    "passed": 297,
+    "failed": 97,
+    "skipped": 0,
+    "todo": 0
   }
 }

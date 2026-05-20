@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="1" failures="0" errors="0" time="0.043582292">
-    <testsuite name="test/angular-sessions.spec.ts" timestamp="2026-05-19T16:03:12.038Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.043582292">
-        <testcase classname="test/angular-sessions.spec.ts" name="@stynx-web/angular-sessions &gt; loads sessions and revokes a non-current session" time="0.03660575">
+<testsuites name="vitest tests" tests="1" failures="0" errors="0" time="0.1107785">
+    <testsuite name="test/angular-sessions.spec.ts" timestamp="2026-05-20T03:44:03.458Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.1107785">
+        <testcase classname="test/angular-sessions.spec.ts" name="@stynx-web/angular-sessions &gt; loads sessions and revokes a non-current session" time="0.09803825">
         </testcase>
     </testsuite>
 </testsuites>

@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="8" failures="0" errors="0" time="2.995623251">
-    <testsuite name="test/integration/audit.api-matrix.spec.ts" timestamp="2026-05-19T15:59:42.732Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="1.534634834">
-        <testcase classname="test/integration/audit.api-matrix.spec.ts" name="StynxAuditController API error matrix &gt; GET /_audit/log &gt; returns 200 with audit log entries for an authorized audit reader" time="0.07640775">
+<testsuites name="vitest tests" tests="8" failures="0" errors="0" time="2.574711875">
+    <testsuite name="test/integration/audit.api-matrix.spec.ts" timestamp="2026-05-20T02:02:36.614Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="1.257881333">
+        <testcase classname="test/integration/audit.api-matrix.spec.ts" name="StynxAuditController API error matrix &gt; GET /_audit/log &gt; returns 200 with audit log entries for an authorized audit reader" time="0.028944541">
         </testcase>
-        <testcase classname="test/integration/audit.api-matrix.spec.ts" name="StynxAuditController API error matrix &gt; GET /_audit/log &gt; returns 401 when the bearer token is missing" time="0.006569709">
+        <testcase classname="test/integration/audit.api-matrix.spec.ts" name="StynxAuditController API error matrix &gt; GET /_audit/log &gt; returns 401 when the bearer token is missing" time="0.006555625">
         </testcase>
-        <testcase classname="test/integration/audit.api-matrix.spec.ts" name="StynxAuditController API error matrix &gt; GET /_audit/log &gt; returns 403 when the principal lacks platform:audit:read:*" time="0.0166355">
+        <testcase classname="test/integration/audit.api-matrix.spec.ts" name="StynxAuditController API error matrix &gt; GET /_audit/log &gt; returns 403 when the principal lacks platform:audit:read:*" time="0.004872833">
         </testcase>
     </testsuite>
-    <testsuite name="test/integration/audit.module.spec.ts" timestamp="2026-05-19T15:59:42.737Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="1.460988417">
-        <testcase classname="test/integration/audit.module.spec.ts" name="StynxAuditModule integration &gt; writes one soft-delete row for the live delete and no archive insert row" time="0.080419334">
+    <testsuite name="test/integration/audit.module.spec.ts" timestamp="2026-05-20T02:02:36.618Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="1.316830542">
+        <testcase classname="test/integration/audit.module.spec.ts" name="StynxAuditModule integration &gt; writes one soft-delete row for the live delete and no archive insert row" time="0.079968125">
         </testcase>
-        <testcase classname="test/integration/audit.module.spec.ts" name="StynxAuditModule integration &gt; writes one restore row for the live insert and no archive delete row" time="0.006871125">
+        <testcase classname="test/integration/audit.module.spec.ts" name="StynxAuditModule integration &gt; writes one restore row for the live insert and no archive delete row" time="0.00551625">
         </testcase>
-        <testcase classname="test/integration/audit.module.spec.ts" name="StynxAuditModule integration &gt; tags archive-side erasure updates as lgpd erasure" time="0.018526625">
+        <testcase classname="test/integration/audit.module.spec.ts" name="StynxAuditModule integration &gt; tags archive-side erasure updates as lgpd erasure" time="0.005434667">
         </testcase>
-        <testcase classname="test/integration/audit.module.spec.ts" name="StynxAuditModule integration &gt; verifies the audit.events hash chain and detects direct row tampering" time="0.108874208">
+        <testcase classname="test/integration/audit.module.spec.ts" name="StynxAuditModule integration &gt; verifies the audit.events hash chain and detects direct row tampering" time="0.049843125">
         </testcase>
-        <testcase classname="test/integration/audit.module.spec.ts" name="StynxAuditModule integration &gt; retains lgpd partitions longer in detach dry-run" time="0.104717917">
+        <testcase classname="test/integration/audit.module.spec.ts" name="StynxAuditModule integration &gt; retains lgpd partitions longer in detach dry-run" time="0.041654042">
         </testcase>
     </testsuite>
 </testsuites>

@@ -5,9 +5,9 @@
   "runner": "stryker-vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T05:17:44.197Z",
-  "endedAt": "2026-05-19T05:31:31.286Z",
-  "durationMs": 827089,
+  "startedAt": "2026-05-20T02:12:02.536Z",
+  "endedAt": "2026-05-20T02:12:12.005Z",
+  "durationMs": 9469,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -20,18 +20,12 @@
     "ci": false
   },
   "command": {
-    "argv": [
-      "pnpm",
-      "exec",
-      "stryker",
-      "run",
-      "stryker.conf.mjs"
-    ],
+    "argv": ["pnpm", "exec", "stryker", "run", "stryker.conf.mjs"],
     "cwd": "/Users/aarusso/Development/stech/stynx/packages/auth"
   },
   "metric": {
     "kind": "score",
-    "score": 93.13725490196079,
+    "score": 92.50645994832041,
     "thresholds": {
       "high": 85,
       "low": 75,
@@ -41,8 +35,8 @@
   "totals": {
     "files": 8,
     "tests": 657,
-    "passed": 285,
-    "failed": 21,
+    "passed": 358,
+    "failed": 29,
     "skipped": 0,
     "todo": 0
   }

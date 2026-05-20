@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="1" failures="0" errors="0" time="17.212828875">
+    <testsuite name="test/integration/privacy.module.spec.ts" timestamp="2026-05-20T02:03:05.471Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="17.212828875">
+        <testcase classname="test/integration/privacy.module.spec.ts" name="StynxPrivacyModule integration &gt; loads PII rules, exports live and archive rows, erases data, and reports retention" time="17.211341208">
+        </testcase>
+    </testsuite>
+</testsuites>

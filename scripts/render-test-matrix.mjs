@@ -21,7 +21,7 @@ const coverageMetricByColumn = {
   Branches: 'branches',
   Functions: 'functions',
 };
-const timingValueWidth = 13;
+const timingValueWidth = 8;
 const columns = aspect === 'coverage' ? coverageMetricColumns : levels;
 const workspaces = discoverWorkspaces();
 const coverageByWorkspace = aspect === 'coverage' ? loadCoverageByWorkspace(workspaces) : new Map();
@@ -109,9 +109,9 @@ for cache-hit task runs). They are NOT a canonical artifact and are
 deliberately ignored by this renderer — see docs/operations/test-result-contract.md.
 
 Modes:
-  --status    state plus [suites_passed/suites_total | tests_passed/tests_total] counts
+  --status    state plus compact suites_passed/tests_passed counts
   --coverage  coverage only: lines, statements, branches, functions
-  --timing    runtime only: fixed-width [hh:][mm:]ss.mmm rendering
+  --timing    runtime only: compact [[h:]mm:]ss.mmm rendering, with units in the header
   --compact   glyph-only cells: 🟢 pass/at threshold, 🟡 not run/fail/below threshold,
               🔴 below 50% coverage, · no config, blank meaningless
   --resume    append summary totals for the selected mode
@@ -190,9 +190,6 @@ function readCanonicalResult(dir, level) {
   try {
     const r = JSON.parse(readFileSync(path, 'utf8'));
     if (r.schemaVersion !== '1') return null;
-    // For mutation, surface the score as testsPassed/total = score/100 so the
-    // matrix renders 'XX/100' in count mode and the threshold-aware status
-    // colour still works.
     if (r.level === 'mutation' && typeof r.metric?.score === 'number') {
       return {
         status: r.status === 'passed' ? 'passed' : r.status === 'failed' ? 'failed' : 'present',
@@ -201,9 +198,7 @@ function readCanonicalResult(dir, level) {
         suitesTotal: null,
         testsPassed: Math.round(r.metric.score),
         testsTotal: 100,
-        // Tag as 'mutation' so resultFailed() defers to the artifact's
-        // own status (which the wrapper already set from Stryker's break
-        // threshold) instead of treating score<100 as a failure.
+        mutationScore: r.metric.score,
         source: 'mutation',
       };
     }
@@ -214,6 +209,7 @@ function readCanonicalResult(dir, level) {
       suitesTotal: r.totals?.files ?? null,
       testsPassed: r.totals?.passed ?? null,
       testsTotal: r.totals?.tests ?? null,
+      perf: r.level === 'perf' && r.metric?.kind === 'perf' ? r.metric.perf : null,
       source: 'test-result/v1',
     };
   } catch {
@@ -270,6 +266,7 @@ function readMutationResult(ws) {
     suitesTotal: null,
     testsPassed: Math.round(score),
     testsTotal: 100,
+    mutationScore: score,
     status: typeof breakThreshold === 'number' && score < breakThreshold ? 'failed' : 'passed',
     source: 'mutation',
   };
@@ -319,9 +316,12 @@ function buildStatusCell(ws, column, result) {
     return { state: 'not-run' };
   }
 
+  const failed = column === 'Mutation' ? mutationFailed(ws, result) : resultFailed(result);
   return {
-    state: resultFailed(result) ? 'failed' : 'passed',
+    state: failed ? 'failed' : 'passed',
     result,
+    column,
+    workspace: ws.name,
   };
 }
 
@@ -376,11 +376,22 @@ function resultFailed(result) {
   if (result.status === 'failed') return true;
   if (result.source === 'mutation') return false;
   return (
+    (result.suitesPassed != null &&
+      result.suitesTotal != null &&
+      result.suitesTotal > 0 &&
+      result.suitesPassed < result.suitesTotal) ||
     result.testsPassed != null &&
     result.testsTotal != null &&
     result.testsTotal > 0 &&
     result.testsPassed < result.testsTotal
   );
+}
+
+function mutationFailed(ws, result) {
+  if (!result) return false;
+  if (result.status === 'failed') return true;
+  if (typeof result.mutationScore !== 'number' || !Number.isFinite(result.mutationScore)) return false;
+  return result.mutationScore < mutationThresholdFor(ws);
 }
 
 function hasAnyCoverageProducingLevel(ws) {
@@ -612,7 +623,7 @@ function printMatrix(rows) {
   } else if (aspect === 'timing') {
     process.stdout.write('Timing prefers recorder sidecar durationMs, then Vitest Time, then Node duration_ms.\n');
   } else {
-    process.stdout.write('Status cell order: suites_passed/suites_total | tests_passed/tests_total.\n');
+    process.stdout.write('Status cells: suites_passed/tests_passed; mutation: rounded score percent; perf: p95 ms.\n');
   }
   process.stdout.write("'   ' = configured meaningless; ' - ' = no package script/config; ' 0 ' = applicable level has no current artifact.\n");
 }
@@ -692,6 +703,8 @@ function renderTimingTotal(durationMs) {
 }
 
 function renderHeader(column) {
+  if (aspect === 'timing' && !compact) return renderTimingHeader(column);
+  if (aspect === 'status' && !compact && column === 'Mutation') return 'Mut.';
   if (!compact) return column;
   return (
     {
@@ -708,6 +721,13 @@ function renderHeader(column) {
       Total: 'T',
     }[column] ?? column
   );
+}
+
+function renderTimingHeader(column) {
+  const labels = {
+    Mutation: 'Mut.',
+  };
+  return `${labels[column] ?? column} [s]`;
 }
 
 function renderCell(cell) {
@@ -766,11 +786,42 @@ function renderTiming(cell) {
 }
 
 function renderStatusResult(cell) {
-  const counts = renderCounts(cell.result);
+  const counts = renderStatusValue(cell);
   if (cell.state === 'failed') {
-    return colorize(`FAIL ${counts}`, 'yellow');
+    return useColor ? colorize(counts, statusAlertColor(cell)) : `!${counts}`;
   }
   return counts;
+}
+
+function renderStatusValue(cell) {
+  if (cell.column === 'Mutation') return renderMutationScore(cell);
+  if (cell.column === 'Perf') return renderPerfValue(cell);
+  if (['Unit', 'API', 'DB', 'E2E'].includes(cell.column)) return renderSuccessPair(cell.result);
+  return renderCounts(cell.result);
+}
+
+function renderSuccessPair(result) {
+  if (!result) return '';
+  return renderCountPair(result.suitesPassed, result.testsPassed);
+}
+
+function renderMutationScore(cell) {
+  const score = cell?.result?.mutationScore;
+  if (typeof score !== 'number' || !Number.isFinite(score)) return ' ';
+  return String(Math.round(score));
+}
+
+function renderPerfValue(cell) {
+  const p95Ms = cell?.result?.perf?.p95Ms;
+  if (typeof p95Ms !== 'number' || !Number.isFinite(p95Ms)) return ' ';
+  return String(Math.round(p95Ms));
+}
+
+function statusAlertColor(cell) {
+  if (cell.column !== 'Mutation') return 'yellow';
+  const score = cell?.result?.mutationScore;
+  if (typeof score === 'number' && Number.isFinite(score) && score < 50) return 'red';
+  return 'yellow';
 }
 
 function renderCounts(result) {
@@ -815,6 +866,18 @@ function thresholdFor(metric) {
   return matrixConfig.thresholds?.[metric] ?? (metric === 'branches' ? 80 : 85);
 }
 
+function mutationThresholdFor(ws) {
+  const override = matrixConfig.perPackage?.[ws.name]?.mutation ?? matrixConfig.defaults?.mutation ?? 'default';
+  if (typeof override === 'number' && Number.isFinite(override)) return override;
+  if (typeof override === 'string') {
+    const policyValue = matrixConfig.policies?.mutation?.[override];
+    if (typeof policyValue === 'number' && Number.isFinite(policyValue)) return policyValue;
+    const literal = Number(override);
+    if (Number.isFinite(literal)) return literal;
+  }
+  return 60;
+}
+
 function formatDuration(durationMs) {
   const totalMs = Math.max(0, Math.round(durationMs));
   const ms = String(totalMs % 1000).padStart(3, '0');
@@ -827,26 +890,30 @@ function formatDuration(durationMs) {
   const secondsText = hours > 0 || totalMinutes > 0 ? String(seconds).padStart(2, '0') : String(seconds);
   const value =
     hours > 0
-      ? `${hours}:${String(minutes).padStart(2, '0')}:${secondsText}.${ms}s`
+      ? `${hours}:${String(minutes).padStart(2, '0')}:${secondsText}.${ms}`
       : totalMinutes > 0
-        ? `${totalMinutes}:${secondsText}.${ms}s`
-        : `${secondsText}.${ms}s`;
+        ? `${totalMinutes}:${secondsText}.${ms}`
+        : `${secondsText}.${ms}`;
   return value.padStart(timingValueWidth);
 }
 
 function renderTable(rows, options = {}) {
   const splitRows = rows.map((row) => row.map((cell) => String(cell).split('\n')));
+  const headerLabels = splitRows[0].map((cell) => stripAnsi(cell[0] ?? ''));
   const widths = [];
   for (const row of splitRows) {
     row.forEach((cell, index) => {
       widths[index] = Math.max(widths[index] ?? 0, ...cell.map((line) => visibleLength(line)));
     });
   }
+  const slashPositions = aspect === 'status' && !compact ? calculateSlashPositions(splitRows, headerLabels) : [];
+  const alignments = calculateColumnAlignments(headerLabels);
   if (aspect === 'timing' && !compact) {
     for (let index = 1; index < widths.length; index += 1) {
       widths[index] = Math.max(widths[index] ?? 0, timingValueWidth);
     }
   }
+  const decimalPositions = aspect === 'timing' && !compact ? calculateDecimalPositions(splitRows, widths, alignments) : [];
 
   const sepLine = widths.map((width) => '-'.repeat(width)).join('-+-');
   const rendered = [];
@@ -855,7 +922,15 @@ function renderTable(rows, options = {}) {
     for (let lineIndex = 0; lineIndex < height; lineIndex += 1) {
       rendered.push(
         row
-          .map((cell, colIndex) => padVisible(cell[lineIndex] ?? '', widths[colIndex]))
+          .map((cell, colIndex) =>
+            padTableCell(
+              cell[lineIndex] ?? '',
+              widths[colIndex],
+              slashPositions[colIndex],
+              alignments[colIndex],
+              decimalPositions[colIndex],
+            ),
+          )
           .join(' | '),
       );
     }
@@ -865,8 +940,86 @@ function renderTable(rows, options = {}) {
   return rendered.join('\n');
 }
 
+function calculateColumnAlignments(headerLabels) {
+  if (compact) return [];
+  return headerLabels.map((label) => {
+    if (isRightAlignedColumnLabel(label)) return 'right-one-space';
+    return null;
+  });
+}
+
+function isRightAlignedColumnLabel(label) {
+  return label === 'Mut.' || label.startsWith('Mut. ') || label === 'Total' || label.startsWith('Total ');
+}
+
+function calculateSlashPositions(splitRows, headerLabels) {
+  const positions = [];
+  for (const row of splitRows) {
+    row.forEach((cell, colIndex) => {
+      if (colIndex === 0 || headerLabels[colIndex] === 'Mut.') return;
+      for (const line of cell) {
+        const slashIndex = stripAnsi(line).indexOf('/');
+        if (slashIndex >= 0) positions[colIndex] = Math.max(positions[colIndex] ?? 0, slashIndex);
+      }
+    });
+  }
+  return positions;
+}
+
+function calculateDecimalPositions(splitRows, widths, alignments) {
+  const positions = [];
+  for (const row of splitRows.slice(1)) {
+    row.forEach((cell, colIndex) => {
+      if (colIndex === 0) return;
+      for (const line of cell) {
+        const aligned =
+          alignments[colIndex] === 'right-one-space'
+            ? padVisibleRight(line, widths[colIndex], 1)
+            : padVisible(line, widths[colIndex]);
+        const decimalIndex = stripAnsi(aligned).indexOf('.');
+        if (decimalIndex >= 0) positions[colIndex] = Math.max(positions[colIndex] ?? 0, decimalIndex);
+      }
+    });
+  }
+  return positions;
+}
+
+function padTableCell(value, width, slashPosition, alignment, decimalPosition) {
+  const decimalPlaceholder = padTimingPlaceholder(value, width, decimalPosition);
+  if (decimalPlaceholder) return decimalPlaceholder;
+  if (alignment === 'right-one-space') return padVisibleRight(value, width, 1);
+  if (slashPosition == null) return padVisible(value, width);
+  const slashIndex = stripAnsi(value).indexOf('/');
+  if (slashIndex < 0) {
+    const trimmed = stripAnsi(value).trim();
+    if (trimmed === '-') {
+      return padVisible(`${' '.repeat(Math.max(0, slashPosition))}${value.trimStart()}`, width);
+    }
+    return padVisible(value, width);
+  }
+  const aligned = `${' '.repeat(Math.max(0, slashPosition - slashIndex))}${value}`;
+  return padVisible(aligned, width);
+}
+
+function padTimingPlaceholder(value, width, decimalPosition) {
+  if (decimalPosition == null) return null;
+  const token = stripAnsi(value).trim();
+  if (token !== '-' && token !== '0') return null;
+  const rendered = token === '0' ? colorize('0', 'yellow') : colorize('-', 'dim');
+  const tokenPosition = Math.max(0, decimalPosition - 1);
+  return padVisible(`${' '.repeat(tokenPosition)}${rendered}`, width);
+}
+
 function padVisible(value, width) {
   return value + ' '.repeat(Math.max(0, width - visibleLength(value)));
+}
+
+function padVisibleRight(value, width, rightPadding = 0) {
+  const visible = visibleLength(value);
+  if (visible >= width) return value;
+  const effectiveRightPadding = Math.min(rightPadding, width - visible);
+  const leftPadding = Math.max(0, width - effectiveRightPadding - visible);
+  return `${' '.repeat(leftPadding)}${value}${' '.repeat(effectiveRightPadding)}`;
 }
 
 function visibleLength(value) {

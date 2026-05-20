@@ -1,41 +1,41 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="18" failures="0" errors="0" time="0.736439791">
-    <testsuite name="test/angular-auth.spec.ts" timestamp="2026-05-19T15:55:55.913Z" hostname="thiamat-1903.local" tests="18" failures="0" errors="0" skipped="0" time="0.736439791">
-        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; auth guard redirects to the login route when no session is active" time="0.007425667">
+<testsuites name="vitest tests" tests="18" failures="0" errors="0" time="0.930194">
+    <testsuite name="test/angular-auth.spec.ts" timestamp="2026-05-20T03:43:25.617Z" hostname="thiamat-1903.local" tests="18" failures="0" errors="0" skipped="0" time="0.930194">
+        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; auth guard redirects to the login route when no session is active" time="0.002618417">
         </testcase>
-        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; auth guard allows active sessions" time="0.000285208">
+        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; auth guard allows active sessions" time="0.000338708">
         </testcase>
-        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; auth guard uses the default login route when no override is configured" time="0.00020625">
+        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; auth guard uses the default login route when no override is configured" time="0.000236375">
         </testcase>
-        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; switches tenant and updates both session state and tenant context" time="0.068402958">
+        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; switches tenant and updates both session state and tenant context" time="0.053874708">
         </testcase>
-        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; handles inactive login, refresh failure, login redirect, logout, and permission helpers" time="0.016119041">
+        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; handles inactive login, refresh failure, login redirect, logout, and permission helpers" time="0.004361917">
         </testcase>
-        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; resolves tenant from callback URL, refreshes active sessions, and rejects tenant switch without a token" time="0.200360417">
+        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; resolves tenant from callback URL, refreshes active sessions, and rejects tenant switch without a token" time="0.20893125">
         </testcase>
-        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; parses JWT payloads and persists refresh tokens in storage and cookies" time="0.11981725">
+        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; parses JWT payloads and persists refresh tokens in storage and cookies" time="0.136971709">
         </testcase>
-        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; permission guard denies and allows based on session permissions" time="0.007158708">
+        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; permission guard denies and allows based on session permissions" time="0.045428083">
         </testcase>
-        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; ships the permission-denied component and default route provider" time="0.196444916">
+        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; ships the permission-denied component and default route provider" time="0.402490875">
         </testcase>
-        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; has-permission directive renders only when the session grants the permission" time="0.013744542">
+        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; has-permission directive renders only when the session grants the permission" time="0.004406042">
         </testcase>
-        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; calls auth backend endpoints with normalized URLs and headers" time="0.01567225">
+        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; calls auth backend endpoints with normalized URLs and headers" time="0.00511925">
         </testcase>
-        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; adapts OIDC calls and redirect/logout components to session methods" time="0.030428459">
+        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; adapts OIDC calls and redirect/logout components to session methods" time="0.048594167">
         </testcase>
-        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; resolves configured hosted auth action links without guessing provider URLs" time="0.005601375">
+        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; resolves configured hosted auth action links without guessing provider URLs" time="0.005599416">
         </testcase>
-        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; reports unavailable and invalid hosted auth action configuration" time="0.002129291">
+        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; reports unavailable and invalid hosted auth action configuration" time="0.002435333">
         </testcase>
-        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; login redirect passes no callback URL when no browser window is available" time="0.000310167">
+        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; login redirect passes no callback URL when no browser window is available" time="0.000201">
         </testcase>
-        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; refresh token storage tolerates missing browser storage globals" time="0.000084833">
+        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; refresh token storage tolerates missing browser storage globals" time="0.000076208">
         </testcase>
-        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; refreshes and logs out inactive sessions without backend calls" time="0.002811833">
+        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; refreshes and logs out inactive sessions without backend calls" time="0.001415833">
         </testcase>
-        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; resolves tenant ids from token claims and rejects missing tenant context" time="0.039281125">
+        <testcase classname="test/angular-auth.spec.ts" name="@stynx-web/angular-auth &gt; resolves tenant ids from token claims and rejects missing tenant context" time="0.001581709">
         </testcase>
     </testsuite>
 </testsuites>

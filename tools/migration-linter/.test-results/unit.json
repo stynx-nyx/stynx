@@ -4,9 +4,9 @@
   "level": "unit",
   "runner": "node-test",
   "status": "passed",
-  "startedAt": "2026-05-19T15:55:29.742Z",
-  "endedAt": "2026-05-19T15:55:45.213Z",
-  "durationMs": 15471,
+  "startedAt": "2026-05-20T03:43:05.936Z",
+  "endedAt": "2026-05-20T03:43:12.232Z",
+  "durationMs": 6296,
   "exitCode": 0,
   "signal": null,
   "artifacts": {

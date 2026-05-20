@@ -24,11 +24,12 @@ export function createStrykerConfig({
   vitestConfig = './vitest.config.ts',
   mutate = ['src/**/*.ts', '!src/**/*.d.ts'],
   timeoutMS,
+  ignoreStatic = false,
+  incremental = process.env.STRYKER_INCREMENTAL !== 'false',
 }) {
   const tempDirName = '.stryker-tmp';
   cleanStrykerBackups(tempDirName);
 
-  const incremental = process.env.STRYKER_INCREMENTAL !== 'false';
   // `threshold` argument is optional — resolves from
   // scripts/test-matrix.config.json via test-thresholds.mjs when absent.
   const resolvedThreshold = typeof threshold === 'number'
@@ -47,6 +48,7 @@ export function createStrykerConfig({
     inPlace: true,
     concurrency,
     incremental,
+    ignoreStatic,
     ...(timeoutMS ? { timeoutMS } : {}),
     vitest: {
       configFile: vitestConfig,

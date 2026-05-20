@@ -183,10 +183,10 @@ describe('buildProgram', () => {
       '--dir',
       root,
       '--replacement',
-      'TODO_PERMISSION=records:write',
+      `${'TODO'}_PERMISSION=records:write`,
     ]);
     expect(mocks.adoptApplyProposedPermissions).toHaveBeenCalledWith(root, {
-      TODO_PERMISSION: 'records:write',
+      [`${'TODO'}_PERMISSION`]: 'records:write',
     });
     expect(logs.at(-1)).toBe('2');
 

@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="3" failures="0" errors="0" time="10.417065458">
-    <testsuite name="test/integration/session-jwks.api-matrix.spec.ts" timestamp="2026-05-19T15:59:17.471Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.813214583">
-        <testcase classname="test/integration/session-jwks.api-matrix.spec.ts" name="SessionJwksController API error matrix &gt; GET /.well-known/jwks.json &gt; returns 200/201 when JWKS signing material is configured" time="0.163950125">
+<testsuites name="vitest tests" tests="3" failures="1" errors="0" time="6.892455125">
+    <testsuite name="test/integration/session-jwks.api-matrix.spec.ts" timestamp="2026-05-20T03:45:14.952Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="1.261415291">
+        <testcase classname="test/integration/session-jwks.api-matrix.spec.ts" name="SessionJwksController API error matrix &gt; GET /.well-known/jwks.json &gt; returns 200/201 when JWKS signing material is configured" time="0.273880875">
         </testcase>
     </testsuite>
-    <testsuite name="test/integration/sessions.module.spec.ts" timestamp="2026-05-19T15:59:17.485Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="9.603850875">
-        <testcase classname="test/integration/sessions.module.spec.ts" name="StynxSessionsModule integration &gt; publishes JWKS publicly and mirrors create/revoke events into auth.sessions" time="0.1482435">
+    <testsuite name="test/integration/sessions.module.spec.ts" timestamp="2026-05-20T03:45:14.953Z" hostname="thiamat-1903.local" tests="2" failures="1" errors="0" skipped="0" time="5.631039834">
+        <testcase classname="test/integration/sessions.module.spec.ts" name="StynxSessionsModule integration &gt; publishes JWKS publicly and mirrors create/revoke events into auth.sessions" time="0.825730542">
         </testcase>
-        <testcase classname="test/integration/sessions.module.spec.ts" name="StynxSessionsModule integration &gt; propagates tenant revocation over Redis pubsub within 100ms" time="0.068166167">
+        <testcase classname="test/integration/sessions.module.spec.ts" name="StynxSessionsModule integration &gt; propagates tenant revocation over Redis pubsub within 100ms" time="0.293293167">
+            <failure message="expected 101.75054100000034 to be less than 100" type="AssertionError">
+AssertionError: expected 101.75054100000034 to be less than 100
+ ❯ test/integration/sessions.module.spec.ts:302:43
+            </failure>
         </testcase>
     </testsuite>
 </testsuites>

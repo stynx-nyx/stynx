@@ -10,7 +10,7 @@ tags: [stynx, frontend, angular, packaging, apf]
 # ADR-FE-PACKAGING-0001 — Angular Package Format for packages-web
 
 **Authority:** Architect.
-**Related:** [`docs/work/plan/FE-WAVE-A-public-surface.md`](../work/plan/FE-WAVE-A-public-surface.md), [`docs/work/diag/FE-03-standards-compliance.md`](../work/diag/FE-03-standards-compliance.md).
+**Related:** `docs/work/plan/FE-WAVE-A-public-surface.md`, `docs/work/diag/FE-03-standards-compliance.md`.
 
 ## Status
 

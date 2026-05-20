@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T07:31:03.648Z",
-  "endedAt": "2026-05-19T07:31:21.501Z",
-  "durationMs": 17853,
+  "startedAt": "2026-05-20T02:02:47.996Z",
+  "endedAt": "2026-05-20T02:03:07.432Z",
+  "durationMs": 19436,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.int.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-62421-1779175863647.json",
+      "--outputFile.json=/tmp/vitest-89130-1779242567996.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/flow/.test-results/integration.junit.xml"
     ],
@@ -45,54 +45,54 @@
   },
   "slowestTests": [
     {
-      "name": "FlowEffectsController API error matrix POST /flow/effects/dispatch returns 201 after dispatching a pending effect",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/effects.api-matrix.spec.ts",
-      "durationMs": 433.21054099999856
-    },
-    {
       "name": "FlowSignalController API error matrix POST /flow/signal returns 201 after signaling an active flow target",
       "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/signal.api-matrix.spec.ts",
-      "durationMs": 311.908875000001
+      "durationMs": 513.4446660000012
     },
     {
-      "name": "FlowSignalController API error matrix POST /flow/signal returns 429 when the flow signal tenant bucket is exhausted",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/signal.api-matrix.spec.ts",
-      "durationMs": 271.9102920000005
-    },
-    {
-      "name": "FlowAnalyticsController API error matrix GET /flow/open-tasks returns 200 with open task analytics for the authorized tenant",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/analytics.api-matrix.spec.ts",
-      "durationMs": 236.7426660000001
-    },
-    {
-      "name": "FlowAnswersController API error matrix DELETE /flow/answers/:id returns 200 after soft-deleting an answer for the authorized tenant",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/answers.api-matrix.spec.ts",
-      "durationMs": 212.51783400000022
-    },
-    {
-      "name": "FlowEventsController API error matrix GET /flow/events returns 200 with flow events for the authorized tenant",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/events.api-matrix.spec.ts",
-      "durationMs": 208.4294170000012
+      "name": "FlowEffectsController API error matrix POST /flow/effects/dispatch returns 201 after dispatching a pending effect",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/effects.api-matrix.spec.ts",
+      "durationMs": 468.9250830000001
     },
     {
       "name": "FlowAnswersController API error matrix PATCH /flow/answers/:id returns 200 after updating an answer for the authorized tenant",
       "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/answers.api-matrix.spec.ts",
-      "durationMs": 207.74637500000063
+      "durationMs": 241.54891700000007
     },
     {
-      "name": "FlowEffectsController API error matrix POST /flow/effects/dispatch returns 422 when an idempotency key is reused with a different body",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/effects.api-matrix.spec.ts",
-      "durationMs": 173.488292
+      "name": "FlowNodeRunsController API error matrix GET /flow/node-runs returns 200 with node runs for the authorized tenant",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/node-runs.api-matrix.spec.ts",
+      "durationMs": 238.4439170000005
     },
     {
-      "name": "FlowEdgesController API error matrix DELETE /flow/edges/:id returns 200 after soft-deleting an edge for the authorized tenant",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/edges.api-matrix.spec.ts",
-      "durationMs": 171.72991700000057
+      "name": "FlowEventsController API error matrix GET /flow/events returns 200 with flow events for the authorized tenant",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/events.api-matrix.spec.ts",
+      "durationMs": 203.26041700000133
+    },
+    {
+      "name": "FlowAnalyticsController API error matrix GET /flow/open-tasks returns 200 with open task analytics for the authorized tenant",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/analytics.api-matrix.spec.ts",
+      "durationMs": 185.8729170000006
     },
     {
       "name": "FlowEdgesController API error matrix GET /flow/edges/:id returns 200 for an authorized design edge lookup",
       "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/edges.api-matrix.spec.ts",
-      "durationMs": 165.10379199999988
+      "durationMs": 174.49529099999927
+    },
+    {
+      "name": "FlowEffectsController API error matrix POST /flow/effects/dispatch returns 403 when the authenticated actor lacks flow admin permission",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/effects.api-matrix.spec.ts",
+      "durationMs": 146.64341700000114
+    },
+    {
+      "name": "FlowEffectsController API error matrix POST /flow/effects/dispatch returns 429 when the flow effect dispatch tenant bucket is exhausted",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/effects.api-matrix.spec.ts",
+      "durationMs": 145.32287499999984
+    },
+    {
+      "name": "FlowSignalController API error matrix POST /flow/signal returns 429 when the flow signal tenant bucket is exhausted",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/integration/signal.api-matrix.spec.ts",
+      "durationMs": 126.20999999999913
     }
   ]
 }

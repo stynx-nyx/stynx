@@ -1,7 +1,7 @@
 # Test-result contract — operator + adopter reference
 
 > **Status:** R0–R5 landed. **Single source of truth** for every test surface
-> in stynx. Schema: [`tools/repo-config/test-result.schema.json`](../../tools/repo-config/test-result.schema.json).
+> in stynx. Schema: `tools/repo-config/test-result.schema.json`.
 
 This doc is the orientation guide for anyone consuming test results in
 stynx — humans reading the matrix, CI jobs uploading artifacts, DEVAI
@@ -30,7 +30,7 @@ All consumers read from there.
 
 ## Schema (v1)
 
-Full schema in [`tools/repo-config/test-result.schema.json`](../../tools/repo-config/test-result.schema.json).
+Full schema in `tools/repo-config/test-result.schema.json`.
 The shape, abbreviated:
 
 ```jsonc
@@ -75,13 +75,13 @@ should defer to `metric.kind` and ignore the others.
 
 ## Threshold source of truth
 
-[`scripts/test-matrix.config.json`](../../scripts/test-matrix.config.json) carries every
+`scripts/test-matrix.config.json` carries every
 coverage + mutation threshold the workspace uses. Three consumers read
-it through [`tools/repo-config/test-thresholds.mjs`](../../tools/repo-config/test-thresholds.mjs):
+it through `tools/repo-config/test-thresholds.mjs`:
 
-- [`tools/repo-config/vitest.base.mjs`](../../tools/repo-config/vitest.base.mjs) — `getCoverageThreshold(packageName)`
-- [`tools/stryker/base.mjs`](../../tools/stryker/base.mjs) — `getMutationThreshold(packageName)`
-- [`scripts/render-test-matrix.mjs`](../../scripts/render-test-matrix.mjs) — `getMatrixCoverageThreshold()`
+- `tools/repo-config/vitest.base.mjs` — `getCoverageThreshold(packageName)`
+- `tools/stryker/base.mjs` — `getMutationThreshold(packageName)`
+- `scripts/render-test-matrix.mjs` — `getMatrixCoverageThreshold()`
 
 Schema:
 
@@ -105,20 +105,20 @@ or a named policy (`{"mutation": "strict"}`); literal numbers win.
 
 ## Consumers (current)
 
-| Consumer                                                                                        | Reads                                                                             | Notes                                                                                |
-| ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| `pnpm test:matrix*` ([`scripts/render-test-matrix.mjs`](../../scripts/render-test-matrix.mjs))  | every `.test-results/<level>.json`                                                | canonical-only as of R3                                                              |
-| `pnpm test:evidence` ([`scripts/test-evidence.mjs`](../../scripts/test-evidence.mjs))           | every `.test-results/<level>.json`                                                | aggregates into `coverage/test-evidence.json` for downstream graders / DEVAI sensors |
-| `pnpm test:coverage` ([`scripts/aggregate-coverage.mjs`](../../scripts/aggregate-coverage.mjs)) | per-target `coverage-vitest/coverage-final.json`                                  | also writes canonical `<pkg>/.test-results/coverage.json`                            |
-| GitHub Actions ([`.github/workflows/ci.yml`](../../.github/workflows/ci.yml))                   | `.test-results/**` via `actions/upload-artifact` + `mikepenz/action-junit-report` | uploads + JUnit summary in GH UI                                                     |
-| GitHub Actions ([`.github/workflows/hardening.yml`](../../.github/workflows/hardening.yml))     | `.test-results/mutation.{json,log}` + legacy `reports/mutation/<pkg>/`            | per-package mutation artifacts                                                       |
+| Consumer                                                | Reads                                                                             | Notes                                                                                |
+| ------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `pnpm test:matrix*` (`scripts/render-test-matrix.mjs`)  | every `.test-results/<level>.json`                                                | canonical-only as of R3                                                              |
+| `pnpm test:evidence` (`scripts/test-evidence.mjs`)      | every `.test-results/<level>.json`                                                | aggregates into `coverage/test-evidence.json` for downstream graders / DEVAI sensors |
+| `pnpm test:coverage` (`scripts/aggregate-coverage.mjs`) | per-target `coverage-vitest/coverage-final.json`                                  | also writes canonical `<pkg>/.test-results/coverage.json`                            |
+| GitHub Actions (`.github/workflows/ci.yml`)             | `.test-results/**` via `actions/upload-artifact` + `mikepenz/action-junit-report` | uploads + JUnit summary in GH UI                                                     |
+| GitHub Actions (`.github/workflows/hardening.yml`)      | `.test-results/mutation.{json,log}` + legacy `reports/mutation/<pkg>/`            | per-package mutation artifacts                                                       |
 
 ## DEVAI sensor integration
 
 DEVAI's test sensors (`test.unit`, `test.integration`, `test.coverage-depth`,
 `test.idiomaticity`, `test.security-coverage`, `test.weakening-review`,
 `test.coherence`, `perf-test`) historically re-invoke `pnpm test` and
-parse stdout. They should instead read [`coverage/test-evidence.json`](../../coverage/test-evidence.json):
+parse stdout. They should instead read `coverage/test-evidence.json`:
 
 ```js
 // example sensor adapter
@@ -158,19 +158,19 @@ they parse the artifact, never re-run the suite.
 
 ## File index
 
-| File                                                                                           | Role                                               |
-| ---------------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| [`tools/repo-config/test-result.schema.json`](../../tools/repo-config/test-result.schema.json) | canonical artifact schema (v1)                     |
-| [`scripts/run-and-record.mjs`](../../scripts/run-and-record.mjs)                               | the wrapper                                        |
-| [`scripts/test-evidence.mjs`](../../scripts/test-evidence.mjs)                                 | workspace-level evidence aggregator                |
-| [`scripts/aggregate-coverage.mjs`](../../scripts/aggregate-coverage.mjs)                       | coverage rolling + per-package canonical writer    |
-| [`scripts/render-test-matrix.mjs`](../../scripts/render-test-matrix.mjs)                       | terminal-table renderer                            |
-| [`scripts/test-matrix.config.json`](../../scripts/test-matrix.config.json)                     | thresholds + matrix-renderer config                |
-| [`tools/repo-config/test-thresholds.mjs`](../../tools/repo-config/test-thresholds.mjs)         | single-source threshold resolver                   |
-| [`tools/repo-config/vitest.base.mjs`](../../tools/repo-config/vitest.base.mjs)                 | vitest factory; reads `getCoverageThreshold`       |
-| [`tools/stryker/base.mjs`](../../tools/stryker/base.mjs)                                       | stryker factory; reads `getMutationThreshold`      |
-| [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)                                   | unit + integration artifact upload + JUnit summary |
-| [`.github/workflows/hardening.yml`](../../.github/workflows/hardening.yml)                     | mutation artifact upload                           |
+| File                                        | Role                                               |
+| ------------------------------------------- | -------------------------------------------------- |
+| `tools/repo-config/test-result.schema.json` | canonical artifact schema (v1)                     |
+| `scripts/run-and-record.mjs`                | the wrapper                                        |
+| `scripts/test-evidence.mjs`                 | workspace-level evidence aggregator                |
+| `scripts/aggregate-coverage.mjs`            | coverage rolling + per-package canonical writer    |
+| `scripts/render-test-matrix.mjs`            | terminal-table renderer                            |
+| `scripts/test-matrix.config.json`           | thresholds + matrix-renderer config                |
+| `tools/repo-config/test-thresholds.mjs`     | single-source threshold resolver                   |
+| `tools/repo-config/vitest.base.mjs`         | vitest factory; reads `getCoverageThreshold`       |
+| `tools/stryker/base.mjs`                    | stryker factory; reads `getMutationThreshold`      |
+| `.github/workflows/ci.yml`                  | unit + integration artifact upload + JUnit summary |
+| `.github/workflows/hardening.yml`           | mutation artifact upload                           |
 
 ## Versioning
 
