@@ -1,6 +1,6 @@
 # FE-WAVE-G — Test Fan-Out: TestBed, Playwright Per Vertical, A11y, Mutation Rebase
 
-**Wave goal.** Replace the "looks-green-isn't-exercised" test surface with one that verifies every FE-01 completeness claim. TestBed-rendered component specs everywhere; per-vertical Playwright scenarios; `@axe-core/playwright` non-blocking accessibility report; mutation thresholds rebased.
+**Wave goal.** Replace the "looks-green-isn't-exercised" test surface with one that verifies every FE-01 completeness claim. TestBed-rendered component specs everywhere; per-vertical Playwright scenarios; `@axe-core/playwright` non-blocking accessibility report; mutation verified against repository thresholds.
 
 ## Scope
 
@@ -11,7 +11,7 @@
 | Playwright fan-out                        | One spec per FE-01 row; see [../diag/FE-05](../diag/FE-05-testing-against-expectations.md) for the file layout. |
 | Real-OIDC mode for Playwright             | Opt-in `PLAYWRIGHT_USE_REAL_OIDC=1` boots `reference-api` + `oidc-fake-server`; otherwise dev-auth.     |
 | Accessibility                            | `@axe-core/playwright` per spec; non-blocking report under `.test-results/a11y.json`.                   |
-| Mutation                                 | Re-run Stryker for every package; rebase thresholds per the table in [../diag/FE-05](../diag/FE-05-testing-against-expectations.md). |
+| Mutation                                 | Re-run Stryker for every package against the thresholds configured in the repository policy/package Stryker config. |
 | Per-package `test/e2e/` smokes           | Delete (per [../diag/FE-04](../diag/FE-04-stale-unused-flaky.md#1-per-package-e2e-spects-smokes-are-misleading)). |
 | `test/support/test-bed.ts`               | Author the shared `renderComponent<T>(...)` factory per package.                                        |
 
@@ -60,7 +60,7 @@ For each shipped component in each package: ship a TestBed spec that exercises:
 - Form validation states (where applicable).
 - Translated-strings render under a stubbed catalog.
 
-Branch coverage target: ≥ 80 %. Mutation: per the table below.
+Branch coverage target: ≥ 80 %. Mutation: per the configured repository threshold.
 
 ### G.4 — Router specs
 
@@ -105,9 +105,9 @@ Each spec ≤ 5 minutes wall-time. Shared fixtures in `reference/web/test/e2e/fi
 
 `@axe-core/playwright` per spec. Output to `.test-results/a11y.json`. Initially non-blocking; gate after a stabilisation window (per the gate-ratchet in [../diag/FE-05](../diag/FE-05-testing-against-expectations.md#gate-ratchet)).
 
-### G.9 — Mutation rebase
+### G.9 — Mutation threshold verification
 
-Run Stryker for every `packages-web/*` package. Confirm thresholds per the table in [../diag/FE-05](../diag/FE-05-testing-against-expectations.md#mutation-thresholds-proposed). Investigate survivors; either kill via new tests or document the survivor.
+Run Stryker for every `packages-web/*` package. Confirm each package passes its configured repository threshold (`scripts/test-matrix.config.json` plus package Stryker config). Investigate survivors; either kill via new tests or document the survivor. Do not invent higher wave-local bars unless an Architect updates the repo policy.
 
 ### G.10 — Delete per-package `*.e2e-spec.ts` smokes
 
@@ -120,7 +120,7 @@ Delete every `packages-web/*/test/e2e/*.e2e-spec.ts`. They are export-existence 
 3. The Playwright fan-out covers every FE-01 row whose claim is now shipped.
 4. `PLAYWRIGHT_USE_REAL_OIDC=1` boots `reference-api` and the suite passes.
 5. `@axe-core/playwright` runs per spec; report under `.test-results/a11y.json`.
-6. Mutation thresholds match the rebased table; Stryker records artifacts for all packages.
+6. Mutation passes the configured repository thresholds; Stryker records artifacts for all packages.
 7. Per-package `*.e2e-spec.ts` smokes are deleted.
 8. `coverage/test-evidence.json` reflects the new surface; the matrix view shows real depth, not just 100 % from stubs.
 

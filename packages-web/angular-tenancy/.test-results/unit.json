@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-20T03:43:00.137Z",
-  "endedAt": "2026-05-20T03:43:10.524Z",
-  "durationMs": 10387,
+  "startedAt": "2026-05-20T17:14:29.825Z",
+  "endedAt": "2026-05-20T17:14:31.148Z",
+  "durationMs": 1323,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-47037-1779248580137.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-38463-1779297269824.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/.test-results/unit.junit.xml"
     ],
@@ -37,62 +37,62 @@
   },
   "totals": {
     "files": 2,
-    "tests": 14,
-    "passed": 14,
+    "tests": 15,
+    "passed": 15,
     "failed": 0,
     "skipped": 0,
     "todo": 0
   },
   "slowestTests": [
     {
+      "name": "@stynx-web/angular-tenancy renders the tenant switcher and emits selected tenants from the DOM",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts",
+      "durationMs": 35.32362499999999
+    },
+    {
       "name": "@stynx-web/angular-tenancy tenant picker renders only on multi-tenant first load and projects content after selection",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts",
-      "durationMs": 286.0722080000005
-    },
-    {
-      "name": "@stynx-web/angular-tenancy leaves tenant unset when no source resolves and supports manual source default",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts",
-      "durationMs": 126.24874999999975
-    },
-    {
-      "name": "@stynx-web/angular-tenancy initializes tenants from query, subdomain, default resolver, and clear",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts",
-      "durationMs": 101.24712499999987
-    },
-    {
-      "name": "@stynx-web/angular-tenancy stores available tenants for first-load chooser surfaces",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts",
-      "durationMs": 58.749917000000096
-    },
-    {
-      "name": "@stynx-web/angular-tenancy emits tenantChanged$ only when the tenant id changes",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts",
-      "durationMs": 21.129665999999816
+      "durationMs": 14.026707999999985
     },
     {
       "name": "@stynx-web/angular-tenancy tenant picker accepts explicit tenant options and stays passive for single tenants or active contexts",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts",
-      "durationMs": 11.861541000000216
+      "durationMs": 4.2460419999999885
+    },
+    {
+      "name": "@stynx-web/angular-tenancy initializes tenants from query, subdomain, default resolver, and clear",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts",
+      "durationMs": 4.026499999999942
     },
     {
       "name": "@stynx-web/angular-tenancy normalizes URL and host edge cases before using the default resolver",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts",
-      "durationMs": 6.855208999999377
+      "durationMs": 2.3518329999999423
     },
     {
-      "name": "@stynx-web/angular-tenancy does not override an existing tenant header",
+      "name": "@stynx-web/angular-tenancy leaves tenant unset when no source resolves and supports manual source default",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts",
-      "durationMs": 6.274792000000161
+      "durationMs": 1.4717920000000504
     },
     {
       "name": "@stynx-web/angular-tenancy provides tenancy options, browser window fallback, initializer, and interceptor providers",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts",
-      "durationMs": 3.1788329999999405
+      "durationMs": 1.3790409999999156
+    },
+    {
+      "name": "@stynx-web/angular-tenancy emits tenantChanged$ only when the tenant id changes",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts",
+      "durationMs": 1.1081660000000966
+    },
+    {
+      "name": "@stynx-web/angular-tenancy stores available tenants for first-load chooser surfaces",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts",
+      "durationMs": 1.0060829999999896
     },
     {
       "name": "@stynx-web/angular-tenancy adds X-Tenant-Id from the current tenant context",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-tenancy/test/angular-tenancy.spec.ts",
-      "durationMs": 1.6731250000002547
+      "durationMs": 0.9514169999999922
     }
   ]
 }

@@ -1,31 +1,33 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="13" failures="0" errors="0" time="0.010823041">
-    <testsuite name="test/angular-sessions.spec.ts" timestamp="2026-05-20T04:53:39.389Z" hostname="thiamat-1903.local" tests="13" failures="0" errors="0" skipped="0" time="0.010823041">
-        <testcase classname="test/angular-sessions.spec.ts" name="@stynx-web/angular-sessions &gt; defines stable injection tokens for the sessions client and adapter" time="0.000804166">
+<testsuites name="vitest tests" tests="14" failures="0" errors="0" time="0.124701042">
+    <testsuite name="test/angular-sessions.spec.ts" timestamp="2026-05-20T17:14:39.330Z" hostname="thiamat-1903.local" tests="14" failures="0" errors="0" skipped="0" time="0.124701042">
+        <testcase classname="test/angular-sessions.spec.ts" name="@stynx-web/angular-sessions &gt; renders active sessions with current-device labelling and revoke actions" time="0.110155958">
         </testcase>
-        <testcase classname="test/angular-sessions.spec.ts" name="@stynx-web/angular-sessions &gt; normalizes SDK session payloads, derives the current session, and calls SDK endpoints" time="0.003799708">
+        <testcase classname="test/angular-sessions.spec.ts" name="@stynx-web/angular-sessions &gt; defines stable injection tokens for the sessions client and adapter" time="0.000196541">
         </testcase>
-        <testcase classname="test/angular-sessions.spec.ts" name="@stynx-web/angular-sessions &gt; normalizes missing SDK fields without requiring an auth session provider" time="0.000823625">
+        <testcase classname="test/angular-sessions.spec.ts" name="@stynx-web/angular-sessions &gt; normalizes SDK session payloads, derives the current session, and calls SDK endpoints" time="0.003495917">
         </testcase>
-        <testcase classname="test/angular-sessions.spec.ts" name="@stynx-web/angular-sessions &gt; uses snapshot sid before token claims and ignores empty token sid claims" time="0.000686125">
+        <testcase classname="test/angular-sessions.spec.ts" name="@stynx-web/angular-sessions &gt; normalizes missing SDK fields without requiring an auth session provider" time="0.001036375">
         </testcase>
-        <testcase classname="test/angular-sessions.spec.ts" name="@stynx-web/angular-sessions &gt; fails fast when the SDK adapter is used without a client provider" time="0.000477167">
+        <testcase classname="test/angular-sessions.spec.ts" name="@stynx-web/angular-sessions &gt; uses snapshot sid before token claims and ignores empty token sid claims" time="0.000693375">
         </testcase>
-        <testcase classname="test/angular-sessions.spec.ts" name="@stynx-web/angular-sessions &gt; provides a default SDK adapter and allows explicit adapter overrides" time="0.000684084">
+        <testcase classname="test/angular-sessions.spec.ts" name="@stynx-web/angular-sessions &gt; fails fast when the SDK adapter is used without a client provider" time="0.000490958">
         </testcase>
-        <testcase classname="test/angular-sessions.spec.ts" name="@stynx-web/angular-sessions &gt; loads active sessions with current-device, metadata, and empty-state behavior" time="0.000569416">
+        <testcase classname="test/angular-sessions.spec.ts" name="@stynx-web/angular-sessions &gt; provides a default SDK adapter and allows explicit adapter overrides" time="0.000588375">
         </testcase>
-        <testcase classname="test/angular-sessions.spec.ts" name="@stynx-web/angular-sessions &gt; revokes sessions, reloads state, clears busy state, and emits translated warning toasts" time="0.00071375">
+        <testcase classname="test/angular-sessions.spec.ts" name="@stynx-web/angular-sessions &gt; loads active sessions with current-device, metadata, and empty-state behavior" time="0.00046825">
         </testcase>
-        <testcase classname="test/angular-sessions.spec.ts" name="@stynx-web/angular-sessions &gt; keeps busy state true until revoke operations settle" time="0.000272792">
+        <testcase classname="test/angular-sessions.spec.ts" name="@stynx-web/angular-sessions &gt; revokes sessions, reloads state, clears busy state, and emits translated warning toasts" time="0.00347875">
         </testcase>
-        <testcase classname="test/angular-sessions.spec.ts" name="@stynx-web/angular-sessions &gt; falls back to untranslated toast keys when no i18n provider is configured" time="0.000298958">
+        <testcase classname="test/angular-sessions.spec.ts" name="@stynx-web/angular-sessions &gt; keeps busy state true until revoke operations settle" time="0.000415333">
         </testcase>
-        <testcase classname="test/angular-sessions.spec.ts" name="@stynx-web/angular-sessions &gt; throws a clear error when no adapter is provided" time="0.000377666">
+        <testcase classname="test/angular-sessions.spec.ts" name="@stynx-web/angular-sessions &gt; falls back to untranslated toast keys when no i18n provider is configured" time="0.000218916">
         </testcase>
-        <testcase classname="test/angular-sessions.spec.ts" name="@stynx-web/angular-sessions &gt; prefers an input adapter over the provider adapter" time="0.000531208">
+        <testcase classname="test/angular-sessions.spec.ts" name="@stynx-web/angular-sessions &gt; throws a clear error when no adapter is provided" time="0.000316709">
         </testcase>
-        <testcase classname="test/angular-sessions.spec.ts" name="@stynx-web/angular-sessions &gt; accepts an input adapter without a provider adapter" time="0.000178292">
+        <testcase classname="test/angular-sessions.spec.ts" name="@stynx-web/angular-sessions &gt; prefers an input adapter over the provider adapter" time="0.00050725">
+        </testcase>
+        <testcase classname="test/angular-sessions.spec.ts" name="@stynx-web/angular-sessions &gt; accepts an input adapter without a provider adapter" time="0.000184834">
         </testcase>
     </testsuite>
 </testsuites>

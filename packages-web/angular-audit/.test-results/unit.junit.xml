@@ -1,31 +1,31 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="12" failures="0" errors="0" time="0.166619292">
-    <testsuite name="test/angular-audit.spec.ts" timestamp="2026-05-20T04:16:26.678Z" hostname="thiamat-1903.local" tests="7" failures="0" errors="0" skipped="0" time="0.0063795">
-        <testcase classname="test/angular-audit.spec.ts" name="@stynx-web/angular-audit &gt; exports the audit SDK client token through the public entrypoint" time="0.000832166">
+<testsuites name="vitest tests" tests="12" failures="0" errors="0" time="0.708068458">
+    <testsuite name="test/angular-audit.spec.ts" timestamp="2026-05-20T16:27:15.544Z" hostname="thiamat-1903.local" tests="7" failures="0" errors="0" skipped="0" time="0.01486875">
+        <testcase classname="test/angular-audit.spec.ts" name="@stynx-web/angular-audit &gt; exports the audit SDK client token through the public entrypoint" time="0.007225959">
         </testcase>
-        <testcase classname="test/angular-audit.spec.ts" name="@stynx-web/angular-audit &gt; resolves the configured audit client from Angular injection" time="0.00122925">
+        <testcase classname="test/angular-audit.spec.ts" name="@stynx-web/angular-audit &gt; resolves the configured audit client from Angular injection" time="0.001254625">
         </testcase>
-        <testcase classname="test/angular-audit.spec.ts" name="@stynx-web/angular-audit &gt; wraps the pinned audit event and integrity endpoints" time="0.0024845">
+        <testcase classname="test/angular-audit.spec.ts" name="@stynx-web/angular-audit &gt; wraps the pinned audit event and integrity endpoints" time="0.002816917">
         </testcase>
-        <testcase classname="test/angular-audit.spec.ts" name="@stynx-web/angular-audit &gt; omits empty list query options and URL-encodes path segments" time="0.000342833">
+        <testcase classname="test/angular-audit.spec.ts" name="@stynx-web/angular-audit &gt; omits empty list query options and URL-encodes path segments" time="0.000371">
         </testcase>
-        <testcase classname="test/angular-audit.spec.ts" name="@stynx-web/angular-audit &gt; wires the host-facing provider into Angular dependency injection" time="0.000524916">
+        <testcase classname="test/angular-audit.spec.ts" name="@stynx-web/angular-audit &gt; wires the host-facing provider into Angular dependency injection" time="0.000570833">
         </testcase>
-        <testcase classname="test/angular-audit.spec.ts" name="@stynx-web/angular-audit &gt; uses empty audit options when a host only provides a client factory" time="0.000100666">
+        <testcase classname="test/angular-audit.spec.ts" name="@stynx-web/angular-audit &gt; uses empty audit options when a host only provides a client factory" time="0.000099792">
         </testcase>
-        <testcase classname="test/angular-audit.spec.ts" name="@stynx-web/angular-audit &gt; exposes a defensive audit route factory" time="0.000302667">
+        <testcase classname="test/angular-audit.spec.ts" name="@stynx-web/angular-audit &gt; exposes a defensive audit route factory" time="0.000295042">
         </testcase>
     </testsuite>
-    <testsuite name="test/audit-components.spec.ts" timestamp="2026-05-20T04:16:26.679Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="0.160239792">
-        <testcase classname="test/audit-components.spec.ts" name="@stynx-web/angular-audit E.6 components &gt; renders the audit log, applies filters, and advances cursor-backed pages" time="0.11354325">
+    <testsuite name="test/audit-components.spec.ts" timestamp="2026-05-20T16:27:15.556Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="0.693199708">
+        <testcase classname="test/audit-components.spec.ts" name="@stynx-web/angular-audit E.6 components &gt; renders the audit log, applies filters, and advances cursor-backed pages" time="0.490714792">
         </testcase>
-        <testcase classname="test/audit-components.spec.ts" name="@stynx-web/angular-audit E.6 components &gt; renders detail payloads and verifies event integrity on demand" time="0.019383792">
+        <testcase classname="test/audit-components.spec.ts" name="@stynx-web/angular-audit E.6 components &gt; renders detail payloads and verifies event integrity on demand" time="0.074001542">
         </testcase>
-        <testcase classname="test/audit-components.spec.ts" name="@stynx-web/angular-audit E.6 components &gt; surfaces integrity verification failures without destructive remediation" time="0.006140375">
+        <testcase classname="test/audit-components.spec.ts" name="@stynx-web/angular-audit E.6 components &gt; surfaces integrity verification failures without destructive remediation" time="0.019038167">
         </testcase>
-        <testcase classname="test/audit-components.spec.ts" name="@stynx-web/angular-audit E.6 components &gt; renders per-entity history with cursor pagination and per-event integrity badges" time="0.015147667">
+        <testcase classname="test/audit-components.spec.ts" name="@stynx-web/angular-audit E.6 components &gt; renders per-entity history with cursor pagination and per-event integrity badges" time="0.080821459">
         </testcase>
-        <testcase classname="test/audit-components.spec.ts" name="@stynx-web/angular-audit E.6 components &gt; renders hash integrity badge tones for valid, broken, and unchecked states" time="0.003667417">
+        <testcase classname="test/audit-components.spec.ts" name="@stynx-web/angular-audit E.6 components &gt; renders hash integrity badge tones for valid, broken, and unchecked states" time="0.014234875">
         </testcase>
     </testsuite>
 </testsuites>

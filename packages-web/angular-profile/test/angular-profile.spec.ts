@@ -1,7 +1,10 @@
 import '@angular/compiler';
-import { Injector, runInInjectionContext } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Injector, runInInjectionContext } from '@angular/core';
 import type { Provider } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
+import { TestBed } from '@angular/core/testing';
+import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
+import { Router, RouterOutlet, provideRouter } from '@angular/router';
 import { ErrorBannerService } from '@stynx-web/angular';
 import { StynxI18nService } from '@stynx-web/angular-i18n';
 import { STYNX_OIDC_ADAPTER } from '@stynx-web/angular-auth';
@@ -13,8 +16,11 @@ import {
 } from '../src/hosted-auth-action-handoff.component';
 import { StynxPreferencesFormComponent } from '../src/preferences-form.component';
 import { StynxProfileFormComponent } from '../src/profile-form.component';
+import { StynxProfileSecurityComponent } from '../src/profile-security.component';
 import { ProfileService } from '../src/profile.service';
+import { profileRoutes } from '../src/routes';
 import type { StynxHostedAuthAction } from '@stynx-web/angular-auth';
+import { renderComponent } from './support/test-bed';
 
 function createWithFormBuilder<T>(factory: () => T, providers: Provider[] = []): T {
   const injector = Injector.create({
@@ -51,7 +57,147 @@ function createHandoffComponent<T>(
   return runInInjectionContext(injector, componentFactory);
 }
 
+@Component({
+  standalone: true,
+  imports: [RouterOutlet],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: '<router-outlet></router-outlet>',
+})
+class ProfileRouterHostComponent {}
+
+beforeAll(() => {
+  TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
+});
+
+afterEach(() => {
+  TestBed.resetTestingModule();
+});
+
 describe('@stynx-web/angular-profile', () => {
+  it('renders profile and preferences forms with translated labels and DOM validation state', async () => {
+    const i18n = {
+      locale: () => 'en',
+      translate: (key: string) => ({
+        'profile.form.actions.save': 'Save profile',
+        'profile.form.fields.email': 'Email',
+        'profile.form.fields.locale': 'Locale',
+        'profile.form.fields.name': 'Name',
+        'profile.form.validation.nameRequired': 'Name is required',
+        'profile.preferences.actions.save': 'Save preferences',
+        'profile.preferences.fields.locale': 'Language',
+        'profile.preferences.fields.notifications': 'Notifications',
+      })[key] ?? key,
+      use: vi.fn(async () => undefined),
+    };
+
+    const profileFixture = await renderComponent(StynxProfileFormComponent, {
+      inputs: {
+        value: {
+          name: 'Ana',
+          email: 'ana@example.test',
+          locale: 'en-US',
+        },
+      },
+      providers: [{ provide: StynxI18nService, useValue: i18n }],
+    });
+    const profileHost = profileFixture.nativeElement as HTMLElement;
+    expect(profileHost.textContent).toContain('Name');
+    expect(profileHost.textContent).toContain('Save profile');
+    profileFixture.componentInstance.form.controls.name.setValue('');
+    profileFixture.componentInstance.form.controls.name.markAsTouched();
+    profileFixture.detectChanges();
+    expect(profileHost.textContent).toContain('Name is required');
+
+    const preferencesFixture = await renderComponent(StynxPreferencesFormComponent, {
+      inputs: {
+        value: {
+          locale: 'en-US',
+          notifications: false,
+        },
+      },
+      providers: [{ provide: StynxI18nService, useValue: i18n }],
+    });
+    const preferencesHost = preferencesFixture.nativeElement as HTMLElement;
+    expect(preferencesHost.textContent).toContain('Language');
+    expect(preferencesHost.textContent).toContain('Notifications');
+    expect(preferencesHost.textContent).toContain('Save preferences');
+  });
+
+  it('renders the security handoff surface and opens hosted auth actions from buttons', async () => {
+    const opened: unknown[] = [];
+    const fixture = await renderComponent(StynxProfileSecurityComponent, {
+      providers: [
+        {
+          provide: STYNX_OIDC_ADAPTER,
+          useValue: {
+            getHostedActionLink: (action: StynxHostedAuthAction) => ({
+              action,
+              url: `https://idp.example.test/${action}`,
+              method: 'browser-redirect',
+            }),
+            openHostedAction: (action: StynxHostedAuthAction, context: unknown) => opened.push([action, context]),
+          },
+        },
+        {
+          provide: StynxI18nService,
+          useValue: {
+            locale: () => 'en',
+            translate: (key: string) => ({
+              'profile.security.changePassword.action': 'Change password',
+              'profile.security.description': 'Manage account security.',
+              'profile.security.mfaEnrolment.action': 'Set up MFA',
+              'profile.security.title': 'Security',
+            })[key] ?? key,
+          },
+        },
+      ],
+    });
+
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.textContent).toContain('Security');
+    expect(host.textContent).toContain('Change password');
+    expect(host.textContent).toContain('Set up MFA');
+    host.querySelector<HTMLButtonElement>('[data-testid="change-password-handoff-button"]')?.click();
+    await fixture.whenStable();
+    expect(opened[0]).toEqual(['change-password', expect.objectContaining({ locale: null, tenantId: null })]);
+  });
+
+  it('navigates profile routes to the shipped standalone components', async () => {
+    await TestBed.configureTestingModule({
+      imports: [ProfileRouterHostComponent],
+      providers: [
+        provideRouter([{ path: '', children: profileRoutes() }]),
+        {
+          provide: STYNX_OIDC_ADAPTER,
+          useValue: {
+            getHostedActionLink: () => null,
+          },
+        },
+        {
+          provide: StynxI18nService,
+          useValue: {
+            locale: () => 'en',
+            translate: (key: string) => key,
+          },
+        },
+      ],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(ProfileRouterHostComponent);
+    const router = TestBed.inject(Router);
+
+    await router.navigateByUrl('/');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="profile-form"]')).not.toBeNull();
+
+    await router.navigateByUrl('/preferences');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="preferences-form"]')).not.toBeNull();
+
+    await router.navigateByUrl('/security');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="profile-security-route"]')).not.toBeNull();
+  });
+
   it('validates the profile form and emits only when dirty and valid', () => {
     const component = createWithFormBuilder(() => new StynxProfileFormComponent());
     const seen: unknown[] = [];

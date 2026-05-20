@@ -89,7 +89,7 @@ Add `pnpm i18n:check` and `pnpm i18n:extract` workspace scripts.
 - `SdkTrashAdapter` spec — list / restore / bulk semantics.
 - `TranslatePipe` ICU spec — `'You have {count, plural, one {1 task} other {# tasks}}'`.
 - `Intl` pipes specs.
-- Mutation threshold ≥ 70 %.
+- Mutation passes the configured repository threshold for the package under test.
 
 (Playwright in FE-WAVE-G.)
 
@@ -102,7 +102,7 @@ Add `pnpm i18n:check` and `pnpm i18n:extract` workspace scripts.
 5. Every `packages-web/*` template literal in user-visible position is now translatable.
 6. `en` + `pt-BR` catalogs shipped per package with templates.
 7. `pnpm i18n:check` passes; `pnpm i18n:extract` reproduces the catalog from source.
-8. `pnpm test:matrix` records the new tests; mutation ≥ 70 % per package.
+8. `pnpm test:matrix` records the new tests; mutation passes the configured repository threshold per package.
 
 ## Closure artifact
 

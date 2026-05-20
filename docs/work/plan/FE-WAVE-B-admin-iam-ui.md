@@ -116,7 +116,7 @@ export function provideStynxIam(config: StynxIamConfig): EnvironmentProviders;
 - Service spec with mocked HTTP transport for every method.
 - Router spec navigating each `iamRoutes()` entry with a stubbed permission set.
 - Permission-gated assertion: without `iam:users:read`, navigation to `/users` lands on the denial component.
-- Mutation threshold: 70 % per the FE-05 schedule.
+- Mutation threshold: configured repository threshold for `@stynx-web/angular-iam` (currently `70` in `scripts/test-matrix.config.json`).
 
 (Playwright scenarios in FE-WAVE-G.)
 
@@ -127,7 +127,7 @@ export function provideStynxIam(config: StynxIamConfig): EnvironmentProviders;
 3. `IamApiService` covers every endpoint in B.2.
 4. `iamRoutes()` and `provideStynxIam()` exported from `index.ts`.
 5. Per-component TestBed specs pass; unit branch coverage ≥ 80 %.
-6. Mutation score ≥ 70 % (Stryker recorded).
+6. Mutation passes the configured repository threshold (Stryker recorded).
 7. Translation catalogs `en` + `pt-BR` shipped; no untranslated literal strings in templates.
 8. Wired into `test-matrix.config.json` and `coverage/test-evidence.json` is updated by a fresh `pnpm test:matrix` run.
 9. Reference app (`reference/web`) mounts `iamRoutes()` under `/admin` and demonstrates the surface.

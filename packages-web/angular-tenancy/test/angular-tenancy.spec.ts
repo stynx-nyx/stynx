@@ -1,8 +1,9 @@
 import '@angular/compiler';
-import { APP_INITIALIZER, Injector, runInInjectionContext, type Provider } from '@angular/core';
+import { APP_INITIALIZER, Injector, runInInjectionContext, signal, type Provider } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { StynxI18nService } from '@stynx-web/angular-i18n';
 import { of, firstValueFrom, type Observable } from 'rxjs';
 import { provideTenancy } from '../src/provide-tenancy';
 import { TenantContextService } from '../src/tenant-context.service';
@@ -11,6 +12,7 @@ import { StynxTenantPickerComponent } from '../src/tenant-picker.component';
 import { TenantSwitcherComponent } from '../src/tenant-switcher.component';
 import { STYNX_TENANCY_OPTIONS, STYNX_TENANCY_WINDOW } from '../src/tokens';
 import type { TenancyOptions, TenantTransition } from '../src/types';
+import { renderComponent } from './support/test-bed';
 
 type ProviderRecord = Provider & Record<string, unknown> & {
   provide: unknown;
@@ -102,6 +104,47 @@ afterEach(() => {
 });
 
 describe('@stynx-web/angular-tenancy', () => {
+  it('renders the tenant switcher and emits selected tenants from the DOM', async () => {
+    const tenantId = signal<string | null>(null);
+    const tenantContext = {
+      tenantId,
+      setTenant: (id: string) => tenantId.set(id),
+    } as unknown as TenantContextService;
+    const seen: string[] = [];
+    const fixture = await renderComponent(TenantSwitcherComponent, {
+      inputs: {
+        tenants: [
+          { id: 'tenant-a', label: 'Tenant A' },
+          { id: 'tenant-b', label: 'Tenant B' },
+        ],
+      },
+      providers: [
+        { provide: TenantContextService, useValue: tenantContext },
+        {
+          provide: StynxI18nService,
+          useValue: {
+            locale: () => 'en',
+            translate: (key: string) => ({
+              'tenancy.switcher.label': 'Tenant',
+              'tenancy.switcher.placeholder': 'Choose tenant',
+            })[key] ?? key,
+          },
+        },
+      ],
+    });
+    fixture.componentInstance.tenantChange.subscribe((tenantId) => seen.push(tenantId));
+
+    const host = fixture.nativeElement as HTMLElement;
+    const select = host.querySelector('select') as HTMLSelectElement;
+    expect(host.textContent).toContain('Tenant A');
+    select.value = 'tenant-b';
+    select.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+
+    expect(tenantId()).toBe('tenant-b');
+    expect(seen).toEqual(['tenant-b']);
+  });
+
   it('provides tenancy options, browser window fallback, initializer, and interceptor providers', async () => {
     const options = { defaultTenantResolver: async () => 'tenant-default' };
     const providers = provideTenancy(options);

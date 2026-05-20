@@ -20,7 +20,7 @@ You will execute **one** of the FE-B workstreams. The orchestrator names it in t
 - B.6 — Effective-permissions viewer (`StynxEffectivePermissionsComponent`).
 - B.7 — Routes + provider (`iamRoutes()`, `provideStynxIam(...)`, `STYNX_IAM_CLIENT`).
 - B.8 — Translation catalogs (`src/i18n/{en,pt-BR}.json`; migrate every template literal to `| translate`).
-- B.9 — Tests (component TestBed specs, service spec, router spec, mutation ≥ 70 %).
+- B.9 — Tests (component TestBed specs, service spec, router spec, mutation passes the configured repository threshold).
 
 ## Role (Article 6)
 
@@ -35,7 +35,7 @@ You will execute **one** of the FE-B workstreams. The orchestrator names it in t
 3. `IamApiService` covers every endpoint in B.2.
 4. `iamRoutes()` and `provideStynxIam()` exported from `index.ts`.
 5. Per-component TestBed specs pass; unit branch coverage ≥ 80 %.
-6. Mutation score ≥ 70 % (Stryker recorded).
+6. Mutation passes the configured repository threshold (Stryker recorded).
 7. Translation catalogs `en` + `pt-BR` shipped; no untranslated literal strings in templates.
 8. Wired into `test-matrix.config.json` and `coverage/test-evidence.json` is updated by a fresh `pnpm test:matrix` run.
 9. Reference app (`reference/web`) mounts `iamRoutes()` under `/admin` and demonstrates the surface.
@@ -83,7 +83,7 @@ node -e "const c = require('./packages-web/angular-iam/src/i18n/en.json'); conso
 For B.9 specifically, confirm:
 
 - Coverage ≥ 80 % branches.
-- Mutation score ≥ 70 % (or document the survivors).
+- Mutation passes the configured repository threshold (or document the survivors).
 
 ## Closure
 

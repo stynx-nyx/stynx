@@ -38,7 +38,7 @@ You are a worker for Wave **FE-E — Tenancy + Audit** in the stynx frontend com
 5. Cursor pagination works against a mocked SDK in unit tests.
 6. Hash-integrity badge calls the SDK and renders the right tone.
 7. Translation catalogs `en` + `pt-BR` shipped.
-8. `pnpm test:matrix` records the new test surface; mutation ≥ 70 %.
+8. `pnpm test:matrix` records the new test surface; mutation passes the configured repository threshold.
 
 ## Pre-flight
 

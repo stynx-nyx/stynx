@@ -1,6 +1,7 @@
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
+import { StynxI18nService } from '@stynx-web/angular-i18n';
 import { StynxBannerComponent } from '../src/banner.component';
 import { StynxConfirmDialogComponent } from '../src/confirm-dialog.component';
 import { STYNX_ICON_NAMES, StynxIconComponent } from '../src/icon/icon.component';
@@ -9,6 +10,7 @@ import { StynxPaginationComponent } from '../src/pagination.component';
 import { StynxTableComponent } from '../src/table.component';
 import { StynxToastContainerComponent } from '../src/toast-container.component';
 import { StynxToastService } from '../src/toast.service';
+import { renderComponent } from './support/test-bed';
 
 function createToastService(): StynxToastService {
   return TestBed.runInInjectionContext(() => new StynxToastService());
@@ -32,6 +34,78 @@ describe('@stynx-web/angular-ui', () => {
     const toast = service.push('Saved', 'success');
     expect(service.toasts()).toEqual([toast]);
     service.dismiss(toast.id);
+    expect(service.toasts()).toEqual([]);
+  });
+
+  it('renders UI primitives through TestBed with DOM output and click emitters', async () => {
+    const i18n = {
+      locale: () => 'en',
+      translate: (key: string, params?: Record<string, unknown>) => ({
+        'ui.confirmDialog.cancel': 'Cancel',
+        'ui.pagination.next': 'Next',
+        'ui.pagination.pageStatus': `Page ${params?.['page'] ?? 1} of ${params?.['count'] ?? 1}`,
+        'ui.pagination.previous': 'Previous',
+      })[key] ?? key,
+    };
+
+    const banner = await renderComponent(StynxBannerComponent, {
+      inputs: { title: 'Heads up', message: 'Policy changed', tone: 'warning' },
+    });
+    expect((banner.nativeElement as HTMLElement).textContent).toContain('Heads up');
+    expect((banner.nativeElement as HTMLElement).querySelector('section')?.getAttribute('data-tone')).toBe('warning');
+
+    const confirmSeen: string[] = [];
+    const confirm = await renderComponent(StynxConfirmDialogComponent, {
+      inputs: { open: true, title: 'Delete', message: 'Delete item?', confirmLabel: 'Delete' },
+      providers: [{ provide: StynxI18nService, useValue: i18n }],
+    });
+    confirm.componentInstance.confirm.subscribe(() => confirmSeen.push('confirm'));
+    confirm.componentInstance.dismissed.subscribe(() => confirmSeen.push('dismiss'));
+    const confirmButtons = (confirm.nativeElement as HTMLElement).querySelectorAll('button');
+    confirmButtons[0]?.click();
+    confirmButtons[1]?.click();
+    expect(confirmSeen).toEqual(['dismiss', 'confirm']);
+
+    const paginationSeen: Array<{ pageIndex: number; pageSize: number }> = [];
+    const pagination = await renderComponent(StynxPaginationComponent, {
+      inputs: { totalItems: 25, page: 0, pageSizeInput: 10 },
+      providers: [{ provide: StynxI18nService, useValue: i18n }],
+    });
+    pagination.componentInstance.pageChange.subscribe((event) => paginationSeen.push(event));
+    (pagination.nativeElement as HTMLElement).querySelectorAll('button')[1]?.click();
+    expect(paginationSeen).toEqual([{ pageIndex: 1, pageSize: 10 }]);
+
+    const table = await renderComponent(StynxTableComponent<{ name: string }>, {
+      inputs: {
+        columns: [{ key: 'name', label: 'Name' }],
+        rows: [{ name: 'Ada' }],
+      },
+    });
+    expect((table.nativeElement as HTMLElement).textContent).toContain('Ada');
+
+    const spinner = await renderComponent(StynxLoadingSpinnerComponent, {
+      inputs: { label: 'Loading records', size: 2 },
+    });
+    expect((spinner.nativeElement as HTMLElement).textContent).toContain('Loading records');
+
+    const icon = await renderComponent(StynxIconComponent, {
+      inputs: { name: 'check', label: 'Done' },
+    });
+    expect((icon.nativeElement as HTMLElement).querySelector('svg')?.getAttribute('aria-label')).toBe('Done');
+  });
+
+  it('renders the toast container and dismisses toasts from the DOM', async () => {
+    const fixture = await renderComponent(StynxToastContainerComponent, {
+      providers: [StynxToastService],
+    });
+    const service = TestBed.inject(StynxToastService);
+    service.push('Saved', 'success', 0);
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.textContent).toContain('Saved');
+    host.querySelector('button')?.click();
+    fixture.detectChanges();
     expect(service.toasts()).toEqual([]);
   });
 

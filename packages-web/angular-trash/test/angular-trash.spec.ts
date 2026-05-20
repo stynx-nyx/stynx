@@ -1,14 +1,18 @@
 import '@angular/compiler';
 import { Injector, runInInjectionContext } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { StynxSessionService } from '@stynx-web/angular-auth';
+import { StynxI18nService } from '@stynx-web/angular-i18n';
 import { StynxToastService } from '@stynx-web/angular-ui';
 import type { StynxSdkClient } from '@stynx-web/sdk';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { provideStynxTrash } from '../src/provide-trash';
 import { SdkTrashAdapter } from '../src/sdk-trash.adapter';
 import { STYNX_TRASH_ADAPTER, STYNX_TRASH_CLIENT, STYNX_TRASH_OPTIONS } from '../src/tokens';
 import { StynxTrashListComponent } from '../src/trash-list.component';
 import type { StynxTrashAdapter, StynxTrashItem, StynxTrashQuery } from '../src/types';
+import { renderComponent } from './support/test-bed';
 
 interface MockSession {
   hasAllPermissions: (permissions: string[]) => boolean;
@@ -47,9 +51,80 @@ function createComponent(
   return runInInjectionContext(injector, () => new StynxTrashListComponent());
 }
 
+beforeAll(() => {
+  TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
+});
+
 describe('@stynx-web/angular-trash', () => {
   afterEach(() => {
+    TestBed.resetTestingModule();
     vi.restoreAllMocks();
+  });
+
+  it('renders trash list rows, selection toolbar, and pagination through TestBed', async () => {
+    const adapter: StynxTrashAdapter = {
+      list: vi.fn(async () => ({
+        items: [
+          {
+            id: 'trash-1',
+            label: 'Archived record',
+            deletedAt: '2026-05-01T10:00:00.000Z',
+            deletedBy: 'Ana',
+            canHardDelete: true,
+          },
+        ],
+        total: 1,
+      })),
+      restore: vi.fn(async () => undefined),
+      hardDelete: vi.fn(async () => undefined),
+    };
+    const fixture = await renderComponent(StynxTrashListComponent, {
+      inputs: { adapter },
+      providers: [
+        { provide: StynxSessionService, useValue: createSession(true) },
+        { provide: StynxToastService, useValue: { push: vi.fn() } },
+        {
+          provide: StynxI18nService,
+          useValue: {
+            locale: () => 'en',
+            translate: (key: string, params?: Record<string, unknown>) => ({
+              'trash.bulk.clear': 'Clear',
+              'trash.bulk.hardDelete': 'Delete forever',
+              'trash.bulk.restore': 'Restore selected',
+              'trash.bulk.selected': `${params?.['count'] ?? 0} selected`,
+              'trash.confirmHardDelete.confirm': 'Delete forever',
+              'trash.confirmHardDelete.message': 'This cannot be undone.',
+              'trash.confirmHardDelete.title': 'Delete archived item?',
+              'trash.empty.description': 'Deleted items will appear here.',
+              'trash.empty.title': 'Trash is empty',
+              'trash.filters.ariaLabel': 'Filters',
+              'trash.filters.byActor': 'By actor',
+              'trash.filters.byMe': 'By me',
+              'trash.filters.last7Days': 'Last 7 days',
+              'trash.item.deletedBy': `Deleted by ${params?.['actor'] ?? ''}`,
+              'trash.item.hardDelete': 'Delete forever',
+              'trash.item.restore': 'Restore',
+              'trash.item.select': 'Select',
+              'trash.tabs.ariaLabel': 'Trash kinds',
+              'ui.confirmDialog.cancel': 'Cancel',
+              'ui.pagination.next': 'Next',
+              'ui.pagination.pageStatus': `Page ${params?.['page'] ?? 1} of ${params?.['count'] ?? 1}`,
+              'ui.pagination.previous': 'Previous',
+            })[key] ?? key,
+          },
+        },
+      ],
+    });
+
+    await fixture.componentInstance.load();
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelector('[data-testid="trash-item-record-trash-1"]')?.textContent).toContain('Archived record');
+
+    host.querySelector<HTMLInputElement>('[data-testid="trash-select-record-trash-1"]')?.click();
+    fixture.detectChanges();
+    expect(host.textContent).toContain('1 selected');
+    expect(host.textContent).toContain('Page 1 of 1');
   });
 
   it('loads trash items and restores them through the adapter', async () => {

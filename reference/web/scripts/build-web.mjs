@@ -37,6 +37,7 @@ await build({
   },
   define: {
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV ?? 'production'),
+    'process.env.PLAYWRIGHT_USE_REAL_OIDC': JSON.stringify(process.env.PLAYWRIGHT_USE_REAL_OIDC ?? ''),
   },
 });
 

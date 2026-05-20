@@ -101,7 +101,7 @@ Render the `last-ip`, `user-agent` (truncated), `last-seen-at` columns. Add a pe
 - `ProfileService` spec — HTTP mock.
 - `SdkSessionsAdapter` spec — HTTP mock.
 - `UnsavedChangesGuard` spec.
-- Mutation threshold ≥ 70 %.
+- Mutation passes the configured repository threshold for the package under test.
 
 (Playwright in FE-WAVE-G.)
 
@@ -114,7 +114,7 @@ Render the `last-ip`, `user-agent` (truncated), `last-seen-at` columns. Add a pe
 5. `@stynx-web/angular-sessions` exports `SdkSessionsAdapter` and a default `provideStynxSessions()`.
 6. "This device" badge resolves correctly under unit test.
 7. Translation catalogs `en` + `pt-BR` shipped for both packages.
-8. `pnpm test:matrix` records the new test surface; mutation score ≥ 70 %.
+8. `pnpm test:matrix` records the new test surface; mutation passes the configured repository threshold.
 
 ## Closure artifact
 

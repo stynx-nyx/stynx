@@ -64,6 +64,10 @@ async function requestBody(route: Route): Promise<{ email?: string; tenantId?: s
 }
 
 export async function installSpaAuthMocks(page: Page, options: SpaAuthMocksOptions = {}): Promise<void> {
+  if (process.env.PLAYWRIGHT_USE_REAL_OIDC === '1') {
+    return;
+  }
+
   await page.route('**/_reference/dev-login', async (route) => {
     options.onDevLogin?.();
     if (options.failLogin) {

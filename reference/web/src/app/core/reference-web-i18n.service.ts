@@ -1,6 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { STYNX_IAM_CATALOGS } from '@stynx-web/angular-iam';
 import { StynxI18nService } from '@stynx-web/angular-i18n';
+import flowEnCatalog from '../../../../../packages-web/angular-flow/src/i18n/en.json';
+import flowPtBrCatalog from '../../../../../packages-web/angular-flow/src/i18n/pt-BR.json';
 
 type Catalog = Record<string, string>;
 
@@ -21,6 +23,12 @@ const REFERENCE_CATALOGS: Record<string, Catalog> = {
   },
 };
 
+const FLOW_CATALOGS: Record<string, Catalog> = {
+  en: flowEnCatalog,
+  'en-US': flowEnCatalog,
+  'pt-BR': flowPtBrCatalog,
+};
+
 @Injectable()
 export class ReferenceWebI18nService {
   readonly locales = ['en-US', 'pt-BR'];
@@ -34,6 +42,7 @@ export class ReferenceWebI18nService {
     return Promise.resolve({
       ...(REFERENCE_CATALOGS[locale] ?? REFERENCE_CATALOGS['en-US'] ?? {}),
       ...(STYNX_IAM_CATALOGS[locale] ?? STYNX_IAM_CATALOGS.en ?? {}),
+      ...(FLOW_CATALOGS[locale] ?? FLOW_CATALOGS.en ?? {}),
     });
   }
 }

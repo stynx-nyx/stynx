@@ -1,8 +1,11 @@
 import '@angular/compiler';
 import { HttpClient } from '@angular/common/http';
 import { Injector, runInInjectionContext } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { firstValueFrom, of, throwError, toArray } from 'rxjs';
 import { STYNX_ANGULAR_OPTIONS } from '@stynx-web/angular';
+import { StynxI18nService } from '@stynx-web/angular-i18n';
 import { StynxToastService } from '@stynx-web/angular-ui';
 import { StynxDocumentDownloadComponent } from '../src/document-download.component';
 import { DocumentService } from '../src/document.service';
@@ -11,6 +14,7 @@ import { MultipartUploadExecutor, provideStynxMultipartUploadExecutor } from '..
 import { STYNX_DEFAULT_MULTIPART_UPLOAD_OPTIONS, STYNX_MULTIPART_UPLOAD_OPTIONS, STYNX_UPLOAD_EXECUTOR } from '../src/tokens';
 import type { StynxDocumentScanEvent, StynxUploadExecutor } from '../src/types';
 import { XhrUploadExecutor } from '../src/xhr-upload.executor';
+import { renderComponent } from './support/test-bed';
 
 class FakeXmlHttpRequest {
   static instances: FakeXmlHttpRequest[] = [];
@@ -120,7 +124,50 @@ function createMultipartExecutor(
   );
 }
 
+beforeAll(() => {
+  TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
+});
+
 describe('@stynx-web/angular-storage', () => {
+  afterEach(() => {
+    TestBed.resetTestingModule();
+  });
+
+  it('renders upload and download components with validation failures in the DOM', async () => {
+    const uploadFixture = await renderComponent(StynxDocumentUploadComponent, {
+      providers: [
+        {
+          provide: DocumentService,
+          useValue: {
+            initiate: vi.fn(),
+            complete: vi.fn(),
+          },
+        },
+        { provide: STYNX_UPLOAD_EXECUTOR, useValue: { upload: vi.fn() } },
+        { provide: StynxToastService, useValue: { push: vi.fn() } },
+        { provide: StynxI18nService, useValue: { locale: () => 'en', translate: (key: string) => key } },
+      ],
+    });
+
+    uploadFixture.componentRef.setInput('allowedMimes', ['application/pdf']);
+    uploadFixture.componentRef.setInput('collection', 'records');
+    uploadFixture.detectChanges();
+    const uploadHost = uploadFixture.nativeElement as HTMLElement;
+    expect(uploadHost.querySelector('[data-testid="document-upload-root"]')?.getAttribute('data-upload-status')).toBe('idle');
+    expect(uploadHost.querySelector('[data-testid="document-upload-file-input"]')?.getAttribute('accept')).toBe('application/pdf');
+
+    const downloadFixture = await renderComponent(StynxDocumentDownloadComponent, {
+      providers: [
+        { provide: DocumentService, useValue: { getSignedUrl: vi.fn() } },
+      ],
+    });
+    await downloadFixture.componentInstance.download();
+    downloadFixture.detectChanges();
+    const downloadHost = downloadFixture.nativeElement as HTMLElement;
+    expect(downloadHost.querySelector('[data-testid="document-download-root"]')?.getAttribute('data-download-status')).toBe('errored');
+    expect(downloadHost.textContent).toContain('Document id is required.');
+  });
+
   it('downloads a document through a signed URL and emits progress', async () => {
     const originalFetch = globalThis.fetch;
     const originalCreateObjectUrl = URL.createObjectURL;

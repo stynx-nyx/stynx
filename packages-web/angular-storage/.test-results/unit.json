@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-20T04:25:03.251Z",
-  "endedAt": "2026-05-20T04:25:04.620Z",
-  "durationMs": 1369,
+  "startedAt": "2026-05-20T17:14:37.004Z",
+  "endedAt": "2026-05-20T17:14:39.409Z",
+  "durationMs": 2405,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-81634-1779251103250.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-38792-1779297277004.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/.test-results/unit.junit.xml"
     ],
@@ -37,62 +37,62 @@
   },
   "totals": {
     "files": 1,
-    "tests": 23,
-    "passed": 23,
+    "tests": 24,
+    "passed": 24,
     "failed": 0,
     "skipped": 0,
     "todo": 0
   },
   "slowestTests": [
     {
+      "name": "@stynx-web/angular-storage renders upload and download components with validation failures in the DOM",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
+      "durationMs": 114.67258300000003
+    },
+    {
       "name": "@stynx-web/angular-storage downloads a document through a signed URL and emits progress",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
-      "durationMs": 13.256750000000011
+      "durationMs": 7.501541999999972
     },
     {
       "name": "@stynx-web/angular-storage deduplicates repeated scan events and surfaces scan-status errors",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
-      "durationMs": 4.673541999999998
+      "durationMs": 6.014083000000028
     },
     {
       "name": "@stynx-web/angular-storage long-polls scan status until a terminal status is returned",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
-      "durationMs": 4.543542000000002
+      "durationMs": 5.806583000000046
     },
     {
       "name": "@stynx-web/angular-storage normalizes repeated API slashes and fills blank scan event ids",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
-      "durationMs": 3.5500409999999647
+      "durationMs": 5.254875000000084
     },
     {
       "name": "@stynx-web/angular-storage uploads large files as resumable multipart chunks",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
-      "durationMs": 2.191291999999976
-    },
-    {
-      "name": "@stynx-web/angular-storage uses explicit download filenames before encoded headers and URL fallbacks",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
-      "durationMs": 1.576291000000083
+      "durationMs": 4.12195799999995
     },
     {
       "name": "@stynx-web/angular-storage resolves encoded, plain, and id fallback download names",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
-      "durationMs": 1.4008330000000342
+      "durationMs": 2.6140419999999267
+    },
+    {
+      "name": "@stynx-web/angular-storage uses multipart status numbers, explicit completion URL, and failure statuses",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
+      "durationMs": 2.4665829999999005
     },
     {
       "name": "@stynx-web/angular-storage tracks download busy labels and bodyless browser fallbacks",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
-      "durationMs": 1.3553329999999733
+      "durationMs": 1.5829169999999522
     },
     {
-      "name": "@stynx-web/angular-storage uploads files through XMLHttpRequest with progress, success, and failure paths",
+      "name": "@stynx-web/angular-storage uses explicit download filenames before encoded headers and URL fallbacks",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
-      "durationMs": 0.8497499999999718
-    },
-    {
-      "name": "@stynx-web/angular-storage surfaces exhausted multipart retries, completion failures, and provider wiring",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-storage/test/angular-storage.spec.ts",
-      "durationMs": 0.6946659999999838
+      "durationMs": 1.577541999999994
     }
   ]
 }

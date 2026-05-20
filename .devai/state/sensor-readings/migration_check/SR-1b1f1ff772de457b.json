@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-1b1f1ff772de457b",
+  "sensor": {
+    "name": "migrate-check",
+    "kind": "migration_check"
+  },
+  "timestamp": "2026-05-20T17:40:37.074Z",
+  "status": "unknown",
+  "deterministic": true,
+  "command": "psql 0 -f <each migration>",
+  "command_hash": "7ec6af053a97d40f5325764679ae411927ef120c3d6d79b1c238175a5d70f383",
+  "err_head": "psql: error: connection to server on socket \"/tmp/.s.PGSQL.5432\" failed: FATAL:  database \"0\" does not exist\n",
+  "findings": [
+    {
+      "severity": "warning",
+      "code": "pre_seed_failed",
+      "message": "Pre-seed db/migrate-check-preseed.sql exited 2: psql: error: connection to server on socket \"/tmp/.s.PGSQL.5432\" failed: FATAL:  database \"0\" does not exist",
+      "file": "db/migrate-check-preseed.sql"
+    }
+  ],
+  "metrics": {
+    "migrations_applied": 0,
+    "migrations_failed": 0,
+    "pre_seed_applied": 0,
+    "pre_seed_failed": 1,
+    "total_duration_ms": 40
+  }
+}

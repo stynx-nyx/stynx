@@ -1,19 +1,27 @@
 import { defineConfig } from '@playwright/test';
 
+const useRealOidc = process.env.PLAYWRIGHT_USE_REAL_OIDC === '1';
+
 const ownedCategorySpecs = [
   'auth/**/*.spec.ts',
-  'smoke/**/*.spec.ts',
-  'profile/**/*.spec.ts',
-  'tenant/**/*.spec.ts',
-  'i18n/**/*.spec.ts',
-  'records/**/*.spec.ts',
+  'audit/**/*.spec.ts',
   'documents/**/*.spec.ts',
+  'flows/**/*.spec.ts',
+  'i18n/**/*.spec.ts',
+  'iam/**/*.spec.ts',
+  'permissions/**/*.spec.ts',
+  'profile/**/*.spec.ts',
+  'records/**/*.spec.ts',
   'sessions/**/*.spec.ts',
+  'smoke/**/*.spec.ts',
+  'tenant/**/*.spec.ts',
+  'trash/**/*.spec.ts',
   'work-items/**/*.spec.ts',
 ];
 
 export default defineConfig({
   testDir: './test/e2e',
+  globalSetup: './test/e2e/a11y-global-setup.mjs',
   timeout: 90_000,
   use: {
     baseURL: 'http://127.0.0.1:3100',
@@ -36,6 +44,15 @@ export default defineConfig({
     },
   ],
   webServer: [
+    ...(useRealOidc
+      ? [{
+          command: 'node scripts/serve-fake-oidc.mjs',
+          cwd: new URL('.', import.meta.url).pathname,
+          url: 'http://127.0.0.1:3200/readyz',
+          reuseExistingServer: true,
+          timeout: 30_000,
+        }]
+      : []),
     {
       command: 'node scripts/serve-reference-api-stack.mjs',
       cwd: new URL('.', import.meta.url).pathname,

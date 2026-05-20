@@ -85,7 +85,7 @@ Document the three common shapes in `packages-web/angular-flow/README.md`:
 
 - TestBed spec per new component (inbox, run activity, dashboard, new fill types).
 - Router spec (F.9).
-- Mutation threshold ≥ 70 %.
+- Mutation must pass the package's configured repository threshold. Threshold source of truth is the repo policy/configuration (`scripts/test-matrix.config.json` plus the package Stryker config), not an ad hoc wave percentage.
 
 (Playwright design + runtime + analytics scenarios in FE-WAVE-G.)
 
@@ -100,7 +100,7 @@ Document the three common shapes in `packages-web/angular-flow/README.md`:
 7. Every flow template literal is translated; `en` + `pt-BR` shipped.
 8. Real router spec passes.
 9. `@stynx-web/angular-flow` releases as `1.0.0`.
-10. `pnpm test:matrix` records the new tests; mutation ≥ 70 %.
+10. `pnpm test:matrix` records the new tests; mutation passes the configured repository threshold for `@stynx-web/angular-flow`.
 
 ## Closure artifact
 

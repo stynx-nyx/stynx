@@ -1,6 +1,13 @@
 import '@angular/compiler';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Injector, TemplateRef, ViewContainerRef, runInInjectionContext } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  Injector,
+  TemplateRef,
+  ViewContainerRef,
+  runInInjectionContext,
+} from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { ROUTES, Router } from '@angular/router';
@@ -23,6 +30,7 @@ import { StynxSessionService } from '../src/session.service';
 import { STYNX_ANGULAR_AUTH_OPTIONS, STYNX_AUTH_BACKEND, STYNX_OIDC_ADAPTER } from '../src/tokens';
 import type { StynxAngularAuthModuleOptions, StynxAuthBackend, StynxOidcAdapter, StynxSessionBundle } from '../src/types';
 import { STYNX_TENANCY_OPTIONS, STYNX_TENANCY_WINDOW, type TenancyOptions } from '@stynx-web/angular-tenancy';
+import { renderComponent } from './support/test-bed';
 
 function createJwt(payload: Record<string, unknown>): string {
   const encode = (value: object) => Buffer.from(JSON.stringify(value), 'utf8').toString('base64url');
@@ -43,6 +51,14 @@ class FakeViewContainerRef {
     this.cleared += 1;
   }
 }
+
+@Component({
+  standalone: true,
+  imports: [StynxHasPermissionDirective],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `<span data-testid="permitted" *stynxHasPermission="'document:write:*'">Allowed</span>`,
+})
+class HasPermissionHostComponent {}
 
 function createTenantContext(options: TenancyOptions = {}, browserWindow: Window | null = null): TenantContextService {
   const injector = Injector.create({
@@ -148,6 +164,60 @@ afterEach(() => {
 });
 
 describe('@stynx-web/angular-auth', () => {
+  it('renders login redirect and completes the active browser callback URL', async () => {
+    const completeLogin = vi.fn(async () => undefined);
+    const fixture = await renderComponent(StynxLoginRedirectComponent, {
+      providers: [
+        { provide: StynxSessionService, useValue: { completeLogin } },
+        {
+          provide: StynxI18nService,
+          useValue: {
+            locale: () => 'en',
+            translate: (key: string) => ({ 'auth.loginRedirect.completing': 'Completing sign in' })[key] ?? key,
+          },
+        },
+      ],
+    });
+    await fixture.whenStable();
+
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Completing sign in');
+    expect(completeLogin).toHaveBeenCalledWith(window.location.href);
+  });
+
+  it('renders logout and permission directive behaviour through TestBed', async () => {
+    const logout = vi.fn(async () => undefined);
+    const logoutFixture = await renderComponent(StynxLogoutButtonComponent, {
+      providers: [
+        { provide: StynxSessionService, useValue: { logout } },
+        {
+          provide: StynxI18nService,
+          useValue: {
+            locale: () => 'en',
+            translate: (key: string) => ({ 'auth.logoutButton.label': 'Sign out' })[key] ?? key,
+          },
+        },
+      ],
+    });
+    const button = (logoutFixture.nativeElement as HTMLElement).querySelector('button');
+    button?.click();
+    await logoutFixture.whenStable();
+    expect(button?.textContent).toContain('Sign out');
+    expect(logout).toHaveBeenCalledTimes(1);
+
+    const permissionFixture = await renderComponent(HasPermissionHostComponent, {
+      providers: [
+        {
+          provide: StynxSessionService,
+          useValue: {
+            active$: of({ active: true }),
+            hasAllPermissions: (permissions: string[]) => permissions.includes('document:write:*'),
+          },
+        },
+      ],
+    });
+    expect((permissionFixture.nativeElement as HTMLElement).textContent).toContain('Allowed');
+  });
+
   it('auth guard redirects to the login route when no session is active', () => {
     const injector = Injector.create({
       providers: [

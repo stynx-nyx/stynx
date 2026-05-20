@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-20T04:53:37.727Z",
-  "endedAt": "2026-05-20T04:53:39.472Z",
-  "durationMs": 1745,
+  "startedAt": "2026-05-20T17:14:37.001Z",
+  "endedAt": "2026-05-20T17:14:39.430Z",
+  "durationMs": 2429,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-4151-1779252817727.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-38766-1779297276999.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages-web/angular-sessions/.test-results/unit.junit.xml"
     ],
@@ -37,62 +37,62 @@
   },
   "totals": {
     "files": 1,
-    "tests": 13,
-    "passed": 13,
+    "tests": 14,
+    "passed": 14,
     "failed": 0,
     "skipped": 0,
     "todo": 0
   },
   "slowestTests": [
     {
+      "name": "@stynx-web/angular-sessions renders active sessions with current-device labelling and revoke actions",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-sessions/test/angular-sessions.spec.ts",
+      "durationMs": 110.15595800000006
+    },
+    {
       "name": "@stynx-web/angular-sessions normalizes SDK session payloads, derives the current session, and calls SDK endpoints",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-sessions/test/angular-sessions.spec.ts",
-      "durationMs": 3.7997080000000096
-    },
-    {
-      "name": "@stynx-web/angular-sessions normalizes missing SDK fields without requiring an auth session provider",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-sessions/test/angular-sessions.spec.ts",
-      "durationMs": 0.8236249999999927
-    },
-    {
-      "name": "@stynx-web/angular-sessions defines stable injection tokens for the sessions client and adapter",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-sessions/test/angular-sessions.spec.ts",
-      "durationMs": 0.804166000000123
+      "durationMs": 3.495916999999963
     },
     {
       "name": "@stynx-web/angular-sessions revokes sessions, reloads state, clears busy state, and emits translated warning toasts",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-sessions/test/angular-sessions.spec.ts",
-      "durationMs": 0.7137499999998909
+      "durationMs": 3.478749999999991
+    },
+    {
+      "name": "@stynx-web/angular-sessions normalizes missing SDK fields without requiring an auth session provider",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-sessions/test/angular-sessions.spec.ts",
+      "durationMs": 1.0363750000001346
     },
     {
       "name": "@stynx-web/angular-sessions uses snapshot sid before token claims and ignores empty token sid claims",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-sessions/test/angular-sessions.spec.ts",
-      "durationMs": 0.6861249999999472
+      "durationMs": 0.69337500000006
     },
     {
       "name": "@stynx-web/angular-sessions provides a default SDK adapter and allows explicit adapter overrides",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-sessions/test/angular-sessions.spec.ts",
-      "durationMs": 0.6840839999999844
-    },
-    {
-      "name": "@stynx-web/angular-sessions loads active sessions with current-device, metadata, and empty-state behavior",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-sessions/test/angular-sessions.spec.ts",
-      "durationMs": 0.5694160000000466
+      "durationMs": 0.5883750000000418
     },
     {
       "name": "@stynx-web/angular-sessions prefers an input adapter over the provider adapter",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-sessions/test/angular-sessions.spec.ts",
-      "durationMs": 0.531208000000106
+      "durationMs": 0.5072499999998854
     },
     {
       "name": "@stynx-web/angular-sessions fails fast when the SDK adapter is used without a client provider",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-sessions/test/angular-sessions.spec.ts",
-      "durationMs": 0.47716700000000856
+      "durationMs": 0.4909580000000915
     },
     {
-      "name": "@stynx-web/angular-sessions throws a clear error when no adapter is provided",
+      "name": "@stynx-web/angular-sessions loads active sessions with current-device, metadata, and empty-state behavior",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-sessions/test/angular-sessions.spec.ts",
-      "durationMs": 0.3776660000000902
+      "durationMs": 0.4682500000001255
+    },
+    {
+      "name": "@stynx-web/angular-sessions keeps busy state true until revoke operations settle",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-sessions/test/angular-sessions.spec.ts",
+      "durationMs": 0.4153329999999187
     }
   ]
 }

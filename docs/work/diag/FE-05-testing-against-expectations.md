@@ -117,31 +117,30 @@ reference/web/test/e2e/
 
 Each spec ≤ 5 minutes wall-time. Total Playwright wall-time target: ≤ 20 minutes parallelised, ≤ 60 minutes serial.
 
-## Mutation thresholds (proposed)
+## Mutation thresholds
 
-| Package                    | Today  | Target |
-| -------------------------- | -----: | -----: |
-| `@stynx-web/angular`       | 76.54  |  80    |
-| `@stynx-web/angular-auth`  |  —     |  75    |
-| `@stynx-web/angular-flow`  |  —     |  70    |
-| `@stynx-web/angular-i18n`  |  —     |  70    |
-| `@stynx-web/angular-profile` |  —   |  70    |
-| `@stynx-web/angular-sessions` |  — |  70    |
-| `@stynx-web/angular-storage` |  —   |  70    |
-| `@stynx-web/angular-tenancy` | 72.73 |  75   |
-| `@stynx-web/angular-trash` |  —     |  70    |
-| `@stynx-web/angular-ui`    |  —     |  70    |
-| `@stynx-web/angular-iam` (new) |  — | 70    |
-| `@stynx-web/angular-audit` (new) | — | 70   |
-| `@stynx-web/sdk`           | 67.81  |  75    |
+Mutation threshold source of truth is the repository policy and each package's
+Stryker configuration, not this diagnostic note. FE-G verifies the configured
+thresholds and records survivor context; any ratchet above the repo's current
+policy is an Architect-owned policy change.
 
-These are bottom-of-range; bumps follow once the TestBed migration lands.
+Current repo policy is:
+
+| Package set / package | Configured threshold |
+| --------------------- | -------------------- |
+| Default mutation policy (`scripts/test-matrix.config.json`) | `60` |
+| `@stynx-web/angular-audit` | `70` |
+| `@stynx-web/angular-iam` | `70` |
+| Package Stryker configs | Use the package's checked-in Stryker thresholds when stricter or more specific. |
+
+Older proposed values in this diagnostic were explicitly superseded on
+2026-05-20 by the operator decision to accept the repository thresholds.
 
 ## Gate ratchet
 
 - **First.** Add the new tests (TestBed + Playwright); don't gate on them.
 - **Second.** Once green for two consecutive CI runs, gate on them (`pnpm test:matrix` strict).
-- **Third.** Raise mutation thresholds per the table above; gate strictly.
+- **Third.** Gate mutation according to the configured repository thresholds. Raise thresholds only through an Architect-owned policy change.
 - **Fourth.** Add `@axe-core/playwright` as a non-blocking report; gate after a stabilisation window.
 
 ## Net effect

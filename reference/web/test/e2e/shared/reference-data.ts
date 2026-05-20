@@ -27,6 +27,12 @@ export const referenceActors = {
     email: 'admin@sample-demo.test',
     permissions: [
       'flow:read:runtime',
+      'flow:read:analytics',
+      'flow:read:design',
+      'iam:groups:read',
+      'iam:roles:read',
+      'iam:users:read',
+      'platform:audit:read:*',
       'sample:document:write',
       'sample:record:delete',
       'sample:record:read',

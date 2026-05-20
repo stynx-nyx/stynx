@@ -6,6 +6,8 @@ import {
   runInInjectionContext,
 } from '@angular/core';
 import type { EnvironmentInjector, Provider } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { StynxSessionService } from '@stynx-web/angular-auth';
 import { StynxI18nService } from '@stynx-web/angular-i18n';
 import { StynxToastService } from '@stynx-web/angular-ui';
@@ -22,6 +24,7 @@ import type {
   StynxSessionsAdapter,
   StynxSessionsSdkClient,
 } from '../src/types';
+import { renderComponent } from './support/test-bed';
 
 function createJwt(claims: Record<string, unknown>): string {
   return [
@@ -58,7 +61,77 @@ function createComponent(providers: Provider[]): StynxActiveSessionsComponent {
   return runInInjectionContext(injector, () => new StynxActiveSessionsComponent());
 }
 
+beforeAll(() => {
+  TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
+});
+
 describe('@stynx-web/angular-sessions', () => {
+  afterEach(() => {
+    TestBed.resetTestingModule();
+  });
+
+  it('renders active sessions with current-device labelling and revoke actions', async () => {
+    const adapter: StynxSessionsAdapter = {
+      list: vi.fn(async () => [
+        {
+          sid: 'sid-current',
+          sessionId: 'sid-current',
+          tenantId: 'tenant-a',
+          createdAt: '2026-05-20T10:00:00.000Z',
+          expiresAt: '2026-05-20T11:00:00.000Z',
+          lastIp: '127.0.0.1',
+          userAgent: 'Safari',
+          lastSeenAt: null,
+        },
+        {
+          sid: 'sid-other',
+          sessionId: 'sid-other',
+          tenantId: 'tenant-b',
+          createdAt: '2026-05-20T09:00:00.000Z',
+          expiresAt: '2026-05-20T12:00:00.000Z',
+          lastIp: null,
+          userAgent: null,
+          lastSeenAt: null,
+        },
+      ]),
+      revoke: vi.fn(async () => undefined),
+      revokeOthers: vi.fn(async () => undefined),
+    };
+    const fixture = await renderComponent(StynxActiveSessionsComponent, {
+      inputs: { adapter },
+      providers: [
+        { provide: StynxSessionService, useValue: { snapshot: () => ({ sid: 'sid-current' }) } },
+        {
+          provide: StynxI18nService,
+          useValue: {
+            locale: () => 'en',
+            translate: (key: string) => ({
+              'sessions.active.actions.revoke': 'Revoke',
+              'sessions.active.actions.revokeOthers': 'Revoke other sessions',
+              'sessions.active.columns.createdAt': 'Created',
+              'sessions.active.columns.expiresAt': 'Expires',
+              'sessions.active.columns.lastIp': 'IP',
+              'sessions.active.columns.lastSeenAt': 'Last seen',
+              'sessions.active.columns.userAgent': 'Browser',
+              'sessions.active.current': 'This device',
+              'sessions.active.labels.thisDevice': 'This device',
+              'sessions.active.values.unknown': 'Unknown',
+            })[key] ?? key,
+          },
+        },
+        { provide: StynxToastService, useValue: { push: vi.fn() } },
+      ],
+    });
+
+    await fixture.componentInstance.load();
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelector('[data-testid="active-session-current-sid-current"]')?.textContent).toContain('This device');
+    expect(host.querySelector('[data-testid="active-session-revoke-sid-other"]')?.textContent).toContain('Revoke');
+    expect(host.textContent).toContain('tenant-b');
+  });
+
   it('defines stable injection tokens for the sessions client and adapter', () => {
     expect(STYNX_SESSIONS_CLIENT.toString()).toContain('STYNX_SESSIONS_CLIENT');
     expect(STYNX_SESSIONS_ADAPTER.toString()).toContain('STYNX_SESSIONS_ADAPTER');

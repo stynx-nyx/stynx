@@ -97,7 +97,7 @@ verifyHashIntegrity(eventId: string): Observable<AuditIntegrityReport>;
 - `AuditApiService` spec with mocked HTTP.
 - `tenantChanged$` spec asserting subscribers fire on `setTenantId`.
 - `StynxTenantPickerComponent` spec asserting it only renders on multi-tenant first-load.
-- Mutation threshold ≥ 70 %.
+- Mutation passes the configured repository threshold for the package under test.
 
 (Playwright in FE-WAVE-G.)
 
@@ -110,7 +110,7 @@ verifyHashIntegrity(eventId: string): Observable<AuditIntegrityReport>;
 5. Cursor pagination works against a mocked SDK in unit tests.
 6. Hash-integrity badge calls the SDK and renders the right tone.
 7. Translation catalogs `en` + `pt-BR` shipped.
-8. `pnpm test:matrix` records the new test surface; mutation ≥ 70 %.
+8. `pnpm test:matrix` records the new test surface; mutation passes the configured repository threshold.
 
 ## Closure artifact
 

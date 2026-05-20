@@ -36,7 +36,7 @@ You are a worker for Wave **FE-D — Storage + Trash + i18n** in the stynx front
 5. Every `packages-web/*` template literal in user-visible position is now translatable.
 6. `en` + `pt-BR` catalogs shipped per package with templates.
 7. `pnpm i18n:check` passes; `pnpm i18n:extract` reproduces the catalog from source.
-8. `pnpm test:matrix` records the new tests; mutation ≥ 70 % per package.
+8. `pnpm test:matrix` records the new tests; mutation passes the configured repository threshold per package.
 
 ## Pre-flight
 

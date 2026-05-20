@@ -6,6 +6,14 @@ import {
   StynxFlowFillsComponent,
 } from '../src/flow-fills.component';
 import { FlowApiService } from '../src/flow-api.service';
+import {
+  StynxFlowAgentRuleDialogComponent,
+  StynxFlowEdgeDialogComponent,
+  StynxFlowGraphDialogComponent,
+  StynxFlowNodeDialogComponent,
+  StynxFlowNodeFormRuleDialogComponent,
+  StynxFlowTransitionEffectDialogComponent,
+} from '../src/flow-design-dialogs.component';
 import { StynxFlowEmptyStateComponent } from '../src/flow-empty-state.component';
 import {
   StynxFlowFormEditorComponent,
@@ -654,5 +662,104 @@ describe('@stynx-web/angular-flow components', () => {
     });
     expect(actions).toEqual(['approve']);
     expect(assigned).toEqual([true]);
+  });
+
+  it('keeps fill reveal, text-mode, collection, and signature guard branches observable', () => {
+    const component = new StynxFlowFillEditorComponent();
+    component.questions = [
+      { id: 'source-id', formId: 'form-1', key: 'sourceKey', label: 'Source', fieldType: 'select', required: false, blocksSubmit: false, options: [{ label: 'Approved', value: { code: 'APPROVED' } }] },
+      { id: 'visible-by-id', formId: 'form-1', key: 'visibleById', label: 'By id', fieldType: 'text', required: false, blocksSubmit: false, revealIf: { question: 'source-id', equals: { code: 'APPROVED' } } },
+      { id: 'visible-by-question-key', formId: 'form-1', key: 'visibleByQuestionKey', label: 'By question key', fieldType: 'text', required: false, blocksSubmit: false, visibleIf: { questionKey: 'sourceKey', value: { code: 'APPROVED' } } },
+      { id: 'short-limited', formId: 'form-1', key: 'shortLimited', label: 'Short limited', fieldType: 'text', required: false, blocksSubmit: false, validators: { maxLength: 120 } },
+      { id: 'short-overflow', formId: 'form-1', key: 'shortOverflow', label: 'Short overflow', fieldType: 'text', required: false, blocksSubmit: false, validators: { maxLength: 201 } },
+      { id: 'long-option', formId: 'form-1', key: 'longOption', label: 'Long option', fieldType: 'text', required: false, blocksSubmit: false, options: { mode: 'long', collection: '' } },
+      { id: 'file-default', formId: 'form-1', key: 'fileDefault', label: 'File default', fieldType: 'file', required: false, blocksSubmit: false, validators: { collection: '' } },
+      { id: 'file-validator', formId: 'form-1', key: 'fileValidator', label: 'File validator', fieldType: 'file', required: false, blocksSubmit: false, validators: { collection: 'validator-docs' } },
+      { id: 'signature', formId: 'form-1', key: 'signature', label: 'Signature', fieldType: 'signature', required: false, blocksSubmit: false },
+    ];
+    component.answers = [{ id: 'answer-source', fillId: 'fill-1', questionId: 'source-id', value: { code: 'APPROVED' } }];
+
+    expect(component.isQuestionVisible(component.questions[1]!)).toBe(true);
+    expect(component.isQuestionVisible(component.questions[2]!)).toBe(true);
+    expect(component.isLongText(component.questions[3]!)).toBe(false);
+    expect(component.questionTextMaxLength(component.questions[3]!)).toBe(120);
+    expect(component.isLongText(component.questions[4]!)).toBe(true);
+    expect(component.questionTextMaxLength(component.questions[5]!)).toBe(4000);
+    expect(component.fileCollection(component.questions[6]!)).toBe('flow');
+    expect(component.fileCollection(component.questions[7]!)).toBe('validator-docs');
+
+    const canvas = document.createElement('canvas');
+    const context = {
+      beginPath: vi.fn(),
+      clearRect: vi.fn(),
+      lineTo: vi.fn(),
+      moveTo: vi.fn(),
+      stroke: vi.fn(),
+      lineWidth: 0,
+      lineCap: '',
+      strokeStyle: '',
+    };
+    vi.spyOn(canvas, 'getContext').mockReturnValue(context as never);
+    vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, width: 100, height: 50 } as DOMRect);
+    const toDataURL = vi.spyOn(canvas, 'toDataURL').mockReturnValue('data:image/png;base64,signature');
+
+    component.drawSignature(component.questions[8]!, { target: canvas, clientX: 1, clientY: 1, preventDefault: vi.fn() } as never);
+    component.endSignature(component.questions[8]!, { target: canvas, preventDefault: vi.fn() } as never);
+    expect(context.lineTo).not.toHaveBeenCalled();
+    expect(toDataURL).not.toHaveBeenCalled();
+
+    component.beginSignature(component.questions[8]!, { target: document.createElement('button'), clientX: 1, clientY: 1, preventDefault: vi.fn() } as never);
+    component.endSignature(component.questions[8]!, { target: document.createElement('button'), preventDefault: vi.fn() } as never);
+    expect(component.textValue(component.questions[8]!)).toBe('');
+  });
+
+  it('keeps flow design dialog defaults and output payloads observable', () => {
+    const graph = new StynxFlowGraphDialogComponent();
+    const node = new StynxFlowNodeDialogComponent();
+    const edge = new StynxFlowEdgeDialogComponent();
+    const agentRule = new StynxFlowAgentRuleDialogComponent();
+    const formRule = new StynxFlowNodeFormRuleDialogComponent();
+    const effect = new StynxFlowTransitionEffectDialogComponent();
+    const emitted: unknown[] = [];
+
+    for (const dialog of [graph, node, edge, agentRule, formRule, effect]) {
+      expect(dialog.open).toBe(false);
+      dialog.dismissed.subscribe(() => emitted.push('dismissed'));
+      dialog.dismissed.emit();
+    }
+    graph.graph = { id: 'graph-1' };
+    node.node = { id: 'node-1' };
+    edge.edge = { id: 'edge-1' };
+    agentRule.rule = { id: 'rule-1' };
+    formRule.rule = { id: 'form-rule-1' };
+    effect.effect = { id: 'effect-1' };
+    graph.save.subscribe((value) => emitted.push(value));
+    node.save.subscribe((value) => emitted.push(value));
+    edge.save.subscribe((value) => emitted.push(value));
+    agentRule.save.subscribe((value) => emitted.push(value));
+    formRule.save.subscribe((value) => emitted.push(value));
+    effect.save.subscribe((value) => emitted.push(value));
+
+    graph.save.emit(graph.graph);
+    node.save.emit(node.node);
+    edge.save.emit(edge.edge);
+    agentRule.save.emit(agentRule.rule);
+    formRule.save.emit(formRule.rule);
+    effect.save.emit(effect.effect);
+
+    expect(emitted).toEqual([
+      'dismissed',
+      'dismissed',
+      'dismissed',
+      'dismissed',
+      'dismissed',
+      'dismissed',
+      { id: 'graph-1' },
+      { id: 'node-1' },
+      { id: 'edge-1' },
+      { id: 'rule-1' },
+      { id: 'form-rule-1' },
+      { id: 'effect-1' },
+    ]);
   });
 });

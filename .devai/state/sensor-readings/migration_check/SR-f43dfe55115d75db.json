@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-f43dfe55115d75db",
+  "sensor": {
+    "name": "migrate-check",
+    "kind": "migration_check"
+  },
+  "timestamp": "2026-05-20T17:40:57.107Z",
+  "status": "fail",
+  "deterministic": true,
+  "command": "psql postgresql://aarusso@localhost:5432/stynx-test -f <each migration>",
+  "command_hash": "07719bd1fc601922e79e0165f1b1893d9d497b2e444c507fae7d0909b049acd9",
+  "evidence_path": ".devai/state/sensors/migration_check/per-migration.json",
+  "findings": [
+    {
+      "severity": "info",
+      "code": "migration_dir_missing",
+      "message": "skipping non-existent dir /Users/aarusso/Development/stech/stynx/db/migrations"
+    },
+    {
+      "severity": "info",
+      "code": "migration_dir_missing",
+      "message": "skipping non-existent dir /Users/aarusso/Development/stech/stynx/apps/api/migrations"
+    },
+    {
+      "severity": "info",
+      "code": "migration_dir_missing",
+      "message": "skipping non-existent dir /Users/aarusso/Development/stech/stynx/apps/reference-api/migrations"
+    },
+    {
+      "severity": "error",
+      "code": "migration_failed",
+      "message": "0001_reference.sql exited 3: psql:/Users/aarusso/Development/stech/stynx/reference/api/migrations/0001_reference.sql:65: NOTICE:  schema \"sample\" already exists, skipping",
+      "file": "/Users/aarusso/Development/stech/stynx/reference/api/migrations/0001_reference.sql"
+    }
+  ],
+  "metrics": {
+    "migrations_applied": 0,
+    "migrations_failed": 1,
+    "pre_seed_applied": 1,
+    "pre_seed_failed": 0,
+    "total_duration_ms": 118,
+    "migrations_total": 1,
+    "migrations_already_applied": 0,
+    "dirs_scanned": 1,
+    "dirs_skipped": 3
+  }
+}

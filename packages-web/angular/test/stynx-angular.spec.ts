@@ -19,6 +19,7 @@ import { ToastService } from '../src/toast.service';
 import { ForbiddenError, UnauthorizedError } from '@stynx-web/sdk';
 import { STYNX_ANGULAR_OPTIONS, STYNX_AUTH_PROVIDER, STYNX_WINDOW } from '../src/tokens';
 import { STYNX_TENANCY_OPTIONS, STYNX_TENANCY_WINDOW, type TenancyOptions } from '@stynx-web/angular-tenancy';
+import { renderComponent } from './support/test-bed';
 
 const REQUEST_ID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -144,6 +145,21 @@ afterEach(() => {
 });
 
 describe('@stynx-web/angular', () => {
+  it('renders the empty-state component with input-driven copy and tone', async () => {
+    const fixture = await renderComponent(EmptyStateComponent, {
+      inputs: {
+        title: 'No records',
+        description: 'Create a record to start.',
+        tone: 'warning',
+      },
+    });
+
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelector('section')?.getAttribute('data-tone')).toBe('warning');
+    expect(host.textContent).toContain('No records');
+    expect(host.textContent).toContain('Create a record to start.');
+  });
+
   it('generates UUIDv7-shaped request ids for API headers', () => {
     expect(generateClientRequestId()).toMatch(REQUEST_ID_PATTERN);
   });

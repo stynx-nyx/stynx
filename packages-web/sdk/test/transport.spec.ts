@@ -258,6 +258,32 @@ describe('@stynx-web/sdk transport', () => {
     }
   });
 
+  it('surfaces network failures and preserves abort signals for caller cancellation', async () => {
+    const signal = new AbortController().signal;
+    const networkClient = new StynxSdkClient({
+      baseUrl: 'https://api.example.test',
+      fetchFn: async () => {
+        throw new TypeError('network offline');
+      },
+    });
+
+    await expect(networkClient.get('/offline')).rejects.toThrow('network offline');
+
+    const calls: Array<{ init?: HttpRequestInitLike }> = [];
+    const abortingClient = new StynxSdkClient({
+      baseUrl: 'https://api.example.test',
+      fetchFn: async (_url, init) => {
+        calls.push({ init });
+        throw new DOMException('The operation was aborted.', 'AbortError');
+      },
+    });
+
+    await expect(abortingClient.get('/slow', { signal })).rejects.toMatchObject({
+      name: 'AbortError',
+    });
+    expect(calls[0]?.init?.signal).toBe(signal);
+  });
+
   it('maps context payloads and 401 responses without an auth provider', async () => {
     const contextClient = new StynxSdkClient({
       baseUrl: 'https://api.example.test',

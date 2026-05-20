@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-20T04:16:24.948Z",
-  "endedAt": "2026-05-20T04:16:26.750Z",
-  "durationMs": 1802,
+  "startedAt": "2026-05-20T16:27:09.529Z",
+  "endedAt": "2026-05-20T16:27:15.803Z",
+  "durationMs": 6274,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-75226-1779250584948.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-97492-1779294429529.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages-web/angular-audit/.test-results/unit.junit.xml"
     ],
@@ -47,52 +47,52 @@
     {
       "name": "@stynx-web/angular-audit E.6 components renders the audit log, applies filters, and advances cursor-backed pages",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-audit/test/audit-components.spec.ts",
-      "durationMs": 113.54324999999994
-    },
-    {
-      "name": "@stynx-web/angular-audit E.6 components renders detail payloads and verifies event integrity on demand",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-audit/test/audit-components.spec.ts",
-      "durationMs": 19.383792000000085
+      "durationMs": 490.71479199999976
     },
     {
       "name": "@stynx-web/angular-audit E.6 components renders per-entity history with cursor pagination and per-event integrity badges",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-audit/test/audit-components.spec.ts",
-      "durationMs": 15.147666999999956
+      "durationMs": 80.82145899999978
+    },
+    {
+      "name": "@stynx-web/angular-audit E.6 components renders detail payloads and verifies event integrity on demand",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-audit/test/audit-components.spec.ts",
+      "durationMs": 74.00154199999997
     },
     {
       "name": "@stynx-web/angular-audit E.6 components surfaces integrity verification failures without destructive remediation",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-audit/test/audit-components.spec.ts",
-      "durationMs": 6.140374999999949
+      "durationMs": 19.038166999999703
     },
     {
       "name": "@stynx-web/angular-audit E.6 components renders hash integrity badge tones for valid, broken, and unchecked states",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-audit/test/audit-components.spec.ts",
-      "durationMs": 3.667417000000114
-    },
-    {
-      "name": "@stynx-web/angular-audit wraps the pinned audit event and integrity endpoints",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-audit/test/angular-audit.spec.ts",
-      "durationMs": 2.4845000000000255
-    },
-    {
-      "name": "@stynx-web/angular-audit resolves the configured audit client from Angular injection",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-audit/test/angular-audit.spec.ts",
-      "durationMs": 1.2292499999998654
+      "durationMs": 14.234875000000102
     },
     {
       "name": "@stynx-web/angular-audit exports the audit SDK client token through the public entrypoint",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-audit/test/angular-audit.spec.ts",
-      "durationMs": 0.8321659999999156
+      "durationMs": 7.2259589999994205
+    },
+    {
+      "name": "@stynx-web/angular-audit wraps the pinned audit event and integrity endpoints",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-audit/test/angular-audit.spec.ts",
+      "durationMs": 2.816917000000103
+    },
+    {
+      "name": "@stynx-web/angular-audit resolves the configured audit client from Angular injection",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-audit/test/angular-audit.spec.ts",
+      "durationMs": 1.2546250000004875
     },
     {
       "name": "@stynx-web/angular-audit wires the host-facing provider into Angular dependency injection",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-audit/test/angular-audit.spec.ts",
-      "durationMs": 0.5249160000000757
+      "durationMs": 0.5708330000006754
     },
     {
       "name": "@stynx-web/angular-audit omits empty list query options and URL-encodes path segments",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-audit/test/angular-audit.spec.ts",
-      "durationMs": 0.3428329999999278
+      "durationMs": 0.3710000000000946
     }
   ]
 }

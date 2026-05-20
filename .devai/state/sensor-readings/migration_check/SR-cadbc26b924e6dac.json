@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-cadbc26b924e6dac",
+  "sensor": {
+    "name": "migrate-check",
+    "kind": "migration_check"
+  },
+  "timestamp": "2026-05-20T17:41:22.830Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "psql postgresql://aarusso@localhost:5432/stynx-test -f <each migration>",
+  "command_hash": "07719bd1fc601922e79e0165f1b1893d9d497b2e444c507fae7d0909b049acd9",
+  "evidence_path": ".devai/state/sensors/migration_check/per-migration.json",
+  "findings": [],
+  "metrics": {
+    "migrations_applied": 21,
+    "migrations_failed": 0,
+    "pre_seed_applied": 1,
+    "pre_seed_failed": 0,
+    "total_duration_ms": 1374,
+    "migrations_total": 21,
+    "migrations_already_applied": 0,
+    "dirs_scanned": 3,
+    "dirs_skipped": 0
+  }
+}

@@ -5,9 +5,9 @@
   "runner": "stryker-vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-20T04:51:10.474Z",
-  "endedAt": "2026-05-20T05:00:05.667Z",
-  "durationMs": 535193,
+  "startedAt": "2026-05-20T16:04:19.357Z",
+  "endedAt": "2026-05-20T16:13:58.107Z",
+  "durationMs": 578750,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -20,18 +20,12 @@
     "ci": false
   },
   "command": {
-    "argv": [
-      "pnpm",
-      "exec",
-      "stryker",
-      "run",
-      "stryker.conf.mjs"
-    ],
+    "argv": ["pnpm", "exec", "stryker", "run", "stryker.conf.mjs"],
     "cwd": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow"
   },
   "metric": {
     "kind": "score",
-    "score": 65.29492455418381,
+    "score": 76.47849462365592,
     "thresholds": {
       "high": 60,
       "low": 60,
@@ -41,9 +35,9 @@
   "totals": {
     "files": 12,
     "tests": 1050,
-    "passed": 476,
-    "failed": 253,
-    "skipped": 26,
+    "passed": 569,
+    "failed": 175,
+    "skipped": 11,
     "todo": 0
   }
 }

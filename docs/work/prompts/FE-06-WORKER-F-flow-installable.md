@@ -39,7 +39,7 @@ You are a worker for Wave **FE-F — `@stynx-web/angular-flow` 1.0** in the styn
 7. Every flow template literal is translated; `en` + `pt-BR` shipped.
 8. Real router spec passes.
 9. `@stynx-web/angular-flow` releases as `1.0.0`.
-10. `pnpm test:matrix` records the new tests; mutation ≥ 70 %.
+10. `pnpm test:matrix` records the new tests; mutation passes the configured repository threshold for `@stynx-web/angular-flow`.
 
 ## Pre-flight
 

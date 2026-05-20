@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-20T03:43:08.774Z",
-  "endedAt": "2026-05-20T03:43:18.986Z",
-  "durationMs": 10212,
+  "startedAt": "2026-05-20T17:14:32.537Z",
+  "endedAt": "2026-05-20T17:14:36.469Z",
+  "durationMs": 3932,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-47547-1779248588761.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-38558-1779297272537.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages-web/angular-ui/.test-results/unit.junit.xml"
     ],
@@ -37,52 +37,62 @@
   },
   "totals": {
     "files": 1,
-    "tests": 8,
-    "passed": 8,
+    "tests": 10,
+    "passed": 10,
     "failed": 0,
     "skipped": 0,
     "todo": 0
   },
   "slowestTests": [
     {
+      "name": "@stynx-web/angular-ui renders UI primitives through TestBed with DOM output and click emitters",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-ui/test/angular-ui.spec.ts",
+      "durationMs": 239.9033340000001
+    },
+    {
+      "name": "@stynx-web/angular-ui renders the toast container and dismisses toasts from the DOM",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-ui/test/angular-ui.spec.ts",
+      "durationMs": 38.42491699999982
+    },
+    {
       "name": "@stynx-web/angular-ui tracks toast lifecycle through the toast service",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-ui/test/angular-ui.spec.ts",
-      "durationMs": 16.390207999999802
+      "durationMs": 29.370332999999846
     },
     {
       "name": "@stynx-web/angular-ui supports sticky, timed, and clear toast lifecycle paths",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-ui/test/angular-ui.spec.ts",
-      "durationMs": 9.552165999999488
+      "durationMs": 8.783540999999786
     },
     {
       "name": "@stynx-web/angular-ui exposes the shared icon sprite names and href contract",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-ui/test/angular-ui.spec.ts",
-      "durationMs": 0.715541999999914
+      "durationMs": 1.8482500000000073
     },
     {
       "name": "@stynx-web/angular-ui keeps simple component inputs and emitters wired",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-ui/test/angular-ui.spec.ts",
-      "durationMs": 0.6527909999995245
+      "durationMs": 1.6367919999997866
     },
     {
       "name": "@stynx-web/angular-ui clamps pagination changes and emits page-change events",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-ui/test/angular-ui.spec.ts",
-      "durationMs": 0.4788330000001224
+      "durationMs": 1.361250000000382
     },
     {
       "name": "@stynx-web/angular-ui normalizes pagination inputs and clamps navigation at both ends",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-ui/test/angular-ui.spec.ts",
-      "durationMs": 0.26300000000082946
+      "durationMs": 0.8152499999996508
     },
     {
       "name": "@stynx-web/angular-ui tracks table rows with custom or JSON identity",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-ui/test/angular-ui.spec.ts",
-      "durationMs": 0.16049999999995634
+      "durationMs": 0.6802920000000086
     },
     {
       "name": "@stynx-web/angular-ui declares the toast container service dependency",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-ui/test/angular-ui.spec.ts",
-      "durationMs": 0.10595900000043912
+      "durationMs": 0.24220900000000256
     }
   ]
 }

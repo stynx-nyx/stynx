@@ -36,7 +36,7 @@ One of the FE-C workstreams:
 5. `@stynx-web/angular-sessions` exports `SdkSessionsAdapter` and a default `provideStynxSessions()`.
 6. "This device" badge resolves correctly under unit test.
 7. Translation catalogs `en` + `pt-BR` shipped for both packages.
-8. `pnpm test:matrix` records the new test surface; mutation score ≥ 70 %.
+8. `pnpm test:matrix` records the new test surface; mutation passes the configured repository threshold.
 
 ## Pre-flight
 

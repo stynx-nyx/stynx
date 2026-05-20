@@ -5,6 +5,7 @@ import { StynxSessionService } from '@stynx-web/angular-auth';
 import { ReferenceWebApiService } from './reference-web-api.service';
 import { ReferenceWebDevOidcAdapter } from './reference-web-dev-oidc.adapter';
 import type { DemoTenant } from './reference-models';
+import { environment } from '../../environments/environment';
 
 @Injectable()
 export class ReferenceWebShellService {
@@ -24,14 +25,25 @@ export class ReferenceWebShellService {
       const fallbackTenantId = this.tenantContext.tenantId() ?? tenants[0]?.id;
       if (fallbackTenantId) {
         this.tenantContext.setTenant(fallbackTenantId, 'manual');
-        await this.session.completeLogin(`${window.location.origin}/login?tenantId=${fallbackTenantId}`);
+        const loginUrl = environment.useRealOidc
+          ? window.location.href
+          : `${window.location.origin}/login?tenantId=${fallbackTenantId}`;
+        const state = await this.session.completeLogin(loginUrl);
+        if (environment.useRealOidc && state.active) {
+          await this.router.navigate(['/']);
+        }
       }
     }
   }
 
   async login(email: string, tenantId: string): Promise<void> {
-    this.devOidc.beginLogin(email);
+    this.devOidc.beginLogin(email, tenantId);
     this.tenantContext.setTenant(tenantId, 'manual');
+    if (environment.useRealOidc) {
+      this.session.login();
+      return;
+    }
+
     try {
       await this.session.completeLogin(`${window.location.origin}/login?tenantId=${tenantId}`);
     } catch (error) {

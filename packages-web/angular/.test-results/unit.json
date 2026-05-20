@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-20T03:43:02.154Z",
-  "endedAt": "2026-05-20T03:43:14.798Z",
-  "durationMs": 12644,
+  "startedAt": "2026-05-20T17:14:31.191Z",
+  "endedAt": "2026-05-20T17:14:32.496Z",
+  "durationMs": 1305,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-47216-1779248582153.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-38511-1779297271191.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages-web/angular/.test-results/unit.junit.xml"
     ],
@@ -37,62 +37,62 @@
   },
   "totals": {
     "files": 1,
-    "tests": 18,
-    "passed": 18,
+    "tests": 19,
+    "passed": 19,
     "failed": 0,
     "skipped": 0,
     "todo": 0
   },
   "slowestTests": [
     {
-      "name": "@stynx-web/angular tracks toast service signal and observable lifecycles",
+      "name": "@stynx-web/angular renders the empty-state component with input-driven copy and tone",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular/test/stynx-angular.spec.ts",
-      "durationMs": 136.26929199999904
-    },
-    {
-      "name": "@stynx-web/angular skips auth without a provider and does not retry non-retryable errors",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular/test/stynx-angular.spec.ts",
-      "durationMs": 75.6869999999999
+      "durationMs": 32.54554200000007
     },
     {
       "name": "@stynx-web/angular applies request-id, tenant, and auth headers and refreshes after 401",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular/test/stynx-angular.spec.ts",
-      "durationMs": 51.773207999998704
-    },
-    {
-      "name": "@stynx-web/angular leaves bearer requests unchanged when the provider has no token",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular/test/stynx-angular.spec.ts",
-      "durationMs": 33.75454200000058
-    },
-    {
-      "name": "@stynx-web/angular passes auth through when bearer mode is disabled and shows a re-login action when refresh is empty",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular/test/stynx-angular.spec.ts",
-      "durationMs": 18.77887499999997
+      "durationMs": 3.9386670000000095
     },
     {
       "name": "@stynx-web/angular passes unauthenticated mapped 401 errors through without refresh",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular/test/stynx-angular.spec.ts",
-      "durationMs": 18.70258300000023
-    },
-    {
-      "name": "@stynx-web/angular registers module error mapping outside auth refresh handling",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular/test/stynx-angular.spec.ts",
-      "durationMs": 15.363292000000001
+      "durationMs": 2.2434580000000324
     },
     {
       "name": "@stynx-web/angular resolves tenant context from query, subdomain, then default resolver",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular/test/stynx-angular.spec.ts",
-      "durationMs": 14.321249999999054
+      "durationMs": 2.1261670000000095
     },
     {
-      "name": "@stynx-web/angular maps server errors through ErrorBannerService",
+      "name": "@stynx-web/angular passes auth through when bearer mode is disabled and shows a re-login action when refresh is empty",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular/test/stynx-angular.spec.ts",
-      "durationMs": 13.87708399999974
+      "durationMs": 1.8390419999999494
     },
     {
-      "name": "@stynx-web/angular preserves caller request ids",
+      "name": "@stynx-web/angular provides standalone stynx defaults with feature-provider overrides",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular/test/stynx-angular.spec.ts",
-      "durationMs": 13.37895799999933
+      "durationMs": 1.8210840000000417
+    },
+    {
+      "name": "@stynx-web/angular registers module error mapping outside auth refresh handling",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular/test/stynx-angular.spec.ts",
+      "durationMs": 1.3721249999999827
+    },
+    {
+      "name": "@stynx-web/angular tracks toast service signal and observable lifecycles",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular/test/stynx-angular.spec.ts",
+      "durationMs": 1.2930410000000165
+    },
+    {
+      "name": "@stynx-web/angular refreshes after a mapped unauthorized SDK error",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular/test/stynx-angular.spec.ts",
+      "durationMs": 1.2493749999999864
+    },
+    {
+      "name": "@stynx-web/angular maps HTTP error context and omits falsy status from banners",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular/test/stynx-angular.spec.ts",
+      "durationMs": 1.2446669999999358
     }
   ]
 }

@@ -272,5 +272,26 @@ Auditor validation:
 Auditor action:
 
 - Marked FE-C closed because C.9 is now covered by FE-G sessions mutation and parent gates.
-- Kept FE-F in progress because flow mutation is repo-green at `65.29492455418381` but below FE-F's documented `>= 70 %` success criterion.
+- Initially kept FE-F in progress because flow mutation was repo-green at `65.29492455418381` but below FE-F's documented `>= 70 %` success criterion. Superseded 2026-05-20: operator directed the wave plan to use repo-configured thresholds instead of ad hoc wave-local values, so FE-F is accepted against the configured break threshold `60`.
 - Added sessions and flow rows to `docs/work/plan/FE-WAVE-G-report.md`.
+
+### FE-G Package Fan-Out And Threshold Policy Refresh
+
+Operator directive: use repository-configured mutation thresholds instead of wave-local ad hoc values, accept `@stynx-web/angular-flow` as-is, and proceed.
+
+Auditor action:
+
+- Updated FE wave plans/prompts/diagnostics to point at repo thresholds (`scripts/test-matrix.config.json` and package Stryker configuration) instead of hardcoded `>= 70 %` language.
+- Marked FE-F closed in `docs/work/plan/FE-CLOSURE-REGISTRY.md` because `@stynx-web/angular-flow` passes its configured break threshold `60`; later local evidence improved to `75.36 %`.
+- Added a FE-G G.1-G.5 row for package-wide TestBed/support, route, SDK transport, and HTTP error fan-out.
+
+Auditor validation:
+
+- `find packages-web -path '*/test/e2e/*.e2e-spec.ts' -print` returned no files after G.10.
+- The 10-package package-web scoped `test`, `typecheck`, and `build` gates passed for `@stynx-web/angular`, `angular-auth`, `angular-i18n`, `angular-profile`, `angular-sessions`, `angular-storage`, `angular-tenancy`, `angular-trash`, `angular-ui`, and `sdk`; scoped unit tests covered 151 tests.
+- `pnpm test:evidence` regenerated `coverage/test-evidence.json` at `2026-05-20T17:14:57.371Z` with `unit=41 integration=17 e2e=1 mutation=31 coverage=31 perf=1 smoke=1`.
+- `pnpm test:matrix --no-color --compact`, `pnpm test:matrix --no-color --coverage`, and `git diff --check` passed.
+
+Remaining FE-G blocker:
+
+- Current reference-web Playwright/a11y browser evidence is still blocked by local Chromium launch failure: `bootstrap_check_in org.chromium.Chromium.MachPortRendezvousServer... Permission denied (1100)`. The matrix `e2e` pass is from the older artifact ending `2026-05-19T10:58:54.411Z`, and `reference/web/.test-results/a11y.json` remains an empty `[]` until a browser run can open a page.

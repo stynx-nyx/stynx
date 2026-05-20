@@ -96,7 +96,7 @@ Plus `StynxAvatarComponent`, `StynxChangePasswordHandoffComponent`, `StynxMfaEnr
 provideStynxIam({ clientFactory: () => inject(StynxSdkClient) })
 ```
 
-and gets working list / create / edit / disable / role-assign / group-assign / permission-matrix screens with translated strings, OnPush components, signal-driven UI state, RxJS HTTP service, route guards, permission gating. Default route layout under `iamRoutes()`. Test surface: ≥ 80 % branches, ≥ 70 % mutation, at least one Playwright scenario per CRUD vertical (users / roles / groups / permission-matrix).
+and gets working list / create / edit / disable / role-assign / group-assign / permission-matrix screens with translated strings, OnPush components, signal-driven UI state, RxJS HTTP service, route guards, permission gating. Default route layout under `iamRoutes()`. Test surface: ≥ 80 % branches, mutation passing the repo-configured package threshold, and at least one Playwright scenario per CRUD vertical (users / roles / groups / permission-matrix).
 
 **Wave.** [../plan/FE-WAVE-B](../plan/FE-WAVE-B-admin-iam-ui.md).
 

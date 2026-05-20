@@ -1,5 +1,5 @@
-import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 async function loginAsAdmin(page: Page): Promise<void> {
   await page.goto('/login');

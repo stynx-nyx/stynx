@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-20c42267581902c2",
+  "sensor": {
+    "name": "migrate-check",
+    "kind": "migration_check"
+  },
+  "timestamp": "2026-05-20T17:40:47.992Z",
+  "status": "unknown",
+  "deterministic": true,
+  "command": "psql postgresql://aarusso@localhost:5432/stynx-test -f <each migration>",
+  "command_hash": "07719bd1fc601922e79e0165f1b1893d9d497b2e444c507fae7d0909b049acd9",
+  "err_head": "psql: error: connection to server at \"localhost\" (::1), port 5432 failed: FATAL:  database \"stynx-test\" does not exist\n",
+  "findings": [
+    {
+      "severity": "warning",
+      "code": "pre_seed_failed",
+      "message": "Pre-seed db/migrate-check-preseed.sql exited 2: psql: error: connection to server at \"localhost\" (::1), port 5432 failed: FATAL:  database \"stynx-test\" does not exist",
+      "file": "db/migrate-check-preseed.sql"
+    }
+  ],
+  "metrics": {
+    "migrations_applied": 0,
+    "migrations_failed": 0,
+    "pre_seed_applied": 0,
+    "pre_seed_failed": 1,
+    "total_duration_ms": 35
+  }
+}

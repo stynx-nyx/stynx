@@ -18,7 +18,7 @@ You are a worker for Wave **FE-G — Test Fan-Out** in the stynx frontend comple
 - G.6 — Playwright fan-out: one spec per FE-01 vertical (file list in [`../diag/FE-05`](../diag/FE-05-testing-against-expectations.md)).
 - G.7 — `PLAYWRIGHT_USE_REAL_OIDC=1` opt-in: boot `reference-api` + `oidc-fake-server` in `playwright.config.mjs`.
 - G.8 — `@axe-core/playwright` integration; report under `.test-results/a11y.json`.
-- G.9 — Stryker mutation rebase per package; achieve the thresholds in [`../diag/FE-05`](../diag/FE-05-testing-against-expectations.md#mutation-thresholds-proposed).
+- G.9 — Stryker mutation verification per package; pass the configured repository thresholds (`scripts/test-matrix.config.json` and package Stryker configs).
 - G.10 — Delete per-package `*.e2e-spec.ts` smokes.
 
 ## Role (Article 6)
@@ -34,14 +34,14 @@ You are a worker for Wave **FE-G — Test Fan-Out** in the stynx frontend comple
 3. The Playwright fan-out covers every FE-01 row whose claim is now shipped.
 4. `PLAYWRIGHT_USE_REAL_OIDC=1` boots `reference-api` and the suite passes.
 5. `@axe-core/playwright` runs per spec; report under `.test-results/a11y.json`.
-6. Mutation thresholds match the rebased table; Stryker records artifacts for all packages.
+6. Mutation passes the configured repository thresholds; Stryker records artifacts for all packages.
 7. Per-package `*.e2e-spec.ts` smokes are deleted.
 8. `coverage/test-evidence.json` reflects the new surface; the matrix view shows real depth, not just 100 % from stubs.
 
 ## Pre-flight
 
 1. `./docs/work/plan/FE-WAVE-G-test-fan-out.md`.
-2. `./docs/work/diag/FE-05-testing-against-expectations.md` — the test-layout proposal and the mutation threshold table.
+2. `./docs/work/diag/FE-05-testing-against-expectations.md` — the test-layout proposal and the mutation threshold policy note.
 3. `./docs/work/inv/FE-06-test-surface-vs-completeness.md` — verified / surface / unverified breakdown.
 4. `./reference/web/playwright.config.mjs` — current config.
 5. `./reference/web/test/e2e/` — existing scenarios; fixtures pattern.
@@ -53,7 +53,7 @@ You are a worker for Wave **FE-G — Test Fan-Out** in the stynx frontend comple
 - Specs ≤ 60 s wall-time each (jsdom); Playwright specs ≤ 5 minutes each.
 - Shared `reference/web/test/e2e/fixtures.ts` for canonical user / tenant identifiers.
 - Axe scans non-blocking initially; a stabilisation window lets the orchestrator gate them later.
-- Mutation: identify survivors, kill via new tests when possible, document otherwise.
+- Mutation: identify survivors, kill via new tests when possible, document otherwise. Do not invent a stricter wave-local threshold.
 
 ## Validation commands
 
@@ -96,4 +96,4 @@ Stop and ask if:
 - A package's TestBed setup conflicts with the global `provideStynx*` providers (DI cycle).
 - The Playwright suite exceeds the wall-time budget even after parallelisation (consider partitioning into shards).
 - Real-OIDC boot fails because `oidc-fake-server` isn't on the dev box (orchestrate the dependency).
-- Mutation thresholds cannot be reached for one package without testing trivial branches (request a threshold adjustment).
+- The configured repo threshold cannot be reached for one package without testing trivial branches (request a threshold adjustment).

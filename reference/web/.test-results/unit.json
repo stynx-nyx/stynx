@@ -4,24 +4,20 @@
   "level": "unit",
   "runner": "node-test",
   "status": "passed",
-  "startedAt": "2026-05-19T15:26:17.133Z",
-  "endedAt": "2026-05-19T15:26:17.483Z",
-  "durationMs": 349,
+  "startedAt": "2026-05-20T17:37:38.324Z",
+  "endedAt": "2026-05-20T17:37:38.503Z",
+  "durationMs": 179,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
     "raw": ".test-results/unit.log"
   },
   "env": {
-    "node": "26.0.0",
+    "node": "24.15.0",
     "ci": false
   },
   "command": {
-    "argv": [
-      "node",
-      "--test",
-      "test/unit/reference-web-config.spec.mjs"
-    ],
+    "argv": ["node", "--test", "test/unit/reference-web-config.spec.mjs"],
     "cwd": "/Users/aarusso/Development/stech/stynx/reference/web"
   },
   "metric": {
