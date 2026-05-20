@@ -6,6 +6,7 @@ export * from './flow-fills.component';
 export * from './flow-forms.component';
 export * from './flow-graph-canvas.component';
 export * from './flow-graph-designer.component';
+export * from './flow-run-activity.component';
 export * from './flow-tasks.component';
 export * from './flow-waivers.component';
 export * from './routes';

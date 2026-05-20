@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="9" failures="0" errors="0" time="0.140948208">
-    <testsuite name="test/angular-i18n.spec.ts" timestamp="2026-05-20T03:43:00.719Z" hostname="thiamat-1903.local" tests="9" failures="0" errors="0" skipped="0" time="0.140948208">
-        <testcase classname="test/angular-i18n.spec.ts" name="@stynx-web/angular-i18n &gt; switches locale at runtime and updates translations" time="0.0047975">
+<testsuites name="vitest tests" tests="9" failures="0" errors="0" time="0.022027125">
+    <testsuite name="test/angular-i18n.spec.ts" timestamp="2026-05-20T04:25:03.144Z" hostname="thiamat-1903.local" tests="9" failures="0" errors="0" skipped="0" time="0.022027125">
+        <testcase classname="test/angular-i18n.spec.ts" name="@stynx-web/angular-i18n &gt; switches locale at runtime and updates translations" time="0.002005833">
         </testcase>
-        <testcase classname="test/angular-i18n.spec.ts" name="@stynx-web/angular-i18n &gt; uses default supported locale and missing interpolation values" time="0.000847167">
+        <testcase classname="test/angular-i18n.spec.ts" name="@stynx-web/angular-i18n &gt; uses default supported locale and missing interpolation values" time="0.000441583">
         </testcase>
-        <testcase classname="test/angular-i18n.spec.ts" name="@stynx-web/angular-i18n &gt; formats ICU plural messages through the active locale catalog" time="0.120884166">
+        <testcase classname="test/angular-i18n.spec.ts" name="@stynx-web/angular-i18n &gt; formats ICU plural messages through the active locale catalog" time="0.012353875">
         </testcase>
-        <testcase classname="test/angular-i18n.spec.ts" name="@stynx-web/angular-i18n &gt; detects ICU messages with flexible whitespace around arguments and types" time="0.001562334">
+        <testcase classname="test/angular-i18n.spec.ts" name="@stynx-web/angular-i18n &gt; detects ICU messages with flexible whitespace around arguments and types" time="0.000467958">
         </testcase>
-        <testcase classname="test/angular-i18n.spec.ts" name="@stynx-web/angular-i18n &gt; refreshes cached ICU formatters when a locale catalog is reloaded" time="0.00047875">
+        <testcase classname="test/angular-i18n.spec.ts" name="@stynx-web/angular-i18n &gt; refreshes cached ICU formatters when a locale catalog is reloaded" time="0.000306">
         </testcase>
-        <testcase classname="test/angular-i18n.spec.ts" name="@stynx-web/angular-i18n &gt; switches locale through the component and marks the translate pipe for check on locale changes" time="0.001735708">
+        <testcase classname="test/angular-i18n.spec.ts" name="@stynx-web/angular-i18n &gt; switches locale through the component and marks the translate pipe for check on locale changes" time="0.000896375">
         </testcase>
-        <testcase classname="test/angular-i18n.spec.ts" name="@stynx-web/angular-i18n &gt; formats dates, numbers, and currencies through the active locale" time="0.007277625">
+        <testcase classname="test/angular-i18n.spec.ts" name="@stynx-web/angular-i18n &gt; formats dates, numbers, and currencies through the active locale" time="0.003989417">
         </testcase>
-        <testcase classname="test/angular-i18n.spec.ts" name="@stynx-web/angular-i18n &gt; returns an empty string for empty and invalid Intl pipe inputs" time="0.000395459">
+        <testcase classname="test/angular-i18n.spec.ts" name="@stynx-web/angular-i18n &gt; returns an empty string for empty and invalid Intl pipe inputs" time="0.000239125">
         </testcase>
-        <testcase classname="test/angular-i18n.spec.ts" name="@stynx-web/angular-i18n &gt; caches Intl formatters by locale and options" time="0.000983125">
+        <testcase classname="test/angular-i18n.spec.ts" name="@stynx-web/angular-i18n &gt; caches Intl formatters by locale and options" time="0.000749167">
         </testcase>
     </testsuite>
 </testsuites>

@@ -1,7 +1,19 @@
 {
   "sessions.active.actions.revoke": "Revoke",
   "sessions.active.actions.revokeOthers": "Revoke all other sessions",
+  "sessions.active.columns.createdAt": "Created",
+  "sessions.active.columns.expiresAt": "Expires",
+  "sessions.active.columns.lastIp": "Last IP",
+  "sessions.active.columns.lastSeenAt": "Last seen",
+  "sessions.active.columns.userAgent": "User agent",
+  "sessions.active.confirmRevokeOthers.confirm": "Revoke other sessions",
+  "sessions.active.confirmRevokeOthers.message": "All other active sessions for this account will be revoked.",
+  "sessions.active.confirmRevokeOthers.title": "Revoke other sessions?",
   "sessions.active.current": "Current session",
   "sessions.active.empty.description": "Your active sessions will appear here.",
-  "sessions.active.empty.title": "No active sessions"
+  "sessions.active.empty.title": "No active sessions",
+  "sessions.active.labels.thisDevice": "This device",
+  "sessions.active.toast.revoked": "Session revoked.",
+  "sessions.active.toast.revokedOthers": "Other sessions revoked.",
+  "sessions.active.values.unknown": "Unknown"
 }

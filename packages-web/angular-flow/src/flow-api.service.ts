@@ -8,6 +8,7 @@ import type {
   FlowForm,
   FlowGraph,
   FlowGraphExport,
+  FlowDashboardAnalytics,
   FlowNode,
   FlowNodeFormRule,
   FlowNodeRun,
@@ -17,6 +18,7 @@ import type {
   FlowPolicyRule,
   FlowPolicySet,
   FlowQuestion,
+  FlowRunActivityEvent,
   FlowRun,
   FlowRunSummary,
   FlowScope,
@@ -227,6 +229,10 @@ export class FlowApiService {
 
   listRunEvents(runId: string): Promise<FlowEvent[]> {
     return this.client.get<FlowEvent[]>(`/flow/runs/${runId}/events`);
+  }
+
+  listRunActivity(runId: string, filters: { cursor?: string; page?: number; pageSize?: number } = {}): Promise<FlowPage<FlowRunActivityEvent>> {
+    return this.client.get<FlowPage<FlowRunActivityEvent>>(`/flow/runs/${runId}/activity`, options(filters));
   }
 
   getRunFacts(runId: string): Promise<Record<string, unknown>> {
@@ -441,6 +447,10 @@ export class FlowApiService {
 
   runsSummary(filters: { scopeId?: string; scopeCode?: string; graphId?: string; status?: string; page?: number; pageSize?: number } = {}): Promise<FlowPage<FlowRunSummary>> {
     return this.client.get<FlowPage<FlowRunSummary>>('/flow/runs/summary', options(filters));
+  }
+
+  dashboardAnalytics(filters: { scopeId?: string; scopeCode?: string; graphId?: string } = {}): Promise<FlowDashboardAnalytics> {
+    return this.client.get<FlowDashboardAnalytics>('/flow/analytics/dashboard', options(filters));
   }
 
   listPolicySets(scopeId?: string): Promise<FlowPolicySet[]> {

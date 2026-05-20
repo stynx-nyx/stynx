@@ -82,6 +82,13 @@ export class FlowRunsController {
 
   @Permission('flow:read:runtime')
   @ReadOnly()
+  @Get('/:id/activity')
+  activity(@Param('id') id: string, @Query() query: Record<string, unknown>) {
+    return this.runtime.listEvents({ ...query, runId: id });
+  }
+
+  @Permission('flow:read:runtime')
+  @ReadOnly()
   @Get('/:id/facts')
   facts(@Param('id') id: string) {
     return this.runtime.getRunFacts(id);

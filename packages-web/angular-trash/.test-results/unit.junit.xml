@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="9" failures="0" errors="0" time="0.042498375">
-    <testsuite name="test/angular-trash.spec.ts" timestamp="2026-05-20T03:43:40.017Z" hostname="thiamat-1903.local" tests="9" failures="0" errors="0" skipped="0" time="0.042498375">
-        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; loads trash items and restores them through the adapter" time="0.0085495">
+<testsuites name="vitest tests" tests="9" failures="0" errors="0" time="0.022497875">
+    <testsuite name="test/angular-trash.spec.ts" timestamp="2026-05-20T04:25:04.592Z" hostname="thiamat-1903.local" tests="9" failures="0" errors="0" skipped="0" time="0.022497875">
+        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; loads trash items and restores them through the adapter" time="0.003813041">
         </testcase>
-        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; handles pagination, cascade restore, hard delete, and fallback errors" time="0.004710209">
+        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; handles pagination, cascade restore, hard delete, and fallback errors" time="0.001104209">
         </testcase>
-        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; ships a default SDK adapter provider and multiplexes configured kinds" time="0.006942792">
+        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; ships a default SDK adapter provider and multiplexes configured kinds" time="0.001540792">
         </testcase>
-        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; supports provider-backed components, tabs, filters, bulk actions, and retention countdowns" time="0.018751375">
+        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; supports provider-backed components, tabs, filters, bulk actions, and retention countdowns" time="0.01309625">
         </testcase>
-        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; falls back to per-item bulk operations and filters by the current session" time="0.000460458">
+        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; falls back to per-item bulk operations and filters by the current session" time="0.000418833">
         </testcase>
-        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; prunes stale selections, clears load errors, and preserves row fields" time="0.000254208">
+        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; prunes stale selections, clears load errors, and preserves row fields" time="0.00024475">
         </testcase>
-        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; honors default kind, selection/filter toggles, empty bulk guards, and missing adapters" time="0.001049375">
+        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; honors default kind, selection/filter toggles, empty bulk guards, and missing adapters" time="0.000912583">
         </testcase>
-        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; checks hard-delete permission names, invalid purge dates, and today countdowns" time="0.000392667">
+        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; checks hard-delete permission names, invalid purge dates, and today countdowns" time="0.000276584">
         </testcase>
-        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; does not cascade unrelated restore errors and preserves exact toast messages" time="0.000425834">
+        <testcase classname="test/angular-trash.spec.ts" name="@stynx-web/angular-trash &gt; does not cascade unrelated restore errors and preserves exact toast messages" time="0.000341708">
         </testcase>
     </testsuite>
 </testsuites>

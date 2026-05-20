@@ -12,6 +12,7 @@ export type FlowFieldType =
   | 'select'
   | 'multiselect'
   | 'file'
+  | 'signature'
   | 'url'
   | 'cnpj'
   | 'email';
@@ -188,7 +189,13 @@ export interface FlowQuestion {
   options?: unknown[] | Record<string, unknown>;
   validators?: Record<string, unknown>;
   visibleIf?: Record<string, unknown>;
+  revealIf?: FlowQuestionRevealCondition;
   sortOrder?: number;
+}
+
+export interface FlowQuestionRevealCondition {
+  question: string;
+  equals: unknown;
 }
 
 export interface FlowScore {
@@ -245,6 +252,19 @@ export interface FlowRunSummary {
   lastUpdatedAt?: string;
 }
 
+export interface FlowDashboardAnalytics {
+  openTasks: number;
+  cycleTime: {
+    p50Seconds: number;
+    p95Seconds: number;
+  };
+  completionRate: {
+    last7Days: number;
+    last30Days: number;
+  };
+  slaBreaches: number;
+}
+
 export interface FlowEvent {
   id: string;
   runId: string;
@@ -257,6 +277,8 @@ export interface FlowEvent {
   payload?: Record<string, unknown>;
   createdAt?: string;
 }
+
+export type FlowRunActivityEvent = FlowEvent;
 
 export interface FlowTaskCandidate {
   agentType: 'user' | 'permission' | 'resolver';

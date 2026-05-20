@@ -1,51 +1,51 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="23" failures="0" errors="0" time="1.081043542">
-    <testsuite name="test/angular-storage.spec.ts" timestamp="2026-05-20T03:43:37.573Z" hostname="thiamat-1903.local" tests="23" failures="0" errors="0" skipped="0" time="1.081043542">
-        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; downloads a document through a signed URL and emits progress" time="0.192141459">
+<testsuites name="vitest tests" tests="23" failures="0" errors="0" time="0.039491625">
+    <testsuite name="test/angular-storage.spec.ts" timestamp="2026-05-20T04:25:04.536Z" hostname="thiamat-1903.local" tests="23" failures="0" errors="0" skipped="0" time="0.039491625">
+        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; downloads a document through a signed URL and emits progress" time="0.01325675">
         </testcase>
-        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; surfaces download validation and network failures" time="0.000768791">
+        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; surfaces download validation and network failures" time="0.000470709">
         </testcase>
-        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; uses explicit download filenames before encoded headers and URL fallbacks" time="0.040982458">
+        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; uses explicit download filenames before encoded headers and URL fallbacks" time="0.001576291">
         </testcase>
-        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; resolves encoded, plain, and id fallback download names" time="0.266086792">
+        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; resolves encoded, plain, and id fallback download names" time="0.001400833">
         </testcase>
-        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; tracks download busy labels and bodyless browser fallbacks" time="0.063445167">
+        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; tracks download busy labels and bodyless browser fallbacks" time="0.001355333">
         </testcase>
-        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; moves through initiating, uploading, and completed states" time="0.010154625">
+        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; moves through initiating, uploading, and completed states" time="0.000553125">
         </testcase>
-        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; handles selected files, quarantine completion, and generic failures" time="0.009072">
+        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; handles selected files, quarantine completion, and generic failures" time="0.000388208">
         </testcase>
-        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; uploads dropped files when drag-and-drop is enabled" time="0.208223916">
+        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; uploads dropped files when drag-and-drop is enabled" time="0.000538917">
         </testcase>
-        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; ignores drag events while drag-and-drop is disabled" time="0.001767">
+        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; ignores drag events while drag-and-drop is disabled" time="0.000223584">
         </testcase>
-        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; emits scan-status updates after an upload completes with a pending scan" time="0.002884792">
+        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; emits scan-status updates after an upload completes with a pending scan" time="0.000501333">
         </testcase>
-        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; rejects invalid files and surfaces upload failures" time="0.003814875">
+        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; rejects invalid files and surfaces upload failures" time="0.000270834">
         </testcase>
-        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; accepts files exactly at the configured byte limit" time="0.003955">
+        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; accepts files exactly at the configured byte limit" time="0.000174625">
         </testcase>
-        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; ignores empty file selection events" time="0.001414917">
+        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; ignores empty file selection events" time="0.000100667">
         </testcase>
-        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; calls the document API endpoints with normalized base URLs" time="0.012415167">
+        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; calls the document API endpoints with normalized base URLs" time="0.000325625">
         </testcase>
-        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; normalizes repeated API slashes and fills blank scan event ids" time="0.041977041">
+        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; normalizes repeated API slashes and fills blank scan event ids" time="0.003550041">
         </testcase>
-        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; long-polls scan status until a terminal status is returned" time="0.127629208">
+        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; long-polls scan status until a terminal status is returned" time="0.004543542">
         </testcase>
-        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; deduplicates repeated scan events and surfaces scan-status errors" time="0.019161167">
+        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; deduplicates repeated scan events and surfaces scan-status errors" time="0.004673542">
         </testcase>
-        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; uploads files through XMLHttpRequest with progress, success, and failure paths" time="0.001725417">
+        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; uploads files through XMLHttpRequest with progress, success, and failure paths" time="0.00084975">
         </testcase>
-        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; delegates small files from multipart executor to the XHR executor" time="0.001903084">
+        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; delegates small files from multipart executor to the XHR executor" time="0.000367833">
         </testcase>
-        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; delegates files exactly at the multipart threshold" time="0.003089292">
+        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; delegates files exactly at the multipart threshold" time="0.000161917">
         </testcase>
-        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; uploads large files as resumable multipart chunks" time="0.050784042">
+        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; uploads large files as resumable multipart chunks" time="0.002191292">
         </testcase>
-        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; uses multipart status numbers, explicit completion URL, and failure statuses" time="0.003869459">
+        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; uses multipart status numbers, explicit completion URL, and failure statuses" time="0.000678833">
         </testcase>
-        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; surfaces exhausted multipart retries, completion failures, and provider wiring" time="0.002608791">
+        <testcase classname="test/angular-storage.spec.ts" name="@stynx-web/angular-storage &gt; surfaces exhausted multipart retries, completion failures, and provider wiring" time="0.000694666">
         </testcase>
     </testsuite>
 </testsuites>

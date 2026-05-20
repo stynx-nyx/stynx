@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-20T03:44:27.567Z",
-  "endedAt": "2026-05-20T03:44:35.100Z",
-  "durationMs": 7533,
+  "startedAt": "2026-05-20T04:41:32.174Z",
+  "endedAt": "2026-05-20T04:41:35.724Z",
+  "durationMs": 3550,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-50493-1779248667567.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-94583-1779252092173.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/flow/.test-results/unit.junit.xml"
     ],
@@ -45,54 +45,54 @@
   },
   "slowestTests": [
     {
-      "name": "FlowRuntimeService.ensureRun passes optional signal facts to the adapter before ensuring a run",
+      "name": "FlowRuntimeService.dispatchPendingEffects returns zero counts when no pending events",
       "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-runtime.service.spec.ts",
-      "durationMs": 59.800083000000086
+      "durationMs": 13.716625000000022
     },
     {
-      "name": "FlowDesignService.importGraph throws when an insert returns no row",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-design.service.spec.ts",
-      "durationMs": 26.286082999999962
+      "name": "FlowFormsService forms CRUD createForm INSERTs and returns the new row",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-forms.service.spec.ts",
+      "durationMs": 13.174624999999878
     },
     {
       "name": "Flow backend gap contracts dispatches pending effects through the adapter and skips already terminal events on retry",
       "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/gap-contracts.spec.ts",
-      "durationMs": 22.071458999999777
+      "durationMs": 12.41862500000002
     },
     {
-      "name": "FlowFormsService waivers createFillWaiver hydrates context from the parent fill",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-forms.service.spec.ts",
-      "durationMs": 19.888500000000022
-    },
-    {
-      "name": "Flow validation and regression guards keeps generic Flow source free of PORM/CMS domain coupling",
+      "name": "Flow validation and regression guards rejects ambiguous flow DTO identifiers",
       "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/validation-and-regression.spec.ts",
-      "durationMs": 18.09704200000033
+      "durationMs": 9.256832999999915
     },
     {
-      "name": "FlowRuntimeService.signal resolves scopeId from scopeCode when needed and calls signal_changed",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-runtime.service.spec.ts",
-      "durationMs": 16.69287499999973
+      "name": "FlowAdapterRegistry delegates adapter operations and wraps adapter failures",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/branch-helpers.spec.ts",
+      "durationMs": 8.667333999999983
     },
     {
-      "name": "FlowDesignService — graphs / nodes / edges createGraphNode attaches graphId to the input",
+      "name": "FlowAdapterRegistry returns safe defaults when optional adapters or capabilities are absent",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/branch-helpers.spec.ts",
+      "durationMs": 7.312208000000055
+    },
+    {
+      "name": "FlowDesignService — graphs / nodes / edges createGraphNode rejects non-object input",
       "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-design.service.spec.ts",
-      "durationMs": 16.52166599999964
+      "durationMs": 7.186416000000008
     },
     {
-      "name": "FlowRuntimeService.ensureRun throws when flow.run_ensure returns no run_id",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-runtime.service.spec.ts",
-      "durationMs": 15.586374999999862
+      "name": "FlowPolicyService returns the first matching rule using empty, jsonpath, and object conditions",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/branch-helpers.spec.ts",
+      "durationMs": 6.347750000000133
     },
     {
-      "name": "Flow backend gap contracts records failed adapter effect delivery as an effect_failed event",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/gap-contracts.spec.ts",
-      "durationMs": 14.913500000000568
+      "name": "Flow row utilities accepts object bodies and rejects null, arrays, and primitives",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/branch-helpers.spec.ts",
+      "durationMs": 5.798125000000027
     },
     {
-      "name": "FlowDesignService — policySets / policyRules listPolicyRules filters by policy_set_id",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/flow-design.service.spec.ts",
-      "durationMs": 14.755708000000595
+      "name": "Flow row utilities camelizes rows and clamps pagination inputs",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/flow/test/unit/branch-helpers.spec.ts",
+      "durationMs": 5.562167000000045
     }
   ]
 }

@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="7" failures="0" errors="0" time="0.0247005">
-    <testsuite name="test/angular-profile.spec.ts" timestamp="2026-05-20T03:44:21.104Z" hostname="thiamat-1903.local" tests="7" failures="0" errors="0" skipped="0" time="0.0247005">
-        <testcase classname="test/angular-profile.spec.ts" name="@stynx-web/angular-profile &gt; validates the profile form and emits only when dirty and valid" time="0.01413725">
+<testsuites name="vitest tests" tests="7" failures="0" errors="0" time="0.011276709">
+    <testsuite name="test/angular-profile.spec.ts" timestamp="2026-05-20T04:41:19.233Z" hostname="thiamat-1903.local" tests="7" failures="0" errors="0" skipped="0" time="0.011276709">
+        <testcase classname="test/angular-profile.spec.ts" name="@stynx-web/angular-profile &gt; validates the profile form and emits only when dirty and valid" time="0.006258208">
         </testcase>
-        <testcase classname="test/angular-profile.spec.ts" name="@stynx-web/angular-profile &gt; saves profile changes through ProfileService and reports failures" time="0.006357875">
+        <testcase classname="test/angular-profile.spec.ts" name="@stynx-web/angular-profile &gt; saves profile changes through ProfileService and reports failures" time="0.001989291">
         </testcase>
-        <testcase classname="test/angular-profile.spec.ts" name="@stynx-web/angular-profile &gt; tracks dirty state in the preferences form" time="0.001235208">
+        <testcase classname="test/angular-profile.spec.ts" name="@stynx-web/angular-profile &gt; tracks dirty state in the preferences form" time="0.000634375">
         </testcase>
-        <testcase classname="test/angular-profile.spec.ts" name="@stynx-web/angular-profile &gt; saves preferences through ProfileService, changes locale, and reports failures" time="0.001028917">
+        <testcase classname="test/angular-profile.spec.ts" name="@stynx-web/angular-profile &gt; saves preferences through ProfileService, changes locale, and reports failures" time="0.000849334">
         </testcase>
-        <testcase classname="test/angular-profile.spec.ts" name="@stynx-web/angular-profile &gt; opens the configured change-password hosted action" time="0.000812583">
+        <testcase classname="test/angular-profile.spec.ts" name="@stynx-web/angular-profile &gt; opens the configured change-password hosted action" time="0.000537042">
         </testcase>
-        <testcase classname="test/angular-profile.spec.ts" name="@stynx-web/angular-profile &gt; marks MFA enrolment unavailable when no hosted action URL is configured" time="0.000201708">
+        <testcase classname="test/angular-profile.spec.ts" name="@stynx-web/angular-profile &gt; marks MFA enrolment unavailable when no hosted action URL is configured" time="0.000182291">
         </testcase>
-        <testcase classname="test/angular-profile.spec.ts" name="@stynx-web/angular-profile &gt; reports hosted action configuration errors to the standard error banner" time="0.000196166">
+        <testcase classname="test/angular-profile.spec.ts" name="@stynx-web/angular-profile &gt; reports hosted action configuration errors to the standard error banner" time="0.00018425">
         </testcase>
     </testsuite>
 </testsuites>

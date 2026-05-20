@@ -10,8 +10,11 @@ export default createStrykerConfig({
     'src/flow-forms.component.ts',
     'src/flow-graph-canvas.component.ts',
     'src/flow-graph-designer.component.ts',
+    'src/flow-run-activity.component.ts',
     'src/flow-tasks.component.ts',
     'src/flow-waivers.component.ts',
     'src/routes.ts',
+    'src/tokens.ts',
   ],
+  incremental: false,
 });

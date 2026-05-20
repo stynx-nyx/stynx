@@ -1,6 +1,6 @@
 {
   "name": "@stynx-web/angular-flow",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Angular workflow design and runtime components for stynx Flow",
   "exports": {
     ".": {
@@ -35,6 +35,7 @@
   "dependencies": {
     "@stynx-web/angular-auth": "workspace:*",
     "@stynx-web/angular-i18n": "workspace:*",
+    "@stynx-web/angular-storage": "workspace:*",
     "@stynx-web/angular-ui": "workspace:*",
     "@stynx-web/sdk": "workspace:*",
     "rxjs": "^7.8.2"

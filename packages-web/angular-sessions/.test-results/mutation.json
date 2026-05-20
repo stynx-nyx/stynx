@@ -5,9 +5,9 @@
   "runner": "stryker-vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-20T02:16:27.359Z",
-  "endedAt": "2026-05-20T02:16:41.182Z",
-  "durationMs": 13823,
+  "startedAt": "2026-05-20T04:53:50.114Z",
+  "endedAt": "2026-05-20T04:54:56.604Z",
+  "durationMs": 66490,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -20,23 +20,29 @@
     "ci": false
   },
   "command": {
-    "argv": ["pnpm", "exec", "stryker", "run", "stryker.conf.mjs"],
+    "argv": [
+      "pnpm",
+      "exec",
+      "stryker",
+      "run",
+      "stryker.conf.mjs"
+    ],
     "cwd": "/Users/aarusso/Development/stech/stynx/packages-web/angular-sessions"
   },
   "metric": {
     "kind": "score",
-    "score": 70,
+    "score": 98.24561403508771,
     "thresholds": {
-      "high": 60,
+      "high": 70,
       "low": 60,
-      "break": 60
+      "break": 70
     }
   },
   "totals": {
-    "files": 1,
-    "tests": 16,
-    "passed": 7,
-    "failed": 3,
+    "files": 4,
+    "tests": 133,
+    "passed": 56,
+    "failed": 1,
     "skipped": 0,
     "todo": 0
   }

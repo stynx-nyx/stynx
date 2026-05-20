@@ -1,0 +1,21 @@
+# FE-WAVE-A Report
+
+| Workstream | Commit | Validation excerpt | Notes |
+| ---------- | ------ | ------------------ | ----- |
+| A.1 | TBD | `pnpm --filter './packages-web/*' lint` exit 0; `pnpm test:matrix --no-color --coverage` exit 0; `@stynx-web/angular-tenancy` lines/statements/branches/functions `✓✓`; full `pnpm lint`, `pnpm -r build`, `pnpm -r test` red outside A.1 | OnPush rule active across web package lint; full gates blocked by dirty `@stynx/flow`, docs broken links, and `@stynx/testing` timeout. |
+| A.2 | TBD | scoped `lint`, `build`, and unit `test` pass for `@stynx-web/angular`, `@stynx-web/angular-auth`, `@stynx-web/angular-tenancy`, `@stynx-web/angular-ui`; `pnpm test:matrix --no-color --coverage` exit 0 | Signals are canonical; deprecated `*$` adapters use `toObservable(...)` with initial-emission compatibility; full root `pnpm lint` intentionally skipped per operator decision. |
+| A.3 | TBD | `pnpm --filter './packages-web/*' lint`, `build`, and `test` exit 0; `pnpm test:matrix --no-color --coverage` exit 0 | Constructor DI removed from packages-web component/service classes; direct-instantiation specs now use Angular injection contexts. |
+| A.4 | TBD | `pnpm --filter @stynx-web/angular lint`, `build`, and `test` exit 0; `pnpm test:matrix --no-color --coverage` exit 0 with `@stynx-web/angular` lines/statements/branches/functions `✓✓` | Added `provideStynxDefaults()` and standalone defaults documentation; full root `pnpm lint` intentionally skipped per operator decision. |
+| A.5 | TBD | `pnpm --filter './packages-web/*' lint`, `build`, and `test` exit 0; `pnpm test:matrix --no-color --coverage` exit 0 | Added `exports["./testing"]`, `exports["./package.json"]`, `sideEffects: false`, and compiling `src/testing/index.ts` barrels for all 11 packages-web packages. |
+| A.6 | TBD | `pnpm --filter @stynx-web/angular build`, `pnpm -r --filter './packages-web/*' build`, scoped web `lint`/`test`, and `pnpm test:matrix --no-color --coverage` exit 0 | Repaired APF default `ng-packagr -p` builds, restored the full angular barrel, removed APF tsconfig overrides, and kept Angular 22 RC package-local tooling. |
+| A.7 | TBD | `pnpm -r --filter './packages-web/*' lint`, `build`, and `test` exit 0; `pnpm test:matrix --no-color --coverage` exit 0 | Adopted official `@angular-eslint` recommended/template presets; fixed native-colliding outputs, control-flow, and remaining DI lint fallout. |
+| A.8 | TBD | `pnpm -r --filter './packages-web/*' lint`, `build`, and `test` exit 0; `pnpm test:matrix --no-color --coverage` exit 0 | Shipped `<stynx-permission-denied>`, default `/forbidden` auth route, and refresh-failure re-login banner action; full root `pnpm lint` skipped per operator decision. |
+| A.9 | TBD | `pnpm -r --filter './packages-web/*' lint`, `build`, and `test` exit 0; `pnpm test:matrix --no-color --coverage` exit 0 | Shipped `<stynx-icon>`, APF-copied sprite asset, icon docs/tests, and angular-flow/angular-ui call sites; full root `pnpm lint` skipped per operator decision. |
+
+## Orchestrator Status
+
+FE-A has implementation rows for A.1-A.9. On 2026-05-19 the orchestrator re-ran `pnpm -r --filter './packages-web/*' lint`, `pnpm -r --filter './packages-web/*' build`, `pnpm -r --filter './packages-web/*' test`, `pnpm test:matrix --no-color --coverage`, and `git diff --check`; all exited 0, with the matrix still showing non-regressing warning cells for `@stynx-web/angular-auth` branches (`!97`) and `@stynx-web/angular-flow` branches (`!92`). FE-A initially remained open under the operator-approved root-lint waiver.
+
+## Promotion Summary
+
+Promoted 2026-05-19T15:44:21Z against workspace base `0b5c152` with local, uncommitted FE patches. The promotion audit re-ran `pnpm lint` (35 tasks successful), `pnpm -r --filter './packages-web/*' build` (13 package builds successful), `pnpm i18n:check` (all `packages-web/*` packages reported 0 untranslated literals), `pnpm test:matrix --no-color --coverage` (all listed packages green), `CI=true pnpm install --frozen-lockfile --offline --ignore-scripts` (lockfile up to date), and `git diff --check` (clean). Local Node still warns as `v26.0.0` versus repo engine `>=24 <25`; this is an environment warning, not a gate failure in this audit.

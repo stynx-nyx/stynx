@@ -1,11 +1,37 @@
 import '@angular/compiler';
-import { InjectionToken, Injector, runInInjectionContext } from '@angular/core';
+import {
+  InjectionToken,
+  Injector,
+  runInInjectionContext,
+} from '@angular/core';
 import type { StynxSdkClient } from '@stynx-web/sdk';
 import { firstValueFrom } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
-import { AuditApiService, STYNX_AUDIT_CLIENT } from '../src';
+import {
+  AUDIT_ROUTES,
+  AuditApiService,
+  STYNX_AUDIT_CLIENT,
+  STYNX_AUDIT_OPTIONS,
+  StynxAuditHashIntegrityBadgeComponent,
+  StynxEntityHistoryComponent,
+  auditRoutes,
+  provideStynxAudit,
+} from '../src';
+import type { StynxAuditConfig } from '../src/provide-audit';
 
 type ClientCall = [path: string, options?: unknown];
+type ProviderRecord = {
+  readonly provide?: unknown;
+  readonly useFactory?: () => unknown;
+  readonly useValue?: unknown;
+};
+type EnvironmentProvidersShape = {
+  readonly '\u0275providers': unknown[];
+};
+
+function auditProviderRecords(config: StynxAuditConfig): ProviderRecord[] {
+  return (provideStynxAudit(config) as unknown as EnvironmentProvidersShape)['\u0275providers'] as ProviderRecord[];
+}
 
 function createClient(): StynxSdkClient & { calls: { get: ClientCall[] } } {
   const calls = { get: [] as ClientCall[] };
@@ -86,6 +112,11 @@ describe('@stynx-web/angular-audit', () => {
     expect(STYNX_AUDIT_CLIENT).toBeInstanceOf(InjectionToken);
     expect(`${STYNX_AUDIT_CLIENT}`).toBe('InjectionToken STYNX_AUDIT_CLIENT');
     expect(AuditApiService).toBeDefined();
+    expect(STYNX_AUDIT_OPTIONS).toBeDefined();
+    expect(StynxEntityHistoryComponent).toBeDefined();
+    expect(StynxAuditHashIntegrityBadgeComponent).toBeDefined();
+    expect(auditRoutes).toBeDefined();
+    expect(provideStynxAudit).toBeDefined();
   });
 
   it('resolves the configured audit client from Angular injection', () => {
@@ -171,5 +202,69 @@ describe('@stynx-web/angular-audit', () => {
       ['/audit/events', undefined],
       ['/audit/entities/schema%2Ftable/id%20with%20spaces/history', undefined],
     ]);
+  });
+
+  it('wires the host-facing provider into Angular dependency injection', () => {
+    const client = createClient();
+    const providers = auditProviderRecords({
+      clientFactory: () => client,
+      options: { permission: 'platform:audit:read:*' },
+    });
+
+    expect(providers).toHaveLength(3);
+    expect(providers[0]?.provide).toBe(STYNX_AUDIT_CLIENT);
+    expect(providers[0]?.useFactory?.()).toBe(client);
+    expect(providers[1]).toEqual({
+      provide: STYNX_AUDIT_OPTIONS,
+      useValue: { permission: 'platform:audit:read:*' },
+    });
+    expect(providers[2]).toBe(AuditApiService);
+  });
+
+  it('uses empty audit options when a host only provides a client factory', () => {
+    const client = createClient();
+    const providers = auditProviderRecords({
+      clientFactory: () => client,
+    });
+
+    expect(providers[0]?.useFactory?.()).toBe(client);
+    expect(providers[1]).toEqual({
+      provide: STYNX_AUDIT_OPTIONS,
+      useValue: {},
+    });
+  });
+
+  it('exposes a defensive audit route factory', () => {
+    expect(provideStynxAudit({
+      clientFactory: createClient,
+      options: { permission: 'platform:audit:read:*' },
+    })).toEqual(expect.any(Object));
+
+    const first = auditRoutes();
+    const second = auditRoutes();
+    first.pop();
+    first[0]?.canActivate?.pop();
+    if (first[0]?.data) {
+      first[0].data['permission'] = 'mutated';
+      first[0].data['titleKey'] = 'mutated';
+    }
+
+    expect(second).toHaveLength(AUDIT_ROUTES.length);
+    expect(second.map((route) => route.path)).toEqual([
+      '',
+      'events/:eventId',
+      'entities/:resource/:id/history',
+    ]);
+    expect(second.map((route) => route.data?.['permission'])).toEqual([
+      'platform:audit:read:*',
+      'platform:audit:read:*',
+      'platform:audit:read:*',
+    ]);
+    expect(second.map((route) => route.data?.['titleKey'])).toEqual([
+      'audit.routes.log',
+      'audit.routes.eventDetail',
+      'audit.routes.entityHistory',
+    ]);
+    expect(second.every((route) => route.canActivate?.length === 1)).toBe(true);
   });
 });

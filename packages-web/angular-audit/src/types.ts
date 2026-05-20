@@ -2,6 +2,8 @@ export interface StynxAuditPackageOptions {
   readonly permission?: 'platform:audit:read:*' | string;
 }
 
+export const STYNX_AUDIT_DEFAULT_PERMISSION = 'platform:audit:read:*';
+
 export type AuditIntegrityTone = 'valid' | 'broken' | 'unchecked';
 
 export interface AuditFilter {

@@ -1,7 +1,19 @@
 {
   "sessions.active.actions.revoke": "Revogar",
   "sessions.active.actions.revokeOthers": "Revogar todas as outras sessoes",
+  "sessions.active.columns.createdAt": "Criada",
+  "sessions.active.columns.expiresAt": "Expira",
+  "sessions.active.columns.lastIp": "Ultimo IP",
+  "sessions.active.columns.lastSeenAt": "Visto por ultimo",
+  "sessions.active.columns.userAgent": "Agente de usuario",
+  "sessions.active.confirmRevokeOthers.confirm": "Revogar outras sessoes",
+  "sessions.active.confirmRevokeOthers.message": "Todas as outras sessoes ativas desta conta serao revogadas.",
+  "sessions.active.confirmRevokeOthers.title": "Revogar outras sessoes?",
   "sessions.active.current": "Sessao atual",
   "sessions.active.empty.description": "Suas sessoes ativas aparecerao aqui.",
-  "sessions.active.empty.title": "Nenhuma sessao ativa"
+  "sessions.active.empty.title": "Nenhuma sessao ativa",
+  "sessions.active.labels.thisDevice": "Este dispositivo",
+  "sessions.active.toast.revoked": "Sessao revogada.",
+  "sessions.active.toast.revokedOthers": "Outras sessoes revogadas.",
+  "sessions.active.values.unknown": "Desconhecido"
 }

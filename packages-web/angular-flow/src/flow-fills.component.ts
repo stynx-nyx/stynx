@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject
 import type { OnChanges } from '@angular/core';
 import { StynxHasPermissionDirective } from '@stynx-web/angular-auth';
 import { StynxTranslatePipe } from '@stynx-web/angular-i18n';
+import { StynxDocumentUploadComponent } from '@stynx-web/angular-storage';
+import type { StynxDocumentUploadCompletedEvent } from '@stynx-web/angular-storage';
 import { StynxBannerComponent, StynxIconComponent, StynxLoadingSpinnerComponent } from '@stynx-web/angular-ui';
 import { FlowApiService } from './flow-api.service';
 import type { FlowAnswer, FlowFill, FlowQuestion } from './types';
@@ -79,11 +81,11 @@ export class StynxFlowFillsComponent implements OnChanges {
 @Component({
   selector: 'stynx-flow-fill-editor',
   standalone: true,
-  imports: [StynxHasPermissionDirective, StynxIconComponent, StynxTranslatePipe],
+  imports: [StynxDocumentUploadComponent, StynxHasPermissionDirective, StynxIconComponent, StynxTranslatePipe],
   template: `
     <section class="surface">
       <header>
-        <h2>{{ fill?.targetId || 'Fill' }}</h2>
+        <h2>{{ fill?.targetId || ('flow.fillEditor.fallbackTitle' | stynxTranslate) }}</h2>
         <div class="actions">
           <button type="button" *stynxHasPermission="'flow:execute:task'" (click)="saveAllAnswers()">
             <stynx-icon name="save" aria-hidden="true"></stynx-icon>
@@ -95,6 +97,7 @@ export class StynxFlowFillsComponent implements OnChanges {
         </div>
       </header>
       @for (question of questions; track question.id) {
+        @if (isQuestionVisible(question)) {
         <article class="answer">
           <label [attr.for]="'flow-answer-' + question.id">
             <strong>{{ question.label }}</strong>
@@ -151,11 +154,49 @@ export class StynxFlowFillsComponent implements OnChanges {
               </select>
             }
             @case ('text') {
-              <textarea
-                [id]="'flow-answer-' + question.id"
-                [value]="textValue(question)"
-                (input)="setValue(question, $any($event.target).value)"
-              ></textarea>
+              @if (isLongText(question)) {
+                <textarea
+                  [id]="'flow-answer-' + question.id"
+                  [attr.maxlength]="questionTextMaxLength(question)"
+                  [value]="textValue(question)"
+                  (input)="setValue(question, $any($event.target).value)"
+                ></textarea>
+              } @else {
+                <input
+                  [id]="'flow-answer-' + question.id"
+                  type="text"
+                  [attr.maxlength]="questionTextMaxLength(question)"
+                  [value]="textValue(question)"
+                  (input)="setValue(question, $any($event.target).value)"
+                />
+              }
+              <small>{{ 'flow.fillEditor.characterCount' | stynxTranslate: { count: textValue(question).length } }}</small>
+            }
+            @case ('file') {
+              <stynx-document-upload
+                [collection]="fileCollection(question)"
+                [enableDragAndDrop]="true"
+                (completed)="setFileAnswer(question, $event)"
+              ></stynx-document-upload>
+              @if (textValue(question)) {
+                <small>{{ 'flow.fillEditor.fileSelected' | stynxTranslate: { id: textValue(question) } }}</small>
+              }
+            }
+            @case ('signature') {
+              <div class="signature">
+                <canvas
+                  [attr.aria-label]="'flow.fillEditor.signatureCanvas' | stynxTranslate"
+                  width="560"
+                  height="160"
+                  (pointerdown)="beginSignature(question, $event)"
+                  (pointermove)="drawSignature(question, $event)"
+                  (pointerup)="endSignature(question, $event)"
+                  (pointerleave)="endSignature(question, $event)"
+                ></canvas>
+                <button type="button" class="secondary" (click)="clearSignature(question, $event)">
+                  {{ 'flow.fillEditor.actions.clearSignature' | stynxTranslate }}
+                </button>
+              </div>
             }
             @default {
               <input
@@ -170,10 +211,11 @@ export class StynxFlowFillsComponent implements OnChanges {
             {{ 'flow.fillEditor.actions.waive' | stynxTranslate }}
           </button>
         </article>
+        }
       }
     </section>
   `,
-  styles: [`.surface { display: grid; gap: 0.75rem; } header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; } h2 { margin: 0; } .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; } button { display: inline-flex; align-items: center; gap: 0.4rem; } stynx-icon { --stynx-icon-size: 1rem; } .answer { border: 1px solid #d8dee9; border-radius: 8px; padding: 0.75rem; display: grid; gap: 0.5rem; } label { display: flex; gap: 0.5rem; align-items: baseline; justify-content: space-between; } input:not([type="checkbox"]), select, textarea { width: 100%; box-sizing: border-box; border: 1px solid #c7d0dd; border-radius: 6px; padding: 0.5rem; } textarea { min-height: 6rem; resize: vertical; } .secondary { justify-self: start; }`],
+  styles: [`.surface { display: grid; gap: 0.75rem; } header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; } h2 { margin: 0; } .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; } button { display: inline-flex; align-items: center; gap: 0.4rem; } stynx-icon { --stynx-icon-size: 1rem; } .answer { border: 1px solid #d8dee9; border-radius: 8px; padding: 0.75rem; display: grid; gap: 0.5rem; } label { display: flex; gap: 0.5rem; align-items: baseline; justify-content: space-between; } input:not([type="checkbox"]), select, textarea { width: 100%; box-sizing: border-box; border: 1px solid #c7d0dd; border-radius: 6px; padding: 0.5rem; } textarea { min-height: 6rem; resize: vertical; } small { color: #64748b; } .signature { display: grid; gap: 0.5rem; } canvas { width: 100%; max-width: 35rem; height: 10rem; border: 1px solid #c7d0dd; border-radius: 6px; touch-action: none; background: #ffffff; } .secondary { justify-self: start; }`],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StynxFlowFillEditorComponent implements OnChanges {
@@ -186,9 +228,11 @@ export class StynxFlowFillEditorComponent implements OnChanges {
   @Output() readonly waiveQuestion = new EventEmitter<FlowQuestion>();
 
   private readonly values = new Map<string, unknown>();
+  private readonly drawingQuestions = new Set<string>();
 
   ngOnChanges(): void {
     this.values.clear();
+    this.drawingQuestions.clear();
   }
 
   answerFor(questionId: string): FlowAnswer | undefined {
@@ -221,6 +265,31 @@ export class StynxFlowFillEditorComponent implements OnChanges {
     return typeof value === 'string' ? value.slice(0, 10) : '';
   }
 
+  isQuestionVisible(question: FlowQuestion): boolean {
+    const condition = question.revealIf ?? this.revealIfFromVisibleIf(question.visibleIf);
+    if (!condition) {
+      return true;
+    }
+    const source = this.questions.find((item) => item.key === condition.question || item.id === condition.question);
+    if (!source) {
+      return false;
+    }
+    return this.optionKey(this.valueFor(source)) === this.optionKey(condition.equals);
+  }
+
+  isLongText(question: FlowQuestion): boolean {
+    const mode = this.textMode(question);
+    return mode === 'long' || this.questionTextMaxLength(question) > 200;
+  }
+
+  questionTextMaxLength(question: FlowQuestion): number {
+    const maxLength = Number(question.validators?.maxLength ?? question.validators?.maxlength);
+    if (Number.isFinite(maxLength) && maxLength > 0) {
+      return Math.min(maxLength, 4000);
+    }
+    return this.textMode(question) === 'long' ? 4000 : 200;
+  }
+
   setValue(question: FlowQuestion, value: unknown): void {
     const parsed = this.parseInputValue(question, value);
     this.values.set(question.id, parsed);
@@ -228,6 +297,46 @@ export class StynxFlowFillEditorComponent implements OnChanges {
       questionId: question.id,
       value: this.serializeValue(question, parsed),
     });
+  }
+
+  setFileAnswer(question: FlowQuestion, event: StynxDocumentUploadCompletedEvent): void {
+    this.setValue(question, event.id);
+  }
+
+  fileCollection(question: FlowQuestion): string {
+    const collection = question.validators?.collection ?? this.questionOptionRecord(question)?.collection;
+    return typeof collection === 'string' && collection.length > 0 ? collection : 'flow';
+  }
+
+  beginSignature(question: FlowQuestion, event: PointerEvent): void {
+    this.drawingQuestions.add(question.id);
+    this.drawSignaturePoint(event, true);
+  }
+
+  drawSignature(question: FlowQuestion, event: PointerEvent): void {
+    if (!this.drawingQuestions.has(question.id)) {
+      return;
+    }
+    this.drawSignaturePoint(event, false);
+  }
+
+  endSignature(question: FlowQuestion, event: PointerEvent): void {
+    if (!this.drawingQuestions.delete(question.id)) {
+      return;
+    }
+    const canvas = event.target instanceof HTMLCanvasElement ? event.target : undefined;
+    if (canvas) {
+      this.setValue(question, canvas.toDataURL('image/png'));
+    }
+  }
+
+  clearSignature(question: FlowQuestion, event: Event): void {
+    const canvas = (event.target as HTMLElement | null)?.closest('.signature')?.querySelector('canvas');
+    const context = canvas?.getContext('2d');
+    if (canvas && context) {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    this.setValue(question, '');
   }
 
   setMultiselectValue(question: FlowQuestion, selectedOptions: HTMLCollectionOf<HTMLOptionElement>): void {
@@ -258,7 +367,7 @@ export class StynxFlowFillEditorComponent implements OnChanges {
   }
 
   saveAllAnswers(): void {
-    this.saveAnswers.emit(this.questions.map((question) => ({
+    this.saveAnswers.emit(this.questions.filter((question) => this.isQuestionVisible(question)).map((question) => ({
       questionId: question.id,
       value: this.serializeValue(question, this.valueFor(question)),
     })));
@@ -281,6 +390,9 @@ export class StynxFlowFillEditorComponent implements OnChanges {
           return value;
         }
         return value === null || value === undefined || value === '' ? [] : [value];
+      case 'file':
+      case 'signature':
+        return value ?? '';
       default:
         return value ?? '';
     }
@@ -310,6 +422,9 @@ export class StynxFlowFillEditorComponent implements OnChanges {
       case 'multiselect':
         return value;
       case 'date':
+        return value || null;
+      case 'file':
+      case 'signature':
         return value || null;
       default:
         return value === '' ? null : value;
@@ -343,5 +458,48 @@ export class StynxFlowFillEditorComponent implements OnChanges {
 
   optionKey(value: unknown): string {
     return typeof value === 'string' ? value : JSON.stringify(value) ?? '';
+  }
+
+  private revealIfFromVisibleIf(value: Record<string, unknown> | undefined): { question: string; equals: unknown } | undefined {
+    const question = value?.question ?? value?.key ?? value?.questionKey;
+    if (typeof question !== 'string') {
+      return undefined;
+    }
+    return {
+      question,
+      equals: value?.equals ?? value?.value,
+    };
+  }
+
+  private textMode(question: FlowQuestion): 'short' | 'long' {
+    const optionRecord = this.questionOptionRecord(question);
+    const mode = question.validators?.mode ?? question.validators?.variant ?? optionRecord?.mode;
+    return mode === 'long' ? 'long' : 'short';
+  }
+
+  private questionOptionRecord(question: FlowQuestion): Record<string, unknown> | undefined {
+    return question.options && !Array.isArray(question.options) ? question.options : undefined;
+  }
+
+  private drawSignaturePoint(event: PointerEvent, begin: boolean): void {
+    const canvas = event.target instanceof HTMLCanvasElement ? event.target : undefined;
+    const context = canvas?.getContext('2d');
+    if (!canvas || !context) {
+      return;
+    }
+    event.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const x = (event.clientX - rect.left) * (canvas.width / rect.width);
+    const y = (event.clientY - rect.top) * (canvas.height / rect.height);
+    context.lineWidth = 2;
+    context.lineCap = 'round';
+    context.strokeStyle = '#0f172a';
+    if (begin) {
+      context.beginPath();
+      context.moveTo(x, y);
+      return;
+    }
+    context.lineTo(x, y);
+    context.stroke();
   }
 }

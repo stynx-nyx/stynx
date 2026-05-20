@@ -1,9 +1,10 @@
 import type { Routes } from '@angular/router';
 import { stynxPermissionGuard } from '@stynx-web/angular-auth';
-import { StynxFlowOpenTasksComponent, StynxFlowRunSummaryComponent } from './analytics.component';
+import { StynxFlowDashboardComponent, StynxFlowOpenTasksComponent, StynxFlowRunSummaryComponent } from './analytics.component';
 import { StynxFlowFillsComponent } from './flow-fills.component';
 import { StynxFlowFormsComponent } from './flow-forms.component';
 import { StynxFlowGraphDesignerComponent } from './flow-graph-designer.component';
+import { StynxFlowRunActivityComponent } from './flow-run-activity.component';
 import { StynxFlowMyTasksInboxComponent, StynxFlowTaskListComponent } from './flow-tasks.component';
 import { StynxFlowWaiversComponent } from './flow-waivers.component';
 
@@ -54,9 +55,19 @@ export const FLOW_ROUTES: Routes = [
     canActivate: [stynxPermissionGuard('flow:read:runtime')],
   },
   {
+    path: 'runs/:runId/activity',
+    component: StynxFlowRunActivityComponent,
+    canActivate: [stynxPermissionGuard('flow:read:runtime')],
+  },
+  {
     path: 'waivers',
     component: StynxFlowWaiversComponent,
     canActivate: [stynxPermissionGuard('flow:read:runtime')],
+  },
+  {
+    path: 'dashboard',
+    component: StynxFlowDashboardComponent,
+    canActivate: [stynxPermissionGuard('flow:read:analytics')],
   },
   {
     path: 'open-tasks',

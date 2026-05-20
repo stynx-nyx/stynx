@@ -13,4 +13,11 @@ export class FlowAnalyticsController {
   openTasks(@Query() query: Record<string, unknown>) {
     return this.analytics.openTasks(query);
   }
+
+  @Permission('flow:read:analytics')
+  @ReadOnly()
+  @Get('/analytics/dashboard')
+  dashboard(@Query() query: Record<string, unknown>) {
+    return this.analytics.dashboard(query);
+  }
 }

@@ -2,7 +2,7 @@
 
 Angular standalone components and route helpers for STYNX Flow.
 
-This package is host-mounted. Applications provide a configured `StynxSdkClient` through `provideStynxFlow(...)`, then mount `flowRoutes()` under any route prefix.
+This package is host-mounted. Applications provide a configured `StynxSdkClient` or compatible transport through `provideStynxFlow(...)`, then mount `flowRoutes()` under any route prefix.
 
 The graph canvas intentionally does not bundle Cytoscape. It renders a stable list-based fallback with node and edge selection outputs. Hosts that need richer graph layout can wrap `StynxFlowGraphCanvasComponent` or replace it at the route level while reusing the service and models.
 
@@ -36,4 +36,45 @@ export const appConfig = {
 };
 
 export const routes = [{ path: 'flow', children: flowRoutes() }];
+```
+
+## Provider Recipes
+
+SDK-backed applications can defer SDK construction to Angular injection:
+
+```ts
+import { inject } from '@angular/core';
+import { provideStynxFlow } from '@stynx-web/angular-flow';
+import { StynxSdkClient } from '@stynx-web/sdk';
+
+export const providers = [
+  provideStynxFlow({
+    clientFactory: () => inject(StynxSdkClient),
+  }),
+];
+```
+
+Demo hosts can use a mock transport with the same `get`, `post`, `put`, `patch`, and `delete` shape:
+
+```ts
+import { provideStynxFlow } from '@stynx-web/angular-flow';
+
+export const providers = [
+  provideStynxFlow({
+    clientFactory: () => new MockFlowClient(),
+  }),
+];
+```
+
+Custom-backed applications can inject their own compatible client:
+
+```ts
+import { inject } from '@angular/core';
+import { provideStynxFlow } from '@stynx-web/angular-flow';
+
+export const providers = [
+  provideStynxFlow({
+    clientFactory: () => inject(MyFlowClient),
+  }),
+];
 ```

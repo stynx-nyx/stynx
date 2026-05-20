@@ -1,7 +1,19 @@
 [
   "sessions.active.actions.revoke",
   "sessions.active.actions.revokeOthers",
+  "sessions.active.columns.createdAt",
+  "sessions.active.columns.expiresAt",
+  "sessions.active.columns.lastIp",
+  "sessions.active.columns.lastSeenAt",
+  "sessions.active.columns.userAgent",
+  "sessions.active.confirmRevokeOthers.confirm",
+  "sessions.active.confirmRevokeOthers.message",
+  "sessions.active.confirmRevokeOthers.title",
   "sessions.active.current",
   "sessions.active.empty.description",
-  "sessions.active.empty.title"
+  "sessions.active.empty.title",
+  "sessions.active.labels.thisDevice",
+  "sessions.active.toast.revoked",
+  "sessions.active.toast.revokedOthers",
+  "sessions.active.values.unknown"
 ]

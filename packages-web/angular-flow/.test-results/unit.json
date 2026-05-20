@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-20T03:43:41.223Z",
-  "endedAt": "2026-05-20T03:44:08.647Z",
-  "durationMs": 27424,
+  "startedAt": "2026-05-20T04:50:53.837Z",
+  "endedAt": "2026-05-20T04:50:55.529Z",
+  "durationMs": 1692,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-48870-1779248621223.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-2134-1779252653836.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/.test-results/unit.junit.xml"
     ],
@@ -36,63 +36,63 @@
     "kind": "none"
   },
   "totals": {
-    "files": 3,
-    "tests": 28,
-    "passed": 28,
+    "files": 4,
+    "tests": 34,
+    "passed": 34,
     "failed": 0,
     "skipped": 0,
     "todo": 0
   },
   "slowestTests": [
     {
-      "name": "@stynx-web/angular-flow components describes branch: distinguishes empty filters and fallback load errors across flow lists",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
-      "durationMs": 83.1997080000001
+      "name": "@stynx-web/angular-flow FE-G fan-out activates each flow route with the real Router when permissions allow",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/flow-fan-out.spec.ts",
+      "durationMs": 187.88300000000004
     },
     {
-      "name": "@stynx-web/angular-flow components binds graph designer inputs to route-like scope and graph ids",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
-      "durationMs": 50.69474999999875
-    },
-    {
-      "name": "@stynx-web/angular-flow exports and routes exports the package API needed by host shells",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/routes-and-exports.spec.ts",
-      "durationMs": 46.78370899999936
+      "name": "@stynx-web/angular-flow FE-G fan-out redirects every guarded flow route to permission denial when the session lacks access",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/flow-fan-out.spec.ts",
+      "durationMs": 10.893333999999868
     },
     {
       "name": "FlowApiService endpoint contract covers design route families for scopes, graphs, nodes, edges, rules, effects, and form gates",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/flow-api.service.spec.ts",
-      "durationMs": 33.63479200000074
+      "durationMs": 4.656332999999904
     },
     {
-      "name": "@stynx-web/angular-flow components loads forms, fills, tasks, and waivers with optional filters and error branches",
+      "name": "@stynx-web/angular-flow components binds graph designer inputs to route-like scope and graph ids",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
-      "durationMs": 31.07350000000224
+      "durationMs": 4.377707999999984
     },
     {
-      "name": "@stynx-web/angular-flow components loads the my-tasks inbox with signal state and tenant refreshes",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
-      "durationMs": 15.08941699999923
-    },
-    {
-      "name": "@stynx-web/angular-flow exports and routes returns a defensive copy of host-mountable routes",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/routes-and-exports.spec.ts",
-      "durationMs": 13.940958999999566
+      "name": "@stynx-web/angular-flow FE-G fan-out handles file answers, signatures, and reveal conditions in the fill editor",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/flow-fan-out.spec.ts",
+      "durationMs": 2.515333999999939
     },
     {
       "name": "FlowApiService endpoint contract covers forms, fills, answers, waivers, policies, analytics, signal, and effect routes",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/flow-api.service.spec.ts",
-      "durationMs": 6.978750000000218
+      "durationMs": 1.988917000000015
     },
     {
-      "name": "@stynx-web/angular-flow components keeps the empty state action output host-controlled",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
-      "durationMs": 4.022041000000172
+      "name": "@stynx-web/angular-flow FE-G fan-out wires provideStynxFlow for instance-backed and factory-backed package hosts",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/flow-fan-out.spec.ts",
+      "durationMs": 1.7478750000000218
     },
     {
-      "name": "@stynx-web/angular-flow components covers fill editor empty, object option, and fallback serialization branches",
+      "name": "@stynx-web/angular-flow components loads forms, fills, tasks, and waivers with optional filters and error branches",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
-      "durationMs": 3.4163750000006985
+      "durationMs": 1.4152090000000044
+    },
+    {
+      "name": "@stynx-web/angular-flow components loads the my-tasks inbox with signal state and tenant refreshes",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
+      "durationMs": 1.1257080000000315
+    },
+    {
+      "name": "@stynx-web/angular-flow exports and routes exports the package API needed by host shells",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/routes-and-exports.spec.ts",
+      "durationMs": 0.9587910000000193
     }
   ]
 }
