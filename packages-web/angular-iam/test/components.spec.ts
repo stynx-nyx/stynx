@@ -947,4 +947,288 @@ describe('@stynx-web/angular-iam component TestBed specs', () => {
     (user.component as unknown as DetailAccess).sendInvite();
     expect(user.component.error()).toBe('iam.users.invite.failed');
   });
+
+  // ===========================================================================
+  // WAVE-05A targeted mutation kills — users-admin + effective-permissions.
+  // Each describe targets specific survivor clusters in the mutation report.
+  // ===========================================================================
+
+  describe('UsersAdminComponent — mutation-killing assertions', () => {
+    it('userDisplayName joins firstName + lastName with a single space (kills L19 StringLiteral)', () => {
+      const users = setup(StynxUsersAdminComponent);
+      const access = users.component as unknown as UsersAdminAccess;
+      // Original: ' ' separator → 'Ada Lovelace'.
+      // Mutation: '' separator → 'AdaLovelace'.
+      expect(access.displayName({
+        id: 'u', email: 'u@example.test', firstName: 'Ada', lastName: 'Lovelace',
+      })).toBe('Ada Lovelace');
+    });
+
+    it('userDisplayName falls back to email when no name parts are present', () => {
+      // Kills the LogicalOperator `||` mutation that would swap to `&&` and
+      // return the empty join result instead of falling through.
+      const users = setup(StynxUsersAdminComponent);
+      const access = users.component as unknown as UsersAdminAccess;
+      expect(access.displayName({ id: 'u', email: 'fallback@example.test' })).toBe('fallback@example.test');
+    });
+
+    it('userDisplayName filters out empty string parts (kills MethodExpression .filter mutant)', () => {
+      const users = setup(StynxUsersAdminComponent);
+      const access = users.component as unknown as UsersAdminAccess;
+      // Only lastName provided → 'Lovelace' (no leading space).
+      expect(access.displayName({
+        id: 'u', email: 'u@example.test', lastName: 'Lovelace',
+      })).toBe('Lovelace');
+    });
+
+    it('statusKey concatenates the literal "iam.users.status." prefix with status (kills StringLiteral on prefix)', () => {
+      // Original prefix 'iam.users.status.' + status → 'iam.users.status.disabled'.
+      // Mutation '' / 'Stryker was here!' would break the exact key.
+      const users = setup(StynxUsersAdminComponent);
+      const access = users.component as unknown as UsersAdminAccess;
+      expect(access.statusKey({ id: 'u', email: 'u@example.test', status: 'disabled' })).toBe('iam.users.status.disabled');
+    });
+
+    it('statusKey defaults to "active" when user.status is falsy (kills StringLiteral on the "active" fallback)', () => {
+      const users = setup(StynxUsersAdminComponent);
+      const access = users.component as unknown as UsersAdminAccess;
+      expect(access.statusKey({ id: 'u', email: 'u@example.test' })).toBe('iam.users.status.active');
+    });
+
+    it('search() resets pageIndex to 0 (kills BooleanLiteral / ArithmeticOperator on the reset path)', () => {
+      const users = setup(StynxUsersAdminComponent);
+      const access = users.component as unknown as UsersAdminAccess;
+      users.fixture.detectChanges();
+      access.pageChanged({ pageIndex: 5, pageSize: 25 });
+      expect(users.component.pageIndex()).toBe(5);
+      access.search();
+      expect(users.component.pageIndex()).toBe(0);
+    });
+
+    it('clearSearch() resets the search input to empty string (kills StringLiteral on reset value)', () => {
+      const users = setup(StynxUsersAdminComponent);
+      const access = users.component as unknown as UsersAdminAccess;
+      users.component.searchForm.controls.q.setValue('ada');
+      access.clearSearch();
+      expect(users.component.searchForm.controls.q.value).toBe('');
+      expect(users.component.pageIndex()).toBe(0);
+    });
+
+    it('load() applies Math.max(0, page.meta.page - 1) — kills the Math.min mutant', () => {
+      // Set up a fresh component with an api that returns meta.page = 5.
+      const users = setup(StynxUsersAdminComponent);
+      users.api.listUsers.mockReturnValueOnce(of({
+        items: [...USERS],
+        meta: { total: 100, page: 5, pageSize: 10 },
+      } satisfies PagedResult<StynxUser>));
+      (users.component as unknown as UsersAdminAccess).search();  // triggers load()
+      // Math.max(0, 5-1) = 4. Math.min mutation = 0.
+      expect(users.component.pageIndex()).toBe(4);
+    });
+
+    it('load() applies Math.max(0, page.meta.page - 1) — kills the ArithmeticOperator + 1 mutant', () => {
+      const users = setup(StynxUsersAdminComponent);
+      users.api.listUsers.mockReturnValueOnce(of({
+        items: [...USERS],
+        meta: { total: 100, page: 3, pageSize: 10 },
+      } satisfies PagedResult<StynxUser>));
+      (users.component as unknown as UsersAdminAccess).search();
+      // 3-1 = 2; mutation 3+1 = 4.
+      expect(users.component.pageIndex()).toBe(2);
+    });
+
+    it('load() omits the q param entirely when search box is empty (kills BooleanLiteral on q ? {q} : {})', () => {
+      const users = setup(StynxUsersAdminComponent);
+      users.component.searchForm.controls.q.setValue('');
+      (users.component as unknown as UsersAdminAccess).search();
+      const last = users.api.listUsers.mock.calls.at(-1)?.[0];
+      expect(last).toEqual({ page: 1, pageSize: 10 });
+      expect(last).not.toHaveProperty('q');
+    });
+
+    it('load() trims whitespace from the search query before sending (kills BooleanLiteral on trim path)', () => {
+      const users = setup(StynxUsersAdminComponent);
+      users.component.searchForm.controls.q.setValue('   ');
+      (users.component as unknown as UsersAdminAccess).search();
+      const last = users.api.listUsers.mock.calls.at(-1)?.[0];
+      // Trimmed empty string → no q key.
+      expect(last).not.toHaveProperty('q');
+    });
+
+    it('successful createUser pushes the exact toast key + level', () => {
+      const users = setup(StynxUsersAdminComponent);
+      const access = users.component as unknown as UsersAdminAccess;
+      users.api.createUser.mockReturnValueOnce(of({
+        id: 'created', email: 'new@example.test',
+      } as StynxUser));
+      access.createUser({ email: 'new@example.test', sendInvite: true });
+      // Kills StringLiteral mutations on both arguments.
+      expect(users.toast.push).toHaveBeenCalledWith('iam.users.create.created', 'success');
+    });
+
+    it('failed createUser sets createError to the exact fallback i18n key, not empty string', () => {
+      const users = setup(StynxUsersAdminComponent, [
+        { provide: StynxI18nService, useValue: { locale: signal('en'), translate: () => undefined } },
+      ]);
+      const access = users.component as unknown as UsersAdminAccess;
+      users.api.createUser.mockReturnValueOnce(throwError(() => undefined));
+      access.createUser({ email: 'x@example.test', sendInvite: true });
+      expect(users.component.createError()).toBe('iam.users.create.failed');
+    });
+
+    it('failed load() sets error to the exact fallback key', () => {
+      const users = setup(StynxUsersAdminComponent, [
+        { provide: StynxI18nService, useValue: { locale: signal('en'), translate: () => undefined } },
+      ]);
+      users.api.listUsers.mockReturnValueOnce(throwError(() => undefined));
+      (users.component as unknown as UsersAdminAccess).search();
+      expect(users.component.error()).toBe('iam.users.error.loadFailed');
+    });
+
+    it('error path with Error instance uses error.message verbatim (kills ConditionalExpression on the type-guard)', () => {
+      const users = setup(StynxUsersAdminComponent);
+      users.api.createUser.mockReturnValueOnce(throwError(() => new Error('boom')));
+      (users.component as unknown as UsersAdminAccess).createUser({ email: 'x@example.test', sendInvite: true });
+      expect(users.component.createError()).toBe('boom');
+    });
+
+    it('closeCreateDialog respects the createSaving guard (kills BlockStatement {} mutation)', () => {
+      const users = setup(StynxUsersAdminComponent);
+      const access = users.component as unknown as UsersAdminAccess;
+      access.openCreateDialog();
+      users.component.createSaving.set(true);
+      access.closeCreateDialog();
+      expect(users.component.createOpen()).toBe(true);    // saving in progress → stays open
+      users.component.createSaving.set(false);
+      access.closeCreateDialog();
+      expect(users.component.createOpen()).toBe(false);   // not saving → closes
+    });
+
+    it('openCreateDialog clears createError and opens the dialog (kills StringLiteral on the reset)', () => {
+      const users = setup(StynxUsersAdminComponent);
+      users.component.createError.set('previous error');
+      (users.component as unknown as UsersAdminAccess).openCreateDialog();
+      expect(users.component.createError()).toBe('');
+      expect(users.component.createOpen()).toBe(true);
+    });
+  });
+
+  describe('EffectivePermissionsComponent — mutation-killing assertions', () => {
+    it('sourceTypeKey returns the exact `iam.effectivePermissions.source.<type>` key', () => {
+      const effective = setup(StynxEffectivePermissionsComponent);
+      const access = effective.component as unknown as EffectiveAccess;
+      // Kills StringLiteral mutations on the template literal prefix.
+      expect(access.sourceTypeKey('role')).toBe('iam.effectivePermissions.source.role');
+      expect(access.sourceTypeKey('group')).toBe('iam.effectivePermissions.source.group');
+    });
+
+    it('emptyTitleKey switches between empty and emptySearch variants based on the search term', () => {
+      const effective = setup(StynxEffectivePermissionsComponent);
+      const access = effective.component as unknown as EffectiveAccess;
+      // Without a search term → empty.title.
+      expect(access.emptyTitleKey()).toBe('iam.effectivePermissions.empty.title');
+      // With a search term → emptySearch.title.
+      effective.component.filterForm.controls.q.setValue('admin');
+      access.applySearch();
+      expect(access.emptyTitleKey()).toBe('iam.effectivePermissions.emptySearch.title');
+    });
+
+    it('emptyDescriptionKey switches between empty and emptySearch variants based on the search term', () => {
+      const effective = setup(StynxEffectivePermissionsComponent);
+      const access = effective.component as unknown as EffectiveAccess;
+      expect(access.emptyDescriptionKey()).toBe('iam.effectivePermissions.empty.description');
+      effective.component.filterForm.controls.q.setValue('write');
+      access.applySearch();
+      expect(access.emptyDescriptionKey()).toBe('iam.effectivePermissions.emptySearch.description');
+    });
+
+    it('clearSearch() resets the search form to empty string', () => {
+      const effective = setup(StynxEffectivePermissionsComponent);
+      const access = effective.component as unknown as EffectiveAccess;
+      effective.component.filterForm.controls.q.setValue('admin');
+      access.clearSearch();
+      expect(effective.component.filterForm.controls.q.value).toBe('');
+    });
+
+    it('applySearch() trims the search input before applying the filter', () => {
+      const effective = setup(StynxEffectivePermissionsComponent);
+      const access = effective.component as unknown as EffectiveAccess;
+      effective.component.filterForm.controls.q.setValue('   admin  ');
+      access.applySearch();
+      // emptyTitleKey returns the emptySearch variant only if search is non-empty;
+      // after applySearch trims '   admin  ' → 'admin', the search variant fires.
+      expect(access.emptyTitleKey()).toBe('iam.effectivePermissions.emptySearch.title');
+    });
+
+    it('applySearch() trims a whitespace-only input down to empty, falling back to the non-search empty key (kills MethodExpression .trim drop)', () => {
+      // With .trim() in place, '   ' becomes '', search is empty → empty.title.
+      // Without .trim() (MethodExpression mutation), '   ' is truthy → emptySearch.title.
+      const effective = setup(StynxEffectivePermissionsComponent);
+      const access = effective.component as unknown as EffectiveAccess;
+      effective.component.filterForm.controls.q.setValue('   ');
+      access.applySearch();
+      expect(access.emptyTitleKey()).toBe('iam.effectivePermissions.empty.title');
+    });
+
+    it('empty-search shows ALL permissions (kills BlockStatement {} on the includesSearch early-return)', () => {
+      // includesSearch returns true on empty value via `if (!value) return true;`.
+      // Mutation `{}` falls through to the loop which evaluates against empty
+      // searchableParts → array.some is false → all permissions filter out.
+      // Asserting filteredPermissions.length === permissions.length (both non-zero) catches it.
+      const effective = setup(StynxEffectivePermissionsComponent);
+      effective.component.userId = 'user-1';
+      effective.fixture.detectChanges();
+      const total = effective.component.permissions().length;
+      expect(total).toBeGreaterThan(0);
+      expect(effective.component.filteredPermissions().length).toBe(total);
+    });
+
+    it('search matching by permission key returns only matching entries (kills BlockStatement / StringLiteral on the searchable-parts construction)', () => {
+      const effective = setup(StynxEffectivePermissionsComponent);
+      effective.component.userId = 'user-1';
+      effective.fixture.detectChanges();
+      const access = effective.component as unknown as EffectiveAccess;
+      effective.component.filterForm.controls.q.setValue('groups');  // matches 'iam:groups:write' but not 'iam:users:read'
+      access.applySearch();
+      const filtered = effective.component.filteredPermissions();
+      expect(filtered).toHaveLength(1);
+      expect(filtered[0]?.key).toBe('iam:groups:write');
+    });
+  });
+
+  describe('UsersAdminComponent — constructor + initial-state kills', () => {
+    it('constructor invokes the initial load() with empty q AND default page=1,pageSize=10 (kills BlockStatement {} on the constructor body + StringLiteral on the form default)', () => {
+      // Calling the constructor must produce an initial listUsers call.
+      const users = setup(StynxUsersAdminComponent);
+      // The first listUsers call is the constructor-triggered load. Inspect it.
+      const first = users.api.listUsers.mock.calls[0]?.[0];
+      // Constructor body must execute (kills BlockStatement → {} on line 309).
+      expect(users.api.listUsers).toHaveBeenCalled();
+      // Initial form default `q: ['']` produces an empty q which is omitted
+      // from the listUsers payload entirely. A StringLiteral mutation on the
+      // default would inject 'Stryker was here!' into the payload.
+      expect(first).toEqual({ page: 1, pageSize: 10 });
+      expect(first).not.toHaveProperty('q');
+    });
+
+    it('clearSearch() preserves the searchForm default q value after explicit setValue', () => {
+      const users = setup(StynxUsersAdminComponent);
+      const access = users.component as unknown as UsersAdminAccess;
+      users.component.searchForm.controls.q.setValue('Ada');
+      access.clearSearch();
+      // After clearSearch the form must hold the literal empty string.
+      // Pre-mutation StringLiteral on the reset's { q: '' } default would make
+      // this assertion fail if it became 'Stryker was here!'.
+      expect(users.component.searchForm.controls.q.value).toBe('');
+    });
+
+    it('openDetail emits userSelected EXACTLY when a user is opened (kills BlockStatement {} on openDetail body)', () => {
+      const users = setup(StynxUsersAdminComponent);
+      const access = users.component as unknown as UsersAdminAccess;
+      const emitted: StynxUser[] = [];
+      users.component.userSelected.subscribe((user) => emitted.push(user));
+      access.openDetail(USERS[0]!);
+      expect(emitted).toEqual([USERS[0]]);
+    });
+  });
 });

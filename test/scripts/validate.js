@@ -12,6 +12,7 @@ const { tmpdir } = require('node:os');
 const { join } = require('node:path');
 const { spawnSync } = require('node:child_process');
 
+const repoRoot = join(__dirname, '..', '..');
 const scriptsDir = join(__dirname, '..', '..', 'scripts');
 const failures = [];
 
@@ -62,6 +63,53 @@ function run(command, args, options = {}) {
 
 function writeJson(path, value) {
   writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`);
+}
+
+function assertIncludes(value, expected, label) {
+  if (!value.includes(expected)) {
+    throw new Error(`${label} missing expected text: ${expected}`);
+  }
+}
+
+function assertExcludes(value, unexpected, label) {
+  if (value.includes(unexpected)) {
+    throw new Error(`${label} unexpectedly included text: ${unexpected}`);
+  }
+}
+
+function runMatrixRendererTests() {
+  const status = run('node', ['scripts/render-test-matrix.mjs', '--no-color', '--resume'], { cwd: repoRoot });
+  const statusLegend = run('node', ['scripts/render-test-matrix.mjs', '--no-color', '--resume', '--legend'], {
+    cwd: repoRoot,
+  });
+  const compact = run('node', ['scripts/render-test-matrix.mjs', '--no-color', '--compact', '--resume'], {
+    cwd: repoRoot,
+  });
+  const timing = run('node', ['scripts/render-test-matrix.mjs', '--no-color', '--timing', '--resume'], {
+    cwd: repoRoot,
+  });
+  const coverage = run('node', ['scripts/render-test-matrix.mjs', '--no-color', '--coverage', '--resume'], {
+    cwd: repoRoot,
+  });
+
+  assertExcludes(status.split('\n')[0], 'Perf', 'status matrix header');
+  assertIncludes(status, 'Resume', 'status matrix');
+  assertIncludes(status, ' 2/2 ', 'status E2E resume');
+  assertIncludes(status, 'Perf: PASS p95=', 'status perf footer');
+  assertIncludes(status, '¹', 'status mutation default tier');
+  assertIncludes(status, '²', 'status mutation strict tier');
+  assertIncludes(status, '³', 'status mutation strictest tier');
+  assertExcludes(status, 'Legend:', 'default status matrix');
+  assertIncludes(statusLegend, 'Legend:', 'status legend');
+
+  assertExcludes(compact.split('\n')[0], ' | P', 'compact matrix header');
+  assertIncludes(compact, 'Perf: P p95=', 'compact perf footer');
+
+  assertExcludes(timing.split('\n')[0], 'Perf [s]', 'timing matrix header');
+  assertIncludes(timing, 'Perf duration: ', 'timing perf footer');
+
+  assertExcludes(coverage, 'Coverage columns: lines, statements, branches, functions.', 'coverage matrix');
+  assertIncludes(coverage, 'Source: coverage/test-evidence.json', 'coverage matrix source footer');
 }
 
 function metadata(job) {
@@ -259,6 +307,7 @@ function runEvidenceTests() {
   }
 }
 
+runMatrixRendererTests();
 runEvidenceTests();
 
 console.log('All scripts validated');

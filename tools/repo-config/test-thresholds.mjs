@@ -46,22 +46,43 @@ export function getCoverageThreshold(packageName) {
 }
 
 /**
+ * Resolve the full mutation threshold set for a package.
+ * Policy values may be:
+ *   - a number (legacy / single-floor policy): treated as { break: N, high: N, low: max(60, N-10) }
+ *   - an object {break, high, low?}: returned verbatim (tiered policy)
+ *   - a per-package literal number: same as legacy number policy
+ * @param {string} packageName
+ * @returns {{break:number, high:number, low:number}}
+ */
+export function getMutationThresholds(packageName) {
+  const cfg = load();
+  const override = cfg.perPackage?.[packageName]?.mutation;
+  if (typeof override === 'number') {
+    return { break: override, high: override, low: Math.max(60, override - 10) };
+  }
+  const policyName = override ?? cfg.defaults?.mutation ?? 'default';
+  const policy = cfg.policies?.mutation?.[policyName];
+  if (typeof policy === 'number') {
+    return { break: policy, high: policy, low: Math.max(60, policy - 10) };
+  }
+  if (policy && typeof policy === 'object' && typeof policy.break === 'number') {
+    const breakT = policy.break;
+    const highT = typeof policy.high === 'number' ? policy.high : breakT;
+    const lowT = typeof policy.low === 'number' ? policy.low : Math.max(60, breakT - 10);
+    return { break: breakT, high: highT, low: lowT };
+  }
+  throw new Error(`[test-thresholds] unknown mutation policy '${policyName}' for ${packageName}`);
+}
+
+/**
  * Resolve the mutation break threshold (single number) for a package.
- * Per-package values may be either a policy name (e.g. "strict") or a literal
- * number; numbers win over policies.
+ * Backward-compatible scalar accessor — returns the `break` value only.
+ * Use {@link getMutationThresholds} to access the high/low/break triplet.
  * @param {string} packageName
  * @returns {number}
  */
 export function getMutationThreshold(packageName) {
-  const cfg = load();
-  const override = cfg.perPackage?.[packageName]?.mutation;
-  if (typeof override === 'number') return override;
-  const policyName = override ?? cfg.defaults?.mutation ?? 'default';
-  const policy = cfg.policies?.mutation?.[policyName];
-  if (typeof policy !== 'number') {
-    throw new Error(`[test-thresholds] unknown mutation policy '${policyName}' for ${packageName}`);
-  }
-  return policy;
+  return getMutationThresholds(packageName).break;
 }
 
 /**

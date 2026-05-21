@@ -4,7 +4,7 @@
     "rootDir": "/Users/aarusso/Development/stech/stynx/reference/web/test/e2e",
     "forbidOnly": false,
     "fullyParallel": false,
-    "globalSetup": null,
+    "globalSetup": "/Users/aarusso/Development/stech/stynx/reference/web/test/e2e/a11y-global-setup.mjs",
     "globalTeardown": null,
     "globalTimeout": 0,
     "grep": {},
@@ -26,9 +26,7 @@
         "name": "legacy-api",
         "testDir": "/Users/aarusso/Development/stech/stynx/reference/web/test/e2e",
         "testIgnore": [],
-        "testMatch": [
-          "*.spec.ts"
-        ],
+        "testMatch": ["*.spec.ts"],
         "timeout": 90000
       },
       {
@@ -44,13 +42,18 @@
         "testIgnore": [],
         "testMatch": [
           "auth/**/*.spec.ts",
-          "smoke/**/*.spec.ts",
-          "profile/**/*.spec.ts",
-          "tenant/**/*.spec.ts",
-          "i18n/**/*.spec.ts",
-          "records/**/*.spec.ts",
+          "audit/**/*.spec.ts",
           "documents/**/*.spec.ts",
+          "flows/**/*.spec.ts",
+          "i18n/**/*.spec.ts",
+          "iam/**/*.spec.ts",
+          "permissions/**/*.spec.ts",
+          "profile/**/*.spec.ts",
+          "records/**/*.spec.ts",
           "sessions/**/*.spec.ts",
+          "smoke/**/*.spec.ts",
+          "tenant/**/*.spec.ts",
+          "trash/**/*.spec.ts",
           "work-items/**/*.spec.ts"
         ],
         "timeout": 90000
@@ -66,21 +69,12 @@
         "name": "spa+api",
         "testDir": "/Users/aarusso/Development/stech/stynx/reference/web/test/e2e",
         "testIgnore": [],
-        "testMatch": [
-          "**/*.spec.ts"
-        ],
+        "testMatch": ["**/*.spec.ts"],
         "timeout": 90000
       }
     ],
     "quiet": false,
-    "reporter": [
-      [
-        "line"
-      ],
-      [
-        "json"
-      ]
-    ],
+    "reporter": [["line"], ["json"]],
     "reportSlowTests": {
       "max": 5,
       "threshold": 300000
@@ -89,7 +83,7 @@
     "tags": [],
     "updateSnapshots": "missing",
     "updateSourceMethod": "patch",
-    "version": "1.59.1",
+    "version": "1.60.0",
     "workers": 4,
     "webServer": null
   },
@@ -116,12 +110,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1170,
+                  "duration": 2317,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:28.664Z",
+                  "startTime": "2026-05-21T02:20:01.741Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -150,12 +144,12 @@
                   "workerIndex": 4,
                   "parallelIndex": 2,
                   "status": "passed",
-                  "duration": 700,
+                  "duration": 1557,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:42.949Z",
+                  "startTime": "2026-05-21T02:20:31.043Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -192,12 +186,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 1,
                   "status": "passed",
-                  "duration": 1308,
+                  "duration": 2451,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:28.668Z",
+                  "startTime": "2026-05-21T02:20:01.735Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -224,14 +218,14 @@
               "results": [
                 {
                   "workerIndex": 5,
-                  "parallelIndex": 0,
+                  "parallelIndex": 1,
                   "status": "passed",
-                  "duration": 847,
+                  "duration": 2352,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:43.290Z",
+                  "startTime": "2026-05-21T02:20:33.858Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -268,12 +262,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 2,
                   "status": "passed",
-                  "duration": 1361,
+                  "duration": 2355,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:28.664Z",
+                  "startTime": "2026-05-21T02:20:01.725Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -299,15 +293,15 @@
               "projectName": "spa-only",
               "results": [
                 {
-                  "workerIndex": 6,
-                  "parallelIndex": 1,
+                  "workerIndex": 4,
+                  "parallelIndex": 2,
                   "status": "passed",
-                  "duration": 1071,
+                  "duration": 1420,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:44.520Z",
+                  "startTime": "2026-05-21T02:20:32.955Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -344,12 +338,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 3,
                   "status": "passed",
-                  "duration": 1575,
+                  "duration": 2517,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:28.664Z",
+                  "startTime": "2026-05-21T02:20:01.727Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -375,15 +369,15 @@
               "projectName": "spa-only",
               "results": [
                 {
-                  "workerIndex": 4,
-                  "parallelIndex": 2,
+                  "workerIndex": 6,
+                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1092,
+                  "duration": 2428,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:43.808Z",
+                  "startTime": "2026-05-21T02:20:34.358Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -420,12 +414,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1075,
+                  "duration": 2010,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:30.111Z",
+                  "startTime": "2026-05-21T02:20:07.568Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -454,12 +448,12 @@
                   "workerIndex": 7,
                   "parallelIndex": 3,
                   "status": "passed",
-                  "duration": 1245,
+                  "duration": 2328,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:45.180Z",
+                  "startTime": "2026-05-21T02:20:34.474Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -493,15 +487,15 @@
               "projectName": "legacy-api",
               "results": [
                 {
-                  "workerIndex": 1,
-                  "parallelIndex": 1,
+                  "workerIndex": 2,
+                  "parallelIndex": 2,
                   "status": "passed",
-                  "duration": 837,
+                  "duration": 2067,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:30.248Z",
+                  "startTime": "2026-05-21T02:20:07.597Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -527,15 +521,15 @@
               "projectName": "spa-only",
               "results": [
                 {
-                  "workerIndex": 5,
-                  "parallelIndex": 0,
+                  "workerIndex": 4,
+                  "parallelIndex": 2,
                   "status": "passed",
-                  "duration": 738,
+                  "duration": 2072,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:44.336Z",
+                  "startTime": "2026-05-21T02:20:34.401Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -569,15 +563,15 @@
               "projectName": "legacy-api",
               "results": [
                 {
-                  "workerIndex": 2,
-                  "parallelIndex": 2,
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
                   "status": "passed",
-                  "duration": 1839,
+                  "duration": 2645,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:30.303Z",
+                  "startTime": "2026-05-21T02:20:07.773Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -603,15 +597,15 @@
               "projectName": "spa-only",
               "results": [
                 {
-                  "workerIndex": 4,
-                  "parallelIndex": 2,
+                  "workerIndex": 5,
+                  "parallelIndex": 1,
                   "status": "passed",
-                  "duration": 1486,
+                  "duration": 2253,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:44.919Z",
+                  "startTime": "2026-05-21T02:20:36.480Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -648,12 +642,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 3,
                   "status": "passed",
-                  "duration": 1835,
+                  "duration": 2595,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:30.532Z",
+                  "startTime": "2026-05-21T02:20:07.867Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -679,15 +673,15 @@
               "projectName": "spa-only",
               "results": [
                 {
-                  "workerIndex": 5,
-                  "parallelIndex": 0,
+                  "workerIndex": 4,
+                  "parallelIndex": 2,
                   "status": "passed",
-                  "duration": 1542,
+                  "duration": 2277,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:45.087Z",
+                  "startTime": "2026-05-21T02:20:36.490Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -721,15 +715,15 @@
               "projectName": "legacy-api",
               "results": [
                 {
-                  "workerIndex": 1,
-                  "parallelIndex": 1,
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1411,
+                  "duration": 2393,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:31.115Z",
+                  "startTime": "2026-05-21T02:20:09.613Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -756,14 +750,14 @@
               "results": [
                 {
                   "workerIndex": 6,
-                  "parallelIndex": 1,
+                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1192,
+                  "duration": 2283,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:45.856Z",
+                  "startTime": "2026-05-21T02:20:37.106Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -797,15 +791,15 @@
               "projectName": "legacy-api",
               "results": [
                 {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
+                  "workerIndex": 2,
+                  "parallelIndex": 2,
                   "status": "passed",
-                  "duration": 1817,
+                  "duration": 2641,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:31.205Z",
+                  "startTime": "2026-05-21T02:20:09.688Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -831,15 +825,15 @@
               "projectName": "spa-only",
               "results": [
                 {
-                  "workerIndex": 4,
-                  "parallelIndex": 2,
+                  "workerIndex": 7,
+                  "parallelIndex": 3,
                   "status": "passed",
-                  "duration": 1524,
+                  "duration": 2464,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:46.420Z",
+                  "startTime": "2026-05-21T02:20:37.262Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -873,15 +867,15 @@
               "projectName": "legacy-api",
               "results": [
                 {
-                  "workerIndex": 2,
-                  "parallelIndex": 2,
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
                   "status": "passed",
-                  "duration": 1384,
+                  "duration": 2744,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:32.170Z",
+                  "startTime": "2026-05-21T02:20:10.446Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -908,14 +902,14 @@
               "results": [
                 {
                   "workerIndex": 5,
-                  "parallelIndex": 0,
+                  "parallelIndex": 1,
                   "status": "passed",
-                  "duration": 1483,
+                  "duration": 2241,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:46.645Z",
+                  "startTime": "2026-05-21T02:20:38.761Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -952,12 +946,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 3,
                   "status": "passed",
-                  "duration": 3508,
+                  "duration": 4830,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:32.385Z",
+                  "startTime": "2026-05-21T02:20:10.484Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -983,15 +977,15 @@
               "projectName": "spa-only",
               "results": [
                 {
-                  "workerIndex": 7,
-                  "parallelIndex": 3,
+                  "workerIndex": 4,
+                  "parallelIndex": 2,
                   "status": "passed",
-                  "duration": 3637,
+                  "duration": 5239,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:46.654Z",
+                  "startTime": "2026-05-21T02:20:38.796Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1025,15 +1019,15 @@
               "projectName": "legacy-api",
               "results": [
                 {
-                  "workerIndex": 1,
-                  "parallelIndex": 1,
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1189,
+                  "duration": 2592,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:32.543Z",
+                  "startTime": "2026-05-21T02:20:12.030Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1060,14 +1054,14 @@
               "results": [
                 {
                   "workerIndex": 6,
-                  "parallelIndex": 1,
+                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1296,
+                  "duration": 2547,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:47.068Z",
+                  "startTime": "2026-05-21T02:20:39.408Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1108,15 +1102,15 @@
                   "projectName": "legacy-api",
                   "results": [
                     {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
                       "status": "passed",
-                      "duration": 587,
+                      "duration": 1643,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-05-19T10:58:33.052Z",
+                      "startTime": "2026-05-21T02:20:12.355Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1142,15 +1136,15 @@
                   "projectName": "legacy-api",
                   "results": [
                     {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
                       "status": "passed",
-                      "duration": 5196,
+                      "duration": 5325,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-05-19T10:58:33.676Z",
+                      "startTime": "2026-05-21T02:20:14.024Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1164,6 +1158,234 @@
               "column": 7
             }
           ]
+        }
+      ]
+    },
+    {
+      "title": "flows/analytics.spec.ts",
+      "file": "flows/analytics.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "renders the Flow analytics dashboard route",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 2146,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-21T02:20:13.218Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "84231b0882e2e10ec995-fb2803218e2ad89a2131",
+          "file": "flows/analytics.spec.ts",
+          "line": 4,
+          "column": 5
+        },
+        {
+          "title": "renders the Flow analytics dashboard route",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 7,
+                  "parallelIndex": 3,
+                  "status": "passed",
+                  "duration": 2451,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-21T02:20:39.781Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "84231b0882e2e10ec995-6648212a4bf239e612f6",
+          "file": "flows/analytics.spec.ts",
+          "line": 4,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "flows/design.spec.ts",
+      "file": "flows/design.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "renders the Flow design forms route",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2055,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-21T02:20:14.647Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "9a51de74aa419a40c1b1-594ba231952a6ea01e1d",
+          "file": "flows/design.spec.ts",
+          "line": 4,
+          "column": 5
+        },
+        {
+          "title": "renders the Flow design forms route",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 2468,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-21T02:20:41.037Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "9a51de74aa419a40c1b1-c91b140af32f17a80a1c",
+          "file": "flows/design.spec.ts",
+          "line": 4,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "flows/runtime.spec.ts",
+      "file": "flows/runtime.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "renders the Flow runtime fills route",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 3,
+                  "status": "passed",
+                  "duration": 1981,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-21T02:20:15.352Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "34023aaa99132182ea10-7e52ba0ffc9e285610fe",
+          "file": "flows/runtime.spec.ts",
+          "line": 4,
+          "column": 5
+        },
+        {
+          "title": "renders the Flow runtime fills route",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 6,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2583,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-21T02:20:41.976Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "34023aaa99132182ea10-0deda7c5efb52a818550",
+          "file": "flows/runtime.spec.ts",
+          "line": 4,
+          "column": 5
         }
       ]
     },
@@ -1186,15 +1408,15 @@
               "projectName": "legacy-api",
               "results": [
                 {
-                  "workerIndex": 2,
-                  "parallelIndex": 2,
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
                   "status": "passed",
-                  "duration": 934,
+                  "duration": 1966,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:33.604Z",
+                  "startTime": "2026-05-21T02:20:15.396Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1220,15 +1442,15 @@
               "projectName": "spa-only",
               "results": [
                 {
-                  "workerIndex": 4,
-                  "parallelIndex": 2,
+                  "workerIndex": 7,
+                  "parallelIndex": 3,
                   "status": "passed",
-                  "duration": 1088,
+                  "duration": 2775,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:47.968Z",
+                  "startTime": "2026-05-21T02:20:42.274Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1239,6 +1461,310 @@
           "id": "d2d22f1548e4944224f2-642cddabf2ade312afa0",
           "file": "i18n/locale-switch.spec.ts",
           "line": 10,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "iam/groups.spec.ts",
+      "file": "iam/groups.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "renders the IAM groups admin list",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2605,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-21T02:20:16.719Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "037ef43be665ffbb35dc-f4595839cf0742de3ae8",
+          "file": "iam/groups.spec.ts",
+          "line": 4,
+          "column": 5
+        },
+        {
+          "title": "renders the IAM groups admin list",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 3110,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-21T02:20:43.539Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "037ef43be665ffbb35dc-7acf838bac21e58a38ea",
+          "file": "iam/groups.spec.ts",
+          "line": 4,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "iam/roles.spec.ts",
+      "file": "iam/roles.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "renders the IAM roles admin list",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 3,
+                  "status": "passed",
+                  "duration": 2592,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-21T02:20:17.354Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "20b4d9f42c5f5549a3c7-4952067a4c60f1377678",
+          "file": "iam/roles.spec.ts",
+          "line": 4,
+          "column": 5
+        },
+        {
+          "title": "renders the IAM roles admin list",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 2,
+                  "status": "passed",
+                  "duration": 2758,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-21T02:20:44.070Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "20b4d9f42c5f5549a3c7-d0648620fc205ccbd6bd",
+          "file": "iam/roles.spec.ts",
+          "line": 4,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "iam/users.spec.ts",
+      "file": "iam/users.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "renders the IAM users admin list",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 2473,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-21T02:20:17.381Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d8ee96893b577b16de59-aa79e94388d2246e3cad",
+          "file": "iam/users.spec.ts",
+          "line": 4,
+          "column": 5
+        },
+        {
+          "title": "renders the IAM users admin list",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 6,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2977,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-21T02:20:44.659Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d8ee96893b577b16de59-a2541bf8773c62aa1a4e",
+          "file": "iam/users.spec.ts",
+          "line": 4,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "permissions/effective-permissions.spec.ts",
+      "file": "permissions/effective-permissions.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "shows permission denial for a reader without admin grants",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "legacy-api",
+              "projectName": "legacy-api",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 2,
+                  "status": "passed",
+                  "duration": 2029,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-21T02:20:19.362Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f2657b0a695a3ba8db57-bd02838fccf43e2363ce",
+          "file": "permissions/effective-permissions.spec.ts",
+          "line": 4,
+          "column": 5
+        },
+        {
+          "title": "shows permission denial for a reader without admin grants",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "spa-only",
+              "projectName": "spa-only",
+              "results": [
+                {
+                  "workerIndex": 7,
+                  "parallelIndex": 3,
+                  "status": "passed",
+                  "duration": 4099,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-21T02:20:45.080Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f2657b0a695a3ba8db57-3dd5e27a53a0f7345f40",
+          "file": "permissions/effective-permissions.spec.ts",
+          "line": 4,
           "column": 5
         }
       ]
@@ -1262,15 +1788,15 @@
               "projectName": "legacy-api",
               "results": [
                 {
-                  "workerIndex": 1,
-                  "parallelIndex": 1,
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 967,
+                  "duration": 2640,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:33.768Z",
+                  "startTime": "2026-05-21T02:20:19.392Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1296,15 +1822,15 @@
               "projectName": "legacy-api",
               "results": [
                 {
-                  "workerIndex": 1,
-                  "parallelIndex": 1,
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 857,
+                  "duration": 2642,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:34.753Z",
+                  "startTime": "2026-05-21T02:20:22.056Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1330,15 +1856,15 @@
               "projectName": "legacy-api",
               "results": [
                 {
-                  "workerIndex": 1,
-                  "parallelIndex": 1,
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 921,
+                  "duration": 1736,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:35.629Z",
+                  "startTime": "2026-05-21T02:20:24.732Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1365,14 +1891,14 @@
               "results": [
                 {
                   "workerIndex": 5,
-                  "parallelIndex": 0,
+                  "parallelIndex": 1,
                   "status": "passed",
-                  "duration": 1081,
+                  "duration": 3120,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:48.157Z",
+                  "startTime": "2026-05-21T02:20:46.680Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1399,14 +1925,14 @@
               "results": [
                 {
                   "workerIndex": 5,
-                  "parallelIndex": 0,
+                  "parallelIndex": 1,
                   "status": "passed",
-                  "duration": 997,
+                  "duration": 2249,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:49.253Z",
+                  "startTime": "2026-05-21T02:20:49.824Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1433,14 +1959,14 @@
               "results": [
                 {
                   "workerIndex": 5,
-                  "parallelIndex": 0,
+                  "parallelIndex": 1,
                   "status": "passed",
-                  "duration": 1030,
+                  "duration": 2356,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:50.262Z",
+                  "startTime": "2026-05-21T02:20:52.092Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1474,15 +2000,15 @@
               "projectName": "legacy-api",
               "results": [
                 {
-                  "workerIndex": 2,
-                  "parallelIndex": 2,
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
                   "status": "passed",
-                  "duration": 7167,
+                  "duration": 8249,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:34.557Z",
+                  "startTime": "2026-05-21T02:20:19.889Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1519,12 +2045,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 3,
                   "status": "passed",
-                  "duration": 2461,
+                  "duration": 3987,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:35.935Z",
+                  "startTime": "2026-05-21T02:20:19.968Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1550,15 +2076,15 @@
               "projectName": "spa-only",
               "results": [
                 {
-                  "workerIndex": 6,
-                  "parallelIndex": 1,
+                  "workerIndex": 4,
+                  "parallelIndex": 2,
                   "status": "passed",
-                  "duration": 2969,
+                  "duration": 5172,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:48.384Z",
+                  "startTime": "2026-05-21T02:20:46.887Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1592,15 +2118,15 @@
               "projectName": "legacy-api",
               "results": [
                 {
-                  "workerIndex": 1,
-                  "parallelIndex": 1,
+                  "workerIndex": 2,
+                  "parallelIndex": 2,
                   "status": "passed",
-                  "duration": 2249,
+                  "duration": 3909,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:36.572Z",
+                  "startTime": "2026-05-21T02:20:21.420Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1626,15 +2152,15 @@
               "projectName": "spa-only",
               "results": [
                 {
-                  "workerIndex": 4,
-                  "parallelIndex": 2,
+                  "workerIndex": 6,
+                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2869,
+                  "duration": 5018,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:49.095Z",
+                  "startTime": "2026-05-21T02:20:47.871Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1671,12 +2197,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 3,
                   "status": "passed",
-                  "duration": 5558,
+                  "duration": 9149,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:38.416Z",
+                  "startTime": "2026-05-21T02:20:23.983Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1710,15 +2236,15 @@
               "projectName": "legacy-api",
               "results": [
                 {
-                  "workerIndex": 1,
-                  "parallelIndex": 1,
+                  "workerIndex": 2,
+                  "parallelIndex": 2,
                   "status": "passed",
-                  "duration": 1408,
+                  "duration": 2276,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:38.841Z",
+                  "startTime": "2026-05-21T02:20:25.359Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1747,12 +2273,12 @@
                   "workerIndex": 7,
                   "parallelIndex": 3,
                   "status": "passed",
-                  "duration": 1714,
+                  "duration": 3267,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:50.309Z",
+                  "startTime": "2026-05-21T02:20:49.227Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1789,12 +2315,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1434,
+                  "duration": 2165,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:38.890Z",
+                  "startTime": "2026-05-21T02:20:26.495Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1820,15 +2346,15 @@
               "projectName": "spa-only",
               "results": [
                 {
-                  "workerIndex": 5,
-                  "parallelIndex": 0,
+                  "workerIndex": 4,
+                  "parallelIndex": 2,
                   "status": "passed",
-                  "duration": 1572,
+                  "duration": 2847,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:51.316Z",
+                  "startTime": "2026-05-21T02:20:52.089Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1862,15 +2388,15 @@
               "projectName": "legacy-api",
               "results": [
                 {
-                  "workerIndex": 1,
-                  "parallelIndex": 1,
+                  "workerIndex": 2,
+                  "parallelIndex": 2,
                   "status": "passed",
-                  "duration": 659,
+                  "duration": 1630,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:40.264Z",
+                  "startTime": "2026-05-21T02:20:27.652Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1896,15 +2422,15 @@
               "projectName": "spa-only",
               "results": [
                 {
-                  "workerIndex": 6,
-                  "parallelIndex": 1,
+                  "workerIndex": 7,
+                  "parallelIndex": 3,
                   "status": "passed",
-                  "duration": 904,
+                  "duration": 2002,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:51.386Z",
+                  "startTime": "2026-05-21T02:20:52.554Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1938,15 +2464,15 @@
               "projectName": "legacy-api",
               "results": [
                 {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
                   "status": "passed",
-                  "duration": 935,
+                  "duration": 2331,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:40.341Z",
+                  "startTime": "2026-05-21T02:20:28.197Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1972,15 +2498,15 @@
               "projectName": "legacy-api",
               "results": [
                 {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
                   "status": "passed",
-                  "duration": 1171,
+                  "duration": 1923,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:41.290Z",
+                  "startTime": "2026-05-21T02:20:30.550Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2006,15 +2532,15 @@
               "projectName": "spa-only",
               "results": [
                 {
-                  "workerIndex": 4,
-                  "parallelIndex": 2,
+                  "workerIndex": 6,
+                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1031,
+                  "duration": 2098,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:51.990Z",
+                  "startTime": "2026-05-21T02:20:52.998Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2040,15 +2566,15 @@
               "projectName": "spa-only",
               "results": [
                 {
-                  "workerIndex": 4,
-                  "parallelIndex": 2,
+                  "workerIndex": 6,
+                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 869,
+                  "duration": 1522,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:53.032Z",
+                  "startTime": "2026-05-21T02:20:55.106Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2082,15 +2608,15 @@
               "projectName": "legacy-api",
               "results": [
                 {
-                  "workerIndex": 1,
-                  "parallelIndex": 1,
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1348,
+                  "duration": 2259,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:40.938Z",
+                  "startTime": "2026-05-21T02:20:28.684Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2116,15 +2642,15 @@
               "projectName": "legacy-api",
               "results": [
                 {
-                  "workerIndex": 1,
-                  "parallelIndex": 1,
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1171,
+                  "duration": 2122,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:42.306Z",
+                  "startTime": "2026-05-21T02:20:30.956Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2150,15 +2676,15 @@
               "projectName": "spa-only",
               "results": [
                 {
-                  "workerIndex": 7,
-                  "parallelIndex": 3,
+                  "workerIndex": 5,
+                  "parallelIndex": 1,
                   "status": "passed",
-                  "duration": 1282,
+                  "duration": 1640,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:52.048Z",
+                  "startTime": "2026-05-21T02:20:54.501Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2184,15 +2710,15 @@
               "projectName": "spa-only",
               "results": [
                 {
-                  "workerIndex": 7,
-                  "parallelIndex": 3,
+                  "workerIndex": 5,
+                  "parallelIndex": 1,
                   "status": "passed",
-                  "duration": 995,
+                  "duration": 1406,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-05-19T10:58:53.347Z",
+                  "startTime": "2026-05-21T02:20:56.152Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2210,9 +2736,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-05-19T10:58:13.380Z",
-    "duration": 41014.724,
-    "expected": 56,
+    "startTime": "2026-05-21T02:19:30.255Z",
+    "duration": 87370.922,
+    "expected": 70,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0

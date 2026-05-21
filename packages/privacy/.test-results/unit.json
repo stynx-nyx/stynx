@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-20T03:43:42.645Z",
-  "endedAt": "2026-05-20T03:44:36.991Z",
-  "durationMs": 54346,
+  "startedAt": "2026-05-21T04:13:27.642Z",
+  "endedAt": "2026-05-21T04:13:37.342Z",
+  "durationMs": 9700,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-48989-1779248622645.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-35776-1779336807641.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/privacy/.test-results/unit.junit.xml"
     ],
@@ -37,8 +37,8 @@
   },
   "totals": {
     "files": 4,
-    "tests": 22,
-    "passed": 22,
+    "tests": 55,
+    "passed": 55,
     "failed": 0,
     "skipped": 0,
     "todo": 0
@@ -47,52 +47,52 @@
     {
       "name": "StynxPrivacyModule integration loads PII rules, exports live and archive rows, erases data, and reports retention",
       "file": "/Users/aarusso/Development/stech/stynx/packages/privacy/test/integration/privacy.module.spec.ts",
-      "durationMs": 23689.229375000003
+      "durationMs": 6690.633833999999
+    },
+    {
+      "name": "privacy runtime helpers loads database PII rules, auth user defaults, overrides, and validates subject metadata",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/privacy/test/unit/privacy-runtime.spec.ts",
+      "durationMs": 14.802167000000054
     },
     {
       "name": "PrivacyService branch coverage exports an empty bundle when rules match no rows",
       "file": "/Users/aarusso/Development/stech/stynx/packages/privacy/test/unit/privacy.service.spec.ts",
-      "durationMs": 94.09124999999767
+      "durationMs": 8.479083000000173
+    },
+    {
+      "name": "PrivacyService — exportData CSV escaping (kills csvEscape mutants at src/privacy.service.ts:39-48) escapes strings containing newlines by wrapping in double quotes",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/privacy/test/unit/privacy.service.spec.ts",
+      "durationMs": 5.4535829999999805
+    },
+    {
+      "name": "PrivacyService — exportData CSV escaping (kills csvEscape mutants at src/privacy.service.ts:39-48) passes plain strings through verbatim (no quoting)",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/privacy/test/unit/privacy.service.spec.ts",
+      "durationMs": 4.879999999999882
     },
     {
       "name": "PrivacyService branch coverage exports live and archive rows using subject and tenant filters",
       "file": "/Users/aarusso/Development/stech/stynx/packages/privacy/test/unit/privacy.service.spec.ts",
-      "durationMs": 79.41758299999856
+      "durationMs": 4.720916999999872
     },
     {
-      "name": "PrivacyService branch coverage exports unfiltered table snapshots and uses the default export TTL",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/privacy/test/unit/privacy.service.spec.ts",
-      "durationMs": 73.70224999999846
-    },
-    {
-      "name": "PrivacyService branch coverage renders ROPA markdown from loaded rules",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/privacy/test/unit/privacy.service.spec.ts",
-      "durationMs": 47.74312500000087
-    },
-    {
-      "name": "privacy runtime helpers generates ROPA markdown with defaults and data-flow metadata",
+      "name": "privacy runtime helpers loads override-only PII rules and falls back to the process working directory",
       "file": "/Users/aarusso/Development/stech/stynx/packages/privacy/test/unit/privacy-runtime.spec.ts",
-      "durationMs": 46.93358299999818
+      "durationMs": 4.5118750000001455
     },
     {
-      "name": "PrivacyService branch coverage executes retention delete branches across live and archive targets",
+      "name": "PrivacyService — exportData CSV escaping (kills csvEscape mutants at src/privacy.service.ts:39-48) JSON-encodes non-string non-null values and wraps them when they contain commas",
       "file": "/Users/aarusso/Development/stech/stynx/packages/privacy/test/unit/privacy.service.spec.ts",
-      "durationMs": 42.00654099999883
+      "durationMs": 4.117624999999862
     },
     {
-      "name": "PrivacyService branch coverage rejects export requests without a selector",
+      "name": "PrivacyService — manifest null coalescing (kills LogicalOperator survivors at src/privacy.service.ts:109-110) coalesces absent subjectUserId to null in manifest.json (not undefined)",
       "file": "/Users/aarusso/Development/stech/stynx/packages/privacy/test/unit/privacy.service.spec.ts",
-      "durationMs": 36.43620799999917
+      "durationMs": 3.8079579999998714
     },
     {
-      "name": "PrivacyService branch coverage skips export rules that do not describe a subject column",
+      "name": "PrivacyService — exportData CSV escaping (kills csvEscape mutants at src/privacy.service.ts:39-48) emits the literal empty string for null and undefined cell values",
       "file": "/Users/aarusso/Development/stech/stynx/packages/privacy/test/unit/privacy.service.spec.ts",
-      "durationMs": 25.767292000000452
-    },
-    {
-      "name": "PrivacyService branch coverage applies every erasure strategy to live and archive targets and disables Cognito user",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/privacy/test/unit/privacy.service.spec.ts",
-      "durationMs": 22.484167000002344
+      "durationMs": 3.717624999999998
     }
   ]
 }

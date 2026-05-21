@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-20T02:02:24.912Z",
-  "endedAt": "2026-05-20T02:02:32.159Z",
-  "durationMs": 7247,
+  "startedAt": "2026-05-21T02:16:40.098Z",
+  "endedAt": "2026-05-21T02:16:47.335Z",
+  "durationMs": 7237,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.int.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-88232-1779242544912.json",
+      "--outputFile.json=/tmp/vitest-82182-1779329800098.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/auth/.test-results/integration.junit.xml"
     ],
@@ -47,52 +47,52 @@
     {
       "name": "StynxAuthModule integration detects hash drift when pubsub invalidation is missed",
       "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/integration/auth.module.spec.ts",
-      "durationMs": 1196.8995830000003
+      "durationMs": 1173.2385409999997
     },
     {
       "name": "StynxAuthModule integration maintains generation ordering across concurrent mutations",
       "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/integration/auth.module.spec.ts",
-      "durationMs": 255.50466599999982
+      "durationMs": 260.2057910000003
     },
     {
       "name": "StynxAuthModule integration exchanges a Cognito token for a STYNX session and enforces route permissions",
       "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/integration/auth.module.spec.ts",
-      "durationMs": 140.67483300000004
-    },
-    {
-      "name": "StynxAuthController API error matrix POST /_platform/perms/:sid/invalidate returns 403 when the authenticated actor lacks platform invalidate permission",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/integration/auth.api-matrix.spec.ts",
-      "durationMs": 101.01291700000002
-    },
-    {
-      "name": "StynxAuthModule integration rotates session state when switching tenants",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/integration/auth.module.spec.ts",
-      "durationMs": 87.20158399999946
+      "durationMs": 110.5572500000003
     },
     {
       "name": "StynxAuthController API error matrix GET /_platform/perms/:sid returns 200/201 with cached permission state for an existing session",
       "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/integration/auth.api-matrix.spec.ts",
-      "durationMs": 87.12666600000011
+      "durationMs": 73.14783400000033
     },
     {
-      "name": "StynxAuthController API error matrix GET /_platform/perms/:sid returns 401 when the STYNX bearer token is missing",
+      "name": "StynxAuthModule integration keeps session caches isolated for impersonation-style parallel sessions",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/integration/auth.module.spec.ts",
+      "durationMs": 66.21191699999963
+    },
+    {
+      "name": "StynxAuthController API error matrix POST /_platform/perms/:sid/invalidate returns 200/201 after invalidating an existing permission cache entry",
       "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/integration/auth.api-matrix.spec.ts",
-      "durationMs": 80.88145799999984
+      "durationMs": 56.48449999999957
     },
     {
       "name": "StynxAuthModule integration refreshes permissions through pubsub invalidation within 2 seconds",
       "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/integration/auth.module.spec.ts",
-      "durationMs": 65.9275419999999
+      "durationMs": 52.64799999999968
     },
     {
-      "name": "StynxAuthController API error matrix POST /sessions/switch returns 200/201 after rotating into the requested tenant",
+      "name": "StynxAuthController API error matrix POST /_platform/perms/:sid/invalidate returns 403 when the authenticated actor lacks platform invalidate permission",
       "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/integration/auth.api-matrix.spec.ts",
-      "durationMs": 65.48725000000013
+      "durationMs": 48.579624999999396
     },
     {
-      "name": "StynxAuthController API error matrix POST /sessions/switch returns 401 when the STYNX bearer token is missing",
+      "name": "StynxAuthModule integration rotates session state when switching tenants",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/integration/auth.module.spec.ts",
+      "durationMs": 47.23229199999969
+    },
+    {
+      "name": "StynxAuthController API error matrix GET /_platform/perms/:sid returns 403 when the authenticated actor lacks platform inspect permission",
       "file": "/Users/aarusso/Development/stech/stynx/packages/auth/test/integration/auth.api-matrix.spec.ts",
-      "durationMs": 59.876249999999345
+      "durationMs": 43.355125000000044
     }
   ]
 }

@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-20T02:02:32.235Z",
-  "endedAt": "2026-05-20T02:02:36.812Z",
-  "durationMs": 4577,
+  "startedAt": "2026-05-21T02:16:47.262Z",
+  "endedAt": "2026-05-21T02:16:52.028Z",
+  "durationMs": 4766,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.int.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-88484-1779242552235.json",
+      "--outputFile.json=/tmp/vitest-82817-1779329807261.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/audit/.test-results/integration.junit.xml"
     ],
@@ -47,42 +47,42 @@
     {
       "name": "StynxAuditModule integration writes one soft-delete row for the live delete and no archive insert row",
       "file": "/Users/aarusso/Development/stech/stynx/packages/audit/test/integration/audit.module.spec.ts",
-      "durationMs": 79.96812499999987
+      "durationMs": 80.17354100000011
     },
     {
       "name": "StynxAuditModule integration verifies the audit.events hash chain and detects direct row tampering",
       "file": "/Users/aarusso/Development/stech/stynx/packages/audit/test/integration/audit.module.spec.ts",
-      "durationMs": 49.84312499999987
+      "durationMs": 74.40149999999994
     },
     {
       "name": "StynxAuditModule integration retains lgpd partitions longer in detach dry-run",
       "file": "/Users/aarusso/Development/stech/stynx/packages/audit/test/integration/audit.module.spec.ts",
-      "durationMs": 41.65404199999966
+      "durationMs": 48.9787080000001
     },
     {
       "name": "StynxAuditController API error matrix GET /_audit/log returns 200 with audit log entries for an authorized audit reader",
       "file": "/Users/aarusso/Development/stech/stynx/packages/audit/test/integration/audit.api-matrix.spec.ts",
-      "durationMs": 28.944540999999845
-    },
-    {
-      "name": "StynxAuditController API error matrix GET /_audit/log returns 401 when the bearer token is missing",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/audit/test/integration/audit.api-matrix.spec.ts",
-      "durationMs": 6.555624999999964
+      "durationMs": 30.11562499999991
     },
     {
       "name": "StynxAuditModule integration writes one restore row for the live insert and no archive delete row",
       "file": "/Users/aarusso/Development/stech/stynx/packages/audit/test/integration/audit.module.spec.ts",
-      "durationMs": 5.516250000000127
+      "durationMs": 14.092291999999816
     },
     {
       "name": "StynxAuditModule integration tags archive-side erasure updates as lgpd erasure",
       "file": "/Users/aarusso/Development/stech/stynx/packages/audit/test/integration/audit.module.spec.ts",
-      "durationMs": 5.43466699999999
+      "durationMs": 6.503083999999944
+    },
+    {
+      "name": "StynxAuditController API error matrix GET /_audit/log returns 401 when the bearer token is missing",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/audit/test/integration/audit.api-matrix.spec.ts",
+      "durationMs": 4.2956250000002
     },
     {
       "name": "StynxAuditController API error matrix GET /_audit/log returns 403 when the principal lacks platform:audit:read:*",
       "file": "/Users/aarusso/Development/stech/stynx/packages/audit/test/integration/audit.api-matrix.spec.ts",
-      "durationMs": 4.872833000000355
+      "durationMs": 2.9183749999997417
     }
   ]
 }

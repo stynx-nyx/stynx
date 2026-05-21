@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T07:58:19.448Z",
-  "endedAt": "2026-05-19T07:58:21.741Z",
-  "durationMs": 2293,
+  "startedAt": "2026-05-21T02:11:54.163Z",
+  "endedAt": "2026-05-21T02:12:00.281Z",
+  "durationMs": 6118,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -24,11 +24,9 @@
       "run",
       "--config",
       "./vitest.config.ts",
-      "--",
-      "--runInBand",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-25080-1779177499447.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-73143-1779329514162.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/test/db/.test-results/integration.junit.xml"
     ],
@@ -36,5 +34,65 @@
   },
   "metric": {
     "kind": "none"
-  }
+  },
+  "totals": {
+    "files": 17,
+    "tests": 57,
+    "passed": 57,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "slowestTests": [
+    {
+      "name": "storage.files runtime behavior applies tenant_scope RLS so a non-owner role sees only the current tenant files",
+      "file": "/Users/aarusso/Development/stech/stynx/test/db/runtime/storage/files-touch.runtime.spec.ts",
+      "durationMs": 113.806959
+    },
+    {
+      "name": "auth runtime RLS policies filters auth.tenancies through the tenant_isolation policy",
+      "file": "/Users/aarusso/Development/stech/stynx/test/db/runtime/auth/rls-policies.runtime.spec.ts",
+      "durationMs": 110.594292
+    },
+    {
+      "name": "auth tenant context runtime helpers keeps tenant context isolated per database connection",
+      "file": "/Users/aarusso/Development/stech/stynx/test/db/runtime/auth/tenant-context.runtime.spec.ts",
+      "durationMs": 90.66008299999999
+    },
+    {
+      "name": "auth runtime RLS policies filters auth.user_roles through user_roles_isolation",
+      "file": "/Users/aarusso/Development/stech/stynx/test/db/runtime/auth/rls-policies.runtime.spec.ts",
+      "durationMs": 84.0039999999999
+    },
+    {
+      "name": "audit DML trigger runtime behavior extract_primary_key returns ordered primary-key JSON and null for unsupported rows",
+      "file": "/Users/aarusso/Development/stech/stynx/test/db/runtime/audit/log-dml.runtime.spec.ts",
+      "durationMs": 80.39925000000017
+    },
+    {
+      "name": "audit hash-chain runtime behavior audit.write appends tenant-local hashes and uses auth.current_tenant when tenant is omitted",
+      "file": "/Users/aarusso/Development/stech/stynx/test/db/runtime/audit/hash-chain.runtime.spec.ts",
+      "durationMs": 72.99324999999999
+    },
+    {
+      "name": "auth runtime RLS policies filters auth.users through users_isolation and hides cross-tenant updates",
+      "file": "/Users/aarusso/Development/stech/stynx/test/db/runtime/auth/rls-policies.runtime.spec.ts",
+      "durationMs": 66.37308299999995
+    },
+    {
+      "name": "auth tenant context runtime helpers enforces tenancy_id with auth.create_tenant_enforcement_trigger and auth.apply_tenant",
+      "file": "/Users/aarusso/Development/stech/stynx/test/db/runtime/auth/tenant-context.runtime.spec.ts",
+      "durationMs": 60.09083399999986
+    },
+    {
+      "name": "audit DML trigger runtime behavior fn_log_dml records INSERT, UPDATE, and DELETE through audit.attach_dml_triggers",
+      "file": "/Users/aarusso/Development/stech/stynx/test/db/runtime/audit/log-dml.runtime.spec.ts",
+      "durationMs": 58.330917
+    },
+    {
+      "name": "auth tenant context runtime helpers enforces tenant_id through auth.attach_tenant_enforcement_triggers and auth.apply_tenant_id",
+      "file": "/Users/aarusso/Development/stech/stynx/test/db/runtime/auth/tenant-context.runtime.spec.ts",
+      "durationMs": 54.14545800000019
+    }
+  ]
 }

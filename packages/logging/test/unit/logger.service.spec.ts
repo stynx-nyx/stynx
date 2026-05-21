@@ -118,6 +118,6 @@ describe('StynxLogger.error edge cases', () => {
     const { logger, errorCalls } = setup({ shouldLog: true });
     logger.error('boom', { requestId: 'r-1' });
     expect(errorCalls[0]?.fields).toEqual({ requestId: 'r-1' });
-    expect((errorCalls[0]?.fields as Record<string, unknown>).stack).toBeUndefined();
+    expect(Object.hasOwn(errorCalls[0]?.fields as Record<string, unknown>, 'stack')).toBe(false);
   });
 });

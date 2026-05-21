@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="7" failures="0" errors="0" time="26.659507125">
-    <testsuite name="test/integration/i18n.api-matrix.spec.ts" timestamp="2026-05-20T02:03:03.422Z" hostname="thiamat-1903.local" tests="6" failures="0" errors="0" skipped="0" time="10.597721833">
-        <testcase classname="test/integration/i18n.api-matrix.spec.ts" name="I18nController API error matrix &gt; GET /_tenancy/i18n/overrides &gt; returns 200 with tenant overrides and request id propagation" time="0.142133083">
+<testsuites name="vitest tests" tests="7" failures="0" errors="0" time="27.566143875">
+    <testsuite name="test/integration/i18n.api-matrix.spec.ts" timestamp="2026-05-21T02:17:19.940Z" hostname="thiamat-1903.local" tests="6" failures="0" errors="0" skipped="0" time="11.527517542">
+        <testcase classname="test/integration/i18n.api-matrix.spec.ts" name="I18nController API error matrix &gt; GET /_tenancy/i18n/overrides &gt; returns 200 with tenant overrides and request id propagation" time="0.076833">
         </testcase>
-        <testcase classname="test/integration/i18n.api-matrix.spec.ts" name="I18nController API error matrix &gt; GET /_tenancy/i18n/overrides &gt; returns 400 when tenant context is missing" time="0.006723375">
+        <testcase classname="test/integration/i18n.api-matrix.spec.ts" name="I18nController API error matrix &gt; GET /_tenancy/i18n/overrides &gt; returns 400 when tenant context is missing" time="0.004020125">
         </testcase>
-        <testcase classname="test/integration/i18n.api-matrix.spec.ts" name="I18nController API error matrix &gt; GET /_tenancy/i18n/overrides &gt; returns 403 when the actor is not a member of the requested tenant" time="0.023513666">
+        <testcase classname="test/integration/i18n.api-matrix.spec.ts" name="I18nController API error matrix &gt; GET /_tenancy/i18n/overrides &gt; returns 403 when the actor is not a member of the requested tenant" time="0.018051042">
         </testcase>
-        <testcase classname="test/integration/i18n.api-matrix.spec.ts" name="I18nController API error matrix &gt; PUT /_tenancy/i18n/overrides &gt; returns 200 after updating tenant overrides" time="0.039811833">
+        <testcase classname="test/integration/i18n.api-matrix.spec.ts" name="I18nController API error matrix &gt; PUT /_tenancy/i18n/overrides &gt; returns 200 after updating tenant overrides" time="0.045969084">
         </testcase>
-        <testcase classname="test/integration/i18n.api-matrix.spec.ts" name="I18nController API error matrix &gt; PUT /_tenancy/i18n/overrides &gt; returns 400 for malformed JSON" time="0.005258458">
+        <testcase classname="test/integration/i18n.api-matrix.spec.ts" name="I18nController API error matrix &gt; PUT /_tenancy/i18n/overrides &gt; returns 400 for malformed JSON" time="0.003319208">
         </testcase>
-        <testcase classname="test/integration/i18n.api-matrix.spec.ts" name="I18nController API error matrix &gt; PUT /_tenancy/i18n/overrides &gt; returns 403 when the actor is not a member of the requested tenant" time="0.004304">
+        <testcase classname="test/integration/i18n.api-matrix.spec.ts" name="I18nController API error matrix &gt; PUT /_tenancy/i18n/overrides &gt; returns 403 when the actor is not a member of the requested tenant" time="0.003004083">
         </testcase>
     </testsuite>
-    <testsuite name="test/integration/i18n.module.spec.ts" timestamp="2026-05-20T02:03:03.425Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="16.061785292">
-        <testcase classname="test/integration/i18n.module.spec.ts" name="StynxI18nModule integration &gt; resolves locale order, applies tenant overrides, renders ICU messages, and localizes errors" time="16.060034791">
+    <testsuite name="test/integration/i18n.module.spec.ts" timestamp="2026-05-21T02:17:19.945Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="16.038626333">
+        <testcase classname="test/integration/i18n.module.spec.ts" name="StynxI18nModule integration &gt; resolves locale order, applies tenant overrides, renders ICU messages, and localizes errors" time="16.036988458">
         </testcase>
     </testsuite>
 </testsuites>

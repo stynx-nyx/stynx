@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-19T10:49:41.301Z",
-  "endedAt": "2026-05-19T10:50:04.103Z",
-  "durationMs": 22802,
+  "startedAt": "2026-05-21T02:12:48.400Z",
+  "endedAt": "2026-05-21T02:13:14.552Z",
+  "durationMs": 26152,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -25,24 +25,15 @@
       "--config",
       "./vitest.config.ts",
       "test/integration/reference-api.runtime.spec.ts",
-      "test/e2e/flows/audit.e2e.ts",
-      "test/e2e/flows/auth-and-permissions.e2e.ts",
-      "test/e2e/flows/documents.e2e.ts",
-      "test/e2e/flows/error-matrix.e2e.ts",
-      "test/e2e/flows/flow-design-and-runtime.e2e.ts",
-      "test/e2e/flows/i18n.e2e.ts",
-      "test/e2e/flows/idempotency.e2e.ts",
-      "test/e2e/flows/privacy.e2e.ts",
-      "test/e2e/flows/profile-and-preferences.e2e.ts",
-      "test/e2e/flows/rate-limit.e2e.ts",
-      "test/e2e/flows/records-and-notes.e2e.ts",
-      "test/e2e/flows/role-and-permission-management.e2e.ts",
-      "test/e2e/flows/sessions-management.e2e.ts",
-      "test/e2e/flows/tenancy.e2e.ts",
-      "test/e2e/flows/work-items.e2e.ts",
+      "test/integration/reference-api.unit-coverage.spec.ts",
+      "test/integration/reference-app-governance.spec.ts",
+      "test/integration/reference-dev-auth.api-matrix.spec.ts",
+      "test/integration/reference-dev-auth.gating.spec.ts",
+      "test/integration/reference-probes.api-matrix.spec.ts",
+      "test/integration/sample.schema.spec.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-35190-1779187781301.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-74641-1779329568400.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/reference/api/.test-results/integration.junit.xml"
     ],
@@ -52,63 +43,63 @@
     "kind": "none"
   },
   "totals": {
-    "files": 16,
-    "tests": 76,
-    "passed": 76,
+    "files": 7,
+    "tests": 58,
+    "passed": 58,
     "failed": 0,
     "skipped": 0,
     "todo": 0
   },
   "slowestTests": [
     {
-      "name": "@stynx/reference-api runtime suite family 1: isolates live and archive rows by tenant across sample tables",
+      "name": "reference dev-auth production gate mounts the reference dev-auth surface outside production",
+      "file": "/Users/aarusso/Development/stech/stynx/reference/api/test/integration/reference-dev-auth.gating.spec.ts",
+      "durationMs": 5051.6353340000005
+    },
+    {
+      "name": "@stynx/reference-api runtime suite family 9: rejects hard delete without the hard-delete permission",
       "file": "/Users/aarusso/Development/stech/stynx/reference/api/test/integration/reference-api.runtime.spec.ts",
-      "durationMs": 1361.0162499999988
-    },
-    {
-      "name": "@stynx/reference-api e2e work items runs happy create, update, read, and list for work items, entries, and locks with audit rows",
-      "file": "/Users/aarusso/Development/stech/stynx/reference/api/test/e2e/flows/work-items.e2e.ts",
-      "durationMs": 905.7238750000006
-    },
-    {
-      "name": "@stynx/reference-api e2e flow design and runtime runs design authoring, runtime execution, form completion, signals, analytics, and audit rows",
-      "file": "/Users/aarusso/Development/stech/stynx/reference/api/test/e2e/flows/flow-design-and-runtime.e2e.ts",
-      "durationMs": 771.1544169999997
+      "durationMs": 607.7977919999976
     },
     {
       "name": "@stynx/reference-api runtime suite flow family: runs design, runtime, forms, tasks, signals, analytics, audit, and idempotency through HTTP",
       "file": "/Users/aarusso/Development/stech/stynx/reference/api/test/integration/reference-api.runtime.spec.ts",
-      "durationMs": 737.891040999999
+      "durationMs": 554.810125
     },
     {
-      "name": "@stynx/reference-api e2e documents soft-deletes, restores, and hard-deletes document object versions",
-      "file": "/Users/aarusso/Development/stech/stynx/reference/api/test/e2e/flows/documents.e2e.ts",
-      "durationMs": 671.0037090000005
+      "name": "@stynx/reference-api runtime suite family 1: isolates live and archive rows by tenant across sample tables",
+      "file": "/Users/aarusso/Development/stech/stynx/reference/api/test/integration/reference-api.runtime.spec.ts",
+      "durationMs": 530.942750000002
     },
     {
       "name": "@stynx/reference-api runtime suite family 13: demonstrates cascade size behavior within limits and on breach",
       "file": "/Users/aarusso/Development/stech/stynx/reference/api/test/integration/reference-api.runtime.spec.ts",
-      "durationMs": 509.2754160000004
+      "durationMs": 427.6235830000005
     },
     {
-      "name": "@stynx/reference-api e2e documents uploads, completes, and downloads a document with audit rows",
-      "file": "/Users/aarusso/Development/stech/stynx/reference/api/test/e2e/flows/documents.e2e.ts",
-      "durationMs": 489.988292
-    },
-    {
-      "name": "@stynx/reference-api e2e records and notes soft-deletes and restores notes and records with archive assertions",
-      "file": "/Users/aarusso/Development/stech/stynx/reference/api/test/e2e/flows/records-and-notes.e2e.ts",
-      "durationMs": 397.2990839999993
-    },
-    {
-      "name": "@stynx/reference-api e2e auth and permissions denies missing permissions, grants write permission, invalidates the cache, and revokes it again",
-      "file": "/Users/aarusso/Development/stech/stynx/reference/api/test/e2e/flows/auth-and-permissions.e2e.ts",
-      "durationMs": 389.8502499999995
-    },
-    {
-      "name": "@stynx/reference-api runtime suite family 3: writes audit rows for audited routes",
+      "name": "@stynx/reference-api runtime suite family 11: enforces cascade and block FK annotations",
       "file": "/Users/aarusso/Development/stech/stynx/reference/api/test/integration/reference-api.runtime.spec.ts",
-      "durationMs": 387.1290829999998
+      "durationMs": 426.42212500000096
+    },
+    {
+      "name": "reference dev-auth production gate omits dev-login from module assembly when STYNX_ENVIRONMENT is production",
+      "file": "/Users/aarusso/Development/stech/stynx/reference/api/test/integration/reference-dev-auth.gating.spec.ts",
+      "durationMs": 351.76720900000055
+    },
+    {
+      "name": "@stynx/reference-api controller delegation applies environment-driven rate-limit metadata with fallback parsing",
+      "file": "/Users/aarusso/Development/stech/stynx/reference/api/test/integration/reference-api.unit-coverage.spec.ts",
+      "durationMs": 348.35870799999975
+    },
+    {
+      "name": "@stynx/reference-api runtime suite family 10: returns 409 on restore conflicts against natural unique keys",
+      "file": "/Users/aarusso/Development/stech/stynx/reference/api/test/integration/reference-api.runtime.spec.ts",
+      "durationMs": 312.8477500000008
+    },
+    {
+      "name": "reference dev-auth production gate omits dev-login from module assembly when NODE_ENV is production",
+      "file": "/Users/aarusso/Development/stech/stynx/reference/api/test/integration/reference-dev-auth.gating.spec.ts",
+      "durationMs": 311.14116699999977
     }
   ]
 }

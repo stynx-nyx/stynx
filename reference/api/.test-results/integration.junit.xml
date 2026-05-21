@@ -1,187 +1,133 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="76" failures="0" errors="0" time="99.779444251">
-    <testsuite name="test/integration/reference-api.runtime.spec.ts" timestamp="2026-05-19T10:50:03.992Z" hostname="thiamat-1903.local" tests="17" failures="0" errors="0" skipped="0" time="19.803765625">
-        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; family 1: isolates live and archive rows by tenant across sample tables" time="1.36101625">
+<testsuites name="vitest tests" tests="58" failures="0" errors="0" time="26.182991251">
+    <testsuite name="test/integration/reference-api.runtime.spec.ts" timestamp="2026-05-21T02:13:14.447Z" hostname="thiamat-1903.local" tests="17" failures="0" errors="0" skipped="0" time="19.076539709">
+        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; family 1: isolates live and archive rows by tenant across sample tables" time="0.53094275">
         </testcase>
-        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; emits the SPEC 11.2 Prometheus metric names" time="0.298917375">
+        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; emits the SPEC 11.2 Prometheus metric names" time="0.093455458">
         </testcase>
-        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; family 2: denies routes when @Permission grants are missing" time="0.251430583">
+        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; family 2: denies routes when @Permission grants are missing" time="0.0862965">
         </testcase>
-        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; family 3: writes audit rows for audited routes" time="0.387129083">
+        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; family 3: writes audit rows for audited routes" time="0.117411583">
         </testcase>
-        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; flow family: keeps Flow routes behind STYNX auth and permission guards" time="0.229267417">
+        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; flow family: keeps Flow routes behind STYNX auth and permission guards" time="0.127415917">
         </testcase>
-        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; flow family: runs design, runtime, forms, tasks, signals, analytics, audit, and idempotency through HTTP" time="0.737891041">
+        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; flow family: runs design, runtime, forms, tasks, signals, analytics, audit, and idempotency through HTTP" time="0.554810125">
         </testcase>
-        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; family 4: enforces collection scope on document download" time="0.285380042">
+        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; family 4: enforces collection scope on document download" time="0.233563875">
         </testcase>
-        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; family 5: rate-limit blocks repeated high-cost route usage" time="0.15215">
+        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; family 5: rate-limit blocks repeated high-cost route usage" time="0.1532355">
         </testcase>
-        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; family 6: enforces read-only routes against writes" time="0.109286458">
+        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; family 6: enforces read-only routes against writes" time="0.110888458">
         </testcase>
-        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; family 7: replays idempotent record creation without duplicating rows" time="0.109814417">
+        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; family 7: replays idempotent record creation without duplicating rows" time="0.140047792">
         </testcase>
-        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; family 8: performs a soft-delete round trip through trash and restore" time="0.188964166">
+        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; family 8: performs a soft-delete round trip through trash and restore" time="0.2017185">
         </testcase>
-        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; family 9: rejects hard delete without the hard-delete permission" time="0.155465875">
+        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; family 9: rejects hard delete without the hard-delete permission" time="0.607797792">
         </testcase>
-        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; family 10: returns 409 on restore conflicts against natural unique keys" time="0.184470166">
+        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; family 10: returns 409 on restore conflicts against natural unique keys" time="0.31284775">
         </testcase>
-        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; family 11: enforces cascade and block FK annotations" time="0.380152291">
+        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; family 11: enforces cascade and block FK annotations" time="0.426422125">
         </testcase>
-        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; family 12: keeps archive mirrors in sync for all sample tables" time="0.130695083">
+        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; family 12: keeps archive mirrors in sync for all sample tables" time="0.135637458">
         </testcase>
-        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; family 13: demonstrates cascade size behavior within limits and on breach" time="0.509275416">
+        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; family 13: demonstrates cascade size behavior within limits and on breach" time="0.427623583">
         </testcase>
-        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; supports live stack smoke routes needed for local verification" time="0.093126417">
-        </testcase>
-    </testsuite>
-    <testsuite name="test/e2e/flows/audit.e2e.ts" timestamp="2026-05-19T10:50:03.999Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="3.863244125">
-        <testcase classname="test/e2e/flows/audit.e2e.ts" name="@stynx/reference-api e2e audit &gt; records a mutating route in audit.log, audit.events, and the hash-chain columns" time="0.110799542">
-        </testcase>
-        <testcase classname="test/e2e/flows/audit.e2e.ts" name="@stynx/reference-api e2e audit &gt; allows an audit reader to query the log and keeps credential material out of audit metadata" time="0.012524666">
-        </testcase>
-        <testcase classname="test/e2e/flows/audit.e2e.ts" name="@stynx/reference-api e2e audit &gt; denies audit-log access to an actor without platform audit permission" time="0.01348">
-        </testcase>
-        <testcase classname="test/e2e/flows/audit.e2e.ts" name="@stynx/reference-api e2e audit &gt; keeps audit queries scoped by tenant filters across tenant records" time="0.068717375">
+        <testcase classname="test/integration/reference-api.runtime.spec.ts" name="@stynx/reference-api runtime suite &gt; supports live stack smoke routes needed for local verification" time="0.101049">
         </testcase>
     </testsuite>
-    <testsuite name="test/e2e/flows/auth-and-permissions.e2e.ts" timestamp="2026-05-19T10:50:04.011Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="4.523098625">
-        <testcase classname="test/e2e/flows/auth-and-permissions.e2e.ts" name="@stynx/reference-api e2e auth and permissions &gt; logs in through the reference auth route, verifies the token, publishes JWKS, and audits the session" time="0.128993583">
+    <testsuite name="test/integration/reference-api.unit-coverage.spec.ts" timestamp="2026-05-21T02:13:14.451Z" hostname="thiamat-1903.local" tests="15" failures="0" errors="0" skipped="0" time="0.362830042">
+        <testcase classname="test/integration/reference-api.unit-coverage.spec.ts" name="@stynx/reference-api controller delegation &gt; applies environment-driven rate-limit metadata with fallback parsing" time="0.348358708">
         </testcase>
-        <testcase classname="test/e2e/flows/auth-and-permissions.e2e.ts" name="@stynx/reference-api e2e auth and permissions &gt; denies missing permissions, grants write permission, invalidates the cache, and revokes it again" time="0.38985025">
+        <testcase classname="test/integration/reference-api.unit-coverage.spec.ts" name="@stynx/reference-api controller delegation &gt; delegates sample resource controllers to ReferenceSampleService" time="0.003277958">
         </testcase>
-        <testcase classname="test/e2e/flows/auth-and-permissions.e2e.ts" name="@stynx/reference-api e2e auth and permissions &gt; keeps permission introspection and record access scoped by tenant" time="0.1734725">
+        <testcase classname="test/integration/reference-api.unit-coverage.spec.ts" name="@stynx/reference-api controller delegation &gt; delegates dev auth controller operations" time="0.000289333">
         </testcase>
-    </testsuite>
-    <testsuite name="test/e2e/flows/documents.e2e.ts" timestamp="2026-05-19T10:50:04.023Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="17.050531916">
-        <testcase classname="test/e2e/flows/documents.e2e.ts" name="@stynx/reference-api e2e documents &gt; uploads, completes, and downloads a document with audit rows" time="0.489988292">
+        <testcase classname="test/integration/reference-api.unit-coverage.spec.ts" name="@stynx/reference-api controller delegation &gt; verifies STYNX auth headers and rejects missing bearer tokens" time="0.001344958">
         </testcase>
-        <testcase classname="test/e2e/flows/documents.e2e.ts" name="@stynx/reference-api e2e documents &gt; denies document writes to the read-only viewer actor" time="0.09190575">
+        <testcase classname="test/integration/reference-api.unit-coverage.spec.ts" name="@stynx/reference-api sample service &gt; passes document operations through to DocumentsService and returns status envelopes" time="0.000357625">
         </testcase>
-        <testcase classname="test/e2e/flows/documents.e2e.ts" name="@stynx/reference-api e2e documents &gt; isolates documents across tenants through HTTP and RLS" time="0.049445333">
+        <testcase classname="test/integration/reference-api.unit-coverage.spec.ts" name="@stynx/reference-api sample service &gt; creates and updates sample records with defaults and actor context" time="0.002004083">
         </testcase>
-        <testcase classname="test/e2e/flows/documents.e2e.ts" name="@stynx/reference-api e2e documents &gt; soft-deletes, restores, and hard-deletes document object versions" time="0.671003709">
+        <testcase classname="test/integration/reference-api.unit-coverage.spec.ts" name="@stynx/reference-api sample service &gt; covers delete helpers, missing context errors, and bigint response serialization" time="0.001593333">
         </testcase>
-    </testsuite>
-    <testsuite name="test/e2e/flows/error-matrix.e2e.ts" timestamp="2026-05-19T10:50:04.024Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="3.743235583">
-        <testcase classname="test/e2e/flows/error-matrix.e2e.ts" name="@stynx/reference-api e2e error matrix &gt; runs an audited happy-path mutation that anchors the matrix" time="0.154158417">
+        <testcase classname="test/integration/reference-api.unit-coverage.spec.ts" name="@stynx/reference-api sample service &gt; covers list defaults, clamp boundaries, missing archive rows, and serialization recursion" time="0.001711708">
         </testcase>
-        <testcase classname="test/e2e/flows/error-matrix.e2e.ts" name="@stynx/reference-api e2e error matrix &gt; returns canonical authentication, authorization, and idempotency errors" time="0.076815875">
+        <testcase classname="test/integration/reference-api.unit-coverage.spec.ts" name="@stynx/reference-api dev auth service and probes &gt; logs in through demo tenant setup and primes permission cache when available" time="0.000702583">
         </testcase>
-        <testcase classname="test/e2e/flows/error-matrix.e2e.ts" name="@stynx/reference-api e2e error matrix &gt; surfaces read-only transaction violations through a read-only route" time="0.077210333">
+        <testcase classname="test/integration/reference-api.unit-coverage.spec.ts" name="@stynx/reference-api dev auth service and probes &gt; logs in with default tenant/email and tolerates missing optional permission cache" time="0.000333834">
         </testcase>
-        <testcase classname="test/e2e/flows/error-matrix.e2e.ts" name="@stynx/reference-api e2e error matrix &gt; rejects hard delete without hard-delete permission and does not write a hard-delete audit row" time="0.165805916">
+        <testcase classname="test/integration/reference-api.unit-coverage.spec.ts" name="@stynx/reference-api dev auth service and probes &gt; resolves tenants by explicit id and falls back from unknown slug" time="0.0001005">
         </testcase>
-        <testcase classname="test/e2e/flows/error-matrix.e2e.ts" name="@stynx/reference-api e2e error matrix &gt; maps cross-tenant record access to 404 and preserves RLS isolation" time="0.14195525">
+        <testcase classname="test/integration/reference-api.unit-coverage.spec.ts" name="@stynx/reference-api dev auth service and probes &gt; covers direct dev-auth existing membership and missing inserted ids" time="0.000190916">
         </testcase>
-    </testsuite>
-    <testsuite name="test/e2e/flows/flow-design-and-runtime.e2e.ts" timestamp="2026-05-19T10:50:04.025Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="4.481859125">
-        <testcase classname="test/e2e/flows/flow-design-and-runtime.e2e.ts" name="@stynx/reference-api e2e flow design and runtime &gt; runs design authoring, runtime execution, form completion, signals, analytics, and audit rows" time="0.771154417">
+        <testcase classname="test/integration/reference-api.unit-coverage.spec.ts" name="@stynx/reference-api dev auth service and probes &gt; rejects blank dev auth email and unavailable providers" time="0.00019825">
         </testcase>
-        <testcase classname="test/e2e/flows/flow-design-and-runtime.e2e.ts" name="@stynx/reference-api e2e flow design and runtime &gt; denies unauthenticated and missing-permission design mutations" time="0.014781042">
+        <testcase classname="test/integration/reference-api.unit-coverage.spec.ts" name="@stynx/reference-api dev auth service and probes &gt; covers probe error and hot-path branches" time="0.001138584">
         </testcase>
-        <testcase classname="test/e2e/flows/flow-design-and-runtime.e2e.ts" name="@stynx/reference-api e2e flow design and runtime &gt; keeps flow runs hidden across tenant-scoped RLS reads" time="0.3287495">
+        <testcase classname="test/integration/reference-api.unit-coverage.spec.ts" name="@stynx/reference-api dev auth service and probes &gt; throws when the rate limit store provider is unavailable" time="0.000175833">
         </testcase>
     </testsuite>
-    <testsuite name="test/e2e/flows/i18n.e2e.ts" timestamp="2026-05-19T10:50:04.025Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="4.454666292">
-        <testcase classname="test/e2e/flows/i18n.e2e.ts" name="@stynx/reference-api e2e i18n &gt; updates tenant locale overrides over HTTP and persists them in tenant settings" time="0.048496458">
+    <testsuite name="test/integration/reference-app-governance.spec.ts" timestamp="2026-05-21T02:13:14.453Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="0.005375333">
+        <testcase classname="test/integration/reference-app-governance.spec.ts" name="reference app data, RBAC, and route governance artifacts &gt; keeps the authored RBAC inventory aligned with controller permission decorators" time="0.0033595">
         </testcase>
-        <testcase classname="test/e2e/flows/i18n.e2e.ts" name="@stynx/reference-api e2e i18n &gt; uses the tenant settings locale when no supported Accept-Language header is present" time="0.005910625">
+        <testcase classname="test/integration/reference-app-governance.spec.ts" name="reference app data, RBAC, and route governance artifacts &gt; keeps route bindings aligned with Angular permission guards" time="0.0005565">
         </testcase>
-        <testcase classname="test/e2e/flows/i18n.e2e.ts" name="@stynx/reference-api e2e i18n &gt; returns a validation error for malformed override JSON" time="0.006215125">
-        </testcase>
-        <testcase classname="test/e2e/flows/i18n.e2e.ts" name="@stynx/reference-api e2e i18n &gt; keeps tenant override reads scoped by tenant and RLS" time="0.048946">
+        <testcase classname="test/integration/reference-app-governance.spec.ts" name="reference app data, RBAC, and route governance artifacts &gt; documents reference FKs, PII policy, and migration verification hooks" time="0.00086925">
         </testcase>
     </testsuite>
-    <testsuite name="test/e2e/flows/idempotency.e2e.ts" timestamp="2026-05-19T10:50:04.025Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="5.095631791">
-        <testcase classname="test/e2e/flows/idempotency.e2e.ts" name="@stynx/reference-api e2e idempotency &gt; replays a matching record creation without duplicating record rows" time="0.219411916">
+    <testsuite name="test/integration/reference-dev-auth.api-matrix.spec.ts" timestamp="2026-05-21T02:13:14.454Z" hostname="thiamat-1903.local" tests="7" failures="0" errors="0" skipped="0" time="0.1505925">
+        <testcase classname="test/integration/reference-dev-auth.api-matrix.spec.ts" name="ReferenceDevAuthController API error matrix &gt; GET /_reference/demo-tenants &gt; returns 200 with the public demo tenant inventory" time="0.03842675">
         </testcase>
-        <testcase classname="test/e2e/flows/idempotency.e2e.ts" name="@stynx/reference-api e2e idempotency &gt; rejects divergent replay for the same tenant, actor, route, and idempotency key" time="0.263125334">
+        <testcase classname="test/integration/reference-dev-auth.api-matrix.spec.ts" name="ReferenceDevAuthController API error matrix &gt; GET /_reference/demo-tenants &gt; returns 400 when X-Request-Id is malformed" time="0.002996125">
         </testcase>
-        <testcase classname="test/e2e/flows/idempotency.e2e.ts" name="@stynx/reference-api e2e idempotency &gt; scopes identical idempotency keys by tenant and preserves RLS isolation" time="0.227316958">
+        <testcase classname="test/integration/reference-dev-auth.api-matrix.spec.ts" name="ReferenceDevAuthController API error matrix &gt; POST /_reference/dev-login &gt; returns 201 with a STYNX session bundle for a valid dev-login request" time="0.010740292">
         </testcase>
-        <testcase classname="test/e2e/flows/idempotency.e2e.ts" name="@stynx/reference-api e2e idempotency &gt; allows a reused public idempotency key to execute again after durable and cache expiry" time="0.298317375">
+        <testcase classname="test/integration/reference-dev-auth.api-matrix.spec.ts" name="ReferenceDevAuthController API error matrix &gt; POST /_reference/dev-login &gt; returns 400 for malformed JSON" time="0.002968166">
         </testcase>
-    </testsuite>
-    <testsuite name="test/e2e/flows/privacy.e2e.ts" timestamp="2026-05-19T10:50:04.026Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="3.726617042">
-        <testcase classname="test/e2e/flows/privacy.e2e.ts" name="@stynx/reference-api e2e privacy &gt; exports a subject bundle with live and archive privacy rows" time="0.071082208">
+        <testcase classname="test/integration/reference-dev-auth.api-matrix.spec.ts" name="ReferenceDevAuthController API error matrix &gt; POST /_reference/dev-login &gt; returns 401 when the email is blank" time="0.002510958">
         </testcase>
-        <testcase classname="test/e2e/flows/privacy.e2e.ts" name="@stynx/reference-api e2e privacy &gt; rejects an export request without a subject or tenant selector" time="0.007534917">
+        <testcase classname="test/integration/reference-dev-auth.api-matrix.spec.ts" name="ReferenceDevAuthController API error matrix &gt; GET /_reference/auth-verify &gt; returns 200 and auth timing for a valid STYNX bearer token" time="0.002065917">
         </testcase>
-        <testcase classname="test/e2e/flows/privacy.e2e.ts" name="@stynx/reference-api e2e privacy &gt; keeps tenant-filtered exports and direct RLS reads isolated" time="0.043060459">
-        </testcase>
-        <testcase classname="test/e2e/flows/privacy.e2e.ts" name="@stynx/reference-api e2e privacy &gt; reports retention candidates without deleting archive rows" time="0.011321667">
-        </testcase>
-        <testcase classname="test/e2e/flows/privacy.e2e.ts" name="@stynx/reference-api e2e privacy &gt; erases a subject across live and archive stores and writes LGPD audit rows" time="0.040938084">
+        <testcase classname="test/integration/reference-dev-auth.api-matrix.spec.ts" name="ReferenceDevAuthController API error matrix &gt; GET /_reference/auth-verify &gt; returns 400 when the STYNX bearer token is missing" time="0.002087292">
         </testcase>
     </testsuite>
-    <testsuite name="test/e2e/flows/profile-and-preferences.e2e.ts" timestamp="2026-05-19T10:50:04.027Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="3.725518542">
-        <testcase classname="test/e2e/flows/profile-and-preferences.e2e.ts" name="@stynx/reference-api e2e profile and preferences &gt; creates the user profile through dev login, verifies the session, and persists preferences" time="0.124625416">
+    <testsuite name="test/integration/reference-dev-auth.gating.spec.ts" timestamp="2026-05-21T02:13:14.455Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="5.71534825">
+        <testcase classname="test/integration/reference-dev-auth.gating.spec.ts" name="reference dev-auth production gate &gt; mounts the reference dev-auth surface outside production" time="5.051635334">
         </testcase>
-        <testcase classname="test/e2e/flows/profile-and-preferences.e2e.ts" name="@stynx/reference-api e2e profile and preferences &gt; rejects blank profile identity input before creating a user" time="0.005920959">
+        <testcase classname="test/integration/reference-dev-auth.gating.spec.ts" name="reference dev-auth production gate &gt; omits dev-login from module assembly when NODE_ENV is production" time="0.311141167">
         </testcase>
-        <testcase classname="test/e2e/flows/profile-and-preferences.e2e.ts" name="@stynx/reference-api e2e profile and preferences &gt; keeps preference reads and writes scoped to the active tenant" time="0.141135167">
-        </testcase>
-        <testcase classname="test/e2e/flows/profile-and-preferences.e2e.ts" name="@stynx/reference-api e2e profile and preferences &gt; uses the stored locale preference when resolving localized profile copy" time="0.016608541">
+        <testcase classname="test/integration/reference-dev-auth.gating.spec.ts" name="reference dev-auth production gate &gt; omits dev-login from module assembly when STYNX_ENVIRONMENT is production" time="0.351767209">
         </testcase>
     </testsuite>
-    <testsuite name="test/e2e/flows/rate-limit.e2e.ts" timestamp="2026-05-19T10:50:04.027Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="4.845679542">
-        <testcase classname="test/e2e/flows/rate-limit.e2e.ts" name="@stynx/reference-api e2e rate limit &gt; allows the first high-cost tenant request and records the audit row" time="0.274259417">
+    <testsuite name="test/integration/reference-probes.api-matrix.spec.ts" timestamp="2026-05-21T02:13:14.456Z" hostname="thiamat-1903.local" tests="11" failures="0" errors="0" skipped="0" time="0.866081292">
+        <testcase classname="test/integration/reference-probes.api-matrix.spec.ts" name="ReferenceProbesController API error matrix &gt; GET /_probes/data-tx &gt; returns 200 with the data transaction overhead header for a valid STYNX token" time="0.038894375">
         </testcase>
-        <testcase classname="test/e2e/flows/rate-limit.e2e.ts" name="@stynx/reference-api e2e rate limit &gt; blocks the second same-tenant lock request with retry headers" time="0.123117584">
+        <testcase classname="test/integration/reference-probes.api-matrix.spec.ts" name="ReferenceProbesController API error matrix &gt; GET /_probes/data-tx &gt; returns 400 when the route-local STYNX bearer token is missing" time="0.003935459">
         </testcase>
-        <testcase classname="test/e2e/flows/rate-limit.e2e.ts" name="@stynx/reference-api e2e rate limit &gt; denies the viewer before a write can consume the tenant bucket" time="0.022527125">
+        <testcase classname="test/integration/reference-probes.api-matrix.spec.ts" name="ReferenceProbesController API error matrix &gt; POST /_probes/idempotency &gt; returns 201 and persists the idempotency response for a valid key" time="0.0186805">
         </testcase>
-        <testcase classname="test/e2e/flows/rate-limit.e2e.ts" name="@stynx/reference-api e2e rate limit &gt; keeps rate-limit buckets and lock rows isolated across tenants" time="0.202765375">
+        <testcase classname="test/integration/reference-probes.api-matrix.spec.ts" name="ReferenceProbesController API error matrix &gt; POST /_probes/idempotency &gt; returns 400 when the idempotency key is missing" time="0.002622542">
         </testcase>
-    </testsuite>
-    <testsuite name="test/e2e/flows/records-and-notes.e2e.ts" timestamp="2026-05-19T10:50:04.028Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="5.753851792">
-        <testcase classname="test/e2e/flows/records-and-notes.e2e.ts" name="@stynx/reference-api e2e records and notes &gt; runs happy CRUD for records and notes with audit rows" time="0.319319458">
+        <testcase classname="test/integration/reference-probes.api-matrix.spec.ts" name="ReferenceProbesController API error matrix &gt; POST /_probes/idempotency &gt; returns 201 with replay headers when the same key and body are replayed" time="0.012463292">
         </testcase>
-        <testcase classname="test/e2e/flows/records-and-notes.e2e.ts" name="@stynx/reference-api e2e records and notes &gt; denies write routes to the read-only viewer actor" time="0.024725208">
+        <testcase classname="test/integration/reference-probes.api-matrix.spec.ts" name="ReferenceProbesController API error matrix &gt; POST /_probes/idempotency &gt; returns 422 when the same idempotency key is replayed with a different body" time="0.012101375">
         </testcase>
-        <testcase classname="test/e2e/flows/records-and-notes.e2e.ts" name="@stynx/reference-api e2e records and notes &gt; isolates records and notes across tenants through HTTP and RLS" time="0.130640625">
+        <testcase classname="test/integration/reference-probes.api-matrix.spec.ts" name="ReferenceProbesController API error matrix &gt; GET /_probes/ratelimit &gt; returns 200 with rate-limit probe timing headers" time="0.003412125">
         </testcase>
-        <testcase classname="test/e2e/flows/records-and-notes.e2e.ts" name="@stynx/reference-api e2e records and notes &gt; soft-deletes and restores notes and records with archive assertions" time="0.397299084">
+        <testcase classname="test/integration/reference-probes.api-matrix.spec.ts" name="ReferenceProbesController API error matrix &gt; GET /_probes/readonly-write &gt; returns 401 when the protected readonly probe is called without a bearer token" time="0.007304375">
         </testcase>
-    </testsuite>
-    <testsuite name="test/e2e/flows/role-and-permission-management.e2e.ts" timestamp="2026-05-19T10:50:04.028Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="4.807630542">
-        <testcase classname="test/e2e/flows/role-and-permission-management.e2e.ts" name="@stynx/reference-api e2e role and permission management &gt; creates a tenant role, attaches a permission, assigns it, revokes it, and audits RBAC changes" time="0.226773709">
+        <testcase classname="test/integration/reference-probes.api-matrix.spec.ts" name="ReferenceProbesController API error matrix &gt; GET /_probes/readonly-write &gt; returns 403 when the actor lacks sample:probe:read" time="0.03964825">
         </testcase>
-        <testcase classname="test/e2e/flows/role-and-permission-management.e2e.ts" name="@stynx/reference-api e2e role and permission management &gt; keeps tenant-scoped role rows isolated by RLS" time="0.063453125">
+        <testcase classname="test/integration/reference-probes.api-matrix.spec.ts" name="ReferenceProbesController API error matrix &gt; GET /_probes/readonly-write &gt; returns 429 after the tenant readonly probe bucket is exhausted" time="0.018693125">
+        </testcase>
+        <testcase classname="test/integration/reference-probes.api-matrix.spec.ts" name="ReferenceProbesController API error matrix &gt; GET /_probes/readonly-write &gt; returns 500 READONLY_VIOLATION for an authorized readonly write attempt" time="0.003837792">
         </testcase>
     </testsuite>
-    <testsuite name="test/e2e/flows/sessions-management.e2e.ts" timestamp="2026-05-19T10:50:04.029Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="4.396230917">
-        <testcase classname="test/e2e/flows/sessions-management.e2e.ts" name="@stynx/reference-api e2e sessions management &gt; exchanges a Cognito login for an active STYNX session and exposes public JWKS" time="0.114909125">
+    <testsuite name="test/integration/sample.schema.spec.ts" timestamp="2026-05-21T02:13:14.457Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.006224125">
+        <testcase classname="test/integration/sample.schema.spec.ts" name="@stynx/reference-api schema contract &gt; brands every sample table as soft deletable" time="0.003290875">
         </testcase>
-        <testcase classname="test/e2e/flows/sessions-management.e2e.ts" name="@stynx/reference-api e2e sessions management &gt; denies session inspection to an actor without platform session-management permission" time="0.125441417">
-        </testcase>
-        <testcase classname="test/e2e/flows/sessions-management.e2e.ts" name="@stynx/reference-api e2e sessions management &gt; revokes another active session and records the session mirror/audit trail" time="0.182315958">
-        </testcase>
-        <testcase classname="test/e2e/flows/sessions-management.e2e.ts" name="@stynx/reference-api e2e sessions management &gt; logs out the current route session while leaving a sibling session active" time="0.213261458">
-        </testcase>
-        <testcase classname="test/e2e/flows/sessions-management.e2e.ts" name="@stynx/reference-api e2e sessions management &gt; keeps mirrored active sessions isolated by tenant under RLS" time="0.045750083">
-        </testcase>
-    </testsuite>
-    <testsuite name="test/e2e/flows/tenancy.e2e.ts" timestamp="2026-05-19T10:50:04.029Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="4.000833">
-        <testcase classname="test/e2e/flows/tenancy.e2e.ts" name="@stynx/reference-api e2e tenancy &gt; lists, provisions, reads, and updates tenants with audit rows" time="0.097107875">
-        </testcase>
-        <testcase classname="test/e2e/flows/tenancy.e2e.ts" name="@stynx/reference-api e2e tenancy &gt; suspends, archives, and purges tenants with lifecycle audit rows" time="0.023437125">
-        </testcase>
-        <testcase classname="test/e2e/flows/tenancy.e2e.ts" name="@stynx/reference-api e2e tenancy &gt; denies platform tenant operations when the platform-admin guard is disabled" time="0.002328292">
-        </testcase>
-        <testcase classname="test/e2e/flows/tenancy.e2e.ts" name="@stynx/reference-api e2e tenancy &gt; keeps tenant rows isolated under tenant-scoped RLS reads" time="0.036542166">
-        </testcase>
-    </testsuite>
-    <testsuite name="test/e2e/flows/work-items.e2e.ts" timestamp="2026-05-19T10:50:04.030Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="5.507049792">
-        <testcase classname="test/e2e/flows/work-items.e2e.ts" name="@stynx/reference-api e2e work items &gt; runs happy create, update, read, and list for work items, entries, and locks with audit rows" time="0.905723875">
-        </testcase>
-        <testcase classname="test/e2e/flows/work-items.e2e.ts" name="@stynx/reference-api e2e work items &gt; denies work-item writes to the viewer actor" time="0.038123417">
-        </testcase>
-        <testcase classname="test/e2e/flows/work-items.e2e.ts" name="@stynx/reference-api e2e work items &gt; isolates work items, entries, and locks across tenants through HTTP and RLS" time="0.336501417">
-        </testcase>
-        <testcase classname="test/e2e/flows/work-items.e2e.ts" name="@stynx/reference-api e2e work items &gt; soft-deletes and restores work-item entries, locks, and items with archive assertions" time="0.331239541">
+        <testcase classname="test/integration/sample.schema.spec.ts" name="@stynx/reference-api schema contract &gt; keeps the expected sample table names" time="0.000950208">
         </testcase>
     </testsuite>
 </testsuites>

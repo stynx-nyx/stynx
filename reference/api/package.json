@@ -14,7 +14,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
     "test": "node ./../../scripts/run-and-record.mjs --package @stynx/reference-api --level unit --runner vitest -- vitest run --config ./vitest.config.ts",
-    "test:int": "node ../../scripts/run-and-record.mjs --package @stynx/reference-api --level integration --runner vitest -- vitest run --config ./vitest.config.ts test/integration/reference-api.runtime.spec.ts test/e2e/flows/*.e2e.ts"
+    "test:int": "node ../../scripts/run-and-record.mjs --package @stynx/reference-api --level integration --runner vitest -- vitest run --config ./vitest.config.ts test/integration/*.spec.ts",
+    "test:e2e": "node ../../scripts/run-and-record.mjs --package @stynx/reference-api --level e2e --runner vitest -- vitest run --config ./vitest.e2e.config.ts test/e2e/flows/*.e2e.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.19",

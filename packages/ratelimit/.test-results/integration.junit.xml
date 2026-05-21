@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="3" failures="0" errors="0" time="4.49000875">
-    <testsuite name="test/integration/rate-limit.integration.spec.ts" timestamp="2026-05-20T02:02:37.939Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="4.49000875">
-        <testcase classname="test/integration/rate-limit.integration.spec.ts" name="Rate limit integration &gt; applies per-tenant overrides via core.rate_limit_overrides" time="0.01113825">
+<testsuites name="vitest tests" tests="3" failures="0" errors="0" time="5.746646958">
+    <testsuite name="test/integration/rate-limit.integration.spec.ts" timestamp="2026-05-21T02:16:56.963Z" hostname="thiamat-1903.local" tests="3" failures="0" errors="0" skipped="0" time="5.746646958">
+        <testcase classname="test/integration/rate-limit.integration.spec.ts" name="Rate limit integration &gt; applies per-tenant overrides via core.rate_limit_overrides" time="0.021869334">
         </testcase>
-        <testcase classname="test/integration/rate-limit.integration.spec.ts" name="Rate limit integration &gt; keeps Redis sliding-window atomic under 1000 concurrent hits" time="0.129110416">
+        <testcase classname="test/integration/rate-limit.integration.spec.ts" name="Rate limit integration &gt; keeps Redis sliding-window atomic under 1000 concurrent hits" time="0.075171">
         </testcase>
-        <testcase classname="test/integration/rate-limit.integration.spec.ts" name="Rate limit integration &gt; emits headers and blocks above the resolved limit" time="1.73257325">
+        <testcase classname="test/integration/rate-limit.integration.spec.ts" name="Rate limit integration &gt; emits headers and blocks above the resolved limit" time="2.074841125">
         </testcase>
     </testsuite>
 </testsuites>

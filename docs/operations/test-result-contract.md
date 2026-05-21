@@ -73,6 +73,32 @@ should defer to `metric.kind` and ignore the others.
 | `perf`        | `perf-smoke`                          | `perf`        | —                | —               |
 | `smoke`       | `rls-smoke`                           | `none`        | —                | —               |
 
+## Matrix display semantics
+
+`pnpm test:matrix*` renders package-owned obligations only. Reusable
+packages intentionally rely on the reference applications for E2E
+coverage, so only `@stynx/reference-api` and `@stynx/reference-web`
+are expected to show E2E pass/fail cells.
+
+Cell markers mean:
+
+- Blank: intentionally not applicable for that package and level.
+- `-`: no package script/config exists, and the level is not currently
+  an obligation for that package.
+- `0`: the level is applicable/configured, but no current canonical
+  artifact exists.
+- `FAIL`: a current artifact exists and did not pass.
+
+The marker legend is hidden by default; pass `--legend` when an
+operator-facing run should print it. Mutation status cells append the
+assigned threshold tier to the rounded score: `¹` for default,
+`²` for strict, and `³` for strictest. Colored output also assigns a
+distinct ANSI color to each tier marker.
+
+Perf is not a package column. Current perf evidence is a single
+workspace benchmark (`stynx-workspace/.test-results/perf.json`) and is
+rendered as a global summary after the status/timing matrix.
+
 ## Threshold source of truth
 
 `scripts/test-matrix.config.json` carries every
@@ -89,9 +115,10 @@ Schema:
 {
   "policies": {
     "coverage": { "default": {...}, "strict": {...}, "complete": {...}, "off": {...} },
-    "mutation": { "default": 60, "strict": 80, "strictest": 85 }
+    "mutation": { "default": 60, "strict": 80, "strictest": 85 },
+    "perf": { "default": { "p50_ms": 5000, "p95_ms": 9000, "rps_min": 0.2 } }
   },
-  "defaults":  { "coverage": "complete", "mutation": "default" },
+  "defaults":  { "coverage": "complete", "mutation": "default", "perf": "default" },
   "perPackage": {
     "@stynx/auth":    { "mutation": "strictest" },
     "@stynx/data":    { "mutation": "strictest" },
@@ -151,6 +178,7 @@ they parse the artifact, never re-run the suite.
    `scripts/run-and-record.mjs` and route to it from the runner switch.
 3. **Renderer:** if the level should appear in the matrix, extend
    `scripts/render-test-matrix.mjs`'s level list + `readCanonicalResult`.
+   Keep global-only levels like perf outside the per-package column list.
 4. **Thresholds:** if the level has a pass/fail metric, add a `policies.<level>`
    block in `scripts/test-matrix.config.json` and a `get<Level>Threshold`
    helper in `test-thresholds.mjs`.

@@ -992,4 +992,263 @@ describe('IdempotencyInterceptor', () => {
     expect(backend.set).toHaveBeenCalledTimes(1); // cache promotion
     expect(durable.lookup).toHaveBeenCalledTimes(1);
   });
+
+  // ===========================================================================
+  // WAVE-05A targeted mutation kills.
+  // ===========================================================================
+
+  describe('expiresAt arithmetic (kills ArithmeticOperator at L304, L325)', () => {
+    it('persists expiresAt = Date.now() + ttlMs on a successful response', async () => {
+      const reflector = createReflector();
+      const backend = createBackend();
+      const durable: IdempotencyStore = {
+        lookup: vi.fn(async () => null), reserve: vi.fn(async () => true),
+        persistResponse: vi.fn(async () => undefined), clearReservation: vi.fn(async () => undefined),
+      };
+      const interceptor = new IdempotencyInterceptor(reflector, { ttlMs: 60_000 }, durable, backend);
+      const request = { method: 'POST', url: '/v1/items', tenantId: 't', actor: { id: 'u' }, headers: { 'Idempotency-Key': 'k-arith' }, body: { a: 1 } };
+      const response = createResponseStub();
+      const before = Date.now();
+      await lastValueFrom(interceptor.intercept(createExecutionContext(request, response, annotatedHandler(reflector)), { handle: () => of({ id: 'ok' }) } as CallHandler));
+      const after = Date.now();
+      const stored = (backend.set as Mock).mock.calls[0]![1] as IdempotencyStoredEntry;
+      expect(stored.expiresAt).toBeGreaterThanOrEqual(before + 60_000);
+      expect(stored.expiresAt).toBeLessThanOrEqual(after + 60_000);
+    });
+
+    it('persists expiresAt = Date.now() + ttlMs on a 4xx HttpException error path', async () => {
+      const reflector = createReflector();
+      const backend = createBackend();
+      const durable: IdempotencyStore = {
+        lookup: vi.fn(async () => null), reserve: vi.fn(async () => true),
+        persistResponse: vi.fn(async () => undefined), clearReservation: vi.fn(async () => undefined),
+      };
+      const interceptor = new IdempotencyInterceptor(reflector, { ttlMs: 30_000 }, durable, backend);
+      const request = { method: 'POST', url: '/v1/items', tenantId: 't', actor: { id: 'u' }, headers: { 'Idempotency-Key': 'k-arith-err' }, body: { a: 1 } };
+      const response = createResponseStub();
+      const before = Date.now();
+      await expect(lastValueFrom(interceptor.intercept(createExecutionContext(request, response, annotatedHandler(reflector)), { handle: () => throwError(() => new HttpException('bad', 400)) } as CallHandler))).rejects.toBeInstanceOf(HttpException);
+      const after = Date.now();
+      const stored = (backend.set as Mock).mock.calls[0]![1] as IdempotencyStoredEntry;
+      expect(stored.statusCode).toBe(400);
+      expect(stored.expiresAt).toBeGreaterThanOrEqual(before + 30_000);
+      expect(stored.expiresAt).toBeLessThanOrEqual(after + 30_000);
+    });
+
+    it('defaults ttlMs to 86_400_000 ms (24 * 60 * 60 * 1000) when omitted', async () => {
+      const reflector = createReflector();
+      const backend = createBackend();
+      const durable: IdempotencyStore = {
+        lookup: vi.fn(async () => null), reserve: vi.fn(async () => true),
+        persistResponse: vi.fn(async () => undefined), clearReservation: vi.fn(async () => undefined),
+      };
+      const interceptor = new IdempotencyInterceptor(reflector, {}, durable, backend);
+      const request = { method: 'POST', url: '/v1/items', tenantId: 't', actor: { id: 'u' }, headers: { 'Idempotency-Key': 'k-default' }, body: { a: 1 } };
+      const response = createResponseStub();
+      const before = Date.now();
+      await lastValueFrom(interceptor.intercept(createExecutionContext(request, response, annotatedHandler(reflector)), { handle: () => of({ id: 'ok' }) } as CallHandler));
+      const after = Date.now();
+      const stored = (backend.set as Mock).mock.calls[0]![1] as IdempotencyStoredEntry;
+      const oneDayMs = 24 * 60 * 60 * 1000;
+      expect(stored.expiresAt).toBeGreaterThanOrEqual(before + oneDayMs);
+      expect(stored.expiresAt).toBeLessThanOrEqual(after + oneDayMs);
+    });
+  });
+
+  describe('status-code boundary (kills EqualityOperator at L307)', () => {
+    function fixtures() {
+      const reflector = createReflector();
+      const backend = createBackend();
+      const durable: IdempotencyStore = {
+        lookup: vi.fn(async () => null), reserve: vi.fn(async () => true),
+        persistResponse: vi.fn(async () => undefined), clearReservation: vi.fn(async () => undefined),
+      };
+      const interceptor = new IdempotencyInterceptor(reflector, {}, durable, backend);
+      return { reflector, backend, durable, interceptor };
+    }
+
+    it('on 200, persists to durable AND sets backend', async () => {
+      const { reflector, backend, durable, interceptor } = fixtures();
+      const response = createResponseStub();
+      response.statusCode = 200;
+      await lastValueFrom(interceptor.intercept(createExecutionContext(
+        { method: 'POST', url: '/v1/items', tenantId: 't', actor: { id: 'u' }, headers: { 'Idempotency-Key': 'k-ok' }, body: { a: 1 } },
+        response, annotatedHandler(reflector),
+      ), { handle: () => of({ id: 'ok' }) } as CallHandler));
+      expect(backend.set).toHaveBeenCalledTimes(1);
+      expect(durable.persistResponse).toHaveBeenCalledTimes(1);
+      expect(durable.clearReservation).not.toHaveBeenCalled();
+    });
+
+    it('on statusCode === 500 boundary, clears reservation and does NOT persist (kills `< 500` → `<= 500`)', async () => {
+      const { reflector, backend, durable, interceptor } = fixtures();
+      const response = createResponseStub();
+      response.statusCode = 500;
+      await lastValueFrom(interceptor.intercept(createExecutionContext(
+        { method: 'POST', url: '/v1/items', tenantId: 't', actor: { id: 'u' }, headers: { 'Idempotency-Key': 'k-500' }, body: { a: 1 } },
+        response, annotatedHandler(reflector),
+      ), { handle: () => of({ id: 'failed' }) } as CallHandler));
+      expect(durable.clearReservation).toHaveBeenCalledTimes(1);
+      expect(backend.set).not.toHaveBeenCalled();
+      expect(durable.persistResponse).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('header value rejection (kills ConditionalExpression at L147)', () => {
+    function build(headers: Record<string, unknown>) {
+      const reflector = createReflector();
+      const interceptor = new IdempotencyInterceptor(reflector, {}, undefined, createBackend());
+      const request = { method: 'POST', url: '/v1/items', tenantId: 't', actor: { id: 'u' }, headers, body: { a: 1 } };
+      const response = createResponseStub();
+      // intercept() throws synchronously on missing/empty key — wrap in fn.
+      return () => interceptor.intercept(createExecutionContext(request, response, annotatedHandler(reflector)), { handle: () => of('x') } as CallHandler);
+    }
+
+    it('rejects empty-string Idempotency-Key as missing', () => {
+      expect(build({ 'Idempotency-Key': '' })).toThrow(BadRequestException);
+    });
+
+    it('rejects whitespace-only Idempotency-Key after trim', () => {
+      expect(build({ 'Idempotency-Key': '   ' })).toThrow(BadRequestException);
+    });
+
+    it('BadRequest message names the header (kills StringLiteral on L129)', () => {
+      expect(build({})).toThrow(/Idempotency-Key header is required/);
+    });
+  });
+
+  describe('user-id precedence (kills LogicalOperator at L78)', () => {
+    async function captureContext(request: Record<string, unknown>) {
+      const reflector = createReflector();
+      const backend = createBackend();
+      const interceptor = new IdempotencyInterceptor(reflector, {}, undefined, backend);
+      await lastValueFrom(interceptor.intercept(createExecutionContext(request, createResponseStub(), annotatedHandler(reflector)), { handle: () => of('x') } as CallHandler));
+      return (backend.set as Mock).mock.calls[0]![0] as IdempotencyDecisionContext;
+    }
+
+    it('uses principal.id when present (precedence: principal > actor > user)', async () => {
+      const ctx = await captureContext({
+        method: 'POST', url: '/v1/items', tenantId: 't',
+        principal: { id: 'P' }, actor: { id: 'A' }, user: { id: 'U' },
+        headers: { 'Idempotency-Key': 'k' }, body: {},
+      });
+      expect(ctx.userId).toBe('P');
+    });
+
+    it('falls through to actor.id when principal is absent', async () => {
+      const ctx = await captureContext({
+        method: 'POST', url: '/v1/items', tenantId: 't',
+        actor: { id: 'A' }, user: { id: 'U' },
+        headers: { 'Idempotency-Key': 'k' }, body: {},
+      });
+      expect(ctx.userId).toBe('A');
+    });
+
+    it('falls through to user.id when both principal and actor are absent', async () => {
+      const ctx = await captureContext({
+        method: 'POST', url: '/v1/items', tenantId: 't',
+        user: { id: 'U' },
+        headers: { 'Idempotency-Key': 'k' }, body: {},
+      });
+      expect(ctx.userId).toBe('U');
+    });
+  });
+
+  describe('method + path normalization (kills MethodExpression at L74, StringLiterals at L84-85)', () => {
+    async function captureRouteKey(request: Record<string, unknown>) {
+      const reflector = createReflector();
+      const backend = createBackend();
+      const interceptor = new IdempotencyInterceptor(reflector, {}, undefined, backend);
+      await lastValueFrom(interceptor.intercept(createExecutionContext(request, createResponseStub(), annotatedHandler(reflector)), { handle: () => of('x') } as CallHandler));
+      return ((backend.set as Mock).mock.calls[0]![0] as IdempotencyDecisionContext).routeKey;
+    }
+
+    it('normalizes lowercase method to uppercase (kills toLowerCase mutation)', async () => {
+      expect(await captureRouteKey({ method: 'post', url: '/v1/items', tenantId: 't', actor: { id: 'u' }, headers: { 'Idempotency-Key': 'k' }, body: {} })).toBe('POST:/v1/items');
+    });
+
+    it('strips query string from the route key (kills StringLiteral on "?")', async () => {
+      expect(await captureRouteKey({ method: 'POST', url: '/v1/items?x=1', tenantId: 't', actor: { id: 'u' }, headers: { 'Idempotency-Key': 'k' }, body: {} })).toBe('POST:/v1/items');
+    });
+
+    it('prefers originalUrl over url', async () => {
+      expect(await captureRouteKey({ method: 'POST', originalUrl: '/proxied', url: '/v1/items', tenantId: 't', actor: { id: 'u' }, headers: { 'Idempotency-Key': 'k' }, body: {} })).toBe('POST:/proxied');
+    });
+
+    it('defaults to empty path when both originalUrl and url are absent', async () => {
+      expect(await captureRouteKey({ method: 'POST', tenantId: 't', actor: { id: 'u' }, headers: { 'Idempotency-Key': 'k' }, body: {} })).toBe('POST:');
+    });
+
+    it('defaults to empty method when method is not a string', async () => {
+      expect(await captureRouteKey({ url: '/v1/items', tenantId: 't', actor: { id: 'u' }, headers: { 'Idempotency-Key': 'k' }, body: {} })).toBe(':/v1/items');
+    });
+  });
+
+  describe('stableStringify determinism (kills StringLiteral/BlockStatement at L158-172)', () => {
+    async function captureFingerprint(body: unknown) {
+      const reflector = createReflector();
+      const backend = createBackend();
+      const interceptor = new IdempotencyInterceptor(reflector, {}, undefined, backend);
+      await lastValueFrom(interceptor.intercept(createExecutionContext(
+        { method: 'POST', url: '/v1/items', tenantId: 't', actor: { id: 'u' }, headers: { 'Idempotency-Key': 'k' }, body },
+        createResponseStub(), annotatedHandler(reflector),
+      ), { handle: () => of('x') } as CallHandler));
+      return ((backend.set as Mock).mock.calls[0]![0] as IdempotencyDecisionContext).requestFingerprint;
+    }
+
+    it('produces identical fingerprint for reversed object key order', async () => {
+      expect(await captureFingerprint({ z: 1, a: 2 })).toBe(await captureFingerprint({ a: 2, z: 1 }));
+    });
+
+    it('produces DIFFERENT fingerprints for array element order swaps (array order matters)', async () => {
+      expect(await captureFingerprint({ items: [1, 2, 3] })).not.toBe(await captureFingerprint({ items: [3, 2, 1] }));
+    });
+
+    it('treats null and undefined as equivalent ("null")', async () => {
+      expect(await captureFingerprint(null)).toBe(await captureFingerprint(undefined));
+    });
+  });
+
+  describe('replay headers (kills StringLiteral survivors on header names + values at L218)', () => {
+    it('on cache replay emits X-Stynx-Idempotency-Lookup-Ms + X-Idempotency-Key + Idempotency-Replayed=true', async () => {
+      const reflector = createReflector();
+      const backend = createBackend();
+      (backend.get as Mock).mockImplementation(async (ctx: IdempotencyDecisionContext) => ({
+        requestFingerprint: ctx.requestFingerprint, statusCode: 201, body: { id: 'cached' }, headers: {},
+        expiresAt: Date.now() + 60_000, status: 'completed' as const,
+      }));
+      const interceptor = new IdempotencyInterceptor(reflector, {}, undefined, backend);
+      const response = createResponseStub();
+      await lastValueFrom(interceptor.intercept(createExecutionContext(
+        { method: 'POST', url: '/v1/items', tenantId: 't', actor: { id: 'u' }, headers: { 'Idempotency-Key': 'k-replay' }, body: { a: 1 } },
+        response, annotatedHandler(reflector),
+      ), { handle: () => of('fresh') } as CallHandler));
+      const headerCalls = (response.setHeader as Mock).mock.calls.map((c) => c[0]);
+      expect(headerCalls).toContain('X-Stynx-Idempotency-Lookup-Ms');
+      expect((response.setHeader as Mock).mock.calls).toContainEqual(['X-Idempotency-Key', 'k-replay']);
+      expect((response.setHeader as Mock).mock.calls).toContainEqual(['Idempotency-Replayed', 'true']);
+    });
+  });
+
+  describe('captureReplayableHeaders (kills BlockStatement at L374-375)', () => {
+    it('copies the response headers object verbatim into the stored entry (subset assertion since interceptor itself adds timing header)', async () => {
+      const reflector = createReflector();
+      const backend = createBackend();
+      const durable: IdempotencyStore = {
+        lookup: vi.fn(async () => null), reserve: vi.fn(async () => true),
+        persistResponse: vi.fn(async () => undefined), clearReservation: vi.fn(async () => undefined),
+      };
+      const interceptor = new IdempotencyInterceptor(reflector, {}, durable, backend);
+      const response = createResponseStub();
+      response.headers = { 'X-Custom': 'value', 'X-Request-ID': 'r-1' };
+      await lastValueFrom(interceptor.intercept(createExecutionContext(
+        { method: 'POST', url: '/v1/items', tenantId: 't', actor: { id: 'u' }, headers: { 'Idempotency-Key': 'k-hdr' }, body: { a: 1 } },
+        response, annotatedHandler(reflector),
+      ), { handle: () => of('x') } as CallHandler));
+      const stored = (backend.set as Mock).mock.calls[0]![1] as IdempotencyStoredEntry;
+      // BlockStatement {} mutation on captureReplayableHeaders would store {}
+      // (no keys at all). Subset match still detects the missing custom keys.
+      expect(stored.headers).toMatchObject({ 'X-Custom': 'value', 'X-Request-ID': 'r-1' });
+    });
+  });
 });

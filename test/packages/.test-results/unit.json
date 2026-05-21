@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-20T03:42:50.280Z",
-  "endedAt": "2026-05-20T03:43:02.786Z",
-  "durationMs": 12506,
+  "startedAt": "2026-05-21T02:11:54.169Z",
+  "endedAt": "2026-05-21T02:12:01.238Z",
+  "durationMs": 7069,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-46133-1779248570280.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-73122-1779329514169.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/test/packages/.test-results/unit.junit.xml"
     ],
@@ -36,63 +36,63 @@
     "kind": "none"
   },
   "totals": {
-    "files": 19,
-    "tests": 66,
-    "passed": 66,
+    "files": 20,
+    "tests": 67,
+    "passed": 67,
     "failed": 0,
     "skipped": 0,
     "todo": 0
   },
   "slowestTests": [
     {
-      "name": "RateLimitGuard bypasses health-check path",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/rate-limit/rate-limit.guard.spec.ts",
-      "durationMs": 121.66700000000037
+      "name": "@stynx/auth cognito admin adapter builds options from env and infers profile strategy when AWS_PROFILE exists",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/auth/cognito-admin.adapter.spec.ts",
+      "durationMs": 218.22887500000002
     },
     {
-      "name": "SlaMonitorInterceptor emits sample event with threshold/breach information",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/sla/sla-monitor.interceptor.spec.ts",
-      "durationMs": 87.64383300000009
-    },
-    {
-      "name": "IdempotencyInterceptor replays in-memory cached response for same key/fingerprint",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/idempotency/idempotency.interceptor.spec.ts",
-      "durationMs": 69.171292
-    },
-    {
-      "name": "AuditInterceptor metadata redaction applies metadata redaction policy before sink write",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/audit/audit-interceptor-redaction.spec.ts",
-      "durationMs": 54.563874999999825
+      "name": "REST route coverage ledger declares every production controller route as a named test obligation",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/rest-route-ledger.spec.ts",
+      "durationMs": 30.24645899999996
     },
     {
       "name": "PgIdentityLocalSyncAdapter syncs users/groups into local tables and returns counters",
       "file": "/Users/aarusso/Development/stech/stynx/test/packages/identity-admin/pg-local-sync.adapter.spec.ts",
-      "durationMs": 48.64087500000005
+      "durationMs": 17.460666000000174
     },
     {
-      "name": "RateLimitGuard enforces in-memory limit when distributed path is unavailable",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/rate-limit/rate-limit.guard.spec.ts",
-      "durationMs": 38.323249999999916
+      "name": "@stynx/auth cognito admin adapter maps cognito errors into canonical identity-admin errors",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/auth/cognito-admin.adapter.spec.ts",
+      "durationMs": 16.940124999999853
     },
     {
-      "name": "AuditInterceptor metadata redaction writes raw metadata when no redaction policy is configured",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/audit/audit-interceptor-redaction.spec.ts",
-      "durationMs": 37.198457999999846
+      "name": "PecIdentityAdminFacade maps list and update request/response to pec-compatible shape",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/identity-admin/integration-facades.spec.ts",
+      "durationMs": 11.777624999999944
+    },
+    {
+      "name": "SlaMonitorInterceptor emits sample event with threshold/breach information",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/sla/sla-monitor.interceptor.spec.ts",
+      "durationMs": 10.056584000000157
+    },
+    {
+      "name": "@stynx/auth cognito admin adapter throws validation error when required env is missing",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/auth/cognito-admin.adapter.spec.ts",
+      "durationMs": 9.75825000000009
+    },
+    {
+      "name": "PormIdentityAdminFacade maps verify and sync operations for porm compatibility",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/identity-admin/integration-facades.spec.ts",
+      "durationMs": 9.074292000000014
     },
     {
       "name": "TenantLifecycleMiddleware sets tenantId and releases tenant-bound client on response events",
       "file": "/Users/aarusso/Development/stech/stynx/test/packages/db-context/tenant-lifecycle.middleware.spec.ts",
-      "durationMs": 31.090333999999984
+      "durationMs": 8.508833999999979
     },
     {
-      "name": "IdempotencyInterceptor uses durable store when configured and tenant exists",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/idempotency/idempotency.interceptor.spec.ts",
-      "durationMs": 24.094166999999743
-    },
-    {
-      "name": "AuthContextGuard throws forbidden when tenant entitlement fails",
-      "file": "/Users/aarusso/Development/stech/stynx/test/packages/auth/auth-context.guard.spec.ts",
-      "durationMs": 16.208458000000064
+      "name": "ClaimFirstTenantEntitlementPolicy accepts when tenant appears in claim list",
+      "file": "/Users/aarusso/Development/stech/stynx/test/packages/auth/tenant-entitlement.spec.ts",
+      "durationMs": 8.072332999999844
     }
   ]
 }

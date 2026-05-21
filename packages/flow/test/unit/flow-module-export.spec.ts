@@ -6,6 +6,10 @@ import * as flow from '../../src/index';
 
 describe('@stynx/flow module barrel', () => {
   it('top-level index.ts is importable', () => {
-    expect(flow).toBeDefined();
+    expect(flow).toEqual(expect.objectContaining({
+      StynxFlowModule: expect.any(Function),
+      FlowRuntimeService: expect.any(Function),
+      FlowFormsService: expect.any(Function),
+    }));
   });
 });

@@ -181,5 +181,133 @@ describe('SessionJwtSigningService.signAccessToken', () => {
       const result = await svc.signAccessToken(makeRecord(), new Date());
       expect(result.token.split('.')).toHaveLength(3);
     });
+
+    // =========================================================================
+    // WAVE-05A targeted kills — distinguish error messages so ConditionalExpression
+    // mutations on the guard chain are observable through which error path fires.
+    // =========================================================================
+
+    it('rejects null with the EXACT "Session key material is missing" message (kills ConditionalExpression L34)', async () => {
+      const svc = makeService(makeSecretLoader('null'));
+      await expect(svc.signAccessToken(makeRecord(), new Date())).rejects.toThrow(
+        /Session key material is missing$/u,
+      );
+    });
+
+    it('rejects undefined with the EXACT "Session key material is missing" message', async () => {
+      const svc = makeService(makeSecretLoader('null')); // null is the JSON.stringify for undefined
+      await expect(svc.signAccessToken(makeRecord(), new Date())).rejects.toThrow(
+        /Session key material is missing$/u,
+      );
+    });
+
+    it('rejects scalar with EXACT "Session key material is missing" (kills LogicalOperator || → &&)', async () => {
+      // Original `!value || typeof value !== 'object'`:
+      // For a scalar (truthy non-object), `!value` is false, `typeof !== 'object'` is true → throws "missing".
+      // Mutation `&&`: false && true → false → does NOT throw at L34 → falls through to currentKid check → throws "missing currentKid" (different message).
+      const svc = makeService(makeSecretLoader('"oops"'));
+      await expect(svc.signAccessToken(makeRecord(), new Date())).rejects.toThrow(
+        /Session key material is missing$/u,
+      );
+    });
+
+    it('rejects missing currentKid with EXACT "missing currentKid" message (kills StringLiteral L44)', async () => {
+      const svc = makeService(makeSecretLoader(JSON.stringify({ keys: [] })));
+      await expect(svc.signAccessToken(makeRecord(), new Date())).rejects.toThrow(
+        /Session key material is missing currentKid$/u,
+      );
+    });
+
+    it('rejects empty-string currentKid with EXACT "missing currentKid" (kills EqualityOperator currentKid.length === 0 → !== 0)', async () => {
+      const svc = makeService(makeSecretLoader(JSON.stringify({ currentKid: '', keys: [] })));
+      await expect(svc.signAccessToken(makeRecord(), new Date())).rejects.toThrow(
+        /Session key material is missing currentKid$/u,
+      );
+    });
+
+    it('rejects non-string currentKid (numeric) with the SAME currentKid message (kills ConditionalExpression typeof)', async () => {
+      const svc = makeService(makeSecretLoader(JSON.stringify({ currentKid: 42, keys: [] })));
+      await expect(svc.signAccessToken(makeRecord(), new Date())).rejects.toThrow(
+        /Session key material is missing currentKid$/u,
+      );
+    });
+
+    it('rejects non-array keys with EXACT "has no keys" message (kills ConditionalExpression on Array.isArray)', async () => {
+      const svc = makeService(
+        makeSecretLoader(JSON.stringify({ currentKid: 'k1', keys: 'not-array' })),
+      );
+      await expect(svc.signAccessToken(makeRecord(), new Date())).rejects.toThrow(
+        /Session key material has no keys$/u,
+      );
+    });
+
+    it('rejects empty-array keys with EXACT "has no keys" message (kills EqualityOperator keys.length === 0 → !== 0)', async () => {
+      const svc = makeService(
+        makeSecretLoader(JSON.stringify({ currentKid: 'k1', keys: [] })),
+      );
+      await expect(svc.signAccessToken(makeRecord(), new Date())).rejects.toThrow(
+        /Session key material has no keys$/u,
+      );
+    });
+
+    it('rejects null key entry with EXACT "is invalid" message (kills ConditionalExpression L54)', async () => {
+      const svc = makeService(
+        makeSecretLoader(JSON.stringify({ currentKid: 'k1', keys: [null] })),
+      );
+      await expect(svc.signAccessToken(makeRecord(), new Date())).rejects.toThrow(
+        /Session signing key entry is invalid$/u,
+      );
+    });
+
+    it('rejects key entry missing kid with EXACT "is incomplete" message (kills LogicalOperator || chain L63-67)', async () => {
+      const svc = makeService(
+        makeSecretLoader(JSON.stringify({
+          currentKid: 'k1',
+          keys: [{ publicKeyPem: 'p', privateKeyPem: 'q' }],
+        })),
+      );
+      await expect(svc.signAccessToken(makeRecord(), new Date())).rejects.toThrow(
+        /Session signing key entry is incomplete$/u,
+      );
+    });
+
+    it('rejects key entry missing privateKeyPem with EXACT "is incomplete" message', async () => {
+      const svc = makeService(
+        makeSecretLoader(JSON.stringify({
+          currentKid: 'k1',
+          keys: [{ kid: 'k1', publicKeyPem: 'p' }],
+        })),
+      );
+      await expect(svc.signAccessToken(makeRecord(), new Date())).rejects.toThrow(
+        /Session signing key entry is incomplete$/u,
+      );
+    });
+  });
+
+  describe('base64UrlEncode (kills Regex survivors at jwt-signing.service.ts:30)', () => {
+    // The base64UrlEncode helper is private; we observe its output via the
+    // produced JWT segments. The padding-strip /=+$/u differs from the
+    // mutations /=+/u (no anchor, strips ALL contiguous = runs anywhere) and
+    // /=$/u (single trailing =).
+    it('produces a 3-part token with no trailing = in any segment', async () => {
+      const { publicKey, privateKey } = genKeyPair();
+      const raw = JSON.stringify({
+        currentKid: 'k1',
+        keys: [{ kid: 'k1', publicKeyPem: publicKey, privateKeyPem: privateKey }],
+      });
+      const svc = new SessionJwtSigningService(
+        {
+          timeouts: { accessSeconds: 300, refreshSeconds: 86_400, idleSeconds: 1800 },
+          jwt: { secretId: 'session/keys', cacheTtlMs: 60_000 },
+        } as never,
+        makeSecretLoader(raw) as never,
+      );
+      const result = await svc.signAccessToken(makeRecord(), new Date());
+      const parts = result.token.split('.');
+      // No '=' in any base64url segment (trailing padding is stripped).
+      for (const segment of parts) {
+        expect(segment.endsWith('=')).toBe(false);
+      }
+    });
   });
 });

@@ -4,6 +4,7 @@ import {
   ForbiddenError,
   NotFoundError,
   RateLimitError,
+  StynxSdkError,
   UnauthorizedError,
   ValidationError,
 } from '../src/errors';
@@ -128,7 +129,7 @@ describe('@stynx-web/sdk transport', () => {
       fetchFn: async () => response(200, bodies.shift() ?? '{}'),
     });
 
-    await expect(client.get('/empty')).resolves.toBeUndefined();
+    await expect(client.get('/empty')).resolves.toBe(undefined);
     await expect(client.put('/array', { ok: true })).resolves.toEqual([1, 2]);
     await expect(client.patch('/invalid-json', { ok: true })).resolves.toBe('{bad');
     await expect(client.delete('/default-options')).resolves.toEqual({});
@@ -304,5 +305,404 @@ describe('@stynx-web/sdk transport', () => {
     });
 
     await expect(anonymousClient.get('/secure')).rejects.toBeInstanceOf(UnauthorizedError);
+  });
+
+  // =========================================================================
+  // WAVE-05A Phase 3 — sdk/transport.ts mutation kills.
+  // =========================================================================
+
+  it('trimEdgeSlash strips ALL trailing slashes from baseUrl (kills Regex anchor mutations)', async () => {
+    const calls: Array<{ url: string }> = [];
+    const client = new StynxSdkClient({
+      baseUrl: 'https://api.example.test///',
+      fetchFn: async (input: RequestInfo) => {
+        calls.push({ url: typeof input === 'string' ? input : (input as Request).url });
+        return response(200, '{"ok":true}', { 'content-type': 'application/json' });
+      },
+    });
+    await client.get('/users');
+    expect(calls[0]!.url).toBe('https://api.example.test/users');
+  });
+
+  it('buildQuery returns "" when query is undefined (kills StringLiteral at transport.ts:30)', async () => {
+    const calls: Array<{ url: string }> = [];
+    const client = new StynxSdkClient({
+      baseUrl: 'https://api.example.test',
+      fetchFn: async (input: RequestInfo) => {
+        calls.push({ url: typeof input === 'string' ? input : (input as Request).url });
+        return response(200, '{"ok":true}', { 'content-type': 'application/json' });
+      },
+    });
+    await client.get('/users');
+    expect(calls[0]!.url).toBe('https://api.example.test/users');
+    expect(calls[0]!.url).not.toContain('?');
+    expect(calls[0]!.url).not.toContain('Stryker');
+  });
+
+  it('buildQuery prefixes "?" only when there are non-null params', async () => {
+    const calls: Array<{ url: string }> = [];
+    const client = new StynxSdkClient({
+      baseUrl: 'https://api.example.test',
+      fetchFn: async (input: RequestInfo) => {
+        calls.push({ url: typeof input === 'string' ? input : (input as Request).url });
+        return response(200, '{"ok":true}', { 'content-type': 'application/json' });
+      },
+    });
+    await client.get('/users', { query: { foo: null, bar: undefined } });
+    expect(calls[0]!.url).toBe('https://api.example.test/users');
+    await client.get('/users', { query: { foo: 'bar' } });
+    expect(calls[1]!.url).toBe('https://api.example.test/users?foo=bar');
+  });
+
+  it('parseBody returns undefined for empty body', async () => {
+    const client = new StynxSdkClient({
+      baseUrl: 'https://api.example.test',
+      fetchFn: async () => response(204, '', { 'content-type': 'application/json' }),
+    });
+    await expect(client.get('/empty')).resolves.toBe(undefined);
+  });
+
+  it('parseBody detects JSON arrays by leading "[" (kills StringLiteral on the bracket literal)', async () => {
+    const client = new StynxSdkClient({
+      baseUrl: 'https://api.example.test',
+      fetchFn: async () => response(200, '[{"id":1}]', { }),
+    });
+    await expect(client.get('/array')).resolves.toEqual([{ id: 1 }]);
+  });
+
+  it('parseBody detects JSON objects by leading "{" (kills StringLiteral on the brace literal)', async () => {
+    const client = new StynxSdkClient({
+      baseUrl: 'https://api.example.test',
+      fetchFn: async () => response(200, '{"id":1}', { }),
+    });
+    await expect(client.get('/object')).resolves.toEqual({ id: 1 });
+  });
+
+  it('parseBody returns raw string when body is non-JSON-shaped and no content-type', async () => {
+    const client = new StynxSdkClient({
+      baseUrl: 'https://api.example.test',
+      fetchFn: async () => response(200, 'plain text body', { }),
+    });
+    await expect(client.get('/text')).resolves.toBe('plain text body');
+  });
+
+  it('isJsonResponse handles mixed-case content-type (kills MethodExpression .toLowerCase)', async () => {
+    const client = new StynxSdkClient({
+      baseUrl: 'https://api.example.test',
+      fetchFn: async () => response(200, '{"ok":true}', { 'content-type': 'Application/JSON; charset=utf-8' }),
+    });
+    await expect(client.get('/mixed-case')).resolves.toEqual({ ok: true });
+  });
+
+  // ===========================================================================
+  // WAVE-05A Turn B.3a — sdk transport hot-zone kills.
+  // Targets the 5 fake-fetch scenarios + hasHeader case-insensitivity.
+  // ===========================================================================
+
+  describe('hasHeader case-insensitivity (kills MethodExpression at transport.ts:44)', () => {
+    it('does not double-set Authorization when caller passes lowercase "authorization"', async () => {
+      const calls: Array<{ init?: HttpRequestInitLike }> = [];
+      const client = new StynxSdkClient({
+        baseUrl: 'https://api.example.test',
+        fetchFn: async (_url, init) => {
+          calls.push({ init });
+          return response(200, '{}', { 'content-type': 'application/json' });
+        },
+        authProvider: {
+          getAccessToken: async () => 'provider-token',
+          refresh: async () => null,
+        },
+      });
+      await client.get('/x', { headers: { authorization: 'Bearer caller-token' } });
+      // Lowercase authorization must be detected as already-set → no Bearer override.
+      const sent = calls[0]!.init!.headers!;
+      const authHeaders = Object.entries(sent).filter(([k]) => k.toLowerCase() === 'authorization');
+      expect(authHeaders).toHaveLength(1);
+      expect(authHeaders[0]![1]).toBe('Bearer caller-token');
+    });
+
+    it('does not double-set x-tenant-id when caller passes mixed-case "X-Tenant-ID"', async () => {
+      const calls: Array<{ init?: HttpRequestInitLike }> = [];
+      const client = new StynxSdkClient({
+        baseUrl: 'https://api.example.test',
+        fetchFn: async (_url, init) => {
+          calls.push({ init });
+          return response(200, '{}', { 'content-type': 'application/json' });
+        },
+        tenantProvider: { getTenantId: async () => 'provider-tenant' },
+      });
+      await client.get('/x', { headers: { 'X-Tenant-ID': 'caller-tenant' } });
+      const sent = calls[0]!.init!.headers!;
+      const tenantHeaders = Object.entries(sent).filter(([k]) => k.toLowerCase() === 'x-tenant-id');
+      expect(tenantHeaders).toHaveLength(1);
+      expect(tenantHeaders[0]![1]).toBe('caller-tenant');
+    });
+  });
+
+  describe('parseBody early-return on empty body (kills ConditionalExpression at transport.ts:57)', () => {
+    it('returns undefined for empty body even when content-type is application/json', async () => {
+      const client = new StynxSdkClient({
+        baseUrl: 'https://api.example.test',
+        fetchFn: async () => response(200, '', { 'content-type': 'application/json' }),
+      });
+      await expect(client.get('/empty')).resolves.toBe(undefined);
+    });
+
+    it('returns undefined for empty body without content-type', async () => {
+      const client = new StynxSdkClient({
+        baseUrl: 'https://api.example.test',
+        fetchFn: async () => response(204, '', {}),
+      });
+      await expect(client.get('/empty')).resolves.toBe(undefined);
+    });
+  });
+
+  describe('resolveTenantId precedence (kills EqualityOperator at transport.ts:78)', () => {
+    it('explicit tenantId=null overrides the tenantProvider (kills `!== undefined` → `=== undefined`)', async () => {
+      const calls: Array<{ init?: HttpRequestInitLike }> = [];
+      const client = new StynxSdkClient({
+        baseUrl: 'https://api.example.test',
+        fetchFn: async (_url, init) => {
+          calls.push({ init });
+          return response(200, '{}', { 'content-type': 'application/json' });
+        },
+        tenantProvider: { getTenantId: async () => 'provider-tenant' },
+      });
+      // Explicit null should suppress the x-tenant-id header (not fall through to provider).
+      await client.get('/x', { tenantId: null });
+      const sent = calls[0]!.init!.headers!;
+      const tenantHeaders = Object.entries(sent).filter(([k]) => k.toLowerCase() === 'x-tenant-id');
+      expect(tenantHeaders).toHaveLength(0);
+    });
+
+    it('explicit tenantId=undefined falls through to the tenantProvider', async () => {
+      const calls: Array<{ init?: HttpRequestInitLike }> = [];
+      const client = new StynxSdkClient({
+        baseUrl: 'https://api.example.test',
+        fetchFn: async (_url, init) => {
+          calls.push({ init });
+          return response(200, '{}', { 'content-type': 'application/json' });
+        },
+        tenantProvider: { getTenantId: async () => 'provider-tenant' },
+      });
+      await client.get('/x');
+      const sent = calls[0]!.init!.headers!;
+      const tenantHeader = Object.entries(sent).find(([k]) => k.toLowerCase() === 'x-tenant-id');
+      expect(tenantHeader![1]).toBe('provider-tenant');
+    });
+  });
+
+  describe('refresh-and-replay sequence (kills ConditionalExpression survivors at transport.ts:133-141)', () => {
+    it('does NOT replay when refresh returns null — surfaces UnauthorizedError once (kills `if (refreshed)` mutation)', async () => {
+      const calls: Array<{ url: string }> = [];
+      const failures: unknown[] = [];
+      const client = new StynxSdkClient({
+        baseUrl: 'https://api.example.test',
+        fetchFn: async (input) => {
+          calls.push({ url: typeof input === 'string' ? input : (input as Request).url });
+          return response(401, '{"message":"expired"}', { 'content-type': 'application/json' });
+        },
+        authProvider: {
+          getAccessToken: async () => 'expired',
+          refresh: async () => null,  // refresh returns null → no replay
+          onAuthFailure: async (e) => { failures.push(e); },
+        },
+      });
+      await expect(client.get('/x')).rejects.toBeInstanceOf(UnauthorizedError);
+      // Exactly ONE call (no replay).
+      expect(calls).toHaveLength(1);
+      expect(failures).toHaveLength(1);
+    });
+
+    it('passes the parsed error body to onAuthFailure (kills BlockStatement {} at transport.ts:138)', async () => {
+      const failures: unknown[] = [];
+      const client = new StynxSdkClient({
+        baseUrl: 'https://api.example.test',
+        fetchFn: async () => response(401, '{"code":"AUTH_EXPIRED","message":"login required"}', {
+          'content-type': 'application/json',
+        }),
+        authProvider: {
+          getAccessToken: async () => 'expired',
+          refresh: async () => null,
+          onAuthFailure: async (e) => { failures.push(e); },
+        },
+      });
+      await expect(client.get('/x')).rejects.toMatchObject({ status: 401, message: 'login required' });
+      expect(failures).toHaveLength(1);
+      expect(failures[0]).toMatchObject({ status: 401, code: 'AUTH_EXPIRED' });
+    });
+
+    it('does NOT call onAuthFailure when refresh succeeds and replay is OK', async () => {
+      const failures: unknown[] = [];
+      let calls = 0;
+      const client = new StynxSdkClient({
+        baseUrl: 'https://api.example.test',
+        fetchFn: async () => {
+          calls += 1;
+          if (calls === 1) {
+            return response(401, '{"message":"expired"}', { 'content-type': 'application/json' });
+          }
+          return response(200, '{"ok":true}', { 'content-type': 'application/json' });
+        },
+        authProvider: {
+          getAccessToken: async () => 'expired',
+          refresh: async () => 'fresh',
+          onAuthFailure: async (e) => { failures.push(e); },
+        },
+      });
+      await expect(client.get('/x')).resolves.toEqual({ ok: true });
+      expect(failures).toHaveLength(0);
+    });
+  });
+
+  describe('body serialization + Content-Type (kills survivors at transport.ts:122-127)', () => {
+    it('serializes body via JSON.stringify and sets Content-Type when not provided', async () => {
+      const calls: Array<{ init?: HttpRequestInitLike }> = [];
+      const client = new StynxSdkClient({
+        baseUrl: 'https://api.example.test',
+        fetchFn: async (_url, init) => {
+          calls.push({ init });
+          return response(200, '{}', { 'content-type': 'application/json' });
+        },
+      });
+      await client.post('/x', { name: 'demo' });
+      expect(calls[0]!.init!.body).toBe(JSON.stringify({ name: 'demo' }));
+      expect((calls[0]!.init!.headers as Record<string, string>)['content-type']).toBe('application/json');
+    });
+
+    it('does NOT set Content-Type when caller already provided one (case-insensitive)', async () => {
+      const calls: Array<{ init?: HttpRequestInitLike }> = [];
+      const client = new StynxSdkClient({
+        baseUrl: 'https://api.example.test',
+        fetchFn: async (_url, init) => {
+          calls.push({ init });
+          return response(200, '{}', { 'content-type': 'application/json' });
+        },
+      });
+      await client.post('/x', { name: 'demo' }, { headers: { 'Content-Type': 'application/vnd.example+json' } });
+      const sent = calls[0]!.init!.headers as Record<string, string>;
+      // Only one content-type header, with the caller's value.
+      const ctHeaders = Object.entries(sent).filter(([k]) => k.toLowerCase() === 'content-type');
+      expect(ctHeaders).toHaveLength(1);
+      expect(ctHeaders[0]![1]).toBe('application/vnd.example+json');
+    });
+
+    it('omits body when request.body is undefined (kills ConditionalExpression at transport.ts:122)', async () => {  // legacy header for the test below
+      const calls: Array<{ init?: HttpRequestInitLike }> = [];
+      const client = new StynxSdkClient({
+        baseUrl: 'https://api.example.test',
+        fetchFn: async (_url, init) => {
+          calls.push({ init });
+          return response(200, '{}', { 'content-type': 'application/json' });
+        },
+      });
+      await client.get('/x');
+      expect(calls[0]!.init!.body).toBe(undefined);
+    });
+  });
+
+  // ===========================================================================
+  // WAVE-05A Turn B.3a — errors.ts per-class mutation kills.
+  // Each kills the StringLiteral / ConditionalExpression mutants at L51-72.
+  // ===========================================================================
+
+  describe('errors.ts createStynxSdkError per-class mapping', () => {
+    async function callWith(status: number, body: string) {
+      let captured: unknown;
+      const client = new StynxSdkClient({
+        baseUrl: 'https://api.example.test',
+        fetchFn: async () => response(status, body, { 'content-type': 'application/json' }),
+      });
+      try { await client.get('/x'); } catch (e) { captured = e; }
+      return captured;
+    }
+
+    it('401 → UnauthorizedError with status, message, code (kills L51 StringLiteral)', async () => {
+      const e = await callWith(401, '{"code":"AUTH_X","message":"login required"}');
+      expect(e).toBeInstanceOf(UnauthorizedError);
+      expect((e as UnauthorizedError).status).toBe(401);
+      expect((e as UnauthorizedError).code).toBe('AUTH_X');
+      expect((e as UnauthorizedError).message).toBe('login required');
+    });
+
+    it('403 → ForbiddenError with status (kills L54 EqualityOperator/ConditionalExpression)', async () => {
+      const e = await callWith(403, '{"message":"no access"}');
+      expect(e).toBeInstanceOf(ForbiddenError);
+      expect((e as ForbiddenError).status).toBe(403);
+    });
+
+    it('404 → NotFoundError', async () => {
+      const e = await callWith(404, '{"message":"gone"}');
+      expect(e).toBeInstanceOf(NotFoundError);
+    });
+
+    it('409 → ConflictError', async () => {
+      const e = await callWith(409, '{"message":"conflict"}');
+      expect(e).toBeInstanceOf(ConflictError);
+    });
+
+    it('429 → RateLimitError', async () => {
+      const e = await callWith(429, '{"message":"slow"}');
+      expect(e).toBeInstanceOf(RateLimitError);
+    });
+
+    it('400 → ValidationError (kills L67-68 EqualityOperator)', async () => {
+      const e = await callWith(400, '{"message":"bad"}');
+      expect(e).toBeInstanceOf(ValidationError);
+    });
+
+    it('422 → ValidationError (kills L68 status === 422 → !== 422 mutation)', async () => {
+      const e = await callWith(422, '{"message":"unprocessable"}');
+      expect(e).toBeInstanceOf(ValidationError);
+    });
+
+    it('500 with code ending in _VALIDATION_ERROR → ValidationError (kills L69 StringLiteral suffix)', async () => {
+      const e = await callWith(500, '{"code":"CUSTOM_VALIDATION_ERROR","message":"bad"}');
+      expect(e).toBeInstanceOf(ValidationError);
+      expect((e as ValidationError).code).toBe('CUSTOM_VALIDATION_ERROR');
+    });
+
+    it('500 with code NOT ending in _VALIDATION_ERROR → generic StynxSdkError, not ValidationError', async () => {
+      const e = await callWith(500, '{"code":"INTERNAL_FAILURE","message":"oops"}');
+      // Mutation that flips the endsWith logic would route this as ValidationError.
+      expect(e).not.toBeInstanceOf(ValidationError);
+      expect((e as StynxSdkError).status).toBe(500);
+    });
+
+    it('502 with no code → generic StynxSdkError (kills BlockStatement {} on 400/422 paths)', async () => {
+      const e = await callWith(502, '{"message":"gateway"}');
+      expect(e).not.toBeInstanceOf(ValidationError);
+      expect(e).not.toBeInstanceOf(UnauthorizedError);
+      expect(e).not.toBeInstanceOf(ForbiddenError);
+      expect(e).not.toBeInstanceOf(NotFoundError);
+      expect(e).not.toBeInstanceOf(ConflictError);
+      expect(e).not.toBeInstanceOf(RateLimitError);
+      expect((e as StynxSdkError).status).toBe(502);
+    });
+
+    it('falls back to "Request failed with status N" when payload has no message (kills L35 StringLiteral)', async () => {
+      const e = await callWith(404, '{}');
+      expect((e as NotFoundError).message).toBe('Request failed with status 404');
+    });
+
+    it('falls back to default message when payload.message is empty string (kills L32 EqualityOperator length > 0)', async () => {
+      const e = await callWith(404, '{"message":""}');
+      // Empty string fails the `length > 0` check → falls through to default.
+      expect((e as NotFoundError).message).toBe('Request failed with status 404');
+    });
+
+    it('preserves payload.context when present and discards when absent (kills resolveContext branches)', async () => {
+      const eWith = await callWith(409, '{"message":"x","context":{"field":"email"}}');
+      expect((eWith as ConflictError).context).toEqual({ field: 'email' });
+      const eWithout = await callWith(409, '{"message":"x"}');
+      expect((eWithout as ConflictError).context).toBe(undefined);
+    });
+
+    it('isObject rejects null payload (kills L28 LogicalOperator)', async () => {
+      // null payload → resolveMessage falls back to default.
+      const e = await callWith(500, 'null');
+      expect((e as StynxSdkError).message).toBe('Request failed with status 500');
+      expect((e as StynxSdkError).code).toBe(undefined);
+    });
   });
 });

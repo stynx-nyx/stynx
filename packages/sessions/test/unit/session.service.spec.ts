@@ -641,4 +641,86 @@ describe('SessionService', () => {
     await expect(service.revokeAllForTenant('tenant-missing')).resolves.toBe(0);
     expect(store.invalidations).toEqual([]);
   });
+
+  // ===========================================================================
+  // WAVE-05A targeted kills.
+  // ===========================================================================
+
+  describe('mirror payload excludes undefined membershipId (kills EqualityOperator + ObjectLiteral at session.service.ts:293, 320)', () => {
+    it('omits membershipId from mirror entry when session has none', async () => {
+      const store = new InMemorySessionStore();
+      const mirror = new RecordingMirror();
+      const options = resolveSessionsOptions({
+        issuer: 'https://sessions.test',
+        redis: { url: 'redis://127.0.0.1:6379' },
+        jwt: { keySet: buildKeySet() },
+      });
+      const service = new SessionService(options, store, new SessionJwtSigningService(options), mirror);
+      const bundle = await service.create('user-no-mem', 'tenant-1', 'cog-1');
+      await service.revoke(bundle.sid, 'revoked');
+      const entry = mirror.entries.at(-1)!;
+      expect(entry).not.toHaveProperty('membershipId');
+      expect(entry.tenantId).toBe('tenant-1');
+      expect(entry.userId).toBe('user-no-mem');
+    });
+
+    it('includes membershipId in mirror entry when session has one', async () => {
+      const store = new InMemorySessionStore();
+      const mirror = new RecordingMirror();
+      const options = resolveSessionsOptions({
+        issuer: 'https://sessions.test',
+        redis: { url: 'redis://127.0.0.1:6379' },
+        jwt: { keySet: buildKeySet() },
+      });
+      const service = new SessionService(options, store, new SessionJwtSigningService(options), mirror);
+      const bundle = await service.create('user-with-mem', 'tenant-1', 'cog-1', {}, { membershipId: 'm-1' });
+      await service.revoke(bundle.sid, 'revoked');
+      const entry = mirror.entries.at(-1)!;
+      expect(entry.membershipId).toBe('m-1');
+    });
+  });
+});
+
+// ===========================================================================
+// InMemorySessionStore mutation kills.
+// ===========================================================================
+
+describe('InMemorySessionStore — mutation kills', () => {
+  it('rotateRefreshToken returns null when refresh-lookup state is not active (kills ConditionalExpression at L48)', async () => {
+    const store = new InMemorySessionStore();
+    const now = new Date('2026-01-01T00:00:00.000Z').toISOString();
+    const expiresAt = new Date('2026-02-01T00:00:00.000Z').toISOString();
+    await store.createSession({
+      sid: 's-rotate-not-active', tenantId: 't', userId: 'u', cognitoSub: 'c',
+      refreshTokenHash: 'h-old', refreshFamilyId: 'f-1',
+      createdAt: now, updatedAt: now, lastTouchedAt: now,
+      expiresAt, idleExpiresAt: expiresAt, status: 'active',
+    } as never);
+    await store.rotateRefreshToken('s-rotate-not-active', 'h-old', 'h-mid', expiresAt, now);
+    const result = await store.rotateRefreshToken('s-rotate-not-active', 'h-old', 'h-next', expiresAt, now);
+    expect(result).toBeNull();
+  });
+
+  it('rotateRefreshToken returns null when currentHash does not match session refreshTokenHash (kills second ConditionalExpression at L48)', async () => {
+    const store = new InMemorySessionStore();
+    const now = new Date('2026-01-01T00:00:00.000Z').toISOString();
+    const expiresAt = new Date('2026-02-01T00:00:00.000Z').toISOString();
+    await store.createSession({
+      sid: 's-rotate-mismatch', tenantId: 't', userId: 'u', cognitoSub: 'c',
+      refreshTokenHash: 'h-current', refreshFamilyId: 'f-1',
+      createdAt: now, updatedAt: now, lastTouchedAt: now,
+      expiresAt, idleExpiresAt: expiresAt, status: 'active',
+    } as never);
+    const result = await store.rotateRefreshToken('s-rotate-mismatch', 'h-WRONG', 'h-next', expiresAt, now);
+    expect(result).toBeNull();
+  });
+
+  it('publishInvalidation emits on the literal "invalidate" channel (kills StringLiteral at L130)', async () => {
+    const store = new InMemorySessionStore();
+    const received: string[] = [];
+    (store as unknown as { invalidationEvents: { on(e: string, cb: (msg: string) => void): void } })
+      .invalidationEvents.on('invalidate', (msg) => received.push(msg));
+    await store.publishInvalidation('test-channel');
+    expect(received).toEqual(['test-channel']);
+  });
 });

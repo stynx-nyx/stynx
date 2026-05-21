@@ -42,7 +42,7 @@ describe('@stynx-web/sdk runtime helpers', () => {
       const store = new InMemoryTokenStore();
       const manager = new FrontendSessionManager(store);
       expect(manager.hydrate()).toEqual({ tokens: null, principal: null });
-      expect(manager.getValidAccessToken()).toBeNull();
+      expect(manager.getValidAccessToken()).toBe(null);
 
       const state = manager.setTokens({
         accessToken: token({
@@ -71,7 +71,7 @@ describe('@stynx-web/sdk runtime helpers', () => {
 
       nowSpy.mockReturnValue(3_000);
       expect(manager.hydrate()).toEqual({ tokens: null, principal: null });
-      expect(store.read()).toBeNull();
+      expect(store.read()).toBe(null);
     } finally {
       nowSpy.mockRestore();
     }
@@ -92,9 +92,9 @@ describe('@stynx-web/sdk runtime helpers', () => {
       permissions: ['a', 'b'],
       tenantId: 'tenant-x',
     });
-    expect(manager.setTokens({ accessToken: token({}) }).principal).toBeNull();
+    expect(manager.setTokens({ accessToken: token({}) }).principal).toBe(null);
     expect(manager.setTokens({ accessToken: 'invalid' }).tokens).toEqual({ accessToken: 'invalid' });
-    expect(manager.getTenantId()).toBeNull();
+    expect(manager.getTenantId()).toBe(null);
   });
 
   it('derives tenant identifiers from fallback claims and empty claims', () => {
@@ -115,7 +115,7 @@ describe('@stynx-web/sdk runtime helpers', () => {
       tenantId: null,
       tenantIds: [],
     });
-    expect(manager.getTenantId()).toBeNull();
+    expect(manager.getTenantId()).toBe(null);
   });
 
   it('stores tokens in memory and browser-local storage variants', () => {
@@ -125,7 +125,7 @@ describe('@stynx-web/sdk runtime helpers', () => {
     original.accessToken = 'mutated';
     expect(memory.read()).toEqual({ accessToken: 'a', refreshToken: 'r' });
     memory.clear();
-    expect(memory.read()).toBeNull();
+    expect(memory.read()).toBe(null);
 
     const values = new Map<string, string>();
     const storage = {
@@ -137,13 +137,13 @@ describe('@stynx-web/sdk runtime helpers', () => {
     browser.write({ accessToken: 'stored' });
     expect(browser.read()).toEqual({ accessToken: 'stored' });
     values.set('tokens', '{bad');
-    expect(browser.read()).toBeNull();
+    expect(browser.read()).toBe(null);
     browser.clear();
     expect(values.has('tokens')).toBe(false);
 
     const unavailable = new BrowserLocalStorageTokenStore('tokens', null);
     unavailable.write({ accessToken: 'ignored' });
-    expect(unavailable.read()).toBeNull();
+    expect(unavailable.read()).toBe(null);
     expect(() => unavailable.clear()).not.toThrow();
 
     const emptyStorage = new BrowserLocalStorageTokenStore('tokens', {
@@ -151,7 +151,7 @@ describe('@stynx-web/sdk runtime helpers', () => {
       setItem: vi.fn(),
       removeItem: vi.fn(),
     });
-    expect(emptyStorage.read()).toBeNull();
+    expect(emptyStorage.read()).toBe(null);
   });
 
   it('uses global localStorage when no storage provider is supplied', () => {
@@ -187,7 +187,7 @@ describe('@stynx-web/sdk runtime helpers', () => {
 
     try {
       const browser = new BrowserLocalStorageTokenStore();
-      expect(browser.read()).toBeNull();
+      expect(browser.read()).toBe(null);
       expect(() => browser.write({ accessToken: 'ignored' })).not.toThrow();
       expect(() => browser.clear()).not.toThrow();
     } finally {
@@ -235,14 +235,52 @@ describe('@stynx-web/sdk runtime helpers', () => {
       clientId: 'client-2',
       redirectUri: 'https://app.example.test/callback',
     })).toContain('response_type=token');
+
+    // WAVE-05A Turn B.3a: trimProtocol regex kills.
+    // /^https?:\/\//i — strips http:// or https:// from front. Mutations:
+    //   /https?:\/\//i (no ^ anchor) → would strip mid-URL occurrences
+    //   /^https:\/\//i (no `?` modifier) → would not strip 'http://'
+    // The trailing /\/+$/ strips trailing slashes; mutation /\/+/ (no $)
+    // strips first slash run anywhere.
+    const fromHttp = buildCognitoHostedUiLoginUrl({
+      domain: 'http://auth.example.test',
+      clientId: 'c',
+      redirectUri: 'https://app.example.test/cb',
+    });
+    expect(fromHttp).toMatch(/^https:\/\/auth\.example\.test\/login\?/u);
+
+    const fromBare = buildCognitoHostedUiLoginUrl({
+      domain: 'auth.example.test/',
+      clientId: 'c',
+      redirectUri: 'https://app.example.test/cb',
+    });
+    expect(fromBare).toMatch(/^https:\/\/auth\.example\.test\/login\?/u);
+
+    const fromMulti = buildCognitoHostedUiLoginUrl({
+      domain: 'https://auth.example.test///',
+      clientId: 'c',
+      redirectUri: 'https://app.example.test/cb',
+    });
+    // Trailing slashes all stripped, exactly one `/` between origin and `login`.
+    expect(fromMulti).toMatch(/^https:\/\/auth\.example\.test\/login\?/u);
+    expect(fromMulti.includes('test//')).toBe(false);
+
+    // Default scopes when not provided (kills ArrayDeclaration + StringLiteral on the ['openid','email','profile'] default).
+    const defaultScopes = buildCognitoHostedUiLoginUrl({
+      domain: 'auth.example.test',
+      clientId: 'c',
+      redirectUri: 'https://app.example.test/cb',
+    });
+    const defaultScopeParam = new URL(defaultScopes).searchParams.get('scope');
+    expect(defaultScopeParam).toBe('openid email profile');
     expect(parseJwtPayload(token({ sub: 'user' }))).toEqual({ sub: 'user' });
-    expect(parseJwtPayload('missing-payload')).toBeNull();
-    expect(parseJwtPayload('a.not-json.s')).toBeNull();
+    expect(parseJwtPayload('missing-payload')).toBe(null);
+    expect(parseJwtPayload('a.not-json.s')).toBe(null);
 
     const originalAtob = globalThis.atob;
     Object.defineProperty(globalThis, 'atob', { configurable: true, value: undefined });
     try {
-      expect(parseJwtPayload(token({ sub: 'user' }))).toBeNull();
+      expect(parseJwtPayload(token({ sub: 'user' }))).toBe(null);
     } finally {
       Object.defineProperty(globalThis, 'atob', { configurable: true, value: originalAtob });
     }
@@ -283,7 +321,7 @@ describe('@stynx-web/sdk runtime helpers', () => {
     })).resolves.toEqual({ ok: true });
     await expect(client.post('/records', { name: 'demo' })).resolves.toEqual({ ok: true });
     await expect(client.delete('/text')).resolves.toBe('plain');
-    await expect(client.request('PATCH', '/empty')).resolves.toBeUndefined();
+    await expect(client.request('PATCH', '/empty')).resolves.toBe(undefined);
 
     expect(calls[0]?.url).toBe('https://api.example.test/records?page=1');
     expect(calls[1]?.url).toBe('https://api.example.test/records');
@@ -297,7 +335,7 @@ describe('@stynx-web/sdk runtime helpers', () => {
       'Content-Type': 'custom/type',
       'X-Tenant-Id': 'caller-tenant',
     });
-    expect(calls[2]?.init?.headers?.['x-tenant-id']).toBeUndefined();
+    expect(calls[2]?.init?.headers?.['x-tenant-id']).toBe(undefined);
     expect(calls[3]?.init?.headers?.['content-type']).toBe('application/json');
   });
 

@@ -60,8 +60,11 @@ describe('FlowFormsService', () => {
     it('listForms without scopeId omits WHERE', async () => {
       const { service, trx } = makeService([[]]);
       await service.listForms();
-      const [sql] = trx.query.mock.calls[0]!;
+      const [sql, params] = trx.query.mock.calls[0]!;
+      expect(sql).toContain('select * from flow.forms');
       expect(sql).not.toContain('where');
+      expect(sql).toContain('order by code, version');
+      expect(params).toEqual([]);
     });
 
     it('getForm returns row by id', async () => {
@@ -72,7 +75,7 @@ describe('FlowFormsService', () => {
 
     it('getForm throws NotFoundException when missing', async () => {
       const { service } = makeService([[]]);
-      await expect(service.getForm(FORM)).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.getForm(FORM)).rejects.toThrow('Flow row not found');
     });
 
     it('createForm INSERTs and returns the new row', async () => {
@@ -83,28 +86,38 @@ describe('FlowFormsService', () => {
         title: 'T',
       });
       expect(result).toMatchObject({ id: FORM, code: 'C' });
-      const [sql] = trx.query.mock.calls[0]!;
-      expect(sql).toContain('insert into flow.forms');
+      expect(trx.query.mock.calls[0]).toEqual([
+        'insert into flow.forms (tenant_id, scope_id, code, version, title, created_by, updated_by) values ($1, $2, $3, $4, $5, $6, $7) returning *',
+        ['t-1', SCOPE, 'C', 'v1', 'T', 'u-1', 'u-1'],
+      ]);
     });
 
     it('updateRow throws BadRequest when no updatable column fields are present (waiver delete)', async () => {
       // Waivers don't have actorColumns; an updateWaiver with {} produces zero
       // rowEntries which is the BadRequest branch in updateRowInTx.
       const { service } = makeService([[]]);
-      await expect(service.updateWaiver(WAIVER, {})).rejects.toBeInstanceOf(BadRequestException);
+      await expect(service.updateWaiver(WAIVER, {})).rejects.toThrow(
+        'At least one update field is required',
+      );
     });
 
     it('updateForm throws NotFoundException when no row returned', async () => {
       const { service } = makeService([[]]);
-      await expect(service.updateForm(FORM, { title: 'New' })).rejects.toBeInstanceOf(
-        NotFoundException,
+      await expect(service.updateForm(FORM, { title: 'New' })).rejects.toThrow(
+        'Flow row not found',
       );
     });
 
     it('updateForm returns the camelized updated row', async () => {
-      const { service } = makeService([[{ id: FORM, title: 'New' }]]);
+      const { service, trx } = makeService([[{ id: FORM, title: 'New' }]]);
       const result = await service.updateForm(FORM, { title: 'New' });
       expect(result).toMatchObject({ id: FORM, title: 'New' });
+      const [sql, params] = trx.query.mock.calls[0]!;
+      expect(sql).toBe(
+        'update flow.forms set version = $2, title = $3, updated_by = $4, updated_at = $5 where id = $1::uuid returning *',
+      );
+      expect(params?.slice(0, 4)).toEqual([FORM, 'v1', 'New', 'u-1']);
+      expect(params?.[4]).toBeInstanceOf(Date);
     });
 
     it('deleteForm asserts existence then calls trx.softDelete', async () => {
@@ -112,7 +125,7 @@ describe('FlowFormsService', () => {
         [{ exists: true }],
       ]);
       const result = await service.deleteForm(FORM);
-      expect(trx.softDelete).toHaveBeenCalled();
+      expect(trx.softDelete).toHaveBeenCalledWith(expect.anything(), FORM);
       expect(result).toEqual({ id: FORM, deleted: true });
     });
 
@@ -127,7 +140,9 @@ describe('FlowFormsService', () => {
       const { service, trx } = makeService([[]]);
       await service.listQuestions(FORM);
       const [sql, params] = trx.query.mock.calls[0]!;
+      expect(sql).toContain('select * from flow.questions');
       expect(sql).toContain('form_id = $1::uuid');
+      expect(sql).toContain('order by sort_order, key');
       expect(params).toEqual([FORM]);
     });
 
@@ -145,7 +160,7 @@ describe('FlowFormsService', () => {
 
     it('createQuestion rejects non-object input', () => {
       const { service } = makeService([]);
-      expect(() => service.createQuestion(FORM, null)).toThrow(BadRequestException);
+      expect(() => service.createQuestion(FORM, null)).toThrow('Request body must be an object');
     });
 
     it('question get, update, and delete methods route through shared helpers', async () => {
@@ -163,7 +178,7 @@ describe('FlowFormsService', () => {
         id: QUESTION,
         deleted: true,
       });
-      expect(del.trx.softDelete).toHaveBeenCalled();
+      expect(del.trx.softDelete).toHaveBeenCalledWith(expect.anything(), QUESTION);
     });
 
     it('putQuestionScore upserts and returns the camelized row', async () => {
@@ -173,8 +188,15 @@ describe('FlowFormsService', () => {
       ]);
       const result = await service.putQuestionScore(QUESTION, { passPoints: '3' });
       expect(result).toMatchObject({ questionId: QUESTION, passPoints: '3' });
-      const [sqlUpsert] = trx.query.mock.calls[1]!;
+      expect(trx.query.mock.calls[0]).toEqual([
+        expect.stringContaining('select exists(select 1 from flow.questions where id = $1::uuid) as exists'),
+        [QUESTION],
+      ]);
+      const [sqlUpsert, params] = trx.query.mock.calls[1]!;
       expect(sqlUpsert).toContain('insert into flow.scores');
+      expect(sqlUpsert).toContain('values ($1::uuid, $2::uuid, $3::numeric, $4::numeric, $5::jsonb, $6::uuid, $6::uuid)');
+      expect(sqlUpsert).toContain('on conflict (tenant_id, question_id) do update');
+      expect(params).toEqual(['t-1', QUESTION, '3', '0', {}, 'u-1']);
     });
 
     it('putQuestionScore defaults scores and nullable actor when omitted', async () => {
@@ -188,17 +210,21 @@ describe('FlowFormsService', () => {
 
     it('putQuestionScore propagates NotFound from assertExists', async () => {
       const { service } = makeService([[{ exists: false }]]);
-      await expect(service.putQuestionScore(QUESTION, { passPoints: '3' })).rejects.toBeInstanceOf(
-        NotFoundException,
+      await expect(service.putQuestionScore(QUESTION, { passPoints: '3' })).rejects.toThrow(
+        'Question not found',
       );
     });
 
     it('getQuestionScore returns one row or throws NotFound', async () => {
       const found = makeService([[{ id: SCORE }]]);
       await expect(found.service.getQuestionScore(QUESTION)).resolves.toMatchObject({ id: SCORE });
+      expect(found.trx.query.mock.calls[0]).toEqual([
+        'select * from flow.scores where question_id = $1::uuid limit 1',
+        [QUESTION],
+      ]);
       const missing = makeService([[]]);
-      await expect(missing.service.getQuestionScore(QUESTION)).rejects.toBeInstanceOf(
-        NotFoundException,
+      await expect(missing.service.getQuestionScore(QUESTION)).rejects.toThrow(
+        'Question score not found',
       );
     });
 
@@ -211,7 +237,7 @@ describe('FlowFormsService', () => {
         id: SCORE,
         deleted: true,
       });
-      expect(trx.softDelete).toHaveBeenCalled();
+      expect(trx.softDelete).toHaveBeenCalledWith(expect.anything(), SCORE);
     });
   });
 
@@ -228,8 +254,31 @@ describe('FlowFormsService', () => {
         nonsense: 'x',
         empty: '',
       });
-      const params = trx.query.mock.calls[0]?.[1] as unknown[];
+      const [sql, params] = trx.query.mock.calls[0]!;
+      expect(sql).toContain('select * from flow.fills');
+      expect(sql).toContain('form_id = $1::uuid');
+      expect(sql).toContain('scope_id = $2::uuid');
+      expect(sql).toContain('run_id = $3::uuid');
+      expect(sql).toContain('task_id = $4::uuid');
+      expect(sql).toContain('target_id = $5');
+      expect(sql).toContain('target_type = $6');
+      expect(sql).toContain('order by created_at desc');
       expect(params).toEqual(['f', 's', 'r', 't', 'tid', 'ttype']);
+    });
+
+    it('listFills omits empty-string and non-string filter values', async () => {
+      const { service, trx } = makeService([[]]);
+      await service.listFills({
+        formId: '',
+        scopeId: 123,
+        runId: null,
+        taskId: false,
+        targetId: ['tid'],
+        targetType: { type: 'doc' },
+      });
+      const [sql, params] = trx.query.mock.calls[0]!;
+      expect(sql).toBe('select * from flow.fills order by created_at desc');
+      expect(params).toEqual([]);
     });
 
     it('listFormFills filters by form_id and orders by created_at desc', async () => {
@@ -242,15 +291,19 @@ describe('FlowFormsService', () => {
     });
 
     it('getFormFill returns row matched by form + fill ids', async () => {
-      const { service } = makeService([[{ id: FILL, form_id: FORM }]]);
+      const { service, trx } = makeService([[{ id: FILL, form_id: FORM }]]);
       const result = await service.getFormFill(FORM, FILL);
       expect(result).toMatchObject({ id: FILL });
+      expect(trx.query.mock.calls[0]).toEqual([
+        'select * from flow.fills where form_id = $1::uuid and id = $2::uuid limit 1',
+        [FORM, FILL],
+      ]);
     });
 
     it('createFillFromBody requires formId in the body', () => {
       const { service } = makeService([]);
       // stringField throws synchronously before the createFill Promise is constructed.
-      expect(() => service.createFillFromBody({})).toThrow(BadRequestException);
+      expect(() => service.createFillFromBody({})).toThrow('formId is required');
     });
 
     it('createFillFromBody routes to createFill when formId is present', async () => {
@@ -262,8 +315,10 @@ describe('FlowFormsService', () => {
         targetId: 'doc-1',
       });
       expect(result.id).toBe(FILL);
-      const [sql] = trx.query.mock.calls[0]!;
-      expect(sql).toContain('insert into flow.fills');
+      expect(trx.query.mock.calls[0]).toEqual([
+        'insert into flow.fills (tenant_id, form_id, scope_id, target_type, target_id, created_by, updated_by) values ($1, $2, $3, $4, $5, $6, $7) returning *',
+        ['t-1', FORM, SCOPE, 'doc', 'doc-1', 'u-1', 'u-1'],
+      ]);
     });
 
     it('get, update, and delete fill methods route through shared helpers', async () => {
@@ -278,7 +333,7 @@ describe('FlowFormsService', () => {
 
       const del = makeService([[{ exists: true }]]);
       await expect(del.service.deleteFill(FILL)).resolves.toEqual({ id: FILL, deleted: true });
-      expect(del.trx.softDelete).toHaveBeenCalled();
+      expect(del.trx.softDelete).toHaveBeenCalledWith(expect.anything(), FILL);
     });
   });
 
@@ -291,15 +346,26 @@ describe('FlowFormsService', () => {
       ]);
       const result = await service.upsertAnswer(FILL, { questionId: QUESTION, value: { x: 1 } });
       expect(result).toMatchObject({ id: ANSWER, questionId: QUESTION });
-      const [upsertSql] = trx.query.mock.calls[2]!;
+      expect(trx.query.mock.calls[0]).toEqual([
+        expect.stringContaining('select exists(select 1 from flow.fills where id = $1::uuid) as exists'),
+        [FILL],
+      ]);
+      expect(trx.query.mock.calls[1]).toEqual([
+        expect.stringContaining('select exists(select 1 from flow.questions where id = $1::uuid) as exists'),
+        [QUESTION],
+      ]);
+      const [upsertSql, params] = trx.query.mock.calls[2]!;
       expect(upsertSql).toContain('insert into flow.answers');
+      expect(upsertSql).toContain('values ($1::uuid, $2::uuid, $3::uuid, $4::jsonb, $5::jsonb, $6::uuid, $6::uuid)');
+      expect(upsertSql).toContain('on conflict (tenant_id, fill_id, question_id) do update');
+      expect(params).toEqual(['t-1', FILL, QUESTION, { x: 1 }, null, 'u-1']);
     });
 
     it('upsertAnswer rejects when fill does not exist', async () => {
       const { service } = makeService([[{ exists: false }]]);
       await expect(
         service.upsertAnswer(FILL, { questionId: QUESTION }),
-      ).rejects.toBeInstanceOf(NotFoundException);
+      ).rejects.toThrow('Fill not found');
     });
 
     it('upsertAnswer maps itemId → questionId via normalizeAnswerInput', async () => {
@@ -333,7 +399,7 @@ describe('FlowFormsService', () => {
 
     it('bulkUpsertAnswers iterates and upserts each, asserting question existence per row', async () => {
       const Q2 = '0190abcd-1234-7abc-89ab-000000000099';
-      const { service } = makeService([
+      const { service, trx } = makeService([
         [{ exists: true }],
         [{ exists: true }],
         [{ id: ANSWER }],
@@ -347,6 +413,20 @@ describe('FlowFormsService', () => {
         ],
       });
       expect(result).toHaveLength(2);
+      expect(trx.query.mock.calls[0]).toEqual([
+        expect.stringContaining('select exists(select 1 from flow.fills where id = $1::uuid) as exists'),
+        [FILL],
+      ]);
+      expect(trx.query.mock.calls[1]).toEqual([
+        expect.stringContaining('select exists(select 1 from flow.questions where id = $1::uuid) as exists'),
+        [QUESTION],
+      ]);
+      expect(trx.query.mock.calls[2]?.[1]).toEqual(['t-1', FILL, QUESTION, 1, null, 'u-1']);
+      expect(trx.query.mock.calls[3]).toEqual([
+        expect.stringContaining('select exists(select 1 from flow.questions where id = $1::uuid) as exists'),
+        [Q2],
+      ]);
+      expect(trx.query.mock.calls[4]?.[1]).toEqual(['t-1', FILL, Q2, 2, null, 'u-1']);
     });
 
     it('bulkUpsertAnswers accepts a bare array as input', async () => {
@@ -368,7 +448,7 @@ describe('FlowFormsService', () => {
         [{ id: ANSWER }],
       ], { tenantId: 't-1' });
       await service.bulkUpsertAnswers(FILL, [{ questionId: QUESTION, value: 1 }]);
-      expect((trx.query.mock.calls[2]?.[1] as unknown[])[5]).toBeNull();
+      expect((trx.query.mock.calls[2]?.[1] as unknown[])[5]).toBe(null);
     });
 
     it('updateAnswer asserts question when questionId is set', async () => {
@@ -387,6 +467,9 @@ describe('FlowFormsService', () => {
       ]);
       await service.updateAnswer(ANSWER, { value: 'x' });
       expect(trx.query.mock.calls.length).toBe(1);
+      expect(trx.query.mock.calls[0]?.[0]).toBe(
+        'update flow.answers set value = $2, updated_by = $3, updated_at = $4 where id = $1::uuid returning *',
+      );
       expect(trx.query.mock.calls[0]?.[0]).not.toContain('question_id');
     });
 
@@ -395,7 +478,7 @@ describe('FlowFormsService', () => {
         [{ id: ANSWER, value: 'x' }],
       ], { tenantId: 't-1' });
       await service.updateAnswer(ANSWER, { value: 'x' });
-      expect((trx.query.mock.calls[0]?.[1] as unknown[])[2]).toBeNull();
+      expect((trx.query.mock.calls[0]?.[1] as unknown[])[2]).toBe(null);
     });
 
     it('listFormFillAnswers verifies fill belongs to form, then lists answers', async () => {
@@ -405,22 +488,149 @@ describe('FlowFormsService', () => {
       ]);
       const result = await service.listFormFillAnswers(FORM, FILL);
       expect(result).toHaveLength(1);
-      expect(trx.query.mock.calls.length).toBe(2);
+      expect(trx.query.mock.calls[0]).toEqual([
+        'select * from flow.fills where form_id = $1::uuid and id = $2::uuid limit 1',
+        [FORM, FILL],
+      ]);
+      expect(trx.query.mock.calls[1]).toEqual([
+        'select * from flow.answers where fill_id = $1::uuid order by created_at, id',
+        [FILL],
+      ]);
     });
 
     it('deleteAnswer soft deletes after existence check', async () => {
       const { service, trx } = makeService([[{ exists: true }]]);
       await expect(service.deleteAnswer(ANSWER)).resolves.toEqual({ id: ANSWER, deleted: true });
-      expect(trx.softDelete).toHaveBeenCalled();
+      expect(trx.softDelete).toHaveBeenCalledWith(expect.anything(), ANSWER);
     });
   });
 
   describe('waivers', () => {
     it('listWaivers filters by allowed keys', async () => {
       const { service, trx } = makeService([[]]);
-      await service.listWaivers({ scopeId: 's', formId: 'f' });
-      const params = trx.query.mock.calls[0]?.[1] as unknown[];
-      expect(params).toEqual(['s', 'f']);
+      await service.listWaivers({
+        scopeId: 's',
+        formId: 'f',
+        questionId: 'q',
+        targetId: 'tid',
+        targetType: 'ttype',
+        runId: 'ignored',
+        empty: '',
+      });
+      const [sql, params] = trx.query.mock.calls[0]!;
+      expect(sql).toBe(
+        'select * from flow.waivers where scope_id = $1::uuid and form_id = $2::uuid and question_id = $3::uuid and target_id = $4 and target_type = $5 order by created_at desc',
+      );
+      expect(params).toEqual(['s', 'f', 'q', 'tid', 'ttype']);
+    });
+
+    it('listWaivers omits empty and non-string filters', async () => {
+      const { service, trx } = makeService([[]]);
+      await service.listWaivers({
+        scopeId: '',
+        formId: null,
+        questionId: ['q'],
+        targetId: 3,
+        targetType: false,
+      });
+      const [sql, params] = trx.query.mock.calls[0]!;
+      expect(sql).toBe('select * from flow.waivers order by created_at desc');
+      expect(params).toEqual([]);
+    });
+
+    it('listWaivers preserves allowed-filter order for partial filters', async () => {
+      const { service, trx } = makeService([[]]);
+      await service.listWaivers({ formId: FORM, targetType: 'doc' });
+      const [sql, params] = trx.query.mock.calls[0]!;
+      expect(sql).toBe(
+        'select * from flow.waivers where form_id = $1::uuid and target_type = $2 order by created_at desc',
+      );
+      expect(params).toEqual([FORM, 'doc']);
+    });
+
+    it('createWaiver inserts a full row without actor columns', async () => {
+      const { service, trx } = makeService([[{ id: WAIVER }]]);
+      await service.createWaiver({
+        scopeId: SCOPE,
+        targetType: 'doc',
+        targetId: 't',
+        formId: FORM,
+        questionId: QUESTION,
+        reason: 'because',
+        waivedBy: ANSWER,
+        expiresAt: '2026-06-01T00:00:00.000Z',
+      });
+      expect(trx.query.mock.calls[0]).toEqual([
+        'insert into flow.waivers (tenant_id, scope_id, target_type, target_id, form_id, question_id, reason, waived_by, expires_at) values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning *',
+        [
+          't-1',
+          SCOPE,
+          'doc',
+          't',
+          FORM,
+          QUESTION,
+          'because',
+          ANSWER,
+          '2026-06-01T00:00:00.000Z',
+        ],
+      ]);
+    });
+
+    it('createWaiver inserts a sparse row in configured column order', async () => {
+      const { service, trx } = makeService([[{ id: WAIVER }]]);
+      await service.createWaiver({
+        scopeId: SCOPE,
+        targetType: 'doc',
+        targetId: 't',
+        formId: FORM,
+        reason: 'because',
+      });
+      expect(trx.query.mock.calls[0]).toEqual([
+        'insert into flow.waivers (tenant_id, scope_id, target_type, target_id, form_id, reason) values ($1, $2, $3, $4, $5, $6) returning *',
+        ['t-1', SCOPE, 'doc', 't', FORM, 'because'],
+      ]);
+    });
+
+    it('updateWaiver sends only waiver fields plus updated_at', async () => {
+      const { service, trx } = makeService([[{ id: WAIVER, reason: 'updated' }]]);
+      await service.updateWaiver(WAIVER, { reason: 'updated' });
+      const [sql, params] = trx.query.mock.calls[0]!;
+      expect(sql).toBe(
+        'update flow.waivers set reason = $2, updated_at = $3 where id = $1::uuid returning *',
+      );
+      expect(params?.slice(0, 2)).toEqual([WAIVER, 'updated']);
+      expect(params?.[2]).toBeInstanceOf(Date);
+    });
+
+    it('deleteWaiver binds the exact assertExists query before soft delete', async () => {
+      const { service, trx } = makeService([[{ exists: true }]]);
+      await service.deleteWaiver(WAIVER);
+      expect(trx.query.mock.calls[0]).toEqual([
+        'select exists(select 1 from flow.waivers where id = $1::uuid) as exists',
+        [WAIVER],
+      ]);
+    });
+
+    it('deleteWaiver throws the shared row-not-found message', async () => {
+      const { service } = makeService([[{ exists: false }]]);
+      await expect(service.deleteWaiver(WAIVER)).rejects.toThrow('Flow row not found');
+    });
+
+    it('listAnswers uses UUID fill filter and the exact order clause', async () => {
+      const { service, trx } = makeService([[]]);
+      await service.listAnswers(FILL);
+      expect(trx.query.mock.calls[0]).toEqual([
+        'select * from flow.answers where fill_id = $1::uuid order by created_at, id',
+        [FILL],
+      ]);
+    });
+
+    it('listWaivers ignores unrelated filter names even when they are strings', async () => {
+      const { service, trx } = makeService([[]]);
+      await service.listWaivers({ fillId: FILL, nodeRunId: 'node-run' });
+      const [sql, params] = trx.query.mock.calls[0]!;
+      expect(sql).toBe('select * from flow.waivers order by created_at desc');
+      expect(params).toEqual([]);
     });
 
     it('createWaiver inserts a row', async () => {
@@ -476,7 +686,7 @@ describe('FlowFormsService', () => {
         id: WAIVER,
         deleted: true,
       });
-      expect(del.trx.softDelete).toHaveBeenCalled();
+      expect(del.trx.softDelete).toHaveBeenCalledWith(expect.anything(), WAIVER);
     });
 
     it('lists fill waivers and form-fill waivers from hydrated fill context', async () => {
@@ -542,7 +752,18 @@ describe('FlowFormsService', () => {
   describe('input validation', () => {
     it('createQuestion rejects an array as input body', () => {
       const { service } = makeService([]);
-      expect(() => service.createQuestion(FORM, [])).toThrow(BadRequestException);
+      expect(() => service.createQuestion(FORM, [])).toThrow('Request body must be an object');
+    });
+
+    it('createQuestion rejects null and scalar input bodies with the object message', () => {
+      const { service } = makeService([]);
+      expect(() => service.createQuestion(FORM, null)).toThrow('Request body must be an object');
+      expect(() => service.createQuestion(FORM, 'body')).toThrow('Request body must be an object');
+    });
+
+    it('createFillFromBody rejects empty-string formId with the exact field message', () => {
+      const { service } = makeService([]);
+      expect(() => service.createFillFromBody({ formId: '' })).toThrow('formId is required');
     });
 
     it('createForm accepts missing actor and empty insert result', async () => {

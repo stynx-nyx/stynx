@@ -430,3 +430,322 @@ describe('AuditSqlReader.list', () => {
     });
   });
 });
+
+// =============================================================================
+// Targeted mutation-survivor kills (WAVE-05A / @stynx/audit).
+//
+// Each describe below names the survivor cluster it targets in plain language
+// and the file:line origin in src/sql-adapter.ts. Assertions are deliberately
+// precise (full param arrays, exact SQL substrings, exact WHERE counts) so the
+// surviving mutants cannot pass through.
+// =============================================================================
+
+describe('AuditSqlSink — ?? null params (LogicalOperator survivors at src/sql-adapter.ts:88-100 + 130-135)', () => {
+  function makeExecutor(responses: unknown[] = []) {
+    let i = 0;
+    const query = vi.fn(async () => responses[i++] ?? { rows: [] });
+    return { query };
+  }
+
+  describe('mode: audit_write_function — full param tuple', () => {
+    it('coalesces undefined optionals to null (not undefined) at every slot', async () => {
+      const executor = makeExecutor();
+      const sink = new AuditSqlSink(executor, { mode: 'audit_write_function' });
+      // All optionals omitted; action, entity, occurredAt are required.
+      await sink.write({ occurredAt: '2026-05-18T00:00:00Z', action: 'a', entity: 'e' });
+      const [, params] = executor.query.mock.calls[0]!;
+      // 13 slots; every optional must be `null`, never `undefined`.
+      // (?? null → null; mutation && null → undefined). Asserting via .toEqual
+      // with `null` explicitly fails on undefined.
+      expect(params).toEqual([
+        null,                                            // [0] tenantId
+        null,                                            // [1] actorId
+        null,                                            // [2] actorRole — kills mutant 281
+        'a',                                             // [3] action
+        'e',                                             // [4] entity
+        null,                                            // [5] entityId — kills mutant 282
+        JSON.stringify({}),                              // [6] metadata
+        null,                                            // [7] ipAddress — kills mutant 284
+        null,                                            // [8] (literal null, always)
+        null,                                            // [9] requestId/correlationId
+        null,                                            // [10] oldData
+        null,                                            // [11] newData
+        null,                                            // [12] pk
+      ]);
+    });
+
+    it('passes truthy optionals through verbatim (not nulled out)', async () => {
+      const executor = makeExecutor();
+      const sink = new AuditSqlSink(executor, { mode: 'audit_write_function' });
+      await sink.write({
+        occurredAt: '2026-05-18T00:00:00Z',
+        action: 'a',
+        entity: 'e',
+        tenantId: 'tenant-1',
+        actorId: 'actor-1',
+        actorRole: 'admin',
+        entityId: 'entity-1',
+        ipAddress: '1.2.3.4',
+        requestId: 'req-1',
+      });
+      const [, params] = executor.query.mock.calls[0]!;
+      // Mutation `?? null` → `&& null` on truthy operands collapses to null;
+      // asserting the original value at each slot kills the mutation.
+      expect((params as unknown[])[0]).toBe('tenant-1');
+      expect((params as unknown[])[1]).toBe('actor-1');
+      expect((params as unknown[])[2]).toBe('admin');
+      expect((params as unknown[])[5]).toBe('entity-1');
+      expect((params as unknown[])[7]).toBe('1.2.3.4');
+      expect((params as unknown[])[9]).toBe('req-1');
+    });
+  });
+
+  describe('mode: audit_event_table — full param tuple', () => {
+    it('coalesces undefined optionals to null at every slot', async () => {
+      const executor = makeExecutor();
+      const sink = new AuditSqlSink(executor, { mode: 'audit_event_table' });
+      await sink.write({ occurredAt: '2026-05-18T00:00:00Z', action: 'a', entity: 'e' });
+      const [, params] = executor.query.mock.calls[0]!;
+      expect((params as unknown[])[0]).toBe('2026-05-18T00:00:00Z');
+      expect((params as unknown[])[1]).toBeNull();                  // actorId — kills 294
+      expect((params as unknown[])[2]).toBe('a');                   // action
+      expect((params as unknown[])[3]).toBe('e');                   // resource_type
+      expect((params as unknown[])[4]).toBeNull();                  // entityId — kills 295
+      expect((params as unknown[])[5]).toBeNull();                  // requestId — kills 296
+      expect((params as unknown[])[6]).toBeNull();                  // ipAddress — kills 297
+      // metadata blob still present (JSON-stringified empty-ish object)
+      expect(typeof (params as unknown[])[7]).toBe('string');
+    });
+
+    it('passes truthy optionals through verbatim', async () => {
+      const executor = makeExecutor();
+      const sink = new AuditSqlSink(executor, { mode: 'audit_event_table' });
+      await sink.write({
+        occurredAt: '2026-05-18T00:00:00Z',
+        action: 'a',
+        entity: 'e',
+        actorId: 'actor-1',
+        entityId: 'entity-1',
+        requestId: 'req-1',
+        ipAddress: '1.2.3.4',
+      });
+      const [, params] = executor.query.mock.calls[0]!;
+      expect((params as unknown[])[1]).toBe('actor-1');
+      expect((params as unknown[])[4]).toBe('entity-1');
+      expect((params as unknown[])[5]).toBe('req-1');
+      expect((params as unknown[])[6]).toBe('1.2.3.4');
+    });
+  });
+});
+
+describe('AuditSqlReader — toRows OptionalChaining (kills survivor at src/sql-adapter.ts:178)', () => {
+  it('returns empty items when executor.query returns null directly (not { rows: ... })', async () => {
+    // Without the `?.` on (result as {...})?.rows, accessing `.rows` on null
+    // throws TypeError. The mutant removes the optional chaining; this test
+    // exercises the null result path that the existing { rows: null } test
+    // does not reach.
+    const executor = { query: vi.fn(async () => null as unknown) };
+    const result = await new AuditSqlReader(executor as never, { mode: 'audit_log' }).list();
+    expect(result).toEqual({ items: [], total: 0 });
+  });
+
+  it('returns empty items when executor.query returns undefined directly', async () => {
+    const executor = { query: vi.fn(async () => undefined as unknown) };
+    const result = await new AuditSqlReader(executor as never, { mode: 'audit_log' }).list();
+    expect(result).toEqual({ items: [], total: 0 });
+  });
+});
+
+describe('AuditSqlReader — empty-query coverage for non-audit_log modes', () => {
+  function makeExecutor(responses: unknown[] = []) {
+    let i = 0;
+    const query = vi.fn(async () => responses[i++] ?? { rows: [] });
+    return { query };
+  }
+
+  describe('mode: stynx_events with empty query', () => {
+    it('emits no WHERE clause and only [limit, offset] params (kills 7+ ConditionalExpression "true" mutants + EqualityOperator + StringLiteral)', async () => {
+      const executor = makeExecutor([{ rows: [] }]);
+      await new AuditSqlReader(executor, { mode: 'stynx_events' }).list();
+      const [sql, params] = executor.query.mock.calls[0]!;
+      expect(sql).toContain('FROM audit.events');
+      // Any ConditionalExpression → true mutation forces a filter branch to
+      // fire even with no query field; that would push to params and emit a
+      // WHERE clause. .not.toContain('WHERE') catches the EqualityOperator
+      // mutation (whereParts.length >= 0) as well.
+      expect(sql).not.toContain('WHERE');
+      // Filter-clause fragments use distinctive cast/equality forms; the
+      // SELECT-clause column names alone (`tenancy_id`, `entity`, …) appear
+      // unconditionally, so we assert only the filter-specific suffixes here.
+      expect(sql).not.toContain('tenancy_id::text =');
+      expect(sql).not.toContain('entity = $');
+      expect(sql).not.toContain('operation = $');
+      expect(sql).not.toContain('actor_id::text');
+      expect(sql).not.toContain('request_id = $');
+      expect(sql).not.toContain('occurred_at >=');
+      expect(sql).not.toContain('occurred_at <=');
+      expect(params).toEqual([100, 0]);
+    });
+
+    it('emits a single WHERE fragment with only one filter (kills join-string mutants)', async () => {
+      const executor = makeExecutor([{ rows: [] }]);
+      await new AuditSqlReader(executor, { mode: 'stynx_events' }).list({ tenantId: 't-1' });
+      const [sql, params] = executor.query.mock.calls[0]!;
+      // Exact WHERE substring (no trailing ' AND ' artifact from a mutated
+      // join separator).
+      expect(sql).toMatch(/WHERE tenancy_id::text = \$1\s+ORDER BY/);
+      expect(params).toEqual(['t-1', 100, 0]);
+    });
+
+    it('tightens the full-filter assertion to assert every WHERE fragment + exact placeholder ordering', async () => {
+      const executor = makeExecutor([{ rows: [] }]);
+      await new AuditSqlReader(executor, { mode: 'stynx_events' }).list({
+        tenantId: 't',
+        entity: 'doc',
+        operation: 'UPDATE',
+        actorId: 'u',
+        requestId: 'r',
+        from: 'f',
+        to: 't',
+      });
+      const [sql, params] = executor.query.mock.calls[0]!;
+      // Each filter's SQL fragment with its specific placeholder index.
+      // Kills StringLiteral → "``" on each individual fragment + index--
+      // UpdateOperator on each ++ that would shift the numbering.
+      expect(sql).toContain('tenancy_id::text = $1');
+      expect(sql).toContain('entity = $2');
+      expect(sql).toContain('operation = $3');
+      expect(sql).toContain('actor_id::text = $4');
+      expect(sql).toContain('request_id = $5');
+      expect(sql).toContain('occurred_at >= $6::timestamptz');
+      expect(sql).toContain('occurred_at <= $7::timestamptz');
+      // Join separator: ' AND ' (mutations to '' / 'Stryker was here!' would
+      // alter the joined output; matching the joined WHERE string catches it).
+      expect(sql).toMatch(
+        /WHERE tenancy_id::text = \$1 AND entity = \$2 AND operation = \$3 AND actor_id::text = \$4 AND request_id = \$5 AND occurred_at >= \$6::timestamptz AND occurred_at <= \$7::timestamptz/,
+      );
+      expect(params).toEqual(['t', 'doc', 'UPDATE', 'u', 'r', 'f', 't', 100, 0]);
+    });
+  });
+
+  describe('mode: porm_logged_actions with empty query', () => {
+    it('emits no WHERE clause and only [limit, offset] params', async () => {
+      const executor = makeExecutor([{ rows: [] }]);
+      await new AuditSqlReader(executor, { mode: 'porm_logged_actions' }).list();
+      const [sql, params] = executor.query.mock.calls[0]!;
+      expect(sql).toContain('FROM audit.logged_actions');
+      expect(sql).not.toContain('WHERE');
+      // Filter-clause forms (distinct from SELECT-clause column names).
+      expect(sql).not.toContain("(schema_name || '.' || table_name) = $");
+      expect(sql).not.toContain('op = $');
+      expect(sql).not.toContain('request_id = $');
+      expect(sql).not.toContain('occurred_at >=');
+      expect(sql).not.toContain('occurred_at <=');
+      expect(params).toEqual([100, 0]);
+    });
+
+    it('emits a single WHERE fragment with only one filter', async () => {
+      const executor = makeExecutor([{ rows: [] }]);
+      await new AuditSqlReader(executor, { mode: 'porm_logged_actions' }).list({
+        operation: 'D',
+      });
+      const [sql, params] = executor.query.mock.calls[0]!;
+      expect(sql).toMatch(/WHERE op = \$1\s+ORDER BY/);
+      expect(params).toEqual(['D', 100, 0]);
+    });
+
+    it('tightens the full-filter assertion to assert every WHERE fragment + exact placeholder ordering', async () => {
+      const executor = makeExecutor([{ rows: [] }]);
+      await new AuditSqlReader(executor, { mode: 'porm_logged_actions' }).list({
+        entity: 'public.users',
+        operation: 'D',
+        requestId: 'r',
+        from: 'f',
+        to: 't',
+      });
+      const [sql, params] = executor.query.mock.calls[0]!;
+      expect(sql).toContain("(schema_name || '.' || table_name) = $1");
+      expect(sql).toContain('op = $2');
+      expect(sql).toContain('request_id = $3');
+      expect(sql).toContain('occurred_at >= $4::timestamptz');
+      expect(sql).toContain('occurred_at <= $5::timestamptz');
+      expect(sql).toMatch(
+        /WHERE \(schema_name \|\| '\.' \|\| table_name\) = \$1 AND op = \$2 AND request_id = \$3 AND occurred_at >= \$4::timestamptz AND occurred_at <= \$5::timestamptz/,
+      );
+      expect(params).toEqual(['public.users', 'D', 'r', 'f', 't', 100, 0]);
+    });
+  });
+
+  describe('mode: audit_log — tightening the join + placeholder assertions', () => {
+    it('emits a single WHERE fragment with only one filter (placeholder $1, no AND artifact)', async () => {
+      const executor = makeExecutor([{ rows: [] }]);
+      await new AuditSqlReader(executor, { mode: 'audit_log' }).list({ tenantId: 't' });
+      const [sql, params] = executor.query.mock.calls[0]!;
+      expect(sql).toMatch(/WHERE tenant_id::text = \$1\s+ORDER BY/);
+      expect(params).toEqual(['t', 100, 0]);
+    });
+
+    it('joins multiple filters with " AND " (kills StringLiteral mutation on the separator)', async () => {
+      const executor = makeExecutor([{ rows: [] }]);
+      await new AuditSqlReader(executor, { mode: 'audit_log' }).list({
+        tenantId: 't',
+        operation: 'INSERT',
+      });
+      const [sql] = executor.query.mock.calls[0]!;
+      expect(sql).toMatch(/WHERE tenant_id::text = \$1 AND operation = \$2/);
+      // The mutated 'Stryker was here!' separator would produce
+      // `WHERE tenant_id::text = $1Stryker was here!operation = $2` —
+      // caught by the regex above (it requires literal ' AND ').
+    });
+  });
+});
+
+describe('AuditSqlReader — sanitize equivalence proofs (src/sql-adapter.ts:186-198)', () => {
+  // The EqualityOperator mutants on `limit <= 0` and `offset < 0` are
+  // EQUIVALENT mutants under the surrounding short-circuit:
+  //
+  //   if (!Number.isFinite(limit) || !limit || limit <= 0) { return fallback; }
+  //
+  //   - When limit === 0, the `!limit` clause short-circuits true → returns
+  //     fallback. The `limit <= 0` vs `limit < 0` distinction never fires.
+  //   - When limit > 0, both `<= 0` and `< 0` are false → same code path.
+  //   - When limit < 0, both `<= 0` and `< 0` are true → same code path.
+  //
+  // Same proof applies to sanitizeOffset's `offset < 0` (the inner `!offset`
+  // short-circuit catches 0; the outer comparator is dead at the boundary).
+  // The proofs are encoded as assertions below so that any change to the
+  // surrounding short-circuit (e.g. removing `!limit`) would break this spec
+  // and force the equivalence claim to be re-verified.
+
+  function makeExecutor(responses: unknown[] = []) {
+    let i = 0;
+    const query = vi.fn(async () => responses[i++] ?? { rows: [] });
+    return { query };
+  }
+
+  it('sanitizeLimit: limit=0 returns fallback (proves the !limit short-circuit catches 0)', async () => {
+    const executor = makeExecutor([{ rows: [] }]);
+    await new AuditSqlReader(executor, { mode: 'audit_log' }).list({ limit: 0 });
+    // fallback is 100 for listAuditLog
+    expect(executor.query.mock.calls[0]![1]).toEqual([100, 0]);
+  });
+
+  it('sanitizeOffset: offset=0 returns 0 (proves the !offset short-circuit catches 0)', async () => {
+    const executor = makeExecutor([{ rows: [] }]);
+    await new AuditSqlReader(executor, { mode: 'audit_log' }).list({ offset: 0 });
+    expect(executor.query.mock.calls[0]![1]).toEqual([100, 0]);
+  });
+
+  it('sanitizeLimit: negative limit returns fallback (the <= vs < distinction never fires here either)', async () => {
+    const executor = makeExecutor([{ rows: [] }]);
+    await new AuditSqlReader(executor, { mode: 'audit_log' }).list({ limit: -5 });
+    expect(executor.query.mock.calls[0]![1]).toEqual([100, 0]);
+  });
+
+  it('sanitizeOffset: negative offset returns 0', async () => {
+    const executor = makeExecutor([{ rows: [] }]);
+    await new AuditSqlReader(executor, { mode: 'audit_log' }).list({ offset: -10 });
+    expect(executor.query.mock.calls[0]![1]).toEqual([100, 0]);
+  });
+});
+

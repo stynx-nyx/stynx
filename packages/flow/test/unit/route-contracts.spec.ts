@@ -73,7 +73,7 @@ function metadata<T>(key: unknown, controller: ControllerClass, methodName: stri
 describe('Flow route contracts', () => {
   it('keeps every Flow route private and permissioned', () => {
     for (const controller of controllers) {
-      expect(Reflect.getMetadata(STYNX_PUBLIC_ROUTE, controller)).toBeUndefined();
+      expect(Reflect.getMetadata(STYNX_PUBLIC_ROUTE, controller)).toBe(undefined);
       expect(Reflect.getMetadata(GUARDS_METADATA, controller)).toEqual(
         expect.arrayContaining([StynxAuthGuard, PermissionGuard]),
       );
@@ -82,7 +82,7 @@ describe('Flow route contracts', () => {
         .filter((name) => typeof controller.prototype[name as keyof object] === 'function');
 
       for (const methodName of methodNames) {
-        expect(Reflect.getMetadata(STYNX_PUBLIC_ROUTE, handler(controller, methodName))).toBeUndefined();
+        expect(Reflect.getMetadata(STYNX_PUBLIC_ROUTE, handler(controller, methodName))).toBe(undefined);
         expect(metadata<string>(STYNX_PERMISSION_ROUTE, controller, methodName)).toMatch(/^flow:/);
       }
     }
@@ -108,7 +108,7 @@ describe('Flow route contracts', () => {
     for (const [controller, methodName, permission] of readRoutes) {
       expect(metadata<string>(STYNX_PERMISSION_ROUTE, controller, methodName)).toBe(permission);
       expect(metadata<boolean>(STYNX_READONLY_ROUTE, controller, methodName)).toBe(true);
-      expect(metadata(STYNX_AUDIT_METADATA, controller, methodName)).toBeUndefined();
+      expect(metadata(STYNX_AUDIT_METADATA, controller, methodName)).toBe(undefined);
     }
   });
 

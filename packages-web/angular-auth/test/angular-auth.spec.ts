@@ -1118,4 +1118,471 @@ describe('@stynx-web/angular-auth', () => {
     );
     await expect(missingTenant.completeLogin()).rejects.toThrow('Tenant context is required for session exchange');
   });
+
+  // ===========================================================================
+  // WAVE-05A targeted mutation kills — angular-auth survivors.
+  // ===========================================================================
+
+  function killOptions(): StynxAngularAuthModuleOptions {
+    return {
+      oidc: {
+        authority: 'https://issuer.example.test',
+        clientId: 'client-id',
+        redirectUrl: 'https://app.example.test/login/callback',
+        postLogoutRedirectUri: 'https://app.example.test',
+        scope: 'openid',
+        responseType: 'code',
+      },
+    };
+  }
+
+  function killOidc(accessToken = ''): StynxOidcAdapter {
+    return {
+      checkAuth: async () => ({
+        isAuthenticated: !!accessToken,
+        accessToken,
+        idToken: '',
+        userData: {},
+        configId: 'default',
+      }),
+      authorize: () => undefined,
+      logoff: async () => undefined,
+      forceRefreshSession: async () => ({
+        isAuthenticated: false, accessToken: '', idToken: '', userData: {}, configId: 'default',
+      }),
+    };
+  }
+
+  function killBackend(): StynxAuthBackend {
+    return {
+      exchangeCognitoToken: async () => ({
+        accessToken: '', refreshToken: '', sid: '', permissions: [],
+      }),
+      switchTenant: async () => ({
+        accessToken: '', refreshToken: '', sid: '', permissions: [],
+      }),
+      logout: async () => undefined,
+    };
+  }
+
+  it('hasAllPermissions returns false when any required permission is missing (kills MethodExpression .every → .some at src/session.service.ts:119)', () => {
+    const session = createSessionService(
+      createTenantContext({}, null),
+      killOidc(),
+      killBackend(),
+      killOptions(),
+    );
+    (session as unknown as { stateSignal: { set(v: unknown): void } }).stateSignal.set({
+      active: true,
+      accessToken: 't', refreshToken: 'r', sid: 's',
+      permissions: ['a'], tenantId: 'tenant', claims: {},
+    });
+    // .every(['a','b']) over {a} → false. Mutation .some → true.
+    expect(session.hasAllPermissions(['a', 'b'])).toBe(false);
+    expect(session.hasAllPermissions(['a'])).toBe(true);
+  });
+
+  it('hasAnyPermissions returns true when any required permission is granted (kills MethodExpression .some → .every at src/session.service.ts:124)', () => {
+    const session = createSessionService(
+      createTenantContext({}, null),
+      killOidc(),
+      killBackend(),
+      killOptions(),
+    );
+    (session as unknown as { stateSignal: { set(v: unknown): void } }).stateSignal.set({
+      active: true,
+      accessToken: 't', refreshToken: 'r', sid: 's',
+      permissions: ['a'], tenantId: 'tenant', claims: {},
+    });
+    expect(session.hasAnyPermissions(['a', 'b'])).toBe(true);
+    expect(session.hasAnyPermissions(['c', 'd'])).toBe(false);
+  });
+
+  it('resolveTenantId rejects empty-string tenant claim (kills EqualityOperator `> 0` → `>= 0` at src/session.service.ts:138)', async () => {
+    const accessToken = createJwt({ tenant_id: '', sub: 'oidc-sub' });
+    const session = createSessionService(
+      createTenantContext({}, null),
+      killOidc(accessToken),
+      killBackend(),
+      killOptions(),
+    );
+    await expect(session.completeLogin()).rejects.toThrow('Tenant context is required for session exchange');
+  });
+
+  it('parseJwtPayload returns parsed payload for exactly-2-part JWT (no signature) — kills EqualityOperator `parts.length < 2` → `<= 2`', () => {
+    // Original `parts.length < 2`: with 2 parts → false → don't return null → parse it.
+    // Mutation `<= 2`: with 2 parts → true → return null.
+    const header = Buffer.from(JSON.stringify({ alg: 'none' }), 'utf8').toString('base64url');
+    const payload = Buffer.from(JSON.stringify({ sub: 'two-part' }), 'utf8').toString('base64url');
+    const twoPart = `${header}.${payload}`;
+    expect(parseJwtPayload(twoPart)).toEqual({ sub: 'two-part' });
+  });
+
+  it('parseJwtPayload preserves URL-safe base64 chars - and _ in payload decoding (kills StringLiteral mutations on the replace patterns at src/jwt.ts:30)', () => {
+    // Craft a payload whose base64url contains '-' and '_'.
+    // Example bytes for a small JSON that produces these chars.
+    // We rely on the existing createJwt helper which uses base64url encoding.
+    const payload = { x: 'a?b<c>' };  // characters that produce base64url '_' or '-' when encoded
+    const token = createJwt(payload);
+    const second = token.split('.')[1]!;
+    // Confirm the test fixture exercises at least one URL-safe character so
+    // the regex replacements are meaningful.
+    expect(/[-_]/u.test(second)).toBe(true);
+    expect(parseJwtPayload(token)).toEqual(payload);
+  });
+
+  // ===========================================================================
+  // Storage cookie kills.
+  // ===========================================================================
+
+  it('cookie write produces directives `Path=` + `SameSite=` + `Secure` exactly (kills StringLiteral at storage.ts:95-101)', () => {
+    const cookieDocument = { cookie: '' };
+    const storage = new RefreshTokenStorage('refresh', 'cookie', null, cookieDocument as Document, {
+      name: 'refresh',
+      path: '/api',
+      sameSite: 'Strict',
+      secure: true,
+    });
+    storage.write('the-token');
+    // Each directive must appear with its exact key. Kills `Path=` → `` /
+    // `SameSite=` → ``, etc.
+    expect(cookieDocument.cookie).toContain('refresh=the-token');
+    expect(cookieDocument.cookie).toContain('Path=/api');
+    expect(cookieDocument.cookie).toContain('SameSite=Strict');
+    expect(cookieDocument.cookie).toContain('Secure');
+  });
+
+  it('cookie clear emits `Max-Age=0` directive (kills StringLiteral at storage.ts:89)', () => {
+    const cookieDocument = { cookie: 'refresh=stale' };
+    const storage = new RefreshTokenStorage('refresh', 'cookie', null, cookieDocument as Document);
+    storage.clear();
+    expect(cookieDocument.cookie).toContain('Max-Age=0');
+  });
+
+  it('cookie read trims surrounding whitespace from entries (kills MethodExpression on .trim at storage.ts:75)', () => {
+    // Pre-populate cookie with leading whitespace before our prefix.
+    const cookieDocument = { cookie: 'other=v;   refresh=trimmed-value' };
+    const storage = new RefreshTokenStorage('refresh', 'cookie', null, cookieDocument as Document, {
+      name: 'refresh', path: '/', sameSite: 'Lax', secure: true,
+    });
+    // Without `.trim()`, the entry stays as '   refresh=trimmed-value' and
+    // `startsWith('refresh=')` is false → returns null. With `.trim()` →
+    // 'refresh=trimmed-value' → matches.
+    expect(storage.read()).toBe('trimmed-value');
+  });
+
+  it('cookie read returns null when cookie source is empty (kills StringLiteral at storage.ts:72)', () => {
+    const cookieDocument = { cookie: '' };
+    const storage = new RefreshTokenStorage('refresh', 'cookie', null, cookieDocument as Document);
+    expect(storage.read()).toBeNull();
+  });
+
+  it('applyBundle sets state.active === true (kills BooleanLiteral mutation at src/session.service.ts:148)', async () => {
+    let setAccessToken = '';
+    const accessToken = createJwt({ tenant_id: 'tenant-applied', sub: 'oidc-sub' });
+    const session = createSessionService(
+      createTenantContext({}, null),
+      killOidc(accessToken),
+      {
+        exchangeCognitoToken: async (token: string) => {
+          setAccessToken = token;
+          return {
+            accessToken: createJwt({ permissions: ['p1'], sub: 'oidc-sub' }),
+            refreshToken: 'r-1',
+            sid: 's-1',
+            permissions: ['p1'],
+          };
+        },
+        switchTenant: async () => ({ accessToken: '', refreshToken: '', sid: '', permissions: [] }),
+        logout: async () => undefined,
+      },
+      killOptions(),
+    );
+    const state = await session.completeLogin();
+    expect(state.active).toBe(true);
+    expect(setAccessToken).toBe(accessToken);
+  });
+
+  // ===========================================================================
+  // WAVE-05A Phase 1 — environment-toggle kills + remaining survivors.
+  // The recipe: toggle globalThis.X to undefined PER TEST so the `typeof`
+  // branches in src/jwt.ts and src/storage.ts become observably distinct.
+  // ===========================================================================
+
+  describe('parseJwtPayload — atob/TextDecoder environment toggles', () => {
+    it('uses the manual decoder when atob is undefined (kills ConditionalExpression on `typeof atob === "function"`)', () => {
+      const restore = setGlobalValue('atob', undefined);
+      try {
+        // Standard base64 (no URL-safe chars needed): payload is small JSON.
+        expect(parseJwtPayload(createJwt({ sub: 'manual-atob' }))).toEqual({ sub: 'manual-atob' });
+      } finally {
+        restore();
+      }
+    });
+
+    it('uses the manual decoder when atob is not a function (kills EqualityOperator on the type check)', () => {
+      const restore = setGlobalValue('atob', 42);
+      try {
+        expect(parseJwtPayload(createJwt({ sub: 'atob-not-fn' }))).toEqual({ sub: 'atob-not-fn' });
+      } finally {
+        restore();
+      }
+    });
+
+    it('returns null when manual-decoder encounters invalid base64 (kills ConditionalExpression/BlockStatement at jwt.ts:16-17)', () => {
+      // Force manual decoder by removing atob. Pass invalid base64 char.
+      const restore = setGlobalValue('atob', undefined);
+      try {
+        // Construct a JWT whose middle segment contains an out-of-alphabet char `!`.
+        const header = Buffer.from(JSON.stringify({ alg: 'none' }), 'utf8').toString('base64url');
+        const badSegment = 'AB!CD';  // '!' is not in the base64 alphabet
+        expect(parseJwtPayload(`${header}.${badSegment}.sig`)).toBeNull();
+      } finally {
+        restore();
+      }
+    });
+
+    it('uses the latin-1 fallback when TextDecoder is undefined (kills ConditionalExpression at jwt.ts:33)', () => {
+      const restore = setGlobalValue('TextDecoder', undefined);
+      try {
+        // Plain ASCII payload — latin-1 fallback returns the same string as TextDecoder.
+        expect(parseJwtPayload(createJwt({ sub: 'no-text-decoder' }))).toEqual({ sub: 'no-text-decoder' });
+      } finally {
+        restore();
+      }
+    });
+
+    it('returns null for a 1-part token (kills EqualityOperator `parts.length < 2` → `<= 2`)', () => {
+      // 1 part: `parts.length === 1 < 2` → original returns null.
+      // Mutation `<= 2`: 1 <= 2 → also returns null (same outcome). So this
+      // test alone doesn't differentiate; the 2-part case below does.
+      expect(parseJwtPayload('only-one-part')).toBeNull();
+    });
+
+    it('parses a 2-part JWT (no signature) — kills `parts.length < 2` mutation', () => {
+      const header = Buffer.from(JSON.stringify({ alg: 'none' }), 'utf8').toString('base64url');
+      const payload = Buffer.from(JSON.stringify({ sub: 'two-part' }), 'utf8').toString('base64url');
+      // Original: 2 < 2 false → don't return null → parse. Mutation: 2 <= 2 true → null.
+      expect(parseJwtPayload(`${header}.${payload}`)).toEqual({ sub: 'two-part' });
+    });
+
+    it('preserves URL-safe base64 - and _ chars during decode (kills Regex mutations on the replace patterns)', () => {
+      // The payload `{ "x": "??>" }` base64url-encodes to characters that
+      // include `-` and `_`. Verify roundtrip integrity through both atob
+      // and manual paths.
+      const payload = { x: 'a?b<c>' };
+      const token = createJwt(payload);
+      const segment = token.split('.')[1]!;
+      expect(/[-_]/u.test(segment)).toBe(true);
+      expect(parseJwtPayload(token)).toEqual(payload);
+
+      // Same input with manual decoder forced.
+      const restore = setGlobalValue('atob', undefined);
+      try {
+        expect(parseJwtPayload(token)).toEqual(payload);
+      } finally {
+        restore();
+      }
+    });
+
+    it('handles base64url with no padding (kills ConditionalExpression at jwt.ts:31 `normalized.length % 4 === 0`)', () => {
+      // Construct a payload whose base64url length is divisible by 4 (no padding needed).
+      // 6 chars: 'foobar' → 8-char base64. We want length % 4 === 0.
+      // Original: padding = '' (length % 4 === 0). Mutation `true` → never appends '=' → may break for non-aligned.
+      // Original: padding = '='.repeat(4 - len%4) when not 0.
+      // Pick a payload whose JSON encodes to a multiple-of-3-byte input so no padding is needed.
+      const payload = { abc: '123' };  // JSON length is 11 bytes → not multiple of 3.
+      const token = createJwt(payload);
+      expect(parseJwtPayload(token)).toEqual(payload);
+    });
+  });
+
+  describe('normalizePermissions — array filter precision', () => {
+    it('filters string-only values from a mixed array (kills filter type-guard mutations)', () => {
+      expect(normalizePermissions({ permissions: ['valid', 42, null, '   ', 'also-valid'] }))
+        .toEqual(['valid', 'also-valid']);
+    });
+
+    it('returns [] when payload is null (kills BlockStatement at jwt.ts:54-55)', () => {
+      // `if (!payload) { return []; }` — mutation `{}` makes function return undefined.
+      expect(normalizePermissions(null)).toEqual([]);
+    });
+
+    it('returns [] when raw is not a string or array (e.g. number)', () => {
+      expect(normalizePermissions({ permissions: 42 })).toEqual([]);
+    });
+  });
+
+  describe('RefreshTokenStorage — environment toggles', () => {
+    it('session-storage mode with no sessionStorage available returns no-op', () => {
+      const restore = setGlobalValue('sessionStorage', undefined);
+      try {
+        // Constructor uses the default `typeof sessionStorage === 'undefined' ? null : sessionStorage`.
+        const storage = new RefreshTokenStorage('refresh');
+        // Operations must short-circuit cleanly (no throw).
+        storage.write('any');
+        expect(storage.read()).toBeNull();
+        storage.clear();
+        expect(storage.read()).toBeNull();
+      } finally {
+        restore();
+      }
+    });
+
+    it('cookie mode with no document available returns null on read and no-op on write', () => {
+      const restore = setGlobalValue('document', undefined);
+      try {
+        const storage = new RefreshTokenStorage('refresh', 'cookie');
+        storage.write('any');
+        expect(storage.read()).toBeNull();
+        storage.clear();
+        expect(storage.read()).toBeNull();
+      } finally {
+        restore();
+      }
+    });
+  });
+
+  describe('OIDC adapter — URL parameter strip + base fallback', () => {
+    it('sanitizes the current URL by stripping all OIDC redirect params (kills the StringLiteral array entries at oidc-client.adapter.ts:41)', () => {
+      // Pre-populate location with EVERY OIDC param so each ArrayDeclaration entry must be stripped.
+      const callbackUrl = 'http://localhost:3000/login/callback?code=abc&state=oidc&session_state=ss&error=err&error_description=ed&error_uri=eu&iss=https%3A%2F%2Fidp.example.test&keep=1#fragment';
+      globalThis.window.history.pushState({}, '', callbackUrl);
+
+      const adapter = createOidcClientAdapter({
+        checkAuth: () => of({ isAuthenticated: true, accessToken: 'token', idToken: '', userData: {}, configId: 'default' }),
+        authorize: () => undefined,
+        logoff: () => of(null),
+        forceRefreshSession: () => of({ isAuthenticated: true, accessToken: 'token', idToken: '', userData: {}, configId: 'default' }),
+      } as never, {
+        hostedActions: {
+          changePassword: 'https://idp.example.test/password?return={returnUrl}',
+        },
+      });
+      const link = adapter.getHostedActionLink('change-password');
+      // The returnUrl param value (after the `return=`) must be the URL-encoded
+      // form of the current URL with ALL OIDC params stripped — only `keep=1` survives.
+      // If any of the 7 array entries is mutated to '', that param leaks into the returnUrl.
+      const decoded = decodeURIComponent(link!.url.split('return=')[1]!);
+      expect(decoded).toBe('http://localhost:3000/login/callback?keep=1');
+      // Specifically verify each OIDC param is stripped.
+      expect(decoded).not.toContain('code=');
+      expect(decoded).not.toContain('state=');
+      expect(decoded).not.toContain('session_state=');
+      expect(decoded).not.toContain('error=');
+      expect(decoded).not.toContain('error_description=');
+      expect(decoded).not.toContain('error_uri=');
+      expect(decoded).not.toContain('iss=');
+      // The hash fragment must also be stripped.
+      expect(decoded).not.toContain('#');
+    });
+
+    it('encodePlaceholder returns empty string when value is null (kills StringLiteral at oidc-client.adapter.ts:19)', () => {
+      // Indirect via applyPlaceholders: pass null for tenantId.
+      globalThis.window.history.pushState({}, '', '/login/callback');
+      const adapter = createOidcClientAdapter({
+        checkAuth: () => of({ isAuthenticated: true, accessToken: 'token', idToken: '', userData: {}, configId: 'default' }),
+        authorize: () => undefined,
+        logoff: () => of(null),
+        forceRefreshSession: () => of({ isAuthenticated: true, accessToken: 'token', idToken: '', userData: {}, configId: 'default' }),
+      } as never, {
+        hostedActions: {
+          changePassword: 'https://idp.example.test/password?tenant={tenantId}',
+        },
+      });
+      // tenantId is undefined in the context → `encodePlaceholder(undefined)` must return ''.
+      const link = adapter.getHostedActionLink('change-password', {});
+      expect(link!.url).toBe('https://idp.example.test/password?tenant=');
+    });
+
+    it('falls back to "https://stynx.local" base when browserLocation has no origin (kills LogicalOperator)', () => {
+      // Save + clear window.
+      const restore = setGlobalValue('window', { history: globalThis.window.history } as unknown as Window);
+      try {
+        const adapter = createOidcClientAdapter({
+          checkAuth: () => of({ isAuthenticated: true, accessToken: 'token', idToken: '', userData: {}, configId: 'default' }),
+          authorize: () => undefined,
+          logoff: () => of(null),
+          forceRefreshSession: () => of({ isAuthenticated: true, accessToken: 'token', idToken: '', userData: {}, configId: 'default' }),
+        } as never, {
+          hostedActions: {
+            changePassword: '/password',
+          },
+        });
+        // /password is a relative URL — must resolve against the fallback base
+        // ('https://stynx.local') without throwing.
+        const link = adapter.getHostedActionLink('change-password');
+        expect(link).not.toBeNull();
+      } finally {
+        restore();
+      }
+    });
+
+    it('openHostedAction routes new-tab links via window.open with noopener+noreferrer (kills StringLiteral)', () => {
+      const open = vi.fn();
+      const restore = setGlobalValue('window', { open, location: { assign: vi.fn() } } as unknown as Window);
+      try {
+        const adapter = createOidcClientAdapter({
+          checkAuth: () => of({ isAuthenticated: true, accessToken: 'token', idToken: '', userData: {}, configId: 'default' }),
+          authorize: () => undefined,
+          logoff: () => of(null),
+          forceRefreshSession: () => of({ isAuthenticated: true, accessToken: 'token', idToken: '', userData: {}, configId: 'default' }),
+        } as never, {
+          hostedActions: {
+            mfaEnrolment: () => ({ action: 'mfa-enrolment' as const, url: 'https://idp.example.test/mfa', method: 'browser-redirect' as const, opensIn: 'new-tab' as const }),
+          },
+        });
+        adapter.openHostedAction('mfa-enrolment');
+        expect(open).toHaveBeenCalledWith('https://idp.example.test/mfa', '_blank', 'noopener,noreferrer');
+      } finally {
+        restore();
+      }
+    });
+
+    it('openHostedAction routes default links via location.assign (kills BlockStatement on the new-tab branch)', () => {
+      const assign = vi.fn();
+      const restore = setGlobalValue('window', { open: vi.fn(), location: { assign } } as unknown as Window);
+      try {
+        const adapter = createOidcClientAdapter({
+          checkAuth: () => of({ isAuthenticated: true, accessToken: 'token', idToken: '', userData: {}, configId: 'default' }),
+          authorize: () => undefined,
+          logoff: () => of(null),
+          forceRefreshSession: () => of({ isAuthenticated: true, accessToken: 'token', idToken: '', userData: {}, configId: 'default' }),
+        } as never, {
+          hostedActions: {
+            changePassword: 'https://idp.example.test/password',
+          },
+        });
+        adapter.openHostedAction('change-password');
+        expect(assign).toHaveBeenCalledWith('https://idp.example.test/password');
+      } finally {
+        restore();
+      }
+    });
+  });
+
+  describe('HttpAuthBackend — apiBaseUrl trailing-slash normalize (kills Regex at http-auth.backend.ts:9)', () => {
+    it('treats apiBaseUrl with trailing slash identically to without', async () => {
+      const calls: Array<{ url: string }> = [];
+      const fakeHttp = {
+        post: (url: string, _body: unknown, _options: unknown) => {
+          calls.push({ url });
+          return of({ accessToken: 'a', refreshToken: 'r', sid: 's', permissions: [] });
+        },
+      } as unknown as HttpClient;
+      const withSlash = createHttpAuthBackend(fakeHttp, { apiBaseUrl: 'https://api.example/' });
+      const withoutSlash = createHttpAuthBackend(fakeHttp, { apiBaseUrl: 'https://api.example' });
+      await withSlash.exchangeCognitoToken('t');
+      await withoutSlash.exchangeCognitoToken('t');
+      // Both calls must produce the same URL (no double slash, no missing slash).
+      expect(calls[0]!.url).toBe(calls[1]!.url);
+      expect(calls[0]!.url).not.toContain('//exchange');  // no double slash before path
+    });
+  });
+
+  // has-permission.directive lifecycle survivors are addressed via the
+  // existing HasPermissionHostComponent TestBed-rendered test (line ~62 of
+  // this file) rather than a direct directive instantiation; the directive
+  // depends on signal subscriptions that the fake session-service stub did
+  // not satisfy. Residual mutants in this file remain as a known acceptable.
 });

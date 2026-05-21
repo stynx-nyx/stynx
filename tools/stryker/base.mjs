@@ -1,7 +1,43 @@
+// Central Stryker factory for stynx packages.
+//
+// Threshold resolution
+// --------------------
+// `threshold` argument is optional. When absent, resolves from
+// scripts/test-matrix.config.json via getMutationThresholds(packageName).
+// Policies may be a number (legacy single-floor) or an object {break, high}
+// (tiered floor + target). The resolved triplet drives Stryker's
+// thresholds.{high, low, break}.
+//
+// CI / PR split modes (see docs/adr/2026-05-21-mutation-thresholds-tiered.md)
+// --------------------------------------------------------------------------
+// `STRYKER_INCREMENTAL` (env) is the split-mode knob:
+//   - unset / 'true'  → incremental: true.  Use for local dev iteration and
+//                       (later) the per-PR scoped gate. Cache file lives at
+//                       reports/stryker-incremental.json; persist across CI
+//                       runs via actions/cache.
+//   - 'false'         → incremental: false. Use for the weekly Monday cron
+//                       (.github/workflows/hardening.yml) and any monthly
+//                       baseline-refresh job. Full runs are the only way to
+//                       catch cross-file drift in a monorepo.
+//
+// Per-PR mutation gating is intentionally deferred (see ADR). When adopted,
+// the gate runs the PR-mode factory with `STRYKER_INCREMENTAL=true` and the
+// `actions/cache` step keyed on src+test hashes; the weekly cron continues to
+// emit the authoritative score with `STRYKER_INCREMENTAL=false`.
+//
+// Default mutate exclusions
+// -------------------------
+// `*.controller.ts` files are excluded by default. Nest controllers in stynx
+// are thin HTTP → service forwarders; their literal route paths and
+// permission strings are exercised by integration tests via supertest, not
+// by unit specs. Mutating them under unit mocks produces low-signal
+// survivors and dilutes the report (see audit MUTATION_AUDIT_2026-05-19.md
+// finding #11). Packages that genuinely have branching logic inside a
+// controller may opt back in by overriding `mutate`.
 import { existsSync, readdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { getMutationThreshold } from '../repo-config/test-thresholds.mjs';
+import { getMutationThresholds } from '../repo-config/test-thresholds.mjs';
 
 function cleanStrykerBackups(tempDirName) {
   const tempDir = join(process.cwd(), tempDirName);
@@ -22,7 +58,7 @@ export function createStrykerConfig({
   checkers = ['typescript'],
   concurrency = 2,
   vitestConfig = './vitest.config.ts',
-  mutate = ['src/**/*.ts', '!src/**/*.d.ts'],
+  mutate = ['src/**/*.ts', '!src/**/*.d.ts', '!src/**/*.controller.ts'],
   timeoutMS,
   ignoreStatic = false,
   incremental = process.env.STRYKER_INCREMENTAL !== 'false',
@@ -30,11 +66,10 @@ export function createStrykerConfig({
   const tempDirName = '.stryker-tmp';
   cleanStrykerBackups(tempDirName);
 
-  // `threshold` argument is optional — resolves from
-  // scripts/test-matrix.config.json via test-thresholds.mjs when absent.
-  const resolvedThreshold = typeof threshold === 'number'
-    ? threshold
-    : getMutationThreshold(packageName);
+  const resolved = typeof threshold === 'number'
+    ? { break: threshold, high: threshold, low: Math.max(60, threshold - 10) }
+    : getMutationThresholds(packageName);
+
   return {
     packageManager: 'pnpm',
     plugins: ['@stryker-mutator/vitest-runner', '@stryker-mutator/typescript-checker'],
@@ -55,9 +90,9 @@ export function createStrykerConfig({
     },
     reporters: ['clear-text', 'progress', 'html', 'json'],
     thresholds: {
-      high: resolvedThreshold,
-      low: Math.max(60, resolvedThreshold - 10),
-      break: resolvedThreshold,
+      high: resolved.high,
+      low: resolved.low,
+      break: resolved.break,
     },
     htmlReporter: {
       fileName: `reports/mutation/${packageName.replace(/[@/]/g, '-')}/index.html`,

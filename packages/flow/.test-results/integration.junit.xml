@@ -1,139 +1,139 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="60" failures="0" errors="0" time="98.128464748">
-    <testsuite name="test/integration/analytics.api-matrix.spec.ts" timestamp="2026-05-20T02:03:07.318Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="11.243309625">
-        <testcase classname="test/integration/analytics.api-matrix.spec.ts" name="FlowAnalyticsController API error matrix &gt; GET /flow/open-tasks &gt; returns 200 with open task analytics for the authorized tenant" time="0.185872917">
+<testsuites name="vitest tests" tests="60" failures="0" errors="0" time="86.810806084">
+    <testsuite name="test/integration/analytics.api-matrix.spec.ts" timestamp="2026-05-21T02:17:22.739Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="9.94367775">
+        <testcase classname="test/integration/analytics.api-matrix.spec.ts" name="FlowAnalyticsController API error matrix &gt; GET /flow/open-tasks &gt; returns 200 with open task analytics for the authorized tenant" time="0.156132542">
         </testcase>
-        <testcase classname="test/integration/analytics.api-matrix.spec.ts" name="FlowAnalyticsController API error matrix &gt; GET /flow/open-tasks &gt; returns 400 when the request id header is malformed" time="0.002897125">
+        <testcase classname="test/integration/analytics.api-matrix.spec.ts" name="FlowAnalyticsController API error matrix &gt; GET /flow/open-tasks &gt; returns 400 when the request id header is malformed" time="0.003462542">
         </testcase>
-        <testcase classname="test/integration/analytics.api-matrix.spec.ts" name="FlowAnalyticsController API error matrix &gt; GET /flow/open-tasks &gt; returns 401 when the bearer token is missing" time="0.002816083">
+        <testcase classname="test/integration/analytics.api-matrix.spec.ts" name="FlowAnalyticsController API error matrix &gt; GET /flow/open-tasks &gt; returns 401 when the bearer token is missing" time="0.003047875">
         </testcase>
-        <testcase classname="test/integration/analytics.api-matrix.spec.ts" name="FlowAnalyticsController API error matrix &gt; GET /flow/open-tasks &gt; returns 403 when the authenticated actor lacks flow analytics permission" time="0.0382445">
-        </testcase>
-    </testsuite>
-    <testsuite name="test/integration/answers.api-matrix.spec.ts" timestamp="2026-05-20T02:03:07.319Z" hostname="thiamat-1903.local" tests="11" failures="0" errors="0" skipped="0" time="14.614297291">
-        <testcase classname="test/integration/answers.api-matrix.spec.ts" name="FlowAnswersController API error matrix &gt; PATCH /flow/answers/:id &gt; returns 200 after updating an answer for the authorized tenant" time="0.241548917">
-        </testcase>
-        <testcase classname="test/integration/answers.api-matrix.spec.ts" name="FlowAnswersController API error matrix &gt; PATCH /flow/answers/:id &gt; returns 200 after updating only the answer value" time="0.094918792">
-        </testcase>
-        <testcase classname="test/integration/answers.api-matrix.spec.ts" name="FlowAnswersController API error matrix &gt; PATCH /flow/answers/:id &gt; returns 400 when the body fails answer validation" time="0.004963042">
-        </testcase>
-        <testcase classname="test/integration/answers.api-matrix.spec.ts" name="FlowAnswersController API error matrix &gt; PATCH /flow/answers/:id &gt; returns 401 when the bearer token is missing" time="0.003237875">
-        </testcase>
-        <testcase classname="test/integration/answers.api-matrix.spec.ts" name="FlowAnswersController API error matrix &gt; PATCH /flow/answers/:id &gt; returns 403 when the authenticated actor lacks flow task execution permission" time="0.048768375">
-        </testcase>
-        <testcase classname="test/integration/answers.api-matrix.spec.ts" name="FlowAnswersController API error matrix &gt; PATCH /flow/answers/:id &gt; returns 404 when the answer does not exist" time="0.052301625">
-        </testcase>
-        <testcase classname="test/integration/answers.api-matrix.spec.ts" name="FlowAnswersController API error matrix &gt; DELETE /flow/answers/:id &gt; returns 200 after soft-deleting an answer for the authorized tenant" time="0.091818125">
-        </testcase>
-        <testcase classname="test/integration/answers.api-matrix.spec.ts" name="FlowAnswersController API error matrix &gt; DELETE /flow/answers/:id &gt; returns 400 when the request id header is malformed" time="0.002262458">
-        </testcase>
-        <testcase classname="test/integration/answers.api-matrix.spec.ts" name="FlowAnswersController API error matrix &gt; DELETE /flow/answers/:id &gt; returns 401 when the bearer token is missing" time="0.005394208">
-        </testcase>
-        <testcase classname="test/integration/answers.api-matrix.spec.ts" name="FlowAnswersController API error matrix &gt; DELETE /flow/answers/:id &gt; returns 403 when the authenticated actor lacks flow task execution permission" time="0.004773458">
-        </testcase>
-        <testcase classname="test/integration/answers.api-matrix.spec.ts" name="FlowAnswersController API error matrix &gt; DELETE /flow/answers/:id &gt; returns 404 when the answer does not exist" time="0.041809459">
+        <testcase classname="test/integration/analytics.api-matrix.spec.ts" name="FlowAnalyticsController API error matrix &gt; GET /flow/open-tasks &gt; returns 403 when the authenticated actor lacks flow analytics permission" time="0.036453">
         </testcase>
     </testsuite>
-    <testsuite name="test/integration/edges.api-matrix.spec.ts" timestamp="2026-05-20T02:03:07.321Z" hostname="thiamat-1903.local" tests="14" failures="0" errors="0" skipped="0" time="14.858819291">
-        <testcase classname="test/integration/edges.api-matrix.spec.ts" name="FlowEdgesController API error matrix &gt; GET /flow/edges/:id &gt; returns 200 for an authorized design edge lookup" time="0.174495291">
+    <testsuite name="test/integration/answers.api-matrix.spec.ts" timestamp="2026-05-21T02:17:22.740Z" hostname="thiamat-1903.local" tests="11" failures="0" errors="0" skipped="0" time="11.565958167">
+        <testcase classname="test/integration/answers.api-matrix.spec.ts" name="FlowAnswersController API error matrix &gt; PATCH /flow/answers/:id &gt; returns 200 after updating an answer for the authorized tenant" time="0.193550875">
         </testcase>
-        <testcase classname="test/integration/edges.api-matrix.spec.ts" name="FlowEdgesController API error matrix &gt; GET /flow/edges/:id &gt; returns 401 when the bearer token is missing" time="0.003156916">
+        <testcase classname="test/integration/answers.api-matrix.spec.ts" name="FlowAnswersController API error matrix &gt; PATCH /flow/answers/:id &gt; returns 200 after updating only the answer value" time="0.056556917">
         </testcase>
-        <testcase classname="test/integration/edges.api-matrix.spec.ts" name="FlowEdgesController API error matrix &gt; GET /flow/edges/:id &gt; returns 403 when the authenticated actor lacks flow design read permission" time="0.062217541">
+        <testcase classname="test/integration/answers.api-matrix.spec.ts" name="FlowAnswersController API error matrix &gt; PATCH /flow/answers/:id &gt; returns 400 when the body fails answer validation" time="0.00412975">
         </testcase>
-        <testcase classname="test/integration/edges.api-matrix.spec.ts" name="FlowEdgesController API error matrix &gt; GET /flow/edges/:id &gt; returns 404 when the edge does not exist" time="0.074312667">
+        <testcase classname="test/integration/answers.api-matrix.spec.ts" name="FlowAnswersController API error matrix &gt; PATCH /flow/answers/:id &gt; returns 401 when the bearer token is missing" time="0.002105333">
         </testcase>
-        <testcase classname="test/integration/edges.api-matrix.spec.ts" name="FlowEdgesController API error matrix &gt; PATCH /flow/edges/:id &gt; returns 200 after updating an edge for the authorized tenant" time="0.07302725">
+        <testcase classname="test/integration/answers.api-matrix.spec.ts" name="FlowAnswersController API error matrix &gt; PATCH /flow/answers/:id &gt; returns 403 when the authenticated actor lacks flow task execution permission" time="0.018591541">
         </testcase>
-        <testcase classname="test/integration/edges.api-matrix.spec.ts" name="FlowEdgesController API error matrix &gt; PATCH /flow/edges/:id &gt; returns 400 when the body fails edge validation" time="0.004265958">
+        <testcase classname="test/integration/answers.api-matrix.spec.ts" name="FlowAnswersController API error matrix &gt; PATCH /flow/answers/:id &gt; returns 404 when the answer does not exist" time="0.023257709">
         </testcase>
-        <testcase classname="test/integration/edges.api-matrix.spec.ts" name="FlowEdgesController API error matrix &gt; PATCH /flow/edges/:id &gt; returns 401 when the bearer token is missing" time="0.002231416">
+        <testcase classname="test/integration/answers.api-matrix.spec.ts" name="FlowAnswersController API error matrix &gt; DELETE /flow/answers/:id &gt; returns 200 after soft-deleting an answer for the authorized tenant" time="0.058480917">
         </testcase>
-        <testcase classname="test/integration/edges.api-matrix.spec.ts" name="FlowEdgesController API error matrix &gt; PATCH /flow/edges/:id &gt; returns 403 when the authenticated actor lacks flow design write permission" time="0.002046333">
+        <testcase classname="test/integration/answers.api-matrix.spec.ts" name="FlowAnswersController API error matrix &gt; DELETE /flow/answers/:id &gt; returns 400 when the request id header is malformed" time="0.002109542">
         </testcase>
-        <testcase classname="test/integration/edges.api-matrix.spec.ts" name="FlowEdgesController API error matrix &gt; PATCH /flow/edges/:id &gt; returns 404 when the edge does not exist" time="0.019711333">
+        <testcase classname="test/integration/answers.api-matrix.spec.ts" name="FlowAnswersController API error matrix &gt; DELETE /flow/answers/:id &gt; returns 401 when the bearer token is missing" time="0.001922625">
         </testcase>
-        <testcase classname="test/integration/edges.api-matrix.spec.ts" name="FlowEdgesController API error matrix &gt; DELETE /flow/edges/:id &gt; returns 200 after soft-deleting an edge for the authorized tenant" time="0.085792791">
+        <testcase classname="test/integration/answers.api-matrix.spec.ts" name="FlowAnswersController API error matrix &gt; DELETE /flow/answers/:id &gt; returns 403 when the authenticated actor lacks flow task execution permission" time="0.002294875">
         </testcase>
-        <testcase classname="test/integration/edges.api-matrix.spec.ts" name="FlowEdgesController API error matrix &gt; DELETE /flow/edges/:id &gt; returns 400 when the request id header is malformed" time="0.0019935">
-        </testcase>
-        <testcase classname="test/integration/edges.api-matrix.spec.ts" name="FlowEdgesController API error matrix &gt; DELETE /flow/edges/:id &gt; returns 401 when the bearer token is missing" time="0.001746917">
-        </testcase>
-        <testcase classname="test/integration/edges.api-matrix.spec.ts" name="FlowEdgesController API error matrix &gt; DELETE /flow/edges/:id &gt; returns 403 when the authenticated actor lacks flow design write permission" time="0.0040505">
-        </testcase>
-        <testcase classname="test/integration/edges.api-matrix.spec.ts" name="FlowEdgesController API error matrix &gt; DELETE /flow/edges/:id &gt; returns 404 when the edge does not exist" time="0.030084916">
+        <testcase classname="test/integration/answers.api-matrix.spec.ts" name="FlowAnswersController API error matrix &gt; DELETE /flow/answers/:id &gt; returns 404 when the answer does not exist" time="0.014714166">
         </testcase>
     </testsuite>
-    <testsuite name="test/integration/effects.api-matrix.spec.ts" timestamp="2026-05-20T02:03:07.325Z" hostname="thiamat-1903.local" tests="6" failures="0" errors="0" skipped="0" time="13.463704417">
-        <testcase classname="test/integration/effects.api-matrix.spec.ts" name="FlowEffectsController API error matrix &gt; POST /flow/effects/dispatch &gt; returns 201 after dispatching a pending effect" time="0.468925083">
+    <testsuite name="test/integration/edges.api-matrix.spec.ts" timestamp="2026-05-21T02:17:22.742Z" hostname="thiamat-1903.local" tests="14" failures="0" errors="0" skipped="0" time="12.388531875">
+        <testcase classname="test/integration/edges.api-matrix.spec.ts" name="FlowEdgesController API error matrix &gt; GET /flow/edges/:id &gt; returns 200 for an authorized design edge lookup" time="0.232952708">
         </testcase>
-        <testcase classname="test/integration/effects.api-matrix.spec.ts" name="FlowEffectsController API error matrix &gt; POST /flow/effects/dispatch &gt; returns 400 when the body fails dispatch validation" time="0.004685875">
+        <testcase classname="test/integration/edges.api-matrix.spec.ts" name="FlowEdgesController API error matrix &gt; GET /flow/edges/:id &gt; returns 401 when the bearer token is missing" time="0.003589333">
         </testcase>
-        <testcase classname="test/integration/effects.api-matrix.spec.ts" name="FlowEffectsController API error matrix &gt; POST /flow/effects/dispatch &gt; returns 401 when the bearer token is missing" time="0.003031458">
+        <testcase classname="test/integration/edges.api-matrix.spec.ts" name="FlowEdgesController API error matrix &gt; GET /flow/edges/:id &gt; returns 403 when the authenticated actor lacks flow design read permission" time="0.033184083">
         </testcase>
-        <testcase classname="test/integration/effects.api-matrix.spec.ts" name="FlowEffectsController API error matrix &gt; POST /flow/effects/dispatch &gt; returns 403 when the authenticated actor lacks flow admin permission" time="0.146643417">
+        <testcase classname="test/integration/edges.api-matrix.spec.ts" name="FlowEdgesController API error matrix &gt; GET /flow/edges/:id &gt; returns 404 when the edge does not exist" time="0.038123125">
         </testcase>
-        <testcase classname="test/integration/effects.api-matrix.spec.ts" name="FlowEffectsController API error matrix &gt; POST /flow/effects/dispatch &gt; returns 422 when an idempotency key is reused with a different body" time="0.101281791">
+        <testcase classname="test/integration/edges.api-matrix.spec.ts" name="FlowEdgesController API error matrix &gt; PATCH /flow/edges/:id &gt; returns 200 after updating an edge for the authorized tenant" time="0.11080775">
         </testcase>
-        <testcase classname="test/integration/effects.api-matrix.spec.ts" name="FlowEffectsController API error matrix &gt; POST /flow/effects/dispatch &gt; returns 429 when the flow effect dispatch tenant bucket is exhausted" time="0.145322875">
+        <testcase classname="test/integration/edges.api-matrix.spec.ts" name="FlowEdgesController API error matrix &gt; PATCH /flow/edges/:id &gt; returns 400 when the body fails edge validation" time="0.004620042">
         </testcase>
-    </testsuite>
-    <testsuite name="test/integration/events.api-matrix.spec.ts" timestamp="2026-05-20T02:03:07.326Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="14.339795708">
-        <testcase classname="test/integration/events.api-matrix.spec.ts" name="FlowEventsController API error matrix &gt; GET /flow/events &gt; returns 200 with flow events for the authorized tenant" time="0.203260417">
+        <testcase classname="test/integration/edges.api-matrix.spec.ts" name="FlowEdgesController API error matrix &gt; PATCH /flow/edges/:id &gt; returns 401 when the bearer token is missing" time="0.001932333">
         </testcase>
-        <testcase classname="test/integration/events.api-matrix.spec.ts" name="FlowEventsController API error matrix &gt; GET /flow/events &gt; returns 400 when the request id header is malformed" time="0.004776334">
+        <testcase classname="test/integration/edges.api-matrix.spec.ts" name="FlowEdgesController API error matrix &gt; PATCH /flow/edges/:id &gt; returns 403 when the authenticated actor lacks flow design write permission" time="0.015422042">
         </testcase>
-        <testcase classname="test/integration/events.api-matrix.spec.ts" name="FlowEventsController API error matrix &gt; GET /flow/events &gt; returns 401 when the bearer token is missing" time="0.002517709">
+        <testcase classname="test/integration/edges.api-matrix.spec.ts" name="FlowEdgesController API error matrix &gt; PATCH /flow/edges/:id &gt; returns 404 when the edge does not exist" time="0.0875245">
         </testcase>
-        <testcase classname="test/integration/events.api-matrix.spec.ts" name="FlowEventsController API error matrix &gt; GET /flow/events &gt; returns 403 when the authenticated actor lacks flow runtime permission" time="0.075428208">
+        <testcase classname="test/integration/edges.api-matrix.spec.ts" name="FlowEdgesController API error matrix &gt; DELETE /flow/edges/:id &gt; returns 200 after soft-deleting an edge for the authorized tenant" time="0.262039333">
         </testcase>
-    </testsuite>
-    <testsuite name="test/integration/flow.database.spec.ts" timestamp="2026-05-20T02:03:07.327Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="1.008548625">
-        <testcase classname="test/integration/flow.database.spec.ts" name="Flow database and runtime integration &gt; applies Flow DDL with RLS, archive mirrors, and an append-only event ledger" time="0.009651792">
+        <testcase classname="test/integration/edges.api-matrix.spec.ts" name="FlowEdgesController API error matrix &gt; DELETE /flow/edges/:id &gt; returns 400 when the request id header is malformed" time="0.00212075">
         </testcase>
-        <testcase classname="test/integration/flow.database.spec.ts" name="Flow database and runtime integration &gt; enforces tenant isolation on tenant-scoped Flow tables" time="0.005644375">
+        <testcase classname="test/integration/edges.api-matrix.spec.ts" name="FlowEdgesController API error matrix &gt; DELETE /flow/edges/:id &gt; returns 401 when the bearer token is missing" time="0.001539834">
         </testcase>
-        <testcase classname="test/integration/flow.database.spec.ts" name="Flow database and runtime integration &gt; runs the workflow lifecycle, task actions, events, and form facts without PORM domains" time="0.084493541">
+        <testcase classname="test/integration/edges.api-matrix.spec.ts" name="FlowEdgesController API error matrix &gt; DELETE /flow/edges/:id &gt; returns 403 when the authenticated actor lacks flow design write permission" time="0.003478916">
         </testcase>
-        <testcase classname="test/integration/flow.database.spec.ts" name="Flow database and runtime integration &gt; blocks human task completion until required node form rules pass" time="0.03389325">
-        </testcase>
-        <testcase classname="test/integration/flow.database.spec.ts" name="Flow database and runtime integration &gt; re-evaluates active auto nodes when answers change form facts" time="0.033815041">
+        <testcase classname="test/integration/edges.api-matrix.spec.ts" name="FlowEdgesController API error matrix &gt; DELETE /flow/edges/:id &gt; returns 404 when the edge does not exist" time="0.144341917">
         </testcase>
     </testsuite>
-    <testsuite name="test/integration/node-runs.api-matrix.spec.ts" timestamp="2026-05-20T02:03:07.329Z" hostname="thiamat-1903.local" tests="9" failures="0" errors="0" skipped="0" time="14.74795325">
-        <testcase classname="test/integration/node-runs.api-matrix.spec.ts" name="FlowNodeRunsController API error matrix &gt; GET /flow/node-runs &gt; returns 200 with node runs for the authorized tenant" time="0.238443917">
+    <testsuite name="test/integration/effects.api-matrix.spec.ts" timestamp="2026-05-21T02:17:22.745Z" hostname="thiamat-1903.local" tests="6" failures="0" errors="0" skipped="0" time="13.123691167">
+        <testcase classname="test/integration/effects.api-matrix.spec.ts" name="FlowEffectsController API error matrix &gt; POST /flow/effects/dispatch &gt; returns 201 after dispatching a pending effect" time="0.623711125">
         </testcase>
-        <testcase classname="test/integration/node-runs.api-matrix.spec.ts" name="FlowNodeRunsController API error matrix &gt; GET /flow/node-runs &gt; returns 400 when the request id header is malformed" time="0.003358958">
+        <testcase classname="test/integration/effects.api-matrix.spec.ts" name="FlowEffectsController API error matrix &gt; POST /flow/effects/dispatch &gt; returns 400 when the body fails dispatch validation" time="0.004033542">
         </testcase>
-        <testcase classname="test/integration/node-runs.api-matrix.spec.ts" name="FlowNodeRunsController API error matrix &gt; GET /flow/node-runs &gt; returns 401 when the bearer token is missing" time="0.002115792">
+        <testcase classname="test/integration/effects.api-matrix.spec.ts" name="FlowEffectsController API error matrix &gt; POST /flow/effects/dispatch &gt; returns 401 when the bearer token is missing" time="0.001780709">
         </testcase>
-        <testcase classname="test/integration/node-runs.api-matrix.spec.ts" name="FlowNodeRunsController API error matrix &gt; GET /flow/node-runs &gt; returns 403 when the authenticated actor lacks flow runtime permission" time="0.046814333">
+        <testcase classname="test/integration/effects.api-matrix.spec.ts" name="FlowEffectsController API error matrix &gt; POST /flow/effects/dispatch &gt; returns 403 when the authenticated actor lacks flow admin permission" time="0.046749084">
         </testcase>
-        <testcase classname="test/integration/node-runs.api-matrix.spec.ts" name="FlowNodeRunsController API error matrix &gt; GET /flow/node-runs/:id &gt; returns 200 with the selected node run for the authorized tenant" time="0.022004667">
+        <testcase classname="test/integration/effects.api-matrix.spec.ts" name="FlowEffectsController API error matrix &gt; POST /flow/effects/dispatch &gt; returns 422 when an idempotency key is reused with a different body" time="0.087589292">
         </testcase>
-        <testcase classname="test/integration/node-runs.api-matrix.spec.ts" name="FlowNodeRunsController API error matrix &gt; GET /flow/node-runs/:id &gt; returns 400 when the request id header is malformed" time="0.00307875">
-        </testcase>
-        <testcase classname="test/integration/node-runs.api-matrix.spec.ts" name="FlowNodeRunsController API error matrix &gt; GET /flow/node-runs/:id &gt; returns 401 when the bearer token is missing" time="0.00200525">
-        </testcase>
-        <testcase classname="test/integration/node-runs.api-matrix.spec.ts" name="FlowNodeRunsController API error matrix &gt; GET /flow/node-runs/:id &gt; returns 403 when the authenticated actor lacks flow runtime permission" time="0.00466025">
-        </testcase>
-        <testcase classname="test/integration/node-runs.api-matrix.spec.ts" name="FlowNodeRunsController API error matrix &gt; GET /flow/node-runs/:id &gt; returns 404 when the node run does not exist" time="0.023722125">
+        <testcase classname="test/integration/effects.api-matrix.spec.ts" name="FlowEffectsController API error matrix &gt; POST /flow/effects/dispatch &gt; returns 429 when the flow effect dispatch tenant bucket is exhausted" time="0.058087833">
         </testcase>
     </testsuite>
-    <testsuite name="test/integration/signal.api-matrix.spec.ts" timestamp="2026-05-20T02:03:07.329Z" hostname="thiamat-1903.local" tests="7" failures="0" errors="0" skipped="0" time="13.852036541">
-        <testcase classname="test/integration/signal.api-matrix.spec.ts" name="FlowSignalController API error matrix &gt; POST /flow/signal &gt; returns 201 after signaling an active flow target" time="0.513444666">
+    <testsuite name="test/integration/events.api-matrix.spec.ts" timestamp="2026-05-21T02:17:22.746Z" hostname="thiamat-1903.local" tests="4" failures="0" errors="0" skipped="0" time="12.885679791">
+        <testcase classname="test/integration/events.api-matrix.spec.ts" name="FlowEventsController API error matrix &gt; GET /flow/events &gt; returns 200 with flow events for the authorized tenant" time="0.357781792">
         </testcase>
-        <testcase classname="test/integration/signal.api-matrix.spec.ts" name="FlowSignalController API error matrix &gt; POST /flow/signal &gt; returns 400 when the body fails flow signal validation" time="0.009282042">
+        <testcase classname="test/integration/events.api-matrix.spec.ts" name="FlowEventsController API error matrix &gt; GET /flow/events &gt; returns 400 when the request id header is malformed" time="0.008759125">
         </testcase>
-        <testcase classname="test/integration/signal.api-matrix.spec.ts" name="FlowSignalController API error matrix &gt; POST /flow/signal &gt; returns 401 when the bearer token is missing" time="0.005628167">
+        <testcase classname="test/integration/events.api-matrix.spec.ts" name="FlowEventsController API error matrix &gt; GET /flow/events &gt; returns 401 when the bearer token is missing" time="0.003612125">
         </testcase>
-        <testcase classname="test/integration/signal.api-matrix.spec.ts" name="FlowSignalController API error matrix &gt; POST /flow/signal &gt; returns 403 when the authenticated actor lacks flow runtime permission" time="0.086013625">
+        <testcase classname="test/integration/events.api-matrix.spec.ts" name="FlowEventsController API error matrix &gt; GET /flow/events &gt; returns 403 when the authenticated actor lacks flow runtime permission" time="0.084467917">
         </testcase>
-        <testcase classname="test/integration/signal.api-matrix.spec.ts" name="FlowSignalController API error matrix &gt; POST /flow/signal &gt; returns 404 when the referenced flow scope does not exist" time="0.085944875">
+    </testsuite>
+    <testsuite name="test/integration/flow.database.spec.ts" timestamp="2026-05-21T02:17:22.747Z" hostname="thiamat-1903.local" tests="5" failures="0" errors="0" skipped="0" time="0.878751417">
+        <testcase classname="test/integration/flow.database.spec.ts" name="Flow database and runtime integration &gt; applies Flow DDL with RLS, archive mirrors, and an append-only event ledger" time="0.009823417">
         </testcase>
-        <testcase classname="test/integration/signal.api-matrix.spec.ts" name="FlowSignalController API error matrix &gt; POST /flow/signal &gt; returns 422 when an idempotency key is reused with a different body" time="0.107304791">
+        <testcase classname="test/integration/flow.database.spec.ts" name="Flow database and runtime integration &gt; enforces tenant isolation on tenant-scoped Flow tables" time="0.007008084">
         </testcase>
-        <testcase classname="test/integration/signal.api-matrix.spec.ts" name="FlowSignalController API error matrix &gt; POST /flow/signal &gt; returns 429 when the flow signal tenant bucket is exhausted" time="0.12621">
+        <testcase classname="test/integration/flow.database.spec.ts" name="Flow database and runtime integration &gt; runs the workflow lifecycle, task actions, events, and form facts without PORM domains" time="0.073798042">
+        </testcase>
+        <testcase classname="test/integration/flow.database.spec.ts" name="Flow database and runtime integration &gt; blocks human task completion until required node form rules pass" time="0.023089583">
+        </testcase>
+        <testcase classname="test/integration/flow.database.spec.ts" name="Flow database and runtime integration &gt; re-evaluates active auto nodes when answers change form facts" time="0.019302334">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/integration/node-runs.api-matrix.spec.ts" timestamp="2026-05-21T02:17:22.748Z" hostname="thiamat-1903.local" tests="9" failures="0" errors="0" skipped="0" time="12.986977875">
+        <testcase classname="test/integration/node-runs.api-matrix.spec.ts" name="FlowNodeRunsController API error matrix &gt; GET /flow/node-runs &gt; returns 200 with node runs for the authorized tenant" time="0.3651465">
+        </testcase>
+        <testcase classname="test/integration/node-runs.api-matrix.spec.ts" name="FlowNodeRunsController API error matrix &gt; GET /flow/node-runs &gt; returns 400 when the request id header is malformed" time="0.003503209">
+        </testcase>
+        <testcase classname="test/integration/node-runs.api-matrix.spec.ts" name="FlowNodeRunsController API error matrix &gt; GET /flow/node-runs &gt; returns 401 when the bearer token is missing" time="0.001682125">
+        </testcase>
+        <testcase classname="test/integration/node-runs.api-matrix.spec.ts" name="FlowNodeRunsController API error matrix &gt; GET /flow/node-runs &gt; returns 403 when the authenticated actor lacks flow runtime permission" time="0.055266417">
+        </testcase>
+        <testcase classname="test/integration/node-runs.api-matrix.spec.ts" name="FlowNodeRunsController API error matrix &gt; GET /flow/node-runs/:id &gt; returns 200 with the selected node run for the authorized tenant" time="0.063846958">
+        </testcase>
+        <testcase classname="test/integration/node-runs.api-matrix.spec.ts" name="FlowNodeRunsController API error matrix &gt; GET /flow/node-runs/:id &gt; returns 400 when the request id header is malformed" time="0.002164792">
+        </testcase>
+        <testcase classname="test/integration/node-runs.api-matrix.spec.ts" name="FlowNodeRunsController API error matrix &gt; GET /flow/node-runs/:id &gt; returns 401 when the bearer token is missing" time="0.001774375">
+        </testcase>
+        <testcase classname="test/integration/node-runs.api-matrix.spec.ts" name="FlowNodeRunsController API error matrix &gt; GET /flow/node-runs/:id &gt; returns 403 when the authenticated actor lacks flow runtime permission" time="0.001692">
+        </testcase>
+        <testcase classname="test/integration/node-runs.api-matrix.spec.ts" name="FlowNodeRunsController API error matrix &gt; GET /flow/node-runs/:id &gt; returns 404 when the node run does not exist" time="0.05052625">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/integration/signal.api-matrix.spec.ts" timestamp="2026-05-21T02:17:22.750Z" hostname="thiamat-1903.local" tests="7" failures="0" errors="0" skipped="0" time="13.037538042">
+        <testcase classname="test/integration/signal.api-matrix.spec.ts" name="FlowSignalController API error matrix &gt; POST /flow/signal &gt; returns 201 after signaling an active flow target" time="0.556297">
+        </testcase>
+        <testcase classname="test/integration/signal.api-matrix.spec.ts" name="FlowSignalController API error matrix &gt; POST /flow/signal &gt; returns 400 when the body fails flow signal validation" time="0.008167458">
+        </testcase>
+        <testcase classname="test/integration/signal.api-matrix.spec.ts" name="FlowSignalController API error matrix &gt; POST /flow/signal &gt; returns 401 when the bearer token is missing" time="0.003903459">
+        </testcase>
+        <testcase classname="test/integration/signal.api-matrix.spec.ts" name="FlowSignalController API error matrix &gt; POST /flow/signal &gt; returns 403 when the authenticated actor lacks flow runtime permission" time="0.038968917">
+        </testcase>
+        <testcase classname="test/integration/signal.api-matrix.spec.ts" name="FlowSignalController API error matrix &gt; POST /flow/signal &gt; returns 404 when the referenced flow scope does not exist" time="0.067124708">
+        </testcase>
+        <testcase classname="test/integration/signal.api-matrix.spec.ts" name="FlowSignalController API error matrix &gt; POST /flow/signal &gt; returns 422 when an idempotency key is reused with a different body" time="0.121771958">
+        </testcase>
+        <testcase classname="test/integration/signal.api-matrix.spec.ts" name="FlowSignalController API error matrix &gt; POST /flow/signal &gt; returns 429 when the flow signal tenant bucket is exhausted" time="0.0667065">
         </testcase>
     </testsuite>
 </testsuites>

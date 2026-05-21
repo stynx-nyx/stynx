@@ -1,6 +1,19 @@
 import { RequestLogFieldFactory, createPinoLogger, resolveRedactPaths } from '../../src/pino.factory';
 
 describe('createPinoLogger', () => {
+  it('keeps the full default redact path contract stable', () => {
+    expect(resolveRedactPaths()).toEqual([
+      'password',
+      'token',
+      'authorization',
+      'cookie',
+      'idToken',
+      'accessToken',
+      'refreshToken',
+      'secret',
+    ]);
+  });
+
   it('redacts sensitive values', () => {
     let output = '';
     const logger = createPinoLogger({
@@ -16,6 +29,46 @@ describe('createPinoLogger', () => {
 
     expect(output).toContain('"password":"[Redacted]"');
     expect(output).not.toContain('secret-value');
+  });
+
+  it('redacts every default sensitive field', () => {
+    let output = '';
+    const logger = createPinoLogger({
+      destination: {
+        write(chunk: string) {
+          output += chunk;
+          return true;
+        },
+      } as never,
+    });
+
+    logger.info({
+      password: 'p',
+      token: 't',
+      authorization: 'a',
+      cookie: 'c',
+      idToken: 'id',
+      accessToken: 'access',
+      refreshToken: 'refresh',
+      secret: 'secret',
+    }, 'defaults');
+
+    expect(output).toContain('"password":"[Redacted]"');
+    expect(output).toContain('"token":"[Redacted]"');
+    expect(output).toContain('"authorization":"[Redacted]"');
+    expect(output).toContain('"cookie":"[Redacted]"');
+    expect(output).toContain('"idToken":"[Redacted]"');
+    expect(output).toContain('"accessToken":"[Redacted]"');
+    expect(output).toContain('"refreshToken":"[Redacted]"');
+    expect(output).toContain('"secret":"[Redacted]"');
+    expect(output).not.toContain('"password":"p"');
+    expect(output).not.toContain('"token":"t"');
+    expect(output).not.toContain('"authorization":"a"');
+    expect(output).not.toContain('"cookie":"c"');
+    expect(output).not.toContain('"idToken":"id"');
+    expect(output).not.toContain('"accessToken":"access"');
+    expect(output).not.toContain('"refreshToken":"refresh"');
+    expect(output).not.toContain('"secret":"secret"');
   });
 
   it('refuses an empty redact list in production', () => {

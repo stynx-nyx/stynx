@@ -21,7 +21,10 @@
     "mutation": {
       "default": 60,
       "strict": 80,
-      "strictest": 85
+      "strictest": 85,
+      "tier1": { "break": 80, "high": 90, "low": 70 },
+      "tier2": { "break": 70, "high": 80, "low": 60 },
+      "tier3": { "break": 60, "high": 70, "low": 50 }
     },
     "perf": {
       "default": {
@@ -33,15 +36,25 @@
   },
   "defaults": {
     "coverage": "complete",
-    "mutation": "default",
+    "mutation": "tier3",
     "perf": "default"
   },
   "perPackage": {
-    "@stynx-web/angular-audit": { "coverage": "default", "mutation": 70 },
-    "@stynx-web/angular-iam": { "coverage": "default", "mutation": 70 },
-    "@stynx/auth": { "mutation": "strictest" },
-    "@stynx/data": { "mutation": "strictest" },
-    "@stynx/tenancy": { "mutation": "strict" }
+    "@stynx-web/angular-audit": { "coverage": "default", "mutation": "tier1" },
+    "@stynx-web/angular-iam": { "coverage": "default", "mutation": "tier1" },
+    "@stynx-web/angular-auth": { "mutation": "tier1" },
+    "@stynx-web/sdk": { "mutation": "tier1" },
+    "@stynx/audit": { "mutation": "tier1" },
+    "@stynx/auth": { "mutation": "tier1" },
+    "@stynx/data": { "mutation": "tier1" },
+    "@stynx/privacy": { "mutation": "tier1" },
+    "@stynx/tenancy": { "mutation": "tier1" },
+    "@stynx/core": { "mutation": "tier2" },
+    "@stynx/flow": { "mutation": "tier2" },
+    "@stynx/idempotency": { "mutation": "tier2" },
+    "@stynx/ratelimit": { "mutation": "tier2" },
+    "@stynx/sessions": { "mutation": "tier2" },
+    "@stynx/storage": { "mutation": "tier2" }
   },
   "notApplicable": [
     {
@@ -50,55 +63,87 @@
     },
     {
       "packagePattern": "@stynx-domain/*",
-      "levels": ["Mutation"]
+      "levels": ["E2E", "Mutation"]
     },
     {
       "packagePattern": "@stynx-infra/*",
       "levels": ["API", "DB", "E2E", "Mutation", "Coverage"]
     },
     {
+      "packagePattern": "@stynx/audit",
+      "levels": ["E2E"]
+    },
+    {
+      "packagePattern": "@stynx/auth",
+      "levels": ["E2E"]
+    },
+    {
       "packagePattern": "@stynx/backend",
-      "levels": ["API", "DB"]
+      "levels": ["API", "DB", "E2E"]
     },
     {
       "packagePattern": "@stynx/cli",
-      "levels": ["API", "DB"]
+      "levels": ["API", "DB", "E2E"]
     },
     {
       "packagePattern": "@stynx/contracts",
-      "levels": ["API", "DB"]
+      "levels": ["API", "DB", "E2E"]
     },
     {
       "packagePattern": "@stynx/core",
-      "levels": ["API"]
+      "levels": ["API", "E2E"]
     },
     {
       "packagePattern": "@stynx/data",
-      "levels": ["API"]
+      "levels": ["API", "E2E"]
+    },
+    {
+      "packagePattern": "@stynx/flow",
+      "levels": ["E2E"]
+    },
+    {
+      "packagePattern": "@stynx/health",
+      "levels": ["E2E"]
+    },
+    {
+      "packagePattern": "@stynx/i18n",
+      "levels": ["E2E"]
     },
     {
       "packagePattern": "@stynx/idempotency",
-      "levels": ["API"]
+      "levels": ["API", "E2E"]
     },
     {
       "packagePattern": "@stynx/logging",
-      "levels": ["API"]
+      "levels": ["API", "E2E"]
+    },
+    {
+      "packagePattern": "@stynx/privacy",
+      "levels": ["E2E"]
     },
     {
       "packagePattern": "@stynx/ratelimit",
-      "levels": ["API"]
+      "levels": ["API", "E2E"]
+    },
+    {
+      "packagePattern": "@stynx/sessions",
+      "levels": ["E2E"]
     },
     {
       "packagePattern": "@stynx/storage",
-      "levels": ["API"]
+      "levels": ["API", "E2E"]
+    },
+    {
+      "packagePattern": "@stynx/tenancy",
+      "levels": ["E2E"]
     },
     {
       "packagePattern": "@stynx/testing",
-      "levels": ["API", "DB"]
+      "levels": ["API", "DB", "E2E"]
     },
     {
       "packagePattern": "@stynx-web/*",
-      "levels": ["API", "DB"]
+      "levels": ["API", "DB", "E2E"]
     },
     {
       "packagePattern": "@stynx/reference-web",
@@ -119,6 +164,10 @@
     {
       "packagePattern": "@stynx-internal/*",
       "levels": ["API", "DB", "E2E", "Mutation", "Coverage"]
+    },
+    {
+      "packagePattern": "stynx-workspace",
+      "levels": ["Unit", "API", "DB", "E2E", "Mutation", "Coverage"]
     }
   ]
 }
