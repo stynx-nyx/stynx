@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-20T03:43:39.735Z",
-  "endedAt": "2026-05-20T03:44:22.281Z",
-  "durationMs": 42546,
+  "startedAt": "2026-05-21T23:49:41.092Z",
+  "endedAt": "2026-05-21T23:50:56.810Z",
+  "durationMs": 75718,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-48706-1779248619735.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-85945-1779407381091.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/backend/.test-results/unit.junit.xml"
     ],
@@ -37,62 +37,62 @@
   },
   "totals": {
     "files": 25,
-    "tests": 232,
-    "passed": 232,
+    "tests": 247,
+    "passed": 247,
     "failed": 0,
     "skipped": 0,
     "todo": 0
   },
   "slowestTests": [
     {
-      "name": "PormIdentityAdminFacade getBySub() resolves username via getUserBySubject then composes",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/integration-facades.spec.ts",
-      "durationMs": 132.42729200000008
+      "name": "backend SLA behavior samples requests, skips NONE categories, aggregates by window, and records errors",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/behavior-coverage.spec.ts",
+      "durationMs": 562.8358330000046
     },
     {
-      "name": "IdentityAdminService passes through non-IdentityAdminError throws unchanged",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/identity-admin.service.spec.ts",
-      "durationMs": 106.18700000000013
+      "name": "backend idempotency behavior describes branch: durable replay/cache paths default status codes",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/behavior-coverage.spec.ts",
+      "durationMs": 406.9767920000013
     },
     {
-      "name": "@stynx/backend exports surface for identity-admin barrel surfaces at least one export",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/identity-admin-export.spec.ts",
-      "durationMs": 50.30616699999882
+      "name": "backend authorization and auth behavior guards authorization metadata with default and injected evaluators",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/behavior-coverage.spec.ts",
+      "durationMs": 218.5207919999957
     },
     {
-      "name": "PormIdentityAdminFacade get() composes user details + group names",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/integration-facades.spec.ts",
-      "durationMs": 43.790457999999944
+      "name": "backend SLA behavior resolves URL categories and falls back to NONE",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/behavior-coverage.spec.ts",
+      "durationMs": 193.18466700000135
     },
     {
-      "name": "PormIdentityAdminFacade update() treats email as independently updatable",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/integration-facades.spec.ts",
-      "durationMs": 27.594541000000163
+      "name": "backend SLA behavior describes branch: default SLA dependencies resolve URL and sample through logger sink",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/behavior-coverage.spec.ts",
+      "durationMs": 191.48895900000207
     },
     {
-      "name": "PecIdentityAdminFacade describes branch: PEC listAllGroups omits next token when absent",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/integration-facades.spec.ts",
-      "durationMs": 14.77975000000015
+      "name": "PgIdentityLocalSyncAdapter listGroupsWithMetaByUserId trims user group names before membership matching",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/pg-local-sync.adapter.spec.ts",
+      "durationMs": 137.86566700000003
     },
     {
-      "name": "@stynx/backend exports surface for db-context barrel surfaces at least one export",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/db-context-export.spec.ts",
-      "durationMs": 14.073041999999987
-    },
-    {
-      "name": "PormIdentityAdminFacade update() passes through every present field to updateUser",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/integration-facades.spec.ts",
-      "durationMs": 10.098124999999982
+      "name": "DbContextInterceptor skips applier when there is no principal on the request",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/db-context.interceptor.spec.ts",
+      "durationMs": 70.6582499999995
     },
     {
       "name": "ClaimFirstTenantEntitlementPolicy grants when a string claim contains the tenantId",
       "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/tenant-entitlement.spec.ts",
-      "durationMs": 9.332416999999964
+      "durationMs": 66.22987499999999
     },
     {
-      "name": "@stynx/backend exports surface for audit barrel surfaces at least one export",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/audit-export.spec.ts",
-      "durationMs": 8.177666999999929
+      "name": "TenantLifecycleMiddleware allows missing header when requireTenantHeader=false",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/tenant-lifecycle.middleware.spec.ts",
+      "durationMs": 57.87149999999974
+    },
+    {
+      "name": "@stynx/backend exports surface for sla barrel surfaces at least one export",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/sla-export.spec.ts",
+      "durationMs": 54.915750000000116
     }
   ]
 }

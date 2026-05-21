@@ -3,6 +3,7 @@ import {
   ConflictException,
   ForbiddenException,
   HttpException,
+  HttpStatus,
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
@@ -204,6 +205,95 @@ describe('backend SLA behavior', () => {
       p99Ms: 0,
     }));
   });
+
+  it('records exact success and error durations with default thresholds', async () => {
+    const sink = { sample: vi.fn(), aggregate: vi.fn() };
+    const nowSpy = vi
+      .spyOn(Date, 'now')
+      .mockReturnValueOnce(1_000)
+      .mockReturnValueOnce(4_000)
+      .mockReturnValueOnce(10_000)
+      .mockReturnValueOnce(13_001);
+    const interceptor = new SlaMonitorInterceptor(
+      { aggregateEvery: 1 },
+      { resolve: vi.fn(() => 'BIOMETRIC') },
+      sink,
+    );
+
+    try {
+      await lastValueFrom(interceptor.intercept(httpContext({ headers: {} }) as never, {
+        handle: () => of('ok'),
+      }));
+      await expect(lastValueFrom(interceptor.intercept(httpContext({ headers: {} }) as never, {
+        handle: () => throwError(() => new Error('boom')),
+      }))).rejects.toThrow('boom');
+    } finally {
+      nowSpy.mockRestore();
+    }
+
+    expect(sink.sample).toHaveBeenNthCalledWith(1, expect.objectContaining({
+      category: 'BIOMETRIC',
+      thresholdMs: 3_000,
+      durationMs: 3_000,
+      breach: false,
+      requestError: false,
+    }));
+    expect(sink.sample).toHaveBeenNthCalledWith(2, expect.objectContaining({
+      category: 'BIOMETRIC',
+      thresholdMs: 3_000,
+      durationMs: 3_001,
+      breach: true,
+      requestError: true,
+    }));
+    expect(sink.aggregate).toHaveBeenNthCalledWith(1, expect.objectContaining({
+      p95Ms: 3_000,
+      breachP95: false,
+    }));
+    expect(sink.aggregate).toHaveBeenNthCalledWith(2, expect.objectContaining({
+      p95Ms: 3_001,
+      breachP95: true,
+    }));
+  });
+
+  it('sorts percentile samples and trims the latency window before aggregation', async () => {
+    const sink = { sample: vi.fn(), aggregate: vi.fn() };
+    const nowSpy = vi
+      .spyOn(Date, 'now')
+      .mockReturnValueOnce(100)
+      .mockReturnValueOnce(130)
+      .mockReturnValueOnce(200)
+      .mockReturnValueOnce(210)
+      .mockReturnValueOnce(300)
+      .mockReturnValueOnce(320);
+    const interceptor = new SlaMonitorInterceptor(
+      { aggregateEvery: 1, windowSize: 2, thresholdsMs: { CUSTOM: 15 } },
+      { resolve: vi.fn(() => 'CUSTOM') },
+      sink,
+    );
+
+    try {
+      await lastValueFrom(interceptor.intercept(httpContext({ headers: {} }) as never, {
+        handle: () => of('first'),
+      }));
+      await lastValueFrom(interceptor.intercept(httpContext({ headers: {} }) as never, {
+        handle: () => of('second'),
+      }));
+      await lastValueFrom(interceptor.intercept(httpContext({ headers: {} }) as never, {
+        handle: () => of('third'),
+      }));
+    } finally {
+      nowSpy.mockRestore();
+    }
+
+    expect(sink.aggregate).toHaveBeenLastCalledWith(expect.objectContaining({
+      samples: 2,
+      p50Ms: 10,
+      p95Ms: 20,
+      p99Ms: 20,
+      thresholdMs: 15,
+      breachP95: true,
+    }));
+  });
 });
 
 describe('backend authorization and auth behavior', () => {
@@ -265,7 +355,7 @@ describe('backend authorization and auth behavior', () => {
       headers: {},
       actor: { id: 'a', roles: [], permissions: [], tenants: [], claims: {} },
     })).toMatchObject({ id: 'a' });
-    expect(getPrincipalFromRequest({ headers: {}, user: {}, actor: {} })).toBeUndefined();
+    expect(getPrincipalFromRequest({ headers: {}, user: {}, actor: {} })).toBe(undefined);
   });
 
   it('describes branch: actor fallback preserves optional email and username', () => {
@@ -365,7 +455,7 @@ describe('backend authorization and auth behavior', () => {
     const request = { headers: { authorization: 'Bearer t', 'x-tenant-id': [' tenant-array '] } };
     await expect(guard.canActivate(httpContext(request) as never)).resolves.toBe(true);
     expect(request).toMatchObject({ tenantId: 'tenant-array' });
-    expect((request as { user?: Record<string, unknown> }).user?.claims).toBeUndefined();
+    expect((request as { user?: Record<string, unknown> }).user?.claims).toBe(undefined);
   });
 });
 
@@ -675,7 +765,10 @@ describe('backend idempotency behavior', () => {
       }, responseStub()) as never,
       { handle: () => throwError(() => new Error('handler failed')) },
     ))).rejects.toThrow('handler failed');
-    expect(errorStore.clearReservation).toHaveBeenCalled();
+    expect(errorStore.clearReservation).toHaveBeenCalledWith(expect.objectContaining({
+      idempotencyKey: 'error',
+      tenantId: 'tenant-1',
+    }));
   });
 
   it('covers durable direct replay, conflict, wait timeout, and cache cleanup', async () => {
@@ -985,7 +1078,29 @@ describe('backend rate-limit behavior', () => {
 
     const request = { headers: {}, ip: '127.0.0.1', method: 'POST', url: '/items' };
     await expect(guard.canActivate(httpContext(request) as never)).resolves.toBe(true);
-    await expect(guard.canActivate(httpContext(request) as never)).rejects.toBeInstanceOf(HttpException);
+    await expect(guard.canActivate(httpContext(request) as never)).rejects.toMatchObject({
+      message: 'Rate limit exceeded',
+      status: HttpStatus.TOO_MANY_REQUESTS,
+    });
+  });
+
+  it('matches any configured health prefix before distributed rate-limit checks', async () => {
+    const store: RateLimitStore = {
+      increment: vi.fn(async () => {
+        throw new Error('store unavailable');
+      }),
+    };
+    const guard = new RateLimitGuard({
+      distributedStrict: true,
+      healthCheckPathPrefixes: ['/internal/health', '/ready'],
+    }, store);
+
+    await expect(guard.canActivate(httpContext({
+      headers: {},
+      tenantId: 'tenant-1',
+      path: '/ready/status',
+    }) as never)).resolves.toBe(true);
+    expect(store.increment).not.toHaveBeenCalled();
   });
 
   it('describes branch: rate-limit defaults request identity and constructor options', async () => {
@@ -1019,6 +1134,30 @@ describe('backend rate-limit behavior', () => {
         method: 'GET',
         originalUrl: '/two',
       }) as never)).resolves.toBe(true);
+    } finally {
+      nowSpy.mockRestore();
+    }
+  });
+
+  it('does not reset an in-memory bucket until the reset deadline has passed', async () => {
+    let now = 1_000;
+    const nowSpy = vi.spyOn(Date, 'now').mockImplementation(() => now);
+    try {
+      const guard = new RateLimitGuard({ limit: 1, ttlSeconds: 1, cleanupEvery: 10 });
+      const request = {
+        headers: {},
+        ip: 'boundary',
+        method: 'GET',
+        url: '/boundary',
+      };
+      await expect(guard.canActivate(httpContext(request) as never)).resolves.toBe(true);
+      now = 2_000;
+      await expect(guard.canActivate(httpContext(request) as never)).rejects.toMatchObject({
+        message: 'Rate limit exceeded',
+        status: HttpStatus.TOO_MANY_REQUESTS,
+      });
+      now = 2_001;
+      await expect(guard.canActivate(httpContext(request) as never)).resolves.toBe(true);
     } finally {
       nowSpy.mockRestore();
     }
@@ -1069,6 +1208,11 @@ describe('backend rate-limit behavior', () => {
     const request = { headers: {}, ip: 'ip', method: 'GET', url: '/bucket' };
     await expect(guard.canActivate(httpContext(request) as never)).resolves.toBe(true);
     await expect(guard.canActivate(httpContext(request) as never)).resolves.toBe(true);
+    await expect(guard.canActivate(httpContext(request) as never)).resolves.toBe(true);
+    await expect(guard.canActivate(httpContext(request) as never)).rejects.toMatchObject({
+      message: 'Rate limit exceeded',
+      status: HttpStatus.TOO_MANY_REQUESTS,
+    });
 
     const buckets = (guard as unknown as { buckets: Map<string, { resetAt: number; count: number }> }).buckets;
     (guard as unknown as { maybeCleanupInMemory: () => void }).maybeCleanupInMemory();
@@ -1186,6 +1330,6 @@ describe('backend audit and db context branch closure', () => {
   it('describes branch: tenant lifecycle tolerates missing headers object', () => {
     const next = vi.fn();
     new TenantLifecycleMiddleware({ requireTenantHeader: false }).use({}, undefined, next);
-    expect(next).toHaveBeenCalled();
+    expect(next).toHaveBeenCalledWith();
   });
 });

@@ -66,7 +66,7 @@ describe('PgIdentityLocalSyncAdapter', () => {
     const result = await adapter.syncToLocal();
     expect(result.skipped).toBe(2); // empty username + non-UUID sub
     expect(result.users).toBe(1); // alice
-    expect(db.withTransaction).toHaveBeenCalled();
+    expect(db.withTransaction).toHaveBeenCalledWith(expect.any(Function), undefined);
   });
 
   it('describes branch: syncToLocal skips users whose subject is missing entirely', async () => {
@@ -111,6 +111,7 @@ describe('PgIdentityLocalSyncAdapter', () => {
     });
 
     const result = await adapter.syncToLocal();
+    expect(result.ok).toBe(true);
     expect(result.users).toBe(1);
     expect(result.groups).toBe(1);
     expect(result.memberships).toBe(1);
@@ -137,6 +138,75 @@ describe('PgIdentityLocalSyncAdapter', () => {
       3,
       expect.stringContaining('INSERT INTO auth.user_roles'),
       [UUID_A, 'role-1'],
+      'client-handle',
+    );
+  });
+
+  it('syncToLocal trims listed usernames before loading details', async () => {
+    const admin = fakeAdmin({
+      listUsers: vi.fn(async () => ({ items: [{ username: '  alice  ' }] })),
+      getUser: vi.fn(async () => ({
+        username: 'alice',
+        enabled: true,
+        attributes: { sub: UUID_A },
+      })),
+    });
+    const db = fakeDb([[]]);
+    const adapter = new PgIdentityLocalSyncAdapter({
+      identityAdmin: admin as never,
+      db: db as never,
+    });
+
+    await adapter.syncToLocal();
+
+    expect(admin.getUser).toHaveBeenCalledWith('alice');
+    expect(db.query).toHaveBeenCalledWith(
+      expect.stringContaining('INSERT INTO auth.users'),
+      [
+        UUID_A,
+        'alice',
+        null,
+        'alice',
+        null,
+        expect.stringContaining('"username":"alice"'),
+      ],
+      'client-handle',
+    );
+  });
+
+  it('syncToLocal trims and filters provider group names before writing membership metadata', async () => {
+    const admin = fakeAdmin({
+      listGroups: vi.fn(async () => ({
+        items: [{ name: 'admins' }],
+      })),
+      listUsers: vi.fn(async () => ({ items: [{ username: 'alice' }] })),
+      getUser: vi.fn(async () => ({
+        username: 'alice',
+        enabled: true,
+        attributes: { sub: UUID_A },
+      })),
+      listGroupsForUser: vi.fn(async () => [{ name: ' admins ' }, { name: '   ' }]),
+    });
+    const db = fakeDb([[{ role_id: 'role-1' }], [], []]);
+    const adapter = new PgIdentityLocalSyncAdapter({
+      identityAdmin: admin as never,
+      db: db as never,
+    });
+
+    const result = await adapter.syncToLocal();
+
+    expect(result.memberships).toBe(1);
+    expect(db.query).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining('INSERT INTO auth.users'),
+      [
+        UUID_A,
+        'alice',
+        null,
+        'alice',
+        null,
+        expect.stringContaining('"groups":["admins"]'),
+      ],
       'client-handle',
     );
   });
@@ -180,8 +250,10 @@ describe('PgIdentityLocalSyncAdapter', () => {
       db: db as never,
     });
     await adapter.syncToLocal();
-    expect(admin.listUsers).toHaveBeenCalledTimes(2);
-    expect(admin.listGroups).toHaveBeenCalledTimes(2);
+    expect(admin.listUsers).toHaveBeenNthCalledWith(1, { limit: 60 });
+    expect(admin.listUsers).toHaveBeenNthCalledWith(2, { limit: 60, token: 'tok-1' });
+    expect(admin.listGroups).toHaveBeenNthCalledWith(1, { limit: 60 });
+    expect(admin.listGroups).toHaveBeenNthCalledWith(2, { limit: 60, token: 'tok-g' });
   });
 
   it('syncUser throws IDENTITY_VALIDATION_ERROR when sub is not a UUID', async () => {
@@ -197,7 +269,11 @@ describe('PgIdentityLocalSyncAdapter', () => {
       identityAdmin: admin as never,
       db: db as never,
     });
-    await expect(adapter.syncUser('alice')).rejects.toBeInstanceOf(IdentityAdminError);
+    await expect(adapter.syncUser('alice')).rejects.toMatchObject({
+      code: 'IDENTITY_VALIDATION_ERROR',
+      message: 'Identity user is missing a valid UUID subject',
+      details: { username: 'alice' },
+    });
   });
 
   it('syncUser returns the resolved user id', async () => {
@@ -274,6 +350,41 @@ describe('PgIdentityLocalSyncAdapter', () => {
     );
   });
 
+  it('listGroupsWithMetaByUserId trims the resolved username and binds the lookup query exactly', async () => {
+    const admin = fakeAdmin({
+      listGroups: vi.fn(async () => ({ items: [] })),
+      listGroupsForUser: vi.fn(async () => []),
+    });
+    const db = fakeDb([[{ external_id: '  alice  ' }]]);
+    const adapter = new PgIdentityLocalSyncAdapter({
+      identityAdmin: admin as never,
+      db: db as never,
+    });
+
+    await expect(adapter.listGroupsWithMetaByUserId(UUID_A)).resolves.toEqual({ groups: [] });
+    expect(db.query).toHaveBeenNthCalledWith(
+      1,
+      'SELECT external_id FROM auth.users WHERE user_id = $1',
+      [UUID_A],
+    );
+    expect(admin.listGroupsForUser).toHaveBeenCalledWith('alice');
+  });
+
+  it('listGroupsWithMetaByUserId rejects blank resolved usernames', async () => {
+    const admin = fakeAdmin();
+    const db = fakeDb([[{ external_id: '   ' }]]);
+    const adapter = new PgIdentityLocalSyncAdapter({
+      identityAdmin: admin as never,
+      db: db as never,
+    });
+
+    await expect(adapter.listGroupsWithMetaByUserId(UUID_A)).rejects.toMatchObject({
+      code: 'IDENTITY_NOT_FOUND',
+      message: 'Identity user not found',
+      details: { userId: UUID_A },
+    });
+  });
+
   it('listGroupsWithMetaByUserId merges adapter groups with isIn flag and meta sort', async () => {
     const admin = fakeAdmin({
       listGroups: vi.fn(async () => ({
@@ -327,6 +438,27 @@ describe('PgIdentityLocalSyncAdapter', () => {
     });
   });
 
+  it('listGroupsWithMetaByUserId trims user group names before membership matching', async () => {
+    const admin = fakeAdmin({
+      listGroups: vi.fn(async () => ({
+        items: [{ name: 'admins' }, { name: 'blank' }],
+      })),
+      listGroupsForUser: vi.fn(async () => [{ name: ' ADMINS ' }, { name: '   ' }]),
+    });
+    const db = fakeDb([[{ external_id: 'alice' }]]);
+    const adapter = new PgIdentityLocalSyncAdapter({
+      identityAdmin: admin as never,
+      db: db as never,
+    });
+
+    const result = await adapter.listGroupsWithMetaByUserId(UUID_A);
+
+    expect(result.groups.map((group) => ({ name: group.name, isIn: group.isIn }))).toEqual([
+      { name: 'admins', isIn: true },
+      { name: 'blank', isIn: false },
+    ]);
+  });
+
   it('listGroupsWithMetaByUserId handles missing meta loader (default empty)', async () => {
     const admin = fakeAdmin({
       listGroups: vi.fn(async () => ({
@@ -341,7 +473,7 @@ describe('PgIdentityLocalSyncAdapter', () => {
     });
     const result = await adapter.listGroupsWithMetaByUserId(UUID_A);
     expect(result.groups).toHaveLength(1);
-    expect(result.groups[0].label).toBeNull();
+    expect(result.groups[0].label).toBe(null);
   });
 
   it('falls back to direct run() when db.withTransaction is not present', async () => {
@@ -371,7 +503,7 @@ describe('PgIdentityLocalSyncAdapter', () => {
     });
     await adapter.syncToLocal();
     expect(roleCodeFromGroupName).toHaveBeenCalledWith('AdminGroup');
-    expect(roleDescriptionFromGroup).toHaveBeenCalled();
+    expect(roleDescriptionFromGroup).toHaveBeenCalledWith({ name: 'AdminGroup' });
   });
 
   it('default role descriptions normalize group names when descriptions are blank', async () => {
@@ -394,6 +526,28 @@ describe('PgIdentityLocalSyncAdapter', () => {
     );
   });
 
+  it('default role descriptions prefer a trimmed provider description', async () => {
+    const admin = fakeAdmin({
+      listGroups: vi.fn(async () => ({
+        items: [{ name: 'power_users-team', description: '  Provided description  ' }],
+      })),
+      listUsers: vi.fn(async () => ({ items: [] })),
+    });
+    const db = fakeDb([[{ role_id: 'r-1' }]]);
+    const adapter = new PgIdentityLocalSyncAdapter({
+      identityAdmin: admin as never,
+      db: db as never,
+    });
+
+    await adapter.syncToLocal();
+
+    expect(db.query).toHaveBeenCalledWith(
+      expect.stringContaining('INSERT INTO auth.roles'),
+      ['power_users-team', 'Provided description'],
+      'client-handle',
+    );
+  });
+
   it('honors custom userIdFromDetail override (e.g. external_id strategy)', async () => {
     const admin = fakeAdmin({
       listUsers: vi.fn(async () => ({ items: [{ username: 'alice' }] })),
@@ -411,7 +565,11 @@ describe('PgIdentityLocalSyncAdapter', () => {
       userIdFromDetail,
     });
     const result = await adapter.syncToLocal();
-    expect(userIdFromDetail).toHaveBeenCalled();
+    expect(userIdFromDetail).toHaveBeenCalledWith({
+      username: 'alice',
+      enabled: true,
+      attributes: {},
+    });
     expect(result.users).toBe(1);
   });
 
@@ -432,7 +590,54 @@ describe('PgIdentityLocalSyncAdapter', () => {
       displayNameFromDetail,
     });
     await adapter.syncToLocal();
-    expect(displayNameFromDetail).toHaveBeenCalled();
+    expect(displayNameFromDetail).toHaveBeenCalledWith({
+      username: 'alice',
+      enabled: true,
+      attributes: { sub: UUID_A },
+      groups: [],
+    });
+  });
+
+  it('passes status and email into the display-name resolver when present', async () => {
+    const admin = fakeAdmin({
+      listUsers: vi.fn(async () => ({ items: [{ username: 'alice' }] })),
+      getUser: vi.fn(async () => ({
+        username: 'alice',
+        enabled: false,
+        status: 'CONFIRMED',
+        attributes: { sub: UUID_A, email: 'alice@example.test' },
+      })),
+    });
+    const db = fakeDb([[]]);
+    const displayNameFromDetail = vi.fn(() => 'Resolved Name');
+    const adapter = new PgIdentityLocalSyncAdapter({
+      identityAdmin: admin as never,
+      db: db as never,
+      displayNameFromDetail,
+    });
+
+    await adapter.syncToLocal();
+
+    expect(displayNameFromDetail).toHaveBeenCalledWith({
+      username: 'alice',
+      enabled: false,
+      status: 'CONFIRMED',
+      email: 'alice@example.test',
+      attributes: { sub: UUID_A, email: 'alice@example.test' },
+      groups: [],
+    });
+    expect(db.query).toHaveBeenCalledWith(
+      expect.stringContaining('INSERT INTO auth.users'),
+      [
+        UUID_A,
+        'alice',
+        'alice@example.test',
+        'Resolved Name',
+        'CONFIRMED',
+        expect.stringContaining('"enabled":false'),
+      ],
+      'client-handle',
+    );
   });
 
   it('default display name falls back through name → custom:displayName → email → username', async () => {
@@ -460,6 +665,78 @@ describe('PgIdentityLocalSyncAdapter', () => {
         'alice',
         null,
         expect.stringContaining('"username":"alice"'),
+      ],
+      'client-handle',
+    );
+  });
+
+  it('default display-name resolution trims and prioritizes name before custom display name', async () => {
+    const admin = fakeAdmin({
+      listUsers: vi.fn(async () => ({ items: [{ username: 'alice' }] })),
+      getUser: vi.fn(async () => ({
+        username: 'alice',
+        enabled: true,
+        attributes: {
+          sub: UUID_A,
+          name: '  Alice Name  ',
+          'custom:displayName': 'Custom Name',
+          email: 'alice@example.test',
+        },
+      })),
+    });
+    const db = fakeDb([[]]);
+    const adapter = new PgIdentityLocalSyncAdapter({
+      identityAdmin: admin as never,
+      db: db as never,
+    });
+
+    await adapter.syncToLocal();
+
+    expect(db.query).toHaveBeenCalledWith(
+      expect.stringContaining('INSERT INTO auth.users'),
+      [
+        UUID_A,
+        'alice',
+        'alice@example.test',
+        'Alice Name',
+        null,
+        expect.stringContaining('"name":"  Alice Name  "'),
+      ],
+      'client-handle',
+    );
+  });
+
+  it('default display-name resolution uses custom display name before email', async () => {
+    const admin = fakeAdmin({
+      listUsers: vi.fn(async () => ({ items: [{ username: 'alice' }] })),
+      getUser: vi.fn(async () => ({
+        username: 'alice',
+        enabled: true,
+        attributes: {
+          sub: UUID_A,
+          name: '   ',
+          'custom:displayName': '  Custom Name  ',
+          email: 'alice@example.test',
+        },
+      })),
+    });
+    const db = fakeDb([[]]);
+    const adapter = new PgIdentityLocalSyncAdapter({
+      identityAdmin: admin as never,
+      db: db as never,
+    });
+
+    await adapter.syncToLocal();
+
+    expect(db.query).toHaveBeenCalledWith(
+      expect.stringContaining('INSERT INTO auth.users'),
+      [
+        UUID_A,
+        'alice',
+        'alice@example.test',
+        'Custom Name',
+        null,
+        expect.stringContaining('"custom:displayName":"  Custom Name  "'),
       ],
       'client-handle',
     );
@@ -499,6 +776,29 @@ describe('PgIdentityLocalSyncAdapter', () => {
     expect(result.groups.map((group) => group.name)).toEqual(['alpha', 'zeta']);
   });
 
+  it('sorts groups by ascending sort order before name fallback', async () => {
+    const admin = fakeAdmin({
+      listGroups: vi.fn(async () => ({
+        items: [{ name: 'zeta' }, { name: 'alpha' }],
+      })),
+      listGroupsForUser: vi.fn(async () => []),
+    });
+    const db = fakeDb([[{ external_id: 'alice' }]]);
+    const adapter = new PgIdentityLocalSyncAdapter({
+      identityAdmin: admin as never,
+      db: db as never,
+      loadGroupMetaRows: vi.fn(async () => [
+        { code: 'zeta', sortOrder: 10 },
+        { code: 'alpha', sortOrder: 5 },
+      ]),
+    });
+
+    const result = await adapter.listGroupsWithMetaByUserId(UUID_A);
+
+    expect(result.groups.map((group) => group.name)).toEqual(['alpha', 'zeta']);
+    expect(result.groups.map((group) => group.sortOrder)).toEqual([5, 10]);
+  });
+
   it('default role-code strategy strips trailing s from plural group names', async () => {
     const admin = fakeAdmin({
       listGroups: vi.fn(async () => ({ items: [{ name: 'admins' }, { name: 'editor' }] })),
@@ -517,6 +817,38 @@ describe('PgIdentityLocalSyncAdapter', () => {
     const codes = db.query.mock.calls.map((c) => (c[1] as unknown[])[0]);
     expect(codes).toContain('admin');
     expect(codes).toContain('editor');
+  });
+
+  it('default role-code strategy trims and lowercases group names without stripping single-letter s', async () => {
+    const admin = fakeAdmin({
+      listGroups: vi.fn(async () => ({
+        items: [{ name: ' S ' }, { name: ' Reviewers ' }],
+      })),
+      listUsers: vi.fn(async () => ({ items: [] })),
+    });
+    const db = fakeDb([
+      [{ role_id: 'r-1' }],
+      [{ role_id: 'r-2' }],
+    ]);
+    const adapter = new PgIdentityLocalSyncAdapter({
+      identityAdmin: admin as never,
+      db: db as never,
+    });
+
+    await adapter.syncToLocal();
+
+    expect(db.query).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining('INSERT INTO auth.roles'),
+      ['s', 'S'],
+      'client-handle',
+    );
+    expect(db.query).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining('INSERT INTO auth.roles'),
+      ['reviewer', 'Reviewers'],
+      'client-handle',
+    );
   });
 
   it('describes branch: missing returned role ids skip group and membership counts', async () => {
@@ -542,7 +874,7 @@ describe('PgIdentityLocalSyncAdapter', () => {
       getUser: vi.fn(async () => ({
         username: 'alice',
         enabled: true,
-        attributes: { sub: `prefix-${UUID_A}` },
+        attributes: { sub: `${UUID_A}-suffix` },
       })),
     });
     const db = fakeDb();
@@ -573,6 +905,13 @@ describe('loadPormRoleMetaRows', () => {
       })),
     };
     const rows = await loadPormRoleMetaRows(db as never);
+    expect(db.query).toHaveBeenCalledWith(
+      `SELECT code, label, icon, meta, sort_order, "order"
+         FROM porm.v_enum
+        WHERE domain = $1
+        ORDER BY "order", code`,
+      ['org_role'],
+    );
     expect(rows[0]).toEqual({
       code: 'admin',
       label: 'Admin',
@@ -593,9 +932,13 @@ describe('loadPormRoleMetaRows', () => {
       viewName: 'my.view',
       roleDomain: 'my_domain',
     });
-    const [sql, params] = db.query.mock.calls[0]!;
-    expect(sql).toContain('my.view');
-    expect(params).toEqual(['my_domain']);
+    expect(db.query).toHaveBeenCalledWith(
+      `SELECT code, label, icon, meta, sort_order, "order"
+         FROM my.view
+        WHERE domain = $1
+        ORDER BY "order", code`,
+      ['my_domain'],
+    );
     expect(rows[0].sortOrder).toBe(7);
   });
 
