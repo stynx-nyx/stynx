@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-20T03:44:12.267Z",
-  "endedAt": "2026-05-20T03:44:20.828Z",
-  "durationMs": 8561,
+  "startedAt": "2026-05-21T22:00:57.875Z",
+  "endedAt": "2026-05-21T22:01:01.836Z",
+  "durationMs": 3961,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-49766-1779248652267.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-60246-1779400857874.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/cli/.test-results/unit.junit.xml"
     ],
@@ -37,8 +37,8 @@
   },
   "totals": {
     "files": 6,
-    "tests": 29,
-    "passed": 29,
+    "tests": 30,
+    "passed": 30,
     "failed": 0,
     "skipped": 0,
     "todo": 0
@@ -47,52 +47,52 @@
     {
       "name": "@stynx/cli runs doctor against a fixture directory",
       "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli.spec.ts",
-      "durationMs": 382.3007080000002
+      "durationMs": 145.63133300000004
     },
     {
       "name": "@stynx/cli reports doctor spawn failures with fallback exit code and empty output strings",
       "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli.spec.ts",
-      "durationMs": 335.4610420000008
+      "durationMs": 95.52154199999995
     },
     {
       "name": "buildProgram runs adoption scan/apply/link commands",
       "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli-program.spec.ts",
-      "durationMs": 232.53079200000047
-    },
-    {
-      "name": "buildProgram runs audit verification in json, valid-human, and broken-human modes",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli-program.spec.ts",
-      "durationMs": 229.5931660000001
-    },
-    {
-      "name": "buildProgram runs init, doctor, and privacy commands",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli-program.spec.ts",
-      "durationMs": 184.2693330000002
+      "durationMs": 79.58070900000007
     },
     {
       "name": "adopt command family is idempotent on the fixture repo",
       "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/adopt.spec.ts",
-      "durationMs": 157.67162499999995
+      "durationMs": 76.8660420000001
+    },
+    {
+      "name": "runDoctor normalizes nullish spawn status and captured output",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/doctor.spec.ts",
+      "durationMs": 54.185665999999856
+    },
+    {
+      "name": "@stynx/cli scans and applies the neutral adoption fixture with richer outputs",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli.spec.ts",
+      "durationMs": 18.093959000000268
+    },
+    {
+      "name": "@stynx/cli scaffolds without Angular files when angular=false",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli.spec.ts",
+      "durationMs": 16.069417000000158
     },
     {
       "name": "adopt command family handles clean reports, skipped directories, dry-runs, and mixed schema generation",
       "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/adopt.spec.ts",
-      "durationMs": 137.75612499999988
+      "durationMs": 13.03791699999988
     },
     {
-      "name": "migrate command surface rejects rollback of migrations without a down pair",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/migrate.spec.ts",
-      "durationMs": 125.55100000000039
+      "name": "@stynx/cli generates ROPA markdown from privacy yaml",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli.spec.ts",
+      "durationMs": 11.56979199999978
     },
     {
-      "name": "migrate command surface lists migrations and supports dry-run up/down/redo without applying changes",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/migrate.spec.ts",
-      "durationMs": 49.75745800000004
-    },
-    {
-      "name": "migrate command surface fails redo when a migration file disappears between rollback and replay",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/migrate.spec.ts",
-      "durationMs": 40.573457999999846
+      "name": "buildProgram runs init, doctor, and privacy commands",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/cli/test/cli-program.spec.ts",
+      "durationMs": 11.513083000000051
     }
   ]
 }
