@@ -54,4 +54,58 @@ describe('StynxHealthService', () => {
       },
     });
   });
+
+  it('reports skipped built-in checks when callbacks are omitted', async () => {
+    const service = new StynxHealthService({}, []);
+
+    await expect(service.readiness()).resolves.toEqual({
+      status: 'ok',
+      info: {
+        postgres: { status: 'up', skipped: true },
+        redis: { status: 'up', skipped: true },
+        jwks: { status: 'up', skipped: true },
+        s3: { status: 'up', skipped: true },
+      },
+      error: {},
+      details: {
+        postgres: { status: 'up', skipped: true },
+        redis: { status: 'up', skipped: true },
+        jwks: { status: 'up', skipped: true },
+        s3: { status: 'up', skipped: true },
+      },
+    });
+  });
+
+  it('keeps custom indicator details and marks any down indicator as a readiness error', async () => {
+    const service = new StynxHealthService(
+      {
+        pgCheck: async () => undefined,
+      },
+      [
+        {
+          name: 'search',
+          check: async () => ({
+            status: 'down' as const,
+            details: { latencyMs: 250, reason: 'timeout' },
+          }),
+        },
+      ],
+    );
+
+    await expect(service.readiness()).rejects.toMatchObject({
+      causes: {
+        status: 'error',
+        info: expect.objectContaining({
+          postgres: { status: 'up' },
+          search: { status: 'down', latencyMs: 250, reason: 'timeout' },
+        }),
+        error: {
+          search: { latencyMs: 250, reason: 'timeout' },
+        },
+        details: expect.objectContaining({
+          search: { status: 'down', latencyMs: 250, reason: 'timeout' },
+        }),
+      },
+    });
+  });
 });
