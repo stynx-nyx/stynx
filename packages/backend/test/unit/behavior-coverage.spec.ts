@@ -2,7 +2,6 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
-  HttpException,
   HttpStatus,
   ServiceUnavailableException,
 } from '@nestjs/common';
@@ -310,8 +309,12 @@ describe('backend authorization and auth behavior', () => {
     expect(evaluator.evaluate({ principal, requirements: {} })).toBe(true);
     expect(evaluator.evaluate({ principal, requirements: { roles: { roles: [] } } })).toBe(true);
     expect(evaluator.evaluate({ principal, requirements: { roles: { roles: ['ADMIN'] } } })).toBe(true);
+    expect(evaluator.evaluate({ principal, requirements: { roles: { roles: ['admin', 'missing'] } } })).toBe(false);
+    expect(evaluator.evaluate({ principal, requirements: { roles: { roles: ['admin', 'missing'], mode: 'any' } } })).toBe(true);
     expect(evaluator.evaluate({ principal, requirements: { roles: { roles: ['missing'], mode: 'any' } } })).toBe(false);
     expect(evaluator.evaluate({ principal, requirements: { permissions: { permissions: ['records:read'] } } })).toBe(true);
+    expect(evaluator.evaluate({ principal, requirements: { permissions: { permissions: ['records:read', 'records:write'] } } })).toBe(false);
+    expect(evaluator.evaluate({ principal, requirements: { permissions: { permissions: ['records:read', 'records:write'], mode: 'any' } } })).toBe(true);
     expect(evaluator.evaluate({ principal, requirements: { permissions: { permissions: ['records:write'] } } })).toBe(false);
   });
 
@@ -327,12 +330,28 @@ describe('backend authorization and auth behavior', () => {
 
     reflector.getAllAndOverride.mockReturnValue({ permissions: { permissions: ['records:read'] } });
     await expect(allowGuard.canActivate(httpContext({ headers: {}, principal }) as never)).resolves.toBe(true);
+    expect(reflector.getAllAndOverride).toHaveBeenLastCalledWith(
+      expect.any(Symbol),
+      [{ name: 'handler' }, { name: 'ControllerClass' }],
+    );
+    expect(allowGuard['evaluator'].evaluate).toHaveBeenLastCalledWith({
+      principal,
+      requirements: {
+        permissions: { permissions: ['records:read'] },
+      },
+      action: 'handler',
+      resource: 'ControllerClass',
+    });
 
     const denyGuard = new AuthorizationGuard(reflector as unknown as Reflector, {
       evaluate: vi.fn(async () => false),
     });
-    await expect(denyGuard.canActivate(httpContext({ headers: {}, principal }) as never)).rejects.toBeInstanceOf(ForbiddenException);
-    await expect(denyGuard.canActivate(httpContext({ headers: {} }) as never)).rejects.toBeInstanceOf(ForbiddenException);
+    await expect(denyGuard.canActivate(httpContext({ headers: {}, principal }) as never)).rejects.toThrow(
+      'Access denied by policy evaluator',
+    );
+    await expect(denyGuard.canActivate(httpContext({ headers: {} }) as never)).rejects.toThrow(
+      'Missing request principal for authorization evaluation',
+    );
   });
 
   it('describes branch: authorization default evaluator receives role-only and permission-only metadata', async () => {
@@ -575,6 +594,83 @@ describe('backend idempotency behavior', () => {
       next,
     )).toThrow(ConflictException);
     interceptor.onModuleDestroy();
+  });
+
+  it('uses the default TTL and strips query strings from local replay fingerprints', async () => {
+    const now = vi.spyOn(Date, 'now').mockReturnValue(1_700_000_000_000);
+    const interceptor = new IdempotencyInterceptor();
+    const next = { handle: vi.fn(() => of({ ok: true })) };
+    const firstResponse = responseStub(201);
+    const request = {
+      method: 'post',
+      tenantId: 'tenant-1',
+      headers: { 'x-idempotency-key': 'ttl-default' },
+      originalUrl: '/items?ignored=first',
+      body: { a: 1 },
+    };
+
+    try {
+      await expect(lastValueFrom(interceptor.intercept(
+        httpContextWithResponse(request, firstResponse) as never,
+        next,
+      ))).resolves.toEqual({ ok: true });
+
+      const cache = (interceptor as unknown as {
+        cache: Map<string, { expiresAt: number; requestFingerprint: string }>;
+      }).cache;
+      expect(cache.get('tenant-1:ttl-default')).toEqual(expect.objectContaining({
+        expiresAt: 1_700_086_400_000,
+        requestFingerprint: 'POST:/items:{"a":1}',
+      }));
+
+      const replayResponse = responseStub();
+      await expect(lastValueFrom(interceptor.intercept(
+        httpContextWithResponse({
+          ...request,
+          originalUrl: '/items?ignored=second',
+          body: { a: 1 },
+        }, replayResponse) as never,
+        next,
+      ))).resolves.toEqual({ ok: true });
+      expect(replayResponse.status).toHaveBeenCalledWith(201);
+      expect(replayResponse.setHeader).toHaveBeenCalledWith('X-Idempotency-Key', 'ttl-default');
+      expect(replayResponse.setHeader).toHaveBeenCalledWith('X-Idempotency-Replay', 'true');
+      expect(next.handle).toHaveBeenCalledTimes(1);
+    } finally {
+      now.mockRestore();
+      interceptor.onModuleDestroy();
+    }
+  });
+
+  it('serializes request bodies with stable null, array, and escaped-key semantics', () => {
+    const interceptor = new IdempotencyInterceptor({ cacheCleanupMs: 10_000 });
+    const stableStringify = (interceptor as unknown as {
+      stableStringify: (value: unknown) => string;
+    }).stableStringify.bind(interceptor);
+
+    expect(stableStringify(null)).toBe('null');
+    expect(stableStringify(undefined)).toBe('null');
+    expect(stableStringify(['b', null, { z: 2, a: 1 }])).toBe('["b",null,{"a":1,"z":2}]');
+    expect(stableStringify({ z: 2, 'a"q': 'quote', a: 1 })).toBe('{"a":1,"a\\"q":"quote","z":2}');
+    interceptor.onModuleDestroy();
+  });
+
+  it('destroys local idempotency timers, cache entries, and in-flight reservations', () => {
+    const clearIntervalSpy = vi.spyOn(globalThis, 'clearInterval');
+    const interceptor = new IdempotencyInterceptor({ cacheCleanupMs: 10_000 });
+    const internals = interceptor as unknown as {
+      cache: Map<string, unknown>;
+      inFlight: Map<string, Promise<unknown>>;
+    };
+    internals.cache.set('cache-key', { body: true });
+    internals.inFlight.set('flight-key', Promise.resolve({ body: true }));
+
+    interceptor.onModuleDestroy();
+
+    expect(clearIntervalSpy).toHaveBeenCalledWith(expect.any(Object));
+    expect([...internals.cache.entries()]).toEqual([]);
+    expect([...internals.inFlight.entries()]).toEqual([]);
+    clearIntervalSpy.mockRestore();
   });
 
   it('waits on in-flight in-memory work for concurrent matching writes', async () => {
@@ -1075,6 +1171,7 @@ describe('backend rate-limit behavior', () => {
       headers: {},
       path: '/api/v1/system/health/ready',
     }) as never)).resolves.toBe(true);
+    expect((guard as unknown as { buckets: Map<string, unknown> }).buckets.size).toBe(0);
 
     const request = { headers: {}, ip: '127.0.0.1', method: 'POST', url: '/items' };
     await expect(guard.canActivate(httpContext(request) as never)).resolves.toBe(true);
@@ -1179,7 +1276,11 @@ describe('backend rate-limit behavior', () => {
 
     await expect(guard.canActivate(httpContext(request) as never)).resolves.toBe(true);
     expect(store.cleanup).toHaveBeenCalledTimes(1);
-    await expect(guard.canActivate(httpContext(request) as never)).rejects.toBeInstanceOf(HttpException);
+    expect((guard as unknown as { buckets: Map<string, unknown> }).buckets.size).toBe(0);
+    await expect(guard.canActivate(httpContext(request) as never)).rejects.toMatchObject({
+      message: 'Rate limit exceeded',
+      status: HttpStatus.TOO_MANY_REQUESTS,
+    });
     await expect(guard.canActivate(httpContext({ ...request, url: '/fallback-null' }) as never)).resolves.toBe(true);
     await expect(guard.canActivate(httpContext({ ...request, url: '/fallback-error' }) as never)).resolves.toBe(true);
 
@@ -1188,9 +1289,13 @@ describe('backend rate-limit behavior', () => {
         throw new Error('store down');
       }),
     });
-    await expect(strict.canActivate(httpContext(request) as never)).rejects.toBeInstanceOf(
-      ServiceUnavailableException,
-    );
+    await expect(strict.canActivate(httpContext(request) as never)).rejects.toMatchObject({
+      message: 'Distributed rate limit backend unavailable',
+      response: {
+        message: 'Distributed rate limit backend unavailable',
+        statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+      },
+    });
 
     const delayedCleanupStore: RateLimitStore = {
       increment: vi.fn(async () => 1),
@@ -1201,6 +1306,38 @@ describe('backend rate-limit behavior', () => {
     expect(delayedCleanupStore.cleanup).not.toHaveBeenCalled();
     await expect(delayedCleanup.canActivate(httpContext({ ...request, url: '/delayed-2' }) as never)).resolves.toBe(true);
     expect(delayedCleanupStore.cleanup).toHaveBeenCalledTimes(1);
+  });
+
+  it('cleans in-memory buckets only at the configured call and overflow boundaries', () => {
+    let now = 1_000;
+    const nowSpy = vi.spyOn(Date, 'now').mockImplementation(() => now);
+    try {
+      const guard = new RateLimitGuard({ cleanupEvery: 2, maxBuckets: 2 });
+      const internals = guard as unknown as {
+        buckets: Map<string, { resetAt: number; count: number }>;
+        callsSinceInMemoryCleanup: number;
+        maybeCleanupInMemory: () => void;
+      };
+      internals.buckets.set('fresh-one', { count: 1, resetAt: 2_000 });
+      internals.buckets.set('fresh-two', { count: 1, resetAt: 2_000 });
+
+      internals.maybeCleanupInMemory();
+      expect(internals.callsSinceInMemoryCleanup).toBe(1);
+      expect([...internals.buckets.keys()]).toEqual(['fresh-one', 'fresh-two']);
+
+      internals.buckets.set('expired', { count: 1, resetAt: 999 });
+      internals.maybeCleanupInMemory();
+      expect(internals.callsSinceInMemoryCleanup).toBe(0);
+      expect([...internals.buckets.keys()]).toEqual(['fresh-one', 'fresh-two']);
+
+      now = 1_500;
+      internals.buckets.set('overflow', { count: 1, resetAt: 2_500 });
+      internals.maybeCleanupInMemory();
+      expect(internals.callsSinceInMemoryCleanup).toBe(0);
+      expect([...internals.buckets.keys()]).toEqual(['fresh-two', 'overflow']);
+    } finally {
+      nowSpy.mockRestore();
+    }
   });
 
   it('covers in-memory bucket increment, cleanup no-op, cleanup error, and overflow deletion', async () => {

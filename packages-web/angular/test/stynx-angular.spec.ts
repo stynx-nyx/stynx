@@ -1,7 +1,7 @@
 import '@angular/compiler';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Injector, runInInjectionContext } from '@angular/core';
+import { ApplicationRef, Injector, NgZone, runInInjectionContext } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { of, throwError, firstValueFrom, type Observable } from 'rxjs';
@@ -100,6 +100,7 @@ function createAuthInterceptor(
   options: { apiBaseUrl: string; sessionMode: 'bearer' | 'cookie' },
   authProvider: unknown,
   errorBanner?: ErrorBannerService,
+  providers: Parameters<typeof Injector.create>[0]['providers'] = [],
 ): AuthInterceptor {
   const injector = Injector.create({
     parent: TestBed.inject(Injector),
@@ -107,6 +108,7 @@ function createAuthInterceptor(
       { provide: STYNX_ANGULAR_OPTIONS, useValue: options },
       { provide: STYNX_AUTH_PROVIDER, useValue: authProvider },
       ...(errorBanner ? [{ provide: ErrorBannerService, useValue: errorBanner }] : []),
+      ...providers,
     ],
   });
   return runInInjectionContext(injector, () => new AuthInterceptor());
@@ -175,6 +177,57 @@ describe('@stynx-web/angular', () => {
 
     try {
       expect(generateClientRequestId()).toMatch(REQUEST_ID_PATTERN);
+    } finally {
+      Object.defineProperty(globalThis, 'crypto', {
+        configurable: true,
+        value: originalCrypto,
+      });
+      random.mockRestore();
+      now.mockRestore();
+    }
+  });
+
+  it('generates deterministic UUIDv7 bytes from fallback entropy and timestamp', () => {
+    const originalCrypto = globalThis.crypto;
+    const random = vi.spyOn(Math, 'random').mockReturnValue(0.5);
+    const now = vi.spyOn(Date, 'now').mockReturnValue(1_700_000_000_000);
+    Object.defineProperty(globalThis, 'crypto', {
+      configurable: true,
+      value: undefined,
+    });
+
+    try {
+      expect(generateClientRequestId()).toBe('018bcfe5-6800-7080-8080-808080808080');
+      expect(random).toHaveBeenCalledTimes(16);
+    } finally {
+      Object.defineProperty(globalThis, 'crypto', {
+        configurable: true,
+        value: originalCrypto,
+      });
+      random.mockRestore();
+      now.mockRestore();
+    }
+  });
+
+  it('generates deterministic UUIDv7 bytes from web crypto entropy and timestamp', () => {
+    const originalCrypto = globalThis.crypto;
+    const random = vi.spyOn(Math, 'random');
+    const now = vi.spyOn(Date, 'now').mockReturnValue(1_700_000_000_000);
+    const getRandomValues = vi.fn((bytes: Uint8Array) => {
+      for (let index = 0; index < bytes.length; index += 1) {
+        bytes[index] = index;
+      }
+      return bytes;
+    });
+    Object.defineProperty(globalThis, 'crypto', {
+      configurable: true,
+      value: { getRandomValues },
+    });
+
+    try {
+      expect(generateClientRequestId()).toBe('018bcfe5-6800-7607-8809-0a0b0c0d0e0f');
+      expect(getRandomValues).toHaveBeenCalledWith(expect.any(Uint8Array));
+      expect(random).not.toHaveBeenCalled();
     } finally {
       Object.defineProperty(globalThis, 'crypto', {
         configurable: true,
@@ -284,7 +337,7 @@ describe('@stynx-web/angular', () => {
     const passthroughHandler = new FakeHandler([of({ ok: true }) as Observable<unknown>]);
 
     await expect(firstValueFrom(passthrough.intercept(new FakeRequest() as never, passthroughHandler as never))).resolves.toEqual({ ok: true });
-    expect(passthroughHandler.seen[0]?.headers.get('authorization')).toBeNull();
+    expect(passthroughHandler.seen[0]?.headers.get('authorization')).toBe(null);
 
     const error = new HttpErrorResponse({ status: 401, error: { code: 'AUTHENTICATION_ERROR' } });
     const handler = new FakeHandler([throwError(() => error)]);
@@ -323,7 +376,7 @@ describe('@stynx-web/angular', () => {
     );
     const noProviderHandler = new FakeHandler([of({ ok: true }) as Observable<unknown>]);
     await expect(firstValueFrom(noProvider.intercept(new FakeRequest() as never, noProviderHandler as never))).resolves.toEqual({ ok: true });
-    expect(noProviderHandler.seen[0]?.headers.get('authorization')).toBeNull();
+    expect(noProviderHandler.seen[0]?.headers.get('authorization')).toBe(null);
 
     const auth = createAuthInterceptor(
       { apiBaseUrl: '/api', sessionMode: 'bearer' },
@@ -348,6 +401,91 @@ describe('@stynx-web/angular', () => {
     ))).rejects.toBe(plainError);
   });
 
+  it('does not treat malformed bearer-looking authorization headers as retryable attempts', async () => {
+    let refreshCalls = 0;
+    const error = new HttpErrorResponse({ status: 401, error: { message: 'login failed' } });
+    const auth = createAuthInterceptor(
+      { apiBaseUrl: '/api', sessionMode: 'bearer' },
+      {
+        getAccessToken: async () => null,
+        refresh: async () => {
+          refreshCalls += 1;
+          return 'fresh-token';
+        },
+      },
+    );
+
+    await expect(firstValueFrom(auth.intercept(
+      new FakeRequest(new FakeHeaders({ Authorization: 'Token Bearer stale-token' })) as never,
+      new FakeHandler([throwError(() => error)]) as never,
+    ))).rejects.toBe(error);
+
+    await expect(firstValueFrom(auth.intercept(
+      new FakeRequest(new FakeHeaders({ Authorization: 'Bearerstale-token' })) as never,
+      new FakeHandler([throwError(() => error)]) as never,
+    ))).rejects.toBe(error);
+
+    expect(refreshCalls).toBe(0);
+  });
+
+  it('rethrows errors inside the injected zone and ticks non-destroyed apps after delivery', async () => {
+    vi.useFakeTimers();
+    const run = vi.fn((callback: () => void) => callback());
+    const tick = vi.fn();
+    const error = new Error('zone failure');
+    const auth = createAuthInterceptor(
+      { apiBaseUrl: '/api', sessionMode: 'bearer' },
+      {
+        getAccessToken: async () => null,
+        refresh: async () => {
+          throw new Error('refresh should not run');
+        },
+      },
+      undefined,
+      [
+        { provide: NgZone, useValue: { run } },
+        { provide: ApplicationRef, useValue: { destroyed: false, tick } },
+      ],
+    );
+
+    await expect(firstValueFrom(auth.intercept(
+      new FakeRequest() as never,
+      new FakeHandler([throwError(() => error)]) as never,
+    ))).rejects.toBe(error);
+
+    expect(run).toHaveBeenCalledWith(expect.any(Function));
+    expect(tick).not.toHaveBeenCalled();
+    vi.runOnlyPendingTimers();
+    expect(tick).toHaveBeenCalledWith();
+    vi.useRealTimers();
+  });
+
+  it('skips the post-error tick when the injected app ref is already destroyed', async () => {
+    vi.useFakeTimers();
+    const tick = vi.fn();
+    const error = new Error('destroyed app');
+    const auth = createAuthInterceptor(
+      { apiBaseUrl: '/api', sessionMode: 'bearer' },
+      {
+        getAccessToken: async () => null,
+        refresh: async () => {
+          throw new Error('refresh should not run');
+        },
+      },
+      undefined,
+      [{ provide: ApplicationRef, useValue: { destroyed: true, tick } }],
+    );
+
+    await expect(firstValueFrom(auth.intercept(
+      new FakeRequest() as never,
+      new FakeHandler([throwError(() => error)]) as never,
+    ))).rejects.toBe(error);
+
+    vi.runOnlyPendingTimers();
+    expect(tick).not.toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
   it('leaves bearer requests unchanged when the provider has no token', async () => {
     const unauthorized = new HttpErrorResponse({ status: 401, error: { message: 'login failed' } });
     const auth = createAuthInterceptor(
@@ -362,7 +500,7 @@ describe('@stynx-web/angular', () => {
     const handler = new FakeHandler([of({ ok: true }) as Observable<unknown>]);
 
     await expect(firstValueFrom(auth.intercept(new FakeRequest() as never, handler as never))).resolves.toEqual({ ok: true });
-    expect(handler.seen[0]?.headers.get('authorization')).toBeNull();
+    expect(handler.seen[0]?.headers.get('authorization')).toBe(null);
 
     await expect(firstValueFrom(auth.intercept(
       new FakeRequest() as never,
@@ -394,7 +532,7 @@ describe('@stynx-web/angular', () => {
     } as never))).rejects.toBeInstanceOf(UnauthorizedError);
 
     expect(handler.seen).toHaveLength(1);
-    expect(handler.seen[0]?.headers.get('authorization')).toBeNull();
+    expect(handler.seen[0]?.headers.get('authorization')).toBe(null);
     expect(refreshCalls).toBe(0);
     expect(banners.current()).toMatchObject({
       message: 'login failed',
@@ -423,7 +561,7 @@ describe('@stynx-web/angular', () => {
     expect(banners.current()?.message).toBe('[Tenant A] forbidden');
     expect(banners.current()?.context).toEqual({ tenantLabel: 'Tenant A' });
     banners.clear();
-    expect(banners.current()).toBeNull();
+    expect(banners.current()).toBe(null);
   });
 
   it('maps HTTP error context and omits falsy status from banners', async () => {
@@ -486,7 +624,7 @@ describe('@stynx-web/angular', () => {
       new FakeHandler([throwError(() => error)]) as never,
     ))).rejects.toBe(error);
 
-    expect(banners.current()).toBeNull();
+    expect(banners.current()).toBe(null);
   });
 
   it('resolves tenant context from query, subdomain, then default resolver', async () => {
@@ -551,6 +689,8 @@ describe('@stynx-web/angular', () => {
   it('keeps empty-state component inputs as configured', () => {
     const component = new EmptyStateComponent();
     expect(component.tone).toBe('info');
+    expect(component.title).toBe('');
+    expect(component.description).toBe('');
     component.title = 'No records';
     component.description = 'Create a record to continue';
     component.tone = 'warning';

@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-21T23:49:41.092Z",
-  "endedAt": "2026-05-21T23:50:56.810Z",
-  "durationMs": 75718,
+  "startedAt": "2026-05-22T02:36:08.291Z",
+  "endedAt": "2026-05-22T02:36:15.651Z",
+  "durationMs": 7360,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-85945-1779407381091.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-19687-1779417368291.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/backend/.test-results/unit.junit.xml"
     ],
@@ -37,62 +37,62 @@
   },
   "totals": {
     "files": 25,
-    "tests": 247,
-    "passed": 247,
+    "tests": 253,
+    "passed": 253,
     "failed": 0,
     "skipped": 0,
     "todo": 0
   },
   "slowestTests": [
     {
-      "name": "backend SLA behavior samples requests, skips NONE categories, aggregates by window, and records errors",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/behavior-coverage.spec.ts",
-      "durationMs": 562.8358330000046
+      "name": "PormIdentityAdminFacade disable/enable/addToGroup/removeFromGroup/resetPassword/setPassword return their tags",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/integration-facades.spec.ts",
+      "durationMs": 58.96954200000005
     },
     {
-      "name": "backend idempotency behavior describes branch: durable replay/cache paths default status codes",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/behavior-coverage.spec.ts",
-      "durationMs": 406.9767920000013
+      "name": "PormIdentityAdminFacade list() expands each item via get() to include groups + attributes",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/integration-facades.spec.ts",
+      "durationMs": 47.35254100000009
     },
     {
-      "name": "backend authorization and auth behavior guards authorization metadata with default and injected evaluators",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/behavior-coverage.spec.ts",
-      "durationMs": 218.5207919999957
+      "name": "IdentityAdminService IdentityAdminError → HttpException mapping UNKNOWN_CODE maps to %p class ServiceUnavailableException extends http_exception_1.HttpException {\n    /**\n     * Instantiate a `ServiceUnavailableException` Exception.\n     *\n     * @example\n     * `throw new ServiceUnavailableException()`\n     *\n     * @usageNotes\n     * The HTTP response status code will be 503.\n     * - The `objectOrError` argument defines the JSON response body or the message string.\n     * - The `descriptionOrOptions` argument contains either a short description of the HTTP error or an options object used to provide an underlying error cause.\n     *\n     * By default, the JSON response body contains two properties:\n     * - `statusCode`: this will be the value 503.\n     * - `message`: the string `'Service Unavailable'` by default; override this by supplying\n     * a string in the `objectOrError` parameter.\n     *\n     * If the parameter `objectOrError` is a string, the response body will contain an\n     * additional property, `error`, with a short description of the HTTP error. To override the\n     * entire JSON response body, pass an object instead. Nest will serialize the object\n     * and return it as the JSON response body.\n     *\n     * @param objectOrError string or object describing the error condition.\n     * @param descriptionOrOptions either a short description of the HTTP error or an options object used to provide an underlying error cause\n     */\n    constructor(objectOrError, descriptionOrOptions = 'Service Unavailable') {\n        const { description, httpExceptionOptions } = http_exception_1.HttpException.extractDescriptionAndOptionsFrom(descriptionOrOptions);\n        super(http_exception_1.HttpException.createBody(objectOrError, description, http_status_enum_1.HttpStatus.SERVICE_UNAVAILABLE), http_status_enum_1.HttpStatus.SERVICE_UNAVAILABLE, httpExceptionOptions);\n    }\n}",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/identity-admin.service.spec.ts",
+      "durationMs": 41.45516699999996
     },
     {
-      "name": "backend SLA behavior resolves URL categories and falls back to NONE",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/behavior-coverage.spec.ts",
-      "durationMs": 193.18466700000135
+      "name": "AuditInterceptor runs metadata through the redaction policy when configured",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/audit.interceptor.spec.ts",
+      "durationMs": 32.59320800000012
     },
     {
-      "name": "backend SLA behavior describes branch: default SLA dependencies resolve URL and sample through logger sink",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/behavior-coverage.spec.ts",
-      "durationMs": 191.48895900000207
+      "name": "IdentityAdminService passes through non-IdentityAdminError throws unchanged",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/identity-admin.service.spec.ts",
+      "durationMs": 25.991499999999974
+    },
+    {
+      "name": "backend durable stores covers backend PgIdempotencyStore query branches",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/pg-durable-stores.spec.ts",
+      "durationMs": 21.67950000000002
     },
     {
       "name": "PgIdentityLocalSyncAdapter listGroupsWithMetaByUserId trims user group names before membership matching",
       "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/pg-local-sync.adapter.spec.ts",
-      "durationMs": 137.86566700000003
+      "durationMs": 13.04362500000002
     },
     {
-      "name": "DbContextInterceptor skips applier when there is no principal on the request",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/db-context.interceptor.spec.ts",
-      "durationMs": 70.6582499999995
+      "name": "backend SLA behavior samples requests, skips NONE categories, aggregates by window, and records errors",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/behavior-coverage.spec.ts",
+      "durationMs": 6.963625000000093
     },
     {
-      "name": "ClaimFirstTenantEntitlementPolicy grants when a string claim contains the tenantId",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/tenant-entitlement.spec.ts",
-      "durationMs": 66.22987499999999
+      "name": "PormIdentityAdminFacade list() forwards every supported filter to listUsers",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/integration-facades.spec.ts",
+      "durationMs": 6.21083299999998
     },
     {
-      "name": "TenantLifecycleMiddleware allows missing header when requireTenantHeader=false",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/tenant-lifecycle.middleware.spec.ts",
-      "durationMs": 57.87149999999974
-    },
-    {
-      "name": "@stynx/backend exports surface for sla barrel surfaces at least one export",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/sla-export.spec.ts",
-      "durationMs": 54.915750000000116
+      "name": "backend SLA behavior resolves URL categories and falls back to NONE",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/backend/test/unit/behavior-coverage.spec.ts",
+      "durationMs": 5.962207999999919
     }
   ]
 }

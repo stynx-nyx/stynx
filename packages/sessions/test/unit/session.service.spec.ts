@@ -84,6 +84,20 @@ class RefreshFailureStore extends StaticSessionStore {
   }
 }
 
+class PartialRevokeStore extends InMemorySessionStore {
+  constructor(private readonly listedIds: string[]) {
+    super();
+  }
+
+  override async listSessionIdsByUser(): Promise<string[]> {
+    return [...this.listedIds];
+  }
+
+  override async listSessionIdsByTenant(): Promise<string[]> {
+    return [...this.listedIds];
+  }
+}
+
 function buildKeySet() {
   const { publicKey, privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
   return {
@@ -155,13 +169,39 @@ describe('SessionService', () => {
     const created = await service.create('user-1', 'tenant-1', 'cognito-1', { device: 'test' });
     const current = await service.get(created.sid);
 
-    expect(current).not.toBeNull();
+    expect(current).toEqual(expect.objectContaining({
+      deviceMeta: { device: 'test' },
+      tenantId: 'tenant-1',
+    }));
     expect(current?.tenantId).toBe('tenant-1');
 
     await expect(service.revoke(created.sid)).resolves.toBe(true);
-    await expect(service.get(created.sid)).resolves.toBeNull();
+    await expect(service.get(created.sid)).resolves.toBe(null);
     expect(store.invalidations).toEqual(['user-1:tenant-1']);
     expect(mirror.entries.map((entry) => entry.status)).toEqual(['active', 'revoked']);
+  });
+
+  it('omits empty device metadata and create metadata from stored session records', async () => {
+    const store = new InMemorySessionStore();
+    const mirror = new RecordingMirror();
+    const options = resolveSessionsOptions({
+      issuer: 'https://sessions.test',
+      redis: { url: 'redis://127.0.0.1:6379' },
+      jwt: { keySet: buildKeySet() },
+    });
+    const service = new SessionService(options, store, new SessionJwtSigningService(options), mirror);
+
+    const created = await service.create('user-empty', 'tenant-empty', 'cognito-empty', {}, {});
+    const current = await service.get(created.sid);
+
+    expect(current).toEqual(expect.objectContaining({
+      userId: 'user-empty',
+      tenantId: 'tenant-empty',
+      cognitoSub: 'cognito-empty',
+    }));
+    expect(current).not.toHaveProperty('deviceMeta');
+    expect(current).not.toHaveProperty('membershipId');
+    expect(current).not.toHaveProperty('permsHash');
   });
 
   it('rotates refresh tokens and kills the family when an old token is reused', async () => {
@@ -182,7 +222,7 @@ describe('SessionService', () => {
     await expect(service.refresh(created.refreshToken)).rejects.toBeInstanceOf(
       RefreshTokenReuseDetectedError,
     );
-    await expect(service.get(created.sid)).resolves.toBeNull();
+    await expect(service.get(created.sid)).resolves.toBe(null);
     expect(mirror.entries.at(-1)?.status).toBe('reuse_detected');
   });
 
@@ -210,11 +250,49 @@ describe('SessionService', () => {
 
     now = new Date('2026-04-24T12:00:03.500Z');
     await expect(service.refresh(created.refreshToken)).rejects.toBeInstanceOf(SessionExpiredError);
-    await expect(service.get(created.sid)).resolves.toBeNull();
+    await expect(service.get(created.sid)).resolves.toBe(null);
 
     const createdAgain = await service.create('user-2', 'tenant-1', 'cognito-2');
     now = new Date('2026-04-24T12:00:08.500Z');
     await expect(service.refresh(createdAgain.refreshToken)).rejects.toBeInstanceOf(SessionExpiredError);
+  });
+
+  it('treats absolute and idle expiry timestamps as expired at the exact boundary', async () => {
+    const now = new Date('2026-04-24T12:00:00.000Z');
+    const baseSession: SessionRecord = {
+      sid: 'session-boundary',
+      userId: 'user-1',
+      tenantId: 'tenant-1',
+      cognitoSub: 'cognito-1',
+      refreshFamilyId: 'family-1',
+      refreshTokenHash: 'refresh-hash-1',
+      status: 'active',
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+      lastTouchedAt: now.toISOString(),
+      expiresAt: new Date(now.getTime() + 60_000).toISOString(),
+      idleExpiresAt: new Date(now.getTime() + 60_000).toISOString(),
+    };
+    const options = resolveSessionsOptions({
+      issuer: 'https://sessions.test',
+      redis: { url: 'redis://127.0.0.1:6379' },
+      jwt: { keySet: buildKeySet() },
+      clock: () => now,
+    });
+
+    await expect(new SessionService(
+      options,
+      new StaticSessionStore({ ...baseSession, expiresAt: now.toISOString() }),
+      new SessionJwtSigningService(options),
+      new RecordingMirror(),
+    ).get('session-boundary')).resolves.toBe(null);
+
+    await expect(new SessionService(
+      options,
+      new StaticSessionStore({ ...baseSession, idleExpiresAt: now.toISOString() }),
+      new SessionJwtSigningService(options),
+      new RecordingMirror(),
+    ).get('session-boundary')).resolves.toBe(null);
   });
 
   it('supports clock skew when access tokens have a slightly future nbf', async () => {
@@ -262,7 +340,7 @@ describe('SessionService', () => {
 
     expect(store.sessionCount()).toBe(1);
     expect(store.refreshLookupCount()).toBe(1001);
-    expect(await service.get(current.sid)).not.toBeNull();
+    expect(await service.get(current.sid)).toEqual(expect.objectContaining({ sid: current.sid }));
   });
 
   it('exchanges an active session for a new tenant-scoped session', async () => {
@@ -293,7 +371,7 @@ describe('SessionService', () => {
 
     expect(exchanged.revokedSessionId).toBe(created.sid);
     expect(exchanged.bundle.sid).not.toBe(created.sid);
-    await expect(service.get(created.sid)).resolves.toBeNull();
+    await expect(service.get(created.sid)).resolves.toBe(null);
 
     const replacement = await service.get(exchanged.bundle.sid);
     expect(replacement).toMatchObject({
@@ -327,6 +405,7 @@ describe('SessionService', () => {
       newTenantId: 'tenant-2',
     })).rejects.toMatchObject({
       code: 'SESSION_OWNER_MISMATCH',
+      message: 'Session ' + created.sid + ' does not belong to user user-2',
     });
   });
 
@@ -347,6 +426,7 @@ describe('SessionService', () => {
       newTenantId: 'tenant-2',
     })).rejects.toMatchObject({
       code: 'SESSION_NOT_FOUND',
+      message: 'Session missing-session not found',
     });
   });
 
@@ -382,6 +462,7 @@ describe('SessionService', () => {
       newTenantId: 'tenant-2',
     })).rejects.toMatchObject({
       code: 'SESSION_NOT_ACTIVE',
+      message: 'Session session-1 is no longer active',
     });
   });
 
@@ -395,8 +476,8 @@ describe('SessionService', () => {
     });
     const service = new SessionService(options, store, new SessionJwtSigningService(options), mirror);
 
-    await expect(service.get('missing')).resolves.toBeNull();
-    await expect(service.touch('missing')).resolves.toBeNull();
+    await expect(service.get('missing')).resolves.toBe(null);
+    await expect(service.touch('missing')).resolves.toBe(null);
     await expect(service.revoke('missing')).resolves.toBe(false);
     await expect(service.refresh('not-a-refresh-token')).rejects.toBeInstanceOf(InvalidRefreshTokenError);
   });
@@ -439,10 +520,10 @@ describe('SessionService', () => {
         new Date().toISOString(),
         new Date().toISOString(),
       ),
-    ).resolves.toBeNull();
+    ).resolves.toBe(null);
     await expect(
       store.touchSession('missing', new Date().toISOString(), new Date().toISOString()),
-    ).resolves.toBeNull();
+    ).resolves.toBe(null);
   });
 
   it('rejects refresh when lookup points at a missing session or rotation fails', async () => {
@@ -502,7 +583,7 @@ describe('SessionService', () => {
         createdAt: new Date().toISOString(),
         expiresAt: new Date(Date.now() + 60_000).toISOString(),
       }),
-    ).resolves.toBeUndefined();
+    ).resolves.toBe(undefined);
   });
 
   it('writes mirror rows with membership ids when infrastructure providers are available', async () => {
@@ -642,6 +723,42 @@ describe('SessionService', () => {
     expect(store.invalidations).toEqual([]);
   });
 
+  it('excludes missing sessions from revoke-all counts, invalidations, and mirror writes', async () => {
+    const store = new PartialRevokeStore(['sid-active', 'sid-missing']);
+    const mirror = new RecordingMirror();
+    const options = resolveSessionsOptions({
+      issuer: 'https://sessions.test',
+      redis: { url: 'redis://127.0.0.1:6379' },
+      jwt: { keySet: buildKeySet() },
+    });
+    const service = new SessionService(options, store, new SessionJwtSigningService(options), mirror);
+    await store.createSession({
+      sid: 'sid-active',
+      userId: 'user-partial',
+      tenantId: 'tenant-partial',
+      cognitoSub: 'cognito-partial',
+      refreshFamilyId: 'family-partial',
+      refreshTokenHash: 'hash-partial',
+      status: 'active',
+      createdAt: '2026-05-18T12:00:00.000Z',
+      updatedAt: '2026-05-18T12:00:00.000Z',
+      lastTouchedAt: '2026-05-18T12:00:00.000Z',
+      expiresAt: '2026-05-18T13:00:00.000Z',
+      idleExpiresAt: '2026-05-18T13:00:00.000Z',
+      membershipId: 'membership-partial',
+    });
+
+    await expect(service.revokeAllForUser('user-partial')).resolves.toBe(1);
+    expect(store.invalidations).toEqual(['user-partial:tenant-partial']);
+    expect(mirror.entries).toEqual([
+      expect.objectContaining({
+        sid: 'sid-active',
+        status: 'revoked',
+        membershipId: 'membership-partial',
+      }),
+    ]);
+  });
+
   // ===========================================================================
   // WAVE-05A targeted kills.
   // ===========================================================================
@@ -698,7 +815,7 @@ describe('InMemorySessionStore — mutation kills', () => {
     } as never);
     await store.rotateRefreshToken('s-rotate-not-active', 'h-old', 'h-mid', expiresAt, now);
     const result = await store.rotateRefreshToken('s-rotate-not-active', 'h-old', 'h-next', expiresAt, now);
-    expect(result).toBeNull();
+    expect(result).toBe(null);
   });
 
   it('rotateRefreshToken returns null when currentHash does not match session refreshTokenHash (kills second ConditionalExpression at L48)', async () => {
@@ -712,7 +829,7 @@ describe('InMemorySessionStore — mutation kills', () => {
       expiresAt, idleExpiresAt: expiresAt, status: 'active',
     } as never);
     const result = await store.rotateRefreshToken('s-rotate-mismatch', 'h-WRONG', 'h-next', expiresAt, now);
-    expect(result).toBeNull();
+    expect(result).toBe(null);
   });
 
   it('publishInvalidation emits on the literal "invalidate" channel (kills StringLiteral at L130)', async () => {

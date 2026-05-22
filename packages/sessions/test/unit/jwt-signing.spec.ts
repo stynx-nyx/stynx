@@ -36,7 +36,7 @@ function makeOptions(keyMaterialOverride?: unknown): ResolvedStynxSessionsModule
   return {
     issuer: 'https://stynx.test',
     audience: 'stynx',
-    timeouts: { accessSeconds: 300, refreshSeconds: 86_400, idleSeconds: 1800 },
+    timeouts: { accessSeconds: 300, refreshSeconds: 86_400, idleSeconds: 1800, accessNotBeforeDelaySeconds: 0 },
     jwt: { keySet: keyMaterial, cacheTtlMs: 60_000 },
     cookies: { secure: true, sameSite: 'lax', name: 'stynx.session' },
   } as unknown as ResolvedStynxSessionsModuleOptions;
@@ -55,12 +55,77 @@ function makeRecord(): SessionRecord {
   } as unknown as SessionRecord;
 }
 
+function decodeJsonSegment(segment: string): Record<string, unknown> {
+  return JSON.parse(Buffer.from(
+    segment.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(segment.length / 4) * 4, '='),
+    'base64',
+  ).toString('utf8')) as Record<string, unknown>;
+}
+
 describe('SessionJwtSigningService.signAccessToken', () => {
   it('produces a 3-segment JWT signed by the active key', async () => {
     const svc = new SessionJwtSigningService(makeOptions());
     const result = await svc.signAccessToken(makeRecord(), new Date('2026-05-17T00:00:00.000Z'));
     expect(result.token.split('.')).toHaveLength(3);
-    expect(typeof result.expiresAt).toBeDefined();
+    expect(typeof result.expiresAt).toBe('string');
+  });
+
+  it('binds exact JWT header, payload claims, and access expiry', async () => {
+    const svc = new SessionJwtSigningService(makeOptions());
+    const issuedAt = new Date('2026-05-17T00:00:00.000Z');
+    const record = {
+      ...makeRecord(),
+      sid: 'sid-1',
+      userId: 'user-1',
+      tenantId: 'tenant-1',
+      cognitoSub: 'cognito-1',
+      permsHash: 'perms-hash-1',
+    } as SessionRecord;
+    const result = await svc.signAccessToken(record, issuedAt);
+    const [encodedHeader, encodedPayload] = result.token.split('.');
+
+    expect(encodedHeader).toEqual(expect.any(String));
+    expect(encodedPayload).toEqual(expect.any(String));
+    expect(decodeJsonSegment(encodedHeader!)).toEqual({
+      alg: 'RS256',
+      kid: 'k1',
+      typ: 'JWT',
+    });
+    expect(decodeJsonSegment(encodedPayload!)).toMatchObject({
+      iss: 'https://stynx.test',
+      sub: 'user-1',
+      sid: 'sid-1',
+      tenant_id: 'tenant-1',
+      cognito_sub: 'cognito-1',
+      perms_hash: 'perms-hash-1',
+      amr: ['refresh'],
+      aud: 'stynx',
+      iat: 1_778_976_000,
+      exp: 1_778_976_300,
+      nbf: 1_778_976_000,
+    });
+    expect(result.expiresAt).toBe('2026-05-17T00:05:00.000Z');
+  });
+
+  it('omits optional JWT audience and permission hash claims when unset', async () => {
+    const svc = new SessionJwtSigningService({
+      ...makeOptions(),
+      audience: undefined,
+    });
+    const record = {
+      ...makeRecord(),
+      sid: 'sid-2',
+      userId: 'user-2',
+      tenantId: 'tenant-2',
+      cognitoSub: 'cognito-2',
+      permsHash: undefined,
+    } as SessionRecord;
+    const result = await svc.signAccessToken(record, new Date('2026-05-17T00:00:00.000Z'));
+    const [, encodedPayload] = result.token.split('.');
+    const payload = decodeJsonSegment(encodedPayload!);
+
+    expect(payload).not.toHaveProperty('aud');
+    expect(payload).not.toHaveProperty('perms_hash');
   });
 
   it('caches resolved keys across calls (singleton)', async () => {
@@ -80,9 +145,38 @@ describe('SessionJwtSigningService.signAccessToken', () => {
         keys: [{ kid: 'k1', publicKeyPem: publicKey, privateKeyPem: privateKey }],
       }),
     );
-    await expect(svc.signAccessToken(makeRecord(), new Date())).rejects.toBeInstanceOf(
-      SessionSigningKeyError,
+    await expect(svc.signAccessToken(makeRecord(), new Date())).rejects.toThrow(
+      /^Active session signing key missing-kid not found$/u,
     );
+  });
+
+  it('reloads signing keys exactly when the cache ttl boundary is reached', async () => {
+    const { publicKey, privateKey } = genKeyPair();
+    const raw = JSON.stringify({
+      currentKid: 'k1',
+      keys: [{ kid: 'k1', publicKeyPem: publicKey, privateKeyPem: privateKey }],
+    });
+    const loader = makeSecretLoader(raw);
+    const dateNow = vi.spyOn(Date, 'now').mockReturnValue(1_000);
+    const svc = new SessionJwtSigningService(
+      {
+        issuer: 'https://stynx.test',
+        timeouts: { accessSeconds: 300, refreshSeconds: 86_400, idleSeconds: 1800 },
+        jwt: { secretId: 'session/keys', cacheTtlMs: 60_000 },
+        cookies: { secure: true, sameSite: 'lax', name: 'stynx.session' },
+      } as never,
+      loader as never,
+    );
+
+    await svc.getJwks();
+    dateNow.mockReturnValue(60_999);
+    await svc.getJwks();
+    dateNow.mockReturnValue(61_000);
+    await svc.getJwks();
+
+    expect(loader.getSecretString).toHaveBeenCalledTimes(2);
+    expect(loader.getSecretString).toHaveBeenCalledWith('session/keys');
+    dateNow.mockRestore();
   });
 
   it('throws when neither jwt.keySet nor jwt.secretId is configured', async () => {

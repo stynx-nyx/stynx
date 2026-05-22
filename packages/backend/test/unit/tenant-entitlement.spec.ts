@@ -51,8 +51,9 @@ describe('ClaimFirstTenantEntitlementPolicy', () => {
   it('delegates to fallback when no tenant claim and fallback configured', async () => {
     const fallback = { isEntitled: vi.fn(async () => true) };
     const policy = new ClaimFirstTenantEntitlementPolicy({ fallback });
-    await expect(policy.isEntitled(mkContext({}))).resolves.toBe(true);
-    expect(fallback.isEntitled).toHaveBeenCalled();
+    const context = mkContext({});
+    await expect(policy.isEntitled(context)).resolves.toBe(true);
+    expect(fallback.isEntitled).toHaveBeenCalledWith(context);
   });
 
   it('does NOT delegate to fallback when a tenant claim exists but excludes the tenantId', async () => {
@@ -100,7 +101,14 @@ describe('SqlTenantEntitlementFallback', () => {
     const executor = makeExecutor([{ one: 1 }]);
     const fb = new SqlTenantEntitlementFallback({ executor });
     await expect(fb.isEntitled(mkContext({}))).resolves.toBe(true);
-    expect(executor.query).toHaveBeenCalled();
+    expect(executor.query).toHaveBeenCalledWith(
+      expect.stringContaining('from auth.users'),
+      ['t-1', 'p-1', 'a@b.test'],
+    );
+    expect(executor.query.mock.calls[0]?.[0]).toContain('where tenant_id = $1');
+    expect(executor.query.mock.calls[0]?.[0]).toContain('and is_active = true');
+    expect(executor.query.mock.calls[0]?.[0]).toContain('(oidc_sub is not distinct from $2)');
+    expect(executor.query.mock.calls[0]?.[0]).toContain('or (email is not distinct from $3)');
   });
 
   it('returns false when no rows match', async () => {
@@ -126,21 +134,72 @@ describe('SqlTenantEntitlementFallback', () => {
     await fb.isEntitled(mkContext({}));
     const sql = executor.query.mock.calls[0]?.[0] as string;
     expect(sql).not.toContain('is_active');
+    expect(executor.query).toHaveBeenCalledWith(expect.stringContaining('from auth.users'), [
+      't-1',
+      'p-1',
+      'a@b.test',
+    ]);
   });
 
   it('rejects table identifiers that fail the SQL identifier pattern', () => {
-    expect(
-      () =>
-        new SqlTenantEntitlementFallback({
-          executor: makeExecutor([]),
-          table: '"; drop table users;--',
-        }),
-    ).toThrow(/Invalid SQL identifier/);
+    for (const table of ['"; drop table users;--', 'auth.bad-name', 'auth.123users']) {
+      expect(
+        () =>
+          new SqlTenantEntitlementFallback({
+            executor: makeExecutor([]),
+            table,
+          }),
+      ).toThrow(new RegExp(`Invalid SQL identifier for table: ${table.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'u'));
+    }
   });
 
   it('handles array-form query result (no .rows wrapper)', async () => {
     const executor = { query: vi.fn(async () => [{ one: 1 }]) };
     const fb = new SqlTenantEntitlementFallback({ executor: executor as never });
     await expect(fb.isEntitled(mkContext({}))).resolves.toBe(true);
+  });
+
+  it('uses custom identifiers and trims fallback subject and email parameters exactly', async () => {
+    const executor = makeExecutor([]);
+    const fb = new SqlTenantEntitlementFallback({
+      executor,
+      table: 'security.memberships',
+      tenantColumn: 'tenant_uuid',
+      subjectColumn: 'subject_ref',
+      emailColumn: 'email_ref',
+      activeColumn: 'enabled',
+    });
+    const context = mkContext({
+      sub: '   ',
+      email: ' claim-email@example.test ',
+    }, 'tenant-custom');
+    context.principal.id = ' principal-id ';
+    context.principal.email = '   ';
+
+    await expect(fb.isEntitled(context)).resolves.toBe(false);
+
+    const sql = executor.query.mock.calls[0]?.[0] as string;
+    expect(sql).toContain('from security.memberships');
+    expect(sql).toContain('where tenant_uuid = $1');
+    expect(sql).toContain('and enabled = true');
+    expect(sql).toContain('(subject_ref is not distinct from $2)');
+    expect(sql).toContain('or (email_ref is not distinct from $3)');
+    expect(executor.query).toHaveBeenCalledWith(expect.any(String), [
+      'tenant-custom',
+      'principal-id',
+      'claim-email@example.test',
+    ]);
+  });
+
+  it('returns false without querying when subject and email normalize to empty values', async () => {
+    const executor = makeExecutor([{ one: 1 }]);
+    const fb = new SqlTenantEntitlementFallback({ executor });
+    const context = mkContext({ sub: ' ', email: ' ' });
+    context.principal.id = ' ';
+    context.principal.email = ' ';
+
+    await expect(fb.isEntitled(context)).resolves.toBe(false);
+
+    expect(executor.query).not.toHaveBeenCalled();
   });
 });
