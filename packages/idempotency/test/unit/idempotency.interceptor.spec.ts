@@ -1,4 +1,5 @@
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
+import { createHash } from 'node:crypto';
 import {
   BadRequestException,
   HttpException,
@@ -262,6 +263,24 @@ describe('IdempotencyInterceptor', () => {
       lastValueFrom(interceptor.intercept(createExecutionContext(request, replayResponse, annotatedHandler(reflector)), next)),
     ).resolves.toEqual({ ok: true });
 
+    const firstContext = (backend.get as Mock).mock.calls[0]?.[0] as IdempotencyDecisionContext;
+    const expectedCompositeKey = createHash('sha256')
+      .update(JSON.stringify({
+        tenantId: null,
+        userId: 'principal-user',
+        routeKey: 'POST:/v1/items',
+        headerValue: 'array-key',
+      }))
+      .digest('hex');
+    expect(firstContext).toMatchObject({
+      headerName: 'Idempotency-Key',
+      headerValue: 'array-key',
+      routeKey: 'POST:/v1/items',
+      userId: 'principal-user',
+      ttlMs: 86_400_000,
+    });
+    expect(firstContext.tenantId).toBe(undefined);
+    expect(firstContext.compositeKey).toBe(expectedCompositeKey);
     expect(metrics.incrementReplay).toHaveBeenCalledTimes(1);
     expect(replayResponse.setHeader).toHaveBeenCalledWith('X-Idempotency-Key', 'array-key');
   });
@@ -417,7 +436,10 @@ describe('IdempotencyInterceptor', () => {
     ).rejects.toBeInstanceOf(HttpException);
 
     expect(store.persistResponse).not.toHaveBeenCalled();
-    expect(store.clearReservation).toHaveBeenCalled();
+    expect(store.clearReservation).toHaveBeenCalledWith(expect.objectContaining({
+      headerValue: 'k1',
+      routeKey: 'POST:/v1/items',
+    }));
   });
 
   it('throws service unavailable when lock cannot be obtained in strict mode', async () => {

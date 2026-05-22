@@ -159,7 +159,7 @@ describe('@stynx-web/angular-tenancy', () => {
     expect(providerFactory<[], Window | null>(windowProvider)()).toBe(window);
     expect((initializerProvider['deps'] as unknown[])).toEqual([TenantContextService]);
     expect(initializerProvider['multi']).toBe(true);
-    await expect(providerFactory<[typeof service], () => Promise<void>>(initializerProvider)(service)()).resolves.toBeUndefined();
+    await expect(providerFactory<[typeof service], () => Promise<void>>(initializerProvider)(service)()).resolves.toBe(undefined);
     expect(service.initialize).toHaveBeenCalledTimes(1);
     expect(interceptorProvider['useClass']).toBe(TenantInterceptor);
     expect(interceptorProvider['multi']).toBe(true);
@@ -201,7 +201,7 @@ describe('@stynx-web/angular-tenancy', () => {
     expect(tenantContext.activeTenant()).toEqual({ id: 'fallback-tenant', source: 'default' });
 
     tenantContext.clear();
-    expect(tenantContext.activeTenant()).toBeNull();
+    expect(tenantContext.activeTenant()).toBe(null);
     expect(emitted).toContain(null);
   });
 
@@ -244,17 +244,85 @@ describe('@stynx-web/angular-tenancy', () => {
     expect(tenantContext.activeTenant()).toEqual({ id: 'fallback-tenant', source: 'default' });
   });
 
+  it('prefers tenantId query values and strips ports before subdomain detection', async () => {
+    const seen: Array<{ url: string; host: string }> = [];
+    const tenantContext = createTenantContext(
+      {
+        defaultTenantResolver: async ({ url, host }) => {
+          seen.push({ url: url.href, host });
+          return null;
+        },
+      },
+      null,
+    );
+
+    await tenantContext.initialize({
+      url: 'https://portal.example.test/work?tenantId=tenant-id&tenant=tenant-fallback',
+      host: 'portal.example.test',
+    });
+    expect(tenantContext.activeTenant()).toEqual({ id: 'tenant-id', source: 'query' });
+    expect(seen).toEqual([]);
+
+    tenantContext.clear();
+    await tenantContext.initialize({
+      url: '/home',
+      host: 'ops.example.test:4200',
+    });
+    expect(tenantContext.activeTenant()).toEqual({ id: 'ops', source: 'subdomain' });
+  });
+
+  it('passes absolute https URLs to the fallback resolver without rewriting the host', async () => {
+    const seen: Array<{ url: string; host: string }> = [];
+    const tenantContext = createTenantContext(
+      {
+        defaultTenantResolver: async ({ url, host }) => {
+          seen.push({ url: url.href, host });
+          return 'tenant-default';
+        },
+      },
+      null,
+    );
+
+    await tenantContext.initialize({
+      url: 'https://localhost/settings',
+      host: 'localhost',
+    });
+
+    expect(tenantContext.activeTenant()).toEqual({ id: 'tenant-default', source: 'default' });
+    expect(seen).toEqual([{ url: 'https://localhost/settings', host: 'localhost' }]);
+  });
+
+  it('rejects IPv4 hosts and blank hosts before falling back to defaults', async () => {
+    const seen: string[] = [];
+    const tenantContext = createTenantContext(
+      {
+        defaultTenantResolver: async ({ host }) => {
+          seen.push(host);
+          return 'tenant-default';
+        },
+      },
+      null,
+    );
+
+    await tenantContext.initialize({ url: '/x', host: '10.20.30.40:4200' });
+    expect(tenantContext.activeTenant()).toEqual({ id: 'tenant-default', source: 'default' });
+    tenantContext.clear();
+    await tenantContext.initialize({ host: '' });
+    expect(tenantContext.activeTenant()).toEqual({ id: 'tenant-default', source: 'default' });
+    expect(seen).toEqual(['10.20.30.40:4200', '']);
+  });
+
   it('leaves tenant unset when no source resolves and supports manual source default', async () => {
     const tenantContext = createTenantContext({}, null);
 
     await tenantContext.initialize();
-    expect(tenantContext.activeTenant()).toBeNull();
+    expect(tenantContext.activeTenant()).toBe(null);
 
     await tenantContext.initialize({
       url: '/dashboard',
       host: '',
     });
-    expect(tenantContext.activeTenant()).toBeNull();
+    expect(tenantContext.activeTenant()).toBe(null);
 
     tenantContext.setTenant('tenant-manual');
     expect(tenantContext.activeTenant()).toEqual({ id: 'tenant-manual', source: 'manual' });
@@ -286,6 +354,7 @@ describe('@stynx-web/angular-tenancy', () => {
 
     tenantContext.setTenant('tenant-a', 'manual');
     tenantContext.setTenant('tenant-a', 'query');
+    expect(tenantContext.activeTenant()).toEqual({ id: 'tenant-a', source: 'query' });
     tenantContext.setTenant('tenant-b', 'manual');
     tenantContext.clear();
     tenantContext.clear();
@@ -297,7 +366,7 @@ describe('@stynx-web/angular-tenancy', () => {
       { from: 'tenant-b', to: null },
     ]);
     expect(emitted.every(({ at }) => Number.isInteger(at) && at > 0)).toBe(true);
-    expect(tenantContext.activeTenant()).toBeNull();
+    expect(tenantContext.activeTenant()).toBe(null);
   });
 
   it('adds X-Tenant-Id from the current tenant context', async () => {

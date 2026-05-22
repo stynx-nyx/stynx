@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-20T03:43:02.791Z",
-  "endedAt": "2026-05-20T03:43:15.808Z",
-  "durationMs": 13017,
+  "startedAt": "2026-05-22T04:29:20.913Z",
+  "endedAt": "2026-05-22T04:29:27.527Z",
+  "durationMs": 6614,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/tmp/vitest-47285-1779248582791.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-98673-1779424160912.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/idempotency/.test-results/unit.junit.xml"
     ],
@@ -37,62 +37,62 @@
   },
   "totals": {
     "files": 4,
-    "tests": 44,
-    "passed": 44,
+    "tests": 65,
+    "passed": 65,
     "failed": 0,
     "skipped": 0,
     "todo": 0
   },
   "slowestTests": [
     {
-      "name": "DatabaseIdempotencyStore returns false for skipped durable writes and uses null tenant parameters",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/unit/runtime-stores.spec.ts",
-      "durationMs": 67.07125000000087
+      "name": "IdempotencyInterceptor does not persist 5xx HTTP exception responses (allows retry)",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/unit/idempotency.interceptor.spec.ts",
+      "durationMs": 68.51474999999982
     },
     {
       "name": "IdempotencyInterceptor uses the default header name and rejects blank header values",
       "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/unit/idempotency.interceptor.spec.ts",
-      "durationMs": 49.06879200000003
+      "durationMs": 34.44583399999965
     },
     {
-      "name": "IdempotencyInterceptor rejects annotated routes without the configured header",
+      "name": "idempotency decorators and metrics tracks replay counts in memory",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/unit/decorators-and-metrics.spec.ts",
+      "durationMs": 30.33391699999993
+    },
+    {
+      "name": "IdempotencyInterceptor accepts canonical lower-case array headers and user principal fallbacks",
       "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/unit/idempotency.interceptor.spec.ts",
-      "durationMs": 39.247665999999754
+      "durationMs": 24.557582999999795
     },
     {
-      "name": "IdempotencyInterceptor executes the request after wait attempts are exhausted in non-strict mode",
+      "name": "IdempotencyInterceptor continues without durable ownership when no backend is configured and strict mode is off",
       "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/unit/idempotency.interceptor.spec.ts",
-      "durationMs": 15.528916000000208
-    },
-    {
-      "name": "IdempotencyInterceptor persists 4xx HTTP exception responses for replay",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/unit/idempotency.interceptor.spec.ts",
-      "durationMs": 13.712375000000065
-    },
-    {
-      "name": "PgIdempotencyStore validates configured SQL identifiers",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/unit/pg-idempotency.store.spec.ts",
-      "durationMs": 13.173874999999953
-    },
-    {
-      "name": "IdempotencyInterceptor persists 4xx HTTP exception responses to the durable store",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/unit/idempotency.interceptor.spec.ts",
-      "durationMs": 9.749041000000034
-    },
-    {
-      "name": "IdempotencyInterceptor clears durable reservations for normal 5xx responses and non-HTTP errors",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/unit/idempotency.interceptor.spec.ts",
-      "durationMs": 8.0609170000007
-    },
-    {
-      "name": "IdempotencyInterceptor continues waiting over pending durable entries until a completed one is ready",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/unit/idempotency.interceptor.spec.ts",
-      "durationMs": 6.365374999999403
+      "durationMs": 22.180250000000342
     },
     {
       "name": "IdempotencyInterceptor replays cached responses from the durable store after a backend miss",
       "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/unit/idempotency.interceptor.spec.ts",
-      "durationMs": 5.669208000000253
+      "durationMs": 16.788166999999703
+    },
+    {
+      "name": "IdempotencyInterceptor clears durable reservations for normal 5xx responses and non-HTTP errors",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/unit/idempotency.interceptor.spec.ts",
+      "durationMs": 11.350292000000081
+    },
+    {
+      "name": "IdempotencyInterceptor status-code boundary (kills EqualityOperator at L307) on statusCode === 500 boundary, clears reservation and does NOT persist (kills `< 500` → `<= 500`)",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/unit/idempotency.interceptor.spec.ts",
+      "durationMs": 10.22891699999991
+    },
+    {
+      "name": "IdempotencyInterceptor rejects annotated routes without the configured header",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/unit/idempotency.interceptor.spec.ts",
+      "durationMs": 10.154999999999745
+    },
+    {
+      "name": "IdempotencyInterceptor expiresAt arithmetic (kills ArithmeticOperator at L304, L325) persists expiresAt = Date.now() + ttlMs on a 4xx HttpException error path",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/idempotency/test/unit/idempotency.interceptor.spec.ts",
+      "durationMs": 9.833082999999988
     }
   ]
 }

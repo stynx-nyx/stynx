@@ -186,6 +186,7 @@ describe('FlowApiService endpoint contract', () => {
     await api.deleteWaiver('waiver-1');
     await api.openTasks({ scopeCode: 'scope', page: 2, pageSize: 25 });
     await api.runsSummary({ scopeCode: 'scope', status: 'active' });
+    await api.dashboardAnalytics({ scopeCode: 'scope', graphId: 'graph-1' });
     await api.signal({ scopeCode: 'scope', targetType: 'generic', targetId: 'target-1' });
     await api.dispatchEffects({ runId: 'run-1', limit: 10 });
     await api.listPolicySets('scope-1');
@@ -235,6 +236,7 @@ describe('FlowApiService endpoint contract', () => {
       ['DELETE', '/flow/waivers/waiver-1', null],
       ['GET', '/flow/open-tasks', { query: { scopeCode: 'scope', page: 2, pageSize: 25 } }],
       ['GET', '/flow/runs/summary', { query: { scopeCode: 'scope', status: 'active' } }],
+      ['GET', '/flow/analytics/dashboard', { query: { scopeCode: 'scope', graphId: 'graph-1' } }],
       ['POST', '/flow/signal', null],
       ['POST', '/flow/effects/dispatch', null],
       ['GET', '/flow/policies/sets', { query: { scopeId: 'scope-1' } }],
@@ -284,6 +286,7 @@ describe('FlowApiService endpoint contract', () => {
     await api.listRunNodeRuns('run-1');
     await api.listRunTasks('run-1');
     await api.listRunEvents('run-1');
+    await api.listRunActivity('run-1', { cursor: 'cursor-1', pageSize: 25 });
     await api.getRunFacts('run-1');
     await api.listNodeRuns({ runId: 'run-1', status: 'in_progress' });
     await api.getNodeRun('node-run-1');
@@ -311,6 +314,7 @@ describe('FlowApiService endpoint contract', () => {
       ['GET', '/flow/runs/run-1/nodes', null],
       ['GET', '/flow/runs/run-1/tasks', null],
       ['GET', '/flow/runs/run-1/events', null],
+      ['GET', '/flow/runs/run-1/activity', { query: { cursor: 'cursor-1', pageSize: 25 } }],
       ['GET', '/flow/runs/run-1/facts', null],
       ['GET', '/flow/node-runs', { query: { runId: 'run-1', status: 'in_progress' } }],
       ['GET', '/flow/node-runs/node-run-1', null],
@@ -346,6 +350,8 @@ describe('FlowApiService endpoint contract', () => {
       { method: 'POST', path: '/flow/tasks/task-1/decline', body: { note: 'declining' }, options: undefined },
       { method: 'POST', path: '/flow/tasks/task-1/unaccept', body: { note: 'undo' }, options: undefined },
       { method: 'POST', path: '/flow/tasks/task-1/withdraw', body: { note: 'withdraw' }, options: undefined },
+      { method: 'POST', path: '/flow/tasks/task-1/act', body: { action: 'approve', note: 'approved' }, options: undefined },
+      { method: 'POST', path: '/flow/tasks/task-1/assign', body: { userId: 'user-1', note: 'assign' }, options: undefined },
       { method: 'POST', path: '/flow/tasks/task-1/unassign', body: { note: 'unassign' }, options: undefined },
     ]));
   });
@@ -365,6 +371,8 @@ describe('FlowApiService endpoint contract', () => {
     await api.listEvents();
     await api.openTasks();
     await api.runsSummary();
+    await api.dashboardAnalytics();
+    await api.listRunActivity('run-1');
     await api.listPolicySets();
     const undefinedFilters = { formId: undefined, targetId: undefined } as unknown as Parameters<FlowApiService['listFills']>[0];
     await api.listFills(undefinedFilters);
@@ -381,6 +389,8 @@ describe('FlowApiService endpoint contract', () => {
       { method: 'GET', path: '/flow/events', options: {} },
       { method: 'GET', path: '/flow/open-tasks', options: {} },
       { method: 'GET', path: '/flow/runs/summary', options: {} },
+      { method: 'GET', path: '/flow/analytics/dashboard', options: {} },
+      { method: 'GET', path: '/flow/runs/run-1/activity', options: {} },
       { method: 'GET', path: '/flow/policies/sets', options: {} },
     ]));
   });

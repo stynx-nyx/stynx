@@ -192,6 +192,43 @@ describe('migrate command surface', () => {
     expect(fake.journal).toEqual([]);
   });
 
+  it('filters migration specs to forward sql files and records deterministic checksums', async () => {
+    const root = mkdtempSync(resolve(tmpdir(), 'stynx-cli-migrate-filter-'));
+    const dir = resolve(root, 'migrations');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(resolve(dir, '0002_second.sql'), 'select 2;', 'utf8');
+    writeFileSync(resolve(dir, '0002_second.down.sql'), 'select 22;', 'utf8');
+    writeFileSync(resolve(dir, '0001_first.sql'), 'select 1;', 'utf8');
+    writeFileSync(resolve(dir, '0001_first.down.sql'), 'select 11;', 'utf8');
+    writeFileSync(resolve(dir, '0003_notes.txt'), 'ignored', 'utf8');
+    writeFileSync(resolve(dir, '0004_almost.sql.bak'), 'ignored', 'utf8');
+    const fake = new FakeMigrationClient();
+
+    expect(listMigrations(process.cwd(), { migrationDir: dir })).toEqual([
+      {
+        id: '0001_first.sql',
+        upPath: resolve(dir, '0001_first.sql'),
+        downPath: resolve(dir, '0001_first.down.sql'),
+      },
+      {
+        id: '0002_second.sql',
+        upPath: resolve(dir, '0002_second.sql'),
+        downPath: resolve(dir, '0002_second.down.sql'),
+      },
+    ]);
+
+    await expect(migrateUp(process.cwd(), 'postgresql://example', false, {
+      migrationDir: dir,
+      clientFactory: clientFactoryFor(fake),
+    })).resolves.toEqual(['0001_first.sql', '0002_second.sql']);
+    expect(fake.applied.get('0001_first.sql')).toBe(
+      `9:${Buffer.from('select 1;', 'utf8').toString('base64url').slice(0, 24)}`,
+    );
+    expect(fake.applied.get('0002_second.sql')).toBe(
+      `9:${Buffer.from('select 2;', 'utf8').toString('base64url').slice(0, 24)}`,
+    );
+  });
+
   it('uses the default platform migration directory when none is supplied', () => {
     const root = mkdtempSync(resolve(tmpdir(), 'stynx-cli-migrate-default-dir-'));
     const dir = resolve(root, 'packages/data/migrations/platform');

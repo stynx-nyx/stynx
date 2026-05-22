@@ -212,6 +212,25 @@ describe('@stynx-web/angular-flow FE-G fan-out', () => {
     expect(component.loading()).toBe(false);
   });
 
+  it('loads dashboard analytics with empty filters when inputs are unset', async () => {
+    const api = createApi();
+    const component = createWithApi(api, () => new StynxFlowDashboardComponent());
+
+    expect(component.metrics()).toBe(undefined);
+    expect(component.loading()).toBe(false);
+    expect(component.errorMessage()).toBe('');
+    await component.ngOnChanges();
+
+    expect(api.dashboardAnalytics).toHaveBeenCalledWith({});
+    expect(component.metrics()).toEqual({
+      openTasks: 8,
+      cycleTime: { p50Seconds: 42, p95Seconds: 95 },
+      completionRate: { last7Days: 0.25, last30Days: 0.8 },
+      slaBreaches: 3,
+    });
+    expect(component.percent(0.125)).toBe('13%');
+  });
+
   it('loads run activity pages, appends older events, and clears when no run is selected', async () => {
     const api = createApi();
     (api.listRunActivity as ReturnType<typeof vi.fn>)
@@ -242,6 +261,37 @@ describe('@stynx-web/angular-flow FE-G fan-out', () => {
     (api.listRunActivity as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('activity down'));
     await component.refresh();
     expect(component.errorMessage()).toBe('activity down');
+    expect(component.loading()).toBe(false);
+  });
+
+  it('ignores stale run activity refreshes and uses page math for next-page state', async () => {
+    let resolveFirst: (value: Awaited<ReturnType<FlowApiService['listRunActivity']>>) => void = () => undefined;
+    const api = createApi();
+    (api.listRunActivity as ReturnType<typeof vi.fn>)
+      .mockReturnValueOnce(new Promise((resolve) => {
+        resolveFirst = resolve;
+      }))
+      .mockResolvedValueOnce({
+        data: [{ id: 'event-latest', runId: 'run-1', kind: 'approved' }],
+        meta: { page: 2, pageSize: 10, total: 20 },
+      });
+    const component = createWithApi(api, () => new StynxFlowRunActivityComponent());
+    component.runId = 'run-1';
+    component.pageSize = 10;
+
+    const first = component.refresh();
+    const second = component.loadNextPage();
+    await second;
+    resolveFirst({
+      data: [{ id: 'event-stale', runId: 'run-1', kind: 'started' }],
+      meta: { page: 1, pageSize: 10, total: 30 },
+    });
+    await first;
+
+    expect(api.listRunActivity).toHaveBeenNthCalledWith(1, 'run-1', { page: 1, pageSize: 10 });
+    expect(api.listRunActivity).toHaveBeenNthCalledWith(2, 'run-1', { page: 2, pageSize: 10 });
+    expect(component.events()).toEqual([{ id: 'event-latest', runId: 'run-1', kind: 'approved' }]);
+    expect(component.hasNextPage()).toBe(false);
     expect(component.loading()).toBe(false);
   });
 
@@ -287,8 +337,8 @@ describe('@stynx-web/angular-flow FE-G fan-out', () => {
     component.drawSignature(component.questions[3]!, { target: canvas, clientX: 40, clientY: 35, preventDefault: vi.fn() } as never);
     component.endSignature(component.questions[3]!, { target: canvas, preventDefault: vi.fn() } as never);
 
-    expect(context.beginPath).toHaveBeenCalled();
-    expect(context.lineTo).toHaveBeenCalled();
+    expect(context.beginPath).toHaveBeenCalledTimes(1);
+    expect(context.lineTo).toHaveBeenCalledWith(90, 45);
     expect(component.textValue(component.questions[3]!)).toBe('data:image/png;base64,signature');
 
     const shell = document.createElement('div');

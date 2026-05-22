@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-20T16:27:19.130Z",
-  "endedAt": "2026-05-20T16:27:21.273Z",
-  "durationMs": 2143,
+  "startedAt": "2026-05-22T04:29:37.339Z",
+  "endedAt": "2026-05-22T04:29:44.848Z",
+  "durationMs": 7509,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-97933-1779294439129.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-10772-1779424177338.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/.test-results/unit.junit.xml"
     ],
@@ -37,8 +37,8 @@
   },
   "totals": {
     "files": 4,
-    "tests": 37,
-    "passed": 37,
+    "tests": 41,
+    "passed": 41,
     "failed": 0,
     "skipped": 0,
     "todo": 0
@@ -47,52 +47,52 @@
     {
       "name": "@stynx-web/angular-flow FE-G fan-out activates each flow route with the real Router when permissions allow",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/flow-fan-out.spec.ts",
-      "durationMs": 222.9542080000001
+      "durationMs": 489.58358299999963
     },
     {
       "name": "@stynx-web/angular-flow FE-G fan-out redirects every guarded flow route to permission denial when the session lacks access",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/flow-fan-out.spec.ts",
-      "durationMs": 11.821541000000025
+      "durationMs": 33.5064169999996
     },
     {
       "name": "FlowApiService endpoint contract covers design route families for scopes, graphs, nodes, edges, rules, effects, and form gates",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/flow-api.service.spec.ts",
-      "durationMs": 3.7387079999998605
+      "durationMs": 20.93474999999944
     },
     {
       "name": "@stynx-web/angular-flow components binds graph designer inputs to route-like scope and graph ids",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
-      "durationMs": 3.715750000000071
-    },
-    {
-      "name": "@stynx-web/angular-flow FE-G fan-out handles file answers, signatures, and reveal conditions in the fill editor",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/flow-fan-out.spec.ts",
-      "durationMs": 2.40820900000017
+      "durationMs": 7.82274999999936
     },
     {
       "name": "@stynx-web/angular-flow FE-G fan-out wires provideStynxFlow for instance-backed and factory-backed package hosts",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/flow-fan-out.spec.ts",
-      "durationMs": 1.7907920000000104
-    },
-    {
-      "name": "FlowApiService endpoint contract covers forms, fills, answers, waivers, policies, analytics, signal, and effect routes",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/flow-api.service.spec.ts",
-      "durationMs": 1.557540999999901
+      "durationMs": 6.9152079999994385
     },
     {
       "name": "@stynx-web/angular-flow components loads run summaries and captures non-Error failures",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
-      "durationMs": 1.502042000000074
+      "durationMs": 5.124832999999853
+    },
+    {
+      "name": "@stynx-web/angular-flow components draws signature points with scaled canvas coordinates and stroke style",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
+      "durationMs": 4.818750000000364
+    },
+    {
+      "name": "@stynx-web/angular-flow FE-G fan-out handles file answers, signatures, and reveal conditions in the fill editor",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/flow-fan-out.spec.ts",
+      "durationMs": 4.563125000000582
     },
     {
       "name": "@stynx-web/angular-flow components loads forms, fills, tasks, and waivers with optional filters and error branches",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
-      "durationMs": 1.3711249999998927
+      "durationMs": 4.544417000000067
     },
     {
-      "name": "FlowApiService endpoint contract covers runtime, task action, candidate, user lookup, and event routes",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/flow-api.service.spec.ts",
-      "durationMs": 1.1615409999999429
+      "name": "@stynx-web/angular-flow components loads the my-tasks inbox with signal state and tenant refreshes",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-flow/test/components.spec.ts",
+      "durationMs": 3.876916999999594
     }
   ]
 }

@@ -269,4 +269,29 @@ describe('@stynx/cli', () => {
       clientFactory: () => client,
     })).resolves.toMatchObject({ valid: true, totalChecked: 0 });
   });
+
+  it('defaults audit limit when the caller passes zero', async () => {
+    const client = {
+      async connect(): Promise<void> {},
+      async end(): Promise<void> {},
+      async query<T>(_sql: string, values?: unknown[]): Promise<{ rows: T[] }> {
+        expect(values).toEqual(['01990000-0000-7000-8000-000000000001', 1000]);
+        return { rows: [] };
+      },
+    };
+
+    await expect(verifyAuditChain('postgres://fixture', {
+      tenantId: '01990000-0000-7000-8000-000000000001',
+      limit: 0,
+      clientFactory: () => client,
+    })).resolves.toEqual({
+      valid: true,
+      totalChecked: 0,
+      tenants: [{
+        tenantId: '01990000-0000-7000-8000-000000000001',
+        valid: true,
+        totalChecked: 0,
+      }],
+    });
+  });
 });

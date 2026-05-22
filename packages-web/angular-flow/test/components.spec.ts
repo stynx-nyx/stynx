@@ -223,6 +223,9 @@ describe('@stynx-web/angular-flow components', () => {
     const api = createApi();
     const component = createWithApi(api, () => new StynxFlowOpenTasksComponent());
 
+    expect(component.tasks).toEqual([]);
+    expect(component.loading).toBe(false);
+    expect(component.errorMessage).toBe('');
     await component.ngOnInit();
     expect(component.tasks).toHaveLength(1);
     await component.load();
@@ -259,6 +262,9 @@ describe('@stynx-web/angular-flow components', () => {
     const api = createApi();
     const component = createWithApi(api, () => new StynxFlowRunSummaryComponent());
 
+    expect(component.summaries).toEqual([]);
+    expect(component.loading).toBe(false);
+    expect(component.errorMessage).toBe('');
     await component.ngOnInit();
     expect(component.summaries).toHaveLength(1);
     await component.load();
@@ -505,6 +511,87 @@ describe('@stynx-web/angular-flow components', () => {
       { questionId: 'multi-question', value: ['a', 'b'] },
       { questionId: 'date-question', value: '2026-05-17' },
     ]]);
+  });
+
+  it('serializes fill-editor boundary values and excludes hidden answers from bulk save', () => {
+    const component = new StynxFlowFillEditorComponent();
+    const saved: unknown[] = [];
+    const emitted: unknown[] = [];
+    component.questions = [
+      { id: 'source', formId: 'form-1', key: 'source', label: 'Source', fieldType: 'select', required: false, blocksSubmit: false, options: [{ label: 'Yes', value: 'yes' }] },
+      { id: 'visible', formId: 'form-1', key: 'visible', label: 'Visible', fieldType: 'number', required: false, blocksSubmit: false, visibleIf: { questionKey: 'source', value: 'yes' } },
+      { id: 'hidden', formId: 'form-1', key: 'hidden', label: 'Hidden', fieldType: 'text', required: false, blocksSubmit: false, revealIf: { question: 'source', equals: 'no' } },
+      { id: 'invalid-number', formId: 'form-1', key: 'invalidNumber', label: 'Invalid number', fieldType: 'number', required: false, blocksSubmit: false },
+      { id: 'file', formId: 'form-1', key: 'file', label: 'File', fieldType: 'file', required: false, blocksSubmit: false },
+      { id: 'signature', formId: 'form-1', key: 'signature', label: 'Signature', fieldType: 'signature', required: false, blocksSubmit: false },
+      { id: 'long-default', formId: 'form-1', key: 'longDefault', label: 'Long default', fieldType: 'text', required: false, blocksSubmit: false, validators: { mode: 'long' } },
+      { id: 'zero-max', formId: 'form-1', key: 'zeroMax', label: 'Zero max', fieldType: 'text', required: false, blocksSubmit: false, validators: { maxLength: 0 } },
+    ];
+    component.answers = [
+      { id: 'source-answer', fillId: 'fill-1', questionId: 'source', value: 'yes' },
+      { id: 'invalid-answer', fillId: 'fill-1', questionId: 'invalid-number', value: 'not-a-number' },
+    ];
+    component.saveAnswers.subscribe((value) => saved.push(value));
+    component.answer.subscribe((value) => emitted.push(value));
+
+    expect(component.isQuestionVisible(component.questions[1]!)).toBe(true);
+    expect(component.isQuestionVisible(component.questions[2]!)).toBe(false);
+    expect(component.numberValue(component.questions[3]!)).toBe('');
+    expect(component.questionTextMaxLength(component.questions[6]!)).toBe(4000);
+    expect(component.questionTextMaxLength(component.questions[7]!)).toBe(200);
+
+    component.setValue(component.questions[1]!, undefined);
+    component.setValue(component.questions[4]!, '');
+    component.setValue(component.questions[5]!, '');
+    component.saveAllAnswers();
+
+    expect(emitted).toEqual([
+      { questionId: 'visible', value: null },
+      { questionId: 'file', value: null },
+      { questionId: 'signature', value: null },
+    ]);
+    expect(saved).toEqual([[
+      { questionId: 'source', value: 'yes' },
+      { questionId: 'visible', value: null },
+      { questionId: 'invalid-number', value: Number.NaN },
+      { questionId: 'file', value: null },
+      { questionId: 'signature', value: null },
+      { questionId: 'long-default', value: null },
+      { questionId: 'zero-max', value: null },
+    ]]);
+  });
+
+  it('draws signature points with scaled canvas coordinates and stroke style', () => {
+    const component = new StynxFlowFillEditorComponent();
+    const question = { id: 'signature', formId: 'form-1', key: 'signature', label: 'Signature', fieldType: 'signature', required: false, blocksSubmit: false } as const;
+    const canvas = document.createElement('canvas');
+    canvas.width = 200;
+    canvas.height = 100;
+    const context = {
+      beginPath: vi.fn(),
+      clearRect: vi.fn(),
+      lineTo: vi.fn(),
+      moveTo: vi.fn(),
+      stroke: vi.fn(),
+      lineWidth: 0,
+      lineCap: '',
+      strokeStyle: '',
+    };
+    vi.spyOn(canvas, 'getContext').mockReturnValue(context as never);
+    vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({ left: 10, top: 20, width: 100, height: 50 } as DOMRect);
+    vi.spyOn(canvas, 'toDataURL').mockReturnValue('data:image/png;base64,signature');
+
+    component.beginSignature(question, { target: canvas, clientX: 60, clientY: 45, preventDefault: vi.fn() } as never);
+    component.drawSignature(question, { target: canvas, clientX: 85, clientY: 60, preventDefault: vi.fn() } as never);
+    component.endSignature(question, { target: canvas, preventDefault: vi.fn() } as never);
+
+    expect(context.lineWidth).toBe(2);
+    expect(context.lineCap).toBe('round');
+    expect(context.strokeStyle).toBe('#0f172a');
+    expect(context.moveTo).toHaveBeenCalledWith(100, 50);
+    expect(context.lineTo).toHaveBeenCalledWith(150, 80);
+    expect(context.stroke).toHaveBeenCalledTimes(1);
+    expect(component.textValue(question)).toBe('data:image/png;base64,signature');
   });
 
   it('covers fill editor empty, object option, and fallback serialization branches', () => {

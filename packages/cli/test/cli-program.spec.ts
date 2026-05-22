@@ -60,6 +60,10 @@ async function runCli(args: string[]) {
   await program.parseAsync(args, { from: 'user' });
 }
 
+function optionDefault(command: { options: Array<{ flags: string; defaultValue?: unknown }> } | undefined, flags: string): unknown {
+  return command?.options.find((option) => option.flags === flags)?.defaultValue;
+}
+
 describe('buildProgram', () => {
   let stdout = '';
   let stderr = '';
@@ -89,6 +93,29 @@ describe('buildProgram', () => {
   afterEach(() => {
     vi.restoreAllMocks();
     process.exitCode = originalExitCode;
+  });
+
+  it('declares the expected command tree and option defaults', () => {
+    const program = buildProgram();
+    const commandNames = program.commands.map((command) => command.name());
+    const migrate = program.commands.find((command) => command.name() === 'migrate');
+    const adopt = program.commands.find((command) => command.name() === 'adopt');
+    const init = program.commands.find((command) => command.name() === 'init');
+    const audit = program.commands.find((command) => command.name() === 'audit');
+
+    expect(program.name()).toBe('stynx');
+    expect(commandNames).toEqual(['init', 'migrate', 'doctor', 'privacy', 'audit', 'adopt']);
+    expect(migrate?.commands.map((command) => command.name())).toEqual(['status', 'up', 'down', 'redo']);
+    expect(adopt?.commands.map((command) => command.name())).toEqual([
+      'scan',
+      'apply',
+      'apply-proposed-permissions',
+      'link-cognito-users',
+    ]);
+    expect(optionDefault(init, '--angular')).toBe(false);
+    expect(optionDefault(init, '--dir <dir>')).toBe(process.cwd());
+    expect(optionDefault(audit?.commands[0], '--limit <n>')).toBe('1000');
+    expect(optionDefault(audit?.commands[0], '--format <format>')).toBe('human');
   });
 
   it('runs init, doctor, and privacy commands', async () => {
@@ -137,6 +164,10 @@ describe('buildProgram', () => {
       'json',
     ]);
     expect(logs.at(-1)).toContain('"valid": true');
+    expect(mocks.verifyAuditChain).toHaveBeenLastCalledWith('postgres://db', {
+      tenantId: 'tenant-1',
+      limit: 5,
+    });
 
     await runCli(['audit', 'verify', '--database-url', 'postgres://db']);
     expect(logs.at(-1)).toContain('OK audit chain valid');

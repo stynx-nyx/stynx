@@ -93,6 +93,17 @@ describe('SystemContext', () => {
     );
   });
 
+  it('rejects reasons that are only long enough before trimming', async () => {
+    const cls = new FakeClsService();
+    const systemContext = new SystemContext(
+      new RequestContext(cls as never),
+      new RequestContextMutator(cls as never),
+    );
+    await expect(systemContext.withSystemContext('  short   ', async () => undefined)).rejects.toBeInstanceOf(
+      SystemContextRequiredError,
+    );
+  });
+
   it('accepts a trimmed 10-character reason and stores the trimmed value', async () => {
     const cls = new FakeClsService();
     const sink = new RecordingSink();

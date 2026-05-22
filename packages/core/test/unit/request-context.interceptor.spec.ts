@@ -97,6 +97,9 @@ describe('RequestContextInterceptor', () => {
   it('throws BadRequestException when X-Request-Id is provided but invalid', () => {
     const { context } = makeContext({ 'x-request-id': 'not-a-uuid' });
     expect(() => interceptor.intercept(context, makeHandler())).toThrow(BadRequestException);
+    expect(() => interceptor.intercept(context, makeHandler())).toThrow(
+      'X-Request-Id must be a valid UUIDv7',
+    );
   });
 
   it('extracts header from first element when value is an array', async () => {
@@ -114,12 +117,31 @@ describe('RequestContextInterceptor', () => {
     expect(seed.locale).toBe('pt-BR');
   });
 
+  it('extracts locale from the first array header value and trims it before comma parsing', async () => {
+    const { context } = makeContext({ 'accept-language': [' en-US , pt-BR;q=0.9', 'pt-BR'] });
+    const spy = vi.spyOn(mutator, 'runWithRequestContext');
+    await run(interceptor.intercept(context, makeHandler()));
+    const seed = spy.mock.calls[0]?.[0] as RequestContextState;
+    expect(seed.locale).toBe('en-US');
+  });
+
+  it('generates a fresh request id when the caller header is an array without a string first value', async () => {
+    const { context, response } = makeContext({ 'x-request-id': [123, '0190abcd-1234-7abc-89ab-0123456789ab'] });
+    const spy = vi.spyOn(mutator, 'runWithRequestContext');
+    await run(interceptor.intercept(context, makeHandler()));
+    const seed = spy.mock.calls[0]?.[0] as RequestContextState;
+
+    expect(seed.requestId).not.toBe('0190abcd-1234-7abc-89ab-0123456789ab');
+    expect(seed.requestId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu);
+    expect(response.setHeader).toHaveBeenCalledWith('X-Request-Id', seed.requestId);
+  });
+
   it('ignores Accept-Language when only whitespace', async () => {
     const { context } = makeContext({ 'accept-language': '   ' });
     const spy = vi.spyOn(mutator, 'runWithRequestContext');
     await run(interceptor.intercept(context, makeHandler()));
     const seed = spy.mock.calls[0]?.[0] as RequestContextState;
-    expect(seed.locale).toBeUndefined();
+    expect(seed.locale).toBe(undefined);
   });
 
   it('ignores Accept-Language when the first language segment is empty', async () => {
@@ -127,7 +149,7 @@ describe('RequestContextInterceptor', () => {
     const spy = vi.spyOn(mutator, 'runWithRequestContext');
     await run(interceptor.intercept(context, makeHandler()));
     const seed = spy.mock.calls[0]?.[0] as RequestContextState;
-    expect(seed.locale).toBeUndefined();
+    expect(seed.locale).toBe(undefined);
   });
 
   it('binds tenantId from request.tenantId when present', async () => {
@@ -191,7 +213,7 @@ describe('RequestContextInterceptor', () => {
     const handler: CallHandler = { handle: () => inner };
     const subscription = interceptor.intercept(context, handler).subscribe();
     subscription.unsubscribe();
-    expect(unsubscribe).toHaveBeenCalled();
+    expect(unsubscribe).toHaveBeenCalledTimes(1);
   });
 
   it('exposes seed state inside the CLS scope during handler execution', async () => {
@@ -218,10 +240,10 @@ describe('RequestContextInterceptor', () => {
     const spy = vi.spyOn(mutator, 'runWithRequestContext');
     await run(interceptor.intercept(context, makeHandler()));
     const seed = spy.mock.calls[0]?.[0] as RequestContextState;
-    expect(seed.tenantId).toBeUndefined();
-    expect(seed.actorId).toBeUndefined();
-    expect(seed.locale).toBeUndefined();
-    expect(seed.sessionId).toBeUndefined();
+    expect(seed.tenantId).toBe(undefined);
+    expect(seed.actorId).toBe(undefined);
+    expect(seed.locale).toBe(undefined);
+    expect(seed.sessionId).toBe(undefined);
     expect(seed.startedAt).toBeInstanceOf(Date);
   });
 });

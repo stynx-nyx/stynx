@@ -3,6 +3,8 @@ import type { ArgumentsHost } from '@nestjs/common';
 import type { ModuleRef } from '@nestjs/core';
 import { StynxErrorFilter } from '../../src/error.filter';
 import { StynxError } from '../../src/errors';
+import { RequestContext } from '../../src/request-context';
+import { STYNX_ERROR_TRANSLATOR } from '../../src/tokens';
 import type { Mock } from 'vitest';
 
 function makeHost(): {
@@ -116,6 +118,8 @@ describe('StynxErrorFilter', () => {
 
     filter.catch(ex, host);
 
+    expect(moduleRef.get).toHaveBeenCalledWith(RequestContext, { strict: false });
+    expect(moduleRef.get).toHaveBeenCalledWith(STYNX_ERROR_TRANSLATOR, { strict: false });
     expect(translator.translate).toHaveBeenCalledWith('error.boom', 'pt-BR', { x: 1 });
     expect(json).toHaveBeenCalledWith({
       code: 'C',

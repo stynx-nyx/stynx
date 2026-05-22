@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-22T00:02:49.145Z",
-  "endedAt": "2026-05-22T00:02:51.422Z",
-  "durationMs": 2277,
+  "startedAt": "2026-05-22T04:29:21.024Z",
+  "endedAt": "2026-05-22T04:29:27.061Z",
+  "durationMs": 6037,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-3353-1779408169145.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-98779-1779424161024.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages/core/.test-results/unit.junit.xml"
     ],
@@ -37,62 +37,62 @@
   },
   "totals": {
     "files": 9,
-    "tests": 63,
-    "passed": 63,
+    "tests": 66,
+    "passed": 66,
     "failed": 0,
     "skipped": 0,
     "todo": 0
   },
   "slowestTests": [
     {
-      "name": "SystemContext requires a readable reason and records an audit event",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/system-context.spec.ts",
-      "durationMs": 41.78970800000002
-    },
-    {
-      "name": "SecretLoader refreshes a cached secret after a connection-like run failure",
+      "name": "SecretLoader caches the secret value within ttlMs",
       "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/secret-loader.spec.ts",
-      "durationMs": 21.881875000000036
+      "durationMs": 141.13616600000023
     },
     {
-      "name": "SystemContext current() throws SystemContextRequiredError when no system context is active",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/system-context.spec.ts",
-      "durationMs": 19.223208000000113
-    },
-    {
-      "name": "config ownership metadata reports required ownership violations",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/config-ownership.spec.ts",
-      "durationMs": 18.826666999999816
+      "name": "StynxCoreModule wires sync and async option providers plus global infrastructure",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/core.module.spec.ts",
+      "durationMs": 51.46258299999954
     },
     {
       "name": "SystemContext withSystemContext helper delegates to the SystemContext instance",
       "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/system-context.spec.ts",
-      "durationMs": 12.832916000000068
-    },
-    {
-      "name": "SecretLoader does not refresh after non-connection run failures",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/secret-loader.spec.ts",
-      "durationMs": 11.261582999999973
-    },
-    {
-      "name": "StynxErrorFilter forwards plain HttpException with its status + response body",
-      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/error.filter.spec.ts",
-      "durationMs": 9.715666000000056
+      "durationMs": 36.77112500000021
     },
     {
       "name": "StynxErrorFilter warns for client StynxError responses and errors for server failures",
       "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/error.filter.spec.ts",
-      "durationMs": 8.882040999999958
+      "durationMs": 31.10116599999992
     },
     {
-      "name": "SecretLoader caches the secret value within ttlMs",
+      "name": "SecretLoader refetches when the cached secret expires exactly at the current time",
       "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/secret-loader.spec.ts",
-      "durationMs": 8.526542000000063
+      "durationMs": 26.734875000000102
     },
     {
-      "name": "StynxErrorFilter translates StynxError into the standard envelope at exception.status",
+      "name": "SystemContext requires a readable reason and records an audit event",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/system-context.spec.ts",
+      "durationMs": 22.840584000000035
+    },
+    {
+      "name": "StynxErrorFilter rethrows when the exception is neither HttpException nor StynxError",
       "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/error.filter.spec.ts",
-      "durationMs": 7.261332999999922
+      "durationMs": 16.116499999999633
+    },
+    {
+      "name": "RequestContext exposes values inside an active request context and allows internal patching",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/request-context.spec.ts",
+      "durationMs": 12.854499999999916
+    },
+    {
+      "name": "config ownership metadata validates ownership after loading configuration",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/config-ownership.spec.ts",
+      "durationMs": 11.852917000000161
+    },
+    {
+      "name": "loadStynxConfiguration SSM loading loads paged SSM values using the default environment prefix",
+      "file": "/Users/aarusso/Development/stech/stynx/packages/core/test/unit/config-ssm.spec.ts",
+      "durationMs": 11.329999999999927
     }
   ]
 }

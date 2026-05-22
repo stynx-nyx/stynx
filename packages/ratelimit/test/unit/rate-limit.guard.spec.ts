@@ -1,5 +1,5 @@
 import type { ExecutionContext } from '@nestjs/common';
-import { HttpException, ServiceUnavailableException, SetMetadata } from '@nestjs/common';
+import { HttpStatus, ServiceUnavailableException, SetMetadata } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { STYNX_SYSTEM_ROUTE } from '@stynx/auth';
 import { STYNX_RATE_LIMIT_ROUTE } from '../../src/constants';
@@ -61,6 +61,34 @@ describe('RateLimitGuard', () => {
     const guard = new RateLimitGuard(reflector, { healthCheckPathPrefixes: ['/api/v1/system/health'] }, store, policyResolver);
     await expect(guard.canActivate(createExecutionContext(request, handler, TestController))).resolves.toBe(true);
     expect(store.consume).not.toHaveBeenCalled();
+    expect(policyResolver.resolve).not.toHaveBeenCalled();
+  });
+
+  it('bypasses a request when any configured health prefix matches', async () => {
+    const store: RateLimitStore = {
+      consume: vi.fn(async () => {
+        throw new Error('should not run');
+      }),
+    };
+    const policyResolver: RateLimitPolicyResolver = {
+      resolve: vi.fn(async () => ({ bucket: 'tenant', scope: 'ignored', cost: 1, limit: 5, windowSeconds: 60 })),
+    };
+    const handler = () => undefined;
+    const guard = new RateLimitGuard(
+      reflector,
+      { healthCheckPathPrefixes: ['/internal/livez', '/ready'] },
+      store,
+      policyResolver,
+    );
+
+    await expect(guard.canActivate(createExecutionContext({
+      headers: {},
+      method: 'GET',
+      originalUrl: '/ready/status',
+      res: createResponse(),
+    }, handler, TestController))).resolves.toBe(true);
+    expect(store.consume).not.toHaveBeenCalled();
+    expect(policyResolver.resolve).not.toHaveBeenCalled();
   });
 
   it('bypasses routes marked as @System()', async () => {
@@ -166,8 +194,14 @@ describe('RateLimitGuard', () => {
           TestController,
         ),
       ),
-    ).rejects.toBeInstanceOf(HttpException);
+    ).rejects.toMatchObject({
+      message: 'Rate limit exceeded',
+      status: HttpStatus.TOO_MANY_REQUESTS,
+    });
 
+    expect(response.headers['X-RateLimit-Limit']).toBe('10');
+    expect(response.headers['X-RateLimit-Remaining']).toBe('0');
+    expect(response.headers['X-RateLimit-Reset']).toBe(String(Math.ceil(1_700_000_010_000 / 1000)));
     expect(response.headers['Retry-After']).toBe('10');
     expect(metrics.snapshot()).toEqual({ 'documents.write': 1 });
   });
@@ -293,7 +327,13 @@ describe('RateLimitGuard', () => {
           TestController,
         ),
       ),
-    ).rejects.toBeInstanceOf(ServiceUnavailableException);
+    ).rejects.toMatchObject({
+      message: 'down',
+      response: {
+        message: 'down',
+        statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+      },
+    });
   });
 
   it('throws 503 under distributedStrict when the store returns null (resolver missing)', async () => {
@@ -323,7 +363,13 @@ describe('RateLimitGuard', () => {
           TestController,
         ),
       ),
-    ).rejects.toBeInstanceOf(ServiceUnavailableException);
+    ).rejects.toMatchObject({
+      message: 'Distributed rate limit backend unavailable',
+      response: {
+        message: 'Distributed rate limit backend unavailable',
+        statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+      },
+    });
   });
 
   it('open-circuits on backend errors when distributedStrict is explicitly false', async () => {
@@ -521,6 +567,45 @@ describe('RateLimitGuard', () => {
       ),
     );
     expect(observedKey).toBe('s:tenant:tenant-jwt');
+  });
+
+  it('accepts trimmed two-part Bearer tokens and uses sub for user buckets', async () => {
+    const handler = function twoPartJwtFallback() {
+      return undefined;
+    };
+    Reflect.defineMetadata(STYNX_RATE_LIMIT_ROUTE, { bucket: 'user', scope: 's', cost: 1 }, handler);
+    const claims = { sub: 'two-part-user', tenant_id: 'two-part-tenant' };
+    const fakeJwt = `h.${Buffer.from(JSON.stringify(claims)).toString('base64url')}`;
+    let observedContext: { bucketKey: string; userId?: string; tenantId?: string } | undefined;
+    const store: RateLimitStore = {
+      consume: vi.fn(async (ctx) => {
+        observedContext = ctx;
+        return { allowed: true, limit: 1, remaining: 1, resetAtEpochMs: 0, retryAfterSeconds: 0, used: 1 };
+      }),
+    };
+    const policyResolver: RateLimitPolicyResolver = {
+      resolve: vi.fn(async () => ({ bucket: 'user', scope: 's', cost: 1, limit: 1, windowSeconds: 60 })),
+    };
+    const guard = new RateLimitGuard(reflector, {}, store, policyResolver);
+
+    await guard.canActivate(
+      createExecutionContext(
+        {
+          headers: { authorization: `Bearer   ${fakeJwt}  ` },
+          method: 'GET',
+          path: '/x',
+          res: createResponse(),
+        },
+        handler,
+        TestController,
+      ),
+    );
+
+    expect(observedContext).toMatchObject({
+      bucketKey: 's:user:two-part-user',
+      userId: 'two-part-user',
+      tenantId: 'two-part-tenant',
+    });
   });
 
   it('ignores malformed Bearer tokens silently', async () => {
