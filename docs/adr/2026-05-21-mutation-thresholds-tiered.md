@@ -43,42 +43,41 @@ The factory honours `STRYKER_INCREMENTAL` as the split-mode knob:
 
 The current `STRYKER_INCREMENTAL: 'false'` in `.github/workflows/hardening.yml` is kept as-is. No new workflow is added today; the contract is documented so the future PR-gate workflow has the contract to plug into.
 
-### D3. Adopt tiered mutation floors
+### D3. Adopt tiered mutation bands with a single stynx acceptance floor
+
+**2026-05-22 Architect revision.** Stynx now uses one mutation acceptance
+floor across all stynx package tiers: `break: 90`. The tier names remain useful
+for ownership/risk classification and for the low/high reporting bands, but
+Stryker pass/fail is intentionally uniform.
 
 `scripts/test-matrix.config.json#policies.mutation` now defines three named tiers in addition to the legacy `default / strict / strictest`:
 
 ```json
-"tier1": { "break": 80, "high": 90, "low": 70 },
-"tier2": { "break": 70, "high": 80, "low": 60 },
-"tier3": { "break": 60, "high": 70, "low": 50 }
+"tier1": { "break": 90, "high": 90, "low": 80 },
+"tier2": { "break": 90, "high": 95, "low": 85 },
+"tier3": { "break": 90, "high": 100, "low": 90 }
 ```
+
+The `break` value is the acceptance threshold. It is the ceiling of the tier1
+band, the middle of the tier2 band, and the floor of the tier3 band. The
+`low`/`high` values remain reporting boundaries for matrix colouring and
+Stryker report semantics; they do not lower the acceptance floor.
 
 `defaults.mutation` is now `"tier3"`. The per-package map assigns packages by risk class:
 
-| Tier                | Packages                                                                                                                                                                            | Rationale                                                                                   |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| tier1 (`break: 80`) | `@stynx/auth`, `@stynx/data`, `@stynx/audit`, `@stynx/privacy`, `@stynx/tenancy`, `@stynx-web/sdk`, `@stynx-web/angular-auth`, `@stynx-web/angular-iam`, `@stynx-web/angular-audit` | Security / data / identity / shipped SDK; cross-package blast radius for surviving mutants. |
-| tier2 (`break: 70`) | `@stynx/sessions`, `@stynx/idempotency`, `@stynx/flow`, `@stynx/core`, `@stynx/storage`, `@stynx/ratelimit`                                                                         | State engines and runtime services; logic-heavy but not on the security perimeter.          |
-| tier3 (`break: 60`) | All others (workspace default)                                                                                                                                                      | Generic / UI / wiring; mutation testing has lower marginal value here.                      |
+| Tier              | Packages                                                                                                                                                                            | Rationale                                                                                   |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| tier1 (`80..90`)  | `@stynx/auth`, `@stynx/data`, `@stynx/audit`, `@stynx/privacy`, `@stynx/tenancy`, `@stynx-web/sdk`, `@stynx-web/angular-auth`, `@stynx-web/angular-iam`, `@stynx-web/angular-audit` | Security / data / identity / shipped SDK; cross-package blast radius for surviving mutants. |
+| tier2 (`85..95`)  | `@stynx/sessions`, `@stynx/idempotency`, `@stynx/flow`, `@stynx/core`, `@stynx/storage`, `@stynx/ratelimit`                                                                         | State engines and runtime services; logic-heavy but not on the security perimeter.          |
+| tier3 (`90..100`) | All others (workspace default)                                                                                                                                                      | Generic / UI / wiring; mutation testing remains mandatory, with no package below 90.        |
 
 The legacy `default / strict / strictest` numeric policies are retained for backward compatibility with any external consumer; they are not used by per-package overrides any more.
 
-**Expected adoption impact on the next Monday cron.** Eight packages currently sit below their new tier's `break` threshold and will fail the gate until remediated. The audit's earlier 4-package forecast missed four additional packages that the matrix renderer now flags `!`:
-
-| Package                   | Tier  | Current score | New floor |    Gap |
-| ------------------------- | ----- | ------------: | --------: | -----: |
-| `@stynx-web/sdk`          | tier1 |         68.32 |        80 | -11.68 |
-| `@stynx/sessions`         | tier2 |         60.13 |        70 |  -9.87 |
-| `@stynx/flow`             | tier2 |         60.55 |        70 |  -9.45 |
-| `@stynx-web/angular-auth` | tier1 |         73.04 |        80 |  -6.96 |
-| `@stynx/idempotency`      | tier2 |         63.82 |        70 |  -6.18 |
-| `@stynx-web/angular-iam`  | tier1 |         74.77 |        80 |  -5.23 |
-| `@stynx/audit`            | tier1 |         75.38 |        80 |  -4.62 |
-| `@stynx/privacy`          | tier1 |         75.42 |        80 |  -4.58 |
-
-These are the eight remediation work items the new policy surfaces. Closing each gap is tracked under `docs/work/plan/WAVE-05-mutation-completeness.md`. The order above (largest gap first) is also a reasonable order of attack: large gaps mean rich survivor lists and the highest signal per spec authored. The four packages with gaps under 5 points are within one focused day each — `audit` and `privacy` in particular.
-
-`@stynx/auth` (92.50) and `@stynx/data` (96.58) used to be at 85 (`strictest`); they now sit at 80 (`tier1`). This is a deliberate 5-point relaxation: the audit could not justify the historical 85 against tenancy's 80 / `strict`. If the workspace later decides those two security-perimeter packages warrant a higher bar, add a `tier0: { break: 85 }` and reassign.
+**Expected adoption impact.** Any stynx package with a current mutation score
+below `90.00` now fails the mutation gate until remediated. This is deliberate:
+the wave work lifted the former tier1-below-high packages above 90, and the
+remaining below-90 packages are now visible as the next architectural quality
+debt rather than being hidden behind lower tier floors.
 
 ### D4. Postpone per-PR mutation gating
 
@@ -86,36 +85,34 @@ No new workflow is created. The Monday cron + manual `workflow_dispatch` remain 
 
 - Filters to changed packages via path-detection.
 - Sets `STRYKER_INCREMENTAL: 'true'` and caches `reports/stryker-incremental.json`.
-- Uses a PR-mode threshold (e.g. `break = tier.break - 5`) so a half-point margin does not block merges that are unrelated to the failing package.
+- Uses an explicitly approved PR-mode threshold if the workspace later wants a softer changed-package gate; it must not silently weaken the stynx-wide `break: 90` floor.
 
-Adoption is deferred until the four fragile packages clear their D3 floors. Gating PRs when the floor is already unreachable creates a perpetually-red gate the team would learn to ignore.
+Adoption is deferred until the below-90 packages clear the D3 floor. Gating PRs when the floor is already unreachable creates a perpetually-red gate the team would learn to ignore.
 
 ## Consequences
 
-| Aspect                                    | Before                                                        | After                                                                                                                                                                                                              |
-| ----------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `*.controller.ts` in `mutate:`            | Inconsistent: 3 packages opted in, 1 explicitly out, rest n/a | Workspace-wide opt-out via factory default.                                                                                                                                                                        |
-| Workspace mutation default                | `60` (`default` policy)                                       | `60` (`tier3` policy) — same number, different policy label.                                                                                                                                                       |
-| `auth` / `data` floor                     | `85` (`strictest`)                                            | `80` (`tier1`) — 5 pt relaxation, deliberate.                                                                                                                                                                      |
-| `tenancy` floor                           | `80` (`strict`)                                               | `80` (`tier1`) — same floor, different policy label.                                                                                                                                                               |
-| `angular-iam` / `angular-audit` floor     | `70` (literal)                                                | `80` (`tier1`).                                                                                                                                                                                                    |
-| `sdk` / `angular-auth` floor              | `60` (default)                                                | `80` (`tier1`) — gate will fail on `sdk` (68.32) until remediated.                                                                                                                                                 |
-| `sessions` / `flow` / `idempotency` floor | `60`                                                          | `70` (`tier2`) — gate will fail on all three until remediated.                                                                                                                                                     |
-| `core` / `storage` / `ratelimit` floor    | `60`                                                          | `70` (`tier2`).                                                                                                                                                                                                    |
-| `STRYKER_INCREMENTAL` policy              | Implicit (`false` in CI, `true` locally)                      | Documented contract in `tools/stryker/base.mjs`.                                                                                                                                                                   |
-| Per-PR gate                               | None                                                          | Deferred. ADR records the contract for future adoption.                                                                                                                                                            |
-| Threshold helper                          | `getMutationThreshold(pkg) → number`                          | `getMutationThresholds(pkg) → {break, high, low}` plus scalar back-compat accessor.                                                                                                                                |
-| `stryker.thresholds.high == break`        | Always true (single number policy)                            | False for tiered packages: `high` is the target, `break` is the floor. Stryker exit-code behaviour is unchanged (still keyed on `break`); `high` informs the colour coding in the HTML report and matrix renderer. |
+| Aspect                                    | Before                                                        | After                                                                                                                                  |
+| ----------------------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `*.controller.ts` in `mutate:`            | Inconsistent: 3 packages opted in, 1 explicitly out, rest n/a | Workspace-wide opt-out via factory default.                                                                                            |
+| Workspace mutation default                | `60` (`default` policy)                                       | `90` (`tier3` policy) — same acceptance floor as every stynx tier.                                                                     |
+| `auth` / `data` floor                     | `85` (`strictest`)                                            | `90` (`tier1`).                                                                                                                        |
+| `tenancy` floor                           | `80` (`strict`)                                               | `90` (`tier1`).                                                                                                                        |
+| `angular-iam` / `angular-audit` floor     | `70` (literal)                                                | `90` (`tier1`).                                                                                                                        |
+| `sdk` / `angular-auth` floor              | `60` (default)                                                | `90` (`tier1`).                                                                                                                        |
+| `sessions` / `flow` / `idempotency` floor | `60`                                                          | `90` (`tier2`).                                                                                                                        |
+| `core` / `storage` / `ratelimit` floor    | `60`                                                          | `90` (`tier2`).                                                                                                                        |
+| Other stynx package floors                | `60` (`tier3` default)                                        | `90` (`tier3`).                                                                                                                        |
+| `STRYKER_INCREMENTAL` policy              | Implicit (`false` in CI, `true` locally)                      | Documented contract in `tools/stryker/base.mjs`.                                                                                       |
+| Per-PR gate                               | None                                                          | Deferred. ADR records the contract for future adoption.                                                                                |
+| Threshold helper                          | `getMutationThreshold(pkg) → number`                          | `getMutationThresholds(pkg) → {break, high, low}` plus scalar back-compat accessor.                                                    |
+| `stryker.thresholds.high == break`        | Always true (single number policy)                            | True only for tier1. Tier2 and tier3 keep higher `high` targets while Stryker exit-code behaviour is keyed on the uniform `break: 90`. |
 
 ## How to revert
 
-Revert with: `git revert <this-commit-range>`. The 1-commit-or-many decision is left to the operator; the changes touch six files:
+Revert with: `git revert <this-commit-range>`. The original ADR changes touched six files; the 2026-05-22 Architect revision touches:
 
 - `scripts/test-matrix.config.json`
-- `tools/repo-config/test-thresholds.mjs`
-- `tools/stryker/base.mjs`
-- `packages/auth/stryker.conf.mjs`
-- `packages/health/stryker.conf.mjs`
-- `packages/i18n/stryker.conf.mjs`
+- `scripts/render-test-matrix.mjs`
+- `docs/adr/2026-05-21-mutation-thresholds-tiered.md`
 
 The on-disk mutation artefacts (`<pkg>/.test-results/mutation.json`, `<pkg>/reports/mutation/`) are untouched; they remain valid against the previous policy. The next mutation run rewrites them under the new policy.

@@ -61,7 +61,14 @@ for (const ws of workspaces) {
 printMatrix(rows);
 
 function parseArgs(values) {
-  const parsed = { color: true, compact: false, empty: false, legend: false, resume: false, aspect: 'status' };
+  const parsed = {
+    color: true,
+    compact: false,
+    empty: false,
+    legend: false,
+    resume: false,
+    aspect: 'status',
+  };
   const aspectFlags = [];
 
   for (const value of values) {
@@ -87,7 +94,9 @@ function parseArgs(values) {
 
   const uniqueAspectFlags = [...new Set(aspectFlags)];
   if (uniqueAspectFlags.length > 1) {
-    process.stderr.write(`Incompatible aspect flags: ${aspectFlags.map((flag) => `--${flag}`).join(' ')}\n`);
+    process.stderr.write(
+      `Incompatible aspect flags: ${aspectFlags.map((flag) => `--${flag}`).join(' ')}\n`,
+    );
     process.exit(2);
   }
   if (uniqueAspectFlags.length === 1) parsed.aspect = uniqueAspectFlags[0];
@@ -132,23 +141,27 @@ States:
 Color:
   Enabled by default; pass --no-color to disable.
   Coverage is green at/above threshold, yellow from 50% to threshold, red below 50%.
-  Mutation tier markers encode the assigned threshold: ¹ default, ² strict, ³ strictest.
+  Mutation tier markers encode the assigned policy band: ¹=tier3, ²=tier2, ³=tier1.
 `);
 }
 
 function discoverWorkspaces() {
-  const roots = aspect === 'coverage'
-    ? ['packages', 'packages-web']
-    : ['packages', 'packages-web', 'domain', 'infra', 'reference', 'test', 'tools'];
-  const entries = aspect === 'coverage'
-    ? []
-    : [{
-        dir: repoRoot,
-        root: '.',
-        name: 'stynx-workspace',
-        label: 'stynx-workspace',
-        scripts: {},
-      }];
+  const roots =
+    aspect === 'coverage'
+      ? ['packages', 'packages-web']
+      : ['packages', 'packages-web', 'domain', 'infra', 'reference', 'test', 'tools'];
+  const entries =
+    aspect === 'coverage'
+      ? []
+      : [
+          {
+            dir: repoRoot,
+            root: '.',
+            name: 'stynx-workspace',
+            label: 'stynx-workspace',
+            scripts: {},
+          },
+        ];
 
   for (const root of roots) {
     const absRoot = join(repoRoot, root);
@@ -163,19 +176,22 @@ function discoverWorkspacesUnder(root, dir) {
   const pkgPath = join(dir, 'package.json');
   if (existsSync(pkgPath)) {
     const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
-    return [{
-      dir,
-      root,
-      name: pkg.name ?? relative(repoRoot, dir),
-      label: pkg.name ?? relative(repoRoot, dir),
-      scripts: pkg.scripts ?? {},
-    }];
+    return [
+      {
+        dir,
+        root,
+        name: pkg.name ?? relative(repoRoot, dir),
+        label: pkg.name ?? relative(repoRoot, dir),
+        scripts: pkg.scripts ?? {},
+      },
+    ];
   }
 
   const entries = [];
   for (const child of readdirSync(dir, { withFileTypes: true })) {
     if (!child.isDirectory()) continue;
-    if (child.name === 'node_modules' || child.name === 'dist' || child.name.startsWith('.')) continue;
+    if (child.name === 'node_modules' || child.name === 'dist' || child.name.startsWith('.'))
+      continue;
     entries.push(...discoverWorkspacesUnder(root, join(dir, child.name)));
   }
   return entries;
@@ -246,7 +262,8 @@ function readE2EResult(ws) {
   if (!existsSync(lastRunPath)) return e2eArtifact;
 
   const payload = JSON.parse(readFileSync(lastRunPath, 'utf8'));
-  const status = payload.status === 'passed' ? 'passed' : payload.status === 'failed' ? 'failed' : 'present';
+  const status =
+    payload.status === 'passed' ? 'passed' : payload.status === 'failed' ? 'failed' : 'present';
   return {
     ...(e2eArtifact ?? {}),
     status,
@@ -263,7 +280,8 @@ function readMutationResult(ws) {
   const path = join(ws.dir, 'reports', 'mutation', 'mutation.json');
   if (!existsSync(path)) return null;
   const payload = JSON.parse(readFileSync(path, 'utf8'));
-  const score = payload?.systemUnderTestMetrics?.mutationScore ?? calculateStrykerMutationScore(payload);
+  const score =
+    payload?.systemUnderTestMetrics?.mutationScore ?? calculateStrykerMutationScore(payload);
   if (typeof score !== 'number') return { status: 'present', source: 'mutation' };
   const breakThreshold = payload?.thresholds?.break;
   return {
@@ -380,17 +398,18 @@ function resultFailed(result) {
       result.suitesTotal != null &&
       result.suitesTotal > 0 &&
       result.suitesPassed < result.suitesTotal) ||
-    result.testsPassed != null &&
-    result.testsTotal != null &&
-    result.testsTotal > 0 &&
-    result.testsPassed < result.testsTotal
+    (result.testsPassed != null &&
+      result.testsTotal != null &&
+      result.testsTotal > 0 &&
+      result.testsPassed < result.testsTotal)
   );
 }
 
 function mutationFailed(ws, result) {
   if (!result) return false;
   if (result.status === 'failed') return true;
-  if (typeof result.mutationScore !== 'number' || !Number.isFinite(result.mutationScore)) return false;
+  if (typeof result.mutationScore !== 'number' || !Number.isFinite(result.mutationScore))
+    return false;
   return result.mutationScore < mutationThresholdFor(ws);
 }
 
@@ -404,7 +423,9 @@ function hasCoverageConfigured(ws) {
 
 function hasConfiguredLevel(ws, level) {
   if (level === 'Unit') {
-    return Boolean(ws.scripts.test) || hasAnyFile(ws.dir, ['vitest.config.ts', 'vitest.config.mjs']);
+    return (
+      Boolean(ws.scripts.test) || hasAnyFile(ws.dir, ['vitest.config.ts', 'vitest.config.mjs'])
+    );
   }
   if (level === 'API') {
     return (
@@ -421,10 +442,16 @@ function hasConfiguredLevel(ws, level) {
     );
   }
   if (level === 'E2E') {
-    return isRunnableScript(ws.scripts['test:e2e']) || hasAnyFile(ws.dir, ['playwright.config.mjs', 'playwright.config.ts']);
+    return (
+      isRunnableScript(ws.scripts['test:e2e']) ||
+      hasAnyFile(ws.dir, ['playwright.config.mjs', 'playwright.config.ts'])
+    );
   }
   if (level === 'Mutation') {
-    return Boolean(ws.scripts.stryker || ws.scripts.mutation) || hasAnyFile(ws.dir, ['stryker.conf.mjs', 'stryker.conf.cjs']);
+    return (
+      Boolean(ws.scripts.stryker || ws.scripts.mutation) ||
+      hasAnyFile(ws.dir, ['stryker.conf.mjs', 'stryker.conf.cjs'])
+    );
   }
   return false;
 }
@@ -448,7 +475,8 @@ function hasFileMatching(dir, predicate) {
   for (const child of readdirSync(dir, { withFileTypes: true })) {
     const childPath = join(dir, child.name);
     if (child.isDirectory()) {
-      if (child.name === 'dist' || child.name === 'node_modules' || child.name.startsWith('.')) continue;
+      if (child.name === 'dist' || child.name === 'node_modules' || child.name.startsWith('.'))
+        continue;
       if (hasFileMatching(childPath, predicate)) return true;
     } else if (predicate(child.name)) {
       return true;
@@ -605,15 +633,21 @@ function printMatrix(rows) {
   renderGlobalPerfSummary();
 
   if (aspect === 'coverage') {
-    process.stdout.write('Source: coverage/test-evidence.json; falls back to coverage/coverage-final.json when evidence is absent.\n');
+    process.stdout.write(
+      'Source: coverage/test-evidence.json; falls back to coverage/coverage-final.json when evidence is absent.\n',
+    );
   } else if (aspect === 'timing') {
-    process.stdout.write('Timing prefers recorder sidecar durationMs, then Vitest Time, then Node duration_ms.\n');
+    process.stdout.write(
+      'Timing prefers recorder sidecar durationMs, then Vitest Time, then Node duration_ms.\n',
+    );
   } else {
-    process.stdout.write('Status cells: suites_passed/tests_passed; mutation: rounded score percent.\n');
+    process.stdout.write(
+      'Status cells: suites_passed/tests_passed; mutation: rounded score percent.\n',
+    );
   }
   if (showLegend) {
     process.stdout.write(
-      "Legend: blank=intentionally not applicable; -=no script/config and not an obligation; 0=obligation exists but no current artifact; mutation tiers ¹=default, ²=strict, ³=strictest.\n",
+      'Legend: blank=intentionally not applicable; -=no script/config and not an obligation; 0=obligation exists but no current artifact; mutation tiers ¹=tier3, ²=tier2, ³=tier1.\n',
     );
   }
 }
@@ -655,7 +689,11 @@ function renderCoverageResume(rows, column) {
   let above = 0;
   for (const row of expectedRows) {
     const cell = row.cells[column];
-    if (cell?.state === 'coverage-metric' && cell.value != null && cell.value >= thresholdFor(metric)) {
+    if (
+      cell?.state === 'coverage-metric' &&
+      cell.value != null &&
+      cell.value >= thresholdFor(metric)
+    ) {
       above += 1;
     }
   }
@@ -684,7 +722,9 @@ function sumTimingColumn(rows, column) {
 }
 
 function timingDuration(cell) {
-  return typeof cell?.durationMs === 'number' && Number.isFinite(cell.durationMs) ? cell.durationMs : 0;
+  return typeof cell?.durationMs === 'number' && Number.isFinite(cell.durationMs)
+    ? cell.durationMs
+    : 0;
 }
 
 function renderTimingTotal(durationMs) {
@@ -736,7 +776,8 @@ function renderCompactCell(cell) {
   if (!cell) return renderCompactNoTests();
   if (cell.state === 'not-applicable') return ' ';
   if (cell.state === 'no-tests') return renderCompactNoTests();
-  if (cell.state === 'not-run' || cell.state === 'unknown-timing') return renderCompactState('not-run');
+  if (cell.state === 'not-run' || cell.state === 'unknown-timing')
+    return renderCompactState('not-run');
   if (cell.state === 'coverage-metric') return renderCompactCoverage(cell.value, cell.metric);
   if (cell.state === 'coverage') return renderCompactState(cell.coverage ? 'passed' : 'not-run');
   return renderCompactState(cell.state);
@@ -858,7 +899,7 @@ function thresholdFor(metric) {
 }
 
 function mutationThresholdFor(ws) {
-  const override = matrixConfig.perPackage?.[ws.name]?.mutation ?? matrixConfig.defaults?.mutation ?? 'default';
+  const override = mutationPolicyForWorkspace(ws.name);
   if (typeof override === 'number' && Number.isFinite(override)) return override;
   if (typeof override === 'string') {
     const policyValue = matrixConfig.policies?.mutation?.[override];
@@ -873,22 +914,23 @@ function mutationThresholdFor(ws) {
 }
 
 function mutationTierForWorkspace(workspaceName) {
+  const policy = mutationPolicyForWorkspace(workspaceName);
+  if (policy === 'tier1' || policy === 'strictest') return { marker: '³', color: 'magenta' };
+  if (policy === 'tier2' || policy === 'strict') return { marker: '²', color: 'blue' };
+  if (policy === 'tier3' || policy === 'default') return { marker: '¹', color: 'cyan' };
+
   const threshold = mutationThresholdFor({ name: workspaceName });
-  // Three-tier band: tier1 ≥ 80, tier2 ≥ 70, else tier3.
-  // Falls back to the legacy strictest/strict bands when only those policies
-  // are defined.
-  const tier1Floor = namedMutationPolicy('tier1', namedMutationPolicy('strict', 80));
-  const tier2Floor = namedMutationPolicy('tier2', 70);
-  if (threshold >= tier1Floor) return { marker: '³', color: 'magenta' };
-  if (threshold >= tier2Floor) return { marker: '²', color: 'blue' };
+  if (threshold >= 95) return { marker: '³', color: 'magenta' };
+  if (threshold >= 90) return { marker: '²', color: 'blue' };
   return { marker: '¹', color: 'cyan' };
 }
 
-function namedMutationPolicy(name, fallback) {
-  const value = matrixConfig.policies?.mutation?.[name];
-  if (typeof value === 'number' && Number.isFinite(value)) return value;
-  if (value && typeof value === 'object' && Number.isFinite(value.break)) return value.break;
-  return fallback;
+function mutationPolicyForWorkspace(workspaceName) {
+  return (
+    matrixConfig.perPackage?.[workspaceName]?.mutation ??
+    matrixConfig.defaults?.mutation ??
+    'default'
+  );
 }
 
 function perfThreshold() {
@@ -926,7 +968,9 @@ function renderGlobalPerfSummary() {
 
   if (aspect === 'timing') {
     if (typeof globalPerfResult.durationMs === 'number') {
-      process.stdout.write(`Perf duration: ${formatDuration(globalPerfResult.durationMs).trim()}s\n`);
+      process.stdout.write(
+        `Perf duration: ${formatDuration(globalPerfResult.durationMs).trim()}s\n`,
+      );
     }
     return;
   }
@@ -973,7 +1017,8 @@ function formatDuration(durationMs) {
   const minutes = totalMinutes % 60;
   const hours = Math.floor(totalMinutes / 60);
 
-  const secondsText = hours > 0 || totalMinutes > 0 ? String(seconds).padStart(2, '0') : String(seconds);
+  const secondsText =
+    hours > 0 || totalMinutes > 0 ? String(seconds).padStart(2, '0') : String(seconds);
   const value =
     hours > 0
       ? `${hours}:${String(minutes).padStart(2, '0')}:${secondsText}.${ms}`
@@ -992,14 +1037,16 @@ function renderTable(rows, options = {}) {
       widths[index] = Math.max(widths[index] ?? 0, ...cell.map((line) => visibleLength(line)));
     });
   }
-  const slashPositions = aspect === 'status' && !compact ? calculateSlashPositions(splitRows, headerLabels) : [];
+  const slashPositions =
+    aspect === 'status' && !compact ? calculateSlashPositions(splitRows, headerLabels) : [];
   const alignments = calculateColumnAlignments(headerLabels);
   if (aspect === 'timing' && !compact) {
     for (let index = 1; index < widths.length; index += 1) {
       widths[index] = Math.max(widths[index] ?? 0, timingValueWidth);
     }
   }
-  const decimalPositions = aspect === 'timing' && !compact ? calculateDecimalPositions(splitRows, widths, alignments) : [];
+  const decimalPositions =
+    aspect === 'timing' && !compact ? calculateDecimalPositions(splitRows, widths, alignments) : [];
 
   const sepLine = widths.map((width) => '-'.repeat(width)).join('-+-');
   const rendered = [];
@@ -1035,7 +1082,9 @@ function calculateColumnAlignments(headerLabels) {
 }
 
 function isRightAlignedColumnLabel(label) {
-  return label === 'Mut.' || label.startsWith('Mut. ') || label === 'Total' || label.startsWith('Total ');
+  return (
+    label === 'Mut.' || label.startsWith('Mut. ') || label === 'Total' || label.startsWith('Total ')
+  );
 }
 
 function calculateSlashPositions(splitRows, headerLabels) {
@@ -1063,7 +1112,8 @@ function calculateDecimalPositions(splitRows, widths, alignments) {
             ? padVisibleRight(line, widths[colIndex], 1)
             : padVisible(line, widths[colIndex]);
         const decimalIndex = stripAnsi(aligned).indexOf('.');
-        if (decimalIndex >= 0) positions[colIndex] = Math.max(positions[colIndex] ?? 0, decimalIndex);
+        if (decimalIndex >= 0)
+          positions[colIndex] = Math.max(positions[colIndex] ?? 0, decimalIndex);
       }
     });
   }
@@ -1124,14 +1174,12 @@ function isWideGlyph(codePoint) {
   return codePoint >= 0x1f300 && codePoint <= 0x1faff;
 }
 
- 
 function stripAnsi(value) {
   return String(value)
     .replace(/\u001B\[[0-?]*[ -/]*[@-~]/g, '')
     .replace(/\u001B\][^\u0007]*(?:\u0007|\u001B\\)/g, '')
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '');
 }
- 
 
 function colorize(value, color) {
   if (!useColor) return value;

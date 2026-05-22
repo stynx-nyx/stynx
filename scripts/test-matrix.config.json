@@ -22,9 +22,9 @@
       "default": 60,
       "strict": 80,
       "strictest": 85,
-      "tier1": { "break": 80, "high": 90, "low": 70 },
-      "tier2": { "break": 70, "high": 80, "low": 60 },
-      "tier3": { "break": 60, "high": 70, "low": 50 }
+      "tier1": { "break": 90, "high": 90, "low": 80 },
+      "tier2": { "break": 90, "high": 95, "low": 85 },
+      "tier3": { "break": 90, "high": 100, "low": 90 }
     },
     "perf": {
       "default": {
