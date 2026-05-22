@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-21T04:37:53.128Z",
-  "endedAt": "2026-05-21T04:38:12.567Z",
-  "durationMs": 19439,
+  "startedAt": "2026-05-22T16:11:56.217Z",
+  "endedAt": "2026-05-22T16:12:17.453Z",
+  "durationMs": 21236,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-58168-1779338273127.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-51852-1779466316213.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/.test-results/unit.junit.xml"
     ],
@@ -37,8 +37,8 @@
   },
   "totals": {
     "files": 17,
-    "tests": 75,
-    "passed": 75,
+    "tests": 84,
+    "passed": 84,
     "failed": 0,
     "skipped": 0,
     "todo": 0
@@ -47,52 +47,52 @@
     {
       "name": "angular-iam routes activates each IAM admin route for users, roles, and groups when permissions allow",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/routing/angular-iam-routes.spec.ts",
-      "durationMs": 2157.181374999999
-    },
-    {
-      "name": "StynxGroupDetailComponent loads a group and saves overview changes without blank descriptions",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/unit/group-detail.component.spec.ts",
-      "durationMs": 1083.0303750000003
-    },
-    {
-      "name": "StynxUsersAdminComponent renders user rows and drives search, pagination, creation, and selection",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/unit/users-admin.component.spec.ts",
-      "durationMs": 1015.9732920000006
-    },
-    {
-      "name": "StynxUserDetailComponent loads user detail and persists overview, role, group, and lifecycle actions",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/unit/user-detail.component.spec.ts",
-      "durationMs": 996.1711249999998
+      "durationMs": 1939.2477089999993
     },
     {
       "name": "@stynx-web/angular-iam component TestBed specs renders the users admin table and drives search, pagination, creation, and selection",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/components.spec.ts",
-      "durationMs": 991.6122910000004
+      "durationMs": 909.5925000000007
     },
     {
       "name": "StynxRoleDetailComponent loads a role, saves overview changes, and identifies system roles",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/unit/role-detail.component.spec.ts",
-      "durationMs": 914.3322910000006
-    },
-    {
-      "name": "StynxGroupsAdminComponent filters groups, creates, deletes, and navigates to group detail",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/unit/groups-admin.component.spec.ts",
-      "durationMs": 903.2490420000004
+      "durationMs": 762.5361250000005
     },
     {
       "name": "StynxUserCreateDialogComponent validates form input and emits a trimmed create payload",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/unit/user-create-dialog.component.spec.ts",
-      "durationMs": 853.7952910000004
+      "durationMs": 728.8378750000011
+    },
+    {
+      "name": "StynxEffectivePermissionsComponent loads effective grants, filters by grant source, refreshes, and clears search state",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/unit/effective-permissions.component.spec.ts",
+      "durationMs": 712.1594999999998
+    },
+    {
+      "name": "StynxGroupCreateDialogComponent validates required fields and emits trimmed optional description",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/unit/group-create-dialog.component.spec.ts",
+      "durationMs": 687.7144589999989
+    },
+    {
+      "name": "StynxGroupDetailComponent loads a group and saves overview changes without blank descriptions",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/unit/group-detail.component.spec.ts",
+      "durationMs": 663.769875
+    },
+    {
+      "name": "StynxUserDetailComponent loads user detail and persists overview, role, group, and lifecycle actions",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/unit/user-detail.component.spec.ts",
+      "durationMs": 653.6523749999997
+    },
+    {
+      "name": "StynxUsersAdminComponent renders user rows and drives search, pagination, creation, and selection",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/unit/users-admin.component.spec.ts",
+      "durationMs": 628.2157909999996
     },
     {
       "name": "StynxRolesAdminComponent filters roles, creates, clones, deletes non-system roles, and navigates to detail",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/unit/roles-admin.component.spec.ts",
-      "durationMs": 842.2114590000001
-    },
-    {
-      "name": "StynxPermissionMatrixComponent filters permissions, toggles grants, selects resources, and saves changes",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-iam/test/unit/permission-matrix.component.spec.ts",
-      "durationMs": 751.7783330000002
+      "durationMs": 625.6317499999996
     }
   ]
 }

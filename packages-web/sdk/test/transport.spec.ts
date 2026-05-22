@@ -31,6 +31,28 @@ function response(status: number, body: string, headers: Record<string, string> 
 }
 
 describe('@stynx-web/sdk transport', () => {
+  it('forwards client method wrappers to transport with exact methods, paths, bodies, and options', async () => {
+    const client = new StynxSdkClient({
+      baseUrl: 'https://api.example.test',
+      fetchFn: async () => response(200, '{}', { 'content-type': 'application/json' }),
+    });
+    const request = vi.spyOn(client.transport, 'request').mockResolvedValue({ ok: true });
+
+    await client.get('/get', { query: { page: 1 } });
+    await client.post('/post', { name: 'demo' }, { tenantId: 'tenant-1' });
+    await client.put('/put', { enabled: true });
+    await client.patch('/patch', { name: 'patched' });
+    await client.delete('/delete', { headers: { 'x-test': '1' } });
+
+    expect(request.mock.calls).toEqual([
+      [{ method: 'GET', path: '/get', query: { page: 1 } }],
+      [{ method: 'POST', path: '/post', body: { name: 'demo' }, tenantId: 'tenant-1' }],
+      [{ method: 'PUT', path: '/put', body: { enabled: true } }],
+      [{ method: 'PATCH', path: '/patch', body: { name: 'patched' } }],
+      [{ method: 'DELETE', path: '/delete', headers: { 'x-test': '1' } }],
+    ]);
+  });
+
   it('injects bearer and tenant headers on requests', async () => {
     const calls: Array<{ url: string; init?: HttpRequestInitLike }> = [];
     const fetchFn: FetchLike = async (url, init) => {
@@ -120,6 +142,26 @@ describe('@stynx-web/sdk transport', () => {
 
     expect(calls[0]?.url).toBe('https://api.example.test/health');
     expect(calls[0]?.init?.signal).toBe(signal);
+  });
+
+  it('preserves nested path slashes and omits absent signal/body fields', async () => {
+    const calls: Array<{ url: string; init?: HttpRequestInitLike }> = [];
+    const client = new StynxSdkClient({
+      baseUrl: 'https://api.example.test///',
+      fetchFn: async (url, init) => {
+        calls.push({ url: typeof url === 'string' ? url : (url as Request).url, init });
+        return response(200, '{}', { 'content-type': 'application/json' });
+      },
+    });
+
+    await client.get('nested///records');
+    await client.get('///triple');
+
+    expect(calls[0]?.url).toBe('https://api.example.test/nested///records');
+    expect(Object.hasOwn(calls[0]!.init!, 'signal')).toBe(false);
+    expect(Object.hasOwn(calls[0]!.init!, 'body')).toBe(false);
+    expect(calls[0]?.init?.headers).toEqual({});
+    expect(calls[1]?.url).toBe('https://api.example.test/triple');
   });
 
   it('uses client method default options and parses empty or inferred JSON bodies', async () => {
@@ -384,6 +426,22 @@ describe('@stynx-web/sdk transport', () => {
       fetchFn: async () => response(200, 'plain text body', { }),
     });
     await expect(client.get('/text')).resolves.toBe('plain text body');
+  });
+
+  it('uses content-type to parse JSON primitives and keeps text/plain primitives as text', async () => {
+    const bodies = [' true ', 'true'];
+    const client = new StynxSdkClient({
+      baseUrl: 'https://api.example.test',
+      fetchFn: async () => {
+        const body = bodies.shift() ?? 'true';
+        return response(200, body, {
+          'content-type': body.startsWith(' ') ? 'Application/JSON; charset=utf-8' : 'text/plain',
+        });
+      },
+    });
+
+    await expect(client.get('/json-primitive')).resolves.toBe(true);
+    await expect(client.get('/text-primitive')).resolves.toBe('true');
   });
 
   it('isJsonResponse handles mixed-case content-type (kills MethodExpression .toLowerCase)', async () => {

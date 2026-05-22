@@ -14,7 +14,7 @@ import { ROUTES, Router } from '@angular/router';
 import { STYNX_ANGULAR_OPTIONS, TenantContextService } from '@stynx-web/angular';
 import { StynxI18nService } from '@stynx-web/angular-i18n';
 import { OidcSecurityService } from 'angular-auth-oidc-client';
-import { of } from 'rxjs';
+import { of, Subject } from 'rxjs';
 import { parseJwtPayload, normalizePermissions } from '../src/jwt';
 import { RefreshTokenStorage } from '../src/storage';
 import { stynxAuthGuard } from '../src/auth.guard';
@@ -143,7 +143,7 @@ function createOidcClientAdapter(
   return runInInjectionContext(injector, () => new OidcClientAdapter());
 }
 
-function setGlobalValue(name: 'document' | 'sessionStorage' | 'window', value: unknown): () => void {
+function setGlobalValue(name: 'document' | 'sessionStorage' | 'window' | 'atob' | 'TextDecoder', value: unknown): () => void {
   const descriptor = Object.getOwnPropertyDescriptor(globalThis, name);
   Object.defineProperty(globalThis, name, { value, configurable: true });
   return () => {
@@ -180,7 +180,7 @@ describe('@stynx-web/angular-auth', () => {
     });
     await fixture.whenStable();
 
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Completing sign in');
+    expect((fixture.nativeElement as HTMLElement).textContent).toMatch(/Completing sign in/u);
     expect(completeLogin).toHaveBeenCalledWith(window.location.href);
   });
 
@@ -201,7 +201,7 @@ describe('@stynx-web/angular-auth', () => {
     const button = (logoutFixture.nativeElement as HTMLElement).querySelector('button');
     button?.click();
     await logoutFixture.whenStable();
-    expect(button?.textContent).toContain('Sign out');
+    expect(button?.textContent).toMatch(/Sign out/u);
     expect(logout).toHaveBeenCalledTimes(1);
 
     const permissionFixture = await renderComponent(HasPermissionHostComponent, {
@@ -215,7 +215,7 @@ describe('@stynx-web/angular-auth', () => {
         },
       ],
     });
-    expect((permissionFixture.nativeElement as HTMLElement).textContent).toContain('Allowed');
+    expect((permissionFixture.nativeElement as HTMLElement).textContent).toMatch(/Allowed/u);
   });
 
   it('auth guard redirects to the login route when no session is active', () => {
@@ -360,6 +360,17 @@ describe('@stynx-web/angular-auth', () => {
     expect(service.snapshot().tenantId).toBe('tenant-b');
     expect(service.snapshot().sid).toBe('sid-tenant-b');
     expect(tenantContext.tenantId()).toBe('tenant-b');
+
+    await service.onAuthFailure();
+    expect(service.snapshot()).toEqual({
+      active: false,
+      accessToken: null,
+      refreshToken: null,
+      sid: null,
+      permissions: [],
+      tenantId: null,
+      claims: null,
+    });
   });
 
   it('handles inactive login, refresh failure, login redirect, logout, and permission helpers', async () => {
@@ -419,10 +430,109 @@ describe('@stynx-web/angular-auth', () => {
     service.loginRedirect();
     expect(authorizeCalls).toBe(2);
     await expect(service.completeLogin()).resolves.toMatchObject({ active: false });
-    await expect(service.refresh()).resolves.toBeNull();
+    expect(service.snapshot()).toEqual({
+      active: false,
+      accessToken: null,
+      refreshToken: null,
+      sid: null,
+      permissions: [],
+      tenantId: null,
+      claims: null,
+    });
+    await expect(service.refresh()).resolves.toBe(null);
     expect(service.hasAnyPermissions(['missing'])).toBe(false);
     await service.logout();
     expect(logoffCalls).toBe(1);
+  });
+
+  it('clears inactive callback variants and preserves state tenant during refresh', async () => {
+    const tenantContext = createTenantContext({}, null);
+    tenantContext.setTenant('tenant-a', 'manual');
+    const backendCalls: string[] = [];
+    const bundleFor = (tenantId: string): StynxSessionBundle => ({
+      sid: `sid-${tenantId}`,
+      accessToken: createJwt({ sub: 'user-1', tenant_id: tenantId, permissions: ['document:read:*'] }),
+      accessTokenExpiresAt: new Date(Date.now() + 60_000).toISOString(),
+      refreshToken: `refresh-${tenantId}`,
+      expiresAt: new Date(Date.now() + 60_000).toISOString(),
+      idleExpiresAt: new Date(Date.now() + 60_000).toISOString(),
+    });
+    let checkAuthResponse = {
+      isAuthenticated: true,
+      accessToken: '',
+      idToken: '',
+      userData: {},
+      configId: 'default',
+    };
+    let refreshResponse = {
+      isAuthenticated: true,
+      accessToken: createJwt({ sub: 'oidc-sub' }),
+      idToken: '',
+      userData: {},
+      configId: 'default',
+    };
+    const service = createSessionService(
+      tenantContext,
+      {
+        checkAuth: async () => checkAuthResponse,
+        authorize: () => undefined,
+        logoff: async () => undefined,
+        forceRefreshSession: async () => refreshResponse,
+      },
+      {
+        exchangeCognitoToken: async (_token, tenantId) => {
+          backendCalls.push(tenantId);
+          return bundleFor(tenantId);
+        },
+        switchTenant: async (_token, tenantId) => bundleFor(tenantId),
+        logout: async () => undefined,
+      },
+      {
+        oidc: {
+          authority: 'https://issuer.example.test',
+          clientId: 'client-id',
+          redirectUrl: 'https://app.example.test/login/callback',
+          postLogoutRedirectUri: 'https://app.example.test',
+          scope: 'openid profile email offline_access',
+          responseType: 'code',
+        },
+      },
+    );
+
+    await expect(service.completeLogin()).resolves.toMatchObject({ active: false });
+    expect(backendCalls).toEqual([]);
+
+    checkAuthResponse = {
+      isAuthenticated: false,
+      accessToken: createJwt({ sub: 'oidc-sub' }),
+      idToken: '',
+      userData: {},
+      configId: 'default',
+    };
+    await expect(service.completeLogin()).resolves.toMatchObject({ active: false });
+    expect(backendCalls).toEqual([]);
+
+    checkAuthResponse = {
+      isAuthenticated: true,
+      accessToken: createJwt({ sub: 'oidc-sub' }),
+      idToken: '',
+      userData: {},
+      configId: 'default',
+    };
+    await service.completeLogin();
+    tenantContext.setTenant('tenant-b', 'manual');
+    await expect(service.refresh()).resolves.toMatch(/\./u);
+    expect(backendCalls).toEqual(['tenant-a', 'tenant-a']);
+
+    refreshResponse = {
+      isAuthenticated: true,
+      accessToken: '',
+      idToken: '',
+      userData: {},
+      configId: 'default',
+    };
+    await expect(service.refresh()).resolves.toBe(null);
+    expect(service.snapshot().permissions).toEqual([]);
   });
 
   it('resolves tenant from callback URL, refreshes active sessions, and rejects tenant switch without a token', async () => {
@@ -495,10 +605,11 @@ describe('@stynx-web/angular-auth', () => {
     expect(normalizePermissions(null)).toEqual([]);
     expect(normalizePermissions({ scope: 'read write ' })).toEqual(['read', 'write']);
     expect(normalizePermissions({ permissions: ' read  write ' })).toEqual(['read', 'write']);
+    expect(normalizePermissions({ permissions: '\tread\t write' })).toEqual(['read', 'write']);
     expect(normalizePermissions({ permissions: ['a', 42, '  ', 'b'] })).toEqual(['a', 'b']);
     expect(normalizePermissions({ permissions: 42 })).toEqual([]);
-    expect(parseJwtPayload('not-a-jwt')).toBeNull();
-    expect(parseJwtPayload(`h.${Buffer.from('not-json', 'utf8').toString('base64url')}.s`)).toBeNull();
+    expect(parseJwtPayload('not-a-jwt')).toBe(null);
+    expect(parseJwtPayload(`h.${Buffer.from('not-json', 'utf8').toString('base64url')}.s`)).toBe(null);
 
     const backing = new Map<string, string>();
     const storage = new RefreshTokenStorage('refresh', 'session-storage', {
@@ -509,22 +620,22 @@ describe('@stynx-web/angular-auth', () => {
     storage.write('token-1');
     expect(storage.read()).toBe('token-1');
     storage.write(null);
-    expect(storage.read()).toBeNull();
+    expect(storage.read()).toBe(null);
     storage.clear();
-    expect(storage.read()).toBeNull();
+    expect(storage.read()).toBe(null);
 
     const missingStorage = new RefreshTokenStorage('refresh', 'session-storage', null);
     missingStorage.write('ignored');
-    expect(missingStorage.read()).toBeNull();
+    expect(missingStorage.read()).toBe(null);
 
     const defaultStorage = new RefreshTokenStorage('refresh');
     defaultStorage.write(null);
-    expect(defaultStorage.read()).toBeNull();
+    expect(defaultStorage.read()).toBe(null);
 
     const serverCookieStorage = new RefreshTokenStorage('refresh', 'cookie', null, null);
     serverCookieStorage.write('ignored');
     serverCookieStorage.clear();
-    expect(serverCookieStorage.read()).toBeNull();
+    expect(serverCookieStorage.read()).toBe(null);
 
     const cookieDocument = { cookie: '' };
     const cookieStorage = new RefreshTokenStorage('refresh', 'cookie', null, cookieDocument as Document, {
@@ -534,22 +645,30 @@ describe('@stynx-web/angular-auth', () => {
       secure: false,
     });
     cookieStorage.write('cookie-token');
-    expect(cookieDocument.cookie).toContain('refresh=cookie-token');
+    expect(cookieDocument.cookie).toBe('refresh=cookie-token; Path=/app; SameSite=Strict');
     cookieDocument.cookie = 'refresh=cookie-token; other=value';
     expect(cookieStorage.read()).toBe('cookie-token');
     cookieDocument.cookie = 'other=value';
-    expect(cookieStorage.read()).toBeNull();
+    expect(cookieStorage.read()).toBe(null);
     cookieStorage.clear();
-    expect(cookieDocument.cookie).toContain('Max-Age=0');
+    expect(cookieDocument.cookie).toBe('refresh=; Max-Age=0; Path=/app');
 
     const secureCookieDocument = { cookie: '' };
     new RefreshTokenStorage('refresh', 'cookie', null, secureCookieDocument as Document).write('secure-token');
-    expect(secureCookieDocument.cookie).toContain('Secure');
+    expect(secureCookieDocument.cookie).toBe('refresh=secure-token; Path=/; SameSite=Lax; Secure');
 
     const originalAtob = globalThis.atob;
+    Object.defineProperty(globalThis, 'atob', {
+      value: vi.fn(() => '{"via":"custom-atob"}'),
+      configurable: true,
+    });
+    expect(parseJwtPayload('h.not-base64.s')).toEqual({ via: 'custom-atob' });
+    expect(globalThis.atob).toHaveBeenCalledWith('not+base64==');
+
     Object.defineProperty(globalThis, 'atob', { value: undefined, configurable: true });
     expect(parseJwtPayload(createJwt({ scope: ['array-scope', 42] }))).toEqual({ scope: ['array-scope', 42] });
-    expect(parseJwtPayload('header.@.sig')).toBeNull();
+    expect(parseJwtPayload('header.@.sig')).toBe(null);
+    expect(parseJwtPayload('header..sig')).toBe(null);
     Object.defineProperty(globalThis, 'atob', { value: originalAtob, configurable: true });
 
     const originalTextDecoder = globalThis.TextDecoder;
@@ -558,6 +677,35 @@ describe('@stynx-web/angular-auth', () => {
       expect(parseJwtPayload(createJwt({ sub: 'without-text-decoder' }))).toEqual({ sub: 'without-text-decoder' });
     } finally {
       Object.defineProperty(globalThis, 'TextDecoder', { value: originalTextDecoder, configurable: true });
+    }
+  });
+
+  it('uses browser globals for refresh storage defaults and preserves cookie directives exactly', () => {
+    const storageValues = new Map<string, string>();
+    const restoreStorage = setGlobalValue('sessionStorage', {
+      getItem: vi.fn((key: string) => storageValues.get(key) ?? null),
+      setItem: vi.fn((key: string, value: string) => storageValues.set(key, value)),
+      removeItem: vi.fn((key: string) => storageValues.delete(key)),
+    });
+    const documentValue = { cookie: '' };
+    const restoreDocument = setGlobalValue('document', documentValue);
+    try {
+      const storage = new RefreshTokenStorage('refresh-global');
+      storage.write('global-token');
+      expect(storage.read()).toBe('global-token');
+      storage.clear();
+      expect(storage.read()).toBe(null);
+
+      const cookieStorage = new RefreshTokenStorage('refresh key', 'cookie');
+      cookieStorage.write('token value');
+      expect(documentValue.cookie).toBe('refresh%20key=token%20value; Path=/; SameSite=Lax; Secure');
+      documentValue.cookie = 'other=value; refresh%20key=token%20value';
+      expect(cookieStorage.read()).toBe('token value');
+      cookieStorage.clear();
+      expect(documentValue.cookie).toBe('refresh%20key=; Max-Age=0; Path=/');
+    } finally {
+      restoreDocument();
+      restoreStorage();
     }
   });
 
@@ -685,7 +833,7 @@ describe('@stynx-web/angular-auth', () => {
 
     const fixture = TestBed.createComponent(StynxPermissionDeniedComponent);
     fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Permission denied');
+    expect(fixture.nativeElement.textContent).toMatch(/Permission denied/u);
     fixture.nativeElement.querySelector('button')?.click();
     expect(redirectCalls).toBe(1);
 
@@ -801,8 +949,53 @@ describe('@stynx-web/angular-auth', () => {
 
       directive.stynxHasPermission = 'document:delete:*';
       expect(view.cleared).toBe(1);
-      expect(() => directive.ngOnDestroy()).not.toThrow();
+      directive.ngOnDestroy();
     });
+  });
+
+  it('has-permission directive rerenders on active stream changes and array inputs', () => {
+    const active$ = new Subject<unknown>();
+    const granted = new Set<string>();
+    const session = {
+      active$,
+      hasAllPermissions: vi.fn((permissions: string[]) => permissions.every((permission) => granted.has(permission))),
+    } as unknown as StynxSessionService;
+    const view = new FakeViewContainerRef();
+    const directive = createHasPermissionDirective(new FakeTemplateRef(), view, session);
+
+    directive.stynxHasPermission = ['document:read:*', 'document:write:*'];
+    expect(view.rendered).toBe(0);
+    expect(session.hasAllPermissions).toHaveBeenLastCalledWith(['document:read:*', 'document:write:*']);
+
+    granted.add('document:read:*');
+    granted.add('document:write:*');
+    active$.next(null);
+    expect(view.rendered).toBe(1);
+
+    active$.next(null);
+    expect(view.rendered).toBe(1);
+
+    granted.clear();
+    active$.next(null);
+    expect(view.cleared).toBe(1);
+    directive.ngOnDestroy();
+    expect(active$.observed).toBe(false);
+  });
+
+  it('has-permission directive renders the default empty requirement before inputs arrive', () => {
+    const session = {
+      active$: of(null),
+      hasAllPermissions: vi.fn((permissions: string[]) => permissions.length === 0),
+    } as unknown as StynxSessionService;
+    const view = new FakeViewContainerRef();
+    const directive = createHasPermissionDirective(new FakeTemplateRef(), view, session);
+
+    expect(view.rendered).toBe(1);
+    expect(session.hasAllPermissions).toHaveBeenCalledWith([]);
+
+    directive.stynxHasPermission = 'document:read:*';
+    expect(view.cleared).toBe(1);
+    directive.ngOnDestroy();
   });
 
   it('calls auth backend endpoints with normalized URLs and headers', async () => {
@@ -822,12 +1015,12 @@ describe('@stynx-web/angular-auth', () => {
           return of(bundle);
         },
       } as never,
-      { apiBaseUrl: 'https://api.example.test/' },
+      { apiBaseUrl: 'https://api.example.test///' },
     );
 
     await expect(backend.exchangeCognitoToken('cognito-token', 'tenant-a')).resolves.toEqual(bundle);
     await expect(backend.switchTenant('access-token', 'tenant-b')).resolves.toEqual(bundle);
-    await expect(backend.logout('access-token')).resolves.toBeUndefined();
+    await expect(backend.logout('access-token')).resolves.toBe(undefined);
 
     expect(calls.map((call) => call.url)).toEqual([
       'https://api.example.test/sessions',
@@ -865,7 +1058,7 @@ describe('@stynx-web/angular-auth', () => {
 
     await expect(adapter.checkAuth('https://app.example.test/callback')).resolves.toMatchObject({ isAuthenticated: true });
     adapter.authorize({ customParams: { prompt: 'login' } } as never);
-    await expect(adapter.logoff()).resolves.toBeUndefined();
+    await expect(adapter.logoff()).resolves.toBe(undefined);
     await expect(adapter.forceRefreshSession()).resolves.toMatchObject({ isAuthenticated: false });
     expect(oidcCalls).toEqual([
       ['checkAuth', 'https://app.example.test/callback'],
@@ -933,6 +1126,41 @@ describe('@stynx-web/angular-auth', () => {
     });
   });
 
+  it('opens hosted auth actions through location assignment or a new tab', () => {
+    const assign = vi.fn();
+    const open = vi.fn();
+    const restoreWindow = setGlobalValue('window', {
+      location: {
+        href: 'https://app.example.test/profile?code=abc&keep=1',
+        origin: 'https://app.example.test',
+        assign,
+      },
+      open,
+    });
+    try {
+      const adapter = createOidcClientAdapter({
+        checkAuth: () => of({ isAuthenticated: true, accessToken: 'token', idToken: '', userData: {}, configId: 'default' }),
+        authorize: () => undefined,
+        logoff: () => of(null),
+        forceRefreshSession: () => of({ isAuthenticated: true, accessToken: 'token', idToken: '', userData: {}, configId: 'default' }),
+      } as never, {
+        hostedActions: {
+          returnUrl: 'https://app.example.test/account',
+          changePassword: '/password?return={returnUrl}',
+          mfaEnrolment: () => ({ action: 'mfa-enrolment', url: '/mfa', method: 'browser-redirect', opensIn: 'new-tab' }),
+        },
+      });
+
+      adapter.openHostedAction('change-password');
+      expect(assign).toHaveBeenCalledWith('/password?return=https%3A%2F%2Fapp.example.test%2Faccount');
+
+      adapter.openHostedAction('mfa-enrolment');
+      expect(open).toHaveBeenCalledWith('/mfa', '_blank', 'noopener,noreferrer');
+    } finally {
+      restoreWindow();
+    }
+  });
+
   it('reports unavailable and invalid hosted auth action configuration', () => {
     const oidcSecurity = {
       checkAuth: () => of({ isAuthenticated: true, accessToken: 'token', idToken: '', userData: {}, configId: 'default' }),
@@ -946,15 +1174,15 @@ describe('@stynx-web/angular-auth', () => {
         changePassword: () => null,
       },
     });
-    expect(unavailable.getHostedActionLink('change-password')).toBeNull();
-    expect(unavailable.getHostedActionLink('mfa-enrolment')).toBeNull();
+    expect(unavailable.getHostedActionLink('change-password')).toBe(null);
+    expect(unavailable.getHostedActionLink('mfa-enrolment')).toBe(null);
 
     const invalid = createOidcClientAdapter(oidcSecurity, {
       hostedActions: {
         changePassword: 'http://[',
       },
     });
-    expect(() => invalid.getHostedActionLink('change-password')).toThrow();
+    expect(() => invalid.getHostedActionLink('change-password')).toThrow(TypeError);
   });
 
   it('login redirect passes no callback URL when no browser window is available', async () => {
@@ -985,7 +1213,7 @@ describe('@stynx-web/angular-auth', () => {
     try {
       const storage = new RefreshTokenStorage('refresh');
       storage.write('ignored');
-      expect(storage.read()).toBeNull();
+      expect(storage.read()).toBe(null);
       storage.clear();
     } finally {
       restoreSessionStorage();
@@ -1031,7 +1259,7 @@ describe('@stynx-web/angular-auth', () => {
       },
     );
 
-    await expect(service.refresh()).resolves.toBeNull();
+    await expect(service.refresh()).resolves.toBe(null);
     await service.onAuthFailure();
     await service.logout();
     expect(logoffCalls).toBe(1);
@@ -1156,10 +1384,22 @@ describe('@stynx-web/angular-auth', () => {
   function killBackend(): StynxAuthBackend {
     return {
       exchangeCognitoToken: async () => ({
-        accessToken: '', refreshToken: '', sid: '', permissions: [],
+        accessToken: '',
+        accessTokenExpiresAt: new Date(Date.now() + 60_000).toISOString(),
+        refreshToken: '',
+        expiresAt: new Date(Date.now() + 60_000).toISOString(),
+        idleExpiresAt: new Date(Date.now() + 60_000).toISOString(),
+        sid: '',
+        permissions: [],
       }),
       switchTenant: async () => ({
-        accessToken: '', refreshToken: '', sid: '', permissions: [],
+        accessToken: '',
+        accessTokenExpiresAt: new Date(Date.now() + 60_000).toISOString(),
+        refreshToken: '',
+        expiresAt: new Date(Date.now() + 60_000).toISOString(),
+        idleExpiresAt: new Date(Date.now() + 60_000).toISOString(),
+        sid: '',
+        permissions: [],
       }),
       logout: async () => undefined,
     };
@@ -1246,17 +1486,14 @@ describe('@stynx-web/angular-auth', () => {
     storage.write('the-token');
     // Each directive must appear with its exact key. Kills `Path=` → `` /
     // `SameSite=` → ``, etc.
-    expect(cookieDocument.cookie).toContain('refresh=the-token');
-    expect(cookieDocument.cookie).toContain('Path=/api');
-    expect(cookieDocument.cookie).toContain('SameSite=Strict');
-    expect(cookieDocument.cookie).toContain('Secure');
+    expect(cookieDocument.cookie).toBe('refresh=the-token; Path=/api; SameSite=Strict; Secure');
   });
 
   it('cookie clear emits `Max-Age=0` directive (kills StringLiteral at storage.ts:89)', () => {
     const cookieDocument = { cookie: 'refresh=stale' };
     const storage = new RefreshTokenStorage('refresh', 'cookie', null, cookieDocument as Document);
     storage.clear();
-    expect(cookieDocument.cookie).toContain('Max-Age=0');
+    expect(cookieDocument.cookie).toBe('refresh=; Max-Age=0; Path=/');
   });
 
   it('cookie read trims surrounding whitespace from entries (kills MethodExpression on .trim at storage.ts:75)', () => {
@@ -1274,7 +1511,7 @@ describe('@stynx-web/angular-auth', () => {
   it('cookie read returns null when cookie source is empty (kills StringLiteral at storage.ts:72)', () => {
     const cookieDocument = { cookie: '' };
     const storage = new RefreshTokenStorage('refresh', 'cookie', null, cookieDocument as Document);
-    expect(storage.read()).toBeNull();
+    expect(storage.read()).toBe(null);
   });
 
   it('applyBundle sets state.active === true (kills BooleanLiteral mutation at src/session.service.ts:148)', async () => {
@@ -1288,12 +1525,23 @@ describe('@stynx-web/angular-auth', () => {
           setAccessToken = token;
           return {
             accessToken: createJwt({ permissions: ['p1'], sub: 'oidc-sub' }),
+            accessTokenExpiresAt: new Date(Date.now() + 60_000).toISOString(),
             refreshToken: 'r-1',
+            expiresAt: new Date(Date.now() + 60_000).toISOString(),
+            idleExpiresAt: new Date(Date.now() + 60_000).toISOString(),
             sid: 's-1',
             permissions: ['p1'],
           };
         },
-        switchTenant: async () => ({ accessToken: '', refreshToken: '', sid: '', permissions: [] }),
+        switchTenant: async () => ({
+          accessToken: '',
+          accessTokenExpiresAt: new Date(Date.now() + 60_000).toISOString(),
+          refreshToken: '',
+          expiresAt: new Date(Date.now() + 60_000).toISOString(),
+          idleExpiresAt: new Date(Date.now() + 60_000).toISOString(),
+          sid: '',
+          permissions: [],
+        }),
         logout: async () => undefined,
       },
       killOptions(),
@@ -1336,7 +1584,7 @@ describe('@stynx-web/angular-auth', () => {
         // Construct a JWT whose middle segment contains an out-of-alphabet char `!`.
         const header = Buffer.from(JSON.stringify({ alg: 'none' }), 'utf8').toString('base64url');
         const badSegment = 'AB!CD';  // '!' is not in the base64 alphabet
-        expect(parseJwtPayload(`${header}.${badSegment}.sig`)).toBeNull();
+        expect(parseJwtPayload(`${header}.${badSegment}.sig`)).toBe(null);
       } finally {
         restore();
       }
@@ -1356,7 +1604,7 @@ describe('@stynx-web/angular-auth', () => {
       // 1 part: `parts.length === 1 < 2` → original returns null.
       // Mutation `<= 2`: 1 <= 2 → also returns null (same outcome). So this
       // test alone doesn't differentiate; the 2-part case below does.
-      expect(parseJwtPayload('only-one-part')).toBeNull();
+      expect(parseJwtPayload('only-one-part')).toBe(null);
     });
 
     it('parses a 2-part JWT (no signature) — kills `parts.length < 2` mutation', () => {
@@ -1421,9 +1669,9 @@ describe('@stynx-web/angular-auth', () => {
         const storage = new RefreshTokenStorage('refresh');
         // Operations must short-circuit cleanly (no throw).
         storage.write('any');
-        expect(storage.read()).toBeNull();
+        expect(storage.read()).toBe(null);
         storage.clear();
-        expect(storage.read()).toBeNull();
+        expect(storage.read()).toBe(null);
       } finally {
         restore();
       }
@@ -1434,9 +1682,9 @@ describe('@stynx-web/angular-auth', () => {
       try {
         const storage = new RefreshTokenStorage('refresh', 'cookie');
         storage.write('any');
-        expect(storage.read()).toBeNull();
+        expect(storage.read()).toBe(null);
         storage.clear();
-        expect(storage.read()).toBeNull();
+        expect(storage.read()).toBe(null);
       } finally {
         restore();
       }
@@ -1465,16 +1713,8 @@ describe('@stynx-web/angular-auth', () => {
       // If any of the 7 array entries is mutated to '', that param leaks into the returnUrl.
       const decoded = decodeURIComponent(link!.url.split('return=')[1]!);
       expect(decoded).toBe('http://localhost:3000/login/callback?keep=1');
-      // Specifically verify each OIDC param is stripped.
-      expect(decoded).not.toContain('code=');
-      expect(decoded).not.toContain('state=');
-      expect(decoded).not.toContain('session_state=');
-      expect(decoded).not.toContain('error=');
-      expect(decoded).not.toContain('error_description=');
-      expect(decoded).not.toContain('error_uri=');
-      expect(decoded).not.toContain('iss=');
-      // The hash fragment must also be stripped.
-      expect(decoded).not.toContain('#');
+      expect(new URL(decoded).search).toBe('?keep=1');
+      expect(new URL(decoded).hash).toBe('');
     });
 
     it('encodePlaceholder returns empty string when value is null (kills StringLiteral at oidc-client.adapter.ts:19)', () => {
@@ -1512,7 +1752,11 @@ describe('@stynx-web/angular-auth', () => {
         // /password is a relative URL — must resolve against the fallback base
         // ('https://stynx.local') without throwing.
         const link = adapter.getHostedActionLink('change-password');
-        expect(link).not.toBeNull();
+        expect(link).toEqual({
+          action: 'change-password',
+          url: '/password',
+          method: 'browser-redirect',
+        });
       } finally {
         restore();
       }
@@ -1572,11 +1816,11 @@ describe('@stynx-web/angular-auth', () => {
       } as unknown as HttpClient;
       const withSlash = createHttpAuthBackend(fakeHttp, { apiBaseUrl: 'https://api.example/' });
       const withoutSlash = createHttpAuthBackend(fakeHttp, { apiBaseUrl: 'https://api.example' });
-      await withSlash.exchangeCognitoToken('t');
-      await withoutSlash.exchangeCognitoToken('t');
+      await withSlash.exchangeCognitoToken('t', 'tenant-a');
+      await withoutSlash.exchangeCognitoToken('t', 'tenant-a');
       // Both calls must produce the same URL (no double slash, no missing slash).
       expect(calls[0]!.url).toBe(calls[1]!.url);
-      expect(calls[0]!.url).not.toContain('//exchange');  // no double slash before path
+      expect(calls[0]!.url).toBe('https://api.example/sessions');
     });
   });
 

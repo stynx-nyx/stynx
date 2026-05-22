@@ -97,6 +97,66 @@ describe('@stynx-web/sdk runtime helpers', () => {
     expect(manager.getTenantId()).toBe(null);
   });
 
+  it('normalizes session claim whitespace, duplicates, and expiration boundaries', () => {
+    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(2_000);
+    try {
+      const store = new InMemoryTokenStore();
+      const manager = new FrontendSessionManager(store);
+
+      const active = manager.setTokens({
+        accessToken: token({
+          sub: ' user-5 ',
+          roles: [' Admin ', 'admin', '', 3],
+          scope: ' records:read  records:write records:read ',
+          tenant_id: '',
+          tenancy_id: 'tenant-from-tenancy',
+          tenant_ids: ['tenant-from-list', ' ', 7],
+          exp: 3,
+        }),
+      });
+
+      expect(active.principal).toMatchObject({
+        sub: 'user-5',
+        tenantId: 'tenant-from-tenancy',
+        tenantIds: ['tenant-from-tenancy', 'tenant-from-list'],
+        roles: ['Admin', 'admin'],
+        permissions: ['records:read', 'records:write'],
+      });
+      expect(manager.getValidAccessToken()).toBe(active.tokens?.accessToken);
+
+      store.write({ accessToken: active.tokens!.accessToken, expiresAt: 2_000 });
+      expect(manager.getValidAccessToken()).toBe(null);
+      expect(store.read()).toBe(null);
+
+      expect(manager.setTokens({ accessToken: token({ sub: '   ' }) }).principal).toBe(null);
+    } finally {
+      nowSpy.mockRestore();
+    }
+  });
+
+  it('uses default Cognito, permission, tenant, and username claim keys exactly', () => {
+    const manager = new FrontendSessionManager(new InMemoryTokenStore());
+
+    const state = manager.setTokens({
+      accessToken: token({
+        sub: 'user-claims',
+        'cognito:username': 'cognito-user',
+        'cognito:groups': 'Power Users',
+        permissions: ['records:approve'],
+        tenant_id: 'tenant-direct',
+      }),
+    });
+
+    expect(state.principal).toMatchObject({
+      sub: 'user-claims',
+      username: 'cognito-user',
+      tenantId: 'tenant-direct',
+      tenantIds: ['tenant-direct'],
+      roles: ['Power Users'],
+      permissions: ['records:approve'],
+    });
+  });
+
   it('derives tenant identifiers from fallback claims and empty claims', () => {
     const store = new InMemoryTokenStore();
     const manager = new FrontendSessionManager(store);
@@ -135,7 +195,10 @@ describe('@stynx-web/sdk runtime helpers', () => {
     };
     const browser = new BrowserLocalStorageTokenStore('tokens', storage);
     browser.write({ accessToken: 'stored' });
+    expect(storage.setItem).toHaveBeenCalledWith('tokens', JSON.stringify({ accessToken: 'stored' }));
     expect(browser.read()).toEqual({ accessToken: 'stored' });
+    values.set('tokens', '');
+    expect(browser.read()).toBe(null);
     values.set('tokens', '{bad');
     expect(browser.read()).toBe(null);
     browser.clear();
@@ -172,6 +235,12 @@ describe('@stynx-web/sdk runtime helpers', () => {
       expect(browser.read()).toEqual({ accessToken: 'global' });
       browser.clear();
       expect(values.has('global-tokens')).toBe(false);
+
+      const defaultBrowser = new BrowserLocalStorageTokenStore();
+      defaultBrowser.write({ accessToken: 'default-key' });
+      expect(values.get('stynx.auth.tokens')).toBe(JSON.stringify({ accessToken: 'default-key' }));
+      defaultBrowser.clear();
+      expect(values.has('stynx.auth.tokens')).toBe(false);
     } finally {
       if (original) {
         Object.defineProperty(globalThis, 'localStorage', original);
@@ -212,6 +281,9 @@ describe('@stynx-web/sdk runtime helpers', () => {
     expect(hasAllPermissions(null, ['records:read'])).toBe(false);
     expect(hasAllPermissions(principal, ['records:read', 'RECORDS:WRITE'])).toBe(true);
     expect(hasAllPermissions(principal, ['records:read', 'missing'])).toBe(false);
+    expect(hasAnyRole(principal, [' admin '])).toBe(true);
+    expect(hasAnyRole(principal, ['viewer'])).toBe(false);
+    expect(hasAllPermissions(principal, [' records:read ', 'records:write'])).toBe(true);
   });
 
   it('builds Cognito URLs and parses JWT payloads', () => {
@@ -274,10 +346,19 @@ describe('@stynx-web/sdk runtime helpers', () => {
     const defaultScopeParam = new URL(defaultScopes).searchParams.get('scope');
     expect(defaultScopeParam).toBe('openid email profile');
     expect(parseJwtPayload(token({ sub: 'user' }))).toEqual({ sub: 'user' });
+    const twoPartPayload = Buffer.from(JSON.stringify({ sub: 'two-part' }), 'utf8').toString('base64url');
+    expect(parseJwtPayload(`h.${twoPartPayload}`)).toEqual({ sub: 'two-part' });
     expect(parseJwtPayload('missing-payload')).toBe(null);
     expect(parseJwtPayload('a.not-json.s')).toBe(null);
 
     const originalAtob = globalThis.atob;
+    Object.defineProperty(globalThis, 'atob', {
+      configurable: true,
+      value: vi.fn(() => '{"via":"custom"}'),
+    });
+    expect(parseJwtPayload('h.not-base64.s')).toEqual({ via: 'custom' });
+    expect(globalThis.atob).toHaveBeenCalledWith('not+base64==');
+
     Object.defineProperty(globalThis, 'atob', { configurable: true, value: undefined });
     try {
       expect(parseJwtPayload(token({ sub: 'user' }))).toBe(null);
@@ -337,6 +418,75 @@ describe('@stynx-web/sdk runtime helpers', () => {
     });
     expect(calls[2]?.init?.headers?.['x-tenant-id']).toBe(undefined);
     expect(calls[3]?.init?.headers?.['content-type']).toBe('application/json');
+  });
+
+  it('normalizes StynxApiClient base paths, query primitives, and header precedence exactly', async () => {
+    const calls: Array<{ url: string; init?: HttpRequestInitLike }> = [];
+    const sessionManager = {
+      getValidAccessToken: vi.fn(() => ''),
+    } as unknown as FrontendSessionManager;
+    const client = new StynxApiClient({
+      baseUrl: 'https://api.example.test/root///',
+      fetchFn: async (url, init) => {
+        calls.push({ url, init });
+        return response(200, '{"ok":true}', { 'Content-Type': 'Application/JSON; charset=utf-8' });
+      },
+      sessionManager,
+      tenantResolver: () => '',
+      defaultHeaders: { Authorization: 'Bearer default-token' },
+    });
+
+    await client.request('PUT', '///records', { ok: true }, {
+      query: { zero: 0, enabled: false, text: 'a b' },
+      headers: { authorization: 'Bearer caller-token' },
+    });
+    await client.request('GET', '/', undefined, { query: {} });
+
+    expect(calls[0]?.url).toBe('https://api.example.test/root/records?zero=0&enabled=false&text=a+b');
+    expect(calls[0]?.init).toEqual({
+      method: 'PUT',
+      headers: {
+        Authorization: 'Bearer default-token',
+        authorization: 'Bearer caller-token',
+        'content-type': 'application/json',
+      },
+      signal: undefined,
+      body: JSON.stringify({ ok: true }),
+    });
+    expect(calls[1]?.url).toBe('https://api.example.test/root/');
+    expect(calls[1]?.init?.headers).toEqual({ Authorization: 'Bearer default-token' });
+  });
+
+  it('keeps StynxApiClient methods, empty query, auth, and content-type decisions observable', async () => {
+    const calls: Array<{ url: string; init?: HttpRequestInitLike }> = [];
+    const client = new StynxApiClient({
+      baseUrl: 'https://api.example.test///',
+      fetchFn: async (url, init) => {
+        calls.push({ url, init });
+        return response(200, '{"ok":true}', { 'content-type': 'application/json' });
+      },
+      sessionManager: {
+        getValidAccessToken: vi.fn(() => ''),
+      } as unknown as FrontendSessionManager,
+      tenantResolver: () => null,
+    });
+    const request = vi.spyOn(client, 'request');
+
+    await client.get('nested///records');
+    await client.post('///records', { ok: true }, { headers: { 'Content-Type': 'application/custom' } });
+    await client.delete('/records/1');
+
+    expect(request.mock.calls).toEqual([
+      ['GET', 'nested///records', undefined, undefined],
+      ['POST', '///records', { ok: true }, { headers: { 'Content-Type': 'application/custom' } }],
+      ['DELETE', '/records/1', undefined, undefined],
+    ]);
+    expect(calls[0]?.url).toBe('https://api.example.test/nested///records');
+    expect(calls[0]?.init?.headers).toEqual({});
+    expect(Object.hasOwn(calls[0]!.init!, 'body')).toBe(false);
+    expect(calls[1]?.url).toBe('https://api.example.test/records');
+    expect(calls[1]?.init?.headers).toEqual({ 'Content-Type': 'application/custom' });
+    expect(calls[2]?.init?.method).toBe('DELETE');
   });
 
   it('surfaces StynxApiClient error responses', async () => {

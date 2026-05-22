@@ -1,115 +1,129 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="54" failures="0" errors="0" time="0.019473292">
-    <testsuite name="test/runtime.spec.ts" timestamp="2026-05-21T18:18:15.327Z" hostname="thiamat-1903.local" tests="10" failures="0" errors="0" skipped="0" time="0.008285667">
-        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; hydrates, derives, expires, and clears frontend sessions" time="0.00254175">
+<testsuites name="vitest tests" tests="61" failures="0" errors="0" time="0.460482708">
+    <testsuite name="test/runtime.spec.ts" timestamp="2026-05-22T16:12:01.336Z" hostname="thiamat-1903.local" tests="14" failures="0" errors="0" skipped="0" time="0.286522208">
+        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; hydrates, derives, expires, and clears frontend sessions" time="0.021215459">
         </testcase>
-        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; supports custom claim keys and invalid token fallbacks" time="0.000276666">
+        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; supports custom claim keys and invalid token fallbacks" time="0.00031975">
         </testcase>
-        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; derives tenant identifiers from fallback claims and empty claims" time="0.000207958">
+        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; normalizes session claim whitespace, duplicates, and expiration boundaries" time="0.000307042">
         </testcase>
-        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; stores tokens in memory and browser-local storage variants" time="0.000873209">
+        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; uses default Cognito, permission, tenant, and username claim keys exactly" time="0.007874667">
         </testcase>
-        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; uses global localStorage when no storage provider is supplied" time="0.00025075">
+        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; derives tenant identifiers from fallback claims and empty claims" time="0.004240625">
         </testcase>
-        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; falls back to unavailable storage when global localStorage is absent" time="0.000148333">
+        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; stores tokens in memory and browser-local storage variants" time="0.052660708">
         </testcase>
-        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; evaluates frontend authorization helpers case-insensitively" time="0.000325875">
+        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; uses global localStorage when no storage provider is supplied" time="0.000768625">
         </testcase>
-        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; builds Cognito URLs and parses JWT payloads" time="0.000816625">
+        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; falls back to unavailable storage when global localStorage is absent" time="0.00040975">
         </testcase>
-        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; sends StynxApiClient requests with auth, tenant, body, query, and response variants" time="0.001811916">
+        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; evaluates frontend authorization helpers case-insensitively" time="0.000541333">
         </testcase>
-        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; surfaces StynxApiClient error responses" time="0.00039275">
+        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; builds Cognito URLs and parses JWT payloads" time="0.015535584">
+        </testcase>
+        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; sends StynxApiClient requests with auth, tenant, body, query, and response variants" time="0.138491125">
+        </testcase>
+        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; normalizes StynxApiClient base paths, query primitives, and header precedence exactly" time="0.0023165">
+        </testcase>
+        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; keeps StynxApiClient methods, empty query, auth, and content-type decisions observable" time="0.01534875">
+        </testcase>
+        <testcase classname="test/runtime.spec.ts" name="@stynx-web/sdk runtime helpers &gt; surfaces StynxApiClient error responses" time="0.006221625">
         </testcase>
     </testsuite>
-    <testsuite name="test/transport.spec.ts" timestamp="2026-05-21T18:18:15.331Z" hostname="thiamat-1903.local" tests="44" failures="0" errors="0" skipped="0" time="0.011187625">
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; injects bearer and tenant headers on requests" time="0.00327375">
+    <testsuite name="test/transport.spec.ts" timestamp="2026-05-22T16:12:01.347Z" hostname="thiamat-1903.local" tests="47" failures="0" errors="0" skipped="0" time="0.1739605">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; forwards client method wrappers to transport with exact methods, paths, bodies, and options" time="0.004922708">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; preserves caller headers and omits empty query and tenant values" time="0.000657708">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; injects bearer and tenant headers on requests" time="0.006220666">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; omits empty query strings and forwards request signal options" time="0.000147542">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; preserves caller headers and omits empty query and tenant values" time="0.001273417">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; uses client method default options and parses empty or inferred JSON bodies" time="0.000351792">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; omits empty query strings and forwards request signal options" time="0.001900334">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; refreshes once after a 401 and replays the request" time="0.000231208">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; preserves nested path slashes and omits absent signal/body fields" time="0.002856709">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; maps response codes to typed error instances and calls onAuthFailure after unrecoverable 401" time="0.00060175">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; uses client method default options and parses empty or inferred JSON bodies" time="0.001555125">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; preserves content-type headers and surfaces repeated 401 responses after refresh" time="0.000296084">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; refreshes once after a 401 and replays the request" time="0.0057395">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; maps remaining status codes and validation code suffixes" time="0.000377375">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; maps response codes to typed error instances and calls onAuthFailure after unrecoverable 401" time="0.005956041">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; surfaces network failures and preserves abort signals for caller cancellation" time="0.000609166">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; preserves content-type headers and surfaces repeated 401 responses after refresh" time="0.000397333">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; maps context payloads and 401 responses without an auth provider" time="0.000202708">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; maps remaining status codes and validation code suffixes" time="0.004687708">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; trimEdgeSlash strips ALL trailing slashes from baseUrl (kills Regex anchor mutations)" time="0.000113667">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; surfaces network failures and preserves abort signals for caller cancellation" time="0.019069667">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; buildQuery returns &quot;&quot; when query is undefined (kills StringLiteral at transport.ts:30)" time="0.000140959">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; maps context payloads and 401 responses without an auth provider" time="0.000550666">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; buildQuery prefixes &quot;?&quot; only when there are non-null params" time="0.000108583">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; trimEdgeSlash strips ALL trailing slashes from baseUrl (kills Regex anchor mutations)" time="0.006097209">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; parseBody returns undefined for empty body" time="0.000064041">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; buildQuery returns &quot;&quot; when query is undefined (kills StringLiteral at transport.ts:30)" time="0.04191425">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; parseBody detects JSON arrays by leading &quot;[&quot; (kills StringLiteral on the bracket literal)" time="0.000094917">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; buildQuery prefixes &quot;?&quot; only when there are non-null params" time="0.005057292">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; parseBody detects JSON objects by leading &quot;{&quot; (kills StringLiteral on the brace literal)" time="0.000108708">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; parseBody returns undefined for empty body" time="0.004837125">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; parseBody returns raw string when body is non-JSON-shaped and no content-type" time="0.0000855">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; parseBody detects JSON arrays by leading &quot;[&quot; (kills StringLiteral on the bracket literal)" time="0.021082292">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; isJsonResponse handles mixed-case content-type (kills MethodExpression .toLowerCase)" time="0.000082542">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; parseBody detects JSON objects by leading &quot;{&quot; (kills StringLiteral on the brace literal)" time="0.000229583">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; hasHeader case-insensitivity (kills MethodExpression at transport.ts:44) &gt; does not double-set Authorization when caller passes lowercase &quot;authorization&quot;" time="0.000155667">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; parseBody returns raw string when body is non-JSON-shaped and no content-type" time="0.000078167">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; hasHeader case-insensitivity (kills MethodExpression at transport.ts:44) &gt; does not double-set x-tenant-id when caller passes mixed-case &quot;X-Tenant-ID&quot;" time="0.000113042">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; uses content-type to parse JSON primitives and keeps text/plain primitives as text" time="0.000124583">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; parseBody early-return on empty body (kills ConditionalExpression at transport.ts:57) &gt; returns undefined for empty body even when content-type is application/json" time="0.000064">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; isJsonResponse handles mixed-case content-type (kills MethodExpression .toLowerCase)" time="0.00006825">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; parseBody early-return on empty body (kills ConditionalExpression at transport.ts:57) &gt; returns undefined for empty body without content-type" time="0.000051625">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; hasHeader case-insensitivity (kills MethodExpression at transport.ts:44) &gt; does not double-set Authorization when caller passes lowercase &quot;authorization&quot;" time="0.000171834">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; resolveTenantId precedence (kills EqualityOperator at transport.ts:78) &gt; explicit tenantId=null overrides the tenantProvider (kills `!== undefined` → `=== undefined`)" time="0.000192584">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; hasHeader case-insensitivity (kills MethodExpression at transport.ts:44) &gt; does not double-set x-tenant-id when caller passes mixed-case &quot;X-Tenant-ID&quot;" time="0.000116083">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; resolveTenantId precedence (kills EqualityOperator at transport.ts:78) &gt; explicit tenantId=undefined falls through to the tenantProvider" time="0.000129958">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; parseBody early-return on empty body (kills ConditionalExpression at transport.ts:57) &gt; returns undefined for empty body even when content-type is application/json" time="0.000066167">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; refresh-and-replay sequence (kills ConditionalExpression survivors at transport.ts:133-141) &gt; does NOT replay when refresh returns null — surfaces UnauthorizedError once (kills `if (refreshed)` mutation)" time="0.000229875">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; parseBody early-return on empty body (kills ConditionalExpression at transport.ts:57) &gt; returns undefined for empty body without content-type" time="0.000051583">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; refresh-and-replay sequence (kills ConditionalExpression survivors at transport.ts:133-141) &gt; passes the parsed error body to onAuthFailure (kills BlockStatement {} at transport.ts:138)" time="0.000184333">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; resolveTenantId precedence (kills EqualityOperator at transport.ts:78) &gt; explicit tenantId=null overrides the tenantProvider (kills `!== undefined` → `=== undefined`)" time="0.000103333">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; refresh-and-replay sequence (kills ConditionalExpression survivors at transport.ts:133-141) &gt; does NOT call onAuthFailure when refresh succeeds and replay is OK" time="0.000138833">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; resolveTenantId precedence (kills EqualityOperator at transport.ts:78) &gt; explicit tenantId=undefined falls through to the tenantProvider" time="0.000071583">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; body serialization + Content-Type (kills survivors at transport.ts:122-127) &gt; serializes body via JSON.stringify and sets Content-Type when not provided" time="0.00008325">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; refresh-and-replay sequence (kills ConditionalExpression survivors at transport.ts:133-141) &gt; does NOT replay when refresh returns null — surfaces UnauthorizedError once (kills `if (refreshed)` mutation)" time="0.0001855">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; body serialization + Content-Type (kills survivors at transport.ts:122-127) &gt; does NOT set Content-Type when caller already provided one (case-insensitive)" time="0.000106375">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; refresh-and-replay sequence (kills ConditionalExpression survivors at transport.ts:133-141) &gt; passes the parsed error body to onAuthFailure (kills BlockStatement {} at transport.ts:138)" time="0.006942875">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; body serialization + Content-Type (kills survivors at transport.ts:122-127) &gt; omits body when request.body is undefined (kills ConditionalExpression at transport.ts:122)" time="0.000061834">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; refresh-and-replay sequence (kills ConditionalExpression survivors at transport.ts:133-141) &gt; does NOT call onAuthFailure when refresh succeeds and replay is OK" time="0.000521417">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; errors.ts createStynxSdkError per-class mapping &gt; 401 → UnauthorizedError with status, message, code (kills L51 StringLiteral)" time="0.000118958">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; body serialization + Content-Type (kills survivors at transport.ts:122-127) &gt; serializes body via JSON.stringify and sets Content-Type when not provided" time="0.004188208">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; errors.ts createStynxSdkError per-class mapping &gt; 403 → ForbiddenError with status (kills L54 EqualityOperator/ConditionalExpression)" time="0.000070417">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; body serialization + Content-Type (kills survivors at transport.ts:122-127) &gt; does NOT set Content-Type when caller already provided one (case-insensitive)" time="0.00312025">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; errors.ts createStynxSdkError per-class mapping &gt; 404 → NotFoundError" time="0.000057458">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; body serialization + Content-Type (kills survivors at transport.ts:122-127) &gt; omits body when request.body is undefined (kills ConditionalExpression at transport.ts:122)" time="0.000301875">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; errors.ts createStynxSdkError per-class mapping &gt; 409 → ConflictError" time="0.000074959">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; errors.ts createStynxSdkError per-class mapping &gt; 401 → UnauthorizedError with status, message, code (kills L51 StringLiteral)" time="0.000343041">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; errors.ts createStynxSdkError per-class mapping &gt; 429 → RateLimitError" time="0.000049208">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; errors.ts createStynxSdkError per-class mapping &gt; 403 → ForbiddenError with status (kills L54 EqualityOperator/ConditionalExpression)" time="0.000210791">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; errors.ts createStynxSdkError per-class mapping &gt; 400 → ValidationError (kills L67-68 EqualityOperator)" time="0.00005275">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; errors.ts createStynxSdkError per-class mapping &gt; 404 → NotFoundError" time="0.000164584">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; errors.ts createStynxSdkError per-class mapping &gt; 422 → ValidationError (kills L68 status === 422 → !== 422 mutation)" time="0.000040708">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; errors.ts createStynxSdkError per-class mapping &gt; 409 → ConflictError" time="0.000178584">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; errors.ts createStynxSdkError per-class mapping &gt; 500 with code ending in _VALIDATION_ERROR → ValidationError (kills L69 StringLiteral suffix)" time="0.000052417">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; errors.ts createStynxSdkError per-class mapping &gt; 429 → RateLimitError" time="0.002140834">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; errors.ts createStynxSdkError per-class mapping &gt; 500 with code NOT ending in _VALIDATION_ERROR → generic StynxSdkError, not ValidationError" time="0.000054041">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; errors.ts createStynxSdkError per-class mapping &gt; 400 → ValidationError (kills L67-68 EqualityOperator)" time="0.000408208">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; errors.ts createStynxSdkError per-class mapping &gt; 502 with no code → generic StynxSdkError (kills BlockStatement {} on 400/422 paths)" time="0.000138708">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; errors.ts createStynxSdkError per-class mapping &gt; 422 → ValidationError (kills L68 status === 422 → !== 422 mutation)" time="0.00027375">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; errors.ts createStynxSdkError per-class mapping &gt; falls back to &quot;Request failed with status N&quot; when payload has no message (kills L35 StringLiteral)" time="0.000066542">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; errors.ts createStynxSdkError per-class mapping &gt; 500 with code ending in _VALIDATION_ERROR → ValidationError (kills L69 StringLiteral suffix)" time="0.000224708">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; errors.ts createStynxSdkError per-class mapping &gt; falls back to default message when payload.message is empty string (kills L32 EqualityOperator length &gt; 0)" time="0.000042833">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; errors.ts createStynxSdkError per-class mapping &gt; 500 with code NOT ending in _VALIDATION_ERROR → generic StynxSdkError, not ValidationError" time="0.000191334">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; errors.ts createStynxSdkError per-class mapping &gt; preserves payload.context when present and discards when absent (kills resolveContext branches)" time="0.000082125">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; errors.ts createStynxSdkError per-class mapping &gt; 502 with no code → generic StynxSdkError (kills BlockStatement {} on 400/422 paths)" time="0.000398584">
         </testcase>
-        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; errors.ts createStynxSdkError per-class mapping &gt; isObject rejects null payload (kills L28 LogicalOperator)" time="0.000059833">
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; errors.ts createStynxSdkError per-class mapping &gt; falls back to &quot;Request failed with status N&quot; when payload has no message (kills L35 StringLiteral)" time="0.000189958">
+        </testcase>
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; errors.ts createStynxSdkError per-class mapping &gt; falls back to default message when payload.message is empty string (kills L32 EqualityOperator length &gt; 0)" time="0.00018125">
+        </testcase>
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; errors.ts createStynxSdkError per-class mapping &gt; preserves payload.context when present and discards when absent (kills resolveContext branches)" time="0.00810675">
+        </testcase>
+        <testcase classname="test/transport.spec.ts" name="@stynx-web/sdk transport &gt; errors.ts createStynxSdkError per-class mapping &gt; isObject rejects null payload (kills L28 LogicalOperator)" time="0.00016925">
         </testcase>
     </testsuite>
 </testsuites>
