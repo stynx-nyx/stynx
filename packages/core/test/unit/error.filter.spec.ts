@@ -58,6 +58,28 @@ describe('StynxErrorFilter', () => {
     });
   });
 
+  it('warns for client StynxError responses and errors for server failures', () => {
+    const moduleRef = { get: vi.fn(() => undefined) } as unknown as ModuleRef;
+    const filter = new StynxErrorFilter(moduleRef);
+    const logger = {
+      warn: vi.fn(),
+      error: vi.fn(),
+    };
+    Object.defineProperty(filter, 'logger', { value: logger });
+
+    filter.catch(
+      new StynxError('Client visible problem', { code: 'CLIENT', status: 499 }),
+      makeHost().host,
+    );
+    filter.catch(
+      new StynxError('Server failure', { code: 'SERVER', status: 500 }),
+      makeHost().host,
+    );
+
+    expect(logger.warn).toHaveBeenCalledWith('Client visible problem');
+    expect(logger.error).toHaveBeenCalledWith('Server failure', expect.any(String));
+  });
+
   it('omits context from the body when StynxError carries none', () => {
     const moduleRef = { get: vi.fn(() => undefined) } as unknown as ModuleRef;
     const filter = new StynxErrorFilter(moduleRef);
