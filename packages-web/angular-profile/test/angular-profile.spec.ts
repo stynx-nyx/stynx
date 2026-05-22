@@ -187,15 +187,21 @@ describe('@stynx-web/angular-profile', () => {
 
     await router.navigateByUrl('/');
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('[data-testid="profile-form"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="profile-form"]')?.getAttribute('data-testid')).toBe(
+      'profile-form',
+    );
 
     await router.navigateByUrl('/preferences');
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('[data-testid="preferences-form"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="preferences-form"]')?.getAttribute('data-testid')).toBe(
+      'preferences-form',
+    );
 
     await router.navigateByUrl('/security');
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('[data-testid="profile-security-route"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="profile-security-route"]')?.getAttribute('data-testid')).toBe(
+      'profile-security-route',
+    );
   });
 
   it('validates the profile form and emits only when dirty and valid', () => {
@@ -240,6 +246,43 @@ describe('@stynx-web/angular-profile', () => {
     ]);
   });
 
+  it('applies profile defaults, display-name fallback, and validator contracts exactly', () => {
+    const component = createWithFormBuilder(() => new StynxProfileFormComponent());
+
+    component.value = {
+      displayName: 'Display Name',
+      name: '',
+      email: 'display@example.test',
+      locale: 'pt-BR',
+    } as never;
+    expect(component.form.getRawValue()).toEqual({
+      name: 'Display Name',
+      email: 'display@example.test',
+      locale: 'pt-BR',
+    });
+
+    component.value = {
+      displayName: 123,
+      name: '',
+      email: 'fallback@example.test',
+      locale: 'en-US',
+    } as never;
+    expect(component.form.getRawValue()).toEqual({
+      name: '',
+      email: 'fallback@example.test',
+      locale: 'en-US',
+    });
+
+    component.form.patchValue({
+      name: 'x'.repeat(161),
+      email: 'not-email',
+      locale: '',
+    });
+    expect(component.form.controls.name.errors).toEqual(expect.objectContaining({ maxlength: expect.any(Object) }));
+    expect(component.form.controls.email.errors).toEqual(expect.objectContaining({ email: true }));
+    expect(component.form.controls.locale.errors).toEqual({ required: true });
+  });
+
   it('saves profile changes through ProfileService and reports failures', () => {
     const toast = { push: vi.fn() };
     const errorBanner = { clear: vi.fn(), show: vi.fn() };
@@ -274,7 +317,7 @@ describe('@stynx-web/angular-profile', () => {
       email: 'ana@example.test',
       locale: 'pt-BR',
     });
-    expect(errorBanner.clear).toHaveBeenCalled();
+    expect(errorBanner.clear).toHaveBeenCalledWith();
     expect(component.status()).toBe('saved');
     expect(component.form.dirty).toBe(false);
 
@@ -317,6 +360,44 @@ describe('@stynx-web/angular-profile', () => {
     expect(component.form.dirty).toBe(false);
   });
 
+  it('applies preference defaults and changes locale only for new non-empty values without a service', () => {
+    const i18n = {
+      translate: (key: string) => key,
+      use: vi.fn(async () => undefined),
+    };
+    const toast = { push: vi.fn() };
+    const component = createWithFormBuilder(
+      () => new StynxPreferencesFormComponent(),
+      [
+        { provide: StynxI18nService, useValue: i18n },
+        { provide: StynxToastService, useValue: toast },
+      ],
+    );
+    const seen: unknown[] = [];
+    component.save.subscribe((value) => seen.push(value));
+
+    component.status.set('error');
+    component.errorMessage.set('old error');
+    component.value = { locale: '', notifications: undefined } as never;
+
+    expect(component.form.getRawValue()).toEqual({ locale: 'en-US', notifications: false });
+    expect(component.status()).toBe('idle');
+    expect(component.errorMessage()).toBe('');
+
+    component.form.patchValue({ notifications: true });
+    component.form.markAsDirty();
+    component.submit();
+    expect(seen.at(-1)).toEqual({ locale: 'en-US', notifications: true });
+    expect(i18n.use).not.toHaveBeenCalled();
+    expect(component.status()).toBe('saved');
+    expect(toast.push).toHaveBeenCalledWith('profile.preferences.toast.saved', 'success');
+
+    component.form.patchValue({ locale: 'pt-BR' });
+    component.form.markAsDirty();
+    component.submit();
+    expect(i18n.use).toHaveBeenCalledWith('pt-BR');
+  });
+
   it('saves preferences through ProfileService, changes locale, and reports failures', () => {
     const toast = { push: vi.fn() };
     const errorBanner = { clear: vi.fn(), show: vi.fn() };
@@ -349,7 +430,7 @@ describe('@stynx-web/angular-profile', () => {
     component.submit();
 
     expect(profile.setPreferences).toHaveBeenCalledWith({ locale: 'pt-BR', notifications: true });
-    expect(errorBanner.clear).toHaveBeenCalled();
+    expect(errorBanner.clear).toHaveBeenCalledWith();
     expect(i18n.use).toHaveBeenCalledWith('pt-BR');
     expect(component.status()).toBe('saved');
     expect(component.form.getRawValue()).toEqual({ locale: 'pt-BR', notifications: true });

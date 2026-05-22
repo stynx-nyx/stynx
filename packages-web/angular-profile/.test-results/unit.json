@@ -5,9 +5,9 @@
   "runner": "vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-20T17:14:39.577Z",
-  "endedAt": "2026-05-20T17:14:41.159Z",
-  "durationMs": 1582,
+  "startedAt": "2026-05-22T00:36:49.386Z",
+  "endedAt": "2026-05-22T00:36:52.472Z",
+  "durationMs": 3086,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -26,7 +26,7 @@
       "./vitest.config.ts",
       "--reporter=default",
       "--reporter=json",
-      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-38921-1779297279577.json",
+      "--outputFile.json=/var/folders/5c/m4tbc9kj091cw8v71dnxtrt00000gn/T/vitest-29896-1779410209385.json",
       "--reporter=junit",
       "--outputFile.junit=/Users/aarusso/Development/stech/stynx/packages-web/angular-profile/.test-results/unit.junit.xml"
     ],
@@ -37,8 +37,8 @@
   },
   "totals": {
     "files": 1,
-    "tests": 10,
-    "passed": 10,
+    "tests": 12,
+    "passed": 12,
     "failed": 0,
     "skipped": 0,
     "todo": 0
@@ -47,52 +47,52 @@
     {
       "name": "@stynx-web/angular-profile renders profile and preferences forms with translated labels and DOM validation state",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-profile/test/angular-profile.spec.ts",
-      "durationMs": 85.98062499999992
+      "durationMs": 92.78141700000015
     },
     {
       "name": "@stynx-web/angular-profile navigates profile routes to the shipped standalone components",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-profile/test/angular-profile.spec.ts",
-      "durationMs": 33.67662500000006
+      "durationMs": 33.32237499999974
     },
     {
       "name": "@stynx-web/angular-profile renders the security handoff surface and opens hosted auth actions from buttons",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-profile/test/angular-profile.spec.ts",
-      "durationMs": 15.884874999999965
-    },
-    {
-      "name": "@stynx-web/angular-profile saves profile changes through ProfileService and reports failures",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-profile/test/angular-profile.spec.ts",
-      "durationMs": 1.339666999999963
-    },
-    {
-      "name": "@stynx-web/angular-profile validates the profile form and emits only when dirty and valid",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-profile/test/angular-profile.spec.ts",
-      "durationMs": 1.3032499999999345
+      "durationMs": 19.766875000000255
     },
     {
       "name": "@stynx-web/angular-profile saves preferences through ProfileService, changes locale, and reports failures",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-profile/test/angular-profile.spec.ts",
-      "durationMs": 1.184624999999869
+      "durationMs": 1.9504170000000158
+    },
+    {
+      "name": "@stynx-web/angular-profile saves profile changes through ProfileService and reports failures",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-profile/test/angular-profile.spec.ts",
+      "durationMs": 1.6552920000003724
+    },
+    {
+      "name": "@stynx-web/angular-profile validates the profile form and emits only when dirty and valid",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-profile/test/angular-profile.spec.ts",
+      "durationMs": 1.1869999999998981
+    },
+    {
+      "name": "@stynx-web/angular-profile applies preference defaults and changes locale only for new non-empty values without a service",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-profile/test/angular-profile.spec.ts",
+      "durationMs": 0.7820409999999356
+    },
+    {
+      "name": "@stynx-web/angular-profile applies profile defaults, display-name fallback, and validator contracts exactly",
+      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-profile/test/angular-profile.spec.ts",
+      "durationMs": 0.6340420000001359
     },
     {
       "name": "@stynx-web/angular-profile tracks dirty state in the preferences form",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-profile/test/angular-profile.spec.ts",
-      "durationMs": 0.5110419999998612
+      "durationMs": 0.41116699999975026
     },
     {
       "name": "@stynx-web/angular-profile opens the configured change-password hosted action",
       "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-profile/test/angular-profile.spec.ts",
-      "durationMs": 0.3017499999998563
-    },
-    {
-      "name": "@stynx-web/angular-profile reports hosted action configuration errors to the standard error banner",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-profile/test/angular-profile.spec.ts",
-      "durationMs": 0.21041700000000674
-    },
-    {
-      "name": "@stynx-web/angular-profile marks MFA enrolment unavailable when no hosted action URL is configured",
-      "file": "/Users/aarusso/Development/stech/stynx/packages-web/angular-profile/test/angular-profile.spec.ts",
-      "durationMs": 0.12745799999993324
+      "durationMs": 0.356916000000183
     }
   ]
 }
