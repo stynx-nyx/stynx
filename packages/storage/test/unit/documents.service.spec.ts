@@ -4,7 +4,6 @@ import {
   StorageCollectionNotFoundError,
   StorageDocumentNotFoundError,
   StorageTenantMismatchError,
-  StorageValidationError,
 } from '../../src/errors';
 import type { Mock } from 'vitest';
 
@@ -86,6 +85,64 @@ describe('DocumentsService', () => {
     );
   });
 
+  it('normalizes initiate inputs and persists exact document metadata', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-05-21T14:03:04.000Z'));
+    const { service, db, s3 } = createService();
+    let inserted: Record<string, unknown> | undefined;
+    db.tx.mockImplementation(async (fn: (trx: { insert: () => { values: (value: Record<string, unknown>) => Promise<void> } }) => Promise<void>) =>
+      fn({
+        insert: () => ({
+          values: async (value) => {
+            inserted = value;
+          },
+        }),
+      }),
+    );
+    s3.presignUpload.mockResolvedValue({
+      method: 'PUT',
+      url: 'https://upload.test',
+      headers: { 'content-type': 'application/pdf' },
+      expiresInSeconds: 300,
+    });
+
+    try {
+      const result = await service.initiate({
+        collection: 'invoices',
+        filename: '../unsafe name?.PDF',
+        mimeType: ' APPLICATION/PDF ',
+        byteSize: 1024,
+        checksumSha256: 'A'.repeat(64),
+        classification: 'restricted',
+      });
+
+      expect(result.s3Key).toMatch(
+        /^tenant-1\/invoices\/2026\/05\/21\/.+\/1\/unsafe_name_.PDF$/,
+      );
+      expect(inserted).toMatchObject({
+        tenantId: 'tenant-1',
+        collection: 'invoices',
+        s3Key: result.s3Key,
+        filename: 'unsafe_name_.PDF',
+        mimeType: 'application/pdf',
+        byteSize: 1024,
+        checksumSha256: 'a'.repeat(64),
+        scanStatus: 'not_scanned',
+        scanDetail: {},
+        encryption: 'aws:kms',
+        classification: 'restricted',
+        ownerUserId: 'user-1',
+      });
+      expect(s3.presignUpload).toHaveBeenCalledWith({
+        key: result.s3Key,
+        contentType: 'application/pdf',
+        checksumSha256: 'a'.repeat(64),
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('rejects collection size overflow', async () => {
     const { service } = createService();
     await expect(
@@ -93,10 +150,17 @@ describe('DocumentsService', () => {
         collection: 'invoices',
         filename: 'invoice.pdf',
         mimeType: 'application/pdf',
-        byteSize: 2048,
-        checksumSha256: 'a'.repeat(64),
+      byteSize: 2048,
+      checksumSha256: 'a'.repeat(64),
       }),
-    ).rejects.toBeInstanceOf(StorageValidationError);
+    ).rejects.toMatchObject({
+      message: 'Document exceeds the collection size limit',
+      context: {
+        collection: 'invoices',
+        byteSize: 2048,
+        maxBytes: 1024,
+      },
+    });
   });
 
   it('rejects unknown collections, disallowed mime types, bad checksums, and missing context', async () => {
@@ -114,15 +178,26 @@ describe('DocumentsService', () => {
       mimeType: 'image/png',
       byteSize: 1,
       checksumSha256: 'a'.repeat(64),
-    })).rejects.toBeInstanceOf(StorageValidationError);
+    })).rejects.toMatchObject({
+      message: 'MIME type is not allowed for this collection',
+      context: { collection: 'invoices', mimeType: 'image/png' },
+    });
 
     await expect(createService().service.initiate({
       collection: 'invoices',
       filename: 'invoice.pdf',
       mimeType: 'application/pdf',
       byteSize: 1,
-      checksumSha256: 'not-hex',
-    })).rejects.toBeInstanceOf(StorageValidationError);
+      checksumSha256: `${'a'.repeat(64)}f`,
+    })).rejects.toThrow('checksum_sha256 must be a 64-character hex digest');
+
+    await expect(createService().service.initiate({
+      collection: 'invoices',
+      filename: 'invoice.pdf',
+      mimeType: 'application/pdf',
+      byteSize: 1,
+      checksumSha256: `f${'a'.repeat(64)}`,
+    })).rejects.toThrow('checksum_sha256 must be a 64-character hex digest');
 
     await expect(createService({ requestContext: { actorId: 'user-1' } }).service.initiate({
       collection: 'invoices',

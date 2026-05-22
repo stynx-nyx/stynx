@@ -65,7 +65,10 @@ describe('S3Service', () => {
     ).resolves.toBe('https://signed.example.test/object');
     await expect(
       service.presignDownloadForTenant({ key: 'tenant-a/docs/three.pdf', tenantId: 'tenant-a' }),
-    ).rejects.toBeInstanceOf(StorageValidationError);
+    ).rejects.toMatchObject({
+      message: 'Presign rate limit exceeded for tenant tenant-a: 2 per minute',
+      context: { tenantId: 'tenant-a', limit: 2 },
+    });
 
     expect(getSignedUrl).toHaveBeenCalledTimes(2);
     const signedCommand = (getSignedUrl as Mock).mock.calls[0]?.[1];
@@ -74,6 +77,26 @@ describe('S3Service', () => {
     vi.spyOn(Date, 'now').mockReturnValue(new Date('2026-04-26T12:01:01.000Z').getTime());
     await expect(
       service.presignDownloadForTenant({ key: 'tenant-a/docs/four.pdf', tenantId: 'tenant-a', expiresInSeconds: 10 }),
+    ).resolves.toBe('https://signed.example.test/object');
+  });
+
+  it('resets tenant presign counters exactly at the one-minute boundary', async () => {
+    const service = new S3Service({
+      environment: 'dev',
+      region: 'us-east-1',
+      kmsAlias: 'stynx-docs',
+      collections: {},
+      compliance: {
+        presignRateLimit: { maxPerMinute: 1 },
+      },
+    });
+
+    await expect(
+      service.presignDownloadForTenant({ key: 'tenant-a/docs/one.pdf', tenantId: 'tenant-a' }),
+    ).resolves.toBe('https://signed.example.test/object');
+    vi.spyOn(Date, 'now').mockReturnValue(new Date('2026-04-26T12:01:00.000Z').getTime());
+    await expect(
+      service.presignDownloadForTenant({ key: 'tenant-a/docs/two.pdf', tenantId: 'tenant-a' }),
     ).resolves.toBe('https://signed.example.test/object');
   });
 
@@ -221,7 +244,11 @@ describe('S3Service', () => {
       });
       expect(result.url).toBe('https://signed.example.test/object');
       expect(result.expiresInSeconds).toBe(300);
-      expect(getSignedUrl).toHaveBeenCalled();
+      expect(getSignedUrl).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.any(GetObjectCommand),
+        { expiresIn: 300 },
+      );
       const cmd = (getSignedUrl as Mock).mock.calls[0]?.[1] as GetObjectCommand;
       expect(cmd.input.Bucket).toBe('stynx-docs-prod-us-east-1');
       expect(cmd.input.Key).toBe('tenant-a/docs/file.pdf');
