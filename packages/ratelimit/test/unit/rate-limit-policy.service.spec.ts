@@ -83,6 +83,16 @@ describe('DatabaseRateLimitPolicyResolver', () => {
     const resolved = await resolver.resolve(request, metadata);
     expect(resolved.limit).toBe(33);
     expect(resolved.windowSeconds).toBe(7);
+    expect(db.withSystemContext).toHaveBeenNthCalledWith(
+      1,
+      'rate limit policy override lookup',
+      expect.any(Function),
+    );
+    expect(db.tx).toHaveBeenNthCalledWith(1, expect.any(Function), {
+      role: 'owner',
+      readonly: true,
+      replica: false,
+    });
   });
 
   it('falls back to platform config (core.config) when no override', async () => {
@@ -96,10 +106,15 @@ describe('DatabaseRateLimitPolicyResolver', () => {
     const resolved = await resolver.resolve(request, metadata);
     expect(resolved.limit).toBe(88);
     expect(resolved.windowSeconds).toBe(22);
+    expect(db.withSystemContext).toHaveBeenNthCalledWith(
+      2,
+      'rate limit platform config lookup',
+      expect.any(Function),
+    );
   });
 
   it('tries the colon platform config key when the dot key is not present', async () => {
-    const { db } = makeDatabase([
+    const { db, trx } = makeDatabase([
       [], // lookupLimit -> no override
       [], // lookupLimit -> ratelimit.documents.write
       [{ value: { limit: 44 } }], // lookupLimit -> ratelimit:documents.write
@@ -113,6 +128,16 @@ describe('DatabaseRateLimitPolicyResolver', () => {
 
     expect(resolved.limit).toBe(44);
     expect(resolved.windowSeconds).toBe(12);
+    expect(trx.query).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining('from core.config'),
+      ['ratelimit.documents.write'],
+    );
+    expect(trx.query).toHaveBeenNthCalledWith(
+      3,
+      expect.stringContaining('from core.config'),
+      ['ratelimit:documents.write'],
+    );
   });
 
   it('skips override lookup when tenantId is undefined', async () => {

@@ -5,9 +5,9 @@
   "runner": "stryker-vitest",
   "runnerVersion": "3.2.4",
   "status": "passed",
-  "startedAt": "2026-05-20T02:12:40.711Z",
-  "endedAt": "2026-05-20T02:12:49.436Z",
-  "durationMs": 8725,
+  "startedAt": "2026-05-22T00:25:26.996Z",
+  "endedAt": "2026-05-22T00:31:33.551Z",
+  "durationMs": 366555,
   "exitCode": 0,
   "signal": null,
   "artifacts": {
@@ -25,18 +25,18 @@
   },
   "metric": {
     "kind": "score",
-    "score": 71.11111111111111,
+    "score": 77.77777777777779,
     "thresholds": {
-      "high": 60,
+      "high": 80,
       "low": 60,
-      "break": 60
+      "break": 70
     }
   },
   "totals": {
     "files": 3,
     "tests": 285,
-    "passed": 96,
-    "failed": 39,
+    "passed": 105,
+    "failed": 30,
     "skipped": 0,
     "todo": 0
   }
