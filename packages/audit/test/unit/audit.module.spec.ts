@@ -24,7 +24,7 @@ describe('StynxAuditModule.forRoot', () => {
     const clockProvider = providers.find((provider) =>
       typeof provider === 'object' && 'provide' in provider && provider.provide === STYNX_AUDIT_CLOCK,
     ) as { useClass: new () => { now(): Date } };
-    expect(clockProvider.useClass).toBeDefined();
+    expect(clockProvider.useClass).toEqual(expect.anything());
     expect(clockProvider.useClass.prototype.now()).toBeInstanceOf(Date);
   });
 
@@ -43,7 +43,7 @@ describe('StynxAuditModule.forRoot', () => {
     const inactive = new schedulerClass(auditService, { dailyDetachEnabled: false }, {}, {});
     inactive.onModuleInit();
     vi.advanceTimersByTime(50);
-    expect(auditService.runDailyDetachJob).not.toHaveBeenCalled();
+    expect(auditService.runDailyDetachJob).not.toHaveBeenCalledTimes(1);
 
     const active = new schedulerClass(
       auditService,

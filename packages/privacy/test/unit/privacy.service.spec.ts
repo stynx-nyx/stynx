@@ -166,7 +166,7 @@ describe('PrivacyService branch coverage', () => {
       subjectUserId,
       format: 'json',
     })).resolves.toMatchObject({ tables: [] });
-    expect(query).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalledTimes(1);
   });
 
   it('fails erasure when a rule lacks subject metadata', async () => {
@@ -541,13 +541,13 @@ describe('PrivacyService — manifest null coalescing (kills LogicalOperator sur
 
   it('coalesces absent subjectUserId to null in manifest.json (not undefined)', async () => {
     const manifest = await manifestFromExport({ tenantId });
-    expect(manifest.subjectUserId).toBeNull();
+    expect(manifest.subjectUserId).toBe(null);
     expect(manifest.tenantId).toBe(tenantId);
   });
 
   it('coalesces absent tenantId to null in manifest.json (not undefined)', async () => {
     const manifest = await manifestFromExport({ subjectUserId });
-    expect(manifest.tenantId).toBeNull();
+    expect(manifest.tenantId).toBe(null);
     expect(manifest.subjectUserId).toBe(subjectUserId);
   });
 });

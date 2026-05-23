@@ -134,7 +134,7 @@ describe('StynxAuthService', () => {
       { device: 'browser' },
       { membershipId: 'membership-1', permsHash: 'hash-1' },
     );
-    expect(permissionCache.prime).toHaveBeenCalled();
+    expect(permissionCache.prime).toHaveBeenCalledTimes(1);
     expect(requestContextMutator.patch).toHaveBeenCalledWith({
       tenantId: 'tenant-1',
       actorId: 'user-1',
@@ -163,7 +163,7 @@ describe('StynxAuthService', () => {
       expect.stringContaining('insert into auth.users'),
       expect.arrayContaining(['cognito-2@stynx.local', 'cognito-2']),
     );
-    expect(requestContextMutator.runWithRequestContext).toHaveBeenCalled();
+    expect(requestContextMutator.runWithRequestContext).toHaveBeenCalledTimes(2);
   });
 
   it('creates a request context when only the mutator provider is available', async () => {
@@ -185,7 +185,7 @@ describe('StynxAuthService', () => {
 
     await expect(service.exchangeCognitoToken('token', 'tenant-6')).resolves.toEqual(sessionBundle);
 
-    expect(requestContextMutator.patch).not.toHaveBeenCalled();
+    expect(requestContextMutator.patch).not.toHaveBeenCalledTimes(1);
     expect(requestContextMutator.runWithRequestContext).toHaveBeenCalledWith(
       expect.objectContaining({ tenantId: 'tenant-6', actorId: 'user-6' }),
       expect.any(Function),
@@ -273,7 +273,7 @@ describe('StynxAuthService', () => {
     expect(permissionCache.invalidateSid).toHaveBeenCalledWith('sid-1');
 
     await expect(service.inspectPermissions('sid-1')).resolves.toEqual({ sid: 'sid-1' });
-    await expect(service.invalidatePermissions('sid-2')).resolves.toBeUndefined();
+    await expect(service.invalidatePermissions('sid-2')).resolves.toBe(undefined);
     expect(permissionCache.invalidateSid).toHaveBeenCalledWith('sid-2');
   });
 

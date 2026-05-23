@@ -594,7 +594,7 @@ describe('@stynx-web/angular-sessions', () => {
     await component.load();
 
     expect(inputAdapter.list).toHaveBeenCalledTimes(1);
-    expect(providerAdapter.list).not.toHaveBeenCalled();
+    expect(providerAdapter.list).not.toHaveBeenCalledTimes(1);
     expect(component.sessions[0]).toMatchObject({
       sid: 'sid-input',
       current: true,

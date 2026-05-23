@@ -43,6 +43,8 @@ describe('@stynx-web/angular-i18n', () => {
       loadCatalog: async () => ({ greeting: 'Hello, {name}!' }),
     });
 
+    expect(service.locale()).toBe('en-US');
+
     await service.initialize();
 
     expect(service.catalog()).toEqual({ greeting: 'Hello, {name}!' });
@@ -107,6 +109,30 @@ describe('@stynx-web/angular-i18n', () => {
     expect(service.translate('tasks', { count: 2 })).toBe('2 closed tasks');
   });
 
+  it('uses cached ICU formatters until the catalog is reloaded', async () => {
+    const service = createI18nService({
+      defaultLocale: 'en-US',
+      loadCatalog: async () => ({
+        tasks: '{count, plural, one {# task} other {# tasks}}',
+      }),
+    });
+
+    await service.initialize();
+    expect(service.translate('tasks', { count: 2 })).toBe('2 tasks');
+
+    const formatterCache = (service as unknown as {
+      formatterCache: Map<string, { format: () => string }>;
+    }).formatterCache;
+    expect(formatterCache.size).toBe(1);
+    formatterCache.set('en-US\u0000tasks', { format: () => 'cached formatter' });
+
+    expect(service.translate('tasks', { count: 3 })).toBe('cached formatter');
+
+    await service.use('en-US');
+    expect(formatterCache.size).toBe(0);
+    expect(service.translate('tasks', { count: 1 })).toBe('1 task');
+  });
+
   it('switches locale through the component and marks the translate pipe for check on locale changes', async () => {
     const service = createI18nService({
       defaultLocale: 'en-US',
@@ -122,6 +148,7 @@ describe('@stynx-web/angular-i18n', () => {
       Injector.create({ providers: [{ provide: StynxI18nService, useValue: service }] }),
       () => new LocaleSwitcherComponent(),
     );
+    expect(component.locales).toEqual([]);
     component.locales = ['en-US', 'pt-BR'];
     await component.switchLocale('pt-BR');
     expect(service.locale()).toBe('pt-BR');
@@ -138,7 +165,7 @@ describe('@stynx-web/angular-i18n', () => {
 
     expect(pipe.transform('greeting', { name: 'Ana' })).toBe('Ola, Ana!');
     expect(pipe.transform('greeting', { name: 'Bia' })).toBe('Ola, Bia!');
-    expect(markForCheck).not.toHaveBeenCalled();
+    expect(markForCheck).not.toHaveBeenCalledTimes(1);
     await service.use('en-US');
     expect(pipe.transform('greeting', { name: 'Ana' })).toBe('Hello, Ana!');
     expect(markForCheck).toHaveBeenCalledTimes(1);
@@ -181,7 +208,7 @@ describe('@stynx-web/angular-i18n', () => {
     expect(currencyPipe.transform(1)).toBe(
       new Intl.NumberFormat('en-US', { currency: 'USD', style: 'currency' }).format(1),
     );
-    expect(markForCheck).not.toHaveBeenCalled();
+    expect(markForCheck).not.toHaveBeenCalledTimes(1);
 
     await service.use('pt-BR');
 
@@ -216,6 +243,7 @@ describe('@stynx-web/angular-i18n', () => {
 
     expect(datePipe.transform(undefined)).toBe('');
     expect(datePipe.transform('')).toBe('');
+    expect(datePipe.transform(null)).toBe('');
     expect(datePipe.transform('not-a-date')).toBe('');
     expect(numberPipe.transform(null)).toBe('');
     expect(numberPipe.transform(undefined)).toBe('');

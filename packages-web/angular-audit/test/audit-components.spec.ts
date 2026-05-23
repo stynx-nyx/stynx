@@ -235,20 +235,20 @@ describe('@stynx-web/angular-audit E.6 components', () => {
 
     expect(api.verifyHashIntegrity).toHaveBeenCalledWith('event-1');
     expect(fixture.nativeElement.textContent).toContain('audit.integrity.valid');
-    expect(fixture.nativeElement.querySelector('[data-tone="valid"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('[data-tone="valid"]')).toEqual(expect.anything());
 
     api.verifyHashIntegrity.mockReturnValueOnce(of({ ...REPORT, valid: false, firstBrokenEventId: 'event-0' }));
     fixture.componentRef.setInput('eventId', 'event-2');
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('audit.integrity.broken');
-    expect(fixture.nativeElement.querySelector('[data-tone="broken"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('[data-tone="broken"]')).toEqual(expect.anything());
 
     api.verifyHashIntegrity.mockReturnValueOnce(throwError(() => new Error('integrity unavailable')));
     fixture.componentRef.setInput('eventId', 'event-3');
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('audit.integrity.unchecked');
-    expect(fixture.nativeElement.querySelector('[data-tone="unchecked"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('[data-tone="unchecked"]')).toEqual(expect.anything());
   });
 });

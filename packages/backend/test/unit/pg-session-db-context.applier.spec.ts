@@ -17,7 +17,7 @@ describe('PgSessionDbContextApplier', () => {
     const applier = new PgSessionDbContextApplier({ enableRowSecurity: false });
     await applier.apply(client, { tenantId: 'tenant-1' });
     const rsCall = client.query.mock.calls.find(([sql]) => sql === 'SET row_security = on');
-    expect(rsCall).toBeUndefined();
+    expect(rsCall).toBe(undefined);
   });
 
   it('writes tenantId via set_config to all default tenant setting names', async () => {

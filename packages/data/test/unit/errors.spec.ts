@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import {
   ActorContextMissingError,
@@ -32,8 +33,8 @@ describe('data errors', () => {
   });
 
   it('omits optional error context when no context is provided', () => {
-    expect(new ReadOnlyViolationError().context).toBeUndefined();
-    expect(new StatementTimeoutError().context).toBeUndefined();
-    expect(new SerializationFailureError().context).toBeUndefined();
+    expect(new ReadOnlyViolationError().context).toBe(undefined);
+    expect(new StatementTimeoutError().context).toBe(undefined);
+    expect(new SerializationFailureError().context).toBe(undefined);
   });
 });

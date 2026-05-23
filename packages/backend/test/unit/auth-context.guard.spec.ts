@@ -34,7 +34,7 @@ describe('AuthContextGuard', () => {
     const guard = new AuthContextGuard(verifier as never);
     const request: Record<string, unknown> = { headers: {} };
     await expect(guard.canActivate(ctx(request))).resolves.toBe(true);
-    expect(request.principal).toBeDefined();
+    expect(request.principal).toEqual(expect.anything());
     expect((request.user as { id: string }).id).toBe('p-1');
     expect((request.actor as { roles: string[] }).roles).toEqual(['admin']);
     expect(request.tenantId).toBe('t-1');
@@ -87,7 +87,7 @@ describe('AuthContextGuard', () => {
     const guard = new AuthContextGuard(verifier as never);
     const request: Record<string, unknown> = { headers: {} };
     await guard.canActivate(ctx(request));
-    expect(request.tenantId).toBeUndefined();
+    expect(request.tenantId).toBe(undefined);
   });
 
   it('throws Forbidden when tenantEntitlementPolicy denies the tenant', async () => {
@@ -130,7 +130,7 @@ describe('AuthContextGuard', () => {
     const guard = new AuthContextGuard(verifier as never, mapper as never);
     const request: Record<string, unknown> = { headers: {} };
     await guard.canActivate(ctx(request));
-    expect(mapper.map).toHaveBeenCalled();
+    expect(mapper.map).toHaveBeenCalledTimes(1);
     expect((request.principal as { id: string }).id).toBe('mapped');
   });
 

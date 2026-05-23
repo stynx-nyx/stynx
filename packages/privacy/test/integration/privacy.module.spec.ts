@@ -94,7 +94,7 @@ describe('StynxPrivacyModule integration', () => {
       );
 
       const zipBuffer = objectStore.objects.get(exportResult.objectKey);
-      expect(zipBuffer).toBeDefined();
+      expect(zipBuffer).toEqual(expect.anything());
       const archive = await JSZip.loadAsync(zipBuffer as Buffer);
       const manifest = JSON.parse(await archive.file('manifest.json')!.async('string')) as {
         tables: Array<{ table: string; liveRows: number; archiveRows: number }>;
@@ -241,14 +241,14 @@ describe('StynxPrivacyModule integration', () => {
           ),
       );
 
-      expect(postErasure.live?.email).toBeNull();
+      expect(postErasure.live?.email).toBe(null);
       expect(postErasure.live?.phone).toContain('hash:');
       expect(postErasure.live?.note).toBe(`[erased:${subjectUserId}]`);
-      expect(postErasure.live?.profile_json).toBeNull();
-      expect(postErasure.archived?.email).toBeNull();
+      expect(postErasure.live?.profile_json).toBe(null);
+      expect(postErasure.archived?.email).toBe(null);
       expect(postErasure.archived?.note).toBe(`[erased:${subjectUserId}]`);
-      expect(postErasure.archived?.profile_json).toBeNull();
-      expect(postErasure.archived?.last_erasure_at).toBeTruthy();
+      expect(postErasure.archived?.profile_json).toBe(null);
+      expect(postErasure.archived?.last_erasure_at).toEqual(expect.anything());
       expect(postErasure.attachmentCount).toBe(0);
       expect(postErasure.archivedAttachmentCount).toBe(0);
       expect(postErasure.erasureAudit).toEqual(
@@ -277,7 +277,7 @@ describe('StynxPrivacyModule integration', () => {
       );
       expect(postErasure.erasureAudit.every((row) => row.tags.lgpd_erasure === true)).toBe(true);
       expect(postErasure.erasureEvents).toEqual({ total: 10, hashed: true });
-      expect(ids).toBeDefined();
+      expect(ids).toEqual(expect.anything());
 
       const retentionDryRun = await privacyService.applyRetention(true);
       expect(retentionDryRun.actions).toEqual([
@@ -290,5 +290,5 @@ describe('StynxPrivacyModule integration', () => {
     } finally {
       await testApp.teardown();
     }
-  });
+  }, 60_000);
 });

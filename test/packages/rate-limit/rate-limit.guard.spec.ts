@@ -76,7 +76,14 @@ describe('RateLimitGuard', () => {
     await expect(guard.canActivate(createExecutionContext(request))).resolves.toBe(true);
     await expect(guard.canActivate(createExecutionContext(request))).resolves.toBe(true);
     expect(store.increment).toHaveBeenCalledTimes(2);
-    expect(store.cleanup).toHaveBeenCalled();
+    expect(store.cleanup).toHaveBeenCalledTimes(2);
+    expect(store.cleanup).toHaveBeenCalledWith(
+      expect.objectContaining({
+        bucketKey: '127.0.0.1:POST:/api/v1/users',
+        tenantId: '11111111-1111-1111-1111-111111111111',
+        ttlMs: 60000,
+      }),
+    );
   });
 
   it('throws 429 when distributed hits exceed limit', async () => {

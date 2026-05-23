@@ -138,7 +138,7 @@ describe('IdentityAdminService', () => {
       const localSync = makeLocalSync();
       const svc = new IdentityAdminService(makeAdapter(), localSync);
       await svc.syncToLocal();
-      expect(localSync.syncToLocal).toHaveBeenCalled();
+      expect(localSync.syncToLocal).toHaveBeenCalledTimes(1);
       await svc.syncUser('alice', { reason: 'manual' } as never);
       expect(localSync.syncUser).toHaveBeenCalledWith('alice', { reason: 'manual' });
       await svc.listGroupsWithMetaByUserId('user-1');

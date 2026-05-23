@@ -268,7 +268,7 @@ describe('StynxAuthController API error matrix', () => {
           expect(body).toEqual({ status: 'ok' });
         });
 
-      await expect(authService.inspectPermissions(targetSession.sid)).resolves.toBeNull();
+      await expect(authService.inspectPermissions(targetSession.sid)).resolves.toBe(null);
     });
 
     it('returns 401 when the STYNX bearer token is missing', async () => {

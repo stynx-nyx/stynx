@@ -1,4 +1,4 @@
-import { ForbiddenException, ServiceUnavailableException } from '@nestjs/common';
+import { ServiceUnavailableException } from '@nestjs/common';
 import { HealthCheckError } from '@nestjs/terminus';
 import { StynxHealthController } from '../../src/health.controller';
 import type { StynxHealthService } from '../../src/health.service';
@@ -51,9 +51,9 @@ describe('StynxHealthController API contract', () => {
       send: vi.fn(),
     };
 
-    await expect(controller.metricsEndpoint({ ip: '10.0.0.1' }, response)).rejects.toBeInstanceOf(
-      ForbiddenException,
-    );
+    await expect(controller.metricsEndpoint({ ip: '10.0.0.1' }, response)).rejects.toMatchObject({
+      response: expect.objectContaining({ message: 'Metrics endpoint is restricted' }),
+    });
     await controller.metricsEndpoint({ ip: '127.0.0.1' }, response);
 
     expect(response.setHeader).toHaveBeenCalledWith('content-type', 'text/plain; version=0.0.4');
@@ -63,6 +63,7 @@ describe('StynxHealthController API contract', () => {
 
   it('allows metrics without an allowlist and falls back to empty client IP', async () => {
     const { controller } = createController(async () => ({ status: 'ok' }));
+    const emptyIpAllowed = createController(async () => ({ status: 'ok' }), ['']);
     const response = {
       setHeader: vi.fn(),
       send: vi.fn(),
@@ -71,6 +72,7 @@ describe('StynxHealthController API contract', () => {
     await controller.metricsEndpoint({}, response);
 
     expect(response.send).toHaveBeenCalledWith('metric 1\n');
+    await expect(emptyIpAllowed.controller.metricsEndpoint({}, response)).resolves.toBe(undefined);
   });
 
   it('returns base info when app info is omitted', () => {

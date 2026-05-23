@@ -62,7 +62,6 @@ describe('AuditInterceptor metadata redaction', () => {
 
     expect(sink.write).toHaveBeenCalledTimes(1);
     const firstCall = sink.write.mock.calls[0];
-    expect(firstCall).toBeDefined();
     if (!firstCall) {
       throw new Error('Missing sink write call');
     }
@@ -99,7 +98,6 @@ describe('AuditInterceptor metadata redaction', () => {
       lastValueFrom(interceptor.intercept(createExecutionContext({ headers: {} }), next)),
     ).resolves.toBe('ok');
     const firstCall = sink.write.mock.calls[0];
-    expect(firstCall).toBeDefined();
     if (!firstCall) {
       throw new Error('Missing sink write call');
     }

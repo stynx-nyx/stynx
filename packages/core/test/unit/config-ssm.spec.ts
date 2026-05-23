@@ -137,6 +137,6 @@ describe('loadStynxConfiguration SSM loading', () => {
     expect(service.snapshot()).toEqual({ VALUE: 'ok' });
 
     const serviceWithoutOptions = new StynxConfigService({ VALUE: 'ok' });
-    expect(serviceWithoutOptions.appName).toBeUndefined();
+    expect(serviceWithoutOptions.appName).toBe(undefined);
   });
 });

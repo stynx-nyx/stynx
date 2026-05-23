@@ -16,7 +16,7 @@ describe('TenantLifecycleMiddleware', () => {
     const mw = new TenantLifecycleMiddleware();
     const next = vi.fn();
     expect(() => mw.use({ headers: {} }, fakeResponse(), next)).toThrow(BadRequestException);
-    expect(next).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalledTimes(1);
   });
 
   it('allows missing header when requireTenantHeader=false', () => {
@@ -108,7 +108,7 @@ describe('TenantLifecycleMiddleware', () => {
     mw.use(request, response, vi.fn());
     response.emit('finish');
     await new Promise((r) => setImmediate(r));
-    expect(release).toHaveBeenCalled();
+    expect(release).toHaveBeenCalledTimes(1);
   });
 
   it('is a no-op when no client is attached to the request', async () => {
@@ -130,7 +130,7 @@ describe('TenantLifecycleMiddleware', () => {
       pgClient: { release },
     };
     mw.use(request, undefined, vi.fn());
-    expect(release).not.toHaveBeenCalled();
+    expect(release).not.toHaveBeenCalledTimes(1);
   });
 
   it('createTenantLifecycleMiddleware returns a bound function form', () => {

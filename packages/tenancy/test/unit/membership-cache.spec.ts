@@ -15,14 +15,14 @@ describe('MembershipAccessCache', () => {
 
     dateNow.mockReturnValue(now + 6);
 
-    expect(cache.get('user-1', 'tenant-1')).toBeUndefined();
+    expect(cache.get('user-1', 'tenant-1')).toBe(undefined);
   });
 
   it('evicts the oldest entry when it exceeds capacity', () => {
     const cache = new MembershipAccessCache(1_000, 1);
     cache.set('user-1', 'tenant-1', true);
     cache.set('user-2', 'tenant-2', false);
-    expect(cache.get('user-1', 'tenant-1')).toBeUndefined();
+    expect(cache.get('user-1', 'tenant-1')).toBe(undefined);
     expect(cache.get('user-2', 'tenant-2')).toBe(false);
   });
 
@@ -34,7 +34,7 @@ describe('MembershipAccessCache', () => {
     cache.set('user-1', 'tenant-1', true);
     dateNow.mockReturnValue(now + 25);
 
-    expect(cache.get('user-1', 'tenant-1')).toBeUndefined();
+    expect(cache.get('user-1', 'tenant-1')).toBe(undefined);
   });
 
   it('clears all entries and invalidates only the requested tenant', () => {
@@ -45,12 +45,12 @@ describe('MembershipAccessCache', () => {
 
     cache.invalidateTenant('tenant-1');
 
-    expect(cache.get('user-1', 'tenant-1')).toBeUndefined();
-    expect(cache.get('user-3', 'tenant-1')).toBeUndefined();
+    expect(cache.get('user-1', 'tenant-1')).toBe(undefined);
+    expect(cache.get('user-3', 'tenant-1')).toBe(undefined);
     expect(cache.get('user-2', 'tenant-2')).toBe(false);
 
     cache.clear();
 
-    expect(cache.get('user-2', 'tenant-2')).toBeUndefined();
+    expect(cache.get('user-2', 'tenant-2')).toBe(undefined);
   });
 });

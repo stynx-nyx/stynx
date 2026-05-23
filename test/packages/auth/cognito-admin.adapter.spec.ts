@@ -33,7 +33,7 @@ describe('@stynx/auth cognito admin adapter', () => {
     );
 
     expect(options.credentialsStrategy).toBe('default-chain');
-    expect(options.profile).toBeUndefined();
+    expect(options.profile).toBe(undefined);
   });
 
   it('throws validation error when required env is missing', () => {

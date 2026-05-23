@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import { Test, type TestingModule } from '@nestjs/testing';
 import { RequestContextMutator } from '@stynx/core';
@@ -545,11 +546,11 @@ describe('Transaction soft delete operations', () => {
           (select customer_id::text from demo.customer_note where id = '${noteId}') as note_customer_id
       `);
 
-      expect(deletedRows.rows[0]?.customer_deleted_at).toBeTruthy();
+      expect(deletedRows.rows[0]?.customer_deleted_at).toEqual(expect.anything());
       expect(deletedRows.rows[0]?.address_deleted_at).toBe(deletedRows.rows[0]?.customer_deleted_at);
       expect(deletedRows.rows[0]?.invoice_deleted_at).toBe(deletedRows.rows[0]?.customer_deleted_at);
       expect(deletedRows.rows[0]?.line_item_deleted_at).toBe(deletedRows.rows[0]?.customer_deleted_at);
-      expect(deletedRows.rows[0]?.note_customer_id).toBeNull();
+      expect(deletedRows.rows[0]?.note_customer_id).toBe(null);
     } finally {
       await adminClient?.end();
       await moduleRef?.close();
@@ -633,7 +634,7 @@ describe('Transaction soft delete operations', () => {
       );
 
       expect(withDeletedRows.map((row) => row.id)).toEqual([liveCustomerA, deletedCustomerA]);
-      expect(withDeletedRows[0]?.deletedAt).toBeNull();
+      expect(withDeletedRows[0]?.deletedAt).toBe(null);
       expect(withDeletedRows[1]?.archiveId).toBeGreaterThan(0n);
       expect(withDeletedRows[1]?.deletedAt).toBeInstanceOf(Date);
 

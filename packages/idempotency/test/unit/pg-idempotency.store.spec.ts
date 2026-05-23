@@ -28,11 +28,11 @@ describe('PgIdempotencyStore', () => {
     const store = new PgIdempotencyStore({ executor });
     const tenantless = context({ tenantId: undefined });
 
-    await expect(store.lookup(tenantless)).resolves.toBeNull();
+    await expect(store.lookup(tenantless)).resolves.toBe(null);
     await expect(store.reserve(tenantless)).resolves.toBe(false);
     await expect(store.persistResponse(tenantless, 200, {})).resolves.toBe(false);
-    await expect(store.clearReservation(tenantless)).resolves.toBeUndefined();
-    expect(executor.query).not.toHaveBeenCalled();
+    await expect(store.clearReservation(tenantless)).resolves.toBe(undefined);
+    expect(executor.query).not.toHaveBeenCalledTimes(1);
   });
 
   it('maps lookup rows for pending, completed, empty, and array result shapes', async () => {
@@ -45,8 +45,8 @@ describe('PgIdempotencyStore', () => {
     };
     const store = new PgIdempotencyStore({ executor });
 
-    await expect(store.lookup(context())).resolves.toBeNull();
-    await expect(store.lookup(context())).resolves.toBeNull();
+    await expect(store.lookup(context())).resolves.toBe(null);
+    await expect(store.lookup(context())).resolves.toBe(null);
     await expect(store.lookup(context())).resolves.toMatchObject({
       requestFingerprint: 'fp-1',
       statusCode: 200,
@@ -76,7 +76,7 @@ describe('PgIdempotencyStore', () => {
 
     await expect(store.reserve(context())).resolves.toBe(true);
     await expect(store.persistResponse(context(), 204, undefined)).resolves.toBe(true);
-    await expect(store.clearReservation(context())).resolves.toBeUndefined();
+    await expect(store.clearReservation(context())).resolves.toBe(undefined);
 
     expect(executor.query).toHaveBeenNthCalledWith(
       1,

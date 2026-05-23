@@ -59,7 +59,7 @@ describe('EffectiveHashComputer', () => {
 
     await service.ensureMembershipHash('user-1', 'tenant-1');
 
-    expect(database.tx).toHaveBeenCalled();
+    expect(database.tx).toHaveBeenCalledTimes(1);
   });
 
   it('short-circuits empty mutation inputs', async () => {

@@ -95,7 +95,7 @@ describe('createTestApp', () => {
       },
     });
 
-    expect(connect).toHaveBeenCalled();
+    expect(connect).toHaveBeenCalledTimes(1);
     expect(query).toHaveBeenCalledWith('select 1');
     expect(query).toHaveBeenCalledWith('select 2');
     expect(query).toHaveBeenCalledWith('select 3');
@@ -103,8 +103,8 @@ describe('createTestApp', () => {
     const admin = await app.adminClient();
     expect(admin).toEqual({ connect, query, end });
     await app.teardown();
-    expect(close).toHaveBeenCalled();
-    expect(stop).toHaveBeenCalled();
+    expect(close).toHaveBeenCalledTimes(1);
+    expect(stop).toHaveBeenCalledTimes(3);
   });
 
   it('uses default LocalStack services and omits Cognito when disabled', async () => {
@@ -116,7 +116,7 @@ describe('createTestApp', () => {
         region: 'us-east-1',
       }),
     );
-    expect(app.cognito).toBeUndefined();
+    expect(app.cognito).toBe(undefined);
     await app.teardown();
   });
 
@@ -148,8 +148,8 @@ describe('createTestApp', () => {
     init.mockRejectedValueOnce(new Error('init failed'));
 
     await expect(createTestApp({ cognito: { enabled: true } })).rejects.toThrow('init failed');
-    expect(close).toHaveBeenCalled();
-    expect(stop).toHaveBeenCalled();
+    expect(close).toHaveBeenCalledTimes(1);
+    expect(stop).toHaveBeenCalledTimes(4);
   });
 
   it('preserves the initialization error when cleanup also fails', async () => {

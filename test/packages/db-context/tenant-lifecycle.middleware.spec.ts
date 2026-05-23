@@ -86,7 +86,7 @@ describe('TenantLifecycleMiddleware', () => {
     middleware.use(request, undefined, next);
 
     expect(next).toHaveBeenCalledTimes(1);
-    expect(request.tenantId).toBeUndefined();
+    expect(request.tenantId).toBe(undefined);
   });
 
   it('exposes factory helper for middleware-consumer use', () => {

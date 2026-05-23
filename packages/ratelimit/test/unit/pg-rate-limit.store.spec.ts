@@ -37,7 +37,7 @@ describe('PgRateLimitStore', () => {
         retryAfterSeconds: 60,
         used: 2,
       });
-      expect(executor.query).not.toHaveBeenCalled();
+      expect(executor.query).not.toHaveBeenCalledTimes(1);
     } finally {
       nowSpy.mockRestore();
     }

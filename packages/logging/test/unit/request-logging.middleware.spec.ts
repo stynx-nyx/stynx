@@ -2,12 +2,12 @@ import { RequestLoggingMiddleware } from '../../src/request-logging.middleware';
 
 describe('RequestLoggingMiddleware', () => {
   it('logs one request completion record for non-health routes', () => {
-    const records: Array<Record<string, unknown>> = [];
+    const records: Array<{ message: string; fields: Record<string, unknown> }> = [];
     const listeners = new Map<string, () => void>();
     const middleware = new RequestLoggingMiddleware(
       {
         log: (_message: string, fields?: Record<string, unknown>) => {
-          records.push(fields ?? {});
+          records.push({ message: _message, fields: fields ?? {} });
         },
       } as never,
       {},
@@ -27,7 +27,8 @@ describe('RequestLoggingMiddleware', () => {
     listeners.get('finish')?.();
 
     expect(records).toHaveLength(1);
-    expect(records[0]).toMatchObject({
+    expect(records[0]?.message).toBe('request completed');
+    expect(records[0]?.fields).toMatchObject({
       route: '/example',
       method: 'POST',
       status: 201,

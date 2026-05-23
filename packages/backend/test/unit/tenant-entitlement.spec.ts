@@ -60,7 +60,7 @@ describe('ClaimFirstTenantEntitlementPolicy', () => {
     const fallback = { isEntitled: vi.fn(async () => true) };
     const policy = new ClaimFirstTenantEntitlementPolicy({ fallback });
     await expect(policy.isEntitled(mkContext({ tenant_id: 't-other' }))).resolves.toBe(false);
-    expect(fallback.isEntitled).not.toHaveBeenCalled();
+    expect(fallback.isEntitled).not.toHaveBeenCalledTimes(1);
   });
 
   it('falls back through invalid JSON to CSV parsing', async () => {
@@ -125,7 +125,7 @@ describe('SqlTenantEntitlementFallback', () => {
     context.principal.email = '';
     context.principal.claims = {};
     await expect(fb.isEntitled(context)).resolves.toBe(false);
-    expect(executor.query).not.toHaveBeenCalled();
+    expect(executor.query).not.toHaveBeenCalledTimes(1);
   });
 
   it('omits active predicate when activeColumn is null', async () => {
@@ -200,6 +200,6 @@ describe('SqlTenantEntitlementFallback', () => {
 
     await expect(fb.isEntitled(context)).resolves.toBe(false);
 
-    expect(executor.query).not.toHaveBeenCalled();
+    expect(executor.query).not.toHaveBeenCalledTimes(1);
   });
 });

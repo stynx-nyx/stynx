@@ -218,6 +218,7 @@ describe('DocumentsService', () => {
 
   it('quarantines a document when the uploaded metadata does not match', async () => {
     const { service, db, s3 } = createService();
+    let updated: Record<string, unknown> | undefined;
     db.tx
       .mockImplementationOnce(async (fn: (trx: { select: () => { from: () => { where: () => { limit: () => Promise<unknown[]> } } } }) => Promise<unknown>) =>
         fn({
@@ -246,9 +247,12 @@ describe('DocumentsService', () => {
       .mockImplementationOnce(async (fn: (trx: { update: () => { set: () => { where: (clause: unknown) => Promise<void> } }; softDelete: Mock }) => Promise<unknown>) =>
         fn({
           update: () => ({
-            set: () => ({
+            set: (value: Record<string, unknown>) => {
+              updated = value;
+              return {
               where: async (_clause: unknown) => undefined,
-            }),
+              };
+            },
           }),
           softDelete: vi.fn(async () => undefined),
         }),
@@ -260,6 +264,14 @@ describe('DocumentsService', () => {
 
     const result = await service.complete('doc-1');
     expect(result.scanStatus).toBe('quarantined');
+    expect(updated).toMatchObject({
+      scanStatus: 'quarantined',
+      scanDetail: {
+        mismatchReasons: ['content_type_mismatch', 'checksum_mismatch'],
+        actualMime: 'image/png',
+        actualChecksum: 'b'.repeat(64),
+      },
+    });
   });
 
   function ownedDocumentMock() {
@@ -289,14 +301,17 @@ describe('DocumentsService', () => {
 
   it('completes scan + persists scanDetail when content + checksum match', async () => {
     const { service, db, s3 } = createService();
-    let update: Mock;
+    let updated: Record<string, unknown> | undefined;
     db.tx
       .mockImplementationOnce(async (fn: never) => (fn as unknown as (trx: unknown) => Promise<unknown>)(ownedDocumentMock()))
       .mockImplementationOnce(async (fn: never) => {
-        update = vi.fn(() => ({
-          set: vi.fn(() => ({
+        const update = vi.fn(() => ({
+          set: vi.fn((value: Record<string, unknown>) => {
+            updated = value;
+            return {
             where: vi.fn(async () => undefined),
-          })),
+            };
+          }),
         }));
         return (fn as unknown as (trx: unknown) => Promise<unknown>)({ update });
       });
@@ -308,6 +323,14 @@ describe('DocumentsService', () => {
 
     const result = await service.complete('doc-1');
     expect(result.scanStatus).toBe('completed');
+    expect(updated).toMatchObject({
+      scanStatus: 'completed',
+      scanDetail: {
+        actualMime: 'application/pdf',
+        actualChecksum: 'a'.repeat(64),
+        contentLength: 32,
+      },
+    });
   });
 
   it('uses completion headers when object metadata is absent', async () => {
@@ -330,11 +353,17 @@ describe('DocumentsService', () => {
   it('quarantines completion when object metadata and completion headers are absent', async () => {
     const { service, db, s3 } = createService();
     const softDelete = vi.fn(async () => undefined);
+    let updated: Record<string, unknown> | undefined;
     db.tx
       .mockImplementationOnce(async (fn: never) => (fn as unknown as (trx: unknown) => Promise<unknown>)(ownedDocumentMock()))
       .mockImplementationOnce(async (fn: never) =>
         (fn as unknown as (trx: unknown) => Promise<unknown>)({
-          update: () => ({ set: () => ({ where: async () => undefined }) }),
+          update: () => ({
+            set: (value: Record<string, unknown>) => {
+              updated = value;
+              return { where: async () => undefined };
+            },
+          }),
           softDelete,
         }),
       );
@@ -342,6 +371,14 @@ describe('DocumentsService', () => {
 
     await expect(service.complete('doc-1')).resolves.toEqual({ id: 'doc-1', scanStatus: 'quarantined' });
     expect(softDelete).toHaveBeenCalledTimes(1);
+    expect(updated).toMatchObject({
+      scanStatus: 'quarantined',
+      scanDetail: {
+        mismatchReasons: ['content_type_mismatch', 'checksum_mismatch'],
+        actualMime: '',
+        actualChecksum: '',
+      },
+    });
   });
 
   it('getDownloadUrl returns a signed URL via s3.presignDownload', async () => {

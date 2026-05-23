@@ -49,7 +49,7 @@ describe('auth runtime helpers', () => {
 
     patch.mockClear();
     interceptor.intercept(createExecutionContext({}), next);
-    expect(patch).not.toHaveBeenCalled();
+    expect(patch).not.toHaveBeenCalledTimes(1);
   });
 
   it('allows public and system routes and enforces permission membership otherwise', () => {
@@ -185,7 +185,7 @@ describe('auth runtime helpers', () => {
     expect(await backend.get('sid-1')).toMatchObject({ tenantId: 'tenant-1' });
 
     await backend.invalidateScope('user-1:tenant-1');
-    expect(await backend.get('sid-1')).toBeNull();
+    expect(await backend.get('sid-1')).toBe(null);
 
     metrics.increment('in_memory');
     metrics.increment('redis');
@@ -205,6 +205,6 @@ describe('auth runtime helpers', () => {
     ).toEqual(['document:*:*', 'document:read:*', 'document:write:*']);
     expect(computePermissionsHash(['b', 'a', 'a'])).toHaveLength(16);
     expect(headerToString(['tenant-1'])).toBe('tenant-1');
-    expect(headerToString({})).toBeUndefined();
+    expect(headerToString({})).toBe(undefined);
   });
 });

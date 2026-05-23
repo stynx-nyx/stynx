@@ -435,7 +435,7 @@ describe('IdempotencyInterceptor', () => {
       lastValueFrom(interceptor.intercept(createExecutionContext(request, response, annotatedHandler(reflector)), next)),
     ).rejects.toBeInstanceOf(HttpException);
 
-    expect(store.persistResponse).not.toHaveBeenCalled();
+    expect(store.persistResponse).not.toHaveBeenCalledTimes(1);
     expect(store.clearReservation).toHaveBeenCalledWith(expect.objectContaining({
       headerValue: 'k1',
       routeKey: 'POST:/v1/items',
@@ -857,7 +857,7 @@ describe('IdempotencyInterceptor', () => {
       lastValueFrom(interceptor.intercept(createExecutionContext(request, response, annotatedHandler(reflector)), next)),
     ).rejects.toBeInstanceOf(ServiceUnavailableException);
 
-    expect(backend.set).not.toHaveBeenCalled();
+    expect(backend.set).not.toHaveBeenCalledTimes(1);
   });
 
   it('clears durable reservations for normal 5xx responses and non-HTTP errors', async () => {
@@ -948,7 +948,7 @@ describe('IdempotencyInterceptor', () => {
       )),
     ).rejects.toThrow('unowned failure');
     expect(store.clearReservation).toHaveBeenCalledTimes(1);
-    expect(backend.releaseLock).not.toHaveBeenCalled();
+    expect(backend.releaseLock).not.toHaveBeenCalledTimes(1);
   });
 
   it('clears durable reservations after a handler failure without a backend', async () => {
@@ -1099,7 +1099,7 @@ describe('IdempotencyInterceptor', () => {
       ), { handle: () => of({ id: 'ok' }) } as CallHandler));
       expect(backend.set).toHaveBeenCalledTimes(1);
       expect(durable.persistResponse).toHaveBeenCalledTimes(1);
-      expect(durable.clearReservation).not.toHaveBeenCalled();
+      expect(durable.clearReservation).not.toHaveBeenCalledTimes(1);
     });
 
     it('on statusCode === 500 boundary, clears reservation and does NOT persist (kills `< 500` → `<= 500`)', async () => {
@@ -1111,8 +1111,8 @@ describe('IdempotencyInterceptor', () => {
         response, annotatedHandler(reflector),
       ), { handle: () => of({ id: 'failed' }) } as CallHandler));
       expect(durable.clearReservation).toHaveBeenCalledTimes(1);
-      expect(backend.set).not.toHaveBeenCalled();
-      expect(durable.persistResponse).not.toHaveBeenCalled();
+      expect(backend.set).not.toHaveBeenCalledTimes(1);
+      expect(durable.persistResponse).not.toHaveBeenCalledTimes(1);
     });
   });
 

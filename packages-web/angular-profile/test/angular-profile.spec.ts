@@ -19,6 +19,7 @@ import { StynxProfileFormComponent } from '../src/profile-form.component';
 import { StynxProfileSecurityComponent } from '../src/profile-security.component';
 import { ProfileService } from '../src/profile.service';
 import { profileRoutes } from '../src/routes';
+import { UnsavedChangesRegistry } from '../src/unsaved-changes.guard';
 import type { StynxHostedAuthAction } from '@stynx-web/angular-auth';
 import { renderComponent } from './support/test-bed';
 
@@ -249,6 +250,12 @@ describe('@stynx-web/angular-profile', () => {
   it('applies profile defaults, display-name fallback, and validator contracts exactly', () => {
     const component = createWithFormBuilder(() => new StynxProfileFormComponent());
 
+    expect(component.form.getRawValue()).toEqual({
+      name: '',
+      email: '',
+      locale: 'en-US',
+    });
+
     component.value = {
       displayName: 'Display Name',
       name: '',
@@ -319,7 +326,9 @@ describe('@stynx-web/angular-profile', () => {
     });
     expect(errorBanner.clear).toHaveBeenCalledWith();
     expect(component.status()).toBe('saved');
+    expect(component.errorMessage()).toBe('');
     expect(component.form.dirty).toBe(false);
+    expect(toast.push).toHaveBeenCalledWith('profile.form.toast.saved', 'success');
 
     profile.patch.mockReturnValueOnce(throwError(() => new Error('profile save failed')));
     component.form.patchValue({ name: 'Ana Failed' });
@@ -360,6 +369,51 @@ describe('@stynx-web/angular-profile', () => {
     expect(component.form.dirty).toBe(false);
   });
 
+  it('registers unsaved-change callbacks and confirms discard through translated browser prompts', () => {
+    const unregisterProfile = vi.fn();
+    const unregisterPreferences = vi.fn();
+    const registry = {
+      register: vi.fn()
+        .mockReturnValueOnce(unregisterProfile)
+        .mockReturnValueOnce(unregisterPreferences),
+    };
+    const confirm = vi.spyOn(globalThis.window, 'confirm').mockReturnValueOnce(false).mockReturnValueOnce(true);
+    const i18n = { translate: (key: string) => `translated:${key}` };
+
+    const profile = createWithFormBuilder(
+      () => new StynxProfileFormComponent(),
+      [
+        { provide: UnsavedChangesRegistry, useValue: registry },
+        { provide: StynxI18nService, useValue: i18n },
+      ],
+    );
+    const preferences = createWithFormBuilder(
+      () => new StynxPreferencesFormComponent(),
+      [
+        { provide: UnsavedChangesRegistry, useValue: registry },
+        { provide: StynxI18nService, useValue: i18n },
+      ],
+    );
+
+    expect(registry.register).toHaveBeenNthCalledWith(1, profile);
+    expect(registry.register).toHaveBeenNthCalledWith(2, preferences);
+
+    profile.form.markAsDirty();
+    preferences.form.markAsDirty();
+    expect(profile.hasUnsavedChanges()).toBe(true);
+    expect(preferences.hasUnsavedChanges()).toBe(true);
+    expect(profile.confirmDiscardChanges()).toBe(false);
+    expect(preferences.confirmDiscardChanges()).toBe(true);
+    expect(confirm).toHaveBeenNthCalledWith(1, 'translated:profile.unsaved.confirm');
+    expect(confirm).toHaveBeenNthCalledWith(2, 'translated:profile.unsaved.confirm');
+
+    profile.ngOnDestroy();
+    preferences.ngOnDestroy();
+    expect(unregisterProfile).toHaveBeenCalledWith();
+    expect(unregisterPreferences).toHaveBeenCalledWith();
+    confirm.mockRestore();
+  });
+
   it('applies preference defaults and changes locale only for new non-empty values without a service', () => {
     const i18n = {
       translate: (key: string) => key,
@@ -384,11 +438,14 @@ describe('@stynx-web/angular-profile', () => {
     expect(component.status()).toBe('idle');
     expect(component.errorMessage()).toBe('');
 
+    component.value = { locale: 'fr-FR', notifications: null } as never;
+    expect(component.form.getRawValue()).toEqual({ locale: 'fr-FR', notifications: false });
+
     component.form.patchValue({ notifications: true });
     component.form.markAsDirty();
     component.submit();
-    expect(seen.at(-1)).toEqual({ locale: 'en-US', notifications: true });
-    expect(i18n.use).not.toHaveBeenCalled();
+    expect(seen.at(-1)).toEqual({ locale: 'fr-FR', notifications: true });
+    expect(i18n.use).not.toHaveBeenCalledTimes(1);
     expect(component.status()).toBe('saved');
     expect(toast.push).toHaveBeenCalledWith('profile.preferences.toast.saved', 'success');
 
@@ -396,6 +453,7 @@ describe('@stynx-web/angular-profile', () => {
     component.form.markAsDirty();
     component.submit();
     expect(i18n.use).toHaveBeenCalledWith('pt-BR');
+    expect(component.errorMessage()).toBe('');
   });
 
   it('saves preferences through ProfileService, changes locale, and reports failures', () => {

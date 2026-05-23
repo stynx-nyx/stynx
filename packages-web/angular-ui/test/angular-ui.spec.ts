@@ -117,8 +117,10 @@ describe('@stynx-web/angular-ui', () => {
 
     expect(service.toasts()).toEqual([
       sticky,
-      { id: timed.id, message: 'Saved', tone: 'info' },
+      { id: 2, message: 'Saved', tone: 'info' },
     ]);
+    expect(sticky.id).toBe(1);
+    expect(timed.id).toBe(2);
 
     vi.advanceTimersByTime(25);
     expect(service.toasts()).toEqual([sticky]);
@@ -162,6 +164,7 @@ describe('@stynx-web/angular-ui', () => {
 
     component.totalItems = 2;
     component.page = 10;
+    expect(component.pageIndex()).toBe(10);
     component.next();
     expect(component.pageIndex()).toBe(1);
     expect(component.pageCount()).toBe(2);
@@ -180,8 +183,18 @@ describe('@stynx-web/angular-ui', () => {
     banner.tone = 'warning';
     expect(banner).toMatchObject({ title: 'Heads up', message: 'Policy changed', tone: 'warning' });
     expect(banner.toneIcon).toBe('warning');
+    banner.tone = 'success';
+    expect(banner.toneIcon).toBe('check');
+    banner.tone = 'error';
+    expect(banner.toneIcon).toBe('error');
 
     const confirm = new StynxConfirmDialogComponent();
+    expect(confirm).toMatchObject({
+      open: false,
+      title: 'Confirm',
+      message: '',
+      confirmLabel: 'Confirm',
+    });
     const seen: string[] = [];
     confirm.confirm.subscribe(() => seen.push('confirm'));
     confirm.dismissed.subscribe(() => seen.push('cancel'));
@@ -225,6 +238,6 @@ describe('@stynx-web/angular-ui', () => {
   });
 
   it('declares the toast container service dependency', () => {
-    expect(StynxToastContainerComponent).toBeDefined();
+    expect(StynxToastContainerComponent).toEqual(expect.anything());
   });
 });

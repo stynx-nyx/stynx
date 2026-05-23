@@ -62,7 +62,7 @@ describe('PermissionQueryService', () => {
       generation: 7,
     });
     expect(requestContextMutator.patch).toHaveBeenCalledWith({ tenantId: 'tenant-1', actorId: 'user-1' });
-    expect(requestContextMutator.runWithRequestContext).not.toHaveBeenCalled();
+    expect(requestContextMutator.runWithRequestContext).not.toHaveBeenCalledTimes(1);
   });
 
   it('creates a request context when none is active and supports probeHash', async () => {
@@ -98,7 +98,7 @@ describe('PermissionQueryService', () => {
       hash: 'hash-1',
       generation: 3,
     });
-    expect(requestContextMutator.runWithRequestContext).toHaveBeenCalled();
+    expect(requestContextMutator.runWithRequestContext).toHaveBeenCalledTimes(1);
   });
 
   it('creates a request context when the mutator exists but RequestContext is unavailable', async () => {
@@ -127,7 +127,7 @@ describe('PermissionQueryService', () => {
       hash: 'hash-missing-context',
       generation: 4,
     });
-    expect(requestContextMutator.patch).not.toHaveBeenCalled();
+    expect(requestContextMutator.patch).not.toHaveBeenCalledTimes(1);
     expect(requestContextMutator.runWithRequestContext).toHaveBeenCalledWith(
       expect.objectContaining({ tenantId: 'tenant-no-context', actorId: 'user-no-context' }),
       expect.any(Function),
@@ -200,7 +200,7 @@ describe('PermissionQueryService', () => {
       permissions: ['storage:*:*', 'storage:read:*', 'storage:write:*'],
       generation: 0,
     });
-    expect(database.tx).toHaveBeenCalled();
+    expect(database.tx).toHaveBeenCalledTimes(1);
     expect(trx.query).toHaveBeenCalledWith(expect.stringContaining('where user_id = $1'), ['user-2', 'tenant-2']);
     expect(trx.query).toHaveBeenCalledWith(expect.stringContaining('select distinct perm.key'), ['membership-2']);
     expect(trx.query).toHaveBeenCalledWith('select key from auth.perms');

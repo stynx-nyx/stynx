@@ -1548,6 +1548,7 @@ describe('@stynx-web/angular-auth', () => {
     );
     const state = await session.completeLogin();
     expect(state.active).toBe(true);
+    expect(session.active()).toBe(true);
     expect(setAccessToken).toBe(accessToken);
   });
 

@@ -34,6 +34,6 @@ describe('provideTenancy SSR window provider', () => {
     const providers = provideTenancy();
     const windowProvider = findProvider(providers, STYNX_TENANCY_WINDOW);
 
-    expect(providerFactory<Window | null>(windowProvider)()).toBeNull();
+    expect(providerFactory<Window | null>(windowProvider)()).toBe(null);
   });
 });

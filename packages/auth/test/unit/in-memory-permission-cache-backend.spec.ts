@@ -3,8 +3,8 @@ import { InMemoryPermissionCacheBackend } from '../../src/in-memory-permission-c
 describe('InMemoryPermissionCacheBackend edge branches', () => {
   it('ignores delete and malformed invalidation misses', async () => {
     const backend = new InMemoryPermissionCacheBackend();
-    await expect(backend.delete('missing')).resolves.toBeUndefined();
-    await expect(backend.invalidateScope('bad')).resolves.toBeUndefined();
+    await expect(backend.delete('missing')).resolves.toBe(undefined);
+    await expect(backend.invalidateScope('bad')).resolves.toBe(undefined);
   });
 
   it('publishes to subscribers and clears records on close', async () => {
@@ -27,13 +27,13 @@ describe('InMemoryPermissionCacheBackend edge branches', () => {
     await backend.close();
 
     expect(seen).toEqual(['user-1:tenant-1']);
-    await expect(backend.get('sid-1')).resolves.toBeNull();
+    await expect(backend.get('sid-1')).resolves.toBe(null);
   });
 
   it('ignores tenant and user invalidation misses', async () => {
     const backend = new InMemoryPermissionCacheBackend();
 
-    await expect(backend.invalidateScope('*:missing-tenant')).resolves.toBeUndefined();
-    await expect(backend.invalidateScope('missing-user:tenant-1')).resolves.toBeUndefined();
+    await expect(backend.invalidateScope('*:missing-tenant')).resolves.toBe(undefined);
+    await expect(backend.invalidateScope('missing-user:tenant-1')).resolves.toBe(undefined);
   });
 });

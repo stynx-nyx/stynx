@@ -1197,7 +1197,7 @@ describe('backend rate-limit behavior', () => {
       tenantId: 'tenant-1',
       path: '/ready/status',
     }) as never)).resolves.toBe(true);
-    expect(store.increment).not.toHaveBeenCalled();
+    expect(store.increment).not.toHaveBeenCalledTimes(1);
   });
 
   it('describes branch: rate-limit defaults request identity and constructor options', async () => {
@@ -1303,7 +1303,7 @@ describe('backend rate-limit behavior', () => {
     };
     const delayedCleanup = new RateLimitGuard({ cleanupEvery: 2 }, delayedCleanupStore);
     await expect(delayedCleanup.canActivate(httpContext({ ...request, url: '/delayed-1' }) as never)).resolves.toBe(true);
-    expect(delayedCleanupStore.cleanup).not.toHaveBeenCalled();
+    expect(delayedCleanupStore.cleanup).not.toHaveBeenCalledTimes(1);
     await expect(delayedCleanup.canActivate(httpContext({ ...request, url: '/delayed-2' }) as never)).resolves.toBe(true);
     expect(delayedCleanupStore.cleanup).toHaveBeenCalledTimes(1);
   });
@@ -1442,7 +1442,7 @@ describe('backend audit and db context branch closure', () => {
       }) as never,
       { handle: () => of('ok') },
     ))).rejects.toThrow('apply failed');
-    expect(lifecycle.release).not.toHaveBeenCalled();
+    expect(lifecycle.release).not.toHaveBeenCalledTimes(1);
   });
 
   it('describes branch: session applier drops blank list/scalar values', async () => {

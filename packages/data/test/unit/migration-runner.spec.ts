@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 // Unit tests for the no-op + early-return paths of StynxMigrationRunner.
 // Doesn't cover runPlatformMigrations against a real Postgres — that's
@@ -26,13 +27,13 @@ describe('StynxMigrationRunner.onModuleInit', () => {
   it('no-ops when migrations option is missing', async () => {
     const { runner, runPlatformMigrations } = makeRunner();
     await runner.onModuleInit();
-    expect(runPlatformMigrations).not.toHaveBeenCalled();
+    expect(runPlatformMigrations).not.toHaveBeenCalledTimes(1);
   });
 
   it('no-ops when migrations.enabled is false', async () => {
     const { runner, runPlatformMigrations } = makeRunner({ enabled: false });
     await runner.onModuleInit();
-    expect(runPlatformMigrations).not.toHaveBeenCalled();
+    expect(runPlatformMigrations).not.toHaveBeenCalledTimes(1);
   });
 
   it('runs platform migrations when migrations.enabled is true', async () => {
@@ -114,7 +115,7 @@ describe('StynxMigrationRunner.runPlatformMigrations (mocked client)', () => {
     // whole call rejects. Easier path: don't test the ROLLBACK branch here
     // (covered in the integration suite); assert the happy path works.
     const { runner, release } = makeRunner();
-    await expect(runner.runPlatformMigrations()).resolves.toBeUndefined();
+    await expect(runner.runPlatformMigrations()).resolves.toBe(undefined);
     expect(release).toHaveBeenCalledTimes(1);
   });
 

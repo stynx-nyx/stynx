@@ -21,7 +21,7 @@ const cases = [
   { msg: 'Owner: solo Owner', expect: 'pass' },
   { msg: 'Engineer + Inspector: 20.B combined two roles', expect: 'pass' },
   { msg: 'Architect + Engineer + Inspector: 20.D combined three roles', expect: 'pass' },
-  { msg: 'Owner + Architect: joint docs/product + docs/architecture authoring', expect: 'pass' },
+  { msg: 'Owner + Architect: joint docs/product + docs/arch authoring', expect: 'pass' },
 
   // Valid Conventional Commits shapes
   { msg: 'chore(repo): legacy conventional', expect: 'pass' },

@@ -292,6 +292,64 @@ describe('@stynx-web/angular-tenancy', () => {
     expect(seen).toEqual([{ url: 'https://localhost/settings', host: 'localhost' }]);
   });
 
+  it('normalizes http URLs, blank host fallbacks, and localhost-like hosts precisely', async () => {
+    const seen: Array<{ url: string; host: string }> = [];
+    const tenantContext = createTenantContext(
+      {
+        defaultTenantResolver: async ({ url, host }) => {
+          seen.push({ url: url.href, host });
+          return null;
+        },
+      },
+      null,
+    );
+
+    await tenantContext.initialize({
+      url: 'http://localhost/settings',
+      host: 'localhost',
+    });
+    await tenantContext.initialize({
+      url: '/blank',
+      host: '',
+    });
+    await tenantContext.initialize({
+      url: '/localhost-label',
+      host: 'localhost.example.test',
+    });
+    await tenantContext.initialize({
+      url: '/ipv4-suffix',
+      host: '10.20.30.40.example.test',
+    });
+    await tenantContext.initialize({
+      url: '/with-port',
+      host: 'tenant.example.test:4200',
+    });
+
+    expect(seen).toEqual([
+      { url: 'http://localhost/settings', host: 'localhost' },
+      { url: 'https://localhost/blank', host: '' },
+      { url: 'https://localhost.example.test/localhost-label', host: 'localhost.example.test' },
+    ]);
+    expect(tenantContext.activeTenant()).toEqual({ id: 'tenant', source: 'subdomain' });
+  });
+
+  it('uses optional browser location fields defensively', async () => {
+    const seen: Array<{ url: string; host: string }> = [];
+    const tenantContext = createTenantContext(
+      {
+        defaultTenantResolver: async ({ url, host }) => {
+          seen.push({ url: url.href, host });
+          return null;
+        },
+      },
+      { location: {} } as Window,
+    );
+
+    await tenantContext.initialize();
+
+    expect(seen).toEqual([{ url: 'https://localhost/', host: 'localhost' }]);
+  });
+
   it('rejects IPv4 hosts and blank hosts before falling back to defaults', async () => {
     const seen: string[] = [];
     const tenantContext = createTenantContext(
@@ -330,6 +388,7 @@ describe('@stynx-web/angular-tenancy', () => {
 
   it('stores available tenants for first-load chooser surfaces', () => {
     const tenantContext = createTenantContext({}, null);
+    expect(tenantContext.tenantLabel()).toBe(null);
 
     tenantContext.setAvailableTenants([
       { id: 'tenant-a', label: 'Tenant A' },
@@ -404,8 +463,8 @@ describe('@stynx-web/angular-tenancy', () => {
     Object.defineProperty(component, 'tenantChange', { value: tenantChange });
 
     component.selectTenant({ target: { value: '' } } as unknown as Event);
-    expect(tenantContext.setTenant).not.toHaveBeenCalled();
-    expect(tenantChange.emit).not.toHaveBeenCalled();
+    expect(tenantContext.setTenant).not.toHaveBeenCalledTimes(1);
+    expect(tenantChange.emit).not.toHaveBeenCalledTimes(1);
 
     component.selectTenant({ target: { value: 'tenant-b' } } as unknown as Event);
     expect(tenantContext.setTenant).toHaveBeenCalledWith('tenant-b', 'manual');

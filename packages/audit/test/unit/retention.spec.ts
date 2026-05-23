@@ -70,7 +70,7 @@ describe('planAuditDetach', () => {
         // intentionally omit keyPrefix → falls back to default 'audit'
       );
 
-      expect(plan).not.toBeNull();
+      expect(plan).not.toBe(null);
       expect(plan?.objectKey).toBe('audit/2025-01.sql.gz');
     });
   });
@@ -90,7 +90,7 @@ describe('planAuditDetach', () => {
         'audit',
       );
 
-      expect(plan).toBeNull();
+      expect(plan).toBe(null);
     });
 
     it('retains lgpd-tagged partitions whose partitionEnd straddles the cutoff (2024-01 within 5y of 2026-04-24)', () => {
@@ -107,7 +107,7 @@ describe('planAuditDetach', () => {
         'audit',
       );
 
-      expect(plan).toBeNull();
+      expect(plan).toBe(null);
     });
 
     it('retains standard partitions still within the 90d window', () => {
@@ -123,7 +123,7 @@ describe('planAuditDetach', () => {
         'audit',
       );
 
-      expect(plan).toBeNull();
+      expect(plan).toBe(null);
     });
 
     it('treats partitionEnd === cutoff as still-retained (strict > comparison)', () => {
@@ -145,7 +145,7 @@ describe('planAuditDetach', () => {
         'audit',
       );
 
-      expect(plan).not.toBeNull();
+      expect(plan).not.toBe(null);
       expect(plan?.retentionClass).toBe('standard_90d');
     });
   });
@@ -252,7 +252,7 @@ describe('planAuditDetach', () => {
           },
           new Date('2026-04-24T00:00:00.000Z'),
         ),
-      ).toBeNull();
+      ).toBe(null);
     });
 
     it('rejects malformed partition months (NaN month component)', () => {
@@ -265,7 +265,7 @@ describe('planAuditDetach', () => {
           },
           new Date('2026-04-24T00:00:00.000Z'),
         ),
-      ).toBeNull();
+      ).toBe(null);
     });
 
     it('rejects partition months with month=0 (Number("0") is falsy in the !month guard)', () => {
@@ -278,7 +278,7 @@ describe('planAuditDetach', () => {
           },
           new Date('2026-04-24T00:00:00.000Z'),
         ),
-      ).toBeNull();
+      ).toBe(null);
     });
   });
 });

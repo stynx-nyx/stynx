@@ -18,7 +18,7 @@ describe('@stynx/contracts errors', () => {
 
     it('details optional', () => {
       const e = new StynxError('m', 'C');
-      expect(e.details).toBeUndefined();
+      expect(e.details).toBe(undefined);
     });
   });
 
@@ -35,6 +35,7 @@ describe('@stynx/contracts errors', () => {
     it('carries the AUTHORIZATION_ERROR code', () => {
       const e = new AuthorizationError('not allowed', { permission: 'admin' });
       expect(e.code).toBe('AUTHORIZATION_ERROR');
+      expect(e.name).toBe('AuthorizationError');
       expect(e.details).toEqual({ permission: 'admin' });
     });
   });

@@ -45,7 +45,7 @@ describe('PgTenantDbClientLifecycle', () => {
       tenantId: 't',
       client: { close },
     });
-    expect(close).toHaveBeenCalled();
+    expect(close).toHaveBeenCalledTimes(1);
   });
 
   it('release is a no-op when the client does not expose the release method', async () => {
@@ -53,7 +53,7 @@ describe('PgTenantDbClientLifecycle', () => {
     const lifecycle = new PgTenantDbClientLifecycle(factory);
     await expect(
       lifecycle.release({ request: { headers: {} } as never, tenantId: 't', client: {} }),
-    ).resolves.toBeUndefined();
+    ).resolves.toBe(undefined);
   });
 });
 
@@ -70,7 +70,7 @@ describe('ResponseEventRequestDbClientLifecycle', () => {
     const wrapper = new ResponseEventRequestDbClientLifecycle(delegate);
     const client = await wrapper.acquire({ request: { headers: {} } as never, tenantId: 't' });
     expect(client).toEqual({ tag: 'client' });
-    expect(delegate.acquire).toHaveBeenCalled();
+    expect(delegate.acquire).toHaveBeenCalledTimes(1);
   });
 
   it('release defers to the response finish event when response is open', async () => {
@@ -82,7 +82,7 @@ describe('ResponseEventRequestDbClientLifecycle', () => {
       tenantId: 't',
       client: {},
     });
-    expect(delegate.release).not.toHaveBeenCalled();
+    expect(delegate.release).not.toHaveBeenCalledTimes(1);
     response.emit('finish');
     await new Promise((r) => setImmediate(r));
     expect(delegate.release).toHaveBeenCalledTimes(1);
@@ -160,7 +160,7 @@ describe('ResponseEventRequestDbClientLifecycle', () => {
     });
     response.emit('finish'); // not in the list; should not trigger release
     await new Promise((r) => setImmediate(r));
-    expect(delegate.release).not.toHaveBeenCalled();
+    expect(delegate.release).not.toHaveBeenCalledTimes(1);
     response.emit('close');
     await new Promise((r) => setImmediate(r));
     expect(delegate.release).toHaveBeenCalledTimes(1);

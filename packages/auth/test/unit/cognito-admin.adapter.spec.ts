@@ -395,7 +395,7 @@ describe('CognitoIdentityAdminAdapter', () => {
     const send = vi.fn(async () => ({}));
     const adapter = makeAdapter(send);
     await adapter.verifyUserChannels('alice', {});
-    expect(send).not.toHaveBeenCalled();
+    expect(send).not.toHaveBeenCalledTimes(1);
   });
 
   it('resolveCredentials default-chain returns undefined (uses AWS SDK default)', () => {

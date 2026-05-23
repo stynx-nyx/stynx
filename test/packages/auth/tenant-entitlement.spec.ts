@@ -86,7 +86,6 @@ describe('SqlTenantEntitlementFallback', () => {
     ).resolves.toBe(true);
     expect(query).toHaveBeenCalledTimes(1);
     const firstCall = query.mock.calls[0];
-    expect(firstCall).toBeDefined();
     if (!firstCall) {
       throw new Error('Missing query call');
     }

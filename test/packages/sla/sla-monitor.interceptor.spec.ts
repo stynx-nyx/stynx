@@ -48,7 +48,7 @@ describe('SlaMonitorInterceptor', () => {
       lastValueFrom(interceptor.intercept(createExecutionContext({ headers: {} }), next)),
     ).resolves.toEqual({ ok: true });
 
-    expect(nowSpy).toHaveBeenCalled();
+    expect(nowSpy).toHaveBeenCalledTimes(2);
     expect(sink.sample).toHaveBeenCalledWith(
       expect.objectContaining({
         category: 'RENACH',

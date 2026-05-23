@@ -18,7 +18,7 @@ describe('tenancy utils', () => {
     expect(isUuidV7(id)).toBe(true);
     expect(isUuidV7('not-a-uuid')).toBe(false);
     expect(headerToString(['tenant-a', 'tenant-b'])).toBe('tenant-a');
-    expect(headerToString([1])).toBeUndefined();
+    expect(headerToString([1])).toBe(undefined);
     expect(normalizedPath({ originalUrl: '/records?x=1' })).toBe('/records');
     expect(normalizedPath({ url: '' })).toBe('/');
     expect(normalizedPath({})).toBe('/');
@@ -27,10 +27,10 @@ describe('tenancy utils', () => {
   });
 
   it('parses bearer tenant claims defensively', () => {
-    expect(parseBearerTenantClaims(undefined)).toBeNull();
-    expect(parseBearerTenantClaims('Basic abc')).toBeNull();
-    expect(parseBearerTenantClaims('Bearer one-part')).toBeNull();
-    expect(parseBearerTenantClaims('Bearer header.invalid-json.sig')).toBeNull();
+    expect(parseBearerTenantClaims(undefined)).toBe(null);
+    expect(parseBearerTenantClaims('Basic abc')).toBe(null);
+    expect(parseBearerTenantClaims('Bearer one-part')).toBe(null);
+    expect(parseBearerTenantClaims('Bearer header.invalid-json.sig')).toBe(null);
     expect(parseBearerTenantClaims(bearer({ sub: 'user-1', tenant_id: 'tenant-1' }))).toEqual({
       sub: 'user-1',
       tenantId: 'tenant-1',
@@ -49,20 +49,20 @@ describe('tenancy utils', () => {
       return Reflect.apply(originalSplit, this, [separator, limit]) as string[];
     });
 
-    expect(parseBearerTenantClaims('Bearer header.sig')).toBeNull();
+    expect(parseBearerTenantClaims('Bearer header.sig')).toBe(null);
     split.mockRestore();
   });
 
   it('resolves subdomain tenants with default UUIDv7 and custom patterns', () => {
     const uuidTenant = createUuidV7();
     expect(resolveSubdomainTenantId(`${uuidTenant}.example.test:443`)).toBe(uuidTenant);
-    expect(resolveSubdomainTenantId('tenant-a.example.test')).toBeUndefined();
+    expect(resolveSubdomainTenantId('tenant-a.example.test')).toBe(undefined);
     expect(resolveSubdomainTenantId(' tenant-a.example.test ', /^([^.]+)\.example\.test$/u)).toBe('tenant-a');
-    expect(resolveSubdomainTenantId('app.example.test', /tenant-([^.]+)/u)).toBeUndefined();
+    expect(resolveSubdomainTenantId('app.example.test', /tenant-([^.]+)/u)).toBe(undefined);
     expect(resolveSubdomainTenantId('app.tenant-alpha.example.test', /tenant-([^.]+)/u)).toBe('alpha');
     expect(resolveSubdomainTenantId('app.example.test', /^app\.example\.test$/u)).toBe('app.example.test');
-    expect(resolveSubdomainTenantId('', /^(.+)$/u)).toBeUndefined();
-    expect(resolveSubdomainTenantId('.example.test', /^(.+)$/u)).toBeUndefined();
+    expect(resolveSubdomainTenantId('', /^(.+)$/u)).toBe(undefined);
+    expect(resolveSubdomainTenantId('.example.test', /^(.+)$/u)).toBe(undefined);
   });
 
   it('ignores custom matchers that produce no tenant candidate', () => {
@@ -75,7 +75,7 @@ describe('tenancy utils', () => {
       },
     } as unknown as RegExp;
 
-    expect(resolveSubdomainTenantId('app.example.test', matcher)).toBeUndefined();
+    expect(resolveSubdomainTenantId('app.example.test', matcher)).toBe(undefined);
   });
 
   it('creates UUIDv7 values when entropy bytes are missing variant positions', async () => {

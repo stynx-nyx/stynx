@@ -48,9 +48,9 @@ describe('FrontendSessionManager', () => {
     manager.setTokens({ accessToken });
     const state = manager.hydrate();
 
-    expect(state.tokens).toBeNull();
-    expect(state.principal).toBeNull();
-    expect(store.read()).toBeNull();
+    expect(state.tokens).toBe(null);
+    expect(state.principal).toBe(null);
+    expect(store.read()).toBe(null);
   });
 
   it('splits whitespace permissions from scope claims', () => {

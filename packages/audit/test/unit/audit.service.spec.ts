@@ -60,7 +60,7 @@ describe('StynxAuditService.listLog', () => {
     const service = makeService(db);
     const page = await service.listLog({ limit: 1 });
     expect(page.items).toHaveLength(1);
-    expect(page.nextCursor).toBeDefined();
+    expect(page.nextCursor).toEqual(expect.anything());
   });
 
   it('omits nextCursor when no tail row', async () => {
@@ -68,7 +68,7 @@ describe('StynxAuditService.listLog', () => {
     const service = makeService(db);
     const page = await service.listLog();
     expect(page.items).toEqual([]);
-    expect(page.nextCursor).toBeUndefined();
+    expect(page.nextCursor).toBe(undefined);
   });
 
   it('maps Date occurred_at values to ISO strings', async () => {
@@ -216,7 +216,7 @@ describe('StynxAuditService.runDailyDetachJob', () => {
   it('runs detach but logs nothing when nothing detached', async () => {
     const { db } = makeDatabase([[]]);
     const service = makeService(db);
-    await expect(service.runDailyDetachJob()).resolves.toBeUndefined();
+    await expect(service.runDailyDetachJob()).resolves.toBe(undefined);
   });
 
   it('logs when the daily detach job detaches partitions', async () => {

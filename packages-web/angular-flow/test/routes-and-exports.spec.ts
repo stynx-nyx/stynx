@@ -11,18 +11,18 @@ import { FLOW_ROUTES, flowRoutes } from '../src/routes';
 
 describe('@stynx-web/angular-flow exports and routes', () => {
   it('exports the package API needed by host shells', () => {
-    expect(flow.FlowApiService).toBeDefined();
-    expect(flow.FLOW_ROUTES).toBeDefined();
-    expect(flow.flowRoutes).toBeDefined();
-    expect(flow.StynxFlowGraphDesignerComponent).toBeDefined();
-    expect(flow.StynxFlowGraphCanvasComponent).toBeDefined();
-    expect(flow.StynxFlowFormsComponent).toBeDefined();
-    expect(flow.StynxFlowFormEditorComponent).toBeDefined();
-    expect(flow.StynxFlowFillEditorComponent).toBeDefined();
-    expect(flow.StynxFlowMyTasksInboxComponent).toBeDefined();
-    expect(flow.StynxFlowTaskCardComponent).toBeDefined();
-    expect(flow.StynxFlowWaiverDialogComponent).toBeDefined();
-    expect(flow.StynxFlowOpenTasksComponent).toBeDefined();
+    expect(flow.FlowApiService).toEqual(expect.anything());
+    expect(flow.FLOW_ROUTES).toEqual(expect.anything());
+    expect(flow.flowRoutes).toEqual(expect.anything());
+    expect(flow.StynxFlowGraphDesignerComponent).toEqual(expect.anything());
+    expect(flow.StynxFlowGraphCanvasComponent).toEqual(expect.anything());
+    expect(flow.StynxFlowFormsComponent).toEqual(expect.anything());
+    expect(flow.StynxFlowFormEditorComponent).toEqual(expect.anything());
+    expect(flow.StynxFlowFillEditorComponent).toEqual(expect.anything());
+    expect(flow.StynxFlowMyTasksInboxComponent).toEqual(expect.anything());
+    expect(flow.StynxFlowTaskCardComponent).toEqual(expect.anything());
+    expect(flow.StynxFlowWaiverDialogComponent).toEqual(expect.anything());
+    expect(flow.StynxFlowOpenTasksComponent).toEqual(expect.anything());
   });
 
   it('returns a defensive copy of host-mountable routes', () => {

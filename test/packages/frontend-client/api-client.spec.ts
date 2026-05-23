@@ -55,8 +55,8 @@ describe('StynxApiClient', () => {
     });
 
     await expect(client.get('/health')).resolves.toEqual({ ok: true });
+    expect(requests).toHaveLength(1);
     const [request] = requests;
-    expect(request).toBeDefined();
     expect(request?.init?.headers?.Authorization).toMatch(/^Bearer /);
     expect(request?.init?.headers?.['x-tenant-id']).toBe('tenant-1');
   });

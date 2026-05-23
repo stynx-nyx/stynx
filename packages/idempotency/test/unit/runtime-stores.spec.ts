@@ -54,17 +54,17 @@ function databaseWithRows(rows: unknown[], rowCount = rows.length) {
 describe('DatabaseIdempotencyStore', () => {
   it('returns null/false/noop without a configured database', async () => {
     const store = new DatabaseIdempotencyStore(undefined, { ttlMs: 10_000 });
-    await expect(store.lookup(context())).resolves.toBeNull();
+    await expect(store.lookup(context())).resolves.toBe(null);
     await expect(store.reserve(context())).resolves.toBe(false);
     await expect(store.persistResponse(context(), 200, {}, {})).resolves.toBe(false);
-    await expect(store.clearReservation(context())).resolves.toBeUndefined();
+    await expect(store.clearReservation(context())).resolves.toBe(undefined);
   });
 
   it('maps lookup rows and fallback expiry values inside system transactions', async () => {
     const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(1000);
     try {
       const empty = databaseWithRows([]);
-      await expect(new DatabaseIdempotencyStore(empty.database as never).lookup(context())).resolves.toBeNull();
+      await expect(new DatabaseIdempotencyStore(empty.database as never).lookup(context())).resolves.toBe(null);
 
       const completed = databaseWithRows([{
         request_fingerprint: 'fp-1',
@@ -167,7 +167,7 @@ describe('DatabaseIdempotencyStore', () => {
     );
 
     const cleared = databaseWithRows([], 0);
-    await expect(new DatabaseIdempotencyStore(cleared.database as never).clearReservation(context())).resolves.toBeUndefined();
+    await expect(new DatabaseIdempotencyStore(cleared.database as never).clearReservation(context())).resolves.toBe(undefined);
     expect(cleared.query).toHaveBeenCalledWith(
       expect.stringContaining('delete from core.idempotency_keys'),
       expect.arrayContaining(['tenant-1:k1']),
@@ -230,7 +230,7 @@ describe('RedisIdempotencyBackend', () => {
   it('is inert without redis options', async () => {
     const backend = new RedisIdempotencyBackend();
     await backend.onModuleInit();
-    await expect(backend.get(context())).resolves.toBeNull();
+    await expect(backend.get(context())).resolves.toBe(null);
     await expect(backend.acquireLock(context(), 'token')).resolves.toBe(false);
     await expect(backend.isLocked(context())).resolves.toBe(false);
     await expect(backend.set(context(), {
@@ -240,10 +240,10 @@ describe('RedisIdempotencyBackend', () => {
       headers: {},
       expiresAt: 1,
       status: 'completed',
-    })).resolves.toBeUndefined();
-    await expect(backend.releaseLock(context(), 'token')).resolves.toBeUndefined();
+    })).resolves.toBe(undefined);
+    await expect(backend.releaseLock(context(), 'token')).resolves.toBe(undefined);
     await backend.onModuleDestroy();
-    expect(redisMock.createClient).not.toHaveBeenCalled();
+    expect(redisMock.createClient).not.toHaveBeenCalledTimes(1);
   });
 
   it('stores entries, manages locks, and closes open redis clients', async () => {
@@ -253,7 +253,7 @@ describe('RedisIdempotencyBackend', () => {
     await backend.onModuleInit();
     expect(redisMock.createClient).toHaveBeenCalledWith({ url: 'redis://localhost:6379' });
     expect(redisMock.client.on).toHaveBeenCalledWith('error', expect.any(Function));
-    expect(redisMock.client.connect).toHaveBeenCalled();
+    expect(redisMock.client.connect).toHaveBeenCalledTimes(1);
 
     redisMock.client.get.mockResolvedValueOnce(JSON.stringify({
       requestFingerprint: 'fp-1',
@@ -284,7 +284,7 @@ describe('RedisIdempotencyBackend', () => {
 
     redisMock.client.get.mockResolvedValueOnce('other').mockResolvedValueOnce('token');
     await backend.releaseLock(context(), 'token');
-    expect(redisMock.client.del).not.toHaveBeenCalled();
+    expect(redisMock.client.del).not.toHaveBeenCalledTimes(1);
     await backend.releaseLock(context(), 'token');
     expect(redisMock.client.del).toHaveBeenCalledWith('custom:lock:tenant-1:k1');
 
@@ -293,7 +293,7 @@ describe('RedisIdempotencyBackend', () => {
     await expect(backend.isLocked(context())).resolves.toBe(false);
 
     await backend.onModuleDestroy();
-    expect(redisMock.client.quit).toHaveBeenCalled();
+    expect(redisMock.client.quit).toHaveBeenCalledTimes(1);
   });
 
   it('returns null cache misses and uses the default redis prefix', async () => {
@@ -303,7 +303,7 @@ describe('RedisIdempotencyBackend', () => {
     await backend.onModuleInit();
 
     redisMock.client.get.mockResolvedValueOnce(null);
-    await expect(backend.get(context())).resolves.toBeNull();
+    await expect(backend.get(context())).resolves.toBe(null);
     expect(redisMock.client.get).toHaveBeenCalledWith('stynx:idempotency:entry:tenant-1:k1');
 
     redisMock.client.set.mockResolvedValueOnce('OK');

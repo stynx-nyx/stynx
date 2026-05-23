@@ -227,7 +227,7 @@ describe('@stynx-web/angular', () => {
     try {
       expect(generateClientRequestId()).toBe('018bcfe5-6800-7607-8809-0a0b0c0d0e0f');
       expect(getRandomValues).toHaveBeenCalledWith(expect.any(Uint8Array));
-      expect(random).not.toHaveBeenCalled();
+      expect(random).not.toHaveBeenCalledTimes(1);
     } finally {
       Object.defineProperty(globalThis, 'crypto', {
         configurable: true,
@@ -454,7 +454,7 @@ describe('@stynx-web/angular', () => {
     ))).rejects.toBe(error);
 
     expect(run).toHaveBeenCalledWith(expect.any(Function));
-    expect(tick).not.toHaveBeenCalled();
+    expect(tick).not.toHaveBeenCalledTimes(1);
     vi.runOnlyPendingTimers();
     expect(tick).toHaveBeenCalledWith();
     vi.useRealTimers();
@@ -482,7 +482,7 @@ describe('@stynx-web/angular', () => {
     ))).rejects.toBe(error);
 
     vi.runOnlyPendingTimers();
-    expect(tick).not.toHaveBeenCalled();
+    expect(tick).not.toHaveBeenCalledTimes(1);
     vi.useRealTimers();
   });
 

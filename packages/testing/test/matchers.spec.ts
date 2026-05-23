@@ -62,7 +62,7 @@ describe('expectROCannotWrite', () => {
       expectROCannotWrite(async () => {
         throw new ReadOnlyViolationError({ table: 'demo' });
       }),
-    ).resolves.toBeUndefined();
+    ).resolves.toBe(undefined);
   });
 
   it('rethrows non-RO errors', async () => {
@@ -89,9 +89,9 @@ describe('archive-aware matchers', () => {
       { rows: [{ value: 0 }] },
     ]);
 
-    await expect(expectInArchive(database, unitDocuments, 'row-1')).resolves.toBeUndefined();
-    await expect(expectNotInLive(database, unitDocuments, 'row-1')).resolves.toBeUndefined();
-    await expect(expectRestored(database, unitDocuments, 'row-1')).resolves.toBeUndefined();
+    await expect(expectInArchive(database, unitDocuments, 'row-1')).resolves.toBe(undefined);
+    await expect(expectNotInLive(database, unitDocuments, 'row-1')).resolves.toBe(undefined);
+    await expect(expectRestored(database, unitDocuments, 'row-1')).resolves.toBe(undefined);
     expect(query).toHaveBeenCalledWith(
       'select count(*)::int as value from "archive"."unit_documents" where id = $1::uuid',
       ['row-1'],
@@ -123,7 +123,7 @@ describe('archive-aware matchers', () => {
   it('uses public schema metadata for tables without an explicit schema', async () => {
     const { database, query } = databaseWithRows([{ rows: [{ value: 0 }] }]);
 
-    await expect(expectNotInLive(database, publicDocuments, 'public-row')).resolves.toBeUndefined();
+    await expect(expectNotInLive(database, publicDocuments, 'public-row')).resolves.toBe(undefined);
     expect(query).toHaveBeenCalledWith(
       'select count(*)::int as value from "public"."public_documents" where id = $1::uuid',
       ['public-row'],
@@ -133,7 +133,7 @@ describe('archive-aware matchers', () => {
   it('checks archive mirror existence and column parity', async () => {
     await expect(
       expectArchiveMirrorExists(databaseWithRows([{ rows: [{ value: 1 }] }]).database, unitDocuments),
-    ).resolves.toBeUndefined();
+    ).resolves.toBe(undefined);
 
     await expect(
       expectArchiveMirrorInSync(
@@ -151,7 +151,7 @@ describe('archive-aware matchers', () => {
         ]).database,
         unitDocuments,
       ),
-    ).resolves.toBeUndefined();
+    ).resolves.toBe(undefined);
   });
 
   it('reports missing archive mirrors and mirror drift', async () => {
@@ -193,7 +193,7 @@ describe('auditExpect', () => {
         rowId: 'row-1',
         tags: { requestId: 'req-1' },
       }),
-    ).resolves.toBeUndefined();
+    ).resolves.toBe(undefined);
     expect(query).toHaveBeenCalledWith(expect.stringContaining('from audit.log'), [
       'insert',
       'unit',
@@ -205,7 +205,7 @@ describe('auditExpect', () => {
   it('uses schema, row id, and tags defaults when only entity and operation are provided', async () => {
     const { database, query } = databaseWithRows([{ rows: [{ tags: null }] }]);
 
-    await expect(auditExpect(database, 'documents', 'insert')).resolves.toBeUndefined();
+    await expect(auditExpect(database, 'documents', 'insert')).resolves.toBe(undefined);
     expect(query).toHaveBeenCalledWith(expect.stringContaining('from audit.log'), [
       'insert',
       null,
@@ -236,7 +236,7 @@ describe('expectRLSIsolated', () => {
         ],
         { tenantA: 'tenant-a', tenantB: 'tenant-b' },
       ),
-    ).resolves.toBeUndefined();
+    ).resolves.toBe(undefined);
   });
 
   it('reports leaked rows from another tenant', async () => {
@@ -255,7 +255,7 @@ describe('expectRestoreConflict', () => {
       expectRestoreConflict(async () => {
         throw new RestoreConflictError({ table: 'demo' });
       }),
-    ).resolves.toBeUndefined();
+    ).resolves.toBe(undefined);
   });
 
   it('rethrows non-conflict errors', async () => {
@@ -279,7 +279,7 @@ describe('expectSoftDeleteBlocked', () => {
       expectSoftDeleteBlocked(async () => {
         throw new SoftDeleteBlockedError({ table: 'demo' });
       }),
-    ).resolves.toBeUndefined();
+    ).resolves.toBe(undefined);
   });
 
   it('rethrows non-blocked errors', async () => {

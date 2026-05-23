@@ -45,7 +45,7 @@ describe('RedisSlidingWindowRateLimitStore', () => {
     await store.onModuleInit();
     await expect(store.consume(context())).rejects.toThrow('not configured');
     await store.onModuleDestroy();
-    expect(redisMock.createClient).not.toHaveBeenCalled();
+    expect(redisMock.createClient).not.toHaveBeenCalledTimes(1);
   });
 
   it('loads the sliding-window script, maps Redis numeric responses, and quits open clients', async () => {
@@ -57,7 +57,7 @@ describe('RedisSlidingWindowRateLimitStore', () => {
       await store.onModuleInit();
       expect(redisMock.createClient).toHaveBeenCalledWith({ url: 'redis://localhost:6379' });
       expect(redisMock.client.on).toHaveBeenCalledWith('error', expect.any(Function));
-      expect(redisMock.client.connect).toHaveBeenCalled();
+      expect(redisMock.client.connect).toHaveBeenCalledTimes(1);
       expect(redisMock.client.scriptLoad).toHaveBeenCalledWith(expect.stringContaining('ZRANGEBYSCORE'));
 
       redisMock.client.evalSha
@@ -96,7 +96,7 @@ describe('RedisSlidingWindowRateLimitStore', () => {
       });
 
       await store.onModuleDestroy();
-      expect(redisMock.client.quit).toHaveBeenCalled();
+      expect(redisMock.client.quit).toHaveBeenCalledTimes(1);
     } finally {
       nowSpy.mockRestore();
     }
@@ -109,7 +109,7 @@ describe('RedisSlidingWindowRateLimitStore', () => {
     await store.onModuleInit();
     redisMock.client.isOpen = false;
     await store.onModuleDestroy();
-    expect(redisMock.client.quit).not.toHaveBeenCalled();
+    expect(redisMock.client.quit).not.toHaveBeenCalledTimes(1);
   });
 
   it('uses the default Redis key prefix when keyPrefix is omitted', async () => {

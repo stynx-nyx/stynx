@@ -44,11 +44,11 @@ describe('backend durable stores', () => {
     };
     const store = new PgIdempotencyStore({ executor, table: 'custom.idempotency' });
 
-    await expect(store.lookup(idempotencyContext({ tenantId: undefined }))).resolves.toBeNull();
+    await expect(store.lookup(idempotencyContext({ tenantId: undefined }))).resolves.toBe(null);
     await expect(store.reserve(idempotencyContext({ tenantId: undefined }))).resolves.toBe(false);
     await expect(store.persistResponse(idempotencyContext({ tenantId: undefined }), 200, {})).resolves.toBe(false);
-    await expect(store.clearReservation(idempotencyContext({ tenantId: undefined }))).resolves.toBeUndefined();
-    await expect(store.lookup(idempotencyContext())).resolves.toBeNull();
+    await expect(store.clearReservation(idempotencyContext({ tenantId: undefined }))).resolves.toBe(undefined);
+    await expect(store.lookup(idempotencyContext())).resolves.toBe(null);
     await expect(store.lookup(idempotencyContext())).resolves.toMatchObject({
       statusCode: 200,
       body: null,
@@ -59,7 +59,7 @@ describe('backend durable stores', () => {
     });
     await expect(store.reserve(idempotencyContext())).resolves.toBe(true);
     await expect(store.persistResponse(idempotencyContext(), 204, undefined)).resolves.toBe(true);
-    await expect(store.clearReservation(idempotencyContext())).resolves.toBeUndefined();
+    await expect(store.clearReservation(idempotencyContext())).resolves.toBe(undefined);
     expect(executor.query).toHaveBeenLastCalledWith(
       expect.stringContaining('DELETE FROM custom.idempotency'),
       expect.arrayContaining(['k1', 'fp-1']),
@@ -75,7 +75,7 @@ describe('backend durable stores', () => {
         .mockResolvedValueOnce({ rows: [] }),
     };
     const store = new PgIdempotencyStore({ executor });
-    await expect(store.lookup(idempotencyContext())).resolves.toBeNull();
+    await expect(store.lookup(idempotencyContext())).resolves.toBe(null);
     await expect(store.persistResponse(idempotencyContext(), 201, { ok: true })).resolves.toBe(true);
     await expect(store.persistResponse(idempotencyContext(), 201, { ok: true })).resolves.toBe(false);
     await expect(store.persistResponse(idempotencyContext(), 201, { ok: true })).resolves.toBe(false);
@@ -96,11 +96,11 @@ describe('backend durable stores', () => {
     const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(61_000);
     try {
       const store = new PgRateLimitStore({ executor, table: 'custom.rate_windows' });
-      await expect(store.increment(rateLimitContext({ tenantId: undefined }))).resolves.toBeNull();
-      await expect(store.cleanup(rateLimitContext({ tenantId: undefined }))).resolves.toBeUndefined();
+      await expect(store.increment(rateLimitContext({ tenantId: undefined }))).resolves.toBe(null);
+      await expect(store.cleanup(rateLimitContext({ tenantId: undefined }))).resolves.toBe(undefined);
       await expect(store.increment(rateLimitContext())).resolves.toBe(2);
-      await expect(store.increment(rateLimitContext())).resolves.toBeNull();
-      await expect(store.cleanup(rateLimitContext())).resolves.toBeUndefined();
+      await expect(store.increment(rateLimitContext())).resolves.toBe(null);
+      await expect(store.cleanup(rateLimitContext())).resolves.toBe(undefined);
       expect(executor.query).toHaveBeenLastCalledWith(
         expect.stringContaining('DELETE FROM custom.rate_windows'),
         ['00000000-0000-0000-0000-000000000001'],

@@ -1,5 +1,5 @@
 import type { ExecutionContext } from '@nestjs/common';
-import { HttpStatus, ServiceUnavailableException, SetMetadata } from '@nestjs/common';
+import { HttpException, HttpStatus, ServiceUnavailableException, SetMetadata } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { STYNX_SYSTEM_ROUTE } from '@stynx/auth';
 import { STYNX_RATE_LIMIT_ROUTE } from '../../src/constants';
@@ -96,7 +96,15 @@ describe('RateLimitGuard', () => {
       return undefined;
     };
     SetMetadata(STYNX_SYSTEM_ROUTE, true)(handler, undefined as never, undefined as never);
-    const guard = new RateLimitGuard(reflector, {}, undefined, undefined);
+    const store: RateLimitStore = {
+      consume: vi.fn(async () => {
+        throw new Error('should not run');
+      }),
+    };
+    const policyResolver: RateLimitPolicyResolver = {
+      resolve: vi.fn(async () => ({ bucket: 'tenant', scope: 's', cost: 1, limit: 5, windowSeconds: 60 })),
+    };
+    const guard = new RateLimitGuard(reflector, {}, store, policyResolver);
 
     await expect(
       guard.canActivate(
@@ -107,6 +115,8 @@ describe('RateLimitGuard', () => {
         ),
       ),
     ).resolves.toBe(true);
+    expect(store.consume).not.toHaveBeenCalled();
+    expect(policyResolver.resolve).not.toHaveBeenCalled();
   });
 
   it('applies headers and allows when the store accepts the request', async () => {
@@ -154,6 +164,7 @@ describe('RateLimitGuard', () => {
     expect(response.headers['X-RateLimit-Limit']).toBe('10');
     expect(response.headers['X-RateLimit-Remaining']).toBe('9');
     expect(response.headers['X-RateLimit-Reset']).toBe(String(Math.ceil(1_700_000_000_000 / 1000)));
+    expect(response.headers['X-Stynx-RateLimit-Overhead-Ms']).toMatch(/^\d+\.\d{3}$/u);
     expect(metrics.histogramSnapshot()['documents.write']?.count).toBe(1);
   });
 
@@ -203,6 +214,7 @@ describe('RateLimitGuard', () => {
     expect(response.headers['X-RateLimit-Remaining']).toBe('0');
     expect(response.headers['X-RateLimit-Reset']).toBe(String(Math.ceil(1_700_000_010_000 / 1000)));
     expect(response.headers['Retry-After']).toBe('10');
+    expect(response.headers['X-Stynx-RateLimit-Overhead-Ms']).toMatch(/^\d+\.\d{3}$/u);
     expect(metrics.snapshot()).toEqual({ 'documents.write': 1 });
   });
 
@@ -223,24 +235,35 @@ describe('RateLimitGuard', () => {
         ),
       ),
     ).resolves.toBe(true);
-    expect(policyResolver.resolve).not.toHaveBeenCalled();
+    expect(policyResolver.resolve).not.toHaveBeenCalledTimes(1);
   });
 
   it('uses default options when only the reflector is provided', async () => {
     const handler = function defaultOptions() {
       return undefined;
     };
-    const guard = new RateLimitGuard(reflector);
+    Reflect.defineMetadata(STYNX_RATE_LIMIT_ROUTE, { bucket: 'tenant', scope: 's', cost: 1 }, handler);
+    const store: RateLimitStore = {
+      consume: vi.fn(async () => {
+        throw new Error('should not run');
+      }),
+    };
+    const policyResolver: RateLimitPolicyResolver = {
+      resolve: vi.fn(async () => ({ bucket: 'tenant', scope: 's', cost: 1, limit: 5, windowSeconds: 60 })),
+    };
+    const guard = new RateLimitGuard(reflector, undefined, store, policyResolver);
 
     await expect(
       guard.canActivate(
         createExecutionContext(
-          { headers: {}, method: 'GET', path: '/unmetered', res: createResponse() },
+          { headers: {}, method: 'GET', path: '/api/v1/system/health/ready', res: createResponse() },
           handler,
           TestController,
         ),
       ),
     ).resolves.toBe(true);
+    expect(store.consume).not.toHaveBeenCalled();
+    expect(policyResolver.resolve).not.toHaveBeenCalled();
   });
 
   it('allows the request when no policyResolver is wired even if metadata is set', async () => {
@@ -336,6 +359,35 @@ describe('RateLimitGuard', () => {
     });
   });
 
+  it('rethrows HttpException from the distributed store without open-circuiting', async () => {
+    const handler = function storeHttpError() {
+      return undefined;
+    };
+    Reflect.defineMetadata(STYNX_RATE_LIMIT_ROUTE, { bucket: 'tenant', scope: 's', cost: 1 }, handler);
+    const store: RateLimitStore = {
+      consume: vi.fn(async () => {
+        throw new HttpException('store rejected request', HttpStatus.CONFLICT);
+      }),
+    };
+    const policyResolver: RateLimitPolicyResolver = {
+      resolve: vi.fn(async () => ({ bucket: 'tenant', scope: 's', cost: 1, limit: 5, windowSeconds: 60 })),
+    };
+    const guard = new RateLimitGuard(reflector, {}, store, policyResolver);
+
+    await expect(
+      guard.canActivate(
+        createExecutionContext(
+          { headers: {}, method: 'GET', path: '/x', tenantId: 't1', res: createResponse() },
+          handler,
+          TestController,
+        ),
+      ),
+    ).rejects.toMatchObject({
+      message: 'store rejected request',
+      status: HttpStatus.CONFLICT,
+    });
+  });
+
   it('throws 503 under distributedStrict when the store returns null (resolver missing)', async () => {
     const handler = function strictBackend() {
       return undefined;
@@ -401,6 +453,7 @@ describe('RateLimitGuard', () => {
         ),
       ),
     ).resolves.toBe(true);
+    expect(store.consume).toHaveBeenCalledTimes(1);
   });
 
   it('builds bucket keys for ip / user / route buckets', async () => {
@@ -637,6 +690,39 @@ describe('RateLimitGuard', () => {
       ),
     );
     expect(observedKey).toBe('s:tenant:public');
+  });
+
+  it('rejects malformed one-part Bearer values before payload parsing', async () => {
+    const handler = function onePartJwt() {
+      return undefined;
+    };
+    Reflect.defineMetadata(STYNX_RATE_LIMIT_ROUTE, { bucket: 'user', scope: 's', cost: 1 }, handler);
+    let observedKey: string | undefined;
+    const store: RateLimitStore = {
+      consume: vi.fn(async (ctx) => {
+        observedKey = ctx.bucketKey;
+        return { allowed: true, limit: 1, remaining: 1, resetAtEpochMs: 0, retryAfterSeconds: 0, used: 1 };
+      }),
+    };
+    const policyResolver: RateLimitPolicyResolver = {
+      resolve: vi.fn(async () => ({ bucket: 'user', scope: 's', cost: 1, limit: 1, windowSeconds: 60 })),
+    };
+    const guard = new RateLimitGuard(reflector, {}, store, policyResolver);
+
+    await guard.canActivate(
+      createExecutionContext(
+        {
+          headers: { authorization: 'Bearer abc' },
+          method: 'GET',
+          path: '/x',
+          res: createResponse(),
+        },
+        handler,
+        TestController,
+      ),
+    );
+
+    expect(observedKey).toBe('s:user:anonymous');
   });
 
   it('ignores Bearer tokens whose payload is not valid JSON', async () => {

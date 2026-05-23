@@ -91,6 +91,16 @@ describe('SecretLoader', () => {
     await expect(loader.getSecretString('id-1')).rejects.toBeInstanceOf(SecretLoadError);
   });
 
+  it('throws SecretLoadError when the SDK returns an empty SecretString', async () => {
+    const send = vi.fn().mockResolvedValueOnce({ SecretString: '' });
+    const loader = new SecretLoader({ secretCacheTtlMs: 60_000 } as never);
+    (loader as unknown as { client: { send: typeof send } }).client = { send } as never;
+
+    await expect(loader.getSecretString('id-1')).rejects.toMatchObject({
+      cause: expect.objectContaining({ message: 'SecretString is empty' }),
+    });
+  });
+
   it('throws SecretLoadError on connection-like errors', async () => {
     const send = vi.fn().mockRejectedValueOnce(new Error('ECONNREFUSED'));
     const loader = new SecretLoader({ secretCacheTtlMs: 60_000 } as never);
@@ -123,6 +133,8 @@ describe('SecretLoader', () => {
 
     expect(run).toHaveBeenNthCalledWith(1, 'old-secret');
     expect(run).toHaveBeenNthCalledWith(2, 'new-secret');
+    expect(send).toHaveBeenCalledTimes(2);
+    await expect(loader.getSecretString('id-1')).resolves.toBe('new-secret');
     expect(send).toHaveBeenCalledTimes(2);
   });
 

@@ -57,7 +57,7 @@ describe('PermissionCache', () => {
     });
 
     expect(record.permissions).toEqual(['document:read:*']);
-    expect(queries.resolveForUser).not.toHaveBeenCalled();
+    expect(queries.resolveForUser).not.toHaveBeenCalledTimes(1);
     expect(metrics.snapshot()).toEqual({ in_memory: 1, redis: 0, db: 0 });
   });
 
@@ -98,7 +98,7 @@ describe('PermissionCache', () => {
     });
 
     expect(record.permissions).toEqual(['document:read:*']);
-    expect(queries.resolveForUser).not.toHaveBeenCalled();
+    expect(queries.resolveForUser).not.toHaveBeenCalledTimes(1);
     expect(metrics.snapshot()).toEqual({ in_memory: 0, redis: 1, db: 0 });
     await expect(cache.inspectSid('sid-redis')).resolves.toMatchObject({ sid: 'sid-redis' });
   });
@@ -139,7 +139,7 @@ describe('PermissionCache', () => {
     await cache.publishInvalidation('*:tenant-1');
 
     for (let index = 0; index < 100; index += 1) {
-      await expect(cache.inspectSid(`sid-${index}`)).resolves.toBeNull();
+      await expect(cache.inspectSid(`sid-${index}`)).resolves.toBe(null);
     }
   });
 
@@ -302,7 +302,7 @@ describe('PermissionCache', () => {
     await cache.invalidateSid('sid-delete');
 
     expect(deleteSpy).toHaveBeenCalledWith('sid-delete');
-    await expect(cache.inspectSid('sid-delete')).resolves.toBeNull();
+    await expect(cache.inspectSid('sid-delete')).resolves.toBe(null);
   });
 
   it('clears all cached sessions on global invalidation and ignores malformed invalidation messages', async () => {
@@ -352,13 +352,13 @@ describe('PermissionCache', () => {
 
     await cache.publishInvalidation('malformed-message');
     await expect(cache.inspectSid('sid-a')).resolves.toMatchObject({ sid: 'sid-a' });
-    expect(invalidateScope).not.toHaveBeenCalled();
+    expect(invalidateScope).not.toHaveBeenCalledTimes(1);
 
     await cache.publishInvalidation('*:*');
 
     expect(invalidateScope).toHaveBeenCalledWith('*:*');
-    await expect(cache.inspectSid('sid-a')).resolves.toBeNull();
-    await expect(cache.inspectSid('sid-b')).resolves.toBeNull();
+    await expect(cache.inspectSid('sid-a')).resolves.toBe(null);
+    await expect(cache.inspectSid('sid-b')).resolves.toBe(null);
   });
 
   it('invalidates only matching sessions for user and tenant scoped messages', async () => {
@@ -397,7 +397,7 @@ describe('PermissionCache', () => {
 
     await cache.publishInvalidation('user-a:tenant-a');
 
-    await expect(cache.inspectSid('sid-a')).resolves.toBeNull();
+    await expect(cache.inspectSid('sid-a')).resolves.toBe(null);
     await expect(cache.inspectSid('sid-b')).resolves.toMatchObject({ sid: 'sid-b' });
     await expect(cache.inspectSid('sid-c')).resolves.toMatchObject({ sid: 'sid-c' });
   });
@@ -444,7 +444,7 @@ describe('PermissionCache', () => {
 
     nowSpy.mockReturnValue(startedAt + 5_000);
     backend.get.mockResolvedValue(null);
-    await expect(cache.inspectSid('sid-expiring')).resolves.toBeNull();
+    await expect(cache.inspectSid('sid-expiring')).resolves.toBe(null);
     nowSpy.mockRestore();
   });
 
@@ -477,7 +477,7 @@ describe('PermissionCache', () => {
       );
     }
 
-    await expect(cache.inspectSid('sid-a')).resolves.toBeNull();
+    await expect(cache.inspectSid('sid-a')).resolves.toBe(null);
     await expect(cache.inspectSid('sid-b')).resolves.toMatchObject({ sid: 'sid-b' });
     await expect(cache.inspectSid('sid-c')).resolves.toMatchObject({ sid: 'sid-c' });
   });
@@ -565,7 +565,7 @@ describe('PermissionCache', () => {
       }),
     ).resolves.toMatchObject({ sid: 'sid-no-drift', hash: 'hash' });
     expect(queries.probeHash).toHaveBeenCalledWith('user-1', 'tenant-1');
-    expect(queries.resolveForUser).not.toHaveBeenCalled();
+    expect(queries.resolveForUser).not.toHaveBeenCalledTimes(1);
     expect(metrics.snapshot()).toEqual({ in_memory: 1, redis: 0, db: 0 });
     nowSpy.mockRestore();
   });
@@ -615,7 +615,7 @@ describe('PermissionCache', () => {
         claims: {},
       }),
     ).resolves.toMatchObject({ hash: 'fresh-hash', permissions: ['document:write:*'] });
-    expect(queries.probeHash).not.toHaveBeenCalled();
+    expect(queries.probeHash).not.toHaveBeenCalledTimes(1);
     expect(queries.resolveForUser).toHaveBeenCalledWith('user-1', 'tenant-1');
   });
 
@@ -669,15 +669,15 @@ describe('PermissionCache', () => {
 
     await cache.publishInvalidation('*:tenant-a');
 
-    await expect(cache.inspectSid('sid-a1')).resolves.toBeNull();
-    await expect(cache.inspectSid('sid-a2')).resolves.toBeNull();
+    await expect(cache.inspectSid('sid-a1')).resolves.toBe(null);
+    await expect(cache.inspectSid('sid-a2')).resolves.toBe(null);
     await expect(cache.inspectSid('sid-b1')).resolves.toMatchObject({ sid: 'sid-b1' });
     await expect(cache.inspectSid('sid-b2')).resolves.toMatchObject({ sid: 'sid-b2' });
     expect(invalidateScope).toHaveBeenLastCalledWith('*:tenant-a');
 
     await cache.publishInvalidation('user-a:*');
 
-    await expect(cache.inspectSid('sid-b1')).resolves.toBeNull();
+    await expect(cache.inspectSid('sid-b1')).resolves.toBe(null);
     await expect(cache.inspectSid('sid-b2')).resolves.toMatchObject({ sid: 'sid-b2' });
     expect(invalidateScope).toHaveBeenLastCalledWith('user-a:*');
   });
@@ -697,7 +697,7 @@ describe('PermissionCache', () => {
 
     await cache.onModuleDestroy();
 
-    expect(closeSpy).toHaveBeenCalled();
+    expect(closeSpy).toHaveBeenCalledTimes(1);
   });
 
   it('proactively re-syncs stale in-memory permission entries', async () => {

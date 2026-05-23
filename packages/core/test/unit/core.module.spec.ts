@@ -51,6 +51,6 @@ describe('StynxCoreModule', () => {
       && 'provide' in provider
       && provider.provide === STYNX_SYSTEM_OPERATION_SINK,
     ) as { useValue: { write: () => Promise<void> } };
-    await expect(sinkProvider.useValue.write()).resolves.toBeUndefined();
+    await expect(sinkProvider.useValue.write()).resolves.toBe(undefined);
   });
 });

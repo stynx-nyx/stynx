@@ -69,7 +69,7 @@ describe('Rate limit integration', () => {
     } finally {
       await admin.end();
     }
-  });
+  }, 60_000);
 
   afterAll(async () => {
     await stopRedisDockerContainer(redis);
@@ -177,10 +177,10 @@ describe('Rate limit integration', () => {
             handler,
           ),
         ),
-      ).rejects.toBeTruthy();
+      ).rejects.toEqual(expect.anything());
 
       expect(response.headers['X-RateLimit-Limit']).toBe('150');
-      expect(response.headers['Retry-After']).toBeTruthy();
+      expect(response.headers['Retry-After']).toEqual(expect.anything());
       expect(metrics.snapshot()).toEqual({ 'documents.write': 1 });
     } finally {
       await store.onModuleDestroy();

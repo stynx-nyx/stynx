@@ -123,7 +123,7 @@ describe('TenancyService', () => {
     });
 
     expect(result.tenant.slug).toBe('tenant-alpha');
-    expect(prefixProvisioner.ensurePrefix).toHaveBeenCalled();
+    expect(prefixProvisioner.ensurePrefix).toHaveBeenCalledTimes(1);
     expect(inviteSender.sendOwnerInvite).toHaveBeenCalledWith(expect.objectContaining({
       tenantSlug: 'tenant-alpha',
       tenantName: 'Tenant Alpha',
@@ -205,7 +205,7 @@ describe('TenancyService', () => {
       tenant: expect.objectContaining({ slug: 'tenant-alpha' }),
     });
 
-    expect(archiveExporter.exportPlaceholder).toHaveBeenCalled();
+    expect(archiveExporter.exportPlaceholder).toHaveBeenCalledTimes(1);
     expect(purgeDelegate.purgeTenant).toHaveBeenCalledWith(TENANT_ID);
     expect(membershipCache.invalidateTenant).toHaveBeenCalledWith(TENANT_ID);
     expect(txQuery).toHaveBeenCalledWith(expect.stringContaining("state = 'archived'"), [TENANT_ID]);
@@ -261,7 +261,7 @@ describe('TenancyService', () => {
     const { service, txQuery, database } = createService();
     txQuery.mockImplementation((sql: string, values?: unknown[]) => {
       if (sql.includes('order by tenant.created_at desc')) {
-        expect(values).toBeUndefined();
+        expect(values).toBe(undefined);
         return Promise.resolve({ rows: [tenantRow({ slug: 'tenant-list' })] });
       }
       if (sql.includes('where tenant.id = $1::uuid limit 1')) {

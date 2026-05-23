@@ -144,14 +144,14 @@ describe('PormIdentityAdminFacade', () => {
     const service = makeAdminService();
     const facade = new PormIdentityAdminFacade(service);
     await expect(facade.update('alice', {})).resolves.toEqual({ updated: false });
-    expect(service.updateUser).not.toHaveBeenCalled();
+    expect(service.updateUser).not.toHaveBeenCalledTimes(1);
   });
 
   it('update() short-circuits when custom is empty', async () => {
     const service = makeAdminService();
     const facade = new PormIdentityAdminFacade(service);
     await expect(facade.update('alice', { custom: {} })).resolves.toEqual({ updated: false });
-    expect(service.updateUser).not.toHaveBeenCalled();
+    expect(service.updateUser).not.toHaveBeenCalledTimes(1);
   });
 
   it('update() passes through every present field to updateUser', async () => {
@@ -203,7 +203,7 @@ describe('PormIdentityAdminFacade', () => {
     const service = makeAdminService();
     const facade = new PormIdentityAdminFacade(service);
     await expect(facade.verify('u', {})).resolves.toEqual({ verified: false });
-    expect(service.verifyUserChannels).not.toHaveBeenCalled();
+    expect(service.verifyUserChannels).not.toHaveBeenCalledTimes(1);
   });
 
   it('verify() delegates when email or phone is requested', async () => {
@@ -277,7 +277,7 @@ describe('PecIdentityAdminFacade', () => {
       token: 'next',
     });
     expect(result.items[0].createdAt).toBeInstanceOf(Date);
-    expect(result.items[0].updatedAt).toBeUndefined();
+    expect(result.items[0].updatedAt).toBe(undefined);
     expect(result.items[0].username).toBe('u');
     expect(result.items[0].status).toBe('CONFIRMED');
     expect(result.items[0].enabled).toBe(true);
@@ -294,8 +294,8 @@ describe('PecIdentityAdminFacade', () => {
     });
     const facade = new PecIdentityAdminFacade(service);
     const result = await facade.list({});
-    expect(result.items[0].email).toBeNull();
-    expect(result.items[0].phone_number).toBeNull();
+    expect(result.items[0].email).toBe(null);
+    expect(result.items[0].phone_number).toBe(null);
   });
 
   it('get() maps user detail with parsed dates', async () => {
@@ -334,7 +334,7 @@ describe('PecIdentityAdminFacade', () => {
     expect(result.status).toBe('UPDATED');
     expect(result.enabled).toBe(false);
     expect(result.createdAt).toBeInstanceOf(Date);
-    expect(result.updatedAt).toBeUndefined();
+    expect(result.updatedAt).toBe(undefined);
   });
 
   it('describes branch: PEC update passes an empty patch when all fields are undefined', async () => {

@@ -715,7 +715,7 @@ describe('FlowRuntimeService.taskCandidates', () => {
     );
     const result = await service.taskCandidates(TASK);
     expect(result[0]).toMatchObject({ agentType: 'resolver', agentId: '' });
-    expect(adapters.resolveAgents).not.toHaveBeenCalled();
+    expect(adapters.resolveAgents).not.toHaveBeenCalledTimes(1);
   });
 
   it('leaves resolver candidates unresolved when resolver id is null', async () => {
@@ -734,7 +734,7 @@ describe('FlowRuntimeService.taskCandidates', () => {
     ]);
     const result = await service.taskCandidates(TASK);
     expect(result[0]).toMatchObject({ agentType: 'resolver', agentId: null });
-    expect(adapters.resolveAgents).not.toHaveBeenCalled();
+    expect(adapters.resolveAgents).not.toHaveBeenCalledTimes(1);
   });
 
   it('passes empty strings for nullable resolver candidate context', async () => {

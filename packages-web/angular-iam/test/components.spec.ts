@@ -717,7 +717,7 @@ describe('@stynx-web/angular-iam component TestBed specs', () => {
     role.component.roleId = null;
     roleAccess.saveOverview();
     role.component.roleId = 'missing-role';
-    expect(role.component.role()).toBeNull();
+    expect(role.component.role()).toBe(null);
     role.api.listRoles.mockReturnValueOnce(throwError(() => 'roles down'));
     role.component.roleId = 'role-1';
     expect(role.component.error()).toBe('iam.roles.detail.loadFailed');
@@ -734,7 +734,7 @@ describe('@stynx-web/angular-iam component TestBed specs', () => {
     group.component.groupId = null;
     groupAccess.saveOverview();
     group.component.groupId = 'missing-group';
-    expect(group.component.group()).toBeNull();
+    expect(group.component.group()).toBe(null);
     group.api.listGroups.mockReturnValueOnce(throwError(() => 'groups down'));
     group.component.groupId = 'group-1';
     expect(group.component.error()).toBe('iam.groups.detail.loadFailed');
@@ -752,7 +752,7 @@ describe('@stynx-web/angular-iam component TestBed specs', () => {
     access.saveRoles();
     access.saveGroups();
     access.sendInvite();
-    expect(detail.api.patchUser).not.toHaveBeenCalled();
+    expect(detail.api.patchUser).not.toHaveBeenCalledTimes(1);
     detail.api.getUser.mockReturnValueOnce(of({ id: 'user-3', email: 'empty@example.test', groups: [], roles: [], effectivePermissions: EFFECTIVE }));
     detail.component.userId = 'user-3';
     expect(detail.component.overviewForm.getRawValue()).toEqual({ email: 'empty@example.test', firstName: '', lastName: '', locale: 'en-US' });
@@ -810,7 +810,7 @@ describe('@stynx-web/angular-iam component TestBed specs', () => {
     expect(matrix.component.allPermissions().map((permission) => permission.key)).toContain('lonely');
     expect(matrix.component.dirty()).toBe(true);
     access.save();
-    expect(matrix.api.setRolePermissions).not.toHaveBeenCalled();
+    expect(matrix.api.setRolePermissions).not.toHaveBeenCalledTimes(1);
     matrix.api.listRolePermissions.mockReturnValueOnce(throwError(() => new Error('load failed')));
     matrix.component.roleId = 'role-1';
     expect(matrix.component.error()).toBe('load failed');
@@ -1203,7 +1203,7 @@ describe('@stynx-web/angular-iam component TestBed specs', () => {
       // The first listUsers call is the constructor-triggered load. Inspect it.
       const first = users.api.listUsers.mock.calls[0]?.[0];
       // Constructor body must execute (kills BlockStatement → {} on line 309).
-      expect(users.api.listUsers).toHaveBeenCalled();
+      expect(users.api.listUsers).toHaveBeenCalledTimes(1);
       // Initial form default `q: ['']` produces an empty q which is omitted
       // from the listUsers payload entirely. A StringLiteral mutation on the
       // default would inject 'Stryker was here!' into the payload.

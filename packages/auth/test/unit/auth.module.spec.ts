@@ -95,7 +95,7 @@ describe('StynxAuthModule', () => {
         provider.provide === STYNX_PERMISSION_CACHE_BACKEND,
     ) as { useFactory: (backend: RedisPermissionCacheBackend) => RedisPermissionCacheBackend | null };
 
-    expect(backendProvider.useFactory({} as RedisPermissionCacheBackend)).toBeNull();
+    expect(backendProvider.useFactory({} as RedisPermissionCacheBackend)).toBe(null);
   });
 
   it('resolves auth options with defaults and optional redis/permission overrides', () => {

@@ -187,7 +187,7 @@ describe('@stynx-web/angular-iam API and routes', () => {
     await firstValueFrom(service.listRoles());
     // Patch URL must be exactly `/admin/roles/${id}` — kills StringLiteral mutation that empties the template.
     await firstValueFrom(service.patchRole('role-1', { name: 'Admin patched' }));
-    expect(client.calls.patch.find(([p]) => p === '/admin/roles/role-1')).toBeDefined();
+    expect(client.calls.patch.find(([p]) => p === '/admin/roles/role-1')).toEqual(expect.anything());
     // The tap() body updates state with the response shape — kills BlockStatement {} mutation.
     expect(service.roles().find((role) => role.id === 'role-1')?.name).toBe('Admin patched');
   });
@@ -197,7 +197,7 @@ describe('@stynx-web/angular-iam API and routes', () => {
     const service = createService(client);
     await firstValueFrom(service.listGroups());
     await firstValueFrom(service.patchGroup('group-1', { name: 'Ops patched' }));
-    expect(client.calls.patch.find(([p]) => p === '/admin/groups/group-1')).toBeDefined();
+    expect(client.calls.patch.find(([p]) => p === '/admin/groups/group-1')).toEqual(expect.anything());
     expect(service.groups().find((group) => group.id === 'group-1')?.name).toBe('Ops patched');
   });
 

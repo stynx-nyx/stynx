@@ -33,7 +33,7 @@ describe('DbContextInterceptor', () => {
     const interceptor = new DbContextInterceptor(applier);
     const request = { headers: {}, pgClient: { tag: 'c' } };
     await run(interceptor.intercept(ctx(request), makeHandler()));
-    expect(applier.apply).not.toHaveBeenCalled();
+    expect(applier.apply).not.toHaveBeenCalledTimes(1);
   });
 
   it('skips applier when no client is resolvable', async () => {
@@ -41,7 +41,7 @@ describe('DbContextInterceptor', () => {
     const interceptor = new DbContextInterceptor(applier);
     const request = { headers: {}, principal: PRINCIPAL };
     await run(interceptor.intercept(ctx(request), makeHandler()));
-    expect(applier.apply).not.toHaveBeenCalled();
+    expect(applier.apply).not.toHaveBeenCalledTimes(1);
   });
 
   it('applies session context when principal + pgClient are present', async () => {
@@ -73,7 +73,7 @@ describe('DbContextInterceptor', () => {
     const interceptor = new DbContextInterceptor(applier, resolver);
     const request = { headers: {}, principal: PRINCIPAL };
     await run(interceptor.intercept(ctx(request), makeHandler()));
-    expect(resolver).toHaveBeenCalled();
+    expect(resolver).toHaveBeenCalledTimes(1);
     expect(applier.apply).toHaveBeenCalledWith({ tag: 'resolved' }, expect.any(Object));
   });
 
@@ -117,8 +117,8 @@ describe('DbContextInterceptor', () => {
     await run(interceptor.intercept(ctx(request), makeHandler()));
 
     expect(lifecycle.acquire).toHaveBeenCalledWith(expect.objectContaining({ tenantId: 't-1' }));
-    expect(applier.apply).not.toHaveBeenCalled();
-    expect(lifecycle.release).not.toHaveBeenCalled();
+    expect(applier.apply).not.toHaveBeenCalledTimes(1);
+    expect(lifecycle.release).not.toHaveBeenCalledTimes(1);
   });
 
   it('does not call release when no client was acquired by the interceptor', async () => {
@@ -130,8 +130,8 @@ describe('DbContextInterceptor', () => {
     const interceptor = new DbContextInterceptor(applier, undefined, lifecycle);
     const request = { headers: {}, principal: PRINCIPAL, pgClient: { tag: 'existing' } };
     await run(interceptor.intercept(ctx(request), makeHandler()));
-    expect(lifecycle.acquire).not.toHaveBeenCalled();
-    expect(lifecycle.release).not.toHaveBeenCalled();
+    expect(lifecycle.acquire).not.toHaveBeenCalledTimes(1);
+    expect(lifecycle.release).not.toHaveBeenCalledTimes(1);
   });
 
   it('swallows release errors so they do not bubble out of the request', async () => {
@@ -160,7 +160,7 @@ describe('DbContextInterceptor', () => {
     const interceptor = new DbContextInterceptor(applier, undefined, lifecycle);
     const request = { headers: {}, principal: PRINCIPAL };
     await run(interceptor.intercept(ctx(request), makeHandler()));
-    expect(lifecycle.acquire).not.toHaveBeenCalled();
+    expect(lifecycle.acquire).not.toHaveBeenCalledTimes(1);
   });
 });
 
@@ -194,7 +194,7 @@ describe('getPrincipalFromRequest', () => {
   });
 
   it('returns undefined when no principal sources are present', () => {
-    expect(getPrincipalFromRequest({ headers: {} })).toBeUndefined();
+    expect(getPrincipalFromRequest({ headers: {} })).toBe(undefined);
   });
 
   it('treats non-array roles/permissions/tenants/claims on user as empty/defaults', () => {

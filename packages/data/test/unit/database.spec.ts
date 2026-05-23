@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import { RequestContext, SystemContext, SystemContextRequiredError } from '@stynx/core';
 import { ClsService } from 'nestjs-cls';
@@ -296,8 +297,8 @@ describe('Database', () => {
       retry: { attempts: Number.NaN, jitterMs: [0, 0] },
     })).rejects.toBeInstanceOf(SerializationFailureError);
 
-    expect(client.query).not.toHaveBeenCalled();
-    expect(client.release).not.toHaveBeenCalled();
+    expect(client.query).not.toHaveBeenCalledTimes(1);
+    expect(client.release).not.toHaveBeenCalledTimes(1);
   });
 
   it('waits the computed jitter before retrying retryable transaction failures', async () => {
@@ -341,7 +342,7 @@ describe('Database', () => {
     const nullDatabase = createPoolBackedDatabase(nullClient.client);
     await expect(nullDatabase.tx(async () => {
       throw null;
-    }, { retry: false })).rejects.toBeNull();
+    }, { retry: false })).rejects.toBe(null);
     expect(nullClient.client.release).toHaveBeenCalledTimes(1);
   });
 

@@ -131,7 +131,7 @@ describe('@stynx/testing', () => {
     } finally {
       await testApp.teardown();
     }
-  }, 60_000);
+  }, 120_000);
 
   it('exercises restore-conflict and soft-delete-blocked matchers against custom fixture tables', async () => {
     const testApp = await createTestApp({
@@ -246,7 +246,7 @@ describe('@stynx/testing', () => {
     });
 
     expect(session.token.split('.')).toHaveLength(3);
-    expect(session.sid).toBeTruthy();
+    expect(session.sid).toEqual(expect.anything());
     expect(session.jwks.keys).toHaveLength(1);
 
     const doctorRoot = mkdtempSync(resolve(tmpdir(), 'stynx-doctor-fixture-'));

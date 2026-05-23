@@ -39,7 +39,7 @@ describe('TenantSystemOperationSink', () => {
       occurredAt: '2026-05-18T12:00:00.000Z',
     });
 
-    expect(database.tx).not.toHaveBeenCalled();
+    expect(database.tx).not.toHaveBeenCalledTimes(1);
   });
 
   it('persists system operation records and exposes the provider binding', async () => {

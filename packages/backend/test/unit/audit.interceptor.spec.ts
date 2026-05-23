@@ -40,7 +40,7 @@ describe('AuditInterceptor', () => {
     const interceptor = new AuditInterceptor(new FakeReflector(undefined), sink);
     const result = await lastValueFrom(interceptor.intercept(ctx({ headers: {} }), makeHandler()));
     expect(result).toEqual({ id: 'entity-1' });
-    expect(sink.write).not.toHaveBeenCalled();
+    expect(sink.write).not.toHaveBeenCalledTimes(1);
   });
 
   it('writes an envelope with action/entity/entityId/tenantId/actorId/role', async () => {
@@ -96,7 +96,7 @@ describe('AuditInterceptor', () => {
     });
     const interceptor = new AuditInterceptor(reflector, sink, policy);
     await lastValueFrom(interceptor.intercept(ctx({ headers: {} }), makeHandler({})));
-    expect(policy.redact).toHaveBeenCalled();
+    expect(policy.redact).toHaveBeenCalledTimes(1);
     expect((sink.write.mock.calls[0]![0] as { metadata: unknown }).metadata).toEqual({
       redacted: true,
       _: { password: 'secret' },

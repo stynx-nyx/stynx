@@ -262,7 +262,7 @@ describe('@stynx-web/angular-trash', () => {
       }),
       post: vi.fn(async () => undefined),
     } as unknown as StynxSdkClient;
-    expect(provideStynxTrash(client)).toBeDefined();
+    expect(provideStynxTrash(client)).toEqual(expect.anything());
     const injector = Injector.create({
       providers: [
         { provide: STYNX_TRASH_CLIENT, useValue: client },
@@ -475,6 +475,70 @@ describe('@stynx-web/angular-trash', () => {
     ]);
   });
 
+  it('preserves default inputs and no-op bulk hard-delete guards exactly', async () => {
+    const toast = { push: vi.fn() };
+    const list = vi.fn(async () => ({
+      items: [
+        {
+          id: 'kept',
+          label: 'Kept row',
+          deletedAt: '2026-05-18T00:00:00.000Z',
+          canHardDelete: true,
+        },
+      ],
+      total: 1,
+    }));
+    const hardDelete = vi.fn(async () => undefined);
+    const component = createComponent(
+      {
+        hasAllPermissions: (permissions: string[]) => permissions.includes('archive:hard-delete:*'),
+        snapshot: () => ({ sid: 'session-1', claims: null }),
+      },
+      toast,
+      {
+        list,
+        restore: vi.fn(async () => undefined),
+        hardDelete,
+      },
+    );
+    component.kinds = [{ kind: 'document', label: 'Documents' }];
+
+    expect(component.resource).toBe('record');
+    expect(component.activeKind()).toBe('record');
+    expect(component.hardDeletePermission).toBe('archive:hard-delete:*');
+    expect(component.errorMessage()).toBe('');
+    expect(component.mayHardDelete({
+      id: 'trash-1',
+      label: 'One',
+      deletedAt: '2026-05-18T00:00:00.000Z',
+      canHardDelete: true,
+    })).toBe(true);
+
+    await component.load();
+    expect(component.rows()).toEqual([
+      {
+        label: 'Kept row',
+        deletedAt: '2026-05-18T00:00:00.000Z',
+        deletedBy: '',
+        retention: 'No purge scheduled',
+      },
+    ]);
+
+    await component.bulkHardDelete();
+    expect(hardDelete).not.toHaveBeenCalled();
+    expect(toast.push).not.toHaveBeenCalled();
+    expect(list).toHaveBeenCalledTimes(1);
+
+    component.toggleSelected('kept');
+    component.adapter = {
+      list,
+      restore: vi.fn(async () => undefined),
+    };
+    await component.bulkHardDelete();
+    expect(toast.push).not.toHaveBeenCalled();
+    expect(list).toHaveBeenCalledTimes(1);
+  });
+
   it('honors default kind, selection/filter toggles, empty bulk guards, and missing adapters', async () => {
     const adapter: StynxTrashAdapter = {
       list: vi.fn(async () => ({ items: [], total: 0 })),
@@ -499,7 +563,7 @@ describe('@stynx-web/angular-trash', () => {
 
     await component.bulkRestore();
     await component.bulkHardDelete();
-    expect(adapter.restore).not.toHaveBeenCalled();
+    expect(adapter.restore).not.toHaveBeenCalledTimes(1);
 
     const missingAdapter = createComponent(createSession(), { push: vi.fn() });
     expect(() => missingAdapter.activeKind()).not.toThrow();
@@ -563,7 +627,7 @@ describe('@stynx-web/angular-trash', () => {
     );
 
     await component.restore('trash-1');
-    expect(adapter.restoreWithCascade).not.toHaveBeenCalled();
+    expect(adapter.restoreWithCascade).not.toHaveBeenCalledTimes(1);
     expect(component.errorMessage()).toBe('restore denied');
 
     adapter.restore = vi.fn(async () => undefined);

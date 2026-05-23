@@ -4,8 +4,11 @@ import { RequestContextMissingError, RequestContextMutationError } from './error
 import type { SystemExecutionContext } from './database';
 import { generateRequestId } from './request-id';
 
+/* eslint-disable @angular-eslint/prefer-inject */
+
 const REQUEST_CONTEXT_KEY = Symbol('stynx.request-context');
 const SYSTEM_CONTEXT_KEY = Symbol('stynx.system-context');
+const optionalRequestContextKeys = ['tenantId', 'actorId', 'sessionId', 'locale'] as const;
 
 export interface RequestContextState {
   requestId: string;
@@ -62,14 +65,10 @@ export class RequestContext {
 
   snapshot(): Readonly<RequestContextState> {
     const state = this.read();
-    return {
+    return omitUndefinedOptionals({
       ...state,
-      ...(state.tenantId !== undefined ? { tenantId: state.tenantId } : {}),
-      ...(state.actorId !== undefined ? { actorId: state.actorId } : {}),
-      ...(state.sessionId !== undefined ? { sessionId: state.sessionId } : {}),
-      ...(state.locale !== undefined ? { locale: state.locale } : {}),
       startedAt: new Date(state.startedAt),
-    };
+    });
   }
 
   private read(): RequestContextState {
@@ -132,18 +131,7 @@ export class RequestContextMutator {
       throw new RequestContextMutationError();
     }
 
-    const next: RequestContextState = {
-      requestId: current.requestId,
-      startedAt: current.startedAt,
-      ...(current.tenantId !== undefined ? { tenantId: current.tenantId } : {}),
-      ...(current.actorId !== undefined ? { actorId: current.actorId } : {}),
-      ...(current.sessionId !== undefined ? { sessionId: current.sessionId } : {}),
-      ...(current.locale !== undefined ? { locale: current.locale } : {}),
-      ...(patch.tenantId !== undefined ? { tenantId: patch.tenantId } : {}),
-      ...(patch.actorId !== undefined ? { actorId: patch.actorId } : {}),
-      ...(patch.sessionId !== undefined ? { sessionId: patch.sessionId } : {}),
-      ...(patch.locale !== undefined ? { locale: patch.locale } : {}),
-    };
+    const next = omitUndefinedOptionals({ ...current, ...patch });
 
     this.cls.set(REQUEST_CONTEXT_KEY, next);
   }
@@ -151,4 +139,14 @@ export class RequestContextMutator {
   getSystemContext(): SystemExecutionContext | undefined {
     return this.cls.get<SystemExecutionContext>(SYSTEM_CONTEXT_KEY);
   }
+}
+
+function omitUndefinedOptionals(state: RequestContextState): RequestContextState {
+  const next = { ...state };
+  for (const key of optionalRequestContextKeys) {
+    if (next[key] === undefined) {
+      delete next[key];
+    }
+  }
+  return next;
 }

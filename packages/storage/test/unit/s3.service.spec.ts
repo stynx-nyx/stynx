@@ -5,6 +5,7 @@ import {
   HeadObjectCommand,
   ListObjectVersionsCommand,
   PutBucketLifecycleConfigurationCommand,
+  PutObjectCommand,
   PutObjectRetentionCommand,
   type PutBucketLifecycleConfigurationCommandInput,
   type PutObjectRetentionCommandInput,
@@ -210,6 +211,21 @@ describe('S3Service', () => {
       expect(result.headers['x-amz-server-side-encryption']).toBe('aws:kms');
       expect(result.headers['x-amz-server-side-encryption-aws-kms-key-id']).toBe('alias/stynx-docs');
       expect(result.expiresInSeconds).toBe(300);
+
+      expect(getSignedUrl).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.any(PutObjectCommand),
+        { expiresIn: 300 },
+      );
+      const command = (getSignedUrl as Mock).mock.calls[0]?.[1] as PutObjectCommand;
+      expect(command.input).toMatchObject({
+        Bucket: 'stynx-docs-prod-us-east-1',
+        Key: 'tenant-a/docs/file.pdf',
+        ContentType: 'application/pdf',
+        Metadata: { sha256: 'abc123' },
+        ServerSideEncryption: 'aws:kms',
+        SSEKMSKeyId: 'alias/stynx-docs',
+      });
     });
 
     it('honors caller-specified expiresInSeconds', async () => {
@@ -227,6 +243,11 @@ describe('S3Service', () => {
         expiresInSeconds: 30,
       });
       expect(result.expiresInSeconds).toBe(30);
+      expect(getSignedUrl).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.any(PutObjectCommand),
+        { expiresIn: 30 },
+      );
     });
   });
 
@@ -394,5 +415,10 @@ describe('S3Service', () => {
     await expect(
       service.presignDownloadForTenant({ key: 'tenant-a/docs/file.pdf', tenantId: 'tenant-a' }),
     ).resolves.toBe('https://signed.example.test/object');
+    expect(getSignedUrl).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.any(GetObjectCommand),
+      { expiresIn: 300 },
+    );
   });
 });

@@ -320,6 +320,9 @@ describe('SessionService', () => {
 
     expect(payload.sid).toBe(created.sid);
     expect(payload.tenant_id).toBe('tenant-1');
+    expect(typeof payload.iat).toBe('number');
+    expect(typeof payload.nbf).toBe('number');
+    expect((payload.nbf as number) - (payload.iat as number)).toBe(2);
   });
 
   it('survives 1000 sequential refresh cycles without leaking live session records', async () => {
@@ -511,6 +514,8 @@ describe('SessionService', () => {
 
   it('returns null for direct in-memory touch and rotate misses', async () => {
     const store = new InMemorySessionStore();
+    const now = new Date('2026-01-01T00:00:00.000Z').toISOString();
+    const expiresAt = new Date('2026-02-01T00:00:00.000Z').toISOString();
 
     await expect(
       store.rotateRefreshToken(
@@ -523,6 +528,32 @@ describe('SessionService', () => {
     ).resolves.toBe(null);
     await expect(
       store.touchSession('missing', new Date().toISOString(), new Date().toISOString()),
+    ).resolves.toBe(null);
+
+    await store.createSession({
+      sid: 'sid-mismatch',
+      userId: 'user-mismatch',
+      tenantId: 'tenant-mismatch',
+      cognitoSub: 'cognito-mismatch',
+      refreshFamilyId: 'family-mismatch',
+      refreshTokenHash: 'hash-current',
+      status: 'active',
+      createdAt: now,
+      updatedAt: now,
+      lastTouchedAt: now,
+      expiresAt,
+      idleExpiresAt: expiresAt,
+    });
+    (store as unknown as {
+      refreshLookups: Map<string, { sid: string; familyId: string; state: 'active' }>;
+    }).refreshLookups.set('stale-hash', {
+      sid: 'sid-mismatch',
+      familyId: 'family-mismatch',
+      state: 'active',
+    });
+
+    await expect(
+      store.rotateRefreshToken('sid-mismatch', 'stale-hash', 'hash-next', expiresAt, now),
     ).resolves.toBe(null);
   });
 
@@ -721,6 +752,7 @@ describe('SessionService', () => {
 
     await expect(service.revokeAllForTenant('tenant-missing')).resolves.toBe(0);
     expect(store.invalidations).toEqual([]);
+    expect(mirror.entries).toEqual([]);
   });
 
   it('excludes missing sessions from revoke-all counts, invalidations, and mirror writes', async () => {

@@ -19,8 +19,8 @@ describe('auth utils', () => {
   it('converts supported header forms to strings', () => {
     expect(headerToString('tenant-1')).toBe('tenant-1');
     expect(headerToString(['tenant-2'])).toBe('tenant-2');
-    expect(headerToString([1, 2, 3])).toBeUndefined();
-    expect(headerToString(null)).toBeUndefined();
+    expect(headerToString([1, 2, 3])).toBe(undefined);
+    expect(headerToString(null)).toBe(undefined);
   });
 
   it('round-trips base64url values without padding and rejects malformed JWT shapes', () => {

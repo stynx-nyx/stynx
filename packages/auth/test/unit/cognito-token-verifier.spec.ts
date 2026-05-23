@@ -158,8 +158,8 @@ describe('CognitoTokenVerifier — payload branch helpers', () => {
     expect(privateVerifier.resolvePrincipalId({ 'cognito:username': ' user-1 ' })).toBe('user-1');
     expect(privateVerifier.resolvePrincipalId({ username: 'user-2' })).toBe('user-2');
     expect(() => privateVerifier.resolvePrincipalId({})).toThrow('Token missing principal identifier');
-    expect(privateVerifier.readString({ email: '  ' }, 'email')).toBeNull();
-    expect(privateVerifier.readString({ email: 123 }, 'email')).toBeNull();
+    expect(privateVerifier.readString({ email: '  ' }, 'email')).toBe(null);
+    expect(privateVerifier.readString({ email: 123 }, 'email')).toBe(null);
     expect(privateVerifier.resolveClaims({
       roles: ['Admin', '', 123, 'admin'],
       groups: 'Reviewer',

@@ -5,7 +5,7 @@ const ctx = { action: 'a', entity: 'e', request: {} as never };
 describe('PatternAuditMetadataRedactionPolicy', () => {
   it('returns undefined when metadata is undefined', () => {
     const policy = new PatternAuditMetadataRedactionPolicy();
-    expect(policy.redact(undefined, ctx)).toBeUndefined();
+    expect(policy.redact(undefined, ctx)).toBe(undefined);
   });
 
   it('returns the value unchanged for trivial scalar values inside objects', () => {
@@ -71,7 +71,7 @@ describe('PatternAuditMetadataRedactionPolicy', () => {
   it('returns undefined when metadata sanitizes to an array (root-level array)', () => {
     const policy = new PatternAuditMetadataRedactionPolicy();
     // Arrays at the root are not valid metadata containers — should return undefined.
-    expect(policy.redact([1, 2] as unknown as Record<string, unknown>, ctx)).toBeUndefined();
+    expect(policy.redact([1, 2] as unknown as Record<string, unknown>, ctx)).toBe(undefined);
   });
 
   it('emits [Unsupported] for function/symbol values', () => {

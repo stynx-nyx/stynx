@@ -184,8 +184,8 @@ describe('SessionJwtSigningService.signAccessToken', () => {
       jwt: { cacheTtlMs: 60_000 },
       timeouts: { accessSeconds: 300, refreshSeconds: 86_400, idleSeconds: 1800 },
     } as never);
-    await expect(svc.signAccessToken(makeRecord(), new Date())).rejects.toBeInstanceOf(
-      SessionSigningKeyError,
+    await expect(svc.signAccessToken(makeRecord(), new Date())).rejects.toThrow(
+      /^Session signing requires jwt\.keySet or jwt\.secretId$/u,
     );
   });
 
@@ -194,8 +194,8 @@ describe('SessionJwtSigningService.signAccessToken', () => {
       jwt: { secretId: 'some-secret', cacheTtlMs: 60_000 },
       timeouts: { accessSeconds: 300, refreshSeconds: 86_400, idleSeconds: 1800 },
     } as never);
-    await expect(svc.signAccessToken(makeRecord(), new Date())).rejects.toBeInstanceOf(
-      SessionSigningKeyError,
+    await expect(svc.signAccessToken(makeRecord(), new Date())).rejects.toThrow(
+      /^SecretLoader is unavailable for session signing$/u,
     );
   });
 

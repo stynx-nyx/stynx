@@ -111,12 +111,12 @@ describe('@stynx-web/angular-audit', () => {
   it('exports the audit SDK client token through the public entrypoint', () => {
     expect(STYNX_AUDIT_CLIENT).toBeInstanceOf(InjectionToken);
     expect(`${STYNX_AUDIT_CLIENT}`).toBe('InjectionToken STYNX_AUDIT_CLIENT');
-    expect(AuditApiService).toBeDefined();
-    expect(STYNX_AUDIT_OPTIONS).toBeDefined();
-    expect(StynxEntityHistoryComponent).toBeDefined();
-    expect(StynxAuditHashIntegrityBadgeComponent).toBeDefined();
-    expect(auditRoutes).toBeDefined();
-    expect(provideStynxAudit).toBeDefined();
+    expect(AuditApiService).toEqual(expect.anything());
+    expect(STYNX_AUDIT_OPTIONS).toEqual(expect.anything());
+    expect(StynxEntityHistoryComponent).toEqual(expect.anything());
+    expect(StynxAuditHashIntegrityBadgeComponent).toEqual(expect.anything());
+    expect(auditRoutes).toEqual(expect.anything());
+    expect(provideStynxAudit).toEqual(expect.anything());
   });
 
   it('resolves the configured audit client from Angular injection', () => {

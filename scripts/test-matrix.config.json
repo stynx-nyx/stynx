@@ -43,18 +43,24 @@
     "@stynx-web/angular-audit": { "coverage": "default", "mutation": "tier1" },
     "@stynx-web/angular-iam": { "coverage": "default", "mutation": "tier1" },
     "@stynx-web/angular-auth": { "mutation": "tier1" },
+    "@stynx-web/angular-flow": { "mutation": "strict" },
+    "@stynx-web/angular-profile": { "mutation": "strictest" },
     "@stynx-web/sdk": { "mutation": "tier1" },
     "@stynx/audit": { "mutation": "tier1" },
     "@stynx/auth": { "mutation": "tier1" },
+    "@stynx/backend": { "mutation": "strict" },
+    "@stynx/cli": { "mutation": "strict" },
     "@stynx/data": { "mutation": "tier1" },
-    "@stynx/privacy": { "mutation": "tier1" },
+    "@stynx/privacy": { "mutation": "strictest" },
     "@stynx/tenancy": { "mutation": "tier1" },
     "@stynx/core": { "mutation": "tier2" },
-    "@stynx/flow": { "mutation": "tier2" },
+    "@stynx/flow": { "mutation": "strict" },
+    "@stynx/i18n": { "mutation": "strict" },
     "@stynx/idempotency": { "mutation": "tier2" },
     "@stynx/ratelimit": { "mutation": "tier2" },
     "@stynx/sessions": { "mutation": "tier2" },
-    "@stynx/storage": { "mutation": "tier2" }
+    "@stynx/storage": { "mutation": "tier2" },
+    "@stynx/testing": { "mutation": "strict" }
   },
   "notApplicable": [
     {

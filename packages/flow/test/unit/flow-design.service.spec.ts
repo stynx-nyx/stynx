@@ -83,7 +83,7 @@ describe('FlowDesignService — scopes', () => {
     const { service, trx } = makeService([[{ id: SCOPE }]]);
     const result = await service.deleteScope(SCOPE);
     // Soft-delete must be invoked with (table reference, scope id). The bare
-    // .toHaveBeenCalled() form does not catch mutations on the id literal.
+    // .toHaveBeenCalledTimes(1) form does not catch mutations on the id literal.
     expect(trx.softDelete).toHaveBeenCalledWith(expect.anything(), SCOPE);
     expect(result).toEqual({ id: SCOPE, deleted: true });
   });

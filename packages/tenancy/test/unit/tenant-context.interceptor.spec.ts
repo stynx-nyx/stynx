@@ -73,7 +73,7 @@ describe('TenantContextInterceptor', () => {
     interceptor.intercept(createExecutionContext({ originalUrl: '/healthz', headers: {} }), next);
 
     await new Promise((resolve) => setImmediate(resolve));
-    expect(txQuery).not.toHaveBeenCalled();
+    expect(txQuery).not.toHaveBeenCalledTimes(1);
   });
 
   it('runs the downstream handler with tenant context and unsubscribes cleanly', async () => {
@@ -104,7 +104,7 @@ describe('TenantContextInterceptor', () => {
       expect.objectContaining({ tenantId: TENANT_ID }),
       expect.any(Function),
     );
-    expect(unsubscribe).toHaveBeenCalled();
+    expect(unsubscribe).toHaveBeenCalledTimes(1);
   });
 
   it('runs optional paths without adding tenant context', async () => {
@@ -181,8 +181,8 @@ describe('TenantContextInterceptor', () => {
       }),
     ).resolves.toEqual({ tenantId: '018f53e4-28a1-7cd8-a0ff-5b22c3a07111' });
 
-    expect(membershipCache.get).toHaveBeenCalled();
-    expect(txQuery).not.toHaveBeenCalled();
+    expect(membershipCache.get).toHaveBeenCalledTimes(1);
+    expect(txQuery).not.toHaveBeenCalledTimes(1);
   });
 
   it('trims tenant sources, validates membership through owner readonly tx, and caches the decision', async () => {
@@ -268,7 +268,7 @@ describe('TenantContextInterceptor', () => {
       }),
     ).rejects.toBeInstanceOf(BadRequestException);
 
-    expect(txQuery).not.toHaveBeenCalled();
+    expect(txQuery).not.toHaveBeenCalledTimes(1);
   });
 
   it('rejects inactive memberships and caches the negative membership decision', async () => {

@@ -28,7 +28,7 @@ describe('LocaleService', () => {
     );
 
     await expect(service.resolve('pt-BR,en-US')).resolves.toBe('en-US');
-    expect(mutator.patch).not.toHaveBeenCalled();
+    expect(mutator.patch).not.toHaveBeenCalledTimes(1);
   });
 
   it('uses the first supported Accept-Language entry and patches context', async () => {

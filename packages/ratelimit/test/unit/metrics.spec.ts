@@ -13,6 +13,7 @@ describe('InMemoryRateLimitMetrics', () => {
     expect(metrics.latencyPercentile('api:write', 95)).toBe(10);
     expect(metrics.latencyPercentile('api:write', 99)).toBe(10);
     expect(metrics.latencyPercentile('api:read', 50)).toBe(undefined);
+    expect(metrics.histogramSnapshot([5, 10])['api:read']).toBe(undefined);
     expect(metrics.histogramSnapshot([5, 10])['api:write']).toEqual({
       le_5: 5,
       le_10: 10,

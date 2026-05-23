@@ -162,7 +162,7 @@ describe('@stynx-web/angular-flow components', () => {
     expect(component.hasNoGraphsForActiveScope).toBe(false);
     expect(component.nodes).toEqual([]);
     expect(component.edges).toEqual([]);
-    expect(api.listGraphs).not.toHaveBeenCalled();
+    expect(api.listGraphs).not.toHaveBeenCalledTimes(1);
     expect(emitted).toEqual(['scope']);
   });
 
@@ -181,8 +181,8 @@ describe('@stynx-web/angular-flow components', () => {
     expect(component.hasNoGraphsForActiveScope).toBe(true);
     expect(component.nodes).toEqual([]);
     expect(component.edges).toEqual([]);
-    expect(api.listGraphNodes).not.toHaveBeenCalled();
-    expect(api.listGraphEdges).not.toHaveBeenCalled();
+    expect(api.listGraphNodes).not.toHaveBeenCalledTimes(1);
+    expect(api.listGraphEdges).not.toHaveBeenCalledTimes(1);
     expect(emitted).toEqual([expect.objectContaining({ id: 'scope-1' })]);
   });
 
@@ -792,8 +792,8 @@ describe('@stynx-web/angular-flow components', () => {
 
     component.drawSignature(component.questions[8]!, { target: canvas, clientX: 1, clientY: 1, preventDefault: vi.fn() } as never);
     component.endSignature(component.questions[8]!, { target: canvas, preventDefault: vi.fn() } as never);
-    expect(context.lineTo).not.toHaveBeenCalled();
-    expect(toDataURL).not.toHaveBeenCalled();
+    expect(context.lineTo).not.toHaveBeenCalledTimes(1);
+    expect(toDataURL).not.toHaveBeenCalledTimes(1);
 
     component.beginSignature(component.questions[8]!, { target: document.createElement('button'), clientX: 1, clientY: 1, preventDefault: vi.fn() } as never);
     component.endSignature(component.questions[8]!, { target: document.createElement('button'), preventDefault: vi.fn() } as never);

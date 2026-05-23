@@ -123,24 +123,24 @@ describe('RedisSessionStore', () => {
 
     await expect(store.getSession('sid-1')).resolves.toMatchObject({ sid: 'sid-1' });
     await expect(store.lookupRefreshToken('hash-1')).resolves.toMatchObject({ sid: 'sid-1', state: 'active' });
-    await expect(store.rotateRefreshToken('sid-1', 'wrong', 'hash-2', '2026-05-18T12:40:00.000Z', '2026-05-18T12:01:00.000Z')).resolves.toBeNull();
+    await expect(store.rotateRefreshToken('sid-1', 'wrong', 'hash-2', '2026-05-18T12:40:00.000Z', '2026-05-18T12:01:00.000Z')).resolves.toBe(null);
     await expect(store.rotateRefreshToken('sid-1', 'hash-1', 'hash-2', '2026-05-18T12:40:00.000Z', '2026-05-18T12:01:00.000Z')).resolves.toMatchObject({
       refreshTokenHash: 'hash-2',
     });
-    await expect(store.touchSession('missing', '2026-05-18T12:50:00.000Z', '2026-05-18T12:02:00.000Z')).resolves.toBeNull();
+    await expect(store.touchSession('missing', '2026-05-18T12:50:00.000Z', '2026-05-18T12:02:00.000Z')).resolves.toBe(null);
     await expect(store.touchSession('sid-1', '2026-05-18T12:50:00.000Z', '2026-05-18T12:02:00.000Z')).resolves.toMatchObject({
       idleExpiresAt: '2026-05-18T12:50:00.000Z',
     });
     await expect(store.listSessionIdsByUser('user-1')).resolves.toEqual(['sid-1']);
     await expect(store.listSessionIdsByTenant('tenant-1')).resolves.toEqual(['sid-1']);
-    await expect(store.revokeSession('missing', '2026-05-18T12:03:00.000Z', 'revoked')).resolves.toBeNull();
+    await expect(store.revokeSession('missing', '2026-05-18T12:03:00.000Z', 'revoked')).resolves.toBe(null);
     await expect(store.revokeSession('sid-1', '2026-05-18T12:03:00.000Z', 'revoked')).resolves.toMatchObject({
       status: 'revoked',
     });
     await store.publishInvalidation('user-1:tenant-1');
 
     expect(client.publish).toHaveBeenCalledWith('invalidate', 'user-1:tenant-1');
-    expect(client.multiTx.exec).toHaveBeenCalled();
+    expect(client.multiTx.exec).toHaveBeenCalledTimes(4);
   });
 
   it('prunes stale ids from indexes', async () => {

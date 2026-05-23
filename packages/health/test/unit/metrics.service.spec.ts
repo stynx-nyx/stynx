@@ -35,6 +35,34 @@ describe('StynxMetricsService', () => {
     expect(metrics.sessionActiveTotal.labelNames).toEqual([]);
   });
 
+  it('registers every package metric on the service registry', () => {
+    const metrics = new StynxMetricsService();
+    const registeredMetrics = {
+      archive_size_bytes: metrics.archiveSizeBytes,
+      audit_events_total: metrics.auditEventsTotal,
+      authz_deny_total: metrics.authzDenyTotal,
+      db_pool_idle: metrics.dbPoolIdle,
+      db_pool_in_use: metrics.dbPoolInUse,
+      db_pool_waiting: metrics.dbPoolWaiting,
+      db_query_duration_seconds: metrics.dbQueryDuration,
+      hard_delete_total: metrics.hardDeleteTotal,
+      http_request_duration_seconds: metrics.httpRequestDuration,
+      http_request_total: metrics.httpRequestTotal,
+      http_requests_total: metrics.httpRequestsTotal,
+      idempotency_replay_total: metrics.idempotencyReplayTotal,
+      lgpd_erasure_total: metrics.lgpdErasureTotal,
+      ratelimit_block_total: metrics.rateLimitBlockTotal,
+      restore_total: metrics.restoreTotal,
+      session_active_total: metrics.sessionActiveTotal,
+      soft_delete_total: metrics.softDeleteTotal,
+      storage_presign_total: metrics.storagePresignTotal,
+    };
+
+    for (const [name, metric] of Object.entries(registeredMetrics)) {
+      expect(metrics.registry.getSingleMetric(name)).toBe(metric);
+    }
+  });
+
   it('initializes pool gauges for all connection roles and the active session gauge', async () => {
     const metrics = new StynxMetricsService();
     const output = await metrics.render();

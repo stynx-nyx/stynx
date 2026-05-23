@@ -28,6 +28,9 @@ describe('request id helpers', () => {
 
     expect(normalizeRequestId(` ${requestId} `)).toBe(requestId);
     expect(normalizeRequestId(null)).toBe(undefined);
+    expect(normalizeRequestId(`${requestId} `)).toBe(requestId);
+    expect(normalizeRequestId(`${requestId.slice(0, -1)} `)).toBe(undefined);
+    expect(normalizeRequestId(`${requestId}x`)).toBe(undefined);
     expect(normalizeRequestId('not-a-request-id')).toBe(undefined);
     expect(normalizeRequestId('00000000-0000-6000-8000-000000000000')).toBe(undefined);
   });

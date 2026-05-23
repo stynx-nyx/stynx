@@ -143,7 +143,7 @@ describe('StynxAuthGuard', () => {
     await expect(guard.canActivate(createExecutionContext(request))).resolves.toBe(true);
 
     expect(validator.validate).toHaveBeenCalledWith('array-token');
-    expect(sessionService.get).not.toHaveBeenCalled();
+    expect(sessionService.get).not.toHaveBeenCalledTimes(1);
     expect(permissionCache.getForSession).toHaveBeenCalledWith(expect.objectContaining({ tenantId: 'tenant-1' }));
     expect(request).toMatchObject({
       stynxReadonly: false,

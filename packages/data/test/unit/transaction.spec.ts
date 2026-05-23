@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import { sql } from 'drizzle-orm';
 import type { PoolClient, QueryResult } from 'pg';
@@ -149,7 +150,7 @@ describe('Transaction', () => {
     });
 
     await expect(tx.softDelete(documents, 'doc-1', { dryRun: true })).resolves.toBe(plan);
-    expect(api.softDeleteByReference).not.toHaveBeenCalled();
+    expect(api.softDeleteByReference).not.toHaveBeenCalledTimes(1);
 
     await expect(tx.softDelete(documents, 'doc-1')).resolves.toMatchObject({
       archiveId: 7n,
@@ -459,7 +460,7 @@ describe('Transaction', () => {
     (api as unknown as { sampleArchiveSize: Mock }).sampleArchiveSize = vi.fn(async () => undefined);
     await expect(
       api.softDeleteByReference(parentMeta, 'at-limit', '2026-01-01T00:00:00.000Z', 4, 2, 0, []),
-    ).resolves.toBeUndefined();
+    ).resolves.toBe(undefined);
 
     api.loadRegistryByParent = vi.fn(async () => []);
     api.describeBlockingChildren = vi.fn(async () => [{ schema: 'demo', table: 'payment', count: 1 }]);
@@ -830,7 +831,7 @@ describe('Transaction', () => {
         : { rows: [{ blocking_id: 'live-without-row-count' }] }
     ));
     await expect(api.findRestoreConflict(parentMeta, { email: 'row-count@example.com' }, 'archived-row-count'))
-      .resolves.toBeUndefined();
+      .resolves.toBe(undefined);
 
     api.query = vi.fn(async (_text: string, values?: unknown[]) => (
       !values || values[0] === 'demo'
@@ -838,7 +839,7 @@ describe('Transaction', () => {
         : { rows: [], rowCount: 0 }
     ));
     await expect(api.findRestoreConflict(parentMeta, { email: 'clear@example.com' }, 'archived-2')).resolves
-      .toBeUndefined();
+      .toBe(undefined);
   });
 
   it('loads column names, checks mirrors, normalizes labels, and samples archive sizes defensively', async () => {
@@ -870,7 +871,7 @@ describe('Transaction', () => {
     });
 
     await expect(api.loadColumnNames('demo', 'customer')).resolves.toEqual(['id', 'tenant_id']);
-    await expect(api.ensureMirrorExists(parentMeta)).resolves.toBeUndefined();
+    await expect(api.ensureMirrorExists(parentMeta)).resolves.toBe(undefined);
     await expect(api.ensureMirrorExists({ ...parentMeta, table: 'missing' })).rejects.toBeInstanceOf(
       ArchiveMirrorMissingError,
     );

@@ -59,10 +59,14 @@ describe('RequestContext', () => {
         expect(requestContext.startedAt).toEqual(new Date('2026-01-01T00:00:00.000Z'));
         expect(requestContext.hasActiveContext()).toBe(true);
         const initialSnapshot = requestContext.snapshot();
-        expect(initialSnapshot).toEqual({
+        expect(initialSnapshot).toStrictEqual({
           requestId: '018f5502-9f95-7c6b-8c74-d1173ec95f14',
           startedAt: new Date('2026-01-01T00:00:00.000Z'),
         });
+        expect(initialSnapshot).not.toHaveProperty('tenantId');
+        expect(initialSnapshot).not.toHaveProperty('actorId');
+        expect(initialSnapshot).not.toHaveProperty('sessionId');
+        expect(initialSnapshot).not.toHaveProperty('locale');
         expect(initialSnapshot.startedAt).not.toBe(requestContext.startedAt);
 
         mutator.patch({
@@ -82,7 +86,7 @@ describe('RequestContext', () => {
         expect(requestContext.actorId).toBe('actor-b');
         expect(requestContext.sessionId).toBe('session-a');
         expect(requestContext.locale).toBe('pt-BR');
-        expect(requestContext.snapshot()).toEqual({
+        expect(requestContext.snapshot()).toStrictEqual({
           requestId: '018f5502-9f95-7c6b-8c74-d1173ec95f14',
           tenantId: 'tenant-b',
           actorId: 'actor-b',
@@ -109,6 +113,7 @@ describe('RequestContext', () => {
     expect(requestContext.hasActiveContext()).toBe(false);
     const seen = await mutator.runWithSystemContext('scheduled repair', async (context) => context);
     expect(seen.actorId).toBe(undefined);
+    expect(seen).not.toHaveProperty('actorId');
     expect(seen).toEqual(expect.objectContaining({
       reason: 'scheduled repair',
       requestId: expect.stringMatching(/^[0-9a-f-]{36}$/u),
@@ -129,6 +134,11 @@ describe('RequestContext', () => {
       async () => {
         const seen = await mutator.runWithSystemContext('system repair task', async (context) => {
           expect(mutator.getSystemContext()?.reason).toBe('system repair task');
+          expect(new RequestContext(cls as never).snapshot()).toStrictEqual({
+            requestId: expect.stringMatching(/^[0-9a-f-]{36}$/u),
+            actorId: 'actor-a',
+            startedAt: expect.any(Date),
+          });
           return context;
         });
         expect(seen.actorId).toBe('actor-a');

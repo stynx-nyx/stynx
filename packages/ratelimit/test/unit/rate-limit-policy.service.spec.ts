@@ -41,7 +41,7 @@ describe('DatabaseRateLimitPolicyResolver', () => {
     expect(resolved.limit).toBe(999);
     expect(resolved.windowSeconds).toBe(30);
     expect(resolved.cost).toBe(2);
-    expect(db.tx).not.toHaveBeenCalled();
+    expect(db.tx).not.toHaveBeenCalledTimes(1);
   });
 
   it('falls back to per-scope defaults from options when DB returns no rows', async () => {
@@ -53,6 +53,11 @@ describe('DatabaseRateLimitPolicyResolver', () => {
     const resolved = await resolver.resolve(request, metadata);
     expect(resolved.limit).toBe(50);
     expect(resolved.windowSeconds).toBe(15);
+    expect(db.tx).toHaveBeenNthCalledWith(1, expect.any(Function), {
+      role: 'owner',
+      readonly: true,
+      replica: false,
+    });
   });
 
   it('falls back to defaultLimit / defaultWindowSeconds when no per-scope default', async () => {
@@ -111,6 +116,11 @@ describe('DatabaseRateLimitPolicyResolver', () => {
       'rate limit platform config lookup',
       expect.any(Function),
     );
+    expect(db.tx).toHaveBeenNthCalledWith(2, expect.any(Function), {
+      role: 'owner',
+      readonly: true,
+      replica: false,
+    });
   });
 
   it('tries the colon platform config key when the dot key is not present', async () => {

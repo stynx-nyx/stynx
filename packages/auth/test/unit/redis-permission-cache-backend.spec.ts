@@ -56,7 +56,7 @@ describe('RedisPermissionCacheBackend', () => {
 
   it('onModuleInit is a no-op when redis options are absent', async () => {
     const backend = new RedisPermissionCacheBackend(makeOptions());
-    await expect(backend.onModuleInit()).resolves.toBeUndefined();
+    await expect(backend.onModuleInit()).resolves.toBe(undefined);
   });
 
   it('onModuleInit does not reconnect when both redis clients are already open', async () => {
@@ -64,7 +64,7 @@ describe('RedisPermissionCacheBackend', () => {
     attachClient(backend, makeClient({ isOpen: true, connect: vi.fn() }));
     const sub = attachSubscriber(backend, { isOpen: true, connect: vi.fn() });
     await backend.onModuleInit();
-    expect((sub.connect as Mock | undefined)).not.toHaveBeenCalled();
+    expect((sub.connect as Mock | undefined)).not.toHaveBeenCalledTimes(1);
   });
 
   it('onModuleInit creates, connects, subscribes, and forwards invalidation messages', async () => {
@@ -98,8 +98,8 @@ describe('RedisPermissionCacheBackend', () => {
     expect(createClient).toHaveBeenCalledWith({ url: 'redis://localhost:6379' });
     expect(client.on).toHaveBeenCalledWith('error', expect.any(Function));
     expect(subscriber.on).toHaveBeenCalledWith('error', expect.any(Function));
-    expect(client.connect).toHaveBeenCalled();
-    expect(subscriber.connect).toHaveBeenCalled();
+    expect(client.connect).toHaveBeenCalledTimes(1);
+    expect(subscriber.connect).toHaveBeenCalledTimes(1);
     expect(subscriber.subscribe).toHaveBeenCalledWith('permission-invalidation', expect.any(Function));
     expect(handler).toHaveBeenCalledWith('u-1:t-1');
   });
@@ -123,7 +123,7 @@ describe('RedisPermissionCacheBackend', () => {
 
   it('get returns null when no client is configured', async () => {
     const backend = new RedisPermissionCacheBackend(makeOptions());
-    await expect(backend.get('sid-1')).resolves.toBeNull();
+    await expect(backend.get('sid-1')).resolves.toBe(null);
   });
 
   it('get parses JSON value when present', async () => {
@@ -136,7 +136,7 @@ describe('RedisPermissionCacheBackend', () => {
   it('get returns null when redis returns nothing', async () => {
     const backend = new RedisPermissionCacheBackend(makeOptions(redisOpts));
     attachClient(backend, makeClient({ get: vi.fn(async () => null) }));
-    await expect(backend.get('sid-1')).resolves.toBeNull();
+    await expect(backend.get('sid-1')).resolves.toBe(null);
   });
 
   it('set is a no-op when no client is configured', async () => {
@@ -146,7 +146,7 @@ describe('RedisPermissionCacheBackend', () => {
         { sid: 's', userId: 'u', tenantId: 't', permissions: [], expiresAt: 0 } as never,
         60,
       ),
-    ).resolves.toBeUndefined();
+    ).resolves.toBe(undefined);
   });
 
   it('set writes record + user/tenant indexes with TTL', async () => {
@@ -159,12 +159,12 @@ describe('RedisPermissionCacheBackend', () => {
     );
     const opNames = ops.map((o) => o.op);
     expect(opNames).toEqual(['set', 'sAdd', 'sAdd', 'expire', 'expire']);
-    expect(multi.exec).toHaveBeenCalled();
+    expect(multi.exec).toHaveBeenCalledTimes(1);
   });
 
   it('delete is a no-op when no client is configured', async () => {
     const backend = new RedisPermissionCacheBackend(makeOptions());
-    await expect(backend.delete('sid-1')).resolves.toBeUndefined();
+    await expect(backend.delete('sid-1')).resolves.toBe(undefined);
   });
 
   it('delete removes record and (when known) sids from user/tenant indexes', async () => {
@@ -181,7 +181,7 @@ describe('RedisPermissionCacheBackend', () => {
     await backend.delete('sid-1');
     const opNames = ops.map((o) => o.op);
     expect(opNames).toEqual(['del', 'sRem', 'sRem']);
-    expect(multi.exec).toHaveBeenCalled();
+    expect(multi.exec).toHaveBeenCalledTimes(1);
   });
 
   it('delete only deletes the record when no record exists in the index', async () => {
@@ -197,14 +197,14 @@ describe('RedisPermissionCacheBackend', () => {
 
   it('invalidateScope is a no-op when no client is configured', async () => {
     const backend = new RedisPermissionCacheBackend(makeOptions());
-    await expect(backend.invalidateScope('u:t')).resolves.toBeUndefined();
+    await expect(backend.invalidateScope('u:t')).resolves.toBe(undefined);
   });
 
   it('invalidateScope ignores malformed messages without both parts', async () => {
     const backend = new RedisPermissionCacheBackend(makeOptions(redisOpts));
     attachClient(backend, makeClient());
-    await expect(backend.invalidateScope('')).resolves.toBeUndefined();
-    await expect(backend.invalidateScope('only-one')).resolves.toBeUndefined();
+    await expect(backend.invalidateScope('')).resolves.toBe(undefined);
+    await expect(backend.invalidateScope('only-one')).resolves.toBe(undefined);
   });
 
   it('invalidateScope handles per-user scope by listing user sids', async () => {
@@ -220,7 +220,7 @@ describe('RedisPermissionCacheBackend', () => {
       }),
     );
     await backend.invalidateScope('u-1:t-1');
-    expect(multi.exec).toHaveBeenCalled();
+    expect(multi.exec).toHaveBeenCalledTimes(1);
   });
 
   it('invalidateScope leaves user-indexed records alone when tenant does not match', async () => {
@@ -241,7 +241,7 @@ describe('RedisPermissionCacheBackend', () => {
       }),
     );
     await backend.invalidateScope('u-1:t-1');
-    expect(multi.exec).not.toHaveBeenCalled();
+    expect(multi.exec).not.toHaveBeenCalledTimes(1);
   });
 
   it('invalidateScope handles tenant-wide scope (userId=*)', async () => {
@@ -257,7 +257,7 @@ describe('RedisPermissionCacheBackend', () => {
       }),
     );
     await backend.invalidateScope('*:t-1');
-    expect(multi.exec).toHaveBeenCalled();
+    expect(multi.exec).toHaveBeenCalledTimes(1);
   });
 
   it('invalidateScope handles global scope (*:*) by scanning keys', async () => {
@@ -278,7 +278,7 @@ describe('RedisPermissionCacheBackend', () => {
       }),
     );
     await backend.invalidateScope('*:*');
-    expect(multi.exec).toHaveBeenCalled();
+    expect(multi.exec).toHaveBeenCalledTimes(1);
   });
 
   it('invalidateScope accepts scanIterator string keys as well as key arrays', async () => {
@@ -299,7 +299,7 @@ describe('RedisPermissionCacheBackend', () => {
       }),
     );
     await backend.invalidateScope('*:*');
-    expect(multi.exec).toHaveBeenCalled();
+    expect(multi.exec).toHaveBeenCalledTimes(1);
   });
 
   it('subscribe records the handler and re-subscribes when subscriber is present', async () => {
@@ -332,10 +332,10 @@ describe('RedisPermissionCacheBackend', () => {
   it('publish is a no-op without redis options or without a client', async () => {
     const withoutOptions = new RedisPermissionCacheBackend(makeOptions());
     attachClient(withoutOptions, makeClient());
-    await expect(withoutOptions.publish('u-1:t-1')).resolves.toBeUndefined();
+    await expect(withoutOptions.publish('u-1:t-1')).resolves.toBe(undefined);
 
     const withoutClient = new RedisPermissionCacheBackend(makeOptions(redisOpts));
-    await expect(withoutClient.publish('u-1:t-1')).resolves.toBeUndefined();
+    await expect(withoutClient.publish('u-1:t-1')).resolves.toBe(undefined);
   });
 
   it('close quits both client and subscriber when open', async () => {
@@ -345,8 +345,8 @@ describe('RedisPermissionCacheBackend', () => {
     Object.defineProperty(backend, 'client', { value: client, writable: true });
     attachSubscriber(backend, sub);
     await backend.close();
-    expect(client.quit).toHaveBeenCalled();
-    expect(sub.quit).toHaveBeenCalled();
+    expect(client.quit).toHaveBeenCalledTimes(1);
+    expect(sub.quit).toHaveBeenCalledTimes(1);
   });
 
   it('close skips quit calls when clients are already closed', async () => {
@@ -356,12 +356,12 @@ describe('RedisPermissionCacheBackend', () => {
     Object.defineProperty(backend, 'client', { value: client, writable: true });
     attachSubscriber(backend, sub);
     await backend.close();
-    expect(client.quit).not.toHaveBeenCalled();
-    expect(sub.quit).not.toHaveBeenCalled();
+    expect(client.quit).not.toHaveBeenCalledTimes(1);
+    expect(sub.quit).not.toHaveBeenCalledTimes(1);
   });
 
   it('onModuleDestroy delegates to close', async () => {
     const backend = new RedisPermissionCacheBackend(makeOptions(redisOpts));
-    await expect(backend.onModuleDestroy()).resolves.toBeUndefined();
+    await expect(backend.onModuleDestroy()).resolves.toBe(undefined);
   });
 });

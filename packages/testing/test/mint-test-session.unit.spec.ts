@@ -34,6 +34,32 @@ describe('mintTestSession', () => {
 
     expect(payload.aud).toBe('stynx-tests');
     expect(payload.sid).toBe('sid-1');
-    expect(payload.perms_hash).toBeUndefined();
+    expect(payload.perms_hash).toBe(undefined);
+  });
+
+  it('uses default issuer, cognito fallback, and sorted permissions hash', async () => {
+    process.env.NODE_ENV = 'test';
+    const now = new Date('2026-05-22T12:00:00.000Z');
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
+
+    try {
+      const userId = randomUUID();
+      const tenantId = randomUUID();
+      const session = await mintTestSession({
+        userId,
+        tenantId,
+        perms: ['storage:write', 'audit:read'],
+      });
+      const [, payloadSegment] = session.token.split('.');
+      const payload = JSON.parse(Buffer.from(payloadSegment ?? '', 'base64url').toString('utf8')) as Record<string, unknown>;
+
+      expect(payload.iss).toBe('https://stynx.testing.local');
+      expect(payload.sub).toBe(userId);
+      expect(payload.tenant_id).toBe(tenantId);
+      expect(payload.perms_hash).toBe('audit:read|storage:write');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

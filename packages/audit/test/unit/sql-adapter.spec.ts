@@ -82,11 +82,11 @@ describe('AuditSqlSink', () => {
       const sink = new AuditSqlSink(executor, { mode: 'audit_write_function' });
       await sink.write({ occurredAt: 'now', action: 'a', entity: 'e' });
       const [, params] = executor.query.mock.calls[0]!;
-      expect((params as unknown[])[0]).toBeNull();
-      expect((params as unknown[])[1]).toBeNull();
-      expect((params as unknown[])[10]).toBeNull();
-      expect((params as unknown[])[11]).toBeNull();
-      expect((params as unknown[])[12]).toBeNull();
+      expect((params as unknown[])[0]).toBe(null);
+      expect((params as unknown[])[1]).toBe(null);
+      expect((params as unknown[])[10]).toBe(null);
+      expect((params as unknown[])[11]).toBe(null);
+      expect((params as unknown[])[12]).toBe(null);
     });
   });
 
@@ -507,12 +507,12 @@ describe('AuditSqlSink — ?? null params (LogicalOperator survivors at src/sql-
       await sink.write({ occurredAt: '2026-05-18T00:00:00Z', action: 'a', entity: 'e' });
       const [, params] = executor.query.mock.calls[0]!;
       expect((params as unknown[])[0]).toBe('2026-05-18T00:00:00Z');
-      expect((params as unknown[])[1]).toBeNull();                  // actorId — kills 294
+      expect((params as unknown[])[1]).toBe(null);                  // actorId — kills 294
       expect((params as unknown[])[2]).toBe('a');                   // action
       expect((params as unknown[])[3]).toBe('e');                   // resource_type
-      expect((params as unknown[])[4]).toBeNull();                  // entityId — kills 295
-      expect((params as unknown[])[5]).toBeNull();                  // requestId — kills 296
-      expect((params as unknown[])[6]).toBeNull();                  // ipAddress — kills 297
+      expect((params as unknown[])[4]).toBe(null);                  // entityId — kills 295
+      expect((params as unknown[])[5]).toBe(null);                  // requestId — kills 296
+      expect((params as unknown[])[6]).toBe(null);                  // ipAddress — kills 297
       // metadata blob still present (JSON-stringified empty-ish object)
       expect(typeof (params as unknown[])[7]).toBe('string');
     });

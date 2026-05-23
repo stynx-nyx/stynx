@@ -45,6 +45,9 @@ const config: KnipConfig = {
 
   ignoreFiles: [
     'tools/migration-linter/dist/**',
+    'tools/create-stynx-app/template/playwright.config.mjs',
+    'tools/create-stynx-app/template/src/app/**',
+    'tools/create-stynx-app/template/src/main.ts',
     'reference/web/src/app/reference-web.module.ts',
     'reference/web/src/environments/environment.prod.ts',
     'packages/cli/src/main.ts',

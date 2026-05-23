@@ -90,7 +90,15 @@ describe('AuthContextGuard', () => {
 
     await expect(guard.canActivate(createExecutionContext(request))).resolves.toBe(true);
     expect(request.tenantId).toBe('tenant-b');
-    expect(entitlement.isEntitled).toHaveBeenCalled();
+    expect(entitlement.isEntitled).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tenantId: 'tenant-b',
+        principal: expect.objectContaining({
+          id: 'user-1',
+          tenants: ['tenant-a', 'tenant-b'],
+        }),
+      }),
+    );
   });
 
   it('throws forbidden when tenant entitlement fails', async () => {
