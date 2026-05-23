@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="2" failures="0" errors="0" time="0.0680635">
-    <testsuite name="test/integration/core.module.spec.ts" timestamp="2026-05-21T02:16:17.090Z" hostname="thiamat-1903.local" tests="2" failures="0" errors="0" skipped="0" time="0.0680635">
-        <testcase classname="test/integration/core.module.spec.ts" name="StynxCoreModule integration &gt; propagates request ids and config values through the module" time="0.057078583">
-        </testcase>
-        <testcase classname="test/integration/core.module.spec.ts" name="StynxCoreModule integration &gt; fails fast on invalid configuration during module boot" time="0.009075083">
-        </testcase>
-    </testsuite>
-</testsuites>

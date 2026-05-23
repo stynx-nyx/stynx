@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="1" failures="0" errors="0" time="0.025802417">
-    <testsuite name="test/integration/logging.module.spec.ts" timestamp="2026-05-21T02:16:19.745Z" hostname="thiamat-1903.local" tests="1" failures="0" errors="0" skipped="0" time="0.025802417">
-        <testcase classname="test/integration/logging.module.spec.ts" name="StynxLoggingModule integration &gt; emits JSON logs with the active request id" time="0.024668916">
-        </testcase>
-    </testsuite>
-</testsuites>

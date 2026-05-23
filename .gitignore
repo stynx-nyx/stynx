@@ -96,6 +96,7 @@ docs/.docusaurus/
 docs/.generated/
 
 # Test artefacts
+.test-results/
 test-results/
 tests/e2e/.summary.txt
 test/perf/k6/results/
