@@ -25,7 +25,7 @@ function readRepoFile(path: string): string {
 }
 
 function readReferenceRbac(): RbacInventory {
-  return JSON.parse(readRepoFile('docs/architecture/reference-app-rbac.json')) as RbacInventory;
+  return JSON.parse(readRepoFile('docs/arch/reference-app-rbac.json')) as RbacInventory;
 }
 
 function permissionDecoratorsFromReferenceControllers(): string[] {

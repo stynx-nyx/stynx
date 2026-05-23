@@ -1,9 +1,9 @@
 # GAP-001 — Audit: Append-Only Hash Chaining
 
-**Priority:** CRITICAL  
-**Package:** `packages/audit`  
-**DDL:** `db/ddl/02-audit.sql`  
-**Source of truth:** pec's `audit.events` hash-chain model  
+**Priority:** CRITICAL
+**Package:** `packages/audit`
+**DDL:** `database/ddl/02-audit.sql`
+**Source of truth:** pec's `audit.events` hash-chain model
 **Run from:** `./stynx` repo root
 **Status:** Complete
 
@@ -31,15 +31,15 @@ order and comparing them to the stored values.
 
 Before writing any code, read these files in full:
 
-- `db/ddl/02-audit.sql`
+- `database/ddl/02-audit.sql`
 - `packages/audit/src/types.ts`
 - `packages/audit/src/sql-adapter.ts`
 - `packages/audit/src/audit.service.ts`
-- `db/ddl/00-extensions.sql` (confirm `pgcrypto` is present)
+- `database/ddl/00-extensions.sql` (confirm `pgcrypto` is present)
 
 ---
 
-## Step 2 — Migrate `db/ddl/02-audit.sql`
+## Step 2 — Migrate `database/ddl/02-audit.sql`
 
 ### 2a — Add column to `audit.events`
 
@@ -195,7 +195,7 @@ In `packages/audit/src/index.ts`, add exports for:
 
 ```bash
 # Schema compiles cleanly
-psql $DATABASE_URL -f db/ddl/02-audit.sql
+psql $DATABASE_URL -f database/ddl/02-audit.sql
 
 # TypeScript builds
 pnpm --filter @stynx/audit build

@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 describe('audit schema DDL', () => {
-  const ddl = readFileSync(join(__dirname, '../../db/ddl/02-audit.sql'), 'utf-8');
+  const ddl = readFileSync(join(__dirname, '../../database/ddl/02-audit.sql'), 'utf-8');
 
   it('creates audit.events table with metadata and pk columns', () => {
     expect(ddl).toMatch(/CREATE TABLE audit\.events/);

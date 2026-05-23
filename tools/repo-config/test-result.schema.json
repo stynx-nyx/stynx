@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://stynx.dev/schemas/test-result/v1",
   "title": "stynx test-result",
-  "description": "Canonical per-(package, level) test-result artifact. One file per run of a given level in a given package. Written by scripts/run-and-record.mjs; read by render-test-matrix.mjs, aggregate-coverage.mjs, DEVAI sensors, CI summary jobs.",
+  "description": "Canonical per-(package, level) test-result artifact. One file per run of a given level in a given package. Written and read by DEVAI test evidence commands, sensors, and CI summary jobs.",
   "type": "object",
   "additionalProperties": false,
   "required": [

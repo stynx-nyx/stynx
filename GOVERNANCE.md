@@ -7,11 +7,11 @@ Stynx is governed by **DEVAI** ([sibling repo](../devai)). Per session directive
 | Concern                                                         | Canonical location                                                                   | Notes                                                                                                          |
 | --------------------------------------------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
 | Constitutional discipline (5 roles, substrates, evidence chain) | [`../devai/CONSTITUTION.md`](../devai/CONSTITUTION.md)                               | Article 6 path-authority is the source of truth for who-may-edit-what.                                         |
-| Engineering specifications                                      | [`docs/architecture/`](docs/architecture/)                                           | Created by `devai init --execute` in Phase A.2.                                                                |
+| Engineering specifications                                      | [`docs/arch/`](docs/arch/)                                                           | Created by `devai init --execute` in Phase A.2.                                                                |
 | Architectural decisions                                         | [`docs/adr/`](docs/adr/)                                                             | DEVAI-shaped ADR substrate. (Pre-pilot ADRs migrated here in C-4 Session S5; `/specs/` retired in Session T6.) |
-| Active invariants                                               | [`docs/architecture/invariants/`](docs/architecture/invariants/)                     | Currently: `INV-RBAC-001`, `INV-PRIVACY-001` (Phase B).                                                        |
+| Active invariants                                               | [`docs/arch/invariants/`](docs/arch/invariants/)                                     | Currently: `INV-RBAC-001`, `INV-PRIVACY-001` (Phase B).                                                        |
 | Contracts                                                       | [`docs/contracts/`](docs/contracts/)                                                 | DEVAI substrate; populate as schemas/contracts are extracted.                                                  |
-| Operations runbooks                                             | [`docs/operations/`](docs/operations/)                                               | Both DEVAI substrate (README.md) and legacy stynx (`recovery/`, `runbooks/`).                                  |
+| Operations runbooks                                             | [`docs/ops/`](docs/ops/)                                                             | Both DEVAI substrate (README.md) and legacy stynx (`recovery/`, `runbooks/`).                                  |
 | Security posture                                                | [`docs/security/`](docs/security/)                                                   | DEVAI substrate.                                                                                               |
 | Glossary                                                        | [`docs/glossary/`](docs/glossary/)                                                   | DEVAI substrate.                                                                                               |
 | Inventory & evidence                                            | [`.devai/state/`](.devai/state/)                                                     | Auto-generated (do not hand-edit). Sensors, candidates, telemetry, evidence chain.                             |
@@ -21,7 +21,7 @@ Stynx is governed by **DEVAI** ([sibling repo](../devai)). Per session directive
 
 ## What this file used to point at
 
-The pre-pilot `docs/governance/{health, audit, compliance}` tree has been archived to [`docs/legacy/governance-archive/`](docs/legacy/governance-archive/) (C-4 Session S5-3). Its content is kept for archeological reference but is NOT authoritative for current stynx governance — run the DEVAI commands above for live signal.
+The pre-pilot `docs/gov/{health, audit, compliance}` tree has been archived to [`docs/legacy/governance-archive/`](docs/legacy/governance-archive/) (C-4 Session S5-3). Its content is kept for archeological reference but is NOT authoritative for current stynx governance — run the DEVAI commands above for live signal.
 
 ## How to participate
 

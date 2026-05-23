@@ -2,9 +2,9 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-AUTH_DDL="$ROOT_DIR/db/ddl/01-auth.sql"
-AUDIT_DDL="$ROOT_DIR/db/ddl/02-audit.sql"
-STORAGE_DDL="$ROOT_DIR/db/ddl/03-storage.sql"
+AUTH_DDL="$ROOT_DIR/database/ddl/01-auth.sql"
+AUDIT_DDL="$ROOT_DIR/database/ddl/02-audit.sql"
+STORAGE_DDL="$ROOT_DIR/database/ddl/03-storage.sql"
 MISSING=0
 
 assert_pattern() {

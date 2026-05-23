@@ -23,6 +23,9 @@
     "lint:cycles": "madge --circular packages/ packages-web/ tools/ --extensions ts,mjs --exclude '(^|/)(dist|build|coverage|node_modules)/'",
     "lint:workflows": "github-actionlint .github/workflows/*.yml",
     "db:verify": "node scripts/db-verify.mjs",
+    "db:acceptance": "node scripts/verify-db-acceptance.mjs",
+    "api:coverage": "node scripts/verify-api-coverage.mjs",
+    "stynx-boundary:check": "node --experimental-strip-types scripts/verify-stynx-boundary.ts",
     "ci:stynx": "pnpm check:engines && pnpm lint && pnpm lint:tests && pnpm lint:deadcode && pnpm lint:deps && pnpm lint:cycles && pnpm typecheck && pnpm test && pnpm test:int && pnpm build && pnpm run doctor",
     "ci:stynx:full": "pnpm ci:stynx && pnpm test:e2e && pnpm test:mutation && pnpm test:perf && pnpm check:rls-smoke",
     "ci:stynx:release": "pnpm release:policy && pnpm release:drafts",
@@ -44,16 +47,16 @@
     "doctor": "node scripts/stynx-doctor.mjs",
     "test:e2e": "turbo run test:e2e --filter='./packages/*' --filter='./packages-web/*' --filter='./reference/*'",
     "test:mutation": "pnpm -r --filter \"./packages/*\" --filter \"./packages-web/*\" --workspace-concurrency=1 stryker",
-    "test:matrix": "node scripts/render-test-matrix.mjs",
-    "test:evidence": "node scripts/test-evidence.mjs",
-    "test:matrix:coverage": "node scripts/render-test-matrix.mjs --coverage",
-    "test:matrix:timings": "node scripts/render-test-matrix.mjs --timing",
-    "check:rls-smoke": "node scripts/run-and-record.mjs --package stynx-workspace --level smoke --runner rls-smoke -- bash scripts/check-rls-smoke.sh",
+    "test:matrix": "devai render-matrix --repo-root . --config scripts/test-matrix.config.json",
+    "test:evidence": "devai evidence-emit test-evidence --actor stynx --actor-role Auditor --status completed --note \"STYNX test evidence aggregation delegated to DEVAI R2.\"",
+    "test:matrix:coverage": "devai render-matrix --repo-root . --config scripts/test-matrix.config.json --filter tier=coverage",
+    "test:matrix:timings": "devai render-matrix --repo-root . --config scripts/test-matrix.config.json",
+    "check:rls-smoke": "bash scripts/check-rls-smoke.sh",
     "smoke:local": "pnpm --filter @stynx/reference-api smoke:local",
     "prepare": "husky",
-    "test:coverage": "node scripts/aggregate-coverage.mjs",
-    "test:coverage:aggregate": "node scripts/aggregate-coverage.mjs",
-    "test:perf": "node scripts/run-and-record.mjs --package stynx-workspace --level perf --runner perf-smoke -- node scripts/perf-smoke.mjs",
+    "test:coverage": "devai coverage-aggregate --repo-root . --in coverage --out coverage/coverage-final.json --final --human",
+    "test:coverage:aggregate": "devai coverage-aggregate --repo-root . --in coverage --out coverage/coverage-final.json --final --human",
+    "test:perf": "devai record-run --repo-root . --scope stynx-workspace --tier perf --cmd \"node scripts/perf-smoke.mjs\" --human",
     "i18n:check": "node tools/i18n-extract.mjs --check",
     "i18n:extract": "node tools/i18n-extract.mjs --write"
   },
@@ -114,6 +117,45 @@
       "serialize-javascript": "7.0.5",
       "uuid": "14.0.0",
       "webpackbar": "7.0.0"
+    }
+  },
+  "stynx": {
+    "boundary": {
+      "roots": [
+        "reference",
+        "domain",
+        "packages",
+        "packages-web"
+      ],
+      "allowedPackages": [
+        "@stynx/",
+        "@stynx-web/"
+      ],
+      "forbiddenImports": [],
+      "requireStynxPackages": []
+    },
+    "apiCoverage": {
+      "openapiPath": "docs/contracts/openapi.json",
+      "sourceRoots": [
+        "reference/api/src",
+        "packages"
+      ],
+      "routePrefix": ""
+    },
+    "dbAcceptance": {
+      "ddlPaths": [
+        "database/ddl/*.sql"
+      ],
+      "seedPaths": [
+        "database/seed/*.sql"
+      ],
+      "requiredSchemas": [
+        "auth",
+        "audit",
+        "storage"
+      ],
+      "requiredTables": [],
+      "requiredRlsTables": []
     }
   }
 }

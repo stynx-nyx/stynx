@@ -1,0 +1,39 @@
+{
+  "name": "@stynx/signature",
+  "version": "0.1.0",
+  "description": "PAdES, TSA, and certificate-status signature facade for stynx",
+  "main": "dist/signature/src/index.js",
+  "types": "dist/signature/src/index.d.ts",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/signature/src/index.d.ts",
+      "require": "./dist/signature/src/index.js",
+      "default": "./dist/signature/src/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist coverage",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+    "test": "vitest run --config ./vitest.config.ts"
+  },
+  "stynxProviderDependencies": {
+    "padesCms": "pkijs",
+    "certificateParsing": "@peculiar/x509",
+    "asn1Encoding": "asn1js",
+    "tsaClient": "provider-supplied RFC 3161 client",
+    "ocspClient": "provider-supplied RFC 6960 client",
+    "crlClient": "provider-supplied RFC 5280 CRL client"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "typescript": "^6.0.3"
+  }
+}

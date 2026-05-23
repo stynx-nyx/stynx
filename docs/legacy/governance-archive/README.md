@@ -1,6 +1,6 @@
 # `docs/legacy/governance-archive/` — pre-pilot stynx governance, archived
 
-> **C-4 Session S5-3 (post-21 stynx adoption, 2026-05).** This tree is what `docs/governance/` used to be before the DEVAI adoption pilot. Per session directives 5.1/5.2 (DEVAI authoritative; supersedes legacy stynx governance), governance content lives in DEVAI substrates now.
+> **C-4 Session S5-3 (post-21 stynx adoption, 2026-05).** This tree is what `docs/gov/` used to be before the DEVAI adoption pilot. Per session directives 5.1/5.2 (DEVAI authoritative; supersedes legacy stynx governance), governance content lives in DEVAI substrates now.
 
 ## Where stynx governance lives today
 
@@ -23,8 +23,8 @@
 | `audit/npm-security-upgrade-report.md` | npm dep security report (the `.codex/skills/npm-security-upgrade-auditor` skill emits these) |
 | `compliance/scorecard-2026-02-15.md`   | Pre-pilot manual scorecard                                                                   |
 | `compliance/scoring.md`                | Pre-pilot scoring methodology                                                                |
-| `_DEPRECATION-NOTICE.md`               | The "deprecated" pointer that lived at `docs/governance/README.md` post-Phase-G of the pilot |
+| `_DEPRECATION-NOTICE.md`               | The "deprecated" pointer that lived at `docs/gov/README.md` post-Phase-G of the pilot        |
 
 These files are kept for archeological reference (why-was-it-built-this-way context). They are NOT authoritative for current stynx state — run the DEVAI commands listed above for live signal.
 
-`GOVERNANCE.md` at the repo root was updated in Phase G (commit `4f914a2`) to point at the DEVAI substrates instead of `docs/governance/`; the dir-level deprecation README in `_DEPRECATION-NOTICE.md` (kept here for forensic completeness) was authored in S5-step-1 (commit `cb734ac`).
+`GOVERNANCE.md` at the repo root was updated in Phase G (commit `4f914a2`) to point at the DEVAI substrates instead of `docs/gov/`; the dir-level deprecation README in `_DEPRECATION-NOTICE.md` (kept here for forensic completeness) was authored in S5-step-1 (commit `cb734ac`).

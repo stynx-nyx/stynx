@@ -112,7 +112,7 @@ Adoption is deferred until the below-90 packages clear the D3 floor. Gating PRs 
 Revert with: `git revert <this-commit-range>`. The original ADR changes touched six files; the 2026-05-22 Architect revision touches:
 
 - `scripts/test-matrix.config.json`
-- `scripts/render-test-matrix.mjs`
+- `devai render-matrix`
 - `docs/adr/2026-05-21-mutation-thresholds-tiered.md`
 
 The on-disk mutation artefacts (`<pkg>/.test-results/mutation.json`, `<pkg>/reports/mutation/`) are untouched; they remain valid against the previous policy. The next mutation run rewrites them under the new policy.

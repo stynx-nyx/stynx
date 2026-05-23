@@ -144,7 +144,7 @@ stynx assumes the following actors with distinct authority:
 This is the **initial threat model** authored to close F1×T6 (`spec_security_coverage`) in the post-trilogy scorecard refresh (stynx U5+, 2026-05-17). Future iterations should:
 
 1. Add a threat per new attack surface introduced by domain modules (e.g. file upload → injection).
-2. Promote any threat's "future INV-\*" candidate to an actual invariant under `docs/architecture/invariants/` once the verification mechanism exists.
+2. Promote any threat's "future INV-\*" candidate to an actual invariant under `docs/arch/invariants/` once the verification mechanism exists.
 3. Refresh annually or after any incident response postmortem.
 
 Authority for updates: Architect (this file lives under `docs/security/`, an Architect-substrate path per Constitution Article 6).

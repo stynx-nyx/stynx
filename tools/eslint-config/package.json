@@ -11,7 +11,7 @@
     "./angular": "./angular.mjs"
   },
   "scripts": {
-    "test": "node ../../scripts/run-and-record.mjs --package @stynx-internal/eslint-config --level unit --runner node-test -- node --test test/eslint-config.spec.mjs"
+    "test": "node --test test/eslint-config.spec.mjs"
   },
   "files": [
     "*.mjs",

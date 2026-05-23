@@ -24,7 +24,7 @@ The skill is content-only (a SKILL.md prompt manifest) — there's no runtime he
 2. The agent reads `SKILL.md` for instructions.
 3. Output lands at `docs/security/npm-security-upgrade-report.md` (the DEVAI substrate for security artifacts).
 
-Older outputs at `docs/governance/audit/npm-security-upgrade-report.md` were archived to `docs/legacy/governance-archive/audit/npm-security-upgrade-report.md` in C-4 Session S5-3 — those are historical reference, not active.
+Older outputs at `docs/gov/audit/npm-security-upgrade-report.md` were archived to `docs/legacy/governance-archive/audit/npm-security-upgrade-report.md` in C-4 Session S5-3 — those are historical reference, not active.
 
 ### When DEVAI ships a generic dep-security action
 

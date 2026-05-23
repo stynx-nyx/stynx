@@ -13,15 +13,15 @@ describe('db runtime extensions', () => {
 
   it('applies DDL and seed files in lexical order', () => {
     expect(fixture.appliedFiles).toEqual([
-      'db/ddl/00-extensions.sql',
-      'db/ddl/01-auth.sql',
-      'db/ddl/02-audit.sql',
-      'db/ddl/03-storage.sql',
-      'db/seed/00-base.sql',
+      'database/ddl/00-extensions.sql',
+      'database/ddl/01-auth.sql',
+      'database/ddl/02-audit.sql',
+      'database/ddl/03-storage.sql',
+      'database/seed/00-base.sql',
     ]);
   });
 
-  it('loads the extensions declared by db/ddl/00-extensions.sql', async () => {
+  it('loads the extensions declared by database/ddl/00-extensions.sql', async () => {
     const result = await fixture.client.query<{ extname: string }>(
       `
         select extname

@@ -37,7 +37,7 @@ Top-2 recommended changes: (a) extend the CI mutation matrix to every configured
 | `STRYKER_DASHBOARD_API_KEY`                    | no       | not in CI env                                                                                                                        |
 | Incremental cache in CI                        | n/a      | `.github/workflows/hardening.yml:266 STRYKER_INCREMENTAL: 'false'` — incremental disabled in CI by design.                           |
 | Incremental artefacts on disk                  | 30 / 31  | `reports/stryker-incremental.json` present in 30 packages; missing in `packages-web/angular-audit/`.                                 |
-| Canonical per-(pkg, level) JSON                | 31 / 31  | every `<pkg>/.test-results/mutation.json` is current (written via `scripts/run-and-record.mjs`)                                      |
+| Canonical per-(pkg, level) JSON                | 31 / 31  | every `<pkg>/.test-results/mutation.json` is current (written via `devai record-run`)                                                |
 | Stryker raw HTML report                        | 31 / 31  | `<pkg>/reports/mutation/-stynx-<pkg>/index.html` per package                                                                         |
 | Stryker raw JSON report                        | 31 / 31  | `<pkg>/reports/mutation/mutation.json` per package                                                                                   |
 | `.stryker-tmp/backup-*` leftover scratch dirs  | none     | `find packages packages-web -name 'backup-*' -type d` → empty (`tools/stryker/base.mjs:6-17 cleanStrykerBackups()` runs pre-config). |
@@ -182,7 +182,7 @@ _Opinion: the cluster in `packages/sessions/test/unit/session.service.spec.ts` i
 
 ## Execution results
 
-I used the on-disk artefacts (every package's `<pkg>/.test-results/mutation.json`) as the execution layer. Every file is dated within 24 hours of this audit and was produced by `scripts/run-and-record.mjs` wrapping `pnpm exec stryker run stryker.conf.mjs`.
+I used the on-disk artefacts (every package's `<pkg>/.test-results/mutation.json`) as the execution layer. Every file is dated within 24 hours of this audit and was produced by `devai record-run` wrapping `pnpm exec stryker run stryker.conf.mjs`.
 
 | Package                       | Score % | break | Total |        Killed | Survived | NoCov | Timeout | CompileError | Ignored | Pass?                                    |
 | ----------------------------- | ------: | ----: | ----: | ------------: | -------: | ----: | ------: | -----------: | ------: | ---------------------------------------- |

@@ -6,7 +6,7 @@
 This retro captures what V6 (cutover) + V7 (cleanup) actually involved on
 stynx, what went well, what surprised us, and what the next adopter should
 expect. It's the post-mortem to the parallel-adoption ledger in
-[`docs/operations/vitest-parallel-adoption.md`](../../operations/vitest-parallel-adoption.md).
+[`docs/ops/vitest-parallel-adoption.md`](../../ops/vitest-parallel-adoption.md).
 
 ## What changed (top-line)
 
@@ -133,7 +133,7 @@ re-measured on the new runner; protocol in
 
 ## Article 6 substrate ledger
 
-- **Architect** authored: this retro, [`docs/operations/vitest-parallel-adoption.md`](../../operations/vitest-parallel-adoption.md), [`tools/repo-config/vitest.base.mjs`](../../../tools/repo-config/vitest.base.mjs), [`tools/stryker/base.mjs`](../../../tools/stryker/base.mjs).
+- **Architect** authored: this retro, [`docs/ops/vitest-parallel-adoption.md`](../../ops/vitest-parallel-adoption.md), [`tools/repo-config/vitest.base.mjs`](../../../tools/repo-config/vitest.base.mjs), [`tools/stryker/base.mjs`](../../../tools/stryker/base.mjs).
 - **Engineer** authored: per-package `vitest.config.ts` / `vitest.int.config.ts` / `vitest.stryker.config.ts` (33 + 14 + 11 files), per-package script + dep updates (35 `package.json` files), `turbo.json` task list, `.github/dependabot.yml` groups.
 - **Inspector** authored: spec codemods, the four spec source changes (`vi.hoisted` wraps + `require → import`), `@stynx/auth/test/unit/validators.spec.ts:411` runner-detection bridge → simplified to `vi.importActual` post-cutover.
 - **Auditor** authored: nothing in this phase — V5 audit reports preceded cutover; next audit comes after the V7 cleanup.

@@ -1,0 +1,31 @@
+{
+  "name": "@stynx/integration-adapter",
+  "version": "0.1.0",
+  "description": "Retry, timeout, idempotency, and circuit-breaker framework for stynx integrations",
+  "main": "dist/integration-adapter/src/index.js",
+  "types": "dist/integration-adapter/src/index.d.ts",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/integration-adapter/src/index.d.ts",
+      "require": "./dist/integration-adapter/src/index.js",
+      "default": "./dist/integration-adapter/src/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist coverage",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+    "test": "vitest run --config ./vitest.config.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "typescript": "^6.0.3"
+  }
+}

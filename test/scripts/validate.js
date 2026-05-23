@@ -77,41 +77,6 @@ function assertExcludes(value, unexpected, label) {
   }
 }
 
-function runMatrixRendererTests() {
-  const status = run('node', ['scripts/render-test-matrix.mjs', '--no-color', '--resume'], { cwd: repoRoot });
-  const statusLegend = run('node', ['scripts/render-test-matrix.mjs', '--no-color', '--resume', '--legend'], {
-    cwd: repoRoot,
-  });
-  const compact = run('node', ['scripts/render-test-matrix.mjs', '--no-color', '--compact', '--resume'], {
-    cwd: repoRoot,
-  });
-  const timing = run('node', ['scripts/render-test-matrix.mjs', '--no-color', '--timing', '--resume'], {
-    cwd: repoRoot,
-  });
-  const coverage = run('node', ['scripts/render-test-matrix.mjs', '--no-color', '--coverage', '--resume'], {
-    cwd: repoRoot,
-  });
-
-  assertExcludes(status.split('\n')[0], 'Perf', 'status matrix header');
-  assertIncludes(status, 'Resume', 'status matrix');
-  assertIncludes(status, ' 2/2 ', 'status E2E resume');
-  assertIncludes(status, 'Perf: PASS p95=', 'status perf footer');
-  assertIncludes(status, '¹', 'status mutation default tier');
-  assertIncludes(status, '²', 'status mutation strict tier');
-  assertIncludes(status, '³', 'status mutation strictest tier');
-  assertExcludes(status, 'Legend:', 'default status matrix');
-  assertIncludes(statusLegend, 'Legend:', 'status legend');
-
-  assertExcludes(compact.split('\n')[0], ' | P', 'compact matrix header');
-  assertIncludes(compact, 'Perf: P p95=', 'compact perf footer');
-
-  assertExcludes(timing.split('\n')[0], 'Perf [s]', 'timing matrix header');
-  assertIncludes(timing, 'Perf duration: ', 'timing perf footer');
-
-  assertExcludes(coverage, 'Coverage columns: lines, statements, branches, functions.', 'coverage matrix');
-  assertIncludes(coverage, 'Source: coverage/test-evidence.json', 'coverage matrix source footer');
-}
-
 function metadata(job) {
   return [
     `job=${job}`,
@@ -175,7 +140,10 @@ function runEvidenceTests() {
     mkdirSync(join(root, 'artifacts', 'stynx-release'), { recursive: true });
     writeFileSync(join(root, 'artifacts', 'all-linux', 'metadata.txt'), metadata('all-linux'));
     writeFileSync(join(root, 'artifacts', 'all-linux', 'log.txt'), 'ok\n');
-    writeFileSync(join(root, 'artifacts', 'stynx-release', 'metadata.txt'), metadata('stynx-release'));
+    writeFileSync(
+      join(root, 'artifacts', 'stynx-release', 'metadata.txt'),
+      metadata('stynx-release'),
+    );
     writeFileSync(join(root, 'artifacts', 'stynx-release', 'log.txt'), 'ok\n');
 
     run(
@@ -227,10 +195,20 @@ function runEvidenceTests() {
       { cwd: root },
     );
 
-    run('node', ['scripts/evidence/verify-local-evidence.mjs', '--mode', 'strict', '--manifest', 'missing.json'], {
-      cwd: root,
-      status: 1,
-    });
+    run(
+      'node',
+      [
+        'scripts/evidence/verify-local-evidence.mjs',
+        '--mode',
+        'strict',
+        '--manifest',
+        'missing.json',
+      ],
+      {
+        cwd: root,
+        status: 1,
+      },
+    );
 
     const manifestPath = join(root, '.ci', 'evidence', 'local-ci.json');
     const validManifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
@@ -307,7 +285,6 @@ function runEvidenceTests() {
   }
 }
 
-runMatrixRendererTests();
 runEvidenceTests();
 
 console.log('All scripts validated');

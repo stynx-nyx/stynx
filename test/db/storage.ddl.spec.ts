@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 describe('storage schema DDL', () => {
-  const ddl = readFileSync(join(__dirname, '../../db/ddl/03-storage.sql'), 'utf-8');
+  const ddl = readFileSync(join(__dirname, '../../database/ddl/03-storage.sql'), 'utf-8');
 
   it('defines storage schema and files table', () => {
     expect(ddl).toContain('CREATE SCHEMA storage');

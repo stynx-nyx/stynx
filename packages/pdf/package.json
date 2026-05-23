@@ -1,0 +1,38 @@
+{
+  "name": "@stynx/pdf",
+  "version": "0.1.0",
+  "description": "Server-side PDF generation facade for stynx",
+  "main": "dist/pdf/src/index.js",
+  "types": "dist/pdf/src/index.d.ts",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/pdf/src/index.d.ts",
+      "require": "./dist/pdf/src/index.js",
+      "default": "./dist/pdf/src/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist coverage",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+    "test": "vitest run --config ./vitest.config.ts"
+  },
+  "stynxProviderDependencies": {
+    "templateEngines": [
+      "handlebars",
+      "html"
+    ],
+    "pdfRenderer": "provider-supplied Chromium, Playwright, or equivalent renderer"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "typescript": "^6.0.3"
+  }
+}

@@ -377,7 +377,7 @@ These feed `18-GAPS-AND-OPEN-QUESTIONS.md`:
 7. **`pnpm doctor` empty-output (FIND-011) re-verification owed.**
    Severity: MAJOR.
 8. **Operations runbooks (FIND-031)** — discovery did not re-check
-   `docs/operations/`. Severity: MAJOR.
+   `docs/ops/`. Severity: MAJOR.
 
 ## 12. Audit findings carrying into porting concerns
 
@@ -397,4 +397,4 @@ agents must know about (post-rationalization survivors):
   whether GAP-001 is fully implemented is `[VERIFY in PORT-04]`).
 - **FIND-026** — Conventional Commits compliance ~37 % at audit time;
   re-check via `git log` before claiming closed.
-- **FIND-031** — operations runbooks; re-check `docs/operations/`.
+- **FIND-031** — operations runbooks; re-check `docs/ops/`.

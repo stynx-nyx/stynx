@@ -61,12 +61,12 @@ describe('audit DML trigger runtime behavior', () => {
         ) as pk
       `,
     );
-    expect(noPrimaryKey.rows[0]?.pk).toBeNull();
+    expect(noPrimaryKey.rows[0]?.pk).toBe(null);
 
     const nullRow = await fixture.client.query<{ pk: Record<string, unknown> | null }>(
       `select audit.extract_primary_key('scratch', 'audit_items', null) as pk`,
     );
-    expect(nullRow.rows[0]?.pk).toBeNull();
+    expect(nullRow.rows[0]?.pk).toBe(null);
   });
 
   it('fn_log_dml records INSERT, UPDATE, and DELETE through audit.attach_dml_triggers', async () => {
@@ -136,7 +136,7 @@ describe('audit DML trigger runtime behavior', () => {
       'request-dml-1',
     ]);
 
-    expect(rows.rows[0]?.old_data).toBeNull();
+    expect(rows.rows[0]?.old_data).toBe(null);
     expect(rows.rows[0]?.new_data).toMatchObject({ id: itemId, tenancy_id: tenantId, label: 'alpha', amount: 10 });
     expect(rows.rows[0]?.metadata).toMatchObject({ id: itemId, tenancy_id: tenantId, label: 'alpha', amount: 10 });
 
@@ -145,10 +145,10 @@ describe('audit DML trigger runtime behavior', () => {
     expect(rows.rows[1]?.metadata).toMatchObject({ label: 'beta', amount: 20 });
 
     expect(rows.rows[2]?.old_data).toMatchObject({ label: 'beta', amount: 20 });
-    expect(rows.rows[2]?.new_data).toBeNull();
+    expect(rows.rows[2]?.new_data).toBe(null);
     expect(rows.rows[2]?.metadata).toEqual({});
 
-    expect(rows.rows[0]?.previous_hash).toBeNull();
+    expect(rows.rows[0]?.previous_hash).toBe(null);
     expect(rows.rows[1]?.previous_hash).toBe(rows.rows[0]?.row_hash);
     expect(rows.rows[2]?.previous_hash).toBe(rows.rows[1]?.row_hash);
   });

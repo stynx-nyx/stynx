@@ -5,14 +5,14 @@ This workspace contains reusable, installable backend packages published as
 
 ## Package Groups
 
-| Group                        | Packages                                                  | Purpose                                                                                           |
-| ---------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Contracts                    | `contracts`                                               | Framework-agnostic interfaces and error types.                                                    |
-| Runtime foundation           | `core`, `data`, `backend`                                 | Request context, config, data access, migrations, and aggregate NestJS wiring.                    |
-| Security and tenancy         | `auth`, `sessions`, `tenancy`, `ratelimit`, `idempotency` | Auth, session lifecycle, tenant validation, throttling, and mutation replay protection.           |
-| Governance and observability | `audit`, `health`, `logging`, `privacy`                   | Audit evidence, metrics/readiness, structured logs, LGPD export/erasure, and ROPA.                |
-| Platform features            | `storage`, `i18n`, `flow`                                 | Documents/object storage, localized messages, and workflow machinery.                             |
-| Tooling                      | `cli`, `testing`                                          | Consumer commands, migrations, doctor checks, fixtures, matchers, and integration-test harnesses. |
+| Group                        | Packages                                                                              | Purpose                                                                                                                      |
+| ---------------------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Contracts                    | `contracts`                                                                           | Framework-agnostic interfaces and error types.                                                                               |
+| Runtime foundation           | `core`, `data`, `backend`                                                             | Request context, config, data access, migrations, and aggregate NestJS wiring.                                               |
+| Security and tenancy         | `auth`, `sessions`, `tenancy`, `ratelimit`, `idempotency`                             | Auth, session lifecycle, tenant validation, throttling, and mutation replay protection.                                      |
+| Governance and observability | `audit`, `health`, `logging`, `privacy`                                               | Audit evidence, metrics/readiness, structured logs, LGPD export/erasure, and ROPA.                                           |
+| Platform features            | `storage`, `i18n`, `flow`, `signature`, `pdf`, `feature-flags`, `integration-adapter` | Documents/object storage, localized messages, workflow machinery, signatures, PDFs, rollout flags, and integration adapters. |
+| Tooling                      | `cli`, `testing`                                                                      | Consumer commands, migrations, doctor checks, fixtures, matchers, and integration-test harnesses.                            |
 
 ## Documentation Baseline
 
@@ -27,7 +27,7 @@ Every active package directory has a README with:
 - package-local verification commands.
 
 The canonical standard is
-[`docs/architecture/developer-documentation.md`](../docs/architecture/developer-documentation.md)
+[`docs/arch/developer-documentation.md`](../docs/arch/developer-documentation.md)
 and the reusable template is
 [`docs/templates/package-README.md`](../docs/templates/package-README.md).
 

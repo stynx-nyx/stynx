@@ -1,0 +1,68 @@
+{
+  "schemaVersion": "1.0.0",
+  "version": "1.0.0",
+  "id": "INV-FLOW-001",
+  "domain": "FLOW",
+  "severity": "gate",
+  "type": "rls",
+  "title": "Flow tenant rows must be tenant-scoped and RLS-protected",
+  "statement": "Every Flow row that belongs to a tenant MUST carry tenant_id, execute behind PostgreSQL RLS keyed from STYNX transaction context, and preserve tenant-local references across related Flow tables.",
+  "rationale": "PORM Flow provides the workflow vocabulary but does not consistently enforce STYNX tenant isolation. Flow is a cross-domain framework module; a single tenant leak can expose workflow state, tasks, answers, waivers, and event payloads for arbitrary host domains.",
+  "status": "active",
+  "verification": {
+    "required_suites": ["db", "int"],
+    "oracle": "tests"
+  },
+  "authority": {
+    "docs": [
+      {
+        "doc": "docs/arch/flow.md",
+        "anchor": "tenant-and-rls-model"
+      },
+      {
+        "doc": "docs/stynx/porting-pack/04-INVARIANTS-AND-CONTRACTS.md",
+        "anchor": "i5-every-tenant-scoped-table-has-tenant_id-and-an-rls-policy"
+      }
+    ]
+  },
+  "scope": {
+    "components": ["db", "backend", "flow"],
+    "code_areas": [
+      "packages/data/migrations/platform/*flow*.sql",
+      "packages/data/src/schema/flow.ts",
+      "packages/flow/src/**"
+    ],
+    "data": [
+      "flow.scopes",
+      "flow.graphs",
+      "flow.nodes",
+      "flow.edges",
+      "flow.agent_rules",
+      "flow.transition_effects",
+      "flow.runs",
+      "flow.node_runs",
+      "flow.tasks",
+      "flow.events",
+      "flow.forms",
+      "flow.questions",
+      "flow.scores",
+      "flow.fills",
+      "flow.answers",
+      "flow.waivers",
+      "flow.node_form_rules"
+    ]
+  },
+  "change_policy": {
+    "breaking_change_requires": [
+      "doc_update",
+      "trace_update",
+      "test_update",
+      "migration",
+      "human_approval"
+    ],
+    "test_weakening_allowed": false,
+    "human_approval_required": true
+  },
+  "tags": ["porm-port", "flow", "tenancy", "rls", "stynx"],
+  "measurable_via": ["sense data", "sense api", "inv adherence"]
+}

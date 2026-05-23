@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "1.0.0",
+  "version": "1.0.0",
+  "id": "INV-FLOW-002",
+  "domain": "FLOW",
+  "severity": "gate",
+  "type": "state_machine",
+  "title": "Generic Flow must not hard-code host-domain behavior",
+  "statement": "Generic Flow backend and frontend packages MUST NOT import, branch on, mutate, or otherwise special-case CMS, PORM opportunity, proposal, engagement, or any host-domain behavior outside the registered Flow domain adapter contract.",
+  "rationale": "STYNX Flow is a framework module. PORM contains useful workflow machinery, but portions of its runtime are coupled to PORM domains. Porting those couplings would prevent reuse and violate the STYNX module boundary.",
+  "status": "active",
+  "verification": {
+    "required_suites": ["unit", "int"],
+    "oracle": "tests"
+  },
+  "authority": {
+    "docs": [
+      {
+        "doc": "docs/arch/flow.md",
+        "anchor": "generic-code-rule"
+      },
+      {
+        "doc": "docs/arch/flow.md",
+        "anchor": "domain-adapter-contract"
+      }
+    ]
+  },
+  "scope": {
+    "components": ["backend", "frontend", "flow"],
+    "code_areas": ["packages/flow/src/**", "packages-web/angular-flow/src/**"]
+  },
+  "change_policy": {
+    "breaking_change_requires": ["doc_update", "trace_update", "test_update", "human_approval"],
+    "test_weakening_allowed": false,
+    "human_approval_required": true
+  },
+  "tags": ["porm-port", "flow", "adapter", "framework-boundary", "stynx"],
+  "measurable_via": ["sense dep-graph", "sense api", "inv adherence"]
+}

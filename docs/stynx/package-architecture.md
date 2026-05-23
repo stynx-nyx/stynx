@@ -71,7 +71,7 @@ prefer direct package imports when that keeps ownership clearer.
 ## Documentation Contract
 
 Every active backend package has a package README. The baseline is documented in
-[Developer Documentation Standard](../architecture/developer-documentation.md)
+[Developer Documentation Standard](../arch/developer-documentation.md)
 and [Package README Template](../templates/package-README.md).
 
 Public package barrels must carry package-level `@packageDocumentation`.

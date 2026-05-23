@@ -22,8 +22,8 @@
     "clean": "rm -rf dist coverage",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
-    "test": "node ./../../scripts/run-and-record.mjs --package @stynx/testing --level unit --runner vitest -- vitest run --config ./vitest.config.ts",
-    "stryker": "node ./../../scripts/run-and-record.mjs --package @stynx/testing --level mutation --runner stryker-vitest -- pnpm exec stryker run stryker.conf.mjs"
+    "test": "vitest run --config ./vitest.config.ts",
+    "stryker": "pnpm exec stryker run stryker.conf.mjs"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.19",

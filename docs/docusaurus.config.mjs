@@ -90,7 +90,7 @@ const config = {
         { to: '/docs/packages', label: 'Packages', position: 'left' },
         { to: '/docs/api-reference', label: 'API', position: 'left' },
         { to: '/docs/specifications', label: 'Specifications', position: 'left' },
-        { to: '/docs/architecture-decisions', label: 'ADRs', position: 'left' },
+        { to: '/docs/arch-decisions', label: 'ADRs', position: 'left' },
         { type: 'docsVersionDropdown', position: 'right' },
       ],
     },

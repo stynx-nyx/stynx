@@ -17,7 +17,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/lib.mjs \"src/**/*.ts\"",
     "lint:repo": "pnpm run build && node dist/src/cli.js ../../packages/data/migrations",
-    "test": "pnpm run build && node ../../scripts/run-and-record.mjs --package @stynx-internal/migration-linter --level unit --runner node-test -- node --test dist/test/migration-linter.spec.js"
+    "test": "pnpm run build && node --test dist/test/migration-linter.spec.js"
   },
   "dependencies": {
     "pg-query-emscripten": "^5.1.0"

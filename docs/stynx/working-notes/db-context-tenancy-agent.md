@@ -20,9 +20,9 @@ Contract baseline for shared abstractions is defined in `stynx/packages/stynx-co
 - `stynx/backend/src/core/auth/auth.service.ts` (`resolveTenants`)
 - `stynx/backend/src/core/auth/guards/jwt-auth.guard.ts` (`JwtAuthGuard.canActivate`)
 - `stynx/backend/src/core/auth/guards/tenancy.guard.ts` (`TenancyGuard.canActivate`)
-- `stynx/db/ddl/01-auth.sql` (`auth.current_tenant`, `auth.set_tenant`, `auth.set_user_context`, `auth.apply_tenant`, RLS policies)
-- `stynx/db/ddl/02-audit.sql` (`audit.write`, `audit.fn_log_dml`, audit tenant policy)
-- `stynx/db/ddl/03-storage.sql` (storage tenant trigger + policy)
+- `stynx/database/ddl/01-auth.sql` (`auth.current_tenant`, `auth.set_tenant`, `auth.set_user_context`, `auth.apply_tenant`, RLS policies)
+- `stynx/database/ddl/02-audit.sql` (`audit.write`, `audit.fn_log_dml`, audit tenant policy)
+- `stynx/database/ddl/03-storage.sql` (storage tenant trigger + policy)
 - `porm/backend/src/database/database.service.ts` (`withTransaction`, `query`)
 - `porm/backend/src/core/auth/auth.service.ts` (`readOrgCnpjClaim`, `resolveOrgCnpjFallback`)
 - `porm/backend/src/core/auth/jwt-auth.guard.ts` (`JwtAuthGuard.canActivate`)
@@ -86,7 +86,7 @@ Contract baseline for shared abstractions is defined in `stynx/packages/stynx-co
 
 - `stynx`
   - Set in app code: `auth.set_tenant`, `auth.set_user_context`, `stynx.correlation_id` (`stynx/backend/src/shared/database/database.service.ts`).
-  - Read in SQL: `auth.current_tenant`, `auth.app_user_id`, `auth.roles`, `auth.lang` with fallback to `stynx.current_tenant`, `stynx.app_user_id`, `stynx.roles` (`stynx/db/ddl/01-auth.sql`).
+  - Read in SQL: `auth.current_tenant`, `auth.app_user_id`, `auth.roles`, `auth.lang` with fallback to `stynx.current_tenant`, `stynx.app_user_id`, `stynx.roles` (`stynx/database/ddl/01-auth.sql`).
 - `porm`
   - Set in app code: `auth.app_user_id`, `auth.roles`, `auth.org_cnpj`, `auth.lang` (`porm/backend/src/database/database.service.ts`).
   - Read in SQL: `auth.context_user_id`, `auth.context_roles`, `auth.context_org_cnpj`; domain helper `porm.context_org_cnpj` (`porm/database/auth/ddl.sql`, `porm/database/porm/rls.sql`).

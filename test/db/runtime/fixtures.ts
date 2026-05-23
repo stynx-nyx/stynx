@@ -57,8 +57,8 @@ export async function createDbRuntimeFixture(prefix = 'stynx_db_runtime'): Promi
 
   try {
     const appliedFiles = [
-      ...(await applySqlFiles(client, 'db/ddl')),
-      ...(await applySqlFiles(client, 'db/seed')),
+      ...(await applySqlFiles(client, 'database/ddl')),
+      ...(await applySqlFiles(client, 'database/seed')),
     ];
 
     return {

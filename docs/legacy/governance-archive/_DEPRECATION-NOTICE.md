@@ -1,4 +1,4 @@
-# `docs/governance/` — deprecated
+# `docs/gov/` — deprecated
 
 > **C-4 Session S5 (Phase G.2 of the DEVAI adoption pilot, 2026-05).** Per session directive 5.2 (DEVAI is authoritative; supersedes legacy stynx governance), this directory is **deprecated** as the source of truth for stynx governance.
 
@@ -19,6 +19,6 @@ The files under `health/`, `audit/`, and `compliance/` predate the C-4 adoption 
 A future stynx session can choose to:
 
 - Synthesize the historical content into DEVAI substrates (`.devai/state/agent-runs/` AR-\* records pointing at this history).
-- Or simply archive `docs/governance/` to `docs/legacy/` and remove the pointer here.
+- Or simply archive `docs/gov/` to `docs/legacy/` and remove the pointer here.
 
 Phase G of the C-4 pilot (commit `4f914a2`) already removed `GOVERNANCE.md`'s pointer at this tree.

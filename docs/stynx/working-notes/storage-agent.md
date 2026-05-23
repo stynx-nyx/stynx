@@ -122,7 +122,7 @@ Evidence source was code/DDL only (no inferred business semantics).
   - `StorageController.delete`
 - `stynx/backend/src/core/storage/dto/register-file.dto.ts`
   - `RegisterFileDto`
-- `stynx/db/ddl/03-storage.sql`
+- `stynx/database/ddl/03-storage.sql`
   - `CREATE TABLE storage.files`
   - `metadata jsonb`
   - `tenant_scope` RLS policy

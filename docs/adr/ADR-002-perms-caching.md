@@ -10,7 +10,7 @@ tags: [stynx, auth, performance, post-c4]
 # ADR-002 — Permission Resolution Caching
 
 **Authority:** Architect.
-**Related:** [`docs/architecture/STYNX-SPEC-v0.6.md`](../architecture/STYNX-SPEC-v0.6.md) §5, §6, §7, §12. Pre-pilot history: file was at `specs/STYNX-ADR-002-perms-caching.md` until C-4 Session S5 (commit `cb734ac`); re-authored to DEVAI ADR schema in C-4 Session T3.
+**Related:** [`docs/arch/STYNX-SPEC-v0.6.md`](../arch/STYNX-SPEC-v0.6.md) §5, §6, §7, §12. Pre-pilot history: file was at `specs/STYNX-ADR-002-perms-caching.md` until C-4 Session S5 (commit `cb734ac`); re-authored to DEVAI ADR schema in C-4 Session T3.
 
 ## Status
 

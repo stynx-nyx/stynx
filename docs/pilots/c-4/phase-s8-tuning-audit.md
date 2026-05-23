@@ -19,7 +19,7 @@ No tuning landed in S8. Rationale: the scorecard cells are all UNKNOWN (per S7 /
 
 ### Adherence-reverse audit
 
-Authored `docs/architecture/trace.json` (required input — was missing). Schema-valid; maps `INV-RBAC-001` + `INV-PRIVACY-001` to their `docs/architecture/invariants/*.json` files. Both invariants have empty `tests` arrays — they're declared but not yet verified by tests (Inspector follow-up).
+Authored `docs/arch/trace.json` (required input — was missing). Schema-valid; maps `INV-RBAC-001` + `INV-PRIVACY-001` to their `docs/arch/invariants/*.json` files. Both invariants have empty `tests` arrays — they're declared but not yet verified by tests (Inspector follow-up).
 
 Ran `devai inv-adherence-reverse --repo-root . --inventory .devai/state/inventory/inventory.json --human`. Result: **0 surfaces; 0 claimed, 0 orphan**.
 
@@ -36,7 +36,7 @@ Suggested resolution: (a) — the aggregate is the right consumer surface; teach
 
 ## What landed in stynx (S8 commit)
 
-- `docs/architecture/trace.json` — minimal but schema-valid; maps the 2 promoted invariants to their authoring docs. Empty `tests` arrays signal the verification work still pending.
+- `docs/arch/trace.json` — minimal but schema-valid; maps the 2 promoted invariants to their authoring docs. Empty `tests` arrays signal the verification work still pending.
 - `.devai/state/inventory/inventory.json` — first aggregate inventory.json commit (was missing). Generated via `devai inv-regen --no-git`.
 
 ## D-A register update

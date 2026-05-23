@@ -5,7 +5,7 @@ import { basename, dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const defaultDdlDir = 'db/ddl';
+const defaultDdlDir = 'database/ddl';
 
 if (isMain()) {
   try {
@@ -152,7 +152,7 @@ function parseArgs(values) {
 function printUsage(stream = process.stdout) {
   stream.write(`Usage: node scripts/list-ddl-objects.mjs --print-csv [--ddl-dir <path>]
 
-Scans db/ddl/*.sql and emits deterministic DDL object inventory rows.
+Scans database/ddl/*.sql and emits deterministic DDL object inventory rows.
 
 Columns:
   schema, name, type, source_file, line, target

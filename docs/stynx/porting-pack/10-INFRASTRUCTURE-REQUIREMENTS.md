@@ -365,7 +365,7 @@ at the discovery commit. Consumers porting to a regulated environment
 must own runbooks for at least: KMS key rotation, RDS engine upgrade,
 session-keypair rotation, app-DB password rotation, Redis failover,
 Cognito user-pool migration, and S3 lifecycle audit. None of these
-exist in `docs/operations/` at HEAD.
+exist in `docs/ops/` at HEAD.
 
 ---
 

@@ -8,21 +8,21 @@ STYNX is a `pnpm` + `Turborepo` monorepo targeting GitHub Packages for the spec-
 
 ## Active workspace shape (post-C-4 adoption pilot)
 
-| Tree                                                                      | Purpose                                                                                                                                              |
-| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/*`                                                              | Backend reusable libraries (`@stynx/*`)                                                                                                              |
-| `packages-web/*`                                                          | Frontend reusable libraries (`@stynx-web/*`)                                                                                                         |
-| `reference/{api,web}/`                                                    | Reference applications demonstrating framework usage (analogous to DEVAI's `examples/`). Relocated here from `apps/reference-*` in Session S2 (C-4). |
-| `domain/<module>/`                                                        | DEVAI-scaffolded modules. First example: `domain/demo-bookmark/` (C-4 Phase D).                                                                      |
-| `tools/*`                                                                 | Internal repo tooling (`@stynx-internal/*`).                                                                                                         |
-| `infra/cdk/`                                                              | AWS CDK infrastructure. Out of DEVAI's purview (stynx-specific).                                                                                     |
-| `test/`                                                                   | Centralized test harness (backend, frontend, perf, scripts).                                                                                         |
-| `db/ddl/`                                                                 | Canonical SQL definitions.                                                                                                                           |
-| `.devai/`                                                                 | DEVAI substrate (config + state + evidence chain + constitution pointer). Auto-generated; do not hand-edit.                                          |
-| `docs/{product,architecture,contracts,adr,operations,security,glossary}/` | DEVAI's Article 6 F1 substrate roots.                                                                                                                |
-| `docs/{stynx,dev,api}/`                                                   | Stynx-specific documentation.                                                                                                                        |
-| `docs/legacy/`                                                            | Pre-pilot governance + completed GAP tasks, archived for archeology. NOT authoritative for current state.                                            |
-| `tools/npm-security-upgrade-auditor/`                                     | Stynx-idiosyncratic dep-security skill. Was `.codex/skills/npm-security-upgrade-auditor/`; relocated in C-4 Session T7 when `.codex/` was retired.   |
+| Tree                                                           | Purpose                                                                                                                                              |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/*`                                                   | Backend reusable libraries (`@stynx/*`)                                                                                                              |
+| `packages-web/*`                                               | Frontend reusable libraries (`@stynx-web/*`)                                                                                                         |
+| `reference/{api,web}/`                                         | Reference applications demonstrating framework usage (analogous to DEVAI's `examples/`). Relocated here from `apps/reference-*` in Session S2 (C-4). |
+| `domain/<module>/`                                             | DEVAI-scaffolded modules. First example: `domain/demo-bookmark/` (C-4 Phase D).                                                                      |
+| `tools/*`                                                      | Internal repo tooling (`@stynx-internal/*`).                                                                                                         |
+| `infra/cdk/`                                                   | AWS CDK infrastructure. Out of DEVAI's purview (stynx-specific).                                                                                     |
+| `test/`                                                        | Centralized test harness (backend, frontend, perf, scripts).                                                                                         |
+| `database/{ddl,seed,migrations}/`                              | Canonical SQL bootstrap, seed, and migration support files.                                                                                          |
+| `.devai/`                                                      | DEVAI substrate (config + state + evidence chain + constitution pointer). Auto-generated; do not hand-edit.                                          |
+| `docs/{product,arch,contracts,adr,ops,gov,security,glossary}/` | DEVAI-shaped Article 6 F1 substrate roots; `docs/gov/` delegates substantive governance to sibling DEVAI.                                            |
+| `docs/{stynx,dev,api}/`                                        | Stynx-specific documentation.                                                                                                                        |
+| `docs/legacy/`                                                 | Pre-pilot governance + completed GAP tasks, archived for archeology. NOT authoritative for current state.                                            |
+| `tools/npm-security-upgrade-auditor/`                          | Stynx-idiosyncratic dep-security skill. Was `.codex/skills/npm-security-upgrade-auditor/`; relocated in C-4 Session T7 when `.codex/` was retired.   |
 
 Pre-extraction `backend/`, `frontend/`, `bootstrap/` trees were removed prior to the C-4 pilot close; root `test/` remains as the centralized test harness (active workspace member).
 

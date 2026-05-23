@@ -22,9 +22,9 @@
     "clean": "rm -rf dist coverage",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
-    "test": "node ./../../scripts/run-and-record.mjs --package @stynx/flow --level unit --runner vitest -- vitest run --config ./vitest.config.ts",
-    "test:int": "node ./../../scripts/run-and-record.mjs --package @stynx/flow --level integration --runner vitest -- vitest run --config ./vitest.int.config.ts",
-    "stryker": "node ./../../scripts/run-and-record.mjs --package @stynx/flow --level mutation --runner stryker-vitest -- pnpm exec stryker run stryker.conf.mjs"
+    "test": "vitest run --config ./vitest.config.ts",
+    "test:int": "vitest run --config ./vitest.int.config.ts",
+    "stryker": "pnpm exec stryker run stryker.conf.mjs"
   },
   "dependencies": {
     "@stynx/auth": "workspace:*",

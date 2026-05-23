@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 describe('auth schema DDL', () => {
-  const ddl = readFileSync(join(__dirname, '../../db/ddl/01-auth.sql'), 'utf-8');
+  const ddl = readFileSync(join(__dirname, '../../database/ddl/01-auth.sql'), 'utf-8');
 
   it('defines auth schema', () => {
     expect(ddl).toContain('CREATE SCHEMA auth');

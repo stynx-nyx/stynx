@@ -25,8 +25,8 @@
     "clean": "rm -rf dist coverage",
     "typecheck": "tsc -p tsconfig.spec.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/angular.mjs \"src/**/*.ts\"",
-    "test": "node ./../../scripts/run-and-record.mjs --package @stynx-web/angular --level unit --runner vitest -- vitest run --config ./vitest.config.ts",
-    "stryker": "node ./../../scripts/run-and-record.mjs --package @stynx-web/angular --level mutation --runner stryker-vitest -- NODE_OPTIONS=\"--disable-warning=ExperimentalWarning --experimental-vm-modules\" pnpm exec stryker run stryker.conf.mjs",
+    "test": "vitest run --config ./vitest.config.ts",
+    "stryker": "NODE_OPTIONS=\"--disable-warning=ExperimentalWarning --experimental-vm-modules\" pnpm exec stryker run stryker.conf.mjs",
     "build:tsc": "tsc -p tsconfig.json"
   },
   "dependencies": {

@@ -3,7 +3,7 @@
 // values. Imported by:
 //   - tools/repo-config/vitest.base.mjs       (coverage gates)
 //   - tools/stryker/base.mjs                  (mutation gates)
-//   - scripts/render-test-matrix.mjs          (cell colouring)
+//   - devai render-matrix                     (cell colouring)
 //
 // Per-package overrides live under `perPackage[packageName]` in the config:
 //   "perPackage": { "@stynx/auth": { "coverage": "strict", "mutation": "strictest" } }
@@ -103,11 +103,11 @@ export function getPerfThreshold(packageName = 'stynx-workspace') {
 
 /**
  * Coverage thresholds for the renderer's overall workspace gate.
- * Falls back to the legacy top-level `thresholds` key for compat.
+ * Coverage thresholds for DEVAI matrix rendering.
  */
 export function getMatrixCoverageThreshold() {
   const cfg = load();
-  return cfg.thresholds ?? cfg.policies?.coverage?.default ?? null;
+  return cfg.policies?.coverage?.default ?? null;
 }
 
 export function getRawConfig() {

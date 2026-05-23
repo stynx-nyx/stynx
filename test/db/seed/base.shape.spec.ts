@@ -15,7 +15,7 @@ describe('db seed base shape', () => {
     await fixture?.dispose();
   });
 
-  it('loads the canonical row counts from db/seed/00-base.sql', async () => {
+  it('loads the canonical row counts from database/seed/00-base.sql', async () => {
     const result = await fixture.client.query<{ table_name: string; row_count: string }>(
       `
         select 'auth.tenancies' as table_name, count(*)::text as row_count from auth.tenancies

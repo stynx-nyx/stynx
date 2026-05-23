@@ -63,7 +63,7 @@ generation**. Verify before relying on it for compliance.
 
 **Severity:** MAJOR (audit FIND-031).
 
-`docs/operations/` and `docs/runbooks/` were absent at audit time.
+`docs/ops/` and `docs/runbooks/` were absent at audit time.
 The pack does not provide them. Consuming teams need their own
 runbooks for: tenant suspension, LGPD erasure execution, manual
 session revocation, DB role password rotation, Cognito federation

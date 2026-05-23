@@ -11,10 +11,10 @@ architecture, and reference-app documentation.
   stynx, architecture/contracts/operations/security docs are Architect
   substrate, packages are Engineer substrate, and tests are Inspector substrate.
 - **Invariant** — an atomic architecture rule under
-  [../architecture/invariants/](../architecture/invariants/). Tests and docs
+  [../arch/invariants/](../arch/invariants/). Tests and docs
   should reference invariants when they enforce durable framework behavior.
 - **Trace** — the mapping from invariants to code, tests, and evidence. Current
-  stynx trace lives in `docs/architecture/trace.json`.
+  stynx trace lives in `docs/arch/trace.json`.
 
 ## Runtime Terms
 

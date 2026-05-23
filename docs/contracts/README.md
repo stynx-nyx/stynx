@@ -14,6 +14,13 @@ can compile or validate against without importing implementation internals.
   `@stynx-web/angular-audit` list, detail, entity-history, and integrity views.
 - [flow-api.md](flow-api.md) — HTTP contract for `@stynx/flow` and
   `@stynx-web/angular-flow`.
+- [signature.md](signature.md) — PAdES/TSA signing and verification contract for
+  `@stynx/signature`.
+- [pdf.md](pdf.md) — server-side PDF render contract for `@stynx/pdf`.
+- [feature-flags.md](feature-flags.md) — tenant/environment feature-flag
+  definition and evaluation contract for `@stynx/feature-flags`.
+- [integration-adapter.md](integration-adapter.md) — retry, timeout,
+  idempotency, and circuit-breaker contract for `@stynx/integration-adapter`.
 - `errors.json` — shared error taxonomy and envelope metadata.
 - [`@stynx/contracts`](/docs/packages/contracts) — TypeScript interfaces for
   auth, authorization, audit, storage, DB context, tenancy, errors, and

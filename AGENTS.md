@@ -21,7 +21,7 @@ These are stynx-side conventions DEVAI doesn't speak to; they remain authoritati
 - `tools/*` — internal repo tooling (`@stynx-internal/*`).
 - `domain/*` — DEVAI-scaffolded modules (Phase D output and onward).
 - `infra/cdk/` — AWS CDK infrastructure.
-- `db/ddl/` — canonical SQL definitions; update seeds + tests in `test/db/` when DDL changes.
+- `database/ddl/` — canonical SQL definitions; update seeds + tests in `test/db/` when DDL changes.
 - `legacy: backend/, frontend/, bootstrap/, test/` — preserved during framework extraction; outside the active workspace graph.
 
 ### Stynx-specific rules

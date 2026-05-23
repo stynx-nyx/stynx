@@ -1,11 +1,13 @@
 # Authorization Agent Working Note
 
 ## Decision summary
+
 Adopt a shared authorization kernel in `stynx` based on request principal normalization + metadata requirements + pluggable evaluators. Keep role/permission catalogs and mapping rules in each app (`porm`, `pec`, `sgp`) and only standardize evaluator interfaces and execution pipeline in `stynx`.
 
 ## Files inspected (code evidence)
 
 ### porm
+
 - `porm/backend/src/core/auth/jwt-auth.guard.ts`
   - `JwtAuthGuard.canActivate`
 - `porm/backend/src/core/auth/auth.service.ts`
@@ -30,6 +32,7 @@ Adopt a shared authorization kernel in `stynx` based on request principal normal
   - `porm.has_role`, `porm.has_any_role`, `porm.can_view_subject_id`, `porm.can_manage_subject_id`
 
 ### pec
+
 - `pec/src/@core/security/roles.decorator.ts`
   - `ROLES_METADATA_KEY`, `RoleCode`, `ALL_ROLES`, `Roles`
 - `pec/src/@core/security/roles.guard.ts`
@@ -50,6 +53,7 @@ Adopt a shared authorization kernel in `stynx` based on request principal normal
   - tables `auth.roles`, `auth.permissions`, `auth.user_roles`, `auth.role_permissions`
 
 ### sgp
+
 - `sgp/source/backend/src/auth/permissions.decorator.ts`
   - `REQUIRED_PERMISSIONS`, `RequirePermissions`
 - `sgp/source/backend/src/auth/permissions.guard.ts`
@@ -78,6 +82,7 @@ Adopt a shared authorization kernel in `stynx` based on request principal normal
   - models `Permission`, `AccessProfile`, `ProfilePermission`
 
 ### stynx
+
 - `stynx/backend/src/core/auth/decorators/roles.decorator.ts`
   - `ROLES_METADATA_KEY`, `RequireRoles`
 - `stynx/backend/src/core/auth/guards/role.guard.ts`
@@ -98,22 +103,23 @@ Adopt a shared authorization kernel in `stynx` based on request principal normal
   - `RolesService.list`, `RolesService.create`, `RolesService.assignRole`
 - `stynx/backend/src/core/tenancy/tenancy.controller.ts`
   - `@UseGuards(RoleGuard)`, `@RequireRoles(...)`
-- `stynx/db/ddl/01-auth.sql`
+- `stynx/database/ddl/01-auth.sql`
   - `auth.current_roles`, `auth.has_role`, `auth.set_user_context`, RLS policies using `auth.has_role('platform:superadmin')`
 
 ## Same-vs-different semantics
 
-| Dimension | porm | pec | sgp | stynx |
-|---|---|---|---|---|
-| Decorator model | No backend role/permission metadata decorator found in inspected backend files; routes rely on `@UseGuards(...)` and service checks | Role metadata decorator: `Roles(...RoleCode[])` | Permission metadata decorator: `RequirePermissions(...string[])` | Role metadata decorator: `RequireRoles(...string[])` |
-| Guard decision type | `AdminOnlyGuard` is role check (`admin`); most routes only require JWT | `RolesGuard` checks any overlap with `requiredRoles` | `PermissionsGuard` requires **all** declared permissions (`every`) | `RoleGuard` checks any overlap with required roles |
-| Principal enrichment | `JwtAuthGuard` sets `req.user` from `AuthService.verifyBearer` (`id`, `roles`, `orgCnpj`) | `JwtAuthGuard` verifies token, normalizes roles via `normalizeRoles`, binds tenant client | `CognitoJwtGuard` sets `request.actor`; permissions derived by `PermissionsService.permissionsForGroups` | `JwtAuthGuard` sets `request.user` with `roles` + `tenants`; tenant resolved from header or single-tenant token |
-| Catalog location | Role semantics split between code checks and DB functions (`auth.*`, `porm.*`, `flow.*`) and flow policy tables | Role sets centralized in `role-policies.ts`; DB also defines `auth.permissions`/`auth.role_permissions` tables | Permission catalog and group mapping in `permission-catalog.ts`; DB has permission/profile models and views | Role model in code + DB; no permission decorator/guard/catalog in inspected `stynx` |
-| Evaluator style | Rule evaluator service (`FlowPolicyService`) with conditions (`rolesAny`, `orgRelationIn`, `assignmentStateIn`, `requireCreatedBy`) | Mostly guard-level RBAC + some action-specific in-method checks (`ensureVerifyPermissions`) | Permission guard + mapping evaluator (`permissionsForGroups`) + DB helper (`sgp_has_permission`) | Simple role guard + tenancy/user guards |
+| Dimension            | porm                                                                                                                                | pec                                                                                                            | sgp                                                                                                         | stynx                                                                                                           |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Decorator model      | No backend role/permission metadata decorator found in inspected backend files; routes rely on `@UseGuards(...)` and service checks | Role metadata decorator: `Roles(...RoleCode[])`                                                                | Permission metadata decorator: `RequirePermissions(...string[])`                                            | Role metadata decorator: `RequireRoles(...string[])`                                                            |
+| Guard decision type  | `AdminOnlyGuard` is role check (`admin`); most routes only require JWT                                                              | `RolesGuard` checks any overlap with `requiredRoles`                                                           | `PermissionsGuard` requires **all** declared permissions (`every`)                                          | `RoleGuard` checks any overlap with required roles                                                              |
+| Principal enrichment | `JwtAuthGuard` sets `req.user` from `AuthService.verifyBearer` (`id`, `roles`, `orgCnpj`)                                           | `JwtAuthGuard` verifies token, normalizes roles via `normalizeRoles`, binds tenant client                      | `CognitoJwtGuard` sets `request.actor`; permissions derived by `PermissionsService.permissionsForGroups`    | `JwtAuthGuard` sets `request.user` with `roles` + `tenants`; tenant resolved from header or single-tenant token |
+| Catalog location     | Role semantics split between code checks and DB functions (`auth.*`, `porm.*`, `flow.*`) and flow policy tables                     | Role sets centralized in `role-policies.ts`; DB also defines `auth.permissions`/`auth.role_permissions` tables | Permission catalog and group mapping in `permission-catalog.ts`; DB has permission/profile models and views | Role model in code + DB; no permission decorator/guard/catalog in inspected `stynx`                             |
+| Evaluator style      | Rule evaluator service (`FlowPolicyService`) with conditions (`rolesAny`, `orgRelationIn`, `assignmentStateIn`, `requireCreatedBy`) | Mostly guard-level RBAC + some action-specific in-method checks (`ensureVerifyPermissions`)                    | Permission guard + mapping evaluator (`permissionsForGroups`) + DB helper (`sgp_has_permission`)            | Simple role guard + tenancy/user guards                                                                         |
 
 ## Shared authorization primitives (proposed)
 
 1. `AuthorizationPrincipal`
+
 - normalized subject used by all evaluators:
   - `subjectId: string`
   - `roles: string[]`
@@ -123,6 +129,7 @@ Adopt a shared authorization kernel in `stynx` based on request principal normal
   - `claims: Record<string, unknown>`
 
 2. `AuthorizationRequirement` (metadata payload)
+
 - support coexistence explicitly:
   - `rolesAny?: string[]`
   - `rolesAll?: string[]`
@@ -131,6 +138,7 @@ Adopt a shared authorization kernel in `stynx` based on request principal normal
   - `policy?: { engine: string; key: string; params?: Record<string, unknown> }`
 
 3. `AuthorizationDecision`
+
 - evaluator output:
   - `allow: boolean`
   - `reasonCode: string`
@@ -138,17 +146,20 @@ Adopt a shared authorization kernel in `stynx` based on request principal normal
   - `details?: Record<string, unknown>`
 
 4. `AuthorizationGuard` pipeline in `stynx`
+
 - sequence:
   - collect merged requirements from metadata
   - execute registered evaluators by requirement type
   - fail closed on denied decision
 
 5. Default evaluators in `stynx`
+
 - `RoleEvaluator` (supports any/all)
 - `PermissionEvaluator` (supports any/all)
 - optional `TenantEvaluator` for tenant-scoped requirement checks
 
 6. App-provided pluggable evaluators (outside `stynx`)
+
 - `porm`: adapter around `FlowPolicyService.evaluateAction/evaluateCapability`
 - `pec`: optional evaluator for contextual checks like `BiometricsController.ensureVerifyPermissions`
 - `sgp`: evaluator backed by app-local catalog/mapping (`PermissionsService.permissionsForGroups`)
@@ -180,6 +191,7 @@ export interface AuthorizationContextBinder {
 ```
 
 ## Exclusions
+
 - Do not migrate app-specific catalogs into `stynx`:
   - `pec/src/@core/security/role-policies.ts`
   - `sgp/source/backend/src/iam/permissions/permission-catalog.ts`
@@ -189,6 +201,7 @@ export interface AuthorizationContextBinder {
 - Do not alter existing RLS helper function contracts in this phase (`auth.has_role`, `sgp_has_permission`, etc.).
 
 ## Migration risks
+
 - Semantic drift risk (high): current guards differ (`any-role` vs `all-permissions`); incorrect default combiner can broaden or shrink access.
 - Claim-shape risk (high): role extraction differs by app (`cognito:groups` only in PEC vs multi-claim in stynx/porm); unified principal mapper may drop effective roles.
 - Hidden in-method authorization risk (medium): controller/service checks like `ensureVerifyPermissions` can be missed if migration only targets decorators/guards.

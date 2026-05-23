@@ -65,7 +65,7 @@
 
 10. Audit trigger convergence with PORM + PK capture
 
-- Updated `db/ddl/02-audit.sql` to add `audit.events.pk jsonb` and `idx_audit_events_pk` (GIN).
+- Updated `database/ddl/02-audit.sql` to add `audit.events.pk jsonb` and `idx_audit_events_pk` (GIN).
 - Added `audit.extract_primary_key(...)` for trigger-time PK extraction from catalog metadata.
 - Updated `audit.fn_log_dml` to write table-qualified entity names and extracted PK for INSERT/UPDATE/DELETE.
 - Updated `@stech/stynx-audit-sql` function-mode mapping to align with current `audit.write(...)` signature and forward optional `pk`/`oldData`/`newData`.
@@ -82,11 +82,11 @@
 
 12. RLS helper convergence in SQL DDL
 
-- Added reusable SQL helpers in `db/ddl/01-auth.sql`:
+- Added reusable SQL helpers in `database/ddl/01-auth.sql`:
   - `auth.create_tenant_enforcement_trigger(...)`
   - `auth.attach_tenant_enforcement_triggers(...)`
   - `auth.create_rls_policy(...)`
-- Rewired `db/ddl/03-storage.sql` to consume shared helpers (`storage.files`) instead of manual trigger/policy DDL.
+- Rewired `database/ddl/03-storage.sql` to consume shared helpers (`storage.files`) instead of manual trigger/policy DDL.
 - Added repo smoke check `scripts/check-rls-smoke.sh` and workspace script `npm run check:rls-smoke`.
 - Expanded DB DDL tests to assert helper definitions and helper-based wiring.
 

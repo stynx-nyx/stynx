@@ -2,7 +2,7 @@
   "name": "stynx-script-tests",
   "private": true,
   "scripts": {
-    "test": "node ../../scripts/run-and-record.mjs --package stynx-script-tests --level unit --runner node-test -- node validate.js",
+    "test": "node validate.js",
     "lint": "eslint --config ../../tools/eslint-config/scripts.mjs \"./**/*.js\""
   }
 }

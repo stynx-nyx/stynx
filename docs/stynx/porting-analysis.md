@@ -88,7 +88,7 @@
 - Sink adapter mechanism (already done in `stynx-audit-sql`).
 - Canonical event envelope + sink translation strategy.
 - Trigger-level DML capture with PK extraction:
-  - `db/ddl/02-audit.sql` now stores `pk jsonb` in `audit.events`.
+  - `database/ddl/02-audit.sql` now stores `pk jsonb` in `audit.events`.
   - `audit.fn_log_dml` now logs `schema.table`, `old_data`, `new_data`, and extracted PK.
 
 ## What should stay app-local

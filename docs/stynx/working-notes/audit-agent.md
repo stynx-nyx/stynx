@@ -1,11 +1,13 @@
 # Audit Agent Scope (code-only)
 
 ## Scope
+
 Inspected audit decorators/interceptors, audit event envelope shaping, and persistence sinks across `porm`, `pec`, `sgp`, and `stynx`.
 
 ## Files inspected (paths + symbols)
 
 ### stynx
+
 - `stynx/backend/src/core/audit/decorators/audit.decorator.ts`
   - `AUDIT_METADATA_KEY`, `AuditRequest`, `AuditMetadata`, `Audit`
 - `stynx/backend/src/core/audit/audit.interceptor.ts`
@@ -28,12 +30,13 @@ Inspected audit decorators/interceptors, audit event envelope shaping, and persi
   - `@Audit({ action: 'upload'|'delete', entity: 'storage_file' })`
 - `stynx/backend/src/core/tenancy/tenancy.controller.ts`
   - `@Audit({ action: 'create', entity: 'tenancy' })`
-- `stynx/db/ddl/02-audit.sql`
+- `stynx/database/ddl/02-audit.sql`
   - `audit.events`, `audit.write`, `audit.fn_log_dml`, `audit.attach_dml_triggers`
-- `stynx/db/ddl/01-auth.sql`
+- `stynx/database/ddl/01-auth.sql`
   - `auth.set_tenant`, `auth.set_user_context`
 
 ### pec
+
 - `pec/src/@core/security/decorators/audit.decorator.ts`
   - `AUDIT_METADATA_KEY`, `Audit` (overloads)
 - `pec/src/@core/interceptors/audit.interceptor.ts`
@@ -72,6 +75,7 @@ Inspected audit decorators/interceptors, audit event envelope shaping, and persi
   - semantic comments for audit table/function
 
 ### sgp
+
 - `sgp/source/backend/src/audit/audit.dto.ts`
   - `AUDIT_ACTIONS`, `AuditEventQueryDto`, `AuditReportRequestDto`
 - `sgp/source/backend/src/audit/audit.service.ts`
@@ -110,6 +114,7 @@ Inspected audit decorators/interceptors, audit event envelope shaping, and persi
   - `CREATE TABLE "audit_event"`, related indexes/FK
 
 ### porm
+
 - `porm/database/audit/ddl.sql`
   - `audit.logged_actions`, `audit.current_app_user_id`, `audit.current_user_roles`, `audit.fn_log_dml`
 - `porm/database/auth/ddl.sql`
@@ -140,18 +145,21 @@ Inspected audit decorators/interceptors, audit event envelope shaping, and persi
 ## Shared audit core boundaries
 
 1. Metadata declaration boundary
+
 - `stynx` and `pec` both expose a decorator metadata contract:
   - `stynx`: `AuditMetadata` in `.../audit.decorator.ts`
   - `pec`: `AuditMetadata` in `.../security/decorators/audit.decorator.ts`
 - `sgp` and `porm` do not use an `@Audit` decorator pattern in inspected backend code.
 
 2. Capture boundary (interceptor vs explicit call)
+
 - `stynx`: global `AuditInterceptor` (`APP_INTERCEPTOR`) captures annotated routes.
 - `pec`: global `AuditInterceptor` (`APP_INTERCEPTOR`) captures annotated routes.
 - `sgp`: controllers/services call `AuditService.appendMutation/appendEvent` explicitly.
 - `porm`: database triggers (`audit.fn_log_dml`) capture table mutations; backend `AuditService` is read-oriented.
 
 3. Context propagation boundary
+
 - `stynx`: `DatabaseService.applyContext` sets tenant/user/roles/correlation (`auth.set_tenant`, `auth.set_user_context`, `set_config('stynx.correlation_id',...)`).
 - `pec`: request carries `tenantId`, `pgClient`, `correlationId` (`express` augmentation + middleware/guards); `AuditService` can use caller transaction client.
 - `sgp`: `RequestIdMiddleware` + `CognitoJwtGuard` populate `RequestWithContext`; `DatabaseService.applySessionContext` maps context to `app.*` settings.
@@ -160,12 +168,14 @@ Inspected audit decorators/interceptors, audit event envelope shaping, and persi
 ## Sink adapter boundaries
 
 1. stynx sink adapters
+
 - Application write adapter: `AuditService.write` -> `select audit.write(...)`.
 - Database sink(s):
   - `audit.events` via `audit.write(...)`.
   - `audit.fn_log_dml` for trigger-based table logging into `audit.events`.
 
 2. pec sink adapters
+
 - Application write adapter: `AuditService.write` -> `select audit.write($1..$10)`.
 - Transaction-aware adapter choice:
   - `runWithClient(...)` when a request transaction client exists.
@@ -173,36 +183,43 @@ Inspected audit decorators/interceptors, audit event envelope shaping, and persi
 - Database sink: `audit.events` (append-only guarded by `audit_events_prevent_mutation`).
 
 3. sgp sink adapters
+
 - Application write adapter: `AuditWriterService.appendEvent` -> `INSERT INTO public.audit_event`.
 - Additional persistence sink in documents flow:
   - `DocumentsService.presignDownload` -> `INSERT INTO public.document_download_audit`.
 
 4. porm sink adapters
+
 - Database-first sink adapter: trigger attachments in `database/*/audit.sql` -> `audit.fn_log_dml` -> `audit.logged_actions`.
 - Backend audit service reads from `audit.logged_actions`; no inspected app-side writer to `audit` table.
 
 ## Envelope normalization strategy
 
 1. stynx
+
 - Normalization source: `AuditInterceptor` combines request context + `AuditMetadata` selectors.
 - Normalized fields (`AuditEventInput`): `tenantId`, `actorId`, `actorRole`, `action`, `entity`, `entityId`, `details`, `ipAddress`, `stationId`, `correlationId`.
 - Persistence mapping: `AuditService.write` maps to `audit.write(..., metadata, ip, station, request, old, new)`.
 
 2. pec
+
 - Normalization source: `AuditInterceptor` + metadata selectors.
 - Default detail envelope (when no selector): `{ method, path, correlationId, ip }`.
 - Type normalization: `AuditService.asUuidOrNull` for actor/entity/station/correlation UUID-typed sink columns.
 
 3. sgp
+
 - Normalization source: explicit `appendMutation/appendEvent` call sites + request context.
 - Writer envelope: `{ action, resourceType, resourceId, tableName, requestId, ip, userAgent, metadata }` + actor fields.
 - Metadata normalization: `redactAuditMetadata` (secret-key redaction, size/depth limits, array truncation).
 
 4. porm
+
 - Normalization source: DB trigger context (`TG_OP`, `TG_TABLE_SCHEMA`, `TG_TABLE_NAME`, `OLD/NEW`, `auth.context_*`).
 - Envelope persisted to `audit.logged_actions`: `{ schema_name, table_name, op, user_id, roles, old_data, new_data }`.
 
 ## Exclusions
+
 - Excluded implementation noise outside live source scope:
   - `pec/.claude/worktrees/**` (historical/ephemeral worktree copies).
   - documentation/generated artifacts (`**/docs/**`, `**/openapi/**`) except where used only to locate code entry points.
@@ -212,34 +229,41 @@ Inspected audit decorators/interceptors, audit event envelope shaping, and persi
 ## Migration risks (from observed code)
 
 1. Async audit write completion semantics differ
+
 - `stynx` interceptor uses `tap(() => this.auditService.write(...))`; returned Promise is not chained/awaited in stream flow.
   - Source: `stynx/backend/src/core/audit/audit.interceptor.ts` (`tap` callback).
 - `pec` chains write with `mergeMap(from(...))` and explicitly catches/logs failures.
   - Source: `pec/src/@core/interceptors/audit.interceptor.ts`.
 
 2. Sink schema mismatch across repos
+
 - `porm`: `audit.logged_actions` (`op`, `schema_name`, `table_name`, `old_data`, `new_data`).
 - `pec`/`stynx`: `audit.events` (`action/operation`, `entity`, `entity_id`, `details/metadata`, etc.).
 - `sgp`: `public.audit_event` (`resource_type`, `resource_id`, `table_name`, `metadata`).
 
 3. Correlation/station typing mismatch
+
 - `pec` sink expects UUID/INET for correlation/station/ip (`audit.write` signature).
 - `stynx` sink uses text for `request_id`/`station_id`/`ip_address`.
 - `sgp` request id is text pattern (`x-request-id`), not UUID-only.
 
 4. Append-only guarantees are inconsistent
+
 - `pec` enforces append-only (`audit.prevent_mutation` trigger).
 - No equivalent append-only guard found in inspected `stynx` `02-audit.sql`, `porm` `audit.logged_actions`, or `sgp` migration for `audit_event`.
 
 5. Redaction policy is inconsistent
+
 - `sgp` actively redacts/truncates metadata (`redactAuditMetadata`).
 - `pec` and `stynx` do not enforce equivalent runtime metadata redaction in inspected write paths.
 
 6. Trigger coverage model mismatch
+
 - `porm` has broad explicit trigger attachments across schemas (`auth`, `porm`, `flow`, `cms`).
 - `stynx` defines `audit.attach_dml_triggers(...)` but no inspected invocation attaching it to concrete tables.
 
 7. Transaction coupling mismatch
+
 - `porm` trigger writes occur inside table mutation transaction by design.
 - `pec` supports same-transaction app-level audit writes via `client`.
 - `sgp` writes are explicit post-mutation calls.

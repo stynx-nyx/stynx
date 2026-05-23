@@ -78,5 +78,5 @@ symbol-level TSDoc when their contract is not obvious from the type signature.
 
 ## References
 
-- [STYNX Spec](../../docs/architecture/STYNX-SPEC-v0.6.md)
-- [Developer Documentation Standard](../../docs/architecture/developer-documentation.md)
+- [STYNX Spec](../../docs/arch/STYNX-SPEC-v0.6.md)
+- [Developer Documentation Standard](../../docs/arch/developer-documentation.md)

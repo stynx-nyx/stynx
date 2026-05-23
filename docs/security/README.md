@@ -9,9 +9,9 @@ operator runbooks.
 ## Canonical Documents
 
 - [Threat Model](threat-model.md) — current architectural threat model.
-- [Architecture invariants](../architecture/invariants/) — RBAC, privacy,
+- [Architecture invariants](../arch/invariants/) — RBAC, privacy,
   package, Flow, coverage, error, and performance invariants.
-- [Operations runbooks](../operations/README.md) — rotation, suspension,
+- [Operations runbooks](../ops/README.md) — rotation, suspension,
   erasure, federation, and recovery procedures.
 
 ## Package Responsibilities

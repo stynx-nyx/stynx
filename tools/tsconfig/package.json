@@ -4,7 +4,7 @@
   "version": "0.2.0",
   "description": "Shared TypeScript presets for the STYNX monorepo",
   "scripts": {
-    "test": "node ../../scripts/run-and-record.mjs --package @stynx-internal/tsconfig --level unit --runner node-test -- node --test test/tsconfig.spec.mjs"
+    "test": "node --test test/tsconfig.spec.mjs"
   },
   "files": [
     "*.json",

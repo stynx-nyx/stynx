@@ -71,12 +71,12 @@
       request context. Override the codemod with `stynx adopt apply
 --skip-rename resource_record.organization_id` and add by hand:
 
-                       ```sql
-                       ALTER TABLE resource_record
-                         ADD COLUMN tenant_id uuid NOT NULL
-                           REFERENCES tenancy.tenants(id)
-                           DEFAULT current_setting('app.tenant_id', true)::uuid;
-                       ```
+                             ```sql
+                             ALTER TABLE resource_record
+                               ADD COLUMN tenant_id uuid NOT NULL
+                                 REFERENCES tenancy.tenants(id)
+                                 DEFAULT current_setting('app.tenant_id', true)::uuid;
+                             ```
 
 - **Detection:**
 
@@ -390,7 +390,7 @@ link-cognito-users` (`_DISCOVERY.md` §8) writes the Cognito-sub ↔
      reports legacy users for whom no Cognito sub was found.
   5. Only then run `--apply` to write `auth.user_identities`.
 
-  Document this in `docs/operations/runbooks/cognito-cutover.md`
+  Document this in `docs/ops/runbooks/cognito-cutover.md`
   (helps close FIND-031).
 
 - **Detection:**
@@ -401,7 +401,7 @@ link-cognito-users` (`_DISCOVERY.md` §8) writes the Cognito-sub ↔
   pnpm stynx adopt link-cognito-users --dry-run \
     | grep -E 'unmapped|missing' \
     && echo "FAIL: legacy users without a Cognito identity"
-  test -f docs/operations/runbooks/cognito-cutover.md \
+  test -f docs/ops/runbooks/cognito-cutover.md \
     || echo "MISSING: cognito cutover runbook (FIND-031)"
   ```
 
@@ -840,7 +840,7 @@ relying on a detection step that depends on them:
   detection grep assumes doctor surfaces an `is_active` info note;
   if doctor is silent, rely on the SQL probe instead.
 - **FIND-031** — operations runbooks absent. Pitfall #7's "Fix"
-  references `docs/operations/runbooks/cognito-cutover.md`; that
+  references `docs/ops/runbooks/cognito-cutover.md`; that
   tree does not yet exist and adoption work touching Cognito should
   add it.
 

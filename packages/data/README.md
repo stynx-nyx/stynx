@@ -84,7 +84,7 @@ The public barrel must carry package-level `@packageDocumentation`. Add symbol-l
 
 ## References
 
-- [docs/architecture/developer-documentation.md](../../docs/architecture/developer-documentation.md)
+- [docs/arch/developer-documentation.md](../../docs/arch/developer-documentation.md)
 - [docs/stynx/package-architecture.md](../../docs/stynx/package-architecture.md)
-- [docs/architecture/STYNX-API-DATA.md](../../docs/architecture/STYNX-API-DATA.md)
-- [docs/architecture/README.md](../../docs/architecture/README.md)
+- [docs/arch/STYNX-API-DATA.md](../../docs/arch/STYNX-API-DATA.md)
+- [docs/arch/README.md](../../docs/arch/README.md)
