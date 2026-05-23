@@ -1,82 +1,82 @@
 # @stynx/signature
 
-`@stynx/signature` is the shared STYNX facade for long-lived document signatures:
-PAdES/PDF signatures, TSA timestamping, and OCSP-first certificate status checks
-with CRL fallback. It centralizes the contract currently carried by PEC's
-`signature-digital-signature` and `integration-tsa` domains so PEC R2 and TEAT
-R2 can converge on one platform API.
+`@stynx/signature` is the shared STYNX facade for long-lived PAdES document
+signatures, TSA timestamping, and OCSP-first certificate validation with CRL
+fallback. It ports PEC's signature orchestration into a package-owned boundary
+while leaving ICP-Brasil, gov.br, and other cryptographic providers behind a
+stable provider contract.
 
-This round intentionally ships a typed scaffold. The cryptographic provider is
-pluggable and the default provider rejects calls until the PEC implementation is
-ported.
+## Nest Setup
+
+```ts
+import { StynxSignatureModule } from '@stynx/signature';
+
+StynxSignatureModule.forRoot({
+  provider: {
+    baseUrl: 'https://signature-provider.example',
+    pathPrefix: '/mock',
+    crlUrl: 'https://ca.example/crl.pem',
+    timeoutMs: 15_000,
+  },
+  verificationPolicy: {
+    requireTimestamp: true,
+    requireRevocationEvidence: true,
+    allowCrlFallback: true,
+  },
+});
+```
+
+`SignatureService` can also be constructed directly with a custom
+`SignatureBackend` for tests and non-Nest consumers.
 
 ## Public API
 
 ```ts
-import { SignatureService, createMockSignatureBackend } from '@stynx/signature';
+import { SignatureService } from '@stynx/signature';
 
-const service = new SignatureService(createMockSignatureBackend());
-const result = await service.sign({
+const result = await signature.sign({
   tenantId: 'tenant-a',
   actorId: 'user-a',
-  document: new Uint8Array([1, 2, 3]),
-  documentSha256: '039058c6f2c0cb492c533b0a4d14ef77cc0f78abccced5287d84a1a2011cfb81',
-  tsa: { endpoint: 'https://tsa.example.test' },
-  certificate: { subject: 'CN=Signer', issuer: 'CN=ICP Test', serialNumber: '01' },
+  document: pdf.bytes,
+  documentSha256: pdf.sha256,
+  tsa: { endpoint: 'https://signature-provider.example' },
+  certificate: {
+    subject: 'CN=Signer',
+    issuer: 'CN=ICP Test',
+    serialNumber: '01',
+    pem: process.env.SIGNER_CERT_PEM,
+  },
 });
 ```
 
 Primary exports:
 
-- `SignatureService` - orchestration facade for signing and verification.
-- `SignatureBackend` - provider interface implemented by a real PAdES/TSA/OCSP
-  backend.
-- `createMockSignatureBackend()` - deterministic test backend for consumers.
-- Request/result types for signing and verification.
+- `StynxSignatureModule` - Nest module for provider-backed signing.
+- `SignatureService` - canonical signing and verification facade.
+- `HttpSignatureProviderClient` - external provider client using
+  `@stynx/integration-adapter` for retry, timeout, idempotency, telemetry, and
+  circuit breaking.
+- `ProviderBackedSignatureBackend` - validates certificates before signing and
+  maps provider responses into `SignatureEvidence`.
+- `createMockSignatureBackend()` - deterministic test backend.
 
-## Threat Model
+## Provider Contract
 
-The package boundary assumes callers have already enforced authentication,
-authorization, tenant membership, and object-storage access. The signature
-backend must still protect against:
+The HTTP provider receives base64 documents and returns provider-owned PAdES/TSA
+results:
 
-- signing a different document than the hash recorded in audit evidence;
-- accepting revoked certificates when OCSP is unavailable;
-- silently dropping TSA or revocation evidence from the result;
-- re-signing unchanged content instead of reusing recorded evidence where the
-  domain policy requires idempotent signing.
+- `POST {pathPrefix}/tsa/sign` - signs immutable PDF bytes and returns signed
+  PDF bytes, optional CMS bytes, TSA time, revocation source, certificate chain,
+  and evidence URI.
+- `POST {pathPrefix}/tsa/ocsp/validate` - validates signer certificates with
+  OCSP and optional CRL fallback.
+- `POST {pathPrefix}/pades/verify` - verifies signed PDF or detached CMS bytes.
 
-Each signing and verification operation should emit an `@stynx/audit` event with
-tenant, actor, document hash, signer certificate metadata, TSA evidence, and
-revocation source.
-
-## Algorithms and Providers
-
-The initial contract requires SHA-256 document hashing and PAdES-compatible CMS
-signatures. Real implementations are expected to use the optional provider
-dependencies declared in `package.json`:
-
-- `pkijs` and `asn1js` for CMS/ASN.1 handling;
-- `@peculiar/x509` for certificate parsing and chain metadata.
-
-Provider-specific TSA, OCSP, and CRL HTTP clients remain implementation details
-behind `SignatureBackend`.
-
-## TSA Configuration
-
-`SignatureRequest.tsa` carries the TSA endpoint plus optional policy OID,
-timeout, and headers. The service forwards this configuration without owning
-provider credentials. Host applications should load credentials through their
-normal secret-management path.
-
-## OCSP and CRL Handling
-
-Verification must attempt OCSP first. Temporary OCSP failure may fall back to CRL
-if `VerificationPolicy.allowCrlFallback` is true. Results expose the revocation
-source as `ocsp`, `crl`, `embedded`, or `none` so auditors can distinguish happy
-path from fallback evidence.
+Provider failures are surfaced as typed package errors. Hash mismatches are
+rejected before any provider call.
 
 ## PEC and TEAT Migration
 
-PEC R2 will migrate its PAdES/TSA implementation into a `SignatureBackend`.
-TEAT R2 can consume the same API for signed receipts and evidence artifacts.
+PEC report flows can replace `signPades(pdf, meta)` with `SignatureService.sign`
+and persist `SignatureEvidence`. TEAT AIT/evidence flows can use `verify()` for
+hash/signature validation without importing PEC code or STYNX internals.

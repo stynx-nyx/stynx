@@ -3,41 +3,36 @@
 **Authority:** Architect (DEVAI Constitution Article 6).
 **Package:** `@stynx/pdf`.
 
-This contract defines the server-side PDF rendering boundary that PEC document
-management and TEAT receipt/evidence flows can consume without importing
-domain-specific rendering internals.
+`@stynx/pdf` owns local server-side PDF rendering for STYNX consumers. It
+supports deterministic fixture rendering for tests and local Playwright
+Chromium rendering for `html` and `handlebars` templates.
 
 ## RenderRequest
 
-| Field              | Required | Description                                                       |
-| ------------------ | -------- | ----------------------------------------------------------------- |
-| `tenantId`         | yes      | Tenant scope for branding, audit, and output ownership.           |
-| `template.id`      | yes      | Stable template identifier.                                       |
-| `template.engine`  | yes      | Template engine key such as `fixture`, `handlebars`, or `html`.   |
-| `template.source`  | yes      | Template source or provider-local template body.                  |
-| `template.version` | no       | Version pin for durable evidence.                                 |
-| `data`             | yes      | JSON-safe render data owned by the consuming domain.              |
-| `branding`         | no       | Tenant brand inputs: logo, font, color, locale.                   |
-| `output.profile`   | no       | `pdf` or `pdf-a`; signed regulatory artifacts should use `pdf-a`. |
+Render requests include tenant scope, template id/engine/source/version,
+JSON-safe data, optional branding, metadata and output options. `tenantId`,
+`template.id` and `template.source` are required.
 
 ## RenderResult
 
-Renderers return:
+Renderers return immutable PDF bytes, `application/pdf`, SHA-256 computed after
+rendering, page count, template id/version and merged metadata. That SHA-256 is
+the digest to pass to `@stynx/signature`.
 
-- `bytes` containing the immutable PDF bytes;
-- `contentType` equal to `application/pdf`;
-- `sha256`, the digest consumed by `@stynx/signature`;
-- `pageCount`;
-- template id and optional version;
-- metadata copied from the request and renderer.
+## Local Renderer
 
-## Signature Interop
+`LocalPdfRenderBackend` renders `html` and `handlebars` templates with local
+Playwright Chromium. Runtime options cover launch options, base URL injection,
+timeout, default PDF options and default metadata.
 
-`RenderResult.sha256` is the only digest that may be handed to
-`SignatureRequest.documentSha256`. A renderer must not mutate bytes after
-hashing.
+## PDF/A
 
-## Provider Boundary
+`output.profile: "pdf-a"` requires a configured `PdfAConformanceAdapter`.
+Without one, the package throws `PdfProfileUnsupportedError` rather than
+mislabeling a normal PDF as archival PDF/A.
 
-The package does not mandate Chromium, wkhtmltopdf, or a specific template
-library. Those choices remain provider implementations behind `PdfRenderBackend`.
+## Migration Notes
+
+PEC document/report generation can move behind `PdfRenderer` before signing.
+TEAT can use the same package for AIT receipts, integrity reports and probative
+evidence bundles without domain coupling.

@@ -24,6 +24,16 @@
     "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
     "test": "vitest run --config ./vitest.config.ts"
   },
+  "dependencies": {
+    "handlebars": "4.7.9",
+    "playwright": "^1.60.0"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^11.1.19",
+    "@nestjs/core": "^11.1.19",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
   "stynxProviderDependencies": {
     "templateEngines": [
       "handlebars",
@@ -32,6 +42,7 @@
     "pdfRenderer": "provider-supplied Chromium, Playwright, or equivalent renderer"
   },
   "devDependencies": {
+    "@nestjs/testing": "^11.1.19",
     "@types/node": "^25.6.0",
     "typescript": "^6.0.3"
   }

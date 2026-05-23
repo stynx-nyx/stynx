@@ -3,59 +3,16 @@
  *
  * @packageDocumentation
  */
-import { createHash } from 'node:crypto';
-import type {
-  SignatureBackend,
-  SignatureCertificateRef,
-  SignatureEvidence,
-  SignatureRequest,
-  SignatureResult,
-  VerifyRequest,
-  VerifyResult,
-} from './types';
+import { sha256Hex } from './signature.service';
+import type { SignatureBackend, SignatureCertificateRef, SignatureEvidence } from './types';
 
+export * from './errors';
+export * from './http-provider-client';
+export * from './provider-backend';
+export * from './signature.module';
+export * from './signature.service';
+export * from './tokens';
 export * from './types';
-
-class UnimplementedSignatureBackend implements SignatureBackend {
-  async sign(_request: SignatureRequest): Promise<SignatureResult> {
-    // TODO(stynx-signature): port from PEC origin path ../pec/domain/signature-digital-signature/.
-    throw new Error('No @stynx/signature backend configured');
-  }
-
-  async verify(_request: VerifyRequest): Promise<VerifyResult> {
-    // TODO(stynx-signature): port from PEC origin path ../pec/domain/signature-digital-signature/.
-    throw new Error('No @stynx/signature backend configured');
-  }
-}
-
-function sha256Hex(bytes: Uint8Array): string {
-  return createHash('sha256').update(bytes).digest('hex');
-}
-
-function assertDocumentHash(document: Uint8Array, expectedSha256: string): void {
-  const actual = sha256Hex(document);
-  if (actual !== expectedSha256) {
-    throw new Error(`Document SHA-256 mismatch: expected ${expectedSha256}, got ${actual}`);
-  }
-}
-
-export class SignatureService {
-  constructor(private readonly backend: SignatureBackend = new UnimplementedSignatureBackend()) {}
-
-  async sign(request: SignatureRequest): Promise<SignatureResult> {
-    assertDocumentHash(request.document, request.documentSha256);
-    return this.backend.sign({
-      ...request,
-      algorithm: request.algorithm ?? 'pades-ltv',
-      digestAlgorithm: request.digestAlgorithm ?? 'sha256',
-    });
-  }
-
-  async verify(request: VerifyRequest): Promise<VerifyResult> {
-    assertDocumentHash(request.document, request.documentSha256);
-    return this.backend.verify(request);
-  }
-}
 
 export function createMockSignatureBackend(now: () => Date = () => new Date()): SignatureBackend {
   return {

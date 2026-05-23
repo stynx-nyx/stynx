@@ -82,9 +82,6 @@ importers:
       husky:
         specifier: ^9.1.7
         version: 9.1.7
-      istanbul-lib-coverage:
-        specifier: ^3.2.2
-        version: 3.2.2
       knip:
         specifier: ^6.7.0
         version: 6.14.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
@@ -360,9 +357,6 @@ importers:
       '@stynx-web/angular-i18n':
         specifier: workspace:*
         version: link:../angular-i18n
-      '@stynx-web/angular-storage':
-        specifier: workspace:*
-        version: link:../angular-storage
       '@stynx-web/angular-ui':
         specifier: workspace:*
         version: link:../angular-ui
@@ -448,6 +442,9 @@ importers:
       '@stynx-web/angular-i18n':
         specifier: workspace:*
         version: link:../angular-i18n
+      '@stynx-web/angular-storage':
+        specifier: workspace:*
+        version: link:../angular-storage
       '@stynx-web/angular-ui':
         specifier: workspace:*
         version: link:../angular-ui
@@ -1439,7 +1436,29 @@ importers:
         version: 6.0.3
 
   packages/pdf:
+    dependencies:
+      '@nestjs/common':
+        specifier: ^11.1.19
+        version: 11.1.21(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/core':
+        specifier: ^11.1.19
+        version: 11.1.21(@nestjs/common@11.1.21(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.21)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      handlebars:
+        specifier: 4.7.9
+        version: 4.7.9
+      playwright:
+        specifier: ^1.60.0
+        version: 1.60.0
+      reflect-metadata:
+        specifier: ^0.2.2
+        version: 0.2.2
+      rxjs:
+        specifier: ^7.8.2
+        version: 7.8.2
     devDependencies:
+      '@nestjs/testing':
+        specifier: ^11.1.19
+        version: 11.1.21(@nestjs/common@11.1.21(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.21)(@nestjs/platform-express@11.1.21)
       '@types/node':
         specifier: 25.6.0
         version: 25.6.0
@@ -1601,7 +1620,26 @@ importers:
         version: 6.0.3
 
   packages/signature:
+    dependencies:
+      '@nestjs/common':
+        specifier: ^11.1.19
+        version: 11.1.21(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/core':
+        specifier: ^11.1.19
+        version: 11.1.21(@nestjs/common@11.1.21(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.21)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@stynx/integration-adapter':
+        specifier: workspace:*
+        version: link:../integration-adapter
+      reflect-metadata:
+        specifier: ^0.2.2
+        version: 0.2.2
+      rxjs:
+        specifier: ^7.8.2
+        version: 7.8.2
     devDependencies:
+      '@nestjs/testing':
+        specifier: ^11.1.19
+        version: 11.1.21(@nestjs/common@11.1.21(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.21)(@nestjs/platform-express@11.1.21)
       '@types/node':
         specifier: 25.6.0
         version: 25.6.0

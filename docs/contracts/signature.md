@@ -3,55 +3,40 @@
 **Authority:** Architect (DEVAI Constitution Article 6).
 **Package:** `@stynx/signature`.
 
-This contract defines the implementation-free shape for PAdES/TSA signing and
-verification. It is derived from PEC's signature requirements in
-`../pec/docs/pec/signatures.md`, PEC's OCSP-with-CRL-fallback decision in
-`../pec/docs/project/decisions/0001-certificate-validation-ocsp-crl.md`, and the
-PEC runtime inventory for `signature-digital-signature` plus `integration-tsa`.
+`@stynx/signature` owns the STYNX signing facade and evidence shape. External
+providers such as ICP-Brasil or gov.br own the cryptographic PAdES/TSA work.
 
-## SignatureRequest
+## Runtime Boundary
 
-| Field            | Required | Description                                                                |
-| ---------------- | -------- | -------------------------------------------------------------------------- |
-| `tenantId`       | yes      | Tenant scope for audit and storage ownership.                              |
-| `actorId`        | yes      | Authenticated actor requesting the signature.                              |
-| `document`       | yes      | Immutable PDF/PDF-A bytes to sign.                                         |
-| `documentSha256` | yes      | SHA-256 hex digest of `document`.                                          |
-| `tsa.endpoint`   | yes      | TSA endpoint selected by the host application.                             |
-| `certificate`    | yes      | Subject, issuer, serial, and validity metadata for the signer certificate. |
-| `algorithm`      | no       | `pades-baseline-t` or `pades-ltv`; defaults to `pades-ltv`.                |
-| `idempotencyKey` | no       | Host-level key used to avoid duplicate signing.                            |
+`SignatureService.sign()` validates the document hash locally, validates the
+signer certificate through OCSP with CRL fallback when allowed, delegates PAdES
+signing to a configured provider, and returns `SignatureEvidence`.
 
-## SignatureResult
+`SignatureService.verify()` validates the document hash locally, requires signed
+PDF bytes or CMS bytes, then delegates signature verification to the provider.
 
-`SignatureResult` returns signed bytes, detached CMS bytes when available, and
-`SignatureEvidence`.
+## Provider Wire Contract
 
-`SignatureEvidence` must preserve:
+- `POST {pathPrefix}/tsa/sign`: request includes base64 PDF, SHA-256,
+  algorithm, TSA options, signer certificate and credential metadata; response
+  includes signed PDF base64, optional CMS base64, TSA time, revocation source,
+  certificate chain and evidence URI.
+- `POST {pathPrefix}/tsa/ocsp/validate`: request includes signer certificate,
+  tenant/actor context, CRL URL and fallback policy; response includes
+  `good`, `OCSP` or `CRL`, checked time, optional chain and reason.
+- `POST {pathPrefix}/pades/verify`: request includes original document bytes,
+  hash and signed bytes or CMS; response includes `valid`, `invalid`, or
+  `unknown` plus verification evidence.
 
-- signature id;
-- document SHA-256;
-- signing time and TSA time;
-- signer certificate reference;
-- certificate chain when available;
-- revocation source: `ocsp`, `crl`, `embedded`, or `none`;
-- revocation check time;
-- optional provider evidence URI.
+## Evidence Rules
 
-## VerifyRequest and VerifyResult
+Evidence must preserve document SHA-256, signing time, TSA time when available,
+signer certificate metadata, revocation source, revocation check time,
+certificate chain and provider evidence URI when available. Unknown verification
+status is reserved for provider uncertainty, not missing local inputs.
 
-Verification receives the original bytes and hash plus signed bytes or CMS
-signature bytes. `VerifyResult.status` is `valid`, `invalid`, or `unknown`.
-Unknown is reserved for provider uncertainty, not for missing local validation.
+## Migration Notes
 
-## Revocation Rule
-
-Verification must attempt OCSP first. CRL fallback is allowed only when policy
-permits it and OCSP failed temporarily. Results must expose which source was
-used so auditors can distinguish primary validation from fallback evidence.
-
-## PEC Cross-Link
-
-The round prompt references PEC `INV-06`; current PEC docs expose the active
-PAdES/TSA requirement through `docs/pec/signatures.md` and the generated
-signature invariants around returning CMS, ICP chain, TSA, and immutability.
+PEC's report signing flow maps directly to `SignatureService.sign()` and should
+persist `SignatureEvidence`. TEAT can use `verify()` for AIT/evidence hash and
+signature validation without importing PEC implementation code.

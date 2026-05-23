@@ -1,25 +1,33 @@
 # @stynx/pdf
 
-`@stynx/pdf` is the shared server-side PDF generation facade for NestJS
-applications. PEC currently owns PDF artifact creation in
-`documents-document-mgmt`; TEAT will consume the same boundary for receipts and
-evidence documents.
+`@stynx/pdf` is the shared STYNX server-side PDF generation package. It provides
+a local renderer backed by Playwright Chromium plus a deterministic fixture
+backend for tests. It does not depend on a remote PDF service.
 
-The first release is a scaffold. A real renderer can be plugged in later; the
-included fixture renderer is for unit tests and local contract exercises.
+## Nest Setup
+
+```ts
+import { StynxPdfModule } from '@stynx/pdf';
+
+StynxPdfModule.forRoot({
+  defaultPdfOptions: { format: 'A4', printBackground: true },
+  timeoutMs: 15_000,
+  defaultMetadata: { product: 'stynx' },
+});
+```
 
 ## Public API
 
 ```ts
-import { PdfRenderer, createFixturePdfBackend } from '@stynx/pdf';
+import { PdfRenderer } from '@stynx/pdf';
 
-const renderer = new PdfRenderer(createFixturePdfBackend());
-const result = await renderer.render({
+const pdf = await renderer.render({
   tenantId: 'tenant-a',
   template: {
     id: 'receipt',
-    engine: 'fixture',
-    source: 'Receipt {{number}}',
+    engine: 'handlebars',
+    source: '<html><body>Receipt {{number}}</body></html>',
+    version: '1',
   },
   data: { number: 'AIT-1' },
 });
@@ -27,33 +35,25 @@ const result = await renderer.render({
 
 Primary exports:
 
-- `PdfRenderer` - facade that validates render requests and delegates to a
-  provider.
-- `PdfRenderBackend` - provider interface for Chromium, wkhtmltopdf, or
-  domain-specific renderers.
-- `createFixturePdfBackend()` - deterministic text-to-PDF-like backend for
-  tests.
-- `RenderRequest`, `RenderResult`, and template configuration types.
+- `StynxPdfModule` - Nest module that wires `PdfRenderer` to the local backend.
+- `PdfRenderer` - validates render requests and delegates to a backend.
+- `LocalPdfRenderBackend` - renders `html` and `handlebars` templates locally
+  with Playwright Chromium.
+- `createFixturePdfBackend()` - deterministic lightweight backend for tests.
 
-## Template Engine Plug Points
+## PDF/A
 
-Templates are identified by `TemplateRef.engine`. The initial contract names
-`fixture`, `handlebars`, and `html` engines, but it does not force a renderer.
-Production consumers should bind their preferred implementation behind
-`PdfRenderBackend`.
+`output.profile: "pdf-a"` is not silently treated as a regular PDF. The local
+backend throws `PdfProfileUnsupportedError` unless a `PdfAConformanceAdapter` is
+configured. That keeps regulatory archival output explicit and auditable.
 
-## Fonts and Branding
+## Signature Interop
 
-Brand packs are carried by `RenderRequest.branding`. The facade treats fonts,
-logos, color tokens, and locale as render inputs so tenants and environments can
-select branded artifacts without changing domain code.
-
-## Interop with @stynx/signature
-
-`RenderResult.sha256` is the stable digest that `@stynx/signature` should use as
-`SignatureRequest.documentSha256`. Renderers must not mutate bytes after hashing.
+`RenderResult.sha256` is computed after bytes are rendered. That digest is the
+only value that should be passed to `SignatureRequest.documentSha256`.
 
 ## PEC and TEAT Migration
 
-PEC R2 will migrate document generation behind this provider interface. TEAT R2
-can use the same API for evidence receipts and signed output bundles.
+PEC report generation can move document creation behind `PdfRenderer` before
+calling `@stynx/signature`. TEAT can use the same renderer for AIT receipts,
+integrity reports, and probative evidence packages without coupling to PEC.
