@@ -117,9 +117,15 @@ The resulting `coverage-matrix.json` has `routes: []` (empty), and zero route-si
 - **(b) Read the framework discriminator from `.devai/config/pack-tune.json`** (already records `frontend: angular` / `react` for stynx-shaped packs) and select `routes-${framework}.json` accordingly.
 - **(c) Allow `routesPath` override via `.devai/config/project.json`** so adopters can pin the path without DEVAI knowing the framework.
 
-**Recommended stynx-side mitigation (durable):** add a `pnpm sense:coverage` script (or wrapper in `tools/repo-config/`) that always invokes with `--routes-path .devai/state/sensors/inventory_routes/routes-angular.json`. This is a clean stynx-side fix; no `.devai/state/` writes; no DEVAI patch dependency. **Not done in this session** — flagged for follow-up.
+**Stynx-side mitigation (landed in this session):** root [`package.json`](../../../package.json) now carries a `sense:coverage` script:
 
-**Status:** Open. Real underlying bug; workaround is reliable. Filed as DEVAI-upstream concern for the default-value fix, plus a stynx-local follow-up for the wrapper script.
+```
+"sense:coverage": "devai sense-coverage --repo-root . --routes-path .devai/state/sensors/inventory_routes/routes-angular.json --human"
+```
+
+`pnpm sense:coverage` PASSes against the current state. Durable across `.devai/state/` regenerations; no DEVAI patch dependency; no symlinks. Future S-series automations and skills should call this script instead of bare `devai sense-coverage`.
+
+**Status:** Open upstream (default-value still hardcoded to `routes-react.json`). Stynx is unblocked.
 
 **Impact on Gap #3 (coverage-link synthesis, from the S11 pre-amble):** Originally framed as a half-day Architect session to author endpoint/route refs across 13 use-cases. **In reality coverage authoring is essentially complete** — endpoints at 100% (50/50), routes at 14/15 via in-step `refs.routeIds[]` (the matrix workaround above confirms PASS). Gap #3 is **closed in scope**; the remaining work is D-A-37's default-value fix and the stynx-local wrapper.
 
