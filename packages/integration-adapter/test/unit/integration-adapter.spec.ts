@@ -41,6 +41,19 @@ describe('IntegrationAdapter', () => {
     expect(attempts).toBe(2);
   });
 
+  it('rethrows the terminal provider error after retry exhaustion', async () => {
+    const terminal = new Error('provider terminal failure');
+    const adapter = new IntegrationAdapter({
+      name: 'provider',
+      request: vi.fn().mockRejectedValue(terminal),
+      parseResponse: (raw) => raw,
+      retryPolicy: { maxAttempts: 2, baseDelayMs: 0 },
+      sleep: async () => undefined,
+    });
+
+    await expect(adapter.execute({})).rejects.toBe(terminal);
+  });
+
   it('opens the circuit after configured failures', async () => {
     const circuitBreaker = new InMemoryCircuitBreaker(
       {

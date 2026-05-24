@@ -236,6 +236,9 @@ export class IntegrationAdapter<TReq, TRaw, TRes> {
         attempt += 1;
       }
     }
+    if (lastError instanceof Error) {
+      throw lastError;
+    }
     throw new Error(`Integration ${this.options.name} failed: ${errorMessage(lastError)}`);
   }
 
