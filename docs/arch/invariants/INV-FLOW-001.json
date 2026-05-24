@@ -64,5 +64,5 @@
     "human_approval_required": true
   },
   "tags": ["porm-port", "flow", "tenancy", "rls", "stynx"],
-  "measurable_via": ["sense data", "sense api", "inv adherence"]
+  "measurable_via": ["sense data-model", "sense api", "inv adherence-reverse"]
 }

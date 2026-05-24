@@ -35,5 +35,5 @@
     "human_approval_required": true
   },
   "tags": ["porm-port", "flow", "adapter", "framework-boundary", "stynx"],
-  "measurable_via": ["sense dep-graph", "sense api", "inv adherence"]
+  "measurable_via": ["sense dep-graph", "sense api", "inv adherence-reverse"]
 }

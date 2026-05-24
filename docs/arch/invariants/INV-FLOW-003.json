@@ -46,5 +46,5 @@
     "human_approval_required": true
   },
   "tags": ["porm-port", "flow", "events", "audit", "append-only", "stynx"],
-  "measurable_via": ["sense api", "sense data", "inv adherence"]
+  "measurable_via": ["sense api", "sense data-model", "inv adherence-reverse"]
 }

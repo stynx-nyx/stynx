@@ -37,5 +37,5 @@
     "human_approval_required": true
   },
   "tags": ["stynx", "error-semantics", "promoted-during-u5", "closes-F1xT8"],
-  "measurable_via": ["sense api", "sense contracts"]
+  "measurable_via": ["sense api", "inv contracts"]
 }

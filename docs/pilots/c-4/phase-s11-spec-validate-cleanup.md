@@ -141,8 +141,77 @@ The resulting `coverage-matrix.json` has `routes: []` (empty), and zero route-si
 
 `devai spec-validate-all` is now green on every adopter-controllable substrate (invariants / journeys / trace / glossary). The single remaining failing category is upstream-owned.
 
-## 6. References
+## 6. Post-D-A-36/D-A-37 follow-up (later in session)
 
+After both upstream fixes landed, a verification pass against the fresh `devai` build surfaced one more upstream gap and an adopter-side cleanup.
+
+### D-A-38 — `spec-validate-all` aggregator bypasses D-A-36's adopter-scope filter
+
+**Where:** [`../../../../devai/packages/cli/src/commands/spec/validate-all.ts:87-101`](../../../../devai/packages/cli/src/commands/spec/validate-all.ts) — the inline action-coverage gate.
+
+**Symptom:** The standalone `devai spec-validate-action-coverage --human` against stynx correctly reports **3 unclaimed + 3 orphan** (post-D-A-36 baseline). The aggregator `devai spec-validate-all --human` against the same repo reports **137 errors** — exactly the pre-D-A-36 noise. Both commands read the same invariants directory and registry.
+
+**Root cause:** `spec-validate-all` does not delegate to the same `validateActionCoverage` function the standalone command uses. Its inline gate at validate-all.ts:91 iterates `getActionsList()` (the full 145-action registry) and flags every action not in `claimedActions`. No `detectSelfPosture()`, no `discoverAdopterActions()`, no `adopterFacingAuthorities` filter. And `spec-validate-all --help` exposes no `--scope` flag, so adopters can't opt in even manually.
+
+**Evidence:**
+
+```
+$ devai spec-validate-action-coverage --human          # standalone, auto-detect
+spec validate-action-coverage: FAIL (scope=adopter)
+  145 action(s) registered, 14 in scope, 11 claimed by invariants
+  3 unclaimed action(s): blueprint validate, inv suggest, sense data-model
+  3 orphan claim(s): inv adherence, sense contracts, sense data
+
+$ devai spec-validate-all --human                      # aggregator
+spec validate-all: FAIL
+  [✗] action-coverage (145 file(s), 137 error(s))      ← unfiltered
+```
+
+**Suggested resolution (DEVAI-side):** have `validate-all.ts` import and call the same `validateActionCoverage` function the standalone CLI uses, propagating an auto-detected scope. Single-source-of-truth; ~20 lines of replacement. The standalone command's existing `--scope` / `--coverage-authorities` / `--pack-tune` / `--pack-id` / `--packs-root` / `--adopter-root` options would also need to be either exposed on `spec-validate-all` or default-resolved through the same auto-detect path. Minimal-intervention shape: aggregator just calls the standalone function with default options; adopters who need overrides invoke the standalone CLI.
+
+**Stynx-side mitigation (no code change in this session):** scripts and CI that currently call `devai spec-validate-all` for the action-coverage signal should call `devai spec-validate-action-coverage --human` directly until the aggregator is fixed. The aggregator's other four categories (invariants / journeys / trace / glossary) are all PASS, so the only signal lost by skipping the aggregator is the unified summary line.
+
+**Status:** Open. Upstream-only fix; no clean stynx-side change.
+
+### Adopter-side cleanup (landed in this session): 6 `measurable_via` residuals
+
+Once `spec-validate-action-coverage` (the scope-aware standalone) was readable, it surfaced 6 fixable issues in stynx's own invariants:
+
+| Type      | Action name          | Where (before)                           | Where (after)                                               |
+| --------- | -------------------- | ---------------------------------------- | ----------------------------------------------------------- |
+| Orphan    | `sense data`         | INV-FLOW-001, INV-FLOW-003               | renamed to `sense data-model`                               |
+| Orphan    | `sense contracts`    | INV-ERROR-001                            | renamed to `inv contracts`                                  |
+| Orphan    | `inv adherence`      | INV-FLOW-001, INV-FLOW-002, INV-FLOW-003 | renamed to `inv adherence-reverse`                          |
+| Unclaimed | `blueprint validate` | (no claimant)                            | added to INV-CORE-001                                       |
+| Unclaimed | `inv suggest`        | (no claimant)                            | added to INV-CORE-001                                       |
+| Unclaimed | `sense data-model`   | (no claimant)                            | implicitly claimed via the FLOW-001/003 orphan rename above |
+
+Verified post-cleanup:
+
+```
+$ devai spec-validate-action-coverage --human
+spec validate-action-coverage: OK (scope=adopter)
+  145 action(s) registered, 13 in scope, 13 claimed by invariants
+```
+
+Adopter-side action-coverage is now **0 unclaimed, 0 orphan**. The only thing keeping `spec-validate-all` red is D-A-38.
+
+## 7. Updated open-gap snapshot (post-post-session)
+
+| Gap                                  | Status                                                                                                         |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| Trace gap (INV-PACKAGES-001 missing) | **closed** in §2 (added INV-CORE-001 entry)                                                                    |
+| Invariant id↔domain mismatch         | **closed** in §2 (renamed to INV-CORE-001)                                                                     |
+| Broken kickoff-brief anchors         | **closed** in §2 (dropped dead refs)                                                                           |
+| Action-coverage breadth (137 errors) | **closed upstream** — D-A-36 / commit `3b52bcc` in devai. Scope-aware standalone shows 0 errors against stynx. |
+| Coverage-matrix routes count         | **closed upstream** — D-A-37 / commit `765bad0` in devai. Bare `devai sense-coverage` PASSes.                  |
+| Aggregator bypasses scope filter     | **filed upstream** (D-A-38). Standalone command is the durable workaround.                                     |
+| 6 `measurable_via` residuals (3+3)   | **closed** in §6 (orphan renames + 2 additions to INV-CORE-001)                                                |
+
+## 8. References
+
+- D-A-36 closure commit (devai): `3b52bcc — Architect + Engineer: closes D-A-36 — action-coverage adopter scope filters framework-internal authorities`.
+- D-A-37 closure commit (devai): `765bad0 — Engineer: closes D-A-37 — sense-coverage default routes path is framework-aware`.
 - Schema source: [`../../../../devai/docs/schemas/invariant.schema.json`](../../../../devai/docs/schemas/invariant.schema.json) (id regex, domain pattern).
 - Domain declaration: [`../../../.devai/config/domains.json`](../../../.devai/config/domains.json).
 - Companion S-series audits: [`phase-s10-audit.md`](phase-s10-audit.md), [`phase-s8-tuning-audit.md`](phase-s8-tuning-audit.md).
