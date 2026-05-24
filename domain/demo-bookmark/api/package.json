@@ -13,10 +13,10 @@
     "test:int": "vitest run --config ./vitest.int.config.ts"
   },
   "dependencies": {
-    "@nestjs/common": "^11.1.19",
-    "@nestjs/core": "^11.1.19",
+    "@nestjs/common": "^11.1.23",
+    "@nestjs/core": "^11.1.23",
     "@nestjs/mapped-types": "^2.0.6",
-    "@nestjs/platform-express": "^11.1.19",
+    "@nestjs/platform-express": "^11.1.23",
     "@stynx/audit": "workspace:*",
     "@stynx/auth": "workspace:*",
     "@stynx/backend": "workspace:*",
@@ -36,7 +36,7 @@
     "rxjs": "^7.8.2"
   },
   "devDependencies": {
-    "@nestjs/testing": "^11.1.19",
+    "@nestjs/testing": "^11.1.23",
     "@stynx-internal/eslint-config": "workspace:*",
     "@stynx-internal/tsconfig": "workspace:*",
     "@types/node": "^25.6.0",

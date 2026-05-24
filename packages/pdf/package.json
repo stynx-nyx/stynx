@@ -42,7 +42,7 @@
     "pdfRenderer": "provider-supplied Chromium, Playwright, or equivalent renderer"
   },
   "devDependencies": {
-    "@nestjs/testing": "^11.1.19",
+    "@nestjs/testing": "^11.1.23",
     "@types/node": "^25.6.0",
     "typescript": "^6.0.3"
   }

@@ -42,7 +42,7 @@
     "crlClient": "provider-supplied RFC 5280 CRL client"
   },
   "devDependencies": {
-    "@nestjs/testing": "^11.1.19",
+    "@nestjs/testing": "^11.1.23",
     "@types/node": "^25.6.0",
     "typescript": "^6.0.3"
   }

@@ -26,10 +26,10 @@
     "stryker": "pnpm exec stryker run stryker.conf.mjs"
   },
   "dependencies": {
-    "@nestjs/common": "^11.1.19",
-    "@nestjs/core": "^11.1.19",
-    "@nestjs/platform-express": "^11.1.19",
-    "@nestjs/testing": "^11.1.19",
+    "@nestjs/common": "^11.1.23",
+    "@nestjs/core": "^11.1.23",
+    "@nestjs/platform-express": "^11.1.23",
+    "@nestjs/testing": "^11.1.23",
     "@stynx/audit": "workspace:*",
     "@stynx/auth": "workspace:*",
     "@stynx/core": "workspace:*",
