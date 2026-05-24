@@ -241,10 +241,10 @@ module scope and pass it to your data-fetching primitive.
 ### Bootstrapping — `StynxAngularModule.forRoot`
 
 The reference app composes the platform like this (full file at
-`apps/reference-web/src/app/reference-web.module.ts:1–82`):
+`reference/web/src/app/reference-web.module.ts:1–82`):
 
 ```ts
-// apps/reference-web/src/app/reference-web.module.ts:21-52
+// reference/web/src/app/reference-web.module.ts:21-52
 @NgModule({
   imports: [
     BrowserModule,
@@ -427,10 +427,10 @@ example above, lines 31–46). The salient fields:
 | `secureRoutes`                | URL prefixes the OIDC client should attach the Cognito access token to. Usually one entry: your API base URL. |
 
 The login page itself just calls `session.completeLogin(returnUrl)`
-(`apps/reference-web/src/app/core/reference-web-shell.service.ts:32–37`):
+(`reference/web/src/app/core/reference-web-shell.service.ts:32–37`):
 
 ```ts
-// apps/reference-web/src/app/core/reference-web-shell.service.ts:32-37
+// reference/web/src/app/core/reference-web-shell.service.ts:32-37
 async login(email: string, tenantId: string): Promise<void> {
   this.devOidc.beginLogin(email);
   this.tenantContext.setTenant(tenantId, 'manual');
@@ -498,7 +498,7 @@ component writes back through `TenantContextService.setTenant(id,
 When tenants change, you usually also need to mint a new bearer token
 scoped to the new tenant. The reference shell does this with
 `session.switchTenant(tenantId)`
-(`apps/reference-web/src/app/core/reference-web-shell.service.ts:39–42`):
+(`reference/web/src/app/core/reference-web-shell.service.ts:39–42`):
 
 ```ts
 async switchTenant(tenantId: string): Promise<void> {
@@ -591,7 +591,7 @@ your own implementing `StynxUploadExecutor` if you need fetch-based or
 chunked uploads):
 
 ```ts
-// apps/reference-web/src/app/reference-web.module.ts:53-72 (excerpt)
+// reference/web/src/app/reference-web.module.ts:53-72 (excerpt)
 providers: [
   /* ... */
   DocumentService,
@@ -669,7 +669,7 @@ takes `defaultLocale`, `supportedLocales`, and a `loadCatalog`
 callback. The reference-web wiring is:
 
 ```ts
-// apps/reference-web/src/app/reference-web.module.ts:47-51
+// reference/web/src/app/reference-web.module.ts:47-51
 StynxI18nModule.forRoot({
   defaultLocale: 'en-US',
   supportedLocales: ['en-US', 'pt-BR'],
@@ -863,9 +863,9 @@ at one of these files at HEAD `670d165`:
 - `packages-web/angular-trash/src/trash-list.component.ts`
 - `packages-web/angular-i18n/src/index.ts`
 - `packages-web/angular-i18n/src/stynx-i18n.module.ts`
-- `apps/reference-web/src/app/reference-web.module.ts`
-- `apps/reference-web/src/app/pages/login.page.ts`
-- `apps/reference-web/src/app/core/reference-web-shell.service.ts`
+- `reference/web/src/app/reference-web.module.ts`
+- `reference/web/src/app/pages/login.page.ts`
+- `reference/web/src/app/core/reference-web-shell.service.ts`
 
 Anything fenced as `[GAP — sketched from package barrel]` is
 illustrative wiring built from the public surface and must be

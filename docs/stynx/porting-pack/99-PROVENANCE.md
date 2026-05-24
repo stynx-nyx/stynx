@@ -80,12 +80,12 @@ generation. Subagent reads not listed individually.
 
 ### Reference apps
 
-- `apps/reference-api/src/app.module.ts`
-- `apps/reference-api/src/sample/*.controller.ts` (8 files)
-- `apps/reference-api/src/sample/reference-sample.service.ts`
-- `apps/reference-api/migrations/0001_reference.sql`
-- `apps/reference-api/Dockerfile`, `docker-compose.yml`
-- `apps/reference-web/src/main.ts`,
+- `reference/api/src/app.module.ts`
+- `reference/api/src/sample/*.controller.ts` (8 files)
+- `reference/api/src/sample/reference-sample.service.ts`
+- `reference/api/migrations/0001_reference.sql`
+- `reference/api/Dockerfile`, `docker-compose.yml`
+- `reference/web/src/main.ts`,
   `src/app/app.component.ts`, `app.routes.ts`,
   `core/reference-web-shell.service.ts`
 

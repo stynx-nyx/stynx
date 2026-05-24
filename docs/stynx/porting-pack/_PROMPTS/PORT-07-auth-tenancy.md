@@ -17,7 +17,7 @@ with STYNX's.
 - `packages/auth/src/permission-cache.ts`.
 - `packages/sessions/src/` — token issuance & refresh.
 - `packages/tenancy/src/` — TenantContext + interceptors.
-- `apps/reference-api/src/main.ts` and `app.module.ts` for wiring.
+- `reference/api/src/main.ts` and `app.module.ts` for wiring.
 - The Cognito wiring: search for `@aws-sdk/client-cognito-identity-provider`.
 
 ## Sections
@@ -45,7 +45,7 @@ Cite tenancy/src/ + database.ts GUC plumbing.]
 
 - Naming convention: `resource:action:scope` (cite spec §6).
 - Seeding in a migration: cite the seed pattern from
-  apps/reference-api/migrations/.
+  reference/api/migrations/.
 - Attaching to tenant roles: cite the auth schema.
 
 ## Pattern D — Tenant switching

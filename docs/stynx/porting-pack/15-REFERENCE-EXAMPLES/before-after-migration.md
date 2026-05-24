@@ -3,7 +3,7 @@
 > Companion to [`08-MIGRATION-PATTERNS.md`](../08-MIGRATION-PATTERNS.md)
 > and the spec excerpts in [`16-SPEC-EXCERPTS/soft-delete-model.md`](../16-SPEC-EXCERPTS/soft-delete-model.md)
 > and [`16-SPEC-EXCERPTS/audit-model.md`](../16-SPEC-EXCERPTS/audit-model.md).
-> The "After" section mirrors `apps/reference-api/migrations/0001_reference.sql`.
+> The "After" section mirrors `reference/api/migrations/0001_reference.sql`.
 
 This file shows a typical legacy migration — `organization_id` column,
 `deleted` boolean, no RLS, no archive mirror, no audit trigger — and

@@ -17,7 +17,7 @@ consumers using `@stynx-web/sdk` only.
 - `packages-web/angular-auth/src/` — login flow.
 - `packages-web/angular-tenancy/` — note: NOT YET IMPLEMENTED per
   audit FIND-002. Mark accordingly.
-- `apps/reference-web/src/` — composition example.
+- `reference/web/src/` — composition example.
 
 ## Sections
 

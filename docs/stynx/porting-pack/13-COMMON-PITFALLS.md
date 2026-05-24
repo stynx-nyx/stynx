@@ -71,12 +71,12 @@
       request context. Override the codemod with `stynx adopt apply
 --skip-rename resource_record.organization_id` and add by hand:
 
-                             ```sql
-                             ALTER TABLE resource_record
-                               ADD COLUMN tenant_id uuid NOT NULL
-                                 REFERENCES tenancy.tenants(id)
-                                 DEFAULT current_setting('app.tenant_id', true)::uuid;
-                             ```
+                                   ```sql
+                                   ALTER TABLE resource_record
+                                     ADD COLUMN tenant_id uuid NOT NULL
+                                       REFERENCES tenancy.tenants(id)
+                                       DEFAULT current_setting('app.tenant_id', true)::uuid;
+                                   ```
 
 - **Detection:**
 
@@ -243,7 +243,7 @@ updated_by SET NOT NULL`, or — worse — succeeds silently with
 
   ```bash
   rg -n "payload\.org_id|claims?\.org_id|jwt.*org_id" apps/ packages/
-  rg -n "'org_id'" apps/reference-api/src/ \
+  rg -n "'org_id'" reference/api/src/ \
     && echo "FAIL: legacy claim leaked into new code"
   curl -s -H "Authorization: Bearer $LEGACY_TOKEN" \
        https://api.example/things | jq '.code'
@@ -541,7 +541,7 @@ ROW LEVEL SECURITY`. Hand-written mirrors often paste the live
   rg -nU --type sql 'CREATE TABLE archive\.' migrations/
   pnpm --filter @stynx/migration-linter test  # see FIND-004
   psql "$STAGING_URL" -At -f scripts/probe-rls-symmetry.sql
-  pnpm --filter apps/reference-api test \
+  pnpm --filter reference/api test \
     --testPathPattern 'rls-cross-tenant\.spec\.ts'
   ```
 

@@ -13,7 +13,7 @@ export const demoSchema = pgSchema('demo');
 /**
  * demo.demo__bookmark_bookmark — user-saved URL with optional title/notes,
  * tenant-scoped + owner-scoped, soft-deletable. PII registration for `notes`
- * column lives in apps/reference-api/migrations/0001 (incidental_pii,
+ * column lives in reference/api/migrations/0001 (incidental_pii,
  * legitimate_interest, P1Y) per INV-PRIVACY-001.
  */
 export const bookmarks = softDeletable(

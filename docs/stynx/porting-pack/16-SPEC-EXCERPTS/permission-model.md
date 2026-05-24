@@ -134,7 +134,7 @@ mutation.
 ## Permissions seeding
 
 Permissions are seeded by migration. The reference-api migration
-(`apps/reference-api/migrations/0001_reference.sql`) is the
+(`reference/api/migrations/0001_reference.sql`) is the
 canonical example; `[VERIFY exact INSERT shape in PORT-07]`.
 
 ## Read API

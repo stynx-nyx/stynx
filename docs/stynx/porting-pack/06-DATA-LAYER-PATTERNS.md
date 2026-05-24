@@ -77,7 +77,7 @@ class MyService {
 
 ### Drift vs `STYNX-API-DATA.md` (prefer the code)
 
-1. **`hardDelete` confirmation literal.** Spec says `'CONFIRM_HARD_DELETE'`; implementation accepts `'I understand this is irrecoverable'` `(packages/data/src/transaction.ts:833)`. Reference-api uses the implemented literal `(apps/reference-api/src/sample/reference-sample.service.ts:44)`.
+1. **`hardDelete` confirmation literal.** Spec says `'CONFIRM_HARD_DELETE'`; implementation accepts `'I understand this is irrecoverable'` `(packages/data/src/transaction.ts:833)`. Reference-api uses the implemented literal `(reference/api/src/sample/reference-sample.service.ts:44)`.
 2. **`DataModule` vs `StynxDataModule`.** Both exported; prefer `StynxDataModule`.
 3. **Archive Drizzle types are private** — `packages/data/src/internal/archive-schema.ts`, not re-exported. See Anti-pattern 5.
 4. **`withSystemContext` callback receives `SystemExecutionContext`**, not `Transaction`. Call `db.tx(...)` inside `(packages/data/src/database.ts:151)`.
@@ -172,7 +172,7 @@ Notes:
 - The connection options matrix (replica, role, readonly) is in
   `TxOptions`, not in pool construction.
 - The reference-api list method is a verbatim shape:
-  `(apps/reference-api/src/sample/reference-sample.service.ts:88)`.
+  `(reference/api/src/sample/reference-sample.service.ts:88)`.
 
 ---
 
@@ -221,10 +221,10 @@ Things that disappear in the rewrite:
 
 - `@InjectRepository` and the `Repository<T>` abstraction. STYNX's
   Drizzle schema gives you the table object directly (see
-  `apps/reference-api/src/sample/reference-sample.service.ts:25–31`).
+  `reference/api/src/sample/reference-sample.service.ts:25–31`).
 - `deletedAt: IsNull()` and `softDelete` semantics — STYNX moves rows
   to `archive.*`; live tables never have `deleted_at`. See
-  `(apps/reference-api/migrations/0001_reference.sql:88–110)` for the
+  `(reference/api/migrations/0001_reference.sql:88–110)` for the
   helper invocation that replaces TypeORM's `@DeleteDateColumn`.
 - Manual `tenantId` parameter — RLS handles it.
 
@@ -369,7 +369,7 @@ export class RecordsController {
 ```
 
 (Real source:
-`apps/reference-api/src/sample/records.controller.ts:48–124`.)
+`reference/api/src/sample/records.controller.ts:48–124`.)
 
 ### Service
 
@@ -420,7 +420,7 @@ Patterns to copy verbatim:
 
 - `randomUUID()` in application code; let the DB default also fire if
   the column has `DEFAULT gen_random_uuid()` (it does — see
-  `(apps/reference-api/migrations/0001_reference.sql:91)`).
+  `(reference/api/migrations/0001_reference.sql:91)`).
 - `created_by` / `updated_by` populated from `RequestContext.actorId`,
   not from any token claim directly — `RequestContext` already validated
   the token.
@@ -441,7 +441,7 @@ decide what to do at delete-time.
 ### Migration (excerpt)
 
 ```sql
--- (apps/reference-api/migrations/0001_reference.sql:88–110)
+-- (reference/api/migrations/0001_reference.sql:88–110)
 SELECT data.create_soft_deletable_table($$
   CREATE TABLE sample.record (
     id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -506,7 +506,7 @@ The matching registry calls (the linter normally generates these from
 the comment annotations; explicit form for clarity):
 
 ```sql
--- (apps/reference-api/migrations/0001_reference.sql:222–233)
+-- (reference/api/migrations/0001_reference.sql:222–233)
 SELECT data.register_softdelete_fk('sample','record','sample','record_note',
                                    'record_note_record_id_fkey','cascade');
 SELECT data.register_softdelete_fk('sample','record','sample','work_item',
@@ -518,7 +518,7 @@ SELECT data.register_softdelete_fk('auth','users','sample','record',
 ### Service excerpt — softDelete + restore
 
 ```typescript
-// (apps/reference-api/src/sample/reference-sample.service.ts:441–457)
+// (reference/api/src/sample/reference-sample.service.ts:441–457)
 private async softDelete<T extends SampleTable>(
   table: SoftDeletableTable<T>, id: string,
 ) {
@@ -743,7 +743,7 @@ const trash = await this.db.tx(
 ```
 
 The reference-api uses `onlyDeleted` for the `/trash` endpoints
-`(apps/reference-api/src/sample/reference-sample.service.ts:103, 245)`.
+`(reference/api/src/sample/reference-sample.service.ts:103, 245)`.
 
 Behaviour from `query-helpers.ts`:
 
@@ -796,7 +796,7 @@ Cascade limits at decision-time
 - Use `dryRun: true` first when expected fan-out is uncertain.
 
 Reference-api's hard-delete follows the archive-id lookup pattern
-`(apps/reference-api/src/sample/reference-sample.service.ts:459–475)`:
+`(reference/api/src/sample/reference-sample.service.ts:459–475)`:
 
 ```typescript
 // Look up the archive_id for this live id, then hard-delete from archive.
@@ -855,7 +855,7 @@ value). Matches the rewrite table for I5 in
 [`04-INVARIANTS-AND-CONTRACTS.md`](04-INVARIANTS-AND-CONTRACTS.md) §I5.
 
 The reference-api keeps `eq(table.tenantId, this.requireTenantId())` in
-_some_ places `(apps/reference-api/src/sample/reference-sample.service.ts:92)`
+_some_ places `(reference/api/src/sample/reference-sample.service.ts:92)`
 as defense in depth — that's tolerated. The anti-pattern is when the
 predicate is the **only** isolation, with no RLS behind it.
 
@@ -890,7 +890,7 @@ $$);
 **Why:** STYNX's archive-mirror model puts deletion metadata on
 `archive.{schema}_{table}`, never on the live table (I8). The
 migration linter rejects `deleted_at` columns on live tables. See
-`(apps/reference-api/migrations/0001_reference.sql:88–110)` for the
+`(reference/api/migrations/0001_reference.sql:88–110)` for the
 canonical helper invocation.
 
 ### 3. `ON DELETE CASCADE` at DB level
@@ -916,8 +916,8 @@ limits.
 
 `ON DELETE RESTRICT` is the right DB-level posture for every FK to a
 soft-deletable parent — it forces the application path. See
-`(apps/reference-api/migrations/0001_reference.sql:118)` and
-`(apps/reference-api/migrations/0001_reference.sql:143)` for both
+`(reference/api/migrations/0001_reference.sql:118)` and
+`(reference/api/migrations/0001_reference.sql:143)` for both
 `cascade` and `block` examples that use `RESTRICT` at the DB level.
 
 ### 4. Queries outside `tx()`
@@ -999,4 +999,4 @@ foreign code; the absence of that rule is `[GAP — verify ESLint
 - Spec excerpts: [`16-SPEC-EXCERPTS/data-api-contract.md`](16-SPEC-EXCERPTS/data-api-contract.md), [`16-SPEC-EXCERPTS/soft-delete-model.md`](16-SPEC-EXCERPTS/soft-delete-model.md).
 - Open gaps: `_DISCOVERY.md` §11 and [`18-GAPS-AND-OPEN-QUESTIONS.md`](18-GAPS-AND-OPEN-QUESTIONS.md).
 
-When in doubt, `apps/reference-api/src/sample/reference-sample.service.ts` is the ground-truth example.
+When in doubt, `reference/api/src/sample/reference-sample.service.ts` is the ground-truth example.

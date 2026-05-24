@@ -4,8 +4,8 @@
 > app must stand up to host a STYNX-based service. It is anchored to
 > the CDK code at `infra/cdk/lib/` (HEAD on `clean/doc-pass`,
 > 2026-04-27), the local-dev compose file at
-> `apps/reference-api/docker-compose.yml`, and the env-var inventory
-> derived from `apps/reference-api/src/app.module.ts` plus
+> `reference/api/docker-compose.yml`, and the env-var inventory
+> derived from `reference/api/src/app.module.ts` plus
 > `packages/*/src/**/*.ts`.
 >
 > **Source baseline.** Every CDK citation references the file paths
@@ -94,17 +94,17 @@ audit FIND-005 and is now present at
 
 ## 2. Local-dev services (docker-compose)
 
-Source: `apps/reference-api/docker-compose.yml`. Five services run
+Source: `reference/api/docker-compose.yml`. Five services run
 locally; the table below captures each, mapped to the production
 counterpart.
 
-| Compose service | Image                                      | Port(s) | Production analogue                    | Notes                                                                                                                                                                                         |
-| --------------- | ------------------------------------------ | ------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `postgres`      | `postgres:16-alpine`                       | 5432    | RDS PostgreSQL 16.3 (DataStack)        | DB/user/password all `postgres`; healthcheck via `pg_isready`. The reference-api boots in single-role mode against this — owner/app/reader URLs all point here.                               |
-| `redis`         | `redis:7-alpine`                           | 6379    | ElastiCache Redis 7.1 (DataStack)      | No password, no TLS. Production uses `rediss://` (TLS) and a primary endpoint from the replication group.                                                                                     |
-| `localstack`    | `localstack/localstack:3.8.1`              | 4566    | S3 + KMS in production                 | `SERVICES=s3` only — KMS, Secrets Manager, Cognito-IDP are not emulated by this LocalStack instance. Init script `localstack/init-s3.sh` creates the dev bucket `stynx-docs-local-us-east-1`. |
-| `cognito-local` | `jagregory/cognito-local:latest`           | 9229    | Cognito User Pool (IdentityStack)      | Pre-seeded pool `local_testing_pool` and client `local_testing_client`. Issuer URL `http://cognito-local:9229`.                                                                               |
-| `reference-api` | built from `apps/reference-api/Dockerfile` | 3000    | ECS Fargate app service (ComputeStack) | Depends on all four backing services (`condition: service_healthy`).                                                                                                                          |
+| Compose service | Image                                 | Port(s) | Production analogue                    | Notes                                                                                                                                                                                         |
+| --------------- | ------------------------------------- | ------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `postgres`      | `postgres:16-alpine`                  | 5432    | RDS PostgreSQL 16.3 (DataStack)        | DB/user/password all `postgres`; healthcheck via `pg_isready`. The reference-api boots in single-role mode against this — owner/app/reader URLs all point here.                               |
+| `redis`         | `redis:7-alpine`                      | 6379    | ElastiCache Redis 7.1 (DataStack)      | No password, no TLS. Production uses `rediss://` (TLS) and a primary endpoint from the replication group.                                                                                     |
+| `localstack`    | `localstack/localstack:3.8.1`         | 4566    | S3 + KMS in production                 | `SERVICES=s3` only — KMS, Secrets Manager, Cognito-IDP are not emulated by this LocalStack instance. Init script `localstack/init-s3.sh` creates the dev bucket `stynx-docs-local-us-east-1`. |
+| `cognito-local` | `jagregory/cognito-local:latest`      | 9229    | Cognito User Pool (IdentityStack)      | Pre-seeded pool `local_testing_pool` and client `local_testing_client`. Issuer URL `http://cognito-local:9229`.                                                                               |
+| `reference-api` | built from `reference/api/Dockerfile` | 3000    | ECS Fargate app service (ComputeStack) | Depends on all four backing services (`condition: service_healthy`).                                                                                                                          |
 
 **Services expected by production but absent locally:**
 
@@ -119,13 +119,13 @@ counterpart.
 - **Secrets Manager.** Not emulated. The reference-api takes DB
   passwords inline via the connection-string env vars and synthesizes
   a session-signing keypair at boot if `STYNX_SESSION_KEY_SET_JSON` is
-  unset (`apps/reference-api/src/app.module.ts:29-49`).
+  unset (`reference/api/src/app.module.ts:29-49`).
 - **WAF / ALB / CloudFront.** No edge or load-balancer emulation —
   the app exposes 3000 directly.
 - **Observability stack.** No AMP, AMG, SNS, or CloudWatch emulation.
   Logs go to stdout via `@stynx/logging` (Pino).
 
-**reference-web** has its own Dockerfile (`apps/reference-web/Dockerfile`)
+**reference-web** has its own Dockerfile (`reference/web/Dockerfile`)
 serving the SPA on port 3100 (`PORT=3100`) via
 `scripts/serve-static.mjs`. It is **not** part of the compose file —
 it is a separately built image whose origin in production is fronted
@@ -136,10 +136,10 @@ not modelled in the current CDK).
 
 ## 3. Environment variables every consuming app needs
 
-There is **no `.env.example`** in `apps/reference-api/` (audit
+There is **no `.env.example`** in `reference/api/` (audit
 FIND: `_DISCOVERY.md` §11 item 3). The table below was built by
 grepping `process.env.X` and the local `env('X', fallback)` helper
-across `apps/reference-api/src/` and `packages/*/src/`. Every name is
+across `reference/api/src/` and `packages/*/src/`. Every name is
 verified — none invented.
 
 | Variable                                                                                                             | Required                                 | Default (if any)                                         | Source                                                                                                                                                                                                                          |
@@ -148,7 +148,7 @@ verified — none invented.
 | `AWS_REGION`                                                                                                         | yes (prod)                               | n/a                                                      | Injected by `compute-stack.ts:85`; consumed by `packages/auth/src/cognito-admin.adapter.ts:452`.                                                                                                                                |
 | `AWS_DEFAULT_REGION`                                                                                                 | optional                                 | n/a                                                      | Fallback to `AWS_REGION` in `cognito-admin.adapter.ts:453`.                                                                                                                                                                     |
 | `AWS_PROFILE`                                                                                                        | dev only                                 | n/a                                                      | `cognito-admin.adapter.ts:424,480,482` and `packages/auth/src/cognito-admin.adapter.ts:429`.                                                                                                                                    |
-| `PORT`                                                                                                               | optional                                 | `3000`                                                   | `apps/reference-api/src/main.ts:30` (`Number(process.env.PORT ?? '3000')`).                                                                                                                                                     |
+| `PORT`                                                                                                               | optional                                 | `3000`                                                   | `reference/api/src/main.ts:30` (`Number(process.env.PORT ?? '3000')`).                                                                                                                                                          |
 | `LOG_LEVEL`                                                                                                          | optional                                 | `info`                                                   | `packages/logging/src/pino.factory.ts:30`.                                                                                                                                                                                      |
 | `STYNX_ENV`                                                                                                          | optional                                 | n/a                                                      | Injected by `compute-stack.ts:86`. (Read indirectly by tooling; not consumed by core packages today.)                                                                                                                           |
 | `STYNX_ENVIRONMENT`                                                                                                  | optional                                 | `local`                                                  | `app.module.ts:215` — passed to `StynxStorageModule.forRoot({ environment })`.                                                                                                                                                  |
@@ -166,7 +166,7 @@ verified — none invented.
 | `STYNX_STORAGE_FORCE_PATH_STYLE`                                                                                     | dev only                                 | n/a                                                      | `app.module.ts:230` (`'true'` enables path-style for LocalStack).                                                                                                                                                               |
 | `STYNX_KMS_ALIAS`                                                                                                    | yes (prod)                               | `stynx-local`                                            | `app.module.ts:217`.                                                                                                                                                                                                            |
 | `STYNX_TENANCY_PLATFORM_ADMIN`                                                                                       | dev/test only                            | n/a                                                      | `packages/tenancy/src/tenancy-platform-admin.guard.ts:6`; also referenced as the platform-admin env flag in `packages/tenancy/src/types.ts:97`. Bypasses platform-admin guard when `'true'`. **Must NOT be set in production.** |
-| `STYNX_REFERENCE_WEB_ORIGINS`                                                                                        | reference-api only                       | `http://127.0.0.1:3100,http://localhost:3100`            | `apps/reference-api/src/main.ts:7` — CORS allow-list for the SPA.                                                                                                                                                               |
+| `STYNX_REFERENCE_WEB_ORIGINS`                                                                                        | reference-api only                       | `http://127.0.0.1:3100,http://localhost:3100`            | `reference/api/src/main.ts:7` — CORS allow-list for the SPA.                                                                                                                                                                    |
 | `STYNX_IDENTITY_ADMIN_CREDENTIALS_STRATEGY`                                                                          | optional                                 | derived from `AWS_PROFILE` presence                      | `packages/auth/src/cognito-admin.adapter.ts:479`. Values: `default-chain` \| `profile`.                                                                                                                                         |
 | `STYNX_IDENTITY_ADMIN_AWS_PROFILE`                                                                                   | optional                                 | falls back to `AWS_PROFILE`                              | `cognito-admin.adapter.ts:482`.                                                                                                                                                                                                 |
 | `COGNITO_REGION`                                                                                                     | optional                                 | falls back to `AWS_REGION` / `AWS_DEFAULT_REGION`        | `cognito-admin.adapter.ts:451`.                                                                                                                                                                                                 |
@@ -179,7 +179,7 @@ verified — none invented.
 | `KMS_DOCS_KEY_ID`                                                                                                    | yes (prod)                               | n/a                                                      | Injected by `compute-stack.ts:92`.                                                                                                                                                                                              |
 | `DB_APP_PASSWORD`                                                                                                    | yes (prod)                               | n/a                                                      | Injected via `EcsSecret.fromSecretsManager` (`compute-stack.ts:95`). The app must build its connection string from it (currently expected to live inside `STYNX_APP_DATABASE_URL`, so wiring code is needed).                   |
 | `DB_OWNER_PASSWORD`                                                                                                  | yes (prod)                               | n/a                                                      | Injected via `EcsSecret.fromSecretsManager` (`compute-stack.ts:96`). Same caveat as above.                                                                                                                                      |
-| `STYNX_SAMPLE_RECORD_CREATE_LIMIT`                                                                                   | sample app only                          | n/a                                                      | `apps/reference-api/docker-compose.yml:79`.                                                                                                                                                                                     |
+| `STYNX_SAMPLE_RECORD_CREATE_LIMIT`                                                                                   | sample app only                          | n/a                                                      | `reference/api/docker-compose.yml:79`.                                                                                                                                                                                          |
 | `STYNX_SAMPLE_RECORD_CREATE_WINDOW_SECONDS`                                                                          | sample app only                          | n/a                                                      | compose:80.                                                                                                                                                                                                                     |
 | `STYNX_SAMPLE_RECORD_READ_LIMIT`                                                                                     | sample app only                          | n/a                                                      | compose:81.                                                                                                                                                                                                                     |
 | `STYNX_SAMPLE_RECORD_READ_WINDOW_SECONDS`                                                                            | sample app only                          | n/a                                                      | compose:82.                                                                                                                                                                                                                     |
@@ -191,8 +191,8 @@ verified — none invented.
 | `STYNX_SAMPLE_DOCUMENT_WRITE_WINDOW_SECONDS`                                                                         | sample app only                          | n/a                                                      | compose:88.                                                                                                                                                                                                                     |
 | `AWS_ACCESS_KEY_ID`                                                                                                  | dev only                                 | `test` (compose)                                         | compose:89; LocalStack dummy creds. **Never set in production** — the task role provides credentials.                                                                                                                           |
 | `AWS_SECRET_ACCESS_KEY`                                                                                              | dev only                                 | `test` (compose)                                         | compose:90. Same caveat.                                                                                                                                                                                                        |
-| `HUSKY`                                                                                                              | build only                               | `0` (Dockerfile)                                         | `apps/reference-api/Dockerfile:8` — disables hook installation in CI/image builds.                                                                                                                                              |
-| `CI`                                                                                                                 | build only                               | `true` (Dockerfile)                                      | `apps/reference-api/Dockerfile:7`.                                                                                                                                                                                              |
+| `HUSKY`                                                                                                              | build only                               | `0` (Dockerfile)                                         | `reference/api/Dockerfile:8` — disables hook installation in CI/image builds.                                                                                                                                                   |
+| `CI`                                                                                                                 | build only                               | `true` (Dockerfile)                                      | `reference/api/Dockerfile:7`.                                                                                                                                                                                                   |
 | `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD`                                                                | dev only                                 | compose values                                           | compose:5-7 — Postgres image bootstrap.                                                                                                                                                                                         |
 | `POSTGRESQL_HOST` / `POSTGRESQL_PORT_NUMBER` / `POSTGRESQL_USERNAME` / `POSTGRESQL_PASSWORD` / `PGBOUNCER_POOL_MODE` | infra-only (PgBouncer container)         | derived from RDS endpoint + `stynx_owner` secret         | `infra/cdk/lib/data-stack.ts:90-98` — consumed by the Bitnami PgBouncer image, not by the app.                                                                                                                                  |
 
@@ -268,7 +268,7 @@ stack with a thin construct that does).
     & WORM are out-of-scope for this skeleton — see §6.
 - **STYNX session signing keypair (RS256).**
   - Loaded from `STYNX_SESSION_KEY_SET_JSON`
-    (`apps/reference-api/src/app.module.ts:43-49`). Spec calls for
+    (`reference/api/src/app.module.ts:43-49`). Spec calls for
     quarterly rotation (SPEC §18.2). Today rotation is **manual** —
     consumers must provision a Secrets Manager entry holding the
     JSON-serialized keyset and a rotator (Lambda or scheduled job)
@@ -354,7 +354,7 @@ Explicitly **not** modelled in `infra/cdk/lib/`:
   controls, expected to live in a landing zone (skeleton §10).
 - **Route 53 hosted-zone creation.** Imported in EdgeStack
   (`edge-stack.ts:24-27`) — provisioned upstream.
-- **Static-asset origin.** `apps/reference-web` builds a separate
+- **Static-asset origin.** `reference/web` builds a separate
   image but no CDN origin / S3-static-hosting is in CDK; consumers
   using the SPA must provision either an additional CloudFront
   behavior or a separate static origin.

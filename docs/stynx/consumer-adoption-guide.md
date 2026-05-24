@@ -97,7 +97,7 @@ Use `StynxAuditModule.forRoot({ sink, metadataRedactionPolicy })` with `PatternA
 
 ## Frontend Adoption Baseline
 
-Use `apps/reference-frontend` as the package-consumer baseline for frontend concerns:
+Use `reference/web` as the package-consumer baseline for frontend concerns:
 
 1. `@stynx-web/sdk` for token/principal/http contracts.
 2. `@stynx-web/sdk` for:

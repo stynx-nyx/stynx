@@ -17,9 +17,9 @@ existing ORM call sites with `@stynx/data`.
 - `packages/data/src/database.ts`, `transaction.ts`, `query-helpers.ts`.
 - `packages/data/src/internal/archive-schema.ts` (note: internal —
   do not let consumers import directly).
-- `apps/reference-api/src/records.service.ts` (or whichever the
+- `reference/api/src/records.service.ts` (or whichever the
   reference service is) — canonical service shape.
-- `apps/reference-api/migrations/0001_*.sql` for the helper-driven
+- `reference/api/migrations/0001_*.sql` for the helper-driven
   table creation pattern.
 
 ## Sections to write

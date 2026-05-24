@@ -88,7 +88,7 @@ The pack's auth pattern doc references `packages/auth/src/decorators.ts`.
 The actual file may be split (e.g., per-decorator files). Re-verify
 imports by reading `packages/auth/src/index.ts` directly.
 
-### G-008 — `apps/reference-api/.env.example` does not exist
+### G-008 — `reference/api/.env.example` does not exist
 
 **Severity:** MINOR.
 
@@ -96,7 +96,7 @@ The env-var inventory in
 [`10-INFRASTRUCTURE-REQUIREMENTS.md`](10-INFRASTRUCTURE-REQUIREMENTS.md)
 was reverse-engineered from `process.env.X` references. A canonical
 `.env.example` would be authoritative; verify against
-`apps/reference-api/src/app.module.ts` and the CDK
+`reference/api/src/app.module.ts` and the CDK
 `compute-stack.ts`'s container environment block before deploying.
 
 ## Things in code but not in the spec
@@ -106,7 +106,7 @@ was reverse-engineered from `process.env.X` references. A canonical
 **Severity:** MAJOR for porting clarity.
 
 Spec §3 lists 16 backend packages. The repo ships 17 — `@stynx/backend`
-is the actual composition module imported by `apps/reference-api/src/app.module.ts:11`
+is the actual composition module imported by `reference/api/src/app.module.ts:11`
 (`StynxPlatformPipelineModule`, `AuditInterceptor`, `STYNX_AUDIT_SINK`,
 `@Audit`, `@Idempotent`, `@RateLimit`, etc.). Treat as STABLE;
 import its barrel; do not try to wire each underlying module

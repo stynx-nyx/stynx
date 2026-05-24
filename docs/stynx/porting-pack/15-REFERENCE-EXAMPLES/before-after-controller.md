@@ -4,8 +4,8 @@
 > [`07-AUTH-AND-TENANCY-PATTERNS.md`](../07-AUTH-AND-TENANCY-PATTERNS.md),
 > and [`16-SPEC-EXCERPTS/permission-model.md`](../16-SPEC-EXCERPTS/permission-model.md).
 > The "After" section mirrors the guard/decorator shape in
-> `apps/reference-api/src/sample/records.controller.ts` and
-> `apps/reference-api/src/app.module.ts`.
+> `reference/api/src/sample/records.controller.ts` and
+> `reference/api/src/app.module.ts`.
 
 This example ports a NestJS controller that verifies JWTs in ad-hoc
 middleware and passes `organizationId` through every method. The STYNX
@@ -247,7 +247,7 @@ export class BillingModule {}
 
 `[GAP — the inline fallback connection strings are documentation-only.
 Production apps should inject these values from their configuration module,
-matching the shape used by `apps/reference-api/src/app.module.ts`.]`
+matching the shape used by `reference/api/src/app.module.ts`.]`
 
 ---
 

@@ -10,7 +10,7 @@ should reach for it. Surfaces are pulled from each package's
 > composition module the reference-api imports for
 > `StynxPlatformPipelineModule`, `AuditInterceptor`, and
 > `STYNX_AUDIT_SINK`
-> (`apps/reference-api/src/app.module.ts:11`). Treat it as STABLE.
+> (`reference/api/src/app.module.ts:11`). Treat it as STABLE.
 
 ---
 
@@ -224,7 +224,7 @@ should reach for it. Surfaces are pulled from each package's
   - SLA monitor types and module.
 - **Peer deps:** every other `@stynx/*` it composes.
 - **Import when:** Always — replaces hand-wiring of the pipeline.
-  See `apps/reference-api/src/app.module.ts:13`.
+  See `reference/api/src/app.module.ts:13`.
 - **Citation:** `packages/backend/src/index.ts`.
 
 ### `@stynx/testing` — v0.1.0

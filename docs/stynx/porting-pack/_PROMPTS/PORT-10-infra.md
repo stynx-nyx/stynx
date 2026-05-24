@@ -13,8 +13,8 @@ ported app needs. Not how to deploy — what to plan for.
 
 - `specs/STYNX-CDK-SKELETON.md`.
 - `infra/cdk/lib/*.ts`.
-- `apps/reference-api/.env.example`.
-- `apps/reference-api/docker-compose.yml`.
+- `reference/api/.env.example`.
+- `reference/api/docker-compose.yml`.
 
 ## Sections
 
@@ -44,7 +44,7 @@ ported app needs. Not how to deploy — what to plan for.
 
 ## Environment variables (consuming app)
 
-Pulled verbatim from `apps/reference-api/.env.example`, with each
+Pulled verbatim from `reference/api/.env.example`, with each
 variable annotated:
 
 | Variable | Required | Source | Notes |
@@ -77,7 +77,7 @@ variable annotated:
 
 ## Rules
 
-- Verify every env var name against `apps/reference-api/.env.example`;
+- Verify every env var name against `reference/api/.env.example`;
   do not invent.
 - For EdgeStack, mark explicitly that the current repo is missing
   it (audit FIND-005). The consuming app may need to provision an

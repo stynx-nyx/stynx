@@ -15,7 +15,7 @@
 > - `specs/STYNX-REFERENCE-MIGRATION.sql` (468 lines, full read)
 > - `packages/data/migrations/platform/0001_roles.sql` … `0012_*.sql`
 >   (full read of `0010_data_helpers.sql`; spot-read of others)
-> - `apps/reference-api/migrations/0001_reference.sql` (485 lines, full
+> - `reference/api/migrations/0001_reference.sql` (485 lines, full
 >   read)
 > - `tools/migration-linter/src/lint.ts` (636 lines, full read)
 > - `tools/migration-linter/src/types.ts`
@@ -61,11 +61,11 @@ prefix" below.
 ### 2. Consumer migrations layer on top
 
 A consumer ships its own migration directory (the reference app uses
-`apps/reference-api/migrations/`) holding files like
+`reference/api/migrations/`) holding files like
 `0001_reference.sql`. Consumer migrations:
 
 - **assume** all platform schemas, roles, helpers, and tables already
-  exist (see `apps/reference-api/migrations/0001_reference.sql:36-59`
+  exist (see `reference/api/migrations/0001_reference.sql:36-59`
   for the canonical preamble);
 - **never** redefine `data.*` / `audit.*` helpers;
 - **must** themselves be linted and emit the `audit.enable_for(...)` /
@@ -166,7 +166,7 @@ The canonical authoring surface is
 - default archive indexes `(id)`, `(tenant_id)`, `(deleted_at DESC)`,
 - `audit.enable_for(live)` and `audit.enable_for(archive)`.
 
-Cited from `apps/reference-api/migrations/0001_reference.sql:88-110`
+Cited from `reference/api/migrations/0001_reference.sql:88-110`
 (the `sample.record` aggregate root):
 
 ```sql
@@ -292,7 +292,7 @@ engine reads from that registry.
 
 ### `cascade` — children archived atomically with parent
 
-From `apps/reference-api/migrations/0001_reference.sql:113-135`:
+From `reference/api/migrations/0001_reference.sql:113-135`:
 
 ```sql
 -- 2.2 Record note — cascade child of record
@@ -323,7 +323,7 @@ limits (defaults from `core.config`) are `maxCascadeDepth = 4`,
 
 ### `block` — parent cannot be archived while children are alive
 
-From `apps/reference-api/migrations/0001_reference.sql:138-168`:
+From `reference/api/migrations/0001_reference.sql:138-168`:
 
 ```sql
 SELECT data.create_soft_deletable_table($$
@@ -381,7 +381,7 @@ SELECT data.register_softdelete_fk('auth','users','sample','work_item',
                                    'work_item_created_by_user_id_fkey','hide');
 ```
 
-(Verbatim from `apps/reference-api/migrations/0001_reference.sql:222-233`.)
+(Verbatim from `reference/api/migrations/0001_reference.sql:222-233`.)
 
 ---
 
@@ -542,7 +542,7 @@ ON CONFLICT (table_schema, table_name, column_name) DO UPDATE
       notes    = EXCLUDED.notes;
 ```
 
-(Adapted from `apps/reference-api/migrations/0001_reference.sql:356-378`.)
+(Adapted from `reference/api/migrations/0001_reference.sql:356-378`.)
 
 ### Strategy enum
 
@@ -569,7 +569,7 @@ The reference migration uses three categories:
 | `subject_link`   | Column is a FK/link to the user table; erasure handled via the `auth.users` pipeline rather than per-column. |
 
 Worked example — entries for `sample.record` and friends, verbatim
-from `apps/reference-api/migrations/0001_reference.sql:356-378`:
+from `reference/api/migrations/0001_reference.sql:356-378`:
 
 ```sql
 INSERT INTO core.pii_map (table_schema, table_name, column_name, category, strategy, notes)
@@ -615,7 +615,7 @@ key. Permissions live in `auth.perms` and are mapped to roles via
 
 ### Implemented form (reference-api as shipped)
 
-From `apps/reference-api/migrations/0001_reference.sql:272-310`:
+From `reference/api/migrations/0001_reference.sql:272-310`:
 
 ```sql
 INSERT INTO auth.perms (key, description) VALUES
@@ -647,7 +647,7 @@ permission INSERT.]`
 ### Role mapping
 
 The reference app maps perms onto the four default tenant roles at
-`apps/reference-api/migrations/0001_reference.sql:316-347`. The
+`reference/api/migrations/0001_reference.sql:316-347`. The
 shape:
 
 ```sql
@@ -683,7 +683,7 @@ test where the operator has flipped the flag.
 ### Verified GUC name
 
 The reference migration reads the GUC `stynx.seed_fixtures` at
-`apps/reference-api/migrations/0001_reference.sql:387-396`:
+`reference/api/migrations/0001_reference.sql:387-396`:
 
 ```sql
 DO $$
@@ -724,7 +724,7 @@ ALTER DATABASE my_dev_db SET stynx.seed_fixtures = on;
 ```
 
 Or invoke the migration with the flag inline (per the closing
-comment at `apps/reference-api/migrations/0001_reference.sql:478-479`):
+comment at `reference/api/migrations/0001_reference.sql:478-479`):
 
 ```bash
 ALTER DATABASE <db> SET stynx.seed_fixtures = on;   -- dev only
@@ -733,7 +733,7 @@ ALTER DATABASE <db> SET stynx.seed_fixtures = on;   -- dev only
 
 For the full body of a guarded seed (tenant + user + membership +
 role-assignment INSERTs inside the `DO` block), see
-`apps/reference-api/migrations/0001_reference.sql:387-416` verbatim.
+`reference/api/migrations/0001_reference.sql:387-416` verbatim.
 
 ---
 
@@ -831,7 +831,7 @@ Practical implications for porting agents:
   # or, against arbitrary SQL trees:
   pnpm --filter @stynx/migration-linter exec migration-linter \
     packages/data/migrations/platform \
-    apps/reference-api/migrations
+    reference/api/migrations
   ```
   `[GAP — exact test target name not re-verified in this pass; check
 `tools/migration-linter/package.json` scripts.]`
@@ -993,7 +993,7 @@ side-effects — feeds an UPDATE migration the operator authors.
 - Invariants I1, I5, I6, I8 (the migration-relevant ones):
   `docs/stynx/porting-pack/04-INVARIANTS-AND-CONTRACTS.md`.
 - Reference migration as the canonical worked example:
-  `apps/reference-api/migrations/0001_reference.sql`.
+  `reference/api/migrations/0001_reference.sql`.
 - Helper source of truth:
   `packages/data/migrations/platform/0010_data_helpers.sql`.
 - Linter source of truth: `tools/migration-linter/src/lint.ts`,

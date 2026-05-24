@@ -14,7 +14,7 @@ generate dozens of these against a foreign schema.
 - `specs/STYNX-REFERENCE-MIGRATION.sql` — canonical example.
 - `packages/data/migrations/` — platform migrations (the consumer's
   migrations layer on top of these; document the order).
-- `apps/reference-api/migrations/0001_*.sql` — consumer-style example.
+- `reference/api/migrations/0001_*.sql` — consumer-style example.
 - `tools/migration-linter/src/` — enumerate every lint rule.
 
 ## Sections

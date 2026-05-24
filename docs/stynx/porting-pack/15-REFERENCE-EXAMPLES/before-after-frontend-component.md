@@ -4,8 +4,8 @@
 > [`07-AUTH-AND-TENANCY-PATTERNS.md`](../07-AUTH-AND-TENANCY-PATTERNS.md),
 > and [`16-SPEC-EXCERPTS/tenancy-model.md`](../16-SPEC-EXCERPTS/tenancy-model.md).
 > The "After" section mirrors the standalone Angular bootstrap in
-> `apps/reference-web/src/main.ts` and the shell pattern in
-> `apps/reference-web/src/app/app.component.ts`.
+> `reference/web/src/main.ts` and the shell pattern in
+> `reference/web/src/app/app.component.ts`.
 
 This example ports an Angular page that manually appends bearer and tenant
 headers. The STYNX version delegates auth replay, request IDs, tenant headers,
@@ -292,7 +292,7 @@ void bootstrapApplication(InvoicesPage, {
 
 `[GAP — the example uses one SDK instance inside the component for compactness.
 In production Angular apps, provide a singleton API service as in
-`apps/reference-web/src/app/core/reference-web-api.service.ts` so test fakes and
+`reference/web/src/app/core/reference-web-api.service.ts` so test fakes and
 route resolvers can share the same client.]`
 
 ---

@@ -57,12 +57,12 @@ PermissionGuard → checks @Permission(...) metadata
 `PermissionGuard` is at `packages/auth/src/permission.guard.ts:11–38`.
 The reference app wires them per-controller via
 `@UseGuards(StynxAuthGuard, PermissionGuard)`
-(`apps/reference-api/src/sample/records.controller.ts:49`).
+(`reference/api/src/sample/records.controller.ts:49`).
 
 ### A.1 What `@stynx/auth` actually is
 
 - A NestJS module: `StynxAuthModule.forRoot({...})`
-  (`apps/reference-api/src/app.module.ts:180–195`).
+  (`reference/api/src/app.module.ts:180–195`).
 - Two guards that ship together:
   `StynxAuthGuard` (verify bearer + hydrate `request.principal`) and
   `PermissionGuard` (check `@Permission(key)` metadata).
@@ -104,7 +104,7 @@ Minimum-effort migration assuming a typical Express + Passport app:
    (set in `packages/auth/src/stynx-auth.guard.ts:65–71`).
 5. **Wire** `StynxAuthModule.forRoot({ stynx: {issuer}, cognito:
 {issuer, jwksUri} })` exactly as
-   `apps/reference-api/src/app.module.ts:180–195`.
+   `reference/api/src/app.module.ts:180–195`.
 
 If the foreign app's `req.user.permissions` was a flat string array,
 the shape is already compatible — `permissions` in
@@ -127,7 +127,7 @@ the shape is already compatible — `permissions` in
 4. **Delete** the bespoke secret-loading code. STYNX uses an asymmetric
    keypair (RSA), JWKS-published. Key set is configured via
    `STYNX_SESSION_KEY_SET_JSON`
-   (`apps/reference-api/src/app.module.ts:43–49`).
+   (`reference/api/src/app.module.ts:43–49`).
 5. **Note:** STYNX bearer JWT lifetime is 10 min, refresh 24h sliding
    (`tenancy-model.md` §5.2). If the foreign app used long-lived JWTs,
    the new contract requires a refresh round-trip — clients must call
@@ -260,7 +260,7 @@ because the GUC is set on every transaction and RLS reads the GUC**.
 
 - `StynxTenancyModule` — NestJS module
   (`packages/tenancy/src/tenancy.module.ts`, see also
-  `apps/reference-api/src/app.module.ts:205`).
+  `reference/api/src/app.module.ts:205`).
 - `TenantContextInterceptor` — runs _after_ `StynxAuthGuard`, resolves
   the tenant per `tenancy-model.md` §4.2 order
   (header → claim → subdomain), validates membership, then mutates
@@ -316,7 +316,7 @@ Adopt exactly the four steps from `tenancy-model.md` lines 166–173:
    signature; for hand-rolled tables, the snippet above is the entire
    contract.
 4. **Wire** `StynxTenancyModule.forRoot({})` into the app module
-   (`apps/reference-api/src/app.module.ts:205`). Nothing else: the
+   (`reference/api/src/app.module.ts:205`). Nothing else: the
    interceptor is registered globally by the module, and it runs
    automatically on every request.
 
@@ -400,7 +400,7 @@ The tenant role insert is **platform bootstrap** — you do not seed
 ### C.2 Seeding domain permissions in a migration
 
 The reference-api migration is the canonical example:
-`apps/reference-api/migrations/0001_reference.sql:266–347`.
+`reference/api/migrations/0001_reference.sql:266–347`.
 
 Step 1 — declare every key your app needs (lines 272–310):
 
@@ -482,7 +482,7 @@ creation (the cache miss path at
 The spec's example (`permission-model.md:10–20`) uses three segments:
 `document:read:*`. The reference-api migration uses **two segments**:
 `sample:record:read`, `sample:record-note:write`, etc.
-(`apps/reference-api/migrations/0001_reference.sql:272–309`).
+(`reference/api/migrations/0001_reference.sql:272–309`).
 
 Both are accepted by the runtime — the lookup is a string-equality
 hash-set membership check. **Pick one convention per app.** Mixing
@@ -496,7 +496,7 @@ Spawn task: file an ADR or update the spec.]`
 ### C.5 Composing C with the rest of the pipeline
 
 Every controller method shown in
-`apps/reference-api/src/sample/records.controller.ts:53–124` uses the
+`reference/api/src/sample/records.controller.ts:53–124` uses the
 full pipeline:
 
 ```ts
@@ -752,7 +752,7 @@ only.]`
 
 Every read-style route in the records controller is `@ReadOnly()`:
 
-`apps/reference-api/src/sample/records.controller.ts:53–78`:
+`reference/api/src/sample/records.controller.ts:53–78`:
 
 ```ts
 @Get()
@@ -859,7 +859,7 @@ Used in two places visible in the reference app:
    );
    ```
 2. The reference audit sink factory
-   (`apps/reference-api/src/app.module.ts:267`):
+   (`reference/api/src/app.module.ts:267`):
    ```ts
    query: async (sql, params) =>
      database.withSystemContext('reference-api audit sink', async () =>
@@ -1000,19 +1000,19 @@ sequenceDiagram
 
 **STYNX DB provisions** (this side):
 
-| Table                     | Purpose                                                                               | Migration                                                         |
-| ------------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| `tenancy.tenants`         | Tenant identity & lifecycle (`provisioning → active → suspended → archived → purged`) | `packages/data/migrations/platform/0004_tenancy.sql`              |
-| `auth.users`              | Mirror of Cognito users (one row per `cognito_sub`)                                   | `packages/data/migrations/platform/0005_auth.sql`                 |
-| `auth.memberships`        | (user_id, tenant_id, is_active, effective_hash)                                       | same                                                              |
-| `auth.roles`              | Per-tenant roles (`owner`, `admin`, `member`, `viewer`)                               | same                                                              |
-| `auth.perms`              | Permission key registry (one row per `@Permission(key)`)                              | same + `apps/reference-api/migrations/0001_reference.sql:272–310` |
-| `auth.role_perms`         | Many-to-many: role × perm                                                             | same; see `0001_reference.sql:316–347`                            |
-| `auth.group_perms`        | Many-to-many: group × perm (group hierarchy depth 8)                                  | platform                                                          |
-| `auth.user_roles`         | Direct role grants per (user, tenant)                                                 | platform                                                          |
-| `auth.user_groups`        | Group memberships per user                                                            | platform                                                          |
-| `auth.sessions` (durable) | Session mirror (write-through from Redis hot store)                                   | platform; see `packages/sessions/src/session-mirror.writer.ts`    |
-| `audit.system_op`         | Cross-tenant `withSystemContext` reasons                                              | `packages/data/migrations/platform/0008_audit.sql`                |
+| Table                     | Purpose                                                                               | Migration                                                      |
+| ------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `tenancy.tenants`         | Tenant identity & lifecycle (`provisioning → active → suspended → archived → purged`) | `packages/data/migrations/platform/0004_tenancy.sql`           |
+| `auth.users`              | Mirror of Cognito users (one row per `cognito_sub`)                                   | `packages/data/migrations/platform/0005_auth.sql`              |
+| `auth.memberships`        | (user_id, tenant_id, is_active, effective_hash)                                       | same                                                           |
+| `auth.roles`              | Per-tenant roles (`owner`, `admin`, `member`, `viewer`)                               | same                                                           |
+| `auth.perms`              | Permission key registry (one row per `@Permission(key)`)                              | same + `reference/api/migrations/0001_reference.sql:272–310`   |
+| `auth.role_perms`         | Many-to-many: role × perm                                                             | same; see `0001_reference.sql:316–347`                         |
+| `auth.group_perms`        | Many-to-many: group × perm (group hierarchy depth 8)                                  | platform                                                       |
+| `auth.user_roles`         | Direct role grants per (user, tenant)                                                 | platform                                                       |
+| `auth.user_groups`        | Group memberships per user                                                            | platform                                                       |
+| `auth.sessions` (durable) | Session mirror (write-through from Redis hot store)                                   | platform; see `packages/sessions/src/session-mirror.writer.ts` |
+| `audit.system_op`         | Cross-tenant `withSystemContext` reasons                                              | `packages/data/migrations/platform/0008_audit.sql`             |
 
 **Redis provisions** (third side):
 
@@ -1036,15 +1036,15 @@ refresh, the membership is re-checked.
 
 ## Quick reference — pattern → packages → files
 
-| Pattern                             | Primary `@stynx/*` packages                     | Key files                                                                                                                                                                                                                                    |
-| ----------------------------------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A — Replace JWT middleware          | `@stynx/auth`, `@stynx/sessions`, `@stynx/core` | `packages/auth/src/stynx-auth.guard.ts`, `packages/auth/src/permission.guard.ts`, `packages/auth/src/decorators.ts`, `packages/sessions/src/session.service.ts`, `apps/reference-api/src/app.module.ts:180–195`                              |
-| B — Introduce TenantContext         | `@stynx/tenancy`, `@stynx/data`, `@stynx/core`  | `packages/tenancy/src/tenant-context.interceptor.ts`, `packages/data/src/database.ts`, `apps/reference-api/src/app.module.ts:205`                                                                                                            |
-| C — Declare permissions             | `@stynx/auth`, `@stynx/data` (migrations)       | `apps/reference-api/migrations/0001_reference.sql:266–347`, `packages/auth/src/effective-hash-computer.ts`, `packages/auth/src/permission-cache.ts`                                                                                          |
-| D — Tenant switching                | `@stynx/sessions`, `@stynx/auth`                | `packages/sessions/src/session.service.ts:208–246`, `specs/GAP-004-session-tenant-exchange.md`                                                                                                                                               |
-| E — Impersonation                   | (none, v1.0)                                    | `[NOT SUPPORTED IN v1.0]`                                                                                                                                                                                                                    |
-| F — `@ReadOnly`                     | `@stynx/auth`, `@stynx/data`                    | `packages/auth/src/decorators.ts:16`, `packages/auth/src/stynx-auth.guard.ts:62–64`, `apps/reference-api/src/sample/records.controller.ts:53–78`                                                                                             |
-| G — `@System` / `withSystemContext` | `@stynx/auth`, `@stynx/core`, `@stynx/data`     | `packages/auth/src/decorators.ts:12`, `packages/auth/src/stynx-auth.guard.ts:38–40`, `packages/auth/src/permission.guard.ts:19–21`, `packages/tenancy/src/tenant-context.interceptor.ts:124–146`, `apps/reference-api/src/app.module.ts:267` |
+| Pattern                             | Primary `@stynx/*` packages                     | Key files                                                                                                                                                                                                                               |
+| ----------------------------------- | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A — Replace JWT middleware          | `@stynx/auth`, `@stynx/sessions`, `@stynx/core` | `packages/auth/src/stynx-auth.guard.ts`, `packages/auth/src/permission.guard.ts`, `packages/auth/src/decorators.ts`, `packages/sessions/src/session.service.ts`, `reference/api/src/app.module.ts:180–195`                              |
+| B — Introduce TenantContext         | `@stynx/tenancy`, `@stynx/data`, `@stynx/core`  | `packages/tenancy/src/tenant-context.interceptor.ts`, `packages/data/src/database.ts`, `reference/api/src/app.module.ts:205`                                                                                                            |
+| C — Declare permissions             | `@stynx/auth`, `@stynx/data` (migrations)       | `reference/api/migrations/0001_reference.sql:266–347`, `packages/auth/src/effective-hash-computer.ts`, `packages/auth/src/permission-cache.ts`                                                                                          |
+| D — Tenant switching                | `@stynx/sessions`, `@stynx/auth`                | `packages/sessions/src/session.service.ts:208–246`, `specs/GAP-004-session-tenant-exchange.md`                                                                                                                                          |
+| E — Impersonation                   | (none, v1.0)                                    | `[NOT SUPPORTED IN v1.0]`                                                                                                                                                                                                               |
+| F — `@ReadOnly`                     | `@stynx/auth`, `@stynx/data`                    | `packages/auth/src/decorators.ts:16`, `packages/auth/src/stynx-auth.guard.ts:62–64`, `reference/api/src/sample/records.controller.ts:53–78`                                                                                             |
+| G — `@System` / `withSystemContext` | `@stynx/auth`, `@stynx/core`, `@stynx/data`     | `packages/auth/src/decorators.ts:12`, `packages/auth/src/stynx-auth.guard.ts:38–40`, `packages/auth/src/permission.guard.ts:19–21`, `packages/tenancy/src/tenant-context.interceptor.ts:124–146`, `reference/api/src/app.module.ts:267` |
 
 ---
 

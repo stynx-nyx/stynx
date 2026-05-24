@@ -145,7 +145,7 @@ at 0.1.0 — likely the rationalization seam from `@stech/*` predecessors.
 **Spec drift:** spec §3 lists 16 backend packages (no `@stynx/backend`).
 The repo adds `@stynx/backend` as an aggregator/composition module —
 its 44 exports include `StynxPlatformPipelineModule`, `AuditInterceptor`,
-`STYNX_AUDIT_SINK` (per `apps/reference-api/src/app.module.ts:11`).
+`STYNX_AUDIT_SINK` (per `reference/api/src/app.module.ts:11`).
 Treat `@stynx/backend` as STABLE-but-undocumented-in-spec; subsequent
 prompts must consult its `README.md` and barrel.
 
@@ -169,7 +169,7 @@ is no longer the audit's BLOCKER; it has 6 exports and 1 test.
 
 ## 5. Reference-app patterns observed
 
-`apps/reference-api/src/app.module.ts` composes the platform modules:
+`reference/api/src/app.module.ts` composes the platform modules:
 
 ```ts
 import { PermissionGuard, StynxAuthGuard, StynxAuthModule } from '@stynx/auth';
@@ -183,9 +183,9 @@ import { StynxTenancyModule } from '@stynx/tenancy';
 import { AuditSqlSink, StynxAuditModule as StynxAuditApiModule } from '@stynx/audit';
 ```
 
-(`apps/reference-api/src/app.module.ts:1–24`)
+(`reference/api/src/app.module.ts:1–24`)
 
-Sample domain controllers under `apps/reference-api/src/sample/`:
+Sample domain controllers under `reference/api/src/sample/`:
 
 - `records.controller.ts`, `record-notes.controller.ts`,
   `documents.controller.ts`, `work-items.controller.ts`,
@@ -194,9 +194,9 @@ Sample domain controllers under `apps/reference-api/src/sample/`:
 
 These are the canonical "service uses STYNX" examples.
 
-Reference web app: `apps/reference-web/`.
-Local stack: `apps/reference-api/docker-compose.yml`.
-**No `apps/reference-api/.env.example` was found** — `[GAP — env-var
+Reference web app: `reference/web/`.
+Local stack: `reference/api/docker-compose.yml`.
+**No `reference/api/.env.example` was found** — `[GAP — env-var
 catalog must be derived from `app.module.ts` and CDK code instead]`.
 
 ## 6. Migration system
@@ -226,7 +226,7 @@ expectations before porting.]
 
 ### 6.2 Reference-app migration
 
-`apps/reference-api/migrations/0001_reference.sql` — single consumer
+`reference/api/migrations/0001_reference.sql` — single consumer
 migration; uses `data.create_soft_deletable_table` (per audit
 [02-SPEC-ADHERENCE.md] line 89). Subsequent prompts that need a
 worked example pull from this file.
@@ -365,7 +365,7 @@ These feed `18-GAPS-AND-OPEN-QUESTIONS.md`:
 2. **Two `0012_*.sql` migrations** share the same numeric prefix in
    `packages/data/migrations/platform/`. Severity: MAJOR — ordering may
    surprise consumer migrations layering on top.
-3. **No `.env.example`** in `apps/reference-api/` — env-var inventory
+3. **No `.env.example`** in `reference/api/` — env-var inventory
    must be reverse-engineered. Severity: MINOR (documentable).
 4. **`pnpm exec stynx --help` does not resolve a bin** at the
    filter scope. Severity: MINOR — affects developer ergonomics, not

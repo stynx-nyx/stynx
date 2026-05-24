@@ -202,7 +202,7 @@ mirror atomically; the migration linter rejects:
 - `@ReadOnly()` switches the route to `stynx_reader`.
 - Errors bubble to the global filter wired by
   `@stynx/backend`'s `StynxPlatformPipelineModule`
-  (`apps/reference-api/src/app.module.ts:13`).
+  (`reference/api/src/app.module.ts:13`).
 
 ### Database access contract
 

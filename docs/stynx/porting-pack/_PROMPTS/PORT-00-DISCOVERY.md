@@ -33,7 +33,7 @@ sources directly.
    - `README.md` if present.
    - One representative source file (e.g. for `@stynx/data`, read
      `database.ts` and `transaction.ts`).
-4. **Reference apps** — `apps/reference-api/` and `apps/reference-web/`:
+4. **Reference apps** — `reference/api/` and `reference/web/`:
    - `src/main.ts` and `src/app.module.ts` (or entry equivalent).
    - One representative controller (e.g. `records.controller.ts`).
    - `migrations/0001_*.sql`.

@@ -3,7 +3,7 @@
 > Companion to [`06-DATA-LAYER-PATTERNS.md`](../06-DATA-LAYER-PATTERNS.md)
 > and the spec excerpts in [`16-SPEC-EXCERPTS/data-api-contract.md`](../16-SPEC-EXCERPTS/data-api-contract.md)
 > and [`16-SPEC-EXCERPTS/soft-delete-model.md`](../16-SPEC-EXCERPTS/soft-delete-model.md).
-> The "After" section mirrors `apps/reference-api/src/sample/reference-sample.service.ts`.
+> The "After" section mirrors `reference/api/src/sample/reference-sample.service.ts`.
 
 This file shows a typical "list / get / create / update / delete" service in
 its foreign shape — raw `pg.Pool`, hand-written tenant predicates, an
