@@ -80,14 +80,50 @@ Roughly 95% of the unclaimed actions are pure DEVAI-internal infrastructure (`lo
 
 **Status:** Open. Filed as DEVAI-upstream concern; no stynx-side code change unblocks this.
 
+### D-A-35 — `sense-coverage` hardcodes `routes-react.json` as the routes-inventory path
+
+**Where:** [`../../../../devai/packages/sensors/src/inventory-coverage.ts`](../../../../devai/packages/sensors/src/inventory-coverage.ts) lines 310-311.
+
+```ts
+const routesPath =
+  opts.routesPath ?? join(opts.repoRoot, '.devai/state/sensors/inventory_routes/routes-react.json');
+```
+
+**Symptom:** Stynx is an Angular shop; `sense-routes` writes its inventory to `.devai/state/sensors/inventory_routes/routes-angular.json` (15 routes captured). `sense-coverage` then can't find `routes-react.json` and emits:
+
+```
+inventory:coverage [inventory_coverage]: REVIEW
+  [warning] COVERAGE_REQUIRES_ROUTES: routes-inventory body not found at
+  .devai/state/sensors/inventory_routes/routes-react.json. Run 'devai sense routes' first.
+```
+
+The resulting `coverage-matrix.json` has `routes: []` (empty), and zero route-side link records, even though 14 of the 15 Angular routes are referenced by `refs.routeIds[]` inside use-case `mainFlow[]` steps.
+
+**Sibling gap:** D-A-2 closed the **walker** half of this (sense-routes now emits Angular correctly post-Phase-20.D). D-A-35 is the **coverage sensor's** half — the consumer of the walker output still assumes React.
+
+**Endpoint side is unaffected.** Stynx is at **100% endpoint coverage already** (50/50 endpoints linked across UC-stynx-001…014). The earlier "44 unmapped endpoints + 7 unmapped routes" baseline cited in [`phase-i-retro.md`](phase-i-retro.md) was closed at the endpoint level during the use-case authoring sweep that produced [`stynx-reference-app.json`](../../product/use-cases/stynx-reference-app.json) and [`stynx-reference-app-extended.json`](../../product/use-cases/stynx-reference-app-extended.json). The route side remains uncountable until D-A-35 lands.
+
+**Suggested resolution (DEVAI-side):**
+
+- **(a) Default to a framework-agnostic glob.** `glob('.devai/state/sensors/inventory_routes/routes-*.json')` and pick the first that exists, or merge all (stynx may eventually carry both an Angular shell + a React reference web).
+- **(b) Read the framework discriminator from `.devai/config/pack-tune.json`** (already records `frontend: angular` / `react` for stynx-shaped packs) and select `routes-${framework}.json` accordingly.
+- **(c) Allow `routesPath` override via `.devai/config/project.json`** so adopters can pin the path without DEVAI knowing the framework.
+
+**Workaround (stynx-side, if a coverage-matrix routes count is urgently needed before upstream lands):** symlink `routes-angular.json` → `routes-react.json` inside `.devai/state/sensors/inventory_routes/`. Hacky; couples the inventory directory to a lie about the framework; **not recommended** unless coverage gating becomes a release blocker. `.devai/state/` is auto-generated per substrate rules, so the symlink would be lost on regeneration.
+
+**Status:** Open. Filed as DEVAI-upstream concern; no clean stynx-side change unblocks this.
+
+**Impact on Gap #3 (coverage-link synthesis, from the S11 pre-amble):** Originally framed as a half-day Architect session to author endpoint/route refs across 13 use-cases. **In reality endpoint coverage was already complete** before this session began. The route half is blocked by D-A-35. Gap #3 is therefore **closed in scope** for endpoints and **deferred to D-A-35** for routes.
+
 ## 5. Updated open-gap snapshot
 
-| Gap                                  | Was        | Now                                   |
-| ------------------------------------ | ---------- | ------------------------------------- |
-| Trace gap (INV-PACKAGES-001 missing) | 1 error    | **closed** (added INV-CORE-001 entry) |
-| Invariant id↔domain mismatch         | 1 error    | **closed** (renamed to INV-CORE-001)  |
-| Broken kickoff-brief anchors         | 5 errors   | **closed** (dropped dead refs)        |
-| Action-coverage breadth              | 137 errors | **filed upstream** (D-A-34)           |
+| Gap                                  | Was        | Now                                                        |
+| ------------------------------------ | ---------- | ---------------------------------------------------------- |
+| Trace gap (INV-PACKAGES-001 missing) | 1 error    | **closed** (added INV-CORE-001 entry)                      |
+| Invariant id↔domain mismatch         | 1 error    | **closed** (renamed to INV-CORE-001)                       |
+| Broken kickoff-brief anchors         | 5 errors   | **closed** (dropped dead refs)                             |
+| Action-coverage breadth              | 137 errors | **filed upstream** (D-A-34)                                |
+| Coverage-matrix routes count         | 0 routes   | **filed upstream** (D-A-35); endpoint side at 100% (50/50) |
 
 `devai spec-validate-all` is now green on every adopter-controllable substrate (invariants / journeys / trace / glossary). The single remaining failing category is upstream-owned.
 
