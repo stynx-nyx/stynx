@@ -28,8 +28,8 @@
     "stryker": "pnpm exec stryker run stryker.conf.mjs"
   },
   "dependencies": {
-    "@aws-sdk/client-secrets-manager": "^3.1037.0",
-    "@aws-sdk/client-ssm": "^3.1037.0",
+    "@aws-sdk/client-secrets-manager": "^3.1053.0",
+    "@aws-sdk/client-ssm": "^3.1053.0",
     "nestjs-cls": "^6.2.0",
     "zod": "^4.3.6"
   },

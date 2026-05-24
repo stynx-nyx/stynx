@@ -27,9 +27,9 @@
     "stryker": "pnpm exec stryker run stryker.conf.mjs"
   },
   "dependencies": {
-    "@aws-sdk/client-cognito-identity-provider": "^3.1037.0",
-    "@aws-sdk/credential-providers": "^3.1037.0",
-    "@aws-sdk/types": "^3.973.8",
+    "@aws-sdk/client-cognito-identity-provider": "^3.1053.0",
+    "@aws-sdk/credential-providers": "^3.1053.0",
+    "@aws-sdk/types": "^3.973.9",
     "@stynx/contracts": "workspace:*",
     "@stynx/core": "workspace:*",
     "@stynx/data": "workspace:*",
