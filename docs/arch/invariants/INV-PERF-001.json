@@ -16,10 +16,6 @@
   "authority": {
     "docs": [
       {
-        "doc": "../devai-adoption-by-stynx.md",
-        "anchor": "phase-a-scope"
-      },
-      {
         "doc": "docs/security/threat-model.md",
         "anchor": "t-8--denial-of-service-via-expensive-endpoints"
       }

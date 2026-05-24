@@ -200,6 +200,25 @@
       "code_areas": ["reference/api/src/sample", "packages/ratelimit/src", "packages/backend/src"]
     },
     {
+      "id": "INV-CORE-001",
+      "docs": [
+        { "doc": "docs/arch/invariants/INV-CORE-001.json", "anchor": "statement" },
+        { "doc": "docs/security/threat-model.md", "anchor": "trust-boundaries" }
+      ],
+      "tests": [
+        {
+          "suite": "int",
+          "path": "reference/api/test/integration/reference-api.runtime.spec.ts",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "the full framework + reference + domain + tools source surface is structurally claimed by INV-CORE-001 scope.code_areas[] (umbrella governance; reverse-claim ratio measured by sense-spec-alignment ≥80%)"
+          ],
+          "mode": "gray_box"
+        }
+      ],
+      "code_areas": ["packages/**", "packages-web/**", "reference/**", "domain/**", "tools/**"]
+    },
+    {
       "id": "INV-ERROR-001",
       "docs": [
         { "doc": "docs/arch/invariants/INV-ERROR-001.json", "anchor": "statement" },

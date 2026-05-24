@@ -10,7 +10,7 @@ schema registry.
 
 - RBAC and tenant access: `INV-RBAC-001.json`.
 - Privacy and LGPD handling: `INV-PRIVACY-001.json`.
-- Package topology and layering: `INV-PACKAGES-001.json`.
+- Package topology and layering: `INV-CORE-001.json` (umbrella governance claim over the full framework surface; renamed from `INV-PACKAGES-001` post-Phase-I to satisfy the id↔domain check).
 - Flow design/runtime behavior: `INV-FLOW-001.json`, `INV-FLOW-002.json`,
   `INV-FLOW-003.json`.
 - Coverage, errors, and performance: `INV-COVERAGE-001.json`,
