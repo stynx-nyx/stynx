@@ -38,6 +38,15 @@ The fixed-layout helpers expose `validatePdfAStyle(buffer)`, which is a
 structural check for PDF header, metadata, and font resources. It is intentionally
 named PDF/A-style and must not be treated as validator-backed PDF/A conformance.
 
+## Validation
+
+Real PDF/A validation is owned by the additive `@stynx/pdf-a` contract and the
+reference `@stynx/pdf-a-vera-docker` adapter. The R12 target is PDF/A-2b.
+Adopters wire a `PdfAValidator` after PDF construction and choose their own
+warn/fail policy per environment. See
+[`docs/adopters/pdf-a-validation.md`](../adopters/pdf-a-validation.md) and
+[`ADR-PDF-A-VALIDATOR-CONTRACT`](../adr/ADR-PDF-A-VALIDATOR-CONTRACT.md).
+
 ## Public Payroll Template Pack
 
 `@stynx/pdf/public-payroll` exports `PublicPayrollPdfBuilder` for deterministic

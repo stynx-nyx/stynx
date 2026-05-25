@@ -96,6 +96,10 @@ configured. That keeps regulatory archival output explicit and auditable.
 metadata, and font resources; it is not a validator-backed PDF/A conformance
 adapter.
 
+For validator-backed conformance checks, wire `@stynx/pdf-a` with the reference
+`@stynx/pdf-a-vera-docker` adapter after rendering. See
+[`docs/adopters/pdf-a-validation.md`](../../docs/adopters/pdf-a-validation.md).
+
 ## Signature Interop
 
 `RenderResult.sha256` is computed after bytes are rendered. That digest is the

@@ -1,6 +1,7 @@
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, extname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
 
 const siteDir = dirname(fileURLToPath(import.meta.url));
 const docsRoot = resolve(siteDir, '..');
@@ -57,6 +58,10 @@ function writeReadmeDoc(sourcePath, relativeTarget, transform, title) {
   writeDoc(relativeTarget, transform(readFileSync(sourcePath, 'utf8'), 'README.md'), title);
 }
 
+function writeSpecificDoc(sourcePath, relativeTarget, title) {
+  writeReadmeDoc(sourcePath, relativeTarget, (content) => publicMarkdownContent(content), title);
+}
+
 function copyMarkdownDir(sourceDir, targetDir) {
   if (!existsSync(sourceDir)) {
     return;
@@ -89,6 +94,33 @@ function copyMarkdownDirTransformed(sourceDir, targetDir, transform) {
     mkdirSync(dirname(target), { recursive: true });
     writeFileSync(target, transform(readFileSync(source, 'utf8'), relative(sourceRoot, source)));
   }
+}
+
+function isTrackedFile(filePath) {
+  const relativePath = relative(repoRoot, filePath).split('\\').join('/');
+  const result = spawnSync('git', ['ls-files', '--error-unmatch', '--', relativePath], {
+    cwd: repoRoot,
+    stdio: 'ignore',
+  });
+  return result.status === 0;
+}
+
+function sanitizePublicReferences(content) {
+  return content
+    .replace(/`docs\/work\/[^`]*`/gu, '`internal work note (not published)`')
+    .replace(/\bdocs\/work\/[^\s),.;]*/gu, 'internal work note')
+    .replace(/`\.devai\/state\/[^`]*`/gu, '`internal DEVAI state artifact (not published)`')
+    .replace(/\.devai\/state\/[^\s`'",)]+/gu, 'internal DEVAI state artifact')
+    .replace(/`\.ci\/evidence\/[^`]*`/gu, '`internal CI evidence artifact (not published)`')
+    .replace(/\.ci\/evidence\/[^\s`'",)]+/gu, 'internal CI evidence artifact')
+    .replace(/`coverage\/test-evidence\.json`/gu, '`generated test evidence summary (not published)`')
+    .replace(/coverage\/test-evidence\.json/gu, 'generated test evidence summary')
+    .replace(/`coverage-final\.json`/gu, '`coverage summary JSON (not published)`')
+    .replace(/coverage-final\.json/gu, 'coverage summary JSON');
+}
+
+function publicMarkdownContent(content) {
+  return sanitizePublicReferences(rewriteGeneratedDocLinks(sanitizeMdxContent(content)));
 }
 
 function rewriteGeneratedDocLinks(content) {
@@ -144,11 +176,25 @@ function rewriteGeneratedDocLinks(content) {
       (_match, filename, hash = '') => `](/docs/narrative/stynx/${filename}${hash})`,
     )
     .replace(/\]\(\.\.\/\.\.\/docs\/templates\/package-README\.md((?:#[^)]+)?)\)/gu, '](/docs/templates/package-README$1)')
-    .replace(/\]\(\.\.\/\.\.\/docs\/rfcs\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu, '](/docs/rfcs/$1$2)');
+    .replace(/\]\(\.\.\/\.\.\/docs\/rfcs\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu, '](/docs/rfcs/$1$2)')
+    .replace(/\]\(\.\.\/adopters\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu, '](/docs/adopters/$1$2)')
+    .replace(/\]\(\.\.\/\.\.\/docs\/adopters\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu, '](/docs/adopters/$1$2)')
+    .replace(/\]\(\.\.\/\.\.\/CONTRIBUTING\.md((?:#[^)]+)?)\)/gu, '](/docs/contributing$1)')
+    .replace(
+      /\]\(\.\.\/\.\.\/packages\/([^)\s/#]+)\/README\.md((?:#[^)]+)?)\)/gu,
+      (_match, packageDir, hash = '') => `](/docs/packages/${packageDir}${hash})`,
+    )
+    .replace(
+      /\]\(\.\.\/\.\.\/packages-web\/([^)\s/#]+)\/README\.md((?:#[^)]+)?)\)/gu,
+      (_match, packageDir, hash = '') => `](/docs/packages-web/${packageDir}${hash})`,
+    )
+    .replace(/\[`@stynx\/pdf-a`\]\(\/docs\/packages\/pdf-a\)/gu, '`@stynx/pdf-a`')
+    .replace(/\[`@stynx\/pdf-a-vera-docker`\]\(\/docs\/packages\/pdf-a-vera-docker\)/gu, '`@stynx/pdf-a-vera-docker`')
+    .replace(/\]\(porm-flow-deprecation-readiness\.md((?:#[^)]+)?)\)/gu, '](./porm-flow-deprecation-readiness$1)');
 }
 
 function rewritePackageReadmeLinks(content, targetDir) {
-  return rewriteGeneratedDocLinks(content)
+  const updated = rewriteGeneratedDocLinks(content)
     .replace(/\]\(\.\.\/([^)\s/#]+)\/README\.md((?:#[^)]+)?)\)/gu, (_match, packageDir, hash = '') => {
       return `](/docs/${targetDir}/${packageDir}${hash})`;
     })
@@ -160,19 +206,20 @@ function rewritePackageReadmeLinks(content, targetDir) {
     })
     .replace(/\]\(\.\.\/\.\.\/reference\/web\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/reference/web$1)')
     .replace(/\]\(\.\.\/\.\.\/reference\/api\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/reference/api$1)');
+  return sanitizePublicReferences(updated);
 }
 
 function syncRfcContent(content, relativePath) {
   const slug = relativePath.replace(/\.mdx?$/u, '');
-  const body = rewriteGeneratedDocLinks(content)
+  const body = sanitizePublicReferences(rewriteGeneratedDocLinks(sanitizeMdxContent(content))
     .replace(
       /\]\(\.\.\/legacy\/completed-gap-tasks\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
       (_match, filename, hash = '') => `](/docs/legacy/completed-gap-tasks/${filename}${hash})`,
     )
     .replace(
       /\[Rationalization work\]\(\.\.\/work\/rationalization\/\)/gu,
-      '`docs/work/rationalization/`',
-    );
+      'internal rationalization notes',
+    ));
   if (body.startsWith('---\n')) {
     return body;
   }
@@ -185,7 +232,7 @@ function syncPackageReadmes(baseDir, targetDir, prefixMatcher) {
   for (const entry of readdirSync(basePath)) {
     const packageDir = resolve(basePath, entry);
     const manifestPath = resolve(packageDir, 'package.json');
-    if (!existsSync(manifestPath)) {
+    if (!existsSync(manifestPath) || !isTrackedFile(manifestPath)) {
       continue;
     }
     const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
@@ -195,7 +242,7 @@ function syncPackageReadmes(baseDir, targetDir, prefixMatcher) {
     const readmePath = resolve(packageDir, 'README.md');
     const title = `${manifest.name} ${manifest.description ? `- ${manifest.description}` : ''}`.trim();
     if (existsSync(readmePath)) {
-      writeDoc(join(targetDir, `${entry}.md`), rewritePackageReadmeLinks(readFileSync(readmePath, 'utf8'), targetDir), manifest.name);
+      writeDoc(join(targetDir, `${entry}.md`), rewritePackageReadmeLinks(sanitizeMdxContent(readFileSync(readmePath, 'utf8')), targetDir), manifest.name);
       continue;
     }
     writeDoc(
@@ -228,7 +275,7 @@ function syncSpecs() {
     ];
     for (const doc of fallbackDocs) {
       if (existsSync(doc.source)) {
-        writeDoc(doc.target, sanitizeMdxContent(readFileSync(doc.source, 'utf8')), doc.title);
+        writeDoc(doc.target, publicMarkdownContent(readFileSync(doc.source, 'utf8')), doc.title);
       }
     }
     return;
@@ -248,13 +295,13 @@ function syncSpecs() {
     if (/^STYNX-ADR-/u.test(entry)) {
       writeDoc(
         join('architecture-decisions', entry.toLowerCase().replace(/\.md$/u, '.md')),
-        sanitizeMdxContent(readFileSync(source, 'utf8')),
+        publicMarkdownContent(readFileSync(source, 'utf8')),
         titleFromName(entry),
       );
       continue;
     }
     if (entry.endsWith('.md')) {
-      writeDoc(join('specifications', entry.toLowerCase()), sanitizeMdxContent(readFileSync(source, 'utf8')), titleFromName(entry));
+      writeDoc(join('specifications', entry.toLowerCase()), publicMarkdownContent(readFileSync(source, 'utf8')), titleFromName(entry));
       continue;
     }
     if (entry.endsWith('.sql')) {
@@ -268,6 +315,38 @@ function syncSpecs() {
   }
 }
 
+function syncPublicStynxDocs() {
+  writeDoc(
+    'narrative/stynx/index.md',
+    '# STYNX Project Status\n\nCurated public project, readiness, and adoption documents.\n',
+    'STYNX Project Status',
+  );
+
+  const docs = [
+    ['consumer-adoption-guide.md', 'narrative/stynx/consumer-adoption-guide.md', 'Consumer Adoption Guide'],
+    ['feature-coverage-status.md', 'narrative/stynx/feature-coverage-status.md', 'Feature Coverage Status'],
+    ['implementation-status.md', 'narrative/stynx/implementation-status.md', 'Implementation Status'],
+    ['package-architecture.md', 'narrative/stynx/package-architecture.md', 'Package Architecture'],
+    ['porm-flow-deprecation-readiness.md', 'narrative/stynx/porm-flow-deprecation-readiness.md', 'PORM Flow Deprecation Readiness'],
+    ['release-readiness.md', 'narrative/stynx/release-readiness.md', 'Release Readiness'],
+  ];
+
+  for (const [sourceName, target, title] of docs) {
+    writeSpecificDoc(resolve(repoRoot, 'docs/stynx', sourceName), target, title);
+  }
+}
+
+function generateStatusPages() {
+  const result = spawnSync(process.execPath, [resolve(docsRoot, 'scripts/generate-status-pages.mjs')], {
+    cwd: repoRoot,
+    stdio: 'inherit',
+  });
+
+  if (result.status !== 0) {
+    throw new Error('Status page generation failed');
+  }
+}
+
 resetOutDir();
 writeDoc('packages/index.md', '# Packages\n\nNarrative package documentation aggregated from each `README.md` or package manifest.\n', 'Packages');
 writeDoc('packages-web/index.md', '# Web Packages\n\nNarrative Angular and SDK package documentation.\n', 'Web Packages');
@@ -275,40 +354,41 @@ writeDoc('specifications/index.md', '# Specifications\n\nNormative and reference
 writeDoc('architecture-decisions/index.md', '# Architecture Decisions\n\nArchitecture Decision Records mirrored from `specs/` when that source directory is present.\n', 'Architecture Decisions');
 writeDoc('api-reference/index.md', '# API Reference\n\nGenerated API reference for every `@stynx/*` and `@stynx-web/*` package.\n', 'API Reference');
 writeDoc('templates/index.md', '# Templates\n\nDocumentation templates mirrored from `docs/templates/`.\n', 'Templates');
-writeDoc('rfcs/index.md', '# RFCs\n\nRepository RFCs mirrored from `docs/rfcs/`.\n', 'RFCs');
+writeDoc('rfcs/index.md', '# RFCs\n\nRepository RFCs mirrored for public cross-reference stability.\n', 'RFCs');
 
-copyMarkdownDir(resolve(repoRoot, 'docs/dev'), 'narrative/dev');
-copyMarkdownDir(resolve(repoRoot, 'docs/legacy/completed-gap-tasks'), 'legacy/completed-gap-tasks');
-copyMarkdownDir(resolve(repoRoot, 'docs/sys'), 'narrative/system');
-copyMarkdownDir(resolve(repoRoot, 'docs/user'), 'narrative/user');
-copyMarkdownDirTransformed(resolve(repoRoot, 'docs/product'), 'product', (content) =>
-  rewriteGeneratedDocLinks(sanitizeMdxContent(content)),
+copyMarkdownDirTransformed(resolve(repoRoot, 'docs/adopters'), 'adopters', (content) =>
+  publicMarkdownContent(content),
 );
+copyMarkdownDirTransformed(resolve(repoRoot, 'docs/dev'), 'narrative/dev', (content) => publicMarkdownContent(content));
+copyMarkdownDirTransformed(resolve(repoRoot, 'docs/legacy/completed-gap-tasks'), 'legacy/completed-gap-tasks', (content) =>
+  publicMarkdownContent(content),
+);
+copyMarkdownDirTransformed(resolve(repoRoot, 'docs/sys'), 'narrative/system', (content) => publicMarkdownContent(content));
+copyMarkdownDirTransformed(resolve(repoRoot, 'docs/user'), 'narrative/user', (content) => publicMarkdownContent(content));
+writeSpecificDoc(resolve(repoRoot, 'CONTRIBUTING.md'), 'contributing.md', 'Contributing');
 copyMarkdownDirTransformed(resolve(repoRoot, 'docs/arch'), 'arch', (content) =>
-  rewriteGeneratedDocLinks(sanitizeMdxContent(content)),
+  publicMarkdownContent(content),
 );
 copyMarkdownDirTransformed(resolve(repoRoot, 'docs/contracts'), 'contracts', (content) =>
-  rewriteGeneratedDocLinks(sanitizeMdxContent(content)),
+  publicMarkdownContent(content),
 );
 copyMarkdownDirTransformed(resolve(repoRoot, 'docs/security'), 'security', (content) =>
-  rewriteGeneratedDocLinks(sanitizeMdxContent(content)),
+  publicMarkdownContent(content),
 );
 copyMarkdownDirTransformed(resolve(repoRoot, 'docs/glossary'), 'glossary', (content) =>
-  rewriteGeneratedDocLinks(sanitizeMdxContent(content)),
+  publicMarkdownContent(content),
 );
 copyMarkdownDirTransformed(resolve(repoRoot, 'docs/ops'), 'ops', (content) =>
-  rewriteGeneratedDocLinks(sanitizeMdxContent(content)),
+  publicMarkdownContent(content),
 );
 copyMarkdownDirTransformed(resolve(repoRoot, 'docs/adr'), 'adr', (content) =>
-  rewriteGeneratedDocLinks(sanitizeMdxContent(content)),
+  publicMarkdownContent(content),
 );
-copyMarkdownDirTransformed(resolve(repoRoot, 'docs/stynx'), 'narrative/stynx', (content) =>
-  rewriteGeneratedDocLinks(sanitizeMdxContent(content)),
-);
-copyMarkdownDirTransformed(resolve(repoRoot, 'docs/templates'), 'templates', (content) => rewriteGeneratedDocLinks(sanitizeMdxContent(content)));
+syncPublicStynxDocs();
+copyMarkdownDirTransformed(resolve(repoRoot, 'docs/templates'), 'templates', (content) => publicMarkdownContent(content));
 copyMarkdownDirTransformed(resolve(repoRoot, 'docs/rfcs'), 'rfcs', syncRfcContent);
 writeReadmeDoc(resolve(repoRoot, 'reference/api/README.md'), 'reference/api.md', (content) =>
-  rewriteGeneratedDocLinks(sanitizeMdxContent(content))
+  publicMarkdownContent(content)
     .replace(/\[([^\]]+)\]\(\.\.\/\.\.\/specs\/([^)\s#]+)\.sql(?:#[^)]+)?\)/gu, (_match, label, filename) => {
       return `\`${label || `specs/${filename}.sql`}\``;
     }),
@@ -321,3 +401,4 @@ writeReadmeDoc(resolve(repoRoot, 'reference/web/README.md'), 'reference/web.md',
 syncPackageReadmes('packages', 'packages', (name) => typeof name === 'string' && name.startsWith('@stynx/'));
 syncPackageReadmes('packages-web', 'packages-web', (name) => typeof name === 'string' && name.startsWith('@stynx-web/'));
 syncSpecs();
+generateStatusPages();

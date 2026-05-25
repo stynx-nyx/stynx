@@ -1,4 +1,12 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { dirname, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -19,12 +27,22 @@ function collectPackages(baseDir, matcher) {
   return readdirSync(resolvedBase)
     .map((entry) => resolve(resolvedBase, entry))
     .filter((dirPath) => existsSync(resolve(dirPath, 'package.json')))
+    .filter((dirPath) => isTrackedFile(resolve(dirPath, 'package.json')))
     .map((dirPath) => ({
       dirPath,
       manifest: JSON.parse(readFileSync(resolve(dirPath, 'package.json'), 'utf8')),
     }))
     .filter(({ manifest }) => matcher(manifest.name))
     .filter(({ dirPath }) => existsSync(resolve(dirPath, 'src/index.ts')));
+}
+
+function isTrackedFile(filePath) {
+  const relativePath = relative(repoRoot, filePath).split(sep).join('/');
+  const result = spawnSync('git', ['ls-files', '--error-unmatch', '--', relativePath], {
+    cwd: repoRoot,
+    stdio: 'ignore',
+  });
+  return result.status === 0;
 }
 
 function renderIndex(packages) {
@@ -72,6 +90,27 @@ function normalizePackageIndex(targetDir) {
   }
 }
 
+function ensurePackageIndex(pkg, targetDir) {
+  const indexPath = resolve(targetDir, 'index.md');
+  if (existsSync(indexPath)) {
+    return;
+  }
+  mkdirSync(targetDir, { recursive: true });
+  writeFileSync(
+    indexPath,
+    [
+      '---',
+      `title: ${JSON.stringify(pkg.manifest.name)}`,
+      '---',
+      '',
+      `# ${pkg.manifest.name}`,
+      '',
+      'TypeDoc did not emit public API pages for this package in the current build.',
+      '',
+    ].join('\n'),
+  );
+}
+
 function rewriteReadmeLinks(targetDir) {
   const files = collectMarkdownFiles(targetDir);
   for (const filePath of files) {
@@ -85,6 +124,50 @@ function rewriteReadmeLinks(targetDir) {
     if (updated.includes('README.md')) {
       throw new Error(`Unrewritten README link remains in ${filePath}`);
     }
+  }
+}
+
+function rewriteMissingLocalMarkdownLinks(rootDir) {
+  const files = collectMarkdownFiles(rootDir);
+  const existingFiles = new Set(files.map((filePath) => resolve(filePath)));
+  let rewriteCount = 0;
+
+  for (const filePath of files) {
+    const original = readFileSync(filePath, 'utf8');
+    const updated = original.replace(
+      /\[([^\]\n]+)\]\(([^)\s]+\.md(?:#[^)]+)?)\)/gu,
+      (match, label, target) => {
+        if (/^(?:https?:|mailto:|#|\/)/u.test(target)) {
+          return match;
+        }
+
+        const [targetPath] = target.split('#');
+        let decodedTargetPath = targetPath;
+        try {
+          decodedTargetPath = decodeURIComponent(targetPath);
+        } catch {
+          decodedTargetPath = targetPath;
+        }
+
+        const resolvedTarget = resolve(dirname(filePath), decodedTargetPath);
+        if (existingFiles.has(resolvedTarget)) {
+          return match;
+        }
+
+        rewriteCount += 1;
+        return label.replace(/\\([\][\\])/gu, '$1');
+      },
+    );
+
+    if (updated !== original) {
+      writeFileSync(filePath, updated);
+    }
+  }
+
+  if (rewriteCount > 0) {
+    console.log(
+      `Rewrote ${rewriteCount} generated TypeDoc links to missing local markdown targets.`,
+    );
   }
 }
 
@@ -121,10 +204,7 @@ function typeDocOptionsFor(pkg) {
   }
 
   if (pkg.manifest.name === '@stynx/data') {
-    return [
-      '--intentionallyNotExported',
-      'src/schema/index.ts:schema',
-    ];
+    return ['--intentionallyNotExported', 'src/schema/index.ts:schema'];
   }
 
   if (pkg.manifest.name === '@stynx-web/sdk') {
@@ -151,16 +231,23 @@ function typeDocOptionsFor(pkg) {
 
 const packages = [
   ...collectPackages('packages', (name) => typeof name === 'string' && name.startsWith('@stynx/')),
-  ...collectPackages('packages-web', (name) => typeof name === 'string' && name.startsWith('@stynx-web/')),
+  ...collectPackages(
+    'packages-web',
+    (name) => typeof name === 'string' && name.startsWith('@stynx-web/'),
+  ),
 ];
 
 rmSync(apiOutDir, { recursive: true, force: true });
 mkdirSync(apiOutDir, { recursive: true });
 
+const typedocTempDirs = [];
+let failure = null;
+
 for (const pkg of packages) {
   const slug = pkg.manifest.name.replace(/^@/u, '').replace(/[\/]/gu, '-');
   const targetDir = resolve(apiOutDir, slug);
   const typedocTsconfig = writeTypeDocTsconfig(pkg);
+  typedocTempDirs.push(typedocTsconfig.dirPath);
   mkdirSync(targetDir, { recursive: true });
 
   const result = spawnSync(
@@ -185,14 +272,28 @@ for (const pkg of packages) {
     },
   );
 
-  rmSync(typedocTsconfig.dirPath, { recursive: true, force: true });
-
   if (result.status !== 0) {
-    throw new Error(`TypeDoc failed for ${pkg.manifest.name}`);
+    failure = new Error(`TypeDoc failed for ${pkg.manifest.name}`);
+    break;
   }
 
   normalizePackageIndex(targetDir);
   rewriteReadmeLinks(targetDir);
+  ensurePackageIndex(pkg, targetDir);
 }
 
+for (const dirPath of typedocTempDirs) {
+  rmSync(dirPath, { recursive: true, force: true });
+}
+
+if (failure !== null) {
+  throw failure;
+}
+
+for (const pkg of packages) {
+  const slug = pkg.manifest.name.replace(/^@/u, '').replace(/[\/]/gu, '-');
+  ensurePackageIndex(pkg, resolve(apiOutDir, slug));
+}
+
+rewriteMissingLocalMarkdownLinks(apiOutDir);
 writeFileSync(resolve(apiOutDir, 'index.md'), renderIndex(packages));

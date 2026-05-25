@@ -1,8 +1,12 @@
 # ADR: PDF/A Boundary
 
-**Status:** Accepted.
+**Status:** Superseded by [ADR-PDF-A-VALIDATOR-CONTRACT](ADR-PDF-A-VALIDATOR-CONTRACT.md) (2026-05-25).
 **Date:** 2026-05-24.
 **Author role:** Architect, per DEVAI Article 6.
+
+Original "documented exclusion" decision is retained below for historical
+context. STYNX now ships validation via `@stynx/pdf-a` and
+`@stynx/pdf-a-vera-docker`; see the successor ADR for the current contract.
 
 ## Context
 

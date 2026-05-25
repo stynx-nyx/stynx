@@ -6,18 +6,24 @@ provider-specific schemas.
 
 ## Shared Package Boundary
 
-| Package                      | STYNX responsibility                                                                                          | Adopter responsibility                                                                                                                         |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@stynx/signature`           | PAdES/TSA/OCSP/CRL facade, signature evidence contract, provider interface.                                   | Domain signing policy, certificate provider credentials, legal retention, and audit event meaning.                                             |
-| `@stynx/pdf`                 | Server-side PDF render facade, template/render result contract, signature digest handoff, PDF/A adapter hook. | Domain templates, branding assets, data selection, legal text approval, and PDF/A conformance claims unless an explicit adapter is configured. |
-| `@stynx/feature-flags`       | Tenant/environment/global flag evaluation contract and provider interface.                                    | Deciding which domain behaviors may be flag-gated and auditing material decisions.                                                             |
-| `@stynx/integration-adapter` | Retry, timeout, idempotency, circuit breaker, and telemetry pattern for external calls.                       | Provider schemas, homologation evidence, credential handling, and domain error semantics.                                                      |
+| Package                      | STYNX responsibility                                                                                          | Adopter responsibility                                                                             |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `@stynx/signature`           | PAdES/TSA/OCSP/CRL facade, signature evidence contract, provider interface.                                   | Domain signing policy, certificate provider credentials, legal retention, and audit event meaning. |
+| `@stynx/pdf`                 | Server-side PDF render facade, template/render result contract, signature digest handoff, PDF/A adapter hook. | Domain templates, branding assets, data selection, legal text approval, and validation policy.     |
+| `@stynx/pdf-a`               | PDF/A validator interface, result contract, stubs, and telemetry metric names.                                | Choosing where validation is required and how failures affect each workflow.                       |
+| `@stynx/pdf-a-vera-docker`   | Reference veraPDF Docker adapter, digest-pinned image default, report normalization, fixture corpus, bench.   | Docker runtime availability, image override policy, and high-volume validation caching.            |
+| `@stynx/feature-flags`       | Tenant/environment/global flag evaluation contract and provider interface.                                    | Deciding which domain behaviors may be flag-gated and auditing material decisions.                 |
+| `@stynx/integration-adapter` | Retry, timeout, idempotency, circuit breaker, and telemetry pattern for external calls.                       | Provider schemas, homologation evidence, credential handling, and domain error semantics.          |
 
 ## Rule
 
 If a concern is generic platform behavior, prefer STYNX. If it changes legal
 meaning, workflow state, evidence custody, numbering, domain interpretation, or
 provider-specific schema semantics, keep it in the adopter repo.
+
+PDF/A validation is now an in-scope STYNX surface through `@stynx/pdf-a` and
+`@stynx/pdf-a-vera-docker`. R10 documented it as excluded; R12 supersedes that
+boundary for validation only.
 
 ## RBAC Watch
 

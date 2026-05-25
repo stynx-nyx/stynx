@@ -35,6 +35,8 @@
       "@stynx/testing": ["../../packages/testing/src/index.ts"],
       "@stynx/signature": ["../../packages/signature/src/index.ts"],
       "@stynx/pdf": ["../../packages/pdf/src/index.ts"],
+      "@stynx/pdf-a": ["../../packages/pdf-a/src/index.ts"],
+      "@stynx/pdf-a-vera-docker": ["../../packages/pdf-a-vera-docker/src/index.ts"],
       "@stynx/feature-flags": ["../../packages/feature-flags/src/index.ts"],
       "@stynx/integration-adapter": ["../../packages/integration-adapter/src/index.ts"],
       "@stynx/reference-api": ["../../reference/api/src/main.ts"],

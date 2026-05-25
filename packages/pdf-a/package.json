@@ -1,0 +1,40 @@
+{
+  "name": "@stynx/pdf-a",
+  "version": "0.1.0",
+  "description": "PDF/A validation contract and stubs for stynx",
+  "main": "dist/pdf-a/src/index.js",
+  "types": "dist/pdf-a/src/index.d.ts",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/pdf-a/src/index.d.ts",
+      "require": "./dist/pdf-a/src/index.js",
+      "default": "./dist/pdf-a/src/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist coverage",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+    "test": "vitest run --config ./vitest.config.ts"
+  },
+  "peerDependencies": {
+    "@stynx/logging": "^1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@stynx/logging": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@stynx/logging": "workspace:*",
+    "@types/node": "^25.6.0",
+    "typescript": "^6.0.3"
+  }
+}

@@ -1,0 +1,4 @@
+export const DEFAULT_VERAPDF_IMAGE =
+  'verapdf/cli@sha256:20202b4bcc2410a25db1f637c7b461a2e0dda1d97dd8a6df658286b30d56c842';
+
+export const DEFAULT_VERAPDF_TIMEOUT_MS = 30_000;

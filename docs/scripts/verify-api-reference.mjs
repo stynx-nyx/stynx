@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { dirname, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const docsDir = resolve(scriptDir, '..');
@@ -12,12 +13,22 @@ function collectPackages(baseDir, matcher) {
   return readdirSync(resolvedBase)
     .map((entry) => resolve(resolvedBase, entry))
     .filter((dirPath) => existsSync(resolve(dirPath, 'package.json')))
+    .filter((dirPath) => isTrackedFile(resolve(dirPath, 'package.json')))
     .map((dirPath) => ({
       dirPath,
       manifest: JSON.parse(readFileSync(resolve(dirPath, 'package.json'), 'utf8')),
     }))
     .filter(({ manifest }) => matcher(manifest.name))
     .filter(({ dirPath }) => existsSync(resolve(dirPath, 'src/index.ts')));
+}
+
+function isTrackedFile(filePath) {
+  const relativePath = relative(repoRoot, filePath).split(sep).join('/');
+  const result = spawnSync('git', ['ls-files', '--error-unmatch', '--', relativePath], {
+    cwd: repoRoot,
+    stdio: 'ignore',
+  });
+  return result.status === 0;
 }
 
 const packages = [
