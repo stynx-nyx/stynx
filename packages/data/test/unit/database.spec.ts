@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 import { RequestContext, SystemContext, SystemContextRequiredError } from '@stynx/core';
 import { ClsService } from 'nestjs-cls';
 import type { PoolClient } from 'pg';

@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 // Unit tests for the no-op + early-return paths of StynxMigrationRunner.
 // Doesn't cover runPlatformMigrations against a real Postgres — that's
 // the integration suite's job. Tests here exercise the wiring paths
