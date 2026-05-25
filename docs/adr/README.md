@@ -15,6 +15,7 @@ shape package boundaries, generated diagnostics, or adoption policy.
 - [ADR-FE-ICU-i18n-0002 — Package Catalogs and ICU MessageFormat for packages-web](ADR-FE-ICU-i18n-0002-package-catalogs-and-icu.md)
 - [ADR-FE-FLOW-PUBLISH-0003 — Flow Draft and Publish Contract](ADR-FE-FLOW-PUBLISH-0003-draft-publish-contract.md)
 - [ADR-FE-AUDIT-CONTRACT-0004 — Frontend Audit Read Contract](ADR-FE-AUDIT-CONTRACT-0004-audit-read-contract.md)
+- [ADR-PDF-A-BOUNDARY — PDF/A Boundary](ADR-PDF-A-BOUNDARY.md)
 
 ## Related RFCs
 

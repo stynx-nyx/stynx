@@ -15,6 +15,9 @@ The verifier reads `.stynxrc.json#dbAcceptance` first, then
   "dbAcceptance": {
     "ddlPaths": ["database/ddl/*.sql"],
     "seedPaths": ["database/seed/*.sql"],
+    "seedGroups": {
+      "base": ["database/seed/base/*.sql"]
+    },
     "requiredSchemas": ["auth", "audit", "storage"],
     "requiredTables": ["audit.events"],
     "requiredRlsTables": ["audit.events"],
@@ -29,5 +32,7 @@ The verifier reads `.stynxrc.json#dbAcceptance` first, then
 node scripts/verify-db-acceptance.mjs --json
 ```
 
-The script reports matched DDL/seed files and any missing schema, table, or RLS
-requirements.
+The script reports matched DDL files, seed files, optional seed groups, and any
+missing schema, table, RLS, or required-seed discovery failures. Seed discovery
+is static; idempotence execution against PostgreSQL remains adopter-owned unless
+a separate runtime contract is added.

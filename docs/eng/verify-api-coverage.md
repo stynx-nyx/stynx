@@ -28,4 +28,8 @@ node scripts/verify-api-coverage.mjs --json
 node scripts/verify-api-coverage.mjs --strict
 ```
 
-`--strict` fails when OpenAPI and controller paths drift.
+`--strict` fails when OpenAPI and controller paths drift. Path comparison
+normalizes duplicate separators, trailing slashes, and parameter syntax, so
+`/v1/aits/{id}` and `/v1/aits/:id` match when the parameter positions match.
+Remaining strict diagnostics include both the original path and the normalized
+comparison key.

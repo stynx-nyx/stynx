@@ -7,6 +7,10 @@ const args = new Set(process.argv.slice(2));
 const config = readConfig().dbAcceptance ?? {};
 const ddlPaths = expand(config.ddlPaths ?? ['database/ddl/*.sql']);
 const seedPaths = expand(config.seedPaths ?? ['database/seed/*.sql']);
+const seedGroups = Object.entries(config.seedGroups ?? {}).map(([name, patterns]) => ({
+  name,
+  files: expand(Array.isArray(patterns) ? patterns : [patterns]),
+}));
 const requiredSchemas = config.requiredSchemas ?? ['auth', 'audit', 'storage'];
 const requiredTables = config.requiredTables ?? [];
 const requiredRlsTables = config.requiredRlsTables ?? [];
@@ -39,11 +43,20 @@ for (const table of requiredRlsTables) {
   }
 }
 if (seedPaths.length === 0 && config.requireSeeds === true) failures.push('no seed files matched');
+for (const group of seedGroups) {
+  if (group.files.length === 0 && config.requireSeeds === true) {
+    failures.push(`no seed files matched for group ${group.name}`);
+  }
+}
 
 const summary = {
   schemaVersion: '1',
   ddlFiles: ddlPaths.map((file) => relative(repoRoot, file)),
   seedFiles: seedPaths.map((file) => relative(repoRoot, file)),
+  seedGroups: seedGroups.map((group) => ({
+    name: group.name,
+    files: group.files.map((file) => relative(repoRoot, file)),
+  })),
   failures,
 };
 if (args.has('--json')) console.log(JSON.stringify(summary, null, 2));

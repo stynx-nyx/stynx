@@ -7,8 +7,12 @@ import { sha256Hex } from './signature.service';
 import type { SignatureBackend, SignatureCertificateRef, SignatureEvidence } from './types';
 
 export * from './errors';
+export * from './digest';
+export * from './govbr-sandbox';
 export * from './http-provider-client';
+export * from './pades';
 export * from './provider-backend';
+export * from './sequential';
 export * from './signature.module';
 export * from './signature.service';
 export * from './tokens';

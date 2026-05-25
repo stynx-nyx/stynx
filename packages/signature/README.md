@@ -59,6 +59,14 @@ Primary exports:
 - `ProviderBackedSignatureBackend` - validates certificates before signing and
   maps provider responses into `SignatureEvidence`.
 - `createMockSignatureBackend()` - deterministic test backend.
+- `sha256`, `canonicalJson`, `sha256CanonicalJson`, and `canonicalXmlDigest` -
+  deterministic digest helpers for XML, PDF, and payload evidence.
+- `MockPadesEvidenceAdapter` - provider-free PAdES evidence envelopes for
+  fixture-friendly sandbox signing.
+- `GovBrSandboxAdapter` - gov.br advanced-signature callback simulation with
+  tamper-evident evidence.
+- `SequentialSigner` - ordered document-signing envelope helper with publish
+  read verification.
 
 ## Provider Contract
 

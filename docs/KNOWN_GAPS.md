@@ -20,6 +20,12 @@ When a previously-listed gap is verified closed, delete its row from this file r
 | ----- | ---------------------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | PF-06 | **Original PORM consumer cutover** | Planned, awaiting explicit consuming-repo execution | The STYNX packages are ready for adoption, but replacing `../porm`'s in-repo Flow module with `@stynx/flow` + `@stynx-web/angular-flow` is a sibling-repo migration that has not been executed. Run only when explicitly requested by the user. |
 
+## 3. Sibling-checkout CI verification
+
+| #      | Gap / capability                                      | Status              | Detail                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ------ | ----------------------------------------------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R10-01 | **PEC sibling-checkout CI script uses npm for stynx** | Verification failed | R10 reproduced the proposed `/tmp/ci-spike` sibling-checkout sequence on 2026-05-24. Cloning `devai`, `stynx`, and `pec` from local checkouts succeeded, but `npm ci --prefix stynx` failed because stynx is a pnpm workspace with `pnpm-lock.yaml` and no `package-lock.json`. Decide whether the PEC CI recipe should use `pnpm install --frozen-lockfile --dir stynx` before treating this verification as green. |
+
 ---
 
 ## Notes

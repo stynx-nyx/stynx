@@ -117,13 +117,15 @@ The resulting `coverage-matrix.json` has `routes: []` (empty), and zero route-si
 - **(b) Read the framework discriminator from `.devai/config/pack-tune.json`** (already records `frontend: angular` / `react` for stynx-shaped packs) and select `routes-${framework}.json` accordingly.
 - **(c) Allow `routesPath` override via `.devai/config/project.json`** so adopters can pin the path without DEVAI knowing the framework.
 
-**Stynx-side mitigation (landed in this session):** root [`package.json`](../../../package.json) now carries a `sense:coverage` script:
+**Stynx-side mitigation (landed in this session):** root [`package.json`](../../../package.json) carried a `sense:coverage` script:
 
 ```
 "sense:coverage": "devai sense-coverage --repo-root . --routes-path .devai/state/sensors/inventory_routes/routes-angular.json --human"
 ```
 
-`pnpm sense:coverage` PASSes against the current state. Durable across `.devai/state/` regenerations; no DEVAI patch dependency; no symlinks. Future S-series automations and skills should call this script instead of bare `devai sense-coverage`.
+`pnpm sense:coverage` PASSed against the current state. Durable across `.devai/state/` regenerations; no DEVAI patch dependency; no symlinks. Future S-series automations and skills were expected to call this script instead of bare `devai sense-coverage`.
+
+**R10 cleanup:** DEVAI `765bad0` closed the default-path gap, so the stynx-local wrapper is no longer required. The root `sense:coverage` script was removed on 2026-05-24 after bare `devai sense-coverage --human` passed without route overrides.
 
 **Status:** Open upstream (default-value still hardcoded to `routes-react.json`). Stynx is unblocked.
 

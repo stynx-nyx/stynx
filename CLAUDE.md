@@ -43,6 +43,7 @@ The DEVAI `CLAUDE.md` linked above is shaped for DEVAI's OWN development. Adopti
 - Some `devai doctor` checks (workspace-layout, f1-paths-present, schemas-loadable, constitution-symlink) hardcode DEVAI's monorepo shape (`packages/{cli,core,schemas,sensors,utils}`, root-level `tsconfig.base.json`, `docs/schemas/`, `.devai/constitution.md`). These will fail on adopters today; the underlying gap is filed in [`docs/pilots/c-4/phase-a-retro.md`](docs/pilots/c-4/phase-a-retro.md) (D-A-9 from Phase H).
 - The reading-order tokens enforced by `agents-claude-sync` (`README.md`, `CONSTITUTION.md`, `BUILD-PLAN.md`, `DESIGN-DECISIONS.md`, `docs/schemas`) refer to **DEVAI's** files (in the sibling `../devai/` checkout), not stynx's. This file references them by path so the check passes; an adopter without a sibling devai checkout would need DEVAI to be installed via package manager.
 - Stynx **inherits** DEVAI's universal invariants (e.g. `INV-INVENTORY-001`, `INV-INVENTORY-002`, `INV-INVENTORY-003`) from `../devai/docs/arch/invariants/`. Stynx's own invariants live under [`docs/arch/invariants/`](docs/arch/invariants/) and SHOULD specialize the universal ones rather than redefine them.
+- The repo carries deliberate `TODO_PERMISSION` and `TODO(stynx-adopt)` sentinels injected by `@stynx/cli` adopt. A repo-wide grep for `TODO` will surface those; they are not unresolved tech debt unless a specific instance is proven outside the generated-adoption pattern.
 
 ## When in doubt
 

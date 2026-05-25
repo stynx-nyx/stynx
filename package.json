@@ -54,7 +54,6 @@
     "check:rls-smoke": "bash scripts/check-rls-smoke.sh",
     "smoke:local": "pnpm --filter @stynx/reference-api smoke:local",
     "prepare": "husky",
-    "sense:coverage": "devai sense-coverage --repo-root . --routes-path .devai/state/sensors/inventory_routes/routes-angular.json --human",
     "test:coverage": "devai coverage-aggregate --repo-root . --in coverage --out coverage/coverage-final.json --final --human",
     "test:coverage:aggregate": "devai coverage-aggregate --repo-root . --in coverage --out coverage/coverage-final.json --final --human",
     "test:perf": "devai record-run --repo-root . --scope stynx-workspace --tier perf --cmd \"node scripts/perf-smoke.mjs\" --human",

@@ -9,19 +9,29 @@ const config = readConfig().apiCoverage ?? {};
 const openapiPath = resolve(repoRoot, config.openapiPath ?? 'docs/contracts/openapi.json');
 const sourceRoots = config.sourceRoots ?? ['reference/api/src', 'packages'];
 const routePrefix = config.routePrefix ?? '';
-const openapiPaths = readOpenApiPaths(openapiPath);
-const routePaths = discoverNestRoutes(
+const openapiRoutes = readOpenApiPaths(openapiPath);
+const implementedRoutes = discoverNestRoutes(
   sourceRoots.map((root) => resolve(repoRoot, root)),
   routePrefix,
 );
-const missingInCode = [...openapiPaths].filter((path) => !routePaths.has(path)).sort();
-const missingInOpenApi = [...routePaths].filter((path) => !openapiPaths.has(path)).sort();
+const openapiByCanonical = groupByCanonical(openapiRoutes);
+const implementedByCanonical = groupByCanonical(implementedRoutes);
+const missingInCode = [...openapiByCanonical.entries()]
+  .filter(([canonical]) => !implementedByCanonical.has(canonical))
+  .flatMap(([canonical, routes]) => routes.map((route) => diagnostic(route, canonical)))
+  .sort((a, b) => a.path.localeCompare(b.path));
+const missingInOpenApi = [...implementedByCanonical.entries()]
+  .filter(([canonical]) => !openapiByCanonical.has(canonical))
+  .flatMap(([canonical, routes]) => routes.map((route) => diagnostic(route, canonical)))
+  .sort((a, b) => a.path.localeCompare(b.path));
+const parameterNameMismatches = compareParameterNames(openapiByCanonical, implementedByCanonical);
 
 const summary = {
   schemaVersion: '1',
   openapiPath: existsSync(openapiPath) ? relative(repoRoot, openapiPath) : null,
-  openapiPaths: openapiPaths.size,
-  implementedRoutes: routePaths.size,
+  openapiPaths: openapiRoutes.length,
+  implementedRoutes: implementedRoutes.length,
+  parameterNameMismatches,
   missingInCode,
   missingInOpenApi,
 };
@@ -29,9 +39,12 @@ const summary = {
 if (args.has('--json')) console.log(JSON.stringify(summary, null, 2));
 else
   console.log(
-    `API coverage: ${openapiPaths.size} OpenAPI paths, ${routePaths.size} implemented routes.`,
+    `API coverage: ${summary.openapiPaths} OpenAPI paths, ${summary.implementedRoutes} implemented routes.`,
   );
-if (strict && (missingInCode.length > 0 || missingInOpenApi.length > 0)) {
+if (
+  strict &&
+  (missingInCode.length > 0 || missingInOpenApi.length > 0 || parameterNameMismatches.length > 0)
+) {
   throw new Error(`API coverage drift detected:\n${JSON.stringify(summary, null, 2)}`);
 }
 
@@ -42,19 +55,19 @@ function readConfig() {
 }
 
 function readOpenApiPaths(file) {
-  if (!existsSync(file)) return new Set();
+  if (!existsSync(file)) return [];
   const parsed = JSON.parse(readFileSync(file, 'utf8'));
-  return new Set(Object.keys(parsed.paths ?? {}).map(normalizePath));
+  return Object.keys(parsed.paths ?? {}).map(normalizePath);
 }
 
 function discoverNestRoutes(roots, prefix) {
-  const routes = new Set();
+  const routes = [];
   for (const file of roots.flatMap(walk).filter((path) => path.endsWith('.controller.ts'))) {
     const text = readFileSync(file, 'utf8');
     const controller = text.match(/@Controller\(([^)]*)\)/u)?.[1] ?? "''";
     const base = literal(controller);
     for (const match of text.matchAll(/@(Get|Post|Put|Patch|Delete)\(([^)]*)\)/gu)) {
-      routes.add(normalizePath(`${prefix}/${base}/${literal(match[2])}`));
+      routes.push(normalizePath(`${prefix}/${base}/${literal(match[2])}`));
     }
   }
   return routes;
@@ -80,4 +93,66 @@ function literal(value = '') {
 
 function normalizePath(path) {
   return `/${path}`.replace(/\/+/gu, '/').replace(/\/$/u, '') || '/';
+}
+
+function canonicalizePath(path) {
+  return normalizePath(path)
+    .split('/')
+    .map((segment) => {
+      if (segment.startsWith(':')) return '{}';
+      if (/^\{[^/{}]+\}$/u.test(segment)) return '{}';
+      return segment;
+    })
+    .join('/');
+}
+
+function parameterNames(path) {
+  return normalizePath(path)
+    .split('/')
+    .filter(Boolean)
+    .map((segment, index) => {
+      if (segment.startsWith(':')) return { index, name: segment.slice(1), syntax: ':' };
+      const match = segment.match(/^\{([^/{}]+)\}$/u);
+      return match ? { index, name: match[1], syntax: '{}' } : null;
+    })
+    .filter(Boolean);
+}
+
+function groupByCanonical(paths) {
+  const grouped = new Map();
+  for (const path of paths) {
+    const canonical = canonicalizePath(path);
+    const routes = grouped.get(canonical) ?? [];
+    routes.push(path);
+    grouped.set(canonical, routes);
+  }
+  return grouped;
+}
+
+function diagnostic(path, canonical) {
+  return { path, normalized: canonical };
+}
+
+function compareParameterNames(expected, actual) {
+  const mismatches = [];
+  for (const [canonical, expectedPaths] of expected.entries()) {
+    const actualPaths = actual.get(canonical);
+    if (!actualPaths) continue;
+    const expectedNames = parameterNames(expectedPaths[0] ?? '');
+    const actualNames = parameterNames(actualPaths[0] ?? '');
+    for (const [index, expectedParam] of expectedNames.entries()) {
+      const actualParam = actualNames[index];
+      if (actualParam && actualParam.name !== expectedParam.name) {
+        mismatches.push({
+          normalized: canonical,
+          openapiPath: expectedPaths[0],
+          routePath: actualPaths[0],
+          segment: expectedParam.index,
+          openapiParam: expectedParam.name,
+          routeParam: actualParam.name,
+        });
+      }
+    }
+  }
+  return mismatches;
 }

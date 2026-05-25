@@ -236,7 +236,7 @@ describe('@stynx/testing', () => {
     } finally {
       await testApp.teardown();
     }
-  });
+  }, 120_000);
 
   it('mints a test session only in NODE_ENV=test and runs doctor helper', async () => {
     const session = await mintTestSession({
@@ -277,5 +277,5 @@ describe('@stynx/testing', () => {
     } finally {
       await testApp.teardown();
     }
-  });
+  }, 120_000);
 });

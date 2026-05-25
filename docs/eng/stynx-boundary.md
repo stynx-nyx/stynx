@@ -6,18 +6,25 @@ provider-specific schemas.
 
 ## Shared Package Boundary
 
-| Package                      | STYNX responsibility                                                                      | Adopter responsibility                                                                             |
-| ---------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `@stynx/signature`           | PAdES/TSA/OCSP/CRL facade, signature evidence contract, provider interface.               | Domain signing policy, certificate provider credentials, legal retention, and audit event meaning. |
-| `@stynx/pdf`                 | Server-side PDF render facade, template/render result contract, signature digest handoff. | Domain templates, branding assets, data selection, and legal text approval.                        |
-| `@stynx/feature-flags`       | Tenant/environment/global flag evaluation contract and provider interface.                | Deciding which domain behaviors may be flag-gated and auditing material decisions.                 |
-| `@stynx/integration-adapter` | Retry, timeout, idempotency, circuit breaker, and telemetry pattern for external calls.   | Provider schemas, homologation evidence, credential handling, and domain error semantics.          |
+| Package                      | STYNX responsibility                                                                                          | Adopter responsibility                                                                                                                         |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@stynx/signature`           | PAdES/TSA/OCSP/CRL facade, signature evidence contract, provider interface.                                   | Domain signing policy, certificate provider credentials, legal retention, and audit event meaning.                                             |
+| `@stynx/pdf`                 | Server-side PDF render facade, template/render result contract, signature digest handoff, PDF/A adapter hook. | Domain templates, branding assets, data selection, legal text approval, and PDF/A conformance claims unless an explicit adapter is configured. |
+| `@stynx/feature-flags`       | Tenant/environment/global flag evaluation contract and provider interface.                                    | Deciding which domain behaviors may be flag-gated and auditing material decisions.                                                             |
+| `@stynx/integration-adapter` | Retry, timeout, idempotency, circuit breaker, and telemetry pattern for external calls.                       | Provider schemas, homologation evidence, credential handling, and domain error semantics.                                                      |
 
 ## Rule
 
 If a concern is generic platform behavior, prefer STYNX. If it changes legal
 meaning, workflow state, evidence custody, numbering, domain interpretation, or
 provider-specific schema semantics, keep it in the adopter repo.
+
+## RBAC Watch
+
+R10 opened an RBAC stability watch at
+[`docs/work/2026-05-24-rbac-stability-watch.md`](../work/2026-05-24-rbac-stability-watch.md).
+Transient adopter-side RBAC failures should not trigger STYNX code changes until
+they reproduce twice with role, tenant, route, status-code, and stack evidence.
 
 ## Shared Verifiers
 
