@@ -12,3 +12,4 @@ behavior in the adopter repo.
 ## Closeouts
 
 - [STYNX R10 closeout — adopter notes](stynx-r10-closeout.md)
+- [STYNX PDF public payroll — adopter notes](stynx-pdf-public-payroll.md)

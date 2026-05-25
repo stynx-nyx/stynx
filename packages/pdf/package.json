@@ -12,6 +12,21 @@
       "types": "./dist/pdf/src/index.d.ts",
       "require": "./dist/pdf/src/index.js",
       "default": "./dist/pdf/src/index.js"
+    },
+    "./fixed-layout": {
+      "types": "./dist/pdf/src/fixed-layout/index.d.ts",
+      "require": "./dist/pdf/src/fixed-layout/index.js",
+      "default": "./dist/pdf/src/fixed-layout/index.js"
+    },
+    "./evidence": {
+      "types": "./dist/pdf/src/evidence/index.d.ts",
+      "require": "./dist/pdf/src/evidence/index.js",
+      "default": "./dist/pdf/src/evidence/index.js"
+    },
+    "./public-payroll": {
+      "types": "./dist/pdf/src/templates/public-payroll/index.d.ts",
+      "require": "./dist/pdf/src/templates/public-payroll/index.js",
+      "default": "./dist/pdf/src/templates/public-payroll/index.js"
     }
   },
   "files": [
@@ -26,11 +41,13 @@
   },
   "dependencies": {
     "handlebars": "4.7.9",
+    "pdf-lib": "^1.17.1",
     "playwright": "^1.60.0"
   },
   "peerDependencies": {
     "@nestjs/common": "^11.1.19",
     "@nestjs/core": "^11.1.19",
+    "@stynx/signature": "^0.1.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2"
   },

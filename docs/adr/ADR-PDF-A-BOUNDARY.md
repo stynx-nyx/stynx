@@ -23,6 +23,10 @@ and conversion implementation with fixture compatibility evidence. The
 `PdfAConformanceAdapter` interface stays as the integration point for adopters
 that already have a compliant converter.
 
+In R11 follow-up work, STYNX may ship deterministic fixed-layout helpers and
+explicit adopter-compatible template packs, provided they are documented as
+PDF/A-style structural output rather than validator-backed PDF/A conformance.
+
 ## Rationale
 
 PDF/A is a regulatory archival claim, not a generic rendering feature. A shared
@@ -35,7 +39,8 @@ STYNX without a validator would increase risk while reducing audit clarity.
 
 - `@stynx/pdf` continues to reject `output.profile: "pdf-a"` unless callers
   configure a `PdfAConformanceAdapter`.
-- SGP keeps its local PDF/A builders and can update its R10 adoption diagnostic
-  from "missing STYNX API" to "intentionally adopter-local by STYNX decision."
+- SGP can replace duplicated PDF construction with an explicit public-payroll
+  template pack while keeping orchestration, product semantics, and regulatory
+  acceptance in SGP.
 - Future STYNX work may add deterministic primitives or a real adapter only with
   validator-backed tests and adopter fixture compatibility evidence.

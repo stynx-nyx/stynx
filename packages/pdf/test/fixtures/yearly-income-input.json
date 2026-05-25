@@ -1,0 +1,28 @@
+{
+  "payer": {
+    "name": "Municipio de Teste",
+    "document": "12345678000199"
+  },
+  "employee": {
+    "id": "00000000-0000-4000-8000-000000000001",
+    "registration": "MAT-001",
+    "name": "Servidor Teste",
+    "cpf": "00011122233",
+    "employmentLink": "Efetivo"
+  },
+  "yearBase": 2025,
+  "totals": {
+    "taxableTotal": "74500.25",
+    "thirteenthSalary": "5000.25",
+    "vacationTotal": "9500.00",
+    "severanceTotal": "0.00",
+    "exemptTotal": "1200.00",
+    "inssRppsTotal": "8250.00",
+    "irrfTotal": "6100.00",
+    "dependentsCount": 2
+  },
+  "esocialTotal": "75700.25",
+  "esocialIrrfTotal": "6100.00",
+  "legalReference": "IN RFB 2.060/2021, art. 16 e Anexo I - Comprovante de Rendimentos Pagos e de IRRF.",
+  "recomputedAt": "2026-02-28T00:00:00.000Z"
+}
