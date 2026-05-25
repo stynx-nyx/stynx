@@ -1630,12 +1630,18 @@ importers:
       '@stynx/integration-adapter':
         specifier: workspace:*
         version: link:../integration-adapter
+      '@xmldom/xmldom':
+        specifier: ^0.9.10
+        version: 0.9.10
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
+      xml-crypto:
+        specifier: ^6.1.2
+        version: 6.1.2
     devDependencies:
       '@nestjs/testing':
         specifier: ^11.1.19
@@ -8971,6 +8977,27 @@ packages:
       {
         integrity: sha512-kPSSXE6De1XOR820C90RIo2ogvZG+c3KiHzqUoO/F34Y2shGzesfqv7o57xrxovZJH/MetF5UjroJ/R/3isoiw==,
       }
+
+  '@xmldom/is-dom-node@1.0.1':
+    resolution:
+      {
+        integrity: sha512-CJDxIgE5I0FH+ttq/Fxy6nRpxP70+e2O048EPe85J2use3XKdatVM7dDVvFNjQudd9B49NPoZ+8PG49zj4Er8Q==,
+      }
+    engines: { node: '>= 16' }
+
+  '@xmldom/xmldom@0.8.13':
+    resolution:
+      {
+        integrity: sha512-KRYzxepc14G/CEpEGc3Yn+JKaAeT63smlDr+vjB8jRfgTBBI9wRj/nkQEO+ucV8p8I9bfKLWp37uHgFrbntPvw==,
+      }
+    engines: { node: '>=10.0.0' }
+
+  '@xmldom/xmldom@0.9.10':
+    resolution:
+      {
+        integrity: sha512-A9gOqLdi6cV4ibazAjcQufGj0B1y/vDqYrcuP6d/6x8P27gRS8643Dj9o1dEKtB6O7fwxb2FgBmJS2mX7gpvdw==,
+      }
+    engines: { node: '>=14.6' }
 
   '@xtuc/ieee754@1.2.0':
     resolution:
@@ -20078,6 +20105,13 @@ packages:
       }
     engines: { node: '>=12' }
 
+  xml-crypto@6.1.2:
+    resolution:
+      {
+        integrity: sha512-leBOVQdVi8FvPJrMYoum7Ici9qyxfE4kVi+AkpUoYCSXaQF4IlBm1cneTK9oAxR61LpYxTx7lNcsnBIeRpGW2w==,
+      }
+    engines: { node: '>=16' }
+
   xml-js@1.6.11:
     resolution:
       {
@@ -20104,6 +20138,13 @@ packages:
       {
         integrity: sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw==,
       }
+
+  xpath@0.0.33:
+    resolution:
+      {
+        integrity: sha512-NNXnzrkDrAzalLhIUc01jO2mOzXGXh1JwPgkihcLLzw98c0WgYDmmjSh1Kl3wzaxSVWMuA+fe0WTWOBDWCBmNA==,
+      }
+    engines: { node: '>=0.6.0' }
 
   xtend@4.0.2:
     resolution:
@@ -25901,6 +25942,12 @@ snapshots:
     dependencies:
       '@webassemblyjs/ast': 1.14.1
       '@xtuc/long': 4.2.2
+
+  '@xmldom/is-dom-node@1.0.1': {}
+
+  '@xmldom/xmldom@0.8.13': {}
+
+  '@xmldom/xmldom@0.9.10': {}
 
   '@xtuc/ieee754@1.2.0': {}
 
@@ -33308,6 +33355,12 @@ snapshots:
 
   xdg-basedir@5.1.0: {}
 
+  xml-crypto@6.1.2:
+    dependencies:
+      '@xmldom/is-dom-node': 1.0.1
+      '@xmldom/xmldom': 0.8.13
+      xpath: 0.0.33
+
   xml-js@1.6.11:
     dependencies:
       sax: 1.6.0
@@ -33317,6 +33370,8 @@ snapshots:
   xml-naming@0.1.0: {}
 
   xmlchars@2.2.0: {}
+
+  xpath@0.0.33: {}
 
   xtend@4.0.2: {}
 

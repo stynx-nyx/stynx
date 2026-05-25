@@ -4,7 +4,7 @@ import { createVitestConfig } from '../../tools/repo-config/vitest.base.mjs';
 export default createVitestConfig({
   packageDir: __dirname,
   packageName: '@stynx/signature',
-  include: ['test/unit/**/*.spec.ts'],
+  include: ['test/**/*.spec.ts'],
   alias: {
     '@stynx/integration-adapter': resolve(__dirname, '../integration-adapter/src/index.ts'),
   },

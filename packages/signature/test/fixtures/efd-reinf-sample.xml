@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Reinf>
+  <evtTotal Id="ID-R9000-2026-01">
+    <ideEvento>
+      <perApur>2026-01</perApur>
+    </ideEvento>
+    <ideContri>
+      <nrInsc>00000000000000</nrInsc>
+    </ideContri>
+    <infoTotal>
+      <vlrBaseRet>1000.00</vlrBaseRet>
+      <vlrRetApur>110.00</vlrRetApur>
+    </infoTotal>
+  </evtTotal>
+</Reinf>

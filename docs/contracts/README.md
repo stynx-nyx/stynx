@@ -16,6 +16,8 @@ can compile or validate against without importing implementation internals.
   `@stynx-web/angular-flow`.
 - [signature.md](signature.md) — PAdES/TSA signing and verification contract for
   `@stynx/signature`.
+- [xmldsig.md](xmldsig.md) — XMLDSig signing and verification contract for
+  fiscal XML payloads.
 - [pdf.md](pdf.md) — server-side PDF render contract for `@stynx/pdf`.
 - [feature-flags.md](feature-flags.md) — tenant/environment feature-flag
   definition and evaluation contract for `@stynx/feature-flags`.

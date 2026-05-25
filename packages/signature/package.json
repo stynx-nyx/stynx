@@ -12,6 +12,11 @@
       "types": "./dist/signature/src/index.d.ts",
       "require": "./dist/signature/src/index.js",
       "default": "./dist/signature/src/index.js"
+    },
+    "./xmldsig": {
+      "types": "./dist/signature/src/xmldsig/index.d.ts",
+      "require": "./dist/signature/src/xmldsig/index.js",
+      "default": "./dist/signature/src/xmldsig/index.js"
     }
   },
   "files": [
@@ -25,7 +30,9 @@
     "test": "vitest run --config ./vitest.config.ts"
   },
   "dependencies": {
-    "@stynx/integration-adapter": "workspace:*"
+    "@stynx/integration-adapter": "workspace:*",
+    "@xmldom/xmldom": "^0.9.10",
+    "xml-crypto": "^6.1.2"
   },
   "peerDependencies": {
     "@nestjs/common": "^11.1.19",

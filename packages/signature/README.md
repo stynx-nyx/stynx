@@ -4,7 +4,8 @@
 signatures, TSA timestamping, and OCSP-first certificate validation with CRL
 fallback. It ports PEC's signature orchestration into a package-owned boundary
 while leaving ICP-Brasil, gov.br, and other cryptographic providers behind a
-stable provider contract.
+stable provider contract. It also exposes XMLDSig helpers for adopter-owned
+fiscal XML flows such as DCTFWeb and EFD-Reinf.
 
 ## Nest Setup
 
@@ -67,6 +68,8 @@ Primary exports:
   tamper-evident evidence.
 - `SequentialSigner` - ordered document-signing envelope helper with publish
   read verification.
+- `XmlDSigSigner` and `XmlDSigVerifier` - enveloped XMLDSig signing,
+  verification, and tamper-detection helpers for `Id`-addressed XML payloads.
 
 ## Provider Contract
 
@@ -88,3 +91,7 @@ rejected before any provider call.
 PEC report flows can replace `signPades(pdf, meta)` with `SignatureService.sign`
 and persist `SignatureEvidence`. TEAT AIT/evidence flows can use `verify()` for
 hash/signature validation without importing PEC code or STYNX internals.
+
+SGP fiscal XML flows can import `@stynx/signature/xmldsig` to sign DCTFWeb and
+EFD-Reinf payloads while keeping PKCS#12 parsing, certificate lookup, audit, and
+database updates inside SGP.

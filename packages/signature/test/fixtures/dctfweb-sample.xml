@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<declaracao Id="DCTFWEB-2026-01">
+  <competencia>2026-01</competencia>
+  <contribuinte>00000000000000</contribuinte>
+  <debitos>
+    <debito codigo="1082-01" valor="200.00" />
+    <debito codigo="0561" valor="50.00" />
+    <debito codigo="FGTS" valor="64.00" />
+  </debitos>
+  <total>314.00</total>
+</declaracao>

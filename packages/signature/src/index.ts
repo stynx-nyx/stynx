@@ -17,6 +17,7 @@ export * from './signature.module';
 export * from './signature.service';
 export * from './tokens';
 export * from './types';
+export * from './xmldsig';
 
 export function createMockSignatureBackend(now: () => Date = () => new Date()): SignatureBackend {
   return {
