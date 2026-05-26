@@ -1,5 +1,7 @@
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import { PDFDocument, rgb } from 'pdf-lib';
 import type { PDFDocument as PdfLibDocument, PDFFont, PDFPage } from 'pdf-lib';
+import { embedPdfAFonts } from '../internals/pdf-a-fonts';
+import { applyPdfAConformanceMetadata } from '../internals/pdf-a-metadata';
 import { cleanPdfText } from './text';
 import { A4_PAGE_SIZE } from './types';
 import type { FixedLayoutDrawContext, FixedLayoutPageSize } from './types';
@@ -23,6 +25,7 @@ export interface FixedLayoutDocumentOptions {
 export class FixedLayoutDocumentBuilder {
   private constructor(
     private readonly pdf: PdfLibDocument,
+    private readonly metadata: Required<FixedLayoutDocumentMetadata>,
     private readonly options: Required<FixedLayoutDocumentOptions>,
   ) {}
 
@@ -38,18 +41,24 @@ export class FixedLayoutDocumentBuilder {
     pdf.setProducer(metadata.producer ?? 'pdf-lib');
     pdf.setCreationDate(metadata.createdAt);
     pdf.setModificationDate(metadata.modifiedAt ?? metadata.createdAt);
-    return new FixedLayoutDocumentBuilder(pdf, {
-      pageSize: options.pageSize ?? A4_PAGE_SIZE,
-      margin: options.margin ?? 36,
-      initialY: options.initialY ?? 802,
-    });
+    return new FixedLayoutDocumentBuilder(
+      pdf,
+      {
+        ...metadata,
+        producer: metadata.producer ?? 'pdf-lib',
+        modifiedAt: metadata.modifiedAt ?? metadata.createdAt,
+      },
+      {
+        pageSize: options.pageSize ?? A4_PAGE_SIZE,
+        margin: options.margin ?? 36,
+        initialY: options.initialY ?? 802,
+      },
+    );
   }
 
   async addPage(): Promise<FixedLayoutDrawContext> {
     const page = this.pdf.addPage([this.options.pageSize.width, this.options.pageSize.height]);
-    const regular = await this.pdf.embedFont(StandardFonts.Helvetica);
-    const bold = await this.pdf.embedFont(StandardFonts.HelveticaBold);
-    const mono = await this.pdf.embedFont(StandardFonts.Courier);
+    const { regular, bold, mono } = await embedPdfAFonts(this.pdf);
     return createDrawContext(page, {
       regular,
       bold,
@@ -60,6 +69,7 @@ export class FixedLayoutDocumentBuilder {
   }
 
   async save(): Promise<Uint8Array> {
+    applyPdfAConformanceMetadata(this.pdf, this.metadata);
     return this.pdf.save({ useObjectStreams: false });
   }
 }

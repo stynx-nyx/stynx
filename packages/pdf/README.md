@@ -43,9 +43,11 @@ Primary exports:
   with Playwright Chromium.
 - `createFixturePdfBackend()` - deterministic lightweight backend for tests.
 - `FixedLayoutDocumentBuilder` and `validatePdfAStyle()` - provider-free
-  `pdf-lib` helpers for stable fixed-layout PDFs and honest structural checks.
+  `pdf-lib` helpers for stable fixed-layout PDFs with bundled PDF/A-2b content
+  assets and honest structural checks.
 - `PdfVerificationEvidenceAppender` - draws a verification hint into PDF bytes
-  and appends a STYNX PAdES evidence block through `@stynx/signature`.
+  and embeds a STYNX PAdES evidence block through `@stynx/signature` using a
+  valid incremental PDF update.
 - `PublicPayrollPdfBuilder` - adopter-compatible payslip and yearly-income
   template pack exposed through `@stynx/pdf/public-payroll`.
 
@@ -91,6 +93,19 @@ transitions, and payroll/fiscal reconciliation in their own repositories.
 `output.profile: "pdf-a"` is not silently treated as a regular PDF. The local
 backend throws `PdfProfileUnsupportedError` unless a `PdfAConformanceAdapter` is
 configured. That keeps regulatory archival output explicit and auditable.
+
+The fixed-layout and public-payroll surfaces bundle the assets required for
+PDF/A-2b content generation:
+
+- Liberation Sans Regular, Liberation Sans Bold, and Liberation Mono Regular
+  under `assets/fonts/`, licensed by `assets/fonts/LICENSE-LIBERATION-FONTS`.
+- sRGB IEC61966-2.1 no-black-scaling ICC profile under `assets/color/`, with
+  redistribution terms in `assets/color/LICENSE-SRGB-ICC`.
+
+`FixedLayoutDocumentBuilder.save()` embeds subset fonts, deterministic trailer
+IDs, XMP metadata declaring PDF/A-2b, and an sRGB output intent. The evidence
+appender keeps `%%STYNX-PADES-SIGNATURE` byte-scannable but places it before the
+final EOF through an incremental update.
 
 `validatePdfAStyle()` is a structural helper only. It checks for a PDF header,
 metadata, and font resources; it is not a validator-backed PDF/A conformance

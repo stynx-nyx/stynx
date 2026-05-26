@@ -1,5 +1,8 @@
 import { createRequire } from 'node:module';
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import { PDFDocument, rgb } from 'pdf-lib';
+import { embedPdfAFonts } from '../internals/pdf-a-fonts';
+import { applyPdfAConformanceMetadata } from '../internals/pdf-a-metadata';
+import { appendIncrementalEvidenceObject } from '../internals/pdf-incremental-evidence';
 
 import type {
   PdfPadesEvidenceAdapter,
@@ -12,23 +15,19 @@ const loadPeerPackage = createRequire(__filename);
 export class PdfVerificationEvidenceAppender {
   private readonly evidenceAdapter: PdfPadesEvidenceAdapter;
 
-  constructor(
-    private readonly options: PdfVerificationEvidenceAppenderOptions = {},
-  ) {
+  constructor(private readonly options: PdfVerificationEvidenceAppenderOptions = {}) {
     this.evidenceAdapter =
       options.evidenceAdapter ?? createDefaultPadesEvidenceAdapter(options.now);
   }
 
-  async embedVerificationHint(
-    input: PdfVerificationEvidenceInput,
-  ): Promise<Uint8Array> {
+  async embedVerificationHint(input: PdfVerificationEvidenceInput): Promise<Uint8Array> {
     try {
       const pdf = await PDFDocument.load(input.payload, {
         ignoreEncryption: true,
         updateMetadata: false,
       });
       const page = pdf.getPage(pdf.getPageCount() - 1);
-      const font = await pdf.embedFont(StandardFonts.Helvetica);
+      const { regular: font } = await embedPdfAFonts(pdf);
       page.drawText(`Verificacao publica: ${input.verifyUrl}`, {
         x: 36,
         y: 36,
@@ -36,8 +35,10 @@ export class PdfVerificationEvidenceAppender {
         font,
         color: rgb(0, 0, 0),
       });
+      applyPdfAConformanceMetadata(pdf, metadataFromInput(input));
       const rendered = await pdf.save({ useObjectStreams: false });
-      return this.appendEvidenceBlock(rendered, input);
+      const evidenceBlock = this.evidenceBlock(rendered, input);
+      return this.appendEvidenceBlock(rendered, evidenceBlock);
     } catch {
       return Buffer.concat([
         Buffer.from(input.payload),
@@ -47,20 +48,11 @@ export class PdfVerificationEvidenceAppender {
     }
   }
 
-  private appendEvidenceBlock(
-    payload: Uint8Array,
-    input: PdfVerificationEvidenceInput,
-  ): Uint8Array {
-    return Buffer.concat([
-      Buffer.from(payload),
-      Buffer.from(this.evidenceBlock(payload, input)),
-    ]);
+  private appendEvidenceBlock(payload: Uint8Array, evidenceBlock: Uint8Array): Uint8Array {
+    return appendIncrementalEvidenceObject(payload, evidenceBlock);
   }
 
-  private evidenceBlock(
-    payload: Uint8Array,
-    input: PdfVerificationEvidenceInput,
-  ): Uint8Array {
+  private evidenceBlock(payload: Uint8Array, input: PdfVerificationEvidenceInput): Uint8Array {
     const signed = this.evidenceAdapter.sign({
       payload,
       verifyUrl: input.verifyUrl,
@@ -73,15 +65,32 @@ export class PdfVerificationEvidenceAppender {
   }
 }
 
-function createDefaultPadesEvidenceAdapter(
-  now: (() => Date) | undefined,
-): PdfPadesEvidenceAdapter {
+function metadataFromInput(input: PdfVerificationEvidenceInput) {
+  const signedAt = parseDate(input.signedAt) ?? new Date(0);
+  return {
+    title: 'STYNX PDF verification evidence',
+    subject: input.reason ?? 'Official PDF signature evidence',
+    author: input.signerName ?? 'STYNX',
+    creator: 'PdfVerificationEvidenceAppender',
+    producer: 'pdf-lib',
+    createdAt: signedAt,
+    modifiedAt: signedAt,
+  };
+}
+
+function parseDate(value: string | undefined): Date | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
+function createDefaultPadesEvidenceAdapter(now: (() => Date) | undefined): PdfPadesEvidenceAdapter {
   // Keep @stynx/signature as a runtime peer so @stynx/pdf does not compile the
   // sibling package source into its tarball through monorepo tsconfig paths.
   const signature = loadPeerPackage('@stynx/signature') as {
-    createMockPadesEvidenceAdapter: (
-      now?: () => Date,
-    ) => PdfPadesEvidenceAdapter;
+    createMockPadesEvidenceAdapter: (now?: () => Date) => PdfPadesEvidenceAdapter;
   };
   return signature.createMockPadesEvidenceAdapter(now);
 }

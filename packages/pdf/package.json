@@ -30,6 +30,7 @@
     }
   },
   "files": [
+    "assets",
     "dist"
   ],
   "scripts": {
@@ -40,6 +41,7 @@
     "test": "vitest run --config ./vitest.config.ts"
   },
   "dependencies": {
+    "@pdf-lib/fontkit": "^1.1.1",
     "handlebars": "4.7.9",
     "pdf-lib": "^1.17.1",
     "playwright": "^1.60.0"

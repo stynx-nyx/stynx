@@ -1,5 +1,17 @@
 # @stynx/pdf
 
+## Unreleased
+
+- Bundle Liberation font assets and an sRGB ICC profile for fixed-layout
+  PDF/A-2b output.
+- Embed subset fonts, deterministic trailer IDs, XMP PDF/A metadata, and sRGB
+  output intents in `FixedLayoutDocumentBuilder`.
+- Move verification evidence placement into a valid incremental PDF update so
+  `%%STYNX-PADES-SIGNATURE` remains byte-scannable without trailing bytes after
+  `%%EOF`.
+- Add veraPDF-backed conformance coverage for public-payroll payslip and
+  yearly-income PDFs.
+
 ## 0.2.0
 
 - Add deterministic fixed-layout PDF primitives backed by `pdf-lib`.

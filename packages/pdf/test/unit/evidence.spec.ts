@@ -1,8 +1,5 @@
 import { decodePadesEvidenceBlock } from '@stynx/signature';
-import {
-  FixedLayoutDocumentBuilder,
-  PdfVerificationEvidenceAppender,
-} from '../../src';
+import { FixedLayoutDocumentBuilder, PdfVerificationEvidenceAppender } from '../../src';
 
 describe('PdfVerificationEvidenceAppender', () => {
   it('draws a verification hint and appends STYNX PAdES evidence', async () => {
@@ -18,8 +15,11 @@ describe('PdfVerificationEvidenceAppender', () => {
       signedAt: '2026-05-24T12:00:00.000Z',
     });
 
-    expect(Buffer.from(signed).subarray(0, 5).toString('latin1')).toBe(
-      '%PDF-',
+    expect(Buffer.from(signed).subarray(0, 5).toString('latin1')).toBe('%PDF-');
+    const signedText = Buffer.from(signed).toString('latin1');
+    expect(signedText.trimEnd().endsWith('%%EOF')).toBe(true);
+    expect(signedText.indexOf('%%STYNX-PADES-SIGNATURE:')).toBeLessThan(
+      signedText.lastIndexOf('%%EOF'),
     );
     expect(decodePadesEvidenceBlock(signed)).toMatchObject({
       format: 'PAdES',

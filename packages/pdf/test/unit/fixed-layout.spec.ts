@@ -4,9 +4,16 @@ describe('fixed-layout PDF helpers', () => {
   it('renders deterministic structural PDF bytes with stable metadata', async () => {
     const first = await renderSimplePdf();
     const second = await renderSimplePdf();
+    const text = Buffer.from(first).toString('latin1');
 
     expect(Buffer.from(first).subarray(0, 5).toString('latin1')).toBe('%PDF-');
     expect(Buffer.from(first).equals(Buffer.from(second))).toBe(true);
+    expect(text).toContain('/FontFile2');
+    expect(text).toMatch(/\/ID\s*\[\s*<[0-9a-f]{32}>/u);
+    expect(text).toContain('/OutputIntents');
+    expect(text).toContain('/Metadata');
+    expect(text).toContain('<pdfaid:part>2</pdfaid:part>');
+    expect(text).toContain('<pdfaid:conformance>B</pdfaid:conformance>');
     expect(validatePdfAStyle(first)).toEqual({ valid: true, reasons: [] });
   });
 
