@@ -123,6 +123,7 @@ const config = {
           ],
         },
       ],
+      copyright: `Copyright © ${new Date().getFullYear()} Antonio A. Russo (<a href="mailto:aarusso@nyxk.com.br" style="color:inherit;text-decoration:underline">aarusso@nyxk.com.br</a>).<br/>STYNX — a multi-tenant platform foundation of reusable backend and Angular libraries for building governed SaaS applications. ${coreMajorLabel}<br/>Built with Docusaurus.`,
     },
   },
 };
