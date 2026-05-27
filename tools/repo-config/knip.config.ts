@@ -63,7 +63,7 @@ const config: KnipConfig = {
     'packages/backend/src/rate-limit/types.ts',
     'tools/eslint-config/scripts.mjs',
     'tools/eslint-config/test.mjs',
-    'docs/scripts/generate-status-pages.mjs',
+    'docs/site/scripts/generate-status-pages.mjs',
     'domain/demo-bookmark/api/src/demo-bookmark/dto/update-bookmark-tag.dto.ts',
     'domain/demo-bookmark/api/src/demo-bookmark/entities/bookmark.entity.ts',
     'domain/demo-bookmark/web/src/app/demo-bookmark/bookmark-tag-detail.component.ts',
