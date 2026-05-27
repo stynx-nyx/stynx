@@ -4,5 +4,12 @@
   "devai_version": "0.0.0",
   "repo": {
     "kind": "library"
+  },
+  "docs": {
+    "builder": "docusaurus",
+    "build_command": "pnpm --filter @stynx/docs-site run build",
+    "output_dir": "docs/site/build",
+    "publish_target": "gh-pages",
+    "gh_pages_branch": "gh-pages"
   }
 }
