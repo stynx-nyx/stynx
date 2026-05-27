@@ -1,4 +1,4 @@
-name: Docs
+name: Docs freshness check
 
 on:
   pull_request:
@@ -30,8 +30,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: docs-${{ github.ref }}
@@ -91,36 +89,10 @@ jobs:
           CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
         run: pnpm --filter @stynx/docs-site build:ci
 
-      - name: Configure GitHub Pages
-        if: github.event_name == 'push'
-        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
-
       - name: Upload Lighthouse reports
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: docs-lighthouse
-          path: docs/build/lighthouse
+          path: docs/site/build/lighthouse
           if-no-files-found: ignore
-
-      - name: Upload pages artifact
-        if: github.event_name == 'push'
-        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
-        with:
-          path: docs/build
-
-  deploy:
-    name: deploy-pages
-    # Disabled by default until repository Pages deployment is explicitly enabled.
-    if: ${{ vars.ENABLE_PAGES_DEPLOY == 'true' && needs.evidence-gate.outputs.evidence_mode != 'true' }}
-    needs:
-      - evidence-gate
-      - build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5
