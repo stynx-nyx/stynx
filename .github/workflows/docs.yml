@@ -89,7 +89,7 @@ jobs:
       - name: Build docs
         env:
           CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
-        run: pnpm --filter docs build:ci
+        run: pnpm --filter @stynx/docs-site build:ci
 
       - name: Configure GitHub Pages
         if: github.event_name == 'push'

@@ -91,9 +91,9 @@ infra/cdk/cdk.out/
 # Documentation build output
 docs/dist/
 !docs/dist/.gitkeep
-docs/build/
-docs/.docusaurus/
-docs/.generated/
+docs/site/build/
+docs/site/.docusaurus/
+docs/site/.generated/
 
 # Test artefacts
 .test-results/

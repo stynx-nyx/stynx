@@ -4,9 +4,9 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
-const docsDir = resolve(scriptDir, '..');
-const repoRoot = resolve(docsDir, '..');
-const apiOutDir = resolve(docsDir, '.generated/site-docs/api-reference');
+const siteRoot = resolve(scriptDir, '..');
+const repoRoot = resolve(siteRoot, '..', '..');
+const apiOutDir = resolve(siteRoot, '.generated/site-docs/api-reference');
 
 function collectPackages(baseDir, matcher) {
   const resolvedBase = resolve(repoRoot, baseDir);

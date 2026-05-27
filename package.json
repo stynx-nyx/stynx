@@ -10,10 +10,10 @@
     "pnpm": ">=9 <10"
   },
   "scripts": {
-    "build": "turbo run build --filter='./packages/*' --filter='./packages-web/*' --filter='./tools/*' --filter='./test/*' --filter=docs",
+    "build": "turbo run build --filter='./packages/*' --filter='./packages-web/*' --filter='./tools/*' --filter='./test/*' --filter=@stynx/docs-site",
     "lint": "turbo run lint --filter='./packages/*' --filter='./packages-web/*' --filter='./tools/*' --filter='./test/*'",
     "lint:tests": "eslint --config tools/eslint-config/test.mjs --no-error-on-unmatched-pattern 'packages/*/test/**/*.{spec,test}.ts' 'packages-web/*/test/**/*.{spec,test}.ts'",
-    "typecheck": "turbo run typecheck --filter='./packages/*' --filter='./packages-web/*' --filter='./tools/*' --filter=docs",
+    "typecheck": "turbo run typecheck --filter='./packages/*' --filter='./packages-web/*' --filter='./tools/*' --filter=@stynx/docs-site",
     "test": "turbo run test --filter='./packages/*' --filter='./packages-web/*' --filter='./tools/*' --filter='./test/*'",
     "test:int": "turbo run test:int --filter='./packages/*'",
     "check:engines": "node scripts/check-engines.mjs",

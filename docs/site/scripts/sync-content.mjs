@@ -3,10 +3,10 @@ import { dirname, extname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
-const siteDir = dirname(fileURLToPath(import.meta.url));
-const docsRoot = resolve(siteDir, '..');
-const repoRoot = resolve(docsRoot, '..');
-const outDir = resolve(docsRoot, '.generated/site-docs');
+const scriptDir = dirname(fileURLToPath(import.meta.url));
+const siteRoot = resolve(scriptDir, '..');
+const repoRoot = resolve(siteRoot, '..', '..');
+const outDir = resolve(siteRoot, '.generated/site-docs');
 
 function resetOutDir() {
   rmSync(outDir, { recursive: true, force: true });
@@ -116,7 +116,12 @@ function sanitizePublicReferences(content) {
     .replace(/`coverage\/test-evidence\.json`/gu, '`generated test evidence summary (not published)`')
     .replace(/coverage\/test-evidence\.json/gu, 'generated test evidence summary')
     .replace(/`coverage-final\.json`/gu, '`coverage summary JSON (not published)`')
-    .replace(/coverage-final\.json/gu, 'coverage summary JSON');
+    .replace(/coverage-final\.json/gu, 'coverage summary JSON')
+    .replace(/\]\((?:\.\.\/)+align\/[^)]*\)/gu, '](#internal-round-tracking-note)')
+    .replace(/`(?:\.\.\/)*align\/[^`]*`/gu, '`internal round-tracking note (not published)`')
+    .replace(/\balign\/stynx\/[^\s`'",)]+/gu, 'internal round-tracking note')
+    .replace(/\]\((?:\.\.\/)+devai\/[^)]*\)/gu, '](#external-devai-reference)')
+    .replace(/`(?:\.\.\/)*devai\/[^`]*`/gu, '`external DEVAI sibling checkout reference (not published)`');
 }
 
 function publicMarkdownContent(content) {
@@ -337,7 +342,7 @@ function syncPublicStynxDocs() {
 }
 
 function generateStatusPages() {
-  const result = spawnSync(process.execPath, [resolve(docsRoot, 'scripts/generate-status-pages.mjs')], {
+  const result = spawnSync(process.execPath, [resolve(siteRoot, 'scripts/generate-status-pages.mjs')], {
     cwd: repoRoot,
     stdio: 'inherit',
   });

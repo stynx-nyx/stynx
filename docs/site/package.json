@@ -1,5 +1,5 @@
 {
-  "name": "docs",
+  "name": "@stynx/docs-site",
   "private": true,
   "version": "0.1.0",
   "description": "Docusaurus documentation site for STYNX",

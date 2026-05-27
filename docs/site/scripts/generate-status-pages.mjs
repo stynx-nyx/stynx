@@ -4,9 +4,9 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
-const docsRoot = resolve(scriptDir, '..');
-const repoRoot = resolve(docsRoot, '..');
-const outDir = resolve(docsRoot, '.generated/site-docs/status');
+const siteRoot = resolve(scriptDir, '..');
+const repoRoot = resolve(siteRoot, '..', '..');
+const outDir = resolve(siteRoot, '.generated/site-docs/status');
 
 function run(command, args) {
   const result = spawnSync(command, args, {

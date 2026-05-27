@@ -500,8 +500,8 @@ job_docs() {
   local status=0
   install_workspace_once
   ensure_docs_chrome
-  run pnpm --filter docs build:ci || status=$?
-  copy_artifact docs/build/lighthouse docs/lighthouse
+  run pnpm --filter @stynx/docs-site build:ci || status=$?
+  copy_artifact docs/site/build/lighthouse docs/lighthouse
   return "$status"
 }
 

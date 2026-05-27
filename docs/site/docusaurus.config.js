@@ -1,9 +1,7 @@
-import { readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+const { readFileSync } = require('node:fs');
+const { resolve } = require('node:path');
 
-const configDir = dirname(fileURLToPath(import.meta.url));
-const corePackageJsonPath = resolve(configDir, '../packages/core/package.json');
+const corePackageJsonPath = resolve(__dirname, '../../packages/core/package.json');
 const corePackageVersion = JSON.parse(readFileSync(corePackageJsonPath, 'utf8')).version;
 const coreMajorLabel = `v${String(corePackageVersion).split('.')[0] ?? '0'}`;
 
@@ -64,7 +62,7 @@ const config = {
         docs: {
           path: '.generated/site-docs',
           routeBasePath: 'docs',
-          sidebarPath: './sidebars.mjs',
+          sidebarPath: './sidebars.js',
           lastVersion: 'current',
           versions: {
             current: {
@@ -128,4 +126,4 @@ const config = {
   },
 };
 
-export default config;
+module.exports = config;
