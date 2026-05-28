@@ -18,3 +18,11 @@ behavior in the adopter repo.
 
 - [STYNX R10 closeout — adopter notes](stynx-r10-closeout.md)
 - [STYNX R12 closeout — PDF/A validator](stynx-r12-closeout.md)
+- [STYNX R14 closeout — docs-governance migration](stynx-r14-closeout.md)
+
+## Docs governance
+
+Publishing the docs site is a local act via the DEVAI CLI:
+`node ../devai/packages/cli/dist/bin.js docs-publish --repo-root . --human`.
+See [ADR-DOCS-GOVERNANCE-ADOPTION](../adr/ADR-DOCS-GOVERNANCE-ADOPTION.md)
+for the rationale and the eight decisions taken during the R14 migration.

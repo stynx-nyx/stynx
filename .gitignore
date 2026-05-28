@@ -95,6 +95,9 @@ docs/site/build/
 docs/site/.docusaurus/
 docs/site/.generated/
 
+# Docusaurus publish state (local-only baseline tracking)
+.devai/state/docs-publish-baseline.txt
+
 # Test artefacts
 .test-results/
 test-results/
