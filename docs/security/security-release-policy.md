@@ -11,6 +11,7 @@ This policy defines the release-security lane for STYNX framework packages.
 - SBOM freshness: `pnpm security:sbom:check`.
 - Direct external dependency license policy: `pnpm security:licenses`.
 - High-confidence secret scan: `pnpm security:secrets`.
+- Package provenance wiring: `pnpm release:provenance`.
 - Package release policy and API baselines: `pnpm release:policy` and
   `pnpm api:baselines`.
 - Packaged consumer fixtures: `pnpm release:consumer-fixtures`.
@@ -19,6 +20,7 @@ The combined local gate is:
 
 ```bash
 pnpm security:release
+pnpm release:provenance
 ```
 
 ## SBOM

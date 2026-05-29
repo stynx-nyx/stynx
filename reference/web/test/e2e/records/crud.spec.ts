@@ -142,7 +142,9 @@ test('creates, edits, lists, and soft-deletes a record', async ({ page, loginAsA
   const updatedTitle = `${recordTitle} updated`;
   await page.goto(`/records/${recordId}/edit`);
   await page.getByTestId('record-title-input').fill(updatedTitle);
-  await page.getByTestId('record-email-input').fill(`records-crud-updated-${suffix}@sample-demo.test`);
+  await page
+    .getByTestId('record-email-input')
+    .fill(`records-crud-updated-${suffix}@sample-demo.test`);
   await page.getByTestId('record-save-submit').click();
 
   await expect(page.getByTestId('record-detail-title')).toContainText(updatedTitle);
@@ -152,5 +154,3 @@ test('creates, edits, lists, and soft-deletes a record', async ({ page, loginAsA
   await page.getByTestId(`record-delete-${recordId}`).click();
   await expect(page.getByTestId(`record-row-${recordId}`)).toBeHidden();
 });
-
-// Blocked until @axe-core/playwright is added to @stynx/reference-web devDependencies.

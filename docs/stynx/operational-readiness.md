@@ -10,8 +10,15 @@ This document is the current MVP operations bar for regulated STYNX adopters.
 - Public API declarations are guarded by `pnpm api:baselines`.
 - OpenAPI and generated SDK route coverage are guarded by `pnpm api:contract`
   and `pnpm sdk:route-smoke`.
+- Browser-level frontend confidence is guarded by `pnpm frontend:production-smoke`
+  and `pnpm frontend:a11y-gate`.
 - SBOM freshness, license policy, secret scan, and production audit are covered
   by `pnpm security:release`.
+- Package provenance wiring is guarded by `pnpm release:provenance`.
+- The private regulated production bar is recorded in
+  [production-grade-private-regulated.md](production-grade-private-regulated.md)
+  with the evidence ledger in
+  [production-readiness-evidence.md](production-readiness-evidence.md).
 
 ## Install Verification
 
@@ -27,6 +34,9 @@ pnpm api:baselines
 pnpm release:consumer-fixtures
 pnpm check:rls-negative
 pnpm frontend:production-smoke
+pnpm frontend:a11y-gate
+pnpm release:provenance
+pnpm production:readiness-reference
 pnpm security:release
 pnpm lint
 pnpm typecheck
@@ -68,12 +78,7 @@ contracts.
 
 - Registry publication is opt-in until package namespace ownership and
   provenance-enabled publish credentials are configured.
-- Browser-level frontend integration and axe-based accessibility scans are not
-  yet a required CI gate; current frontend confidence is package Vitest coverage,
-  fixture installs, and SDK route smoke coverage.
 - Container image signing is scoped to reference-app deployment hardening, not
   the framework package release lane.
-- Runtime RLS negative coverage is strongest for auth, audit, and storage DB
-  policies. Flow, records, and reference API route coverage is enforced through
-  OpenAPI/source contract tests until full DB-backed cross-tenant fixtures are
-  expanded for those surfaces.
+- Remote CI, registry publication, and real private adopter deployment rehearsal
+  require human approval and external credentials.

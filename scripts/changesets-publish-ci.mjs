@@ -22,6 +22,7 @@ const result = spawnSync('pnpm', ['release'], {
     ...process.env,
     NODE_AUTH_TOKEN: token,
     NPM_TOKEN: token,
+    NPM_CONFIG_PROVENANCE: 'true',
   },
   stdio: 'inherit',
 });

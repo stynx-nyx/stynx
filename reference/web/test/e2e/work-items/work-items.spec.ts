@@ -41,7 +41,8 @@ const tenantId = referenceTenants.sampleDemo.id;
 const createdAt = '2026-05-19T09:30:46.338Z';
 const recordsApiUrl = /^http:\/\/127\.0\.0\.1:3000\/records(?:\?.*)?$/;
 const workItemsApiUrl = /^http:\/\/127\.0\.0\.1:3000\/work-items(?:\?.*)?$/;
-const workItemApiUrl = /^http:\/\/127\.0\.0\.1:3000\/work-items\/(?!trash(?:[/?#]|$))([^/?#]+)(?:\?.*)?$/;
+const workItemApiUrl =
+  /^http:\/\/127\.0\.0\.1:3000\/work-items\/(?!trash(?:[/?#]|$))([^/?#]+)(?:\?.*)?$/;
 const workItemsTrashApiUrl = /^http:\/\/127\.0\.0\.1:3000\/work-items\/trash(?:\?.*)?$/;
 
 const primaryRecord: RecordItem = {
@@ -212,8 +213,3 @@ test('lists work items and soft-deletes a selected row', async ({ page, loginAsA
   await page.goto('/trash');
   await page.getByTestId('trash-resource-work-items').click();
 });
-
-// Blocked: @axe-core/playwright is not installed in @stynx/reference-web, so the
-// required work-items a11y probe cannot be authored without a dependency-policy assist.
-// Blocked: reference/web/playwright.config.mjs does not include work-items/**/*.spec.ts
-// in the spa-only ownedCategorySpecs list, and this worker may not edit config.

@@ -21,7 +21,8 @@ const deletedAt = '2026-05-19T10:15:46.338Z';
 const recordsApiUrl = /^http:\/\/127\.0\.0\.1:3000\/records(?:\?.*)?$/;
 const recordsTrashApiUrl = /^http:\/\/127\.0\.0\.1:3000\/records\/trash(?:\?.*)?$/;
 const recordRestoreApiUrl = /^http:\/\/127\.0\.0\.1:3000\/records\/([^/?#]+)\/restore(?:\?.*)?$/;
-const recordApiUrl = /^http:\/\/127\.0\.0\.1:3000\/records\/(?!trash(?:[/?#]|$))([^/?#]+)(?:\?.*)?$/;
+const recordApiUrl =
+  /^http:\/\/127\.0\.0\.1:3000\/records\/(?!trash(?:[/?#]|$))([^/?#]+)(?:\?.*)?$/;
 
 function recordIdFromUrl(url: string): string {
   return url.split('/records/')[1]?.split(/[?#/]/)[0] ?? '';
@@ -181,6 +182,3 @@ test('restores a soft-deleted record from trash', async ({ page, loginAsAdmin })
   await page.goto(`/records/${recordId}`);
   await expect(page.getByTestId('record-detail-title')).toContainText(recordTitle);
 });
-
-// Blocked: @axe-core/playwright is not installed in @stynx/reference-web, so an
-// accessibility probe cannot be authored in this spec without dependency-policy assist.

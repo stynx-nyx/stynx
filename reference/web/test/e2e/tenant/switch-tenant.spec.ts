@@ -10,7 +10,9 @@ test('renders tenant selection cards after spa-only dev auth', async ({ page }) 
 
   await page.goto('/tenant');
   await expect(page.getByTestId('tenant-selection-title')).toBeVisible();
-  await expect(page.getByTestId('tenant-current-banner')).toContainText(referenceTenants.sampleDemo.name);
+  await expect(page.getByTestId('tenant-current-banner')).toContainText(
+    referenceTenants.sampleDemo.name,
+  );
   await expect(page.getByTestId(`tenant-card-${referenceTenants.sampleDemo.id}`)).toBeVisible();
   await expect(page.getByTestId(`tenant-card-${referenceTenants.sampleOps.id}`)).toBeVisible();
   await expect(page.getByTestId(`tenant-switch-${referenceTenants.sampleDemo.id}`)).toBeEnabled();
@@ -38,18 +40,21 @@ test('switches the active tenant and mints a replacement session bundle', async 
   await expect(page.getByTestId('nav-dashboard')).toBeVisible();
 
   await page.goto('/tenant');
-  await expect(page.getByTestId('tenant-current-banner')).toContainText(referenceTenants.sampleDemo.name);
+  await expect(page.getByTestId('tenant-current-banner')).toContainText(
+    referenceTenants.sampleDemo.name,
+  );
   const requestCountBeforeSwitch = devLoginTenantIds.length;
   await page.getByTestId(`tenant-switch-${referenceTenants.sampleOps.id}`).click();
   await expect(page.getByTestId('nav-dashboard')).toBeVisible();
   await expect(page).toHaveURL(/\/$/);
 
-  await expect.poll(() => devLoginTenantIds.slice(requestCountBeforeSwitch)).toEqual([referenceTenants.sampleOps.id]);
+  await expect
+    .poll(() => devLoginTenantIds.slice(requestCountBeforeSwitch))
+    .toEqual([referenceTenants.sampleOps.id]);
 
   await page.goBack();
   await expect(page).toHaveURL(/\/tenant$/);
-  await expect(page.getByTestId('tenant-current-banner')).toContainText(referenceTenants.sampleOps.name);
+  await expect(page.getByTestId('tenant-current-banner')).toContainText(
+    referenceTenants.sampleOps.name,
+  );
 });
-
-// Blocked: @axe-core/playwright is not installed in @stynx/reference-web, so the
-// tenant a11y probe cannot be authored without a dependency-policy assist.

@@ -26,19 +26,36 @@
       ]
     },
     {
-      "surface": "flow",
-      "file": "test/packages/openapi-tenant-isolation.spec.ts",
+      "surface": "storage",
+      "file": "reference/api/test/e2e/flows/documents.e2e.ts",
       "patterns": [
-        "proves flow routes require tenant-bound security",
-        "proves flow write routes expose idempotent tenant-scoped contracts"
+        "isolates documents across tenants through HTTP and RLS",
+        "select id::text, tenant_id::text from storage.documents"
+      ]
+    },
+    {
+      "surface": "flow",
+      "file": "reference/api/test/e2e/flows/flow-design-and-runtime.e2e.ts",
+      "patterns": [
+        "keeps flow runs hidden across tenant-scoped RLS reads",
+        "select id::text, tenant_id::text, target_id from flow.runs"
       ]
     },
     {
       "surface": "records",
-      "file": "test/packages/openapi-tenant-isolation.spec.ts",
+      "file": "reference/api/test/e2e/flows/records-and-notes.e2e.ts",
       "patterns": [
-        "proves reference records routes require tenant-bound security",
-        "proves reference records source filters by tenant before returning rows"
+        "isolates records and notes across tenants through HTTP and RLS",
+        "select id::text, tenant_id::text from sample.record",
+        "select id::text, tenant_id::text from sample.record_note"
+      ]
+    },
+    {
+      "surface": "reference-api",
+      "file": "reference/api/test/e2e/flows/error-matrix.e2e.ts",
+      "patterns": [
+        "maps cross-tenant record access to 404 and preserves RLS isolation",
+        "select id::text, tenant_id::text from sample.record"
       ]
     },
     {
@@ -47,6 +64,16 @@
       "patterns": [
         "proves reference API protected routes require tenant-bound security",
         "proves document storage routes keep tenant-scoped auth, rate limits, and audit hooks"
+      ]
+    },
+    {
+      "surface": "work-items",
+      "file": "reference/api/test/e2e/flows/work-items.e2e.ts",
+      "patterns": [
+        "isolates work items, entries, and locks across tenants through HTTP and RLS",
+        "select id::text, tenant_id::text from sample.work_item",
+        "select id::text, tenant_id::text from sample.work_item_entry",
+        "select id::text, tenant_id::text from sample.work_item_lock"
       ]
     }
   ]
