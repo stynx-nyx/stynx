@@ -35,6 +35,10 @@ const packages = [
 ];
 
 const errors = [];
+const requiredPublicExports = {
+  '@stynx/pdf': ['.', './evidence', './fixed-layout', './public-payroll'],
+  '@stynx/signature': ['.', './xmldsig'],
+};
 
 for (const pkg of packages) {
   const licensePath = resolve(pkg.dirPath, 'LICENSE');
@@ -51,8 +55,19 @@ for (const pkg of packages) {
     pkg.manifest.exports && typeof pkg.manifest.exports === 'object'
       ? Object.keys(pkg.manifest.exports)
       : [];
-  if (exportKeys.length !== 1 || exportKeys[0] !== '.') {
-    errors.push(`${pkg.manifest.name}: exports must contain only the "." barrel entry`);
+  const allowedExports = allowedExportKeys(pkg.manifest.name);
+  const unknownExports = exportKeys.filter((key) => !allowedExports.has(key));
+  if (!exportKeys.includes('.')) {
+    errors.push(`${pkg.manifest.name}: exports must include the "." barrel entry`);
+  }
+  if (unknownExports.length > 0) {
+    errors.push(`${pkg.manifest.name}: unexpected public exports ${unknownExports.join(', ')}`);
+  }
+
+  for (const required of requiredPublicExports[pkg.manifest.name] ?? []) {
+    if (!exportKeys.includes(required)) {
+      errors.push(`${pkg.manifest.name}: missing adopter-facing export ${required}`);
+    }
   }
 }
 
@@ -65,3 +80,18 @@ if (errors.length > 0) {
 }
 
 console.log(`Verified release policy for ${packages.length} publishable packages.`);
+
+function allowedExportKeys(packageName) {
+  const keys = new Set(['.', './package.json']);
+  if (packageName.startsWith('@stynx-web/angular') || packageName === '@stynx-web/sdk') {
+    keys.add('./testing');
+  }
+  if (packageName.startsWith('@stynx-web/angular')) {
+    keys.add('./catalogs/en.json');
+    keys.add('./catalogs/pt-BR.json');
+  }
+  for (const required of requiredPublicExports[packageName] ?? []) {
+    keys.add(required);
+  }
+  return keys;
+}

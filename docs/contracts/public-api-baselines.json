@@ -1,0 +1,123 @@
+{
+  "schemaVersion": "1",
+  "packages": {
+    "@stynx/integration-adapter": {
+      "exports": {
+        ".": {
+          "types": "./dist/integration-adapter/src/index.d.ts",
+          "require": "./dist/integration-adapter/src/index.js",
+          "default": "./dist/integration-adapter/src/index.js"
+        }
+      },
+      "declarationHashes": {
+        "integration-adapter/src/index.d.ts": "a145d96ef487b99fe1050dc7f5f5333a072f7fa48cf8c68837a7469c9f419338",
+        "integration-adapter/src/types.d.ts": "34e869829671246b73a6e3bdf2f0b3242242e490db8630d9cf2751f16f624071"
+      }
+    },
+    "@stynx/pdf": {
+      "exports": {
+        ".": {
+          "types": "./dist/pdf/src/index.d.ts",
+          "require": "./dist/pdf/src/index.js",
+          "default": "./dist/pdf/src/index.js"
+        },
+        "./fixed-layout": {
+          "types": "./dist/pdf/src/fixed-layout/index.d.ts",
+          "require": "./dist/pdf/src/fixed-layout/index.js",
+          "default": "./dist/pdf/src/fixed-layout/index.js"
+        },
+        "./evidence": {
+          "types": "./dist/pdf/src/evidence/index.d.ts",
+          "require": "./dist/pdf/src/evidence/index.js",
+          "default": "./dist/pdf/src/evidence/index.js"
+        },
+        "./public-payroll": {
+          "types": "./dist/pdf/src/templates/public-payroll/index.d.ts",
+          "require": "./dist/pdf/src/templates/public-payroll/index.js",
+          "default": "./dist/pdf/src/templates/public-payroll/index.js"
+        }
+      },
+      "declarationHashes": {
+        "pdf/src/errors.d.ts": "7c8f32f0097a09bb0cc5479d72c12f4d45f0bb27392993c2301ef5759231477c",
+        "pdf/src/evidence/index.d.ts": "55ab478c2aa73c9b2781aff5f2b2bfb04a6ace4dcaa4c71ce7272ba1ac4592cb",
+        "pdf/src/evidence/pdf-verification-evidence-appender.d.ts": "441d0846b1703af6108f0d8e7553382b596018f72341f8e353206fa4773311c7",
+        "pdf/src/evidence/types.d.ts": "9feb9a983541e4935d0bd03d986bc1a2806774d303c1fefa09b63edb1da5c64d",
+        "pdf/src/fixed-layout/fixed-layout-builder.d.ts": "b959df1401f1286ec27fc8c70ed603d15bc6c4ac8872b23c3de0a1651ea42183",
+        "pdf/src/fixed-layout/index.d.ts": "0117caf8157ac101baf881a2a9574dd06e8ea17746d387b16aec3f88161511e8",
+        "pdf/src/fixed-layout/pdf-a-style-validator.d.ts": "99e6d63bc2598adbbffd7d41446161f09bd5dca5e69b39067d6279ae299cc7fb",
+        "pdf/src/fixed-layout/text.d.ts": "f42cceb5646333b4f89369e6d95ab4eece42b6cf20896caff2f77b0adcd4b3dc",
+        "pdf/src/fixed-layout/types.d.ts": "2b9ca446f52df7ede999315086c2c7c7ca2531c77cb638275f46bba5ab4fd2b0",
+        "pdf/src/fixture-backend.d.ts": "7383589e14ee7b281025cc6d4a5dc10cf4109c012fbfd4ee7cff2b4a49221bb0",
+        "pdf/src/index.d.ts": "cbd747ea995cadb2fb27ca0b2a6b9929160cbabea18729361a59dd21acaa511e",
+        "pdf/src/internals/assets.d.ts": "123f0162f7316ce1b33ce102c445f6938c030091d58ff629a9e7347c14dc0b25",
+        "pdf/src/internals/pdf-a-fonts.d.ts": "8c5bec39aae53fc6156f598a3cb814667a62e2d471b99be9a7f13619451b9d5e",
+        "pdf/src/internals/pdf-a-metadata.d.ts": "728b67ce3f7037de54b520f91468214cebccb8ba777e983b80b9da478ce8181e",
+        "pdf/src/internals/pdf-incremental-evidence.d.ts": "35c6ef1ed4f2fc28390733674953de43d1672a4e42c4762099feb6594433786d",
+        "pdf/src/local-backend.d.ts": "3d9d1b17706ccf973ed3ece75ae50a948a24a164381b29b026d3b37c347e4296",
+        "pdf/src/pdf-renderer.d.ts": "d5761784f422f802d7e04ba19e253d3c63fbb202e25c8e805e9596f762756a06",
+        "pdf/src/pdf.module.d.ts": "5eb3198fbdc460af3fefd4de862fca7fd0b3e506eb8cd19321508c53a07bcc58",
+        "pdf/src/templates/public-payroll/index.d.ts": "43ec0898ce39fb533abef6983ef42a6ea8c27d1d4a467655779fc977e5497616",
+        "pdf/src/templates/public-payroll/payslip.d.ts": "e669fa3468fd58becbefbff97ba1c29b09da0b764c7c46a24b5dec16a0823136",
+        "pdf/src/templates/public-payroll/public-payroll-builder.d.ts": "6fe6f3837554653961c1999aac249e016a3104ab2305acc3e2051b0ca5bdba7c",
+        "pdf/src/templates/public-payroll/types.d.ts": "f7459a470cb76cea8ba2cd5e03dc7e6a2f62e455c661dd90cae432ba3b10d4f7",
+        "pdf/src/templates/public-payroll/yearly-income.d.ts": "e986a09266871507176689da6265f55ce8beefbd3bca6564879c376b33d1f6e3",
+        "pdf/src/tokens.d.ts": "e941c95f8db8f41ae63d3941b7f437c93ba24b3432d0fdca083884cae3bb3ed8",
+        "pdf/src/types.d.ts": "d44cc789df01ecba424732e6dc3965d9682bf01adcd85656934c7b2d7341f8ae"
+      }
+    },
+    "@stynx/signature": {
+      "exports": {
+        ".": {
+          "types": "./dist/signature/src/index.d.ts",
+          "require": "./dist/signature/src/index.js",
+          "default": "./dist/signature/src/index.js"
+        },
+        "./xmldsig": {
+          "types": "./dist/signature/src/xmldsig/index.d.ts",
+          "require": "./dist/signature/src/xmldsig/index.js",
+          "default": "./dist/signature/src/xmldsig/index.js"
+        }
+      },
+      "declarationHashes": {
+        "integration-adapter/src/index.d.ts": "a145d96ef487b99fe1050dc7f5f5333a072f7fa48cf8c68837a7469c9f419338",
+        "integration-adapter/src/types.d.ts": "34e869829671246b73a6e3bdf2f0b3242242e490db8630d9cf2751f16f624071",
+        "signature/src/digest.d.ts": "e029e6fcc277c632dd57b59b89a0fc652a5c7300a81633a2d97328a8603ded3c",
+        "signature/src/errors.d.ts": "99b4e2fabb273c86ac050ec35401d9f91fdc9ea7450c44bc638997be069e5396",
+        "signature/src/govbr-sandbox.d.ts": "00d7495be7e2fb54be8d46dffe873fa0f1e4f1eeff9e6117152303d5e020a90e",
+        "signature/src/http-provider-client.d.ts": "5765579f92c5163689ce6d4133f9b3c0bfa5a1209b6896b2c929bc6118ef122c",
+        "signature/src/index.d.ts": "b6e79d0439fa652f08d5deb82d364f617f5008ae68645a4264c07a1a4d03ab43",
+        "signature/src/pades.d.ts": "276684e33363b2d4d80ee8c5dd1cc04c02f8fabe22497a825dab961724759835",
+        "signature/src/provider-backend.d.ts": "2d11d05ea0b351513fc7611b8c6a9268b0ecd2a9bad13e48d1d280da1ca3173e",
+        "signature/src/sequential.d.ts": "505420b5fbdb84c4fea6f476eb63d749128f3b1b89361ae5f65d9ae5164509b8",
+        "signature/src/signature.module.d.ts": "6fcc96531fbd65ca310cc7ebe02faaf4cf0d90febba7fbd35911212ff25192b2",
+        "signature/src/signature.service.d.ts": "f29b4697c0dd04a30d38c0921811c304b1fdf5a186fa9442ff77a59214e6259f",
+        "signature/src/tokens.d.ts": "f14e3e13c2c0fdeec87075c497723fa745561f86d11bba5eba5c0f5bb918d9f3",
+        "signature/src/types.d.ts": "3be150b3170c6364c290f9649e558598e41c08ecb0fa8486b4d2c088ee4d0970",
+        "signature/src/xmldsig/c14n.d.ts": "5eedcec978c227f6426b52ce69be09f21f163e90dc2b3474e699330c8e4b325e",
+        "signature/src/xmldsig/index.d.ts": "bee0f3869def2c020f39f674015146dc6340ef56d757c50103c6a514ca31b4e5",
+        "signature/src/xmldsig/sign.d.ts": "09bcf810064399ab8796825a0b6db9f16456a2a85967e82836f6ed48d2cf8723",
+        "signature/src/xmldsig/types.d.ts": "cb72e14a04cdd5a7e6e9c81718ec8e2de601dc382199ca1171dfdee9296b2099",
+        "signature/src/xmldsig/verify.d.ts": "0e66c8e9c314d8d6a96483a77134d75f598327df7fac18e3e6277e24b5b96848"
+      }
+    },
+    "@stynx-web/sdk": {
+      "exports": {
+        ".": {
+          "types": "./dist/types/stynx-web-sdk.d.ts",
+          "default": "./dist/fesm2022/stynx-web-sdk.mjs"
+        },
+        "./testing": {
+          "types": "./dist/types/stynx-web-sdk-testing.d.ts",
+          "default": "./dist/fesm2022/stynx-web-sdk-testing.mjs"
+        },
+        "./package.json": {
+          "default": "./package.json"
+        }
+      },
+      "declarationHashes": {
+        "types/stynx-web-sdk-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
+        "types/stynx-web-sdk.d.ts": "52711d5bf78848111a1096d4cbce4a3fc3a59f38f7855cc55f9e4e9ef91d6d59"
+      }
+    }
+  }
+}
