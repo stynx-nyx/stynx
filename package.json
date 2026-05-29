@@ -24,11 +24,15 @@
     "lint:workflows": "github-actionlint .github/workflows/*.yml",
     "db:verify": "node scripts/db-verify.mjs",
     "db:acceptance": "node scripts/verify-db-acceptance.mjs",
-    "api:coverage": "node scripts/verify-api-coverage.mjs",
+    "api:coverage": "node scripts/verify-api-coverage.mjs --strict",
+    "api:docs:write": "node scripts/verify-api-coverage.mjs --write-openapi --strict",
+    "api:contract": "node scripts/verify-openapi-contract.mjs",
+    "sdk:route-smoke": "node scripts/verify-sdk-route-smoke.mjs",
+    "check:rls-negative": "node scripts/verify-rls-negative.mjs",
     "stynx-boundary:check": "node --experimental-strip-types scripts/verify-stynx-boundary.ts",
-    "ci:stynx": "pnpm check:engines && pnpm lint && pnpm lint:tests && pnpm lint:deadcode && pnpm lint:deps && pnpm lint:cycles && pnpm typecheck && pnpm test && pnpm test:int && pnpm build && pnpm run doctor",
+    "ci:stynx": "pnpm check:engines && pnpm api:coverage && pnpm api:contract && pnpm sdk:route-smoke && pnpm check:rls-negative && pnpm lint && pnpm lint:tests && pnpm lint:deadcode && pnpm lint:deps && pnpm lint:cycles && pnpm typecheck && pnpm test && pnpm test:int && pnpm build && pnpm run doctor",
     "ci:stynx:full": "pnpm ci:stynx && pnpm test:e2e && pnpm test:mutation && pnpm test:perf && pnpm check:rls-smoke",
-    "ci:stynx:release": "pnpm release:policy && pnpm release:drafts",
+    "ci:stynx:release": "pnpm release:policy && pnpm release:consumer-fixtures && pnpm release:drafts",
     "ci:reference-apps": "pnpm --filter @stynx/reference-api build && pnpm --filter @stynx/reference-api test && pnpm --filter @stynx/reference-api test:int && pnpm --filter @stynx/reference-web build && pnpm --filter @stynx/reference-web build:web",
     "ci:local": "bash scripts/ci-local/run.sh",
     "evidence:collect": "node scripts/evidence/collect-local-evidence.mjs",
@@ -40,6 +44,7 @@
     "release:status": "changeset status --output .changeset/status.json",
     "release:drafts": "pnpm release:status && node scripts/generate-release-drafts.mjs",
     "release:policy": "node scripts/verify-release-policy.mjs && node scripts/verify-web-sourcemaps.mjs",
+    "release:consumer-fixtures": "node scripts/verify-consumer-fixtures.mjs",
     "release:web-sourcemaps": "node scripts/verify-web-sourcemaps.mjs",
     "version-packages": "changeset version",
     "release": "changeset publish",
@@ -72,7 +77,7 @@
     "@stryker-mutator/typescript-checker": "^9.6.1",
     "@stryker-mutator/vitest-runner": "^9.6.1",
     "@swc/core": "^1.15.33",
-    "@types/node": "^25.6.0",
+    "@types/node": "24.12.4",
     "@typescript-eslint/eslint-plugin": "^8.59.0",
     "@typescript-eslint/parser": "^8.59.0",
     "@vitest/coverage-v8": "^3",
@@ -109,13 +114,14 @@
   },
   "pnpm": {
     "overrides": {
-      "@types/node": "25.6.0",
+      "@types/node": "24.12.4",
       "dockerode": "5.0.0",
       "handlebars": "4.7.9",
       "postcss": "8.5.12",
       "serialize-javascript": "7.0.5",
       "uuid": "14.0.0",
-      "webpackbar": "7.0.0"
+      "webpackbar": "7.0.0",
+      "tmp": "0.2.6"
     }
   },
   "stynx": {

@@ -8,7 +8,7 @@ import { generate } from 'openapi-typescript-codegen';
 const currentDir = dirname(fileURLToPath(import.meta.url));
 const packageRoot = resolve(currentDir, '..');
 const workspaceRoot = resolve(packageRoot, '../..');
-const inputPath = resolve(workspaceRoot, 'packages/core/dist/openapi/openapi.json');
+const inputPath = resolve(workspaceRoot, 'docs/contracts/openapi.json');
 const outputPath = resolve(packageRoot, 'src/generated');
 const lockPath = resolve(packageRoot, '.codegen.lock');
 
@@ -70,13 +70,13 @@ async function ensureOpenApiInput() {
   try {
     await access(inputPath, constants.F_OK);
   } catch {
-    const result = spawnSync('pnpm', ['--filter', '@stynx/core', 'build'], {
+    const result = spawnSync('pnpm', ['api:docs:write'], {
       cwd: workspaceRoot,
       stdio: 'inherit',
       env: process.env,
     });
     if (result.status !== 0) {
-      throw new Error('Failed to build @stynx/core before SDK codegen');
+      throw new Error('Failed to generate OpenAPI docs before SDK codegen');
     }
     await access(inputPath, constants.F_OK);
   }

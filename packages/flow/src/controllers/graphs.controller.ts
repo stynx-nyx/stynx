@@ -13,6 +13,15 @@ import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx/au
 import { Audit, NoIdempotent } from '@stynx/backend';
 import { Idempotent } from '@stynx/idempotency';
 import { FlowDesignService } from '../flow-design.service';
+import type {
+  CreateFlowEdgeDto,
+  CreateFlowGraphDto,
+  CreateFlowNodeDto,
+  CreateFlowTransitionEffectDto,
+  FlowGraphImportDocument,
+  PublishFlowGraphDto,
+  UpdateFlowGraphDto,
+} from '../types';
 
 @Controller('/flow/graphs')
 @UseGuards(StynxAuthGuard, PermissionGuard)
@@ -44,7 +53,7 @@ export class FlowGraphsController {
   @Audit({ action: 'flow.graph.create', entity: 'flow.graphs' })
   @NoIdempotent()
   @Post()
-  create(@Body() input: unknown) {
+  create(@Body() input: CreateFlowGraphDto) {
     return this.design.createGraph(input);
   }
 
@@ -52,7 +61,7 @@ export class FlowGraphsController {
   @Audit({ action: 'flow.graph.import', entity: 'flow.graphs' })
   @Idempotent('Idempotency-Key')
   @Post('/import')
-  import(@Body() input: unknown) {
+  import(@Body() input: FlowGraphImportDocument) {
     return this.design.importGraph(input);
   }
 
@@ -60,7 +69,7 @@ export class FlowGraphsController {
   @Audit({ action: 'flow.graph.update', entity: 'flow.graphs' })
   @NoIdempotent()
   @Patch('/:id')
-  update(@Param('id') id: string, @Body() input: unknown) {
+  update(@Param('id') id: string, @Body() input: UpdateFlowGraphDto) {
     return this.design.updateGraph(id, input);
   }
 
@@ -68,7 +77,7 @@ export class FlowGraphsController {
   @Audit({ action: 'flow.graph.publish', entity: 'flow.graphs' })
   @Idempotent('Idempotency-Key')
   @Post('/:id/publish')
-  publish(@Param('id') id: string, @Body() input: unknown) {
+  publish(@Param('id') id: string, @Body() input: PublishFlowGraphDto) {
     return this.design.publishGraph(id, input);
   }
 
@@ -90,7 +99,7 @@ export class FlowGraphsController {
   @Audit({ action: 'flow.node.create', entity: 'flow.nodes' })
   @NoIdempotent()
   @Post('/:graphId/nodes')
-  createNode(@Param('graphId') graphId: string, @Body() input: unknown) {
+  createNode(@Param('graphId') graphId: string, @Body() input: CreateFlowNodeDto) {
     return this.design.createGraphNode(graphId, input);
   }
 
@@ -105,7 +114,7 @@ export class FlowGraphsController {
   @Audit({ action: 'flow.edge.create', entity: 'flow.edges' })
   @NoIdempotent()
   @Post('/:graphId/edges')
-  createEdge(@Param('graphId') graphId: string, @Body() input: unknown) {
+  createEdge(@Param('graphId') graphId: string, @Body() input: CreateFlowEdgeDto) {
     return this.design.createGraphEdge(graphId, input);
   }
 
@@ -120,7 +129,7 @@ export class FlowGraphsController {
   @Audit({ action: 'flow.transition_effect.create', entity: 'flow.transition_effects' })
   @NoIdempotent()
   @Post('/:graphId/transition-effects')
-  createTransitionEffect(@Param('graphId') graphId: string, @Body() input: unknown) {
+  createTransitionEffect(@Param('graphId') graphId: string, @Body() input: CreateFlowTransitionEffectDto) {
     return this.design.createGraphTransitionEffect(graphId, input);
   }
 }

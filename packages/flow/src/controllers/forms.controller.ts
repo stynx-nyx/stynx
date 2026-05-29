@@ -13,6 +13,13 @@ import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx/au
 import { Audit, NoIdempotent } from '@stynx/backend';
 import { Idempotent } from '@stynx/idempotency';
 import { FlowFormsService } from '../flow-forms.service';
+import type {
+  CreateFlowFillDto,
+  CreateFlowFormDto,
+  CreateFlowQuestionDto,
+  CreateFlowWaiverDto,
+  UpdateFlowFormDto,
+} from '../types';
 
 @Controller('/flow/forms')
 @UseGuards(StynxAuthGuard, PermissionGuard)
@@ -37,7 +44,7 @@ export class FlowFormsController {
   @Audit({ action: 'flow.form.create', entity: 'flow.forms' })
   @NoIdempotent()
   @Post()
-  create(@Body() input: unknown) {
+  create(@Body() input: CreateFlowFormDto) {
     return this.forms.createForm(input);
   }
 
@@ -45,7 +52,7 @@ export class FlowFormsController {
   @Audit({ action: 'flow.form.update', entity: 'flow.forms' })
   @NoIdempotent()
   @Patch('/:id')
-  update(@Param('id') id: string, @Body() input: unknown) {
+  update(@Param('id') id: string, @Body() input: UpdateFlowFormDto) {
     return this.forms.updateForm(id, input);
   }
 
@@ -67,7 +74,7 @@ export class FlowFormsController {
   @Audit({ action: 'flow.question.create', entity: 'flow.questions' })
   @NoIdempotent()
   @Post('/:formId/questions')
-  createQuestion(@Param('formId') formId: string, @Body() input: unknown) {
+  createQuestion(@Param('formId') formId: string, @Body() input: CreateFlowQuestionDto) {
     return this.forms.createQuestion(formId, input);
   }
 
@@ -103,7 +110,7 @@ export class FlowFormsController {
   @Audit({ action: 'flow.fill.create', entity: 'flow.fills' })
   @Idempotent('Idempotency-Key')
   @Post('/:formId/fills')
-  createFill(@Param('formId') formId: string, @Body() input: unknown) {
+  createFill(@Param('formId') formId: string, @Body() input: CreateFlowFillDto) {
     return this.forms.createFill(formId, input);
   }
 
@@ -111,7 +118,11 @@ export class FlowFormsController {
   @Audit({ action: 'flow.waiver.create', entity: 'flow.waivers' })
   @Idempotent('Idempotency-Key')
   @Post('/:formId/fills/:fillId/waivers')
-  createFillWaiver(@Param('formId') formId: string, @Param('fillId') fillId: string, @Body() input: unknown) {
+  createFillWaiver(
+    @Param('formId') formId: string,
+    @Param('fillId') fillId: string,
+    @Body() input: CreateFlowWaiverDto,
+  ) {
     return this.forms.createFormFillWaiver(formId, fillId, input);
   }
 }

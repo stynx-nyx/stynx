@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, Patch, UseGuards } from '@nestjs/
 import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx/auth';
 import { Audit, NoIdempotent } from '@stynx/backend';
 import { FlowDesignService } from '../flow-design.service';
+import type { UpdateFlowNodeFormRuleDto } from '../types';
 
 @Controller('/flow/node-form-rules')
 @UseGuards(StynxAuthGuard, PermissionGuard)
@@ -19,7 +20,7 @@ export class FlowNodeFormRulesController {
   @Audit({ action: 'flow.node_form_rule.update', entity: 'flow.node_form_rules' })
   @NoIdempotent()
   @Patch('/:id')
-  update(@Param('id') id: string, @Body() input: unknown) {
+  update(@Param('id') id: string, @Body() input: UpdateFlowNodeFormRuleDto) {
     return this.design.updateNodeFormRule(id, input);
   }
 

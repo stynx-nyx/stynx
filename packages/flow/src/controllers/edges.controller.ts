@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, Patch, UseGuards } from '@nestjs/
 import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx/auth';
 import { Audit, NoIdempotent } from '@stynx/backend';
 import { FlowDesignService } from '../flow-design.service';
+import type { UpdateFlowEdgeDto } from '../types';
 
 @Controller('/flow/edges')
 @UseGuards(StynxAuthGuard, PermissionGuard)
@@ -19,7 +20,7 @@ export class FlowEdgesController {
   @Audit({ action: 'flow.edge.update', entity: 'flow.edges' })
   @NoIdempotent()
   @Patch('/:id')
-  update(@Param('id') id: string, @Body() input: unknown) {
+  update(@Param('id') id: string, @Body() input: UpdateFlowEdgeDto) {
     return this.design.updateEdge(id, input);
   }
 

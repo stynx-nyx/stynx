@@ -91,6 +91,30 @@ describe('@stynx-web/sdk transport', () => {
     });
   });
 
+  it('serializes falsy query values and URL-encodes caller filters without dropping them', async () => {
+    const calls: Array<{ url: string; init?: HttpRequestInitLike }> = [];
+    const client = new StynxSdkClient({
+      baseUrl: 'https://api.example.test',
+      fetchFn: async (url, init) => {
+        calls.push({ url, init });
+        return response(200, '{"ok":true}', { 'content-type': 'application/json' });
+      },
+    });
+
+    await client.get('/records/search', {
+      query: {
+        active: false,
+        page: 0,
+        filter: 'status:open owner:a/b',
+      },
+    });
+
+    expect(calls[0]?.url).toBe(
+      'https://api.example.test/records/search?active=false&page=0&filter=status%3Aopen+owner%3Aa%2Fb',
+    );
+    expect(calls[0]?.init?.method).toBe('GET');
+  });
+
   it('preserves caller headers and omits empty query and tenant values', async () => {
     const calls: Array<{ url: string; init?: HttpRequestInitLike }> = [];
     const client = new StynxSdkClient({

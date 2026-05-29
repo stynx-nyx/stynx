@@ -13,6 +13,7 @@ import { Audit, NoIdempotent } from '@stynx/backend';
 import { Idempotent } from '@stynx/idempotency';
 import { FlowAnalyticsService } from '../flow-analytics.service';
 import { FlowRuntimeService } from '../flow-runtime.service';
+import type { EnsureFlowRunDto, UpdateFlowRunDto } from '../types';
 
 @Controller('/flow/runs')
 @UseGuards(StynxAuthGuard, PermissionGuard)
@@ -33,7 +34,7 @@ export class FlowRunsController {
   @Audit({ action: 'flow.run.ensure', entity: 'flow.runs' })
   @Idempotent('Idempotency-Key')
   @Post('/ensure')
-  ensure(@Body() input: unknown) {
+  ensure(@Body() input: EnsureFlowRunDto) {
     return this.runtime.ensureRun(input);
   }
 
@@ -55,7 +56,7 @@ export class FlowRunsController {
   @Audit({ action: 'flow.run.update', entity: 'flow.runs' })
   @NoIdempotent()
   @Patch('/:id')
-  update(@Param('id') id: string, @Body() input: unknown) {
+  update(@Param('id') id: string, @Body() input: UpdateFlowRunDto) {
     return this.runtime.updateRun(id, input);
   }
 

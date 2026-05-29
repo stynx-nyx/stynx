@@ -3,6 +3,7 @@ import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx/au
 import { Audit, RateLimit } from '@stynx/backend';
 import { Idempotent } from '@stynx/idempotency';
 import { FlowRuntimeService } from '../flow-runtime.service';
+import type { FlowTaskActionDto, FlowTaskAssignmentDto, FlowTaskNoteDto } from '../types';
 
 @Controller('/flow/tasks')
 @UseGuards(StynxAuthGuard, PermissionGuard)
@@ -49,7 +50,7 @@ export class FlowTasksController {
   @Idempotent('Idempotency-Key')
   @RateLimit({ bucket: 'user', scope: 'flow.task.act' })
   @Post('/:id/act')
-  act(@Param('id') id: string, @Body() input: unknown) {
+  act(@Param('id') id: string, @Body() input: FlowTaskActionDto) {
     return this.runtime.actTask(id, input);
   }
 
@@ -57,7 +58,7 @@ export class FlowTasksController {
   @Audit({ action: 'flow.task.accept', entity: 'flow.tasks' })
   @Idempotent('Idempotency-Key')
   @Post('/:id/accept')
-  accept(@Param('id') id: string, @Body() input: unknown) {
+  accept(@Param('id') id: string, @Body() input: FlowTaskNoteDto) {
     return this.runtime.acceptTask(id, input);
   }
 
@@ -65,7 +66,7 @@ export class FlowTasksController {
   @Audit({ action: 'flow.task.decline', entity: 'flow.tasks' })
   @Idempotent('Idempotency-Key')
   @Post('/:id/decline')
-  decline(@Param('id') id: string, @Body() input: unknown) {
+  decline(@Param('id') id: string, @Body() input: FlowTaskNoteDto) {
     return this.runtime.declineTask(id, input);
   }
 
@@ -73,7 +74,7 @@ export class FlowTasksController {
   @Audit({ action: 'flow.task.unaccept', entity: 'flow.tasks' })
   @Idempotent('Idempotency-Key')
   @Post('/:id/unaccept')
-  unaccept(@Param('id') id: string, @Body() input: unknown) {
+  unaccept(@Param('id') id: string, @Body() input: FlowTaskNoteDto) {
     return this.runtime.unacceptTask(id, input);
   }
 
@@ -81,7 +82,7 @@ export class FlowTasksController {
   @Audit({ action: 'flow.task.withdraw', entity: 'flow.tasks' })
   @Idempotent('Idempotency-Key')
   @Post('/:id/withdraw')
-  withdraw(@Param('id') id: string, @Body() input: unknown) {
+  withdraw(@Param('id') id: string, @Body() input: FlowTaskNoteDto) {
     return this.runtime.withdrawTask(id, input);
   }
 
@@ -89,7 +90,7 @@ export class FlowTasksController {
   @Audit({ action: 'flow.task.assign', entity: 'flow.tasks' })
   @Idempotent('Idempotency-Key')
   @Post('/:id/assign')
-  assign(@Param('id') id: string, @Body() input: unknown) {
+  assign(@Param('id') id: string, @Body() input: FlowTaskAssignmentDto) {
     return this.runtime.assignTask(id, input);
   }
 
@@ -97,7 +98,7 @@ export class FlowTasksController {
   @Audit({ action: 'flow.task.unassign', entity: 'flow.tasks' })
   @Idempotent('Idempotency-Key')
   @Post('/:id/unassign')
-  unassign(@Param('id') id: string, @Body() input: unknown) {
+  unassign(@Param('id') id: string, @Body() input: FlowTaskNoteDto) {
     return this.runtime.unassignTask(id, input);
   }
 }

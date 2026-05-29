@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Param, Patch, UseGuards } from '@nestjs/commo
 import { Permission, PermissionGuard, StynxAuthGuard } from '@stynx/auth';
 import { Audit, NoIdempotent } from '@stynx/backend';
 import { FlowFormsService } from '../flow-forms.service';
+import type { UpdateFlowAnswerDto } from '../types';
 
 @Controller('/flow/answers')
 @UseGuards(StynxAuthGuard, PermissionGuard)
@@ -12,7 +13,7 @@ export class FlowAnswersController {
   @Audit({ action: 'flow.answer.update', entity: 'flow.answers' })
   @NoIdempotent()
   @Patch('/:id')
-  update(@Param('id') id: string, @Body() input: unknown) {
+  update(@Param('id') id: string, @Body() input: UpdateFlowAnswerDto) {
     return this.forms.updateAnswer(id, input);
   }
 

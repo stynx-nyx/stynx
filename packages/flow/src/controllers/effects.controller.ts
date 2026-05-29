@@ -3,6 +3,7 @@ import { Permission, PermissionGuard, StynxAuthGuard } from '@stynx/auth';
 import { Audit, RateLimit } from '@stynx/backend';
 import { Idempotent } from '@stynx/idempotency';
 import { FlowRuntimeService } from '../flow-runtime.service';
+import type { DispatchFlowEffectsDto } from '../types';
 
 @Controller('/flow/effects')
 @UseGuards(StynxAuthGuard, PermissionGuard)
@@ -14,7 +15,7 @@ export class FlowEffectsController {
   @Idempotent('Idempotency-Key')
   @RateLimit({ bucket: 'tenant', scope: 'flow.effect.dispatch' })
   @Post('/dispatch')
-  dispatch(@Body() input: unknown) {
+  dispatch(@Body() input: DispatchFlowEffectsDto) {
     return this.runtime.dispatchPendingEffects(input);
   }
 }

@@ -3,6 +3,7 @@ import { Permission, PermissionGuard, StynxAuthGuard } from '@stynx/auth';
 import { Audit, RateLimit } from '@stynx/backend';
 import { Idempotent } from '@stynx/idempotency';
 import { FlowRuntimeService } from '../flow-runtime.service';
+import type { FlowSignalDto } from '../types';
 
 @Controller('/flow/signal')
 @UseGuards(StynxAuthGuard, PermissionGuard)
@@ -14,7 +15,7 @@ export class FlowSignalController {
   @Idempotent('Idempotency-Key')
   @RateLimit({ bucket: 'tenant', scope: 'flow.signal' })
   @Post()
-  signal(@Body() input: unknown) {
+  signal(@Body() input: FlowSignalDto) {
     return this.runtime.signal(input);
   }
 }

@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, Patch, UseGuards } from '@nestjs/
 import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx/auth';
 import { Audit, NoIdempotent } from '@stynx/backend';
 import { FlowDesignService } from '../flow-design.service';
+import type { UpdateFlowTransitionEffectDto } from '../types';
 
 @Controller('/flow/transition-effects')
 @UseGuards(StynxAuthGuard, PermissionGuard)
@@ -19,7 +20,7 @@ export class FlowTransitionEffectsController {
   @Audit({ action: 'flow.transition_effect.update', entity: 'flow.transition_effects' })
   @NoIdempotent()
   @Patch('/:id')
-  update(@Param('id') id: string, @Body() input: unknown) {
+  update(@Param('id') id: string, @Body() input: UpdateFlowTransitionEffectDto) {
     return this.design.updateTransitionEffect(id, input);
   }
 

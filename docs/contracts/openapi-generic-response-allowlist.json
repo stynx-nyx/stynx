@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "1",
+  "allow": [
+    {
+      "pathPattern": "^/_platform/perms/",
+      "methods": ["get", "post"],
+      "reason": "Permission cache inspection returns adapter-specific diagnostic JSON."
+    },
+    {
+      "pathPattern": "^/_probes/",
+      "methods": ["get", "post"],
+      "reason": "Reference probe routes intentionally return implementation diagnostics."
+    },
+    {
+      "pathPattern": "^/_reference/auth-verify$",
+      "methods": ["get"],
+      "reason": "Reference auth probe only validates a token and may return no domain payload."
+    },
+    {
+      "pathPattern": "^/(healthz|info|metrics|readyz)$",
+      "methods": ["get"],
+      "reason": "Operational health and metrics endpoints expose deployment-specific JSON."
+    },
+    {
+      "pathPattern": "^/(records|record-notes|work-items|work-item-entries|work-item-locks|documents)(/.*)?$",
+      "methods": ["get", "post", "patch", "delete"],
+      "reason": "Reference sample routes return Drizzle row shapes pending named sample response DTOs."
+    },
+    {
+      "pathPattern": "^/flow/",
+      "methods": ["get", "post", "patch", "delete"],
+      "reason": "Flow runtime/design rows are dynamic JSON records backed by configurable process tables."
+    },
+    {
+      "pathPattern": "^/sessions/logout$",
+      "methods": ["post"],
+      "reason": "Logout returns a minimal status object."
+    }
+  ]
+}

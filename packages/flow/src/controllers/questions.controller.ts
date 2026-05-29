@@ -3,6 +3,7 @@ import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx/au
 import { Audit, NoIdempotent } from '@stynx/backend';
 import { Idempotent } from '@stynx/idempotency';
 import { FlowFormsService } from '../flow-forms.service';
+import type { PutFlowQuestionScoreDto, UpdateFlowQuestionDto } from '../types';
 
 @Controller('/flow/questions')
 @UseGuards(StynxAuthGuard, PermissionGuard)
@@ -20,7 +21,7 @@ export class FlowQuestionsController {
   @Audit({ action: 'flow.question.update', entity: 'flow.questions' })
   @NoIdempotent()
   @Patch('/:id')
-  update(@Param('id') id: string, @Body() input: unknown) {
+  update(@Param('id') id: string, @Body() input: UpdateFlowQuestionDto) {
     return this.forms.updateQuestion(id, input);
   }
 
@@ -42,7 +43,7 @@ export class FlowQuestionsController {
   @Audit({ action: 'flow.score.put', entity: 'flow.scores' })
   @Idempotent('Idempotency-Key')
   @Put('/:id/score')
-  putScore(@Param('id') id: string, @Body() input: unknown) {
+  putScore(@Param('id') id: string, @Body() input: PutFlowQuestionScoreDto) {
     return this.forms.putQuestionScore(id, input);
   }
 

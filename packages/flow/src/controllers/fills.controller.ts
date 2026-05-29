@@ -3,6 +3,13 @@ import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx/au
 import { Audit, NoIdempotent, RateLimit } from '@stynx/backend';
 import { Idempotent } from '@stynx/idempotency';
 import { FlowFormsService } from '../flow-forms.service';
+import type {
+  BulkFlowAnswerWriteRequestDto,
+  CreateFlowFillDto,
+  CreateFlowWaiverDto,
+  FlowAnswerWriteDto,
+  UpdateFlowFillDto,
+} from '../types';
 
 @Controller('/flow/fills')
 @UseGuards(StynxAuthGuard, PermissionGuard)
@@ -27,7 +34,7 @@ export class FlowFillsController {
   @Audit({ action: 'flow.fill.create', entity: 'flow.fills' })
   @Idempotent('Idempotency-Key')
   @Post()
-  create(@Body() input: unknown) {
+  create(@Body() input: CreateFlowFillDto) {
     return this.forms.createFillFromBody(input);
   }
 
@@ -35,7 +42,7 @@ export class FlowFillsController {
   @Audit({ action: 'flow.fill.update', entity: 'flow.fills' })
   @NoIdempotent()
   @Patch('/:id')
-  update(@Param('id') id: string, @Body() input: unknown) {
+  update(@Param('id') id: string, @Body() input: UpdateFlowFillDto) {
     return this.forms.updateFill(id, input);
   }
 
@@ -57,7 +64,7 @@ export class FlowFillsController {
   @Audit({ action: 'flow.answer.upsert', entity: 'flow.answers' })
   @Idempotent('Idempotency-Key')
   @Post('/:fillId/answers')
-  upsertAnswer(@Param('fillId') fillId: string, @Body() input: unknown) {
+  upsertAnswer(@Param('fillId') fillId: string, @Body() input: FlowAnswerWriteDto) {
     return this.forms.upsertAnswer(fillId, input);
   }
 
@@ -66,7 +73,7 @@ export class FlowFillsController {
   @Idempotent('Idempotency-Key')
   @RateLimit({ bucket: 'user', scope: 'flow.answer.bulk_upsert' })
   @Put('/:fillId/answers')
-  bulkUpsertAnswers(@Param('fillId') fillId: string, @Body() input: unknown) {
+  bulkUpsertAnswers(@Param('fillId') fillId: string, @Body() input: BulkFlowAnswerWriteRequestDto) {
     return this.forms.bulkUpsertAnswers(fillId, input);
   }
 
@@ -74,7 +81,7 @@ export class FlowFillsController {
   @Audit({ action: 'flow.waiver.create', entity: 'flow.waivers' })
   @Idempotent('Idempotency-Key')
   @Post('/:fillId/waivers')
-  createWaiver(@Param('fillId') fillId: string, @Body() input: unknown) {
+  createWaiver(@Param('fillId') fillId: string, @Body() input: CreateFlowWaiverDto) {
     return this.forms.createFillWaiver(fillId, input);
   }
 

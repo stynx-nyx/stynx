@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@n
 import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx/auth';
 import { Audit, NoIdempotent } from '@stynx/backend';
 import { FlowDesignService } from '../flow-design.service';
+import type { CreateFlowAgentRuleDto, CreateFlowNodeFormRuleDto, UpdateFlowNodeDto } from '../types';
 
 @Controller('/flow/nodes')
 @UseGuards(StynxAuthGuard, PermissionGuard)
@@ -19,7 +20,7 @@ export class FlowNodesController {
   @Audit({ action: 'flow.node.update', entity: 'flow.nodes' })
   @NoIdempotent()
   @Patch('/:id')
-  update(@Param('id') id: string, @Body() input: unknown) {
+  update(@Param('id') id: string, @Body() input: UpdateFlowNodeDto) {
     return this.design.updateNode(id, input);
   }
 
@@ -41,7 +42,7 @@ export class FlowNodesController {
   @Audit({ action: 'flow.agent_rule.create', entity: 'flow.agent_rules' })
   @NoIdempotent()
   @Post('/:nodeId/agent-rules')
-  createAgentRule(@Param('nodeId') nodeId: string, @Body() input: unknown) {
+  createAgentRule(@Param('nodeId') nodeId: string, @Body() input: CreateFlowAgentRuleDto) {
     return this.design.createNodeAgentRule(nodeId, input);
   }
 
@@ -56,7 +57,7 @@ export class FlowNodesController {
   @Audit({ action: 'flow.node_form_rule.create', entity: 'flow.node_form_rules' })
   @NoIdempotent()
   @Post('/:nodeId/form-rules')
-  createFormRule(@Param('nodeId') nodeId: string, @Body() input: unknown) {
+  createFormRule(@Param('nodeId') nodeId: string, @Body() input: CreateFlowNodeFormRuleDto) {
     return this.design.createNodeFormRule(nodeId, input);
   }
 }

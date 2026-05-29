@@ -2,6 +2,13 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } f
 import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx/auth';
 import { Audit, NoIdempotent } from '@stynx/backend';
 import { FlowPolicyService } from '../flow-policy.service';
+import type {
+  CreateFlowPolicyRuleDto,
+  CreateFlowPolicySetDto,
+  FlowPolicyEvaluationDto,
+  UpdateFlowPolicyRuleDto,
+  UpdateFlowPolicySetDto,
+} from '../types';
 
 @Controller('/flow/policies')
 @UseGuards(StynxAuthGuard, PermissionGuard)
@@ -26,7 +33,7 @@ export class FlowPoliciesController {
   @Audit({ action: 'flow.policy_set.create', entity: 'flow.policy_sets' })
   @NoIdempotent()
   @Post('/sets')
-  createSet(@Body() input: unknown) {
+  createSet(@Body() input: CreateFlowPolicySetDto) {
     return this.policies.createPolicySet(input);
   }
 
@@ -34,7 +41,7 @@ export class FlowPoliciesController {
   @Audit({ action: 'flow.policy_set.update', entity: 'flow.policy_sets' })
   @NoIdempotent()
   @Patch('/sets/:id')
-  updateSet(@Param('id') id: string, @Body() input: unknown) {
+  updateSet(@Param('id') id: string, @Body() input: UpdateFlowPolicySetDto) {
     return this.policies.updatePolicySet(id, input);
   }
 
@@ -56,7 +63,7 @@ export class FlowPoliciesController {
   @Audit({ action: 'flow.policy_rule.create', entity: 'flow.policy_rules' })
   @NoIdempotent()
   @Post('/sets/:policySetId/rules')
-  createRule(@Param('policySetId') policySetId: string, @Body() input: unknown) {
+  createRule(@Param('policySetId') policySetId: string, @Body() input: CreateFlowPolicyRuleDto) {
     return this.policies.createPolicyRule(policySetId, input);
   }
 
@@ -71,7 +78,7 @@ export class FlowPoliciesController {
   @Audit({ action: 'flow.policy_rule.update', entity: 'flow.policy_rules' })
   @NoIdempotent()
   @Patch('/rules/:id')
-  updateRule(@Param('id') id: string, @Body() input: unknown) {
+  updateRule(@Param('id') id: string, @Body() input: UpdateFlowPolicyRuleDto) {
     return this.policies.updatePolicyRule(id, input);
   }
 
@@ -86,7 +93,7 @@ export class FlowPoliciesController {
   @ReadOnly()
   @NoIdempotent()
   @Post('/evaluate')
-  evaluate(@Body() input: unknown) {
+  evaluate(@Body() input: FlowPolicyEvaluationDto) {
     return this.policies.evaluate(input);
   }
 }

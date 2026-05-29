@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@n
 import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx/auth';
 import { Audit, NoIdempotent } from '@stynx/backend';
 import { FlowDesignService } from '../flow-design.service';
+import type { CreateFlowScopeDto, UpdateFlowScopeDto } from '../types';
 
 @Controller('/flow/scopes')
 @UseGuards(StynxAuthGuard, PermissionGuard)
@@ -26,7 +27,7 @@ export class FlowScopesController {
   @Audit({ action: 'flow.scope.create', entity: 'flow.scopes' })
   @NoIdempotent()
   @Post()
-  create(@Body() input: unknown) {
+  create(@Body() input: CreateFlowScopeDto) {
     return this.design.createScope(input);
   }
 
@@ -34,7 +35,7 @@ export class FlowScopesController {
   @Audit({ action: 'flow.scope.update', entity: 'flow.scopes' })
   @NoIdempotent()
   @Patch('/:id')
-  update(@Param('id') id: string, @Body() input: unknown) {
+  update(@Param('id') id: string, @Body() input: UpdateFlowScopeDto) {
     return this.design.updateScope(id, input);
   }
 
