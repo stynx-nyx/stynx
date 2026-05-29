@@ -11,6 +11,11 @@ reference-app workflow instead of the STYNX package release lane.
 - Root `MIT` license plus per-package `LICENSE` files for every publishable package.
 - Release policy verification script:
   - `pnpm release:policy`
+- Security release lane:
+  - `pnpm security:release`
+  - `pnpm security:sbom`
+  - `pnpm security:licenses`
+  - `pnpm security:secrets`
 - Changeset status + release draft generation:
   - `pnpm release:status`
   - `pnpm release:drafts`

@@ -9,6 +9,15 @@ operator runbooks.
 ## Canonical Documents
 
 - [Threat Model](threat-model.md) — current architectural threat model.
+- [Security release policy](security-release-policy.md) — SBOM, license,
+  secret-scanning, provenance, dependency-review, and vulnerability remediation
+  lane.
+- [SBOM](sbom.cdx.json) — generated CycloneDX inventory. Refresh with
+  `pnpm security:sbom` and verify with `pnpm security:sbom:check`.
+- [License policy](license-policy.json) — allow/deny list for direct external
+  dependencies.
+- [Secret-scan allowlist](secret-scan-allowlist.json) — explicit approved test
+  fixture findings for the local secret scanner.
 - [Architecture invariants](../arch/invariants/) — RBAC, privacy,
   package, Flow, coverage, error, and performance invariants.
 - [Operations runbooks](../ops/README.md) — rotation, suspension,
@@ -31,3 +40,11 @@ operator runbooks.
 
 Security behavior should be proven by package tests and reference-app
 integration tests, not by hand-editing generated diagnostics.
+
+## Release Security Commands
+
+- `pnpm security:sbom`
+- `pnpm security:sbom:check`
+- `pnpm security:licenses`
+- `pnpm security:secrets`
+- `pnpm security:release`
