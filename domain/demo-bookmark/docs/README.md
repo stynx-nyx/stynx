@@ -3,7 +3,7 @@
 
 # `demo-bookmark` module
 
-Reference module for the C-4 DEVAI adoption pilot. Demonstrates the blueprint → scaffold → finish lifecycle end-to-end against an existing stynx-shaped repo. **Not a production feature.**
+Reference module for the C-4 DEVAI adoption pilot. Demonstrates the blueprint → scaffold → finish lifecycle end-to-end against an existing stynx-shaped repo. **Not a production feature.** The `domain/demo-bookmark/web` package is private scaffold evidence only; it must not carry production dependencies or be treated as an adopter-facing package.
 
 ## Status
 

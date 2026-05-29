@@ -1,11 +1,15 @@
 # API Documentation
 
-Generate Swagger/OpenAPI specifications directly from the NestJS project.
+OpenAPI is generated from the current STYNX NestJS controller sources and
+verified against the canonical contract file at `docs/contracts/openapi.json`.
 
 ```bash
-(cd backend && npm run swagger:export > ../docs/api/openapi.json)
+pnpm api:docs:write
+pnpm api:coverage
 ```
 
-- The CLI command synthesises route metadata from the `CoreModule` and writes `openapi.json` under `docs/api/`.
-- Serve the docs locally via `npm run start:dev` and visit `http://localhost:3000/docs`.
-- Commit regenerated specs whenever you add or modify controllers, DTOs, or guards that change the API surface.
+- `pnpm api:docs:write` regenerates the deterministic OpenAPI route inventory.
+- `pnpm api:coverage` fails when source controller paths drift from the
+  committed OpenAPI paths.
+- Commit regenerated specs whenever you add or modify controllers that change
+  the API surface.

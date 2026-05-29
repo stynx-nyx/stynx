@@ -11,9 +11,15 @@
       "types": "./dist/types/stynx-web-angular-auth-testing.d.ts",
       "default": "./dist/fesm2022/stynx-web-angular-auth-testing.mjs"
     },
-    "./catalogs/en.json": "./dist/catalogs/en.json",
-    "./catalogs/pt-BR.json": "./dist/catalogs/pt-BR.json",
-    "./package.json": "./package.json"
+    "./catalogs/en.json": {
+      "default": "./dist/catalogs/en.json"
+    },
+    "./catalogs/pt-BR.json": {
+      "default": "./dist/catalogs/pt-BR.json"
+    },
+    "./package.json": {
+      "default": "./package.json"
+    }
   },
   "sideEffects": false,
   "engines": {
@@ -29,7 +35,7 @@
     "lint": "eslint --config ../../tools/eslint-config/angular.mjs \"src/**/*.ts\"",
     "test": "vitest run --config ./vitest.config.ts",
     "stryker": "NODE_OPTIONS=\"--disable-warning=ExperimentalWarning --experimental-vm-modules\" pnpm exec stryker run stryker.conf.mjs",
-    "normalize:dist-exports": "node -e \"const fs=require('node:fs');const path='dist/package.json';const pkg=JSON.parse(fs.readFileSync(path,'utf8'));pkg.exports['./catalogs/en.json']='./catalogs/en.json';pkg.exports['./catalogs/pt-BR.json']='./catalogs/pt-BR.json';fs.writeFileSync(path, JSON.stringify(pkg,null,2)+'\\n');\"",
+    "normalize:dist-exports": "node -e \"const fs=require('node:fs');const path='dist/package.json';const pkg=JSON.parse(fs.readFileSync(path,'utf8'));pkg.exports['./catalogs/en.json']={default:'./catalogs/en.json'};pkg.exports['./catalogs/pt-BR.json']={default:'./catalogs/pt-BR.json'};fs.writeFileSync(path, JSON.stringify(pkg,null,2)+'\\n');\"",
     "build:tsc": "tsc -p tsconfig.json"
   },
   "dependencies": {
@@ -40,23 +46,23 @@
     "rxjs": "^7.8.2"
   },
   "peerDependencies": {
-    "@angular/common": "^20.2.0",
-    "@angular/core": "^20.2.0",
-    "@angular/forms": "^20.2.0",
-    "@angular/router": "^20.2.0"
+    "@angular/common": ">=20.3.0 <22",
+    "@angular/core": ">=20.3.0 <22",
+    "@angular/forms": ">=20.3.0 <22",
+    "@angular/router": ">=20.3.0 <22"
   },
   "devDependencies": {
-    "@angular/common": "22.0.0-rc.0",
-    "@angular/compiler": "22.0.0-rc.0",
-    "@angular/compiler-cli": "22.0.0-rc.0",
-    "@angular/core": "22.0.0-rc.0",
-    "@angular/forms": "22.0.0-rc.0",
-    "@angular/platform-browser": "22.0.0-rc.0",
-    "@angular/router": "22.0.0-rc.0",
-    "@types/node": "^25.6.0",
+    "@angular/common": "21.2.15",
+    "@angular/compiler": "21.2.15",
+    "@angular/compiler-cli": "21.2.15",
+    "@angular/core": "21.2.15",
+    "@angular/forms": "21.2.15",
+    "@angular/platform-browser": "21.2.15",
+    "@angular/router": "21.2.15",
+    "@types/node": "24.12.4",
     "jsdom": "^29.0.2",
-    "ng-packagr": "22.0.0-rc.0",
+    "ng-packagr": "21.2.3",
     "tslib": "^2.8.1",
-    "typescript": "^6.0.3"
+    "typescript": "5.9.3"
   }
 }

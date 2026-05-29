@@ -321,6 +321,11 @@ CREATE POLICY tenant_scope ON audit.events
     tenancy_id = auth.current_tenant()
     OR auth.has_role('platform:superadmin')
     OR tenancy_id IS NULL
+  )
+  WITH CHECK (
+    tenancy_id = auth.current_tenant()
+    OR auth.has_role('platform:superadmin')
+    OR tenancy_id IS NULL
   );
 
 RESET search_path;

@@ -11,7 +11,9 @@
       "types": "./dist/types/stynx-web-sdk-testing.d.ts",
       "default": "./dist/fesm2022/stynx-web-sdk-testing.mjs"
     },
-    "./package.json": "./package.json"
+    "./package.json": {
+      "default": "./package.json"
+    }
   },
   "sideEffects": false,
   "engines": {
@@ -31,13 +33,13 @@
     "build:tsc": "pnpm run codegen && tsc -p tsconfig.json"
   },
   "devDependencies": {
-    "@angular/compiler": "22.0.0-rc.0",
-    "@angular/compiler-cli": "22.0.0-rc.0",
+    "@angular/compiler": "21.2.15",
+    "@angular/compiler-cli": "21.2.15",
     "@stynx/core": "workspace:*",
-    "@types/node": "^25.6.0",
-    "ng-packagr": "22.0.0-rc.0",
+    "@types/node": "24.12.4",
+    "ng-packagr": "21.2.3",
     "openapi-typescript-codegen": "^0.30.0",
     "tslib": "^2.8.1",
-    "typescript": "^6.0.3"
+    "typescript": "5.9.3"
   }
 }

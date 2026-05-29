@@ -1,6 +1,18 @@
 # STYNX Web Packages
 
-`packages-web/` contains the Angular 20 and TypeScript client package family for STYNX applications. The suite is layered: `@stynx-web/sdk` owns framework-agnostic HTTP, auth, tenant, and generated API access; `@stynx-web/angular` adapts that foundation to Angular providers and interceptors; feature packages add auth, tenancy, i18n, UI, storage, trash, sessions, profile, IAM, audit, and Flow screens.
+`packages-web/` contains the Angular 20/21 and TypeScript client package family for STYNX applications. The suite is layered: `@stynx-web/sdk` owns framework-agnostic HTTP, auth, tenant, and generated API access; `@stynx-web/angular` adapts that foundation to Angular providers and interceptors; feature packages add auth, tenancy, i18n, UI, storage, trash, sessions, profile, IAM, audit, and Flow screens.
+
+Supported frontend runtime matrix for this release line:
+
+| Surface                     | Supported versions              |
+| --------------------------- | ------------------------------- |
+| Angular consumer peer range | `>=20.3.0 <22`                  |
+| Angular package build line  | `21.2.15`                       |
+| `ng-packagr`                | `21.2.3`                        |
+| Angular TypeScript          | `5.9.3`                         |
+| Node / pnpm                 | Node `>=24 <25`, pnpm `>=9 <10` |
+
+`pnpm check:engines` enforces this matrix across package manifests.
 
 ## Install Matrix
 

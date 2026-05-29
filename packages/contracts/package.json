@@ -28,6 +28,6 @@
     "stryker": "pnpm exec stryker run stryker.conf.mjs"
   },
   "devDependencies": {
-    "@types/node": "^25.6.0"
+    "@types/node": "24.12.4"
   }
 }

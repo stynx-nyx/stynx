@@ -124,6 +124,22 @@ function createMultipartExecutor(
   );
 }
 
+function createDocumentService(http: Pick<HttpClient, 'get' | 'post'>): DocumentService {
+  const injector = Injector.create({
+    providers: [
+      { provide: HttpClient, useValue: http },
+      {
+        provide: STYNX_ANGULAR_OPTIONS,
+        useValue: {
+          apiBaseUrl: 'https://api.example.test/',
+          sessionMode: 'bearer',
+        },
+      },
+    ],
+  });
+  return runInInjectionContext(injector, () => new DocumentService());
+}
+
 beforeAll(() => {
   TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
 });
@@ -131,6 +147,30 @@ beforeAll(() => {
 describe('@stynx-web/angular-storage', () => {
   afterEach(() => {
     TestBed.resetTestingModule();
+  });
+
+  it('polls encoded document scan-status URLs and completes on terminal events', async () => {
+    const get = vi.fn(() => of({
+      id: '',
+      status: 'completed',
+      checkedAt: '2026-05-29T00:00:00.000Z',
+      message: 'clean',
+    } satisfies StynxDocumentScanEvent));
+    const service = createDocumentService({
+      get,
+      post: vi.fn(),
+    } as unknown as HttpClient);
+
+    await expect(firstValueFrom(service.scanStatus$('doc/id with space', { pollIntervalMs: 1 }))).resolves.toEqual({
+      id: 'doc/id with space',
+      status: 'completed',
+      checkedAt: '2026-05-29T00:00:00.000Z',
+      message: 'clean',
+    });
+
+    expect(get).toHaveBeenCalledWith(
+      'https://api.example.test/storage/documents/doc%2Fid%20with%20space/scan-status',
+    );
   });
 
   it('renders upload and download components with validation failures in the DOM', async () => {

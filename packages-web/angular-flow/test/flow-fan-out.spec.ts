@@ -105,7 +105,6 @@ async function configureRouterTest(allowed: boolean) {
 }
 
 beforeAll(async () => {
-  // @ts-expect-error Resolved by the repo Vitest workspace fallback; angular-flow does not ship this runtime dependency.
   const { BrowserTestingModule, platformBrowserTesting } = await import('@angular/platform-browser/testing');
   try {
     TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
