@@ -23,6 +23,11 @@ can compile or validate against without importing implementation internals.
   definition and evaluation contract for `@stynx/feature-flags`.
 - [integration-adapter.md](integration-adapter.md) — retry, timeout,
   idempotency, and circuit-breaker contract for `@stynx/integration-adapter`.
+- [openapi.json](openapi.json) — generated OpenAPI 3.1 route inventory for
+  reference and package NestJS controllers.
+- [tenant-isolation-coverage.json](tenant-isolation-coverage.json) — required
+  negative tenant/RLS evidence across auth, audit, storage, flow, records, and
+  reference API routes.
 - `errors.json` — shared error taxonomy and envelope metadata.
 - [`@stynx/contracts`](/docs/packages/contracts) — TypeScript interfaces for
   auth, authorization, audit, storage, DB context, tenancy, errors, and
@@ -40,3 +45,7 @@ can compile or validate against without importing implementation internals.
   interface semantics.
 - Any generated contract artifact must have a deterministic verification command
   in package or docs scripts.
+- Regenerate OpenAPI with `pnpm api:docs:write`; verify source-route parity
+  with `pnpm api:coverage`; verify contract posture with
+  `pnpm api:contract`.
+- Verify tenant/RLS negative coverage with `pnpm check:rls-negative`.

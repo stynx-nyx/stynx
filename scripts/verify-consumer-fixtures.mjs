@@ -58,7 +58,11 @@ try {
 
   const tarballs = new Map();
   for (const spec of packageSpecs) {
-    const stdout = run('pnpm', ['--dir', spec.dir, 'pack', '--pack-destination', packDir, '--json'], repoRoot);
+    const stdout = run(
+      'pnpm',
+      ['--dir', spec.dir, 'pack', '--pack-destination', packDir, '--json'],
+      repoRoot,
+    );
     const tarball = packedFile(stdout, spec.name);
     assertPackedManifest(tarball, spec.name);
     tarballs.set(spec.name, tarball);
@@ -68,7 +72,10 @@ try {
   for (const fixture of fixtureSpecs) {
     const fixtureDir = join(fixturesRoot, fixture.name);
     mkdirSync(fixtureDir, { recursive: true });
-    writeFileSync(join(fixtureDir, 'package.json'), `${JSON.stringify(fixture.packageJson, null, 2)}\n`);
+    writeFileSync(
+      join(fixtureDir, 'package.json'),
+      `${JSON.stringify(fixture.packageJson, null, 2)}\n`,
+    );
     writeFileSync(join(fixtureDir, 'pnpm-workspace.yaml'), fixtureWorkspace(tarballs));
     writeFileSync(join(fixtureDir, 'tsconfig.json'), `${JSON.stringify(tsconfig(), null, 2)}\n`);
     writeFileSync(join(fixtureDir, 'index.ts'), fixture.indexTs);
@@ -76,7 +83,9 @@ try {
     run('pnpm', ['run', 'typecheck'], fixtureDir);
   }
 
-  console.log(`[consumer-fixture] OK: ${packageSpecs.length} tarballs installed across ${fixtureSpecs.length} adopter-style fixtures`);
+  console.log(
+    `[consumer-fixture] OK: ${packageSpecs.length} tarballs installed across ${fixtureSpecs.length} adopter-style fixtures`,
+  );
 } finally {
   if (process.env.STYNX_KEEP_CONSUMER_FIXTURE !== '1') {
     rmSync(tempRoot, { recursive: true, force: true });
@@ -86,11 +95,7 @@ try {
 }
 
 function consumerFixtureSpecs(tarballs) {
-  return [
-    sgpFixture(tarballs),
-    pecFixture(tarballs),
-    teatFixture(tarballs),
-  ];
+  return [sgpFixture(tarballs), pecFixture(tarballs), teatFixture(tarballs)];
 }
 
 function basePackageJson(name, dependencies) {
@@ -199,9 +204,13 @@ function teatFixture(tarballs) {
       '@angular/forms': '21.2.15',
       '@angular/router': '21.2.15',
       '@stynx-web/angular': fileDependency(tarballs, '@stynx-web/angular'),
+      '@stynx-web/angular-audit': fileDependency(tarballs, '@stynx-web/angular-audit'),
       '@stynx-web/angular-auth': fileDependency(tarballs, '@stynx-web/angular-auth'),
       '@stynx-web/angular-flow': fileDependency(tarballs, '@stynx-web/angular-flow'),
+      '@stynx-web/angular-i18n': fileDependency(tarballs, '@stynx-web/angular-i18n'),
       '@stynx-web/angular-storage': fileDependency(tarballs, '@stynx-web/angular-storage'),
+      '@stynx-web/angular-tenancy': fileDependency(tarballs, '@stynx-web/angular-tenancy'),
+      '@stynx-web/angular-ui': fileDependency(tarballs, '@stynx-web/angular-ui'),
       '@stynx-web/sdk': fileDependency(tarballs, '@stynx-web/sdk'),
       rxjs: '^7.8.2',
       tslib: '^2.8.1',
@@ -209,18 +218,29 @@ function teatFixture(tarballs) {
     }),
     indexTs: `import { GeneratedStynxSdk, StynxSdkClient } from '@stynx-web/sdk';
 import { provideStynxAngular } from '@stynx-web/angular';
+import { StynxAuditLogComponent, provideStynxAudit } from '@stynx-web/angular-audit';
 import { provideStynxAuth } from '@stynx-web/angular-auth';
 import { DocumentService } from '@stynx-web/angular-storage';
 import { provideStynxFlow } from '@stynx-web/angular-flow';
+import { provideTenancy, TenantContextService } from '@stynx-web/angular-tenancy';
+import { StynxBannerComponent, StynxPaginationComponent } from '@stynx-web/angular-ui';
 
 const sdk = new GeneratedStynxSdk({ BASE: 'https://api.example.test' });
 if (typeof sdk.stynxAuth.stynxAuthGetPlatformPermsBySidInspect !== 'function') {
   throw new Error('Generated SDK path-parameter method is missing');
 }
 
-export const teatProviders = [provideStynxAngular, provideStynxAuth, provideStynxFlow];
+export const teatProviders = [
+  provideStynxAngular,
+  provideStynxAudit,
+  provideStynxAuth,
+  provideStynxFlow,
+  provideTenancy,
+];
 export const sdkClient = StynxSdkClient;
 export const documentService = DocumentService;
+export const teatComponents = [StynxAuditLogComponent, StynxBannerComponent, StynxPaginationComponent];
+export const tenantContext = TenantContextService;
 `,
   };
 }
@@ -248,7 +268,9 @@ function run(command, args, cwd) {
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   if (result.status !== 0) {
-    throw new Error(`${command} ${args.join(' ')} failed\n${result.stdout}\n${result.stderr}`.trim());
+    throw new Error(
+      `${command} ${args.join(' ')} failed\n${result.stdout}\n${result.stderr}`.trim(),
+    );
   }
   return result.stdout.trim();
 }

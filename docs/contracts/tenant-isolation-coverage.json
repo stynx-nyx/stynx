@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "1",
+  "requiredEvidence": [
+    {
+      "surface": "auth",
+      "file": "test/db/runtime/auth/rls-policies.runtime.spec.ts",
+      "patterns": [
+        "rejects cross-tenant tenancy inserts through tenant_isolation WITH CHECK",
+        "filters auth.users through users_isolation and hides cross-tenant updates"
+      ]
+    },
+    {
+      "surface": "audit",
+      "file": "test/db/runtime/audit/tenant-scope.runtime.spec.ts",
+      "patterns": [
+        "limits non-owner reads to auth.current_tenant plus tenantless audit events",
+        "rejects inserts for another tenant under the non-owner application role"
+      ]
+    },
+    {
+      "surface": "storage",
+      "file": "test/db/runtime/storage/files-touch.runtime.spec.ts",
+      "patterns": [
+        "rejects storage file inserts when the provided tenant mismatches auth.current_tenant",
+        "applies tenant_scope RLS so a non-owner role sees only the current tenant files"
+      ]
+    },
+    {
+      "surface": "flow",
+      "file": "test/packages/openapi-tenant-isolation.spec.ts",
+      "patterns": [
+        "proves flow routes require tenant-bound security",
+        "proves flow write routes expose idempotent tenant-scoped contracts"
+      ]
+    },
+    {
+      "surface": "records",
+      "file": "test/packages/openapi-tenant-isolation.spec.ts",
+      "patterns": [
+        "proves reference records routes require tenant-bound security",
+        "proves reference records source filters by tenant before returning rows"
+      ]
+    },
+    {
+      "surface": "reference-api",
+      "file": "test/packages/openapi-tenant-isolation.spec.ts",
+      "patterns": [
+        "proves reference API protected routes require tenant-bound security",
+        "proves document storage routes keep tenant-scoped auth, rate limits, and audit hooks"
+      ]
+    }
+  ]
+}
