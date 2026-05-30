@@ -1,5 +1,5 @@
 import { NgFor, NgIf } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import type { OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -19,6 +19,7 @@ function dateInputValue(offsetDays = 0): string {
   selector: 'stynx-reference-work-item-form-page',
   standalone: true,
   imports: [NgIf, NgFor, ReactiveFormsModule, RouterLink, StynxBannerComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="panel">
       <div class="panel__header">
@@ -58,49 +59,55 @@ function dateInputValue(offsetDays = 0): string {
           <stynx-banner tone="error" [message]="errorMessage"></stynx-banner>
         }
 
-        <button type="submit" [disabled]="form.invalid || pending" data-testid="work-item-save-submit">
+        <button
+          type="submit"
+          [disabled]="form.invalid || pending"
+          data-testid="work-item-save-submit"
+        >
           {{ pending ? 'Saving...' : editingId ? 'Save transition' : 'Create work item' }}
         </button>
       </form>
     </section>
   `,
-  styles: [`
-    .panel {
-      display: grid;
-      gap: 1rem;
-      padding: 1.5rem;
-      border-radius: 24px;
-      background: var(--app-card);
-      border: 1px solid var(--app-line);
-    }
+  styles: [
+    `
+      .panel {
+        display: grid;
+        gap: 1rem;
+        padding: 1.5rem;
+        border-radius: 24px;
+        background: var(--app-card);
+        border: 1px solid var(--app-line);
+      }
 
-    .panel__header {
-      display: flex;
-      justify-content: space-between;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
+      .panel__header {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
 
-    .form {
-      display: grid;
-      gap: 1rem;
-      max-width: 42rem;
-    }
+      .form {
+        display: grid;
+        gap: 1rem;
+        max-width: 42rem;
+      }
 
-    label {
-      display: grid;
-      gap: 0.45rem;
-    }
+      label {
+        display: grid;
+        gap: 0.45rem;
+      }
 
-    input,
-    select,
-    button {
-      border-radius: 14px;
-      border: 1px solid var(--app-line);
-      padding: 0.85rem 1rem;
-      background: white;
-    }
-  `],
+      input,
+      select,
+      button {
+        border-radius: 14px;
+        border: 1px solid var(--app-line);
+        padding: 0.85rem 1rem;
+        background: white;
+      }
+    `,
+  ],
 })
 export class WorkItemFormPageComponent implements OnInit {
   private readonly api = inject(ReferenceWebApiService);
@@ -115,7 +122,10 @@ export class WorkItemFormPageComponent implements OnInit {
     targetOn: [dateInputValue(7), [Validators.required]],
     category: ['GEN'],
     totalUnits: [0, [Validators.min(0)]],
-    status: this.formBuilder.nonNullable.control<'draft' | 'ready' | 'done' | 'cancelled'>('draft', [Validators.required]),
+    status: this.formBuilder.nonNullable.control<'draft' | 'ready' | 'done' | 'cancelled'>(
+      'draft',
+      [Validators.required],
+    ),
   });
 
   protected records: RecordItem[] = [];

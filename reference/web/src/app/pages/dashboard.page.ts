@@ -1,11 +1,14 @@
 import { NgIf } from '@angular/common';
-import { Component, ViewChild, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ViewChild, inject } from '@angular/core';
 import type { AfterViewInit } from '@angular/core';
 import { StynxActiveSessionsComponent } from '@stynx-web/angular-sessions';
 import { StynxDocumentUploadComponent } from '@stynx-web/angular-storage';
 import { StynxHasPermissionDirective, StynxSessionService } from '@stynx-web/angular-auth';
 import { StynxBannerComponent, StynxToastService } from '@stynx-web/angular-ui';
-import { StynxPreferencesFormComponent, StynxProfileFormComponent } from '@stynx-web/angular-profile';
+import {
+  StynxPreferencesFormComponent,
+  StynxProfileFormComponent,
+} from '@stynx-web/angular-profile';
 import type { StynxSessionsAdapter } from '@stynx-web/angular-sessions';
 import { StynxIntlCurrencyPipe } from '@stynx-web/angular-i18n';
 import { environment } from '../../environments/environment';
@@ -25,6 +28,7 @@ import { ReferenceWebShellService } from '../core/reference-web-shell.service';
     StynxHasPermissionDirective,
     StynxIntlCurrencyPipe,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="stack">
       <article class="hero">
@@ -32,14 +36,24 @@ import { ReferenceWebShellService } from '../core/reference-web-shell.service';
           <p class="eyebrow">Prompt 31</p>
           <h2 data-testid="dashboard-title">{{ i18n.t('dashboard.title') }}</h2>
           <p class="tenant-label">{{ shell.activeTenantLabel() }}</p>
-          <p data-testid="i18n-number-sample">{{ 1234.56 | stynxIntlCurrency:'USD' }}</p>
-          <p>Dashboard, storage, sessions, profile, locale switching, and auth wiring are all mounted here.</p>
+          <p data-testid="i18n-number-sample">{{ 1234.56 | stynxIntlCurrency: 'USD' }}</p>
+          <p>
+            Dashboard, storage, sessions, profile, locale switching, and auth wiring are all mounted
+            here.
+          </p>
         </div>
-        <stynx-banner tone="info" [message]="'Signed in as ' + shell.activeUserLabel()"></stynx-banner>
+        <stynx-banner
+          tone="info"
+          [message]="'Signed in as ' + shell.activeUserLabel()"
+        ></stynx-banner>
       </article>
 
       <section class="grid">
-        <article class="card" data-testid="dashboard-document-upload-card" *stynxHasPermission="'sample:document:write'">
+        <article
+          class="card"
+          data-testid="dashboard-document-upload-card"
+          *stynxHasPermission="'sample:document:write'"
+        >
           <h3>Document upload</h3>
           <stynx-document-upload
             data-testid="dashboard-document-upload"
@@ -62,50 +76,58 @@ import { ReferenceWebShellService } from '../core/reference-web-shell.service';
       <section class="grid">
         <article class="card">
           <h3>Profile</h3>
-          <stynx-profile-form [value]="profileValue" (save)="saveProfile($event)"></stynx-profile-form>
+          <stynx-profile-form
+            [value]="profileValue"
+            (save)="saveProfile($event)"
+          ></stynx-profile-form>
         </article>
 
         <article class="card">
           <h3>Preferences</h3>
-          <stynx-preferences-form [value]="preferencesValue" (save)="savePreferences($event)"></stynx-preferences-form>
+          <stynx-preferences-form
+            [value]="preferencesValue"
+            (save)="savePreferences($event)"
+          ></stynx-preferences-form>
         </article>
       </section>
     </section>
   `,
-  styles: [`
-    .stack,
-    .grid {
-      display: grid;
-      gap: 1rem;
-    }
+  styles: [
+    `
+      .stack,
+      .grid {
+        display: grid;
+        gap: 1rem;
+      }
 
-    .grid {
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    }
+      .grid {
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      }
 
-    .hero,
-    .card {
-      padding: 1.4rem;
-      border-radius: 24px;
-      background: var(--app-card);
-      border: 1px solid var(--app-line);
-    }
+      .hero,
+      .card {
+        padding: 1.4rem;
+        border-radius: 24px;
+        background: var(--app-card);
+        border: 1px solid var(--app-line);
+      }
 
-    .hero {
-      display: flex;
-      justify-content: space-between;
-      gap: 1rem;
-      align-items: flex-start;
-    }
+      .hero {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: flex-start;
+      }
 
-    .eyebrow {
-      margin: 0 0 0.35rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      font-size: 0.72rem;
-      color: var(--app-muted);
-    }
-  `],
+      .eyebrow {
+        margin: 0 0 0.35rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        font-size: 0.72rem;
+        color: var(--app-muted);
+      }
+    `,
+  ],
 })
 export class DashboardPageComponent implements AfterViewInit {
   private readonly session = inject(StynxSessionService);
@@ -134,14 +156,18 @@ export class DashboardPageComponent implements AfterViewInit {
     list: async () => {
       const snapshot = this.session.snapshot();
       return snapshot.sid
-        ? [{
-            sid: snapshot.sid,
-            tenantId: snapshot.tenantId ?? 'n/a',
-            createdAt: new Date().toISOString(),
-            expiresAt: typeof snapshot.claims?.exp === 'number'
-              ? new Date(snapshot.claims.exp * 1000).toISOString()
-              : 'unknown',
-          }, ...(this.devSecondarySession ? [this.devSecondarySession] : [])]
+        ? [
+            {
+              sid: snapshot.sid,
+              tenantId: snapshot.tenantId ?? 'n/a',
+              createdAt: new Date().toISOString(),
+              expiresAt:
+                typeof snapshot.claims?.exp === 'number'
+                  ? new Date(snapshot.claims.exp * 1000).toISOString()
+                  : 'unknown',
+            },
+            ...(this.devSecondarySession ? [this.devSecondarySession] : []),
+          ]
         : [];
     },
     revoke: async (sid: string) => {

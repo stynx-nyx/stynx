@@ -1,15 +1,29 @@
 import { NgFor, NgIf } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import type { OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { StynxBannerComponent, EmptyStateComponent, StynxLoadingSpinnerComponent, StynxTableComponent } from '@stynx-web/angular-ui';
+import {
+  StynxBannerComponent,
+  EmptyStateComponent,
+  StynxLoadingSpinnerComponent,
+  StynxTableComponent,
+} from '@stynx-web/angular-ui';
 import { ReferenceWebApiService } from '../core/reference-web-api.service';
 import type { RecordItem } from '../core/reference-models';
 
 @Component({
   selector: 'stynx-reference-records-page',
   standalone: true,
-  imports: [NgFor, NgIf, RouterLink, EmptyStateComponent, StynxBannerComponent, StynxLoadingSpinnerComponent, StynxTableComponent],
+  imports: [
+    NgFor,
+    NgIf,
+    RouterLink,
+    EmptyStateComponent,
+    StynxBannerComponent,
+    StynxLoadingSpinnerComponent,
+    StynxTableComponent,
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="panel">
       <div class="panel__header">
@@ -27,7 +41,10 @@ import type { RecordItem } from '../core/reference-models';
       @if (loading()) {
         <stynx-loading-spinner label="Loading records"></stynx-loading-spinner>
       } @else if (rows().length === 0) {
-        <stynx-empty-state title="No records yet" description="Create a record to start the sample workflow."></stynx-empty-state>
+        <stynx-empty-state
+          title="No records yet"
+          description="Create a record to start the sample workflow."
+        ></stynx-empty-state>
       } @else {
         <stynx-table [columns]="columns" [rows]="rows()"></stynx-table>
         <div class="card-list">
@@ -40,7 +57,13 @@ import type { RecordItem } from '../core/reference-models';
               <div class="card__actions">
                 <a [routerLink]="['/records', record.id]">Open</a>
                 <a [routerLink]="['/records', record.id, 'edit']">Edit</a>
-                <button type="button" (click)="deleteRecord(record.id)" [attr.data-testid]="'record-delete-' + record.id">Delete</button>
+                <button
+                  type="button"
+                  (click)="deleteRecord(record.id)"
+                  [attr.data-testid]="'record-delete-' + record.id"
+                >
+                  Delete
+                </button>
               </div>
             </article>
           }
@@ -48,42 +71,44 @@ import type { RecordItem } from '../core/reference-models';
       }
     </section>
   `,
-  styles: [`
-    .panel {
-      display: grid;
-      gap: 1rem;
-      padding: 1.5rem;
-      border-radius: 24px;
-      background: var(--app-card);
-      border: 1px solid var(--app-line);
-    }
+  styles: [
+    `
+      .panel {
+        display: grid;
+        gap: 1rem;
+        padding: 1.5rem;
+        border-radius: 24px;
+        background: var(--app-card);
+        border: 1px solid var(--app-line);
+      }
 
-    .panel__header,
-    .card,
-    .card__actions {
-      display: flex;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-    }
+      .panel__header,
+      .card,
+      .card__actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+      }
 
-    .panel__header {
-      justify-content: space-between;
-      align-items: flex-start;
-    }
+      .panel__header {
+        justify-content: space-between;
+        align-items: flex-start;
+      }
 
-    .card-list {
-      display: grid;
-      gap: 0.75rem;
-    }
+      .card-list {
+        display: grid;
+        gap: 0.75rem;
+      }
 
-    .card {
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.9rem 1rem;
-      border-radius: 16px;
-      background: white;
-    }
-  `],
+      .card {
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.9rem 1rem;
+        border-radius: 16px;
+        background: white;
+      }
+    `,
+  ],
 })
 export class RecordsPageComponent implements OnInit {
   private readonly api = inject(ReferenceWebApiService);

@@ -1,5 +1,5 @@
 import { NgIf } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import type { OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -10,19 +10,28 @@ import { ReferenceWebApiService } from '../core/reference-web-api.service';
   selector: 'stynx-reference-record-form-page',
   standalone: true,
   imports: [NgIf, ReactiveFormsModule, RouterLink, StynxBannerComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="panel">
       <div class="panel__header">
         <div>
           <h2>{{ editingId ? 'Edit record' : 'Create record' }}</h2>
-          <p>{{ editingId ? 'Update the sample record fields.' : 'Create a record for the work-item flow.' }}</p>
+          <p>
+            {{
+              editingId
+                ? 'Update the sample record fields.'
+                : 'Create a record for the work-item flow.'
+            }}
+          </p>
         </div>
         <a routerLink="/records">Back to records</a>
       </div>
 
       <form class="form" [formGroup]="form" (ngSubmit)="submit()">
         <label>Title <input formControlName="title" data-testid="record-title-input" /></label>
-        <label>Email <input type="email" formControlName="email" data-testid="record-email-input" /></label>
+        <label
+          >Email <input type="email" formControlName="email" data-testid="record-email-input"
+        /></label>
         <label>External reference <input formControlName="externalRef" /></label>
         <label>
           Status
@@ -43,43 +52,45 @@ import { ReferenceWebApiService } from '../core/reference-web-api.service';
       </form>
     </section>
   `,
-  styles: [`
-    .panel {
-      display: grid;
-      gap: 1rem;
-      padding: 1.5rem;
-      border-radius: 24px;
-      background: var(--app-card);
-      border: 1px solid var(--app-line);
-    }
+  styles: [
+    `
+      .panel {
+        display: grid;
+        gap: 1rem;
+        padding: 1.5rem;
+        border-radius: 24px;
+        background: var(--app-card);
+        border: 1px solid var(--app-line);
+      }
 
-    .panel__header {
-      display: flex;
-      justify-content: space-between;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
+      .panel__header {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
 
-    .form {
-      display: grid;
-      gap: 1rem;
-      max-width: 40rem;
-    }
+      .form {
+        display: grid;
+        gap: 1rem;
+        max-width: 40rem;
+      }
 
-    label {
-      display: grid;
-      gap: 0.4rem;
-    }
+      label {
+        display: grid;
+        gap: 0.4rem;
+      }
 
-    input,
-    select,
-    button {
-      border-radius: 14px;
-      border: 1px solid var(--app-line);
-      padding: 0.85rem 1rem;
-      background: white;
-    }
-  `],
+      input,
+      select,
+      button {
+        border-radius: 14px;
+        border: 1px solid var(--app-line);
+        padding: 0.85rem 1rem;
+        background: white;
+      }
+    `,
+  ],
 })
 export class RecordFormPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
@@ -91,7 +102,9 @@ export class RecordFormPageComponent implements OnInit {
     title: ['', [Validators.required]],
     email: ['', [Validators.required, Validators.email]],
     externalRef: [''],
-    status: this.formBuilder.nonNullable.control<'active' | 'pending' | 'inactive'>('active', [Validators.required]),
+    status: this.formBuilder.nonNullable.control<'active' | 'pending' | 'inactive'>('active', [
+      Validators.required,
+    ]),
   });
 
   protected editingId: string | null = null;

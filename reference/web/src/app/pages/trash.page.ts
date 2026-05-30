@@ -1,5 +1,5 @@
 import { NgFor } from '@angular/common';
-import { Component, ViewChild, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ViewChild, inject } from '@angular/core';
 import type { AfterViewInit } from '@angular/core';
 import { StynxTrashListComponent } from '@stynx-web/angular-trash';
 import type { StynxTrashAdapter, StynxTrashPage } from '@stynx-web/angular-trash';
@@ -9,6 +9,7 @@ import { ReferenceWebApiService } from '../core/reference-web-api.service';
   selector: 'stynx-reference-trash-page',
   standalone: true,
   imports: [NgFor, StynxTrashListComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="panel">
       <div class="panel__header">
@@ -37,36 +38,38 @@ import { ReferenceWebApiService } from '../core/reference-web-api.service';
       ></stynx-trash-list>
     </section>
   `,
-  styles: [`
-    .panel {
-      display: grid;
-      gap: 1rem;
-      padding: 1.5rem;
-      border-radius: 24px;
-      background: var(--app-card);
-      border: 1px solid var(--app-line);
-    }
+  styles: [
+    `
+      .panel {
+        display: grid;
+        gap: 1rem;
+        padding: 1.5rem;
+        border-radius: 24px;
+        background: var(--app-card);
+        border: 1px solid var(--app-line);
+      }
 
-    .panel__header,
-    .switcher {
-      display: flex;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-      justify-content: space-between;
-    }
+      .panel__header,
+      .switcher {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        justify-content: space-between;
+      }
 
-    .switcher button {
-      border-radius: 999px;
-      border: 1px solid var(--app-line);
-      background: white;
-      padding: 0.6rem 0.85rem;
-    }
+      .switcher button {
+        border-radius: 999px;
+        border: 1px solid var(--app-line);
+        background: white;
+        padding: 0.6rem 0.85rem;
+      }
 
-    .switcher button.is-active {
-      background: var(--app-accent);
-      color: white;
-    }
-  `],
+      .switcher button.is-active {
+        background: var(--app-accent);
+        color: white;
+      }
+    `,
+  ],
 })
 export class TrashPageComponent implements AfterViewInit {
   private readonly api = inject(ReferenceWebApiService);
@@ -77,9 +80,10 @@ export class TrashPageComponent implements AfterViewInit {
   protected activeResource: 'records' | 'work-items' = 'work-items';
   protected readonly adapter: StynxTrashAdapter = {
     list: async (resource: string): Promise<StynxTrashPage> => {
-      const items = resource === 'work-items'
-        ? await this.api.listDeletedWorkItems()
-        : await this.api.listDeletedRecords();
+      const items =
+        resource === 'work-items'
+          ? await this.api.listDeletedWorkItems()
+          : await this.api.listDeletedRecords();
       return {
         items: items.map((item) => ({
           id: item.id,

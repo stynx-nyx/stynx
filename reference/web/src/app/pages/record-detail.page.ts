@@ -1,8 +1,11 @@
 import { DatePipe, NgIf } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import type { OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { StynxDocumentDownloadComponent, StynxDocumentUploadComponent } from '@stynx-web/angular-storage';
+import {
+  StynxDocumentDownloadComponent,
+  StynxDocumentUploadComponent,
+} from '@stynx-web/angular-storage';
 import { StynxBannerComponent } from '@stynx-web/angular-ui';
 import { ReferenceWebApiService } from '../core/reference-web-api.service';
 import type { RecordItem } from '../core/reference-models';
@@ -10,7 +13,15 @@ import type { RecordItem } from '../core/reference-models';
 @Component({
   selector: 'stynx-reference-record-detail-page',
   standalone: true,
-  imports: [DatePipe, NgIf, RouterLink, StynxBannerComponent, StynxDocumentDownloadComponent, StynxDocumentUploadComponent],
+  imports: [
+    DatePipe,
+    NgIf,
+    RouterLink,
+    StynxBannerComponent,
+    StynxDocumentDownloadComponent,
+    StynxDocumentUploadComponent,
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="panel">
       @if (record(); as currentRecord) {
@@ -26,10 +37,22 @@ import type { RecordItem } from '../core/reference-models';
         </div>
 
         <dl class="detail-grid">
-          <div><dt>ID</dt><dd>{{ currentRecord.id }}</dd></div>
-          <div><dt>External reference</dt><dd>{{ currentRecord.externalRef || '—' }}</dd></div>
-          <div><dt>Created</dt><dd>{{ currentRecord.createdAt | date:'medium' }}</dd></div>
-          <div><dt>Updated</dt><dd>{{ currentRecord.updatedAt | date:'medium' }}</dd></div>
+          <div>
+            <dt>ID</dt>
+            <dd>{{ currentRecord.id }}</dd>
+          </div>
+          <div>
+            <dt>External reference</dt>
+            <dd>{{ currentRecord.externalRef || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Created</dt>
+            <dd>{{ currentRecord.createdAt | date: 'medium' }}</dd>
+          </div>
+          <div>
+            <dt>Updated</dt>
+            <dd>{{ currentRecord.updatedAt | date: 'medium' }}</dd>
+          </div>
         </dl>
 
         <article class="upload-card" data-testid="record-document-card">
@@ -44,7 +67,10 @@ import type { RecordItem } from '../core/reference-models';
             ></stynx-document-upload>
           </div>
           @if (uploadedDocumentId(); as documentId) {
-            <div data-testid="record-document-download-surface" [attr.data-document-id]="documentId">
+            <div
+              data-testid="record-document-download-surface"
+              [attr.data-document-id]="documentId"
+            >
               <stynx-document-download
                 data-testid="record-document-download"
                 [documentId]="documentId"
@@ -58,50 +84,52 @@ import type { RecordItem } from '../core/reference-models';
       }
     </section>
   `,
-  styles: [`
-    .panel {
-      display: grid;
-      gap: 1rem;
-      padding: 1.5rem;
-      border-radius: 24px;
-      background: var(--app-card);
-      border: 1px solid var(--app-line);
-    }
+  styles: [
+    `
+      .panel {
+        display: grid;
+        gap: 1rem;
+        padding: 1.5rem;
+        border-radius: 24px;
+        background: var(--app-card);
+        border: 1px solid var(--app-line);
+      }
 
-    .panel__header,
-    .actions {
-      display: flex;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-      justify-content: space-between;
-    }
+      .panel__header,
+      .actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        justify-content: space-between;
+      }
 
-    .detail-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1rem;
-      margin: 0;
-    }
+      .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+        margin: 0;
+      }
 
-    dt {
-      font-size: 0.78rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--app-muted);
-    }
+      dt {
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--app-muted);
+      }
 
-    dd {
-      margin: 0.35rem 0 0;
-    }
+      dd {
+        margin: 0.35rem 0 0;
+      }
 
-    .upload-card {
-      display: grid;
-      gap: 0.75rem;
-      padding: 1rem;
-      border-radius: 18px;
-      background: white;
-    }
-  `],
+      .upload-card {
+        display: grid;
+        gap: 0.75rem;
+        padding: 1rem;
+        border-radius: 18px;
+        background: white;
+      }
+    `,
+  ],
 })
 export class RecordDetailPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
