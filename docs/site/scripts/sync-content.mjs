@@ -419,6 +419,29 @@ syncPackageReadmes(
 syncSpecs();
 generateStatusPages();
 
+// R16 W02 — mirror packages/backend/docs/ into /docs/packages/backend/.
+// The backend meta-package has 10 independently-mountable submodules
+// (Decision E modularity-driven split); each submodule gets its own page
+// under packages/backend/docs/<submod>.md. Per Decision E distributed-
+// authoring, W02 lands pipeline.md only; W03 + W04 land the other 9.
+// This mirror picks up everything the wave authoring drops into the dir.
+copyMarkdownDirTransformed(
+  resolve(repoRoot, 'packages/backend/docs'),
+  'packages/backend',
+  (content) => publicMarkdownContent(content),
+);
+
+// R16 W05 — mirror packages/flow/docs/ into /docs/packages/flow/.
+// Flow has 20 controllers; flat README would exceed 600 lines. Per
+// Decision E size-driven split, flow's docs are an entrypoint + ~12
+// pages under packages/flow/docs/. This mirror picks them up. The mirror
+// is in place from W02 (lands once); flow content arrives in W05.
+copyMarkdownDirTransformed(
+  resolve(repoRoot, 'packages/flow/docs'),
+  'packages/flow',
+  (content) => publicMarkdownContent(content),
+);
+
 // R15 W06 — IA-section mirror: walk the 0.2.0 section dirs (post-W03 reorg)
 // and copy markdown directly into matching section roots under .generated/site-docs/.
 // This is additive — the legacy mirror logic above stays in place for backwards URL
