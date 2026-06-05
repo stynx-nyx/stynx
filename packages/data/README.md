@@ -1,90 +1,155 @@
-# @stynx/data
+# `@stynx/data` — Drizzle-backed DB substrate with RLS-aware request scoping + soft-delete
 
-Data access foundation for PostgreSQL pools, migrations, Drizzle schemas, transactions, archive-aware helpers, and SQL policy boundaries.
+`@stynx/data` is the data-access substrate every STYNX persistence-touching package consumes. It wraps Drizzle ORM with: a request-scoped DB connection that carries `tenantId` + `actorId` into Postgres via `SET LOCAL` (RLS-aware), a transactional `Database` service, pool-registry helpers for multi-connection apps, soft-delete cascade primitives per `ADR-001-soft-delete`, archive-aware query helpers, and CLI-controlled migration runners.
 
 ## Purpose
 
-Data access foundation for PostgreSQL pools, migrations, Drizzle schemas, transactions, archive-aware helpers, and SQL policy boundaries.
+Multi-tenant Postgres apps need RLS policies pinned to a request-scoped session context, plus consistent soft-delete (with archive cascades) and a predictable migration runner. Doing each of these by hand is error-prone — request-context drift causes RLS bypass; soft-delete done per-table leaks deleted rows. `@stynx/data` centralises it.
 
-## Install And Import
+You reach for `@stynx/data` after `@stynx/core` whenever the app talks to Postgres. The default Postgres impl is paired with `DbContextApplier` from `@stynx/contracts`; custom dialects implement a different applier.
 
-```ts
-import {} from /* public exports */ '@stynx/data';
+What it does NOT do: it doesn't define your schema (Drizzle's `pgTable()` does; you author it). It doesn't enforce RLS policies (your SQL migrations create them; this package PROJECTS the session context they read). It doesn't include a query builder beyond Drizzle.
+
+## Audience
+
+Backend developers building any STYNX app with Postgres persistence.
+
+## Install
+
+```bash
+pnpm add @stynx/data drizzle-orm pg
 ```
 
-In this monorepo, use the workspace package. Published consumers should install matching `@stynx/*` versions from the same release train.
+**Peer dependencies:** `@nestjs/common` `^11`, `@stynx/core` `^1`, `@stynx/contracts` `^1`, `drizzle-orm` `^0.34`, `pg` `^8`.
 
-## Module Setup
-
-Import `StynxDataModule` once per host and provide owner/app/reader connection configuration.
+## Quick start
 
 ```ts
-@Module({
-  imports: [StynxDataModule.forRoot({ connections, migrations })],
-})
-export class DataHostModule {}
-```
+import { StynxDataModule } from '@stynx/data';
+import * as schema from './schema';
 
-## Data And Security Model
-
-Owns direct PostgreSQL access for framework packages. New curated tables must preserve tenant/RLS expectations and DML audit trigger coverage. Other packages should consume data services instead of importing pg directly.
-
-## Example
-
-```ts
-import { Database, Transaction } from '@stynx/data';
-
-await db.transaction(async (tx: Transaction) => {
-  await tx.execute(sql);
+StynxDataModule.forRoot({
+  connection: { url: process.env.DATABASE_URL },
+  schema,
 });
 ```
 
-## Public API
+```ts
+import { Database } from '@stynx/data';
 
-- StynxDataModule
-- Database
-- Transaction and Drizzle helpers
-- PostgreSQL pool registry/client helpers
-- system-context helper
-- schema exports, query helpers, table markers, errors, and tokens
+@Injectable()
+export class OrdersRepo {
+  constructor(private readonly db: Database) {}
 
-Current barrel highlights:
-
-- `export { StynxDataModule, StynxDataModule as DataModule } from './data.module'`
-- `export { Database } from './database'`
-- `export { Transaction, createDrizzle, type StynxDrizzleDatabase } from './transaction'`
-- `export { StynxPoolRegistry, createStynxPgPool, type StynxPgPoolOptions } from './pools'`
-- `export { createStynxPgClient, type StynxPgClient, type StynxPgClientConfig } from './client'`
-- `export { withSystemContext } from './system-context'`
-- `export * from './table-markers'`
-- `export * from './types'`
-- `export * from './errors'`
-- `export * from './tokens'`
-- `export * from './schema'`
-- `export * from './query-helpers'`
-- See `src/index.ts` for the complete public barrel.
-
-## Verification
-
-```sh
-pnpm --filter @stynx/data build
-pnpm --filter @stynx/data test
-STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx/data test:int
+  async list() {
+    // request-scoped; SET LOCAL applied so RLS sees tenant + actor
+    return this.db.select().from(schema.orders);
+  }
+}
 ```
 
-## Documentation Standard
+## Public API surface
 
-The public barrel must carry package-level `@packageDocumentation`. Add symbol-level TSDoc for exported services, modules, guards, interceptors, decorators, adapters, errors, and public options when the type name is not self-explanatory.
+### Modules
 
-## Compatibility
+| Export                                 | Signature                             | Description                                                                 |
+| -------------------------------------- | ------------------------------------- | --------------------------------------------------------------------------- |
+| `StynxDataModule` (alias `DataModule`) | `.forRoot(options: StynxDataOptions)` | Registers the pool, `Database`, the `DbContextApplier`, transaction helper. |
 
-| Package version | Node | pnpm | STYNX spec              |
-| --------------- | ---- | ---- | ----------------------- |
-| 1.x             | 24.x | 9.x  | v0.6 / v1.0 remediation |
+### Services / Injectables
 
-## References
+| Export                                                          | Description                                                                                           |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `Database`                                                      | Request-scoped Drizzle wrapper. Reads `RequestContext` and applies `SET LOCAL` per query/transaction. |
+| `Transaction`                                                   | Helper for explicit transactions across multiple ops; nests cleanly inside `Database`.                |
+| `StynxPoolRegistry`                                             | Multi-pool registry; useful for read-replica routing or per-tenant connection pinning.                |
+| `StynxPgClient`                                                 | Lower-level Postgres client; exposed for tests + CLI utilities.                                       |
+| `PgSessionDbContextApplier` (re-exported from `@stynx/backend`) | The default `DbContextApplier<PostgresClient>` — `SET LOCAL` for RLS.                                 |
 
-- [docs/framework/arch/developer-documentation.md](../../docs/framework/arch/developer-documentation.md)
-- [docs/stynx/package-architecture.md](../../docs/stynx/package-architecture.md)
-- [docs/framework/arch/STYNX-API-DATA.md](../../docs/framework/arch/STYNX-API-DATA.md)
-- [docs/framework/arch/README.md](../../docs/framework/arch/README.md)
+### Functions
+
+| Export                | Signature                                | Description                                                    |
+| --------------------- | ---------------------------------------- | -------------------------------------------------------------- |
+| `createDrizzle`       | `(client, schema): StynxDrizzleDatabase` | Build a typed Drizzle instance from a connection + schema.     |
+| `createStynxPgPool`   | `(options: StynxPgPoolOptions): Pool`    | Build a Postgres pool with STYNX defaults (idle timeout, max). |
+| `createStynxPgClient` | `(options): StynxPgClient`               | Test-friendly factory.                                         |
+
+### Soft-delete + archive helpers
+
+| Export               | Description                                                             |
+| -------------------- | ----------------------------------------------------------------------- |
+| `archiveWhereActive` | Predicate helper that filters out soft-deleted rows.                    |
+| `cascadeSoftDelete`  | Walks FK relationships per ADR-001 and applies the cascade.             |
+| `restoreCascade`     | Reverses a soft-delete cascade if no conflicting parent archive exists. |
+
+### Types / Interfaces
+
+| Export                   | Description                                                |
+| ------------------------ | ---------------------------------------------------------- |
+| `StynxDataOptions`       | `forRoot()` options.                                       |
+| `StynxDrizzleDatabase`   | Typed Drizzle DB instance for your schema.                 |
+| `StynxPgPoolOptions`     | Pool options.                                              |
+| `SystemExecutionContext` | Cited from `@stynx/core`; marks system-context operations. |
+
+## Configuration
+
+### `StynxDataModule.forRoot()` options
+
+| Option                     | Type               | Default                     | Description                                               |
+| -------------------------- | ------------------ | --------------------------- | --------------------------------------------------------- |
+| `connection.url`           | `string`           | `process.env.DATABASE_URL`  | Postgres URL.                                             |
+| `connection.poolMax`       | `number`           | `10`                        | Max pool size.                                            |
+| `connection.idleTimeoutMs` | `number`           | `30_000`                    | Idle timeout.                                             |
+| `schema`                   | `DrizzleSchema`    | (required)                  | Your Drizzle schema barrel.                               |
+| `applier`                  | `DbContextApplier` | `PgSessionDbContextApplier` | Custom DB-session-context applier (non-Postgres dialect). |
+| `multiPool`                | `boolean`          | `false`                     | Enable `StynxPoolRegistry` for multi-pool apps.           |
+
+## Examples
+
+### Example 1 — tenant-scoped read
+
+```ts
+async list() {
+  // tenantId pulled from RequestContext; SET LOCAL stynx_tenant_id applied
+  return this.db.select().from(schema.orders);
+}
+```
+
+### Example 2 — explicit transaction
+
+```ts
+async chargeAndAudit(input: ChargeInput) {
+  await this.db.transaction(async (tx) => {
+    await tx.insert(schema.charges).values({...});
+    await tx.insert(schema.auditLog).values({...});
+  });
+}
+```
+
+### Example 3 — archive-aware query
+
+```ts
+import { archiveWhereActive } from '@stynx/data';
+
+return this.db.select().from(schema.orders).where(archiveWhereActive(schema.orders));
+```
+
+## Common pitfalls
+
+- **Querying outside a request frame** — `RequestContext` is missing, so `SET LOCAL` doesn't fire and RLS may reject (or worse: silently leak across tenants). Use `SystemContext` from `@stynx/core` for cron/queue contexts.
+- **Forgetting `cascadeSoftDelete`** when soft-deleting a parent — children remain "alive" in the DB and leak in subsequent queries.
+- **Multi-pool registry with tenant-pinning** — each tenant's queries go through a single pool; a hot tenant can saturate its pool while others sit idle. Monitor per-pool pressure.
+- **Raw SQL bypassing `Database`** — bypasses `SET LOCAL`, so RLS sees no context. Always go through `db.execute()` or higher.
+
+## Related packages
+
+- [`@stynx/core`](/docs/packages/core/) — provides `RequestContext` the applier reads.
+- [`@stynx/contracts`](/docs/packages/contracts/) — defines `DbContextApplier` + `DbSessionContext` interfaces.
+- [`@stynx/tenancy`](/docs/packages/tenancy/) — populates `tenantId` the applier projects.
+- [`@stynx/idempotency`](/docs/packages/idempotency/) — Postgres store shares this package's connection for transactional consistency.
+- [`backend/db-context`](/docs/packages/backend/db-context/) — `@stynx/backend` submodule that wraps this package.
+- [`@stynx-web/angular-trash`](/docs/packages-web/angular-trash/) — Angular UI for soft-delete recovery (consumes archive primitives from this package).
+
+## TypeDoc reference
+
+Full symbol-level API: [`/docs/api-reference/stynx-data/`](/docs/api-reference/stynx-data/)

@@ -1,59 +1,130 @@
-# @stynx/feature-flags
+# `@stynx/feature-flags` — minimal feature-flag contract with in-memory default + pluggable providers
 
-`@stynx/feature-flags` provides a canonical tenant and environment scoped flag
-API. PEC currently models similar behavior through process parameters; TEAT uses
-normative packages; SGP and PORM carry ad-hoc configuration layers. This package
-turns those patterns into one STYNX-owned contract.
+`@stynx/feature-flags` is a minimal feature-flag contract. It exposes `FeatureFlagProvider.evaluate(flag, context)` returning a typed `FlagEvaluation`. Default provider reads from a static `FlagSet` (in-memory + file-backed). Custom providers (LaunchDarkly, Unleash, your own) implement the interface.
 
-## Public API
+## Purpose
 
-```ts
-import { FeatureFlagsService, InMemoryFeatureFlagProvider } from '@stynx/feature-flags';
+Feature flags + experimentation tooling is a big ecosystem; most STYNX apps don't need a full platform. `@stynx/feature-flags` provides the _contract_ so per-app feature toggles use a consistent shape, while leaving the provider implementation open for swap-in if/when you scale to a hosted service.
 
-const service = new FeatureFlagsService(
-  new InMemoryFeatureFlagProvider({
-    flags: {
-      'billing.new-flow': {
-        default: false,
-        environments: { staging: true },
-        tenants: { 'tenant-a': true },
-      },
-    },
-  }),
-);
+You reach for it any time you want to gate a code path behind a flag. Start with the in-memory provider; swap to LaunchDarkly later without touching call sites.
 
-const enabled = await service.isEnabled('billing.new-flow', {
-  tenantId: 'tenant-a',
-  environment: 'production',
-});
+What it does NOT do: it doesn't run experiments (no A/B + analytics). It doesn't ship a UI for managing flags. It doesn't ship adapters for hosted services (you implement that adapter against the provider contract).
+
+## Audience
+
+Backend developers gating new code paths.
+
+## Install
+
+```bash
+pnpm add @stynx/feature-flags
 ```
 
-## Decision Model
+**Peer dependencies:** `@stynx/core` `^1` (for `RequestContext` projection into `FlagContext`).
 
-Resolution is deterministic:
+## Quick start
 
-1. tenant override;
-2. environment override;
-3. global default;
-4. caller fallback.
+```ts
+import { InMemoryFeatureFlagProvider } from '@stynx/feature-flags';
 
-Variants use the same precedence. Flag names must use `<domain>.<feature>`.
+const provider = new InMemoryFeatureFlagProvider({
+  flags: {
+    'new-checkout-flow': { value: false, rolloutPct: 10 },
+  },
+});
 
-## Providers
+const evalResult = await provider.evaluate('new-checkout-flow', {
+  actorId: 'user-1',
+  tenantId: 'tenant-a',
+});
+if (evalResult.value) {
+  /* show new flow */
+}
+```
 
-The first release includes:
+## Public API surface
 
-- `InMemoryFeatureFlagProvider` for tests and embedded static configuration;
-- `JsonFileFeatureFlagProvider` for local fixtures and small deployments;
-- `FeatureFlagProvider` interface for database or remote providers.
+### Types / Interfaces
 
-## Audit Trail
+| Export                | Description                                                                         |
+| --------------------- | ----------------------------------------------------------------------------------- |
+| `FeatureFlagProvider` | The provider contract: `evaluate(flag, context): Promise<FlagEvaluation>`.          |
+| `FlagDefinition`      | `{ value, rolloutPct?, predicate? }`.                                               |
+| `FlagEvaluation`      | `{ value: FlagValue, reason: 'static' \| 'rollout' \| 'predicate' \| 'fallback' }`. |
+| `FlagContext`         | Per-evaluation context: `{ actorId, tenantId, attrs? }`.                            |
+| `FlagSet`             | `Record<string, FlagDefinition>`.                                                   |
+| `FlagValue`           | `boolean \| string \| number`.                                                      |
 
-Flag evaluations can alter user-visible behavior. Consumers should emit
-evaluation facts to `@stynx/audit` where the decision affects workflow state,
-accessibility of a domain action, billing behavior, or integration routing.
+### Default impl
 
-## Security and Tenancy
+| Export                        | Description                                                                              |
+| ----------------------------- | ---------------------------------------------------------------------------------------- |
+| `InMemoryFeatureFlagProvider` | Reads from a static `FlagSet`. Supports rollout-percentage via deterministic actor hash. |
+| `loadFlagSet`                 | `(path: string): Promise<FlagSet>` — load a JSON file into a `FlagSet`.                  |
 
-Providers must treat `tenantId` as the strongest selector. Domain code must not
-fall back to global flags when a tenant-specific deny exists.
+## Configuration
+
+This package exposes no NestJS module — providers are instantiated and injected manually (or via your own DI registration). Typical pattern:
+
+```ts
+@Module({
+  providers: [
+    {
+      provide: 'FeatureFlags',
+      useFactory: async () =>
+        new InMemoryFeatureFlagProvider({
+          flags: await loadFlagSet(process.env.FLAGS_PATH ?? './flags.json'),
+        }),
+    },
+  ],
+  exports: ['FeatureFlags'],
+})
+export class FeatureFlagsModule {}
+```
+
+## Examples
+
+### Example 1 — boolean flag with rollout
+
+```ts
+flags: {
+  'new-flow': { value: true, rolloutPct: 25 },
+}
+// Evaluates to true for ~25% of actors (deterministic by actorId hash)
+```
+
+### Example 2 — predicate flag
+
+```ts
+flags: {
+  'admin-features': {
+    value: false,
+    predicate: (ctx) => ctx.attrs?.role === 'admin',
+  },
+}
+```
+
+### Example 3 — custom provider (LaunchDarkly-style)
+
+```ts
+class LaunchDarklyProvider implements FeatureFlagProvider {
+  async evaluate(flag: string, ctx: FlagContext): Promise<FlagEvaluation> {
+    const value = await ldClient.variation(flag, { key: ctx.actorId }, false);
+    return { value, reason: 'static' };
+  }
+}
+```
+
+## Common pitfalls
+
+- **Flag context not derived from request** — if your code doesn't pass actor + tenant, rollouts behave as anonymous. Wire via `@stynx/core`'s `RequestContext` at the controller layer.
+- **File-backed flag refresh latency** — `loadFlagSet()` reads once. For runtime updates, swap the provider or wrap with a TTL-cached refresher.
+- **Rollout percentage drift across instances** — `InMemoryFeatureFlagProvider` uses a deterministic hash of `actorId`; same actor sees same flag value across instances. If you change the hash strategy, the cohort shifts.
+
+## Related packages
+
+- [`@stynx/core`](/docs/packages/core/) — provides `RequestContext` for `FlagContext` projection.
+
+## TypeDoc reference
+
+Full symbol-level API: [`/docs/api-reference/stynx-feature-flags/`](/docs/api-reference/stynx-feature-flags/)

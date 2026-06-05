@@ -1,85 +1,160 @@
-# @stynx/privacy
+# `@stynx/privacy` — LGPD/GDPR primitives: PII registry, erasure workflow, ROPA generator
 
-LGPD privacy exports, PII maps, data-subject export/erasure workflows, retention planning, ROPA generation, and object-store integration.
+`@stynx/privacy` provides three concerns: (1) a runtime PII column registry that captures which columns hold PII, the legal basis, and retention; (2) erasure-workflow orchestration that walks the registry to redact + delete the subject's data; (3) ROPA (Record-of-Processing-Activities) JSON generation from the registry for compliance audits. Exposed via three controller endpoints (`/privacy/exports`, `/privacy/erasures`, `/privacy/retention`).
 
 ## Purpose
 
-LGPD privacy exports, PII maps, data-subject export/erasure workflows, retention planning, ROPA generation, and object-store integration.
+Privacy laws (LGPD in Brazil, GDPR in EU) require: knowing which columns hold PII (registry), supporting data-export + deletion requests (subject-rights endpoints), and producing a ROPA on demand. Without explicit tooling, this lives as scattered scripts. `@stynx/privacy` centralises the substrate.
 
-## Install And Import
+You reach for it when your app is subject to LGPD/GDPR and stores user PII.
+
+What it does NOT do: it doesn't claim to be a compliance solution (it's the runtime substrate; legal review still required). It doesn't anonymise quasi-identifiers (k-anonymity etc.) — its erasure is row-level. It doesn't audit access — that's `@stynx/audit`.
+
+## Audience
+
+Backend developers in regulated apps (financial, healthcare, public-payroll, etc.). Also relevant for compliance officers using `stynx privacy ropa` for periodic reports.
+
+## Install
+
+```bash
+pnpm add @stynx/privacy
+```
+
+**Peer dependencies:** `@nestjs/common` `^11`, `@stynx/core` `^1`, `@stynx/data` `^1`, `@stynx/storage` `^1` (for export packaging).
+
+## Quick start
 
 ```ts
-import {} from /* public exports */ '@stynx/privacy';
+import { StynxPrivacyModule, PiiColumn } from '@stynx/privacy';
+
+StynxPrivacyModule.forRoot({
+  defaultLegalBasis: 'consent',
+  defaultRetentionDays: 365 * 5,
+});
 ```
 
-In this monorepo, use the workspace package. Published consumers should install matching `@stynx/*` versions from the same release train.
-
-## Module Setup
-
-Import `StynxPrivacyModule` after data, storage, auth, and audit are configured.
+Register PII columns:
 
 ```ts
-@Module({
-  imports: [StynxPrivacyModule.forRoot({ objectStore, cognitoAdmin })],
-})
-export class PrivacyHostModule {}
+import { PiiColumn } from '@stynx/privacy';
+
+@PiiColumn({ legalBasis: 'contract', retentionDays: 365 * 7, category: 'identifier' })
+email: string;
 ```
 
-## Data And Security Model
+```bash
+# Generate a ROPA snapshot
+pnpm exec stynx privacy ropa --out ./ropa.json
+```
 
-Reads PII map metadata, exports live/archive subject data, applies erasure strategies, records audit evidence, and may disable Cognito users through the configured adapter.
+## Public API surface
 
-## Example
+### Modules
+
+| Export               | Signature                                | Description                                                             |
+| -------------------- | ---------------------------------------- | ----------------------------------------------------------------------- |
+| `StynxPrivacyModule` | `.forRoot(options: StynxPrivacyOptions)` | Registers controller, PII map service, erasure service, ROPA generator. |
+
+### Services / Injectables
+
+| Export                      | Description                                       |
+| --------------------------- | ------------------------------------------------- |
+| `StynxPrivacyService`       | Top-level: export, erase, get retention status.   |
+| `PiiMapService`             | Reads + writes the runtime PII registry.          |
+| `PrivacyObjectStoreService` | Bridges to `@stynx/storage` for export packaging. |
+| `RopaGenerator`             | Produces the ROPA JSON.                           |
+
+### Decorators
+
+| Export                 | Targets          | Description                                                                                   |
+| ---------------------- | ---------------- | --------------------------------------------------------------------------------------------- |
+| `@PiiColumn(metadata)` | Class properties | Mark a column as PII. `metadata`: `{ legalBasis, retentionDays, category, redactStrategy? }`. |
+
+### Endpoints (1 controller)
+
+| Method | Path                 | Auth                              | Description                                                                                           |
+| ------ | -------------------- | --------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `POST` | `/privacy/exports`   | bearer + `privacy:subject-rights` | Initiate a data-export request for a subject. Returns a presigned download URL when ready.            |
+| `POST` | `/privacy/erasures`  | bearer + `privacy:subject-rights` | Initiate an erasure request. Walks the PII registry, applies redact strategy, returns a confirmation. |
+| `GET`  | `/privacy/retention` | bearer + `privacy:read`           | Snapshot of retention status across registered PII columns.                                           |
+
+### Types / Interfaces
+
+| Export                | Description                                                                     |
+| --------------------- | ------------------------------------------------------------------------------- |
+| `StynxPrivacyOptions` | `forRoot()` options.                                                            |
+| `PiiColumnMetadata`   | Decorator metadata: `{ legalBasis, retentionDays, category, redactStrategy? }`. |
+| `RedactStrategy`      | `'null' \| 'hash' \| 'mask'` or a custom function.                              |
+
+### Errors
+
+| Export               | Code                    | Description                                    |
+| -------------------- | ----------------------- | ---------------------------------------------- |
+| `SubjectRightsError` | `SUBJECT_RIGHTS_FAILED` | Erasure / export hit an unrecoverable failure. |
+
+## Configuration
+
+### `StynxPrivacyModule.forRoot()` options
+
+| Option                  | Type              | Default     | Description                                       |
+| ----------------------- | ----------------- | ----------- | ------------------------------------------------- |
+| `defaultLegalBasis`     | `string`          | `'consent'` | Fallback when a `@PiiColumn` doesn't declare one. |
+| `defaultRetentionDays`  | `number`          | `1825` (5y) | Fallback retention.                               |
+| `defaultRedactStrategy` | `RedactStrategy`  | `'null'`    | Default redaction.                                |
+| `export.format`         | `'json' \| 'csv'` | `'json'`    | Export packaging format.                          |
+| `export.presignTtl`     | `string`          | `'24h'`     | TTL for the export download URL.                  |
+
+## Examples
+
+### Example 1 — column-level PII annotation
 
 ```ts
-import { PrivacyService } from '@stynx/privacy';
+class User {
+  @PiiColumn({ category: 'identifier', legalBasis: 'contract', retentionDays: 365 * 7 })
+  email!: string;
 
-await privacy.eraseSubject({ tenantId, subjectId, requestedBy });
+  @PiiColumn({
+    category: 'sensitive',
+    legalBasis: 'consent',
+    retentionDays: 365,
+    redactStrategy: 'hash',
+  })
+  cpf!: string;
+}
 ```
 
-## Public API
+### Example 2 — erasure flow
 
-- PiiMapService
-- PrivacyController
-- StynxPrivacyModule
-- PrivacyService
-- PrivacyObjectStoreService
-- ROPA helpers
-- tokens, errors, and types
-
-Current barrel highlights:
-
-- `export * from './errors'`
-- `export * from './pii-map.service'`
-- `export * from './privacy.controller'`
-- `export * from './privacy.module'`
-- `export * from './privacy.service'`
-- `export * from './privacy-object-store.service'`
-- `export * from './ropa'`
-- `export * from './tokens'`
-- `export * from './types'`
-
-## Verification
-
-```sh
-pnpm --filter @stynx/privacy build
-pnpm --filter @stynx/privacy test
-STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx/privacy test:int
+```bash
+curl -X POST /privacy/erasures \
+  -H "Authorization: Bearer <token>" \
+  -d '{"subjectId": "user-123"}'
 ```
 
-## Documentation Standard
+Walks all `@PiiColumn`-marked columns referencing `user-123` and applies the column's redact strategy.
 
-The public barrel must carry package-level `@packageDocumentation`. Add symbol-level TSDoc for exported services, modules, guards, interceptors, decorators, adapters, errors, and public options when the type name is not self-explanatory.
+### Example 3 — ROPA from CI
 
-## Compatibility
+```bash
+pnpm exec stynx privacy ropa --out ./compliance/ropa-2026-q2.json
+```
 
-| Package version | Node | pnpm | STYNX spec              |
-| --------------- | ---- | ---- | ----------------------- |
-| 1.x             | 24.x | 9.x  | v0.6 / v1.0 remediation |
+## Common pitfalls
 
-## References
+- **Missing `@PiiColumn` on a PII column** — erasure misses it. The ROPA also won't list it. Periodically audit the schema for unannotated PII; consider a CI gate.
+- **Redact strategy `'null'` on a NOT NULL column** — write fails. Use `'hash'` or `'mask'` for required PII columns.
+- **Long export jobs blocking the request** — exports run async; the endpoint returns a job id. Don't expect the response to contain the data.
+- **Subject-id mismatch across tables** — your erasure must walk every table that references the subject. The PII registry helps but doesn't enforce — model your subject FKs consistently.
 
-- [docs/framework/arch/developer-documentation.md](../../docs/framework/arch/developer-documentation.md)
-- [docs/stynx/package-architecture.md](../../docs/stynx/package-architecture.md)
-- [docs/meta/security/README.md](../../docs/meta/security/README.md)
-- [docs/meta/ops/runbooks/lgpd-erasure.md](../../docs/meta/ops/runbooks/lgpd-erasure.md)
+## Related packages
+
+- [`@stynx/core`](/docs/packages/core/) — provides `RequestContext` for subject-rights endpoint auth.
+- [`@stynx/data`](/docs/packages/data/) — owns the schema where PII columns live.
+- [`@stynx/storage`](/docs/packages/storage/) — provides the bucket used for export packaging.
+- [`@stynx/audit`](/docs/packages/audit/) — every subject-rights operation emits an audit event.
+- [`@stynx-web/angular-profile`](/docs/packages-web/angular-profile/) — Angular pair: subject-rights UI (account-deletion).
+- [`@stynx/cli`](/docs/packages/cli/) — `stynx privacy ropa` verb generates ROPA from this package's registry.
+
+## TypeDoc reference
+
+Full symbol-level API: [`/docs/api-reference/stynx-privacy/`](/docs/api-reference/stynx-privacy/)

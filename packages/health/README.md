@@ -1,80 +1,147 @@
-# @stynx/health
+# `@stynx/health` — `/health` + `/readiness` endpoints with pluggable dependency checks
 
-Health, readiness, metrics, and guarded info endpoints for STYNX services.
+`@stynx/health` exposes Kubernetes-style liveness and readiness probes. `/health` returns 200 if the process is alive (no dep checks). `/readiness` runs registered checks (DB, Redis, S3, custom) and returns 200 only if all pass.
 
 ## Purpose
 
-Health, readiness, metrics, and guarded info endpoints for STYNX services.
+Every production container needs `/health` + `/readiness` for orchestration probes (Kubernetes, ECS, etc.). Hand-rolling per app drifts. `@stynx/health` provides the structure + a pluggable check registry.
 
-## Install And Import
+You reach for it on every STYNX app deployed to a container orchestrator.
+
+What it does NOT do: it's not metrics (use `@stynx/logging` for logs and a separate metrics layer for Prom-style). It doesn't run automatic alerting.
+
+## Audience
+
+Backend developers + ops. The endpoints are consumed by Kubernetes liveness/readiness probes or your orchestrator's equivalent.
+
+## Install
+
+```bash
+pnpm add @stynx/health
+```
+
+**Peer dependencies:** `@nestjs/common` `^11`, `@stynx/core` `^1`.
+
+## Quick start
 
 ```ts
-import {} from /* public exports */ '@stynx/health';
+import { StynxHealthModule } from '@stynx/health';
+
+StynxHealthModule.forRoot({
+  checks: [
+    { name: 'db', check: async () => ({ ok: true }) },
+    { name: 'redis', check: async () => ({ ok: await ping() }) },
+  ],
+});
 ```
 
-In this monorepo, use the workspace package. Published consumers should install matching `@stynx/*` versions from the same release train.
+```bash
+# K8s liveness probe
+curl http://app:3000/health
+# → 200 {"status":"ok"}
 
-## Module Setup
+# K8s readiness probe
+curl http://app:3000/readiness
+# → 200 {"status":"ok","checks":{"db":"ok","redis":"ok"}}
+```
 
-Import `StynxHealthModule` after metrics and dependency indicators are available.
+## Public API surface
+
+### Modules
+
+| Export              | Signature                               | Description                     |
+| ------------------- | --------------------------------------- | ------------------------------- |
+| `StynxHealthModule` | `.forRoot(options: StynxHealthOptions)` | Registers controller, services. |
+
+### Services / Injectables
+
+| Export           | Description                                                                               |
+| ---------------- | ----------------------------------------------------------------------------------------- |
+| `HealthService`  | Runs registered checks.                                                                   |
+| `MetricsService` | Lightweight metric capture (request count, error rate); exposed at `/metrics` if enabled. |
+
+### Guards
+
+| Export      | Description                                                                   |
+| ----------- | ----------------------------------------------------------------------------- |
+| `InfoGuard` | Protects `/info` and `/metrics` if exposed (requires `info:read` permission). |
+
+### Endpoints (1 controller)
+
+| Method | Path         | Auth                              | Description                                              |
+| ------ | ------------ | --------------------------------- | -------------------------------------------------------- |
+| `GET`  | `/health`    | public                            | Liveness probe. Always returns 200 if the process is up. |
+| `GET`  | `/readiness` | public                            | Readiness probe. Returns 200 only if all checks pass.    |
+| `GET`  | `/info`      | bearer + `info:read` (if guarded) | App info (version, commit).                              |
+| `GET`  | `/metrics`   | bearer + `info:read` (if enabled) | Prometheus-style metrics.                                |
+
+### Types / Interfaces
+
+| Export               | Description                                                                  |
+| -------------------- | ---------------------------------------------------------------------------- |
+| `StynxHealthOptions` | `forRoot()` options.                                                         |
+| `HealthCheck`        | `{ name: string; check: () => Promise<{ ok: boolean; detail?: unknown }> }`. |
+
+## Configuration
+
+### `StynxHealthModule.forRoot()` options
+
+| Option               | Type            | Default | Description        |
+| -------------------- | --------------- | ------- | ------------------ |
+| `checks`             | `HealthCheck[]` | `[]`    | Registered checks. |
+| `exposeInfo`         | `boolean`       | `false` | Mount `/info`.     |
+| `exposeMetrics`      | `boolean`       | `false` | Mount `/metrics`.  |
+| `readinessTimeoutMs` | `number`        | `2_000` | Per-check timeout. |
+
+## Examples
+
+### Example 1 — DB check
 
 ```ts
-@Module({
-  imports: [StynxHealthModule.forRoot({ indicators })],
-})
-export class HealthHostModule {}
+checks: [
+  {
+    name: 'postgres',
+    check: async () => {
+      try {
+        await this.db.execute('SELECT 1');
+        return { ok: true };
+      } catch (e) {
+        return { ok: false, detail: e.message };
+      }
+    },
+  },
+],
 ```
 
-## Data And Security Model
+### Example 2 — Kubernetes probe spec
 
-Exposes operational health and Prometheus-style metrics. Info endpoints must stay guarded; metrics access should follow the reference app and infrastructure controls.
+```yaml
+livenessProbe:
+  httpGet: { path: /health, port: 3000 }
+  initialDelaySeconds: 10
+readinessProbe:
+  httpGet: { path: /readiness, port: 3000 }
+  initialDelaySeconds: 5
+```
 
-## Example
+### Example 3 — guarded info endpoint
 
 ```ts
-import { StynxMetricsService } from '@stynx/health';
-
-metrics.observeHttpRequest({ method: 'GET', route: '/records', statusCode: 200, durationMs: 12 });
+StynxHealthModule.forRoot({ exposeInfo: true });
+// Then mount InfoGuard at /info via your auth wiring
 ```
 
-## Public API
+## Common pitfalls
 
-- HealthController
-- StynxHealthModule
-- StynxHealthService
-- InfoGuard
-- StynxMetricsService
-- health indicator tokens and types
+- **Slow check blocks readiness rollouts** — keep checks under 500ms. Use `readinessTimeoutMs` to bound.
+- **Mixing liveness + readiness semantics** — liveness should NOT check downstream deps; readiness should. Don't put a DB check on liveness or your pod gets restarted when the DB hiccups.
+- **Exposing `/metrics` without auth** in a public service — leaks operational data. Use `InfoGuard`.
 
-Current barrel highlights:
+## Related packages
 
-- `export * from './health.controller'`
-- `export * from './health.module'`
-- `export * from './health.service'`
-- `export * from './info.guard'`
-- `export * from './metrics.service'`
-- `export * from './tokens'`
+- [`@stynx/core`](/docs/packages/core/) — provides `RequestContext` (rarely used here, but consistent).
+- [`@stynx/logging`](/docs/packages/logging/) — pair the metrics with structured logs.
 
-## Verification
+## TypeDoc reference
 
-```sh
-pnpm --filter @stynx/health build
-pnpm --filter @stynx/health test
-STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx/health test:int
-```
-
-## Documentation Standard
-
-The public barrel must carry package-level `@packageDocumentation`. Add symbol-level TSDoc for exported services, modules, guards, interceptors, decorators, adapters, errors, and public options when the type name is not self-explanatory.
-
-## Compatibility
-
-| Package version | Node | pnpm | STYNX spec              |
-| --------------- | ---- | ---- | ----------------------- |
-| 1.x             | 24.x | 9.x  | v0.6 / v1.0 remediation |
-
-## References
-
-- [docs/framework/arch/developer-documentation.md](../../docs/framework/arch/developer-documentation.md)
-- [docs/stynx/package-architecture.md](../../docs/stynx/package-architecture.md)
-- [docs/meta/ops/README.md](../../docs/meta/ops/README.md)
+Full symbol-level API: [`/docs/api-reference/stynx-health/`](/docs/api-reference/stynx-health/)
