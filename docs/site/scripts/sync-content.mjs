@@ -355,6 +355,7 @@ function generateStatusPages() {
 resetOutDir();
 writeDoc('packages/index.md', '# Packages\n\nNarrative package documentation aggregated from each `README.md` or package manifest.\n', 'Packages');
 writeDoc('packages-web/index.md', '# Web Packages\n\nNarrative Angular and SDK package documentation.\n', 'Web Packages');
+writeDoc('tools/index.md', '# Tools\n\nInternal workspace tooling published under `@stynx-internal/*`: the scaffolder, shared ESLint config, migration linter, and TS config.\n', 'Tools');
 writeDoc('specifications/index.md', '# Specifications\n\nNormative and reference documents mirrored from `specs/` when that source directory is present.\n', 'Specifications');
 writeDoc('architecture-decisions/index.md', '# Architecture Decisions\n\nArchitecture Decision Records mirrored from `specs/` when that source directory is present.\n', 'Architecture Decisions');
 writeDoc('api-reference/index.md', '# API Reference\n\nGenerated API reference for every `@stynx/*` and `@stynx-web/*` package.\n', 'API Reference');
@@ -405,6 +406,16 @@ writeReadmeDoc(resolve(repoRoot, 'reference/web/README.md'), 'reference/web.md',
 );
 syncPackageReadmes('packages', 'packages', (name) => typeof name === 'string' && name.startsWith('@stynx/'));
 syncPackageReadmes('packages-web', 'packages-web', (name) => typeof name === 'string' && name.startsWith('@stynx-web/'));
+// R15 follow-up: surface tool packages on the published site. All current
+// tools live under @stynx-internal/* (create-stynx-app, eslint-config,
+// migration-linter, tsconfig). Internal scripts without a package.json
+// (ci-local, repo-config, stryker, npm-security-upgrade-auditor) are
+// intentionally skipped — they're not published packages.
+syncPackageReadmes(
+  'tools',
+  'tools',
+  (name) => typeof name === 'string' && name.startsWith('@stynx-internal/'),
+);
 syncSpecs();
 generateStatusPages();
 
