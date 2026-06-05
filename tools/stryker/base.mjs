@@ -8,7 +8,7 @@
 // (tiered floor + target). The resolved triplet drives Stryker's
 // thresholds.{high, low, break}.
 //
-// CI / PR split modes (see docs/adr/2026-05-21-mutation-thresholds-tiered.md)
+// CI / PR split modes (see docs/meta/adr/2026-05-21-mutation-thresholds-tiered.md)
 // --------------------------------------------------------------------------
 // `STRYKER_INCREMENTAL` (env) is the split-mode knob:
 //   - unset / 'true'  → incremental: true.  Use for local dev iteration and

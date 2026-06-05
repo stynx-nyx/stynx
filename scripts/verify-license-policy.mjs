@@ -4,7 +4,7 @@ import { join, resolve } from 'node:path';
 
 const repoRoot = process.cwd();
 const policy = JSON.parse(
-  readFileSync(resolve(repoRoot, 'docs/security/license-policy.json'), 'utf8'),
+  readFileSync(resolve(repoRoot, 'docs/meta/security/license-policy.json'), 'utf8'),
 );
 const allowed = new Set(policy.allowedLicenses ?? []);
 const denied = new Set(policy.deniedLicenses ?? []);

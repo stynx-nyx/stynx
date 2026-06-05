@@ -7,9 +7,9 @@
 ## What landed
 
 - Docusaurus scaffold relocated from `docs/` to `docs/site/` per
-  [ADR-LOCAL-PUBLISH-WORKFLOW](../../../devai/docs/adr/ADR-LOCAL-PUBLISH-WORKFLOW.md)
-  Decision 4. The primary markdown corpus (`docs/adr/`, `docs/arch/`,
-  `docs/contracts/`, etc.) stays in place; the relocated
+  [ADR-LOCAL-PUBLISH-WORKFLOW](../../../devai/docs/meta/adr/ADR-LOCAL-PUBLISH-WORKFLOW.md)
+  Decision 4. The primary markdown corpus (`docs/meta/adr/`, `docs/framework/arch/`,
+  `docs/framework/contracts/`, etc.) stays in place; the relocated
   `sync-content.mjs` pipeline imports it via `repoRoot`.
 - `docs/scripts/sync-content.mjs` preserved as the import pipeline,
   relocated to `docs/site/scripts/sync-content.mjs` with siteRoot/
@@ -36,7 +36,7 @@
   step, github-pages environment, ENABLE_PAGES_DEPLOY var,
   `pages:write` + `id-token:write` permissions. Kept: evidence-gate
   job, build-docs job, lighthouse artifact upload.
-- `docs/adr/ADR-DOCS-GOVERNANCE-ADOPTION.md` ratifies STYNX's
+- `docs/meta/adr/ADR-DOCS-GOVERNANCE-ADOPTION.md` ratifies STYNX's
   adoption of DEVAI's law and records the eight decisions taken
   during the audit (D1 round number, D2 sync-content preservation,
   D3 CI disposition, D4 long-term home, D5 ADR shape, D6 file
@@ -59,7 +59,7 @@ lint:workflows`: pass.
   scope (no test files modified). Filed as follow-up.
 - `pnpm --filter @stynx/docs-site build`: pass (3246 files, 117 MB).
 - Live site: HTTP 200 on landing + the new
-  `/docs/adr/ADR-DOCS-GOVERNANCE-ADOPTION/` route.
+  `/docs/meta/adr/ADR-DOCS-GOVERNANCE-ADOPTION/` route.
 
 ## Commit chain (origin/main)
 
@@ -110,9 +110,9 @@ Plus a closeout commit landing this file, CHANGELOG, and the
 - Orchestrator: `align/stynx/round-14/prompts/00-orchestrator.md`
 - Audit: `align/stynx/docs-governance-audit.md`
 - Audit log: `align/stynx/docs-governance-audit-log.txt`
-- Adoption ADR: [`docs/adr/ADR-DOCS-GOVERNANCE-ADOPTION.md`](../adr/ADR-DOCS-GOVERNANCE-ADOPTION.md)
+- Adoption ADR: [`docs/meta/adr/ADR-DOCS-GOVERNANCE-ADOPTION.md`](../meta/adr/ADR-DOCS-GOVERNANCE-ADOPTION.md)
 - Round log: `align/stynx/round-14/log.txt`
-- Upstream law: `../../../devai/docs/adr/ADR-DOCS-GOVERNANCE.md`
-- Upstream mechanism: `../../../devai/docs/adr/ADR-LOCAL-PUBLISH-WORKFLOW.md`
+- Upstream law: `../../../devai/docs/meta/adr/ADR-DOCS-GOVERNANCE.md`
+- Upstream mechanism: `../../../devai/docs/meta/adr/ADR-LOCAL-PUBLISH-WORKFLOW.md`
 - Published site: https://aarusso-nyx.github.io/stynx/
-- Live adoption ADR: https://aarusso-nyx.github.io/stynx/docs/adr/ADR-DOCS-GOVERNANCE-ADOPTION/
+- Live adoption ADR: https://aarusso-nyx.github.io/stynx/docs/meta/adr/ADR-DOCS-GOVERNANCE-ADOPTION/

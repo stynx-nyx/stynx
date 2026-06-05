@@ -105,8 +105,8 @@ The adapter emits these names when a logger/metrics sink is provided:
 
 ## Links
 
-- [ADR-PDF-A-VALIDATOR-CONTRACT](../adr/ADR-PDF-A-VALIDATOR-CONTRACT.md)
-- [ADR-PDF-A-CONFORMANCE](../adr/ADR-PDF-A-CONFORMANCE.md)
+- [ADR-PDF-A-VALIDATOR-CONTRACT](../meta/adr/ADR-PDF-A-VALIDATOR-CONTRACT.md)
+- [ADR-PDF-A-CONFORMANCE](../meta/adr/ADR-PDF-A-CONFORMANCE.md)
 - [`@stynx/pdf`](../../packages/pdf/README.md)
 - [`@stynx/pdf-a`](../../packages/pdf-a/README.md)
 - [`@stynx/pdf-a-vera-docker`](../../packages/pdf-a-vera-docker/README.md)

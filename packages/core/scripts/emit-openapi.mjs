@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const currentDir = dirname(fileURLToPath(import.meta.url));
 const workspaceRoot = resolve(currentDir, '../../..');
-const sourcePath = resolve(workspaceRoot, 'docs/api/openapi.json');
+const sourcePath = resolve(workspaceRoot, 'docs/framework/api/openapi.json');
 const outputPath = resolve(currentDir, '../dist/openapi/openapi.json');
 
 const raw = await readFile(sourcePath, 'utf8');

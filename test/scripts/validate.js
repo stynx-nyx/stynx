@@ -82,15 +82,15 @@ function prepareVerifierRepo(config) {
 function runVerifierTests() {
   const apiRoot = prepareVerifierRepo({
     apiCoverage: {
-      openapiPath: 'docs/contracts/openapi.json',
+      openapiPath: 'docs/framework/contracts/openapi.json',
       sourceRoots: ['src'],
       routePrefix: '',
     },
   });
   try {
-    mkdirSync(join(apiRoot, 'docs', 'contracts'), { recursive: true });
+    mkdirSync(join(apiRoot, 'docs', 'framework', 'contracts'), { recursive: true });
     mkdirSync(join(apiRoot, 'src'), { recursive: true });
-    writeJson(join(apiRoot, 'docs', 'contracts', 'openapi.json'), {
+    writeJson(join(apiRoot, 'docs', 'framework', 'contracts', 'openapi.json'), {
       paths: {
         '/v1/aits/{id}/': {},
       },
@@ -117,7 +117,7 @@ function runVerifierTests() {
     assertIncludes(strict, '"parameterNameMismatches": []', 'api strict output');
     assertIncludes(strict, '"missingInCode": []', 'api strict output');
 
-    writeJson(join(apiRoot, 'docs', 'contracts', 'openapi.json'), {
+    writeJson(join(apiRoot, 'docs', 'framework', 'contracts', 'openapi.json'), {
       paths: {
         '/v1/aits/{id}/events': {},
       },

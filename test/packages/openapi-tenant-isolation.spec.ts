@@ -17,7 +17,7 @@ interface OpenApiDocument {
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const openapi = JSON.parse(
-  readFileSync(resolve(repoRoot, 'docs/contracts/openapi.json'), 'utf8'),
+  readFileSync(resolve(repoRoot, 'docs/framework/contracts/openapi.json'), 'utf8'),
 ) as OpenApiDocument;
 
 function operationsUnder(

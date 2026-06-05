@@ -3,7 +3,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 
 const repoRoot = process.cwd();
-const allowlistPath = resolve(repoRoot, 'docs/security/secret-scan-allowlist.json');
+const allowlistPath = resolve(repoRoot, 'docs/meta/security/secret-scan-allowlist.json');
 const allowlist = new Set(
   JSON.parse(readFileSync(allowlistPath, 'utf8')).allowedFindings.map(
     (entry) => `${entry.file}:${entry.label}`,

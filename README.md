@@ -1,6 +1,6 @@
 # STYNX
 
-> **C-4 done** — stynx is a [DEVAI](https://github.com/anthropics/devai)-managed adopter at maturity. See [docs/pilots/c-4/phase-i-retro.md](docs/pilots/c-4/phase-i-retro.md) for the full pilot retro (Phases A–I + R1, S1–S11, T1–T8).
+> **C-4 done** — stynx is a [DEVAI](https://github.com/anthropics/devai)-managed adopter at maturity. See [docs/adopters/pilots/c-4/phase-i-retro.md](docs/adopters/pilots/c-4/phase-i-retro.md) for the full pilot retro (Phases A–I + R1, S1–S11, T1–T8).
 
 STYNX is a `pnpm` + `Turborepo` monorepo targeting GitHub Packages for the spec-defined `@stynx/*` and `@stynx-web/*` package families.
 
@@ -19,9 +19,9 @@ STYNX is a `pnpm` + `Turborepo` monorepo targeting GitHub Packages for the spec-
 | `test/`                                                        | Centralized test harness (backend, frontend, perf, scripts).                                                                                         |
 | `database/{ddl,seed,migrations}/`                              | Canonical SQL bootstrap, seed, and migration support files.                                                                                          |
 | `.devai/`                                                      | DEVAI substrate (config + state + evidence chain + constitution pointer). Auto-generated; do not hand-edit.                                          |
-| `docs/{product,arch,contracts,adr,ops,gov,security,glossary}/` | DEVAI-shaped Article 6 F1 substrate roots; `docs/gov/` delegates substantive governance to sibling DEVAI.                                            |
+| `docs/{product,arch,contracts,adr,ops,gov,security,glossary}/` | DEVAI-shaped Article 6 F1 substrate roots; `docs/meta/gov/` delegates substantive governance to sibling DEVAI.                                       |
 | `docs/{stynx,dev,api}/`                                        | Stynx-specific documentation.                                                                                                                        |
-| `docs/legacy/`                                                 | Pre-pilot governance + completed GAP tasks, archived for archeology. NOT authoritative for current state.                                            |
+| `docs/meta/legacy/`                                            | Pre-pilot governance + completed GAP tasks, archived for archeology. NOT authoritative for current state.                                            |
 | `tools/npm-security-upgrade-auditor/`                          | Stynx-idiosyncratic dep-security skill. Was `.codex/skills/npm-security-upgrade-auditor/`; relocated in C-4 Session T7 when `.codex/` was retired.   |
 
 Pre-extraction `backend/`, `frontend/`, `bootstrap/` trees were removed prior to the C-4 pilot close; root `test/` remains as the centralized test harness (active workspace member).

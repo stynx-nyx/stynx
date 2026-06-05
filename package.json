@@ -151,7 +151,7 @@
       "requireStynxPackages": []
     },
     "apiCoverage": {
-      "openapiPath": "docs/contracts/openapi.json",
+      "openapiPath": "docs/framework/contracts/openapi.json",
       "sourceRoots": [
         "reference/api/src",
         "packages"

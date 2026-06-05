@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "1.0.0",
+  "version": "1.0.0",
+  "id": "INV-COVERAGE-001",
+  "domain": "COVERAGE",
+  "severity": "gate",
+  "type": "governance",
+  "title": "Every HTTP endpoint and frontend route must be claimed by at least one authored use-case",
+  "statement": "For every endpoint id in .devai/state/sensors/inventory_api/api-map.json#/endpoints[*] and every route id in .devai/state/sensors/inventory_routes/routes-angular.json#/routes[*], the surface MUST be claimed by at least one use-case JSON under docs/framework/product/use-cases/*.json via the use-case's refs.endpointIds[] / refs.routeIds[] arrays. Coverage is measured by sense-coverage, which joins the api-map + routes-inventory + use-case bodies into .devai/state/sensors/inventory_coverage/coverage-matrix.json. An endpoint or route with zero claiming use-cases is a release-gating finding (unmapped_endpoint / unmapped_route candidate). The fix is either (a) author or extend a use-case under docs/framework/product/use-cases/ to add the surface id to refs.endpointIds[] or refs.routeIds[]; or (b) remove the surface from code if it is dead. INV-COVERAGE-001 does not gate on the use-case body schema (that is DEVAI's UC-* schema responsibility) — it only gates on the *existence* of at least one claim per surface.",
+  "rationale": "Stynx-side specialization of DEVAI's INV-INVENTORY-001 (universal traceability). Pre-Phase-22 of C-4 this invariant was not measurable because sense-coverage did not parse use-case bodies. DEVAI Phase 22.H + D-A-18 added use-case linking: refs.endpointIds[] / refs.routeIds[] arrays in docs/framework/product/use-cases/*.json now populate coverage-matrix.links[], and the post-22 baseline (T1, commit 44b4c05) shows 13 use-cases populate 14 links, with 44 endpoints and 7 routes still unmapped. The 'gate' severity reflects that unmapped surfaces represent untraced API or UI behavior — a downstream consumer (mobile client, partner integration, compliance review) cannot reason about a surface that has no specification. Promotion is conservative: this is the same statement DEVAI's INV-INVENTORY-001 makes universally, narrowed to stynx's authored use-cases directory and verifiable on stynx's pack defaults. Promoted from the post-22 inv-suggest output: 44 INV-CANDIDATE entries of category 'unmapped_endpoint' + 7 of category 'unmapped_route' generated at 2026-05-16T17:34:22.105Z. Initial violations (51) are tracked rather than blocking — see the COVERAGE-001 burn-down in the T8 retro for the closure plan.",
+  "status": "active",
+  "verification": {
+    "required_suites": ["int"],
+    "oracle": "tests"
+  },
+  "authority": {
+    "docs": [
+      {
+        "doc": "docs/adopters/pilots/c-4/phase-a-retro.md",
+        "anchor": "8-phase-b-promotion-priorities"
+      }
+    ]
+  },
+  "scope": {
+    "components": ["api", "routes", "coverage", "use-cases"],
+    "code_areas": [
+      "reference/api/src",
+      "reference/web/src",
+      "domain/demo-bookmark/api/src",
+      "domain/demo-bookmark/web/src",
+      "docs/framework/product/use-cases"
+    ]
+  },
+  "change_policy": {
+    "breaking_change_requires": ["doc_update", "test_update", "human_approval"],
+    "test_weakening_allowed": false,
+    "human_approval_required": true
+  },
+  "tags": [
+    "phase-b",
+    "c-4",
+    "stynx",
+    "inventory",
+    "coverage",
+    "use-cases",
+    "promoted-from-INV-CANDIDATE",
+    "phase-22-enabled"
+  ],
+  "measurable_via": ["sense coverage", "sense api", "sense routes"]
+}

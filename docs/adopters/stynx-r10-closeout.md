@@ -24,4 +24,4 @@
   - `pnpm --filter @stynx/signature lint`
   - `pnpm --filter @stynx/signature build`
 - Owner decisions: PDF/A conformance remains adopter-owned in R10. See
-  [`ADR-PDF-A-BOUNDARY`](../adr/ADR-PDF-A-BOUNDARY.md).
+  [`ADR-PDF-A-BOUNDARY`](../meta/adr/ADR-PDF-A-BOUNDARY.md).

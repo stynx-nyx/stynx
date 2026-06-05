@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "1.0.0",
+  "version": "1.0.0",
+  "id": "INV-FLOW-003",
+  "domain": "FLOW",
+  "severity": "gate",
+  "type": "audit",
+  "title": "Flow events are append-only domain ledger rows",
+  "statement": "Flow workflow events MUST be append-only domain ledger rows and MUST NOT replace STYNX platform audit for protected route invocations or administrative operations.",
+  "rationale": "PORM exposes workflow events as part of runtime history. STYNX needs that domain ledger, but it also requires platform audit for security and compliance. Conflating the two either loses workflow replay evidence or hides who invoked protected operations.",
+  "status": "active",
+  "verification": {
+    "required_suites": ["int", "api"],
+    "oracle": "tests"
+  },
+  "authority": {
+    "docs": [
+      {
+        "doc": "docs/framework/arch/flow.md",
+        "anchor": "event-ledger-versus-platform-audit"
+      },
+      {
+        "doc": "docs/meta/ops/runbooks/flow.md",
+        "anchor": "diagnose-adapter-errors"
+      }
+    ]
+  },
+  "scope": {
+    "components": ["db", "backend", "audit", "flow"],
+    "code_areas": [
+      "packages/data/migrations/platform/*flow*.sql",
+      "packages/flow/src/**",
+      "packages/audit/src/**"
+    ],
+    "data": ["flow.events", "audit.*"]
+  },
+  "change_policy": {
+    "breaking_change_requires": [
+      "doc_update",
+      "trace_update",
+      "test_update",
+      "migration",
+      "human_approval"
+    ],
+    "test_weakening_allowed": false,
+    "human_approval_required": true
+  },
+  "tags": ["porm-port", "flow", "events", "audit", "append-only", "stynx"],
+  "measurable_via": ["sense api", "sense data-model", "inv adherence-reverse"]
+}

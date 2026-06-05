@@ -5,7 +5,7 @@ import { dirname, join, relative, resolve } from 'node:path';
 
 const repoRoot = process.cwd();
 const args = new Set(process.argv.slice(2));
-const outputPath = resolve(repoRoot, 'docs/security/sbom.cdx.json');
+const outputPath = resolve(repoRoot, 'docs/meta/security/sbom.cdx.json');
 const packageManifests = discoverPackageManifests(repoRoot);
 const rootManifest = readJson(resolve(repoRoot, 'package.json'));
 const lockPath = resolve(repoRoot, 'pnpm-lock.yaml');
@@ -59,12 +59,12 @@ const next = `${JSON.stringify(sbom, null, 2)}\n`;
 
 if (args.has('--check')) {
   if (!existsSync(outputPath)) {
-    console.error('[sbom] missing docs/security/sbom.cdx.json; run pnpm security:sbom');
+    console.error('[sbom] missing docs/meta/security/sbom.cdx.json; run pnpm security:sbom');
     process.exit(1);
   }
   const current = readFileSync(outputPath, 'utf8');
   if (current !== next) {
-    console.error('[sbom] docs/security/sbom.cdx.json is stale; run pnpm security:sbom');
+    console.error('[sbom] docs/meta/security/sbom.cdx.json is stale; run pnpm security:sbom');
     process.exit(1);
   }
   console.log(`[sbom] OK: ${sbom.components.length} components verified`);

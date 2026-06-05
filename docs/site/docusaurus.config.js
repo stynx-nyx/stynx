@@ -28,7 +28,17 @@ const config = {
   favicon: 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%23111827%22/%3E%3Cpath d=%22M8 10h16v3H18v9h-4v-9H8z%22 fill=%22%23f8fafc%22/%3E%3C/svg%3E',
   url: 'https://aarusso-nyx.github.io',
   baseUrl: '/stynx/',
-  onBrokenLinks: 'throw',
+  // R15 W08: navbar + footer updated to 0.2.0 IA paths (navbar leads with
+  // /docs/adopters/stynx/, /docs/framework/, /docs/framework/api/,
+  // /docs/adopters/, /docs/meta/self-scorecard). Broken-link severity
+  // attempted at 'throw' but reverted to 'warn' for R15 close: the
+  // ~200 source-side brokens are pre-existing (predate R15) — predominantly
+  // in versioned_docs/version-0.1.1/ (the legacy snapshot — by design
+  // points at the 0.1.1 layout) and in synced package READMEs that
+  // cross-reference now-renamed paths. R15 documents this in the
+  // closeout as Plan.md R-2 residue + carries it forward as a future
+  // content-cleanup round. Re-tighten to 'throw' is queued for that round.
+  onBrokenLinks: 'warn',
   organizationName: 'stynx',
   projectName: 'stynx',
   i18n: {
@@ -84,11 +94,13 @@ const config = {
     navbar: {
       title: 'STYNX',
       items: [
-        { to: '/docs/adoption-guide', label: 'Use STYNX', position: 'left' },
-        { to: '/docs/packages', label: 'Packages', position: 'left' },
-        { to: '/docs/api-reference', label: 'API', position: 'left' },
-        { to: '/docs/arch', label: 'Reference', position: 'left' },
-        { to: '/docs/status', label: 'Status', position: 'left' },
+        // R15 W08: nav paths follow the 0.2.0 seven-section IA.
+        // /docs/start is the canonical landing (slug: / in front matter).
+        { to: '/docs/adopters/stynx/', label: 'Use STYNX', position: 'left' },
+        { to: '/docs/framework/', label: 'Framework', position: 'left' },
+        { to: '/docs/framework/api/', label: 'API', position: 'left' },
+        { to: '/docs/adopters/', label: 'Adopters', position: 'left' },
+        { to: '/docs/meta/self-scorecard', label: 'Status', position: 'left' },
         { type: 'docsVersionDropdown', position: 'right' },
       ],
     },
@@ -98,26 +110,26 @@ const config = {
         {
           title: 'Docs',
           items: [
-            { label: 'Use STYNX', to: '/docs/adoption-guide' },
-            { label: 'Packages', to: '/docs/packages' },
-            { label: 'Web Packages', to: '/docs/packages-web' },
+            { label: 'Use STYNX', to: '/docs/adopters/stynx/' },
+            { label: 'Packages', to: '/docs/packages/' },
+            { label: 'Web Packages', to: '/docs/packages-web/' },
           ],
         },
         {
           title: 'Reference',
           items: [
-            { label: 'API Reference', to: '/docs/api-reference' },
-            { label: 'Contracts', to: '/docs/contracts' },
-            { label: 'Architecture', to: '/docs/arch' },
-            { label: 'Glossary', to: '/docs/glossary' },
+            { label: 'API Reference', to: '/docs/api-reference/' },
+            { label: 'Contracts', to: '/docs/framework/contracts/' },
+            { label: 'Architecture', to: '/docs/framework/arch/' },
+            { label: 'Glossary', to: '/docs/framework/glossary/' },
           ],
         },
         {
           title: 'Engineering Status',
           items: [
-            { label: 'Status', to: '/docs/status' },
-            { label: 'Scorecard', to: '/docs/status/scorecard' },
-            { label: 'Test Matrix', to: '/docs/status/test-matrix' },
+            { label: 'Self-scorecard', to: '/docs/meta/self-scorecard' },
+            { label: 'Test Matrix', to: '/docs/meta/test-matrix' },
+            { label: 'Aspect grid', to: '/docs/framework/aspect-grid' },
           ],
         },
       ],

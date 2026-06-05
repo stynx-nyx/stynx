@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "1.0.0",
+  "version": "1.0.0",
+  "id": "INV-RBAC-001",
+  "domain": "RBAC",
+  "severity": "gate",
+  "type": "rbac",
+  "title": "Every stynx HTTP endpoint must be either role-bound or explicitly public",
+  "statement": "For every endpoint id in .devai/state/sensors/inventory_api/api-map.json#/endpoints[*], the endpoint MUST satisfy at least one of: (a) appear in .devai/state/sensors/inventory_rbac/rbac.json#/bindings/endpointBindings[*] under a non-empty permission/role binding; or (b) carry an explicit `auth.required = false` claim in the api-map entry; or (c) match an explicit allow-list of bootstrap/dev-only paths declared in docs/framework/arch/invariants/RBAC-001-allowlist.data.json. The default policy is deny: an endpoint with no role binding, no public marker, and no allow-list entry is a release-gating finding, not an implicit grant.",
+  "rationale": "Stynx-side specialization of DEVAI's INV-INVENTORY-003 (universal policy). Phase A of C-4 surfaced three currently-violating endpoints — GET /_reference/auth-verify, POST /_reference/dev-login, GET /_reference/demo-tenants — all in the reference-api dev-auth sample. These are legitimate public/dev-only endpoints; closure requires marking them public via api-map's `auth.required=false` (or moving them to the allow-list) rather than guarding them. The 'gate' severity reflects that any non-allow-listed unbound endpoint blocks release. Promoted from INV-CANDIDATE-{01KRQD0PQW2M64XGKB2QDD3HZM, 01KRQD0PQWAX38EH0XVJHDAMPJ, 01KRQD0PQWKZ8QD7SVAJSATX7T}.",
+  "status": "active",
+  "verification": {
+    "required_suites": ["int"],
+    "oracle": "tests"
+  },
+  "authority": {
+    "docs": [
+      {
+        "doc": "docs/adopters/pilots/c-4/phase-a-retro.md",
+        "anchor": "8-phase-b-promotion-priorities"
+      }
+    ]
+  },
+  "scope": {
+    "components": ["api", "rbac"],
+    "code_areas": ["reference/api/src/sample", "packages/auth/src", "packages/backend/src/auth"]
+  },
+  "change_policy": {
+    "breaking_change_requires": ["doc_update", "test_update", "human_approval"],
+    "test_weakening_allowed": false,
+    "human_approval_required": true
+  },
+  "tags": ["phase-b", "c-4", "stynx", "rbac", "authorization", "promoted-from-INV-CANDIDATE"],
+  "measurable_via": ["sense api", "sense rbac"]
+}

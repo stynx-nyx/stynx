@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 const repoRoot = process.cwd();
-const openApiPath = resolve(repoRoot, 'docs/contracts/openapi.json');
+const openApiPath = resolve(repoRoot, 'docs/framework/contracts/openapi.json');
 const servicesDir = resolve(repoRoot, 'packages-web/sdk/src/generated/services');
 
 if (!existsSync(openApiPath)) {

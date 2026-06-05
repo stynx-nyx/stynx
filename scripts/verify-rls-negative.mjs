@@ -5,7 +5,7 @@ import { join, relative, resolve } from 'node:path';
 const repoRoot = process.cwd();
 const ddlDir = resolve(repoRoot, 'database/ddl');
 const runtimeDir = resolve(repoRoot, 'test/db/runtime');
-const coveragePath = resolve(repoRoot, 'docs/contracts/tenant-isolation-coverage.json');
+const coveragePath = resolve(repoRoot, 'docs/framework/contracts/tenant-isolation-coverage.json');
 const failures = [];
 
 const ddlFiles = readdirSync(ddlDir)
@@ -73,7 +73,7 @@ if (existsSync(coveragePath)) {
   }
 } else {
   failures.push(
-    'missing tenant isolation coverage manifest: docs/contracts/tenant-isolation-coverage.json',
+    'missing tenant isolation coverage manifest: docs/framework/contracts/tenant-isolation-coverage.json',
   );
 }
 

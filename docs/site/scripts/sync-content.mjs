@@ -130,13 +130,13 @@ function publicMarkdownContent(content) {
 
 function rewriteGeneratedDocLinks(content) {
   return content
-    .replace(/\]\(\.\.\/arch\/invariants\/?\)/gu, '](/docs/arch/invariants)')
+    .replace(/\]\(\.\.\/arch\/invariants\/?\)/gu, '](/docs/framework/arch/invariants)')
     .replace(/\]\(\.\.\/arch\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/arch$1)')
     .replace(
       /\]\(\.\.\/arch\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
-      (_match, filename, hash = '') => `](/docs/arch/${filename}${hash})`,
+      (_match, filename, hash = '') => `](/docs/framework/arch/${filename}${hash})`,
     )
-    .replace(/\]\(\.\.\/adr\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu, '](/docs/adr/$1$2)')
+    .replace(/\]\(\.\.\/adr\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu, '](/docs/meta/adr/$1$2)')
     .replace(/\]\(\.\.\/contracts\/?\)/gu, '](/docs/contracts)')
     .replace(/\]\(\.\.\/contracts\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/contracts$1)')
     .replace(/\]\(\.\.\/security\/?\)/gu, '](/docs/security)')
@@ -147,41 +147,41 @@ function rewriteGeneratedDocLinks(content) {
       /\]\(\.\.\/stynx\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
       (_match, filename, hash = '') => `](/docs/narrative/stynx/${filename}${hash})`,
     )
-    .replace(/\]\(\.\.\/templates\/package-README\.md((?:#[^)]+)?)\)/gu, '](/docs/templates/package-README$1)')
+    .replace(/\]\(\.\.\/templates\/package-README\.md((?:#[^)]+)?)\)/gu, '](/docs/meta/templates/package-README$1)')
     .replace(/\]\(\.\.\/\.\.\/specs\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu, (_match, filename, hash = '') => {
       return `](/docs/specifications/${filename.toLowerCase()}${hash})`;
     })
     .replace(/\]\(\.\.\/\.\.\/docs\/arch\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/arch$1)')
     .replace(
       /\]\(\.\.\/\.\.\/docs\/arch\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
-      (_match, filename, hash = '') => `](/docs/arch/${filename}${hash})`,
+      (_match, filename, hash = '') => `](/docs/framework/arch/${filename}${hash})`,
     )
     .replace(/\]\(\.\.\/\.\.\/docs\/contracts\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/contracts$1)')
     .replace(
       /\]\(\.\.\/\.\.\/docs\/contracts\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
-      (_match, filename, hash = '') => `](/docs/contracts/${filename}${hash})`,
+      (_match, filename, hash = '') => `](/docs/framework/contracts/${filename}${hash})`,
     )
     .replace(/\]\(\.\.\/\.\.\/docs\/security\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/security$1)')
     .replace(
       /\]\(\.\.\/\.\.\/docs\/security\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
-      (_match, filename, hash = '') => `](/docs/security/${filename}${hash})`,
+      (_match, filename, hash = '') => `](/docs/meta/security/${filename}${hash})`,
     )
     .replace(/\]\(\.\.\/\.\.\/docs\/glossary\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/glossary$1)')
     .replace(
       /\]\(\.\.\/\.\.\/docs\/glossary\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
-      (_match, filename, hash = '') => `](/docs/glossary/${filename}${hash})`,
+      (_match, filename, hash = '') => `](/docs/framework/glossary/${filename}${hash})`,
     )
     .replace(/\]\(\.\.\/\.\.\/docs\/ops\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/ops$1)')
     .replace(
       /\]\(\.\.\/\.\.\/docs\/ops\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
-      (_match, filename, hash = '') => `](/docs/ops/${filename}${hash})`,
+      (_match, filename, hash = '') => `](/docs/meta/ops/${filename}${hash})`,
     )
     .replace(
       /\]\(\.\.\/\.\.\/docs\/stynx\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
       (_match, filename, hash = '') => `](/docs/narrative/stynx/${filename}${hash})`,
     )
-    .replace(/\]\(\.\.\/\.\.\/docs\/templates\/package-README\.md((?:#[^)]+)?)\)/gu, '](/docs/templates/package-README$1)')
-    .replace(/\]\(\.\.\/\.\.\/docs\/rfcs\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu, '](/docs/rfcs/$1$2)')
+    .replace(/\]\(\.\.\/\.\.\/docs\/templates\/package-README\.md((?:#[^)]+)?)\)/gu, '](/docs/meta/templates/package-README$1)')
+    .replace(/\]\(\.\.\/\.\.\/docs\/rfcs\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu, '](/docs/meta/rfcs/$1$2)')
     .replace(/\]\(\.\.\/adopters\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu, '](/docs/adopters/$1$2)')
     .replace(/\]\(\.\.\/\.\.\/docs\/adopters\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu, '](/docs/adopters/$1$2)')
     .replace(/\]\(\.\.\/\.\.\/CONTRIBUTING\.md((?:#[^)]+)?)\)/gu, '](/docs/contributing$1)')
@@ -219,7 +219,7 @@ function syncRfcContent(content, relativePath) {
   const body = sanitizePublicReferences(rewriteGeneratedDocLinks(sanitizeMdxContent(content))
     .replace(
       /\]\(\.\.\/legacy\/completed-gap-tasks\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
-      (_match, filename, hash = '') => `](/docs/legacy/completed-gap-tasks/${filename}${hash})`,
+      (_match, filename, hash = '') => `](/docs/meta/legacy/completed-gap-tasks/${filename}${hash})`,
     )
     .replace(
       /\[Rationalization work\]\(\.\.\/work\/rationalization\/\)/gu,
@@ -263,17 +263,17 @@ function syncSpecs() {
   if (!existsSync(specsDir)) {
     const fallbackDocs = [
       {
-        source: resolve(repoRoot, 'docs/dev/STYNX-ADOPT-EXAMPLE.md'),
+        source: resolve(repoRoot, 'docs/meta/dev/STYNX-ADOPT-EXAMPLE.md'),
         target: 'adoption-guide.md',
         title: 'Adoption Guide',
       },
       {
-        source: resolve(repoRoot, 'docs/arch/STYNX-CDK-SKELETON.md'),
+        source: resolve(repoRoot, 'docs/framework/arch/STYNX-CDK-SKELETON.md'),
         target: 'infrastructure-guide.md',
         title: 'Infrastructure Guide',
       },
       {
-        source: resolve(repoRoot, 'docs/arch/STYNX-SPEC-v0.6.md'),
+        source: resolve(repoRoot, 'docs/framework/arch/STYNX-SPEC-v0.6.md'),
         target: 'specifications/stynx-spec-v0.6.md',
         title: 'Stynx Spec v0.6',
       },
@@ -358,14 +358,14 @@ writeDoc('packages-web/index.md', '# Web Packages\n\nNarrative Angular and SDK p
 writeDoc('specifications/index.md', '# Specifications\n\nNormative and reference documents mirrored from `specs/` when that source directory is present.\n', 'Specifications');
 writeDoc('architecture-decisions/index.md', '# Architecture Decisions\n\nArchitecture Decision Records mirrored from `specs/` when that source directory is present.\n', 'Architecture Decisions');
 writeDoc('api-reference/index.md', '# API Reference\n\nGenerated API reference for every `@stynx/*` and `@stynx-web/*` package.\n', 'API Reference');
-writeDoc('templates/index.md', '# Templates\n\nDocumentation templates mirrored from `docs/templates/`.\n', 'Templates');
+writeDoc('templates/index.md', '# Templates\n\nDocumentation templates mirrored from `docs/meta/templates/`.\n', 'Templates');
 writeDoc('rfcs/index.md', '# RFCs\n\nRepository RFCs mirrored for public cross-reference stability.\n', 'RFCs');
 
 copyMarkdownDirTransformed(resolve(repoRoot, 'docs/adopters'), 'adopters', (content) =>
   publicMarkdownContent(content),
 );
 copyMarkdownDirTransformed(resolve(repoRoot, 'docs/dev'), 'narrative/dev', (content) => publicMarkdownContent(content));
-copyMarkdownDirTransformed(resolve(repoRoot, 'docs/legacy/completed-gap-tasks'), 'legacy/completed-gap-tasks', (content) =>
+copyMarkdownDirTransformed(resolve(repoRoot, 'docs/meta/legacy/completed-gap-tasks'), 'legacy/completed-gap-tasks', (content) =>
   publicMarkdownContent(content),
 );
 copyMarkdownDirTransformed(resolve(repoRoot, 'docs/sys'), 'narrative/system', (content) => publicMarkdownContent(content));
@@ -407,3 +407,23 @@ syncPackageReadmes('packages', 'packages', (name) => typeof name === 'string' &&
 syncPackageReadmes('packages-web', 'packages-web', (name) => typeof name === 'string' && name.startsWith('@stynx-web/'));
 syncSpecs();
 generateStatusPages();
+
+// R15 W06 — IA-section mirror: walk the 0.2.0 section dirs (post-W03 reorg)
+// and copy markdown directly into matching section roots under .generated/site-docs/.
+// This is additive — the legacy mirror logic above stays in place for backwards URL
+// stability; the IA mirror exists so the hand-authored 7-section sidebar in
+// docs/site/sidebars.js can autogenerate from real content under each section.
+//
+// Source layout (post-W03): docs/{start,theory,framework,roles,adopters,reference,meta}/
+// Target layout: .generated/site-docs/{start,theory,framework,roles,adopters,reference,meta}/
+//
+// Section dirs without content are tolerated (Docusaurus only errors on empty
+// sidebar categories, not on missing section dirs; the sidebar gracefully
+// handles empty `autogenerated` items when the dirName has at least an index).
+for (const section of ['start', 'theory', 'framework', 'roles', 'adopters', 'reference', 'meta']) {
+  copyMarkdownDirTransformed(
+    resolve(repoRoot, 'docs', section),
+    section,
+    (content) => publicMarkdownContent(content),
+  );
+}

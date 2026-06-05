@@ -4,14 +4,14 @@ import { resolve } from 'node:path';
 
 const repoRoot = process.cwd();
 const reference = readFileSync(
-  resolve(repoRoot, 'docs/stynx/production-grade-private-regulated.md'),
+  resolve(repoRoot, 'docs/adopters/stynx/production-grade-private-regulated.md'),
   'utf8',
 );
 const evidence = readFileSync(
-  resolve(repoRoot, 'docs/stynx/production-readiness-evidence.md'),
+  resolve(repoRoot, 'docs/adopters/stynx/production-readiness-evidence.md'),
   'utf8',
 );
-const operational = readFileSync(resolve(repoRoot, 'docs/stynx/operational-readiness.md'), 'utf8');
+const operational = readFileSync(resolve(repoRoot, 'docs/adopters/stynx/operational-readiness.md'), 'utf8');
 const packageJson = JSON.parse(readFileSync(resolve(repoRoot, 'package.json'), 'utf8'));
 const failures = [];
 const normalizedReference = reference.replace(/\s+/gu, ' ');

@@ -66,7 +66,7 @@ for (const release of releases) {
     '',
     '- Changesets GitHub Releases should use this package/version pair as the release title.',
     '- Container signing and SBOM attachment are handled by the Prompt 37 release workflows.',
-    '- Do not mark this draft as shipped until `docs/stynx/release-readiness.md` and the current release workflow evidence are green.',
+    '- Do not mark this draft as shipped until `docs/adopters/stynx/release-readiness.md` and the current release workflow evidence are green.',
     '',
   ];
 

@@ -3,8 +3,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const repoRoot = process.cwd();
-const openApiPath = resolve(repoRoot, 'docs/contracts/openapi.json');
-const genericResponseAllowlistPath = resolve(repoRoot, 'docs/contracts/openapi-generic-response-allowlist.json');
+const openApiPath = resolve(repoRoot, 'docs/framework/contracts/openapi.json');
+const genericResponseAllowlistPath = resolve(repoRoot, 'docs/framework/contracts/openapi-generic-response-allowlist.json');
 
 if (!existsSync(openApiPath)) {
   throw new Error(`OpenAPI contract not found at ${openApiPath}. Run pnpm api:docs:write first.`);

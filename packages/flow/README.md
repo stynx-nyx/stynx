@@ -86,7 +86,7 @@ The public barrel must carry package-level `@packageDocumentation`. Add symbol-l
 
 ## References
 
-- [docs/arch/developer-documentation.md](../../docs/arch/developer-documentation.md)
+- [docs/framework/arch/developer-documentation.md](../../docs/framework/arch/developer-documentation.md)
 - [docs/stynx/package-architecture.md](../../docs/stynx/package-architecture.md)
-- [docs/arch/flow.md](../../docs/arch/flow.md)
-- [docs/contracts/flow-api.md](../../docs/contracts/flow-api.md)
+- [docs/framework/arch/flow.md](../../docs/framework/arch/flow.md)
+- [docs/framework/contracts/flow-api.md](../../docs/framework/contracts/flow-api.md)

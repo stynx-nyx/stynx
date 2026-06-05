@@ -17,7 +17,7 @@ on:
     paths:
       - '.devai/**'
       - 'docs/architecture/**'
-      - 'docs/product/**'
+      - 'docs/framework/product/**'
       - 'apps/**'
       - 'packages/**'
       - 'packages-web/**'
@@ -111,7 +111,7 @@ jobs:
             node -e "
               const path=require('path');
               const {Ajv2020}=require(path.resolve('node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/2020'));
-              const s=require(path.resolve('../devai/docs/schemas/invariant.schema.json'));
+              const s=require(path.resolve('../devai/docs/framework/schemas/invariant.schema.json'));
               const ajv=new Ajv2020({strict:false,allErrors:true});
               const v=ajv.compile(s);
               const inv=require(path.resolve('$f'));
@@ -130,7 +130,7 @@ jobs:
         run: |
           set -euo pipefail
           shopt -s nullglob
-          for f in docs/product/draft/blueprints/*.json; do
+          for f in docs/framework/product/draft/blueprints/*.json; do
             echo "::group::validate $f"
             devai blueprint-validate --file "$f" --human
             echo "::endgroup::"

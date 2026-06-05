@@ -6,11 +6,11 @@ const repoRoot = process.cwd();
 const workflow = readFileSync(resolve(repoRoot, '.github/workflows/release.yml'), 'utf8');
 const publishScript = readFileSync(resolve(repoRoot, 'scripts/changesets-publish-ci.mjs'), 'utf8');
 const securityPolicy = readFileSync(
-  resolve(repoRoot, 'docs/security/security-release-policy.md'),
+  resolve(repoRoot, 'docs/meta/security/security-release-policy.md'),
   'utf8',
 );
 const readinessReference = readFileSync(
-  resolve(repoRoot, 'docs/stynx/production-grade-private-regulated.md'),
+  resolve(repoRoot, 'docs/adopters/stynx/production-grade-private-regulated.md'),
   'utf8',
 );
 const failures = [];

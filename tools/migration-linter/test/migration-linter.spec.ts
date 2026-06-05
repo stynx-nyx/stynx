@@ -46,7 +46,7 @@ for (const [ruleCode, fileName, expectedCodes] of ruleCases) {
 }
 
 test('reference migration is clean', async () => {
-  // Path updated post C-4 Phase G/T6 (specs/ retired, see docs/pilots/c-4/phase-i-retro.md §10).
+  // Path updated post C-4 Phase G/T6 (specs/ retired, see docs/adopters/pilots/c-4/phase-i-retro.md §10).
   // Canonical reference migration now lives under reference/api/migrations/.
   const result = await lintSqlTarget(join(repoRoot, 'reference', 'api', 'migrations', '0001_reference.sql'));
   assert.equal(result.parserIssues.length, 0);

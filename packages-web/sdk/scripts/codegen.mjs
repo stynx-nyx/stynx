@@ -8,7 +8,7 @@ import { generate } from 'openapi-typescript-codegen';
 const currentDir = dirname(fileURLToPath(import.meta.url));
 const packageRoot = resolve(currentDir, '..');
 const workspaceRoot = resolve(packageRoot, '../..');
-const inputPath = resolve(workspaceRoot, 'docs/contracts/openapi.json');
+const inputPath = resolve(workspaceRoot, 'docs/framework/contracts/openapi.json');
 const outputPath = resolve(packageRoot, 'src/generated');
 const lockPath = resolve(packageRoot, '.codegen.lock');
 

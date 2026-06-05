@@ -1,0 +1,45 @@
+---
+title: API Reference
+---
+
+# API Reference
+
+Generated API reference for every `@stynx/*` and `@stynx-web/*` package.
+
+- [@stynx/audit](./stynx-audit/)
+- [@stynx/auth](./stynx-auth/)
+- [@stynx/backend](./stynx-backend/)
+- [@stynx/cli](./stynx-cli/)
+- [@stynx/contracts](./stynx-contracts/)
+- [@stynx/core](./stynx-core/)
+- [@stynx/data](./stynx-data/)
+- [@stynx/feature-flags](./stynx-feature-flags/)
+- [@stynx/flow](./stynx-flow/)
+- [@stynx/health](./stynx-health/)
+- [@stynx/i18n](./stynx-i18n/)
+- [@stynx/idempotency](./stynx-idempotency/)
+- [@stynx/integration-adapter](./stynx-integration-adapter/)
+- [@stynx/logging](./stynx-logging/)
+- [@stynx/pdf](./stynx-pdf/)
+- [@stynx/pdf-a](./stynx-pdf-a/)
+- [@stynx/pdf-a-vera-docker](./stynx-pdf-a-vera-docker/)
+- [@stynx/privacy](./stynx-privacy/)
+- [@stynx/ratelimit](./stynx-ratelimit/)
+- [@stynx/sessions](./stynx-sessions/)
+- [@stynx/signature](./stynx-signature/)
+- [@stynx/storage](./stynx-storage/)
+- [@stynx/tenancy](./stynx-tenancy/)
+- [@stynx/testing](./stynx-testing/)
+- [@stynx-web/angular](./stynx-web-angular/)
+- [@stynx-web/angular-audit](./stynx-web-angular-audit/)
+- [@stynx-web/angular-auth](./stynx-web-angular-auth/)
+- [@stynx-web/angular-flow](./stynx-web-angular-flow/)
+- [@stynx-web/angular-i18n](./stynx-web-angular-i18n/)
+- [@stynx-web/angular-iam](./stynx-web-angular-iam/)
+- [@stynx-web/angular-profile](./stynx-web-angular-profile/)
+- [@stynx-web/angular-sessions](./stynx-web-angular-sessions/)
+- [@stynx-web/angular-storage](./stynx-web-angular-storage/)
+- [@stynx-web/angular-tenancy](./stynx-web-angular-tenancy/)
+- [@stynx-web/angular-trash](./stynx-web-angular-trash/)
+- [@stynx-web/angular-ui](./stynx-web-angular-ui/)
+- [@stynx-web/sdk](./stynx-web-sdk/)

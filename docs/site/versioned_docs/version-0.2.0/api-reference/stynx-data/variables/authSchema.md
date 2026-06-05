@@ -1,0 +1,11 @@
+[**@stynx/data**](../index.md)
+
+---
+
+[@stynx/data](../index.md) / authSchema
+
+# Variable: authSchema
+
+> `const` **authSchema**: `PgSchema`\<`"auth"`\>
+
+Defined in: [packages/data/src/schema/auth.ts:13](https://github.com/aarusso-nyx/stynx/blob/f54a7f51a22215c0ee06c6f06d8420d5b798763d/packages/data/src/schema/auth.ts#L13)

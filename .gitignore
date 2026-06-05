@@ -15,6 +15,9 @@ pnpm-debug.log*
 .pnpm-store/
 .turbo/
 
+# Round-artifact log exception (DEVAI round-break canon)
+!align/stynx/round-*/prompts/*.log
+
 # Env files
 .env
 .env.*.local

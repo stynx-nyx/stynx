@@ -14,7 +14,7 @@ You are an npm dependency security auditor.
 
 ## Output
 
-- `docs/security/npm-security-upgrade-report.md`
-  (Pre-T7 location was `docs/gov/audit/npm-security-upgrade-report.md`.
-  Old report archived at `docs/legacy/governance-archive/audit/npm-security-upgrade-report.md`.
-  Fresh runs land under `docs/security/`, the DEVAI substrate for security artifacts per Article 6.)
+- `docs/meta/security/npm-security-upgrade-report.md`
+  (Pre-T7 location was `docs/meta/gov/audit/npm-security-upgrade-report.md`.
+  Old report archived at `docs/meta/legacy/governance-archive/audit/npm-security-upgrade-report.md`.
+  Fresh runs land under `docs/meta/security/`, the DEVAI substrate for security artifacts per Article 6.)

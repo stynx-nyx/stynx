@@ -8,7 +8,7 @@ const args = new Set(process.argv.slice(2));
 const strict = args.has('--strict');
 const writeOpenApi = args.has('--write-openapi');
 const config = readConfig().apiCoverage ?? {};
-const openapiPath = resolve(repoRoot, config.openapiPath ?? 'docs/contracts/openapi.json');
+const openapiPath = resolve(repoRoot, config.openapiPath ?? 'docs/framework/contracts/openapi.json');
 const sourceRoots = config.sourceRoots ?? ['reference/api/src', 'packages'];
 const routePrefix = config.routePrefix ?? '';
 const sourceRootPaths = sourceRoots.map((root) => resolve(repoRoot, root));
@@ -27,7 +27,7 @@ const schemaRegistry = buildSchemaRegistry(
 
 if (writeOpenApi) {
   writeOpenApiContract(openapiPath, implementedOperations);
-  const legacyOpenApiPath = resolve(repoRoot, 'docs/api/openapi.json');
+  const legacyOpenApiPath = resolve(repoRoot, 'docs/framework/api/openapi.json');
   if (legacyOpenApiPath !== openapiPath) {
     writeOpenApiContract(legacyOpenApiPath, implementedOperations);
   }

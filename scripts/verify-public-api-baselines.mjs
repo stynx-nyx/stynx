@@ -6,7 +6,7 @@ import { spawnSync } from 'node:child_process';
 
 const repoRoot = process.cwd();
 const write = process.argv.includes('--write');
-const baselinePath = resolve(repoRoot, 'docs/contracts/public-api-baselines.json');
+const baselinePath = resolve(repoRoot, 'docs/framework/contracts/public-api-baselines.json');
 const packageSpecs = [
   { name: '@stynx/integration-adapter', dir: 'packages/integration-adapter' },
   { name: '@stynx/pdf', dir: 'packages/pdf' },

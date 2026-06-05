@@ -27,9 +27,9 @@ Every active package directory has a README with:
 - package-local verification commands.
 
 The canonical standard is
-[`docs/arch/developer-documentation.md`](../docs/arch/developer-documentation.md)
+[`docs/framework/arch/developer-documentation.md`](../docs/framework/arch/developer-documentation.md)
 and the reusable template is
-[`docs/templates/package-README.md`](../docs/templates/package-README.md).
+[`docs/meta/templates/package-README.md`](../docs/meta/templates/package-README.md).
 
 ## Public Barrel Baseline
 

@@ -24,5 +24,5 @@ behavior in the adopter repo.
 
 Publishing the docs site is a local act via the DEVAI CLI:
 `node ../devai/packages/cli/dist/bin.js docs-publish --repo-root . --human`.
-See [ADR-DOCS-GOVERNANCE-ADOPTION](../adr/ADR-DOCS-GOVERNANCE-ADOPTION.md)
+See [ADR-DOCS-GOVERNANCE-ADOPTION](../meta/adr/ADR-DOCS-GOVERNANCE-ADOPTION.md)
 for the rationale and the eight decisions taken during the R14 migration.
