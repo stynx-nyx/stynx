@@ -13,13 +13,21 @@ export class LocalPdfRenderBackend implements PdfRenderBackend {
     if (request.template.engine === 'fixture') {
       throw new PdfValidationError('fixture templates require createFixturePdfBackend()');
     }
+    // Fast-fail precondition: PDF/A profile without a conformance adapter is
+    // unsupported. Check BEFORE the expensive Chromium render so callers don't
+    // pay the render cost on a request that can never succeed. The unit test at
+    // packages/pdf/test/unit/pdf-renderer.spec.ts:92 (`fails PDF/A requests
+    // without a conformance adapter`) previously timed out at 30s on stressed
+    // hosts because the check ran AFTER renderHtmlToPdf — see R15 closeout
+    // follow-up.
+    if (request.output?.profile === 'pdf-a' && !this.options.pdfAAdapter) {
+      throw new PdfProfileUnsupportedError();
+    }
     const html = this.renderHtml(request);
     const result = await this.renderHtmlToPdf(request, html);
     if (request.output?.profile === 'pdf-a') {
-      if (!this.options.pdfAAdapter) {
-        throw new PdfProfileUnsupportedError();
-      }
-      return this.options.pdfAAdapter.convert(result, request);
+      // pdfAAdapter presence already validated above.
+      return this.options.pdfAAdapter!.convert(result, request);
     }
     return result;
   }
