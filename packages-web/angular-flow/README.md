@@ -1,6 +1,18 @@
-# @stynx-web/angular-flow
+# `@stynx-web/angular-flow` — Angular workflow UI: graph designer, forms, tasks, run activity
 
-Angular standalone components and route helpers for STYNX Flow design, runtime, fill execution, task assignment, waivers, run activity, and analytics. The package is host-mounted: apps provide a configured Flow client, then mount `flowRoutes()` under any route prefix.
+`@stynx-web/angular-flow` is the Angular UI for the STYNX workflow engine. It provides a graph designer (visual canvas + design dialogs), form-render + fills components, a task inbox, run-activity timeline, waivers UI, and analytics. It consumes the backend's [`@stynx/flow`](/docs/packages/flow/) endpoints (20 controllers) via a `FlowApiService`. This is the visual half of the flow engine — pair it with the backend flow docs for end-to-end understanding.
+
+## Purpose
+
+Workflow apps need UI for the whole flow lifecycle: visually design the process graph, render forms for users to fill, route tasks to actors with an inbox, show run progress + activity, and surface analytics. Building all of this against flow's ~113 endpoints is a major effort. `@stynx-web/angular-flow` provides it as drop-in components.
+
+You reach for it whenever your STYNX app exposes workflows to users.
+
+What it does NOT do: it doesn't define the workflow (the backend graph does). It renders + drives runs of graphs the backend hosts.
+
+## Audience
+
+Angular frontend developers building workflow-driven UIs.
 
 ## Install
 
@@ -8,45 +20,94 @@ Angular standalone components and route helpers for STYNX Flow design, runtime, 
 pnpm add @stynx-web/angular-flow
 ```
 
-## Peer Dependencies
+**Peer dependencies:** `@angular/core` `^18`, `@angular/router` `^18`, `@stynx-web/angular` `^1`, `@stynx-web/angular-ui` `^1`, `@stynx-web/sdk` `^1`.
 
-- `@angular/common ^20.2.0`
-- `@angular/core ^20.2.0`
-- `@angular/router ^20.2.0`
-
-## Use
+## Quick start
 
 ```ts
-import { provideStynxDefaults } from '@stynx-web/angular';
-import { flowRoutes, provideStynxFlow } from '@stynx-web/angular-flow';
-import { StynxSdkClient } from '@stynx-web/sdk';
+import { flowRoutes } from '@stynx-web/angular-flow';
 
-const client = new StynxSdkClient({ baseUrl: '/api', fetchFn: fetch });
-
-bootstrapApplication(AppComponent, {
-  providers: [
-    provideStynxDefaults({
-      flow: provideStynxFlow({
-        clientFactory: () => client,
-      }),
-    }),
-  ],
-});
-
-export const routes = [{ path: 'flow', children: flowRoutes() }];
+export const routes: Routes = [
+  { path: 'workflows', children: flowRoutes, canActivate: [authGuard] },
+];
 ```
 
-## Public Surface
+```html
+<stynx-flow-tasks [assignee]="currentUser.id" />
+```
 
-- Providers/routes: `provideStynxFlow`, `FLOW_ROUTES`, `flowRoutes`.
-- Services/tokens: `FlowApiService`, `STYNX_FLOW_CLIENT`, `STYNX_FLOW_TENANT_CHANGED`.
-- Components: graph canvas/designer/dialogs, forms, fills, tasks, waivers, run activity, dashboard, open tasks, run summary, empty state.
-- Types: Flow design/runtime/form/fill/task/waiver/analytics client and model types.
-- Secondary exports: `@stynx-web/angular-flow/testing`, locale catalogs.
+## Public API surface
 
-## See Also
+### Routes
 
-- [`@stynx-web/angular-auth`](../angular-auth/README.md)
-- [`@stynx-web/angular-storage`](../angular-storage/README.md)
-- [`@stynx-web/angular-ui`](../angular-ui/README.md)
-- [Reference app Flow demo](../../reference/web/README.md#demo-surfaces)
+| Export       | Description                                            |
+| ------------ | ------------------------------------------------------ |
+| `flowRoutes` | Ready-to-mount child routes covering the full flow UI. |
+
+### Components
+
+| Selector                      | Component                    | Description                                  |
+| ----------------------------- | ---------------------------- | -------------------------------------------- |
+| `<stynx-flow-graph-designer>` | `FlowGraphDesignerComponent` | The visual process-graph designer.           |
+| `<stynx-flow-graph-canvas>`   | `FlowGraphCanvasComponent`   | The node/edge canvas (used by the designer). |
+| `<stynx-flow-design-dialogs>` | `FlowDesignDialogsComponent` | Node / edge / rule edit dialogs.             |
+| `<stynx-flow-forms>`          | `FlowFormsComponent`         | Form-render for filling.                     |
+| `<stynx-flow-fills>`          | `FlowFillsComponent`         | View/manage fills.                           |
+| `<stynx-flow-tasks>`          | `FlowTasksComponent`         | Task inbox; accept / act / assign.           |
+| `<stynx-flow-run-activity>`   | `FlowRunActivityComponent`   | Run-activity timeline.                       |
+| `<stynx-flow-waivers>`        | `FlowWaiversComponent`       | Waivers management.                          |
+| `<stynx-flow-analytics>`      | `AnalyticsComponent`         | Dashboards (open tasks, throughput).         |
+| `<stynx-flow-empty-state>`    | `FlowEmptyStateComponent`    | Empty-state for flow views.                  |
+
+### Services
+
+| Export           | Description                                 |
+| ---------------- | ------------------------------------------- |
+| `FlowApiService` | Wraps the SDK's 20-controller flow surface. |
+
+### Types
+
+| Export  | Description                                                                        |
+| ------- | ---------------------------------------------------------------------------------- |
+| (types) | Flow view-model types. See [TypeDoc](/docs/api-reference/stynx-web-angular-flow/). |
+
+## Configuration
+
+| Option             | Type      | Default  | Description                                  |
+| ------------------ | --------- | -------- | -------------------------------------------- |
+| `taskRefreshMs`    | `number`  | `30_000` | Task-inbox poll interval.                    |
+| `designerReadOnly` | `boolean` | `false`  | Render the graph designer in view-only mode. |
+
+## Examples
+
+### Example 1 — task inbox
+
+```html
+<stynx-flow-tasks [assignee]="user.id" (taskActed)="refresh()" />
+```
+
+### Example 2 — embedding form-render
+
+```html
+<stynx-flow-forms [formId]="form.id" [runId]="run.id" />
+```
+
+### Example 3 — end-to-end (UI side of the backend's expense-approval example)
+
+This mirrors the backend [`@stynx/flow` examples](/docs/packages/flow/examples/): the submitter uses `<stynx-flow-forms>` to fill the expense form; the manager uses `<stynx-flow-tasks>` to review + act; `<stynx-flow-run-activity>` shows the event stream.
+
+## Common pitfalls
+
+- **Stale SDK after backend flow contract change** — `FlowApiService` calls the generated SDK; regenerate the SDK (`pnpm sdk:codegen`) after backend flow changes, or UI calls break.
+- **Form-render state isolation** — multiple `<stynx-flow-forms>` instances on one page share state if not keyed; give each a distinct `[fillId]`.
+- **Designer mutations without publish** — editing a graph in the designer doesn't affect in-flight runs until published (the backend publish gate).
+
+## Related packages
+
+- [`@stynx/flow`](/docs/packages/flow/) — the backend engine (20 controllers / ~113 endpoints) + the [domain model](/docs/packages/flow/domain-model/) this UI renders.
+- [`@stynx-web/sdk`](/docs/packages-web/sdk/) — the generated client `FlowApiService` wraps.
+- [`@stynx-web/angular-ui`](/docs/packages-web/angular-ui/) — shared components the flow UI builds on.
+
+## TypeDoc reference
+
+Full symbol-level API: [`/docs/api-reference/stynx-web-angular-flow/`](/docs/api-reference/stynx-web-angular-flow/)

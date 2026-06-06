@@ -1,6 +1,18 @@
-# @stynx-web/angular-ui
+# `@stynx-web/angular-ui` — shared Angular UI primitives (tables, dialogs, toasts, banners)
 
-Angular 20 UI primitives for STYNX web applications. The package is intentionally small: it provides reusable shell pieces for status, tables, pagination, toast, confirmation, loading, empty states, and icons while leaving app layout to the host.
+`@stynx-web/angular-ui` is STYNX's shared component library — the design-system surface every STYNX frontend draws from. Standalone Angular components: data tables with pagination, confirmation dialogs, loading spinners, banners, icons, toast notifications. All themeable via CSS custom properties, all standalone (no NgModule required).
+
+## Purpose
+
+Every STYNX frontend needs the same UI primitives: a paginated table, a confirm-before-delete dialog, a loading spinner, toast notifications. Rebuilding these per app produces inconsistent UX. `@stynx-web/angular-ui` provides them once, themeable.
+
+You reach for it whenever you build STYNX frontend screens — it's the visual vocabulary.
+
+What it does NOT do: it's not a full design system (no form controls library — use Angular Material or your own for inputs). It doesn't impose a router or layout shell.
+
+## Audience
+
+Angular frontend developers building STYNX UIs.
 
 ## Install
 
@@ -8,42 +20,106 @@ Angular 20 UI primitives for STYNX web applications. The package is intentionall
 pnpm add @stynx-web/angular-ui
 ```
 
-## Peer Dependencies
+**Peer dependencies:** `@angular/core` `^18`, `@angular/common` `^18`, `@stynx-web/angular` `^1`.
 
-- `@angular/common ^20.2.0`
-- `@angular/core ^20.2.0`
-
-## Use
+## Quick start
 
 ```ts
 import { Component } from '@angular/core';
-import {
-  StynxBannerComponent,
-  StynxTableComponent,
-  StynxToastContainerComponent,
-} from '@stynx-web/angular-ui';
+import { TableComponent, ConfirmDialogComponent } from '@stynx-web/angular-ui';
 
 @Component({
   standalone: true,
-  imports: [StynxBannerComponent, StynxTableComponent, StynxToastContainerComponent],
-  template: `
-    <stynx-banner tone="info" message="Ready"></stynx-banner>
-    <stynx-table [columns]="columns" [rows]="rows"></stynx-table>
-    <stynx-toast-container></stynx-toast-container>
-  `,
+  imports: [TableComponent, ConfirmDialogComponent],
+  template: ` <stynx-table [rows]="users" [columns]="columns" [pageSize]="20" /> `,
 })
-export class AppComponent {}
+export class UsersPage {}
 ```
 
-## Public Surface
+## Public API surface
 
-- Components: `StynxBannerComponent`, `StynxConfirmDialogComponent`, `EmptyStateComponent`, `StynxIconComponent`, `StynxLoadingSpinnerComponent`, `StynxPaginationComponent`, `StynxTableComponent`, `StynxToastContainerComponent`.
-- Services: `StynxToastService`.
-- Icons: `STYNX_ICON_NAMES` and `StynxIconName`; host apps should inline or mount `assets/sprite.svg` so `<stynx-icon>` symbols resolve.
-- Secondary exports: `@stynx-web/angular-ui/testing`, locale catalogs.
+### Components
 
-## See Also
+| Selector                  | Component                                                     | Key inputs / outputs                              | Description                                                 |
+| ------------------------- | ------------------------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------------- |
+| `<stynx-table>`           | `TableComponent`                                              | `[rows]`, `[columns]`, `[pageSize]`; `(rowClick)` | Data table with built-in pagination.                        |
+| `<stynx-pagination>`      | `PaginationComponent`                                         | `[total]`, `[pageSize]`, `[page]`; `(pageChange)` | Standalone pagination control.                              |
+| `<stynx-confirm-dialog>`  | `ConfirmDialogComponent`                                      | `[title]`, `[message]`; `(confirm)`, `(cancel)`   | Confirm-before-action modal.                                |
+| `<stynx-loading-spinner>` | `LoadingSpinnerComponent`                                     | `[size]`, `[label]`                               | Loading indicator.                                          |
+| `<stynx-banner>`          | `BannerComponent`                                             | `[type]`, `[message]`, `[dismissible]`            | Inline banner (info / warn / error).                        |
+| `<stynx-icon>`            | `IconComponent`                                               | `[name]`, `[size]`                                | Icon renderer.                                              |
+| `<stynx-toast-container>` | `ToastContainerComponent`                                     | —                                                 | Mount once at app root; renders toasts from `ToastService`. |
+| `<stynx-empty-state>`     | `EmptyStateComponent` (re-exported from `@stynx-web/angular`) | `[message]`                                       | Empty-state placeholder.                                    |
 
-- [`@stynx-web/angular`](../angular/README.md)
-- [`@stynx-web/angular-i18n`](../angular-i18n/README.md)
-- [Reference app dashboard demo](../../reference/web/README.md#demo-surfaces)
+### Services
+
+| Export         | Description                                                                 |
+| -------------- | --------------------------------------------------------------------------- |
+| `ToastService` | Programmatically push toasts. `.success(msg)`, `.error(msg)`, `.info(msg)`. |
+
+## Configuration
+
+Theming is via CSS custom properties — no module config. Override design tokens at the app root:
+
+| CSS variable            | Default       | Description               |
+| ----------------------- | ------------- | ------------------------- |
+| `--stynx-color-primary` | (brand blue)  | Primary action color.     |
+| `--stynx-color-danger`  | (red)         | Destructive action color. |
+| `--stynx-density`       | `comfortable` | `comfortable \| compact`. |
+| `--stynx-radius`        | `6px`         | Corner radius.            |
+
+## Examples
+
+### Example 1 — confirm dialog
+
+```html
+<stynx-confirm-dialog
+  *ngIf="showDelete"
+  title="Delete user?"
+  message="This cannot be undone."
+  (confirm)="onDelete()"
+  (cancel)="showDelete = false"
+/>
+```
+
+### Example 2 — toasts
+
+```ts
+import { ToastService } from '@stynx-web/angular-ui';
+
+@Component({
+  /* ... */
+})
+export class SaveButton {
+  private readonly toast = inject(ToastService);
+  async save() {
+    await this.api.save();
+    this.toast.success('Saved');
+  }
+}
+```
+
+Mount `<stynx-toast-container>` once at the app root for toasts to render.
+
+### Example 3 — theming
+
+```css
+:root {
+  --stynx-color-primary: #6d28d9;
+  --stynx-density: compact;
+}
+```
+
+## Common pitfalls
+
+- **Forgetting `<stynx-toast-container>` at root** — `ToastService.success()` pushes a toast but nothing renders it. Mount the container once.
+- **Importing components into an NgModule app** — these are standalone components; import them into the `imports` array of a standalone component or NgModule, not declare them.
+- **Table with huge datasets** — `<stynx-table>` paginates client-side by default; for server-side data, drive `[rows]` from a paged API call + `(pageChange)`.
+
+## Related packages
+
+- [`@stynx-web/angular`](/docs/packages-web/angular/) — the foundation; provides `ToastService`'s underlying mechanism + the empty-state component.
+
+## TypeDoc reference
+
+Full symbol-level API: [`/docs/api-reference/stynx-web-angular-ui/`](/docs/api-reference/stynx-web-angular-ui/)

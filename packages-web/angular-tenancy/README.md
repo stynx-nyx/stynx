@@ -1,6 +1,18 @@
-# @stynx-web/angular-tenancy
+# `@stynx-web/angular-tenancy` — Angular tenant switcher + context + header interceptor
 
-Angular 20 tenancy integration for STYNX. It resolves the active tenant, initializes tenant context, adds `X-Tenant-Id` through an HTTP interceptor, and exposes tenant picker/switcher components.
+`@stynx-web/angular-tenancy` is the Angular multi-tenant package. It provides a tenant-switcher + tenant-picker component, a `TenantContextService` holding the active tenant, and an HTTP interceptor that injects the tenant header into every backend call. Pairs with the backend's [`@stynx/tenancy`](/docs/packages/tenancy/).
+
+## Purpose
+
+Multi-tenant frontends need: a way to switch the active tenant, a place to read the current tenant, and automatic injection of the tenant header so the backend scopes data correctly. `@stynx-web/angular-tenancy` provides all three.
+
+You reach for it when your app serves users who belong to multiple tenants.
+
+What it does NOT do: it doesn't enforce tenant isolation (the backend RLS does). It doesn't manage tenant lifecycle (admin endpoints + `@stynx-web/angular-iam` do).
+
+## Audience
+
+Angular frontend developers building multi-tenant UIs.
 
 ## Install
 
@@ -8,38 +20,102 @@ Angular 20 tenancy integration for STYNX. It resolves the active tenant, initial
 pnpm add @stynx-web/angular-tenancy
 ```
 
-## Peer Dependencies
+**Peer dependencies:** `@angular/core` `^18`, `@stynx-web/angular` `^1`, `@stynx-web/sdk` `^1`.
 
-- `@angular/common ^20.2.0`
-- `@angular/core ^20.2.0`
-- `@angular/forms ^20.2.0`
-
-## Use
+## Quick start
 
 ```ts
-import { bootstrapApplication } from '@angular/platform-browser';
 import { provideTenancy } from '@stynx-web/angular-tenancy';
 
-bootstrapApplication(AppComponent, {
-  providers: [
-    provideTenancy({
-      defaultTenantResolver: () => localStorage.getItem('tenant-id'),
-    }),
-  ],
-});
+export const appConfig = { providers: [provideTenancy()] };
 ```
 
-`provideStynxAngular(...)` and `provideStynxDefaults(...)` call `provideTenancy(...)` for the core Angular integration.
+```html
+<stynx-tenant-switcher />
+```
 
-## Public Surface
+## Public API surface
 
-- Providers/interceptors: `provideTenancy`, `TenantInterceptor`.
-- Services/components: `TenantContextService`, `StynxTenantPickerComponent`, `StynxTenantSwitcherComponent`.
-- Tokens/types: `STYNX_TENANCY_OPTIONS`, `STYNX_TENANCY_WINDOW`, tenancy option, tenant, and resolution context types.
-- Secondary exports: `@stynx-web/angular-tenancy/testing`, locale catalogs.
+### Providers
 
-## See Also
+| Export           | Description                                                      |
+| ---------------- | ---------------------------------------------------------------- |
+| `provideTenancy` | Registers the tenant context service + interceptor + components. |
 
-- [`@stynx-web/angular`](../angular/README.md)
-- [`@stynx-web/sdk`](../sdk/README.md)
-- [Reference app tenant demo](../../reference/web/README.md#demo-surfaces)
+### Components
+
+| Selector                  | Component                 | Description                                                                    |
+| ------------------------- | ------------------------- | ------------------------------------------------------------------------------ |
+| `<stynx-tenant-switcher>` | `TenantSwitcherComponent` | Dropdown to switch the active tenant; updates context without page reload.     |
+| `<stynx-tenant-picker>`   | `TenantPickerComponent`   | Initial tenant selection (e.g. post-login when the user has multiple tenants). |
+
+### Services
+
+| Export                 | Description                                                   |
+| ---------------------- | ------------------------------------------------------------- |
+| `TenantContextService` | `current` (signal), `switchTo(tenantId)`, `availableTenants`. |
+
+### Interceptors
+
+| Export              | Description                                                        |
+| ------------------- | ------------------------------------------------------------------ |
+| `tenantInterceptor` | Injects the active tenant id as a header on every backend request. |
+
+### Types
+
+| Export  | Description                                                                             |
+| ------- | --------------------------------------------------------------------------------------- |
+| (types) | Tenant view-model types. See [TypeDoc](/docs/api-reference/stynx-web-angular-tenancy/). |
+
+## Configuration
+
+| Option             | Type      | Default         | Description                                |
+| ------------------ | --------- | --------------- | ------------------------------------------ |
+| `headerName`       | `string`  | `'X-Tenant-Id'` | Must match the backend's tenant source.    |
+| `persistSelection` | `boolean` | `true`          | Remember the chosen tenant across reloads. |
+
+## Examples
+
+### Example 1 — tenant switcher in the header
+
+```html
+<header>
+  <stynx-tenant-switcher />
+</header>
+```
+
+### Example 2 — reading current tenant in a component
+
+```ts
+import { TenantContextService } from '@stynx-web/angular-tenancy';
+
+@Component({
+  /* ... */
+})
+export class Dashboard {
+  private readonly tenancy = inject(TenantContextService);
+  tenant = this.tenancy.current; // signal
+}
+```
+
+### Example 3 — post-login tenant picker
+
+```html
+<stynx-tenant-picker *ngIf="user.tenants.length > 1" (selected)="onTenantChosen($event)" />
+```
+
+## Common pitfalls
+
+- **`headerName` mismatch** — must equal the backend's tenant source (`@stynx/tenancy` `headerName` when `source: 'header'`), or the backend doesn't see the tenant.
+- **Stale context after tab restore** — if `persistSelection` is off, restoring a tab loses the tenant. Default-on mitigates.
+- **Switching tenant without refreshing data** — the switcher updates context but in-flight component data may be stale; subscribe to `current` and refetch.
+
+## Related packages
+
+- [`@stynx-web/angular`](/docs/packages-web/angular/) — the foundation (also ships a base tenant context service).
+- [`@stynx/tenancy`](/docs/packages/tenancy/) — the backend counterpart.
+- [`@stynx-web/angular-iam`](/docs/packages-web/angular-iam/) — tenant admin management.
+
+## TypeDoc reference
+
+Full symbol-level API: [`/docs/api-reference/stynx-web-angular-tenancy/`](/docs/api-reference/stynx-web-angular-tenancy/)
