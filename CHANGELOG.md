@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+- R16 deepens every published package README from ~50-130 line stubs to
+  template-conformant developer references. All 41 packages (24 backend
+  `@stynx/*`, 13 web `@stynx-web/*`, 4 tools `@stynx-internal/*`) now carry
+  the locked 8-section shape: purpose / audience / install / quick-start /
+  public-API-surface / configuration / examples / common-pitfalls /
+  related-packages, pitched at the family-specific persona (NestJS backend
+  devs / Angular frontend devs / workspace integrators). `@stynx/backend`
+  (10 mountable submodules) and `@stynx/flow` (20 controllers / ~113 routes)
+  split into `packages/<pkg>/docs/` subtrees; `sync-content.mjs` mirrors them
+  into the published site. Two new round-gate scripts land under `scripts/`:
+  `check-package-doc-shape.mjs` (asserts the 8 mandatory sections) and
+  `verify-package-doc-coverage.mjs` (diffs README symbol cites vs index
+  exports). `check-package-doc-shape` goes 0/41 → 41/41 clean;
+  `check-docs-governance` holds at pass 14/14; the Docusaurus build is clean
+  for every new cross-reference. Ratified by the round artifacts at
+  `align/stynx/round-16/`; pilot retro at
+  `docs/adopters/pilots/c-4/r16-package-deepening-retro.md` documents the
+  devai `docs-links` sensor false-positive on Docusaurus site-absolute URLs
+  (G16-1) and the barrel-re-export doc-coverage noise (G16-2).
+
 - R15 migrates STYNX from DEVAI Constitution 0.1.1 to 0.2.0.
   `.devai/config/project.json` now carries an explicit
   `constitution.version: "0.2.0"` field. The `docs/` tree is reshaped
