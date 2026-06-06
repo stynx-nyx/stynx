@@ -1,49 +1,95 @@
-# `@stynx-internal/migration-linter`
+# `@stynx-internal/migration-linter` — archive-aware SQL migration linter for STYNX
 
-Standalone archive-aware SQL migration linter for stynx.
+`@stynx-internal/migration-linter` is a standalone CLI that lints SQL migrations against STYNX-specific conventions: archive-table mutation rules, soft-delete-aware constraints, RLS-policy adjacency. It catches migrations that would break STYNX's soft-delete + RLS guarantees before they ship. Run it in CI alongside your other gates.
 
-## CLI
+## Purpose
+
+STYNX's data layer relies on conventions: tenant-scoped tables need RLS policies, archive tables have soft-delete semantics, certain column changes break cascade behaviour. A raw SQL migration can silently violate these. The migration-linter encodes the conventions as lint rules so violations fail at PR time, not in production.
+
+You reach for it whenever you author a Drizzle/SQL migration touching tenant-scoped or archive tables.
+
+What it does NOT do: it's intentionally **not** part of DEVAI's `check-*` family (see "Status" below) — it encodes STYNX-specific SQL conventions, not universal DEVAI semantics. It doesn't run migrations (that's [`@stynx/cli`](/docs/packages/cli/)'s `stynx migrate`).
+
+## Audience
+
+Backend developers authoring database migrations. Audience-pitch: _"My migration touches an archive table — what rules apply?"_
+
+## Install
+
+Workspace-local; invoke via pnpm:
 
 ```bash
 pnpm --dir tools/migration-linter exec stynx-migration-lint <migration-file-or-dir>
 ```
 
-Supported flags:
+## Quick start
 
-- `--format=human|json`
-- `--fix-suggestions`
+```bash
+# Lint a single migration
+pnpm --dir tools/migration-linter exec stynx-migration-lint db/migrations/0042_add_orders.sql
 
-## Status: intentionally stynx-idiosyncratic
+# Lint the whole migrations directory (JSON output for CI)
+pnpm --filter migration-linter run lint:repo --format=json
+```
 
-> **C-4 Session S9 (post-21 stynx adoption pilot, 2026-05-16).** This tool is **NOT folded into DEVAI's `check-*` family** and is **not planned to be**.
+## Public API surface
 
-### Why this is stynx-only
+### CLI
 
-DEVAI's `check-*` actions (`check-adrs`, `check-forbidden-actions`, `check-overrides`, `inv-contracts`, etc.) all operate against DEVAI substrates with universal semantics. The migration-linter, by contrast, encodes stynx-specific SQL conventions:
+| Invocation                           | Description                                              |
+| ------------------------------------ | -------------------------------------------------------- |
+| `stynx-migration-lint <file-or-dir>` | Lint a migration file or every migration in a directory. |
 
-| Rule family                             | Stynx-specific because…                                                                                            |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `archive-table` invariants              | Stynx's soft-delete pattern uses paired `core.create_soft_deletable_table()` + archive table; not a DEVAI concept. |
-| Tenant-column enforcement (`tenant_id`) | Stynx RLS pattern is opinionated; DEVAI's invariants speak about _whether_ tenancy is enforced, not _how_.         |
-| `core.pii_map` insert recognition       | Stynx-specific runtime registry; DEVAI's `sense-data-handling` reads pii heuristically, not via this table.        |
-| `data.create_*` helper enforcement      | Stynx data-layer helpers in `@stynx/data`.                                                                         |
+### Flags
 
-These rules would be noise (or worse, contradiction) for any non-stynx adopter of DEVAI. Pulling them into DEVAI's universal check-\* family would violate Article 6's substrate-authority discipline.
+| Flag                   | Description                                |
+| ---------------------- | ------------------------------------------ |
+| `--format=human\|json` | Output format. JSON for CI gating.         |
+| `--fix-suggestions`    | Emit suggested fixes alongside violations. |
 
-### When DEVAI ships a generic SQL-pattern check action
+### Rule families
 
-If a future DEVAI phase ships `check-migrations` or `sense-migrate-check` enhancement that lets adopters configure stack-specific SQL patterns (similar to how `extractor_params` configures `sense-data-model`), then it may make sense to:
+| Rule family            | Catches                                                         |
+| ---------------------- | --------------------------------------------------------------- |
+| Archive-table mutation | Direct deletes / unsafe alters on archive (soft-delete) tables. |
+| Soft-delete constraint | Constraints incompatible with soft-delete semantics.            |
+| RLS-policy adjacency   | New tenant-scoped tables lacking an RLS policy.                 |
 
-1. Migrate stynx-generic rules (e.g. "every migration has a header comment with version + sha") into the DEVAI generic action.
-2. Keep stynx-idiosyncratic rules here.
-3. Wire stynx's CI to run both: DEVAI's generic action + this one.
+## Configuration
 
-That would be a Phase G.3 / Phase H opportunity. Until then, this linter stays where it is.
+The linter reads its config from the repo's migration-linter config (rule severities, table-classification overrides). Per-rule severity can be tuned; see the tool's config schema.
 
-### Audit trail
+## Examples
 
-The decision to keep this stynx-idiosyncratic was made in C-4 Session S9. Per Phase A retro §6 "Skills consolidation audit," the equivalent decision was already made for [`tools/npm-security-upgrade-auditor/`](../npm-security-upgrade-auditor/) (kept idiosyncratic; relocated from `.codex/skills/` in Session T7). This README captures the same pattern for `tools/migration-linter/`.
+### Example 1 — CI gate
 
-## Active rules
+```yaml
+# In your CI chain
+- name: Lint migrations
+  run: pnpm --filter migration-linter run lint:repo --format=json
+```
 
-(See `src/lint.ts` for the canonical list. As of 2026-05-16, the rule set is stable; no rule changes are expected before stynx 1.0.)
+### Example 2 — fix suggestions during development
+
+```bash
+pnpm --dir tools/migration-linter exec stynx-migration-lint db/migrations/ --fix-suggestions
+```
+
+## Common pitfalls
+
+- **Missing RLS policy on a new tenant-scoped table** — the most common violation. Add the `CREATE POLICY` in the same migration.
+- **Raw `DELETE` on an archive table** — archive tables use soft-delete; a hard `DELETE` bypasses cascade rules. Use the soft-delete path.
+- **Linter not in CI** — violations only caught locally are easy to skip. Wire `lint:repo` into your CI chain.
+
+## Status: intentionally STYNX-idiosyncratic
+
+Per C-4 Session S9, this tool is **not** folded into DEVAI's `check-*` family and is not planned to be. DEVAI's `check-*` actions operate on DEVAI substrates with universal semantics; the migration-linter encodes STYNX-specific SQL conventions that don't generalize. It stays a STYNX-local tool.
+
+## Related packages
+
+- [`@stynx/data`](/docs/packages/data/) — the data layer whose conventions this linter enforces (`ADR-001-soft-delete`).
+- [`@stynx/cli`](/docs/packages/cli/) — `stynx migrate` runs the migrations this lints.
+
+## TypeDoc reference
+
+CLI-only tool; no symbol-level API surface.
