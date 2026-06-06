@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_stynx_docs_site=self.webpackChunk_stynx_docs_site||[]).push([[87313],{87313(e,s,c){c.d(s,{createArchitectureServices:()=>t.S});var t=c(73121);c(3435)}}]);

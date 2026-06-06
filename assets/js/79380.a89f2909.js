@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_stynx_docs_site=self.webpackChunk_stynx_docs_site||[]).push([[79380],{79380(e,s,c){c.d(s,{createPieServices:()=>t.f});var t=c(78557);c(3435)}}]);

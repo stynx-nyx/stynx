@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_stynx_docs_site=self.webpackChunk_stynx_docs_site||[]).push([[61235],{88552(s){s.exports=JSON.parse('{"name":"docusaurus-plugin-content-pages","id":"default"}')}}]);
