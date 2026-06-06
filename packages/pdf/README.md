@@ -1,129 +1,165 @@
-# @stynx/pdf
+# `@stynx/pdf` — server-side PDF rendering (HTML/Handlebars → PDF) with PDF/A profile support
 
-`@stynx/pdf` is the shared STYNX server-side PDF generation package. It provides
-a local renderer backed by Playwright Chromium plus a deterministic fixture
-backend for tests. It also provides deterministic fixed-layout primitives and a
-public-payroll report template pack for adopter-owned payslip and yearly-income
-PDF construction. It does not depend on a remote PDF service.
+`@stynx/pdf` renders PDFs server-side. The default `LocalPdfRenderBackend` drives headless Chromium (via Playwright) to turn HTML or Handlebars templates into PDF bytes; a `FixturePdfBackend` produces deterministic output for tests without launching a browser. For archival-grade output it supports a PDF/A profile slot — supply a conformance adapter (e.g. [`@stynx/pdf-a-vera-docker`](/docs/packages/pdf-a-vera-docker/)) and request `profile: 'pdf-a'`. Ships a ready-made public-payroll template.
 
-## Nest Setup
+## Purpose
+
+Generating PDFs server-side (invoices, payslips, reports, signed documents) is fiddly: headless-browser lifecycle, deterministic test output, PDF/A conformance for archival/legal requirements. `@stynx/pdf` packages all three behind a single `PdfRenderer`.
+
+You reach for it whenever your app produces PDF output. For archival/legal PDFs (PDF/A-2b), pair it with a conformance adapter.
+
+What it does NOT do: it doesn't sign PDFs (that's [`@stynx/signature`](/docs/packages/signature/)). It doesn't store them (that's [`@stynx/storage`](/docs/packages/storage/)). It doesn't render charts/graphics beyond what HTML+CSS can express.
+
+## Audience
+
+Backend developers generating documents.
+
+## Install
+
+```bash
+pnpm add @stynx/pdf playwright
+npx playwright install chromium
+```
+
+**Peer dependencies:** `@nestjs/common` `^11`, `@stynx/core` `^1`, `playwright` `^1`, `handlebars` `^4`.
+
+## Quick start
 
 ```ts
 import { StynxPdfModule } from '@stynx/pdf';
 
-StynxPdfModule.forRoot({
-  defaultPdfOptions: { format: 'A4', printBackground: true },
-  timeoutMs: 15_000,
-  defaultMetadata: { product: 'stynx' },
-});
+StynxPdfModule.forRoot({});
 ```
-
-## Public API
 
 ```ts
 import { PdfRenderer } from '@stynx/pdf';
 
-const pdf = await renderer.render({
-  tenantId: 'tenant-a',
-  template: {
-    id: 'receipt',
-    engine: 'handlebars',
-    source: '<html><body>Receipt {{number}}</body></html>',
-    version: '1',
-  },
-  data: { number: 'AIT-1' },
-});
+@Injectable()
+export class InvoiceService {
+  constructor(private readonly pdf: PdfRenderer) {}
+
+  async render(invoice: Invoice): Promise<Uint8Array> {
+    const result = await this.pdf.render({
+      tenantId: invoice.tenantId,
+      template: { id: 'invoice', engine: 'handlebars', source: invoiceTemplate },
+      data: invoice,
+    });
+    return result.bytes;
+  }
+}
 ```
 
-Primary exports:
+## Public API surface
 
-- `StynxPdfModule` - Nest module that wires `PdfRenderer` to the local backend.
-- `PdfRenderer` - validates render requests and delegates to a backend.
-- `LocalPdfRenderBackend` - renders `html` and `handlebars` templates locally
-  with Playwright Chromium.
-- `createFixturePdfBackend()` - deterministic lightweight backend for tests.
-- `FixedLayoutDocumentBuilder` and `validatePdfAStyle()` - provider-free
-  `pdf-lib` helpers for stable fixed-layout PDFs with bundled PDF/A-2b content
-  assets and honest structural checks.
-- `PdfVerificationEvidenceAppender` - draws a verification hint into PDF bytes
-  and embeds a STYNX PAdES evidence block through `@stynx/signature` using a
-  valid incremental PDF update.
-- `PublicPayrollPdfBuilder` - adopter-compatible payslip and yearly-income
-  template pack exposed through `@stynx/pdf/public-payroll`.
+### Modules
 
-## PDF Evidence
+| Export           | Signature                                   | Description                                                                |
+| ---------------- | ------------------------------------------- | -------------------------------------------------------------------------- |
+| `StynxPdfModule` | `.forRoot(options?: StynxPdfModuleOptions)` | Registers `PdfRenderer` + the configured backend + optional PDF/A adapter. |
+
+### Services / Injectables
+
+| Export                    | Description                                                          |
+| ------------------------- | -------------------------------------------------------------------- |
+| `PdfRenderer`             | The facade: `render(request: RenderRequest): Promise<RenderResult>`. |
+| `LocalPdfRenderBackend`   | Default backend — Playwright/Chromium HTML→PDF.                      |
+| `createFixturePdfBackend` | Test backend — deterministic bytes without a browser.                |
+
+### Errors
+
+| Export                       | Description                                                                                                                                         |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PdfValidationError`         | Bad request (e.g. fixture engine without the fixture backend).                                                                                      |
+| `PdfRenderError`             | Rendering failed (Chromium launch, page error).                                                                                                     |
+| `PdfProfileUnsupportedError` | `profile: 'pdf-a'` requested but no conformance adapter configured. **Fires before** the Chromium render (precondition fix, R15 commit `be3f9e27`). |
+
+### Templates
+
+| Export                    | Description                                 |
+| ------------------------- | ------------------------------------------- |
+| `PublicPayrollPdfBuilder` | Ready-made public-payroll payslip template. |
+
+### Types / Interfaces
+
+| Export                    | Description                                                                            |
+| ------------------------- | -------------------------------------------------------------------------------------- |
+| `RenderRequest<TData>`    | `{ tenantId, template: { id, engine, source }, data, output?, branding?, metadata? }`. |
+| `RenderResult`            | `{ bytes, contentType, sha256, pageCount, templateId, metadata }`.                     |
+| `PdfRenderBackend`        | Backend interface (implement for a custom renderer).                                   |
+| `LocalPdfRendererOptions` | Backend options (launch opts, timeouts, defaults).                                     |
+| `PdfProfile`              | `'pdf' \| 'pdf-a'`.                                                                    |
+
+## Configuration
+
+| Option              | Type                     | Default                 | Description                                               |
+| ------------------- | ------------------------ | ----------------------- | --------------------------------------------------------- |
+| `backend`           | `PdfRenderBackend`       | `LocalPdfRenderBackend` | Render backend.                                           |
+| `pdfAAdapter`       | `PdfAConformanceAdapter` | none                    | Required to satisfy `profile: 'pdf-a'` requests.          |
+| `launchOptions`     | Playwright launch opts   | `{ headless: true }`    | Chromium launch config.                                   |
+| `timeoutMs`         | `number`                 | `15_000`                | Per-page render timeout.                                  |
+| `defaultPdfOptions` | `PDFOptions`             | A4 + printBackground    | Default `page.pdf()` options.                             |
+| `baseUrl`           | `string`                 | none                    | Base href for resolving relative asset URLs in templates. |
+
+## Examples
+
+### Example 1 — HTML template
 
 ```ts
-import { PdfVerificationEvidenceAppender } from '@stynx/pdf/evidence';
-
-const appender = new PdfVerificationEvidenceAppender({
-  defaultSignerName: 'SGP report-service',
-});
-
-const signedPdf = await appender.embedVerificationHint({
-  payload,
-  verifyUrl: '/verify/document',
-  reason: 'Official report',
+await pdf.render({
+  tenantId: 't1',
+  template: { id: 'receipt', engine: 'html', source: '<html><body><h1>Receipt</h1></body></html>' },
+  data: {},
 });
 ```
 
-The appender mutates PDF bytes only. It delegates the provider-free
-`%%STYNX-PADES-SIGNATURE` evidence envelope to `@stynx/signature` and does not
-claim legal CMS/PKCS#7/PAdES signing.
-
-## Public Payroll Templates
+### Example 2 — PDF/A with the veraPDF adapter
 
 ```ts
-import { PublicPayrollPdfBuilder } from '@stynx/pdf/public-payroll';
+import { VeraPdfDockerValidator } from '@stynx/pdf-a-vera-docker';
 
-const builder = new PublicPayrollPdfBuilder({
-  appendEvidence: (input) => appender.embedVerificationHint(input),
+StynxPdfModule.forRoot({
+  pdfAAdapter: new VeraPdfDockerValidator({
+    /* ... */
+  }),
 });
 
-const pdf = await builder.buildPayslip(document);
-const validation = builder.validatePdfAStyle(pdf);
+await pdf.render({
+  tenantId: 't1',
+  template: { id: 'archive', engine: 'html', source: html },
+  data: {},
+  output: { profile: 'pdf-a' },
+});
 ```
 
-The template pack is framework-agnostic. Consumers keep database reads,
-LGPD/legal-basis checks, RBAC/RLS/audit behavior, storage keys, report status
-transitions, and payroll/fiscal reconciliation in their own repositories.
+### Example 3 — fixture backend in tests
 
-## PDF/A
+```ts
+import { createFixturePdfBackend } from '@stynx/pdf';
 
-`output.profile: "pdf-a"` is not silently treated as a regular PDF. The local
-backend throws `PdfProfileUnsupportedError` unless a `PdfAConformanceAdapter` is
-configured. That keeps regulatory archival output explicit and auditable.
+const renderer = new PdfRenderer(createFixturePdfBackend());
+const result = await renderer.render({
+  tenantId: 't',
+  template: { id: 'x', engine: 'fixture', source: '' },
+  data: {},
+});
+// deterministic bytes, no Chromium
+```
 
-The fixed-layout and public-payroll surfaces bundle the assets required for
-PDF/A-2b content generation:
+## Common pitfalls
 
-- Liberation Sans Regular, Liberation Sans Bold, and Liberation Mono Regular
-  under `assets/fonts/`, licensed by `assets/fonts/LICENSE-LIBERATION-FONTS`.
-- sRGB IEC61966-2.1 no-black-scaling ICC profile under `assets/color/`, with
-  redistribution terms in `assets/color/LICENSE-SRGB-ICC`.
+- **Chromium not installed** — `npx playwright install chromium` after adding the package, or the render throws `PdfRenderError` on launch.
+- **`profile: 'pdf-a'` without a configured `pdfAAdapter`** — throws `PdfProfileUnsupportedError` _before_ the render (so you don't pay the Chromium cost on a request that can't succeed). Configure an adapter.
+- **Chromium under Docker resource pressure** — under-resourced containers fail browser launch intermittently. Allocate ≥512MB + `--no-sandbox` where appropriate.
+- **`engine: 'fixture'` with the real backend** — throws `PdfValidationError`. Fixtures require `createFixturePdfBackend()`.
 
-`FixedLayoutDocumentBuilder.save()` embeds subset fonts, deterministic trailer
-IDs, XMP metadata declaring PDF/A-2b, and an sRGB output intent. The evidence
-appender keeps `%%STYNX-PADES-SIGNATURE` byte-scannable but places it before the
-final EOF through an incremental update.
+## Related packages
 
-`validatePdfAStyle()` is a structural helper only. It checks for a PDF header,
-metadata, and font resources; it is not a validator-backed PDF/A conformance
-adapter.
+- [`@stynx/pdf-a`](/docs/packages/pdf-a/) — the PDF/A conformance-adapter contract.
+- [`@stynx/pdf-a-vera-docker`](/docs/packages/pdf-a-vera-docker/) — a veraPDF-Docker-backed adapter implementing that contract.
+- [`@stynx/signature`](/docs/packages/signature/) — sign the rendered PDF.
+- [`@stynx/storage`](/docs/packages/storage/) — store the rendered PDF.
+- [`@stynx/testing`](/docs/packages/testing/) — uses `createFixturePdfBackend()` in test apps.
 
-For validator-backed conformance checks, wire `@stynx/pdf-a` with the reference
-`@stynx/pdf-a-vera-docker` adapter after rendering. See
-[`docs/adopters/pdf-a-validation.md`](../../docs/adopters/pdf-a-validation.md).
+## TypeDoc reference
 
-## Signature Interop
-
-`RenderResult.sha256` is computed after bytes are rendered. That digest is the
-only value that should be passed to `SignatureRequest.documentSha256`.
-
-## PEC and TEAT Migration
-
-PEC report generation can move document creation behind `PdfRenderer` before
-calling `@stynx/signature`. TEAT can use the same renderer for AIT receipts,
-integrity reports, and probative evidence packages without coupling to PEC.
-SGP can wrap `PublicPayrollPdfBuilder` for official payslip and yearly-income
-PDF construction while keeping its product semantics local.
+Full symbol-level API: [`/docs/api-reference/stynx-pdf/`](/docs/api-reference/stynx-pdf/)
