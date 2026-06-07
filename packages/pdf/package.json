@@ -63,7 +63,7 @@
   "devDependencies": {
     "@nestjs/testing": "^11.1.19",
     "@stynx/signature": "workspace:*",
-    "@types/node": "24.12.4",
+    "@types/node": "25.9.2",
     "typescript": "^6.0.3"
   }
 }
