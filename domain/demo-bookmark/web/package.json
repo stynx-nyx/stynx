@@ -13,15 +13,15 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@angular/common": "21.2.15",
-    "@angular/core": "21.2.15",
-    "@angular/router": "21.2.15",
+    "@angular/common": "22.0.0",
+    "@angular/core": "22.0.0",
+    "@angular/router": "22.0.0",
     "@stynx-internal/eslint-config": "workspace:*",
     "@stynx-internal/tsconfig": "workspace:*",
     "@stynx-web/angular": "workspace:*",
     "rxjs": "^7.8.2",
     "typescript": "5.9.3",
     "vitest": "^3",
-    "@angular/platform-browser": "21.2.15"
+    "@angular/platform-browser": "22.0.0"
   }
 }
