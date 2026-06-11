@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Test, type TestingModule } from '@nestjs/testing';
 import { RequestContextMutator, SystemContextRequiredError } from '@stynx/core';
 import { ActorContextMissingError, ReadOnlyViolationError } from '../../src/errors';
@@ -8,7 +7,7 @@ import { createPostgresTestDatabase } from '../support/postgres';
 
 describe('StynxDataModule integration', () => {
 
-  it('configures GUCs, retries serialization failures, and isolates the three pools', async () => {
+  it('configures GUCs, retries serialization failures, and isolates the three pools', { timeout: 120_000 }, async () => {
     const testDatabase = await createPostgresTestDatabase('stynx_data_module');
     let moduleRef: TestingModule | undefined;
 
