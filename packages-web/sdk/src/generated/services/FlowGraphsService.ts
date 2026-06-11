@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+/* eslint-disable */
 import type { CreateFlowEdgeDto } from '../models/CreateFlowEdgeDto';
 import type { CreateFlowGraphDto } from '../models/CreateFlowGraphDto';
 import type { CreateFlowNodeDto } from '../models/CreateFlowNodeDto';

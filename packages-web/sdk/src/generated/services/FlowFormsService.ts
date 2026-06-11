@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+/* eslint-disable */
 import type { CreateFlowFillDto } from '../models/CreateFlowFillDto';
 import type { CreateFlowFormDto } from '../models/CreateFlowFormDto';
 import type { CreateFlowQuestionDto } from '../models/CreateFlowQuestionDto';

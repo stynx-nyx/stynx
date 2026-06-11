@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+/* eslint-disable */
 import type { EnsureFlowRunDto } from '../models/EnsureFlowRunDto';
 import type { JsonValue } from '../models/JsonValue';
 import type { ProblemDetails } from '../models/ProblemDetails';

@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+/* eslint-disable */
 import type { ProblemDetails } from '../models/ProblemDetails';
 import type { TenantOverrideUpdateInput } from '../models/TenantOverrideUpdateInput';
 import type { CancelablePromise } from '../core/CancelablePromise';

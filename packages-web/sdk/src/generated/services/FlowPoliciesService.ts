@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+/* eslint-disable */
 import type { CreateFlowPolicyRuleDto } from '../models/CreateFlowPolicyRuleDto';
 import type { CreateFlowPolicySetDto } from '../models/CreateFlowPolicySetDto';
 import type { FlowJsonObject } from '../models/FlowJsonObject';

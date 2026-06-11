@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+/* eslint-disable */
 import type { FlowDecisionPolicy } from './FlowDecisionPolicy';
 import type { FlowJsonObject } from './FlowJsonObject';
 import type { FlowNodeKind } from './FlowNodeKind';

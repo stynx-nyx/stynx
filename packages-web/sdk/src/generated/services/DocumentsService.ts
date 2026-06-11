@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+/* eslint-disable */
 import type { CompleteDocumentDto } from '../models/CompleteDocumentDto';
 import type { CreateDocumentDto } from '../models/CreateDocumentDto';
 import type { JsonValue } from '../models/JsonValue';

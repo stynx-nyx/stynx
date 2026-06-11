@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+/* eslint-disable */
 import type { CreateFlowAgentRuleDto } from '../models/CreateFlowAgentRuleDto';
 import type { CreateFlowNodeFormRuleDto } from '../models/CreateFlowNodeFormRuleDto';
 import type { FlowJsonObject } from '../models/FlowJsonObject';

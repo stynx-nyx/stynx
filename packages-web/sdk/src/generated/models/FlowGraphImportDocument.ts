@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+/* eslint-disable */
 import type { FlowGraphImportEdge } from './FlowGraphImportEdge';
 import type { FlowGraphImportNode } from './FlowGraphImportNode';
 import type { FlowJsonObject } from './FlowJsonObject';

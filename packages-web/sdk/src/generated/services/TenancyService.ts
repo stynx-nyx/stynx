@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+/* eslint-disable */
 import type { ArchiveTenantResult } from '../models/ArchiveTenantResult';
 import type { ProblemDetails } from '../models/ProblemDetails';
 import type { ProvisionTenantInput } from '../models/ProvisionTenantInput';

@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+/* eslint-disable */
 import type { BulkFlowAnswerWriteRequestDto } from '../models/BulkFlowAnswerWriteRequestDto';
 import type { CreateFlowFillDto } from '../models/CreateFlowFillDto';
 import type { CreateFlowWaiverDto } from '../models/CreateFlowWaiverDto';

@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+/* eslint-disable */
 import type { DemoTenant } from '../models/DemoTenant';
 import type { DevLoginBody } from '../models/DevLoginBody';
 import type { JsonValue } from '../models/JsonValue';

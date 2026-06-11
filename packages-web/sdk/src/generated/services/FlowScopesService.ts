@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+/* eslint-disable */
 import type { CreateFlowScopeDto } from '../models/CreateFlowScopeDto';
 import type { FlowJsonObject } from '../models/FlowJsonObject';
 import type { ProblemDetails } from '../models/ProblemDetails';
