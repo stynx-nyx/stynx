@@ -1,4 +1,5 @@
 // C-4 Session T2 — BookmarkService wired to @stynx/data
+/* eslint-disable @angular-eslint/prefer-inject */
 //
 // Replaces the S3-2 NotImplementedException stubs. Follows the stynx
 // pattern from reference/api/src/sample/reference-sample.service.ts:
@@ -9,7 +10,7 @@ import { randomUUID } from 'node:crypto';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { RequestContext } from '@stynx/core';
 import { Database } from '@stynx/data';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, isNull } from 'drizzle-orm';
 import { bookmarks } from '../schema';
 import type { CreateBookmarkDto } from '../dto/create-bookmark.dto';
 import type { UpdateBookmarkDto } from '../dto/update-bookmark.dto';
@@ -32,7 +33,7 @@ export class BookmarkService {
         trx
           .select()
           .from(bookmarks)
-          .where(eq(bookmarks.tenantId, this.requireTenantId()))
+          .where(and(eq(bookmarks.tenantId, this.requireTenantId()), isNull(bookmarks.deletedAt)))
           .orderBy(desc(bookmarks.createdAt))
           .limit(clampLimit(limit)),
       { role: 'reader', readonly: true },
@@ -45,7 +46,7 @@ export class BookmarkService {
         trx
           .select()
           .from(bookmarks)
-          .where(and(eq(bookmarks.id, id), eq(bookmarks.tenantId, this.requireTenantId())))
+          .where(and(eq(bookmarks.id, id), eq(bookmarks.tenantId, this.requireTenantId()), isNull(bookmarks.deletedAt)))
           .limit(1),
       { role: 'reader', readonly: true },
     );
@@ -102,8 +103,9 @@ export class BookmarkService {
     return this.database.tx(async (trx) => {
       const tenantId = this.requireTenantId();
       const result = await trx
-        .delete(bookmarks)
-        .where(and(eq(bookmarks.id, id), eq(bookmarks.tenantId, tenantId)))
+        .update(bookmarks)
+        .set({ deletedAt: new Date(), updatedAt: new Date() })
+        .where(and(eq(bookmarks.id, id), eq(bookmarks.tenantId, tenantId), isNull(bookmarks.deletedAt)))
         .returning({ id: bookmarks.id });
       if (result.length === 0) {
         throw new NotFoundException(`BOOKMARK_NOT_FOUND:${id}`);

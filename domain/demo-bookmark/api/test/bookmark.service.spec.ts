@@ -94,4 +94,29 @@ describe('BookmarkService (per-task-DB integration)', () => {
     });
     expect((stillThere as { title: string | null }).title).toBe('B scoping');
   });
+
+  it('remove soft-deletes active rows and allows URL reuse (F-20)', async () => {
+    const url = 'https://soft-delete.example/';
+    const created = await fixture.runAs(fixture.tenantA, fixture.userA, async (db) => {
+      const ctx = fixture.module.get<RequestContext>(RequestContext);
+      const svc = new BookmarkService(db, ctx);
+      return svc.create({ url, title: 'Before delete', notes: null });
+    });
+    const id = (created as { id: string }).id;
+
+    await fixture.runAs(fixture.tenantA, fixture.userA, async (db) => {
+      const ctx = fixture.module.get<RequestContext>(RequestContext);
+      const svc = new BookmarkService(db, ctx);
+      await expect(svc.remove(id)).resolves.toEqual({ status: 'soft-deleted', id });
+      await expect(svc.findOne(id)).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    const recreated = await fixture.runAs(fixture.tenantA, fixture.userA, async (db) => {
+      const ctx = fixture.module.get<RequestContext>(RequestContext);
+      const svc = new BookmarkService(db, ctx);
+      return svc.create({ url, title: 'After delete', notes: null });
+    });
+    expect((recreated as { id: string }).id).not.toBe(id);
+    expect((recreated as { title: string | null }).title).toBe('After delete');
+  });
 });

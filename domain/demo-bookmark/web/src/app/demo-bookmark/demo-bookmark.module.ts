@@ -23,8 +23,13 @@ const routes: Routes = [
 ];
 
 @NgModule({
-  declarations: [BookmarkListComponent, BookmarkDetailComponent],
-  imports: [CommonModule, HttpClientModule, RouterModule.forChild(routes)],
+  imports: [
+    CommonModule,
+    HttpClientModule,
+    RouterModule.forChild(routes),
+    BookmarkListComponent,
+    BookmarkDetailComponent,
+  ],
   providers: [BookmarkService],
 })
 export class DemoBookmarkFeatureModule {}

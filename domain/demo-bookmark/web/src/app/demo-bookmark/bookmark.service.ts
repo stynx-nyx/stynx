@@ -5,7 +5,7 @@
 // services authored in T2.
 
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 export interface Bookmark {
@@ -36,8 +36,7 @@ export interface DeleteResult {
 @Injectable({ providedIn: 'root' })
 export class BookmarkService {
   private readonly base = '/api/demo/bookmark/bookmark';
-
-  constructor(private readonly http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   list(limit?: number): Observable<Bookmark[]> {
     const params: Record<string, string> = {};

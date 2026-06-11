@@ -6,7 +6,7 @@
 
 import { sql } from 'drizzle-orm';
 import { check, pgSchema, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
-import { softDeletable, tenancySchemaTables, authSchemaTables } from '@stynx/data';
+import { softDeletable, tenants, users } from '@stynx/data';
 
 export const demoSchema = pgSchema('demo');
 
@@ -21,13 +21,14 @@ export const bookmarks = softDeletable(
     'demo__bookmark_bookmark',
     {
       id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-      tenantId: uuid('tenant_id').notNull().references(() => tenancySchemaTables.tenants.id),
-      ownerId: uuid('owner_id').notNull().references(() => authSchemaTables.users.id),
+      tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
+      ownerId: uuid('owner_id').notNull().references(() => users.id),
       url: text('url').notNull(),
       title: varchar('title', { length: 256 }),
       notes: text('notes'),
       createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
       updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+      deletedAt: timestamp('deleted_at', { withTimezone: true }),
     },
     (table) => ({
       urlLengthCheck: check(

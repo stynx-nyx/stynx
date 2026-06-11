@@ -1,4 +1,5 @@
 // C-4 Session T2 — BookmarkTagService wired to @stynx/data
+/* eslint-disable @angular-eslint/prefer-inject */
 //
 // Replaces the S3-2 NotImplementedException stubs. Tags are immutable
 // post-creation per the blueprint; only list/create/delete operations
@@ -7,7 +8,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { RequestContext } from '@stynx/core';
 import { Database } from '@stynx/data';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { bookmarks, bookmarkTags } from '../schema';
 import type { CreateBookmarkTagDto } from '../dto/create-bookmark-tag.dto';
 
@@ -31,17 +32,14 @@ export class BookmarkTagService {
           .from(bookmarks)
           .where(
             bookmarkId !== undefined
-              ? and(eq(bookmarks.tenantId, tenantId), eq(bookmarks.id, bookmarkId))
-              : eq(bookmarks.tenantId, tenantId),
+              ? and(eq(bookmarks.tenantId, tenantId), eq(bookmarks.id, bookmarkId), isNull(bookmarks.deletedAt))
+              : and(eq(bookmarks.tenantId, tenantId), isNull(bookmarks.deletedAt)),
           );
         if (tenantBookmarks.length === 0) return [];
         // softDeletable wrapper obscures column inference here; cast explicitly.
         const ids = tenantBookmarks.map((b) => (b as { id: string }).id);
         if (bookmarkId !== undefined) {
-          return trx
-            .select()
-            .from(bookmarkTags)
-            .where(eq(bookmarkTags.bookmarkId, bookmarkId));
+          return trx.select().from(bookmarkTags).where(eq(bookmarkTags.bookmarkId, bookmarkId));
         }
         const allTags = (await trx.select().from(bookmarkTags)) as Array<{ bookmarkId: string; tag: string; createdAt: Date }>;
         return allTags.filter((t) => ids.includes(t.bookmarkId));
@@ -57,7 +55,7 @@ export class BookmarkTagService {
       const parent = await trx
         .select()
         .from(bookmarks)
-        .where(and(eq(bookmarks.id, dto.bookmark_id), eq(bookmarks.tenantId, tenantId)))
+        .where(and(eq(bookmarks.id, dto.bookmark_id), eq(bookmarks.tenantId, tenantId), isNull(bookmarks.deletedAt)))
         .limit(1);
       if (parent.length === 0) {
         throw new NotFoundException(`BOOKMARK_NOT_FOUND:${dto.bookmark_id}`);
@@ -82,7 +80,7 @@ export class BookmarkTagService {
       const parent = await trx
         .select()
         .from(bookmarks)
-        .where(and(eq(bookmarks.id, bookmarkId), eq(bookmarks.tenantId, tenantId)))
+        .where(and(eq(bookmarks.id, bookmarkId), eq(bookmarks.tenantId, tenantId), isNull(bookmarks.deletedAt)))
         .limit(1);
       if (parent.length === 0) {
         throw new NotFoundException(`BOOKMARK_NOT_FOUND:${bookmarkId}`);

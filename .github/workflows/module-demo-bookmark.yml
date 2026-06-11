@@ -26,6 +26,8 @@ jobs:
       - run: pnpm --filter ./domain/demo-bookmark/api run build
       - run: pnpm --filter ./domain/demo-bookmark/api run test
       - run: pnpm --filter ./domain/demo-bookmark/api run lint
+      - run: pnpm --filter ./domain/demo-bookmark/web run build
+      - run: pnpm --filter ./domain/demo-bookmark/web run test
 
   security:
     runs-on: ubuntu-latest
