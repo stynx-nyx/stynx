@@ -4,7 +4,6 @@ import { RequestContextMissingError, RequestContextMutationError } from './error
 import type { SystemExecutionContext } from './database';
 import { generateRequestId } from './request-id';
 
-/* eslint-disable @angular-eslint/prefer-inject */
 
 const REQUEST_CONTEXT_KEY = Symbol('stynx.request-context');
 const SYSTEM_CONTEXT_KEY = Symbol('stynx.system-context');

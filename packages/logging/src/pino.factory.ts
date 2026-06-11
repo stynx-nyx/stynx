@@ -3,7 +3,6 @@ import pino, { destination, transport, type DestinationStream, type Logger, type
 import { RequestContext } from '@stynx/core';
 import type { StynxLoggingOptions } from './tokens';
 
-/* eslint-disable @angular-eslint/prefer-inject */
 
 export const DEFAULT_REDACT_PATHS = [
   // Stryker disable next-line StringLiteral: exported redaction contract is asserted directly; empty-path mutations are equivalent once pino filters them.

@@ -1,5 +1,4 @@
 // C-4 Session T2 — BookmarkTagService wired to @stynx/data
-/* eslint-disable @angular-eslint/prefer-inject */
 //
 // Replaces the S3-2 NotImplementedException stubs. Tags are immutable
 // post-creation per the blueprint; only list/create/delete operations

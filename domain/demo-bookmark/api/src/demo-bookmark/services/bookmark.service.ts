@@ -1,5 +1,4 @@
 // C-4 Session T2 — BookmarkService wired to @stynx/data
-/* eslint-disable @angular-eslint/prefer-inject */
 //
 // Replaces the S3-2 NotImplementedException stubs. Follows the stynx
 // pattern from reference/api/src/sample/reference-sample.service.ts:

@@ -26,7 +26,6 @@ import type {
   IdempotencyStoredEntry,
 } from './types';
 
-/* eslint-disable @angular-eslint/prefer-inject */
 
 interface CachedResponse {
   body: unknown;
