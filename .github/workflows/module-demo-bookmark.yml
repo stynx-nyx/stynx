@@ -2,6 +2,7 @@
 name: module-demo-bookmark
 
 on:
+  workflow_dispatch:
   push:
     paths:
       - 'domain/demo-bookmark/**'
