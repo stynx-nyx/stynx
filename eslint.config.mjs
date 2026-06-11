@@ -6,6 +6,13 @@ import globals from 'globals';
 import tsParser from '@typescript-eslint/parser';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
 
+// Angular sources live only in these trees; backend NestJS packages use
+// constructor injection and must NOT receive @angular-eslint rules here.
+// The canonical per-package gates are tools/eslint-config/{nest,lib,...}.mjs;
+// this root config exists for bare `eslint` consumers (lint-staged hook, IDE)
+// and must stay in agreement with those gates (see R17 closeout, c5bc31357).
+const angularFiles = ['packages-web/**/*.ts', 'reference/web/**/*.ts', 'domain/*/web/**/*.ts'];
+
 export default [
   {
     ignores: [
@@ -33,18 +40,25 @@ export default [
     },
     plugins: {
       '@typescript-eslint': tsPlugin,
+    },
+    rules: {
+      ...js.configs.recommended.rules,
+      ...tsPlugin.configs.recommended.rules,
+      'no-undef': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unsafe-function-type': 'off',
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+    },
+  },
+  {
+    files: angularFiles,
+    plugins: {
       '@angular-eslint': angularPlugin,
       '@angular-eslint/template': angularTemplatePlugin,
     },
     processor: angularTemplatePlugin.processors['extract-inline-html'],
     rules: {
-      ...js.configs.recommended.rules,
-      ...tsPlugin.configs.recommended.rules,
       ...angularPlugin.configs.recommended.rules,
-      'no-undef': 'off',
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unsafe-function-type': 'off',
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       '@angular-eslint/component-class-suffix': 'error',
       '@angular-eslint/no-input-rename': 'error',
       '@angular-eslint/no-output-on-prefix': 'error',
@@ -53,7 +67,7 @@ export default [
     },
   },
   {
-    files: ['**/*.html'],
+    files: ['packages-web/**/*.html', 'reference/web/**/*.html', 'domain/*/web/**/*.html'],
     languageOptions: {
       parser: angularTemplateParser,
     },
