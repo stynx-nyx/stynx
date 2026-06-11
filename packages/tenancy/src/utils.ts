@@ -1,4 +1,7 @@
 import { randomBytes } from 'node:crypto';
+import { headerToString } from '@stynx/contracts';
+
+export { headerToString } from '@stynx/contracts';
 
 export const OPTIONAL_TENANCY_PATHS = [
   /^\/(?:healthz|readyz|metrics|info)$/u,
@@ -9,16 +12,6 @@ export const OPTIONAL_TENANCY_PATHS = [
   /^\/_reference\/(?:demo-tenants|dev-login|auth-verify)$/u,
   /^\/_probes\/(?:data-tx|ratelimit|idempotency)$/u,
 ];
-
-export function headerToString(value: unknown): string | undefined {
-  if (typeof value === 'string') {
-    return value;
-  }
-  if (Array.isArray(value) && typeof value[0] === 'string') {
-    return value[0];
-  }
-  return undefined;
-}
 
 export function parseBearerTenantClaims(rawAuthorization: unknown): { sub?: string; tenantId?: string } | null {
   const header = headerToString(rawAuthorization)?.trim();

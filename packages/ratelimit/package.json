@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@stynx/auth": "workspace:*",
+    "@stynx/contracts": "workspace:*",
     "@stynx/data": "workspace:*",
     "redis": "^5.12.1"
   },

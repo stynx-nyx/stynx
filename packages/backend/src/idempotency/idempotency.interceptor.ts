@@ -8,6 +8,7 @@ import {
   Optional,
   ServiceUnavailableException,
 } from '@nestjs/common';
+import { headerToString } from '@stynx/contracts';
 import { firstValueFrom, from, Observable, of } from 'rxjs';
 import type { RequestLike } from '../common/request-context';
 import type {
@@ -56,12 +57,6 @@ interface HttpResponseLike {
   statusCode?: number;
   setHeader(name: string, value: string): void;
   status(statusCode: number): unknown;
-}
-
-function headerToString(value: unknown): string | undefined {
-  if (typeof value === 'string') return value;
-  if (Array.isArray(value) && typeof value[0] === 'string') return value[0];
-  return undefined;
 }
 
 function normalizeMethod(method: unknown): string {

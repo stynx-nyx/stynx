@@ -13,6 +13,7 @@ import type {
   TenantResolver,
   TokenVerifier,
 } from '@stynx/contracts';
+import { headerToString } from '@stynx/contracts';
 import { DefaultPrincipalMapper } from './default-principal-mapper';
 import {
   STYNX_PRINCIPAL_MAPPER,
@@ -21,12 +22,6 @@ import {
   STYNX_TOKEN_VERIFIER,
 } from './constants';
 import type { RequestLike } from '../common/request-context';
-
-function headerToString(value: unknown): string | undefined {
-  if (typeof value === 'string') return value;
-  if (Array.isArray(value) && typeof value[0] === 'string') return value[0];
-  return undefined;
-}
 
 @Injectable()
 export class AuthContextGuard implements CanActivate {

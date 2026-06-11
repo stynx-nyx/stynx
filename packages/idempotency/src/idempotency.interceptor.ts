@@ -11,6 +11,7 @@ import {
   HttpException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { headerToString } from '@stynx/contracts';
 import { firstValueFrom, from, type Observable } from 'rxjs';
 import { createHash, randomUUID } from 'node:crypto';
 import { STYNX_IDEMPOTENCY_BACKEND, STYNX_IDEMPOTENCY_METRICS, STYNX_IDEMPOTENCY_OPTIONS, STYNX_IDEMPOTENCY_STORE, STYNX_IDEMPOTENT_ROUTE, STYNX_NO_IDEMPOTENT_ROUTE } from './constants';
@@ -65,13 +66,6 @@ interface HttpResponseLike {
 
 function setLookupTimingHeader(response: HttpResponseLike, durationMs: number): void {
   response.setHeader('X-Stynx-Idempotency-Lookup-Ms', durationMs.toFixed(3));
-}
-
-function headerToString(value: unknown): string | undefined {
-  if (typeof value === 'string') return value;
-  // Stryker disable next-line ConditionalExpression: array-header behavior is covered through canonical lower-case array header tests.
-  if (Array.isArray(value) && typeof value[0] === 'string') return value[0];
-  return undefined;
 }
 
 function normalizeMethod(method: unknown): string {

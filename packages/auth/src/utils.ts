@@ -1,5 +1,7 @@
 import { createHash, createPublicKey, verify as verifySignature } from 'node:crypto';
 
+export { headerToString } from '@stynx/contracts';
+
 export function base64UrlEncode(value: string | Buffer): string {
   return Buffer.from(value)
     .toString('base64')
@@ -78,16 +80,6 @@ export function expandPermissionWildcards(grants: string[], universe: string[]):
   }
 
   return [...expanded].sort();
-}
-
-export function headerToString(value: unknown): string | undefined {
-  if (typeof value === 'string') {
-    return value;
-  }
-  if (Array.isArray(value) && typeof value[0] === 'string') {
-    return value[0];
-  }
-  return undefined;
 }
 
 function escapeRegex(value: string): string {

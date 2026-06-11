@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { STYNX_SYSTEM_ROUTE } from '@stynx/auth';
+import { headerToString } from '@stynx/contracts';
 import { Inject, Optional } from '@nestjs/common';
 import { STYNX_RATE_LIMIT_METRICS, STYNX_RATE_LIMIT_OPTIONS, STYNX_RATE_LIMIT_POLICY, STYNX_RATE_LIMIT_ROUTE, STYNX_RATE_LIMIT_STORE } from './constants';
 import type { RequestLike } from './request-context';
@@ -35,16 +36,6 @@ function toUserId(request: RequestLike): string | undefined {
     ?? request.user?.id
     ?? request.stynxClaims?.sub
     ?? parseStynxAccessToken(request.headers.authorization)?.sub;
-}
-
-function headerToString(value: unknown): string | undefined {
-  if (typeof value === 'string') {
-    return value;
-  }
-  if (Array.isArray(value) && typeof value[0] === 'string') {
-    return value[0];
-  }
-  return undefined;
 }
 
 function parseStynxAccessToken(rawAuthorization: unknown): { sub?: string; tenantId?: string } | null {

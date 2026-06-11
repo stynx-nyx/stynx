@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { configureSecurityHeaders } from './security-headers';
 
 function resolveCorsOrigins(): string[] {
   return (process.env.STYNX_REFERENCE_WEB_ORIGINS ?? 'http://127.0.0.1:3100,http://localhost:3100')
@@ -12,6 +13,7 @@ function resolveCorsOrigins(): string[] {
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  configureSecurityHeaders(app);
   app.enableCors({
     origin: resolveCorsOrigins(),
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],

@@ -213,6 +213,9 @@ importers:
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(pg@8.21.0)
+      helmet:
+        specifier: ^8.2.0
+        version: 8.2.0
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
@@ -13246,6 +13249,13 @@ packages:
         integrity: sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==,
       }
     hasBin: true
+
+  helmet@8.2.0:
+    resolution:
+      {
+        integrity: sha512-XD7Vqg8B182Zgwe9kiy6y8/Fqv0CT3KaeJqjEbT2M2nMeD1Ud9PmmqV9KskOZy6MdZ8sz1H0+c91x2Uj4U+dbA==,
+      }
+    engines: { node: '>=18.0.0' }
 
   help-me@5.0.0:
     resolution:
@@ -28681,6 +28691,8 @@ snapshots:
       space-separated-tokens: 2.0.2
 
   he@1.2.0: {}
+
+  helmet@8.2.0: {}
 
   help-me@5.0.0: {}
 

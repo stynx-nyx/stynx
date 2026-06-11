@@ -39,6 +39,18 @@ network. The compose API service sets `NODE_ENV=development` and
 available to local smoke and k6 runs; the Docker image itself keeps
 `NODE_ENV=production` by default.
 
+## Security Headers
+
+The reference API wires Helmet in `src/main.ts` before CORS so adopters copy a
+secure bootstrap by default. Its CSP is API-oriented: `default-src 'none'` with
+`frame-ancestors 'none'`, because this service returns JSON and does not serve a
+browser UI. It also emits `X-Content-Type-Options: nosniff`,
+`X-Frame-Options: DENY`, and `Referrer-Policy: no-referrer`.
+
+HSTS is enabled only for production-like environments (`NODE_ENV=production`,
+`STYNX_ENVIRONMENT=production`, or `STYNX_ENVIRONMENT=prod`). Local HTTP
+development must not cache HSTS for `localhost`.
+
 ## Tests
 
 ```bash
