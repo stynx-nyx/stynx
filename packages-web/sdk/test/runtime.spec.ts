@@ -501,4 +501,13 @@ describe('@stynx-web/sdk runtime helpers', () => {
       message: 'Request failed (503)',
     } satisfies Partial<ApiClientError>);
   });
+
+  it('surfaces malformed JSON success bodies instead of hiding parser failures', async () => {
+    const client = new StynxApiClient({
+      baseUrl: 'https://api.example.test',
+      fetchFn: async () => response(200, '{"broken"', { 'content-type': 'application/json' }),
+    });
+
+    await expect(client.get('/malformed')).rejects.toBeInstanceOf(SyntaxError);
+  });
 });

@@ -786,5 +786,13 @@ describe('@stynx-web/sdk transport', () => {
       expect((e as StynxSdkError).message).toBe('Request failed with status 500');
       expect((e as StynxSdkError).code).toBe(undefined);
     });
+
+    it('preserves malformed non-json envelopes as responseBody on generic errors', async () => {
+      const e = await callWith(503, '<html>offline</html>');
+      expect(e).toBeInstanceOf(StynxSdkError);
+      expect((e as StynxSdkError).status).toBe(503);
+      expect((e as StynxSdkError).message).toBe('Request failed with status 503');
+      expect((e as StynxSdkError).responseBody).toBe('<html>offline</html>');
+    });
   });
 });
