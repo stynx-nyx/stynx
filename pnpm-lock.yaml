@@ -213,9 +213,6 @@ importers:
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(pg@8.21.0)
-      helmet:
-        specifier: ^8.2.0
-        version: 8.2.0
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
@@ -1363,6 +1360,9 @@ importers:
       '@nestjs/core':
         specifier: ^11.1.19
         version: 11.1.21(@nestjs/common@11.1.21(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.21)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@stynx/contracts':
+        specifier: workspace:*
+        version: link:../contracts
       '@stynx/data':
         specifier: workspace:*
         version: link:../data
@@ -1584,6 +1584,9 @@ importers:
       '@stynx/auth':
         specifier: workspace:*
         version: link:../auth
+      '@stynx/contracts':
+        specifier: workspace:*
+        version: link:../contracts
       '@stynx/data':
         specifier: workspace:*
         version: link:../data
@@ -1774,6 +1777,9 @@ importers:
       '@nestjs/core':
         specifier: ^11.1.19
         version: 11.1.21(@nestjs/common@11.1.21(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.21)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@stynx/contracts':
+        specifier: workspace:*
+        version: link:../contracts
       '@stynx/core':
         specifier: workspace:*
         version: link:../core
@@ -1926,6 +1932,9 @@ importers:
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(pg@8.21.0)
+      helmet:
+        specifier: ^8.2.0
+        version: 8.2.0
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2

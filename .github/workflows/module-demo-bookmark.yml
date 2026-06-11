@@ -20,9 +20,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - uses: ./.github/actions/setup-stynx
         with:
-          node-version: '20'
+          node-version: '24'
       - run: pnpm --filter ./domain/demo-bookmark/api run build
       - run: pnpm --filter ./domain/demo-bookmark/api run test
       - run: pnpm --filter ./domain/demo-bookmark/api run lint
@@ -32,6 +33,7 @@ jobs:
   security:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - uses: ./.github/actions/setup-stynx
         with:
           install: 'false'
