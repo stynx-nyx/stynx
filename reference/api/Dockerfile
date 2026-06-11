@@ -10,7 +10,8 @@ ENV CI=true \
 RUN corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.json ./
-COPY docs/api ./docs/api
+COPY docs/framework/api ./docs/framework/api
+COPY docs/framework/contracts ./docs/framework/contracts
 COPY tools ./tools
 COPY packages ./packages
 COPY packages-web ./packages-web
