@@ -80,7 +80,9 @@ runs:
       id: pnpm-store
       shell: bash
       run: |
-        echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+        STORE_PATH="$(pnpm store path --silent)"
+        mkdir -p "$STORE_PATH"
+        echo "path=$STORE_PATH" >> "$GITHUB_OUTPUT"
 
     - name: Cache pnpm store
       if: inputs.install == 'true'

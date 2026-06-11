@@ -20,6 +20,25 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: stynx
+          POSTGRES_USER: stynx
+          POSTGRES_PASSWORD: stynx
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U stynx -d stynx"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      STYNX_TEST_PG_HOST: 127.0.0.1
+      STYNX_TEST_PG_PORT: '5432'
+      STYNX_TEST_PG_USER: stynx
+      STYNX_TEST_PG_PASSWORD: stynx
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - uses: ./.github/actions/setup-stynx
