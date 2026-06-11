@@ -133,6 +133,20 @@ stynx assumes the following actors with distinct authority:
 **Tests:** `packages/rate-limit/test/rate-limit.guard.spec.ts`, `_probes/ratelimit` endpoint runtime smoke.
 **Residual risk:** Distributed attack across many tenants can still saturate shared resources; needs upstream rate limiting (CDN / WAF) for production deployments.
 
+## Intentional algorithm choices
+
+Two scanner-visible weak algorithms are intentional and bounded:
+
+- `reference/api/src/app.module.ts` uses PostgreSQL `md5($3)` for reference-app
+  migration checksums. This is an integrity marker for locally stored migration
+  text, not a password hash, signature, MAC, or adversarial trust boundary.
+  Migrate it if migrations are accepted from untrusted sources or if the
+  checksum begins authorizing security-sensitive behavior.
+- `packages/signature/src/xmldsig/verify.ts` supports SHA-1 for XMLDSig
+  verification because legacy XMLDSig profiles can require it. The verifier also
+  supports SHA-256 and SHA-512. Remove SHA-1 support for a deployment profile
+  only when that profile no longer accepts standard-mandated SHA-1 signatures.
+
 ## Out-of-scope threats
 
 - **Side-channel attacks** (timing, cache, power analysis): not in scope; assume trusted compute environment.

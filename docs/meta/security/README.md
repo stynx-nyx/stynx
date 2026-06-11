@@ -12,6 +12,9 @@ operator runbooks.
 - [Security release policy](security-release-policy.md) — SBOM, license,
   secret-scanning, provenance, dependency-review, and vulnerability remediation
   lane.
+- [Session signing key rotation runbook](key-rotation-runbook.md) — rotation
+  triggers, zero-downtime choreography, verification, and rollback for
+  `@stynx/sessions` RSA-2048 signing keys.
 - [SBOM](sbom.cdx.json) — generated CycloneDX inventory. Refresh with
   `pnpm security:sbom` and verify with `pnpm security:sbom:check`.
 - [License policy](license-policy.json) — allow/deny list for direct external
