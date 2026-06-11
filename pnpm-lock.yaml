@@ -13262,7 +13262,7 @@ packages:
   helmet@8.2.0:
     resolution:
       {
-        integrity: sha512-XD7Vqg8B182Zgwe9kiy6y8/Fqv0CT3KaeJqjEbT2M2nMeD1Ud9PmmqV9KskOZy6MdZ8sz1H0+c91x2Uj4U+dbA==,
+        integrity: sha512-DRgTIUgnWcJ62KyarxxziuqYxKGnR6Rgg19BlbucN/dpmJbl1XOit6qvoOX0ZT+HhWe5OUVhU/a1zpGyc1xA0Q==,
       }
     engines: { node: '>=18.0.0' }
 
