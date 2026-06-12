@@ -69,6 +69,9 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number | undefined
   }
 }
 
+/**
+ * Process-local idempotency store for adapter tests and lightweight consumers.
+ */
 export class InMemoryIdempotencyStore<TRes> implements IdempotencyStore<TRes> {
   private readonly values = new Map<string, TRes>();
 
@@ -81,6 +84,9 @@ export class InMemoryIdempotencyStore<TRes> implements IdempotencyStore<TRes> {
   }
 }
 
+/**
+ * Process-local circuit breaker that tracks failures per integration key.
+ */
 export class InMemoryCircuitBreaker implements CircuitBreaker {
   private readonly snapshots = new Map<string, CircuitSnapshot>();
 
@@ -136,6 +142,9 @@ export class InMemoryCircuitBreaker implements CircuitBreaker {
   }
 }
 
+/**
+ * Executes integration calls with retry, timeout, idempotency, and circuit-breaker controls.
+ */
 export class IntegrationAdapter<TReq, TRaw, TRes> {
   private readonly retryPolicy: RetryPolicy;
   private readonly circuitBreaker: CircuitBreaker;

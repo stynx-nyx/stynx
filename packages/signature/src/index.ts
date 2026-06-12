@@ -19,6 +19,9 @@ export * from './tokens';
 export * from './types';
 export * from './xmldsig';
 
+/**
+ * Creates a deterministic in-memory signature backend for tests and local demos.
+ */
 export function createMockSignatureBackend(now: () => Date = () => new Date()): SignatureBackend {
   return {
     async sign(request) {

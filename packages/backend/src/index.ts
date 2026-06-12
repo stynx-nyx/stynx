@@ -38,6 +38,9 @@ export * from './db-context/db-context.module';
 export * from './storage/constants';
 export * from './storage/storage.module';
 
+/**
+ * Idempotency injection tokens and route metadata helpers.
+ */
 export {
   STYNX_IDEMPOTENCY_BACKEND,
   STYNX_IDEMPOTENCY_METRICS,
@@ -46,6 +49,9 @@ export {
   STYNX_IDEMPOTENT_ROUTE,
   STYNX_NO_IDEMPOTENT_ROUTE,
 } from '@stynx/idempotency';
+/**
+ * Idempotency module, stores, interceptors, metrics, and public contracts.
+ */
 export {
   DatabaseIdempotencyStore,
   IdempotencyInterceptor,
@@ -62,6 +68,9 @@ export {
   type StynxIdempotencyModuleOptions,
 } from '@stynx/idempotency';
 
+/**
+ * Rate-limit injection tokens and route metadata helpers.
+ */
 export {
   STYNX_RATE_LIMIT_METRICS,
   STYNX_RATE_LIMIT_OPTIONS,
@@ -69,6 +78,9 @@ export {
   STYNX_RATE_LIMIT_ROUTE,
   STYNX_RATE_LIMIT_STORE,
 } from '@stynx/ratelimit';
+/**
+ * Rate-limit module, guards, stores, metrics, and public contracts.
+ */
 export {
   DatabaseRateLimitPolicyResolver,
   InMemoryRateLimitMetrics,

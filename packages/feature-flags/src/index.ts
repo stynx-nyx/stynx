@@ -64,6 +64,9 @@ function resolveDefinition(
   };
 }
 
+/**
+ * Feature flag provider backed by an in-memory flag set.
+ */
 export class InMemoryFeatureFlagProvider implements FeatureFlagProvider {
   constructor(private readonly flagSet: FlagSet = { flags: {} }) {}
 
@@ -73,6 +76,9 @@ export class InMemoryFeatureFlagProvider implements FeatureFlagProvider {
   }
 }
 
+/**
+ * Feature flag provider that loads definitions from a JSON file per evaluation.
+ */
 export class JsonFileFeatureFlagProvider implements FeatureFlagProvider {
   constructor(private readonly path: string) {}
 
@@ -84,6 +90,9 @@ export class JsonFileFeatureFlagProvider implements FeatureFlagProvider {
   }
 }
 
+/**
+ * Service facade for boolean and variant feature flag evaluations.
+ */
 export class FeatureFlagsService {
   constructor(private readonly provider: FeatureFlagProvider = new InMemoryFeatureFlagProvider()) {}
 
