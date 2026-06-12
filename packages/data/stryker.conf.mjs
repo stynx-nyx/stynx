@@ -7,6 +7,9 @@ export default createStrykerConfig({
   vitestConfig: './vitest.stryker.config.ts',
   mutate: [
     'src/database.ts',
+    'src/internal/archive-relations.ts',
+    'src/internal/archive-restore.ts',
+    'src/internal/soft-delete-cascade.ts',
     'src/query-helpers.ts',
     'src/transaction.ts',
   ],
