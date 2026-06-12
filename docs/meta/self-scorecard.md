@@ -6,7 +6,7 @@ last_built_at: 2026-05-20T18:40:28.917Z
 
 # Self-scorecard
 
-> DEVAI applies to itself per [Constitution Article 36](../framework/constitution.md). This page is the substrate × transversal grid with current verdicts — the framework's own accountability surface.
+> DEVAI applies to itself per Constitution Article 36. This page is the substrate × transversal grid with current verdicts — the framework's own accountability surface.
 
 **Source:** `skill-output` (`.devai/state/skills/SKILL-compute-scorecard/2026-05-20T17-08-43-386Z.json`)
 **Snapshot ID:** `SC-20260520T170843-001`
@@ -26,5 +26,5 @@ last_built_at: 2026-05-20T18:40:28.917Z
 ## See also
 
 - [Aspect grid](../framework/aspect-grid.md) — which sensor scores each cell (without verdicts).
-- [Scorecard](../framework/scorecard.md) — verdict semantics + thresholds.
+- `scorecard.md` — verdict semantics + thresholds.
 - [Test matrix](test-matrix.md) — DEVAI's own current suite measurements.

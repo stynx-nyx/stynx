@@ -5,7 +5,7 @@ sidebar_position: 4
 
 # Schemas
 
-> Auto-generated from `docs/framework/schemas/*.schema.json` by `scripts/gen-schema-browser.mjs` per [ADR-DOCS-IA Decision 6](../../meta/adr/ADR-DOCS-IA.md). **1** schemas in the catalog.
+> Auto-generated from `docs/framework/schemas/*.schema.json` by `scripts/gen-schema-browser.mjs` per DEVAI `ADR-DOCS-IA` Decision 6. **1** schemas in the catalog.
 
 | Name                                  | Title                     | Description                                                                                                              |
 | ------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------ |

@@ -96,6 +96,31 @@ function copyMarkdownDirTransformed(sourceDir, targetDir, transform) {
   }
 }
 
+function copyMarkdownDirTransformedWithIndex(sourceDir, targetDir, transform) {
+  if (!existsSync(sourceDir)) {
+    return;
+  }
+
+  const sourceRoot = resolve(sourceDir);
+  const targetRoot = resolve(outDir, targetDir);
+  for (const entry of readdirSync(sourceRoot, { withFileTypes: true, recursive: true })) {
+    const source = resolve(entry.parentPath, entry.name);
+    const sourceRelative = relative(sourceRoot, source);
+    const targetRelative = entry.name === 'README.md' ? join(dirname(sourceRelative), 'index.md') : sourceRelative;
+    const target = resolve(targetRoot, targetRelative);
+    if (entry.isDirectory()) {
+      mkdirSync(target, { recursive: true });
+      continue;
+    }
+    if (!entry.isFile() || !['.md', '.mdx'].includes(extname(entry.name))) {
+      continue;
+    }
+
+    mkdirSync(dirname(target), { recursive: true });
+    writeFileSync(target, transform(readFileSync(source, 'utf8'), sourceRelative));
+  }
+}
+
 function isTrackedFile(filePath) {
   const relativePath = relative(repoRoot, filePath).split('\\').join('/');
   const result = spawnSync('git', ['ls-files', '--error-unmatch', '--', relativePath], {
@@ -117,10 +142,10 @@ function sanitizePublicReferences(content) {
     .replace(/coverage\/test-evidence\.json/gu, 'generated test evidence summary')
     .replace(/`coverage-final\.json`/gu, '`coverage summary JSON (not published)`')
     .replace(/coverage-final\.json/gu, 'coverage summary JSON')
-    .replace(/\]\((?:\.\.\/)+align\/[^)]*\)/gu, '](#internal-round-tracking-note)')
+    .replace(/\[([^\]]+)\]\((?:\.\.\/)+align\/[^)]*\)/gu, (_match, label) => `\`${label}\``)
     .replace(/`(?:\.\.\/)*align\/[^`]*`/gu, '`internal round-tracking note (not published)`')
     .replace(/\balign\/stynx\/[^\s`'",)]+/gu, 'internal round-tracking note')
-    .replace(/\]\((?:\.\.\/)+devai\/[^)]*\)/gu, '](#external-devai-reference)')
+    .replace(/\[([^\]]+)\]\((?:\.\.\/)+devai\/[^)]*\)/gu, (_match, label) => `\`${label}\``)
     .replace(/`(?:\.\.\/)*devai\/[^`]*`/gu, '`external DEVAI sibling checkout reference (not published)`');
 }
 
@@ -145,8 +170,30 @@ function rewriteGeneratedDocLinks(content) {
     .replace(/\]\(\.\.\/ops\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/ops$1)')
     .replace(
       /\]\(\.\.\/stynx\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
-      (_match, filename, hash = '') => `](/docs/narrative/stynx/${filename}${hash})`,
+      (_match, filename, hash = '') => `](/docs/adopters/stynx/${filename}${hash})`,
     )
+    .replace(/\]\(\.\.\/\.\.\/framework\/arch\/invariants\/?\)/gu, '](/docs/framework/arch/invariants)')
+    .replace(/\]\(\.\.\/\.\.\/framework\/arch\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/framework/arch$1)')
+    .replace(
+      /\]\(\.\.\/\.\.\/framework\/arch\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
+      (_match, filename, hash = '') => `](/docs/framework/arch/${filename}${hash})`,
+    )
+    .replace(/\]\(\.\.\/\.\.\/framework\/contracts\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/framework/contracts$1)')
+    .replace(
+      /\]\(\.\.\/\.\.\/framework\/contracts\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
+      (_match, filename, hash = '') => `](/docs/framework/contracts/${filename}${hash})`,
+    )
+    .replace(/\]\(\.\.\/\.\.\/framework\/glossary\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/framework/glossary$1)')
+    .replace(/\]\(\.\.\/\.\.\/meta\/adr\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/meta/adr$1)')
+    .replace(/\]\(\.\.\/\.\.\/meta\/adr\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu, '](/docs/meta/adr/$1$2)')
+    .replace(/\]\(\.\.\/\.\.\/meta\/ops\/?\)/gu, '](/docs/meta/ops)')
+    .replace(/\]\(\.\.\/\.\.\/meta\/ops\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/meta/ops$1)')
+    .replace(/\]\(\.\.\/\.\.\/meta\/ops\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu, '](/docs/meta/ops/$1$2)')
+    .replace(/\]\(\.\.\/\.\.\/meta\/security\/?\)/gu, '](/docs/meta/security)')
+    .replace(/\]\(\.\.\/\.\.\/meta\/security\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/meta/security$1)')
+    .replace(/\]\(\.\.\/\.\.\/meta\/security\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu, '](/docs/meta/security/$1$2)')
+    .replace(/\]\(\.\.\/\.\.\/meta\/templates\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu, '](/docs/meta/templates/$1$2)')
+    .replace(/\]\(\.\.\/\.\.\/adopters\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu, '](/docs/adopters/$1$2)')
     .replace(/\]\(\.\.\/templates\/package-README\.md((?:#[^)]+)?)\)/gu, '](/docs/meta/templates/package-README$1)')
     .replace(/\]\(\.\.\/\.\.\/specs\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu, (_match, filename, hash = '') => {
       return `](/docs/specifications/${filename.toLowerCase()}${hash})`;
@@ -154,6 +201,16 @@ function rewriteGeneratedDocLinks(content) {
     .replace(/\]\(\.\.\/\.\.\/docs\/arch\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/arch$1)')
     .replace(
       /\]\(\.\.\/\.\.\/docs\/arch\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
+      (_match, filename, hash = '') => `](/docs/framework/arch/${filename}${hash})`,
+    )
+    .replace(/\]\(\.\.\/docs\/framework\/arch\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/framework/arch$1)')
+    .replace(
+      /\]\(\.\.\/docs\/framework\/arch\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
+      (_match, filename, hash = '') => `](/docs/framework/arch/${filename}${hash})`,
+    )
+    .replace(/\]\(\.\.\/\.\.\/docs\/framework\/arch\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/framework/arch$1)')
+    .replace(
+      /\]\(\.\.\/\.\.\/docs\/framework\/arch\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
       (_match, filename, hash = '') => `](/docs/framework/arch/${filename}${hash})`,
     )
     .replace(/\]\(\.\.\/\.\.\/docs\/contracts\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/contracts$1)')
@@ -166,6 +223,11 @@ function rewriteGeneratedDocLinks(content) {
       /\]\(\.\.\/\.\.\/docs\/security\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
       (_match, filename, hash = '') => `](/docs/meta/security/${filename}${hash})`,
     )
+    .replace(/\]\(\.\.\/\.\.\/docs\/meta\/security\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/meta/security$1)')
+    .replace(
+      /\]\(\.\.\/\.\.\/docs\/meta\/security\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
+      (_match, filename, hash = '') => `](/docs/meta/security/${filename}${hash})`,
+    )
     .replace(/\]\(\.\.\/\.\.\/docs\/glossary\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/glossary$1)')
     .replace(
       /\]\(\.\.\/\.\.\/docs\/glossary\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
@@ -176,9 +238,18 @@ function rewriteGeneratedDocLinks(content) {
       /\]\(\.\.\/\.\.\/docs\/ops\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
       (_match, filename, hash = '') => `](/docs/meta/ops/${filename}${hash})`,
     )
+    .replace(/\]\(\.\.\/\.\.\/docs\/meta\/ops\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/meta/ops$1)')
+    .replace(
+      /\]\(\.\.\/\.\.\/docs\/meta\/ops\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
+      (_match, filename, hash = '') => `](/docs/meta/ops/${filename}${hash})`,
+    )
     .replace(
       /\]\(\.\.\/\.\.\/docs\/stynx\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
-      (_match, filename, hash = '') => `](/docs/narrative/stynx/${filename}${hash})`,
+      (_match, filename, hash = '') => `](/docs/adopters/stynx/${filename}${hash})`,
+    )
+    .replace(
+      /\]\(\.\.\/docs\/stynx\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
+      (_match, filename, hash = '') => `](/docs/adopters/stynx/${filename}${hash})`,
     )
     .replace(/\]\(\.\.\/\.\.\/docs\/templates\/package-README\.md((?:#[^)]+)?)\)/gu, '](/docs/meta/templates/package-README$1)')
     .replace(/\]\(\.\.\/\.\.\/docs\/rfcs\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu, '](/docs/meta/rfcs/$1$2)')
@@ -190,11 +261,23 @@ function rewriteGeneratedDocLinks(content) {
       (_match, packageDir, hash = '') => `](/docs/packages/${packageDir}${hash})`,
     )
     .replace(
+      /\]\(\.\.\/\.\.\/\.\.\/packages\/([^)\s/#]+)\/README\.md((?:#[^)]+)?)\)/gu,
+      (_match, packageDir, hash = '') => `](/docs/packages/${packageDir}${hash})`,
+    )
+    .replace(
       /\]\(\.\.\/\.\.\/packages-web\/([^)\s/#]+)\/README\.md((?:#[^)]+)?)\)/gu,
+      (_match, packageDir, hash = '') => `](/docs/packages-web/${packageDir}${hash})`,
+    )
+    .replace(
+      /\]\(\.\.\/\.\.\/\.\.\/packages-web\/([^)\s/#]+)\/README\.md((?:#[^)]+)?)\)/gu,
       (_match, packageDir, hash = '') => `](/docs/packages-web/${packageDir}${hash})`,
     )
     .replace(/\[`@stynx\/pdf-a`\]\(\/docs\/packages\/pdf-a\)/gu, '`@stynx/pdf-a`')
     .replace(/\[`@stynx\/pdf-a-vera-docker`\]\(\/docs\/packages\/pdf-a-vera-docker\)/gu, '`@stynx/pdf-a-vera-docker`')
+    .replace(/\]\(architecture\/reference-app-rbac\.json((?:#[^)]+)?)\)/gu, '](/docs/framework/arch/reference-app-rbac$1)')
+    .replace(/\[([^\]]+)\]\(([^)\s#]+)\.(?:json|sql|ts|tsx|js|mjs|cjs)((?:#[^)]+)?)\)/gu, (_match, label) => `\`${label}\``)
+    .replace(/\[([^\]]+)\]\((?:\.\.\/){2,}(?:tools|packages|packages-web|reference|database|infra|\.devai|work)\/[^)]*\)/gu, (_match, label) => `\`${label}\``)
+    .replace(/\[([^\]]+)\]\((?:\.\.\/){2,}(?:AGENTS|CLAUDE|package)\.md[^)]*\)/gu, (_match, label) => `\`${label}\``)
     .replace(/\]\(porm-flow-deprecation-readiness\.md((?:#[^)]+)?)\)/gu, '](./porm-flow-deprecation-readiness$1)');
 }
 
@@ -337,7 +420,7 @@ function syncPublicStynxDocs() {
   ];
 
   for (const [sourceName, target, title] of docs) {
-    writeSpecificDoc(resolve(repoRoot, 'docs/stynx', sourceName), target, title);
+    writeSpecificDoc(resolve(repoRoot, 'docs/adopters/stynx', sourceName), target, title);
   }
 }
 
@@ -393,6 +476,28 @@ copyMarkdownDirTransformed(resolve(repoRoot, 'docs/adr'), 'adr', (content) =>
 syncPublicStynxDocs();
 copyMarkdownDirTransformed(resolve(repoRoot, 'docs/templates'), 'templates', (content) => publicMarkdownContent(content));
 copyMarkdownDirTransformed(resolve(repoRoot, 'docs/rfcs'), 'rfcs', syncRfcContent);
+copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'docs/framework/arch'), 'arch', (content) =>
+  publicMarkdownContent(content),
+);
+copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'docs/framework/contracts'), 'contracts', (content) =>
+  publicMarkdownContent(content),
+);
+copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'docs/framework/glossary'), 'glossary', (content) =>
+  publicMarkdownContent(content),
+);
+copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'docs/meta/adr'), 'adr', (content) =>
+  publicMarkdownContent(content),
+);
+copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'docs/meta/ops'), 'ops', (content) =>
+  publicMarkdownContent(content),
+);
+copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'docs/meta/rfcs'), 'rfcs', syncRfcContent);
+copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'docs/meta/security'), 'security', (content) =>
+  publicMarkdownContent(content),
+);
+copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'docs/meta/templates'), 'templates', (content) =>
+  publicMarkdownContent(content),
+);
 writeReadmeDoc(resolve(repoRoot, 'reference/api/README.md'), 'reference/api.md', (content) =>
   publicMarkdownContent(content)
     .replace(/\[([^\]]+)\]\(\.\.\/\.\.\/specs\/([^)\s#]+)\.sql(?:#[^)]+)?\)/gu, (_match, label, filename) => {

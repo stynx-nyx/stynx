@@ -26,5 +26,5 @@ When a previously-listed gap is verified closed, delete its row from this file r
 ## Notes
 
 - **Working directory:** `./docs/work/` was wiped on 2026-05-18 to start fresh. Future audit/remediation artifacts (plans, prompts, inventories, diagnostics, specs, rationalizations) go under the existing `docs/work/{audit,diag,inv,plan,prompts,rationalization,specs}/` skeleton.
-- **Schema-bound architect substrates that ARE populated** (so a future session doesn't mistakenly file them as gaps): [architecture/flow.md](architecture/flow.md), [architecture/invariants/](architecture/invariants/), [adr/](adr/), [contracts/flow-api.md](contracts/flow-api.md), [operations/runbooks/](operations/runbooks/), [operations/recovery/](operations/recovery/).
+- **Schema-bound architect substrates that ARE populated** (so a future session doesn't mistakenly file them as gaps): [Flow architecture](/docs/framework/arch/flow), [invariants](/docs/framework/arch/invariants/), [ADRs](/docs/meta/adr/), [Flow API contract](/docs/framework/contracts/flow-api), [operations runbooks](/docs/meta/ops/runbooks/), [operations recovery](/docs/meta/ops/recovery/).
 - **Most-current per-cell state lives in code, not in this file.** Re-verify before re-opening anything: a row's absence here is a claim, not proof. If a check fails today, add the row back with current evidence.

@@ -5,7 +5,7 @@
 **Session date:** 2026-05-15 → 2026-05-16 (single multi-turn session).
 **DEVAI HEAD throughout:** `cb21339` initially → `4eb4547` after Phase 20 alignment landed mid-session → `4eb4547` at pilot close.
 **Stynx branch:** `codex/sgp-stynx-web-declarations`. Pilot commits added on top of pre-existing WIP; WIP files (`package.json`, `tools/tsconfig/angular18.json`, `scripts/verify-web-sourcemaps.mjs`) were not touched.
-**Inputs:** [`../devai-adoption-by-stynx.md`](../../../../devai-adoption-by-stynx.md) (the kickoff brief, sibling to both repos).
+**Inputs:** `../devai-adoption-by-stynx.md` (the kickoff brief, sibling to both repos).
 
 This is the C-4 pilot's terminal retro. Phase A's retro at [`phase-a-retro.md`](phase-a-retro.md) and Phase H's audit at [`phase-h-audit.md`](phase-h-audit.md) are its detailed companions; this file synthesizes across all nine phases.
 
@@ -738,7 +738,7 @@ The DEVAI-side / stynx-side partition from §15 proved correct: stynx had ~10 ce
 
 ## 17. Post-Phase-30 verification refresh (U7, 2026-05-17)
 
-**DEVAI Phase 30 closed at `10f4d58`** (D-86) — see [`../../../../../devai-phase-30-alignment.md`](../../../../../devai-phase-30-alignment.md) for the brief. Phase 30 shipped the 7 sensor-completeness gaps (W-1/2/3, I-1, S-1/2 + D-A-30). Stynx ran U7 to re-emit the 8 cells that were UNKNOWN post-U6.
+**DEVAI Phase 30 closed at `10f4d58`** (D-86) — see `../../../../../devai-phase-30-alignment.md` for the brief. Phase 30 shipped the 7 sensor-completeness gaps (W-1/2/3, I-1, S-1/2 + D-A-30). Stynx ran U7 to re-emit the 8 cells that were UNKNOWN post-U6.
 
 ### Headline numbers
 

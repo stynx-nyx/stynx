@@ -4,14 +4,14 @@
 
 ## Where stynx governance lives today
 
-| Concern                  | Canonical location                                                                                                                                       |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Compliance scorecard     | `devai skill run SKILL-compute-scorecard` → `.devai/state/skills/SKILL-compute-scorecard/*.json`                                                         |
-| Health / preflight       | `devai doctor --adopter` (Phase 21.B)                                                                                                                    |
-| Audit reports            | `.devai/state/agent-runs/AR-*.json` (auto-emitted, hash-chained per Article 32)                                                                          |
-| Structure conformance    | `devai inv-contracts` + `devai check-adrs` + `devai check-forbidden-actions`                                                                             |
-| Security audits          | [`docs/meta/security/`](../../security/) + DEVAI's `SKILL-write-threat-model`                                                                            |
-| Per-package npm security | [`.codex/skills/npm-security-upgrade-auditor/`](../../../.codex/skills/npm-security-upgrade-auditor/) — kept as stynx-idiosyncratic per Phase A retro §6 |
+| Concern                  | Canonical location                                                                               |
+| ------------------------ | ------------------------------------------------------------------------------------------------ |
+| Compliance scorecard     | `devai skill run SKILL-compute-scorecard` → `.devai/state/skills/SKILL-compute-scorecard/*.json` |
+| Health / preflight       | `devai doctor --adopter` (Phase 21.B)                                                            |
+| Audit reports            | `.devai/state/agent-runs/AR-*.json` (auto-emitted, hash-chained per Article 32)                  |
+| Structure conformance    | `devai inv-contracts` + `devai check-adrs` + `devai check-forbidden-actions`                     |
+| Security audits          | [`docs/meta/security/`](../../security/) + DEVAI's `SKILL-write-threat-model`                    |
+| Per-package npm security | `.codex/skills/npm-security-upgrade-auditor/` — kept as stynx-idiosyncratic per Phase A retro §6 |
 
 ## What's archived here
 

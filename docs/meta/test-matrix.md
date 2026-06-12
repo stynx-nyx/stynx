@@ -6,7 +6,7 @@ last_built_at: 2026-06-05T00:00:00.000Z
 
 # Test matrix
 
-> DEVAI's six test suites at last sensor sweep. Each suite probes the plant at a different level; together they cover the framework's regulation surface. See [test policy](../framework/test-policy.md) for the policy framing.
+> DEVAI's six test suites at last sensor sweep. Each suite probes the plant at a different level; together they cover the framework's regulation surface. The policy framing lives in DEVAI's `test-policy.md`.
 
 | Suite           | Config                         | Files | Tests | Stage            | Probes                                                        |
 | --------------- | ------------------------------ | ----- | ----- | ---------------- | ------------------------------------------------------------- |
@@ -21,5 +21,5 @@ last_built_at: 2026-06-05T00:00:00.000Z
 
 ## See also
 
-- [Test policy](../framework/test-policy.md) — canonical reference: suite definitions, weakening, quarantine, coverage policy, per-batch verification.
+- DEVAI `test-policy.md` — canonical reference: suite definitions, weakening, quarantine, coverage policy, per-batch verification.
 - [Self-scorecard](self-scorecard.md) — DEVAI's own substrate × transversal verdicts.

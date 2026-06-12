@@ -2,7 +2,7 @@
 
 STYNX inherits DEVAI's five-role authority model (Owner, Architect, Engineer, Inspector, Auditor) per Constitution Article 6.
 
-The F1 paths each role authors in STYNX are enumerated in [`AGENTS.md`](../../AGENTS.md) and [`CLAUDE.md`](../../CLAUDE.md). For the canonical role definitions, see [DEVAI's Roles section](https://aarusso-nyx.github.io/devai/docs/roles/).
+The F1 paths each role authors in STYNX are enumerated in `AGENTS.md` and `CLAUDE.md`. For the canonical role definitions, see [DEVAI's Roles section](https://aarusso-nyx.github.io/devai/docs/roles/).
 
 | Role          | STYNX-substrate paths (post-R15 / 0.2.0)                                                                                                    |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |

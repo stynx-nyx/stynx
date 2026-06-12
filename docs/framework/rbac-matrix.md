@@ -7,7 +7,7 @@ repository/reference-app inventory. It is not the canonical framework RBAC
 implementation; see [ADR-003](../meta/adr/ADR-003-rbac-matrix-role.md).
 
 **Wave 04 update:** the authored reference-app RBAC inventory is
-[architecture/reference-app-rbac.json](architecture/reference-app-rbac.json).
+[Reference App RBAC Inventory](arch/reference-app-rbac.md).
 It records 4 roles, 38 permission keys, 44 permissioned endpoint bindings, 9
 Angular route bindings, and 12 entity bindings. This generated matrix remains
 useful as a historical sensor diagnostic, but its empty role/permission counts
@@ -20,7 +20,7 @@ are superseded for the reference app by the authored inventory and tests.
 The historical sensor body did not discover RBAC ILF tables. The reference
 migration seeds the canonical platform tables `auth.roles`, `auth.perms`,
 `auth.role_perms`, `auth.membership_roles`, and `auth.direct_perms`; see
-[architecture/reference-app-rbac.json](architecture/reference-app-rbac.json).
+[Reference App RBAC Inventory](arch/reference-app-rbac.md).
 
 ---
 

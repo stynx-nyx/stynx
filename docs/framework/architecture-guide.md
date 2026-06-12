@@ -12,7 +12,7 @@ pnpm monorepo; source lives under two glob families:
 
 **Stack:** NestJS (backend API) · Angular (frontend, per stack config) · PostgreSQL
 
-> The Angular routes introspector now identifies 15 reference-web routes. Route ids in the use-case files and [architecture/reference-app-rbac.json](architecture/reference-app-rbac.json) are tied to that inventory.
+> The Angular routes introspector now identifies 15 reference-web routes. Route ids in the use-case files and [Reference App RBAC Inventory](arch/reference-app-rbac.md) are tied to that inventory.
 
 ---
 
@@ -54,7 +54,7 @@ All five tables carry `tenant_id` (row-level multi-tenant isolation) and `create
 **Auth / RBAC**
 
 - Dev-login surface: `POST /_reference/dev-login`, `GET /_reference/auth-verify`, `GET /_reference/demo-tenants` (all `ReferenceDevAuthController`) is mounted only outside production by `SampleModule`.
-- RBAC stats: reference roles, permissions, endpoint bindings, route bindings, and entity bindings are authored in [architecture/reference-app-rbac.json](architecture/reference-app-rbac.json). Current `sense-rbac` still cannot read STYNX `@Permission(...)` decorators or Angular `stynxPermissionGuard(...)` route bindings directly.
+- RBAC stats: reference roles, permissions, endpoint bindings, route bindings, and entity bindings are authored in [Reference App RBAC Inventory](arch/reference-app-rbac.md). Current `sense-rbac` still cannot read STYNX `@Permission(...)` decorators or Angular `stynxPermissionGuard(...)` route bindings directly.
 
 **Multi-tenancy**
 
@@ -86,7 +86,7 @@ All five tables carry `tenant_id` (row-level multi-tenant isolation) and `create
 
 ### Unmapped Endpoints
 
-Use-case coverage now claims the 50 reference endpoints. The authored route-binding inventory lives in [architecture/reference-app-rbac.json](architecture/reference-app-rbac.json). Current sensor route-binding output remains empty until DEVAI can read STYNX Angular permission guards.
+Use-case coverage now claims the 50 reference endpoints. The authored route-binding inventory lives in [Reference App RBAC Inventory](arch/reference-app-rbac.md). Current sensor route-binding output remains empty until DEVAI can read STYNX Angular permission guards.
 
 - `RecordNotesController` — 7 endpoints: list, create, get, patch, delete, hard-delete, restore
 - `DocumentsController` — 6 endpoints: create, delete, hard-delete, restore, complete, download
@@ -100,4 +100,4 @@ Use-case coverage now claims the 50 reference endpoints. The authored route-bind
 ### Gaps
 
 - DEVAI `sense-rbac` still emits empty route bindings for STYNX Angular permission guards.
-- Operations, infra, and package test-depth gaps remain in [KNOWN_GAPS.md](KNOWN_GAPS.md).
+- Operations, infra, and package test-depth gaps remain in [Known Gaps](/docs/meta/known-gaps).
