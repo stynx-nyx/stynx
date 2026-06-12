@@ -35,8 +35,21 @@ permissions:
   contents: read
 
 jobs:
+  gate-status:
+    name: DEVAI gate status
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report DEVAI gate mode
+        run: |
+          if [ "${{ vars.DEVAI_GATES_ENABLED }}" = "true" ]; then
+            echo "::notice::devai-gates enabled: sibling DEVAI checkout will run"
+          else
+            echo "::notice::devai-gates skipped: DEVAI_GATES_ENABLED unset -- sibling devai repo not reachable from Actions"
+          fi
+
   devai-inventory:
     name: DEVAI inventory + invariant gates
+    if: ${{ vars.DEVAI_GATES_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:

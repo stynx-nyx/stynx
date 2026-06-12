@@ -19,12 +19,7 @@
 //                       (.github/workflows/hardening.yml) and any monthly
 //                       baseline-refresh job. Full runs are the only way to
 //                       catch cross-file drift in a monorepo.
-// `STRYKER_DASHBOARD_API_KEY` (env) enables the Stryker dashboard reporter
-// only when `CI === 'true'`. The API key is intentionally not required for
-// local runs or ordinary CI jobs; a missing key silently keeps today's
-// clear-text/progress/html/json reporters. Monorepo dashboard naming uses
-// Stryker's dashboard.project/dashboard.version CI detection plus
-// dashboard.module = packageName (for example, `@stynx/health`).
+// Dashboard publishing was removed by operator decision 2026-06-11; see git history.
 //
 // Default concurrency
 // -------------------
@@ -63,10 +58,6 @@ function cleanStrykerBackups(tempDirName) {
       rmSync(join(tempDir, entry.name), { recursive: true, force: true });
     }
   }
-}
-
-function shouldPublishDashboard() {
-  return process.env.CI === 'true' && Boolean(process.env.STRYKER_DASHBOARD_API_KEY);
 }
 
 export function createStrykerConfig({
@@ -110,15 +101,11 @@ export function createStrykerConfig({
       'progress',
       'html',
       'json',
-      ...(shouldPublishDashboard() ? ['dashboard'] : []),
     ],
     thresholds: {
       high: resolved.high,
       low: resolved.low,
       break: resolved.break,
-    },
-    dashboard: {
-      module: packageName,
     },
     htmlReporter: {
       fileName: `reports/mutation/${packageName.replace(/[@/]/g, '-')}/index.html`,
