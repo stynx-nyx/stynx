@@ -322,11 +322,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build package dependency closure
-        # @stynx/testing... is included because several packages' integration
-        # specs reach test helpers in packages/testing/src via relative imports
-        # (undeclared dep — see R17 closeout; hygiene fix tracked for R18),
-        # and those helpers import @stynx/sessions et al. at runtime.
-        run: pnpm --filter "${{ matrix.filter }}..." --filter "@stynx/testing..." build
+        run: pnpm --filter "${{ matrix.filter }}..." build
 
       - name: Run Stryker
         env:

@@ -12,6 +12,7 @@ export default createVitestConfig({
     '@stynx/idempotency': resolve(__dirname, '../idempotency/src/index.ts'),
     '@stynx/sessions': resolve(__dirname, '../sessions/src/index.ts'),
     '@stynx/testing': resolve(__dirname, '../testing/src/index.ts'),
+    '@stynx/tenancy': resolve(__dirname, '../tenancy/src/index.ts'),
     'intl-messageformat': resolve(__dirname, 'test/support/intl-messageformat.stub.ts'),
   },
 });

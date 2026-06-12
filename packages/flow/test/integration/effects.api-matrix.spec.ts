@@ -25,7 +25,11 @@ import {
 } from '@stynx/backend';
 import { generateRequestId, StynxCoreModule } from '@stynx/core';
 import type { AuditEventEnvelope, AuditSink } from '@stynx/contracts';
-import { SessionJwtSigningService, SessionService, type StynxSessionSigningKeySet } from '@stynx/sessions';
+import {
+  SessionJwtSigningService,
+  SessionService,
+  type StynxSessionSigningKeySet,
+} from '@stynx/sessions';
 import request from 'supertest';
 import { z } from 'zod';
 import { StynxFlowModule } from '../../src/flow.module';
@@ -36,7 +40,7 @@ import {
   createTestApp,
   mintTestSession,
   type TestAppContext,
-} from '../../../testing/src';
+} from '@stynx/testing';
 
 const TENANT_ID = '0197481e-6f84-77e4-8d6d-41f0b6fca9c1';
 const ADMIN_USER_ID = '0197481e-7294-7c53-8b03-5c36d7c2831a';
@@ -133,7 +137,9 @@ class RecordingEffectAdapter implements FlowDomainAdapter {
     return {};
   }
 
-  async applyEffect(input: FlowEffectInput): Promise<{ ok: boolean; payload: Record<string, unknown> }> {
+  async applyEffect(
+    input: FlowEffectInput,
+  ): Promise<{ ok: boolean; payload: Record<string, unknown> }> {
     this.effects.push(input);
     return { ok: true, payload: { delivered: true } };
   }
@@ -226,9 +232,19 @@ function buildKeySet(): StynxSessionSigningKeySet {
 
 async function seedFlowEffectsRuntime(testApp: TestAppContext): Promise<void> {
   const fixtures = createStynxFixtures(testApp.adminClient);
-  await fixtures.createTenant({ id: TENANT_ID, slug: 'flow-effects-api-matrix', name: 'Flow Effects API Matrix' });
-  await fixtures.createUser({ id: ADMIN_USER_ID, email: 'flow-effects-api-matrix-admin@example.com' });
-  await fixtures.createUser({ id: VIEWER_USER_ID, email: 'flow-effects-api-matrix-viewer@example.com' });
+  await fixtures.createTenant({
+    id: TENANT_ID,
+    slug: 'flow-effects-api-matrix',
+    name: 'Flow Effects API Matrix',
+  });
+  await fixtures.createUser({
+    id: ADMIN_USER_ID,
+    email: 'flow-effects-api-matrix-admin@example.com',
+  });
+  await fixtures.createUser({
+    id: VIEWER_USER_ID,
+    email: 'flow-effects-api-matrix-viewer@example.com',
+  });
   await fixtures.createMembership({
     id: ADMIN_MEMBERSHIP_ID,
     tenantId: TENANT_ID,
@@ -401,7 +417,10 @@ async function seedFlowEffectsRuntime(testApp: TestAppContext): Promise<void> {
   }
 }
 
-async function insertPendingEffect(testApp: TestAppContext, eventId = generateRequestId()): Promise<string> {
+async function insertPendingEffect(
+  testApp: TestAppContext,
+  eventId = generateRequestId(),
+): Promise<string> {
   const admin = await testApp.adminClient();
   try {
     await admin.query(

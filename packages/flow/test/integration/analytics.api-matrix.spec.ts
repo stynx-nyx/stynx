@@ -12,7 +12,11 @@ import {
   StynxJwtValidator,
 } from '@stynx/auth';
 import { generateRequestId, StynxCoreModule } from '@stynx/core';
-import { SessionJwtSigningService, SessionService, type StynxSessionSigningKeySet } from '@stynx/sessions';
+import {
+  SessionJwtSigningService,
+  SessionService,
+  type StynxSessionSigningKeySet,
+} from '@stynx/sessions';
 import request from 'supertest';
 import { z } from 'zod';
 import { StynxFlowModule } from '../../src/flow.module';
@@ -21,7 +25,7 @@ import {
   createTestApp,
   mintTestSession,
   type TestAppContext,
-} from '../../../testing/src';
+} from '@stynx/testing';
 
 const TENANT_ID = '0197481e-6f84-77e4-8d6d-41f0b6fca9c1';
 const ADMIN_USER_ID = '0197481e-7294-7c53-8b03-5c36d7c2831a';

@@ -42,6 +42,7 @@
     "@nestjs/platform-express": "^11.1.19",
     "@nestjs/testing": "^11.1.19",
     "@stynx/testing": "workspace:*",
+    "@stynx/tenancy": "workspace:*",
     "@types/node": "24.12.4",
     "@types/supertest": "^7.2.0",
     "supertest": "^7.2.2",

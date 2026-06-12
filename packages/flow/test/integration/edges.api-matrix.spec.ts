@@ -15,7 +15,11 @@ import {
 import { AuditInterceptor, StynxAuditModule } from '@stynx/backend';
 import { generateRequestId, StynxCoreModule } from '@stynx/core';
 import type { AuditEventEnvelope, AuditSink } from '@stynx/contracts';
-import { SessionJwtSigningService, SessionService, type StynxSessionSigningKeySet } from '@stynx/sessions';
+import {
+  SessionJwtSigningService,
+  SessionService,
+  type StynxSessionSigningKeySet,
+} from '@stynx/sessions';
 import request from 'supertest';
 import { z } from 'zod';
 import { StynxFlowModule } from '../../src/flow.module';
@@ -24,7 +28,7 @@ import {
   createTestApp,
   mintTestSession,
   type TestAppContext,
-} from '../../../testing/src';
+} from '@stynx/testing';
 
 const TENANT_ID = '0197481e-6f84-77e4-8d6d-41f0b6fca9e1';
 const ADMIN_USER_ID = '0197481e-7294-7c53-8b03-5c36d7c28e1a';
@@ -125,9 +129,19 @@ function buildKeySet(): StynxSessionSigningKeySet {
 
 async function seedFlowEdgesDesign(testApp: TestAppContext): Promise<void> {
   const fixtures = createStynxFixtures(testApp.adminClient);
-  await fixtures.createTenant({ id: TENANT_ID, slug: 'flow-edges-api-matrix', name: 'Flow Edges API Matrix' });
-  await fixtures.createUser({ id: ADMIN_USER_ID, email: 'flow-edges-api-matrix-admin@example.com' });
-  await fixtures.createUser({ id: VIEWER_USER_ID, email: 'flow-edges-api-matrix-viewer@example.com' });
+  await fixtures.createTenant({
+    id: TENANT_ID,
+    slug: 'flow-edges-api-matrix',
+    name: 'Flow Edges API Matrix',
+  });
+  await fixtures.createUser({
+    id: ADMIN_USER_ID,
+    email: 'flow-edges-api-matrix-admin@example.com',
+  });
+  await fixtures.createUser({
+    id: VIEWER_USER_ID,
+    email: 'flow-edges-api-matrix-viewer@example.com',
+  });
   await fixtures.createMembership({
     id: ADMIN_MEMBERSHIP_ID,
     tenantId: TENANT_ID,

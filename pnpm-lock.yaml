@@ -1247,6 +1247,9 @@ importers:
       '@nestjs/testing':
         specifier: ^11.1.19
         version: 11.1.21(@nestjs/common@11.1.21(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.21)(@nestjs/platform-express@11.1.21)
+      '@stynx/testing':
+        specifier: workspace:*
+        version: link:../testing
       '@types/node':
         specifier: 24.12.4
         version: 24.12.4
@@ -1339,6 +1342,9 @@ importers:
       '@stynx/testing':
         specifier: workspace:*
         version: link:../testing
+      '@stynx/tenancy':
+        specifier: workspace:*
+        version: link:../tenancy
       '@types/node':
         specifier: 24.12.4
         version: 24.12.4
@@ -1808,6 +1814,9 @@ importers:
       '@nestjs/testing':
         specifier: ^11.1.19
         version: 11.1.21(@nestjs/common@11.1.21(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.21)(@nestjs/platform-express@11.1.21)
+      '@stynx/testing':
+        specifier: workspace:*
+        version: link:../testing
       '@types/node':
         specifier: 24.12.4
         version: 24.12.4

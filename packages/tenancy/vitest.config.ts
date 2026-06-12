@@ -9,6 +9,7 @@ export default createVitestConfig({
     '@stynx/core': resolve(__dirname, '../core/src/index.ts'),
     '@stynx/data': resolve(__dirname, '../data/src/index.ts'),
     '@stynx/idempotency': resolve(__dirname, '../idempotency/src/index.ts'),
+    '@stynx/testing': resolve(__dirname, '../testing/src/index.ts'),
     '@stynx/tenancy': resolve(__dirname, 'src/index.ts'),
   },
 });

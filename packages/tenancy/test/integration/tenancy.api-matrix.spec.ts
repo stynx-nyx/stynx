@@ -1,10 +1,12 @@
 import { generateRequestId } from '@stynx/core';
+import {
+  createStynxFixtures,
+  createTestApp,
+  mintTestSession,
+  type TestAppContext,
+} from '@stynx/testing';
 import request from 'supertest';
 import { StynxTenancyModule } from '../../src/tenancy.module';
-import { createTestApp } from '../../../testing/src/create-test-app';
-import { createStynxFixtures } from '../../../testing/src/fixtures';
-import { mintTestSession } from '../../../testing/src/mint-test-session';
-import type { TestAppContext } from '../../../testing/src/types';
 
 const ACTOR_ID = '0197481e-7294-7c53-8b03-5c36d7c2831a';
 const LIST_TENANT_ID = '0197481e-6f84-77e4-8d6d-41f0b6fca9c1';
@@ -92,8 +94,8 @@ describe('TenancyController API error matrix', () => {
   }
 
   async function expectMalformedJson(method: 'patch' | 'post', path: string): Promise<void> {
-    await request(testApp.app.getHttpServer())
-      [method](path)
+    const call = request(testApp.app.getHttpServer())[method](path);
+    await call
       .set(headers())
       .set('content-type', 'application/json')
       .send('{"invalid":')

@@ -63,6 +63,23 @@ export default [
             'WAVE-05A/CW-1: Use a value assertion (.toBe(x) / .toEqual(...) / .toMatch(/.../)) instead of an existence-only assertion; existence assertions survive most mutations.',
         },
       ],
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                '../../../*/src',
+                '../../../*/src/*',
+                '../../../../*/src',
+                '../../../../*/src/*',
+              ],
+              message:
+                'R19-W06: Import sibling packages through their package name and test alias, not relative */src paths.',
+            },
+          ],
+        },
+      ],
     },
   },
 ];

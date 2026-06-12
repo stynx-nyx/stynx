@@ -25,7 +25,11 @@ import {
 } from '@stynx/backend';
 import { generateRequestId, StynxCoreModule } from '@stynx/core';
 import type { AuditEventEnvelope, AuditSink } from '@stynx/contracts';
-import { SessionJwtSigningService, SessionService, type StynxSessionSigningKeySet } from '@stynx/sessions';
+import {
+  SessionJwtSigningService,
+  SessionService,
+  type StynxSessionSigningKeySet,
+} from '@stynx/sessions';
 import request from 'supertest';
 import { z } from 'zod';
 import { StynxFlowModule } from '../../src/flow.module';
@@ -34,7 +38,7 @@ import {
   createTestApp,
   mintTestSession,
   type TestAppContext,
-} from '../../../testing/src';
+} from '@stynx/testing';
 
 const TENANT_ID = '0197481e-6f84-77e4-8d6d-41f0b6fca9c1';
 const ADMIN_USER_ID = '0197481e-7294-7c53-8b03-5c36d7c2831a';
@@ -191,9 +195,19 @@ function buildKeySet(): StynxSessionSigningKeySet {
 
 async function seedFlowSignalRuntime(testApp: TestAppContext): Promise<void> {
   const fixtures = createStynxFixtures(testApp.adminClient);
-  await fixtures.createTenant({ id: TENANT_ID, slug: 'flow-signal-api-matrix', name: 'Flow Signal API Matrix' });
-  await fixtures.createUser({ id: ADMIN_USER_ID, email: 'flow-signal-api-matrix-admin@example.com' });
-  await fixtures.createUser({ id: VIEWER_USER_ID, email: 'flow-signal-api-matrix-viewer@example.com' });
+  await fixtures.createTenant({
+    id: TENANT_ID,
+    slug: 'flow-signal-api-matrix',
+    name: 'Flow Signal API Matrix',
+  });
+  await fixtures.createUser({
+    id: ADMIN_USER_ID,
+    email: 'flow-signal-api-matrix-admin@example.com',
+  });
+  await fixtures.createUser({
+    id: VIEWER_USER_ID,
+    email: 'flow-signal-api-matrix-viewer@example.com',
+  });
   await fixtures.createMembership({
     id: ADMIN_MEMBERSHIP_ID,
     tenantId: TENANT_ID,

@@ -1,8 +1,8 @@
 import { generateRequestId } from '@stynx/core';
 import { createStynxFixtures, createTestApp, type TestAppContext } from '@stynx/testing';
+import { StynxTenancyModule } from '@stynx/tenancy';
 import request from 'supertest';
 import { StynxI18nModule } from '../../src/i18n.module';
-import { StynxTenancyModule } from '../../../tenancy/src/tenancy.module';
 
 const TENANT_ID = '0197481e-6f84-77e4-8d6d-41f0b6fca9c1';
 const OTHER_TENANT_ID = '0197481e-6f84-77e4-8d6d-41f0b6fca9c2';
@@ -10,7 +10,9 @@ const ACTOR_ID = '0197481e-7294-7c53-8b03-5c36d7c2831a';
 
 function bearerToken(tenantId = TENANT_ID): string {
   const header = Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' })).toString('base64url');
-  const payload = Buffer.from(JSON.stringify({ sub: ACTOR_ID, tenant_id: tenantId })).toString('base64url');
+  const payload = Buffer.from(JSON.stringify({ sub: ACTOR_ID, tenant_id: tenantId })).toString(
+    'base64url',
+  );
   return `Bearer ${header}.${payload}.signature`;
 }
 
@@ -41,7 +43,11 @@ describe('I18nController API error matrix', () => {
 
     const fixtures = createStynxFixtures(testApp.adminClient);
     await fixtures.createTenant({ id: TENANT_ID, slug: 'i18n-matrix', name: 'I18n Matrix' });
-    await fixtures.createTenant({ id: OTHER_TENANT_ID, slug: 'i18n-matrix-other', name: 'I18n Matrix Other' });
+    await fixtures.createTenant({
+      id: OTHER_TENANT_ID,
+      slug: 'i18n-matrix-other',
+      name: 'I18n Matrix Other',
+    });
     await fixtures.createUser({ id: ACTOR_ID, email: 'i18n-matrix@example.com' });
     await fixtures.createMembership({
       id: '0197481e-7294-7c53-8b03-5c36d7c2832a',
