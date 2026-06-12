@@ -11,7 +11,7 @@
     "prepare:content": "node scripts/sync-content.mjs",
     "prepare:api": "node scripts/generate-api-reference.mjs",
     "verify:api": "node scripts/verify-api-reference.mjs",
-    "build": "node scripts/sync-content.mjs && node scripts/generate-api-reference.mjs && node scripts/verify-api-reference.mjs && docusaurus build",
+    "build": "node scripts/sync-content.mjs && node scripts/generate-api-reference.mjs && node scripts/verify-api-reference.mjs && NODE_OPTIONS=--max-old-space-size=4096 docusaurus build",
     "build:ci": "pnpm run build && pnpm run lighthouse",
     "lighthouse": "node scripts/run-lighthouse.mjs",
     "start": "node scripts/sync-content.mjs && node scripts/generate-api-reference.mjs && docusaurus start",
