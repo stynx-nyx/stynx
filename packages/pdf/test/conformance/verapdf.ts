@@ -20,6 +20,11 @@ interface DockerRunResult {
   error?: Error;
 }
 
+interface DockerCopyFile {
+  source: string;
+  target: string;
+}
+
 export interface VeraPdfSummary {
   compliant: boolean;
   failedChecks: number;
@@ -97,22 +102,21 @@ export function validatePdfsA2b(inputs: VeraPdfInput[]): VeraPdfSummary[] {
 function runVeraPdf(fileNames: string[], dir: string): DockerRunResult {
   let lastResult: DockerRunResult | undefined;
   for (let attempt = 0; attempt < DOCKER_ATTEMPTS; attempt += 1) {
+    const containerFiles = fileNames.map((fileName) => `/tmp/${fileName}`);
     lastResult = runDockerVeraPdf(
-      [
-        '-v',
-        `${dir}:/work`,
-        '-w',
-        '/work',
-      ],
       [
         '--format',
         'json',
         '--flavour',
         '2b',
-        ...fileNames.map((fileName) => `/work/${fileName}`),
+        ...containerFiles,
       ],
       fileNames[0] ?? 'validation',
       VERAPDF_RUN_TIMEOUT_MS,
+      fileNames.map((fileName) => ({
+        source: join(dir, fileName),
+        target: `/tmp/${fileName}`,
+      })),
     );
     if (lastResult.status === 0) {
       return lastResult;
@@ -122,15 +126,15 @@ function runVeraPdf(fileNames: string[], dir: string): DockerRunResult {
 }
 
 function runDockerVeraPdf(
-  dockerArgs: string[],
   veraPdfArgs: string[],
   label: string,
   timeout: number,
+  copyFiles: DockerCopyFile[],
 ): DockerRunResult {
   const containerName = `stynx-verapdf-${safeLabel(label)}-${randomUUID()}`;
   const create = spawnSync(
     'docker',
-    ['create', '--name', containerName, ...DOCKER_PLATFORM_ARGS, ...dockerArgs, VERAPDF_IMAGE, ...veraPdfArgs],
+    ['create', '--name', containerName, ...DOCKER_PLATFORM_ARGS, VERAPDF_IMAGE, ...veraPdfArgs],
     {
       encoding: 'utf8',
     },
@@ -138,6 +142,16 @@ function runDockerVeraPdf(
   if (create.status !== 0 || create.error) {
     cleanupContainer(containerName);
     return toDockerRunResult(create);
+  }
+
+  for (const copyFile of copyFiles) {
+    const copy = spawnSync('docker', ['cp', copyFile.source, `${containerName}:${copyFile.target}`], {
+      encoding: 'utf8',
+    });
+    if (copy.status !== 0 || copy.error) {
+      cleanupContainer(containerName);
+      return toDockerRunResult(copy);
+    }
   }
 
   const start = spawnSync('docker', ['start', containerName], { encoding: 'utf8' });
