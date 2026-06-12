@@ -29,20 +29,18 @@ export function buildVeraPdfDockerArgs(request: Pick<VeraPdfDockerRunRequest, 'i
 }
 
 export function buildVeraPdfDockerCreateArgs(
-  request: Pick<VeraPdfDockerRunRequest, 'image' | 'flavour'> & { name: string; inputDir: string },
+  request: Pick<VeraPdfDockerRunRequest, 'image' | 'flavour'> & { name: string },
 ) {
   return [
     'create',
     '--name',
     request.name,
-    '-v',
-    `${request.inputDir}:/work:ro`,
     request.image,
     '--format',
     'json',
     '--flavour',
     request.flavour,
-    '/work/input.pdf',
+    '/tmp/input.pdf',
   ];
 }
 
@@ -51,10 +49,11 @@ export async function runVeraPdfDocker(
 ): Promise<VeraPdfDockerRunResult> {
   const containerName = `stynx-verapdf-${randomUUID()}`;
   const inputDir = mkdtempSync(join(tmpdir(), 'stynx-verapdf-'));
-  writeFileSync(join(inputDir, 'input.pdf'), Buffer.from(request.pdf));
+  const inputPath = join(inputDir, 'input.pdf');
+  writeFileSync(inputPath, Buffer.from(request.pdf));
   const create = spawnSync(
     request.dockerBin,
-    buildVeraPdfDockerCreateArgs({ image: request.image, flavour: request.flavour, name: containerName, inputDir }),
+    buildVeraPdfDockerCreateArgs({ image: request.image, flavour: request.flavour, name: containerName }),
     { encoding: 'utf8', timeout: Math.min(request.timeoutMs, 10_000) },
   );
   if (create.error || create.status !== 0) {
@@ -65,6 +64,21 @@ export async function runVeraPdfDocker(
       stderr: create.stderr || create.error?.message || '',
       exitCode: create.status,
       timedOut: create.error?.name === 'TimeoutError',
+    };
+  }
+
+  const copy = spawnSync(request.dockerBin, ['cp', inputPath, `${containerName}:/tmp/input.pdf`], {
+    encoding: 'utf8',
+    timeout: Math.min(request.timeoutMs, 10_000),
+  });
+  if (copy.error || copy.status !== 0) {
+    cleanupContainer(request.dockerBin, containerName);
+    cleanupInputDir(inputDir);
+    return {
+      stdout: copy.stdout ?? '',
+      stderr: copy.stderr || copy.error?.message || '',
+      exitCode: copy.status,
+      timedOut: copy.error?.name === 'TimeoutError',
     };
   }
 
