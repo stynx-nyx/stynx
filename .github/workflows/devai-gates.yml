@@ -51,7 +51,7 @@ jobs:
       - name: Checkout devai (sibling)
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          repository: ${{ vars.DEVAI_REPO || 'anthropics/devai' }}
+          repository: ${{ vars.DEVAI_REPO || 'aarusso-nyx/devai' }}
           ref: ${{ vars.DEVAI_REF  || 'main' }}
           path: devai
           # Falls back to a fresh clone of devai's main branch unless
