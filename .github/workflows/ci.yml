@@ -116,6 +116,8 @@ jobs:
             tools/*/package.json
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Install Playwright Chromium
+        run: pnpm --filter @stynx/pdf exec playwright install --with-deps chromium
       - name: Run fast PR gate
         if: ${{ github.event_name == 'pull_request' }}
         run: pnpm ci:stynx
