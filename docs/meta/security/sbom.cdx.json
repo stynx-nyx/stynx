@@ -1,7 +1,7 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:d8bfd451-7bdf-48d8-85f1-37761287ac40",
+  "serialNumber": "urn:uuid:5b08da2e-8179-4197-8ca5-b9e6f5aa81fd",
   "version": 1,
   "metadata": {
     "timestamp": "2026-05-29T00:00:00.000Z",
@@ -27,7 +27,7 @@
     "properties": [
       {
         "name": "stynx:pnpm-lock-sha256",
-        "value": "d8bfd4517bdff8d8f5f137761287ac40bc8f0e7f857bd50312b12e670aae697d"
+        "value": "5b08da2e8179a1978ca5b9e6f5aa81fd7c9168fa03c8659414e9ef7e3ed83b9c"
       },
       {
         "name": "stynx:package-manager",
@@ -1578,6 +1578,20 @@
         }
       ],
       "purl": "pkg:npm/handlebars@4.7.9"
+    },
+    {
+      "type": "library",
+      "name": "helmet",
+      "version": "8.2.0",
+      "scope": "required",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:npm/helmet@8.2.0"
     },
     {
       "type": "library",

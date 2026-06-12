@@ -10,7 +10,7 @@
         }
       },
       "declarationHashes": {
-        "integration-adapter/src/index.d.ts": "a145d96ef487b99fe1050dc7f5f5333a072f7fa48cf8c68837a7469c9f419338",
+        "integration-adapter/src/index.d.ts": "685101fe521c5770fa2a6a6cd4311f05ed6b3373c7f25f456266c829eb451348",
         "integration-adapter/src/types.d.ts": "34e869829671246b73a6e3bdf2f0b3242242e490db8630d9cf2751f16f624071"
       }
     },
@@ -53,7 +53,7 @@
         "pdf/src/internals/pdf-a-fonts.d.ts": "8c5bec39aae53fc6156f598a3cb814667a62e2d471b99be9a7f13619451b9d5e",
         "pdf/src/internals/pdf-a-metadata.d.ts": "728b67ce3f7037de54b520f91468214cebccb8ba777e983b80b9da478ce8181e",
         "pdf/src/internals/pdf-incremental-evidence.d.ts": "35c6ef1ed4f2fc28390733674953de43d1672a4e42c4762099feb6594433786d",
-        "pdf/src/local-backend.d.ts": "3d9d1b17706ccf973ed3ece75ae50a948a24a164381b29b026d3b37c347e4296",
+        "pdf/src/local-backend.d.ts": "bd32a1b990bfab68991768964b632010ed8fc7b9ea9fb9d35dcda122fa3266bb",
         "pdf/src/pdf-renderer.d.ts": "d5761784f422f802d7e04ba19e253d3c63fbb202e25c8e805e9596f762756a06",
         "pdf/src/pdf.module.d.ts": "5eb3198fbdc460af3fefd4de862fca7fd0b3e506eb8cd19321508c53a07bcc58",
         "pdf/src/templates/public-payroll/index.d.ts": "43ec0898ce39fb533abef6983ef42a6ea8c27d1d4a467655779fc977e5497616",
@@ -79,13 +79,13 @@
         }
       },
       "declarationHashes": {
-        "integration-adapter/src/index.d.ts": "a145d96ef487b99fe1050dc7f5f5333a072f7fa48cf8c68837a7469c9f419338",
+        "integration-adapter/src/index.d.ts": "685101fe521c5770fa2a6a6cd4311f05ed6b3373c7f25f456266c829eb451348",
         "integration-adapter/src/types.d.ts": "34e869829671246b73a6e3bdf2f0b3242242e490db8630d9cf2751f16f624071",
         "signature/src/digest.d.ts": "e029e6fcc277c632dd57b59b89a0fc652a5c7300a81633a2d97328a8603ded3c",
         "signature/src/errors.d.ts": "99b4e2fabb273c86ac050ec35401d9f91fdc9ea7450c44bc638997be069e5396",
         "signature/src/govbr-sandbox.d.ts": "00d7495be7e2fb54be8d46dffe873fa0f1e4f1eeff9e6117152303d5e020a90e",
         "signature/src/http-provider-client.d.ts": "5765579f92c5163689ce6d4133f9b3c0bfa5a1209b6896b2c929bc6118ef122c",
-        "signature/src/index.d.ts": "b6e79d0439fa652f08d5deb82d364f617f5008ae68645a4264c07a1a4d03ab43",
+        "signature/src/index.d.ts": "ba66c1213982ba9f35286c887bdf4d32c47413c8c0f1ace9c1fe8e1882aa5824",
         "signature/src/pades.d.ts": "276684e33363b2d4d80ee8c5dd1cc04c02f8fabe22497a825dab961724759835",
         "signature/src/provider-backend.d.ts": "2d11d05ea0b351513fc7611b8c6a9268b0ecd2a9bad13e48d1d280da1ca3173e",
         "signature/src/sequential.d.ts": "505420b5fbdb84c4fea6f476eb63d749128f3b1b89361ae5f65d9ae5164509b8",
