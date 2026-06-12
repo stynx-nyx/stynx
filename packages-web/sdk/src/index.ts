@@ -1,3 +1,8 @@
+/**
+ * Public SDK exports for handwritten transport, auth, session, tenant, error, and generated REST surfaces.
+ *
+ * @packageDocumentation
+ */
 export * from './api-client';
 export * from './auth';
 export * from './auth-provider';

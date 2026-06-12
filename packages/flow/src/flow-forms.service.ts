@@ -1,15 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { RequestContext } from '@stynx/core';
-import {
-  Database,
-  Transaction,
-  answers as flowAnswers,
-  fills as flowFills,
-  forms as flowForms,
-  questions as flowQuestions,
-  scores as flowScores,
-  waivers as flowWaivers,
-} from '@stynx/data';
+import { Database, Transaction } from '@stynx/data';
+import { FORM_TABLES, formEntries, type FormTableKey } from './internal/forms/form-tables';
 import { camelizeRow, type FlowRow } from './row-utils';
 import {
   answerWriteSchema,
@@ -26,110 +18,6 @@ import {
   updateQuestionSchema,
   updateWaiverSchema,
 } from './validation';
-
-type ColumnMap = Record<string, string>;
-
-interface TableConfig {
-  sqlName: string;
-  columns: ColumnMap;
-  softDeleteTable: unknown;
-  actorColumns: boolean;
-}
-
-const TABLES = {
-  forms: {
-    sqlName: 'flow.forms',
-    softDeleteTable: flowForms,
-    actorColumns: true,
-    columns: {
-      scopeId: 'scope_id',
-      code: 'code',
-      version: 'version',
-      title: 'title',
-      description: 'description',
-      isActive: 'is_active',
-      meta: 'meta',
-    },
-  },
-  questions: {
-    sqlName: 'flow.questions',
-    softDeleteTable: flowQuestions,
-    actorColumns: true,
-    columns: {
-      formId: 'form_id',
-      key: 'key',
-      label: 'label',
-      fieldType: 'field_type',
-      required: 'required',
-      blocksSubmit: 'blocks_submit',
-      options: 'options',
-      validators: 'validators',
-      visibleIf: 'visible_if',
-      sortOrder: 'sort_order',
-      meta: 'meta',
-    },
-  },
-  scores: {
-    sqlName: 'flow.scores',
-    softDeleteTable: flowScores,
-    actorColumns: true,
-    columns: {
-      questionId: 'question_id',
-      passPoints: 'pass_points',
-      failPoints: 'fail_points',
-      meta: 'meta',
-    },
-  },
-  fills: {
-    sqlName: 'flow.fills',
-    softDeleteTable: flowFills,
-    actorColumns: true,
-    columns: {
-      formId: 'form_id',
-      scopeId: 'scope_id',
-      runId: 'run_id',
-      nodeRunId: 'node_run_id',
-      taskId: 'task_id',
-      targetType: 'target_type',
-      targetId: 'target_id',
-      status: 'status',
-    },
-  },
-  answers: {
-    sqlName: 'flow.answers',
-    softDeleteTable: flowAnswers,
-    actorColumns: true,
-    columns: {
-      fillId: 'fill_id',
-      questionId: 'question_id',
-      value: 'value',
-      attachment: 'attachment',
-    },
-  },
-  waivers: {
-    sqlName: 'flow.waivers',
-    softDeleteTable: flowWaivers,
-    actorColumns: false,
-    columns: {
-      scopeId: 'scope_id',
-      targetType: 'target_type',
-      targetId: 'target_id',
-      formId: 'form_id',
-      questionId: 'question_id',
-      reason: 'reason',
-      waivedBy: 'waived_by',
-      expiresAt: 'expires_at',
-    },
-  },
-} satisfies Record<string, TableConfig>;
-
-type TableKey = keyof typeof TABLES;
-
-function entries(input: Record<string, unknown>, columns: ColumnMap): Array<[string, unknown]> {
-  return Object.entries(columns)
-    .filter(([apiName]) => Object.prototype.hasOwnProperty.call(input, apiName))
-    .map(([apiName, columnName]) => [columnName, input[apiName]]);
-}
 
 @Injectable()
 export class FlowFormsService {
@@ -441,14 +329,14 @@ export class FlowFormsService {
     return normalized;
   }
 
-  private async createRow(key: TableKey, input: Record<string, unknown>): Promise<Record<string, unknown>> {
-    const config = TABLES[key];
+  private async createRow(key: FormTableKey, input: Record<string, unknown>): Promise<Record<string, unknown>> {
+    const config = FORM_TABLES[key];
     return this.db.tx(async (trx) => {
       const tenantId = this.requireTenantId();
       const actorId = this.requestContext.actorId ?? null;
       const rowEntries = [
         ['tenant_id', tenantId],
-        ...entries(input, config.columns),
+        ...formEntries(input, config.columns),
       ];
       if (config.actorColumns) {
         rowEntries.push(['created_by', actorId]);
@@ -462,7 +350,7 @@ export class FlowFormsService {
     });
   }
 
-  private async updateRow(key: TableKey, id: string, input: Record<string, unknown>): Promise<Record<string, unknown>> {
+  private async updateRow(key: FormTableKey, id: string, input: Record<string, unknown>): Promise<Record<string, unknown>> {
     return this.db.tx(async (trx) => {
       return this.updateRowInTx(trx, key, id, input);
     });
@@ -470,12 +358,12 @@ export class FlowFormsService {
 
   private async updateRowInTx(
     trx: Transaction,
-    key: TableKey,
+    key: FormTableKey,
     id: string,
     input: Record<string, unknown>,
   ): Promise<Record<string, unknown>> {
-    const config = TABLES[key];
-    const rowEntries = entries(input, config.columns);
+    const config = FORM_TABLES[key];
+    const rowEntries = formEntries(input, config.columns);
     if (rowEntries.length === 0) {
       throw new BadRequestException('At least one update field is required');
     }
@@ -494,8 +382,8 @@ export class FlowFormsService {
     return camelizeRow(row);
   }
 
-  private async softDeleteRow(key: TableKey, id: string): Promise<Record<string, unknown>> {
-    const config = TABLES[key];
+  private async softDeleteRow(key: FormTableKey, id: string): Promise<Record<string, unknown>> {
+    const config = FORM_TABLES[key];
     return this.db.tx(async (trx) => {
       await this.assertExists(trx, config.sqlName, id, 'Flow row not found');
       await trx.softDelete(config.softDeleteTable as never, id);
@@ -504,11 +392,11 @@ export class FlowFormsService {
   }
 
   private listRows(
-    key: TableKey,
+    key: FormTableKey,
     filters: Record<string, string> = {},
     orderBy = 'created_at desc',
   ): Promise<Record<string, unknown>[]> {
-    const config = TABLES[key];
+    const config = FORM_TABLES[key];
     return this.db.tx(async (trx) => {
       const values = Object.values(filters);
       const uuidColumns = new Set([
@@ -534,8 +422,8 @@ export class FlowFormsService {
     });
   }
 
-  private getRow(key: TableKey, id: string): Promise<Record<string, unknown>> {
-    return this.getOne(`select * from ${TABLES[key].sqlName} where id = $1::uuid limit 1`, [id], 'Flow row not found');
+  private getRow(key: FormTableKey, id: string): Promise<Record<string, unknown>> {
+    return this.getOne(`select * from ${FORM_TABLES[key].sqlName} where id = $1::uuid limit 1`, [id], 'Flow row not found');
   }
 
   private async getOne(sql: string, values: unknown[], message: string): Promise<Record<string, unknown>> {

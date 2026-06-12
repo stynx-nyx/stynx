@@ -1,3 +1,8 @@
+/**
+ * Public Angular UI exports for shared empty states, banners, dialogs, icons, tables, and toasts.
+ *
+ * @packageDocumentation
+ */
 export { EmptyStateComponent } from '@stynx-web/angular';
 export * from './banner.component';
 export * from './confirm-dialog.component';

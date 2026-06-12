@@ -1,3 +1,8 @@
+/**
+ * Public Angular audit exports for log timelines, entity history, integrity badges, and routes.
+ *
+ * @packageDocumentation
+ */
 export * from './audit-hash-integrity-badge.component';
 export * from './audit-event-detail.component';
 export * from './audit-log.component';

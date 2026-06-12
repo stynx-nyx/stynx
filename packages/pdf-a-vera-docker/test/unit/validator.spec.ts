@@ -46,7 +46,7 @@ describe('VeraPdfDockerValidator', () => {
         image: DEFAULT_VERAPDF_IMAGE,
         flavour: '2b',
         pdf: new Uint8Array([1, 2, 3]),
-        timeoutMs: 30000,
+        timeoutMs: 420000,
       },
     ]);
     expect(logger.increment).toHaveBeenCalledWith('pdf_a_validation_attempts_total', {

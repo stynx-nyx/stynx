@@ -4,7 +4,7 @@ import { createVitestConfig } from '../../tools/repo-config/vitest.base.mjs';
 const cfg = createVitestConfig({
   packageDir: __dirname,
   packageName: '@stynx/flow',
-  include: ['test/unit/**/*.spec.ts'],
+  include: ['test/unit/**/*.spec.ts', 'test/wiring/**/*.wiring-spec.ts'],
   alias: {
     '@stynx/auth': resolve(__dirname, '../auth/src/index.ts'),
     '@stynx/backend': resolve(__dirname, '../backend/src/index.ts'),

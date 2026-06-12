@@ -1,5 +1,9 @@
-import { spawn } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
+import { spawn, spawnSync } from 'node:child_process';
 import type { ChildProcessWithoutNullStreams } from 'node:child_process';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 
 export interface VeraPdfDockerRunRequest {
   dockerBin: string;
@@ -24,13 +28,51 @@ export function buildVeraPdfDockerArgs(request: Pick<VeraPdfDockerRunRequest, 'i
   return ['run', '--rm', '-i', request.image, '--format', 'json', '--flavour', request.flavour, '-'];
 }
 
+export function buildVeraPdfDockerCreateArgs(
+  request: Pick<VeraPdfDockerRunRequest, 'image' | 'flavour'> & { name: string; inputDir: string },
+) {
+  return [
+    'create',
+    '--name',
+    request.name,
+    '-v',
+    `${request.inputDir}:/work:ro`,
+    request.image,
+    '--format',
+    'json',
+    '--flavour',
+    request.flavour,
+    '/work/input.pdf',
+  ];
+}
+
 export async function runVeraPdfDocker(
   request: VeraPdfDockerRunRequest,
 ): Promise<VeraPdfDockerRunResult> {
+  const containerName = `stynx-verapdf-${randomUUID()}`;
+  const inputDir = mkdtempSync(join(tmpdir(), 'stynx-verapdf-'));
+  writeFileSync(join(inputDir, 'input.pdf'), Buffer.from(request.pdf));
+  const create = spawnSync(
+    request.dockerBin,
+    buildVeraPdfDockerCreateArgs({ image: request.image, flavour: request.flavour, name: containerName, inputDir }),
+    { encoding: 'utf8', timeout: Math.min(request.timeoutMs, 10_000) },
+  );
+  if (create.error || create.status !== 0) {
+    cleanupContainer(request.dockerBin, containerName);
+    cleanupInputDir(inputDir);
+    return {
+      stdout: create.stdout ?? '',
+      stderr: create.stderr || create.error?.message || '',
+      exitCode: create.status,
+      timedOut: create.error?.name === 'TimeoutError',
+    };
+  }
+
   return new Promise((resolve) => {
-    const child = spawn(request.dockerBin, buildVeraPdfDockerArgs(request), {
+    const child = spawn(request.dockerBin, ['start', '-a', containerName], {
       stdio: ['pipe', 'pipe', 'pipe'],
     });
+    child.stdin.end();
     const stdout: Buffer[] = [];
     const stderr: Buffer[] = [];
     let timedOut = false;
@@ -40,12 +82,16 @@ export async function runVeraPdfDocker(
       if (settled) return;
       settled = true;
       clearTimeout(timer);
+      cleanupContainer(request.dockerBin, containerName);
+      cleanupInputDir(inputDir);
       resolve(result);
     };
 
     const timer = setTimeout(() => {
       timedOut = true;
       killChild(child);
+      cleanupContainer(request.dockerBin, containerName);
+      cleanupInputDir(inputDir);
     }, request.timeoutMs);
 
     child.stdout.on('data', (chunk: Buffer) => stdout.push(chunk));
@@ -66,8 +112,6 @@ export async function runVeraPdfDocker(
         timedOut,
       });
     });
-
-    child.stdin.end(Buffer.from(request.pdf));
   });
 }
 
@@ -75,4 +119,16 @@ function killChild(child: ChildProcessWithoutNullStreams): void {
   if (!child.killed) {
     child.kill('SIGKILL');
   }
+}
+
+function cleanupContainer(dockerBin: string, containerName: string): void {
+  spawnSync(dockerBin, ['rm', '-f', containerName], {
+    encoding: 'utf8',
+    timeout: 10_000,
+    stdio: 'ignore',
+  });
+}
+
+function cleanupInputDir(inputDir: string): void {
+  rmSync(inputDir, { recursive: true, force: true });
 }

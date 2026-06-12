@@ -1,3 +1,8 @@
+/**
+ * Public Angular flow exports for graph design, forms, task inboxes, waivers, analytics, and routes.
+ *
+ * @packageDocumentation
+ */
 export * from './analytics.component';
 export * from './flow-api.service';
 export * from './flow-design-dialogs.component';

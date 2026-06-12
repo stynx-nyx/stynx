@@ -19,6 +19,19 @@
 //                       (.github/workflows/hardening.yml) and any monthly
 //                       baseline-refresh job. Full runs are the only way to
 //                       catch cross-file drift in a monorepo.
+// `STRYKER_DASHBOARD_API_KEY` (env) enables the Stryker dashboard reporter
+// only when `CI === 'true'`. The API key is intentionally not required for
+// local runs or ordinary CI jobs; a missing key silently keeps today's
+// clear-text/progress/html/json reporters. Monorepo dashboard naming uses
+// Stryker's dashboard.project/dashboard.version CI detection plus
+// dashboard.module = packageName (for example, `@stynx/health`).
+//
+// Default concurrency
+// -------------------
+// The factory default stays at 2. W05 sampled @stynx-web/angular-trash
+// full-mode on the 4-vCPU ubuntu-latest hardening runner class: concurrency 4
+// was slower locally and introduced timeout kills, so packages that are proven
+// stable at higher process counts should keep explicit per-package overrides.
 //
 // Per-PR mutation gating is intentionally deferred (see ADR). When adopted,
 // the gate runs the PR-mode factory with `STRYKER_INCREMENTAL=true` and the
@@ -50,6 +63,10 @@ function cleanStrykerBackups(tempDirName) {
       rmSync(join(tempDir, entry.name), { recursive: true, force: true });
     }
   }
+}
+
+function shouldPublishDashboard() {
+  return process.env.CI === 'true' && Boolean(process.env.STRYKER_DASHBOARD_API_KEY);
 }
 
 export function createStrykerConfig({
@@ -88,11 +105,20 @@ export function createStrykerConfig({
     vitest: {
       configFile: vitestConfig,
     },
-    reporters: ['clear-text', 'progress', 'html', 'json'],
+    reporters: [
+      'clear-text',
+      'progress',
+      'html',
+      'json',
+      ...(shouldPublishDashboard() ? ['dashboard'] : []),
+    ],
     thresholds: {
       high: resolved.high,
       low: resolved.low,
       break: resolved.break,
+    },
+    dashboard: {
+      module: packageName,
     },
     htmlReporter: {
       fileName: `reports/mutation/${packageName.replace(/[@/]/g, '-')}/index.html`,

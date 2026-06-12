@@ -57,14 +57,14 @@ export class VeraPdfDockerValidator implements PdfAValidator {
       return timeout;
     }
 
-    if (run.exitCode !== 0) {
+    const parsed = parseVeraPdfReport(run.stdout);
+    if (run.exitCode !== 0 && !parsed) {
       throw new VeraPdfDockerError(
         `veraPDF Docker validation failed with exit code ${run.exitCode ?? 'unknown'}: ${summarizeStderr(run.stderr)}`,
       );
     }
 
-    const parsed = parseVeraPdfJson(run.stdout);
-    const result = { ...parsed, durationMs };
+    const result = { ...(parsed ?? parseVeraPdfJson(run.stdout)), durationMs };
     await this.emitResult(result, opts);
     return result;
   }
@@ -125,4 +125,15 @@ function summarizeStderr(stderr: string): string {
     .map((line) => line.trim())
     .find((line) => line.length > 0);
   return firstLine ?? 'no stderr output';
+}
+
+function parseVeraPdfReport(raw: string): PdfAValidationResult | undefined {
+  if (raw.trim().length === 0) {
+    return undefined;
+  }
+  try {
+    return parseVeraPdfJson(raw);
+  } catch {
+    return undefined;
+  }
 }

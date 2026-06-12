@@ -1,910 +1,142 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { RequestContext } from '@stynx/core';
-import { Database, Transaction } from '@stynx/data';
+import { Database } from '@stynx/data';
 import { FlowAdapterRegistry } from './adapters';
-import { camelizeRow, pageLimitOffset, requireObject, type FlowRow } from './row-utils';
-import type { FlowJsonObject } from './types';
-import {
-  assignTaskSchema,
-  dispatchEffectsSchema,
-  ensureRunSchema,
-  parseDto,
-  signalSchema,
-  taskActionSchema,
-  taskNoteSchema,
-  updateRunSchema,
-} from './validation';
+import { requireObject } from './row-utils';
+import { FlowEffectDispatch } from './internal/runtime/effect-dispatch';
+import { FlowRunLifecycle } from './internal/runtime/run-lifecycle';
+import { FlowRuntimeReadModel } from './internal/runtime/runtime-read-model';
+import { FlowTaskDispatch } from './internal/runtime/task-dispatch';
 
 type FilterInput = Record<string, unknown>;
 
-interface PendingEffectRow extends FlowRow {
-  event_id: string;
-  run_id: string;
-  node_id?: string | null;
-  task_id?: string | null;
-  adapter_key: string;
-  target_type: string;
-  target_id: string;
-  node_code?: string | null;
-  action?: string | null;
-  payload: FlowJsonObject;
-}
-
-interface TaskAccessRow extends FlowRow {
-  assignee_user_id?: string | null;
-  is_user_candidate?: boolean;
-  adapter_key: string;
-  target_type: string;
-  target_id: string;
-}
-
-function optionalString(value: unknown): string | undefined {
-  return typeof value === 'string' && value.length > 0 ? value : undefined;
-}
-
-function addUuidFilter(
-  where: string[],
-  values: unknown[],
-  column: string,
-  value: unknown,
-): void {
-  const stringValue = optionalString(value);
-  if (!stringValue) {
-    return;
-  }
-  values.push(stringValue);
-  where.push(`${column} = $${values.length}::uuid`);
-}
-
-function addTextFilter(
-  where: string[],
-  values: unknown[],
-  column: string,
-  value: unknown,
-): void {
-  const stringValue = optionalString(value);
-  if (!stringValue) {
-    return;
-  }
-  values.push(stringValue);
-  where.push(`${column} = $${values.length}`);
-}
-
-function asJsonObject(value: unknown): FlowJsonObject {
-  return value !== null && typeof value === 'object' && !Array.isArray(value)
-    ? value as FlowJsonObject
-    : {};
-}
-
 @Injectable()
 export class FlowRuntimeService {
+  private readonly runLifecycle: FlowRunLifecycle;
+  private readonly taskDispatch: FlowTaskDispatch;
+  private readonly effectDispatch: FlowEffectDispatch;
+  private readonly readModel: FlowRuntimeReadModel;
+
   constructor(
-    private readonly db: Database,
-    private readonly requestContext: RequestContext,
-    private readonly adapters: FlowAdapterRegistry,
-  ) {}
+    db: Database,
+    requestContext: RequestContext,
+    adapters: FlowAdapterRegistry,
+  ) {
+    this.readModel = new FlowRuntimeReadModel(db);
+    this.runLifecycle = new FlowRunLifecycle(db, requestContext, adapters, this.readModel);
+    this.taskDispatch = new FlowTaskDispatch(db, requestContext, adapters, this.readModel);
+    this.effectDispatch = new FlowEffectDispatch(db, requestContext, adapters, this.readModel);
+  }
 
-  async ensureRun(input: unknown): Promise<Record<string, unknown>> {
-    const dto = parseDto(ensureRunSchema, input);
-    const scopeCode = dto.scopeCode ?? await this.scopeCodeForId(dto.scopeId);
-
-    await this.buildAdapterFactsIfRegistered({
-      adapterKey: dto.adapterKey,
-      targetType: dto.targetType,
-      targetId: dto.targetId,
-      signalKey: dto.signalKey,
-      payload: dto.payload,
-    });
-
-    return this.db.tx(async (trx) => {
-      const result = await trx.query<{ run_id: string }>(
-        `
-          select flow.run_ensure(
-            $1::text,
-            $2::text,
-            $3::text,
-            $4::text,
-            $5::text,
-            $6::text
-          ) as run_id
-        `,
-        [dto.graphCode, dto.version, scopeCode, dto.adapterKey ?? null, dto.targetType, dto.targetId],
-      );
-      const runId = result.rows[0]?.run_id;
-      if (!runId) {
-        throw new BadRequestException('Flow run was not created');
-      }
-      return { runId };
-    });
+  ensureRun(input: unknown): Promise<Record<string, unknown>> {
+    return this.runLifecycle.ensureRun(input);
   }
 
   listRuns(query: FilterInput = {}): Promise<Record<string, unknown>> {
-    const { limit, offset, page, pageSize } = pageLimitOffset(query);
-    const where: string[] = [];
-    const values: unknown[] = [];
-    addUuidFilter(where, values, 'scope_id', query.scopeId);
-    addUuidFilter(where, values, 'graph_id', query.graphId);
-    addTextFilter(where, values, 'target_type', query.targetType);
-    addTextFilter(where, values, 'target_id', query.targetId);
-    addTextFilter(where, values, 'status', query.status);
-    const whereSql = where.length > 0 ? ` where ${where.join(' and ')}` : '';
-
-    return this.db.tx(async (trx) => {
-      const rows = await trx.query<FlowRow>(
-        `select * from flow.runs${whereSql} order by created_at desc limit $${values.length + 1} offset $${values.length + 2}`,
-        [...values, limit, offset],
-      );
-      const total = await trx.query<{ total: string }>(
-        `select count(*)::text as total from flow.runs${whereSql}`,
-        values,
-      );
-      return {
-        data: rows.rows.map(camelizeRow),
-        meta: {
-          page,
-          pageSize,
-          total: Number(total.rows[0]?.total ?? 0),
-        },
-      };
-    }, {
-      role: 'reader',
-      readonly: true,
-    });
+    return this.runLifecycle.listRuns(query);
   }
 
   getRun(id: string): Promise<Record<string, unknown>> {
-    return this.getOne('select * from flow.runs where id = $1::uuid limit 1', [id], 'Run not found');
+    return this.runLifecycle.getRun(id);
   }
 
   updateRun(id: string, input: unknown): Promise<Record<string, unknown>> {
-    const dto = parseDto(updateRunSchema, input);
-    return this.db.tx(async (trx) => {
-      const result = await trx.query<FlowRow>(
-        `
-          update flow.runs
-          set status = $2::flow.run_status,
-              updated_by = $3::uuid,
-              updated_at = clock_timestamp()
-          where id = $1::uuid
-          returning *
-        `,
-        [id, dto.status, this.requestContext.actorId ?? null],
-      );
-      const row = result.rows[0];
-      if (!row) {
-        throw new NotFoundException('Run not found');
-      }
-      return camelizeRow(row);
-    });
+    return this.runLifecycle.updateRun(id, input);
   }
 
   listRunNodeRuns(runId: string): Promise<Record<string, unknown>[]> {
-    return this.list(
-      `
-        select nr.*, n.code as node_code, n.name as node_name, n.kind
-        from flow.node_runs nr
-        join flow.nodes n on n.id = nr.node_id
-        where nr.run_id = $1::uuid
-        order by nr.opened_at, nr.id
-      `,
-      [runId],
-    );
+    return this.runLifecycle.listRunNodeRuns(runId);
   }
 
   listRunTasks(runId: string): Promise<Record<string, unknown>[]> {
-    return this.list(
-      `
-        select t.*, n.code as node_code, n.name as node_name, n.kind
-        from flow.tasks t
-        join flow.nodes n on n.id = t.node_id
-        where t.run_id = $1::uuid
-        order by t.created_at desc, t.id
-      `,
-      [runId],
-    );
+    return this.runLifecycle.listRunTasks(runId);
   }
 
   listRunEvents(runId: string): Promise<Record<string, unknown>[]> {
-    return this.list(
-      `
-        select e.*, n.code as node_code, t.status as task_status
-        from flow.events e
-        left join flow.nodes n on n.id = e.node_id
-        left join flow.tasks t on t.id = e.task_id
-        where e.run_id = $1::uuid
-        order by e.created_at desc, e.id desc
-      `,
-      [runId],
-    );
+    return this.runLifecycle.listRunEvents(runId);
   }
 
-  async getRunFacts(id: string): Promise<Record<string, unknown>> {
-    const run = await this.getRun(id);
-    const adapterFacts = await this.buildAdapterFactsIfRegistered({
-      adapterKey: optionalString(run.adapterKey),
-      targetType: String(run.targetType),
-      targetId: String(run.targetId),
-      runId: id,
-    });
-
-    return this.db.tx(async (trx) => {
-      const result = await trx.query<{ facts: Record<string, unknown> }>(
-        'select flow.build_facts($1::uuid, $2::text, $3::text) as facts',
-        [run.scopeId, run.targetType, run.targetId],
-      );
-      return {
-        ...(result.rows[0]?.facts ?? {}),
-        adapter: adapterFacts,
-      };
-    }, {
-      role: 'reader',
-      readonly: true,
-    });
+  getRunFacts(id: string): Promise<Record<string, unknown>> {
+    return this.runLifecycle.getRunFacts(id);
   }
 
   listNodeRuns(query: FilterInput = {}): Promise<Record<string, unknown>> {
-    const { limit, offset, page, pageSize } = pageLimitOffset(query);
-    const where: string[] = [];
-    const values: unknown[] = [];
-    addUuidFilter(where, values, 'nr.run_id', query.runId);
-    addTextFilter(where, values, 'nr.status', query.status);
-    const whereSql = where.length > 0 ? ` where ${where.join(' and ')}` : '';
-
-    return this.db.tx(async (trx) => {
-      const rows = await trx.query<FlowRow>(
-        `
-          select nr.*, n.code as node_code, n.name as node_name, n.kind
-          from flow.node_runs nr
-          join flow.nodes n on n.id = nr.node_id
-          ${whereSql}
-          order by nr.opened_at desc, nr.id desc
-          limit $${values.length + 1} offset $${values.length + 2}
-        `,
-        [...values, limit, offset],
-      );
-      const total = await trx.query<{ total: string }>(
-        `select count(*)::text as total from flow.node_runs nr${whereSql}`,
-        values,
-      );
-      return {
-        data: rows.rows.map(camelizeRow),
-        meta: { page, pageSize, total: Number(total.rows[0]?.total ?? 0) },
-      };
-    }, {
-      role: 'reader',
-      readonly: true,
-    });
+    return this.runLifecycle.listNodeRuns(query);
   }
 
   getNodeRun(id: string): Promise<Record<string, unknown>> {
-    return this.getOne(
-      `
-        select nr.*, n.code as node_code, n.name as node_name, n.kind
-        from flow.node_runs nr
-        join flow.nodes n on n.id = nr.node_id
-        where nr.id = $1::uuid
-        limit 1
-      `,
-      [id],
-      'Node run not found',
-    );
+    return this.runLifecycle.getNodeRun(id);
   }
 
   listTasks(query: FilterInput = {}): Promise<Record<string, unknown>> {
-    const { limit, offset, page, pageSize } = pageLimitOffset(query);
-    const where: string[] = [];
-    const values: unknown[] = [];
-    addUuidFilter(where, values, 't.run_id', query.runId);
-    addUuidFilter(where, values, 't.assignee_user_id', query.assigneeUserId);
-    addTextFilter(where, values, 't.status', query.status);
-    if (query.mine === 'true' || query.mine === true) {
-      values.push(this.requestContext.actorId ?? '');
-      where.push(`t.assignee_user_id = $${values.length}::uuid`);
-    }
-    const whereSql = where.length > 0 ? ` where ${where.join(' and ')}` : '';
-
-    return this.db.tx(async (trx) => {
-      const rows = await trx.query<FlowRow>(
-        `
-          select t.*, n.code as node_code, n.name as node_name, n.kind
-          from flow.tasks t
-          join flow.nodes n on n.id = t.node_id
-          ${whereSql}
-          order by t.created_at desc, t.id desc
-          limit $${values.length + 1} offset $${values.length + 2}
-        `,
-        [...values, limit, offset],
-      );
-      const total = await trx.query<{ total: string }>(
-        `select count(*)::text as total from flow.tasks t${whereSql}`,
-        values,
-      );
-      return {
-        data: rows.rows.map(camelizeRow),
-        meta: { page, pageSize, total: Number(total.rows[0]?.total ?? 0) },
-      };
-    }, {
-      role: 'reader',
-      readonly: true,
-    });
+    return this.taskDispatch.listTasks(query);
   }
 
   getTask(id: string): Promise<Record<string, unknown>> {
-    return this.getOne(
-      `
-        select t.*, n.code as node_code, n.name as node_name, n.kind
-        from flow.tasks t
-        join flow.nodes n on n.id = t.node_id
-        where t.id = $1::uuid
-        limit 1
-      `,
-      [id],
-      'Task not found',
-    );
+    return this.taskDispatch.getTask(id);
   }
 
-  async actTask(id: string, input: unknown): Promise<Record<string, unknown>> {
-    const dto = parseDto(taskActionSchema, input);
-    await this.assertAllowedAction(id, dto.action);
-    await this.assertTaskExecutionAllowed(id);
-    return this.callTaskFunction('flow.task_complete($1::uuid, $2::text, $3::text, $4::jsonb)', [
-      id,
-      dto.action,
-      dto.note ?? null,
-      dto.payload ?? {},
-    ]);
+  actTask(id: string, input: unknown): Promise<Record<string, unknown>> {
+    return this.taskDispatch.actTask(id, input);
   }
 
-  async assignTask(id: string, input: unknown): Promise<Record<string, unknown>> {
-    const dto = parseDto(assignTaskSchema, input);
-    await this.assertTaskManagementAllowed(id);
-    return this.callTaskFunction('flow.task_assign($1::uuid, $2::uuid, $3::text)', [
-      id,
-      dto.userId,
-      dto.note ?? null,
-    ]);
+  assignTask(id: string, input: unknown): Promise<Record<string, unknown>> {
+    return this.taskDispatch.assignTask(id, input);
   }
 
-  async unassignTask(id: string, input: unknown): Promise<Record<string, unknown>> {
-    const dto = parseDto(taskNoteSchema, input);
-    await this.assertTaskManagementAllowed(id);
-    return this.callTaskFunction('flow.task_unassign($1::uuid, $2::text)', [id, dto.note ?? null]);
+  unassignTask(id: string, input: unknown): Promise<Record<string, unknown>> {
+    return this.taskDispatch.unassignTask(id, input);
   }
 
-  async acceptTask(id: string, input: unknown): Promise<Record<string, unknown>> {
-    const dto = parseDto(taskNoteSchema, input);
-    await this.assertTaskExecutionAllowed(id);
-    return this.callTaskFunction('flow.task_accept($1::uuid, $2::text)', [id, dto.note ?? null]);
+  acceptTask(id: string, input: unknown): Promise<Record<string, unknown>> {
+    return this.taskDispatch.acceptTask(id, input);
   }
 
-  async declineTask(id: string, input: unknown): Promise<Record<string, unknown>> {
-    const dto = parseDto(taskNoteSchema, input);
-    await this.assertTaskExecutionAllowed(id);
-    return this.callTaskFunction('flow.task_decline($1::uuid, $2::text)', [id, dto.note ?? null]);
+  declineTask(id: string, input: unknown): Promise<Record<string, unknown>> {
+    return this.taskDispatch.declineTask(id, input);
   }
 
-  async unacceptTask(id: string, input: unknown): Promise<Record<string, unknown>> {
-    const dto = parseDto(taskNoteSchema, input);
-    await this.assertTaskExecutionAllowed(id);
-    return this.callTaskFunction('flow.task_unaccept($1::uuid, $2::text)', [id, dto.note ?? null]);
+  unacceptTask(id: string, input: unknown): Promise<Record<string, unknown>> {
+    return this.taskDispatch.unacceptTask(id, input);
   }
 
-  async withdrawTask(id: string, input: unknown): Promise<Record<string, unknown>> {
-    const dto = parseDto(taskNoteSchema, input);
-    await this.assertTaskExecutionAllowed(id);
-    return this.callTaskFunction('flow.task_withdraw($1::uuid, $2::text)', [id, dto.note ?? null]);
+  withdrawTask(id: string, input: unknown): Promise<Record<string, unknown>> {
+    return this.taskDispatch.withdrawTask(id, input);
   }
 
-  async taskCandidates(id: string): Promise<Record<string, unknown>[]> {
-    await this.assertTaskManagementAllowed(id);
-    const candidates = await this.list(
-      `
-        select
-          candidate.*,
-          rule.params,
-          t.run_id,
-          t.node_id,
-          r.adapter_key,
-          r.target_type,
-          r.target_id
-        from flow.tasks t
-        cross join lateral flow.resolve_agents(t.node_id, t.run_id) candidate
-        left join flow.agent_rules rule on rule.id = candidate.rule_id
-        join flow.runs r on r.id = t.run_id
-        where t.id = $1::uuid
-      `,
-      [id],
-    );
-    const resolved: Record<string, unknown>[] = [];
-    for (const candidate of candidates) {
-      if (candidate.agentType !== 'resolver') {
-        resolved.push(candidate);
-        continue;
-      }
-      const resolverKey = String(candidate.agentId ?? '');
-      const adapterKey = optionalString(candidate.adapterKey);
-      if (!this.requestContext.tenantId || !adapterKey || !resolverKey) {
-        resolved.push(candidate);
-        continue;
-      }
-      const agents = await this.adapters.resolveAgents({
-        tenantId: this.requestContext.tenantId,
-        adapterKey,
-        targetType: String(candidate.targetType ?? ''),
-        targetId: String(candidate.targetId ?? ''),
-        runId: String(candidate.runId ?? ''),
-        nodeId: String(candidate.nodeId ?? ''),
-        ruleId: String(candidate.ruleId ?? ''),
-        resolverKey,
-        params: asJsonObject(candidate.params),
-      });
-      if (agents.length === 0) {
-        resolved.push({ ...candidate, unresolved: true, resolverKey });
-        continue;
-      }
-      for (const agent of agents) {
-        resolved.push({
-          agentType: agent.type,
-          agentId: agent.id,
-          ...(agent.label ? { label: agent.label } : {}),
-          ruleId: candidate.ruleId,
-          resolverKey,
-        });
-      }
-    }
-    return resolved;
+  taskCandidates(id: string): Promise<Record<string, unknown>[]> {
+    return this.taskDispatch.taskCandidates(id);
   }
 
   listUsersForRole(role: string, search?: string): Promise<Record<string, unknown>[]> {
-    const values: unknown[] = [role];
-    const searchSql = optionalString(search)
-      ? ` and (u.email::text ilike $2 or u.external_subject ilike $2)`
-      : '';
-    if (searchSql) {
-      values.push(`%${search}%`);
-    }
-
-    return this.list(
-      `
-        select distinct u.id, u.email, u.external_subject
-        from auth.users u
-        join auth.memberships m on m.user_id = u.id and m.is_active
-        join auth.membership_roles mr on mr.membership_id = m.id
-        join auth.roles r on r.id = mr.role_id
-        where r.key = $1
-        ${searchSql}
-        order by u.email
-        limit 50
-      `,
-      values,
-    );
+    return this.taskDispatch.listUsersForRole(role, search);
   }
 
   getTaskUser(id: string): Promise<Record<string, unknown>> {
-    return this.getOne(
-      `
-        select distinct u.id, u.email, u.external_subject, u.locale
-        from auth.users u
-        join auth.memberships m on m.user_id = u.id and m.is_active
-        where u.id = $1::uuid
-        limit 1
-      `,
-      [id],
-      'User not found',
-    );
+    return this.taskDispatch.getTaskUser(id);
   }
 
   listEvents(query: FilterInput = {}): Promise<Record<string, unknown>> {
-    const { limit, offset, page, pageSize } = pageLimitOffset(query);
-    const where: string[] = [];
-    const values: unknown[] = [];
-    addUuidFilter(where, values, 'run_id', query.runId);
-    addUuidFilter(where, values, 'node_id', query.nodeId);
-    addUuidFilter(where, values, 'task_id', query.taskId);
-    addTextFilter(where, values, 'kind', query.kind);
-    addTextFilter(where, values, 'actor_id', query.actorId);
-    const whereSql = where.length > 0 ? ` where ${where.join(' and ')}` : '';
-
-    return this.db.tx(async (trx) => {
-      const rows = await trx.query<FlowRow>(
-        `select * from flow.events${whereSql} order by created_at desc, id desc limit $${values.length + 1} offset $${values.length + 2}`,
-        [...values, limit, offset],
-      );
-      const total = await trx.query<{ total: string }>(
-        `select count(*)::text as total from flow.events${whereSql}`,
-        values,
-      );
-      return {
-        data: rows.rows.map(camelizeRow),
-        meta: { page, pageSize, total: Number(total.rows[0]?.total ?? 0) },
-      };
-    }, {
-      role: 'reader',
-      readonly: true,
-    });
+    return this.effectDispatch.listEvents(query);
   }
 
-  async signal(input: unknown): Promise<Record<string, unknown>> {
-    const dto = parseDto(signalSchema, input);
-    const scopeId = dto.scopeId ?? await this.scopeIdForCode(dto.scopeCode);
-
-    await this.buildAdapterFactsIfRegistered({
-      adapterKey: dto.adapterKey,
-      targetType: dto.targetType,
-      targetId: dto.targetId,
-      signalKey: dto.signalKey,
-      payload: dto.payload,
-    });
-
-    return this.db.tx(async (trx) => {
-      await trx.query('select flow.signal_changed($1::uuid, $2::text, $3::text)', [
-        scopeId,
-        dto.targetType,
-        dto.targetId,
-      ]);
-      return { scopeId, targetType: dto.targetType, targetId: dto.targetId, signaled: true };
-    });
+  signal(input: unknown): Promise<Record<string, unknown>> {
+    return this.effectDispatch.signal(input);
   }
 
-  async dispatchPendingEffects(input: unknown = {}): Promise<Record<string, unknown>> {
-    const dto = parseDto(dispatchEffectsSchema, input);
-    const limit = dto.limit ?? 50;
-    const pending = await this.db.tx(async (trx) => {
-      const result = await trx.query<PendingEffectRow>(
-        `
-          select
-            e.id as event_id,
-            e.run_id,
-            e.node_id,
-            e.task_id,
-            e.payload,
-            r.adapter_key,
-            r.target_type,
-            r.target_id,
-            n.code as node_code,
-            t.decided_action as action
-          from flow.events e
-          join flow.runs r on r.id = e.run_id
-          left join flow.nodes n on n.id = e.node_id
-          left join flow.tasks t on t.id = e.task_id
-          where e.kind = 'effect_requested'
-            and ($1::uuid is null or e.run_id = $1::uuid)
-            and ($2::uuid is null or e.id = $2::uuid)
-            and not exists (
-              select 1
-              from flow.events terminal
-              where terminal.run_id = e.run_id
-                and terminal.kind in ('effect_succeeded', 'effect_failed')
-                and terminal.payload ->> 'effectEventId' = e.id::text
-            )
-          order by e.created_at, e.id
-          limit $3
-        `,
-        [dto.runId ?? null, dto.effectEventId ?? null, limit],
-      );
-      return result.rows;
-    }, {
-      role: 'reader',
-      readonly: true,
-    });
-
-    let succeeded = 0;
-    let failed = 0;
-    const diagnostics: Record<string, unknown>[] = [];
-    for (const event of pending) {
-      const payload = asJsonObject(event.payload);
-      const effectKey = optionalString(payload.effectKey);
-      if (!effectKey) {
-        failed += 1;
-        await this.recordEffectResult(event, 'effect_failed', {
-          error: 'effectKey is required',
-          effectEventId: event.event_id,
-        });
-        diagnostics.push({ effectEventId: event.event_id, ok: false, error: 'effectKey is required' });
-        continue;
-      }
-
-      try {
-        const result = await this.adapters.applyEffect({
-          tenantId: this.requireTenantId(),
-          adapterKey: event.adapter_key,
-          targetType: event.target_type,
-          targetId: event.target_id,
-          runId: event.run_id,
-          effectKey,
-          ...(event.node_code ? { nodeCode: event.node_code } : {}),
-          ...(event.action ? { action: event.action } : {}),
-          payload: asJsonObject(payload.payload),
-        });
-        succeeded += 1;
-        await this.recordEffectResult(event, 'effect_succeeded', {
-          effectEventId: event.event_id,
-          effectKey,
-          ok: result.ok,
-          ...(result.payload ? { result: result.payload } : {}),
-        });
-        diagnostics.push({ effectEventId: event.event_id, ok: true });
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        failed += 1;
-        await this.recordEffectResult(event, 'effect_failed', {
-          effectEventId: event.event_id,
-          effectKey,
-          error: message,
-        });
-        diagnostics.push({ effectEventId: event.event_id, ok: false, error: message });
-      }
-    }
-
-    return {
-      attempted: pending.length,
-      succeeded,
-      failed,
-      skipped: 0,
-      diagnostics,
-    };
-  }
-
-  private async scopeCodeForId(scopeId: string | undefined): Promise<string> {
-    if (!scopeId) {
-      throw new BadRequestException('scopeId or scopeCode is required');
-    }
-    const scope = await this.getOne(
-      'select code from flow.scopes where id = $1::uuid limit 1',
-      [scopeId],
-      'Scope not found',
-    );
-    return String(scope.code);
-  }
-
-  private async scopeIdForCode(scopeCode: string | undefined): Promise<string> {
-    if (!scopeCode) {
-      throw new BadRequestException('scopeId or scopeCode is required');
-    }
-    const scope = await this.getOne(
-      'select id from flow.scopes where code = $1 limit 1',
-      [scopeCode],
-      'Scope not found',
-    );
-    return String(scope.id);
-  }
-
-  private async buildAdapterFactsIfRegistered(input: {
-    adapterKey?: string | undefined;
-    targetType: string;
-    targetId: string;
-    runId?: string | undefined;
-    signalKey?: string | undefined;
-    payload?: Record<string, unknown> | undefined;
-  }): Promise<Record<string, unknown>> {
-    const tenantId = this.requestContext.tenantId;
-    if (!tenantId || !input.adapterKey) {
-      return {};
-    }
-
-    try {
-      return await this.adapters.buildFacts({
-        tenantId,
-        adapterKey: input.adapterKey,
-        targetType: input.targetType,
-        targetId: input.targetId,
-        ...(input.runId ? { runId: input.runId } : {}),
-        ...(input.signalKey ? { signalKey: input.signalKey } : {}),
-        ...(input.payload ? { payload: input.payload } : {}),
-      });
-    } catch (error) {
-      await this.recordAdapterFailure(input, error);
-      throw error;
-    }
-  }
-
-  private async recordEffectResult(
-    event: PendingEffectRow,
-    kind: 'effect_succeeded' | 'effect_failed',
-    payload: FlowJsonObject,
-  ): Promise<void> {
-    await this.db.tx(async (trx) => {
-      await trx.query(
-        `
-          insert into flow.events (tenant_id, run_id, node_id, task_id, kind, actor_id, payload)
-          values ($1::uuid, $2::uuid, $3::uuid, $4::uuid, $5::flow.event_kind, $6::uuid, $7::jsonb)
-        `,
-        [
-          this.requireTenantId(),
-          event.run_id,
-          event.node_id ?? null,
-          event.task_id ?? null,
-          kind,
-          this.requestContext.actorId ?? null,
-          payload,
-        ],
-      );
-    });
-  }
-
-  private async recordAdapterFailure(
-    input: {
-      adapterKey?: string | undefined;
-      targetType: string;
-      targetId: string;
-      runId?: string | undefined;
-    },
-    error: unknown,
-  ): Promise<void> {
-    if (!input.runId) {
-      return;
-    }
-
-    const message = error instanceof Error ? error.message : String(error);
-    await this.db.tx(async (trx) => {
-      await trx.query(
-        `
-          insert into flow.events (tenant_id, run_id, kind, actor_id, payload)
-          values ($1::uuid, $2::uuid, 'facts_changed', $3::uuid, $4::jsonb)
-        `,
-        [
-          this.requestContext.tenantId,
-          input.runId,
-          this.requestContext.actorId ?? null,
-          {
-            adapterKey: input.adapterKey,
-            targetType: input.targetType,
-            targetId: input.targetId,
-            error: message,
-          },
-        ],
-      );
-    });
-  }
-
-  private async callTaskFunction(sqlFunctionCall: string, values: unknown[]): Promise<Record<string, unknown>> {
-    return this.db.tx(async (trx) => {
-      await trx.query(`select ${sqlFunctionCall}`, values);
-      return this.getTaskFromTransaction(trx, String(values[0]));
-    });
-  }
-
-  private async assertAllowedAction(taskId: string, action: string): Promise<void> {
-    await this.db.tx(async (trx) => {
-      const result = await trx.query<{ allowed: boolean }>(
-        `
-          select $2::text = any(t.allowed_actions) as allowed
-          from flow.tasks t
-          where t.id = $1::uuid
-          limit 1
-        `,
-        [taskId, action],
-      );
-      const allowed = result.rows[0]?.allowed;
-      if (allowed === undefined) {
-        throw new NotFoundException('Task not found');
-      }
-      if (!allowed) {
-        throw new BadRequestException('Action is not allowed for this task');
-      }
-    }, {
-      role: 'reader',
-      readonly: true,
-    });
-  }
-
-  private async assertTaskExecutionAllowed(taskId: string): Promise<void> {
-    const actorId = this.requestContext.actorId;
-    if (!actorId) {
-      throw new ForbiddenException('Task actor context is required');
-    }
-    const access = await this.taskAccess(taskId, actorId);
-    if (access.assignee_user_id && access.assignee_user_id !== actorId) {
-      throw new ForbiddenException('Only the current assignee may execute this task');
-    }
-    if (!access.assignee_user_id && !access.is_user_candidate) {
-      throw new ForbiddenException('Actor is not a task candidate');
-    }
-  }
-
-  private async assertTaskManagementAllowed(taskId: string): Promise<void> {
-    const access = await this.taskAccess(taskId, this.requestContext.actorId);
-    const actorId = this.requestContext.actorId;
-    const allowed = await this.adapters.canManage({
-      tenantId: this.requireTenantId(),
-      adapterKey: access.adapter_key,
-      targetType: access.target_type,
-      targetId: access.target_id,
-      ...(actorId ? { actorId } : {}),
-    });
-    if (!allowed) {
-      throw new ForbiddenException('Adapter denied Flow task management');
-    }
-  }
-
-  private async taskAccess(taskId: string, actorId: string | undefined): Promise<TaskAccessRow> {
-    return this.db.tx(async (trx) => {
-      const result = await trx.query<TaskAccessRow>(
-        `
-          select
-            t.assignee_user_id as assignee_user_id,
-            r.adapter_key,
-            r.target_type,
-            r.target_id,
-            exists (
-              select 1
-              from flow.resolve_agents(t.node_id, t.run_id) candidate
-              where candidate.agent_type = 'user'
-                and candidate.agent_id = $2::text
-            ) as is_user_candidate
-          from flow.tasks t
-          join flow.runs r on r.id = t.run_id
-          where t.id = $1::uuid
-          limit 1
-        `,
-        [taskId, actorId ?? ''],
-      );
-      const row = result.rows[0];
-      if (!row) {
-        throw new NotFoundException('Task not found');
-      }
-      return row;
-    }, {
-      role: 'reader',
-      readonly: true,
-    });
-  }
-
-  private async getTaskFromTransaction(trx: Transaction, id: string): Promise<Record<string, unknown>> {
-    const result = await trx.query<FlowRow>(
-      `
-        select t.*, n.code as node_code, n.name as node_name, n.kind
-        from flow.tasks t
-        join flow.nodes n on n.id = t.node_id
-        where t.id = $1::uuid
-        limit 1
-      `,
-      [id],
-    );
-    const row = result.rows[0];
-    if (!row) {
-      throw new NotFoundException('Task not found');
-    }
-    return camelizeRow(row);
-  }
-
-  private async list(sql: string, values: unknown[]): Promise<Record<string, unknown>[]> {
-    return this.db.tx(async (trx) => {
-      const result = await trx.query<FlowRow>(sql, values);
-      return result.rows.map(camelizeRow);
-    }, {
-      role: 'reader',
-      readonly: true,
-    });
-  }
-
-  private async getOne(
-    sql: string,
-    values: unknown[],
-    notFoundMessage: string,
-  ): Promise<Record<string, unknown>> {
-    return this.db.tx(async (trx) => {
-      const result = await trx.query<FlowRow>(sql, values);
-      const row = result.rows[0];
-      if (!row) {
-        throw new NotFoundException(notFoundMessage);
-      }
-      return camelizeRow(row);
-    }, {
-      role: 'reader',
-      readonly: true,
-    });
+  dispatchPendingEffects(input: unknown = {}): Promise<Record<string, unknown>> {
+    return this.effectDispatch.dispatchPendingEffects(input);
   }
 
   objectInput(input: unknown): Record<string, unknown> {
     return requireObject(input);
   }
 
-  private requireTenantId(): string {
-    const tenantId = this.requestContext.tenantId;
-    if (!tenantId) {
-      throw new BadRequestException('Tenant context is required');
-    }
-    return tenantId;
+  private scopeCodeForId(scopeId: string | undefined): Promise<string> {
+    return this.readModel.scopeCodeForId(scopeId);
+  }
+
+  private scopeIdForCode(scopeCode: string | undefined): Promise<string> {
+    return this.readModel.scopeIdForCode(scopeCode);
   }
 }

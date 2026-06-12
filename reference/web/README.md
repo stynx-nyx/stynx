@@ -2,6 +2,8 @@
 
 `@stynx/reference-web` is the Angular 20 showcase app for the neutral `sample.*` domain. It demonstrates how a consumer application mounts the `@stynx-web/*` packages against the reference API while keeping auth, tenancy, i18n, storage, flow, IAM, and shared UI wiring visible in one app.
 
+For adoption guidance, start with [`docs/meta/dev/frontend.md`](/docs/meta/dev/frontend). This README stays a showcase map: routes, package surfaces, and local commands.
+
 ## Demo Surfaces
 
 | Route                                                                       | Demonstrates                                                                                                                                                                 | Package docs                                                                                                                                                                                                                                                                                                                                                                           |

@@ -88,6 +88,7 @@ export function createVitestConfig({
   globals = true,
   setupFiles = [],
   testTimeout = 30000,
+  hookTimeout = 60_000,
   singleThread = false,
   passWithNoTests = false,
   patchDrizzle = false,
@@ -126,13 +127,20 @@ export function createVitestConfig({
       include,
       setupFiles,
       testTimeout,
+      hookTimeout,
       passWithNoTests,
       // Inline @nestjs/@aws-sdk/@stynx-* so vi.mock can intercept their
       // exports and so require() / import() resolve to the same module
       // instance (avoids CJS/ESM dual-class-identity issues with NestJS DI).
       server: { deps: { inline: [/@nestjs/, /@aws-sdk/, /@stynx\//, /@stynx-web\//] } },
       ...(singleThread
-        ? { pool: 'threads', poolOptions: { threads: { singleThread: true } } }
+        ? {
+            fileParallelism: false,
+            maxWorkers: 1,
+            minWorkers: 1,
+            pool: 'threads',
+            poolOptions: { threads: { singleThread: true } },
+          }
         : {}),
       reporters: ['default'],
       coverage: {

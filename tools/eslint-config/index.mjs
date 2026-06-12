@@ -56,7 +56,45 @@ const tsdocPackages = new Set([
   '@stynx/sessions',
   '@stynx/tenancy',
   '@stynx/privacy',
+  '@stynx/backend',
+  '@stynx/cli',
+  '@stynx/contracts',
+  '@stynx/feature-flags',
+  '@stynx/flow',
+  '@stynx/health',
+  '@stynx/i18n',
+  '@stynx/idempotency',
+  '@stynx/integration-adapter',
+  '@stynx/logging',
+  '@stynx/pdf',
+  '@stynx/pdf-a',
+  '@stynx/pdf-a-vera-docker',
+  '@stynx/ratelimit',
+  '@stynx/signature',
+  '@stynx/testing',
+  '@stynx-web/angular',
+  '@stynx-web/angular-audit',
+  '@stynx-web/angular-auth',
+  '@stynx-web/angular-flow',
+  '@stynx-web/angular-i18n',
+  '@stynx-web/angular-iam',
+  '@stynx-web/angular-profile',
+  '@stynx-web/angular-sessions',
+  '@stynx-web/angular-storage',
+  '@stynx-web/angular-tenancy',
+  '@stynx-web/angular-trash',
+  '@stynx-web/angular-ui',
+  '@stynx-web/sdk',
 ]);
+
+const tsdocExportContexts = ['ExportAllDeclaration', 'ExportNamedDeclaration'];
+const tsdocExportContextsForPackage = () =>
+  currentPackageName() === '@stynx-web/sdk'
+    ? [
+        "ExportAllDeclaration[source.value!='./generated']",
+        "ExportNamedDeclaration[source.value!='./generated']",
+      ]
+    : tsdocExportContexts;
 
 const writeRouteDecoratorNames = new Set(['Post', 'Put', 'Patch']);
 const idempotencyDecoratorNames = new Set(['Idempotent', 'NoIdempotent']);
@@ -211,7 +249,16 @@ const resolveTsconfigProject = (tsconfig) => {
 
 const createConfig = ({ files, tsconfig = './tsconfig.json', browser = false, nest = false, angular = false, allowPgPool = false, allowS3Fetch = false, processor = undefined }) => [
   {
-    ignores: ['dist/**', 'build/**', 'coverage/**', 'node_modules/**', '.angular/**'],
+    ignores: [
+      'dist/**',
+      'build/**',
+      'coverage/**',
+      'node_modules/**',
+      '.angular/**',
+      // Generated OpenAPI SDK output carries its own codegen marker and is
+      // intentionally excluded; only the hand-authored SDK facade is documented.
+      'src/generated/**',
+    ],
   },
   {
     files,
@@ -293,7 +340,7 @@ const createConfig = ({ files, tsconfig = './tsconfig.json', browser = false, ne
           'jsdoc/require-jsdoc': [
             'error',
             {
-              contexts: ['ExportAllDeclaration', 'ExportNamedDeclaration'],
+              contexts: tsdocExportContextsForPackage(),
               publicOnly: true,
             },
           ],

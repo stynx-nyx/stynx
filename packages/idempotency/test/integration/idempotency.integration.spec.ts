@@ -91,7 +91,7 @@ describe('Idempotency integration', () => {
       return undefined;
     };
     Reflect.defineMetadata(STYNX_IDEMPOTENT_ROUTE, { headerName: 'Idempotency-Key' }, handler);
-  });
+  }, 60_000);
 
   afterAll(async () => {
     await moduleRef?.close();
@@ -100,7 +100,7 @@ describe('Idempotency integration', () => {
     }
     await stopRedisDockerContainer(redis);
     await postgres?.dispose();
-  });
+  }, 60_000);
 
   it('replays the exact response on the second call', async () => {
     const interceptor = new IdempotencyInterceptor(reflector, {}, store, backend, new InMemoryIdempotencyMetrics());

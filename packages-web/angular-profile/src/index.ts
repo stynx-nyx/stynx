@@ -1,3 +1,8 @@
+/**
+ * Public Angular profile exports for preferences, security settings, hosted-auth handoff, and routes.
+ *
+ * @packageDocumentation
+ */
 export * from './hosted-auth-action-handoff.component';
 export * from './preferences-form.component';
 export * from './profile-security.component';

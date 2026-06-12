@@ -1,3 +1,8 @@
+/**
+ * Public Angular tenancy exports for tenant context, switching UI, HTTP interception, and providers.
+ *
+ * @packageDocumentation
+ */
 export * from './provide-tenancy';
 export * from './tenant-context.service';
 export * from './tenant.interceptor';

@@ -1,3 +1,8 @@
+/**
+ * Public Angular auth exports for guards, permission UI, OIDC, session, and token storage.
+ *
+ * @packageDocumentation
+ */
 export * from './auth.guard';
 export * from './has-permission.directive';
 export * from './http-auth.backend';

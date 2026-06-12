@@ -13,13 +13,14 @@ export function parseVeraPdfJson(raw: string): PdfAValidationResult {
   const parsed = parseJson(raw);
   const report = asRecord(parsed.report) ?? parsed;
   const job = firstRecord(report.jobs) ?? report;
-  const validation = asRecord(job.validationResult) ?? asRecord(job.validation) ?? job;
+  const validation =
+    firstRecord(job.validationResult) ?? asRecord(job.validationResult) ?? asRecord(job.validation) ?? job;
   const errors = collectRuleErrors(validation);
   const valid = readBoolean(validation, ['isCompliant', 'compliant', 'valid']) ?? errors.length === 0;
 
   return {
     valid,
-    declared: declaredFrom(validation, job, report),
+    declared: valid ? declaredFrom(validation, job, report) : null,
     rulesetVersion: rulesetVersionFrom(report),
     validatedAt: new Date().toISOString(),
     durationMs: readNumber(validation, ['durationMs', 'duration']) ?? 0,
@@ -46,7 +47,7 @@ function parseJson(raw: string): JsonRecord {
 
 function collectRuleErrors(validation: JsonRecord): PdfARuleError[] {
   const details = asRecord(validation.details) ?? validation;
-  const failedRules = readArray(details, ['failedRules', 'rules']);
+  const failedRules = readArray(details, ['failedRules', 'rules', 'ruleSummaries']);
   return failedRules.flatMap((rule) => {
     const ruleRecord = asRecord(rule);
     if (!ruleRecord) return [];
@@ -130,7 +131,7 @@ function declaredFrom(...records: JsonRecord[]): { version: PdfAVersion; conform
 
 function rulesetVersionFrom(report: JsonRecord): string {
   const buildInformation = asRecord(report.buildInformation);
-  const releaseDetails = asRecord(buildInformation?.releaseDetails);
+  const releaseDetails = firstRecord(buildInformation?.releaseDetails) ?? asRecord(buildInformation?.releaseDetails);
   return (
     stringFrom(report.rulesetVersion) ??
     stringFrom(releaseDetails?.version) ??

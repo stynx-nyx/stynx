@@ -1,11 +1,26 @@
 import Handlebars from 'handlebars';
+import type { Browser, Page } from 'playwright';
 import { chromium } from 'playwright';
 import { PdfProfileUnsupportedError, PdfRenderError, PdfValidationError } from './errors';
 import { sha256Hex } from './pdf-renderer';
 import type { LocalPdfRendererOptions, PdfRenderBackend, RenderRequest, RenderResult } from './types';
 
 export class LocalPdfRenderBackend implements PdfRenderBackend {
+  private browser: Browser | undefined;
+  private launchPromise: Promise<Browser> | undefined;
+
   constructor(private readonly options: LocalPdfRendererOptions = {}) {}
+
+  async onModuleDestroy(): Promise<void> {
+    await this.dispose();
+  }
+
+  async dispose(): Promise<void> {
+    const browser = this.browser;
+    this.browser = undefined;
+    this.launchPromise = undefined;
+    await browser?.close();
+  }
 
   async render<TData extends Record<string, unknown>>(
     request: RenderRequest<TData>,
@@ -48,16 +63,13 @@ export class LocalPdfRenderBackend implements PdfRenderBackend {
   }
 
   private async renderHtmlToPdf(request: RenderRequest, html: string): Promise<RenderResult> {
-    let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
+    let page: Page | undefined;
     try {
-      browser = await chromium.launch({
-        headless: true,
-        ...(this.options.launchOptions ?? {}),
-      });
-      const page = await browser.newPage();
+      const browser = await this.getBrowser();
+      page = await browser.newPage();
       page.setDefaultTimeout(this.options.timeoutMs ?? 15_000);
       await page.setContent(withBaseHref(html, this.options.baseUrl), {
-        waitUntil: 'networkidle',
+        waitUntil: 'load',
       });
       const bytes = await page.pdf({
         printBackground: true,
@@ -89,8 +101,39 @@ export class LocalPdfRenderBackend implements PdfRenderBackend {
         cause: error,
       });
     } finally {
-      await browser?.close();
+      await page?.close();
     }
+  }
+
+  private async getBrowser(): Promise<Browser> {
+    if (this.browser?.isConnected()) {
+      return this.browser;
+    }
+    if (this.launchPromise) {
+      return this.launchPromise;
+    }
+    const { timeout, ...launchOptions } = this.options.launchOptions ?? {};
+    this.launchPromise = chromium
+      .launch({
+        headless: true,
+        ...launchOptions,
+        timeout: timeout ?? 60_000,
+      })
+      .then((browser) => {
+        this.browser = browser;
+        this.launchPromise = undefined;
+        browser.on('disconnected', () => {
+          if (this.browser === browser) {
+            this.browser = undefined;
+          }
+        });
+        return browser;
+      })
+      .catch((error: unknown) => {
+        this.launchPromise = undefined;
+        throw error;
+      });
+    return this.launchPromise;
   }
 }
 

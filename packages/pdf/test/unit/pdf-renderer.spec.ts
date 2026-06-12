@@ -14,6 +14,12 @@ function sha256Hex(bytes: Uint8Array): string {
 }
 
 describe('PdfRenderer', () => {
+  const localBackend = new LocalPdfRenderBackend();
+
+  afterAll(async () => {
+    await localBackend.dispose();
+  });
+
   it('renders a fixture template and returns stable bytes for signature input', async () => {
     const renderer = new PdfRenderer(createFixturePdfBackend());
 
@@ -38,7 +44,7 @@ describe('PdfRenderer', () => {
   });
 
   it('renders local HTML into real PDF bytes', async () => {
-    const renderer = new PdfRenderer(new LocalPdfRenderBackend());
+    const renderer = new PdfRenderer(localBackend);
 
     const result = await renderer.render({
       tenantId: 'tenant-a',
@@ -56,7 +62,7 @@ describe('PdfRenderer', () => {
   }, 30_000);
 
   it('renders local Handlebars templates', async () => {
-    const renderer = new PdfRenderer(new LocalPdfRenderBackend());
+    const renderer = new PdfRenderer(localBackend);
 
     const result = await renderer.render({
       tenantId: 'tenant-a',
@@ -90,7 +96,7 @@ describe('PdfRenderer', () => {
   });
 
   it('fails PDF/A requests without a conformance adapter', async () => {
-    const renderer = new PdfRenderer(new LocalPdfRenderBackend());
+    const renderer = new PdfRenderer(localBackend);
 
     await expect(
       renderer.render({

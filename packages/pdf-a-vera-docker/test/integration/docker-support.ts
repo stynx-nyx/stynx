@@ -1,5 +1,4 @@
 import { spawnSync } from 'node:child_process';
-import { DEFAULT_VERAPDF_IMAGE } from '../../src';
 
 let cached: boolean | undefined;
 
@@ -7,9 +6,9 @@ export function isVeraPdfDockerUsable(): boolean {
   if (cached !== undefined) {
     return cached;
   }
-  const result = spawnSync('docker', ['run', '--rm', DEFAULT_VERAPDF_IMAGE, '--version'], {
+  const result = spawnSync('docker', ['version', '--format', '{{.Server.Version}}'], {
     encoding: 'utf8',
-    timeout: 5_000,
+    timeout: 10_000,
   });
   cached = result.status === 0;
   return cached;

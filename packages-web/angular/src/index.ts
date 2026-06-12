@@ -1,3 +1,8 @@
+/**
+ * Public Angular foundation exports for providers, interceptors, request context, and UI services.
+ *
+ * @packageDocumentation
+ */
 export * from './auth.interceptor';
 export * from './empty-state.component';
 export * from './error-banner.service';

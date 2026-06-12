@@ -2,7 +2,11 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { PdfVerificationEvidenceAppender, PublicPayrollPdfBuilder } from '../../src';
 import type { PublicYearlyIncomeDocument } from '../../src';
-import { isVeraPdfDockerUsable, validatePdfA2b } from './verapdf';
+import {
+  VERAPDF_CONFORMANCE_TIMEOUT_MS,
+  isVeraPdfDockerUsable,
+  validatePdfsA2b,
+} from './verapdf';
 
 const describeIfDocker = isVeraPdfDockerUsable() ? describe : describe.skip;
 
@@ -20,20 +24,24 @@ describeIfDocker('yearly-income PDF/A-2b conformance', () => {
 
     const plain = await new PublicPayrollPdfBuilder().buildYearlyIncome(document);
     const signed = await builder.buildYearlyIncome(document);
+    const [plainSummary, evidenceSummary] = validatePdfsA2b([
+      { name: 'yearly-income-plain', pdf: plain },
+      { name: 'yearly-income-evidence', pdf: signed },
+    ]);
 
-    expect(validatePdfA2b(plain, 'yearly-income-plain')).toMatchObject({
+    expect(plainSummary).toMatchObject({
       compliant: true,
       failedChecks: 0,
       failedRules: 0,
       profileName: 'PDF/A-2b validation profile',
     });
-    expect(validatePdfA2b(signed, 'yearly-income-evidence')).toMatchObject({
+    expect(evidenceSummary).toMatchObject({
       compliant: true,
       failedChecks: 0,
       failedRules: 0,
       profileName: 'PDF/A-2b validation profile',
     });
-  }, 80_000);
+  }, VERAPDF_CONFORMANCE_TIMEOUT_MS);
 });
 
 function fixture<T>(name: string): T {
