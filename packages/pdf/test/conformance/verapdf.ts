@@ -1,5 +1,4 @@
-import { mkdtempSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
@@ -51,44 +50,48 @@ export function validatePdfA2b(pdf: Uint8Array, name: string): VeraPdfSummary {
 }
 
 export function validatePdfsA2b(inputs: VeraPdfInput[]): VeraPdfSummary[] {
-  const dir = mkdtempSync(join(tmpdir(), 'stynx-pdf-a-'));
+  const dir = mkdtempSync(join(process.cwd(), '.stynx-pdf-a-'));
   const fileNames = inputs.map((input) => `${input.name}.pdf`);
-  inputs.forEach((input, index) => {
-    writeFileSync(join(dir, fileNames[index]!), input.pdf);
-  });
-  const result = runVeraPdf(fileNames, dir);
+  try {
+    inputs.forEach((input, index) => {
+      writeFileSync(join(dir, fileNames[index]!), input.pdf);
+    });
+    const result = runVeraPdf(fileNames, dir);
 
-  if (result.status !== 0) {
-    throw new Error(`veraPDF failed for ${fileNames.join(', ')}: ${dockerResultMessage(result)}`);
-  }
-
-  const raw = JSON.parse(result.stdout) as {
-    report: {
-      jobs: Array<{
-        validationResult: Array<{
-          compliant: boolean;
-          profileName: string;
-          details: {
-            failedChecks: number;
-            failedRules: number;
-          };
-        }>;
-      }>;
-    };
-  };
-  return inputs.map((input, index) => {
-    const validation = raw.report.jobs[index]?.validationResult[0];
-    if (!validation) {
-      throw new Error(`veraPDF returned no validation result for ${input.name}`);
+    if (result.status !== 0) {
+      throw new Error(`veraPDF failed for ${fileNames.join(', ')}: ${dockerResultMessage(result)}`);
     }
-    return {
-      compliant: validation.compliant,
-      failedChecks: validation.details.failedChecks,
-      failedRules: validation.details.failedRules,
-      profileName: validation.profileName,
-      raw,
+
+    const raw = JSON.parse(result.stdout) as {
+      report: {
+        jobs: Array<{
+          validationResult: Array<{
+            compliant: boolean;
+            profileName: string;
+            details: {
+              failedChecks: number;
+              failedRules: number;
+            };
+          }>;
+        }>;
+      };
     };
-  });
+    return inputs.map((input, index) => {
+      const validation = raw.report.jobs[index]?.validationResult[0];
+      if (!validation) {
+        throw new Error(`veraPDF returned no validation result for ${input.name}`);
+      }
+      return {
+        compliant: validation.compliant,
+        failedChecks: validation.details.failedChecks,
+        failedRules: validation.details.failedRules,
+        profileName: validation.profileName,
+        raw,
+      };
+    });
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 }
 
 function runVeraPdf(fileNames: string[], dir: string): DockerRunResult {
