@@ -106,7 +106,7 @@ function runVeraPdf(fileNames: string[], dir: string): DockerRunResult {
         'json',
         '--flavour',
         '2b',
-        ...fileNames,
+        ...fileNames.map((fileName) => `/work/${fileName}`),
       ],
       fileNames[0] ?? 'validation',
       VERAPDF_RUN_TIMEOUT_MS,

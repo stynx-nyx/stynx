@@ -308,6 +308,8 @@ jobs:
             tools/*/package.json
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Install Playwright Chromium
+        run: pnpm --filter @stynx/pdf exec playwright install --with-deps chromium
       - name: Run STYNX unit tests
         run: pnpm test
       - name: Upload canonical test-result artifacts (unit)
