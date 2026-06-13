@@ -3,7 +3,7 @@ import { createStrykerConfig } from '../../tools/stryker/base.mjs';
 
 export default createStrykerConfig({
   packageName: '@stynx/data',
-  concurrency: 6,
+  concurrency: 2,
   vitestConfig: './vitest.stryker.config.ts',
   mutate: [
     'src/database.ts',

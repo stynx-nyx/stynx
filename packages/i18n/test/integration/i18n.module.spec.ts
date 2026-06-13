@@ -40,6 +40,7 @@ describe('StynxI18nModule integration', () => {
   it('resolves locale order, applies tenant overrides, renders ICU messages, and localizes errors', async () => {
     const tenantId = '01978f4a-32bf-7c27-a131-fd73a9e20111';
     const testApp = await createTestApp({
+      localstack: { enabled: false },
       overrides: {
         imports: [
           StynxI18nModule.forRoot({

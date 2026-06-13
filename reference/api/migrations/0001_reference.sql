@@ -244,6 +244,9 @@ CREATE INDEX idx_record_tenant_status
   ON sample.record (tenant_id, status)
   WHERE status IN ('active','pending');
 
+CREATE INDEX idx_record_tenant_updated_at
+  ON sample.record (tenant_id, updated_at DESC);
+
 CREATE INDEX idx_record_note_record
   ON sample.record_note (record_id);
 

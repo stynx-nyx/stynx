@@ -44,6 +44,8 @@ function runScenario(name) {
   const summaryHtml = resolve(resultsDir, `${name}.summary.html`);
   rmSync(summaryJson, { force: true });
   rmSync(summaryHtml, { force: true });
+  const scenarioEnvPrefix = `STYNX_K6_${name.replace(/-/gu, '_').toUpperCase()}`;
+  const scenarioRate = process.env[`${scenarioEnvPrefix}_RATE`] ?? process.env.STYNX_K6_RATE;
 
   const dockerArgs = [
     '--rm',
@@ -62,13 +64,22 @@ function runScenario(name) {
     '-e',
     `K6_WEB_DASHBOARD_EXPORT=/perf/results/${name}.summary.html`,
   ];
+  if (scenarioRate) {
+    dockerArgs.push('-e', `STYNX_K6_RATE=${scenarioRate}`);
+  }
 
   if (useHostNetwork) {
     dockerArgs.unshift('--network', 'host');
   }
 
   for (const [key, value] of Object.entries(process.env)) {
-    if (key.startsWith('STYNX_K6_') && value && key !== 'STYNX_K6_BASE_URL' && key !== 'STYNX_K6_S3_PUBLIC_BASE_URL') {
+    if (
+      key.startsWith('STYNX_K6_')
+      && value
+      && key !== 'STYNX_K6_BASE_URL'
+      && key !== 'STYNX_K6_S3_PUBLIC_BASE_URL'
+      && key !== 'STYNX_K6_RATE'
+    ) {
       dockerArgs.push('-e', `${key}=${value}`);
     }
   }

@@ -2,6 +2,7 @@ import { createStrykerConfig } from '../../tools/stryker/base.mjs';
 
 export default createStrykerConfig({
   packageName: '@stynx/flow',
+  concurrency: 1,
   vitestConfig: './vitest.stryker.config.ts',
   ignoreStatic: true,
   mutate: [
