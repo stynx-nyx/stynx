@@ -66,10 +66,10 @@
     "@stynx-web/angular-i18n": "workspace:*",
     "@stynx-web/angular-ui": "workspace:*",
     "@stynx-web/sdk": "workspace:*",
-    "@types/node": "24.12.4",
+    "@types/node": "25.9.3",
     "jsdom": "^29.0.2",
     "ng-packagr": "21.2.3",
     "tslib": "^2.8.1",
-    "typescript": "5.9.3"
+    "typescript": "6.0.3"
   }
 }
