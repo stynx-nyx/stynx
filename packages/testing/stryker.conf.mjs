@@ -1,7 +1,7 @@
 import { createStrykerConfig } from '../../tools/stryker/base.mjs';
 
 export default createStrykerConfig({
-  packageName: '@stynx/testing',
+  packageName: '@stynx-nyx/testing',
   checkers: [],
   mutate: [
     'src/context.ts',

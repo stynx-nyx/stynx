@@ -1,8 +1,8 @@
-[**@stynx/pdf-a**](../index.md)
+[**@stynx-nyx/pdf-a**](../index.md)
 
 ---
 
-[@stynx/pdf-a](../index.md) / PDF_A_VALIDATION_ATTEMPTS_TOTAL
+[@stynx-nyx/pdf-a](../index.md) / PDF_A_VALIDATION_ATTEMPTS_TOTAL
 
 # Variable: PDF_A_VALIDATION_ATTEMPTS_TOTAL
 

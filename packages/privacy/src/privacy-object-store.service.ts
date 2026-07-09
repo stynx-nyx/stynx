@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { StynxObjectStore } from '@stynx/storage';
+import { StynxObjectStore } from '@stynx-nyx/storage';
 import { STYNX_PRIVACY_OPTIONS } from './tokens';
 import type { PrivacyObjectStore, StynxPrivacyModuleOptions } from './types';
 

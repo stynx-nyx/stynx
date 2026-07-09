@@ -4,7 +4,7 @@ import type {
   IdentityGroupSummary,
   IdentityLocalSyncResult,
   IdentitySyncContext,
-} from '@stynx/contracts';
+} from '@stynx-nyx/contracts';
 import { IdentityAdminService } from './identity-admin.service';
 
 export interface PormIdentityListUsersQuery {

@@ -10,7 +10,7 @@ A multi-tenant document and work-item management platform — a [DEVAI](https://
 
 **Audiences:**
 
-- **Integrators** building on `@stynx/*` and `@stynx-web/*`: head to [Framework](/docs/framework/) for the contract surface, then [Adopters → STYNX adoption pack](/docs/adopters/stynx/) for the AI-agent porting reference.
+- **Integrators** building on `@stynx-nyx/*` and `@stynx-web/*`: head to [Framework](/docs/framework/) for the contract surface, then [Adopters → STYNX adoption pack](/docs/adopters/stynx/) for the AI-agent porting reference.
 - **Architects** operating in this repo: read `AGENTS.md` + `CLAUDE.md`, then [`framework/arch/`](/docs/framework/arch/) and the locked decisions in [`meta/adr/`](/docs/meta/adr/).
 - **DEVAI adopters** evaluating STYNX as a reference: see the C-4 pilot retros under [`adopters/pilots/c-4/`](/docs/adopters/pilots/c-4/) and the migration ADR at [`meta/adr/ADR-DEVAI-0.2.0-MIGRATION`](/docs/meta/adr/ADR-DEVAI-0.2.0-MIGRATION).
 

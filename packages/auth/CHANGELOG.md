@@ -1,4 +1,4 @@
-# @stynx/auth
+# @stynx-nyx/auth
 
 ## 1.0.0
 
@@ -9,8 +9,8 @@
 ### Patch Changes
 
 - Updated dependencies [8f6df55]
-  - @stynx/core@1.0.0
-  - @stynx/data@1.0.0
-  - @stynx/idempotency@1.0.0
-  - @stynx/sessions@1.0.0
+  - @stynx-nyx/core@1.0.0
+  - @stynx-nyx/data@1.0.0
+  - @stynx-nyx/idempotency@1.0.0
+  - @stynx-nyx/sessions@1.0.0
   - @stech/stynx-contracts@1.0.0

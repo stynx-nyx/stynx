@@ -10,7 +10,7 @@ Audience split:
 
 ## Reference App
 
-The reference implementation is [`@stynx/reference-web`](/docs/reference/web), an Angular app under `reference/web/src/app/`. It composes:
+The reference implementation is [`@stynx-nyx/reference-web`](/docs/reference/web), an Angular app under `reference/web/src/app/`. It composes:
 
 - Foundation providers from [`@stynx-web/angular`](/docs/packages-web/angular).
 - Auth, OIDC, route guards, permission directives, and session exchange from [`@stynx-web/angular-auth`](/docs/packages-web/angular-auth).
@@ -124,9 +124,9 @@ Use the R18 W02 taxonomy in [`2026-06-11-test-taxonomy.md`](../adr/2026-06-11-te
 Useful commands:
 
 ```bash
-pnpm --filter @stynx/reference-web build
-pnpm --filter @stynx/reference-web build:web
-pnpm --filter @stynx/reference-web test:e2e
+pnpm --filter @stynx-nyx/reference-web build
+pnpm --filter @stynx-nyx/reference-web build:web
+pnpm --filter @stynx-nyx/reference-web test:e2e
 pnpm frontend:a11y-gate
 ```
 
@@ -139,6 +139,6 @@ The old root `frontend/` commands are obsolete. The current production-oriented 
 - `pnpm frontend:production-smoke` checks critical web package test scripts, package test presence, testing exports, consumer fixture imports, and the SDK route smoke script.
 - `pnpm frontend:a11y-gate` checks the reference web Playwright and axe accessibility wiring.
 - `pnpm release:web-sourcemaps` verifies web source-map policy through `scripts/verify-web-sourcemaps.mjs`.
-- `pnpm --filter @stynx/reference-web build:web` builds the deployable reference SPA bundle.
+- `pnpm --filter @stynx-nyx/reference-web build:web` builds the deployable reference SPA bundle.
 
 For release/readiness work, pair those with the broader release gates named in [`production-readiness-evidence.md`](/docs/adopters/stynx/production-readiness-evidence).

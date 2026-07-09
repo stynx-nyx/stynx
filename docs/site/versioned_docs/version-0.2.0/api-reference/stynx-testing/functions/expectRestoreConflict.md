@@ -1,8 +1,8 @@
-[**@stynx/testing**](../index.md)
+[**@stynx-nyx/testing**](../index.md)
 
 ---
 
-[@stynx/testing](../index.md) / expectRestoreConflict
+[@stynx-nyx/testing](../index.md) / expectRestoreConflict
 
 # Function: expectRestoreConflict()
 

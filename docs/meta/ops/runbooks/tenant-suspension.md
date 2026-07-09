@@ -7,7 +7,7 @@ Suspend or restore tenant access across API, database, and Cognito while preserv
 - Confirm the tenant slug and UUID from `tenancy.tenants`.
 - Set `tenancy.tenants.is_active = false` with an owner-role transaction.
 - Disable or remove Cognito group assignments for tenant-scoped access.
-- Invalidate active sessions for affected users through `@stynx/sessions`.
+- Invalidate active sessions for affected users through `@stynx-nyx/sessions`.
 - Record the operator, reason, ticket, and timestamp in the audit trail.
 
 ## Verification

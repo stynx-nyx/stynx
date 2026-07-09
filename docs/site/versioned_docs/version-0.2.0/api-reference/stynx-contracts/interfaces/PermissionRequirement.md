@@ -1,8 +1,8 @@
-[**@stynx/contracts**](../index.md)
+[**@stynx-nyx/contracts**](../index.md)
 
 ---
 
-[@stynx/contracts](../index.md) / PermissionRequirement
+[@stynx-nyx/contracts](../index.md) / PermissionRequirement
 
 # Interface: PermissionRequirement
 

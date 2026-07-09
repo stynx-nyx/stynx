@@ -1,4 +1,4 @@
-# @stynx/pdf-a-vera-docker
+# @stynx-nyx/pdf-a-vera-docker
 
 ## 0.1.0
 

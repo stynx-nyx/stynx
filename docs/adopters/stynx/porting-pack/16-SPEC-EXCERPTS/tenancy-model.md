@@ -96,7 +96,7 @@ SET LOCAL app.session_id = '...';
 SET LOCAL app.role       = 'app' | 'reader' | 'owner';
 ```
 
-Plus, during archive moves (set by `@stynx/data`):
+Plus, during archive moves (set by `@stynx-nyx/data`):
 
 ```sql
 SET LOCAL app.archive_move    = 'in_progress';   -- suppresses archive-side audit duplication
@@ -170,8 +170,8 @@ For consumers porting from "filter by `org_id` manually":
 2. `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` + create policy.
 3. Delete every `WHERE tenant_id = $X` predicate from application
    code (RLS handles it).
-4. Wire `@stynx/tenancy` interceptor to set `app.tenant_id` GUC on
+4. Wire `@stynx-nyx/tenancy` interceptor to set `app.tenant_id` GUC on
    each transaction.
 
 The hardest part is auditing legacy code for tenant-leaks; the
-`@stynx/testing` RLS-leak matcher catches them in tests.
+`@stynx-nyx/testing` RLS-leak matcher catches them in tests.

@@ -1,9 +1,9 @@
 # PDF/A Validation
 
-STYNX ships a validator contract in `@stynx/pdf-a` and a reference veraPDF
-Docker adapter in `@stynx/pdf-a-vera-docker`. R12 targets PDF/A-2b.
+STYNX ships a validator contract in `@stynx-nyx/pdf-a` and a reference veraPDF
+Docker adapter in `@stynx-nyx/pdf-a-vera-docker`. R12 targets PDF/A-2b.
 
-R13 makes `@stynx/pdf` fixed-layout and public-payroll outputs conformant with
+R13 makes `@stynx-nyx/pdf` fixed-layout and public-payroll outputs conformant with
 that target by bundling embedded Liberation fonts, an sRGB output intent,
 deterministic trailer IDs, and catalog XMP metadata. The evidence appender keeps
 the `%%STYNX-PADES-SIGNATURE:` marker byte-scannable but places it inside a
@@ -29,8 +29,8 @@ Runtime overrides:
 
 ```ts
 import { Injectable } from '@nestjs/common';
-import { PublicPayrollPdfBuilder } from '@stynx/pdf/public-payroll';
-import { VeraPdfDockerValidator } from '@stynx/pdf-a-vera-docker';
+import { PublicPayrollPdfBuilder } from '@stynx-nyx/pdf/public-payroll';
+import { VeraPdfDockerValidator } from '@stynx-nyx/pdf-a-vera-docker';
 
 @Injectable()
 export class PayrollPdfService {
@@ -68,7 +68,7 @@ HTTP sidecar may remove per-call Docker startup overhead.
 
 ## STYNX Producer Conformance
 
-`@stynx/pdf` carries a Docker-backed conformance suite under
+`@stynx-nyx/pdf` carries a Docker-backed conformance suite under
 `packages/pdf/test/conformance/`. It renders payslip and yearly-income fixtures
 with and without verification evidence, then validates each PDF with:
 
@@ -79,7 +79,7 @@ docker run --rm -v "$TMPDIR:/work" -w /work verapdf/cli@sha256:20202b4bcc2410a25
 The expected summary is `compliant=true`, `failedChecks=0`, `failedRules=0`,
 and profile `PDF/A-2b validation profile`.
 
-SGP R11 handoff: after consuming R13, re-pack the local `@stynx/pdf` tarball and
+SGP R11 handoff: after consuming R13, re-pack the local `@stynx-nyx/pdf` tarball and
 rerun the payslip/yearly-income build-time strict checks. No SGP source change is
 expected for the conformance closure.
 
@@ -107,6 +107,6 @@ The adapter emits these names when a logger/metrics sink is provided:
 
 - [ADR-PDF-A-VALIDATOR-CONTRACT](../meta/adr/ADR-PDF-A-VALIDATOR-CONTRACT.md)
 - [ADR-PDF-A-CONFORMANCE](../meta/adr/ADR-PDF-A-CONFORMANCE.md)
-- [`@stynx/pdf`](../../packages/pdf/README.md)
-- [`@stynx/pdf-a`](../../packages/pdf-a/README.md)
-- [`@stynx/pdf-a-vera-docker`](../../packages/pdf-a-vera-docker/README.md)
+- [`@stynx-nyx/pdf`](../../packages/pdf/README.md)
+- [`@stynx-nyx/pdf-a`](../../packages/pdf-a/README.md)
+- [`@stynx-nyx/pdf-a-vera-docker`](../../packages/pdf-a-vera-docker/README.md)

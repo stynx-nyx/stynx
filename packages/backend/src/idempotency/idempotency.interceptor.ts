@@ -8,7 +8,7 @@ import {
   Optional,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { headerToString } from '@stynx/contracts';
+import { headerToString } from '@stynx-nyx/contracts';
 import { firstValueFrom, from, Observable, of } from 'rxjs';
 import type { RequestLike } from '../common/request-context';
 import type {

@@ -1,6 +1,6 @@
 # `@stynx-web/angular-sessions` — Angular UI for active sessions + remote logout
 
-`@stynx-web/angular-sessions` is the Angular session-management UI. It provides an `<stynx-active-sessions>` component that lists the user's active sessions (device, location, last-seen) with a "revoke" action for logging out other devices. Backed by the SDK's session endpoints, paired with the backend's [`@stynx/sessions`](/docs/packages/sessions/).
+`@stynx-web/angular-sessions` is the Angular session-management UI. It provides an `<stynx-active-sessions>` component that lists the user's active sessions (device, location, last-seen) with a "revoke" action for logging out other devices. Backed by the SDK's session endpoints, paired with the backend's [`@stynx-nyx/sessions`](/docs/packages/sessions/).
 
 ## Purpose
 
@@ -86,13 +86,13 @@ export const appConfig = { providers: [provideSessions()] };
 
 ## Common pitfalls
 
-- **Backend session store is in-memory across instances** — revoking a session on one instance may not propagate. Ensure the backend uses the Redis session store in production (see [`@stynx/sessions`](/docs/packages/sessions/)).
+- **Backend session store is in-memory across instances** — revoking a session on one instance may not propagate. Ensure the backend uses the Redis session store in production (see [`@stynx-nyx/sessions`](/docs/packages/sessions/)).
 - **Revoking the current session** — the component highlights the current session; revoking it logs the user out immediately. Confirm intent.
 
 ## Related packages
 
 - [`@stynx-web/angular-auth`](/docs/packages-web/angular-auth/) — session creation + auth state.
-- [`@stynx/sessions`](/docs/packages/sessions/) — the backend counterpart.
+- [`@stynx-nyx/sessions`](/docs/packages/sessions/) — the backend counterpart.
 
 ## TypeDoc reference
 

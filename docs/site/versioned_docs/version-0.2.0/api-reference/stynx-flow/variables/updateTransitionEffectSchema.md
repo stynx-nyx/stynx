@@ -1,8 +1,8 @@
-[**@stynx/flow**](../index.md)
+[**@stynx-nyx/flow**](../index.md)
 
 ---
 
-[@stynx/flow](../index.md) / updateTransitionEffectSchema
+[@stynx-nyx/flow](../index.md) / updateTransitionEffectSchema
 
 # Variable: updateTransitionEffectSchema
 

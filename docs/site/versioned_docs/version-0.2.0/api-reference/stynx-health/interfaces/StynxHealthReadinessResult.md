@@ -1,8 +1,8 @@
-[**@stynx/health**](../index.md)
+[**@stynx-nyx/health**](../index.md)
 
 ---
 
-[@stynx/health](../index.md) / StynxHealthReadinessResult
+[@stynx-nyx/health](../index.md) / StynxHealthReadinessResult
 
 # Interface: StynxHealthReadinessResult
 

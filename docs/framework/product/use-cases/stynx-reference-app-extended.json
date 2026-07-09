@@ -352,19 +352,19 @@
       "mainFlow": [
         {
           "id": "1",
-          "action": "Caller probes the data-transaction path (`@stynx/data` semantics).",
+          "action": "Caller probes the data-transaction path (`@stynx-nyx/data` semantics).",
           "actorRole": "platform-admin",
           "refs": { "endpointIds": ["GET /_probes/data-tx"] }
         },
         {
           "id": "2",
-          "action": "Caller probes the idempotency path (`@stynx/idempotency`).",
+          "action": "Caller probes the idempotency path (`@stynx-nyx/idempotency`).",
           "actorRole": "platform-admin",
           "refs": { "endpointIds": ["POST /_probes/idempotency"] }
         },
         {
           "id": "3",
-          "action": "Caller probes the rate-limit path (`@stynx/ratelimit`).",
+          "action": "Caller probes the rate-limit path (`@stynx-nyx/ratelimit`).",
           "actorRole": "platform-admin",
           "refs": { "endpointIds": ["GET /_probes/ratelimit"] }
         },

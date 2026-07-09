@@ -52,7 +52,7 @@ async function lintSnippet({ packageName, code }) {
 
 test('rejects raw PostgreSQL imports outside data and cli packages', async () => {
   const messages = await lintSnippet({
-    packageName: '@stynx/auth',
+    packageName: '@stynx-nyx/auth',
     code: "import { Client } from 'pg';\nexport const client = Client;\n",
   });
 
@@ -63,7 +63,7 @@ test('rejects raw PostgreSQL imports outside data and cli packages', async () =>
 });
 
 test('allows raw PostgreSQL imports in data and cli packages', async () => {
-  for (const packageName of ['@stynx/data', '@stynx/cli']) {
+  for (const packageName of ['@stynx-nyx/data', '@stynx-nyx/cli']) {
     const messages = await lintSnippet({
       packageName,
       code: "import { Client } from 'pg';\nexport const client = Client;\n",
@@ -79,7 +79,7 @@ test('allows raw PostgreSQL imports in data and cli packages', async () => {
 
 test('activates boundaries plugin and internal dependency rule', () => {
   const previousPackageName = process.env.npm_package_name;
-  process.env.npm_package_name = '@stynx/core';
+  process.env.npm_package_name = '@stynx-nyx/core';
 
   try {
     const config = createLibConfig();

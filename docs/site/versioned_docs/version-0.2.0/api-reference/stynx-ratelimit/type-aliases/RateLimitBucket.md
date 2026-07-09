@@ -1,8 +1,8 @@
-[**@stynx/ratelimit**](../index.md)
+[**@stynx-nyx/ratelimit**](../index.md)
 
 ---
 
-[@stynx/ratelimit](../index.md) / RateLimitBucket
+[@stynx-nyx/ratelimit](../index.md) / RateLimitBucket
 
 # Type Alias: RateLimitBucket
 

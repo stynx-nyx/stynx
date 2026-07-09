@@ -1,8 +1,8 @@
-[**@stynx/tenancy**](../index.md)
+[**@stynx-nyx/tenancy**](../index.md)
 
 ---
 
-[@stynx/tenancy](../index.md) / TENANT_SYSTEM_OPERATION_SINK_PROVIDER
+[@stynx-nyx/tenancy](../index.md) / TENANT_SYSTEM_OPERATION_SINK_PROVIDER
 
 # Variable: TENANT_SYSTEM_OPERATION_SINK_PROVIDER
 

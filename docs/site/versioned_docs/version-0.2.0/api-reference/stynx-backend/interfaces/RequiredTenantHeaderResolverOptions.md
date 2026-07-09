@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / RequiredTenantHeaderResolverOptions
+[@stynx-nyx/backend](../index.md) / RequiredTenantHeaderResolverOptions
 
 # Interface: RequiredTenantHeaderResolverOptions
 

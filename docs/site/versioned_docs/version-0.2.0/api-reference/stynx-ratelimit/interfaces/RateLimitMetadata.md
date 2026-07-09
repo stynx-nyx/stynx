@@ -1,8 +1,8 @@
-[**@stynx/ratelimit**](../index.md)
+[**@stynx-nyx/ratelimit**](../index.md)
 
 ---
 
-[@stynx/ratelimit](../index.md) / RateLimitMetadata
+[@stynx-nyx/ratelimit](../index.md) / RateLimitMetadata
 
 # Interface: RateLimitMetadata
 

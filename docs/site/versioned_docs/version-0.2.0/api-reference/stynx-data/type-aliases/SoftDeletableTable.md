@@ -1,8 +1,8 @@
-[**@stynx/data**](../index.md)
+[**@stynx-nyx/data**](../index.md)
 
 ---
 
-[@stynx/data](../index.md) / SoftDeletableTable
+[@stynx-nyx/data](../index.md) / SoftDeletableTable
 
 # Type Alias: SoftDeletableTable\<T\>
 

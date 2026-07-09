@@ -1,8 +1,8 @@
-[**@stynx/audit**](../index.md)
+[**@stynx-nyx/audit**](../index.md)
 
 ---
 
-[@stynx/audit](../index.md) / AuditLogPage
+[@stynx-nyx/audit](../index.md) / AuditLogPage
 
 # Interface: AuditLogPage
 

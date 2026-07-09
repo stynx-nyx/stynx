@@ -1,8 +1,8 @@
-[**@stynx/privacy**](../index.md)
+[**@stynx-nyx/privacy**](../index.md)
 
 ---
 
-[@stynx/privacy](../index.md) / STYNX_PRIVACY_OBJECT_STORE
+[@stynx-nyx/privacy](../index.md) / STYNX_PRIVACY_OBJECT_STORE
 
 # Variable: STYNX_PRIVACY_OBJECT_STORE
 

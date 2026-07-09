@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / STYNX_TENANT_ENTITLEMENT_POLICY
+[@stynx-nyx/backend](../index.md) / STYNX_TENANT_ENTITLEMENT_POLICY
 
 # Variable: STYNX_TENANT_ENTITLEMENT_POLICY
 

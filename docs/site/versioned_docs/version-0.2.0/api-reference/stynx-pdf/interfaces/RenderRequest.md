@@ -1,8 +1,8 @@
-[**@stynx/pdf**](../index.md)
+[**@stynx-nyx/pdf**](../index.md)
 
 ---
 
-[@stynx/pdf](../index.md) / RenderRequest
+[@stynx-nyx/pdf](../index.md) / RenderRequest
 
 # Interface: RenderRequest\<TData\>
 

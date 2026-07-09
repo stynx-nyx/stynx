@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { RequestContext } from '@stynx/core';
-import { Database, Transaction } from '@stynx/data';
+import { RequestContext } from '@stynx-nyx/core';
+import { Database, Transaction } from '@stynx-nyx/data';
 import type { FlowGraphExportDocument, FlowGraphImportDocument, FlowJsonObject } from '../../types';
 import {
   camelizeDesignRow,

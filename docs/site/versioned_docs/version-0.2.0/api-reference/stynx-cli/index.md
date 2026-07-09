@@ -1,8 +1,8 @@
-**@stynx/cli**
+**@stynx-nyx/cli**
 
 ---
 
-# @stynx/cli
+# @stynx-nyx/cli
 
 Public CLI command exports for STYNX bootstrap, doctor, migration, audit, privacy, and adoption helpers.
 

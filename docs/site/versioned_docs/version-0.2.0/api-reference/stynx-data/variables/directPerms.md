@@ -1,8 +1,8 @@
-[**@stynx/data**](../index.md)
+[**@stynx-nyx/data**](../index.md)
 
 ---
 
-[@stynx/data](../index.md) / directPerms
+[@stynx-nyx/data](../index.md) / directPerms
 
 # Variable: directPerms
 

@@ -2,9 +2,9 @@
 title: backend/rate-limit
 ---
 
-# `StynxBackendRateLimitModule` — `@stynx/ratelimit` wired as global guard
+# `StynxBackendRateLimitModule` — `@stynx-nyx/ratelimit` wired as global guard
 
-Wraps `@stynx/ratelimit` with the canonical backend wiring: Redis store, actor-keyed defaults, the `RateLimitGuard` registered as `APP_GUARD` via `StynxPlatformPipelineModule`.
+Wraps `@stynx-nyx/ratelimit` with the canonical backend wiring: Redis store, actor-keyed defaults, the `RateLimitGuard` registered as `APP_GUARD` via `StynxPlatformPipelineModule`.
 
 ## When to mount
 
@@ -13,7 +13,7 @@ Always, for any production app. Mount via `StynxPlatformPipelineModule.forRoot({
 ## Wiring
 
 ```ts
-import { StynxBackendRateLimitModule } from '@stynx/backend';
+import { StynxBackendRateLimitModule } from '@stynx-nyx/backend';
 
 StynxBackendRateLimitModule.forRoot({
   default: { window: '1m', max: 60, key: 'actor' },
@@ -23,7 +23,7 @@ StynxBackendRateLimitModule.forRoot({
 
 ## Configuration
 
-Forwarded to `@stynx/ratelimit`'s `StynxRateLimitModuleOptions`. See [`@stynx/ratelimit`](/docs/packages/ratelimit/).
+Forwarded to `@stynx-nyx/ratelimit`'s `StynxRateLimitModuleOptions`. See [`@stynx-nyx/ratelimit`](/docs/packages/ratelimit/).
 
 ## Common pitfalls
 
@@ -32,5 +32,5 @@ Forwarded to `@stynx/ratelimit`'s `StynxRateLimitModuleOptions`. See [`@stynx/ra
 
 ## Related
 
-- [`@stynx/ratelimit`](/docs/packages/ratelimit/) — the underlying package.
+- [`@stynx-nyx/ratelimit`](/docs/packages/ratelimit/) — the underlying package.
 - [`backend/pipeline`](/docs/packages/backend/pipeline/) — the preferred mount path.

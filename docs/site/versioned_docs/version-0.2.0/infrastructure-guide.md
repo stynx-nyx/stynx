@@ -6,7 +6,7 @@ title: 'Infrastructure Guide'
 
 &gt; AWS CDK (TypeScript) reference stack for a STYNX‑based application's environment. Paired with STYNX‑SPEC §2 (architecture), §4.1 (tenancy topology), §8 (storage), §11 (observability), §17/§18 (configuration).
 
-**Status:** Normative reference. Each consumer app duplicates &amp; customizes this skeleton under `infra/` in its own repo. The STYNX platform publishes a thin `@stynx/cdk` package exposing L3 constructs that wrap the raw CDK, so most consumers write ~150 lines of stack code total.
+**Status:** Normative reference. Each consumer app duplicates &amp; customizes this skeleton under `infra/` in its own repo. The STYNX platform publishes a thin `@stynx-nyx/cdk` package exposing L3 constructs that wrap the raw CDK, so most consumers write ~150 lines of stack code total.
 
 **Targets:** one AWS account per environment (`dev`, `stage`, `prod`), region fixed at install (default `sa-east-1`).
 
@@ -460,7 +460,7 @@ export class DataStack extends Stack {
 
     // Internal NLB for PgBouncer, or Cloud Map service discovery.
     // Using Cloud Map keeps the hop fewer and avoids another LB to manage.
-    // (elided for space — see @stynx/cdk package for the full construct.)
+    // (elided for space — see @stynx-nyx/cdk package for the full construct.)
     this.pgBouncerEndpoint = `pgbouncer.${config.env}.stynx.internal:5432`;
 
     // -- ElastiCache Redis ------------------------------------------------
@@ -505,7 +505,7 @@ export class DataStack extends Stack {
 // buildPgBouncerTaskDefinition: elided. Builds a TaskDefinition from the
 // team's pinned PgBouncer container image, reading DB creds from Secrets Manager
 // and writing userlist.txt + pgbouncer.ini into an EFS-backed config volume or
-// via environment substitution at container start. See @stynx/cdk source.
+// via environment substitution at container start. See @stynx-nyx/cdk source.
 ```
 
 **Notes:**
@@ -513,7 +513,7 @@ export class DataStack extends Stack {
 - `stynx_app` and `stynx_reader` roles are created inside Postgres by STYNX's bootstrap migration, not by CDK. The `stynx_owner` password is the only credential provisioned here.
 - `row_security = on` is a belt‑and‑braces; the app connections always use `stynx_app` which is subject to RLS regardless.
 - PgBouncer on Fargate (not sidecar): one central pooler per environment, two instances in prod for redundancy. Sidecar‑per‑pod is an alternative if connection fan‑out is tight; the central form is simpler for tenant scale in scope.
-- Redis with transit + at‑rest encryption is standard. `notify-keyspace-events Ex` is used by `@stynx/sessions` to observe session expiry.
+- Redis with transit + at‑rest encryption is standard. `notify-keyspace-events Ex` is used by `@stynx-nyx/sessions` to observe session expiry.
 - Parameter rotation monthly (DB) and via STYNX's in‑app scheduler (Cognito client secrets, STYNX signing keys per §18.2).
 
 ---
@@ -614,7 +614,7 @@ export class StorageStack extends Stack {
 
 **Notes:**
 
-- Single shared bucket per environment (STYNX‑SPEC §4.1 decision). Per‑tenant prefix is enforced in `@stynx/storage` at presign time.
+- Single shared bucket per environment (STYNX‑SPEC §4.1 decision). Per‑tenant prefix is enforced in `@stynx-nyx/storage` at presign time.
 - Lifecycle: IA at 30d, Glacier IR at 180d, Deep Archive at 730d, noncurrent version expire at 90d. Matches SPEC §8.1.
 - `eventBridgeEnabled: true` is the hook for when §24/E8 (document scanning) ships.
 - `BUCKET_OWNER_ENFORCED` + block‑public‑access + enforce‑SSL is the hardened default.
@@ -981,7 +981,7 @@ export class ObservabilityStack extends Stack {
 
     // -- Grafana data sources, dashboards, folders
     //    are provisioned via the AMG API from a git-versioned folder in
-    //    infra/dashboards/ using the @stynx/cdk AmgProvisioner construct.
+    //    infra/dashboards/ using the @stynx-nyx/cdk AmgProvisioner construct.
     //    elided.
   }
 }

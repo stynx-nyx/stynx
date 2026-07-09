@@ -4,7 +4,7 @@
 -- Purpose: Canonical example exercising the full STYNX data model in one file.
 -- Doubles as: the `stynx init` seed migration for new apps; the worked
 --             example referenced in onboarding docs; the test fixture
---             used by @stynx/testing's integration suite.
+--             used by @stynx-nyx/testing's integration suite.
 -- ============================================================================
 --
 -- This migration demonstrates:
@@ -18,9 +18,9 @@
 --   - Seed data for default roles and permissions
 --
 -- It does NOT demonstrate:
---   - The STYNX platform's own schemas (those are shipped by @stynx/data's
+--   - The STYNX platform's own schemas (those are shipped by @stynx-nyx/data's
 --     bootstrap migrations; this file assumes they exist)
---   - LGPD erasure functions (shipped by @stynx/privacy)
+--   - LGPD erasure functions (shipped by @stynx-nyx/privacy)
 --   - Index strategies beyond the defaults (consumer apps add theirs later)
 --
 -- Conventions:
@@ -36,7 +36,7 @@ BEGIN;
 -- SECTION 0. Assumptions about prior state
 -- ----------------------------------------------------------------------------
 -- The following schemas and helpers are assumed to exist via prior
--- @stynx/* bootstrap migrations:
+-- @stynx-nyx/* bootstrap migrations:
 --
 --   - Extensions: pgcrypto, citext, uuid-ossp (or pg_uuidv7 if adopted)
 --   - Schemas: core, tenancy, auth, audit, storage, archive
@@ -333,7 +333,7 @@ ON CONFLICT DO NOTHING;
 -- ----------------------------------------------------------------------------
 -- SECTION 6. PII map for LGPD
 --
--- Declared inline; @stynx/privacy reads from core.pii_map at erasure time.
+-- Declared inline; @stynx-nyx/privacy reads from core.pii_map at erasure time.
 -- Platform bootstrap created the table; domain migration adds entries.
 -- ----------------------------------------------------------------------------
 
@@ -464,5 +464,5 @@ COMMIT;
 --
 -- Then exercise with the STYNX integration test harness:
 --
---   pnpm --filter @stynx/testing test:reference-migration
+--   pnpm --filter @stynx-nyx/testing test:reference-migration
 -- ============================================================================

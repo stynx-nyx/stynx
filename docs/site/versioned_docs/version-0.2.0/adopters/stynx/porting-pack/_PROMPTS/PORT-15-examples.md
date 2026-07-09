@@ -31,7 +31,7 @@ invariants. Annotations cite the migration linter rules from `08`.
 
 ### 3. `before-after-controller.md`
 
-Controller with custom JWT middleware → rewrite with `@stynx/auth`
+Controller with custom JWT middleware → rewrite with `@stynx-nyx/auth`
 guards, `@Permission`, `@RateLimit`, `@Idempotent`. Show the
 NestJS module wiring at the end.
 
@@ -51,7 +51,7 @@ frontend, tests — in one document. Target 600–800 lines.
 
 ## Rules
 
-- Every "After" example must compile against the actual `@stynx/*`
+- Every "After" example must compile against the actual `@stynx-nyx/*`
   exports as documented in `05-PACKAGE-CATALOG.md`. Verify imports.
 - Every example is annotated — the agent should learn the _why_,
   not just the diff.

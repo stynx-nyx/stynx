@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / ResultEnvelope
+[@stynx-nyx/backend](../index.md) / ResultEnvelope
 
 # Interface: ResultEnvelope\<T\>
 

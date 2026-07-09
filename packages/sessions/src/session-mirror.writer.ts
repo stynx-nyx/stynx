@@ -1,5 +1,5 @@
-import { generateRequestId, RequestContextMutator } from '@stynx/core';
-import { Database, sessions as authSessions } from '@stynx/data';
+import { generateRequestId, RequestContextMutator } from '@stynx-nyx/core';
+import { Database, sessions as authSessions } from '@stynx-nyx/data';
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { randomUUID } from 'node:crypto';

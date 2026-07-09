@@ -10,7 +10,7 @@
 
 ## Context
 
-`@stynx/sessions` has no way for a user to switch to a different tenant
+`@stynx-nyx/sessions` has no way for a user to switch to a different tenant
 context without first logging out and logging back in. pec exposes
 `POST /auth/sessions/&#123;id&#125;/exchange` which atomically revokes the current
 session and issues a new one bound to the requested tenant, provided the
@@ -153,7 +153,7 @@ import type { SessionExchangeOptions, SessionExchangeResult } from './types';
 exported. Confirm after build that they appear:
 
 ```bash
-pnpm --filter @stynx/sessions build && node -e "const m = require('./packages/sessions/dist'); console.log(Object.keys(m))" | tr ',' '\n' | grep -iE "exchange|Exchange"
+pnpm --filter @stynx-nyx/sessions build && node -e "const m = require('./packages/sessions/dist'); console.log(Object.keys(m))" | tr ',' '\n' | grep -iE "exchange|Exchange"
 ```
 
 ---
@@ -180,21 +180,21 @@ In `test/packages/` add `session-exchange.test.ts`:
 
 ```bash
 # TypeScript builds
-pnpm --filter @stynx/sessions build
+pnpm --filter @stynx-nyx/sessions build
 
 # Unit tests pass
-pnpm --filter @stynx/sessions test
+pnpm --filter @stynx-nyx/sessions test
 
 # Lint clean
-pnpm --filter @stynx/sessions lint
+pnpm --filter @stynx-nyx/sessions lint
 ```
 
 ---
 
 ## Acceptance criteria
 
-- [x] `SessionExchangeOptions` and `SessionExchangeResult` exported from `@stynx/sessions`
-- [x] `SessionExchangeError` exported from `@stynx/sessions` with typed `code` field
+- [x] `SessionExchangeOptions` and `SessionExchangeResult` exported from `@stynx-nyx/sessions`
+- [x] `SessionExchangeError` exported from `@stynx-nyx/sessions` with typed `code` field
 - [x] `SessionService.exchange()` revokes the source session before issuing the replacement
 - [x] Owner mismatch and inactive session are each rejected with typed errors
 - [x] Unit test covers happy path and all three error cases

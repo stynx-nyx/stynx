@@ -1,5 +1,5 @@
 import { DynamicModule, Module, Provider } from '@nestjs/common';
-import type { AuditSink } from '@stynx/contracts';
+import type { AuditSink } from '@stynx-nyx/contracts';
 import { AuditInterceptor } from './audit.interceptor';
 import { STYNX_AUDIT_METADATA_REDACTION_POLICY, STYNX_AUDIT_SINK } from './constants';
 import type { AuditMetadataRedactionPolicy } from './redaction-policy';

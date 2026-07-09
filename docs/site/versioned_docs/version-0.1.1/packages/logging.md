@@ -1,8 +1,8 @@
 ---
-title: '@stynx/logging'
+title: '@stynx-nyx/logging'
 ---
 
-# @stynx/logging
+# @stynx-nyx/logging
 
 Structured logging primitives, request logging middleware, Pino factory, and duplicate-log suppression.
 
@@ -13,10 +13,10 @@ Structured logging primitives, request logging middleware, Pino factory, and dup
 ## Install And Import
 
 ```ts
-import {} from /* public exports */ '@stynx/logging';
+import {} from /* public exports */ '@stynx-nyx/logging';
 ```
 
-In this monorepo, use the workspace package. Published consumers should install matching `@stynx/*` versions from the same release train.
+In this monorepo, use the workspace package. Published consumers should install matching `@stynx-nyx/*` versions from the same release train.
 
 ## Module Setup
 
@@ -31,12 +31,12 @@ export class LoggingHostModule {}
 
 ## Data And Security Model
 
-Logs must redact configured sensitive paths and include request/tenant context when available. This package should not persist audit evidence; use @stynx/audit for audit trails.
+Logs must redact configured sensitive paths and include request/tenant context when available. This package should not persist audit evidence; use @stynx-nyx/audit for audit trails.
 
 ## Example
 
 ```ts
-import { StynxLogger } from '@stynx/logging';
+import { StynxLogger } from '@stynx-nyx/logging';
 
 logger.info({ tenantId, requestId }, 'record created');
 ```
@@ -62,9 +62,9 @@ Current barrel highlights:
 ## Verification
 
 ```sh
-pnpm --filter @stynx/logging build
-pnpm --filter @stynx/logging test
-STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx/logging test:int
+pnpm --filter @stynx-nyx/logging build
+pnpm --filter @stynx-nyx/logging test
+STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx-nyx/logging test:int
 ```
 
 ## Documentation Standard

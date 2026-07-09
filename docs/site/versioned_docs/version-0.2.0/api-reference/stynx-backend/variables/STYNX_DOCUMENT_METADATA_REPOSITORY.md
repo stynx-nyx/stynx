@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / STYNX_DOCUMENT_METADATA_REPOSITORY
+[@stynx-nyx/backend](../index.md) / STYNX_DOCUMENT_METADATA_REPOSITORY
 
 # Variable: STYNX_DOCUMENT_METADATA_REPOSITORY
 

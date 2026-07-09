@@ -1,5 +1,5 @@
-import { PermissionCache } from '@stynx/auth';
-import { auditExpect } from '@stynx/testing';
+import { PermissionCache } from '@stynx-nyx/auth';
+import { auditExpect } from '@stynx-nyx/testing';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   closeReferenceApiE2e,
@@ -106,7 +106,7 @@ function findAuditItem(page: AuditLogPage, rowId: string, operation: string): Au
   return page.items.find((item) => item.rowId === rowId && item.operation === operation);
 }
 
-describe('@stynx/reference-api e2e audit', () => {
+describe('@stynx-nyx/reference-api e2e audit', () => {
   let context: ReferenceApiE2eContext;
   let adminA: AuthenticatedAgent;
   let viewerA: AuthenticatedAgent;

@@ -6,7 +6,7 @@
 // {enabled:true}})) + applies domain/demo-bookmark/db/migration.sql on top.
 
 import { NotFoundException } from '@nestjs/common';
-import { RequestContext } from '@stynx/core';
+import { RequestContext } from '@stynx-nyx/core';
 import { BookmarkService } from '../src/demo-bookmark/services/bookmark.service';
 import { createDemoBookmarkFixture, type DemoBookmarkFixture } from './support/postgres-fixture';
 
@@ -23,7 +23,7 @@ describe('BookmarkService (per-task-DB integration)', () => {
   });
 
   // Shape check kept from the T2 stub — verifies the constructor signature
-  // still matches the @stynx/data + @stynx/core injection contract.
+  // still matches the @stynx-nyx/data + @stynx-nyx/core injection contract.
   it('instantiates with Database + RequestContext dependencies', async () => {
     await fixture.runAs(fixture.tenantA, fixture.userA, async (db) => {
       const ctx = fixture.module.get<RequestContext>(RequestContext);

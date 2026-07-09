@@ -316,7 +316,7 @@ route resolvers can share the same client.]`
 
 4. **Uploads use the storage package.** `&lt;stynx-document-upload&gt;` performs
    initiate → presigned S3 PUT → complete through `@stynx-web/angular-storage`;
-   the backend still uses `@stynx/storage`, satisfying invariant I3.
+   the backend still uses `@stynx-nyx/storage`, satisfying invariant I3.
 
 5. **Idempotency remains explicit at call sites.** STYNX handles replay on the
    server, but clients still supply unique keys for retryable mutations.

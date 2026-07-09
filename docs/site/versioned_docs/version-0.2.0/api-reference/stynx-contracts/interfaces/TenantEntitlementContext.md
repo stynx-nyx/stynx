@@ -1,8 +1,8 @@
-[**@stynx/contracts**](../index.md)
+[**@stynx-nyx/contracts**](../index.md)
 
 ---
 
-[@stynx/contracts](../index.md) / TenantEntitlementContext
+[@stynx-nyx/contracts](../index.md) / TenantEntitlementContext
 
 # Interface: TenantEntitlementContext
 

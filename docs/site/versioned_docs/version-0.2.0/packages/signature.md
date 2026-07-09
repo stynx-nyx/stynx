@@ -1,10 +1,10 @@
 ---
-title: '@stynx/signature'
+title: '@stynx-nyx/signature'
 ---
 
-# @stynx/signature
+# @stynx-nyx/signature
 
-`@stynx/signature` is the shared STYNX facade for long-lived PAdES document
+`@stynx-nyx/signature` is the shared STYNX facade for long-lived PAdES document
 signatures, TSA timestamping, and OCSP-first certificate validation with CRL
 fallback. It ports PEC's signature orchestration into a package-owned boundary
 while leaving ICP-Brasil, gov.br, and other cryptographic providers behind a
@@ -14,7 +14,7 @@ fiscal XML flows such as DCTFWeb and EFD-Reinf.
 ## Nest Setup
 
 ```ts
-import { StynxSignatureModule } from '@stynx/signature';
+import { StynxSignatureModule } from '@stynx-nyx/signature';
 
 StynxSignatureModule.forRoot({
   provider: {
@@ -37,7 +37,7 @@ StynxSignatureModule.forRoot({
 ## Public API
 
 ```ts
-import { SignatureService } from '@stynx/signature';
+import { SignatureService } from '@stynx-nyx/signature';
 
 const result = await signature.sign({
   tenantId: 'tenant-a',
@@ -59,7 +59,7 @@ Primary exports:
 - `StynxSignatureModule` - Nest module for provider-backed signing.
 - `SignatureService` - canonical signing and verification facade.
 - `HttpSignatureProviderClient` - external provider client using
-  `@stynx/integration-adapter` for retry, timeout, idempotency, telemetry, and
+  `@stynx-nyx/integration-adapter` for retry, timeout, idempotency, telemetry, and
   circuit breaking.
 - `ProviderBackedSignatureBackend` - validates certificates before signing and
   maps provider responses into `SignatureEvidence`.
@@ -96,6 +96,6 @@ PEC report flows can replace `signPades(pdf, meta)` with `SignatureService.sign`
 and persist `SignatureEvidence`. TEAT AIT/evidence flows can use `verify()` for
 hash/signature validation without importing PEC code or STYNX internals.
 
-SGP fiscal XML flows can import `@stynx/signature/xmldsig` to sign DCTFWeb and
+SGP fiscal XML flows can import `@stynx-nyx/signature/xmldsig` to sign DCTFWeb and
 EFD-Reinf payloads while keeping PKCS#12 parsing, certificate lookup, audit, and
 database updates inside SGP.

@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / XmlDSigSignOptions
+[@stynx-nyx/signature](../index.md) / XmlDSigSignOptions
 
 # Interface: XmlDSigSignOptions
 

@@ -1,6 +1,6 @@
-import { PermissionCache, StynxAuthService } from '@stynx/auth';
-import { SessionService, type SessionBundle } from '@stynx/sessions';
-import { expectRLSIsolated } from '@stynx/testing';
+import { PermissionCache, StynxAuthService } from '@stynx-nyx/auth';
+import { SessionService, type SessionBundle } from '@stynx-nyx/sessions';
+import { expectRLSIsolated } from '@stynx-nyx/testing';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
@@ -126,7 +126,7 @@ async function expectSessionAuditRows(context: ReferenceApiE2eContext, sid: stri
   await expect(countSessionAuditRows(context, sid)).resolves.toBe(rows.length);
 }
 
-describe('@stynx/reference-api e2e sessions management', () => {
+describe('@stynx-nyx/reference-api e2e sessions management', () => {
   let context: ReferenceApiE2eContext;
   let authService: StynxAuthService;
   let sessionService: SessionService;

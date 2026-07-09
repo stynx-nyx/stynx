@@ -1,8 +1,8 @@
-[**@stynx/core**](../index.md)
+[**@stynx-nyx/core**](../index.md)
 
 ---
 
-[@stynx/core](../index.md) / STYNX_SYSTEM_OPERATION_SINK
+[@stynx-nyx/core](../index.md) / STYNX_SYSTEM_OPERATION_SINK
 
 # Variable: STYNX_SYSTEM_OPERATION_SINK
 

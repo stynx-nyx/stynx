@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / Sha256Encoding
+[@stynx-nyx/signature](../index.md) / Sha256Encoding
 
 # Type Alias: Sha256Encoding
 

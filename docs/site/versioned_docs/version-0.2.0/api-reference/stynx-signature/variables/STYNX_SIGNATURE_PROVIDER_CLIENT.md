@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / STYNX_SIGNATURE_PROVIDER_CLIENT
+[@stynx-nyx/signature](../index.md) / STYNX_SIGNATURE_PROVIDER_CLIENT
 
 # Variable: STYNX_SIGNATURE_PROVIDER_CLIENT
 

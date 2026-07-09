@@ -38,10 +38,10 @@ extracted directly from the implementation, not the spec.
 ### `Database` (Nest provider)
 
 `Database` is a `@Injectable()` class extending `CoreDatabase` from
-`@stynx/core`. Inject by class:
+`@stynx-nyx/core`. Inject by class:
 
 ```typescript
-import { Database } from '@stynx/data';
+import { Database } from '@stynx-nyx/data';
 @Injectable()
 class MyService {
   constructor(private readonly db: Database) {}
@@ -100,7 +100,7 @@ Cited at [`16-SPEC-EXCERPTS/data-api-contract.md`](16-SPEC-EXCERPTS/data-api-con
 
 ### Errors raised by the surface
 
-All extend `StynxDataError` (code + httpStatus). The `@stynx/backend` global filter translates them. Key throw sites: `TenantContextMissingError` `(packages/data/src/database.ts:240)`, `ActorContextMissingError` `(database.ts:243)`, `ReadOnlyViolationError` `(database.ts:51, 180; transaction.ts:67)`, `SerializationFailureError` `(database.ts:129)`, `CascadeTooDeepError` `(transaction.ts:236)`, `CascadeTooLargeError` `(transaction.ts:284)`, `SoftDeleteBlockedError` `(transaction.ts:359)`, `RestoreConflictError` `(transaction.ts:443)`, `RestoreCascadeParentsArchivedError` `(transaction.ts:419)`, `ArchiveMirrorMissingError` `(transaction.ts:787)`, `TransactionRequiredError` `(transaction.ts:840)`.
+All extend `StynxDataError` (code + httpStatus). The `@stynx-nyx/backend` global filter translates them. Key throw sites: `TenantContextMissingError` `(packages/data/src/database.ts:240)`, `ActorContextMissingError` `(database.ts:243)`, `ReadOnlyViolationError` `(database.ts:51, 180; transaction.ts:67)`, `SerializationFailureError` `(database.ts:129)`, `CascadeTooDeepError` `(transaction.ts:236)`, `CascadeTooLargeError` `(transaction.ts:284)`, `SoftDeleteBlockedError` `(transaction.ts:359)`, `RestoreConflictError` `(transaction.ts:443)`, `RestoreCascadeParentsArchivedError` `(transaction.ts:419)`, `ArchiveMirrorMissingError` `(transaction.ts:787)`, `TransactionRequiredError` `(transaction.ts:840)`.
 
 ---
 
@@ -146,7 +146,7 @@ This violates **I1** (raw pg connection — no GUCs set) and **I5** (the
 ```typescript
 // records.service.ts (after port)
 import { Injectable } from '@nestjs/common';
-import { Database } from '@stynx/data';
+import { Database } from '@stynx-nyx/data';
 import { eq, desc } from 'drizzle-orm';
 import { records } from './schema';
 
@@ -655,7 +655,7 @@ Calling `db.tx(...)` directly will throw `TenantContextMissingError`
 
 ```typescript
 // jobs/nightly-vacuum.ts
-import { Database, withSystemContext } from '@stynx/data';
+import { Database, withSystemContext } from '@stynx-nyx/data';
 import { sql } from 'drizzle-orm';
 
 @Injectable()
@@ -676,7 +676,7 @@ export class NightlyVacuumJob {
 What the wrapper does:
 
 - `Database.withSystemContext` delegates to `SystemContext.withSystemContext`
-  from `@stynx/core` `(packages/data/src/database.ts:151)`.
+  from `@stynx-nyx/core` `(packages/data/src/database.ts:151)`.
 - `assertRoleConstraints({ role: 'owner' })` calls
   `systemContext.current()`; if no SystemContext is active,
   `SystemContextRequiredError` is raised
@@ -783,7 +783,7 @@ table makes the choice explicit:
 | User clicks "Restore" in the trash UI                                    | `trx.restoreFromArchive(table, id)`                                                                    | Validates uniqueness; raises `RestoreConflictError` (409) on conflict.                             |
 | User clicks "Restore with children"                                      | `trx.restoreWithCascade(table, id)`                                                                    | Restores children archived in the same `deleted_at` tick. Caller needs `:restore:*` on each child. |
 | Admin permanently empties the trash                                      | `trx.hardDeleteFromArchive(archiveId, { archiveTable, confirm })`                                      | Use `confirm: 'I understand this is irrecoverable'`. `(packages/data/src/transaction.ts:213, 833)` |
-| LGPD subject erasure                                                     | Goes through `@stynx/privacy`, which uses `hardDeleteFromArchive` + per-column nullify/hash strategies |
+| LGPD subject erasure                                                     | Goes through `@stynx-nyx/privacy`, which uses `hardDeleteFromArchive` + per-column nullify/hash strategies |
 | One-off cleanup of a misbehaving live row that should never have existed | `trx.hardDelete(table, id, { confirm })`                                                               | Live-only DELETE; no archive write. Use exceedingly rarely; reserve for explicit admin paths.      |
 | Testing — wipe between scenarios                                         | TRUNCATE inside `withSystemContext`                                                                    | Not a `Transaction` method; use `trx.execute(sql\`truncate ...\`)`with`role: 'owner'`.             |
 
@@ -965,7 +965,7 @@ Pattern 6 (`withSystemContext`).
 
 ```typescript
 // WRONG
-import { sampleRecordArchive } from '@stynx/data/internal/archive-schema';
+import { sampleRecordArchive } from '@stynx-nyx/data/internal/archive-schema';
 
 const archivedRecords = await this.db.tx((trx) => trx.select().from(sampleRecordArchive));
 ```
@@ -986,9 +986,9 @@ drift note). The `onlyDeleted()` helper gives application code the same
 data with the right tenant guard and result shape automatically
 `(packages/data/src/query-helpers.ts:253–270, 295–311)`.
 
-A `no-restricted-imports` rule should block `@stynx/data/internal/*` in
+A `no-restricted-imports` rule should block `@stynx-nyx/data/internal/*` in
 foreign code; the absence of that rule is `[GAP — verify ESLint
-`no-restricted-imports`rule in`tools/eslint-config/`blocks`@stynx/data/internal/\*` outside the data package itself]`.
+`no-restricted-imports`rule in`tools/eslint-config/`blocks`@stynx-nyx/data/internal/\*` outside the data package itself]`.
 
 ---
 

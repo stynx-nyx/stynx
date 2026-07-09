@@ -1,4 +1,4 @@
-import { IdentityAdminError } from '@stynx/contracts';
+import { IdentityAdminError } from '@stynx-nyx/contracts';
 import {
   PgIdentityLocalSyncAdapter,
   loadPormRoleMetaRows,

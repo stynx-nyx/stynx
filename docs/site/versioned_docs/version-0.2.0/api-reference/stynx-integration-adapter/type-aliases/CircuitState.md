@@ -1,8 +1,8 @@
-[**@stynx/integration-adapter**](../index.md)
+[**@stynx-nyx/integration-adapter**](../index.md)
 
 ---
 
-[@stynx/integration-adapter](../index.md) / CircuitState
+[@stynx-nyx/integration-adapter](../index.md) / CircuitState
 
 # Type Alias: CircuitState
 

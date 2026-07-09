@@ -1,5 +1,5 @@
-import { PermissionCache } from '@stynx/auth';
-import { auditExpect, expectRLSIsolated } from '@stynx/testing';
+import { PermissionCache } from '@stynx-nyx/auth';
+import { auditExpect, expectRLSIsolated } from '@stynx-nyx/testing';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   closeReferenceApiE2e,
@@ -95,7 +95,7 @@ async function createWorkItemTarget(
   return { record, workItem };
 }
 
-describe('@stynx/reference-api e2e rate limit', () => {
+describe('@stynx-nyx/reference-api e2e rate limit', () => {
   let context: ReferenceApiE2eContext;
   let adminA: AuthenticatedAgent;
   let viewerA: AuthenticatedAgent;

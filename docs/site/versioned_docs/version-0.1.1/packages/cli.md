@@ -1,8 +1,8 @@
 ---
-title: '@stynx/cli'
+title: '@stynx-nyx/cli'
 ---
 
-# @stynx/cli
+# @stynx-nyx/cli
 
 Command-line tools for init, doctor checks, migrations, audit verification, privacy ROPA output, and adoption helpers.
 
@@ -13,10 +13,10 @@ Command-line tools for init, doctor checks, migrations, audit verification, priv
 ## Install And Import
 
 ```ts
-import {} from /* public exports */ '@stynx/cli';
+import {} from /* public exports */ '@stynx-nyx/cli';
 ```
 
-In this monorepo, use the workspace package. Published consumers should install matching `@stynx/*` versions from the same release train.
+In this monorepo, use the workspace package. Published consumers should install matching `@stynx-nyx/*` versions from the same release train.
 
 ## Module Setup
 
@@ -57,9 +57,9 @@ Current barrel highlights:
 ## Verification
 
 ```sh
-pnpm --filter @stynx/cli build
-pnpm --filter @stynx/cli test
-pnpm --filter @stynx/cli test:adopt
+pnpm --filter @stynx-nyx/cli build
+pnpm --filter @stynx-nyx/cli test
+pnpm --filter @stynx-nyx/cli test:adopt
 ```
 
 ## Documentation Standard

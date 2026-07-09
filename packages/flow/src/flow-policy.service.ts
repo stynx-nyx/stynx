@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Database, type Transaction } from '@stynx/data';
+import { Database, type Transaction } from '@stynx-nyx/data';
 import { FlowDesignService } from './flow-design.service';
 import type { FlowJsonObject } from './types';
 import { parseDto, policyEvaluationSchema } from './validation';

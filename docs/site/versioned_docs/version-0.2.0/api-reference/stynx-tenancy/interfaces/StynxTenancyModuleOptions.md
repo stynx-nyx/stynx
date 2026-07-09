@@ -1,8 +1,8 @@
-[**@stynx/tenancy**](../index.md)
+[**@stynx-nyx/tenancy**](../index.md)
 
 ---
 
-[@stynx/tenancy](../index.md) / StynxTenancyModuleOptions
+[@stynx-nyx/tenancy](../index.md) / StynxTenancyModuleOptions
 
 # Interface: StynxTenancyModuleOptions
 

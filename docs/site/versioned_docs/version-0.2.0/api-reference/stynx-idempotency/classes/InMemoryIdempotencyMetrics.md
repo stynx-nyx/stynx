@@ -1,8 +1,8 @@
-[**@stynx/idempotency**](../index.md)
+[**@stynx-nyx/idempotency**](../index.md)
 
 ---
 
-[@stynx/idempotency](../index.md) / InMemoryIdempotencyMetrics
+[@stynx-nyx/idempotency](../index.md) / InMemoryIdempotencyMetrics
 
 # Class: InMemoryIdempotencyMetrics
 

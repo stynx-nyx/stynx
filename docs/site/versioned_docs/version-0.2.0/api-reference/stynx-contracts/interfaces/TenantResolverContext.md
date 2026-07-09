@@ -1,8 +1,8 @@
-[**@stynx/contracts**](../index.md)
+[**@stynx-nyx/contracts**](../index.md)
 
 ---
 
-[@stynx/contracts](../index.md) / TenantResolverContext
+[@stynx-nyx/contracts](../index.md) / TenantResolverContext
 
 # Interface: TenantResolverContext
 

@@ -1,8 +1,8 @@
-[**@stynx/tenancy**](../index.md)
+[**@stynx-nyx/tenancy**](../index.md)
 
 ---
 
-[@stynx/tenancy](../index.md) / STYNX_TENANT_MEMBERSHIP_CACHE
+[@stynx-nyx/tenancy](../index.md) / STYNX_TENANT_MEMBERSHIP_CACHE
 
 # Variable: STYNX_TENANT_MEMBERSHIP_CACHE
 

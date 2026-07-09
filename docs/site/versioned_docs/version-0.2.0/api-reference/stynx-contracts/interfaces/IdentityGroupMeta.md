@@ -1,8 +1,8 @@
-[**@stynx/contracts**](../index.md)
+[**@stynx-nyx/contracts**](../index.md)
 
 ---
 
-[@stynx/contracts](../index.md) / IdentityGroupMeta
+[@stynx-nyx/contracts](../index.md) / IdentityGroupMeta
 
 # Interface: IdentityGroupMeta
 

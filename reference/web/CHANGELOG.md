@@ -1,4 +1,4 @@
-# @stynx/reference-web
+# @stynx-nyx/reference-web
 
 ## 0.2.1
 

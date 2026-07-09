@@ -1,6 +1,6 @@
 import { Controller, Get, type CallHandler, type ExecutionContext } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { RequestContext, RequestContextMutator, RequestContextInterceptor, StynxCoreModule } from '@stynx/core';
+import { RequestContext, RequestContextMutator, RequestContextInterceptor, StynxCoreModule } from '@stynx-nyx/core';
 import { defer, from, lastValueFrom } from 'rxjs';
 import { z } from 'zod';
 import { StynxLogger } from '../../src/logger.service';

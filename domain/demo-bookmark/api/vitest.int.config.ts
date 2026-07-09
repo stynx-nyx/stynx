@@ -22,7 +22,7 @@ const stynxPackages = [
   'testing',
 ];
 const stynxAlias = Object.fromEntries(
-  stynxPackages.map((p) => [`@stynx/${p}`, resolve(__dirname, `../../../packages/${p}/src/index.ts`)]),
+  stynxPackages.map((p) => [`@stynx-nyx/${p}`, resolve(__dirname, `../../../packages/${p}/src/index.ts`)]),
 );
 
 export default createVitestConfig({

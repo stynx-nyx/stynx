@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / RedisSlidingWindowRateLimitStore
+[@stynx-nyx/backend](../index.md) / RedisSlidingWindowRateLimitStore
 
 # Class: RedisSlidingWindowRateLimitStore
 

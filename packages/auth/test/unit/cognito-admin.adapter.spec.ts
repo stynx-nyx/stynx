@@ -12,7 +12,7 @@ import {
   ListUsersCommand,
   ListUsersInGroupCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
-import { IdentityAdminError } from '@stynx/contracts';
+import { IdentityAdminError } from '@stynx-nyx/contracts';
 import {
   CognitoIdentityAdminAdapter,
   buildCognitoAdminOptionsFromEnv,

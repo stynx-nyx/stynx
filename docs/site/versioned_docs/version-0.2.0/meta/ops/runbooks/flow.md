@@ -1,9 +1,9 @@
 # Flow Runbook
 
 **Authority:** Architect (Constitution Article 6).
-**Status:** Draft for `@stynx/flow`.
+**Status:** Draft for `@stynx-nyx/flow`.
 
-This runbook covers operational checks for the STYNX Flow module. It assumes the backend implementation uses `@stynx/data`, tenant RLS, STYNX audit, and the adapter contract in `docs/framework/arch/flow.md`.
+This runbook covers operational checks for the STYNX Flow module. It assumes the backend implementation uses `@stynx-nyx/data`, tenant RLS, STYNX audit, and the adapter contract in `docs/framework/arch/flow.md`.
 
 ## Migration Deployment Checks
 

@@ -1,8 +1,8 @@
-[**@stynx/sessions**](../index.md)
+[**@stynx-nyx/sessions**](../index.md)
 
 ---
 
-[@stynx/sessions](../index.md) / StynxSessionsModuleOptions
+[@stynx-nyx/sessions](../index.md) / StynxSessionsModuleOptions
 
 # Interface: StynxSessionsModuleOptions
 

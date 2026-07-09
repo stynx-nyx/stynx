@@ -1,4 +1,4 @@
-// C-4 Session T2 — BookmarkController rewired to @stynx/auth canonical guards.
+// C-4 Session T2 — BookmarkController rewired to @stynx-nyx/auth canonical guards.
 //
 // Replaces the scaffolder-emitted local BookmarkPolicyGuard + @Resource/@Action
 // stubs with the stynx pattern from reference/api/src/sample/records.controller.ts:
@@ -6,7 +6,7 @@
 // per method, @ReadOnly() on GETs.
 
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
-import { Permission, ReadOnly, StynxAuthGuard, PermissionGuard } from '@stynx/auth';
+import { Permission, ReadOnly, StynxAuthGuard, PermissionGuard } from '@stynx-nyx/auth';
 import { BookmarkService } from '../services/bookmark.service';
 import { CreateBookmarkDto } from '../dto/create-bookmark.dto';
 import { UpdateBookmarkDto } from '../dto/update-bookmark.dto';

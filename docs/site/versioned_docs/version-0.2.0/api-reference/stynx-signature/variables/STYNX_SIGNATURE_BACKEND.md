@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / STYNX_SIGNATURE_BACKEND
+[@stynx-nyx/signature](../index.md) / STYNX_SIGNATURE_BACKEND
 
 # Variable: STYNX_SIGNATURE_BACKEND
 

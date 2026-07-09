@@ -111,7 +111,7 @@ For every request, the guard does:
 5. If absent, raise 403
 ```
 
-**Expected hot path cost: p99 &lt; 2 ms** including network round‑trip to Redis. Well under our `@stynx/auth` SLO of 10 ms for token verify (STYNX‑SPEC §26).
+**Expected hot path cost: p99 &lt; 2 ms** including network round‑trip to Redis. Well under our `@stynx-nyx/auth` SLO of 10 ms for token verify (STYNX‑SPEC §26).
 
 ### 2.4 Invalidation
 
@@ -119,7 +119,7 @@ Permission changes happen via admin actions: role creation/deletion, role‑to�
 
 #### Direct invalidation path (preferred)
 
-The mutating service (in `@stynx/auth`) writes to the DB, then publishes to a Redis channel:
+The mutating service (in `@stynx-nyx/auth`) writes to the DB, then publishes to a Redis channel:
 
 ```
 PUBLISH perms:invalidate "{user_id}:{tenant_id}"            // narrowest scope
@@ -174,7 +174,7 @@ The generation is included in the JWT and in the Redis record. It exists for two
 - `INSERT`/`DELETE` on `auth.group_roles` for any group this membership belongs to.
 - Platform role changes on `auth.users` (all memberships of the user).
 
-Each of these is a discrete mutation path in `@stynx/auth`. Each is responsible for recomputing `effective_hash` for every affected membership as part of its transaction. A trigger‑based alternative was considered and rejected (§3.3).
+Each of these is a discrete mutation path in `@stynx-nyx/auth`. Each is responsible for recomputing `effective_hash` for every affected membership as part of its transaction. A trigger‑based alternative was considered and rejected (§3.3).
 
 ### 2.7 Session enumeration on invalidation
 
@@ -187,7 +187,7 @@ sessions_by_user:{user_id}    SET of sids
 sessions_by_tenant:{tenant_id} SET of sids
 ```
 
-Maintained by `@stynx/sessions` at session create (SADD) and session revoke (SREM). Invalidation then becomes:
+Maintained by `@stynx-nyx/sessions` at session create (SADD) and session revoke (SREM). Invalidation then becomes:
 
 ```
 SMEMBERS sessions_by_tenant:{tenant_id}   → [sid1, sid2, ...]
@@ -218,7 +218,7 @@ Skip Redis; each pod caches `(user_id, tenant_id) → set` in an LRU map. Pros: 
 
 Put triggers on all permission‑affecting tables that recompute `effective_hash` for every affected membership inside the trigger. Pros: the mutating service can't forget to update the hash. Cons: triggers would need to walk the role→permission graph themselves; trigger logic is harder to test; `auth.role_perms` mutations affect potentially thousands of memberships, so a trigger there would do unbounded work inside a single statement.
 
-Rejected. The mutating paths in `@stynx/auth` are few (six, per §2.6) and each one gets unit‑tested for hash‑update behavior. A linter rule on `auth.*` schema migrations detects new tables added to the permission graph without corresponding hash‑update logic.
+Rejected. The mutating paths in `@stynx-nyx/auth` are few (six, per §2.6) and each one gets unit‑tested for hash‑update behavior. A linter rule on `auth.*` schema migrations detects new tables added to the permission graph without corresponding hash‑update logic.
 
 ### 3.4 Authorization service (external engine)
 
@@ -240,7 +240,7 @@ Rejected for v1.0. Revisit if we ever adopt relationship authz (not on the roadm
 
 ### 4.2 Negative
 
-- Every permission‑affecting mutation path in `@stynx/auth` must update `auth.memberships.effective_hash` + `effective_hash_generation`. Six paths, each must be correct. Mitigation: unit tests per path, plus a `stynx doctor` check that the set of mutating functions matches the expected list (any new function touching these tables fails CI until explicitly acknowledged).
+- Every permission‑affecting mutation path in `@stynx-nyx/auth` must update `auth.memberships.effective_hash` + `effective_hash_generation`. Six paths, each must be correct. Mitigation: unit tests per path, plus a `stynx doctor` check that the set of mutating functions matches the expected list (any new function touching these tables fails CI until explicitly acknowledged).
 - Redis availability is on the request hot path for all cold‑cache requests. Mitigation: in‑memory LRU absorbs most requests; Redis downtime degrades to a DB fallback path with higher latency but correct results. A feature flag `perms.db_fallback_on_redis_down` enables this mode.
 - The hash probe query is +1 DB query per request for users whose in‑pod `(user_id, tenant_id)` cache is stale. At 1 000 rps across 100 unique users the cost is ~100 qps on a covered index — acceptable. At very high user diversity (~10 000 unique users/sec) this becomes significant; at that scale we'd either extend the in‑pod TTL or batch probes.
 
@@ -255,7 +255,7 @@ Rejected for v1.0. Revisit if we ever adopt relationship authz (not on the roadm
 
 ## 5. Test strategy
 
-Mandatory tests for `@stynx/auth` permission cache:
+Mandatory tests for `@stynx-nyx/auth` permission cache:
 
 1. **Freshness.** Create user with role R; log in; assert perm P. Grant user role S (adds perm Q). Assert next request sees Q within 2 s (pub/sub path) and within (5 s + pod‑LRU TTL) even when pub/sub is dropped.
 2. **Invalidation fan‑out.** Create 100 users in a tenant; grant a new role at tenant level; assert all 100 sessions' cache entries are invalidated or refreshed within 2 s.
@@ -270,7 +270,7 @@ Mandatory tests for `@stynx/auth` permission cache:
 
 ## 6. Rollout and versioning
 
-This mechanism ships with `@stynx/auth` v1.0. The `auth.memberships.effective_hash` and `effective_hash_generation` columns, plus the secondary index sets in Redis, are introduced by the platform's bootstrap migration.
+This mechanism ships with `@stynx-nyx/auth` v1.0. The `auth.memberships.effective_hash` and `effective_hash_generation` columns, plus the secondary index sets in Redis, are introduced by the platform's bootstrap migration.
 
 Any change to the set of mutating paths (§2.6) requires an RFC amendment to this ADR.
 

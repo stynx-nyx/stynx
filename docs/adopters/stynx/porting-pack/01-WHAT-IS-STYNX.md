@@ -4,7 +4,7 @@
 
 STYNX is a shared platform foundation for in-house multi-tenant
 applications: a NestJS-based backend library family
-(`@stynx/*`), an Angular client family (`@stynx-web/*`), a
+(`@stynx-nyx/*`), an Angular client family (`@stynx-web/*`), a
 PostgreSQL schema with strict RLS, an operational CLI, and a CDK
 deployment skeleton. It exists so every consuming team starts with
 identity, multi-tenancy, audit, soft-delete, RLS, LGPD pipelines,
@@ -17,8 +17,8 @@ relationship-based authz); Cognito as IdP with tenancy + roles in
 STYNX DB; archive-schema soft delete (no `deleted_at` on live
 tables); DB-trigger audit; AWS-only; web/Angular only. Eight
 non-negotiable invariants (I1–I8) are enforced by a combination of
-runtime checks (`@stynx/data`), decorators (`@stynx/auth`,
-`@stynx/backend`), a SQL migration helper, a migration linter, and
+runtime checks (`@stynx-nyx/data`), decorators (`@stynx-nyx/auth`,
+`@stynx-nyx/backend`), a SQL migration helper, a migration linter, and
 the `stynx doctor` CLI.
 
 What STYNX is not: a CMS, a workflow engine, an event bus, a job
@@ -38,10 +38,10 @@ deferrals.)
 | Storage (S3 + presigned)   | Per-tenant prefix; KMS envelope; presigned URL with tenant claim check.                                  | §8           |
 | LGPD pipeline              | Export + erasure across live and archive; PII map drives strategies (nullify/hash/tombstone/delete).     | §9, §21      |
 | Logging + redaction        | Pino structured JSON; redacts `password`, `token`, headers, JWT fields; request-context fields per line. | §10–§11      |
-| Health + metrics + tracing | `/healthz`, `/readyz`, `/metrics` (Prometheus), `/info`. OTel SDK in `@stynx/core`.                      | §11          |
+| Health + metrics + tracing | `/healthz`, `/readyz`, `/metrics` (Prometheus), `/info`. OTel SDK in `@stynx-nyx/core`.                      | §11          |
 | Rate limiting              | Distributed (Redis primary, PG fallback); `@RateLimit({ bucket, scope })` decorator.                     | §15          |
 | Idempotency                | `@Idempotent('Idempotency-Key')` decorator; 24 h Redis + durable mirror.                                 | §22          |
-| i18n (pt-BR + en-US)       | `@stynx/i18n` resolves locale per request; consumer overrides via `@stynx-web/angular-i18n`.             | §23          |
+| i18n (pt-BR + en-US)       | `@stynx-nyx/i18n` resolves locale per request; consumer overrides via `@stynx-web/angular-i18n`.             | §23          |
 
 (Each row maps to a package in [`05-PACKAGE-CATALOG.md`](05-PACKAGE-CATALOG.md).)
 
@@ -52,12 +52,12 @@ deferrals.)
   `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`).
 - **Frontend:** Angular (peer dep), RxJS.
 - **Database:** PostgreSQL with `row_security=on`. Drizzle ORM
-  (`@stynx/data` peer dep `drizzle-orm`).
+  (`@stynx-nyx/data` peer dep `drizzle-orm`).
 - **Cache:** Redis 7.x (`ioredis`).
 - **Identity:** AWS Cognito User Pool. SDK
   `@aws-sdk/client-cognito-identity-provider` is in
-  `@stynx/auth`'s deps.
-- **Object storage:** S3 with KMS CMKs (`@stynx/storage` uses
+  `@stynx-nyx/auth`'s deps.
+- **Object storage:** S3 with KMS CMKs (`@stynx-nyx/storage` uses
   `@aws-sdk/client-s3` and `@aws-sdk/s3-request-presigner`).
 - **Compute:** ECS Fargate per `specs/STYNX-CDK-SKELETON.md`.
 - **Observability:** Pino → CloudWatch; OTel → AMP; Grafana for

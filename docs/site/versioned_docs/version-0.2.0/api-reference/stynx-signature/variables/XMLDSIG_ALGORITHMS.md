@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / XMLDSIG_ALGORITHMS
+[@stynx-nyx/signature](../index.md) / XMLDSIG_ALGORITHMS
 
 # Variable: XMLDSIG_ALGORITHMS
 

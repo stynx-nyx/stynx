@@ -1,8 +1,8 @@
-[**@stynx/flow**](../index.md)
+[**@stynx-nyx/flow**](../index.md)
 
 ---
 
-[@stynx/flow](../index.md) / createNodeSchema
+[@stynx-nyx/flow](../index.md) / createNodeSchema
 
 # Variable: createNodeSchema
 

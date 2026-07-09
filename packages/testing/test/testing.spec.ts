@@ -2,8 +2,8 @@ import { randomUUID } from 'node:crypto';
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { tmpdir } from 'node:os';
-import { RequestContext } from '@stynx/core';
-import { documents, softDeletable } from '@stynx/data';
+import { RequestContext } from '@stynx-nyx/core';
+import { documents, softDeletable } from '@stynx-nyx/data';
 import { pgSchema, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import {
   createTestApp,
@@ -64,7 +64,7 @@ const FIXTURE_MIGRATIONS = [
   `,
 ];
 
-describe('@stynx/testing', () => {
+describe('@stynx-nyx/testing', () => {
 
   it('creates an isolated app, seeds fixtures, and exercises archive-aware matchers', async () => {
     const testApp = await createTestApp({

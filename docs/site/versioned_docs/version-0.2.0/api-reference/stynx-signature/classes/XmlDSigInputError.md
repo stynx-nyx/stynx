@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / XmlDSigInputError
+[@stynx-nyx/signature](../index.md) / XmlDSigInputError
 
 # Class: XmlDSigInputError
 

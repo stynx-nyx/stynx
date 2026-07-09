@@ -10,29 +10,29 @@ const packDir = join(tempRoot, 'packs');
 const fixturesRoot = join(tempRoot, 'consumers');
 
 const packageSpecs = [
-  { name: '@stynx/audit', dir: 'packages/audit' },
-  { name: '@stynx/auth', dir: 'packages/auth' },
-  { name: '@stynx/backend', dir: 'packages/backend' },
-  { name: '@stynx/contracts', dir: 'packages/contracts' },
-  { name: '@stynx/core', dir: 'packages/core' },
-  { name: '@stynx/data', dir: 'packages/data' },
-  { name: '@stynx/feature-flags', dir: 'packages/feature-flags' },
-  { name: '@stynx/flow', dir: 'packages/flow' },
-  { name: '@stynx/health', dir: 'packages/health' },
-  { name: '@stynx/i18n', dir: 'packages/i18n' },
-  { name: '@stynx/idempotency', dir: 'packages/idempotency' },
-  { name: '@stynx/storage', dir: 'packages/storage' },
-  { name: '@stynx/tenancy', dir: 'packages/tenancy' },
-  { name: '@stynx/integration-adapter', dir: 'packages/integration-adapter' },
-  { name: '@stynx/logging', dir: 'packages/logging' },
-  { name: '@stynx/pdf-a', dir: 'packages/pdf-a' },
-  { name: '@stynx/pdf-a-vera-docker', dir: 'packages/pdf-a-vera-docker' },
-  { name: '@stynx/signature', dir: 'packages/signature' },
-  { name: '@stynx/pdf', dir: 'packages/pdf' },
-  { name: '@stynx/privacy', dir: 'packages/privacy' },
-  { name: '@stynx/ratelimit', dir: 'packages/ratelimit' },
-  { name: '@stynx/sessions', dir: 'packages/sessions' },
-  { name: '@stynx/testing', dir: 'packages/testing' },
+  { name: '@stynx-nyx/audit', dir: 'packages/audit' },
+  { name: '@stynx-nyx/auth', dir: 'packages/auth' },
+  { name: '@stynx-nyx/backend', dir: 'packages/backend' },
+  { name: '@stynx-nyx/contracts', dir: 'packages/contracts' },
+  { name: '@stynx-nyx/core', dir: 'packages/core' },
+  { name: '@stynx-nyx/data', dir: 'packages/data' },
+  { name: '@stynx-nyx/feature-flags', dir: 'packages/feature-flags' },
+  { name: '@stynx-nyx/flow', dir: 'packages/flow' },
+  { name: '@stynx-nyx/health', dir: 'packages/health' },
+  { name: '@stynx-nyx/i18n', dir: 'packages/i18n' },
+  { name: '@stynx-nyx/idempotency', dir: 'packages/idempotency' },
+  { name: '@stynx-nyx/storage', dir: 'packages/storage' },
+  { name: '@stynx-nyx/tenancy', dir: 'packages/tenancy' },
+  { name: '@stynx-nyx/integration-adapter', dir: 'packages/integration-adapter' },
+  { name: '@stynx-nyx/logging', dir: 'packages/logging' },
+  { name: '@stynx-nyx/pdf-a', dir: 'packages/pdf-a' },
+  { name: '@stynx-nyx/pdf-a-vera-docker', dir: 'packages/pdf-a-vera-docker' },
+  { name: '@stynx-nyx/signature', dir: 'packages/signature' },
+  { name: '@stynx-nyx/pdf', dir: 'packages/pdf' },
+  { name: '@stynx-nyx/privacy', dir: 'packages/privacy' },
+  { name: '@stynx-nyx/ratelimit', dir: 'packages/ratelimit' },
+  { name: '@stynx-nyx/sessions', dir: 'packages/sessions' },
+  { name: '@stynx-nyx/testing', dir: 'packages/testing' },
   { name: '@stynx-web/angular', dir: 'packages-web/angular' },
   { name: '@stynx-web/angular-audit', dir: 'packages-web/angular-audit' },
   { name: '@stynx-web/angular-auth', dir: 'packages-web/angular-auth' },
@@ -130,23 +130,23 @@ function sgpFixture(tarballs) {
     packageJson: basePackageJson('stynx-consumer-sgp-fixture', {
       '@nestjs/common': '^11.1.19',
       '@nestjs/core': '^11.1.19',
-      '@stynx/audit': fileDependency(tarballs, '@stynx/audit'),
-      '@stynx/auth': fileDependency(tarballs, '@stynx/auth'),
-      '@stynx/backend': fileDependency(tarballs, '@stynx/backend'),
-      '@stynx/core': fileDependency(tarballs, '@stynx/core'),
-      '@stynx/data': fileDependency(tarballs, '@stynx/data'),
-      '@stynx/storage': fileDependency(tarballs, '@stynx/storage'),
-      '@stynx/tenancy': fileDependency(tarballs, '@stynx/tenancy'),
+      '@stynx-nyx/audit': fileDependency(tarballs, '@stynx-nyx/audit'),
+      '@stynx-nyx/auth': fileDependency(tarballs, '@stynx-nyx/auth'),
+      '@stynx-nyx/backend': fileDependency(tarballs, '@stynx-nyx/backend'),
+      '@stynx-nyx/core': fileDependency(tarballs, '@stynx-nyx/core'),
+      '@stynx-nyx/data': fileDependency(tarballs, '@stynx-nyx/data'),
+      '@stynx-nyx/storage': fileDependency(tarballs, '@stynx-nyx/storage'),
+      '@stynx-nyx/tenancy': fileDependency(tarballs, '@stynx-nyx/tenancy'),
       'reflect-metadata': '^0.2.2',
       rxjs: '^7.8.2',
     }),
-    indexTs: `import { Audit } from '@stynx/backend';
-import { Permission, StynxAuthGuard } from '@stynx/auth';
-import { RequestContext } from '@stynx/core';
-import type { AuditEvent } from '@stynx/audit';
-import type { Database } from '@stynx/data';
-import type { InitiateDocumentInput } from '@stynx/storage';
-import type { ProvisionTenantInput } from '@stynx/tenancy';
+    indexTs: `import { Audit } from '@stynx-nyx/backend';
+import { Permission, StynxAuthGuard } from '@stynx-nyx/auth';
+import { RequestContext } from '@stynx-nyx/core';
+import type { AuditEvent } from '@stynx-nyx/audit';
+import type { Database } from '@stynx-nyx/data';
+import type { InitiateDocumentInput } from '@stynx-nyx/storage';
+import type { ProvisionTenantInput } from '@stynx-nyx/tenancy';
 
 export class SgpRecordsController {
   constructor(
@@ -170,17 +170,17 @@ function pecFixture(tarballs) {
     packageJson: basePackageJson('stynx-consumer-pec-fixture', {
       '@nestjs/common': '^11.1.19',
       '@nestjs/core': '^11.1.19',
-      '@stynx/integration-adapter': fileDependency(tarballs, '@stynx/integration-adapter'),
-      '@stynx/pdf': fileDependency(tarballs, '@stynx/pdf'),
-      '@stynx/signature': fileDependency(tarballs, '@stynx/signature'),
+      '@stynx-nyx/integration-adapter': fileDependency(tarballs, '@stynx-nyx/integration-adapter'),
+      '@stynx-nyx/pdf': fileDependency(tarballs, '@stynx-nyx/pdf'),
+      '@stynx-nyx/signature': fileDependency(tarballs, '@stynx-nyx/signature'),
       'reflect-metadata': '^0.2.2',
       rxjs: '^7.8.2',
     }),
-    indexTs: `import { IntegrationAdapter, InMemoryCircuitBreaker } from '@stynx/integration-adapter';
-import { PdfVerificationEvidenceAppender } from '@stynx/pdf/evidence';
-import { PublicPayrollPdfBuilder } from '@stynx/pdf/public-payroll';
-import { XmlDSigVerifier } from '@stynx/signature/xmldsig';
-import type { SignatureRequest, VerifyRequest } from '@stynx/signature';
+    indexTs: `import { IntegrationAdapter, InMemoryCircuitBreaker } from '@stynx-nyx/integration-adapter';
+import { PdfVerificationEvidenceAppender } from '@stynx-nyx/pdf/evidence';
+import { PublicPayrollPdfBuilder } from '@stynx-nyx/pdf/public-payroll';
+import { XmlDSigVerifier } from '@stynx-nyx/signature/xmldsig';
+import type { SignatureRequest, VerifyRequest } from '@stynx-nyx/signature';
 
 export const pecSurface = {
   IntegrationAdapter,

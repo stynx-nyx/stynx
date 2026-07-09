@@ -1,4 +1,4 @@
-import { decodePadesEvidenceBlock } from '@stynx/signature';
+import { decodePadesEvidenceBlock } from '@stynx-nyx/signature';
 import { FixedLayoutDocumentBuilder, PdfVerificationEvidenceAppender } from '../../src';
 
 describe('PdfVerificationEvidenceAppender', () => {

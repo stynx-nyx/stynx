@@ -4,8 +4,8 @@ import {
   expectNotInLive,
   expectRestored,
   expectRLSIsolated,
-} from '@stynx/testing';
-import { PermissionCache } from '@stynx/auth';
+} from '@stynx-nyx/testing';
+import { PermissionCache } from '@stynx-nyx/auth';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   workItemEntries,
@@ -115,7 +115,7 @@ function lockTimestamp(): string {
   return new Date('2026-05-19T12:00:00.000Z').toISOString();
 }
 
-describe('@stynx/reference-api e2e work items', () => {
+describe('@stynx-nyx/reference-api e2e work items', () => {
   let context: ReferenceApiE2eContext;
   let adminA: AuthenticatedAgent;
   let viewerA: AuthenticatedAgent;

@@ -1,8 +1,8 @@
-[**@stynx/flow**](../index.md)
+[**@stynx-nyx/flow**](../index.md)
 
 ---
 
-[@stynx/flow](../index.md) / FlowEffectResult
+[@stynx-nyx/flow](../index.md) / FlowEffectResult
 
 # Interface: FlowEffectResult
 

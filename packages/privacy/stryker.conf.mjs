@@ -1,7 +1,7 @@
 import { createStrykerConfig } from '../../tools/stryker/base.mjs';
 
 export default createStrykerConfig({
-  packageName: '@stynx/privacy',
+  packageName: '@stynx-nyx/privacy',
   vitestConfig: './vitest.stryker.config.ts',
   mutate: [
     'src/pii-map.service.ts',

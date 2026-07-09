@@ -1,8 +1,8 @@
-[**@stynx/ratelimit**](../index.md)
+[**@stynx-nyx/ratelimit**](../index.md)
 
 ---
 
-[@stynx/ratelimit](../index.md) / STYNX_RATE_LIMIT_STORE
+[@stynx-nyx/ratelimit](../index.md) / STYNX_RATE_LIMIT_STORE
 
 # Variable: STYNX_RATE_LIMIT_STORE
 

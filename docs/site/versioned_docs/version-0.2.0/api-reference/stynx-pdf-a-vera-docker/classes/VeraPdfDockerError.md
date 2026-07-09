@@ -1,8 +1,8 @@
-[**@stynx/pdf-a-vera-docker**](../index.md)
+[**@stynx-nyx/pdf-a-vera-docker**](../index.md)
 
 ---
 
-[@stynx/pdf-a-vera-docker](../index.md) / VeraPdfDockerError
+[@stynx-nyx/pdf-a-vera-docker](../index.md) / VeraPdfDockerError
 
 # Class: VeraPdfDockerError
 

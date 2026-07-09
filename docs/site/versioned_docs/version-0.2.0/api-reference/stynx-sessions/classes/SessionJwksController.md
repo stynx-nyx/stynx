@@ -1,8 +1,8 @@
-[**@stynx/sessions**](../index.md)
+[**@stynx-nyx/sessions**](../index.md)
 
 ---
 
-[@stynx/sessions](../index.md) / SessionJwksController
+[@stynx-nyx/sessions](../index.md) / SessionJwksController
 
 # Class: SessionJwksController
 

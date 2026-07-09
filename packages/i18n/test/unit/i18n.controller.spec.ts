@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { STYNX_NO_IDEMPOTENT_ROUTE } from '@stynx/idempotency';
+import { STYNX_NO_IDEMPOTENT_ROUTE } from '@stynx-nyx/idempotency';
 import { I18nController } from '../../src/i18n.controller';
 import type { I18nAdminService } from '../../src/i18n-admin.service';
 

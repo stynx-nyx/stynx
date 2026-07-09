@@ -1,8 +1,8 @@
-[**@stynx/contracts**](../index.md)
+[**@stynx-nyx/contracts**](../index.md)
 
 ---
 
-[@stynx/contracts](../index.md) / AuthenticationError
+[@stynx-nyx/contracts](../index.md) / AuthenticationError
 
 # Class: AuthenticationError
 

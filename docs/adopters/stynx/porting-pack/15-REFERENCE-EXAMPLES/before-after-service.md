@@ -138,12 +138,12 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { RequestContext } from '@stynx/core';
-import { Database, type SoftDeletableTable } from '@stynx/data';
-import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx/auth';
-import { Idempotent } from '@stynx/idempotency';
-import { RateLimit } from '@stynx/ratelimit';
-import { Audit } from '@stynx/backend';
+import { RequestContext } from '@stynx-nyx/core';
+import { Database, type SoftDeletableTable } from '@stynx-nyx/data';
+import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx-nyx/auth';
+import { Idempotent } from '@stynx-nyx/idempotency';
+import { RateLimit } from '@stynx-nyx/ratelimit';
+import { Audit } from '@stynx-nyx/backend';
 import { and, desc, eq } from 'drizzle-orm';
 import { records } from './schema';
 import type { CreateRecordDto, ListQuery, UpdateRecordDto } from './dto';
@@ -273,7 +273,7 @@ export class RecordsController {
 ## Annotations — what changed and why
 
 1. **`new Pool(...)` removed; `Database` injected.** Inject the platform's
-   `Database` class (`@stynx/data`). Every call goes through `db.tx(...)`,
+   `Database` class (`@stynx-nyx/data`). Every call goes through `db.tx(...)`,
    which sets `app.tenant_id`, `app.actor_id`, `app.request_id`, `app.role`
    GUCs per transaction. See [`06-DATA-LAYER-PATTERNS.md`](../06-DATA-LAYER-PATTERNS.md)
    "The Database / Transaction surface" and the `applySessionState` citation.
@@ -293,7 +293,7 @@ export class RecordsController {
    tolerated, but never the _only_ isolation.
 
 4. **Tenancy and actor read from `RequestContext`, not method arguments.**
-   `RequestContext` from `@stynx/core` is bound by the
+   `RequestContext` from `@stynx-nyx/core` is bound by the
    `RequestContextInterceptor` and survives any `await` inside `db.tx()`
    thanks to `nestjs-cls`. The controller no longer threads `orgId`
    through.
@@ -337,18 +337,18 @@ export class RecordsController {
     `pool.query` and the unwrapped Drizzle root (`Anti-pattern 4` in
     [`06-DATA-LAYER-PATTERNS.md`](../06-DATA-LAYER-PATTERNS.md)).
 
-### Imports verified against `@stynx/*` exports
+### Imports verified against `@stynx-nyx/*` exports
 
 | Symbol                                                        | Package              | Source                                                   |
 | ------------------------------------------------------------- | -------------------- | -------------------------------------------------------- |
-| `Database`, `SoftDeletableTable`                              | `@stynx/data`        | `packages/data/src/index.ts` (catalog 05 §`@stynx/data`) |
-| `RequestContext`                                              | `@stynx/core`        | catalog 05 §`@stynx/core`                                |
-| `Permission`, `ReadOnly`, `StynxAuthGuard`, `PermissionGuard` | `@stynx/auth`        | `packages/auth/src/index.ts`                             |
-| `Idempotent`                                                  | `@stynx/idempotency` | `packages/idempotency/src/index.ts`                      |
-| `RateLimit`                                                   | `@stynx/ratelimit`   | `packages/ratelimit/src/index.ts`                        |
-| `Audit`                                                       | `@stynx/backend`     | `packages/backend/src/index.ts`                          |
-| `eq`, `and`, `desc`                                           | `drizzle-orm`        | peer dep of `@stynx/data`                                |
+| `Database`, `SoftDeletableTable`                              | `@stynx-nyx/data`        | `packages/data/src/index.ts` (catalog 05 §`@stynx-nyx/data`) |
+| `RequestContext`                                              | `@stynx-nyx/core`        | catalog 05 §`@stynx-nyx/core`                                |
+| `Permission`, `ReadOnly`, `StynxAuthGuard`, `PermissionGuard` | `@stynx-nyx/auth`        | `packages/auth/src/index.ts`                             |
+| `Idempotent`                                                  | `@stynx-nyx/idempotency` | `packages/idempotency/src/index.ts`                      |
+| `RateLimit`                                                   | `@stynx-nyx/ratelimit`   | `packages/ratelimit/src/index.ts`                        |
+| `Audit`                                                       | `@stynx-nyx/backend`     | `packages/backend/src/index.ts`                          |
+| `eq`, `and`, `desc`                                           | `drizzle-orm`        | peer dep of `@stynx-nyx/data`                                |
 
 `[GAP — confirm `randomUUID`vs UUIDv7 helper preference; reference-api
 uses Node`crypto.randomUUID`which is UUIDv4. The migration comment
-says "UUIDv7 preferred"; if a helper ships in`@stynx/core`, prefer it.]`
+says "UUIDv7 preferred"; if a helper ships in`@stynx-nyx/core`, prefer it.]`

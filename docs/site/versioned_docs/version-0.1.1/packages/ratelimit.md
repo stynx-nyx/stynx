@@ -1,8 +1,8 @@
 ---
-title: '@stynx/ratelimit'
+title: '@stynx-nyx/ratelimit'
 ---
 
-# @stynx/ratelimit
+# @stynx-nyx/ratelimit
 
 Request throttling primitives, policy resolution, durable rate-limit stores, Redis sliding-window store, and guard wiring.
 
@@ -13,10 +13,10 @@ Request throttling primitives, policy resolution, durable rate-limit stores, Red
 ## Install And Import
 
 ```ts
-import {} from /* public exports */ '@stynx/ratelimit';
+import {} from /* public exports */ '@stynx-nyx/ratelimit';
 ```
 
-In this monorepo, use the workspace package. Published consumers should install matching `@stynx/*` versions from the same release train.
+In this monorepo, use the workspace package. Published consumers should install matching `@stynx-nyx/*` versions from the same release train.
 
 ## Module Setup
 
@@ -36,7 +36,7 @@ Decisions can be scoped by IP, tenant, user, and route. Stores must preserve ten
 ## Example
 
 ```ts
-import { RateLimit } from '@stynx/ratelimit';
+import { RateLimit } from '@stynx-nyx/ratelimit';
 
 @RateLimit({ bucket: 'tenant', limit: 120, windowSeconds: 60 })
 @Post('/records')
@@ -69,9 +69,9 @@ Current barrel highlights:
 ## Verification
 
 ```sh
-pnpm --filter @stynx/ratelimit build
-pnpm --filter @stynx/ratelimit test
-STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx/ratelimit test:int
+pnpm --filter @stynx-nyx/ratelimit build
+pnpm --filter @stynx-nyx/ratelimit test
+STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx-nyx/ratelimit test:int
 ```
 
 ## Documentation Standard

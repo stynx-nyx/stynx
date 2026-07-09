@@ -78,7 +78,7 @@ the verification checklist in `14-VERIFICATION-CHECKLIST.md`.
 - The agent must produce `./adoption/ASSESSMENT.md` before any code.
 - All migrations go in `./migrations/` and follow the naming convention
   `NNNN_description.sql`.
-- All `@stynx/*` imports use barrel paths only (no deep imports).
+- All `@stynx-nyx/*` imports use barrel paths only (no deep imports).
 - Every controller method must carry @Permission, @Public, or @System.
 - Every mutation method must carry @Audit (or @NoAudit('reason')).
 ```

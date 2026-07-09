@@ -28,13 +28,13 @@ const requiredCategories = [
 ];
 
 if (!packageJson.devDependencies?.['@axe-core/playwright']) {
-  failures.push('@stynx/reference-web must install @axe-core/playwright');
+  failures.push('@stynx-nyx/reference-web must install @axe-core/playwright');
 }
 if (!packageJson.devDependencies?.['@playwright/test']) {
-  failures.push('@stynx/reference-web must install @playwright/test');
+  failures.push('@stynx-nyx/reference-web must install @playwright/test');
 }
 if (packageJson.scripts?.['test:e2e'] !== 'playwright test') {
-  failures.push('@stynx/reference-web test:e2e must execute Playwright');
+  failures.push('@stynx-nyx/reference-web test:e2e must execute Playwright');
 }
 if (!a11y.includes("import AxeBuilder from '@axe-core/playwright'")) {
   failures.push('reference web a11y probe must use AxeBuilder');

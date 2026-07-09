@@ -1,4 +1,4 @@
-import { auditExpect, expectRLSIsolated } from '@stynx/testing';
+import { auditExpect, expectRLSIsolated } from '@stynx-nyx/testing';
 import request from 'supertest';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import {
@@ -86,7 +86,7 @@ async function queryTenantsForRls(context: ReferenceApiE2eContext, tenantId: str
   );
 }
 
-describe('@stynx/reference-api e2e tenancy', () => {
+describe('@stynx-nyx/reference-api e2e tenancy', () => {
   let context: ReferenceApiE2eContext;
   let previousPlatformAdminFlag: string | undefined;
   let authorization = '';

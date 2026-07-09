@@ -2,7 +2,7 @@
 
 &gt; **Audience:** an agent porting another codebase to STYNX, or extending
 &gt; a STYNX consumer with a new domain schema. Every pattern in this file
-&gt; compiles against the platform helpers shipped by `@stynx/data`'s
+&gt; compiles against the platform helpers shipped by `@stynx-nyx/data`'s
 &gt; bootstrap migrations and is enforced by the migration linter at
 &gt; `tools/migration-linter/src/lint.ts`.
 &gt;
@@ -32,7 +32,7 @@ The runtime database that backs a STYNX consumer is built in three
 layers, applied in this order. Skipping or reordering layers produces
 RLS bypasses, broken FK references, and silent un-audited tables.
 
-### 1. Platform migrations from `@stynx/data`
+### 1. Platform migrations from `@stynx-nyx/data`
 
 Run first. Located at
 `packages/data/migrations/platform/`. The thirteen files at the
@@ -72,7 +72,7 @@ A consumer ships its own migration directory (the reference app uses
   RLS / archive-mirror calls — directly or via
   `data.create_soft_deletable_table(...)`.
 
-### 3. Migration runner is `@stynx/cli`'s `migrate` command
+### 3. Migration runner is `@stynx-nyx/cli`'s `migrate` command
 
 `packages/cli/src/migrate.ts` implements `stynx migrate up | down |
 redo | status` (per `_DISCOVERY.md` §8). The runner reads from a
@@ -80,7 +80,7 @@ configurable migrations directory, applies files in lexicographic
 order, and records applied entries in a tracking table.
 
 **Invocation note from `_DISCOVERY.md` §8 / §11:** at the discovery
-commit `pnpm --filter @stynx/cli exec stynx --help` does **not**
+commit `pnpm --filter @stynx-nyx/cli exec stynx --help` does **not**
 resolve a `stynx` bin (`Command "stynx" not found`). Consuming agents
 should invoke the CLI through `node packages/cli/dist/main.js` or via
 the wrapper script their app exposes — **not** via `pnpm exec stynx`
@@ -392,7 +392,7 @@ materialized read models, ephemeral scratch tables. Opting out
 requires **two** declarations that must agree:
 
 1. **TS entity model:** `@NoSoftDelete('reason')` on the Drizzle
-   schema, surfaced from `@stynx/data`'s `table-markers` barrel
+   schema, surfaced from `@stynx-nyx/data`'s `table-markers` barrel
    (`_DISCOVERY.md` §10 — `* from './table-markers'`).
 2. **SQL migration:** `-- @no_soft_delete: &lt;reason&gt;` annotation in
    the same migration that declares the `CREATE TABLE`. The linter
@@ -423,13 +423,13 @@ CREATE POLICY tenant_isolation ON sample.event_log
 SELECT audit.enable_for('sample.event_log');
 ```
 
-The TypeScript companion (illustrative; consult `@stynx/data`
+The TypeScript companion (illustrative; consult `@stynx-nyx/data`
 table-markers for the exact decorator surface — `[GAP — symbol name
 not enumerated in this pass; verify in the table-markers barrel]`):
 
 ```ts
 import { pgTable } from 'drizzle-orm/pg-core';
-import { NoSoftDelete } from '@stynx/data';
+import { NoSoftDelete } from '@stynx-nyx/data';
 
 export const eventLog = NoSoftDelete(
   'append-only audit-style log; rotation handled by partition detach',
@@ -441,7 +441,7 @@ export const eventLog = NoSoftDelete(
 ```
 
 If the SQL annotation is present but the TS marker is not (or vice
-versa), runtime guards in `@stynx/data` raise — divergence is a
+versa), runtime guards in `@stynx-nyx/data` raise — divergence is a
 fail-closed condition.
 
 ---
@@ -450,7 +450,7 @@ fail-closed condition.
 
 Symmetric to the soft-delete opt-out. Two declarations:
 
-1. **TS entity model:** `@NoAudit('reason')` from `@stynx/data`
+1. **TS entity model:** `@NoAudit('reason')` from `@stynx-nyx/data`
    table-markers.
 2. **SQL migration:** `-- @no_audit: &lt;reason&gt;` annotation in the
    migration that declares the table; **and** the migration must
@@ -493,7 +493,7 @@ CREATE POLICY tenant_isolation ON sample.search_cache
 The matching TS marker:
 
 ```ts
-import { NoAudit, NoSoftDelete } from '@stynx/data';
+import { NoAudit, NoSoftDelete } from '@stynx-nyx/data';
 
 export const searchCache = NoAudit('high-volume cache; audit cost would dominate')(
   NoSoftDelete('regenerable cache')(
@@ -526,7 +526,7 @@ CREATE TABLE IF NOT EXISTS core.pii_map (
 );
 ```
 
-The `@stynx/privacy` package's `PiiMapService`
+The `@stynx-nyx/privacy` package's `PiiMapService`
 (`packages/privacy/src/pii-map.service.ts:75+`) reads the rows at
 LGPD-erasure time. The DB column the service treats as the strategy
 key is `strategy` (per `0007_core.sql:53`).
@@ -827,9 +827,9 @@ Practical implications for porting agents:
   migrations and the platform migrations alike, then triage.
 - The expected re-verification command is roughly:
   ```bash
-  pnpm --filter @stynx/migration-linter test
+  pnpm --filter @stynx-nyx/migration-linter test
   # or, against arbitrary SQL trees:
-  pnpm --filter @stynx/migration-linter exec migration-linter \
+  pnpm --filter @stynx-nyx/migration-linter exec migration-linter \
     packages/data/migrations/platform \
     reference/api/migrations
   ```
@@ -880,7 +880,7 @@ I1 / I4 / I5 / I6 / I8 from `04-INVARIANTS-AND-CONTRACTS.md`:
 | `invariants.audit.missingAuditTables`         | `string[]`            | Tenant-scoped tables without a matching `audit.enable_for(&lt;table&gt;)` call.                                                                                                         |
 | `invariants.softDelete.missingArchiveTables`  | `string[]`            | Tenant-scoped non-`_log` tables without a `data.create_soft_deletable_table` / `data.adopt_soft_deletable_table` call **and** without an `archive.&lt;schema&gt;_&lt;table&gt;` mirror. |
 | `invariants.softDelete.adHocSoftDeleteTables` | `string[]`            | Tables that already carry a `deleted` / `deleted_at` column (candidates for `data.adopt_soft_deletable_table`).                                                                         |
-| `authLayer.customJwtMiddleware`               | `string[]`            | Files that mention `jwt` and `middleware` (heuristic — flag for manual review against `@stynx/auth`).                                                                                   |
+| `authLayer.customJwtMiddleware`               | `string[]`            | Files that mention `jwt` and `middleware` (heuristic — flag for manual review against `@stynx-nyx/auth`).                                                                                   |
 | `other.readOnlyCandidates`                    | `string[]`            | GET handlers whose name matches `report                                                                                                                                                 | utilization                         | calendar | list`— candidates for`@ReadOnly()` (I7). |
 | `other.appendOnlyCandidates`                  | `string[]`            | Tables whose name ends `_log` — candidates for `@NoSoftDelete` and partition-detach retention.                                                                                          |
 
@@ -912,12 +912,12 @@ Per file, runs three TS codemods in sequence:
 
 - `codemodPoolUsage` (`adopt.ts:339-347`) — rewrites `pg`-direct
   imports and `Pool/Client` usage to `Database` injection from
-  `@stynx/data`. Replaces `this.pool.query(…)` with
+  `@stynx-nyx/data`. Replaces `this.pool.query(…)` with
   `this.db.tx(async (trx) =&gt; trx.query(…))`. Replaces
   `new Pool(…)` constructions with a `TODO(stynx-adopt): inject
 Database via NestJS DI` comment.
 - `codemodAuthMiddleware` (`adopt.ts:349-361`) — flags JWT
-  middleware files with a `// DEPRECATED in favor of @stynx/auth.`
+  middleware files with a `// DEPRECATED in favor of @stynx-nyx/auth.`
   banner so the cutover is reviewable.
 - `codemodRoutePermissions` + `injectPermissionImports`
   (`adopt.ts:310-337`) — for any route decorator without a sibling

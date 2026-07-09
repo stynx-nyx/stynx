@@ -1,4 +1,4 @@
-// C-4 Session T2 — BookmarkService wired to @stynx/data
+// C-4 Session T2 — BookmarkService wired to @stynx-nyx/data
 //
 // Replaces the S3-2 NotImplementedException stubs. Follows the stynx
 // pattern from reference/api/src/sample/reference-sample.service.ts:
@@ -7,8 +7,8 @@
 
 import { randomUUID } from 'node:crypto';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { RequestContext } from '@stynx/core';
-import { Database } from '@stynx/data';
+import { RequestContext } from '@stynx-nyx/core';
+import { Database } from '@stynx-nyx/data';
 import { and, desc, eq, isNull } from 'drizzle-orm';
 import { bookmarks } from '../schema';
 import type { CreateBookmarkDto } from '../dto/create-bookmark.dto';

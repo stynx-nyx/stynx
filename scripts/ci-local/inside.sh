@@ -253,8 +253,8 @@ ensure_docs_chrome() {
   if [[ -z "$chrome_path" ]]; then
     log "Chrome stable is unavailable; installing Playwright Chromium for local docs preflight"
     install_workspace_once
-    run pnpm --filter @stynx/reference-web exec playwright install --with-deps chromium
-    chrome_path="$(pnpm --filter @stynx/reference-web exec node -e "const { chromium } = require('@playwright/test'); console.log(chromium.executablePath())")"
+    run pnpm --filter @stynx-nyx/reference-web exec playwright install --with-deps chromium
+    chrome_path="$(pnpm --filter @stynx-nyx/reference-web exec node -e "const { chromium } = require('@playwright/test'); console.log(chromium.executablePath())")"
   fi
 
   if [[ ! -x "$chrome_path" ]]; then
@@ -352,7 +352,7 @@ job_integration() {
   export STYNX_TEST_PG_PASSWORD="stynx"
 
   if [[ "$status" -eq 0 ]]; then
-    run pnpm --filter @stynx/cli build || status=$?
+    run pnpm --filter @stynx-nyx/cli build || status=$?
   fi
   if [[ "$status" -eq 0 ]]; then
     run node packages/cli/dist/cli/src/main.js migrate up --database-url "$DATABASE_URL" || status=$?
@@ -402,7 +402,7 @@ job_reference_web_e2e() {
   fi
   cleanup_reference_stack
 
-  run pnpm --filter @stynx/reference-web exec playwright install --with-deps chromium || status=$?
+  run pnpm --filter @stynx-nyx/reference-web exec playwright install --with-deps chromium || status=$?
   if [[ "$status" -eq 0 ]]; then
     run reference_compose up -d --build || status=$?
   fi
@@ -416,7 +416,7 @@ job_reference_web_e2e() {
     if [[ "${CI_LOCAL_HOST_DOCKER:-0}" == "1" ]]; then
       api_proxy_pid="$(start_tcp_proxy 3000 "$service_host" 3000 reference-api)"
     fi
-    run env CI=true pnpm --filter @stynx/reference-web test:e2e || status=$?
+    run env CI=true pnpm --filter @stynx-nyx/reference-web test:e2e || status=$?
   fi
 
   if [[ -n "$api_proxy_pid" ]]; then
@@ -500,7 +500,7 @@ job_docs() {
   local status=0
   install_workspace_once
   ensure_docs_chrome
-  run pnpm --filter @stynx/docs-site build:ci || status=$?
+  run pnpm --filter @stynx-nyx/docs-site build:ci || status=$?
   copy_artifact docs/site/build/lighthouse docs/lighthouse
   return "$status"
 }

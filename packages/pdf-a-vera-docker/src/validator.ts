@@ -2,13 +2,13 @@ import {
   PDF_A_VALIDATION_ATTEMPTS_TOTAL,
   PDF_A_VALIDATION_DURATION_MS,
   PDF_A_VALIDATION_ERRORS_TOTAL,
-} from '@stynx/pdf-a';
+} from '@stynx-nyx/pdf-a';
 import type {
   PdfAValidateOptions,
   PdfAValidationLogger,
   PdfAValidationResult,
   PdfAValidator,
-} from '@stynx/pdf-a';
+} from '@stynx-nyx/pdf-a';
 import { DEFAULT_VERAPDF_IMAGE, DEFAULT_VERAPDF_TIMEOUT_MS } from './constants';
 import { runVeraPdfDocker } from './docker';
 import type { VeraPdfDockerRunner } from './docker';

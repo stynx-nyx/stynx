@@ -53,7 +53,7 @@ function renderIndex(packages) {
     '',
     '# API Reference',
     '',
-    'Generated API reference for every `@stynx/*` and `@stynx-web/*` package.',
+    'Generated API reference for every `@stynx-nyx/*` and `@stynx-web/*` package.',
     '',
   ];
 
@@ -194,7 +194,7 @@ function writeTypeDocTsconfig(pkg) {
 }
 
 function typeDocOptionsFor(pkg) {
-  if (pkg.manifest.name === '@stynx/backend') {
+  if (pkg.manifest.name === '@stynx-nyx/backend') {
     return [
       '--intentionallyNotExported',
       'src/identity-admin/pg-local-sync.adapter.ts:QueryResult',
@@ -203,7 +203,7 @@ function typeDocOptionsFor(pkg) {
     ];
   }
 
-  if (pkg.manifest.name === '@stynx/data') {
+  if (pkg.manifest.name === '@stynx-nyx/data') {
     return ['--intentionallyNotExported', 'src/schema/index.ts:schema'];
   }
 
@@ -230,7 +230,7 @@ function typeDocOptionsFor(pkg) {
 }
 
 const packages = [
-  ...collectPackages('packages', (name) => typeof name === 'string' && name.startsWith('@stynx/')),
+  ...collectPackages('packages', (name) => typeof name === 'string' && name.startsWith('@stynx-nyx/')),
   ...collectPackages(
     'packages-web',
     (name) => typeof name === 'string' && name.startsWith('@stynx-web/'),

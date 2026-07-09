@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { RequestContext } from '@stynx/core';
+import { RequestContext } from '@stynx-nyx/core';
 import { I18nAdminService } from '../../src/i18n-admin.service';
 import { I18nController } from '../../src/i18n.controller';
 

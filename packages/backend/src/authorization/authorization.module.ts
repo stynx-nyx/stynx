@@ -1,5 +1,5 @@
 import { DynamicModule, Module, Provider } from '@nestjs/common';
-import type { PolicyEvaluator } from '@stynx/contracts';
+import type { PolicyEvaluator } from '@stynx-nyx/contracts';
 import { AuthorizationGuard } from './authorization.guard';
 import { STYNX_AUTHZ_POLICY_EVALUATOR } from './constants';
 

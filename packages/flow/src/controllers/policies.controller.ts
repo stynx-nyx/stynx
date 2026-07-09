@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
-import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx/auth';
-import { Audit, NoIdempotent } from '@stynx/backend';
+import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx-nyx/auth';
+import { Audit, NoIdempotent } from '@stynx-nyx/backend';
 import { FlowPolicyService } from '../flow-policy.service';
 import type {
   CreateFlowPolicyRuleDto,

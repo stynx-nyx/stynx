@@ -1,14 +1,14 @@
-# `@stynx/privacy` — LGPD/GDPR primitives: PII registry, erasure workflow, ROPA generator
+# `@stynx-nyx/privacy` — LGPD/GDPR primitives: PII registry, erasure workflow, ROPA generator
 
-`@stynx/privacy` provides three concerns: (1) a runtime PII column registry that captures which columns hold PII, the legal basis, and retention; (2) erasure-workflow orchestration that walks the registry to redact + delete the subject's data; (3) ROPA (Record-of-Processing-Activities) JSON generation from the registry for compliance audits. Exposed via three controller endpoints (`/privacy/exports`, `/privacy/erasures`, `/privacy/retention`).
+`@stynx-nyx/privacy` provides three concerns: (1) a runtime PII column registry that captures which columns hold PII, the legal basis, and retention; (2) erasure-workflow orchestration that walks the registry to redact + delete the subject's data; (3) ROPA (Record-of-Processing-Activities) JSON generation from the registry for compliance audits. Exposed via three controller endpoints (`/privacy/exports`, `/privacy/erasures`, `/privacy/retention`).
 
 ## Purpose
 
-Privacy laws (LGPD in Brazil, GDPR in EU) require: knowing which columns hold PII (registry), supporting data-export + deletion requests (subject-rights endpoints), and producing a ROPA on demand. Without explicit tooling, this lives as scattered scripts. `@stynx/privacy` centralises the substrate.
+Privacy laws (LGPD in Brazil, GDPR in EU) require: knowing which columns hold PII (registry), supporting data-export + deletion requests (subject-rights endpoints), and producing a ROPA on demand. Without explicit tooling, this lives as scattered scripts. `@stynx-nyx/privacy` centralises the substrate.
 
 You reach for it when your app is subject to LGPD/GDPR and stores user PII.
 
-What it does NOT do: it doesn't claim to be a compliance solution (it's the runtime substrate; legal review still required). It doesn't anonymise quasi-identifiers (k-anonymity etc.) — its erasure is row-level. It doesn't audit access — that's `@stynx/audit`.
+What it does NOT do: it doesn't claim to be a compliance solution (it's the runtime substrate; legal review still required). It doesn't anonymise quasi-identifiers (k-anonymity etc.) — its erasure is row-level. It doesn't audit access — that's `@stynx-nyx/audit`.
 
 ## Audience
 
@@ -17,15 +17,15 @@ Backend developers in regulated apps (financial, healthcare, public-payroll, etc
 ## Install
 
 ```bash
-pnpm add @stynx/privacy
+pnpm add @stynx-nyx/privacy
 ```
 
-**Peer dependencies:** `@nestjs/common` `^11`, `@stynx/core` `^1`, `@stynx/data` `^1`, `@stynx/storage` `^1` (for export packaging).
+**Peer dependencies:** `@nestjs/common` `^11`, `@stynx-nyx/core` `^1`, `@stynx-nyx/data` `^1`, `@stynx-nyx/storage` `^1` (for export packaging).
 
 ## Quick start
 
 ```ts
-import { StynxPrivacyModule, PiiColumn } from '@stynx/privacy';
+import { StynxPrivacyModule, PiiColumn } from '@stynx-nyx/privacy';
 
 StynxPrivacyModule.forRoot({
   defaultLegalBasis: 'consent',
@@ -36,7 +36,7 @@ StynxPrivacyModule.forRoot({
 Register PII columns:
 
 ```ts
-import { PiiColumn } from '@stynx/privacy';
+import { PiiColumn } from '@stynx-nyx/privacy';
 
 @PiiColumn({ legalBasis: 'contract', retentionDays: 365 * 7, category: 'identifier' })
 email: string;
@@ -61,7 +61,7 @@ pnpm exec stynx privacy ropa --out ./ropa.json
 | --------------------------- | ------------------------------------------------- |
 | `StynxPrivacyService`       | Top-level: export, erase, get retention status.   |
 | `PiiMapService`             | Reads + writes the runtime PII registry.          |
-| `PrivacyObjectStoreService` | Bridges to `@stynx/storage` for export packaging. |
+| `PrivacyObjectStoreService` | Bridges to `@stynx-nyx/storage` for export packaging. |
 | `RopaGenerator`             | Produces the ROPA JSON.                           |
 
 ### Decorators
@@ -148,12 +148,12 @@ pnpm exec stynx privacy ropa --out ./compliance/ropa-2026-q2.json
 
 ## Related packages
 
-- [`@stynx/core`](/docs/packages/core/) — provides `RequestContext` for subject-rights endpoint auth.
-- [`@stynx/data`](/docs/packages/data/) — owns the schema where PII columns live.
-- [`@stynx/storage`](/docs/packages/storage/) — provides the bucket used for export packaging.
-- [`@stynx/audit`](/docs/packages/audit/) — every subject-rights operation emits an audit event.
+- [`@stynx-nyx/core`](/docs/packages/core/) — provides `RequestContext` for subject-rights endpoint auth.
+- [`@stynx-nyx/data`](/docs/packages/data/) — owns the schema where PII columns live.
+- [`@stynx-nyx/storage`](/docs/packages/storage/) — provides the bucket used for export packaging.
+- [`@stynx-nyx/audit`](/docs/packages/audit/) — every subject-rights operation emits an audit event.
 - [`@stynx-web/angular-profile`](/docs/packages-web/angular-profile/) — Angular pair: subject-rights UI (account-deletion).
-- [`@stynx/cli`](/docs/packages/cli/) — `stynx privacy ropa` verb generates ROPA from this package's registry.
+- [`@stynx-nyx/cli`](/docs/packages/cli/) — `stynx privacy ropa` verb generates ROPA from this package's registry.
 
 ## TypeDoc reference
 

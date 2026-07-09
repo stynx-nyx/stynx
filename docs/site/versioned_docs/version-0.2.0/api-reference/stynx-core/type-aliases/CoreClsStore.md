@@ -1,8 +1,8 @@
-[**@stynx/core**](../index.md)
+[**@stynx-nyx/core**](../index.md)
 
 ---
 
-[@stynx/core](../index.md) / CoreClsStore
+[@stynx-nyx/core](../index.md) / CoreClsStore
 
 # Type Alias: CoreClsStore
 

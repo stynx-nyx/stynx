@@ -1,6 +1,6 @@
 import * as Contracts from '../src/index';
 
-describe('@stynx/contracts barrel', () => {
+describe('@stynx-nyx/contracts barrel', () => {
   it('re-exports core error classes', () => {
     expect(typeof (Contracts as { StynxError?: unknown }).StynxError).toBe('function');
     expect(typeof (Contracts as { AuthenticationError?: unknown }).AuthenticationError).toBe('function');

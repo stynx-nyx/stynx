@@ -1,8 +1,8 @@
-**@stynx/testing**
+**@stynx-nyx/testing**
 
 ---
 
-# @stynx/testing
+# @stynx-nyx/testing
 
 Public STYNX testing harness, fixture, matcher, doctor, and session helper exports.
 

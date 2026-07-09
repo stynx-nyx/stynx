@@ -1,10 +1,10 @@
-import { IdentityAdminError } from '@stynx/contracts';
+import { IdentityAdminError } from '@stynx-nyx/contracts';
 import {
   buildCognitoAdminOptionsFromEnv,
   mapCognitoError,
 } from '../../../packages/auth/src/cognito-admin.adapter';
 
-describe('@stynx/auth cognito admin adapter', () => {
+describe('@stynx-nyx/auth cognito admin adapter', () => {
   it('builds options from env and infers profile strategy when AWS_PROFILE exists', () => {
     const options = buildCognitoAdminOptionsFromEnv({
       AWS_REGION: 'us-east-1',

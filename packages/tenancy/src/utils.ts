@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
-import { headerToString } from '@stynx/contracts';
+import { headerToString } from '@stynx-nyx/contracts';
 
-export { headerToString } from '@stynx/contracts';
+export { headerToString } from '@stynx-nyx/contracts';
 
 export const OPTIONAL_TENANCY_PATHS = [
   /^\/(?:healthz|readyz|metrics|info)$/u,

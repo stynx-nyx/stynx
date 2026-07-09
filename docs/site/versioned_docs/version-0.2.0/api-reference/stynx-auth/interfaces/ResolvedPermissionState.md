@@ -1,8 +1,8 @@
-[**@stynx/auth**](../index.md)
+[**@stynx-nyx/auth**](../index.md)
 
 ---
 
-[@stynx/auth](../index.md) / ResolvedPermissionState
+[@stynx-nyx/auth](../index.md) / ResolvedPermissionState
 
 # Interface: ResolvedPermissionState
 

@@ -1,8 +1,8 @@
-[**@stynx/sessions**](../index.md)
+[**@stynx-nyx/sessions**](../index.md)
 
 ---
 
-[@stynx/sessions](../index.md) / resolveSessionsOptions
+[@stynx-nyx/sessions](../index.md) / resolveSessionsOptions
 
 # Function: resolveSessionsOptions()
 

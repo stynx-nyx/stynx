@@ -1,8 +1,8 @@
-[**@stynx/sessions**](../index.md)
+[**@stynx-nyx/sessions**](../index.md)
 
 ---
 
-[@stynx/sessions](../index.md) / SessionRecord
+[@stynx-nyx/sessions](../index.md) / SessionRecord
 
 # Interface: SessionRecord
 

@@ -1,8 +1,8 @@
-[**@stynx/pdf**](../index.md)
+[**@stynx-nyx/pdf**](../index.md)
 
 ---
 
-[@stynx/pdf](../index.md) / PdfAStyleValidationResult
+[@stynx-nyx/pdf](../index.md) / PdfAStyleValidationResult
 
 # Interface: PdfAStyleValidationResult
 

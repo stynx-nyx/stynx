@@ -27,7 +27,7 @@ function collectPackages(baseDir, matcher) {
 }
 
 const packages = [
-  ...collectPackages('packages', (name) => typeof name === 'string' && name.startsWith('@stynx/')),
+  ...collectPackages('packages', (name) => typeof name === 'string' && name.startsWith('@stynx-nyx/')),
   ...collectPackages(
     'packages-web',
     (name) => typeof name === 'string' && name.startsWith('@stynx-web/'),
@@ -36,8 +36,8 @@ const packages = [
 
 const errors = [];
 const requiredPublicExports = {
-  '@stynx/pdf': ['.', './evidence', './fixed-layout', './public-payroll'],
-  '@stynx/signature': ['.', './xmldsig'],
+  '@stynx-nyx/pdf': ['.', './evidence', './fixed-layout', './public-payroll'],
+  '@stynx-nyx/signature': ['.', './xmldsig'],
 };
 
 for (const pkg of packages) {

@@ -1,8 +1,8 @@
-[**@stynx/testing**](../index.md)
+[**@stynx-nyx/testing**](../index.md)
 
 ---
 
-[@stynx/testing](../index.md) / mintTestSession
+[@stynx-nyx/testing](../index.md) / mintTestSession
 
 # Function: mintTestSession()
 

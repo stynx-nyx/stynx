@@ -1,8 +1,8 @@
-[**@stynx/tenancy**](../index.md)
+[**@stynx-nyx/tenancy**](../index.md)
 
 ---
 
-[@stynx/tenancy](../index.md) / ProvisionTenantResult
+[@stynx-nyx/tenancy](../index.md) / ProvisionTenantResult
 
 # Interface: ProvisionTenantResult
 

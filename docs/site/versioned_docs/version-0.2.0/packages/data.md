@@ -1,8 +1,8 @@
 ---
-title: '@stynx/data'
+title: '@stynx-nyx/data'
 ---
 
-# @stynx/data
+# @stynx-nyx/data
 
 Data access foundation for PostgreSQL pools, migrations, Drizzle schemas, transactions, archive-aware helpers, and SQL policy boundaries.
 
@@ -13,10 +13,10 @@ Data access foundation for PostgreSQL pools, migrations, Drizzle schemas, transa
 ## Install And Import
 
 ```ts
-import {} from /* public exports */ '@stynx/data';
+import {} from /* public exports */ '@stynx-nyx/data';
 ```
 
-In this monorepo, use the workspace package. Published consumers should install matching `@stynx/*` versions from the same release train.
+In this monorepo, use the workspace package. Published consumers should install matching `@stynx-nyx/*` versions from the same release train.
 
 ## Module Setup
 
@@ -36,7 +36,7 @@ Owns direct PostgreSQL access for framework packages. New curated tables must pr
 ## Example
 
 ```ts
-import { Database, Transaction } from '@stynx/data';
+import { Database, Transaction } from '@stynx-nyx/data';
 
 await db.transaction(async (tx: Transaction) => {
   await tx.execute(sql);
@@ -71,9 +71,9 @@ Current barrel highlights:
 ## Verification
 
 ```sh
-pnpm --filter @stynx/data build
-pnpm --filter @stynx/data test
-STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx/data test:int
+pnpm --filter @stynx-nyx/data build
+pnpm --filter @stynx-nyx/data test
+STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx-nyx/data test:int
 ```
 
 ## Documentation Standard

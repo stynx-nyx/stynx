@@ -1,8 +1,8 @@
-[**@stynx/idempotency**](../index.md)
+[**@stynx-nyx/idempotency**](../index.md)
 
 ---
 
-[@stynx/idempotency](../index.md) / PgIdempotencyStoreOptions
+[@stynx-nyx/idempotency](../index.md) / PgIdempotencyStoreOptions
 
 # Interface: PgIdempotencyStoreOptions
 

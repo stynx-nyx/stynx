@@ -1,8 +1,8 @@
-[**@stynx/sessions**](../index.md)
+[**@stynx-nyx/sessions**](../index.md)
 
 ---
 
-[@stynx/sessions](../index.md) / SessionSigningKeyError
+[@stynx-nyx/sessions](../index.md) / SessionSigningKeyError
 
 # Class: SessionSigningKeyError
 

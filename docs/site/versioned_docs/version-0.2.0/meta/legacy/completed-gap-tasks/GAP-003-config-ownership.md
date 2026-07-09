@@ -10,7 +10,7 @@
 
 ## Context
 
-`@stynx/core`'s `StynxCoreModuleOptions` accepts a Zod schema but has no
+`@stynx-nyx/core`'s `StynxCoreModuleOptions` accepts a Zod schema but has no
 concept of who _owns_ each config variable — which team or service is
 responsible for it, whether it must be set at deploy time, and what happens if
 it is absent.
@@ -24,7 +24,7 @@ ops can act on.
 
 ## Goal
 
-Add an optional `ConfigKeyMetadata&lt;T&gt;` wrapper to `@stynx/core` so callers can
+Add an optional `ConfigKeyMetadata&lt;T&gt;` wrapper to `@stynx-nyx/core` so callers can
 annotate Zod schemas with ownership metadata and receive a typed
 `ConfigOwnershipViolationError` on startup violations.
 
@@ -144,14 +144,14 @@ re-export everything. Verify that `ConfigKeyMetadata`, `ConfigOwner`,
 after the build with:
 
 ```bash
-pnpm --filter @stynx/core build && node -e "const m = require('./packages/core/dist'); console.log(Object.keys(m))" | tr ',' '\n' | grep -i config
+pnpm --filter @stynx-nyx/core build && node -e "const m = require('./packages/core/dist'); console.log(Object.keys(m))" | tr ',' '\n' | grep -i config
 ```
 
 ---
 
 ## Step 5 — Add unit test
 
-In `test/packages/` (or wherever the `@stynx/core` unit tests live), add a test
+In `test/packages/` (or wherever the `@stynx-nyx/core` unit tests live), add a test
 file `config-ownership.test.ts`:
 
 ```typescript
@@ -168,21 +168,21 @@ file `config-ownership.test.ts`:
 
 ```bash
 # TypeScript builds
-pnpm --filter @stynx/core build
+pnpm --filter @stynx-nyx/core build
 
 # Unit tests pass
-pnpm --filter @stynx/core test
+pnpm --filter @stynx-nyx/core test
 
 # Lint clean
-pnpm --filter @stynx/core lint
+pnpm --filter @stynx-nyx/core lint
 ```
 
 ---
 
 ## Acceptance criteria
 
-- [x] `ConfigKeyMetadata`, `ConfigOwner`, `AnnotatedSchema` are exported from `@stynx/core`
-- [x] `ConfigOwnershipViolationError` is exported from `@stynx/core`
+- [x] `ConfigKeyMetadata`, `ConfigOwner`, `AnnotatedSchema` are exported from `@stynx-nyx/core`
+- [x] `ConfigOwnershipViolationError` is exported from `@stynx-nyx/core`
 - [x] `StynxCoreModuleOptions` accepts `configMetadata`
 - [x] `loadStynxConfiguration` throws `ConfigOwnershipViolationError` when a required key is absent
 - [x] Unit test covers violation and non-violation paths

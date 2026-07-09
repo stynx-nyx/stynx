@@ -1,8 +1,8 @@
-[**@stynx/storage**](../index.md)
+[**@stynx-nyx/storage**](../index.md)
 
 ---
 
-[@stynx/storage](../index.md) / StorageValidationError
+[@stynx-nyx/storage](../index.md) / StorageValidationError
 
 # Class: StorageValidationError
 

@@ -1,8 +1,8 @@
-[**@stynx/auth**](../index.md)
+[**@stynx-nyx/auth**](../index.md)
 
 ---
 
-[@stynx/auth](../index.md) / CognitoAdminCredentialStrategy
+[@stynx-nyx/auth](../index.md) / CognitoAdminCredentialStrategy
 
 # Type Alias: CognitoAdminCredentialStrategy
 

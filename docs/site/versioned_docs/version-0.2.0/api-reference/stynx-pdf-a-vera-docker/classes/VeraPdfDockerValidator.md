@@ -1,8 +1,8 @@
-[**@stynx/pdf-a-vera-docker**](../index.md)
+[**@stynx-nyx/pdf-a-vera-docker**](../index.md)
 
 ---
 
-[@stynx/pdf-a-vera-docker](../index.md) / VeraPdfDockerValidator
+[@stynx-nyx/pdf-a-vera-docker](../index.md) / VeraPdfDockerValidator
 
 # Class: VeraPdfDockerValidator
 

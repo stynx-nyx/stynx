@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
-import type { StynxPgClient } from '@stynx/data';
+import type { StynxPgClient } from '@stynx-nyx/data';
 import type {
   DocumentFixture,
   MembershipFixture,

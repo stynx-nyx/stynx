@@ -1,8 +1,8 @@
-[**@stynx/core**](../index.md)
+[**@stynx-nyx/core**](../index.md)
 
 ---
 
-[@stynx/core](../index.md) / StynxErrorOptions
+[@stynx-nyx/core](../index.md) / StynxErrorOptions
 
 # Interface: StynxErrorOptions
 

@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / XmlDSigKeyMaterial
+[@stynx-nyx/signature](../index.md) / XmlDSigKeyMaterial
 
 # Type Alias: XmlDSigKeyMaterial
 

@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / createGovBrSandboxAdapter
+[@stynx-nyx/signature](../index.md) / createGovBrSandboxAdapter
 
 # Function: createGovBrSandboxAdapter()
 

@@ -1,8 +1,8 @@
-[**@stynx/sessions**](../index.md)
+[**@stynx-nyx/sessions**](../index.md)
 
 ---
 
-[@stynx/sessions](../index.md) / IssuedAccessToken
+[@stynx-nyx/sessions](../index.md) / IssuedAccessToken
 
 # Interface: IssuedAccessToken
 

@@ -1,8 +1,8 @@
-[**@stynx/contracts**](../index.md)
+[**@stynx-nyx/contracts**](../index.md)
 
 ---
 
-[@stynx/contracts](../index.md) / IdentityListGroupsResult
+[@stynx-nyx/contracts](../index.md) / IdentityListGroupsResult
 
 # Interface: IdentityListGroupsResult
 

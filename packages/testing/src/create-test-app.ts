@@ -1,8 +1,8 @@
 import { Test } from '@nestjs/testing';
 import { type INestApplication } from '@nestjs/common';
 import { GenericContainer, Wait } from 'testcontainers';
-import { RequestContextMutator } from '@stynx/core';
-import { createStynxPgClient, Database, StynxDataModule, type StynxPgClient } from '@stynx/data';
+import { RequestContextMutator } from '@stynx-nyx/core';
+import { createStynxPgClient, Database, StynxDataModule, type StynxPgClient } from '@stynx-nyx/data';
 import type {
   CreateTestAppOptions,
   StartedCognitoHandle,
@@ -136,9 +136,9 @@ export async function createTestApp(options: CreateTestAppOptions = {}): Promise
       imports: [
         StynxDataModule.forRoot({
           connections: {
-            owner: { connectionString: connectionStringWithAppName(postgres.connectionString, '@stynx/testing:owner') },
-            app: { connectionString: connectionStringWithAppName(postgres.connectionString, '@stynx/testing:app') },
-            reader: { connectionString: connectionStringWithAppName(postgres.connectionString, '@stynx/testing:reader') },
+            owner: { connectionString: connectionStringWithAppName(postgres.connectionString, '@stynx-nyx/testing:owner') },
+            app: { connectionString: connectionStringWithAppName(postgres.connectionString, '@stynx-nyx/testing:app') },
+            reader: { connectionString: connectionStringWithAppName(postgres.connectionString, '@stynx-nyx/testing:reader') },
           },
           migrations: { enabled: true },
         }),
@@ -184,7 +184,7 @@ export async function createTestApp(options: CreateTestAppOptions = {}): Promise
       ...(localstack ? { localstack } : {}),
       ...(cognito ? { cognito } : {}),
       adminClient,
-      async tx<T>(fn: (trx: import('@stynx/data').Transaction) => Promise<T>) {
+      async tx<T>(fn: (trx: import('@stynx-nyx/data').Transaction) => Promise<T>) {
         return database.withSystemContext('stynx testing harness', async () =>
           database.tx(fn, {
             role: 'owner',

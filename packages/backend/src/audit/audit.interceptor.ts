@@ -8,7 +8,7 @@ import {
   Optional,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import type { AuditEventEnvelope, AuditSink } from '@stynx/contracts';
+import type { AuditEventEnvelope, AuditSink } from '@stynx-nyx/contracts';
 import { from, mergeMap, Observable } from 'rxjs';
 import { getPrincipalFromRequest, type RequestLike } from '../common/request-context';
 import {

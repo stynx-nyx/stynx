@@ -1,41 +1,41 @@
-# `@stynx/backend` — meta-package mounting 10 modular submodules into the STYNX backend pipeline
+# `@stynx-nyx/backend` — meta-package mounting 10 modular submodules into the STYNX backend pipeline
 
-`@stynx/backend` is the canonical aggregation layer for a STYNX-based NestJS app. It is **not** a single module — it composes 10 independently-mountable submodules (auth, authorization, audit, db-context, idempotency, identity-admin, pipeline, rate-limit, sla, storage) that each wrap one (or one-and-a-half) corresponding `@stynx/<pkg>` package and apply backend-specific glue (interceptors, guards, DI-token rebinding). You import the submodules you need à la carte in your `AppModule`. The full integration pattern is: mount `StynxCoreModule` from `@stynx/core` first, then layer the `@stynx/backend` submodules.
+`@stynx-nyx/backend` is the canonical aggregation layer for a STYNX-based NestJS app. It is **not** a single module — it composes 10 independently-mountable submodules (auth, authorization, audit, db-context, idempotency, identity-admin, pipeline, rate-limit, sla, storage) that each wrap one (or one-and-a-half) corresponding `@stynx-nyx/<pkg>` package and apply backend-specific glue (interceptors, guards, DI-token rebinding). You import the submodules you need à la carte in your `AppModule`. The full integration pattern is: mount `StynxCoreModule` from `@stynx-nyx/core` first, then layer the `@stynx-nyx/backend` submodules.
 
 The `StynxPlatformPipelineModule` is the foundation: it's the global request-pipeline (rate-limit guard, SLA monitor, idempotency interceptor) every STYNX app wires once. Mount that first; the other submodules layer onto it.
 
 ## Purpose
 
-A STYNX app needs auth + authorization + audit + idempotency + rate-limit + DB-context + storage + admin endpoints + SLA monitoring all wired together with the right interceptor ordering and DI-token bindings. Doing this by hand from the underlying `@stynx/auth`, `@stynx/audit`, etc. packages is mechanical but order-sensitive. `@stynx/backend`'s submodules pre-bind the canonical wiring so you import once and get the right pipeline.
+A STYNX app needs auth + authorization + audit + idempotency + rate-limit + DB-context + storage + admin endpoints + SLA monitoring all wired together with the right interceptor ordering and DI-token bindings. Doing this by hand from the underlying `@stynx-nyx/auth`, `@stynx-nyx/audit`, etc. packages is mechanical but order-sensitive. `@stynx-nyx/backend`'s submodules pre-bind the canonical wiring so you import once and get the right pipeline.
 
-You reach for `@stynx/backend` immediately after `@stynx/core` when building a new app. Adopters porting from a legacy stack typically wire submodules incrementally as they migrate routes.
+You reach for `@stynx-nyx/backend` immediately after `@stynx-nyx/core` when building a new app. Adopters porting from a legacy stack typically wire submodules incrementally as they migrate routes.
 
-What it does NOT do: it does not REPLACE the underlying `@stynx/*` packages — it consumes them. If you need fine-grained control (custom interceptor ordering, swap-out adapters, custom DI bindings), import the underlying packages directly and skip the backend submodule. The submodules are "convenient default wirings", not "the only way".
+What it does NOT do: it does not REPLACE the underlying `@stynx-nyx/*` packages — it consumes them. If you need fine-grained control (custom interceptor ordering, swap-out adapters, custom DI bindings), import the underlying packages directly and skip the backend submodule. The submodules are "convenient default wirings", not "the only way".
 
 ## Audience
 
-Backend developers building a STYNX-based NestJS app. Audience-pitch: _"I want to mount auth + idempotency + audit + rate-limit + SLA without writing the wiring code"_ → mount the backend submodules. _"I need a custom interceptor order or a swap-out audit sink"_ → import the underlying `@stynx/*` packages directly.
+Backend developers building a STYNX-based NestJS app. Audience-pitch: _"I want to mount auth + idempotency + audit + rate-limit + SLA without writing the wiring code"_ → mount the backend submodules. _"I need a custom interceptor order or a swap-out audit sink"_ → import the underlying `@stynx-nyx/*` packages directly.
 
 ## Install
 
 ```bash
-pnpm add @stynx/backend
+pnpm add @stynx-nyx/backend
 ```
 
-**Peer dependencies:** `@nestjs/common` `^11`, `@nestjs/core` `^11`, plus the underlying `@stynx/*` packages each submodule wraps (auth, audit, idempotency, ratelimit, etc.). See the per-submodule pages below.
+**Peer dependencies:** `@nestjs/common` `^11`, `@nestjs/core` `^11`, plus the underlying `@stynx-nyx/*` packages each submodule wraps (auth, audit, idempotency, ratelimit, etc.). See the per-submodule pages below.
 
 ## Quick start
 
 ```ts
 // src/app.module.ts — typical STYNX app composition
 import { Module } from '@nestjs/common';
-import { StynxCoreModule } from '@stynx/core';
+import { StynxCoreModule } from '@stynx-nyx/core';
 import {
   StynxPlatformPipelineModule,
   StynxBackendAuthModule,
   StynxBackendAuditModule,
   StynxDbContextModule,
-} from '@stynx/backend';
+} from '@stynx-nyx/backend';
 
 @Module({
   imports: [
@@ -64,19 +64,19 @@ That gives you: authenticated requests with principal + tenant attached, rate-li
 | Submodule                       | Wraps                                                                           | Wave                | Documentation                                                                       |
 | ------------------------------- | ------------------------------------------------------------------------------- | ------------------- | ----------------------------------------------------------------------------------- |
 | `StynxPlatformPipelineModule`   | Rate-limit + SLA + idempotency interceptors as global APP_GUARD/APP_INTERCEPTOR | **W02 (this wave)** | [`backend/pipeline`](/docs/packages/backend/pipeline/)                              |
-| `StynxBackendAuthModule`        | `@stynx/auth` — JWT verifier + AuthContextGuard                                 | W03                 | [`backend/auth`](/docs/packages/backend/auth/) (live after W03)                     |
+| `StynxBackendAuthModule`        | `@stynx-nyx/auth` — JWT verifier + AuthContextGuard                                 | W03                 | [`backend/auth`](/docs/packages/backend/auth/) (live after W03)                     |
 | `StynxAuthorizationModule`      | Role + permission predicates                                                    | W03                 | [`backend/authorization`](/docs/packages/backend/authorization/) (live after W03)   |
-| `StynxBackendIdempotencyModule` | `@stynx/idempotency` — interceptor + store wiring                               | W03                 | [`backend/idempotency`](/docs/packages/backend/idempotency/) (live after W03)       |
+| `StynxBackendIdempotencyModule` | `@stynx-nyx/idempotency` — interceptor + store wiring                               | W03                 | [`backend/idempotency`](/docs/packages/backend/idempotency/) (live after W03)       |
 | `StynxIdentityAdminModule`      | User/role/group admin endpoints                                                 | W03                 | [`backend/identity-admin`](/docs/packages/backend/identity-admin/) (live after W03) |
-| `StynxBackendRateLimitModule`   | `@stynx/ratelimit` — global guard wiring                                        | W03                 | [`backend/rate-limit`](/docs/packages/backend/rate-limit/) (live after W03)         |
-| `StynxBackendAuditModule`       | `@stynx/audit` — interceptor + sink wiring                                      | W04                 | [`backend/audit`](/docs/packages/backend/audit/) (live after W04)                   |
-| `StynxDbContextModule`          | `@stynx/data` — request-scoped DB session                                       | W04                 | [`backend/db-context`](/docs/packages/backend/db-context/) (live after W04)         |
+| `StynxBackendRateLimitModule`   | `@stynx-nyx/ratelimit` — global guard wiring                                        | W03                 | [`backend/rate-limit`](/docs/packages/backend/rate-limit/) (live after W03)         |
+| `StynxBackendAuditModule`       | `@stynx-nyx/audit` — interceptor + sink wiring                                      | W04                 | [`backend/audit`](/docs/packages/backend/audit/) (live after W04)                   |
+| `StynxDbContextModule`          | `@stynx-nyx/data` — request-scoped DB session                                       | W04                 | [`backend/db-context`](/docs/packages/backend/db-context/) (live after W04)         |
 | `StynxSlaModule`                | SLA threshold monitoring                                                        | W04                 | [`backend/sla`](/docs/packages/backend/sla/) (live after W04)                       |
-| `StynxBackendStorageModule`     | `@stynx/storage` — S3 wiring                                                    | W04                 | [`backend/storage`](/docs/packages/backend/storage/) (live after W04)               |
+| `StynxBackendStorageModule`     | `@stynx-nyx/storage` — S3 wiring                                                    | W04                 | [`backend/storage`](/docs/packages/backend/storage/) (live after W04)               |
 
-### Re-exports from `@stynx/contracts`
+### Re-exports from `@stynx-nyx/contracts`
 
-For convenience, `@stynx/backend` re-exports the full `@stynx/contracts` surface so app code can import shared types from a single point (`Principal`, `RequestActor`, `AuditEventEnvelope`, etc.). Both import paths are equivalent — pick by convention.
+For convenience, `@stynx-nyx/backend` re-exports the full `@stynx-nyx/contracts` surface so app code can import shared types from a single point (`Principal`, `RequestActor`, `AuditEventEnvelope`, etc.). Both import paths are equivalent — pick by convention.
 
 ### Decorators
 
@@ -147,24 +147,24 @@ See the Quick start above.
 ## Common pitfalls
 
 - **Importing `StynxPlatformPipelineModule` after a feature module** — guards/interceptors register as `APP_GUARD`/`APP_INTERCEPTOR` and must be visible globally. Always import platform-pipeline at `AppModule`.
-- **Mixing `@stynx/backend` submodules with direct `@stynx/<pkg>` imports** — both can coexist, but you'll have to manually reconcile DI bindings. Pick one approach per concern.
+- **Mixing `@stynx-nyx/backend` submodules with direct `@stynx-nyx/<pkg>` imports** — both can coexist, but you'll have to manually reconcile DI bindings. Pick one approach per concern.
 - **`rateLimit: false` + a `@RateLimit()` decorator** — the decorator is registered but the guard is not, so the rate-limit is silently disabled. The decorator becomes a no-op.
 
 ## Related packages
 
-Every backend submodule wraps a corresponding `@stynx/<pkg>`:
+Every backend submodule wraps a corresponding `@stynx-nyx/<pkg>`:
 
-- [`@stynx/auth`](/docs/packages/auth/) ← `backend/auth`
-- [`@stynx/idempotency`](/docs/packages/idempotency/) ← `backend/idempotency`
-- [`@stynx/ratelimit`](/docs/packages/ratelimit/) ← `backend/rate-limit`
-- [`@stynx/audit`](/docs/packages/audit/) ← `backend/audit`
-- [`@stynx/data`](/docs/packages/data/) ← `backend/db-context`
-- [`@stynx/storage`](/docs/packages/storage/) ← `backend/storage`
+- [`@stynx-nyx/auth`](/docs/packages/auth/) ← `backend/auth`
+- [`@stynx-nyx/idempotency`](/docs/packages/idempotency/) ← `backend/idempotency`
+- [`@stynx-nyx/ratelimit`](/docs/packages/ratelimit/) ← `backend/rate-limit`
+- [`@stynx-nyx/audit`](/docs/packages/audit/) ← `backend/audit`
+- [`@stynx-nyx/data`](/docs/packages/data/) ← `backend/db-context`
+- [`@stynx-nyx/storage`](/docs/packages/storage/) ← `backend/storage`
 
 Plus:
 
-- [`@stynx/core`](/docs/packages/core/) — the foundation `StynxCoreModule` you mount first.
-- [`@stynx/contracts`](/docs/packages/contracts/) — re-exported by `@stynx/backend` for convenience.
+- [`@stynx-nyx/core`](/docs/packages/core/) — the foundation `StynxCoreModule` you mount first.
+- [`@stynx-nyx/contracts`](/docs/packages/contracts/) — re-exported by `@stynx-nyx/backend` for convenience.
 
 ## TypeDoc reference
 

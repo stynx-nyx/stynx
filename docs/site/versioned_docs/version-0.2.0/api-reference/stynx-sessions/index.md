@@ -1,8 +1,8 @@
-**@stynx/sessions**
+**@stynx-nyx/sessions**
 
 ---
 
-# @stynx/sessions
+# @stynx-nyx/sessions
 
 Public session management exports for stores, JWT signing, JWKS, and session mirroring.
 

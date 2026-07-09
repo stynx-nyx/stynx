@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / DigestAlgorithm
+[@stynx-nyx/signature](../index.md) / DigestAlgorithm
 
 # Type Alias: DigestAlgorithm
 

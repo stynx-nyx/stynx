@@ -1,4 +1,4 @@
-import { StynxError } from '@stynx/core';
+import { StynxError } from '@stynx-nyx/core';
 
 export class PrivacyValidationError extends StynxError {
   constructor(message: string, context?: Record<string, unknown>) {

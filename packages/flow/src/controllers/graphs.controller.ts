@@ -9,9 +9,9 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx/auth';
-import { Audit, NoIdempotent } from '@stynx/backend';
-import { Idempotent } from '@stynx/idempotency';
+import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx-nyx/auth';
+import { Audit, NoIdempotent } from '@stynx-nyx/backend';
+import { Idempotent } from '@stynx-nyx/idempotency';
 import { FlowDesignService } from '../flow-design.service';
 import type {
   CreateFlowEdgeDto,

@@ -1,4 +1,4 @@
-# @stynx/signature
+# @stynx-nyx/signature
 
 ## 0.2.0
 

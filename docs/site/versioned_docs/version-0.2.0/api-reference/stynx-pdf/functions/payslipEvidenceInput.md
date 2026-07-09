@@ -1,8 +1,8 @@
-[**@stynx/pdf**](../index.md)
+[**@stynx-nyx/pdf**](../index.md)
 
 ---
 
-[@stynx/pdf](../index.md) / payslipEvidenceInput
+[@stynx-nyx/pdf](../index.md) / payslipEvidenceInput
 
 # Function: payslipEvidenceInput()
 

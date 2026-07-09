@@ -1,8 +1,8 @@
-[**@stynx/i18n**](../index.md)
+[**@stynx-nyx/i18n**](../index.md)
 
 ---
 
-[@stynx/i18n](../index.md) / LocaleService
+[@stynx-nyx/i18n](../index.md) / LocaleService
 
 # Class: LocaleService
 

@@ -4,7 +4,7 @@ title: flow/overview
 
 # Flow engine overview
 
-`@stynx/flow` is one cohesive NestJS module that models and executes workflows. This page orients you before diving into the endpoint groups.
+`@stynx-nyx/flow` is one cohesive NestJS module that models and executes workflows. This page orients you before diving into the endpoint groups.
 
 ## The two halves: design-time and runtime
 
@@ -33,7 +33,7 @@ title: flow/overview
 
 ## State + persistence
 
-Flow stores everything through `@stynx/data`'s request-scoped DB context — so every flow query is tenant-scoped and RLS-aware. Tables are prefixed (default `flow_`). All mutations emit audit events via `@stynx/audit`.
+Flow stores everything through `@stynx-nyx/data`'s request-scoped DB context — so every flow query is tenant-scoped and RLS-aware. Tables are prefixed (default `flow_`). All mutations emit audit events via `@stynx-nyx/audit`.
 
 ## Reading order for the endpoint pages
 

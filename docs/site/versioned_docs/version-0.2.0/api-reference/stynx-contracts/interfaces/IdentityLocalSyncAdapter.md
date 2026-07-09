@@ -1,8 +1,8 @@
-[**@stynx/contracts**](../index.md)
+[**@stynx-nyx/contracts**](../index.md)
 
 ---
 
-[@stynx/contracts](../index.md) / IdentityLocalSyncAdapter
+[@stynx-nyx/contracts](../index.md) / IdentityLocalSyncAdapter
 
 # Interface: IdentityLocalSyncAdapter
 

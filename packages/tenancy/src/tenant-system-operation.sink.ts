@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { Database } from '@stynx/data';
-import { STYNX_SYSTEM_OPERATION_SINK, type SystemOperationRecord, type SystemOperationSink } from '@stynx/core';
+import { Database } from '@stynx-nyx/data';
+import { STYNX_SYSTEM_OPERATION_SINK, type SystemOperationRecord, type SystemOperationSink } from '@stynx-nyx/core';
 
 @Injectable()
 export class TenantSystemOperationSink implements SystemOperationSink {
@@ -24,7 +24,7 @@ export class TenantSystemOperationSink implements SystemOperationSink {
           record.reason,
           record.actorId ?? null,
           record.requestId,
-          JSON.stringify({ source: '@stynx/tenancy' }),
+          JSON.stringify({ source: '@stynx-nyx/tenancy' }),
         ],
       );
     }, { role: 'owner' });

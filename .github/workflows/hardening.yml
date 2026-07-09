@@ -217,58 +217,58 @@ jobs:
       matrix:
         include:
           - package: auth
-            filter: '@stynx/auth'
+            filter: '@stynx-nyx/auth'
             report_path: packages/auth/reports/mutation
           - package: tenancy
-            filter: '@stynx/tenancy'
+            filter: '@stynx-nyx/tenancy'
             report_path: packages/tenancy/reports/mutation
           - package: data
-            filter: '@stynx/data'
+            filter: '@stynx-nyx/data'
             report_path: packages/data/reports/mutation
           - package: flow
-            filter: '@stynx/flow'
+            filter: '@stynx-nyx/flow'
             report_path: packages/flow/reports/mutation
           - package: idempotency
-            filter: '@stynx/idempotency'
+            filter: '@stynx-nyx/idempotency'
             report_path: packages/idempotency/reports/mutation
           - package: ratelimit
-            filter: '@stynx/ratelimit'
+            filter: '@stynx-nyx/ratelimit'
             report_path: packages/ratelimit/reports/mutation
           - package: audit
-            filter: '@stynx/audit'
+            filter: '@stynx-nyx/audit'
             report_path: packages/audit/reports/mutation
           - package: storage
-            filter: '@stynx/storage'
+            filter: '@stynx-nyx/storage'
             report_path: packages/storage/reports/mutation
           - package: privacy
-            filter: '@stynx/privacy'
+            filter: '@stynx-nyx/privacy'
             report_path: packages/privacy/reports/mutation
           - package: core
-            filter: '@stynx/core'
+            filter: '@stynx-nyx/core'
             report_path: packages/core/reports/mutation
           - package: sessions
-            filter: '@stynx/sessions'
+            filter: '@stynx-nyx/sessions'
             report_path: packages/sessions/reports/mutation
           - package: backend
-            filter: '@stynx/backend'
+            filter: '@stynx-nyx/backend'
             report_path: packages/backend/reports/mutation
           - package: cli
-            filter: '@stynx/cli'
+            filter: '@stynx-nyx/cli'
             report_path: packages/cli/reports/mutation
           - package: contracts
-            filter: '@stynx/contracts'
+            filter: '@stynx-nyx/contracts'
             report_path: packages/contracts/reports/mutation
           - package: health
-            filter: '@stynx/health'
+            filter: '@stynx-nyx/health'
             report_path: packages/health/reports/mutation
           - package: i18n
-            filter: '@stynx/i18n'
+            filter: '@stynx-nyx/i18n'
             report_path: packages/i18n/reports/mutation
           - package: logging
-            filter: '@stynx/logging'
+            filter: '@stynx-nyx/logging'
             report_path: packages/logging/reports/mutation
           - package: testing
-            filter: '@stynx/testing'
+            filter: '@stynx-nyx/testing'
             report_path: packages/testing/reports/mutation
           - package: angular
             filter: '@stynx-web/angular'

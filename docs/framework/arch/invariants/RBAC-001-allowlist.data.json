@@ -9,7 +9,7 @@
       "controller": "ReferenceDevAuthController",
       "file": "reference/api/src/sample/reference-dev-auth.controller.ts",
       "decorator": "@Public()",
-      "justification": "Reference dev-auth endpoint for the reference application. Verifies a STYNX-issued bearer token without requiring an authenticated session. Marked @Public per @stynx/auth contract; intentionally exempt from RBAC binding."
+      "justification": "Reference dev-auth endpoint for the reference application. Verifies a STYNX-issued bearer token without requiring an authenticated session. Marked @Public per @stynx-nyx/auth contract; intentionally exempt from RBAC binding."
     },
     {
       "method": "POST",
@@ -17,7 +17,7 @@
       "controller": "ReferenceDevAuthController",
       "file": "reference/api/src/sample/reference-dev-auth.controller.ts",
       "decorator": "@Public()",
-      "justification": "Reference dev-auth login that mints session tokens for the reference web app. Public by definition (pre-auth endpoint). Marked @Public + @NoIdempotent per @stynx/auth + @stynx/idempotency contracts."
+      "justification": "Reference dev-auth login that mints session tokens for the reference web app. Public by definition (pre-auth endpoint). Marked @Public + @NoIdempotent per @stynx-nyx/auth + @stynx-nyx/idempotency contracts."
     },
     {
       "method": "GET",

@@ -1,8 +1,8 @@
 ---
-title: '@stynx/privacy'
+title: '@stynx-nyx/privacy'
 ---
 
-# @stynx/privacy
+# @stynx-nyx/privacy
 
 LGPD privacy exports, PII maps, data-subject export/erasure workflows, retention planning, ROPA generation, and object-store integration.
 
@@ -13,10 +13,10 @@ LGPD privacy exports, PII maps, data-subject export/erasure workflows, retention
 ## Install And Import
 
 ```ts
-import {} from /* public exports */ '@stynx/privacy';
+import {} from /* public exports */ '@stynx-nyx/privacy';
 ```
 
-In this monorepo, use the workspace package. Published consumers should install matching `@stynx/*` versions from the same release train.
+In this monorepo, use the workspace package. Published consumers should install matching `@stynx-nyx/*` versions from the same release train.
 
 ## Module Setup
 
@@ -36,7 +36,7 @@ Reads PII map metadata, exports live/archive subject data, applies erasure strat
 ## Example
 
 ```ts
-import { PrivacyService } from '@stynx/privacy';
+import { PrivacyService } from '@stynx-nyx/privacy';
 
 await privacy.eraseSubject({ tenantId, subjectId, requestedBy });
 ```
@@ -66,9 +66,9 @@ Current barrel highlights:
 ## Verification
 
 ```sh
-pnpm --filter @stynx/privacy build
-pnpm --filter @stynx/privacy test
-STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx/privacy test:int
+pnpm --filter @stynx-nyx/privacy build
+pnpm --filter @stynx-nyx/privacy test
+STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx-nyx/privacy test:int
 ```
 
 ## Documentation Standard

@@ -1,8 +1,8 @@
-[**@stynx/testing**](../index.md)
+[**@stynx-nyx/testing**](../index.md)
 
 ---
 
-[@stynx/testing](../index.md) / LGPD_FIXTURE_MIGRATIONS
+[@stynx-nyx/testing](../index.md) / LGPD_FIXTURE_MIGRATIONS
 
 # Variable: LGPD_FIXTURE_MIGRATIONS
 

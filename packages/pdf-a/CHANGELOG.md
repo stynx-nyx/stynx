@@ -1,4 +1,4 @@
-# @stynx/pdf-a
+# @stynx-nyx/pdf-a
 
 ## 0.1.0
 

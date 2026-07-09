@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { GUARDS_METADATA } from '@nestjs/common/constants';
-import { PermissionGuard, StynxAuthGuard } from '@stynx/auth';
+import { PermissionGuard, StynxAuthGuard } from '@stynx-nyx/auth';
 import { StynxAuditController } from '../../src/audit.controller';
 import type { StynxAuditService } from '../../src/audit.service';
 

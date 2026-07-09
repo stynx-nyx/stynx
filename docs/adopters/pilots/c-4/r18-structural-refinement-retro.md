@@ -43,7 +43,7 @@ R18 is locally closed after W09. The blocker was not proven to be an R18 functio
 Root cause:
 
 - `LocalPdfRenderBackend` launched Chromium per render, used `networkidle` for static HTML, and had no explicit launch timeout.
-- `@stynx/pdf` allowed Chromium unit tests and Docker veraPDF conformance to run in parallel.
+- `@stynx-nyx/pdf` allowed Chromium unit tests and Docker veraPDF conformance to run in parallel.
 - The veraPDF harness spawned and polled Docker in a way that could leave stale containers or lose parseable non-compliance output.
 - Full `ci:stynx` also exposed a repo-wide integration setup hook timeout: migrated Postgres/Redis/LocalStack setup can exceed Vitest's 10s default under fan-out.
 
@@ -55,10 +55,10 @@ Fix summary:
 
 Gate evidence:
 
-- Focused renderer: `pnpm --filter @stynx/pdf exec vitest run --config ./vitest.config.ts test/unit/pdf-renderer.spec.ts --reporter=verbose` exit 0; local HTML 207ms, Handlebars 50ms, full file 983ms.
-- Package PDF: `pnpm --filter @stynx/pdf test` exit 0; 7 files / 16 tests.
-- Cold workspace pressure #1: `pnpm test -- --force` exit 0; 82/82 tasks, 0 cached, 4m34.487s; `@stynx/pdf` 174.26s, renderer file 520ms; `@stynx/pdf-a-vera-docker` 234.47s.
-- Cold workspace pressure #2: `pnpm test -- --force` exit 0; 82/82 tasks, 0 cached, 5m11.483s; `@stynx/pdf` 180.08s, renderer file 531ms; `@stynx/pdf-a-vera-docker` 268.37s.
+- Focused renderer: `pnpm --filter @stynx-nyx/pdf exec vitest run --config ./vitest.config.ts test/unit/pdf-renderer.spec.ts --reporter=verbose` exit 0; local HTML 207ms, Handlebars 50ms, full file 983ms.
+- Package PDF: `pnpm --filter @stynx-nyx/pdf test` exit 0; 7 files / 16 tests.
+- Cold workspace pressure #1: `pnpm test -- --force` exit 0; 82/82 tasks, 0 cached, 4m34.487s; `@stynx-nyx/pdf` 174.26s, renderer file 520ms; `@stynx-nyx/pdf-a-vera-docker` 234.47s.
+- Cold workspace pressure #2: `pnpm test -- --force` exit 0; 82/82 tasks, 0 cached, 5m11.483s; `@stynx-nyx/pdf` 180.08s, renderer file 531ms; `@stynx-nyx/pdf-a-vera-docker` 268.37s.
 - Full gate: `pnpm ci:stynx` exit 0; includes `test:int` 38/38, build 40/40, and doctor ok. Docs build still reports existing site-wide broken-link/anchor warnings but exits 0.
 
 Hygiene: after the pressure runs, no `chromium`, `vitest`, or `verapdf` processes were left, and no veraPDF containers remained.

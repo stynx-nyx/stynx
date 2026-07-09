@@ -1,7 +1,7 @@
 import { createStrykerConfig } from '../../tools/stryker/base.mjs';
 
 export default createStrykerConfig({
-  packageName: '@stynx/auth',
+  packageName: '@stynx-nyx/auth',
   vitestConfig: './vitest.stryker.config.ts',
   // Controllers excluded per workspace policy (see tools/stryker/base.mjs).
   // Route paths and permission strings are exercised by reference-api

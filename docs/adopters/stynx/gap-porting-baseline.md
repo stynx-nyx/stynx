@@ -40,13 +40,13 @@ tests, and package build output:
 Wave 05 of the known-gaps remediation sequence revalidated the audit/privacy
 claims against the current workspace:
 
-- `pnpm --filter @stynx/audit test` passed 2 suites / 3 tests, including the
+- `pnpm --filter @stynx-nyx/audit test` passed 2 suites / 3 tests, including the
   hash-chain unit coverage.
-- `pnpm --filter @stynx/privacy test` passed 2 suites / 7 tests. The LGPD
+- `pnpm --filter @stynx-nyx/privacy test` passed 2 suites / 7 tests. The LGPD
   fixture now proves live rows, archive mirrors, PII map loading, erasure across
   all supported strategies, Cognito disablement, `audit.log` LGPD tags, and
   hashed `audit.events` preservation.
-- `STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx/data test:int` passed 3
+- `STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx-nyx/data test:int` passed 3
   suites / 12 tests with the curated-table DML audit invariant enabled.
 - `pnpm test` passed across the workspace (`Tasks: 63 successful, 63 total`).
 

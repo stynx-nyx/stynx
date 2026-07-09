@@ -1,5 +1,5 @@
 ---
-'@stynx/flow': patch
+'@stynx-nyx/flow': patch
 '@stynx-web/angular-flow': patch
 ---
 

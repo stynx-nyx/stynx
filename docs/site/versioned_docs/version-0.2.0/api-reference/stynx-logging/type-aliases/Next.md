@@ -1,8 +1,8 @@
-[**@stynx/logging**](../index.md)
+[**@stynx-nyx/logging**](../index.md)
 
 ---
 
-[@stynx/logging](../index.md) / Next
+[@stynx-nyx/logging](../index.md) / Next
 
 # Type Alias: Next
 

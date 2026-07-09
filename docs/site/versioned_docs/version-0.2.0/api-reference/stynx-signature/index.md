@@ -1,8 +1,8 @@
-**@stynx/signature**
+**@stynx-nyx/signature**
 
 ---
 
-# @stynx/signature
+# @stynx-nyx/signature
 
 Public PAdES/TSA signature facade exports.
 

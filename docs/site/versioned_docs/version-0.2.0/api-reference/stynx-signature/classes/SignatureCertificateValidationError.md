@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / SignatureCertificateValidationError
+[@stynx-nyx/signature](../index.md) / SignatureCertificateValidationError
 
 # Class: SignatureCertificateValidationError
 

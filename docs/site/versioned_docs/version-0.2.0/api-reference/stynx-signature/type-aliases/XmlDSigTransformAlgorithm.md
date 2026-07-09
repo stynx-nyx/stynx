@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / XmlDSigTransformAlgorithm
+[@stynx-nyx/signature](../index.md) / XmlDSigTransformAlgorithm
 
 # Type Alias: XmlDSigTransformAlgorithm
 

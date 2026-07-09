@@ -1,4 +1,4 @@
-# @stynx/ratelimit
+# @stynx-nyx/ratelimit
 
 ## 1.0.0
 
@@ -9,5 +9,5 @@
 ### Patch Changes
 
 - Updated dependencies [8f6df55]
-  - @stynx/auth@1.0.0
-  - @stynx/data@1.0.0
+  - @stynx-nyx/auth@1.0.0
+  - @stynx-nyx/data@1.0.0

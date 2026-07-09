@@ -1,8 +1,8 @@
-**@stynx/feature-flags**
+**@stynx-nyx/feature-flags**
 
 ---
 
-# @stynx/feature-flags
+# @stynx-nyx/feature-flags
 
 Public feature-flag provider exports.
 

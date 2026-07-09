@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { GUARDS_METADATA } from '@nestjs/common/constants';
-import { STYNX_NO_IDEMPOTENT_ROUTE } from '@stynx/idempotency';
+import { STYNX_NO_IDEMPOTENT_ROUTE } from '@stynx-nyx/idempotency';
 import { TenancyController } from '../../src/tenancy.controller';
 import { TenancyPlatformAdminGuard } from '../../src/tenancy-platform-admin.guard';
 import type { TenancyService } from '../../src/tenancy.service';

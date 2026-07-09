@@ -5,7 +5,7 @@ import {
   IdentityAdminError,
 } from '../src/errors';
 
-describe('@stynx/contracts errors', () => {
+describe('@stynx-nyx/contracts errors', () => {
   describe('StynxError', () => {
     it('inherits from Error', () => {
       const e = new StynxError('boom', 'X', { k: 'v' });

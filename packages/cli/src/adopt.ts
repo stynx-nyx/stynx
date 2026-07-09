@@ -312,16 +312,16 @@ function ensureImport(content: string, statement: string): string {
 }
 
 function injectPermissionImports(content: string): string {
-  if (content.includes("@stynx/auth")) {
+  if (content.includes("@stynx-nyx/auth")) {
     if (content.includes(proposedPermissionPlaceholder)) {
       return content;
     }
     return content.replace(
-      /import\s+\{([^}]*)\}\s+from\s+['"]@stynx\/auth['"];/u,
-      (_match, names: string) => `import { ${names.trim()}, ${proposedPermissionPlaceholder} } from '@stynx/auth';`,
+      /import\s+\{([^}]*)\}\s+from\s+['"]@stynx-nyx\/auth['"];/u,
+      (_match, names: string) => `import { ${names.trim()}, ${proposedPermissionPlaceholder} } from '@stynx-nyx/auth';`,
     );
   }
-  return ensureImport(content, `import { Permission, ${proposedPermissionPlaceholder} } from '@stynx/auth';`);
+  return ensureImport(content, `import { Permission, ${proposedPermissionPlaceholder} } from '@stynx-nyx/auth';`);
 }
 
 function codemodRoutePermissions(content: string): string {
@@ -342,8 +342,8 @@ function codemodRoutePermissions(content: string): string {
 
 function codemodPoolUsage(content: string): string {
   let next = content;
-  next = next.replace(/import\s+\{\s*Pool\s*(?:,\s*Client\s*)?\}\s+from\s+['"]pg['"];\n?/gu, "import { Database } from '@stynx/data';\n");
-  next = next.replace(/import\s+pg\s+from\s+['"]pg['"];\n?/gu, "import { Database } from '@stynx/data';\n");
+  next = next.replace(/import\s+\{\s*Pool\s*(?:,\s*Client\s*)?\}\s+from\s+['"]pg['"];\n?/gu, "import { Database } from '@stynx-nyx/data';\n");
+  next = next.replace(/import\s+pg\s+from\s+['"]pg['"];\n?/gu, "import { Database } from '@stynx-nyx/data';\n");
   next = next.replace(/constructor\(([^)]*?)private readonly (pool|client):\s*(Pool|Client)([^)]*?)\)/gu, "constructor($1private readonly db: Database$4)");
   next = next.replace(/\b(private readonly )?(pool|client)\s*=\s*new\s+(?:Pool|pg\.Pool|Client|pg\.Client)\([^;]*\);/gu, '/* TODO(stynx-adopt): inject Database via NestJS DI */');
   next = next.replace(/\bthis\.(pool|client)\.query\(([\s\S]*?)\);/gu, 'this.db.tx(async (trx) => trx.query($2));');
@@ -351,14 +351,14 @@ function codemodPoolUsage(content: string): string {
 }
 
 function codemodAuthMiddleware(content: string): string {
-  if (content.includes('DEPRECATED in favor of @stynx/auth.')) {
+  if (content.includes('DEPRECATED in favor of @stynx-nyx/auth.')) {
     return content;
   }
   if (!/middleware/iu.test(content) || !/jwt/iu.test(content)) {
     return content;
   }
   return [
-    '// DEPRECATED in favor of @stynx/auth.',
+    '// DEPRECATED in favor of @stynx-nyx/auth.',
     '// Left in-tree to ease rollback during adoption cutover.',
     content,
   ].join('\n');
@@ -418,7 +418,7 @@ function generateSchemaFile(targetDir: string, tables: TableScanResult[]): strin
   const importList = [...imports].sort().join(', ');
   return [
     `import { ${importList} } from 'drizzle-orm/pg-core';`,
-    "import { softDeletable } from '@stynx/data';",
+    "import { softDeletable } from '@stynx-nyx/data';",
     '',
     ...bodies,
     '',

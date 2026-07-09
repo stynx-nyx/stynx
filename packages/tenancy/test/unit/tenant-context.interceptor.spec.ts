@@ -1,7 +1,7 @@
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
 import type { ModuleRef } from '@nestjs/core';
-import { RequestContext, RequestContextMutator } from '@stynx/core';
+import { RequestContext, RequestContextMutator } from '@stynx-nyx/core';
 import { TenantContextInterceptor } from '../../src/tenant-context.interceptor';
 import { MembershipAccessCache } from '../../src/membership-cache';
 

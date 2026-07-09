@@ -29,7 +29,7 @@ function collectPublishablePackageNames(baseDir, matcher) {
 const publishablePackages = new Set([
   ...collectPublishablePackageNames(
     'packages',
-    (name) => typeof name === 'string' && name.startsWith('@stynx/'),
+    (name) => typeof name === 'string' && name.startsWith('@stynx-nyx/'),
   ),
   ...collectPublishablePackageNames(
     'packages-web',

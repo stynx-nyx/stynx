@@ -65,7 +65,7 @@ jobs:
   workspace-typecheck:
     # Demonstrates the reusable-typecheck workflow pattern; runs alongside
     # build to catch regressions caused by demo-bookmark changes that
-    # propagate to other packages via @stynx/* imports.
+    # propagate to other packages via @stynx-nyx/* imports.
     uses: ./.github/workflows/reusable-typecheck.yml
     with:
       node-version: '24'

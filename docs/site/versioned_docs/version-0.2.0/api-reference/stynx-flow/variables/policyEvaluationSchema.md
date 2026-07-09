@@ -1,8 +1,8 @@
-[**@stynx/flow**](../index.md)
+[**@stynx-nyx/flow**](../index.md)
 
 ---
 
-[@stynx/flow](../index.md) / policyEvaluationSchema
+[@stynx-nyx/flow](../index.md) / policyEvaluationSchema
 
 # Variable: policyEvaluationSchema
 

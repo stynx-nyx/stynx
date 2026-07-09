@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Database } from '@stynx/data';
+import { Database } from '@stynx-nyx/data';
 import { camelizeRow, pageLimitOffset, type FlowRow } from './row-utils';
 
 type AnalyticsQuery = Record<string, unknown>;

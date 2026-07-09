@@ -31,7 +31,7 @@ sources directly.
    - `package.json` (name, version, peerDependencies, exports).
    - `src/index.ts` (or barrel) — list every exported symbol.
    - `README.md` if present.
-   - One representative source file (e.g. for `@stynx/data`, read
+   - One representative source file (e.g. for `@stynx-nyx/data`, read
      `database.ts` and `transaction.ts`).
 4. **Reference apps** — `reference/api/` and `reference/web/`:
    - `src/main.ts` and `src/app.module.ts` (or entry equivalent).
@@ -63,7 +63,7 @@ Sections:
    (STABLE / EXPERIMENTAL / NOT YET IMPLEMENTED based on tests +
    audit findings).
 5. **Reference-app patterns observed** — short prose on how the
-   reference-api uses `@stynx/*`, with file:line references.
+   reference-api uses `@stynx-nyx/*`, with file:line references.
 6. **Migration helpers** — SQL helper signatures with file:line.
 7. **Migration linter rules** — bullet list, code → description.
 8. **CLI commands** — output of `--help` quoted verbatim.

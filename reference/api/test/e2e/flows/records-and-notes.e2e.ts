@@ -4,7 +4,7 @@ import {
   expectNotInLive,
   expectRestored,
   expectRLSIsolated,
-} from '@stynx/testing';
+} from '@stynx-nyx/testing';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { recordNotes, records } from '../../../src/sample/schema';
 import {
@@ -35,7 +35,7 @@ interface NoteBody {
   tenant_id?: string;
 }
 
-describe('@stynx/reference-api e2e records and notes', () => {
+describe('@stynx-nyx/reference-api e2e records and notes', () => {
   let context: ReferenceApiE2eContext;
   let adminA: AuthenticatedAgent;
   let viewerA: AuthenticatedAgent;

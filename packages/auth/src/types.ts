@@ -1,4 +1,4 @@
-import type { Principal } from '@stynx/contracts';
+import type { Principal } from '@stynx-nyx/contracts';
 
 export interface StynxAuthModuleOptions {
   cognito?: {

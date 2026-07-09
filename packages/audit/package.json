@@ -1,5 +1,5 @@
 {
-  "name": "@stynx/audit",
+  "name": "@stynx-nyx/audit",
   "version": "1.0.0",
   "description": "Audit adapters and helpers for stynx",
   "main": "dist/audit/src/index.js",
@@ -28,10 +28,10 @@
   },
   "dependencies": {
     "@nestjs/schedule": "^6.1.3",
-    "@stynx/contracts": "workspace:*",
-    "@stynx/auth": "workspace:*",
-    "@stynx/core": "workspace:*",
-    "@stynx/data": "workspace:*",
+    "@stynx-nyx/contracts": "workspace:*",
+    "@stynx-nyx/auth": "workspace:*",
+    "@stynx-nyx/core": "workspace:*",
+    "@stynx-nyx/data": "workspace:*",
     "zod": "^4.3.6"
   },
   "peerDependencies": {

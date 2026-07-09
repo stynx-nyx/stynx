@@ -1,4 +1,4 @@
-import type { StynxLogger } from '@stynx/logging';
+import type { StynxLogger } from '@stynx-nyx/logging';
 
 export interface PdfAValidationTelemetry {
   increment?(metric: string, labels?: Record<string, string>): void | Promise<void>;

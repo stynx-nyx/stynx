@@ -1,8 +1,8 @@
-[**@stynx/data**](../index.md)
+[**@stynx-nyx/data**](../index.md)
 
 ---
 
-[@stynx/data](../index.md) / StynxDrizzleDatabase
+[@stynx-nyx/data](../index.md) / StynxDrizzleDatabase
 
 # Type Alias: StynxDrizzleDatabase
 

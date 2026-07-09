@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / STYNX_SLA_EVENT_SINK
+[@stynx-nyx/backend](../index.md) / STYNX_SLA_EVENT_SINK
 
 # Variable: STYNX_SLA_EVENT_SINK
 

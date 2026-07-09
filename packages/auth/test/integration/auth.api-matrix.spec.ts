@@ -4,14 +4,14 @@ import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
 import { Client } from 'pg';
 import request from 'supertest';
-import { generateRequestId, RequestContextMutator } from '@stynx/core';
-import { Database, StynxDataModule } from '@stynx/data';
+import { generateRequestId, RequestContextMutator } from '@stynx-nyx/core';
+import { Database, StynxDataModule } from '@stynx-nyx/data';
 import {
   InMemorySessionStore,
   RedisSessionStore,
   StynxSessionsModule,
   STYNX_SESSION_STORE,
-} from '@stynx/sessions';
+} from '@stynx-nyx/sessions';
 import { CognitoJwtValidator } from '../../src/cognito-jwt.validator';
 import { EffectiveHashComputer } from '../../src/effective-hash-computer';
 import { InMemoryPermissionCacheBackend } from '../../src/in-memory-permission-cache-backend';
@@ -131,9 +131,9 @@ describe('StynxAuthController API error matrix', () => {
       imports: [
         StynxDataModule.forRoot({
           connections: {
-            owner: { connectionString: database.connectionString('@stynx/auth-matrix:owner') },
-            app: { connectionString: database.connectionString('@stynx/auth-matrix:app') },
-            reader: { connectionString: database.connectionString('@stynx/auth-matrix:reader') },
+            owner: { connectionString: database.connectionString('@stynx-nyx/auth-matrix:owner') },
+            app: { connectionString: database.connectionString('@stynx-nyx/auth-matrix:app') },
+            reader: { connectionString: database.connectionString('@stynx-nyx/auth-matrix:reader') },
           },
           migrations: { enabled: true },
         }),

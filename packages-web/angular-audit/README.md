@@ -1,6 +1,6 @@
 # `@stynx-web/angular-audit` — Angular audit-trail UI: log timeline, entity history, integrity badge
 
-`@stynx-web/angular-audit` is the Angular audit-viewing package. It provides an audit-log timeline, an entity-history panel (the audit trail for a single record), an event-detail view, and a hash-integrity badge that surfaces whether the audit chain verifies. Backed by the backend's [`@stynx/audit`](/docs/packages/audit/) read endpoint.
+`@stynx-web/angular-audit` is the Angular audit-viewing package. It provides an audit-log timeline, an entity-history panel (the audit trail for a single record), an event-detail view, and a hash-integrity badge that surfaces whether the audit chain verifies. Backed by the backend's [`@stynx-nyx/audit`](/docs/packages/audit/) read endpoint.
 
 ## Purpose
 
@@ -101,8 +101,8 @@ export const appConfig = { providers: [provideAudit()] };
 ## Related packages
 
 - [`@stynx-web/angular`](/docs/packages-web/angular/) — the foundation.
-- [`@stynx/audit`](/docs/packages/audit/) — the backend counterpart.
-- [`@stynx/cli`](/docs/packages/cli/) — `stynx audit verify` is the CLI equivalent of the integrity badge.
+- [`@stynx-nyx/audit`](/docs/packages/audit/) — the backend counterpart.
+- [`@stynx-nyx/cli`](/docs/packages/cli/) — `stynx audit verify` is the CLI equivalent of the integrity badge.
 
 ## TypeDoc reference
 

@@ -1,5 +1,5 @@
 import { lgpdFixturePiiMapYaml, seedLgpdFixture } from '../src/lgpd-fixture';
-import type { StynxPgClient } from '@stynx/data';
+import type { StynxPgClient } from '@stynx-nyx/data';
 
 describe('LGPD fixture helpers', () => {
   it('emits a PII map with every fixture strategy', () => {

@@ -1,8 +1,8 @@
-[**@stynx/pdf-a**](../index.md)
+[**@stynx-nyx/pdf-a**](../index.md)
 
 ---
 
-[@stynx/pdf-a](../index.md) / PdfAVersion
+[@stynx-nyx/pdf-a](../index.md) / PdfAVersion
 
 # Type Alias: PdfAVersion
 

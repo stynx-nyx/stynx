@@ -1,4 +1,4 @@
-import { IntegrationAdapter } from '@stynx/integration-adapter';
+import { IntegrationAdapter } from '@stynx-nyx/integration-adapter';
 import {
   SignatureProviderConfigurationError,
   SignatureProviderError,

@@ -1,10 +1,10 @@
-import { generateRequestId } from '@stynx/core';
+import { generateRequestId } from '@stynx-nyx/core';
 import {
   createStynxFixtures,
   createTestApp,
   mintTestSession,
   type TestAppContext,
-} from '@stynx/testing';
+} from '@stynx-nyx/testing';
 import request from 'supertest';
 import { StynxTenancyModule } from '../../src/tenancy.module';
 

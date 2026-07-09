@@ -1,5 +1,5 @@
 {
-  "name": "@stynx/privacy",
+  "name": "@stynx-nyx/privacy",
   "version": "1.0.0",
   "description": "Privacy exports, erasure orchestration, and ROPA generation for stynx",
   "main": "dist/privacy/src/index.js",
@@ -27,9 +27,9 @@
     "stryker": "pnpm exec stryker run stryker.conf.mjs"
   },
   "dependencies": {
-    "@stynx/core": "workspace:*",
-    "@stynx/data": "workspace:*",
-    "@stynx/storage": "workspace:*",
+    "@stynx-nyx/core": "workspace:*",
+    "@stynx-nyx/data": "workspace:*",
+    "@stynx-nyx/storage": "workspace:*",
     "jszip": "^3.10.1",
     "yaml": "^2.8.3",
     "zod": "^4.3.6"
@@ -43,7 +43,7 @@
   "devDependencies": {
     "@nestjs/platform-express": "^11.1.19",
     "@nestjs/testing": "^11.1.19",
-    "@stynx/testing": "workspace:*",
+    "@stynx-nyx/testing": "workspace:*",
     "@types/node": "24.12.4",
     "@types/supertest": "^7.2.0",
     "supertest": "^7.2.2",

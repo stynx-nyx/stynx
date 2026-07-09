@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / sha256CanonicalJson
+[@stynx-nyx/signature](../index.md) / sha256CanonicalJson
 
 # Function: sha256CanonicalJson()
 

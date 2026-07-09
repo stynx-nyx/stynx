@@ -1,8 +1,8 @@
-[**@stynx/auth**](../index.md)
+[**@stynx-nyx/auth**](../index.md)
 
 ---
 
-[@stynx/auth](../index.md) / PermissionCacheMetrics
+[@stynx-nyx/auth](../index.md) / PermissionCacheMetrics
 
 # Class: PermissionCacheMetrics
 

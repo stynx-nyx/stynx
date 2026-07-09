@@ -2,13 +2,13 @@ import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { ModuleRef } from '@nestjs/core';
-import { StynxObjectStore } from '@stynx/storage';
+import { StynxObjectStore } from '@stynx-nyx/storage';
 import { PrivacyConfigurationError, PrivacyValidationError } from '../../src/errors';
 import { PiiMapService } from '../../src/pii-map.service';
 import { PrivacyObjectStoreService } from '../../src/privacy-object-store.service';
 import { generateRopaMarkdown } from '../../src/ropa';
 
-vi.mock('@stynx/storage', () => ({
+vi.mock('@stynx-nyx/storage', () => ({
   StynxObjectStore: vi.fn(),
 }));
 

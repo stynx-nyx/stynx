@@ -1,7 +1,7 @@
 import { createStrykerConfig } from '../../tools/stryker/base.mjs';
 
 export default createStrykerConfig({
-  packageName: '@stynx/backend',
+  packageName: '@stynx-nyx/backend',
   mutate: [
     'src/audit/audit.interceptor.ts',
     'src/audit/redaction-policy.ts',

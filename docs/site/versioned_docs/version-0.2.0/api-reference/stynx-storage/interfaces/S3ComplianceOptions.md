@@ -1,8 +1,8 @@
-[**@stynx/storage**](../index.md)
+[**@stynx-nyx/storage**](../index.md)
 
 ---
 
-[@stynx/storage](../index.md) / S3ComplianceOptions
+[@stynx-nyx/storage](../index.md) / S3ComplianceOptions
 
 # Interface: S3ComplianceOptions
 

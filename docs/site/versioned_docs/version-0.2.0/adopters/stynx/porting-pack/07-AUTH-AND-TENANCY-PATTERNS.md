@@ -5,8 +5,8 @@
 &gt; §6 (authz). ADR-002 for the permission cache. GAP-004 for tenant
 &gt; exchange. Discovery commit `670d165`.
 &gt;
-&gt; **Use this file when:** wiring `@stynx/auth` + `@stynx/sessions` +
-&gt; `@stynx/tenancy` into an app that already has _some_ form of auth.
+&gt; **Use this file when:** wiring `@stynx-nyx/auth` + `@stynx-nyx/sessions` +
+&gt; `@stynx-nyx/tenancy` into an app that already has _some_ form of auth.
 &gt;
 &gt; Every snippet cites a concrete `path:line` from this repo. Anything
 &gt; the discovery pass could not confirm is marked `[GAP — …]`.
@@ -18,7 +18,7 @@
 Each pattern below answers four questions in the same order:
 
 1. **What it replaces** in the foreign codebase.
-2. **Which `@stynx/*` packages compose** the new surface.
+2. **Which `@stynx-nyx/*` packages compose** the new surface.
 3. **A minimum-effort migration recipe** (numbered steps).
 4. **A code citation** that proves the pattern is real in this repo.
 
@@ -59,7 +59,7 @@ The reference app wires them per-controller via
 `@UseGuards(StynxAuthGuard, PermissionGuard)`
 (`reference/api/src/sample/records.controller.ts:49`).
 
-### A.1 What `@stynx/auth` actually is
+### A.1 What `@stynx-nyx/auth` actually is
 
 - A NestJS module: `StynxAuthModule.forRoot(&#123;...&#125;)`
   (`reference/api/src/app.module.ts:180–195`).
@@ -90,8 +90,8 @@ Minimum-effort migration assuming a typical Express + Passport app:
 1. **Remove** `passport`, `passport-jwt`, and any
    `app.use(passport.initialize())`/`passport.authenticate('jwt', ...)`
    middleware.
-2. **Install** `@stynx/auth`, `@stynx/sessions`, `@stynx/data`,
-   `@stynx/core`, `@stynx/backend` (peer-dep set per
+2. **Install** `@stynx-nyx/auth`, `@stynx-nyx/sessions`, `@stynx-nyx/data`,
+   `@stynx-nyx/core`, `@stynx-nyx/backend` (peer-dep set per
    `docs/stynx/porting-pack/05-PACKAGE-CATALOG.md`).
 3. **Convert** the host app to NestJS _or_ keep the existing HTTP layer
    and call `StynxJwtValidator.validate(token)` inside your existing
@@ -186,7 +186,7 @@ This is the smallest delta — STYNX's IdP layer **is** Cognito.
 
 1. **Keep** the User Pool, app client, callback URLs.
 2. **Remove** any direct `@aws-sdk/client-cognito-identity-provider`
-   calls outside `@stynx/auth`'s `CognitoAdminAdapter`
+   calls outside `@stynx-nyx/auth`'s `CognitoAdminAdapter`
    (`packages/auth/src/cognito-admin.adapter.ts`).
 3. **Add** the session-exchange endpoint: client posts the Cognito
    access token to `POST /sessions`, gets back a STYNX bearer + refresh.
@@ -256,7 +256,7 @@ There are three problems:
 STYNX fixes all three with one mechanism: **the database does it,
 because the GUC is set on every transaction and RLS reads the GUC**.
 
-### B.1 What `@stynx/tenancy` actually is
+### B.1 What `@stynx-nyx/tenancy` actually is
 
 - `StynxTenancyModule` — NestJS module
   (`packages/tenancy/src/tenancy.module.ts`, see also
@@ -272,7 +272,7 @@ because the GUC is set on every transaction and RLS reads the GUC**.
 - `TenancyPlatformAdminGuard` — gates `@System()` routes that need
   platform-ops scope.
 
-### B.2 What `@stynx/data` does with the GUC
+### B.2 What `@stynx-nyx/data` does with the GUC
 
 `Database.tx(...)` is the only sanctioned DB entry point (Invariant
 I1). On entry it issues:
@@ -348,7 +348,7 @@ const nextState = {
 this.requestContextMutator.runWithRequestContext(nextState, () => { ... });
 ```
 
-`RequestContext` is from `@stynx/core`. Anything inside the request
+`RequestContext` is from `@stynx-nyx/core`. Anything inside the request
 that calls `Database.tx(...)` reads it via `nestjs-cls`. Out-of-band
 work (cron, queue handlers) cannot use it — see Pattern G.
 
@@ -594,7 +594,7 @@ hits `auth.memberships` and returns a fresh `PermissionCacheRecord`
 
 1. **Expose** the tenant list per user. Source: `auth.memberships`
    joined to `tenancy.tenants`. Use `TenancyService` (re-exported by
-   `@stynx/tenancy`) — see `packages/tenancy/src/tenancy.service.ts`.
+   `@stynx-nyx/tenancy`) — see `packages/tenancy/src/tenancy.service.ts`.
 2. **Wire** a UI affordance (Angular consumers can use
    `@stynx-web/angular-tenancy`'s `TenantSwitcherComponent`,
    `packages-web/angular-tenancy/src/index.ts`).
@@ -846,7 +846,7 @@ if (
 ```
 
 **`withSystemContext(reason, fn)`** —
-re-exported from `@stynx/data` (and `@stynx/core`).
+re-exported from `@stynx-nyx/data` (and `@stynx-nyx/core`).
 Used in two places visible in the reference app:
 
 1. The tenancy interceptor's membership check
@@ -939,8 +939,8 @@ sequenceDiagram
     participant SPA as Angular SPA
     participant Cognito as Cognito User Pool
     participant API as STYNX API
-    participant Auth as @stynx/auth
-    participant Sessions as @stynx/sessions
+    participant Auth as @stynx-nyx/auth
+    participant Sessions as @stynx-nyx/sessions
     participant DB as Postgres (auth.* / tenancy.*)
     participant Redis as Redis
 
@@ -1021,8 +1021,8 @@ sequenceDiagram
 | `session:&#123;sid&#125;`  | Hot session lookup (10-min TTL aligns with bearer)               | `RedisSessionStore`           |
 | `perm:&#123;sid&#125;`     | Permission cache record (24h TTL, see `permission-cache.ts:178`) | `RedisPermissionCacheBackend` |
 | `perm-invalidate` (pubsub) | Six mutation paths emit invalidations                            | `EffectiveHashComputer`       |
-| `ratelimit:...`            | `@stynx/ratelimit` buckets                                       | `RedisRateLimitStore`         |
-| `idempotency:...`          | `@stynx/idempotency` keys                                        | `RedisIdempotencyBackend`     |
+| `ratelimit:...`            | `@stynx-nyx/ratelimit` buckets                                       | `RedisRateLimitStore`         |
+| `idempotency:...`          | `@stynx-nyx/idempotency` keys                                        | `RedisIdempotencyBackend`     |
 
 The strict separation matters: **Cognito does not know what tenants
 exist**, and **STYNX does not store passwords**. A user whose Cognito
@@ -1036,15 +1036,15 @@ refresh, the membership is re-checked.
 
 ## Quick reference — pattern → packages → files
 
-| Pattern                             | Primary `@stynx/*` packages                     | Key files                                                                                                                                                                                                                               |
+| Pattern                             | Primary `@stynx-nyx/*` packages                     | Key files                                                                                                                                                                                                                               |
 | ----------------------------------- | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A — Replace JWT middleware          | `@stynx/auth`, `@stynx/sessions`, `@stynx/core` | `packages/auth/src/stynx-auth.guard.ts`, `packages/auth/src/permission.guard.ts`, `packages/auth/src/decorators.ts`, `packages/sessions/src/session.service.ts`, `reference/api/src/app.module.ts:180–195`                              |
-| B — Introduce TenantContext         | `@stynx/tenancy`, `@stynx/data`, `@stynx/core`  | `packages/tenancy/src/tenant-context.interceptor.ts`, `packages/data/src/database.ts`, `reference/api/src/app.module.ts:205`                                                                                                            |
-| C — Declare permissions             | `@stynx/auth`, `@stynx/data` (migrations)       | `reference/api/migrations/0001_reference.sql:266–347`, `packages/auth/src/effective-hash-computer.ts`, `packages/auth/src/permission-cache.ts`                                                                                          |
-| D — Tenant switching                | `@stynx/sessions`, `@stynx/auth`                | `packages/sessions/src/session.service.ts:208–246`, `specs/GAP-004-session-tenant-exchange.md`                                                                                                                                          |
+| A — Replace JWT middleware          | `@stynx-nyx/auth`, `@stynx-nyx/sessions`, `@stynx-nyx/core` | `packages/auth/src/stynx-auth.guard.ts`, `packages/auth/src/permission.guard.ts`, `packages/auth/src/decorators.ts`, `packages/sessions/src/session.service.ts`, `reference/api/src/app.module.ts:180–195`                              |
+| B — Introduce TenantContext         | `@stynx-nyx/tenancy`, `@stynx-nyx/data`, `@stynx-nyx/core`  | `packages/tenancy/src/tenant-context.interceptor.ts`, `packages/data/src/database.ts`, `reference/api/src/app.module.ts:205`                                                                                                            |
+| C — Declare permissions             | `@stynx-nyx/auth`, `@stynx-nyx/data` (migrations)       | `reference/api/migrations/0001_reference.sql:266–347`, `packages/auth/src/effective-hash-computer.ts`, `packages/auth/src/permission-cache.ts`                                                                                          |
+| D — Tenant switching                | `@stynx-nyx/sessions`, `@stynx-nyx/auth`                | `packages/sessions/src/session.service.ts:208–246`, `specs/GAP-004-session-tenant-exchange.md`                                                                                                                                          |
 | E — Impersonation                   | (none, v1.0)                                    | `[NOT SUPPORTED IN v1.0]`                                                                                                                                                                                                               |
-| F — `@ReadOnly`                     | `@stynx/auth`, `@stynx/data`                    | `packages/auth/src/decorators.ts:16`, `packages/auth/src/stynx-auth.guard.ts:62–64`, `reference/api/src/sample/records.controller.ts:53–78`                                                                                             |
-| G — `@System` / `withSystemContext` | `@stynx/auth`, `@stynx/core`, `@stynx/data`     | `packages/auth/src/decorators.ts:12`, `packages/auth/src/stynx-auth.guard.ts:38–40`, `packages/auth/src/permission.guard.ts:19–21`, `packages/tenancy/src/tenant-context.interceptor.ts:124–146`, `reference/api/src/app.module.ts:267` |
+| F — `@ReadOnly`                     | `@stynx-nyx/auth`, `@stynx-nyx/data`                    | `packages/auth/src/decorators.ts:16`, `packages/auth/src/stynx-auth.guard.ts:62–64`, `reference/api/src/sample/records.controller.ts:53–78`                                                                                             |
+| G — `@System` / `withSystemContext` | `@stynx-nyx/auth`, `@stynx-nyx/core`, `@stynx-nyx/data`     | `packages/auth/src/decorators.ts:12`, `packages/auth/src/stynx-auth.guard.ts:38–40`, `packages/auth/src/permission.guard.ts:19–21`, `packages/tenancy/src/tenant-context.interceptor.ts:124–146`, `reference/api/src/app.module.ts:267` |
 
 ---
 

@@ -64,7 +64,7 @@ docker compose -f "$COMPOSE_FILE" down -v >/dev/null 2>&1 || true
 docker compose -f "$COMPOSE_FILE" up -d --build postgres redis localstack
 wait_for_postgres
 
-pnpm --filter @stynx/cli build
+pnpm --filter @stynx-nyx/cli build
 node "$ROOT_DIR/packages/cli/dist/cli/src/main.js" migrate up --database-url "$DATABASE_URL"
 
 docker compose -f "$COMPOSE_FILE" up -d --build reference-api

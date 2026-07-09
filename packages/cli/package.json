@@ -1,5 +1,5 @@
 {
-  "name": "@stynx/cli",
+  "name": "@stynx-nyx/cli",
   "version": "1.0.0",
   "description": "CLI for bootstrapping, doctor checks, migrations, privacy ROPA, and adoption helpers",
   "main": "dist/cli/src/index.js",
@@ -30,7 +30,7 @@
     "stryker": "pnpm exec stryker run stryker.conf.mjs"
   },
   "dependencies": {
-    "@stynx/privacy": "workspace:*",
+    "@stynx-nyx/privacy": "workspace:*",
     "commander": "^14.0.3",
     "pg": "^8.20.0",
     "yaml": "^2.8.3"

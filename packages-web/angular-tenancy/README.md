@@ -1,6 +1,6 @@
 # `@stynx-web/angular-tenancy` — Angular tenant switcher + context + header interceptor
 
-`@stynx-web/angular-tenancy` is the Angular multi-tenant package. It provides a tenant-switcher + tenant-picker component, a `TenantContextService` holding the active tenant, and an HTTP interceptor that injects the tenant header into every backend call. Pairs with the backend's [`@stynx/tenancy`](/docs/packages/tenancy/).
+`@stynx-web/angular-tenancy` is the Angular multi-tenant package. It provides a tenant-switcher + tenant-picker component, a `TenantContextService` holding the active tenant, and an HTTP interceptor that injects the tenant header into every backend call. Pairs with the backend's [`@stynx-nyx/tenancy`](/docs/packages/tenancy/).
 
 ## Purpose
 
@@ -106,14 +106,14 @@ export class Dashboard {
 
 ## Common pitfalls
 
-- **`headerName` mismatch** — must equal the backend's tenant source (`@stynx/tenancy` `headerName` when `source: 'header'`), or the backend doesn't see the tenant.
+- **`headerName` mismatch** — must equal the backend's tenant source (`@stynx-nyx/tenancy` `headerName` when `source: 'header'`), or the backend doesn't see the tenant.
 - **Stale context after tab restore** — if `persistSelection` is off, restoring a tab loses the tenant. Default-on mitigates.
 - **Switching tenant without refreshing data** — the switcher updates context but in-flight component data may be stale; subscribe to `current` and refetch.
 
 ## Related packages
 
 - [`@stynx-web/angular`](/docs/packages-web/angular/) — the foundation (also ships a base tenant context service).
-- [`@stynx/tenancy`](/docs/packages/tenancy/) — the backend counterpart.
+- [`@stynx-nyx/tenancy`](/docs/packages/tenancy/) — the backend counterpart.
 - [`@stynx-web/angular-iam`](/docs/packages-web/angular-iam/) — tenant admin management.
 
 ## TypeDoc reference

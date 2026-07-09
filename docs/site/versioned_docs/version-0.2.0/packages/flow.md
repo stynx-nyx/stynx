@@ -1,8 +1,8 @@
 ---
-title: '@stynx/flow'
+title: '@stynx-nyx/flow'
 ---
 
-# @stynx/flow
+# @stynx-nyx/flow
 
 Tenant-scoped workflow design, runtime, forms, policies, analytics, and PORM-compatible migration aliases.
 
@@ -13,10 +13,10 @@ Tenant-scoped workflow design, runtime, forms, policies, analytics, and PORM-com
 ## Install And Import
 
 ```ts
-import {} from /* public exports */ '@stynx/flow';
+import {} from /* public exports */ '@stynx-nyx/flow';
 ```
 
-In this monorepo, use the workspace package. Published consumers should install matching `@stynx/*` versions from the same release train.
+In this monorepo, use the workspace package. Published consumers should install matching `@stynx-nyx/*` versions from the same release train.
 
 ## Module Setup
 
@@ -36,7 +36,7 @@ Stores Flow design/runtime data under the flow schema, emits signals on answer/w
 ## Example
 
 ```ts
-import { FlowRuntimeService } from '@stynx/flow';
+import { FlowRuntimeService } from '@stynx-nyx/flow';
 
 await flowRuntime.signal({
   tenantId,
@@ -73,9 +73,9 @@ Current barrel highlights:
 ## Verification
 
 ```sh
-pnpm --filter @stynx/flow build
-pnpm --filter @stynx/flow test
-STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx/flow test:int
+pnpm --filter @stynx-nyx/flow build
+pnpm --filter @stynx-nyx/flow test
+STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx-nyx/flow test:int
 ```
 
 ## Documentation Standard

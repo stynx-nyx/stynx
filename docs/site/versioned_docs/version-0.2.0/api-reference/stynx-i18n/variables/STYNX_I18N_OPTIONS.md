@@ -1,8 +1,8 @@
-[**@stynx/i18n**](../index.md)
+[**@stynx-nyx/i18n**](../index.md)
 
 ---
 
-[@stynx/i18n](../index.md) / STYNX_I18N_OPTIONS
+[@stynx-nyx/i18n](../index.md) / STYNX_I18N_OPTIONS
 
 # Variable: STYNX_I18N_OPTIONS
 

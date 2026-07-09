@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
-import { NoIdempotent } from '@stynx/idempotency';
+import { NoIdempotent } from '@stynx-nyx/idempotency';
 import { TenancyPlatformAdminGuard } from './tenancy-platform-admin.guard';
 import { TenancyService } from './tenancy.service';
 import type { ProvisionTenantInput, SuspendTenantInput, UpdateTenantInput } from './types';

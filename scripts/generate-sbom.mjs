@@ -18,7 +18,7 @@ for (const manifestPath of packageManifests) {
     componentIndex.set(manifest.name, workspaceComponent(manifest, manifestPath));
   }
   for (const dependencyName of dependencyNames(manifest)) {
-    if (dependencyName.startsWith('@stynx/') || dependencyName.startsWith('@stynx-web/')) continue;
+    if (dependencyName.startsWith('@stynx-nyx/') || dependencyName.startsWith('@stynx-web/')) continue;
     const dependencyManifest = resolveInstalledManifest(dependencyName);
     if (!dependencyManifest || componentIndex.has(dependencyName)) continue;
     componentIndex.set(dependencyName, externalComponent(dependencyName, dependencyManifest));

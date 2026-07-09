@@ -1,6 +1,6 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, Logger } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { RequestContext, StynxError } from '@stynx/core';
+import { RequestContext, StynxError } from '@stynx-nyx/core';
 import { ErrorTranslatorService } from './error-translator.service';
 
 interface ResponseLike {

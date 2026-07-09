@@ -1,7 +1,7 @@
 # Feature Flags Contract
 
 **Authority:** Architect (DEVAI Constitution Article 6).
-**Package:** `@stynx/feature-flags`.
+**Package:** `@stynx-nyx/feature-flags`.
 
 Feature flags are tenant and environment scoped configuration decisions. They
 replace app-local process-parameter and normative-package patterns when the
@@ -55,6 +55,6 @@ Tenant denies must not be bypassed by environment or global values.
 
 ## Audit Guidance
 
-Consumers should record flag evaluations through `@stynx/audit` when a decision
+Consumers should record flag evaluations through `@stynx-nyx/audit` when a decision
 changes workflow state, access to a user action, billing behavior, or external
 integration routing.

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { Database, type Transaction } from '@stynx/data';
+import { Database, type Transaction } from '@stynx-nyx/data';
 import JSZip from 'jszip';
 import { PiiMapService } from './pii-map.service';
 import { generateRopaMarkdown, type RopaMetadata } from './ropa';

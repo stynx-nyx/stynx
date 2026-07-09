@@ -4,14 +4,14 @@ import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { generateKeyPairSync } from 'node:crypto';
 import { Client } from 'pg';
-import { generateRequestId, RequestContextMutator } from '@stynx/core';
-import { Database, StynxDataModule } from '@stynx/data';
+import { generateRequestId, RequestContextMutator } from '@stynx-nyx/core';
+import { Database, StynxDataModule } from '@stynx-nyx/data';
 import {
   InMemorySessionStore,
   RedisSessionStore,
   StynxSessionsModule,
   STYNX_SESSION_STORE,
-} from '@stynx/sessions';
+} from '@stynx-nyx/sessions';
 import { CognitoJwtValidator } from '../../src/cognito-jwt.validator';
 import { EffectiveHashComputer } from '../../src/effective-hash-computer';
 import { InMemoryPermissionCacheBackend } from '../../src/in-memory-permission-cache-backend';
@@ -163,9 +163,9 @@ describe('StynxAuthModule integration', () => {
       imports: [
         StynxDataModule.forRoot({
           connections: {
-            owner: { connectionString: database.connectionString('@stynx/auth:owner') },
-            app: { connectionString: database.connectionString('@stynx/auth:app') },
-            reader: { connectionString: database.connectionString('@stynx/auth:reader') },
+            owner: { connectionString: database.connectionString('@stynx-nyx/auth:owner') },
+            app: { connectionString: database.connectionString('@stynx-nyx/auth:app') },
+            reader: { connectionString: database.connectionString('@stynx-nyx/auth:reader') },
           },
           migrations: { enabled: true },
         }),

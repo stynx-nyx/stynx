@@ -1,12 +1,12 @@
-// C-4 Session T2 — BookmarkTagService wired to @stynx/data
+// C-4 Session T2 — BookmarkTagService wired to @stynx-nyx/data
 //
 // Replaces the S3-2 NotImplementedException stubs. Tags are immutable
 // post-creation per the blueprint; only list/create/delete operations
 // are exposed. Composite (bookmark_id, tag) is the primary key.
 
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { RequestContext } from '@stynx/core';
-import { Database } from '@stynx/data';
+import { RequestContext } from '@stynx-nyx/core';
+import { Database } from '@stynx-nyx/data';
 import { and, eq, isNull } from 'drizzle-orm';
 import { bookmarks, bookmarkTags } from '../schema';
 import type { CreateBookmarkTagDto } from '../dto/create-bookmark-tag.dto';
@@ -24,7 +24,7 @@ export class BookmarkTagService {
         const tenantId = this.requireTenantId();
         // Tenancy: bookmarkTags has no tenant_id column. Two-step query to
         // enforce tenant scoping via the parent bookmarks row, since
-        // @stynx/data's Transaction type doesn't surface drizzle's innerJoin
+        // @stynx-nyx/data's Transaction type doesn't surface drizzle's innerJoin
         // typings cleanly here.
         const tenantBookmarks = await trx
           .select()

@@ -38,25 +38,25 @@ const CONVENTIONAL_TYPES = [
 
 const allowedScopes = [
   'stynx-workspace',
-  '@stynx/reference-api',
-  '@stynx/reference-web',
-  '@stynx/backend',
-  '@stynx/contracts',
-  '@stynx/auth',
-  '@stynx/audit',
-  '@stynx/cli',
-  '@stynx/core',
-  '@stynx/data',
-  '@stynx/i18n',
-  '@stynx/privacy',
-  '@stynx/ratelimit',
-  '@stynx/idempotency',
-  '@stynx/health',
-  '@stynx/logging',
-  '@stynx/sessions',
-  '@stynx/storage',
-  '@stynx/tenancy',
-  '@stynx/testing',
+  '@stynx-nyx/reference-api',
+  '@stynx-nyx/reference-web',
+  '@stynx-nyx/backend',
+  '@stynx-nyx/contracts',
+  '@stynx-nyx/auth',
+  '@stynx-nyx/audit',
+  '@stynx-nyx/cli',
+  '@stynx-nyx/core',
+  '@stynx-nyx/data',
+  '@stynx-nyx/i18n',
+  '@stynx-nyx/privacy',
+  '@stynx-nyx/ratelimit',
+  '@stynx-nyx/idempotency',
+  '@stynx-nyx/health',
+  '@stynx-nyx/logging',
+  '@stynx-nyx/sessions',
+  '@stynx-nyx/storage',
+  '@stynx-nyx/tenancy',
+  '@stynx-nyx/testing',
   '@stynx-web/angular',
   '@stynx-web/angular-tenancy',
   '@stynx-web/angular-auth',
@@ -84,7 +84,7 @@ module.exports = {
       // The role branch's capture is the whole "Role + Role" string so the
       // role-of-record (for any downstream tooling) is the full combo,
       // matching the way authors write it.
-      // Scope class admits `@` so `@stynx/*` / `@stynx-web/*` scopes work
+      // Scope class admits `@` so `@stynx-nyx/*` / `@stynx-web/*` scopes work
       // (a pre-existing latent bug surfaced during F-12 smoke testing —
       // the scope enum lists them but the prior regex couldn't match them).
       headerPattern: new RegExp(

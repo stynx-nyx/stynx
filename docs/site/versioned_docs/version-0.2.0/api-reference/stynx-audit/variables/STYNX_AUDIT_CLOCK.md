@@ -1,8 +1,8 @@
-[**@stynx/audit**](../index.md)
+[**@stynx-nyx/audit**](../index.md)
 
 ---
 
-[@stynx/audit](../index.md) / STYNX_AUDIT_CLOCK
+[@stynx-nyx/audit](../index.md) / STYNX_AUDIT_CLOCK
 
 # Variable: STYNX_AUDIT_CLOCK
 

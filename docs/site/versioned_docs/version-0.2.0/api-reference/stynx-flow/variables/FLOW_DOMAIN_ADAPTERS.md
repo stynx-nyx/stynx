@@ -1,8 +1,8 @@
-[**@stynx/flow**](../index.md)
+[**@stynx-nyx/flow**](../index.md)
 
 ---
 
-[@stynx/flow](../index.md) / FLOW_DOMAIN_ADAPTERS
+[@stynx-nyx/flow](../index.md) / FLOW_DOMAIN_ADAPTERS
 
 # Variable: FLOW_DOMAIN_ADAPTERS
 

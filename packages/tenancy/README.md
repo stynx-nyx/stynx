@@ -1,12 +1,12 @@
-# `@stynx/tenancy` — multi-tenant context, membership, platform-admin guard
+# `@stynx-nyx/tenancy` — multi-tenant context, membership, platform-admin guard
 
-`@stynx/tenancy` is STYNX's multi-tenant substrate. It resolves the active tenant per request (from header, JWT claim, or route param), enforces tenant membership (the principal must belong to the tenant), caches membership lookups, exposes platform-admin endpoints for tenant lifecycle (archive/restore/suspend), and bridges into `@stynx/data`'s request-scoped DB context for RLS-aware queries. The `tenant-context.interceptor` writes the resolved tenant id into `RequestContext` so every downstream package sees it.
+`@stynx-nyx/tenancy` is STYNX's multi-tenant substrate. It resolves the active tenant per request (from header, JWT claim, or route param), enforces tenant membership (the principal must belong to the tenant), caches membership lookups, exposes platform-admin endpoints for tenant lifecycle (archive/restore/suspend), and bridges into `@stynx-nyx/data`'s request-scoped DB context for RLS-aware queries. The `tenant-context.interceptor` writes the resolved tenant id into `RequestContext` so every downstream package sees it.
 
 ## Purpose
 
-Multi-tenant apps need a canonical answer to "which tenant is this request acting under?" and a canonical answer to "is this principal allowed to act under that tenant?" — both decisions need to happen early, deterministically, with caching for the membership check. `@stynx/tenancy` centralises this.
+Multi-tenant apps need a canonical answer to "which tenant is this request acting under?" and a canonical answer to "is this principal allowed to act under that tenant?" — both decisions need to happen early, deterministically, with caching for the membership check. `@stynx-nyx/tenancy` centralises this.
 
-You reach for `@stynx/tenancy` whenever the app has multiple tenants — typically immediately after `@stynx/auth`.
+You reach for `@stynx-nyx/tenancy` whenever the app has multiple tenants — typically immediately after `@stynx-nyx/auth`.
 
 What it does NOT do: it doesn't define your tenant schema (your migrations do), doesn't enforce RLS policies (your Postgres policies do, with the `tenantId` this package writes), doesn't manage cross-tenant data access (use platform-admin endpoints for that).
 
@@ -17,15 +17,15 @@ Backend developers building multi-tenant apps. Most use is configuration + decor
 ## Install
 
 ```bash
-pnpm add @stynx/tenancy
+pnpm add @stynx-nyx/tenancy
 ```
 
-**Peer dependencies:** `@nestjs/common` `^11`, `@stynx/core` `^1`, `@stynx/contracts` `^1`, `@stynx/data` `^1`.
+**Peer dependencies:** `@nestjs/common` `^11`, `@stynx-nyx/core` `^1`, `@stynx-nyx/contracts` `^1`, `@stynx-nyx/data` `^1`.
 
 ## Quick start
 
 ```ts
-import { StynxTenancyModule } from '@stynx/tenancy';
+import { StynxTenancyModule } from '@stynx-nyx/tenancy';
 
 StynxTenancyModule.forRoot({
   source: 'jwt-claim',
@@ -63,7 +63,7 @@ Every request now has `RequestContext.tenantId` populated from the JWT claim; th
 | `POST`  | `/tenancy/tenants`             | platform-admin | Create a tenant.                                                              |
 | `PATCH` | `/tenancy/tenants/:id`         | platform-admin | Update tenant metadata.                                                       |
 | `POST`  | `/tenancy/tenants/:id/suspend` | platform-admin | Suspend a tenant.                                                             |
-| `POST`  | `/tenancy/tenants/:id/archive` | platform-admin | Archive (soft-delete) a tenant; cascades per `@stynx/data` soft-delete rules. |
+| `POST`  | `/tenancy/tenants/:id/archive` | platform-admin | Archive (soft-delete) a tenant; cascades per `@stynx-nyx/data` soft-delete rules. |
 
 ### Types / Interfaces
 
@@ -111,7 +111,7 @@ StynxTenancyModule.forRoot({
 ### Example 3 — entitlement check on a custom route
 
 ```ts
-import { StynxPlatformAdminGuard } from '@stynx/tenancy';
+import { StynxPlatformAdminGuard } from '@stynx-nyx/tenancy';
 
 @Controller('admin-stuff')
 @UseGuards(StynxPlatformAdminGuard)
@@ -128,9 +128,9 @@ export class AdminController {
 
 ## Related packages
 
-- [`@stynx/core`](/docs/packages/core/) — provides `RequestContextMutator`; this package writes `tenantId` to the request frame.
-- [`@stynx/auth`](/docs/packages/auth/) — resolves the principal whose tenant claim this package reads.
-- [`@stynx/data`](/docs/packages/data/) — consumes the resolved `tenantId` for RLS-aware DB sessions.
+- [`@stynx-nyx/core`](/docs/packages/core/) — provides `RequestContextMutator`; this package writes `tenantId` to the request frame.
+- [`@stynx-nyx/auth`](/docs/packages/auth/) — resolves the principal whose tenant claim this package reads.
+- [`@stynx-nyx/data`](/docs/packages/data/) — consumes the resolved `tenantId` for RLS-aware DB sessions.
 - [`@stynx-web/angular-tenancy`](/docs/packages-web/angular-tenancy/) — Angular pair: tenant switcher + context display.
 
 ## TypeDoc reference

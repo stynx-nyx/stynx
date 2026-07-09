@@ -1,4 +1,4 @@
-import { RequestContext, SystemContext, SystemContextRequiredError } from '@stynx/core';
+import { RequestContext, SystemContext, SystemContextRequiredError } from '@stynx-nyx/core';
 import { ClsService } from 'nestjs-cls';
 import type { PoolClient } from 'pg';
 import {

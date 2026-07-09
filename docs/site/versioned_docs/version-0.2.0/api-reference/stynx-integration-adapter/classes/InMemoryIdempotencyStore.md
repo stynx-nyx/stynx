@@ -1,8 +1,8 @@
-[**@stynx/integration-adapter**](../index.md)
+[**@stynx-nyx/integration-adapter**](../index.md)
 
 ---
 
-[@stynx/integration-adapter](../index.md) / InMemoryIdempotencyStore
+[@stynx-nyx/integration-adapter](../index.md) / InMemoryIdempotencyStore
 
 # Class: InMemoryIdempotencyStore\<TRes\>
 

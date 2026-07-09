@@ -7,8 +7,8 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { STYNX_SYSTEM_ROUTE } from '@stynx/auth';
-import { headerToString } from '@stynx/contracts';
+import { STYNX_SYSTEM_ROUTE } from '@stynx-nyx/auth';
+import { headerToString } from '@stynx-nyx/contracts';
 import { Inject, Optional } from '@nestjs/common';
 import { STYNX_RATE_LIMIT_METRICS, STYNX_RATE_LIMIT_OPTIONS, STYNX_RATE_LIMIT_POLICY, STYNX_RATE_LIMIT_ROUTE, STYNX_RATE_LIMIT_STORE } from './constants';
 import type { RequestLike } from './request-context';

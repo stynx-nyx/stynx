@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / SlaCategory
+[@stynx-nyx/backend](../index.md) / SlaCategory
 
 # Type Alias: SlaCategory
 

@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / StynxIdempotencyModuleOptions
+[@stynx-nyx/backend](../index.md) / StynxIdempotencyModuleOptions
 
 # Interface: StynxIdempotencyModuleOptions
 

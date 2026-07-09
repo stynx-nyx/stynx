@@ -1,4 +1,4 @@
-# @stynx/health
+# @stynx-nyx/health
 
 ## 1.0.0
 
@@ -9,4 +9,4 @@
 ### Patch Changes
 
 - Updated dependencies [8f6df55]
-  - @stynx/core@1.0.0
+  - @stynx-nyx/core@1.0.0

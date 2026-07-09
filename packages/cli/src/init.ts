@@ -16,13 +16,13 @@ export function scaffoldApp(targetDir: string, appName: string, angular = false)
       test: 'node --test',
     },
     dependencies: {
-      '@stynx/core': 'workspace:*',
-      '@stynx/data': 'workspace:*',
-      '@stynx/auth': 'workspace:*',
-      '@stynx/sessions': 'workspace:*',
-      '@stynx/storage': 'workspace:*',
-      '@stynx/privacy': 'workspace:*',
-      '@stynx/i18n': 'workspace:*',
+      '@stynx-nyx/core': 'workspace:*',
+      '@stynx-nyx/data': 'workspace:*',
+      '@stynx-nyx/auth': 'workspace:*',
+      '@stynx-nyx/sessions': 'workspace:*',
+      '@stynx-nyx/storage': 'workspace:*',
+      '@stynx-nyx/privacy': 'workspace:*',
+      '@stynx-nyx/i18n': 'workspace:*',
     },
   }, null, 2) + '\n');
   write(resolve(targetDir, 'tsconfig.json'), JSON.stringify({

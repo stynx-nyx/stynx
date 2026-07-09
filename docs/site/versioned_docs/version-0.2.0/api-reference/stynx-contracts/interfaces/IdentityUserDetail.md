@@ -1,8 +1,8 @@
-[**@stynx/contracts**](../index.md)
+[**@stynx-nyx/contracts**](../index.md)
 
 ---
 
-[@stynx/contracts](../index.md) / IdentityUserDetail
+[@stynx-nyx/contracts](../index.md) / IdentityUserDetail
 
 # Interface: IdentityUserDetail
 

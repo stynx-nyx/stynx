@@ -1,8 +1,8 @@
-**@stynx/idempotency**
+**@stynx-nyx/idempotency**
 
 ---
 
-# @stynx/idempotency
+# @stynx-nyx/idempotency
 
 Public idempotency decorators, interceptors, stores, metrics, and module exports.
 

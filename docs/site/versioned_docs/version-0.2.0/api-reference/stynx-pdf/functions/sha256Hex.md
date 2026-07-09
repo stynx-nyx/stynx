@@ -1,8 +1,8 @@
-[**@stynx/pdf**](../index.md)
+[**@stynx-nyx/pdf**](../index.md)
 
 ---
 
-[@stynx/pdf](../index.md) / sha256Hex
+[@stynx-nyx/pdf](../index.md) / sha256Hex
 
 # Function: sha256Hex()
 

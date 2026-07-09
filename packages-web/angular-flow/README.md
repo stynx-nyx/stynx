@@ -1,6 +1,6 @@
 # `@stynx-web/angular-flow` — Angular workflow UI: graph designer, forms, tasks, run activity
 
-`@stynx-web/angular-flow` is the Angular UI for the STYNX workflow engine. It provides a graph designer (visual canvas + design dialogs), form-render + fills components, a task inbox, run-activity timeline, waivers UI, and analytics. It consumes the backend's [`@stynx/flow`](/docs/packages/flow/) endpoints (20 controllers) via a `FlowApiService`. This is the visual half of the flow engine — pair it with the backend flow docs for end-to-end understanding.
+`@stynx-web/angular-flow` is the Angular UI for the STYNX workflow engine. It provides a graph designer (visual canvas + design dialogs), form-render + fills components, a task inbox, run-activity timeline, waivers UI, and analytics. It consumes the backend's [`@stynx-nyx/flow`](/docs/packages/flow/) endpoints (20 controllers) via a `FlowApiService`. This is the visual half of the flow engine — pair it with the backend flow docs for end-to-end understanding.
 
 ## Purpose
 
@@ -94,7 +94,7 @@ export const routes: Routes = [
 
 ### Example 3 — end-to-end (UI side of the backend's expense-approval example)
 
-This mirrors the backend [`@stynx/flow` examples](/docs/packages/flow/examples/): the submitter uses `<stynx-flow-forms>` to fill the expense form; the manager uses `<stynx-flow-tasks>` to review + act; `<stynx-flow-run-activity>` shows the event stream.
+This mirrors the backend [`@stynx-nyx/flow` examples](/docs/packages/flow/examples/): the submitter uses `<stynx-flow-forms>` to fill the expense form; the manager uses `<stynx-flow-tasks>` to review + act; `<stynx-flow-run-activity>` shows the event stream.
 
 ## Common pitfalls
 
@@ -104,7 +104,7 @@ This mirrors the backend [`@stynx/flow` examples](/docs/packages/flow/examples/)
 
 ## Related packages
 
-- [`@stynx/flow`](/docs/packages/flow/) — the backend engine (20 controllers / ~113 endpoints) + the [domain model](/docs/packages/flow/domain-model/) this UI renders.
+- [`@stynx-nyx/flow`](/docs/packages/flow/) — the backend engine (20 controllers / ~113 endpoints) + the [domain model](/docs/packages/flow/domain-model/) this UI renders.
 - [`@stynx-web/sdk`](/docs/packages-web/sdk/) — the generated client `FlowApiService` wraps.
 - [`@stynx-web/angular-ui`](/docs/packages-web/angular-ui/) — shared components the flow UI builds on.
 

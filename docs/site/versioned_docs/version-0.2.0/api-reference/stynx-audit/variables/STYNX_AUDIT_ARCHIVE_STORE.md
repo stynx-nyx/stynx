@@ -1,8 +1,8 @@
-[**@stynx/audit**](../index.md)
+[**@stynx-nyx/audit**](../index.md)
 
 ---
 
-[@stynx/audit](../index.md) / STYNX_AUDIT_ARCHIVE_STORE
+[@stynx-nyx/audit](../index.md) / STYNX_AUDIT_ARCHIVE_STORE
 
 # Variable: STYNX_AUDIT_ARCHIVE_STORE
 

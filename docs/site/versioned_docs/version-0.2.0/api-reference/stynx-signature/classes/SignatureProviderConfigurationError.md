@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / SignatureProviderConfigurationError
+[@stynx-nyx/signature](../index.md) / SignatureProviderConfigurationError
 
 # Class: SignatureProviderConfigurationError
 
@@ -24,7 +24,7 @@ Defined in: [packages/signature/src/errors.ts:21](https://github.com/aarusso-nyx
 
 ##### message?
 
-`string` = `'No @stynx/signature provider configured'`
+`string` = `'No @stynx-nyx/signature provider configured'`
 
 #### Returns
 

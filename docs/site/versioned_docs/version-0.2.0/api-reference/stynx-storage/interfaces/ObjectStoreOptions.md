@@ -1,8 +1,8 @@
-[**@stynx/storage**](../index.md)
+[**@stynx-nyx/storage**](../index.md)
 
 ---
 
-[@stynx/storage](../index.md) / ObjectStoreOptions
+[@stynx-nyx/storage](../index.md) / ObjectStoreOptions
 
 # Interface: ObjectStoreOptions
 

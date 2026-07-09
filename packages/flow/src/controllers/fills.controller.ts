@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, UseGuards } from '@nestjs/common';
-import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx/auth';
-import { Audit, NoIdempotent, RateLimit } from '@stynx/backend';
-import { Idempotent } from '@stynx/idempotency';
+import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx-nyx/auth';
+import { Audit, NoIdempotent, RateLimit } from '@stynx-nyx/backend';
+import { Idempotent } from '@stynx-nyx/idempotency';
 import { FlowFormsService } from '../flow-forms.service';
 import type {
   BulkFlowAnswerWriteRequestDto,

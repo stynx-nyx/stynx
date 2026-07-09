@@ -29,7 +29,7 @@ import {
   type IdentityUserDetail,
   type IdentityUserSummary,
   type IdentityVerifyChannelsRequest,
-} from '@stynx/contracts';
+} from '@stynx-nyx/contracts';
 
 export type CognitoAdminCredentialStrategy = 'default-chain' | 'profile' | 'provided';
 

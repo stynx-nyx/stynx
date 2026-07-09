@@ -8,7 +8,7 @@
   - `../pec/src/@core/security/role-policies.ts`
 - Product-specific workflow semantics:
   - PORM-specific Flow rule catalogs, product approval semantics, and UI flows remain local to `../porm`.
-  - The generic Flow machinery has been extracted into `@stynx/flow` and `@stynx-web/angular-flow`; do not copy PORM-specific policies back into the framework packages.
+  - The generic Flow machinery has been extracted into `@stynx-nyx/flow` and `@stynx-web/angular-flow`; do not copy PORM-specific policies back into the framework packages.
   - Generic Flow form execution behavior now belongs in stynx when it is domain-neutral: typed answer controls, serialization, waiver entry, signal freshness, DML audit, and route-access E2E proof are implemented in the Flow package/reference baseline.
 - Domain entities and bounded-context services:
   - `../porm/backend/src/porm/**`

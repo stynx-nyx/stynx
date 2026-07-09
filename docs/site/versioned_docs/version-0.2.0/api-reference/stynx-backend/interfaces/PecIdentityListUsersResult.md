@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / PecIdentityListUsersResult
+[@stynx-nyx/backend](../index.md) / PecIdentityListUsersResult
 
 # Interface: PecIdentityListUsersResult
 

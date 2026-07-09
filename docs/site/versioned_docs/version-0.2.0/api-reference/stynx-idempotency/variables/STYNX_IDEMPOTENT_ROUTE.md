@@ -1,8 +1,8 @@
-[**@stynx/idempotency**](../index.md)
+[**@stynx-nyx/idempotency**](../index.md)
 
 ---
 
-[@stynx/idempotency](../index.md) / STYNX_IDEMPOTENT_ROUTE
+[@stynx-nyx/idempotency](../index.md) / STYNX_IDEMPOTENT_ROUTE
 
 # Variable: STYNX_IDEMPOTENT_ROUTE
 

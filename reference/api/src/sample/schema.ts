@@ -11,7 +11,7 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { softDeletable, tenants, users } from '@stynx/data';
+import { softDeletable, tenants, users } from '@stynx-nyx/data';
 
 export const sampleSchema = pgSchema('sample');
 

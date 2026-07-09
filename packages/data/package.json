@@ -1,5 +1,5 @@
 {
-  "name": "@stynx/data",
+  "name": "@stynx-nyx/data",
   "version": "1.0.0",
   "description": "Data access foundation for stynx",
   "main": "dist/data/src/index.js",
@@ -28,7 +28,7 @@
     "stryker": "pnpm exec stryker run stryker.conf.mjs"
   },
   "dependencies": {
-    "@stynx/core": "workspace:*",
+    "@stynx-nyx/core": "workspace:*",
     "drizzle-orm": "^0.45.2",
     "nestjs-cls": "^6.2.0",
     "pg": "^8.20.0",

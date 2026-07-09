@@ -4,7 +4,7 @@ import {
   Module,
   type NestModule,
 } from '@nestjs/common';
-import { StynxCoreModule } from '@stynx/core';
+import { StynxCoreModule } from '@stynx-nyx/core';
 import { z } from 'zod';
 import { LoggingDedupeService } from './dedupe';
 import { StynxLogger } from './logger.service';

@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { Database, type Transaction } from '@stynx/data';
-import { generateRequestId, RequestContext, RequestContextMutator } from '@stynx/core';
-import { SessionService, type SessionBundle } from '@stynx/sessions';
+import { Database, type Transaction } from '@stynx-nyx/data';
+import { generateRequestId, RequestContext, RequestContextMutator } from '@stynx-nyx/core';
+import { SessionService, type SessionBundle } from '@stynx-nyx/sessions';
 import { CognitoJwtValidator } from './cognito-jwt.validator';
 import { EffectiveHashComputer } from './effective-hash-computer';
 import { PermissionCache } from './permission-cache';

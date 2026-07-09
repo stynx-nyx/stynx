@@ -1,6 +1,6 @@
 // C-4 Session T2 — post-T2 module wiring
 //
-// Services + controllers now use @stynx/data Database + @stynx/auth's
+// Services + controllers now use @stynx-nyx/data Database + @stynx-nyx/auth's
 // canonical StynxAuthGuard + PermissionGuard pattern (per controllers).
 // Local guards/decorators/ subdirs deleted in T2 — no longer needed.
 

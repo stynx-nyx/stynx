@@ -1,8 +1,8 @@
-[**@stynx/contracts**](../index.md)
+[**@stynx-nyx/contracts**](../index.md)
 
 ---
 
-[@stynx/contracts](../index.md) / PrincipalMapper
+[@stynx-nyx/contracts](../index.md) / PrincipalMapper
 
 # Interface: PrincipalMapper
 

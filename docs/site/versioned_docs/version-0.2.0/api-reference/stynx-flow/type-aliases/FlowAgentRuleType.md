@@ -1,8 +1,8 @@
-[**@stynx/flow**](../index.md)
+[**@stynx-nyx/flow**](../index.md)
 
 ---
 
-[@stynx/flow](../index.md) / FlowAgentRuleType
+[@stynx-nyx/flow](../index.md) / FlowAgentRuleType
 
 # Type Alias: FlowAgentRuleType
 

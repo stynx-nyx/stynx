@@ -1,8 +1,8 @@
-[**@stynx/data**](../index.md)
+[**@stynx-nyx/data**](../index.md)
 
 ---
 
-[@stynx/data](../index.md) / idempotencyKeys
+[@stynx-nyx/data](../index.md) / idempotencyKeys
 
 # Variable: idempotencyKeys
 

@@ -18,7 +18,7 @@ shape package boundaries, generated diagnostics, or adoption policy.
 - [ADR-PDF-A-BOUNDARY — PDF/A Boundary](ADR-PDF-A-BOUNDARY.md)
 - [ADR-PDF-A-CONFORMANCE — PDF/A-2b Conformance for STYNX PDF Output](ADR-PDF-A-CONFORMANCE.md)
 - [ADR-PDF-A-VALIDATOR-CONTRACT — PDF/A Validator Contract](ADR-PDF-A-VALIDATOR-CONTRACT.md)
-- [ADR-XMLDSIG-CONTRACT — XMLDSig Contract for `@stynx/signature`](ADR-XMLDSIG-CONTRACT.md)
+- [ADR-XMLDSIG-CONTRACT — XMLDSig Contract for `@stynx-nyx/signature`](ADR-XMLDSIG-CONTRACT.md)
 - [ADR-DOCS-GOVERNANCE-ADOPTION — Adoption of DEVAI's docs-governance law in STYNX](ADR-DOCS-GOVERNANCE-ADOPTION.md)
 
 ## Related RFCs

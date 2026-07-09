@@ -1,8 +1,8 @@
-[**@stynx/testing**](../index.md)
+[**@stynx-nyx/testing**](../index.md)
 
 ---
 
-[@stynx/testing](../index.md) / TestAppOverrides
+[@stynx-nyx/testing](../index.md) / TestAppOverrides
 
 # Interface: TestAppOverrides
 

@@ -1,8 +1,8 @@
-**@stynx/tenancy**
+**@stynx-nyx/tenancy**
 
 ---
 
-# @stynx/tenancy
+# @stynx-nyx/tenancy
 
 Public tenancy exports for tenant context, membership cache, platform admin, and services.
 

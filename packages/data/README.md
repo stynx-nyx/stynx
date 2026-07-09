@@ -1,12 +1,12 @@
-# `@stynx/data` — Drizzle-backed DB substrate with RLS-aware request scoping + soft-delete
+# `@stynx-nyx/data` — Drizzle-backed DB substrate with RLS-aware request scoping + soft-delete
 
-`@stynx/data` is the data-access substrate every STYNX persistence-touching package consumes. It wraps Drizzle ORM with: a request-scoped DB connection that carries `tenantId` + `actorId` into Postgres via `SET LOCAL` (RLS-aware), a transactional `Database` service, pool-registry helpers for multi-connection apps, soft-delete cascade primitives per `ADR-001-soft-delete`, archive-aware query helpers, and CLI-controlled migration runners.
+`@stynx-nyx/data` is the data-access substrate every STYNX persistence-touching package consumes. It wraps Drizzle ORM with: a request-scoped DB connection that carries `tenantId` + `actorId` into Postgres via `SET LOCAL` (RLS-aware), a transactional `Database` service, pool-registry helpers for multi-connection apps, soft-delete cascade primitives per `ADR-001-soft-delete`, archive-aware query helpers, and CLI-controlled migration runners.
 
 ## Purpose
 
-Multi-tenant Postgres apps need RLS policies pinned to a request-scoped session context, plus consistent soft-delete (with archive cascades) and a predictable migration runner. Doing each of these by hand is error-prone — request-context drift causes RLS bypass; soft-delete done per-table leaks deleted rows. `@stynx/data` centralises it.
+Multi-tenant Postgres apps need RLS policies pinned to a request-scoped session context, plus consistent soft-delete (with archive cascades) and a predictable migration runner. Doing each of these by hand is error-prone — request-context drift causes RLS bypass; soft-delete done per-table leaks deleted rows. `@stynx-nyx/data` centralises it.
 
-You reach for `@stynx/data` after `@stynx/core` whenever the app talks to Postgres. The default Postgres impl is paired with `DbContextApplier` from `@stynx/contracts`; custom dialects implement a different applier.
+You reach for `@stynx-nyx/data` after `@stynx-nyx/core` whenever the app talks to Postgres. The default Postgres impl is paired with `DbContextApplier` from `@stynx-nyx/contracts`; custom dialects implement a different applier.
 
 What it does NOT do: it doesn't define your schema (Drizzle's `pgTable()` does; you author it). It doesn't enforce RLS policies (your SQL migrations create them; this package PROJECTS the session context they read). It doesn't include a query builder beyond Drizzle.
 
@@ -17,15 +17,15 @@ Backend developers building any STYNX app with Postgres persistence.
 ## Install
 
 ```bash
-pnpm add @stynx/data drizzle-orm pg
+pnpm add @stynx-nyx/data drizzle-orm pg
 ```
 
-**Peer dependencies:** `@nestjs/common` `^11`, `@stynx/core` `^1`, `@stynx/contracts` `^1`, `drizzle-orm` `^0.34`, `pg` `^8`.
+**Peer dependencies:** `@nestjs/common` `^11`, `@stynx-nyx/core` `^1`, `@stynx-nyx/contracts` `^1`, `drizzle-orm` `^0.34`, `pg` `^8`.
 
 ## Quick start
 
 ```ts
-import { StynxDataModule } from '@stynx/data';
+import { StynxDataModule } from '@stynx-nyx/data';
 import * as schema from './schema';
 
 StynxDataModule.forRoot({
@@ -35,7 +35,7 @@ StynxDataModule.forRoot({
 ```
 
 ```ts
-import { Database } from '@stynx/data';
+import { Database } from '@stynx-nyx/data';
 
 @Injectable()
 export class OrdersRepo {
@@ -64,7 +64,7 @@ export class OrdersRepo {
 | `Transaction`                                                   | Helper for explicit transactions across multiple ops; nests cleanly inside `Database`.                |
 | `StynxPoolRegistry`                                             | Multi-pool registry; useful for read-replica routing or per-tenant connection pinning.                |
 | `StynxPgClient`                                                 | Lower-level Postgres client; exposed for tests + CLI utilities.                                       |
-| `PgSessionDbContextApplier` (re-exported from `@stynx/backend`) | The default `DbContextApplier<PostgresClient>` — `SET LOCAL` for RLS.                                 |
+| `PgSessionDbContextApplier` (re-exported from `@stynx-nyx/backend`) | The default `DbContextApplier<PostgresClient>` — `SET LOCAL` for RLS.                                 |
 
 ### Functions
 
@@ -89,7 +89,7 @@ export class OrdersRepo {
 | `StynxDataOptions`       | `forRoot()` options.                                       |
 | `StynxDrizzleDatabase`   | Typed Drizzle DB instance for your schema.                 |
 | `StynxPgPoolOptions`     | Pool options.                                              |
-| `SystemExecutionContext` | Cited from `@stynx/core`; marks system-context operations. |
+| `SystemExecutionContext` | Cited from `@stynx-nyx/core`; marks system-context operations. |
 
 ## Configuration
 
@@ -129,25 +129,25 @@ async chargeAndAudit(input: ChargeInput) {
 ### Example 3 — archive-aware query
 
 ```ts
-import { archiveWhereActive } from '@stynx/data';
+import { archiveWhereActive } from '@stynx-nyx/data';
 
 return this.db.select().from(schema.orders).where(archiveWhereActive(schema.orders));
 ```
 
 ## Common pitfalls
 
-- **Querying outside a request frame** — `RequestContext` is missing, so `SET LOCAL` doesn't fire and RLS may reject (or worse: silently leak across tenants). Use `SystemContext` from `@stynx/core` for cron/queue contexts.
+- **Querying outside a request frame** — `RequestContext` is missing, so `SET LOCAL` doesn't fire and RLS may reject (or worse: silently leak across tenants). Use `SystemContext` from `@stynx-nyx/core` for cron/queue contexts.
 - **Forgetting `cascadeSoftDelete`** when soft-deleting a parent — children remain "alive" in the DB and leak in subsequent queries.
 - **Multi-pool registry with tenant-pinning** — each tenant's queries go through a single pool; a hot tenant can saturate its pool while others sit idle. Monitor per-pool pressure.
 - **Raw SQL bypassing `Database`** — bypasses `SET LOCAL`, so RLS sees no context. Always go through `db.execute()` or higher.
 
 ## Related packages
 
-- [`@stynx/core`](/docs/packages/core/) — provides `RequestContext` the applier reads.
-- [`@stynx/contracts`](/docs/packages/contracts/) — defines `DbContextApplier` + `DbSessionContext` interfaces.
-- [`@stynx/tenancy`](/docs/packages/tenancy/) — populates `tenantId` the applier projects.
-- [`@stynx/idempotency`](/docs/packages/idempotency/) — Postgres store shares this package's connection for transactional consistency.
-- [`backend/db-context`](/docs/packages/backend/db-context/) — `@stynx/backend` submodule that wraps this package.
+- [`@stynx-nyx/core`](/docs/packages/core/) — provides `RequestContext` the applier reads.
+- [`@stynx-nyx/contracts`](/docs/packages/contracts/) — defines `DbContextApplier` + `DbSessionContext` interfaces.
+- [`@stynx-nyx/tenancy`](/docs/packages/tenancy/) — populates `tenantId` the applier projects.
+- [`@stynx-nyx/idempotency`](/docs/packages/idempotency/) — Postgres store shares this package's connection for transactional consistency.
+- [`backend/db-context`](/docs/packages/backend/db-context/) — `@stynx-nyx/backend` submodule that wraps this package.
 - [`@stynx-web/angular-trash`](/docs/packages-web/angular-trash/) — Angular UI for soft-delete recovery (consumes archive primitives from this package).
 
 ## TypeDoc reference

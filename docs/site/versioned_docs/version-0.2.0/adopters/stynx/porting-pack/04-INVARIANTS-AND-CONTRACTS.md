@@ -26,7 +26,7 @@ manager, which sets `app.tenant_id`, `app.actor_id`, `app.request_id`,
 connection silently disables tenant isolation.
 
 **Detection:** every DB call routes through `Database.tx(...)` from
-`@stynx/data` (`packages/data/src/database.ts`). The runtime check
+`@stynx-nyx/data` (`packages/data/src/database.ts`). The runtime check
 is `TenantContextMissingError` raised at `tx()` entry. The lint
 companion `[GAP — verify ESLint `no-restricted-imports`rule in`tools/eslint-config/`blocks`pg`and`pg-pool`outside`packages/data/`and`packages/cli/`]`.
 
@@ -35,9 +35,9 @@ companion `[GAP — verify ESLint `no-restricted-imports`rule in`tools/eslint-co
 | Grep pattern                                        | Rewrite as                                           |
 | --------------------------------------------------- | ---------------------------------------------------- |
 | `from ['"]pg['"]`                                   | Use `Database.tx(async trx =&gt; &#123; ... &#125;)` |
-| `new Pool(`                                         | Inject `Database` from `@stynx/data`                 |
+| `new Pool(`                                         | Inject `Database` from `@stynx-nyx/data`                 |
 | `client\.query\(` (where `client` is a pg `Client`) | `trx.execute(sql\`...\`)` or Drizzle query builder   |
-| `pgPromise(`                                        | replace with `@stynx/data`                           |
+| `pgPromise(`                                        | replace with `@stynx-nyx/data`                           |
 
 ### I2 — No query outside a request context
 
@@ -62,9 +62,9 @@ silently.
 
 ### I3 — No direct S3 client
 
-**Statement:** All object operations go through `@stynx/storage`.
+**Statement:** All object operations go through `@stynx-nyx/storage`.
 
-**Why it exists:** `@stynx/storage` enforces tenant prefix, KMS
+**Why it exists:** `@stynx-nyx/storage` enforces tenant prefix, KMS
 envelope encryption, and presigned-URL tenant-claim checks.
 
 **Detection:** grep `@aws-sdk/client-s3` outside
@@ -75,9 +75,9 @@ envelope encryption, and presigned-URL tenant-claim checks.
 
 | Pattern                                                   | Rewrite                                           |
 | --------------------------------------------------------- | ------------------------------------------------- |
-| `import &#123; S3Client &#125; from '@aws-sdk/client-s3'` | Inject `ObjectStoreService` from `@stynx/storage` |
+| `import &#123; S3Client &#125; from '@aws-sdk/client-s3'` | Inject `ObjectStoreService` from `@stynx-nyx/storage` |
 | `getSignedUrl(...)` directly                              | `documentsService.getPresignedUploadUrl(...)`     |
-| `multer-s3` upload handlers                               | Replace with the `@stynx/storage` upload flow     |
+| `multer-s3` upload handlers                               | Replace with the `@stynx-nyx/storage` upload flow     |
 
 ### I4 — Every HTTP route has a permission
 
@@ -101,7 +101,7 @@ grep -rE '@(Get|Post|Put|Delete|Patch|All)\(' apps/<your-app>/src --include='*.c
 | Pattern                                                          | Rewrite                                                             |
 | ---------------------------------------------------------------- | ------------------------------------------------------------------- |
 | Controller method with `@Get(':id')` and no permission decorator | Add `@Permission('&lt;resource&gt;:read:*')`                        |
-| `@UseGuards(AuthGuard)` only                                     | Replace with `@stynx/auth` guards (auto-wired by `StynxAuthModule`) |
+| `@UseGuards(AuthGuard)` only                                     | Replace with `@stynx-nyx/auth` guards (auto-wired by `StynxAuthModule`) |
 | Health-style routes meant to be public                           | Add `@Public()` explicitly                                          |
 
 ### I5 — Every tenant-scoped table has `tenant_id` and an RLS policy
@@ -201,14 +201,14 @@ mirror atomically; the migration linter rejects:
 - Rate-limited mutations carry `@RateLimit(&#123; bucket, scope &#125;)`.
 - `@ReadOnly()` switches the route to `stynx_reader`.
 - Errors bubble to the global filter wired by
-  `@stynx/backend`'s `StynxPlatformPipelineModule`
+  `@stynx-nyx/backend`'s `StynxPlatformPipelineModule`
   (`reference/api/src/app.module.ts:13`).
 
 ### Database access contract
 
 - All app-level access via `Database.tx(...)` (or
   `Database.withSystemContext` / `Database.withReplica`).
-- No deep imports from `@stynx/data/internal/...` in app code.
+- No deep imports from `@stynx-nyx/data/internal/...` in app code.
 - No raw `pg.Pool`. No other ORM.
 - Application code never imports `archive.*` Drizzle types — use
   `withDeleted()` / `onlyDeleted()`.
@@ -232,7 +232,7 @@ mirror atomically; the migration linter rejects:
 
 ### LGPD contract
 
-- PII map populated in `@stynx/privacy`; entries name strategy
+- PII map populated in `@stynx-nyx/privacy`; entries name strategy
   (`nullify`, `hash_with_salt`, `tombstone_row`, `delete_row`).
 - Erasure pipeline processes both live and archive in one call.
 - Audit row written with `tags = &#123; lgpd_erasure: true, strategy &#125;`.
@@ -242,10 +242,10 @@ mirror atomically; the migration linter rejects:
 ## Detection summary
 
 ```sh
-# I1: raw pg outside @stynx/data
+# I1: raw pg outside @stynx-nyx/data
 rg -nE "from ['\"]pg['\"]|new Pool\(" --type ts | rg -v 'packages/data|packages/cli|test'
 
-# I3: direct S3 outside @stynx/storage
+# I3: direct S3 outside @stynx-nyx/storage
 rg -n "@aws-sdk/client-s3" --type ts | rg -v 'packages/storage'
 
 # I5: tables without RLS (in app migrations)

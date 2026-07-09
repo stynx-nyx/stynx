@@ -1,8 +1,8 @@
-[**@stynx/tenancy**](../index.md)
+[**@stynx-nyx/tenancy**](../index.md)
 
 ---
 
-[@stynx/tenancy](../index.md) / STYNX_TENANT_INVITE_SENDER
+[@stynx-nyx/tenancy](../index.md) / STYNX_TENANT_INVITE_SENDER
 
 # Variable: STYNX_TENANT_INVITE_SENDER
 

@@ -1,5 +1,5 @@
 import { type DynamicModule, Module } from '@nestjs/common';
-import { StynxCoreModule } from '@stynx/core';
+import { StynxCoreModule } from '@stynx-nyx/core';
 import { z } from 'zod';
 import { SessionJwksController } from './jwks.controller';
 import { SessionJwtSigningService } from './jwt-signing.service';

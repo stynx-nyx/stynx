@@ -1,8 +1,8 @@
-[**@stynx/health**](../index.md)
+[**@stynx-nyx/health**](../index.md)
 
 ---
 
-[@stynx/health](../index.md) / ReadinessEntry
+[@stynx-nyx/health](../index.md) / ReadinessEntry
 
 # Type Alias: ReadinessEntry
 

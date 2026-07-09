@@ -1,6 +1,6 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { Database, type Transaction } from '@stynx/data';
+import { Database, type Transaction } from '@stynx-nyx/data';
 import { MembershipAccessCache } from './membership-cache';
 import {
   STYNX_TENANT_MEMBERSHIP_CACHE,

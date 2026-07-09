@@ -22,12 +22,12 @@ const stynxPackages = [
   'testing',
 ];
 const stynxAlias = Object.fromEntries(
-  stynxPackages.map((pkg) => [`@stynx/${pkg}`, resolve(__dirname, `../../packages/${pkg}/src/index.ts`)]),
+  stynxPackages.map((pkg) => [`@stynx-nyx/${pkg}`, resolve(__dirname, `../../packages/${pkg}/src/index.ts`)]),
 );
 
 export default createVitestConfig({
   packageDir: __dirname,
-  packageName: '@stynx/reference-api',
+  packageName: '@stynx-nyx/reference-api',
   include: ['test/e2e/**/*.e2e.ts'],
   coverageThreshold: { statements: 0, branches: 0, functions: 0, lines: 0 },
   alias: stynxAlias,

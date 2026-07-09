@@ -9,7 +9,7 @@ Adopt `@stech/stynx-*` incrementally without breaking current request/context se
 1. Install packages:
 
 - `@stech/stynx-contracts`
-- `@stynx/backend`
+- `@stynx-nyx/backend`
 - adapter packages needed by app
 
 2. Register modules in app root module using `forRoot(...)`.
@@ -25,7 +25,7 @@ Adopt `@stech/stynx-*` incrementally without breaking current request/context se
 - continue supporting `req.user` consumers
 - continue supporting `request.actor` consumers
 
-`AuthContextGuard` in `@stynx/backend` already exposes both shapes.
+`AuthContextGuard` in `@stynx-nyx/backend` already exposes both shapes.
 
 ## `pec` Adoption Sequence
 
@@ -47,12 +47,12 @@ Adopt `@stech/stynx-*` incrementally without breaking current request/context se
 - which wires `RateLimitGuard` + `SlaMonitorInterceptor` + `IdempotencyInterceptor` as APP providers.
 
 5. For middleware-style tenant handling parity with `../pec/src/@core/middleware/tenant.middleware.ts`, use `TenantLifecycleMiddleware` (or `createTenantLifecycleMiddleware(...)`) in Nest middleware consumer.
-6. Swap audit interceptor/decorator to `@stynx/backend` + SQL sink mode `audit_write_function` matching `../pec/src/@core/services/audit.service.ts`.
+6. Swap audit interceptor/decorator to `@stynx-nyx/backend` + SQL sink mode `audit_write_function` matching `../pec/src/@core/services/audit.service.ts`.
 7. Migrate storage presign service via `S3ObjectStorageService` while retaining `pec.documents` service local.
 8. Replace direct Cognito admin SDK usage in `../pec/src/admin/users/cognito-users.service.ts` with:
 
 - provider adapter: `@stech/stynx-auth-cognito-admin`
-- compatibility facade: `PecIdentityAdminFacade` (`@stynx/backend`)
+- compatibility facade: `PecIdentityAdminFacade` (`@stynx-nyx/backend`)
 
 ## `porm` Adoption Sequence
 
@@ -65,7 +65,7 @@ Adopt `@stech/stynx-*` incrementally without breaking current request/context se
 - provider-generic delegate backed by `@stech/stynx-auth-cognito-admin`
 - PORM-local sync/meta service for non-generic methods.
 
-6. Use `PormIdentityAdminFacade` (`@stynx/backend`) for existing service method/response compatibility (`list/get/update/verify/reset/sync`) while keeping PORM-specific local sync/meta implementation as injected adapters.
+6. Use `PormIdentityAdminFacade` (`@stynx-nyx/backend`) for existing service method/response compatibility (`list/get/update/verify/reset/sync`) while keeping PORM-specific local sync/meta implementation as injected adapters.
 7. For concrete local sync/meta convergence, use:
 
 - `PgIdentityLocalSyncAdapter` for provider-to-local-db sync (`syncToLocal`, `syncUser`, `listGroupsWithMetaByUserId`)

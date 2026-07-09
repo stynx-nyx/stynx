@@ -35,7 +35,7 @@ architecture, and reference-app documentation.
 
 ## Package Terms
 
-- **Backend package** — an installable `@stynx/*` package under `packages/`
+- **Backend package** — an installable `@stynx-nyx/*` package under `packages/`
   that exposes NestJS modules, services, adapters, contracts, CLIs, or testing
   utilities.
 - **Web package** — an installable `@stynx-web/*` package under

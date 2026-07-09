@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / TsaOptions
+[@stynx-nyx/signature](../index.md) / TsaOptions
 
 # Interface: TsaOptions
 

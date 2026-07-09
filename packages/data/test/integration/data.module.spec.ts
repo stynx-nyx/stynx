@@ -1,5 +1,5 @@
 import { Test, type TestingModule } from '@nestjs/testing';
-import { RequestContextMutator, SystemContextRequiredError } from '@stynx/core';
+import { RequestContextMutator, SystemContextRequiredError } from '@stynx-nyx/core';
 import { ActorContextMissingError, ReadOnlyViolationError } from '../../src/errors';
 import { Database } from '../../src/database';
 import { StynxDataModule } from '../../src/data.module';

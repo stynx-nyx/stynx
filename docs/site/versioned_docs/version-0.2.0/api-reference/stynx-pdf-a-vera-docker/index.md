@@ -1,8 +1,8 @@
-**@stynx/pdf-a-vera-docker**
+**@stynx-nyx/pdf-a-vera-docker**
 
 ---
 
-# @stynx/pdf-a-vera-docker
+# @stynx-nyx/pdf-a-vera-docker
 
 ## Classes
 

@@ -1,10 +1,10 @@
-# `@stynx/i18n` — server-side translation, locale resolution, ICU MessageFormat
+# `@stynx-nyx/i18n` — server-side translation, locale resolution, ICU MessageFormat
 
-`@stynx/i18n` is STYNX's server-side internationalization substrate. It resolves the request's locale (from header / actor preference / fallback chain), looks up translations from a catalog, formats them with ICU MessageFormat (plurals, gender, nested), and translates error envelopes so `StynxError` responses come back in the caller's language. Paired with [`@stynx-web/angular-i18n`](/docs/packages-web/angular-i18n/) for the frontend.
+`@stynx-nyx/i18n` is STYNX's server-side internationalization substrate. It resolves the request's locale (from header / actor preference / fallback chain), looks up translations from a catalog, formats them with ICU MessageFormat (plurals, gender, nested), and translates error envelopes so `StynxError` responses come back in the caller's language. Paired with [`@stynx-web/angular-i18n`](/docs/packages-web/angular-i18n/) for the frontend.
 
 ## Purpose
 
-Multi-locale apps need consistent server-side translation: localized error messages, localized notification text, locale resolved per request rather than per deployment. Doing this ad-hoc means error messages leak in the wrong language. `@stynx/i18n` centralises catalog lookup + locale resolution + ICU formatting.
+Multi-locale apps need consistent server-side translation: localized error messages, localized notification text, locale resolved per request rather than per deployment. Doing this ad-hoc means error messages leak in the wrong language. `@stynx-nyx/i18n` centralises catalog lookup + locale resolution + ICU formatting.
 
 You reach for it whenever your app serves users in more than one language, or when you need localized error envelopes.
 
@@ -17,15 +17,15 @@ Backend developers building multi-locale apps.
 ## Install
 
 ```bash
-pnpm add @stynx/i18n
+pnpm add @stynx-nyx/i18n
 ```
 
-**Peer dependencies:** `@nestjs/common` `^11`, `@stynx/core` `^1`, `intl-messageformat` `^10`.
+**Peer dependencies:** `@nestjs/common` `^11`, `@stynx-nyx/core` `^1`, `intl-messageformat` `^10`.
 
 ## Quick start
 
 ```ts
-import { StynxI18nModule } from '@stynx/i18n';
+import { StynxI18nModule } from '@stynx-nyx/i18n';
 
 StynxI18nModule.forRoot({
   defaultLocale: 'pt-BR',
@@ -35,7 +35,7 @@ StynxI18nModule.forRoot({
 ```
 
 ```ts
-import { TranslationService } from '@stynx/i18n';
+import { TranslationService } from '@stynx-nyx/i18n';
 
 @Injectable()
 export class NotificationService {
@@ -133,7 +133,7 @@ StynxI18nModule.forRoot({
 
 ## Related packages
 
-- [`@stynx/core`](/docs/packages/core/) — provides `RequestContext` where the resolved locale is written.
+- [`@stynx-nyx/core`](/docs/packages/core/) — provides `RequestContext` where the resolved locale is written.
 - [`@stynx-web/angular-i18n`](/docs/packages-web/angular-i18n/) — the Angular pair: ICU in templates + catalog loader.
 - [STYNX framework — ADR-FE-ICU-i18n-0002](/docs/meta/adr/ADR-FE-ICU-i18n-0002-package-catalogs-and-icu/) — the catalog + ICU decision.
 

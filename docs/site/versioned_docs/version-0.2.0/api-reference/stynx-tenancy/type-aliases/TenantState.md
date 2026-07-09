@@ -1,8 +1,8 @@
-[**@stynx/tenancy**](../index.md)
+[**@stynx-nyx/tenancy**](../index.md)
 
 ---
 
-[@stynx/tenancy](../index.md) / TenantState
+[@stynx-nyx/tenancy](../index.md) / TenantState
 
 # Type Alias: TenantState
 

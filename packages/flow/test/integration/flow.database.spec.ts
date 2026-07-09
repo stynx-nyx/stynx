@@ -1,5 +1,5 @@
 import { Test, type TestingModule } from '@nestjs/testing';
-import { StynxDataModule } from '@stynx/data';
+import { StynxDataModule } from '@stynx-nyx/data';
 import type { Client } from 'pg';
 import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
 
@@ -525,7 +525,7 @@ describe('Flow database and runtime integration', () => {
 
   beforeAll(async () => {
     testDatabase = await createPostgresTestDatabase('stynx_flow');
-    moduleRef = await createMigratedModule(testDatabase.connectionString('@stynx/flow:owner'));
+    moduleRef = await createMigratedModule(testDatabase.connectionString('@stynx-nyx/flow:owner'));
     adminClient = await testDatabase.connectAsAdmin();
     await seedTenantAndUser(adminClient, tenantA, actorA, 'flow-tenant-a');
     await seedTenantAndUser(adminClient, tenantB, actorB, 'flow-tenant-b');

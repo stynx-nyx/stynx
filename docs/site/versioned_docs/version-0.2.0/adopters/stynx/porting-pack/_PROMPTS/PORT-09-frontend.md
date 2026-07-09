@@ -36,7 +36,7 @@ explicitly chooses Angular.
 
 - Importing the client.
 - Headers to inject: `Authorization`, `X-Tenant-Id`, `X-Request-Id`.
-- Error shape (matches `@stynx/data` errors via API mapping).
+- Error shape (matches `@stynx-nyx/data` errors via API mapping).
 - 401 → refresh flow.
 
 ## Angular adoption

@@ -1,5 +1,5 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import type { Principal } from '@stynx/contracts';
+import type { Principal } from '@stynx-nyx/contracts';
 import type { RequestLike } from '../common/request-context';
 import { getPrincipalFromRequest } from '../common/request-context';
 

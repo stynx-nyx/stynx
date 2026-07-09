@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / STYNX_IDENTITY_LOCAL_SYNC_ADAPTER
+[@stynx-nyx/backend](../index.md) / STYNX_IDENTITY_LOCAL_SYNC_ADAPTER
 
 # Variable: STYNX_IDENTITY_LOCAL_SYNC_ADAPTER
 

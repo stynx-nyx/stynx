@@ -1,5 +1,5 @@
 import { type DynamicModule, Module } from '@nestjs/common';
-import { StynxCoreModule } from '@stynx/core';
+import { StynxCoreModule } from '@stynx-nyx/core';
 import { z } from 'zod';
 import { PrivacyController } from './privacy.controller';
 import { PrivacyObjectStoreService } from './privacy-object-store.service';

@@ -1,8 +1,8 @@
-[**@stynx/privacy**](../index.md)
+[**@stynx-nyx/privacy**](../index.md)
 
 ---
 
-[@stynx/privacy](../index.md) / PrivacyCognitoAdmin
+[@stynx-nyx/privacy](../index.md) / PrivacyCognitoAdmin
 
 # Interface: PrivacyCognitoAdmin
 

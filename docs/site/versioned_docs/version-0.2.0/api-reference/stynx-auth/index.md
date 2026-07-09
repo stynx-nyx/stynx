@@ -1,8 +1,8 @@
-**@stynx/auth**
+**@stynx-nyx/auth**
 
 ---
 
-# @stynx/auth
+# @stynx-nyx/auth
 
 Public authentication, authorization, permission-cache, and Cognito exports.
 

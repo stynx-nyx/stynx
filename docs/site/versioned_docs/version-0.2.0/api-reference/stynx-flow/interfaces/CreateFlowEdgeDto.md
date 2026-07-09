@@ -1,8 +1,8 @@
-[**@stynx/flow**](../index.md)
+[**@stynx-nyx/flow**](../index.md)
 
 ---
 
-[@stynx/flow](../index.md) / CreateFlowEdgeDto
+[@stynx-nyx/flow](../index.md) / CreateFlowEdgeDto
 
 # Interface: CreateFlowEdgeDto
 

@@ -137,13 +137,13 @@ import {
   ReadOnly,
   StynxAuthGuard,
   StynxAuthModule,
-} from '@stynx/auth';
-import { StynxDataModule } from '@stynx/data';
-import { StynxTenancyModule } from '@stynx/tenancy';
-import { StynxLoggingModule } from '@stynx/logging';
-import { Audit, StynxPlatformPipelineModule } from '@stynx/backend';
-import { Idempotent } from '@stynx/idempotency';
-import { RateLimit } from '@stynx/ratelimit';
+} from '@stynx-nyx/auth';
+import { StynxDataModule } from '@stynx-nyx/data';
+import { StynxTenancyModule } from '@stynx-nyx/tenancy';
+import { StynxLoggingModule } from '@stynx-nyx/logging';
+import { Audit, StynxPlatformPipelineModule } from '@stynx-nyx/backend';
+import { Idempotent } from '@stynx-nyx/idempotency';
+import { RateLimit } from '@stynx-nyx/ratelimit';
 import { InvoiceService } from './invoice.service';
 import type { CreateInvoiceDto, ListInvoiceQuery, UpdateInvoiceDto } from './dto';
 
@@ -254,7 +254,7 @@ matching the shape used by `reference/api/src/app.module.ts`.]`
 ## Annotations — what changed and why
 
 1. **JWT verification moved out of the controller.** `StynxAuthGuard`
-   from `@stynx/auth` validates the bearer token, loads the session, and
+   from `@stynx-nyx/auth` validates the bearer token, loads the session, and
    exposes the principal to the request pipeline. This follows
    [`07-AUTH-AND-TENANCY-PATTERNS.md`](../07-AUTH-AND-TENANCY-PATTERNS.md)
    "replace JWT middleware with `StynxAuthGuard`".
@@ -268,16 +268,16 @@ matching the shape used by `reference/api/src/app.module.ts`.]`
    [`16-SPEC-EXCERPTS/invariants.md`](../16-SPEC-EXCERPTS/invariants.md).
 
 4. **Mutations are idempotent by default.** `@Idempotent()` from
-   `@stynx/idempotency` handles the `Idempotency-Key` replay contract; the
+   `@stynx-nyx/idempotency` handles the `Idempotency-Key` replay contract; the
    service no longer stores or compares keys manually.
 
 5. **Rate limits use route metadata.** `@RateLimit(...)` from
-   `@stynx/ratelimit` is resolved by the platform pipeline and can be backed
+   `@stynx-nyx/ratelimit` is resolved by the platform pipeline and can be backed
    by Redis or PostgreSQL, as cataloged in
    [`05-PACKAGE-CATALOG.md`](../05-PACKAGE-CATALOG.md).
 
 6. **Audit action labels are explicit.** Row-level audit is DB-triggered,
-   but `@Audit(...)` from `@stynx/backend` supplies stable route/action
+   but `@Audit(...)` from `@stynx-nyx/backend` supplies stable route/action
    names for forensics. See
    [`16-SPEC-EXCERPTS/audit-model.md`](../16-SPEC-EXCERPTS/audit-model.md).
 
@@ -290,9 +290,9 @@ matching the shape used by `reference/api/src/app.module.ts`.]`
 
 | Symbol                                                                           | Package              | Verified source                     |
 | -------------------------------------------------------------------------------- | -------------------- | ----------------------------------- |
-| `Permission`, `ReadOnly`, `StynxAuthGuard`, `PermissionGuard`, `StynxAuthModule` | `@stynx/auth`        | `packages/auth/src/index.ts`        |
-| `StynxDataModule`                                                                | `@stynx/data`        | `packages/data/src/index.ts`        |
-| `StynxTenancyModule`                                                             | `@stynx/tenancy`     | catalog 05 §`@stynx/tenancy`        |
-| `Audit`, `StynxPlatformPipelineModule`                                           | `@stynx/backend`     | `packages/backend/src/index.ts`     |
-| `Idempotent`                                                                     | `@stynx/idempotency` | `packages/idempotency/src/index.ts` |
-| `RateLimit`                                                                      | `@stynx/ratelimit`   | `packages/ratelimit/src/index.ts`   |
+| `Permission`, `ReadOnly`, `StynxAuthGuard`, `PermissionGuard`, `StynxAuthModule` | `@stynx-nyx/auth`        | `packages/auth/src/index.ts`        |
+| `StynxDataModule`                                                                | `@stynx-nyx/data`        | `packages/data/src/index.ts`        |
+| `StynxTenancyModule`                                                             | `@stynx-nyx/tenancy`     | catalog 05 §`@stynx-nyx/tenancy`        |
+| `Audit`, `StynxPlatformPipelineModule`                                           | `@stynx-nyx/backend`     | `packages/backend/src/index.ts`     |
+| `Idempotent`                                                                     | `@stynx-nyx/idempotency` | `packages/idempotency/src/index.ts` |
+| `RateLimit`                                                                      | `@stynx-nyx/ratelimit`   | `packages/ratelimit/src/index.ts`   |

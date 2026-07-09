@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / RevocationSource
+[@stynx-nyx/signature](../index.md) / RevocationSource
 
 # Type Alias: RevocationSource
 

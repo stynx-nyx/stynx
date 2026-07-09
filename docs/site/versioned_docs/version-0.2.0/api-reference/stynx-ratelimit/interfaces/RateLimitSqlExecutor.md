@@ -1,8 +1,8 @@
-[**@stynx/ratelimit**](../index.md)
+[**@stynx-nyx/ratelimit**](../index.md)
 
 ---
 
-[@stynx/ratelimit](../index.md) / RateLimitSqlExecutor
+[@stynx-nyx/ratelimit](../index.md) / RateLimitSqlExecutor
 
 # Interface: RateLimitSqlExecutor
 

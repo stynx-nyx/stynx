@@ -61,15 +61,15 @@ NestJS (or migration to NestJS in flight).
 
 **Steps:**
 
-1. Add packages: `@stynx/core`, `@stynx/logging`, `@stynx/health`,
-   `@stynx/backend` (composition module — see
+1. Add packages: `@stynx-nyx/core`, `@stynx-nyx/logging`, `@stynx-nyx/health`,
+   `@stynx-nyx/backend` (composition module — see
    [`05-PACKAGE-CATALOG.md`](05-PACKAGE-CATALOG.md)).
 2. In `app.module.ts` import:
    - `StynxCoreModule.forRoot(&#123;...&#125;)`
    - `StynxLoggingModule.forRoot(&#123;...&#125;)`
    - `StynxHealthModule.forRoot(&#123;...&#125;)`
    - `StynxPlatformPipelineModule.forRoot(&#123;...&#125;)` (from
-     `@stynx/backend`)
+     `@stynx-nyx/backend`)
 3. Wire the global `StynxErrorFilter` and `RequestContextInterceptor`.
 4. Provision Node 24 + pnpm 9.15 + Postgres locally per
    [`10-INFRASTRUCTURE-REQUIREMENTS.md`](10-INFRASTRUCTURE-REQUIREMENTS.md).
@@ -92,14 +92,14 @@ return 200; CI runs `pnpm -w typecheck &amp;&amp; pnpm -w lint &amp;&amp; pnpm -
 
 ## Phase 2 — Data Layer
 
-**Goal:** all DB access flows through `@stynx/data`; tenant-scoped
+**Goal:** all DB access flows through `@stynx-nyx/data`; tenant-scoped
 tables have RLS + archive mirrors.
 
 **Entry criteria:** Phase 1 complete; Postgres available.
 
 **Steps:**
 
-1. Add `@stynx/data` and run platform migrations:
+1. Add `@stynx-nyx/data` and run platform migrations:
    ```sh
    node packages/cli/dist/main.js migrate up
    ```
@@ -122,14 +122,14 @@ tables have RLS + archive mirrors.
    RLS handles it now.
 7. Run the migration linter:
    ```sh
-   pnpm --filter @stynx/migration-linter exec migration-linter \
+   pnpm --filter @stynx-nyx/migration-linter exec migration-linter \
      apps/<your-app>/migrations
    ```
 
 **Verify:**
 
 - Integration tests pass.
-- `expectRlsLeakageDetection` matcher from `@stynx/testing`
+- `expectRlsLeakageDetection` matcher from `@stynx-nyx/testing`
   reports no leaks.
 - Migration linter exits 0 (caveat: audit FIND-004 — re-verify
   upstream).
@@ -153,7 +153,7 @@ per [`10`](10-INFRASTRUCTURE-REQUIREMENTS.md) (out of band).
 
 **Steps:**
 
-1. Add `@stynx/auth`, `@stynx/tenancy`, `@stynx/sessions`.
+1. Add `@stynx-nyx/auth`, `@stynx-nyx/tenancy`, `@stynx-nyx/sessions`.
 2. Wire modules in `app.module.ts` per
    [`07-AUTH-AND-TENANCY-PATTERNS.md`](07-AUTH-AND-TENANCY-PATTERNS.md)
    Pattern A.
@@ -185,15 +185,15 @@ throttling.
 
 ## Phase 4 — Audit, Storage, Rate-limit, Idempotency
 
-**Goal:** the four cross-cutting modules wired; `@stynx/storage`
+**Goal:** the four cross-cutting modules wired; `@stynx-nyx/storage`
 replaces ad-hoc S3 code.
 
 **Entry criteria:** Phase 3 complete.
 
 **Steps:**
 
-1. Add `@stynx/audit`, `@stynx/storage`, `@stynx/ratelimit`,
-   `@stynx/idempotency`. Wire in `app.module.ts`.
+1. Add `@stynx-nyx/audit`, `@stynx-nyx/storage`, `@stynx-nyx/ratelimit`,
+   `@stynx-nyx/idempotency`. Wire in `app.module.ts`.
 2. Decorate routes:
    - Every mutation gets `@Audit(&#123; action, entity &#125;)` or
      `@NoAudit('reason')` (I6).
@@ -201,7 +201,7 @@ replaces ad-hoc S3 code.
      `@Idempotent('Idempotency-Key')`.
    - Public/expensive routes get `@RateLimit(&#123; bucket, scope, cost &#125;)`.
 3. Replace ad-hoc S3 code (`@aws-sdk/client-s3` direct usage) with
-   `@stynx/storage`'s `ObjectStoreService` and `DocumentsService`
+   `@stynx-nyx/storage`'s `ObjectStoreService` and `DocumentsService`
    (I3).
 
 **Verify:**
@@ -224,7 +224,7 @@ i18n catalogs wired.
 
 **Steps:**
 
-1. Add `@stynx/privacy`, `@stynx/i18n`.
+1. Add `@stynx-nyx/privacy`, `@stynx-nyx/i18n`.
 2. Populate `core.pii_map` for every PII column. Use
    [`12-DECISION-TREES.md`](12-DECISION-TREES.md) Tree 6 to pick
    strategies.

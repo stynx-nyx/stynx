@@ -1,6 +1,6 @@
-import { generateRequestId } from '@stynx/core';
-import { createStynxFixtures, createTestApp, type TestAppContext } from '@stynx/testing';
-import { StynxTenancyModule } from '@stynx/tenancy';
+import { generateRequestId } from '@stynx-nyx/core';
+import { createStynxFixtures, createTestApp, type TestAppContext } from '@stynx-nyx/testing';
+import { StynxTenancyModule } from '@stynx-nyx/tenancy';
 import request from 'supertest';
 import { StynxI18nModule } from '../../src/i18n.module';
 

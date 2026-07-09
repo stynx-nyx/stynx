@@ -1,8 +1,8 @@
-[**@stynx/contracts**](../index.md)
+[**@stynx-nyx/contracts**](../index.md)
 
 ---
 
-[@stynx/contracts](../index.md) / ResultEnvelope
+[@stynx-nyx/contracts](../index.md) / ResultEnvelope
 
 # Interface: ResultEnvelope\<T\>
 

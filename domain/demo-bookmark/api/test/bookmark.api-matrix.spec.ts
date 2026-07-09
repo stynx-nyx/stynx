@@ -3,9 +3,9 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { INestApplication } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
-import { PermissionCache, PermissionGuard, StynxAuthGuard, StynxJwtValidator } from '@stynx/auth';
-import { StynxDataModule } from '@stynx/data';
-import { SessionService } from '@stynx/sessions';
+import { PermissionCache, PermissionGuard, StynxAuthGuard, StynxJwtValidator } from '@stynx-nyx/auth';
+import { StynxDataModule } from '@stynx-nyx/data';
+import { SessionService } from '@stynx-nyx/sessions';
 import { BookmarkController } from '../src/demo-bookmark/controllers/bookmark.controller';
 import { BookmarkTagController } from '../src/demo-bookmark/controllers/bookmark-tag.controller';
 import { BookmarkService } from '../src/demo-bookmark/services/bookmark.service';
@@ -129,9 +129,9 @@ describe('Demo bookmark API error matrix', () => {
       imports: [
         StynxDataModule.forRoot({
           connections: {
-            owner: { connectionString: database.connectionString('@stynx/demo-bookmark-api:matrix:owner') },
-            app: { connectionString: database.connectionString('@stynx/demo-bookmark-api:matrix:app') },
-            reader: { connectionString: database.connectionString('@stynx/demo-bookmark-api:matrix:reader') },
+            owner: { connectionString: database.connectionString('@stynx-nyx/demo-bookmark-api:matrix:owner') },
+            app: { connectionString: database.connectionString('@stynx-nyx/demo-bookmark-api:matrix:app') },
+            reader: { connectionString: database.connectionString('@stynx-nyx/demo-bookmark-api:matrix:reader') },
           },
           migrations: { enabled: true },
         }),

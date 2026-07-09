@@ -1,8 +1,8 @@
-[**@stynx/data**](../index.md)
+[**@stynx-nyx/data**](../index.md)
 
 ---
 
-[@stynx/data](../index.md) / STYNX_DATA_OPTIONS
+[@stynx-nyx/data](../index.md) / STYNX_DATA_OPTIONS
 
 # Variable: STYNX_DATA_OPTIONS
 

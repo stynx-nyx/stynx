@@ -1,8 +1,8 @@
-**@stynx/logging**
+**@stynx-nyx/logging**
 
 ---
 
-# @stynx/logging
+# @stynx-nyx/logging
 
 Public structured logging, Pino factory, request middleware, and dedupe exports.
 

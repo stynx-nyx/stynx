@@ -898,7 +898,7 @@
     },
     {
       "type": "library",
-      "name": "@stynx/audit",
+      "name": "@stynx-nyx/audit",
       "version": "1.0.0",
       "scope": "required",
       "licenses": [],
@@ -912,7 +912,7 @@
     },
     {
       "type": "library",
-      "name": "@stynx/auth",
+      "name": "@stynx-nyx/auth",
       "version": "1.0.0",
       "scope": "required",
       "licenses": [],
@@ -926,7 +926,7 @@
     },
     {
       "type": "library",
-      "name": "@stynx/backend",
+      "name": "@stynx-nyx/backend",
       "version": "1.0.0",
       "scope": "required",
       "licenses": [],
@@ -940,7 +940,7 @@
     },
     {
       "type": "library",
-      "name": "@stynx/cli",
+      "name": "@stynx-nyx/cli",
       "version": "1.0.0",
       "scope": "required",
       "licenses": [],
@@ -954,7 +954,7 @@
     },
     {
       "type": "library",
-      "name": "@stynx/contracts",
+      "name": "@stynx-nyx/contracts",
       "version": "1.0.0",
       "scope": "required",
       "licenses": [],
@@ -968,7 +968,7 @@
     },
     {
       "type": "library",
-      "name": "@stynx/core",
+      "name": "@stynx-nyx/core",
       "version": "1.0.0",
       "scope": "required",
       "licenses": [],
@@ -982,7 +982,7 @@
     },
     {
       "type": "library",
-      "name": "@stynx/data",
+      "name": "@stynx-nyx/data",
       "version": "1.0.0",
       "scope": "required",
       "licenses": [],
@@ -996,7 +996,7 @@
     },
     {
       "type": "library",
-      "name": "@stynx/docs-site",
+      "name": "@stynx-nyx/docs-site",
       "version": "0.1.0",
       "scope": "excluded",
       "licenses": [],
@@ -1009,7 +1009,7 @@
     },
     {
       "type": "library",
-      "name": "@stynx/feature-flags",
+      "name": "@stynx-nyx/feature-flags",
       "version": "0.1.0",
       "scope": "required",
       "licenses": [],
@@ -1023,7 +1023,7 @@
     },
     {
       "type": "library",
-      "name": "@stynx/flow",
+      "name": "@stynx-nyx/flow",
       "version": "0.1.0",
       "scope": "required",
       "licenses": [],
@@ -1037,7 +1037,7 @@
     },
     {
       "type": "library",
-      "name": "@stynx/health",
+      "name": "@stynx-nyx/health",
       "version": "1.0.0",
       "scope": "required",
       "licenses": [],
@@ -1051,7 +1051,7 @@
     },
     {
       "type": "library",
-      "name": "@stynx/i18n",
+      "name": "@stynx-nyx/i18n",
       "version": "1.0.0",
       "scope": "required",
       "licenses": [],
@@ -1065,7 +1065,7 @@
     },
     {
       "type": "library",
-      "name": "@stynx/idempotency",
+      "name": "@stynx-nyx/idempotency",
       "version": "1.0.0",
       "scope": "required",
       "licenses": [],
@@ -1079,7 +1079,7 @@
     },
     {
       "type": "library",
-      "name": "@stynx/integration-adapter",
+      "name": "@stynx-nyx/integration-adapter",
       "version": "0.1.0",
       "scope": "required",
       "licenses": [],
@@ -1093,7 +1093,7 @@
     },
     {
       "type": "library",
-      "name": "@stynx/logging",
+      "name": "@stynx-nyx/logging",
       "version": "1.0.0",
       "scope": "required",
       "licenses": [],
@@ -1107,7 +1107,7 @@
     },
     {
       "type": "library",
-      "name": "@stynx/pdf-a-vera-docker",
+      "name": "@stynx-nyx/pdf-a-vera-docker",
       "version": "0.1.0",
       "scope": "required",
       "licenses": [],
@@ -1121,7 +1121,7 @@
     },
     {
       "type": "library",
-      "name": "@stynx/pdf-a",
+      "name": "@stynx-nyx/pdf-a",
       "version": "0.1.0",
       "scope": "required",
       "licenses": [],
@@ -1135,7 +1135,7 @@
     },
     {
       "type": "library",
-      "name": "@stynx/pdf",
+      "name": "@stynx-nyx/pdf",
       "version": "0.1.0",
       "scope": "required",
       "licenses": [],
@@ -1149,7 +1149,7 @@
     },
     {
       "type": "library",
-      "name": "@stynx/privacy",
+      "name": "@stynx-nyx/privacy",
       "version": "1.0.0",
       "scope": "required",
       "licenses": [],
@@ -1163,7 +1163,7 @@
     },
     {
       "type": "library",
-      "name": "@stynx/ratelimit",
+      "name": "@stynx-nyx/ratelimit",
       "version": "1.0.0",
       "scope": "required",
       "licenses": [],
@@ -1177,7 +1177,7 @@
     },
     {
       "type": "library",
-      "name": "@stynx/reference-api",
+      "name": "@stynx-nyx/reference-api",
       "version": "0.3.1",
       "scope": "excluded",
       "licenses": [],
@@ -1190,7 +1190,7 @@
     },
     {
       "type": "library",
-      "name": "@stynx/reference-web",
+      "name": "@stynx-nyx/reference-web",
       "version": "0.2.1",
       "scope": "excluded",
       "licenses": [],
@@ -1203,7 +1203,7 @@
     },
     {
       "type": "library",
-      "name": "@stynx/sessions",
+      "name": "@stynx-nyx/sessions",
       "version": "1.0.0",
       "scope": "required",
       "licenses": [],
@@ -1217,7 +1217,7 @@
     },
     {
       "type": "library",
-      "name": "@stynx/signature",
+      "name": "@stynx-nyx/signature",
       "version": "0.1.0",
       "scope": "required",
       "licenses": [],
@@ -1231,7 +1231,7 @@
     },
     {
       "type": "library",
-      "name": "@stynx/storage",
+      "name": "@stynx-nyx/storage",
       "version": "1.0.0",
       "scope": "required",
       "licenses": [],
@@ -1245,7 +1245,7 @@
     },
     {
       "type": "library",
-      "name": "@stynx/tenancy",
+      "name": "@stynx-nyx/tenancy",
       "version": "1.0.0",
       "scope": "required",
       "licenses": [],
@@ -1259,7 +1259,7 @@
     },
     {
       "type": "library",
-      "name": "@stynx/testing",
+      "name": "@stynx-nyx/testing",
       "version": "1.0.0",
       "scope": "required",
       "licenses": [],

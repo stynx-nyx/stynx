@@ -1,12 +1,12 @@
-# `@stynx/idempotency` — replay-safe writes via `Idempotency-Key` header + interceptor
+# `@stynx-nyx/idempotency` — replay-safe writes via `Idempotency-Key` header + interceptor
 
-`@stynx/idempotency` is the idempotency-key interceptor. Mark a write endpoint with `@Idempotent()`, and the interceptor reads the client's `Idempotency-Key` header on each call: a fresh key proceeds and stores the response; a repeated key replays the stored response without re-executing the handler. Stores: in-memory (dev), Postgres-table (default; transactional with your business writes), Redis (lower latency).
+`@stynx-nyx/idempotency` is the idempotency-key interceptor. Mark a write endpoint with `@Idempotent()`, and the interceptor reads the client's `Idempotency-Key` header on each call: a fresh key proceeds and stores the response; a repeated key replays the stored response without re-executing the handler. Stores: in-memory (dev), Postgres-table (default; transactional with your business writes), Redis (lower latency).
 
 ## Purpose
 
-POST/PUT/PATCH endpoints often retry — flaky network, mobile app reconnect, queue redelivery. Without idempotency keys, retries cause duplicate side-effects (double charge, double order). `@stynx/idempotency` resolves this with a tiny decorator + the right store choice.
+POST/PUT/PATCH endpoints often retry — flaky network, mobile app reconnect, queue redelivery. Without idempotency keys, retries cause duplicate side-effects (double charge, double order). `@stynx-nyx/idempotency` resolves this with a tiny decorator + the right store choice.
 
-You reach for it on every mutating endpoint whose duplicate execution is unsafe. Wired globally via `StynxPlatformPipelineModule` from `@stynx/backend`.
+You reach for it on every mutating endpoint whose duplicate execution is unsafe. Wired globally via `StynxPlatformPipelineModule` from `@stynx-nyx/backend`.
 
 What it does NOT do: it doesn't make a non-idempotent operation idempotent (it caches the response only). It doesn't replay streaming responses. It doesn't deduplicate across actors with the same key (keys are scoped to actor by default).
 
@@ -17,15 +17,15 @@ Backend developers building POST/PUT/PATCH endpoints, mobile-facing APIs, queue 
 ## Install
 
 ```bash
-pnpm add @stynx/idempotency
+pnpm add @stynx-nyx/idempotency
 ```
 
-**Peer dependencies:** `@nestjs/common` `^11`, `@stynx/core` `^1`, `@stynx/data` `^1` (for the default Postgres store), `ioredis` (optional, Redis store).
+**Peer dependencies:** `@nestjs/common` `^11`, `@stynx-nyx/core` `^1`, `@stynx-nyx/data` `^1` (for the default Postgres store), `ioredis` (optional, Redis store).
 
 ## Quick start
 
 ```ts
-import { StynxIdempotencyModule } from '@stynx/idempotency';
+import { StynxIdempotencyModule } from '@stynx-nyx/idempotency';
 
 StynxIdempotencyModule.forRoot({
   defaultTtlMs: 24 * 60 * 60_000,
@@ -34,7 +34,7 @@ StynxIdempotencyModule.forRoot({
 ```
 
 ```ts
-import { Idempotent } from '@stynx/idempotency';
+import { Idempotent } from '@stynx-nyx/idempotency';
 
 @Controller('orders')
 export class OrdersController {
@@ -131,10 +131,10 @@ Same key can be reused across tenants without colliding.
 
 ## Related packages
 
-- [`@stynx/core`](/docs/packages/core/) — provides `RequestContext` for the actor scope.
-- [`@stynx/data`](/docs/packages/data/) — provides the Postgres store's DB connection.
-- [`@stynx/ratelimit`](/docs/packages/ratelimit/) — adjacent (replay+limit are often paired).
-- [`backend/idempotency`](/docs/packages/backend/idempotency/) — `@stynx/backend` submodule that wraps wiring.
+- [`@stynx-nyx/core`](/docs/packages/core/) — provides `RequestContext` for the actor scope.
+- [`@stynx-nyx/data`](/docs/packages/data/) — provides the Postgres store's DB connection.
+- [`@stynx-nyx/ratelimit`](/docs/packages/ratelimit/) — adjacent (replay+limit are often paired).
+- [`backend/idempotency`](/docs/packages/backend/idempotency/) — `@stynx-nyx/backend` submodule that wraps wiring.
 
 ## TypeDoc reference
 

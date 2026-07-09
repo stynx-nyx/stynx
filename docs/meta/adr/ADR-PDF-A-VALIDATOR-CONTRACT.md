@@ -9,7 +9,7 @@
 
 R10 kept PDF/A validation outside STYNX because a regulatory archival claim
 without a real validator would overstate package guarantees. R11 added
-deterministic PDF construction surfaces in `@stynx/pdf`, including public
+deterministic PDF construction surfaces in `@stynx-nyx/pdf`, including public
 payroll builders and PDF evidence appenders, but those helpers still expose
 PDF/A-style structural checks only.
 
@@ -37,7 +37,7 @@ adopters own their policy decision and any high-volume caching.
    docker inspect verapdf/cli --format '{{index .RepoDigests 0}}'
    ```
 
-3. STYNX exposes the validator shape in `@stynx/pdf-a`:
+3. STYNX exposes the validator shape in `@stynx-nyx/pdf-a`:
 
    ```ts
    interface PdfAValidator {
@@ -51,13 +51,13 @@ adopters own their policy decision and any high-volume caching.
    adopters cannot accidentally claim validation without a real backend.
 
 4. Package split:
-   - `@stynx/pdf-a` owns types, the interface, stubs, and telemetry sink shapes.
-   - `@stynx/pdf-a-vera-docker` owns Docker invocation and veraPDF JSON report
+   - `@stynx-nyx/pdf-a` owns types, the interface, stubs, and telemetry sink shapes.
+   - `@stynx-nyx/pdf-a-vera-docker` owns Docker invocation and veraPDF JSON report
      normalization.
-   - A future `@stynx/pdf-a-vera-http` may wrap a sidecar service if adopters
+   - A future `@stynx-nyx/pdf-a-vera-http` may wrap a sidecar service if adopters
      need long-lived verifier workers.
 
-5. Validators emit per-call telemetry suitable for `@stynx/logging` or an
+5. Validators emit per-call telemetry suitable for `@stynx-nyx/logging` or an
    adopter metrics sink:
    - `pdf_a_validation_attempts_total`
    - `pdf_a_validation_errors_total{rule_id}`
@@ -83,7 +83,7 @@ adopters own their policy decision and any high-volume caching.
 
 ## Consequences
 
-- `@stynx/pdf` can stay focused on rendering and deterministic construction.
+- `@stynx-nyx/pdf` can stay focused on rendering and deterministic construction.
 - SGP and other adopters can use one `PdfAValidator` seam across build, runtime,
   and acceptance tooling.
 - The veraPDF Docker adapter is intentionally operational: callers must have a
@@ -95,7 +95,7 @@ adopters own their policy decision and any high-volume caching.
 
 - Keep PDF/A fully adopter-owned. Rejected because SGP now has a repeated gap
   across adopter workflows, and shared validation is platform-level behavior.
-- Add validation directly inside `@stynx/pdf`. Rejected because generation and
+- Add validation directly inside `@stynx-nyx/pdf`. Rejected because generation and
   validation have different runtime dependencies, failure policies, and release
   cadence.
 - Use a bundled JVM or native veraPDF binary. Rejected for R12 because Docker
@@ -108,8 +108,8 @@ adopters own their policy decision and any high-volume caching.
 ## References
 
 - [ADR-PDF-A-BOUNDARY](ADR-PDF-A-BOUNDARY.md)
-- [`@stynx/pdf`](../../../packages/pdf/README.md)
-- [`@stynx/signature`](../../../packages/signature/README.md)
+- [`@stynx-nyx/pdf`](../../../packages/pdf/README.md)
+- [`@stynx-nyx/signature`](../../../packages/signature/README.md)
 - SGP `docs/meta/gov/audit/diag/round-2-stynx-adoption-gaps.md`
 - [veraPDF documentation](https://docs.verapdf.org/)
 - [veraPDF Docker Hub repository](https://hub.docker.com/r/verapdf/cli)

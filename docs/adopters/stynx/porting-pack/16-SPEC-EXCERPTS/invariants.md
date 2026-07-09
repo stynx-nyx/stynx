@@ -10,7 +10,7 @@ All DB access goes through STYNX's connection manager, which sets
 GUCs on every transaction.
 
 **Detection:** every DB call routes through `Database.tx(...)` from
-`@stynx/data` (`packages/data/src/database.ts`). Direct `pg.Pool` or
+`@stynx-nyx/data` (`packages/data/src/database.ts`). Direct `pg.Pool` or
 `new Pool(...)` outside `packages/data/` and `packages/cli/` (migration
 runner) is a violation. Linter rule `[VERIFY in PORT-04 — locate
 ESLint `no-restricted-imports`config in`tools/eslint-config/`]`.
@@ -28,7 +28,7 @@ Background work obtains an explicit `TenantContext` via
 
 ## I3 — No direct S3 client
 
-All object operations go through `@stynx/storage`.
+All object operations go through `@stynx-nyx/storage`.
 
 **Detection:** grep for `@aws-sdk/client-s3` outside
 `packages/storage/`. As of audit FIND-010, `packages/privacy/` had a

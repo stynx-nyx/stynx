@@ -1,5 +1,5 @@
 import { createPrivateKey, createPublicKey, randomUUID, sign as signJwtData, type KeyObject } from 'node:crypto';
-import { SecretLoader } from '@stynx/core';
+import { SecretLoader } from '@stynx-nyx/core';
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import { SessionSigningKeyError } from './errors';
 import { STYNX_SESSIONS_OPTIONS } from './tokens';

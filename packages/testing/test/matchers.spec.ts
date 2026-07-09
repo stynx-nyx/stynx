@@ -8,7 +8,7 @@ import {
   RestoreConflictError,
   SoftDeleteBlockedError,
   softDeletable,
-} from '@stynx/data';
+} from '@stynx-nyx/data';
 import { pgSchema, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import {
   auditExpect,

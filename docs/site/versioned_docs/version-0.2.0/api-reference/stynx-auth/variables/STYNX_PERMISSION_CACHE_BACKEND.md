@@ -1,8 +1,8 @@
-[**@stynx/auth**](../index.md)
+[**@stynx-nyx/auth**](../index.md)
 
 ---
 
-[@stynx/auth](../index.md) / STYNX_PERMISSION_CACHE_BACKEND
+[@stynx-nyx/auth](../index.md) / STYNX_PERMISSION_CACHE_BACKEND
 
 # Variable: STYNX_PERMISSION_CACHE_BACKEND
 

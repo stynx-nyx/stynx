@@ -1,8 +1,8 @@
-[**@stynx/data**](../index.md)
+[**@stynx-nyx/data**](../index.md)
 
 ---
 
-[@stynx/data](../index.md) / TxOptions
+[@stynx-nyx/data](../index.md) / TxOptions
 
 # Interface: TxOptions
 

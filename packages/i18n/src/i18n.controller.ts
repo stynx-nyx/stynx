@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Put } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { RequestContext } from '@stynx/core';
-import { NoIdempotent } from '@stynx/idempotency';
+import { RequestContext } from '@stynx-nyx/core';
+import { NoIdempotent } from '@stynx-nyx/idempotency';
 import { I18nAdminService } from './i18n-admin.service';
 import type { TenantOverrideUpdateInput } from './types';
 

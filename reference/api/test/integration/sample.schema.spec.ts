@@ -7,7 +7,7 @@ import {
   workItems,
 } from '../../src/sample/schema';
 
-describe('@stynx/reference-api schema contract', () => {
+describe('@stynx-nyx/reference-api schema contract', () => {
   it('brands every sample table as soft deletable', () => {
     expect(isSoftDeletable(records)).toBe(true);
     expect(isSoftDeletable(recordNotes)).toBe(true);

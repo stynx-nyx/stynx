@@ -20,7 +20,7 @@ COPY reference/api ./reference/api
 FROM workspace AS build
 
 RUN NODE_OPTIONS=--disable-warning=DEP0169 pnpm install --frozen-lockfile --ignore-scripts
-RUN pnpm --filter @stynx/reference-api... build
+RUN pnpm --filter @stynx-nyx/reference-api... build
 RUN mkdir -p runtime-dist/reference/api runtime-dist/packages \
   && cp -R reference/api/dist runtime-dist/reference/api/dist \
   && cp -R reference/api/migrations runtime-dist/reference/api/migrations \

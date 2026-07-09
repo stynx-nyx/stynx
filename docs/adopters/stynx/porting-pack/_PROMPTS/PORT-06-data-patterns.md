@@ -10,7 +10,7 @@
 
 The heaviest part of the port. This document gives the consuming
 agent ready-to-apply patterns for replacing raw `pg.Pool` and
-existing ORM call sites with `@stynx/data`.
+existing ORM call sites with `@stynx-nyx/data`.
 
 ## Read
 
@@ -93,7 +93,7 @@ before applying]`.
 ## Acceptance
 
 - All eight patterns + anti-patterns present.
-- Every pattern's "After" code references real `@stynx/data` exports
+- Every pattern's "After" code references real `@stynx-nyx/data` exports
   (verify against the catalog).
 - No anti-pattern silently corresponds to a real pattern by mistake
   (e.g., pattern 5 must not be silently illustrating an I2 violation).

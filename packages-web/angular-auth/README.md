@@ -1,6 +1,6 @@
 # `@stynx-web/angular-auth` — Angular auth: login, guards, permission directives, session
 
-`@stynx-web/angular-auth` is the Angular authentication package. It provides route guards (`authGuard`, `permissionGuard`), a `*hasPermission` structural directive for conditional UI, login-redirect + logout-button + permission-denied components, an OIDC client adapter, a session service, and pluggable token storage. Pairs with the backend's [`@stynx/auth`](/docs/packages/auth/). Provides the auth-token resolver that `@stynx-web/sdk` consumes.
+`@stynx-web/angular-auth` is the Angular authentication package. It provides route guards (`authGuard`, `permissionGuard`), a `*hasPermission` structural directive for conditional UI, login-redirect + logout-button + permission-denied components, an OIDC client adapter, a session service, and pluggable token storage. Pairs with the backend's [`@stynx-nyx/auth`](/docs/packages/auth/). Provides the auth-token resolver that `@stynx-web/sdk` consumes.
 
 ## Purpose
 
@@ -139,7 +139,7 @@ export class Header {
 ## Related packages
 
 - [`@stynx-web/angular`](/docs/packages-web/angular/) — the foundation.
-- [`@stynx/auth`](/docs/packages/auth/) — the backend counterpart.
+- [`@stynx-nyx/auth`](/docs/packages/auth/) — the backend counterpart.
 - [`@stynx-web/angular-iam`](/docs/packages-web/angular-iam/) — admin UI for users/roles (depends on this).
 - [`@stynx-web/sdk`](/docs/packages-web/sdk/) — consumes this package's auth provider.
 

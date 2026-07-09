@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / STYNX_PRINCIPAL_MAPPER
+[@stynx-nyx/backend](../index.md) / STYNX_PRINCIPAL_MAPPER
 
 # Variable: STYNX_PRINCIPAL_MAPPER
 

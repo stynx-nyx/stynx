@@ -1,8 +1,8 @@
-[**@stynx/storage**](../index.md)
+[**@stynx-nyx/storage**](../index.md)
 
 ---
 
-[@stynx/storage](../index.md) / PresignRateLimitOptions
+[@stynx-nyx/storage](../index.md) / PresignRateLimitOptions
 
 # Interface: PresignRateLimitOptions
 

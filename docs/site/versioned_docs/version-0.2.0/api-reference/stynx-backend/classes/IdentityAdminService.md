@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / IdentityAdminService
+[@stynx-nyx/backend](../index.md) / IdentityAdminService
 
 # Class: IdentityAdminService
 

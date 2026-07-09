@@ -1,9 +1,9 @@
 // Smoke check: storage submodule's exports are reachable through the
-// @stynx/backend barrel.
+// @stynx-nyx/backend barrel.
 
 import * as Backend from '../../src';
 
-describe('@stynx/backend exports surface for storage', () => {
+describe('@stynx-nyx/backend exports surface for storage', () => {
   it('barrel surfaces at least one export', () => {
     expect(Object.keys(Backend).length).toBeGreaterThan(0);
   });

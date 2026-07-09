@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { Database, type Transaction } from '@stynx/data';
-import { generateRequestId, RequestContext, RequestContextMutator } from '@stynx/core';
+import { Database, type Transaction } from '@stynx-nyx/data';
+import { generateRequestId, RequestContext, RequestContextMutator } from '@stynx-nyx/core';
 import { computePermissionsHash, expandPermissionWildcards } from './utils';
 
 interface MembershipRow {

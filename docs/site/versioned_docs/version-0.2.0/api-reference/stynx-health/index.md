@@ -1,8 +1,8 @@
-**@stynx/health**
+**@stynx-nyx/health**
 
 ---
 
-# @stynx/health
+# @stynx-nyx/health
 
 Public health, readiness, metrics, and guarded information endpoint exports.
 

@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
-import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx/auth';
-import { Audit, NoIdempotent } from '@stynx/backend';
+import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx-nyx/auth';
+import { Audit, NoIdempotent } from '@stynx-nyx/backend';
 import { FlowDesignService } from '../flow-design.service';
 import type { CreateFlowAgentRuleDto, CreateFlowNodeFormRuleDto, UpdateFlowNodeDto } from '../types';
 

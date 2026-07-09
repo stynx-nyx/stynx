@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / StynxRateLimitModuleOptions
+[@stynx-nyx/backend](../index.md) / StynxRateLimitModuleOptions
 
 # Interface: StynxRateLimitModuleOptions
 

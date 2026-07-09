@@ -299,9 +299,9 @@ storage table supports before adding it.]`
 // src/billing/invoice.service.ts
 import { randomUUID } from 'node:crypto';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { RequestContext } from '@stynx/core';
-import { Database, type Transaction } from '@stynx/data';
-import { DocumentsService } from '@stynx/storage';
+import { RequestContext } from '@stynx-nyx/core';
+import { Database, type Transaction } from '@stynx-nyx/data';
+import { DocumentsService } from '@stynx-nyx/storage';
 import { and, desc, eq } from 'drizzle-orm';
 import { invoiceAttachments, invoiceLines, invoicePayments, invoices } from './schema';
 import type { CreateInvoiceDto, CreateLineDto, IssueInvoiceDto, ListInvoiceQuery } from './types';
@@ -521,13 +521,13 @@ import {
   ReadOnly,
   StynxAuthGuard,
   StynxAuthModule,
-} from '@stynx/auth';
-import { StynxDataModule } from '@stynx/data';
-import { StynxStorageModule } from '@stynx/storage';
-import { StynxTenancyModule } from '@stynx/tenancy';
-import { Audit, StynxPlatformPipelineModule } from '@stynx/backend';
-import { Idempotent } from '@stynx/idempotency';
-import { RateLimit } from '@stynx/ratelimit';
+} from '@stynx-nyx/auth';
+import { StynxDataModule } from '@stynx-nyx/data';
+import { StynxStorageModule } from '@stynx-nyx/storage';
+import { StynxTenancyModule } from '@stynx-nyx/tenancy';
+import { Audit, StynxPlatformPipelineModule } from '@stynx-nyx/backend';
+import { Idempotent } from '@stynx-nyx/idempotency';
+import { RateLimit } from '@stynx-nyx/ratelimit';
 import { InvoiceService } from './invoice.service';
 import type { CreateInvoiceDto, IssueInvoiceDto, ListInvoiceQuery } from './types';
 
@@ -754,8 +754,8 @@ export class InvoicesPage {
 ```typescript
 // test/billing/invoice.service.spec.ts
 import { describe, expect, it } from 'vitest';
-import { SoftDeleteBlockedError } from '@stynx/data';
-import { createTestApp, expectRLSIsolated, withTenant } from '@stynx/testing';
+import { SoftDeleteBlockedError } from '@stynx-nyx/data';
+import { createTestApp, expectRLSIsolated, withTenant } from '@stynx-nyx/testing';
 import { InvoiceController } from '../../src/billing/invoice.controller';
 import { InvoiceService } from '../../src/billing/invoice.service';
 import invoiceMigrationSql from '../../src/billing/migrations/0001_billing_invoices.sql?raw';
@@ -837,7 +837,7 @@ with `readFileSync` from a test fixture instead.]`
    [`16-SPEC-EXCERPTS/soft-delete-model.md`](../16-SPEC-EXCERPTS/soft-delete-model.md).
 3. **PII has non-nullify strategies.** `customer_email` and `customer_tax_id`
    use `hash_with_salt`; `customer_name` uses `tombstone`, all through
-   `core.pii_map` for `@stynx/privacy`.
+   `core.pii_map` for `@stynx-nyx/privacy`.
 4. **The service never imports `pg` or S3 clients.** `Database.tx` and
    `DocumentsService` close I1 and I3.
 5. **Routes carry the HTTP contract.** `@ReadOnly`, `@Permission`,

@@ -51,7 +51,7 @@ generation. Subagent reads not listed individually.
 ### Specs
 
 - `specs/STYNX-SPEC-v0.6.md` — primary normative spec
-- `specs/STYNX-API-DATA.md` — `@stynx/data` API contract
+- `specs/STYNX-API-DATA.md` — `@stynx-nyx/data` API contract
 - `specs/STYNX-ADR-001-soft-delete.md`
 - `specs/STYNX-ADR-002-perms-caching.md`
 - `specs/STYNX-REFERENCE-MIGRATION.sql`
@@ -164,7 +164,7 @@ budget.)
   [`18-GAPS-AND-OPEN-QUESTIONS.md`](18-GAPS-AND-OPEN-QUESTIONS.md).
 
 - **Validation invariant:** every code example in the pack should
-  compile against the actual `@stynx/*` exports as documented in
+  compile against the actual `@stynx-nyx/*` exports as documented in
   [`05-PACKAGE-CATALOG.md`](05-PACKAGE-CATALOG.md). Spot-checks
   performed during generation; if a consuming agent finds an
   import that does not resolve, file an issue and treat the

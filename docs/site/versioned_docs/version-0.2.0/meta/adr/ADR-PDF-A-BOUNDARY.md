@@ -5,12 +5,12 @@
 **Author role:** Architect, per DEVAI Article 6.
 
 Original "documented exclusion" decision is retained below for historical
-context. STYNX now ships validation via `@stynx/pdf-a` and
-`@stynx/pdf-a-vera-docker`; see the successor ADR for the current contract.
+context. STYNX now ships validation via `@stynx-nyx/pdf-a` and
+`@stynx-nyx/pdf-a-vera-docker`; see the successor ADR for the current contract.
 
 ## Context
 
-`@stynx/pdf` provides server-side PDF rendering and a `PdfAConformanceAdapter`
+`@stynx-nyx/pdf` provides server-side PDF rendering and a `PdfAConformanceAdapter`
 hook, but it does not implement PDF/A conversion or validation internally. SGP
 currently keeps byte-stable `pdf-lib` builders for payslip and yearly-income
 PDF/A-style reports, with golden fixtures that assert exact output bytes.
@@ -41,7 +41,7 @@ STYNX without a validator would increase risk while reducing audit clarity.
 
 ## Consequences
 
-- `@stynx/pdf` continues to reject `output.profile: "pdf-a"` unless callers
+- `@stynx-nyx/pdf` continues to reject `output.profile: "pdf-a"` unless callers
   configure a `PdfAConformanceAdapter`.
 - SGP can replace duplicated PDF construction with an explicit public-payroll
   template pack while keeping orchestration, product semantics, and regulatory

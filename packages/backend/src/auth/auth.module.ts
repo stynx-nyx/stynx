@@ -1,5 +1,5 @@
 import { DynamicModule, Module, Provider } from '@nestjs/common';
-import type { PrincipalMapper, TenantEntitlementPolicy, TenantResolver, TokenVerifier } from '@stynx/contracts';
+import type { PrincipalMapper, TenantEntitlementPolicy, TenantResolver, TokenVerifier } from '@stynx-nyx/contracts';
 import { AuthContextGuard } from './auth-context.guard';
 import {
   STYNX_PRINCIPAL_MAPPER,

@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { RequestContext } from '@stynx/core';
-import { Database } from '@stynx/data';
+import { RequestContext } from '@stynx-nyx/core';
+import { Database } from '@stynx-nyx/data';
 import { FlowGraphPackage } from './internal/design/graph-package';
 import { FlowDesignTableStore } from './internal/design/design-table-store';
 import type { FlowGraphExportDocument, FlowGraphImportDocument, FlowJsonObject } from './types';

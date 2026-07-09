@@ -1,4 +1,4 @@
-import { SecretLoader } from '@stynx/core';
+import { SecretLoader } from '@stynx-nyx/core';
 import { Injectable, Inject, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
 import { Pool, type PoolConfig } from 'pg';
 import { STYNX_DATA_OPTIONS, type StynxDataModuleOptions, type StynxDataRole } from './tokens';
@@ -54,7 +54,7 @@ function createPoolConfig(
     connectionString,
     max: options.max ?? (role === 'owner' ? 2 : 20),
     ssl: options.ssl ? { rejectUnauthorized: false } : undefined,
-    application_name: options.applicationName ?? `@stynx/data:${role}`,
+    application_name: options.applicationName ?? `@stynx-nyx/data:${role}`,
   };
 }
 

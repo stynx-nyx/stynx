@@ -1,8 +1,8 @@
-[**@stynx/core**](../index.md)
+[**@stynx-nyx/core**](../index.md)
 
 ---
 
-[@stynx/core](../index.md) / ConfigViolation
+[@stynx-nyx/core](../index.md) / ConfigViolation
 
 # Interface: ConfigViolation
 

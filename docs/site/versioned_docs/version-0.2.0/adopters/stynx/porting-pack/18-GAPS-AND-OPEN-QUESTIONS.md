@@ -25,17 +25,17 @@ The migration linter (`tools/migration-linter`) is the spec's
 enforcement mechanism for I5/I6/I8. The audit baseline noted its
 self-test failing on 4 parser errors against the repo's own
 migrations. **Re-verify** by running
-`pnpm --filter @stynx/migration-linter test` before treating the
+`pnpm --filter @stynx-nyx/migration-linter test` before treating the
 linter as a hard gate in your port. If it's still failing, hand-
 validate migrations against the LINT001–LINT009 rules listed in
 [`08-MIGRATION-PATTERNS.md`](08-MIGRATION-PATTERNS.md).
 
-### G-002 — `@stynx/privacy` may import `@aws-sdk/client-s3` directly
+### G-002 — `@stynx-nyx/privacy` may import `@aws-sdk/client-s3` directly
 
 **Severity:** MAJOR (rederived from audit FIND-010).
 
 Spec invariant I3 says all object operations go through
-`@stynx/storage`. Audit baseline found `@stynx/privacy` violating
+`@stynx-nyx/storage`. Audit baseline found `@stynx-nyx/privacy` violating
 this. **Re-verify** with `rg '@aws-sdk/client-s3' packages/privacy/src`.
 If still live, document as a known exception (or wait for ADR-003).
 
@@ -101,11 +101,11 @@ was reverse-engineered from `process.env.X` references. A canonical
 
 ## Things in code but not in the spec
 
-### G-009 — `@stynx/backend` composition module (44 exports) not in spec §3
+### G-009 — `@stynx-nyx/backend` composition module (44 exports) not in spec §3
 
 **Severity:** MAJOR for porting clarity.
 
-Spec §3 lists 16 backend packages. The repo ships 17 — `@stynx/backend`
+Spec §3 lists 16 backend packages. The repo ships 17 — `@stynx-nyx/backend`
 is the actual composition module imported by `reference/api/src/app.module.ts:11`
 (`StynxPlatformPipelineModule`, `AuditInterceptor`, `STYNX_AUDIT_SINK`,
 `@Audit`, `@Idempotent`, `@RateLimit`, etc.). Treat as STABLE;
@@ -123,11 +123,11 @@ applies (the latter runs after the former). **Do not add consumer
 migrations with the `0012_` prefix.** Start consumer migrations at
 a high number (e.g., `9001_` or your own scheme).
 
-### G-011 — `@stynx/cli` bin not directly invokable via pnpm exec
+### G-011 — `@stynx-nyx/cli` bin not directly invokable via pnpm exec
 
 **Severity:** MINOR.
 
-`pnpm --filter @stynx/cli exec stynx --help` failed with
+`pnpm --filter @stynx-nyx/cli exec stynx --help` failed with
 `Command "stynx" not found` during discovery. The CLI is invoked
 via `node packages/cli/dist/main.js` or via the workspace's
 top-level scripts (`pnpm doctor`). Consuming repos should expose
@@ -215,7 +215,7 @@ needed point release, schedule the runner upgrade before Phase 1.
 
 ### Q-006 — Test fixture parity
 
-`@stynx/testing` provides RLS-leak matchers and LGPD fixtures.
+`@stynx-nyx/testing` provides RLS-leak matchers and LGPD fixtures.
 Confirm your testing harness can adopt them, or accept the cost of
 porting fixtures.
 
@@ -227,7 +227,7 @@ baseline). Status as of pack-generation commit `670d165`:
 
 | Finding  | Status                          | Notes                                                                             |
 | -------- | ------------------------------- | --------------------------------------------------------------------------------- |
-| FIND-001 | **CLOSED**                      | `@stynx/contracts` exists.                                                        |
+| FIND-001 | **CLOSED**                      | `@stynx-nyx/contracts` exists.                                                        |
 | FIND-002 | **CLOSED**                      | `@stynx-web/angular-tenancy` exists.                                              |
 | FIND-003 | **CLOSED**                      | Legacy `apps/reference-frontend` deleted.                                         |
 | FIND-004 | **VERIFY** (G-001)              | Migration linter regression.                                                      |
@@ -238,7 +238,7 @@ baseline). Status as of pack-generation commit `670d165`:
 | FIND-011 | **VERIFY** (G-003)              | Doctor empty output.                                                              |
 | FIND-013 | **PARTIAL**                     | `.nvmrc` + `package.json` engines pin engines; CI may still run on wrong version. |
 | FIND-014 | **PARTIAL**                     | All 27 packages have READMEs; TSDoc density not re-measured.                      |
-| FIND-015 | **STILL LIVE** (G-013-adjacent) | `@stynx/privacy` thinly tested.                                                   |
+| FIND-015 | **STILL LIVE** (G-013-adjacent) | `@stynx-nyx/privacy` thinly tested.                                                   |
 | FIND-016 | **VERIFY** (G-004)              | Audit hash-chain.                                                                 |
 | FIND-024 | **CLOSED**                      | CODEOWNERS coverage full.                                                         |
 | FIND-025 | **CLOSED**                      | `infra/github/main.tf` declares branch protection.                                |

@@ -1,6 +1,6 @@
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
-import { IdempotencyInterceptor } from '@stynx/idempotency';
-import { RateLimitGuard } from '@stynx/ratelimit';
+import { IdempotencyInterceptor } from '@stynx-nyx/idempotency';
+import { RateLimitGuard } from '@stynx-nyx/ratelimit';
 import { SlaMonitorInterceptor } from '../../../packages/backend/src/sla/sla-monitor.interceptor';
 import { StynxPlatformPipelineModule } from '../../../packages/backend/src/pipeline/platform-pipeline.module';
 

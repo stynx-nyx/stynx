@@ -10,7 +10,7 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
-import { NoIdempotent } from '@stynx/idempotency';
+import { NoIdempotent } from '@stynx-nyx/idempotency';
 import { Permission, Public } from './decorators';
 import { PermissionGuard } from './permission.guard';
 import { StynxAuthGuard } from './stynx-auth.guard';

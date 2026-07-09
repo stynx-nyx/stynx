@@ -1,8 +1,8 @@
-[**@stynx/flow**](../index.md)
+[**@stynx-nyx/flow**](../index.md)
 
 ---
 
-[@stynx/flow](../index.md) / updateFillSchema
+[@stynx-nyx/flow](../index.md) / updateFillSchema
 
 # Variable: updateFillSchema
 

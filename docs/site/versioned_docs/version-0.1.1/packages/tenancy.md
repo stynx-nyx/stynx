@@ -1,8 +1,8 @@
 ---
-title: '@stynx/tenancy'
+title: '@stynx-nyx/tenancy'
 ---
 
-# @stynx/tenancy
+# @stynx-nyx/tenancy
 
 Tenant resolution, membership validation, tenant lifecycle services, platform-admin guards, and lifecycle system-operation recording.
 
@@ -13,10 +13,10 @@ Tenant resolution, membership validation, tenant lifecycle services, platform-ad
 ## Install And Import
 
 ```ts
-import {} from /* public exports */ '@stynx/tenancy';
+import {} from /* public exports */ '@stynx-nyx/tenancy';
 ```
 
-In this monorepo, use the workspace package. Published consumers should install matching `@stynx/*` versions from the same release train.
+In this monorepo, use the workspace package. Published consumers should install matching `@stynx-nyx/*` versions from the same release train.
 
 ## Module Setup
 
@@ -36,7 +36,7 @@ Tenant state is the hard access gate for request validation and RLS-adjacent che
 ## Example
 
 ```ts
-import { TenancyService } from '@stynx/tenancy';
+import { TenancyService } from '@stynx-nyx/tenancy';
 
 const tenant = await tenancy.provisionTenant({ slug, displayName, requestedBy });
 ```
@@ -67,9 +67,9 @@ Current barrel highlights:
 ## Verification
 
 ```sh
-pnpm --filter @stynx/tenancy build
-pnpm --filter @stynx/tenancy test
-STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx/tenancy test:int
+pnpm --filter @stynx-nyx/tenancy build
+pnpm --filter @stynx-nyx/tenancy test
+STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx-nyx/tenancy test:int
 ```
 
 ## Documentation Standard

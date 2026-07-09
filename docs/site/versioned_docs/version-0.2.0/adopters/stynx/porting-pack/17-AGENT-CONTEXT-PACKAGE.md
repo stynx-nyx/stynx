@@ -18,7 +18,7 @@ You are porting **&lt;FOREIGN APP NAME&gt;** at `&lt;PATH&gt;` onto STYNX.
 STYNX is a multi-tenant TypeScript/NestJS platform foundation. It
 provides identity, multi-tenancy, audit, soft-delete-via-archive,
 RLS, LGPD pipelines, storage, idempotency, rate-limiting, and i18n
-as a set of `@stynx/*` (backend) and `@stynx-web/*` (frontend)
+as a set of `@stynx-nyx/*` (backend) and `@stynx-web/*` (frontend)
 packages. The architecture is opinionated and enforces eight
 non-negotiable invariants (I1–I8). Your job is to migrate the
 foreign codebase onto this foundation while preserving its product
@@ -51,11 +51,11 @@ guidance.
 6. **Cognito is IdP only.** Tenancy and roles live in STYNX DB
    (`tenancy.tenants`, `auth.memberships`, `auth.role_perms`). Do
    not use Cognito Groups for tenancy.
-7. **All DB access goes through `Database.tx`** from `@stynx/data`.
-   Direct `pg.Pool` outside `@stynx/data` is invariant violation
+7. **All DB access goes through `Database.tx`** from `@stynx-nyx/data`.
+   Direct `pg.Pool` outside `@stynx-nyx/data` is invariant violation
    I1. Background work wraps in `withSystemContext('reason', fn)`
    for I2.
-8. **All S3 access goes through `@stynx/storage`.** Direct
+8. **All S3 access goes through `@stynx-nyx/storage`.** Direct
    `@aws-sdk/client-s3` outside that package is invariant
    violation I3.
 9. **FK to a soft-deletable parent must be annotated.** Use
@@ -73,11 +73,11 @@ audit, and LGPD patterns. Apply the 10-question compatibility check
 from `02-IS-STYNX-RIGHT-FOR-YOU.md`. Produce
 `./adoption/ASSESSMENT.md` and stop for operator approval.
 
-**Phase 1 — Foundation.** Add `@stynx/core`, `@stynx/logging`,
-`@stynx/health`, `@stynx/backend`. App boots; `/healthz` 200; logs
+**Phase 1 — Foundation.** Add `@stynx-nyx/core`, `@stynx-nyx/logging`,
+`@stynx-nyx/health`, `@stynx-nyx/backend`. App boots; `/healthz` 200; logs
 are structured JSON. Effort: S.
 
-**Phase 2 — Data layer.** Add `@stynx/data`. Run platform
+**Phase 2 — Data layer.** Add `@stynx-nyx/data`. Run platform
 migrations. Convert every `pg.Pool` and ORM call site to
 `Database.tx`. Rename `org_id` → `tenant_id` (where 1:1), enable
 RLS + tenant_isolation policies, replace soft-delete with archive
@@ -85,8 +85,8 @@ mirrors via `data.create_soft_deletable_table`. Annotate every FK
 to a soft-deletable parent. Delete manual `WHERE tenant_id = $X`
 predicates. Effort: L–XL (largest phase).
 
-**Phase 3 — Auth &amp; tenancy.** Add `@stynx/auth`, `@stynx/tenancy`,
-`@stynx/sessions`. Provision Cognito User Pool out-of-band.
+**Phase 3 — Auth &amp; tenancy.** Add `@stynx-nyx/auth`, `@stynx-nyx/tenancy`,
+`@stynx-nyx/sessions`. Provision Cognito User Pool out-of-band.
 Replace existing auth middleware. Seed permissions in a migration.
 Add `@Permission(...)` to every controller method. Wire
 `TenantContextInterceptor`. Coordinate JWT claim-shape change with
@@ -96,9 +96,9 @@ clients. Effort: L.
 four packages. Decorate mutations with `@Audit`. Decorate
 user-driven retryable mutations with `@Idempotent`. Decorate
 public/expensive routes with `@RateLimit`. Replace `@aws-sdk/client-s3`
-direct usage with `@stynx/storage`. Effort: M.
+direct usage with `@stynx-nyx/storage`. Effort: M.
 
-**Phase 5 — Privacy &amp; i18n.** Add `@stynx/privacy`, `@stynx/i18n`.
+**Phase 5 — Privacy &amp; i18n.** Add `@stynx-nyx/privacy`, `@stynx-nyx/i18n`.
 Populate `core.pii_map`. Wire pt-BR + en-US catalogs. Run a
 `stynx privacy ropa` dry-run and verify the plan. Effort: M.
 
@@ -130,7 +130,7 @@ Effort: S–M.
 9. `withSystemContext` bypasses tenant scope, **not** audit. The
    `reason` string is recorded in `audit.system_op` (5-year hot
    retention).
-10. Bypassing `@stynx/data` for archive moves leaves
+10. Bypassing `@stynx-nyx/data` for archive moves leaves
     `app.archive_move` unset → duplicate audit rows.
 
 ## Where to look in the pack for more detail
@@ -177,7 +177,7 @@ Effort: S–M.
 - Always produce `./adoption/ASSESSMENT.md` before any code.
 - All STYNX migrations go in `./migrations/` and follow
   `NNNN_description.sql` naming.
-- All `@stynx/*` imports use barrel paths only (no deep imports).
+- All `@stynx-nyx/*` imports use barrel paths only (no deep imports).
 - Every controller method must carry `@Permission`, `@Public`, or
   `@System`.
 - Every mutation method must carry `@Audit` or `@NoAudit('reason')`.

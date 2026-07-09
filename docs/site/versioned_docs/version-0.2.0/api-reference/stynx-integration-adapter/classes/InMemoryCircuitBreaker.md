@@ -1,8 +1,8 @@
-[**@stynx/integration-adapter**](../index.md)
+[**@stynx-nyx/integration-adapter**](../index.md)
 
 ---
 
-[@stynx/integration-adapter](../index.md) / InMemoryCircuitBreaker
+[@stynx-nyx/integration-adapter](../index.md) / InMemoryCircuitBreaker
 
 # Class: InMemoryCircuitBreaker
 

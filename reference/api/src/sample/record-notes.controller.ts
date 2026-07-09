@@ -1,8 +1,8 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
-import { Permission, ReadOnly, StynxAuthGuard, PermissionGuard } from '@stynx/auth';
-import { Idempotent } from '@stynx/idempotency';
-import { RateLimit } from '@stynx/ratelimit';
-import { Audit } from '@stynx/backend';
+import { Permission, ReadOnly, StynxAuthGuard, PermissionGuard } from '@stynx-nyx/auth';
+import { Idempotent } from '@stynx-nyx/idempotency';
+import { RateLimit } from '@stynx-nyx/ratelimit';
+import { Audit } from '@stynx-nyx/backend';
 import type { CreateRecordNoteDto, ListQuery, UpdateRecordNoteDto } from './dto';
 import { ReferenceSampleService } from './reference-sample.service';
 

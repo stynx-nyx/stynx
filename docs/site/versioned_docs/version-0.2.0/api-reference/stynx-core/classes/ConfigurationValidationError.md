@@ -1,8 +1,8 @@
-[**@stynx/core**](../index.md)
+[**@stynx-nyx/core**](../index.md)
 
 ---
 
-[@stynx/core](../index.md) / ConfigurationValidationError
+[@stynx-nyx/core](../index.md) / ConfigurationValidationError
 
 # Class: ConfigurationValidationError
 

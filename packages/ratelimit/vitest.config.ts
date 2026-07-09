@@ -3,11 +3,11 @@ import { createVitestConfig } from '../../tools/repo-config/vitest.base.mjs';
 
 export default createVitestConfig({
   packageDir: __dirname,
-  packageName: '@stynx/ratelimit',
+  packageName: '@stynx-nyx/ratelimit',
   include: ['test/unit/**/*.spec.ts'],
   alias: {
-    '@stynx/auth': resolve(__dirname, '../auth/src/decorators.ts'),
-    '@stynx/core': resolve(__dirname, '../core/src/index.ts'),
-    '@stynx/data': resolve(__dirname, '../data/src/index.ts'),
+    '@stynx-nyx/auth': resolve(__dirname, '../auth/src/decorators.ts'),
+    '@stynx-nyx/core': resolve(__dirname, '../core/src/index.ts'),
+    '@stynx-nyx/data': resolve(__dirname, '../data/src/index.ts'),
   },
 });

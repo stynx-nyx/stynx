@@ -1,6 +1,6 @@
 # LGPD Erasure
 
-Execute live and archive erasure for data subjects through `@stynx/privacy`.
+Execute live and archive erasure for data subjects through `@stynx-nyx/privacy`.
 
 ## Steps
 
@@ -8,7 +8,7 @@ Execute live and archive erasure for data subjects through `@stynx/privacy`.
 - Run the privacy export first so the requester can review known data.
 - Invoke the erasure workflow with the data subject and tenant scope.
 - Verify live tables and archive mirrors apply the configured PII strategy.
-- Confirm linked object-store references are deleted through `@stynx/storage`.
+- Confirm linked object-store references are deleted through `@stynx-nyx/storage`.
 
 ## Verification
 

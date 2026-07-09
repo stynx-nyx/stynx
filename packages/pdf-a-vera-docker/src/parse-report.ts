@@ -4,7 +4,7 @@ import type {
   PdfARuleLocation,
   PdfAVersion,
   PdfAValidationResult,
-} from '@stynx/pdf-a';
+} from '@stynx-nyx/pdf-a';
 import { VeraPdfReportParseError } from './errors';
 
 type JsonRecord = Record<string, unknown>;

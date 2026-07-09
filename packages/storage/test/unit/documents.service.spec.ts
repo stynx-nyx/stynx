@@ -1,4 +1,4 @@
-import { RequestContext } from '@stynx/core';
+import { RequestContext } from '@stynx-nyx/core';
 import { DocumentsService } from '../../src/documents.service';
 import {
   StorageCollectionNotFoundError,

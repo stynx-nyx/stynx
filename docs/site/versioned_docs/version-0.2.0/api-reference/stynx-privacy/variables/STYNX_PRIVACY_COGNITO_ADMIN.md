@@ -1,8 +1,8 @@
-[**@stynx/privacy**](../index.md)
+[**@stynx-nyx/privacy**](../index.md)
 
 ---
 
-[@stynx/privacy](../index.md) / STYNX_PRIVACY_COGNITO_ADMIN
+[@stynx-nyx/privacy](../index.md) / STYNX_PRIVACY_COGNITO_ADMIN
 
 # Variable: STYNX_PRIVACY_COGNITO_ADMIN
 

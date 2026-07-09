@@ -1,8 +1,8 @@
-[**@stynx/audit**](../index.md)
+[**@stynx-nyx/audit**](../index.md)
 
 ---
 
-[@stynx/audit](../index.md) / STYNX_AUDIT_DUMP_RUNNER
+[@stynx-nyx/audit](../index.md) / STYNX_AUDIT_DUMP_RUNNER
 
 # Variable: STYNX_AUDIT_DUMP_RUNNER
 

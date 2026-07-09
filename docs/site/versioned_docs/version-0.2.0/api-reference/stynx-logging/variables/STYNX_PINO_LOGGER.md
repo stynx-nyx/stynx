@@ -1,8 +1,8 @@
-[**@stynx/logging**](../index.md)
+[**@stynx-nyx/logging**](../index.md)
 
 ---
 
-[@stynx/logging](../index.md) / STYNX_PINO_LOGGER
+[@stynx-nyx/logging](../index.md) / STYNX_PINO_LOGGER
 
 # Variable: STYNX_PINO_LOGGER
 

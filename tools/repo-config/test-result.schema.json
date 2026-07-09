@@ -23,7 +23,7 @@
     },
     "package": {
       "type": "string",
-      "description": "npm name of the package this result belongs to. e.g. '@stynx/auth'."
+      "description": "npm name of the package this result belongs to. e.g. '@stynx-nyx/auth'."
     },
     "level": {
       "enum": ["unit", "integration", "e2e", "mutation", "perf", "coverage", "smoke"],

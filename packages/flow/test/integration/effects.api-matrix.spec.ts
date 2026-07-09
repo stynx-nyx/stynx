@@ -11,7 +11,7 @@ import {
   STYNX_PERMISSION_CACHE_BACKEND,
   StynxAuthGuard,
   StynxJwtValidator,
-} from '@stynx/auth';
+} from '@stynx-nyx/auth';
 import {
   AuditInterceptor,
   StynxAuditModule,
@@ -22,14 +22,14 @@ import {
   type RateLimitDecision,
   type RateLimitDecisionContext,
   type RateLimitStore,
-} from '@stynx/backend';
-import { generateRequestId, StynxCoreModule } from '@stynx/core';
-import type { AuditEventEnvelope, AuditSink } from '@stynx/contracts';
+} from '@stynx-nyx/backend';
+import { generateRequestId, StynxCoreModule } from '@stynx-nyx/core';
+import type { AuditEventEnvelope, AuditSink } from '@stynx-nyx/contracts';
 import {
   SessionJwtSigningService,
   SessionService,
   type StynxSessionSigningKeySet,
-} from '@stynx/sessions';
+} from '@stynx-nyx/sessions';
 import request from 'supertest';
 import { z } from 'zod';
 import { StynxFlowModule } from '../../src/flow.module';
@@ -40,7 +40,7 @@ import {
   createTestApp,
   mintTestSession,
   type TestAppContext,
-} from '@stynx/testing';
+} from '@stynx-nyx/testing';
 
 const TENANT_ID = '0197481e-6f84-77e4-8d6d-41f0b6fca9c1';
 const ADMIN_USER_ID = '0197481e-7294-7c53-8b03-5c36d7c2831a';

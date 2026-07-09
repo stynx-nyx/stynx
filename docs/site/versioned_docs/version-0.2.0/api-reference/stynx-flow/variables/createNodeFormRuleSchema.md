@@ -1,8 +1,8 @@
-[**@stynx/flow**](../index.md)
+[**@stynx-nyx/flow**](../index.md)
 
 ---
 
-[@stynx/flow](../index.md) / createNodeFormRuleSchema
+[@stynx-nyx/flow](../index.md) / createNodeFormRuleSchema
 
 # Variable: createNodeFormRuleSchema
 

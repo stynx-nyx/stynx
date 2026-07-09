@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / IdentityGroupSummary
+[@stynx-nyx/backend](../index.md) / IdentityGroupSummary
 
 # Interface: IdentityGroupSummary
 

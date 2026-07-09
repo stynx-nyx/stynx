@@ -1,6 +1,6 @@
 import type { ModuleRef } from '@nestjs/core';
-import { Database } from '@stynx/data';
-import { RequestContext, RequestContextMutator } from '@stynx/core';
+import { Database } from '@stynx-nyx/data';
+import { RequestContext, RequestContextMutator } from '@stynx-nyx/core';
 import { PermissionQueryService } from '../../src/permission-query.service';
 import type { Mock } from 'vitest';
 

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import pino, { destination, transport, type DestinationStream, type Logger, type LoggerOptions } from 'pino';
-import { RequestContext } from '@stynx/core';
+import { RequestContext } from '@stynx-nyx/core';
 import type { StynxLoggingOptions } from './tokens';
 
 

@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { StynxAuditService } from '@stynx/audit';
+import { StynxAuditService } from '@stynx-nyx/audit';
 
 interface AuditChainRow {
   event_id: string;

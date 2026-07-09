@@ -1,8 +1,8 @@
-[**@stynx/health**](../index.md)
+[**@stynx-nyx/health**](../index.md)
 
 ---
 
-[@stynx/health](../index.md) / StynxHealthModule
+[@stynx-nyx/health](../index.md) / StynxHealthModule
 
 # Class: StynxHealthModule
 

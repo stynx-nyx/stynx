@@ -7,14 +7,14 @@
 
 ## TL;DR
 
-Every one of STYNX's **41 published packages** (24 backend `@stynx/*`, 13 web `@stynx-web/*`, 4 tools `@stynx-internal/*`) was deepened from a ~50–130-line stub to a template-conformant developer reference: purpose / audience / install / quick-start / public-API-surface / configuration / examples / common-pitfalls / related-packages. Two packages got `docs/` subtrees: `@stynx/backend` (10 modularity-driven submodule pages) and `@stynx/flow` (10 size-driven endpoint/domain pages covering 20 controllers / ~113 routes). `check-package-doc-shape` went **0/41 → 41/41 clean**. The Docusaurus build is clean for every new cross-reference. Ten waves, executed largely autonomously per Decision G.
+Every one of STYNX's **41 published packages** (24 backend `@stynx-nyx/*`, 13 web `@stynx-web/*`, 4 tools `@stynx-internal/*`) was deepened from a ~50–130-line stub to a template-conformant developer reference: purpose / audience / install / quick-start / public-API-surface / configuration / examples / common-pitfalls / related-packages. Two packages got `docs/` subtrees: `@stynx-nyx/backend` (10 modularity-driven submodule pages) and `@stynx-nyx/flow` (10 size-driven endpoint/domain pages covering 20 controllers / ~113 routes). `check-package-doc-shape` went **0/41 → 41/41 clean**. The Docusaurus build is clean for every new cross-reference. Ten waves, executed largely autonomously per Decision G.
 
 ## What worked
 
 - **The README template (Decision B) held across 41 packages.** Locking the 8-mandatory-section shape in W01 meant every wave produced consistent structure. Authors never had to re-decide layout.
 - **The `check-package-doc-shape` gate was the right enforcement.** A simple regex over `## ` headings caught every drift. 0→41 is a clean, measurable round outcome.
 - **Adaptive depth (Decision B) matched reality.** Light-tier packages (`feature-flags`, `pdf-a`, `angular-trash`) got ~200 lines; deep-tier (`flow`, `data`, `auth`, `angular-iam`) got 250–600+. The tier assignment in `inv/package-inventory.json` made each wave's effort predictable.
-- **Distributed backend-submodule authoring (Option B / Decision E)** kept cross-links backward-only. `backend/audit.md` landed in W04 alongside `@stynx/audit`, so it could cite a package already documented rather than forward-referencing.
+- **Distributed backend-submodule authoring (Option B / Decision E)** kept cross-links backward-only. `backend/audit.md` landed in W04 alongside `@stynx-nyx/audit`, so it could cite a package already documented rather than forward-referencing.
 - **Family-specific audience pitches (Decision A)** read correctly. Backend READMEs show NestJS module wiring; web READMEs show standalone-providers + component templates; tools READMEs show CLI invocations. The shift was natural per family.
 - **The flow `docs/` subtree (size-driven split)** turned an unreadable 600+-line flat README into a navigable 10-page tree. Grouping the 20 controllers by domain (forms, fills, graph, runs-tasks, policies, effects, analytics) rather than 1:1 kept the page count at ~12.
 
@@ -22,7 +22,7 @@ Every one of STYNX's **41 published packages** (24 backend `@stynx/*`, 13 web `@
 
 ### G16-1 (HIGH) — `docs-links` sensor false-positives on Docusaurus site-absolute URLs
 
-Decision F locked the cross-link style as absolute-from-root: `[`@stynx/auth`](/docs/packages/auth/)`. This is the **correct** form for the published Docusaurus site — verified: the current-version build reports **zero** broken links for these cross-refs and every target page exists in `docs/site/build/`.
+Decision F locked the cross-link style as absolute-from-root: `[`@stynx-nyx/auth`](/docs/packages/auth/)`. This is the **correct** form for the published Docusaurus site — verified: the current-version build reports **zero** broken links for these cross-refs and every target page exists in `docs/site/build/`.
 
 But the devai `docs-links` sensor resolves `/docs/...` as a _filesystem-relative_ path (e.g. `/docs/packages/auth/` from `packages/audit/README.md` → `../../../../../docs/packages/auth`, which doesn't exist on disk). Result: the sensor reports **420 broken** vs the **219** round-open baseline — a +201 delta that is **entirely false-positive**. The authoritative renderer (Docusaurus, which the published site actually uses) validates all of them.
 
@@ -32,7 +32,7 @@ This is adjacent to R15's G-6 (docs-links double-counts `.generated/`). The fix 
 
 ### G16-2 (MEDIUM) — `verify-package-doc-coverage` can't traverse barrel re-exports
 
-The W01-authored `verify-package-doc-coverage.mjs` uses a naive parser that doesn't follow `export * from './x'` barrel re-exports. Every `@stynx/*` package uses barrel `index.ts` files, so the script sees 0 detected exports and flags every README-cited symbol as "stale" (`hard_fail_count: 39`). This is documented noise — the binding gate is `check-package-doc-shape` (which passed 41/41). A more robust version would use the TypeScript compiler API to resolve barrel re-exports.
+The W01-authored `verify-package-doc-coverage.mjs` uses a naive parser that doesn't follow `export * from './x'` barrel re-exports. Every `@stynx-nyx/*` package uses barrel `index.ts` files, so the script sees 0 detected exports and flags every README-cited symbol as "stale" (`hard_fail_count: 39`). This is documented noise — the binding gate is `check-package-doc-shape` (which passed 41/41). A more robust version would use the TypeScript compiler API to resolve barrel re-exports.
 
 **Disposition:** non-blocking; the doc-coverage script was always a soft signal (W01 log). A future round could upgrade it to TS-compiler-API resolution.
 
@@ -58,10 +58,10 @@ The `sync-content.mjs` extension for `packages/backend/docs/` + `packages/flow/d
 | Metric                                                   | Before R16   | After R16                                                                    |
 | -------------------------------------------------------- | ------------ | ---------------------------------------------------------------------------- |
 | `check-package-doc-shape` clean                          | 0/41         | **41/41**                                                                    |
-| Backend `@stynx/*` documented                            | stubs        | 24/24 + 10 `backend/docs/` submodule pages                                   |
+| Backend `@stynx-nyx/*` documented                            | stubs        | 24/24 + 10 `backend/docs/` submodule pages                                   |
 | Web `@stynx-web/*` documented                            | stubs        | 13/13                                                                        |
 | Tools `@stynx-internal/*` documented                     | stubs        | 4/4                                                                          |
-| `@stynx/flow` README                                     | 92-line stub | 138-line entrypoint + 10-page `docs/` subtree (20 controllers / ~113 routes) |
+| `@stynx-nyx/flow` README                                     | 92-line stub | 138-line entrypoint + 10-page `docs/` subtree (20 controllers / ~113 routes) |
 | `check-docs-governance`                                  | pass 14/14   | pass 14/14 (unchanged)                                                       |
 | Docusaurus build                                         | SUCCESS      | SUCCESS (clean for all new cross-refs)                                       |
 | `docs-links` (devai sensor, raw)                         | 219          | 420 (+201 = Decision-F absolute-URL false-positives per G16-1)               |

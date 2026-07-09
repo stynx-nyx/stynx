@@ -54,7 +54,7 @@ phase has entry criteria, exit criteria, and verification commands.
 
 **Goal:** STYNX core, logging, and health booted; app responds on /healthz.
 
-**Steps:** add `@stynx/core`, `@stynx/logging`, `@stynx/health`;
+**Steps:** add `@stynx-nyx/core`, `@stynx-nyx/logging`, `@stynx-nyx/health`;
 wire `StynxCoreModule.forRoot`; add the structured-error filter.
 
 **Verify:** `curl :PORT/healthz` → 200; logs are JSON.
@@ -62,17 +62,17 @@ wire `StynxCoreModule.forRoot`; add the structured-error filter.
 
 ## Phase 2 — Data Layer
 
-**Goal:** all DB access flows through `@stynx/data`; tenant-scoped
+**Goal:** all DB access flows through `@stynx-nyx/data`; tenant-scoped
 tables have RLS and archive mirrors.
 
 **Steps:**
-1. Add `@stynx/data`. Run platform migrations.
+1. Add `@stynx-nyx/data`. Run platform migrations.
 2. Convert `pg.Pool` / ORM call sites per `06-DATA-LAYER-PATTERNS.md`.
 3. For each tenant-scoped table: rename legacy tenant column to
    `tenant_id`, add RLS policy, create archive mirror via helper.
 4. Migrate any existing soft-delete data to archive (per pitfall 8).
 
-**Verify:** integration tests pass; `@stynx/testing` RLS leak
+**Verify:** integration tests pass; `@stynx-nyx/testing` RLS leak
 matcher passes.
 **Effort:** L–XL.
 **Common blockers:** raw-SQL hot paths (pitfall 6); tenant column
@@ -83,7 +83,7 @@ inconsistency (pitfall 1).
 **Goal:** Cognito-issued JWTs verified; permissions enforced;
 TenantContext set on every request.
 
-**Steps:** add `@stynx/auth`, `@stynx/tenancy`, `@stynx/sessions`;
+**Steps:** add `@stynx-nyx/auth`, `@stynx-nyx/tenancy`, `@stynx-nyx/sessions`;
 provision Cognito User Pool out-of-band per `10-INFRASTRUCTURE-REQUIREMENTS.md`;
 replace existing auth middleware; seed permissions.
 

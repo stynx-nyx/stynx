@@ -1,8 +1,8 @@
-[**@stynx/sessions**](../index.md)
+[**@stynx-nyx/sessions**](../index.md)
 
 ---
 
-[@stynx/sessions](../index.md) / SessionBundle
+[@stynx-nyx/sessions](../index.md) / SessionBundle
 
 # Interface: SessionBundle
 

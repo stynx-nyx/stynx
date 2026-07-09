@@ -1,14 +1,14 @@
-# `@stynx/audit` — audit-event decorator + SQL sink + retention policy
+# `@stynx-nyx/audit` — audit-event decorator + SQL sink + retention policy
 
-`@stynx/audit` emits structured audit events for mutating endpoints. Mark a controller method with `@Audit({ action, entity })` and the audit interceptor captures before-state, the principal, the request id, the after-state, and writes an `AuditEventEnvelope` to the configured sink (default: SQL via `@stynx/data`). A retention policy can periodically prune older events to control table growth.
+`@stynx-nyx/audit` emits structured audit events for mutating endpoints. Mark a controller method with `@Audit({ action, entity })` and the audit interceptor captures before-state, the principal, the request id, the after-state, and writes an `AuditEventEnvelope` to the configured sink (default: SQL via `@stynx-nyx/data`). A retention policy can periodically prune older events to control table growth.
 
 ## Purpose
 
-Regulated apps need an audit trail. Hand-emitting audit events from every mutating method drifts. `@stynx/audit` provides a single decorator + the canonical `AuditEventEnvelope` shape + retention enforcement.
+Regulated apps need an audit trail. Hand-emitting audit events from every mutating method drifts. `@stynx-nyx/audit` provides a single decorator + the canonical `AuditEventEnvelope` shape + retention enforcement.
 
 You reach for it whenever your app needs an audit log (almost always in regulated domains; nice-to-have otherwise).
 
-What it does NOT do: it's not an SIEM (use Splunk/Datadog for that). It doesn't sign audit events for tamper-evidence by default (use `@stynx/cli`'s `stynx audit verify` for chain integrity instead). It doesn't query — exposes one read endpoint, but rich filtering is downstream.
+What it does NOT do: it's not an SIEM (use Splunk/Datadog for that). It doesn't sign audit events for tamper-evidence by default (use `@stynx-nyx/cli`'s `stynx audit verify` for chain integrity instead). It doesn't query — exposes one read endpoint, but rich filtering is downstream.
 
 ## Audience
 
@@ -17,15 +17,15 @@ Backend developers in any app with compliance + audit requirements.
 ## Install
 
 ```bash
-pnpm add @stynx/audit
+pnpm add @stynx-nyx/audit
 ```
 
-**Peer dependencies:** `@nestjs/common` `^11`, `@stynx/core` `^1`, `@stynx/contracts` `^1`, `@stynx/data` `^1`.
+**Peer dependencies:** `@nestjs/common` `^11`, `@stynx-nyx/core` `^1`, `@stynx-nyx/contracts` `^1`, `@stynx-nyx/data` `^1`.
 
 ## Quick start
 
 ```ts
-import { StynxAuditModule } from '@stynx/audit';
+import { StynxAuditModule } from '@stynx-nyx/audit';
 
 StynxAuditModule.forRoot({
   sink: 'sql',
@@ -34,7 +34,7 @@ StynxAuditModule.forRoot({
 ```
 
 ```ts
-import { Audit } from '@stynx/audit';
+import { Audit } from '@stynx-nyx/audit';
 
 @Controller('orders')
 export class OrdersController {
@@ -62,7 +62,7 @@ Every call emits an `AuditEventEnvelope` with the principal, before/after snapsh
 | ----------------------- | --------------------------------------------------------------------------- |
 | `StynxAuditService`     | High-level: emit an audit event programmatically (rare; use the decorator). |
 | `AuditInterceptor`      | The `APP_INTERCEPTOR` consuming `@Audit(...)` metadata.                     |
-| `SqlAuditAdapter`       | Default sink: write to `stynx_audit_events` table via `@stynx/data`.        |
+| `SqlAuditAdapter`       | Default sink: write to `stynx_audit_events` table via `@stynx-nyx/data`.        |
 | `AuditRetentionService` | Schedules retention cleanup.                                                |
 
 ### Decorators
@@ -82,7 +82,7 @@ Every call emits an `AuditEventEnvelope` with the principal, before/after snapsh
 | Export                                         | Description                 |
 | ---------------------------------------------- | --------------------------- |
 | `StynxAuditModuleOptions`                      | `forRoot()` options.        |
-| `AuditEventEnvelope` (from `@stynx/contracts`) | The canonical event shape.  |
+| `AuditEventEnvelope` (from `@stynx-nyx/contracts`) | The canonical event shape.  |
 | `RedactionPolicy`                              | Path-based redaction rules. |
 
 ## Configuration
@@ -136,12 +136,12 @@ StynxAuditModule.forRoot({ sink: new CloudWatchAuditSink() });
 
 ## Related packages
 
-- [`@stynx/core`](/docs/packages/core/) — provides `RequestContext` for `actorId`, `tenantId`, `requestId`.
-- [`@stynx/data`](/docs/packages/data/) — provides the DB connection for the SQL sink.
-- [`@stynx/contracts`](/docs/packages/contracts/) — defines `AuditEventEnvelope`, `AuditSink`.
-- [`@stynx/cli`](/docs/packages/cli/) — `stynx audit verify` checks chain integrity.
+- [`@stynx-nyx/core`](/docs/packages/core/) — provides `RequestContext` for `actorId`, `tenantId`, `requestId`.
+- [`@stynx-nyx/data`](/docs/packages/data/) — provides the DB connection for the SQL sink.
+- [`@stynx-nyx/contracts`](/docs/packages/contracts/) — defines `AuditEventEnvelope`, `AuditSink`.
+- [`@stynx-nyx/cli`](/docs/packages/cli/) — `stynx audit verify` checks chain integrity.
 - [`@stynx-web/angular-audit`](/docs/packages-web/angular-audit/) — Angular pair: audit timeline UI.
-- [`backend/audit`](/docs/packages/backend/audit/) — `@stynx/backend` submodule.
+- [`backend/audit`](/docs/packages/backend/audit/) — `@stynx-nyx/backend` submodule.
 
 ## TypeDoc reference
 

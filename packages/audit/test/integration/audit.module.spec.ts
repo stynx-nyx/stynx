@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { Client } from 'pg';
-import { generateRequestId, RequestContextMutator } from '@stynx/core';
-import { Database, StynxDataModule } from '@stynx/data';
+import { generateRequestId, RequestContextMutator } from '@stynx-nyx/core';
+import { Database, StynxDataModule } from '@stynx-nyx/data';
 import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
 import { StynxAuditService } from '../../src/audit.service';
 import { StynxAuditModule } from '../../src/audit.module';
@@ -58,9 +58,9 @@ describe('StynxAuditModule integration', () => {
       imports: [
         StynxDataModule.forRoot({
           connections: {
-            owner: { connectionString: database.connectionString('@stynx/audit:owner') },
-            app: { connectionString: database.connectionString('@stynx/audit:app') },
-            reader: { connectionString: database.connectionString('@stynx/audit:reader') },
+            owner: { connectionString: database.connectionString('@stynx-nyx/audit:owner') },
+            app: { connectionString: database.connectionString('@stynx-nyx/audit:app') },
+            reader: { connectionString: database.connectionString('@stynx-nyx/audit:reader') },
           },
           migrations: { enabled: true },
         }),

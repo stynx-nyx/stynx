@@ -27,7 +27,7 @@ The factory default in `tools/stryker/base.mjs` now excludes `src/**/*.controlle
 mutate = ['src/**/*.ts', '!src/**/*.d.ts', '!src/**/*.controller.ts'];
 ```
 
-The three packages that explicitly listed a controller (`@stynx/auth`, `@stynx/health`, `@stynx/i18n`) have been edited to drop the controller line. The other 27 packages already either did not list controllers or did not have controllers under the mutated path.
+The three packages that explicitly listed a controller (`@stynx-nyx/auth`, `@stynx-nyx/health`, `@stynx-nyx/i18n`) have been edited to drop the controller line. The other 27 packages already either did not list controllers or did not have controllers under the mutated path.
 
 **Rationale.** Nest controllers in stynx are thin HTTP → service forwarders. The semantically interesting strings (route paths, `@Permission(...)` literals) live in decorators and are exercised by integration tests through supertest (the `reference/api/test/integration/reference-api.runtime.spec.ts` family and Wave 2 of `docs/work/plan/`). Mutating them under unit mocks produces low-signal survivors and dilutes the report. Packages with genuine branching logic inside a controller may opt back in by overriding `mutate`.
 
@@ -67,8 +67,8 @@ Stryker report semantics; they do not lower the acceptance floor.
 
 | Tier              | Packages                                                                                                                                                                            | Rationale                                                                                   |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| tier1 (`80..90`)  | `@stynx/auth`, `@stynx/data`, `@stynx/audit`, `@stynx/privacy`, `@stynx/tenancy`, `@stynx-web/sdk`, `@stynx-web/angular-auth`, `@stynx-web/angular-iam`, `@stynx-web/angular-audit` | Security / data / identity / shipped SDK; cross-package blast radius for surviving mutants. |
-| tier2 (`85..95`)  | `@stynx/sessions`, `@stynx/idempotency`, `@stynx/flow`, `@stynx/core`, `@stynx/storage`, `@stynx/ratelimit`                                                                         | State engines and runtime services; logic-heavy but not on the security perimeter.          |
+| tier1 (`80..90`)  | `@stynx-nyx/auth`, `@stynx-nyx/data`, `@stynx-nyx/audit`, `@stynx-nyx/privacy`, `@stynx-nyx/tenancy`, `@stynx-web/sdk`, `@stynx-web/angular-auth`, `@stynx-web/angular-iam`, `@stynx-web/angular-audit` | Security / data / identity / shipped SDK; cross-package blast radius for surviving mutants. |
+| tier2 (`85..95`)  | `@stynx-nyx/sessions`, `@stynx-nyx/idempotency`, `@stynx-nyx/flow`, `@stynx-nyx/core`, `@stynx-nyx/storage`, `@stynx-nyx/ratelimit`                                                                         | State engines and runtime services; logic-heavy but not on the security perimeter.          |
 | tier3 (`90..100`) | All others (workspace default)                                                                                                                                                      | Generic / UI / wiring; mutation testing remains mandatory, with no package below 90.        |
 
 The legacy `default / strict / strictest` numeric policies are retained for backward compatibility with any external consumer; they are not used by per-package overrides any more.

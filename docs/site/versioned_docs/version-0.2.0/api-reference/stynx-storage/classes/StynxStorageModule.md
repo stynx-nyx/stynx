@@ -1,8 +1,8 @@
-[**@stynx/storage**](../index.md)
+[**@stynx-nyx/storage**](../index.md)
 
 ---
 
-[@stynx/storage](../index.md) / StynxStorageModule
+[@stynx-nyx/storage](../index.md) / StynxStorageModule
 
 # Class: StynxStorageModule
 

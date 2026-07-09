@@ -1,6 +1,6 @@
-import { generateRequestId } from '@stynx/core';
-import { LocaleService } from '@stynx/i18n';
-import { auditExpect, expectRLSIsolated } from '@stynx/testing';
+import { generateRequestId } from '@stynx-nyx/core';
+import { LocaleService } from '@stynx-nyx/i18n';
+import { auditExpect, expectRLSIsolated } from '@stynx-nyx/testing';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
@@ -130,7 +130,7 @@ async function login(context: ReferenceApiE2eContext, email: string, tenantSlug:
   return response.body as DevLoginResponse;
 }
 
-describe('@stynx/reference-api e2e profile and preferences', () => {
+describe('@stynx-nyx/reference-api e2e profile and preferences', () => {
   let context: ReferenceApiE2eContext;
   let adminA: DevLoginResponse;
   let adminB: DevLoginResponse;

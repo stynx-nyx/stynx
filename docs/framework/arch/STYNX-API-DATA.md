@@ -1,17 +1,17 @@
-# `@stynx/data` — API Reference (v1.0)
+# `@stynx-nyx/data` — API Reference (v1.0)
 
 > Formal API surface for the data‑access module. Paired with STYNX‑SPEC §4, §13, §14.
 
 **Status:** Normative. Implementation reference.
 **Peer deps:** NestJS ≥ 10, Drizzle ORM, `pg` ≥ 8.
-**Imported types:** `@stynx/core` (TenantContext, ActorContext), `@stynx/contracts` (shared table types).
+**Imported types:** `@stynx-nyx/core` (TenantContext, ActorContext), `@stynx-nyx/contracts` (shared table types).
 
 ---
 
 ## 1. Module surface
 
 ```typescript
-// Root exports from @stynx/data
+// Root exports from @stynx-nyx/data
 export { DataModule } from './module';
 export { Database } from './database';
 export { Transaction } from './transaction';
@@ -47,7 +47,7 @@ export {
 } from './errors';
 ```
 
-Archive schema types are **not exported** to consumers. They exist at `@stynx/data/internal/archive-schema` and are consumed only by the query helpers and soft‑delete operations, per STYNX‑SPEC §14.3.
+Archive schema types are **not exported** to consumers. They exist at `@stynx-nyx/data/internal/archive-schema` and are consumed only by the query helpers and soft‑delete operations, per STYNX‑SPEC §14.3.
 
 ---
 
@@ -170,7 +170,7 @@ The type system enforces that `softDelete`, `restoreFromArchive`, `restoreWithCa
 
 ```typescript
 import { Injectable } from '@nestjs/common';
-import { Database } from '@stynx/data';
+import { Database } from '@stynx-nyx/data';
 
 @Injectable()
 class CustomerService {
@@ -428,7 +428,7 @@ Used by the LGPD erasure pipeline (§21) and by the `platform:archive_purge:*` a
 
 ## 6. Migration‑time helpers (Postgres functions)
 
-These are SQL‑callable from migration files, not TypeScript APIs. Declared once by `@stynx/data`'s bootstrap migration; consumer migrations call them.
+These are SQL‑callable from migration files, not TypeScript APIs. Declared once by `@stynx-nyx/data`'s bootstrap migration; consumer migrations call them.
 
 ### 6.1 `data.create_soft_deletable_table(ddl text)`
 
@@ -480,7 +480,7 @@ abstract class StynxDataError extends Error {
 }
 ```
 
-The NestJS error filter in `@stynx/core` maps these to HTTP responses automatically:
+The NestJS error filter in `@stynx-nyx/core` maps these to HTTP responses automatically:
 
 | Error class                                           | `code`                                 | HTTP | Retryable?                            |
 | ----------------------------------------------------- | -------------------------------------- | ---- | ------------------------------------- |
@@ -610,11 +610,11 @@ async remove(@Param('id') id: string, @Query('confirm') confirm?: string) {
 
 | Module           | Interaction                                                                                                                                        |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@stynx/auth`    | Permission decorators gate routes; `@stynx/data` itself performs no permission checks.                                                             |
-| `@stynx/tenancy` | Supplies `TenantContext`; `@stynx/data` reads it at `tx` entry.                                                                                    |
-| `@stynx/audit`   | Triggers fire inside Postgres; `@stynx/data` sets GUCs that the triggers read.                                                                     |
-| `@stynx/privacy` | Uses `hardDeleteFromArchive` and direct archive access for LGPD erasure (§21.4). Operates under `withSystemContext`.                               |
-| `@stynx/testing` | Provides matchers (`expectInArchive`, `expectNotInLive`, `expectRestoreConflict`, `expectArchiveMirrorInSync`) against the live and archive state. |
+| `@stynx-nyx/auth`    | Permission decorators gate routes; `@stynx-nyx/data` itself performs no permission checks.                                                             |
+| `@stynx-nyx/tenancy` | Supplies `TenantContext`; `@stynx-nyx/data` reads it at `tx` entry.                                                                                    |
+| `@stynx-nyx/audit`   | Triggers fire inside Postgres; `@stynx-nyx/data` sets GUCs that the triggers read.                                                                     |
+| `@stynx-nyx/privacy` | Uses `hardDeleteFromArchive` and direct archive access for LGPD erasure (§21.4). Operates under `withSystemContext`.                               |
+| `@stynx-nyx/testing` | Provides matchers (`expectInArchive`, `expectNotInLive`, `expectRestoreConflict`, `expectArchiveMirrorInSync`) against the live and archive state. |
 
 ---
 
@@ -628,4 +628,4 @@ Semantic observable changes to retry policy defaults, cascade limit defaults, or
 
 ---
 
-_End of `@stynx/data` API Reference v1.0._
+_End of `@stynx-nyx/data` API Reference v1.0._

@@ -3,7 +3,7 @@
  *
  * @packageDocumentation
  */
-export * from '@stynx/contracts';
+export * from '@stynx-nyx/contracts';
 
 export * from './common/request-context';
 
@@ -48,7 +48,7 @@ export {
   STYNX_IDEMPOTENCY_STORE,
   STYNX_IDEMPOTENT_ROUTE,
   STYNX_NO_IDEMPOTENT_ROUTE,
-} from '@stynx/idempotency';
+} from '@stynx-nyx/idempotency';
 /**
  * Idempotency module, stores, interceptors, metrics, and public contracts.
  */
@@ -66,7 +66,7 @@ export {
   type IdempotencyStore,
   type IdempotencyStoredEntry,
   type StynxIdempotencyModuleOptions,
-} from '@stynx/idempotency';
+} from '@stynx-nyx/idempotency';
 
 /**
  * Rate-limit injection tokens and route metadata helpers.
@@ -77,7 +77,7 @@ export {
   STYNX_RATE_LIMIT_POLICY,
   STYNX_RATE_LIMIT_ROUTE,
   STYNX_RATE_LIMIT_STORE,
-} from '@stynx/ratelimit';
+} from '@stynx-nyx/ratelimit';
 /**
  * Rate-limit module, guards, stores, metrics, and public contracts.
  */
@@ -98,7 +98,7 @@ export {
   type RateLimitStore,
   type ResolvedRateLimitPolicy,
   type StynxRateLimitModuleOptions,
-} from '@stynx/ratelimit';
+} from '@stynx-nyx/ratelimit';
 
 export * from './sla/constants';
 export * from './sla/types';

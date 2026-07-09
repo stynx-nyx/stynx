@@ -1,8 +1,8 @@
-[**@stynx/contracts**](../index.md)
+[**@stynx-nyx/contracts**](../index.md)
 
 ---
 
-[@stynx/contracts](../index.md) / PresignedUploadResponse
+[@stynx-nyx/contracts](../index.md) / PresignedUploadResponse
 
 # Interface: PresignedUploadResponse
 

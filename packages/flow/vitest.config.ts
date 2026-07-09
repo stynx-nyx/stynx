@@ -3,14 +3,14 @@ import { createVitestConfig } from '../../tools/repo-config/vitest.base.mjs';
 
 const cfg = createVitestConfig({
   packageDir: __dirname,
-  packageName: '@stynx/flow',
+  packageName: '@stynx-nyx/flow',
   include: ['test/unit/**/*.spec.ts', 'test/wiring/**/*.wiring-spec.ts'],
   alias: {
-    '@stynx/auth': resolve(__dirname, '../auth/src/index.ts'),
-    '@stynx/backend': resolve(__dirname, '../backend/src/index.ts'),
-    '@stynx/core': resolve(__dirname, '../core/src/index.ts'),
-    '@stynx/data': resolve(__dirname, '../data/src/index.ts'),
-    '@stynx/testing': resolve(__dirname, '../testing/src/index.ts'),
+    '@stynx-nyx/auth': resolve(__dirname, '../auth/src/index.ts'),
+    '@stynx-nyx/backend': resolve(__dirname, '../backend/src/index.ts'),
+    '@stynx-nyx/core': resolve(__dirname, '../core/src/index.ts'),
+    '@stynx-nyx/data': resolve(__dirname, '../data/src/index.ts'),
+    '@stynx-nyx/testing': resolve(__dirname, '../testing/src/index.ts'),
   },
 });
 

@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / STYNX_REQUEST_DB_CLIENT_LIFECYCLE
+[@stynx-nyx/backend](../index.md) / STYNX_REQUEST_DB_CLIENT_LIFECYCLE
 
 # Variable: STYNX_REQUEST_DB_CLIENT_LIFECYCLE
 

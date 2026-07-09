@@ -1,8 +1,8 @@
-[**@stynx/sessions**](../index.md)
+[**@stynx-nyx/sessions**](../index.md)
 
 ---
 
-[@stynx/sessions](../index.md) / SessionExchangeOptions
+[@stynx-nyx/sessions](../index.md) / SessionExchangeOptions
 
 # Interface: SessionExchangeOptions
 

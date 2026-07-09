@@ -1,7 +1,7 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
-import { Permission, PermissionGuard, StynxAuthGuard } from '@stynx/auth';
-import { Audit, RateLimit } from '@stynx/backend';
-import { Idempotent } from '@stynx/idempotency';
+import { Permission, PermissionGuard, StynxAuthGuard } from '@stynx-nyx/auth';
+import { Audit, RateLimit } from '@stynx-nyx/backend';
+import { Idempotent } from '@stynx-nyx/idempotency';
 import { FlowRuntimeService } from '../flow-runtime.service';
 import type { DispatchFlowEffectsDto } from '../types';
 

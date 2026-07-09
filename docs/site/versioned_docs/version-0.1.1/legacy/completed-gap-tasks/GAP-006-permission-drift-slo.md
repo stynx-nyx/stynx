@@ -15,7 +15,7 @@ Two minor gaps compared to pec:
    counters. pec also records p50/p95/p99 latency buckets per scope, enabling
    SLO alerting without an external metrics agent.
 
-2. **Permission drift re-sync** — `@stynx/auth`'s permission cache does not
+2. **Permission drift re-sync** — `@stynx-nyx/auth`'s permission cache does not
    proactively refresh stale entries. It relies on pub/sub invalidation events.
    If the Redis channel is temporarily unreachable, permissions can remain stale
    indefinitely. pec adds a `driftResyncIntervalMs` option that triggers a
@@ -224,16 +224,16 @@ real-time waits.
 
 ```bash
 # TypeScript builds
-pnpm --filter @stynx/ratelimit build
-pnpm --filter @stynx/auth build
+pnpm --filter @stynx-nyx/ratelimit build
+pnpm --filter @stynx-nyx/auth build
 
 # Unit tests pass
-pnpm --filter @stynx/ratelimit test
-pnpm --filter @stynx/auth test
+pnpm --filter @stynx-nyx/ratelimit test
+pnpm --filter @stynx-nyx/auth test
 
 # Lint clean
-pnpm --filter @stynx/ratelimit lint
-pnpm --filter @stynx/auth lint
+pnpm --filter @stynx-nyx/ratelimit lint
+pnpm --filter @stynx-nyx/auth lint
 ```
 
 ---

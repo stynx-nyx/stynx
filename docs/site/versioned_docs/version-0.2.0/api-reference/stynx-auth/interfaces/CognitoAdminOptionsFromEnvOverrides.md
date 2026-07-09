@@ -1,8 +1,8 @@
-[**@stynx/auth**](../index.md)
+[**@stynx-nyx/auth**](../index.md)
 
 ---
 
-[@stynx/auth](../index.md) / CognitoAdminOptionsFromEnvOverrides
+[@stynx-nyx/auth](../index.md) / CognitoAdminOptionsFromEnvOverrides
 
 # Interface: CognitoAdminOptionsFromEnvOverrides
 

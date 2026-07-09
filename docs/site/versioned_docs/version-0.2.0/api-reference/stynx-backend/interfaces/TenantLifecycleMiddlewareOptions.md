@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / TenantLifecycleMiddlewareOptions
+[@stynx-nyx/backend](../index.md) / TenantLifecycleMiddlewareOptions
 
 # Interface: TenantLifecycleMiddlewareOptions
 

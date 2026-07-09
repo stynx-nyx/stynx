@@ -114,51 +114,51 @@
       "tests": [
         {
           "id": "0",
-          "name": "@stynx/contracts errors StynxError inherits from Error",
+          "name": "@stynx-nyx/contracts errors StynxError inherits from Error",
           "location": { "start": { "column": 6, "line": 10 } }
         },
         {
           "id": "1",
-          "name": "@stynx/contracts errors StynxError details optional",
+          "name": "@stynx-nyx/contracts errors StynxError details optional",
           "location": { "start": { "column": 6, "line": 19 } }
         },
         {
           "id": "2",
-          "name": "@stynx/contracts errors AuthenticationError carries the AUTHENTICATION_ERROR code",
+          "name": "@stynx-nyx/contracts errors AuthenticationError carries the AUTHENTICATION_ERROR code",
           "location": { "start": { "column": 6, "line": 26 } }
         },
         {
           "id": "3",
-          "name": "@stynx/contracts errors AuthorizationError carries the AUTHORIZATION_ERROR code",
+          "name": "@stynx-nyx/contracts errors AuthorizationError carries the AUTHORIZATION_ERROR code",
           "location": { "start": { "column": 6, "line": 35 } }
         },
         {
           "id": "4",
-          "name": "@stynx/contracts errors IdentityAdminError accepts IDENTITY_NOT_FOUND as a code",
+          "name": "@stynx-nyx/contracts errors IdentityAdminError accepts IDENTITY_NOT_FOUND as a code",
           "location": { "start": { "column": 17, "line": 46 } }
         },
         {
           "id": "5",
-          "name": "@stynx/contracts errors IdentityAdminError accepts IDENTITY_FORBIDDEN as a code",
+          "name": "@stynx-nyx/contracts errors IdentityAdminError accepts IDENTITY_FORBIDDEN as a code",
           "location": { "start": { "column": 17, "line": 46 } }
         }
       ],
-      "source": "import {\n  StynxError,\n  AuthenticationError,\n  AuthorizationError,\n  IdentityAdminError,\n} from '../src/errors';\n\ndescribe('@stynx/contracts errors', () => {\n  describe('StynxError', () => {\n    it('inherits from Error', () => {\n      const e = new StynxError('boom', 'X', { k: 'v' });\n      expect(e).toBeInstanceOf(Error);\n      expect(e.name).toBe('StynxError');\n      expect(e.message).toBe('boom');\n      expect(e.code).toBe('X');\n      expect(e.details).toEqual({ k: 'v' });\n    });\n\n    it('details optional', () => {\n      const e = new StynxError('m', 'C');\n      expect(e.details).toBeUndefined();\n    });\n  });\n\n  describe('AuthenticationError', () => {\n    it('carries the AUTHENTICATION_ERROR code', () => {\n      const e = new AuthenticationError('bad token');\n      expect(e).toBeInstanceOf(StynxError);\n      expect(e.code).toBe('AUTHENTICATION_ERROR');\n      expect(e.name).toBe('AuthenticationError');\n    });\n  });\n\n  describe('AuthorizationError', () => {\n    it('carries the AUTHORIZATION_ERROR code', () => {\n      const e = new AuthorizationError('not allowed', { permission: 'admin' });\n      expect(e.code).toBe('AUTHORIZATION_ERROR');\n      expect(e.details).toEqual({ permission: 'admin' });\n    });\n  });\n\n  describe('IdentityAdminError', () => {\n    it.each([\n      'IDENTITY_NOT_FOUND',\n      'IDENTITY_FORBIDDEN',\n    ] as const)('accepts %s as a code', (code) => {\n      const e = new IdentityAdminError(code, 'msg');\n      expect(e.code).toBe(code);\n      expect(e.name).toBe('IdentityAdminError');\n    });\n  });\n});\n"
+      "source": "import {\n  StynxError,\n  AuthenticationError,\n  AuthorizationError,\n  IdentityAdminError,\n} from '../src/errors';\n\ndescribe('@stynx-nyx/contracts errors', () => {\n  describe('StynxError', () => {\n    it('inherits from Error', () => {\n      const e = new StynxError('boom', 'X', { k: 'v' });\n      expect(e).toBeInstanceOf(Error);\n      expect(e.name).toBe('StynxError');\n      expect(e.message).toBe('boom');\n      expect(e.code).toBe('X');\n      expect(e.details).toEqual({ k: 'v' });\n    });\n\n    it('details optional', () => {\n      const e = new StynxError('m', 'C');\n      expect(e.details).toBeUndefined();\n    });\n  });\n\n  describe('AuthenticationError', () => {\n    it('carries the AUTHENTICATION_ERROR code', () => {\n      const e = new AuthenticationError('bad token');\n      expect(e).toBeInstanceOf(StynxError);\n      expect(e.code).toBe('AUTHENTICATION_ERROR');\n      expect(e.name).toBe('AuthenticationError');\n    });\n  });\n\n  describe('AuthorizationError', () => {\n    it('carries the AUTHORIZATION_ERROR code', () => {\n      const e = new AuthorizationError('not allowed', { permission: 'admin' });\n      expect(e.code).toBe('AUTHORIZATION_ERROR');\n      expect(e.details).toEqual({ permission: 'admin' });\n    });\n  });\n\n  describe('IdentityAdminError', () => {\n    it.each([\n      'IDENTITY_NOT_FOUND',\n      'IDENTITY_FORBIDDEN',\n    ] as const)('accepts %s as a code', (code) => {\n      const e = new IdentityAdminError(code, 'msg');\n      expect(e.code).toBe(code);\n      expect(e.name).toBe('IdentityAdminError');\n    });\n  });\n});\n"
     },
     "test/index.spec.ts": {
       "tests": [
         {
           "id": "6",
-          "name": "@stynx/contracts barrel re-exports core error classes",
+          "name": "@stynx-nyx/contracts barrel re-exports core error classes",
           "location": { "start": { "column": 4, "line": 4 } }
         },
         {
           "id": "7",
-          "name": "@stynx/contracts barrel barrel has multiple exports",
+          "name": "@stynx-nyx/contracts barrel barrel has multiple exports",
           "location": { "start": { "column": 4, "line": 11 } }
         }
       ],
-      "source": "import * as Contracts from '../src/index';\n\ndescribe('@stynx/contracts barrel', () => {\n  it('re-exports core error classes', () => {\n    expect(typeof (Contracts as { StynxError?: unknown }).StynxError).toBe('function');\n    expect(typeof (Contracts as { AuthenticationError?: unknown }).AuthenticationError).toBe('function');\n    expect(typeof (Contracts as { AuthorizationError?: unknown }).AuthorizationError).toBe('function');\n    expect(typeof (Contracts as { IdentityAdminError?: unknown }).IdentityAdminError).toBe('function');\n  });\n\n  it('barrel has multiple exports', () => {\n    expect(Object.keys(Contracts).length).toBeGreaterThan(3);\n  });\n});\n"
+      "source": "import * as Contracts from '../src/index';\n\ndescribe('@stynx-nyx/contracts barrel', () => {\n  it('re-exports core error classes', () => {\n    expect(typeof (Contracts as { StynxError?: unknown }).StynxError).toBe('function');\n    expect(typeof (Contracts as { AuthenticationError?: unknown }).AuthenticationError).toBe('function');\n    expect(typeof (Contracts as { AuthorizationError?: unknown }).AuthorizationError).toBe('function');\n    expect(typeof (Contracts as { IdentityAdminError?: unknown }).IdentityAdminError).toBe('function');\n  });\n\n  it('barrel has multiple exports', () => {\n    expect(Object.keys(Contracts).length).toBeGreaterThan(3);\n  });\n});\n"
     }
   },
   "projectRoot": "/Users/aarusso/Development/stech/stynx/packages/contracts",

@@ -16,7 +16,7 @@ This bifurcation is the locked **Decision A (c) hybrid** in [`ADR-DEVAI-0.2.0-MI
 
 | Sub-section                                   | Purpose                                                                                       |
 | --------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| [API](./api/)                                 | OpenAPI 3.1 spec + reference for `@stynx/*` and `@stynx-web/*` packages                       |
+| [API](./api/)                                 | OpenAPI 3.1 spec + reference for `@stynx-nyx/*` and `@stynx-web/*` packages                       |
 | [Architecture](./arch/)                       | High-level architecture guide + reference-app skeletons + invariants under `arch/invariants/` |
 | [Contracts](./contracts/)                     | Runtime contracts: error envelopes, audit events, integration adapter, feature flags          |
 | [Schemas](./schemas/)                         | JSON Schemas, auto-indexed by the `gen-schema-browser` generator                              |

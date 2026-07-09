@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / VerifyResult
+[@stynx-nyx/signature](../index.md) / VerifyResult
 
 # Interface: VerifyResult
 

@@ -80,7 +80,7 @@ Used as `setupFiles` in `packages/{auth,core,sessions,testing}/jest.config.cjs`.
 | `packages/testing/test/create-test-app.unit.spec.ts`                 | Wrapped all top-level mocks + `class FakeContainer` in a single `vi.hoisted(...)` block                        | Same                                                                                                                                                                                |
 | `packages/auth/test/unit/validators.spec.ts`                         | Standalone `jest.requireActual` switched to a runner-detecting `vi.importActual` / `jest.requireActual` bridge | Vitest needs `await vi.importActual` (sync `vi.importActual` doesn't exist); Jest needs sync `jest.requireActual` with spec-relative resolution.                                    |
 | `packages/data/test/unit/migration-runner.spec.ts`                   | `jest.doMock(...)` + `require(...)` pattern rewritten to `jest.doMock(...)` + `await import(...)`              | Vitest's hoister and module graph need a dynamic import after `vi.doMock`. Jest accepts the dynamic import because the parity script sets `NODE_OPTIONS=--experimental-vm-modules`. |
-| `domain/demo-bookmark/api/test/bookmark*.service.spec.ts`            | `require('@stynx/core').RequestContext` → static `import { RequestContext } from '@stynx/core'`                | The `require` produced a different class identity than NestJS DI registered (CJS-vs-ESM dual evaluation).                                                                           |
+| `domain/demo-bookmark/api/test/bookmark*.service.spec.ts`            | `require('@stynx-nyx/core').RequestContext` → static `import { RequestContext } from '@stynx-nyx/core'`                | The `require` produced a different class identity than NestJS DI registered (CJS-vs-ESM dual evaluation).                                                                           |
 | `reference/api/test/integration/reference-api.unit-coverage.spec.ts` | `jest.isolateModules(() => { require(...) })` → `jest.resetModules(); await import(...)` in an async test      | `vi.isolateModules` doesn't exist in Vitest 3 and `require()` inside the callback bypassed Vite's module graph.                                                                     |
 
 Jest configs gained one `setupFiles` entry each (`packages/{auth,core,sessions,testing}/jest.config.cjs`) to load the `vi` polyfill.
@@ -91,8 +91,8 @@ None. All previously open divergences landed in the V5-readiness pass:
 
 - `packages/auth/test/unit/validators.spec.ts` — standalone `jest.requireActual` switched to a runner-detecting `vi.importActual` bridge (Vitest async path; Jest sync fallback via the global).
 - `packages/data/test/unit/migration-runner.spec.ts` — `jest.doMock(...)` + `require(...)` pattern rewritten to `jest.doMock(...)` + `await import(...)` (works under both runners because the parity script invokes Jest with `NODE_OPTIONS=--experimental-vm-modules`).
-- `packages/i18n/test/integration/i18n.module.spec.ts` — collected by the unit-lane config (because `test/**/*.spec.ts` matches both unit and integration). The integration spec needed `@stynx/sessions` + `@stynx/testing` aliases in the unit `vitest.config.ts` to avoid pulling those packages through their compiled CJS `dist/`, which produced a duplicate `RequestContext` class identity and broke NestJS DI.
-- `domain/demo-bookmark/api/test/bookmark*.service.spec.ts` — `require('@stynx/core').RequestContext` rewritten to a static `import { RequestContext } from '@stynx/core'`.
+- `packages/i18n/test/integration/i18n.module.spec.ts` — collected by the unit-lane config (because `test/**/*.spec.ts` matches both unit and integration). The integration spec needed `@stynx-nyx/sessions` + `@stynx-nyx/testing` aliases in the unit `vitest.config.ts` to avoid pulling those packages through their compiled CJS `dist/`, which produced a duplicate `RequestContext` class identity and broke NestJS DI.
+- `domain/demo-bookmark/api/test/bookmark*.service.spec.ts` — `require('@stynx-nyx/core').RequestContext` rewritten to a static `import { RequestContext } from '@stynx-nyx/core'`.
 - `reference/api/test/integration/reference-api.unit-coverage.spec.ts` — `jest.isolateModules(() => { require(...) })` rewritten to `jest.resetModules(); await import(...)` inside an async test body.
 - `vi.dontMock` was removed from the syntactic rewrite list and aliased to `vi.unmock` inside the compat shim (Vitest has no `vi.dontMock`).
 
@@ -110,8 +110,8 @@ pnpm test:parity
 pnpm test:parity:int
 
 # Per-package (passes through Turbo + script):
-pnpm --filter @stynx/data test:vt
-pnpm --filter @stynx/data test:int:vt
+pnpm --filter @stynx-nyx/data test:vt
+pnpm --filter @stynx-nyx/data test:int:vt
 ```
 
 The parity script's diff is name-tolerant: it compares per-file pass/fail counts rather than fully-qualified test names, absorbing `it.each` title-encoding differences between the two runners.

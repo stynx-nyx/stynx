@@ -1,10 +1,10 @@
 ---
-title: '@stynx/integration-adapter'
+title: '@stynx-nyx/integration-adapter'
 ---
 
-# @stynx/integration-adapter
+# @stynx-nyx/integration-adapter
 
-`@stynx/integration-adapter` is the generic state-system integration framework
+`@stynx-nyx/integration-adapter` is the generic state-system integration framework
 for STYNX consumers. It standardizes retry, timeout, idempotency, circuit
 breaking, and telemetry while keeping request/response schemas repo-local.
 
@@ -15,7 +15,7 @@ RENAVAM, RENACH, RENAEST, SNE/CDT, DETRAN, municipal, and tow/yard adapters.
 ## Public API
 
 ```ts
-import { IntegrationAdapter } from '@stynx/integration-adapter';
+import { IntegrationAdapter } from '@stynx-nyx/integration-adapter';
 
 const adapter = new IntegrationAdapter({
   name: 'renach',
@@ -51,4 +51,4 @@ belong in the consuming repo or a later STYNX provider package.
 
 The package emits structured lifecycle events through the optional
 `IntegrationTelemetry` hook. Host applications should bridge those events to
-`@stynx/logging` and, when calls mutate legal or workflow state, `@stynx/audit`.
+`@stynx-nyx/logging` and, when calls mutate legal or workflow state, `@stynx-nyx/audit`.

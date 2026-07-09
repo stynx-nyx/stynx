@@ -1,7 +1,7 @@
 import { createStrykerConfig } from '../../tools/stryker/base.mjs';
 
 export default createStrykerConfig({
-  packageName: '@stynx/storage',
+  packageName: '@stynx-nyx/storage',
   vitestConfig: './vitest.stryker.config.ts',
   mutate: [
     'src/documents.service.ts',

@@ -1,8 +1,8 @@
-**@stynx/flow**
+**@stynx-nyx/flow**
 
 ---
 
-# @stynx/flow
+# @stynx-nyx/flow
 
 Public Flow exports for workflow design, policy storage, and module wiring.
 

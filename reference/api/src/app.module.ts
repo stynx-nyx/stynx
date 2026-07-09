@@ -7,20 +7,20 @@ import {
   PermissionGuard,
   StynxAuthGuard,
   StynxAuthModule,
-} from '@stynx/auth';
+} from '@stynx-nyx/auth';
 import {
   StynxPlatformPipelineModule,
   AuditInterceptor,
   STYNX_AUDIT_SINK,
-} from '@stynx/backend';
-import { Database, StynxDataModule } from '@stynx/data';
-import { StynxFlowModule } from '@stynx/flow';
-import { StynxHealthModule } from '@stynx/health';
-import { StynxLoggingModule } from '@stynx/logging';
-import { StynxSessionsModule } from '@stynx/sessions';
-import { StynxStorageModule } from '@stynx/storage';
-import { StynxTenancyModule } from '@stynx/tenancy';
-import { AuditSqlSink, StynxAuditModule as StynxAuditApiModule } from '@stynx/audit';
+} from '@stynx-nyx/backend';
+import { Database, StynxDataModule } from '@stynx-nyx/data';
+import { StynxFlowModule } from '@stynx-nyx/flow';
+import { StynxHealthModule } from '@stynx-nyx/health';
+import { StynxLoggingModule } from '@stynx-nyx/logging';
+import { StynxSessionsModule } from '@stynx-nyx/sessions';
+import { StynxStorageModule } from '@stynx-nyx/storage';
+import { StynxTenancyModule } from '@stynx-nyx/tenancy';
+import { AuditSqlSink, StynxAuditModule as StynxAuditApiModule } from '@stynx-nyx/audit';
 import { SampleModule } from './sample/sample.module';
 
 function env(name: string, fallback: string): string {

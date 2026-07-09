@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import { expectRLSIsolated } from '@stynx/testing';
+import { expectRLSIsolated } from '@stynx-nyx/testing';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { queryRowsAsTenant } from '../fixtures/app';
 import { createAuthenticatedAgent, type AuthenticatedAgent } from '../fixtures/http';
@@ -147,7 +147,7 @@ async function queryPostErasureState(context: ReferenceApiPrivacyE2eContext): Pr
   );
 }
 
-describe('@stynx/reference-api e2e privacy', () => {
+describe('@stynx-nyx/reference-api e2e privacy', () => {
   let context: ReferenceApiPrivacyE2eContext;
   let adminA: AuthenticatedAgent;
 

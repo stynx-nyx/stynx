@@ -2,8 +2,8 @@ import { CanActivate, Controller, Get, Req, UseGuards } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { generateRequestId, RequestContext } from '@stynx/core';
-import { StynxDataModule } from '@stynx/data';
+import { generateRequestId, RequestContext } from '@stynx-nyx/core';
+import { StynxDataModule } from '@stynx-nyx/data';
 import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
 import { StynxTenancyModule } from '../../src/tenancy.module';
 import { TenancyService } from '../../src/tenancy.service';
@@ -78,9 +78,9 @@ describe('StynxTenancyModule integration', () => {
       imports: [
         StynxDataModule.forRoot({
           connections: {
-            owner: { connectionString: database.connectionString('@stynx/tenancy:owner') },
-            app: { connectionString: database.connectionString('@stynx/tenancy:app') },
-            reader: { connectionString: database.connectionString('@stynx/tenancy:reader') },
+            owner: { connectionString: database.connectionString('@stynx-nyx/tenancy:owner') },
+            app: { connectionString: database.connectionString('@stynx-nyx/tenancy:app') },
+            reader: { connectionString: database.connectionString('@stynx-nyx/tenancy:reader') },
           },
           migrations: { enabled: true },
         }),

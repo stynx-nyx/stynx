@@ -4,12 +4,12 @@ import {
   IdempotencyInterceptor,
   StynxIdempotencyModule,
   type StynxIdempotencyModuleOptions,
-} from '@stynx/idempotency';
+} from '@stynx-nyx/idempotency';
 import {
   RateLimitGuard,
   StynxRateLimitModule,
   type StynxRateLimitModuleOptions,
-} from '@stynx/ratelimit';
+} from '@stynx-nyx/ratelimit';
 import { SlaMonitorInterceptor } from '../sla/sla-monitor.interceptor';
 import {
   StynxSlaModule,

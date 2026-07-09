@@ -1,8 +1,8 @@
-[**@stynx/feature-flags**](../index.md)
+[**@stynx-nyx/feature-flags**](../index.md)
 
 ---
 
-[@stynx/feature-flags](../index.md) / FlagDefinition
+[@stynx-nyx/feature-flags](../index.md) / FlagDefinition
 
 # Interface: FlagDefinition
 

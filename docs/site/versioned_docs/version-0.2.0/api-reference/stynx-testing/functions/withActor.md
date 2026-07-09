@@ -1,8 +1,8 @@
-[**@stynx/testing**](../index.md)
+[**@stynx-nyx/testing**](../index.md)
 
 ---
 
-[@stynx/testing](../index.md) / withActor
+[@stynx-nyx/testing](../index.md) / withActor
 
 # Function: withActor()
 

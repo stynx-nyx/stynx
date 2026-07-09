@@ -113,7 +113,7 @@ runCheck('object-operations-through-storage', () => {
   }
 
   if (offenders.length > 0) {
-    throw new Error(`Direct S3 imports outside @stynx/storage:\n${offenders.join('\n')}`);
+    throw new Error(`Direct S3 imports outside @stynx-nyx/storage:\n${offenders.join('\n')}`);
   }
 });
 
@@ -179,7 +179,7 @@ if (includeReferenceApps) {
       'pnpm',
       [
         '--filter',
-        '@stynx/reference-api',
+        '@stynx-nyx/reference-api',
         'test',
         '--',
         '--runInBand',
@@ -192,7 +192,7 @@ if (includeReferenceApps) {
       },
     );
     if (result.status !== 0) {
-      throw new Error('@stynx/reference-api runtime suite failed');
+      throw new Error('@stynx-nyx/reference-api runtime suite failed');
     }
   });
 }

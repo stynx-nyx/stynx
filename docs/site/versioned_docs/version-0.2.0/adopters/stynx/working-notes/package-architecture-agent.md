@@ -105,7 +105,7 @@ Scope: define concrete workspace/package changes for an installable `stynx` pack
   - allow explicit subpath exports only for stable public surfaces (for example `./auth`, `./audit`), not deep internals.
 - Dependency boundaries:
   - `@stech/stynx-contracts`: no framework runtime deps.
-  - `@stynx/backend`: peer deps for Nest runtime (`@nestjs/common`, `@nestjs/core`, `@nestjs/config`, `reflect-metadata`, `rxjs`), deps on `@stech/stynx-contracts`.
+  - `@stynx-nyx/backend`: peer deps for Nest runtime (`@nestjs/common`, `@nestjs/core`, `@nestjs/config`, `reflect-metadata`, `rxjs`), deps on `@stech/stynx-contracts`.
   - `@stech/stynx-auth-cognito`: deps on `jose` and `@stech/stynx-contracts`; optional Nest bridge stays in `stynx-backend`.
   - `@stech/stynx-storage-s3`: deps on AWS SDK + `@stech/stynx-contracts`.
   - `@stech/stynx-audit-sql`: deps on `@stech/stynx-contracts`; keep `pg` as peer if adapter takes client/query abstraction, or direct dep if package owns connection creation.

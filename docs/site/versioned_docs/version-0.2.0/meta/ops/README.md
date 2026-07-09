@@ -26,7 +26,7 @@ Operator-facing runbooks and recovery procedures for the STYNX reference deploym
   stack down. The smoke defaults the host PostgreSQL compose port to `55432` to avoid
   clashing with a developer's local PostgreSQL on `5432`; override with
   `STYNX_SMOKE_POSTGRES_PORT` or `STYNX_SMOKE_DATABASE_URL` when needed.
-- `pnpm --filter @stynx/reference-api test:int` verifies runtime metrics,
+- `pnpm --filter @stynx-nyx/reference-api test:int` verifies runtime metrics,
   tenancy/RLS, audit, storage, and soft-delete behavior with Testcontainers.
 - `node test/perf/k6/run-scenarios.mjs --scenario crud` runs a k6 scenario against
   an already-running reference stack.

@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / STYNX_DB_CONTEXT_APPLIER
+[@stynx-nyx/backend](../index.md) / STYNX_DB_CONTEXT_APPLIER
 
 # Variable: STYNX_DB_CONTEXT_APPLIER
 

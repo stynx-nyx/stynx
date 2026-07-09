@@ -1,5 +1,5 @@
 import { ForbiddenException } from '@nestjs/common';
-import { Database } from '@stynx/data';
+import { Database } from '@stynx-nyx/data';
 import { TenancyPlatformAdminGuard } from '../../src/tenancy-platform-admin.guard';
 import {
   TENANT_SYSTEM_OPERATION_SINK_PROVIDER,
@@ -64,7 +64,7 @@ describe('TenantSystemOperationSink', () => {
       'tenant archive export',
       '018f53e4-28a1-7cd8-a0ff-5b22c3a07112',
       'req-1',
-      JSON.stringify({ source: '@stynx/tenancy' }),
+      JSON.stringify({ source: '@stynx-nyx/tenancy' }),
     ]);
     expect(TENANT_SYSTEM_OPERATION_SINK_PROVIDER.useClass).toBe(TenantSystemOperationSink);
   });
@@ -87,7 +87,7 @@ describe('TenantSystemOperationSink', () => {
       'tenant purge',
       null,
       'req-1',
-      JSON.stringify({ source: '@stynx/tenancy' }),
+      JSON.stringify({ source: '@stynx-nyx/tenancy' }),
     ]);
   });
 

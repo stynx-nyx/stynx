@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / XmlDSigVerifyResult
+[@stynx-nyx/signature](../index.md) / XmlDSigVerifyResult
 
 # Type Alias: XmlDSigVerifyResult
 

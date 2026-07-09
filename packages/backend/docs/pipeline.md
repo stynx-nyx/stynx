@@ -4,11 +4,11 @@ title: backend/pipeline
 
 # `StynxPlatformPipelineModule` — the global request pipeline
 
-The platform pipeline is the foundation submodule of `@stynx/backend`. It wires three cross-cutting concerns as global guards/interceptors so they apply uniformly to every controller method:
+The platform pipeline is the foundation submodule of `@stynx-nyx/backend`. It wires three cross-cutting concerns as global guards/interceptors so they apply uniformly to every controller method:
 
-- **Rate-limit guard** (from `@stynx/ratelimit`) — sliding-window guard registered as `APP_GUARD`
+- **Rate-limit guard** (from `@stynx-nyx/ratelimit`) — sliding-window guard registered as `APP_GUARD`
 - **SLA monitor interceptor** (from the backend's own `sla/` submodule) — registered as `APP_INTERCEPTOR`
-- **Idempotency interceptor** (from `@stynx/idempotency`) — registered as `APP_INTERCEPTOR`
+- **Idempotency interceptor** (from `@stynx-nyx/idempotency`) — registered as `APP_INTERCEPTOR`
 
 Mount this **first** after `StynxCoreModule`. Every other backend submodule (auth, audit, data, etc.) layers on top.
 
@@ -19,7 +19,7 @@ Always, for every STYNX-based NestJS app. The three concerns it wires (rate-limi
 ## Wiring
 
 ```ts
-import { StynxPlatformPipelineModule } from '@stynx/backend';
+import { StynxPlatformPipelineModule } from '@stynx-nyx/backend';
 
 StynxPlatformPipelineModule.forRoot({
   rateLimit: { default: { window: '1m', max: 60 } },
@@ -34,9 +34,9 @@ Each of the three keys takes the underlying package's options OR `false` to disa
 
 | Option        | Type                                     | Default               | Description                                                              |
 | ------------- | ---------------------------------------- | --------------------- | ------------------------------------------------------------------------ |
-| `rateLimit`   | `StynxRateLimitModuleOptions \| false`   | enabled with defaults | The rate-limit options from `@stynx/ratelimit`. Pass `false` to disable. |
+| `rateLimit`   | `StynxRateLimitModuleOptions \| false`   | enabled with defaults | The rate-limit options from `@stynx-nyx/ratelimit`. Pass `false` to disable. |
 | `sla`         | `StynxSlaModuleOptions \| false`         | enabled with defaults | SLA threshold config. Per-route + per-handler overrides supported.       |
-| `idempotency` | `StynxIdempotencyModuleOptions \| false` | enabled with defaults | The idempotency options from `@stynx/idempotency`.                       |
+| `idempotency` | `StynxIdempotencyModuleOptions \| false` | enabled with defaults | The idempotency options from `@stynx-nyx/idempotency`.                       |
 
 ## Order of execution
 
@@ -62,6 +62,6 @@ You don't control this order directly — the platform pipeline sets it. Don't t
 
 ## Related
 
-- [`@stynx/ratelimit`](/docs/packages/ratelimit/) — the underlying rate-limit primitives.
-- [`@stynx/idempotency`](/docs/packages/idempotency/) — the underlying idempotency primitives.
+- [`@stynx-nyx/ratelimit`](/docs/packages/ratelimit/) — the underlying rate-limit primitives.
+- [`@stynx-nyx/idempotency`](/docs/packages/idempotency/) — the underlying idempotency primitives.
 - [`backend/auth`](/docs/packages/backend/auth/) — the next submodule typically mounted (live after W03).

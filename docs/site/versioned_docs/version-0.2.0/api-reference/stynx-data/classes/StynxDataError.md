@@ -1,8 +1,8 @@
-[**@stynx/data**](../index.md)
+[**@stynx-nyx/data**](../index.md)
 
 ---
 
-[@stynx/data](../index.md) / StynxDataError
+[@stynx-nyx/data](../index.md) / StynxDataError
 
 # Class: StynxDataError
 

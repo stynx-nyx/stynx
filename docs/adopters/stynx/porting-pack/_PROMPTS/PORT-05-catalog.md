@@ -6,14 +6,14 @@
 
 ## Mission
 
-For every `@stynx/*` and `@stynx-web/*` package found in discovery,
+For every `@stynx-nyx/*` and `@stynx-web/*` package found in discovery,
 document the public surface and the trigger conditions that should
 make a consuming agent reach for it.
 
 ## Per-package template
 
 ```
-### @stynx/<name> — vX.Y.Z
+### @stynx-nyx/<name> — vX.Y.Z
 
 - **Purpose:** <one sentence>
 - **Maturity:** STABLE | EXPERIMENTAL | NOT YET IMPLEMENTED
@@ -45,21 +45,21 @@ After the per-package list, produce a table:
 
 | Foreign-codebase concern       | STYNX package                                                         |
 | ------------------------------ | --------------------------------------------------------------------- |
-| HTTP request handling baseline | `@stynx/core`                                                         |
-| DB access                      | `@stynx/data`                                                         |
-| Auth (JWT verify, login)       | `@stynx/auth` + `@stynx/sessions`                                     |
-| Multi-tenant context           | `@stynx/tenancy`                                                      |
-| File uploads / S3              | `@stynx/storage`                                                      |
-| Audit trail                    | `@stynx/audit`                                                        |
-| Structured logs                | `@stynx/logging`                                                      |
-| Health/probes/metrics          | `@stynx/health`                                                       |
-| Rate limiting                  | `@stynx/ratelimit`                                                    |
-| Idempotency keys               | `@stynx/idempotency`                                                  |
-| LGPD export/erasure            | `@stynx/privacy`                                                      |
-| i18n                           | `@stynx/i18n`                                                         |
-| Test fixtures                  | `@stynx/testing`                                                      |
-| CLI ops (migrate, doctor)      | `@stynx/cli`                                                          |
-| Shared TypeScript types        | `@stynx/contracts` (status: NOT YET IMPLEMENTED — FIND-001)           |
+| HTTP request handling baseline | `@stynx-nyx/core`                                                         |
+| DB access                      | `@stynx-nyx/data`                                                         |
+| Auth (JWT verify, login)       | `@stynx-nyx/auth` + `@stynx-nyx/sessions`                                     |
+| Multi-tenant context           | `@stynx-nyx/tenancy`                                                      |
+| File uploads / S3              | `@stynx-nyx/storage`                                                      |
+| Audit trail                    | `@stynx-nyx/audit`                                                        |
+| Structured logs                | `@stynx-nyx/logging`                                                      |
+| Health/probes/metrics          | `@stynx-nyx/health`                                                       |
+| Rate limiting                  | `@stynx-nyx/ratelimit`                                                    |
+| Idempotency keys               | `@stynx-nyx/idempotency`                                                  |
+| LGPD export/erasure            | `@stynx-nyx/privacy`                                                      |
+| i18n                           | `@stynx-nyx/i18n`                                                         |
+| Test fixtures                  | `@stynx-nyx/testing`                                                      |
+| CLI ops (migrate, doctor)      | `@stynx-nyx/cli`                                                          |
+| Shared TypeScript types        | `@stynx-nyx/contracts` (status: NOT YET IMPLEMENTED — FIND-001)           |
 | Angular HTTP client            | `@stynx-web/sdk`                                                      |
 | Angular base                   | `@stynx-web/angular`                                                  |
 | Angular auth UI                | `@stynx-web/angular-auth`                                             |

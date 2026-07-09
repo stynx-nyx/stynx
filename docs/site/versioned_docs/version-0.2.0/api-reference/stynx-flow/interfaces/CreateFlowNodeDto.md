@@ -1,8 +1,8 @@
-[**@stynx/flow**](../index.md)
+[**@stynx-nyx/flow**](../index.md)
 
 ---
 
-[@stynx/flow](../index.md) / CreateFlowNodeDto
+[@stynx-nyx/flow](../index.md) / CreateFlowNodeDto
 
 # Interface: CreateFlowNodeDto
 

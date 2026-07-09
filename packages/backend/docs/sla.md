@@ -13,7 +13,7 @@ In any production app. Mount via `StynxPlatformPipelineModule.forRoot({ sla: {..
 ## Wiring
 
 ```ts
-import { StynxSlaModule } from '@stynx/backend';
+import { StynxSlaModule } from '@stynx-nyx/backend';
 
 StynxSlaModule.forRoot({
   thresholds: { p99: '500ms', p50: '100ms' },
@@ -42,5 +42,5 @@ StynxSlaModule.forRoot({
 ## Related
 
 - [`backend/pipeline`](/docs/packages/backend/pipeline/) — preferred mount.
-- [`@stynx/health`](/docs/packages/health/) — adjacent (probes vs SLA breach detection).
-- [`@stynx/logging`](/docs/packages/logging/) — breach events route through here.
+- [`@stynx-nyx/health`](/docs/packages/health/) — adjacent (probes vs SLA breach detection).
+- [`@stynx-nyx/logging`](/docs/packages/logging/) — breach events route through here.

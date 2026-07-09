@@ -1,8 +1,8 @@
-[**@stynx/data**](../index.md)
+[**@stynx-nyx/data**](../index.md)
 
 ---
 
-[@stynx/data](../index.md) / flowDecisionPolicy
+[@stynx-nyx/data](../index.md) / flowDecisionPolicy
 
 # Variable: flowDecisionPolicy
 

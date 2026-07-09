@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / STYNX_AUDIT_METADATA
+[@stynx-nyx/backend](../index.md) / STYNX_AUDIT_METADATA
 
 # Variable: STYNX_AUDIT_METADATA
 

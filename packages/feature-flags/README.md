@@ -1,10 +1,10 @@
-# `@stynx/feature-flags` — minimal feature-flag contract with in-memory default + pluggable providers
+# `@stynx-nyx/feature-flags` — minimal feature-flag contract with in-memory default + pluggable providers
 
-`@stynx/feature-flags` is a minimal feature-flag contract. It exposes `FeatureFlagProvider.evaluate(flag, context)` returning a typed `FlagEvaluation`. Default provider reads from a static `FlagSet` (in-memory + file-backed). Custom providers (LaunchDarkly, Unleash, your own) implement the interface.
+`@stynx-nyx/feature-flags` is a minimal feature-flag contract. It exposes `FeatureFlagProvider.evaluate(flag, context)` returning a typed `FlagEvaluation`. Default provider reads from a static `FlagSet` (in-memory + file-backed). Custom providers (LaunchDarkly, Unleash, your own) implement the interface.
 
 ## Purpose
 
-Feature flags + experimentation tooling is a big ecosystem; most STYNX apps don't need a full platform. `@stynx/feature-flags` provides the _contract_ so per-app feature toggles use a consistent shape, while leaving the provider implementation open for swap-in if/when you scale to a hosted service.
+Feature flags + experimentation tooling is a big ecosystem; most STYNX apps don't need a full platform. `@stynx-nyx/feature-flags` provides the _contract_ so per-app feature toggles use a consistent shape, while leaving the provider implementation open for swap-in if/when you scale to a hosted service.
 
 You reach for it any time you want to gate a code path behind a flag. Start with the in-memory provider; swap to LaunchDarkly later without touching call sites.
 
@@ -17,15 +17,15 @@ Backend developers gating new code paths.
 ## Install
 
 ```bash
-pnpm add @stynx/feature-flags
+pnpm add @stynx-nyx/feature-flags
 ```
 
-**Peer dependencies:** `@stynx/core` `^1` (for `RequestContext` projection into `FlagContext`).
+**Peer dependencies:** `@stynx-nyx/core` `^1` (for `RequestContext` projection into `FlagContext`).
 
 ## Quick start
 
 ```ts
-import { InMemoryFeatureFlagProvider } from '@stynx/feature-flags';
+import { InMemoryFeatureFlagProvider } from '@stynx-nyx/feature-flags';
 
 const provider = new InMemoryFeatureFlagProvider({
   flags: {
@@ -117,13 +117,13 @@ class LaunchDarklyProvider implements FeatureFlagProvider {
 
 ## Common pitfalls
 
-- **Flag context not derived from request** — if your code doesn't pass actor + tenant, rollouts behave as anonymous. Wire via `@stynx/core`'s `RequestContext` at the controller layer.
+- **Flag context not derived from request** — if your code doesn't pass actor + tenant, rollouts behave as anonymous. Wire via `@stynx-nyx/core`'s `RequestContext` at the controller layer.
 - **File-backed flag refresh latency** — `loadFlagSet()` reads once. For runtime updates, swap the provider or wrap with a TTL-cached refresher.
 - **Rollout percentage drift across instances** — `InMemoryFeatureFlagProvider` uses a deterministic hash of `actorId`; same actor sees same flag value across instances. If you change the hash strategy, the cohort shifts.
 
 ## Related packages
 
-- [`@stynx/core`](/docs/packages/core/) — provides `RequestContext` for `FlagContext` projection.
+- [`@stynx-nyx/core`](/docs/packages/core/) — provides `RequestContext` for `FlagContext` projection.
 
 ## TypeDoc reference
 

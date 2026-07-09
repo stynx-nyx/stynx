@@ -7,8 +7,8 @@ import {
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
-import { RequestContextMutator } from '@stynx/core';
-import { Database, StynxDataModule } from '@stynx/data';
+import { RequestContextMutator } from '@stynx-nyx/core';
+import { Database, StynxDataModule } from '@stynx-nyx/data';
 import { GenericContainer, Wait, type StartedTestContainer } from 'testcontainers';
 import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
 import { DocumentsService } from '../../src/documents.service';
@@ -146,9 +146,9 @@ describe('StynxStorageModule integration', () => {
       imports: [
         StynxDataModule.forRoot({
           connections: {
-            owner: { connectionString: testDatabase.connectionString('@stynx/storage:owner') },
-            app: { connectionString: testDatabase.connectionString('@stynx/storage:app') },
-            reader: { connectionString: testDatabase.connectionString('@stynx/storage:reader') },
+            owner: { connectionString: testDatabase.connectionString('@stynx-nyx/storage:owner') },
+            app: { connectionString: testDatabase.connectionString('@stynx-nyx/storage:app') },
+            reader: { connectionString: testDatabase.connectionString('@stynx-nyx/storage:reader') },
           },
           migrations: { enabled: true },
         }),

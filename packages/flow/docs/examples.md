@@ -113,5 +113,5 @@ GET /flow/runs/run-1/events
 
 - Step 5's `POST /flow/runs/ensure` is idempotent on `key` — retrying the request resumes the same run.
 - Step 6's `act` goes through policy evaluation; a non-manager actor would get 403.
-- The whole sequence emits audit events via `@stynx/audit` in addition to flow's own event stream.
+- The whole sequence emits audit events via `@stynx-nyx/audit` in addition to flow's own event stream.
 - For the Angular implementation of this exact scenario, see [`@stynx-web/angular-flow`](/docs/packages-web/angular-flow/).

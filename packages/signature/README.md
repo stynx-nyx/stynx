@@ -1,14 +1,14 @@
-# `@stynx/signature` — PAdES/TSA signing for PDF outputs via GovBR + provider sandboxes
+# `@stynx-nyx/signature` — PAdES/TSA signing for PDF outputs via GovBR + provider sandboxes
 
-`@stynx/signature` is STYNX's document-signing substrate. It produces PAdES (PDF Advanced Electronic Signatures) per ADR-XMLDSIG-CONTRACT, supporting the GovBR (Brazilian government) signing sandbox plus generic HTTP-based provider backends. Used by `@stynx/pdf` flows that need legally-binding signatures (SPED-fiscal, signed payslips, archived documents).
+`@stynx-nyx/signature` is STYNX's document-signing substrate. It produces PAdES (PDF Advanced Electronic Signatures) per ADR-XMLDSIG-CONTRACT, supporting the GovBR (Brazilian government) signing sandbox plus generic HTTP-based provider backends. Used by `@stynx-nyx/pdf` flows that need legally-binding signatures (SPED-fiscal, signed payslips, archived documents).
 
 ## Purpose
 
 Regulated document outputs (Brazilian SPED-fiscal, signed payroll, archived legal docs) require signatures conforming to a specific PAdES profile plus an authoritative timestamp from a TSA (Time-Stamping Authority). Doing this by hand is brittle — canonicalization rules, certificate-chain validation, TSA negotiation all need consistent treatment.
 
-You reach for `@stynx/signature` when a STYNX output needs to be legally signed. Most STYNX apps don't need it; regulated apps (financial, healthcare, government-facing) do.
+You reach for `@stynx-nyx/signature` when a STYNX output needs to be legally signed. Most STYNX apps don't need it; regulated apps (financial, healthcare, government-facing) do.
 
-What it does NOT do: it doesn't sign tokens or JWTs (use `@stynx/sessions`). It doesn't produce XMLDSig for arbitrary XML (focused on PDF/PAdES). It doesn't run a TSA itself (consumes one).
+What it does NOT do: it doesn't sign tokens or JWTs (use `@stynx-nyx/sessions`). It doesn't produce XMLDSig for arbitrary XML (focused on PDF/PAdES). It doesn't run a TSA itself (consumes one).
 
 ## Audience
 
@@ -17,15 +17,15 @@ Backend developers in regulated domains.
 ## Install
 
 ```bash
-pnpm add @stynx/signature
+pnpm add @stynx-nyx/signature
 ```
 
-**Peer dependencies:** `@nestjs/common` `^11`, `@stynx/core` `^1`, `pdf-lib` `^1` (for PAdES manipulation).
+**Peer dependencies:** `@nestjs/common` `^11`, `@stynx-nyx/core` `^1`, `pdf-lib` `^1` (for PAdES manipulation).
 
 ## Quick start
 
 ```ts
-import { StynxSignatureModule } from '@stynx/signature';
+import { StynxSignatureModule } from '@stynx-nyx/signature';
 
 StynxSignatureModule.forRoot({
   provider: 'govbr-sandbox',
@@ -35,7 +35,7 @@ StynxSignatureModule.forRoot({
 ```
 
 ```ts
-import { PadesService } from '@stynx/signature';
+import { PadesService } from '@stynx-nyx/signature';
 
 @Injectable()
 export class SignedPdfService {
@@ -136,8 +136,8 @@ const signed2 = await sequentialSigner.append(signed1, { signer: 'employee' });
 
 ## Related packages
 
-- [`@stynx/pdf`](/docs/packages/pdf/) — produces the unsigned PDF.
-- [`@stynx/storage`](/docs/packages/storage/) — stores signed PDFs.
+- [`@stynx-nyx/pdf`](/docs/packages/pdf/) — produces the unsigned PDF.
+- [`@stynx-nyx/storage`](/docs/packages/storage/) — stores signed PDFs.
 - [STYNX framework — ADR-XMLDSIG-CONTRACT](/docs/meta/adr/ADR-XMLDSIG-CONTRACT/) — the contract.
 
 ## TypeDoc reference

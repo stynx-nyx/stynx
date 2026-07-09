@@ -57,6 +57,6 @@ Every task action goes through `FlowPolicyService` — the actor must be authori
 
 ## Notes
 
-- **`POST /flow/runs/ensure`** is idempotent: calling it twice with the same natural key resumes the existing run rather than creating a duplicate. This pairs with `@stynx/idempotency` for safe retries.
+- **`POST /flow/runs/ensure`** is idempotent: calling it twice with the same natural key resumes the existing run rather than creating a duplicate. This pairs with `@stynx-nyx/idempotency` for safe retries.
 - **`GET /flow/runs/:id/facts`** exposes the data policy rules evaluate against — useful for debugging "why was this transition denied".
 - Task actions emit audit events with the actor + before/after state.

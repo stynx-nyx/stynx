@@ -1,8 +1,8 @@
-**@stynx/privacy**
+**@stynx-nyx/privacy**
 
 ---
 
-# @stynx/privacy
+# @stynx-nyx/privacy
 
 Public LGPD privacy exports for PII maps, erasure workflows, ROPA, and object storage.
 

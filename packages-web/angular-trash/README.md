@@ -1,6 +1,6 @@
 # `@stynx-web/angular-trash` — Angular soft-delete recovery UI (trash can + restore)
 
-`@stynx-web/angular-trash` is the Angular soft-delete recovery package. It provides a `<stynx-trash-list>` component listing soft-deleted records with a restore action. Backed by `@stynx/data`'s soft-delete primitives (per `ADR-001-soft-delete`) exposed through the SDK.
+`@stynx-web/angular-trash` is the Angular soft-delete recovery package. It provides a `<stynx-trash-list>` component listing soft-deleted records with a restore action. Backed by `@stynx-nyx/data`'s soft-delete primitives (per `ADR-001-soft-delete`) exposed through the SDK.
 
 ## Purpose
 
@@ -8,7 +8,7 @@ Apps with soft-delete need a "trash can" so users can recover accidentally-delet
 
 You reach for it when your app soft-deletes records and wants user-facing recovery.
 
-What it does NOT do: it doesn't implement soft-delete (the backend `@stynx/data` does). It surfaces + restores.
+What it does NOT do: it doesn't implement soft-delete (the backend `@stynx-nyx/data` does). It surfaces + restores.
 
 ## Audience
 
@@ -89,7 +89,7 @@ export const appConfig = { providers: [provideTrash()] };
 ## Related packages
 
 - [`@stynx-web/angular`](/docs/packages-web/angular/) — the foundation.
-- [`@stynx/data`](/docs/packages/data/) — the soft-delete cascade primitives (`ADR-001-soft-delete`).
+- [`@stynx-nyx/data`](/docs/packages/data/) — the soft-delete cascade primitives (`ADR-001-soft-delete`).
 
 ## TypeDoc reference
 

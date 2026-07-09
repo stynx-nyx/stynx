@@ -1,8 +1,8 @@
-[**@stynx/data**](../index.md)
+[**@stynx-nyx/data**](../index.md)
 
 ---
 
-[@stynx/data](../index.md) / ArchiveQueryRow
+[@stynx-nyx/data](../index.md) / ArchiveQueryRow
 
 # Type Alias: ArchiveQueryRow\<TTable, TMode\>
 

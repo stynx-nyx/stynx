@@ -1,5 +1,5 @@
 {
-  "name": "@stynx/signature",
+  "name": "@stynx-nyx/signature",
   "version": "0.1.0",
   "description": "PAdES, TSA, and certificate-status signature facade for stynx",
   "main": "dist/signature/src/index.js",
@@ -30,7 +30,7 @@
     "test": "vitest run --config ./vitest.config.ts"
   },
   "dependencies": {
-    "@stynx/integration-adapter": "workspace:*",
+    "@stynx-nyx/integration-adapter": "workspace:*",
     "@xmldom/xmldom": "^0.9.10",
     "xml-crypto": "^6.1.2"
   },

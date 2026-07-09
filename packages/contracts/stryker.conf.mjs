@@ -1,7 +1,7 @@
 import { createStrykerConfig } from '../../tools/stryker/base.mjs';
 
 export default createStrykerConfig({
-  packageName: '@stynx/contracts',
+  packageName: '@stynx-nyx/contracts',
   mutate: [
     'src/audit.ts',
     'src/auth.ts',

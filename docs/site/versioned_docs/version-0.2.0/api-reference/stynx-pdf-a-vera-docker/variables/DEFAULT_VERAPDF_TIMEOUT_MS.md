@@ -1,8 +1,8 @@
-[**@stynx/pdf-a-vera-docker**](../index.md)
+[**@stynx-nyx/pdf-a-vera-docker**](../index.md)
 
 ---
 
-[@stynx/pdf-a-vera-docker](../index.md) / DEFAULT_VERAPDF_TIMEOUT_MS
+[@stynx-nyx/pdf-a-vera-docker](../index.md) / DEFAULT_VERAPDF_TIMEOUT_MS
 
 # Variable: DEFAULT_VERAPDF_TIMEOUT_MS
 

@@ -1,12 +1,12 @@
-# `@stynx/testing` — testcontainers-backed integration harness for STYNX apps
+# `@stynx-nyx/testing` — testcontainers-backed integration harness for STYNX apps
 
-`@stynx/testing` is the integration-test substrate for STYNX-based apps. It provides `createTestApp()` — a one-call factory that boots an isolated NestJS app backed by **real Docker containers** (Postgres via testcontainers, plus optional LocalStack for S3/SQS and a Cognito stub) wired to your modules. The returned `TestAppContext` exposes the NestJS app instance, a request-context mutator (so tests can assert behaviour under a specific tenant/actor), session helpers (`mintTestSession` produces a valid JWT against the test signing key), LGPD fixtures (PII-column seed data + erasure scenarios), and a family of archive-aware matchers that understand soft-delete + restore semantics.
+`@stynx-nyx/testing` is the integration-test substrate for STYNX-based apps. It provides `createTestApp()` — a one-call factory that boots an isolated NestJS app backed by **real Docker containers** (Postgres via testcontainers, plus optional LocalStack for S3/SQS and a Cognito stub) wired to your modules. The returned `TestAppContext` exposes the NestJS app instance, a request-context mutator (so tests can assert behaviour under a specific tenant/actor), session helpers (`mintTestSession` produces a valid JWT against the test signing key), LGPD fixtures (PII-column seed data + erasure scenarios), and a family of archive-aware matchers that understand soft-delete + restore semantics.
 
 ## Purpose
 
-Integration tests against a real DB catch the bugs unit tests with mocked repos miss: row-level security policies, soft-delete cascades, RLS interaction with the request context, idempotency replay semantics, audit-event emission. `@stynx/testing` removes the boilerplate: instead of every test file orchestrating its own Postgres container, schema migration, and request-context wiring, you call `createTestApp()` and get a working environment in one line. The fixtures + matchers then encode STYNX's idioms (archive-aware queries, soft-delete cascades, PII handling) so your test assertions stay readable.
+Integration tests against a real DB catch the bugs unit tests with mocked repos miss: row-level security policies, soft-delete cascades, RLS interaction with the request context, idempotency replay semantics, audit-event emission. `@stynx-nyx/testing` removes the boilerplate: instead of every test file orchestrating its own Postgres container, schema migration, and request-context wiring, you call `createTestApp()` and get a working environment in one line. The fixtures + matchers then encode STYNX's idioms (archive-aware queries, soft-delete cascades, PII handling) so your test assertions stay readable.
 
-You reach for `@stynx/testing` when you are writing integration tests for a STYNX-based app — typically under `test/integration/` or `*.int.spec.ts` files run by Vitest. Unit tests with mocked services don't need it; integration tests against real Postgres + S3 do.
+You reach for `@stynx-nyx/testing` when you are writing integration tests for a STYNX-based app — typically under `test/integration/` or `*.int.spec.ts` files run by Vitest. Unit tests with mocked services don't need it; integration tests against real Postgres + S3 do.
 
 What it does NOT do: it does not replace Vitest/Jest. It's a runtime harness used INSIDE your tests. It does not run schema migrations automatically — your `CreateTestAppOptions` declares which migration step set or `TestSqlStep[]` array to run.
 
@@ -17,10 +17,10 @@ NestJS backend developers writing integration tests. Typical scenario: you have 
 ## Install
 
 ```bash
-pnpm add -D @stynx/testing
+pnpm add -D @stynx-nyx/testing
 ```
 
-**Peer dependencies:** `@nestjs/testing` `^11`, `@stynx/core` `^1`, `@stynx/data` `^1`, `testcontainers` `^10`, `vitest` `^2` or `jest` `^29`. **Docker required at runtime** (see R15 pilot retro for the precedent).
+**Peer dependencies:** `@nestjs/testing` `^11`, `@stynx-nyx/core` `^1`, `@stynx-nyx/data` `^1`, `testcontainers` `^10`, `vitest` `^2` or `jest` `^29`. **Docker required at runtime** (see R15 pilot retro for the precedent).
 
 **Node:** 24.x.
 
@@ -29,7 +29,7 @@ pnpm add -D @stynx/testing
 ```ts
 // test/integration/users.int.spec.ts
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { createTestApp, type TestAppContext } from '@stynx/testing';
+import { createTestApp, type TestAppContext } from '@stynx-nyx/testing';
 import { UsersModule } from '../../src/users.module';
 
 describe('UsersService (integration)', () => {
@@ -136,7 +136,7 @@ expect(res.status).toBe(200);
 ### Example 3 — archive-aware assertion
 
 ```ts
-import { archiveAwareEqual } from '@stynx/testing';
+import { archiveAwareEqual } from '@stynx-nyx/testing';
 
 const user = await usersRepo.findById('u1');
 expect(user).toEqual(archiveAwareEqual({ id: 'u1', email: 'seed@b.com' }));
@@ -145,17 +145,17 @@ expect(user).toEqual(archiveAwareEqual({ id: 'u1', email: 'seed@b.com' }));
 
 ## Common pitfalls
 
-- **Docker not running** — testcontainers throws "Could not find a working container runtime strategy". This is the pre-existing R15 finding; not specific to `@stynx/testing`. Ensure Docker Desktop / Colima is up before running integration tests.
+- **Docker not running** — testcontainers throws "Could not find a working container runtime strategy". This is the pre-existing R15 finding; not specific to `@stynx-nyx/testing`. Ensure Docker Desktop / Colima is up before running integration tests.
 - **Forgetting `ctx.close()`** — leaks containers across test files. Use `afterAll` to call it; testcontainers' reuse mode mitigates but doesn't eliminate the leak.
 - **Schema migration ordering** — `sql` runs in order, but if your schema depends on extensions (e.g. `pgcrypto`), include `CREATE EXTENSION` first.
 - **Running `withRequest()` outside an `await`** — the request frame is async-local; calls outside the callback don't see the frame.
 
 ## Related packages
 
-- [`@stynx/core`](/docs/packages/core/) — provides `RequestContext`; `withRequest()` mutates this for tests.
-- [`@stynx/data`](/docs/packages/data/) — provides `StynxDataModule` + the `StynxPgClient` `withRequest()` exposes via `.db`.
-- [`@stynx/auth`](/docs/packages/auth/) — `mintTestSession` produces tokens that pass `@stynx/auth`'s verifier under the test signing key.
-- [`@stynx/pdf`](/docs/packages/pdf/) — provides `createFixturePdfBackend()` for tests that don't want to invoke real Chromium.
+- [`@stynx-nyx/core`](/docs/packages/core/) — provides `RequestContext`; `withRequest()` mutates this for tests.
+- [`@stynx-nyx/data`](/docs/packages/data/) — provides `StynxDataModule` + the `StynxPgClient` `withRequest()` exposes via `.db`.
+- [`@stynx-nyx/auth`](/docs/packages/auth/) — `mintTestSession` produces tokens that pass `@stynx-nyx/auth`'s verifier under the test signing key.
+- [`@stynx-nyx/pdf`](/docs/packages/pdf/) — provides `createFixturePdfBackend()` for tests that don't want to invoke real Chromium.
 
 ## TypeDoc reference
 
