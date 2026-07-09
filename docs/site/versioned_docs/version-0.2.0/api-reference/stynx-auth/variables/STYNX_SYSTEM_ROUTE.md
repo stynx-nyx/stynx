@@ -1,8 +1,8 @@
-[**@stynx/auth**](../index.md)
+[**@stynx-nyx/auth**](../index.md)
 
 ---
 
-[@stynx/auth](../index.md) / STYNX_SYSTEM_ROUTE
+[@stynx-nyx/auth](../index.md) / STYNX_SYSTEM_ROUTE
 
 # Variable: STYNX_SYSTEM_ROUTE
 

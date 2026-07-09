@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / STYNX_RATE_LIMIT_STORE
+[@stynx-nyx/backend](../index.md) / STYNX_RATE_LIMIT_STORE
 
 # Variable: STYNX_RATE_LIMIT_STORE
 

@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / SignatureProviderError
+[@stynx-nyx/signature](../index.md) / SignatureProviderError
 
 # Class: SignatureProviderError
 

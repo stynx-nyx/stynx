@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / PadesEvidenceEnvelope
+[@stynx-nyx/signature](../index.md) / PadesEvidenceEnvelope
 
 # Interface: PadesEvidenceEnvelope
 

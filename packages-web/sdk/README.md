@@ -1,6 +1,6 @@
 # `@stynx-web/sdk` — the generated TypeScript REST client for the STYNX backend
 
-`@stynx-web/sdk` is the TypeScript client for STYNX's REST surface. The bulk of it — the per-operation methods + DTO types — is **auto-generated** from the backend's OpenAPI contract (`@stynx/flow` and the other `@Controller`-carrying packages). On top of the generated core, it adds hand-authored helpers: an auth provider, a session manager, token store, tenant provider, JWT helpers, and a configurable transport. Used by every `@stynx-web/*` package to call the backend.
+`@stynx-web/sdk` is the TypeScript client for STYNX's REST surface. The bulk of it — the per-operation methods + DTO types — is **auto-generated** from the backend's OpenAPI contract (`@stynx-nyx/flow` and the other `@Controller`-carrying packages). On top of the generated core, it adds hand-authored helpers: an auth provider, a session manager, token store, tenant provider, JWT helpers, and a configurable transport. Used by every `@stynx-web/*` package to call the backend.
 
 > **This README is a navigation page, not a symbol catalog.** The SDK has 700+ exports across 250+ files, almost all generated. Enumerating them here would be noise and would go stale on every regeneration. For symbol-level reference use the [TypeDoc](/docs/api-reference/stynx-web-sdk/). The sections below describe the SDK's _shape_ and how to _use_ it.
 
@@ -40,7 +40,7 @@ In an Angular app you rarely set `OpenAPI.BASE` yourself — `provideStynxAngula
 
 ## Public API surface
 
-**Generated (from OpenAPI):** per-controller service classes (e.g. `FlowService`, `AuthService`, `TenancyService`) with one method per endpoint, plus the request/response DTO types. These mirror the backend exactly — see the backend package docs ([`@stynx/flow`](/docs/packages/flow/), etc.) for what each endpoint does, and the [TypeDoc](/docs/api-reference/stynx-web-sdk/) for the symbol-level signatures.
+**Generated (from OpenAPI):** per-controller service classes (e.g. `FlowService`, `AuthService`, `TenancyService`) with one method per endpoint, plus the request/response DTO types. These mirror the backend exactly — see the backend package docs ([`@stynx-nyx/flow`](/docs/packages/flow/), etc.) for what each endpoint does, and the [TypeDoc](/docs/api-reference/stynx-web-sdk/) for the symbol-level signatures.
 
 **Hand-authored helpers:**
 
@@ -99,7 +99,7 @@ This re-runs OpenAPI codegen against the backend's contract. Commit the regenera
 
 ## Related packages
 
-- [`@stynx/flow`](/docs/packages/flow/) — the largest source of the SDK's generated operations (20 controllers).
+- [`@stynx-nyx/flow`](/docs/packages/flow/) — the largest source of the SDK's generated operations (20 controllers).
 - [`@stynx-web/angular`](/docs/packages-web/angular/) — wires the SDK into Angular DI.
 - [`@stynx-web/angular-auth`](/docs/packages-web/angular-auth/) — implements the auth provider the SDK consumes.
 

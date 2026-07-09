@@ -1,8 +1,8 @@
-[**@stynx/privacy**](../index.md)
+[**@stynx-nyx/privacy**](../index.md)
 
 ---
 
-[@stynx/privacy](../index.md) / PrivacyController
+[@stynx-nyx/privacy](../index.md) / PrivacyController
 
 # Class: PrivacyController
 

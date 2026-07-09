@@ -1,8 +1,8 @@
-[**@stynx/tenancy**](../index.md)
+[**@stynx-nyx/tenancy**](../index.md)
 
 ---
 
-[@stynx/tenancy](../index.md) / createUuidV7
+[@stynx-nyx/tenancy](../index.md) / createUuidV7
 
 # Function: createUuidV7()
 

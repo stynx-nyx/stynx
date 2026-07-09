@@ -3,11 +3,11 @@ import { createVitestConfig } from '../../tools/repo-config/vitest.base.mjs';
 
 export default createVitestConfig({
   packageDir: __dirname,
-  packageName: '@stynx/cli',
+  packageName: '@stynx-nyx/cli',
   include: ['test/**/*.spec.ts'],
   alias: {
-    '@stynx/core': resolve(__dirname, '../core/src/index.ts'),
-    '@stynx/data': resolve(__dirname, '../data/src/index.ts'),
-    '@stynx/privacy': resolve(__dirname, '../privacy/src/index.ts'),
+    '@stynx-nyx/core': resolve(__dirname, '../core/src/index.ts'),
+    '@stynx-nyx/data': resolve(__dirname, '../data/src/index.ts'),
+    '@stynx-nyx/privacy': resolve(__dirname, '../privacy/src/index.ts'),
   },
 });

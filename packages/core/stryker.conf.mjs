@@ -1,7 +1,7 @@
 import { createStrykerConfig } from '../../tools/stryker/base.mjs';
 
 export default createStrykerConfig({
-  packageName: '@stynx/core',
+  packageName: '@stynx-nyx/core',
   vitestConfig: './vitest.stryker.config.ts',
   mutate: [
     'src/error.filter.ts',

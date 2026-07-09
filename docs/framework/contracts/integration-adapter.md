@@ -1,7 +1,7 @@
 # Integration Adapter Contract
 
 **Authority:** Architect (DEVAI Constitution Article 6).
-**Package:** `@stynx/integration-adapter`.
+**Package:** `@stynx-nyx/integration-adapter`.
 
 This contract defines the shared adapter pattern for external state-system calls.
 It is intentionally schema-agnostic: PEC, TEAT, SGP, and PORM own their own

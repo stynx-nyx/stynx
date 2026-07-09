@@ -1,10 +1,10 @@
-# `@stynx/integration-adapter` — pure-contract framework for outbound 3rd-party calls
+# `@stynx-nyx/integration-adapter` — pure-contract framework for outbound 3rd-party calls
 
-`@stynx/integration-adapter` defines the contract every outbound-integration in a STYNX app implements: an `IntegrationAdapter` interface with retry policy, circuit-breaker policy, idempotency-store binding, and telemetry events. It's a light framework — implementations live in domain packages or per-app code, but they share this shape so observability + error envelopes work uniformly across integrations.
+`@stynx-nyx/integration-adapter` defines the contract every outbound-integration in a STYNX app implements: an `IntegrationAdapter` interface with retry policy, circuit-breaker policy, idempotency-store binding, and telemetry events. It's a light framework — implementations live in domain packages or per-app code, but they share this shape so observability + error envelopes work uniformly across integrations.
 
 ## Purpose
 
-Apps making 3rd-party HTTP calls accumulate bespoke retry + circuit-break + idempotency-cache code. Each implementation has subtly different semantics, observability output, and failure modes. `@stynx/integration-adapter` resolves it by providing the contract and the typed telemetry event shape; implementations wrap their HTTP client (axios, undici, native fetch) in the contract.
+Apps making 3rd-party HTTP calls accumulate bespoke retry + circuit-break + idempotency-cache code. Each implementation has subtly different semantics, observability output, and failure modes. `@stynx-nyx/integration-adapter` resolves it by providing the contract and the typed telemetry event shape; implementations wrap their HTTP client (axios, undici, native fetch) in the contract.
 
 You reach for it when authoring a new outbound integration in your STYNX app.
 
@@ -17,10 +17,10 @@ Backend developers building outbound integrations to 3rd-party APIs (payment pro
 ## Install
 
 ```bash
-pnpm add @stynx/integration-adapter
+pnpm add @stynx-nyx/integration-adapter
 ```
 
-**Peer dependencies:** `@stynx/core` `^1`, `@stynx/contracts` `^1`. **No HTTP client dependency** — bring your own.
+**Peer dependencies:** `@stynx-nyx/core` `^1`, `@stynx-nyx/contracts` `^1`. **No HTTP client dependency** — bring your own.
 
 ## Quick start
 
@@ -30,7 +30,7 @@ import type {
   IntegrationContext,
   RetryPolicy,
   CircuitBreakerPolicy,
-} from '@stynx/integration-adapter';
+} from '@stynx-nyx/integration-adapter';
 
 const retryPolicy: RetryPolicy = { maxAttempts: 3, backoffMs: 200 };
 const cbPolicy: CircuitBreakerPolicy = { failureThreshold: 5, resetMs: 30_000 };
@@ -51,13 +51,13 @@ export class StripeAdapter implements IntegrationAdapter<StripeRequest, StripeRe
 | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `IntegrationAdapter<TRequest, TResponse>` | The contract: `call(request, ctx): Promise<response>`.                                                                                                                    |
 | `IntegrationAdapterOptions`               | Per-adapter config shape: retry, circuit-break, telemetry, idempotency.                                                                                                   |
-| `IntegrationContext`                      | Per-call context: `{ requestId, tenantId, actorId, correlationId }` — typically projected from `@stynx/core`'s `RequestContext`.                                          |
+| `IntegrationContext`                      | Per-call context: `{ requestId, tenantId, actorId, correlationId }` — typically projected from `@stynx-nyx/core`'s `RequestContext`.                                          |
 | `RetryPolicy`                             | `{ maxAttempts, backoffMs, jitter?, retryableErrors? }`.                                                                                                                  |
 | `CircuitBreakerPolicy`                    | `{ failureThreshold, resetMs, halfOpenProbes? }`.                                                                                                                         |
 | `CircuitBreaker`                          | Stateful breaker the adapter holds (or borrows from a registry).                                                                                                          |
 | `CircuitSnapshot`                         | Observable state: `{ state: 'closed'\|'open'\|'half-open', failureCount, openedAt? }`.                                                                                    |
 | `IntegrationTelemetryEvent`               | Structured event type emitted at every call boundary: `'call_started'`, `'call_succeeded'`, `'call_failed'`, `'retry_scheduled'`, `'circuit_opened'`, `'circuit_closed'`. |
-| `IdempotencyStore`                        | Re-exported from `@stynx/contracts`; outbound idempotency-cache contract (rarely used — usually upstream idempotency is enough).                                          |
+| `IdempotencyStore`                        | Re-exported from `@stynx-nyx/contracts`; outbound idempotency-cache contract (rarely used — usually upstream idempotency is enough).                                          |
 
 ## Configuration
 
@@ -100,7 +100,7 @@ adapter.on('integration:event', (event: IntegrationTelemetryEvent) => {
 });
 ```
 
-### Example 3 — wiring with `@stynx/core`'s `RequestContext`
+### Example 3 — wiring with `@stynx-nyx/core`'s `RequestContext`
 
 ```ts
 @Injectable()
@@ -129,9 +129,9 @@ export class PaymentService {
 
 ## Related packages
 
-- [`@stynx/core`](/docs/packages/core/) — provides `RequestContext` used to build `IntegrationContext`.
-- [`@stynx/contracts`](/docs/packages/contracts/) — defines `IdempotencyStore`.
-- [`@stynx/logging`](/docs/packages/logging/) — receive telemetry events for log routing.
+- [`@stynx-nyx/core`](/docs/packages/core/) — provides `RequestContext` used to build `IntegrationContext`.
+- [`@stynx-nyx/contracts`](/docs/packages/contracts/) — defines `IdempotencyStore`.
+- [`@stynx-nyx/logging`](/docs/packages/logging/) — receive telemetry events for log routing.
 
 ## TypeDoc reference
 

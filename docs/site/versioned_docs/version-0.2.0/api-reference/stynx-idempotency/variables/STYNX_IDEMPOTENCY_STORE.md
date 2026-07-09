@@ -1,8 +1,8 @@
-[**@stynx/idempotency**](../index.md)
+[**@stynx-nyx/idempotency**](../index.md)
 
 ---
 
-[@stynx/idempotency](../index.md) / STYNX_IDEMPOTENCY_STORE
+[@stynx-nyx/idempotency](../index.md) / STYNX_IDEMPOTENCY_STORE
 
 # Variable: STYNX_IDEMPOTENCY_STORE
 

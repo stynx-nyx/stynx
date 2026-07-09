@@ -8,7 +8,7 @@
 ## Context
 
 R12 established the validator contract and the digest-pinned veraPDF Docker
-adapter. SGP R11 then validated byte-stable PDFs produced by `@stynx/pdf` and
+adapter. SGP R11 then validated byte-stable PDFs produced by `@stynx-nyx/pdf` and
 found five PDF/A-2b failures in STYNX-owned output: standard-14 fonts were not
 embedded, trailer `/ID` was absent, evidence bytes were appended after
 `%%EOF`, DeviceRGB had no output intent, and catalog XMP metadata was missing.
@@ -20,10 +20,10 @@ This ADR defines the content-side conformance baseline for PDFs emitted by
 ## Decision
 
 1. STYNX fixed-layout PDFs target PDF/A-2b. Validator-backed conformance remains
-   external and is still owned by `@stynx/pdf-a` and
-   `@stynx/pdf-a-vera-docker`.
+   external and is still owned by `@stynx-nyx/pdf-a` and
+   `@stynx-nyx/pdf-a-vera-docker`.
 
-2. `@stynx/pdf` bundles deterministic binary assets:
+2. `@stynx-nyx/pdf` bundles deterministic binary assets:
 
    | Asset                                     | SHA-256                                                            |
    | ----------------------------------------- | ------------------------------------------------------------------ |
@@ -62,10 +62,10 @@ This ADR defines the content-side conformance baseline for PDFs emitted by
 
 ## Consequences
 
-- `@stynx/pdf` now owns real PDF/A-2b content generation for its fixed-layout
+- `@stynx-nyx/pdf` now owns real PDF/A-2b content generation for its fixed-layout
   and public-payroll surfaces.
 - Consumers still decide when validation is a hard failure. They should validate
-  with `@stynx/pdf-a-vera-docker` when claiming archival conformance.
+  with `@stynx-nyx/pdf-a-vera-docker` when claiming archival conformance.
 - The package gains one runtime dependency, `@pdf-lib/fontkit`, to embed real
   fonts.
 - Evidence extraction remains compatible with existing byte scanners because
@@ -81,10 +81,10 @@ This ADR defines the content-side conformance baseline for PDFs emitted by
   already consumes the byte-scannable marker from PDF bytes.
 - Add a full CMS/PAdES implementation in this round. Rejected because R13 fixes
   PDF/A placement and conformance; legal signing semantics remain the
-  adopter/provider boundary defined by `@stynx/signature`.
+  adopter/provider boundary defined by `@stynx-nyx/signature`.
 
 ## References
 
 - [ADR-PDF-A-VALIDATOR-CONTRACT](ADR-PDF-A-VALIDATOR-CONTRACT.md)
-- [`@stynx/pdf`](../../../packages/pdf/README.md)
+- [`@stynx-nyx/pdf`](../../../packages/pdf/README.md)
 - [PDF/A Validation adopter guide](../../adopters/pdf-a-validation.md)

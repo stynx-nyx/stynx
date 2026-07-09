@@ -1,14 +1,14 @@
-# `@stynx/pdf-a-vera-docker` — veraPDF-Docker PDF/A validator implementing the `@stynx/pdf-a` contract
+# `@stynx-nyx/pdf-a-vera-docker` — veraPDF-Docker PDF/A validator implementing the `@stynx-nyx/pdf-a` contract
 
-`@stynx/pdf-a-vera-docker` is the concrete PDF/A conformance validator. It implements `@stynx/pdf-a`'s `PdfAValidator` interface by shelling out to the [veraPDF](https://verapdf.org/) industry-standard validator running in a Docker container. It builds the `docker run` invocation, parses veraPDF's JSON report, and maps it to the contract's `PdfAValidationResult`. Plug it into `@stynx/pdf`'s `pdfAAdapter` slot to make `profile: 'pdf-a'` requests work.
+`@stynx-nyx/pdf-a-vera-docker` is the concrete PDF/A conformance validator. It implements `@stynx-nyx/pdf-a`'s `PdfAValidator` interface by shelling out to the [veraPDF](https://verapdf.org/) industry-standard validator running in a Docker container. It builds the `docker run` invocation, parses veraPDF's JSON report, and maps it to the contract's `PdfAValidationResult`. Plug it into `@stynx-nyx/pdf`'s `pdfAAdapter` slot to make `profile: 'pdf-a'` requests work.
 
 ## Purpose
 
-PDF/A conformance must be validated by an authoritative tool — veraPDF is the reference implementation. Running it as a Docker container avoids a heavyweight JVM dependency in your app. This package wraps the container invocation behind the `@stynx/pdf-a` contract.
+PDF/A conformance must be validated by an authoritative tool — veraPDF is the reference implementation. Running it as a Docker container avoids a heavyweight JVM dependency in your app. This package wraps the container invocation behind the `@stynx-nyx/pdf-a` contract.
 
 You reach for it when your app produces archival/legal PDFs that must conform to PDF/A-2b (or another profile) and you want authoritative validation.
 
-What it does NOT do: it doesn't render PDFs (that's `@stynx/pdf`). It doesn't run without Docker (the validator IS a container).
+What it does NOT do: it doesn't render PDFs (that's `@stynx-nyx/pdf`). It doesn't run without Docker (the validator IS a container).
 
 ## Audience
 
@@ -17,18 +17,18 @@ Backend developers + ops in regulated domains producing archival PDFs.
 ## Install
 
 ```bash
-pnpm add @stynx/pdf-a-vera-docker @stynx/pdf-a
+pnpm add @stynx-nyx/pdf-a-vera-docker @stynx-nyx/pdf-a
 # Docker must be available at runtime
 docker pull verapdf/cli
 ```
 
-**Peer dependencies:** `@stynx/pdf-a` `^1`. **Docker required at runtime.**
+**Peer dependencies:** `@stynx-nyx/pdf-a` `^1`. **Docker required at runtime.**
 
 ## Quick start
 
 ```ts
-import { StynxPdfModule } from '@stynx/pdf';
-import { VeraPdfDockerValidator } from '@stynx/pdf-a-vera-docker';
+import { StynxPdfModule } from '@stynx-nyx/pdf';
+import { VeraPdfDockerValidator } from '@stynx-nyx/pdf-a-vera-docker';
 
 StynxPdfModule.forRoot({
   pdfAAdapter: new VeraPdfDockerValidator({
@@ -121,8 +121,8 @@ new VeraPdfDockerValidator({
 
 ## Related packages
 
-- [`@stynx/pdf-a`](/docs/packages/pdf-a/) — the contract this package implements.
-- [`@stynx/pdf`](/docs/packages/pdf/) — consumes this via its `pdfAAdapter` slot.
+- [`@stynx-nyx/pdf-a`](/docs/packages/pdf-a/) — the contract this package implements.
+- [`@stynx-nyx/pdf`](/docs/packages/pdf/) — consumes this via its `pdfAAdapter` slot.
 - [STYNX framework — ADR-PDF-A-CONFORMANCE](/docs/meta/adr/ADR-PDF-A-CONFORMANCE/) — the conformance decision.
 
 ## TypeDoc reference

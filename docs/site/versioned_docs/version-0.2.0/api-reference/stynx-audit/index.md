@@ -1,8 +1,8 @@
-**@stynx/audit**
+**@stynx-nyx/audit**
 
 ---
 
-# @stynx/audit
+# @stynx-nyx/audit
 
 Public audit logging, retention, SQL sink, and test-helper exports.
 

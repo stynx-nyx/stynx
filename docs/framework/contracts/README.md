@@ -12,24 +12,24 @@ can compile or validate against without importing implementation internals.
   action URLs consumed by profile security handoff components.
 - [audit-events-api.md](audit-events-api.md) — HTTP contract for
   `@stynx-web/angular-audit` list, detail, entity-history, and integrity views.
-- [flow-api.md](flow-api.md) — HTTP contract for `@stynx/flow` and
+- [flow-api.md](flow-api.md) — HTTP contract for `@stynx-nyx/flow` and
   `@stynx-web/angular-flow`.
 - [signature.md](signature.md) — PAdES/TSA signing and verification contract for
-  `@stynx/signature`.
+  `@stynx-nyx/signature`.
 - [xmldsig.md](xmldsig.md) — XMLDSig signing and verification contract for
   fiscal XML payloads.
-- [pdf.md](pdf.md) — server-side PDF render contract for `@stynx/pdf`.
+- [pdf.md](pdf.md) — server-side PDF render contract for `@stynx-nyx/pdf`.
 - [feature-flags.md](feature-flags.md) — tenant/environment feature-flag
-  definition and evaluation contract for `@stynx/feature-flags`.
+  definition and evaluation contract for `@stynx-nyx/feature-flags`.
 - [integration-adapter.md](integration-adapter.md) — retry, timeout,
-  idempotency, and circuit-breaker contract for `@stynx/integration-adapter`.
+  idempotency, and circuit-breaker contract for `@stynx-nyx/integration-adapter`.
 - [openapi.json](openapi.json) — generated OpenAPI 3.1 route inventory for
   reference and package NestJS controllers.
 - [tenant-isolation-coverage.json](tenant-isolation-coverage.json) — required
   negative tenant/RLS evidence across auth, audit, storage, flow, records, and
   reference API routes.
 - `errors.json` — shared error taxonomy and envelope metadata.
-- [`@stynx/contracts`](/docs/packages/contracts) — TypeScript interfaces for
+- [`@stynx-nyx/contracts`](/docs/packages/contracts) — TypeScript interfaces for
   auth, authorization, audit, storage, DB context, tenancy, errors, and
   identity-admin adapters.
 - Generated API reference under the docs site, produced from package public
@@ -37,7 +37,7 @@ can compile or validate against without importing implementation internals.
 
 ## Authoring Rules
 
-- Put implementation-free interfaces in `@stynx/contracts` when two packages
+- Put implementation-free interfaces in `@stynx-nyx/contracts` when two packages
   need the same compile-time shape.
 - Put protocol-specific HTTP/API contracts in this directory when they define a
   host-visible route family.

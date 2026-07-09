@@ -17,11 +17,11 @@ The trend is positive: the release chain now has a green local script path, gree
 | ------------------------------------ | ----------------------------------------------------------------------------------: | --------------------------------------------------------------------------: |
 | Release-chain latent break classes   |                                                  5 local break classes found in W03 |                       0 local release-chain blockers after W09 SBOM refresh |
 | `packages/data/src/transaction.ts`   |                                                                           843 lines |                                                                   433 lines |
-| `@stynx/data` mutation scope         |                                 `database.ts`, `query-helpers.ts`, `transaction.ts` | adds `archive-relations.ts`, `archive-restore.ts`, `soft-delete-cascade.ts` |
-| `@stynx/data` mutation score         | 96.59 from prior hardening artifact, with timeout inflation risk and narrower scope |                             93.22 non-incremental, break 90, six-file scope |
+| `@stynx-nyx/data` mutation scope         |                                 `database.ts`, `query-helpers.ts`, `transaction.ts` | adds `archive-relations.ts`, `archive-restore.ts`, `soft-delete-cascade.ts` |
+| `@stynx-nyx/data` mutation score         | 96.59 from prior hardening artifact, with timeout inflation risk and narrower scope |                             93.22 non-incremental, break 90, six-file scope |
 | Data mutation harness                |                                                      `data.module.spec.ts` excluded |                       exclusion removed; `data.module.spec.ts` participated |
-| Testing package imports              |                                           8 relative `packages/testing/src` imports |                                0; package consumers import `@stynx/testing` |
-| Hardening workaround                 |                                           `@stynx/testing` build workaround present |                                                          workaround removed |
+| Testing package imports              |                                           8 relative `packages/testing/src` imports |                                0; package consumers import `@stynx-nyx/testing` |
+| Hardening workaround                 |                                           `@stynx-nyx/testing` build workaround present |                                                          workaround removed |
 | k6 reference scenarios               |                                      failing in CI without current root-cause class |    E3 capacity/latency blocker; route drift and `http_req_failed` ruled out |
 | Docs broken-link references          |                                                                                4368 |                                                        87 in W09 full build |
 | Current-doc broken-link source pages |                                         non-zero, dominated by stale current routes |                                                                           0 |
@@ -29,10 +29,10 @@ The trend is positive: the release chain now has a green local script path, gree
 ## Outcomes
 
 - W02 executed the decision register: deleted F-03, removed Stryker Dashboard publication wiring, and guarded DEVAI gates behind an explicit opt-in.
-- W03 made the release chain green locally, refreshed SBOM and API baselines, fixed production audit advisories, and corrected publish-build hygiene for `@stynx/data` and `@stynx/testing`.
+- W03 made the release chain green locally, refreshed SBOM and API baselines, fixed production audit advisories, and corrected publish-build hygiene for `@stynx-nyx/data` and `@stynx-nyx/testing`.
 - W04 split data transaction internals without changing the public export surface and kept every data source file below 500 lines.
 - W05 repaid the `data.module.spec.ts` mutation-harness exclusion.
-- W06 forced package consumers to use `@stynx/testing` rather than relative package internals and removed the hardening workaround.
+- W06 forced package consumers to use `@stynx-nyx/testing` rather than relative package internals and removed the hardening workaround.
 - W07 classified the k6 failure as capacity/latency: auth passed; CRUD, upload, and cascade-delete had `http_req_failed=0` and 100% checks but breached latency or dropped-iteration thresholds.
 - W08 removed current-doc link drift and left only historical Docusaurus version-snapshot warnings.
 - W09 re-ran the local closeout gates, caught and fixed a stale SBOM recurrence, and verified the release lane after all other waves.
@@ -53,7 +53,7 @@ The trend is positive: the release chain now has a green local script path, gree
 
 - `pnpm ci:stynx` exit 0 after W09: lint, typecheck, unit tests, integration tests, build, and doctor passed.
 - `pnpm ci:stynx:release` exit 0 after W09 SBOM refresh: SBOM, license policy, secret scan, production audit, provenance, release policy, API baselines, consumer fixtures, and release drafts passed.
-- `STRYKER_INCREMENTAL=false pnpm --filter @stynx/data stryker` exit 0: final score 93.22, break 90.
+- `STRYKER_INCREMENTAL=false pnpm --filter @stynx-nyx/data stryker` exit 0: final score 93.22, break 90.
 - Docs build exit 0 in the full CI gate; current-doc broken-link source pages were 0.
 
 ## R20 Candidates

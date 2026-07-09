@@ -1,6 +1,6 @@
 import { type DynamicModule, Module } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { StynxCoreModule } from '@stynx/core';
+import { StynxCoreModule } from '@stynx-nyx/core';
 import { z } from 'zod';
 import { TenantContextInterceptor } from './tenant-context.interceptor';
 import { MembershipAccessCache } from './membership-cache';

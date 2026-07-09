@@ -2,9 +2,9 @@
 title: backend/storage
 ---
 
-# `StynxBackendStorageModule` — `@stynx/storage` wired with tenant-prefixed S3
+# `StynxBackendStorageModule` — `@stynx-nyx/storage` wired with tenant-prefixed S3
 
-Wraps `@stynx/storage` with the canonical backend wiring: S3 (or LocalStack in dev), tenant-prefixed key strategy, document-metadata table backed by `@stynx/data`.
+Wraps `@stynx-nyx/storage` with the canonical backend wiring: S3 (or LocalStack in dev), tenant-prefixed key strategy, document-metadata table backed by `@stynx-nyx/data`.
 
 ## When to mount
 
@@ -13,7 +13,7 @@ Whenever your app stores user-uploaded files.
 ## Wiring
 
 ```ts
-import { StynxBackendStorageModule } from '@stynx/backend';
+import { StynxBackendStorageModule } from '@stynx-nyx/backend';
 
 StynxBackendStorageModule.forRoot({
   s3: { region: 'us-east-1', bucket: 'my-app-docs' },
@@ -24,7 +24,7 @@ StynxBackendStorageModule.forRoot({
 
 ## Configuration
 
-Forwarded to `@stynx/storage`'s `StynxStorageOptions`. See [`@stynx/storage`](/docs/packages/storage/).
+Forwarded to `@stynx-nyx/storage`'s `StynxStorageOptions`. See [`@stynx-nyx/storage`](/docs/packages/storage/).
 
 ## Common pitfalls
 
@@ -33,6 +33,6 @@ Forwarded to `@stynx/storage`'s `StynxStorageOptions`. See [`@stynx/storage`](/d
 
 ## Related
 
-- [`@stynx/storage`](/docs/packages/storage/) — the underlying package.
+- [`@stynx-nyx/storage`](/docs/packages/storage/) — the underlying package.
 - [`backend/db-context`](/docs/packages/backend/db-context/) — provides DB for document-metadata persistence.
 - [`@stynx-web/angular-storage`](/docs/packages-web/angular-storage/) — Angular pair: file upload UI.

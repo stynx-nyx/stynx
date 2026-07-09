@@ -30,7 +30,7 @@ range excerpted.
 ### `data-api-contract.md`
 
 - Source: `specs/STYNX-API-DATA.md` §1–§7.
-- Content: the @stynx/data public surface. For each section:
+- Content: the @stynx-nyx/data public surface. For each section:
   module exports, Database/Transaction methods, soft-delete API,
   cascade semantics, error catalog.
 - Where the spec and current code drift (per `_DISCOVERY.md`),

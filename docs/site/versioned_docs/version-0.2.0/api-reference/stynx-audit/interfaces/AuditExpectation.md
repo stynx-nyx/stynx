@@ -1,8 +1,8 @@
-[**@stynx/audit**](../index.md)
+[**@stynx-nyx/audit**](../index.md)
 
 ---
 
-[@stynx/audit](../index.md) / AuditExpectation
+[@stynx-nyx/audit](../index.md) / AuditExpectation
 
 # Interface: AuditExpectation
 

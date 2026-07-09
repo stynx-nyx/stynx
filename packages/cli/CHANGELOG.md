@@ -1,4 +1,4 @@
-# @stynx/cli
+# @stynx-nyx/cli
 
 ## 1.0.0
 
@@ -9,4 +9,4 @@
 ### Patch Changes
 
 - Updated dependencies [8f6df55]
-  - @stynx/privacy@1.0.0
+  - @stynx-nyx/privacy@1.0.0

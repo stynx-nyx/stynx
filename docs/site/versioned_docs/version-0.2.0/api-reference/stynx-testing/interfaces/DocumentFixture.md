@@ -1,8 +1,8 @@
-[**@stynx/testing**](../index.md)
+[**@stynx-nyx/testing**](../index.md)
 
 ---
 
-[@stynx/testing](../index.md) / DocumentFixture
+[@stynx-nyx/testing](../index.md) / DocumentFixture
 
 # Interface: DocumentFixture
 

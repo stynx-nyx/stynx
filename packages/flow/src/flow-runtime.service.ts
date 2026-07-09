@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { RequestContext } from '@stynx/core';
-import { Database } from '@stynx/data';
+import { RequestContext } from '@stynx-nyx/core';
+import { Database } from '@stynx-nyx/data';
 import { FlowAdapterRegistry } from './adapters';
 import { requireObject } from './row-utils';
 import { FlowEffectDispatch } from './internal/runtime/effect-dispatch';

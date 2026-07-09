@@ -1,8 +1,8 @@
-[**@stynx/flow**](../index.md)
+[**@stynx-nyx/flow**](../index.md)
 
 ---
 
-[@stynx/flow](../index.md) / FlowQuestionFieldType
+[@stynx-nyx/flow](../index.md) / FlowQuestionFieldType
 
 # Type Alias: FlowQuestionFieldType
 

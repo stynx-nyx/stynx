@@ -5,12 +5,12 @@ import {
   type IdempotencyBackend,
   type IdempotencyDecisionContext,
   type IdempotencyStoredEntry,
-} from '@stynx/idempotency';
+} from '@stynx-nyx/idempotency';
 import {
   type RateLimitDecision,
   type RateLimitDecisionContext,
   type RateLimitStore,
-} from '@stynx/ratelimit';
+} from '@stynx-nyx/ratelimit';
 import {
   PermissionCache,
   PermissionCacheMetrics,
@@ -21,11 +21,11 @@ import {
   STYNX_PERMISSION_CACHE_BACKEND,
   StynxAuthGuard,
   StynxJwtValidator,
-} from '@stynx/auth';
-import { StynxPlatformPipelineModule } from '@stynx/backend';
-import { Database, StynxDataModule } from '@stynx/data';
-import { SessionJwtSigningService, SessionService, type StynxSessionSigningKeySet } from '@stynx/sessions';
-import { mintTestSession } from '@stynx/testing';
+} from '@stynx-nyx/auth';
+import { StynxPlatformPipelineModule } from '@stynx-nyx/backend';
+import { Database, StynxDataModule } from '@stynx-nyx/data';
+import { SessionJwtSigningService, SessionService, type StynxSessionSigningKeySet } from '@stynx-nyx/sessions';
+import { mintTestSession } from '@stynx-nyx/testing';
 import request from 'supertest';
 import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../../packages/data/test/support/postgres';
 import { ReferenceProbesController } from '../../src/sample/reference-probes.controller';
@@ -317,9 +317,9 @@ describe('ReferenceProbesController API error matrix', () => {
       imports: [
         StynxDataModule.forRoot({
           connections: {
-            owner: { connectionString: postgres.connectionString('@stynx/reference-api-probes:owner') },
-            app: { connectionString: postgres.connectionString('@stynx/reference-api-probes:app') },
-            reader: { connectionString: postgres.connectionString('@stynx/reference-api-probes:reader') },
+            owner: { connectionString: postgres.connectionString('@stynx-nyx/reference-api-probes:owner') },
+            app: { connectionString: postgres.connectionString('@stynx-nyx/reference-api-probes:app') },
+            reader: { connectionString: postgres.connectionString('@stynx-nyx/reference-api-probes:reader') },
           },
           migrations: { enabled: true },
         }),

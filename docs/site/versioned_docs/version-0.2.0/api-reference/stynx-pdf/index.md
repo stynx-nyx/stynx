@@ -1,8 +1,8 @@
-**@stynx/pdf**
+**@stynx-nyx/pdf**
 
 ---
 
-# @stynx/pdf
+# @stynx-nyx/pdf
 
 Public server-side PDF rendering facade exports.
 

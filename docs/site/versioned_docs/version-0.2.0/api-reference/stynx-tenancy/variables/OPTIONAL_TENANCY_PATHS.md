@@ -1,8 +1,8 @@
-[**@stynx/tenancy**](../index.md)
+[**@stynx-nyx/tenancy**](../index.md)
 
 ---
 
-[@stynx/tenancy](../index.md) / OPTIONAL_TENANCY_PATHS
+[@stynx-nyx/tenancy](../index.md) / OPTIONAL_TENANCY_PATHS
 
 # Variable: OPTIONAL_TENANCY_PATHS
 

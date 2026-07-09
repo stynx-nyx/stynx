@@ -1,8 +1,8 @@
-[**@stynx/integration-adapter**](../index.md)
+[**@stynx-nyx/integration-adapter**](../index.md)
 
 ---
 
-[@stynx/integration-adapter](../index.md) / IntegrationAdapterOptions
+[@stynx-nyx/integration-adapter](../index.md) / IntegrationAdapterOptions
 
 # Interface: IntegrationAdapterOptions\<TReq, TRaw, TRes\>
 

@@ -45,7 +45,7 @@ Use this shape in the closeout:
 ```md
 ## STYNX R<N> closeout — adopter notes
 
-- Package: `@stynx/<name>` v<X.Y.Z>
+- Package: `@stynx-nyx/<name>` v<X.Y.Z>
 - Surface changes: [...]
 - Migration: [...]
 - Fixture compat: [...]

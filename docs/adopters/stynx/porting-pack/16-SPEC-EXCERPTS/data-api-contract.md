@@ -1,4 +1,4 @@
-# `@stynx/data` — API Contract
+# `@stynx-nyx/data` — API Contract
 
 > **Source:** `specs/STYNX-API-DATA.md` (618 lines), cross-checked
 > against `packages/data/src/index.ts`,
@@ -30,7 +30,7 @@ naming pattern of sibling packages).
 
 **Drift vs spec:** archive Drizzle types are at
 `packages/data/src/internal/archive-schema.ts` (not the spec's
-`@stynx/data/internal/archive-schema` subpath). They are not
+`@stynx-nyx/data/internal/archive-schema` subpath). They are not
 re-exported from the public barrel — consumer code must not import
 them.
 
@@ -233,6 +233,6 @@ All extend `StynxDataError`. Each carries `code` and `httpStatus`.
 | `SerializationFailureError`          | (PG 40001)                             | 500  |
 | `StatementTimeoutError`              | (PG 57014)                             | 500  |
 
-Apps should let these bubble; the `@stynx/backend`
+Apps should let these bubble; the `@stynx-nyx/backend`
 `StynxPlatformPipelineModule` wires a global exception filter that
 translates them to JSON error responses.

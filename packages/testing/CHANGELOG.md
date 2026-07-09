@@ -1,4 +1,4 @@
-# @stynx/testing
+# @stynx-nyx/testing
 
 ## 1.0.0
 
@@ -9,9 +9,9 @@
 ### Patch Changes
 
 - Updated dependencies [8f6df55]
-  - @stynx/audit@1.0.0
-  - @stynx/auth@1.0.0
-  - @stynx/core@1.0.0
-  - @stynx/data@1.0.0
-  - @stynx/sessions@1.0.0
-  - @stynx/storage@1.0.0
+  - @stynx-nyx/audit@1.0.0
+  - @stynx-nyx/auth@1.0.0
+  - @stynx-nyx/core@1.0.0
+  - @stynx-nyx/data@1.0.0
+  - @stynx-nyx/sessions@1.0.0
+  - @stynx-nyx/storage@1.0.0

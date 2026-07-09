@@ -1,5 +1,5 @@
 import { DynamicModule, Module, Provider } from '@nestjs/common';
-import type { DbContextApplier } from '@stynx/contracts';
+import type { DbContextApplier } from '@stynx-nyx/contracts';
 import { DbContextInterceptor, type DbClientResolver } from './db-context.interceptor';
 import {
   STYNX_DB_CLIENT_RESOLVER,

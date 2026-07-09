@@ -2,13 +2,13 @@
   "graph": {
     "domain/demo-bookmark/api/src/demo-bookmark/controllers/bookmark-tag.controller.ts": [
       "@nestjs/common",
-      "@stynx/auth",
+      "@stynx-nyx/auth",
       "domain/demo-bookmark/api/src/demo-bookmark/dto/create-bookmark-tag.dto",
       "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark-tag.service"
     ],
     "domain/demo-bookmark/api/src/demo-bookmark/controllers/bookmark.controller.ts": [
       "@nestjs/common",
-      "@stynx/auth",
+      "@stynx-nyx/auth",
       "domain/demo-bookmark/api/src/demo-bookmark/dto/create-bookmark.dto",
       "domain/demo-bookmark/api/src/demo-bookmark/dto/update-bookmark.dto",
       "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark.service"
@@ -33,22 +33,22 @@
     ],
     "domain/demo-bookmark/api/src/demo-bookmark/entities/bookmark.entity.ts": [],
     "domain/demo-bookmark/api/src/demo-bookmark/schema.ts": [
-      "@stynx/data",
+      "@stynx-nyx/data",
       "drizzle-orm",
       "drizzle-orm/pg-core"
     ],
     "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark-tag.service.ts": [
       "@nestjs/common",
-      "@stynx/core",
-      "@stynx/data",
+      "@stynx-nyx/core",
+      "@stynx-nyx/data",
       "domain/demo-bookmark/api/src/demo-bookmark/dto/create-bookmark-tag.dto",
       "domain/demo-bookmark/api/src/demo-bookmark/schema",
       "drizzle-orm"
     ],
     "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark.service.ts": [
       "@nestjs/common",
-      "@stynx/core",
-      "@stynx/data",
+      "@stynx-nyx/core",
+      "@stynx-nyx/data",
       "domain/demo-bookmark/api/src/demo-bookmark/dto/create-bookmark.dto",
       "domain/demo-bookmark/api/src/demo-bookmark/dto/update-bookmark.dto",
       "domain/demo-bookmark/api/src/demo-bookmark/schema",
@@ -57,7 +57,7 @@
     ],
     "domain/demo-bookmark/api/test/bookmark-tag.controller.spec.ts": [
       "@nestjs/testing",
-      "@stynx/auth",
+      "@stynx-nyx/auth",
       "domain/demo-bookmark/api/src/demo-bookmark/controllers/bookmark-tag.controller",
       "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark-tag.service"
     ],
@@ -69,7 +69,7 @@
     ],
     "domain/demo-bookmark/api/test/bookmark.controller.spec.ts": [
       "@nestjs/testing",
-      "@stynx/auth",
+      "@stynx-nyx/auth",
       "domain/demo-bookmark/api/src/demo-bookmark/controllers/bookmark.controller",
       "domain/demo-bookmark/api/src/demo-bookmark/services/bookmark.service"
     ],
@@ -80,8 +80,8 @@
     ],
     "domain/demo-bookmark/api/test/support/postgres-fixture.ts": [
       "@nestjs/testing",
-      "@stynx/core",
-      "@stynx/data",
+      "@stynx-nyx/core",
+      "@stynx-nyx/data",
       "node:crypto",
       "node:fs",
       "node:os",
@@ -811,13 +811,13 @@
     ],
     "packages/audit/src/audit.controller.ts": [
       "@nestjs/common",
-      "@stynx/auth",
+      "@stynx-nyx/auth",
       "packages/audit/src/audit.service",
       "packages/audit/src/types"
     ],
     "packages/audit/src/audit.module.ts": [
       "@nestjs/common",
-      "@stynx/core",
+      "@stynx-nyx/core",
       "packages/audit/src/audit.controller",
       "packages/audit/src/audit.service",
       "packages/audit/src/tokens",
@@ -827,7 +827,7 @@
     "packages/audit/src/audit.service.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/data",
+      "@stynx-nyx/data",
       "node:crypto",
       "node:fs/promises",
       "node:os",
@@ -847,14 +847,14 @@
       "packages/audit/src/types"
     ],
     "packages/audit/src/retention.ts": ["packages/audit/src/types"],
-    "packages/audit/src/sql-adapter.ts": ["@stynx/contracts"],
+    "packages/audit/src/sql-adapter.ts": ["@stynx-nyx/contracts"],
     "packages/audit/src/test-helpers.ts": [],
     "packages/audit/src/tokens.ts": [],
     "packages/audit/src/types.ts": [],
     "packages/audit/test/integration/audit.module.spec.ts": [
       "@nestjs/testing",
-      "@stynx/core",
-      "@stynx/data",
+      "@stynx-nyx/core",
+      "@stynx-nyx/data",
       "node:crypto",
       "packages/audit/src/audit.module",
       "packages/audit/src/audit.service",
@@ -871,13 +871,13 @@
     "packages/audit/test/unit/retention.spec.ts": ["packages/audit/src/retention"],
     "packages/auth/src/actor-context.interceptor.ts": [
       "@nestjs/common",
-      "@stynx/core",
+      "@stynx-nyx/core",
       "packages/auth/src/types",
       "rxjs"
     ],
     "packages/auth/src/auth.controller.ts": [
       "@nestjs/common",
-      "@stynx/idempotency",
+      "@stynx-nyx/idempotency",
       "packages/auth/src/auth.service",
       "packages/auth/src/decorators",
       "packages/auth/src/permission.guard",
@@ -888,7 +888,7 @@
     "packages/auth/src/auth.module.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/core",
+      "@stynx-nyx/core",
       "packages/auth/src/actor-context.interceptor",
       "packages/auth/src/auth.controller",
       "packages/auth/src/auth.service",
@@ -908,9 +908,9 @@
     "packages/auth/src/auth.service.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/core",
-      "@stynx/data",
-      "@stynx/sessions",
+      "@stynx-nyx/core",
+      "@stynx-nyx/data",
+      "@stynx-nyx/sessions",
       "node:crypto",
       "packages/auth/src/cognito-jwt.validator",
       "packages/auth/src/effective-hash-computer",
@@ -922,7 +922,7 @@
       "@aws-sdk/client-cognito-identity-provider",
       "@aws-sdk/credential-providers",
       "@aws-sdk/types",
-      "@stynx/contracts"
+      "@stynx-nyx/contracts"
     ],
     "packages/auth/src/cognito-jwt.validator.ts": [
       "@nestjs/common",
@@ -930,13 +930,13 @@
       "packages/auth/src/types",
       "packages/auth/src/utils"
     ],
-    "packages/auth/src/cognito-token-verifier.ts": ["@stynx/contracts", "jose", "node:url"],
+    "packages/auth/src/cognito-token-verifier.ts": ["@stynx-nyx/contracts", "jose", "node:url"],
     "packages/auth/src/decorators.ts": ["@nestjs/common"],
     "packages/auth/src/doctor.ts": ["packages/auth/src/effective-hash-computer"],
     "packages/auth/src/effective-hash-computer.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/data",
+      "@stynx-nyx/data",
       "packages/auth/src/utils"
     ],
     "packages/auth/src/in-memory-permission-cache-backend.ts": ["packages/auth/src/types"],
@@ -973,8 +973,8 @@
     "packages/auth/src/permission-query.service.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/core",
-      "@stynx/data",
+      "@stynx-nyx/core",
+      "@stynx-nyx/data",
       "packages/auth/src/utils"
     ],
     "packages/auth/src/permission.guard.ts": [
@@ -992,7 +992,7 @@
     "packages/auth/src/stynx-auth.guard.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/sessions",
+      "@stynx-nyx/sessions",
       "packages/auth/src/decorators",
       "packages/auth/src/permission-cache",
       "packages/auth/src/stynx-jwt.validator",
@@ -1002,20 +1002,20 @@
     "packages/auth/src/stynx-jwt.validator.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/sessions",
+      "@stynx-nyx/sessions",
       "packages/auth/src/tokens",
       "packages/auth/src/types",
       "packages/auth/src/utils"
     ],
     "packages/auth/src/tokens.ts": [],
-    "packages/auth/src/types.ts": ["@stynx/contracts"],
+    "packages/auth/src/types.ts": ["@stynx-nyx/contracts"],
     "packages/auth/src/utils.ts": ["node:crypto"],
     "packages/auth/test/integration/auth.module.spec.ts": [
       "@nestjs/common",
       "@nestjs/testing",
-      "@stynx/core",
-      "@stynx/data",
-      "@stynx/sessions",
+      "@stynx-nyx/core",
+      "@stynx-nyx/data",
+      "@stynx-nyx/sessions",
       "node:crypto",
       "packages/auth/src/auth.module",
       "packages/auth/src/auth.service",
@@ -1066,8 +1066,8 @@
     ],
     "packages/auth/test/unit/auth.service.spec.ts": [
       "@nestjs/core",
-      "@stynx/core",
-      "@stynx/sessions",
+      "@stynx-nyx/core",
+      "@stynx-nyx/sessions",
       "packages/auth/src/auth.service"
     ],
     "packages/auth/test/unit/doctor.spec.ts": ["packages/auth/src/doctor"],
@@ -1083,14 +1083,14 @@
     ],
     "packages/auth/test/unit/permission-query.service.spec.ts": [
       "@nestjs/core",
-      "@stynx/core",
-      "@stynx/data",
+      "@stynx-nyx/core",
+      "@stynx-nyx/data",
       "packages/auth/src/permission-query.service"
     ],
     "packages/auth/test/unit/stynx-auth.guard.spec.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/sessions",
+      "@stynx-nyx/sessions",
       "packages/auth/src/decorators",
       "packages/auth/src/stynx-auth.guard"
     ],
@@ -1105,7 +1105,7 @@
     "packages/backend/src/audit/audit.interceptor.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/contracts",
+      "@stynx-nyx/contracts",
       "packages/backend/src/audit/constants",
       "packages/backend/src/audit/decorators",
       "packages/backend/src/audit/redaction-policy",
@@ -1114,7 +1114,7 @@
     ],
     "packages/backend/src/audit/audit.module.ts": [
       "@nestjs/common",
-      "@stynx/contracts",
+      "@stynx-nyx/contracts",
       "packages/backend/src/audit/audit.interceptor",
       "packages/backend/src/audit/constants",
       "packages/backend/src/audit/redaction-policy"
@@ -1125,42 +1125,42 @@
       "packages/backend/src/audit/constants"
     ],
     "packages/backend/src/audit/redaction-policy.ts": [
-      "@stynx/contracts",
+      "@stynx-nyx/contracts",
       "packages/backend/src/common/request-context"
     ],
     "packages/backend/src/auth/auth-context.guard.ts": [
       "@nestjs/common",
-      "@stynx/contracts",
+      "@stynx-nyx/contracts",
       "packages/backend/src/auth/constants",
       "packages/backend/src/auth/default-principal-mapper",
       "packages/backend/src/common/request-context"
     ],
     "packages/backend/src/auth/auth.module.ts": [
       "@nestjs/common",
-      "@stynx/contracts",
+      "@stynx-nyx/contracts",
       "packages/backend/src/auth/auth-context.guard",
       "packages/backend/src/auth/constants"
     ],
-    "packages/backend/src/auth/claim-first-tenant-entitlement.policy.ts": ["@stynx/contracts"],
+    "packages/backend/src/auth/claim-first-tenant-entitlement.policy.ts": ["@stynx-nyx/contracts"],
     "packages/backend/src/auth/constants.ts": [],
     "packages/backend/src/auth/current-principal.decorator.ts": [
       "@nestjs/common",
-      "@stynx/contracts",
+      "@stynx-nyx/contracts",
       "packages/backend/src/common/request-context"
     ],
-    "packages/backend/src/auth/default-principal-mapper.ts": ["@stynx/contracts"],
+    "packages/backend/src/auth/default-principal-mapper.ts": ["@stynx-nyx/contracts"],
     "packages/backend/src/auth/required-tenant-header.resolver.ts": [
       "@nestjs/common",
-      "@stynx/contracts"
+      "@stynx-nyx/contracts"
     ],
     "packages/backend/src/auth/sql-tenant-entitlement.fallback.ts": [
-      "@stynx/contracts",
+      "@stynx-nyx/contracts",
       "packages/backend/src/auth/claim-first-tenant-entitlement.policy"
     ],
     "packages/backend/src/authorization/authorization.guard.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/contracts",
+      "@stynx-nyx/contracts",
       "packages/backend/src/authorization/constants",
       "packages/backend/src/authorization/decorators",
       "packages/backend/src/authorization/default-policy-evaluator",
@@ -1168,22 +1168,22 @@
     ],
     "packages/backend/src/authorization/authorization.module.ts": [
       "@nestjs/common",
-      "@stynx/contracts",
+      "@stynx-nyx/contracts",
       "packages/backend/src/authorization/authorization.guard",
       "packages/backend/src/authorization/constants"
     ],
     "packages/backend/src/authorization/constants.ts": [],
     "packages/backend/src/authorization/decorators.ts": [
       "@nestjs/common",
-      "@stynx/contracts",
+      "@stynx-nyx/contracts",
       "packages/backend/src/authorization/constants"
     ],
-    "packages/backend/src/authorization/default-policy-evaluator.ts": ["@stynx/contracts"],
-    "packages/backend/src/common/request-context.ts": ["@stynx/contracts"],
+    "packages/backend/src/authorization/default-policy-evaluator.ts": ["@stynx-nyx/contracts"],
+    "packages/backend/src/common/request-context.ts": ["@stynx-nyx/contracts"],
     "packages/backend/src/db-context/constants.ts": [],
     "packages/backend/src/db-context/db-context.interceptor.ts": [
       "@nestjs/common",
-      "@stynx/contracts",
+      "@stynx-nyx/contracts",
       "packages/backend/src/common/request-context",
       "packages/backend/src/db-context/constants",
       "packages/backend/src/db-context/request-db-client-lifecycle",
@@ -1191,13 +1191,13 @@
     ],
     "packages/backend/src/db-context/db-context.module.ts": [
       "@nestjs/common",
-      "@stynx/contracts",
+      "@stynx-nyx/contracts",
       "packages/backend/src/db-context/constants",
       "packages/backend/src/db-context/db-context.interceptor",
       "packages/backend/src/db-context/pg-session-db-context.applier",
       "packages/backend/src/db-context/request-db-client-lifecycle"
     ],
-    "packages/backend/src/db-context/pg-session-db-context.applier.ts": ["@stynx/contracts"],
+    "packages/backend/src/db-context/pg-session-db-context.applier.ts": ["@stynx-nyx/contracts"],
     "packages/backend/src/db-context/request-db-client-lifecycle.ts": [
       "packages/backend/src/common/request-context"
     ],
@@ -1226,26 +1226,26 @@
     "packages/backend/src/identity-admin/constants.ts": [],
     "packages/backend/src/identity-admin/identity-admin.module.ts": [
       "@nestjs/common",
-      "@stynx/contracts",
+      "@stynx-nyx/contracts",
       "packages/backend/src/identity-admin/constants",
       "packages/backend/src/identity-admin/identity-admin.service",
       "packages/backend/src/identity-admin/integration-facades"
     ],
     "packages/backend/src/identity-admin/identity-admin.service.ts": [
       "@nestjs/common",
-      "@stynx/contracts",
+      "@stynx-nyx/contracts",
       "packages/backend/src/identity-admin/constants"
     ],
     "packages/backend/src/identity-admin/integration-facades.ts": [
       "@nestjs/common",
-      "@stynx/contracts",
+      "@stynx-nyx/contracts",
       "packages/backend/src/identity-admin/identity-admin.service"
     ],
-    "packages/backend/src/identity-admin/pg-local-sync.adapter.ts": ["@stynx/contracts"],
+    "packages/backend/src/identity-admin/pg-local-sync.adapter.ts": ["@stynx-nyx/contracts"],
     "packages/backend/src/index.ts": [
-      "@stynx/contracts",
-      "@stynx/idempotency",
-      "@stynx/ratelimit",
+      "@stynx-nyx/contracts",
+      "@stynx-nyx/idempotency",
+      "@stynx-nyx/ratelimit",
       "packages/backend/src/audit/audit.interceptor",
       "packages/backend/src/audit/audit.module",
       "packages/backend/src/audit/constants",
@@ -1289,8 +1289,8 @@
     "packages/backend/src/pipeline/platform-pipeline.module.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/idempotency",
-      "@stynx/ratelimit",
+      "@stynx-nyx/idempotency",
+      "@stynx-nyx/ratelimit",
       "packages/backend/src/sla/sla-monitor.interceptor",
       "packages/backend/src/sla/sla.module"
     ],
@@ -1339,7 +1339,7 @@
     "packages/backend/src/storage/constants.ts": [],
     "packages/backend/src/storage/storage.module.ts": [
       "@nestjs/common",
-      "@stynx/contracts",
+      "@stynx-nyx/contracts",
       "packages/backend/src/storage/constants"
     ],
     "packages/cli/src/adopt.ts": ["node:fs", "node:path"],
@@ -1518,7 +1518,7 @@
     "packages/data/src/client.ts": ["pg"],
     "packages/data/src/data.module.ts": [
       "@nestjs/common",
-      "@stynx/core",
+      "@stynx-nyx/core",
       "packages/data/src/database",
       "packages/data/src/migration-runner",
       "packages/data/src/pools",
@@ -1527,7 +1527,7 @@
     ],
     "packages/data/src/database.ts": [
       "@nestjs/common",
-      "@stynx/core",
+      "@stynx-nyx/core",
       "nestjs-cls",
       "packages/data/src/errors",
       "packages/data/src/pools",
@@ -1536,7 +1536,7 @@
       "packages/data/src/types",
       "pg"
     ],
-    "packages/data/src/errors.ts": ["@stynx/core"],
+    "packages/data/src/errors.ts": ["@stynx-nyx/core"],
     "packages/data/src/index.ts": [
       "packages/data/src/client",
       "packages/data/src/data.module",
@@ -1566,7 +1566,7 @@
     ],
     "packages/data/src/pools.ts": [
       "@nestjs/common",
-      "@stynx/core",
+      "@stynx-nyx/core",
       "packages/data/src/tokens",
       "pg"
     ],
@@ -1603,7 +1603,7 @@
       "packages/data/src/table-markers"
     ],
     "packages/data/src/schema/tenancy.ts": ["drizzle-orm/pg-core"],
-    "packages/data/src/system-context.ts": ["@stynx/core", "packages/data/src/database"],
+    "packages/data/src/system-context.ts": ["@stynx-nyx/core", "packages/data/src/database"],
     "packages/data/src/table-markers.ts": ["drizzle-orm/pg-core", "packages/data/src/types"],
     "packages/data/src/tokens.ts": ["pg"],
     "packages/data/src/transaction.ts": [
@@ -1622,7 +1622,7 @@
     "packages/data/src/types.ts": ["drizzle-orm", "packages/data/src/tokens"],
     "packages/data/test/integration/data.module.spec.ts": [
       "@nestjs/testing",
-      "@stynx/core",
+      "@stynx-nyx/core",
       "packages/data/src/data.module",
       "packages/data/src/database",
       "packages/data/src/errors",
@@ -1640,7 +1640,7 @@
     "packages/data/test/integration/soft-delete.spec.ts": [
       "@nestjs/common",
       "@nestjs/testing",
-      "@stynx/core",
+      "@stynx-nyx/core",
       "drizzle-orm",
       "drizzle-orm/pg-core",
       "packages/data/src/data.module",
@@ -1658,7 +1658,7 @@
       "packages/data/src/transaction"
     ],
     "packages/data/test/unit/database.spec.ts": [
-      "@stynx/core",
+      "@stynx-nyx/core",
       "nestjs-cls",
       "packages/data/src/database",
       "packages/data/src/errors",
@@ -1689,161 +1689,161 @@
     ],
     "packages/flow/src/controllers/agent-rules.controller.ts": [
       "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/backend",
+      "@stynx-nyx/auth",
+      "@stynx-nyx/backend",
       "packages/flow/src/flow-design.service"
     ],
     "packages/flow/src/controllers/analytics.controller.ts": [
       "@nestjs/common",
-      "@stynx/auth",
+      "@stynx-nyx/auth",
       "packages/flow/src/flow-analytics.service"
     ],
     "packages/flow/src/controllers/answers.controller.ts": [
       "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/backend",
+      "@stynx-nyx/auth",
+      "@stynx-nyx/backend",
       "packages/flow/src/flow-forms.service"
     ],
     "packages/flow/src/controllers/edges.controller.ts": [
       "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/backend",
+      "@stynx-nyx/auth",
+      "@stynx-nyx/backend",
       "packages/flow/src/flow-design.service"
     ],
     "packages/flow/src/controllers/effects.controller.ts": [
       "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/backend",
-      "@stynx/idempotency",
+      "@stynx-nyx/auth",
+      "@stynx-nyx/backend",
+      "@stynx-nyx/idempotency",
       "packages/flow/src/flow-runtime.service"
     ],
     "packages/flow/src/controllers/events.controller.ts": [
       "@nestjs/common",
-      "@stynx/auth",
+      "@stynx-nyx/auth",
       "packages/flow/src/flow-runtime.service"
     ],
     "packages/flow/src/controllers/fills.controller.ts": [
       "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/backend",
-      "@stynx/idempotency",
+      "@stynx-nyx/auth",
+      "@stynx-nyx/backend",
+      "@stynx-nyx/idempotency",
       "packages/flow/src/flow-forms.service"
     ],
     "packages/flow/src/controllers/forms.controller.ts": [
       "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/backend",
-      "@stynx/idempotency",
+      "@stynx-nyx/auth",
+      "@stynx-nyx/backend",
+      "@stynx-nyx/idempotency",
       "packages/flow/src/flow-forms.service"
     ],
     "packages/flow/src/controllers/graphs.controller.ts": [
       "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/backend",
-      "@stynx/idempotency",
+      "@stynx-nyx/auth",
+      "@stynx-nyx/backend",
+      "@stynx-nyx/idempotency",
       "packages/flow/src/flow-design.service"
     ],
     "packages/flow/src/controllers/node-form-rules.controller.ts": [
       "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/backend",
+      "@stynx-nyx/auth",
+      "@stynx-nyx/backend",
       "packages/flow/src/flow-design.service"
     ],
     "packages/flow/src/controllers/node-runs.controller.ts": [
       "@nestjs/common",
-      "@stynx/auth",
+      "@stynx-nyx/auth",
       "packages/flow/src/flow-runtime.service"
     ],
     "packages/flow/src/controllers/nodes.controller.ts": [
       "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/backend",
+      "@stynx-nyx/auth",
+      "@stynx-nyx/backend",
       "packages/flow/src/flow-design.service"
     ],
     "packages/flow/src/controllers/policies.controller.ts": [
       "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/backend",
+      "@stynx-nyx/auth",
+      "@stynx-nyx/backend",
       "packages/flow/src/flow-policy.service"
     ],
     "packages/flow/src/controllers/questions.controller.ts": [
       "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/backend",
-      "@stynx/idempotency",
+      "@stynx-nyx/auth",
+      "@stynx-nyx/backend",
+      "@stynx-nyx/idempotency",
       "packages/flow/src/flow-forms.service"
     ],
     "packages/flow/src/controllers/runs.controller.ts": [
       "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/backend",
-      "@stynx/idempotency",
+      "@stynx-nyx/auth",
+      "@stynx-nyx/backend",
+      "@stynx-nyx/idempotency",
       "packages/flow/src/flow-analytics.service",
       "packages/flow/src/flow-runtime.service"
     ],
     "packages/flow/src/controllers/scopes.controller.ts": [
       "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/backend",
+      "@stynx-nyx/auth",
+      "@stynx-nyx/backend",
       "packages/flow/src/flow-design.service"
     ],
     "packages/flow/src/controllers/signal.controller.ts": [
       "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/backend",
-      "@stynx/idempotency",
+      "@stynx-nyx/auth",
+      "@stynx-nyx/backend",
+      "@stynx-nyx/idempotency",
       "packages/flow/src/flow-runtime.service"
     ],
     "packages/flow/src/controllers/tasks.controller.ts": [
       "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/backend",
-      "@stynx/idempotency",
+      "@stynx-nyx/auth",
+      "@stynx-nyx/backend",
+      "@stynx-nyx/idempotency",
       "packages/flow/src/flow-runtime.service"
     ],
     "packages/flow/src/controllers/transition-effects.controller.ts": [
       "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/backend",
+      "@stynx-nyx/auth",
+      "@stynx-nyx/backend",
       "packages/flow/src/flow-design.service"
     ],
     "packages/flow/src/controllers/waivers.controller.ts": [
       "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/backend",
-      "@stynx/idempotency",
+      "@stynx-nyx/auth",
+      "@stynx-nyx/backend",
+      "@stynx-nyx/idempotency",
       "packages/flow/src/flow-forms.service"
     ],
     "packages/flow/src/flow-analytics.service.ts": [
       "@nestjs/common",
-      "@stynx/data",
+      "@stynx-nyx/data",
       "packages/flow/src/row-utils"
     ],
     "packages/flow/src/flow-design.service.ts": [
       "@nestjs/common",
-      "@stynx/core",
-      "@stynx/data",
+      "@stynx-nyx/core",
+      "@stynx-nyx/data",
       "packages/flow/src/types",
       "packages/flow/src/validation"
     ],
     "packages/flow/src/flow-forms.service.ts": [
       "@nestjs/common",
-      "@stynx/core",
-      "@stynx/data",
+      "@stynx-nyx/core",
+      "@stynx-nyx/data",
       "packages/flow/src/row-utils",
       "packages/flow/src/validation"
     ],
     "packages/flow/src/flow-policy.service.ts": [
       "@nestjs/common",
-      "@stynx/data",
+      "@stynx-nyx/data",
       "packages/flow/src/flow-design.service",
       "packages/flow/src/types",
       "packages/flow/src/validation"
     ],
     "packages/flow/src/flow-runtime.service.ts": [
       "@nestjs/common",
-      "@stynx/core",
-      "@stynx/data",
+      "@stynx-nyx/core",
+      "@stynx-nyx/data",
       "packages/flow/src/adapters",
       "packages/flow/src/row-utils",
       "packages/flow/src/types",
@@ -1896,7 +1896,7 @@
     "packages/flow/src/validation.ts": ["@nestjs/common", "zod"],
     "packages/flow/test/integration/flow.database.spec.ts": [
       "@nestjs/testing",
-      "@stynx/data",
+      "@stynx-nyx/data",
       "packages/data/test/support/postgres",
       "pg"
     ],
@@ -1909,8 +1909,8 @@
     ],
     "packages/flow/test/unit/route-contracts.spec.ts": [
       "@nestjs/common/constants",
-      "@stynx/auth",
-      "@stynx/backend",
+      "@stynx-nyx/auth",
+      "@stynx-nyx/backend",
       "packages/flow/src/controllers/agent-rules.controller",
       "packages/flow/src/controllers/analytics.controller",
       "packages/flow/src/controllers/answers.controller",
@@ -1986,7 +1986,7 @@
     "packages/i18n/src/catalog.service.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/data",
+      "@stynx-nyx/data",
       "intl-messageformat",
       "node:fs",
       "node:path",
@@ -1995,28 +1995,28 @@
     ],
     "packages/i18n/src/error-translator.service.ts": [
       "@nestjs/common",
-      "@stynx/core",
+      "@stynx-nyx/core",
       "packages/i18n/src/locale.service"
     ],
     "packages/i18n/src/i18n-admin.service.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/data",
+      "@stynx-nyx/data",
       "packages/i18n/src/catalog.service",
       "packages/i18n/src/types"
     ],
     "packages/i18n/src/i18n.controller.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/core",
-      "@stynx/idempotency",
+      "@stynx-nyx/core",
+      "@stynx-nyx/idempotency",
       "packages/i18n/src/i18n-admin.service",
       "packages/i18n/src/types"
     ],
     "packages/i18n/src/i18n.module.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/core",
+      "@stynx-nyx/core",
       "packages/i18n/src/catalog.service",
       "packages/i18n/src/error-translator.service",
       "packages/i18n/src/i18n-admin.service",
@@ -2047,14 +2047,14 @@
     "packages/i18n/src/locale.service.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/core",
-      "@stynx/data",
+      "@stynx-nyx/core",
+      "@stynx-nyx/data",
       "packages/i18n/src/catalog.service"
     ],
     "packages/i18n/src/localized-error.filter.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/core",
+      "@stynx-nyx/core",
       "packages/i18n/src/error-translator.service"
     ],
     "packages/i18n/src/tokens.ts": [],
@@ -2062,8 +2062,8 @@
     "packages/i18n/test/integration/i18n.module.spec.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/core",
-      "@stynx/testing",
+      "@stynx-nyx/core",
+      "@stynx-nyx/testing",
       "node:crypto",
       "node:path",
       "packages/i18n/src/i18n-admin.service",
@@ -2075,7 +2075,7 @@
     "packages/idempotency/src/constants.ts": [],
     "packages/idempotency/src/database-idempotency.store.ts": [
       "@nestjs/common",
-      "@stynx/data",
+      "@stynx-nyx/data",
       "packages/idempotency/src/constants",
       "packages/idempotency/src/types"
     ],
@@ -2129,7 +2129,7 @@
       "@nestjs/common",
       "@nestjs/core",
       "@nestjs/testing",
-      "@stynx/data",
+      "@stynx-nyx/data",
       "packages/data/test/support/postgres",
       "packages/idempotency/src/constants",
       "packages/idempotency/src/database-idempotency.store",
@@ -2165,7 +2165,7 @@
     ],
     "packages/logging/src/logging.module.ts": [
       "@nestjs/common",
-      "@stynx/core",
+      "@stynx-nyx/core",
       "packages/logging/src/dedupe",
       "packages/logging/src/logger.service",
       "packages/logging/src/pino.factory",
@@ -2175,7 +2175,7 @@
     ],
     "packages/logging/src/pino.factory.ts": [
       "@nestjs/common",
-      "@stynx/core",
+      "@stynx-nyx/core",
       "packages/logging/src/tokens",
       "pino"
     ],
@@ -2188,7 +2188,7 @@
     "packages/logging/test/integration/logging.module.spec.ts": [
       "@nestjs/common",
       "@nestjs/testing",
-      "@stynx/core",
+      "@stynx-nyx/core",
       "packages/logging/src/logger.service",
       "packages/logging/src/logging.module",
       "rxjs",
@@ -2200,7 +2200,7 @@
     "packages/logging/test/unit/request-logging.middleware.spec.ts": [
       "packages/logging/src/request-logging.middleware"
     ],
-    "packages/privacy/src/errors.ts": ["@stynx/core"],
+    "packages/privacy/src/errors.ts": ["@stynx-nyx/core"],
     "packages/privacy/src/index.ts": [
       "packages/privacy/src/errors",
       "packages/privacy/src/pii-map.service",
@@ -2215,7 +2215,7 @@
     "packages/privacy/src/pii-map.service.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/data",
+      "@stynx-nyx/data",
       "node:fs",
       "node:path",
       "packages/privacy/src/errors",
@@ -2226,19 +2226,19 @@
     ],
     "packages/privacy/src/privacy-object-store.service.ts": [
       "@nestjs/common",
-      "@stynx/storage",
+      "@stynx-nyx/storage",
       "packages/privacy/src/tokens",
       "packages/privacy/src/types"
     ],
     "packages/privacy/src/privacy.controller.ts": [
       "@nestjs/common",
-      "@stynx/idempotency",
+      "@stynx-nyx/idempotency",
       "packages/privacy/src/privacy.service",
       "packages/privacy/src/types"
     ],
     "packages/privacy/src/privacy.module.ts": [
       "@nestjs/common",
-      "@stynx/core",
+      "@stynx-nyx/core",
       "packages/privacy/src/pii-map.service",
       "packages/privacy/src/privacy-object-store.service",
       "packages/privacy/src/privacy.controller",
@@ -2250,7 +2250,7 @@
     "packages/privacy/src/privacy.service.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/data",
+      "@stynx-nyx/data",
       "jszip",
       "node:crypto",
       "packages/privacy/src/errors",
@@ -2263,8 +2263,8 @@
     "packages/privacy/src/tokens.ts": [],
     "packages/privacy/src/types.ts": [],
     "packages/privacy/test/integration/privacy.module.spec.ts": [
-      "@stynx/data",
-      "@stynx/testing",
+      "@stynx-nyx/data",
+      "@stynx-nyx/testing",
       "jszip",
       "node:fs",
       "node:os",
@@ -2302,7 +2302,7 @@
     "packages/ratelimit/src/pg-rate-limit.store.ts": ["packages/ratelimit/src/types"],
     "packages/ratelimit/src/rate-limit-policy.service.ts": [
       "@nestjs/common",
-      "@stynx/data",
+      "@stynx-nyx/data",
       "packages/ratelimit/src/constants",
       "packages/ratelimit/src/request-context",
       "packages/ratelimit/src/types"
@@ -2310,7 +2310,7 @@
     "packages/ratelimit/src/rate-limit.guard.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/auth",
+      "@stynx-nyx/auth",
       "packages/ratelimit/src/constants",
       "packages/ratelimit/src/request-context",
       "packages/ratelimit/src/types"
@@ -2337,7 +2337,7 @@
       "@nestjs/common",
       "@nestjs/core",
       "@nestjs/testing",
-      "@stynx/data",
+      "@stynx-nyx/data",
       "packages/data/test/support/postgres",
       "packages/ratelimit/src/constants",
       "packages/ratelimit/src/metrics",
@@ -2350,7 +2350,7 @@
     "packages/ratelimit/test/unit/rate-limit.guard.spec.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/auth",
+      "@stynx-nyx/auth",
       "packages/ratelimit/src/constants",
       "packages/ratelimit/src/metrics",
       "packages/ratelimit/src/rate-limit.guard",
@@ -2379,7 +2379,7 @@
     ],
     "packages/sessions/src/jwt-signing.service.ts": [
       "@nestjs/common",
-      "@stynx/core",
+      "@stynx-nyx/core",
       "node:crypto",
       "packages/sessions/src/errors",
       "packages/sessions/src/tokens",
@@ -2394,8 +2394,8 @@
     "packages/sessions/src/session-mirror.writer.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/core",
-      "@stynx/data",
+      "@stynx-nyx/core",
+      "@stynx-nyx/data",
       "node:crypto",
       "packages/sessions/src/types"
     ],
@@ -2409,7 +2409,7 @@
     ],
     "packages/sessions/src/sessions.module.ts": [
       "@nestjs/common",
-      "@stynx/core",
+      "@stynx-nyx/core",
       "packages/sessions/src/jwks.controller",
       "packages/sessions/src/jwt-signing.service",
       "packages/sessions/src/redis-session-store",
@@ -2424,7 +2424,7 @@
     "packages/sessions/test/integration/sessions.module.spec.ts": [
       "@nestjs/common",
       "@nestjs/testing",
-      "@stynx/data",
+      "@stynx-nyx/data",
       "node:child_process",
       "node:crypto",
       "node:perf_hooks",
@@ -2451,8 +2451,8 @@
     "packages/storage/src/documents.service.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/core",
-      "@stynx/data",
+      "@stynx-nyx/core",
+      "@stynx-nyx/data",
       "drizzle-orm",
       "node:crypto",
       "node:path",
@@ -2461,7 +2461,7 @@
       "packages/storage/src/tokens",
       "packages/storage/src/types"
     ],
-    "packages/storage/src/errors.ts": ["@stynx/core"],
+    "packages/storage/src/errors.ts": ["@stynx-nyx/core"],
     "packages/storage/src/index.ts": [
       "packages/storage/src/documents.service",
       "packages/storage/src/errors",
@@ -2485,7 +2485,7 @@
     ],
     "packages/storage/src/storage.module.ts": [
       "@nestjs/common",
-      "@stynx/core",
+      "@stynx-nyx/core",
       "packages/storage/src/documents.service",
       "packages/storage/src/s3.service",
       "packages/storage/src/tokens",
@@ -2497,8 +2497,8 @@
     "packages/storage/test/integration/storage.module.spec.ts": [
       "@aws-sdk/client-s3",
       "@nestjs/testing",
-      "@stynx/core",
-      "@stynx/data",
+      "@stynx-nyx/core",
+      "@stynx-nyx/data",
       "node:crypto",
       "packages/data/test/support/postgres",
       "packages/storage/src/documents.service",
@@ -2507,7 +2507,7 @@
       "testcontainers"
     ],
     "packages/storage/test/unit/documents.service.spec.ts": [
-      "@stynx/core",
+      "@stynx-nyx/core",
       "drizzle-orm",
       "packages/storage/src/documents.service",
       "packages/storage/src/errors"
@@ -2534,7 +2534,7 @@
     "packages/tenancy/src/tenancy-platform-admin.guard.ts": ["@nestjs/common"],
     "packages/tenancy/src/tenancy.controller.ts": [
       "@nestjs/common",
-      "@stynx/idempotency",
+      "@stynx-nyx/idempotency",
       "packages/tenancy/src/tenancy-platform-admin.guard",
       "packages/tenancy/src/tenancy.service",
       "packages/tenancy/src/types"
@@ -2542,7 +2542,7 @@
     "packages/tenancy/src/tenancy.module.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/core",
+      "@stynx-nyx/core",
       "packages/tenancy/src/membership-cache",
       "packages/tenancy/src/tenancy-platform-admin.guard",
       "packages/tenancy/src/tenancy.controller",
@@ -2559,7 +2559,7 @@
     "packages/tenancy/src/tenancy.service.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/data",
+      "@stynx-nyx/data",
       "packages/tenancy/src/membership-cache",
       "packages/tenancy/src/tokens",
       "packages/tenancy/src/types",
@@ -2568,8 +2568,8 @@
     "packages/tenancy/src/tenant-context.interceptor.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/core",
-      "@stynx/data",
+      "@stynx-nyx/core",
+      "@stynx-nyx/data",
       "packages/tenancy/src/membership-cache",
       "packages/tenancy/src/tokens",
       "packages/tenancy/src/types",
@@ -2579,8 +2579,8 @@
     "packages/tenancy/src/tenant-system-operation.sink.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/core",
-      "@stynx/data"
+      "@stynx-nyx/core",
+      "@stynx-nyx/data"
     ],
     "packages/tenancy/src/tokens.ts": ["packages/tenancy/src/types"],
     "packages/tenancy/src/types.ts": [],
@@ -2588,8 +2588,8 @@
     "packages/tenancy/test/integration/tenancy.module.spec.ts": [
       "@nestjs/common",
       "@nestjs/testing",
-      "@stynx/core",
-      "@stynx/data",
+      "@stynx-nyx/core",
+      "@stynx-nyx/data",
       "packages/data/test/support/postgres",
       "packages/tenancy/src/tenancy.module",
       "packages/tenancy/src/tenancy.service",
@@ -2606,22 +2606,22 @@
     "packages/tenancy/test/unit/tenant-context.interceptor.spec.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/core",
+      "@stynx-nyx/core",
       "packages/tenancy/src/membership-cache",
       "packages/tenancy/src/tenant-context.interceptor"
     ],
-    "packages/testing/src/context.ts": ["@stynx/core"],
+    "packages/testing/src/context.ts": ["@stynx-nyx/core"],
     "packages/testing/src/create-test-app.ts": [
       "@nestjs/common",
       "@nestjs/testing",
-      "@stynx/core",
-      "@stynx/data",
+      "@stynx-nyx/core",
+      "@stynx-nyx/data",
       "packages/testing/src/types",
       "testcontainers"
     ],
     "packages/testing/src/doctor.ts": ["node:child_process", "node:path"],
     "packages/testing/src/fixtures.ts": [
-      "@stynx/data",
+      "@stynx-nyx/data",
       "node:crypto",
       "packages/testing/src/types"
     ],
@@ -2636,27 +2636,27 @@
       "packages/testing/src/types"
     ],
     "packages/testing/src/lgpd-fixture.ts": [
-      "@stynx/data",
+      "@stynx-nyx/data",
       "node:crypto",
       "packages/testing/src/types"
     ],
-    "packages/testing/src/matchers.ts": ["@stynx/data", "drizzle-orm/pg-core", "drizzle-orm/utils"],
+    "packages/testing/src/matchers.ts": ["@stynx-nyx/data", "drizzle-orm/pg-core", "drizzle-orm/utils"],
     "packages/testing/src/mint-test-session.ts": [
-      "@stynx/sessions",
+      "@stynx-nyx/sessions",
       "node:crypto",
       "packages/testing/src/types"
     ],
     "packages/testing/src/types.ts": [
       "@nestjs/common",
       "@nestjs/testing",
-      "@stynx/core",
-      "@stynx/data",
-      "@stynx/sessions",
+      "@stynx-nyx/core",
+      "@stynx-nyx/data",
+      "@stynx-nyx/sessions",
       "testcontainers"
     ],
     "packages/testing/test/testing.spec.ts": [
-      "@stynx/core",
-      "@stynx/data",
+      "@stynx-nyx/core",
+      "@stynx-nyx/data",
       "drizzle-orm/pg-core",
       "node:crypto",
       "node:fs",
@@ -2667,16 +2667,16 @@
     "reference/api/src/app.module.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/audit",
-      "@stynx/auth",
-      "@stynx/backend",
-      "@stynx/data",
-      "@stynx/flow",
-      "@stynx/health",
-      "@stynx/logging",
-      "@stynx/sessions",
-      "@stynx/storage",
-      "@stynx/tenancy",
+      "@stynx-nyx/audit",
+      "@stynx-nyx/auth",
+      "@stynx-nyx/backend",
+      "@stynx-nyx/data",
+      "@stynx-nyx/flow",
+      "@stynx-nyx/health",
+      "@stynx-nyx/logging",
+      "@stynx-nyx/sessions",
+      "@stynx-nyx/storage",
+      "@stynx-nyx/tenancy",
       "node:crypto",
       "node:fs",
       "node:path",
@@ -2690,61 +2690,61 @@
     ],
     "reference/api/src/sample/documents.controller.ts": [
       "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/backend",
-      "@stynx/idempotency",
-      "@stynx/ratelimit",
+      "@stynx-nyx/auth",
+      "@stynx-nyx/backend",
+      "@stynx-nyx/idempotency",
+      "@stynx-nyx/ratelimit",
       "reference/api/src/sample/dto",
       "reference/api/src/sample/reference-sample.service"
     ],
     "reference/api/src/sample/dto.ts": [],
     "reference/api/src/sample/record-notes.controller.ts": [
       "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/backend",
-      "@stynx/idempotency",
-      "@stynx/ratelimit",
+      "@stynx-nyx/auth",
+      "@stynx-nyx/backend",
+      "@stynx-nyx/idempotency",
+      "@stynx-nyx/ratelimit",
       "reference/api/src/sample/dto",
       "reference/api/src/sample/reference-sample.service"
     ],
     "reference/api/src/sample/records.controller.ts": [
       "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/backend",
-      "@stynx/idempotency",
-      "@stynx/ratelimit",
+      "@stynx-nyx/auth",
+      "@stynx-nyx/backend",
+      "@stynx-nyx/idempotency",
+      "@stynx-nyx/ratelimit",
       "reference/api/src/sample/dto",
       "reference/api/src/sample/reference-sample.service"
     ],
     "reference/api/src/sample/reference-dev-auth.controller.ts": [
       "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/idempotency",
+      "@stynx-nyx/auth",
+      "@stynx-nyx/idempotency",
       "reference/api/src/sample/reference-dev-auth.service"
     ],
     "reference/api/src/sample/reference-dev-auth.service.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/auth",
-      "@stynx/data",
-      "@stynx/sessions"
+      "@stynx-nyx/auth",
+      "@stynx-nyx/data",
+      "@stynx-nyx/sessions"
     ],
     "reference/api/src/sample/reference-probes.controller.ts": [
       "@nestjs/common",
       "@nestjs/core",
-      "@stynx/auth",
-      "@stynx/backend",
-      "@stynx/core",
-      "@stynx/data",
-      "@stynx/idempotency",
-      "@stynx/ratelimit",
+      "@stynx-nyx/auth",
+      "@stynx-nyx/backend",
+      "@stynx-nyx/core",
+      "@stynx-nyx/data",
+      "@stynx-nyx/idempotency",
+      "@stynx-nyx/ratelimit",
       "node:crypto"
     ],
     "reference/api/src/sample/reference-sample.service.ts": [
       "@nestjs/common",
-      "@stynx/core",
-      "@stynx/data",
-      "@stynx/storage",
+      "@stynx-nyx/core",
+      "@stynx-nyx/data",
+      "@stynx-nyx/storage",
       "drizzle-orm",
       "node:crypto",
       "reference/api/src/sample/dto",
@@ -2763,31 +2763,31 @@
       "reference/api/src/sample/work-item-locks.controller",
       "reference/api/src/sample/work-items.controller"
     ],
-    "reference/api/src/sample/schema.ts": ["@stynx/data", "drizzle-orm", "drizzle-orm/pg-core"],
+    "reference/api/src/sample/schema.ts": ["@stynx-nyx/data", "drizzle-orm", "drizzle-orm/pg-core"],
     "reference/api/src/sample/work-item-entries.controller.ts": [
       "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/backend",
-      "@stynx/idempotency",
-      "@stynx/ratelimit",
+      "@stynx-nyx/auth",
+      "@stynx-nyx/backend",
+      "@stynx-nyx/idempotency",
+      "@stynx-nyx/ratelimit",
       "reference/api/src/sample/dto",
       "reference/api/src/sample/reference-sample.service"
     ],
     "reference/api/src/sample/work-item-locks.controller.ts": [
       "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/backend",
-      "@stynx/idempotency",
-      "@stynx/ratelimit",
+      "@stynx-nyx/auth",
+      "@stynx-nyx/backend",
+      "@stynx-nyx/idempotency",
+      "@stynx-nyx/ratelimit",
       "reference/api/src/sample/dto",
       "reference/api/src/sample/reference-sample.service"
     ],
     "reference/api/src/sample/work-items.controller.ts": [
       "@nestjs/common",
-      "@stynx/auth",
-      "@stynx/backend",
-      "@stynx/idempotency",
-      "@stynx/ratelimit",
+      "@stynx-nyx/auth",
+      "@stynx-nyx/backend",
+      "@stynx-nyx/idempotency",
+      "@stynx-nyx/ratelimit",
       "reference/api/src/sample/dto",
       "reference/api/src/sample/reference-sample.service"
     ],
@@ -2795,12 +2795,12 @@
       "@aws-sdk/client-s3",
       "@nestjs/common",
       "@nestjs/testing",
-      "@stynx/auth",
-      "@stynx/core",
-      "@stynx/data",
-      "@stynx/health",
-      "@stynx/sessions",
-      "@stynx/testing",
+      "@stynx-nyx/auth",
+      "@stynx-nyx/core",
+      "@stynx-nyx/data",
+      "@stynx-nyx/health",
+      "@stynx-nyx/sessions",
+      "@stynx-nyx/testing",
       "node:crypto",
       "packages/data/test/support/postgres",
       "reference/api/src/sample/schema",
@@ -3033,15 +3033,15 @@
       "packages/backend/src/audit/redaction-policy",
       "rxjs"
     ],
-    "test/packages/audit/hash-chain.spec.ts": ["@stynx/audit", "node:crypto"],
+    "test/packages/audit/hash-chain.spec.ts": ["@stynx-nyx/audit", "node:crypto"],
     "test/packages/audit/sql-adapter.spec.ts": ["packages/audit/src/index"],
     "test/packages/auth/auth-context.guard.spec.ts": [
       "@nestjs/common",
-      "@stynx/contracts",
+      "@stynx-nyx/contracts",
       "packages/backend/src/auth/auth-context.guard"
     ],
     "test/packages/auth/cognito-admin.adapter.spec.ts": [
-      "@stynx/contracts",
+      "@stynx-nyx/contracts",
       "packages/auth/src/cognito-admin.adapter"
     ],
     "test/packages/auth/tenant-entitlement.spec.ts": [
@@ -3072,20 +3072,20 @@
     ],
     "test/packages/identity-admin/identity-admin.service.spec.ts": [
       "@nestjs/common",
-      "@stynx/contracts",
+      "@stynx-nyx/contracts",
       "packages/backend/src/identity-admin/identity-admin.service"
     ],
     "test/packages/identity-admin/integration-facades.spec.ts": [
       "packages/backend/src/identity-admin/integration-facades"
     ],
     "test/packages/identity-admin/pg-local-sync.adapter.spec.ts": [
-      "@stynx/contracts",
+      "@stynx-nyx/contracts",
       "packages/backend/src/identity-admin/pg-local-sync.adapter"
     ],
     "test/packages/pipeline/platform-pipeline.module.spec.ts": [
       "@nestjs/core",
-      "@stynx/idempotency",
-      "@stynx/ratelimit",
+      "@stynx-nyx/idempotency",
+      "@stynx-nyx/ratelimit",
       "packages/backend/src/pipeline/platform-pipeline.module",
       "packages/backend/src/sla/sla-monitor.interceptor"
     ],

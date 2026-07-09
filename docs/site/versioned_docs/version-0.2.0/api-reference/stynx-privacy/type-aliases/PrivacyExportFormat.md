@@ -1,8 +1,8 @@
-[**@stynx/privacy**](../index.md)
+[**@stynx-nyx/privacy**](../index.md)
 
 ---
 
-[@stynx/privacy](../index.md) / PrivacyExportFormat
+[@stynx-nyx/privacy](../index.md) / PrivacyExportFormat
 
 # Type Alias: PrivacyExportFormat
 

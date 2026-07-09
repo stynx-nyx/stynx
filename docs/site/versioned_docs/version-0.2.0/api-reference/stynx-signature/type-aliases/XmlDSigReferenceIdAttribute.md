@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / XmlDSigReferenceIdAttribute
+[@stynx-nyx/signature](../index.md) / XmlDSigReferenceIdAttribute
 
 # Type Alias: XmlDSigReferenceIdAttribute
 

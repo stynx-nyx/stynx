@@ -1,8 +1,8 @@
-[**@stynx/data**](../index.md)
+[**@stynx-nyx/data**](../index.md)
 
 ---
 
-[@stynx/data](../index.md) / SoftDeleteAwareSelect
+[@stynx-nyx/data](../index.md) / SoftDeleteAwareSelect
 
 # Type Alias: SoftDeleteAwareSelect\<TTable\>
 

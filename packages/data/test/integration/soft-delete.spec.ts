@@ -1,5 +1,5 @@
 import { Test, type TestingModule } from '@nestjs/testing';
-import { RequestContextMutator } from '@stynx/core';
+import { RequestContextMutator } from '@stynx-nyx/core';
 import type { Provider } from '@nestjs/common';
 import { desc } from 'drizzle-orm';
 import { pgSchema, text, timestamp, uuid } from 'drizzle-orm/pg-core';

@@ -1,8 +1,8 @@
-[**@stynx/pdf**](../index.md)
+[**@stynx-nyx/pdf**](../index.md)
 
 ---
 
-[@stynx/pdf](../index.md) / StynxPdfModuleOptions
+[@stynx-nyx/pdf](../index.md) / StynxPdfModuleOptions
 
 # Interface: StynxPdfModuleOptions
 

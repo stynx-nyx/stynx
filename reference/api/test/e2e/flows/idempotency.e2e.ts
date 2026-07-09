@@ -1,4 +1,4 @@
-import { auditExpect, expectRLSIsolated } from '@stynx/testing';
+import { auditExpect, expectRLSIsolated } from '@stynx-nyx/testing';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
@@ -115,7 +115,7 @@ async function clearRedisIdempotencyEntries(context: ReferenceApiE2eContext): Pr
   }
 }
 
-describe('@stynx/reference-api e2e idempotency', () => {
+describe('@stynx-nyx/reference-api e2e idempotency', () => {
   let context: ReferenceApiE2eContext;
   let adminA: AuthenticatedAgent;
   let adminB: AuthenticatedAgent;

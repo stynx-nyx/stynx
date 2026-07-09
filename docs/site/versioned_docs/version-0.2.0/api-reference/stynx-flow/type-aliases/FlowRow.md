@@ -1,8 +1,8 @@
-[**@stynx/flow**](../index.md)
+[**@stynx-nyx/flow**](../index.md)
 
 ---
 
-[@stynx/flow](../index.md) / FlowRow
+[@stynx-nyx/flow](../index.md) / FlowRow
 
 # Type Alias: FlowRow
 

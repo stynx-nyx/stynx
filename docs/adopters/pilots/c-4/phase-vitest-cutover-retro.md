@@ -28,9 +28,9 @@ sweep (Vitest-only) preserves every test: same counts, same pass/fail per
 file. Baselines snapshotted in
 [`docs/adopters/pilots/c-4/vitest-cutover-baselines/`](vitest-cutover-baselines/).
 
-Mutation re-baseline (verified): `@stynx/contracts` post-cutover **83.33%** —
+Mutation re-baseline (verified): `@stynx-nyx/contracts` post-cutover **83.33%** —
 identical to the pre-cutover value. The other three baselined packages
-(`@stynx/core`, `@stynx/audit`, `@stynx-web/angular-tenancy`) should be
+(`@stynx-nyx/core`, `@stynx-nyx/audit`, `@stynx-web/angular-tenancy`) should be
 re-measured on the new runner; protocol in
 [`vitest-cutover-baselines/README.md`](vitest-cutover-baselines/README.md).
 
@@ -72,10 +72,10 @@ re-measured on the new runner; protocol in
    broke until we routed `restoreAllMocks` → `clearAllMocks` in the codemod.
    The behaviour is now baked into the post-cutover spec.
 4. **`require()` inside test bodies.** Three specs (one in `reference/api`,
-   two in `domain/demo-bookmark/api`) used `require('@stynx/core').RequestContext`
+   two in `domain/demo-bookmark/api`) used `require('@stynx-nyx/core').RequestContext`
    to get a class reference for NestJS DI lookups. Under Vitest's ESM-first
    resolver, `require()` returns a different class instance than `import` — DI
-   fails. Fix was per-call-site `import { RequestContext } from '@stynx/core'`
+   fails. Fix was per-call-site `import { RequestContext } from '@stynx-nyx/core'`
    at the top of the file. Easy, but only obvious once you've already lost two
    hours to "could not find provider RequestContext".
 5. **Vitest 3 has no `vi.isolateModules`.** One spec used `jest.isolateModules`
@@ -100,7 +100,7 @@ re-measured on the new runner; protocol in
    used `globals: true`.** Removed; no spec broke.
 3. **Dependabot grouping config referenced jest packages explicitly.**
    Replaced with a Vitest group. Future Vitest 3 → 4 upgrades will batch.
-4. **`@stynx/testing`'s `dist/` shipped CJS, which collided with ESM-resolved
+4. **`@stynx-nyx/testing`'s `dist/` shipped CJS, which collided with ESM-resolved
    imports from spec files.** The fix lived in `server.deps.inline:
 [/@stynx\//]` for both unit + integration configs. Kept post-cutover.
 
@@ -135,6 +135,6 @@ re-measured on the new runner; protocol in
 
 - **Architect** authored: this retro, [`docs/meta/ops/vitest-parallel-adoption.md`](../../../meta/ops/vitest-parallel-adoption.md), [`tools/repo-config/vitest.base.mjs`](../../../../tools/repo-config/vitest.base.mjs), [`tools/stryker/base.mjs`](../../../../tools/stryker/base.mjs).
 - **Engineer** authored: per-package `vitest.config.ts` / `vitest.int.config.ts` / `vitest.stryker.config.ts` (33 + 14 + 11 files), per-package script + dep updates (35 `package.json` files), `turbo.json` task list, `.github/dependabot.yml` groups.
-- **Inspector** authored: spec codemods, the four spec source changes (`vi.hoisted` wraps + `require → import`), `@stynx/auth/test/unit/validators.spec.ts:411` runner-detection bridge → simplified to `vi.importActual` post-cutover.
+- **Inspector** authored: spec codemods, the four spec source changes (`vi.hoisted` wraps + `require → import`), `@stynx-nyx/auth/test/unit/validators.spec.ts:411` runner-detection bridge → simplified to `vi.importActual` post-cutover.
 - **Auditor** authored: nothing in this phase — V5 audit reports preceded cutover; next audit comes after the V7 cleanup.
 - **F4/F5** untouched.

@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / STYNX_DB_CLIENT_RESOLVER
+[@stynx-nyx/backend](../index.md) / STYNX_DB_CLIENT_RESOLVER
 
 # Variable: STYNX_DB_CLIENT_RESOLVER
 

@@ -48,7 +48,7 @@ miss audit rows.**
 
 ### Soft delete (live → archive)
 
-1. `@stynx/data` sets `app.archive_move = 'in_progress'`,
+1. `@stynx-nyx/data` sets `app.archive_move = 'in_progress'`,
    `app.archive_reason = 'soft_delete'`.
 2. Application issues:
    ```sql
@@ -65,7 +65,7 @@ miss audit rows.**
 
 ### Restore (archive → live)
 
-1. `@stynx/data` sets `app.archive_move = 'in_progress'`,
+1. `@stynx-nyx/data` sets `app.archive_move = 'in_progress'`,
    `app.archive_reason = 'restore'`.
 2. INSERT into live; DELETE from archive (single transaction).
 3. Archive DELETE trigger checks `app.archive_move` — writes no
@@ -138,7 +138,7 @@ clean DB]`.
 ## Critical pitfalls (porting)
 
 1. **GUC suppression depends on `app.archive_move`.** Custom
-   archive movement code that bypasses `@stynx/data` and forgets
+   archive movement code that bypasses `@stynx-nyx/data` and forgets
    the GUC will produce duplicate audit rows.
 2. **`audit.enable_for` must be called for every consumer table.**
    The helper does it; hand-written CREATE TABLE migrations must

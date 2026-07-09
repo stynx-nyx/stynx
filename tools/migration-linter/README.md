@@ -8,7 +8,7 @@ STYNX's data layer relies on conventions: tenant-scoped tables need RLS policies
 
 You reach for it whenever you author a Drizzle/SQL migration touching tenant-scoped or archive tables.
 
-What it does NOT do: it's intentionally **not** part of DEVAI's `check-*` family (see "Status" below) — it encodes STYNX-specific SQL conventions, not universal DEVAI semantics. It doesn't run migrations (that's [`@stynx/cli`](/docs/packages/cli/)'s `stynx migrate`).
+What it does NOT do: it's intentionally **not** part of DEVAI's `check-*` family (see "Status" below) — it encodes STYNX-specific SQL conventions, not universal DEVAI semantics. It doesn't run migrations (that's [`@stynx-nyx/cli`](/docs/packages/cli/)'s `stynx migrate`).
 
 ## Audience
 
@@ -87,8 +87,8 @@ Per C-4 Session S9, this tool is **not** folded into DEVAI's `check-*` family an
 
 ## Related packages
 
-- [`@stynx/data`](/docs/packages/data/) — the data layer whose conventions this linter enforces (`ADR-001-soft-delete`).
-- [`@stynx/cli`](/docs/packages/cli/) — `stynx migrate` runs the migrations this lints.
+- [`@stynx-nyx/data`](/docs/packages/data/) — the data layer whose conventions this linter enforces (`ADR-001-soft-delete`).
+- [`@stynx-nyx/cli`](/docs/packages/cli/) — `stynx migrate` runs the migrations this lints.
 
 ## TypeDoc reference
 

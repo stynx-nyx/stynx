@@ -1,4 +1,4 @@
-# @stynx/contracts
+# @stynx-nyx/contracts
 
 ## 1.0.0
 

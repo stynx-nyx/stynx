@@ -12,8 +12,8 @@ import type {
   TenantEntitlementPolicy,
   TenantResolver,
   TokenVerifier,
-} from '@stynx/contracts';
-import { headerToString } from '@stynx/contracts';
+} from '@stynx-nyx/contracts';
+import { headerToString } from '@stynx-nyx/contracts';
 import { DefaultPrincipalMapper } from './default-principal-mapper';
 import {
   STYNX_PRINCIPAL_MAPPER,

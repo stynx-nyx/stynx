@@ -1,8 +1,8 @@
-[**@stynx/idempotency**](../index.md)
+[**@stynx-nyx/idempotency**](../index.md)
 
 ---
 
-[@stynx/idempotency](../index.md) / IdempotencySqlExecutor
+[@stynx-nyx/idempotency](../index.md) / IdempotencySqlExecutor
 
 # Interface: IdempotencySqlExecutor
 

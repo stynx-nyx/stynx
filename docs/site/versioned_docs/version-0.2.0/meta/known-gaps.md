@@ -18,7 +18,7 @@ When a previously-listed gap is verified closed, delete its row from this file r
 
 | #     | Gap / capability                   | Status                                              | Detail                                                                                                                                                                                                                                          |
 | ----- | ---------------------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| PF-06 | **Original PORM consumer cutover** | Planned, awaiting explicit consuming-repo execution | The STYNX packages are ready for adoption, but replacing `../porm`'s in-repo Flow module with `@stynx/flow` + `@stynx-web/angular-flow` is a sibling-repo migration that has not been executed. Run only when explicitly requested by the user. |
+| PF-06 | **Original PORM consumer cutover** | Planned, awaiting explicit consuming-repo execution | The STYNX packages are ready for adoption, but replacing `../porm`'s in-repo Flow module with `@stynx-nyx/flow` + `@stynx-web/angular-flow` is a sibling-repo migration that has not been executed. Run only when explicitly requested by the user. |
 
 ## 3. Sibling-checkout CI verification
 

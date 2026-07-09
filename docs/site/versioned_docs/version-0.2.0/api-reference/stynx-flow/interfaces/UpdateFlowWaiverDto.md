@@ -1,8 +1,8 @@
-[**@stynx/flow**](../index.md)
+[**@stynx-nyx/flow**](../index.md)
 
 ---
 
-[@stynx/flow](../index.md) / UpdateFlowWaiverDto
+[@stynx-nyx/flow](../index.md) / UpdateFlowWaiverDto
 
 # Interface: UpdateFlowWaiverDto
 

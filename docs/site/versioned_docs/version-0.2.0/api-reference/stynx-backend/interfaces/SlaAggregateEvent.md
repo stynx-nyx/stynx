@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / SlaAggregateEvent
+[@stynx-nyx/backend](../index.md) / SlaAggregateEvent
 
 # Interface: SlaAggregateEvent
 

@@ -1,8 +1,8 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { PermissionCache, PermissionQueryService } from '@stynx/auth';
-import { Database } from '@stynx/data';
-import { SessionService, type SessionBundle } from '@stynx/sessions';
+import { PermissionCache, PermissionQueryService } from '@stynx-nyx/auth';
+import { Database } from '@stynx-nyx/data';
+import { SessionService, type SessionBundle } from '@stynx-nyx/sessions';
 
 type DemoTenant = {
   id: string;

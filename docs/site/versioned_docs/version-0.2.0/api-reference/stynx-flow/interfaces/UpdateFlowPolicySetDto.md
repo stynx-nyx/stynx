@@ -1,8 +1,8 @@
-[**@stynx/flow**](../index.md)
+[**@stynx-nyx/flow**](../index.md)
 
 ---
 
-[@stynx/flow](../index.md) / UpdateFlowPolicySetDto
+[@stynx-nyx/flow](../index.md) / UpdateFlowPolicySetDto
 
 # Interface: UpdateFlowPolicySetDto
 

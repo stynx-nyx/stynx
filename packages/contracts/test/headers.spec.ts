@@ -1,6 +1,6 @@
 import { headerToString } from '../src/headers';
 
-describe('@stynx/contracts headers', () => {
+describe('@stynx-nyx/contracts headers', () => {
   it('returns string header values unchanged', () => {
     expect(headerToString('tenant-1')).toBe('tenant-1');
   });

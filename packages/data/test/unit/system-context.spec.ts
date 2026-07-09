@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { withSystemContext } from '../../src/system-context';
-import type { SystemExecutionContext } from '@stynx/core';
+import type { SystemExecutionContext } from '@stynx-nyx/core';
 
 describe('withSystemContext', () => {
   it('delegates to database.withSystemContext with the same reason + fn', async () => {

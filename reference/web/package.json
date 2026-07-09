@@ -1,5 +1,5 @@
 {
-  "name": "@stynx/reference-web",
+  "name": "@stynx-nyx/reference-web",
   "private": true,
   "version": "0.2.1",
   "description": "Reference Angular 20 app exercising the STYNX web packages against reference-api",

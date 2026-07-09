@@ -1,8 +1,8 @@
-[**@stynx/pdf-a**](../index.md)
+[**@stynx-nyx/pdf-a**](../index.md)
 
 ---
 
-[@stynx/pdf-a](../index.md) / resolvePdfADeclaration
+[@stynx-nyx/pdf-a](../index.md) / resolvePdfADeclaration
 
 # Function: resolvePdfADeclaration()
 

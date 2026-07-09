@@ -1,8 +1,8 @@
-[**@stynx/i18n**](../index.md)
+[**@stynx-nyx/i18n**](../index.md)
 
 ---
 
-[@stynx/i18n](../index.md) / LocaleInterceptor
+[@stynx-nyx/i18n](../index.md) / LocaleInterceptor
 
 # Class: LocaleInterceptor
 

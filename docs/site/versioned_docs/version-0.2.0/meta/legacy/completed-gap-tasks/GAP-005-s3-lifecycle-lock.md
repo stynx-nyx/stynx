@@ -1,7 +1,7 @@
 # GAP-005 — Storage: S3 Object Lock, Lifecycle Rules, Presign Rate Limiting
 
 **Priority:** MEANINGFUL  
-**Package:** `packages/storage` (`@stynx/storage-s3`)  
+**Package:** `packages/storage` (`@stynx-nyx/storage-s3`)  
 **Source of truth:** porm's S3 compliance configuration  
 **Run from:** `./stynx` repo root
 **Status:** Complete
@@ -10,7 +10,7 @@
 
 ## Context
 
-`@stynx/storage-s3` presigns upload/download URLs and manages documents but
+`@stynx-nyx/storage-s3` presigns upload/download URLs and manages documents but
 has no support for:
 
 1. **S3 Object Lock** — compliance buckets require WORM retention so documents
@@ -225,7 +225,7 @@ The existing `export * from './types'` already covers all new additions.
 Confirm after build:
 
 ```bash
-pnpm --filter @stynx/storage build && node -e "const m = require('./packages/storage/dist'); console.log(Object.keys(m))" | tr ',' '\n' | grep -iE "lock|lifecycle|presign"
+pnpm --filter @stynx-nyx/storage build && node -e "const m = require('./packages/storage/dist'); console.log(Object.keys(m))" | tr ',' '\n' | grep -iE "lock|lifecycle|presign"
 ```
 
 ---
@@ -252,20 +252,20 @@ In `test/packages/` add `storage-compliance.test.ts`:
 
 ```bash
 # TypeScript builds
-pnpm --filter @stynx/storage build
+pnpm --filter @stynx-nyx/storage build
 
 # Unit tests pass
-pnpm --filter @stynx/storage test
+pnpm --filter @stynx-nyx/storage test
 
 # Lint clean
-pnpm --filter @stynx/storage lint
+pnpm --filter @stynx-nyx/storage lint
 ```
 
 ---
 
 ## Acceptance criteria
 
-- [x] `S3ObjectLockConfig`, `S3LifecycleRule`, `PresignRateLimitOptions`, `S3ComplianceOptions` exported from `@stynx/storage`
+- [x] `S3ObjectLockConfig`, `S3LifecycleRule`, `PresignRateLimitOptions`, `S3ComplianceOptions` exported from `@stynx-nyx/storage`
 - [x] `StynxStorageModuleOptions` accepts `compliance` without breaking existing consumers
 - [x] `S3Service.presignDownloadForTenant()` enforces per-tenant-per-minute cap
 - [x] `S3Service.configureLifecycle()` emits correct IA / Glacier / expiration rules

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { ErrorTranslator } from '@stynx/core';
+import type { ErrorTranslator } from '@stynx-nyx/core';
 import { LocaleService } from './locale.service';
 
 @Injectable()

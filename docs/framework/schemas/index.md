@@ -9,4 +9,4 @@ sidebar_position: 4
 
 | Name                                  | Title                     | Description                                                                                                              |
 | ------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| [`error-envelope`](error-envelope.md) | stynx HTTP error envelope | Stable shape of error responses produced by @stynx/core's StynxErrorFilter. Every stynx HTTP endpoint emits this envelop |
+| [`error-envelope`](error-envelope.md) | stynx HTTP error envelope | Stable shape of error responses produced by @stynx-nyx/core's StynxErrorFilter. Every stynx HTTP endpoint emits this envelop |

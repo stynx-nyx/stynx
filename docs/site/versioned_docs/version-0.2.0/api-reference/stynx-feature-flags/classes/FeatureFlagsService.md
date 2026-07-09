@@ -1,8 +1,8 @@
-[**@stynx/feature-flags**](../index.md)
+[**@stynx-nyx/feature-flags**](../index.md)
 
 ---
 
-[@stynx/feature-flags](../index.md) / FeatureFlagsService
+[@stynx-nyx/feature-flags](../index.md) / FeatureFlagsService
 
 # Class: FeatureFlagsService
 

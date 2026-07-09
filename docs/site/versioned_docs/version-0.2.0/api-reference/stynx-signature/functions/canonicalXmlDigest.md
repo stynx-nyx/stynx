@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / canonicalXmlDigest
+[@stynx-nyx/signature](../index.md) / canonicalXmlDigest
 
 # Function: canonicalXmlDigest()
 

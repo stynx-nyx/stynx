@@ -2,9 +2,9 @@
 title: backend/audit
 ---
 
-# `StynxBackendAuditModule` — `@stynx/audit` wired with the SQL sink
+# `StynxBackendAuditModule` — `@stynx-nyx/audit` wired with the SQL sink
 
-Wraps `@stynx/audit` with the canonical wiring: SQL sink writing to `stynx_audit_events` via `@stynx/data`, the `AuditInterceptor` registered as `APP_INTERCEPTOR`, retention policy enabled by default.
+Wraps `@stynx-nyx/audit` with the canonical wiring: SQL sink writing to `stynx_audit_events` via `@stynx-nyx/data`, the `AuditInterceptor` registered as `APP_INTERCEPTOR`, retention policy enabled by default.
 
 ## When to mount
 
@@ -13,7 +13,7 @@ In any regulated app. Mount after `backend/db-context` (the SQL sink needs the D
 ## Wiring
 
 ```ts
-import { StynxBackendAuditModule } from '@stynx/backend';
+import { StynxBackendAuditModule } from '@stynx-nyx/backend';
 
 StynxBackendAuditModule.forRoot({
   retention: { keepDays: 365 * 7 },
@@ -22,7 +22,7 @@ StynxBackendAuditModule.forRoot({
 
 ## Configuration
 
-Forwarded to `@stynx/audit`'s `StynxAuditModuleOptions`. See [`@stynx/audit`](/docs/packages/audit/).
+Forwarded to `@stynx-nyx/audit`'s `StynxAuditModuleOptions`. See [`@stynx-nyx/audit`](/docs/packages/audit/).
 
 ## Common pitfalls
 
@@ -31,6 +31,6 @@ Forwarded to `@stynx/audit`'s `StynxAuditModuleOptions`. See [`@stynx/audit`](/d
 
 ## Related
 
-- [`@stynx/audit`](/docs/packages/audit/) — the underlying package.
+- [`@stynx-nyx/audit`](/docs/packages/audit/) — the underlying package.
 - [`backend/db-context`](/docs/packages/backend/db-context/) — mount first.
 - [`backend/auth`](/docs/packages/backend/auth/) — provides the actor.

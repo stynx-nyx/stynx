@@ -2,7 +2,7 @@ import type { INestApplication } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { Client } from 'pg';
-import { StynxDataModule } from '@stynx/data';
+import { StynxDataModule } from '@stynx-nyx/data';
 import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
 import { StynxAuditModule } from '../../src/audit.module';
 
@@ -42,9 +42,9 @@ describe('StynxAuditController API error matrix', () => {
       imports: [
         StynxDataModule.forRoot({
           connections: {
-            owner: { connectionString: database.connectionString('@stynx/audit:api-matrix:owner') },
-            app: { connectionString: database.connectionString('@stynx/audit:api-matrix:app') },
-            reader: { connectionString: database.connectionString('@stynx/audit:api-matrix:reader') },
+            owner: { connectionString: database.connectionString('@stynx-nyx/audit:api-matrix:owner') },
+            app: { connectionString: database.connectionString('@stynx-nyx/audit:api-matrix:app') },
+            reader: { connectionString: database.connectionString('@stynx-nyx/audit:api-matrix:reader') },
           },
           migrations: { enabled: true },
         }),

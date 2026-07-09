@@ -1,4 +1,4 @@
-import type { SystemExecutionContext } from '@stynx/core';
+import type { SystemExecutionContext } from '@stynx-nyx/core';
 import { Database } from './database';
 
 export function withSystemContext<T>(

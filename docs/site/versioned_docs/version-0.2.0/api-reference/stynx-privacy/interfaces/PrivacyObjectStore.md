@@ -1,8 +1,8 @@
-[**@stynx/privacy**](../index.md)
+[**@stynx-nyx/privacy**](../index.md)
 
 ---
 
-[@stynx/privacy](../index.md) / PrivacyObjectStore
+[@stynx-nyx/privacy](../index.md) / PrivacyObjectStore
 
 # Interface: PrivacyObjectStore
 

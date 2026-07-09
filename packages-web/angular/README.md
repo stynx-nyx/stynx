@@ -6,7 +6,7 @@
 
 An Angular app talking to a STYNX backend needs consistent plumbing: every HTTP call must carry the bearer token, a request id (for correlation with backend logs), and the tenant header; error responses come back as STYNX error envelopes that should surface uniformly. Wiring this by hand drifts. `@stynx-web/angular` provides it as a single provider call.
 
-You reach for it first, before any other `@stynx-web/*` package. It is the Angular-side counterpart to `@stynx/core`.
+You reach for it first, before any other `@stynx-web/*` package. It is the Angular-side counterpart to `@stynx-nyx/core`.
 
 What it does NOT do: it doesn't render app UI (use `@stynx-web/angular-ui` for shared components). It doesn't manage auth state (use `@stynx-web/angular-auth`). It provides the HTTP + context substrate those build on.
 
@@ -144,7 +144,7 @@ export class HeaderComponent {
 - [`@stynx-web/sdk`](/docs/packages-web/sdk/) — the generated REST client this package wires.
 - [`@stynx-web/angular-ui`](/docs/packages-web/angular-ui/) — shared UI components.
 - [`@stynx-web/angular-auth`](/docs/packages-web/angular-auth/) — auth state + login UI (depends on this).
-- [`@stynx/core`](/docs/packages/core/) — the backend counterpart (request context).
+- [`@stynx-nyx/core`](/docs/packages/core/) — the backend counterpart (request context).
 
 ## TypeDoc reference
 

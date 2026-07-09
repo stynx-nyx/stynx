@@ -7,7 +7,7 @@ directly to STYNX's invariants, mandatory test families, and the
 
 ## Per-invariant verification
 
-### I1 — No raw DB connection outside `@stynx/data`
+### I1 — No raw DB connection outside `@stynx-nyx/data`
 
 ```sh
 rg -nE "from ['\"]pg['\"]|new Pool\(" --type ts \
@@ -28,7 +28,7 @@ rg -nE "Database|db\.tx" path/to/scripts/ \
 - [ ] Every match either runs inside an HTTP request or wraps in
       `withSystemContext('reason', fn)`.
 
-### I3 — No direct S3 client outside `@stynx/storage`
+### I3 — No direct S3 client outside `@stynx-nyx/storage`
 
 ```sh
 rg -n "@aws-sdk/client-s3" --type ts \
@@ -51,7 +51,7 @@ pnpm doctor 2>&1 | tail -30
 ### I5 — Every tenant-scoped table has `tenant_id` and RLS
 
 ```sh
-pnpm --filter @stynx/migration-linter exec migration-linter \
+pnpm --filter @stynx-nyx/migration-linter exec migration-linter \
   apps/<your-app>/migrations
 ```
 
@@ -90,7 +90,7 @@ Per `STYNX-SPEC-v0.6.md` §25 (testing), the consuming codebase must
 have at least one test in each family.
 
 - [ ] **RLS leak test** using the `expectRlsLeakageDetection` matcher
-      from `@stynx/testing`.
+      from `@stynx-nyx/testing`.
 - [ ] **Soft-delete + restore round-trip** — assert archive mirror
       receives the row, restore returns it, audit row written for
       both transitions.
@@ -102,7 +102,7 @@ have at least one test in each family.
       unauthorized returns 403.
 - [ ] **Idempotency replay** — same `Idempotency-Key` returns the
       cached response; new key executes anew.
-- [ ] **LGPD erasure dry-run** — `@stynx/privacy` produces an
+- [ ] **LGPD erasure dry-run** — `@stynx-nyx/privacy` produces an
       erasure plan touching live + archive without writing.
 - [ ] **Audit row written for every mutation** in a sampled
       controller.

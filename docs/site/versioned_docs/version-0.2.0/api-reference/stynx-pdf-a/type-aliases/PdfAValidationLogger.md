@@ -1,8 +1,8 @@
-[**@stynx/pdf-a**](../index.md)
+[**@stynx-nyx/pdf-a**](../index.md)
 
 ---
 
-[@stynx/pdf-a](../index.md) / PdfAValidationLogger
+[@stynx-nyx/pdf-a](../index.md) / PdfAValidationLogger
 
 # Type Alias: PdfAValidationLogger
 

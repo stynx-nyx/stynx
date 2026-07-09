@@ -1,8 +1,8 @@
-[**@stynx/tenancy**](../index.md)
+[**@stynx-nyx/tenancy**](../index.md)
 
 ---
 
-[@stynx/tenancy](../index.md) / PurgeTenantResult
+[@stynx-nyx/tenancy](../index.md) / PurgeTenantResult
 
 # Interface: PurgeTenantResult
 

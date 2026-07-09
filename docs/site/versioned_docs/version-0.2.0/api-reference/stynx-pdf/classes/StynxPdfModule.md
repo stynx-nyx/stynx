@@ -1,8 +1,8 @@
-[**@stynx/pdf**](../index.md)
+[**@stynx-nyx/pdf**](../index.md)
 
 ---
 
-[@stynx/pdf](../index.md) / StynxPdfModule
+[@stynx-nyx/pdf](../index.md) / StynxPdfModule
 
 # Class: StynxPdfModule
 

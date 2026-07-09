@@ -1,8 +1,8 @@
 ---
-title: '@stynx/contracts'
+title: '@stynx-nyx/contracts'
 ---
 
-# @stynx/contracts
+# @stynx-nyx/contracts
 
 Framework-agnostic TypeScript contracts shared by backend, storage, audit, identity, tenancy, and authorization packages.
 
@@ -13,10 +13,10 @@ Framework-agnostic TypeScript contracts shared by backend, storage, audit, ident
 ## Install And Import
 
 ```ts
-import {} from /* public exports */ '@stynx/contracts';
+import {} from /* public exports */ '@stynx-nyx/contracts';
 ```
 
-In this monorepo, use the workspace package. Published consumers should install matching `@stynx/*` versions from the same release train.
+In this monorepo, use the workspace package. Published consumers should install matching `@stynx-nyx/*` versions from the same release train.
 
 ## Module Setup
 
@@ -29,7 +29,7 @@ Owns type-level contracts only. It must not open network connections, read secre
 ## Example
 
 ```ts
-import type { Principal, AuthorizationRequirements } from '@stynx/contracts';
+import type { Principal, AuthorizationRequirements } from '@stynx-nyx/contracts';
 
 function canEvaluate(principal: Principal, requirements: AuthorizationRequirements) {
   return principal.permissions.length >= requirements.permissions.length;
@@ -59,8 +59,8 @@ Current barrel highlights:
 ## Verification
 
 ```sh
-pnpm --filter @stynx/contracts build
-pnpm --filter @stynx/contracts test
+pnpm --filter @stynx-nyx/contracts build
+pnpm --filter @stynx-nyx/contracts test
 ```
 
 ## Documentation Standard

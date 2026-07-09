@@ -32,7 +32,7 @@ Pre-adoption state, captured by the single-prompt audit on 2026-05-26
   `site-dir-shape` and `config-not-placeholder` rules only recognize
   `docusaurus.config.&#123;ts,js&#125;` and `sidebars.&#123;ts,js&#125;`.
 - The workspace package was named `docs`, not the scoped form consistent with
-  the rest of the repo (`@stynx/core`, `@stynx/pdf`, …).
+  the rest of the repo (`@stynx-nyx/core`, `@stynx-nyx/pdf`, …).
 - `.github/workflows/docs.yml` ran `actions/configure-pages` +
   `actions/upload-pages-artifact` + `actions/deploy-pages` behind the
   `ENABLE_PAGES_DEPLOY` repository variable, violating
@@ -140,12 +140,12 @@ paths:
   flagged in the closeout doc — future operators may pick it up so adopters
   after STYNX don't hit the same friction.
 
-### D7 — Package rename `docs` → `@stynx/docs-site`
+### D7 — Package rename `docs` → `@stynx-nyx/docs-site`
 
 The pre-adoption package name was the unscoped `docs`, which reads as a
-directory rather than a workspace member. Renaming to `@stynx/docs-site`
-brings the package under the STYNX scope alongside `@stynx/core`,
-`@stynx/pdf`, `@stynx/auth`, etc., and makes the `--filter @stynx/docs-site`
+directory rather than a workspace member. Renaming to `@stynx-nyx/docs-site`
+brings the package under the STYNX scope alongside `@stynx-nyx/core`,
+`@stynx-nyx/pdf`, `@stynx-nyx/auth`, etc., and makes the `--filter @stynx-nyx/docs-site`
 invocations across `package.json`, `pnpm-workspace.yaml`,
 `.github/workflows/docs.yml`, and `scripts/ci-local/inside.sh` consistent
 with how every other STYNX package is referenced.

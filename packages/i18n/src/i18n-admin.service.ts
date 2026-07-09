@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { Database } from '@stynx/data';
+import { Database } from '@stynx-nyx/data';
 import { CatalogService } from './catalog.service';
 import type { TenantOverrideUpdateInput } from './types';
 

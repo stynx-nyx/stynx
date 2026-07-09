@@ -1,8 +1,8 @@
 ---
-title: '@stynx/audit'
+title: '@stynx-nyx/audit'
 ---
 
-# @stynx/audit
+# @stynx-nyx/audit
 
 Audit logging, SQL audit readers, retention planning, and audit evidence helpers for tenant-aware STYNX services.
 
@@ -13,14 +13,14 @@ Audit logging, SQL audit readers, retention planning, and audit evidence helpers
 ## Install And Import
 
 ```ts
-import {} from /* public exports */ '@stynx/audit';
+import {} from /* public exports */ '@stynx-nyx/audit';
 ```
 
-In this monorepo, use the workspace package. Published consumers should install matching `@stynx/*` versions from the same release train.
+In this monorepo, use the workspace package. Published consumers should install matching `@stynx-nyx/*` versions from the same release train.
 
 ## Module Setup
 
-Import `StynxAuditModule` after `@stynx/core`, `@stynx/data`, and authentication/tenancy context are available.
+Import `StynxAuditModule` after `@stynx-nyx/core`, `@stynx-nyx/data`, and authentication/tenancy context are available.
 
 ```ts
 @Module({
@@ -41,7 +41,7 @@ Writes and reads audit evidence through the platform database. Curated-table DML
 ## Example
 
 ```ts
-import { StynxAuditService } from '@stynx/audit';
+import { StynxAuditService } from '@stynx-nyx/audit';
 
 await audit.log({
   tenantId,
@@ -74,9 +74,9 @@ Current barrel highlights:
 ## Verification
 
 ```sh
-pnpm --filter @stynx/audit build
-pnpm --filter @stynx/audit test
-STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx/audit test:int
+pnpm --filter @stynx-nyx/audit build
+pnpm --filter @stynx-nyx/audit test
+STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx-nyx/audit test:int
 ```
 
 ## Documentation Standard

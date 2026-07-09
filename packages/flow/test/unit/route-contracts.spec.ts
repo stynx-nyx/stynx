@@ -3,15 +3,15 @@ import {
   STYNX_PERMISSION_ROUTE,
   STYNX_PUBLIC_ROUTE,
   STYNX_READONLY_ROUTE,
-} from '@stynx/auth';
+} from '@stynx-nyx/auth';
 import {
   STYNX_AUDIT_METADATA,
   STYNX_IDEMPOTENT_ROUTE,
   STYNX_NO_IDEMPOTENT_ROUTE,
   STYNX_RATE_LIMIT_ROUTE,
-} from '@stynx/backend';
+} from '@stynx-nyx/backend';
 import { GUARDS_METADATA } from '@nestjs/common/constants';
-import { PermissionGuard, StynxAuthGuard } from '@stynx/auth';
+import { PermissionGuard, StynxAuthGuard } from '@stynx-nyx/auth';
 import { FlowAgentRulesController } from '../../src/controllers/agent-rules.controller';
 import { FlowAnalyticsController } from '../../src/controllers/analytics.controller';
 import { FlowAnswersController } from '../../src/controllers/answers.controller';

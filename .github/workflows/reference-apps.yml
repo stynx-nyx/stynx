@@ -115,9 +115,9 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Build and test reference API
         run: |
-          pnpm --filter @stynx/reference-api build
-          pnpm --filter @stynx/reference-api test
-          pnpm --filter @stynx/reference-api test:int
+          pnpm --filter @stynx-nyx/reference-api build
+          pnpm --filter @stynx-nyx/reference-api test
+          pnpm --filter @stynx-nyx/reference-api test:int
 
   reference-web-e2e:
     name: reference-web-e2e
@@ -149,7 +149,7 @@ jobs:
       - name: Install workspace dependencies
         run: pnpm install --frozen-lockfile
       - name: Install Playwright Chromium
-        run: pnpm --filter @stynx/reference-web exec playwright install --with-deps chromium
+        run: pnpm --filter @stynx-nyx/reference-web exec playwright install --with-deps chromium
       - name: Start reference API stack
         run: docker compose -f reference/api/docker-compose.yml up -d --build
       - name: Wait for reference API health gates
@@ -171,7 +171,7 @@ jobs:
       - name: Run reference web E2E
         env:
           CI: 'true'
-        run: pnpm --filter @stynx/reference-web test:e2e
+        run: pnpm --filter @stynx-nyx/reference-web test:e2e
       - name: Upload Playwright artifacts
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7

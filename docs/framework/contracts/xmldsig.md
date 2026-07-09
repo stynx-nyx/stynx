@@ -1,16 +1,16 @@
 # XMLDSig Contract
 
-**Package:** `@stynx/signature`
-**Subpath:** `@stynx/signature/xmldsig`
+**Package:** `@stynx-nyx/signature`
+**Subpath:** `@stynx-nyx/signature/xmldsig`
 **Authority:** Architect, per DEVAI Constitution Article 6
 
-`@stynx/signature/xmldsig` signs and verifies enveloped XMLDSig payloads for
+`@stynx-nyx/signature/xmldsig` signs and verifies enveloped XMLDSig payloads for
 adopter-owned fiscal XML flows such as DCTFWeb and EFD-Reinf.
 
 ## Signing
 
 ```ts
-import { XmlDSigSigner } from '@stynx/signature/xmldsig';
+import { XmlDSigSigner } from '@stynx-nyx/signature/xmldsig';
 
 const signedXml = new XmlDSigSigner().sign(payloadXml, {
   key: {
@@ -42,7 +42,7 @@ new XmlDSigSigner().sign(payloadXml, {
 ## Verification
 
 ```ts
-import { XmlDSigVerifier } from '@stynx/signature/xmldsig';
+import { XmlDSigVerifier } from '@stynx-nyx/signature/xmldsig';
 
 const result = new XmlDSigVerifier().verify(signedXml, {
   keys: [{ keyId: 'tenant-active-cert', publicKeyPem }],

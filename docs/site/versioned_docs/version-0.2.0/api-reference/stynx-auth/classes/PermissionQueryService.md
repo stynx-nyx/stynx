@@ -1,8 +1,8 @@
-[**@stynx/auth**](../index.md)
+[**@stynx-nyx/auth**](../index.md)
 
 ---
 
-[@stynx/auth](../index.md) / PermissionQueryService
+[@stynx-nyx/auth](../index.md) / PermissionQueryService
 
 # Class: PermissionQueryService
 

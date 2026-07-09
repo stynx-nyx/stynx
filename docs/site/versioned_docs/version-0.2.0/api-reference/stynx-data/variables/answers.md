@@ -1,8 +1,8 @@
-[**@stynx/data**](../index.md)
+[**@stynx-nyx/data**](../index.md)
 
 ---
 
-[@stynx/data](../index.md) / answers
+[@stynx-nyx/data](../index.md) / answers
 
 # Variable: answers
 

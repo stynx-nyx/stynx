@@ -1,7 +1,7 @@
 // C-4 Session F-9 step 2/N — per-task-DB fixture for demo-bookmark
 //
 // Mirrors packages/data/test/support/postgres.ts at the surface but is
-// duplicated here because that helper is not exported from @stynx/data.
+// duplicated here because that helper is not exported from @stynx-nyx/data.
 // Adds demo-bookmark migration application on top of the StynxDataModule
 // platform-migration boot.
 
@@ -11,13 +11,13 @@ import { join } from 'node:path';
 import { userInfo } from 'node:os';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { Client, type ClientConfig } from 'pg';
-import { Database, StynxDataModule } from '@stynx/data';
-// StynxMigrationRunner isn't re-exported from @stynx/data's public index;
+import { Database, StynxDataModule } from '@stynx-nyx/data';
+// StynxMigrationRunner isn't re-exported from @stynx-nyx/data's public index;
 // reach into the package source via the workspace symlink. F-9 step 2/N
 // could also be unblocked by re-exporting the class from packages/data/src/index.ts,
-// but that's a @stynx/data API change out of scope for this commit.
+// but that's a @stynx-nyx/data API change out of scope for this commit.
 import { StynxMigrationRunner } from '../../../../../packages/data/src/migration-runner';
-import { RequestContextMutator } from '@stynx/core';
+import { RequestContextMutator } from '@stynx-nyx/core';
 
 function localUser(): string {
   return process.env.STYNX_TEST_PG_USER ?? userInfo().username;

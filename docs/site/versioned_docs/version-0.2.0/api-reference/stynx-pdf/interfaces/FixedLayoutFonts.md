@@ -1,8 +1,8 @@
-[**@stynx/pdf**](../index.md)
+[**@stynx-nyx/pdf**](../index.md)
 
 ---
 
-[@stynx/pdf](../index.md) / FixedLayoutFonts
+[@stynx-nyx/pdf](../index.md) / FixedLayoutFonts
 
 # Interface: FixedLayoutFonts
 

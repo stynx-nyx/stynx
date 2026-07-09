@@ -1,14 +1,14 @@
-# `@stynx/cli` — STYNX workspace CLI for app scaffolding, migrations, doctor, audit, and adoption
+# `@stynx-nyx/cli` — STYNX workspace CLI for app scaffolding, migrations, doctor, audit, and adoption
 
-`@stynx/cli` is the STYNX-side command-line tool — distinct from the sibling `devai` CLI which governs the C-4 DEVAI pilot. The verb set covers what an app developer (or workspace integrator) actually runs day-to-day: `stynx init <name>` scaffolds a new STYNX app, `stynx migrate {up,down,redo,status}` drives Drizzle migrations, `stynx doctor` runs the app-side health check, `stynx audit verify` validates the audit chain integrity, `stynx privacy ropa` produces a LGPD Record-of-Processing-Activities export, and `stynx adopt {scan,apply,...}` is the porting-onboarding helper for foreign apps moving onto STYNX.
+`@stynx-nyx/cli` is the STYNX-side command-line tool — distinct from the sibling `devai` CLI which governs the C-4 DEVAI pilot. The verb set covers what an app developer (or workspace integrator) actually runs day-to-day: `stynx init <name>` scaffolds a new STYNX app, `stynx migrate {up,down,redo,status}` drives Drizzle migrations, `stynx doctor` runs the app-side health check, `stynx audit verify` validates the audit chain integrity, `stynx privacy ropa` produces a LGPD Record-of-Processing-Activities export, and `stynx adopt {scan,apply,...}` is the porting-onboarding helper for foreign apps moving onto STYNX.
 
 ## Purpose
 
-Every STYNX-based app needs the same handful of operations: scaffold, migrate, doctor, audit-verify, ROPA-export, and (for the porting use case) adopt-scan. Embedding each as a bash script per app accumulates drift. `@stynx/cli` consolidates them with a consistent verb shape, JSON-output mode for CI, and the same input-validation discipline as the runtime packages. It's a thin orchestration layer — the heavy lifting lives in the runtime `@stynx/*` packages it shells into.
+Every STYNX-based app needs the same handful of operations: scaffold, migrate, doctor, audit-verify, ROPA-export, and (for the porting use case) adopt-scan. Embedding each as a bash script per app accumulates drift. `@stynx-nyx/cli` consolidates them with a consistent verb shape, JSON-output mode for CI, and the same input-validation discipline as the runtime packages. It's a thin orchestration layer — the heavy lifting lives in the runtime `@stynx-nyx/*` packages it shells into.
 
-You reach for `@stynx/cli` when you're: bootstrapping a new STYNX app (`stynx init`), running a migration step in CI or locally, exporting a ROPA before an audit, verifying the audit chain hash, or driving the `adopt` flow when porting a foreign app's data + endpoints onto STYNX.
+You reach for `@stynx-nyx/cli` when you're: bootstrapping a new STYNX app (`stynx init`), running a migration step in CI or locally, exporting a ROPA before an audit, verifying the audit chain hash, or driving the `adopt` flow when porting a foreign app's data + endpoints onto STYNX.
 
-What it does NOT do: it does not run inside your app's runtime. It is a developer/operator tool, not a NestJS-injectable. For runtime equivalents (e.g. trigger a migration from app code), use `@stynx/data`'s migration helpers directly.
+What it does NOT do: it does not run inside your app's runtime. It is a developer/operator tool, not a NestJS-injectable. For runtime equivalents (e.g. trigger a migration from app code), use `@stynx-nyx/data`'s migration helpers directly.
 
 ## Audience
 
@@ -17,14 +17,14 @@ Backend developers + workspace integrators. The `init` and `adopt` verbs are for
 ## Install
 
 ```bash
-pnpm add -D @stynx/cli
+pnpm add -D @stynx-nyx/cli
 # or globally
-pnpm add -g @stynx/cli
+pnpm add -g @stynx-nyx/cli
 ```
 
 Then invoke as `stynx <verb>` (or via `pnpm exec stynx <verb>` if installed locally).
 
-**Peer dependencies:** `@stynx/core` `^1`, `@stynx/data` `^1`, `@stynx/audit` `^1`, `@stynx/privacy` `^1`. **Node:** 24.x.
+**Peer dependencies:** `@stynx-nyx/core` `^1`, `@stynx-nyx/data` `^1`, `@stynx-nyx/audit` `^1`, `@stynx-nyx/privacy` `^1`. **Node:** 24.x.
 
 ## Quick start
 
@@ -54,7 +54,7 @@ stynx privacy ropa --out ./ropa.json
 
 | Verb                               | Subcommand / Options          | Description                                                                                                                                                                        |
 | ---------------------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `init <app-name>`                  | `--angular --dir <dir>`       | Scaffold a new STYNX app. Produces a NestJS skeleton with `@stynx/*` packages pre-installed + a starter `AppModule`. `--angular` adds the Angular workspace under `packages-web/`. |
+| `init <app-name>`                  | `--angular --dir <dir>`       | Scaffold a new STYNX app. Produces a NestJS skeleton with `@stynx-nyx/*` packages pre-installed + a starter `AppModule`. `--angular` adds the Angular workspace under `packages-web/`. |
 | `migrate status`                   | `--db <url>`                  | Report applied + pending migrations.                                                                                                                                               |
 | `migrate up`                       | `--db <url> [--to <name>]`    | Apply pending migrations up to head (or to a specific marker).                                                                                                                     |
 | `migrate down`                     | `--db <url> --to <name>`      | Roll back to a marker.                                                                                                                                                             |
@@ -64,7 +64,7 @@ stynx privacy ropa --out ./ropa.json
 | `privacy ropa`                     | `--out <path>`                | Generate a LGPD Record-of-Processing-Activities JSON document from the PII column registry.                                                                                        |
 | `adopt scan`                       | `--source <dir> --out <path>` | Scan a foreign app's controllers + DB schema; emit a structured adoption-plan.                                                                                                     |
 | `adopt apply`                      | `--plan <path>`               | Apply a previously-scanned adoption plan to the current STYNX repo.                                                                                                                |
-| `adopt apply-proposed-permissions` | `--plan <path>`               | Apply the permission proposals from an adoption scan to `@stynx/auth` config.                                                                                                      |
+| `adopt apply-proposed-permissions` | `--plan <path>`               | Apply the permission proposals from an adoption scan to `@stynx-nyx/auth` config.                                                                                                      |
 | `adopt link-cognito-users`         | `--mapping <path>`            | Link foreign-app user identities to Cognito principals.                                                                                                                            |
 
 ### Programmatic API
@@ -72,7 +72,7 @@ stynx privacy ropa --out ./ropa.json
 | Export                                                                                                     | Description                                                                                    |
 | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | `buildProgram`                                                                                             | Returns a `Commander.Command` with every verb registered. Useful in tests + workspace tooling. |
-| `runDoctor`                                                                                                | Programmatic doctor entry point (also exported by `@stynx/testing`).                           |
+| `runDoctor`                                                                                                | Programmatic doctor entry point (also exported by `@stynx-nyx/testing`).                           |
 | `migrateUp` / `migrateDown` / `migrateRedo` / `migrationStatus`                                            | Direct migration runners.                                                                      |
 | `verifyAuditChain`                                                                                         | Direct audit-chain verifier.                                                                   |
 | `generateRopaFromApp`                                                                                      | Direct ROPA generator.                                                                         |
@@ -118,7 +118,7 @@ stynx adopt apply --plan ./adoption-plan.json
 ### Example 3 — programmatic use in workspace tooling
 
 ```ts
-import { buildProgram } from '@stynx/cli';
+import { buildProgram } from '@stynx-nyx/cli';
 
 const program = buildProgram();
 await program.parseAsync(['node', 'stynx', 'migrate', 'status']);
@@ -126,16 +126,16 @@ await program.parseAsync(['node', 'stynx', 'migrate', 'status']);
 
 ## Common pitfalls
 
-- **Confusing `@stynx/cli` with the sibling `devai` CLI** — they live in different sibling checkouts (`stynx/packages/cli/` vs `devai/packages/cli/`). Both produce a binary named after themselves. The sibling devai CLI governs the C-4 pilot's doctor + sensor + spec checks; `@stynx/cli` is your app's runtime ops.
+- **Confusing `@stynx-nyx/cli` with the sibling `devai` CLI** — they live in different sibling checkouts (`stynx/packages/cli/` vs `devai/packages/cli/`). Both produce a binary named after themselves. The sibling devai CLI governs the C-4 pilot's doctor + sensor + spec checks; `@stynx-nyx/cli` is your app's runtime ops.
 - **Running `stynx migrate up` against a production DB without dry-run** — there is no built-in dry-run gate. Wrap in `--db` to a staging URL first, OR use `stynx migrate status` to inspect what would run.
 - **`stynx audit verify` exiting non-zero in CI** — the chain hash mismatched. Often caused by replaying audit events out-of-order in a test setup; not necessarily a true integrity break. Inspect the head hash before assuming compromise.
 
 ## Related packages
 
-- [`@stynx/core`](/docs/packages/core/) — config loading + secret loader the CLI uses to read `DATABASE_URL` from secrets.
-- [`@stynx/data`](/docs/packages/data/) — the migration runner the CLI delegates to.
-- [`@stynx/audit`](/docs/packages/audit/) — the audit chain whose integrity `audit verify` checks.
-- [`@stynx/privacy`](/docs/packages/privacy/) — the PII column registry the ROPA generator reads.
+- [`@stynx-nyx/core`](/docs/packages/core/) — config loading + secret loader the CLI uses to read `DATABASE_URL` from secrets.
+- [`@stynx-nyx/data`](/docs/packages/data/) — the migration runner the CLI delegates to.
+- [`@stynx-nyx/audit`](/docs/packages/audit/) — the audit chain whose integrity `audit verify` checks.
+- [`@stynx-nyx/privacy`](/docs/packages/privacy/) — the PII column registry the ROPA generator reads.
 - [`@stynx-internal/create-stynx-app`](/docs/tools/create-stynx-app/) — a thinner npx-style scaffolder, alternative to `stynx init` for the very-first-time use case.
 
 ## TypeDoc reference

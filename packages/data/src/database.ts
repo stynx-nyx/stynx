@@ -4,7 +4,7 @@ import {
   SystemContext,
   SystemContextRequiredError,
   type SystemExecutionContext,
-} from '@stynx/core';
+} from '@stynx-nyx/core';
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import { ClsService } from 'nestjs-cls';
 import type { PoolClient } from 'pg';

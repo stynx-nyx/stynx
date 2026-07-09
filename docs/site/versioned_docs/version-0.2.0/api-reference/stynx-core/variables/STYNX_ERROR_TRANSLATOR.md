@@ -1,8 +1,8 @@
-[**@stynx/core**](../index.md)
+[**@stynx-nyx/core**](../index.md)
 
 ---
 
-[@stynx/core](../index.md) / STYNX_ERROR_TRANSLATOR
+[@stynx-nyx/core](../index.md) / STYNX_ERROR_TRANSLATOR
 
 # Variable: STYNX_ERROR_TRANSLATOR
 

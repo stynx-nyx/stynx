@@ -37,8 +37,8 @@ RBAC implementation and must not be treated as the platform permission catalog.
 
 Canonical RBAC authority is split as follows:
 
-- Framework primitives live in `@stynx/contracts`, `@stynx/auth`,
-  `@stynx/backend`, and related package tests.
+- Framework primitives live in `@stynx-nyx/contracts`, `@stynx-nyx/auth`,
+  `@stynx-nyx/backend`, and related package tests.
 - Reference-app permissions and roles live in reference migrations, seeds, and
   route/controller metadata.
 - Generated matrix files report current inventory coverage and reveal missing

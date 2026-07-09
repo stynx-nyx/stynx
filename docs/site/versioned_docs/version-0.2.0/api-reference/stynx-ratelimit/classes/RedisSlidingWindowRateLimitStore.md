@@ -1,8 +1,8 @@
-[**@stynx/ratelimit**](../index.md)
+[**@stynx-nyx/ratelimit**](../index.md)
 
 ---
 
-[@stynx/ratelimit](../index.md) / RedisSlidingWindowRateLimitStore
+[@stynx-nyx/ratelimit](../index.md) / RedisSlidingWindowRateLimitStore
 
 # Class: RedisSlidingWindowRateLimitStore
 

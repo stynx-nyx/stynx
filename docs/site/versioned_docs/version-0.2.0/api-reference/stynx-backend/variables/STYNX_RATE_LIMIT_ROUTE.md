@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / STYNX_RATE_LIMIT_ROUTE
+[@stynx-nyx/backend](../index.md) / STYNX_RATE_LIMIT_ROUTE
 
 # Variable: STYNX_RATE_LIMIT_ROUTE
 

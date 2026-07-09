@@ -1,5 +1,5 @@
 {
-  "name": "@stynx/auth",
+  "name": "@stynx-nyx/auth",
   "version": "1.0.0",
   "description": "Authentication adapters and runtime primitives for stynx",
   "main": "dist/auth/src/index.js",
@@ -30,11 +30,11 @@
     "@aws-sdk/client-cognito-identity-provider": "^3.1037.0",
     "@aws-sdk/credential-providers": "^3.1037.0",
     "@aws-sdk/types": "^3.973.8",
-    "@stynx/contracts": "workspace:*",
-    "@stynx/core": "workspace:*",
-    "@stynx/data": "workspace:*",
-    "@stynx/idempotency": "workspace:*",
-    "@stynx/sessions": "workspace:*",
+    "@stynx-nyx/contracts": "workspace:*",
+    "@stynx-nyx/core": "workspace:*",
+    "@stynx-nyx/data": "workspace:*",
+    "@stynx-nyx/idempotency": "workspace:*",
+    "@stynx-nyx/sessions": "workspace:*",
     "jose": "^6.2.2",
     "redis": "^5.12.1",
     "zod": "^4.3.6"

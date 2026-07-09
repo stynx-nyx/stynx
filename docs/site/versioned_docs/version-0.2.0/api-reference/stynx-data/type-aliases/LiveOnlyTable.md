@@ -1,8 +1,8 @@
-[**@stynx/data**](../index.md)
+[**@stynx-nyx/data**](../index.md)
 
 ---
 
-[@stynx/data](../index.md) / LiveOnlyTable
+[@stynx-nyx/data](../index.md) / LiveOnlyTable
 
 # Type Alias: LiveOnlyTable\<T\>
 

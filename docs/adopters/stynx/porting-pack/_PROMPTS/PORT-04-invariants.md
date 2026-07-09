@@ -51,7 +51,7 @@ For each invariant:
 [every route has @Permission/@Public/@System; how doctor enforces it]
 
 ### Database access contract
-[no raw pool, all goes through @stynx/data; ESLint rule path]
+[no raw pool, all goes through @stynx-nyx/data; ESLint rule path]
 
 ### Audit contract
 [every mutation @Audit or @NoAudit('reason'); migration linter rule]

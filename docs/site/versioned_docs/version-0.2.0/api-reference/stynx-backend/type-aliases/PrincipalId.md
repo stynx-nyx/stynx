@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / PrincipalId
+[@stynx-nyx/backend](../index.md) / PrincipalId
 
 # Type Alias: PrincipalId
 

@@ -1,8 +1,8 @@
-[**@stynx/core**](../index.md)
+[**@stynx-nyx/core**](../index.md)
 
 ---
 
-[@stynx/core](../index.md) / ConfigOwnershipViolationError
+[@stynx-nyx/core](../index.md) / ConfigOwnershipViolationError
 
 # Class: ConfigOwnershipViolationError
 

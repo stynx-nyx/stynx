@@ -17,7 +17,7 @@
   sanitizer was extended to scrub `internal round-tracking note (not published)` and `external DEVAI sibling checkout reference (not published)`
   cross-repo links that don't exist in the published Docusaurus
   tree.
-- Workspace package renamed `docs` → `@stynx/docs-site` across five
+- Workspace package renamed `docs` → `@stynx-nyx/docs-site` across five
   reference sites (pnpm-workspace.yaml, root package.json build +
   typecheck scripts, .github/workflows/docs.yml, scripts/ci-local/
   inside.sh).
@@ -29,7 +29,7 @@
   both pass on `.js` regardless.
 - `.devai/config/project.json` declares `repo.kind=library`,
   `docs.builder=docusaurus`, `docs.build_command="pnpm --filter
-@stynx/docs-site run build"`, `docs.output_dir=docs/site/build`,
+@stynx-nyx/docs-site run build"`, `docs.output_dir=docs/site/build`,
   `docs.publish_target=gh-pages`, `docs.gh_pages_branch=gh-pages`.
 - `.github/workflows/docs.yml` stripped to freshness-check only.
   Removed: deploy job, configure-pages step, upload-pages-artifact
@@ -57,7 +57,7 @@ lint:deps`, `pnpm lint:cycles`, `pnpm typecheck`, `pnpm
 lint:workflows`: pass.
 - `pnpm test`: **deferred** — pre-existing hang unrelated to R14
   scope (no test files modified). Filed as follow-up.
-- `pnpm --filter @stynx/docs-site build`: pass (3246 files, 117 MB).
+- `pnpm --filter @stynx-nyx/docs-site build`: pass (3246 files, 117 MB).
 - Live site: HTTP 200 on landing + the new
   `/docs/adr/ADR-DOCS-GOVERNANCE-ADOPTION/` route.
 
@@ -91,7 +91,7 @@ Plus a closeout commit landing this file, CHANGELOG, and the
    testcontainers interaction) and worth a dedicated bisection.
 3. **Document the GitHub Packages registry auth requirement**:
    pnpm install without `--frozen-lockfile` requires a
-   `NODE_AUTH_TOKEN` for `npm.pkg.github.com` to fetch `@stynx/*`
+   `NODE_AUTH_TOKEN` for `npm.pkg.github.com` to fetch `@stynx-nyx/*`
    scope packages, even though those are workspace packages. The
    round worked around it with a manual lockfile edit (rename
    `docs:` importer to `docs/site:`) plus `--frozen-lockfile`. A

@@ -1,8 +1,8 @@
-[**@stynx/integration-adapter**](../index.md)
+[**@stynx-nyx/integration-adapter**](../index.md)
 
 ---
 
-[@stynx/integration-adapter](../index.md) / IntegrationAdapter
+[@stynx-nyx/integration-adapter](../index.md) / IntegrationAdapter
 
 # Class: IntegrationAdapter\<TReq, TRaw, TRes\>
 

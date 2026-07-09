@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / STYNX_OBJECT_STORAGE
+[@stynx-nyx/backend](../index.md) / STYNX_OBJECT_STORAGE
 
 # Variable: STYNX_OBJECT_STORAGE
 

@@ -15,7 +15,7 @@ Key compatibility pins remain intentional:
 | `@types/node`            | `24.12.2` | `25.6.0` | repo engines target Node 24 (`>=24 <25`)                                               |
 | `typescript`             |   `5.9.3` |  `6.0.3` | Angular 21 build tooling requires `>=5.9 <6.0`                                         |
 | `@mermaid-js/layout-elk` |   `0.1.9` |  `0.2.1` | `@docusaurus/theme-mermaid@3.10.0` peers on `^0.1.9`                                   |
-| `intl-messageformat`     | `10.7.18` | `11.2.2` | `@stynx/i18n` emits CommonJS; v11 is ESM-only and breaks the current runtime/Jest path |
+| `intl-messageformat`     | `10.7.18` | `11.2.2` | `@stynx-nyx/i18n` emits CommonJS; v11 is ESM-only and breaks the current runtime/Jest path |
 
 The Node/TypeScript split is now explicit:
 

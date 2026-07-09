@@ -25,10 +25,10 @@ STYNX Flow is split into two independent packages:
 
 | Package                   | Owns                                                                                                                                                                            | Must reuse                                                                                                                                                       |
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@stynx/flow`             | Backend NestJS module, database schema bindings, DTOs, controllers, services, adapter tokens, runtime orchestration, task APIs, form APIs, analytics APIs, and OpenAPI metadata | `@stynx/data`, `@stynx/auth`, `@stynx/backend`, `@stynx/tenancy`, `@stynx/audit`, `@stynx/idempotency`, `@stynx/ratelimit`, `@stynx/contracts`, `@stynx/testing` |
+| `@stynx-nyx/flow`             | Backend NestJS module, database schema bindings, DTOs, controllers, services, adapter tokens, runtime orchestration, task APIs, form APIs, analytics APIs, and OpenAPI metadata | `@stynx-nyx/data`, `@stynx-nyx/auth`, `@stynx-nyx/backend`, `@stynx-nyx/tenancy`, `@stynx-nyx/audit`, `@stynx-nyx/idempotency`, `@stynx-nyx/ratelimit`, `@stynx-nyx/contracts`, `@stynx-nyx/testing` |
 | `@stynx-web/angular-flow` | Angular route definitions, API client facade, graph/form/task/fill/waiver components, stores, guards, and host mount helpers                                                    | `@stynx-web/sdk`, `@stynx-web/angular`, `@stynx-web/angular-auth`, `@stynx-web/angular-ui`, and Angular CDK primitives where useful                              |
 
-The backend package is the source of truth for workflow behavior. The Angular package is a client package and may not duplicate orchestration decisions that belong to `@stynx/flow`.
+The backend package is the source of truth for workflow behavior. The Angular package is a client package and may not duplicate orchestration decisions that belong to `@stynx-nyx/flow`.
 
 ## Concepts
 
@@ -76,15 +76,15 @@ Required semantics:
 - `canManage` gates mutations such as graph changes, reassignment, waiver approval, and administrative run repair.
 - `resolveAgents` is optional. If absent, only first-party actor and role assignment rules are available.
 
-The adapter must receive the STYNX tenant context and actor context from the request or system execution context. It must not open raw database connections or bypass `@stynx/data`.
+The adapter must receive the STYNX tenant context and actor context from the request or system execution context. It must not open raw database connections or bypass `@stynx-nyx/data`.
 
 ## Runtime Gap-Closure Decisions
 
-The following decisions close the high-risk gaps found during the PORM Flow reassessment and are binding for `@stynx/flow` v1.
+The following decisions close the high-risk gaps found during the PORM Flow reassessment and are binding for `@stynx-nyx/flow` v1.
 
 ### Effect Dispatch
 
-Flow owns effect delivery as a framework concern. Completing a node still appends `effect_requested` events, but those events are not the end of the contract. `@stynx/flow` must expose an explicit retryable dispatcher that:
+Flow owns effect delivery as a framework concern. Completing a node still appends `effect_requested` events, but those events are not the end of the contract. `@stynx-nyx/flow` must expose an explicit retryable dispatcher that:
 
 - selects pending `effect_requested` events inside the current tenant;
 - calls `FlowDomainAdapter.applyEffect` with tenant, actor/system, run, node, target, effect key, action, and payload context;
@@ -130,14 +130,14 @@ Route permission is necessary but not sufficient for target-bound task work.
 
 ### Policy Evaluation
 
-Policy set and rule CRUD is not enough for closure. `@stynx/flow` must expose policy evaluation through a service and guarded HTTP route. Evaluation selects the active policy set for a scope unless a policy set id is supplied, applies rule priority, returns the first matching allow/deny decision, and returns a deterministic default allow result when no rule matches. Rule conditions use the same JSONPath rule evaluator as graph edges and node rules.
+Policy set and rule CRUD is not enough for closure. `@stynx-nyx/flow` must expose policy evaluation through a service and guarded HTTP route. Evaluation selects the active policy set for a scope unless a policy set id is supplied, applies rule priority, returns the first matching allow/deny decision, and returns a deterministic default allow result when no rule matches. Rule conditions use the same JSONPath rule evaluator as graph edges and node rules.
 
 ### Publish Versus Draft
 
 Graph design edits are draft edits. Runtime execution must be bound to an
 immutable published graph version.
 
-`@stynx/flow` must expose `POST /flow/graphs/:id/publish` as the only public
+`@stynx-nyx/flow` must expose `POST /flow/graphs/:id/publish` as the only public
 transition from draft design state to runtime-eligible state. Publishing
 validates graph structure, records a monotonically increasing
 `publishedVersion`, and stores a runtime snapshot that later draft edits cannot
@@ -162,7 +162,7 @@ selection rules into the browser.
 
 ## Generic-Code Rule
 
-`@stynx/flow` and `@stynx-web/angular-flow` must stay host-domain neutral.
+`@stynx-nyx/flow` and `@stynx-web/angular-flow` must stay host-domain neutral.
 
 Forbidden in generic Flow code:
 
@@ -183,7 +183,7 @@ This rule is captured by `INV-FLOW-002`.
 
 ## Tenant And RLS Model
 
-Every Flow row that belongs to a tenant must carry `tenant_id` and must be protected by PostgreSQL RLS using the STYNX transaction GUCs established by `@stynx/data`.
+Every Flow row that belongs to a tenant must carry `tenant_id` and must be protected by PostgreSQL RLS using the STYNX transaction GUCs established by `@stynx-nyx/data`.
 
 Tenant-owned tables include:
 
@@ -245,7 +245,7 @@ Flow events and STYNX platform audit answer different questions.
 | Surface        | Purpose                                                                                       | Examples                                                                                     |
 | -------------- | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
 | `flow.events`  | Domain workflow ledger for replay, diagnostics, task history, analytics, and adapter behavior | run started, signal received, node opened, task accepted, transition taken, effect requested |
-| `@stynx/audit` | Platform security and compliance audit for who invoked which protected operation              | user updated graph, user assigned task, system repaired stuck run, admin approved waiver     |
+| `@stynx-nyx/audit` | Platform security and compliance audit for who invoked which protected operation              | user updated graph, user assigned task, system repaired stuck run, admin approved waiver     |
 
 Mutating HTTP handlers must emit platform audit through the normal STYNX audit path. Runtime services must also append Flow events when workflow state changes. One does not replace the other. Current curated Flow live tables have database DML audit enabled; future mutable curated Flow tables must do the same unless an explicit exception is documented.
 
@@ -253,7 +253,7 @@ This rule is captured by `INV-FLOW-003`.
 
 ## Backend Module Shape
 
-`@stynx/flow` should expose:
+`@stynx-nyx/flow` should expose:
 
 - `StynxFlowModule` with `forRoot` or equivalent adapter registration.
 - `FLOW_DOMAIN_ADAPTERS` provider token.
@@ -261,7 +261,7 @@ This rule is captured by `INV-FLOW-003`.
 - Services equivalent in responsibility to PORM's design, runtime, forms, and analytics services, but rewritten on STYNX primitives.
 - Public DTO and enum exports needed by host APIs and frontend packages.
 
-Services must use `@stynx/data` transactions, STYNX route decorators, typed DTO validation, and host adapter injection. PORM's PL/pgSQL orchestration functions may be used as behavior evidence, but business orchestration should live in TypeScript services unless a future Architect decision explicitly moves a stable subset into database functions.
+Services must use `@stynx-nyx/data` transactions, STYNX route decorators, typed DTO validation, and host adapter injection. PORM's PL/pgSQL orchestration functions may be used as behavior evidence, but business orchestration should live in TypeScript services unless a future Architect decision explicitly moves a stable subset into database functions.
 
 ## Frontend Package Boundary
 

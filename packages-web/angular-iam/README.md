@@ -120,7 +120,7 @@ export const routes: Routes = [
 
 - [`@stynx-web/angular-auth`](/docs/packages-web/angular-auth/) — auth + the `permissionGuard` for the IAM routes.
 - [`backend/identity-admin`](/docs/packages/backend/identity-admin/) — the backend admin API this consumes.
-- [`@stynx/auth`](/docs/packages/auth/) — defines the permission model.
+- [`@stynx-nyx/auth`](/docs/packages/auth/) — defines the permission model.
 
 ## TypeDoc reference
 

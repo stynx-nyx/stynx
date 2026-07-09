@@ -31,8 +31,8 @@ Platform-level: `platform:support`, `platform:billing`,
 ## Decorators (§6.2)
 
 ```typescript
-import { Permission, ReadOnly, Public, System } from '@stynx/auth';
-import { Audit, Idempotent, RateLimit } from '@stynx/backend';
+import { Permission, ReadOnly, Public, System } from '@stynx-nyx/auth';
+import { Audit, Idempotent, RateLimit } from '@stynx-nyx/backend';
 
 @Controller('documents')
 export class DocumentsController {

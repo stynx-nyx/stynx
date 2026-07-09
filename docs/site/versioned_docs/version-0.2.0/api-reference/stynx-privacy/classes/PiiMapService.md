@@ -1,8 +1,8 @@
-[**@stynx/privacy**](../index.md)
+[**@stynx-nyx/privacy**](../index.md)
 
 ---
 
-[@stynx/privacy](../index.md) / PiiMapService
+[@stynx-nyx/privacy](../index.md) / PiiMapService
 
 # Class: PiiMapService
 

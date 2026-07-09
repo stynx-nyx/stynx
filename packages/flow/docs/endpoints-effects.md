@@ -48,5 +48,5 @@ Created per-graph (`POST /flow/graphs/:graphId/transition-effects`, see [endpoin
 ## Notes
 
 - **Effects vs transition-effects:** a _transition-effect_ is the design-time declaration ("when this edge fires, do X"); an _effect_ is the runtime dispatch of that. The `POST /flow/effects/dispatch` route lets you fire one manually.
-- **Signals** are how external systems push events into a run — pair with `@stynx/integration-adapter` for inbound webhooks.
+- **Signals** are how external systems push events into a run — pair with `@stynx-nyx/integration-adapter` for inbound webhooks.
 - **Events** are the canonical audit stream; consume them for run observability + compliance.

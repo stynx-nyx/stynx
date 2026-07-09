@@ -1,8 +1,8 @@
-[**@stynx/sessions**](../index.md)
+[**@stynx-nyx/sessions**](../index.md)
 
 ---
 
-[@stynx/sessions](../index.md) / STYNX_SESSIONS_OPTIONS
+[@stynx-nyx/sessions](../index.md) / STYNX_SESSIONS_OPTIONS
 
 # Variable: STYNX_SESSIONS_OPTIONS
 

@@ -1,4 +1,4 @@
-# @stynx/i18n
+# @stynx-nyx/i18n
 
 ## 1.0.0
 
@@ -9,5 +9,5 @@
 ### Patch Changes
 
 - Updated dependencies [8f6df55]
-  - @stynx/core@1.0.0
-  - @stynx/data@1.0.0
+  - @stynx-nyx/core@1.0.0
+  - @stynx-nyx/data@1.0.0

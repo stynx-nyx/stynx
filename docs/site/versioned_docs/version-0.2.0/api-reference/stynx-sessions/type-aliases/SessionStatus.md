@@ -1,8 +1,8 @@
-[**@stynx/sessions**](../index.md)
+[**@stynx-nyx/sessions**](../index.md)
 
 ---
 
-[@stynx/sessions](../index.md) / SessionStatus
+[@stynx-nyx/sessions](../index.md) / SessionStatus
 
 # Type Alias: SessionStatus
 

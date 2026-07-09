@@ -1,8 +1,8 @@
-[**@stynx/flow**](../index.md)
+[**@stynx-nyx/flow**](../index.md)
 
 ---
 
-[@stynx/flow](../index.md) / BulkFlowAnswerWriteRequestDto
+[@stynx-nyx/flow](../index.md) / BulkFlowAnswerWriteRequestDto
 
 # Type Alias: BulkFlowAnswerWriteRequestDto
 

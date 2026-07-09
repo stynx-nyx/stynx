@@ -1,10 +1,10 @@
 ---
-title: '@stynx/pdf-a-vera-docker'
+title: '@stynx-nyx/pdf-a-vera-docker'
 ---
 
-# @stynx/pdf-a-vera-docker
+# @stynx-nyx/pdf-a-vera-docker
 
-`@stynx/pdf-a-vera-docker` implements the `@stynx/pdf-a` validator contract by
+`@stynx-nyx/pdf-a-vera-docker` implements the `@stynx-nyx/pdf-a` validator contract by
 shelling out to the digest-pinned veraPDF Docker CLI image.
 
 ## Prerequisites
@@ -19,7 +19,7 @@ docker pull verapdf/cli@sha256:20202b4bcc2410a25db1f637c7b461a2e0dda1d97dd8a6df6
 ## Usage
 
 ```ts
-import { VeraPdfDockerValidator } from '@stynx/pdf-a-vera-docker';
+import { VeraPdfDockerValidator } from '@stynx-nyx/pdf-a-vera-docker';
 
 const validator = new VeraPdfDockerValidator();
 const result = await validator.validate(pdfBytes, { version: 'A-2', conformance: 'b' });
@@ -34,7 +34,7 @@ Constructor options and environment variables:
 | `image`     | `STYNX_VERAPDF_IMAGE`      | Digest-pinned `verapdf/cli` image         |
 | `dockerBin` | `STYNX_VERAPDF_DOCKER_BIN` | `docker`                                  |
 | `timeoutMs` | `STYNX_VERAPDF_TIMEOUT_MS` | `30000`                                   |
-| `logger`    | none                       | Optional `@stynx/logging` compatible sink |
+| `logger`    | none                       | Optional `@stynx-nyx/logging` compatible sink |
 
 The adapter emits `pdf_a_validation_attempts_total`,
 `pdf_a_validation_errors_total&#123;rule_id&#125;`, and

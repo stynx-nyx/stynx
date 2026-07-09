@@ -5,7 +5,7 @@ import {
   questions as flowQuestions,
   scores as flowScores,
   waivers as flowWaivers,
-} from '@stynx/data';
+} from '@stynx-nyx/data';
 
 type ColumnMap = Record<string, string>;
 

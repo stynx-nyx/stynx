@@ -1,8 +1,8 @@
-[**@stynx/core**](../index.md)
+[**@stynx-nyx/core**](../index.md)
 
 ---
 
-[@stynx/core](../index.md) / STYNX_CORE_CONFIG
+[@stynx-nyx/core](../index.md) / STYNX_CORE_CONFIG
 
 # Variable: STYNX_CORE_CONFIG
 

@@ -5,7 +5,7 @@
 // (each spec file gets its own fresh DB via createDemoBookmarkFixture).
 
 import { NotFoundException } from '@nestjs/common';
-import { RequestContext } from '@stynx/core';
+import { RequestContext } from '@stynx-nyx/core';
 import { BookmarkService } from '../src/demo-bookmark/services/bookmark.service';
 import { BookmarkTagService } from '../src/demo-bookmark/services/bookmark-tag.service';
 import { createDemoBookmarkFixture, type DemoBookmarkFixture } from './support/postgres-fixture';

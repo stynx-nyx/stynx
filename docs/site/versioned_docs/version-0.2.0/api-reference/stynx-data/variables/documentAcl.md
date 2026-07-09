@@ -1,8 +1,8 @@
-[**@stynx/data**](../index.md)
+[**@stynx-nyx/data**](../index.md)
 
 ---
 
-[@stynx/data](../index.md) / documentAcl
+[@stynx-nyx/data](../index.md) / documentAcl
 
 # Variable: documentAcl
 

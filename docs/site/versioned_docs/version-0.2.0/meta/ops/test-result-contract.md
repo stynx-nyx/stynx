@@ -34,7 +34,7 @@ The shape, abbreviated:
 ```jsonc
 {
   "schemaVersion": "1",
-  "package": "@stynx/auth",
+  "package": "@stynx-nyx/auth",
   "level": "unit | integration | e2e | mutation | perf | coverage | smoke",
   "runner": "vitest | stryker-vitest | perf-smoke | rls-smoke | node-test",
   "runnerVersion": "3.2.4",
@@ -75,7 +75,7 @@ should defer to `metric.kind` and ignore the others.
 
 `pnpm test:matrix*` renders package-owned obligations only. Reusable
 packages intentionally rely on the reference applications for E2E
-coverage, so only `@stynx/reference-api` and `@stynx/reference-web`
+coverage, so only `@stynx-nyx/reference-api` and `@stynx-nyx/reference-web`
 are expected to show E2E pass/fail cells.
 
 Cell markers mean:
@@ -117,9 +117,9 @@ Schema:
   },
   "defaults":  { "coverage": "complete", "mutation": "default", "perf": "default" },
   "perPackage": {
-    "@stynx/auth":    { "mutation": "strictest" },
-    "@stynx/data":    { "mutation": "strictest" },
-    "@stynx/tenancy": { "mutation": "strict" }
+    "@stynx-nyx/auth":    { "mutation": "strictest" },
+    "@stynx-nyx/data":    { "mutation": "strictest" },
+    "@stynx-nyx/tenancy": { "mutation": "strict" }
   }
 }
 ```

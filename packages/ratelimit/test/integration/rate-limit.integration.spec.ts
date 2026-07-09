@@ -1,7 +1,7 @@
 import type { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
-import { StynxDataModule, Database } from '@stynx/data';
+import { StynxDataModule, Database } from '@stynx-nyx/data';
 import { STYNX_RATE_LIMIT_ROUTE } from '../../src/constants';
 import { InMemoryRateLimitMetrics } from '../../src/metrics';
 import { DatabaseRateLimitPolicyResolver } from '../../src/rate-limit-policy.service';
@@ -33,9 +33,9 @@ describe('Rate limit integration', () => {
       imports: [
         StynxDataModule.forRoot({
           connections: {
-            owner: { connectionString: postgres.connectionString('@stynx/ratelimit:owner') },
-            app: { connectionString: postgres.connectionString('@stynx/ratelimit:app') },
-            reader: { connectionString: postgres.connectionString('@stynx/ratelimit:reader') },
+            owner: { connectionString: postgres.connectionString('@stynx-nyx/ratelimit:owner') },
+            app: { connectionString: postgres.connectionString('@stynx-nyx/ratelimit:app') },
+            reader: { connectionString: postgres.connectionString('@stynx-nyx/ratelimit:reader') },
           },
           migrations: { enabled: true },
         }),

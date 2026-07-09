@@ -6,7 +6,7 @@
 //   - devai render-matrix                     (cell colouring)
 //
 // Per-package overrides live under `perPackage[packageName]` in the config:
-//   "perPackage": { "@stynx/auth": { "coverage": "strict", "mutation": "strictest" } }
+//   "perPackage": { "@stynx-nyx/auth": { "coverage": "strict", "mutation": "strictest" } }
 //
 // Policies (under `policies.coverage`, `policies.mutation`, and `policies.perf`) define named
 // presets; `defaults` picks which preset applies workspace-wide when no
@@ -29,7 +29,7 @@ function load() {
 
 /**
  * Resolve the coverage threshold for a package.
- * @param {string} packageName  e.g. "@stynx/auth"
+ * @param {string} packageName  e.g. "@stynx-nyx/auth"
  * @returns {{lines:number, branches:number, functions:number, statements:number}}
  */
 export function getCoverageThreshold(packageName) {

@@ -12,7 +12,7 @@ type BoundaryConfig = {
 const repoRoot = process.cwd();
 const config = readBoundaryConfig();
 const roots = config.roots ?? ['reference', 'domain', 'packages', 'packages-web'];
-const allowed = config.allowedPackages ?? ['@stynx/', '@stynx-web/'];
+const allowed = config.allowedPackages ?? ['@stynx-nyx/', '@stynx-web/'];
 const forbidden = config.forbiddenImports ?? [];
 const required = config.requireStynxPackages ?? [];
 const files = roots
@@ -26,7 +26,7 @@ const violations: string[] = [];
 for (const file of files) {
   const text = readFileSync(file, 'utf8');
   for (const specifier of importSpecifiers(text)) {
-    if (specifier.startsWith('@stynx/')) imported.add(specifier.split('/').slice(0, 2).join('/'));
+    if (specifier.startsWith('@stynx-nyx/')) imported.add(specifier.split('/').slice(0, 2).join('/'));
     if (specifier.startsWith('@stynx-web/'))
       imported.add(specifier.split('/').slice(0, 2).join('/'));
     if (forbidden.some((prefix) => specifier === prefix || specifier.startsWith(`${prefix}/`))) {

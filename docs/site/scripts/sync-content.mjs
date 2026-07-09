@@ -272,8 +272,8 @@ function rewriteGeneratedDocLinks(content) {
       /\]\(\.\.\/\.\.\/\.\.\/packages-web\/([^)\s/#]+)\/README\.md((?:#[^)]+)?)\)/gu,
       (_match, packageDir, hash = '') => `](/docs/packages-web/${packageDir}${hash})`,
     )
-    .replace(/\[`@stynx\/pdf-a`\]\(\/docs\/packages\/pdf-a\)/gu, '`@stynx/pdf-a`')
-    .replace(/\[`@stynx\/pdf-a-vera-docker`\]\(\/docs\/packages\/pdf-a-vera-docker\)/gu, '`@stynx/pdf-a-vera-docker`')
+    .replace(/\[`@stynx\/pdf-a`\]\(\/docs\/packages\/pdf-a\)/gu, '`@stynx-nyx/pdf-a`')
+    .replace(/\[`@stynx\/pdf-a-vera-docker`\]\(\/docs\/packages\/pdf-a-vera-docker\)/gu, '`@stynx-nyx/pdf-a-vera-docker`')
     .replace(/\]\(architecture\/reference-app-rbac\.json((?:#[^)]+)?)\)/gu, '](/docs/framework/arch/reference-app-rbac$1)')
     .replace(/\[([^\]]+)\]\(([^)\s#]+)\.(?:json|sql|ts|tsx|js|mjs|cjs)((?:#[^)]+)?)\)/gu, (_match, label) => `\`${label}\``)
     .replace(/\[([^\]]+)\]\((?:\.\.\/){2,}(?:tools|packages|packages-web|reference|database|infra|\.devai|work)\/[^)]*\)/gu, (_match, label) => `\`${label}\``)
@@ -441,7 +441,7 @@ writeDoc('packages-web/index.md', '# Web Packages\n\nNarrative Angular and SDK p
 writeDoc('tools/index.md', '# Tools\n\nInternal workspace tooling published under `@stynx-internal/*`: the scaffolder, shared ESLint config, migration linter, and TS config.\n', 'Tools');
 writeDoc('specifications/index.md', '# Specifications\n\nNormative and reference documents mirrored from `specs/` when that source directory is present.\n', 'Specifications');
 writeDoc('architecture-decisions/index.md', '# Architecture Decisions\n\nArchitecture Decision Records mirrored from `specs/` when that source directory is present.\n', 'Architecture Decisions');
-writeDoc('api-reference/index.md', '# API Reference\n\nGenerated API reference for every `@stynx/*` and `@stynx-web/*` package.\n', 'API Reference');
+writeDoc('api-reference/index.md', '# API Reference\n\nGenerated API reference for every `@stynx-nyx/*` and `@stynx-web/*` package.\n', 'API Reference');
 writeDoc('templates/index.md', '# Templates\n\nDocumentation templates mirrored from `docs/meta/templates/`.\n', 'Templates');
 writeDoc('rfcs/index.md', '# RFCs\n\nRepository RFCs mirrored for public cross-reference stability.\n', 'RFCs');
 
@@ -509,7 +509,7 @@ writeReadmeDoc(resolve(repoRoot, 'reference/web/README.md'), 'reference/web.md',
   rewritePackageReadmeLinks(sanitizeMdxContent(content), 'packages-web'),
   'Reference Web',
 );
-syncPackageReadmes('packages', 'packages', (name) => typeof name === 'string' && name.startsWith('@stynx/'));
+syncPackageReadmes('packages', 'packages', (name) => typeof name === 'string' && name.startsWith('@stynx-nyx/'));
 syncPackageReadmes('packages-web', 'packages-web', (name) => typeof name === 'string' && name.startsWith('@stynx-web/'));
 // R15 follow-up: surface tool packages on the published site. All current
 // tools live under @stynx-internal/* (create-stynx-app, eslint-config,

@@ -1,33 +1,33 @@
-# `@stynx/sessions` — STYNX session lifecycle, JWT signing, key rotation, JWKS endpoint
+# `@stynx-nyx/sessions` — STYNX session lifecycle, JWT signing, key rotation, JWKS endpoint
 
-`@stynx/sessions` issues + manages STYNX-side session JWTs. It signs access tokens with a rotation-friendly key set, exposes a JWKS endpoint so consumers can verify, supports in-memory + Redis session stores for pin/revoke flows, and mirrors session events to an external writer for audit/observability. Paired with `@stynx/auth` which exchanges an upstream Cognito token for one of these sessions and verifies them on subsequent requests.
+`@stynx-nyx/sessions` issues + manages STYNX-side session JWTs. It signs access tokens with a rotation-friendly key set, exposes a JWKS endpoint so consumers can verify, supports in-memory + Redis session stores for pin/revoke flows, and mirrors session events to an external writer for audit/observability. Paired with `@stynx-nyx/auth` which exchanges an upstream Cognito token for one of these sessions and verifies them on subsequent requests.
 
 ## Purpose
 
 A STYNX app needs short-lived access tokens it controls (not directly Cognito tokens), with: rotation of the signing key without downtime, revocation by session-id (for "log out everywhere"), session pinning to a device, and a JWKS endpoint so client SDKs and other services can verify tokens.
 
-You reach for `@stynx/sessions` whenever `@stynx/auth` is wired — the two packages work as a unit. You configure the signing key set (active kid + retired kids still trusted for verification) and the store backend.
+You reach for `@stynx-nyx/sessions` whenever `@stynx-nyx/auth` is wired — the two packages work as a unit. You configure the signing key set (active kid + retired kids still trusted for verification) and the store backend.
 
-What it does NOT do: it doesn't verify upstream Cognito tokens (`@stynx/auth` does), doesn't manage user accounts (admin endpoints live in `backend/identity-admin`), doesn't issue refresh tokens — STYNX sessions are short-lived and re-issued by a fresh Cognito exchange.
+What it does NOT do: it doesn't verify upstream Cognito tokens (`@stynx-nyx/auth` does), doesn't manage user accounts (admin endpoints live in `backend/identity-admin`), doesn't issue refresh tokens — STYNX sessions are short-lived and re-issued by a fresh Cognito exchange.
 
 ## Audience
 
-Backend developers wiring authentication. Direct interaction is unusual — most use goes through `@stynx/auth`'s session-exchange. You configure this package; you rarely call it.
+Backend developers wiring authentication. Direct interaction is unusual — most use goes through `@stynx-nyx/auth`'s session-exchange. You configure this package; you rarely call it.
 
 ## Install
 
 ```bash
-pnpm add @stynx/sessions
+pnpm add @stynx-nyx/sessions
 ```
 
-**Peer dependencies:** `@nestjs/common` `^11`, `@stynx/core` `^1`, `@stynx/contracts` `^1`, `jose` `^5` (for JWT signing/verification), `ioredis` (optional, for Redis store).
+**Peer dependencies:** `@nestjs/common` `^11`, `@stynx-nyx/core` `^1`, `@stynx-nyx/contracts` `^1`, `jose` `^5` (for JWT signing/verification), `ioredis` (optional, for Redis store).
 
 **Node:** 24.x.
 
 ## Quick start
 
 ```ts
-import { StynxSessionsModule } from '@stynx/sessions';
+import { StynxSessionsModule } from '@stynx-nyx/sessions';
 
 StynxSessionsModule.forRoot({
   signing: {
@@ -148,8 +148,8 @@ mirror: {
 
 ## Related packages
 
-- [`@stynx/auth`](/docs/packages/auth/) — exchanges upstream tokens for STYNX sessions via this package; verifies sessions on subsequent requests.
-- [`@stynx/core`](/docs/packages/core/) — provides `RequestContext` for session-bound request metadata.
+- [`@stynx-nyx/auth`](/docs/packages/auth/) — exchanges upstream tokens for STYNX sessions via this package; verifies sessions on subsequent requests.
+- [`@stynx-nyx/core`](/docs/packages/core/) — provides `RequestContext` for session-bound request metadata.
 - [`@stynx-web/angular-sessions`](/docs/packages-web/angular-sessions/) — Angular pair: session-list UI + revoke-other-sessions action.
 
 ## TypeDoc reference

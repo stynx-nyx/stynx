@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / verifySequentialEnvelope
+[@stynx-nyx/signature](../index.md) / verifySequentialEnvelope
 
 # Function: verifySequentialEnvelope()
 

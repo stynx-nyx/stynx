@@ -1,4 +1,4 @@
-# @stynx/idempotency
+# @stynx-nyx/idempotency
 
 ## 1.0.0
 
@@ -9,4 +9,4 @@
 ### Patch Changes
 
 - Updated dependencies [8f6df55]
-  - @stynx/data@1.0.0
+  - @stynx-nyx/data@1.0.0

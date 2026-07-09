@@ -17,7 +17,7 @@ Checkboxes the consuming agent marks off to declare the port done.
 
 For each invariant from `04-INVARIANTS-AND-CONTRACTS.md`:
 
-- [ ] **I1 — No raw DB connection outside @stynx/data**
+- [ ] **I1 — No raw DB connection outside @stynx-nyx/data**
   - Command: `rg "from ['\"]pg['\"]|new Pool\(" --type ts | grep -v packages/data | grep -v test`
   - Expected: empty output (modulo documented exceptions).
 
@@ -26,7 +26,7 @@ For each invariant from `04-INVARIANTS-AND-CONTRACTS.md`:
 
 ## Mandatory test families (per spec testing section)
 
-- [ ] RLS leak test using `@stynx/testing` matcher.
+- [ ] RLS leak test using `@stynx-nyx/testing` matcher.
 - [ ] Soft-delete + restore roundtrip.
 - [ ] Cascade limit (depth + rows).
 - [ ] Permission deny path returns 403 with the documented error shape.
@@ -41,7 +41,7 @@ For each invariant from `04-INVARIANTS-AND-CONTRACTS.md`:
       audit coverage, soft-delete coverage, ReadOnly enforcement).
 - [ ] Note: at audit baseline, `pnpm doctor` produced empty output
       (FIND-011). Consuming agents on the foreign repo run their own
-      `stynx doctor` from `@stynx/cli` — verify it actually emits.
+      `stynx doctor` from `@stynx-nyx/cli` — verify it actually emits.
 
 ## Smoke tests
 

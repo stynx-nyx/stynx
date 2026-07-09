@@ -1,8 +1,8 @@
-[**@stynx/privacy**](../index.md)
+[**@stynx-nyx/privacy**](../index.md)
 
 ---
 
-[@stynx/privacy](../index.md) / RopaMetadata
+[@stynx-nyx/privacy](../index.md) / RopaMetadata
 
 # Interface: RopaMetadata
 

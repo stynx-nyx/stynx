@@ -24,10 +24,10 @@ generate dozens of these against a foreign schema.
 
 ## Migration order
 
-1. Platform migrations from `@stynx/data` run first
+1. Platform migrations from `@stynx-nyx/data` run first
    (cite packages/data/migrations/).
 2. Consumer migrations layer on top.
-3. Run order is enforced by the migration runner in @stynx/cli.
+3. Run order is enforced by the migration runner in @stynx-nyx/cli.
 
 ## Pattern: tenant-scoped table the right way
 

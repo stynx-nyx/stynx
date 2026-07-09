@@ -1,5 +1,5 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
-import { RequestContextMutator } from '@stynx/core';
+import { RequestContextMutator } from '@stynx-nyx/core';
 import { Observable } from 'rxjs';
 import type { RequestLike } from './types';
 

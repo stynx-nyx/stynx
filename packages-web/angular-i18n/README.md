@@ -1,6 +1,6 @@
 # `@stynx-web/angular-i18n` — Angular i18n: translate pipe, ICU pipes, locale switcher
 
-`@stynx-web/angular-i18n` is the Angular-side internationalization package. It provides a `translate` pipe for template translation, ICU MessageFormat pipes (plural / number / date), a locale-switcher component, and an `I18nService` that loads catalogs and resolves the active locale. Pairs with the backend's [`@stynx/i18n`](/docs/packages/i18n/) so frontend + backend share the same locale + catalog conventions per ADR-FE-ICU-i18n-0002.
+`@stynx-web/angular-i18n` is the Angular-side internationalization package. It provides a `translate` pipe for template translation, ICU MessageFormat pipes (plural / number / date), a locale-switcher component, and an `I18nService` that loads catalogs and resolves the active locale. Pairs with the backend's [`@stynx-nyx/i18n`](/docs/packages/i18n/) so frontend + backend share the same locale + catalog conventions per ADR-FE-ICU-i18n-0002.
 
 ## Purpose
 
@@ -125,7 +125,7 @@ export class Notifier {
 ## Related packages
 
 - [`@stynx-web/angular`](/docs/packages-web/angular/) — the foundation.
-- [`@stynx/i18n`](/docs/packages/i18n/) — the backend counterpart; shares catalog conventions.
+- [`@stynx-nyx/i18n`](/docs/packages/i18n/) — the backend counterpart; shares catalog conventions.
 - [STYNX framework — ADR-FE-ICU-i18n-0002](/docs/meta/adr/ADR-FE-ICU-i18n-0002-package-catalogs-and-icu/) — the catalog + ICU decision.
 
 ## TypeDoc reference

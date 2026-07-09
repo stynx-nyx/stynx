@@ -795,7 +795,7 @@ component code just decides whether to also disable affected UI.
 Common 409 causes:
 
 - **Optimistic-lock collision** (`OPTIMISTIC_LOCK_VERSION_MISMATCH` or
-  similar — confirm exact codes against `@stynx/contracts` errors
+  similar — confirm exact codes against `@stynx-nyx/contracts` errors
   module). Re-fetch the record, ask the user to merge, resubmit with
   the new `version`.
 - **Idempotency-key replay with different body**

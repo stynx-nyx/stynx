@@ -9,11 +9,11 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 import { GenericContainer, Wait, type StartedTestContainer } from 'testcontainers';
-import { CognitoJwtValidator } from '@stynx/auth';
+import { CognitoJwtValidator } from '@stynx-nyx/auth';
 import {
   CascadeTooLargeError,
   Database,
-} from '@stynx/data';
+} from '@stynx-nyx/data';
 import {
   auditExpect,
   expectArchiveMirrorExists,
@@ -24,10 +24,10 @@ import {
   expectRestored,
   expectROCannotWrite,
   expectSoftDeleteBlocked,
-} from '@stynx/testing';
-import { SessionService } from '@stynx/sessions';
-import { RequestContextMutator } from '@stynx/core';
-import { StynxMetricsService } from '@stynx/health';
+} from '@stynx-nyx/testing';
+import { SessionService } from '@stynx-nyx/sessions';
+import { RequestContextMutator } from '@stynx-nyx/core';
+import { StynxMetricsService } from '@stynx-nyx/health';
 import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../../packages/data/test/support/postgres';
 import {
   recordNotes as liveRecordNotes,
@@ -199,7 +199,7 @@ async function seedBaseState(database: PostgresTestDatabase): Promise<void> {
   }
 }
 
-describe('@stynx/reference-api runtime suite', () => {
+describe('@stynx-nyx/reference-api runtime suite', () => {
   let postgres: PostgresTestDatabase;
   let redis: StartedTestContainer;
   let localstack: StartedTestContainer;
@@ -441,9 +441,9 @@ describe('@stynx/reference-api runtime suite', () => {
       .start();
     localstackEndpoint = `http://${localstack.getHost()}:${localstack.getMappedPort(4566)}`;
 
-    process.env.STYNX_OWNER_DATABASE_URL = postgres.connectionString('@stynx/reference-api:owner');
-    process.env.STYNX_APP_DATABASE_URL = postgres.connectionString('@stynx/reference-api:app');
-    process.env.STYNX_READER_DATABASE_URL = postgres.connectionString('@stynx/reference-api:reader');
+    process.env.STYNX_OWNER_DATABASE_URL = postgres.connectionString('@stynx-nyx/reference-api:owner');
+    process.env.STYNX_APP_DATABASE_URL = postgres.connectionString('@stynx-nyx/reference-api:app');
+    process.env.STYNX_READER_DATABASE_URL = postgres.connectionString('@stynx-nyx/reference-api:reader');
     process.env.STYNX_REDIS_URL = redisUrl;
     process.env.STYNX_STORAGE_ENDPOINT = localstackEndpoint;
     process.env.STYNX_STORAGE_FORCE_PATH_STYLE = 'true';

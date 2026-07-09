@@ -1,8 +1,8 @@
-[**@stynx/pdf-a**](../index.md)
+[**@stynx-nyx/pdf-a**](../index.md)
 
 ---
 
-[@stynx/pdf-a](../index.md) / PDF_A_VALIDATION_DURATION_MS
+[@stynx-nyx/pdf-a](../index.md) / PDF_A_VALIDATION_DURATION_MS
 
 # Variable: PDF_A_VALIDATION_DURATION_MS
 

@@ -2,9 +2,9 @@
 title: backend/auth
 ---
 
-# `StynxBackendAuthModule` — `@stynx/auth` wired into the backend pipeline
+# `StynxBackendAuthModule` — `@stynx-nyx/auth` wired into the backend pipeline
 
-`StynxBackendAuthModule` wraps `@stynx/auth` for the canonical backend composition. It mounts `StynxAuthModule.forRoot(authOptions)` with the pipeline's expected DI bindings (the `DefaultPrincipalMapper`, `ActorContextInterceptor`, `StynxAuthGuard` as global `APP_GUARD`).
+`StynxBackendAuthModule` wraps `@stynx-nyx/auth` for the canonical backend composition. It mounts `StynxAuthModule.forRoot(authOptions)` with the pipeline's expected DI bindings (the `DefaultPrincipalMapper`, `ActorContextInterceptor`, `StynxAuthGuard` as global `APP_GUARD`).
 
 ## When to mount
 
@@ -13,7 +13,7 @@ Always, for any app needing authenticated endpoints. Mount after `StynxPlatformP
 ## Wiring
 
 ```ts
-import { StynxBackendAuthModule } from '@stynx/backend';
+import { StynxBackendAuthModule } from '@stynx-nyx/backend';
 
 StynxBackendAuthModule.forRoot({
   verifier: 'cognito',
@@ -22,16 +22,16 @@ StynxBackendAuthModule.forRoot({
 });
 ```
 
-Options are the underlying `StynxAuthModule.forRoot()` shape — see [`@stynx/auth`](/docs/packages/auth/) for the full schema.
+Options are the underlying `StynxAuthModule.forRoot()` shape — see [`@stynx-nyx/auth`](/docs/packages/auth/) for the full schema.
 
 ## Configuration
 
-Forwarded to `@stynx/auth`'s `StynxAuthOptions`. The backend submodule adds:
+Forwarded to `@stynx-nyx/auth`'s `StynxAuthOptions`. The backend submodule adds:
 
 | Option            | Type                    | Default                                              | Description                              |
 | ----------------- | ----------------------- | ---------------------------------------------------- | ---------------------------------------- |
-| `principalMapper` | `(claims) => Principal` | `DefaultPrincipalMapper` (in `@stynx/backend`)       | Override the claim-to-principal mapping. |
-| `tenantResolver`  | `TenantResolver`        | `RequiredTenantHeaderResolver` (in `@stynx/backend`) | Override the tenant resolution strategy. |
+| `principalMapper` | `(claims) => Principal` | `DefaultPrincipalMapper` (in `@stynx-nyx/backend`)       | Override the claim-to-principal mapping. |
+| `tenantResolver`  | `TenantResolver`        | `RequiredTenantHeaderResolver` (in `@stynx-nyx/backend`) | Override the tenant resolution strategy. |
 
 ## Common pitfalls
 
@@ -40,6 +40,6 @@ Forwarded to `@stynx/auth`'s `StynxAuthOptions`. The backend submodule adds:
 
 ## Related
 
-- [`@stynx/auth`](/docs/packages/auth/) — the underlying package.
+- [`@stynx-nyx/auth`](/docs/packages/auth/) — the underlying package.
 - [`backend/authorization`](/docs/packages/backend/authorization/) — sibling submodule; permission predicate evaluator.
 - [`backend/pipeline`](/docs/packages/backend/pipeline/) — mount before this.

@@ -1,8 +1,8 @@
-[**@stynx/data**](../index.md)
+[**@stynx-nyx/data**](../index.md)
 
 ---
 
-[@stynx/data](../index.md) / ArchiveMirrorDriftError
+[@stynx-nyx/data](../index.md) / ArchiveMirrorDriftError
 
 # Class: ArchiveMirrorDriftError
 

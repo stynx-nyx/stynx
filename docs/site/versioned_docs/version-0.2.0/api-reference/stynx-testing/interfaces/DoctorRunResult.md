@@ -1,8 +1,8 @@
-[**@stynx/testing**](../index.md)
+[**@stynx-nyx/testing**](../index.md)
 
 ---
 
-[@stynx/testing](../index.md) / DoctorRunResult
+[@stynx-nyx/testing](../index.md) / DoctorRunResult
 
 # Interface: DoctorRunResult
 

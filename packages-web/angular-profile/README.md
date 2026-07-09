@@ -1,6 +1,6 @@
 # `@stynx-web/angular-profile` — Angular user-profile UI: edit, preferences, security, hosted-action handoff
 
-`@stynx-web/angular-profile` is the Angular user-profile package. It provides profile-edit, preferences-form, and profile-security components, a hosted-auth-action handoff component (for IdP-hosted flows like password change / MFA), an unsaved-changes route guard, a `ProfileService`, and ready-to-mount routes. The security + account-deletion flows tie into the backend's [`@stynx/privacy`](/docs/packages/privacy/) subject-rights endpoints.
+`@stynx-web/angular-profile` is the Angular user-profile package. It provides profile-edit, preferences-form, and profile-security components, a hosted-auth-action handoff component (for IdP-hosted flows like password change / MFA), an unsaved-changes route guard, a `ProfileService`, and ready-to-mount routes. The security + account-deletion flows tie into the backend's [`@stynx-nyx/privacy`](/docs/packages/privacy/) subject-rights endpoints.
 
 ## Purpose
 
@@ -8,7 +8,7 @@ Apps need a "my account" area: edit profile, set preferences, change password / 
 
 You reach for it when your app has a user account / settings area.
 
-What it does NOT do: it doesn't authenticate (that's `@stynx-web/angular-auth`). It doesn't perform the actual erasure (the backend `@stynx/privacy` does; this initiates the request).
+What it does NOT do: it doesn't authenticate (that's `@stynx-web/angular-auth`). It doesn't perform the actual erasure (the backend `@stynx-nyx/privacy` does; this initiates the request).
 
 ## Audience
 
@@ -102,21 +102,21 @@ import { ProfileService } from '@stynx-web/angular-profile';
 export class DeleteAccount {
   private readonly profile = inject(ProfileService);
   async confirmDelete() {
-    await this.profile.requestAccountDeletion(); // hits @stynx/privacy erasure endpoint
+    await this.profile.requestAccountDeletion(); // hits @stynx-nyx/privacy erasure endpoint
   }
 }
 ```
 
 ## Common pitfalls
 
-- **Account-deletion without backend privacy module** — `requestAccountDeletion()` calls the `@stynx/privacy` subject-rights endpoint; if that module isn't mounted server-side, it 404s.
+- **Account-deletion without backend privacy module** — `requestAccountDeletion()` calls the `@stynx-nyx/privacy` subject-rights endpoint; if that module isn't mounted server-side, it 404s.
 - **Hosted-action handoff redirect loop** — misconfigured return URL bounces the user. Ensure `hostedActionUrl` + return URI are registered with the IdP.
 - **Unsaved-changes guard on a multi-step form** — the guard fires on any navigation; for wizards, suppress it between steps.
 
 ## Related packages
 
 - [`@stynx-web/angular-auth`](/docs/packages-web/angular-auth/) — auth + the IdP the hosted-action handoff uses.
-- [`@stynx/privacy`](/docs/packages/privacy/) — the backend subject-rights endpoints (account deletion).
+- [`@stynx-nyx/privacy`](/docs/packages/privacy/) — the backend subject-rights endpoints (account deletion).
 
 ## TypeDoc reference
 

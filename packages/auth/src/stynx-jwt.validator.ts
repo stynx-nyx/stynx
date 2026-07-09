@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { SessionJwtSigningService } from '@stynx/sessions';
+import { SessionJwtSigningService } from '@stynx-nyx/sessions';
 import { STYNX_AUTH_OPTIONS } from './tokens';
 import type { ResolvedStynxAuthModuleOptions, StynxAccessTokenClaims } from './types';
 import { verifyJwtWithJwk } from './utils';

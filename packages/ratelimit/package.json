@@ -1,5 +1,5 @@
 {
-  "name": "@stynx/ratelimit",
+  "name": "@stynx-nyx/ratelimit",
   "version": "1.0.0",
   "description": "Rate limiting primitives for stynx",
   "main": "dist/ratelimit/src/index.js",
@@ -27,9 +27,9 @@
     "stryker": "pnpm exec stryker run stryker.conf.mjs"
   },
   "dependencies": {
-    "@stynx/auth": "workspace:*",
-    "@stynx/contracts": "workspace:*",
-    "@stynx/data": "workspace:*",
+    "@stynx-nyx/auth": "workspace:*",
+    "@stynx-nyx/contracts": "workspace:*",
+    "@stynx-nyx/data": "workspace:*",
     "redis": "^5.12.1"
   },
   "peerDependencies": {

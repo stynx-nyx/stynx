@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / GovBrSandboxState
+[@stynx-nyx/signature](../index.md) / GovBrSandboxState
 
 # Type Alias: GovBrSandboxState
 

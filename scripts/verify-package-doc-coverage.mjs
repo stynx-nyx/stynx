@@ -139,7 +139,7 @@ function extractCitedSymbols(readmePath) {
     const id = span.match(/^([A-Z]\w+)/);
     if (id) cited.add(id[1]);
   }
-  // Code blocks: lines like `Foo.bar()` or `import { Foo } from '@stynx/...'`
+  // Code blocks: lines like `Foo.bar()` or `import { Foo } from '@stynx-nyx/...'`
   const codeBlocks = /```[\s\S]+?```/g;
   while ((m = codeBlocks.exec(src)) !== null) {
     const block = m[0];

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { Injectable, Logger, Optional, Inject } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { Database } from '@stynx/data';
+import { Database } from '@stynx-nyx/data';
 import { planAuditDetach } from './retention';
 import {
   STYNX_AUDIT_ARCHIVE_STORE,

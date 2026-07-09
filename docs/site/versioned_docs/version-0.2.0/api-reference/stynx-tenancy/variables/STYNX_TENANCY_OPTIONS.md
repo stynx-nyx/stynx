@@ -1,8 +1,8 @@
-[**@stynx/tenancy**](../index.md)
+[**@stynx-nyx/tenancy**](../index.md)
 
 ---
 
-[@stynx/tenancy](../index.md) / STYNX_TENANCY_OPTIONS
+[@stynx-nyx/tenancy](../index.md) / STYNX_TENANCY_OPTIONS
 
 # Variable: STYNX_TENANCY_OPTIONS
 

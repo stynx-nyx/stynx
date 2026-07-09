@@ -7,7 +7,7 @@ import request from 'supertest';
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
 import { Client } from 'pg';
-import { StynxDataModule } from '@stynx/data';
+import { StynxDataModule } from '@stynx-nyx/data';
 import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
 import { InMemorySessionStore } from '../../src/in-memory-session-store';
 import { RedisSessionStore } from '../../src/redis-session-store';
@@ -163,9 +163,9 @@ describe('StynxSessionsModule integration', () => {
       imports: [
         StynxDataModule.forRoot({
           connections: {
-            owner: { connectionString: database.connectionString('@stynx/sessions:owner') },
-            app: { connectionString: database.connectionString('@stynx/sessions:app') },
-            reader: { connectionString: database.connectionString('@stynx/sessions:reader') },
+            owner: { connectionString: database.connectionString('@stynx-nyx/sessions:owner') },
+            app: { connectionString: database.connectionString('@stynx-nyx/sessions:app') },
+            reader: { connectionString: database.connectionString('@stynx-nyx/sessions:reader') },
           },
           migrations: { enabled: true },
         }),

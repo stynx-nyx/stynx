@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / RequestDbClientLifecycle
+[@stynx-nyx/backend](../index.md) / RequestDbClientLifecycle
 
 # Interface: RequestDbClientLifecycle
 

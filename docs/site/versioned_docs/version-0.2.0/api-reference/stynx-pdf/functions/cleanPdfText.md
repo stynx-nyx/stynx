@@ -1,8 +1,8 @@
-[**@stynx/pdf**](../index.md)
+[**@stynx-nyx/pdf**](../index.md)
 
 ---
 
-[@stynx/pdf](../index.md) / cleanPdfText
+[@stynx-nyx/pdf](../index.md) / cleanPdfText
 
 # Function: cleanPdfText()
 

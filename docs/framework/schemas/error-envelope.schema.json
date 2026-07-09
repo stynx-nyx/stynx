@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://stynx.dev/schemas/error-envelope.schema.json",
   "title": "stynx HTTP error envelope",
-  "description": "Stable shape of error responses produced by @stynx/core's StynxErrorFilter. Every stynx HTTP endpoint emits this envelope on 4xx + 5xx responses. Source-of-truth for the canonical error-response shape referenced by INV-ERROR-001 and the baseline errors catalogue at docs/framework/contracts/errors.json.",
+  "description": "Stable shape of error responses produced by @stynx-nyx/core's StynxErrorFilter. Every stynx HTTP endpoint emits this envelope on 4xx + 5xx responses. Source-of-truth for the canonical error-response shape referenced by INV-ERROR-001 and the baseline errors catalogue at docs/framework/contracts/errors.json.",
   "type": "object",
   "required": ["statusCode", "errorCode", "message", "requestId"],
   "additionalProperties": false,

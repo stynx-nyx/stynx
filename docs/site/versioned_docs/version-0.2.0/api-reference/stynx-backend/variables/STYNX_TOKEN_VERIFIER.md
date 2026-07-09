@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / STYNX_TOKEN_VERIFIER
+[@stynx-nyx/backend](../index.md) / STYNX_TOKEN_VERIFIER
 
 # Variable: STYNX_TOKEN_VERIFIER
 

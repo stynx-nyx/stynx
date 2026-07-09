@@ -8,9 +8,9 @@ const repoRoot = process.cwd();
 const write = process.argv.includes('--write');
 const baselinePath = resolve(repoRoot, 'docs/framework/contracts/public-api-baselines.json');
 const packageSpecs = [
-  { name: '@stynx/integration-adapter', dir: 'packages/integration-adapter' },
-  { name: '@stynx/pdf', dir: 'packages/pdf' },
-  { name: '@stynx/signature', dir: 'packages/signature' },
+  { name: '@stynx-nyx/integration-adapter', dir: 'packages/integration-adapter' },
+  { name: '@stynx-nyx/pdf', dir: 'packages/pdf' },
+  { name: '@stynx-nyx/signature', dir: 'packages/signature' },
   { name: '@stynx-web/sdk', dir: 'packages-web/sdk' },
 ];
 

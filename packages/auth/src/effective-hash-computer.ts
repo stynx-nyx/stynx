@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { Database, type Transaction } from '@stynx/data';
+import { Database, type Transaction } from '@stynx-nyx/data';
 import { computePermissionsHash, expandPermissionWildcards } from './utils';
 
 interface IdRow {

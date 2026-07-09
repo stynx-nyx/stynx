@@ -1,7 +1,7 @@
 import { createStrykerConfig } from '../../tools/stryker/base.mjs';
 
 export default createStrykerConfig({
-  packageName: '@stynx/sessions',
+  packageName: '@stynx-nyx/sessions',
   vitestConfig: './vitest.stryker.config.ts',
   mutate: [
     'src/in-memory-session-store.ts',

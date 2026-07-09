@@ -3,7 +3,7 @@ import { HttpException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { lastValueFrom, Observable } from 'rxjs';
-import { StynxDataModule, Database } from '@stynx/data';
+import { StynxDataModule, Database } from '@stynx-nyx/data';
 import { STYNX_IDEMPOTENT_ROUTE } from '../../src/constants';
 import { DatabaseIdempotencyStore } from '../../src/database-idempotency.store';
 import { IdempotencyInterceptor } from '../../src/idempotency.interceptor';
@@ -59,9 +59,9 @@ describe('Idempotency integration', () => {
       imports: [
         StynxDataModule.forRoot({
           connections: {
-            owner: { connectionString: postgres.connectionString('@stynx/idempotency:owner') },
-            app: { connectionString: postgres.connectionString('@stynx/idempotency:app') },
-            reader: { connectionString: postgres.connectionString('@stynx/idempotency:reader') },
+            owner: { connectionString: postgres.connectionString('@stynx-nyx/idempotency:owner') },
+            app: { connectionString: postgres.connectionString('@stynx-nyx/idempotency:app') },
+            reader: { connectionString: postgres.connectionString('@stynx-nyx/idempotency:reader') },
           },
           migrations: { enabled: true },
         }),

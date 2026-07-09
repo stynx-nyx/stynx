@@ -1,8 +1,8 @@
-[**@stynx/logging**](../index.md)
+[**@stynx-nyx/logging**](../index.md)
 
 ---
 
-[@stynx/logging](../index.md) / ResponseLike
+[@stynx-nyx/logging](../index.md) / ResponseLike
 
 # Interface: ResponseLike
 

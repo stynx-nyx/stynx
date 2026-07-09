@@ -1,6 +1,6 @@
 import { Logger } from '@nestjs/common';
-import { PermissionCache } from '@stynx/auth';
-import { auditExpect, expectRLSIsolated } from '@stynx/testing';
+import { PermissionCache } from '@stynx-nyx/auth';
+import { auditExpect, expectRLSIsolated } from '@stynx-nyx/testing';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import {
@@ -85,7 +85,7 @@ async function countAuditRows(
   );
 }
 
-describe('@stynx/reference-api e2e error matrix', () => {
+describe('@stynx-nyx/reference-api e2e error matrix', () => {
   let context: ReferenceApiE2eContext;
   let adminA: AuthenticatedAgent;
   let viewerA: AuthenticatedAgent;

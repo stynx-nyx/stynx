@@ -260,10 +260,10 @@ function resolvePackageInfo(file, root) {
   const parts = relativePath.split(sep);
   if (parts[0] === 'packages' && parts[1]) {
     const packageDir = join(root, 'packages', parts[1]);
-    return packageInfoFromDir(packageDir, `@stynx/${parts[1]}`, `packages/${parts[1]}`);
+    return packageInfoFromDir(packageDir, `@stynx-nyx/${parts[1]}`, `packages/${parts[1]}`);
   }
   if (parts[0] === 'reference' && parts[1] === 'api') {
-    return packageInfoFromDir(join(root, 'reference', 'api'), '@stynx/reference-api', 'reference/api');
+    return packageInfoFromDir(join(root, 'reference', 'api'), '@stynx-nyx/reference-api', 'reference/api');
   }
   if (parts[0] === 'domain' && parts[1] === 'demo-bookmark' && parts[2] === 'api') {
     return packageInfoFromDir(

@@ -6,7 +6,7 @@ title: 'PORM Flow Deprecation Readiness'
 
 **Authority:** Architect and Inspector, per DEVAI Constitution Article 6.
 **Last updated:** 2026-05-18.
-**Scope:** `@stynx/flow`, `@stynx-web/angular-flow`, and reference app proof needed before replacing `../porm` local Flow.
+**Scope:** `@stynx-nyx/flow`, `@stynx-web/angular-flow`, and reference app proof needed before replacing `../porm` local Flow.
 
 This note is the consuming-repo cutover plan for `../porm`. It does not authorize the sibling repo migration by itself; execute that work only when explicitly requested.
 
@@ -38,7 +38,7 @@ This note is the consuming-repo cutover plan for `../porm`. It does not authoriz
    - list frontend imports/routes under `../porm/frontend/src/**/flow/**`;
    - list direct SQL references to `flow.*` tables/functions.
 2. Align package versions:
-   - add `@stynx/flow` to the PORM backend workspace;
+   - add `@stynx-nyx/flow` to the PORM backend workspace;
    - add `@stynx-web/angular-flow` to the PORM frontend workspace;
    - align peer versions for Nest, Angular, STYNX auth/data/core, and SDK packages.
 3. Database migration:
@@ -61,7 +61,7 @@ This note is the consuming-repo cutover plan for `../porm`. It does not authoriz
 7. Removal:
    - delete PORM local Flow code only after package-backed tests are green;
    - keep a data rollback plan for one release window if the production migration has already run;
-   - update PORM docs to mark local Flow as deprecated by `@stynx/flow` and `@stynx-web/angular-flow`.
+   - update PORM docs to mark local Flow as deprecated by `@stynx-nyx/flow` and `@stynx-web/angular-flow`.
 
 ## Deferrals That Do Not Block Deprecation
 

@@ -2,8 +2,8 @@ import { randomUUID } from 'node:crypto';
 import { basename } from 'node:path';
 import { Inject, Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { RequestContext } from '@stynx/core';
-import { Database, documents } from '@stynx/data';
+import { RequestContext } from '@stynx-nyx/core';
+import { Database, documents } from '@stynx-nyx/data';
 import { eq } from 'drizzle-orm';
 import {
   StorageCollectionNotFoundError,

@@ -1,8 +1,8 @@
-[**@stynx/logging**](../index.md)
+[**@stynx-nyx/logging**](../index.md)
 
 ---
 
-[@stynx/logging](../index.md) / DEFAULT_REDACT_PATHS
+[@stynx-nyx/logging](../index.md) / DEFAULT_REDACT_PATHS
 
 # Variable: DEFAULT_REDACT_PATHS
 

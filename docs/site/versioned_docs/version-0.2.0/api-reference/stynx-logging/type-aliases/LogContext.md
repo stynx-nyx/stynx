@@ -1,8 +1,8 @@
-[**@stynx/logging**](../index.md)
+[**@stynx-nyx/logging**](../index.md)
 
 ---
 
-[@stynx/logging](../index.md) / LogContext
+[@stynx-nyx/logging](../index.md) / LogContext
 
 # Type Alias: LogContext
 

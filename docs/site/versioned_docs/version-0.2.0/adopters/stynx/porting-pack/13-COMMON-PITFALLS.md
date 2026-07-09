@@ -207,10 +207,10 @@ updated_by SET NOT NULL`, or — worse — succeeds silently with
 - **Symptom:** After cutover, every authenticated request returns 401
   Unauthorized, or — subtler — requests succeed but every query
   returns zero rows because `app.tenant_id` is `NULL`. Logs show
-  `TenantContextMissingError` from `@stynx/data` (`_DISCOVERY.md`
+  `TenantContextMissingError` from `@stynx-nyx/data` (`_DISCOVERY.md`
   §10).
 - **Root cause:** Legacy JWT shape (`STYNX-ADOPT-EXAMPLE.md` §1.2) is
-  typically `&#123; sub, email, org_id &#125;`. STYNX's `@stynx/auth` expects
+  typically `&#123; sub, email, org_id &#125;`. STYNX's `@stynx-nyx/auth` expects
   `&#123; sub, sid, tenant_id, perms_hash &#125;` (per §6 #4). The middleware
   swap deletes the legacy middleware but does not migrate
   already-issued tokens.
@@ -296,7 +296,7 @@ updated_by SET NOT NULL`, or — worse — succeeds silently with
   ```bash
   rg -n -- '@softdelete_fk:' migrations/ apps/
   rg -o -- '@softdelete_fk:\s+\w+' migrations/ apps/ | sort | uniq -c
-  pnpm --filter @stynx/data test --testPathPattern 'cascade.*\.spec\.ts'
+  pnpm --filter @stynx-nyx/data test --testPathPattern 'cascade.*\.spec\.ts'
   ```
 
 - **Citation:** `soft-delete-model.md` §14.7; `STYNX-ADOPT-EXAMPLE.md`
@@ -539,7 +539,7 @@ ROW LEVEL SECURITY`. Hand-written mirrors often paste the live
 
   ```bash
   rg -nU --type sql 'CREATE TABLE archive\.' migrations/
-  pnpm --filter @stynx/migration-linter test  # see FIND-004
+  pnpm --filter @stynx-nyx/migration-linter test  # see FIND-004
   psql "$STAGING_URL" -At -f scripts/probe-rls-symmetry.sql
   pnpm --filter reference/api test \
     --testPathPattern 'rls-cross-tenant\.spec\.ts'
@@ -624,18 +624,18 @@ soft_delete: true, archived: true &#125;`) and one for the archive
   similar counters drift.
 - **Root cause:** Per `audit-model.md` §9.3, `audit.fn_row_change()`
   reads `app.archive_move` to _suppress_ the archive INSERT trigger
-  during a live → archive move. `@stynx/data`'s `softDelete` /
+  during a live → archive move. `@stynx-nyx/data`'s `softDelete` /
   `restoreFromArchive` / `hardDeleteFromArchive` (`_DISCOVERY.md`
   §10) all set the GUC. Hand-written code that issues the archive
-  INSERT + live DELETE outside `@stynx/data` (one-off SQL during an
+  INSERT + live DELETE outside `@stynx-nyx/data` (one-off SQL during an
   incident, or a service that didn't inject `Transaction`) does
   **not** set the GUC, so the archive INSERT trigger fires normally.
   The audit-model spec calls this out: "get the GUC handling wrong
   and you double-count or miss audit rows." (§9.3 intro.)
-- **Fix:** Never write archive moves outside `@stynx/data`.
+- **Fix:** Never write archive moves outside `@stynx-nyx/data`.
 
   ```typescript
-  // BAD — bypasses @stynx/data; GUC is unset.
+  // BAD — bypasses @stynx-nyx/data; GUC is unset.
   await pool.query(
     `
     INSERT INTO archive.sample_example_entity
@@ -645,7 +645,7 @@ soft_delete: true, archived: true &#125;`) and one for the archive
     [id],
   );
 
-  // GOOD — uses @stynx/data, which sets app.archive_move.
+  // GOOD — uses @stynx-nyx/data, which sets app.archive_move.
   await db.tx(async (trx) => {
     await trx.softDelete(exampleEntity, id);
   });
@@ -665,7 +665,7 @@ soft_delete: true, archived: true &#125;`) and one for the archive
 - **Detection:**
 
   ```bash
-  pnpm --filter @stynx/eslint-config exec eslint apps/ \
+  pnpm --filter @stynx-nyx/eslint-config exec eslint apps/ \
     --rule '{"no-restricted-imports": ["error", {"paths": ["pg", "pg-pool"]}]}'
   rg -nU 'INSERT\s+INTO\s+archive\.' apps/ packages/ \
     --glob '!packages/data/**'
@@ -679,10 +679,10 @@ soft_delete: true, archived: true &#125;`) and one for the archive
   ```
 
 - **Citation:** `audit-model.md` §9.3 ("Critical pitfalls (porting)"
-  item #1: "Custom archive movement code that bypasses `@stynx/data`
+  item #1: "Custom archive movement code that bypasses `@stynx-nyx/data`
   and forgets the GUC will produce duplicate audit rows."); audit
   **FIND-009** ("No ESLint rule blocking `pg`/`Pool` outside
-  `@stynx/data`").
+  `@stynx-nyx/data`").
 
 ---
 
@@ -792,7 +792,7 @@ table "role_permissions" violates foreign key constraint
 
 Before opening the cutover PR, confirm:
 
-- [ ] No raw `pool.query` / direct `pg` import outside `@stynx/data`
+- [ ] No raw `pool.query` / direct `pg` import outside `@stynx-nyx/data`
       (pitfall #11; FIND-009).
 - [ ] Every legacy `organization_id` column was triaged before rename
       (#1).
@@ -827,12 +827,12 @@ relying on a detection step that depends on them:
 
 - **FIND-004** — migration linter may still fail on repo migrations.
   Several "Detection" commands above invoke `pnpm --filter
-@stynx/migration-linter test`; if the linter is broken, fall back
+@stynx-nyx/migration-linter test`; if the linter is broken, fall back
   to the SQL probes shown alongside.
 - **FIND-009** — no ESLint rule blocking `pg`/`Pool` outside
-  `@stynx/data`. Pitfall #11's detection step assumes the rule is
+  `@stynx-nyx/data`. Pitfall #11's detection step assumes the rule is
   in place; if it isn't, add the rule as part of the porting PR.
-- **FIND-010** — `@stynx/privacy` directly imports `@aws-sdk/client-s3`
+- **FIND-010** — `@stynx-nyx/privacy` directly imports `@aws-sdk/client-s3`
   in violation of **I3**. Not introduced by porting, but if I3
   enforcement is wired (e.g. `eslint-plugin-boundaries`), expect it
   to flag privacy as well.

@@ -6,7 +6,7 @@
 
 import { sql } from 'drizzle-orm';
 import { check, pgSchema, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
-import { softDeletable, tenants, users } from '@stynx/data';
+import { softDeletable, tenants, users } from '@stynx-nyx/data';
 
 export const demoSchema = pgSchema('demo');
 

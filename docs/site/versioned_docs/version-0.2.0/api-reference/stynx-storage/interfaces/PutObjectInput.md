@@ -1,8 +1,8 @@
-[**@stynx/storage**](../index.md)
+[**@stynx-nyx/storage**](../index.md)
 
 ---
 
-[@stynx/storage](../index.md) / PutObjectInput
+[@stynx-nyx/storage](../index.md) / PutObjectInput
 
 # Interface: PutObjectInput
 

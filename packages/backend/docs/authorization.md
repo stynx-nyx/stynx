@@ -4,7 +4,7 @@ title: backend/authorization
 
 # `StynxAuthorizationModule` — role + permission predicate evaluator
 
-`StynxAuthorizationModule` is the authorization layer sibling to `backend/auth`. It evaluates `@RequirePermissions(...)` and `@Permission(...)` decorator metadata against the principal's resolved permission set (cached by `@stynx/auth`'s `PermissionCache`).
+`StynxAuthorizationModule` is the authorization layer sibling to `backend/auth`. It evaluates `@RequirePermissions(...)` and `@Permission(...)` decorator metadata against the principal's resolved permission set (cached by `@stynx-nyx/auth`'s `PermissionCache`).
 
 ## When to mount
 
@@ -13,7 +13,7 @@ Whenever you use the declarative permission decorators. The module is mounted au
 ## Wiring
 
 ```ts
-import { StynxAuthorizationModule, DefaultPolicyEvaluator } from '@stynx/backend';
+import { StynxAuthorizationModule, DefaultPolicyEvaluator } from '@stynx-nyx/backend';
 
 StynxAuthorizationModule.forRoot({
   evaluator: DefaultPolicyEvaluator,
@@ -33,10 +33,10 @@ The default `DefaultPolicyEvaluator` is a string-membership check against `Princ
 
 ## Common pitfalls
 
-- **Mounting without `backend/auth`** — the policy evaluator runs against `Principal.permissions`, which is populated by `@stynx/auth`'s guard. Without that, every request has an undefined principal.
+- **Mounting without `backend/auth`** — the policy evaluator runs against `Principal.permissions`, which is populated by `@stynx-nyx/auth`'s guard. Without that, every request has an undefined principal.
 - **Custom evaluator throwing instead of returning false** — throws bubble as 500 from the guard; return `false` for denial.
 
 ## Related
 
-- [`@stynx/auth`](/docs/packages/auth/) — provides `@Permission` decorator + permission cache.
+- [`@stynx-nyx/auth`](/docs/packages/auth/) — provides `@Permission` decorator + permission cache.
 - [`backend/auth`](/docs/packages/backend/auth/) — sibling submodule; mount first.

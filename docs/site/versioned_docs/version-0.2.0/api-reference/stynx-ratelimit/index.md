@@ -1,8 +1,8 @@
-**@stynx/ratelimit**
+**@stynx-nyx/ratelimit**
 
 ---
 
-# @stynx/ratelimit
+# @stynx-nyx/ratelimit
 
 Public rate-limit decorators, guards, policies, stores, metrics, and module exports.
 

@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / Sha256Options
+[@stynx-nyx/signature](../index.md) / Sha256Options
 
 # Interface: Sha256Options
 

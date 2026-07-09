@@ -1,8 +1,8 @@
-[**@stynx/tenancy**](../index.md)
+[**@stynx-nyx/tenancy**](../index.md)
 
 ---
 
-[@stynx/tenancy](../index.md) / TenantDetail
+[@stynx-nyx/tenancy](../index.md) / TenantDetail
 
 # Interface: TenantDetail
 

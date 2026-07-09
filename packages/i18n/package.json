@@ -1,5 +1,5 @@
 {
-  "name": "@stynx/i18n",
+  "name": "@stynx-nyx/i18n",
   "version": "1.0.0",
   "description": "Catalog aggregation, locale resolution, and localized error rendering for stynx",
   "main": "dist/i18n/src/index.js",
@@ -27,8 +27,8 @@
     "stryker": "pnpm exec stryker run stryker.conf.mjs"
   },
   "dependencies": {
-    "@stynx/core": "workspace:*",
-    "@stynx/data": "workspace:*",
+    "@stynx-nyx/core": "workspace:*",
+    "@stynx-nyx/data": "workspace:*",
     "intl-messageformat": "^11.2.2",
     "zod": "^4.3.6"
   },
@@ -41,8 +41,8 @@
   "devDependencies": {
     "@nestjs/platform-express": "^11.1.19",
     "@nestjs/testing": "^11.1.19",
-    "@stynx/testing": "workspace:*",
-    "@stynx/tenancy": "workspace:*",
+    "@stynx-nyx/testing": "workspace:*",
+    "@stynx-nyx/tenancy": "workspace:*",
     "@types/node": "24.12.4",
     "@types/supertest": "^7.2.0",
     "supertest": "^7.2.2",

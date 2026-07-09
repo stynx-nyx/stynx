@@ -1,14 +1,14 @@
-# `@stynx/health` — `/health` + `/readiness` endpoints with pluggable dependency checks
+# `@stynx-nyx/health` — `/health` + `/readiness` endpoints with pluggable dependency checks
 
-`@stynx/health` exposes Kubernetes-style liveness and readiness probes. `/health` returns 200 if the process is alive (no dep checks). `/readiness` runs registered checks (DB, Redis, S3, custom) and returns 200 only if all pass.
+`@stynx-nyx/health` exposes Kubernetes-style liveness and readiness probes. `/health` returns 200 if the process is alive (no dep checks). `/readiness` runs registered checks (DB, Redis, S3, custom) and returns 200 only if all pass.
 
 ## Purpose
 
-Every production container needs `/health` + `/readiness` for orchestration probes (Kubernetes, ECS, etc.). Hand-rolling per app drifts. `@stynx/health` provides the structure + a pluggable check registry.
+Every production container needs `/health` + `/readiness` for orchestration probes (Kubernetes, ECS, etc.). Hand-rolling per app drifts. `@stynx-nyx/health` provides the structure + a pluggable check registry.
 
 You reach for it on every STYNX app deployed to a container orchestrator.
 
-What it does NOT do: it's not metrics (use `@stynx/logging` for logs and a separate metrics layer for Prom-style). It doesn't run automatic alerting.
+What it does NOT do: it's not metrics (use `@stynx-nyx/logging` for logs and a separate metrics layer for Prom-style). It doesn't run automatic alerting.
 
 ## Audience
 
@@ -17,15 +17,15 @@ Backend developers + ops. The endpoints are consumed by Kubernetes liveness/read
 ## Install
 
 ```bash
-pnpm add @stynx/health
+pnpm add @stynx-nyx/health
 ```
 
-**Peer dependencies:** `@nestjs/common` `^11`, `@stynx/core` `^1`.
+**Peer dependencies:** `@nestjs/common` `^11`, `@stynx-nyx/core` `^1`.
 
 ## Quick start
 
 ```ts
-import { StynxHealthModule } from '@stynx/health';
+import { StynxHealthModule } from '@stynx-nyx/health';
 
 StynxHealthModule.forRoot({
   checks: [
@@ -139,8 +139,8 @@ StynxHealthModule.forRoot({ exposeInfo: true });
 
 ## Related packages
 
-- [`@stynx/core`](/docs/packages/core/) — provides `RequestContext` (rarely used here, but consistent).
-- [`@stynx/logging`](/docs/packages/logging/) — pair the metrics with structured logs.
+- [`@stynx-nyx/core`](/docs/packages/core/) — provides `RequestContext` (rarely used here, but consistent).
+- [`@stynx-nyx/logging`](/docs/packages/logging/) — pair the metrics with structured logs.
 
 ## TypeDoc reference
 

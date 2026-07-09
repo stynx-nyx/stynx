@@ -155,7 +155,7 @@ INVARIANT VIOLATIONS (must resolve before "STYNX: compliant")
 
   I1  No raw DB connection
       ✗ 43 call sites use `pool.query(...)` directly
-      ✗  2 files import `pg` directly (should go through @stynx/data)
+      ✗  2 files import `pg` directly (should go through @stynx-nyx/data)
       → Codemod available (Phase 2)
 
   I4  Every HTTP route has a permission
@@ -181,7 +181,7 @@ AUTH LAYER
   ✗ Custom JWT middleware at src/auth.middleware.ts
   ✗ No Cognito integration
   ✗ No session management; JWT is self-signed with static secret
-  → Replace with @stynx/auth in Phase 2 (mechanical); Cognito pool wiring in Phase 3
+  → Replace with @stynx-nyx/auth in Phase 2 (mechanical); Cognito pool wiring in Phase 3
 
 OTHER
 
@@ -212,19 +212,19 @@ Key takeaways:
 
 ### 3.1 `src/db.ts` after
 
-The file disappears entirely. `pg.Pool` is replaced by `@stynx/data`'s injected `Database`.
+The file disappears entirely. `pg.Pool` is replaced by `@stynx-nyx/data`'s injected `Database`.
 
 ```typescript
 // DELETED: src/db.ts
-// Database access now goes through @stynx/data's Database service.
+// Database access now goes through @stynx-nyx/data's Database service.
 ```
 
 ### 3.2 `src/auth.middleware.ts` after
 
-The old middleware is commented out and the app is rewired to `@stynx/auth`.
+The old middleware is commented out and the app is rewired to `@stynx-nyx/auth`.
 
 ```typescript
-// DEPRECATED in favor of @stynx/auth.
+// DEPRECATED in favor of @stynx-nyx/auth.
 // Left in-tree for one release to ease rollback; delete after cutover.
 ```
 
@@ -232,7 +232,7 @@ The old middleware is commented out and the app is rewired to `@stynx/auth`.
 
 ```typescript
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Database } from '@stynx/data';
+import { Database } from '@stynx-nyx/data';
 import { desc, eq } from 'drizzle-orm';
 import { resourceRecord } from '../schema';
 
@@ -327,8 +327,8 @@ COMMIT;
 ```typescript
 // src/schema/resource-record.ts -- generated
 import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { tenants } from '@stynx/data/schema';
-import { softDeletable } from '@stynx/data';
+import { tenants } from '@stynx-nyx/data/schema';
+import { softDeletable } from '@stynx-nyx/data';
 
 export const resourceRecord = softDeletable(
   pgTable('resource_record', {
@@ -355,7 +355,7 @@ export const resourceRecord = softDeletable(
 ```typescript
 // src/records/records.controller.ts
 import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
-import { Permission, TODO_PERMISSION } from '@stynx/auth';
+import { Permission, TODO_PERMISSION } from '@stynx-nyx/auth';
 
 @Controller('records')
 export class RecordsController {
@@ -432,7 +432,7 @@ FK ANNOTATIONS
     resource_record.owner_user_id               -> hide
 
 COGNITO WIRING
-  @stynx/auth is installed but Cognito User Pool ID is unset.
+  @stynx-nyx/auth is installed but Cognito User Pool ID is unset.
 ```
 
 This is the real adoption work: decisions that cannot be inferred mechanically.
@@ -450,13 +450,13 @@ Compliance report
 INVARIANT VIOLATIONS          0  ✓
 MANUAL CHECKLIST ITEMS        0  ✓
 TODO_PERMISSION PLACEHOLDERS  0  ✓
-@stynx/testing REQUIRED TESTS 12/12  ✓
+@stynx-nyx/testing REQUIRED TESTS 12/12  ✓
 stynx doctor                    ✓
 
 Status: STYNX compliant
 ```
 
-At this point the service consumes `@stynx/*` idiomatically. New features are built on STYNX rails; the adoption branch merges after the shadow period.
+At this point the service consumes `@stynx-nyx/*` idiomatically. New features are built on STYNX rails; the adoption branch merges after the shadow period.
 
 ---
 

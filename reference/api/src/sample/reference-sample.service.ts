@@ -3,9 +3,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { RequestContext } from '@stynx/core';
-import { Database, type SoftDeletableTable } from '@stynx/data';
-import { DocumentsService } from '@stynx/storage';
+import { RequestContext } from '@stynx-nyx/core';
+import { Database, type SoftDeletableTable } from '@stynx-nyx/data';
+import { DocumentsService } from '@stynx-nyx/storage';
 import { and, desc, eq } from 'drizzle-orm';
 import type {
   CompleteDocumentDto,

@@ -1,8 +1,8 @@
-[**@stynx/audit**](../index.md)
+[**@stynx-nyx/audit**](../index.md)
 
 ---
 
-[@stynx/audit](../index.md) / planAuditDetach
+[@stynx-nyx/audit](../index.md) / planAuditDetach
 
 # Function: planAuditDetach()
 

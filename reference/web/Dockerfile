@@ -9,7 +9,7 @@ COPY packages-web ./packages-web
 COPY reference/web ./reference/web
 
 RUN pnpm install --frozen-lockfile
-RUN pnpm --filter @stynx/reference-web build:web
+RUN pnpm --filter @stynx-nyx/reference-web build:web
 
 FROM node:24-alpine AS runtime
 # Patch base-image OS packages; Trivy gates HIGH/CRITICAL (e.g. CVE-2026-45447

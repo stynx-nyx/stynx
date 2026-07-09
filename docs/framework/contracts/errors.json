@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "version": "1.0.0",
   "title": "stynx baseline error contract",
-  "description": "Stable error response envelope every stynx endpoint produces via @stynx/core's StynxErrorFilter. Adopters extending with domain-specific errors author per-module *.errors.json files that reference this baseline.",
+  "description": "Stable error response envelope every stynx endpoint produces via @stynx-nyx/core's StynxErrorFilter. Adopters extending with domain-specific errors author per-module *.errors.json files that reference this baseline.",
   "envelope": {
     "shape": {
       "type": "object",

@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / STYNX_IDEMPOTENT_ROUTE
+[@stynx-nyx/backend](../index.md) / STYNX_IDEMPOTENT_ROUTE
 
 # Variable: STYNX_IDEMPOTENT_ROUTE
 

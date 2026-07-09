@@ -1,8 +1,8 @@
-[**@stynx/core**](../index.md)
+[**@stynx-nyx/core**](../index.md)
 
 ---
 
-[@stynx/core](../index.md) / Database
+[@stynx-nyx/core](../index.md) / Database
 
 # Abstract Class: Database
 

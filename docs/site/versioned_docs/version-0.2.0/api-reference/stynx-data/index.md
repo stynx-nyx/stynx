@@ -1,8 +1,8 @@
-**@stynx/data**
+**@stynx-nyx/data**
 
 ---
 
-# @stynx/data
+# @stynx-nyx/data
 
 Public data access exports for pools, migrations, transactions, schemas, and archive helpers.
 

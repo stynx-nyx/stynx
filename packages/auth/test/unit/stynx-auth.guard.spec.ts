@@ -1,6 +1,6 @@
 import type { ExecutionContext } from '@nestjs/common';
 import type { ModuleRef } from '@nestjs/core';
-import { SessionService } from '@stynx/sessions';
+import { SessionService } from '@stynx-nyx/sessions';
 import { STYNX_PUBLIC_ROUTE, STYNX_READONLY_ROUTE, STYNX_SYSTEM_ROUTE } from '../../src/decorators';
 import { StynxAuthGuard } from '../../src/stynx-auth.guard';
 

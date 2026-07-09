@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { RequestContext } from '@stynx/core';
+import { RequestContext } from '@stynx-nyx/core';
 import {
   Database,
   Transaction,
@@ -12,7 +12,7 @@ import {
   policySets as flowPolicySets,
   scopes as flowScopes,
   transitionEffects as flowTransitionEffects,
-} from '@stynx/data';
+} from '@stynx-nyx/data';
 import type { FlowJsonObject } from '../../types';
 
 export type DesignFlowRow = Record<string, unknown>;

@@ -5,8 +5,8 @@
 
 ## Problem
 
-Spec section 3 places `@stynx/idempotency` above `@stynx/auth` in the package
-DAG, but `@stynx/auth` imports `@NoIdempotent()` from `@stynx/idempotency`.
+Spec section 3 places `@stynx-nyx/idempotency` above `@stynx-nyx/auth` in the package
+DAG, but `@stynx-nyx/auth` imports `@NoIdempotent()` from `@stynx-nyx/idempotency`.
 
 ## Constraints
 
@@ -23,8 +23,8 @@ route contract from the controller that owns it.
 
 ## Decision
 
-Keep the dependency as a documented exception. `@stynx/auth` may import only the
-metadata decorator from `@stynx/idempotency`; it must not import idempotency
+Keep the dependency as a documented exception. `@stynx-nyx/auth` may import only the
+metadata decorator from `@stynx-nyx/idempotency`; it must not import idempotency
 stores, interceptors, module providers, or backend implementations.
 
 ## Migration
@@ -36,5 +36,5 @@ reviews.
 ## Rollback
 
 If the spec DAG becomes strict with no exceptions, move the shared decorator
-metadata into a lower package such as `@stynx/core` and update both auth and
+metadata into a lower package such as `@stynx-nyx/core` and update both auth and
 idempotency to consume that symbol.

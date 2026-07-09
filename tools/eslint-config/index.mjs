@@ -16,20 +16,20 @@ const workspaceRoot = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 
 const deepImportPatterns = [
   {
-    group: ['@stynx/*/*', '@stynx-web/*/*'],
+    group: ['@stynx-nyx/*/*', '@stynx-web/*/*'],
     message: 'Use barrel imports only; deep imports between workspace packages are forbidden.',
   },
 ];
 
 const pgImportPaths = ['pg', 'pg-pool', 'pg-native', 'node-postgres'].map((name) => ({
   name,
-  message: 'Raw PostgreSQL imports are only allowed inside @stynx/data and @stynx/cli.',
+  message: 'Raw PostgreSQL imports are only allowed inside @stynx-nyx/data and @stynx-nyx/cli.',
 }));
 
 const s3ImportPatterns = [
   {
     group: ['@aws-sdk/client-s3*'],
-    message: 'Direct S3 SDK imports are only allowed inside @stynx/storage.',
+    message: 'Direct S3 SDK imports are only allowed inside @stynx-nyx/storage.',
   },
 ];
 
@@ -48,30 +48,30 @@ const boundaryElements = [
 ];
 
 const tsdocPackages = new Set([
-  '@stynx/core',
-  '@stynx/auth',
-  '@stynx/data',
-  '@stynx/storage',
-  '@stynx/audit',
-  '@stynx/sessions',
-  '@stynx/tenancy',
-  '@stynx/privacy',
-  '@stynx/backend',
-  '@stynx/cli',
-  '@stynx/contracts',
-  '@stynx/feature-flags',
-  '@stynx/flow',
-  '@stynx/health',
-  '@stynx/i18n',
-  '@stynx/idempotency',
-  '@stynx/integration-adapter',
-  '@stynx/logging',
-  '@stynx/pdf',
-  '@stynx/pdf-a',
-  '@stynx/pdf-a-vera-docker',
-  '@stynx/ratelimit',
-  '@stynx/signature',
-  '@stynx/testing',
+  '@stynx-nyx/core',
+  '@stynx-nyx/auth',
+  '@stynx-nyx/data',
+  '@stynx-nyx/storage',
+  '@stynx-nyx/audit',
+  '@stynx-nyx/sessions',
+  '@stynx-nyx/tenancy',
+  '@stynx-nyx/privacy',
+  '@stynx-nyx/backend',
+  '@stynx-nyx/cli',
+  '@stynx-nyx/contracts',
+  '@stynx-nyx/feature-flags',
+  '@stynx-nyx/flow',
+  '@stynx-nyx/health',
+  '@stynx-nyx/i18n',
+  '@stynx-nyx/idempotency',
+  '@stynx-nyx/integration-adapter',
+  '@stynx-nyx/logging',
+  '@stynx-nyx/pdf',
+  '@stynx-nyx/pdf-a',
+  '@stynx-nyx/pdf-a-vera-docker',
+  '@stynx-nyx/ratelimit',
+  '@stynx-nyx/signature',
+  '@stynx-nyx/testing',
   '@stynx-web/angular',
   '@stynx-web/angular-audit',
   '@stynx-web/angular-auth',
@@ -233,7 +233,7 @@ const s3FetchRule = (allow) => allow
         {
           selector:
             "CallExpression[callee.name='fetch'] > Literal:first-child[value=/https?:\\/\\/.*s3[.-].*/]",
-          message: 'Fetch calls to direct S3 URLs are only allowed inside @stynx/storage.',
+          message: 'Fetch calls to direct S3 URLs are only allowed inside @stynx-nyx/storage.',
         },
       ],
     };
@@ -288,10 +288,10 @@ const createConfig = ({ files, tsconfig = './tsconfig.json', browser = false, ne
     rules: {
       ...sharedTypescriptRules,
       ...restrictedImportsRule({
-        allowPgImports: allowPgPool || ['@stynx/data', '@stynx/cli'].includes(currentPackageName()),
-        allowS3Imports: currentPackageName() === '@stynx/storage',
+        allowPgImports: allowPgPool || ['@stynx-nyx/data', '@stynx-nyx/cli'].includes(currentPackageName()),
+        allowS3Imports: currentPackageName() === '@stynx-nyx/storage',
       }),
-      ...s3FetchRule(allowS3Fetch || currentPackageName() === '@stynx/storage'),
+      ...s3FetchRule(allowS3Fetch || currentPackageName() === '@stynx-nyx/storage'),
       'boundaries/dependencies': [
         'error',
         {

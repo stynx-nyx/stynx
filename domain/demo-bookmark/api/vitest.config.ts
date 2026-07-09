@@ -7,12 +7,12 @@ const stynxPackages = [
   'sessions', 'storage', 'tenancy', 'testing',
 ];
 const stynxAlias = Object.fromEntries(
-  stynxPackages.map((p) => [`@stynx/${p}`, resolve(__dirname, `../../../packages/${p}/src/index.ts`)]),
+  stynxPackages.map((p) => [`@stynx-nyx/${p}`, resolve(__dirname, `../../../packages/${p}/src/index.ts`)]),
 );
 
 export default createVitestConfig({
   packageDir: __dirname,
-  packageName: '@stynx/demo-bookmark-api',
+  packageName: '@stynx-nyx/demo-bookmark-api',
   include: ['test/**/*.spec.ts', 'test/**/*.test.ts'],
   coverageThreshold: { statements: 0, branches: 0, functions: 0, lines: 0 },
   alias: stynxAlias,

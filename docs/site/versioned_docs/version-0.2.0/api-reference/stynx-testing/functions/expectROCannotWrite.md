@@ -1,8 +1,8 @@
-[**@stynx/testing**](../index.md)
+[**@stynx-nyx/testing**](../index.md)
 
 ---
 
-[@stynx/testing](../index.md) / expectROCannotWrite
+[@stynx-nyx/testing](../index.md) / expectROCannotWrite
 
 # Function: expectROCannotWrite()
 

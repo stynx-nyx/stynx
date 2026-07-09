@@ -180,7 +180,7 @@ C-4 is closed. C-5 (the next adopter pilot, post-D-A-7/-8/-9/-10/-11 closure) st
 | Session | Commit                     | Outcome                                                                                                                                                                                                                                              |
 | ------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | R1      | `2c0e0ab`                  | Post-Phase-21 baseline refresh: `.devai/constitution.md` pointer landed; 7 sensors emit SRs (`internal DEVAI state artifact (not published)`); `devai doctor --adopter` 6/6 PASS; `examples/` symlink dropped; CI workflow updated; **D-A-14** filed |
-| F-12    | `30337cd`                  | Commitlint regex accepts `Architect + Engineer:` style + `@stynx/*` scopes (pre-existing latent bug)                                                                                                                                                 |
+| F-12    | `30337cd`                  | Commitlint regex accepts `Architect + Engineer:` style + `@stynx-nyx/*` scopes (pre-existing latent bug)                                                                                                                                                 |
 | S1      | `47c6ccc`                  | `INV-RBAC-001-allowlist.json` + `core.pii_map` enriched with `legal_basis`/`retention` + new migration `0013`; **D-A-12, D-A-13** filed                                                                                                              |
 | S2      | `d3bec7b`                  | `apps/reference-&#123;api,web&#125;` → `reference/&#123;api,web&#125;` (161 files); typecheck 46/46 green                                                                                                                                            |
 | S5-1    | `cb734ac`                  | Commitlint adopter template, GOVERNANCE.md + AGENTS.md rewritten, `.codex/skills/` archived, `.codex/system.md` retired                                                                                                                              |
@@ -217,7 +217,7 @@ Companion brief authored at `../devai-phase-22-alignment.md` (next-session kicko
 
 | ID           | One-line description                                                                                            |
 | ------------ | --------------------------------------------------------------------------------------------------------------- |
-| F-9 step 2/N | Wire `domain/demo-bookmark/` services to `@stynx/data`; real tests; module-level CI green                       |
+| F-9 step 2/N | Wire `domain/demo-bookmark/` services to `@stynx-nyx/data`; real tests; module-level CI green                       |
 | F-16         | Re-author the 2 ADRs at `docs/meta/adr/` in DEVAI's schema-conformant form (check-adrs currently finds 0 files) |
 
 Both are stynx-side engineering work, neither blocks the pilot close.
@@ -248,7 +248,7 @@ Stynx becomes the canonical "DEVAI adopter at maturity" reference. C-5 starts fr
 | T6      | `16e6716`             | `/specs/` retired entirely (legacy archive deletion approved); 3 ADRs hand-promoted to F1 substrate                                                                                                                                                                                                        |
 | T7      | `8564198` + `a80c389` | `.codex/` retired entirely; `npm-security-upgrade-auditor` relocated to `tools/`; WIP-sweep revert (capture-restore pattern)                                                                                                                                                                               |
 | T3      | `f62f592`             | 2 ADRs re-authored in DEVAI schema-conformant form (closes F-16)                                                                                                                                                                                                                                           |
-| T2      | `e38ae83`             | demo-bookmark wired to `@stynx/data` + canonical `StynxAuthGuard + PermissionGuard`; 4 spec files (controller + service) green with 6 it.todo deferred to F-20                                                                                                                                             |
+| T2      | `e38ae83`             | demo-bookmark wired to `@stynx-nyx/data` + canonical `StynxAuthGuard + PermissionGuard`; 4 spec files (controller + service) green with 6 it.todo deferred to F-20                                                                                                                                             |
 | F-19    | `8441bb8`             | `jose@6` TS1479 suppressed via `@ts-ignore` in `packages/auth/src/cognito-token-verifier.ts`; closes the depth-3 typecheck regression in `domain/demo-bookmark/api`                                                                                                                                        |
 | F-20    | `0f6929e`             | jest + ts-jest wired for demo-bookmark-api; `jest.config.cjs` + `tsconfig.spec.json` authored at 3-level depth; test suite green 12/18 (6 it.todo for per-task-DB integration)                                                                                                                             |
 | T1      | `44b4c05`             | Post-Phase-22 baseline refresh: 7 L0 sensors green; **6/50 endpoints now `auth.required=false` via `@Public()`** (D-A-12 verified); inv-suggest drops 68 → 52 candidates; `sense-coverage` 14 links from 13 use-cases (D-A-18 verified); `inv-adherence-reverse` enumerates 779 surfaces (D-A-17 verified) |
@@ -709,8 +709,8 @@ F5 harness P   P   R   P   F   R   P   ·   F
 | **F1×T5**     | FAIL   | PASS                    | Added `FLOW`, `PERF`, `ERROR` to `.devai/config/domains.json#/client[]` taxonomy                                                                                                                                                                                                                                                                                                                                 |
 | **F1×T6**     | REVIEW | PASS                    | Authored `docs/meta/security/threat-model.md` (8 threats T-1..T-8 with mitigations + invariants + tests + residual risk per the partition expectation)                                                                                                                                                                                                                                                           |
 | **F1×T7**     | FAIL   | REVIEW                  | Promoted `INV-PERF-001` ("every release-gated endpoint must declare a latency SLO and stay within it") — REVIEW because no use-case yet carries explicit latency acceptance lines                                                                                                                                                                                                                                |
-| **F1×T8**     | FAIL   | PASS                    | Promoted `INV-ERROR-001` ("every state-mutating endpoint must declare its error contract") + authored `docs/framework/contracts/errors.json` (10 baseline error envelopes shaped per `@stynx/core`'s StynxErrorFilter)                                                                                                                                                                                           |
-| **F3×T1**     | FAIL   | (FAIL, different cause) | Fixed `tools/migration-linter/test/migration-linter.spec.ts` — reference migration path updated from `specs/STYNX-REFERENCE-MIGRATION.sql` (retired in C-4 Phase G/T6) to `reference/api/migrations/0001_reference.sql`. Workspace `pnpm test` no longer fails on migration-linter; **a different workspace test (`@stynx/i18n#test`) is now the cause** — out-of-scope PORM-FLOW WIP territory.                 |
+| **F1×T8**     | FAIL   | PASS                    | Promoted `INV-ERROR-001` ("every state-mutating endpoint must declare its error contract") + authored `docs/framework/contracts/errors.json` (10 baseline error envelopes shaped per `@stynx-nyx/core`'s StynxErrorFilter)                                                                                                                                                                                           |
+| **F3×T1**     | FAIL   | (FAIL, different cause) | Fixed `tools/migration-linter/test/migration-linter.spec.ts` — reference migration path updated from `specs/STYNX-REFERENCE-MIGRATION.sql` (retired in C-4 Phase G/T6) to `reference/api/migrations/0001_reference.sql`. Workspace `pnpm test` no longer fails on migration-linter; **a different workspace test (`@stynx-nyx/i18n#test`) is now the cause** — out-of-scope PORM-FLOW WIP territory.                 |
 | **F3×T4**     | REVIEW | PASS                    | Added `tests[]` entries to `docs/framework/arch/trace.json` for INV-RBAC-001 (3 test paths) + INV-PRIVACY-001 (2 test paths)                                                                                                                                                                                                                                                                                     |
 | **F4×T1, T2** | REVIEW | PASS                    | Extended UC-stynx-004 (dev-login flow) to claim the wildcard route `angular:66ada9255a8c` (404 fallback in `reference/web/src/app/app.routes.ts`)                                                                                                                                                                                                                                                                |
 | **F5×T3**     | FAIL   | REVIEW                  | Normalized action versions in `.github/workflows/devai-gates.yml` + `module-demo-bookmark.yml` (v4 → v6 for checkout/setup-node, v4 → v5 for pnpm, v4 → v7 for upload-artifact). REVIEW remains because some workflows still differ on permissions/concurrency block presence (8 declare permissions, 2 don't; 6 declare concurrency, 4 don't) — a configuration-completeness issue separate from version drift. |
@@ -719,7 +719,7 @@ F5 harness P   P   R   P   F   R   P   ·   F
 
 | Cell      | Reason for deferral                                                                                                                                                                               |
 | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **F3×T1** | Migration-linter fixed; current `pnpm test` failure is `@stynx/i18n#test` — investigation belongs to whoever owns PORM-FLOW WIP currently active in the workspace                                 |
+| **F3×T1** | Migration-linter fixed; current `pnpm test` failure is `@stynx-nyx/i18n#test` — investigation belongs to whoever owns PORM-FLOW WIP currently active in the workspace                                 |
 | **F5×T5** | `harness_idiomaticity` wants composite actions + reusable workflows + dependency cache — substantive engineering work, ~1-2 hours; deferred per the partition's "heavier ~60+ min" classification |
 | **F5×T9** | `harness_green_main` reports 58% success over the last 50 runs — historical; will improve as the F3×T1 cause is fixed but won't refresh until enough new green runs land                          |
 
@@ -853,7 +853,7 @@ Executed the "&lt; 30 min cheap wins" subset of the post-U7 burn-down inventory.
 | **F2×T5** | REVIEW  | `sense-lint` 120s timeout too short for full workspace                                                                         | DEVAI (add `--timeout-ms` flag) — file as D-A-32 |
 | **F3×T2** | REVIEW  | Coverage 63.9% &lt; 80% PASS threshold. Either raise per-package coverage or lower pack-config threshold                       | Stynx engineering OR pack config tune            |
 | **F3×T3** | REVIEW  | 4 packages below 0.10 test/source ratio (backend, contracts, flow, i18n)                                                       | Stynx engineering                                |
-| **F3×T1** | FAIL    | `@stynx/i18n#test` cascade (PORM-FLOW WIP)                                                                                     | Whoever owns PORM-FLOW                           |
+| **F3×T1** | FAIL    | `@stynx-nyx/i18n#test` cascade (PORM-FLOW WIP)                                                                                     | Whoever owns PORM-FLOW                           |
 | **F5×T5** | FAIL    | Composite actions + reusable workflows + caching                                                                               | Stynx (~1-2 hrs)                                 |
 | **F5×T9** | FAIL    | Historical 58% main green (cascades from F3×T1)                                                                                | Wait for F3×T1 fix + 20 new green runs           |
 | **F2×T4** | UNKNOWN | Platform migration `SET ROLE` issue → D-A-31                                                                                   | DEVAI Phase 31                                   |
@@ -1202,7 +1202,7 @@ this **per package**, not in aggregate:
     (CognitoAdminAdapter, CognitoTokenVerifier, RedisPermissionCacheBackend) are
     not touched by the existing int spec. Meaningful auth lift requires
     _authoring_ int specs that exercise those adapters against Cognito-local +
-    Redis containers (both are already provisioned by `@stynx/testing`).
+    Redis containers (both are already provisioned by `@stynx-nyx/testing`).
 
 ### What this means for the remaining four sub-80% packages
 
@@ -1226,7 +1226,7 @@ Three viable directions, ordered by ROI:
    are in the "sessions" category (already PASS via merge) vs the "auth"
    category (need new int specs).
 2. **Author missing auth/audit/flow int specs** against the existing
-   `@stynx/testing` harness (Cognito-local for auth, Postgres for audit's
+   `@stynx-nyx/testing` harness (Cognito-local for auth, Postgres for audit's
    sql-adapter, Postgres for flow design/forms/runtime). Estimated 3-5 hr
    total to flip 2-3 more packages.
 3. **Scaffold backend int suite** — ~3-4 hr. Largest single unlock (22%→~70%)
@@ -1344,7 +1344,7 @@ had no spec at all (DB-backed override + platform-config lookup).
 Per the U15 sequencing plan, the next move is the backend integration
 scaffold (the load-bearing flip for the F3×T2 cell). Backend has no
 existing int suite; needs a NestJS TestBed harness booting against a
-real Postgres (via the `@stynx/testing` create-test-app helper that
+real Postgres (via the `@stynx-nyx/testing` create-test-app helper that
 already provisions Postgres + Redis + LocalStack containers).
 
 Scorecard unchanged at 40/45 PASS (89%).

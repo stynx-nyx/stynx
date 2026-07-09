@@ -2,13 +2,13 @@ import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import JSZip from 'jszip';
-import { Database } from '@stynx/data';
+import { Database } from '@stynx-nyx/data';
 import {
   createTestApp,
   LGPD_FIXTURE_MIGRATIONS,
   lgpdFixturePiiMapYaml,
   seedLgpdFixture,
-} from '@stynx/testing';
+} from '@stynx-nyx/testing';
 import { PiiMapService } from '../../src/pii-map.service';
 import { PrivacyService } from '../../src/privacy.service';
 import { StynxPrivacyModule } from '../../src/privacy.module';

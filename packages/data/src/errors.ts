@@ -1,4 +1,4 @@
-import { StynxError } from '@stynx/core';
+import { StynxError } from '@stynx-nyx/core';
 
 export class StynxDataError extends StynxError {}
 

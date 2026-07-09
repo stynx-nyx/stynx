@@ -46,7 +46,7 @@ exports where applicable:
 
 The reference web app must keep Playwright and axe-based browser coverage wired
 through `pnpm frontend:a11y-gate` and its own `pnpm --filter
-@stynx/reference-web test:e2e` lane.
+@stynx-nyx/reference-web test:e2e` lane.
 
 ## Contract Evidence
 

@@ -1,8 +1,8 @@
-[**@stynx/flow**](../index.md)
+[**@stynx-nyx/flow**](../index.md)
 
 ---
 
-[@stynx/flow](../index.md) / DispatchFlowEffectsDto
+[@stynx-nyx/flow](../index.md) / DispatchFlowEffectsDto
 
 # Interface: DispatchFlowEffectsDto
 

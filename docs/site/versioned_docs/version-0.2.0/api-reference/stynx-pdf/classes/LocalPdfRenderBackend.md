@@ -1,8 +1,8 @@
-[**@stynx/pdf**](../index.md)
+[**@stynx-nyx/pdf**](../index.md)
 
 ---
 
-[@stynx/pdf](../index.md) / LocalPdfRenderBackend
+[@stynx-nyx/pdf](../index.md) / LocalPdfRenderBackend
 
 # Class: LocalPdfRenderBackend
 

@@ -1,8 +1,8 @@
-[**@stynx/data**](../index.md)
+[**@stynx-nyx/data**](../index.md)
 
 ---
 
-[@stynx/data](../index.md) / storageSchema
+[@stynx-nyx/data](../index.md) / storageSchema
 
 # Variable: storageSchema
 

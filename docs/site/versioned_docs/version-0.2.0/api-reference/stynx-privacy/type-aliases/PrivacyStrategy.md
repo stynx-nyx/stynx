@@ -1,8 +1,8 @@
-[**@stynx/privacy**](../index.md)
+[**@stynx-nyx/privacy**](../index.md)
 
 ---
 
-[@stynx/privacy](../index.md) / PrivacyStrategy
+[@stynx-nyx/privacy](../index.md) / PrivacyStrategy
 
 # Type Alias: PrivacyStrategy
 

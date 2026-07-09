@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / ProviderSignResult
+[@stynx-nyx/signature](../index.md) / ProviderSignResult
 
 # Interface: ProviderSignResult
 

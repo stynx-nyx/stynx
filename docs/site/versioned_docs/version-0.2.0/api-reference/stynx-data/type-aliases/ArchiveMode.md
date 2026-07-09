@@ -1,8 +1,8 @@
-[**@stynx/data**](../index.md)
+[**@stynx-nyx/data**](../index.md)
 
 ---
 
-[@stynx/data](../index.md) / ArchiveMode
+[@stynx-nyx/data](../index.md) / ArchiveMode
 
 # Type Alias: ArchiveMode
 

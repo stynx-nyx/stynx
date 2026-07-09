@@ -1,8 +1,8 @@
-[**@stynx/ratelimit**](../index.md)
+[**@stynx-nyx/ratelimit**](../index.md)
 
 ---
 
-[@stynx/ratelimit](../index.md) / RequestLike
+[@stynx-nyx/ratelimit](../index.md) / RequestLike
 
 # Interface: RequestLike
 

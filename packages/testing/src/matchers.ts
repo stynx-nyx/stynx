@@ -1,12 +1,12 @@
 import type { AnyPgTable } from 'drizzle-orm/pg-core';
 import { getTableConfig } from 'drizzle-orm/pg-core';
 import { getTableColumns } from 'drizzle-orm/utils';
-import type { Database, SoftDeletableTable } from '@stynx/data';
+import type { Database, SoftDeletableTable } from '@stynx-nyx/data';
 import {
   ReadOnlyViolationError,
   RestoreConflictError,
   SoftDeleteBlockedError,
-} from '@stynx/data';
+} from '@stynx-nyx/data';
 
 function tableMeta(table: AnyPgTable) {
   const config = getTableConfig(table);

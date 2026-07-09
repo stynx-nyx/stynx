@@ -1,8 +1,8 @@
-[**@stynx/sessions**](../index.md)
+[**@stynx-nyx/sessions**](../index.md)
 
 ---
 
-[@stynx/sessions](../index.md) / SessionMirror
+[@stynx-nyx/sessions](../index.md) / SessionMirror
 
 # Interface: SessionMirror
 

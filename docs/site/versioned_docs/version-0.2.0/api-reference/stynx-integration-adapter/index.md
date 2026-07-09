@@ -1,8 +1,8 @@
-**@stynx/integration-adapter**
+**@stynx-nyx/integration-adapter**
 
 ---
 
-# @stynx/integration-adapter
+# @stynx-nyx/integration-adapter
 
 Public integration adapter framework exports.
 

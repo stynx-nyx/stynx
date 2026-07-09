@@ -1,10 +1,10 @@
 ---
-title: '@stynx/pdf'
+title: '@stynx-nyx/pdf'
 ---
 
-# @stynx/pdf
+# @stynx-nyx/pdf
 
-`@stynx/pdf` is the shared STYNX server-side PDF generation package. It provides
+`@stynx-nyx/pdf` is the shared STYNX server-side PDF generation package. It provides
 a local renderer backed by Playwright Chromium plus a deterministic fixture
 backend for tests. It also provides deterministic fixed-layout primitives and a
 public-payroll report template pack for adopter-owned payslip and yearly-income
@@ -13,7 +13,7 @@ PDF construction. It does not depend on a remote PDF service.
 ## Nest Setup
 
 ```ts
-import { StynxPdfModule } from '@stynx/pdf';
+import { StynxPdfModule } from '@stynx-nyx/pdf';
 
 StynxPdfModule.forRoot({
   defaultPdfOptions: { format: 'A4', printBackground: true },
@@ -25,7 +25,7 @@ StynxPdfModule.forRoot({
 ## Public API
 
 ```ts
-import { PdfRenderer } from '@stynx/pdf';
+import { PdfRenderer } from '@stynx-nyx/pdf';
 
 const pdf = await renderer.render({
   tenantId: 'tenant-a',
@@ -50,15 +50,15 @@ Primary exports:
   `pdf-lib` helpers for stable fixed-layout PDFs with bundled PDF/A-2b content
   assets and honest structural checks.
 - `PdfVerificationEvidenceAppender` - draws a verification hint into PDF bytes
-  and embeds a STYNX PAdES evidence block through `@stynx/signature` using a
+  and embeds a STYNX PAdES evidence block through `@stynx-nyx/signature` using a
   valid incremental PDF update.
 - `PublicPayrollPdfBuilder` - adopter-compatible payslip and yearly-income
-  template pack exposed through `@stynx/pdf/public-payroll`.
+  template pack exposed through `@stynx-nyx/pdf/public-payroll`.
 
 ## PDF Evidence
 
 ```ts
-import { PdfVerificationEvidenceAppender } from '@stynx/pdf/evidence';
+import { PdfVerificationEvidenceAppender } from '@stynx-nyx/pdf/evidence';
 
 const appender = new PdfVerificationEvidenceAppender({
   defaultSignerName: 'SGP report-service',
@@ -72,13 +72,13 @@ const signedPdf = await appender.embedVerificationHint({
 ```
 
 The appender mutates PDF bytes only. It delegates the provider-free
-`%%STYNX-PADES-SIGNATURE` evidence envelope to `@stynx/signature` and does not
+`%%STYNX-PADES-SIGNATURE` evidence envelope to `@stynx-nyx/signature` and does not
 claim legal CMS/PKCS#7/PAdES signing.
 
 ## Public Payroll Templates
 
 ```ts
-import { PublicPayrollPdfBuilder } from '@stynx/pdf/public-payroll';
+import { PublicPayrollPdfBuilder } from '@stynx-nyx/pdf/public-payroll';
 
 const builder = new PublicPayrollPdfBuilder({
   appendEvidence: (input) => appender.embedVerificationHint(input),
@@ -115,8 +115,8 @@ final EOF through an incremental update.
 metadata, and font resources; it is not a validator-backed PDF/A conformance
 adapter.
 
-For validator-backed conformance checks, wire `@stynx/pdf-a` with the reference
-`@stynx/pdf-a-vera-docker` adapter after rendering. See
+For validator-backed conformance checks, wire `@stynx-nyx/pdf-a` with the reference
+`@stynx-nyx/pdf-a-vera-docker` adapter after rendering. See
 [`docs/adopters/pdf-a-validation.md`](/docs/adopters/pdf-a-validation).
 
 ## Signature Interop
@@ -127,7 +127,7 @@ only value that should be passed to `SignatureRequest.documentSha256`.
 ## PEC and TEAT Migration
 
 PEC report generation can move document creation behind `PdfRenderer` before
-calling `@stynx/signature`. TEAT can use the same renderer for AIT receipts,
+calling `@stynx-nyx/signature`. TEAT can use the same renderer for AIT receipts,
 integrity reports, and probative evidence packages without coupling to PEC.
 SGP can wrap `PublicPayrollPdfBuilder` for official payslip and yearly-income
 PDF construction while keeping its product semantics local.

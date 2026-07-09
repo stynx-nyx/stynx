@@ -26,7 +26,7 @@ const cases = [
   // Valid Conventional Commits shapes
   { msg: 'chore(repo): legacy conventional', expect: 'pass' },
   { msg: 'feat: type only no scope', expect: 'pass' },
-  { msg: 'feat(@stynx/auth): conventional with @-prefixed scope', expect: 'pass' },
+  { msg: 'feat(@stynx-nyx/auth): conventional with @-prefixed scope', expect: 'pass' },
   { msg: 'fix(@stynx-web/angular): scope with hyphen', expect: 'pass' },
   { msg: 'chore(@stynx-internal/eslint-config): another @ scope', expect: 'pass' },
   { msg: 'docs(deps): scope with no @', expect: 'pass' },

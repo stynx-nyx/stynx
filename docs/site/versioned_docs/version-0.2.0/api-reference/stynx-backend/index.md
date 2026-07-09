@@ -1,8 +1,8 @@
-**@stynx/backend**
+**@stynx-nyx/backend**
 
 ---
 
-# @stynx/backend
+# @stynx-nyx/backend
 
 Compatibility backend barrel for shared NestJS modules and contracts.
 

@@ -1,8 +1,8 @@
-[**@stynx/testing**](../index.md)
+[**@stynx-nyx/testing**](../index.md)
 
 ---
 
-[@stynx/testing](../index.md) / TestingFixtures
+[@stynx-nyx/testing](../index.md) / TestingFixtures
 
 # Interface: TestingFixtures
 

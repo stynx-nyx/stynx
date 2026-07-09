@@ -1,8 +1,8 @@
-**@stynx/i18n**
+**@stynx-nyx/i18n**
 
 ---
 
-# @stynx/i18n
+# @stynx-nyx/i18n
 
 Public catalog, locale, localized error, and i18n administration exports.
 

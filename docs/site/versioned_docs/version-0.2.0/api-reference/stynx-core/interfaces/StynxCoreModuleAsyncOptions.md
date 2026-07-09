@@ -1,8 +1,8 @@
-[**@stynx/core**](../index.md)
+[**@stynx-nyx/core**](../index.md)
 
 ---
 
-[@stynx/core](../index.md) / StynxCoreModuleAsyncOptions
+[@stynx-nyx/core](../index.md) / StynxCoreModuleAsyncOptions
 
 # Interface: StynxCoreModuleAsyncOptions\<TSchema\>
 

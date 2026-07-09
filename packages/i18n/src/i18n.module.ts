@@ -1,6 +1,6 @@
 import { type DynamicModule, Module } from '@nestjs/common';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
-import { STYNX_ERROR_TRANSLATOR } from '@stynx/core';
+import { STYNX_ERROR_TRANSLATOR } from '@stynx-nyx/core';
 import { CatalogService } from './catalog.service';
 import { ErrorTranslatorService } from './error-translator.service';
 import { I18nAdminService } from './i18n-admin.service';

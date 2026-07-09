@@ -8,8 +8,8 @@ import type {
   IdentityLocalSyncResult,
   IdentitySyncContext,
   IdentityUserDetail,
-} from '@stynx/contracts';
-import { IdentityAdminError } from '@stynx/contracts';
+} from '@stynx-nyx/contracts';
+import { IdentityAdminError } from '@stynx-nyx/contracts';
 
 type QueryResult<T> = { rows: T[]; rowCount?: number } | T[];
 

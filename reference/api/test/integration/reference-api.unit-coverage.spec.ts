@@ -1,9 +1,9 @@
 import { BadRequestException } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { Database } from '@stynx/data';
-import { PermissionCache, PermissionQueryService, StynxJwtValidator } from '@stynx/auth';
-import { RequestContext, RequestContextMutator } from '@stynx/core';
-import { SessionService } from '@stynx/sessions';
+import { Database } from '@stynx-nyx/data';
+import { PermissionCache, PermissionQueryService, StynxJwtValidator } from '@stynx-nyx/auth';
+import { RequestContext, RequestContextMutator } from '@stynx-nyx/core';
+import { SessionService } from '@stynx-nyx/sessions';
 import { DocumentsController } from '../../src/sample/documents.controller';
 import { RecordNotesController } from '../../src/sample/record-notes.controller';
 import { RecordsController } from '../../src/sample/records.controller';
@@ -68,7 +68,7 @@ function queryBuilder() {
   };
 }
 
-describe('@stynx/reference-api controller delegation', () => {
+describe('@stynx-nyx/reference-api controller delegation', () => {
   it('applies environment-driven rate-limit metadata with fallback parsing', async () => {
     const originalRecordCreateLimit = process.env.STYNX_SAMPLE_RECORD_CREATE_LIMIT;
     const originalRecordCreateWindow = process.env.STYNX_SAMPLE_RECORD_CREATE_WINDOW_SECONDS;
@@ -99,7 +99,7 @@ describe('@stynx/reference-api controller delegation', () => {
       // and the parity script sets NODE_OPTIONS the same way for all jest
       // invocations).
       vi.resetModules();
-      const isolatedRateLimit = await import('@stynx/ratelimit');
+      const isolatedRateLimit = await import('@stynx-nyx/ratelimit');
       const isolatedRecords = await import('../../src/sample/records.controller');
       const isolatedDocuments = await import('../../src/sample/documents.controller');
       const isolatedNotes = await import('../../src/sample/record-notes.controller');
@@ -275,7 +275,7 @@ describe('@stynx/reference-api controller delegation', () => {
   });
 });
 
-describe('@stynx/reference-api sample service', () => {
+describe('@stynx-nyx/reference-api sample service', () => {
   it('passes document operations through to DocumentsService and returns status envelopes', async () => {
     const documents = methods(['initiate', 'complete', 'getDownloadUrl', 'softRemove', 'restore', 'hardRemove']);
     const service = new ReferenceSampleService({} as never, {} as never, documents as never);
@@ -509,7 +509,7 @@ describe('@stynx/reference-api sample service', () => {
   });
 });
 
-describe('@stynx/reference-api dev auth service and probes', () => {
+describe('@stynx-nyx/reference-api dev auth service and probes', () => {
   it('logs in through demo tenant setup and primes permission cache when available', async () => {
     const queries: Array<{ rows: Record<string, unknown>[] }> = [
       { rows: [] },

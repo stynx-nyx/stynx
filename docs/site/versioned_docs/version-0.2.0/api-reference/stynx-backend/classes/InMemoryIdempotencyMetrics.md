@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / InMemoryIdempotencyMetrics
+[@stynx-nyx/backend](../index.md) / InMemoryIdempotencyMetrics
 
 # Class: InMemoryIdempotencyMetrics
 

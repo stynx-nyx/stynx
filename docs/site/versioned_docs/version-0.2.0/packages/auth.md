@@ -1,8 +1,8 @@
 ---
-title: '@stynx/auth'
+title: '@stynx-nyx/auth'
 ---
 
-# @stynx/auth
+# @stynx-nyx/auth
 
 Authentication, authorization guards, permission caches, Cognito validation, and auth runtime primitives for tenant-aware APIs.
 
@@ -13,10 +13,10 @@ Authentication, authorization guards, permission caches, Cognito validation, and
 ## Install And Import
 
 ```ts
-import {} from /* public exports */ '@stynx/auth';
+import {} from /* public exports */ '@stynx-nyx/auth';
 ```
 
-In this monorepo, use the workspace package. Published consumers should install matching `@stynx/*` versions from the same release train.
+In this monorepo, use the workspace package. Published consumers should install matching `@stynx-nyx/*` versions from the same release train.
 
 ## Module Setup
 
@@ -42,7 +42,7 @@ Validates principals and permissions before route handlers execute. Permission c
 ## Example
 
 ```ts
-import { Permission, StynxAuthGuard } from '@stynx/auth';
+import { Permission, StynxAuthGuard } from '@stynx-nyx/auth';
 
 @UseGuards(StynxAuthGuard)
 @Permission('records.read')
@@ -52,7 +52,7 @@ listRecords() {}
 
 ## Layering Note
 
-`@stynx/auth` intentionally depends on `@stynx/idempotency` only for the
+`@stynx-nyx/auth` intentionally depends on `@stynx-nyx/idempotency` only for the
 `@NoIdempotent()` decorator used on session/authentication endpoints. This is
 a documented exception to the strict package DAG: auth routes must opt out of
 mutation idempotency before a STYNX session exists, while the runtime
@@ -87,9 +87,9 @@ Current barrel highlights:
 ## Verification
 
 ```sh
-pnpm --filter @stynx/auth build
-pnpm --filter @stynx/auth test
-STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx/auth test:int
+pnpm --filter @stynx-nyx/auth build
+pnpm --filter @stynx-nyx/auth test
+STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx-nyx/auth test:int
 ```
 
 ## Documentation Standard

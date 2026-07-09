@@ -1,5 +1,5 @@
 {
-  "name": "@stynx/backend",
+  "name": "@stynx-nyx/backend",
   "version": "1.0.0",
   "description": "NestJS shared platform modules for stynx",
   "main": "dist/backend/src/index.js",
@@ -27,9 +27,9 @@
     "stryker": "pnpm exec stryker run stryker.conf.mjs"
   },
   "dependencies": {
-    "@stynx/idempotency": "workspace:*",
-    "@stynx/ratelimit": "workspace:*",
-    "@stynx/contracts": "workspace:*"
+    "@stynx-nyx/idempotency": "workspace:*",
+    "@stynx-nyx/ratelimit": "workspace:*",
+    "@stynx-nyx/contracts": "workspace:*"
   },
   "peerDependencies": {
     "@nestjs/common": "^11.1.19",

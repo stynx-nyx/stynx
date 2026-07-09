@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1",
   "packages": {
-    "@stynx/integration-adapter": {
+    "@stynx-nyx/integration-adapter": {
       "exports": {
         ".": {
           "types": "./dist/integration-adapter/src/index.d.ts",
@@ -14,7 +14,7 @@
         "integration-adapter/src/types.d.ts": "34e869829671246b73a6e3bdf2f0b3242242e490db8630d9cf2751f16f624071"
       }
     },
-    "@stynx/pdf": {
+    "@stynx-nyx/pdf": {
       "exports": {
         ".": {
           "types": "./dist/pdf/src/index.d.ts",
@@ -65,7 +65,7 @@
         "pdf/src/types.d.ts": "d44cc789df01ecba424732e6dc3965d9682bf01adcd85656934c7b2d7341f8ae"
       }
     },
-    "@stynx/signature": {
+    "@stynx-nyx/signature": {
       "exports": {
         ".": {
           "types": "./dist/signature/src/index.d.ts",

@@ -1,8 +1,8 @@
-[**@stynx/ratelimit**](../index.md)
+[**@stynx-nyx/ratelimit**](../index.md)
 
 ---
 
-[@stynx/ratelimit](../index.md) / RateLimitDecision
+[@stynx-nyx/ratelimit](../index.md) / RateLimitDecision
 
 # Interface: RateLimitDecision
 

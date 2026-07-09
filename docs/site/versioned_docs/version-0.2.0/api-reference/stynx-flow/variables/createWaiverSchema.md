@@ -1,8 +1,8 @@
-[**@stynx/flow**](../index.md)
+[**@stynx-nyx/flow**](../index.md)
 
 ---
 
-[@stynx/flow](../index.md) / createWaiverSchema
+[@stynx-nyx/flow](../index.md) / createWaiverSchema
 
 # Variable: createWaiverSchema
 

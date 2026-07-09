@@ -58,7 +58,7 @@ vi.mock('@nestjs/testing', () => ({
   },
 }));
 
-vi.mock('@stynx/data', () => ({
+vi.mock('@stynx-nyx/data', () => ({
   createStynxPgClient: vi.fn(() => ({ connect, query, end })),
   Database: class Database {},
   StynxDataModule: {
@@ -66,7 +66,7 @@ vi.mock('@stynx/data', () => ({
   },
 }));
 
-vi.mock('@stynx/core', () => ({
+vi.mock('@stynx-nyx/core', () => ({
   RequestContextMutator: class RequestContextMutator {},
 }));
 

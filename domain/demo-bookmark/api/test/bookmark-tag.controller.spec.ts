@@ -1,7 +1,7 @@
 // C-4 Session T2 — BookmarkTagController route-binding test.
 
 import { Test } from '@nestjs/testing';
-import { PermissionGuard, StynxAuthGuard } from '@stynx/auth';
+import { PermissionGuard, StynxAuthGuard } from '@stynx-nyx/auth';
 import { BookmarkTagController } from '../src/demo-bookmark/controllers/bookmark-tag.controller';
 import { BookmarkTagService } from '../src/demo-bookmark/services/bookmark-tag.service';
 

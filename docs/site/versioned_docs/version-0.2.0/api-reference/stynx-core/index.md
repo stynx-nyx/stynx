@@ -1,8 +1,8 @@
-**@stynx/core**
+**@stynx-nyx/core**
 
 ---
 
-# @stynx/core
+# @stynx-nyx/core
 
 Public core runtime exports for request context, configuration, errors, and secrets.
 

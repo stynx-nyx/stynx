@@ -1,8 +1,8 @@
-[**@stynx/core**](../index.md)
+[**@stynx-nyx/core**](../index.md)
 
 ---
 
-[@stynx/core](../index.md) / StynxSsmOptions
+[@stynx-nyx/core](../index.md) / StynxSsmOptions
 
 # Interface: StynxSsmOptions
 

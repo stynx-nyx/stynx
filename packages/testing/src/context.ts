@@ -1,4 +1,4 @@
-import { generateRequestId, type RequestContextMutator } from '@stynx/core';
+import { generateRequestId, type RequestContextMutator } from '@stynx-nyx/core';
 
 export interface TenantActorTarget {
   tenantId?: string;

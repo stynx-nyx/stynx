@@ -1,9 +1,9 @@
 # PDF Contract
 
 **Authority:** Architect (DEVAI Constitution Article 6).
-**Package:** `@stynx/pdf`.
+**Package:** `@stynx-nyx/pdf`.
 
-`@stynx/pdf` owns local server-side PDF rendering for STYNX consumers. It
+`@stynx-nyx/pdf` owns local server-side PDF rendering for STYNX consumers. It
 supports deterministic fixture rendering for tests and local Playwright
 Chromium rendering for `html` and `handlebars` templates.
 It also exposes provider-free fixed-layout primitives and an explicit
@@ -20,7 +20,7 @@ JSON-safe data, optional branding, metadata and output options. `tenantId`,
 
 Renderers return immutable PDF bytes, `application/pdf`, SHA-256 computed after
 rendering, page count, template id/version and merged metadata. That SHA-256 is
-the digest to pass to `@stynx/signature`.
+the digest to pass to `@stynx-nyx/signature`.
 
 ## Local Renderer
 
@@ -40,8 +40,8 @@ named PDF/A-style and must not be treated as validator-backed PDF/A conformance.
 
 ## Validation
 
-Real PDF/A validation is owned by the additive `@stynx/pdf-a` contract and the
-reference `@stynx/pdf-a-vera-docker` adapter. The R12 target is PDF/A-2b.
+Real PDF/A validation is owned by the additive `@stynx-nyx/pdf-a` contract and the
+reference `@stynx-nyx/pdf-a-vera-docker` adapter. The R12 target is PDF/A-2b.
 Adopters wire a `PdfAValidator` after PDF construction and choose their own
 warn/fail policy per environment. See
 [`docs/adopters/pdf-a-validation.md`](/docs/adopters/pdf-a-validation) and
@@ -49,7 +49,7 @@ warn/fail policy per environment. See
 
 ## Public Payroll Template Pack
 
-`@stynx/pdf/public-payroll` exports `PublicPayrollPdfBuilder` for deterministic
+`@stynx-nyx/pdf/public-payroll` exports `PublicPayrollPdfBuilder` for deterministic
 payslip and yearly-income construction. The builder accepts an optional
 `appendEvidence(input)` function so adopters can attach PAdES or verification
 hints without STYNX importing adopter runtime code.
@@ -60,10 +60,10 @@ storage keys, retention policy, and report status transitions.
 
 ## PDF Evidence
 
-`@stynx/pdf/evidence` exports `PdfVerificationEvidenceAppender`. It draws a
+`@stynx-nyx/pdf/evidence` exports `PdfVerificationEvidenceAppender`. It draws a
 public verification hint into PDF bytes when possible, uses a package-neutral
 fallback marker for non-PDF payloads, and appends a
-`%%STYNX-PADES-SIGNATURE` evidence block by delegating to `@stynx/signature`.
+`%%STYNX-PADES-SIGNATURE` evidence block by delegating to `@stynx-nyx/signature`.
 
 This remains provider-free deterministic evidence. It is not a legal
 CMS/PKCS#7/PAdES implementation.

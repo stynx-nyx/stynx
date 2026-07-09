@@ -1,8 +1,8 @@
-[**@stynx/pdf**](../index.md)
+[**@stynx-nyx/pdf**](../index.md)
 
 ---
 
-[@stynx/pdf](../index.md) / A4_PAGE_SIZE
+[@stynx-nyx/pdf](../index.md) / A4_PAGE_SIZE
 
 # Variable: A4_PAGE_SIZE
 

@@ -1,8 +1,8 @@
-[**@stynx/data**](../index.md)
+[**@stynx-nyx/data**](../index.md)
 
 ---
 
-[@stynx/data](../index.md) / documents
+[@stynx-nyx/data](../index.md) / documents
 
 # Variable: documents
 

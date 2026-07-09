@@ -1,8 +1,8 @@
-[**@stynx/testing**](../index.md)
+[**@stynx-nyx/testing**](../index.md)
 
 ---
 
-[@stynx/testing](../index.md) / expectArchiveMirrorExists
+[@stynx-nyx/testing](../index.md) / expectArchiveMirrorExists
 
 # Function: expectArchiveMirrorExists()
 

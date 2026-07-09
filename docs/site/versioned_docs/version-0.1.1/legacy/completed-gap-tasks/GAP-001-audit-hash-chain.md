@@ -198,16 +198,16 @@ In `packages/audit/src/index.ts`, add exports for:
 psql $DATABASE_URL -f database/ddl/02-audit.sql
 
 # TypeScript builds
-pnpm --filter @stynx/audit build
+pnpm --filter @stynx-nyx/audit build
 
 # Unit tests pass
-pnpm --filter @stynx/audit test
+pnpm --filter @stynx-nyx/audit test
 
 # Integration test passes (requires PostgreSQL)
 pnpm test:int 2>&1 | grep -E "audit-hash|PASS|FAIL"
 
 # Lint clean
-pnpm --filter @stynx/audit lint
+pnpm --filter @stynx-nyx/audit lint
 ```
 
 ---

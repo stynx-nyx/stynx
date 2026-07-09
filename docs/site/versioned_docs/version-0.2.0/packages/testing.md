@@ -1,8 +1,8 @@
 ---
-title: '@stynx/testing'
+title: '@stynx-nyx/testing'
 ---
 
-# @stynx/testing
+# @stynx-nyx/testing
 
 Reusable integration-test harnesses, fixtures, archive-aware matchers, LGPD fixtures, and session helpers for STYNX consumers.
 
@@ -13,10 +13,10 @@ Reusable integration-test harnesses, fixtures, archive-aware matchers, LGPD fixt
 ## Install And Import
 
 ```ts
-import {} from /* public exports */ '@stynx/testing';
+import {} from /* public exports */ '@stynx-nyx/testing';
 ```
 
-In this monorepo, use the workspace package. Published consumers should install matching `@stynx/*` versions from the same release train.
+In this monorepo, use the workspace package. Published consumers should install matching `@stynx-nyx/*` versions from the same release train.
 
 ## Module Setup
 
@@ -29,7 +29,7 @@ May start local PostgreSQL, Redis, LocalStack, or Cognito test services. Test he
 ## Example
 
 ```ts
-import { createTestApp, expectArchivedRow } from '@stynx/testing';
+import { createTestApp, expectArchivedRow } from '@stynx-nyx/testing';
 
 const app = await createTestApp({ imports: [FeatureModule] });
 expectArchivedRow(result).toMatchObject({ deletedBy: actorId });
@@ -59,8 +59,8 @@ Current barrel highlights:
 ## Verification
 
 ```sh
-pnpm --filter @stynx/testing build
-pnpm --filter @stynx/testing test
+pnpm --filter @stynx-nyx/testing build
+pnpm --filter @stynx-nyx/testing test
 ```
 
 ## Documentation Standard

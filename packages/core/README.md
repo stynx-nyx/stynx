@@ -1,23 +1,23 @@
-# `@stynx/core` — request context, configuration, errors, and secrets
+# `@stynx-nyx/core` — request context, configuration, errors, and secrets
 
-`@stynx/core` is the NestJS foundation every other `@stynx/*` package depends on. It owns four cross-cutting concerns: per-request context (request id, tenant id, actor id, session id, locale — accessible from any service via dependency injection), schema-validated configuration loading (Zod-driven, with optional AWS SSM hydration), the canonical error envelope shape (`StynxError` + `StynxErrorFilter`), and secret loading (AWS Secrets Manager with caching). Wire it once at the root of your app; every downstream `@stynx/*` package reads from these primitives.
+`@stynx-nyx/core` is the NestJS foundation every other `@stynx-nyx/*` package depends on. It owns four cross-cutting concerns: per-request context (request id, tenant id, actor id, session id, locale — accessible from any service via dependency injection), schema-validated configuration loading (Zod-driven, with optional AWS SSM hydration), the canonical error envelope shape (`StynxError` + `StynxErrorFilter`), and secret loading (AWS Secrets Manager with caching). Wire it once at the root of your app; every downstream `@stynx-nyx/*` package reads from these primitives.
 
 ## Purpose
 
-`@stynx/core` solves the _foundation_ problem in a multi-tenant NestJS app: every request needs a stable identifier, knowledge of the actor + tenant + session it runs under, a single canonical error shape that bubbles up consistently, schema-validated environment configuration, and a secret loader that doesn't leak credentials into logs. Each of these is solvable separately, but composing them ad-hoc across packages creates drift. `@stynx/core` resolves it once.
+`@stynx-nyx/core` solves the _foundation_ problem in a multi-tenant NestJS app: every request needs a stable identifier, knowledge of the actor + tenant + session it runs under, a single canonical error shape that bubbles up consistently, schema-validated environment configuration, and a secret loader that doesn't leak credentials into logs. Each of these is solvable separately, but composing them ad-hoc across packages creates drift. `@stynx-nyx/core` resolves it once.
 
-You reach for `@stynx/core` when you are starting a new STYNX-based backend app, or when you are integrating an existing app onto STYNX and need the request-context substrate for tenant scoping, audit, idempotency, or rate-limit decisions downstream. It is **always the first** `@stynx/*` package wired in your `AppModule`.
+You reach for `@stynx-nyx/core` when you are starting a new STYNX-based backend app, or when you are integrating an existing app onto STYNX and need the request-context substrate for tenant scoping, audit, idempotency, or rate-limit decisions downstream. It is **always the first** `@stynx-nyx/*` package wired in your `AppModule`.
 
-What it does NOT do: it does not own tenant data (that's [`@stynx/tenancy`](/docs/packages/tenancy/)), does not enforce authentication (that's [`@stynx/auth`](/docs/packages/auth/)), does not persist anything (that's [`@stynx/data`](/docs/packages/data/)). It provides the _contexts and primitives_ those packages consume.
+What it does NOT do: it does not own tenant data (that's [`@stynx-nyx/tenancy`](/docs/packages/tenancy/)), does not enforce authentication (that's [`@stynx-nyx/auth`](/docs/packages/auth/)), does not persist anything (that's [`@stynx-nyx/data`](/docs/packages/data/)). It provides the _contexts and primitives_ those packages consume.
 
 ## Audience
 
-NestJS backend developers building a STYNX-based application. You inject `RequestContext` into your services to read tenant/actor, throw `StynxError` subclasses to participate in the unified error envelope, register your env-var schema with `StynxCoreModule.forRoot()` to get type-safe configuration, and use `SecretLoader` to pull secrets without ever logging them. Typical integration scenario: a new NestJS service starting from `@nestjs/cli` adopts `@stynx/core` first, then layers `@stynx/auth`, `@stynx/tenancy`, and `@stynx/data` on top.
+NestJS backend developers building a STYNX-based application. You inject `RequestContext` into your services to read tenant/actor, throw `StynxError` subclasses to participate in the unified error envelope, register your env-var schema with `StynxCoreModule.forRoot()` to get type-safe configuration, and use `SecretLoader` to pull secrets without ever logging them. Typical integration scenario: a new NestJS service starting from `@nestjs/cli` adopts `@stynx-nyx/core` first, then layers `@stynx-nyx/auth`, `@stynx-nyx/tenancy`, and `@stynx-nyx/data` on top.
 
 ## Install
 
 ```bash
-pnpm add @stynx/core
+pnpm add @stynx-nyx/core
 ```
 
 **Peer dependencies:** `@nestjs/common` `^11`, `@nestjs/core` `^11`, `nestjs-cls` `^4`, `zod` `^3`. `@aws-sdk/client-ssm` and `@aws-sdk/client-secrets-manager` are required at runtime only when you enable SSM hydration or call `SecretLoader.load()`.
@@ -29,7 +29,7 @@ pnpm add @stynx/core
 ```ts
 // src/app.module.ts
 import { Module } from '@nestjs/common';
-import { StynxCoreModule } from '@stynx/core';
+import { StynxCoreModule } from '@stynx-nyx/core';
 import { z } from 'zod';
 
 const ConfigSchema = z.object({
@@ -53,7 +53,7 @@ export class AppModule {}
 ```ts
 // src/users/users.service.ts
 import { Injectable } from '@nestjs/common';
-import { RequestContext, StynxConfigService } from '@stynx/core';
+import { RequestContext, StynxConfigService } from '@stynx-nyx/core';
 
 @Injectable()
 export class UsersService {
@@ -87,7 +87,7 @@ That's the minimum. `StynxCoreModule` registers the request-context interceptor 
 | Export                  | Description                                                                                                                                                                                                                                                       |
 | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `RequestContext`        | Read-only view of the current request frame: `requestId`, `tenantId`, `actorId`, `sessionId`, `locale`, `startedAt`. Injectable in any service; throws `RequestContextMissingError` if read outside an active request frame.                                      |
-| `RequestContextMutator` | Write surface for the request frame. Allows interceptors / guards (e.g. `@stynx/auth`'s `AuthContextGuard`) to populate `tenantId`, `actorId`, `sessionId`, `locale` once at the request boundary. Mutations outside a frame throw `RequestContextMutationError`. |
+| `RequestContextMutator` | Write surface for the request frame. Allows interceptors / guards (e.g. `@stynx-nyx/auth`'s `AuthContextGuard`) to populate `tenantId`, `actorId`, `sessionId`, `locale` once at the request boundary. Mutations outside a frame throw `RequestContextMutationError`. |
 | `StynxConfigService`    | Schema-validated config reader. `.get(key)` returns the typed value the Zod schema declared. Configuration is loaded once at bootstrap from `process.env` + optional SSM hydration + `options.defaults`.                                                          |
 | `SecretLoader`          | AWS Secrets Manager wrapper with TTL cache + connection-error retry. `.load(secretId)` returns the secret value or throws `SecretLoadError`.                                                                                                                      |
 | `SystemContext`         | Marks an operation as "system-initiated" (no actor) for audit purposes. Required for cron jobs, migrations, system-fired effects. Throws `SystemContextRequiredError` if downstream operations require it and it isn't active.                                    |
@@ -138,7 +138,7 @@ That's the minimum. `StynxCoreModule` registers the request-context interceptor 
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | `STYNX_CORE_OPTIONS`          | Inject the raw `StynxCoreModuleOptions` (rarely needed in app code; useful for plugin authors).                                 |
 | `STYNX_CORE_CONFIG`           | Inject the resolved, validated config object.                                                                                   |
-| `STYNX_SYSTEM_OPERATION_SINK` | DI slot for the audit sink `SystemContext` writes to. Default is a no-op; `@stynx/audit` rebinds it to its sink at module load. |
+| `STYNX_SYSTEM_OPERATION_SINK` | DI slot for the audit sink `SystemContext` writes to. Default is a no-op; `@stynx-nyx/audit` rebinds it to its sink at module load. |
 
 ## Configuration
 
@@ -156,7 +156,7 @@ That's the minimum. `StynxCoreModule` registers the request-context interceptor 
 
 ### Environment variables read by core itself
 
-The package itself reads no env vars directly. Your schema declares what `process.env` keys to read; `@stynx/core` validates them via Zod.
+The package itself reads no env vars directly. Your schema declares what `process.env` keys to read; `@stynx-nyx/core` validates them via Zod.
 
 ## Examples
 
@@ -164,7 +164,7 @@ The package itself reads no env vars directly. Your schema declares what `proces
 
 ```ts
 import { Injectable } from '@nestjs/common';
-import { SecretLoader, StynxConfigService } from '@stynx/core';
+import { SecretLoader, StynxConfigService } from '@stynx-nyx/core';
 
 @Injectable()
 export class DbProvisioner {
@@ -184,7 +184,7 @@ export class DbProvisioner {
 ### Example 2 — extending `StynxError` for your own package's errors
 
 ```ts
-import { StynxError } from '@stynx/core';
+import { StynxError } from '@stynx-nyx/core';
 
 export class OrderNotFoundError extends StynxError {
   constructor(orderId: string) {
@@ -203,7 +203,7 @@ Throwing `OrderNotFoundError` from a controller method produces a structured 404
 
 ```ts
 import { Injectable } from '@nestjs/common';
-import { RequestContext } from '@stynx/core';
+import { RequestContext } from '@stynx-nyx/core';
 
 @Injectable()
 export class TenantScopedRepo {
@@ -217,12 +217,12 @@ export class TenantScopedRepo {
 }
 ```
 
-In practice you'd use [`@stynx/tenancy`](/docs/packages/tenancy/) (W03 wave) for tenant scoping rather than raw `RequestContext`, but the underlying read goes through here.
+In practice you'd use [`@stynx-nyx/tenancy`](/docs/packages/tenancy/) (W03 wave) for tenant scoping rather than raw `RequestContext`, but the underlying read goes through here.
 
 ## Common pitfalls
 
 - **Reading `RequestContext` outside a request frame** throws `RequestContextMissingError`. This includes: code paths fired by cron jobs, message-queue consumers, app-bootstrap initializers. Use `SystemContext` in those paths.
-- **Mutating `RequestContextMutator` from a controller** throws `RequestContextMutationError`. The mutation is supposed to happen exactly once at the request boundary (in a guard or middleware — e.g. `@stynx/auth`'s `AuthContextGuard`). If you find yourself wanting to mutate from controller code, the design is probably wrong.
+- **Mutating `RequestContextMutator` from a controller** throws `RequestContextMutationError`. The mutation is supposed to happen exactly once at the request boundary (in a guard or middleware — e.g. `@stynx-nyx/auth`'s `AuthContextGuard`). If you find yourself wanting to mutate from controller code, the design is probably wrong.
 - **Forgetting `StynxCoreModule.forRoot()` is global**. Importing it in a feature module instead of the app root works, but it shadows the global registration of the interceptor + filter. Always import at `AppModule` once.
 - **Catching `StynxError` and rethrowing as `new Error()`** strips the structured envelope. Either re-throw the original, or build a new `StynxError` subclass that wraps it with `cause`.
 - **Calling `SecretLoader.load()` at module-initialization time** can stall startup if AWS Secrets Manager has elevated latency. Load on first use, not at bootstrap.
@@ -230,12 +230,12 @@ In practice you'd use [`@stynx/tenancy`](/docs/packages/tenancy/) (W03 wave) for
 
 ## Related packages
 
-- [`@stynx/contracts`](/docs/packages/contracts/) — the cross-package contracts that define what `RequestActor` / `DbContext` / error-envelope look like; `@stynx/core` implements them.
-- [`@stynx/logging`](/docs/packages/logging/) — request-context-aware structured logging; depends on `@stynx/core`.
-- [`@stynx/auth`](/docs/packages/auth/) — populates `RequestContextMutator` with `actorId` / `sessionId` from JWT claims.
-- [`@stynx/tenancy`](/docs/packages/tenancy/) — populates `tenantId` and provides tenant-scoped DB context.
-- [`@stynx/backend`](/docs/packages/backend/) — the meta-package that wires `@stynx/core` + identity + data + observability submodules into one cohesive aggregation layer.
-- [STYNX framework — Architecture Guide](/docs/framework/architecture-guide) — high-level architecture overview; explains where `@stynx/core` sits in the stack.
+- [`@stynx-nyx/contracts`](/docs/packages/contracts/) — the cross-package contracts that define what `RequestActor` / `DbContext` / error-envelope look like; `@stynx-nyx/core` implements them.
+- [`@stynx-nyx/logging`](/docs/packages/logging/) — request-context-aware structured logging; depends on `@stynx-nyx/core`.
+- [`@stynx-nyx/auth`](/docs/packages/auth/) — populates `RequestContextMutator` with `actorId` / `sessionId` from JWT claims.
+- [`@stynx-nyx/tenancy`](/docs/packages/tenancy/) — populates `tenantId` and provides tenant-scoped DB context.
+- [`@stynx-nyx/backend`](/docs/packages/backend/) — the meta-package that wires `@stynx-nyx/core` + identity + data + observability submodules into one cohesive aggregation layer.
+- [STYNX framework — Architecture Guide](/docs/framework/architecture-guide) — high-level architecture overview; explains where `@stynx-nyx/core` sits in the stack.
 
 ## TypeDoc reference
 

@@ -1,5 +1,5 @@
-import { PermissionCache } from '@stynx/auth';
-import { auditExpect, expectRLSIsolated } from '@stynx/testing';
+import { PermissionCache } from '@stynx-nyx/auth';
+import { auditExpect, expectRLSIsolated } from '@stynx-nyx/testing';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   closeReferenceApiE2e,
@@ -204,7 +204,7 @@ async function queryTenantRoleRows(
   );
 }
 
-describe('@stynx/reference-api e2e role and permission management', () => {
+describe('@stynx-nyx/reference-api e2e role and permission management', () => {
   let context: ReferenceApiE2eContext;
   let adminA: AuthenticatedAgent;
   let viewerA: AuthenticatedAgent;

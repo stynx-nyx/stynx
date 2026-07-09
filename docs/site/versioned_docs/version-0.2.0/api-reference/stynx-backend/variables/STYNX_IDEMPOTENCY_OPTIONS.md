@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / STYNX_IDEMPOTENCY_OPTIONS
+[@stynx-nyx/backend](../index.md) / STYNX_IDEMPOTENCY_OPTIONS
 
 # Variable: STYNX_IDEMPOTENCY_OPTIONS
 

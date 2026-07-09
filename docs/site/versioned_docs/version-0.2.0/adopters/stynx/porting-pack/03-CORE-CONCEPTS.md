@@ -72,11 +72,11 @@ mismatch and re-resolves.
 
 The full per-request bundle: `request_id`, `tenant_id`, `actor_id`,
 `session_id`, `locale`, plus controller/route metadata. Provided by
-`@stynx/core` (`packages/core/src/request-context.ts`). Used by
+`@stynx-nyx/core` (`packages/core/src/request-context.ts`). Used by
 logging, audit, rate-limit, idempotency, and tracing layers.
 
 **Example:** every Pino log line carries `&#123;request_id, tenant_id,
-actor_id&#125;` automatically because `@stynx/logging` reads the context.
+actor_id&#125;` automatically because `@stynx-nyx/logging` reads the context.
 
 ## Tenant-scoped table, RLS policy
 
@@ -178,7 +178,7 @@ Provisioned by
 ## GUCs — `app.tenant_id`, `app.actor_id`, `app.archive_move`, …
 
 Postgres custom GUC settings set at the start of every transaction
-by `@stynx/data`:
+by `@stynx-nyx/data`:
 
 ```sql
 SET LOCAL app.tenant_id    = '...';
@@ -197,7 +197,7 @@ SET LOCAL app.archive_reason  = 'soft_delete';   -- or 'restore'
 
 The audit trigger reads `app.archive_move` to decide whether to
 write a duplicate audit row during archive moves. Bypassing
-`@stynx/data`'s archive flow leaves the GUC unset → duplicate audit
+`@stynx-nyx/data`'s archive flow leaves the GUC unset → duplicate audit
 rows.
 
 **Citation:** `STYNX-SPEC-v0.6.md` §4.4, §9.3.

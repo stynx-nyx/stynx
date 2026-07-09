@@ -1,8 +1,8 @@
-[**@stynx/audit**](../index.md)
+[**@stynx-nyx/audit**](../index.md)
 
 ---
 
-[@stynx/audit](../index.md) / AuditSqlReaderOptions
+[@stynx-nyx/audit](../index.md) / AuditSqlReaderOptions
 
 # Interface: AuditSqlReaderOptions
 

@@ -34,7 +34,7 @@ Where this spec references AWS primitives, the target is one AWS account per env
 
 ### 1.1 Goals [SPEC]
 
-1. **One foundation, many apps.** Every in‑house service starts from `@stynx/core` and inherits identity, tenancy, audit, soft‑delete (via archive), logging, storage, health, rate‑limiting, privacy, idempotency, i18n, and testing rails with zero bespoke code for those concerns.
+1. **One foundation, many apps.** Every in‑house service starts from `@stynx-nyx/core` and inherits identity, tenancy, audit, soft‑delete (via archive), logging, storage, health, rate‑limiting, privacy, idempotency, i18n, and testing rails with zero bespoke code for those concerns.
 2. **One foundation, both ends.** Angular clients start from `@stynx-web/*` and inherit auth, tenancy switching, document upload, session UI, trash management, and i18n with the same DRY guarantee.
 3. **Security by default.** RLS is always on. JWT verification is never bypassable at the framework level. Logs are redacted by default. Presigned URLs always carry a tenant claim check.
 4. **Multi‑tenant from zero.** Tenancy is a cross‑cutting invariant enforced at HTTP, service, database, and storage layers.
@@ -58,7 +58,7 @@ Where this spec references AWS primitives, the target is one AWS account per env
 
 - **I1 — No raw DB connection.** All DB access goes through STYNX's connection manager, which sets `app.tenant_id`, `app.actor_id`, `app.request_id`, `app.session_id` GUCs on every transaction.
 - **I2 — No query outside a request context.** Background work obtains an explicit `TenantContext` via `withSystemContext(reason, fn)`.
-- **I3 — No direct S3 client.** All object operations go through `@stynx/storage`.
+- **I3 — No direct S3 client.** All object operations go through `@stynx-nyx/storage`.
 - **I4 — Every HTTP route has a permission.** Routes without `@Permission(...)`, `@Public()`, or `@System()` fail CI.
 - **I5 — Every tenant‑scoped table has `tenant_id uuid NOT NULL` and an RLS policy.**
 - **I6 — Every mutation is audited** unless annotated `@NoAudit('reason')`.
@@ -247,7 +247,7 @@ SET LOCAL app.session_id = '...';
 SET LOCAL app.role       = 'app' | 'reader' | 'owner';
 ```
 
-Additional GUCs used by `@stynx/data` during archive moves (see §9.3):
+Additional GUCs used by `@stynx-nyx/data` during archive moves (see §9.3):
 
 ```sql
 SET LOCAL app.archive_move = 'in_progress';    -- suppresses archive-side audit duplication
@@ -486,7 +486,7 @@ Presigned PUT via `POST /documents:initiate`; pre‑scan defenses (MIME allowlis
 
 ### 8.4 Soft‑delete of documents [SPEC]
 
-Soft‑deleting a `storage.documents` row moves the registry row to `archive.storage_documents`. The **S3 object itself is not deleted or moved** — S3 versioning + bucket lifecycle handle byte‑level retention separately. On restore, the registry row moves back; the S3 object is still addressable. On hard delete (from archive), `@stynx/storage` issues a DELETE of the S3 object(s) too, versioned object purge when applicable.
+Soft‑deleting a `storage.documents` row moves the registry row to `archive.storage_documents`. The **S3 object itself is not deleted or moved** — S3 versioning + bucket lifecycle handle byte‑level retention separately. On restore, the registry row moves back; the S3 object is still addressable. On hard delete (from archive), `@stynx-nyx/storage` issues a DELETE of the S3 object(s) too, versioned object purge when applicable.
 
 ---
 
@@ -528,14 +528,14 @@ CREATE TABLE audit.system_op (...);
 
 **Soft delete (move live → archive):**
 
-1. `@stynx/data` sets `app.archive_move = 'in_progress'`, `app.archive_reason = 'soft_delete'`.
+1. `@stynx-nyx/data` sets `app.archive_move = 'in_progress'`, `app.archive_reason = 'soft_delete'`.
 2. Application issues `INSERT INTO archive.{schema}_{table} SELECT ... FROM live.{schema}.{table} WHERE id = $1` and `DELETE FROM live.{schema}.{table} WHERE id = $1` in one transaction.
 3. The archive INSERT trigger **checks `app.archive_move`** — if `in_progress`, writes **no** audit row (avoids duplicate).
 4. The live DELETE trigger writes **one** audit row with `op='D'`, `tags={"soft_delete":true,"archived":true,"archive_table":"archive.{schema}_{table}"}`.
 
 **Restore (move archive → live):**
 
-1. `@stynx/data` sets `app.archive_move = 'in_progress'`, `app.archive_reason = 'restore'`.
+1. `@stynx-nyx/data` sets `app.archive_move = 'in_progress'`, `app.archive_reason = 'restore'`.
 2. INSERT into live; DELETE from archive — single transaction.
 3. Archive DELETE trigger checks `app.archive_move` — if `in_progress`, writes no audit row.
 4. Live INSERT trigger writes one audit row with `op='I'`, `tags={"restore":true,"from_archive":true}`.
@@ -642,7 +642,7 @@ GUCs via `SET LOCAL`, retries on 40001/40P01, nested calls via savepoints. Outsi
 ### 13.5 Migrations
 
 - Tool: **Drizzle Kit**, plain SQL.
-- Runner: `@stynx/cli migrate up|down|status`.
+- Runner: `@stynx-nyx/cli migrate up|down|status`.
 - STYNX migrations under `stynx_owner` first; consumer migrations after.
 - **Linter rules (archive‑aware):**
   - Every new tenant‑scoped table declares `tenant_id`, RLS, and policy in the same migration.
@@ -741,7 +741,7 @@ SELECT data.alter_soft_deletable_table('sample.example_entity',
 
 Hand‑written `CREATE TABLE` + separate mirror DDL is an **escape hatch** for edge cases (e.g., a table that needs a custom index strategy on archive that differs from live). When used, the migration linter still enforces parity; divergence fails the migration.
 
-**Archive Drizzle types are hidden from consumer code.** `@stynx/data` generates Drizzle schema for archive tables into an internal module (`@stynx/data/internal/archive-schema`) consumed only by the query helpers (§14.4) and the soft‑delete/restore operations (§13.4, §14.5). Consumer apps import only live‑table types. The archive mirror exists as a concrete DB object (for the audit and privacy pipelines that need to query it directly) but is never surfaced in application code paths.
+**Archive Drizzle types are hidden from consumer code.** `@stynx-nyx/data` generates Drizzle schema for archive tables into an internal module (`@stynx-nyx/data/internal/archive-schema`) consumed only by the query helpers (§14.4) and the soft‑delete/restore operations (§13.4, §14.5). Consumer apps import only live‑table types. The archive mirror exists as a concrete DB object (for the audit and privacy pipelines that need to query it directly) but is never surfaced in application code paths.
 
 Developers therefore see the mirror in exactly two places:
 
@@ -752,7 +752,7 @@ Day‑to‑day application code (services, controllers, queries) never reference
 
 ### 14.4 Default query behavior [SPEC]
 
-`@stynx/data` query helpers query live only by default. To include archived rows, opt in explicitly:
+`@stynx-nyx/data` query helpers query live only by default. To include archived rows, opt in explicitly:
 
 ```typescript
 await trx.select().from(table); // live only
@@ -817,7 +817,7 @@ Every FK to a soft‑deletable parent must carry a `-- @softdelete_fk: hide | ca
 
 **DB‑level:** `FOREIGN KEY (...) REFERENCES parent(id) ON DELETE RESTRICT`.
 
-**Mechanics:** `trx.softDelete(parent, id)` performs the archive INSERT + live DELETE transaction. The DELETE raises `foreign_key_violation` (SQLSTATE 23503) if any child row still references this parent. `@stynx/data` catches the error, consults the registry for child tables, queries for blockers (capped at the first 10 per table with a total count), and returns 409 with a structured shape:
+**Mechanics:** `trx.softDelete(parent, id)` performs the archive INSERT + live DELETE transaction. The DELETE raises `foreign_key_violation` (SQLSTATE 23503) if any child row still references this parent. `@stynx-nyx/data` catches the error, consults the registry for child tables, queries for blockers (capped at the first 10 per table with a total count), and returns 409 with a structured shape:
 
 ```json
 {
@@ -930,7 +930,7 @@ Four dimensions (IP, tenant, user, route × tenant), sliding window in Redis (Lu
 
 Per v0.3: Unit (Vitest), Integration (Testcontainers PG + Redis, LocalStack S3, cognito‑local), Contract (Pact), E2E backend (supertest), E2E frontend (Cypress/Playwright), Load (k6), Mutation (Stryker), Security (Semgrep, `npm audit`, Trivy).
 
-### 16.2 `@stynx/testing` exports
+### 16.2 `@stynx-nyx/testing` exports
 
 - `createTestApp`, `withTenant`, `withActor`.
 - `expectRLSIsolated(q, { tenantA, tenantB })`.
@@ -990,7 +990,7 @@ Per v0.3 table. `@stynx-web/angular-trash` exposes `<stynx-trash-list>` (§14.9)
 
 ### 19.3 Versioning
 
-`@stynx-web/angular` major locks to `@stynx/core` major. Drops Angular LTS that falls out of support.
+`@stynx-web/angular` major locks to `@stynx-nyx/core` major. Drops Angular LTS that falls out of support.
 
 ### 19.4 Bearer storage
 
@@ -1010,7 +1010,7 @@ Auth/tenant interceptors, 401 refresh flow, tenant switcher rotation, permission
 
 ### 20.1 `stynx init`
 
-Backend: scaffolds NestJS app with all `@stynx/*` packages pre‑wired, `.env.example`, `docker-compose.yml` (PG + Redis + LocalStack), `Dockerfile`, `CODEOWNERS`, `README`, CDK skeleton, one example tenant‑scoped + soft‑deletable module with **both the live table and its `archive.*` mirror** in the initial migration, tests passing.
+Backend: scaffolds NestJS app with all `@stynx-nyx/*` packages pre‑wired, `.env.example`, `docker-compose.yml` (PG + Redis + LocalStack), `Dockerfile`, `CODEOWNERS`, `README`, CDK skeleton, one example tenant‑scoped + soft‑deletable module with **both the live table and its `archive.*` mirror** in the initial migration, tests passing.
 
 Frontend: Angular workspace with `@stynx-web/angular` pre‑wired, OIDC templates, reference page exercising auth + tenant switch + document upload + trash list.
 
@@ -1026,9 +1026,9 @@ Frontend: Angular workspace with `@stynx-web/angular` pre‑wired, OIDC template
 
 **Phase 2 — codemods (`stynx adopt apply`).**
 
-- Replace `pg.Pool` with `@stynx/data` injection.
+- Replace `pg.Pool` with `@stynx-nyx/data` injection.
 - Wrap each `pool.query(...)` in `tx(...)` or `withReplica(...)`.
-- Replace JWT middleware with `@stynx/auth` guards; flag ambiguous cases.
+- Replace JWT middleware with `@stynx-nyx/auth` guards; flag ambiguous cases.
 - Insert `@Permission(...)` placeholders that fail CI until filled.
 - Generate Drizzle schema from `information_schema` introspection.
 - **Generate archive mirror migrations for every tenant‑scoped table** (operator approves each mirror DDL before apply). Existing DELETE call sites are rewritten to `trx.softDelete(...)`; existing hard‑delete semantics must be explicitly preserved with `?hard=true` in the new routes.
@@ -1170,9 +1170,9 @@ Per v0.3. ICU MessageFormat, `pt-BR` + `en-US`, resolution order: session → Ac
 - LTS 18 months.
 - Deprecation notice: two minor versions.
 - Platform SLOs (v0.3 baseline) plus:
-  - `@stynx/data` soft‑delete (archive move) p99 < 5 ms for a single row.
-  - `@stynx/data` restore p99 < 10 ms (includes unique‑conflict probe).
-  - `@stynx/data` cascade soft‑delete p99 < 5 ms × N children (linear).
+  - `@stynx-nyx/data` soft‑delete (archive move) p99 < 5 ms for a single row.
+  - `@stynx-nyx/data` restore p99 < 10 ms (includes unique‑conflict probe).
+  - `@stynx-nyx/data` cascade soft‑delete p99 < 5 ms × N children (linear).
 
 ---
 
@@ -1201,13 +1201,13 @@ Resolved in v0.3: web SPA token storage in `sessionStorage` (Q1); read‑only ro
 
 | Phase                                 | Weeks | Deliverable                                                                                                                                               |
 | ------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| P0 Bootstrap                          | 1–2   | Monorepo, CI, `@stynx/core`, `@stynx/logging`, `@stynx/health`, reference api                                                                             |
-| P1 Data + Tenancy + Archive           | 3–7   | `@stynx/data` (Drizzle, tx, three roles, RLS GUC, **archive model: mirror helpers, softDelete/restore, FK registry**), `@stynx/tenancy`, migration linter |
-| P2 Auth + Authz + Sessions            | 8–11  | `@stynx/auth` (Cognito + STYNX bearer + refresh rotation), `@stynx/sessions`, perms engine                                                                |
-| P3 Audit + Storage                    | 12–14 | `@stynx/audit` (triggers + archive‑move GUC suppression + read API), `@stynx/storage` (S3, pre‑scan defenses, archive‑aware hard delete)                  |
-| P4 Rate‑limit + Idempotency + Testing | 15–16 | `@stynx/ratelimit`, `@stynx/idempotency`, `@stynx/testing` (archive‑aware matchers), `stynx doctor`                                                       |
-| P5 Privacy + i18n                     | 17–18 | `@stynx/privacy` (live + archive erasure; active‑row retention), `@stynx/i18n`                                                                            |
-| P6 CLI + Adoption                     | 19–20 | `@stynx/cli` init/adopt/migrate, codemods (archive mirror generation), pilot adoption                                                                     |
+| P0 Bootstrap                          | 1–2   | Monorepo, CI, `@stynx-nyx/core`, `@stynx-nyx/logging`, `@stynx-nyx/health`, reference api                                                                             |
+| P1 Data + Tenancy + Archive           | 3–7   | `@stynx-nyx/data` (Drizzle, tx, three roles, RLS GUC, **archive model: mirror helpers, softDelete/restore, FK registry**), `@stynx-nyx/tenancy`, migration linter |
+| P2 Auth + Authz + Sessions            | 8–11  | `@stynx-nyx/auth` (Cognito + STYNX bearer + refresh rotation), `@stynx-nyx/sessions`, perms engine                                                                |
+| P3 Audit + Storage                    | 12–14 | `@stynx-nyx/audit` (triggers + archive‑move GUC suppression + read API), `@stynx-nyx/storage` (S3, pre‑scan defenses, archive‑aware hard delete)                  |
+| P4 Rate‑limit + Idempotency + Testing | 15–16 | `@stynx-nyx/ratelimit`, `@stynx-nyx/idempotency`, `@stynx-nyx/testing` (archive‑aware matchers), `stynx doctor`                                                       |
+| P5 Privacy + i18n                     | 17–18 | `@stynx-nyx/privacy` (live + archive erasure; active‑row retention), `@stynx-nyx/i18n`                                                                            |
+| P6 CLI + Adoption                     | 19–20 | `@stynx-nyx/cli` init/adopt/migrate, codemods (archive mirror generation), pilot adoption                                                                     |
 | P7 Frontend                           | 21–24 | `@stynx-web/sdk` + `@stynx-web/angular` family + reference web app (incl. `<stynx-trash-list>`)                                                           |
 | P8 Hardening + v1.0                   | 25–27 | Load tests, chaos tests, docs site, v1.0 cut                                                                                                              |
 

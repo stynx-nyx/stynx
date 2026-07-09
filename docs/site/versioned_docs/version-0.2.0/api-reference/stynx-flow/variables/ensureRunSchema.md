@@ -1,8 +1,8 @@
-[**@stynx/flow**](../index.md)
+[**@stynx-nyx/flow**](../index.md)
 
 ---
 
-[@stynx/flow](../index.md) / ensureRunSchema
+[@stynx-nyx/flow](../index.md) / ensureRunSchema
 
 # Variable: ensureRunSchema
 

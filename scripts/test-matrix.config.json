@@ -46,21 +46,21 @@
     "@stynx-web/angular-flow": { "mutation": "strict" },
     "@stynx-web/angular-profile": { "mutation": "strictest" },
     "@stynx-web/sdk": { "mutation": "tier1" },
-    "@stynx/audit": { "mutation": "tier1" },
-    "@stynx/auth": { "mutation": "tier1" },
-    "@stynx/backend": { "mutation": "strict" },
-    "@stynx/cli": { "mutation": "strict" },
-    "@stynx/data": { "mutation": "tier1" },
-    "@stynx/privacy": { "mutation": "strictest" },
-    "@stynx/tenancy": { "mutation": "tier1" },
-    "@stynx/core": { "mutation": "tier2" },
-    "@stynx/flow": { "mutation": "strict" },
-    "@stynx/i18n": { "mutation": "strict" },
-    "@stynx/idempotency": { "mutation": "tier2" },
-    "@stynx/ratelimit": { "mutation": "tier2" },
-    "@stynx/sessions": { "mutation": "tier2" },
-    "@stynx/storage": { "mutation": "tier2" },
-    "@stynx/testing": { "mutation": "strict" }
+    "@stynx-nyx/audit": { "mutation": "tier1" },
+    "@stynx-nyx/auth": { "mutation": "tier1" },
+    "@stynx-nyx/backend": { "mutation": "strict" },
+    "@stynx-nyx/cli": { "mutation": "strict" },
+    "@stynx-nyx/data": { "mutation": "tier1" },
+    "@stynx-nyx/privacy": { "mutation": "strictest" },
+    "@stynx-nyx/tenancy": { "mutation": "tier1" },
+    "@stynx-nyx/core": { "mutation": "tier2" },
+    "@stynx-nyx/flow": { "mutation": "strict" },
+    "@stynx-nyx/i18n": { "mutation": "strict" },
+    "@stynx-nyx/idempotency": { "mutation": "tier2" },
+    "@stynx-nyx/ratelimit": { "mutation": "tier2" },
+    "@stynx-nyx/sessions": { "mutation": "tier2" },
+    "@stynx-nyx/storage": { "mutation": "tier2" },
+    "@stynx-nyx/testing": { "mutation": "strict" }
   },
   "notApplicable": [
     {
@@ -76,75 +76,75 @@
       "levels": ["API", "DB", "E2E", "Mutation", "Coverage"]
     },
     {
-      "packagePattern": "@stynx/audit",
+      "packagePattern": "@stynx-nyx/audit",
       "levels": ["E2E"]
     },
     {
-      "packagePattern": "@stynx/auth",
+      "packagePattern": "@stynx-nyx/auth",
       "levels": ["E2E"]
     },
     {
-      "packagePattern": "@stynx/backend",
+      "packagePattern": "@stynx-nyx/backend",
       "levels": ["API", "DB", "E2E"]
     },
     {
-      "packagePattern": "@stynx/cli",
+      "packagePattern": "@stynx-nyx/cli",
       "levels": ["API", "DB", "E2E"]
     },
     {
-      "packagePattern": "@stynx/contracts",
+      "packagePattern": "@stynx-nyx/contracts",
       "levels": ["API", "DB", "E2E"]
     },
     {
-      "packagePattern": "@stynx/core",
+      "packagePattern": "@stynx-nyx/core",
       "levels": ["API", "E2E"]
     },
     {
-      "packagePattern": "@stynx/data",
+      "packagePattern": "@stynx-nyx/data",
       "levels": ["API", "E2E"]
     },
     {
-      "packagePattern": "@stynx/flow",
+      "packagePattern": "@stynx-nyx/flow",
       "levels": ["E2E"]
     },
     {
-      "packagePattern": "@stynx/health",
+      "packagePattern": "@stynx-nyx/health",
       "levels": ["E2E"]
     },
     {
-      "packagePattern": "@stynx/i18n",
+      "packagePattern": "@stynx-nyx/i18n",
       "levels": ["E2E"]
     },
     {
-      "packagePattern": "@stynx/idempotency",
+      "packagePattern": "@stynx-nyx/idempotency",
       "levels": ["API", "E2E"]
     },
     {
-      "packagePattern": "@stynx/logging",
+      "packagePattern": "@stynx-nyx/logging",
       "levels": ["API", "E2E"]
     },
     {
-      "packagePattern": "@stynx/privacy",
+      "packagePattern": "@stynx-nyx/privacy",
       "levels": ["E2E"]
     },
     {
-      "packagePattern": "@stynx/ratelimit",
+      "packagePattern": "@stynx-nyx/ratelimit",
       "levels": ["API", "E2E"]
     },
     {
-      "packagePattern": "@stynx/sessions",
+      "packagePattern": "@stynx-nyx/sessions",
       "levels": ["E2E"]
     },
     {
-      "packagePattern": "@stynx/storage",
+      "packagePattern": "@stynx-nyx/storage",
       "levels": ["API", "E2E"]
     },
     {
-      "packagePattern": "@stynx/tenancy",
+      "packagePattern": "@stynx-nyx/tenancy",
       "levels": ["E2E"]
     },
     {
-      "packagePattern": "@stynx/testing",
+      "packagePattern": "@stynx-nyx/testing",
       "levels": ["API", "DB", "E2E"]
     },
     {
@@ -152,7 +152,7 @@
       "levels": ["API", "DB", "E2E"]
     },
     {
-      "packagePattern": "@stynx/reference-web",
+      "packagePattern": "@stynx-nyx/reference-web",
       "levels": ["API", "DB"]
     },
     {

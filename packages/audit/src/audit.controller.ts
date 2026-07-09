@@ -1,5 +1,5 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
-import { Permission, PermissionGuard, StynxAuthGuard } from '@stynx/auth';
+import { Permission, PermissionGuard, StynxAuthGuard } from '@stynx-nyx/auth';
 import { StynxAuditService } from './audit.service';
 import type { AuditLogQuery } from './types';
 

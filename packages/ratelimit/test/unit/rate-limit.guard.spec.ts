@@ -1,7 +1,7 @@
 import type { ExecutionContext } from '@nestjs/common';
 import { HttpException, HttpStatus, ServiceUnavailableException, SetMetadata } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { STYNX_SYSTEM_ROUTE } from '@stynx/auth';
+import { STYNX_SYSTEM_ROUTE } from '@stynx-nyx/auth';
 import { STYNX_RATE_LIMIT_ROUTE } from '../../src/constants';
 import { InMemoryRateLimitMetrics } from '../../src/metrics';
 import { RateLimitGuard } from '../../src/rate-limit.guard';

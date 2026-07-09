@@ -1,4 +1,4 @@
-# ADR-XMLDSIG-CONTRACT - XMLDSig Contract for `@stynx/signature`
+# ADR-XMLDSIG-CONTRACT - XMLDSig Contract for `@stynx-nyx/signature`
 
 **Status:** Accepted
 **Date:** 2026-05-24
@@ -9,7 +9,7 @@
 SGP carries two near-identical fiscal XML signers for DCTFWeb and EFD-Reinf.
 Both sign an element selected by an `Id` attribute, use enveloped XMLDSig, and
 then persist the signed XML hash as fiscal evidence. STYNX already owns digest,
-PAdES, GovBR sandbox, and sequential-signing helpers in `@stynx/signature`, so
+PAdES, GovBR sandbox, and sequential-signing helpers in `@stynx-nyx/signature`, so
 XMLDSig belongs in the same package boundary.
 
 This contract does not make STYNX a private-key store, certificate authority, or
@@ -18,7 +18,7 @@ telemetry, storage, audit, and business state transitions outside this package.
 
 ## Decision
 
-1. `@stynx/signature` exposes separate `XmlDSigSigner` and `XmlDSigVerifier`
+1. `@stynx-nyx/signature` exposes separate `XmlDSigSigner` and `XmlDSigVerifier`
    APIs. Signing and verification stay separate so adopters can wire key
    resolution and verification trust policy independently.
 2. The default signature method is RSA-SHA256:
@@ -53,7 +53,7 @@ telemetry, storage, audit, and business state transitions outside this package.
 ## Public Shape
 
 ```ts
-import { XmlDSigSigner, XmlDSigVerifier } from '@stynx/signature/xmldsig';
+import { XmlDSigSigner, XmlDSigVerifier } from '@stynx-nyx/signature/xmldsig';
 
 const signedXml = new XmlDSigSigner().sign(xml, {
   key: { privateKeyPem, certificatePem },

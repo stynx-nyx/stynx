@@ -1,8 +1,8 @@
-[**@stynx/tenancy**](../index.md)
+[**@stynx-nyx/tenancy**](../index.md)
 
 ---
 
-[@stynx/tenancy](../index.md) / RequestLike
+[@stynx-nyx/tenancy](../index.md) / RequestLike
 
 # Interface: RequestLike
 

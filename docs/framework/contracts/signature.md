@@ -1,9 +1,9 @@
 # Signature Contract
 
 **Authority:** Architect (DEVAI Constitution Article 6).
-**Package:** `@stynx/signature`.
+**Package:** `@stynx-nyx/signature`.
 
-`@stynx/signature` owns the STYNX signing facade and evidence shape. External
+`@stynx-nyx/signature` owns the STYNX signing facade and evidence shape. External
 providers such as ICP-Brasil or gov.br own the cryptographic PAdES/TSA work.
 
 ## Runtime Boundary

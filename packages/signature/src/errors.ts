@@ -18,7 +18,7 @@ export class SignatureCertificateValidationError extends SignatureError {
 }
 
 export class SignatureProviderConfigurationError extends SignatureError {
-  constructor(message = 'No @stynx/signature provider configured') {
+  constructor(message = 'No @stynx-nyx/signature provider configured') {
     super(message);
   }
 }

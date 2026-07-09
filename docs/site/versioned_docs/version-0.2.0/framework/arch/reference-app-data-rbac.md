@@ -39,7 +39,7 @@ asserts cascade/block behavior.
 Reference migrations use the same visible toolchain as platform migrations:
 
 - `reference/api/src/app.module.ts` runs `reference/api/migrations/*.sql`
-  through the `@stynx/data` migration runner integration.
+  through the `@stynx-nyx/data` migration runner integration.
 - `pnpm lint:migrations` includes `reference/api/migrations/0001_reference.sql`.
 - `pnpm db:verify` verifies schemas, RLS, archive mirrors, and audit triggers
   on any database identified by `DATABASE_URL` or `STYNX_DATABASE_URL`.

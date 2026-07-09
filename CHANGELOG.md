@@ -4,12 +4,12 @@
 
 - R16 deepens every published package README from ~50-130 line stubs to
   template-conformant developer references. All 41 packages (24 backend
-  `@stynx/*`, 13 web `@stynx-web/*`, 4 tools `@stynx-internal/*`) now carry
+  `@stynx-nyx/*`, 13 web `@stynx-web/*`, 4 tools `@stynx-internal/*`) now carry
   the locked 8-section shape: purpose / audience / install / quick-start /
   public-API-surface / configuration / examples / common-pitfalls /
   related-packages, pitched at the family-specific persona (NestJS backend
-  devs / Angular frontend devs / workspace integrators). `@stynx/backend`
-  (10 mountable submodules) and `@stynx/flow` (20 controllers / ~113 routes)
+  devs / Angular frontend devs / workspace integrators). `@stynx-nyx/backend`
+  (10 mountable submodules) and `@stynx-nyx/flow` (20 controllers / ~113 routes)
   split into `packages/<pkg>/docs/` subtrees; `sync-content.mjs` mirrors them
   into the published site. Two new round-gate scripts land under `scripts/`:
   `check-package-doc-shape.mjs` (asserts the 8 mandatory sections) and
@@ -66,15 +66,15 @@
   all landed clean.
 - R14 migrates the Docusaurus scaffold from `docs/` to `docs/site/` per
   DEVAI ADR-DOCS-GOVERNANCE + ADR-LOCAL-PUBLISH-WORKFLOW. The workspace
-  package is renamed `docs` → `@stynx/docs-site`; `pnpm --filter
-@stynx/docs-site …` replaces `pnpm --filter docs …` in build pipelines.
+  package is renamed `docs` → `@stynx-nyx/docs-site`; `pnpm --filter
+@stynx-nyx/docs-site …` replaces `pnpm --filter docs …` in build pipelines.
   `.devai/config/project.json` now declares `repo.kind=library` and the
   full `docs.*` block. Docs publish moves from CI (GitHub Actions
   deploy-pages) to a local act via `devai docs publish`; the
   `.github/workflows/docs.yml` workflow runs as a freshness check
   only. Adoption ratified by `docs/meta/adr/ADR-DOCS-GOVERNANCE-ADOPTION.md`.
-- R13 closes the SGP R11 PDF/A-2b conformance gaps in `@stynx/pdf` by bundling
+- R13 closes the SGP R11 PDF/A-2b conformance gaps in `@stynx-nyx/pdf` by bundling
   embedded fonts and sRGB ICC assets, adding deterministic PDF/A catalog
   metadata, and moving verification evidence before the final EOF.
-- R12 supersedes the R10 PDF/A boundary exclusion by adding `@stynx/pdf-a` and
-  `@stynx/pdf-a-vera-docker` as additive validator surfaces for PDF/A-2b.
+- R12 supersedes the R10 PDF/A boundary exclusion by adding `@stynx-nyx/pdf-a` and
+  `@stynx-nyx/pdf-a-vera-docker` as additive validator surfaces for PDF/A-2b.

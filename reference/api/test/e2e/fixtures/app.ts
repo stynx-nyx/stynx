@@ -1,10 +1,10 @@
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
-import { CognitoJwtValidator } from '@stynx/auth';
-import { RequestContextMutator } from '@stynx/core';
-import { Database } from '@stynx/data';
-import { StynxI18nModule } from '@stynx/i18n';
-import { SessionService } from '@stynx/sessions';
+import { CognitoJwtValidator } from '@stynx-nyx/auth';
+import { RequestContextMutator } from '@stynx-nyx/core';
+import { Database } from '@stynx-nyx/data';
+import { StynxI18nModule } from '@stynx-nyx/i18n';
+import { SessionService } from '@stynx-nyx/sessions';
 import { GenericContainer, Wait, type StartedTestContainer } from 'testcontainers';
 import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../../../packages/data/test/support/postgres';
 import { actors, type ActorName, seedRecordsAndNotesE2e } from './seed';
@@ -45,9 +45,9 @@ function setRuntimeEnvironment(postgres: PostgresTestDatabase, redisUrl: string)
   process.env.AWS_SECRET_ACCESS_KEY = 'test';
   process.env.AWS_REGION = 'us-east-1';
   process.env.AWS_EC2_METADATA_DISABLED = 'true';
-  process.env.STYNX_OWNER_DATABASE_URL = postgres.connectionString('@stynx/reference-api-e2e:owner');
-  process.env.STYNX_APP_DATABASE_URL = postgres.connectionString('@stynx/reference-api-e2e:app');
-  process.env.STYNX_READER_DATABASE_URL = postgres.connectionString('@stynx/reference-api-e2e:reader');
+  process.env.STYNX_OWNER_DATABASE_URL = postgres.connectionString('@stynx-nyx/reference-api-e2e:owner');
+  process.env.STYNX_APP_DATABASE_URL = postgres.connectionString('@stynx-nyx/reference-api-e2e:app');
+  process.env.STYNX_READER_DATABASE_URL = postgres.connectionString('@stynx-nyx/reference-api-e2e:reader');
   process.env.STYNX_REDIS_URL = redisUrl;
   process.env.STYNX_STORAGE_ENDPOINT = 'http://127.0.0.1:4566';
   process.env.STYNX_STORAGE_FORCE_PATH_STYLE = 'true';

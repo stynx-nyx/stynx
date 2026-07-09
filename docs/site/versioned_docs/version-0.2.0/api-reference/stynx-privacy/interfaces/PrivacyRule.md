@@ -1,8 +1,8 @@
-[**@stynx/privacy**](../index.md)
+[**@stynx-nyx/privacy**](../index.md)
 
 ---
 
-[@stynx/privacy](../index.md) / PrivacyRule
+[@stynx-nyx/privacy](../index.md) / PrivacyRule
 
 # Interface: PrivacyRule
 

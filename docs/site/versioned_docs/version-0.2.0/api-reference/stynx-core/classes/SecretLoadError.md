@@ -1,8 +1,8 @@
-[**@stynx/core**](../index.md)
+[**@stynx-nyx/core**](../index.md)
 
 ---
 
-[@stynx/core](../index.md) / SecretLoadError
+[@stynx-nyx/core](../index.md) / SecretLoadError
 
 # Class: SecretLoadError
 

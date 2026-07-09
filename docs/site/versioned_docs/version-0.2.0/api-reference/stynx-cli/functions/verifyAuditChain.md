@@ -1,8 +1,8 @@
-[**@stynx/cli**](../index.md)
+[**@stynx-nyx/cli**](../index.md)
 
 ---
 
-[@stynx/cli](../index.md) / verifyAuditChain
+[@stynx-nyx/cli](../index.md) / verifyAuditChain
 
 # Function: verifyAuditChain()
 

@@ -1,10 +1,10 @@
 ---
-title: '@stynx/feature-flags'
+title: '@stynx-nyx/feature-flags'
 ---
 
-# @stynx/feature-flags
+# @stynx-nyx/feature-flags
 
-`@stynx/feature-flags` provides a canonical tenant and environment scoped flag
+`@stynx-nyx/feature-flags` provides a canonical tenant and environment scoped flag
 API. PEC currently models similar behavior through process parameters; TEAT uses
 normative packages; SGP and PORM carry ad-hoc configuration layers. This package
 turns those patterns into one STYNX-owned contract.
@@ -12,7 +12,7 @@ turns those patterns into one STYNX-owned contract.
 ## Public API
 
 ```ts
-import { FeatureFlagsService, InMemoryFeatureFlagProvider } from '@stynx/feature-flags';
+import { FeatureFlagsService, InMemoryFeatureFlagProvider } from '@stynx-nyx/feature-flags';
 
 const service = new FeatureFlagsService(
   new InMemoryFeatureFlagProvider({
@@ -54,7 +54,7 @@ The first release includes:
 ## Audit Trail
 
 Flag evaluations can alter user-visible behavior. Consumers should emit
-evaluation facts to `@stynx/audit` where the decision affects workflow state,
+evaluation facts to `@stynx-nyx/audit` where the decision affects workflow state,
 accessibility of a domain action, billing behavior, or integration routing.
 
 ## Security and Tenancy

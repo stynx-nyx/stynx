@@ -9,7 +9,7 @@ import { URL } from 'node:url';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import type { JWTPayload, JWTVerifyGetKey } from 'jose';
-import type { AuthVerificationResult, Principal, TokenVerifier } from '@stynx/contracts';
+import type { AuthVerificationResult, Principal, TokenVerifier } from '@stynx-nyx/contracts';
 
 export interface CognitoTokenVerifierOptions {
   issuer: string;

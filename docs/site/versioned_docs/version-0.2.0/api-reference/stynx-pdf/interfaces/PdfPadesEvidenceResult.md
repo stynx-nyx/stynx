@@ -1,8 +1,8 @@
-[**@stynx/pdf**](../index.md)
+[**@stynx-nyx/pdf**](../index.md)
 
 ---
 
-[@stynx/pdf](../index.md) / PdfPadesEvidenceResult
+[@stynx-nyx/pdf](../index.md) / PdfPadesEvidenceResult
 
 # Interface: PdfPadesEvidenceResult
 

@@ -109,7 +109,7 @@ Adopter-side follow-ups still open in stynx:
 
 | ID               | Carried since | Description                                                          |
 | ---------------- | ------------- | -------------------------------------------------------------------- |
-| **F-9 step 2/N** | S3-2          | Wire demo-bookmark services to @stynx/data; real tests               |
+| **F-9 step 2/N** | S3-2          | Wire demo-bookmark services to @stynx-nyx/data; real tests               |
 | **F-16**         | This audit    | Re-author ADRs at `docs/meta/adr/` in DEVAI's schema-conformant form |
 
 ## 7. Headline

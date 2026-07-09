@@ -1,8 +1,8 @@
 ---
-title: '@stynx/backend'
+title: '@stynx-nyx/backend'
 ---
 
-# @stynx/backend
+# @stynx-nyx/backend
 
 Compatibility aggregation package that re-exports shared NestJS backend modules for existing STYNX host applications.
 
@@ -13,10 +13,10 @@ Compatibility aggregation package that re-exports shared NestJS backend modules 
 ## Install And Import
 
 ```ts
-import {} from /* public exports */ '@stynx/backend';
+import {} from /* public exports */ '@stynx-nyx/backend';
 ```
 
-In this monorepo, use the workspace package. Published consumers should install matching `@stynx/*` versions from the same release train.
+In this monorepo, use the workspace package. Published consumers should install matching `@stynx-nyx/*` versions from the same release train.
 
 ## Module Setup
 
@@ -29,7 +29,7 @@ Does not own database tables or external calls directly. Runtime behavior belong
 ## Example
 
 ```ts
-import { CurrentPrincipal, RequirePermissions, StynxPlatformPipelineModule } from '@stynx/backend';
+import { CurrentPrincipal, RequirePermissions, StynxPlatformPipelineModule } from '@stynx-nyx/backend';
 
 @Module({
   imports: [StynxPlatformPipelineModule.forRoot(platformOptions)],
@@ -48,7 +48,7 @@ export class AppModule {}
 
 Current barrel highlights:
 
-- `export * from '@stynx/contracts'`
+- `export * from '@stynx-nyx/contracts'`
 - `export * from './common/request-context'`
 - `export * from './auth/constants'`
 - `export * from './auth/default-principal-mapper'`
@@ -65,8 +65,8 @@ Current barrel highlights:
 ## Verification
 
 ```sh
-pnpm --filter @stynx/backend build
-pnpm --filter @stynx/backend test
+pnpm --filter @stynx-nyx/backend build
+pnpm --filter @stynx-nyx/backend test
 ```
 
 ## Documentation Standard

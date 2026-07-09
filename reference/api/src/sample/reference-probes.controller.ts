@@ -1,12 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import { BadRequestException, Controller, Get, Headers, Post, Query, Res, UseGuards } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { Public, Permission, ReadOnly, StynxAuthGuard, PermissionGuard, StynxJwtValidator } from '@stynx/auth';
-import { RequestContextMutator } from '@stynx/core';
-import { Database } from '@stynx/data';
-import { Idempotent } from '@stynx/idempotency';
-import { RateLimit, STYNX_RATE_LIMIT_STORE, type RateLimitStore } from '@stynx/ratelimit';
-import { Audit } from '@stynx/backend';
+import { Public, Permission, ReadOnly, StynxAuthGuard, PermissionGuard, StynxJwtValidator } from '@stynx-nyx/auth';
+import { RequestContextMutator } from '@stynx-nyx/core';
+import { Database } from '@stynx-nyx/data';
+import { Idempotent } from '@stynx-nyx/idempotency';
+import { RateLimit, STYNX_RATE_LIMIT_STORE, type RateLimitStore } from '@stynx-nyx/ratelimit';
+import { Audit } from '@stynx-nyx/backend';
 
 interface ResponseLike {
   setHeader(name: string, value: string): void;

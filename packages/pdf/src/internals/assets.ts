@@ -33,7 +33,7 @@ function readAsset(relativePath: string): Uint8Array {
       return readFileSync(assetPath);
     }
   }
-  throw new Error(`Missing @stynx/pdf asset: ${relativePath}`);
+  throw new Error(`Missing @stynx-nyx/pdf asset: ${relativePath}`);
 }
 
 function assetRootCandidates(): string[] {

@@ -1,8 +1,8 @@
-[**@stynx/flow**](../index.md)
+[**@stynx-nyx/flow**](../index.md)
 
 ---
 
-[@stynx/flow](../index.md) / signalSchema
+[@stynx-nyx/flow](../index.md) / signalSchema
 
 # Variable: signalSchema
 

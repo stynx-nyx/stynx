@@ -1,8 +1,8 @@
-[**@stynx/core**](../index.md)
+[**@stynx-nyx/core**](../index.md)
 
 ---
 
-[@stynx/core](../index.md) / ConfigOwner
+[@stynx-nyx/core](../index.md) / ConfigOwner
 
 # Type Alias: ConfigOwner
 

@@ -55,7 +55,7 @@ stynx assumes the following actors with distinct authority:
 
 **Mitigations:**
 
-- Production: Cognito User Pool with rotating JWKS; `@stynx/auth`'s `CognitoTokenVerifier` validates `iss`, `aud`, `exp`, `jwks_uri` per request.
+- Production: Cognito User Pool with rotating JWKS; `@stynx-nyx/auth`'s `CognitoTokenVerifier` validates `iss`, `aud`, `exp`, `jwks_uri` per request.
 - Dev: `/_reference/dev-login` endpoint is `@Public()` BUT only exists in non-production reference-app builds (`SampleModule` omits `ReferenceDevAuthController` and `ReferenceDevAuthService` when `NODE_ENV` or `STYNX_ENVIRONMENT` is `production`/`prod`).
 - Idempotency keys reduce replay damage for state-mutating endpoints.
 
@@ -71,7 +71,7 @@ stynx assumes the following actors with distinct authority:
 
 - `INV-PRIVACY-001` gates: every column with `pii_class` set must have `legal_basis` + `retention` registered in `core.pii_map`.
 - `sense-data-handling` (post-Phase 22.B + 23.F) extracts the pii_map join from migrations and verifies coverage.
-- `@stynx/privacy` reads from `core.pii_map` at erasure time and dispatches the correct `strategy` (nullify / hash_with_salt / hard_delete).
+- `@stynx-nyx/privacy` reads from `core.pii_map` at erasure time and dispatches the correct `strategy` (nullify / hash_with_salt / hard_delete).
 
 **Invariants:** `INV-PRIVACY-001`.
 **Tests:** `packages/data/test/integration/migrations.spec.ts` (verifies pii_map schema), `domain/demo-bookmark/api/test/bookmark.service.spec.ts` (verifies the demo column registration).
@@ -83,7 +83,7 @@ stynx assumes the following actors with distinct authority:
 
 **Mitigations:**
 
-- `@stynx/audit` uses hash-chained audit records; each row carries the previous row's hash.
+- `@stynx-nyx/audit` uses hash-chained audit records; each row carries the previous row's hash.
 - `evidence-verify` re-validates the chain integrity on demand.
 - `audit.events` table has no UPDATE/DELETE grants for `stynx_app` (insert-only).
 
@@ -125,9 +125,9 @@ stynx assumes the following actors with distinct authority:
 
 **Mitigations:**
 
-- `@stynx/ratelimit` enforces per-tenant + per-actor rate limits.
-- `@stynx/sessions` caps concurrent session count.
-- Long-running queries are subject to per-task DB statement timeouts (configured in `@stynx/data`).
+- `@stynx-nyx/ratelimit` enforces per-tenant + per-actor rate limits.
+- `@stynx-nyx/sessions` caps concurrent session count.
+- Long-running queries are subject to per-task DB statement timeouts (configured in `@stynx-nyx/data`).
 
 **Invariants:** Future `INV-PERF-001` candidate (post-perf-targets work).
 **Tests:** `packages/rate-limit/test/rate-limit.guard.spec.ts`, `_probes/ratelimit` endpoint runtime smoke.

@@ -1,8 +1,8 @@
-**@stynx/contracts**
+**@stynx-nyx/contracts**
 
 ---
 
-# @stynx/contracts
+# @stynx-nyx/contracts
 
 Public framework-agnostic contract exports shared by STYNX packages.
 

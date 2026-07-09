@@ -159,7 +159,7 @@ async function runChecked(command, args) {
 }
 
 await runChecked('docker', ['compose', '-f', composeFile, 'up', '--wait', 'postgres', 'redis']);
-await runChecked('pnpm', ['--filter', '@stynx/reference-api', 'build']);
+await runChecked('pnpm', ['--filter', '@stynx-nyx/reference-api', 'build']);
 
 apiProcess = run('node', [referenceApiMain], {
   env: {

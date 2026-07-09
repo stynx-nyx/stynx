@@ -432,7 +432,7 @@ describe('AuditSqlReader.list', () => {
 });
 
 // =============================================================================
-// Targeted mutation-survivor kills (WAVE-05A / @stynx/audit).
+// Targeted mutation-survivor kills (WAVE-05A / @stynx-nyx/audit).
 //
 // Each describe below names the survivor cluster it targets in plain language
 // and the file:line origin in src/sql-adapter.ts. Assertions are deliberately

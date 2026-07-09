@@ -1,8 +1,8 @@
-[**@stynx/contracts**](../index.md)
+[**@stynx-nyx/contracts**](../index.md)
 
 ---
 
-[@stynx/contracts](../index.md) / PolicyEvaluator
+[@stynx-nyx/contracts](../index.md) / PolicyEvaluator
 
 # Interface: PolicyEvaluator
 

@@ -141,7 +141,7 @@ _If you lean A instead, I won't argue hard. The two reasonable reasons to flip a
 **Stay with B (archive schema, same DB)** as specified in v0.4, but with two refinements to reduce the cost you were reacting to:
 
 1. **Make the helper the primary authoring surface.** In v0.4 §14.3 the helper `data.create_soft_deletable_table(...)` is shown as an option. Make it the _default_. Consumers write one `CREATE TABLE` inside the helper and get the live table + archive mirror + RLS on both + audit wiring + indexes automatically. Hand‑written mirror DDL is an escape hatch, not the common path. This takes the ongoing cognitive load of mirror parity down to near zero.
-2. **Stop emitting `archive.*` in Drizzle schema files.** Archive tables are derived; developers should read and write live tables only. `@stynx/data` exposes query helpers (`.withDeleted()`, `.onlyDeleted()`) that resolve archive access internally. Drizzle types for archive are generated into a separate, ignored module consumed only by the helpers. Result: developers never see the mirror except in migrations.
+2. **Stop emitting `archive.*` in Drizzle schema files.** Archive tables are derived; developers should read and write live tables only. `@stynx-nyx/data` exposes query helpers (`.withDeleted()`, `.onlyDeleted()`) that resolve archive access internally. Drizzle types for archive are generated into a separate, ignored module consumed only by the helpers. Result: developers never see the mirror except in migrations.
 
 With those two moves, the day‑to‑day cost of B approaches the cost of A, and you retain the structural‑safety benefits.
 
@@ -163,7 +163,7 @@ Every FK to a soft‑deletable parent must carry one annotation. No default: the
 
 **DB:** `FOREIGN KEY (...) REFERENCES parent(id) ON DELETE RESTRICT`.
 
-**Mechanics:** `softDelete(parent, id)` performs the archive INSERT + live DELETE transaction. The DELETE raises `foreign_key_violation` (SQLSTATE 23503) if any child row still references this parent. `@stynx/data` catches the error, looks up the child tables from `core.softdelete_fk_registry`, queries for blocking children (limited to the first N, say 10, with a count), and returns a 409 response:
+**Mechanics:** `softDelete(parent, id)` performs the archive INSERT + live DELETE transaction. The DELETE raises `foreign_key_violation` (SQLSTATE 23503) if any child row still references this parent. `@stynx-nyx/data` catches the error, looks up the child tables from `core.softdelete_fk_registry`, queries for blocking children (limited to the first N, say 10, with a count), and returns a 409 response:
 
 ```json
 {

@@ -15,7 +15,7 @@ import { generateRopaFromApp } from '../src/privacy-ropa';
 
 const proposedPermissionPlaceholder = 'TODO' + '_PERMISSION';
 
-describe('@stynx/cli', () => {
+describe('@stynx-nyx/cli', () => {
   it('scaffolds a consumer app skeleton', () => {
     const root = mkdtempSync(resolve(tmpdir(), 'stynx-cli-init-'));
     scaffoldApp(resolve(root, 'demo-app'), 'demo-app', true);
@@ -46,13 +46,13 @@ describe('@stynx/cli', () => {
         test: 'node --test',
       },
       dependencies: {
-        '@stynx/core': 'workspace:*',
-        '@stynx/data': 'workspace:*',
-        '@stynx/auth': 'workspace:*',
-        '@stynx/sessions': 'workspace:*',
-        '@stynx/storage': 'workspace:*',
-        '@stynx/privacy': 'workspace:*',
-        '@stynx/i18n': 'workspace:*',
+        '@stynx-nyx/core': 'workspace:*',
+        '@stynx-nyx/data': 'workspace:*',
+        '@stynx-nyx/auth': 'workspace:*',
+        '@stynx-nyx/sessions': 'workspace:*',
+        '@stynx-nyx/storage': 'workspace:*',
+        '@stynx-nyx/privacy': 'workspace:*',
+        '@stynx-nyx/i18n': 'workspace:*',
       },
     });
     expect(JSON.parse(readFileSync(resolve(appDir, 'tsconfig.json'), 'utf8'))).toEqual({

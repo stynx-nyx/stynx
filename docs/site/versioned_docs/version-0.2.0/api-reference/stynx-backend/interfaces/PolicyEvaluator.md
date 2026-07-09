@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / PolicyEvaluator
+[@stynx-nyx/backend](../index.md) / PolicyEvaluator
 
 # Interface: PolicyEvaluator
 

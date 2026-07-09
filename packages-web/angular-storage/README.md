@@ -1,6 +1,6 @@
 # `@stynx-web/angular-storage` — Angular file upload + download with presigned-URL flow
 
-`@stynx-web/angular-storage` is the Angular file-handling package. It provides a document-upload component (drag-drop + progress), a document-download component, and the upload executors (multipart + XHR) that drive direct-to-S3 uploads via presigned URLs. Backed by the backend's [`@stynx/storage`](/docs/packages/storage/) presign endpoints.
+`@stynx-web/angular-storage` is the Angular file-handling package. It provides a document-upload component (drag-drop + progress), a document-download component, and the upload executors (multipart + XHR) that drive direct-to-S3 uploads via presigned URLs. Backed by the backend's [`@stynx-nyx/storage`](/docs/packages/storage/) presign endpoints.
 
 ## Purpose
 
@@ -101,14 +101,14 @@ export class Viewer {
 
 ## Common pitfalls
 
-- **Bucket CORS not configured** — direct-to-S3 PUT fails the browser preflight. The backend bucket must allow the app's origin (see [`@stynx/storage`](/docs/packages/storage/)).
+- **Bucket CORS not configured** — direct-to-S3 PUT fails the browser preflight. The backend bucket must allow the app's origin (see [`@stynx-nyx/storage`](/docs/packages/storage/)).
 - **Presigned-URL expiry mid-upload** — large files on slow networks can outlast the presign TTL. Bump the backend's `presignTtl` for big files.
 - **Multipart threshold too low** — many small parts add overhead. Tune `multipartThresholdBytes`.
 
 ## Related packages
 
 - [`@stynx-web/angular`](/docs/packages-web/angular/) — the foundation.
-- [`@stynx/storage`](/docs/packages/storage/) — the backend counterpart (presign endpoints + S3).
+- [`@stynx-nyx/storage`](/docs/packages/storage/) — the backend counterpart (presign endpoints + S3).
 
 ## TypeDoc reference
 

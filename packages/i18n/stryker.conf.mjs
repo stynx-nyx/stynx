@@ -1,7 +1,7 @@
 import { createStrykerConfig } from '../../tools/stryker/base.mjs';
 
 export default createStrykerConfig({
-  packageName: '@stynx/i18n',
+  packageName: '@stynx-nyx/i18n',
   concurrency: 1,
   vitestConfig: './vitest.stryker.config.ts',
   // Controllers excluded per workspace policy (see tools/stryker/base.mjs).

@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / DbContextApplier
+[@stynx-nyx/backend](../index.md) / DbContextApplier
 
 # Interface: DbContextApplier\<TClient\>
 

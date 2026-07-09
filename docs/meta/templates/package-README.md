@@ -1,4 +1,4 @@
-# @stynx/<package>
+# @stynx-nyx/<package>
 
 One-sentence consumer scope. State whether this package is a NestJS module,
 framework-agnostic contract package, CLI, adapter package, or test harness.
@@ -11,11 +11,11 @@ does not cross. Mention related packages that must be configured first.
 ## Install And Import
 
 ```ts
-import { StynxExampleModule } from '@stynx/<package>';
+import { StynxExampleModule } from '@stynx-nyx/<package>';
 ```
 
 In the monorepo, package consumers use workspace dependencies. Published
-consumers install the matching `@stynx/*` package version.
+consumers install the matching `@stynx-nyx/*` package version.
 
 ## Module Setup
 
@@ -57,8 +57,8 @@ Keep exports behind the public barrel; avoid documenting deep imports as stable.
 List package-local commands:
 
 ```sh
-pnpm --filter @stynx/<package> build
-pnpm --filter @stynx/<package> test
+pnpm --filter @stynx-nyx/<package> build
+pnpm --filter @stynx-nyx/<package> test
 ```
 
 Add integration-test commands if the package owns database, Redis, S3, Cognito,

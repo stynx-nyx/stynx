@@ -1,9 +1,9 @@
 import type { DynamicModule, INestApplication, Provider, Type } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import type { StartedTestContainer } from 'testcontainers';
-import type { Database, StynxPgClient, Transaction } from '@stynx/data';
-import type { RequestContextMutator } from '@stynx/core';
-import type { SessionJwtSigningService, StynxSessionSigningKeySet } from '@stynx/sessions';
+import type { Database, StynxPgClient, Transaction } from '@stynx-nyx/data';
+import type { RequestContextMutator } from '@stynx-nyx/core';
+import type { SessionJwtSigningService, StynxSessionSigningKeySet } from '@stynx-nyx/sessions';
 
 export type TestSqlStep =
   | string

@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / canonicalJson
+[@stynx-nyx/signature](../index.md) / canonicalJson
 
 # Function: canonicalJson()
 

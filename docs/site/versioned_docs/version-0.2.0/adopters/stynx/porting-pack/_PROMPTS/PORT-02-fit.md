@@ -64,9 +64,9 @@ flowchart TD
   B -- yes --&gt; C&#123;Postgres + AWS feasible?&#125;
   C -- no --&gt; Z
   C -- yes --&gt; D&#123;Multi-tenant?&#125;
-  D -- single-tenant --&gt; Y[SCOPE-REDUCED:&lt;br/&gt;skip @stynx/tenancy&lt;br/&gt;and RLS layer]
+  D -- single-tenant --&gt; Y[SCOPE-REDUCED:&lt;br/&gt;skip @stynx-nyx/tenancy&lt;br/&gt;and RLS layer]
   D -- multi-tenant --&gt; E&#123;LGPD/GDPR&lt;br/&gt;needed?&#125;
-  E -- no --&gt; Y2[SCOPE-REDUCED:&lt;br/&gt;skip @stynx/privacy]
+  E -- no --&gt; Y2[SCOPE-REDUCED:&lt;br/&gt;skip @stynx-nyx/privacy]
   E -- yes --&gt; F&#123;Frontend Angular&lt;br/&gt;or sdk-only?&#125;
   F -- neither --&gt; Y3[SCOPE-REDUCED:&lt;br/&gt;backend port only,&lt;br/&gt;keep foreign FE]
   F -- ok --&gt; P[PROCEED]

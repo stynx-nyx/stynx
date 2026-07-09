@@ -35,7 +35,7 @@
   "devDependencies": {
     "@angular/compiler": "21.2.15",
     "@angular/compiler-cli": "21.2.15",
-    "@stynx/core": "workspace:*",
+    "@stynx-nyx/core": "workspace:*",
     "@types/node": "24.12.4",
     "ng-packagr": "21.2.3",
     "openapi-typescript-codegen": "^0.30.0",

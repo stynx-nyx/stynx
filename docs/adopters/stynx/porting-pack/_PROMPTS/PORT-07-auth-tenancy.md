@@ -34,7 +34,7 @@ By starting point:
 - Clerk → ...
 - Cognito-direct → ...
 
-[Each: minimum-effort migration steps, citing @stynx/auth wiring.]
+[Each: minimum-effort migration steps, citing @stynx-nyx/auth wiring.]
 
 ## Pattern B — Introducing TenantContext
 

@@ -1,8 +1,8 @@
-[**@stynx/privacy**](../index.md)
+[**@stynx-nyx/privacy**](../index.md)
 
 ---
 
-[@stynx/privacy](../index.md) / PrivacyConfigurationError
+[@stynx-nyx/privacy](../index.md) / PrivacyConfigurationError
 
 # Class: PrivacyConfigurationError
 

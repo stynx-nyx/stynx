@@ -1,8 +1,8 @@
-[**@stynx/logging**](../index.md)
+[**@stynx-nyx/logging**](../index.md)
 
 ---
 
-[@stynx/logging](../index.md) / StynxLoggingOptions
+[@stynx-nyx/logging](../index.md) / StynxLoggingOptions
 
 # Interface: StynxLoggingOptions
 

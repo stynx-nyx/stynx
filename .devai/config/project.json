@@ -10,7 +10,7 @@
   },
   "docs": {
     "builder": "docusaurus",
-    "build_command": "pnpm --filter @stynx/docs-site run build",
+    "build_command": "pnpm --filter @stynx-nyx/docs-site run build",
     "output_dir": "docs/site/build",
     "publish_target": "gh-pages",
     "gh_pages_branch": "gh-pages"

@@ -1,4 +1,4 @@
-# @stynx/flow Changelog
+# @stynx-nyx/flow Changelog
 
 ## 0.1.0
 

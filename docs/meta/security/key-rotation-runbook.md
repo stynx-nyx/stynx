@@ -1,9 +1,9 @@
 # Session signing key rotation runbook
 
 **Authority:** Architect (Constitution Article 6).
-**Scope:** STYNX session access-token signing keys used by `@stynx/sessions`.
+**Scope:** STYNX session access-token signing keys used by `@stynx-nyx/sessions`.
 **Applies to:** deployments that issue STYNX-side session JWTs and expose JWKS
-through `@stynx/sessions`.
+through `@stynx-nyx/sessions`.
 
 ## Code references
 
@@ -19,7 +19,7 @@ through `@stynx/sessions`.
 - `packages/sessions/README.md` — package-level rotation example and operational
   pitfalls.
 - `packages/auth/src/stynx-jwt.validator.ts` — verifier-side JWKS cache behavior
-  in `@stynx/auth`.
+  in `@stynx-nyx/auth`.
 - `packages/core/src/secret-loader.ts` — AWS Secrets Manager-backed
   `SecretLoader` used when `jwt.secretId` supplies key material.
 - `reference/api/src/app.module.ts` — reference API wiring for session signing
@@ -51,7 +51,7 @@ after assessing active-token exposure.
    now signed by the new key; old access tokens remain verifiable.
 6. Keep the old key in the key set for a grace window at least as long as the
    maximum access-token TTL, plus verifier JWKS cache time. The current
-   `@stynx/auth` validator caches JWKS for 12 hours.
+   `@stynx-nyx/auth` validator caches JWKS for 12 hours.
 7. After the grace window, remove the old key from the key set and deploy.
 8. Confirm JWKS contains only the active and intentionally retained retired
    keys.
@@ -69,7 +69,7 @@ fails.
 - Verify an access token minted before the active-key flip until the grace
   window expires.
 - Run the deployment's auth/session smoke path, including a protected endpoint
-  guarded by `@stynx/auth`.
+  guarded by `@stynx-nyx/auth`.
 - Check application logs for `SessionSigningKeyError` and JWKS fetch failures.
 
 ## Rollback

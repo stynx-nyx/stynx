@@ -1,8 +1,8 @@
-[**@stynx/privacy**](../index.md)
+[**@stynx-nyx/privacy**](../index.md)
 
 ---
 
-[@stynx/privacy](../index.md) / generateRopaMarkdown
+[@stynx-nyx/privacy](../index.md) / generateRopaMarkdown
 
 # Function: generateRopaMarkdown()
 

@@ -1,8 +1,8 @@
-[**@stynx/pdf**](../index.md)
+[**@stynx-nyx/pdf**](../index.md)
 
 ---
 
-[@stynx/pdf](../index.md) / FixedLayoutDocumentBuilder
+[@stynx-nyx/pdf](../index.md) / FixedLayoutDocumentBuilder
 
 # Class: FixedLayoutDocumentBuilder
 

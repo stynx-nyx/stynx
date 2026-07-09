@@ -5,7 +5,7 @@
 // this spec validates the DI graph + controller-to-service delegation only.
 
 import { Test } from '@nestjs/testing';
-import { Permission, PermissionGuard, StynxAuthGuard } from '@stynx/auth';
+import { Permission, PermissionGuard, StynxAuthGuard } from '@stynx-nyx/auth';
 import { BookmarkController } from '../src/demo-bookmark/controllers/bookmark.controller';
 import { BookmarkService } from '../src/demo-bookmark/services/bookmark.service';
 

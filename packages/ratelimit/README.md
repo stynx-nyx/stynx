@@ -1,14 +1,14 @@
-# `@stynx/ratelimit` — sliding-window rate limit with per-route policy + Redis/Postgres stores
+# `@stynx-nyx/ratelimit` — sliding-window rate limit with per-route policy + Redis/Postgres stores
 
-`@stynx/ratelimit` is the sliding-window rate-limit primitive. Apply per-route policy via `@RateLimit({ window, max, key })`, and the global `RateLimitGuard` (mounted by `StynxPlatformPipelineModule` from `@stynx/backend`, or directly by this module) rejects with 429 when the window's limit is exceeded. Stores: in-memory (dev), Postgres-table (lower throughput, simple), Redis (production, single-digit-ms latency).
+`@stynx-nyx/ratelimit` is the sliding-window rate-limit primitive. Apply per-route policy via `@RateLimit({ window, max, key })`, and the global `RateLimitGuard` (mounted by `StynxPlatformPipelineModule` from `@stynx-nyx/backend`, or directly by this module) rejects with 429 when the window's limit is exceeded. Stores: in-memory (dev), Postgres-table (lower throughput, simple), Redis (production, single-digit-ms latency).
 
 ## Purpose
 
-Production APIs need rate limits per-route per-key (per-actor, per-tenant, per-IP). Doing this with a single global limit isn't fine-grained enough; doing it per-route by hand is error-prone. `@stynx/ratelimit` provides a single decorator + store abstraction with the sliding-window algorithm baked in.
+Production APIs need rate limits per-route per-key (per-actor, per-tenant, per-IP). Doing this with a single global limit isn't fine-grained enough; doing it per-route by hand is error-prone. `@stynx-nyx/ratelimit` provides a single decorator + store abstraction with the sliding-window algorithm baked in.
 
 You reach for it any time you expose a public or semi-public endpoint that could be flooded. The `StynxPlatformPipelineModule` wires it globally; you only annotate routes.
 
-What it does NOT do: not a circuit breaker (use `@stynx/integration-adapter` for outbound calls), not DDoS protection (use upstream WAF), no jittering/exponential-backoff hints (client-side concern).
+What it does NOT do: not a circuit breaker (use `@stynx-nyx/integration-adapter` for outbound calls), not DDoS protection (use upstream WAF), no jittering/exponential-backoff hints (client-side concern).
 
 ## Audience
 
@@ -17,15 +17,15 @@ Backend developers protecting endpoints from abuse, runaway clients, or noisy ne
 ## Install
 
 ```bash
-pnpm add @stynx/ratelimit
+pnpm add @stynx-nyx/ratelimit
 ```
 
-**Peer dependencies:** `@nestjs/common` `^11`, `@stynx/core` `^1`, `ioredis` (optional, Redis store), `drizzle-orm` (optional, Postgres store).
+**Peer dependencies:** `@nestjs/common` `^11`, `@stynx-nyx/core` `^1`, `ioredis` (optional, Redis store), `drizzle-orm` (optional, Postgres store).
 
 ## Quick start
 
 ```ts
-import { StynxRateLimitModule } from '@stynx/ratelimit';
+import { StynxRateLimitModule } from '@stynx-nyx/ratelimit';
 
 StynxRateLimitModule.forRoot({
   default: { window: '1m', max: 60, key: 'actor' },
@@ -34,7 +34,7 @@ StynxRateLimitModule.forRoot({
 ```
 
 ```ts
-import { RateLimit } from '@stynx/ratelimit';
+import { RateLimit } from '@stynx-nyx/ratelimit';
 
 @Controller('orders')
 export class OrdersController {
@@ -134,9 +134,9 @@ StynxRateLimitModule.forRoot({
 
 ## Related packages
 
-- [`@stynx/core`](/docs/packages/core/) — provides `RequestContext` for the `actor` / `tenant` key resolvers.
-- [`backend/rate-limit`](/docs/packages/backend/rate-limit/) — `@stynx/backend` submodule that wraps wiring.
-- [`@stynx/idempotency`](/docs/packages/idempotency/) — adjacent concern (replay protection); both registered by `StynxPlatformPipelineModule`.
+- [`@stynx-nyx/core`](/docs/packages/core/) — provides `RequestContext` for the `actor` / `tenant` key resolvers.
+- [`backend/rate-limit`](/docs/packages/backend/rate-limit/) — `@stynx-nyx/backend` submodule that wraps wiring.
+- [`@stynx-nyx/idempotency`](/docs/packages/idempotency/) — adjacent concern (replay protection); both registered by `StynxPlatformPipelineModule`.
 
 ## TypeDoc reference
 

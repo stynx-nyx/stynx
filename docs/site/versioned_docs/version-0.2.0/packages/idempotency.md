@@ -1,8 +1,8 @@
 ---
-title: '@stynx/idempotency'
+title: '@stynx-nyx/idempotency'
 ---
 
-# @stynx/idempotency
+# @stynx-nyx/idempotency
 
 Mutation idempotency primitives, response replay, durable stores, Redis backend, and HTTP interceptor wiring.
 
@@ -13,10 +13,10 @@ Mutation idempotency primitives, response replay, durable stores, Redis backend,
 ## Install And Import
 
 ```ts
-import {} from /* public exports */ '@stynx/idempotency';
+import {} from /* public exports */ '@stynx-nyx/idempotency';
 ```
 
-In this monorepo, use the workspace package. Published consumers should install matching `@stynx/*` versions from the same release train.
+In this monorepo, use the workspace package. Published consumers should install matching `@stynx-nyx/*` versions from the same release train.
 
 ## Module Setup
 
@@ -36,7 +36,7 @@ Stores idempotency keys and replay envelopes by tenant/user/request context. Aut
 ## Example
 
 ```ts
-import { Idempotent } from '@stynx/idempotency';
+import { Idempotent } from '@stynx-nyx/idempotency';
 
 @Idempotent({ scope: 'tenant' })
 @Post('/records')
@@ -68,9 +68,9 @@ Current barrel highlights:
 ## Verification
 
 ```sh
-pnpm --filter @stynx/idempotency build
-pnpm --filter @stynx/idempotency test
-STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx/idempotency test:int
+pnpm --filter @stynx-nyx/idempotency build
+pnpm --filter @stynx-nyx/idempotency test
+STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx-nyx/idempotency test:int
 ```
 
 ## Documentation Standard

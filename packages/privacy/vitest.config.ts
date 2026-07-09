@@ -3,7 +3,7 @@ import { createVitestConfig } from '../../tools/repo-config/vitest.base.mjs';
 
 export default createVitestConfig({
   packageDir: __dirname,
-  packageName: '@stynx/privacy',
+  packageName: '@stynx-nyx/privacy',
   include: ['test/**/*.spec.ts', 'test/wiring/**/*.wiring-spec.ts'],
   collectCoverageFrom: [
     'src/**/*.ts',
@@ -12,10 +12,10 @@ export default createVitestConfig({
     '!src/privacy.module.ts',
   ],
   alias: {
-    '@stynx/core': resolve(__dirname, '../core/src/index.ts'),
-    '@stynx/data': resolve(__dirname, '../data/src/index.ts'),
-    '@stynx/testing': resolve(__dirname, '../testing/src/index.ts'),
-    '@stynx/privacy': resolve(__dirname, 'src/index.ts'),
-    '@stynx/idempotency': resolve(__dirname, '../idempotency/src/index.ts'),
+    '@stynx-nyx/core': resolve(__dirname, '../core/src/index.ts'),
+    '@stynx-nyx/data': resolve(__dirname, '../data/src/index.ts'),
+    '@stynx-nyx/testing': resolve(__dirname, '../testing/src/index.ts'),
+    '@stynx-nyx/privacy': resolve(__dirname, 'src/index.ts'),
+    '@stynx-nyx/idempotency': resolve(__dirname, '../idempotency/src/index.ts'),
   },
 });

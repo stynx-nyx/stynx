@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / encodePadesEvidenceBlock
+[@stynx-nyx/signature](../index.md) / encodePadesEvidenceBlock
 
 # Function: encodePadesEvidenceBlock()
 

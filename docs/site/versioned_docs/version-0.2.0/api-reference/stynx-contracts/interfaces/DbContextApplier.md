@@ -1,8 +1,8 @@
-[**@stynx/contracts**](../index.md)
+[**@stynx-nyx/contracts**](../index.md)
 
 ---
 
-[@stynx/contracts](../index.md) / DbContextApplier
+[@stynx-nyx/contracts](../index.md) / DbContextApplier
 
 # Interface: DbContextApplier\<TClient\>
 

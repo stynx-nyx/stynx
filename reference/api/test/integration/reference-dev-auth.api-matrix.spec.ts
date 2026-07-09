@@ -1,7 +1,7 @@
 import { UnauthorizedException, type INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { StynxCoreModule } from '@stynx/core';
-import { StynxJwtValidator } from '@stynx/auth';
+import { StynxCoreModule } from '@stynx-nyx/core';
+import { StynxJwtValidator } from '@stynx-nyx/auth';
 import request from 'supertest';
 import { z } from 'zod';
 import { ReferenceDevAuthController } from '../../src/sample/reference-dev-auth.controller';

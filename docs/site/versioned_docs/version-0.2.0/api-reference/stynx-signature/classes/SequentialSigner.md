@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / SequentialSigner
+[@stynx-nyx/signature](../index.md) / SequentialSigner
 
 # Class: SequentialSigner
 

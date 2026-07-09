@@ -1,8 +1,8 @@
-[**@stynx/data**](../index.md)
+[**@stynx-nyx/data**](../index.md)
 
 ---
 
-[@stynx/data](../index.md) / Transaction
+[@stynx-nyx/data](../index.md) / Transaction
 
 # Class: Transaction
 

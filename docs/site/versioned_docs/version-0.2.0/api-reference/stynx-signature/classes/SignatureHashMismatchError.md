@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / SignatureHashMismatchError
+[@stynx-nyx/signature](../index.md) / SignatureHashMismatchError
 
 # Class: SignatureHashMismatchError
 

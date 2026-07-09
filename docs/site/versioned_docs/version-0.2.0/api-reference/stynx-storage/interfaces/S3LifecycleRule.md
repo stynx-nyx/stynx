@@ -1,8 +1,8 @@
-[**@stynx/storage**](../index.md)
+[**@stynx-nyx/storage**](../index.md)
 
 ---
 
-[@stynx/storage](../index.md) / S3LifecycleRule
+[@stynx-nyx/storage](../index.md) / S3LifecycleRule
 
 # Interface: S3LifecycleRule
 

@@ -1,8 +1,8 @@
-[**@stynx/storage**](../index.md)
+[**@stynx-nyx/storage**](../index.md)
 
 ---
 
-[@stynx/storage](../index.md) / STYNX_STORAGE_OPTIONS
+[@stynx-nyx/storage](../index.md) / STYNX_STORAGE_OPTIONS
 
 # Variable: STYNX_STORAGE_OPTIONS
 

@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { STYNX_NO_IDEMPOTENT_ROUTE } from '@stynx/idempotency';
+import { STYNX_NO_IDEMPOTENT_ROUTE } from '@stynx-nyx/idempotency';
 import { PrivacyController } from '../../src/privacy.controller';
 import type { PrivacyService } from '../../src/privacy.service';
 

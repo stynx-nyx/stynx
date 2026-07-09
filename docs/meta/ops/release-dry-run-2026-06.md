@@ -25,10 +25,10 @@ The release dry-run chain is green locally.
 2. The committed CycloneDX SBOM was stale relative to `pnpm-lock.yaml`; it was regenerated.
 3. Public API declaration hashes had drifted after prior package changes; the baseline was regenerated.
 4. The dry-publish inspection exposed publish tarball hygiene gaps:
-   - `@stynx/data` was compiling `test/types` into `dist`.
-   - `@stynx/testing` was compiling spec files and re-emitting workspace dependency sources because the publish build inherited repo source-path mappings.
+   - `@stynx-nyx/data` was compiling `test/types` into `dist`.
+   - `@stynx-nyx/testing` was compiling spec files and re-emitting workspace dependency sources because the publish build inherited repo source-path mappings.
 
-`@stynx/data` and `@stynx/testing` now build through `tsconfig.build.json`, clean `dist` before compile, and override inherited `paths` for publish builds. Their normal `tsconfig.json` files remain the typecheck surface, so test typechecking is not silently dropped.
+`@stynx-nyx/data` and `@stynx-nyx/testing` now build through `tsconfig.build.json`, clean `dist` before compile, and override inherited `paths` for publish builds. Their normal `tsconfig.json` files remain the typecheck surface, so test typechecking is not silently dropped.
 
 ## Dry-Publish Parity
 
@@ -38,8 +38,8 @@ Spot checks after the tarball-hygiene fix:
 
 | Package          |    Before |     After | Notes                                                                                                    |
 | ---------------- | --------: | --------: | -------------------------------------------------------------------------------------------------------- |
-| `@stynx/data`    | 157 files | 109 files | Removed compiled `dist/data/test/types/*` from the package.                                              |
-| `@stynx/testing` | 219 files |  39 files | Removed compiled specs and duplicate dependency package output; package now emits only `dist/testing/*`. |
+| `@stynx-nyx/data`    | 157 files | 109 files | Removed compiled `dist/data/test/types/*` from the package.                                              |
+| `@stynx-nyx/testing` | 219 files |  39 files | Removed compiled specs and duplicate dependency package output; package now emits only `dist/testing/*`. |
 
 ## Remaining Follow-Up
 

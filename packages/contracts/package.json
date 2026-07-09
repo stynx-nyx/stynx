@@ -1,5 +1,5 @@
 {
-  "name": "@stynx/contracts",
+  "name": "@stynx-nyx/contracts",
   "version": "1.0.0",
   "description": "Framework-agnostic STYNX contracts shared by backend and integration packages",
   "main": "dist/contracts/src/index.js",

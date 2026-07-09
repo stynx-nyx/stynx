@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { RequestContext } from '@stynx/core';
-import { Database, Transaction } from '@stynx/data';
+import { RequestContext } from '@stynx-nyx/core';
+import { Database, Transaction } from '@stynx-nyx/data';
 import { FORM_TABLES, formEntries, type FormTableKey } from './internal/forms/form-tables';
 import { camelizeRow, type FlowRow } from './row-utils';
 import {

@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / DEFAULT_XMLDSIG_CANONICALIZATION
+[@stynx-nyx/signature](../index.md) / DEFAULT_XMLDSIG_CANONICALIZATION
 
 # Variable: DEFAULT_XMLDSIG_CANONICALIZATION
 

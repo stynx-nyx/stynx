@@ -1,8 +1,8 @@
 ---
-title: '@stynx/sessions'
+title: '@stynx-nyx/sessions'
 ---
 
-# @stynx/sessions
+# @stynx-nyx/sessions
 
 Redis-backed sessions, refresh-token rotation, JWT/JWKS signing, session mirror writing, and bulk revocation helpers.
 
@@ -13,10 +13,10 @@ Redis-backed sessions, refresh-token rotation, JWT/JWKS signing, session mirror 
 ## Install And Import
 
 ```ts
-import {} from /* public exports */ '@stynx/sessions';
+import {} from /* public exports */ '@stynx-nyx/sessions';
 ```
 
-In this monorepo, use the workspace package. Published consumers should install matching `@stynx/*` versions from the same release train.
+In this monorepo, use the workspace package. Published consumers should install matching `@stynx-nyx/*` versions from the same release train.
 
 ## Module Setup
 
@@ -31,12 +31,12 @@ export class SessionsHostModule {}
 
 ## Data And Security Model
 
-Access tokens are RS256 signed and exposed through JWKS. Refresh tokens are opaque, rotated, reuse-detected, and indexed for user/tenant revocation. Durable mirrors write through @stynx/data.
+Access tokens are RS256 signed and exposed through JWKS. Refresh tokens are opaque, rotated, reuse-detected, and indexed for user/tenant revocation. Durable mirrors write through @stynx-nyx/data.
 
 ## Example
 
 ```ts
-import { SessionService } from '@stynx/sessions';
+import { SessionService } from '@stynx-nyx/sessions';
 
 const bundle = await sessions.exchangeRefreshToken({ refreshToken, device });
 ```
@@ -67,9 +67,9 @@ Current barrel highlights:
 ## Verification
 
 ```sh
-pnpm --filter @stynx/sessions build
-pnpm --filter @stynx/sessions test
-STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx/sessions test:int
+pnpm --filter @stynx-nyx/sessions build
+pnpm --filter @stynx-nyx/sessions test
+STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx-nyx/sessions test:int
 ```
 
 ## Documentation Standard

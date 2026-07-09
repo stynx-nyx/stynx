@@ -8,8 +8,8 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { RequestContext, RequestContextMutator } from '@stynx/core';
-import { Database } from '@stynx/data';
+import { RequestContext, RequestContextMutator } from '@stynx-nyx/core';
+import { Database } from '@stynx-nyx/data';
 import { Observable, type Subscription } from 'rxjs';
 import { MembershipAccessCache } from './membership-cache';
 import { STYNX_TENANCY_OPTIONS, STYNX_TENANT_MEMBERSHIP_CACHE } from './tokens';

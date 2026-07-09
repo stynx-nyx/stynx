@@ -1,8 +1,8 @@
-[**@stynx/data**](../index.md)
+[**@stynx-nyx/data**](../index.md)
 
 ---
 
-[@stynx/data](../index.md) / WithDeletedRow
+[@stynx-nyx/data](../index.md) / WithDeletedRow
 
 # Type Alias: WithDeletedRow\<TTable\>
 

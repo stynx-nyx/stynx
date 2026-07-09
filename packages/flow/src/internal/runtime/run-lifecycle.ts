@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { RequestContext } from '@stynx/core';
-import { Database } from '@stynx/data';
+import { RequestContext } from '@stynx-nyx/core';
+import { Database } from '@stynx-nyx/data';
 import { FlowAdapterRegistry } from '../../adapters';
 import {
   ensureRunSchema,

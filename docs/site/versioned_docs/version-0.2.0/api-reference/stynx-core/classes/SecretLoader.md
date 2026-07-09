@@ -1,8 +1,8 @@
-[**@stynx/core**](../index.md)
+[**@stynx-nyx/core**](../index.md)
 
 ---
 
-[@stynx/core](../index.md) / SecretLoader
+[@stynx-nyx/core](../index.md) / SecretLoader
 
 # Class: SecretLoader
 

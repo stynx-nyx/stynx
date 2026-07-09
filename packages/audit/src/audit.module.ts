@@ -1,5 +1,5 @@
 import { type DynamicModule, Module, OnModuleDestroy, OnModuleInit, Inject, Optional, Injectable } from '@nestjs/common';
-import { StynxCoreModule } from '@stynx/core';
+import { StynxCoreModule } from '@stynx-nyx/core';
 import { z } from 'zod';
 import { StynxAuditController } from './audit.controller';
 import { StynxAuditService } from './audit.service';

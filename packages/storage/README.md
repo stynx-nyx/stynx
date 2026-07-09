@@ -1,10 +1,10 @@
-# `@stynx/storage` — S3-backed object storage with presign + document-metadata persistence
+# `@stynx-nyx/storage` — S3-backed object storage with presign + document-metadata persistence
 
-`@stynx/storage` is STYNX's object-storage substrate. It implements `@stynx/contracts`'s `ObjectStorageService` against S3 (production) or LocalStack (dev), exposes presigned upload/download URLs (so client browsers can talk directly to S3 without the API in the data path), and persists document metadata (filename, size, content-type, uploader) via a `DocumentMetadataRepository` so app code can list/lookup documents without re-querying S3.
+`@stynx-nyx/storage` is STYNX's object-storage substrate. It implements `@stynx-nyx/contracts`'s `ObjectStorageService` against S3 (production) or LocalStack (dev), exposes presigned upload/download URLs (so client browsers can talk directly to S3 without the API in the data path), and persists document metadata (filename, size, content-type, uploader) via a `DocumentMetadataRepository` so app code can list/lookup documents without re-querying S3.
 
 ## Purpose
 
-File uploads in multi-tenant apps need: tenant-scoped key prefixes, presigned URLs (clients don't proxy through the API), KMS encryption knobs, and a metadata repo so the app can list user files without hitting S3 every time. `@stynx/storage` provides all of this.
+File uploads in multi-tenant apps need: tenant-scoped key prefixes, presigned URLs (clients don't proxy through the API), KMS encryption knobs, and a metadata repo so the app can list user files without hitting S3 every time. `@stynx-nyx/storage` provides all of this.
 
 You reach for it whenever your app stores user files (documents, avatars, exports).
 
@@ -17,15 +17,15 @@ Backend developers building file-upload features.
 ## Install
 
 ```bash
-pnpm add @stynx/storage @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
+pnpm add @stynx-nyx/storage @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
 ```
 
-**Peer dependencies:** `@nestjs/common` `^11`, `@stynx/core` `^1`, `@stynx/contracts` `^1`, `@aws-sdk/client-s3` `^3`, `@aws-sdk/s3-request-presigner` `^3`.
+**Peer dependencies:** `@nestjs/common` `^11`, `@stynx-nyx/core` `^1`, `@stynx-nyx/contracts` `^1`, `@aws-sdk/client-s3` `^3`, `@aws-sdk/s3-request-presigner` `^3`.
 
 ## Quick start
 
 ```ts
-import { StynxStorageModule } from '@stynx/storage';
+import { StynxStorageModule } from '@stynx-nyx/storage';
 
 StynxStorageModule.forRoot({
   s3: { region: 'us-east-1', bucket: 'my-app-docs' },
@@ -35,7 +35,7 @@ StynxStorageModule.forRoot({
 ```
 
 ```ts
-import { StorageService } from '@stynx/storage';
+import { StorageService } from '@stynx-nyx/storage';
 
 @Injectable()
 export class DocumentsService {
@@ -139,11 +139,11 @@ StynxStorageModule.forRoot({
 
 ## Related packages
 
-- [`@stynx/contracts`](/docs/packages/contracts/) — defines `ObjectStorageService` + `PresignedUploadRequest`/`Response`.
-- [`@stynx/tenancy`](/docs/packages/tenancy/) — provides tenant-prefix data for `keyStrategy: 'tenant-prefixed'`.
-- [`@stynx/privacy`](/docs/packages/privacy/) — uses this package for export packaging.
+- [`@stynx-nyx/contracts`](/docs/packages/contracts/) — defines `ObjectStorageService` + `PresignedUploadRequest`/`Response`.
+- [`@stynx-nyx/tenancy`](/docs/packages/tenancy/) — provides tenant-prefix data for `keyStrategy: 'tenant-prefixed'`.
+- [`@stynx-nyx/privacy`](/docs/packages/privacy/) — uses this package for export packaging.
 - [`@stynx-web/angular-storage`](/docs/packages-web/angular-storage/) — Angular pair: file-upload widget consuming the presign flow.
-- [`backend/storage`](/docs/packages/backend/storage/) — `@stynx/backend` submodule.
+- [`backend/storage`](/docs/packages/backend/storage/) — `@stynx-nyx/backend` submodule.
 
 ## TypeDoc reference
 

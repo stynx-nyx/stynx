@@ -1,8 +1,8 @@
-[**@stynx/data**](../index.md)
+[**@stynx-nyx/data**](../index.md)
 
 ---
 
-[@stynx/data](../index.md) / agentRules
+[@stynx-nyx/data](../index.md) / agentRules
 
 # Variable: agentRules
 

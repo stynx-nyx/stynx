@@ -1,8 +1,8 @@
-[**@stynx/pdf**](../index.md)
+[**@stynx-nyx/pdf**](../index.md)
 
 ---
 
-[@stynx/pdf](../index.md) / STYNX_PDF_OPTIONS
+[@stynx-nyx/pdf](../index.md) / STYNX_PDF_OPTIONS
 
 # Variable: STYNX_PDF_OPTIONS
 

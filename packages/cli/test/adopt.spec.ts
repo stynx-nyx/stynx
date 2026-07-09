@@ -18,7 +18,7 @@ describe('adopt command family', () => {
     const second = adoptApply(root, false);
     expect(first.changedFiles.length).toBeGreaterThanOrEqual(3);
     expect(second.changedFiles).toHaveLength(0);
-    expect(readFileSync(resolve(root, 'src/auth.middleware.ts'), 'utf8')).toContain('DEPRECATED in favor of @stynx/auth');
+    expect(readFileSync(resolve(root, 'src/auth.middleware.ts'), 'utf8')).toContain('DEPRECATED in favor of @stynx-nyx/auth');
   });
 
   it('handles clean reports, skipped directories, dry-runs, and mixed schema generation', () => {
@@ -30,7 +30,7 @@ describe('adopt command family', () => {
     writeFileSync(resolve(root, 'src/routes.ts'), [
       '@Get()',
       'async rootList() {}',
-      "import { Public } from '@stynx/auth';",
+      "import { Public } from '@stynx-nyx/auth';",
       '@Public()',
       '@Get()',
       'async listReports() {}',

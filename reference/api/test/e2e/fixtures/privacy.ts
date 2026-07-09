@@ -4,18 +4,18 @@ import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
-import { RequestContextMutator } from '@stynx/core';
-import { Database, type StynxPgClient } from '@stynx/data';
+import { RequestContextMutator } from '@stynx-nyx/core';
+import { Database, type StynxPgClient } from '@stynx-nyx/data';
 import {
   StynxPrivacyModule,
   type PrivacyCognitoAdmin,
   type PrivacyObjectStore,
-} from '@stynx/privacy';
-import { SessionService } from '@stynx/sessions';
+} from '@stynx-nyx/privacy';
+import { SessionService } from '@stynx-nyx/sessions';
 import {
   LGPD_FIXTURE_MIGRATIONS,
   lgpdFixturePiiMapYaml,
-} from '@stynx/testing';
+} from '@stynx-nyx/testing';
 import { GenericContainer, Wait, type StartedTestContainer } from 'testcontainers';
 import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../../../packages/data/test/support/postgres';
 import { actors, tenants, type ActorName, seedRecordsAndNotesE2e } from './seed';
@@ -145,9 +145,9 @@ function setRuntimeEnvironment(postgres: PostgresTestDatabase, redisUrl: string)
   process.env.AWS_SECRET_ACCESS_KEY = 'test';
   process.env.AWS_REGION = 'us-east-1';
   process.env.AWS_EC2_METADATA_DISABLED = 'true';
-  process.env.STYNX_OWNER_DATABASE_URL = postgres.connectionString('@stynx/reference-api-privacy-e2e:owner');
-  process.env.STYNX_APP_DATABASE_URL = postgres.connectionString('@stynx/reference-api-privacy-e2e:app');
-  process.env.STYNX_READER_DATABASE_URL = postgres.connectionString('@stynx/reference-api-privacy-e2e:reader');
+  process.env.STYNX_OWNER_DATABASE_URL = postgres.connectionString('@stynx-nyx/reference-api-privacy-e2e:owner');
+  process.env.STYNX_APP_DATABASE_URL = postgres.connectionString('@stynx-nyx/reference-api-privacy-e2e:app');
+  process.env.STYNX_READER_DATABASE_URL = postgres.connectionString('@stynx-nyx/reference-api-privacy-e2e:reader');
   process.env.STYNX_REDIS_URL = redisUrl;
   process.env.STYNX_STORAGE_ENDPOINT = 'http://127.0.0.1:4566';
   process.env.STYNX_STORAGE_FORCE_PATH_STYLE = 'true';

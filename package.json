@@ -10,10 +10,10 @@
     "pnpm": ">=9 <10"
   },
   "scripts": {
-    "build": "turbo run build --filter='./packages/*' --filter='./packages-web/*' --filter='./tools/*' --filter='./test/*' --filter=@stynx/docs-site",
+    "build": "turbo run build --filter='./packages/*' --filter='./packages-web/*' --filter='./tools/*' --filter='./test/*' --filter=@stynx-nyx/docs-site",
     "lint": "turbo run lint --filter='./packages/*' --filter='./packages-web/*' --filter='./tools/*' --filter='./test/*'",
     "lint:tests": "eslint --config tools/eslint-config/test.mjs --no-error-on-unmatched-pattern 'packages/*/test/**/*.{spec,test}.ts' 'packages-web/*/test/**/*.{spec,test}.ts'",
-    "typecheck": "turbo run typecheck --filter='./packages/*' --filter='./packages-web/*' --filter='./tools/*' --filter=@stynx/docs-site",
+    "typecheck": "turbo run typecheck --filter='./packages/*' --filter='./packages-web/*' --filter='./tools/*' --filter=@stynx-nyx/docs-site",
     "test": "turbo run test --filter='./packages/*' --filter='./packages-web/*' --filter='./tools/*' --filter='./test/*'",
     "test:int": "turbo run test:int --filter='./packages/*'",
     "check:engines": "node scripts/check-engines.mjs",
@@ -38,7 +38,7 @@
     "ci:stynx": "pnpm check:engines && pnpm api:coverage && pnpm api:contract && pnpm sdk:route-smoke && pnpm check:rls-negative && pnpm frontend:production-smoke && pnpm frontend:a11y-gate && pnpm production:readiness-reference && pnpm lint && pnpm lint:tests && pnpm lint:deadcode && pnpm lint:deps && pnpm lint:cycles && pnpm typecheck && pnpm test && pnpm test:int && pnpm build && pnpm run doctor",
     "ci:stynx:full": "pnpm ci:stynx && pnpm test:e2e && pnpm test:mutation && pnpm test:perf && pnpm check:rls-smoke",
     "ci:stynx:release": "pnpm security:release && pnpm release:provenance && pnpm release:policy && pnpm api:baselines && pnpm release:consumer-fixtures && pnpm release:drafts",
-    "ci:reference-apps": "pnpm --filter @stynx/reference-api build && pnpm --filter @stynx/reference-api test && pnpm --filter @stynx/reference-api test:int && pnpm --filter @stynx/reference-web build && pnpm --filter @stynx/reference-web build:web",
+    "ci:reference-apps": "pnpm --filter @stynx-nyx/reference-api build && pnpm --filter @stynx-nyx/reference-api test && pnpm --filter @stynx-nyx/reference-api test:int && pnpm --filter @stynx-nyx/reference-web build && pnpm --filter @stynx-nyx/reference-web build:web",
     "ci:local": "bash scripts/ci-local/run.sh",
     "evidence:collect": "node scripts/evidence/collect-local-evidence.mjs",
     "evidence:verify": "node scripts/evidence/verify-local-evidence.mjs --mode strict",
@@ -68,7 +68,7 @@
     "test:matrix:coverage": "devai render-matrix --repo-root . --config scripts/test-matrix.config.json --filter tier=coverage",
     "test:matrix:timings": "devai render-matrix --repo-root . --config scripts/test-matrix.config.json",
     "check:rls-smoke": "bash scripts/check-rls-smoke.sh",
-    "smoke:local": "pnpm --filter @stynx/reference-api smoke:local",
+    "smoke:local": "pnpm --filter @stynx-nyx/reference-api smoke:local",
     "prepare": "husky",
     "test:coverage": "devai coverage-aggregate --repo-root . --in coverage --out coverage/coverage-final.json --final --human",
     "test:coverage:aggregate": "devai coverage-aggregate --repo-root . --in coverage --out coverage/coverage-final.json --final --human",
@@ -147,7 +147,7 @@
         "packages-web"
       ],
       "allowedPackages": [
-        "@stynx/",
+        "@stynx-nyx/",
         "@stynx-web/"
       ],
       "forbiddenImports": [],

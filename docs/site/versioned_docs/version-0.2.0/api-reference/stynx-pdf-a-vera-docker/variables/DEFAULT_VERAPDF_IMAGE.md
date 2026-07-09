@@ -1,8 +1,8 @@
-[**@stynx/pdf-a-vera-docker**](../index.md)
+[**@stynx-nyx/pdf-a-vera-docker**](../index.md)
 
 ---
 
-[@stynx/pdf-a-vera-docker](../index.md) / DEFAULT_VERAPDF_IMAGE
+[@stynx-nyx/pdf-a-vera-docker](../index.md) / DEFAULT_VERAPDF_IMAGE
 
 # Variable: DEFAULT_VERAPDF_IMAGE
 

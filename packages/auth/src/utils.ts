@@ -1,6 +1,6 @@
 import { createHash, createPublicKey, verify as verifySignature } from 'node:crypto';
 
-export { headerToString } from '@stynx/contracts';
+export { headerToString } from '@stynx-nyx/contracts';
 
 export function base64UrlEncode(value: string | Buffer): string {
   return Buffer.from(value)

@@ -1,8 +1,8 @@
-[**@stynx/flow**](../index.md)
+[**@stynx-nyx/flow**](../index.md)
 
 ---
 
-[@stynx/flow](../index.md) / FlowPolicyEffect
+[@stynx-nyx/flow](../index.md) / FlowPolicyEffect
 
 # Type Alias: FlowPolicyEffect
 

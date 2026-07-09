@@ -443,12 +443,12 @@ ground-truth verifier.
 
 | Tree                   | Spec anchor                         | Runtime / lint enforcement                                                                                             |
 | ---------------------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| 1. FK annotation       | `STYNX-SPEC-v0.6.md` §14.7; ADR-001 | `tools/migration-linter` LINT00x (FK rules); `core.softdelete_fk_registry`; runtime cascade walker in `@stynx/data`    |
+| 1. FK annotation       | `STYNX-SPEC-v0.6.md` §14.7; ADR-001 | `tools/migration-linter` LINT00x (FK rules); `core.softdelete_fk_registry`; runtime cascade walker in `@stynx-nyx/data`    |
 | 2. Soft-deletable      | `STYNX-SPEC-v0.6.md` §14; I8        | `data.create_soft_deletable_table`; migration linter (mirror presence, `deleted_at` ban); `@NoSoftDelete` reason check |
 | 3. `@ReadOnly`         | I7; permission-model.md §6.2        | `Database.tx({ role:'reader', readonly:true })`; `ensureWritableRole()` raises `ReadOnlyViolationError`                |
-| 4. `@Idempotent`       | `STYNX-SPEC-v0.6.md` §22            | `core.idempotency_keys`; Redis lock + cache; per-route durable test in `@stynx/testing`                                |
+| 4. `@Idempotent`       | `STYNX-SPEC-v0.6.md` §22            | `core.idempotency_keys`; Redis lock + cache; per-route durable test in `@stynx-nyx/testing`                                |
 | 5. `withSystemContext` | I2; tenancy-model.md §4.6           | `TenantContextMissingError` at `tx()` entry; `audit.system_op` records reason                                          |
-| 6. PII map             | `STYNX-SPEC-v0.6.md` §21.2          | `@stynx/privacy` PII map loader; `lgpd_erasure_total{table,strategy}` metric; ROPA generator (`stynx privacy ropa`)    |
+| 6. PII map             | `STYNX-SPEC-v0.6.md` §21.2          | `@stynx-nyx/privacy` PII map loader; `lgpd_erasure_total{table,strategy}` metric; ROPA generator (`stynx privacy ropa`)    |
 | 7. Tenant column       | I5; tenancy-model.md §4.4           | Migration linter LINT001–009; runtime RLS at the DB layer                                                              |
 
 Use this table as the lookup when a tree's recommendation surfaces

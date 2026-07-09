@@ -1,8 +1,8 @@
-[**@stynx/privacy**](../index.md)
+[**@stynx-nyx/privacy**](../index.md)
 
 ---
 
-[@stynx/privacy](../index.md) / PrivacyRetentionTarget
+[@stynx-nyx/privacy](../index.md) / PrivacyRetentionTarget
 
 # Type Alias: PrivacyRetentionTarget
 

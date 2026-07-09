@@ -1,8 +1,8 @@
-[**@stynx/signature**](../index.md)
+[**@stynx-nyx/signature**](../index.md)
 
 ---
 
-[@stynx/signature](../index.md) / XmlDSigCanonicalizationAlgorithm
+[@stynx-nyx/signature](../index.md) / XmlDSigCanonicalizationAlgorithm
 
 # Type Alias: XmlDSigCanonicalizationAlgorithm
 

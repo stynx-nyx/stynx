@@ -1,4 +1,4 @@
-# @stynx/pdf
+# @stynx-nyx/pdf
 
 ## Unreleased
 
@@ -16,7 +16,7 @@
 
 - Add deterministic fixed-layout PDF primitives backed by `pdf-lib`.
 - Add a PDF verification-evidence appender that draws verification hints and
-  delegates STYNX PAdES evidence blocks to `@stynx/signature`.
+  delegates STYNX PAdES evidence blocks to `@stynx-nyx/signature`.
 - Add a public-payroll template pack for payslip and yearly-income report PDFs.
 - Add PDF/A-style structural validation helpers without claiming real PDF/A
   conformance.

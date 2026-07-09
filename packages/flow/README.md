@@ -1,16 +1,16 @@
-# `@stynx/flow` — the STYNX workflow engine: forms, runs, nodes, tasks, policies
+# `@stynx-nyx/flow` — the STYNX workflow engine: forms, runs, nodes, tasks, policies
 
-`@stynx/flow` is STYNX's workflow engine. It models **design-time** artifacts (forms with questions, graphs of nodes connected by edges, policies, agent-rules) and drives **runtime** execution (runs that traverse the graph, tasks that humans or agents act on, fills that capture form answers, effects + signals that fire side-effects). One cohesive NestJS module — `StynxFlowModule` — exposes ~113 REST endpoints across 20 controllers, all wired together. It powers the SPED-fiscal flow and the porm / PEC / SGP consumer apps.
+`@stynx-nyx/flow` is STYNX's workflow engine. It models **design-time** artifacts (forms with questions, graphs of nodes connected by edges, policies, agent-rules) and drives **runtime** execution (runs that traverse the graph, tasks that humans or agents act on, fills that capture form answers, effects + signals that fire side-effects). One cohesive NestJS module — `StynxFlowModule` — exposes ~113 REST endpoints across 20 controllers, all wired together. It powers the SPED-fiscal flow and the porm / PEC / SGP consumer apps.
 
 > **This is one module, not a collection of mountable parts.** The 20 controllers share `StynxFlowModule` — you mount the whole engine, not individual controllers. This README is split into a [`docs/`](/docs/packages/flow/) subtree purely for readability (a flat README would exceed 600 lines); the split is editorial, not architectural.
 
 ## Purpose
 
-Workflow apps — approval chains, multi-step forms, document pipelines, regulatory filings — need a consistent engine for: defining the shape of a process (forms + graph), executing instances of it (runs), routing work to actors (tasks), capturing input (fills + answers), enforcing who-can-do-what (policies), and firing side-effects on transitions (effects + signals). Building this per-app is a multi-month effort that drifts. `@stynx/flow` provides it as a mountable engine.
+Workflow apps — approval chains, multi-step forms, document pipelines, regulatory filings — need a consistent engine for: defining the shape of a process (forms + graph), executing instances of it (runs), routing work to actors (tasks), capturing input (fills + answers), enforcing who-can-do-what (policies), and firing side-effects on transitions (effects + signals). Building this per-app is a multi-month effort that drifts. `@stynx-nyx/flow` provides it as a mountable engine.
 
-You reach for `@stynx/flow` when your app has any non-trivial multi-step process with state, actors, and transitions. If you just need CRUD, you don't need flow.
+You reach for `@stynx-nyx/flow` when your app has any non-trivial multi-step process with state, actors, and transitions. If you just need CRUD, you don't need flow.
 
-What it does NOT do: it is not a BPMN engine (no XML process definitions — STYNX uses its own form+graph model). It does not render UI (that's [`@stynx-web/angular-flow`](/docs/packages-web/angular-flow/)). It does not own your domain entities (it references them; you model them in `@stynx/data`).
+What it does NOT do: it is not a BPMN engine (no XML process definitions — STYNX uses its own form+graph model). It does not render UI (that's [`@stynx-web/angular-flow`](/docs/packages-web/angular-flow/)). It does not own your domain entities (it references them; you model them in `@stynx-nyx/data`).
 
 ## Audience
 
@@ -19,23 +19,23 @@ Backend developers building workflow-driven STYNX apps. You mount `StynxFlowModu
 ## Install
 
 ```bash
-pnpm add @stynx/flow
+pnpm add @stynx-nyx/flow
 ```
 
-**Peer dependencies:** `@nestjs/common` `^11`, `@stynx/core` `^1`, `@stynx/contracts` `^1`, `@stynx/data` `^1`, `@stynx/audit` `^1`, `@stynx/auth` `^1`.
+**Peer dependencies:** `@nestjs/common` `^11`, `@stynx-nyx/core` `^1`, `@stynx-nyx/contracts` `^1`, `@stynx-nyx/data` `^1`, `@stynx-nyx/audit` `^1`, `@stynx-nyx/auth` `^1`.
 
 ## Quick start
 
 ```ts
 import { Module } from '@nestjs/common';
-import { StynxCoreModule } from '@stynx/core';
-import { StynxFlowModule } from '@stynx/flow';
+import { StynxCoreModule } from '@stynx-nyx/core';
+import { StynxFlowModule } from '@stynx-nyx/flow';
 
 @Module({
   imports: [
     StynxCoreModule.forRoot({ appName: 'my-app', schema: ConfigSchema }),
     StynxFlowModule.forRoot({
-      // flow reads + writes through @stynx/data; ensure StynxDataModule is mounted
+      // flow reads + writes through @stynx-nyx/data; ensure StynxDataModule is mounted
     }),
   ],
 })
@@ -112,7 +112,7 @@ See [`examples`](/docs/packages/flow/examples/) for an end-to-end scenario: auth
 
 ## Common pitfalls
 
-- **Mounting `@stynx/flow` without `@stynx/data`** — flow reads/writes through the request-scoped DB context. Mount `StynxDataModule` (or `backend/db-context`) first.
+- **Mounting `@stynx-nyx/flow` without `@stynx-nyx/data`** — flow reads/writes through the request-scoped DB context. Mount `StynxDataModule` (or `backend/db-context`) first.
 - **Treating controllers as independently mountable** — they're not; `StynxFlowModule` wires them as a unit.
 - **Confusing forms with fills** — a form is the template (design-time); a fill is one submission (runtime). See [domain-model](/docs/packages/flow/domain-model/).
 - **Bypassing policy evaluation** — runtime task actions go through `FlowPolicyService`; don't call task mutations directly without the policy gate.
@@ -121,9 +121,9 @@ See [`examples`](/docs/packages/flow/examples/) for an end-to-end scenario: auth
 
 - [`@stynx-web/angular-flow`](/docs/packages-web/angular-flow/) — the Angular UI: form-render, run-viewer, task-inbox.
 - [`@stynx-web/sdk`](/docs/packages-web/sdk/) — the generated REST client for flow's endpoints.
-- [`@stynx/data`](/docs/packages/data/) — flow's persistence layer.
-- [`@stynx/audit`](/docs/packages/audit/) — flow mutations emit audit events.
-- [`@stynx/auth`](/docs/packages/auth/) — flow policies consume the principal.
+- [`@stynx-nyx/data`](/docs/packages/data/) — flow's persistence layer.
+- [`@stynx-nyx/audit`](/docs/packages/audit/) — flow mutations emit audit events.
+- [`@stynx-nyx/auth`](/docs/packages/auth/) — flow policies consume the principal.
 
 ## TypeDoc reference
 

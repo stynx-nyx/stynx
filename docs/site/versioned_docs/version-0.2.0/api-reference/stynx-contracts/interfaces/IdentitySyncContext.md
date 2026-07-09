@@ -1,8 +1,8 @@
-[**@stynx/contracts**](../index.md)
+[**@stynx-nyx/contracts**](../index.md)
 
 ---
 
-[@stynx/contracts](../index.md) / IdentitySyncContext
+[@stynx-nyx/contracts](../index.md) / IdentitySyncContext
 
 # Interface: IdentitySyncContext
 

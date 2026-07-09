@@ -1,8 +1,8 @@
-[**@stynx/sessions**](../index.md)
+[**@stynx-nyx/sessions**](../index.md)
 
 ---
 
-[@stynx/sessions](../index.md) / SessionExpiredError
+[@stynx-nyx/sessions](../index.md) / SessionExpiredError
 
 # Class: SessionExpiredError
 

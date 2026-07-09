@@ -2,9 +2,9 @@
 title: backend/idempotency
 ---
 
-# `StynxBackendIdempotencyModule` — `@stynx/idempotency` wired with the Postgres store
+# `StynxBackendIdempotencyModule` — `@stynx-nyx/idempotency` wired with the Postgres store
 
-Wraps `@stynx/idempotency` with the canonical backend wiring: Postgres store (transactional with your business writes), actor scope, the `IdempotencyInterceptor` registered as `APP_INTERCEPTOR` via `StynxPlatformPipelineModule`.
+Wraps `@stynx-nyx/idempotency` with the canonical backend wiring: Postgres store (transactional with your business writes), actor scope, the `IdempotencyInterceptor` registered as `APP_INTERCEPTOR` via `StynxPlatformPipelineModule`.
 
 ## When to mount
 
@@ -13,7 +13,7 @@ Whenever you have mutating endpoints (POST/PUT/PATCH/DELETE). Mount via `StynxPl
 ## Wiring
 
 ```ts
-import { StynxBackendIdempotencyModule } from '@stynx/backend';
+import { StynxBackendIdempotencyModule } from '@stynx-nyx/backend';
 
 StynxBackendIdempotencyModule.forRoot({
   defaultTtlMs: 24 * 60 * 60_000,
@@ -24,7 +24,7 @@ StynxBackendIdempotencyModule.forRoot({
 
 ## Configuration
 
-Forwarded to `@stynx/idempotency`'s `StynxIdempotencyModuleOptions`. See [`@stynx/idempotency`](/docs/packages/idempotency/).
+Forwarded to `@stynx-nyx/idempotency`'s `StynxIdempotencyModuleOptions`. See [`@stynx-nyx/idempotency`](/docs/packages/idempotency/).
 
 ## Common pitfalls
 
@@ -33,6 +33,6 @@ Forwarded to `@stynx/idempotency`'s `StynxIdempotencyModuleOptions`. See [`@styn
 
 ## Related
 
-- [`@stynx/idempotency`](/docs/packages/idempotency/) — the underlying package.
+- [`@stynx-nyx/idempotency`](/docs/packages/idempotency/) — the underlying package.
 - [`backend/pipeline`](/docs/packages/backend/pipeline/) — the preferred way to mount.
 - [`backend/db-context`](/docs/packages/backend/db-context/) — provides the DB connection the Postgres store uses.

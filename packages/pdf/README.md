@@ -1,14 +1,14 @@
-# `@stynx/pdf` — server-side PDF rendering (HTML/Handlebars → PDF) with PDF/A profile support
+# `@stynx-nyx/pdf` — server-side PDF rendering (HTML/Handlebars → PDF) with PDF/A profile support
 
-`@stynx/pdf` renders PDFs server-side. The default `LocalPdfRenderBackend` drives headless Chromium (via Playwright) to turn HTML or Handlebars templates into PDF bytes; a `FixturePdfBackend` produces deterministic output for tests without launching a browser. For archival-grade output it supports a PDF/A profile slot — supply a conformance adapter (e.g. [`@stynx/pdf-a-vera-docker`](/docs/packages/pdf-a-vera-docker/)) and request `profile: 'pdf-a'`. Ships a ready-made public-payroll template.
+`@stynx-nyx/pdf` renders PDFs server-side. The default `LocalPdfRenderBackend` drives headless Chromium (via Playwright) to turn HTML or Handlebars templates into PDF bytes; a `FixturePdfBackend` produces deterministic output for tests without launching a browser. For archival-grade output it supports a PDF/A profile slot — supply a conformance adapter (e.g. [`@stynx-nyx/pdf-a-vera-docker`](/docs/packages/pdf-a-vera-docker/)) and request `profile: 'pdf-a'`. Ships a ready-made public-payroll template.
 
 ## Purpose
 
-Generating PDFs server-side (invoices, payslips, reports, signed documents) is fiddly: headless-browser lifecycle, deterministic test output, PDF/A conformance for archival/legal requirements. `@stynx/pdf` packages all three behind a single `PdfRenderer`.
+Generating PDFs server-side (invoices, payslips, reports, signed documents) is fiddly: headless-browser lifecycle, deterministic test output, PDF/A conformance for archival/legal requirements. `@stynx-nyx/pdf` packages all three behind a single `PdfRenderer`.
 
 You reach for it whenever your app produces PDF output. For archival/legal PDFs (PDF/A-2b), pair it with a conformance adapter.
 
-What it does NOT do: it doesn't sign PDFs (that's [`@stynx/signature`](/docs/packages/signature/)). It doesn't store them (that's [`@stynx/storage`](/docs/packages/storage/)). It doesn't render charts/graphics beyond what HTML+CSS can express.
+What it does NOT do: it doesn't sign PDFs (that's [`@stynx-nyx/signature`](/docs/packages/signature/)). It doesn't store them (that's [`@stynx-nyx/storage`](/docs/packages/storage/)). It doesn't render charts/graphics beyond what HTML+CSS can express.
 
 ## Audience
 
@@ -17,22 +17,22 @@ Backend developers generating documents.
 ## Install
 
 ```bash
-pnpm add @stynx/pdf playwright
+pnpm add @stynx-nyx/pdf playwright
 npx playwright install chromium
 ```
 
-**Peer dependencies:** `@nestjs/common` `^11`, `@stynx/core` `^1`, `playwright` `^1`, `handlebars` `^4`.
+**Peer dependencies:** `@nestjs/common` `^11`, `@stynx-nyx/core` `^1`, `playwright` `^1`, `handlebars` `^4`.
 
 ## Quick start
 
 ```ts
-import { StynxPdfModule } from '@stynx/pdf';
+import { StynxPdfModule } from '@stynx-nyx/pdf';
 
 StynxPdfModule.forRoot({});
 ```
 
 ```ts
-import { PdfRenderer } from '@stynx/pdf';
+import { PdfRenderer } from '@stynx-nyx/pdf';
 
 @Injectable()
 export class InvoiceService {
@@ -115,7 +115,7 @@ await pdf.render({
 ### Example 2 — PDF/A with the veraPDF adapter
 
 ```ts
-import { VeraPdfDockerValidator } from '@stynx/pdf-a-vera-docker';
+import { VeraPdfDockerValidator } from '@stynx-nyx/pdf-a-vera-docker';
 
 StynxPdfModule.forRoot({
   pdfAAdapter: new VeraPdfDockerValidator({
@@ -134,7 +134,7 @@ await pdf.render({
 ### Example 3 — fixture backend in tests
 
 ```ts
-import { createFixturePdfBackend } from '@stynx/pdf';
+import { createFixturePdfBackend } from '@stynx-nyx/pdf';
 
 const renderer = new PdfRenderer(createFixturePdfBackend());
 const result = await renderer.render({
@@ -154,11 +154,11 @@ const result = await renderer.render({
 
 ## Related packages
 
-- [`@stynx/pdf-a`](/docs/packages/pdf-a/) — the PDF/A conformance-adapter contract.
-- [`@stynx/pdf-a-vera-docker`](/docs/packages/pdf-a-vera-docker/) — a veraPDF-Docker-backed adapter implementing that contract.
-- [`@stynx/signature`](/docs/packages/signature/) — sign the rendered PDF.
-- [`@stynx/storage`](/docs/packages/storage/) — store the rendered PDF.
-- [`@stynx/testing`](/docs/packages/testing/) — uses `createFixturePdfBackend()` in test apps.
+- [`@stynx-nyx/pdf-a`](/docs/packages/pdf-a/) — the PDF/A conformance-adapter contract.
+- [`@stynx-nyx/pdf-a-vera-docker`](/docs/packages/pdf-a-vera-docker/) — a veraPDF-Docker-backed adapter implementing that contract.
+- [`@stynx-nyx/signature`](/docs/packages/signature/) — sign the rendered PDF.
+- [`@stynx-nyx/storage`](/docs/packages/storage/) — store the rendered PDF.
+- [`@stynx-nyx/testing`](/docs/packages/testing/) — uses `createFixturePdfBackend()` in test apps.
 
 ## TypeDoc reference
 

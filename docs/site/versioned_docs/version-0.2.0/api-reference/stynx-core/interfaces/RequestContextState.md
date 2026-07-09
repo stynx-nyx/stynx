@@ -1,8 +1,8 @@
-[**@stynx/core**](../index.md)
+[**@stynx-nyx/core**](../index.md)
 
 ---
 
-[@stynx/core](../index.md) / RequestContextState
+[@stynx-nyx/core](../index.md) / RequestContextState
 
 # Interface: RequestContextState
 

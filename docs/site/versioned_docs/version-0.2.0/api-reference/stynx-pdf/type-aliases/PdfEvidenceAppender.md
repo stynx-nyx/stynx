@@ -1,8 +1,8 @@
-[**@stynx/pdf**](../index.md)
+[**@stynx-nyx/pdf**](../index.md)
 
 ---
 
-[@stynx/pdf](../index.md) / PdfEvidenceAppender
+[@stynx-nyx/pdf](../index.md) / PdfEvidenceAppender
 
 # Type Alias: PdfEvidenceAppender
 

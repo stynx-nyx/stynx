@@ -1,8 +1,8 @@
-**@stynx/pdf-a**
+**@stynx-nyx/pdf-a**
 
 ---
 
-# @stynx/pdf-a
+# @stynx-nyx/pdf-a
 
 ## Classes
 

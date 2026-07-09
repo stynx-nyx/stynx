@@ -1,7 +1,7 @@
 # stynx Packages
 
 This workspace contains reusable, installable backend packages published as
-`@stynx/*`. Web packages live under `../packages-web`.
+`@stynx-nyx/*`. Web packages live under `../packages-web`.
 
 ## Package Groups
 

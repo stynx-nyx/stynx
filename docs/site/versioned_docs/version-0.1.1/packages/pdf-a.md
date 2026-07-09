@@ -1,26 +1,26 @@
 ---
-title: '@stynx/pdf-a'
+title: '@stynx-nyx/pdf-a'
 ---
 
-# @stynx/pdf-a
+# @stynx-nyx/pdf-a
 
-`@stynx/pdf-a` defines the STYNX PDF/A validation contract. It contains only
+`@stynx-nyx/pdf-a` defines the STYNX PDF/A validation contract. It contains only
 types, telemetry names, and stubs; it does not invoke veraPDF, Docker, Java, or
 any PDF parser.
 
 ## Install
 
 ```sh
-pnpm add @stynx/pdf-a
+pnpm add @stynx-nyx/pdf-a
 ```
 
-`@stynx/logging` is an optional peer for adopters that want to connect
+`@stynx-nyx/logging` is an optional peer for adopters that want to connect
 validation telemetry to the standard logging surface.
 
 ## Interface
 
 ```ts
-import type { PdfAValidator } from '@stynx/pdf-a';
+import type { PdfAValidator } from '@stynx-nyx/pdf-a';
 
 async function archive(pdf: Uint8Array, validator: PdfAValidator) {
   const result = await validator.validate(pdf, { version: 'A-2', conformance: 'b' });
@@ -35,6 +35,6 @@ async function archive(pdf: Uint8Array, validator: PdfAValidator) {
 - `StrictPdfAValidator` always fails and is the safer default for environments
   that must not claim PDF/A validation until a real adapter is wired.
 
-Use `@stynx/pdf-a-vera-docker` for the reference veraPDF Docker backend. See
+Use `@stynx-nyx/pdf-a-vera-docker` for the reference veraPDF Docker backend. See
 [`docs/adopters/pdf-a-validation.md`](/docs/adopters/pdf-a-validation)
 for wiring, policy, and troubleshooting guidance.

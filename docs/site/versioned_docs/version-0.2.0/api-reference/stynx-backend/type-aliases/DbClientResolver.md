@@ -1,8 +1,8 @@
-[**@stynx/backend**](../index.md)
+[**@stynx-nyx/backend**](../index.md)
 
 ---
 
-[@stynx/backend](../index.md) / DbClientResolver
+[@stynx-nyx/backend](../index.md) / DbClientResolver
 
 # Type Alias: DbClientResolver
 

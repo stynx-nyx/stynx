@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Inject, Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { Database } from '@stynx/data';
+import { Database } from '@stynx-nyx/data';
 import { parse } from 'yaml';
 import { z } from 'zod';
 import { PrivacyConfigurationError } from './errors';

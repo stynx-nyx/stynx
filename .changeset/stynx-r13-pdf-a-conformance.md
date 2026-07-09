@@ -1,5 +1,5 @@
 ---
-'@stynx/pdf': minor
+'@stynx-nyx/pdf': minor
 ---
 
 Bundle PDF/A-2b content assets, embed deterministic catalog metadata and sRGB

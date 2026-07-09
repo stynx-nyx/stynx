@@ -1,14 +1,14 @@
-# `@stynx/pdf-a` — the PDF/A conformance-adapter contract (pure types)
+# `@stynx-nyx/pdf-a` — the PDF/A conformance-adapter contract (pure types)
 
-`@stynx/pdf-a` is the pure-types contract package for PDF/A conformance validation. It defines the `PdfAValidator` interface, the version/conformance enums (`PdfAVersion`, `PdfAConformance`), the validation result + rule-location shapes, telemetry counter names, and two stub implementations (`noop` and `strict`) for tests. The concrete validator lives in [`@stynx/pdf-a-vera-docker`](/docs/packages/pdf-a-vera-docker/); `@stynx/pdf` consumes the contract via its `pdfAAdapter` slot.
+`@stynx-nyx/pdf-a` is the pure-types contract package for PDF/A conformance validation. It defines the `PdfAValidator` interface, the version/conformance enums (`PdfAVersion`, `PdfAConformance`), the validation result + rule-location shapes, telemetry counter names, and two stub implementations (`noop` and `strict`) for tests. The concrete validator lives in [`@stynx-nyx/pdf-a-vera-docker`](/docs/packages/pdf-a-vera-docker/); `@stynx-nyx/pdf` consumes the contract via its `pdfAAdapter` slot.
 
 ## Purpose
 
-PDF/A conformance (the archival PDF standard — A-1/A-2/A-3/A-4 with b/u/a conformance levels) needs a validator, but the validator implementation is heavyweight (veraPDF, a Docker container). Separating the _contract_ (this package) from the _implementation_ lets `@stynx/pdf` depend on a tiny types package and lets you swap validators (veraPDF-Docker, a hosted service, a stub for tests) without touching `@stynx/pdf`.
+PDF/A conformance (the archival PDF standard — A-1/A-2/A-3/A-4 with b/u/a conformance levels) needs a validator, but the validator implementation is heavyweight (veraPDF, a Docker container). Separating the _contract_ (this package) from the _implementation_ lets `@stynx-nyx/pdf` depend on a tiny types package and lets you swap validators (veraPDF-Docker, a hosted service, a stub for tests) without touching `@stynx-nyx/pdf`.
 
-You reach for `@stynx/pdf-a` when authoring a custom PDF/A validator adapter, or when you need the type shapes for handling validation results.
+You reach for `@stynx-nyx/pdf-a` when authoring a custom PDF/A validator adapter, or when you need the type shapes for handling validation results.
 
-What it does NOT do: it doesn't validate anything (pure types + stubs). The real validation is in `@stynx/pdf-a-vera-docker`.
+What it does NOT do: it doesn't validate anything (pure types + stubs). The real validation is in `@stynx-nyx/pdf-a-vera-docker`.
 
 ## Audience
 
@@ -17,7 +17,7 @@ Backend developers authoring or consuming PDF/A validators. Most apps consume th
 ## Install
 
 ```bash
-pnpm add @stynx/pdf-a
+pnpm add @stynx-nyx/pdf-a
 ```
 
 **No runtime peer dependencies** — pure types + lightweight stubs.
@@ -25,7 +25,7 @@ pnpm add @stynx/pdf-a
 ## Quick start
 
 ```ts
-import type { PdfAValidator, PdfAValidationResult } from '@stynx/pdf-a';
+import type { PdfAValidator, PdfAValidationResult } from '@stynx-nyx/pdf-a';
 
 // Implement a custom validator
 export class MyPdfAValidator implements PdfAValidator {
@@ -67,15 +67,15 @@ export class MyPdfAValidator implements PdfAValidator {
 
 ## Configuration
 
-No runtime configuration — pure types. The implementing adapter (`@stynx/pdf-a-vera-docker`) carries the config.
+No runtime configuration — pure types. The implementing adapter (`@stynx-nyx/pdf-a-vera-docker`) carries the config.
 
 ## Examples
 
-### Example 1 — wiring a validator into `@stynx/pdf`
+### Example 1 — wiring a validator into `@stynx-nyx/pdf`
 
 ```ts
-import { StynxPdfModule } from '@stynx/pdf';
-import { VeraPdfDockerValidator } from '@stynx/pdf-a-vera-docker';
+import { StynxPdfModule } from '@stynx-nyx/pdf';
+import { VeraPdfDockerValidator } from '@stynx-nyx/pdf-a-vera-docker';
 
 StynxPdfModule.forRoot({ pdfAAdapter: new VeraPdfDockerValidator({}) });
 ```
@@ -83,7 +83,7 @@ StynxPdfModule.forRoot({ pdfAAdapter: new VeraPdfDockerValidator({}) });
 ### Example 2 — noop stub in tests
 
 ```ts
-import { NoopPdfAValidator } from '@stynx/pdf-a';
+import { NoopPdfAValidator } from '@stynx-nyx/pdf-a';
 
 StynxPdfModule.forRoot({ pdfAAdapter: new NoopPdfAValidator() });
 // PDF/A requests succeed without invoking the heavyweight validator
@@ -92,7 +92,7 @@ StynxPdfModule.forRoot({ pdfAAdapter: new NoopPdfAValidator() });
 ### Example 3 — asserting the failure path
 
 ```ts
-import { StrictPdfAValidator } from '@stynx/pdf-a';
+import { StrictPdfAValidator } from '@stynx-nyx/pdf-a';
 
 const renderer = new PdfRenderer(backend, { pdfAAdapter: new StrictPdfAValidator() });
 await expect(renderer.render({ output: { profile: 'pdf-a' }, ... })).rejects.toThrow();
@@ -100,13 +100,13 @@ await expect(renderer.render({ output: { profile: 'pdf-a' }, ... })).rejects.toT
 
 ## Common pitfalls
 
-- **Confusing the contract with the validator** — this package validates nothing. Use `@stynx/pdf-a-vera-docker` for real validation.
+- **Confusing the contract with the validator** — this package validates nothing. Use `@stynx-nyx/pdf-a-vera-docker` for real validation.
 - **Conformance level mismatch** — requesting `A-2 a` (accessible) requires tagged PDF; most HTML→PDF output is `A-2 b` (basic). Default to `b` unless you've ensured accessibility tagging.
 
 ## Related packages
 
-- [`@stynx/pdf`](/docs/packages/pdf/) — consumes this contract via its `pdfAAdapter` slot.
-- [`@stynx/pdf-a-vera-docker`](/docs/packages/pdf-a-vera-docker/) — the concrete veraPDF-backed implementation.
+- [`@stynx-nyx/pdf`](/docs/packages/pdf/) — consumes this contract via its `pdfAAdapter` slot.
+- [`@stynx-nyx/pdf-a-vera-docker`](/docs/packages/pdf-a-vera-docker/) — the concrete veraPDF-backed implementation.
 - [STYNX framework — ADR-PDF-A-VALIDATOR-CONTRACT](/docs/meta/adr/ADR-PDF-A-VALIDATOR-CONTRACT/) — the contract decision.
 
 ## TypeDoc reference

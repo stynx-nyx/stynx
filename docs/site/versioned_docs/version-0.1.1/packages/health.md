@@ -1,8 +1,8 @@
 ---
-title: '@stynx/health'
+title: '@stynx-nyx/health'
 ---
 
-# @stynx/health
+# @stynx-nyx/health
 
 Health, readiness, metrics, and guarded info endpoints for STYNX services.
 
@@ -13,10 +13,10 @@ Health, readiness, metrics, and guarded info endpoints for STYNX services.
 ## Install And Import
 
 ```ts
-import {} from /* public exports */ '@stynx/health';
+import {} from /* public exports */ '@stynx-nyx/health';
 ```
 
-In this monorepo, use the workspace package. Published consumers should install matching `@stynx/*` versions from the same release train.
+In this monorepo, use the workspace package. Published consumers should install matching `@stynx-nyx/*` versions from the same release train.
 
 ## Module Setup
 
@@ -36,7 +36,7 @@ Exposes operational health and Prometheus-style metrics. Info endpoints must sta
 ## Example
 
 ```ts
-import { StynxMetricsService } from '@stynx/health';
+import { StynxMetricsService } from '@stynx-nyx/health';
 
 metrics.observeHttpRequest({ method: 'GET', route: '/records', statusCode: 200, durationMs: 12 });
 ```
@@ -62,9 +62,9 @@ Current barrel highlights:
 ## Verification
 
 ```sh
-pnpm --filter @stynx/health build
-pnpm --filter @stynx/health test
-STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx/health test:int
+pnpm --filter @stynx-nyx/health build
+pnpm --filter @stynx-nyx/health test
+STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx-nyx/health test:int
 ```
 
 ## Documentation Standard

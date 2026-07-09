@@ -1,8 +1,8 @@
 ---
-title: '@stynx/core'
+title: '@stynx-nyx/core'
 ---
 
-# @stynx/core
+# @stynx-nyx/core
 
 Core runtime primitives for configuration, request context, request IDs, error mapping, secret loading, and system operation context.
 
@@ -13,10 +13,10 @@ Core runtime primitives for configuration, request context, request IDs, error m
 ## Install And Import
 
 ```ts
-import {} from /* public exports */ '@stynx/core';
+import {} from /* public exports */ '@stynx-nyx/core';
 ```
 
-In this monorepo, use the workspace package. Published consumers should install matching `@stynx/*` versions from the same release train.
+In this monorepo, use the workspace package. Published consumers should install matching `@stynx-nyx/*` versions from the same release train.
 
 ## Module Setup
 
@@ -36,7 +36,7 @@ Does not own tenant data, but it provides the request/system context used by oth
 ## Example
 
 ```ts
-import { StynxConfigService, getRequestId } from '@stynx/core';
+import { StynxConfigService, getRequestId } from '@stynx-nyx/core';
 
 const requestId = getRequestId(request);
 const config = configService.get('DATABASE_URL');
@@ -68,9 +68,9 @@ Current barrel highlights:
 ## Verification
 
 ```sh
-pnpm --filter @stynx/core build
-pnpm --filter @stynx/core test
-STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx/core test:int
+pnpm --filter @stynx-nyx/core build
+pnpm --filter @stynx-nyx/core test
+STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx-nyx/core test:int
 ```
 
 ## Documentation Standard

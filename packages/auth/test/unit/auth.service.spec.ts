@@ -1,6 +1,6 @@
 import type { ModuleRef } from '@nestjs/core';
-import type { SessionBundle } from '@stynx/sessions';
-import { RequestContext, RequestContextMutator } from '@stynx/core';
+import type { SessionBundle } from '@stynx-nyx/sessions';
+import { RequestContext, RequestContextMutator } from '@stynx-nyx/core';
 import { StynxAuthService } from '../../src/auth.service';
 
 describe('StynxAuthService', () => {

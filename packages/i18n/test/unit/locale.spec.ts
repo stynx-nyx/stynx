@@ -1,6 +1,6 @@
 import type { ModuleRef } from '@nestjs/core';
-import { RequestContext, RequestContextMutator } from '@stynx/core';
-import { Database } from '@stynx/data';
+import { RequestContext, RequestContextMutator } from '@stynx-nyx/core';
+import { Database } from '@stynx-nyx/data';
 import { CatalogService } from '../../src/catalog.service';
 import { LocaleService } from '../../src/locale.service';
 

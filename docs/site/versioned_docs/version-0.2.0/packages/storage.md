@@ -1,8 +1,8 @@
 ---
-title: '@stynx/storage'
+title: '@stynx-nyx/storage'
 ---
 
-# @stynx/storage
+# @stynx-nyx/storage
 
 Document metadata, object-store abstraction, S3 access, presigned upload/download, and storage module wiring.
 
@@ -13,10 +13,10 @@ Document metadata, object-store abstraction, S3 access, presigned upload/downloa
 ## Install And Import
 
 ```ts
-import {} from /* public exports */ '@stynx/storage';
+import {} from /* public exports */ '@stynx-nyx/storage';
 ```
 
-In this monorepo, use the workspace package. Published consumers should install matching `@stynx/*` versions from the same release train.
+In this monorepo, use the workspace package. Published consumers should install matching `@stynx-nyx/*` versions from the same release train.
 
 ## Module Setup
 
@@ -36,7 +36,7 @@ Stores document metadata in PostgreSQL and object bytes through the configured s
 ## Example
 
 ```ts
-import { DocumentsService } from '@stynx/storage';
+import { DocumentsService } from '@stynx-nyx/storage';
 
 const upload = await documents.initiateUpload({ tenantId, collection, filename });
 ```
@@ -62,9 +62,9 @@ Current barrel highlights:
 ## Verification
 
 ```sh
-pnpm --filter @stynx/storage build
-pnpm --filter @stynx/storage test
-STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx/storage test:int
+pnpm --filter @stynx-nyx/storage build
+pnpm --filter @stynx-nyx/storage test
+STYNX_TEST_PG_HOST=localhost pnpm --filter @stynx-nyx/storage test:int
 ```
 
 ## Documentation Standard

@@ -4,20 +4,20 @@ title: 'Reference API'
 
 # Reference API
 
-`@stynx/reference-api` is the runnable NestJS reference app for the neutral `sample.*` domain defined in `STYNX-REFERENCE-MIGRATION.sql`.
+`@stynx-nyx/reference-api` is the runnable NestJS reference app for the neutral `sample.*` domain defined in `STYNX-REFERENCE-MIGRATION.sql`.
 
 ## What It Exercises
 
-- `@stynx/data` for archive-aware CRUD and soft-delete/restore/hard-delete flows
-- `@stynx/auth` and `@stynx/tenancy` for request/tenant enforcement
-- `@stynx/ratelimit` and `@stynx/idempotency` through route decorators + pipeline wiring
-- `@stynx/storage`, `@stynx/audit`, `@stynx/health`, and `@stynx/logging`
+- `@stynx-nyx/data` for archive-aware CRUD and soft-delete/restore/hard-delete flows
+- `@stynx-nyx/auth` and `@stynx-nyx/tenancy` for request/tenant enforcement
+- `@stynx-nyx/ratelimit` and `@stynx-nyx/idempotency` through route decorators + pipeline wiring
+- `@stynx-nyx/storage`, `@stynx-nyx/audit`, `@stynx-nyx/health`, and `@stynx-nyx/logging`
 
 ## Local Run
 
 ```bash
-pnpm --filter @stynx/reference-api build
-pnpm --filter @stynx/reference-api start
+pnpm --filter @stynx-nyx/reference-api build
+pnpm --filter @stynx-nyx/reference-api start
 ```
 
 Default runtime environment variables:
@@ -46,9 +46,9 @@ available to local smoke and k6 runs; the Docker image itself keeps
 ## Tests
 
 ```bash
-pnpm --filter @stynx/reference-api test
-pnpm --filter @stynx/reference-api typecheck
-pnpm --filter @stynx/reference-api lint
+pnpm --filter @stynx-nyx/reference-api test
+pnpm --filter @stynx-nyx/reference-api typecheck
+pnpm --filter @stynx-nyx/reference-api lint
 ```
 
 ## Common Operations

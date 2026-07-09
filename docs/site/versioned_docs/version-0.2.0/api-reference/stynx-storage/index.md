@@ -1,8 +1,8 @@
-**@stynx/storage**
+**@stynx-nyx/storage**
 
 ---
 
-# @stynx/storage
+# @stynx-nyx/storage
 
 Public storage exports for document metadata, object storage, S3 access, and module wiring.
 

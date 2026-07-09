@@ -1,4 +1,4 @@
-import type { IntegrationTelemetry, RetryPolicy } from '@stynx/integration-adapter';
+import type { IntegrationTelemetry, RetryPolicy } from '@stynx-nyx/integration-adapter';
 
 export type SignatureAlgorithm = 'pades-baseline-t' | 'pades-ltv';
 

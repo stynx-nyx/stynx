@@ -1,5 +1,5 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
-import { Database } from '@stynx/data';
+import { Database } from '@stynx-nyx/data';
 import { STYNX_RATE_LIMIT_OPTIONS } from './constants';
 import type {
   RateLimitGuardOptions,

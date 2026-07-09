@@ -1,8 +1,8 @@
-[**@stynx/health**](../index.md)
+[**@stynx-nyx/health**](../index.md)
 
 ---
 
-[@stynx/health](../index.md) / STYNX_HEALTH_OPTIONS
+[@stynx-nyx/health](../index.md) / STYNX_HEALTH_OPTIONS
 
 # Variable: STYNX_HEALTH_OPTIONS
 

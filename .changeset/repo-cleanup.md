@@ -1,5 +1,5 @@
 ---
-'@stynx/contracts': patch
+'@stynx-nyx/contracts': patch
 '@stynx-web/angular-tenancy': patch
 ---
 

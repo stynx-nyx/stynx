@@ -1,8 +1,8 @@
-[**@stynx/health**](../index.md)
+[**@stynx-nyx/health**](../index.md)
 
 ---
 
-[@stynx/health](../index.md) / ResponseLike
+[@stynx-nyx/health](../index.md) / ResponseLike
 
 # Interface: ResponseLike
 

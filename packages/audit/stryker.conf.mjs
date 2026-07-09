@@ -1,7 +1,7 @@
 import { createStrykerConfig } from '../../tools/stryker/base.mjs';
 
 export default createStrykerConfig({
-  packageName: '@stynx/audit',
+  packageName: '@stynx-nyx/audit',
   vitestConfig: './vitest.stryker.config.ts',
   mutate: [
     'src/audit.service.ts',

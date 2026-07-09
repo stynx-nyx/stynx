@@ -1,5 +1,5 @@
-import { PermissionCache } from '@stynx/auth';
-import { auditExpect, expectRLSIsolated } from '@stynx/testing';
+import { PermissionCache } from '@stynx-nyx/auth';
+import { auditExpect, expectRLSIsolated } from '@stynx-nyx/testing';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
@@ -176,7 +176,7 @@ async function expectSessionAuditRows(context: ReferenceApiE2eContext, sid: stri
   await expect(countSessionAuditRows(context, sid)).resolves.toBe(mirrored.length);
 }
 
-describe('@stynx/reference-api e2e auth and permissions', () => {
+describe('@stynx-nyx/reference-api e2e auth and permissions', () => {
   let context: ReferenceApiE2eContext;
   let adminA: AuthenticatedAgent;
   let viewerA: AuthenticatedAgent;

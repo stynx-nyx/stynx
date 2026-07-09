@@ -87,9 +87,9 @@ function parseDate(value: string | undefined): Date | undefined {
 }
 
 function createDefaultPadesEvidenceAdapter(now: (() => Date) | undefined): PdfPadesEvidenceAdapter {
-  // Keep @stynx/signature as a runtime peer so @stynx/pdf does not compile the
+  // Keep @stynx-nyx/signature as a runtime peer so @stynx-nyx/pdf does not compile the
   // sibling package source into its tarball through monorepo tsconfig paths.
-  const signature = loadPeerPackage('@stynx/signature') as {
+  const signature = loadPeerPackage('@stynx-nyx/signature') as {
     createMockPadesEvidenceAdapter: (now?: () => Date) => PdfPadesEvidenceAdapter;
   };
   return signature.createMockPadesEvidenceAdapter(now);

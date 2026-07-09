@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ModuleRef, Reflector } from '@nestjs/core';
-import { SessionService } from '@stynx/sessions';
+import { SessionService } from '@stynx-nyx/sessions';
 import { PermissionCache } from './permission-cache';
 import { StynxJwtValidator } from './stynx-jwt.validator';
 import { STYNX_PUBLIC_ROUTE, STYNX_READONLY_ROUTE, STYNX_SYSTEM_ROUTE } from './decorators';

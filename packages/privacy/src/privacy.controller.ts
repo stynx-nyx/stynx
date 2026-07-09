@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
-import { NoIdempotent } from '@stynx/idempotency';
+import { NoIdempotent } from '@stynx-nyx/idempotency';
 import { PrivacyService } from './privacy.service';
 import type { PrivacyErasureRequest, PrivacyExportRequest } from './types';
 

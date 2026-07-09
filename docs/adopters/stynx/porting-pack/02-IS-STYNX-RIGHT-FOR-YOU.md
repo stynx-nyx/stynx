@@ -73,7 +73,7 @@ Apply each to the foreign codebase and record the answer.
 | Yes count | Verdict                                                                                                                       |
 | --------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | 8–10      | **STRONG FIT** — proceed to [`11-PORTING-PLAYBOOK.md`](11-PORTING-PLAYBOOK.md).                                               |
-| 5–7       | **SCOPE-REDUCED FIT** — port only the layers that match. Skip incompatible packages (e.g., `@stynx/privacy` if no LGPD need). |
+| 5–7       | **SCOPE-REDUCED FIT** — port only the layers that match. Skip incompatible packages (e.g., `@stynx-nyx/privacy` if no LGPD need). |
 | 0–4       | **DO NOT ADOPT** — the value capture is too small relative to the architectural cost.                                         |
 
 ## Decision tree
@@ -85,9 +85,9 @@ flowchart TD
   B -- yes --> C{Postgres + AWS feasible?}
   C -- no --> Z
   C -- yes --> D{Multi-tenant?}
-  D -- single-tenant --> Y1[SCOPE-REDUCED:<br/>skip @stynx/tenancy<br/>and the RLS layer]
+  D -- single-tenant --> Y1[SCOPE-REDUCED:<br/>skip @stynx-nyx/tenancy<br/>and the RLS layer]
   D -- multi-tenant --> E{LGPD / GDPR<br/>required?}
-  E -- no --> Y2[SCOPE-REDUCED:<br/>skip @stynx/privacy]
+  E -- no --> Y2[SCOPE-REDUCED:<br/>skip @stynx-nyx/privacy]
   E -- yes --> F{Frontend Angular<br/>or sdk-only?}
   F -- neither --> Y3[SCOPE-REDUCED:<br/>backend port only;<br/>foreign FE keeps existing client]
   F -- ok --> P[PROCEED — full pack]
