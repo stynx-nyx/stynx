@@ -42,7 +42,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",
     "@playwright/test": "^1.59.1",
-    "esbuild": "^0.28.0",
+    "esbuild": "^0.28.1",
     "typescript": "5.9.3"
   }
 }
