@@ -121,7 +121,7 @@ jobs:
     if: ${{ needs.evidence-gate.outputs.evidence_mode != 'true' }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-      - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5
         with:
           version: ${{ env.PNPM_VERSION }}
           run_install: false
@@ -160,7 +160,7 @@ jobs:
             git branch --force main origin/main
           fi
 
-      - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5
         with:
           version: ${{ env.PNPM_VERSION }}
           run_install: false
