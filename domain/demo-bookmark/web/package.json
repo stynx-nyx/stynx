@@ -21,7 +21,7 @@
     "@stynx-web/angular": "workspace:*",
     "rxjs": "^7.8.2",
     "typescript": "5.9.3",
-    "vitest": "^3",
+    "vitest": "^4",
     "@angular/platform-browser": "21.2.15"
   }
 }
