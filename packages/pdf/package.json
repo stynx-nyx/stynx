@@ -61,7 +61,7 @@
     "pdfRenderer": "provider-supplied Chromium, Playwright, or equivalent renderer"
   },
   "devDependencies": {
-    "@nestjs/testing": "^11.1.19",
+    "@nestjs/testing": "^11.1.28",
     "@stynx-nyx/signature": "workspace:*",
     "@types/node": "24.12.4",
     "typescript": "^6.0.3"

@@ -18,9 +18,9 @@
     "test:e2e": "vitest run --config ./vitest.e2e.config.ts test/e2e/flows/*.e2e.ts"
   },
   "dependencies": {
-    "@nestjs/common": "^11.1.19",
-    "@nestjs/core": "^11.1.19",
-    "@nestjs/platform-express": "^11.1.19",
+    "@nestjs/common": "^11.1.28",
+    "@nestjs/core": "^11.1.28",
+    "@nestjs/platform-express": "^11.1.28",
     "@stynx-nyx/backend": "workspace:*",
     "@stynx-nyx/audit": "workspace:*",
     "@stynx-nyx/auth": "workspace:*",
@@ -41,7 +41,7 @@
   },
   "devDependencies": {
     "@aws-sdk/client-s3": "^3.1037.0",
-    "@nestjs/testing": "^11.1.19",
+    "@nestjs/testing": "^11.1.28",
     "@types/node": "24.12.4",
     "@types/pg": "^8.20.0",
     "pg": "^8.20.0",
