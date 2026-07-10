@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/angular-audit",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Angular read-only audit report surfaces for stynx web apps",
   "exports": {
     ".": {

@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/i18n",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Catalog aggregation, locale resolution, and localized error rendering for stynx",
   "main": "dist/i18n/src/index.js",
   "types": "dist/i18n/src/index.d.ts",

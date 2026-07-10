@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/angular-tenancy",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Angular tenant context and X-Tenant-Id integration for STYNX applications",
   "exports": {
     ".": {
