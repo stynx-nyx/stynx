@@ -39,6 +39,6 @@
   },
   "devDependencies": {
     "@nestjs/testing": "^11.1.19",
-    "@types/node": "24.12.4"
+    "@types/node": "26.1.1"
   }
 }
