@@ -1,126 +1,105 @@
-# PAUSED 2026-07-09: all update entries have open-pull-requests-limit: 0 for
-# the duration of the alignment cycle. GitHub Actions is billing-locked (CI
-# cannot run) and most open Dependabot PRs are perma-red on
-# ERR_PNPM_OUTDATED_LOCKFILE, so new PRs and rebase churn are suspended
-# without deleting this config. Restore the previous limits (10 for npm
-# entries) once CI is back and the lockfile workflow is fixed.
+# Option D policy, owner decision 2026-07-10: security always-on; version
+# updates grouped ~quarterly; see align/STATUS-2026-07-09.md
+#
+# NOTE ON "QUARTERLY": Dependabot has no native quarterly schedule interval.
+# We approximate the owner's requested quarterly cadence for version updates
+# with a monthly schedule plus a 90-day cooldown (cooldown.default-days).
+# `cooldown` is a GA Dependabot feature; if it is rejected by any local
+# validator, verify its effect after merge via this repo's Dependabot logs
+# (Insights > Dependency graph > Dependabot > <ecosystem> > Recent update
+# jobs).
+#
+# Security updates are always-on and ungrouped: open-pull-requests-limit
+# only throttles version-update PRs, it does not restrict security PRs.
+# Repo-level "automated security fixes" must also be enabled (done via the
+# API, not this file).
+#
+# This repo was previously paused (open-pull-requests-limit: 0 on every
+# entry) during a billing/lockfile incident; this change restores normal
+# operation under Option D and preserves all pre-existing directory/
+# ecosystem entries.
 version: 2
 updates:
   - package-ecosystem: npm
     directory: /
     schedule:
-      interval: weekly
-    open-pull-requests-limit: 0
+      interval: monthly
+    cooldown:
+      default-days: 90
+    open-pull-requests-limit: 2
     groups:
-      aws-sdk:
-        patterns:
-          - '@aws-sdk/*'
-      nest:
-        patterns:
-          - '@nestjs/*'
-      angular:
-        patterns:
-          - '@angular*'
-          - '@angular-devkit/*'
-      vitest:
-        patterns:
-          - 'vitest'
-          - '@vitest/*'
-          - 'unplugin-swc'
-      dev:
-        patterns:
-          - '@changesets/*'
-          - '@commitlint/*'
-          - '@eslint/*'
-          - '@types/*'
-          - '@typescript-eslint/*'
-          - 'eslint'
-          - 'globals'
-          - 'husky'
-          - 'lint-staged'
-          - 'prettier'
-          - 'turbo'
-          - 'typescript'
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
 
   - package-ecosystem: npm
     directory: /reference/web
     schedule:
-      interval: weekly
-    open-pull-requests-limit: 0
+      interval: monthly
+    cooldown:
+      default-days: 90
+    open-pull-requests-limit: 2
     groups:
-      angular:
-        patterns:
-          - '@angular*'
-          - '@angular-devkit/*'
-          - 'angular-oauth2-oidc'
-      vitest:
-        patterns:
-          - 'vitest'
-          - '@vitest/*'
-      dev:
-        patterns:
-          - '@types/*'
-          - '@typescript-eslint/*'
-          - 'cross-env'
-          - 'cypress'
-          - 'eslint'
-          - 'globals'
-          - 'ts-*'
-          - 'typescript'
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
 
   - package-ecosystem: npm
     directory: /reference/api
     schedule:
-      interval: weekly
-    open-pull-requests-limit: 0
+      interval: monthly
+    cooldown:
+      default-days: 90
+    open-pull-requests-limit: 2
     groups:
-      nest:
-        patterns:
-          - '@nestjs/*'
-      vitest:
-        patterns:
-          - 'vitest'
-          - '@vitest/*'
-      dev:
-        patterns:
-          - '@types/*'
-          - 'ts-*'
-          - 'typescript'
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
 
   - package-ecosystem: npm
     directory: /test/db
     schedule:
-      interval: weekly
-    open-pull-requests-limit: 0
+      interval: monthly
+    cooldown:
+      default-days: 90
+    open-pull-requests-limit: 2
     groups:
-      vitest:
-        patterns:
-          - 'vitest'
-          - '@vitest/*'
-      dev:
-        patterns:
-          - '@types/*'
-          - 'ts-*'
-          - 'typescript'
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
 
   - package-ecosystem: npm
     directory: /test/packages
     schedule:
-      interval: weekly
-    open-pull-requests-limit: 0
+      interval: monthly
+    cooldown:
+      default-days: 90
+    open-pull-requests-limit: 2
     groups:
-      vitest:
-        patterns:
-          - 'vitest'
-          - '@vitest/*'
-      dev:
-        patterns:
-          - '@types/*'
-          - 'ts-*'
-          - 'typescript'
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
-    open-pull-requests-limit: 0
+      interval: monthly
+    cooldown:
+      default-days: 90
+    open-pull-requests-limit: 1
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
