@@ -95,7 +95,7 @@
     "depcheck": "^1.4.7",
     "eslint": "^10.2.1",
     "eslint-plugin-boundaries": "^6.0.2",
-    "eslint-plugin-jsdoc": "^62.9.0",
+    "eslint-plugin-jsdoc": "^63.0.13",
     "github-actionlint": "1.7.12",
     "globals": "^17.5.0",
     "husky": "^9.1.7",
