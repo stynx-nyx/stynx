@@ -2,7 +2,7 @@
   "name": "stynx-workspace",
   "private": true,
   "version": "0.2.0",
-  "license": "MIT",
+  "license": "BUSL-1.1",
   "description": "STYNX monorepo foundation for backend, frontend, apps, and tooling",
   "packageManager": "pnpm@9.15.0",
   "engines": {
