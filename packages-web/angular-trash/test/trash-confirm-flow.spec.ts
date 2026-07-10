@@ -1,9 +1,9 @@
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
-import { StynxSessionService } from '@stynx-web/angular-auth';
-import { StynxI18nService } from '@stynx-web/angular-i18n';
-import { StynxToastService } from '@stynx-web/angular-ui';
+import { StynxSessionService } from '@stynx-nyx/angular-auth';
+import { StynxI18nService } from '@stynx-nyx/angular-i18n';
+import { StynxToastService } from '@stynx-nyx/angular-ui';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { StynxTrashListComponent } from '../src/trash-list.component';
 import type { StynxTrashAdapter } from '../src/types';
@@ -41,7 +41,7 @@ afterEach(() => {
   TestBed.resetTestingModule();
 });
 
-describe('@stynx-web/angular-trash confirm flow depth', () => {
+describe('@stynx-nyx/angular-trash confirm flow depth', () => {
   it('renders soft-deleted rows and gates hard delete behind confirmation', async () => {
     const adapter: StynxTrashAdapter = {
       hardDelete: vi.fn(async () => undefined),

@@ -1,8 +1,8 @@
-[**@stynx-web/angular-storage**](../index.md)
+[**@stynx-nyx/angular-storage**](../index.md)
 
 ---
 
-[@stynx-web/angular-storage](../index.md) / StynxDocumentScanEvent
+[@stynx-nyx/angular-storage](../index.md) / StynxDocumentScanEvent
 
 # Interface: StynxDocumentScanEvent
 

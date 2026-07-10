@@ -1,4 +1,4 @@
-# @stynx-web/sdk
+# @stynx-nyx/sdk
 
 ## 1.0.0
 

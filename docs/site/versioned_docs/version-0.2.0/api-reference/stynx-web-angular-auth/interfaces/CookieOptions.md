@@ -1,8 +1,8 @@
-[**@stynx-web/angular-auth**](../index.md)
+[**@stynx-nyx/angular-auth**](../index.md)
 
 ---
 
-[@stynx-web/angular-auth](../index.md) / CookieOptions
+[@stynx-nyx/angular-auth](../index.md) / CookieOptions
 
 # Interface: CookieOptions
 

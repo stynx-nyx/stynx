@@ -1,15 +1,15 @@
 {
-  "name": "@stynx-web/angular-iam",
+  "name": "@stynx-nyx/angular-iam",
   "version": "0.1.0",
   "description": "Angular IAM admin surfaces for stynx web apps",
   "exports": {
     ".": {
-      "types": "./dist/types/stynx-web-angular-iam.d.ts",
-      "default": "./dist/fesm2022/stynx-web-angular-iam.mjs"
+      "types": "./dist/types/stynx-nyx-angular-iam.d.ts",
+      "default": "./dist/fesm2022/stynx-nyx-angular-iam.mjs"
     },
     "./testing": {
-      "types": "./dist/types/stynx-web-angular-iam-testing.d.ts",
-      "default": "./dist/fesm2022/stynx-web-angular-iam-testing.mjs"
+      "types": "./dist/types/stynx-nyx-angular-iam-testing.d.ts",
+      "default": "./dist/fesm2022/stynx-nyx-angular-iam-testing.mjs"
     },
     "./catalogs/en.json": {
       "default": "./dist/catalogs/en.json"
@@ -47,11 +47,11 @@
     "@angular/core": ">=20.3.0 <22",
     "@angular/forms": ">=20.3.0 <22",
     "@angular/router": ">=20.3.0 <22",
-    "@stynx-web/angular": "workspace:*",
-    "@stynx-web/angular-auth": "workspace:*",
-    "@stynx-web/angular-i18n": "workspace:*",
-    "@stynx-web/angular-ui": "workspace:*",
-    "@stynx-web/sdk": "workspace:*"
+    "@stynx-nyx/angular": "workspace:*",
+    "@stynx-nyx/angular-auth": "workspace:*",
+    "@stynx-nyx/angular-i18n": "workspace:*",
+    "@stynx-nyx/angular-ui": "workspace:*",
+    "@stynx-nyx/sdk": "workspace:*"
   },
   "devDependencies": {
     "@angular/common": "21.2.15",
@@ -61,11 +61,11 @@
     "@angular/forms": "21.2.15",
     "@angular/platform-browser": "21.2.15",
     "@angular/router": "21.2.15",
-    "@stynx-web/angular": "workspace:*",
-    "@stynx-web/angular-auth": "workspace:*",
-    "@stynx-web/angular-i18n": "workspace:*",
-    "@stynx-web/angular-ui": "workspace:*",
-    "@stynx-web/sdk": "workspace:*",
+    "@stynx-nyx/angular": "workspace:*",
+    "@stynx-nyx/angular-auth": "workspace:*",
+    "@stynx-nyx/angular-i18n": "workspace:*",
+    "@stynx-nyx/angular-ui": "workspace:*",
+    "@stynx-nyx/sdk": "workspace:*",
     "@types/node": "24.12.4",
     "jsdom": "^29.0.2",
     "ng-packagr": "21.2.3",

@@ -14,7 +14,7 @@ tags: [stynx, frontend, angular, flow, publish]
 
 Decision summary: Flow design edits are drafts until explicitly published;
 runtime execution starts only from immutable published graph versions exposed by
-the Flow API contract and consumed by `@stynx-web/angular-flow`.
+the Flow API contract and consumed by `@stynx-nyx/angular-flow`.
 
 ## Status
 
@@ -22,7 +22,7 @@ Accepted on 2026-05-20 for FE-F F.2 and F.10.
 
 ## Context
 
-`@stynx-web/angular-flow` needs to be installable without each host inventing a
+`@stynx-nyx/angular-flow` needs to be installable without each host inventing a
 draft/runtime policy. Before FE-F, graph editing and runtime execution were not
 separated clearly enough for the designer to show publication state or for a
 runtime to reject draft-only graphs deterministically.
@@ -65,6 +65,6 @@ separate surfaces. Host APIs implementing the Flow contract must expose publish
 semantics and validation errors, and UI code should show draft/published state
 instead of guessing from local edit state.
 
-The `@stynx-web/angular-flow` package can now be installed in SDK-backed or
+The `@stynx-nyx/angular-flow` package can now be installed in SDK-backed or
 custom-host apps without rewriting its publish action, runtime start behavior,
 or task/design provider wiring.

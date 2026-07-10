@@ -1,6 +1,6 @@
 import { makeEnvironmentProviders } from '@angular/core';
 import type { EnvironmentProviders } from '@angular/core';
-import type { StynxSdkClient } from '@stynx-web/sdk';
+import type { StynxSdkClient } from '@stynx-nyx/sdk';
 import { IamApiService } from './iam-api.service';
 import { STYNX_IAM_CLIENT } from './tokens';
 

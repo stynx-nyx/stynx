@@ -1,8 +1,8 @@
-[**@stynx-web/angular**](../index.md)
+[**@stynx-nyx/angular**](../index.md)
 
 ---
 
-[@stynx-web/angular](../index.md) / RequestIdInterceptor
+[@stynx-nyx/angular](../index.md) / RequestIdInterceptor
 
 # Class: RequestIdInterceptor
 

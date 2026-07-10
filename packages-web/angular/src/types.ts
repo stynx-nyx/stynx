@@ -1,5 +1,5 @@
-import type { AuthProvider } from '@stynx-web/sdk';
-import type { TenantResolutionContext } from '@stynx-web/angular-tenancy';
+import type { AuthProvider } from '@stynx-nyx/sdk';
+import type { TenantResolutionContext } from '@stynx-nyx/angular-tenancy';
 
 export type SessionMode = 'bearer' | 'cookie';
 

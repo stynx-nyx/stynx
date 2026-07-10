@@ -1,6 +1,6 @@
 import '@angular/compiler';
 import { Injector, runInInjectionContext } from '@angular/core';
-import type { StynxSdkClient } from '@stynx-web/sdk';
+import type { StynxSdkClient } from '@stynx-nyx/sdk';
 import { firstValueFrom } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
 import { ProfileService } from '../src/profile.service';
@@ -14,7 +14,7 @@ function createService(client: StynxSdkClient): ProfileService {
   return runInInjectionContext(injector, () => new ProfileService());
 }
 
-describe('@stynx-web/angular-profile W04 profile service contract depth', () => {
+describe('@stynx-nyx/angular-profile W04 profile service contract depth', () => {
   it('reads profile state from the configured client and mirrors embedded preferences', async () => {
     const profile: StynxProfile = {
       id: 'profile-1',

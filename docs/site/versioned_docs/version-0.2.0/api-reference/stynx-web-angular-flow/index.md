@@ -1,8 +1,8 @@
-**@stynx-web/angular-flow**
+**@stynx-nyx/angular-flow**
 
 ---
 
-# @stynx-web/angular-flow
+# @stynx-nyx/angular-flow
 
 ## Classes
 

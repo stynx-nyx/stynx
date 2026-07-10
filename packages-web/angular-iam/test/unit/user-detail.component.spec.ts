@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { StynxToastService } from '@stynx-web/angular-ui';
+import { StynxToastService } from '@stynx-nyx/angular-ui';
 import { describe, expect, it, vi } from 'vitest';
 import { IamApiService } from '../../src/iam-api.service';
 import { StynxUserDetailComponent } from '../../src/user-detail.component';

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, inject, Input, Output } from '@angular/core';
-import { StynxTranslatePipe } from '@stynx-web/angular-i18n';
+import { StynxTranslatePipe } from '@stynx-nyx/angular-i18n';
 import { TenantContextService } from './tenant-context.service';
 import type { TenantOption } from './types';
 

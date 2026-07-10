@@ -1,7 +1,7 @@
 import { NgFor } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject } from '@angular/core';
 import { ReactiveFormsModule, Validators, FormBuilder } from '@angular/forms';
-import { StynxBannerComponent } from '@stynx-web/angular-ui';
+import { StynxBannerComponent } from '@stynx-nyx/angular-ui';
 import { ReferenceWebShellService } from '../core/reference-web-shell.service';
 
 @Component({

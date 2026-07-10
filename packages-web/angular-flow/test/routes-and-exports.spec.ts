@@ -9,7 +9,7 @@ import { StynxFlowMyTasksInboxComponent, StynxFlowTaskListComponent } from '../s
 import { StynxFlowWaiversComponent } from '../src/flow-waivers.component';
 import { FLOW_ROUTES, flowRoutes } from '../src/routes';
 
-describe('@stynx-web/angular-flow exports and routes', () => {
+describe('@stynx-nyx/angular-flow exports and routes', () => {
   it('exports the package API needed by host shells', () => {
     expect(flow.FlowApiService).toEqual(expect.anything());
     expect(flow.FLOW_ROUTES).toEqual(expect.anything());

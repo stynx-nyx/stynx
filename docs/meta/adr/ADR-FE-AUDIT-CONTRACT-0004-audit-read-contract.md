@@ -12,7 +12,7 @@ tags: [stynx, frontend, angular, audit, contracts]
 **Authority:** Architect.
 **Related:** `docs/framework/contracts/audit-events-api.md`, `docs/work/plan/FE-WAVE-E-tenancy-and-audit.md`, `docs/work/plan/FE-WAVE-E-report.md`.
 
-Decision summary: `@stynx-web/angular-audit` targets a read-only audit events
+Decision summary: `@stynx-nyx/angular-audit` targets a read-only audit events
 contract under `/audit/*`, not the legacy `/_audit/log` endpoint, and preserves
 tenant isolation plus per-event integrity semantics.
 
@@ -42,7 +42,7 @@ The frontend audit package consumes the dedicated audit events contract.
   `GET /audit/events/:eventId/integrity`.
 - Audit reads execute under the active tenant context. Cross-tenant event and
   entity lookups return `404` rather than leaking existence through `403`.
-- `@stynx-web/angular-audit` exposes read-only service, provider, route, log,
+- `@stynx-nyx/angular-audit` exposes read-only service, provider, route, log,
   detail, entity-history, and hash-integrity badge surfaces.
 - No audit mutation route is part of the frontend package contract; audit events
   remain append-only evidence.

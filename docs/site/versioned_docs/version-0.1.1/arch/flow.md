@@ -13,7 +13,7 @@ The first STYNX Flow implementation is derived from PORM Flow behavior, but not 
 | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `../porm/database/flow/ddl.sql`                                         | Workflow schema, runtime functions, event views, open-task views, forms, questions, scores, fills, answers, waivers | Defines the feature vocabulary and expected runtime semantics; must be rewritten for tenant RLS, STYNX soft-delete, and explicit service boundaries |
 | `../porm/backend/src/flow/flow.module.ts` and flow controllers/services | Design, runtime, task, form, fill, waiver, event, analytics, and signal APIs                                        | Defines the route families; must use STYNX `Database`, auth decorators, tenancy context, audit, idempotency, and rate-limit packages                |
-| `../porm/frontend/src/app/flow/flow.module.ts`                          | Angular routes and feature pages for scopes, graphs, forms, fills, assignments, and waivers                         | Defines the expected UI surface for `@stynx-web/angular-flow`, mounted by a host shell                                                              |
+| `../porm/frontend/src/app/flow/flow.module.ts`                          | Angular routes and feature pages for scopes, graphs, forms, fills, assignments, and waivers                         | Defines the expected UI surface for `@stynx-nyx/angular-flow`, mounted by a host shell                                                              |
 | `../porm/docs/eng/domains/flow/*.md`                                    | Human documentation of schema, backend, frontend, and workflow behavior                                             | Provides invariants, vocabulary, and acceptance expectations                                                                                        |
 | PORM flow tests and OpenAPI inventory                                   | CRUD, task action, runtime, form, and analytics surfaces                                                            | Provides route coverage targets; STYNX Inspectors must rewrite tests against STYNX contracts                                                        |
 
@@ -23,10 +23,10 @@ Known copy blockers from PORM are intentional design inputs: PORM Flow rows are 
 
 STYNX Flow is split into two independent packages:
 
-| Package                   | Owns                                                                                                                                                                            | Must reuse                                                                                                                                                       |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@stynx-nyx/flow`             | Backend NestJS module, database schema bindings, DTOs, controllers, services, adapter tokens, runtime orchestration, task APIs, form APIs, analytics APIs, and OpenAPI metadata | `@stynx-nyx/data`, `@stynx-nyx/auth`, `@stynx-nyx/backend`, `@stynx-nyx/tenancy`, `@stynx-nyx/audit`, `@stynx-nyx/idempotency`, `@stynx-nyx/ratelimit`, `@stynx-nyx/contracts`, `@stynx-nyx/testing` |
-| `@stynx-web/angular-flow` | Angular route definitions, API client facade, graph/form/task/fill/waiver components, stores, guards, and host mount helpers                                                    | `@stynx-web/sdk`, `@stynx-web/angular`, `@stynx-web/angular-auth`, `@stynx-web/angular-ui`, and Angular CDK primitives where useful                              |
+| Package                   | Owns                                                                                                                                                                            | Must reuse                                                                                                                                                                                           |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@stynx-nyx/flow`         | Backend NestJS module, database schema bindings, DTOs, controllers, services, adapter tokens, runtime orchestration, task APIs, form APIs, analytics APIs, and OpenAPI metadata | `@stynx-nyx/data`, `@stynx-nyx/auth`, `@stynx-nyx/backend`, `@stynx-nyx/tenancy`, `@stynx-nyx/audit`, `@stynx-nyx/idempotency`, `@stynx-nyx/ratelimit`, `@stynx-nyx/contracts`, `@stynx-nyx/testing` |
+| `@stynx-nyx/angular-flow` | Angular route definitions, API client facade, graph/form/task/fill/waiver components, stores, guards, and host mount helpers                                                    | `@stynx-nyx/sdk`, `@stynx-nyx/angular`, `@stynx-nyx/angular-auth`, `@stynx-nyx/angular-ui`, and Angular CDK primitives where useful                                                                  |
 
 The backend package is the source of truth for workflow behavior. The Angular package is a client package and may not duplicate orchestration decisions that belong to `@stynx-nyx/flow`.
 
@@ -146,12 +146,12 @@ contract in `docs/contracts/flow-api.md` is stable: Angular clients see
 `status: 'draft' | 'published'` and `publishedVersion`, and runtime APIs resolve
 only published versions.
 
-This keeps `@stynx-web/angular-flow` presentation simple without moving runtime
+This keeps `@stynx-nyx/angular-flow` presentation simple without moving runtime
 selection rules into the browser.
 
 ### Angular Package Minimum
 
-`@stynx-web/angular-flow` is closure-ready only when it has real package tests and a host can build the core PORM-derived workflows from exported package APIs. Minimum closure requires:
+`@stynx-nyx/angular-flow` is closure-ready only when it has real package tests and a host can build the core PORM-derived workflows from exported package APIs. Minimum closure requires:
 
 - route providers for design, runtime, tasks, forms, fills, waivers, analytics, and policies;
 - a tested API facade for every route family in `docs/contracts/flow-api.md`, including aliases;
@@ -162,7 +162,7 @@ selection rules into the browser.
 
 ## Generic-Code Rule
 
-`@stynx-nyx/flow` and `@stynx-web/angular-flow` must stay host-domain neutral.
+`@stynx-nyx/flow` and `@stynx-nyx/angular-flow` must stay host-domain neutral.
 
 Forbidden in generic Flow code:
 
@@ -242,9 +242,9 @@ The no-soft-delete rule for `flow.events` is intentional. Events are evidence of
 
 Flow events and STYNX platform audit answer different questions.
 
-| Surface        | Purpose                                                                                       | Examples                                                                                     |
-| -------------- | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `flow.events`  | Domain workflow ledger for replay, diagnostics, task history, analytics, and adapter behavior | run started, signal received, node opened, task accepted, transition taken, effect requested |
+| Surface            | Purpose                                                                                       | Examples                                                                                     |
+| ------------------ | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `flow.events`      | Domain workflow ledger for replay, diagnostics, task history, analytics, and adapter behavior | run started, signal received, node opened, task accepted, transition taken, effect requested |
 | `@stynx-nyx/audit` | Platform security and compliance audit for who invoked which protected operation              | user updated graph, user assigned task, system repaired stuck run, admin approved waiver     |
 
 Mutating HTTP handlers must emit platform audit through the normal STYNX audit path. Runtime services must also append Flow events when workflow state changes. One does not replace the other. Current curated Flow live tables have database DML audit enabled; future mutable curated Flow tables must do the same unless an explicit exception is documented.
@@ -265,12 +265,12 @@ Services must use `@stynx-nyx/data` transactions, STYNX route decorators, typed 
 
 ## Frontend Package Boundary
 
-`@stynx-web/angular-flow` is a feature package that a host Angular shell mounts under a chosen route, commonly `/flow`.
+`@stynx-nyx/angular-flow` is a feature package that a host Angular shell mounts under a chosen route, commonly `/flow`.
 
 It should expose:
 
 - Route providers for design, runtime, task assignment, forms, fills, and waivers.
-- An API facade over `@stynx-web/sdk` using the backend contract in `docs/contracts/flow-api.md`.
+- An API facade over `@stynx-nyx/sdk` using the backend contract in `docs/contracts/flow-api.md`.
 - Graph designer UI for scopes, graphs, nodes, edges, agent rules, and transition effects.
 - Task workbench UI for open tasks, assignment, acceptance, action, withdrawal, and history.
 - Form builder and fill UI for questions, scores, answers, waivers, and required-form gates.

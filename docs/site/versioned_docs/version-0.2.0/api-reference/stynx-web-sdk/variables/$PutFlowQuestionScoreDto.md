@@ -1,8 +1,8 @@
-[**@stynx-web/sdk**](../index.md)
+[**@stynx-nyx/sdk**](../index.md)
 
 ---
 
-[@stynx-web/sdk](../index.md) / $PutFlowQuestionScoreDto
+[@stynx-nyx/sdk](../index.md) / $PutFlowQuestionScoreDto
 
 # Variable: $PutFlowQuestionScoreDto
 

@@ -117,11 +117,11 @@ export class OrdersController {
 
 ### Endpoints (`@stynx-nyx/auth` exposes 1 controller)
 
-| Method | Path                        | Auth                | Description                                                                                |
-| ------ | --------------------------- | ------------------- | ------------------------------------------------------------------------------------------ |
+| Method | Path                        | Auth                | Description                                                                                    |
+| ------ | --------------------------- | ------------------- | ---------------------------------------------------------------------------------------------- |
 | `POST` | `/auth/session-exchange`    | public              | Exchange a Cognito ID/access token for a STYNX session (handing off to `@stynx-nyx/sessions`). |
-| `GET`  | `/auth/principal`           | bearer              | Return the currently-resolved `Principal`.                                                 |
-| `GET`  | `/auth/permissions/:userId` | bearer + `iam:read` | Look up effective permissions for a user.                                                  |
+| `GET`  | `/auth/principal`           | bearer              | Return the currently-resolved `Principal`.                                                     |
+| `GET`  | `/auth/permissions/:userId` | bearer + `iam:read` | Look up effective permissions for a user.                                                      |
 
 ### Types / Interfaces
 
@@ -144,12 +144,12 @@ export class OrdersController {
 
 ### `StynxAuthModule.forRoot()` options
 
-| Option            | Type                                               | Default                                        | Description                        |
-| ----------------- | -------------------------------------------------- | ---------------------------------------------- | ---------------------------------- |
-| `verifier`        | `'cognito' \| 'generic'`                           | `'cognito'`                                    | Which JWT verifier to wire.        |
-| `cognito`         | `{ userPoolId, clientId, tokenUse }`               | required for `verifier: 'cognito'`             | Cognito user pool config.          |
-| `generic`         | `{ jwksUrl, issuer, audience }`                    | required for `verifier: 'generic'`             | Generic JWT config.                |
-| `permissionCache` | `{ kind: 'in-memory' \| 'redis'; ttlMs?; redis? }` | `{ kind: 'in-memory', ttlMs: 60_000 }`         | Permission cache backend.          |
+| Option            | Type                                               | Default                                            | Description                        |
+| ----------------- | -------------------------------------------------- | -------------------------------------------------- | ---------------------------------- |
+| `verifier`        | `'cognito' \| 'generic'`                           | `'cognito'`                                        | Which JWT verifier to wire.        |
+| `cognito`         | `{ userPoolId, clientId, tokenUse }`               | required for `verifier: 'cognito'`                 | Cognito user pool config.          |
+| `generic`         | `{ jwksUrl, issuer, audience }`                    | required for `verifier: 'generic'`                 | Generic JWT config.                |
+| `permissionCache` | `{ kind: 'in-memory' \| 'redis'; ttlMs?; redis? }` | `{ kind: 'in-memory', ttlMs: 60_000 }`             | Permission cache backend.          |
 | `principalMapper` | `(claims) => Principal`                            | `DefaultPrincipalMapper` from `@stynx-nyx/backend` | Custom claim-to-principal mapping. |
 
 ### Environment variables
@@ -220,7 +220,7 @@ StynxAuthModule.forRoot({
 - [`@stynx-nyx/tenancy`](/docs/packages/tenancy/) — reads tenant from the principal this package attaches.
 - [`@stynx-nyx/idempotency`](/docs/packages/idempotency/) — uses `actorId` from the principal to scope idempotency keys.
 - [`@stynx-nyx/audit`](/docs/packages/audit/) — uses `actorId` for audit-event attribution.
-- [`@stynx-web/angular-auth`](/docs/packages-web/angular-auth/) — Angular pair: login UI + TokenInterceptor.
+- [`@stynx-nyx/angular-auth`](/docs/packages-web/angular-auth/) — Angular pair: login UI + TokenInterceptor.
 - [`backend/auth`](/docs/packages/backend/auth/) — the `@stynx-nyx/backend` submodule that wraps this package's wiring.
 
 ## TypeDoc reference

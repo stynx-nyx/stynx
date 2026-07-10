@@ -4,7 +4,7 @@
 **File:** `packages-web/MIGRATING.md`
 
 This guide summarizes adopter-visible changes introduced by FE-A through FE-G.
-It is scoped to the `@stynx-web/*` Angular package family.
+It is scoped to the `@stynx-nyx/*` Angular package family.
 
 ## FE-A: Angular Package Format and public package surface
 
@@ -21,8 +21,8 @@ import { StynxIconComponent } from '../../packages-web/angular-ui/src';
 After:
 
 ```ts
-import { StynxIconComponent } from '@stynx-web/angular-ui';
-import { createStynxUiTestingHarness } from '@stynx-web/angular-ui/testing';
+import { StynxIconComponent } from '@stynx-nyx/angular-ui';
+import { createStynxUiTestingHarness } from '@stynx-nyx/angular-ui/testing';
 ```
 
 Adopter notes:
@@ -39,7 +39,7 @@ Adopter notes:
 ## FE-D: ICU i18n and package catalogs
 
 Template-bearing packages now ship namespaced `en` and `pt-BR` catalogs, and
-`@stynx-web/angular-i18n` evaluates ICU MessageFormat through
+`@stynx-nyx/angular-i18n` evaluates ICU MessageFormat through
 `intl-messageformat`.
 
 Before:
@@ -66,7 +66,7 @@ Adopter notes:
 
 ## FE-E: Audit read contract
 
-`@stynx-web/angular-audit` is a read-only package over the accepted audit events
+`@stynx-nyx/angular-audit` is a read-only package over the accepted audit events
 contract. New audit UI integrations should target `/audit/*`, not
 `/_audit/log`.
 
@@ -98,7 +98,7 @@ Adopter notes:
 
 ## FE-F: Installable Flow API
 
-`@stynx-web/angular-flow` now treats design drafts and published runtime graph
+`@stynx-nyx/angular-flow` now treats design drafts and published runtime graph
 versions as separate contracts and exposes an installable provider surface.
 
 Before:

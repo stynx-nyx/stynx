@@ -1,8 +1,8 @@
-**@stynx-web/angular-trash**
+**@stynx-nyx/angular-trash**
 
 ---
 
-# @stynx-web/angular-trash
+# @stynx-nyx/angular-trash
 
 ## Classes
 

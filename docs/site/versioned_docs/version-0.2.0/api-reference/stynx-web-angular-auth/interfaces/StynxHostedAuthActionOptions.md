@@ -1,8 +1,8 @@
-[**@stynx-web/angular-auth**](../index.md)
+[**@stynx-nyx/angular-auth**](../index.md)
 
 ---
 
-[@stynx-web/angular-auth](../index.md) / StynxHostedAuthActionOptions
+[@stynx-nyx/angular-auth](../index.md) / StynxHostedAuthActionOptions
 
 # Interface: StynxHostedAuthActionOptions
 

@@ -1,8 +1,8 @@
-[**@stynx-web/sdk**](../index.md)
+[**@stynx-nyx/sdk**](../index.md)
 
 ---
 
-[@stynx-web/sdk](../index.md) / CreateFlowFormDto
+[@stynx-nyx/sdk](../index.md) / CreateFlowFormDto
 
 # Type Alias: CreateFlowFormDto
 

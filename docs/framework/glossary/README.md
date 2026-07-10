@@ -38,7 +38,7 @@ architecture, and reference-app documentation.
 - **Backend package** — an installable `@stynx-nyx/*` package under `packages/`
   that exposes NestJS modules, services, adapters, contracts, CLIs, or testing
   utilities.
-- **Web package** — an installable `@stynx-web/*` package under
+- **Web package** — an installable `@stynx-nyx/*` package under
   `packages-web/` for Angular and browser consumers.
 - **Reference app** — the demonstrator host applications under `reference/api`
   and `reference/web`.

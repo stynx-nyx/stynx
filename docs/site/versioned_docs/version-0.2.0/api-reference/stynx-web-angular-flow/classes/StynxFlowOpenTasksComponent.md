@@ -1,8 +1,8 @@
-[**@stynx-web/angular-flow**](../index.md)
+[**@stynx-nyx/angular-flow**](../index.md)
 
 ---
 
-[@stynx-web/angular-flow](../index.md) / StynxFlowOpenTasksComponent
+[@stynx-nyx/angular-flow](../index.md) / StynxFlowOpenTasksComponent
 
 # Class: StynxFlowOpenTasksComponent
 

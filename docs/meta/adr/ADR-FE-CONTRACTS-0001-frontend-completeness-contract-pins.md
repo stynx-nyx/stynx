@@ -24,7 +24,7 @@ to invent backend or auth semantics:
 - profile security handoff components need hosted identity-provider action URLs;
 - the audit package needs list, detail, entity-history, and per-event integrity
   reads, while the live backend currently exposes only `/_audit/log`;
-- Flow needs a publish/draft distinction before `@stynx-web/angular-flow` can
+- Flow needs a publish/draft distinction before `@stynx-nyx/angular-flow` can
   show a publish badge or action.
 
 Letting frontend components fill those gaps locally would create incompatible
@@ -35,7 +35,7 @@ host behavior and make later backend alignment harder.
 Architect pins the contracts before Engineers implement the blocked UI slices.
 
 - Hosted auth actions are configured/frontend-resolved links exposed by
-  `@stynx-web/angular-auth`; profile components do not derive provider URLs.
+  `@stynx-nyx/angular-auth`; profile components do not derive provider URLs.
 - Audit UI targets `/audit/events`, `/audit/events/:eventId`,
   `/audit/entities/:entityKind/:entityId/history`, and
   `/audit/events/:eventId/integrity` under `platform:audit:read:*`.
@@ -50,4 +50,4 @@ current code is missing the pinned route or adapter surface, but UI code no
 longer has to invent permission names, request DTOs, or tenancy behavior.
 
 The existing `/_audit/log` endpoint remains available for legacy/admin use; it
-is not the target contract for `@stynx-web/angular-audit`.
+is not the target contract for `@stynx-nyx/angular-audit`.

@@ -1,8 +1,8 @@
-[**@stynx-web/angular-profile**](../index.md)
+[**@stynx-nyx/angular-profile**](../index.md)
 
 ---
 
-[@stynx-web/angular-profile](../index.md) / UnsavedChangesGuard
+[@stynx-nyx/angular-profile](../index.md) / UnsavedChangesGuard
 
 # Class: UnsavedChangesGuard
 

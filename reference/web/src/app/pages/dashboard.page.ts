@@ -1,16 +1,16 @@
 import { NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, ViewChild, inject } from '@angular/core';
 import type { AfterViewInit } from '@angular/core';
-import { StynxActiveSessionsComponent } from '@stynx-web/angular-sessions';
-import { StynxDocumentUploadComponent } from '@stynx-web/angular-storage';
-import { StynxHasPermissionDirective, StynxSessionService } from '@stynx-web/angular-auth';
-import { StynxBannerComponent, StynxToastService } from '@stynx-web/angular-ui';
+import { StynxActiveSessionsComponent } from '@stynx-nyx/angular-sessions';
+import { StynxDocumentUploadComponent } from '@stynx-nyx/angular-storage';
+import { StynxHasPermissionDirective, StynxSessionService } from '@stynx-nyx/angular-auth';
+import { StynxBannerComponent, StynxToastService } from '@stynx-nyx/angular-ui';
 import {
   StynxPreferencesFormComponent,
   StynxProfileFormComponent,
-} from '@stynx-web/angular-profile';
-import type { StynxSessionsAdapter } from '@stynx-web/angular-sessions';
-import { StynxIntlCurrencyPipe } from '@stynx-web/angular-i18n';
+} from '@stynx-nyx/angular-profile';
+import type { StynxSessionsAdapter } from '@stynx-nyx/angular-sessions';
+import { StynxIntlCurrencyPipe } from '@stynx-nyx/angular-i18n';
 import { environment } from '../../environments/environment';
 import { ReferenceWebI18nService } from '../core/reference-web-i18n.service';
 import { ReferenceWebShellService } from '../core/reference-web-shell.service';

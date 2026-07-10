@@ -1,8 +1,8 @@
-[**@stynx-web/angular-audit**](../index.md)
+[**@stynx-nyx/angular-audit**](../index.md)
 
 ---
 
-[@stynx-web/angular-audit](../index.md) / STYNX_AUDIT_DEFAULT_PERMISSION
+[@stynx-nyx/angular-audit](../index.md) / STYNX_AUDIT_DEFAULT_PERMISSION
 
 # Variable: STYNX_AUDIT_DEFAULT_PERMISSION
 

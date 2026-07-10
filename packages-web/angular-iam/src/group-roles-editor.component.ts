@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, computed, inject, signal } from '@angular/core';
-import { StynxI18nService, StynxTranslatePipe } from '@stynx-web/angular-i18n';
-import { EmptyStateComponent, StynxBannerComponent, StynxLoadingSpinnerComponent, StynxToastService } from '@stynx-web/angular-ui';
+import { StynxI18nService, StynxTranslatePipe } from '@stynx-nyx/angular-i18n';
+import { EmptyStateComponent, StynxBannerComponent, StynxLoadingSpinnerComponent, StynxToastService } from '@stynx-nyx/angular-ui';
 import { forkJoin } from 'rxjs';
 import { IamApiService } from './iam-api.service';
 import type { StynxRole } from './types';

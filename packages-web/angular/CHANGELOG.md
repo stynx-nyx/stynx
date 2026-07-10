@@ -1,4 +1,4 @@
-# @stynx-web/angular
+# @stynx-nyx/angular
 
 ## 1.0.0
 
@@ -9,4 +9,4 @@
 ### Patch Changes
 
 - Updated dependencies [8f6df55]
-  - @stynx-web/sdk@1.0.0
+  - @stynx-nyx/sdk@1.0.0

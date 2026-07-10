@@ -22,7 +22,7 @@ Accepted on 2026-05-19 for FE-A.6.
 
 ## Context
 
-The `@stynx-web/*` packages were previously built with plain `tsc`. That was enough for monorepo-local consumption, but external Angular CLI consumers expect Angular Package Format (APF): flattened ESM bundles, partial Angular compilation metadata, generated package manifests, and explicit package exports.
+The `@stynx-nyx/*` packages were previously built with plain `tsc`. That was enough for monorepo-local consumption, but external Angular CLI consumers expect Angular Package Format (APF): flattened ESM bundles, partial Angular compilation metadata, generated package manifests, and explicit package exports.
 
 FE-A also introduced `exports`, `sideEffects: false`, and `./testing` barrels for every `packages-web/*` package. The packaging decision must preserve those public subpaths while changing the build output to APF.
 

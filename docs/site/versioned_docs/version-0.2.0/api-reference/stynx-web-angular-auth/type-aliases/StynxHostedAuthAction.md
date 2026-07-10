@@ -1,8 +1,8 @@
-[**@stynx-web/angular-auth**](../index.md)
+[**@stynx-nyx/angular-auth**](../index.md)
 
 ---
 
-[@stynx-web/angular-auth](../index.md) / StynxHostedAuthAction
+[@stynx-nyx/angular-auth](../index.md) / StynxHostedAuthAction
 
 # Type Alias: StynxHostedAuthAction
 

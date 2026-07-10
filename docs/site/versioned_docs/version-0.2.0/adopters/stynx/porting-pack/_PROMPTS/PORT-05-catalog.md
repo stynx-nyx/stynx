@@ -6,7 +6,7 @@
 
 ## Mission
 
-For every `@stynx-nyx/*` and `@stynx-web/*` package found in discovery,
+For every `@stynx-nyx/*` and `@stynx-nyx/*` package found in discovery,
 document the public surface and the trigger conditions that should
 make a consuming agent reach for it.
 
@@ -45,31 +45,31 @@ After the per-package list, produce a table:
 
 | Foreign-codebase concern       | STYNX package                                                         |
 | ------------------------------ | --------------------------------------------------------------------- |
-| HTTP request handling baseline | `@stynx-nyx/core`                                                         |
-| DB access                      | `@stynx-nyx/data`                                                         |
-| Auth (JWT verify, login)       | `@stynx-nyx/auth` + `@stynx-nyx/sessions`                                     |
-| Multi-tenant context           | `@stynx-nyx/tenancy`                                                      |
-| File uploads / S3              | `@stynx-nyx/storage`                                                      |
-| Audit trail                    | `@stynx-nyx/audit`                                                        |
-| Structured logs                | `@stynx-nyx/logging`                                                      |
-| Health/probes/metrics          | `@stynx-nyx/health`                                                       |
-| Rate limiting                  | `@stynx-nyx/ratelimit`                                                    |
-| Idempotency keys               | `@stynx-nyx/idempotency`                                                  |
-| LGPD export/erasure            | `@stynx-nyx/privacy`                                                      |
-| i18n                           | `@stynx-nyx/i18n`                                                         |
-| Test fixtures                  | `@stynx-nyx/testing`                                                      |
-| CLI ops (migrate, doctor)      | `@stynx-nyx/cli`                                                          |
-| Shared TypeScript types        | `@stynx-nyx/contracts` (status: NOT YET IMPLEMENTED — FIND-001)           |
-| Angular HTTP client            | `@stynx-web/sdk`                                                      |
-| Angular base                   | `@stynx-web/angular`                                                  |
-| Angular auth UI                | `@stynx-web/angular-auth`                                             |
-| Angular tenant switcher        | `@stynx-web/angular-tenancy` (status: NOT YET IMPLEMENTED — FIND-002) |
-| Angular file upload            | `@stynx-web/angular-storage`                                          |
-| Angular session list           | `@stynx-web/angular-sessions`                                         |
-| Angular profile                | `@stynx-web/angular-profile`                                          |
-| Angular trash UI               | `@stynx-web/angular-trash`                                            |
-| Angular i18n                   | `@stynx-web/angular-i18n`                                             |
-| Angular UI primitives          | `@stynx-web/angular-ui`                                               |
+| HTTP request handling baseline | `@stynx-nyx/core`                                                     |
+| DB access                      | `@stynx-nyx/data`                                                     |
+| Auth (JWT verify, login)       | `@stynx-nyx/auth` + `@stynx-nyx/sessions`                             |
+| Multi-tenant context           | `@stynx-nyx/tenancy`                                                  |
+| File uploads / S3              | `@stynx-nyx/storage`                                                  |
+| Audit trail                    | `@stynx-nyx/audit`                                                    |
+| Structured logs                | `@stynx-nyx/logging`                                                  |
+| Health/probes/metrics          | `@stynx-nyx/health`                                                   |
+| Rate limiting                  | `@stynx-nyx/ratelimit`                                                |
+| Idempotency keys               | `@stynx-nyx/idempotency`                                              |
+| LGPD export/erasure            | `@stynx-nyx/privacy`                                                  |
+| i18n                           | `@stynx-nyx/i18n`                                                     |
+| Test fixtures                  | `@stynx-nyx/testing`                                                  |
+| CLI ops (migrate, doctor)      | `@stynx-nyx/cli`                                                      |
+| Shared TypeScript types        | `@stynx-nyx/contracts` (status: NOT YET IMPLEMENTED — FIND-001)       |
+| Angular HTTP client            | `@stynx-nyx/sdk`                                                      |
+| Angular base                   | `@stynx-nyx/angular`                                                  |
+| Angular auth UI                | `@stynx-nyx/angular-auth`                                             |
+| Angular tenant switcher        | `@stynx-nyx/angular-tenancy` (status: NOT YET IMPLEMENTED — FIND-002) |
+| Angular file upload            | `@stynx-nyx/angular-storage`                                          |
+| Angular session list           | `@stynx-nyx/angular-sessions`                                         |
+| Angular profile                | `@stynx-nyx/angular-profile`                                          |
+| Angular trash UI               | `@stynx-nyx/angular-trash`                                            |
+| Angular i18n                   | `@stynx-nyx/angular-i18n`                                             |
+| Angular UI primitives          | `@stynx-nyx/angular-ui`                                               |
 
 Adjust rows to match the actual package set discovered. Verify the
 matrix is internally consistent with the per-package entries.

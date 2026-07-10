@@ -13,10 +13,10 @@ Source: pre-existing `packages/&lt;name&gt;/reports/mutation/mutation.json` file
 
 | Package                      | Total mutants | Killed | Survived | Timeout | CompileError | NoCoverage | Mutation score |
 | ---------------------------- | ------------- | ------ | -------- | ------- | ------------ | ---------- | -------------- |
-| `@stynx-nyx/contracts`           | 9             | 5      | 1        | 0       | 3            | 0          | **83.33%**     |
-| `@stynx-nyx/core`                | 297           | 113    | 59       | 5       | 115          | 5          | **66.67%**     |
-| `@stynx-nyx/audit`               | 539           | 244    | 112      | 0       | 145          | 38         | **68.54%**     |
-| `@stynx-web/angular-tenancy` | 132           | 55     | 22       | 0       | 55           | 0          | **71.43%**     |
+| `@stynx-nyx/contracts`       | 9             | 5      | 1        | 0       | 3            | 0          | **83.33%**     |
+| `@stynx-nyx/core`            | 297           | 113    | 59       | 5       | 115          | 5          | **66.67%**     |
+| `@stynx-nyx/audit`           | 539           | 244    | 112      | 0       | 145          | 38         | **68.54%**     |
+| `@stynx-nyx/angular-tenancy` | 132           | 55     | 22       | 0       | 55           | 0          | **71.43%**     |
 
 &gt; Only four packages had reports on disk pre-cutover. The remaining 17
 &gt; Stryker-configured packages will be measured post-cutover; their first

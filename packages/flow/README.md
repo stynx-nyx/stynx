@@ -10,11 +10,11 @@ Workflow apps — approval chains, multi-step forms, document pipelines, regulat
 
 You reach for `@stynx-nyx/flow` when your app has any non-trivial multi-step process with state, actors, and transitions. If you just need CRUD, you don't need flow.
 
-What it does NOT do: it is not a BPMN engine (no XML process definitions — STYNX uses its own form+graph model). It does not render UI (that's [`@stynx-web/angular-flow`](/docs/packages-web/angular-flow/)). It does not own your domain entities (it references them; you model them in `@stynx-nyx/data`).
+What it does NOT do: it is not a BPMN engine (no XML process definitions — STYNX uses its own form+graph model). It does not render UI (that's [`@stynx-nyx/angular-flow`](/docs/packages-web/angular-flow/)). It does not own your domain entities (it references them; you model them in `@stynx-nyx/data`).
 
 ## Audience
 
-Backend developers building workflow-driven STYNX apps. You mount `StynxFlowModule`, model your forms + graphs through its design endpoints, and drive runs + tasks through its runtime endpoints. The paired frontend is [`@stynx-web/angular-flow`](/docs/packages-web/angular-flow/) and the generated REST client is [`@stynx-web/sdk`](/docs/packages-web/sdk/).
+Backend developers building workflow-driven STYNX apps. You mount `StynxFlowModule`, model your forms + graphs through its design endpoints, and drive runs + tasks through its runtime endpoints. The paired frontend is [`@stynx-nyx/angular-flow`](/docs/packages-web/angular-flow/) and the generated REST client is [`@stynx-nyx/sdk`](/docs/packages-web/sdk/).
 
 ## Install
 
@@ -119,8 +119,8 @@ See [`examples`](/docs/packages/flow/examples/) for an end-to-end scenario: auth
 
 ## Related packages
 
-- [`@stynx-web/angular-flow`](/docs/packages-web/angular-flow/) — the Angular UI: form-render, run-viewer, task-inbox.
-- [`@stynx-web/sdk`](/docs/packages-web/sdk/) — the generated REST client for flow's endpoints.
+- [`@stynx-nyx/angular-flow`](/docs/packages-web/angular-flow/) — the Angular UI: form-render, run-viewer, task-inbox.
+- [`@stynx-nyx/sdk`](/docs/packages-web/sdk/) — the generated REST client for flow's endpoints.
 - [`@stynx-nyx/data`](/docs/packages/data/) — flow's persistence layer.
 - [`@stynx-nyx/audit`](/docs/packages/audit/) — flow mutations emit audit events.
 - [`@stynx-nyx/auth`](/docs/packages/auth/) — flow policies consume the principal.

@@ -1,8 +1,8 @@
-[**@stynx-web/angular-storage**](../index.md)
+[**@stynx-nyx/angular-storage**](../index.md)
 
 ---
 
-[@stynx-web/angular-storage](../index.md) / STYNX_DEFAULT_MULTIPART_UPLOAD_OPTIONS
+[@stynx-nyx/angular-storage](../index.md) / STYNX_DEFAULT_MULTIPART_UPLOAD_OPTIONS
 
 # Variable: STYNX_DEFAULT_MULTIPART_UPLOAD_OPTIONS
 

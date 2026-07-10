@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject, type OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { StynxTranslatePipe } from '@stynx-web/angular-i18n';
-import { StynxBannerComponent, StynxLoadingSpinnerComponent, StynxToastService } from '@stynx-web/angular-ui';
+import { StynxTranslatePipe } from '@stynx-nyx/angular-i18n';
+import { StynxBannerComponent, StynxLoadingSpinnerComponent, StynxToastService } from '@stynx-nyx/angular-ui';
 import { DocumentService } from './document.service';
 import { STYNX_UPLOAD_EXECUTOR } from './tokens';
 import type { StynxDocumentScanEvent, StynxDocumentScanStatus, StynxDocumentUploadCompletedEvent } from './types';

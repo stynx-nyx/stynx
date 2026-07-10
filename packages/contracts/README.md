@@ -56,13 +56,13 @@ Then wire your implementation in via `@stynx-nyx/storage`'s `StynxStorageModule.
 
 ### Auth contracts
 
-| Export                    | Description                                                                                                                                            |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Export                    | Description                                                                                                                                                |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Principal`               | Canonical authenticated identity: `{ id, username?, email?, roles, permissions, tenants, claims }`. Every `@stynx-nyx/auth` verifier returns one of these. |
-| `PrincipalId`             | Type alias for `string`; nominal hint for IDs flowing through APIs.                                                                                    |
-| `AuthVerificationResult`  | `{ principal, token, issuedAt?, expiresAt?, tokenUse? }` — what a JWT verifier returns.                                                                |
-| `RequestPrincipalContext` | `{ principal, tenantId?, correlationId? }` — request-attached identity context.                                                                        |
-| `AuthVerifier`            | `verify(token: string): Promise<AuthVerificationResult>` — implementer interface for custom JWT verifiers (Cognito, Auth0, custom).                    |
+| `PrincipalId`             | Type alias for `string`; nominal hint for IDs flowing through APIs.                                                                                        |
+| `AuthVerificationResult`  | `{ principal, token, issuedAt?, expiresAt?, tokenUse? }` — what a JWT verifier returns.                                                                    |
+| `RequestPrincipalContext` | `{ principal, tenantId?, correlationId? }` — request-attached identity context.                                                                            |
+| `AuthVerifier`            | `verify(token: string): Promise<AuthVerificationResult>` — implementer interface for custom JWT verifiers (Cognito, Auth0, custom).                        |
 
 ### Authorization contracts
 
@@ -70,13 +70,13 @@ Then wire your implementation in via `@stynx-nyx/storage`'s `StynxStorageModule.
 | --------------------------- | ------------------------------------------------------------------------------------------------------ |
 | `Permission`                | `string` alias — permission-name token. Convention: `<resource>:<verb>` e.g. `'users:read'`.           |
 | `PermissionPredicate`       | Function `(principal, context) => boolean \| Promise<boolean>` for custom predicate-based permissions. |
-| `AuthorizationRequirements` | Per-route required-permission declaration consumed by `@stynx-nyx/auth`'s guard.                           |
+| `AuthorizationRequirements` | Per-route required-permission declaration consumed by `@stynx-nyx/auth`'s guard.                       |
 
 ### Audit contracts
 
-| Export               | Description                                                                                                                                                                    |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `AuditEventEnvelope` | Canonical audit-event shape: `{ occurredAt, action, entity, entityId?, tenantId?, actorId?, oldData?, newData?, ... }`.                                                        |
+| Export               | Description                                                                                                                                                                        |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AuditEventEnvelope` | Canonical audit-event shape: `{ occurredAt, action, entity, entityId?, tenantId?, actorId?, oldData?, newData?, ... }`.                                                            |
 | `AuditSink`          | `write(event: AuditEventEnvelope): Promise<void>` — sink interface. Default impl is the SQL sink in `@stynx-nyx/audit`; custom impls (CloudWatch, file-tail, etc.) implement this. |
 
 ### DB-context contracts
@@ -109,7 +109,7 @@ Then wire your implementation in via `@stynx-nyx/storage`'s `StynxStorageModule.
 
 | Export                 | Description                                                                                                             |
 | ---------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `IdentityAdminService` | User/role/group management interface implemented by backend-side admin endpoints. Consumed by `@stynx-web/angular-iam`. |
+| `IdentityAdminService` | User/role/group management interface implemented by backend-side admin endpoints. Consumed by `@stynx-nyx/angular-iam`. |
 
 ### Error contracts
 

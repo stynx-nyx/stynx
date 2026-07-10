@@ -3,7 +3,7 @@ import { APP_INITIALIZER, Injector, runInInjectionContext, signal, type Provider
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
-import { StynxI18nService } from '@stynx-web/angular-i18n';
+import { StynxI18nService } from '@stynx-nyx/angular-i18n';
 import { of, firstValueFrom, type Observable } from 'rxjs';
 import { provideTenancy } from '../src/provide-tenancy';
 import { TenantContextService } from '../src/tenant-context.service';
@@ -103,7 +103,7 @@ afterEach(() => {
   TestBed.resetTestingModule();
 });
 
-describe('@stynx-web/angular-tenancy', () => {
+describe('@stynx-nyx/angular-tenancy', () => {
   it('renders the tenant switcher and emits selected tenants from the DOM', async () => {
     const tenantId = signal<string | null>(null);
     const tenantContext = {

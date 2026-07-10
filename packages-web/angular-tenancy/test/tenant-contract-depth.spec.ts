@@ -80,7 +80,7 @@ afterEach(() => {
   TestBed.resetTestingModule();
 });
 
-describe('@stynx-web/angular-tenancy W04 tenant contract depth', () => {
+describe('@stynx-nyx/angular-tenancy W04 tenant contract depth', () => {
   it('exposes resolved manual tenant context to injected consumers and attaches the canonical tenant header', async () => {
     const context = createTenantContext();
     const emitted: Array<string | null> = [];

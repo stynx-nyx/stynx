@@ -38,7 +38,7 @@ larger than the cost of declining cleanly.
   the IdP and AWS primitives are baked in.
 - **Native mobile-only frontend** — no native shell support in v1.0;
   if the only client is iOS/Android, you can integrate with the
-  backend but won't get the `@stynx-web/*` UI benefit.
+  backend but won't get the `@stynx-nyx/*` UI benefit.
 - **API-key / M2M-only product** — v1.0 doesn't issue API keys;
   every request is a user session.
 
@@ -60,7 +60,7 @@ Apply each to the foreign codebase and record the answer.
    `deleted_at` on live tables, and is the team willing to migrate
    to archive-schema soft-delete?
 8. Is the frontend Angular, or is the team willing to either
-   (a) migrate to Angular or (b) consume `@stynx-web/sdk` from a
+   (a) migrate to Angular or (b) consume `@stynx-nyx/sdk` from a
    non-Angular client?
 9. Is the team prepared to adopt strict CI gates (commitlint,
    `stynx doctor`, migration linter, branch protection,
@@ -70,11 +70,11 @@ Apply each to the foreign codebase and record the answer.
 
 ### Scoring
 
-| Yes count | Verdict                                                                                                                       |
-| --------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| 8–10      | **STRONG FIT** — proceed to [`11-PORTING-PLAYBOOK.md`](11-PORTING-PLAYBOOK.md).                                               |
+| Yes count | Verdict                                                                                                                           |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| 8–10      | **STRONG FIT** — proceed to [`11-PORTING-PLAYBOOK.md`](11-PORTING-PLAYBOOK.md).                                                   |
 | 5–7       | **SCOPE-REDUCED FIT** — port only the layers that match. Skip incompatible packages (e.g., `@stynx-nyx/privacy` if no LGPD need). |
-| 0–4       | **DO NOT ADOPT** — the value capture is too small relative to the architectural cost.                                         |
+| 0–4       | **DO NOT ADOPT** — the value capture is too small relative to the architectural cost.                                             |
 
 ## Decision tree
 

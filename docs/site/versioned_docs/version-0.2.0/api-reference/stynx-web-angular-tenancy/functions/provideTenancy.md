@@ -1,8 +1,8 @@
-[**@stynx-web/angular-tenancy**](../index.md)
+[**@stynx-nyx/angular-tenancy**](../index.md)
 
 ---
 
-[@stynx-web/angular-tenancy](../index.md) / provideTenancy
+[@stynx-nyx/angular-tenancy](../index.md) / provideTenancy
 
 # Function: provideTenancy()
 

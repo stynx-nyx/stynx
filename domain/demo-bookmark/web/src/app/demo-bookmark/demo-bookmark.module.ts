@@ -6,7 +6,7 @@
 //   - exported `class __NsModulePascal__FeatureModule {}` (unsubstituted
 //     template variable)
 //
-// Hand-finishing for S3-2-step-2: when @stynx-web/angular's auth guard
+// Hand-finishing for S3-2-step-2: when @stynx-nyx/angular's auth guard
 // pattern is wired, add canActivate guards to the routes.
 
 import { CommonModule } from '@angular/common';

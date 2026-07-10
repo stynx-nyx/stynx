@@ -59,11 +59,11 @@ function validateDistMaps() {
 function validateTarballMaps() {
   if (!existsSync(localNpmDir)) return;
   const tarballs = readdirSync(localNpmDir)
-    .filter((name) => /^stynx-web-angular.*\.tgz$/.test(name))
+    .filter((name) => /^stynx-nyx-angular.*\.tgz$/.test(name))
     .map((name) => resolve(localNpmDir, name));
 
   for (const tarball of tarballs) {
-    const tempDir = mkdtempSync(join(tmpdir(), 'stynx-web-sourcemaps-'));
+    const tempDir = mkdtempSync(join(tmpdir(), 'stynx-nyx-sourcemaps-'));
     try {
       execFileSync('tar', ['-xzf', tarball, '-C', tempDir], { stdio: 'ignore' });
       const packageRoot = resolve(tempDir, 'package');

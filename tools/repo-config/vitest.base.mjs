@@ -132,7 +132,7 @@ export function createVitestConfig({
       // Inline @nestjs/@aws-sdk/@stynx-* so vi.mock can intercept their
       // exports and so require() / import() resolve to the same module
       // instance (avoids CJS/ESM dual-class-identity issues with NestJS DI).
-      server: { deps: { inline: [/@nestjs/, /@aws-sdk/, /@stynx-nyx\//, /@stynx-web\//] } },
+      server: { deps: { inline: [/@nestjs/, /@aws-sdk/, /@stynx-nyx\//, /@stynx-nyx\//] } },
       ...(singleThread
         ? {
             fileParallelism: false,

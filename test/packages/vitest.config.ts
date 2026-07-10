@@ -21,6 +21,6 @@ export default createVitestConfig({
     '@stynx-nyx/storage': resolve(__dirname, '../../packages/storage/src/index.ts'),
     '@stynx-nyx/backend': resolve(__dirname, '../../packages/backend/src/index.ts'),
     '@stynx-nyx/contracts': resolve(__dirname, '../../packages/contracts/src/index.ts'),
-    '@stynx-web/sdk': resolve(__dirname, '../../packages-web/sdk/src/index.ts'),
+    '@stynx-nyx/sdk': resolve(__dirname, '../../packages-web/sdk/src/index.ts'),
   },
 });

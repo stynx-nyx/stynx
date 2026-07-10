@@ -1,10 +1,10 @@
 # `create-stynx-app` — scaffold a new STYNX-based Angular application
 
-`create-stynx-app` (`@stynx-internal/create-stynx-app`) is the project scaffolder. Run it once to generate a standalone Angular app pre-wired with the STYNX foundation: `provideStynxDefaults()`, OIDC auth via `@stynx-web/angular-auth`, tenant resolution, and a Flow client placeholder. It's the fastest path from zero to a running STYNX frontend.
+`create-stynx-app` (`@stynx-internal/create-stynx-app`) is the project scaffolder. Run it once to generate a standalone Angular app pre-wired with the STYNX foundation: `provideStynxDefaults()`, OIDC auth via `@stynx-nyx/angular-auth`, tenant resolution, and a Flow client placeholder. It's the fastest path from zero to a running STYNX frontend.
 
 ## Purpose
 
-Starting a STYNX app from a blank Angular workspace means wiring `@stynx-web/angular`, auth, tenancy, the SDK, and the build config by hand — error-prone and repetitive. `create-stynx-app` generates a correct, runnable starting point so you skip the boilerplate.
+Starting a STYNX app from a blank Angular workspace means wiring `@stynx-nyx/angular`, auth, tenancy, the SDK, and the build config by hand — error-prone and repetitive. `create-stynx-app` generates a correct, runnable starting point so you skip the boilerplate.
 
 You reach for it once, at the very beginning of a new app.
 
@@ -79,13 +79,13 @@ node tools/create-stynx-app/bin.mjs /tmp/smoke --no-install
 ## Common pitfalls
 
 - **Scaffolding into a non-empty directory** without `--force` aborts to avoid clobbering. Use `--force` deliberately.
-- **Template pins a STYNX version** — the generated app references specific `@stynx-web/*` versions. After scaffolding, run your package manager's update to align with the latest if needed.
+- **Template pins a STYNX version** — the generated app references specific `@stynx-nyx/*` versions. After scaffolding, run your package manager's update to align with the latest if needed.
 - **Backend not scaffolded** — this tool produces the frontend. Pair with `stynx init` ([`@stynx-nyx/cli`](/docs/packages/cli/)) for the backend.
 
 ## Related packages
 
 - [`@stynx-nyx/cli`](/docs/packages/cli/) — `stynx init` scaffolds the backend side.
-- [`@stynx-web/angular`](/docs/packages-web/angular/) — the foundation the generated app wires.
+- [`@stynx-nyx/angular`](/docs/packages-web/angular/) — the foundation the generated app wires.
 - [`@stynx-internal/eslint-config`](/docs/tools/eslint-config/) + [`@stynx-internal/tsconfig`](/docs/tools/tsconfig/) — the configs the generated app extends.
 
 ## TypeDoc reference

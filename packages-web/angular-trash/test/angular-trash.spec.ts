@@ -2,10 +2,10 @@ import '@angular/compiler';
 import { Injector, runInInjectionContext } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
-import { StynxSessionService } from '@stynx-web/angular-auth';
-import { StynxI18nService } from '@stynx-web/angular-i18n';
-import { StynxToastService } from '@stynx-web/angular-ui';
-import type { StynxSdkClient } from '@stynx-web/sdk';
+import { StynxSessionService } from '@stynx-nyx/angular-auth';
+import { StynxI18nService } from '@stynx-nyx/angular-i18n';
+import { StynxToastService } from '@stynx-nyx/angular-ui';
+import type { StynxSdkClient } from '@stynx-nyx/sdk';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { provideStynxTrash } from '../src/provide-trash';
 import { SdkTrashAdapter } from '../src/sdk-trash.adapter';
@@ -55,7 +55,7 @@ beforeAll(() => {
   TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
 });
 
-describe('@stynx-web/angular-trash', () => {
+describe('@stynx-nyx/angular-trash', () => {
   afterEach(() => {
     TestBed.resetTestingModule();
     vi.restoreAllMocks();

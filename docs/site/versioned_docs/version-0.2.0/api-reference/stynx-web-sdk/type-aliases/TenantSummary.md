@@ -1,8 +1,8 @@
-[**@stynx-web/sdk**](../index.md)
+[**@stynx-nyx/sdk**](../index.md)
 
 ---
 
-[@stynx-web/sdk](../index.md) / TenantSummary
+[@stynx-nyx/sdk](../index.md) / TenantSummary
 
 # Type Alias: TenantSummary
 

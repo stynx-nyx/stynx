@@ -1,8 +1,8 @@
-[**@stynx-web/angular-flow**](../index.md)
+[**@stynx-nyx/angular-flow**](../index.md)
 
 ---
 
-[@stynx-web/angular-flow](../index.md) / STYNX_FLOW_TENANT_CHANGED
+[@stynx-nyx/angular-flow](../index.md) / STYNX_FLOW_TENANT_CHANGED
 
 # Variable: STYNX_FLOW_TENANT_CHANGED
 

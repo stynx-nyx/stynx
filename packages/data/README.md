@@ -58,12 +58,12 @@ export class OrdersRepo {
 
 ### Services / Injectables
 
-| Export                                                          | Description                                                                                           |
-| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `Database`                                                      | Request-scoped Drizzle wrapper. Reads `RequestContext` and applies `SET LOCAL` per query/transaction. |
-| `Transaction`                                                   | Helper for explicit transactions across multiple ops; nests cleanly inside `Database`.                |
-| `StynxPoolRegistry`                                             | Multi-pool registry; useful for read-replica routing or per-tenant connection pinning.                |
-| `StynxPgClient`                                                 | Lower-level Postgres client; exposed for tests + CLI utilities.                                       |
+| Export                                                              | Description                                                                                           |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `Database`                                                          | Request-scoped Drizzle wrapper. Reads `RequestContext` and applies `SET LOCAL` per query/transaction. |
+| `Transaction`                                                       | Helper for explicit transactions across multiple ops; nests cleanly inside `Database`.                |
+| `StynxPoolRegistry`                                                 | Multi-pool registry; useful for read-replica routing or per-tenant connection pinning.                |
+| `StynxPgClient`                                                     | Lower-level Postgres client; exposed for tests + CLI utilities.                                       |
 | `PgSessionDbContextApplier` (re-exported from `@stynx-nyx/backend`) | The default `DbContextApplier<PostgresClient>` — `SET LOCAL` for RLS.                                 |
 
 ### Functions
@@ -84,11 +84,11 @@ export class OrdersRepo {
 
 ### Types / Interfaces
 
-| Export                   | Description                                                |
-| ------------------------ | ---------------------------------------------------------- |
-| `StynxDataOptions`       | `forRoot()` options.                                       |
-| `StynxDrizzleDatabase`   | Typed Drizzle DB instance for your schema.                 |
-| `StynxPgPoolOptions`     | Pool options.                                              |
+| Export                   | Description                                                    |
+| ------------------------ | -------------------------------------------------------------- |
+| `StynxDataOptions`       | `forRoot()` options.                                           |
+| `StynxDrizzleDatabase`   | Typed Drizzle DB instance for your schema.                     |
+| `StynxPgPoolOptions`     | Pool options.                                                  |
 | `SystemExecutionContext` | Cited from `@stynx-nyx/core`; marks system-context operations. |
 
 ## Configuration
@@ -148,7 +148,7 @@ return this.db.select().from(schema.orders).where(archiveWhereActive(schema.orde
 - [`@stynx-nyx/tenancy`](/docs/packages/tenancy/) — populates `tenantId` the applier projects.
 - [`@stynx-nyx/idempotency`](/docs/packages/idempotency/) — Postgres store shares this package's connection for transactional consistency.
 - [`backend/db-context`](/docs/packages/backend/db-context/) — `@stynx-nyx/backend` submodule that wraps this package.
-- [`@stynx-web/angular-trash`](/docs/packages-web/angular-trash/) — Angular UI for soft-delete recovery (consumes archive primitives from this package).
+- [`@stynx-nyx/angular-trash`](/docs/packages-web/angular-trash/) — Angular UI for soft-delete recovery (consumes archive primitives from this package).
 
 ## TypeDoc reference
 

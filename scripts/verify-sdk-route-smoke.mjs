@@ -11,7 +11,7 @@ if (!existsSync(openApiPath)) {
 }
 
 if (!existsSync(servicesDir)) {
-  throw new Error('Generated SDK services missing. Run pnpm --filter @stynx-web/sdk codegen first.');
+  throw new Error('Generated SDK services missing. Run pnpm --filter @stynx-nyx/sdk codegen first.');
 }
 
 const contract = JSON.parse(readFileSync(openApiPath, 'utf8'));

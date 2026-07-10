@@ -1,15 +1,15 @@
 {
-  "name": "@stynx-web/angular-i18n",
+  "name": "@stynx-nyx/angular-i18n",
   "version": "1.0.0",
   "description": "Angular 20/21 runtime locale switching for stynx web apps",
   "exports": {
     ".": {
-      "types": "./dist/types/stynx-web-angular-i18n.d.ts",
-      "default": "./dist/fesm2022/stynx-web-angular-i18n.mjs"
+      "types": "./dist/types/stynx-nyx-angular-i18n.d.ts",
+      "default": "./dist/fesm2022/stynx-nyx-angular-i18n.mjs"
     },
     "./testing": {
-      "types": "./dist/types/stynx-web-angular-i18n-testing.d.ts",
-      "default": "./dist/fesm2022/stynx-web-angular-i18n-testing.mjs"
+      "types": "./dist/types/stynx-nyx-angular-i18n-testing.d.ts",
+      "default": "./dist/fesm2022/stynx-nyx-angular-i18n-testing.mjs"
     },
     "./catalogs/en.json": {
       "default": "./dist/catalogs/en.json"

@@ -1,8 +1,8 @@
-[**@stynx-web/sdk**](../index.md)
+[**@stynx-nyx/sdk**](../index.md)
 
 ---
 
-[@stynx-web/sdk](../index.md) / TenantOverrideUpdateInput
+[@stynx-nyx/sdk](../index.md) / TenantOverrideUpdateInput
 
 # Type Alias: TenantOverrideUpdateInput
 

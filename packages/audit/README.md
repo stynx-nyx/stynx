@@ -62,7 +62,7 @@ Every call emits an `AuditEventEnvelope` with the principal, before/after snapsh
 | ----------------------- | --------------------------------------------------------------------------- |
 | `StynxAuditService`     | High-level: emit an audit event programmatically (rare; use the decorator). |
 | `AuditInterceptor`      | The `APP_INTERCEPTOR` consuming `@Audit(...)` metadata.                     |
-| `SqlAuditAdapter`       | Default sink: write to `stynx_audit_events` table via `@stynx-nyx/data`.        |
+| `SqlAuditAdapter`       | Default sink: write to `stynx_audit_events` table via `@stynx-nyx/data`.    |
 | `AuditRetentionService` | Schedules retention cleanup.                                                |
 
 ### Decorators
@@ -79,11 +79,11 @@ Every call emits an `AuditEventEnvelope` with the principal, before/after snapsh
 
 ### Types / Interfaces
 
-| Export                                         | Description                 |
-| ---------------------------------------------- | --------------------------- |
-| `StynxAuditModuleOptions`                      | `forRoot()` options.        |
+| Export                                             | Description                 |
+| -------------------------------------------------- | --------------------------- |
+| `StynxAuditModuleOptions`                          | `forRoot()` options.        |
 | `AuditEventEnvelope` (from `@stynx-nyx/contracts`) | The canonical event shape.  |
-| `RedactionPolicy`                              | Path-based redaction rules. |
+| `RedactionPolicy`                                  | Path-based redaction rules. |
 
 ## Configuration
 
@@ -140,7 +140,7 @@ StynxAuditModule.forRoot({ sink: new CloudWatchAuditSink() });
 - [`@stynx-nyx/data`](/docs/packages/data/) — provides the DB connection for the SQL sink.
 - [`@stynx-nyx/contracts`](/docs/packages/contracts/) — defines `AuditEventEnvelope`, `AuditSink`.
 - [`@stynx-nyx/cli`](/docs/packages/cli/) — `stynx audit verify` checks chain integrity.
-- [`@stynx-web/angular-audit`](/docs/packages-web/angular-audit/) — Angular pair: audit timeline UI.
+- [`@stynx-nyx/angular-audit`](/docs/packages-web/angular-audit/) — Angular pair: audit timeline UI.
 - [`backend/audit`](/docs/packages/backend/audit/) — `@stynx-nyx/backend` submodule.
 
 ## TypeDoc reference

@@ -2,7 +2,7 @@ import { CSP_NONCE, NgModule } from '@angular/core';
 import type { ModuleWithProviders } from '@angular/core';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-import { provideTenancy } from '@stynx-web/angular-tenancy';
+import { provideTenancy } from '@stynx-nyx/angular-tenancy';
 import { EmptyStateComponent } from './empty-state.component';
 import { ErrorBannerService } from './error-banner.service';
 import { AuthInterceptor } from './auth.interceptor';

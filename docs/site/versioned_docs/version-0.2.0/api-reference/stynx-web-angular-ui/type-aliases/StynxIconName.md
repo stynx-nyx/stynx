@@ -1,8 +1,8 @@
-[**@stynx-web/angular-ui**](../index.md)
+[**@stynx-nyx/angular-ui**](../index.md)
 
 ---
 
-[@stynx-web/angular-ui](../index.md) / StynxIconName
+[@stynx-nyx/angular-ui](../index.md) / StynxIconName
 
 # Type Alias: StynxIconName
 

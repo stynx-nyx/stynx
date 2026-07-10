@@ -1,8 +1,8 @@
-[**@stynx-web/angular-iam**](../index.md)
+[**@stynx-nyx/angular-iam**](../index.md)
 
 ---
 
-[@stynx-web/angular-iam](../index.md) / StynxRoleCreateDialogComponent
+[@stynx-nyx/angular-iam](../index.md) / StynxRoleCreateDialogComponent
 
 # Class: StynxRoleCreateDialogComponent
 

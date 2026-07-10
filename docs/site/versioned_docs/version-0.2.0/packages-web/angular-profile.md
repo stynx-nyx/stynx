@@ -1,15 +1,15 @@
 ---
-title: '@stynx-web/angular-profile'
+title: '@stynx-nyx/angular-profile'
 ---
 
-# @stynx-web/angular-profile
+# @stynx-nyx/angular-profile
 
 Angular 20 profile and preference screens for STYNX account experiences. It includes profile editing, preferences, security handoffs, hosted change-password/MFA links, and unsaved-change protection.
 
 ## Install
 
 ```bash
-pnpm add @stynx-web/angular-profile
+pnpm add @stynx-nyx/angular-profile
 ```
 
 ## Peer Dependencies
@@ -22,8 +22,8 @@ pnpm add @stynx-web/angular-profile
 ## Use
 
 ```ts
-import { profileRoutes, provideStynxProfile } from '@stynx-web/angular-profile';
-import { StynxSdkClient } from '@stynx-web/sdk';
+import { profileRoutes, provideStynxProfile } from '@stynx-nyx/angular-profile';
+import { StynxSdkClient } from '@stynx-nyx/sdk';
 
 const client = new StynxSdkClient({ baseUrl: '/api', fetchFn: fetch });
 
@@ -45,10 +45,10 @@ For component-only hosts, import `StynxProfileFormComponent`, `StynxPreferencesF
 - Components: `StynxProfileFormComponent`, `StynxPreferencesFormComponent`, `StynxProfileSecurityComponent`, `StynxChangePasswordHandoffComponent`, `StynxMfaEnrolmentHandoffComponent`.
 - Services/guards/tokens: `ProfileService`, `unsavedChangesGuard`, `STYNX_PROFILE_CLIENT`.
 - Types: profile, preferences, security, hosted-auth action, and unsaved-change types.
-- Secondary exports: `@stynx-web/angular-profile/testing`, locale catalogs.
+- Secondary exports: `@stynx-nyx/angular-profile/testing`, locale catalogs.
 
 ## See Also
 
-- [`@stynx-web/angular-auth`](/docs/packages-web/angular-auth)
-- [`@stynx-web/angular-storage`](/docs/packages-web/angular-storage)
+- [`@stynx-nyx/angular-auth`](/docs/packages-web/angular-auth)
+- [`@stynx-nyx/angular-storage`](/docs/packages-web/angular-storage)
 - [Reference app dashboard demo](/docs/reference/web#demo-surfaces)

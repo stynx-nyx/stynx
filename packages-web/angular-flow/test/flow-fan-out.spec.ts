@@ -2,8 +2,8 @@ import '@angular/compiler';
 import { ChangeDetectionStrategy, Component, Injector, runInInjectionContext } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, RouterOutlet, provideRouter } from '@angular/router';
-import { STYNX_ANGULAR_AUTH_OPTIONS, StynxSessionService } from '@stynx-web/angular-auth';
-import { StynxI18nService } from '@stynx-web/angular-i18n';
+import { STYNX_ANGULAR_AUTH_OPTIONS, StynxSessionService } from '@stynx-nyx/angular-auth';
+import { StynxI18nService } from '@stynx-nyx/angular-i18n';
 import { Subject, of } from 'rxjs';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { StynxFlowDashboardComponent, StynxFlowOpenTasksComponent, StynxFlowRunSummaryComponent } from '../src/analytics.component';
@@ -119,7 +119,7 @@ afterEach(() => {
   TestBed.resetTestingModule();
 });
 
-describe('@stynx-web/angular-flow FE-G fan-out', () => {
+describe('@stynx-nyx/angular-flow FE-G fan-out', () => {
   it('activates each flow route with the real Router when permissions allow', async () => {
     const { fixture, router } = await configureRouterTest(true);
 

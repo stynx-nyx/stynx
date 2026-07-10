@@ -38,7 +38,7 @@ NestJS module wiring at the end.
 ### 4. `before-after-frontend-component.md`
 
 Angular component with hand-rolled HTTP calls + auth handling →
-rewrite using `@stynx-web/sdk` + `StynxAngularModule` + the
+rewrite using `@stynx-nyx/sdk` + `StynxAngularModule` + the
 relevant `angular-*` package. If the foreign frontend is React,
 include a parallel React/SDK example as an appendix.
 

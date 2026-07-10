@@ -1,5 +1,5 @@
 import type { Routes } from '@angular/router';
-import { stynxPermissionGuard } from '@stynx-web/angular-auth';
+import { stynxPermissionGuard } from '@stynx-nyx/angular-auth';
 import { StynxFlowDashboardComponent, StynxFlowOpenTasksComponent, StynxFlowRunSummaryComponent } from './analytics.component';
 import { StynxFlowFillsComponent } from './flow-fills.component';
 import { StynxFlowFormsComponent } from './flow-forms.component';

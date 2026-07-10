@@ -1,8 +1,8 @@
-[**@stynx-web/sdk**](../index.md)
+[**@stynx-nyx/sdk**](../index.md)
 
 ---
 
-[@stynx-web/sdk](../index.md) / $CreateFlowScopeDto
+[@stynx-nyx/sdk](../index.md) / $CreateFlowScopeDto
 
 # Variable: $CreateFlowScopeDto
 

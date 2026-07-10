@@ -56,13 +56,13 @@ Every request now has `RequestContext.tenantId` populated from the JWT claim; th
 
 ### Endpoints (1 controller — platform admin)
 
-| Method  | Path                           | Auth           | Description                                                                   |
-| ------- | ------------------------------ | -------------- | ----------------------------------------------------------------------------- |
-| `GET`   | `/tenancy/tenants`             | platform-admin | List tenants.                                                                 |
-| `GET`   | `/tenancy/tenants/:id`         | platform-admin | Get a tenant.                                                                 |
-| `POST`  | `/tenancy/tenants`             | platform-admin | Create a tenant.                                                              |
-| `PATCH` | `/tenancy/tenants/:id`         | platform-admin | Update tenant metadata.                                                       |
-| `POST`  | `/tenancy/tenants/:id/suspend` | platform-admin | Suspend a tenant.                                                             |
+| Method  | Path                           | Auth           | Description                                                                       |
+| ------- | ------------------------------ | -------------- | --------------------------------------------------------------------------------- |
+| `GET`   | `/tenancy/tenants`             | platform-admin | List tenants.                                                                     |
+| `GET`   | `/tenancy/tenants/:id`         | platform-admin | Get a tenant.                                                                     |
+| `POST`  | `/tenancy/tenants`             | platform-admin | Create a tenant.                                                                  |
+| `PATCH` | `/tenancy/tenants/:id`         | platform-admin | Update tenant metadata.                                                           |
+| `POST`  | `/tenancy/tenants/:id/suspend` | platform-admin | Suspend a tenant.                                                                 |
 | `POST`  | `/tenancy/tenants/:id/archive` | platform-admin | Archive (soft-delete) a tenant; cascades per `@stynx-nyx/data` soft-delete rules. |
 
 ### Types / Interfaces
@@ -131,7 +131,7 @@ export class AdminController {
 - [`@stynx-nyx/core`](/docs/packages/core/) — provides `RequestContextMutator`; this package writes `tenantId` to the request frame.
 - [`@stynx-nyx/auth`](/docs/packages/auth/) — resolves the principal whose tenant claim this package reads.
 - [`@stynx-nyx/data`](/docs/packages/data/) — consumes the resolved `tenantId` for RLS-aware DB sessions.
-- [`@stynx-web/angular-tenancy`](/docs/packages-web/angular-tenancy/) — Angular pair: tenant switcher + context display.
+- [`@stynx-nyx/angular-tenancy`](/docs/packages-web/angular-tenancy/) — Angular pair: tenant switcher + context display.
 
 ## TypeDoc reference
 

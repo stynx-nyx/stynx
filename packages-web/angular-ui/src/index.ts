@@ -3,7 +3,7 @@
  *
  * @packageDocumentation
  */
-export { EmptyStateComponent } from '@stynx-web/angular';
+export { EmptyStateComponent } from '@stynx-nyx/angular';
 export * from './banner.component';
 export * from './confirm-dialog.component';
 export * from './icon/icon.component';

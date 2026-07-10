@@ -1,1 +1,1 @@
-export { TenantContextService } from '@stynx-web/angular-tenancy';
+export { TenantContextService } from '@stynx-nyx/angular-tenancy';

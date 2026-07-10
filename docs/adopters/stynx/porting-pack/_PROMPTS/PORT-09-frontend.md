@@ -7,7 +7,7 @@
 ## Mission
 
 Patterns for foreign frontends — both Angular adopters and non-Angular
-consumers using `@stynx-web/sdk` only.
+consumers using `@stynx-nyx/sdk` only.
 
 ## Read
 
@@ -28,8 +28,8 @@ consumers using `@stynx-web/sdk` only.
 
 If the foreign frontend is non-Angular (React, Vue, vanilla TS),
 the migration cost to Angular is large. Recommend keeping the
-existing frontend and consuming `@stynx-web/sdk` (framework-agnostic
-TypeScript). Only migrate to `@stynx-web/angular` if the team
+existing frontend and consuming `@stynx-nyx/sdk` (framework-agnostic
+TypeScript). Only migrate to `@stynx-nyx/angular` if the team
 explicitly chooses Angular.
 
 ## sdk-only adoption
@@ -51,7 +51,7 @@ Auth, tenant, request-id, error. Cite each.
 Flow and the angular-auth surface that drives it.
 
 ### Tenant switcher
-NOTE: `@stynx-web/angular-tenancy` is NOT YET IMPLEMENTED
+NOTE: `@stynx-nyx/angular-tenancy` is NOT YET IMPLEMENTED
 (audit FIND-002). Until it lands, consumers must implement the
 switcher in-app. Document the workaround pattern (`X-Tenant-Id`
 + session re-issue) explicitly.
@@ -60,33 +60,33 @@ switcher in-app. Document the workaround pattern (`X-Tenant-Id`
 Surface from angular-auth.
 
 ### Document upload component
-`@stynx-web/angular-storage` — surface + minimal example.
+`@stynx-nyx/angular-storage` — surface + minimal example.
 
 ### Trash list component
-`@stynx-web/angular-trash` — generic soft-delete/restore UI.
+`@stynx-nyx/angular-trash` — generic soft-delete/restore UI.
 
 ### i18n catalog overrides
-`@stynx-web/angular-i18n` — how to add app-specific keys.
+`@stynx-nyx/angular-i18n` — how to add app-specific keys.
 
 ## Component decision matrix
 
 | Foreign UI need | STYNX component |
 |---|---|
-| Login form | `@stynx-web/angular-auth` |
+| Login form | `@stynx-nyx/angular-auth` |
 | Tenant switcher | [GAP — see FIND-002] |
-| File upload | `@stynx-web/angular-storage` |
-| Trash list | `@stynx-web/angular-trash` |
-| Profile page | `@stynx-web/angular-profile` |
-| Session list | `@stynx-web/angular-sessions` |
-| Generic primitives | `@stynx-web/angular-ui` |
-| Translations | `@stynx-web/angular-i18n` |
+| File upload | `@stynx-nyx/angular-storage` |
+| Trash list | `@stynx-nyx/angular-trash` |
+| Profile page | `@stynx-nyx/angular-profile` |
+| Session list | `@stynx-nyx/angular-sessions` |
+| Generic primitives | `@stynx-nyx/angular-ui` |
+| Translations | `@stynx-nyx/angular-i18n` |
 ```
 
 ## Rules
 
 - The "sdk-only" path must be complete enough that a React
   consuming agent could integrate without reading any other doc.
-- Wherever `@stynx-web/angular-tenancy` would be imported, mark
+- Wherever `@stynx-nyx/angular-tenancy` would be imported, mark
   the gap explicitly.
 
 ## Acceptance

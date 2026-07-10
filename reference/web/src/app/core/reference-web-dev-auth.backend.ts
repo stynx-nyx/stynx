@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import type { StynxAuthBackend, StynxSessionBundle } from '@stynx-web/angular-auth';
+import type { StynxAuthBackend, StynxSessionBundle } from '@stynx-nyx/angular-auth';
 import { environment } from '../../environments/environment';
 import { ReferenceWebDevOidcAdapter } from './reference-web-dev-oidc.adapter';
 

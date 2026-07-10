@@ -1,8 +1,8 @@
-[**@stynx-web/angular-iam**](../index.md)
+[**@stynx-nyx/angular-iam**](../index.md)
 
 ---
 
-[@stynx-web/angular-iam](../index.md) / PagedResult
+[@stynx-nyx/angular-iam](../index.md) / PagedResult
 
 # Interface: PagedResult\<T\>
 

@@ -142,7 +142,7 @@ StynxStorageModule.forRoot({
 - [`@stynx-nyx/contracts`](/docs/packages/contracts/) — defines `ObjectStorageService` + `PresignedUploadRequest`/`Response`.
 - [`@stynx-nyx/tenancy`](/docs/packages/tenancy/) — provides tenant-prefix data for `keyStrategy: 'tenant-prefixed'`.
 - [`@stynx-nyx/privacy`](/docs/packages/privacy/) — uses this package for export packaging.
-- [`@stynx-web/angular-storage`](/docs/packages-web/angular-storage/) — Angular pair: file-upload widget consuming the presign flow.
+- [`@stynx-nyx/angular-storage`](/docs/packages-web/angular-storage/) — Angular pair: file-upload widget consuming the presign flow.
 - [`backend/storage`](/docs/packages/backend/storage/) — `@stynx-nyx/backend` submodule.
 
 ## TypeDoc reference

@@ -6,7 +6,7 @@ title: backend/identity-admin
 
 `StynxIdentityAdminModule` exposes admin endpoints for managing identity objects: users, roles, groups, role-assignments, and group-memberships. Backed by `@stynx-nyx/auth`'s `CognitoAdminAdapter` (default; Cognito-side admin ops) or a custom adapter implementing the `@stynx-nyx/contracts` `IdentityAdminService` interface.
 
-This is the backend surface that powers `@stynx-web/angular-iam` (W07).
+This is the backend surface that powers `@stynx-nyx/angular-iam` (W07).
 
 ## When to mount
 
@@ -56,4 +56,4 @@ StynxIdentityAdminModule.forRoot({
 
 - [`@stynx-nyx/auth`](/docs/packages/auth/) — provides `CognitoAdminAdapter`.
 - [`@stynx-nyx/contracts`](/docs/packages/contracts/) — defines `IdentityAdminService`.
-- [`@stynx-web/angular-iam`](/docs/packages-web/angular-iam/) — Angular admin UI consuming these endpoints.
+- [`@stynx-nyx/angular-iam`](/docs/packages-web/angular-iam/) — Angular admin UI consuming these endpoints.

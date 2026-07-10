@@ -2,7 +2,7 @@
 
 > **C-4 done** — stynx is a [DEVAI](https://github.com/anthropics/devai)-managed adopter at maturity. See [docs/adopters/pilots/c-4/phase-i-retro.md](docs/adopters/pilots/c-4/phase-i-retro.md) for the full pilot retro (Phases A–I + R1, S1–S11, T1–T8).
 
-STYNX is a `pnpm` + `Turborepo` monorepo targeting GitHub Packages for the spec-defined `@stynx-nyx/*` and `@stynx-web/*` package families.
+STYNX is a `pnpm` + `Turborepo` monorepo targeting GitHub Packages for the spec-defined `@stynx-nyx/*` and `@stynx-nyx/*` package families.
 
 `1.0.0` release preparation is implemented in-repo and the tracked release-readiness gates are closed. STYNX is not marked as shipped until an explicit versioning and publishing decision is made.
 
@@ -11,7 +11,7 @@ STYNX is a `pnpm` + `Turborepo` monorepo targeting GitHub Packages for the spec-
 | Tree                                                           | Purpose                                                                                                                                              |
 | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `packages/*`                                                   | Backend reusable libraries (`@stynx-nyx/*`)                                                                                                          |
-| `packages-web/*`                                               | Frontend reusable libraries (`@stynx-web/*`)                                                                                                         |
+| `packages-web/*`                                               | Frontend reusable libraries (`@stynx-nyx/*`)                                                                                                         |
 | `reference/{api,web}/`                                         | Reference applications demonstrating framework usage (analogous to DEVAI's `examples/`). Relocated here from `apps/reference-*` in Session S2 (C-4). |
 | `domain/<module>/`                                             | DEVAI-scaffolded modules. First example: `domain/demo-bookmark/` (C-4 Phase D).                                                                      |
 | `tools/*`                                                      | Internal repo tooling (`@stynx-internal/*`).                                                                                                         |
@@ -46,7 +46,7 @@ corepack pnpm changeset
 - Package manager: `pnpm@9`
 - Task runner: `turbo`
 - Release manager: `changesets`
-- Registries: GitHub Packages for the current `@stynx-nyx/*` scope (24 packages published under the `stynx-nyx` org). The `@stynx-web/*` scope is not yet published — it has no owning GitHub org/registry home yet.
+- Registries: GitHub Packages for the `@stynx-nyx/*` scope, owned by the `stynx-nyx` org. All packages — the 24 backend packages and the 13 web packages under `packages-web/*` (formerly `@stynx-web/*`) — publish under this single scope.
 
 ## CI and Release
 

@@ -1,15 +1,15 @@
 ---
-title: '@stynx-web/angular-sessions'
+title: '@stynx-nyx/angular-sessions'
 ---
 
-# @stynx-web/angular-sessions
+# @stynx-nyx/angular-sessions
 
 Angular 20 active-session UI for STYNX account and administration screens. It can use the SDK-backed adapter or a host-provided adapter to list and revoke sessions.
 
 ## Install
 
 ```bash
-pnpm add @stynx-web/angular-sessions
+pnpm add @stynx-nyx/angular-sessions
 ```
 
 ## Peer Dependencies
@@ -20,8 +20,8 @@ pnpm add @stynx-web/angular-sessions
 ## Use
 
 ```ts
-import { provideStynxSessions, StynxActiveSessionsComponent } from '@stynx-web/angular-sessions';
-import { StynxSdkClient } from '@stynx-web/sdk';
+import { provideStynxSessions, StynxActiveSessionsComponent } from '@stynx-nyx/angular-sessions';
+import { StynxSdkClient } from '@stynx-nyx/sdk';
 
 const client = new StynxSdkClient({ baseUrl: '/api', fetchFn: fetch });
 
@@ -42,10 +42,10 @@ Use `StynxActiveSessionsComponent` in a standalone component or route.
 - Components: `StynxActiveSessionsComponent`.
 - Adapters/tokens: `SdkSessionsAdapter`, `STYNX_SESSIONS_CLIENT`, `STYNX_SESSIONS_ADAPTER`.
 - Types: sessions adapter, SDK client, session item, and revoke/list types.
-- Secondary exports: `@stynx-web/angular-sessions/testing`, locale catalogs.
+- Secondary exports: `@stynx-nyx/angular-sessions/testing`, locale catalogs.
 
 ## See Also
 
-- [`@stynx-web/angular-auth`](/docs/packages-web/angular-auth)
-- [`@stynx-web/sdk`](/docs/packages-web/sdk)
+- [`@stynx-nyx/angular-auth`](/docs/packages-web/angular-auth)
+- [`@stynx-nyx/sdk`](/docs/packages-web/sdk)
 - [Reference app dashboard demo](/docs/reference/web#demo-surfaces)

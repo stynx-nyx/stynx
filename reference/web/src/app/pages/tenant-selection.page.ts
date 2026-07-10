@@ -1,6 +1,6 @@
 import { NgFor } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { StynxBannerComponent } from '@stynx-web/angular-ui';
+import { StynxBannerComponent } from '@stynx-nyx/angular-ui';
 import { ReferenceWebShellService } from '../core/reference-web-shell.service';
 
 @Component({

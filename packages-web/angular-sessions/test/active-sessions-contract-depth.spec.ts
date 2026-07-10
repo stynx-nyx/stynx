@@ -1,9 +1,9 @@
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
-import { StynxSessionService } from '@stynx-web/angular-auth';
-import { StynxI18nService } from '@stynx-web/angular-i18n';
-import { StynxToastService } from '@stynx-web/angular-ui';
+import { StynxSessionService } from '@stynx-nyx/angular-auth';
+import { StynxI18nService } from '@stynx-nyx/angular-i18n';
+import { StynxToastService } from '@stynx-nyx/angular-ui';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { StynxActiveSessionsComponent } from '../src/active-sessions.component';
 import type { StynxActiveSession, StynxSessionsAdapter } from '../src/types';
@@ -61,7 +61,7 @@ afterEach(() => {
   TestBed.resetTestingModule();
 });
 
-describe('@stynx-web/angular-sessions W04 active-session contract depth', () => {
+describe('@stynx-nyx/angular-sessions W04 active-session contract depth', () => {
   it('gates revoke-other-sessions behind confirmation and preserves session expiry fields in the UI', async () => {
     const adapter: StynxSessionsAdapter = {
       list: vi.fn(async () => [...SESSIONS]),

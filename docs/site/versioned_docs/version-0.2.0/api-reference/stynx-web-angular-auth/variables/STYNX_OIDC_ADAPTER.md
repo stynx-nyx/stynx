@@ -1,8 +1,8 @@
-[**@stynx-web/angular-auth**](../index.md)
+[**@stynx-nyx/angular-auth**](../index.md)
 
 ---
 
-[@stynx-web/angular-auth](../index.md) / STYNX_OIDC_ADAPTER
+[@stynx-nyx/angular-auth](../index.md) / STYNX_OIDC_ADAPTER
 
 # Variable: STYNX_OIDC_ADAPTER
 

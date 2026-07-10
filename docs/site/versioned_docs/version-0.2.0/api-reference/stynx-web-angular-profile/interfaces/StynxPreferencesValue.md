@@ -1,8 +1,8 @@
-[**@stynx-web/angular-profile**](../index.md)
+[**@stynx-nyx/angular-profile**](../index.md)
 
 ---
 
-[@stynx-web/angular-profile](../index.md) / StynxPreferencesValue
+[@stynx-nyx/angular-profile](../index.md) / StynxPreferencesValue
 
 # Interface: StynxPreferencesValue
 

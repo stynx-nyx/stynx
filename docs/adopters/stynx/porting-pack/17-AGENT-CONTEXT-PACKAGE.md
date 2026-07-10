@@ -18,7 +18,7 @@ You are porting **<FOREIGN APP NAME>** at `<PATH>` onto STYNX.
 STYNX is a multi-tenant TypeScript/NestJS platform foundation. It
 provides identity, multi-tenancy, audit, soft-delete-via-archive,
 RLS, LGPD pipelines, storage, idempotency, rate-limiting, and i18n
-as a set of `@stynx-nyx/*` (backend) and `@stynx-web/*` (frontend)
+as a set of `@stynx-nyx/*` (backend) and `@stynx-nyx/*` (frontend)
 packages. The architecture is opinionated and enforces eight
 non-negotiable invariants (I1–I8). Your job is to migrate the
 foreign codebase onto this foundation while preserving its product
@@ -103,9 +103,9 @@ Populate `core.pii_map`. Wire pt-BR + en-US catalogs. Run a
 `stynx privacy ropa` dry-run and verify the plan. Effort: M.
 
 **Phase 6 — Frontend (conditional).** Angular: adopt
-`@stynx-web/angular`, `@stynx-web/angular-auth`, `@stynx-web/angular-tenancy`,
+`@stynx-nyx/angular`, `@stynx-nyx/angular-auth`, `@stynx-nyx/angular-tenancy`,
 plus the per-feature angular-\* packages. Non-Angular: use
-`@stynx-web/sdk` (framework-agnostic). Effort: S to XL.
+`@stynx-nyx/sdk` (framework-agnostic). Effort: S to XL.
 
 **Phase 7 — Green gate.** Run `14-VERIFICATION-CHECKLIST.md`.
 `pnpm doctor` exits 0. No `TODO_PERMISSION` sentinels. CI green.

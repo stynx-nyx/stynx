@@ -4,7 +4,7 @@
 
 STYNX is a shared platform foundation for in-house multi-tenant
 applications: a NestJS-based backend library family
-(`@stynx-nyx/*`), an Angular client family (`@stynx-web/*`), a
+(`@stynx-nyx/*`), an Angular client family (`@stynx-nyx/*`), a
 PostgreSQL schema with strict RLS, an operational CLI, and a CDK
 deployment skeleton. It exists so every consuming team starts with
 identity, multi-tenancy, audit, soft-delete, RLS, LGPD pipelines,
@@ -38,10 +38,10 @@ deferrals.)
 | Storage (S3 + presigned)   | Per-tenant prefix; KMS envelope; presigned URL with tenant claim check.                                  | §8           |
 | LGPD pipeline              | Export + erasure across live and archive; PII map drives strategies (nullify/hash/tombstone/delete).     | §9, §21      |
 | Logging + redaction        | Pino structured JSON; redacts `password`, `token`, headers, JWT fields; request-context fields per line. | §10–§11      |
-| Health + metrics + tracing | `/healthz`, `/readyz`, `/metrics` (Prometheus), `/info`. OTel SDK in `@stynx-nyx/core`.                      | §11          |
+| Health + metrics + tracing | `/healthz`, `/readyz`, `/metrics` (Prometheus), `/info`. OTel SDK in `@stynx-nyx/core`.                  | §11          |
 | Rate limiting              | Distributed (Redis primary, PG fallback); `@RateLimit({ bucket, scope })` decorator.                     | §15          |
 | Idempotency                | `@Idempotent('Idempotency-Key')` decorator; 24 h Redis + durable mirror.                                 | §22          |
-| i18n (pt-BR + en-US)       | `@stynx-nyx/i18n` resolves locale per request; consumer overrides via `@stynx-web/angular-i18n`.             | §23          |
+| i18n (pt-BR + en-US)       | `@stynx-nyx/i18n` resolves locale per request; consumer overrides via `@stynx-nyx/angular-i18n`.         | §23          |
 
 (Each row maps to a package in [`05-PACKAGE-CATALOG.md`](05-PACKAGE-CATALOG.md).)
 
@@ -82,7 +82,7 @@ deferrals.)
   (§9.)
 - **AWS-only.** No multi-cloud. (§1.2.)
 - **Web/Angular only in v1.0.** No native shells; non-Angular
-  consumers can use `@stynx-web/sdk`. (§1.2.)
+  consumers can use `@stynx-nyx/sdk`. (§1.2.)
 
 ## What STYNX is NOT (v1.0 deferrals, §24)
 

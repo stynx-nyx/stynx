@@ -4,7 +4,7 @@
 **Status:** Accepted for FE-E E.5-E.8.
 
 This contract defines the frontend-facing HTTP routes for
-`@stynx-web/angular-audit`. The existing `GET /_audit/log` route remains a
+`@stynx-nyx/angular-audit`. The existing `GET /_audit/log` route remains a
 legacy platform-admin log view; FE-E targets the routes below.
 
 ## Permissions

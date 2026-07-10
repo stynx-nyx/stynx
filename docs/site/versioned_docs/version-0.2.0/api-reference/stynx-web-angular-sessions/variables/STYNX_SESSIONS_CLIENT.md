@@ -1,8 +1,8 @@
-[**@stynx-web/angular-sessions**](../index.md)
+[**@stynx-nyx/angular-sessions**](../index.md)
 
 ---
 
-[@stynx-web/angular-sessions](../index.md) / STYNX_SESSIONS_CLIENT
+[@stynx-nyx/angular-sessions](../index.md) / STYNX_SESSIONS_CLIENT
 
 # Variable: STYNX_SESSIONS_CLIENT
 

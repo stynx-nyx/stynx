@@ -288,7 +288,7 @@
     "packages-web/angular-auth/src/http-auth.backend.ts": [
       "@angular/common/http",
       "@angular/core",
-      "@stynx-web/angular",
+      "@stynx-nyx/angular",
       "packages-web/angular-auth/src/types",
       "rxjs"
     ],
@@ -330,8 +330,8 @@
     ],
     "packages-web/angular-auth/src/session.service.ts": [
       "@angular/core",
-      "@stynx-web/angular",
-      "@stynx-web/sdk",
+      "@stynx-nyx/angular",
+      "@stynx-nyx/sdk",
       "packages-web/angular-auth/src/jwt",
       "packages-web/angular-auth/src/storage",
       "packages-web/angular-auth/src/tokens",
@@ -343,7 +343,7 @@
       "@angular/common",
       "@angular/common/http",
       "@angular/core",
-      "@stynx-web/angular",
+      "@stynx-nyx/angular",
       "angular-auth-oidc-client",
       "packages-web/angular-auth/src/has-permission.directive",
       "packages-web/angular-auth/src/http-auth.backend",
@@ -356,7 +356,7 @@
     ],
     "packages-web/angular-auth/src/tokens.ts": [
       "@angular/core",
-      "@stynx-web/sdk",
+      "@stynx-nyx/sdk",
       "packages-web/angular-auth/src/types"
     ],
     "packages-web/angular-auth/src/types.ts": ["angular-auth-oidc-client"],
@@ -364,7 +364,7 @@
       "@angular/compiler",
       "@angular/core",
       "@angular/router",
-      "@stynx-web/angular",
+      "@stynx-nyx/angular",
       "packages-web/angular-auth/src/auth.guard",
       "packages-web/angular-auth/src/has-permission.directive",
       "packages-web/angular-auth/src/jwt",
@@ -376,13 +376,13 @@
     ],
     "packages-web/angular-flow/src/analytics.component.ts": [
       "@angular/core",
-      "@stynx-web/angular-ui",
+      "@stynx-nyx/angular-ui",
       "packages-web/angular-flow/src/flow-api.service",
       "packages-web/angular-flow/src/types"
     ],
     "packages-web/angular-flow/src/flow-api.service.ts": [
       "@angular/core",
-      "@stynx-web/sdk",
+      "@stynx-nyx/sdk",
       "packages-web/angular-flow/src/tokens",
       "packages-web/angular-flow/src/types"
     ],
@@ -392,15 +392,15 @@
     ],
     "packages-web/angular-flow/src/flow-fills.component.ts": [
       "@angular/core",
-      "@stynx-web/angular-auth",
-      "@stynx-web/angular-ui",
+      "@stynx-nyx/angular-auth",
+      "@stynx-nyx/angular-ui",
       "packages-web/angular-flow/src/flow-api.service",
       "packages-web/angular-flow/src/types"
     ],
     "packages-web/angular-flow/src/flow-forms.component.ts": [
       "@angular/core",
-      "@stynx-web/angular-auth",
-      "@stynx-web/angular-ui",
+      "@stynx-nyx/angular-auth",
+      "@stynx-nyx/angular-ui",
       "packages-web/angular-flow/src/flow-api.service",
       "packages-web/angular-flow/src/types"
     ],
@@ -410,23 +410,23 @@
     ],
     "packages-web/angular-flow/src/flow-graph-designer.component.ts": [
       "@angular/core",
-      "@stynx-web/angular-auth",
-      "@stynx-web/angular-ui",
+      "@stynx-nyx/angular-auth",
+      "@stynx-nyx/angular-ui",
       "packages-web/angular-flow/src/flow-api.service",
       "packages-web/angular-flow/src/flow-graph-canvas.component",
       "packages-web/angular-flow/src/types"
     ],
     "packages-web/angular-flow/src/flow-tasks.component.ts": [
       "@angular/core",
-      "@stynx-web/angular-auth",
-      "@stynx-web/angular-ui",
+      "@stynx-nyx/angular-auth",
+      "@stynx-nyx/angular-ui",
       "packages-web/angular-flow/src/flow-api.service",
       "packages-web/angular-flow/src/types"
     ],
     "packages-web/angular-flow/src/flow-waivers.component.ts": [
       "@angular/core",
-      "@stynx-web/angular-auth",
-      "@stynx-web/angular-ui",
+      "@stynx-nyx/angular-auth",
+      "@stynx-nyx/angular-ui",
       "packages-web/angular-flow/src/flow-api.service",
       "packages-web/angular-flow/src/types"
     ],
@@ -446,7 +446,7 @@
     ],
     "packages-web/angular-flow/src/routes.ts": [
       "@angular/router",
-      "@stynx-web/angular-auth",
+      "@stynx-nyx/angular-auth",
       "packages-web/angular-flow/src/analytics.component",
       "packages-web/angular-flow/src/flow-fills.component",
       "packages-web/angular-flow/src/flow-forms.component",
@@ -454,7 +454,7 @@
       "packages-web/angular-flow/src/flow-tasks.component",
       "packages-web/angular-flow/src/flow-waivers.component"
     ],
-    "packages-web/angular-flow/src/tokens.ts": ["@angular/core", "@stynx-web/sdk"],
+    "packages-web/angular-flow/src/tokens.ts": ["@angular/core", "@stynx-nyx/sdk"],
     "packages-web/angular-flow/src/types.ts": [],
     "packages-web/angular-flow/test/components.spec.ts": [
       "@angular/compiler",
@@ -538,8 +538,8 @@
     ],
     "packages-web/angular-sessions/src/active-sessions.component.ts": [
       "@angular/core",
-      "@stynx-web/angular-auth",
-      "@stynx-web/angular-ui",
+      "@stynx-nyx/angular-auth",
+      "@stynx-nyx/angular-ui",
       "packages-web/angular-sessions/src/types"
     ],
     "packages-web/angular-sessions/src/index.ts": [
@@ -555,7 +555,7 @@
     ],
     "packages-web/angular-storage/src/document-upload.component.ts": [
       "@angular/core",
-      "@stynx-web/angular-ui",
+      "@stynx-nyx/angular-ui",
       "packages-web/angular-storage/src/document.service",
       "packages-web/angular-storage/src/tokens",
       "packages-web/angular-storage/src/types"
@@ -563,7 +563,7 @@
     "packages-web/angular-storage/src/document.service.ts": [
       "@angular/common/http",
       "@angular/core",
-      "@stynx-web/angular",
+      "@stynx-nyx/angular",
       "packages-web/angular-storage/src/types",
       "rxjs"
     ],
@@ -641,8 +641,8 @@
     ],
     "packages-web/angular-trash/src/trash-list.component.ts": [
       "@angular/core",
-      "@stynx-web/angular-auth",
-      "@stynx-web/angular-ui",
+      "@stynx-nyx/angular-auth",
+      "@stynx-nyx/angular-ui",
       "packages-web/angular-trash/src/types"
     ],
     "packages-web/angular-trash/src/types.ts": [],
@@ -655,7 +655,7 @@
     "packages-web/angular-ui/src/banner.component.ts": ["@angular/core"],
     "packages-web/angular-ui/src/confirm-dialog.component.ts": ["@angular/core"],
     "packages-web/angular-ui/src/index.ts": [
-      "@stynx-web/angular",
+      "@stynx-nyx/angular",
       "packages-web/angular-ui/src/banner.component",
       "packages-web/angular-ui/src/confirm-dialog.component",
       "packages-web/angular-ui/src/loading-spinner.component",
@@ -680,7 +680,7 @@
     "packages-web/angular/src/auth.interceptor.ts": [
       "@angular/common/http",
       "@angular/core",
-      "@stynx-web/sdk",
+      "@stynx-nyx/sdk",
       "packages-web/angular/src/tokens",
       "packages-web/angular/src/types",
       "rxjs"
@@ -694,7 +694,7 @@
     "packages-web/angular/src/error.interceptor.ts": [
       "@angular/common/http",
       "@angular/core",
-      "@stynx-web/sdk",
+      "@stynx-nyx/sdk",
       "packages-web/angular/src/error-banner.service",
       "rxjs"
     ],
@@ -723,7 +723,7 @@
       "@angular/common",
       "@angular/common/http",
       "@angular/core",
-      "@stynx-web/angular-tenancy",
+      "@stynx-nyx/angular-tenancy",
       "packages-web/angular/src/auth.interceptor",
       "packages-web/angular/src/empty-state.component",
       "packages-web/angular/src/error-banner.service",
@@ -733,8 +733,8 @@
       "packages-web/angular/src/tokens",
       "packages-web/angular/src/types"
     ],
-    "packages-web/angular/src/tenant-context.service.ts": ["@stynx-web/angular-tenancy"],
-    "packages-web/angular/src/tenant.interceptor.ts": ["@stynx-web/angular-tenancy"],
+    "packages-web/angular/src/tenant-context.service.ts": ["@stynx-nyx/angular-tenancy"],
+    "packages-web/angular/src/tenant.interceptor.ts": ["@stynx-nyx/angular-tenancy"],
     "packages-web/angular/src/toast.service.ts": [
       "@angular/core",
       "packages-web/angular/src/types",
@@ -742,14 +742,14 @@
     ],
     "packages-web/angular/src/tokens.ts": [
       "@angular/core",
-      "@stynx-web/sdk",
+      "@stynx-nyx/sdk",
       "packages-web/angular/src/types"
     ],
-    "packages-web/angular/src/types.ts": ["@stynx-web/angular-tenancy", "@stynx-web/sdk"],
+    "packages-web/angular/src/types.ts": ["@stynx-nyx/angular-tenancy", "@stynx-nyx/sdk"],
     "packages-web/angular/test/stynx-angular.spec.ts": [
       "@angular/common/http",
       "@angular/compiler",
-      "@stynx-web/sdk",
+      "@stynx-nyx/sdk",
       "packages-web/angular/src/auth.interceptor",
       "packages-web/angular/src/error-banner.service",
       "packages-web/angular/src/error.interceptor",
@@ -2640,7 +2640,11 @@
       "node:crypto",
       "packages/testing/src/types"
     ],
-    "packages/testing/src/matchers.ts": ["@stynx-nyx/data", "drizzle-orm/pg-core", "drizzle-orm/utils"],
+    "packages/testing/src/matchers.ts": [
+      "@stynx-nyx/data",
+      "drizzle-orm/pg-core",
+      "drizzle-orm/utils"
+    ],
     "packages/testing/src/mint-test-session.ts": [
       "@stynx-nyx/sessions",
       "node:crypto",
@@ -2815,17 +2819,17 @@
       "@angular/common",
       "@angular/core",
       "@angular/router",
-      "@stynx-web/angular",
-      "@stynx-web/angular-auth",
-      "@stynx-web/angular-i18n",
-      "@stynx-web/angular-ui",
+      "@stynx-nyx/angular",
+      "@stynx-nyx/angular-auth",
+      "@stynx-nyx/angular-i18n",
+      "@stynx-nyx/angular-ui",
       "reference/web/src/app/core/reference-web-i18n.service",
       "reference/web/src/app/core/reference-web-shell.service"
     ],
     "reference/web/src/app/app.routes.ts": [
       "@angular/router",
-      "@stynx-web/angular-auth",
-      "@stynx-web/angular-flow",
+      "@stynx-nyx/angular-auth",
+      "@stynx-nyx/angular-flow",
       "reference/web/src/app/pages/dashboard.page",
       "reference/web/src/app/pages/login.page",
       "reference/web/src/app/pages/record-detail.page",
@@ -2849,25 +2853,25 @@
     "reference/web/src/app/core/reference-web-dev-auth.backend.ts": [
       "@angular/common/http",
       "@angular/core",
-      "@stynx-web/angular-auth",
+      "@stynx-nyx/angular-auth",
       "reference/web/src/app/core/reference-web-dev-oidc.adapter",
       "reference/web/src/environments/environment",
       "rxjs"
     ],
     "reference/web/src/app/core/reference-web-dev-oidc.adapter.ts": [
       "@angular/core",
-      "@stynx-web/angular-auth",
+      "@stynx-nyx/angular-auth",
       "angular-auth-oidc-client"
     ],
     "reference/web/src/app/core/reference-web-i18n.service.ts": [
       "@angular/core",
-      "@stynx-web/angular-i18n"
+      "@stynx-nyx/angular-i18n"
     ],
     "reference/web/src/app/core/reference-web-shell.service.ts": [
       "@angular/core",
       "@angular/router",
-      "@stynx-web/angular-auth",
-      "@stynx-web/angular-tenancy",
+      "@stynx-nyx/angular-auth",
+      "@stynx-nyx/angular-tenancy",
       "reference/web/src/app/core/reference-models",
       "reference/web/src/app/core/reference-web-api.service",
       "reference/web/src/app/core/reference-web-dev-oidc.adapter"
@@ -2875,11 +2879,11 @@
     "reference/web/src/app/pages/dashboard.page.ts": [
       "@angular/common",
       "@angular/core",
-      "@stynx-web/angular-auth",
-      "@stynx-web/angular-profile",
-      "@stynx-web/angular-sessions",
-      "@stynx-web/angular-storage",
-      "@stynx-web/angular-ui",
+      "@stynx-nyx/angular-auth",
+      "@stynx-nyx/angular-profile",
+      "@stynx-nyx/angular-sessions",
+      "@stynx-nyx/angular-storage",
+      "@stynx-nyx/angular-ui",
       "reference/web/src/app/core/reference-web-i18n.service",
       "reference/web/src/app/core/reference-web-shell.service"
     ],
@@ -2887,15 +2891,15 @@
       "@angular/common",
       "@angular/core",
       "@angular/forms",
-      "@stynx-web/angular-ui",
+      "@stynx-nyx/angular-ui",
       "reference/web/src/app/core/reference-web-shell.service"
     ],
     "reference/web/src/app/pages/record-detail.page.ts": [
       "@angular/common",
       "@angular/core",
       "@angular/router",
-      "@stynx-web/angular-storage",
-      "@stynx-web/angular-ui",
+      "@stynx-nyx/angular-storage",
+      "@stynx-nyx/angular-ui",
       "reference/web/src/app/core/reference-models",
       "reference/web/src/app/core/reference-web-api.service"
     ],
@@ -2904,35 +2908,35 @@
       "@angular/core",
       "@angular/forms",
       "@angular/router",
-      "@stynx-web/angular-ui",
+      "@stynx-nyx/angular-ui",
       "reference/web/src/app/core/reference-web-api.service"
     ],
     "reference/web/src/app/pages/records.page.ts": [
       "@angular/common",
       "@angular/core",
       "@angular/router",
-      "@stynx-web/angular-ui",
+      "@stynx-nyx/angular-ui",
       "reference/web/src/app/core/reference-models",
       "reference/web/src/app/core/reference-web-api.service"
     ],
     "reference/web/src/app/pages/tenant-selection.page.ts": [
       "@angular/common",
       "@angular/core",
-      "@stynx-web/angular-ui",
+      "@stynx-nyx/angular-ui",
       "reference/web/src/app/core/reference-web-shell.service"
     ],
     "reference/web/src/app/pages/trash.page.ts": [
       "@angular/common",
       "@angular/core",
-      "@stynx-web/angular-trash",
+      "@stynx-nyx/angular-trash",
       "reference/web/src/app/core/reference-web-api.service"
     ],
-    "reference/web/src/app/pages/unauthorized.page.ts": ["@angular/core", "@stynx-web/angular-ui"],
+    "reference/web/src/app/pages/unauthorized.page.ts": ["@angular/core", "@stynx-nyx/angular-ui"],
     "reference/web/src/app/pages/work-item-detail.page.ts": [
       "@angular/common",
       "@angular/core",
       "@angular/router",
-      "@stynx-web/angular-ui",
+      "@stynx-nyx/angular-ui",
       "reference/web/src/app/core/reference-models",
       "reference/web/src/app/core/reference-web-api.service"
     ],
@@ -2941,7 +2945,7 @@
       "@angular/core",
       "@angular/forms",
       "@angular/router",
-      "@stynx-web/angular-ui",
+      "@stynx-nyx/angular-ui",
       "reference/web/src/app/core/reference-models",
       "reference/web/src/app/core/reference-web-api.service"
     ],
@@ -2949,7 +2953,7 @@
       "@angular/common",
       "@angular/core",
       "@angular/router",
-      "@stynx-web/angular-ui",
+      "@stynx-nyx/angular-ui",
       "reference/web/src/app/core/reference-models",
       "reference/web/src/app/core/reference-web-api.service"
     ],
@@ -2957,10 +2961,10 @@
       "@angular/core",
       "@angular/platform-browser",
       "@angular/router",
-      "@stynx-web/angular",
-      "@stynx-web/angular-auth",
-      "@stynx-web/angular-i18n",
-      "@stynx-web/angular-storage",
+      "@stynx-nyx/angular",
+      "@stynx-nyx/angular-auth",
+      "@stynx-nyx/angular-i18n",
+      "@stynx-nyx/angular-storage",
       "reference/web/src/app/app.component",
       "reference/web/src/app/app.routes",
       "reference/web/src/app/core/reference-web-api.service",
@@ -2977,10 +2981,10 @@
       "@angular/core",
       "@angular/platform-browser",
       "@angular/router",
-      "@stynx-web/angular",
-      "@stynx-web/angular-auth",
-      "@stynx-web/angular-i18n",
-      "@stynx-web/angular-storage",
+      "@stynx-nyx/angular",
+      "@stynx-nyx/angular-auth",
+      "@stynx-nyx/angular-i18n",
+      "@stynx-nyx/angular-storage",
       "reference/web/src/app/app.component",
       "reference/web/src/app/app.routes",
       "reference/web/src/app/core/reference-web-api.service",
@@ -3062,8 +3066,8 @@
       "packages/backend/src/db-context/request-db-client-lifecycle",
       "packages/backend/src/db-context/tenant-lifecycle.middleware"
     ],
-    "test/packages/frontend-client/api-client.spec.ts": ["@stynx-web/sdk"],
-    "test/packages/frontend-client/session-manager.spec.ts": ["@stynx-web/sdk"],
+    "test/packages/frontend-client/api-client.spec.ts": ["@stynx-nyx/sdk"],
+    "test/packages/frontend-client/session-manager.spec.ts": ["@stynx-nyx/sdk"],
     "test/packages/idempotency/idempotency.interceptor.spec.ts": [
       "@nestjs/common",
       "packages/backend/src/idempotency/idempotency.interceptor",

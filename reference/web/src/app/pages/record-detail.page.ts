@@ -5,8 +5,8 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
   StynxDocumentDownloadComponent,
   StynxDocumentUploadComponent,
-} from '@stynx-web/angular-storage';
-import { StynxBannerComponent } from '@stynx-web/angular-ui';
+} from '@stynx-nyx/angular-storage';
+import { StynxBannerComponent } from '@stynx-nyx/angular-ui';
 import { ReferenceWebApiService } from '../core/reference-web-api.service';
 import type { RecordItem } from '../core/reference-models';
 

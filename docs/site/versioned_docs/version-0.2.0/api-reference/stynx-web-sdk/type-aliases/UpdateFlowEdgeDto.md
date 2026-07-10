@@ -1,8 +1,8 @@
-[**@stynx-web/sdk**](../index.md)
+[**@stynx-nyx/sdk**](../index.md)
 
 ---
 
-[@stynx-web/sdk](../index.md) / UpdateFlowEdgeDto
+[@stynx-nyx/sdk](../index.md) / UpdateFlowEdgeDto
 
 # Type Alias: UpdateFlowEdgeDto
 

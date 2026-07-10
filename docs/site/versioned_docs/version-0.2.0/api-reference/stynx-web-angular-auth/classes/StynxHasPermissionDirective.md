@@ -1,8 +1,8 @@
-[**@stynx-web/angular-auth**](../index.md)
+[**@stynx-nyx/angular-auth**](../index.md)
 
 ---
 
-[@stynx-web/angular-auth](../index.md) / StynxHasPermissionDirective
+[@stynx-nyx/angular-auth](../index.md) / StynxHasPermissionDirective
 
 # Class: StynxHasPermissionDirective
 

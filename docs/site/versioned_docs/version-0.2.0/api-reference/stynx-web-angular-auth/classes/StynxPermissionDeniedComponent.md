@@ -1,8 +1,8 @@
-[**@stynx-web/angular-auth**](../index.md)
+[**@stynx-nyx/angular-auth**](../index.md)
 
 ---
 
-[@stynx-web/angular-auth](../index.md) / StynxPermissionDeniedComponent
+[@stynx-nyx/angular-auth](../index.md) / StynxPermissionDeniedComponent
 
 # Class: StynxPermissionDeniedComponent
 

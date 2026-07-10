@@ -35,4 +35,4 @@ Forwarded to `@stynx-nyx/storage`'s `StynxStorageOptions`. See [`@stynx-nyx/stor
 
 - [`@stynx-nyx/storage`](/docs/packages/storage/) — the underlying package.
 - [`backend/db-context`](/docs/packages/backend/db-context/) — provides DB for document-metadata persistence.
-- [`@stynx-web/angular-storage`](/docs/packages-web/angular-storage/) — Angular pair: file upload UI.
+- [`@stynx-nyx/angular-storage`](/docs/packages-web/angular-storage/) — Angular pair: file upload UI.

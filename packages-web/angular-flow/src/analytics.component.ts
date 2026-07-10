@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input, inject, signal } from '@angular/core';
 import type { OnChanges, OnInit } from '@angular/core';
-import { StynxTranslatePipe } from '@stynx-web/angular-i18n';
-import { StynxBannerComponent, StynxLoadingSpinnerComponent } from '@stynx-web/angular-ui';
+import { StynxTranslatePipe } from '@stynx-nyx/angular-i18n';
+import { StynxBannerComponent, StynxLoadingSpinnerComponent } from '@stynx-nyx/angular-ui';
 import { FlowApiService } from './flow-api.service';
 import type { FlowDashboardAnalytics, FlowOpenTask, FlowRunSummary } from './types';
 

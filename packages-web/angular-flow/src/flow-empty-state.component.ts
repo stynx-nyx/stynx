@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
-import { StynxHasPermissionDirective } from '@stynx-web/angular-auth';
-import { StynxIconComponent } from '@stynx-web/angular-ui';
+import { StynxHasPermissionDirective } from '@stynx-nyx/angular-auth';
+import { StynxIconComponent } from '@stynx-nyx/angular-ui';
 
 @Component({
   selector: 'stynx-flow-empty-state',

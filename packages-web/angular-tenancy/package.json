@@ -1,15 +1,15 @@
 {
-  "name": "@stynx-web/angular-tenancy",
+  "name": "@stynx-nyx/angular-tenancy",
   "version": "0.1.0",
   "description": "Angular tenant context and X-Tenant-Id integration for STYNX applications",
   "exports": {
     ".": {
-      "types": "./dist/types/stynx-web-angular-tenancy.d.ts",
-      "default": "./dist/fesm2022/stynx-web-angular-tenancy.mjs"
+      "types": "./dist/types/stynx-nyx-angular-tenancy.d.ts",
+      "default": "./dist/fesm2022/stynx-nyx-angular-tenancy.mjs"
     },
     "./testing": {
-      "types": "./dist/types/stynx-web-angular-tenancy-testing.d.ts",
-      "default": "./dist/fesm2022/stynx-web-angular-tenancy-testing.mjs"
+      "types": "./dist/types/stynx-nyx-angular-tenancy-testing.d.ts",
+      "default": "./dist/fesm2022/stynx-nyx-angular-tenancy-testing.mjs"
     },
     "./catalogs/en.json": {
       "default": "./dist/catalogs/en.json"
@@ -40,7 +40,7 @@
     "normalize:dist-exports": "node -e \"const fs=require('node:fs');const path='dist/package.json';const pkg=JSON.parse(fs.readFileSync(path,'utf8'));pkg.exports['./catalogs/en.json']={default:'./catalogs/en.json'};pkg.exports['./catalogs/pt-BR.json']={default:'./catalogs/pt-BR.json'};fs.writeFileSync(path, JSON.stringify(pkg,null,2)+'\\n');\""
   },
   "dependencies": {
-    "@stynx-web/angular-i18n": "workspace:*",
+    "@stynx-nyx/angular-i18n": "workspace:*",
     "rxjs": "^7.8.2"
   },
   "peerDependencies": {

@@ -1,6 +1,6 @@
 import '@angular/compiler';
 import { Injector, runInInjectionContext } from '@angular/core';
-import type { StynxSdkClient } from '@stynx-web/sdk';
+import type { StynxSdkClient } from '@stynx-nyx/sdk';
 import { describe, expect, it, vi } from 'vitest';
 import { FlowApiService } from '../src/flow-api.service';
 import { STYNX_FLOW_CLIENT } from '../src/tokens';
@@ -47,7 +47,7 @@ function createApi(client: StynxSdkClient): FlowApiService {
   return runInInjectionContext(injector, () => new FlowApiService());
 }
 
-describe('@stynx-web/angular-flow W04 contract depth', () => {
+describe('@stynx-nyx/angular-flow W04 contract depth', () => {
   it('submits task action routes with exact Flow API body shapes', async () => {
     const client = createClient();
     const api = createApi(client);

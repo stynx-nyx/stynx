@@ -1,7 +1,7 @@
 import { createStrykerConfig } from '../../tools/stryker/base.mjs';
 
 export default createStrykerConfig({
-  packageName: '@stynx-web/angular-iam',
+  packageName: '@stynx-nyx/angular-iam',
   mutate: [
     'src/effective-permissions.component.ts',
     'src/iam-api.service.ts',

@@ -1,8 +1,8 @@
-**@stynx-web/angular-ui**
+**@stynx-nyx/angular-ui**
 
 ---
 
-# @stynx-web/angular-ui
+# @stynx-nyx/angular-ui
 
 ## Classes
 

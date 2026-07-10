@@ -3,8 +3,8 @@ import { Injector, runInInjectionContext } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { Router } from '@angular/router';
-import { TenantContextService } from '@stynx-web/angular';
-import { STYNX_TENANCY_OPTIONS, STYNX_TENANCY_WINDOW } from '@stynx-web/angular-tenancy';
+import { TenantContextService } from '@stynx-nyx/angular';
+import { STYNX_TENANCY_OPTIONS, STYNX_TENANCY_WINDOW } from '@stynx-nyx/angular-tenancy';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { stynxPermissionGuard } from '../src/permission.guard';
 import { StynxSessionService } from '../src/session.service';
@@ -79,7 +79,7 @@ afterEach(() => {
   TestBed.resetTestingModule();
 });
 
-describe('@stynx-web/angular-auth W04 identity contract depth', () => {
+describe('@stynx-nyx/angular-auth W04 identity contract depth', () => {
   it('exposes current actor claims and scope-derived permissions after credential exchange', async () => {
     const tenantContext = createTenantContext();
     tenantContext.setTenant('tenant-a', 'manual');

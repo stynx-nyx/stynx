@@ -250,7 +250,7 @@ green for dry-run.
 
 **Goal:** depending on the path chosen in
 [`09-FRONTEND-PATTERNS.md`](09-FRONTEND-PATTERNS.md), either
-Angular adoption or `@stynx-web/sdk` integration.
+Angular adoption or `@stynx-nyx/sdk` integration.
 
 **Steps:** see doc 09.
 

@@ -1,8 +1,8 @@
-[**@stynx-web/angular-storage**](../index.md)
+[**@stynx-nyx/angular-storage**](../index.md)
 
 ---
 
-[@stynx-web/angular-storage](../index.md) / provideStynxMultipartUploadExecutor
+[@stynx-nyx/angular-storage](../index.md) / provideStynxMultipartUploadExecutor
 
 # Function: provideStynxMultipartUploadExecutor()
 

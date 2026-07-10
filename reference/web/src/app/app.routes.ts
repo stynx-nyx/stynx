@@ -1,7 +1,7 @@
 import type { Routes } from '@angular/router';
-import { stynxAuthGuard, stynxPermissionGuard } from '@stynx-web/angular-auth';
-import { flowRoutes } from '@stynx-web/angular-flow';
-import { iamRoutes } from '@stynx-web/angular-iam';
+import { stynxAuthGuard, stynxPermissionGuard } from '@stynx-nyx/angular-auth';
+import { flowRoutes } from '@stynx-nyx/angular-flow';
+import { iamRoutes } from '@stynx-nyx/angular-iam';
 import { DashboardPageComponent } from './pages/dashboard.page';
 import { LoginPageComponent } from './pages/login.page';
 import { RecordDetailPageComponent } from './pages/record-detail.page';

@@ -1,8 +1,8 @@
-[**@stynx-web/angular-auth**](../index.md)
+[**@stynx-nyx/angular-auth**](../index.md)
 
 ---
 
-[@stynx-web/angular-auth](../index.md) / SessionStorageLike
+[@stynx-nyx/angular-auth](../index.md) / SessionStorageLike
 
 # Interface: SessionStorageLike
 

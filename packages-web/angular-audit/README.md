@@ -1,10 +1,10 @@
-# `@stynx-web/angular-audit` — Angular audit-trail UI: log timeline, entity history, integrity badge
+# `@stynx-nyx/angular-audit` — Angular audit-trail UI: log timeline, entity history, integrity badge
 
-`@stynx-web/angular-audit` is the Angular audit-viewing package. It provides an audit-log timeline, an entity-history panel (the audit trail for a single record), an event-detail view, and a hash-integrity badge that surfaces whether the audit chain verifies. Backed by the backend's [`@stynx-nyx/audit`](/docs/packages/audit/) read endpoint.
+`@stynx-nyx/angular-audit` is the Angular audit-viewing package. It provides an audit-log timeline, an entity-history panel (the audit trail for a single record), an event-detail view, and a hash-integrity badge that surfaces whether the audit chain verifies. Backed by the backend's [`@stynx-nyx/audit`](/docs/packages/audit/) read endpoint.
 
 ## Purpose
 
-Regulated apps need to _show_ the audit trail, not just record it: a global activity feed, a per-record history ("who changed this and when"), and a visible signal that the chain hasn't been tampered with. `@stynx-web/angular-audit` provides those views.
+Regulated apps need to _show_ the audit trail, not just record it: a global activity feed, a per-record history ("who changed this and when"), and a visible signal that the chain hasn't been tampered with. `@stynx-nyx/angular-audit` provides those views.
 
 You reach for it when your app surfaces audit data to users / compliance officers.
 
@@ -17,15 +17,15 @@ Angular frontend developers building compliance / activity views.
 ## Install
 
 ```bash
-pnpm add @stynx-web/angular-audit
+pnpm add @stynx-nyx/angular-audit
 ```
 
-**Peer dependencies:** `@angular/core` `^18`, `@stynx-web/angular` `^1`, `@stynx-web/angular-ui` `^1`, `@stynx-web/sdk` `^1`.
+**Peer dependencies:** `@angular/core` `^18`, `@stynx-nyx/angular` `^1`, `@stynx-nyx/angular-ui` `^1`, `@stynx-nyx/sdk` `^1`.
 
 ## Quick start
 
 ```ts
-import { provideAudit, auditRoutes } from '@stynx-web/angular-audit';
+import { provideAudit, auditRoutes } from '@stynx-nyx/angular-audit';
 
 export const appConfig = { providers: [provideAudit()] };
 ```
@@ -100,7 +100,7 @@ export const appConfig = { providers: [provideAudit()] };
 
 ## Related packages
 
-- [`@stynx-web/angular`](/docs/packages-web/angular/) — the foundation.
+- [`@stynx-nyx/angular`](/docs/packages-web/angular/) — the foundation.
 - [`@stynx-nyx/audit`](/docs/packages/audit/) — the backend counterpart.
 - [`@stynx-nyx/cli`](/docs/packages/cli/) — `stynx audit verify` is the CLI equivalent of the integrity badge.
 

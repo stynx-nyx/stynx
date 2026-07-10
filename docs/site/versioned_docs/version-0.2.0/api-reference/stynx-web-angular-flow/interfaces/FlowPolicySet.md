@@ -1,8 +1,8 @@
-[**@stynx-web/angular-flow**](../index.md)
+[**@stynx-nyx/angular-flow**](../index.md)
 
 ---
 
-[@stynx-web/angular-flow](../index.md) / FlowPolicySet
+[@stynx-nyx/angular-flow](../index.md) / FlowPolicySet
 
 # Interface: FlowPolicySet
 

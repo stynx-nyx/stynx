@@ -1,8 +1,8 @@
-[**@stynx-web/angular-storage**](../index.md)
+[**@stynx-nyx/angular-storage**](../index.md)
 
 ---
 
-[@stynx-web/angular-storage](../index.md) / StynxMultipartUploadInitiateRequest
+[@stynx-nyx/angular-storage](../index.md) / StynxMultipartUploadInitiateRequest
 
 # Interface: StynxMultipartUploadInitiateRequest
 

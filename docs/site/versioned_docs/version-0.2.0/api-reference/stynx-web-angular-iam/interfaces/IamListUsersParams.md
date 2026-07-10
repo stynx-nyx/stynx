@@ -1,8 +1,8 @@
-[**@stynx-web/angular-iam**](../index.md)
+[**@stynx-nyx/angular-iam**](../index.md)
 
 ---
 
-[@stynx-web/angular-iam](../index.md) / IamListUsersParams
+[@stynx-nyx/angular-iam](../index.md) / IamListUsersParams
 
 # Interface: IamListUsersParams
 

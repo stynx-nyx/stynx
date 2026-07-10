@@ -53,7 +53,7 @@ afterEach(() => {
   TestBed.resetTestingModule();
 });
 
-describe('@stynx-web/angular-i18n rendering depth', () => {
+describe('@stynx-nyx/angular-i18n rendering depth', () => {
   it('renders ICU select/plural output and propagates locale switches to the DOM', async () => {
     TestBed.configureTestingModule({ providers: i18nProviders() });
     const service = TestBed.inject(StynxI18nService);

@@ -8,7 +8,7 @@ packages fit together.
 
 - `packages/*` — backend, data, contracts, CLI, and testing packages published
   as `@stynx-nyx/*`.
-- `packages-web/*` — Angular/browser packages published as `@stynx-web/*`.
+- `packages-web/*` — Angular/browser packages published as `@stynx-nyx/*`.
 - `reference/api` and `reference/web` — host applications proving package
   composition.
 - `infra/cdk` — standalone AWS CDK reference app for deployed environments.
@@ -18,22 +18,22 @@ package API surface.
 
 ## Backend Package Groups
 
-| Group                   | Packages                                                                                     | Purpose                                                                                                          |
-| ----------------------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Contracts               | `@stynx-nyx/contracts`                                                                           | Type-only interfaces and error envelopes shared across packages.                                                 |
-| Runtime foundation      | `@stynx-nyx/core`, `@stynx-nyx/data`, `@stynx-nyx/backend`                                               | Request context, config/secrets, data access, and aggregate NestJS platform wiring.                              |
+| Group                   | Packages                                                                                                         | Purpose                                                                                                          |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Contracts               | `@stynx-nyx/contracts`                                                                                           | Type-only interfaces and error envelopes shared across packages.                                                 |
+| Runtime foundation      | `@stynx-nyx/core`, `@stynx-nyx/data`, `@stynx-nyx/backend`                                                       | Request context, config/secrets, data access, and aggregate NestJS platform wiring.                              |
 | Security and tenancy    | `@stynx-nyx/auth`, `@stynx-nyx/sessions`, `@stynx-nyx/tenancy`, `@stynx-nyx/ratelimit`, `@stynx-nyx/idempotency` | Authentication, authorization, session lifecycle, tenant resolution, throttling, and mutation replay protection. |
-| Observability and audit | `@stynx-nyx/health`, `@stynx-nyx/logging`, `@stynx-nyx/audit`                                            | Health/readiness/metrics, structured logs, audit writing, retention, and evidence queries.                       |
-| Data governance         | `@stynx-nyx/privacy`, `@stynx-nyx/storage`, `@stynx-nyx/i18n`                                            | LGPD export/erasure/ROPA, document metadata/object storage, and localized messages.                              |
-| Workflow                | `@stynx-nyx/flow`                                                                                | Tenant-scoped workflow design, runtime, forms, policy, analytics, and PORM-compatible migration aliases.         |
-| Tooling                 | `@stynx-nyx/cli`, `@stynx-nyx/testing`                                                               | Adoption/migration commands plus reusable test harnesses, fixtures, and matchers.                                |
+| Observability and audit | `@stynx-nyx/health`, `@stynx-nyx/logging`, `@stynx-nyx/audit`                                                    | Health/readiness/metrics, structured logs, audit writing, retention, and evidence queries.                       |
+| Data governance         | `@stynx-nyx/privacy`, `@stynx-nyx/storage`, `@stynx-nyx/i18n`                                                    | LGPD export/erasure/ROPA, document metadata/object storage, and localized messages.                              |
+| Workflow                | `@stynx-nyx/flow`                                                                                                | Tenant-scoped workflow design, runtime, forms, policy, analytics, and PORM-compatible migration aliases.         |
+| Tooling                 | `@stynx-nyx/cli`, `@stynx-nyx/testing`                                                                           | Adoption/migration commands plus reusable test harnesses, fixtures, and matchers.                                |
 
 ## Web Package Groups
 
 | Group            | Packages                                                                                                                                                                                                                             | Purpose                                                          |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
-| Core browser SDK | `@stynx-web/sdk`, `@stynx-web/angular`, `@stynx-web/angular-ui`                                                                                                                                                                      | Fetch/auth helpers, Angular providers, and shared UI primitives. |
-| Feature packages | `@stynx-web/angular-auth`, `@stynx-web/angular-sessions`, `@stynx-web/angular-tenancy`, `@stynx-web/angular-storage`, `@stynx-web/angular-trash`, `@stynx-web/angular-profile`, `@stynx-web/angular-flow`, `@stynx-web/angular-i18n` | Host-mounted Angular surfaces for framework features.            |
+| Core browser SDK | `@stynx-nyx/sdk`, `@stynx-nyx/angular`, `@stynx-nyx/angular-ui`                                                                                                                                                                      | Fetch/auth helpers, Angular providers, and shared UI primitives. |
+| Feature packages | `@stynx-nyx/angular-auth`, `@stynx-nyx/angular-sessions`, `@stynx-nyx/angular-tenancy`, `@stynx-nyx/angular-storage`, `@stynx-nyx/angular-trash`, `@stynx-nyx/angular-profile`, `@stynx-nyx/angular-flow`, `@stynx-nyx/angular-i18n` | Host-mounted Angular surfaces for framework features.            |
 
 ## Recommended Backend Wiring
 
@@ -85,7 +85,7 @@ Use package-local commands for focused work:
 ```sh
 pnpm --filter @stynx-nyx/data test
 pnpm --filter @stynx-nyx/flow test
-pnpm --filter @stynx-web/angular-flow test
+pnpm --filter @stynx-nyx/angular-flow test
 ```
 
 Use docs build to verify package API reference generation:

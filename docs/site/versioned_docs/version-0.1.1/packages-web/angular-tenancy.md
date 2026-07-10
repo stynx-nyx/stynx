@@ -1,15 +1,15 @@
 ---
-title: '@stynx-web/angular-tenancy'
+title: '@stynx-nyx/angular-tenancy'
 ---
 
-# @stynx-web/angular-tenancy
+# @stynx-nyx/angular-tenancy
 
 Angular 20 tenancy integration for STYNX. It resolves the active tenant, initializes tenant context, adds `X-Tenant-Id` through an HTTP interceptor, and exposes tenant picker/switcher components.
 
 ## Install
 
 ```bash
-pnpm add @stynx-web/angular-tenancy
+pnpm add @stynx-nyx/angular-tenancy
 ```
 
 ## Peer Dependencies
@@ -22,7 +22,7 @@ pnpm add @stynx-web/angular-tenancy
 
 ```ts
 import { bootstrapApplication } from '@angular/platform-browser';
-import { provideTenancy } from '@stynx-web/angular-tenancy';
+import { provideTenancy } from '@stynx-nyx/angular-tenancy';
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -40,10 +40,10 @@ bootstrapApplication(AppComponent, {
 - Providers/interceptors: `provideTenancy`, `TenantInterceptor`.
 - Services/components: `TenantContextService`, `StynxTenantPickerComponent`, `StynxTenantSwitcherComponent`.
 - Tokens/types: `STYNX_TENANCY_OPTIONS`, `STYNX_TENANCY_WINDOW`, tenancy option, tenant, and resolution context types.
-- Secondary exports: `@stynx-web/angular-tenancy/testing`, locale catalogs.
+- Secondary exports: `@stynx-nyx/angular-tenancy/testing`, locale catalogs.
 
 ## See Also
 
-- [`@stynx-web/angular`](/docs/packages-web/angular)
-- [`@stynx-web/sdk`](/docs/packages-web/sdk)
+- [`@stynx-nyx/angular`](/docs/packages-web/angular)
+- [`@stynx-nyx/sdk`](/docs/packages-web/sdk)
 - [Reference app tenant demo](/docs/reference/web#demo-surfaces)

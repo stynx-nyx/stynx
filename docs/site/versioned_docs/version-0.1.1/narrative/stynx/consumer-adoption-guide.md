@@ -103,8 +103,8 @@ Use `StynxAuditModule.forRoot(&#123; sink, metadataRedactionPolicy &#125;)` with
 
 Use `reference/web` as the package-consumer baseline for frontend concerns:
 
-1. `@stynx-web/sdk` for token/principal/http contracts.
-2. `@stynx-web/sdk` for:
+1. `@stynx-nyx/sdk` for token/principal/http contracts.
+2. `@stynx-nyx/sdk` for:
 
 - `FrontendSessionManager` + token stores
 - `StynxApiClient` with auth/tenant header wiring

@@ -1,8 +1,8 @@
-[**@stynx-web/angular**](../index.md)
+[**@stynx-nyx/angular**](../index.md)
 
 ---
 
-[@stynx-web/angular](../index.md) / ErrorBannerService
+[@stynx-nyx/angular](../index.md) / ErrorBannerService
 
 # Class: ErrorBannerService
 

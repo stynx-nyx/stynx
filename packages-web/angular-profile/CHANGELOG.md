@@ -1,4 +1,4 @@
-# @stynx-web/angular-profile
+# @stynx-nyx/angular-profile
 
 ## 1.0.0
 
@@ -9,4 +9,4 @@
 ### Patch Changes
 
 - Updated dependencies [8f6df55]
-  - @stynx-web/angular-i18n@1.0.0
+  - @stynx-nyx/angular-i18n@1.0.0

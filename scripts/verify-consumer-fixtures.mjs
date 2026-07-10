@@ -33,19 +33,19 @@ const packageSpecs = [
   { name: '@stynx-nyx/ratelimit', dir: 'packages/ratelimit' },
   { name: '@stynx-nyx/sessions', dir: 'packages/sessions' },
   { name: '@stynx-nyx/testing', dir: 'packages/testing' },
-  { name: '@stynx-web/angular', dir: 'packages-web/angular' },
-  { name: '@stynx-web/angular-audit', dir: 'packages-web/angular-audit' },
-  { name: '@stynx-web/angular-auth', dir: 'packages-web/angular-auth' },
-  { name: '@stynx-web/angular-flow', dir: 'packages-web/angular-flow' },
-  { name: '@stynx-web/angular-i18n', dir: 'packages-web/angular-i18n' },
-  { name: '@stynx-web/angular-iam', dir: 'packages-web/angular-iam' },
-  { name: '@stynx-web/angular-profile', dir: 'packages-web/angular-profile' },
-  { name: '@stynx-web/angular-sessions', dir: 'packages-web/angular-sessions' },
-  { name: '@stynx-web/angular-storage', dir: 'packages-web/angular-storage' },
-  { name: '@stynx-web/angular-tenancy', dir: 'packages-web/angular-tenancy' },
-  { name: '@stynx-web/angular-trash', dir: 'packages-web/angular-trash' },
-  { name: '@stynx-web/angular-ui', dir: 'packages-web/angular-ui' },
-  { name: '@stynx-web/sdk', dir: 'packages-web/sdk' },
+  { name: '@stynx-nyx/angular', dir: 'packages-web/angular' },
+  { name: '@stynx-nyx/angular-audit', dir: 'packages-web/angular-audit' },
+  { name: '@stynx-nyx/angular-auth', dir: 'packages-web/angular-auth' },
+  { name: '@stynx-nyx/angular-flow', dir: 'packages-web/angular-flow' },
+  { name: '@stynx-nyx/angular-i18n', dir: 'packages-web/angular-i18n' },
+  { name: '@stynx-nyx/angular-iam', dir: 'packages-web/angular-iam' },
+  { name: '@stynx-nyx/angular-profile', dir: 'packages-web/angular-profile' },
+  { name: '@stynx-nyx/angular-sessions', dir: 'packages-web/angular-sessions' },
+  { name: '@stynx-nyx/angular-storage', dir: 'packages-web/angular-storage' },
+  { name: '@stynx-nyx/angular-tenancy', dir: 'packages-web/angular-tenancy' },
+  { name: '@stynx-nyx/angular-trash', dir: 'packages-web/angular-trash' },
+  { name: '@stynx-nyx/angular-ui', dir: 'packages-web/angular-ui' },
+  { name: '@stynx-nyx/sdk', dir: 'packages-web/sdk' },
 ];
 
 try {
@@ -203,27 +203,27 @@ function teatFixture(tarballs) {
       '@angular/core': '21.2.15',
       '@angular/forms': '21.2.15',
       '@angular/router': '21.2.15',
-      '@stynx-web/angular': fileDependency(tarballs, '@stynx-web/angular'),
-      '@stynx-web/angular-audit': fileDependency(tarballs, '@stynx-web/angular-audit'),
-      '@stynx-web/angular-auth': fileDependency(tarballs, '@stynx-web/angular-auth'),
-      '@stynx-web/angular-flow': fileDependency(tarballs, '@stynx-web/angular-flow'),
-      '@stynx-web/angular-i18n': fileDependency(tarballs, '@stynx-web/angular-i18n'),
-      '@stynx-web/angular-storage': fileDependency(tarballs, '@stynx-web/angular-storage'),
-      '@stynx-web/angular-tenancy': fileDependency(tarballs, '@stynx-web/angular-tenancy'),
-      '@stynx-web/angular-ui': fileDependency(tarballs, '@stynx-web/angular-ui'),
-      '@stynx-web/sdk': fileDependency(tarballs, '@stynx-web/sdk'),
+      '@stynx-nyx/angular': fileDependency(tarballs, '@stynx-nyx/angular'),
+      '@stynx-nyx/angular-audit': fileDependency(tarballs, '@stynx-nyx/angular-audit'),
+      '@stynx-nyx/angular-auth': fileDependency(tarballs, '@stynx-nyx/angular-auth'),
+      '@stynx-nyx/angular-flow': fileDependency(tarballs, '@stynx-nyx/angular-flow'),
+      '@stynx-nyx/angular-i18n': fileDependency(tarballs, '@stynx-nyx/angular-i18n'),
+      '@stynx-nyx/angular-storage': fileDependency(tarballs, '@stynx-nyx/angular-storage'),
+      '@stynx-nyx/angular-tenancy': fileDependency(tarballs, '@stynx-nyx/angular-tenancy'),
+      '@stynx-nyx/angular-ui': fileDependency(tarballs, '@stynx-nyx/angular-ui'),
+      '@stynx-nyx/sdk': fileDependency(tarballs, '@stynx-nyx/sdk'),
       rxjs: '^7.8.2',
       tslib: '^2.8.1',
       'zone.js': '^0.16.0',
     }),
-    indexTs: `import { GeneratedStynxSdk, StynxSdkClient } from '@stynx-web/sdk';
-import { provideStynxAngular } from '@stynx-web/angular';
-import { StynxAuditLogComponent, provideStynxAudit } from '@stynx-web/angular-audit';
-import { provideStynxAuth } from '@stynx-web/angular-auth';
-import { DocumentService } from '@stynx-web/angular-storage';
-import { provideStynxFlow } from '@stynx-web/angular-flow';
-import { provideTenancy, TenantContextService } from '@stynx-web/angular-tenancy';
-import { StynxBannerComponent, StynxPaginationComponent } from '@stynx-web/angular-ui';
+    indexTs: `import { GeneratedStynxSdk, StynxSdkClient } from '@stynx-nyx/sdk';
+import { provideStynxAngular } from '@stynx-nyx/angular';
+import { StynxAuditLogComponent, provideStynxAudit } from '@stynx-nyx/angular-audit';
+import { provideStynxAuth } from '@stynx-nyx/angular-auth';
+import { DocumentService } from '@stynx-nyx/angular-storage';
+import { provideStynxFlow } from '@stynx-nyx/angular-flow';
+import { provideTenancy, TenantContextService } from '@stynx-nyx/angular-tenancy';
+import { StynxBannerComponent, StynxPaginationComponent } from '@stynx-nyx/angular-ui';
 
 const sdk = new GeneratedStynxSdk({ BASE: 'https://api.example.test' });
 if (typeof sdk.stynxAuth.stynxAuthGetPlatformPermsBySidInspect !== 'function') {

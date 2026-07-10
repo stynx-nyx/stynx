@@ -1,8 +1,8 @@
-[**@stynx-web/angular-auth**](../index.md)
+[**@stynx-nyx/angular-auth**](../index.md)
 
 ---
 
-[@stynx-web/angular-auth](../index.md) / RefreshTokenStorage
+[@stynx-nyx/angular-auth](../index.md) / RefreshTokenStorage
 
 # Class: RefreshTokenStorage
 

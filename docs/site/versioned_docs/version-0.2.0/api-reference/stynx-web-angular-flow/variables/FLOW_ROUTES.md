@@ -1,8 +1,8 @@
-[**@stynx-web/angular-flow**](../index.md)
+[**@stynx-nyx/angular-flow**](../index.md)
 
 ---
 
-[@stynx-web/angular-flow](../index.md) / FLOW_ROUTES
+[@stynx-nyx/angular-flow](../index.md) / FLOW_ROUTES
 
 # Variable: FLOW_ROUTES
 

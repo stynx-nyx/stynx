@@ -12,8 +12,8 @@ Use the smallest migration that gives the product the STYNX request contract.
 
 | Starting point                                                   | Recommended path                                                                                                                                                    | Why                                                                                                                                            |
 | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| React, Vue, Svelte, vanilla TypeScript, mobile bridge, Node tool | Use [`@stynx-web/sdk`](/docs/packages-web/sdk) only.                                                                                                                | The SDK is framework-neutral and covers typed HTTP, auth/tenant providers, refresh, and error mapping without pulling Angular into the bundle. |
-| Angular app that should keep its current shell                   | Add [`@stynx-web/angular`](/docs/packages-web/angular), [`@stynx-web/angular-auth`](/docs/packages-web/angular-auth), and only the feature packages the app mounts. | Interceptors, route guards, tenant context, and package UI can be adopted incrementally.                                                       |
+| React, Vue, Svelte, vanilla TypeScript, mobile bridge, Node tool | Use [`@stynx-nyx/sdk`](/docs/packages-web/sdk) only.                                                                                                                | The SDK is framework-neutral and covers typed HTTP, auth/tenant providers, refresh, and error mapping without pulling Angular into the bundle. |
+| Angular app that should keep its current shell                   | Add [`@stynx-nyx/angular`](/docs/packages-web/angular), [`@stynx-nyx/angular-auth`](/docs/packages-web/angular-auth), and only the feature packages the app mounts. | Interceptors, route guards, tenant context, and package UI can be adopted incrementally.                                                       |
 | New Angular reference or showcase app                            | Follow the full path in [`docs/meta/dev/frontend.md`](../../../meta/dev/frontend.md).                                                                               | The canonical guide tracks the current reference-web composition.                                                                              |
 | Non-TypeScript frontend                                          | Generate or author a local client from the API contract and mimic the SDK header/error/refresh contract.                                                            | STYNX does not ship official non-JS clients in this repo.                                                                                      |
 
@@ -90,5 +90,5 @@ headers, tenant local storage, permission parsing, and raw upload calls to:
 
 The older prompt file `_PROMPTS/PORT-09-frontend.md` is generation history,
 not current guidance. In particular, its note that
-`@stynx-web/angular-tenancy` was not implemented is stale; the current tenancy
+`@stynx-nyx/angular-tenancy` was not implemented is stale; the current tenancy
 package and reference app are the authority.

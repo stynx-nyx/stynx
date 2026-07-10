@@ -4,8 +4,8 @@ import type { Provider, Signal, Type } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { ActivatedRoute, Router } from '@angular/router';
-import { StynxI18nService } from '@stynx-web/angular-i18n';
-import { StynxToastService } from '@stynx-web/angular-ui';
+import { StynxI18nService } from '@stynx-nyx/angular-i18n';
+import { StynxToastService } from '@stynx-nyx/angular-ui';
 import { of, throwError } from 'rxjs';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { IamApiService } from '../src/iam-api.service';
@@ -290,7 +290,7 @@ afterEach(() => {
   TestBed.resetTestingModule();
 });
 
-describe('@stynx-web/angular-iam component TestBed specs', () => {
+describe('@stynx-nyx/angular-iam component TestBed specs', () => {
   it('renders the users admin table and drives search, pagination, creation, and selection', () => {
     const { api, fixture, component, toast } = setup(StynxUsersAdminComponent);
     const access = component as unknown as UsersAdminAccess;

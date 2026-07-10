@@ -1,15 +1,15 @@
 {
-  "name": "@stynx-web/sdk",
+  "name": "@stynx-nyx/sdk",
   "version": "1.0.0",
   "description": "Framework-agnostic TypeScript SDK for stynx APIs",
   "exports": {
     ".": {
-      "types": "./dist/types/stynx-web-sdk.d.ts",
-      "default": "./dist/fesm2022/stynx-web-sdk.mjs"
+      "types": "./dist/types/stynx-nyx-sdk.d.ts",
+      "default": "./dist/fesm2022/stynx-nyx-sdk.mjs"
     },
     "./testing": {
-      "types": "./dist/types/stynx-web-sdk-testing.d.ts",
-      "default": "./dist/fesm2022/stynx-web-sdk-testing.mjs"
+      "types": "./dist/types/stynx-nyx-sdk-testing.d.ts",
+      "default": "./dist/fesm2022/stynx-nyx-sdk-testing.mjs"
     },
     "./package.json": {
       "default": "./package.json"

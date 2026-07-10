@@ -1,8 +1,8 @@
-**@stynx-web/angular-auth**
+**@stynx-nyx/angular-auth**
 
 ---
 
-# @stynx-web/angular-auth
+# @stynx-nyx/angular-auth
 
 ## Classes
 

@@ -1,10 +1,10 @@
 import { APP_INITIALIZER, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
-import { StynxAngularModule } from '@stynx-web/angular';
-import { StynxAngularAuthModule, STYNX_AUTH_BACKEND, STYNX_OIDC_ADAPTER } from '@stynx-web/angular-auth';
-import { StynxI18nModule } from '@stynx-web/angular-i18n';
-import { DocumentService, STYNX_UPLOAD_EXECUTOR, XhrUploadExecutor } from '@stynx-web/angular-storage';
+import { StynxAngularModule } from '@stynx-nyx/angular';
+import { StynxAngularAuthModule, STYNX_AUTH_BACKEND, STYNX_OIDC_ADAPTER } from '@stynx-nyx/angular-auth';
+import { StynxI18nModule } from '@stynx-nyx/angular-i18n';
+import { DocumentService, STYNX_UPLOAD_EXECUTOR, XhrUploadExecutor } from '@stynx-nyx/angular-storage';
 import { AppComponent } from './app.component';
 import { APP_ROUTES } from './app.routes';
 import { ReferenceWebApiService } from './core/reference-web-api.service';

@@ -1,14 +1,14 @@
-# `@stynx-web/angular-profile` — Angular user-profile UI: edit, preferences, security, hosted-action handoff
+# `@stynx-nyx/angular-profile` — Angular user-profile UI: edit, preferences, security, hosted-action handoff
 
-`@stynx-web/angular-profile` is the Angular user-profile package. It provides profile-edit, preferences-form, and profile-security components, a hosted-auth-action handoff component (for IdP-hosted flows like password change / MFA), an unsaved-changes route guard, a `ProfileService`, and ready-to-mount routes. The security + account-deletion flows tie into the backend's [`@stynx-nyx/privacy`](/docs/packages/privacy/) subject-rights endpoints.
+`@stynx-nyx/angular-profile` is the Angular user-profile package. It provides profile-edit, preferences-form, and profile-security components, a hosted-auth-action handoff component (for IdP-hosted flows like password change / MFA), an unsaved-changes route guard, a `ProfileService`, and ready-to-mount routes. The security + account-deletion flows tie into the backend's [`@stynx-nyx/privacy`](/docs/packages/privacy/) subject-rights endpoints.
 
 ## Purpose
 
-Apps need a "my account" area: edit profile, set preferences, change password / manage MFA, request account deletion. Building these per app is repetitive and the security flows are easy to get wrong. `@stynx-web/angular-profile` provides them with the IdP handoff + subject-rights integration handled.
+Apps need a "my account" area: edit profile, set preferences, change password / manage MFA, request account deletion. Building these per app is repetitive and the security flows are easy to get wrong. `@stynx-nyx/angular-profile` provides them with the IdP handoff + subject-rights integration handled.
 
 You reach for it when your app has a user account / settings area.
 
-What it does NOT do: it doesn't authenticate (that's `@stynx-web/angular-auth`). It doesn't perform the actual erasure (the backend `@stynx-nyx/privacy` does; this initiates the request).
+What it does NOT do: it doesn't authenticate (that's `@stynx-nyx/angular-auth`). It doesn't perform the actual erasure (the backend `@stynx-nyx/privacy` does; this initiates the request).
 
 ## Audience
 
@@ -17,15 +17,15 @@ Angular frontend developers building account-settings screens.
 ## Install
 
 ```bash
-pnpm add @stynx-web/angular-profile
+pnpm add @stynx-nyx/angular-profile
 ```
 
-**Peer dependencies:** `@angular/core` `^18`, `@angular/router` `^18`, `@angular/forms` `^18`, `@stynx-web/angular` `^1`, `@stynx-web/angular-auth` `^1`.
+**Peer dependencies:** `@angular/core` `^18`, `@angular/router` `^18`, `@angular/forms` `^18`, `@stynx-nyx/angular` `^1`, `@stynx-nyx/angular-auth` `^1`.
 
 ## Quick start
 
 ```ts
-import { provideProfile, profileRoutes } from '@stynx-web/angular-profile';
+import { provideProfile, profileRoutes } from '@stynx-nyx/angular-profile';
 
 export const appConfig = { providers: [provideProfile()] };
 
@@ -94,7 +94,7 @@ export const routes: Routes = [
 ### Example 3 — account deletion (subject-rights)
 
 ```ts
-import { ProfileService } from '@stynx-web/angular-profile';
+import { ProfileService } from '@stynx-nyx/angular-profile';
 
 @Component({
   /* ... */
@@ -115,7 +115,7 @@ export class DeleteAccount {
 
 ## Related packages
 
-- [`@stynx-web/angular-auth`](/docs/packages-web/angular-auth/) — auth + the IdP the hosted-action handoff uses.
+- [`@stynx-nyx/angular-auth`](/docs/packages-web/angular-auth/) — auth + the IdP the hosted-action handoff uses.
 - [`@stynx-nyx/privacy`](/docs/packages/privacy/) — the backend subject-rights endpoints (account deletion).
 
 ## TypeDoc reference

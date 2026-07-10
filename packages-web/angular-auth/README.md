@@ -1,14 +1,14 @@
-# `@stynx-web/angular-auth` — Angular auth: login, guards, permission directives, session
+# `@stynx-nyx/angular-auth` — Angular auth: login, guards, permission directives, session
 
-`@stynx-web/angular-auth` is the Angular authentication package. It provides route guards (`authGuard`, `permissionGuard`), a `*hasPermission` structural directive for conditional UI, login-redirect + logout-button + permission-denied components, an OIDC client adapter, a session service, and pluggable token storage. Pairs with the backend's [`@stynx-nyx/auth`](/docs/packages/auth/). Provides the auth-token resolver that `@stynx-web/sdk` consumes.
+`@stynx-nyx/angular-auth` is the Angular authentication package. It provides route guards (`authGuard`, `permissionGuard`), a `*hasPermission` structural directive for conditional UI, login-redirect + logout-button + permission-denied components, an OIDC client adapter, a session service, and pluggable token storage. Pairs with the backend's [`@stynx-nyx/auth`](/docs/packages/auth/). Provides the auth-token resolver that `@stynx-nyx/sdk` consumes.
 
 ## Purpose
 
-Frontend auth means: redirecting unauthenticated users to login, guarding routes by permission, hiding UI the user can't use, storing + refreshing tokens, and feeding the token to the API client. `@stynx-web/angular-auth` packages all of it.
+Frontend auth means: redirecting unauthenticated users to login, guarding routes by permission, hiding UI the user can't use, storing + refreshing tokens, and feeding the token to the API client. `@stynx-nyx/angular-auth` packages all of it.
 
-You reach for it right after `@stynx-web/angular`, whenever the app has protected routes or per-permission UI.
+You reach for it right after `@stynx-nyx/angular`, whenever the app has protected routes or per-permission UI.
 
-What it does NOT do: it doesn't manage users/roles (that's `@stynx-web/angular-iam`). It doesn't issue tokens (the backend + IdP do).
+What it does NOT do: it doesn't manage users/roles (that's `@stynx-nyx/angular-iam`). It doesn't issue tokens (the backend + IdP do).
 
 ## Audience
 
@@ -17,15 +17,15 @@ Angular frontend developers building authenticated apps.
 ## Install
 
 ```bash
-pnpm add @stynx-web/angular-auth
+pnpm add @stynx-nyx/angular-auth
 ```
 
-**Peer dependencies:** `@angular/core` `^18`, `@angular/router` `^18`, `@stynx-web/angular` `^1`, `@stynx-web/sdk` `^1`.
+**Peer dependencies:** `@angular/core` `^18`, `@angular/router` `^18`, `@stynx-nyx/angular` `^1`, `@stynx-nyx/sdk` `^1`.
 
 ## Quick start
 
 ```ts
-import { provideAuth } from '@stynx-web/angular-auth';
+import { provideAuth } from '@stynx-nyx/angular-auth';
 
 export const appConfig = {
   providers: [
@@ -37,7 +37,7 @@ export const appConfig = {
 
 ```ts
 // Guard a route
-import { authGuard, permissionGuard } from '@stynx-web/angular-auth';
+import { authGuard, permissionGuard } from '@stynx-nyx/angular-auth';
 
 export const routes: Routes = [
   {
@@ -113,7 +113,7 @@ export const routes: Routes = [
 ### Example 2 — reading session state
 
 ```ts
-import { SessionService } from '@stynx-web/angular-auth';
+import { SessionService } from '@stynx-nyx/angular-auth';
 
 @Component({
   /* ... */
@@ -138,10 +138,10 @@ export class Header {
 
 ## Related packages
 
-- [`@stynx-web/angular`](/docs/packages-web/angular/) — the foundation.
+- [`@stynx-nyx/angular`](/docs/packages-web/angular/) — the foundation.
 - [`@stynx-nyx/auth`](/docs/packages/auth/) — the backend counterpart.
-- [`@stynx-web/angular-iam`](/docs/packages-web/angular-iam/) — admin UI for users/roles (depends on this).
-- [`@stynx-web/sdk`](/docs/packages-web/sdk/) — consumes this package's auth provider.
+- [`@stynx-nyx/angular-iam`](/docs/packages-web/angular-iam/) — admin UI for users/roles (depends on this).
+- [`@stynx-nyx/sdk`](/docs/packages-web/sdk/) — consumes this package's auth provider.
 
 ## TypeDoc reference
 

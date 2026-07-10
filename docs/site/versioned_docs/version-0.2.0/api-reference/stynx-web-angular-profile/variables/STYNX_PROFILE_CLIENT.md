@@ -1,8 +1,8 @@
-[**@stynx-web/angular-profile**](../index.md)
+[**@stynx-nyx/angular-profile**](../index.md)
 
 ---
 
-[@stynx-web/angular-profile](../index.md) / STYNX_PROFILE_CLIENT
+[@stynx-nyx/angular-profile](../index.md) / STYNX_PROFILE_CLIENT
 
 # Variable: STYNX_PROFILE_CLIENT
 

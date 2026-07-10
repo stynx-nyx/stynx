@@ -12,5 +12,5 @@
       "output": "catalogs"
     }
   ],
-  "allowedNonPeerDependencies": ["@stynx-web/*", "angular-auth-oidc-client", "rxjs"]
+  "allowedNonPeerDependencies": ["@stynx-nyx/*", "angular-auth-oidc-client", "rxjs"]
 }

@@ -441,7 +441,7 @@ writeDoc('packages-web/index.md', '# Web Packages\n\nNarrative Angular and SDK p
 writeDoc('tools/index.md', '# Tools\n\nInternal workspace tooling published under `@stynx-internal/*`: the scaffolder, shared ESLint config, migration linter, and TS config.\n', 'Tools');
 writeDoc('specifications/index.md', '# Specifications\n\nNormative and reference documents mirrored from `specs/` when that source directory is present.\n', 'Specifications');
 writeDoc('architecture-decisions/index.md', '# Architecture Decisions\n\nArchitecture Decision Records mirrored from `specs/` when that source directory is present.\n', 'Architecture Decisions');
-writeDoc('api-reference/index.md', '# API Reference\n\nGenerated API reference for every `@stynx-nyx/*` and `@stynx-web/*` package.\n', 'API Reference');
+writeDoc('api-reference/index.md', '# API Reference\n\nGenerated API reference for every `@stynx-nyx/*` and `@stynx-nyx/*` package.\n', 'API Reference');
 writeDoc('templates/index.md', '# Templates\n\nDocumentation templates mirrored from `docs/meta/templates/`.\n', 'Templates');
 writeDoc('rfcs/index.md', '# RFCs\n\nRepository RFCs mirrored for public cross-reference stability.\n', 'RFCs');
 
@@ -510,7 +510,7 @@ writeReadmeDoc(resolve(repoRoot, 'reference/web/README.md'), 'reference/web.md',
   'Reference Web',
 );
 syncPackageReadmes('packages', 'packages', (name) => typeof name === 'string' && name.startsWith('@stynx-nyx/'));
-syncPackageReadmes('packages-web', 'packages-web', (name) => typeof name === 'string' && name.startsWith('@stynx-web/'));
+syncPackageReadmes('packages-web', 'packages-web', (name) => typeof name === 'string' && name.startsWith('@stynx-nyx/'));
 // R15 follow-up: surface tool packages on the published site. All current
 // tools live under @stynx-internal/* (create-stynx-app, eslint-config,
 // migration-linter, tsconfig). Internal scripts without a package.json

@@ -1,8 +1,8 @@
-[**@stynx-web/sdk**](../index.md)
+[**@stynx-nyx/sdk**](../index.md)
 
 ---
 
-[@stynx-web/sdk](../index.md) / hasAnyPermission
+[@stynx-nyx/sdk](../index.md) / hasAnyPermission
 
 # Function: hasAnyPermission()
 

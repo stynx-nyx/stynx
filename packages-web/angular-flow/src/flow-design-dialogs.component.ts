@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
-import { StynxTranslatePipe } from '@stynx-web/angular-i18n';
+import { StynxTranslatePipe } from '@stynx-nyx/angular-i18n';
 import type {
   FlowAgentRule,
   FlowEdge,

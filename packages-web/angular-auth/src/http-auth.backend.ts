@@ -1,8 +1,8 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { STYNX_ANGULAR_OPTIONS } from '@stynx-web/angular';
-import type { StynxAngularModuleOptions } from '@stynx-web/angular';
+import { STYNX_ANGULAR_OPTIONS } from '@stynx-nyx/angular';
+import type { StynxAngularModuleOptions } from '@stynx-nyx/angular';
 import type { StynxAuthBackend, StynxSessionBundle } from './types';
 
 function trimEdgeSlash(value: string): string {

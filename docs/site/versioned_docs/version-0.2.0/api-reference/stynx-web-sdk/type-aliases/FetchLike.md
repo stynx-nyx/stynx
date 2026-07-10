@@ -1,8 +1,8 @@
-[**@stynx-web/sdk**](../index.md)
+[**@stynx-nyx/sdk**](../index.md)
 
 ---
 
-[@stynx-web/sdk](../index.md) / FetchLike
+[@stynx-nyx/sdk](../index.md) / FetchLike
 
 # Type Alias: FetchLike
 

@@ -1,14 +1,14 @@
-# `@stynx-web/angular-tenancy` — Angular tenant switcher + context + header interceptor
+# `@stynx-nyx/angular-tenancy` — Angular tenant switcher + context + header interceptor
 
-`@stynx-web/angular-tenancy` is the Angular multi-tenant package. It provides a tenant-switcher + tenant-picker component, a `TenantContextService` holding the active tenant, and an HTTP interceptor that injects the tenant header into every backend call. Pairs with the backend's [`@stynx-nyx/tenancy`](/docs/packages/tenancy/).
+`@stynx-nyx/angular-tenancy` is the Angular multi-tenant package. It provides a tenant-switcher + tenant-picker component, a `TenantContextService` holding the active tenant, and an HTTP interceptor that injects the tenant header into every backend call. Pairs with the backend's [`@stynx-nyx/tenancy`](/docs/packages/tenancy/).
 
 ## Purpose
 
-Multi-tenant frontends need: a way to switch the active tenant, a place to read the current tenant, and automatic injection of the tenant header so the backend scopes data correctly. `@stynx-web/angular-tenancy` provides all three.
+Multi-tenant frontends need: a way to switch the active tenant, a place to read the current tenant, and automatic injection of the tenant header so the backend scopes data correctly. `@stynx-nyx/angular-tenancy` provides all three.
 
 You reach for it when your app serves users who belong to multiple tenants.
 
-What it does NOT do: it doesn't enforce tenant isolation (the backend RLS does). It doesn't manage tenant lifecycle (admin endpoints + `@stynx-web/angular-iam` do).
+What it does NOT do: it doesn't enforce tenant isolation (the backend RLS does). It doesn't manage tenant lifecycle (admin endpoints + `@stynx-nyx/angular-iam` do).
 
 ## Audience
 
@@ -17,15 +17,15 @@ Angular frontend developers building multi-tenant UIs.
 ## Install
 
 ```bash
-pnpm add @stynx-web/angular-tenancy
+pnpm add @stynx-nyx/angular-tenancy
 ```
 
-**Peer dependencies:** `@angular/core` `^18`, `@stynx-web/angular` `^1`, `@stynx-web/sdk` `^1`.
+**Peer dependencies:** `@angular/core` `^18`, `@stynx-nyx/angular` `^1`, `@stynx-nyx/sdk` `^1`.
 
 ## Quick start
 
 ```ts
-import { provideTenancy } from '@stynx-web/angular-tenancy';
+import { provideTenancy } from '@stynx-nyx/angular-tenancy';
 
 export const appConfig = { providers: [provideTenancy()] };
 ```
@@ -87,7 +87,7 @@ export const appConfig = { providers: [provideTenancy()] };
 ### Example 2 — reading current tenant in a component
 
 ```ts
-import { TenantContextService } from '@stynx-web/angular-tenancy';
+import { TenantContextService } from '@stynx-nyx/angular-tenancy';
 
 @Component({
   /* ... */
@@ -112,9 +112,9 @@ export class Dashboard {
 
 ## Related packages
 
-- [`@stynx-web/angular`](/docs/packages-web/angular/) — the foundation (also ships a base tenant context service).
+- [`@stynx-nyx/angular`](/docs/packages-web/angular/) — the foundation (also ships a base tenant context service).
 - [`@stynx-nyx/tenancy`](/docs/packages/tenancy/) — the backend counterpart.
-- [`@stynx-web/angular-iam`](/docs/packages-web/angular-iam/) — tenant admin management.
+- [`@stynx-nyx/angular-iam`](/docs/packages-web/angular-iam/) — tenant admin management.
 
 ## TypeDoc reference
 

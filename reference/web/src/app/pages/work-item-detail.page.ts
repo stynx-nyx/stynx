@@ -2,7 +2,7 @@ import { DatePipe, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import type { OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { StynxBannerComponent } from '@stynx-web/angular-ui';
+import { StynxBannerComponent } from '@stynx-nyx/angular-ui';
 import { ReferenceWebApiService } from '../core/reference-web-api.service';
 import type { WorkItem } from '../core/reference-models';
 

@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, Component, Input, computed, inject, signal } from '@angular/core';
-import { StynxTranslatePipe } from '@stynx-web/angular-i18n';
+import { StynxTranslatePipe } from '@stynx-nyx/angular-i18n';
 import {
   EmptyStateComponent,
   StynxBannerComponent,
   StynxIconComponent,
   StynxLoadingSpinnerComponent,
   StynxPaginationComponent,
-} from '@stynx-web/angular-ui';
+} from '@stynx-nyx/angular-ui';
 import { finalize } from 'rxjs';
 import { AuditApiService } from './audit-api.service';
 import { StynxAuditHashIntegrityBadgeComponent } from './audit-hash-integrity-badge.component';

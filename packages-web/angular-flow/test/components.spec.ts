@@ -84,7 +84,7 @@ function createInbox(api: FlowApiService, tenantChanged: Subject<void>): StynxFl
   return runInInjectionContext(injector, () => new StynxFlowMyTasksInboxComponent());
 }
 
-describe('@stynx-web/angular-flow components', () => {
+describe('@stynx-nyx/angular-flow components', () => {
   it('binds graph designer inputs to route-like scope and graph ids', async () => {
     const api = createApi();
     const component = createWithApi(api, () => new StynxFlowGraphDesignerComponent());

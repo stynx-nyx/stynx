@@ -1,8 +1,8 @@
-[**@stynx-web/angular-trash**](../index.md)
+[**@stynx-nyx/angular-trash**](../index.md)
 
 ---
 
-[@stynx-web/angular-trash](../index.md) / STYNX_DEFAULT_TRASH_KINDS
+[@stynx-nyx/angular-trash](../index.md) / STYNX_DEFAULT_TRASH_KINDS
 
 # Variable: STYNX_DEFAULT_TRASH_KINDS
 

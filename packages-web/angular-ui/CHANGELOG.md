@@ -1,4 +1,4 @@
-# @stynx-web/angular-ui
+# @stynx-nyx/angular-ui
 
 ## 1.0.0
 
@@ -9,4 +9,4 @@
 ### Patch Changes
 
 - Updated dependencies [8f6df55]
-  - @stynx-web/angular@1.0.0
+  - @stynx-nyx/angular@1.0.0

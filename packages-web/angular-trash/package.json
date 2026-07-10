@@ -1,15 +1,15 @@
 {
-  "name": "@stynx-web/angular-trash",
+  "name": "@stynx-nyx/angular-trash",
   "version": "1.0.0",
   "description": "Angular 20/21 trash-list primitives for archive-aware STYNX resources",
   "exports": {
     ".": {
-      "types": "./dist/types/stynx-web-angular-trash.d.ts",
-      "default": "./dist/fesm2022/stynx-web-angular-trash.mjs"
+      "types": "./dist/types/stynx-nyx-angular-trash.d.ts",
+      "default": "./dist/fesm2022/stynx-nyx-angular-trash.mjs"
     },
     "./testing": {
-      "types": "./dist/types/stynx-web-angular-trash-testing.d.ts",
-      "default": "./dist/fesm2022/stynx-web-angular-trash-testing.mjs"
+      "types": "./dist/types/stynx-nyx-angular-trash-testing.d.ts",
+      "default": "./dist/fesm2022/stynx-nyx-angular-trash-testing.mjs"
     },
     "./catalogs/en.json": {
       "default": "./dist/catalogs/en.json"
@@ -39,10 +39,10 @@
     "normalize:dist-exports": "node -e \"const fs=require('node:fs');const path='dist/package.json';const pkg=JSON.parse(fs.readFileSync(path,'utf8'));pkg.exports['./catalogs/en.json']={default:'./catalogs/en.json'};pkg.exports['./catalogs/pt-BR.json']={default:'./catalogs/pt-BR.json'};fs.writeFileSync(path, JSON.stringify(pkg,null,2)+'\\n');\""
   },
   "dependencies": {
-    "@stynx-web/angular-auth": "workspace:*",
-    "@stynx-web/angular-i18n": "workspace:*",
-    "@stynx-web/angular-ui": "workspace:*",
-    "@stynx-web/sdk": "workspace:*",
+    "@stynx-nyx/angular-auth": "workspace:*",
+    "@stynx-nyx/angular-i18n": "workspace:*",
+    "@stynx-nyx/angular-ui": "workspace:*",
+    "@stynx-nyx/sdk": "workspace:*",
     "rxjs": "^7.8.2"
   },
   "peerDependencies": {

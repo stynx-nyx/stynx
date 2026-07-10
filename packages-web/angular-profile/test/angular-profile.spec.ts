@@ -5,10 +5,10 @@ import { FormBuilder } from '@angular/forms';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { Router, RouterOutlet, provideRouter } from '@angular/router';
-import { ErrorBannerService } from '@stynx-web/angular';
-import { StynxI18nService } from '@stynx-web/angular-i18n';
-import { STYNX_OIDC_ADAPTER } from '@stynx-web/angular-auth';
-import { StynxToastService } from '@stynx-web/angular-ui';
+import { ErrorBannerService } from '@stynx-nyx/angular';
+import { StynxI18nService } from '@stynx-nyx/angular-i18n';
+import { STYNX_OIDC_ADAPTER } from '@stynx-nyx/angular-auth';
+import { StynxToastService } from '@stynx-nyx/angular-ui';
 import { of, throwError } from 'rxjs';
 import {
   StynxChangePasswordHandoffComponent,
@@ -20,7 +20,7 @@ import { StynxProfileSecurityComponent } from '../src/profile-security.component
 import { ProfileService } from '../src/profile.service';
 import { profileRoutes } from '../src/routes';
 import { UnsavedChangesRegistry } from '../src/unsaved-changes.guard';
-import type { StynxHostedAuthAction } from '@stynx-web/angular-auth';
+import type { StynxHostedAuthAction } from '@stynx-nyx/angular-auth';
 import { renderComponent } from './support/test-bed';
 
 function createWithFormBuilder<T>(factory: () => T, providers: Provider[] = []): T {
@@ -74,7 +74,7 @@ afterEach(() => {
   TestBed.resetTestingModule();
 });
 
-describe('@stynx-web/angular-profile', () => {
+describe('@stynx-nyx/angular-profile', () => {
   it('renders profile and preferences forms with translated labels and DOM validation state', async () => {
     const i18n = {
       locale: () => 'en',

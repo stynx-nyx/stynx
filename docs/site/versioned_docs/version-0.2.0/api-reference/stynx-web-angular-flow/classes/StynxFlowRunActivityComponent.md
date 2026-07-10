@@ -1,8 +1,8 @@
-[**@stynx-web/angular-flow**](../index.md)
+[**@stynx-nyx/angular-flow**](../index.md)
 
 ---
 
-[@stynx-web/angular-flow](../index.md) / StynxFlowRunActivityComponent
+[@stynx-nyx/angular-flow](../index.md) / StynxFlowRunActivityComponent
 
 # Class: StynxFlowRunActivityComponent
 

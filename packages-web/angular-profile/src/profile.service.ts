@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
-import { STYNX_ANGULAR_OPTIONS } from '@stynx-web/angular';
-import { DocumentService, STYNX_UPLOAD_EXECUTOR } from '@stynx-web/angular-storage';
+import { STYNX_ANGULAR_OPTIONS } from '@stynx-nyx/angular';
+import { DocumentService, STYNX_UPLOAD_EXECUTOR } from '@stynx-nyx/angular-storage';
 import { from, tap } from 'rxjs';
 import type { Observable } from 'rxjs';
 import { STYNX_PROFILE_CLIENT } from './tokens';
@@ -85,7 +85,7 @@ export class ProfileService {
 
   private async uploadAvatarFile(file: File): Promise<StynxAvatarUploadResult> {
     if (!this.documents || !this.uploadExecutor) {
-      throw new Error('Avatar upload requires @stynx-web/angular-storage providers.');
+      throw new Error('Avatar upload requires @stynx-nyx/angular-storage providers.');
     }
 
     const init = await this.documents.initiate({

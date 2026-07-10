@@ -1,8 +1,8 @@
-[**@stynx-web/angular-iam**](../index.md)
+[**@stynx-nyx/angular-iam**](../index.md)
 
 ---
 
-[@stynx-web/angular-iam](../index.md) / StynxEffectivePermissions
+[@stynx-nyx/angular-iam](../index.md) / StynxEffectivePermissions
 
 # Interface: StynxEffectivePermissions
 

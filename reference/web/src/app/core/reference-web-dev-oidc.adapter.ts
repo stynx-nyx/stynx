@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import type { AuthOptions, LoginResponse } from 'angular-auth-oidc-client';
-import type { StynxOidcAdapter } from '@stynx-web/angular-auth';
+import type { StynxOidcAdapter } from '@stynx-nyx/angular-auth';
 import { environment } from '../../environments/environment';
 
 type ReferenceLoginState = {

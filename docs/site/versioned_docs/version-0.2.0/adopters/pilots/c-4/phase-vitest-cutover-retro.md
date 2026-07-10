@@ -30,7 +30,7 @@ file. Baselines snapshotted in
 
 Mutation re-baseline (verified): `@stynx-nyx/contracts` post-cutover **83.33%** —
 identical to the pre-cutover value. The other three baselined packages
-(`@stynx-nyx/core`, `@stynx-nyx/audit`, `@stynx-web/angular-tenancy`) should be
+(`@stynx-nyx/core`, `@stynx-nyx/audit`, `@stynx-nyx/angular-tenancy`) should be
 re-measured on the new runner; protocol in
 [`vitest-cutover-baselines/README.md`](vitest-cutover-baselines/README.md).
 

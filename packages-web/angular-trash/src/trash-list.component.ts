@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input, computed, inject, signal } from '@angular/core';
-import { StynxSessionService } from '@stynx-web/angular-auth';
-import { StynxTranslatePipe } from '@stynx-web/angular-i18n';
+import { StynxSessionService } from '@stynx-nyx/angular-auth';
+import { StynxTranslatePipe } from '@stynx-nyx/angular-i18n';
 import {
   EmptyStateComponent,
   StynxBannerComponent,
@@ -8,7 +8,7 @@ import {
   StynxPaginationComponent,
   StynxTableComponent,
   StynxToastService,
-} from '@stynx-web/angular-ui';
+} from '@stynx-nyx/angular-ui';
 import { STYNX_DEFAULT_TRASH_KINDS, STYNX_TRASH_ADAPTER } from './tokens';
 import type {
   StynxTrashAdapter,

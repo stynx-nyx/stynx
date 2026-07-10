@@ -1,8 +1,8 @@
-[**@stynx-web/sdk**](../index.md)
+[**@stynx-nyx/sdk**](../index.md)
 
 ---
 
-[@stynx-web/sdk](../index.md) / FrontendTokens
+[@stynx-nyx/sdk](../index.md) / FrontendTokens
 
 # Interface: FrontendTokens
 

@@ -3,8 +3,8 @@ import { createVitestConfig } from '../../tools/repo-config/vitest.base.mjs';
 
 export default createVitestConfig({
   packageDir: __dirname,
-  packageName: '@stynx-web/sdk',
+  packageName: '@stynx-nyx/sdk',
   alias: {
-    '@stynx-web/sdk': resolve(__dirname, 'src/index.ts'),
+    '@stynx-nyx/sdk': resolve(__dirname, 'src/index.ts'),
   },
 });

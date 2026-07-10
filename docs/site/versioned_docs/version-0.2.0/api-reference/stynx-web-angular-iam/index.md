@@ -1,8 +1,8 @@
-**@stynx-web/angular-iam**
+**@stynx-nyx/angular-iam**
 
 ---
 
-# @stynx-web/angular-iam
+# @stynx-nyx/angular-iam
 
 ## Classes
 

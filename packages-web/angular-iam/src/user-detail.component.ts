@@ -1,13 +1,13 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, computed, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { StynxI18nService, StynxTranslatePipe } from '@stynx-web/angular-i18n';
+import { StynxI18nService, StynxTranslatePipe } from '@stynx-nyx/angular-i18n';
 import {
   EmptyStateComponent,
   StynxBannerComponent,
   StynxIconComponent,
   StynxLoadingSpinnerComponent,
   StynxToastService,
-} from '@stynx-web/angular-ui';
+} from '@stynx-nyx/angular-ui';
 import { forkJoin } from 'rxjs';
 import { IamApiService } from './iam-api.service';
 import { StynxUserDisableConfirmDialogComponent } from './user-disable-confirm-dialog.component';

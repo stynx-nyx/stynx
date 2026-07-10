@@ -1,15 +1,15 @@
 ---
-title: '@stynx-web/angular-flow'
+title: '@stynx-nyx/angular-flow'
 ---
 
-# @stynx-web/angular-flow
+# @stynx-nyx/angular-flow
 
 Angular standalone components and route helpers for STYNX Flow design, runtime, fill execution, task assignment, waivers, run activity, and analytics. The package is host-mounted: apps provide a configured Flow client, then mount `flowRoutes()` under any route prefix.
 
 ## Install
 
 ```bash
-pnpm add @stynx-web/angular-flow
+pnpm add @stynx-nyx/angular-flow
 ```
 
 ## Peer Dependencies
@@ -21,9 +21,9 @@ pnpm add @stynx-web/angular-flow
 ## Use
 
 ```ts
-import { provideStynxDefaults } from '@stynx-web/angular';
-import { flowRoutes, provideStynxFlow } from '@stynx-web/angular-flow';
-import { StynxSdkClient } from '@stynx-web/sdk';
+import { provideStynxDefaults } from '@stynx-nyx/angular';
+import { flowRoutes, provideStynxFlow } from '@stynx-nyx/angular-flow';
+import { StynxSdkClient } from '@stynx-nyx/sdk';
 
 const client = new StynxSdkClient({ baseUrl: '/api', fetchFn: fetch });
 
@@ -46,11 +46,11 @@ export const routes = [{ path: 'flow', children: flowRoutes() }];
 - Services/tokens: `FlowApiService`, `STYNX_FLOW_CLIENT`, `STYNX_FLOW_TENANT_CHANGED`.
 - Components: graph canvas/designer/dialogs, forms, fills, tasks, waivers, run activity, dashboard, open tasks, run summary, empty state.
 - Types: Flow design/runtime/form/fill/task/waiver/analytics client and model types.
-- Secondary exports: `@stynx-web/angular-flow/testing`, locale catalogs.
+- Secondary exports: `@stynx-nyx/angular-flow/testing`, locale catalogs.
 
 ## See Also
 
-- [`@stynx-web/angular-auth`](/docs/packages-web/angular-auth)
-- [`@stynx-web/angular-storage`](/docs/packages-web/angular-storage)
-- [`@stynx-web/angular-ui`](/docs/packages-web/angular-ui)
+- [`@stynx-nyx/angular-auth`](/docs/packages-web/angular-auth)
+- [`@stynx-nyx/angular-storage`](/docs/packages-web/angular-storage)
+- [`@stynx-nyx/angular-ui`](/docs/packages-web/angular-ui)
 - [Reference app Flow demo](/docs/reference/web#demo-surfaces)

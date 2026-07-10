@@ -1,8 +1,8 @@
-[**@stynx-web/sdk**](../index.md)
+[**@stynx-nyx/sdk**](../index.md)
 
 ---
 
-[@stynx-web/sdk](../index.md) / CreateWorkItemLockDto
+[@stynx-nyx/sdk](../index.md) / CreateWorkItemLockDto
 
 # Type Alias: CreateWorkItemLockDto
 

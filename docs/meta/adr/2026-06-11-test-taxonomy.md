@@ -128,7 +128,7 @@ available to future system tests, not a claim about current tagged coverage.
 ## Why Playwright lives under `reference/web`
 
 `reference/web` is the consumer-shaped Angular application that composes
-`@stynx-web/*` packages against reference API behavior. Browser e2e belongs
+`@stynx-nyx/*` packages against reference API behavior. Browser e2e belongs
 there because the meaningful system boundary is the running SPA plus its
 reference backend surface, not an isolated package library.
 

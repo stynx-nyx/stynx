@@ -43,7 +43,7 @@ Artifacts: `coverage/parity.json` (unit), `coverage/parity-int.json` (integratio
 
 ### Test deps
 
-- Inlined: `/@nestjs/`, `/@aws-sdk/`, `/@stynx\//`, `/@stynx-web\//` (so `vi.mock` can intercept their exports and so `require()` and `import` resolve to the same module instance).
+- Inlined: `/@nestjs/`, `/@aws-sdk/`, `/@stynx\//`, `/@stynx-nyx\//` (so `vi.mock` can intercept their exports and so `require()` and `import` resolve to the same module instance).
 - Aliased per-package: `drizzle-orm/entity` → shim (only when `patchDrizzle: true` is passed).
 
 ### Jest-side polyfill (`tools/repo-config/jest.setup.vi-shim.cjs`)
@@ -80,7 +80,7 @@ Used as `setupFiles` in `packages/&#123;auth,core,sessions,testing&#125;/jest.co
 | `packages/testing/test/create-test-app.unit.spec.ts`                 | Wrapped all top-level mocks + `class FakeContainer` in a single `vi.hoisted(...)` block                                | Same                                                                                                                                                                                |
 | `packages/auth/test/unit/validators.spec.ts`                         | Standalone `jest.requireActual` switched to a runner-detecting `vi.importActual` / `jest.requireActual` bridge         | Vitest needs `await vi.importActual` (sync `vi.importActual` doesn't exist); Jest needs sync `jest.requireActual` with spec-relative resolution.                                    |
 | `packages/data/test/unit/migration-runner.spec.ts`                   | `jest.doMock(...)` + `require(...)` pattern rewritten to `jest.doMock(...)` + `await import(...)`                      | Vitest's hoister and module graph need a dynamic import after `vi.doMock`. Jest accepts the dynamic import because the parity script sets `NODE_OPTIONS=--experimental-vm-modules`. |
-| `domain/demo-bookmark/api/test/bookmark*.service.spec.ts`            | `require('@stynx-nyx/core').RequestContext` → static `import &#123; RequestContext &#125; from '@stynx-nyx/core'`              | The `require` produced a different class identity than NestJS DI registered (CJS-vs-ESM dual evaluation).                                                                           |
+| `domain/demo-bookmark/api/test/bookmark*.service.spec.ts`            | `require('@stynx-nyx/core').RequestContext` → static `import &#123; RequestContext &#125; from '@stynx-nyx/core'`      | The `require` produced a different class identity than NestJS DI registered (CJS-vs-ESM dual evaluation).                                                                           |
 | `reference/api/test/integration/reference-api.unit-coverage.spec.ts` | `jest.isolateModules(() =&gt; &#123; require(...) &#125;)` → `jest.resetModules(); await import(...)` in an async test | `vi.isolateModules` doesn't exist in Vitest 3 and `require()` inside the callback bypassed Vite's module graph.                                                                     |
 
 Jest configs gained one `setupFiles` entry each (`packages/&#123;auth,core,sessions,testing&#125;/jest.config.cjs`) to load the `vi` polyfill.

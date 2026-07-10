@@ -1,8 +1,8 @@
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
-import { StynxI18nService } from '@stynx-web/angular-i18n';
-import { StynxToastService } from '@stynx-web/angular-ui';
+import { StynxI18nService } from '@stynx-nyx/angular-i18n';
+import { StynxToastService } from '@stynx-nyx/angular-ui';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { DocumentService } from '../src/document.service';
 import { StynxDocumentUploadComponent } from '../src/document-upload.component';
@@ -27,7 +27,7 @@ afterEach(() => {
   TestBed.resetTestingModule();
 });
 
-describe('@stynx-web/angular-storage upload flow depth', () => {
+describe('@stynx-nyx/angular-storage upload flow depth', () => {
   it('initiates uploads with the exact presign shape and forwards signed headers to the executor', async () => {
     const documents = {
       complete: vi.fn(async () => ({ id: 'doc-1', scanStatus: 'completed' as const })),

@@ -1,1 +1,1 @@
-export { TenantInterceptor } from '@stynx-web/angular-tenancy';
+export { TenantInterceptor } from '@stynx-nyx/angular-tenancy';

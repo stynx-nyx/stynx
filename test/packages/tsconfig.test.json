@@ -15,7 +15,7 @@
       "@stynx-nyx/sessions": ["../../packages/sessions/src/index.ts"],
       "@stynx-nyx/storage": ["../../packages/storage/src/index.ts"],
       "@stynx-nyx/contracts": ["../../packages/contracts/src/index.ts"],
-      "@stynx-web/sdk": ["../../packages-web/sdk/src/index.ts"]
+      "@stynx-nyx/sdk": ["../../packages-web/sdk/src/index.ts"]
     },
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true

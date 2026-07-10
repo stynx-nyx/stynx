@@ -1,8 +1,8 @@
-[**@stynx-web/angular**](../index.md)
+[**@stynx-nyx/angular**](../index.md)
 
 ---
 
-[@stynx-web/angular](../index.md) / StynxAuditConfig
+[@stynx-nyx/angular](../index.md) / StynxAuditConfig
 
 # Type Alias: StynxAuditConfig
 

@@ -1,8 +1,8 @@
-**@stynx-web/angular-audit**
+**@stynx-nyx/angular-audit**
 
 ---
 
-# @stynx-web/angular-audit
+# @stynx-nyx/angular-audit
 
 ## Classes
 

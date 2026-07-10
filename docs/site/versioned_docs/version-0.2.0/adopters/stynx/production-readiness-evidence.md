@@ -34,15 +34,15 @@ pnpm typecheck
 Critical frontend packages must keep deterministic package tests and fixture
 exports where applicable:
 
-- `@stynx-web/sdk`
-- `@stynx-web/angular`
-- `@stynx-web/angular-auth`
-- `@stynx-web/angular-audit`
-- `@stynx-web/angular-flow`
-- `@stynx-web/angular-i18n`
-- `@stynx-web/angular-storage`
-- `@stynx-web/angular-tenancy`
-- `@stynx-web/angular-ui`
+- `@stynx-nyx/sdk`
+- `@stynx-nyx/angular`
+- `@stynx-nyx/angular-auth`
+- `@stynx-nyx/angular-audit`
+- `@stynx-nyx/angular-flow`
+- `@stynx-nyx/angular-i18n`
+- `@stynx-nyx/angular-storage`
+- `@stynx-nyx/angular-tenancy`
+- `@stynx-nyx/angular-ui`
 
 The reference web app must keep Playwright and axe-based browser coverage wired
 through `pnpm frontend:a11y-gate` and its own `pnpm --filter

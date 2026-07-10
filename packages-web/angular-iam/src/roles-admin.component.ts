@@ -1,14 +1,14 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Output, computed, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { StynxI18nService, StynxTranslatePipe } from '@stynx-web/angular-i18n';
+import { StynxI18nService, StynxTranslatePipe } from '@stynx-nyx/angular-i18n';
 import {
   EmptyStateComponent,
   StynxBannerComponent,
   StynxIconComponent,
   StynxLoadingSpinnerComponent,
   StynxToastService,
-} from '@stynx-web/angular-ui';
+} from '@stynx-nyx/angular-ui';
 import { IamApiService } from './iam-api.service';
 import { StynxRoleCreateDialogComponent } from './role-create-dialog.component';
 import type { StynxCloneRoleRequest, StynxCreateRoleRequest, StynxRole } from './types';

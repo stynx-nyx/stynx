@@ -1,6 +1,6 @@
 import type { Type } from '@angular/core';
 import type { Route, Routes } from '@angular/router';
-import { stynxPermissionGuard } from '@stynx-web/angular-auth';
+import { stynxPermissionGuard } from '@stynx-nyx/angular-auth';
 import { StynxGroupDetailComponent } from './group-detail.component';
 import { StynxGroupsAdminComponent } from './groups-admin.component';
 import { StynxRoleDetailComponent } from './role-detail.component';

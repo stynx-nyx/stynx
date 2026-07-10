@@ -1,8 +1,8 @@
-[**@stynx-web/angular-i18n**](../index.md)
+[**@stynx-nyx/angular-i18n**](../index.md)
 
 ---
 
-[@stynx-web/angular-i18n](../index.md) / STYNX_I18N_OPTIONS
+[@stynx-nyx/angular-i18n](../index.md) / STYNX_I18N_OPTIONS
 
 # Variable: STYNX_I18N_OPTIONS
 

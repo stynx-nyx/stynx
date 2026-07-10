@@ -46,7 +46,7 @@ The agent runs each against the foreign codebase and records the answer.
 5. Are tenants currently expressed as a column on most domain tables (vs schema-per-tenant or DB-per-tenant)?
 6. Is identity already federated to Cognito, or is the team willing to adopt Cognito?
 7. Is the existing soft-delete (if any) implemented with `deleted_at` on live tables (the audit-anti-pattern STYNX rejects)?
-8. Is the frontend Angular, or is the team willing to either (a) migrate or (b) consume `@stynx-web/sdk` from a non-Angular client?
+8. Is the frontend Angular, or is the team willing to either (a) migrate or (b) consume `@stynx-nyx/sdk` from a non-Angular client?
 9. Is the team prepared to adopt strict CI gates (commitlint, doctor, migration linter, branch protection)?
 10. Is there an LGPD/GDPR data subject requirement that justifies the privacy pipeline cost?
 

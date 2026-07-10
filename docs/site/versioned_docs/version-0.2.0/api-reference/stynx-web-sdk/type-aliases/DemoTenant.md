@@ -1,8 +1,8 @@
-[**@stynx-web/sdk**](../index.md)
+[**@stynx-nyx/sdk**](../index.md)
 
 ---
 
-[@stynx-web/sdk](../index.md) / DemoTenant
+[@stynx-nyx/sdk](../index.md) / DemoTenant
 
 # Type Alias: DemoTenant
 

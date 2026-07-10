@@ -1,7 +1,7 @@
 import { createStrykerConfig } from '../../tools/stryker/base.mjs';
 
 export default createStrykerConfig({
-  packageName: '@stynx-web/angular-flow',
+  packageName: '@stynx-nyx/angular-flow',
   mutate: [
     'src/analytics.component.ts',
     'src/flow-api.service.ts',

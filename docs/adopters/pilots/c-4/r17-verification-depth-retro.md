@@ -31,10 +31,10 @@ Available local evidence keeps the E2 watchlist above its configured breaks:
 
 | Package                      | Tier break | Available score | Source                                                        |
 | ---------------------------- | ---------: | --------------: | ------------------------------------------------------------- |
-| `@stynx-web/angular-auth`    |         90 |           90.79 | W04 local full-mode Stryker, `reports/mutation/mutation.json` |
-| `@stynx-web/angular-profile` |         85 |           89.69 | W04 local full-mode Stryker, `reports/mutation/mutation.json` |
-| `@stynx-nyx/health`              |         90 |          100.00 | W02 local full-mode Stryker                                   |
-| `@stynx-web/angular-trash`   |         90 |           95.45 | W02 local full-mode Stryker                                   |
+| `@stynx-nyx/angular-auth`    |         90 |           90.79 | W04 local full-mode Stryker, `reports/mutation/mutation.json` |
+| `@stynx-nyx/angular-profile` |         85 |           89.69 | W04 local full-mode Stryker, `reports/mutation/mutation.json` |
+| `@stynx-nyx/health`          |         90 |          100.00 | W02 local full-mode Stryker                                   |
+| `@stynx-nyx/angular-trash`   |         90 |           95.45 | W02 local full-mode Stryker                                   |
 
 The full 31-package GitHub Actions mutation dispatch was not validly reverified for this exact patch because the working tree is uncommitted. Dispatching `hardening.yml` now would run a branch ref that does not contain these local edits. The after-baseline records available local artifacts and W02/W04 evidence without changing any tiers.
 

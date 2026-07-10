@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
-import { TenantContextService } from '@stynx-web/angular';
-import { StynxSessionService } from '@stynx-web/angular-auth';
+import { TenantContextService } from '@stynx-nyx/angular';
+import { StynxSessionService } from '@stynx-nyx/angular-auth';
 
 @Component({
   selector: 'app-root',

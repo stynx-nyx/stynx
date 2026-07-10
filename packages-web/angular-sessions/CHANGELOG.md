@@ -1,4 +1,4 @@
-# @stynx-web/angular-sessions
+# @stynx-nyx/angular-sessions
 
 ## 1.0.0
 
@@ -9,6 +9,6 @@
 ### Patch Changes
 
 - Updated dependencies [8f6df55]
-  - @stynx-web/angular@1.0.0
-  - @stynx-web/angular-auth@1.0.0
-  - @stynx-web/angular-ui@1.0.0
+  - @stynx-nyx/angular@1.0.0
+  - @stynx-nyx/angular-auth@1.0.0
+  - @stynx-nyx/angular-ui@1.0.0

@@ -1,8 +1,8 @@
-[**@stynx-web/angular-flow**](../index.md)
+[**@stynx-nyx/angular-flow**](../index.md)
 
 ---
 
-[@stynx-web/angular-flow](../index.md) / FlowDashboardAnalytics
+[@stynx-nyx/angular-flow](../index.md) / FlowDashboardAnalytics
 
 # Interface: FlowDashboardAnalytics
 

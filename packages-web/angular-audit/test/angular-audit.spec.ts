@@ -4,7 +4,7 @@ import {
   Injector,
   runInInjectionContext,
 } from '@angular/core';
-import type { StynxSdkClient } from '@stynx-web/sdk';
+import type { StynxSdkClient } from '@stynx-nyx/sdk';
 import { firstValueFrom } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
 import {
@@ -107,7 +107,7 @@ function createService(client: StynxSdkClient): AuditApiService {
   return runInInjectionContext(injector, () => new AuditApiService());
 }
 
-describe('@stynx-web/angular-audit', () => {
+describe('@stynx-nyx/angular-audit', () => {
   it('exports the audit SDK client token through the public entrypoint', () => {
     expect(STYNX_AUDIT_CLIENT).toBeInstanceOf(InjectionToken);
     expect(`${STYNX_AUDIT_CLIENT}`).toBe('InjectionToken STYNX_AUDIT_CLIENT');

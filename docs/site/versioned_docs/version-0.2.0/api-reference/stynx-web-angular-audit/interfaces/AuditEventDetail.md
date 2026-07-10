@@ -1,8 +1,8 @@
-[**@stynx-web/angular-audit**](../index.md)
+[**@stynx-nyx/angular-audit**](../index.md)
 
 ---
 
-[@stynx-web/angular-audit](../index.md) / AuditEventDetail
+[@stynx-nyx/angular-audit](../index.md) / AuditEventDetail
 
 # Interface: AuditEventDetail
 

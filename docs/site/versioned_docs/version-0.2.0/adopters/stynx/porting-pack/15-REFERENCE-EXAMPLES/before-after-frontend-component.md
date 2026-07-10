@@ -9,7 +9,7 @@
 
 This example ports an Angular page that manually appends bearer and tenant
 headers. The STYNX version delegates auth replay, request IDs, tenant headers,
-permission gating, and document upload to `@stynx-web/*` packages.
+permission gating, and document upload to `@stynx-nyx/*` packages.
 
 ---
 
@@ -151,24 +151,24 @@ import { CommonModule, NgFor } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { importProvidersFrom } from '@angular/core';
-import { StynxAngularModule } from '@stynx-web/angular';
+import { StynxAngularModule } from '@stynx-nyx/angular';
 import {
   StynxAngularAuthModule,
   StynxHasPermissionDirective,
   StynxSessionService,
-} from '@stynx-web/angular-auth';
+} from '@stynx-nyx/angular-auth';
 import {
   TenantContextService,
   TenantSwitcherComponent,
   type TenantOption,
-} from '@stynx-web/angular-tenancy';
+} from '@stynx-nyx/angular-tenancy';
 import {
   DocumentService,
   STYNX_UPLOAD_EXECUTOR,
   StynxDocumentUploadComponent,
   XhrUploadExecutor,
-} from '@stynx-web/angular-storage';
-import { StynxSdkClient } from '@stynx-web/sdk';
+} from '@stynx-nyx/angular-storage';
+import { StynxSdkClient } from '@stynx-nyx/sdk';
 import { environment } from './environments/environment';
 
 interface InvoiceRow {
@@ -315,7 +315,7 @@ route resolvers can share the same client.]`
    enforcement still lives on backend `@Permission`.
 
 4. **Uploads use the storage package.** `&lt;stynx-document-upload&gt;` performs
-   initiate → presigned S3 PUT → complete through `@stynx-web/angular-storage`;
+   initiate → presigned S3 PUT → complete through `@stynx-nyx/angular-storage`;
    the backend still uses `@stynx-nyx/storage`, satisfying invariant I3.
 
 5. **Idempotency remains explicit at call sites.** STYNX handles replay on the
@@ -325,11 +325,11 @@ route resolvers can share the same client.]`
 
 | Symbol                                                                                          | Package                      | Verified source                             |
 | ----------------------------------------------------------------------------------------------- | ---------------------------- | ------------------------------------------- |
-| `StynxSdkClient`, `AuthProvider`, `TenantProvider`                                              | `@stynx-web/sdk`             | `packages-web/sdk/src/index.ts`             |
-| `StynxAngularModule`                                                                            | `@stynx-web/angular`         | `packages-web/angular/src/index.ts`         |
-| `StynxAngularAuthModule`, `StynxSessionService`, `StynxHasPermissionDirective`                  | `@stynx-web/angular-auth`    | `packages-web/angular-auth/src/index.ts`    |
-| `TenantContextService`, `TenantSwitcherComponent`, `TenantOption`                               | `@stynx-web/angular-tenancy` | `packages-web/angular-tenancy/src/index.ts` |
-| `DocumentService`, `StynxDocumentUploadComponent`, `XhrUploadExecutor`, `STYNX_UPLOAD_EXECUTOR` | `@stynx-web/angular-storage` | `packages-web/angular-storage/src/index.ts` |
+| `StynxSdkClient`, `AuthProvider`, `TenantProvider`                                              | `@stynx-nyx/sdk`             | `packages-web/sdk/src/index.ts`             |
+| `StynxAngularModule`                                                                            | `@stynx-nyx/angular`         | `packages-web/angular/src/index.ts`         |
+| `StynxAngularAuthModule`, `StynxSessionService`, `StynxHasPermissionDirective`                  | `@stynx-nyx/angular-auth`    | `packages-web/angular-auth/src/index.ts`    |
+| `TenantContextService`, `TenantSwitcherComponent`, `TenantOption`                               | `@stynx-nyx/angular-tenancy` | `packages-web/angular-tenancy/src/index.ts` |
+| `DocumentService`, `StynxDocumentUploadComponent`, `XhrUploadExecutor`, `STYNX_UPLOAD_EXECUTOR` | `@stynx-nyx/angular-storage` | `packages-web/angular-storage/src/index.ts` |
 
 ---
 
@@ -337,7 +337,7 @@ route resolvers can share the same client.]`
 
 ```tsx
 import { useEffect, useMemo, useState } from 'react';
-import { StynxSdkClient, type AuthProvider, type TenantProvider } from '@stynx-web/sdk';
+import { StynxSdkClient, type AuthProvider, type TenantProvider } from '@stynx-nyx/sdk';
 
 export function useInvoices(authProvider: AuthProvider, tenantProvider: TenantProvider) {
   const sdk = useMemo(
@@ -362,6 +362,6 @@ export function useInvoices(authProvider: AuthProvider, tenantProvider: TenantPr
 }
 ```
 
-Non-Angular apps should keep their UI framework and use `@stynx-web/sdk` only.
+Non-Angular apps should keep their UI framework and use `@stynx-nyx/sdk` only.
 Do not import Angular packages into React/Vue/Svelte bundles just to get auth
 headers; the SDK has the framework-neutral contract.

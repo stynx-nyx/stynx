@@ -17,7 +17,7 @@ These are stynx-side conventions DEVAI doesn't speak to; they remain authoritati
 
 - `reference/{api,web}/` — reference applications (NestJS API + Angular web) that demonstrate stynx framework usage. Relocated here in C-4 Session S2 (per directive 5.4), analogous to DEVAI's `examples/`.
 - `packages/*` (16 packages, `@stynx-nyx/*`) — backend reusable modules (NestJS-shaped: audit, auth, backend, contracts, core, data, health, i18n, idempotency, logging, privacy, ratelimit, sessions, storage, tenancy, testing).
-- `packages-web/*` (10 packages, `@stynx-web/*`) — Angular reusable modules (sdk, angular, angular-auth, angular-i18n, angular-profile, angular-sessions, angular-storage, angular-tenancy, angular-trash, angular-ui).
+- `packages-web/*` (10 packages, `@stynx-nyx/*`) — Angular reusable modules (sdk, angular, angular-auth, angular-i18n, angular-profile, angular-sessions, angular-storage, angular-tenancy, angular-trash, angular-ui).
 - `tools/*` — internal repo tooling (`@stynx-internal/*`).
 - `domain/*` — DEVAI-scaffolded modules (Phase D output and onward).
 - `infra/cdk/` — AWS CDK infrastructure.

@@ -40,12 +40,12 @@
     "perf": "default"
   },
   "perPackage": {
-    "@stynx-web/angular-audit": { "coverage": "default", "mutation": "tier1" },
-    "@stynx-web/angular-iam": { "coverage": "default", "mutation": "tier1" },
-    "@stynx-web/angular-auth": { "mutation": "tier1" },
-    "@stynx-web/angular-flow": { "mutation": "strict" },
-    "@stynx-web/angular-profile": { "mutation": "strictest" },
-    "@stynx-web/sdk": { "mutation": "tier1" },
+    "@stynx-nyx/angular-audit": { "coverage": "default", "mutation": "tier1" },
+    "@stynx-nyx/angular-iam": { "coverage": "default", "mutation": "tier1" },
+    "@stynx-nyx/angular-auth": { "mutation": "tier1" },
+    "@stynx-nyx/angular-flow": { "mutation": "strict" },
+    "@stynx-nyx/angular-profile": { "mutation": "strictest" },
+    "@stynx-nyx/sdk": { "mutation": "tier1" },
     "@stynx-nyx/audit": { "mutation": "tier1" },
     "@stynx-nyx/auth": { "mutation": "tier1" },
     "@stynx-nyx/backend": { "mutation": "strict" },
@@ -148,7 +148,7 @@
       "levels": ["API", "DB", "E2E"]
     },
     {
-      "packagePattern": "@stynx-web/*",
+      "packagePattern": "@stynx-nyx/*",
       "levels": ["API", "DB", "E2E"]
     },
     {

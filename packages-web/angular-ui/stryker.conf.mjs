@@ -1,7 +1,7 @@
 import { createStrykerConfig } from '../../tools/stryker/base.mjs';
 
 export default createStrykerConfig({
-  packageName: '@stynx-web/angular-ui',
+  packageName: '@stynx-nyx/angular-ui',
   mutate: [
     'src/banner.component.ts',
     'src/confirm-dialog.component.ts',

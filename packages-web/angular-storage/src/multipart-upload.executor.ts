@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import type { Provider } from '@angular/core';
-import { STYNX_ANGULAR_OPTIONS } from '@stynx-web/angular';
+import { STYNX_ANGULAR_OPTIONS } from '@stynx-nyx/angular';
 import {
   STYNX_DEFAULT_MULTIPART_UPLOAD_OPTIONS,
   STYNX_MULTIPART_UPLOAD_OPTIONS,
