@@ -44,7 +44,6 @@ on:
 permissions:
   actions: read
   contents: read
-  security-events: write
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
@@ -62,7 +61,7 @@ jobs:
     outputs:
       evidence_mode: ${{ steps.verify.outputs.evidence_mode }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 0
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
@@ -80,7 +79,7 @@ jobs:
     needs: evidence-gate
     if: ${{ needs.evidence-gate.outputs.evidence_mode != 'true' }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
         with:
@@ -92,12 +91,19 @@ jobs:
       - name: Run Semgrep
         run: semgrep scan --config p/default --config p/secrets --severity ERROR --metrics=off --error --sarif --output semgrep.sarif
 
-      - name: Upload SARIF
+      # SARIF upload to code scanning removed 2026-07-09: this is a private
+      # repo without GitHub Advanced Security, so code scanning can never be
+      # enabled and the upload always failed. Findings remain visible via the
+      # artifact below, and the semgrep step above still fails the job on
+      # ERROR-severity findings.
+      - name: Upload Semgrep SARIF artifact
         if: always()
-        continue-on-error: true
-        uses: github/codeql-action/upload-sarif@7c1e4cf0b20d7c1872b26569c00ba908797a59bf # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          sarif_file: semgrep.sarif
+          name: semgrep-sarif
+          path: semgrep.sarif
+          if-no-files-found: error
+          retention-days: 30
 
   package-policy:
     name: package-policy
@@ -105,7 +111,7 @@ jobs:
     needs: evidence-gate
     if: ${{ needs.evidence-gate.outputs.evidence_mode != 'true' }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
@@ -120,7 +126,7 @@ jobs:
     needs: evidence-gate
     if: ${{ needs.evidence-gate.outputs.evidence_mode != 'true' }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5
         with:
           version: ${{ env.PNPM_VERSION }}
@@ -149,7 +155,7 @@ jobs:
     needs: evidence-gate
     if: ${{ needs.evidence-gate.outputs.evidence_mode != 'true' }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 0
 

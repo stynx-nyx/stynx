@@ -10,7 +10,7 @@ STYNX is a `pnpm` + `Turborepo` monorepo targeting GitHub Packages for the spec-
 
 | Tree                                                           | Purpose                                                                                                                                              |
 | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/*`                                                   | Backend reusable libraries (`@stynx-nyx/*`)                                                                                                              |
+| `packages/*`                                                   | Backend reusable libraries (`@stynx-nyx/*`)                                                                                                          |
 | `packages-web/*`                                               | Frontend reusable libraries (`@stynx-web/*`)                                                                                                         |
 | `reference/{api,web}/`                                         | Reference applications demonstrating framework usage (analogous to DEVAI's `examples/`). Relocated here from `apps/reference-*` in Session S2 (C-4). |
 | `domain/<module>/`                                             | DEVAI-scaffolded modules. First example: `domain/demo-bookmark/` (C-4 Phase D).                                                                      |
@@ -46,7 +46,7 @@ corepack pnpm changeset
 - Package manager: `pnpm@9`
 - Task runner: `turbo`
 - Release manager: `changesets`
-- Registries: GitHub Packages for the current `@stech/*` packages and the future `@stynx-nyx/*` / `@stynx-web/*` scopes
+- Registries: GitHub Packages for the current `@stynx-nyx/*` scope (24 packages published under the `stynx-nyx` org). The `@stynx-web/*` scope is not yet published — it has no owning GitHub org/registry home yet.
 
 ## CI and Release
 

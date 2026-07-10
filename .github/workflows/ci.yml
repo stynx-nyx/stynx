@@ -2,10 +2,16 @@ name: STYNX CI
 
 on:
   pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
   push:
     branches:
       - main
       - 'release/**'
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
   schedule:
     - cron: '17 5 * * *'
 
@@ -28,7 +34,7 @@ jobs:
     outputs:
       evidence_mode: ${{ steps.verify.outputs.evidence_mode }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 0
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
@@ -46,7 +52,7 @@ jobs:
     needs: evidence-gate
     if: ${{ needs.evidence-gate.outputs.evidence_mode != 'true' }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5
         with:
           version: ${{ env.PNPM_VERSION }}
@@ -95,7 +101,7 @@ jobs:
       STYNX_TEST_PG_USER: stynx
       STYNX_TEST_PG_PASSWORD: stynx
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5
         with:
           version: ${{ env.PNPM_VERSION }}
@@ -133,7 +139,7 @@ jobs:
       - install
     if: ${{ needs.evidence-gate.outputs.evidence_mode != 'true' }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5
         with:
           version: ${{ env.PNPM_VERSION }}
@@ -175,7 +181,7 @@ jobs:
       - lint
     if: ${{ needs.evidence-gate.outputs.evidence_mode != 'true' }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5
         with:
           version: ${{ env.PNPM_VERSION }}
@@ -207,7 +213,7 @@ jobs:
       - lint
     if: ${{ needs.evidence-gate.outputs.evidence_mode != 'true' }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5
         with:
           version: ${{ env.PNPM_VERSION }}
@@ -239,7 +245,7 @@ jobs:
       - lint
     if: ${{ needs.evidence-gate.outputs.evidence_mode != 'true' }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5
         with:
           version: ${{ env.PNPM_VERSION }}
@@ -289,7 +295,7 @@ jobs:
       STYNX_TEST_PG_USER: stynx
       STYNX_TEST_PG_PASSWORD: stynx
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5
         with:
           version: ${{ env.PNPM_VERSION }}
@@ -367,7 +373,7 @@ jobs:
       STYNX_TEST_PG_USER: stynx
       STYNX_TEST_PG_PASSWORD: stynx
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5
         with:
           version: ${{ env.PNPM_VERSION }}
@@ -436,8 +442,14 @@ jobs:
         os:
           - ubuntu-latest
           - macos-latest
+        # Cost control (2026-07-09): run the macOS leg only on push to main
+        # and on the daily scheduled run — not on every pull request. The
+        # expression resolves to 'macos-latest' (excluding it) unless the
+        # event is a push to main or a schedule run.
+        exclude:
+          - os: ${{ (!((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'schedule')) && 'macos-latest' || 'no-exclusion' }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5
         with:
           version: ${{ env.PNPM_VERSION }}
@@ -469,7 +481,7 @@ jobs:
       - build
     if: ${{ needs.evidence-gate.outputs.evidence_mode != 'true' }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5
         with:
           version: ${{ env.PNPM_VERSION }}

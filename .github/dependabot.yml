@@ -1,10 +1,16 @@
+# PAUSED 2026-07-09: all update entries have open-pull-requests-limit: 0 for
+# the duration of the alignment cycle. GitHub Actions is billing-locked (CI
+# cannot run) and most open Dependabot PRs are perma-red on
+# ERR_PNPM_OUTDATED_LOCKFILE, so new PRs and rebase churn are suspended
+# without deleting this config. Restore the previous limits (10 for npm
+# entries) once CI is back and the lockfile workflow is fixed.
 version: 2
 updates:
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 0
     groups:
       aws-sdk:
         patterns:
@@ -40,7 +46,7 @@ updates:
     directory: /reference/web
     schedule:
       interval: weekly
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 0
     groups:
       angular:
         patterns:
@@ -66,7 +72,7 @@ updates:
     directory: /reference/api
     schedule:
       interval: weekly
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 0
     groups:
       nest:
         patterns:
@@ -85,7 +91,7 @@ updates:
     directory: /test/db
     schedule:
       interval: weekly
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 0
     groups:
       vitest:
         patterns:
@@ -101,7 +107,7 @@ updates:
     directory: /test/packages
     schedule:
       interval: weekly
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 0
     groups:
       vitest:
         patterns:
@@ -117,3 +123,4 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    open-pull-requests-limit: 0
