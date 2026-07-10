@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/privacy",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Privacy exports, erasure orchestration, and ROPA generation for stynx",
   "main": "dist/privacy/src/index.js",
   "types": "dist/privacy/src/index.d.ts",

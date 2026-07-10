@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/angular-auth",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Angular authentication and session integration for stynx",
   "exports": {
     ".": {

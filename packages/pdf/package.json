@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/pdf",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Server-side PDF generation facade for stynx",
   "main": "dist/pdf/src/index.js",
   "types": "dist/pdf/src/index.d.ts",
@@ -49,7 +49,7 @@
   "peerDependencies": {
     "@nestjs/common": "^11.1.19",
     "@nestjs/core": "^11.1.19",
-    "@stynx-nyx/signature": "^0.1.0",
+    "@stynx-nyx/signature": "^0.2.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2"
   },

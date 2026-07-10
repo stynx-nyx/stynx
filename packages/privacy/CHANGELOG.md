@@ -1,5 +1,11 @@
 # @stynx-nyx/privacy
 
+## 1.0.1
+
+### Patch Changes
+
+- @stynx-nyx/storage@1.0.1
+
 ## 1.0.0
 
 ### Major Changes

@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/backend",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "NestJS shared platform modules for stynx",
   "main": "dist/backend/src/index.js",
   "types": "dist/backend/src/index.d.ts",

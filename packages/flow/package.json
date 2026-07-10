@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/flow",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Tenant-scoped workflow design and runtime primitives for stynx",
   "main": "dist/flow/src/index.js",
   "types": "dist/flow/src/index.d.ts",

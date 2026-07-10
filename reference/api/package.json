@@ -1,7 +1,7 @@
 {
   "name": "@stynx-nyx/reference-api",
   "private": true,
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Reference API app exercising the STYNX backend package family",
   "engines": {
     "node": ">=24 <25"

@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/integration-adapter",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Retry, timeout, idempotency, and circuit-breaker framework for stynx integrations",
   "main": "dist/integration-adapter/src/index.js",
   "types": "dist/integration-adapter/src/index.d.ts",

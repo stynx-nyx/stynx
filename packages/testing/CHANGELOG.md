@@ -1,5 +1,13 @@
 # @stynx-nyx/testing
 
+## 1.0.1
+
+### Patch Changes
+
+- @stynx-nyx/audit@1.0.1
+- @stynx-nyx/auth@1.0.1
+- @stynx-nyx/storage@1.0.1
+
 ## 1.0.0
 
 ### Major Changes
