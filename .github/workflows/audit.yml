@@ -1,0 +1,234 @@
+name: STYNX Weekly Audit
+
+# ADR-CI-ECONOMY Decision 4 — the scheduled full remote audit.
+#
+# The per-PR pipeline (ci.yml) may skip heavy tiers when trusted local
+# evidence covers the commit. This workflow is the periodic recalibration
+# of that inference: once a week (plus on-demand via workflow_dispatch) it
+# re-runs the FULL heavy matrix remotely, for real, with evidence mode
+# deliberately ignored — there is no evidence-gate job here and nothing is
+# skipped on the strength of a local manifest. It also carries the macOS
+# build leg, which is banned from the pull_request hot path (Decision 5.1).
+#
+# Quiescence guard (Decision 4): if no new commits landed on the audited
+# branch since the last successful audit, the scheduled run exits green
+# with a notice instead of burning a full matrix. workflow_dispatch always
+# runs the full matrix.
+#
+# REVOCATION PROCEDURE ON RED (Decision 4, mandatory):
+#   An audit failure means local evidence and remote reality have diverged.
+#   Treat the evidence short-circuit as REVOKED until this workflow is green
+#   again on the audited branch:
+#     1. Empty the trusted-actor allowlist so every run takes the full
+#        fallback path:
+#          gh variable set LOCAL_EVIDENCE_TRUSTED_ACTORS --repo stynx-nyx/stynx --body ""
+#        (an empty list disables evidence mode entirely — reusable gate /
+#        verify-local-evidence.mjs semantics).
+#     2. Fix the divergence; re-run this workflow via workflow_dispatch.
+#     3. Only after a green full audit, restore the allowlist:
+#          gh variable set LOCAL_EVIDENCE_TRUSTED_ACTORS --repo stynx-nyx/stynx --body "<actors>"
+#   Trust is re-earned by a green full run, not by the next green local
+#   manifest.
+
+on:
+  schedule:
+    - cron: '17 5 * * 1' # weekly, Monday 05:17 UTC (never daily — Decision 5.4)
+  workflow_dispatch:
+
+concurrency:
+  group: audit-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read # quiescence guard queries previous audit runs
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  NODE_VERSION: '24'
+  PNPM_VERSION: '9.15.0'
+
+jobs:
+  preflight:
+    name: audit-preflight
+    runs-on: ubuntu-latest
+    outputs:
+      run_audit: ${{ steps.decide.outputs.run_audit }}
+    steps:
+      - name: Decide whether new commits require a full audit
+        id: decide
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            echo "On-demand dispatch: running the full audit matrix."
+            echo "run_audit=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          last_sha="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow audit.yml \
+            --branch "$GITHUB_REF_NAME" --status success --limit 1 \
+            --json headSha --jq '.[0].headSha // empty' || true)"
+          if [ -n "$last_sha" ] && [ "$last_sha" = "$GITHUB_SHA" ]; then
+            echo "::notice title=Weekly audit::No new commits on $GITHUB_REF_NAME since the last successful audit ($last_sha) — green-skipping the heavy matrix (ADR-CI-ECONOMY Decision 4 quiescence guard)."
+            echo "run_audit=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "New commits since last successful audit (last=$last_sha, head=$GITHUB_SHA)."
+            echo "run_audit=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  audit-tier-gate:
+    name: audit-tier-gate
+    runs-on: ubuntu-latest
+    needs: preflight
+    if: ${{ needs.preflight.outputs.run_audit == 'true' }}
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: stynx
+          POSTGRES_USER: stynx
+          POSTGRES_PASSWORD: stynx
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U stynx -d stynx"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      STYNX_TEST_PG_HOST: 127.0.0.1
+      STYNX_TEST_PG_PORT: '5432'
+      STYNX_TEST_PG_USER: stynx
+      STYNX_TEST_PG_PASSWORD: stynx
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            package.json
+            pnpm-workspace.yaml
+            apps/*/package.json
+            docs/package.json
+            packages/*/package.json
+            packages-web/*/package.json
+            test/*/package.json
+            tools/*/package.json
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install Playwright Chromium
+        run: pnpm --filter @stynx-nyx/pdf exec playwright install --with-deps chromium
+      - name: Prepare migrated template database (ADR-CI-ECONOMY Decision 6a)
+        run: node scripts/ci-local/prepare-int-template.mjs --github-env "$GITHUB_ENV"
+      - name: Run comprehensive test gate (evidence ignored)
+        run: pnpm ci:stynx:full
+
+  audit-integration:
+    name: audit-integration
+    runs-on: ubuntu-latest
+    needs: preflight
+    if: ${{ needs.preflight.outputs.run_audit == 'true' }}
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: stynx
+          POSTGRES_USER: stynx
+          POSTGRES_PASSWORD: stynx
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U stynx -d stynx"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://stynx:stynx@127.0.0.1:5432/stynx
+      STYNX_DATABASE_URL: postgresql://stynx:stynx@127.0.0.1:5432/stynx
+      STYNX_TEST_PG_HOST: 127.0.0.1
+      STYNX_TEST_PG_PORT: '5432'
+      STYNX_TEST_PG_USER: stynx
+      STYNX_TEST_PG_PASSWORD: stynx
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            package.json
+            pnpm-workspace.yaml
+            apps/*/package.json
+            docs/package.json
+            packages/*/package.json
+            packages-web/*/package.json
+            test/*/package.json
+            tools/*/package.json
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install postgres client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Apply platform migrations for runtime verification
+        run: |
+          pnpm --filter @stynx-nyx/cli build
+          node packages/cli/dist/cli/src/main.js migrate up --database-url "${DATABASE_URL}"
+      - name: Verify migrated database structure
+        run: pnpm db:verify
+      - name: Apply database DDL and seeds
+        run: bash scripts/db-reset.sh --database-url "${DATABASE_URL}"
+      - name: Run RLS smoke check against live database
+        run: pnpm check:rls-smoke
+      - name: Prepare migrated template database (ADR-CI-ECONOMY Decision 6a)
+        run: node scripts/ci-local/prepare-int-template.mjs --github-env "$GITHUB_ENV"
+      - name: Run STYNX integration tests
+        run: pnpm test:int
+
+  audit-build:
+    name: audit-build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    needs: preflight
+    if: ${{ needs.preflight.outputs.run_audit == 'true' }}
+    strategy:
+      fail-fast: false
+      # The macOS leg lives here — weekly + on-demand only, never on
+      # pull_request (ADR-CI-ECONOMY Decision 5.1: macOS bills at 10× Linux).
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            package.json
+            pnpm-workspace.yaml
+            apps/*/package.json
+            docs/package.json
+            packages/*/package.json
+            packages-web/*/package.json
+            test/*/package.json
+            tools/*/package.json
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build STYNX framework workspaces
+        run: pnpm build
