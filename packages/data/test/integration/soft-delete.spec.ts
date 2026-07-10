@@ -486,13 +486,12 @@ describe('Transaction soft delete operations', () => {
     }
   });
 
-  // Timeout raised from the 30s default: in CI the tier gate runs every
-  // package's test:int concurrently (turbo) against one shared Postgres
-  // service container, and this early test pays fresh-database + full
-  // platform-migration setup under that contention (observed 19-30s+ on
-  // ubuntu-latest while completing in ~0.6s locally — run 29063504092).
-  // The test itself is correct and fast; the budget covers cold CI Postgres.
-  it('archives cascade families, preserves deleted_at, and applies hide semantics', { timeout: 120_000 }, async () => {
+  // Runs at the honest 30s default timeout: the CI tier gate now clones
+  // each suite's database from a pre-migrated template (ADR-CI-ECONOMY
+  // Decision 6a, STYNX_TEST_PG_TEMPLATE), so this test no longer pays a
+  // full concurrent platform-migration pass. Passing at the default is the
+  // proof the shared-Postgres contention is gone; do not re-inflate it.
+  it('archives cascade families, preserves deleted_at, and applies hide semantics', async () => {
     const testDatabase = await createPostgresTestDatabase('stynx_soft_delete_cascade');
     let moduleRef: TestingModule | undefined;
     let adminClient: Client | undefined;

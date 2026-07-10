@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { randomUUID } from 'node:crypto';
 import { userInfo } from 'node:os';
 import { Client, type ClientConfig } from 'pg';
@@ -25,6 +24,19 @@ function localHost(): string | undefined {
 
 function databaseName(prefix: string): string {
   return `${prefix}_${randomUUID().replace(/-/g, '').slice(0, 16)}`;
+}
+
+/**
+ * Optional migrated template database (ADR-CI-ECONOMY Decision 6a). When
+ * set (the CI tier gate exports it after running
+ * scripts/ci-local/prepare-int-template.mjs), new test databases are cloned
+ * from the already-migrated template instead of being created empty, so the
+ * per-suite StynxDataModule migration pass no-ops instead of replaying the
+ * full platform migration set concurrently with every other suite.
+ */
+function templateDatabase(): string | undefined {
+  const template = process.env.STYNX_TEST_PG_TEMPLATE;
+  return template && template.length > 0 ? template : undefined;
 }
 
 function adminConfig(database = 'postgres'): ClientConfig {
@@ -81,9 +93,14 @@ export interface PostgresTestDatabase {
 
 export async function createPostgresTestDatabase(prefix = 'stynx_data'): Promise<PostgresTestDatabase> {
   const database = databaseName(prefix);
+  const template = templateDatabase();
 
   await withClient(adminConfig(), async (client) => {
-    await client.query(`create database "${database}"`);
+    if (template) {
+      await client.query(`create database "${database}" template "${template}"`);
+    } else {
+      await client.query(`create database "${database}"`);
+    }
   });
 
   return {
