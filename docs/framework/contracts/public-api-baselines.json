@@ -92,7 +92,7 @@
         "signature/src/signature.module.d.ts": "6fcc96531fbd65ca310cc7ebe02faaf4cf0d90febba7fbd35911212ff25192b2",
         "signature/src/signature.service.d.ts": "f29b4697c0dd04a30d38c0921811c304b1fdf5a186fa9442ff77a59214e6259f",
         "signature/src/tokens.d.ts": "f14e3e13c2c0fdeec87075c497723fa745561f86d11bba5eba5c0f5bb918d9f3",
-        "signature/src/types.d.ts": "3be150b3170c6364c290f9649e558598e41c08ecb0fa8486b4d2c088ee4d0970",
+        "signature/src/types.d.ts": "fda8329b4e126b20860c0306e48545169d2fa118aed49fd6f732905007f76ade",
         "signature/src/xmldsig/c14n.d.ts": "5eedcec978c227f6426b52ce69be09f21f163e90dc2b3474e699330c8e4b325e",
         "signature/src/xmldsig/index.d.ts": "bee0f3869def2c020f39f674015146dc6340ef56d757c50103c6a514ca31b4e5",
         "signature/src/xmldsig/sign.d.ts": "09bcf810064399ab8796825a0b6db9f16456a2a85967e82836f6ed48d2cf8723",
