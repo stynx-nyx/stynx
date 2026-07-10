@@ -50,11 +50,11 @@
     "@angular/core": ">=20.3.0 <22"
   },
   "devDependencies": {
-    "@angular/common": "21.2.15",
-    "@angular/compiler": "21.2.15",
-    "@angular/compiler-cli": "21.2.15",
-    "@angular/core": "21.2.15",
-    "@angular/platform-browser": "21.2.15",
+    "@angular/common": "21.2.18",
+    "@angular/compiler": "21.2.18",
+    "@angular/compiler-cli": "21.2.18",
+    "@angular/core": "21.2.18",
+    "@angular/platform-browser": "21.2.18",
     "@types/node": "24.12.4",
     "jsdom": "^29.0.2",
     "ng-packagr": "21.2.3",

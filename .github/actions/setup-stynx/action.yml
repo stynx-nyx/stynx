@@ -96,8 +96,12 @@ runs:
     - name: Install dependencies
       if: inputs.install == 'true'
       shell: bash
+      # Passed through env (not inline ${{ }} interpolation) so the value can
+      # never be expanded into the shell script as code (run-shell-injection).
+      env:
+        FROZEN_LOCKFILE: ${{ inputs.frozen-lockfile }}
       run: |
-        if [ "${{ inputs.frozen-lockfile }}" = "true" ]; then
+        if [ "$FROZEN_LOCKFILE" = "true" ]; then
           pnpm install --frozen-lockfile
         else
           pnpm install

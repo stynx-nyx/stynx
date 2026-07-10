@@ -11,7 +11,7 @@ const packageManager = manifest.packageManager;
 
 const supported = {
   angularPeer: '>=20.3.0 <22',
-  angularBuild: '21.2.15',
+  angularBuild: '21.2.18',
   ngPackagr: '21.2.3',
   nestPeer: '^11.1.19',
   node: '>=24 <25',
