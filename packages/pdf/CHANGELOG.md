@@ -1,5 +1,25 @@
 # @stynx-nyx/pdf
 
+## 1.0.0
+
+### Minor Changes
+
+- 76bb600: Add deterministic fixed-layout PDF primitives, a PDF verification-evidence appender, and a public-payroll template pack for payslip and yearly-income reports.
+- cb1916f: Bundle PDF/A-2b content assets, embed deterministic catalog metadata and sRGB
+  output intents, and move verification evidence into a valid incremental PDF
+  update so public-payroll PDFs validate with veraPDF before and after evidence.
+- de034f7: Add Round 1 shared module scaffolds for PAdES signatures, PDF rendering,
+  tenant-scoped feature flags, and external integration adapters.
+
+### Patch Changes
+
+- 745c2dd: Support PEC Round 2 adoption of shared signature, PDF, feature-flag, and integration adapter runtimes.
+- Updated dependencies [745c2dd]
+- Updated dependencies [99afc50]
+- Updated dependencies [d06e01c]
+- Updated dependencies [de034f7]
+  - @stynx-nyx/signature@0.2.0
+
 ## Unreleased
 
 - Bundle Liberation font assets and an sRGB ICC profile for fixed-layout

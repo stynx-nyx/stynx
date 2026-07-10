@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/idempotency",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Idempotency primitives for stynx",
   "main": "dist/idempotency/src/index.js",
   "types": "dist/idempotency/src/index.d.ts",

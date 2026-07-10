@@ -1,0 +1,15 @@
+# @stynx-domain/demo-bookmark-api
+
+## 0.0.2
+
+### Patch Changes
+
+- Updated dependencies [928d2fa]
+  - @stynx-nyx/contracts@1.0.1
+  - @stynx-nyx/audit@1.0.1
+  - @stynx-nyx/auth@1.0.1
+  - @stynx-nyx/backend@1.0.1
+  - @stynx-nyx/idempotency@1.0.1
+  - @stynx-nyx/ratelimit@1.0.1
+  - @stynx-nyx/storage@1.0.1
+  - @stynx-nyx/tenancy@1.0.1

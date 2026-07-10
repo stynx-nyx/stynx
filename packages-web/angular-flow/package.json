@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/angular-flow",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Angular workflow design and runtime components for stynx Flow",
   "exports": {
     ".": {

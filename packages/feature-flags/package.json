@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/feature-flags",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Tenant and environment scoped feature flag provider for stynx",
   "main": "dist/feature-flags/src/index.js",
   "types": "dist/feature-flags/src/index.d.ts",

@@ -1,5 +1,12 @@
 # @stynx-nyx/angular-trash
 
+## 1.0.1
+
+### Patch Changes
+
+- @stynx-nyx/angular-auth@1.0.1
+- @stynx-nyx/angular-ui@1.0.1
+
 ## 1.0.0
 
 ### Major Changes

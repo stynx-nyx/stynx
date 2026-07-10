@@ -1,5 +1,14 @@
 # @stynx-nyx/backend
 
+## 1.0.1
+
+### Patch Changes
+
+- Updated dependencies [928d2fa]
+  - @stynx-nyx/contracts@1.0.1
+  - @stynx-nyx/idempotency@1.0.1
+  - @stynx-nyx/ratelimit@1.0.1
+
 ## 1.0.0
 
 ### Major Changes
