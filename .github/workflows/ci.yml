@@ -2,10 +2,16 @@ name: STYNX CI
 
 on:
   pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
   push:
     branches:
       - main
       - 'release/**'
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
   schedule:
     - cron: '17 5 * * *'
 
@@ -436,6 +442,12 @@ jobs:
         os:
           - ubuntu-latest
           - macos-latest
+        # Cost control (2026-07-09): run the macOS leg only on push to main
+        # and on the daily scheduled run — not on every pull request. The
+        # expression resolves to 'macos-latest' (excluding it) unless the
+        # event is a push to main or a schedule run.
+        exclude:
+          - os: ${{ (!((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'schedule')) && 'macos-latest' || 'no-exclusion' }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5
