@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/auth",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Authentication adapters and runtime primitives for stynx",
   "main": "dist/auth/src/index.js",
   "types": "dist/auth/src/index.d.ts",

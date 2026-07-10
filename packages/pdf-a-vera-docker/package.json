@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/pdf-a-vera-docker",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "veraPDF Docker adapter for the stynx PDF/A validator contract",
   "main": "dist/pdf-a-vera-docker/src/index.js",
   "types": "dist/pdf-a-vera-docker/src/index.d.ts",
@@ -29,7 +29,7 @@
     "@stynx-nyx/pdf-a": "workspace:*"
   },
   "peerDependencies": {
-    "@stynx-nyx/logging": "^1.0.0"
+    "@stynx-nyx/logging": "^1.0.1"
   },
   "peerDependenciesMeta": {
     "@stynx-nyx/logging": {

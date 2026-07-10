@@ -1,7 +1,7 @@
 {
   "name": "@stynx-nyx/reference-web",
   "private": true,
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Reference Angular 20 app exercising the STYNX web packages against reference-api",
   "engines": {
     "node": ">=24 <25"
