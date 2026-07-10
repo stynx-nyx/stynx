@@ -19,7 +19,12 @@ permissions:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
   NODE_VERSION: '24'
-  NPM_CONFIG_PROVENANCE: 'true'
+  # No NPM_CONFIG_PROVENANCE: npm provenance requires public access and
+  # GitHub Packages publishes are always restricted — with it set, every
+  # `npm publish` fails with EUSAGE and nothing reaches the registry
+  # (runs 29102848562, 29109128724). Same rationale as
+  # scripts/changesets-publish-ci.mjs, which this workflow-level env was
+  # silently overriding via process.env passthrough.
   PNPM_VERSION: '9.15.0'
   STYNX_ENABLE_REGISTRY_PUBLISH: ${{ vars.STYNX_ENABLE_REGISTRY_PUBLISH || 'false' }}
 
