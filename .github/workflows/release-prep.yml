@@ -55,23 +55,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Single-source evidence gate (ADR-CI-ECONOMY Decision 7).
   evidence-gate:
-    name: evidence-gate
-    runs-on: ubuntu-latest
-    outputs:
-      evidence_mode: ${{ steps.verify.outputs.evidence_mode }}
-    steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-      - name: Check local CI evidence mode
-        id: verify
-        run: node scripts/evidence/verify-local-evidence.mjs --mode gate --github-output "$GITHUB_OUTPUT"
-        env:
-          LOCAL_EVIDENCE_TRUSTED_ACTORS: ${{ vars.LOCAL_EVIDENCE_TRUSTED_ACTORS }}
+    uses: devai-nyx/devai/.github/workflows/reusable-evidence-gate.yml@main
 
   semgrep:
     name: semgrep

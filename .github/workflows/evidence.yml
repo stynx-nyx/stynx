@@ -13,24 +13,11 @@ concurrency:
 permissions:
   contents: read
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
-  NODE_VERSION: '24'
-
 jobs:
+  # Standalone policy verification via the single-source gate
+  # (ADR-CI-ECONOMY Decision 7); mode verify runs the repo verifier with
+  # --mode auto and consumes no outputs.
   verify:
-    name: evidence/verify
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-        with:
-          fetch-depth: 0
-
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Verify local CI evidence policy
-        run: node scripts/evidence/verify-local-evidence.mjs --mode auto
-        env:
-          LOCAL_EVIDENCE_TRUSTED_ACTORS: ${{ vars.LOCAL_EVIDENCE_TRUSTED_ACTORS }}
+    uses: devai-nyx/devai/.github/workflows/reusable-evidence-gate.yml@main
+    with:
+      mode: verify
