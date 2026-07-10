@@ -4,7 +4,7 @@ title: API Reference
 
 # API Reference
 
-Generated API reference for every `@stynx-nyx/*` and `@stynx-web/*` package.
+Generated API reference for every `@stynx-nyx/*` and `@stynx-nyx/*` package.
 
 - [@stynx-nyx/audit](./stynx-audit/)
 - [@stynx-nyx/auth](./stynx-auth/)
@@ -30,16 +30,16 @@ Generated API reference for every `@stynx-nyx/*` and `@stynx-web/*` package.
 - [@stynx-nyx/storage](./stynx-storage/)
 - [@stynx-nyx/tenancy](./stynx-tenancy/)
 - [@stynx-nyx/testing](./stynx-testing/)
-- [@stynx-web/angular](./stynx-web-angular/)
-- [@stynx-web/angular-audit](./stynx-web-angular-audit/)
-- [@stynx-web/angular-auth](./stynx-web-angular-auth/)
-- [@stynx-web/angular-flow](./stynx-web-angular-flow/)
-- [@stynx-web/angular-i18n](./stynx-web-angular-i18n/)
-- [@stynx-web/angular-iam](./stynx-web-angular-iam/)
-- [@stynx-web/angular-profile](./stynx-web-angular-profile/)
-- [@stynx-web/angular-sessions](./stynx-web-angular-sessions/)
-- [@stynx-web/angular-storage](./stynx-web-angular-storage/)
-- [@stynx-web/angular-tenancy](./stynx-web-angular-tenancy/)
-- [@stynx-web/angular-trash](./stynx-web-angular-trash/)
-- [@stynx-web/angular-ui](./stynx-web-angular-ui/)
-- [@stynx-web/sdk](./stynx-web-sdk/)
+- [@stynx-nyx/angular](./stynx-web-angular/)
+- [@stynx-nyx/angular-audit](./stynx-web-angular-audit/)
+- [@stynx-nyx/angular-auth](./stynx-web-angular-auth/)
+- [@stynx-nyx/angular-flow](./stynx-web-angular-flow/)
+- [@stynx-nyx/angular-i18n](./stynx-web-angular-i18n/)
+- [@stynx-nyx/angular-iam](./stynx-web-angular-iam/)
+- [@stynx-nyx/angular-profile](./stynx-web-angular-profile/)
+- [@stynx-nyx/angular-sessions](./stynx-web-angular-sessions/)
+- [@stynx-nyx/angular-storage](./stynx-web-angular-storage/)
+- [@stynx-nyx/angular-tenancy](./stynx-web-angular-tenancy/)
+- [@stynx-nyx/angular-trash](./stynx-web-angular-trash/)
+- [@stynx-nyx/angular-ui](./stynx-web-angular-ui/)
+- [@stynx-nyx/sdk](./stynx-web-sdk/)

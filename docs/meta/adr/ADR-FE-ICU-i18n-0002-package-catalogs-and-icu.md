@@ -12,7 +12,7 @@ tags: [stynx, frontend, angular, i18n, icu]
 **Authority:** Architect.
 **Related:** `docs/work/plan/FE-WAVE-D-storage-trash-i18n.md`, `docs/work/plan/FE-WAVE-D-report.md`.
 
-Decision summary: `@stynx-web/angular-i18n` owns runtime translation,
+Decision summary: `@stynx-nyx/angular-i18n` owns runtime translation,
 `Intl` formatting, and ICU MessageFormat evaluation, and each template-bearing
 `packages-web/*` package ships its own namespaced English and pt-BR catalogs.
 
@@ -35,11 +35,11 @@ FE-E and FE-F extended the same rule to new audit and flow surfaces.
 
 ## Decision
 
-`@stynx-web/angular-i18n` is the canonical runtime for web package translation.
+`@stynx-nyx/angular-i18n` is the canonical runtime for web package translation.
 
 - `StynxTranslatePipe` accepts parameters and evaluates ICU MessageFormat when a
   catalog value contains ICU syntax.
-- `@stynx-web/angular-i18n` depends on `intl-messageformat` at runtime and caches
+- `@stynx-nyx/angular-i18n` depends on `intl-messageformat` at runtime and caches
   compiled formatters by locale and key.
 - Date, number, and currency formatting use `Intl`-backed standalone pipes that
   observe the active `StynxI18nService` locale.
@@ -64,7 +64,7 @@ FE-E and FE-F extended the same rule to new audit and flow surfaces.
 
 ## Consequences
 
-Adopters must include `@stynx-web/angular-i18n` when they render translated web
+Adopters must include `@stynx-nyx/angular-i18n` when they render translated web
 components and should merge package catalogs with host-specific copy before
 bootstrapping. The suite now treats untranslated visible literals as a check
 failure, not as acceptable follow-up debt.

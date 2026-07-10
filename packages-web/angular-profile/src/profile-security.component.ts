@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { StynxTranslatePipe } from '@stynx-web/angular-i18n';
+import { StynxTranslatePipe } from '@stynx-nyx/angular-i18n';
 import {
   StynxChangePasswordHandoffComponent,
   StynxMfaEnrolmentHandoffComponent,

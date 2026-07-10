@@ -4,7 +4,7 @@
 
 - R16 deepens every published package README from ~50-130 line stubs to
   template-conformant developer references. All 41 packages (24 backend
-  `@stynx-nyx/*`, 13 web `@stynx-web/*`, 4 tools `@stynx-internal/*`) now carry
+  `@stynx-nyx/*`, 13 web `@stynx-nyx/*`, 4 tools `@stynx-internal/*`) now carry
   the locked 8-section shape: purpose / audience / install / quick-start /
   public-API-surface / configuration / examples / common-pitfalls /
   related-packages, pitched at the family-specific persona (NestJS backend

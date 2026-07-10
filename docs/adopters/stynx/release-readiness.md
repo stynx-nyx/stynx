@@ -41,7 +41,7 @@ reference-app workflow instead of the STYNX package release lane.
 The PORM-to-STYNX Flow gap pass added release-visible package evidence for:
 
 - `@stynx-nyx/flow`: backend package build/test coverage, platform migrations `0015_flow_gap_closure.sql` and `0016_platform_curated_audit.sql`, answer/waiver mutation signal freshness, curated-table DML audit coverage, reference API import via `StynxFlowModule`, and release changeset `.changeset/flow-gap-closure.md`.
-- `@stynx-web/angular-flow`: Angular package tests with `passWithNoTests` removed, API facade coverage for the Flow contract, typed fill execution controls, reference web route mount under `/flow`, route-access E2E seed, and release changeset `.changeset/flow-gap-closure.md`.
+- `@stynx-nyx/angular-flow`: Angular package tests with `passWithNoTests` removed, API facade coverage for the Flow contract, typed fill execution controls, reference web route mount under `/flow`, route-access E2E seed, and release changeset `.changeset/flow-gap-closure.md`.
 - Flow deprecation-readiness evidence: reference API HTTP-pipeline coverage for Flow guards, request context, idempotency replay, audit writes, form answer/waiver execution, signal freshness, task assignment/action, and analytics smoke; reference-web generic route E2E coverage for forms, fills, assignments, waivers, open tasks, and run summary; and the consuming-repo cutover plan in [porm-flow-deprecation-readiness.md](porm-flow-deprecation-readiness.md).
 
 This addendum is factual package-readiness evidence only. It does not change the v1.0 release-scope notes below or assert registry publication.
@@ -69,10 +69,11 @@ registry publication and keyless image signing can be restored as a later
 deployment hardening task when those environments exist.
 
 The release workflow still owns package versioning through Changesets. Registry
-publishing is intentionally opt-in because the current package scopes (`@stynx`,
-`@stynx-web`, and `@stech`) cannot be published with this repository's default
-`GITHUB_TOKEN`. Set `STYNX_ENABLE_REGISTRY_PUBLISH=true` and provide an
-appropriate `NPM_TOKEN` only after package namespace ownership is configured.
+publishing is intentionally opt-in because the historical package scopes
+(`@stynx`, `@stynx-web`, and `@stech`) could not be published with this
+repository's default `GITHUB_TOKEN`. All packages now live under the
+`@stynx-nyx/*` scope (owned by the `stynx-nyx` org) and publish with
+`STYNX_ENABLE_REGISTRY_PUBLISH=true` plus an appropriate `NPM_TOKEN`.
 
 The spec’s public post-release label is still intentionally not applied by this
 readiness closure:

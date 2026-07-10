@@ -1,8 +1,8 @@
-[**@stynx-web/angular-flow**](../index.md)
+[**@stynx-nyx/angular-flow**](../index.md)
 
 ---
 
-[@stynx-web/angular-flow](../index.md) / FlowRunActivityEvent
+[@stynx-nyx/angular-flow](../index.md) / FlowRunActivityEvent
 
 # Type Alias: FlowRunActivityEvent
 

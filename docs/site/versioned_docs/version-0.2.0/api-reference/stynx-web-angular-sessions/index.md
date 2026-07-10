@@ -1,8 +1,8 @@
-**@stynx-web/angular-sessions**
+**@stynx-nyx/angular-sessions**
 
 ---
 
-# @stynx-web/angular-sessions
+# @stynx-nyx/angular-sessions
 
 ## Classes
 

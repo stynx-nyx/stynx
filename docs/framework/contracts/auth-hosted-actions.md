@@ -3,7 +3,7 @@
 **Authority:** Architect (Constitution Article 6).
 **Status:** Accepted for FE-C C.4.
 
-This contract defines the auth-side surface that `@stynx-web/angular-profile`
+This contract defines the auth-side surface that `@stynx-nyx/angular-profile`
 uses for hosted identity-provider handoffs. It is intentionally frontend-facing:
 STYNX does not standardize a backend HTTP route for these actions in v1.
 
@@ -21,7 +21,7 @@ the host shell wants them.
 
 ## Frontend Interface
 
-`@stynx-web/angular-auth` must expose a hosted-action capability through its
+`@stynx-nyx/angular-auth` must expose a hosted-action capability through its
 auth options and OIDC adapter rather than requiring profile components to
 derive provider URLs from raw OIDC metadata.
 
@@ -125,10 +125,10 @@ HTTP error codes unless a future backend-mediated handoff route is introduced.
 
 ## Engineer Guidance
 
-- Implement the contract in `@stynx-web/angular-auth`; `@stynx-web/angular-profile`
+- Implement the contract in `@stynx-nyx/angular-auth`; `@stynx-nyx/angular-profile`
   consumes only the adapter/provider surface.
 - Keep the two profile handoff components thin: resolve the link, open it, and
   render configured unavailable/error states.
-- Do not import provider-specific SDKs into `@stynx-web/angular-profile`.
+- Do not import provider-specific SDKs into `@stynx-nyx/angular-profile`.
 - Add unit tests for configured URL strings, builder functions, unavailable
   actions, placeholder encoding, and return URL fallback.

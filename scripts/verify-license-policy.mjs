@@ -24,7 +24,7 @@ const releaseManifests = manifests.filter(
     path === resolve(repoRoot, 'package.json') ||
     (!manifest.private &&
       typeof manifest.name === 'string' &&
-      (manifest.name.startsWith('@stynx-nyx/') || manifest.name.startsWith('@stynx-web/'))),
+      (manifest.name.startsWith('@stynx-nyx/') || manifest.name.startsWith('@stynx-nyx/'))),
 );
 
 for (const { manifest } of releaseManifests) {

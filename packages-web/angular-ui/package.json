@@ -1,15 +1,15 @@
 {
-  "name": "@stynx-web/angular-ui",
+  "name": "@stynx-nyx/angular-ui",
   "version": "1.0.0",
   "description": "Angular 20/21 UI primitives for stynx web apps",
   "exports": {
     ".": {
-      "types": "./dist/types/stynx-web-angular-ui.d.ts",
-      "default": "./dist/fesm2022/stynx-web-angular-ui.mjs"
+      "types": "./dist/types/stynx-nyx-angular-ui.d.ts",
+      "default": "./dist/fesm2022/stynx-nyx-angular-ui.mjs"
     },
     "./testing": {
-      "types": "./dist/types/stynx-web-angular-ui-testing.d.ts",
-      "default": "./dist/fesm2022/stynx-web-angular-ui-testing.mjs"
+      "types": "./dist/types/stynx-nyx-angular-ui-testing.d.ts",
+      "default": "./dist/fesm2022/stynx-nyx-angular-ui-testing.mjs"
     },
     "./catalogs/en.json": {
       "default": "./dist/catalogs/en.json"
@@ -39,8 +39,8 @@
     "normalize:dist-exports": "node -e \"const fs=require('node:fs');const path='dist/package.json';const pkg=JSON.parse(fs.readFileSync(path,'utf8'));pkg.exports['./catalogs/en.json']={default:'./catalogs/en.json'};pkg.exports['./catalogs/pt-BR.json']={default:'./catalogs/pt-BR.json'};fs.writeFileSync(path, JSON.stringify(pkg,null,2)+'\\n');\""
   },
   "dependencies": {
-    "@stynx-web/angular": "workspace:*",
-    "@stynx-web/angular-i18n": "workspace:*",
+    "@stynx-nyx/angular": "workspace:*",
+    "@stynx-nyx/angular-i18n": "workspace:*",
     "rxjs": "^7.8.2"
   },
   "peerDependencies": {

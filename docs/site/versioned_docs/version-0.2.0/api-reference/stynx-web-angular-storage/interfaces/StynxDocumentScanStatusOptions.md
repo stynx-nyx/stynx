@@ -1,8 +1,8 @@
-[**@stynx-web/angular-storage**](../index.md)
+[**@stynx-nyx/angular-storage**](../index.md)
 
 ---
 
-[@stynx-web/angular-storage](../index.md) / StynxDocumentScanStatusOptions
+[@stynx-nyx/angular-storage](../index.md) / StynxDocumentScanStatusOptions
 
 # Interface: StynxDocumentScanStatusOptions
 

@@ -1,8 +1,8 @@
-**@stynx-web/angular-profile**
+**@stynx-nyx/angular-profile**
 
 ---
 
-# @stynx-web/angular-profile
+# @stynx-nyx/angular-profile
 
 ## Classes
 

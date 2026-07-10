@@ -1,8 +1,8 @@
-**@stynx-web/sdk**
+**@stynx-nyx/sdk**
 
 ---
 
-# @stynx-web/sdk
+# @stynx-nyx/sdk
 
 ## Classes
 

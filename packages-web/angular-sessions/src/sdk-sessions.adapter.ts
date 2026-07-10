@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { StynxSessionService, parseJwtPayload } from '@stynx-web/angular-auth';
+import { StynxSessionService, parseJwtPayload } from '@stynx-nyx/angular-auth';
 import { from, map } from 'rxjs';
 import type { Observable } from 'rxjs';
 import { STYNX_SESSIONS_CLIENT } from './tokens';

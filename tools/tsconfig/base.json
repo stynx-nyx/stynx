@@ -41,19 +41,19 @@
       "@stynx-nyx/integration-adapter": ["../../packages/integration-adapter/src/index.ts"],
       "@stynx-nyx/reference-api": ["../../reference/api/src/main.ts"],
       "@stynx-nyx/reference-web": ["../../reference/web/src/main.ts"],
-      "@stynx-web/sdk": ["../../packages-web/sdk/src/index.ts"],
-      "@stynx-web/angular": ["../../packages-web/angular/src/index.ts"],
-      "@stynx-web/angular-tenancy": ["../../packages-web/angular-tenancy/src/index.ts"],
-      "@stynx-web/angular-auth": ["../../packages-web/angular-auth/src/index.ts"],
-      "@stynx-web/angular-ui": ["../../packages-web/angular-ui/src/index.ts"],
-      "@stynx-web/angular-i18n": ["../../packages-web/angular-i18n/src/index.ts"],
-      "@stynx-web/angular-trash": ["../../packages-web/angular-trash/src/index.ts"],
-      "@stynx-web/angular-storage": ["../../packages-web/angular-storage/src/index.ts"],
-      "@stynx-web/angular-sessions": ["../../packages-web/angular-sessions/src/index.ts"],
-      "@stynx-web/angular-profile": ["../../packages-web/angular-profile/src/index.ts"],
-      "@stynx-web/angular-iam": ["../../packages-web/angular-iam/src/index.ts"],
-      "@stynx-web/angular-iam/catalogs/*": ["../../packages-web/angular-iam/src/i18n/*"],
-      "@stynx-web/angular-flow": ["../../packages-web/angular-flow/src/index.ts"]
+      "@stynx-nyx/sdk": ["../../packages-web/sdk/src/index.ts"],
+      "@stynx-nyx/angular": ["../../packages-web/angular/src/index.ts"],
+      "@stynx-nyx/angular-tenancy": ["../../packages-web/angular-tenancy/src/index.ts"],
+      "@stynx-nyx/angular-auth": ["../../packages-web/angular-auth/src/index.ts"],
+      "@stynx-nyx/angular-ui": ["../../packages-web/angular-ui/src/index.ts"],
+      "@stynx-nyx/angular-i18n": ["../../packages-web/angular-i18n/src/index.ts"],
+      "@stynx-nyx/angular-trash": ["../../packages-web/angular-trash/src/index.ts"],
+      "@stynx-nyx/angular-storage": ["../../packages-web/angular-storage/src/index.ts"],
+      "@stynx-nyx/angular-sessions": ["../../packages-web/angular-sessions/src/index.ts"],
+      "@stynx-nyx/angular-profile": ["../../packages-web/angular-profile/src/index.ts"],
+      "@stynx-nyx/angular-iam": ["../../packages-web/angular-iam/src/index.ts"],
+      "@stynx-nyx/angular-iam/catalogs/*": ["../../packages-web/angular-iam/src/i18n/*"],
+      "@stynx-nyx/angular-flow": ["../../packages-web/angular-flow/src/index.ts"]
     }
   }
 }

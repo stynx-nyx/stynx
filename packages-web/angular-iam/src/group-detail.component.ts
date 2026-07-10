@@ -1,13 +1,13 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { StynxI18nService, StynxTranslatePipe } from '@stynx-web/angular-i18n';
+import { StynxI18nService, StynxTranslatePipe } from '@stynx-nyx/angular-i18n';
 import {
   EmptyStateComponent,
   StynxBannerComponent,
   StynxIconComponent,
   StynxLoadingSpinnerComponent,
   StynxToastService,
-} from '@stynx-web/angular-ui';
+} from '@stynx-nyx/angular-ui';
 import { StynxGroupMembersEditorComponent } from './group-members-editor.component';
 import { StynxGroupRolesEditorComponent } from './group-roles-editor.component';
 import { IamApiService } from './iam-api.service';

@@ -1,15 +1,15 @@
 ---
-title: '@stynx-web/angular-ui'
+title: '@stynx-nyx/angular-ui'
 ---
 
-# @stynx-web/angular-ui
+# @stynx-nyx/angular-ui
 
 Angular 20 UI primitives for STYNX web applications. The package is intentionally small: it provides reusable shell pieces for status, tables, pagination, toast, confirmation, loading, empty states, and icons while leaving app layout to the host.
 
 ## Install
 
 ```bash
-pnpm add @stynx-web/angular-ui
+pnpm add @stynx-nyx/angular-ui
 ```
 
 ## Peer Dependencies
@@ -25,7 +25,7 @@ import {
   StynxBannerComponent,
   StynxTableComponent,
   StynxToastContainerComponent,
-} from '@stynx-web/angular-ui';
+} from '@stynx-nyx/angular-ui';
 
 @Component({
   standalone: true,
@@ -44,10 +44,10 @@ export class AppComponent {}
 - Components: `StynxBannerComponent`, `StynxConfirmDialogComponent`, `EmptyStateComponent`, `StynxIconComponent`, `StynxLoadingSpinnerComponent`, `StynxPaginationComponent`, `StynxTableComponent`, `StynxToastContainerComponent`.
 - Services: `StynxToastService`.
 - Icons: `STYNX_ICON_NAMES` and `StynxIconName`; host apps should inline or mount `assets/sprite.svg` so `&lt;stynx-icon&gt;` symbols resolve.
-- Secondary exports: `@stynx-web/angular-ui/testing`, locale catalogs.
+- Secondary exports: `@stynx-nyx/angular-ui/testing`, locale catalogs.
 
 ## See Also
 
-- [`@stynx-web/angular`](/docs/packages-web/angular)
-- [`@stynx-web/angular-i18n`](/docs/packages-web/angular-i18n)
+- [`@stynx-nyx/angular`](/docs/packages-web/angular)
+- [`@stynx-nyx/angular-i18n`](/docs/packages-web/angular-i18n)
 - [Reference app dashboard demo](/docs/reference/web#demo-surfaces)

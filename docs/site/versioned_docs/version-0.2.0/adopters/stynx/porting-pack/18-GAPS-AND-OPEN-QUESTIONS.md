@@ -140,7 +140,7 @@ their own CLI wrapper.
 **Severity:** MINOR.
 
 [`09-FRONTEND-PATTERNS.md`](09-FRONTEND-PATTERNS.md) describes
-`@stynx-web/sdk` for non-Angular consumers, but the SDK exports
+`@stynx-nyx/sdk` for non-Angular consumers, but the SDK exports
 were inferred from the package barrel. The reference web app is
 Angular-only — there is no React/Vue/vanilla TS reference
 implementation. If you're porting a non-Angular FE, validate the
@@ -227,8 +227,8 @@ baseline). Status as of pack-generation commit `670d165`:
 
 | Finding  | Status                          | Notes                                                                             |
 | -------- | ------------------------------- | --------------------------------------------------------------------------------- |
-| FIND-001 | **CLOSED**                      | `@stynx-nyx/contracts` exists.                                                        |
-| FIND-002 | **CLOSED**                      | `@stynx-web/angular-tenancy` exists.                                              |
+| FIND-001 | **CLOSED**                      | `@stynx-nyx/contracts` exists.                                                    |
+| FIND-002 | **CLOSED**                      | `@stynx-nyx/angular-tenancy` exists.                                              |
 | FIND-003 | **CLOSED**                      | Legacy `apps/reference-frontend` deleted.                                         |
 | FIND-004 | **VERIFY** (G-001)              | Migration linter regression.                                                      |
 | FIND-005 | **CLOSED**                      | EdgeStack present.                                                                |
@@ -238,7 +238,7 @@ baseline). Status as of pack-generation commit `670d165`:
 | FIND-011 | **VERIFY** (G-003)              | Doctor empty output.                                                              |
 | FIND-013 | **PARTIAL**                     | `.nvmrc` + `package.json` engines pin engines; CI may still run on wrong version. |
 | FIND-014 | **PARTIAL**                     | All 27 packages have READMEs; TSDoc density not re-measured.                      |
-| FIND-015 | **STILL LIVE** (G-013-adjacent) | `@stynx-nyx/privacy` thinly tested.                                                   |
+| FIND-015 | **STILL LIVE** (G-013-adjacent) | `@stynx-nyx/privacy` thinly tested.                                               |
 | FIND-016 | **VERIFY** (G-004)              | Audit hash-chain.                                                                 |
 | FIND-024 | **CLOSED**                      | CODEOWNERS coverage full.                                                         |
 | FIND-025 | **CLOSED**                      | `infra/github/main.tf` declares branch protection.                                |

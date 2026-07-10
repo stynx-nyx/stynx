@@ -1,8 +1,8 @@
-[**@stynx-web/angular-sessions**](../index.md)
+[**@stynx-nyx/angular-sessions**](../index.md)
 
 ---
 
-[@stynx-web/angular-sessions](../index.md) / SdkSessionsAdapter
+[@stynx-nyx/angular-sessions](../index.md) / SdkSessionsAdapter
 
 # Class: SdkSessionsAdapter
 

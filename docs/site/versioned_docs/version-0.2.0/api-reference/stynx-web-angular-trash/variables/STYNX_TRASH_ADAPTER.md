@@ -1,8 +1,8 @@
-[**@stynx-web/angular-trash**](../index.md)
+[**@stynx-nyx/angular-trash**](../index.md)
 
 ---
 
-[@stynx-web/angular-trash](../index.md) / STYNX_TRASH_ADAPTER
+[@stynx-nyx/angular-trash](../index.md) / STYNX_TRASH_ADAPTER
 
 # Variable: STYNX_TRASH_ADAPTER
 

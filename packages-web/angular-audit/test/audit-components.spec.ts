@@ -2,7 +2,7 @@ import '@angular/compiler';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
-import { StynxI18nService } from '@stynx-web/angular-i18n';
+import { StynxI18nService } from '@stynx-nyx/angular-i18n';
 import { of, throwError } from 'rxjs';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import {
@@ -97,7 +97,7 @@ afterEach(() => {
   TestBed.resetTestingModule();
 });
 
-describe('@stynx-web/angular-audit E.6 components', () => {
+describe('@stynx-nyx/angular-audit E.6 components', () => {
   it('renders the audit log, applies filters, and advances cursor-backed pages', () => {
     const api = createApi();
     TestBed.configureTestingModule({

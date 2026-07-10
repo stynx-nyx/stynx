@@ -1,8 +1,8 @@
-[**@stynx-web/angular**](../index.md)
+[**@stynx-nyx/angular**](../index.md)
 
 ---
 
-[@stynx-web/angular](../index.md) / STYNX_AUTH_PROVIDER
+[@stynx-nyx/angular](../index.md) / STYNX_AUTH_PROVIDER
 
 # Variable: STYNX_AUTH_PROVIDER
 

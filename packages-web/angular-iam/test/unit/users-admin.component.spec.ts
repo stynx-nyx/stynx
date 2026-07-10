@@ -1,7 +1,7 @@
 import { ActivatedRoute, Router } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
-import { StynxToastService } from '@stynx-web/angular-ui';
-import type { StynxSdkClient } from '@stynx-web/sdk';
+import { StynxToastService } from '@stynx-nyx/angular-ui';
+import type { StynxSdkClient } from '@stynx-nyx/sdk';
 import { describe, expect, it, vi } from 'vitest';
 import { of, Subject, throwError } from 'rxjs';
 import { IamApiService } from '../../src/iam-api.service';

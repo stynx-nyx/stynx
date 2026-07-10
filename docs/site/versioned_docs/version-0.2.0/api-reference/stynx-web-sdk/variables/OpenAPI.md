@@ -1,8 +1,8 @@
-[**@stynx-web/sdk**](../index.md)
+[**@stynx-nyx/sdk**](../index.md)
 
 ---
 
-[@stynx-web/sdk](../index.md) / OpenAPI
+[@stynx-nyx/sdk](../index.md) / OpenAPI
 
 # Variable: OpenAPI
 

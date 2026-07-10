@@ -1,8 +1,8 @@
-**@stynx-web/angular-tenancy**
+**@stynx-nyx/angular-tenancy**
 
 ---
 
-# @stynx-web/angular-tenancy
+# @stynx-nyx/angular-tenancy
 
 ## Classes
 

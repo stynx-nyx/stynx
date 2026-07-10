@@ -1,8 +1,8 @@
-[**@stynx-web/angular-auth**](../index.md)
+[**@stynx-nyx/angular-auth**](../index.md)
 
 ---
 
-[@stynx-web/angular-auth](../index.md) / StynxSessionService
+[@stynx-nyx/angular-auth](../index.md) / StynxSessionService
 
 # Class: StynxSessionService
 

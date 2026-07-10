@@ -2,8 +2,8 @@ import '@angular/compiler';
 import { Injector, runInInjectionContext } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
-import { StynxI18nService } from '@stynx-web/angular-i18n';
-import type { StynxSdkClient } from '@stynx-web/sdk';
+import { StynxI18nService } from '@stynx-nyx/angular-i18n';
+import type { StynxSdkClient } from '@stynx-nyx/sdk';
 import { firstValueFrom, of } from 'rxjs';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { AuditApiService } from '../src/audit-api.service';
@@ -32,7 +32,7 @@ afterEach(() => {
   TestBed.resetTestingModule();
 });
 
-describe('@stynx-web/angular-audit W04 read contract depth', () => {
+describe('@stynx-nyx/angular-audit W04 read contract depth', () => {
   it('sends the audit read contract query shape exactly and omits nullish filters', async () => {
     const calls: Array<[string, unknown]> = [];
     const client = {

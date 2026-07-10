@@ -11,7 +11,7 @@ const packageSpecs = [
   { name: '@stynx-nyx/integration-adapter', dir: 'packages/integration-adapter' },
   { name: '@stynx-nyx/pdf', dir: 'packages/pdf' },
   { name: '@stynx-nyx/signature', dir: 'packages/signature' },
-  { name: '@stynx-web/sdk', dir: 'packages-web/sdk' },
+  { name: '@stynx-nyx/sdk', dir: 'packages-web/sdk' },
 ];
 
 for (const spec of packageSpecs) {

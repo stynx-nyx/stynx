@@ -1,6 +1,6 @@
 import { Injectable, NgZone, inject } from '@angular/core';
 import type { CanDeactivate, CanDeactivateFn } from '@angular/router';
-import { StynxI18nService } from '@stynx-web/angular-i18n';
+import { StynxI18nService } from '@stynx-nyx/angular-i18n';
 import type { Observable } from 'rxjs';
 
 export interface StynxUnsavedChangesAware {

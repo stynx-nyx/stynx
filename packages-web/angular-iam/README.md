@@ -1,14 +1,14 @@
-# `@stynx-web/angular-iam` — Angular admin UI for users, roles, groups, permissions
+# `@stynx-nyx/angular-iam` — Angular admin UI for users, roles, groups, permissions
 
-`@stynx-web/angular-iam` is the identity-and-access-management admin UI: components for managing roles (list, create, detail), groups (list, create, detail, member-editor, role-editor), the effective-permissions view, and a permission-matrix grid. It consumes the backend's `identity-admin` endpoints ([`backend/identity-admin`](/docs/packages/backend/identity-admin/)) via an `IamApiService`. Ships ready-to-mount admin routes.
+`@stynx-nyx/angular-iam` is the identity-and-access-management admin UI: components for managing roles (list, create, detail), groups (list, create, detail, member-editor, role-editor), the effective-permissions view, and a permission-matrix grid. It consumes the backend's `identity-admin` endpoints ([`backend/identity-admin`](/docs/packages/backend/identity-admin/)) via an `IamApiService`. Ships ready-to-mount admin routes.
 
 ## Purpose
 
-Apps with role-based access need an admin surface: who has which role, which groups exist, what permissions a role grants. Building these CRUD screens per app is repetitive. `@stynx-web/angular-iam` provides them as drop-in components + routes.
+Apps with role-based access need an admin surface: who has which role, which groups exist, what permissions a role grants. Building these CRUD screens per app is repetitive. `@stynx-nyx/angular-iam` provides them as drop-in components + routes.
 
 You reach for it when your app exposes an admin area for managing identity.
 
-What it does NOT do: it doesn't authenticate (that's `@stynx-web/angular-auth`). It doesn't define your permission model (the backend does). It renders the management UI over the backend's admin API.
+What it does NOT do: it doesn't authenticate (that's `@stynx-nyx/angular-auth`). It doesn't define your permission model (the backend does). It renders the management UI over the backend's admin API.
 
 ## Audience
 
@@ -17,15 +17,15 @@ Angular frontend developers building admin consoles.
 ## Install
 
 ```bash
-pnpm add @stynx-web/angular-iam
+pnpm add @stynx-nyx/angular-iam
 ```
 
-**Peer dependencies:** `@angular/core` `^18`, `@angular/router` `^18`, `@stynx-web/angular` `^1`, `@stynx-web/angular-auth` `^1`, `@stynx-web/angular-ui` `^1`.
+**Peer dependencies:** `@angular/core` `^18`, `@angular/router` `^18`, `@stynx-nyx/angular` `^1`, `@stynx-nyx/angular-auth` `^1`, `@stynx-nyx/angular-ui` `^1`.
 
 ## Quick start
 
 ```ts
-import { provideIam, iamRoutes } from '@stynx-web/angular-iam';
+import { provideIam, iamRoutes } from '@stynx-nyx/angular-iam';
 
 export const appConfig = { providers: [provideIam()] };
 
@@ -118,7 +118,7 @@ export const routes: Routes = [
 
 ## Related packages
 
-- [`@stynx-web/angular-auth`](/docs/packages-web/angular-auth/) — auth + the `permissionGuard` for the IAM routes.
+- [`@stynx-nyx/angular-auth`](/docs/packages-web/angular-auth/) — auth + the `permissionGuard` for the IAM routes.
 - [`backend/identity-admin`](/docs/packages/backend/identity-admin/) — the backend admin API this consumes.
 - [`@stynx-nyx/auth`](/docs/packages/auth/) — defines the permission model.
 

@@ -1,8 +1,8 @@
-[**@stynx-web/angular**](../index.md)
+[**@stynx-nyx/angular**](../index.md)
 
 ---
 
-[@stynx-web/angular](../index.md) / StynxFlowConfig
+[@stynx-nyx/angular](../index.md) / StynxFlowConfig
 
 # Type Alias: StynxFlowConfig
 

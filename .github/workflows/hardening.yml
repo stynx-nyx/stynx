@@ -271,43 +271,43 @@ jobs:
             filter: '@stynx-nyx/testing'
             report_path: packages/testing/reports/mutation
           - package: angular
-            filter: '@stynx-web/angular'
+            filter: '@stynx-nyx/angular'
             report_path: packages-web/angular/reports/mutation
           - package: angular-audit
-            filter: '@stynx-web/angular-audit'
+            filter: '@stynx-nyx/angular-audit'
             report_path: packages-web/angular-audit/reports/mutation
           - package: angular-auth
-            filter: '@stynx-web/angular-auth'
+            filter: '@stynx-nyx/angular-auth'
             report_path: packages-web/angular-auth/reports/mutation
           - package: angular-flow
-            filter: '@stynx-web/angular-flow'
+            filter: '@stynx-nyx/angular-flow'
             report_path: packages-web/angular-flow/reports/mutation
           - package: angular-i18n
-            filter: '@stynx-web/angular-i18n'
+            filter: '@stynx-nyx/angular-i18n'
             report_path: packages-web/angular-i18n/reports/mutation
           - package: angular-iam
-            filter: '@stynx-web/angular-iam'
+            filter: '@stynx-nyx/angular-iam'
             report_path: packages-web/angular-iam/reports/mutation
           - package: angular-profile
-            filter: '@stynx-web/angular-profile'
+            filter: '@stynx-nyx/angular-profile'
             report_path: packages-web/angular-profile/reports/mutation
           - package: angular-sessions
-            filter: '@stynx-web/angular-sessions'
+            filter: '@stynx-nyx/angular-sessions'
             report_path: packages-web/angular-sessions/reports/mutation
           - package: angular-storage
-            filter: '@stynx-web/angular-storage'
+            filter: '@stynx-nyx/angular-storage'
             report_path: packages-web/angular-storage/reports/mutation
           - package: angular-tenancy
-            filter: '@stynx-web/angular-tenancy'
+            filter: '@stynx-nyx/angular-tenancy'
             report_path: packages-web/angular-tenancy/reports/mutation
           - package: angular-trash
-            filter: '@stynx-web/angular-trash'
+            filter: '@stynx-nyx/angular-trash'
             report_path: packages-web/angular-trash/reports/mutation
           - package: angular-ui
-            filter: '@stynx-web/angular-ui'
+            filter: '@stynx-nyx/angular-ui'
             report_path: packages-web/angular-ui/reports/mutation
           - package: sdk
-            filter: '@stynx-web/sdk'
+            filter: '@stynx-nyx/sdk'
             report_path: packages-web/sdk/reports/mutation
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3

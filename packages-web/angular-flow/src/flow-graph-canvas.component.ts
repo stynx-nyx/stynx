@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
-import { StynxTranslatePipe } from '@stynx-web/angular-i18n';
-import { StynxIconComponent } from '@stynx-web/angular-ui';
+import { StynxTranslatePipe } from '@stynx-nyx/angular-i18n';
+import { StynxIconComponent } from '@stynx-nyx/angular-ui';
 import type { FlowEdge, FlowNode } from './types';
 
 @Component({

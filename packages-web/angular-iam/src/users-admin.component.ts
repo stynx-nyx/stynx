@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Output, inject, signal } from '@angular/core';
 import { ReactiveFormsModule, NonNullableFormBuilder } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { StynxI18nService, StynxTranslatePipe } from '@stynx-web/angular-i18n';
+import { StynxI18nService, StynxTranslatePipe } from '@stynx-nyx/angular-i18n';
 import {
   EmptyStateComponent,
   StynxBannerComponent,
@@ -9,8 +9,8 @@ import {
   StynxLoadingSpinnerComponent,
   StynxPaginationComponent,
   StynxToastService,
-} from '@stynx-web/angular-ui';
-import type { StynxPageChange } from '@stynx-web/angular-ui';
+} from '@stynx-nyx/angular-ui';
+import type { StynxPageChange } from '@stynx-nyx/angular-ui';
 import { IamApiService } from './iam-api.service';
 import { StynxUserCreateDialogComponent } from './user-create-dialog.component';
 import type { StynxCreateUserRequest, StynxUser } from './types';

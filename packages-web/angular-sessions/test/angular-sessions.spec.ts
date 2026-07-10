@@ -8,9 +8,9 @@ import {
 import type { EnvironmentInjector, Provider } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
-import { StynxSessionService } from '@stynx-web/angular-auth';
-import { StynxI18nService } from '@stynx-web/angular-i18n';
-import { StynxToastService } from '@stynx-web/angular-ui';
+import { StynxSessionService } from '@stynx-nyx/angular-auth';
+import { StynxI18nService } from '@stynx-nyx/angular-i18n';
+import { StynxToastService } from '@stynx-nyx/angular-ui';
 import { firstValueFrom } from 'rxjs';
 import { StynxActiveSessionsComponent } from '../src/active-sessions.component';
 import { provideStynxSessions } from '../src/provide-sessions';
@@ -65,7 +65,7 @@ beforeAll(() => {
   TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
 });
 
-describe('@stynx-web/angular-sessions', () => {
+describe('@stynx-nyx/angular-sessions', () => {
   afterEach(() => {
     TestBed.resetTestingModule();
   });

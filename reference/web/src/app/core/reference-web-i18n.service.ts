@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { STYNX_IAM_CATALOGS } from '@stynx-web/angular-iam';
-import { StynxI18nService } from '@stynx-web/angular-i18n';
+import { STYNX_IAM_CATALOGS } from '@stynx-nyx/angular-iam';
+import { StynxI18nService } from '@stynx-nyx/angular-i18n';
 import flowEnCatalog from '../../../../../packages-web/angular-flow/src/i18n/en.json';
 import flowPtBrCatalog from '../../../../../packages-web/angular-flow/src/i18n/pt-BR.json';
 

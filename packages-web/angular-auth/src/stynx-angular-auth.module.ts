@@ -3,7 +3,7 @@ import type { ModuleWithProviders } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { provideAuth } from 'angular-auth-oidc-client';
-import { STYNX_AUTH_PROVIDER } from '@stynx-web/angular';
+import { STYNX_AUTH_PROVIDER } from '@stynx-nyx/angular';
 import { StynxHasPermissionDirective } from './has-permission.directive';
 import { HttpAuthBackend } from './http-auth.backend';
 import { StynxLoginRedirectComponent } from './login-redirect.component';

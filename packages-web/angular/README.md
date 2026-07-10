@@ -1,14 +1,14 @@
-# `@stynx-web/angular` — Angular foundation: providers, HTTP interceptors, request context bridge
+# `@stynx-nyx/angular` — Angular foundation: providers, HTTP interceptors, request context bridge
 
-`@stynx-web/angular` is the Angular root package every other `@stynx-web/*` package builds on. It provides `provideStynxAngular()` (standalone-providers wiring), the HTTP interceptor stack (auth-token attachment, request-id propagation, tenant-header injection, error-envelope handling), a client-side request-context bridge that mirrors the backend's `RequestContext`, and shared services (error banner, toast). Wire it once at bootstrap; the rest of the `@stynx-web/*` packages assume it's present.
+`@stynx-nyx/angular` is the Angular root package every other `@stynx-nyx/*` package builds on. It provides `provideStynxAngular()` (standalone-providers wiring), the HTTP interceptor stack (auth-token attachment, request-id propagation, tenant-header injection, error-envelope handling), a client-side request-context bridge that mirrors the backend's `RequestContext`, and shared services (error banner, toast). Wire it once at bootstrap; the rest of the `@stynx-nyx/*` packages assume it's present.
 
 ## Purpose
 
-An Angular app talking to a STYNX backend needs consistent plumbing: every HTTP call must carry the bearer token, a request id (for correlation with backend logs), and the tenant header; error responses come back as STYNX error envelopes that should surface uniformly. Wiring this by hand drifts. `@stynx-web/angular` provides it as a single provider call.
+An Angular app talking to a STYNX backend needs consistent plumbing: every HTTP call must carry the bearer token, a request id (for correlation with backend logs), and the tenant header; error responses come back as STYNX error envelopes that should surface uniformly. Wiring this by hand drifts. `@stynx-nyx/angular` provides it as a single provider call.
 
-You reach for it first, before any other `@stynx-web/*` package. It is the Angular-side counterpart to `@stynx-nyx/core`.
+You reach for it first, before any other `@stynx-nyx/*` package. It is the Angular-side counterpart to `@stynx-nyx/core`.
 
-What it does NOT do: it doesn't render app UI (use `@stynx-web/angular-ui` for shared components). It doesn't manage auth state (use `@stynx-web/angular-auth`). It provides the HTTP + context substrate those build on.
+What it does NOT do: it doesn't render app UI (use `@stynx-nyx/angular-ui` for shared components). It doesn't manage auth state (use `@stynx-nyx/angular-auth`). It provides the HTTP + context substrate those build on.
 
 ## Audience
 
@@ -17,10 +17,10 @@ Angular frontend developers building a STYNX-backed app. Typical scenario: you s
 ## Install
 
 ```bash
-pnpm add @stynx-web/angular @stynx-web/sdk
+pnpm add @stynx-nyx/angular @stynx-nyx/sdk
 ```
 
-**Peer dependencies:** `@angular/core` `^18`, `@angular/common` `^18`, `@stynx-web/sdk` `^1`.
+**Peer dependencies:** `@angular/core` `^18`, `@angular/common` `^18`, `@stynx-nyx/sdk` `^1`.
 
 ## Quick start
 
@@ -28,7 +28,7 @@ pnpm add @stynx-web/angular @stynx-web/sdk
 // app.config.ts (standalone Angular)
 import { ApplicationConfig } from '@angular/core';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { provideStynxAngular } from '@stynx-web/angular';
+import { provideStynxAngular } from '@stynx-nyx/angular';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -43,7 +43,7 @@ export const appConfig: ApplicationConfig = {
 
 ```ts
 // Legacy NgModule path
-import { StynxAngularModule } from '@stynx-web/angular';
+import { StynxAngularModule } from '@stynx-nyx/angular';
 
 @NgModule({
   imports: [StynxAngularModule.forRoot({ apiBaseUrl: 'https://api.example.com' })],
@@ -99,7 +99,7 @@ export class AppModule {}
 | Option                | Type      | Default         | Description                                                |
 | --------------------- | --------- | --------------- | ---------------------------------------------------------- |
 | `apiBaseUrl`          | `string`  | (required)      | The STYNX backend base URL. Sets the SDK's `OpenAPI.BASE`. |
-| `defaultLocale`       | `string`  | `'en'`          | Locale fallback for `@stynx-web/angular-i18n`.             |
+| `defaultLocale`       | `string`  | `'en'`          | Locale fallback for `@stynx-nyx/angular-i18n`.             |
 | `strictErrorEnvelope` | `boolean` | `true`          | Treat non-envelope error responses as unexpected.          |
 | `tenantHeaderName`    | `string`  | `'X-Tenant-Id'` | Header the tenant interceptor injects.                     |
 
@@ -116,7 +116,7 @@ bootstrapApplication(AppComponent, {
 ### Example 2 — reading tenant context in a component
 
 ```ts
-import { TenantContextService } from '@stynx-web/angular';
+import { TenantContextService } from '@stynx-nyx/angular';
 
 @Component({
   /* ... */
@@ -135,15 +135,15 @@ export class HeaderComponent {
 
 ## Common pitfalls
 
-- **Missing `provideStynxAngular()`** — downstream `@stynx-web/*` packages crash on injection of services this package provides. It must be in the root providers.
+- **Missing `provideStynxAngular()`** — downstream `@stynx-nyx/*` packages crash on injection of services this package provides. It must be in the root providers.
 - **`apiBaseUrl` not set** — the SDK makes relative-path requests against the app's own origin, returning 404s. Always set it.
 - **Calling `provideHttpClient()` without `withInterceptors`** when mixing custom interceptors — order matters; STYNX's interceptors should run in the registered order.
 
 ## Related packages
 
-- [`@stynx-web/sdk`](/docs/packages-web/sdk/) — the generated REST client this package wires.
-- [`@stynx-web/angular-ui`](/docs/packages-web/angular-ui/) — shared UI components.
-- [`@stynx-web/angular-auth`](/docs/packages-web/angular-auth/) — auth state + login UI (depends on this).
+- [`@stynx-nyx/sdk`](/docs/packages-web/sdk/) — the generated REST client this package wires.
+- [`@stynx-nyx/angular-ui`](/docs/packages-web/angular-ui/) — shared UI components.
+- [`@stynx-nyx/angular-auth`](/docs/packages-web/angular-auth/) — auth state + login UI (depends on this).
 - [`@stynx-nyx/core`](/docs/packages/core/) — the backend counterpart (request context).
 
 ## TypeDoc reference

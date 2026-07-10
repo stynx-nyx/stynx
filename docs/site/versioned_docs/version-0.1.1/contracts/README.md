@@ -11,9 +11,9 @@ can compile or validate against without importing implementation internals.
 - [auth-hosted-actions.md](auth-hosted-actions.md) — hosted identity-provider
   action URLs consumed by profile security handoff components.
 - [audit-events-api.md](audit-events-api.md) — HTTP contract for
-  `@stynx-web/angular-audit` list, detail, entity-history, and integrity views.
+  `@stynx-nyx/angular-audit` list, detail, entity-history, and integrity views.
 - [flow-api.md](flow-api.md) — HTTP contract for `@stynx-nyx/flow` and
-  `@stynx-web/angular-flow`.
+  `@stynx-nyx/angular-flow`.
 - [signature.md](signature.md) — PAdES/TSA signing and verification contract for
   `@stynx-nyx/signature`.
 - [xmldsig.md](xmldsig.md) — XMLDSig signing and verification contract for

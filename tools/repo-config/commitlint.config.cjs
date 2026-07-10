@@ -57,15 +57,15 @@ const allowedScopes = [
   '@stynx-nyx/storage',
   '@stynx-nyx/tenancy',
   '@stynx-nyx/testing',
-  '@stynx-web/angular',
-  '@stynx-web/angular-tenancy',
-  '@stynx-web/angular-auth',
-  '@stynx-web/angular-ui',
-  '@stynx-web/angular-i18n',
-  '@stynx-web/angular-trash',
-  '@stynx-web/angular-storage',
-  '@stynx-web/angular-sessions',
-  '@stynx-web/angular-profile',
+  '@stynx-nyx/angular',
+  '@stynx-nyx/angular-tenancy',
+  '@stynx-nyx/angular-auth',
+  '@stynx-nyx/angular-ui',
+  '@stynx-nyx/angular-i18n',
+  '@stynx-nyx/angular-trash',
+  '@stynx-nyx/angular-storage',
+  '@stynx-nyx/angular-sessions',
+  '@stynx-nyx/angular-profile',
   '@stynx-internal/eslint-config',
   '@stynx-internal/tsconfig',
   '@stynx-internal/migration-linter',
@@ -84,7 +84,7 @@ module.exports = {
       // The role branch's capture is the whole "Role + Role" string so the
       // role-of-record (for any downstream tooling) is the full combo,
       // matching the way authors write it.
-      // Scope class admits `@` so `@stynx-nyx/*` / `@stynx-web/*` scopes work
+      // Scope class admits `@` so `@stynx-nyx/*` / `@stynx-nyx/*` scopes work
       // (a pre-existing latent bug surfaced during F-12 smoke testing —
       // the scope enum lists them but the prior regex couldn't match them).
       headerPattern: new RegExp(

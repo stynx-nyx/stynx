@@ -41,14 +41,14 @@
 
 - backend/database package `@stynx-nyx/flow` with design/runtime services, effect dispatch, resolver expansion, node form-rule gating, aliases, analytics paging/filtering, task privilege checks, and policy evaluation;
 - platform migration `0015_flow_gap_closure.sql`;
-- Angular package `@stynx-web/angular-flow` with real Vitest coverage for exports/routes, API facade route families, and component behavior;
+- Angular package `@stynx-nyx/angular-flow` with real Vitest coverage for exports/routes, API facade route families, and component behavior;
 - reference API/web package consumption and release changeset coverage.
 
 10. Closed the next Flow gap-closure bucket after reassessing PORM leftovers:
 
 - verified answer/waiver mutation freshness still needed automatic runtime signaling and added stynx-native DB triggers plus integration evidence;
 - enabled DML audit for current curated Flow live tables and platform curated tables through platform migrations;
-- added generic typed fill execution controls and question-level waiver entry to `@stynx-web/angular-flow`;
+- added generic typed fill execution controls and question-level waiver entry to `@stynx-nyx/angular-flow`;
 - completed the API completeness review by adding only the package-needed fill-scoped waiver listing route;
 - seeded reference-web Flow route-access E2E coverage.
 
@@ -63,7 +63,7 @@
 1. Move reusable pieces from legacy `backend/src/core/*` into `packages/backend` adapters incrementally.
 2. Add package-level integration examples for `porm` and `pec` controller/module adoption over `PormIdentityAdminFacade` / `PecIdentityAdminFacade` (code snippets + migration checks).
 3. Execute sibling repo cutovers (`porm`, `pec`, `sgp`) to consume package APIs and remove duplicated legacy implementations.
-4. Execute the original `porm` Flow consumer cutover to `@stynx-nyx/flow` and `@stynx-web/angular-flow` using [porm-flow-deprecation-readiness.md](porm-flow-deprecation-readiness.md) once the consuming repo is ready for the dependency swap.
+4. Execute the original `porm` Flow consumer cutover to `@stynx-nyx/flow` and `@stynx-nyx/angular-flow` using [porm-flow-deprecation-readiness.md](porm-flow-deprecation-readiness.md) once the consuming repo is ready for the dependency swap.
 5. Keep DML audit enabled by default for future mutable curated tables added by any stynx package; exceptions must be explicit and narrow.
 
 ## P2

@@ -1,7 +1,7 @@
 import { createStrykerConfig } from '../../tools/stryker/base.mjs';
 
 export default createStrykerConfig({
-  packageName: '@stynx-web/angular',
+  packageName: '@stynx-nyx/angular',
   mutate: [
     'src/auth.interceptor.ts',
     'src/empty-state.component.ts',

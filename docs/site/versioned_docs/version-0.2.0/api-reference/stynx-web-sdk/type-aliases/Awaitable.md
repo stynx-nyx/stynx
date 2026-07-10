@@ -1,8 +1,8 @@
-[**@stynx-web/sdk**](../index.md)
+[**@stynx-nyx/sdk**](../index.md)
 
 ---
 
-[@stynx-web/sdk](../index.md) / Awaitable
+[@stynx-nyx/sdk](../index.md) / Awaitable
 
 # Type Alias: Awaitable\<T\>
 

@@ -1,8 +1,8 @@
-[**@stynx-web/sdk**](../index.md)
+[**@stynx-nyx/sdk**](../index.md)
 
 ---
 
-[@stynx-web/sdk](../index.md) / UpdateFlowTransitionEffectDto
+[@stynx-nyx/sdk](../index.md) / UpdateFlowTransitionEffectDto
 
 # Type Alias: UpdateFlowTransitionEffectDto
 

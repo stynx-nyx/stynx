@@ -1,8 +1,8 @@
-[**@stynx-web/angular-auth**](../index.md)
+[**@stynx-nyx/angular-auth**](../index.md)
 
 ---
 
-[@stynx-web/angular-auth](../index.md) / STYNX_SESSION_AUTH_PROVIDER
+[@stynx-nyx/angular-auth](../index.md) / STYNX_SESSION_AUTH_PROVIDER
 
 # Variable: STYNX_SESSION_AUTH_PROVIDER
 

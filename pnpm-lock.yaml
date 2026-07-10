@@ -266,7 +266,7 @@ importers:
       '@stynx-internal/tsconfig':
         specifier: workspace:*
         version: link:../../../tools/tsconfig
-      '@stynx-web/angular':
+      '@stynx-nyx/angular':
         specifier: workspace:*
         version: link:../../../packages-web/angular
       rxjs:
@@ -281,10 +281,10 @@ importers:
 
   packages-web/angular:
     dependencies:
-      '@stynx-web/angular-tenancy':
+      '@stynx-nyx/angular-tenancy':
         specifier: workspace:*
         version: link:../angular-tenancy
-      '@stynx-web/sdk':
+      '@stynx-nyx/sdk':
         specifier: workspace:*
         version: link:../sdk
       rxjs:
@@ -358,19 +358,19 @@ importers:
       '@angular/router':
         specifier: 21.2.15
         version: 21.2.15(@angular/common@21.2.15(@angular/core@21.2.15(@angular/compiler@21.2.15)(rxjs@7.8.2)(zone.js@0.16.2))(rxjs@7.8.2))(@angular/core@21.2.15(@angular/compiler@21.2.15)(rxjs@7.8.2)(zone.js@0.16.2))(@angular/platform-browser@21.2.15(@angular/common@21.2.15(@angular/core@21.2.15(@angular/compiler@21.2.15)(rxjs@7.8.2)(zone.js@0.16.2))(rxjs@7.8.2))(@angular/core@21.2.15(@angular/compiler@21.2.15)(rxjs@7.8.2)(zone.js@0.16.2)))(rxjs@7.8.2)
-      '@stynx-web/angular':
+      '@stynx-nyx/angular':
         specifier: workspace:*
         version: link:../angular
-      '@stynx-web/angular-auth':
+      '@stynx-nyx/angular-auth':
         specifier: workspace:*
         version: link:../angular-auth
-      '@stynx-web/angular-i18n':
+      '@stynx-nyx/angular-i18n':
         specifier: workspace:*
         version: link:../angular-i18n
-      '@stynx-web/angular-ui':
+      '@stynx-nyx/angular-ui':
         specifier: workspace:*
         version: link:../angular-ui
-      '@stynx-web/sdk':
+      '@stynx-nyx/sdk':
         specifier: workspace:*
         version: link:../sdk
       '@types/node':
@@ -391,13 +391,13 @@ importers:
 
   packages-web/angular-auth:
     dependencies:
-      '@stynx-web/angular':
+      '@stynx-nyx/angular':
         specifier: workspace:*
         version: link:../angular
-      '@stynx-web/angular-i18n':
+      '@stynx-nyx/angular-i18n':
         specifier: workspace:*
         version: link:../angular-i18n
-      '@stynx-web/sdk':
+      '@stynx-nyx/sdk':
         specifier: workspace:*
         version: link:../sdk
       angular-auth-oidc-client:
@@ -446,19 +446,19 @@ importers:
 
   packages-web/angular-flow:
     dependencies:
-      '@stynx-web/angular-auth':
+      '@stynx-nyx/angular-auth':
         specifier: workspace:*
         version: link:../angular-auth
-      '@stynx-web/angular-i18n':
+      '@stynx-nyx/angular-i18n':
         specifier: workspace:*
         version: link:../angular-i18n
-      '@stynx-web/angular-storage':
+      '@stynx-nyx/angular-storage':
         specifier: workspace:*
         version: link:../angular-storage
-      '@stynx-web/angular-ui':
+      '@stynx-nyx/angular-ui':
         specifier: workspace:*
         version: link:../angular-ui
-      '@stynx-web/sdk':
+      '@stynx-nyx/sdk':
         specifier: workspace:*
         version: link:../sdk
       rxjs:
@@ -566,19 +566,19 @@ importers:
       '@angular/router':
         specifier: 21.2.15
         version: 21.2.15(@angular/common@21.2.15(@angular/core@21.2.15(@angular/compiler@21.2.15)(rxjs@7.8.2)(zone.js@0.16.2))(rxjs@7.8.2))(@angular/core@21.2.15(@angular/compiler@21.2.15)(rxjs@7.8.2)(zone.js@0.16.2))(@angular/platform-browser@21.2.15(@angular/common@21.2.15(@angular/core@21.2.15(@angular/compiler@21.2.15)(rxjs@7.8.2)(zone.js@0.16.2))(rxjs@7.8.2))(@angular/core@21.2.15(@angular/compiler@21.2.15)(rxjs@7.8.2)(zone.js@0.16.2)))(rxjs@7.8.2)
-      '@stynx-web/angular':
+      '@stynx-nyx/angular':
         specifier: workspace:*
         version: link:../angular
-      '@stynx-web/angular-auth':
+      '@stynx-nyx/angular-auth':
         specifier: workspace:*
         version: link:../angular-auth
-      '@stynx-web/angular-i18n':
+      '@stynx-nyx/angular-i18n':
         specifier: workspace:*
         version: link:../angular-i18n
-      '@stynx-web/angular-ui':
+      '@stynx-nyx/angular-ui':
         specifier: workspace:*
         version: link:../angular-ui
-      '@stynx-web/sdk':
+      '@stynx-nyx/sdk':
         specifier: workspace:*
         version: link:../sdk
       '@types/node':
@@ -599,22 +599,22 @@ importers:
 
   packages-web/angular-profile:
     dependencies:
-      '@stynx-web/angular':
+      '@stynx-nyx/angular':
         specifier: workspace:*
         version: link:../angular
-      '@stynx-web/angular-auth':
+      '@stynx-nyx/angular-auth':
         specifier: workspace:*
         version: link:../angular-auth
-      '@stynx-web/angular-i18n':
+      '@stynx-nyx/angular-i18n':
         specifier: workspace:*
         version: link:../angular-i18n
-      '@stynx-web/angular-storage':
+      '@stynx-nyx/angular-storage':
         specifier: workspace:*
         version: link:../angular-storage
-      '@stynx-web/angular-ui':
+      '@stynx-nyx/angular-ui':
         specifier: workspace:*
         version: link:../angular-ui
-      '@stynx-web/sdk':
+      '@stynx-nyx/sdk':
         specifier: workspace:*
         version: link:../sdk
       rxjs:
@@ -660,16 +660,16 @@ importers:
 
   packages-web/angular-sessions:
     dependencies:
-      '@stynx-web/angular':
+      '@stynx-nyx/angular':
         specifier: workspace:*
         version: link:../angular
-      '@stynx-web/angular-auth':
+      '@stynx-nyx/angular-auth':
         specifier: workspace:*
         version: link:../angular-auth
-      '@stynx-web/angular-i18n':
+      '@stynx-nyx/angular-i18n':
         specifier: workspace:*
         version: link:../angular-i18n
-      '@stynx-web/angular-ui':
+      '@stynx-nyx/angular-ui':
         specifier: workspace:*
         version: link:../angular-ui
       rxjs:
@@ -709,13 +709,13 @@ importers:
 
   packages-web/angular-storage:
     dependencies:
-      '@stynx-web/angular':
+      '@stynx-nyx/angular':
         specifier: workspace:*
         version: link:../angular
-      '@stynx-web/angular-i18n':
+      '@stynx-nyx/angular-i18n':
         specifier: workspace:*
         version: link:../angular-i18n
-      '@stynx-web/angular-ui':
+      '@stynx-nyx/angular-ui':
         specifier: workspace:*
         version: link:../angular-ui
       rxjs:
@@ -755,7 +755,7 @@ importers:
 
   packages-web/angular-tenancy:
     dependencies:
-      '@stynx-web/angular-i18n':
+      '@stynx-nyx/angular-i18n':
         specifier: workspace:*
         version: link:../angular-i18n
       rxjs:
@@ -798,16 +798,16 @@ importers:
 
   packages-web/angular-trash:
     dependencies:
-      '@stynx-web/angular-auth':
+      '@stynx-nyx/angular-auth':
         specifier: workspace:*
         version: link:../angular-auth
-      '@stynx-web/angular-i18n':
+      '@stynx-nyx/angular-i18n':
         specifier: workspace:*
         version: link:../angular-i18n
-      '@stynx-web/angular-ui':
+      '@stynx-nyx/angular-ui':
         specifier: workspace:*
         version: link:../angular-ui
-      '@stynx-web/sdk':
+      '@stynx-nyx/sdk':
         specifier: workspace:*
         version: link:../sdk
       rxjs:
@@ -847,10 +847,10 @@ importers:
 
   packages-web/angular-ui:
     dependencies:
-      '@stynx-web/angular':
+      '@stynx-nyx/angular':
         specifier: workspace:*
         version: link:../angular
-      '@stynx-web/angular-i18n':
+      '@stynx-nyx/angular-i18n':
         specifier: workspace:*
         version: link:../angular-i18n
       rxjs:
@@ -2003,37 +2003,37 @@ importers:
       '@angular/router':
         specifier: 21.2.15
         version: 21.2.15(@angular/common@21.2.15(@angular/core@21.2.15(@angular/compiler@21.2.15)(rxjs@7.8.2)(zone.js@0.16.2))(rxjs@7.8.2))(@angular/core@21.2.15(@angular/compiler@21.2.15)(rxjs@7.8.2)(zone.js@0.16.2))(@angular/platform-browser@21.2.15(@angular/common@21.2.15(@angular/core@21.2.15(@angular/compiler@21.2.15)(rxjs@7.8.2)(zone.js@0.16.2))(rxjs@7.8.2))(@angular/core@21.2.15(@angular/compiler@21.2.15)(rxjs@7.8.2)(zone.js@0.16.2)))(rxjs@7.8.2)
-      '@stynx-web/angular':
+      '@stynx-nyx/angular':
         specifier: workspace:*
         version: link:../../packages-web/angular
-      '@stynx-web/angular-auth':
+      '@stynx-nyx/angular-auth':
         specifier: workspace:*
         version: link:../../packages-web/angular-auth
-      '@stynx-web/angular-flow':
+      '@stynx-nyx/angular-flow':
         specifier: workspace:*
         version: link:../../packages-web/angular-flow
-      '@stynx-web/angular-i18n':
+      '@stynx-nyx/angular-i18n':
         specifier: workspace:*
         version: link:../../packages-web/angular-i18n
-      '@stynx-web/angular-iam':
+      '@stynx-nyx/angular-iam':
         specifier: workspace:*
         version: link:../../packages-web/angular-iam
-      '@stynx-web/angular-profile':
+      '@stynx-nyx/angular-profile':
         specifier: workspace:*
         version: link:../../packages-web/angular-profile
-      '@stynx-web/angular-sessions':
+      '@stynx-nyx/angular-sessions':
         specifier: workspace:*
         version: link:../../packages-web/angular-sessions
-      '@stynx-web/angular-storage':
+      '@stynx-nyx/angular-storage':
         specifier: workspace:*
         version: link:../../packages-web/angular-storage
-      '@stynx-web/angular-tenancy':
+      '@stynx-nyx/angular-tenancy':
         specifier: workspace:*
         version: link:../../packages-web/angular-tenancy
-      '@stynx-web/angular-trash':
+      '@stynx-nyx/angular-trash':
         specifier: workspace:*
         version: link:../../packages-web/angular-trash
-      '@stynx-web/angular-ui':
+      '@stynx-nyx/angular-ui':
         specifier: workspace:*
         version: link:../../packages-web/angular-ui
       angular-auth-oidc-client:

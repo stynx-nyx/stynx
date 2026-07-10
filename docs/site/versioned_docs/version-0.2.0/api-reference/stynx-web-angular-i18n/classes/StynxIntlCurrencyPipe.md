@@ -1,8 +1,8 @@
-[**@stynx-web/angular-i18n**](../index.md)
+[**@stynx-nyx/angular-i18n**](../index.md)
 
 ---
 
-[@stynx-web/angular-i18n](../index.md) / StynxIntlCurrencyPipe
+[@stynx-nyx/angular-i18n](../index.md) / StynxIntlCurrencyPipe
 
 # Class: StynxIntlCurrencyPipe
 

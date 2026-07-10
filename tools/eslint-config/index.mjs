@@ -16,7 +16,7 @@ const workspaceRoot = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 
 const deepImportPatterns = [
   {
-    group: ['@stynx-nyx/*/*', '@stynx-web/*/*'],
+    group: ['@stynx-nyx/*/*'],
     message: 'Use barrel imports only; deep imports between workspace packages are forbidden.',
   },
 ];
@@ -72,24 +72,24 @@ const tsdocPackages = new Set([
   '@stynx-nyx/ratelimit',
   '@stynx-nyx/signature',
   '@stynx-nyx/testing',
-  '@stynx-web/angular',
-  '@stynx-web/angular-audit',
-  '@stynx-web/angular-auth',
-  '@stynx-web/angular-flow',
-  '@stynx-web/angular-i18n',
-  '@stynx-web/angular-iam',
-  '@stynx-web/angular-profile',
-  '@stynx-web/angular-sessions',
-  '@stynx-web/angular-storage',
-  '@stynx-web/angular-tenancy',
-  '@stynx-web/angular-trash',
-  '@stynx-web/angular-ui',
-  '@stynx-web/sdk',
+  '@stynx-nyx/angular',
+  '@stynx-nyx/angular-audit',
+  '@stynx-nyx/angular-auth',
+  '@stynx-nyx/angular-flow',
+  '@stynx-nyx/angular-i18n',
+  '@stynx-nyx/angular-iam',
+  '@stynx-nyx/angular-profile',
+  '@stynx-nyx/angular-sessions',
+  '@stynx-nyx/angular-storage',
+  '@stynx-nyx/angular-tenancy',
+  '@stynx-nyx/angular-trash',
+  '@stynx-nyx/angular-ui',
+  '@stynx-nyx/sdk',
 ]);
 
 const tsdocExportContexts = ['ExportAllDeclaration', 'ExportNamedDeclaration'];
 const tsdocExportContextsForPackage = () =>
-  currentPackageName() === '@stynx-web/sdk'
+  currentPackageName() === '@stynx-nyx/sdk'
     ? [
         "ExportAllDeclaration[source.value!='./generated']",
         "ExportNamedDeclaration[source.value!='./generated']",

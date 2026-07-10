@@ -1,10 +1,10 @@
-# `@stynx-web/angular-trash` — Angular soft-delete recovery UI (trash can + restore)
+# `@stynx-nyx/angular-trash` — Angular soft-delete recovery UI (trash can + restore)
 
-`@stynx-web/angular-trash` is the Angular soft-delete recovery package. It provides a `<stynx-trash-list>` component listing soft-deleted records with a restore action. Backed by `@stynx-nyx/data`'s soft-delete primitives (per `ADR-001-soft-delete`) exposed through the SDK.
+`@stynx-nyx/angular-trash` is the Angular soft-delete recovery package. It provides a `<stynx-trash-list>` component listing soft-deleted records with a restore action. Backed by `@stynx-nyx/data`'s soft-delete primitives (per `ADR-001-soft-delete`) exposed through the SDK.
 
 ## Purpose
 
-Apps with soft-delete need a "trash can" so users can recover accidentally-deleted records. Building the list + restore + cascade-conflict handling per app is repetitive. `@stynx-web/angular-trash` provides it.
+Apps with soft-delete need a "trash can" so users can recover accidentally-deleted records. Building the list + restore + cascade-conflict handling per app is repetitive. `@stynx-nyx/angular-trash` provides it.
 
 You reach for it when your app soft-deletes records and wants user-facing recovery.
 
@@ -17,15 +17,15 @@ Angular frontend developers building data-management UIs.
 ## Install
 
 ```bash
-pnpm add @stynx-web/angular-trash
+pnpm add @stynx-nyx/angular-trash
 ```
 
-**Peer dependencies:** `@angular/core` `^18`, `@stynx-web/angular` `^1`, `@stynx-web/angular-ui` `^1`, `@stynx-web/sdk` `^1`.
+**Peer dependencies:** `@angular/core` `^18`, `@stynx-nyx/angular` `^1`, `@stynx-nyx/angular-ui` `^1`, `@stynx-nyx/sdk` `^1`.
 
 ## Quick start
 
 ```ts
-import { provideTrash } from '@stynx-web/angular-trash';
+import { provideTrash } from '@stynx-nyx/angular-trash';
 
 export const appConfig = { providers: [provideTrash()] };
 ```
@@ -88,7 +88,7 @@ export const appConfig = { providers: [provideTrash()] };
 
 ## Related packages
 
-- [`@stynx-web/angular`](/docs/packages-web/angular/) — the foundation.
+- [`@stynx-nyx/angular`](/docs/packages-web/angular/) — the foundation.
 - [`@stynx-nyx/data`](/docs/packages/data/) — the soft-delete cascade primitives (`ADR-001-soft-delete`).
 
 ## TypeDoc reference

@@ -1,8 +1,8 @@
-[**@stynx-web/sdk**](../index.md)
+[**@stynx-nyx/sdk**](../index.md)
 
 ---
 
-[@stynx-web/sdk](../index.md) / UpdateFlowNodeDto
+[@stynx-nyx/sdk](../index.md) / UpdateFlowNodeDto
 
 # Type Alias: UpdateFlowNodeDto
 

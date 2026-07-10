@@ -1,15 +1,15 @@
 ---
-title: '@stynx-web/angular-auth'
+title: '@stynx-nyx/angular-auth'
 ---
 
-# @stynx-web/angular-auth
+# @stynx-nyx/angular-auth
 
 Angular 20 authentication integration for STYNX. It combines `angular-auth-oidc-client`, STYNX session exchange, access-token storage, permission guards, hosted-auth action handoff support, and permission-aware UI directives.
 
 ## Install
 
 ```bash
-pnpm add @stynx-web/angular-auth
+pnpm add @stynx-nyx/angular-auth
 ```
 
 ## Peer Dependencies
@@ -22,8 +22,8 @@ pnpm add @stynx-web/angular-auth
 ## Use
 
 ```ts
-import { provideStynxDefaults } from '@stynx-web/angular';
-import { provideStynxAuth, stynxAuthGuard, stynxPermissionGuard } from '@stynx-web/angular-auth';
+import { provideStynxDefaults } from '@stynx-nyx/angular';
+import { provideStynxAuth, stynxAuthGuard, stynxPermissionGuard } from '@stynx-nyx/angular-auth';
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -54,7 +54,7 @@ NgModule hosts can use `StynxAngularAuthModule.forRoot(...)`.
 
 ## See Also
 
-- [`@stynx-web/angular`](/docs/packages-web/angular)
-- [`@stynx-web/angular-profile`](/docs/packages-web/angular-profile)
-- [`@stynx-web/angular-sessions`](/docs/packages-web/angular-sessions)
+- [`@stynx-nyx/angular`](/docs/packages-web/angular)
+- [`@stynx-nyx/angular-profile`](/docs/packages-web/angular-profile)
+- [`@stynx-nyx/angular-sessions`](/docs/packages-web/angular-sessions)
 - [Reference app auth demo](/docs/reference/web#dev-auth-is-test-only)

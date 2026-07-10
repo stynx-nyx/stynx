@@ -1,8 +1,8 @@
-[**@stynx-web/angular**](../index.md)
+[**@stynx-nyx/angular**](../index.md)
 
 ---
 
-[@stynx-web/angular](../index.md) / SessionMode
+[@stynx-nyx/angular](../index.md) / SessionMode
 
 # Type Alias: SessionMode
 

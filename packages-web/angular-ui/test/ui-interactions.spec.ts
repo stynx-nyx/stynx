@@ -1,7 +1,7 @@
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
-import { StynxI18nService } from '@stynx-web/angular-i18n';
+import { StynxI18nService } from '@stynx-nyx/angular-i18n';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { StynxConfirmDialogComponent } from '../src/confirm-dialog.component';
 import { StynxPaginationComponent } from '../src/pagination.component';
@@ -27,7 +27,7 @@ afterEach(() => {
   TestBed.resetTestingModule();
 });
 
-describe('@stynx-web/angular-ui interaction depth', () => {
+describe('@stynx-nyx/angular-ui interaction depth', () => {
   it('renders confirm dialog only when open and emits dismiss/confirm from buttons', async () => {
     const fixture = await renderComponent(StynxConfirmDialogComponent, {
       inputs: { confirmLabel: 'Delete', message: 'Delete archived row?', open: false, title: 'Delete row' },

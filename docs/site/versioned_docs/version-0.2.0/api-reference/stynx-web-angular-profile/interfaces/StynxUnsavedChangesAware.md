@@ -1,8 +1,8 @@
-[**@stynx-web/angular-profile**](../index.md)
+[**@stynx-nyx/angular-profile**](../index.md)
 
 ---
 
-[@stynx-web/angular-profile](../index.md) / StynxUnsavedChangesAware
+[@stynx-nyx/angular-profile](../index.md) / StynxUnsavedChangesAware
 
 # Interface: StynxUnsavedChangesAware
 

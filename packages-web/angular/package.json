@@ -1,15 +1,15 @@
 {
-  "name": "@stynx-web/angular",
+  "name": "@stynx-nyx/angular",
   "version": "1.0.0",
   "description": "Angular core integration for stynx",
   "exports": {
     ".": {
-      "types": "./dist/types/stynx-web-angular.d.ts",
-      "default": "./dist/fesm2022/stynx-web-angular.mjs"
+      "types": "./dist/types/stynx-nyx-angular.d.ts",
+      "default": "./dist/fesm2022/stynx-nyx-angular.mjs"
     },
     "./testing": {
-      "types": "./dist/types/stynx-web-angular-testing.d.ts",
-      "default": "./dist/fesm2022/stynx-web-angular-testing.mjs"
+      "types": "./dist/types/stynx-nyx-angular-testing.d.ts",
+      "default": "./dist/fesm2022/stynx-nyx-angular-testing.mjs"
     },
     "./package.json": {
       "default": "./package.json"
@@ -32,8 +32,8 @@
     "build:tsc": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@stynx-web/angular-tenancy": "workspace:*",
-    "@stynx-web/sdk": "workspace:*",
+    "@stynx-nyx/angular-tenancy": "workspace:*",
+    "@stynx-nyx/sdk": "workspace:*",
     "rxjs": "^7.8.2"
   },
   "peerDependencies": {

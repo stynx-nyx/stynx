@@ -1,8 +1,8 @@
-[**@stynx-web/sdk**](../index.md)
+[**@stynx-nyx/sdk**](../index.md)
 
 ---
 
-[@stynx-web/sdk](../index.md) / FlowFillsService
+[@stynx-nyx/sdk](../index.md) / FlowFillsService
 
 # Class: FlowFillsService
 

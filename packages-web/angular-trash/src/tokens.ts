@@ -1,5 +1,5 @@
 import { InjectionToken } from '@angular/core';
-import type { StynxSdkClient } from '@stynx-web/sdk';
+import type { StynxSdkClient } from '@stynx-nyx/sdk';
 import type { StynxTrashAdapter, StynxTrashKindConfig, StynxTrashOptions } from './types';
 
 export const STYNX_DEFAULT_TRASH_KINDS: StynxTrashKindConfig[] = [

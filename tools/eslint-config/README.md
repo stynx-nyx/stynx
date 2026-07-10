@@ -1,6 +1,6 @@
 # `@stynx-internal/eslint-config` — shared flat ESLint configs for STYNX workspace packages
 
-`@stynx-internal/eslint-config` provides the shared ESLint flat configs every `@stynx-nyx/*` and `@stynx-web/*` package extends. Four exported configs — `nest` (backend), `angular` (web), `lib` (library), and the base — encode STYNX's lint rules so every package lints consistently. Extend the right one in your package's `eslint.config.mjs`.
+`@stynx-internal/eslint-config` provides the shared ESLint flat configs every `@stynx-nyx/*` and `@stynx-nyx/*` package extends. Four exported configs — `nest` (backend), `angular` (web), `lib` (library), and the base — encode STYNX's lint rules so every package lints consistently. Extend the right one in your package's `eslint.config.mjs`.
 
 ## Purpose
 
@@ -40,12 +40,12 @@ export default [...angularConfig];
 
 ### Exported configs
 
-| Export                                  | Use for                     | Description                                         |
-| --------------------------------------- | --------------------------- | --------------------------------------------------- |
-| `@stynx-internal/eslint-config`         | (base)                      | The base ruleset all others build on.               |
+| Export                                  | Use for                         | Description                                         |
+| --------------------------------------- | ------------------------------- | --------------------------------------------------- |
+| `@stynx-internal/eslint-config`         | (base)                          | The base ruleset all others build on.               |
 | `@stynx-internal/eslint-config/nest`    | backend `@stynx-nyx/*` packages | NestJS + TypeScript rules.                          |
-| `@stynx-internal/eslint-config/angular` | web `@stynx-web/*` packages | Angular + template + TypeScript rules.              |
-| `@stynx-internal/eslint-config/lib`     | reusable library packages   | Library-author rules (stricter public-API hygiene). |
+| `@stynx-internal/eslint-config/angular` | web `@stynx-nyx/*` packages     | Angular + template + TypeScript rules.              |
+| `@stynx-internal/eslint-config/lib`     | reusable library packages       | Library-author rules (stricter public-API hygiene). |
 
 ## Configuration
 

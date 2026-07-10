@@ -1,8 +1,8 @@
 import { CSP_NONCE, importProvidersFrom, makeEnvironmentProviders } from '@angular/core';
 import type { EnvironmentProviders, Provider } from '@angular/core';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
-import { provideTenancy } from '@stynx-web/angular-tenancy';
-import type { TenancyOptions } from '@stynx-web/angular-tenancy';
+import { provideTenancy } from '@stynx-nyx/angular-tenancy';
+import type { TenancyOptions } from '@stynx-nyx/angular-tenancy';
 import { AuthInterceptor } from './auth.interceptor';
 import { ErrorBannerService } from './error-banner.service';
 import { ErrorInterceptor } from './error.interceptor';

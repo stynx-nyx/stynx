@@ -7,8 +7,8 @@ export default createVitestConfig({
   include: ['test/**/*.spec.ts'],
   environment: 'jsdom',
   alias: {
-    '@stynx-web/angular': resolve(__dirname, '../../../packages-web/angular/src/index.ts'),
-    '@stynx-web/angular-tenancy': resolve(__dirname, '../../../packages-web/angular-tenancy/src/index.ts'),
+    '@stynx-nyx/angular': resolve(__dirname, '../../../packages-web/angular/src/index.ts'),
+    '@stynx-nyx/angular-tenancy': resolve(__dirname, '../../../packages-web/angular-tenancy/src/index.ts'),
     rxjs: resolve(__dirname, 'node_modules/rxjs/dist/cjs/index.js'),
     'rxjs/operators': resolve(__dirname, 'node_modules/rxjs/dist/cjs/operators/index.js'),
   },

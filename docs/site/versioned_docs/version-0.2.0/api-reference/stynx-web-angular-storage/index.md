@@ -1,8 +1,8 @@
-**@stynx-web/angular-storage**
+**@stynx-nyx/angular-storage**
 
 ---
 
-# @stynx-web/angular-storage
+# @stynx-nyx/angular-storage
 
 ## Classes
 

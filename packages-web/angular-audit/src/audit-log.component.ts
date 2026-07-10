@@ -1,13 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { StynxTranslatePipe } from '@stynx-web/angular-i18n';
+import { StynxTranslatePipe } from '@stynx-nyx/angular-i18n';
 import {
   EmptyStateComponent,
   StynxBannerComponent,
   StynxIconComponent,
   StynxLoadingSpinnerComponent,
   StynxPaginationComponent,
-} from '@stynx-web/angular-ui';
+} from '@stynx-nyx/angular-ui';
 import { finalize } from 'rxjs';
 import { AuditApiService } from './audit-api.service';
 import type { AuditEventSummary, AuditFilter } from './types';

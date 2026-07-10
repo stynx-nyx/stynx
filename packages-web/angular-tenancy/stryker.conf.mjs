@@ -1,7 +1,7 @@
 import { createStrykerConfig } from '../../tools/stryker/base.mjs';
 
 export default createStrykerConfig({
-  packageName: '@stynx-web/angular-tenancy',
+  packageName: '@stynx-nyx/angular-tenancy',
   mutate: [
     'src/provide-tenancy.ts',
     'src/tenant-context.service.ts',

@@ -1,6 +1,6 @@
 # 05 — Package Catalog
 
-For every `@stynx-nyx/*` and `@stynx-web/*` package found in discovery,
+For every `@stynx-nyx/*` and `@stynx-nyx/*` package found in discovery,
 this catalog states the public surface and when a consuming agent
 should reach for it. Surfaces are pulled from each package's
 `src/index.ts` at HEAD (`670d165`).
@@ -258,7 +258,7 @@ should reach for it. Surfaces are pulled from each package's
 
 ## Frontend (`packages-web/`)
 
-### `@stynx-web/sdk` — v0.1.0
+### `@stynx-nyx/sdk` — v0.1.0
 
 - **Purpose:** Framework-agnostic TypeScript HTTP client.
 - **Public surface (14):** OpenAPI-generated client + 401 → refresh
@@ -267,7 +267,7 @@ should reach for it. Surfaces are pulled from each package's
 - **Import when:** any frontend (Angular or non-Angular).
 - **Citation:** `packages-web/sdk/src/index.ts`.
 
-### `@stynx-web/angular` — v0.1.0
+### `@stynx-nyx/angular` — v0.1.0
 
 - **Purpose:** `StynxAngularModule.forRoot`, base interceptors,
   lazy-load infrastructure.
@@ -277,46 +277,46 @@ should reach for it. Surfaces are pulled from each package's
 - **Import when:** Angular consumer.
 - **Citation:** `packages-web/angular/src/index.ts`.
 
-### `@stynx-web/angular-auth` — v0.1.0
+### `@stynx-nyx/angular-auth` — v0.1.0
 
 - **Public surface (13):** OIDC PKCE login flow, session token
   service, permission directive (`*hasPermission`), guards.
 - **Peer deps:** `@angular/router`, `@angular/common`.
 - **Import when:** Angular consumer with Cognito login.
 
-### `@stynx-web/angular-tenancy` — v0.1.0 — **closes audit FIND-002**
+### `@stynx-nyx/angular-tenancy` — v0.1.0 — **closes audit FIND-002**
 
 - **Public surface (6):** `TenantContextService`, `TenantInterceptor`,
   `TenantSwitcherComponent`, `provideTenancy`, types.
 - **Import when:** Angular consumer needing in-app tenant switching.
 - **Citation:** `packages-web/angular-tenancy/src/index.ts`.
 
-### `@stynx-web/angular-storage` — v0.1.0
+### `@stynx-nyx/angular-storage` — v0.1.0
 
 - **Public surface (5):** Document upload component, presigned URL
   service.
 - **Import when:** Angular consumer with file upload UI.
 
-### `@stynx-web/angular-sessions` — v0.1.0
+### `@stynx-nyx/angular-sessions` — v0.1.0
 
 - **Public surface (2):** Session list / revoke component.
 
-### `@stynx-web/angular-profile` — v0.1.0
+### `@stynx-nyx/angular-profile` — v0.1.0
 
 - **Public surface (3):** Profile page component.
 
-### `@stynx-web/angular-trash` — v0.1.0
+### `@stynx-nyx/angular-trash` — v0.1.0
 
 - **Public surface (2):** Generic soft-delete/restore UI.
 - **Import when:** Angular consumer wants a built-in trash UI for
   any soft-deletable resource.
 
-### `@stynx-web/angular-i18n` — v0.1.0
+### `@stynx-nyx/angular-i18n` — v0.1.0
 
 - **Public surface (6):** Catalog override service, locale switcher,
   translation pipe.
 
-### `@stynx-web/angular-ui` — v0.1.0
+### `@stynx-nyx/angular-ui` — v0.1.0
 
 - **Public surface (8):** Shared UI primitives (buttons, dialogs,
   tables, etc.).
@@ -325,9 +325,9 @@ should reach for it. Surfaces are pulled from each package's
 
 ## Decision matrix
 
-| Foreign-codebase concern          | STYNX package                               |
-| --------------------------------- | ------------------------------------------- |
-| HTTP request handling baseline    | `@stynx-nyx/core` + `@stynx-nyx/backend`            |
+| Foreign-codebase concern          | STYNX package                                   |
+| --------------------------------- | ----------------------------------------------- |
+| HTTP request handling baseline    | `@stynx-nyx/core` + `@stynx-nyx/backend`        |
 | DB access (read & write)          | `@stynx-nyx/data`                               |
 | Multi-tenant context              | `@stynx-nyx/tenancy`                            |
 | Auth (Cognito JWT verify, login)  | `@stynx-nyx/auth`                               |
@@ -344,13 +344,13 @@ should reach for it. Surfaces are pulled from each package's
 | CLI ops (migrate, doctor)         | `@stynx-nyx/cli`                                |
 | Shared TypeScript types           | `@stynx-nyx/contracts`                          |
 | Pipeline composition (one module) | `@stynx-nyx/backend`                            |
-| Angular HTTP client               | `@stynx-web/sdk`                            |
-| Angular module + interceptors     | `@stynx-web/angular`                        |
-| Angular auth UI                   | `@stynx-web/angular-auth`                   |
-| Angular tenant switcher           | `@stynx-web/angular-tenancy`                |
-| Angular file upload               | `@stynx-web/angular-storage`                |
-| Angular session list              | `@stynx-web/angular-sessions`               |
-| Angular profile                   | `@stynx-web/angular-profile`                |
-| Angular trash UI                  | `@stynx-web/angular-trash`                  |
-| Angular i18n                      | `@stynx-web/angular-i18n`                   |
-| Angular UI primitives             | `@stynx-web/angular-ui`                     |
+| Angular HTTP client               | `@stynx-nyx/sdk`                                |
+| Angular module + interceptors     | `@stynx-nyx/angular`                            |
+| Angular auth UI                   | `@stynx-nyx/angular-auth`                       |
+| Angular tenant switcher           | `@stynx-nyx/angular-tenancy`                    |
+| Angular file upload               | `@stynx-nyx/angular-storage`                    |
+| Angular session list              | `@stynx-nyx/angular-sessions`                   |
+| Angular profile                   | `@stynx-nyx/angular-profile`                    |
+| Angular trash UI                  | `@stynx-nyx/angular-trash`                      |
+| Angular i18n                      | `@stynx-nyx/angular-i18n`                       |
+| Angular UI primitives             | `@stynx-nyx/angular-ui`                         |

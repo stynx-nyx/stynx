@@ -651,14 +651,14 @@ export class BillingModule {}
 // src/app/invoices.page.ts
 import { CommonModule, NgFor } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
-import { StynxSessionService, StynxHasPermissionDirective } from '@stynx-web/angular-auth';
+import { StynxSessionService, StynxHasPermissionDirective } from '@stynx-nyx/angular-auth';
 import {
   TenantContextService,
   TenantSwitcherComponent,
   type TenantOption,
-} from '@stynx-web/angular-tenancy';
-import { StynxDocumentUploadComponent } from '@stynx-web/angular-storage';
-import { StynxSdkClient } from '@stynx-web/sdk';
+} from '@stynx-nyx/angular-tenancy';
+import { StynxDocumentUploadComponent } from '@stynx-nyx/angular-storage';
+import { StynxSdkClient } from '@stynx-nyx/sdk';
 import { environment } from '../environments/environment';
 
 interface InvoiceRow {

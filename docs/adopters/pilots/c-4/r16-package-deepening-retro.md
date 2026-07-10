@@ -7,7 +7,7 @@
 
 ## TL;DR
 
-Every one of STYNX's **41 published packages** (24 backend `@stynx-nyx/*`, 13 web `@stynx-web/*`, 4 tools `@stynx-internal/*`) was deepened from a ~50–130-line stub to a template-conformant developer reference: purpose / audience / install / quick-start / public-API-surface / configuration / examples / common-pitfalls / related-packages. Two packages got `docs/` subtrees: `@stynx-nyx/backend` (10 modularity-driven submodule pages) and `@stynx-nyx/flow` (10 size-driven endpoint/domain pages covering 20 controllers / ~113 routes). `check-package-doc-shape` went **0/41 → 41/41 clean**. The Docusaurus build is clean for every new cross-reference. Ten waves, executed largely autonomously per Decision G.
+Every one of STYNX's **41 published packages** (24 backend `@stynx-nyx/*`, 13 web `@stynx-nyx/*`, 4 tools `@stynx-internal/*`) was deepened from a ~50–130-line stub to a template-conformant developer reference: purpose / audience / install / quick-start / public-API-surface / configuration / examples / common-pitfalls / related-packages. Two packages got `docs/` subtrees: `@stynx-nyx/backend` (10 modularity-driven submodule pages) and `@stynx-nyx/flow` (10 size-driven endpoint/domain pages covering 20 controllers / ~113 routes). `check-package-doc-shape` went **0/41 → 41/41 clean**. The Docusaurus build is clean for every new cross-reference. Ten waves, executed largely autonomously per Decision G.
 
 ## What worked
 
@@ -58,10 +58,10 @@ The `sync-content.mjs` extension for `packages/backend/docs/` + `packages/flow/d
 | Metric                                                   | Before R16   | After R16                                                                    |
 | -------------------------------------------------------- | ------------ | ---------------------------------------------------------------------------- |
 | `check-package-doc-shape` clean                          | 0/41         | **41/41**                                                                    |
-| Backend `@stynx-nyx/*` documented                            | stubs        | 24/24 + 10 `backend/docs/` submodule pages                                   |
-| Web `@stynx-web/*` documented                            | stubs        | 13/13                                                                        |
+| Backend `@stynx-nyx/*` documented                        | stubs        | 24/24 + 10 `backend/docs/` submodule pages                                   |
+| Web `@stynx-nyx/*` documented                            | stubs        | 13/13                                                                        |
 | Tools `@stynx-internal/*` documented                     | stubs        | 4/4                                                                          |
-| `@stynx-nyx/flow` README                                     | 92-line stub | 138-line entrypoint + 10-page `docs/` subtree (20 controllers / ~113 routes) |
+| `@stynx-nyx/flow` README                                 | 92-line stub | 138-line entrypoint + 10-page `docs/` subtree (20 controllers / ~113 routes) |
 | `check-docs-governance`                                  | pass 14/14   | pass 14/14 (unchanged)                                                       |
 | Docusaurus build                                         | SUCCESS      | SUCCESS (clean for all new cross-refs)                                       |
 | `docs-links` (devai sensor, raw)                         | 219          | 420 (+201 = Decision-F absolute-URL false-positives per G16-1)               |

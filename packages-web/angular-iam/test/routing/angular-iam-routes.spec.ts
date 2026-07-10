@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { Router, RouterOutlet, provideRouter } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
-import { STYNX_ANGULAR_AUTH_OPTIONS, StynxSessionService } from '@stynx-web/angular-auth';
+import { STYNX_ANGULAR_AUTH_OPTIONS, StynxSessionService } from '@stynx-nyx/angular-auth';
 import { describe, expect, it } from 'vitest';
 import { StynxGroupDetailComponent } from '../../src/group-detail.component';
 import { StynxGroupsAdminComponent } from '../../src/groups-admin.component';

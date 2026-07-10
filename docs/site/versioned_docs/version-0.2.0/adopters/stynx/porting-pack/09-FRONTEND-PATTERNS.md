@@ -3,9 +3,9 @@
 &gt; **Scope.** This chapter tells a foreign frontend team how to consume a
 &gt; STYNX-fronted API. Two integration shapes are supported:
 &gt;
-&gt; 1. **`@stynx-web/sdk` only** — framework-agnostic TypeScript HTTP
+&gt; 1. **`@stynx-nyx/sdk` only** — framework-agnostic TypeScript HTTP
 &gt; client. Drop into React, Vue, Svelte, vanilla TS, Node tools, etc.
-&gt; 2. **Full Angular adoption** — `@stynx-web/angular*` packages compose
+&gt; 2. **Full Angular adoption** — `@stynx-nyx/angular*` packages compose
 &gt; a turn-key Angular shell (interceptors, OIDC PKCE login, tenant
 &gt; switcher, permission directive, document upload, trash UI, i18n).
 &gt;
@@ -19,16 +19,16 @@
 ## Decision: Angular vs sdk-only
 
 **If your existing frontend is non-Angular (React, Vue, vanilla TS, a
-mobile RN app, a CLI, etc.) — use `@stynx-web/sdk` and keep your
+mobile RN app, a CLI, etc.) — use `@stynx-nyx/sdk` and keep your
 existing UI.** The SDK is fetch-based and framework-neutral; it carries
 the full STYNX request contract (auth header, tenant header, refresh
 flow, error mapping) without dragging Angular into your bundle.
 
 | You have                                           | Use                                                                                                      | Why                                                                                                 |
 | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| React / Next.js / Vue / Svelte / RN                | `@stynx-web/sdk`                                                                                         | Plug client into your existing data layer (TanStack Query, SWR, Pinia, etc.); no Angular peer deps. |
-| Angular ≥ 17 standalone or NgModule shell          | `@stynx-web/angular` + `@stynx-web/angular-auth` + the per-feature packages you need                     | Interceptors, guards, and components are pre-wired.                                                 |
-| Server-side TypeScript (Edge function, Lambda)     | `@stynx-web/sdk` with a polyfilled `fetch`                                                               | The SDK takes a `fetchFn` injection point — see `packages-web/sdk/src/transport.ts:6–12`.           |
+| React / Next.js / Vue / Svelte / RN                | `@stynx-nyx/sdk`                                                                                         | Plug client into your existing data layer (TanStack Query, SWR, Pinia, etc.); no Angular peer deps. |
+| Angular ≥ 17 standalone or NgModule shell          | `@stynx-nyx/angular` + `@stynx-nyx/angular-auth` + the per-feature packages you need                     | Interceptors, guards, and components are pre-wired.                                                 |
+| Server-side TypeScript (Edge function, Lambda)     | `@stynx-nyx/sdk` with a polyfilled `fetch`                                                               | The SDK takes a `fetchFn` injection point — see `packages-web/sdk/src/transport.ts:6–12`.           |
 | A non-TypeScript frontend (Flutter, Swift, Kotlin) | Generate your own client from the OpenAPI document; mimic the header + refresh contract documented below | The SDK is TS-only; no `[GAP — official non-JS clients are not shipped at HEAD]`.                   |
 
 The matrix at the end of this chapter gives the per-component
@@ -74,7 +74,7 @@ The two pieces a consumer touches first are:
 ```ts
 // minimal bootstrap, sketched from packages-web/sdk/src/client.ts:4–53
 //   and packages-web/sdk/src/transport.ts:84–153
-import { StynxSdkClient, type AuthProvider, type TenantProvider } from '@stynx-web/sdk';
+import { StynxSdkClient, type AuthProvider, type TenantProvider } from '@stynx-nyx/sdk';
 
 const authProvider: AuthProvider = {
   async getAccessToken() {
@@ -197,7 +197,7 @@ Two consequences for consumers:
 // [GAP — sketched from package barrel; shape verified against
 //  packages-web/sdk/src/client.ts:4–53 and errors.ts:7–25]
 import { useEffect, useState } from 'react';
-import { StynxSdkClient, StynxSdkError, UnauthorizedError } from '@stynx-web/sdk';
+import { StynxSdkClient, StynxSdkError, UnauthorizedError } from '@stynx-nyx/sdk';
 
 const sdk = new StynxSdkClient({
   baseUrl: process.env.NEXT_PUBLIC_STYNX_API_URL!,
@@ -290,7 +290,7 @@ following provider plumbing:
   `STYNX_AUTH_PROVIDER`, and a `Window` reference on `STYNX_WINDOW`.
 - Optionally sets `CSP_NONCE` if `options.cspNonce` is provided.
 - Calls `provideTenancy(&#123; defaultTenantResolver &#125;)` from
-  `@stynx-web/angular-tenancy` (line 39).
+  `@stynx-nyx/angular-tenancy` (line 39).
 - Provides `ErrorBannerService` and `ToastService`.
 - Registers three multi-`HTTP_INTERCEPTORS` in this exact order:
   `RequestIdInterceptor` → `AuthInterceptor` → `ErrorInterceptor`.
@@ -388,7 +388,7 @@ So **inside Angular subscribers you catch `StynxSdkError`** (not raw
 `HttpErrorResponse`), with the same subclasses listed in the SDK
 section above.
 
-`@stynx-web/angular-tenancy` ships its own `TenantInterceptor`
+`@stynx-nyx/angular-tenancy` ships its own `TenantInterceptor`
 (`packages-web/angular-tenancy/src/tenant.interceptor.ts:7–24`) — call
 `provideTenancy()` (which `StynxAngularModule.forRoot` already does)
 to register it as a multi-provider:
@@ -446,7 +446,7 @@ override) for deterministic e2e tests.
 
 ### Tenant switcher
 
-`@stynx-web/angular-tenancy` exports six things
+`@stynx-nyx/angular-tenancy` exports six things
 (`packages-web/angular-tenancy/src/index.ts:1–6`):
 
 ```ts
@@ -508,7 +508,7 @@ async switchTenant(tenantId: string): Promise<void> {
 ```
 
 `switchTenant` (in `StynxSessionService` from
-`@stynx-web/angular-auth`) calls the API's tenant-switch endpoint, which
+`@stynx-nyx/angular-auth`) calls the API's tenant-switch endpoint, which
 returns a fresh bearer for the new tenancy.
 
 ### Permission guards and `*stynxHasPermission`
@@ -537,7 +537,7 @@ Wire it into routes:
 
 ```ts
 // [GAP — sketched from package barrel]
-import { stynxPermissionGuard } from '@stynx-web/angular-auth';
+import { stynxPermissionGuard } from '@stynx-nyx/angular-auth';
 
 export const APP_ROUTES: Routes = [
   {
@@ -583,7 +583,7 @@ the directive.
 
 ### Document upload component
 
-`@stynx-web/angular-storage` exposes a turn-key uploader
+`@stynx-nyx/angular-storage` exposes a turn-key uploader
 (`packages-web/angular-storage/src/document-upload.component.ts:7–109`).
 Wiring is two providers — the package's `DocumentService` and an
 `XhrUploadExecutor` (the only ship-included executor; replace with
@@ -630,7 +630,7 @@ component's banner.
 
 ### Trash list component
 
-`@stynx-web/angular-trash` exports a generic UI for soft-deleted rows
+`@stynx-nyx/angular-trash` exports a generic UI for soft-deleted rows
 (`packages-web/angular-trash/src/trash-list.component.ts:7–178`). Bring
 your own `StynxTrashAdapter` — the component is resource-agnostic:
 
@@ -687,7 +687,7 @@ with your own and let your keys win:
 export class AppI18nService {
   static async catalog(locale: 'en-US' | 'pt-BR'): Promise<Record<string, string>> {
     const [platform, app] = await Promise.all([
-      import(`@stynx-web/angular-i18n/catalogs/${locale}.json`).then((m) => m.default),
+      import(`@stynx-nyx/angular-i18n/catalogs/${locale}.json`).then((m) => m.default),
       fetch(`/i18n/${locale}.json`).then((r) => r.json()),
     ]);
     return { ...platform, ...app }; // app keys win
@@ -718,11 +718,11 @@ Use the pipe in templates:
 | Element-level permission gate          | `*stynxHasPermission`                                       | `packages-web/angular-auth/src/has-permission.directive.ts:12`    |
 | File upload UI                         | `&lt;stynx-document-upload&gt;`                             | `packages-web/angular-storage/src/document-upload.component.ts:7` |
 | Soft-delete restore UI                 | `&lt;stynx-trash-list&gt;`                                  | `packages-web/angular-trash/src/trash-list.component.ts:7`        |
-| Session listing (revoke other devices) | `@stynx-web/angular-sessions`                               | `packages-web/angular-sessions/src/index.ts`                      |
-| Profile page                           | `@stynx-web/angular-profile`                                | `packages-web/angular-profile/src/index.ts`                       |
+| Session listing (revoke other devices) | `@stynx-nyx/angular-sessions`                               | `packages-web/angular-sessions/src/index.ts`                      |
+| Profile page                           | `@stynx-nyx/angular-profile`                                | `packages-web/angular-profile/src/index.ts`                       |
 | Locale switching + catalog             | `StynxI18nModule.forRoot` + `&lt;stynx-locale-switcher&gt;` | `packages-web/angular-i18n/src/stynx-i18n.module.ts:17`           |
-| Banners / dialogs / table primitives   | `@stynx-web/angular-ui`                                     | `packages-web/angular-ui/src/index.ts`                            |
-| Foreign FE without Angular             | `@stynx-web/sdk` only                                       | `packages-web/sdk/src/index.ts`                                   |
+| Banners / dialogs / table primitives   | `@stynx-nyx/angular-ui`                                     | `packages-web/angular-ui/src/index.ts`                            |
+| Foreign FE without Angular             | `@stynx-nyx/sdk` only                                       | `packages-web/sdk/src/index.ts`                                   |
 
 ---
 

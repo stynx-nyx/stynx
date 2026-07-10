@@ -1,10 +1,10 @@
-# `@stynx-web/angular-i18n` — Angular i18n: translate pipe, ICU pipes, locale switcher
+# `@stynx-nyx/angular-i18n` — Angular i18n: translate pipe, ICU pipes, locale switcher
 
-`@stynx-web/angular-i18n` is the Angular-side internationalization package. It provides a `translate` pipe for template translation, ICU MessageFormat pipes (plural / number / date), a locale-switcher component, and an `I18nService` that loads catalogs and resolves the active locale. Pairs with the backend's [`@stynx-nyx/i18n`](/docs/packages/i18n/) so frontend + backend share the same locale + catalog conventions per ADR-FE-ICU-i18n-0002.
+`@stynx-nyx/angular-i18n` is the Angular-side internationalization package. It provides a `translate` pipe for template translation, ICU MessageFormat pipes (plural / number / date), a locale-switcher component, and an `I18nService` that loads catalogs and resolves the active locale. Pairs with the backend's [`@stynx-nyx/i18n`](/docs/packages/i18n/) so frontend + backend share the same locale + catalog conventions per ADR-FE-ICU-i18n-0002.
 
 ## Purpose
 
-Angular apps need template translation with ICU formatting (plurals, dates, numbers per locale), runtime locale switching, and catalog loading. Angular's built-in i18n is compile-time; STYNX apps often need runtime locale changes. `@stynx-web/angular-i18n` provides runtime translation aligned with the backend catalogs.
+Angular apps need template translation with ICU formatting (plurals, dates, numbers per locale), runtime locale switching, and catalog loading. Angular's built-in i18n is compile-time; STYNX apps often need runtime locale changes. `@stynx-nyx/angular-i18n` provides runtime translation aligned with the backend catalogs.
 
 You reach for it whenever your STYNX frontend serves more than one language.
 
@@ -17,15 +17,15 @@ Angular frontend developers building multi-locale UIs.
 ## Install
 
 ```bash
-pnpm add @stynx-web/angular-i18n
+pnpm add @stynx-nyx/angular-i18n
 ```
 
-**Peer dependencies:** `@angular/core` `^18`, `@stynx-web/angular` `^1`, `intl-messageformat` `^10`.
+**Peer dependencies:** `@angular/core` `^18`, `@stynx-nyx/angular` `^1`, `intl-messageformat` `^10`.
 
 ## Quick start
 
 ```ts
-import { StynxI18nModule } from '@stynx-web/angular-i18n';
+import { StynxI18nModule } from '@stynx-nyx/angular-i18n';
 
 // NgModule path
 @NgModule({ imports: [StynxI18nModule.forRoot({ defaultLocale: 'pt-BR', catalogs })] })
@@ -102,7 +102,7 @@ export class AppModule {}
 ### Example 3 — programmatic translation
 
 ```ts
-import { I18nService } from '@stynx-web/angular-i18n';
+import { I18nService } from '@stynx-nyx/angular-i18n';
 
 @Component({
   /* ... */
@@ -120,11 +120,11 @@ export class Notifier {
 
 - **Missing key renders the key** — `'home.title' | translate` shows `home.title` literally if the key is absent. Audit catalogs for completeness.
 - **ICU syntax error** — surfaces at render time, not load time. Validate catalogs in CI.
-- **Locale switch not propagating to the backend** — switching the frontend locale doesn't change the backend's `Accept-Language`. Wire the `I18nService` locale into `@stynx-web/angular`'s header interceptor if you need backend error messages localized too.
+- **Locale switch not propagating to the backend** — switching the frontend locale doesn't change the backend's `Accept-Language`. Wire the `I18nService` locale into `@stynx-nyx/angular`'s header interceptor if you need backend error messages localized too.
 
 ## Related packages
 
-- [`@stynx-web/angular`](/docs/packages-web/angular/) — the foundation.
+- [`@stynx-nyx/angular`](/docs/packages-web/angular/) — the foundation.
 - [`@stynx-nyx/i18n`](/docs/packages/i18n/) — the backend counterpart; shares catalog conventions.
 - [STYNX framework — ADR-FE-ICU-i18n-0002](/docs/meta/adr/ADR-FE-ICU-i18n-0002-package-catalogs-and-icu/) — the catalog + ICU decision.
 

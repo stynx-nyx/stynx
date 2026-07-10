@@ -3,7 +3,7 @@
 **Authority:** Architect (Constitution Article 6).
 **Status:** Draft for `@stynx-nyx/flow`.
 
-This contract defines the API shape that the STYNX Flow backend must expose and that `@stynx-web/angular-flow` must consume. It is intentionally route-family oriented. DTOs must be typed and validated in code, but this document does not freeze every field.
+This contract defines the API shape that the STYNX Flow backend must expose and that `@stynx-nyx/angular-flow` must consume. It is intentionally route-family oriented. DTOs must be typed and validated in code, but this document does not freeze every field.
 
 ## Permissions
 

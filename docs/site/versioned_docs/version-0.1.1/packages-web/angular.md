@@ -1,15 +1,15 @@
 ---
-title: '@stynx-web/angular'
+title: '@stynx-nyx/angular'
 ---
 
-# @stynx-web/angular
+# @stynx-nyx/angular
 
 Angular 20 core integration for STYNX apps. It wires the API base URL, tenant resolver, auth provider, request-id/auth/tenant/error interceptors, CSP nonce support, and shared error/toast services.
 
 ## Install
 
 ```bash
-pnpm add @stynx-web/angular
+pnpm add @stynx-nyx/angular
 ```
 
 ## Peer Dependencies
@@ -22,7 +22,7 @@ pnpm add @stynx-web/angular
 
 ```ts
 import { bootstrapApplication } from '@angular/platform-browser';
-import { provideStynxDefaults } from '@stynx-web/angular';
+import { provideStynxDefaults } from '@stynx-nyx/angular';
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -48,6 +48,6 @@ NgModule hosts can use `StynxAngularModule.forRoot(...)`.
 
 ## See Also
 
-- [`@stynx-web/sdk`](/docs/packages-web/sdk)
-- [`@stynx-web/angular-tenancy`](/docs/packages-web/angular-tenancy)
+- [`@stynx-nyx/sdk`](/docs/packages-web/sdk)
+- [`@stynx-nyx/angular-tenancy`](/docs/packages-web/angular-tenancy)
 - [Reference app demo](/docs/reference/web#demo-surfaces)

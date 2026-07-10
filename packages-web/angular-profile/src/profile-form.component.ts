@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject, signal } from '@angular/core';
 import type { OnDestroy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ErrorBannerService } from '@stynx-web/angular';
-import { StynxI18nService, StynxTranslatePipe } from '@stynx-web/angular-i18n';
-import { StynxBannerComponent, StynxIconComponent, StynxLoadingSpinnerComponent, StynxToastService } from '@stynx-web/angular-ui';
+import { ErrorBannerService } from '@stynx-nyx/angular';
+import { StynxI18nService, StynxTranslatePipe } from '@stynx-nyx/angular-i18n';
+import { StynxBannerComponent, StynxIconComponent, StynxLoadingSpinnerComponent, StynxToastService } from '@stynx-nyx/angular-ui';
 import { ProfileService } from './profile.service';
 import type { StynxProfile, StynxProfileValue } from './types';
 import { UnsavedChangesRegistry } from './unsaved-changes.guard';

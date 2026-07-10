@@ -1,8 +1,8 @@
-[**@stynx-web/angular-i18n**](../index.md)
+[**@stynx-nyx/angular-i18n**](../index.md)
 
 ---
 
-[@stynx-web/angular-i18n](../index.md) / StynxI18nModule
+[@stynx-nyx/angular-i18n](../index.md) / StynxI18nModule
 
 # Class: StynxI18nModule
 

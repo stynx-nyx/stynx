@@ -1,16 +1,16 @@
-# `@stynx-web/sdk` — the generated TypeScript REST client for the STYNX backend
+# `@stynx-nyx/sdk` — the generated TypeScript REST client for the STYNX backend
 
-`@stynx-web/sdk` is the TypeScript client for STYNX's REST surface. The bulk of it — the per-operation methods + DTO types — is **auto-generated** from the backend's OpenAPI contract (`@stynx-nyx/flow` and the other `@Controller`-carrying packages). On top of the generated core, it adds hand-authored helpers: an auth provider, a session manager, token store, tenant provider, JWT helpers, and a configurable transport. Used by every `@stynx-web/*` package to call the backend.
+`@stynx-nyx/sdk` is the TypeScript client for STYNX's REST surface. The bulk of it — the per-operation methods + DTO types — is **auto-generated** from the backend's OpenAPI contract (`@stynx-nyx/flow` and the other `@Controller`-carrying packages). On top of the generated core, it adds hand-authored helpers: an auth provider, a session manager, token store, tenant provider, JWT helpers, and a configurable transport. Used by every `@stynx-nyx/*` package to call the backend.
 
 > **This README is a navigation page, not a symbol catalog.** The SDK has 700+ exports across 250+ files, almost all generated. Enumerating them here would be noise and would go stale on every regeneration. For symbol-level reference use the [TypeDoc](/docs/api-reference/stynx-web-sdk/). The sections below describe the SDK's _shape_ and how to _use_ it.
 
 ## Purpose
 
-A frontend talking to the STYNX backend needs a typed client: every endpoint as a method, every DTO as a type, with auth + tenant + error handling threaded through. Hand-writing this drifts from the backend; generating it from the OpenAPI contract keeps it in lockstep. `@stynx-web/sdk` is that generated client plus the auth/session/transport glue the generation can't express.
+A frontend talking to the STYNX backend needs a typed client: every endpoint as a method, every DTO as a type, with auth + tenant + error handling threaded through. Hand-writing this drifts from the backend; generating it from the OpenAPI contract keeps it in lockstep. `@stynx-nyx/sdk` is that generated client plus the auth/session/transport glue the generation can't express.
 
-You reach for it indirectly — `@stynx-web/angular` wires it, and the other `@stynx-web/*` packages consume it. You call it directly when writing a component that hits a backend endpoint.
+You reach for it indirectly — `@stynx-nyx/angular` wires it, and the other `@stynx-nyx/*` packages consume it. You call it directly when writing a component that hits a backend endpoint.
 
-What it does NOT do: it's not Angular-specific (it's framework-agnostic TypeScript; `@stynx-web/angular` adapts it to Angular DI). It doesn't manage UI state.
+What it does NOT do: it's not Angular-specific (it's framework-agnostic TypeScript; `@stynx-nyx/angular` adapts it to Angular DI). It doesn't manage UI state.
 
 ## Audience
 
@@ -19,20 +19,20 @@ Angular frontend developers calling the STYNX backend. Most interaction is throu
 ## Install
 
 ```bash
-pnpm add @stynx-web/sdk
+pnpm add @stynx-nyx/sdk
 ```
 
-**Peer dependencies:** none required for the core client; `@stynx-web/angular` adapts it to Angular DI.
+**Peer dependencies:** none required for the core client; `@stynx-nyx/angular` adapts it to Angular DI.
 
 ## Quick start
 
 ```ts
-import { OpenAPI } from '@stynx-web/sdk';
+import { OpenAPI } from '@stynx-nyx/sdk';
 // Set the base URL (usually done for you by provideStynxAngular)
 OpenAPI.BASE = 'https://api.example.com';
 
 // Call a generated operation
-import { FlowService } from '@stynx-web/sdk';
+import { FlowService } from '@stynx-nyx/sdk';
 const forms = await FlowService.listForms();
 ```
 
@@ -47,7 +47,7 @@ In an Angular app you rarely set `OpenAPI.BASE` yourself — `provideStynxAngula
 | Area      | Exports                                     | Description                                                                        |
 | --------- | ------------------------------------------- | ---------------------------------------------------------------------------------- |
 | Transport | `api-client`, `client`, `http`, `transport` | The configurable HTTP layer the generated code calls through.                      |
-| Auth      | `auth`, `auth-provider`, `authorization`    | Auth-token plumbing + the provider interface `@stynx-web/angular-auth` implements. |
+| Auth      | `auth`, `auth-provider`, `authorization`    | Auth-token plumbing + the provider interface `@stynx-nyx/angular-auth` implements. |
 | Session   | `session-manager`, `token-store`            | Session lifecycle + token storage abstraction.                                     |
 | Identity  | `cognito`, `jwt`                            | Cognito + JWT helpers.                                                             |
 | Tenant    | `tenant-provider`                           | Tenant-context provider interface.                                                 |
@@ -58,22 +58,22 @@ In an Angular app you rarely set `OpenAPI.BASE` yourself — `provideStynxAngula
 | Surface           | Description                                                                     |
 | ----------------- | ------------------------------------------------------------------------------- |
 | `OpenAPI.BASE`    | The backend base URL. Set by `provideStynxAngular()` or manually.               |
-| `OpenAPI.TOKEN`   | The bearer token resolver. Wired by `@stynx-web/angular-auth`.                  |
-| `OpenAPI.HEADERS` | Default headers (tenant, locale). Wired by `@stynx-web/angular`'s interceptors. |
+| `OpenAPI.TOKEN`   | The bearer token resolver. Wired by `@stynx-nyx/angular-auth`.                  |
+| `OpenAPI.HEADERS` | Default headers (tenant, locale). Wired by `@stynx-nyx/angular`'s interceptors. |
 
 ## Examples
 
 ### Example 1 — calling an operation directly
 
 ```ts
-import { TenancyService } from '@stynx-web/sdk';
+import { TenancyService } from '@stynx-nyx/sdk';
 const tenants = await TenancyService.listTenants();
 ```
 
 ### Example 2 — handling a STYNX error envelope
 
 ```ts
-import { StynxApiError } from '@stynx-web/sdk';
+import { StynxApiError } from '@stynx-nyx/sdk';
 try {
   await FlowService.createForm({ name: 'X' });
 } catch (e) {
@@ -100,8 +100,8 @@ This re-runs OpenAPI codegen against the backend's contract. Commit the regenera
 ## Related packages
 
 - [`@stynx-nyx/flow`](/docs/packages/flow/) — the largest source of the SDK's generated operations (20 controllers).
-- [`@stynx-web/angular`](/docs/packages-web/angular/) — wires the SDK into Angular DI.
-- [`@stynx-web/angular-auth`](/docs/packages-web/angular-auth/) — implements the auth provider the SDK consumes.
+- [`@stynx-nyx/angular`](/docs/packages-web/angular/) — wires the SDK into Angular DI.
+- [`@stynx-nyx/angular-auth`](/docs/packages-web/angular-auth/) — implements the auth provider the SDK consumes.
 
 ## TypeDoc reference
 

@@ -1,10 +1,10 @@
-# `@stynx-web/angular-flow` — Angular workflow UI: graph designer, forms, tasks, run activity
+# `@stynx-nyx/angular-flow` — Angular workflow UI: graph designer, forms, tasks, run activity
 
-`@stynx-web/angular-flow` is the Angular UI for the STYNX workflow engine. It provides a graph designer (visual canvas + design dialogs), form-render + fills components, a task inbox, run-activity timeline, waivers UI, and analytics. It consumes the backend's [`@stynx-nyx/flow`](/docs/packages/flow/) endpoints (20 controllers) via a `FlowApiService`. This is the visual half of the flow engine — pair it with the backend flow docs for end-to-end understanding.
+`@stynx-nyx/angular-flow` is the Angular UI for the STYNX workflow engine. It provides a graph designer (visual canvas + design dialogs), form-render + fills components, a task inbox, run-activity timeline, waivers UI, and analytics. It consumes the backend's [`@stynx-nyx/flow`](/docs/packages/flow/) endpoints (20 controllers) via a `FlowApiService`. This is the visual half of the flow engine — pair it with the backend flow docs for end-to-end understanding.
 
 ## Purpose
 
-Workflow apps need UI for the whole flow lifecycle: visually design the process graph, render forms for users to fill, route tasks to actors with an inbox, show run progress + activity, and surface analytics. Building all of this against flow's ~113 endpoints is a major effort. `@stynx-web/angular-flow` provides it as drop-in components.
+Workflow apps need UI for the whole flow lifecycle: visually design the process graph, render forms for users to fill, route tasks to actors with an inbox, show run progress + activity, and surface analytics. Building all of this against flow's ~113 endpoints is a major effort. `@stynx-nyx/angular-flow` provides it as drop-in components.
 
 You reach for it whenever your STYNX app exposes workflows to users.
 
@@ -17,15 +17,15 @@ Angular frontend developers building workflow-driven UIs.
 ## Install
 
 ```bash
-pnpm add @stynx-web/angular-flow
+pnpm add @stynx-nyx/angular-flow
 ```
 
-**Peer dependencies:** `@angular/core` `^18`, `@angular/router` `^18`, `@stynx-web/angular` `^1`, `@stynx-web/angular-ui` `^1`, `@stynx-web/sdk` `^1`.
+**Peer dependencies:** `@angular/core` `^18`, `@angular/router` `^18`, `@stynx-nyx/angular` `^1`, `@stynx-nyx/angular-ui` `^1`, `@stynx-nyx/sdk` `^1`.
 
 ## Quick start
 
 ```ts
-import { flowRoutes } from '@stynx-web/angular-flow';
+import { flowRoutes } from '@stynx-nyx/angular-flow';
 
 export const routes: Routes = [
   { path: 'workflows', children: flowRoutes, canActivate: [authGuard] },
@@ -105,8 +105,8 @@ This mirrors the backend [`@stynx-nyx/flow` examples](/docs/packages/flow/exampl
 ## Related packages
 
 - [`@stynx-nyx/flow`](/docs/packages/flow/) — the backend engine (20 controllers / ~113 endpoints) + the [domain model](/docs/packages/flow/domain-model/) this UI renders.
-- [`@stynx-web/sdk`](/docs/packages-web/sdk/) — the generated client `FlowApiService` wraps.
-- [`@stynx-web/angular-ui`](/docs/packages-web/angular-ui/) — shared components the flow UI builds on.
+- [`@stynx-nyx/sdk`](/docs/packages-web/sdk/) — the generated client `FlowApiService` wraps.
+- [`@stynx-nyx/angular-ui`](/docs/packages-web/angular-ui/) — shared components the flow UI builds on.
 
 ## TypeDoc reference
 

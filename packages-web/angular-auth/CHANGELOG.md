@@ -1,4 +1,4 @@
-# @stynx-web/angular-auth
+# @stynx-nyx/angular-auth
 
 ## 1.0.0
 
@@ -9,5 +9,5 @@
 ### Patch Changes
 
 - Updated dependencies [8f6df55]
-  - @stynx-web/angular@1.0.0
-  - @stynx-web/sdk@1.0.0
+  - @stynx-nyx/angular@1.0.0
+  - @stynx-nyx/sdk@1.0.0

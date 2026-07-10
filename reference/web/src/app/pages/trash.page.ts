@@ -1,8 +1,8 @@
 import { NgFor } from '@angular/common';
 import { ChangeDetectionStrategy, Component, ViewChild, inject } from '@angular/core';
 import type { AfterViewInit } from '@angular/core';
-import { StynxTrashListComponent } from '@stynx-web/angular-trash';
-import type { StynxTrashAdapter, StynxTrashPage } from '@stynx-web/angular-trash';
+import { StynxTrashListComponent } from '@stynx-nyx/angular-trash';
+import type { StynxTrashAdapter, StynxTrashPage } from '@stynx-nyx/angular-trash';
 import { ReferenceWebApiService } from '../core/reference-web-api.service';
 
 @Component({

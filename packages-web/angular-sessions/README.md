@@ -1,14 +1,14 @@
-# `@stynx-web/angular-sessions` — Angular UI for active sessions + remote logout
+# `@stynx-nyx/angular-sessions` — Angular UI for active sessions + remote logout
 
-`@stynx-web/angular-sessions` is the Angular session-management UI. It provides an `<stynx-active-sessions>` component that lists the user's active sessions (device, location, last-seen) with a "revoke" action for logging out other devices. Backed by the SDK's session endpoints, paired with the backend's [`@stynx-nyx/sessions`](/docs/packages/sessions/).
+`@stynx-nyx/angular-sessions` is the Angular session-management UI. It provides an `<stynx-active-sessions>` component that lists the user's active sessions (device, location, last-seen) with a "revoke" action for logging out other devices. Backed by the SDK's session endpoints, paired with the backend's [`@stynx-nyx/sessions`](/docs/packages/sessions/).
 
 ## Purpose
 
-Security-conscious apps let users see + revoke their active sessions ("you're logged in on 3 devices — sign out the others"). `@stynx-web/angular-sessions` provides that surface ready-made.
+Security-conscious apps let users see + revoke their active sessions ("you're logged in on 3 devices — sign out the others"). `@stynx-nyx/angular-sessions` provides that surface ready-made.
 
 You reach for it when your app has an account-security area.
 
-What it does NOT do: it doesn't create sessions (login does, via `@stynx-web/angular-auth`). It only lists + revokes.
+What it does NOT do: it doesn't create sessions (login does, via `@stynx-nyx/angular-auth`). It only lists + revokes.
 
 ## Audience
 
@@ -17,15 +17,15 @@ Angular frontend developers building account-security screens.
 ## Install
 
 ```bash
-pnpm add @stynx-web/angular-sessions
+pnpm add @stynx-nyx/angular-sessions
 ```
 
-**Peer dependencies:** `@angular/core` `^18`, `@stynx-web/angular` `^1`, `@stynx-web/angular-auth` `^1`, `@stynx-web/sdk` `^1`.
+**Peer dependencies:** `@angular/core` `^18`, `@stynx-nyx/angular` `^1`, `@stynx-nyx/angular-auth` `^1`, `@stynx-nyx/sdk` `^1`.
 
 ## Quick start
 
 ```ts
-import { provideSessions } from '@stynx-web/angular-sessions';
+import { provideSessions } from '@stynx-nyx/angular-sessions';
 
 export const appConfig = { providers: [provideSessions()] };
 ```
@@ -91,7 +91,7 @@ export const appConfig = { providers: [provideSessions()] };
 
 ## Related packages
 
-- [`@stynx-web/angular-auth`](/docs/packages-web/angular-auth/) — session creation + auth state.
+- [`@stynx-nyx/angular-auth`](/docs/packages-web/angular-auth/) — session creation + auth state.
 - [`@stynx-nyx/sessions`](/docs/packages/sessions/) — the backend counterpart.
 
 ## TypeDoc reference

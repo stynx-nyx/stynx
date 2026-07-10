@@ -1,8 +1,8 @@
-[**@stynx-web/angular-ui**](../index.md)
+[**@stynx-nyx/angular-ui**](../index.md)
 
 ---
 
-[@stynx-web/angular-ui](../index.md) / STYNX_ICON_NAMES
+[@stynx-nyx/angular-ui](../index.md) / STYNX_ICON_NAMES
 
 # Variable: STYNX_ICON_NAMES
 

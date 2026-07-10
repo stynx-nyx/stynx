@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { StynxBannerComponent } from '@stynx-web/angular-ui';
+import { StynxBannerComponent } from '@stynx-nyx/angular-ui';
 
 @Component({
   selector: 'stynx-reference-unauthorized-page',

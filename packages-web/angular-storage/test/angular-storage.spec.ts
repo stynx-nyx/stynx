@@ -4,9 +4,9 @@ import { Injector, runInInjectionContext } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { firstValueFrom, of, throwError, toArray } from 'rxjs';
-import { STYNX_ANGULAR_OPTIONS } from '@stynx-web/angular';
-import { StynxI18nService } from '@stynx-web/angular-i18n';
-import { StynxToastService } from '@stynx-web/angular-ui';
+import { STYNX_ANGULAR_OPTIONS } from '@stynx-nyx/angular';
+import { StynxI18nService } from '@stynx-nyx/angular-i18n';
+import { StynxToastService } from '@stynx-nyx/angular-ui';
 import { StynxDocumentDownloadComponent } from '../src/document-download.component';
 import { DocumentService } from '../src/document.service';
 import { StynxDocumentUploadComponent } from '../src/document-upload.component';
@@ -144,7 +144,7 @@ beforeAll(() => {
   TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
 });
 
-describe('@stynx-web/angular-storage', () => {
+describe('@stynx-nyx/angular-storage', () => {
   afterEach(() => {
     TestBed.resetTestingModule();
   });

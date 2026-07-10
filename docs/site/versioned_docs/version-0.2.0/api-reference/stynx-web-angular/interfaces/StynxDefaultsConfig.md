@@ -1,8 +1,8 @@
-[**@stynx-web/angular**](../index.md)
+[**@stynx-nyx/angular**](../index.md)
 
 ---
 
-[@stynx-web/angular](../index.md) / StynxDefaultsConfig
+[@stynx-nyx/angular](../index.md) / StynxDefaultsConfig
 
 # Interface: StynxDefaultsConfig
 

@@ -16,9 +16,9 @@ import { EmptyStateComponent } from '../src/empty-state.component';
 import { TenantContextService } from '../src/tenant-context.service';
 import { TenantInterceptor } from '../src/tenant.interceptor';
 import { ToastService } from '../src/toast.service';
-import { ForbiddenError, UnauthorizedError } from '@stynx-web/sdk';
+import { ForbiddenError, UnauthorizedError } from '@stynx-nyx/sdk';
 import { STYNX_ANGULAR_OPTIONS, STYNX_AUTH_PROVIDER, STYNX_WINDOW } from '../src/tokens';
-import { STYNX_TENANCY_OPTIONS, STYNX_TENANCY_WINDOW, type TenancyOptions } from '@stynx-web/angular-tenancy';
+import { STYNX_TENANCY_OPTIONS, STYNX_TENANCY_WINDOW, type TenancyOptions } from '@stynx-nyx/angular-tenancy';
 import { renderComponent } from './support/test-bed';
 
 const REQUEST_ID_PATTERN =
@@ -146,7 +146,7 @@ afterEach(() => {
   TestBed.resetTestingModule();
 });
 
-describe('@stynx-web/angular', () => {
+describe('@stynx-nyx/angular', () => {
   it('renders the empty-state component with input-driven copy and tone', async () => {
     const fixture = await renderComponent(EmptyStateComponent, {
       inputs: {

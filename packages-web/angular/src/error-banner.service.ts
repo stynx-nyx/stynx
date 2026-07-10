@@ -1,6 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { TenantContextService } from '@stynx-web/angular-tenancy';
+import { TenantContextService } from '@stynx-nyx/angular-tenancy';
 import { distinctUntilChanged, startWith } from 'rxjs';
 import type { ErrorBannerState } from './types';
 

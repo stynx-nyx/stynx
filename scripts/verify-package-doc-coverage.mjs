@@ -13,7 +13,7 @@
 //   - coverage_pct: cited / total_exports * 100.
 //
 // Exemptions per align/stynx/round-16/inv/doc-coverage-exemptions.json
-// are honoured. Currently exempts @stynx-web/sdk (252 generated files).
+// are honoured. Currently exempts @stynx-nyx/sdk (252 generated files).
 //
 // Usage:
 //   node scripts/verify-package-doc-coverage.mjs

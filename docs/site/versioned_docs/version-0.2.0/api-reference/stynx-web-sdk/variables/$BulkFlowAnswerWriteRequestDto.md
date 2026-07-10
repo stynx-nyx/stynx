@@ -1,8 +1,8 @@
-[**@stynx-web/sdk**](../index.md)
+[**@stynx-nyx/sdk**](../index.md)
 
 ---
 
-[@stynx-web/sdk](../index.md) / $BulkFlowAnswerWriteRequestDto
+[@stynx-nyx/sdk](../index.md) / $BulkFlowAnswerWriteRequestDto
 
 # Variable: $BulkFlowAnswerWriteRequestDto
 

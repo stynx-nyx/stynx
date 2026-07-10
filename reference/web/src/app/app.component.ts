@@ -1,10 +1,10 @@
 import { AsyncPipe, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { ErrorBannerService } from '@stynx-web/angular';
-import { StynxSessionService, StynxHasPermissionDirective } from '@stynx-web/angular-auth';
-import { LocaleSwitcherComponent } from '@stynx-web/angular-i18n';
-import { StynxBannerComponent, StynxToastContainerComponent } from '@stynx-web/angular-ui';
+import { ErrorBannerService } from '@stynx-nyx/angular';
+import { StynxSessionService, StynxHasPermissionDirective } from '@stynx-nyx/angular-auth';
+import { LocaleSwitcherComponent } from '@stynx-nyx/angular-i18n';
+import { StynxBannerComponent, StynxToastContainerComponent } from '@stynx-nyx/angular-ui';
 import { ReferenceWebI18nService } from './core/reference-web-i18n.service';
 import { ReferenceWebShellService } from './core/reference-web-shell.service';
 

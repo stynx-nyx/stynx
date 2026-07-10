@@ -23,7 +23,7 @@
 //
 // Default concurrency
 // -------------------
-// The factory default stays at 2. W05 sampled @stynx-web/angular-trash
+// The factory default stays at 2. W05 sampled @stynx-nyx/angular-trash
 // full-mode on the 4-vCPU ubuntu-latest hardening runner class: concurrency 4
 // was slower locally and introduced timeout kills, so packages that are proven
 // stable at higher process counts should keep explicit per-package overrides.

@@ -2,7 +2,7 @@ import { makeEnvironmentProviders } from '@angular/core';
 import type { EnvironmentProviders, Provider } from '@angular/core';
 import { ROUTES } from '@angular/router';
 import { provideAuth } from 'angular-auth-oidc-client';
-import { STYNX_AUTH_PROVIDER } from '@stynx-web/angular';
+import { STYNX_AUTH_PROVIDER } from '@stynx-nyx/angular';
 import { HttpAuthBackend } from './http-auth.backend';
 import { StynxPermissionDeniedComponent } from './permission-denied.component';
 import { OidcClientAdapter } from './oidc-client.adapter';

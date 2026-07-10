@@ -57,12 +57,12 @@ pnpm exec stynx privacy ropa --out ./ropa.json
 
 ### Services / Injectables
 
-| Export                      | Description                                       |
-| --------------------------- | ------------------------------------------------- |
-| `StynxPrivacyService`       | Top-level: export, erase, get retention status.   |
-| `PiiMapService`             | Reads + writes the runtime PII registry.          |
+| Export                      | Description                                           |
+| --------------------------- | ----------------------------------------------------- |
+| `StynxPrivacyService`       | Top-level: export, erase, get retention status.       |
+| `PiiMapService`             | Reads + writes the runtime PII registry.              |
 | `PrivacyObjectStoreService` | Bridges to `@stynx-nyx/storage` for export packaging. |
-| `RopaGenerator`             | Produces the ROPA JSON.                           |
+| `RopaGenerator`             | Produces the ROPA JSON.                               |
 
 ### Decorators
 
@@ -152,7 +152,7 @@ pnpm exec stynx privacy ropa --out ./compliance/ropa-2026-q2.json
 - [`@stynx-nyx/data`](/docs/packages/data/) — owns the schema where PII columns live.
 - [`@stynx-nyx/storage`](/docs/packages/storage/) — provides the bucket used for export packaging.
 - [`@stynx-nyx/audit`](/docs/packages/audit/) — every subject-rights operation emits an audit event.
-- [`@stynx-web/angular-profile`](/docs/packages-web/angular-profile/) — Angular pair: subject-rights UI (account-deletion).
+- [`@stynx-nyx/angular-profile`](/docs/packages-web/angular-profile/) — Angular pair: subject-rights UI (account-deletion).
 - [`@stynx-nyx/cli`](/docs/packages/cli/) — `stynx privacy ropa` verb generates ROPA from this package's registry.
 
 ## TypeDoc reference

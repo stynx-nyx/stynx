@@ -1,8 +1,8 @@
-[**@stynx-web/angular-tenancy**](../index.md)
+[**@stynx-nyx/angular-tenancy**](../index.md)
 
 ---
 
-[@stynx-web/angular-tenancy](../index.md) / TenantTransition
+[@stynx-nyx/angular-tenancy](../index.md) / TenantTransition
 
 # Interface: TenantTransition
 

@@ -1,7 +1,7 @@
 import { createStrykerConfig } from '../../tools/stryker/base.mjs';
 
 export default createStrykerConfig({
-  packageName: '@stynx-web/angular-auth',
+  packageName: '@stynx-nyx/angular-auth',
   mutate: [
     'src/auth.guard.ts',
     'src/has-permission.directive.ts',

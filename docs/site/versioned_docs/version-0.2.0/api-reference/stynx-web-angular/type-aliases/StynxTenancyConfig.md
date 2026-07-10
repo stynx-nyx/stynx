@@ -1,8 +1,8 @@
-[**@stynx-web/angular**](../index.md)
+[**@stynx-nyx/angular**](../index.md)
 
 ---
 
-[@stynx-web/angular](../index.md) / StynxTenancyConfig
+[@stynx-nyx/angular](../index.md) / StynxTenancyConfig
 
 # Type Alias: StynxTenancyConfig
 

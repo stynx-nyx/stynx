@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { StynxTranslatePipe } from '@stynx-web/angular-i18n';
-import { StynxBannerComponent, StynxIconComponent, StynxLoadingSpinnerComponent } from '@stynx-web/angular-ui';
+import { StynxTranslatePipe } from '@stynx-nyx/angular-i18n';
+import { StynxBannerComponent, StynxIconComponent, StynxLoadingSpinnerComponent } from '@stynx-nyx/angular-ui';
 import type { StynxCloneRoleRequest, StynxCreateRoleRequest, StynxRole } from './types';
 
 export interface StynxRoleFormValue {

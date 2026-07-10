@@ -12,7 +12,7 @@ The verifier reads `.stynxrc.json#boundary` first, then
 {
   "boundary": {
     "roots": ["apps", "domain"],
-    "allowedPackages": ["@stynx-nyx/", "@stynx-web/"],
+    "allowedPackages": ["@stynx-nyx/", "@stynx-nyx/"],
     "forbiddenImports": ["domain/shared/platform"],
     "requireStynxPackages": ["@stynx-nyx/auth", "@stynx-nyx/data"]
   }

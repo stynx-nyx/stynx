@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import type { OnChanges } from '@angular/core';
-import { StynxHasPermissionDirective } from '@stynx-web/angular-auth';
-import { StynxTranslatePipe } from '@stynx-web/angular-i18n';
-import { StynxDocumentUploadComponent } from '@stynx-web/angular-storage';
-import type { StynxDocumentUploadCompletedEvent } from '@stynx-web/angular-storage';
-import { StynxBannerComponent, StynxIconComponent, StynxLoadingSpinnerComponent } from '@stynx-web/angular-ui';
+import { StynxHasPermissionDirective } from '@stynx-nyx/angular-auth';
+import { StynxTranslatePipe } from '@stynx-nyx/angular-i18n';
+import { StynxDocumentUploadComponent } from '@stynx-nyx/angular-storage';
+import type { StynxDocumentUploadCompletedEvent } from '@stynx-nyx/angular-storage';
+import { StynxBannerComponent, StynxIconComponent, StynxLoadingSpinnerComponent } from '@stynx-nyx/angular-ui';
 import { FlowApiService } from './flow-api.service';
 import type { FlowAnswer, FlowFill, FlowQuestion } from './types';
 

@@ -1,8 +1,8 @@
-[**@stynx-web/angular-trash**](../index.md)
+[**@stynx-nyx/angular-trash**](../index.md)
 
 ---
 
-[@stynx-web/angular-trash](../index.md) / StynxTrashQuery
+[@stynx-nyx/angular-trash](../index.md) / StynxTrashQuery
 
 # Interface: StynxTrashQuery
 

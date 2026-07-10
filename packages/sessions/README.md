@@ -150,7 +150,7 @@ mirror: {
 
 - [`@stynx-nyx/auth`](/docs/packages/auth/) — exchanges upstream tokens for STYNX sessions via this package; verifies sessions on subsequent requests.
 - [`@stynx-nyx/core`](/docs/packages/core/) — provides `RequestContext` for session-bound request metadata.
-- [`@stynx-web/angular-sessions`](/docs/packages-web/angular-sessions/) — Angular pair: session-list UI + revoke-other-sessions action.
+- [`@stynx-nyx/angular-sessions`](/docs/packages-web/angular-sessions/) — Angular pair: session-list UI + revoke-other-sessions action.
 
 ## TypeDoc reference
 

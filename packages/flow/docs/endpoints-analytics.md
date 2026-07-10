@@ -4,7 +4,7 @@ title: flow/endpoints-analytics
 
 # Endpoints — analytics
 
-Read-only aggregates over runs + tasks. Backed by `FlowAnalyticsService`. These power dashboards in [`@stynx-web/angular-flow`](/docs/packages-web/angular-flow/).
+Read-only aggregates over runs + tasks. Backed by `FlowAnalyticsService`. These power dashboards in [`@stynx-nyx/angular-flow`](/docs/packages-web/angular-flow/).
 
 ## Analytics (`/flow`)
 

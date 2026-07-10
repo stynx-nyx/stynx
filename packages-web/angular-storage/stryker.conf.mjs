@@ -1,7 +1,7 @@
 import { createStrykerConfig } from '../../tools/stryker/base.mjs';
 
 export default createStrykerConfig({
-  packageName: '@stynx-web/angular-storage',
+  packageName: '@stynx-nyx/angular-storage',
   mutate: [
     'src/document-download.component.ts',
     'src/document-upload.component.ts',

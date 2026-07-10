@@ -33,7 +33,7 @@ const publishablePackages = new Set([
   ),
   ...collectPublishablePackageNames(
     'packages-web',
-    (name) => typeof name === 'string' && name.startsWith('@stynx-web/'),
+    (name) => typeof name === 'string' && name.startsWith('@stynx-nyx/'),
   ),
 ]);
 

@@ -4,7 +4,7 @@ title: flow/examples
 
 # Flow examples — end-to-end scenario
 
-A complete walkthrough: author a 3-node approval flow, start a run, advance through tasks, read the event stream. This mirrors the UI-side scenario in [`@stynx-web/angular-flow`](/docs/packages-web/angular-flow/)'s examples.
+A complete walkthrough: author a 3-node approval flow, start a run, advance through tasks, read the event stream. This mirrors the UI-side scenario in [`@stynx-nyx/angular-flow`](/docs/packages-web/angular-flow/)'s examples.
 
 ## Scenario: expense-approval flow
 
@@ -114,4 +114,4 @@ GET /flow/runs/run-1/events
 - Step 5's `POST /flow/runs/ensure` is idempotent on `key` — retrying the request resumes the same run.
 - Step 6's `act` goes through policy evaluation; a non-manager actor would get 403.
 - The whole sequence emits audit events via `@stynx-nyx/audit` in addition to flow's own event stream.
-- For the Angular implementation of this exact scenario, see [`@stynx-web/angular-flow`](/docs/packages-web/angular-flow/).
+- For the Angular implementation of this exact scenario, see [`@stynx-nyx/angular-flow`](/docs/packages-web/angular-flow/).

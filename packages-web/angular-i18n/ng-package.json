@@ -12,7 +12,7 @@
     }
   ],
   "allowedNonPeerDependencies": [
-    "@stynx-web/*",
+    "@stynx-nyx/*",
     "angular-auth-oidc-client",
     "intl-messageformat",
     "rxjs"

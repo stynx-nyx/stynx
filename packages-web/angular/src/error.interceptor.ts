@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import type { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { createStynxSdkError } from '@stynx-web/sdk';
+import { createStynxSdkError } from '@stynx-nyx/sdk';
 import type { Observable } from 'rxjs';
 import { catchError, throwError } from 'rxjs';
 import { ErrorBannerService } from './error-banner.service';

@@ -1,15 +1,15 @@
 {
-  "name": "@stynx-web/angular-auth",
+  "name": "@stynx-nyx/angular-auth",
   "version": "1.0.0",
   "description": "Angular authentication and session integration for stynx",
   "exports": {
     ".": {
-      "types": "./dist/types/stynx-web-angular-auth.d.ts",
-      "default": "./dist/fesm2022/stynx-web-angular-auth.mjs"
+      "types": "./dist/types/stynx-nyx-angular-auth.d.ts",
+      "default": "./dist/fesm2022/stynx-nyx-angular-auth.mjs"
     },
     "./testing": {
-      "types": "./dist/types/stynx-web-angular-auth-testing.d.ts",
-      "default": "./dist/fesm2022/stynx-web-angular-auth-testing.mjs"
+      "types": "./dist/types/stynx-nyx-angular-auth-testing.d.ts",
+      "default": "./dist/fesm2022/stynx-nyx-angular-auth-testing.mjs"
     },
     "./catalogs/en.json": {
       "default": "./dist/catalogs/en.json"
@@ -39,9 +39,9 @@
     "build:tsc": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@stynx-web/angular": "workspace:*",
-    "@stynx-web/angular-i18n": "workspace:*",
-    "@stynx-web/sdk": "workspace:*",
+    "@stynx-nyx/angular": "workspace:*",
+    "@stynx-nyx/angular-i18n": "workspace:*",
+    "@stynx-nyx/sdk": "workspace:*",
     "angular-auth-oidc-client": "^21.0.1",
     "rxjs": "^7.8.2"
   },

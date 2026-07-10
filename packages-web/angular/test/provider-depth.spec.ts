@@ -5,7 +5,7 @@ import type { HttpHandler, HttpRequest } from '@angular/common/http';
 import { CSP_NONCE } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
-import { ValidationError, type AuthProvider } from '@stynx-web/sdk';
+import { ValidationError, type AuthProvider } from '@stynx-nyx/sdk';
 import { firstValueFrom, throwError } from 'rxjs';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { ErrorBannerService } from '../src/error-banner.service';
@@ -24,7 +24,7 @@ afterEach(() => {
   TestBed.resetTestingModule();
 });
 
-describe('@stynx-web/angular provider depth', () => {
+describe('@stynx-nyx/angular provider depth', () => {
   it('maps backend StynxError envelopes to typed client errors and banner state', async () => {
     TestBed.configureTestingModule({
       providers: [ErrorBannerService, ErrorInterceptor],

@@ -596,7 +596,7 @@ hits `auth.memberships` and returns a fresh `PermissionCacheRecord`
    joined to `tenancy.tenants`. Use `TenancyService` (re-exported by
    `@stynx-nyx/tenancy`) — see `packages/tenancy/src/tenancy.service.ts`.
 2. **Wire** a UI affordance (Angular consumers can use
-   `@stynx-web/angular-tenancy`'s `TenantSwitcherComponent`,
+   `@stynx-nyx/angular-tenancy`'s `TenantSwitcherComponent`,
    `packages-web/angular-tenancy/src/index.ts`).
 3. **Implement** the backend exchange endpoint exactly as GAP-004
    prescribes; the service-layer code is already present at
@@ -1021,8 +1021,8 @@ sequenceDiagram
 | `session:&#123;sid&#125;`  | Hot session lookup (10-min TTL aligns with bearer)               | `RedisSessionStore`           |
 | `perm:&#123;sid&#125;`     | Permission cache record (24h TTL, see `permission-cache.ts:178`) | `RedisPermissionCacheBackend` |
 | `perm-invalidate` (pubsub) | Six mutation paths emit invalidations                            | `EffectiveHashComputer`       |
-| `ratelimit:...`            | `@stynx-nyx/ratelimit` buckets                                       | `RedisRateLimitStore`         |
-| `idempotency:...`          | `@stynx-nyx/idempotency` keys                                        | `RedisIdempotencyBackend`     |
+| `ratelimit:...`            | `@stynx-nyx/ratelimit` buckets                                   | `RedisRateLimitStore`         |
+| `idempotency:...`          | `@stynx-nyx/idempotency` keys                                    | `RedisIdempotencyBackend`     |
 
 The strict separation matters: **Cognito does not know what tenants
 exist**, and **STYNX does not store passwords**. A user whose Cognito
@@ -1036,14 +1036,14 @@ refresh, the membership is re-checked.
 
 ## Quick reference — pattern → packages → files
 
-| Pattern                             | Primary `@stynx-nyx/*` packages                     | Key files                                                                                                                                                                                                                               |
-| ----------------------------------- | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Pattern                             | Primary `@stynx-nyx/*` packages                             | Key files                                                                                                                                                                                                                               |
+| ----------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | A — Replace JWT middleware          | `@stynx-nyx/auth`, `@stynx-nyx/sessions`, `@stynx-nyx/core` | `packages/auth/src/stynx-auth.guard.ts`, `packages/auth/src/permission.guard.ts`, `packages/auth/src/decorators.ts`, `packages/sessions/src/session.service.ts`, `reference/api/src/app.module.ts:180–195`                              |
 | B — Introduce TenantContext         | `@stynx-nyx/tenancy`, `@stynx-nyx/data`, `@stynx-nyx/core`  | `packages/tenancy/src/tenant-context.interceptor.ts`, `packages/data/src/database.ts`, `reference/api/src/app.module.ts:205`                                                                                                            |
-| C — Declare permissions             | `@stynx-nyx/auth`, `@stynx-nyx/data` (migrations)       | `reference/api/migrations/0001_reference.sql:266–347`, `packages/auth/src/effective-hash-computer.ts`, `packages/auth/src/permission-cache.ts`                                                                                          |
-| D — Tenant switching                | `@stynx-nyx/sessions`, `@stynx-nyx/auth`                | `packages/sessions/src/session.service.ts:208–246`, `specs/GAP-004-session-tenant-exchange.md`                                                                                                                                          |
-| E — Impersonation                   | (none, v1.0)                                    | `[NOT SUPPORTED IN v1.0]`                                                                                                                                                                                                               |
-| F — `@ReadOnly`                     | `@stynx-nyx/auth`, `@stynx-nyx/data`                    | `packages/auth/src/decorators.ts:16`, `packages/auth/src/stynx-auth.guard.ts:62–64`, `reference/api/src/sample/records.controller.ts:53–78`                                                                                             |
+| C — Declare permissions             | `@stynx-nyx/auth`, `@stynx-nyx/data` (migrations)           | `reference/api/migrations/0001_reference.sql:266–347`, `packages/auth/src/effective-hash-computer.ts`, `packages/auth/src/permission-cache.ts`                                                                                          |
+| D — Tenant switching                | `@stynx-nyx/sessions`, `@stynx-nyx/auth`                    | `packages/sessions/src/session.service.ts:208–246`, `specs/GAP-004-session-tenant-exchange.md`                                                                                                                                          |
+| E — Impersonation                   | (none, v1.0)                                                | `[NOT SUPPORTED IN v1.0]`                                                                                                                                                                                                               |
+| F — `@ReadOnly`                     | `@stynx-nyx/auth`, `@stynx-nyx/data`                        | `packages/auth/src/decorators.ts:16`, `packages/auth/src/stynx-auth.guard.ts:62–64`, `reference/api/src/sample/records.controller.ts:53–78`                                                                                             |
 | G — `@System` / `withSystemContext` | `@stynx-nyx/auth`, `@stynx-nyx/core`, `@stynx-nyx/data`     | `packages/auth/src/decorators.ts:12`, `packages/auth/src/stynx-auth.guard.ts:38–40`, `packages/auth/src/permission.guard.ts:19–21`, `packages/tenancy/src/tenant-context.interceptor.ts:124–146`, `reference/api/src/app.module.ts:267` |
 
 ---

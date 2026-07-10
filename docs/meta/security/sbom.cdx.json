@@ -716,11 +716,11 @@
     },
     {
       "type": "library",
-      "name": "@stynx-web/angular-audit",
+      "name": "@stynx-nyx/angular-audit",
       "version": "0.1.0",
       "scope": "required",
       "licenses": [],
-      "purl": "pkg:npm/@stynx-web%2fangular-audit@0.1.0",
+      "purl": "pkg:npm/@stynx-nyx%2fangular-audit@0.1.0",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -730,11 +730,11 @@
     },
     {
       "type": "library",
-      "name": "@stynx-web/angular-auth",
+      "name": "@stynx-nyx/angular-auth",
       "version": "1.0.0",
       "scope": "required",
       "licenses": [],
-      "purl": "pkg:npm/@stynx-web%2fangular-auth@1.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fangular-auth@1.0.0",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -744,11 +744,11 @@
     },
     {
       "type": "library",
-      "name": "@stynx-web/angular-flow",
+      "name": "@stynx-nyx/angular-flow",
       "version": "1.0.0",
       "scope": "required",
       "licenses": [],
-      "purl": "pkg:npm/@stynx-web%2fangular-flow@1.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fangular-flow@1.0.0",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -758,11 +758,11 @@
     },
     {
       "type": "library",
-      "name": "@stynx-web/angular-i18n",
+      "name": "@stynx-nyx/angular-i18n",
       "version": "1.0.0",
       "scope": "required",
       "licenses": [],
-      "purl": "pkg:npm/@stynx-web%2fangular-i18n@1.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fangular-i18n@1.0.0",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -772,11 +772,11 @@
     },
     {
       "type": "library",
-      "name": "@stynx-web/angular-iam",
+      "name": "@stynx-nyx/angular-iam",
       "version": "0.1.0",
       "scope": "required",
       "licenses": [],
-      "purl": "pkg:npm/@stynx-web%2fangular-iam@0.1.0",
+      "purl": "pkg:npm/@stynx-nyx%2fangular-iam@0.1.0",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -786,11 +786,11 @@
     },
     {
       "type": "library",
-      "name": "@stynx-web/angular-profile",
+      "name": "@stynx-nyx/angular-profile",
       "version": "1.0.0",
       "scope": "required",
       "licenses": [],
-      "purl": "pkg:npm/@stynx-web%2fangular-profile@1.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fangular-profile@1.0.0",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -800,11 +800,11 @@
     },
     {
       "type": "library",
-      "name": "@stynx-web/angular-sessions",
+      "name": "@stynx-nyx/angular-sessions",
       "version": "1.0.0",
       "scope": "required",
       "licenses": [],
-      "purl": "pkg:npm/@stynx-web%2fangular-sessions@1.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fangular-sessions@1.0.0",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -814,11 +814,11 @@
     },
     {
       "type": "library",
-      "name": "@stynx-web/angular-storage",
+      "name": "@stynx-nyx/angular-storage",
       "version": "1.0.0",
       "scope": "required",
       "licenses": [],
-      "purl": "pkg:npm/@stynx-web%2fangular-storage@1.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fangular-storage@1.0.0",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -828,11 +828,11 @@
     },
     {
       "type": "library",
-      "name": "@stynx-web/angular-tenancy",
+      "name": "@stynx-nyx/angular-tenancy",
       "version": "0.1.0",
       "scope": "required",
       "licenses": [],
-      "purl": "pkg:npm/@stynx-web%2fangular-tenancy@0.1.0",
+      "purl": "pkg:npm/@stynx-nyx%2fangular-tenancy@0.1.0",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -842,11 +842,11 @@
     },
     {
       "type": "library",
-      "name": "@stynx-web/angular-trash",
+      "name": "@stynx-nyx/angular-trash",
       "version": "1.0.0",
       "scope": "required",
       "licenses": [],
-      "purl": "pkg:npm/@stynx-web%2fangular-trash@1.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fangular-trash@1.0.0",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -856,11 +856,11 @@
     },
     {
       "type": "library",
-      "name": "@stynx-web/angular-ui",
+      "name": "@stynx-nyx/angular-ui",
       "version": "1.0.0",
       "scope": "required",
       "licenses": [],
-      "purl": "pkg:npm/@stynx-web%2fangular-ui@1.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fangular-ui@1.0.0",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -870,11 +870,11 @@
     },
     {
       "type": "library",
-      "name": "@stynx-web/angular",
+      "name": "@stynx-nyx/angular",
       "version": "1.0.0",
       "scope": "required",
       "licenses": [],
-      "purl": "pkg:npm/@stynx-web%2fangular@1.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fangular@1.0.0",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -884,11 +884,11 @@
     },
     {
       "type": "library",
-      "name": "@stynx-web/sdk",
+      "name": "@stynx-nyx/sdk",
       "version": "1.0.0",
       "scope": "required",
       "licenses": [],
-      "purl": "pkg:npm/@stynx-web%2fsdk@1.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fsdk@1.0.0",
       "properties": [
         {
           "name": "stynx:workspacePath",

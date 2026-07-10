@@ -1,8 +1,8 @@
-[**@stynx-web/angular-trash**](../index.md)
+[**@stynx-nyx/angular-trash**](../index.md)
 
 ---
 
-[@stynx-web/angular-trash](../index.md) / StynxTrashItem
+[@stynx-nyx/angular-trash](../index.md) / StynxTrashItem
 
 # Interface: StynxTrashItem
 

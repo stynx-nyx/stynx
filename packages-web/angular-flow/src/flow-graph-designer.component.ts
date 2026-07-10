@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import type { OnChanges } from '@angular/core';
-import { StynxHasPermissionDirective } from '@stynx-web/angular-auth';
-import { StynxTranslatePipe } from '@stynx-web/angular-i18n';
-import { StynxBannerComponent, StynxIconComponent, StynxLoadingSpinnerComponent } from '@stynx-web/angular-ui';
+import { StynxHasPermissionDirective } from '@stynx-nyx/angular-auth';
+import { StynxTranslatePipe } from '@stynx-nyx/angular-i18n';
+import { StynxBannerComponent, StynxIconComponent, StynxLoadingSpinnerComponent } from '@stynx-nyx/angular-ui';
 import { FlowApiService } from './flow-api.service';
 import { StynxFlowEmptyStateComponent } from './flow-empty-state.component';
 import { StynxFlowGraphCanvasComponent } from './flow-graph-canvas.component';

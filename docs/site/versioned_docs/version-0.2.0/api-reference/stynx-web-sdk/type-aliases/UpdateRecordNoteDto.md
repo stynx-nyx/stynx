@@ -1,8 +1,8 @@
-[**@stynx-web/sdk**](../index.md)
+[**@stynx-nyx/sdk**](../index.md)
 
 ---
 
-[@stynx-web/sdk](../index.md) / UpdateRecordNoteDto
+[@stynx-nyx/sdk](../index.md) / UpdateRecordNoteDto
 
 # Type Alias: UpdateRecordNoteDto
 

@@ -1,10 +1,10 @@
-# `@stynx-web/angular-storage` — Angular file upload + download with presigned-URL flow
+# `@stynx-nyx/angular-storage` — Angular file upload + download with presigned-URL flow
 
-`@stynx-web/angular-storage` is the Angular file-handling package. It provides a document-upload component (drag-drop + progress), a document-download component, and the upload executors (multipart + XHR) that drive direct-to-S3 uploads via presigned URLs. Backed by the backend's [`@stynx-nyx/storage`](/docs/packages/storage/) presign endpoints.
+`@stynx-nyx/angular-storage` is the Angular file-handling package. It provides a document-upload component (drag-drop + progress), a document-download component, and the upload executors (multipart + XHR) that drive direct-to-S3 uploads via presigned URLs. Backed by the backend's [`@stynx-nyx/storage`](/docs/packages/storage/) presign endpoints.
 
 ## Purpose
 
-File upload in browsers is fiddly: presigned-URL negotiation, direct-to-S3 PUT (so files don't proxy through your API), progress tracking, multipart for large files. `@stynx-web/angular-storage` packages the whole flow behind two components.
+File upload in browsers is fiddly: presigned-URL negotiation, direct-to-S3 PUT (so files don't proxy through your API), progress tracking, multipart for large files. `@stynx-nyx/angular-storage` packages the whole flow behind two components.
 
 You reach for it when your app uploads or downloads user files.
 
@@ -17,10 +17,10 @@ Angular frontend developers building file-upload features.
 ## Install
 
 ```bash
-pnpm add @stynx-web/angular-storage
+pnpm add @stynx-nyx/angular-storage
 ```
 
-**Peer dependencies:** `@angular/core` `^18`, `@stynx-web/angular` `^1`, `@stynx-web/sdk` `^1`.
+**Peer dependencies:** `@angular/core` `^18`, `@stynx-nyx/angular` `^1`, `@stynx-nyx/sdk` `^1`.
 
 ## Quick start
 
@@ -79,7 +79,7 @@ pnpm add @stynx-web/angular-storage
 ### Example 2 — programmatic download
 
 ```ts
-import { DocumentService } from '@stynx-web/angular-storage';
+import { DocumentService } from '@stynx-nyx/angular-storage';
 
 @Component({
   /* ... */
@@ -107,7 +107,7 @@ export class Viewer {
 
 ## Related packages
 
-- [`@stynx-web/angular`](/docs/packages-web/angular/) — the foundation.
+- [`@stynx-nyx/angular`](/docs/packages-web/angular/) — the foundation.
 - [`@stynx-nyx/storage`](/docs/packages/storage/) — the backend counterpart (presign endpoints + S3).
 
 ## TypeDoc reference

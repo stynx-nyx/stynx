@@ -1,8 +1,8 @@
-[**@stynx-web/angular-ui**](../index.md)
+[**@stynx-nyx/angular-ui**](../index.md)
 
 ---
 
-[@stynx-web/angular-ui](../index.md) / StynxTableComponent
+[@stynx-nyx/angular-ui](../index.md) / StynxTableComponent
 
 # Class: StynxTableComponent\<TRecord\>
 

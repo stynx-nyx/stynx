@@ -1,8 +1,8 @@
-[**@stynx-web/angular-audit**](../index.md)
+[**@stynx-nyx/angular-audit**](../index.md)
 
 ---
 
-[@stynx-web/angular-audit](../index.md) / STYNX_AUDIT_CLIENT
+[@stynx-nyx/angular-audit](../index.md) / STYNX_AUDIT_CLIENT
 
 # Variable: STYNX_AUDIT_CLIENT
 

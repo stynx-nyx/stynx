@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { distinctUntilChanged, firstValueFrom, map, switchMap, takeWhile, timer, type Observable } from 'rxjs';
-import { STYNX_ANGULAR_OPTIONS } from '@stynx-web/angular';
+import { STYNX_ANGULAR_OPTIONS } from '@stynx-nyx/angular';
 import type {
   StynxDocumentCompleteResponse,
   StynxDocumentDownloadResponse,

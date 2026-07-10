@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import type { OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { StynxBannerComponent } from '@stynx-web/angular-ui';
+import { StynxBannerComponent } from '@stynx-nyx/angular-ui';
 import { ReferenceWebApiService } from '../core/reference-web-api.service';
 import type { RecordItem } from '../core/reference-models';
 

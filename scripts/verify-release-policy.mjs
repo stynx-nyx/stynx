@@ -30,7 +30,7 @@ const packages = [
   ...collectPackages('packages', (name) => typeof name === 'string' && name.startsWith('@stynx-nyx/')),
   ...collectPackages(
     'packages-web',
-    (name) => typeof name === 'string' && name.startsWith('@stynx-web/'),
+    (name) => typeof name === 'string' && name.startsWith('@stynx-nyx/'),
   ),
 ];
 
@@ -83,10 +83,10 @@ console.log(`Verified release policy for ${packages.length} publishable packages
 
 function allowedExportKeys(packageName) {
   const keys = new Set(['.', './package.json']);
-  if (packageName.startsWith('@stynx-web/angular') || packageName === '@stynx-web/sdk') {
+  if (packageName.startsWith('@stynx-nyx/angular') || packageName === '@stynx-nyx/sdk') {
     keys.add('./testing');
   }
-  if (packageName.startsWith('@stynx-web/angular')) {
+  if (packageName.startsWith('@stynx-nyx/angular')) {
     keys.add('./catalogs/en.json');
     keys.add('./catalogs/pt-BR.json');
   }

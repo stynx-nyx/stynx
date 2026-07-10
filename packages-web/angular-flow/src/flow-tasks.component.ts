@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, EventEmitter, Input, Output, inject, signal } from '@angular/core';
 import type { OnChanges, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { StynxHasPermissionDirective } from '@stynx-web/angular-auth';
-import { StynxTranslatePipe } from '@stynx-web/angular-i18n';
-import { StynxBannerComponent, StynxIconComponent, StynxLoadingSpinnerComponent } from '@stynx-web/angular-ui';
+import { StynxHasPermissionDirective } from '@stynx-nyx/angular-auth';
+import { StynxTranslatePipe } from '@stynx-nyx/angular-i18n';
+import { StynxBannerComponent, StynxIconComponent, StynxLoadingSpinnerComponent } from '@stynx-nyx/angular-ui';
 import { FlowApiService } from './flow-api.service';
 import { STYNX_FLOW_TENANT_CHANGED } from './tokens';
 import type { FlowTask } from './types';

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, computed, inject, signal } from '@angular/core';
-import { StynxBannerComponent, StynxLoadingSpinnerComponent } from '@stynx-web/angular-ui';
+import { StynxBannerComponent, StynxLoadingSpinnerComponent } from '@stynx-nyx/angular-ui';
 import { DocumentService } from './document.service';
 import type { StynxDocumentDownloadCompletedEvent, StynxDocumentDownloadProgressEvent } from './types';
 

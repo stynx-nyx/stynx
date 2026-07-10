@@ -33,7 +33,7 @@ function isTrackedFile(filePath) {
 
 const packages = [
   ...collectPackages('packages', (name) => typeof name === 'string' && name.startsWith('@stynx-nyx/')),
-  ...collectPackages('packages-web', (name) => typeof name === 'string' && name.startsWith('@stynx-web/')),
+  ...collectPackages('packages-web', (name) => typeof name === 'string' && name.startsWith('@stynx-nyx/')),
 ];
 
 const missing = [];

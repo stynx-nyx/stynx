@@ -35,7 +35,7 @@ Where this spec references AWS primitives, the target is one AWS account per env
 ### 1.1 Goals [SPEC]
 
 1. **One foundation, many apps.** Every in‑house service starts from `@stynx-nyx/core` and inherits identity, tenancy, audit, soft‑delete (via archive), logging, storage, health, rate‑limiting, privacy, idempotency, i18n, and testing rails with zero bespoke code for those concerns.
-2. **One foundation, both ends.** Angular clients start from `@stynx-web/*` and inherit auth, tenancy switching, document upload, session UI, trash management, and i18n with the same DRY guarantee.
+2. **One foundation, both ends.** Angular clients start from `@stynx-nyx/*` and inherit auth, tenancy switching, document upload, session UI, trash management, and i18n with the same DRY guarantee.
 3. **Security by default.** RLS is always on. JWT verification is never bypassable at the framework level. Logs are redacted by default. Presigned URLs always carry a tenant claim check.
 4. **Multi‑tenant from zero.** Tenancy is a cross‑cutting invariant enforced at HTTP, service, database, and storage layers.
 5. **Thin controllers, fat services, push down to the database.** Controllers are DTO binders. Business logic lives in services. Data constraints live in the database (RLS, triggers, check constraints, generated columns, domain types).
@@ -72,7 +72,7 @@ Where this spec references AWS primitives, the target is one AWS account per env
 ```mermaid
 flowchart LR
   subgraph Client
-    SPA[Angular SPA / PWA + stynx-web]
+    SPA[Angular SPA / PWA + packages-web]
   end
 
   subgraph Edge
@@ -128,7 +128,7 @@ flowchart LR
 
 ## 3. Monorepo Layout and Package Topology [SPEC]
 
-STYNX is a **single pnpm + Turborepo monorepo**, published under the `@stynx` and `@stynx-web` scopes to **GitHub Packages**.
+STYNX is a **single pnpm + Turborepo monorepo**, published under the `@stynx` and `@stynx-nyx` scopes to **GitHub Packages**.
 
 ```
 stynx/
@@ -910,7 +910,7 @@ LGPD erasure (§21) processes **both** live and archive tables per the PII map. 
 
 ### 14.10 Frontend [SPEC]
 
-`@stynx-web/angular-trash` exposes `<stynx-trash-list>` — a generic list/restore/hard‑delete component parameterizable by resource type. Columns: original key fields, `deleted_at`, `deleted_by`, actions (restore, hard‑delete, restore‑with‑cascade when applicable). Sort by `deleted_at DESC`. Pagination. Empty state. Restore surfaces 409 as a user‑friendly "conflicts with existing {resource name}" message and, when applicable, a "restore with N linked items" escalation button.
+`@stynx-nyx/angular-trash` exposes `<stynx-trash-list>` — a generic list/restore/hard‑delete component parameterizable by resource type. Columns: original key fields, `deleted_at`, `deleted_by`, actions (restore, hard‑delete, restore‑with‑cascade when applicable). Sort by `deleted_at DESC`. Pagination. Empty state. Restore surfaces 409 as a user‑friendly "conflicts with existing {resource name}" message and, when applicable, a "restore with N linked items" escalation button.
 
 ### 14.11 Opt‑out [SPEC]
 
@@ -986,11 +986,11 @@ Per v0.3: OIDC PKCE, bearer + refresh, tenant context, document upload, sessions
 
 ### 19.2 Package responsibilities
 
-Per v0.3 table. `@stynx-web/angular-trash` exposes `<stynx-trash-list>` (§14.9).
+Per v0.3 table. `@stynx-nyx/angular-trash` exposes `<stynx-trash-list>` (§14.9).
 
 ### 19.3 Versioning
 
-`@stynx-web/angular` major locks to `@stynx-nyx/core` major. Drops Angular LTS that falls out of support.
+`@stynx-nyx/angular` major locks to `@stynx-nyx/core` major. Drops Angular LTS that falls out of support.
 
 ### 19.4 Bearer storage
 
@@ -1012,7 +1012,7 @@ Auth/tenant interceptors, 401 refresh flow, tenant switcher rotation, permission
 
 Backend: scaffolds NestJS app with all `@stynx-nyx/*` packages pre‑wired, `.env.example`, `docker-compose.yml` (PG + Redis + LocalStack), `Dockerfile`, `CODEOWNERS`, `README`, CDK skeleton, one example tenant‑scoped + soft‑deletable module with **both the live table and its `archive.*` mirror** in the initial migration, tests passing.
 
-Frontend: Angular workspace with `@stynx-web/angular` pre‑wired, OIDC templates, reference page exercising auth + tenant switch + document upload + trash list.
+Frontend: Angular workspace with `@stynx-nyx/angular` pre‑wired, OIDC templates, reference page exercising auth + tenant switch + document upload + trash list.
 
 ### 20.2 `stynx adopt` — for raw‑SQL apps without ORM
 
@@ -1199,17 +1199,17 @@ Resolved in v0.3: web SPA token storage in `sessionStorage` (Q1); read‑only ro
 
 ## 28. Delivery Plan (suggested, not normative)
 
-| Phase                                 | Weeks | Deliverable                                                                                                                                               |
-| ------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| P0 Bootstrap                          | 1–2   | Monorepo, CI, `@stynx-nyx/core`, `@stynx-nyx/logging`, `@stynx-nyx/health`, reference api                                                                             |
+| Phase                                 | Weeks | Deliverable                                                                                                                                                       |
+| ------------------------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P0 Bootstrap                          | 1–2   | Monorepo, CI, `@stynx-nyx/core`, `@stynx-nyx/logging`, `@stynx-nyx/health`, reference api                                                                         |
 | P1 Data + Tenancy + Archive           | 3–7   | `@stynx-nyx/data` (Drizzle, tx, three roles, RLS GUC, **archive model: mirror helpers, softDelete/restore, FK registry**), `@stynx-nyx/tenancy`, migration linter |
 | P2 Auth + Authz + Sessions            | 8–11  | `@stynx-nyx/auth` (Cognito + STYNX bearer + refresh rotation), `@stynx-nyx/sessions`, perms engine                                                                |
 | P3 Audit + Storage                    | 12–14 | `@stynx-nyx/audit` (triggers + archive‑move GUC suppression + read API), `@stynx-nyx/storage` (S3, pre‑scan defenses, archive‑aware hard delete)                  |
-| P4 Rate‑limit + Idempotency + Testing | 15–16 | `@stynx-nyx/ratelimit`, `@stynx-nyx/idempotency`, `@stynx-nyx/testing` (archive‑aware matchers), `stynx doctor`                                                       |
+| P4 Rate‑limit + Idempotency + Testing | 15–16 | `@stynx-nyx/ratelimit`, `@stynx-nyx/idempotency`, `@stynx-nyx/testing` (archive‑aware matchers), `stynx doctor`                                                   |
 | P5 Privacy + i18n                     | 17–18 | `@stynx-nyx/privacy` (live + archive erasure; active‑row retention), `@stynx-nyx/i18n`                                                                            |
-| P6 CLI + Adoption                     | 19–20 | `@stynx-nyx/cli` init/adopt/migrate, codemods (archive mirror generation), pilot adoption                                                                     |
-| P7 Frontend                           | 21–24 | `@stynx-web/sdk` + `@stynx-web/angular` family + reference web app (incl. `<stynx-trash-list>`)                                                           |
-| P8 Hardening + v1.0                   | 25–27 | Load tests, chaos tests, docs site, v1.0 cut                                                                                                              |
+| P6 CLI + Adoption                     | 19–20 | `@stynx-nyx/cli` init/adopt/migrate, codemods (archive mirror generation), pilot adoption                                                                         |
+| P7 Frontend                           | 21–24 | `@stynx-nyx/sdk` + `@stynx-nyx/angular` family + reference web app (incl. `<stynx-trash-list>`)                                                                   |
+| P8 Hardening + v1.0                   | 25–27 | Load tests, chaos tests, docs site, v1.0 cut                                                                                                                      |
 
 ---
 

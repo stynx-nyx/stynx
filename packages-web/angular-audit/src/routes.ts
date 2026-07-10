@@ -1,6 +1,6 @@
 import type { Type } from '@angular/core';
 import type { Route, Routes } from '@angular/router';
-import { stynxPermissionGuard } from '@stynx-web/angular-auth';
+import { stynxPermissionGuard } from '@stynx-nyx/angular-auth';
 import { StynxAuditEventDetailComponent } from './audit-event-detail.component';
 import { StynxAuditLogComponent } from './audit-log.component';
 import { StynxEntityHistoryComponent } from './entity-history.component';

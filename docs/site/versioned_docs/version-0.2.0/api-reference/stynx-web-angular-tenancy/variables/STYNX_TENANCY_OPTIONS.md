@@ -1,8 +1,8 @@
-[**@stynx-web/angular-tenancy**](../index.md)
+[**@stynx-nyx/angular-tenancy**](../index.md)
 
 ---
 
-[@stynx-web/angular-tenancy](../index.md) / STYNX_TENANCY_OPTIONS
+[@stynx-nyx/angular-tenancy](../index.md) / STYNX_TENANCY_OPTIONS
 
 # Variable: STYNX_TENANCY_OPTIONS
 

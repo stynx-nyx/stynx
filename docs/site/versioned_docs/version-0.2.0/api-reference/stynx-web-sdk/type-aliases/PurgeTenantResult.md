@@ -1,8 +1,8 @@
-[**@stynx-web/sdk**](../index.md)
+[**@stynx-nyx/sdk**](../index.md)
 
 ---
 
-[@stynx-web/sdk](../index.md) / PurgeTenantResult
+[@stynx-nyx/sdk](../index.md) / PurgeTenantResult
 
 # Type Alias: PurgeTenantResult
 

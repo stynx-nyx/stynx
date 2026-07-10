@@ -1,8 +1,8 @@
-**@stynx-web/angular**
+**@stynx-nyx/angular**
 
 ---
 
-# @stynx-web/angular
+# @stynx-nyx/angular
 
 ## Classes
 

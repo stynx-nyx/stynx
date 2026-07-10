@@ -18,7 +18,7 @@ function createI18nService(options: StynxI18nModuleOptions): StynxI18nService {
   return runInInjectionContext(injector, () => new StynxI18nService());
 }
 
-describe('@stynx-web/angular-i18n', () => {
+describe('@stynx-nyx/angular-i18n', () => {
   it('switches locale at runtime and updates translations', async () => {
     const service = createI18nService({
       defaultLocale: 'en-US',

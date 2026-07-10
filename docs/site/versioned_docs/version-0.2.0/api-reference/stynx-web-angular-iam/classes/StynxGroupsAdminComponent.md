@@ -1,8 +1,8 @@
-[**@stynx-web/angular-iam**](../index.md)
+[**@stynx-nyx/angular-iam**](../index.md)
 
 ---
 
-[@stynx-web/angular-iam](../index.md) / StynxGroupsAdminComponent
+[@stynx-nyx/angular-iam](../index.md) / StynxGroupsAdminComponent
 
 # Class: StynxGroupsAdminComponent
 

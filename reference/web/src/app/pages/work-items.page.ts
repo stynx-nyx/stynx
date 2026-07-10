@@ -7,7 +7,7 @@ import {
   EmptyStateComponent,
   StynxLoadingSpinnerComponent,
   StynxTableComponent,
-} from '@stynx-web/angular-ui';
+} from '@stynx-nyx/angular-ui';
 import { ReferenceWebApiService } from '../core/reference-web-api.service';
 import type { WorkItem } from '../core/reference-models';
 

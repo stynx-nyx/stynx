@@ -11,8 +11,8 @@ import {
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { ROUTES, Router } from '@angular/router';
-import { STYNX_ANGULAR_OPTIONS, TenantContextService } from '@stynx-web/angular';
-import { StynxI18nService } from '@stynx-web/angular-i18n';
+import { STYNX_ANGULAR_OPTIONS, TenantContextService } from '@stynx-nyx/angular';
+import { StynxI18nService } from '@stynx-nyx/angular-i18n';
 import { OidcSecurityService } from 'angular-auth-oidc-client';
 import { of, Subject } from 'rxjs';
 import { parseJwtPayload, normalizePermissions } from '../src/jwt';
@@ -29,7 +29,7 @@ import { provideStynxAuth } from '../src/provide-auth';
 import { StynxSessionService } from '../src/session.service';
 import { STYNX_ANGULAR_AUTH_OPTIONS, STYNX_AUTH_BACKEND, STYNX_OIDC_ADAPTER } from '../src/tokens';
 import type { StynxAngularAuthModuleOptions, StynxAuthBackend, StynxOidcAdapter, StynxSessionBundle } from '../src/types';
-import { STYNX_TENANCY_OPTIONS, STYNX_TENANCY_WINDOW, type TenancyOptions } from '@stynx-web/angular-tenancy';
+import { STYNX_TENANCY_OPTIONS, STYNX_TENANCY_WINDOW, type TenancyOptions } from '@stynx-nyx/angular-tenancy';
 import { renderComponent } from './support/test-bed';
 
 function createJwt(payload: Record<string, unknown>): string {
@@ -163,7 +163,7 @@ afterEach(() => {
   TestBed.resetTestingModule();
 });
 
-describe('@stynx-web/angular-auth', () => {
+describe('@stynx-nyx/angular-auth', () => {
   it('renders login redirect and completes the active browser callback URL', async () => {
     const completeLogin = vi.fn(async () => undefined);
     const fixture = await renderComponent(StynxLoginRedirectComponent, {

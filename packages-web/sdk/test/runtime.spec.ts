@@ -35,7 +35,7 @@ function token(payload: Record<string, unknown>): string {
   return `h.${encoded}.s`;
 }
 
-describe('@stynx-web/sdk runtime helpers', () => {
+describe('@stynx-nyx/sdk runtime helpers', () => {
   it('hydrates, derives, expires, and clears frontend sessions', () => {
     const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(1_000);
     try {

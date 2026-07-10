@@ -1,8 +1,8 @@
-[**@stynx-web/sdk**](../index.md)
+[**@stynx-nyx/sdk**](../index.md)
 
 ---
 
-[@stynx-web/sdk](../index.md) / BaseHttpRequest
+[@stynx-nyx/sdk](../index.md) / BaseHttpRequest
 
 # Abstract Class: BaseHttpRequest
 

@@ -1,5 +1,5 @@
 import { InjectionToken } from '@angular/core';
-import type { AuthProvider } from '@stynx-web/sdk';
+import type { AuthProvider } from '@stynx-nyx/sdk';
 import type { StynxAuthBackend, StynxAngularAuthModuleOptions, StynxOidcAdapter } from './types';
 
 export const STYNX_ANGULAR_AUTH_OPTIONS = new InjectionToken<StynxAngularAuthModuleOptions>('STYNX_ANGULAR_AUTH_OPTIONS');

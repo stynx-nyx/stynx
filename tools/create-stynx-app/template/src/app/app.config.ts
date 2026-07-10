@@ -1,10 +1,10 @@
 import { inject } from '@angular/core';
 import type { ApplicationConfig } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { provideStynxDefaults, TenantContextService } from '@stynx-web/angular';
-import { provideStynxAuth, StynxSessionService } from '@stynx-web/angular-auth';
-import { provideStynxFlow } from '@stynx-web/angular-flow';
-import { StynxSdkClient } from '@stynx-web/sdk';
+import { provideStynxDefaults, TenantContextService } from '@stynx-nyx/angular';
+import { provideStynxAuth, StynxSessionService } from '@stynx-nyx/angular-auth';
+import { provideStynxFlow } from '@stynx-nyx/angular-flow';
+import { StynxSdkClient } from '@stynx-nyx/sdk';
 
 const apiBaseUrl = 'http://127.0.0.1:3000';
 const defaultTenantId = 'demo-tenant';

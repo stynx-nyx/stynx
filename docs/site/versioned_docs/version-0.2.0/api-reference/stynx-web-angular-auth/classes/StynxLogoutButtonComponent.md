@@ -1,8 +1,8 @@
-[**@stynx-web/angular-auth**](../index.md)
+[**@stynx-nyx/angular-auth**](../index.md)
 
 ---
 
-[@stynx-web/angular-auth](../index.md) / StynxLogoutButtonComponent
+[@stynx-nyx/angular-auth](../index.md) / StynxLogoutButtonComponent
 
 # Class: StynxLogoutButtonComponent
 

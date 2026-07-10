@@ -1,6 +1,6 @@
 # `@stynx-nyx/i18n` — server-side translation, locale resolution, ICU MessageFormat
 
-`@stynx-nyx/i18n` is STYNX's server-side internationalization substrate. It resolves the request's locale (from header / actor preference / fallback chain), looks up translations from a catalog, formats them with ICU MessageFormat (plurals, gender, nested), and translates error envelopes so `StynxError` responses come back in the caller's language. Paired with [`@stynx-web/angular-i18n`](/docs/packages-web/angular-i18n/) for the frontend.
+`@stynx-nyx/i18n` is STYNX's server-side internationalization substrate. It resolves the request's locale (from header / actor preference / fallback chain), looks up translations from a catalog, formats them with ICU MessageFormat (plurals, gender, nested), and translates error envelopes so `StynxError` responses come back in the caller's language. Paired with [`@stynx-nyx/angular-i18n`](/docs/packages-web/angular-i18n/) for the frontend.
 
 ## Purpose
 
@@ -8,7 +8,7 @@ Multi-locale apps need consistent server-side translation: localized error messa
 
 You reach for it whenever your app serves users in more than one language, or when you need localized error envelopes.
 
-What it does NOT do: it doesn't translate your frontend templates (that's `@stynx-web/angular-i18n`). It doesn't auto-translate (no machine translation — you author catalogs). It doesn't handle RTL layout (presentation concern).
+What it does NOT do: it doesn't translate your frontend templates (that's `@stynx-nyx/angular-i18n`). It doesn't auto-translate (no machine translation — you author catalogs). It doesn't handle RTL layout (presentation concern).
 
 ## Audience
 
@@ -134,7 +134,7 @@ StynxI18nModule.forRoot({
 ## Related packages
 
 - [`@stynx-nyx/core`](/docs/packages/core/) — provides `RequestContext` where the resolved locale is written.
-- [`@stynx-web/angular-i18n`](/docs/packages-web/angular-i18n/) — the Angular pair: ICU in templates + catalog loader.
+- [`@stynx-nyx/angular-i18n`](/docs/packages-web/angular-i18n/) — the Angular pair: ICU in templates + catalog loader.
 - [STYNX framework — ADR-FE-ICU-i18n-0002](/docs/meta/adr/ADR-FE-ICU-i18n-0002-package-catalogs-and-icu/) — the catalog + ICU decision.
 
 ## TypeDoc reference

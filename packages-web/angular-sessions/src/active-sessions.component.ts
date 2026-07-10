@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input, inject, signal } from '@angular/core';
-import { StynxSessionService } from '@stynx-web/angular-auth';
-import { StynxI18nService, StynxTranslatePipe } from '@stynx-web/angular-i18n';
-import { EmptyStateComponent, StynxConfirmDialogComponent, StynxToastService } from '@stynx-web/angular-ui';
+import { StynxSessionService } from '@stynx-nyx/angular-auth';
+import { StynxI18nService, StynxTranslatePipe } from '@stynx-nyx/angular-i18n';
+import { EmptyStateComponent, StynxConfirmDialogComponent, StynxToastService } from '@stynx-nyx/angular-ui';
 import { firstValueFrom, from } from 'rxjs';
 import type { Observable } from 'rxjs';
 import { STYNX_SESSIONS_ADAPTER } from './tokens';

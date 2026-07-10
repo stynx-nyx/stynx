@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, Input, inject, signal } from '@angular/core';
-import { ErrorBannerService } from '@stynx-web/angular';
-import { StynxI18nService, StynxTranslatePipe } from '@stynx-web/angular-i18n';
-import { STYNX_OIDC_ADAPTER, type StynxHostedAuthAction, type StynxHostedAuthActionContext } from '@stynx-web/angular-auth';
-import { StynxBannerComponent, StynxIconComponent } from '@stynx-web/angular-ui';
+import { ErrorBannerService } from '@stynx-nyx/angular';
+import { StynxI18nService, StynxTranslatePipe } from '@stynx-nyx/angular-i18n';
+import { STYNX_OIDC_ADAPTER, type StynxHostedAuthAction, type StynxHostedAuthActionContext } from '@stynx-nyx/angular-auth';
+import { StynxBannerComponent, StynxIconComponent } from '@stynx-nyx/angular-ui';
 
 type HostedActionStatus = 'ready' | 'unavailable' | 'error';
 

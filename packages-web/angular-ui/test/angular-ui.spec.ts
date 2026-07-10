@@ -1,7 +1,7 @@
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
-import { StynxI18nService } from '@stynx-web/angular-i18n';
+import { StynxI18nService } from '@stynx-nyx/angular-i18n';
 import { StynxBannerComponent } from '../src/banner.component';
 import { StynxConfirmDialogComponent } from '../src/confirm-dialog.component';
 import { STYNX_ICON_NAMES, StynxIconComponent } from '../src/icon/icon.component';
@@ -24,7 +24,7 @@ afterEach(() => {
   TestBed.resetTestingModule();
 });
 
-describe('@stynx-web/angular-ui', () => {
+describe('@stynx-nyx/angular-ui', () => {
   afterEach(() => {
     vi.useRealTimers();
   });

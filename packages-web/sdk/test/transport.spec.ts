@@ -30,7 +30,7 @@ function response(status: number, body: string, headers: Record<string, string> 
   };
 }
 
-describe('@stynx-web/sdk transport', () => {
+describe('@stynx-nyx/sdk transport', () => {
   it('forwards client method wrappers to transport with exact methods, paths, bodies, and options', async () => {
     const client = new StynxSdkClient({
       baseUrl: 'https://api.example.test',

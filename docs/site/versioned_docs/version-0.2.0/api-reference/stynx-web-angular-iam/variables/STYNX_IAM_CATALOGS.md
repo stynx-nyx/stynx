@@ -1,8 +1,8 @@
-[**@stynx-web/angular-iam**](../index.md)
+[**@stynx-nyx/angular-iam**](../index.md)
 
 ---
 
-[@stynx-web/angular-iam](../index.md) / STYNX_IAM_CATALOGS
+[@stynx-nyx/angular-iam](../index.md) / STYNX_IAM_CATALOGS
 
 # Variable: STYNX_IAM_CATALOGS
 

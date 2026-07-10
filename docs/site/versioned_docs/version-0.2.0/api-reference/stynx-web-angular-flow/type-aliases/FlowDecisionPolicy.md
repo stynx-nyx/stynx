@@ -1,8 +1,8 @@
-[**@stynx-web/angular-flow**](../index.md)
+[**@stynx-nyx/angular-flow**](../index.md)
 
 ---
 
-[@stynx-web/angular-flow](../index.md) / FlowDecisionPolicy
+[@stynx-nyx/angular-flow](../index.md) / FlowDecisionPolicy
 
 # Type Alias: FlowDecisionPolicy
 

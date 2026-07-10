@@ -53,7 +53,7 @@ test('reference-web build script bundles the app entry and web-package aliases',
   assert.match(buildScript, /outfile: path\.resolve\(outDir, 'main\.js'\)/u);
 
   const webDependencies = Object.keys(pkg.dependencies)
-    .filter((name) => name.startsWith('@stynx-web/'))
+    .filter((name) => name.startsWith('@stynx-nyx/'))
     .sort();
   for (const dependencyName of webDependencies) {
     assert.match(buildScript, new RegExp(`'${dependencyName}':`, 'u'), `${dependencyName} needs an esbuild alias`);

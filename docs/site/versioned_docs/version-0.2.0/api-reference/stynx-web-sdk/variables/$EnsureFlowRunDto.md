@@ -1,8 +1,8 @@
-[**@stynx-web/sdk**](../index.md)
+[**@stynx-nyx/sdk**](../index.md)
 
 ---
 
-[@stynx-web/sdk](../index.md) / $EnsureFlowRunDto
+[@stynx-nyx/sdk](../index.md) / $EnsureFlowRunDto
 
 # Variable: $EnsureFlowRunDto
 

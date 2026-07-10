@@ -1,8 +1,8 @@
-[**@stynx-web/angular**](../index.md)
+[**@stynx-nyx/angular**](../index.md)
 
 ---
 
-[@stynx-web/angular](../index.md) / TenantInterceptor
+[@stynx-nyx/angular](../index.md) / TenantInterceptor
 
 # Class: TenantInterceptor
 

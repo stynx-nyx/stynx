@@ -2,8 +2,8 @@ import '@angular/compiler';
 import { Injector, runInInjectionContext } from '@angular/core';
 import type { CanActivateFn, UrlTree } from '@angular/router';
 import { Router } from '@angular/router';
-import { STYNX_ANGULAR_AUTH_OPTIONS, StynxSessionService } from '@stynx-web/angular-auth';
-import type { StynxSdkClient } from '@stynx-web/sdk';
+import { STYNX_ANGULAR_AUTH_OPTIONS, StynxSessionService } from '@stynx-nyx/angular-auth';
+import type { StynxSdkClient } from '@stynx-nyx/sdk';
 import { firstValueFrom } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
 import * as iam from '../src';
@@ -95,7 +95,7 @@ function createService(client: StynxSdkClient): IamApiService {
   return runInInjectionContext(injector, () => new IamApiService());
 }
 
-describe('@stynx-web/angular-iam API and routes', () => {
+describe('@stynx-nyx/angular-iam API and routes', () => {
   it('exposes a host-facing provider and defensive IAM route factory', () => {
     expect(typeof iam.provideStynxIam).toBe('function');
     expect(typeof iam.iamRoutes).toBe('function');

@@ -1,10 +1,10 @@
-# `@stynx-web/angular-ui` — shared Angular UI primitives (tables, dialogs, toasts, banners)
+# `@stynx-nyx/angular-ui` — shared Angular UI primitives (tables, dialogs, toasts, banners)
 
-`@stynx-web/angular-ui` is STYNX's shared component library — the design-system surface every STYNX frontend draws from. Standalone Angular components: data tables with pagination, confirmation dialogs, loading spinners, banners, icons, toast notifications. All themeable via CSS custom properties, all standalone (no NgModule required).
+`@stynx-nyx/angular-ui` is STYNX's shared component library — the design-system surface every STYNX frontend draws from. Standalone Angular components: data tables with pagination, confirmation dialogs, loading spinners, banners, icons, toast notifications. All themeable via CSS custom properties, all standalone (no NgModule required).
 
 ## Purpose
 
-Every STYNX frontend needs the same UI primitives: a paginated table, a confirm-before-delete dialog, a loading spinner, toast notifications. Rebuilding these per app produces inconsistent UX. `@stynx-web/angular-ui` provides them once, themeable.
+Every STYNX frontend needs the same UI primitives: a paginated table, a confirm-before-delete dialog, a loading spinner, toast notifications. Rebuilding these per app produces inconsistent UX. `@stynx-nyx/angular-ui` provides them once, themeable.
 
 You reach for it whenever you build STYNX frontend screens — it's the visual vocabulary.
 
@@ -17,16 +17,16 @@ Angular frontend developers building STYNX UIs.
 ## Install
 
 ```bash
-pnpm add @stynx-web/angular-ui
+pnpm add @stynx-nyx/angular-ui
 ```
 
-**Peer dependencies:** `@angular/core` `^18`, `@angular/common` `^18`, `@stynx-web/angular` `^1`.
+**Peer dependencies:** `@angular/core` `^18`, `@angular/common` `^18`, `@stynx-nyx/angular` `^1`.
 
 ## Quick start
 
 ```ts
 import { Component } from '@angular/core';
-import { TableComponent, ConfirmDialogComponent } from '@stynx-web/angular-ui';
+import { TableComponent, ConfirmDialogComponent } from '@stynx-nyx/angular-ui';
 
 @Component({
   standalone: true,
@@ -49,7 +49,7 @@ export class UsersPage {}
 | `<stynx-banner>`          | `BannerComponent`                                             | `[type]`, `[message]`, `[dismissible]`            | Inline banner (info / warn / error).                        |
 | `<stynx-icon>`            | `IconComponent`                                               | `[name]`, `[size]`                                | Icon renderer.                                              |
 | `<stynx-toast-container>` | `ToastContainerComponent`                                     | —                                                 | Mount once at app root; renders toasts from `ToastService`. |
-| `<stynx-empty-state>`     | `EmptyStateComponent` (re-exported from `@stynx-web/angular`) | `[message]`                                       | Empty-state placeholder.                                    |
+| `<stynx-empty-state>`     | `EmptyStateComponent` (re-exported from `@stynx-nyx/angular`) | `[message]`                                       | Empty-state placeholder.                                    |
 
 ### Services
 
@@ -85,7 +85,7 @@ Theming is via CSS custom properties — no module config. Override design token
 ### Example 2 — toasts
 
 ```ts
-import { ToastService } from '@stynx-web/angular-ui';
+import { ToastService } from '@stynx-nyx/angular-ui';
 
 @Component({
   /* ... */
@@ -118,7 +118,7 @@ Mount `<stynx-toast-container>` once at the app root for toasts to render.
 
 ## Related packages
 
-- [`@stynx-web/angular`](/docs/packages-web/angular/) — the foundation; provides `ToastService`'s underlying mechanism + the empty-state component.
+- [`@stynx-nyx/angular`](/docs/packages-web/angular/) — the foundation; provides `ToastService`'s underlying mechanism + the empty-state component.
 
 ## TypeDoc reference
 

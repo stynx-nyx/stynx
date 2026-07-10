@@ -1,10 +1,10 @@
 import { inject } from '@angular/core';
 import type { EnvironmentProviders, Provider } from '@angular/core';
-import { TenantContextService } from '@stynx-web/angular';
-import { StynxSessionService } from '@stynx-web/angular-auth';
-import { STYNX_FLOW_CLIENT } from '@stynx-web/angular-flow';
-import { provideStynxIam } from '@stynx-web/angular-iam';
-import { StynxSdkClient } from '@stynx-web/sdk';
+import { TenantContextService } from '@stynx-nyx/angular';
+import { StynxSessionService } from '@stynx-nyx/angular-auth';
+import { STYNX_FLOW_CLIENT } from '@stynx-nyx/angular-flow';
+import { provideStynxIam } from '@stynx-nyx/angular-iam';
+import { StynxSdkClient } from '@stynx-nyx/sdk';
 import { environment } from '../../environments/environment';
 
 function createReferenceSdkClient(session: StynxSessionService, tenantContext: TenantContextService): StynxSdkClient {
