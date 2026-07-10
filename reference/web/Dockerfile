@@ -1,5 +1,9 @@
 FROM node:24-alpine AS build
 WORKDIR /app
+# node-gyp toolchain for optional native postinstalls (ssh2/cpu-features);
+# without it the image build spews non-fatal gyp "find Python" errors.
+# Build stage only — the runtime stage stays toolchain-free.
+RUN apk add --no-cache python3 make g++
 RUN corepack enable
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.json ./
