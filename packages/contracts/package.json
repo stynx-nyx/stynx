@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/contracts",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Framework-agnostic STYNX contracts shared by backend and integration packages",

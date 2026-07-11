@@ -1,5 +1,15 @@
 # @stynx-nyx/pdf
 
+## 1.0.2
+
+### Patch Changes
+
+- cc0f53e: License and authorship metadata in manifests: SPDX `license: "BUSL-1.1"` and
+  `author: "Antonio Augusto Russo <aarusso@nyxk.com.br>"` added to every
+  publishable package.json. No runtime changes.
+- Updated dependencies [cc0f53e]
+  - @stynx-nyx/signature@0.2.2
+
 ## 1.0.1
 
 ### Patch Changes

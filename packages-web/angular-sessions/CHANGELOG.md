@@ -1,5 +1,18 @@
 # @stynx-nyx/angular-sessions
 
+## 1.0.3
+
+### Patch Changes
+
+- cc0f53e: License and authorship metadata in manifests: SPDX `license: "BUSL-1.1"` and
+  `author: "Antonio Augusto Russo <aarusso@nyxk.com.br>"` added to every
+  publishable package.json. No runtime changes.
+- Updated dependencies [cc0f53e]
+  - @stynx-nyx/angular@1.0.3
+  - @stynx-nyx/angular-auth@1.0.3
+  - @stynx-nyx/angular-i18n@1.0.2
+  - @stynx-nyx/angular-ui@1.0.3
+
 ## 1.0.2
 
 ### Patch Changes

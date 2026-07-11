@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/feature-flags",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Tenant and environment scoped feature flag provider for stynx",

@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/idempotency",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Idempotency primitives for stynx",

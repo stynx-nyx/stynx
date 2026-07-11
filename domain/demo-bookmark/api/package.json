@@ -1,6 +1,6 @@
 {
   "name": "@stynx-domain/demo-bookmark-api",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "private": true,
   "description": "C-4 pilot Session S3 (BP-DEMO-BOOKMARK-001): NestJS API surface for the demo Bookmark module. Template-shaped controllers/services scaffolded by devai SKILL-scaffold-api; hand-finishing is a future S3 deliverable.",
   "main": "dist/index.js",
