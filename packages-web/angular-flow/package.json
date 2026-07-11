@@ -65,5 +65,10 @@
     "tslib": "^2.8.1",
     "typescript": "5.9.3",
     "@angular/platform-browser": "21.2.18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stynx-nyx/stynx.git",
+    "directory": "packages-web/angular-flow"
   }
 }

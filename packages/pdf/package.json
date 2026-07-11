@@ -67,5 +67,10 @@
     "@stynx-nyx/signature": "workspace:*",
     "@types/node": "24.12.4",
     "typescript": "^6.0.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stynx-nyx/stynx.git",
+    "directory": "packages/pdf"
   }
 }
