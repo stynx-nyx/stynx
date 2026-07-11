@@ -1,6 +1,8 @@
 {
   "name": "@stynx-nyx/angular-flow",
   "version": "1.0.2",
+  "license": "BUSL-1.1",
+  "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Angular workflow design and runtime components for stynx Flow",
   "exports": {
     ".": {

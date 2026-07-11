@@ -1,6 +1,8 @@
 {
   "name": "@stynx-nyx/health",
   "version": "1.0.1",
+  "license": "BUSL-1.1",
+  "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Health and observability endpoints for stynx",
   "main": "dist/health/src/index.js",
   "types": "dist/health/src/index.d.ts",

@@ -1,6 +1,8 @@
 {
   "name": "@stynx-nyx/pdf-a-vera-docker",
   "version": "0.2.1",
+  "license": "BUSL-1.1",
+  "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "veraPDF Docker adapter for the stynx PDF/A validator contract",
   "main": "dist/pdf-a-vera-docker/src/index.js",
   "types": "dist/pdf-a-vera-docker/src/index.d.ts",

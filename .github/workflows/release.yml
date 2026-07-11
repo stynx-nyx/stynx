@@ -66,4 +66,8 @@ jobs:
           setupGitUser: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # The repo lives in the stynx-nyx org that owns the @stynx-nyx/*
+          # packages, so the ambient GITHUB_TOKEN (job has `packages: write`)
+          # publishes to GitHub Packages directly — no PAT needed. The NPM_TOKEN
+          # secret is retired separately by the owner.
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

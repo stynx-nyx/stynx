@@ -1,6 +1,8 @@
 {
   "name": "@stynx-nyx/audit",
   "version": "1.0.2",
+  "license": "BUSL-1.1",
+  "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Audit adapters and helpers for stynx",
   "main": "dist/audit/src/index.js",
   "types": "dist/audit/src/index.d.ts",

@@ -1,6 +1,8 @@
 {
   "name": "@stynx-nyx/sessions",
   "version": "1.0.1",
+  "license": "BUSL-1.1",
+  "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Redis-backed sessions, refresh rotation, and JWKS signing for stynx",
   "main": "dist/sessions/src/index.js",
   "types": "dist/sessions/src/index.d.ts",

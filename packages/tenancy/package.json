@@ -1,6 +1,8 @@
 {
   "name": "@stynx-nyx/tenancy",
   "version": "1.0.2",
+  "license": "BUSL-1.1",
+  "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Tenant resolution, membership validation, and tenant lifecycle services for stynx",
   "main": "dist/tenancy/src/index.js",
   "types": "dist/tenancy/src/index.d.ts",

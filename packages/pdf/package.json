@@ -1,6 +1,8 @@
 {
   "name": "@stynx-nyx/pdf",
   "version": "1.0.1",
+  "license": "BUSL-1.1",
+  "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Server-side PDF generation facade for stynx",
   "main": "dist/pdf/src/index.js",
   "types": "dist/pdf/src/index.d.ts",
