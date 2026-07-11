@@ -1,0 +1,13 @@
+# Lockfiles have their own canonical formatting (pnpm/npm); running
+# prettier over them produces enormous, semantically-meaningless diffs and
+# fights the package manager's own writer on every future install.
+pnpm-lock.yaml
+**/pnpm-lock.yaml
+**/package-lock.json
+**/yarn.lock
+
+# Generated output, never hand-formatted.
+**/dist/**
+**/coverage/**
+**/.turbo/**
+**/node_modules/**

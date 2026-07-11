@@ -22,6 +22,21 @@ const supported = {
   tsNode: '^6.0.3',
 };
 
+// Reference apps and standalone test harnesses are not part of the
+// publishable dependency graph (packages/, packages-web/) and are allowed to
+// run ahead of the workspace-pinned @types/node / Angular TypeScript
+// versions so they can exercise forward compatibility. 2026-07 dependency
+// round: @types/node 25.6.0, reference/web TypeScript 6.0.2 (within
+// @angular/compiler-cli@21.2.18's supported >=5.9 <6.1 peer range).
+const NODE_TYPES_EXCEPTIONS = {
+  'reference/api/package.json': '25.6.0',
+  'test/db/package.json': '25.6.0',
+  'test/packages/package.json': '25.6.0',
+};
+const TS_ANGULAR_EXCEPTIONS = {
+  'reference/web/package.json': '6.0.2',
+};
+
 const failures = [];
 if (expectedNode !== supported.node || nodeMajor !== 24) {
   failures.push(`node ${process.versions.node} does not satisfy ${expectedNode ?? '(missing)'}`);
@@ -42,8 +57,11 @@ for (const packagePath of discoverPackageJsons()) {
 
   for (const section of sections) {
     for (const [name, version] of Object.entries(pkg[section] ?? {})) {
-      if (name === '@types/node' && version !== supported.nodeTypes) {
-        failures.push(`${rel}: ${section}.${name} must be ${supported.nodeTypes}, got ${version}`);
+      if (name === '@types/node') {
+        const expectedNodeTypes = NODE_TYPES_EXCEPTIONS[rel] ?? supported.nodeTypes;
+        if (version !== expectedNodeTypes) {
+          failures.push(`${rel}: ${section}.${name} must be ${expectedNodeTypes}, got ${version}`);
+        }
       }
     }
   }
@@ -62,8 +80,9 @@ for (const packagePath of discoverPackageJsons()) {
     if (pkg.devDependencies?.['ng-packagr'] && pkg.devDependencies['ng-packagr'] !== supported.ngPackagr) {
       failures.push(`${rel}: ng-packagr must be ${supported.ngPackagr}, got ${pkg.devDependencies['ng-packagr']}`);
     }
-    if (pkg.devDependencies?.typescript && pkg.devDependencies.typescript !== supported.tsAngular) {
-      failures.push(`${rel}: Angular TypeScript must be ${supported.tsAngular}, got ${pkg.devDependencies.typescript}`);
+    const expectedTsAngular = TS_ANGULAR_EXCEPTIONS[rel] ?? supported.tsAngular;
+    if (pkg.devDependencies?.typescript && pkg.devDependencies.typescript !== expectedTsAngular) {
+      failures.push(`${rel}: Angular TypeScript must be ${expectedTsAngular}, got ${pkg.devDependencies.typescript}`);
     }
   }
 
