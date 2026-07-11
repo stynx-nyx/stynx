@@ -1,5 +1,18 @@
 # @stynx-nyx/tenancy
 
+## 1.0.3
+
+### Patch Changes
+
+- cc0f53e: License and authorship metadata in manifests: SPDX `license: "BUSL-1.1"` and
+  `author: "Antonio Augusto Russo <aarusso@nyxk.com.br>"` added to every
+  publishable package.json. No runtime changes.
+- Updated dependencies [cc0f53e]
+  - @stynx-nyx/contracts@1.0.3
+  - @stynx-nyx/core@1.0.2
+  - @stynx-nyx/data@1.0.2
+  - @stynx-nyx/idempotency@1.0.3
+
 ## 1.0.2
 
 ### Patch Changes

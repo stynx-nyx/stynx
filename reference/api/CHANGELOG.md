@@ -1,5 +1,24 @@
 # @stynx-nyx/reference-api
 
+## 0.3.4
+
+### Patch Changes
+
+- Updated dependencies [cc0f53e]
+  - @stynx-nyx/audit@1.0.3
+  - @stynx-nyx/auth@1.0.3
+  - @stynx-nyx/backend@1.0.3
+  - @stynx-nyx/core@1.0.2
+  - @stynx-nyx/data@1.0.2
+  - @stynx-nyx/flow@0.1.3
+  - @stynx-nyx/health@1.0.2
+  - @stynx-nyx/idempotency@1.0.3
+  - @stynx-nyx/logging@1.0.2
+  - @stynx-nyx/ratelimit@1.0.3
+  - @stynx-nyx/sessions@1.0.2
+  - @stynx-nyx/storage@1.0.3
+  - @stynx-nyx/tenancy@1.0.3
+
 ## 0.3.3
 
 ### Patch Changes

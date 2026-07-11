@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/angular-profile",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Angular 20/21 profile and preference forms for stynx",

@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/angular-storage",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Angular 20/21 document upload components for stynx",
