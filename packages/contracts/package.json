@@ -31,5 +31,10 @@
   },
   "devDependencies": {
     "@types/node": "24.12.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stynx-nyx/stynx.git",
+    "directory": "packages/contracts"
   }
 }

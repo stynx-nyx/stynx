@@ -43,5 +43,10 @@
     "openapi-typescript-codegen": "^0.30.0",
     "tslib": "^2.8.1",
     "typescript": "5.9.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stynx-nyx/stynx.git",
+    "directory": "packages-web/sdk"
   }
 }
