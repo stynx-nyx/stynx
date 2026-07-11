@@ -327,7 +327,7 @@ jobs:
           retention-days: 14
       - name: Publish JUnit summary (unit)
         if: ${{ always() }}
-        uses: mikepenz/action-junit-report@v4
+        uses: mikepenz/action-junit-report@bccf2e31636835cf0874589931c4116687171386 # v6.4.0
         with:
           report_paths: '**/.test-results/unit.junit.xml'
           check_name: unit-tests
@@ -414,7 +414,7 @@ jobs:
           retention-days: 14
       - name: Publish JUnit summary (integration)
         if: ${{ always() }}
-        uses: mikepenz/action-junit-report@v4
+        uses: mikepenz/action-junit-report@bccf2e31636835cf0874589931c4116687171386 # v6.4.0
         with:
           report_paths: '**/.test-results/integration.junit.xml'
           check_name: integration-tests
