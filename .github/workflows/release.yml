@@ -66,8 +66,9 @@ jobs:
           setupGitUser: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # The repo lives in the stynx-nyx org that owns the @stynx-nyx/*
-          # packages, so the ambient GITHUB_TOKEN (job has `packages: write`)
-          # publishes to GitHub Packages directly — no PAT needed. The NPM_TOKEN
-          # secret is retired separately by the owner.
+          # PAT-created packages carry no per-package Actions write grant, so
+          # the ambient GITHUB_TOKEN 403s on publish (write_package) despite
+          # repository linkage. NPM_TOKEN keeps waves autonomous; once the
+          # owner grants 'Manage Actions access' per package in the UI, delete
+          # the secret and the ambient-token fallback takes over.
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
