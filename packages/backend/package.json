@@ -1,6 +1,8 @@
 {
   "name": "@stynx-nyx/backend",
   "version": "1.0.2",
+  "license": "BUSL-1.1",
+  "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "NestJS shared platform modules for stynx",
   "main": "dist/backend/src/index.js",
   "types": "dist/backend/src/index.d.ts",

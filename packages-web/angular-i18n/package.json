@@ -1,6 +1,8 @@
 {
   "name": "@stynx-nyx/angular-i18n",
   "version": "1.0.1",
+  "license": "BUSL-1.1",
+  "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Angular 20/21 runtime locale switching for stynx web apps",
   "exports": {
     ".": {

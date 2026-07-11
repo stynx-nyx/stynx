@@ -1,6 +1,8 @@
 {
   "name": "@stynx-nyx/pdf-a",
   "version": "0.2.1",
+  "license": "BUSL-1.1",
+  "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "PDF/A validation contract and stubs for stynx",
   "main": "dist/pdf-a/src/index.js",
   "types": "dist/pdf-a/src/index.d.ts",

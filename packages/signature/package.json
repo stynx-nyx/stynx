@@ -1,6 +1,8 @@
 {
   "name": "@stynx-nyx/signature",
   "version": "0.2.1",
+  "license": "BUSL-1.1",
+  "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "PAdES, TSA, and certificate-status signature facade for stynx",
   "main": "dist/signature/src/index.js",
   "types": "dist/signature/src/index.d.ts",
