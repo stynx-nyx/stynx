@@ -89,6 +89,7 @@ export function createVitestConfig({
   setupFiles = [],
   testTimeout = 30000,
   hookTimeout = 60_000,
+  retry = 0,
   singleThread = false,
   passWithNoTests = false,
   patchDrizzle = false,
@@ -128,6 +129,7 @@ export function createVitestConfig({
       setupFiles,
       testTimeout,
       hookTimeout,
+      retry,
       passWithNoTests,
       // Inline @nestjs/@aws-sdk/@stynx-* so vi.mock can intercept their
       // exports and so require() / import() resolve to the same module

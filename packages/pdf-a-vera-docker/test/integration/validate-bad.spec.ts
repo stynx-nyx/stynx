@@ -1,13 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { VeraPdfDockerValidator } from '../../src';
-import { isVeraPdfDockerUsable } from './docker-support';
+import { isVeraPdfDockerUsable, makeIntegrationValidator } from './docker-support';
 
 const describeIfDocker = isVeraPdfDockerUsable() ? describe : describe.skip;
 
 describeIfDocker('VeraPdfDockerValidator known-bad fixture', () => {
   it('normalizes at least one rule violation for a broken PDF/A-2b fixture', async () => {
-    const validator = new VeraPdfDockerValidator();
+    const validator = makeIntegrationValidator();
     const pdf = readFixture('bad-2b-missing-cidset.pdf');
 
     const result = await validator.validate(pdf);

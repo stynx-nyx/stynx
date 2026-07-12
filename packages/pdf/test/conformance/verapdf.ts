@@ -7,9 +7,19 @@ export const VERAPDF_IMAGE =
   'verapdf/cli@sha256:20202b4bcc2410a25db1f637c7b461a2e0dda1d97dd8a6df658286b30d56c842';
 export const VERAPDF_CONFORMANCE_TIMEOUT_MS = 420_000;
 const DOCKER_PLATFORM_ARGS = ['--platform', 'linux/amd64'] as const;
-const DOCKER_ATTEMPTS = 1;
+// The veraPDF image is linux/amd64 only, emulated via qemu on the local
+// arm64 Docker VM. The emulated JVM intermittently aborts (qemu signal 6)
+// and the container then hangs forever at 0% CPU — no timeout is long
+// enough for that, so each container gets a bounded attempt and a hang is
+// retried with a fresh container. Healthy containers finish in ~15s
+// (~90s observed under load); ATTEMPTS × RUN_TIMEOUT stays below
+// VERAPDF_CONFORMANCE_TIMEOUT_MS so the harness error surfaces before
+// vitest kills the test. turbo.json additionally serializes this suite
+// against pdf-a-vera-docker's so two emulated JVMs never compete for the
+// 4-CPU/6GB VM.
+const DOCKER_ATTEMPTS = 3;
 const DOCKER_POLL_INTERVAL_MS = 500;
-const VERAPDF_RUN_TIMEOUT_MS = 180_000;
+const VERAPDF_RUN_TIMEOUT_MS = 120_000;
 
 let dockerUsable: boolean | undefined;
 
