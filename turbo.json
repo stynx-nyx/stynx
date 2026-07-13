@@ -31,6 +31,21 @@
         ".test-results/unit.junit.xml"
       ]
     },
+    // Serialize the two suites that run veraPDF containers (linux/amd64 image
+    // emulated on the arm64 Docker VM, 4 CPUs/6GB). When both suites run
+    // concurrently under turbo, a conformance container can be starved past
+    // its 360s budget (observed: yearly-income exceeded 360s in a full run
+    // while the same spec passes in seconds alone). Each suite is already
+    // internally sequential (vitest singleThread), so this dependency keeps
+    // machine-wide veraPDF container concurrency at 1.
+    "@stynx-nyx/pdf#test": {
+      "dependsOn": ["build", "^build", "@stynx-nyx/pdf-a-vera-docker#test"],
+      "outputs": [
+        ".test-results/unit.json",
+        ".test-results/unit.log",
+        ".test-results/unit.junit.xml"
+      ]
+    },
     "test:int": {
       "dependsOn": ["build", "^build"],
       "outputs": [

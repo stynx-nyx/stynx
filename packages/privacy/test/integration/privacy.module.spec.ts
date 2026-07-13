@@ -41,7 +41,14 @@ class CapturingCognitoAdmin implements PrivacyCognitoAdmin {
 
 describe('StynxPrivacyModule integration', () => {
 
-  it('loads PII rules, exports live and archive rows, erases data, and reports retention', async () => {
+  // Timeout raised from 60s: the full `pnpm test` run executes every
+  // package's suite concurrently (turbo) against one shared Postgres, and
+  // this test pays fresh-database + full platform-migration setup under
+  // that contention (observed timeouts at ~60s in concurrent runs while
+  // completing in ~20s when run alone). The test itself is correct and
+  // fast; the budget covers cold Postgres under CPU contention — same
+  // rationale as the cascade-archive test in packages/data (07ceaf01a).
+  it('loads PII rules, exports live and archive rows, erases data, and reports retention', { timeout: 120_000 }, async () => {
     const appRoot = mkdtempSync(resolve(tmpdir(), 'stynx-privacy-fixture-'));
     mkdirSync(resolve(appRoot, 'app/privacy'), { recursive: true });
     writeFileSync(resolve(appRoot, 'app/privacy/pii-map.yaml'), lgpdFixturePiiMapYaml(), 'utf8');
@@ -290,5 +297,5 @@ describe('StynxPrivacyModule integration', () => {
     } finally {
       await testApp.teardown();
     }
-  }, 60_000);
+  });
 });

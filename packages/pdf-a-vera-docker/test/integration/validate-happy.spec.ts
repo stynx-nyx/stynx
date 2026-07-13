@@ -1,13 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { VeraPdfDockerValidator } from '../../src';
-import { isVeraPdfDockerUsable } from './docker-support';
+import { isVeraPdfDockerUsable, makeIntegrationValidator } from './docker-support';
 
 const describeIfDocker = isVeraPdfDockerUsable() ? describe : describe.skip;
 
 describeIfDocker('VeraPdfDockerValidator known-good fixture', () => {
   it('validates the known-good PDF/A-2b fixture', async () => {
-    const validator = new VeraPdfDockerValidator();
+    const validator = makeIntegrationValidator();
     const pdf = readFixture('good-2b-minimal.pdf');
 
     const result = await validator.validate(pdf);
