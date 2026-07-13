@@ -3,11 +3,14 @@
 # to surface inventory drift, unbound endpoints, unmapped routes, and
 # invariant violations BEFORE merge.
 #
-# Adopters of DEVAI can copy this file as a starting point. The
-# `cwd = stynx` assumption + `../devai` sibling layout match the
-# C-4 pilot brief; CI environments without that layout should
-# instead `pnpm link --global @devai/cli` from a published artifact
-# and replace the `cd ../devai && pnpm install` block.
+# devai is consumed as a published @devai-nyx/cli package from GitHub
+# Packages (npm-package consumption model, D-118) -- no sibling ../devai
+# checkout. @devai-nyx:registry is scoped in .npmrc; NODE_AUTH_TOKEN needs
+# read:packages on the devai-nyx org (the ambient GITHUB_TOKEN cannot read
+# another org's packages, same reasoning as devai's own reusable-evidence-
+# gate.yml). The redox-pack-nestjs-postgres-angular stack-adapter pack
+# stynx resolves to isn't published in the package (examples/ is dev-only
+# in devai's own repo) -- a copy is vendored at .devai/vendor/devai-packs/.
 
 name: devai-gates
 
@@ -42,9 +45,9 @@ jobs:
       - name: Report DEVAI gate mode
         run: |
           if [ "${{ vars.DEVAI_GATES_ENABLED }}" = "true" ]; then
-            echo "::notice::devai-gates enabled: sibling DEVAI checkout will run"
+            echo "::notice::devai-gates enabled"
           else
-            echo "::notice::devai-gates skipped: DEVAI_GATES_ENABLED unset -- sibling devai repo not reachable from Actions"
+            echo "::notice::devai-gates skipped: DEVAI_GATES_ENABLED unset"
           fi
 
   devai-inventory:
@@ -58,19 +61,6 @@ jobs:
     steps:
       - name: Checkout stynx
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-        with:
-          path: stynx
-
-      - name: Checkout devai (sibling)
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-        with:
-          repository: ${{ vars.DEVAI_REPO || 'aarusso-nyx/devai' }}
-          ref: ${{ vars.DEVAI_REF  || 'main' }}
-          path: devai
-          token: ${{ secrets.DEVAI_REPO_TOKEN || github.token }}
-          # Falls back to a fresh clone of devai's main branch unless
-          # DEVAI_REPO / DEVAI_REF repository variables override it. Private
-          # DEVAI repositories require DEVAI_REPO_TOKEN with read access.
 
       - name: Set up pnpm
         uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5
@@ -82,46 +72,41 @@ jobs:
         with:
           node-version: '24'
           cache: pnpm
-          cache-dependency-path: |
-            stynx/pnpm-lock.yaml
-            devai/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
+          registry-url: https://npm.pkg.github.com
 
-      - name: Build + link devai CLI
-        working-directory: devai
+      - name: Install dependencies (resolves @devai-nyx/cli from GitHub Packages)
         run: |
           pnpm install --frozen-lockfile
-          pnpm -w build
-          mkdir -p "$HOME/.local/bin"
-          cd packages/cli
-          PNPM_HOME="$HOME/.local/bin" pnpm link --global
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          echo "$PWD/node_modules/.bin" >> "$GITHUB_PATH"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.DEVAI_REPO_TOKEN || github.token }}
+          # DEVAI_REPO_TOKEN previously only needed contents:read (git clone
+          # of the sibling devai checkout); it now also needs read:packages
+          # on the devai-nyx org to pull @devai-nyx/cli from GitHub Packages.
+          # Verify/update the token's scope if this step 401s.
 
       - name: Verify pack matches stynx
-        working-directory: stynx
-        run: devai pack-resolve --repo-root ../devai --adopter-root . --human
+        run: devai pack-resolve --repo-root .devai/vendor/devai-packs --adopter-root . --human
 
       - name: devai doctor --adopter (post-Phase-21.B; expects 6/6 PASS)
-        working-directory: stynx
         run: devai doctor --adopter --human
 
       - name: devai check glob-guards (devai D-124; catches a renamed/retired path before it goes silently dead)
-        working-directory: stynx
         run: devai check glob-guards --repo-root . --human
 
       - name: Run the seven L0 inventory sensors
-        working-directory: stynx
         run: |
           set -euo pipefail
-          devai sense-api          --repo-root . --adopter-root . --packs-root ../devai --pack-tune --human
-          devai sense-routes       --repo-root . --adopter-root . --packs-root ../devai --pack-tune --human
-          devai sense-data-model   --repo-root . --adopter-root . --packs-root ../devai --pack-tune --human
+          devai sense-api          --repo-root . --adopter-root . --packs-root .devai/vendor/devai-packs --pack-tune --human
+          devai sense-routes       --repo-root . --adopter-root . --packs-root .devai/vendor/devai-packs --pack-tune --human
+          devai sense-data-model   --repo-root . --adopter-root . --packs-root .devai/vendor/devai-packs --pack-tune --human
           devai sense-data-handling --repo-root . --human
           devai sense-rbac         --repo-root . --human
           devai sense-dep-graph    --repo-root . --human
           devai sense-coverage     --repo-root . --routes-path .devai/state/sensors/inventory_routes/routes-angular.json --human
 
       - name: Validate stynx invariants against the schema
-        working-directory: stynx
         run: |
           set -euo pipefail
           validated=0
@@ -129,13 +114,12 @@ jobs:
             [ -f "$f" ] || continue
             echo "::group::validate $f"
             node -e "
-              const path=require('path');
-              const {Ajv2020}=require(path.resolve('node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/2020'));
-              const s=require(path.resolve('../devai/docs/framework/schemas/invariant.schema.json'));
-              const ajv=new Ajv2020({strict:false,allErrors:true});
-              const v=ajv.compile(s);
-              const inv=require(path.resolve('$f'));
-              if(!v(inv)){console.error(JSON.stringify(v.errors,null,2));process.exit(1);}
+              const { validators } = require('@devai-nyx/schemas');
+              const inv = require(require('path').resolve('$f'));
+              if (!validators.invariant(inv)) {
+                console.error(JSON.stringify(validators.invariant.errors, null, 2));
+                process.exit(1);
+              }
               console.log('PASS', inv.id);
             "
             echo "::endgroup::"
@@ -151,11 +135,9 @@ jobs:
           echo "validated $validated invariant file(s)"
 
       - name: Refresh invariant candidates (informational)
-        working-directory: stynx
-        run: devai inv-suggest --from-inventory --repo-root . --human
+        run: pnpm exec devai inv-suggest --from-inventory --repo-root . --human
 
       - name: Validate any module-blueprints in draft
-        working-directory: stynx
         run: |
           set -euo pipefail
           shopt -s nullglob
@@ -171,12 +153,12 @@ jobs:
         with:
           name: devai-evidence-${{ github.run_id }}
           path: |
-            stynx/.devai/state/sensors/**
-            stynx/.devai/state/sensor-readings/**
-            stynx/.devai/state/inv-candidates/**
-            stynx/.devai/state/scorecards/**
-            stynx/.devai/state/llm-usage.jsonl
-            stynx/.devai/state/agent-runs/**
-            stynx/.devai/state/skills/**
+            .devai/state/sensors/**
+            .devai/state/sensor-readings/**
+            .devai/state/inv-candidates/**
+            .devai/state/scorecards/**
+            .devai/state/llm-usage.jsonl
+            .devai/state/agent-runs/**
+            .devai/state/skills/**
           if-no-files-found: ignore
           retention-days: 14

@@ -1,0 +1,354 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "redox-pack-nestjs-postgres-angular",
+  "name": "NestJS + Postgres + Angular",
+  "version": "1.0.0",
+  "stack": {
+    "backend": "nestjs",
+    "frontend": "angular",
+    "db": "postgres"
+  },
+  "detect": {
+    "signals": [
+      { "kind": "package_dep_present", "package": "@nestjs/core" },
+      { "kind": "package_dep_present", "package": "@nestjs/common" },
+      { "kind": "package_dep_present", "package": "@angular/core" },
+      { "kind": "file_present", "path": "angular.json" },
+      { "kind": "dir_present", "path": "apps/api/src" },
+      { "kind": "dir_present", "path": "apps/web/src" },
+      { "kind": "dir_present", "path": "apps/reference-api/src" },
+      { "kind": "dir_present", "path": "apps/reference-web/src" },
+      { "kind": "dir_present", "path": "reference/api/src" },
+      { "kind": "dir_present", "path": "reference/web/src" },
+      { "kind": "file_present", "path": "turbo.json" },
+      { "kind": "file_present", "path": "pnpm-workspace.yaml" },
+      { "kind": "dir_present", "path": "packages-web" }
+    ],
+    "priority": 70
+  },
+  "extractor_params": {
+    "inventory_api": {
+      "controller_glob": "**/*.controller.ts",
+      "scan_dir": "apps/api/src",
+      "scan_dir_alternates": ["apps/reference-api/src", "reference/api/src"],
+      "framework": "nestjs",
+      "public_marker_decorators": ["Public"]
+    },
+    "inventory_routes": {
+      "framework": "angular",
+      "scan_dir": "apps/web/src",
+      "scan_dir_alternates": ["apps/reference-web/src", "reference/web/src"],
+      "routes_file_glob": "**/app-routing.module.ts"
+    },
+    "inventory_data_model": {
+      "migration_dirs": [
+        "migrations",
+        "db/migrations",
+        "apps/api/migrations",
+        "apps/reference-api/migrations",
+        "reference/api/migrations"
+      ],
+      "dialect": "postgres",
+      "pii_registry_table": "core.pii_map"
+    },
+    "inventory_type_check": {
+      "typecheck_strategy": "per-package"
+    },
+    "spec_validate": {
+      "invariant_companion_patterns": ["*-allowlist.json", "*-data.json"]
+    },
+    "llm": {
+      "llm_timeouts": {
+        "SKILL-assess-state": 300000,
+        "SKILL-feedback-iteration": 1800000,
+        "SKILL-triage": 900000,
+        "SKILL-fix-lint": 900000,
+        "SKILL-fix-build": 900000,
+        "SKILL-fix-test": 900000
+      }
+    },
+    "spec_freshness": {
+      "threshold_days": 90
+    },
+    "test_coverage": {
+      "thresholds": { "pass": 80, "review": 50 }
+    },
+    "inventory_adherence": {
+      "max_orphans": 50
+    },
+    "harness_security": {
+      "workflow_dir": ".github/workflows"
+    },
+    "harness_green_main": {
+      "threshold_pct": { "pass": 95, "review": 80 },
+      "min_sample_size": 5
+    },
+    "lint": {
+      "timeout_ms": 600000
+    },
+    "spec_alignment": {
+      "source_globs": ["packages/*/src/**", "apps/*/src/**", "reference/*/src/**"],
+      "reverse_threshold_pct": 80
+    },
+    "spec_security_coverage": {
+      "threat_model_globs": ["docs/security"],
+      "pii_registry_table": "core.pii_map"
+    },
+    "plant_depth": {
+      "source_globs": ["packages/*/src/**", "apps/*/src/**", "reference/*/src/**"],
+      "thresholds": { "pass": 500, "review": 1000 }
+    },
+    "plant_coherence": {
+      "source_globs": ["packages/*/src/**", "apps/*/src/**", "reference/*/src/**"],
+      "max_review_incoherent": 3
+    },
+    "test_coherence": {
+      "package_roots": ["packages/*", "apps/*", "reference/*"],
+      "min_per_package_ratio": 0.1,
+      "pass_ratio": 0.3
+    },
+    "test_security_coverage": {
+      "thresholds": { "pass": 5, "review": 2 }
+    },
+    "test_robustness_coverage": {
+      "thresholds": { "pass": 10, "review": 5 }
+    },
+    "harness_coverage": {
+      "thresholds": { "pass": 80, "review": 50 }
+    },
+    "harness_depth": {
+      "thresholds": { "pass": 3 }
+    },
+    "harness_coherence": {
+      "max_review_incoherence": 3
+    },
+    "harness_invariant_alignment": {
+      "gate_severity_value": "gate"
+    },
+    "harness_performance": {
+      "thresholds": {
+        "pass_median_ms": 600000,
+        "pass_p95_ms": 1800000,
+        "review_median_ms": 1200000,
+        "review_p95_ms": 3600000
+      },
+      "branch": "main",
+      "limit": 50
+    },
+    "harness_robustness": {
+      "thresholds": { "pass": 5, "review": 15 },
+      "branch": "main",
+      "limit": 100
+    },
+    "migrate_check": {
+      "migration_dirs": [
+        "db/migrations",
+        "apps/api/migrations",
+        "apps/reference-api/migrations",
+        "reference/api/migrations"
+      ],
+      "bootstrap_roles": ["stynx_owner", "stynx_app", "stynx_reader"]
+    },
+    "spec_performance_targets": {
+      "signals_required": { "invariants": 1, "use_cases": 1 }
+    },
+    "spec_robustness_targets": {
+      "signals_required": { "invariants": 1, "error_contracts": 1 }
+    },
+    "test_performance_coverage": {
+      "thresholds": { "pass": 1, "review": 0 }
+    },
+    "inventory_performance": {
+      "thresholds": { "pass": 2000, "review": 5000 }
+    },
+    "perf_test": {
+      "script_name": "test:perf",
+      "thresholds": {
+        "pass_p50_ms": 100,
+        "review_p50_ms": 500,
+        "pass_p95_ms": 500,
+        "review_p95_ms": 2000,
+        "pass_throughput_rps": 100,
+        "review_throughput_rps": 25
+      }
+    }
+  },
+  "templates": {
+    "db.migration": {
+      "path": "templates/db/migration.sql.tpl",
+      "consumed_by": "SKILL-scaffold-db",
+      "description": "Postgres CREATE TABLE migration (CODEX-TEMPLATES/db/migration.sql)"
+    },
+    "db.seed": {
+      "path": "templates/db/seed.sql.tpl",
+      "consumed_by": "SKILL-scaffold-db",
+      "description": "Postgres INSERT seed (CODEX-TEMPLATES/db/seed.sql)"
+    },
+    "api.module": {
+      "path": "templates/api/__kebabModule__.module.ts.tpl",
+      "consumed_by": "SKILL-scaffold-api",
+      "description": "NestJS @Module (CODEX-TEMPLATES/nest/.../__kebabModule__.module.ts)"
+    },
+    "api.controller": {
+      "path": "templates/api/controllers/__kebabEntity__.controller.ts.tpl",
+      "consumed_by": "SKILL-scaffold-api",
+      "description": "NestJS @Controller (CODEX-TEMPLATES/nest/.../__kebabEntity__.controller.ts)"
+    },
+    "api.service": {
+      "path": "templates/api/services/__kebabEntity__.service.ts.tpl",
+      "consumed_by": "SKILL-scaffold-api",
+      "description": "NestJS @Injectable service (CODEX-TEMPLATES/nest/.../__kebabEntity__.service.ts)"
+    },
+    "api.dto.create": {
+      "path": "templates/api/dto/create-__kebabEntity__.dto.ts.tpl",
+      "consumed_by": "SKILL-scaffold-api",
+      "description": "class-validator create DTO; Phase 22.E renders fields from blueprint entity (D-A-15)"
+    },
+    "api.dto.update": {
+      "path": "templates/api/dto/update-__kebabEntity__.dto.ts.tpl",
+      "consumed_by": "SKILL-scaffold-api",
+      "description": "class-validator update DTO (PartialType of create DTO)"
+    },
+    "api.entity": {
+      "path": "templates/api/entities/__kebabEntity__.entity.ts.tpl",
+      "consumed_by": "SKILL-scaffold-api",
+      "description": "Plain-TS entity; Phase 22.E renders fields from blueprint, no ORM annotations (D-A-15)"
+    },
+    "api.guard.policy": {
+      "path": "templates/api/guards/policy.guard.ts.tpl",
+      "consumed_by": "SKILL-scaffold-api",
+      "description": "Template-shaped RBAC/ABAC policy guard (CanActivate); Phase 22.E (D-A-15) — emitted by the scaffolder, not pre-22.E"
+    },
+    "api.decorator.policy": {
+      "path": "templates/api/decorators/policy.decorator.ts.tpl",
+      "consumed_by": "SKILL-scaffold-api",
+      "description": "@Resource() + @Action() route decorators; Phase 22.E companion to api.guard.policy (D-A-15)"
+    },
+    "ui.module": {
+      "path": "templates/ui/__kebabModule__.module.ts.tpl",
+      "consumed_by": "SKILL-scaffold-ui",
+      "description": "Angular feature NgModule (CODEX-TEMPLATES/angular/.../__kebabModule__.module.ts)"
+    },
+    "ui.list-component": {
+      "path": "templates/ui/__kebabEntity__-list.component.ts.tpl",
+      "consumed_by": "SKILL-scaffold-ui",
+      "description": "Angular list component (CODEX)"
+    },
+    "ui.detail-component": {
+      "path": "templates/ui/__kebabEntity__-detail.component.ts.tpl",
+      "consumed_by": "SKILL-scaffold-ui",
+      "description": "Angular detail component (CODEX)"
+    },
+    "ui.service": {
+      "path": "templates/ui/__kebabEntity__.service.ts.tpl",
+      "consumed_by": "SKILL-scaffold-ui",
+      "description": "Angular feature service (CODEX)"
+    },
+    "tests.controller-spec": {
+      "path": "templates/tests/__kebabEntity__.controller.spec.ts.tpl",
+      "consumed_by": "SKILL-scaffold-tests",
+      "description": "Jest @nestjs/testing controller spec (CODEX)"
+    },
+    "tests.service-spec": {
+      "path": "templates/tests/__kebabEntity__.service.spec.ts.tpl",
+      "consumed_by": "SKILL-scaffold-tests",
+      "description": "Angular TestBed service spec (CODEX)"
+    },
+    "docs.readme": {
+      "path": "templates/docs/README.md.tpl",
+      "consumed_by": "SKILL-scaffold-docs",
+      "description": "Module README skeleton"
+    },
+    "docs.adr": {
+      "path": "templates/docs/ADR-0001.md.tpl",
+      "consumed_by": "SKILL-scaffold-docs",
+      "description": "First-decision ADR scaffold (CODEX-TEMPLATES/docs/ADR.md)"
+    },
+    "ci.workflow": {
+      "path": "templates/ci/module-workflow.yml.tpl",
+      "consumed_by": "SKILL-scaffold-ci",
+      "description": "GitHub Actions per-module workflow (derived from CODEX CI_POLICY.md)"
+    }
+  },
+  "prompt_overlays": {
+    "SKILL-write-overview": [
+      {
+        "layer": "overlay",
+        "name": "redox-pack-nestjs-postgres-angular.overview",
+        "body": "NestJS (backend) + Angular (frontend) + Postgres. Typical monorepo split: apps/api/ (NestJS) + apps/web/ (Angular CLI workspace). Cite TypeScript everywhere; mention TypeORM/Prisma only if visible in inputs; note Angular Router as the SPA navigation layer."
+      }
+    ],
+    "SKILL-write-api-map": [
+      {
+        "layer": "overlay",
+        "name": "redox-pack-nestjs-postgres-angular.api-map",
+        "body": "Endpoints from @Controller-decorated classes. Group by controller class. Surface auth guards prominently (JwtAuthGuard / AuthGuard / RolesGuard). The global /api prefix is set in main.ts; tests build the app without bootstrap so e2e hit bare routes. DTOs are validated via class-validator with ValidationPipe({whitelist:true,forbidNonWhitelisted:true,transform:true}). Standard responses: lists return {data,meta}; POST/PATCH return {id}; UUID params use ParseUUIDPipe({version:'4'})."
+      }
+    ],
+    "SKILL-write-frontend-routes-map": [
+      {
+        "layer": "overlay",
+        "name": "redox-pack-nestjs-postgres-angular.frontend-routes-map",
+        "body": "Angular routes live in app-routing.module.ts (and any feature-module routing files). Each route record has path + component + optional guards + optional resolvers. Surface canActivate guards (AuthGuard, RoleGuard with data.roles) and resolvers prominently. Note lazy-loaded modules (loadChildren) separately. AuthInterceptor (core) adds Authorization + X-User-Roles + Accept-Language headers to /api requests."
+      }
+    ],
+    "SKILL-write-database-reference": [
+      {
+        "layer": "overlay",
+        "name": "redox-pack-nestjs-postgres-angular.database-reference",
+        "body": "Postgres dialect. Cite migration filenames as evidence (TypeORM migrations under apps/api/migrations/ or db/migrations/). Mark UUID PKs with gen_random_uuid() defaults specifically. Note @Entity decorator → table-name mappings if visible. Execution order is DDL → RLS → Audit → Seeds (configurable in package.json#dbase.order). Per-domain schemas: auth | audit | cms | flow | geo | <domain>. RLS context is propagated by services via set_config('auth.app_user_id', 'auth.roles', 'auth.lang') on each transaction."
+      }
+    ],
+    "SKILL-write-architecture-guide": [
+      {
+        "layer": "overlay",
+        "name": "redox-pack-nestjs-postgres-angular.architecture-guide",
+        "body": "Backend TS path aliases: @core, @cms, @flow, @geo, @common/*. Domain modules depend on PORTS (interfaces injected via DI tokens), never concrete services — WorkflowRuntime, GeometryGateway, DocumentSetGateway are the canonical examples. Database orchestration lives in tools/dbase.config.json. Frontend feature folders mirror backend domains; path aliases @core/* @cms/* @flow/* @shared/* used throughout."
+      }
+    ],
+    "SKILL-write-rbac-matrix": [
+      {
+        "layer": "overlay",
+        "name": "redox-pack-nestjs-postgres-angular.rbac-matrix",
+        "body": "Roles from JWT cognito:groups claim. AuthN: JwtAuthGuard (JOSE + Cognito JWKs). AuthZ coordination: AuthzGuard with test-header overrides for e2e. Roles propagate into DB via RLS (set_config('auth.roles', ...))."
+      }
+    ],
+    "SKILL-write-threat-model": [
+      {
+        "layer": "overlay",
+        "name": "redox-pack-nestjs-postgres-angular.threat-model",
+        "body": "OWASP A01-A10 NestJS+Cognito posture: A01 access control via RBAC guards + ABAC policy in services + deny-by-default routers; A02 crypto via TLS + KMS-managed keys; A03 injection via parameterized SQL only (no string-interpolation in raw queries); A05 misconfig via strict CORS + CSP (Angular) + disabled x-powered-by; A07 auth via Cognito JWT verification (iss + aud + short-lifetime); A08 supply-chain via lockfiles + npm audit; A09 logging with PII redaction; A10 SSRF via outbound HTTP allowlist + metadata-service protection."
+      }
+    ],
+    "SKILL-write-onboarding": [
+      {
+        "layer": "overlay",
+        "name": "redox-pack-nestjs-postgres-angular.onboarding",
+        "body": "Per-module CI workflow (.github/workflows/module-<slug>.yml) runs: pnpm install + build + test + lint. Security gates: npm audit --audit-level=high (block on high/critical); secrets scan via GitHub Secret Scanning + regex grep. Branch protections: ≥1 code-owner approval for /core; module-owner approval for /domain/<module>. Test gates: unit ≥80% line+branch coverage."
+      }
+    ]
+  },
+  "seed_invariants": [],
+  "tags": [
+    "phase-17",
+    "phase-17-G",
+    "phase-18",
+    "phase-18-G",
+    "phase-19",
+    "phase-19-B",
+    "phase-20",
+    "phase-20-E",
+    "phase-26",
+    "phase-26-L",
+    "phase-27",
+    "phase-27-M",
+    "phase-28",
+    "phase-28-I",
+    "stack-adapter",
+    "nestjs",
+    "postgres",
+    "angular",
+    "codex-templates"
+  ],
+  "notes": "Phase 17.G shipped detection signals + extractor params + initial prompt overlays. Phase 18.G adds the codex-absorbed `templates` registry (consumed by SKILL-scaffold-*) and extends prompt_overlays with the P3.9 NestJS slice (architecture-guide / rbac-matrix / threat-model / onboarding overlays sourced from codex EXTRACTED_CONVENTIONS.md + SECURITY_BASELINES.md). Per D-59 18.G. Phase 19.B widens `detect.signals` with workspace-layout markers (turbo.json, pnpm-workspace.yaml, packages-web) so adopters whose deps live in subpackages (e.g. stynx) match by directory shape even without root-level @nestjs/@angular deps, and adds inventory_api.scan_dir for the codex-canonical apps/api/src layout. Per D-61 19.B. Phase 20.E widens detect.signals with reference-app markers (apps/reference-{api,web}/src + reference/{api,web}/src) and introduces `extractor_params.<sensor>.scan_dir_alternates` so the api + routes walkers walk parallel app layouts and merge results — closes the stynx-pilot overhead where adopters with reference/* layouts needed manual --scan-dir overrides for every sense run. inventory_data_model.migration_dirs widens accordingly. Per D-63 20.E."
+}

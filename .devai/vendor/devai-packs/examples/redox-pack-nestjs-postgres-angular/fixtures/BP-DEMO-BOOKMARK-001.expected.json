@@ -1,0 +1,22 @@
+{
+  "files": [
+    "api/src/demo-bookmark/controllers/bookmark.controller.ts",
+    "api/src/demo-bookmark/decorators/policy.decorator.ts",
+    "api/src/demo-bookmark/demo-bookmark.module.ts",
+    "api/src/demo-bookmark/dto/create-bookmark.dto.ts",
+    "api/src/demo-bookmark/dto/update-bookmark.dto.ts",
+    "api/src/demo-bookmark/entities/bookmark.entity.ts",
+    "api/src/demo-bookmark/guards/policy.guard.ts",
+    "api/src/demo-bookmark/services/bookmark.service.ts",
+    "api/test/bookmark.controller.spec.ts",
+    "api/test/bookmark.service.spec.ts",
+    "db/migration.sql",
+    "db/seed.sql",
+    "docs/ADR-0001.md",
+    "docs/README.md",
+    "web/src/app/demo-bookmark/bookmark-detail.component.ts",
+    "web/src/app/demo-bookmark/bookmark-list.component.ts",
+    "web/src/app/demo-bookmark/bookmark.service.ts",
+    "web/src/app/demo-bookmark/demo-bookmark.module.ts"
+  ]
+}
