@@ -27,6 +27,11 @@ env:
   # silently overriding via process.env passthrough.
   PNPM_VERSION: '9.15.0'
   STYNX_ENABLE_REGISTRY_PUBLISH: ${{ vars.STYNX_ENABLE_REGISTRY_PUBLISH || 'false' }}
+  # @devai-nyx/* resolves from GitHub Packages (npm.pkg.github.com), which
+  # needs an authenticated read regardless of the source repo's visibility.
+  # Step-level env (below, the Changesets publish step) overrides this for
+  # its own NPM_TOKEN-based publish semantics -- unaffected by this default.
+  NODE_AUTH_TOKEN: ${{ secrets.DEVAI_REPO_TOKEN || github.token }}
 
 jobs:
   release:
