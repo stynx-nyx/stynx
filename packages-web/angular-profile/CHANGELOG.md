@@ -1,5 +1,12 @@
 # @stynx-nyx/angular-profile
 
+## 2.0.0
+
+### Major Changes
+
+- d7a6c41: Add the closed tenant-subject preferences backend and align Angular profile
+  types and writes with mandatory revision-aware ETags.
+
 ## 1.0.3
 
 ### Patch Changes

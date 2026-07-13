@@ -1,5 +1,13 @@
 # @stynx-nyx/angular-sessions
 
+## 1.1.0
+
+### Minor Changes
+
+- d7a6c41: Add provider-neutral logical-session inventory and revocation control, deterministic
+  Cognito-compatible adapter contracts, and additive status-aware Angular APIs while
+  preserving the existing issuance and route contracts.
+
 ## 1.0.3
 
 ### Patch Changes
