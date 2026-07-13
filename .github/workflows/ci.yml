@@ -29,8 +29,10 @@ env:
 
 jobs:
   # Single-source evidence gate (ADR-CI-ECONOMY Decision 7). Defaults match
-  # this repo: mode gate, verifier scripts/evidence/verify-local-evidence.mjs,
-  # trusted actors from this repo's vars.LOCAL_EVIDENCE_TRUSTED_ACTORS.
+  # this repo: mode gate, canonical devai CLI verifier built from a
+  # devai-nyx/devai sibling checkout (D-117/D-121 — this repo's prototype
+  # scripts/evidence/*.mjs are retired), trusted actors from this repo's
+  # vars.LOCAL_EVIDENCE_TRUSTED_ACTORS.
   evidence-gate:
     uses: devai-nyx/devai/.github/workflows/reusable-evidence-gate.yml@main
 

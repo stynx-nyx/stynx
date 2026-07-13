@@ -23,7 +23,7 @@ name: STYNX Weekly Audit
 #        fallback path:
 #          gh variable set LOCAL_EVIDENCE_TRUSTED_ACTORS --repo stynx-nyx/stynx --body ""
 #        (an empty list disables evidence mode entirely — reusable gate /
-#        verify-local-evidence.mjs semantics).
+#        `devai evidence verify-local` semantics, D-117/D-121).
 #     2. Fix the divergence; re-run this workflow via workflow_dispatch.
 #     3. Only after a green full audit, restore the allowlist:
 #          gh variable set LOCAL_EVIDENCE_TRUSTED_ACTORS --repo stynx-nyx/stynx --body "<actors>"

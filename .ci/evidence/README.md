@@ -2,10 +2,14 @@
 
 Local CI evidence is a maintainer-only shortcut for direct `main` pushes. It
 does not replace pull request CI, and it is rejected for policy-sensitive
-changes such as workflows, branch-protection Terraform, or the evidence scripts
-themselves.
+changes such as workflows, branch-protection Terraform, or the
+`ci_economy.local_evidence` policy declared in `.devai/config/project.json`.
 
-The required local jobs for schema v1 are:
+Promoted into the canonical DEVAI framework by D-117; this repo now runs
+`devai evidence collect-local`/`verify-local` instead of the repo-local
+prototype scripts it originated as (`scripts/evidence/*.mjs`, removed).
+
+The required local jobs (declared in `.devai/config/project.json`) are:
 
 - `all-linux`
 - `stynx-release`
@@ -15,10 +19,9 @@ Generate a manifest after both jobs pass:
 ```bash
 pnpm ci:local -- all-linux
 pnpm ci:local -- stynx-release
-pnpm evidence:collect \
-  --all-linux reports/ci-local/<all-linux-run> \
-  --stynx-release reports/ci-local/<stynx-release-run> \
-  --output .ci/evidence/local-ci.json
+devai evidence collect-local \
+  --job all-linux:reports/ci-local/<all-linux-run> \
+  --job stynx-release:reports/ci-local/<stynx-release-run>
 ```
 
 Commit the manifest with the trailer that enables evidence mode:
@@ -27,6 +30,10 @@ Commit the manifest with the trailer that enables evidence mode:
 Local-CI-Evidence: .ci/evidence/local-ci.json
 ```
 
-`evidence/verify` validates the manifest source hash, max age, tool versions,
-required job results, allowed platforms, trusted actor policy, and forbidden
-file rules. GitHub skip markers such as `[skip ci]` must not be used.
+`pnpm evidence:verify` (`devai evidence verify-local --mode strict`) validates
+the manifest source hash, max age, tool versions, required job results,
+allowed platforms, trusted actor policy, and forbidden file rules — the same
+checks CI runs in `--mode gate`. GitHub skip markers such as `[skip ci]` must
+not be used.
+
+See DEVAI's [`docs/meta/ops/local-evidence-runbook.md`](https://github.com/devai-nyx/devai/blob/main/docs/meta/ops/local-evidence-runbook.md) for the full mechanism.

@@ -14,5 +14,15 @@
     "output_dir": "docs/site/build",
     "publish_target": "gh-pages",
     "gh_pages_branch": "gh-pages"
+  },
+  "ci_economy": {
+    "local_evidence": {
+      "manifest_path": ".ci/evidence/local-ci.json",
+      "max_age_hours": 24,
+      "required_jobs": ["all-linux", "stynx-release"],
+      "allowed_platforms": ["linux/arm64", "linux/amd64"],
+      "forbidden_paths": ["infra/github/"],
+      "require_docker": true
+    }
   }
 }
