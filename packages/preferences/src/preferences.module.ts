@@ -1,5 +1,4 @@
 import { type DynamicModule, Module } from '@nestjs/common';
-import { StynxDataModule } from '@stynx-nyx/data';
 import { InMemoryPreferencesStore } from './in-memory-preferences.store';
 import { PostgresPreferencesStore } from './postgres-preferences.store';
 import { PreferencesController } from './preferences.controller';
@@ -22,7 +21,6 @@ export class StynxPreferencesModule {
   static forRoot(options: StynxPreferencesModuleOptions = {}): DynamicModule {
     return {
       module: StynxPreferencesModule,
-      imports: [StynxDataModule],
       controllers: [PreferencesController],
       providers: [
         { provide: STYNX_PREFERENCES_OPTIONS, useValue: options },

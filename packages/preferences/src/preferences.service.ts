@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { RequestContext } from '@stynx-nyx/core';
 import { PreferencesError } from './errors';
 import {
@@ -39,7 +40,7 @@ const categories: PreferenceCategory[] = [
 export class PreferencesService {
   private readonly defaults: PreferenceValues;
   constructor(
-    private readonly context: RequestContext,
+    private readonly moduleRef: ModuleRef,
     @Inject(STYNX_PREFERENCES_STORE) private readonly store: PreferencesStore,
     @Inject(STYNX_PREFERENCES_OPTIONS) private readonly options: StynxPreferencesModuleOptions,
     @Inject(STYNX_PREFERENCES_AUDIT) private readonly audit: PreferencesAuditSink,
@@ -50,6 +51,9 @@ export class PreferencesService {
     );
     if (!parsed.success) throw new Error('Invalid STYNX preference defaults');
     this.defaults = parsed.data;
+  }
+  private get context(): RequestContext {
+    return this.moduleRef.get(RequestContext, { strict: false });
   }
   async getPreferences(): Promise<PreferencesDocument> {
     const row = await this.store.read(this.scope());

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { Database } from '@stynx-nyx/data';
 import type {
   PreferenceMutation,
@@ -19,7 +20,7 @@ interface Row {
 }
 @Injectable()
 export class PostgresPreferencesStore implements PreferencesStore {
-  constructor(private readonly database: Database) {}
+  constructor(private readonly moduleRef: ModuleRef) {}
   async read(scope: TrustedPreferenceScope): Promise<StoredSubjectPreferences | null> {
     return this.database.tx(
       async (trx) => {
@@ -70,5 +71,8 @@ export class PostgresPreferencesStore implements PreferencesStore {
       createdAt: new Date(row.created_at).toISOString(),
       updatedAt: new Date(row.updated_at).toISOString(),
     };
+  }
+  private get database(): Database {
+    return this.moduleRef.get(Database, { strict: false });
   }
 }
