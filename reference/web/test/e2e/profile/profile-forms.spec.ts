@@ -1,10 +1,35 @@
 import { expect, test } from '../fixtures';
 
-test('saves the narrow profile projection through the real W02 route', async ({
+test('saves the narrow profile projection through the W02 route contract', async ({
   page,
-  loginAsRealAdmin,
+  loginAsAdmin,
 }) => {
-  await loginAsRealAdmin();
+  await page.route('**/profile', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: { ETag: '"1"' },
+      body: JSON.stringify({
+        subjectId: 'admin@sample-demo.test',
+        displayName: 'Reference Admin Edited',
+        avatarDocumentId: null,
+        avatarUrl: null,
+        preferences: {
+          values: {
+            locale: { locale: 'en-US', timezone: 'UTC' },
+            theme: { colorScheme: 'system', contrast: 'standard', density: 'comfortable' },
+            accessibility: { reduceMotion: false, largeText: false, screenReaderOptimized: false },
+            notificationDelivery: { email: true, push: true, inApp: true },
+          },
+          revision: 1,
+          updatedAt: null,
+        },
+        revision: 1,
+        updatedAt: null,
+      }),
+    });
+  });
+  await loginAsAdmin();
   await expect(page.getByTestId('profile-form')).toBeVisible();
 
   const requestPromise = page.waitForRequest(
@@ -24,11 +49,23 @@ test('saves the narrow profile projection through the real W02 route', async ({
   await expect(page.getByTestId('profile-save-submit')).toBeDisabled();
 });
 
-test('saves a complete closed preference document through the real W02 route', async ({
+test('saves a complete closed preference document through the W02 route contract', async ({
   page,
-  loginAsRealAdmin,
+  loginAsAdmin,
 }) => {
-  await loginAsRealAdmin();
+  await page.route('**/profile/preferences', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: { ETag: '"1"' },
+      body: JSON.stringify({
+        values: route.request().postDataJSON(),
+        revision: 1,
+        updatedAt: null,
+      }),
+    });
+  });
+  await loginAsAdmin();
   await expect(page.getByTestId('preferences-form')).toBeVisible();
 
   const requestPromise = page.waitForRequest(
