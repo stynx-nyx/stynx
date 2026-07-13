@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/testing",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Testing harness and archive-aware matchers for stynx consumers",

@@ -1,5 +1,12 @@
 # @stynx-nyx/flow Changelog
 
+## 0.1.4
+
+### Patch Changes
+
+- @stynx-nyx/auth@1.0.4
+- @stynx-nyx/backend@1.0.4
+
 ## 0.1.3
 
 ### Patch Changes

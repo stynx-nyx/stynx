@@ -1,5 +1,12 @@
 # @stynx-nyx/auth
 
+## 1.0.4
+
+### Patch Changes
+
+- Updated dependencies [d7a6c41]
+  - @stynx-nyx/sessions@1.1.0
+
 ## 1.0.3
 
 ### Patch Changes

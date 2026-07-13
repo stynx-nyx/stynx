@@ -1,5 +1,14 @@
 # @stynx-nyx/reference-web
 
+## 0.2.5
+
+### Patch Changes
+
+- Updated dependencies [d7a6c41]
+- Updated dependencies [d7a6c41]
+  - @stynx-nyx/angular-profile@2.0.0
+  - @stynx-nyx/angular-sessions@1.1.0
+
 ## 0.2.4
 
 ### Patch Changes
