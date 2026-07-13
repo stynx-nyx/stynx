@@ -122,33 +122,15 @@ jobs:
 
       - name: Validate stynx invariants against the schema
         working-directory: stynx
-        run: |
-          set -euo pipefail
-          validated=0
-          for f in docs/framework/arch/invariants/*.json; do
-            [ -f "$f" ] || continue
-            echo "::group::validate $f"
-            node -e "
-              const path=require('path');
-              const {Ajv2020}=require(path.resolve('node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/2020'));
-              const s=require(path.resolve('../devai/docs/framework/schemas/invariant.schema.json'));
-              const ajv=new Ajv2020({strict:false,allErrors:true});
-              const v=ajv.compile(s);
-              const inv=require(path.resolve('$f'));
-              if(!v(inv)){console.error(JSON.stringify(v.errors,null,2));process.exit(1);}
-              console.log('PASS', inv.id);
-            "
-            echo "::endgroup::"
-            validated=$((validated + 1))
-          done
-          # A dead glob here (rename, restructure) would otherwise make this
-          # whole step a silent no-op that still reports green — see D-124 in
-          # devai and this workflow's own history. Fail loudly instead.
-          if [ "$validated" -eq 0 ]; then
-            echo "::error::no invariant files matched docs/framework/arch/invariants/*.json — this step validated nothing"
-            exit 1
-          fi
-          echo "validated $validated invariant file(s)"
+        run: devai spec validate-invariants --repo-root . --human
+        # Uses devai's canonical validator (schema + ID uniqueness + domain +
+        # anchor checks) instead of a hand-rolled ajv script. Its default
+        # companion-pattern exclusion (*-allowlist.json, *-data.json) is why
+        # RBAC-001-allowlist.json (renamed from the non-matching
+        # RBAC-001-allowlist.data.json, closing TASK-0003) is correctly
+        # skipped rather than validated as an incomplete invariant. A
+        # zero-match glob here is caught by the glob-guards step above
+        # (INVARIANTS_DIR, min_matches 10), not re-guarded inline.
 
       - name: Refresh invariant candidates (informational)
         working-directory: stynx
