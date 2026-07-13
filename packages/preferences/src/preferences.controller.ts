@@ -9,6 +9,7 @@ import {
   Patch,
   Put,
   Query,
+  Req,
   Res,
 } from '@nestjs/common';
 import { NoIdempotent } from '@stynx-nyx/idempotency';
@@ -21,6 +22,7 @@ import type {
   PreferencesDocument,
   PreferenceValues,
   ProfilePatch,
+  TrustedPreferenceScope,
 } from './types';
 const identityKeys = new Set([
   'tenantId',
@@ -31,15 +33,23 @@ const identityKeys = new Set([
   'user_id',
 ]);
 type NestResponse = { setHeader(name: string, value: string): void };
+type AuthenticatedRequest = {
+  tenantId?: string;
+  stynxClaims?: { sub?: string; tenantId?: string };
+  principal?: { id?: string };
+  actor?: { id?: string };
+  user?: { id?: string };
+};
 @Controller('profile')
 export class PreferencesController {
   constructor(private readonly preferences: PreferencesService) {}
   @Get() async profile(
     @Query() query: Record<string, unknown>,
     @Res({ passthrough: true }) response: NestResponse,
+    @Req() request: AuthenticatedRequest,
   ): Promise<PlatformProfile> {
     this.rejectOverrides(query);
-    const result = await this.preferences.getProfile();
+    const result = await this.preferences.getProfile(this.scope(request));
     return this.respond(response, result);
   }
   @Patch() @NoIdempotent() async patchProfile(
@@ -47,17 +57,19 @@ export class PreferencesController {
     @Query() query: Record<string, unknown>,
     @Headers('if-match') ifMatch: string | undefined,
     @Res({ passthrough: true }) response: NestResponse,
+    @Req() request: AuthenticatedRequest,
   ): Promise<PlatformProfile> {
     this.rejectOverrides(query, body);
-    const result = await this.preferences.patchProfile(body, this.revision(ifMatch));
+    const result = await this.preferences.patchProfile(body, this.revision(ifMatch), this.scope(request));
     return this.respond(response, result);
   }
   @Get('preferences') async get(
     @Query() query: Record<string, unknown>,
     @Res({ passthrough: true }) response: NestResponse,
+    @Req() request: AuthenticatedRequest,
   ): Promise<PreferencesDocument> {
     this.rejectOverrides(query);
-    const result = await this.preferences.getPreferences();
+    const result = await this.preferences.getPreferences(this.scope(request));
     return this.respond(response, result);
   }
   @Put('preferences') @NoIdempotent() async put(
@@ -65,9 +77,10 @@ export class PreferencesController {
     @Query() query: Record<string, unknown>,
     @Headers('if-match') ifMatch: string | undefined,
     @Res({ passthrough: true }) response: NestResponse,
+    @Req() request: AuthenticatedRequest,
   ): Promise<PreferencesDocument> {
     this.rejectOverrides(query, body);
-    const result = await this.preferences.putPreferences(body, this.revision(ifMatch));
+    const result = await this.preferences.putPreferences(body, this.revision(ifMatch), this.scope(request));
     return this.respond(response, result);
   }
   @Patch('preferences') @NoIdempotent() async patch(
@@ -75,18 +88,20 @@ export class PreferencesController {
     @Query() query: Record<string, unknown>,
     @Headers('if-match') ifMatch: string | undefined,
     @Res({ passthrough: true }) response: NestResponse,
+    @Req() request: AuthenticatedRequest,
   ): Promise<PreferencesDocument> {
     this.rejectOverrides(query, body);
-    const result = await this.preferences.patchPreferences(body, this.revision(ifMatch));
+    const result = await this.preferences.patchPreferences(body, this.revision(ifMatch), this.scope(request));
     return this.respond(response, result);
   }
   @Delete('preferences') @HttpCode(200) async reset(
     @Query() query: Record<string, unknown>,
     @Headers('if-match') ifMatch: string | undefined,
     @Res({ passthrough: true }) response: NestResponse,
+    @Req() request: AuthenticatedRequest,
   ): Promise<PreferencesDocument> {
     this.rejectOverrides(query);
-    const result = await this.preferences.reset(null, this.revision(ifMatch));
+    const result = await this.preferences.reset(null, this.revision(ifMatch), this.scope(request));
     return this.respond(response, result);
   }
   @Delete('preferences/:category') @HttpCode(200) async resetCategory(
@@ -94,11 +109,13 @@ export class PreferencesController {
     @Query() query: Record<string, unknown>,
     @Headers('if-match') ifMatch: string | undefined,
     @Res({ passthrough: true }) response: NestResponse,
+    @Req() request: AuthenticatedRequest,
   ): Promise<PreferencesDocument> {
     this.rejectOverrides(query);
     const result = await this.preferences.reset(
       category as PreferenceCategory,
       this.revision(ifMatch),
+      this.scope(request),
     );
     return this.respond(response, result);
   }
@@ -117,6 +134,16 @@ export class PreferencesController {
     if (!Number.isSafeInteger(revision))
       throw new PreferencesError('PREFERENCES_REVISION_CONFLICT', 412);
     return revision;
+  }
+  private scope(request: AuthenticatedRequest): TrustedPreferenceScope {
+    const subjectId =
+      request.stynxClaims?.sub ?? request.principal?.id ?? request.actor?.id ?? request.user?.id;
+    if (!subjectId) throw new PreferencesError('PREFERENCES_UNAUTHENTICATED', 401);
+    const tenantId = request.tenantId ?? request.stynxClaims?.tenantId;
+    if (!tenantId) throw new PreferencesError('PREFERENCES_FORBIDDEN', 403);
+    if (Buffer.byteLength(subjectId) > 255)
+      throw new PreferencesError('PREFERENCES_INVALID', 400, ['subject']);
+    return { tenantId, subjectId };
   }
   private rejectOverrides(...sources: unknown[]): void {
     for (const source of sources) {

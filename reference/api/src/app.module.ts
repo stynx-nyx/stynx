@@ -1,7 +1,7 @@
 import { generateKeyPairSync } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { Module } from '@nestjs/common';
+import { Module, UseGuards } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { PermissionGuard, StynxAuthGuard, StynxAuthModule } from '@stynx-nyx/auth';
 import {
@@ -13,7 +13,7 @@ import { Database, StynxDataModule } from '@stynx-nyx/data';
 import { StynxFlowModule } from '@stynx-nyx/flow';
 import { StynxHealthModule } from '@stynx-nyx/health';
 import { StynxLoggingModule } from '@stynx-nyx/logging';
-import { StynxPreferencesModule } from '@stynx-nyx/preferences';
+import { PreferencesController, StynxPreferencesModule } from '@stynx-nyx/preferences';
 import {
   DeterministicSessionProviderFake,
   StynxSessionControlModule,
@@ -171,6 +171,9 @@ async function runReferenceApiMigrations(
   }
 }
 
+@UseGuards(StynxAuthGuard)
+class GuardedPreferencesController extends PreferencesController {}
+
 @Module({
   imports: [
     StynxLoggingModule.forRoot(),
@@ -232,7 +235,7 @@ async function runReferenceApiMigrations(
       provider: new DeterministicSessionProviderFake(),
     }),
     StynxTenancyModule.forRoot({}),
-    StynxPreferencesModule.forRoot(),
+    StynxPreferencesModule.forRoot({ mountController: false }),
     StynxAuditApiModule.forRoot({
       dailyDetachEnabled: false,
     }),
@@ -287,6 +290,7 @@ async function runReferenceApiMigrations(
     StynxFlowModule,
     SampleModule,
   ],
+  controllers: [GuardedPreferencesController],
   providers: [
     StynxAuthGuard,
     PermissionGuard,

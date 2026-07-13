@@ -1,9 +1,11 @@
 import {
   Database as CoreDatabase,
   RequestContext,
+  RequestContextMutator,
   SystemContext,
   SystemContextRequiredError,
   type SystemExecutionContext,
+  generateRequestId,
 } from '@stynx-nyx/core';
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import { ClsService } from 'nestjs-cls';
@@ -72,6 +74,7 @@ export class Database extends CoreDatabase {
     @Optional()
     @Inject(STYNX_DATA_METRICS)
     private readonly metrics?: StynxDataMetricsSink,
+    private readonly requestContextMutator?: RequestContextMutator,
   ) {
     super();
   }
@@ -148,6 +151,24 @@ export class Database extends CoreDatabase {
 
   withReplica<T>(fn: (trx: Transaction) => Promise<T>): Promise<T> {
     return this.tx(fn, { role: 'reader', readonly: true, replica: true });
+  }
+
+  withRequestContext<T>(
+    scope: { tenantId: string; actorId: string; sessionId?: string },
+    fn: () => Promise<T>,
+  ): Promise<T> {
+    return Promise.resolve(
+      this.requestContextMutator!.runWithRequestContext(
+        {
+          requestId: generateRequestId(),
+          tenantId: scope.tenantId,
+          actorId: scope.actorId,
+          ...(scope.sessionId ? { sessionId: scope.sessionId } : {}),
+          startedAt: new Date(),
+        },
+        fn,
+      ),
+    );
   }
 
   override withSystemContext<T>(

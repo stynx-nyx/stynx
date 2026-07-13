@@ -88,6 +88,7 @@ export interface StynxPreferencesModuleOptions {
   store?: PreferencesStore;
   audit?: PreferencesAuditSink;
   avatarResolver?: PreferencesAvatarResolver;
+  mountController?: boolean;
 }
 export type PreferencePatch = {
   [K in PreferenceCategory]?:

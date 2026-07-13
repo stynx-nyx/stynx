@@ -21,7 +21,7 @@ export class StynxPreferencesModule {
   static forRoot(options: StynxPreferencesModuleOptions = {}): DynamicModule {
     return {
       module: StynxPreferencesModule,
-      controllers: [PreferencesController],
+      ...(options.mountController === false ? {} : { controllers: [PreferencesController] }),
       providers: [
         { provide: STYNX_PREFERENCES_OPTIONS, useValue: options },
         ...(options.store

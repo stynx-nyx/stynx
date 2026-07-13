@@ -14,7 +14,7 @@ function harness(tenantId = tenantA, subjectId = 'external|subject-1') {
   const store = new InMemoryPreferencesStore();
   const events: PreferencesAuditEvent[] = [];
   const service = new PreferencesService(
-    context as never,
+    { get: () => context } as never,
     store,
     {},
     { write: (event) => events.push(event) },
@@ -142,7 +142,7 @@ describe('@stynx-nyx/preferences W04 closed contract', () => {
   it('rejects oversized documents and unsupported configured values without persistence', async () => {
     const { context, store } = harness();
     const service = new PreferencesService(
-      context as never,
+      { get: () => context } as never,
       store,
       { supportedLocales: ['en-US'], supportedTimezones: ['UTC'] },
       { write: vi.fn() },

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { Database } from '@stynx-nyx/data';
+import { Database, STYNX_DATABASE } from '@stynx-nyx/data';
 import type {
   PreferenceMutation,
   PreferenceOverrides,
@@ -22,7 +22,9 @@ interface Row {
 export class PostgresPreferencesStore implements PreferencesStore {
   constructor(private readonly moduleRef: ModuleRef) {}
   async read(scope: TrustedPreferenceScope): Promise<StoredSubjectPreferences | null> {
-    return this.database.tx(
+    return this.database.withRequestContext(
+      { tenantId: scope.tenantId, actorId: scope.subjectId },
+      () => this.database.tx(
       async (trx) => {
         const result = await trx.query<Row>(
           'select tenant_id, subject_id, display_name, avatar_document_id, preference_overrides, revision, created_at, updated_at from profile.subject_preferences where tenant_id = $1::uuid and subject_id = $2',
@@ -30,11 +32,14 @@ export class PostgresPreferencesStore implements PreferencesStore {
         );
         return result.rows[0] ? this.map(result.rows[0]) : null;
       },
-      { readonly: true },
+        { readonly: true },
+      ),
     );
   }
   async compareAndSet(input: PreferenceMutation): Promise<StoredSubjectPreferences | 'conflict'> {
-    return this.database.tx(async (trx) => {
+    return this.database.withRequestContext(
+      { tenantId: input.scope.tenantId, actorId: input.scope.subjectId },
+      () => this.database.tx(async (trx) => {
       const result =
         input.expectedRevision === 0
           ? await trx.query<Row>(
@@ -59,7 +64,8 @@ export class PostgresPreferencesStore implements PreferencesStore {
               ],
             );
       return result.rows[0] ? this.map(result.rows[0]) : 'conflict';
-    });
+      }),
+    );
   }
   private map(row: Row): StoredSubjectPreferences {
     return {
@@ -73,6 +79,6 @@ export class PostgresPreferencesStore implements PreferencesStore {
     };
   }
   private get database(): Database {
-    return this.moduleRef.get(Database, { strict: false });
+    return this.moduleRef.get<Database>(STYNX_DATABASE, { strict: false });
   }
 }

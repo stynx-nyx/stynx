@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { RequestContext } from '@stynx-nyx/core';
@@ -55,12 +56,11 @@ export class PreferencesService {
   private get context(): RequestContext {
     return this.moduleRef.get(RequestContext, { strict: false });
   }
-  async getPreferences(): Promise<PreferencesDocument> {
-    const row = await this.store.read(this.scope());
+  async getPreferences(scope = this.scope()): Promise<PreferencesDocument> {
+    const row = await this.store.read(scope);
     return this.document(row);
   }
-  async getProfile(): Promise<PlatformProfile> {
-    const scope = this.scope();
+  async getProfile(scope = this.scope()): Promise<PlatformProfile> {
     const row = await this.store.read(scope);
     return {
       subjectId: scope.subjectId,
@@ -72,7 +72,11 @@ export class PreferencesService {
       updatedAt: row?.updatedAt ?? null,
     };
   }
-  async putPreferences(raw: unknown, expectedRevision: number): Promise<PreferencesDocument> {
+  async putPreferences(
+    raw: unknown,
+    expectedRevision: number,
+    scope = this.scope(),
+  ): Promise<PreferencesDocument> {
     this.assertSize(raw);
     const parsed = preferenceValuesSchema.safeParse(raw);
     if (!parsed.success)
@@ -88,9 +92,14 @@ export class PreferencesService {
       expectedRevision,
       'preferences.updated',
       this.changedPaths(overrides),
+      scope,
     );
   }
-  async patchPreferences(raw: unknown, expectedRevision: number): Promise<PreferencesDocument> {
+  async patchPreferences(
+    raw: unknown,
+    expectedRevision: number,
+    scope = this.scope(),
+  ): Promise<PreferencesDocument> {
     this.assertSize(raw);
     const parsed = preferencePatchSchema.safeParse(raw);
     if (!parsed.success)
@@ -99,7 +108,7 @@ export class PreferencesService {
         400,
         parsed.error.issues.map((issue) => issue.path.join('.')),
       );
-    const current = await this.store.read(this.scope());
+    const current = await this.store.read(scope);
     const overrides = structuredClone(current?.overrides ?? {});
     this.applyPatch(overrides, parsed.data as PreferencePatch);
     const effective = this.resolve(overrides);
@@ -109,15 +118,17 @@ export class PreferencesService {
       expectedRevision,
       'preferences.updated',
       this.patchPaths(parsed.data as PreferencePatch),
+      scope,
     );
   }
   async reset(
     category: PreferenceCategory | null,
     expectedRevision: number,
+    scope = this.scope(),
   ): Promise<PreferencesDocument> {
     if (category !== null && !categories.includes(category))
       throw new PreferencesError('PREFERENCES_CATEGORY_NOT_FOUND', 404, ['category']);
-    const current = await this.store.read(this.scope());
+    const current = await this.store.read(scope);
     const overrides = structuredClone(current?.overrides ?? {});
     if (category) delete overrides[category];
     else for (const key of categories) delete overrides[key];
@@ -126,9 +137,14 @@ export class PreferencesService {
       expectedRevision,
       category ? 'preferences.category_reset' : 'preferences.reset',
       category ? [category] : categories,
+      scope,
     );
   }
-  async patchProfile(raw: unknown, expectedRevision: number): Promise<PlatformProfile> {
+  async patchProfile(
+    raw: unknown,
+    expectedRevision: number,
+    scope = this.scope(),
+  ): Promise<PlatformProfile> {
     this.assertSize(raw);
     const parsed = profilePatchSchema.safeParse(raw);
     if (!parsed.success) {
@@ -140,7 +156,6 @@ export class PreferencesService {
         forbidden ? keys : parsed.error.issues.map((issue) => issue.path.join('.')),
       );
     }
-    const scope = this.scope();
     const current = await this.store.read(scope);
     const next = await this.store.compareAndSet({
       scope,
@@ -161,8 +176,9 @@ export class PreferencesService {
       current?.revision ?? 0,
       next.revision,
       Object.keys(parsed.data),
+      scope,
     );
-    return this.getProfile();
+    return this.getProfile(scope);
   }
   private scope(): TrustedPreferenceScope {
     let tenantId: string | undefined;
@@ -232,8 +248,8 @@ export class PreferencesService {
     expectedRevision: number,
     operation: 'preferences.updated' | 'preferences.category_reset' | 'preferences.reset',
     paths: string[],
+    scope: TrustedPreferenceScope,
   ): Promise<PreferencesDocument> {
-    const scope = this.scope();
     const current = await this.store.read(scope);
     if ((current?.revision ?? 0) !== expectedRevision)
       throw new PreferencesError('PREFERENCES_REVISION_CONFLICT', 412);
@@ -247,7 +263,7 @@ export class PreferencesService {
       overrides,
     });
     if (next === 'conflict') throw new PreferencesError('PREFERENCES_REVISION_CONFLICT', 412);
-    await this.emit(operation, current?.revision ?? 0, next.revision, paths);
+    await this.emit(operation, current?.revision ?? 0, next.revision, paths, scope);
     return this.document(next);
   }
   private async emit(
@@ -259,14 +275,14 @@ export class PreferencesService {
     previousRevision: number,
     newRevision: number,
     changedPaths: string[],
+    scope: TrustedPreferenceScope,
   ): Promise<void> {
-    const scope = this.scope();
     await this.audit.write({
       operation,
       tenantId: scope.tenantId,
       subjectId: scope.subjectId,
       actorId: scope.subjectId,
-      requestId: this.context.requestId,
+      requestId: randomUUID(),
       changedPaths,
       previousRevision,
       newRevision,
