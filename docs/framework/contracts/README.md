@@ -8,6 +8,10 @@ can compile or validate against without importing implementation internals.
 
 ## Contract Surfaces
 
+- [session-control.md](session-control.md) — provider-neutral logical-session
+  registry, capabilities, revocation guarantees, retry, privacy, and compatible wire contract.
+- [preferences-api.md](preferences-api.md) — closed tenant-subject preferences,
+  narrow profile projection, optimistic concurrency, storage, and audit contract.
 - [auth-hosted-actions.md](auth-hosted-actions.md) — hosted identity-provider
   action URLs consumed by profile security handoff components.
 - [audit-events-api.md](audit-events-api.md) — HTTP contract for
