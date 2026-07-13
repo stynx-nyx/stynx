@@ -16,7 +16,7 @@
       "docs": [
         { "doc": "docs/framework/arch/invariants/INV-RBAC-001.json", "anchor": "statement" },
         {
-          "doc": "docs/framework/arch/invariants/RBAC-001-allowlist.data.json",
+          "doc": "docs/framework/arch/invariants/RBAC-001-allowlist.json",
           "anchor": "entries"
         }
       ],

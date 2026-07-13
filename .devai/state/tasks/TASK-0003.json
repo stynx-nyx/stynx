@@ -7,9 +7,10 @@
   "target_substrates": ["F2"],
   "db_isolation": "database",
   "description": "spec-validate-all scans every INV-*.json under docs/architecture/invariants/ and fails the allowlist file (16 errors: required fields + additionalProperties). The allowlist is data for INV-RBAC-001, not an invariant. Closure: either rename to 'RBAC-001-allowlist.json' (no INV- prefix) and update INV-RBAC-001 references, or move to docs/architecture/invariant-data/. Verify: devai spec-validate-all --human shows 0 errors on invariants in path.",
-  "status": "escalated",
+  "status": "completed",
   "iteration_count": 0,
   "created_at": "2026-05-17T00:31:39.148Z",
+  "completed_at": "2026-07-13T00:00:00.000Z",
   "worktree_id": "WT-TASK-0003",
   "branch": "escalated/TASK-0003"
 }
