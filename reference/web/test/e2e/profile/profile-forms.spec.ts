@@ -2,9 +2,9 @@ import { expect, test } from '../fixtures';
 
 test('saves the narrow profile projection through the real W02 route', async ({
   page,
-  loginAsAdmin,
+  loginAsRealAdmin,
 }) => {
-  await loginAsAdmin();
+  await loginAsRealAdmin();
   await expect(page.getByTestId('profile-form')).toBeVisible();
 
   const requestPromise = page.waitForRequest(
@@ -26,9 +26,9 @@ test('saves the narrow profile projection through the real W02 route', async ({
 
 test('saves a complete closed preference document through the real W02 route', async ({
   page,
-  loginAsAdmin,
+  loginAsRealAdmin,
 }) => {
-  await loginAsAdmin();
+  await loginAsRealAdmin();
   await expect(page.getByTestId('preferences-form')).toBeVisible();
 
   const requestPromise = page.waitForRequest(
