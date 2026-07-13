@@ -19,6 +19,23 @@
       }
     },
     "schemas": {
+      "AccessibilityPreferences": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "largeText": {
+            "type": "boolean"
+          },
+          "reduceMotion": {
+            "type": "boolean"
+          },
+          "screenReaderOptimized": {
+            "type": "boolean"
+          }
+        },
+        "required": ["largeText", "reduceMotion", "screenReaderOptimized"],
+        "x-stynx-source": "packages/preferences/src/types.ts"
+      },
       "ArchiveTenantResult": {
         "type": "object",
         "additionalProperties": false,
@@ -852,6 +869,13 @@
         },
         "x-stynx-source": "packages/flow/src/types.ts"
       },
+      "EmptySessionControlRequest": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "#/components/schemas/UnknownJson"
+        },
+        "x-stynx-source": "packages/sessions/src/control/session-control.controller.ts"
+      },
       "EnsureFlowRunDto": {
         "type": "object",
         "additionalProperties": false,
@@ -1284,6 +1308,171 @@
         },
         "x-stynx-source": "packages/flow/src/types.ts"
       },
+      "InvalidationGuarantee": {
+        "type": "string",
+        "enum": [
+          "immediate_local",
+          "bounded_local",
+          "refresh_revoked_access_expires",
+          "provider_confirmed",
+          "none"
+        ],
+        "x-stynx-source": "packages/sessions/src/control/types.ts"
+      },
+      "LocalePreferences": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "locale": {
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string"
+          }
+        },
+        "required": ["locale", "timezone"],
+        "x-stynx-source": "packages/preferences/src/types.ts"
+      },
+      "MutationStatus": {
+        "type": "string",
+        "enum": ["pending", "revoked", "unsupported", "failed"],
+        "x-stynx-source": "packages/sessions/src/control/types.ts"
+      },
+      "NotificationDeliveryPreferences": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "type": "boolean"
+          },
+          "inApp": {
+            "type": "boolean"
+          },
+          "push": {
+            "type": "boolean"
+          }
+        },
+        "required": ["email", "inApp", "push"],
+        "x-stynx-source": "packages/preferences/src/types.ts"
+      },
+      "PlatformProfile": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "avatarDocumentId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null",
+                "const": null
+              }
+            ]
+          },
+          "avatarUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null",
+                "const": null
+              }
+            ]
+          },
+          "displayName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null",
+                "const": null
+              }
+            ]
+          },
+          "preferences": {
+            "$ref": "#/components/schemas/PreferencesDocument"
+          },
+          "revision": {
+            "type": "number"
+          },
+          "subjectId": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null",
+                "const": null
+              }
+            ]
+          }
+        },
+        "required": [
+          "avatarDocumentId",
+          "avatarUrl",
+          "displayName",
+          "preferences",
+          "revision",
+          "subjectId",
+          "updatedAt"
+        ],
+        "x-stynx-source": "packages/preferences/src/types.ts"
+      },
+      "PreferencePatch": {
+        "$ref": "#/components/schemas/UnknownJson",
+        "x-stynx-source": "packages/preferences/src/types.ts"
+      },
+      "PreferencesDocument": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "revision": {
+            "type": "number"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null",
+                "const": null
+              }
+            ]
+          },
+          "values": {
+            "$ref": "#/components/schemas/PreferenceValues"
+          }
+        },
+        "required": ["revision", "updatedAt", "values"],
+        "x-stynx-source": "packages/preferences/src/types.ts"
+      },
+      "PreferenceValues": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "accessibility": {
+            "$ref": "#/components/schemas/AccessibilityPreferences"
+          },
+          "locale": {
+            "$ref": "#/components/schemas/LocalePreferences"
+          },
+          "notificationDelivery": {
+            "$ref": "#/components/schemas/NotificationDeliveryPreferences"
+          },
+          "theme": {
+            "$ref": "#/components/schemas/ThemePreferences"
+          }
+        },
+        "required": ["accessibility", "locale", "notificationDelivery", "theme"],
+        "x-stynx-source": "packages/preferences/src/types.ts"
+      },
       "PrivacyErasureRequest": {
         "type": "object",
         "additionalProperties": false,
@@ -1442,6 +1631,35 @@
         "enum": ["nullify", "hash_with_salt", "tombstone", "delete_row"],
         "x-stynx-source": "packages/privacy/src/types.ts"
       },
+      "ProfilePatch": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "avatarDocumentId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null",
+                "const": null
+              }
+            ]
+          },
+          "displayName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null",
+                "const": null
+              }
+            ]
+          }
+        },
+        "x-stynx-source": "packages/preferences/src/types.ts"
+      },
       "ProvisionTenantInput": {
         "type": "object",
         "additionalProperties": false,
@@ -1522,6 +1740,18 @@
         },
         "x-stynx-source": "packages/flow/src/types.ts"
       },
+      "SessionAction": {
+        "type": "string",
+        "enum": [
+          "logout-current",
+          "revoke-one",
+          "revoke-others",
+          "revoke-all",
+          "revoke-subject",
+          "revoke-tenant"
+        ],
+        "x-stynx-source": "packages/sessions/src/control/types.ts"
+      },
       "SessionBundle": {
         "type": "object",
         "additionalProperties": false,
@@ -1571,6 +1801,136 @@
         },
         "x-stynx-source": "packages/auth/src/auth.controller.ts"
       },
+      "SessionGuarantee": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "accessTokenExpiresAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null",
+                "const": null
+              }
+            ]
+          },
+          "effectiveBy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null",
+                "const": null
+              }
+            ]
+          },
+          "kind": {
+            "$ref": "#/components/schemas/InvalidationGuarantee"
+          },
+          "propagationBoundSeconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null",
+                "const": null
+              }
+            ]
+          }
+        },
+        "required": ["accessTokenExpiresAt", "effectiveBy", "kind", "propagationBoundSeconds"],
+        "x-stynx-source": "packages/sessions/src/control/types.ts"
+      },
+      "SessionItemResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "errorCode": {
+            "type": "string"
+          },
+          "guarantee": {
+            "$ref": "#/components/schemas/SessionGuarantee"
+          },
+          "sid": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/MutationStatus"
+          }
+        },
+        "required": ["guarantee", "sid", "status"],
+        "x-stynx-source": "packages/sessions/src/control/types.ts"
+      },
+      "SessionMutationResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/SessionAction"
+          },
+          "effectiveBy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null",
+                "const": null
+              }
+            ]
+          },
+          "errorCode": {
+            "type": "string"
+          },
+          "guarantee": {
+            "$ref": "#/components/schemas/SessionGuarantee"
+          },
+          "operationId": {
+            "type": "string"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SessionItemResult"
+            }
+          },
+          "scope": {
+            "$ref": "#/components/schemas/SessionScope"
+          },
+          "status": {
+            "$ref": "#/components/schemas/MutationStatus"
+          }
+        },
+        "required": [
+          "action",
+          "effectiveBy",
+          "guarantee",
+          "operationId",
+          "results",
+          "scope",
+          "status"
+        ],
+        "x-stynx-source": "packages/sessions/src/control/types.ts"
+      },
+      "SessionScope": {
+        "type": "string",
+        "enum": ["tenant", "identity"],
+        "x-stynx-source": "packages/sessions/src/control/types.ts"
+      },
+      "SessionSubjectRevokeRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "scope": {
+            "$ref": "#/components/schemas/SessionScope"
+          }
+        },
+        "x-stynx-source": "packages/sessions/src/control/session-control.controller.ts"
+      },
       "SessionSwitchBody": {
         "type": "object",
         "additionalProperties": false,
@@ -1586,6 +1946,44 @@
           }
         },
         "x-stynx-source": "packages/auth/src/auth.controller.ts"
+      },
+      "SessionView": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "client": {
+            "type": "string"
+          },
+          "current": {
+            "type": "boolean"
+          },
+          "deviceLabel": {
+            "type": "string"
+          },
+          "guarantee": {
+            "$ref": "#/components/schemas/UnknownJson"
+          },
+          "location": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "country": {
+                "type": "string"
+              },
+              "region": {
+                "type": "string"
+              }
+            }
+          },
+          "sessionId": {
+            "type": "string"
+          },
+          "userAgent": {
+            "type": "string"
+          }
+        },
+        "required": ["current", "guarantee", "sessionId"],
+        "x-stynx-source": "packages/sessions/src/control/types.ts"
       },
       "SuspendTenantInput": {
         "type": "object",
@@ -1720,6 +2118,26 @@
         },
         "required": ["createdAt", "id", "isActive", "name", "slug", "state", "updatedAt"],
         "x-stynx-source": "packages/tenancy/src/types.ts"
+      },
+      "ThemePreferences": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "colorScheme": {
+            "type": "string",
+            "enum": ["system", "light", "dark"]
+          },
+          "contrast": {
+            "type": "string",
+            "enum": ["standard", "more"]
+          },
+          "density": {
+            "type": "string",
+            "enum": ["comfortable", "compact"]
+          }
+        },
+        "required": ["colorScheme", "contrast", "density"],
+        "x-stynx-source": "packages/preferences/src/types.ts"
       },
       "UpdateFlowAgentRuleDto": {
         "type": "object",
@@ -4107,6 +4525,1169 @@
                           "use": "sig"
                         }
                       ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Bad request",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unauthorized",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Forbidden",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Not found",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unexpected error",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/session-administration/subjects/{subjectId}/revoke": {
+      "post": {
+        "operationId": "SessionControl-post-auth-session-administration-subjects-by-subjectId-revoke-handler",
+        "tags": ["SessionControl"],
+        "parameters": [
+          {
+            "name": "subjectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "00000000-0000-4000-8000-000000000000"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionSubjectRevokeRequest"
+              },
+              "x-stynx-source-type": "SessionSubjectRevokeRequest",
+              "examples": {
+                "default": {
+                  "value": {
+                    "scope": "tenant"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": [],
+            "tenantHeader": []
+          }
+        ],
+        "x-stynx-source": "packages/sessions/src/control/session-control.controller.ts",
+        "x-stynx-route": "/auth/session-administration/subjects/:subjectId/revoke",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionMutationResult"
+                },
+                "x-stynx-source-type": "Promise<SessionMutationResult>",
+                "examples": {
+                  "default": {
+                    "value": {
+                      "action": "logout-current",
+                      "effectiveBy": "example",
+                      "errorCode": "example",
+                      "guarantee": {
+                        "accessTokenExpiresAt": "example",
+                        "effectiveBy": "example",
+                        "kind": "immediate_local",
+                        "propagationBoundSeconds": 1
+                      },
+                      "operationId": "example",
+                      "results": [
+                        {
+                          "errorCode": "example",
+                          "guarantee": {},
+                          "sid": "example",
+                          "status": "pending"
+                        }
+                      ],
+                      "scope": "tenant",
+                      "status": {}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Bad request",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unauthorized",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Forbidden",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Not found",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unexpected error",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/session-operations/{operationId}": {
+      "get": {
+        "operationId": "SessionControl-get-auth-session-operations-by-operationId-handler",
+        "tags": ["SessionControl"],
+        "parameters": [
+          {
+            "name": "operationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "00000000-0000-4000-8000-000000000000"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": [],
+            "tenantHeader": []
+          }
+        ],
+        "x-stynx-source": "packages/sessions/src/control/session-control.controller.ts",
+        "x-stynx-route": "/auth/session-operations/:operationId",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionMutationResult"
+                },
+                "x-stynx-source-type": "Promise<SessionMutationResult>",
+                "examples": {
+                  "default": {
+                    "value": {
+                      "action": "logout-current",
+                      "effectiveBy": "example",
+                      "errorCode": "example",
+                      "guarantee": {
+                        "accessTokenExpiresAt": "example",
+                        "effectiveBy": "example",
+                        "kind": "immediate_local",
+                        "propagationBoundSeconds": 1
+                      },
+                      "operationId": "example",
+                      "results": [
+                        {
+                          "errorCode": "example",
+                          "guarantee": {},
+                          "sid": "example",
+                          "status": "pending"
+                        }
+                      ],
+                      "scope": "tenant",
+                      "status": {}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Bad request",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unauthorized",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Forbidden",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Not found",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unexpected error",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/sessions": {
+      "get": {
+        "operationId": "SessionControl-get-auth-sessions-handler",
+        "tags": ["SessionControl"],
+        "x-stynx-query-object": true,
+        "security": [
+          {
+            "bearerAuth": [],
+            "tenantHeader": []
+          }
+        ],
+        "x-stynx-source": "packages/sessions/src/control/session-control.controller.ts",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SessionView"
+                  }
+                },
+                "x-stynx-source-type": "Promise<SessionView[]>",
+                "examples": {
+                  "default": {
+                    "value": [
+                      {
+                        "client": "example",
+                        "current": true,
+                        "deviceLabel": "example",
+                        "guarantee": "example",
+                        "location": {
+                          "country": "example",
+                          "region": "example"
+                        },
+                        "sessionId": "example",
+                        "userAgent": "example"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Bad request",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unauthorized",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Forbidden",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Not found",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unexpected error",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/sessions/{sid}": {
+      "delete": {
+        "operationId": "SessionControl-delete-auth-sessions-by-sid-handler",
+        "tags": ["SessionControl"],
+        "parameters": [
+          {
+            "name": "sid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "00000000-0000-4000-8000-000000000000"
+          }
+        ],
+        "x-stynx-query-object": true,
+        "security": [
+          {
+            "bearerAuth": [],
+            "tenantHeader": []
+          }
+        ],
+        "x-stynx-source": "packages/sessions/src/control/session-control.controller.ts",
+        "x-stynx-route": "/auth/sessions/:sid",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionMutationResult"
+                },
+                "x-stynx-source-type": "Promise<SessionMutationResult>",
+                "examples": {
+                  "default": {
+                    "value": {
+                      "action": "logout-current",
+                      "effectiveBy": "example",
+                      "errorCode": "example",
+                      "guarantee": {
+                        "accessTokenExpiresAt": "example",
+                        "effectiveBy": "example",
+                        "kind": "immediate_local",
+                        "propagationBoundSeconds": 1
+                      },
+                      "operationId": "example",
+                      "results": [
+                        {
+                          "errorCode": "example",
+                          "guarantee": {},
+                          "sid": "example",
+                          "status": "pending"
+                        }
+                      ],
+                      "scope": "tenant",
+                      "status": {}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Bad request",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unauthorized",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Forbidden",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Not found",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unexpected error",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/sessions/logout-current": {
+      "post": {
+        "operationId": "SessionControl-post-auth-sessions-logout-current-handler",
+        "tags": ["SessionControl"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptySessionControlRequest"
+              },
+              "x-stynx-source-type": "EmptySessionControlRequest",
+              "examples": {
+                "default": {
+                  "value": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": [],
+            "tenantHeader": []
+          }
+        ],
+        "x-stynx-source": "packages/sessions/src/control/session-control.controller.ts",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionMutationResult"
+                },
+                "x-stynx-source-type": "Promise<SessionMutationResult>",
+                "examples": {
+                  "default": {
+                    "value": {
+                      "action": "logout-current",
+                      "effectiveBy": "example",
+                      "errorCode": "example",
+                      "guarantee": {
+                        "accessTokenExpiresAt": "example",
+                        "effectiveBy": "example",
+                        "kind": "immediate_local",
+                        "propagationBoundSeconds": 1
+                      },
+                      "operationId": "example",
+                      "results": [
+                        {
+                          "errorCode": "example",
+                          "guarantee": {},
+                          "sid": "example",
+                          "status": "pending"
+                        }
+                      ],
+                      "scope": "tenant",
+                      "status": {}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Bad request",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unauthorized",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Forbidden",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Not found",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unexpected error",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/sessions/revoke-all": {
+      "post": {
+        "operationId": "SessionControl-post-auth-sessions-revoke-all-handler",
+        "tags": ["SessionControl"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptySessionControlRequest"
+              },
+              "x-stynx-source-type": "EmptySessionControlRequest",
+              "examples": {
+                "default": {
+                  "value": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": [],
+            "tenantHeader": []
+          }
+        ],
+        "x-stynx-source": "packages/sessions/src/control/session-control.controller.ts",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionMutationResult"
+                },
+                "x-stynx-source-type": "Promise<SessionMutationResult>",
+                "examples": {
+                  "default": {
+                    "value": {
+                      "action": "logout-current",
+                      "effectiveBy": "example",
+                      "errorCode": "example",
+                      "guarantee": {
+                        "accessTokenExpiresAt": "example",
+                        "effectiveBy": "example",
+                        "kind": "immediate_local",
+                        "propagationBoundSeconds": 1
+                      },
+                      "operationId": "example",
+                      "results": [
+                        {
+                          "errorCode": "example",
+                          "guarantee": {},
+                          "sid": "example",
+                          "status": "pending"
+                        }
+                      ],
+                      "scope": "tenant",
+                      "status": {}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Bad request",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unauthorized",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Forbidden",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Not found",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unexpected error",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/sessions/revoke-others": {
+      "post": {
+        "operationId": "SessionControl-post-auth-sessions-revoke-others-handler",
+        "tags": ["SessionControl"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptySessionControlRequest"
+              },
+              "x-stynx-source-type": "EmptySessionControlRequest",
+              "examples": {
+                "default": {
+                  "value": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": [],
+            "tenantHeader": []
+          }
+        ],
+        "x-stynx-source": "packages/sessions/src/control/session-control.controller.ts",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionMutationResult"
+                },
+                "x-stynx-source-type": "Promise<SessionMutationResult>",
+                "examples": {
+                  "default": {
+                    "value": {
+                      "action": "logout-current",
+                      "effectiveBy": "example",
+                      "errorCode": "example",
+                      "guarantee": {
+                        "accessTokenExpiresAt": "example",
+                        "effectiveBy": "example",
+                        "kind": "immediate_local",
+                        "propagationBoundSeconds": 1
+                      },
+                      "operationId": "example",
+                      "results": [
+                        {
+                          "errorCode": "example",
+                          "guarantee": {},
+                          "sid": "example",
+                          "status": "pending"
+                        }
+                      ],
+                      "scope": "tenant",
+                      "status": {}
                     }
                   }
                 }
@@ -23415,6 +24996,1189 @@
                         }
                       ],
                       "dryRun": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Bad request",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unauthorized",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Forbidden",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Not found",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unexpected error",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profile": {
+      "get": {
+        "operationId": "Preferences-get-profile-handler",
+        "tags": ["Preferences"],
+        "x-stynx-query-object": true,
+        "security": [
+          {
+            "bearerAuth": [],
+            "tenantHeader": []
+          }
+        ],
+        "x-stynx-source": "packages/preferences/src/preferences.controller.ts",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformProfile"
+                },
+                "x-stynx-source-type": "Promise<PlatformProfile>",
+                "examples": {
+                  "default": {
+                    "value": {
+                      "avatarDocumentId": "example",
+                      "avatarUrl": "example",
+                      "displayName": "example",
+                      "preferences": {
+                        "revision": 1,
+                        "updatedAt": "example",
+                        "values": {
+                          "accessibility": {
+                            "largeText": true,
+                            "reduceMotion": true,
+                            "screenReaderOptimized": true
+                          },
+                          "locale": {
+                            "locale": "example",
+                            "timezone": "example"
+                          },
+                          "notificationDelivery": {
+                            "email": true,
+                            "inApp": true,
+                            "push": true
+                          },
+                          "theme": {
+                            "colorScheme": "system",
+                            "contrast": "standard",
+                            "density": "comfortable"
+                          }
+                        }
+                      },
+                      "revision": 1,
+                      "subjectId": "example",
+                      "updatedAt": "example"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Bad request",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unauthorized",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Forbidden",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Not found",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unexpected error",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "Preferences-patch-profile-handler",
+        "tags": ["Preferences"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfilePatch"
+              },
+              "x-stynx-source-type": "ProfilePatch",
+              "examples": {
+                "default": {
+                  "value": {
+                    "avatarDocumentId": "example",
+                    "displayName": "example"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-stynx-query-object": true,
+        "security": [
+          {
+            "bearerAuth": [],
+            "tenantHeader": []
+          }
+        ],
+        "x-stynx-source": "packages/preferences/src/preferences.controller.ts",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformProfile"
+                },
+                "x-stynx-source-type": "Promise<PlatformProfile>",
+                "examples": {
+                  "default": {
+                    "value": {
+                      "avatarDocumentId": "example",
+                      "avatarUrl": "example",
+                      "displayName": "example",
+                      "preferences": {
+                        "revision": 1,
+                        "updatedAt": "example",
+                        "values": {
+                          "accessibility": {
+                            "largeText": true,
+                            "reduceMotion": true,
+                            "screenReaderOptimized": true
+                          },
+                          "locale": {
+                            "locale": "example",
+                            "timezone": "example"
+                          },
+                          "notificationDelivery": {
+                            "email": true,
+                            "inApp": true,
+                            "push": true
+                          },
+                          "theme": {
+                            "colorScheme": "system",
+                            "contrast": "standard",
+                            "density": "comfortable"
+                          }
+                        }
+                      },
+                      "revision": 1,
+                      "subjectId": "example",
+                      "updatedAt": "example"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Bad request",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unauthorized",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Forbidden",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Not found",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unexpected error",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profile/preferences": {
+      "delete": {
+        "operationId": "Preferences-delete-profile-preferences-handler",
+        "tags": ["Preferences"],
+        "x-stynx-query-object": true,
+        "security": [
+          {
+            "bearerAuth": [],
+            "tenantHeader": []
+          }
+        ],
+        "x-stynx-source": "packages/preferences/src/preferences.controller.ts",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreferencesDocument"
+                },
+                "x-stynx-source-type": "Promise<PreferencesDocument>",
+                "examples": {
+                  "default": {
+                    "value": {
+                      "revision": 1,
+                      "updatedAt": "example",
+                      "values": {
+                        "accessibility": {
+                          "largeText": true,
+                          "reduceMotion": true,
+                          "screenReaderOptimized": true
+                        },
+                        "locale": {
+                          "locale": "example",
+                          "timezone": "example"
+                        },
+                        "notificationDelivery": {
+                          "email": true,
+                          "inApp": true,
+                          "push": true
+                        },
+                        "theme": {
+                          "colorScheme": "system",
+                          "contrast": "standard",
+                          "density": "comfortable"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Bad request",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unauthorized",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Forbidden",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Not found",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unexpected error",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "Preferences-get-profile-preferences-handler",
+        "tags": ["Preferences"],
+        "x-stynx-query-object": true,
+        "security": [
+          {
+            "bearerAuth": [],
+            "tenantHeader": []
+          }
+        ],
+        "x-stynx-source": "packages/preferences/src/preferences.controller.ts",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreferencesDocument"
+                },
+                "x-stynx-source-type": "Promise<PreferencesDocument>",
+                "examples": {
+                  "default": {
+                    "value": {
+                      "revision": 1,
+                      "updatedAt": "example",
+                      "values": {
+                        "accessibility": {
+                          "largeText": true,
+                          "reduceMotion": true,
+                          "screenReaderOptimized": true
+                        },
+                        "locale": {
+                          "locale": "example",
+                          "timezone": "example"
+                        },
+                        "notificationDelivery": {
+                          "email": true,
+                          "inApp": true,
+                          "push": true
+                        },
+                        "theme": {
+                          "colorScheme": "system",
+                          "contrast": "standard",
+                          "density": "comfortable"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Bad request",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unauthorized",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Forbidden",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Not found",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unexpected error",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "Preferences-patch-profile-preferences-handler",
+        "tags": ["Preferences"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreferencePatch"
+              },
+              "x-stynx-source-type": "PreferencePatch",
+              "examples": {
+                "default": {
+                  "value": "example"
+                }
+              }
+            }
+          }
+        },
+        "x-stynx-query-object": true,
+        "security": [
+          {
+            "bearerAuth": [],
+            "tenantHeader": []
+          }
+        ],
+        "x-stynx-source": "packages/preferences/src/preferences.controller.ts",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreferencesDocument"
+                },
+                "x-stynx-source-type": "Promise<PreferencesDocument>",
+                "examples": {
+                  "default": {
+                    "value": {
+                      "revision": 1,
+                      "updatedAt": "example",
+                      "values": {
+                        "accessibility": {
+                          "largeText": true,
+                          "reduceMotion": true,
+                          "screenReaderOptimized": true
+                        },
+                        "locale": {
+                          "locale": "example",
+                          "timezone": "example"
+                        },
+                        "notificationDelivery": {
+                          "email": true,
+                          "inApp": true,
+                          "push": true
+                        },
+                        "theme": {
+                          "colorScheme": "system",
+                          "contrast": "standard",
+                          "density": "comfortable"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Bad request",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unauthorized",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Forbidden",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Not found",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unexpected error",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "Preferences-put-profile-preferences-handler",
+        "tags": ["Preferences"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreferenceValues"
+              },
+              "x-stynx-source-type": "PreferenceValues",
+              "examples": {
+                "default": {
+                  "value": {
+                    "accessibility": {
+                      "largeText": true,
+                      "reduceMotion": true,
+                      "screenReaderOptimized": true
+                    },
+                    "locale": {
+                      "locale": "example",
+                      "timezone": "example"
+                    },
+                    "notificationDelivery": {
+                      "email": true,
+                      "inApp": true,
+                      "push": true
+                    },
+                    "theme": {
+                      "colorScheme": "system",
+                      "contrast": "standard",
+                      "density": "comfortable"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-stynx-query-object": true,
+        "security": [
+          {
+            "bearerAuth": [],
+            "tenantHeader": []
+          }
+        ],
+        "x-stynx-source": "packages/preferences/src/preferences.controller.ts",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreferencesDocument"
+                },
+                "x-stynx-source-type": "Promise<PreferencesDocument>",
+                "examples": {
+                  "default": {
+                    "value": {
+                      "revision": 1,
+                      "updatedAt": "example",
+                      "values": {
+                        "accessibility": {
+                          "largeText": true,
+                          "reduceMotion": true,
+                          "screenReaderOptimized": true
+                        },
+                        "locale": {
+                          "locale": "example",
+                          "timezone": "example"
+                        },
+                        "notificationDelivery": {
+                          "email": true,
+                          "inApp": true,
+                          "push": true
+                        },
+                        "theme": {
+                          "colorScheme": "system",
+                          "contrast": "standard",
+                          "density": "comfortable"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Bad request",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unauthorized",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Forbidden",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Not found",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unexpected error",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profile/preferences/{category}": {
+      "delete": {
+        "operationId": "Preferences-delete-profile-preferences-by-category-handler",
+        "tags": ["Preferences"],
+        "parameters": [
+          {
+            "name": "category",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "00000000-0000-4000-8000-000000000000"
+          }
+        ],
+        "x-stynx-query-object": true,
+        "security": [
+          {
+            "bearerAuth": [],
+            "tenantHeader": []
+          }
+        ],
+        "x-stynx-source": "packages/preferences/src/preferences.controller.ts",
+        "x-stynx-route": "/profile/preferences/:category",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreferencesDocument"
+                },
+                "x-stynx-source-type": "Promise<PreferencesDocument>",
+                "examples": {
+                  "default": {
+                    "value": {
+                      "revision": 1,
+                      "updatedAt": "example",
+                      "values": {
+                        "accessibility": {
+                          "largeText": true,
+                          "reduceMotion": true,
+                          "screenReaderOptimized": true
+                        },
+                        "locale": {
+                          "locale": "example",
+                          "timezone": "example"
+                        },
+                        "notificationDelivery": {
+                          "email": true,
+                          "inApp": true,
+                          "push": true
+                        },
+                        "theme": {
+                          "colorScheme": "system",
+                          "contrast": "standard",
+                          "density": "comfortable"
+                        }
+                      }
                     }
                   }
                 }

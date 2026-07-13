@@ -41,3 +41,4 @@ export interface StynxDataMetricsSink {
 export const STYNX_DATA_OPTIONS = Symbol('STYNX_DATA_OPTIONS');
 export const STYNX_DATA_POOLS = Symbol('STYNX_DATA_POOLS');
 export const STYNX_DATA_METRICS = Symbol('STYNX_DATA_METRICS');
+export const STYNX_DATABASE = Symbol.for('@stynx-nyx/data:database');

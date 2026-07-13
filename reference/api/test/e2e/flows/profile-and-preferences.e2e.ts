@@ -44,8 +44,7 @@ function referenceRequest(context: ReferenceApiE2eContext) {
 
 function i18nRequest(context: ReferenceApiE2eContext, token: string, tenantId: string) {
   const authenticated = (method: 'get' | 'put') =>
-    referenceRequest(context)
-      [method]('/_tenancy/i18n/overrides')
+    referenceRequest(context)[method]('/_tenancy/i18n/overrides')
       .set('authorization', `Bearer ${token}`)
       .set('x-tenant-id', tenantId);
 
@@ -55,7 +54,10 @@ function i18nRequest(context: ReferenceApiE2eContext, token: string, tenantId: s
   };
 }
 
-async function readUserByEmail(context: ReferenceApiE2eContext, email: string): Promise<UserProfileRow> {
+async function readUserByEmail(
+  context: ReferenceApiE2eContext,
+  email: string,
+): Promise<UserProfileRow> {
   return context.database.withSystemContext('profile e2e user read', async () =>
     context.database.tx(
       async (trx) => {
@@ -79,7 +81,10 @@ async function readUserByEmail(context: ReferenceApiE2eContext, email: string): 
   );
 }
 
-async function readTenantSettings(context: ReferenceApiE2eContext, tenantId: string): Promise<TenantSettingsRow> {
+async function readTenantSettings(
+  context: ReferenceApiE2eContext,
+  tenantId: string,
+): Promise<TenantSettingsRow> {
   return context.database.withSystemContext('profile e2e tenant settings read', async () =>
     context.database.tx(
       async (trx) => {
@@ -103,7 +108,11 @@ async function readTenantSettings(context: ReferenceApiE2eContext, tenantId: str
   );
 }
 
-async function setTenantLocale(context: ReferenceApiE2eContext, tenantId: string, locale: string): Promise<void> {
+async function setTenantLocale(
+  context: ReferenceApiE2eContext,
+  tenantId: string,
+  locale: string,
+): Promise<void> {
   await context.database.withSystemContext('profile e2e tenant locale update', async () =>
     context.database.tx(
       async (trx) => {
@@ -122,7 +131,11 @@ async function setTenantLocale(context: ReferenceApiE2eContext, tenantId: string
   );
 }
 
-async function login(context: ReferenceApiE2eContext, email: string, tenantSlug: string): Promise<DevLoginResponse> {
+async function login(
+  context: ReferenceApiE2eContext,
+  email: string,
+  tenantSlug: string,
+): Promise<DevLoginResponse> {
   const response = await referenceRequest(context)
     .post('/_reference/dev-login')
     .send({ email, tenantSlug })
@@ -149,11 +162,13 @@ describe('@stynx-nyx/reference-api e2e profile and preferences', () => {
 
   it('creates the user profile through dev login, verifies the session, and persists preferences', async () => {
     adminA = await login(context, adminAEmail, 'sample-demo');
-    expect(adminA).toEqual(expect.objectContaining({
-      tenantId: demoTenantA,
-      email: adminAEmail,
-      permissions: expect.arrayContaining(['sample:record:read', 'sample:record:write']),
-    }));
+    expect(adminA).toEqual(
+      expect.objectContaining({
+        tenantId: demoTenantA,
+        email: adminAEmail,
+        permissions: expect.arrayContaining(['sample:record:read', 'sample:record:write']),
+      }),
+    );
 
     await referenceRequest(context)
       .get('/_reference/auth-verify')
@@ -185,16 +200,18 @@ describe('@stynx-nyx/reference-api e2e profile and preferences', () => {
       rowId: demoTenantA,
     });
 
-    const preferences = (await i18nRequest(context, adminA.accessToken, demoTenantA)
-      .put()
-      .send({
-        locale: 'pt-BR',
-        catalog: {
-          'profile.preference.locale': 'pt-BR',
-          'profile.preference.notifications': 'enabled',
-        },
-      })
-      .expect(200)).body as Overrides;
+    const preferences = (
+      await i18nRequest(context, adminA.accessToken, demoTenantA)
+        .put()
+        .send({
+          locale: 'pt-BR',
+          catalog: {
+            'profile.preference.locale': 'pt-BR',
+            'profile.preference.notifications': 'enabled',
+          },
+        })
+        .expect(200)
+    ).body as Overrides;
 
     expect(preferences).toMatchObject({
       'i18n.override.pt-BR.profile.preference.locale': 'pt-BR',
@@ -209,6 +226,106 @@ describe('@stynx-nyx/reference-api e2e profile and preferences', () => {
     await auditExpect(context.database, 'tenant_settings', 'UPDATE', {
       schema: 'tenancy',
       rowId: demoTenantA,
+    });
+  });
+
+  it('serves the real closed /profile/preferences contract with ETag CAS and spoof resistance', async () => {
+    const authenticated = () =>
+      referenceRequest(context)
+        .get('/profile/preferences')
+        .set('authorization', `Bearer ${adminA.accessToken}`)
+        .set('x-tenant-id', demoTenantA);
+
+    const initial = await authenticated().expect(200).expect('etag', '"0"');
+    expect(initial.body).toEqual({
+      values: {
+        locale: { locale: 'en-US', timezone: 'UTC' },
+        theme: { colorScheme: 'system', contrast: 'standard', density: 'comfortable' },
+        accessibility: { reduceMotion: false, largeText: false, screenReaderOptimized: false },
+        notificationDelivery: { email: true, push: true, inApp: true },
+      },
+      revision: 0,
+      updatedAt: null,
+    });
+
+    const values = {
+      ...initial.body.values,
+      locale: { locale: 'pt-BR', timezone: 'America/Sao_Paulo' },
+    };
+    await referenceRequest(context)
+      .put('/profile/preferences')
+      .set('authorization', `Bearer ${adminA.accessToken}`)
+      .set('x-tenant-id', demoTenantA)
+      .set('if-match', '"0"')
+      .send(values)
+      .expect(200)
+      .expect('etag', '"1"');
+
+    await referenceRequest(context)
+      .put('/profile/preferences')
+      .set('authorization', `Bearer ${adminA.accessToken}`)
+      .set('x-tenant-id', demoTenantA)
+      .set('if-match', '"0"')
+      .send(values)
+      .expect(412);
+
+    await referenceRequest(context)
+      .put('/profile/preferences')
+      .set('authorization', `Bearer ${adminA.accessToken}`)
+      .set('x-tenant-id', demoTenantA)
+      .set('if-match', '"1"')
+      .send({ ...values, tenantId: demoTenantB, salary: 999 })
+      .expect(400)
+      .expect(({ body }) => expect(body.code).toBe('PREFERENCES_CONTEXT_OVERRIDE'));
+  });
+
+  it('enforces composite uniqueness and forced RLS at the database boundary', async () => {
+    const own = await queryRowsAsTenant<{ tenant_id: string; subject_id: string }>(
+      context,
+      demoTenantA,
+      adminAUserId,
+      'select tenant_id::text, subject_id from profile.subject_preferences',
+    );
+    expect(own).toEqual([{ tenant_id: demoTenantA, subject_id: adminAUserId }]);
+
+    const crossTenant = await queryRowsAsTenant<{ tenant_id: string; subject_id: string }>(
+      context,
+      demoTenantB,
+      adminAUserId,
+      'select tenant_id::text, subject_id from profile.subject_preferences',
+    );
+    expect(crossTenant).toEqual([]);
+
+    const metadata = await context.database.withSystemContext(
+      'inspect preferences constraints',
+      () =>
+        context.database.tx(
+          async (trx) => {
+            const result = await trx.query<{
+              relrowsecurity: boolean;
+              relforcerowsecurity: boolean;
+              primary_columns: string[];
+            }>(`
+          select c.relrowsecurity,
+                 c.relforcerowsecurity,
+                 array_agg(a.attname order by u.ordinality)::text[] as primary_columns
+            from pg_class c
+            join pg_namespace n on n.oid = c.relnamespace
+            join pg_index i on i.indrelid = c.oid and i.indisprimary
+            join unnest(i.indkey) with ordinality u(attnum, ordinality) on true
+            join pg_attribute a on a.attrelid = c.oid and a.attnum = u.attnum
+           where n.nspname = 'profile' and c.relname = 'subject_preferences'
+           group by c.relrowsecurity, c.relforcerowsecurity
+        `);
+            return result.rows[0];
+          },
+          { role: 'owner', readonly: true },
+        ),
+    );
+    expect(metadata).toEqual({
+      relrowsecurity: true,
+      relforcerowsecurity: true,
+      primary_columns: ['tenant_id', 'subject_id'],
     });
   });
 

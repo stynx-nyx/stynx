@@ -14,6 +14,11 @@
       "types": "./dist/sessions/src/index.d.ts",
       "require": "./dist/sessions/src/index.js",
       "default": "./dist/sessions/src/index.js"
+    },
+    "./control": {
+      "types": "./dist/sessions/src/control/index.d.ts",
+      "require": "./dist/sessions/src/control/index.js",
+      "default": "./dist/sessions/src/control/index.js"
     }
   },
   "files": [
@@ -31,6 +36,7 @@
   "dependencies": {
     "@stynx-nyx/core": "workspace:*",
     "@stynx-nyx/data": "workspace:*",
+    "@stynx-nyx/idempotency": "workspace:*",
     "jose": "^6.2.2",
     "redis": "^5.12.1",
     "uuid": "^14.0.0",

@@ -4,7 +4,12 @@ import { z } from 'zod';
 import { Database } from './database';
 import { StynxMigrationRunner } from './migration-runner';
 import { StynxPoolRegistry } from './pools';
-import { STYNX_DATA_METRICS, STYNX_DATA_OPTIONS, type StynxDataModuleOptions } from './tokens';
+import {
+  STYNX_DATABASE,
+  STYNX_DATA_METRICS,
+  STYNX_DATA_OPTIONS,
+  type StynxDataModuleOptions,
+} from './tokens';
 
 export type { StynxDataModuleOptions } from './tokens';
 
@@ -32,8 +37,16 @@ export class StynxDataModule {
         StynxPoolRegistry,
         StynxMigrationRunner,
         Database,
+        { provide: STYNX_DATABASE, useExisting: Database },
       ],
-      exports: [STYNX_DATA_OPTIONS, STYNX_DATA_METRICS, StynxPoolRegistry, StynxMigrationRunner, Database],
+      exports: [
+        STYNX_DATABASE,
+        STYNX_DATA_OPTIONS,
+        STYNX_DATA_METRICS,
+        StynxPoolRegistry,
+        StynxMigrationRunner,
+        Database,
+      ],
     };
   }
 }

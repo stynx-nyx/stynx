@@ -7,6 +7,8 @@ shape package boundaries, generated diagnostics, or adoption policy.
 
 ## Accepted Decisions
 
+- [ADR-SESSIONS-0001 — Provider-neutral session inventory and control](ADR-SESSIONS-0001-provider-neutral-session-control.md)
+- [ADR-PREFERENCES-0001 — Tenant-subject preferences boundary](ADR-PREFERENCES-0001-tenant-subject-preferences.md)
 - [ADR-001 — Soft Delete](ADR-001-soft-delete.md)
 - [ADR-002 — Permissions Caching](ADR-002-perms-caching.md)
 - [ADR-003 — RBAC Matrix Role in a Framework Repository](ADR-003-rbac-matrix-role.md)

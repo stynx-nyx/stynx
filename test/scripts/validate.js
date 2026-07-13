@@ -379,8 +379,10 @@ function runEvidenceTests() {
   }
 }
 
-runEvidenceTests();
+// Local evidence is exercised by the canonical `devai evidence` command; the
+// retired scripts/evidence prototype was removed in c66161416.
+void runEvidenceTests;
 runVerifierTests();
 
 console.log('All scripts validated');
-console.log('Tests: 2 passed, 2 total');
+console.log('Tests: 1 passed, 1 total');

@@ -1548,6 +1548,40 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
 
+  packages/preferences:
+    dependencies:
+      '@nestjs/common':
+        specifier: ^11.1.19
+        version: 11.1.21(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/core':
+        specifier: ^11.1.19
+        version: 11.1.21(@nestjs/common@11.1.21(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.21)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@stynx-nyx/core':
+        specifier: workspace:*
+        version: link:../core
+      '@stynx-nyx/data':
+        specifier: workspace:*
+        version: link:../data
+      '@stynx-nyx/idempotency':
+        specifier: workspace:*
+        version: link:../idempotency
+      reflect-metadata:
+        specifier: ^0.2.2
+        version: 0.2.2
+      rxjs:
+        specifier: ^7.8.2
+        version: 7.8.2
+      zod:
+        specifier: ^4.3.6
+        version: 4.4.3
+    devDependencies:
+      '@types/node':
+        specifier: 24.12.4
+        version: 24.12.4
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+
   packages/privacy:
     dependencies:
       '@nestjs/common':
@@ -1660,6 +1694,9 @@ importers:
       '@stynx-nyx/data':
         specifier: workspace:*
         version: link:../data
+      '@stynx-nyx/idempotency':
+        specifier: workspace:*
+        version: link:../idempotency
       jose:
         specifier: ^6.2.2
         version: 6.2.3
@@ -1953,6 +1990,9 @@ importers:
       '@stynx-nyx/logging':
         specifier: workspace:*
         version: link:../../packages/logging
+      '@stynx-nyx/preferences':
+        specifier: workspace:*
+        version: link:../../packages/preferences
       '@stynx-nyx/ratelimit':
         specifier: workspace:*
         version: link:../../packages/ratelimit

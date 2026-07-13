@@ -99,7 +99,7 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Build and test reference API
         run: |
-          pnpm --filter @stynx-nyx/reference-api build
+          pnpm --filter @stynx-nyx/reference-api... build
           pnpm --filter @stynx-nyx/reference-api test
           pnpm --filter @stynx-nyx/reference-api test:int
 
