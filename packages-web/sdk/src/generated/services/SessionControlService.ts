@@ -2,15 +2,17 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { JsonValue } from '../models/JsonValue';
+import type { EmptySessionControlRequest } from '../models/EmptySessionControlRequest';
 import type { ProblemDetails } from '../models/ProblemDetails';
-import type { UnknownJson } from '../models/UnknownJson';
+import type { SessionMutationResult } from '../models/SessionMutationResult';
+import type { SessionSubjectRevokeRequest } from '../models/SessionSubjectRevokeRequest';
+import type { SessionView } from '../models/SessionView';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
 export class SessionControlService {
     constructor(public readonly httpRequest: BaseHttpRequest) {}
     /**
-     * @returns JsonValue OK
+     * @returns SessionMutationResult OK
      * @returns ProblemDetails Unexpected error
      * @throws ApiError
      */
@@ -19,8 +21,8 @@ export class SessionControlService {
         requestBody,
     }: {
         subjectId: string,
-        requestBody: UnknownJson,
-    }): CancelablePromise<JsonValue | ProblemDetails> {
+        requestBody: SessionSubjectRevokeRequest,
+    }): CancelablePromise<SessionMutationResult | ProblemDetails> {
         return this.httpRequest.request({
             method: 'POST',
             url: '/auth/session-administration/subjects/{subjectId}/revoke',
@@ -38,7 +40,7 @@ export class SessionControlService {
         });
     }
     /**
-     * @returns JsonValue OK
+     * @returns SessionMutationResult OK
      * @returns ProblemDetails Unexpected error
      * @throws ApiError
      */
@@ -46,7 +48,7 @@ export class SessionControlService {
         operationId,
     }: {
         operationId: string,
-    }): CancelablePromise<JsonValue | ProblemDetails> {
+    }): CancelablePromise<SessionMutationResult | ProblemDetails> {
         return this.httpRequest.request({
             method: 'GET',
             url: '/auth/session-operations/{operationId}',
@@ -62,11 +64,11 @@ export class SessionControlService {
         });
     }
     /**
-     * @returns JsonValue OK
+     * @returns SessionView OK
      * @returns ProblemDetails Unexpected error
      * @throws ApiError
      */
-    public sessionControlGetAuthSessionsHandler(): CancelablePromise<JsonValue | ProblemDetails> {
+    public sessionControlGetAuthSessionsHandler(): CancelablePromise<Array<SessionView> | ProblemDetails> {
         return this.httpRequest.request({
             method: 'GET',
             url: '/auth/sessions',
@@ -79,7 +81,7 @@ export class SessionControlService {
         });
     }
     /**
-     * @returns JsonValue OK
+     * @returns SessionMutationResult OK
      * @returns ProblemDetails Unexpected error
      * @throws ApiError
      */
@@ -87,7 +89,7 @@ export class SessionControlService {
         sid,
     }: {
         sid: string,
-    }): CancelablePromise<JsonValue | ProblemDetails> {
+    }): CancelablePromise<SessionMutationResult | ProblemDetails> {
         return this.httpRequest.request({
             method: 'DELETE',
             url: '/auth/sessions/{sid}',
@@ -103,15 +105,15 @@ export class SessionControlService {
         });
     }
     /**
-     * @returns JsonValue OK
+     * @returns SessionMutationResult OK
      * @returns ProblemDetails Unexpected error
      * @throws ApiError
      */
     public sessionControlPostAuthSessionsLogoutCurrentHandler({
         requestBody,
     }: {
-        requestBody: UnknownJson,
-    }): CancelablePromise<JsonValue | ProblemDetails> {
+        requestBody: EmptySessionControlRequest,
+    }): CancelablePromise<SessionMutationResult | ProblemDetails> {
         return this.httpRequest.request({
             method: 'POST',
             url: '/auth/sessions/logout-current',
@@ -126,15 +128,15 @@ export class SessionControlService {
         });
     }
     /**
-     * @returns JsonValue OK
+     * @returns SessionMutationResult OK
      * @returns ProblemDetails Unexpected error
      * @throws ApiError
      */
     public sessionControlPostAuthSessionsRevokeAllHandler({
         requestBody,
     }: {
-        requestBody: UnknownJson,
-    }): CancelablePromise<JsonValue | ProblemDetails> {
+        requestBody: EmptySessionControlRequest,
+    }): CancelablePromise<SessionMutationResult | ProblemDetails> {
         return this.httpRequest.request({
             method: 'POST',
             url: '/auth/sessions/revoke-all',
@@ -149,15 +151,15 @@ export class SessionControlService {
         });
     }
     /**
-     * @returns JsonValue OK
+     * @returns SessionMutationResult OK
      * @returns ProblemDetails Unexpected error
      * @throws ApiError
      */
     public sessionControlPostAuthSessionsRevokeOthersHandler({
         requestBody,
     }: {
-        requestBody: UnknownJson,
-    }): CancelablePromise<JsonValue | ProblemDetails> {
+        requestBody: EmptySessionControlRequest,
+    }): CancelablePromise<SessionMutationResult | ProblemDetails> {
         return this.httpRequest.request({
             method: 'POST',
             url: '/auth/sessions/revoke-others',

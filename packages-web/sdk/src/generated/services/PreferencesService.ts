@@ -2,19 +2,22 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { JsonValue } from '../models/JsonValue';
+import type { PlatformProfile } from '../models/PlatformProfile';
+import type { PreferencePatch } from '../models/PreferencePatch';
+import type { PreferencesDocument } from '../models/PreferencesDocument';
+import type { PreferenceValues } from '../models/PreferenceValues';
 import type { ProblemDetails } from '../models/ProblemDetails';
-import type { UnknownJson } from '../models/UnknownJson';
+import type { ProfilePatch } from '../models/ProfilePatch';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
 export class PreferencesService {
     constructor(public readonly httpRequest: BaseHttpRequest) {}
     /**
-     * @returns JsonValue OK
+     * @returns PlatformProfile OK
      * @returns ProblemDetails Unexpected error
      * @throws ApiError
      */
-    public preferencesGetProfileHandler(): CancelablePromise<JsonValue | ProblemDetails> {
+    public preferencesGetProfileHandler(): CancelablePromise<PlatformProfile | ProblemDetails> {
         return this.httpRequest.request({
             method: 'GET',
             url: '/profile',
@@ -27,15 +30,15 @@ export class PreferencesService {
         });
     }
     /**
-     * @returns JsonValue OK
+     * @returns PlatformProfile OK
      * @returns ProblemDetails Unexpected error
      * @throws ApiError
      */
     public preferencesPatchProfileHandler({
         requestBody,
     }: {
-        requestBody: UnknownJson,
-    }): CancelablePromise<JsonValue | ProblemDetails> {
+        requestBody: ProfilePatch,
+    }): CancelablePromise<PlatformProfile | ProblemDetails> {
         return this.httpRequest.request({
             method: 'PATCH',
             url: '/profile',
@@ -50,11 +53,11 @@ export class PreferencesService {
         });
     }
     /**
-     * @returns JsonValue OK
+     * @returns PreferencesDocument OK
      * @returns ProblemDetails Unexpected error
      * @throws ApiError
      */
-    public preferencesDeleteProfilePreferencesHandler(): CancelablePromise<JsonValue | ProblemDetails> {
+    public preferencesDeleteProfilePreferencesHandler(): CancelablePromise<PreferencesDocument | ProblemDetails> {
         return this.httpRequest.request({
             method: 'DELETE',
             url: '/profile/preferences',
@@ -67,11 +70,11 @@ export class PreferencesService {
         });
     }
     /**
-     * @returns JsonValue OK
+     * @returns PreferencesDocument OK
      * @returns ProblemDetails Unexpected error
      * @throws ApiError
      */
-    public preferencesGetProfilePreferencesHandler(): CancelablePromise<JsonValue | ProblemDetails> {
+    public preferencesGetProfilePreferencesHandler(): CancelablePromise<PreferencesDocument | ProblemDetails> {
         return this.httpRequest.request({
             method: 'GET',
             url: '/profile/preferences',
@@ -84,15 +87,15 @@ export class PreferencesService {
         });
     }
     /**
-     * @returns JsonValue OK
+     * @returns PreferencesDocument OK
      * @returns ProblemDetails Unexpected error
      * @throws ApiError
      */
     public preferencesPatchProfilePreferencesHandler({
         requestBody,
     }: {
-        requestBody: UnknownJson,
-    }): CancelablePromise<JsonValue | ProblemDetails> {
+        requestBody: PreferencePatch,
+    }): CancelablePromise<PreferencesDocument | ProblemDetails> {
         return this.httpRequest.request({
             method: 'PATCH',
             url: '/profile/preferences',
@@ -107,15 +110,15 @@ export class PreferencesService {
         });
     }
     /**
-     * @returns JsonValue OK
+     * @returns PreferencesDocument OK
      * @returns ProblemDetails Unexpected error
      * @throws ApiError
      */
     public preferencesPutProfilePreferencesHandler({
         requestBody,
     }: {
-        requestBody: UnknownJson,
-    }): CancelablePromise<JsonValue | ProblemDetails> {
+        requestBody: PreferenceValues,
+    }): CancelablePromise<PreferencesDocument | ProblemDetails> {
         return this.httpRequest.request({
             method: 'PUT',
             url: '/profile/preferences',
@@ -130,7 +133,7 @@ export class PreferencesService {
         });
     }
     /**
-     * @returns JsonValue OK
+     * @returns PreferencesDocument OK
      * @returns ProblemDetails Unexpected error
      * @throws ApiError
      */
@@ -138,7 +141,7 @@ export class PreferencesService {
         category,
     }: {
         category: string,
-    }): CancelablePromise<JsonValue | ProblemDetails> {
+    }): CancelablePromise<PreferencesDocument | ProblemDetails> {
         return this.httpRequest.request({
             method: 'DELETE',
             url: '/profile/preferences/{category}',
