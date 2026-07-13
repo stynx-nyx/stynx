@@ -19,6 +19,15 @@ const noopAudit: SessionAuditSink = { write: () => undefined };
 const terminal = new Set(['revoked', 'unsupported', 'expired', 'retired']);
 
 export class SessionControlService {
+  private readonly inFlight = new Map<
+    string,
+    {
+      requestHash: string;
+      promise: Promise<SessionMutationResult>;
+      resolve: (result: SessionMutationResult) => void;
+      reject: (error: unknown) => void;
+    }
+  >();
   constructor(
     private readonly registry: SessionRegistry,
     private readonly provider: SessionProviderAdapter,
@@ -41,7 +50,10 @@ export class SessionControlService {
         actorId: context.actorId,
         at: this.now().toISOString(),
       });
-    const rows = await this.registry.list(context, query);
+    const rows = await this.registry.list(context, {
+      ...query,
+      subjectId: query.subjectId ?? context.subjectId,
+    });
     return rows.map((row) => ({
       sid: row.sid,
       sessionId: row.sid,
@@ -49,7 +61,11 @@ export class SessionControlService {
       state: row.state,
       provider: row.provider,
       capabilities: row.capabilities,
-      guarantee: row.guarantee,
+      guarantee: {
+        kind: row.guarantee.kind,
+        effectiveBy: row.guarantee.effectiveBy,
+        propagationBoundSeconds: row.guarantee.propagationBoundSeconds,
+      },
       createdAt: row.createdAt,
       lastSeenAt: row.lastSeenAt,
       expiresAt: row.expiresAt,
@@ -86,6 +102,21 @@ export class SessionControlService {
         throw new SessionControlError('SESSION_IDEMPOTENCY_CONFLICT', 409);
       return existing.result;
     }
+    const inFlight = this.inFlight.get(key);
+    if (inFlight) {
+      if (inFlight.requestHash !== requestHash)
+        throw new SessionControlError('SESSION_IDEMPOTENCY_CONFLICT', 409);
+      return inFlight.promise;
+    }
+    let resolve!: (result: SessionMutationResult) => void;
+    let reject!: (error: unknown) => void;
+    const promise = new Promise<SessionMutationResult>((complete, fail) => {
+      resolve = complete;
+      reject = fail;
+    });
+    void promise.catch(() => undefined);
+    this.inFlight.set(key, { requestHash, promise, resolve, reject });
+    try {
     const all = await this.registry.list(context, {
       scope,
       subjectId: command.targetSubjectId ?? context.subjectId,
@@ -143,6 +174,7 @@ export class SessionControlService {
           errorCode: 'SESSION_OPERATION_PENDING',
         };
       }
+      this.validateGuarantee(providerResult.guarantee);
       target.state =
         providerResult.status === 'pending' ? 'revocation_pending' : providerResult.status;
       target.guarantee = providerResult.guarantee;
@@ -191,7 +223,14 @@ export class SessionControlService {
       state: status,
       at: this.now().toISOString(),
     });
+    resolve(result);
+    this.inFlight.delete(key);
     return result;
+    } catch (error) {
+      this.inFlight.delete(key);
+      reject(error);
+      throw error;
+    }
   }
 
   async getOperation(
@@ -236,6 +275,7 @@ export class SessionControlService {
             action: command.action,
             registration,
           });
+          this.validateGuarantee(outcome.guarantee);
           item.status = outcome.status;
           item.guarantee = outcome.guarantee;
           if (outcome.errorCode) item.errorCode = outcome.errorCode;
@@ -254,6 +294,16 @@ export class SessionControlService {
         operation.result.status = 'failed';
         operation.result.errorCode = 'SESSION_PROVIDER_FAILED';
         operation.nextAttemptAt = null;
+        for (const item of operation.result.results.filter((result) => result.status === 'pending')) {
+          item.status = 'failed';
+          item.errorCode = 'SESSION_PROVIDER_FAILED';
+          const registration = registrations.find((candidate) => candidate.sid === item.sid);
+          if (registration) {
+            registration.state = 'failed';
+            registration.terminalAt = this.now().toISOString();
+            await this.registry.update(registration);
+          }
+        }
       } else if (stillPending)
         operation.nextAttemptAt = new Date(
           this.now().getTime() + RETRY_SECONDS[operation.attempts - 1]! * 1000,
@@ -322,6 +372,16 @@ export class SessionControlService {
     )
       throw new SessionControlError('SESSION_INVALID', 400);
     if (command.action === 'revoke-one' && !command.targetSessionId)
+      throw new SessionControlError('SESSION_INVALID', 400);
+  }
+  private validateGuarantee(guarantee: SessionGuarantee) {
+    if (
+      guarantee.kind === 'bounded_local' &&
+      (!Number.isInteger(guarantee.propagationBoundSeconds) ||
+        guarantee.propagationBoundSeconds! < 1 ||
+        guarantee.propagationBoundSeconds! > 30 ||
+        !guarantee.effectiveBy)
+    )
       throw new SessionControlError('SESSION_INVALID', 400);
   }
   private none(): SessionGuarantee {

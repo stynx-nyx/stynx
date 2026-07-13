@@ -199,6 +199,13 @@ export class PostgresSessionRegistry implements SessionRegistry {
           JSON.stringify(input.result),
         ],
       );
+      await trx.query(
+        `insert into auth.session_operation_attempts
+           (tenant_id, operation_id, attempt_number, outcome, error_code, started_at, completed_at)
+         values (current_setting('app.tenant_id')::uuid, $1::uuid, $2, $3, $4, clock_timestamp(), clock_timestamp())
+         on conflict (tenant_id, operation_id, attempt_number) do nothing`,
+        [parsed.operationId, input.attempts, input.result.status, input.result.errorCode ?? null],
+      );
     });
   }
 

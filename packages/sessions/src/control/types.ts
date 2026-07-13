@@ -89,9 +89,10 @@ export interface TrustedProviderAnchorInput {
 }
 export interface SessionView extends Omit<
   SessionRegistration,
-  'anchorId' | 'subjectId' | 'metadata' | 'sharedAnchor'
+  'anchorId' | 'subjectId' | 'metadata' | 'sharedAnchor' | 'guarantee'
 > {
   sessionId: string;
+  guarantee: Omit<SessionGuarantee, 'accessTokenExpiresAt'>;
   current: boolean;
   deviceLabel?: string;
   client?: string;
