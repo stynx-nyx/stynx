@@ -78,16 +78,17 @@ describe('@stynx-nyx/angular-profile', () => {
   it('renders profile and preferences forms with translated labels and DOM validation state', async () => {
     const i18n = {
       locale: () => 'en',
-      translate: (key: string) => ({
-        'profile.form.actions.save': 'Save profile',
-        'profile.form.fields.email': 'Email',
-        'profile.form.fields.locale': 'Locale',
-        'profile.form.fields.name': 'Name',
-        'profile.form.validation.nameRequired': 'Name is required',
-        'profile.preferences.actions.save': 'Save preferences',
-        'profile.preferences.fields.locale': 'Language',
-        'profile.preferences.fields.notifications': 'Notifications',
-      })[key] ?? key,
+      translate: (key: string) =>
+        ({
+          'profile.form.actions.save': 'Save profile',
+          'profile.form.fields.email': 'Email',
+          'profile.form.fields.locale': 'Locale',
+          'profile.form.fields.name': 'Name',
+          'profile.form.validation.nameRequired': 'Name is required',
+          'profile.preferences.actions.save': 'Save preferences',
+          'profile.preferences.fields.locale': 'Language',
+          'profile.preferences.fields.notifications': 'Notifications',
+        })[key] ?? key,
       use: vi.fn(async () => undefined),
     };
 
@@ -136,19 +137,21 @@ describe('@stynx-nyx/angular-profile', () => {
               url: `https://idp.example.test/${action}`,
               method: 'browser-redirect',
             }),
-            openHostedAction: (action: StynxHostedAuthAction, context: unknown) => opened.push([action, context]),
+            openHostedAction: (action: StynxHostedAuthAction, context: unknown) =>
+              opened.push([action, context]),
           },
         },
         {
           provide: StynxI18nService,
           useValue: {
             locale: () => 'en',
-            translate: (key: string) => ({
-              'profile.security.changePassword.action': 'Change password',
-              'profile.security.description': 'Manage account security.',
-              'profile.security.mfaEnrolment.action': 'Set up MFA',
-              'profile.security.title': 'Security',
-            })[key] ?? key,
+            translate: (key: string) =>
+              ({
+                'profile.security.changePassword.action': 'Change password',
+                'profile.security.description': 'Manage account security.',
+                'profile.security.mfaEnrolment.action': 'Set up MFA',
+                'profile.security.title': 'Security',
+              })[key] ?? key,
           },
         },
       ],
@@ -158,9 +161,14 @@ describe('@stynx-nyx/angular-profile', () => {
     expect(host.textContent).toContain('Security');
     expect(host.textContent).toContain('Change password');
     expect(host.textContent).toContain('Set up MFA');
-    host.querySelector<HTMLButtonElement>('[data-testid="change-password-handoff-button"]')?.click();
+    host
+      .querySelector<HTMLButtonElement>('[data-testid="change-password-handoff-button"]')
+      ?.click();
     await fixture.whenStable();
-    expect(opened[0]).toEqual(['change-password', expect.objectContaining({ locale: null, tenantId: null })]);
+    expect(opened[0]).toEqual([
+      'change-password',
+      expect.objectContaining({ locale: null, tenantId: null }),
+    ]);
   });
 
   it('navigates profile routes to the shipped standalone components', async () => {
@@ -188,21 +196,27 @@ describe('@stynx-nyx/angular-profile', () => {
 
     await router.navigateByUrl('/');
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('[data-testid="profile-form"]')?.getAttribute('data-testid')).toBe(
-      'profile-form',
-    );
+    expect(
+      fixture.nativeElement
+        .querySelector('[data-testid="profile-form"]')
+        ?.getAttribute('data-testid'),
+    ).toBe('profile-form');
 
     await router.navigateByUrl('/preferences');
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('[data-testid="preferences-form"]')?.getAttribute('data-testid')).toBe(
-      'preferences-form',
-    );
+    expect(
+      fixture.nativeElement
+        .querySelector('[data-testid="preferences-form"]')
+        ?.getAttribute('data-testid'),
+    ).toBe('preferences-form');
 
     await router.navigateByUrl('/security');
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('[data-testid="profile-security-route"]')?.getAttribute('data-testid')).toBe(
-      'profile-security-route',
-    );
+    expect(
+      fixture.nativeElement
+        .querySelector('[data-testid="profile-security-route"]')
+        ?.getAttribute('data-testid'),
+    ).toBe('profile-security-route');
   });
 
   it('validates the profile form and emits only when dirty and valid', () => {
@@ -285,7 +299,9 @@ describe('@stynx-nyx/angular-profile', () => {
       email: 'not-email',
       locale: '',
     });
-    expect(component.form.controls.name.errors).toEqual(expect.objectContaining({ maxlength: expect.any(Object) }));
+    expect(component.form.controls.name.errors).toEqual(
+      expect.objectContaining({ maxlength: expect.any(Object) }),
+    );
     expect(component.form.controls.email.errors).toEqual(expect.objectContaining({ email: true }));
     expect(component.form.controls.locale.errors).toEqual({ required: true });
   });
@@ -294,14 +310,16 @@ describe('@stynx-nyx/angular-profile', () => {
     const toast = { push: vi.fn() };
     const errorBanner = { clear: vi.fn(), show: vi.fn() };
     const profile = {
-      patch: vi.fn((value: unknown) => of({
-        id: 'profile-1',
-        displayName: 'Ana Saved',
-        name: 'Ana Saved',
-        email: 'ana@example.test',
-        locale: 'pt-BR',
-        received: value,
-      })),
+      patch: vi.fn((value: unknown) =>
+        of({
+          id: 'profile-1',
+          displayName: 'Ana Saved',
+          name: 'Ana Saved',
+          email: 'ana@example.test',
+          locale: 'pt-BR',
+          received: value,
+        }),
+      ),
     };
     const component = createWithFormBuilder(
       () => new StynxProfileFormComponent(),
@@ -320,9 +338,6 @@ describe('@stynx-nyx/angular-profile', () => {
 
     expect(profile.patch).toHaveBeenCalledWith({
       displayName: 'Ana',
-      name: 'Ana',
-      email: 'ana@example.test',
-      locale: 'pt-BR',
     });
     expect(errorBanner.clear).toHaveBeenCalledWith();
     expect(component.status()).toBe('saved');
@@ -373,11 +388,15 @@ describe('@stynx-nyx/angular-profile', () => {
     const unregisterProfile = vi.fn();
     const unregisterPreferences = vi.fn();
     const registry = {
-      register: vi.fn()
+      register: vi
+        .fn()
         .mockReturnValueOnce(unregisterProfile)
         .mockReturnValueOnce(unregisterPreferences),
     };
-    const confirm = vi.spyOn(globalThis.window, 'confirm').mockReturnValueOnce(false).mockReturnValueOnce(true);
+    const confirm = vi
+      .spyOn(globalThis.window, 'confirm')
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(true);
     const i18n = { translate: (key: string) => `translated:${key}` };
 
     const profile = createWithFormBuilder(
@@ -487,13 +506,20 @@ describe('@stynx-nyx/angular-profile', () => {
     component.form.markAsDirty();
     component.submit();
 
-    expect(profile.setPreferences).toHaveBeenCalledWith({ locale: 'pt-BR', notifications: true });
+    expect(profile.setPreferences).toHaveBeenCalledWith({
+      locale: { locale: 'pt-BR', timezone: 'UTC' },
+      theme: { colorScheme: 'system', contrast: 'standard', density: 'comfortable' },
+      accessibility: { reduceMotion: false, largeText: false, screenReaderOptimized: false },
+      notificationDelivery: { email: true, push: true, inApp: true },
+    });
     expect(errorBanner.clear).toHaveBeenCalledWith();
     expect(i18n.use).toHaveBeenCalledWith('pt-BR');
     expect(component.status()).toBe('saved');
     expect(component.form.getRawValue()).toEqual({ locale: 'pt-BR', notifications: true });
 
-    profile.setPreferences.mockReturnValueOnce(throwError(() => new Error('preferences save failed')));
+    profile.setPreferences.mockReturnValueOnce(
+      throwError(() => new Error('preferences save failed')),
+    );
     component.form.patchValue({ notifications: false });
     component.form.markAsDirty();
     component.submit();
@@ -509,22 +535,19 @@ describe('@stynx-nyx/angular-profile', () => {
 
   it('opens the configured change-password hosted action', () => {
     const calls: unknown[] = [];
-    const component = createHandoffComponent(
-      () => new StynxChangePasswordHandoffComponent(),
-      {
-        getHostedActionLink: (action, context) => {
-          calls.push(['link', action, context]);
-          return {
-            action,
-            url: 'https://idp.example.test/change-password',
-            method: 'browser-redirect',
-          };
-        },
-        openHostedAction: (action, context) => {
-          calls.push(['open', action, context]);
-        },
+    const component = createHandoffComponent(() => new StynxChangePasswordHandoffComponent(), {
+      getHostedActionLink: (action, context) => {
+        calls.push(['link', action, context]);
+        return {
+          action,
+          url: 'https://idp.example.test/change-password',
+          method: 'browser-redirect',
+        };
       },
-    );
+      openHostedAction: (action, context) => {
+        calls.push(['open', action, context]);
+      },
+    });
 
     component.returnUrl = 'https://app.example.test/profile/security';
     component.state = 'security-tab';
@@ -546,12 +569,9 @@ describe('@stynx-nyx/angular-profile', () => {
   });
 
   it('marks MFA enrolment unavailable when no hosted action URL is configured', () => {
-    const component = createHandoffComponent(
-      () => new StynxMfaEnrolmentHandoffComponent(),
-      {
-        getHostedActionLink: () => null,
-      },
-    );
+    const component = createHandoffComponent(() => new StynxMfaEnrolmentHandoffComponent(), {
+      getHostedActionLink: () => null,
+    });
 
     expect(component.handoff.status()).toBe('unavailable');
     expect(component.handoff.message()).toBe('profile.security.mfaEnrolment.unavailable');

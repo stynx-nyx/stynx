@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createStrykerConfig } from '../../tools/stryker/base.mjs';
 
 export default createStrykerConfig({

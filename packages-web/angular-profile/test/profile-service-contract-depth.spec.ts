@@ -17,15 +17,22 @@ function createService(client: StynxSdkClient): ProfileService {
 describe('@stynx-nyx/angular-profile W04 profile service contract depth', () => {
   it('reads profile state from the configured client and mirrors embedded preferences', async () => {
     const profile: StynxProfile = {
-      id: 'profile-1',
-      name: 'Ada Lovelace',
-      email: 'ada@example.test',
-      locale: 'en-US',
+      subjectId: 'subject-1',
+      displayName: 'Ada Lovelace',
+      avatarDocumentId: null,
+      avatarUrl: null,
       preferences: {
-        locale: 'en-US',
-        notifications: true,
-        timezone: 'America/Sao_Paulo',
+        values: {
+          locale: { locale: 'en-US', timezone: 'America/Sao_Paulo' },
+          theme: { colorScheme: 'system', contrast: 'standard', density: 'comfortable' },
+          accessibility: { reduceMotion: false, largeText: false, screenReaderOptimized: false },
+          notificationDelivery: { email: true, push: true, inApp: true },
+        },
+        revision: 7,
+        updatedAt: '2026-07-13T00:00:00.000Z',
       },
+      revision: 7,
+      updatedAt: '2026-07-13T00:00:00.000Z',
     };
     const client = {
       get: vi.fn(async () => profile),
@@ -43,19 +50,27 @@ describe('@stynx-nyx/angular-profile W04 profile service contract depth', () => 
 
   it('submits exact profile and preference update shapes to the configured client', async () => {
     const patched: StynxProfile = {
-      id: 'profile-1',
-      name: 'Ada Byron',
-      email: 'ada@example.test',
-      locale: 'pt-BR',
+      subjectId: 'subject-1',
+      displayName: 'Ada Byron',
+      avatarDocumentId: null,
+      avatarUrl: null,
       preferences: {
-        locale: 'pt-BR',
-        notifications: false,
+        values: {
+          locale: { locale: 'pt-BR', timezone: 'America/Sao_Paulo' },
+          theme: { colorScheme: 'dark', contrast: 'standard', density: 'compact' },
+          accessibility: { reduceMotion: true, largeText: false, screenReaderOptimized: false },
+          notificationDelivery: { email: false, push: true, inApp: true },
+        },
+        revision: 4,
+        updatedAt: '2026-07-13T00:00:00.000Z',
       },
+      revision: 4,
+      updatedAt: '2026-07-13T00:00:00.000Z',
     };
     const preferences: StynxPreferences = {
-      locale: 'pt-BR',
-      notifications: false,
-      timezone: 'America/Sao_Paulo',
+      values: patched.preferences.values,
+      revision: 5,
+      updatedAt: '2026-07-13T00:01:00.000Z',
     };
     const client = {
       get: vi.fn(),
@@ -64,24 +79,24 @@ describe('@stynx-nyx/angular-profile W04 profile service contract depth', () => 
     } as unknown as StynxSdkClient;
     const service = createService(client);
 
-    await expect(firstValueFrom(service.patch({
-      displayName: 'Ada Byron',
-      name: 'Ada Byron',
-      email: 'ada@example.test',
-      locale: 'pt-BR',
-    }))).resolves.toEqual(patched);
-    await expect(firstValueFrom(service.setPreferences(preferences))).resolves.toEqual(preferences);
+    await expect(firstValueFrom(service.patch({ displayName: 'Ada Byron' }))).resolves.toEqual(
+      patched,
+    );
+    await expect(firstValueFrom(service.setPreferences(preferences.values))).resolves.toEqual(
+      preferences,
+    );
 
-    expect(client.patch).toHaveBeenCalledWith('/profile', {
-      displayName: 'Ada Byron',
-      name: 'Ada Byron',
-      email: 'ada@example.test',
-      locale: 'pt-BR',
-    });
-    expect(client.put).toHaveBeenCalledWith('/profile/preferences', {
-      locale: 'pt-BR',
-      notifications: false,
-      timezone: 'America/Sao_Paulo',
+    expect(client.patch).toHaveBeenCalledWith(
+      '/profile',
+      {
+        displayName: 'Ada Byron',
+      },
+      {
+        headers: { 'If-Match': '"0"' },
+      },
+    );
+    expect(client.put).toHaveBeenCalledWith('/profile/preferences', preferences.values, {
+      headers: { 'If-Match': '"4"' },
     });
     expect(service.profile()).toEqual({ ...patched, preferences });
     expect(service.preferences()).toEqual(preferences);

@@ -52,6 +52,7 @@
     "@stynx-nyx/cli": { "mutation": "strict" },
     "@stynx-nyx/data": { "mutation": "tier1" },
     "@stynx-nyx/privacy": { "mutation": "strictest" },
+    "@stynx-nyx/preferences": { "mutation": "strictest" },
     "@stynx-nyx/tenancy": { "mutation": "tier1" },
     "@stynx-nyx/core": { "mutation": "tier2" },
     "@stynx-nyx/flow": { "mutation": "strict" },
