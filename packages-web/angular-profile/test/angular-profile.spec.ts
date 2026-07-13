@@ -524,6 +524,12 @@ describe('@stynx-nyx/angular-profile', () => {
     component.form.markAsDirty();
     component.submit();
 
+    expect(profile.setPreferences).toHaveBeenLastCalledWith({
+      locale: { locale: 'pt-BR', timezone: 'UTC' },
+      theme: { colorScheme: 'system', contrast: 'standard', density: 'comfortable' },
+      accessibility: { reduceMotion: false, largeText: false, screenReaderOptimized: false },
+      notificationDelivery: { email: false, push: false, inApp: false },
+    });
     expect(component.status()).toBe('error');
     expect(component.errorMessage()).toBe('profile.preferences.error.saveFailed');
     expect(errorBanner.show).toHaveBeenCalledWith({

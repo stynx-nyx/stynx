@@ -250,13 +250,21 @@ export class StynxPreferencesFormComponent implements OnDestroy, StynxUnsavedCha
       ? {
           ...current,
           locale: { ...current.locale, locale: value.locale },
-          notificationDelivery: { ...current.notificationDelivery, inApp: value.notifications },
+          notificationDelivery: {
+            email: value.notifications,
+            push: value.notifications,
+            inApp: value.notifications,
+          },
         }
       : {
           locale: { locale: value.locale, timezone: 'UTC' },
           theme: { colorScheme: 'system', contrast: 'standard', density: 'comfortable' },
           accessibility: { reduceMotion: false, largeText: false, screenReaderOptimized: false },
-          notificationDelivery: { email: true, push: true, inApp: value.notifications },
+          notificationDelivery: {
+            email: value.notifications,
+            push: value.notifications,
+            inApp: value.notifications,
+          },
         };
     this.profile.setPreferences(wireValue).subscribe({
       next: (preferences) => {

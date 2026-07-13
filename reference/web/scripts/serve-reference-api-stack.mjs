@@ -8,6 +8,7 @@ const workspaceRoot = resolve(scriptDir, '..', '..', '..');
 const composeFile = resolve(workspaceRoot, 'reference/api/docker-compose.yml');
 const referenceApiMain = resolve(workspaceRoot, 'reference/api/dist/reference/api/src/main.js');
 const scriptPath = fileURLToPath(import.meta.url);
+const postgresPort = process.env.STYNX_POSTGRES_PORT ?? '55432';
 
 let shuttingDown = false;
 let composeDownComplete = false;
@@ -159,7 +160,7 @@ async function runChecked(command, args) {
 }
 
 await runChecked('docker', ['compose', '-f', composeFile, 'up', '--wait', 'postgres', 'redis']);
-await runChecked('pnpm', ['--filter', '@stynx-nyx/reference-api', 'build']);
+await runChecked('pnpm', ['--filter', '@stynx-nyx/reference-api...', 'build']);
 
 apiProcess = run('node', [referenceApiMain], {
   env: {
@@ -171,9 +172,9 @@ apiProcess = run('node', [referenceApiMain], {
     NODE_ENV: 'development',
     PORT: '3000',
     STYNX_ENVIRONMENT: 'local',
-    STYNX_OWNER_DATABASE_URL: 'postgresql://postgres:postgres@127.0.0.1:55432/postgres',
-    STYNX_APP_DATABASE_URL: 'postgresql://postgres:postgres@127.0.0.1:55432/postgres',
-    STYNX_READER_DATABASE_URL: 'postgresql://postgres:postgres@127.0.0.1:55432/postgres',
+    STYNX_OWNER_DATABASE_URL: `postgresql://postgres:postgres@127.0.0.1:${postgresPort}/postgres`,
+    STYNX_APP_DATABASE_URL: `postgresql://postgres:postgres@127.0.0.1:${postgresPort}/postgres`,
+    STYNX_READER_DATABASE_URL: `postgresql://postgres:postgres@127.0.0.1:${postgresPort}/postgres`,
     STYNX_REDIS_URL: 'redis://127.0.0.1:6379',
     STYNX_STORAGE_ENDPOINT: process.env.STYNX_STORAGE_ENDPOINT ?? 'http://127.0.0.1:4566',
     STYNX_STORAGE_FORCE_PATH_STYLE: process.env.STYNX_STORAGE_FORCE_PATH_STYLE ?? 'true',
