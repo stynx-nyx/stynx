@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "1.0.0",
+  "guards": [
+    {
+      "id": "INVARIANTS_DIR",
+      "pattern": "docs/framework/arch/invariants/*.json",
+      "min_matches": 10,
+      "description": "devai-gates.yml's 'Validate stynx invariants against the schema' step globs this directory. It silently validated zero files for an unknown period after the directory was renamed from docs/architecture/invariants/ (fixed alongside this guard, per devai D-124 / governance-roadmap item 7).",
+      "source": ".github/workflows/devai-gates.yml"
+    },
+    {
+      "id": "REFERENCE_DIR",
+      "pattern": "reference/**",
+      "min_matches": 1,
+      "description": "devai-gates.yml's PR-trigger paths: filter includes reference/** (relocated from apps/reference-{api,web}). A zero-match here would mean the workflow can never fire on changes under this tree.",
+      "source": ".github/workflows/devai-gates.yml"
+    }
+  ]
+}

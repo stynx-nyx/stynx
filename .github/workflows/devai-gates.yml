@@ -16,9 +16,9 @@ on:
     branches: [main]
     paths:
       - '.devai/**'
-      - 'docs/architecture/**'
+      - 'docs/framework/arch/**'
       - 'docs/framework/product/**'
-      - 'apps/**'
+      - 'reference/**'
       - 'packages/**'
       - 'packages-web/**'
       - 'domain/**'
@@ -104,6 +104,10 @@ jobs:
         working-directory: stynx
         run: devai doctor --adopter --human
 
+      - name: devai check glob-guards (devai D-124; catches a renamed/retired path before it goes silently dead)
+        working-directory: stynx
+        run: devai check glob-guards --repo-root . --human
+
       - name: Run the seven L0 inventory sensors
         working-directory: stynx
         run: |
@@ -120,7 +124,8 @@ jobs:
         working-directory: stynx
         run: |
           set -euo pipefail
-          for f in docs/architecture/invariants/*.json; do
+          validated=0
+          for f in docs/framework/arch/invariants/*.json; do
             [ -f "$f" ] || continue
             echo "::group::validate $f"
             node -e "
@@ -134,7 +139,16 @@ jobs:
               console.log('PASS', inv.id);
             "
             echo "::endgroup::"
+            validated=$((validated + 1))
           done
+          # A dead glob here (rename, restructure) would otherwise make this
+          # whole step a silent no-op that still reports green — see D-124 in
+          # devai and this workflow's own history. Fail loudly instead.
+          if [ "$validated" -eq 0 ]; then
+            echo "::error::no invariant files matched docs/framework/arch/invariants/*.json — this step validated nothing"
+            exit 1
+          fi
+          echo "validated $validated invariant file(s)"
 
       - name: Refresh invariant candidates (informational)
         working-directory: stynx
