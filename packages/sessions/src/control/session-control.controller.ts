@@ -18,7 +18,13 @@ import { NoIdempotent } from '@stynx-nyx/idempotency';
 import { v4 as uuid } from 'uuid';
 import { SessionControlError } from './errors';
 import { SessionControlService } from './session-control.service';
-import type { SessionControlCommand, StynxSessionControlOptions } from './types';
+import type {
+  SessionControlCommand,
+  SessionMutationResult,
+  SessionScope,
+  SessionView,
+  StynxSessionControlOptions,
+} from './types';
 import { STYNX_SESSION_CONTROL_OPTIONS } from './tokens';
 const forbidden = new Set([
   'tenantId',
@@ -33,6 +39,10 @@ const forbidden = new Set([
   'permissions',
 ]);
 type Response = { setHeader(name: string, value: string): void; status(code: number): Response };
+type EmptySessionControlRequest = Record<string, never>;
+interface SessionSubjectRevokeRequest {
+  scope?: SessionScope;
+}
 @Controller('auth')
 export class SessionControlController {
   constructor(
@@ -43,7 +53,7 @@ export class SessionControlController {
   @Get('sessions') async list(
     @Query() query: Record<string, unknown>,
     @Res({ passthrough: true }) res: Response,
-  ) {
+  ): Promise<SessionView[]> {
     this.rejectOverrides(query);
     this.version(res);
     return this.wrap(() =>
@@ -57,7 +67,7 @@ export class SessionControlController {
     @Query() query: Record<string, unknown>,
     @Headers('idempotency-key') operationId: string | undefined,
     @Res({ passthrough: true }) res: Response,
-  ) {
+  ): Promise<SessionMutationResult> {
     this.rejectOverrides(query);
     return this.mutate(res, {
       action: 'revoke-one',
@@ -66,33 +76,33 @@ export class SessionControlController {
     });
   }
   @Post('sessions/revoke-others') @NoIdempotent() @HttpCode(200) async others(
-    @Body() body: unknown,
+    @Body() body: EmptySessionControlRequest,
     @Headers('idempotency-key') operationId: string | undefined,
     @Res({ passthrough: true }) res: Response,
-  ) {
+  ): Promise<SessionMutationResult> {
     this.rejectOverrides(body);
     return this.mutate(res, { action: 'revoke-others', operationId: operationId ?? uuid() });
   }
   @Post('sessions/logout-current') @NoIdempotent() @HttpCode(200) async logout(
-    @Body() body: unknown,
+    @Body() body: EmptySessionControlRequest,
     @Headers('idempotency-key') operationId: string | undefined,
     @Res({ passthrough: true }) res: Response,
-  ) {
+  ): Promise<SessionMutationResult> {
     this.rejectOverrides(body);
     return this.mutate(res, { action: 'logout-current', operationId: operationId ?? uuid() });
   }
   @Post('sessions/revoke-all') @NoIdempotent() @HttpCode(200) async all(
-    @Body() body: unknown,
+    @Body() body: EmptySessionControlRequest,
     @Headers('idempotency-key') operationId: string | undefined,
     @Res({ passthrough: true }) res: Response,
-  ) {
+  ): Promise<SessionMutationResult> {
     this.rejectOverrides(body);
     return this.mutate(res, { action: 'revoke-all', operationId: operationId ?? uuid() });
   }
   @Get('session-operations/:operationId') async operation(
     @Param('operationId') operationId: string,
     @Res({ passthrough: true }) res: Response,
-  ) {
+  ): Promise<SessionMutationResult> {
     this.version(res);
     return this.wrap(() => this.service.getOperation(this.context(), operationId));
   }
@@ -101,10 +111,10 @@ export class SessionControlController {
   @HttpCode(200)
   async subject(
     @Param('subjectId') subjectId: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: SessionSubjectRevokeRequest,
     @Headers('idempotency-key') operationId: string | undefined,
     @Res({ passthrough: true }) res: Response,
-  ) {
+  ): Promise<SessionMutationResult> {
     this.rejectOverrides(body);
     return this.mutate(res, {
       action: 'revoke-subject',

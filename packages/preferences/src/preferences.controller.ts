@@ -14,7 +14,14 @@ import {
 import { NoIdempotent } from '@stynx-nyx/idempotency';
 import { PreferencesError } from './errors';
 import { PreferencesService } from './preferences.service';
-import type { PreferenceCategory } from './types';
+import type {
+  PlatformProfile,
+  PreferenceCategory,
+  PreferencePatch,
+  PreferencesDocument,
+  PreferenceValues,
+  ProfilePatch,
+} from './types';
 const identityKeys = new Set([
   'tenantId',
   'tenant_id',
@@ -30,17 +37,17 @@ export class PreferencesController {
   @Get() async profile(
     @Query() query: Record<string, unknown>,
     @Res({ passthrough: true }) response: NestResponse,
-  ) {
+  ): Promise<PlatformProfile> {
     this.rejectOverrides(query);
     const result = await this.preferences.getProfile();
     return this.respond(response, result);
   }
   @Patch() @NoIdempotent() async patchProfile(
-    @Body() body: unknown,
+    @Body() body: ProfilePatch,
     @Query() query: Record<string, unknown>,
     @Headers('if-match') ifMatch: string | undefined,
     @Res({ passthrough: true }) response: NestResponse,
-  ) {
+  ): Promise<PlatformProfile> {
     this.rejectOverrides(query, body);
     const result = await this.preferences.patchProfile(body, this.revision(ifMatch));
     return this.respond(response, result);
@@ -48,27 +55,27 @@ export class PreferencesController {
   @Get('preferences') async get(
     @Query() query: Record<string, unknown>,
     @Res({ passthrough: true }) response: NestResponse,
-  ) {
+  ): Promise<PreferencesDocument> {
     this.rejectOverrides(query);
     const result = await this.preferences.getPreferences();
     return this.respond(response, result);
   }
   @Put('preferences') @NoIdempotent() async put(
-    @Body() body: unknown,
+    @Body() body: PreferenceValues,
     @Query() query: Record<string, unknown>,
     @Headers('if-match') ifMatch: string | undefined,
     @Res({ passthrough: true }) response: NestResponse,
-  ) {
+  ): Promise<PreferencesDocument> {
     this.rejectOverrides(query, body);
     const result = await this.preferences.putPreferences(body, this.revision(ifMatch));
     return this.respond(response, result);
   }
   @Patch('preferences') @NoIdempotent() async patch(
-    @Body() body: unknown,
+    @Body() body: PreferencePatch,
     @Query() query: Record<string, unknown>,
     @Headers('if-match') ifMatch: string | undefined,
     @Res({ passthrough: true }) response: NestResponse,
-  ) {
+  ): Promise<PreferencesDocument> {
     this.rejectOverrides(query, body);
     const result = await this.preferences.patchPreferences(body, this.revision(ifMatch));
     return this.respond(response, result);
@@ -77,7 +84,7 @@ export class PreferencesController {
     @Query() query: Record<string, unknown>,
     @Headers('if-match') ifMatch: string | undefined,
     @Res({ passthrough: true }) response: NestResponse,
-  ) {
+  ): Promise<PreferencesDocument> {
     this.rejectOverrides(query);
     const result = await this.preferences.reset(null, this.revision(ifMatch));
     return this.respond(response, result);
@@ -87,7 +94,7 @@ export class PreferencesController {
     @Query() query: Record<string, unknown>,
     @Headers('if-match') ifMatch: string | undefined,
     @Res({ passthrough: true }) response: NestResponse,
-  ) {
+  ): Promise<PreferencesDocument> {
     this.rejectOverrides(query);
     const result = await this.preferences.reset(
       category as PreferenceCategory,
