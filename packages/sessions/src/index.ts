@@ -13,3 +13,4 @@ export * from './session.service';
 export * from './sessions.module';
 export * from './tokens';
 export * from './types';
+export * from './control';

@@ -29,6 +29,7 @@ const packageSpecs = [
   { name: '@stynx-nyx/pdf-a-vera-docker', dir: 'packages/pdf-a-vera-docker' },
   { name: '@stynx-nyx/signature', dir: 'packages/signature' },
   { name: '@stynx-nyx/pdf', dir: 'packages/pdf' },
+  { name: '@stynx-nyx/preferences', dir: 'packages/preferences' },
   { name: '@stynx-nyx/privacy', dir: 'packages/privacy' },
   { name: '@stynx-nyx/ratelimit', dir: 'packages/ratelimit' },
   { name: '@stynx-nyx/sessions', dir: 'packages/sessions' },
@@ -128,6 +129,10 @@ function sgpFixture(tarballs) {
   return {
     name: 'sgp',
     packageJson: basePackageJson('stynx-consumer-sgp-fixture', {
+      '@angular/common': '21.2.15',
+      '@angular/core': '21.2.15',
+      '@angular/forms': '21.2.15',
+      '@angular/router': '21.2.15',
       '@nestjs/common': '^11.1.19',
       '@nestjs/core': '^11.1.19',
       '@stynx-nyx/audit': fileDependency(tarballs, '@stynx-nyx/audit'),
@@ -135,10 +140,14 @@ function sgpFixture(tarballs) {
       '@stynx-nyx/backend': fileDependency(tarballs, '@stynx-nyx/backend'),
       '@stynx-nyx/core': fileDependency(tarballs, '@stynx-nyx/core'),
       '@stynx-nyx/data': fileDependency(tarballs, '@stynx-nyx/data'),
+      '@stynx-nyx/preferences': fileDependency(tarballs, '@stynx-nyx/preferences'),
       '@stynx-nyx/storage': fileDependency(tarballs, '@stynx-nyx/storage'),
       '@stynx-nyx/tenancy': fileDependency(tarballs, '@stynx-nyx/tenancy'),
+      '@stynx-nyx/angular-profile': fileDependency(tarballs, '@stynx-nyx/angular-profile'),
       'reflect-metadata': '^0.2.2',
       rxjs: '^7.8.2',
+      tslib: '^2.8.1',
+      'zone.js': '^0.16.0',
     }),
     indexTs: `import { Audit } from '@stynx-nyx/backend';
 import { Permission, StynxAuthGuard } from '@stynx-nyx/auth';
@@ -147,6 +156,21 @@ import type { AuditEvent } from '@stynx-nyx/audit';
 import type { Database } from '@stynx-nyx/data';
 import type { InitiateDocumentInput } from '@stynx-nyx/storage';
 import type { ProvisionTenantInput } from '@stynx-nyx/tenancy';
+import { InMemoryPreferencesStore, StynxPreferencesModule } from '@stynx-nyx/preferences';
+import type { PreferenceValues } from '@stynx-nyx/preferences';
+import { ProfileService, provideStynxProfile } from '@stynx-nyx/angular-profile';
+
+export const sgpPreferenceDefaults: PreferenceValues = {
+  locale: { locale: 'pt-BR', timezone: 'America/Sao_Paulo' },
+  theme: { colorScheme: 'system', contrast: 'standard', density: 'comfortable' },
+  accessibility: { reduceMotion: false, largeText: false, screenReaderOptimized: false },
+  notificationDelivery: { email: true, push: true, inApp: true },
+};
+export const sgpPreferencesBackend = StynxPreferencesModule.forRoot({
+  defaults: sgpPreferenceDefaults,
+  store: new InMemoryPreferencesStore(),
+});
+export const sgpProfileFrontend = [ProfileService, provideStynxProfile];
 
 export class SgpRecordsController {
   constructor(

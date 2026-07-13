@@ -1,0 +1,50 @@
+{
+  "name": "@stynx-nyx/preferences",
+  "version": "0.1.0",
+  "license": "BUSL-1.1",
+  "description": "Closed tenant-subject profile and preference contracts for stynx",
+  "main": "dist/preferences/src/index.js",
+  "types": "dist/preferences/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/preferences/src/index.d.ts",
+      "require": "./dist/preferences/src/index.js",
+      "default": "./dist/preferences/src/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist coverage",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+    "test": "vitest run --config ./vitest.config.ts",
+    "test:int": "vitest run --config ./vitest.int.config.ts"
+  },
+  "dependencies": {
+    "@stynx-nyx/core": "workspace:*",
+    "@stynx-nyx/data": "workspace:*",
+    "@stynx-nyx/idempotency": "workspace:*",
+    "zod": "^4.3.6"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^11.1.19",
+    "@nestjs/core": "^11.1.19",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@types/node": "24.12.4",
+    "typescript": "^6.0.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stynx-nyx/stynx.git",
+    "directory": "packages/preferences"
+  }
+}

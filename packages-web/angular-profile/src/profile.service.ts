@@ -5,7 +5,13 @@ import { DocumentService, STYNX_UPLOAD_EXECUTOR } from '@stynx-nyx/angular-stora
 import { from, tap } from 'rxjs';
 import type { Observable } from 'rxjs';
 import { STYNX_PROFILE_CLIENT } from './tokens';
-import type { StynxAvatarUploadResult, StynxPreferences, StynxProfile } from './types';
+import type {
+  PreferenceValues,
+  StynxAvatarUploadResult,
+  StynxPreferences,
+  StynxProfile,
+  StynxProfilePatch,
+} from './types';
 
 function trimEdgeSlash(value: string): string {
   return value.replace(/\/+$/, '');
@@ -37,10 +43,17 @@ export class ProfileService {
     );
   }
 
-  patch(diff: Partial<StynxProfile>): Observable<StynxProfile> {
+  patch(diff: StynxProfilePatch): Observable<StynxProfile> {
+    const revision = this.profile()?.revision ?? 0;
     const source = this.client
-      ? from(this.client.patch<StynxProfile>('/profile', diff))
-      : this.requireHttp().patch<StynxProfile>(`${this.apiBaseUrl}/profile`, diff);
+      ? from(
+          this.client.patch<StynxProfile>('/profile', diff, {
+            headers: { 'If-Match': `"${revision}"` },
+          }),
+        )
+      : this.requireHttp().patch<StynxProfile>(`${this.apiBaseUrl}/profile`, diff, {
+          headers: { 'If-Match': `"${revision}"` },
+        });
 
     return source.pipe(
       tap((profile) => {
@@ -52,15 +65,26 @@ export class ProfileService {
     );
   }
 
-  setPreferences(preferences: StynxPreferences): Observable<StynxPreferences> {
+  setPreferences(preferences: PreferenceValues): Observable<StynxPreferences> {
+    const revision = this.preferences()?.revision ?? 0;
     const source = this.client
-      ? from(this.client.put<StynxPreferences>('/profile/preferences', preferences))
-      : this.requireHttp().put<StynxPreferences>(`${this.apiBaseUrl}/profile/preferences`, preferences);
+      ? from(
+          this.client.put<StynxPreferences>('/profile/preferences', preferences, {
+            headers: { 'If-Match': `"${revision}"` },
+          }),
+        )
+      : this.requireHttp().put<StynxPreferences>(
+          `${this.apiBaseUrl}/profile/preferences`,
+          preferences,
+          { headers: { 'If-Match': `"${revision}"` } },
+        );
 
     return source.pipe(
       tap((nextPreferences) => {
         this.preferences.set(nextPreferences);
-        this.profile.update((current) => current ? { ...current, preferences: nextPreferences } : current);
+        this.profile.update((current) =>
+          current ? { ...current, preferences: nextPreferences } : current,
+        );
       }),
     );
   }
@@ -71,7 +95,9 @@ export class ProfileService {
 
   private get apiBaseUrl(): string {
     if (!this.angularOptions) {
-      throw new Error('ProfileService requires provideStynxProfile(...) or provideStynxAngular(...).');
+      throw new Error(
+        'ProfileService requires provideStynxProfile(...) or provideStynxAngular(...).',
+      );
     }
     return trimEdgeSlash(this.angularOptions.apiBaseUrl);
   }
@@ -101,7 +127,9 @@ export class ProfileService {
     const download = await this.documents.getDownloadUrl(init.id);
     const result = { url: download.url };
 
-    this.profile.update((current) => current ? { ...current, avatarDocumentId: init.id, avatarUrl: result.url } : current);
+    this.profile.update((current) =>
+      current ? { ...current, avatarDocumentId: init.id, avatarUrl: result.url } : current,
+    );
     return result;
   }
 }

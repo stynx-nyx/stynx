@@ -8,6 +8,10 @@ const repoRoot = process.cwd();
 const write = process.argv.includes('--write');
 const baselinePath = resolve(repoRoot, 'docs/framework/contracts/public-api-baselines.json');
 const packageSpecs = [
+  { name: '@stynx-nyx/preferences', dir: 'packages/preferences' },
+  { name: '@stynx-nyx/angular-profile', dir: 'packages-web/angular-profile' },
+  { name: '@stynx-nyx/sessions', dir: 'packages/sessions' },
+  { name: '@stynx-nyx/angular-sessions', dir: 'packages-web/angular-sessions' },
   { name: '@stynx-nyx/integration-adapter', dir: 'packages/integration-adapter' },
   { name: '@stynx-nyx/pdf', dir: 'packages/pdf' },
   { name: '@stynx-nyx/signature', dir: 'packages/signature' },
@@ -30,7 +34,9 @@ if (write) {
 }
 
 if (!existsSync(baselinePath)) {
-  throw new Error(`Missing public API baseline at ${relative(repoRoot, baselinePath)}. Run pnpm api:baselines:write.`);
+  throw new Error(
+    `Missing public API baseline at ${relative(repoRoot, baselinePath)}. Run pnpm api:baselines:write.`,
+  );
 }
 
 const expected = JSON.parse(readFileSync(baselinePath, 'utf8'));
@@ -45,10 +51,12 @@ for (const spec of packageSpecs) {
   for (const [file, actualHash] of Object.entries(actualPkg.declarationHashes)) {
     const expectedHash = expectedPkg.declarationHashes?.[file];
     if (!expectedHash) failures.push(`${spec.name}: new public declaration ${file}`);
-    else if (expectedHash !== actualHash) failures.push(`${spec.name}: public declaration changed ${file}`);
+    else if (expectedHash !== actualHash)
+      failures.push(`${spec.name}: public declaration changed ${file}`);
   }
   for (const file of Object.keys(expectedPkg.declarationHashes ?? {})) {
-    if (!actualPkg.declarationHashes[file]) failures.push(`${spec.name}: removed public declaration ${file}`);
+    if (!actualPkg.declarationHashes[file])
+      failures.push(`${spec.name}: removed public declaration ${file}`);
   }
   const expectedExports = JSON.stringify(expectedPkg.exports ?? {});
   const actualExports = JSON.stringify(actualPkg.exports ?? {});
@@ -97,6 +105,8 @@ function run(command, args, cwd) {
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   if (result.status !== 0) {
-    throw new Error(`${command} ${args.join(' ')} failed\n${result.stdout}\n${result.stderr}`.trim());
+    throw new Error(
+      `${command} ${args.join(' ')} failed\n${result.stdout}\n${result.stderr}`.trim(),
+    );
   }
 }

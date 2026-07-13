@@ -30,6 +30,7 @@
     "@stynx-nyx/health": "workspace:*",
     "@stynx-nyx/idempotency": "workspace:*",
     "@stynx-nyx/logging": "workspace:*",
+    "@stynx-nyx/preferences": "workspace:*",
     "@stynx-nyx/ratelimit": "workspace:*",
     "@stynx-nyx/sessions": "workspace:*",
     "@stynx-nyx/storage": "workspace:*",

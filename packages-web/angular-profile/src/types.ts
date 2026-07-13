@@ -3,30 +3,53 @@ export interface StynxProfileValue {
   email: string;
   locale: string;
 }
-
 export interface StynxPreferencesValue {
   locale: string;
   notifications: boolean;
 }
-
-export interface StynxPreferences extends StynxPreferencesValue {
-  timezone?: string;
-  [key: string]: unknown;
+export interface LocalePreferences {
+  locale: string;
+  timezone: string;
 }
-
-export interface StynxProfile extends StynxProfileValue {
-  id?: string;
-  userId?: string;
-  firstName?: string;
-  lastName?: string;
-  displayName?: string;
-  timezone?: string;
-  avatarUrl?: string | null;
+export interface ThemePreferences {
+  colorScheme: 'system' | 'light' | 'dark';
+  contrast: 'standard' | 'more';
+  density: 'comfortable' | 'compact';
+}
+export interface AccessibilityPreferences {
+  reduceMotion: boolean;
+  largeText: boolean;
+  screenReaderOptimized: boolean;
+}
+export interface NotificationDeliveryPreferences {
+  email: boolean;
+  push: boolean;
+  inApp: boolean;
+}
+export interface PreferenceValues {
+  locale: LocalePreferences;
+  theme: ThemePreferences;
+  accessibility: AccessibilityPreferences;
+  notificationDelivery: NotificationDeliveryPreferences;
+}
+export interface StynxPreferences {
+  values: PreferenceValues;
+  revision: number;
+  updatedAt: string | null;
+}
+export interface StynxProfile {
+  subjectId: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+  avatarDocumentId: string | null;
+  preferences: StynxPreferences;
+  revision: number;
+  updatedAt: string | null;
+}
+export interface StynxProfilePatch {
+  displayName?: string | null;
   avatarDocumentId?: string | null;
-  preferences?: StynxPreferences;
-  [key: string]: unknown;
 }
-
 export interface StynxAvatarUploadResult {
   url: string;
 }

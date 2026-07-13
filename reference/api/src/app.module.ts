@@ -3,11 +3,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Module } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import {
-  PermissionGuard,
-  StynxAuthGuard,
-  StynxAuthModule,
-} from '@stynx-nyx/auth';
+import { PermissionGuard, StynxAuthGuard, StynxAuthModule } from '@stynx-nyx/auth';
 import {
   StynxPlatformPipelineModule,
   AuditInterceptor,
@@ -17,7 +13,12 @@ import { Database, StynxDataModule } from '@stynx-nyx/data';
 import { StynxFlowModule } from '@stynx-nyx/flow';
 import { StynxHealthModule } from '@stynx-nyx/health';
 import { StynxLoggingModule } from '@stynx-nyx/logging';
-import { StynxSessionsModule } from '@stynx-nyx/sessions';
+import { StynxPreferencesModule } from '@stynx-nyx/preferences';
+import {
+  DeterministicSessionProviderFake,
+  StynxSessionControlModule,
+  StynxSessionsModule,
+} from '@stynx-nyx/sessions';
 import { StynxStorageModule } from '@stynx-nyx/storage';
 import { StynxTenancyModule } from '@stynx-nyx/tenancy';
 import { AuditSqlSink, StynxAuditModule as StynxAuditApiModule } from '@stynx-nyx/audit';
@@ -69,7 +70,10 @@ function resolveReferenceMigrationDir(): string {
 
 async function bootstrapLegacyReferenceMigrationState(
   owner: {
-    query: <TRow = Record<string, unknown>>(sql: string, params?: unknown[]) => Promise<{ rows: TRow[] }>;
+    query: <TRow = Record<string, unknown>>(
+      sql: string,
+      params?: unknown[],
+    ) => Promise<{ rows: TRow[] }>;
   },
   scope: string,
 ): Promise<void> {
@@ -101,7 +105,10 @@ async function runReferenceApiMigrations(
     'owner' | 'app' | 'reader',
     {
       connect: () => Promise<{
-        query: <TRow = Record<string, unknown>>(sql: string, params?: unknown[]) => Promise<{ rows: TRow[] }>;
+        query: <TRow = Record<string, unknown>>(
+          sql: string,
+          params?: unknown[],
+        ) => Promise<{ rows: TRow[] }>;
         release: () => void;
       }>;
     }
@@ -169,9 +176,24 @@ async function runReferenceApiMigrations(
     StynxLoggingModule.forRoot(),
     StynxDataModule.forRoot({
       connections: {
-        owner: { connectionString: env('STYNX_OWNER_DATABASE_URL', 'postgresql://postgres:postgres@localhost:5432/postgres') },
-        app: { connectionString: env('STYNX_APP_DATABASE_URL', 'postgresql://postgres:postgres@localhost:5432/postgres') },
-        reader: { connectionString: env('STYNX_READER_DATABASE_URL', 'postgresql://postgres:postgres@localhost:5432/postgres') },
+        owner: {
+          connectionString: env(
+            'STYNX_OWNER_DATABASE_URL',
+            'postgresql://postgres:postgres@localhost:5432/postgres',
+          ),
+        },
+        app: {
+          connectionString: env(
+            'STYNX_APP_DATABASE_URL',
+            'postgresql://postgres:postgres@localhost:5432/postgres',
+          ),
+        },
+        reader: {
+          connectionString: env(
+            'STYNX_READER_DATABASE_URL',
+            'postgresql://postgres:postgres@localhost:5432/postgres',
+          ),
+        },
       },
       migrations: {
         enabled: true,
@@ -184,7 +206,9 @@ async function runReferenceApiMigrations(
       },
       cognito: {
         issuer: env('STYNX_COGNITO_ISSUER', 'https://cognito.local'),
-        ...(process.env.STYNX_COGNITO_JWKS_URI ? { jwksUri: process.env.STYNX_COGNITO_JWKS_URI } : {}),
+        ...(process.env.STYNX_COGNITO_JWKS_URI
+          ? { jwksUri: process.env.STYNX_COGNITO_JWKS_URI }
+          : {}),
       },
       ...(process.env.STYNX_REDIS_URL
         ? {
@@ -203,7 +227,12 @@ async function runReferenceApiMigrations(
         keySet: resolveSessionKeySet(),
       },
     }),
+    StynxSessionControlModule.forRoot({
+      registry: 'postgres',
+      provider: new DeterministicSessionProviderFake(),
+    }),
     StynxTenancyModule.forRoot({}),
+    StynxPreferencesModule.forRoot(),
     StynxAuditApiModule.forRoot({
       dailyDetachEnabled: false,
     }),
@@ -227,7 +256,9 @@ async function runReferenceApiMigrations(
           classificationDefault: 'internal',
         },
       },
-      ...(process.env.STYNX_STORAGE_ENDPOINT ? { endpoint: process.env.STYNX_STORAGE_ENDPOINT } : {}),
+      ...(process.env.STYNX_STORAGE_ENDPOINT
+        ? { endpoint: process.env.STYNX_STORAGE_ENDPOINT }
+        : {}),
       ...(process.env.STYNX_STORAGE_FORCE_PATH_STYLE === 'true' ? { forcePathStyle: true } : {}),
     }),
     StynxPlatformPipelineModule.forRoot({
@@ -267,10 +298,10 @@ async function runReferenceApiMigrations(
           {
             query: async (sql: string, params?: unknown[]) =>
               database.withSystemContext('reference-api audit sink', async () =>
-                database.tx(
-                  async (trx) => trx.query(sql, params),
-                  { role: 'owner', readonly: false },
-                ),
+                database.tx(async (trx) => trx.query(sql, params), {
+                  role: 'owner',
+                  readonly: false,
+                }),
               ),
           },
           { mode: 'audit_write_function' },
