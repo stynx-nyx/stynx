@@ -181,10 +181,23 @@ jobs:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - name: Build reference-api image
-        run: docker build -f reference/api/Dockerfile -t stynx/reference-api:${{ github.sha }} .
+        # DOCKER_BUILDKIT=1 + --secret keeps NODE_AUTH_TOKEN out of image
+        # layers/history; the Dockerfile's RUN --mount=type=secret consumes
+        # it only for the pnpm install step that needs @devai-nyx/* auth.
+        run: |
+          DOCKER_BUILDKIT=1 docker build \
+            --secret id=node_auth_token,env=NODE_AUTH_TOKEN \
+            -f reference/api/Dockerfile -t stynx/reference-api:${{ github.sha }} .
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.DEVAI_REPO_TOKEN || github.token }}
 
       - name: Build reference-web image
-        run: docker build -f reference/web/Dockerfile -t stynx/reference-web:${{ github.sha }} .
+        run: |
+          DOCKER_BUILDKIT=1 docker build \
+            --secret id=node_auth_token,env=NODE_AUTH_TOKEN \
+            -f reference/web/Dockerfile -t stynx/reference-web:${{ github.sha }} .
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.DEVAI_REPO_TOKEN || github.token }}
 
       - name: Run Trivy on reference-api
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
