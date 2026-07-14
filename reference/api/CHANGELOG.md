@@ -1,5 +1,14 @@
 # @stynx-nyx/reference-api
 
+## 0.3.6
+
+### Patch Changes
+
+- 7bdc103: Wire GitHub Packages auth into each Dockerfile's internal `pnpm install`
+  (BuildKit secret mount, `.npmrc` copied into the build context) so image
+  builds can resolve `@devai-nyx/*` now that CI consumes DEVAI as published
+  npm packages instead of a sibling checkout (D-118).
+
 ## 0.3.5
 
 ### Patch Changes
