@@ -138,7 +138,18 @@ jobs:
       - name: Install Playwright Chromium
         run: pnpm --filter @stynx-nyx/reference-web exec playwright install --with-deps chromium
       - name: Start reference API stack
-        run: docker compose -f reference/api/docker-compose.yml up -d --build
+        # NODE_AUTH_TOKEN_FILE feeds docker-compose.yml's file-based build
+        # secret (reference-api's image build resolves @devai-nyx/* from
+        # GitHub Packages) -- runner-local temp file, never committed, gone
+        # when the VM is torn down.
+        run: |
+          set -euo pipefail
+          NODE_AUTH_TOKEN_FILE="$(mktemp)"
+          printf '%s' "$NODE_AUTH_TOKEN" > "$NODE_AUTH_TOKEN_FILE"
+          export NODE_AUTH_TOKEN_FILE
+          docker compose -f reference/api/docker-compose.yml up -d --build
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.DEVAI_REPO_TOKEN || github.token }}
       - name: Wait for reference API health gates
         run: |
           set -euo pipefail

@@ -1,3 +1,12 @@
+secrets:
+  # Sourced from a file (not `environment:`) so this works on older Compose
+  # releases too; the workflow writes NODE_AUTH_TOKEN to NODE_AUTH_TOKEN_FILE
+  # just before `docker compose up`. Falls back to /dev/null for local runs
+  # without the var set -- the Dockerfile's install then just sees an empty
+  # token, which is fine for public/already-authenticated local registries.
+  node_auth_token:
+    file: ${NODE_AUTH_TOKEN_FILE:-/dev/null}
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -70,6 +79,8 @@ services:
     build:
       context: ../..
       dockerfile: reference/api/Dockerfile
+      secrets:
+        - node_auth_token
     environment:
       GLOG_minloglevel: '2'
       NODE_ENV: development
