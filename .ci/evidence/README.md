@@ -6,8 +6,9 @@ changes such as workflows, branch-protection Terraform, or the
 `ci_economy.local_evidence` policy declared in `.devai/config/project.json`.
 
 Promoted into the canonical DEVAI framework by D-117; this repo now runs
-`devai evidence collect-local`/`verify-local` instead of the repo-local
-prototype scripts it originated as (`scripts/evidence/*.mjs`, removed).
+`devai evidence local collect`/`local verify` (0.5.0 hierarchical CLI)
+instead of the repo-local prototype scripts it originated as
+(`scripts/evidence/*.mjs`, removed).
 
 The required local jobs (declared in `.devai/config/project.json`) are:
 
@@ -19,7 +20,7 @@ Generate a manifest after both jobs pass:
 ```bash
 pnpm ci:local -- all-linux
 pnpm ci:local -- stynx-release
-devai evidence collect-local \
+devai evidence local collect \
   --job all-linux:reports/ci-local/<all-linux-run> \
   --job stynx-release:reports/ci-local/<stynx-release-run>
 ```
@@ -30,7 +31,7 @@ Commit the manifest with the trailer that enables evidence mode:
 Local-CI-Evidence: .ci/evidence/local-ci.json
 ```
 
-`pnpm evidence:verify` (`devai evidence verify-local --mode strict`) validates
+`pnpm evidence:verify` (`devai evidence local verify --mode strict`) validates
 the manifest source hash, max age, tool versions, required job results,
 allowed platforms, trusted actor policy, and forbidden file rules — the same
 checks CI runs in `--mode gate`. GitHub skip markers such as `[skip ci]` must

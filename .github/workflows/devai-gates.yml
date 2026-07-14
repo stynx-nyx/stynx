@@ -3,9 +3,11 @@
 # to surface inventory drift, unbound endpoints, unmapped routes, and
 # invariant violations BEFORE merge.
 #
-# devai is consumed as published @devai-nyx/{cli,core,schemas} packages
-# from GitHub Packages (npm-package consumption model, D-118) -- no
-# sibling ../devai checkout. @devai-nyx:registry is scoped in .npmrc;
+# devai is consumed as published @devai-nyx/{cli,core,schemas,sensors,utils}
+# packages from GitHub Packages (npm-package consumption model, D-118) -- no
+# sibling ../devai checkout. Command paths follow the 0.5.0 hierarchical
+# CLI (Round 16, D-129; see devai docs/adopters/migrating-to-0.5.0.md).
+# @devai-nyx:registry is scoped in .npmrc;
 # NODE_AUTH_TOKEN needs read:packages on the devai-nyx org (the ambient
 # GITHUB_TOKEN cannot read another org's packages even though
 # devai-nyx/devai is public). Stack-adapter packs (examples/redox-pack-*)
@@ -89,29 +91,29 @@ jobs:
           # Verify/update the token's scope if this step 401s.
 
       - name: Verify pack matches stynx
-        run: devai pack-resolve --repo-root node_modules/@devai-nyx/core --adopter-root . --human
+        run: devai adopt pack resolve --repo-root node_modules/@devai-nyx/core --adopter-root . --format human
 
       - name: devai doctor --adopter (expects 10/10 PASS)
-        run: devai doctor --adopter --human
+        run: devai doctor --adopter --format human
 
-      - name: devai check glob-guards (devai D-124; catches a renamed/retired path before it goes silently dead)
-        run: devai check glob-guards --repo-root . --human
+      - name: devai policy check glob guards (devai D-124; catches a renamed/retired path before it goes silently dead)
+        run: devai policy check glob guards --repo-root . --format human
 
-      - name: devai check forbidden-actions --strict (16/16 canonical entries present)
-        run: devai check forbidden-actions --strict --human
+      - name: devai policy check forbidden actions --strict (16/16 canonical entries present)
+        run: devai policy check forbidden actions --strict --format human
 
       - name: Run the six L0 inventory sensors
         run: |
           set -euo pipefail
-          devai sense-api          --repo-root . --adopter-root . --packs-root node_modules/@devai-nyx/core --pack-tune --human
-          devai sense-routes       --repo-root . --adopter-root . --packs-root node_modules/@devai-nyx/core --pack-tune --human
-          devai sense-data-model   --repo-root . --adopter-root . --packs-root node_modules/@devai-nyx/core --pack-tune --human
-          devai sense-data-handling --repo-root . --human
-          devai sense-rbac         --repo-root . --human
-          devai sense-dep-graph    --repo-root . --human
+          devai sense inventory api           --repo-root . --adopter-root . --packs-root node_modules/@devai-nyx/core --pack-tune --format human
+          devai sense inventory routes        --repo-root . --adopter-root . --packs-root node_modules/@devai-nyx/core --pack-tune --format human
+          devai sense inventory data model    --repo-root . --adopter-root . --packs-root node_modules/@devai-nyx/core --pack-tune --format human
+          devai sense inventory data handling --repo-root . --format human
+          devai sense inventory rbac          --repo-root . --format human
+          devai sense inventory dep graph     --repo-root . --format human
 
-      - name: Run sense-coverage (tolerate REVIEW; devai route ids are line-number-derived and legitimately churn on any app.routes.ts edit)
-        # devai's `sense-coverage` exits 0 (PASS), 1 (REVIEW), or 2 (FAIL/ERROR)
+      - name: Run sense inventory coverage (tolerate REVIEW; devai route ids are line-number-derived and legitimately churn on any app.routes.ts edit)
+        # devai's `sense inventory coverage` exits 0 (PASS), 1 (REVIEW), or 2 (FAIL/ERROR)
         # -- REVIEW is a deliberately distinct, non-fatal status (see
         # @devai-nyx/utils EXIT_REVIEW=1 vs EXIT_FAIL=2), not an alias for
         # failure. Angular route ids are a content hash over
@@ -132,7 +134,7 @@ jobs:
         # regressions, so only exit 2 (FAIL/ERROR) is treated as fatal here.
         run: |
           set +e
-          devai sense-coverage --repo-root . --routes-path .devai/state/sensors/inventory_routes/routes-angular.json --human
+          devai sense inventory coverage --repo-root . --routes-path .devai/state/sensors/inventory_routes/routes-angular.json --format human
           code=$?
           set -e
           if [ "$code" -eq 2 ]; then
@@ -143,7 +145,7 @@ jobs:
           fi
 
       - name: Validate stynx invariants against the schema
-        run: devai spec validate-invariants --repo-root . --human
+        run: devai spec validate invariants --repo-root . --format human
         # Uses devai's canonical validator (schema + ID uniqueness + domain +
         # anchor checks) instead of a hand-rolled ajv script. Its default
         # companion-pattern exclusion (*-allowlist.json, *-data.json) is why
@@ -154,7 +156,7 @@ jobs:
         # (INVARIANTS_DIR, min_matches 10), not re-guarded inline.
 
       - name: Refresh invariant candidates (informational)
-        run: devai inv-suggest --from-inventory --repo-root . --human
+        run: devai inventory suggest --from-inventory --repo-root . --format human
 
       - name: Validate any module-blueprints in draft
         run: |
@@ -162,7 +164,7 @@ jobs:
           shopt -s nullglob
           for f in docs/framework/product/draft/blueprints/*.json; do
             echo "::group::validate $f"
-            devai blueprint-validate --file "$f" --human
+            devai spec blueprint validate --file "$f" --format human
             echo "::endgroup::"
           done
 

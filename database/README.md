@@ -17,7 +17,7 @@ Current bootstrap DDL:
 
 Current migration support:
 
-- `database/migrations/000_migrate-check-preseed.sql` prepares roles and default privileges for `devai sense-migrate-check --pre-seed`.
+- `database/migrations/000_migrate-check-preseed.sql` prepares roles and default privileges for `devai sense migrate check --pre-seed`.
 
 Current seeds:
 

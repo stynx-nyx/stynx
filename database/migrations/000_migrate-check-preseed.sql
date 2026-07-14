@@ -1,7 +1,7 @@
--- stynx pre-seed for `devai sense-migrate-check --pre-seed database/migrations/000_migrate-check-preseed.sql`
+-- stynx pre-seed for `devai sense migrate check --pre-seed database/migrations/000_migrate-check-preseed.sql`
 --
 -- The platform migration runner normally provisions roles + grants in steps,
--- but `sense-migrate-check` applies SQL files via raw psql against a fresh
+-- but `sense migrate check` applies SQL files via raw psql against a fresh
 -- database without the surrounding application-layer setup. This pre-seed
 -- gives stynx_owner the cross-schema privileges the platform migrations
 -- expect by the time 0011_storage.sql runs (which references tenancy.tenants
@@ -27,7 +27,7 @@ $$;
 
 -- Grant stynx_owner ownership of every schema the migrations reference so
 -- SECURITY DEFINER helpers can access them. The platform migrations
--- normally create the schemas under stynx_owner, but sense-migrate-check
+-- normally create the schemas under stynx_owner, but sense migrate check
 -- runs everything as the connecting user; we need the role to own + manage
 -- the schemas it created.
 DO $$

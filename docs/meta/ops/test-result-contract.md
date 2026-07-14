@@ -14,8 +14,8 @@ Test invocation is split by responsibility:
 - Package-owned `test`, `test:int`, `test:e2e`, and `stryker` scripts invoke
   their runner directly.
 - Workspace evidence commands invoke DEVAI directly:
-  `devai record-run`, `devai render-matrix`, `devai evidence-emit`, and
-  `devai coverage-aggregate`.
+  `devai evidence test record`, `devai evidence test matrix`,
+  `devai evidence emit`, and `devai evidence coverage aggregate`.
 
 DEVAI-owned record commands write artifacts under `.devai/state/test-results/`
 unless an explicit output path is supplied:
@@ -61,15 +61,15 @@ should defer to `metric.kind` and ignore the others.
 
 ## Per-level cheat sheet
 
-| Level         | Runner                     | `metric.kind` | Test count?      | Slow-test list? |
-| ------------- | -------------------------- | ------------- | ---------------- | --------------- |
-| `unit`        | `vitest` / `node-test`     | `none`        | yes              | yes (vitest)    |
-| `integration` | `vitest`                   | `none`        | yes              | yes             |
-| `e2e`         | `vitest`                   | `none`        | yes              | yes             |
-| `mutation`    | `stryker-vitest`           | `score`       | mutants as tests | —               |
-| `coverage`    | `devai coverage-aggregate` | `coverage`    | —                | —               |
-| `perf`        | `perf-smoke`               | `perf`        | —                | —               |
-| `smoke`       | `rls-smoke`                | `none`        | —                | —               |
+| Level         | Runner                              | `metric.kind` | Test count?      | Slow-test list? |
+| ------------- | ----------------------------------- | ------------- | ---------------- | --------------- |
+| `unit`        | `vitest` / `node-test`              | `none`        | yes              | yes (vitest)    |
+| `integration` | `vitest`                            | `none`        | yes              | yes             |
+| `e2e`         | `vitest`                            | `none`        | yes              | yes             |
+| `mutation`    | `stryker-vitest`                    | `score`       | mutants as tests | —               |
+| `coverage`    | `devai evidence coverage aggregate` | `coverage`    | —                | —               |
+| `perf`        | `perf-smoke`                        | `perf`        | —                | —               |
+| `smoke`       | `rls-smoke`                         | `none`        | —                | —               |
 
 ## Matrix display semantics
 
@@ -129,13 +129,13 @@ or a named policy (`{"mutation": "strict"}`); literal numbers win.
 
 ## Consumers (current)
 
-| Consumer                                           | Reads                                           | Notes                                    |
-| -------------------------------------------------- | ----------------------------------------------- | ---------------------------------------- |
-| `pnpm test:matrix*` / `devai render-matrix`        | `.devai/state/test-results/**`                  | Canonical DEVAI matrix rendering.        |
-| `pnpm test:evidence` / `devai evidence-emit`       | `.devai/state/evidence-chain.json`              | Appends evidence-chain records.          |
-| `pnpm test:coverage`                               | per-target `coverage-final.json` under coverage | Uses `devai coverage-aggregate`.         |
-| GitHub Actions (`.github/workflows/ci.yml`)        | runner output and uploaded artifacts            | CI remains responsible for UI summaries. |
-| GitHub Actions (`.github/workflows/hardening.yml`) | mutation runner output and artifacts            | Per-package mutation evidence.           |
+| Consumer                                           | Reads                                           | Notes                                     |
+| -------------------------------------------------- | ----------------------------------------------- | ----------------------------------------- |
+| `pnpm test:matrix*` / `devai evidence test matrix` | `.devai/state/test-results/**`                  | Canonical DEVAI matrix rendering.         |
+| `pnpm test:evidence` / `devai evidence emit`       | `.devai/state/evidence-chain.json`              | Appends evidence-chain records.           |
+| `pnpm test:coverage`                               | per-target `coverage-final.json` under coverage | Uses `devai evidence coverage aggregate`. |
+| GitHub Actions (`.github/workflows/ci.yml`)        | runner output and uploaded artifacts            | CI remains responsible for UI summaries.  |
+| GitHub Actions (`.github/workflows/hardening.yml`) | mutation runner output and artifacts            | Per-package mutation evidence.            |
 
 ## DEVAI sensor integration
 
@@ -163,7 +163,7 @@ return {
 Stynx exposes the evidence file as a stable contract. Whether DEVAI's
 upstream actually consumes it is up to DEVAI's maintainers (Article 6:
 DEVAI authoring is outside stynx's substrates). When DEVAI migrates,
-stynx's per-test-run `devai sense-*` invocations become read-only —
+stynx's per-test-run `devai sense` invocations become read-only —
 they parse the artifact, never re-run the suite.
 
 ## Adding a new level or runner

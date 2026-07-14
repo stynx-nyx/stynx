@@ -1,10 +1,11 @@
 {
   "schemaVersion": "1.0.0",
   "project_type": "runtime-host",
-  "devai_version": "0.0.0",
+  "devai_version": "0.5.0",
   "devai_consumption": "npm-package",
   "constitution": {
-    "version": "0.2.0"
+    "version": "0.4.0",
+    "sha256": "4d302832bccc3997e87955065362455f3122ec53281ece6dda0b39f21c6aa6da"
   },
   "repo": {
     "kind": "library"

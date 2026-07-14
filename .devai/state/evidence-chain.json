@@ -1,5 +1,5 @@
 {
-  "head": "e766d4273d5dafc4a849542b781adba845b51ec6afaf84faebfa0ca8e80acedd",
+  "head": "50477feb48c74fc8635be1b44809b026c2546519fd6345d025082c838bdeb461",
   "records": [
     {
       "schemaVersion": "1.0.0",
@@ -57,6 +57,121 @@
       "notes": ["sensor_status=review", "sensor_id=SR-c9fa656019761534"],
       "previous_run_hash": "808953fe5ffc0ccd255fbe8063a78685dca805bc292444e3295f781b5f2dd597",
       "manifest_hash": "e766d4273d5dafc4a849542b781adba845b51ec6afaf84faebfa0ca8e80acedd"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-7608c8b77b0907ec",
+      "timestamp": "2026-07-14T04:55:05.608Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "constitution.updated",
+      "status": "completed",
+      "context": {
+        "repo_root": ".",
+        "git": {
+          "head_sha": "75d3e795fc7069dd2ab09b84a337d99e81ddd9bd",
+          "dirty_files": [
+            ".ci/evidence/README.md",
+            ".devai/config/project.json",
+            ".github/workflows/devai-gates.yml",
+            "docs/meta/eng/stynx-boundary.md",
+            "docs/meta/ops/test-result-contract.md",
+            "package.json",
+            "pnpm-lock.yaml",
+            "scripts/gen-self-scorecard.mjs",
+            "scripts/gen-skill-catalog.mjs",
+            "scripts/perf-smoke.mjs",
+            "tools/repo-config/test-thresholds.mjs",
+            "CONSTITUTION.md"
+          ]
+        }
+      },
+      "artifacts": [],
+      "notes": ["from=0.2.0", "to=0.4.0", "source=bundled"],
+      "previous_run_hash": "e766d4273d5dafc4a849542b781adba845b51ec6afaf84faebfa0ca8e80acedd",
+      "manifest_hash": "4430b981d52f4a788dc78e2079a90802c291da540d87eea4e75195308bbb2a4d"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-7a72e8215495420e",
+      "timestamp": "2026-07-14T04:58:50.397Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.inventory_rbac",
+      "status": "completed",
+      "context": {
+        "repo_root": ".",
+        "git": {
+          "head_sha": "75d3e795fc7069dd2ab09b84a337d99e81ddd9bd",
+          "dirty_files": [
+            ".ci/evidence/README.md",
+            ".devai/config/project.json",
+            ".devai/state/evidence-chain.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-2b1e1c03d0a0ddcb.json",
+            ".devai/state/sensors/inventory_rbac/rbac.json",
+            ".github/workflows/devai-gates.yml",
+            "docs/_ia/categories.json",
+            "docs/meta/eng/stynx-boundary.md",
+            "docs/meta/ops/test-result-contract.md",
+            "package.json",
+            "pnpm-lock.yaml",
+            "scripts/gen-self-scorecard.mjs",
+            "scripts/gen-skill-catalog.mjs",
+            "scripts/perf-smoke.mjs",
+            "tools/repo-config/test-thresholds.mjs",
+            "CONSTITUTION.md",
+            "docs/framework/constitution.md",
+            "docs/site/versioned_docs/version-0.1.1/framework/",
+            "docs/site/versioned_docs/version-0.2.0/framework/constitution.md"
+          ]
+        }
+      },
+      "artifacts": [],
+      "notes": ["sensor_status=pass", "sensor_id=SR-2b1e1c03d0a0ddcb"],
+      "previous_run_hash": "4430b981d52f4a788dc78e2079a90802c291da540d87eea4e75195308bbb2a4d",
+      "manifest_hash": "106a2ca13c16eab889a35501f1107b2151b3ec5eb93fdddb8f3adff9c488306a"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-8f07ce964f64bebf",
+      "timestamp": "2026-07-14T04:59:03.740Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.inventory_api",
+      "status": "completed",
+      "context": {
+        "repo_root": ".",
+        "git": {
+          "head_sha": "75d3e795fc7069dd2ab09b84a337d99e81ddd9bd",
+          "dirty_files": [
+            ".ci/evidence/README.md",
+            ".devai/config/project.json",
+            ".devai/state/evidence-chain.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-2b1e1c03d0a0ddcb.json",
+            ".devai/state/sensors/inventory_api/api-map.json",
+            ".devai/state/sensors/inventory_rbac/rbac.json",
+            ".github/workflows/devai-gates.yml",
+            "docs/_ia/categories.json",
+            "docs/meta/eng/stynx-boundary.md",
+            "docs/meta/ops/test-result-contract.md",
+            "package.json",
+            "pnpm-lock.yaml",
+            "scripts/gen-self-scorecard.mjs",
+            "scripts/gen-skill-catalog.mjs",
+            "scripts/perf-smoke.mjs",
+            "tools/repo-config/test-thresholds.mjs",
+            "CONSTITUTION.md",
+            "docs/framework/constitution.md",
+            "docs/site/versioned_docs/version-0.1.1/framework/",
+            "docs/site/versioned_docs/version-0.2.0/framework/constitution.md"
+          ]
+        }
+      },
+      "artifacts": [],
+      "notes": ["sensor_status=pass", "sensor_id=SR-741327bc2cdbba8a"],
+      "previous_run_hash": "106a2ca13c16eab889a35501f1107b2151b3ec5eb93fdddb8f3adff9c488306a",
+      "manifest_hash": "50477feb48c74fc8635be1b44809b026c2546519fd6345d025082c838bdeb461"
     }
   ]
 }
