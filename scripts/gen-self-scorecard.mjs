@@ -45,8 +45,12 @@ export function findLatestScorecard(repoRoot) {
   const skillDir = join(repoRoot, '.devai/state/skills/SKILL-compute-scorecard');
   if (existsSync(skillDir)) {
     let names;
-    try { names = readdirSync(skillDir); } catch { names = []; }
-    const jsons = names.filter(n => n.endsWith('.json'));
+    try {
+      names = readdirSync(skillDir);
+    } catch {
+      names = [];
+    }
+    const jsons = names.filter((n) => n.endsWith('.json'));
     if (jsons.length > 0) {
       // Lexicographic order over ISO timestamps == chronological order.
       jsons.sort();
@@ -90,12 +94,16 @@ export function buildSelfScorecard({ repoRoot }) {
   lines.push('# Self-scorecard');
   lines.push('');
   if (!located) {
-    lines.push('> **No scorecard data found.** Run `devai score compute` to produce a scorecard snapshot at `.devai/state/skills/SKILL-compute-scorecard/`, then re-run this generator.');
+    lines.push(
+      '> **No scorecard data found.** Run `devai govern score compute` to produce a scorecard snapshot at `.devai/state/skills/SKILL-compute-scorecard/`, then re-run this generator.',
+    );
     lines.push('');
     return lines.join('\n');
   }
   const { data, index } = loadScorecard(located.path);
-  lines.push('> DEVAI applies to itself per [Constitution Article 36](../framework/constitution.md). This page is the substrate × transversal grid with current verdicts — the framework\'s own accountability surface.');
+  lines.push(
+    "> DEVAI applies to itself per [Constitution Article 36](../framework/constitution.md). This page is the substrate × transversal grid with current verdicts — the framework's own accountability surface.",
+  );
   lines.push('');
   lines.push(`**Source:** \`${located.source}\` (\`${located.path.replace(repoRoot + '/', '')}\`)`);
   if (data.id) lines.push(`**Snapshot ID:** \`${data.id}\``);
@@ -109,7 +117,9 @@ export function buildSelfScorecard({ repoRoot }) {
     if (tally[v] === undefined) tally.UNKNOWN++;
     else tally[v]++;
   }
-  lines.push(`**Totals:** ${tally.PASS} PASS · ${tally.REVIEW} REVIEW · ${tally.FAIL} FAIL · ${tally['N/A']} N/A · ${tally.UNKNOWN} UNKNOWN.`);
+  lines.push(
+    `**Totals:** ${tally.PASS} PASS · ${tally.REVIEW} REVIEW · ${tally.FAIL} FAIL · ${tally['N/A']} N/A · ${tally.UNKNOWN} UNKNOWN.`,
+  );
   lines.push('');
   // Grid.
   lines.push('| Substrate \\ Transversal | ' + TRANSVERSALS.join(' | ') + ' |');
@@ -126,9 +136,11 @@ export function buildSelfScorecard({ repoRoot }) {
   lines.push('');
   lines.push('## See also');
   lines.push('');
-  lines.push('- [Aspect grid](../framework/aspect-grid.md) — which sensor scores each cell (without verdicts).');
+  lines.push(
+    '- [Aspect grid](../framework/aspect-grid.md) — which sensor scores each cell (without verdicts).',
+  );
   lines.push('- [Scorecard](../framework/scorecard.md) — verdict semantics + thresholds.');
-  lines.push('- [Test matrix](test-matrix.md) — DEVAI\'s own current suite measurements.');
+  lines.push("- [Test matrix](test-matrix.md) — DEVAI's own current suite measurements.");
   lines.push('');
   return lines.join('\n');
 }

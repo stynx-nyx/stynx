@@ -6,13 +6,13 @@
     "kind": "inventory_rbac",
     "version": "1.0.0"
   },
-  "timestamp": "2026-05-17T23:10:34.192Z",
+  "timestamp": "2026-07-14T04:58:50.390Z",
   "status": "pass",
   "deterministic": true,
   "command": "devai sense rbac --repo-root .",
   "command_hash": "e0c5e638501022c0f1e6489d484cc154da7b040c0d15e98518025c1005add63c",
   "tier": "L0",
-  "duration_ms": 3,
+  "duration_ms": 5,
   "evidence_path": ".devai/state/sensors/inventory_rbac/rbac.json",
   "metrics": {
     "role_table_count": 2,

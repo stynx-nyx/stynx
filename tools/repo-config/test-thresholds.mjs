@@ -3,7 +3,7 @@
 // values. Imported by:
 //   - tools/repo-config/vitest.base.mjs       (coverage gates)
 //   - tools/stryker/base.mjs                  (mutation gates)
-//   - devai render-matrix                     (cell colouring)
+//   - devai evidence test matrix              (cell colouring)
 //
 // Per-package overrides live under `perPackage[packageName]` in the config:
 //   "perPackage": { "@stynx-nyx/auth": { "coverage": "strict", "mutation": "strictest" } }
@@ -34,10 +34,7 @@ function load() {
  */
 export function getCoverageThreshold(packageName) {
   const cfg = load();
-  const policyName =
-    cfg.perPackage?.[packageName]?.coverage ??
-    cfg.defaults?.coverage ??
-    'default';
+  const policyName = cfg.perPackage?.[packageName]?.coverage ?? cfg.defaults?.coverage ?? 'default';
   const policy = cfg.policies?.coverage?.[policyName];
   if (!policy) {
     throw new Error(`[test-thresholds] unknown coverage policy '${policyName}' for ${packageName}`);

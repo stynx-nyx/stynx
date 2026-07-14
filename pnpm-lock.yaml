@@ -63,14 +63,20 @@ importers:
         specifier: ^20.5.0
         version: 20.5.3
       '@devai-nyx/cli':
-        specifier: ^0.4.0
-        version: 0.4.0(ws@8.21.0)(zod@3.25.76)
+        specifier: ^0.5.0
+        version: 0.5.0(ws@8.21.0)(zod@3.25.76)
       '@devai-nyx/core':
-        specifier: ^0.4.0
-        version: 0.4.0(ws@8.21.0)(zod@3.25.76)
+        specifier: ^0.5.0
+        version: 0.5.0(ws@8.21.0)(zod@3.25.76)
       '@devai-nyx/schemas':
-        specifier: ^0.4.0
-        version: 0.4.0
+        specifier: ^0.5.0
+        version: 0.5.0
+      '@devai-nyx/sensors':
+        specifier: ^0.5.0
+        version: 0.5.0
+      '@devai-nyx/utils':
+        specifier: ^0.5.0
+        version: 0.5.0
       '@eslint/js':
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.4.0(jiti@2.7.0))
@@ -3726,21 +3732,21 @@ packages:
     resolution: {integrity: sha512-v6oD9Ukp+N7V4n6p5I/+mM5fIohSfkrDSGlFm5w/pYmchvbk+sMIHsLxrFJ5Lnujewj1BzWL0K84d88lwZAMQA==}
     engines: {node: '>=18'}
 
-  '@devai-nyx/cli@0.4.0':
-    resolution: {integrity: sha512-nvRYD0gPe3Zd9/hQDC9LtjI+2UhSiWn0wqT1PNHOB7iv3o3BXy5JJrzoshVVuAAQHNydw6TsYECdXf1GuRYUtw==, tarball: https://npm.pkg.github.com/download/@devai-nyx/cli/0.4.0/1ff05d4216a957c038f2f3bcb0fca3e5871da133}
+  '@devai-nyx/cli@0.5.0':
+    resolution: {integrity: sha512-zdeXdpBiFKhpyLw9Y6OHPgHQI2TfZTp7dE8avwJejTGWVZeviC7xIQfvabkmfoqty0qFNbxV1NDQ5XCil+81gA==, tarball: https://npm.pkg.github.com/download/@devai-nyx/cli/0.5.0/d3597e74270c25f1dad13ff0c7416f857815160f}
     hasBin: true
 
-  '@devai-nyx/core@0.4.0':
-    resolution: {integrity: sha512-UNCBeYoyyvlnYwBxat1OpTeQNPnJVM4WsTF39WFXBeVwjasXvKI7aZEikBO+9nfdK0bSGyzJHY5el8DMO+Zc5A==, tarball: https://npm.pkg.github.com/download/@devai-nyx/core/0.4.0/c48057cebb73ab062aea1637ba025b853138f9d9}
+  '@devai-nyx/core@0.5.0':
+    resolution: {integrity: sha512-wUUJurDVkF4pktaUokOgNx/8REBG5w5ebZobsD9LbEVF++DIfXleQ5ntUpyB0INK8n45GR03mg0QF64EGoWURw==, tarball: https://npm.pkg.github.com/download/@devai-nyx/core/0.5.0/d93cbf67c750e123a58362c90238a4a683ea6056}
 
-  '@devai-nyx/schemas@0.4.0':
-    resolution: {integrity: sha512-qG1tW42OUfbnufsA8jjnHYO7Bnn6vD8QnBUFKv88nR/fJEEPpKMF8eCcJGmVEYkQX2X1AgACINynQaC0pPOyeA==, tarball: https://npm.pkg.github.com/download/@devai-nyx/schemas/0.4.0/89af6d163fd5fde758fbc94a1881ef0e8988479e}
+  '@devai-nyx/schemas@0.5.0':
+    resolution: {integrity: sha512-TF9Lz3680cuL8RnC6TiUYFqsYHMvaqCF7i60n1fHWqs24ZDq+UJIet2NXsL0geZ3XBIYkkK4nDB1QPyeLSvVBQ==, tarball: https://npm.pkg.github.com/download/@devai-nyx/schemas/0.5.0/8481e05c4e3bd7034918efe3fb8c19ce00ada740}
 
-  '@devai-nyx/sensors@0.4.0':
-    resolution: {integrity: sha512-7uskertMme8rK4mpKH4V1ATpZFdIRlD6iUL9KcMVyjQnuyh+G0CHCjymswdsuE5yaBaKfwbb8sT/zRoRB/oeSg==, tarball: https://npm.pkg.github.com/download/@devai-nyx/sensors/0.4.0/732a7727da9e22df008b19a334ab7dd1d553ee71}
+  '@devai-nyx/sensors@0.5.0':
+    resolution: {integrity: sha512-91TlfQoyKIXhK9cGZTMAR8pxDjQqJDwcMyZ5bObr9UEvfzJXD6/aJexN8svyGQR2Il24MdlJumdE2L9NjdOySA==, tarball: https://npm.pkg.github.com/download/@devai-nyx/sensors/0.5.0/25cf22ce628635ed6255545dc07c680553fc03ce}
 
-  '@devai-nyx/utils@0.4.0':
-    resolution: {integrity: sha512-LsFztVHNPwO1EkHZXHTejQUANxxLRdpRy8pJnzmWE01H54z/Q+khP2D1vbWZ8i8IoXheaK6FtMCYG3VaQ5cxKQ==, tarball: https://npm.pkg.github.com/download/@devai-nyx/utils/0.4.0/7fd7f536a953dea1b66b48146b5711932e935b18}
+  '@devai-nyx/utils@0.5.0':
+    resolution: {integrity: sha512-hsEvQ2wkIA5da1Hnie3MbEV2ss9kI62uUsa0I3H63Nxs4cV0855cvcVq852PY58NnL6qk2n1eRiWCSvh5y254g==, tarball: https://npm.pkg.github.com/download/@devai-nyx/utils/0.5.0/bf4ec0cd1b4277ad3e10865cc159f80525207c15}
 
   '@discoveryjs/json-ext@0.5.7':
     resolution: {integrity: sha512-dBVuXR082gk3jsFp7Rd/JI4kytwGHecnCoTtXFb7DB6CNHp4rg5k1bhg0nWdLGLnOV71lmDzGQaLMy8iPLY0pw==}
@@ -15151,12 +15157,12 @@ snapshots:
       gonzales-pe: 4.3.0
       node-source-walk: 7.0.2
 
-  '@devai-nyx/cli@0.4.0(ws@8.21.0)(zod@3.25.76)':
+  '@devai-nyx/cli@0.5.0(ws@8.21.0)(zod@3.25.76)':
     dependencies:
-      '@devai-nyx/core': 0.4.0(ws@8.21.0)(zod@3.25.76)
-      '@devai-nyx/schemas': 0.4.0
-      '@devai-nyx/sensors': 0.4.0
-      '@devai-nyx/utils': 0.4.0
+      '@devai-nyx/core': 0.5.0(ws@8.21.0)(zod@3.25.76)
+      '@devai-nyx/schemas': 0.5.0
+      '@devai-nyx/sensors': 0.5.0
+      '@devai-nyx/utils': 0.5.0
       ajv: 8.20.0
       ajv-formats: 3.0.1(ajv@8.20.0)
       cac: 6.7.14
@@ -15167,12 +15173,12 @@ snapshots:
       - ws
       - zod
 
-  '@devai-nyx/core@0.4.0(ws@8.21.0)(zod@3.25.76)':
+  '@devai-nyx/core@0.5.0(ws@8.21.0)(zod@3.25.76)':
     dependencies:
       '@anthropic-ai/sdk': 0.91.1(zod@3.25.76)
-      '@devai-nyx/schemas': 0.4.0
-      '@devai-nyx/sensors': 0.4.0
-      '@devai-nyx/utils': 0.4.0
+      '@devai-nyx/schemas': 0.5.0
+      '@devai-nyx/sensors': 0.5.0
+      '@devai-nyx/utils': 0.5.0
       ajv: 8.20.0
       ajv-formats: 3.0.1(ajv@8.20.0)
       minimatch: 9.0.9
@@ -15185,21 +15191,21 @@ snapshots:
       - ws
       - zod
 
-  '@devai-nyx/schemas@0.4.0':
+  '@devai-nyx/schemas@0.5.0':
     dependencies:
       ajv: 8.20.0
       ajv-formats: 3.0.1(ajv@8.20.0)
 
-  '@devai-nyx/sensors@0.4.0':
+  '@devai-nyx/sensors@0.5.0':
     dependencies:
-      '@devai-nyx/schemas': 0.4.0
-      '@devai-nyx/utils': 0.4.0
+      '@devai-nyx/schemas': 0.5.0
+      '@devai-nyx/utils': 0.5.0
       pg: 8.21.0
       typescript: 5.9.3
     transitivePeerDependencies:
       - pg-native
 
-  '@devai-nyx/utils@0.4.0': {}
+  '@devai-nyx/utils@0.5.0': {}
 
   '@discoveryjs/json-ext@0.5.7': {}
 

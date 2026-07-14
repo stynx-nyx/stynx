@@ -6,8 +6,8 @@ provider-specific schemas.
 
 ## Shared Package Boundary
 
-| Package                      | STYNX responsibility                                                                                          | Adopter responsibility                                                                             |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Package                          | STYNX responsibility                                                                                          | Adopter responsibility                                                                             |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | `@stynx-nyx/signature`           | PAdES/TSA/OCSP/CRL facade, signature evidence contract, provider interface.                                   | Domain signing policy, certificate provider credentials, legal retention, and audit event meaning. |
 | `@stynx-nyx/pdf`                 | Server-side PDF render facade, template/render result contract, signature digest handoff, PDF/A adapter hook. | Domain templates, branding assets, data selection, legal text approval, and validation policy.     |
 | `@stynx-nyx/pdf-a`               | PDF/A validator interface, result contract, stubs, and telemetry metric names.                                | Choosing where validation is required and how failures affect each workflow.                       |
@@ -47,9 +47,9 @@ STYNX owns these adopter-facing verifiers:
 STYNX does not keep local compatibility wrappers for DEVAI-owned test evidence
 commands. Workspace scripts invoke DEVAI directly:
 
-| Task              | DEVAI CLI                  |
-| ----------------- | -------------------------- |
-| Matrix rendering  | `devai render-matrix`      |
-| Run recording     | `devai record-run`         |
-| Evidence emission | `devai evidence-emit`      |
-| Coverage merge    | `devai coverage-aggregate` |
+| Task              | DEVAI CLI (0.5.0)                   |
+| ----------------- | ----------------------------------- |
+| Matrix rendering  | `devai evidence test matrix`        |
+| Run recording     | `devai evidence test record`        |
+| Evidence emission | `devai evidence emit`               |
+| Coverage merge    | `devai evidence coverage aggregate` |

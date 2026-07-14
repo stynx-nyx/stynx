@@ -9,7 +9,7 @@
  * wall-clock and throughput = (1 / median seconds) requests-per-second.
  *
  * Output: emits a single JSON line on stdout as the last line, matching
- * the shape `devai sense-perf-test` parses (Phase 30.H):
+ * the shape `devai sense perf test` parses (Phase 30.H):
  *   { "p50_ms": number, "p95_ms": number, "throughput_rps": number }
  *
  * Override the probed command via STYNX_PERF_PROBE env var. Sample
@@ -26,7 +26,8 @@ import { fileURLToPath } from 'node:url';
 
 import { getPerfThreshold } from '../tools/repo-config/test-thresholds.mjs';
 
-const DEFAULT_PROBE = 'pnpm --dir packages/data exec vitest run --silent --config ./vitest.config.ts test/unit/query-helpers.spec.ts';
+const DEFAULT_PROBE =
+  'pnpm --dir packages/data exec vitest run --silent --config ./vitest.config.ts test/unit/query-helpers.spec.ts';
 const PROBE = process.env.STYNX_PERF_PROBE ?? DEFAULT_PROBE;
 const SAMPLES = Number(process.env.STYNX_PERF_SAMPLES ?? '5');
 const PROBE_ARGS = PROBE.split(/\s+/);
@@ -89,7 +90,9 @@ function main() {
     const { ok, ms } = runOnce();
     samples.push(ms);
     if (ok) okCount += 1;
-    process.stderr.write(`[perf-smoke] sample ${i + 1}/${SAMPLES}: ${ms.toFixed(0)}ms ${ok ? 'ok' : 'FAIL'}\n`);
+    process.stderr.write(
+      `[perf-smoke] sample ${i + 1}/${SAMPLES}: ${ms.toFixed(0)}ms ${ok ? 'ok' : 'FAIL'}\n`,
+    );
   }
   if (okCount < SAMPLES) {
     process.stderr.write(`[perf-smoke] ${SAMPLES - okCount} of ${SAMPLES} probes failed\n`);
