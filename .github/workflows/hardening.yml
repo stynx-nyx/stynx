@@ -22,6 +22,9 @@ env:
   NODE_VERSION: '24'
   PNPM_VERSION: '9.15.0'
   K6_ARTIFACT_NAME: k6-results-${{ github.event.inputs.scenario || 'all' }}
+  # @devai-nyx/* resolves from GitHub Packages (npm.pkg.github.com), which
+  # needs an authenticated read regardless of the source repo's visibility.
+  NODE_AUTH_TOKEN: ${{ secrets.DEVAI_REPO_TOKEN || github.token }}
 
 permissions:
   contents: read

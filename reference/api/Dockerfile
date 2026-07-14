@@ -1,3 +1,6 @@
+# syntax=docker/dockerfile:1
+# The `# syntax` pragma above must stay the first line -- it pins the
+# BuildKit frontend version needed for `RUN --mount=type=secret` below.
 FROM node:24-bookworm-slim AS workspace
 
 WORKDIR /app
@@ -9,7 +12,7 @@ ENV CI=true \
 
 RUN corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.json ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.json .npmrc ./
 COPY docs/framework/api ./docs/framework/api
 COPY docs/framework/contracts ./docs/framework/contracts
 COPY tools ./tools
@@ -19,7 +22,12 @@ COPY reference/api ./reference/api
 
 FROM workspace AS build
 
-RUN NODE_OPTIONS=--disable-warning=DEP0169 pnpm install --frozen-lockfile --ignore-scripts
+# @devai-nyx/* resolves from GitHub Packages (see .npmrc); NODE_AUTH_TOKEN is
+# passed as a BuildKit secret (not an ARG/ENV) so it never lands in an image
+# layer or build-history entry.
+RUN --mount=type=secret,id=node_auth_token \
+  NODE_AUTH_TOKEN="$(cat /run/secrets/node_auth_token)" \
+  NODE_OPTIONS=--disable-warning=DEP0169 pnpm install --frozen-lockfile --ignore-scripts
 RUN pnpm --filter @stynx-nyx/reference-api... build
 RUN mkdir -p runtime-dist/reference/api runtime-dist/packages \
   && cp -R reference/api/dist runtime-dist/reference/api/dist \
@@ -33,7 +41,9 @@ RUN mkdir -p runtime-dist/reference/api runtime-dist/packages \
 
 FROM workspace AS prod-deps
 
-RUN NODE_OPTIONS=--disable-warning=DEP0169 pnpm install --frozen-lockfile --prod --ignore-scripts
+RUN --mount=type=secret,id=node_auth_token \
+  NODE_AUTH_TOKEN="$(cat /run/secrets/node_auth_token)" \
+  NODE_OPTIONS=--disable-warning=DEP0169 pnpm install --frozen-lockfile --prod --ignore-scripts
 
 FROM node:24-bookworm-slim AS runtime
 

@@ -1,3 +1,6 @@
+# syntax=docker/dockerfile:1
+# The `# syntax` pragma above must stay the first line -- it pins the
+# BuildKit frontend version needed for `RUN --mount=type=secret` below.
 FROM node:24-alpine AS build
 WORKDIR /app
 # node-gyp toolchain for optional native postinstalls (ssh2/cpu-features);
@@ -6,13 +9,18 @@ WORKDIR /app
 RUN apk add --no-cache python3 make g++
 RUN corepack enable
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.json ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.json .npmrc ./
 COPY tools ./tools
 COPY packages ./packages
 COPY packages-web ./packages-web
 COPY reference/web ./reference/web
 
-RUN pnpm install --frozen-lockfile
+# @devai-nyx/* resolves from GitHub Packages (see .npmrc); NODE_AUTH_TOKEN is
+# passed as a BuildKit secret (not an ARG/ENV) so it never lands in an image
+# layer or build-history entry.
+RUN --mount=type=secret,id=node_auth_token \
+  NODE_AUTH_TOKEN="$(cat /run/secrets/node_auth_token)" \
+  pnpm install --frozen-lockfile
 RUN pnpm --filter @stynx-nyx/reference-web build:web
 
 FROM node:24-alpine AS runtime

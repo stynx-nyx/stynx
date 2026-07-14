@@ -44,6 +44,9 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
   NODE_VERSION: '24'
   PNPM_VERSION: '9.15.0'
+  # @devai-nyx/* resolves from GitHub Packages (npm.pkg.github.com), which
+  # needs an authenticated read regardless of the source repo's visibility.
+  NODE_AUTH_TOKEN: ${{ secrets.DEVAI_REPO_TOKEN || github.token }}
 
 jobs:
   # Single-source evidence gate (ADR-CI-ECONOMY Decision 7).
@@ -135,7 +138,18 @@ jobs:
       - name: Install Playwright Chromium
         run: pnpm --filter @stynx-nyx/reference-web exec playwright install --with-deps chromium
       - name: Start reference API stack
-        run: docker compose -f reference/api/docker-compose.yml up -d --build
+        # NODE_AUTH_TOKEN_FILE feeds docker-compose.yml's file-based build
+        # secret (reference-api's image build resolves @devai-nyx/* from
+        # GitHub Packages) -- runner-local temp file, never committed, gone
+        # when the VM is torn down.
+        run: |
+          set -euo pipefail
+          NODE_AUTH_TOKEN_FILE="$(mktemp)"
+          printf '%s' "$NODE_AUTH_TOKEN" > "$NODE_AUTH_TOKEN_FILE"
+          export NODE_AUTH_TOKEN_FILE
+          docker compose -f reference/api/docker-compose.yml up -d --build
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.DEVAI_REPO_TOKEN || github.token }}
       - name: Wait for reference API health gates
         run: |
           set -euo pipefail
@@ -178,10 +192,23 @@ jobs:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - name: Build reference-api image
-        run: docker build -f reference/api/Dockerfile -t stynx/reference-api:${{ github.sha }} .
+        # DOCKER_BUILDKIT=1 + --secret keeps NODE_AUTH_TOKEN out of image
+        # layers/history; the Dockerfile's RUN --mount=type=secret consumes
+        # it only for the pnpm install step that needs @devai-nyx/* auth.
+        run: |
+          DOCKER_BUILDKIT=1 docker build \
+            --secret id=node_auth_token,env=NODE_AUTH_TOKEN \
+            -f reference/api/Dockerfile -t stynx/reference-api:${{ github.sha }} .
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.DEVAI_REPO_TOKEN || github.token }}
 
       - name: Build reference-web image
-        run: docker build -f reference/web/Dockerfile -t stynx/reference-web:${{ github.sha }} .
+        run: |
+          DOCKER_BUILDKIT=1 docker build \
+            --secret id=node_auth_token,env=NODE_AUTH_TOKEN \
+            -f reference/web/Dockerfile -t stynx/reference-web:${{ github.sha }} .
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.DEVAI_REPO_TOKEN || github.token }}
 
       - name: Run Trivy on reference-api
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0

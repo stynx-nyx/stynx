@@ -44,6 +44,7 @@ jobs:
       - uses: ./.github/actions/setup-stynx
         with:
           node-version: '24'
+          node-auth-token: ${{ secrets.DEVAI_REPO_TOKEN || github.token }}
       - run: pnpm --filter ./domain/demo-bookmark/api run build
       - run: pnpm --filter ./domain/demo-bookmark/api run test
       - run: pnpm --filter ./domain/demo-bookmark/api run lint
@@ -67,5 +68,7 @@ jobs:
     # build to catch regressions caused by demo-bookmark changes that
     # propagate to other packages via @stynx-nyx/* imports.
     uses: ./.github/workflows/reusable-typecheck.yml
+    secrets:
+      devai-repo-token: ${{ secrets.DEVAI_REPO_TOKEN }}
     with:
       node-version: '24'

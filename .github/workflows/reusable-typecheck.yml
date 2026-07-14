@@ -29,6 +29,13 @@ on:
         type: string
         required: false
         default: '9.15.0'
+    secrets:
+      devai-repo-token:
+        description: >-
+          Token with read:packages on devai-nyx, used to resolve @devai-nyx/*
+          from GitHub Packages. Optional -- falls back to the ambient
+          github.token (works for same-org packages, not devai-nyx).
+        required: false
 
 permissions:
   contents: read
@@ -48,5 +55,6 @@ jobs:
         with:
           node-version: ${{ inputs.node-version }}
           pnpm-version: ${{ inputs.pnpm-version }}
+          node-auth-token: ${{ secrets.devai-repo-token || github.token }}
       - name: Workspace typecheck
         run: pnpm typecheck
