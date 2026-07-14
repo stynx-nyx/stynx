@@ -1,4 +1,62 @@
 {
-  "head": null,
-  "records": []
+  "head": "e766d4273d5dafc4a849542b781adba845b51ec6afaf84faebfa0ca8e80acedd",
+  "records": [
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-4ff9b5379e1ce37f",
+      "timestamp": "2026-07-13T17:21:44.156Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.inventory_routes",
+      "status": "completed",
+      "context": {
+        "repo_root": ".",
+        "git": {
+          "head_sha": "1d5e6388d1071cbd90f5270f666f5078ae75909a",
+          "dirty_files": [
+            ".devai/state/sensors/inventory_coverage/coverage-matrix.json",
+            ".devai/state/sensors/inventory_routes/routes-angular.json",
+            ".github/workflows/devai-gates.yml",
+            "docs/framework/product/use-cases/stynx-reference-app-extended.json",
+            "docs/framework/product/use-cases/stynx-reference-app.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-c9fa656019761534.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-b2f0d7677325d343.json"
+          ]
+        }
+      },
+      "artifacts": [],
+      "notes": ["sensor_status=pass", "sensor_id=SR-b2f0d7677325d343"],
+      "previous_run_hash": null,
+      "manifest_hash": "808953fe5ffc0ccd255fbe8063a78685dca805bc292444e3295f781b5f2dd597"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-924bebf1cdd09f91",
+      "timestamp": "2026-07-13T17:21:44.682Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.inventory_coverage",
+      "status": "completed",
+      "context": {
+        "repo_root": ".",
+        "git": {
+          "head_sha": "1d5e6388d1071cbd90f5270f666f5078ae75909a",
+          "dirty_files": [
+            ".devai/state/evidence-chain.json",
+            ".devai/state/sensors/inventory_coverage/coverage-matrix.json",
+            ".devai/state/sensors/inventory_routes/routes-angular.json",
+            ".github/workflows/devai-gates.yml",
+            "docs/framework/product/use-cases/stynx-reference-app-extended.json",
+            "docs/framework/product/use-cases/stynx-reference-app.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-c9fa656019761534.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-b2f0d7677325d343.json"
+          ]
+        }
+      },
+      "artifacts": [],
+      "notes": ["sensor_status=review", "sensor_id=SR-c9fa656019761534"],
+      "previous_run_hash": "808953fe5ffc0ccd255fbe8063a78685dca805bc292444e3295f781b5f2dd597",
+      "manifest_hash": "e766d4273d5dafc4a849542b781adba845b51ec6afaf84faebfa0ca8e80acedd"
+    }
+  ]
 }
