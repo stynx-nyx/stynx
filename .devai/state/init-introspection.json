@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "1.0.0",
+  "target_root": "/Users/aarusso/Development/stech/stynx",
+  "generated_at": "2026-08-12T19:13:26.584Z",
+  "package_manager": "pnpm",
+  "languages": [
+    {
+      "name": "typescript",
+      "file_count": 1355
+    },
+    {
+      "name": "javascript",
+      "file_count": 159
+    }
+  ],
+  "frameworks": [],
+  "source_globs": [
+    "packages/*/src/**"
+  ],
+  "test_globs": [
+    "test/**",
+    "**/*.spec.*",
+    "**/*.test.*"
+  ],
+  "protected_surfaces": [],
+  "existing_devai_config": true,
+  "proposed_project_type": "platform-package",
+  "notes": [
+    "No recognized framework dependency in package.json; project_type may be platform-package or framework"
+  ]
+}

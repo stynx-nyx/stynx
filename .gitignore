@@ -64,6 +64,11 @@ frontend/src/environments/*.ts
 # Root level
 # ------------------------
 node_modules/
+.devai/state/check-cache/
+scratch/*
+!scratch/worktrees/
+scratch/worktrees/*
+!scratch/worktrees/README.md
 dist/
 build/
 *.tgz

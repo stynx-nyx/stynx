@@ -483,6 +483,11 @@ copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'docs/meta/security'), 'se
 copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'docs/meta/templates'), 'templates', (content) =>
   publicMarkdownContent(content),
 );
+writeSpecificDoc(
+  resolve(repoRoot, 'docs/reference/law.md'),
+  'reference/law.md',
+  'DEVAI Constitution',
+);
 writeReadmeDoc(resolve(repoRoot, 'reference/api/README.md'), 'reference/api.md', (content) =>
   publicMarkdownContent(content)
     .replace(/\[([^\]]+)\]\(\.\.\/\.\.\/specs\/([^)\s#]+)\.sql(?:#[^)]+)?\)/gu, (_match, label, filename) => {

@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "1.0.0",
+  "descriptorVersion": "stynx-tier1-v1",
+  "repositoryId": "stynx",
+  "fallbackNodeId": "test:local-full",
+  "dynamicFallbackSelectors": [],
+  "tasks": [
+    {
+      "nodeId": "test:lint",
+      "dependencies": [],
+      "argv": ["pnpm", "run", "lint"],
+      "cwd": ".",
+      "runner": "spawn",
+      "inputSelectors": [{ "kind": "glob", "pattern": "**" }],
+      "toolchainKeys": ["node", "pnpm"],
+      "allowlistedEnv": [],
+      "outputContract": { "kind": "exit-code", "expected": 0 }
+    },
+    {
+      "nodeId": "test:typecheck",
+      "dependencies": [],
+      "argv": ["pnpm", "run", "typecheck"],
+      "cwd": ".",
+      "runner": "spawn",
+      "inputSelectors": [{ "kind": "glob", "pattern": "**" }],
+      "toolchainKeys": ["node", "pnpm", "typescript"],
+      "allowlistedEnv": [],
+      "outputContract": { "kind": "exit-code", "expected": 0 }
+    },
+    {
+      "nodeId": "test:unit",
+      "dependencies": [],
+      "argv": ["pnpm", "run", "test"],
+      "cwd": ".",
+      "runner": "spawn",
+      "inputSelectors": [{ "kind": "glob", "pattern": "**" }],
+      "toolchainKeys": ["node", "pnpm", "vitest"],
+      "allowlistedEnv": [],
+      "outputContract": { "kind": "exit-code", "expected": 0 }
+    },
+    {
+      "nodeId": "test:build",
+      "dependencies": ["test:typecheck"],
+      "argv": ["pnpm", "run", "build"],
+      "cwd": ".",
+      "runner": "spawn",
+      "inputSelectors": [{ "kind": "glob", "pattern": "**" }],
+      "toolchainKeys": ["node", "pnpm", "typescript"],
+      "allowlistedEnv": [],
+      "outputContract": { "kind": "exit-code", "expected": 0 }
+    },
+    {
+      "nodeId": "test:local-full",
+      "dependencies": ["test:lint", "test:typecheck", "test:unit", "test:build"],
+      "argv": ["pnpm", "run", "check:engines"],
+      "cwd": ".",
+      "runner": "spawn",
+      "inputSelectors": [{ "kind": "glob", "pattern": "**" }],
+      "toolchainKeys": ["node", "pnpm"],
+      "allowlistedEnv": [],
+      "outputContract": { "kind": "exit-code", "expected": 0 }
+    },
+    {
+      "nodeId": "test:integration",
+      "dependencies": ["test:unit"],
+      "argv": ["pnpm", "run", "test:int"],
+      "cwd": ".",
+      "runner": "spawn",
+      "inputSelectors": [{ "kind": "glob", "pattern": "**" }],
+      "toolchainKeys": ["node", "pnpm", "vitest"],
+      "allowlistedEnv": ["DEVAI_DB_TESTS"],
+      "outputContract": { "kind": "exit-code", "expected": 0 }
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "affected",
+      "mode": "affected",
+      "requiredNodes": [],
+      "eligibleNodes": [
+        "test:lint",
+        "test:typecheck",
+        "test:unit",
+        "test:build",
+        "test:local-full",
+        "test:integration"
+      ]
+    },
+    {
+      "profileId": "rc",
+      "mode": "fixed",
+      "requiredNodes": ["test:local-full", "test:integration"]
+    }
+  ]
+}
