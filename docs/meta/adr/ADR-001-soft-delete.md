@@ -10,11 +10,11 @@ tags: [stynx, soft-delete, data-layer, post-c4]
 # ADR-001 — Soft Delete Mechanics and Cascading Semantics
 
 **Authority:** Architect.
-**Related:** [`docs/framework/arch/STYNX-SPEC-v0.6.md`](../../framework/arch/STYNX-SPEC-v0.6.md) §14, §13.4, §13.5. Pre-pilot history: file was at `specs/STYNX-ADR-001-soft-delete.md` until C-4 Session S5 (commit `cb734ac`); re-authored to DEVAI ADR schema in C-4 Session T3.
+**Related:** [`docs/framework/arch/STYNX-SPEC-v0.6.md`](../../framework/arch/STYNX-SPEC-v0.6.md) §14, §13.4, §13.5. Historical path: `specs/STYNX-ADR-001-soft-delete.md`.
 
 ## Status
 
-Accepted on 2026-05-16 (re-authored to DEVAI schema; the underlying decision was made pre-pilot — original Status was "Proposed"; accepted as of stynx v1.0 release prep).
+Accepted on 2026-05-16; the underlying decision predates the current documentation layout and was accepted as part of STYNX v1.0 release preparation.
 
 ## Context
 

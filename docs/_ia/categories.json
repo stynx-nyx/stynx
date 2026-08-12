@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$comment": "R15 W04 deliverable. Authored category manifest declaring per-directory order + labels for the seven top-level sections and any sub-categories within them. Shape follows DEVAI's docs/_ia/categories.json (sections + categories + rootFileAllowlist), NOT the alternate shape sketched in this round's W04 worker prompt. Consumed by docs/site/scripts/sync-content.mjs (or its R15 W06 successor) which emits _category_.json files into the synced Docusaurus tree. Per ADR-DOCS-IA Decision 5, this is the only authorised way to reorder a category in the published site.",
+  "$comment": "Category manifest consumed by docs/site/scripts/sync-content.mjs. Update this file to reorder categories in the published site.",
   "sections": [
     {
       "id": "start",
@@ -8,34 +8,24 @@
       "position": 1
     },
     {
-      "id": "theory",
-      "label": "Theory",
-      "position": 2
-    },
-    {
       "id": "framework",
       "label": "Framework",
-      "position": 3
-    },
-    {
-      "id": "roles",
-      "label": "Roles",
-      "position": 4
+      "position": 2
     },
     {
       "id": "adopters",
       "label": "Adopters",
-      "position": 5
+      "position": 3
     },
     {
       "id": "reference",
       "label": "Reference",
-      "position": 6
+      "position": 4
     },
     {
       "id": "meta",
       "label": "Meta",
-      "position": 7
+      "position": 5
     }
   ],
   "categories": {
@@ -56,16 +46,12 @@
       "position": 4
     },
     "framework/product": {
-      "label": "Product (Owner specs)",
+      "label": "Product specifications",
       "position": 7
     },
     "framework/glossary": {
       "label": "Glossary",
       "position": 8
-    },
-    "adopters/pilots": {
-      "label": "Pilots",
-      "position": 2
     },
     "adopters/stynx": {
       "label": "STYNX adoption pack",
@@ -82,10 +68,6 @@
     "meta/eng": {
       "label": "Engineering",
       "position": 3
-    },
-    "meta/gov": {
-      "label": "Governance",
-      "position": 4
     },
     "meta/ops": {
       "label": "Operations",
@@ -106,10 +88,6 @@
     "meta/templates": {
       "label": "Templates",
       "position": 9
-    },
-    "meta/legacy": {
-      "label": "Legacy (archived)",
-      "position": 10
     }
   },
   "rootFileAllowlist": [
@@ -129,24 +107,9 @@
       "section": "meta"
     },
     {
-      "source": "GOVERNANCE.md",
-      "dest": "meta/governance.md",
-      "section": "meta"
-    },
-    {
       "source": "AGENTS.md",
       "dest": "meta/agents.md",
       "section": "meta"
-    },
-    {
-      "source": "CLAUDE.md",
-      "dest": "meta/claude.md",
-      "section": "meta"
-    },
-    {
-      "source": "CONSTITUTION.md",
-      "dest": "framework/constitution.md",
-      "section": "framework"
     }
   ],
   "outOfIa": ["work/", "_ia/", "site/"]

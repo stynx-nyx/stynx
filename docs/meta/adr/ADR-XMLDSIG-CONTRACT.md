@@ -2,7 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-05-24
-**Authority:** Architect, per DEVAI Constitution Article 6
+**Status:** Accepted architecture decision.
 
 ## Context
 

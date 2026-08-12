@@ -62,7 +62,7 @@ function walk(dir) {
   const files = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     if (entry.isDirectory()) {
-      if (!excludedDirs.has(entry.name) && !entry.name.startsWith('.devai')) {
+      if (!excludedDirs.has(entry.name)) {
         files.push(...walk(join(dir, entry.name)));
       }
       continue;

@@ -1,10 +1,8 @@
 # Invariants
 
-**Authority:** Architect (Constitution Article 6).
-
 This directory contains the active machine-readable stynx invariants. JSON files
-remain the canonical invariant instances and must validate against DEVAI's
-schema registry.
+remain the canonical invariant instances and must validate against the schemas
+tracked under `docs/framework/schemas/`.
 
 ## Active Areas
 

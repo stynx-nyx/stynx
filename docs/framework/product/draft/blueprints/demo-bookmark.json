@@ -6,7 +6,7 @@
     "namespace": "demo",
     "version": "0.1.0",
     "owners": ["c-4-pilot"],
-    "description": "First DEVAI-scaffolded vertical slice in stynx: per-tenant tagged bookmarks. Demonstrates the full NestJS + Angular + Postgres pipeline (DB migration → API controller → Angular feature module) end-to-end against an existing stynx-shaped repo. Minimal but concrete; not a production feature."
+    "description": "Reference vertical slice for per-tenant tagged bookmarks. Demonstrates the NestJS, Angular, and PostgreSQL pipeline from database migration through API controller and Angular feature module. Minimal but concrete; not a production feature."
   },
   "database": {
     "entities": [

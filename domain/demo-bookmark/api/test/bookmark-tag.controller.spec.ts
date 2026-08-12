@@ -1,4 +1,4 @@
-// C-4 Session T2 — BookmarkTagController route-binding test.
+// BookmarkTagController route-binding test.
 
 import { Test } from '@nestjs/testing';
 import { PermissionGuard, StynxAuthGuard } from '@stynx-nyx/auth';
@@ -8,7 +8,7 @@ import { BookmarkTagService } from '../src/demo-bookmark/services/bookmark-tag.s
 describe('BookmarkTagController', () => {
   const fakeTag = {
     bookmarkId: '00000000-0000-4000-8000-000000bk0001',
-    tag: 'devai',
+    tag: 'architecture',
     createdAt: new Date(),
   };
 

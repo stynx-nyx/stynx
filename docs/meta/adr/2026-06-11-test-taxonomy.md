@@ -9,7 +9,7 @@ tags: [stynx, testing, e2e, vitest, playwright]
 
 # ADR-TEST-TAXONOMY-2026-06-11 - Stynx test taxonomy and e2e naming contract
 
-**Authority:** Architect, per DEVAI Constitution Article 6.
+**Status:** Accepted architecture decision.
 **Related:** `docs/work/round-18/diag.md`, `docs/work/round-18/inv.md`, `docs/work/round-18/inv-before/e2e-spec-touchpoints.txt`.
 
 Decision summary: stynx uses four named test kinds. Package-level mocked HTTP

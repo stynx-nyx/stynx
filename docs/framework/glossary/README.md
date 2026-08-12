@@ -1,20 +1,15 @@
 # Glossary
 
-**Authority:** Owner and Architect, jointly (Constitution Article 6).
-
-This glossary defines terms that recur across stynx package, governance,
+This glossary defines terms that recur across STYNX package,
 architecture, and reference-app documentation.
 
-## DEVAI Terms
+## Architecture terms
 
-- **Substrate** — DEVAI's authority partition for repository artifacts. In
-  stynx, architecture/contracts/operations/security docs are Architect
-  substrate, packages are Engineer substrate, and tests are Inspector substrate.
 - **Invariant** — an atomic architecture rule under
   [../arch/invariants/](../arch/invariants/). Tests and docs
   should reference invariants when they enforce durable framework behavior.
-- **Trace** — the mapping from invariants to code, tests, and evidence. Current
-  stynx trace lives in `docs/framework/arch/trace.json`.
+- **Trace** — the mapping from invariants to code, tests, and documentation.
+  The current trace lives in `docs/framework/arch/trace.json`.
 
 ## Runtime Terms
 

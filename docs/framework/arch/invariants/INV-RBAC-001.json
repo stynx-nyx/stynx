@@ -6,8 +6,8 @@
   "severity": "gate",
   "type": "rbac",
   "title": "Every stynx HTTP endpoint must be either role-bound or explicitly public",
-  "statement": "For every endpoint id in .devai/state/sensors/inventory_api/api-map.json#/endpoints[*], the endpoint MUST satisfy at least one of: (a) appear in .devai/state/sensors/inventory_rbac/rbac.json#/bindings/endpointBindings[*] under a non-empty permission/role binding; or (b) carry an explicit `auth.required = false` claim in the api-map entry; or (c) match an explicit allow-list of bootstrap/dev-only paths declared in docs/framework/arch/invariants/RBAC-001-allowlist.json. The default policy is deny: an endpoint with no role binding, no public marker, and no allow-list entry is a release-gating finding, not an implicit grant.",
-  "rationale": "Stynx-side specialization of DEVAI's INV-INVENTORY-003 (universal policy). Phase A of C-4 surfaced three currently-violating endpoints — GET /_reference/auth-verify, POST /_reference/dev-login, GET /_reference/demo-tenants — all in the reference-api dev-auth sample. These are legitimate public/dev-only endpoints; closure requires marking them public via api-map's `auth.required=false` (or moving them to the allow-list) rather than guarding them. The 'gate' severity reflects that any non-allow-listed unbound endpoint blocks release. Promoted from INV-CANDIDATE-{01KRQD0PQW2M64XGKB2QDD3HZM, 01KRQD0PQWAX38EH0XVJHDAMPJ, 01KRQD0PQWKZ8QD7SVAJSATX7T}.",
+  "statement": "Every implemented HTTP endpoint MUST either have a non-empty permission or role binding, carry an explicit public marker, or match the documented bootstrap and development allow-list in docs/framework/arch/invariants/RBAC-001-allowlist.json. The default policy is deny: an endpoint with no binding, no public marker, and no allow-list entry is release-gating.",
+  "rationale": "The reference authentication endpoints are intentionally public or development-only. All other unbound endpoints block release so that missing authorization can never become an implicit grant.",
   "status": "active",
   "verification": {
     "required_suites": ["int"],
@@ -16,8 +16,8 @@
   "authority": {
     "docs": [
       {
-        "doc": "docs/adopters/pilots/c-4/phase-a-retro.md",
-        "anchor": "8-phase-b-promotion-priorities"
+        "doc": "docs/meta/development-contract.md",
+        "anchor": "engineering-rules"
       }
     ]
   },

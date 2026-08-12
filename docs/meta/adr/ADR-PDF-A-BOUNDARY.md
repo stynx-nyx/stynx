@@ -2,7 +2,7 @@
 
 **Status:** Superseded by [ADR-PDF-A-VALIDATOR-CONTRACT](ADR-PDF-A-VALIDATOR-CONTRACT.md) (2026-05-25).
 **Date:** 2026-05-24.
-**Author role:** Architect, per DEVAI Article 6.
+**Status:** Accepted architecture decision.
 
 Original "documented exclusion" decision is retained below for historical
 context. STYNX now ships validation via `@stynx-nyx/pdf-a` and

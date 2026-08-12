@@ -3,7 +3,7 @@
 // Threshold resolution
 // --------------------
 // `threshold` argument is optional. When absent, resolves from
-// scripts/test-matrix.config.json via getMutationThresholds(packageName).
+// tools/repo-config/test-policy.json via getMutationThresholds(packageName).
 // Policies may be a number (legacy single-floor) or an object {break, high}
 // (tiered floor + target). The resolved triplet drives Stryker's
 // thresholds.{high, low, break}.

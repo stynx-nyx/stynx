@@ -94,13 +94,12 @@ const config = {
     navbar: {
       title: 'STYNX',
       items: [
-        // R15 W08: nav paths follow the 0.2.0 seven-section IA.
         // /docs/start is the canonical landing (slug: / in front matter).
         { to: '/docs/adopters/stynx/', label: 'Use STYNX', position: 'left' },
         { to: '/docs/framework/', label: 'Framework', position: 'left' },
         { to: '/docs/framework/api/', label: 'API', position: 'left' },
         { to: '/docs/adopters/', label: 'Adopters', position: 'left' },
-        { to: '/docs/meta/self-scorecard', label: 'Status', position: 'left' },
+        { to: '/docs/adopters/stynx/release-readiness', label: 'Status', position: 'left' },
         { type: 'docsVersionDropdown', position: 'right' },
       ],
     },
@@ -127,9 +126,8 @@ const config = {
         {
           title: 'Engineering Status',
           items: [
-            { label: 'Self-scorecard', to: '/docs/meta/self-scorecard' },
-            { label: 'Test Matrix', to: '/docs/meta/test-matrix' },
-            { label: 'Aspect grid', to: '/docs/framework/aspect-grid' },
+            { label: 'Release readiness', to: '/docs/adopters/stynx/release-readiness' },
+            { label: 'Implementation status', to: '/docs/adopters/stynx/implementation-status' },
           ],
         },
       ],

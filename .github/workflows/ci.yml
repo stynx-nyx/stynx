@@ -26,24 +26,12 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
   NODE_VERSION: '24'
   PNPM_VERSION: '9.15.0'
-  # @devai-nyx/* resolves from GitHub Packages (npm.pkg.github.com), which
-  # needs an authenticated read regardless of the source repo's visibility.
-  NODE_AUTH_TOKEN: ${{ secrets.DEVAI_REPO_TOKEN || github.token }}
+  NODE_AUTH_TOKEN: ${{ github.token }}
 
 jobs:
-  # Single-source evidence gate (ADR-CI-ECONOMY Decision 7). Defaults match
-  # this repo: mode gate, canonical devai CLI verifier built from a
-  # devai-nyx/devai sibling checkout (D-117/D-121 — this repo's prototype
-  # scripts/evidence/*.mjs are retired), trusted actors from this repo's
-  # vars.LOCAL_EVIDENCE_TRUSTED_ACTORS.
-  evidence-gate:
-    uses: devai-nyx/devai/.github/workflows/reusable-evidence-gate.yml@main
-
   install:
     name: install
     runs-on: ubuntu-latest
-    needs: evidence-gate
-    if: ${{ needs.evidence-gate.outputs.evidence_mode != 'true' }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5
@@ -72,8 +60,7 @@ jobs:
   stynx-tier-gate:
     name: stynx-tier-gate
     runs-on: ubuntu-latest
-    needs: evidence-gate
-    if: ${{ needs.evidence-gate.outputs.evidence_mode != 'true' && (github.event_name == 'pull_request' || startsWith(github.ref, 'refs/heads/release/')) }}
+    if: ${{ github.event_name == 'pull_request' || startsWith(github.ref, 'refs/heads/release/') }}
     services:
       postgres:
         image: postgres:16-alpine
@@ -130,9 +117,7 @@ jobs:
     name: lint
     runs-on: ubuntu-latest
     needs:
-      - evidence-gate
       - install
-    if: ${{ needs.evidence-gate.outputs.evidence_mode != 'true' }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5
@@ -172,9 +157,7 @@ jobs:
     name: typecheck
     runs-on: ubuntu-latest
     needs:
-      - evidence-gate
       - lint
-    if: ${{ needs.evidence-gate.outputs.evidence_mode != 'true' }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5
@@ -204,9 +187,7 @@ jobs:
     name: lint:cycles
     runs-on: ubuntu-latest
     needs:
-      - evidence-gate
       - lint
-    if: ${{ needs.evidence-gate.outputs.evidence_mode != 'true' }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5
@@ -236,9 +217,7 @@ jobs:
     name: migration-lint
     runs-on: ubuntu-latest
     needs:
-      - evidence-gate
       - lint
-    if: ${{ needs.evidence-gate.outputs.evidence_mode != 'true' }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5
@@ -263,11 +242,9 @@ jobs:
     name: unit-tests
     runs-on: ubuntu-latest
     needs:
-      - evidence-gate
       - typecheck
       - lint-cycles
       - migration-lint
-    if: ${{ needs.evidence-gate.outputs.evidence_mode != 'true' }}
     services:
       postgres:
         image: postgres:16-alpine
@@ -343,9 +320,7 @@ jobs:
     name: integration-tests
     runs-on: ubuntu-latest
     needs:
-      - evidence-gate
       - unit-tests
-    if: ${{ needs.evidence-gate.outputs.evidence_mode != 'true' }}
     services:
       postgres:
         image: postgres:16-alpine
@@ -430,9 +405,7 @@ jobs:
     name: build (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     needs:
-      - evidence-gate
       - integration-tests
-    if: ${{ needs.evidence-gate.outputs.evidence_mode != 'true' }}
     strategy:
       fail-fast: false
       # Linux only (ADR-CI-ECONOMY Decision 5.1): the macOS build leg lives
@@ -471,9 +444,7 @@ jobs:
     name: doctor
     runs-on: ubuntu-latest
     needs:
-      - evidence-gate
       - build
-    if: ${{ needs.evidence-gate.outputs.evidence_mode != 'true' }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5

@@ -102,7 +102,7 @@ stynx assumes the following actors with distinct authority:
 - No `pull_request_target` + `actions/checkout` combination (known CVE pattern).
 
 **Invariants:** Future `INV-SUPPLY-001` candidate.
-**Tests:** `sense-harness-security` runs on every PR via `devai-gates.yml`.
+**Tests:** repository security and release gates run from the STYNX workflows.
 **Residual risk:** Currently REVIEW per scorecard — actions/checkout, setup-node, pnpm/action-setup, upload-artifact are pinned to version tags, not SHAs. Hardening tracked separately.
 
 ### T-7 — Dependency vulnerability exposure

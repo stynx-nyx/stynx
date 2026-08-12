@@ -1,7 +1,5 @@
 # ADRs
 
-**Authority:** Architect (Constitution Article 6).
-
 Architecture Decision Records capture durable stynx engineering decisions that
 shape package boundaries, generated diagnostics, or adoption policy.
 
@@ -21,11 +19,9 @@ shape package boundaries, generated diagnostics, or adoption policy.
 - [ADR-PDF-A-CONFORMANCE — PDF/A-2b Conformance for STYNX PDF Output](ADR-PDF-A-CONFORMANCE.md)
 - [ADR-PDF-A-VALIDATOR-CONTRACT — PDF/A Validator Contract](ADR-PDF-A-VALIDATOR-CONTRACT.md)
 - [ADR-XMLDSIG-CONTRACT — XMLDSig Contract for `@stynx-nyx/signature`](ADR-XMLDSIG-CONTRACT.md)
-- [ADR-DOCS-GOVERNANCE-ADOPTION — Adoption of DEVAI's docs-governance law in STYNX](ADR-DOCS-GOVERNANCE-ADOPTION.md)
-- [ADR-DEVAI-NPM-CONSUMPTION — DEVAI CLI consumption switched from sibling-checkout to versioned npm packages](ADR-DEVAI-NPM-CONSUMPTION.md)
 
 ## Related RFCs
 
 Some older decisions still live under [../rfcs/](../rfcs/) while the repository
-continues consolidating DEVAI-shaped substrates. Treat ADRs as the preferred
+continues consolidating its documentation. Treat ADRs as the preferred
 place for new architecture decisions.

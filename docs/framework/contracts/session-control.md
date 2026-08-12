@@ -1,6 +1,6 @@
 # Session Control Contract v1
 
-**Authority:** Architect (DEVAI Constitution Article 6).
+**Status:** Architecture contract.
 **Decision:** [ADR-SESSIONS-0001](../../meta/adr/ADR-SESSIONS-0001-provider-neutral-session-control.md).
 **Target:** additive `@stynx-nyx/sessions/control` and
 `@stynx-nyx/angular-sessions` surfaces.

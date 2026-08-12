@@ -9,7 +9,7 @@
  * wall-clock and throughput = (1 / median seconds) requests-per-second.
  *
  * Output: emits a single JSON line on stdout as the last line, matching
- * the shape `devai sense perf test` parses (Phase 30.H):
+ * the shape consumed by STYNX performance reporting:
  *   { "p50_ms": number, "p95_ms": number, "throughput_rps": number }
  *
  * Override the probed command via STYNX_PERF_PROBE env var. Sample

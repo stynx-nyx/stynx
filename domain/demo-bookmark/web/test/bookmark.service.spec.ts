@@ -46,7 +46,7 @@ describe('BookmarkService', () => {
   });
 
   it('creates bookmarks through the controller path', () => {
-    const body = { url: 'https://devai.example/adopters', title: 'Adopter docs' };
+    const body = { url: 'https://stynx.example/integration', title: 'Integration docs' };
     service.create(body).subscribe((created) => {
       expect(created).toMatchObject(body);
     });

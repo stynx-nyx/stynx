@@ -5,9 +5,7 @@ on:
   pull_request:
     paths:
       - '.changeset/**'
-      - '.ci/evidence/**'
       - '.github/workflows/release-prep.yml'
-      - '.github/workflows/evidence.yml'
       - '.semgrepignore'
       - 'docs/**'
       - 'infra/github/**'
@@ -24,9 +22,7 @@ on:
       - main
     paths:
       - '.changeset/**'
-      - '.ci/evidence/**'
       - '.github/workflows/release-prep.yml'
-      - '.github/workflows/evidence.yml'
       - '.semgrepignore'
       - 'docs/**'
       - 'infra/github/**'
@@ -47,24 +43,16 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
   NODE_VERSION: '24'
   PNPM_VERSION: '9.15.0'
-  # @devai-nyx/* resolves from GitHub Packages (npm.pkg.github.com), which
-  # needs an authenticated read regardless of the source repo's visibility.
-  NODE_AUTH_TOKEN: ${{ secrets.DEVAI_REPO_TOKEN || github.token }}
+  NODE_AUTH_TOKEN: ${{ github.token }}
 
 concurrency:
   group: release-prep-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  # Single-source evidence gate (ADR-CI-ECONOMY Decision 7).
-  evidence-gate:
-    uses: devai-nyx/devai/.github/workflows/reusable-evidence-gate.yml@main
-
   semgrep:
     name: semgrep
     runs-on: ubuntu-latest
-    needs: evidence-gate
-    if: ${{ needs.evidence-gate.outputs.evidence_mode != 'true' }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
@@ -95,8 +83,6 @@ jobs:
   package-policy:
     name: package-policy
     runs-on: ubuntu-latest
-    needs: evidence-gate
-    if: ${{ needs.evidence-gate.outputs.evidence_mode != 'true' }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
@@ -110,8 +96,6 @@ jobs:
   dependency-audit:
     name: dependency-audit
     runs-on: ubuntu-latest
-    needs: evidence-gate
-    if: ${{ needs.evidence-gate.outputs.evidence_mode != 'true' }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5
@@ -139,11 +123,10 @@ jobs:
   release-drafts:
     name: release-drafts
     runs-on: ubuntu-latest
-    needs: evidence-gate
     # Skipped on the changesets version-packages branch: that branch
     # consumes the changesets, so `changeset status` errors by definition
     # ("packages changed but no changesets found") on any version PR.
-    if: ${{ needs.evidence-gate.outputs.evidence_mode != 'true' && !startsWith(github.head_ref, 'changeset-release/') }}
+    if: ${{ !startsWith(github.head_ref, 'changeset-release/') }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:

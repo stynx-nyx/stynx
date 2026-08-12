@@ -9,7 +9,7 @@ tags: [stynx, preferences, tenancy, privacy, profile]
 
 # ADR-PREFERENCES-0001 — Tenant-subject preferences boundary
 
-**Authority:** Architect (DEVAI Constitution Article 6).
+**Status:** Accepted architecture decision.
 **Contract:** [`docs/framework/contracts/preferences-api.md`](../../framework/contracts/preferences-api.md).
 **Round:** R21 W02.
 

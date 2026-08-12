@@ -1,10 +1,7 @@
 # Contributing
 
-STYNX accepts the same two subject shapes for local commits and pull request
-titles:
-
-- DEVAI role-prefix subjects, for example `Engineer: close migration gate`.
-- Conventional Commits, for example `fix(repo): close migration gate`.
+STYNX uses Conventional Commit subjects for local commits and pull request
+titles, for example `fix(repo): close migration gate`.
 
 Run the normal hooks and CI gates before asking for review:
 
@@ -15,8 +12,7 @@ pnpm -r --if-present test --silent
 ```
 
 The authoritative parser is `tools/repo-config/commitlint.config.cjs`; the PR
-title workflow pipes the title through that same config so role-prefix work is
-not blocked by a separate conventional-only rule.
+title workflow pipes the title through that same config.
 
 ## Hook Policy
 
@@ -37,8 +33,8 @@ the closeout must include adopter notes with these fields:
 - Fixture compatibility notes, including byte-stable or golden-equivalent
   expectations.
 - Commands the closeout ran, such as `pnpm --filter <pkg> build test lint`.
-- Owner or Architect decisions that intentionally keep behavior outside STYNX,
-  with rationale and adopter impact.
+- Explicit product or architecture decisions that intentionally keep behavior
+  outside STYNX, with rationale and adopter impact.
 
 Use this shape in the closeout:
 
@@ -50,5 +46,5 @@ Use this shape in the closeout:
 - Migration: [...]
 - Fixture compat: [...]
 - Commands: [...]
-- Owner decisions: [...]
+- Product or architecture decisions: [...]
 ```

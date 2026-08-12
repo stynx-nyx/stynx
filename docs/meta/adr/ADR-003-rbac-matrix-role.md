@@ -4,7 +4,7 @@ title: RBAC Matrix Role in a Framework Repository
 status: accepted
 date: 2026-05-17
 authors: ['@aarusso']
-tags: [stynx, rbac, devai, inventory]
+tags: [stynx, rbac, inventory]
 ---
 
 # ADR-003 — RBAC Matrix Role in a Framework Repository

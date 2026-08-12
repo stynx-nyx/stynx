@@ -2,7 +2,7 @@
 
 **Status:** Accepted.
 **Date:** 2026-05-25.
-**Author role:** Architect, per DEVAI Constitution Article 6.
+**Status:** Accepted architecture decision.
 **Related:** [ADR-PDF-A-VALIDATOR-CONTRACT](ADR-PDF-A-VALIDATOR-CONTRACT.md).
 
 ## Context

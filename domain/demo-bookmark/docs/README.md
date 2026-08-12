@@ -3,13 +3,16 @@
 
 # `demo-bookmark` module
 
-Reference module for the C-4 DEVAI adoption pilot. Demonstrates the blueprint → scaffold → finish lifecycle end-to-end against an existing stynx-shaped repo. **Not a production feature.** The `domain/demo-bookmark/web` package is private scaffold evidence only; it must not carry production dependencies or be treated as an adopter-facing package.
+Reference module demonstrating a blueprint-to-implementation lifecycle across
+the STYNX database, API, and web layers. **Not a production feature.** The
+`domain/demo-bookmark/web` package is private reference code and must not carry
+production dependencies or be treated as a consumer-facing package.
 
 ## Status
 
 | Layer                  | Status       | Notes                                                                                                                                                                                                                       |
 | ---------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Blueprint              | ✅ landed    | [`docs/framework/product/draft/blueprints/demo-bookmark.json`](../../../docs/framework/product/draft/blueprints/demo-bookmark.json) validates against DEVAI's schema.                                                       |
+| Blueprint              | ✅ landed    | [`docs/framework/product/draft/blueprints/demo-bookmark.json`](../../../docs/framework/product/draft/blueprints/demo-bookmark.json) is the module specification.                                                            |
 | DB migration + seed    | ✅ landed    | Real fields per blueprint, FK relations, soft-delete-aware unique index, PII map registration. See `db/migration.sql` + `database/seed.sql`.                                                                                |
 | API compile            | ✅ R17 W07   | `pnpm --filter @stynx-domain/demo-bookmark-api build` exits 0. Schema now matches `db/migration.sql`, including `deleted_at`.                                                                                               |
 | API policy guard       | ✅ T2 wired  | Controllers use `@UseGuards(StynxAuthGuard, PermissionGuard)` + `@Permission('demo:bookmark:read'/'demo:bookmark:write')`; local policy/decorator stubs are not used.                                                       |

@@ -42,14 +42,8 @@ STYNX owns these adopter-facing verifiers:
 | `scripts/verify-api-coverage.mjs`  | Compares OpenAPI paths with implemented NestJS controller paths.                           |
 | `scripts/verify-db-acceptance.mjs` | Checks configured DDL/seed shape, required schemas, required tables, and RLS declarations. |
 
-## DEVAI-Owned Test Evidence Commands
+## Test commands
 
-STYNX does not keep local compatibility wrappers for DEVAI-owned test evidence
-commands. Workspace scripts invoke DEVAI directly:
-
-| Task              | DEVAI CLI (0.5.0)                   |
-| ----------------- | ----------------------------------- |
-| Matrix rendering  | `devai evidence test matrix`        |
-| Run recording     | `devai evidence test record`        |
-| Evidence emission | `devai evidence emit`               |
-| Coverage merge    | `devai evidence coverage aggregate` |
+STYNX owns its test entrypoints in the root `package.json`. Unit, integration,
+coverage, mutation, end-to-end, and performance commands execute the repository
+tooling directly and retain their package-specific thresholds.

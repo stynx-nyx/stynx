@@ -1,6 +1,6 @@
 # Integration Adapter Contract
 
-**Authority:** Architect (DEVAI Constitution Article 6).
+**Status:** Architecture contract.
 **Package:** `@stynx-nyx/integration-adapter`.
 
 This contract defines the shared adapter pattern for external state-system calls.

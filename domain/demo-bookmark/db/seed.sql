@@ -10,14 +10,14 @@ VALUES
   ('00000000-0000-4000-8000-000000b40001'::uuid,
    '00000000-0000-4000-8000-000000fe0001'::uuid,
    '00000000-0000-4000-8000-00000000fee0'::uuid,
-   'https://devai.example/architecture',
-   'DEVAI architecture',
-   'Useful reference for the C-4 pilot.'),
+   'https://stynx.example/architecture',
+   'STYNX architecture',
+   'Useful architecture reference.'),
   ('00000000-0000-4000-8000-000000b40002'::uuid,
    '00000000-0000-4000-8000-000000fe0001'::uuid,
    '00000000-0000-4000-8000-00000000fee0'::uuid,
-   'https://devai.example/adopters',
-   'Adopter docs',
+   'https://stynx.example/integration',
+   'Integration docs',
    NULL),
   ('00000000-0000-4000-8000-000000b40003'::uuid,
    '00000000-0000-4000-8000-000000fe0001'::uuid,
@@ -30,9 +30,9 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO demo.demo__bookmark_bookmark_tag
   (bookmark_id, tag)
 VALUES
-  ('00000000-0000-4000-8000-000000b40001'::uuid, 'devai'),
+  ('00000000-0000-4000-8000-000000b40001'::uuid, 'stynx'),
   ('00000000-0000-4000-8000-000000b40001'::uuid, 'architecture'),
-  ('00000000-0000-4000-8000-000000b40002'::uuid, 'devai'),
+  ('00000000-0000-4000-8000-000000b40002'::uuid, 'stynx'),
   ('00000000-0000-4000-8000-000000b40002'::uuid, 'adopters'),
   ('00000000-0000-4000-8000-000000b40003'::uuid, 'stynx')
 ON CONFLICT (bookmark_id, tag) DO NOTHING;

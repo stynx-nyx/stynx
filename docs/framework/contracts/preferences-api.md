@@ -1,6 +1,6 @@
 # Preferences API Contract
 
-**Authority:** Architect (DEVAI Constitution Article 6).
+**Status:** Architecture contract.
 **Decision:** [ADR-PREFERENCES-0001](../../meta/adr/ADR-PREFERENCES-0001-tenant-subject-preferences.md).
 **Target package:** `@stynx-nyx/preferences`.
 

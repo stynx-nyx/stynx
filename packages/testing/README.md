@@ -66,7 +66,7 @@ describe('UsersService (integration)', () => {
 | ----------------- | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `createTestApp`   | `(options: CreateTestAppOptions): Promise<TestAppContext>`      | Boots an isolated NestJS app with optional Postgres / LocalStack / Cognito containers. The returned context exposes `.app`, `.withRequest()`, `.db`, `.close()`. |
 | `mintTestSession` | `(input: { actorId, tenantId?, roles?, permissions? }): string` | Produces a JWT signed with the test signing key. Use to test endpoints that require a `Bearer <token>` header.                                                   |
-| `runDoctor`       | `(repoRoot: string): Promise<DoctorReport>`                     | Run the doctor harness check (mirrors sibling DEVAI doctor); useful in workspace tests.                                                                          |
+| `runDoctor`       | `(repoRoot: string): Promise<DoctorReport>`                     | Run the STYNX doctor harness check; useful in workspace tests.                                                                                                   |
 | `lgpdFixtures`    | `LgpdFixtures`                                                  | Pre-built PII fixture set: users with email + phone columns marked, erasure scenarios.                                                                           |
 
 ### Matchers

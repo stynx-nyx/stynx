@@ -58,7 +58,7 @@ const drizzleIsPatch = {
 };
 
 // Coverage thresholds resolve from tools/repo-config/test-thresholds.mjs
-// (which reads scripts/test-matrix.config.json). Keep these named exports
+// (which reads tools/repo-config/test-policy.json). Keep these named exports
 // as transitional aliases for configs that import them directly; prefer
 // `getCoverageThreshold(packageName)` going forward.
 const baseCoverageThreshold = { statements: 85, branches: 80, functions: 85, lines: 85 };

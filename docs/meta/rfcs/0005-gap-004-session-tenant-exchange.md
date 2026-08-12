@@ -1,15 +1,15 @@
 # RFC 0005: GAP-004-session-tenant-exchange
 
 - Status: Proposed
-- Source: [GAP-004-session-tenant-exchange.md](../legacy/completed-gap-tasks/GAP-004-session-tenant-exchange.md)
+- Historical source: retired; use Git history for the original gap record.
 
 ## Problem
 
-This RFC tracks the implementation decision for the linked GAP specification.
+This RFC records the session and tenant exchange decision.
 
 ## Constraints
 
-Follow the linked GAP acceptance criteria and the STYNX governance process.
+Preserve the behavior and acceptance criteria documented below.
 
 ## Options
 

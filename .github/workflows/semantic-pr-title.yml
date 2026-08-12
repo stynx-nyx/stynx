@@ -38,10 +38,7 @@ jobs:
             tools/repo-config/commitlint.config.cjs
       - name: Install commitlint dependencies
         env:
-          # @devai-nyx/* resolves from GitHub Packages (npm.pkg.github.com),
-          # which needs an authenticated read regardless of the source
-          # repo's visibility.
-          NODE_AUTH_TOKEN: ${{ secrets.DEVAI_REPO_TOKEN || github.token }}
+          NODE_AUTH_TOKEN: ${{ github.token }}
         run: pnpm install --frozen-lockfile
       - name: Validate PR title
         env:
@@ -51,6 +48,5 @@ jobs:
         run: |
           cat <<'EOF'
           Accepted PR title shapes are defined by tools/repo-config/commitlint.config.cjs:
-          - DEVAI role-prefix, e.g. Engineer: close migration gate
           - Conventional Commits, e.g. fix(repo): close migration gate
           EOF

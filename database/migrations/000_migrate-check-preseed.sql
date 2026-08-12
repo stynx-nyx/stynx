@@ -1,4 +1,4 @@
--- stynx pre-seed for `devai sense migrate check --pre-seed database/migrations/000_migrate-check-preseed.sql`
+-- STYNX migration-check pre-seed.
 --
 -- The platform migration runner normally provisions roles + grants in steps,
 -- but `sense migrate check` applies SQL files via raw psql against a fresh

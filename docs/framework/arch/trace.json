@@ -181,10 +181,7 @@
           "mode": "gray_box"
         }
       ],
-      "code_areas": [
-        "docs/framework/product/use-cases/**",
-        ".devai/state/sensors/inventory_coverage/**"
-      ]
+      "code_areas": ["docs/framework/product/use-cases/**", "docs/framework/product/use-cases/**"]
     },
     {
       "id": "INV-PERF-001",

@@ -2,7 +2,7 @@
 
 **Status:** Accepted.
 **Date:** 2026-05-25.
-**Author role:** Architect, per DEVAI Constitution Article 6.
+**Status:** Accepted architecture decision.
 **Supersedes:** [ADR-PDF-A-BOUNDARY](ADR-PDF-A-BOUNDARY.md).
 
 ## Context

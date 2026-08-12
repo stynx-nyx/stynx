@@ -28,5 +28,5 @@
       "justification": "Reference endpoint listing demo tenants the dev-login flow can mint sessions for. Pre-auth listing; safe by design (only demo-tenant metadata surfaced)."
     }
   ],
-  "_devai_gap_note": "These entries SHOULD be detected automatically by sense-api recognizing the @Public() decorator (filed as D-A-12 for the next devai alignment session). Until then, this allow-list is the documentary closure mechanism for INV-RBAC-001 known violations. The candidate count from `inv-suggest` will not drop until D-A-12 closes; this file establishes the per-stynx convention for the closure."
+  "detection_note": "Repository checks should recognize the @Public() decorator automatically. This allow-list remains the explicit documentary closure mechanism and is reviewed with any endpoint change."
 }

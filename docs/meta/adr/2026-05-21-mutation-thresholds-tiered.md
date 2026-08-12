@@ -50,7 +50,7 @@ floor across all stynx package tiers: `break: 90`. The tier names remain useful
 for ownership/risk classification and for the low/high reporting bands, but
 Stryker pass/fail is intentionally uniform.
 
-`scripts/test-matrix.config.json#policies.mutation` now defines three named tiers in addition to the legacy `default / strict / strictest`:
+`tools/repo-config/test-policy.json#policies.mutation` defines three named tiers in addition to the default, strict, and strictest policies:
 
 ```json
 "tier1": { "break": 90, "high": 90, "low": 80 },
@@ -111,8 +111,8 @@ Adoption is deferred until the below-90 packages clear the D3 floor. Gating PRs 
 
 Revert with: `git revert <this-commit-range>`. The original ADR changes touched six files; the 2026-05-22 Architect revision touches:
 
-- `scripts/test-matrix.config.json`
-- `devai render-matrix`
+- `tools/repo-config/test-policy.json`
+- `pnpm test:mutation`
 - `docs/meta/adr/2026-05-21-mutation-thresholds-tiered.md`
 
 The on-disk mutation artefacts (`<pkg>/.test-results/mutation.json`, `<pkg>/reports/mutation/`) are untouched; they remain valid against the previous policy. The next mutation run rewrites them under the new policy.

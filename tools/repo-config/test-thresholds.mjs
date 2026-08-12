@@ -1,9 +1,8 @@
 // Single source of truth for coverage + mutation + perf thresholds across the
-// workspace. Reads scripts/test-matrix.config.json and resolves per-package
+// workspace. Reads tools/repo-config/test-policy.json and resolves per-package
 // values. Imported by:
 //   - tools/repo-config/vitest.base.mjs       (coverage gates)
 //   - tools/stryker/base.mjs                  (mutation gates)
-//   - devai evidence test matrix              (cell colouring)
 //
 // Per-package overrides live under `perPackage[packageName]` in the config:
 //   "perPackage": { "@stynx-nyx/auth": { "coverage": "strict", "mutation": "strictest" } }
@@ -17,7 +16,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const configPath = resolve(__dirname, '../../scripts/test-matrix.config.json');
+const configPath = resolve(__dirname, './test-policy.json');
 
 let cached;
 
@@ -99,8 +98,7 @@ export function getPerfThreshold(packageName = 'stynx-workspace') {
 }
 
 /**
- * Coverage thresholds for the renderer's overall workspace gate.
- * Coverage thresholds for DEVAI matrix rendering.
+ * Coverage thresholds for the overall workspace gate.
  */
 export function getMatrixCoverageThreshold() {
   const cfg = load();

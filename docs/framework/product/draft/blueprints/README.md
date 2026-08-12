@@ -1,4 +1,4 @@
 # Blueprint Drafts
 
-DEVAI module blueprints and scaffold inputs used during the stynx adoption
+STYNX module blueprints and scaffold inputs used for reference implementations
 pilot. Draft blueprints are not runtime package contracts.

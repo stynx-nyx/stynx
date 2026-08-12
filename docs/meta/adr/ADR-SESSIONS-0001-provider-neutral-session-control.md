@@ -9,7 +9,7 @@ tags: [stynx, sessions, identity-provider, tenancy, privacy, revocation]
 
 # ADR-SESSIONS-0001 — Provider-neutral session inventory and control
 
-**Authority:** Architect (DEVAI Constitution Article 6).
+**Status:** Accepted architecture decision.
 **Contract:** [`docs/framework/contracts/session-control.md`](../../framework/contracts/session-control.md).
 **Round:** R21 W06.
 **Owner decision:** `ACCEPTED 1D 2C 3D 4B 5D 6B 7C 8B 9C 10B 11C 12C`.

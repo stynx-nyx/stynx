@@ -1,15 +1,15 @@
 # RFC 0001: GAP-000-bootstrap
 
 - Status: Proposed
-- Source: [GAP-000-bootstrap.md](../legacy/completed-gap-tasks/GAP-000-bootstrap.md)
+- Historical source: retired; use Git history for the original gap record.
 
 ## Problem
 
-This RFC tracks the implementation decision for the linked GAP specification.
+This RFC records the bootstrap implementation decision.
 
 ## Constraints
 
-Follow the linked GAP acceptance criteria and the STYNX governance process.
+Preserve the behavior and acceptance criteria documented below.
 
 ## Options
 
