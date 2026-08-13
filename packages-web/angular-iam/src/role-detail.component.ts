@@ -12,7 +12,7 @@ import { IamApiService } from './iam-api.service';
 import { StynxPermissionMatrixComponent } from './permission-matrix.component';
 import type { StynxPatchRoleRequest, StynxRole } from './types';
 
-type RoleDetailTab = 'overview' | 'permissions';
+export type RoleDetailTab = 'overview' | 'permissions';
 
 function optionalText(value: string): string | undefined {
   const trimmed = value.trim();

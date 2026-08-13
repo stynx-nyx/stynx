@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Database } from '@stynx-nyx/data';
 import { camelizeRow, pageLimitOffset, type FlowRow } from './row-utils';
 
-type AnalyticsQuery = Record<string, unknown>;
+export type AnalyticsQuery = Record<string, unknown>;
 
 function optionalString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined;

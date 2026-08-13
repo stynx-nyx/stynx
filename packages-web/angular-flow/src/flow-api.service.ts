@@ -36,7 +36,7 @@ import type {
 
 type QueryValue = string | number | boolean | null | undefined;
 type FlowQuery = Record<string, QueryValue>;
-type FlowTaskFilters = {
+export type FlowTaskFilters = {
   runId?: string;
   assignee?: string;
   assigneeUserId?: string;

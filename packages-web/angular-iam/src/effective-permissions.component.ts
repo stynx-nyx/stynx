@@ -10,7 +10,7 @@ import {
 import { IamApiService } from './iam-api.service';
 import type { StynxEffectivePermissions, StynxPermissionGrant } from './types';
 
-interface EffectivePermissionView {
+export interface EffectivePermissionView {
   key: string;
   resource: string;
   action: string;

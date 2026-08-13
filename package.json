@@ -66,6 +66,11 @@
     "test:coverage": "turbo run test:coverage --filter='./packages/*' --filter='./packages-web/*'",
     "test:coverage:aggregate": "turbo run test:coverage --filter='./packages/*' --filter='./packages-web/*'",
     "test:perf": "node scripts/perf-smoke.mjs",
+    "devai:trace:verify": "node scripts/verify-devai-trace.mjs",
+    "devai:api-contracts": "pnpm api:coverage && pnpm api:contract && pnpm api:baselines && pnpm sdk:route-smoke",
+    "devai:lint-families": "pnpm lint && pnpm lint:tests && pnpm lint:deadcode && pnpm lint:deps && pnpm lint:migrations && pnpm lint:cycles && pnpm lint:workflows",
+    "devai:db-rls": "pnpm db:verify && pnpm db:acceptance && pnpm check:rls-negative && pnpm check:rls-smoke",
+    "devai:docs": "pnpm --dir docs/site build",
     "i18n:check": "node tools/i18n-extract.mjs --check",
     "i18n:extract": "node tools/i18n-extract.mjs --write"
   },

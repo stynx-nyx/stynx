@@ -2,8 +2,8 @@ import { ChangeDetectorRef, Pipe, inject } from '@angular/core';
 import type { PipeTransform } from '@angular/core';
 import { StynxI18nService } from './i18n.service';
 
-type DateInput = Date | number | string | null | undefined;
-type NumberInput = number | string | null | undefined;
+export type DateInput = Date | number | string | null | undefined;
+export type NumberInput = number | string | null | undefined;
 
 function normalizeDate(value: DateInput): Date | null {
   if (value === null || value === undefined || value === '') {

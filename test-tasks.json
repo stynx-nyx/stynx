@@ -1,95 +1,435 @@
 {
   "schemaVersion": "1.0.0",
-  "descriptorVersion": "stynx-tier1-v1",
-  "repositoryId": "stynx",
+  "descriptorVersion": "stynx-devai-1.1.0-v1",
+  "repositoryId": "stynx-nyx/stynx",
   "fallbackNodeId": "test:local-full",
-  "dynamicFallbackSelectors": [],
+  "dynamicFallbackSelectors": [
+    { "kind": "prefix", "pattern": "law/" },
+    { "kind": "prefix", "pattern": "product/" },
+    { "kind": "prefix", "pattern": ".devai/" },
+    { "kind": "prefix", "pattern": ".github/" },
+    { "kind": "exact", "pattern": "package.json" },
+    { "kind": "exact", "pattern": "pnpm-lock.yaml" },
+    { "kind": "exact", "pattern": "pnpm-workspace.yaml" },
+    { "kind": "exact", "pattern": "turbo.json" }
+  ],
   "tasks": [
     {
-      "nodeId": "test:lint",
+      "nodeId": "engines",
       "dependencies": [],
-      "argv": ["pnpm", "run", "lint"],
+      "argv": ["pnpm", "run", "check:engines"],
       "cwd": ".",
-      "runner": "spawn",
-      "inputSelectors": [{ "kind": "glob", "pattern": "**" }],
+      "runner": "node-script-v1",
+      "inputSelectors": [
+        { "kind": "exact", "pattern": "package.json" },
+        { "kind": "exact", "pattern": "pnpm-lock.yaml" },
+        { "kind": "exact", "pattern": "pnpm-workspace.yaml" },
+        { "kind": "exact", "pattern": ".node-version" }
+      ],
       "toolchainKeys": ["node", "pnpm"],
-      "allowlistedEnv": [],
-      "outputContract": { "kind": "exit-code", "expected": 0 }
+      "allowlistedEnv": ["CI"],
+      "outputContract": { "kind": "command", "requiredResult": "pass" }
     },
     {
-      "nodeId": "test:typecheck",
-      "dependencies": [],
+      "nodeId": "api:contracts",
+      "dependencies": ["engines"],
+      "argv": ["pnpm", "run", "devai:api-contracts"],
+      "cwd": ".",
+      "runner": "stynx-contracts-v1",
+      "inputSelectors": [
+        { "kind": "prefix", "pattern": "packages/contracts/" },
+        { "kind": "prefix", "pattern": "packages/cli/" },
+        { "kind": "prefix", "pattern": "reference/api/" },
+        { "kind": "prefix", "pattern": "domain/" },
+        { "kind": "prefix", "pattern": "docs/framework/contracts/" },
+        { "kind": "glob", "pattern": "scripts/verify-*api*.mjs" },
+        { "kind": "glob", "pattern": "scripts/verify-*route*.mjs" }
+      ],
+      "toolchainKeys": ["node", "pnpm", "typescript"],
+      "allowlistedEnv": ["CI"],
+      "outputContract": { "kind": "command", "requiredResult": "pass" }
+    },
+    {
+      "nodeId": "lint:families",
+      "dependencies": ["engines"],
+      "argv": ["pnpm", "run", "devai:lint-families"],
+      "cwd": ".",
+      "runner": "stynx-lint-v1",
+      "inputSelectors": [
+        { "kind": "prefix", "pattern": "packages/" },
+        { "kind": "prefix", "pattern": "packages-web/" },
+        { "kind": "prefix", "pattern": "domain/" },
+        { "kind": "prefix", "pattern": "reference/" },
+        { "kind": "prefix", "pattern": "tools/" },
+        { "kind": "prefix", "pattern": "scripts/" },
+        { "kind": "prefix", "pattern": ".github/workflows/" },
+        { "kind": "glob", "pattern": "*.config.*" }
+      ],
+      "toolchainKeys": ["node", "pnpm", "typescript"],
+      "allowlistedEnv": ["CI"],
+      "outputContract": { "kind": "command", "requiredResult": "pass" }
+    },
+    {
+      "nodeId": "typecheck",
+      "dependencies": ["engines"],
       "argv": ["pnpm", "run", "typecheck"],
       "cwd": ".",
-      "runner": "spawn",
-      "inputSelectors": [{ "kind": "glob", "pattern": "**" }],
+      "runner": "turbo-typescript-v1",
+      "inputSelectors": [
+        { "kind": "prefix", "pattern": "packages/" },
+        { "kind": "prefix", "pattern": "packages-web/" },
+        { "kind": "prefix", "pattern": "domain/" },
+        { "kind": "prefix", "pattern": "reference/" },
+        { "kind": "prefix", "pattern": "tools/" },
+        { "kind": "glob", "pattern": "tsconfig*.json" }
+      ],
       "toolchainKeys": ["node", "pnpm", "typescript"],
-      "allowlistedEnv": [],
-      "outputContract": { "kind": "exit-code", "expected": 0 }
+      "allowlistedEnv": ["CI"],
+      "outputContract": { "kind": "command", "requiredResult": "pass" }
     },
     {
       "nodeId": "test:unit",
-      "dependencies": [],
+      "dependencies": ["typecheck"],
       "argv": ["pnpm", "run", "test"],
       "cwd": ".",
-      "runner": "spawn",
-      "inputSelectors": [{ "kind": "glob", "pattern": "**" }],
+      "runner": "turbo-vitest-v1",
+      "inputSelectors": [
+        { "kind": "glob", "pattern": "packages/*/src/**" },
+        { "kind": "glob", "pattern": "packages/*/test/**" },
+        { "kind": "glob", "pattern": "packages-web/*/src/**" },
+        { "kind": "glob", "pattern": "packages-web/*/test/**" },
+        { "kind": "glob", "pattern": "tools/*/src/**" },
+        { "kind": "glob", "pattern": "tools/*/test/**" },
+        { "kind": "prefix", "pattern": "test/" }
+      ],
       "toolchainKeys": ["node", "pnpm", "vitest"],
-      "allowlistedEnv": [],
-      "outputContract": { "kind": "exit-code", "expected": 0 }
-    },
-    {
-      "nodeId": "test:build",
-      "dependencies": ["test:typecheck"],
-      "argv": ["pnpm", "run", "build"],
-      "cwd": ".",
-      "runner": "spawn",
-      "inputSelectors": [{ "kind": "glob", "pattern": "**" }],
-      "toolchainKeys": ["node", "pnpm", "typescript"],
-      "allowlistedEnv": [],
-      "outputContract": { "kind": "exit-code", "expected": 0 }
-    },
-    {
-      "nodeId": "test:local-full",
-      "dependencies": ["test:lint", "test:typecheck", "test:unit", "test:build"],
-      "argv": ["pnpm", "run", "check:engines"],
-      "cwd": ".",
-      "runner": "spawn",
-      "inputSelectors": [{ "kind": "glob", "pattern": "**" }],
-      "toolchainKeys": ["node", "pnpm"],
-      "allowlistedEnv": [],
-      "outputContract": { "kind": "exit-code", "expected": 0 }
+      "allowlistedEnv": ["CI"],
+      "outputContract": { "kind": "command", "requiredResult": "pass" }
     },
     {
       "nodeId": "test:integration",
       "dependencies": ["test:unit"],
       "argv": ["pnpm", "run", "test:int"],
       "cwd": ".",
-      "runner": "spawn",
-      "inputSelectors": [{ "kind": "glob", "pattern": "**" }],
-      "toolchainKeys": ["node", "pnpm", "vitest"],
-      "allowlistedEnv": ["DEVAI_DB_TESTS"],
-      "outputContract": { "kind": "exit-code", "expected": 0 }
+      "runner": "turbo-vitest-integration-v1",
+      "inputSelectors": [
+        { "kind": "glob", "pattern": "packages/*/test/integration/**" },
+        { "kind": "prefix", "pattern": "packages/data/migrations/" },
+        { "kind": "prefix", "pattern": "domain/" },
+        { "kind": "prefix", "pattern": "reference/api/" }
+      ],
+      "toolchainKeys": ["node", "pnpm", "vitest", "postgres"],
+      "allowlistedEnv": [
+        "CI",
+        "DATABASE_URL",
+        "STYNX_DATABASE_URL",
+        "STYNX_TEST_PG_HOST",
+        "STYNX_TEST_PG_PORT",
+        "STYNX_TEST_PG_USER",
+        "STYNX_TEST_PG_PASSWORD",
+        "STYNX_TEST_PG_SOCKET_DIR",
+        "STYNX_TEST_PG_TEMPLATE"
+      ],
+      "outputContract": { "kind": "command", "requiredResult": "pass" }
+    },
+    {
+      "nodeId": "build",
+      "dependencies": ["typecheck"],
+      "argv": ["pnpm", "run", "build"],
+      "cwd": ".",
+      "runner": "turbo-build-v1",
+      "inputSelectors": [
+        { "kind": "glob", "pattern": "packages/*/src/**" },
+        { "kind": "glob", "pattern": "packages-web/*/src/**" },
+        { "kind": "prefix", "pattern": "domain/" },
+        { "kind": "prefix", "pattern": "reference/" },
+        { "kind": "prefix", "pattern": "tools/" },
+        { "kind": "exact", "pattern": "turbo.json" }
+      ],
+      "toolchainKeys": ["node", "pnpm", "typescript"],
+      "allowlistedEnv": ["CI", "NODE_ENV"],
+      "outputContract": { "kind": "command", "requiredResult": "pass" }
+    },
+    {
+      "nodeId": "reference:apps",
+      "dependencies": ["build", "test:integration"],
+      "argv": ["pnpm", "run", "ci:reference-apps"],
+      "cwd": ".",
+      "runner": "stynx-reference-v1",
+      "inputSelectors": [
+        { "kind": "prefix", "pattern": "reference/api/" },
+        { "kind": "prefix", "pattern": "reference/web/" },
+        { "kind": "prefix", "pattern": "domain/" },
+        { "kind": "glob", "pattern": "packages/*/src/**" },
+        { "kind": "glob", "pattern": "packages-web/*/src/**" }
+      ],
+      "toolchainKeys": ["node", "pnpm", "vitest", "typescript", "postgres"],
+      "allowlistedEnv": [
+        "CI",
+        "DATABASE_URL",
+        "STYNX_DATABASE_URL",
+        "STYNX_TEST_PG_HOST",
+        "STYNX_TEST_PG_PORT",
+        "STYNX_TEST_PG_USER",
+        "STYNX_TEST_PG_PASSWORD",
+        "STYNX_TEST_PG_SOCKET_DIR",
+        "STYNX_TEST_PG_TEMPLATE"
+      ],
+      "outputContract": { "kind": "command", "requiredResult": "pass" }
+    },
+    {
+      "nodeId": "db:rls",
+      "dependencies": ["build", "test:integration"],
+      "argv": ["pnpm", "run", "devai:db-rls"],
+      "cwd": ".",
+      "runner": "stynx-postgresql-v1",
+      "inputSelectors": [
+        { "kind": "prefix", "pattern": "packages/data/" },
+        { "kind": "glob", "pattern": "packages/*/migrations/**" },
+        { "kind": "glob", "pattern": "domain/*/db/**" },
+        { "kind": "prefix", "pattern": "reference/api/migrations/" },
+        { "kind": "glob", "pattern": "scripts/*db*.mjs" },
+        { "kind": "glob", "pattern": "scripts/*rls*" }
+      ],
+      "toolchainKeys": ["node", "pnpm", "postgres"],
+      "allowlistedEnv": [
+        "CI",
+        "DATABASE_URL",
+        "STYNX_DATABASE_URL",
+        "STYNX_TEST_PG_HOST",
+        "STYNX_TEST_PG_PORT",
+        "STYNX_TEST_PG_USER",
+        "STYNX_TEST_PG_PASSWORD",
+        "STYNX_TEST_PG_SOCKET_DIR",
+        "STYNX_TEST_PG_TEMPLATE"
+      ],
+      "outputContract": { "kind": "command", "requiredResult": "pass" }
+    },
+    {
+      "nodeId": "test:e2e",
+      "dependencies": ["reference:apps", "db:rls"],
+      "argv": ["pnpm", "run", "test:e2e"],
+      "cwd": ".",
+      "runner": "turbo-playwright-v1",
+      "inputSelectors": [
+        { "kind": "glob", "pattern": "reference/*/test/e2e/**" },
+        { "kind": "glob", "pattern": "packages/*/test/e2e/**" },
+        { "kind": "glob", "pattern": "packages-web/*/test/e2e/**" },
+        { "kind": "prefix", "pattern": "reference/" },
+        { "kind": "glob", "pattern": "playwright*.config.*" }
+      ],
+      "toolchainKeys": ["node", "pnpm", "postgres"],
+      "allowlistedEnv": [
+        "CI",
+        "DATABASE_URL",
+        "STYNX_DATABASE_URL",
+        "STYNX_TEST_PG_HOST",
+        "STYNX_TEST_PG_PORT",
+        "STYNX_TEST_PG_USER",
+        "STYNX_TEST_PG_PASSWORD",
+        "STYNX_TEST_PG_SOCKET_DIR",
+        "STYNX_TEST_PG_TEMPLATE"
+      ],
+      "outputContract": { "kind": "command", "requiredResult": "pass" }
+    },
+    {
+      "nodeId": "docs",
+      "dependencies": ["build"],
+      "argv": ["pnpm", "run", "devai:docs"],
+      "cwd": ".",
+      "runner": "docusaurus-v1",
+      "inputSelectors": [
+        { "kind": "prefix", "pattern": "docs/" },
+        { "kind": "prefix", "pattern": "law/" },
+        { "kind": "prefix", "pattern": "product/" },
+        { "kind": "glob", "pattern": "packages/*/README.md" },
+        { "kind": "glob", "pattern": "packages-web/*/README.md" },
+        { "kind": "glob", "pattern": "scripts/gen-*.mjs" }
+      ],
+      "toolchainKeys": ["node", "pnpm", "typescript"],
+      "allowlistedEnv": ["CI"],
+      "outputContract": { "kind": "command", "requiredResult": "pass" }
+    },
+    {
+      "nodeId": "test:mutation",
+      "dependencies": ["test:unit", "test:integration"],
+      "argv": ["pnpm", "run", "test:mutation"],
+      "cwd": ".",
+      "runner": "stryker-v1",
+      "inputSelectors": [
+        { "kind": "glob", "pattern": "packages/*/src/**" },
+        { "kind": "glob", "pattern": "packages/*/test/**" },
+        { "kind": "glob", "pattern": "packages-web/*/src/**" },
+        { "kind": "glob", "pattern": "packages-web/*/test/**" },
+        { "kind": "prefix", "pattern": "tools/stryker/" },
+        { "kind": "exact", "pattern": "tools/repo-config/test-policy.json" }
+      ],
+      "toolchainKeys": ["node", "pnpm", "vitest", "typescript", "postgres"],
+      "allowlistedEnv": [
+        "CI",
+        "DATABASE_URL",
+        "STYNX_DATABASE_URL",
+        "STYNX_TEST_PG_HOST",
+        "STYNX_TEST_PG_PORT",
+        "STYNX_TEST_PG_USER",
+        "STYNX_TEST_PG_PASSWORD",
+        "STYNX_TEST_PG_SOCKET_DIR",
+        "STYNX_TEST_PG_TEMPLATE"
+      ],
+      "outputContract": { "kind": "command", "requiredResult": "pass" }
+    },
+    {
+      "nodeId": "test:performance",
+      "dependencies": ["reference:apps", "db:rls"],
+      "argv": ["pnpm", "run", "test:perf"],
+      "cwd": ".",
+      "runner": "stynx-performance-v1",
+      "inputSelectors": [
+        { "kind": "exact", "pattern": "scripts/perf-smoke.mjs" },
+        { "kind": "exact", "pattern": "scripts/perf-smoke.spec.mjs" },
+        { "kind": "prefix", "pattern": "test/perf/" },
+        { "kind": "prefix", "pattern": "reference/api/" },
+        { "kind": "prefix", "pattern": "packages/ratelimit/" }
+      ],
+      "toolchainKeys": ["node", "pnpm", "postgres"],
+      "allowlistedEnv": [
+        "CI",
+        "DATABASE_URL",
+        "STYNX_DATABASE_URL",
+        "STYNX_TEST_PG_HOST",
+        "STYNX_TEST_PG_PORT",
+        "STYNX_TEST_PG_USER",
+        "STYNX_TEST_PG_PASSWORD",
+        "STYNX_TEST_PG_SOCKET_DIR",
+        "STYNX_TEST_PG_TEMPLATE"
+      ],
+      "outputContract": { "kind": "command", "requiredResult": "pass" }
+    },
+    {
+      "nodeId": "security",
+      "dependencies": ["build"],
+      "argv": ["pnpm", "run", "security:release"],
+      "cwd": ".",
+      "runner": "stynx-security-v1",
+      "inputSelectors": [
+        { "kind": "exact", "pattern": "package.json" },
+        { "kind": "exact", "pattern": "pnpm-lock.yaml" },
+        { "kind": "prefix", "pattern": "scripts/" },
+        { "kind": "prefix", "pattern": "docs/meta/security/" },
+        { "kind": "prefix", "pattern": ".github/workflows/" }
+      ],
+      "toolchainKeys": ["node", "pnpm"],
+      "allowlistedEnv": ["CI", "NODE_AUTH_TOKEN"],
+      "outputContract": { "kind": "command", "requiredResult": "pass" }
+    },
+    {
+      "nodeId": "trace",
+      "dependencies": ["engines"],
+      "argv": ["pnpm", "run", "devai:trace:verify"],
+      "cwd": ".",
+      "runner": "stynx-trace-v1",
+      "inputSelectors": [
+        { "kind": "exact", "pattern": "law/trace.json" },
+        { "kind": "prefix", "pattern": "law/invariants/" },
+        { "kind": "prefix", "pattern": "scripts/" },
+        { "kind": "glob", "pattern": "packages/*/test/**" },
+        { "kind": "glob", "pattern": "packages-web/*/test/**" },
+        { "kind": "glob", "pattern": "reference/*/test/**" },
+        { "kind": "glob", "pattern": "tools/*/test/**" }
+      ],
+      "toolchainKeys": ["node", "pnpm"],
+      "allowlistedEnv": ["CI"],
+      "outputContract": { "kind": "command", "requiredResult": "pass" }
+    },
+    {
+      "nodeId": "doctor",
+      "dependencies": ["trace"],
+      "argv": ["pnpm", "exec", "devai", "doctor", "--repo-root", ".", "--format", "json"],
+      "cwd": ".",
+      "runner": "devai-doctor-v1",
+      "inputSelectors": [
+        { "kind": "prefix", "pattern": ".devai/" },
+        { "kind": "prefix", "pattern": "law/" },
+        { "kind": "prefix", "pattern": "product/" },
+        { "kind": "exact", "pattern": "package.json" },
+        { "kind": "exact", "pattern": "pnpm-lock.yaml" }
+      ],
+      "toolchainKeys": ["node", "pnpm"],
+      "allowlistedEnv": ["CI"],
+      "outputContract": { "kind": "command", "requiredResult": "pass" }
+    },
+    {
+      "nodeId": "test:local-full",
+      "dependencies": ["api:contracts", "lint:families", "test:unit", "build", "docs", "doctor"],
+      "argv": ["pnpm", "run", "check:engines"],
+      "cwd": ".",
+      "runner": "stynx-local-closure-v1",
+      "inputSelectors": [
+        { "kind": "exact", "pattern": "package.json" },
+        { "kind": "exact", "pattern": "test-tasks.json" }
+      ],
+      "toolchainKeys": ["node", "pnpm"],
+      "allowlistedEnv": ["CI"],
+      "outputContract": { "kind": "command", "requiredResult": "pass" }
+    },
+    {
+      "nodeId": "release:prepare",
+      "dependencies": [
+        "api:contracts",
+        "lint:families",
+        "test:e2e",
+        "docs",
+        "test:mutation",
+        "test:performance",
+        "security",
+        "doctor"
+      ],
+      "argv": ["pnpm", "run", "ci:stynx:release"],
+      "cwd": ".",
+      "runner": "stynx-release-v1",
+      "inputSelectors": [
+        { "kind": "prefix", "pattern": ".changeset/" },
+        { "kind": "prefix", "pattern": "docs/adopters/stynx/" },
+        { "kind": "prefix", "pattern": "scripts/" },
+        { "kind": "exact", "pattern": "package.json" },
+        { "kind": "exact", "pattern": "pnpm-lock.yaml" },
+        { "kind": "exact", "pattern": "test-tasks.json" }
+      ],
+      "toolchainKeys": ["node", "pnpm"],
+      "allowlistedEnv": ["CI", "NODE_AUTH_TOKEN"],
+      "outputContract": { "kind": "command", "requiredResult": "pass" }
     }
   ],
   "profiles": [
     {
       "profileId": "affected",
       "mode": "affected",
-      "requiredNodes": [],
+      "requiredNodes": ["engines", "trace", "doctor"],
       "eligibleNodes": [
-        "test:lint",
-        "test:typecheck",
+        "engines",
+        "api:contracts",
+        "lint:families",
+        "typecheck",
         "test:unit",
-        "test:build",
+        "test:integration",
+        "build",
+        "reference:apps",
+        "db:rls",
+        "test:e2e",
+        "docs",
+        "test:mutation",
+        "test:performance",
+        "security",
+        "trace",
+        "doctor",
         "test:local-full",
-        "test:integration"
+        "release:prepare"
       ]
     },
     {
       "profileId": "rc",
       "mode": "fixed",
-      "requiredNodes": ["test:local-full", "test:integration"]
+      "requiredNodes": ["release:prepare"]
     }
   ]
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // R14-W10 generator: schema browser.
 //
-// Reads docs/framework/schemas/*.schema.json and emits an indexed catalog
+// Reads canonical law/schemas/*.schema.json and emits an indexed catalog
 // at docs/site/docs/framework/schemas/index.md plus per-schema pages
 // listing title, $id, description, top-level properties, and full JSON
 // in a collapsible <details> block.
@@ -23,7 +23,7 @@ function parseArgs(argv) {
 }
 
 export function loadSchemas({ repoRoot }) {
-  const dir = join(repoRoot, 'docs/framework/schemas');
+  const dir = join(repoRoot, 'law/schemas');
   let entries;
   try { entries = readdirSync(dir); } catch { return []; }
   const schemas = [];
@@ -107,7 +107,7 @@ function renderIndex(schemas) {
   lines.push('');
   lines.push('# Schemas');
   lines.push('');
-  lines.push(`> Auto-generated from \`docs/framework/schemas/*.schema.json\` by \`scripts/gen-schema-browser.mjs\` per [ADR-DOCS-IA Decision 6](../../meta/adr/ADR-DOCS-IA.md). **${schemas.length}** schemas in the catalog.`);
+  lines.push(`> Auto-generated from canonical \`law/schemas/*.schema.json\` by \`scripts/gen-schema-browser.mjs\`. **${schemas.length}** schemas in the catalog.`);
   lines.push('');
   lines.push('| Name | Title | Description |');
   lines.push('|---|---|---|');

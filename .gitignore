@@ -65,6 +65,7 @@ frontend/src/environments/*.ts
 # ------------------------
 node_modules/
 .devai/state/check-cache/
+.devai/worktrees/
 scratch/*
 !scratch/worktrees/
 scratch/worktrees/*

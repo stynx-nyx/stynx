@@ -4,7 +4,7 @@ import { StynxI18nService, StynxTranslatePipe } from '@stynx-nyx/angular-i18n';
 import { STYNX_OIDC_ADAPTER, type StynxHostedAuthAction, type StynxHostedAuthActionContext } from '@stynx-nyx/angular-auth';
 import { StynxBannerComponent, StynxIconComponent } from '@stynx-nyx/angular-ui';
 
-type HostedActionStatus = 'ready' | 'unavailable' | 'error';
+export type HostedActionStatus = 'ready' | 'unavailable' | 'error';
 
 const ACTION_LABEL_KEYS: Record<StynxHostedAuthAction, string> = {
   'change-password': 'profile.security.changePassword.action',
@@ -25,7 +25,7 @@ function currentReturnUrl(): string {
   return typeof globalThis.window === 'object' ? globalThis.window.location.href : '';
 }
 
-class HostedAuthActionHandoffController {
+export class HostedAuthActionHandoffController {
   private readonly adapter = inject(STYNX_OIDC_ADAPTER, { optional: true });
   private readonly errorBanner = inject(ErrorBannerService, { optional: true });
   private readonly i18n = inject(StynxI18nService, { optional: true });

@@ -38,9 +38,9 @@ const forbidden = new Set([
   'authorities',
   'permissions',
 ]);
-type Response = { setHeader(name: string, value: string): void; status(code: number): Response };
-type EmptySessionControlRequest = Record<string, never>;
-interface SessionSubjectRevokeRequest {
+export type Response = { setHeader(name: string, value: string): void; status(code: number): Response };
+export type EmptySessionControlRequest = Record<string, never>;
+export interface SessionSubjectRevokeRequest {
   scope?: SessionScope;
 }
 @Controller('auth')

@@ -32,8 +32,8 @@ const identityKeys = new Set([
   'userId',
   'user_id',
 ]);
-type NestResponse = { setHeader(name: string, value: string): void };
-type AuthenticatedRequest = {
+export type NestResponse = { setHeader(name: string, value: string): void };
+export type AuthenticatedRequest = {
   tenantId?: string;
   stynxClaims?: { sub?: string; tenantId?: string };
   principal?: { id?: string };
