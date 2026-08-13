@@ -45,8 +45,8 @@ importers:
   .:
     devDependencies:
       '@aarusso-nyx/devai':
-        specifier: 1.1.0
-        version: 1.1.0(ws@8.21.0)(zod@3.25.76)
+        specifier: 1.1.1
+        version: 1.1.1(ws@8.21.0)(zod@3.25.76)
       '@angular-eslint/eslint-plugin':
         specifier: 21.4.0
         version: 21.4.0(@typescript-eslint/utils@8.59.4(eslint@10.4.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.4.0(jiti@2.7.0))(typescript@6.0.3)
@@ -2184,8 +2184,8 @@ importers:
 
 packages:
 
-  '@aarusso-nyx/devai@1.1.0':
-    resolution: {integrity: sha512-T7Q7gH+LZOB4j6+95L8odXscr5qK5bx2OyIItAMKWGo+Om917nGVkLV2AxKksgzC5BO1WoTZbFaujowVzHQflw==, tarball: https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.1.0/320746953e70c2cc910346b9555936d53d478a5e}
+  '@aarusso-nyx/devai@1.1.1':
+    resolution: {integrity: sha512-UCtLKDINhG+yhkCtc3IRpFYT7GS3PefdZnnOM7kx6EhPBlDes0J3Rj4QrmcAZg9KKIRM8SzwrGco+nFaTF9QIQ==, tarball: https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.1.1/d1763dee9244620dac874f11f63ab9376151a5b9}
     engines: {node: '>=24.0.0'}
     hasBin: true
 
@@ -13019,7 +13019,7 @@ packages:
 
 snapshots:
 
-  '@aarusso-nyx/devai@1.1.0(ws@8.21.0)(zod@3.25.76)':
+  '@aarusso-nyx/devai@1.1.1(ws@8.21.0)(zod@3.25.76)':
     dependencies:
       '@anthropic-ai/sdk': 0.91.1(zod@3.25.76)
       ajv: 8.20.0
