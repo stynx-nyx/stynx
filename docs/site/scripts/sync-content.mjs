@@ -141,6 +141,35 @@ function copyJsonDirAsDocs(sourceDir, targetDir, title) {
   }
 }
 
+function copySchemaJsonDirAsDocs(sourceDir, targetDir) {
+  if (!existsSync(sourceDir)) {
+    return;
+  }
+
+  const entries = readdirSync(sourceDir, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith('.schema.json'))
+    .sort((left, right) => left.name.localeCompare(right.name));
+  const rows = entries.map((entry) => {
+    const schema = JSON.parse(readFileSync(resolve(sourceDir, entry.name), 'utf8'));
+    const slug = entry.name.replace(/\.schema\.json$/u, '');
+    return `| [\`${slug}\`](./${slug}) | ${schema.title ?? slug} | ${schema.description ?? ''} |`;
+  });
+  writeDoc(
+    join(targetDir, 'index.md'),
+    `# Schemas\n\nCanonical adopter-owned schemas mirrored from \`law/schemas\`.\n\n| Name | Title | Description |\n|---|---|---|\n${rows.join('\n')}\n`,
+    'Schemas',
+  );
+  for (const entry of entries) {
+    const schema = JSON.parse(readFileSync(resolve(sourceDir, entry.name), 'utf8'));
+    const slug = entry.name.replace(/\.schema\.json$/u, '');
+    writeDoc(
+      join(targetDir, `${slug}.md`),
+      `# ${schema.title ?? titleFromName(slug)}\n\n${schema.description ?? ''}\n\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\n\`\`\`\n`,
+      schema.title ?? titleFromName(slug),
+    );
+  }
+}
+
 function isTrackedFile(filePath) {
   const relativePath = relative(repoRoot, filePath).split('\\').join('/');
   const result = spawnSync('git', ['ls-files', '--error-unmatch', '--', relativePath], {
@@ -171,6 +200,17 @@ function publicMarkdownContent(content) {
 
 function rewriteGeneratedDocLinks(content) {
   return content
+    .replace(/\/docs\/framework\/glossary\/?/gu, '/docs/glossary/')
+    .replace(/\/docs\/meta\/adr\/?/gu, '/docs/adr/')
+    .replace(/\/docs\/framework\/api\/?/gu, '/docs/api-reference/')
+    .replace(/\/docs\/api-reference\/stynx-web-/gu, '/docs/api-reference/stynx-nyx-')
+    .replace(/\/docs\/api-reference\/stynx-(?!nyx-)/gu, '/docs/api-reference/stynx-nyx-')
+    .replace(/\]\(\.\/glossary\/?\)/gu, '](/docs/glossary/)')
+    .replace(/\]\((?:\.\.\/)+law\/invariants\/?\)/gu, '](/docs/law/invariants/)')
+    .replace(/\]\(\.\.\/invariants\/?\)/gu, '](/docs/law/invariants/)')
+    .replace(/\]\(draft\/blueprints\/?\)/gu, '](/docs/product/drafts/blueprints/)')
+    .replace(/\]\((?:\.\.\/)+meta\/adr\/?\)/gu, '](/docs/adr/)')
+    .replace(/\]\((?:\.\.\/)+meta\/adr\/([^\)\s#]+)\.md((?:#[^)]+)?)\)/gu, '](/docs/adr/$1$2)')
     .replace(/\]\(\.\.\/arch\/invariants\/?\)/gu, '](/docs/framework/arch/invariants)')
     .replace(/\]\(\.\.\/arch\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/arch$1)')
     .replace(
@@ -294,7 +334,9 @@ function rewriteGeneratedDocLinks(content) {
     .replace(/\[([^\]]+)\]\(([^)\s#]+)\.(?:json|sql|ts|tsx|js|mjs|cjs)((?:#[^)]+)?)\)/gu, (_match, label) => `\`${label}\``)
     .replace(/\[([^\]]+)\]\((?:\.\.\/){2,}(?:tools|packages|packages-web|reference|database|infra|work)\/[^)]*\)/gu, (_match, label) => `\`${label}\``)
     .replace(/\[([^\]]+)\]\((?:\.\.\/){2,}(?:AGENTS|CLAUDE|package)\.md[^)]*\)/gu, (_match, label) => `\`${label}\``)
-    .replace(/\]\(porm-flow-deprecation-readiness\.md((?:#[^)]+)?)\)/gu, '](./porm-flow-deprecation-readiness$1)');
+    .replace(/\]\(porm-flow-deprecation-readiness\.md((?:#[^)]+)?)\)/gu, '](./porm-flow-deprecation-readiness$1)')
+    .replace(/\/stynx\/docs\/meta\/adr\/?/gu, '/docs/adr/')
+    .replace(/\/docs\/meta\/adr\/?/gu, '/docs/adr/');
 }
 
 function rewritePackageReadmeLinks(content, targetDir) {
@@ -449,6 +491,11 @@ writeDoc('architecture-decisions/index.md', '# Architecture Decisions\n\nArchite
 writeDoc('api-reference/index.md', '# API Reference\n\nGenerated API reference for every `@stynx-nyx/*` and `@stynx-nyx/*` package.\n', 'API Reference');
 writeDoc('templates/index.md', '# Templates\n\nDocumentation templates mirrored from `docs/meta/templates/`.\n', 'Templates');
 writeDoc('rfcs/index.md', '# RFCs\n\nRepository RFCs mirrored for public cross-reference stability.\n', 'RFCs');
+writeDoc(
+  'adopters/index.md',
+  '# Adopters\n\nProject-specific adoption, operations, and readiness documentation.\n\n- [STYNX](./stynx/)\n',
+  'Adopters',
+);
 
 copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'docs/adopters'), 'adopters', (content) =>
   publicMarkdownContent(content),
@@ -566,3 +613,12 @@ for (const section of ['start', 'framework', 'adopters', 'reference', 'meta']) {
     (content) => publicMarkdownContent(content),
   );
 }
+copySchemaJsonDirAsDocs(resolve(repoRoot, 'law/schemas'), 'framework/schemas');
+writeReadmeDoc(resolve(repoRoot, 'product/README.md'), 'product/index.md', (content) =>
+  publicMarkdownContent(content),
+  'Product',
+);
+copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'product/drafts'), 'product/drafts', (content) =>
+  publicMarkdownContent(content),
+);
+copyJsonDirAsDocs(resolve(repoRoot, 'product/drafts/blueprints'), 'product/drafts/blueprints', 'Draft Blueprints');
