@@ -1,6 +1,9 @@
 # Product specification
 
-New DEVAI-governed business specifications are authored here under Owner
-authority. The preserved STYNX product and reference-application corpus remains
-in [`docs/framework/product`](../docs/framework/product/) and is not duplicated
-or rewritten by the bootstrap adoption.
+This directory is the canonical Owner authority for STYNX product behavior.
+
+- `use-cases/` contains the two live reference-application use-case catalogs.
+- `drafts/` contains explicitly non-authoritative product drafts, including the
+  demo bookmark blueprint.
+
+Published documentation mirrors these sources; it does not supersede them.
