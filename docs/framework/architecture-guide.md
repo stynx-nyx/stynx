@@ -74,7 +74,7 @@ All five tables carry `tenant_id` (row-level multi-tenant isolation) and `create
 
 **Frontend ↔ Backend**
 
-- Declared stack is Angular; 15 frontend routes are captured. Reference API endpoints and primary Angular routes are linked from `docs/framework/product/use-cases/stynx-reference-app*.json`.
+- Declared stack is Angular; 15 frontend routes are captured. Reference API endpoints and primary Angular routes are linked from `product/use-cases/stynx-reference-app*.json`.
 
 ---
 

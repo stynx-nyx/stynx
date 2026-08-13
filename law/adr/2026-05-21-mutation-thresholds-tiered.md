@@ -113,6 +113,6 @@ Revert with: `git revert <this-commit-range>`. The original ADR changes touched 
 
 - `tools/repo-config/test-policy.json`
 - `pnpm test:mutation`
-- `docs/meta/adr/2026-05-21-mutation-thresholds-tiered.md`
+- `law/adr/2026-05-21-mutation-thresholds-tiered.md`
 
 The on-disk mutation artefacts (`<pkg>/.test-results/mutation.json`, `<pkg>/reports/mutation/`) are untouched; they remain valid against the previous policy. The next mutation run rewrites them under the new policy.

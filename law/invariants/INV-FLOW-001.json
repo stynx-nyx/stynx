@@ -9,11 +9,18 @@
   "statement": "Every Flow row that belongs to a tenant MUST carry tenant_id, execute behind PostgreSQL RLS keyed from STYNX transaction context, and preserve tenant-local references across related Flow tables.",
   "rationale": "PORM Flow provides the workflow vocabulary but does not consistently enforce STYNX tenant isolation. Flow is a cross-domain framework module; a single tenant leak can expose workflow state, tasks, answers, waivers, and event payloads for arbitrary host domains.",
   "status": "active",
+  "lifecycle": "supported",
   "verification": {
     "required_suites": ["db", "int"],
-    "oracle": "tests"
+    "oracle": "tests",
+    "strategy": {
+      "primary": "regression",
+      "supplemental": ["structural"],
+      "deterministic_check_available": true,
+      "rationale": "Executable repository tests and structural trace verification deterministically enforce this established STYNX behavior."
+    }
   },
-  "authority": {
+  "authority_docs": {
     "docs": [
       {
         "doc": "docs/framework/arch/flow.md",
@@ -64,5 +71,5 @@
     "human_approval_required": true
   },
   "tags": ["porm-port", "flow", "tenancy", "rls", "stynx"],
-  "measurable_via": ["sense data-model", "sense api", "inv adherence-reverse"]
+  "measurable_via": ["check", "sense inventory", "audit observe"]
 }

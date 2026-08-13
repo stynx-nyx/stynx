@@ -121,6 +121,26 @@ function copyMarkdownDirTransformedWithIndex(sourceDir, targetDir, transform) {
   }
 }
 
+function copyJsonDirAsDocs(sourceDir, targetDir, title) {
+  if (!existsSync(sourceDir)) {
+    return;
+  }
+
+  const entries = readdirSync(sourceDir, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith('.json'))
+    .sort((left, right) => left.name.localeCompare(right.name));
+  writeDoc(
+    join(targetDir, 'index.md'),
+    `# ${title}\n\n${entries.map((entry) => `- [\`${entry.name}\`](./${entry.name.replace(/\.json$/u, '')})`).join('\n')}\n`,
+    title,
+  );
+  for (const entry of entries) {
+    const source = resolve(sourceDir, entry.name);
+    const target = join(targetDir, entry.name.replace(/\.json$/u, '.md'));
+    writeDoc(target, `# ${titleFromName(entry.name)}\n\n\`\`\`json\n${readFileSync(source, 'utf8').trim()}\n\`\`\`\n`, titleFromName(entry.name));
+  }
+}
+
 function isTrackedFile(filePath) {
   const relativePath = relative(repoRoot, filePath).split('\\').join('/');
   const result = spawnSync('git', ['ls-files', '--error-unmatch', '--', relativePath], {
@@ -430,7 +450,7 @@ writeDoc('api-reference/index.md', '# API Reference\n\nGenerated API reference f
 writeDoc('templates/index.md', '# Templates\n\nDocumentation templates mirrored from `docs/meta/templates/`.\n', 'Templates');
 writeDoc('rfcs/index.md', '# RFCs\n\nRepository RFCs mirrored for public cross-reference stability.\n', 'RFCs');
 
-copyMarkdownDirTransformed(resolve(repoRoot, 'docs/adopters'), 'adopters', (content) =>
+copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'docs/adopters'), 'adopters', (content) =>
   publicMarkdownContent(content),
 );
 copyMarkdownDirTransformed(resolve(repoRoot, 'docs/dev'), 'narrative/dev', (content) => publicMarkdownContent(content));
@@ -467,12 +487,14 @@ copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'docs/framework/arch'), 'a
 copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'docs/framework/contracts'), 'contracts', (content) =>
   publicMarkdownContent(content),
 );
-copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'docs/framework/glossary'), 'glossary', (content) =>
+copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'law/glossary'), 'glossary', (content) =>
   publicMarkdownContent(content),
 );
-copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'docs/meta/adr'), 'adr', (content) =>
+copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'law/adr'), 'adr', (content) =>
   publicMarkdownContent(content),
 );
+copyJsonDirAsDocs(resolve(repoRoot, 'law/invariants'), 'law/invariants', 'Canonical Invariants');
+copyJsonDirAsDocs(resolve(repoRoot, 'product/use-cases'), 'product/use-cases', 'Canonical Use Cases');
 copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'docs/meta/ops'), 'ops', (content) =>
   publicMarkdownContent(content),
 );

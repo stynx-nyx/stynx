@@ -2,14 +2,15 @@
   "schemaVersion": "1.0.0",
   "project_type": "platform-package",
   "authority_enforcement": {
-    "mode": "cli-only"
+    "mode": "host-integrated",
+    "adapter_config": ".devai/config/post-merge-host-adapter.json"
   },
   "profile": "tier1",
   "constitution": {
     "version": "1.0.0",
     "sha256": "3f0e2ddc45d0f4102eda34776700d8da7a1e56aab30c6ab43cc6ee6dbe972542"
   },
-  "devai_version": "1.0.1",
+  "devai_version": "1.1.0",
   "repo": {
     "kind": "library"
   },

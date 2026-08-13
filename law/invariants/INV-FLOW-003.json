@@ -9,11 +9,18 @@
   "statement": "Flow workflow events MUST be append-only domain ledger rows and MUST NOT replace STYNX platform audit for protected route invocations or administrative operations.",
   "rationale": "PORM exposes workflow events as part of runtime history. STYNX needs that domain ledger, but it also requires platform audit for security and compliance. Conflating the two either loses workflow replay evidence or hides who invoked protected operations.",
   "status": "active",
+  "lifecycle": "supported",
   "verification": {
     "required_suites": ["int", "api"],
-    "oracle": "tests"
+    "oracle": "tests",
+    "strategy": {
+      "primary": "regression",
+      "supplemental": ["structural"],
+      "deterministic_check_available": true,
+      "rationale": "Executable repository tests and structural trace verification deterministically enforce this established STYNX behavior."
+    }
   },
-  "authority": {
+  "authority_docs": {
     "docs": [
       {
         "doc": "docs/framework/arch/flow.md",
@@ -46,5 +53,5 @@
     "human_approval_required": true
   },
   "tags": ["porm-port", "flow", "events", "audit", "append-only", "stynx"],
-  "measurable_via": ["sense api", "sense data-model", "inv adherence-reverse"]
+  "measurable_via": ["check", "sense inventory", "audit observe"]
 }

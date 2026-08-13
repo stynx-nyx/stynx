@@ -9,11 +9,18 @@
   "statement": "Every column classified as PII in canonical DDL, migrations, or the privacy mapping MUST also declare a non-empty `legal_basis` under LGPD Art. 7 or GDPR Art. 6 and a non-empty retention policy. Heuristic classification alone does not satisfy this invariant; both values require explicit review.",
   "rationale": "LGPD and GDPR review cannot complete when PII lacks an explicit lawful basis and retention policy. The fix is to author both values or document, with rationale, that the column is not PII.",
   "status": "active",
+  "lifecycle": "supported",
   "verification": {
     "required_suites": ["int"],
-    "oracle": "tests"
+    "oracle": "tests",
+    "strategy": {
+      "primary": "regression",
+      "supplemental": ["structural"],
+      "deterministic_check_available": true,
+      "rationale": "Executable repository tests and structural trace verification deterministically enforce this established STYNX behavior."
+    }
   },
-  "authority": {
+  "authority_docs": {
     "docs": [
       {
         "doc": "docs/meta/development-contract.md",
@@ -40,5 +47,5 @@
     "gdpr",
     "promoted-from-INV-CANDIDATE"
   ],
-  "measurable_via": ["sense data-handling"]
+  "measurable_via": ["check", "sense inventory", "audit observe"]
 }

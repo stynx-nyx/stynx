@@ -9,11 +9,18 @@
   "statement": "Generic Flow backend and frontend packages MUST NOT import, branch on, mutate, or otherwise special-case CMS, PORM opportunity, proposal, engagement, or any host-domain behavior outside the registered Flow domain adapter contract.",
   "rationale": "STYNX Flow is a framework module. PORM contains useful workflow machinery, but portions of its runtime are coupled to PORM domains. Porting those couplings would prevent reuse and violate the STYNX module boundary.",
   "status": "active",
+  "lifecycle": "supported",
   "verification": {
     "required_suites": ["unit", "int"],
-    "oracle": "tests"
+    "oracle": "tests",
+    "strategy": {
+      "primary": "regression",
+      "supplemental": ["structural"],
+      "deterministic_check_available": true,
+      "rationale": "Executable repository tests and structural trace verification deterministically enforce this established STYNX behavior."
+    }
   },
-  "authority": {
+  "authority_docs": {
     "docs": [
       {
         "doc": "docs/framework/arch/flow.md",
@@ -35,5 +42,5 @@
     "human_approval_required": true
   },
   "tags": ["porm-port", "flow", "adapter", "framework-boundary", "stynx"],
-  "measurable_via": ["sense dep-graph", "sense api", "inv adherence-reverse"]
+  "measurable_via": ["check", "sense inventory", "audit observe"]
 }

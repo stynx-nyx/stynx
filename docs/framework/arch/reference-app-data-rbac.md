@@ -64,8 +64,8 @@ bindings and is checked alongside permission decorators and Angular guards.
 
 Reference endpoints and Angular routes are claimed by:
 
-- `docs/framework/product/use-cases/stynx-reference-app.json`;
-- `docs/framework/product/use-cases/stynx-reference-app-extended.json`.
+- `product/use-cases/stynx-reference-app.json`;
+- `product/use-cases/stynx-reference-app-extended.json`.
 
 The primary user-facing routes are bound to stable route ids from the current
 `sense-routes` Angular inventory. Auth-only routes (`login`, `tenant`,

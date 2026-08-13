@@ -21,9 +21,9 @@ Inspectors actuate against.
 
 ## Invariants And Trace
 
-- [invariants/](invariants/) contains active stynx invariants such as
+- [`law/invariants`](../../../law/invariants/) contains the canonical active STYNX invariants such as
   `INV-RBAC-001`, `INV-PRIVACY-001`, `INV-CORE-001` (umbrella; renamed from `INV-PACKAGES-001`), and Flow invariants.
-- `trace.json` maps invariant anchors to code and sensor surfaces.
+- [`law/trace.json`](../../../law/trace.json) maps invariant anchors to code and sensor surfaces.
 
 ## Related Substrates
 

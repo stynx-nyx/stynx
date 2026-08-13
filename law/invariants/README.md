@@ -1,6 +1,8 @@
 # Invariants
 
-New DEVAI-governed invariants are authored here under Architect authority.
-STYNX's preserved invariant corpus remains in
-[`docs/framework/arch/invariants`](../../docs/framework/arch/invariants/) until
-an explicit, schema-validated promotion is authorized.
+This directory is the canonical, Architect-owned STYNX invariant corpus.
+Every active invariant validates against DEVAI 1.1, names deterministic
+verification, and is mapped to executable evidence in [`../trace.json`](../trace.json).
+
+`RBAC-001-allowlist.json` is the narrow bootstrap/development exception list
+referenced by `INV-RBAC-001`; it is policy data, not an additional invariant.

@@ -6,14 +6,21 @@
   "severity": "advisory",
   "type": "governance",
   "title": "Every stynx framework package and reference application is governed by an invariant claim",
-  "statement": "For every source file under `packages/<pkg>/src/**`, `packages-web/<pkg>/src/**`, `reference/<app>/src/**`, `domain/<module>/api/src/**`, `domain/<module>/web/src/**`, and `tools/<tool>/src/**`, the file MUST appear in `scope.code_areas[]` of at least one invariant under `docs/framework/arch/invariants/INV-*.json`. This invariant explicitly claims the full framework + reference + domain + tools surface so `sense-spec-alignment` reports ≥80% reverse-claim ratio, satisfying F1×T4 spec_alignment. Module-specific invariants (`INV-FLOW-001`, `INV-COVERAGE-001`, `INV-PRIVACY-001`, `INV-RBAC-001`, `INV-PERF-001`, `INV-ERROR-001`) carry the substantive behavioural claims; this invariant is the **baseline governance umbrella** that documents that every stynx-authored source file is intentionally part of the framework substrate, not orphan code. New packages MUST update `scope.code_areas[]` here when they ship.",
+  "statement": "For every source file under `packages/<pkg>/src/**`, `packages-web/<pkg>/src/**`, `reference/<app>/src/**`, `domain/<module>/api/src/**`, `domain/<module>/web/src/**`, and `tools/<tool>/src/**`, the file MUST appear in `scope.code_areas[]` of at least one invariant under `law/invariants/INV-*.json`. This invariant explicitly claims the full framework + reference + domain + tools surface. Module-specific invariants carry the substantive behavioural claims; this invariant is the baseline governance umbrella documenting that every STYNX-authored source file is intentionally governed. New packages MUST update `scope.code_areas[]` here when they ship.",
   "rationale": "Stynx's reverse-claim ratio was 16% (42/263 source files) post-Phase-30 because individual behavioural invariants only cover narrow slices (`INV-RBAC-001` claims `packages/auth/src + packages/backend/src/auth`; `INV-PRIVACY-001` claims `packages/data/src/schema + packages/privacy/src`; etc.). The remaining 220+ source files (logging, sessions, storage, idempotency, ratelimit, contracts, audit infrastructure, frontend SDKs, reference apps, etc.) were technically un-governed because no invariant claimed them. Authoring per-package behavioural invariants would be busywork; this umbrella declares that all stynx-authored code is intentionally in scope without prescribing per-file rules beyond what the more-specific invariants already cover. Severity `advisory` because the substantive claims live elsewhere; this is structural traceability bookkeeping.",
   "status": "active",
+  "lifecycle": "supported",
   "verification": {
     "required_suites": ["int"],
-    "oracle": "tests"
+    "oracle": "tests",
+    "strategy": {
+      "primary": "regression",
+      "supplemental": ["structural"],
+      "deterministic_check_available": true,
+      "rationale": "Executable repository tests and structural trace verification deterministically enforce this established STYNX behavior."
+    }
   },
-  "authority": {
+  "authority_docs": {
     "docs": [
       {
         "doc": "docs/meta/security/threat-model.md",
@@ -62,10 +69,16 @@
     ]
   },
   "change_policy": {
-    "breaking_change_requires": ["doc_update"],
-    "test_weakening_allowed": true,
-    "human_approval_required": false
+    "breaking_change_requires": [
+      "doc_update",
+      "trace_update",
+      "test_update",
+      "human_approval",
+      "adr"
+    ],
+    "test_weakening_allowed": false,
+    "human_approval_required": true
   },
   "tags": ["stynx", "governance", "umbrella", "promoted-during-u9", "closes-F1xT4"],
-  "measurable_via": ["sense spec-alignment", "sense api", "blueprint validate", "inv suggest"]
+  "measurable_via": ["check", "doctor", "sense inventory", "audit observe"]
 }
