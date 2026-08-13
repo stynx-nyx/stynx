@@ -3,7 +3,7 @@
   "project_type": "platform-package",
   "authority_enforcement": {
     "mode": "host-integrated",
-    "adapter_config": ".devai/config/github-actions-host-adapter.json"
+    "adapter_config": ".devai/config/post-merge-host-adapter.json"
   },
   "profile": "tier1",
   "constitution": {
