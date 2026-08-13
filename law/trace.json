@@ -10,8 +10,9 @@
       "require_test_links": true
     },
     "provenance": [
-      "DEVAI 1.1.0 deterministic inventory for exact tracked source bytes",
-      "The 460 tracked test-path census is partitioned into 338 executable tests and 122 non-executable fixtures, support modules, benchmarks, and type fixtures."
+      "DEVAI 1.1.0 deterministic inventory for exact tracked source bytes.",
+      "The 460 tracked test-path census is partitioned into 346 executable tests and 114 non-executable fixtures or support modules.",
+      "Fourteen tracked verification scripts and configuration attestations complete the 474-item governed test surface."
     ]
   },
   "invariants": [
@@ -65,7 +66,9 @@
           "path": "scripts/verify-secret-scan.mjs",
           "target_type": "script",
           "names": ["INV-RBAC-001"],
-          "assertions": ["The script is present and selected by the canonical sec closure."],
+          "assertions": [
+            "The tracked script participates in the canonical sec verification surface."
+          ],
           "mode": "white_box"
         }
       ],
@@ -100,12 +103,32 @@
           "mode": "gray_box"
         },
         {
-          "suite": "db",
+          "suite": "sec",
+          "path": "scripts/generate-sbom.mjs",
+          "target_type": "script",
+          "names": ["INV-PRIVACY-001"],
+          "assertions": [
+            "The tracked script participates in the canonical sec verification surface."
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "sec",
+          "path": "scripts/verify-license-policy.mjs",
+          "target_type": "script",
+          "names": ["INV-PRIVACY-001"],
+          "assertions": [
+            "The tracked script participates in the canonical sec verification surface."
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "int",
           "path": "tools/repo-config/test-policy.json",
           "target_type": "config-attestation",
           "names": ["INV-PRIVACY-001"],
           "assertions": [
-            "The config-attestation is present and selected by the canonical db closure."
+            "The tracked config-attestation participates in the canonical int verification surface."
           ],
           "mode": "white_box"
         }
@@ -142,7 +165,19 @@
           "path": "scripts/verify-db-acceptance.mjs",
           "target_type": "script",
           "names": ["INV-FLOW-001"],
-          "assertions": ["The script is present and selected by the canonical db closure."],
+          "assertions": [
+            "The tracked script participates in the canonical db verification surface."
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "db",
+          "path": "scripts/db-verify.mjs",
+          "target_type": "script",
+          "names": ["INV-FLOW-001"],
+          "assertions": [
+            "The tracked script participates in the canonical db verification surface."
+          ],
           "mode": "white_box"
         },
         {
@@ -150,7 +185,19 @@
           "path": "scripts/verify-rls-negative.mjs",
           "target_type": "script",
           "names": ["INV-FLOW-001"],
-          "assertions": ["The script is present and selected by the canonical sec closure."],
+          "assertions": [
+            "The tracked script participates in the canonical sec verification surface."
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "sec",
+          "path": "scripts/check-rls-smoke.sh",
+          "target_type": "script",
+          "names": ["INV-FLOW-001"],
+          "assertions": [
+            "The tracked script participates in the canonical sec verification surface."
+          ],
           "mode": "white_box"
         }
       ],
@@ -258,7 +305,19 @@
           "path": "scripts/verify-api-coverage.mjs",
           "target_type": "script",
           "names": ["INV-COVERAGE-001"],
-          "assertions": ["The script is present and selected by the canonical api closure."],
+          "assertions": [
+            "The tracked script participates in the canonical api verification surface."
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "contract",
+          "path": "scripts/verify-public-api-baselines.mjs",
+          "target_type": "script",
+          "names": ["INV-COVERAGE-001"],
+          "assertions": [
+            "The tracked script participates in the canonical contract verification surface."
+          ],
           "mode": "white_box"
         }
       ],
@@ -292,7 +351,9 @@
           "path": "scripts/perf-smoke.mjs",
           "target_type": "script",
           "names": ["INV-PERF-001"],
-          "assertions": ["The script is present and selected by the canonical perf closure."],
+          "assertions": [
+            "The tracked script participates in the canonical perf verification surface."
+          ],
           "mode": "white_box"
         }
       ],
@@ -319,6 +380,16 @@
             "the full framework + reference + domain + tools source surface is structurally claimed by INV-CORE-001 scope.code_areas[] (umbrella governance; reverse-claim ratio measured by sense-spec-alignment ≥80%)"
           ],
           "mode": "gray_box"
+        },
+        {
+          "suite": "journey",
+          "path": "scripts/verify-production-readiness-reference.mjs",
+          "target_type": "script",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "The tracked script participates in the canonical journey verification surface."
+          ],
+          "mode": "white_box"
         }
       ],
       "code_areas": ["packages/**", "packages-web/**", "reference/**", "domain/**", "tools/**"]
@@ -357,11 +428,21 @@
         },
         {
           "suite": "contract",
+          "path": "scripts/verify-openapi-contract.mjs",
+          "target_type": "script",
+          "names": ["INV-ERROR-001"],
+          "assertions": [
+            "The tracked script participates in the canonical contract verification surface."
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "contract",
           "path": "law/schemas/error-envelope.schema.json",
           "target_type": "config-attestation",
           "names": ["INV-ERROR-001"],
           "assertions": [
-            "The config-attestation is present and selected by the canonical contract closure."
+            "The tracked config-attestation participates in the canonical contract verification surface."
           ],
           "mode": "white_box"
         }
@@ -1395,6 +1476,14 @@
       "lifecycle": "supported",
       "assertion_count": 31,
       "assertion_digest_sha256": "d74b84463cd3fe0859e7c24a3b1ec3fee7c99f9f6dda716987f2c5d9f9701f06"
+    },
+    {
+      "path": "packages/contracts/test/contracts.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001"],
+      "lifecycle": "supported",
+      "assertion_count": 2,
+      "assertion_digest_sha256": "c76642ee808ae3724c7962354ba78c21913e1db1a1a6141fc124cc01c619ea37"
     },
     {
       "path": "packages/contracts/test/errors.spec.ts",
@@ -2919,6 +3008,38 @@
       "assertion_digest_sha256": "a94beff01bdd3a33592db5daa6fe21657acc6eaaf397b190054293a821dc45c7"
     },
     {
+      "path": "reference/web/test/unit/reference-web-config.spec.mjs",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 16,
+      "assertion_digest_sha256": "18d5a2ef12c4b83c0fe93cd36356bef5afcbcbab4c064d45596d4c6cf4dd8429"
+    },
+    {
+      "path": "scripts/list-ddl-objects.spec.mjs",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 8,
+      "assertion_digest_sha256": "4fa0096ab60368853aed30225716477aa365b31f316cbb223ff8e5e8fcf89262"
+    },
+    {
+      "path": "scripts/list-routes.spec.mjs",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001"],
+      "lifecycle": "supported",
+      "assertion_count": 9,
+      "assertion_digest_sha256": "2c72ff56d34367870a20560cd068882e296830776dc25ca61f5d8573ec610417"
+    },
+    {
+      "path": "scripts/perf-smoke.spec.mjs",
+      "suite": "smoke",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 6,
+      "assertion_digest_sha256": "4558951b671e061180a9a6335d5c4ba20a204535ca61310a570bc62dae4c285e"
+    },
+    {
       "path": "test/db/audit.ddl.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-FLOW-001", "INV-FLOW-002", "INV-FLOW-003"],
@@ -3229,6 +3350,14 @@
       "assertion_digest_sha256": "72d74a1297d1b3710fb877fce22ad0c5dc148818310d979cd8d8e1fc638388a7"
     },
     {
+      "path": "tools/eslint-config/test/eslint-config.spec.mjs",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 6,
+      "assertion_digest_sha256": "46b68c8b0a44a563b8390138e4d15a85ea33528910eeb9cc3ad14251e5d55b59"
+    },
+    {
       "path": "tools/migration-linter/test/migration-linter.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
@@ -3237,12 +3366,28 @@
       "assertion_digest_sha256": "eaf34ad311b9b2923efbf7cfc24811e94a1840aa2536e52efce4e77eeb692e41"
     },
     {
+      "path": "tools/repo-config/commitlint.test.cjs",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 20,
+      "assertion_digest_sha256": "3d5f3754a4d73460a58d78e7391b776b77a48f9d8e09f292d6d1470b2166252c"
+    },
+    {
       "path": "tools/repo-config/test-thresholds.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 1,
       "assertion_digest_sha256": "bdb27ca0369e9d97a811a094fe3ebe0b06db0494b0b860c76513881c60a689ab"
+    },
+    {
+      "path": "tools/tsconfig/test/tsconfig.spec.mjs",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 24,
+      "assertion_digest_sha256": "660b8a3ad8b5821dc6f0b9315de7b70fa453a6631b0f4007b5e8c189c5193bf4"
     }
   ],
   "suites": {
