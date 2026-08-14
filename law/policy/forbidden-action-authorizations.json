@@ -187,6 +187,12 @@
       "commit": "61e01a68975b3c798ef419da1553e6739c2c6118",
       "authorized_by": "Owner",
       "reason": "Binds the generated DEVAI 1.1.6 exact-main observation workflow under the canonical adoption ADR."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "03537cdd05d312bb5e45ca273fd39f645769dab8",
+      "authorized_by": "Owner",
+      "reason": "Binds the generated DEVAI 1.1.7 exact-main observation workflow under the canonical adoption ADR."
     }
   ]
 }
