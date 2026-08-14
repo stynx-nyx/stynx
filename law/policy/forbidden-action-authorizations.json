@@ -259,6 +259,12 @@
       "commit": "976498c9425b63ddebd8e5ea2b2854767ef81b64",
       "authorized_by": "Owner",
       "reason": "Records the Owner authorization for the governed closure diagnostic evidence receipt without changing product invariants or gate scope."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "4b9861643171bc916c91a7da9cde4c687bd10a8e",
+      "authorized_by": "Owner",
+      "reason": "Orders the governed closure behind complete build artifacts and the existing migrated-template database prerequisite without skipping, narrowing, or weakening any test."
     }
   ]
 }
