@@ -235,6 +235,12 @@
       "commit": "10b9285307dac13fb875e991dea6bde4529e2729",
       "authorized_by": "Owner",
       "reason": "Authorizes the Inspector-written DB/RLS triage and append-only evidence-chain update for the exact observed failure."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "0ea1675ca094769492d3deb969a10d1ff02fd34b",
+      "authorized_by": "Owner",
+      "reason": "Scopes the DEVAI browser prerequisite to the existing reference-web Playwright dependency under the canonical adoption ADR."
     }
   ]
 }
