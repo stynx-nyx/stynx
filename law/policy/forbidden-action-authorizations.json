@@ -175,6 +175,12 @@
       "commit": "b8dd8f14884a1a10c057e99c953f909a905465b6",
       "authorized_by": "Owner",
       "reason": "Routes authenticated DEVAI package downloads through the existing environment-only CI secret without committing credentials."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "02f31ed7c315427491a489c06ce190e1d70362eb",
+      "authorized_by": "Owner",
+      "reason": "Corrects governed CI package-manager initialization and narrows reusable-workflow secret propagation under the canonical adoption ADR."
     }
   ]
 }
