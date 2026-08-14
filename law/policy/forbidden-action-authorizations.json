@@ -199,6 +199,42 @@
       "commit": "55e3c1a8de255ffaa152c6b82ddcb64588688b5b",
       "authorized_by": "Owner",
       "reason": "Moves the existing live RLS assertion before the integration-fixture reset so CI verifies the migrated platform without weakening either gate."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "ca488eb7342b7af70e732e40d1f44bf6a8af5df7",
+      "authorized_by": "Owner",
+      "reason": "Records the Owner authorization for the governed workflow hardening receipt without changing invariant authority."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "61e01a68975b3c798ef419da1553e6739c2c6118",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the DEVAI 1.1.6 generated policy materialization and host-adapter binding under the canonical adoption decision."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "2e63d66c4b9d588eeaded6d27fe45decf1139e30",
+      "authorized_by": "Owner",
+      "reason": "Records the Owner authorization for the DEVAI 1.1.6 binding receipt without weakening canonical policy."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "03537cdd05d312bb5e45ca273fd39f645769dab8",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the DEVAI 1.1.7 generated policy materialization and host-adapter binding under the canonical adoption decision."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "4f07196bc2c70865059ceac0a3f462cc065571cd",
+      "authorized_by": "Owner",
+      "reason": "Records the Owner authorization for the DEVAI 1.1.7 binding receipt without weakening canonical policy."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "10b9285307dac13fb875e991dea6bde4529e2729",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the Inspector-written DB/RLS triage and append-only evidence-chain update for the exact observed failure."
     }
   ]
 }
