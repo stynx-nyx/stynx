@@ -61,7 +61,9 @@ function adminConfig(database = 'postgres'): ClientConfig {
 function connectionString(database: string, applicationName: string): string {
   const host = localHost();
   if (host) {
-    const url = new URL(`postgresql://${encodeURIComponent(localUser())}@${host}:${localPort()}/${database}`);
+    const url = new URL(
+      `postgresql://${encodeURIComponent(localUser())}@${host}:${localPort()}/${database}`,
+    );
     const password = localPassword();
     if (password) {
       url.password = password;
@@ -91,13 +93,27 @@ export interface PostgresTestDatabase {
   dispose(): Promise<void>;
 }
 
-export async function createPostgresTestDatabase(prefix = 'stynx_data'): Promise<PostgresTestDatabase> {
+export interface PostgresTestDatabaseOptions {
+  readonly useTemplate?: boolean;
+}
+
+export async function createPostgresTestDatabase(
+  prefix = 'stynx_data',
+  options: PostgresTestDatabaseOptions = {},
+): Promise<PostgresTestDatabase> {
   const database = databaseName(prefix);
-  const template = templateDatabase();
+  const template = options.useTemplate === false ? undefined : templateDatabase();
 
   await withClient(adminConfig(), async (client) => {
     if (template) {
       await client.query(`create database "${database}" template "${template}"`);
+      // CREATE DATABASE ... TEMPLATE copies database contents but not the
+      // source database's pg_database ACL. The platform migrations therefore
+      // no-op on the clone without replaying the database-level grants from
+      // 0001_roles.sql, leaving the runtime pools unable to connect or create
+      // schemas. Reapply that existing contract to every migrated clone.
+      await client.query(`grant connect, create on database "${database}" to stynx_owner`);
+      await client.query(`grant connect on database "${database}" to stynx_app, stynx_reader`);
     } else {
       await client.query(`create database "${database}"`);
     }
