@@ -103,6 +103,21 @@ jobs:
           diff -u "$RUNNER_TEMP/inventory-1.json" "$RUNNER_TEMP/inventory-2.json"
       - name: Verify evidence chain
         run: corepack pnpm exec devai evidence verify --scope chain --show-head --repo-root . --format json
+      - name: Report DEVAI failure diagnostics
+        if: failure()
+        run: |
+          diagnostic_root=.devai/state/check-cache/v1/diagnostics
+          if [ ! -d "$diagnostic_root" ]; then
+            echo "DEVAI did not materialize a diagnostic directory."
+            exit 0
+          fi
+          find "$diagnostic_root" -type f -name '*.json' -print0 \
+            | sort -z \
+            | while IFS= read -r -d '' diagnostic; do
+                echo "::group::$diagnostic"
+                jq . "$diagnostic"
+                echo '::endgroup::'
+              done
       - name: Save mutation cache
         if: always()
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -116,7 +131,11 @@ jobs:
         with:
           name: devai-gate-evidence-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
-            .devai/state/check-runner/
+            .devai/state/check-cache/v1/diagnostics/
+            .devai/state/check-cache/v1/receipts/
+            .devai/state/check-cache/v1/results/
+            packages/*/reports/stryker-incremental.json
+            packages-web/*/reports/stryker-incremental.json
             record/proofs/chain.json
           if-no-files-found: error
           include-hidden-files: true
