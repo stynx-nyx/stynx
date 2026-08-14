@@ -247,6 +247,12 @@
       "commit": "95c267eaa807ad6b43066a64550ac7320e062bd6",
       "authorized_by": "Owner",
       "reason": "Activates the mutation-threshold ADR's declared PR cache contract, preserves complete mutation scope, and retains DEVAI failure diagnostics for exact-candidate CI."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "7efa9a33a8db3a773595dfec414b17cb49ee2994",
+      "authorized_by": "Owner",
+      "reason": "Corrects the governed closure diagnostic evidence boundary so exact-candidate failures are observable without narrowing, skipping, or weakening any gate."
     }
   ]
 }
