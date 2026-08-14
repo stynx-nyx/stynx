@@ -193,6 +193,12 @@
       "commit": "03537cdd05d312bb5e45ca273fd39f645769dab8",
       "authorized_by": "Owner",
       "reason": "Binds the generated DEVAI 1.1.7 exact-main observation workflow under the canonical adoption ADR."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "55e3c1a8de255ffaa152c6b82ddcb64588688b5b",
+      "authorized_by": "Owner",
+      "reason": "Moves the existing live RLS assertion before the integration-fixture reset so CI verifies the migrated platform without weakening either gate."
     }
   ]
 }
