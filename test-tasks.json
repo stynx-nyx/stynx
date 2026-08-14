@@ -344,7 +344,7 @@
     {
       "nodeId": "doctor",
       "dependencies": ["trace"],
-      "argv": ["pnpm", "exec", "devai", "doctor", "--repo-root", ".", "--format", "json"],
+      "argv": ["pnpm", "run", "devai:doctor"],
       "cwd": ".",
       "runner": "devai-doctor-v1",
       "inputSelectors": [
