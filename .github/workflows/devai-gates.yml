@@ -51,7 +51,7 @@ jobs:
           cache: pnpm
       - name: Install exact workspace
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.DEVAI_REPO_TOKEN || github.token }}
         run: |
           corepack enable
           corepack pnpm install --frozen-lockfile

@@ -28,7 +28,7 @@ env:
   PNPM_VERSION: '9.15.0'
   STYNX_ENABLE_REGISTRY_PUBLISH: ${{ vars.STYNX_ENABLE_REGISTRY_PUBLISH || 'false' }}
   # Step-level env in the Changesets publish step overrides this default.
-  NODE_AUTH_TOKEN: ${{ github.token }}
+  NODE_AUTH_TOKEN: ${{ secrets.DEVAI_REPO_TOKEN || github.token }}
 
 jobs:
   release:
