@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "TRG-7082fdc15796445e",
+  "generated_at": "2026-08-13T00:00:00.000Z",
+  "subject_evidence_ref": "EV-0123456789abcdef",
+  "classification": "reference_gap",
+  "confidence": {
+    "score": 0.6,
+    "method": "rule-based-mvp"
+  },
+  "summary": "1 finding(s) reference specification gaps",
+  "rationale": "1 finding(s) reference specification gaps",
+  "recommended_route": {
+    "discipline": "architect",
+    "action": "emit_rgr"
+  },
+  "invariants_impacted": [
+    "INV-FLOW-001"
+  ],
+  "subject_task_id": "TASK-0001"
+}

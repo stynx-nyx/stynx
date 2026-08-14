@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "2.0.0",
+  "id": "TASK-0001",
+  "round_id": "R-0001",
+  "discipline": "engineer",
+  "title": "Verify canonical STYNX trace",
+  "description": "Run pnpm devai:trace:verify in one managed worktree.",
+  "lifecycle": "supported",
+  "acceptance_commands": [
+    [
+      "pnpm",
+      "devai:trace:verify"
+    ]
+  ],
+  "target_modules": [
+    "MOD-TRACE-VERIFIER"
+  ],
+  "target_substrates": [
+    "F2"
+  ],
+  "created_at": "2026-08-13T22:03:34.122Z",
+  "db_isolation": "database",
+  "iteration_count": 1,
+  "max_iterations": 1,
+  "priority": 100,
+  "tags": [
+    "devai-adoption",
+    "trace",
+    "validation"
+  ],
+  "executor": {
+    "kind": "routine",
+    "argv": [
+      "pnpm",
+      "devai:trace:verify"
+    ],
+    "cwd": ".",
+    "inputs": [
+      "law/trace.json",
+      "scripts/verify-devai-trace.mjs"
+    ],
+    "outputs": [],
+    "effects": [
+      "read"
+    ],
+    "timeout_ms": 120000,
+    "authority_checks": [
+      "trace-paths-and-invariant-coverage"
+    ]
+  },
+  "spawned_at": "2026-08-13T23:15:05.993Z",
+  "worktree_id": "WT-TASK-0001",
+  "branch": "escalated/rgr/TASK-0001",
+  "status": "escalated"
+}

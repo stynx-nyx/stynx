@@ -1,4 +1,96 @@
 {
-  "head": null,
-  "records": []
+  "head": "ce3202f31b8d3f6ebcaf2fa8dce5613275b3f08464a9b0978ff752355cb96755",
+  "records": [
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-5cff662dced1df81",
+      "timestamp": "2026-08-13T23:13:07.734Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "triage.classify",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Users/aarusso/Development/stech/stynx",
+        "git": {
+          "head_sha": "8bdd68bae53f36986bdc673d31041cd7b73115ee",
+          "dirty_files": [
+            ".devai/state/counters.json",
+            ".devai/state/backlog.jsonl",
+            ".devai/state/rgr/",
+            ".devai/state/tasks/",
+            ".devai/state/triage/",
+            ".devai/state/worktrees.json",
+            "record/proofs/work/"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/triage/TRG-7082fdc15796445e.json",
+          "sha256": "b09de8f20dce7777f5c4b9d806f0617abd2024747b0ea0c71d36c784e9193cda",
+          "kind": "triage"
+        }
+      ],
+      "notes": ["classification=reference_gap", "route=emit_rgr"],
+      "previous_run_hash": null,
+      "manifest_hash": "d456fa75dc2198f26b647e8928ede6d7557903ea12d6df1d419fc83818e8bcef"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-05299e250799cca6",
+      "timestamp": "2026-08-14T00:06:06.361Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "audit.observe",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Users/aarusso/Development/stech/stynx",
+        "git": {
+          "head_sha": "e841de020c35773b454f3bb2d82f40d1f0866082",
+          "dirty_files": [
+            ".devai/state/counters.json",
+            "record/proofs/chain.json",
+            ".devai/state/audit-observations/",
+            ".devai/state/backlog.jsonl",
+            ".devai/state/rgr/",
+            ".devai/state/round-runs/",
+            ".devai/state/tasks/",
+            ".devai/state/triage/",
+            ".devai/state/worktrees.json",
+            "record/proofs/work/"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/audit-observations/e841de020c35773b454f3bb2d82f40d1f0866082/inventory.json",
+          "sha256": "35e012a24d71e327af5d0051760d7ee5e36c5c9112d4fbbbb88bb79a7c515aa7",
+          "kind": "audit"
+        },
+        {
+          "path": ".devai/state/audit-observations/e841de020c35773b454f3bb2d82f40d1f0866082/scorecard.json",
+          "sha256": "50ff07029d389db96d16f501cf5ee5432cee6bcb5a9ccb98bf65f5d6dbea665b",
+          "kind": "audit"
+        },
+        {
+          "path": ".devai/state/audit-observations/e841de020c35773b454f3bb2d82f40d1f0866082/backlog.json",
+          "sha256": "32a756826bbc78ddf3d28f071acad010343ea0e47e9f8f8978c664348a3cfec8",
+          "kind": "audit"
+        },
+        {
+          "path": ".devai/state/audit-observations/e841de020c35773b454f3bb2d82f40d1f0866082/assessment.json",
+          "sha256": "e9d6a56e56ab027a413b8c000a2f2c8e2a2a8c1280dd55625fdb3bb000f97a28",
+          "kind": "audit"
+        },
+        {
+          "path": ".devai/state/audit-observations/e841de020c35773b454f3bb2d82f40d1f0866082/status.json",
+          "sha256": "4ad99242216093d7c6f12e82141f023e27f646353c48b6b05afd2d39ac1d4fde",
+          "kind": "audit"
+        }
+      ],
+      "notes": ["exact_sha=e841de020c35773b454f3bb2d82f40d1f0866082", "readiness_promoting=false"],
+      "previous_run_hash": "d456fa75dc2198f26b647e8928ede6d7557903ea12d6df1d419fc83818e8bcef",
+      "manifest_hash": "ce3202f31b8d3f6ebcaf2fa8dce5613275b3f08464a9b0978ff752355cb96755"
+    }
+  ]
 }
