@@ -163,6 +163,12 @@
       "commit": "f4f1db65ed0172620b3ddc87f4832fc42241eeba",
       "authorized_by": "Owner",
       "reason": "Updates historical generated DEVAI policy materializations without weakening product authority or tests."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "df377d7a2c15e12f801b114c02eacdc071bfbf3f",
+      "authorized_by": "Owner",
+      "reason": "Aligns DEVAI check execution with the Inspector-only authority contract under the canonical adoption ADR."
     }
   ]
 }
