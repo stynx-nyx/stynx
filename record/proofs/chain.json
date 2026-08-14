@@ -1,5 +1,5 @@
 {
-  "head": "a60598bea397b445e5530f6726f8a21124afb111633ac411a3ad1cd1776af7b7",
+  "head": "a456f4e4bab40fcedcbb0a5e9cba853516c89f999fd46c8b0f37db43e110fbe5",
   "records": [
     {
       "schemaVersion": "1.0.0",
@@ -139,6 +139,32 @@
       "notes": ["exact_sha=d8bb896cf4d76368c05540cc273bb8c62bdf3892", "readiness_promoting=false"],
       "previous_run_hash": "ce3202f31b8d3f6ebcaf2fa8dce5613275b3f08464a9b0978ff752355cb96755",
       "manifest_hash": "a60598bea397b445e5530f6726f8a21124afb111633ac411a3ad1cd1776af7b7"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-a4919f0fbe22e99c",
+      "timestamp": "2026-08-14T13:15:13.275Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "triage.classify",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Users/aarusso/Development/stech/stynx",
+        "git": {
+          "head_sha": "e141fd765ef57ccf2d70bc6165952ae45943d337",
+          "dirty_files": [".devai/state/triage/TRG-5a9e1cdef8dd34bc.json"]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/triage/TRG-5a9e1cdef8dd34bc.json",
+          "sha256": "aebaf96057c31bfe5c80bdaa068583a275621b5398af6d4f8e6ff79e6f8ea4b8",
+          "kind": "triage"
+        }
+      ],
+      "notes": ["classification=sensor_error", "route=fix_sensor_adapter"],
+      "previous_run_hash": "a60598bea397b445e5530f6726f8a21124afb111633ac411a3ad1cd1776af7b7",
+      "manifest_hash": "a456f4e4bab40fcedcbb0a5e9cba853516c89f999fd46c8b0f37db43e110fbe5"
     }
   ]
 }

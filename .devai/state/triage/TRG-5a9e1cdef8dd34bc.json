@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "TRG-5a9e1cdef8dd34bc",
+  "generated_at": "2026-08-14T12:50:09.086Z",
+  "subject_evidence_ref": "EV-0a158639f34badba",
+  "classification": "sensor_error",
+  "confidence": {
+    "score": 0.9,
+    "method": "rule-based-mvp"
+  },
+  "summary": "Sensor itself failed",
+  "rationale": "Reading status is 'error' on sensor migration_check (DEVAI db:rls task execution)",
+  "recommended_route": {
+    "discipline": "inspector",
+    "action": "fix_sensor_adapter"
+  }
+}
