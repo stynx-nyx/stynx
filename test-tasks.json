@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "descriptorVersion": "stynx-devai-1.1.0-v1",
+  "descriptorVersion": "stynx-devai-1.1.0-v2",
   "repositoryId": "stynx-nyx/stynx",
   "fallbackNodeId": "test:local-full",
   "dynamicFallbackSelectors": [
@@ -32,7 +32,7 @@
     },
     {
       "nodeId": "api:contracts",
-      "dependencies": ["engines"],
+      "dependencies": ["build"],
       "argv": ["pnpm", "run", "devai:api-contracts"],
       "cwd": ".",
       "runner": "stynx-contracts-v1",

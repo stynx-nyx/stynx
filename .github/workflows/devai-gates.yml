@@ -71,6 +71,8 @@ jobs:
           pnpm install --frozen-lockfile
       - name: Install browser prerequisite
         run: pnpm --filter @stynx-nyx/reference-web exec playwright install --with-deps chromium
+      - name: Prepare migrated template database (ADR-CI-ECONOMY Decision 6a)
+        run: node scripts/ci-local/prepare-int-template.mjs --github-env "$GITHUB_ENV"
       - name: Resolve exact affected base
         id: base
         env:
