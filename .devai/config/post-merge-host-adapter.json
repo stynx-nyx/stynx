@@ -7,17 +7,17 @@
   "hook_path": "/Users/aarusso/Development/stech/stynx/.husky/post-merge",
   "hook_digest_sha256": "0d250c20ee8f26d3b4b06c238dda0b6e50cd76063e83c34891d5489f3959ce9f",
   "key_digest_sha256": "d9bcc2e5c52b93913afdb0584ecc138ddb93fb18e49939c57e344decd51f795b",
-  "policy_digest_sha256": "e72085d90e25d3246ce369273bf0bea7a07201b925c64d7643e77f4ce805e2e0",
+  "policy_digest_sha256": "560104c804f270b77f954466f7bd1ff7c33fa0b0a634ba844347e8ba25ae823c",
   "constitution_digest_sha256": "3f0e2ddc45d0f4102eda34776700d8da7a1e56aab30c6ab43cc6ee6dbe972542",
   "package_binding": {
     "name": "@aarusso-nyx/devai",
-    "version": "1.1.4"
+    "version": "1.1.5"
   },
-  "installed_at_head": "aded25b3a1085c43b182ee1fa17eaeed71a10de1",
-  "installed_at": "2026-08-14T01:23:06.376Z",
+  "installed_at_head": "5476617ea181cf8de14121b9d5a6388ea77535db",
+  "installed_at": "2026-08-14T08:30:11.608Z",
   "cadence": {
     "installed_checkout": "persistent",
     "remote_host": "unknown"
   },
-  "signature_hmac_sha256": "3c3af53b716e7cca3c67a596a7c50f8fdbf60eb4e334b30d36096041e16d1034"
+  "signature_hmac_sha256": "b957a5844ed88d3aa419bf677d7141aaca0ef8db6fecdc0783adcb1c260bfeeb"
 }
