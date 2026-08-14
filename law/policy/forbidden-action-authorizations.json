@@ -253,6 +253,12 @@
       "commit": "7efa9a33a8db3a773595dfec414b17cb49ee2994",
       "authorized_by": "Owner",
       "reason": "Corrects the governed closure diagnostic evidence boundary so exact-candidate failures are observable without narrowing, skipping, or weakening any gate."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "976498c9425b63ddebd8e5ea2b2854767ef81b64",
+      "authorized_by": "Owner",
+      "reason": "Records the Owner authorization for the governed closure diagnostic evidence receipt without changing product invariants or gate scope."
     }
   ]
 }
