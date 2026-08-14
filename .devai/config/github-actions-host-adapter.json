@@ -1,16 +1,16 @@
 {
   "schemaVersion": "1.0.0",
   "adapter_id": "github-actions-main-observation",
-  "adapter_version": "1.1.5",
+  "adapter_version": "1.1.6",
   "repository": "stynx-nyx/stynx",
   "workflow_path": ".github/workflows/devai-main-observation.yml",
-  "workflow_digest_sha256": "96b32fee50d8c3a0ea25ba5318228f0392dd35f8eb0f5de460a777bae3c3cc6b",
+  "workflow_digest_sha256": "8645fec00cd7861d8105a0390898c5c60deb36266aca318ec488a3e54b2a324d",
   "branch": "main",
   "ref_prefix": "refs/devai/post-merge/",
   "oidc_audience": "github-attestations",
   "publication_consent_variable": "DEVAI_ALLOW_OBSERVATION_PUBLICATION",
   "package_binding": {
     "name": "@aarusso-nyx/devai",
-    "version": "1.1.5"
+    "version": "1.1.6"
   }
 }
