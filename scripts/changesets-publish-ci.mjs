@@ -17,13 +17,13 @@ if (!token) {
   process.exit(1);
 }
 
-// No NPM_CONFIG_PROVENANCE here: npm provenance requires public access,
-// and GitHub Packages publishes are always "restricted" — with the flag
-// set, every `npm publish` fails with EUSAGE ("Can't generate provenance
-// for new or private package") and nothing reaches the registry.
+// GitHub Packages publishes are restricted and do not support npm provenance.
+// Force false so an ambient runner setting cannot recreate the known EUSAGE
+// failure. The release verifier keeps this exception aligned with policy.
 const result = spawnSync('pnpm', ['release'], {
   env: {
     ...process.env,
+    NPM_CONFIG_PROVENANCE: 'false',
     NODE_AUTH_TOKEN: token,
     NPM_TOKEN: token,
   },

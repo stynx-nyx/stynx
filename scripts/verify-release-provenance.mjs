@@ -19,18 +19,28 @@ requireText(workflow, /id-token:\s*write/u, 'release workflow must grant OIDC id
 requireText(workflow, /packages:\s*write/u, 'release workflow must grant packages: write');
 requireText(
   workflow,
-  /NPM_CONFIG_PROVENANCE:\s*['"]?true['"]?/u,
-  'release workflow must enable npm provenance',
+  /registry-url:\s*https:\/\/npm\.pkg\.github\.com/u,
+  'release workflow must target GitHub Packages',
+);
+requireText(
+  workflow,
+  /NPM_CONFIG_PROVENANCE:\s*['"]false['"]/u,
+  'release workflow must explicitly disable unsupported npm provenance',
 );
 requireText(
   publishScript,
-  /NPM_CONFIG_PROVENANCE:\s*['"]true['"]/u,
-  'changesets publish script must force npm provenance',
+  /NPM_CONFIG_PROVENANCE:\s*['"]false['"]/u,
+  'changesets publish script must force unsupported npm provenance off',
 );
 requireText(
   securityPolicy,
-  /Package publication must use npm provenance/u,
-  'security release policy must require package provenance',
+  /restricted packages to GitHub Packages/u,
+  'security release policy must identify the restricted GitHub Packages boundary',
+);
+requireText(
+  securityPolicy,
+  /NPM_CONFIG_PROVENANCE=false/u,
+  'security release policy must record the explicit provenance setting',
 );
 requireText(
   readinessReference,
