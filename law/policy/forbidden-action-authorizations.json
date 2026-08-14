@@ -241,6 +241,12 @@
       "commit": "0ea1675ca094769492d3deb969a10d1ff02fd34b",
       "authorized_by": "Owner",
       "reason": "Scopes the DEVAI browser prerequisite to the existing reference-web Playwright dependency under the canonical adoption ADR."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "95c267eaa807ad6b43066a64550ac7320e062bd6",
+      "authorized_by": "Owner",
+      "reason": "Activates the mutation-threshold ADR's declared PR cache contract, preserves complete mutation scope, and retains DEVAI failure diagnostics for exact-candidate CI."
     }
   ]
 }
