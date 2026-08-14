@@ -59,7 +59,7 @@ jobs:
         run: |
           pnpm install --frozen-lockfile
       - name: Install browser prerequisite
-        run: corepack pnpm exec playwright install --with-deps chromium
+        run: pnpm --filter @stynx-nyx/reference-web exec playwright install --with-deps chromium
       - name: Resolve exact affected base
         id: base
         env:
