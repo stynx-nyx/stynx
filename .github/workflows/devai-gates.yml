@@ -76,12 +76,12 @@ jobs:
           corepack pnpm devai:trace:verify
       - name: Plan and execute affected closure
         run: |
-          corepack pnpm exec devai check --affected --task-plan --base "${{ steps.base.outputs.sha }}" --as-role engineer --format json
-          corepack pnpm exec devai check --affected --run --base "${{ steps.base.outputs.sha }}" --task-timeout-ms 7200000 --as-role engineer --write --format json
+          corepack pnpm exec devai check --affected --task-plan --base "${{ steps.base.outputs.sha }}" --as-role inspector --format json
+          corepack pnpm exec devai check --affected --run --base "${{ steps.base.outputs.sha }}" --task-timeout-ms 7200000 --as-role inspector --write --format json
       - name: Execute local and RC closures
         run: |
-          corepack pnpm exec devai check --local --run --task-timeout-ms 7200000 --as-role engineer --write --format json
-          corepack pnpm exec devai check --rc --run --task-timeout-ms 7200000 --as-role engineer --write --format json
+          corepack pnpm exec devai check --local --run --task-timeout-ms 7200000 --as-role inspector --write --format json
+          corepack pnpm exec devai check --rc --run --task-timeout-ms 7200000 --as-role inspector --write --format json
       - name: Prove deterministic inventory
         run: |
           corepack pnpm exec devai sense inventory --slice all --trace law/trace.json --format json | jq -S '.result.value' > "$RUNNER_TEMP/inventory-1.json"
