@@ -5,6 +5,7 @@ export default createVitestConfig({
   packageDir: __dirname,
   packageName: '@stynx-nyx/idempotency',
   include: ['test/integration/**/*.spec.ts'],
+  testTimeout: 60_000,
   alias: {
     '@stynx-nyx/core': resolve(__dirname, '../core/src/index.ts'),
     '@stynx-nyx/data': resolve(__dirname, '../data/src/index.ts'),
