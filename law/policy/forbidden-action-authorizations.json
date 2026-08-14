@@ -169,6 +169,12 @@
       "commit": "df377d7a2c15e12f801b114c02eacdc071bfbf3f",
       "authorized_by": "Owner",
       "reason": "Aligns DEVAI check execution with the Inspector-only authority contract under the canonical adoption ADR."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "b8dd8f14884a1a10c057e99c953f909a905465b6",
+      "authorized_by": "Owner",
+      "reason": "Routes authenticated DEVAI package downloads through the existing environment-only CI secret without committing credentials."
     }
   ]
 }
