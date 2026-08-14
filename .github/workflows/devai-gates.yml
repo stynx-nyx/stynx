@@ -16,7 +16,7 @@ concurrency:
 jobs:
   governed-closure:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 360
     services:
       postgres:
         image: postgres:16
@@ -39,6 +39,7 @@ jobs:
       STYNX_TEST_PG_PORT: '5432'
       STYNX_TEST_PG_USER: stynx
       STYNX_TEST_PG_PASSWORD: stynx
+      STRYKER_INCREMENTAL: 'true'
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -53,6 +54,16 @@ jobs:
           node-version: 24
           registry-url: https://npm.pkg.github.com
           cache: pnpm
+      - name: Restore mutation cache
+        id: mutation-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            packages/*/reports/stryker-incremental.json
+            packages-web/*/reports/stryker-incremental.json
+          key: stryker-v1-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'tools/stryker/**', 'tools/repo-config/test-policy.json', 'packages/*/package.json', 'packages/*/stryker*', 'packages/*/vitest*', 'packages/*/tsconfig*.json', 'packages/*/src/**', 'packages/*/test/**', 'packages/*/tests/**', 'packages-web/*/package.json', 'packages-web/*/stryker*', 'packages-web/*/vitest*', 'packages-web/*/tsconfig*.json', 'packages-web/*/src/**', 'packages-web/*/test/**', 'packages-web/*/tests/**') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            stryker-v1-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'tools/stryker/**', 'tools/repo-config/test-policy.json', 'packages/*/package.json', 'packages/*/stryker*', 'packages/*/vitest*', 'packages/*/tsconfig*.json', 'packages/*/src/**', 'packages/*/test/**', 'packages/*/tests/**', 'packages-web/*/package.json', 'packages-web/*/stryker*', 'packages-web/*/vitest*', 'packages-web/*/tsconfig*.json', 'packages-web/*/src/**', 'packages-web/*/test/**', 'packages-web/*/tests/**') }}-
       - name: Install exact workspace
         env:
           NODE_AUTH_TOKEN: ${{ secrets.DEVAI_REPO_TOKEN || github.token }}
@@ -80,11 +91,11 @@ jobs:
       - name: Plan and execute affected closure
         run: |
           corepack pnpm exec devai check --affected --task-plan --base "${{ steps.base.outputs.sha }}" --as-role inspector --format json
-          corepack pnpm exec devai check --affected --run --base "${{ steps.base.outputs.sha }}" --task-timeout-ms 7200000 --as-role inspector --write --format json
+          corepack pnpm exec devai check --affected --run --base "${{ steps.base.outputs.sha }}" --task-timeout-ms 18000000 --as-role inspector --write --format json
       - name: Execute local and RC closures
         run: |
-          corepack pnpm exec devai check --local --run --task-timeout-ms 7200000 --as-role inspector --write --format json
-          corepack pnpm exec devai check --rc --run --task-timeout-ms 7200000 --as-role inspector --write --format json
+          corepack pnpm exec devai check --local --run --task-timeout-ms 18000000 --as-role inspector --write --format json
+          corepack pnpm exec devai check --rc --run --task-timeout-ms 18000000 --as-role inspector --write --format json
       - name: Prove deterministic inventory
         run: |
           corepack pnpm exec devai sense inventory --slice all --trace law/trace.json --format json | jq -S '.result.value' > "$RUNNER_TEMP/inventory-1.json"
@@ -92,6 +103,14 @@ jobs:
           diff -u "$RUNNER_TEMP/inventory-1.json" "$RUNNER_TEMP/inventory-2.json"
       - name: Verify evidence chain
         run: corepack pnpm exec devai evidence verify --scope chain --show-head --repo-root . --format json
+      - name: Save mutation cache
+        if: always()
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            packages/*/reports/stryker-incremental.json
+            packages-web/*/reports/stryker-incremental.json
+          key: ${{ steps.mutation-cache.outputs.cache-primary-key }}
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
@@ -100,4 +119,5 @@ jobs:
             .devai/state/check-runner/
             record/proofs/chain.json
           if-no-files-found: error
+          include-hidden-files: true
           retention-days: 30
