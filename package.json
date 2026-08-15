@@ -15,7 +15,7 @@
     "lint:tests": "eslint --config tools/eslint-config/test.mjs --no-error-on-unmatched-pattern 'packages/*/test/**/*.{spec,test}.ts' 'packages-web/*/test/**/*.{spec,test}.ts'",
     "typecheck": "turbo run typecheck --filter='./packages/*' --filter='./packages-web/*' --filter='./tools/*' --filter=@stynx-nyx/docs-site",
     "test": "turbo run test --filter='./packages/*' --filter='./packages-web/*' --filter='./tools/*' --filter='./test/*'",
-    "test:int": "turbo run test:int --filter='./packages/*'",
+    "test:int": "turbo run test:int --concurrency=2 --filter='./packages/*'",
     "check:engines": "node scripts/check-engines.mjs",
     "lint:deadcode": "knip --config tools/repo-config/knip.config.ts --no-config-hints",
     "lint:deps": "depcheck --ignore-patterns='**/*.test.ts,**/*.spec.ts' --skip-missing --ignores='@aarusso-nyx/devai,@commitlint/cli,@commitlint/config-conventional,@stryker-mutator/typescript-checker,@stryker-mutator/vitest-runner,@vitest/coverage-v8,eslint-plugin-boundaries,eslint-plugin-jsdoc,github-actionlint,prettier'",
