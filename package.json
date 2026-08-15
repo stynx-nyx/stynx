@@ -58,7 +58,7 @@
     "release": "changeset publish",
     "release:publish:ci": "node scripts/changesets-publish-ci.mjs",
     "doctor": "node scripts/stynx-doctor.mjs",
-    "test:e2e": "turbo run test:e2e --filter='./packages/*' --filter='./packages-web/*' --filter='./reference/*'",
+    "test:e2e": "turbo run test:e2e --force --filter='./packages/*' --filter='./packages-web/*' --filter='./reference/*'",
     "test:mutation": "pnpm -r --filter \"./packages/*\" --filter \"./packages-web/*\" --workspace-concurrency=1 stryker",
     "check:rls-smoke": "bash scripts/check-rls-smoke.sh",
     "smoke:local": "pnpm --filter @stynx-nyx/reference-api smoke:local",

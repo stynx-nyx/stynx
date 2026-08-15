@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "descriptorVersion": "stynx-devai-1.1.0-v2",
+  "descriptorVersion": "stynx-devai-1.1.0-v3",
   "repositoryId": "stynx-nyx/stynx",
   "fallbackNodeId": "test:local-full",
   "dynamicFallbackSelectors": [
@@ -148,7 +148,15 @@
       ],
       "toolchainKeys": ["node", "pnpm", "typescript"],
       "allowlistedEnv": ["CI", "NODE_ENV"],
-      "outputContract": { "kind": "command", "requiredResult": "pass" }
+      "outputContract": {
+        "kind": "command",
+        "requiredResult": "pass",
+        "paths": [
+          "packages/data/dist/data/src/index.js",
+          "packages/preferences/dist/preferences/src/index.js",
+          "packages/cli/dist/cli/src/main.js"
+        ]
+      }
     },
     {
       "nodeId": "reference:apps",
