@@ -277,6 +277,18 @@
       "commit": "5eb40c85c0bbd53895797c05acc54a0c0da82727",
       "authorized_by": "Owner",
       "reason": "Records the exact OWNER authorization receipt for the testing trace reconciliation without changing invariant authority or test scope."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "55c315b5fa268ce69c08a08e6c8f7d377b089586",
+      "authorized_by": "Owner",
+      "reason": "Adds the previously omitted preferences package to the existing mutation-hardening matrix under the canonical mutation-threshold and DEVAI adoption decisions without weakening gate scope."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "85180cd796d77be249111881ebe3aa1817cec679",
+      "authorized_by": "Owner",
+      "reason": "Reconciles the canonical preferences assertion count and digest after strengthening its mutation contract without changing invariant authority or test scope."
     }
   ]
 }
