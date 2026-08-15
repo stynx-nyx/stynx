@@ -2608,8 +2608,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 18,
-      "assertion_digest_sha256": "90603feca83d1d33dc835b001a62743d62ffb0265155687ac5a8b6f57d76807d"
+      "assertion_count": 19,
+      "assertion_digest_sha256": "170efdb87f377be381982fdc64052de06b7fa39f871008d56f2a2e2f90010f9f"
     },
     {
       "path": "packages/testing/test/doctor.unit.spec.ts",
