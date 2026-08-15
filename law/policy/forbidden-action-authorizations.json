@@ -265,6 +265,12 @@
       "commit": "4b9861643171bc916c91a7da9cde4c687bd10a8e",
       "authorized_by": "Owner",
       "reason": "Orders the governed closure behind complete build artifacts and the existing migrated-template database prerequisite without skipping, narrowing, or weakening any test."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "ba88082399a44ab54cdfe85cc346c410bca23934",
+      "authorized_by": "Owner",
+      "reason": "Reconciles the canonical trace count and digest after adding a PostgreSQL readiness regression assertion without changing invariant authority or test scope."
     }
   ]
 }
