@@ -24,7 +24,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
     "test": "vitest run --config ./vitest.config.ts",
-    "test:int": "vitest run --config ./vitest.int.config.ts"
+    "test:int": "vitest run --config ./vitest.int.config.ts",
+    "stryker": "pnpm exec stryker run stryker.conf.mjs",
+    "test:mutation": "pnpm run stryker"
   },
   "dependencies": {
     "@stynx-nyx/core": "workspace:*",
