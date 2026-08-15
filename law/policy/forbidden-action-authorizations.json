@@ -271,6 +271,12 @@
       "commit": "ba88082399a44ab54cdfe85cc346c410bca23934",
       "authorized_by": "Owner",
       "reason": "Reconciles the canonical trace count and digest after adding a PostgreSQL readiness regression assertion without changing invariant authority or test scope."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "5eb40c85c0bbd53895797c05acc54a0c0da82727",
+      "authorized_by": "Owner",
+      "reason": "Records the exact OWNER authorization receipt for the testing trace reconciliation without changing invariant authority or test scope."
     }
   ]
 }
