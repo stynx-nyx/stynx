@@ -2272,8 +2272,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001"],
       "lifecycle": "supported",
-      "assertion_count": 30,
-      "assertion_digest_sha256": "5d5e48e05f33ddfa5328ec9ffe37f16ac83369d7bd24e11d0b91baffba3e68eb"
+      "assertion_count": 67,
+      "assertion_digest_sha256": "38d2f2d68c9b8cd6af46b6434549f9bd42d422cb1f033d99cc7ed25fc36a2d9c"
     },
     {
       "path": "packages/privacy/test/integration/privacy.module.spec.ts",
