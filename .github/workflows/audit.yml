@@ -6,8 +6,7 @@ name: STYNX Weekly Audit
 # evidence covers the commit. This workflow is the periodic recalibration
 # of that inference: once a week (plus on-demand via workflow_dispatch) it
 # re-runs the FULL heavy matrix remotely, for real, with evidence mode
-# deliberately ignored — there is no evidence-gate job here and nothing is
-# skipped on the strength of a local manifest. It also carries the macOS
+# always executed by the applicable job. It also carries the macOS
 # build leg, which is banned from the pull_request hot path (Decision 5.1).
 #
 # Quiescence guard (Decision 4): if no new commits landed on the audited
@@ -15,20 +14,8 @@ name: STYNX Weekly Audit
 # with a notice instead of burning a full matrix. workflow_dispatch always
 # runs the full matrix.
 #
-# REVOCATION PROCEDURE ON RED (Decision 4, mandatory):
-#   An audit failure means local evidence and remote reality have diverged.
-#   Treat the evidence short-circuit as REVOKED until this workflow is green
-#   again on the audited branch:
-#     1. Empty the trusted-actor allowlist so every run takes the full
-#        fallback path:
-#          gh variable set LOCAL_EVIDENCE_TRUSTED_ACTORS --repo stynx-nyx/stynx --body ""
-#        (an empty list disables evidence mode entirely — reusable gate /
-#        `devai evidence verify-local` semantics, D-117/D-121).
-#     2. Fix the divergence; re-run this workflow via workflow_dispatch.
-#     3. Only after a green full audit, restore the allowlist:
-#          gh variable set LOCAL_EVIDENCE_TRUSTED_ACTORS --repo stynx-nyx/stynx --body "<actors>"
-#   Trust is re-earned by a green full run, not by the next green local
-#   manifest.
+# An audit failure must be fixed and the complete workflow rerun before the
+# audited branch is considered healthy again.
 
 on:
   schedule:
@@ -47,8 +34,6 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
   NODE_VERSION: '24'
   PNPM_VERSION: '9.15.0'
-  # @devai-nyx/* resolves from GitHub Packages (npm.pkg.github.com), which
-  # needs an authenticated read regardless of the source repo's visibility.
   NODE_AUTH_TOKEN: ${{ secrets.DEVAI_REPO_TOKEN || github.token }}
 
 jobs:

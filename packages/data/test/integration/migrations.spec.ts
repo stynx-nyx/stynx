@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Test, type TestingModule } from '@nestjs/testing';
 import { readdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -39,10 +38,11 @@ async function queryExistingNames(client: Client, sql: string): Promise<string[]
 }
 
 describe('Stynx platform migrations', () => {
-
   it('boots the platform schema, enforces RLS, and reruns idempotently', async () => {
     const expectedMigrationIds = await expectedPlatformMigrationIds();
-    const testDatabase = await createPostgresTestDatabase('stynx_data_migrations');
+    const testDatabase = await createPostgresTestDatabase('stynx_data_migrations', {
+      useTemplate: false,
+    });
     let moduleRef: TestingModule | undefined;
     let adminClient: Client | undefined;
 

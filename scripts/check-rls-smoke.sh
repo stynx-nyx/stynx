@@ -50,13 +50,13 @@ DB_URL="${STYNX_DATABASE_URL:-${DATABASE_URL:-}}"
 if command -v psql >/dev/null 2>&1 && [ -n "$DB_URL" ]; then
   echo "[RLS] running optional live checks via psql"
 
-  exists_create_rls_policy="$(psql "$DB_URL" -v ON_ERROR_STOP=1 -Atqc "
+  exists_archive_helper="$(psql "$DB_URL" -v ON_ERROR_STOP=1 -Atqc "
     select exists (
       select 1
       from pg_proc p
       join pg_namespace n on n.oid = p.pronamespace
-      where n.nspname = 'auth'
-        and p.proname = 'create_rls_policy'
+      where n.nspname = 'data'
+        and p.proname = 'ensure_archive_mirror'
     );
   ")"
 
@@ -65,18 +65,18 @@ if command -v psql >/dev/null 2>&1 && [ -n "$DB_URL" ]; then
       select 1
       from pg_policies
       where schemaname = 'storage'
-        and tablename = 'files'
-        and policyname = 'tenant_scope'
+        and tablename = 'documents'
+        and policyname = 'tenant_isolation'
     );
   ")"
 
-  if [ "$exists_create_rls_policy" != "t" ]; then
-    echo "[RLS][missing] auth.create_rls_policy not found in connected database"
+  if [ "$exists_archive_helper" != "t" ]; then
+    echo "[RLS][missing] data.ensure_archive_mirror not found in connected database"
     MISSING=1
   fi
 
   if [ "$exists_storage_policy" != "t" ]; then
-    echo "[RLS][missing] storage.files tenant_scope policy not found in connected database"
+    echo "[RLS][missing] storage.documents tenant_isolation policy not found in connected database"
     MISSING=1
   fi
 fi

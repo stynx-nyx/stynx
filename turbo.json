@@ -9,6 +9,7 @@
     "STYNX_TEST_PG_PASSWORD",
     "STYNX_TEST_PG_PORT",
     "STYNX_TEST_PG_USER",
+    "STYNX_TEST_PG_SOCKET_DIR",
     "TESTCONTAINERS_HOST_OVERRIDE"
   ],
   "tasks": {
@@ -48,6 +49,7 @@
     },
     "test:int": {
       "dependsOn": ["build", "^build"],
+      "passThroughEnv": ["STYNX_TEST_PG_TEMPLATE"],
       "outputs": [
         ".test-results/integration.json",
         ".test-results/integration.log",

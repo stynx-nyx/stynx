@@ -1,0 +1,5 @@
+# >>> devai hooks install >>>
+devai_git_dir="$(git rev-parse --absolute-git-dir)" || exit $?
+node "$devai_git_dir/devai/issue-post-merge-receipt.cjs"
+./node_modules/.bin/devai round close --post-merge-receipt --host-receipt "$devai_git_dir/devai/post-merge-receipt.json"
+# <<< devai hooks install <<<

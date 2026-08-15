@@ -1,0 +1,36 @@
+# STYNX development contract
+
+This is the repository-local engineering contract for all contributors.
+
+## Repository responsibilities
+
+- `reference/{api,web}/` contains the NestJS and Angular reference applications.
+- `packages/*` contains reusable backend modules in the `@stynx-nyx/*` family.
+- `packages-web/*` contains reusable Angular modules in the same package family.
+- `tools/*` contains internal repository tooling.
+- `domain/*` contains product modules and their API, web, database, and docs surfaces.
+- `infra/cdk/` contains AWS CDK infrastructure.
+- `database/ddl/` contains canonical SQL definitions.
+- The legacy `backend/`, `frontend/`, `bootstrap/`, and `test/` trees are outside
+  the active package graph except where root tooling explicitly references them.
+
+## Engineering rules
+
+1. Mirror existing naming, module boundaries, public API patterns, and lint rules.
+2. Enforce tenant isolation and row-level security for every new table and API
+   surface. Treat `INV-RBAC-001` and the tenancy package as mandatory references.
+3. Update database seeds and the tests under `test/db/` whenever DDL changes.
+4. Prefer configured path aliases such as `@core`, `@shared`, `@admin`,
+   `@storage`, and `@env` over deep relative imports.
+5. Do not delete, bypass, or hand-edit generated scripts that CI or release
+   automation depends on.
+6. Preserve existing tests, assertions, coverage thresholds, mutation targets,
+   and quality gates. A feature change must add or update tests for its behavior.
+7. Use Conventional Commit subjects and do not bypass hooks during routine work.
+
+## Release and security references
+
+When release state is uncertain, inspect `docs/adopters/stynx/release-readiness.md`,
+`docs/adopters/stynx/implementation-status.md`, and recent Git history before
+making a claim. The repository-specific dependency audit procedure is retained
+at `tools/npm-security-upgrade-auditor/`.

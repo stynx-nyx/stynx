@@ -44,6 +44,7 @@ const config: KnipConfig = {
   },
 
   ignoreFiles: [
+    'tools/image-size-safe/dist/**',
     'tools/migration-linter/dist/**',
     'tools/create-stynx-app/template/playwright.config.mjs',
     'tools/create-stynx-app/template/src/app/**',

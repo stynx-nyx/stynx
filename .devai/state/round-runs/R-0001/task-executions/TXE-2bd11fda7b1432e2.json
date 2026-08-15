@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "TXE-2bd11fda7b1432e2",
+  "task_id": "TASK-0002",
+  "round_id": "R-0001",
+  "candidate_sha": "e841de020c35773b454f3bb2d82f40d1f0866082",
+  "task_record_digest_sha256": "eac3b9e9d13bf8361ba973431c1626827d127cf7d4b8192baa4c251be3bd5cca",
+  "requested_executor_digest_sha256": "a1ba8cf4a018e066968ac75e2354899f95947e6bc134776527b6611abe731aca",
+  "resolved_executor": {
+    "kind": "routine",
+    "action_id": null,
+    "argv": [
+      "pnpm",
+      "devai:trace:verify"
+    ],
+    "cwd": ".",
+    "effects": [
+      "read"
+    ]
+  },
+  "adapter_versions": [
+    {
+      "id": "@devai-nyx/loop:routine-executor",
+      "version": "1.0.0"
+    }
+  ],
+  "tool_versions": [],
+  "input_digests": [
+    {
+      "id": "law/trace.json",
+      "digest_sha256": "1d1390ffedfd2131eae887fde39881e97972f9a31277e7178538389658e3171e"
+    },
+    {
+      "id": "scripts/verify-devai-trace.mjs",
+      "digest_sha256": "f4242d31e55bc78d46cb3d21c00248d9adee894ec614300ea5924738fb40727f"
+    }
+  ],
+  "output_digests": [],
+  "selection": {
+    "mode": "not-applicable",
+    "considered_registry_ids": [],
+    "selected_registry_id": null,
+    "rejection_codes": [],
+    "fallback": false,
+    "fallback_reason": null
+  },
+  "prompt": {
+    "not_applicable_reason": "routine executor has no provider prompt"
+  },
+  "usage": {
+    "not_applicable_reason": "routine executor has no provider usage"
+  },
+  "cost": {
+    "not_applicable_reason": "routine executor has no provider cost"
+  },
+  "started_at": "2026-08-14T00:02:56.855Z",
+  "completed_at": "2026-08-14T00:02:57.197Z",
+  "verdict": "pass",
+  "failure": null,
+  "evidence_refs": []
+}

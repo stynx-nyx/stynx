@@ -11,7 +11,7 @@ const packageManager = manifest.packageManager;
 
 const supported = {
   angularPeer: '>=20.3.0 <22',
-  angularBuild: '21.2.18',
+  angularBuild: '21.2.19',
   ngPackagr: '21.2.3',
   nestPeer: '^11.1.19',
   node: '>=24 <25',
@@ -27,7 +27,7 @@ const supported = {
 // run ahead of the workspace-pinned @types/node / Angular TypeScript
 // versions so they can exercise forward compatibility. 2026-07 dependency
 // round: @types/node 25.6.0, reference/web TypeScript 6.0.2 (within
-// @angular/compiler-cli@21.2.18's supported >=5.9 <6.1 peer range).
+// @angular/compiler-cli@21.2.19's supported >=5.9 <6.1 peer range).
 const NODE_TYPES_EXCEPTIONS = {
   'reference/api/package.json': '25.6.0',
   'test/db/package.json': '25.6.0',

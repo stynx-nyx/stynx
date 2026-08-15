@@ -12,10 +12,22 @@ const stynxAlias = Object.fromEntries(
   stynxPackages.map((p) => [`@stynx-nyx/${p}`, resolve(__dirname, `../../packages/${p}/src/index.ts`)]),
 );
 
-export default createVitestConfig({
+const config = createVitestConfig({
   packageDir: __dirname,
   packageName: '@stynx-nyx/reference-api',
   include: ['test/**/*.spec.ts', 'test/**/*.test.ts', 'test/e2e/**/*.e2e.ts'],
   coverageThreshold: { statements: 0, branches: 0, functions: 0, lines: 0 },
   alias: stynxAlias,
 });
+
+export default {
+  ...config,
+  test: {
+    ...config.test,
+    fileParallelism: false,
+    maxWorkers: 1,
+    minWorkers: 1,
+    pool: 'threads',
+    poolOptions: { threads: { isolate: true } },
+  },
+};

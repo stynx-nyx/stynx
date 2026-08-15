@@ -6,6 +6,7 @@ export default createVitestConfig({
   packageName: '@stynx-nyx/flow',
   include: ['test/integration/**/*.spec.ts'],
   passWithNoTests: true,
+  sequentialFiles: true,
   alias: {
     '@stynx-nyx/auth': resolve(__dirname, '../auth/src/index.ts'),
     '@stynx-nyx/backend': resolve(__dirname, '../backend/src/index.ts'),

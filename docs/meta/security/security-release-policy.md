@@ -43,9 +43,14 @@ framework release artifacts. Missing license metadata requires review.
 
 ## Provenance And Signing
 
-Package publication must use npm provenance when registry publication is
-enabled. For GitHub-hosted publication this means the publish workflow must run
-with OIDC provenance enabled and must not publish from a developer workstation.
+STYNX packages currently publish as restricted packages to GitHub Packages.
+npm provenance is not available for restricted packages, so the release
+workflow and Changesets publisher must explicitly force
+`NPM_CONFIG_PROVENANCE=false`. Publication remains GitHub Actions-only and the
+workflow retains `id-token: write` so the OIDC boundary is explicit and ready
+for registry-supported attestations. If STYNX moves to a registry that supports
+provenance for its visibility model, this policy and the release verifier must
+be updated together to require provenance before publication is enabled there.
 
 Container images are outside the framework package release lane. Reference-app
 image SBOM and signing are owned by the reference-app workflow once deployment

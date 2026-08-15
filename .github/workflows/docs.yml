@@ -4,11 +4,9 @@ on:
   pull_request:
     paths:
       - 'docs/**'
-      - '.ci/evidence/**'
       - 'packages/**'
       - 'packages-web/**'
       - '.github/workflows/docs.yml'
-      - '.github/workflows/evidence.yml'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
       - 'package.json'
@@ -17,11 +15,9 @@ on:
       - main
     paths:
       - 'docs/**'
-      - '.ci/evidence/**'
       - 'packages/**'
       - 'packages-web/**'
       - '.github/workflows/docs.yml'
-      - '.github/workflows/evidence.yml'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
       - 'package.json'
@@ -37,20 +33,12 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
   NODE_VERSION: '24'
   PNPM_VERSION: '9.15.0'
-  # @devai-nyx/* resolves from GitHub Packages (npm.pkg.github.com), which
-  # needs an authenticated read regardless of the source repo's visibility.
   NODE_AUTH_TOKEN: ${{ secrets.DEVAI_REPO_TOKEN || github.token }}
 
 jobs:
-  # Single-source evidence gate (ADR-CI-ECONOMY Decision 7).
-  evidence-gate:
-    uses: devai-nyx/devai/.github/workflows/reusable-evidence-gate.yml@main
-
   build:
     name: build-docs
     runs-on: ubuntu-latest
-    needs: evidence-gate
-    if: ${{ needs.evidence-gate.outputs.evidence_mode != 'true' }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5

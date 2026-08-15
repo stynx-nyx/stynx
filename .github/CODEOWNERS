@@ -4,15 +4,14 @@
 /tools/* @aarusso-nyx
 /infra/* @aarusso-nyx
 
-# Reference applications (relocated from apps/reference-* in C-4 Session S2)
+# Reference applications
 /reference/* @aarusso-nyx
 
-# DEVAI-scaffolded modules (C-4 Phase D onward)
+# Product modules
 /domain/* @aarusso-nyx
 
 # Cross-cutting
 /.github/ @aarusso-nyx
-/.devai/ @aarusso-nyx
 /docs/ @aarusso-nyx
 
 # Tests

@@ -12,8 +12,8 @@ const existingBookmark: Bookmark = {
   id: '00000000-0000-4000-8000-000000b40001',
   tenantId: '00000000-0000-4000-8000-000000fe0001',
   ownerId: '00000000-0000-4000-8000-00000000fee0',
-  url: 'https://devai.example/architecture',
-  title: 'DEVAI architecture',
+  url: 'https://stynx.example/architecture',
+  title: 'STYNX architecture',
   notes: 'Useful reference',
   createdAt: '2026-06-11T00:00:00.000Z',
   updatedAt: '2026-06-11T00:00:00.000Z',
@@ -73,9 +73,9 @@ describe('BookmarkListComponent', () => {
     const host = fixture.nativeElement as HTMLElement;
 
     expect(service.list).toHaveBeenCalledOnce();
-    expect(host.textContent).toContain('DEVAI architecture');
+    expect(host.textContent).toContain('STYNX architecture');
     expect(host.textContent).toContain('Useful reference');
-    expect(host.querySelector('a')?.getAttribute('href')).toBe('https://devai.example/architecture');
+    expect(host.querySelector('a')?.getAttribute('href')).toBe('https://stynx.example/architecture');
   });
 
   it('delegates the create flow and prepends the created bookmark', async () => {
@@ -95,6 +95,6 @@ describe('BookmarkListComponent', () => {
     });
     const rows = Array.from(host.querySelectorAll('li')).map((row) => row.textContent?.trim());
     expect(rows[0]).toContain('Stynx specs index');
-    expect(rows[1]).toContain('DEVAI architecture');
+    expect(rows[1]).toContain('STYNX architecture');
   });
 });

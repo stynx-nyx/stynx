@@ -1,6 +1,6 @@
 # PORM Flow Deprecation Readiness
 
-**Authority:** Architect and Inspector, per DEVAI Constitution Article 6.
+**Review:** Architecture and test verification required.
 **Last updated:** 2026-05-18.
 **Scope:** `@stynx-nyx/flow`, `@stynx-nyx/angular-flow`, and reference app proof needed before replacing `../porm` local Flow.
 

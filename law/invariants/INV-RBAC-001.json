@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "1.0.0",
+  "version": "1.0.0",
+  "id": "INV-RBAC-001",
+  "domain": "RBAC",
+  "severity": "gate",
+  "type": "rbac",
+  "title": "Every stynx HTTP endpoint must be either role-bound or explicitly public",
+  "statement": "Every implemented HTTP endpoint MUST either have a non-empty permission or role binding, carry an explicit public marker, or match the documented bootstrap and development allow-list in law/invariants/RBAC-001-allowlist.json. The default policy is deny: an endpoint with no binding, no public marker, and no allow-list entry is release-gating.",
+  "rationale": "The reference authentication endpoints are intentionally public or development-only. All other unbound endpoints block release so that missing authorization can never become an implicit grant.",
+  "status": "active",
+  "lifecycle": "supported",
+  "verification": {
+    "required_suites": ["int"],
+    "oracle": "tests",
+    "strategy": {
+      "primary": "regression",
+      "supplemental": ["structural"],
+      "deterministic_check_available": true,
+      "rationale": "Executable repository tests and structural trace verification deterministically enforce this established STYNX behavior."
+    }
+  },
+  "authority_docs": {
+    "docs": [
+      {
+        "doc": "docs/meta/development-contract.md",
+        "anchor": "engineering-rules"
+      }
+    ]
+  },
+  "scope": {
+    "components": ["api", "rbac"],
+    "code_areas": ["reference/api/src/sample", "packages/auth/src", "packages/backend/src/auth"]
+  },
+  "change_policy": {
+    "breaking_change_requires": ["doc_update", "test_update", "human_approval"],
+    "test_weakening_allowed": false,
+    "human_approval_required": true
+  },
+  "tags": ["phase-b", "c-4", "stynx", "rbac", "authorization", "promoted-from-INV-CANDIDATE"],
+  "measurable_via": ["check", "sense inventory", "audit observe"]
+}

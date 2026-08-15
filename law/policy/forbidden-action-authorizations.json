@@ -1,0 +1,282 @@
+{
+  "$schema": "https://devai.nyxk.com.br/schemas/forbidden-action-authorizations.schema.json",
+  "schemaVersion": "1.0.0",
+  "authorizations": [
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "5476617ea181cf8de14121b9d5a6388ea77535db",
+      "authorized_by": "Owner",
+      "reason": "Records the exact candidate observation while preserving the reviewed invariant set."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "5700ccfbeeadbf91e9cddc6d5ffc523ecc39be86",
+      "authorized_by": "Owner",
+      "reason": "Aligns the restricted package provenance check under the existing adoption ADR."
+    },
+    {
+      "forbidden_id": "FORBID-PUBLISH",
+      "commit": "5700ccfbeeadbf91e9cddc6d5ffc523ecc39be86",
+      "authorized_by": "Owner",
+      "reason": "References package publication only to verify provenance and does not publish STYNX."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "c4c1113c15de32a73a7e0d93bf979b528c1fa2ee",
+      "authorized_by": "Owner",
+      "reason": "Introduces governed CI under the existing canonical DEVAI adoption decision."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "c4c1113c15de32a73a7e0d93bf979b528c1fa2ee",
+      "authorized_by": "Owner",
+      "reason": "Binds CI to the previously promoted invariant authority without weakening it."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "6883359f35dd235cd5dcccd8fadf7d466537d7cc",
+      "authorized_by": "Owner",
+      "reason": "Completes canonical trace coverage for the reviewed invariant population."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "dd5158cfc44a1c3a46d69efc8961249de082d5b8",
+      "authorized_by": "Owner",
+      "reason": "Reconciles governed test evidence with the existing invariant authority."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "451d8c51d821369e1a15e945df8c1def9f637801",
+      "authorized_by": "Owner",
+      "reason": "Adds deterministic trace verification for the approved invariant roster."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "c08d0756929a8d31bd66d3eb35ae7c3bbadf861a",
+      "authorized_by": "Owner",
+      "reason": "Promotes existing STYNX authority into the DEVAI invariant schema."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "f067161096f7a793a9cac60e0ecd09925430dd59",
+      "authorized_by": "Owner",
+      "reason": "Normalizes approved invariant metadata without changing product behavior."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "5af6f53d1b8fe297932861027107d33ff17c4770",
+      "authorized_by": "Owner",
+      "reason": "Adds missing authoritative domains supported by existing STYNX behavior."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "bd68268a7ba6cfa9a0e84db4bec74fc64bd6a671",
+      "authorized_by": "Owner",
+      "reason": "Adds adoption automation governed by the canonical DEVAI adoption ADR."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "bd68268a7ba6cfa9a0e84db4bec74fc64bd6a671",
+      "authorized_by": "Owner",
+      "reason": "Connects approved invariants to governed automation and evidence checks."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "64f519548ec55df2065ef0386f2e983058fef09c",
+      "authorized_by": "Owner",
+      "reason": "Extends CI proof coverage under the existing adoption architecture decision."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "15177a8675031bdc392a646442a1fe6cc15f5298",
+      "authorized_by": "Owner",
+      "reason": "Finalizes measurable invariant actions from already authoritative behavior."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "9de36834d023c4bc04e524ac49aa9d2acc9ca1e7",
+      "authorized_by": "Owner",
+      "reason": "Installs DEVAI CI adapters governed by the existing adoption ADR."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "9de36834d023c4bc04e524ac49aa9d2acc9ca1e7",
+      "authorized_by": "Owner",
+      "reason": "Binds invariant evidence checks into the approved host adapter surface."
+    },
+    {
+      "forbidden_id": "FORBID-DELETE-AUTHORITY-DOCS",
+      "commit": "08091c62305ebcef9aee9dfdbc84202ad74e1557",
+      "authorized_by": "Owner",
+      "reason": "Moves duplicate documentation into canonical law and product authority locations."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "08091c62305ebcef9aee9dfdbc84202ad74e1557",
+      "authorized_by": "Owner",
+      "reason": "Promotes the reviewed STYNX invariants into their canonical authority path."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "521d6c99dafc5769d24a7e025f733fec3dddbf44",
+      "authorized_by": "Owner",
+      "reason": "Establishes the tier-one bootstrap authority baseline without weakening tests."
+    },
+    {
+      "forbidden_id": "FORBID-DROP-PROD",
+      "commit": "bea499cce9a4c3b5fe1799349d376cee7486af5f",
+      "authorized_by": "Owner",
+      "reason": "Preserves reviewed database safety guidance and does not execute a production drop."
+    },
+    {
+      "forbidden_id": "FORBID-DELETE-AUTHORITY-DOCS",
+      "commit": "bea499cce9a4c3b5fe1799349d376cee7486af5f",
+      "authorized_by": "Owner",
+      "reason": "Reorganizes bootstrap authority sources while preserving their canonical content."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "bea499cce9a4c3b5fe1799349d376cee7486af5f",
+      "authorized_by": "Owner",
+      "reason": "Bootstraps DEVAI CI under the subsequently canonicalized adoption decision."
+    },
+    {
+      "forbidden_id": "FORBID-SECRETS-PROD",
+      "commit": "bea499cce9a4c3b5fe1799349d376cee7486af5f",
+      "authorized_by": "Owner",
+      "reason": "Documents environment-only credential handling and commits no production secret."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "bea499cce9a4c3b5fe1799349d376cee7486af5f",
+      "authorized_by": "Owner",
+      "reason": "Creates the initial reviewed invariant bootstrap while preserving all tests."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "f4f1db65ed0172620b3ddc87f4832fc42241eeba",
+      "authorized_by": "Owner",
+      "reason": "Migrates the historical DEVAI CI invocation surface under its recorded Round 16 architecture decision."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "f4f1db65ed0172620b3ddc87f4832fc42241eeba",
+      "authorized_by": "Owner",
+      "reason": "Updates historical generated DEVAI policy materializations without weakening product authority or tests."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "df377d7a2c15e12f801b114c02eacdc071bfbf3f",
+      "authorized_by": "Owner",
+      "reason": "Aligns DEVAI check execution with the Inspector-only authority contract under the canonical adoption ADR."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "b8dd8f14884a1a10c057e99c953f909a905465b6",
+      "authorized_by": "Owner",
+      "reason": "Routes authenticated DEVAI package downloads through the existing environment-only CI secret without committing credentials."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "02f31ed7c315427491a489c06ce190e1d70362eb",
+      "authorized_by": "Owner",
+      "reason": "Corrects governed CI package-manager initialization and narrows reusable-workflow secret propagation under the canonical adoption ADR."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "61e01a68975b3c798ef419da1553e6739c2c6118",
+      "authorized_by": "Owner",
+      "reason": "Binds the generated DEVAI 1.1.6 exact-main observation workflow under the canonical adoption ADR."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "03537cdd05d312bb5e45ca273fd39f645769dab8",
+      "authorized_by": "Owner",
+      "reason": "Binds the generated DEVAI 1.1.7 exact-main observation workflow under the canonical adoption ADR."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "55e3c1a8de255ffaa152c6b82ddcb64588688b5b",
+      "authorized_by": "Owner",
+      "reason": "Moves the existing live RLS assertion before the integration-fixture reset so CI verifies the migrated platform without weakening either gate."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "ca488eb7342b7af70e732e40d1f44bf6a8af5df7",
+      "authorized_by": "Owner",
+      "reason": "Records the Owner authorization for the governed workflow hardening receipt without changing invariant authority."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "61e01a68975b3c798ef419da1553e6739c2c6118",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the DEVAI 1.1.6 generated policy materialization and host-adapter binding under the canonical adoption decision."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "2e63d66c4b9d588eeaded6d27fe45decf1139e30",
+      "authorized_by": "Owner",
+      "reason": "Records the Owner authorization for the DEVAI 1.1.6 binding receipt without weakening canonical policy."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "03537cdd05d312bb5e45ca273fd39f645769dab8",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the DEVAI 1.1.7 generated policy materialization and host-adapter binding under the canonical adoption decision."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "4f07196bc2c70865059ceac0a3f462cc065571cd",
+      "authorized_by": "Owner",
+      "reason": "Records the Owner authorization for the DEVAI 1.1.7 binding receipt without weakening canonical policy."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "10b9285307dac13fb875e991dea6bde4529e2729",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the Inspector-written DB/RLS triage and append-only evidence-chain update for the exact observed failure."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "0ea1675ca094769492d3deb969a10d1ff02fd34b",
+      "authorized_by": "Owner",
+      "reason": "Scopes the DEVAI browser prerequisite to the existing reference-web Playwright dependency under the canonical adoption ADR."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "95c267eaa807ad6b43066a64550ac7320e062bd6",
+      "authorized_by": "Owner",
+      "reason": "Activates the mutation-threshold ADR's declared PR cache contract, preserves complete mutation scope, and retains DEVAI failure diagnostics for exact-candidate CI."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "7efa9a33a8db3a773595dfec414b17cb49ee2994",
+      "authorized_by": "Owner",
+      "reason": "Corrects the governed closure diagnostic evidence boundary so exact-candidate failures are observable without narrowing, skipping, or weakening any gate."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "976498c9425b63ddebd8e5ea2b2854767ef81b64",
+      "authorized_by": "Owner",
+      "reason": "Records the Owner authorization for the governed closure diagnostic evidence receipt without changing product invariants or gate scope."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "4b9861643171bc916c91a7da9cde4c687bd10a8e",
+      "authorized_by": "Owner",
+      "reason": "Orders the governed closure behind complete build artifacts and the existing migrated-template database prerequisite without skipping, narrowing, or weakening any test."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "ba88082399a44ab54cdfe85cc346c410bca23934",
+      "authorized_by": "Owner",
+      "reason": "Reconciles the canonical trace count and digest after adding a PostgreSQL readiness regression assertion without changing invariant authority or test scope."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "5eb40c85c0bbd53895797c05acc54a0c0da82727",
+      "authorized_by": "Owner",
+      "reason": "Records the exact OWNER authorization receipt for the testing trace reconciliation without changing invariant authority or test scope."
+    }
+  ]
+}

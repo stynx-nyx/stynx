@@ -121,6 +121,55 @@ function copyMarkdownDirTransformedWithIndex(sourceDir, targetDir, transform) {
   }
 }
 
+function copyJsonDirAsDocs(sourceDir, targetDir, title) {
+  if (!existsSync(sourceDir)) {
+    return;
+  }
+
+  const entries = readdirSync(sourceDir, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith('.json'))
+    .sort((left, right) => left.name.localeCompare(right.name));
+  writeDoc(
+    join(targetDir, 'index.md'),
+    `# ${title}\n\n${entries.map((entry) => `- [\`${entry.name}\`](./${entry.name.replace(/\.json$/u, '')})`).join('\n')}\n`,
+    title,
+  );
+  for (const entry of entries) {
+    const source = resolve(sourceDir, entry.name);
+    const target = join(targetDir, entry.name.replace(/\.json$/u, '.md'));
+    writeDoc(target, `# ${titleFromName(entry.name)}\n\n\`\`\`json\n${readFileSync(source, 'utf8').trim()}\n\`\`\`\n`, titleFromName(entry.name));
+  }
+}
+
+function copySchemaJsonDirAsDocs(sourceDir, targetDir) {
+  if (!existsSync(sourceDir)) {
+    return;
+  }
+
+  const entries = readdirSync(sourceDir, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith('.schema.json'))
+    .sort((left, right) => left.name.localeCompare(right.name));
+  const rows = entries.map((entry) => {
+    const schema = JSON.parse(readFileSync(resolve(sourceDir, entry.name), 'utf8'));
+    const slug = entry.name.replace(/\.schema\.json$/u, '');
+    return `| [\`${slug}\`](./${slug}) | ${schema.title ?? slug} | ${schema.description ?? ''} |`;
+  });
+  writeDoc(
+    join(targetDir, 'index.md'),
+    `# Schemas\n\nCanonical adopter-owned schemas mirrored from \`law/schemas\`.\n\n| Name | Title | Description |\n|---|---|---|\n${rows.join('\n')}\n`,
+    'Schemas',
+  );
+  for (const entry of entries) {
+    const schema = JSON.parse(readFileSync(resolve(sourceDir, entry.name), 'utf8'));
+    const slug = entry.name.replace(/\.schema\.json$/u, '');
+    writeDoc(
+      join(targetDir, `${slug}.md`),
+      `# ${schema.title ?? titleFromName(slug)}\n\n${schema.description ?? ''}\n\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\n\`\`\`\n`,
+      schema.title ?? titleFromName(slug),
+    );
+  }
+}
+
 function isTrackedFile(filePath) {
   const relativePath = relative(repoRoot, filePath).split('\\').join('/');
   const result = spawnSync('git', ['ls-files', '--error-unmatch', '--', relativePath], {
@@ -134,8 +183,6 @@ function sanitizePublicReferences(content) {
   return content
     .replace(/`docs\/work\/[^`]*`/gu, '`internal work note (not published)`')
     .replace(/\bdocs\/work\/[^\s),.;]*/gu, 'internal work note')
-    .replace(/`\.devai\/state\/[^`]*`/gu, '`internal DEVAI state artifact (not published)`')
-    .replace(/\.devai\/state\/[^\s`'",)]+/gu, 'internal DEVAI state artifact')
     .replace(/`\.ci\/evidence\/[^`]*`/gu, '`internal CI evidence artifact (not published)`')
     .replace(/\.ci\/evidence\/[^\s`'",)]+/gu, 'internal CI evidence artifact')
     .replace(/`coverage\/test-evidence\.json`/gu, '`generated test evidence summary (not published)`')
@@ -144,9 +191,7 @@ function sanitizePublicReferences(content) {
     .replace(/coverage-final\.json/gu, 'coverage summary JSON')
     .replace(/\[([^\]]+)\]\((?:\.\.\/)+align\/[^)]*\)/gu, (_match, label) => `\`${label}\``)
     .replace(/`(?:\.\.\/)*align\/[^`]*`/gu, '`internal round-tracking note (not published)`')
-    .replace(/\balign\/stynx\/[^\s`'",)]+/gu, 'internal round-tracking note')
-    .replace(/\[([^\]]+)\]\((?:\.\.\/)+devai\/[^)]*\)/gu, (_match, label) => `\`${label}\``)
-    .replace(/`(?:\.\.\/)*devai\/[^`]*`/gu, '`external DEVAI sibling checkout reference (not published)`');
+    .replace(/\balign\/stynx\/[^\s`'",)]+/gu, 'internal round-tracking note');
 }
 
 function publicMarkdownContent(content) {
@@ -155,6 +200,17 @@ function publicMarkdownContent(content) {
 
 function rewriteGeneratedDocLinks(content) {
   return content
+    .replace(/\/docs\/framework\/glossary\/?/gu, '/docs/glossary/')
+    .replace(/\/docs\/meta\/adr\/?/gu, '/docs/adr/')
+    .replace(/\/docs\/framework\/api\/?/gu, '/docs/api-reference/')
+    .replace(/\/docs\/api-reference\/stynx-web-/gu, '/docs/api-reference/stynx-nyx-')
+    .replace(/\/docs\/api-reference\/stynx-(?!nyx-)/gu, '/docs/api-reference/stynx-nyx-')
+    .replace(/\]\(\.\/glossary\/?\)/gu, '](/docs/glossary/)')
+    .replace(/\]\((?:\.\.\/)+law\/invariants\/?\)/gu, '](/docs/law/invariants/)')
+    .replace(/\]\(\.\.\/invariants\/?\)/gu, '](/docs/law/invariants/)')
+    .replace(/\]\(draft\/blueprints\/?\)/gu, '](/docs/product/drafts/blueprints/)')
+    .replace(/\]\((?:\.\.\/)+meta\/adr\/?\)/gu, '](/docs/adr/)')
+    .replace(/\]\((?:\.\.\/)+meta\/adr\/([^\)\s#]+)\.md((?:#[^)]+)?)\)/gu, '](/docs/adr/$1$2)')
     .replace(/\]\(\.\.\/arch\/invariants\/?\)/gu, '](/docs/framework/arch/invariants)')
     .replace(/\]\(\.\.\/arch\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/arch$1)')
     .replace(
@@ -276,9 +332,11 @@ function rewriteGeneratedDocLinks(content) {
     .replace(/\[`@stynx\/pdf-a-vera-docker`\]\(\/docs\/packages\/pdf-a-vera-docker\)/gu, '`@stynx-nyx/pdf-a-vera-docker`')
     .replace(/\]\(architecture\/reference-app-rbac\.json((?:#[^)]+)?)\)/gu, '](/docs/framework/arch/reference-app-rbac$1)')
     .replace(/\[([^\]]+)\]\(([^)\s#]+)\.(?:json|sql|ts|tsx|js|mjs|cjs)((?:#[^)]+)?)\)/gu, (_match, label) => `\`${label}\``)
-    .replace(/\[([^\]]+)\]\((?:\.\.\/){2,}(?:tools|packages|packages-web|reference|database|infra|\.devai|work)\/[^)]*\)/gu, (_match, label) => `\`${label}\``)
+    .replace(/\[([^\]]+)\]\((?:\.\.\/){2,}(?:tools|packages|packages-web|reference|database|infra|work)\/[^)]*\)/gu, (_match, label) => `\`${label}\``)
     .replace(/\[([^\]]+)\]\((?:\.\.\/){2,}(?:AGENTS|CLAUDE|package)\.md[^)]*\)/gu, (_match, label) => `\`${label}\``)
-    .replace(/\]\(porm-flow-deprecation-readiness\.md((?:#[^)]+)?)\)/gu, '](./porm-flow-deprecation-readiness$1)');
+    .replace(/\]\(porm-flow-deprecation-readiness\.md((?:#[^)]+)?)\)/gu, '](./porm-flow-deprecation-readiness$1)')
+    .replace(/\/stynx\/docs\/meta\/adr\/?/gu, '/docs/adr/')
+    .replace(/\/docs\/meta\/adr\/?/gu, '/docs/adr/');
 }
 
 function rewritePackageReadmeLinks(content, targetDir) {
@@ -424,17 +482,6 @@ function syncPublicStynxDocs() {
   }
 }
 
-function generateStatusPages() {
-  const result = spawnSync(process.execPath, [resolve(siteRoot, 'scripts/generate-status-pages.mjs')], {
-    cwd: repoRoot,
-    stdio: 'inherit',
-  });
-
-  if (result.status !== 0) {
-    throw new Error('Status page generation failed');
-  }
-}
-
 resetOutDir();
 writeDoc('packages/index.md', '# Packages\n\nNarrative package documentation aggregated from each `README.md` or package manifest.\n', 'Packages');
 writeDoc('packages-web/index.md', '# Web Packages\n\nNarrative Angular and SDK package documentation.\n', 'Web Packages');
@@ -444,8 +491,13 @@ writeDoc('architecture-decisions/index.md', '# Architecture Decisions\n\nArchite
 writeDoc('api-reference/index.md', '# API Reference\n\nGenerated API reference for every `@stynx-nyx/*` and `@stynx-nyx/*` package.\n', 'API Reference');
 writeDoc('templates/index.md', '# Templates\n\nDocumentation templates mirrored from `docs/meta/templates/`.\n', 'Templates');
 writeDoc('rfcs/index.md', '# RFCs\n\nRepository RFCs mirrored for public cross-reference stability.\n', 'RFCs');
+writeDoc(
+  'adopters/index.md',
+  '# Adopters\n\nProject-specific adoption, operations, and readiness documentation.\n\n- [STYNX](./stynx/)\n',
+  'Adopters',
+);
 
-copyMarkdownDirTransformed(resolve(repoRoot, 'docs/adopters'), 'adopters', (content) =>
+copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'docs/adopters'), 'adopters', (content) =>
   publicMarkdownContent(content),
 );
 copyMarkdownDirTransformed(resolve(repoRoot, 'docs/dev'), 'narrative/dev', (content) => publicMarkdownContent(content));
@@ -482,12 +534,14 @@ copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'docs/framework/arch'), 'a
 copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'docs/framework/contracts'), 'contracts', (content) =>
   publicMarkdownContent(content),
 );
-copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'docs/framework/glossary'), 'glossary', (content) =>
+copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'law/glossary'), 'glossary', (content) =>
   publicMarkdownContent(content),
 );
-copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'docs/meta/adr'), 'adr', (content) =>
+copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'law/adr'), 'adr', (content) =>
   publicMarkdownContent(content),
 );
+copyJsonDirAsDocs(resolve(repoRoot, 'law/invariants'), 'law/invariants', 'Canonical Invariants');
+copyJsonDirAsDocs(resolve(repoRoot, 'product/use-cases'), 'product/use-cases', 'Canonical Use Cases');
 copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'docs/meta/ops'), 'ops', (content) =>
   publicMarkdownContent(content),
 );
@@ -497,6 +551,11 @@ copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'docs/meta/security'), 'se
 );
 copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'docs/meta/templates'), 'templates', (content) =>
   publicMarkdownContent(content),
+);
+writeSpecificDoc(
+  resolve(repoRoot, 'docs/reference/law.md'),
+  'reference/law.md',
+  'DEVAI Constitution',
 );
 writeReadmeDoc(resolve(repoRoot, 'reference/api/README.md'), 'reference/api.md', (content) =>
   publicMarkdownContent(content)
@@ -522,7 +581,6 @@ syncPackageReadmes(
   (name) => typeof name === 'string' && name.startsWith('@stynx-internal/'),
 );
 syncSpecs();
-generateStatusPages();
 
 // R16 W02 — mirror packages/backend/docs/ into /docs/packages/backend/.
 // The backend meta-package has 10 independently-mountable submodules
@@ -547,22 +605,20 @@ copyMarkdownDirTransformed(
   (content) => publicMarkdownContent(content),
 );
 
-// R15 W06 — IA-section mirror: walk the 0.2.0 section dirs (post-W03 reorg)
-// and copy markdown directly into matching section roots under .generated/site-docs/.
-// This is additive — the legacy mirror logic above stays in place for backwards URL
-// stability; the IA mirror exists so the hand-authored 7-section sidebar in
-// docs/site/sidebars.js can autogenerate from real content under each section.
-//
-// Source layout (post-W03): docs/{start,theory,framework,roles,adopters,reference,meta}/
-// Target layout: .generated/site-docs/{start,theory,framework,roles,adopters,reference,meta}/
-//
-// Section dirs without content are tolerated (Docusaurus only errors on empty
-// sidebar categories, not on missing section dirs; the sidebar gracefully
-// handles empty `autogenerated` items when the dirName has at least an index).
-for (const section of ['start', 'theory', 'framework', 'roles', 'adopters', 'reference', 'meta']) {
+// Mirror the authored documentation sections into the generated site tree.
+for (const section of ['start', 'framework', 'adopters', 'reference', 'meta']) {
   copyMarkdownDirTransformed(
     resolve(repoRoot, 'docs', section),
     section,
     (content) => publicMarkdownContent(content),
   );
 }
+copySchemaJsonDirAsDocs(resolve(repoRoot, 'law/schemas'), 'framework/schemas');
+writeReadmeDoc(resolve(repoRoot, 'product/README.md'), 'product/index.md', (content) =>
+  publicMarkdownContent(content),
+  'Product',
+);
+copyMarkdownDirTransformedWithIndex(resolve(repoRoot, 'product/drafts'), 'product/drafts', (content) =>
+  publicMarkdownContent(content),
+);
+copyJsonDirAsDocs(resolve(repoRoot, 'product/drafts/blueprints'), 'product/drafts/blueprints', 'Draft Blueprints');

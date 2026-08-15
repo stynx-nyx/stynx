@@ -74,7 +74,7 @@ All five tables carry `tenant_id` (row-level multi-tenant isolation) and `create
 
 **Frontend ↔ Backend**
 
-- Declared stack is Angular; 15 frontend routes are captured. Reference API endpoints and primary Angular routes are linked from `docs/framework/product/use-cases/stynx-reference-app*.json`.
+- Declared stack is Angular; 15 frontend routes are captured. Reference API endpoints and primary Angular routes are linked from `product/use-cases/stynx-reference-app*.json`.
 
 ---
 
@@ -86,7 +86,8 @@ All five tables carry `tenant_id` (row-level multi-tenant isolation) and `create
 
 ### Unmapped Endpoints
 
-Use-case coverage now claims the 50 reference endpoints. The authored route-binding inventory lives in [Reference App RBAC Inventory](arch/reference-app-rbac.md). Current sensor route-binding output remains empty until DEVAI can read STYNX Angular permission guards.
+Use-case coverage claims the 50 reference endpoints. The authored route-binding
+inventory lives in [Reference App RBAC Inventory](arch/reference-app-rbac.md).
 
 - `RecordNotesController` — 7 endpoints: list, create, get, patch, delete, hard-delete, restore
 - `DocumentsController` — 6 endpoints: create, delete, hard-delete, restore, complete, download
@@ -99,5 +100,5 @@ Use-case coverage now claims the 50 reference endpoints. The authored route-bind
 
 ### Gaps
 
-- DEVAI `sense-rbac` still emits empty route bindings for STYNX Angular permission guards.
+- Route bindings must remain synchronized with STYNX Angular permission guards.
 - Operations, infra, and package test-depth gaps remain in [Known Gaps](/docs/meta/known-gaps).

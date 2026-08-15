@@ -13,7 +13,7 @@ import { StynxGroupRolesEditorComponent } from './group-roles-editor.component';
 import { IamApiService } from './iam-api.service';
 import type { StynxGroup, StynxPatchGroupRequest } from './types';
 
-type GroupDetailTab = 'overview' | 'roles' | 'members';
+export type GroupDetailTab = 'overview' | 'roles' | 'members';
 
 function optionalText(value: string): string | undefined {
   const trimmed = value.trim();

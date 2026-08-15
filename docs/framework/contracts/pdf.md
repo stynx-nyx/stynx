@@ -1,6 +1,6 @@
 # PDF Contract
 
-**Authority:** Architect (DEVAI Constitution Article 6).
+**Status:** Architecture contract.
 **Package:** `@stynx-nyx/pdf`.
 
 `@stynx-nyx/pdf` owns local server-side PDF rendering for STYNX consumers. It

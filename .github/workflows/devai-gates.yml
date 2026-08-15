@@ -1,183 +1,144 @@
-# DEVAI gates for stynx (Phase E of C-4 adoption pilot).
-# Runs the seven L0 inventory sensors + spec validation on every PR
-# to surface inventory drift, unbound endpoints, unmapped routes, and
-# invariant violations BEFORE merge.
-#
-# devai is consumed as published @devai-nyx/{cli,core,schemas} packages
-# from GitHub Packages (npm-package consumption model, D-118) -- no
-# sibling ../devai checkout. @devai-nyx:registry is scoped in .npmrc;
-# NODE_AUTH_TOKEN needs read:packages on the devai-nyx org (the ambient
-# GITHUB_TOKEN cannot read another org's packages even though
-# devai-nyx/devai is public). Stack-adapter packs (examples/redox-pack-*)
-# ship inside @devai-nyx/core as of 0.4.0, so pack-tuned sensors resolve
-# via node_modules/@devai-nyx/core -- @devai-nyx/core is declared as a
-# direct devDependency (not just transitive via cli) specifically so
-# pnpm's strict node_modules layout exposes it at that path.
-
-name: devai-gates
+name: DEVAI gates
 
 on:
   pull_request:
-    branches: [main]
-    paths:
-      - '.devai/**'
-      - 'docs/framework/arch/**'
-      - 'docs/framework/product/**'
-      - 'reference/**'
-      - 'packages/**'
-      - 'packages-web/**'
-      - 'domain/**'
-      - '.github/workflows/devai-gates.yml'
   push:
     branches: [main]
-  workflow_dispatch: {}
-
-concurrency:
-  group: devai-gates-${{ github.ref }}
-  cancel-in-progress: true
 
 permissions:
   contents: read
+  packages: read
+
+concurrency:
+  group: devai-gates-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  gate-status:
-    name: DEVAI gate status
+  governed-closure:
     runs-on: ubuntu-latest
+    timeout-minutes: 360
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: stynx
+          POSTGRES_USER: stynx
+          POSTGRES_PASSWORD: stynx
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U stynx -d stynx"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      CI: '1'
+      DATABASE_URL: postgresql://stynx:stynx@127.0.0.1:5432/stynx
+      STYNX_DATABASE_URL: postgresql://stynx:stynx@127.0.0.1:5432/stynx
+      STYNX_TEST_PG_HOST: 127.0.0.1
+      STYNX_TEST_PG_PORT: '5432'
+      STYNX_TEST_PG_USER: stynx
+      STYNX_TEST_PG_PASSWORD: stynx
+      STRYKER_INCREMENTAL: 'true'
     steps:
-      - name: Report DEVAI gate mode
-        run: |
-          if [ "${{ vars.DEVAI_GATES_ENABLED }}" = "true" ]; then
-            echo "::notice::devai-gates enabled"
-          else
-            echo "::notice::devai-gates skipped: DEVAI_GATES_ENABLED unset"
-          fi
-
-  devai-inventory:
-    name: DEVAI inventory + invariant gates
-    if: ${{ vars.DEVAI_GATES_ENABLED == 'true' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    permissions:
-      contents: read
-
-    steps:
-      - name: Checkout stynx
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-
-      - name: Set up pnpm
-        uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5
         with:
           version: 9.15.0
-
-      - name: Set up Node 24
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+          run_install: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          node-version: '24'
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
+          node-version: 24
           registry-url: https://npm.pkg.github.com
-
-      - name: Install dependencies (resolves @devai-nyx/* from GitHub Packages)
-        run: |
-          pnpm install --frozen-lockfile
-          echo "$PWD/node_modules/.bin" >> "$GITHUB_PATH"
+          cache: pnpm
+      - name: Restore mutation cache
+        id: mutation-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            packages/*/reports/stryker-incremental.json
+            packages-web/*/reports/stryker-incremental.json
+          key: stryker-v1-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'tools/stryker/**', 'tools/repo-config/test-policy.json', 'packages/*/package.json', 'packages/*/stryker*', 'packages/*/vitest*', 'packages/*/tsconfig*.json', 'packages/*/src/**', 'packages/*/test/**', 'packages/*/tests/**', 'packages-web/*/package.json', 'packages-web/*/stryker*', 'packages-web/*/vitest*', 'packages-web/*/tsconfig*.json', 'packages-web/*/src/**', 'packages-web/*/test/**', 'packages-web/*/tests/**') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            stryker-v1-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'tools/stryker/**', 'tools/repo-config/test-policy.json', 'packages/*/package.json', 'packages/*/stryker*', 'packages/*/vitest*', 'packages/*/tsconfig*.json', 'packages/*/src/**', 'packages/*/test/**', 'packages/*/tests/**', 'packages-web/*/package.json', 'packages-web/*/stryker*', 'packages-web/*/vitest*', 'packages-web/*/tsconfig*.json', 'packages-web/*/src/**', 'packages-web/*/test/**', 'packages-web/*/tests/**') }}-
+      - name: Install exact workspace
         env:
           NODE_AUTH_TOKEN: ${{ secrets.DEVAI_REPO_TOKEN || github.token }}
-          # DEVAI_REPO_TOKEN previously only needed contents:read (git clone
-          # of the sibling devai checkout); it now also needs read:packages
-          # on the devai-nyx org to pull @devai-nyx/* from GitHub Packages.
-          # Verify/update the token's scope if this step 401s.
-
-      - name: Verify pack matches stynx
-        run: devai pack-resolve --repo-root node_modules/@devai-nyx/core --adopter-root . --human
-
-      - name: devai doctor --adopter (expects 10/10 PASS)
-        run: devai doctor --adopter --human
-
-      - name: devai check glob-guards (devai D-124; catches a renamed/retired path before it goes silently dead)
-        run: devai check glob-guards --repo-root . --human
-
-      - name: devai check forbidden-actions --strict (16/16 canonical entries present)
-        run: devai check forbidden-actions --strict --human
-
-      - name: Run the six L0 inventory sensors
         run: |
-          set -euo pipefail
-          devai sense-api          --repo-root . --adopter-root . --packs-root node_modules/@devai-nyx/core --pack-tune --human
-          devai sense-routes       --repo-root . --adopter-root . --packs-root node_modules/@devai-nyx/core --pack-tune --human
-          devai sense-data-model   --repo-root . --adopter-root . --packs-root node_modules/@devai-nyx/core --pack-tune --human
-          devai sense-data-handling --repo-root . --human
-          devai sense-rbac         --repo-root . --human
-          devai sense-dep-graph    --repo-root . --human
-
-      - name: Run sense-coverage (tolerate REVIEW; devai route ids are line-number-derived and legitimately churn on any app.routes.ts edit)
-        # devai's `sense-coverage` exits 0 (PASS), 1 (REVIEW), or 2 (FAIL/ERROR)
-        # -- REVIEW is a deliberately distinct, non-fatal status (see
-        # @devai-nyx/utils EXIT_REVIEW=1 vs EXIT_FAIL=2), not an alias for
-        # failure. Angular route ids are a content hash over
-        # `${file}::${path}::${startLine}` (@devai-nyx/sensors
-        # inventory-routes.ts), so a single line added/removed anywhere above
-        # a route in app.routes.ts regenerates every route id below it and
-        # desyncs every use-case refs.routeIds pointing at the old ones --
-        # observed here 2026-07-13, where one shifted line invalidated all 17
-        # routes' ids at once. There is no path-based fallback match in
-        # inventory-coverage.ts, only exact id equality, so this WILL recur.
-        # Structural/redirect-only routes with no component (e.g. the
-        # `admin` container and its `redirectTo: 'users'` child) are also
-        # expected to sit outside use-case narrative coverage permanently --
-        # there's no exemption tag for them today. Flagged upstream to devai
-        # (route-id stability + coverage fallback matching); until that
-        # lands, hard-failing this step on every incidental line-count change
-        # would make the gate flap for reasons unrelated to real coverage
-        # regressions, so only exit 2 (FAIL/ERROR) is treated as fatal here.
+          pnpm install --frozen-lockfile
+      - name: Install browser prerequisite
+        run: pnpm --filter @stynx-nyx/reference-web exec playwright install --with-deps chromium
+      - name: Prepare migrated template database (ADR-CI-ECONOMY Decision 6a)
+        run: node scripts/ci-local/prepare-int-template.mjs --github-env "$GITHUB_ENV"
+      - name: Resolve exact affected base
+        id: base
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE_SHA: ${{ github.event.before }}
         run: |
-          set +e
-          devai sense-coverage --repo-root . --routes-path .devai/state/sensors/inventory_routes/routes-angular.json --human
-          code=$?
-          set -e
-          if [ "$code" -eq 2 ]; then
-            echo "::error::sense-coverage exited FAIL/ERROR (2) -- a real invalid/broken state, not just unresolved use-case links"
-            exit 1
-          elif [ "$code" -eq 1 ]; then
-            echo "::warning::sense-coverage returned REVIEW (exit 1) -- some routes/endpoints remain unmapped or use-case linkage has drifted. Accepted steady-state pending an upstream devai fix to route-id stability; see step comment."
+          base_sha="$PR_BASE_SHA"
+          if [ -z "$base_sha" ]; then base_sha="$PUSH_BEFORE_SHA"; fi
+          if [ -z "$base_sha" ] || [ "$base_sha" = "0000000000000000000000000000000000000000" ]; then
+            base_sha="$(git rev-parse HEAD^)"
           fi
-
-      - name: Validate stynx invariants against the schema
-        run: devai spec validate-invariants --repo-root . --human
-        # Uses devai's canonical validator (schema + ID uniqueness + domain +
-        # anchor checks) instead of a hand-rolled ajv script. Its default
-        # companion-pattern exclusion (*-allowlist.json, *-data.json) is why
-        # RBAC-001-allowlist.json (renamed from the non-matching
-        # RBAC-001-allowlist.data.json, closing TASK-0003) is correctly
-        # skipped rather than validated as an incomplete invariant. A
-        # zero-match glob here is caught by the glob-guards step above
-        # (INVARIANTS_DIR, min_matches 10), not re-guarded inline.
-
-      - name: Refresh invariant candidates (informational)
-        run: devai inv-suggest --from-inventory --repo-root . --human
-
-      - name: Validate any module-blueprints in draft
+          git merge-base --is-ancestor "$base_sha" HEAD
+          printf 'sha=%s\n' "$base_sha" >> "$GITHUB_OUTPUT"
+      - name: Verify bindings and trace
         run: |
-          set -euo pipefail
-          shopt -s nullglob
-          for f in docs/framework/product/draft/blueprints/*.json; do
-            echo "::group::validate $f"
-            devai blueprint-validate --file "$f" --human
-            echo "::endgroup::"
-          done
-
-      - name: Upload sensor + candidate evidence
+          corepack pnpm exec devai doctor --repo-root . --format json
+          corepack pnpm devai:trace:verify
+      - name: Plan and execute affected closure
+        run: |
+          corepack pnpm exec devai check --affected --task-plan --base "${{ steps.base.outputs.sha }}" --as-role inspector --format json
+          corepack pnpm exec devai check --affected --run --base "${{ steps.base.outputs.sha }}" --task-timeout-ms 18000000 --as-role inspector --write --format json
+      - name: Execute local and RC closures
+        run: |
+          corepack pnpm exec devai check --local --run --task-timeout-ms 18000000 --as-role inspector --write --format json
+          corepack pnpm exec devai check --rc --run --task-timeout-ms 18000000 --as-role inspector --write --format json
+      - name: Prove deterministic inventory
+        run: |
+          corepack pnpm exec devai sense inventory --slice all --trace law/trace.json --format json | jq -S '.result.value' > "$RUNNER_TEMP/inventory-1.json"
+          corepack pnpm exec devai sense inventory --slice all --trace law/trace.json --format json | jq -S '.result.value' > "$RUNNER_TEMP/inventory-2.json"
+          diff -u "$RUNNER_TEMP/inventory-1.json" "$RUNNER_TEMP/inventory-2.json"
+      - name: Verify evidence chain
+        run: corepack pnpm exec devai evidence verify --scope chain --show-head --repo-root . --format json
+      - name: Report DEVAI failure diagnostics
+        if: failure()
+        run: |
+          diagnostic_root=.devai/state/check-cache/v1/diagnostics
+          if [ ! -d "$diagnostic_root" ]; then
+            echo "DEVAI did not materialize a diagnostic directory."
+            exit 0
+          fi
+          find "$diagnostic_root" -type f -name '*.json' -print0 \
+            | sort -z \
+            | while IFS= read -r -d '' diagnostic; do
+                echo "::group::$diagnostic"
+                jq . "$diagnostic"
+                echo '::endgroup::'
+              done
+      - name: Save mutation cache
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          name: devai-evidence-${{ github.run_id }}
           path: |
-            .devai/state/sensors/**
-            .devai/state/sensor-readings/**
-            .devai/state/inv-candidates/**
-            .devai/state/scorecards/**
-            .devai/state/llm-usage.jsonl
-            .devai/state/agent-runs/**
-            .devai/state/skills/**
-          if-no-files-found: ignore
-          retention-days: 14
+            packages/*/reports/stryker-incremental.json
+            packages-web/*/reports/stryker-incremental.json
+          key: ${{ steps.mutation-cache.outputs.cache-primary-key }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: devai-gate-evidence-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            .devai/state/check-cache/v1/diagnostics/
+            .devai/state/check-cache/v1/receipts/
+            .devai/state/check-cache/v1/results/
+            packages/*/reports/stryker-incremental.json
+            packages-web/*/reports/stryker-incremental.json
+            record/proofs/chain.json
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 30

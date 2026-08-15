@@ -8,7 +8,8 @@ STYNX's data layer relies on conventions: tenant-scoped tables need RLS policies
 
 You reach for it whenever you author a Drizzle/SQL migration touching tenant-scoped or archive tables.
 
-What it does NOT do: it's intentionally **not** part of DEVAI's `check-*` family (see "Status" below) — it encodes STYNX-specific SQL conventions, not universal DEVAI semantics. It doesn't run migrations (that's [`@stynx-nyx/cli`](/docs/packages/cli/)'s `stynx migrate`).
+What it does NOT do: it does not run migrations. That is
+[`@stynx-nyx/cli`](/docs/packages/cli/)'s `stynx migrate` responsibility.
 
 ## Audience
 
@@ -81,9 +82,10 @@ pnpm --dir tools/migration-linter exec stynx-migration-lint db/migrations/ --fix
 - **Raw `DELETE` on an archive table** — archive tables use soft-delete; a hard `DELETE` bypasses cascade rules. Use the soft-delete path.
 - **Linter not in CI** — violations only caught locally are easy to skip. Wire `lint:repo` into your CI chain.
 
-## Status: intentionally STYNX-idiosyncratic
+## Status
 
-Per C-4 Session S9, this tool is **not** folded into DEVAI's `check-*` family and is not planned to be. DEVAI's `check-*` actions operate on DEVAI substrates with universal semantics; the migration-linter encodes STYNX-specific SQL conventions that don't generalize. It stays a STYNX-local tool.
+This remains a STYNX-local tool because it encodes repository-specific SQL,
+RLS, archive, and soft-delete conventions.
 
 ## Related packages
 

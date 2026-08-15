@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "1.0.0",
+  "policy_id": "stynx.devai-adoption",
+  "policy_version": "1.0.0",
+  "project": {
+    "project_type": "platform-package",
+    "repo": {
+      "kind": "library"
+    },
+    "docs": {
+      "builder": "docusaurus",
+      "build_command": "pnpm --dir docs/site build",
+      "ia": {
+        "path_overrides": {
+          "dev/operations": "meta/ops",
+          "dev/security": "meta/security"
+        }
+      }
+    }
+  },
+  "domains": {
+    "client": ["COVERAGE", "ERROR", "FLOW", "PRIVACY", "RBAC"]
+  },
+  "thresholds": {
+    "lint": {
+      "max_errors": 0,
+      "max_warnings": 0
+    }
+  },
+  "scorecard_na": {
+    "schemaVersion": "1.0.0",
+    "cells": []
+  },
+  "glob_guards": {
+    "schemaVersion": "1.0.0",
+    "guards": []
+  }
+}

@@ -20,7 +20,7 @@ import type {
   StynxUserDetail,
 } from './types';
 
-type UserDetailTab = 'overview' | 'roles' | 'groups' | 'permissions' | 'sessions' | 'audit';
+export type UserDetailTab = 'overview' | 'roles' | 'groups' | 'permissions' | 'sessions' | 'audit';
 
 interface UserDetailSnapshot {
   user: StynxUserDetail;

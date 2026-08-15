@@ -1,0 +1,170 @@
+{
+  "head": "a456f4e4bab40fcedcbb0a5e9cba853516c89f999fd46c8b0f37db43e110fbe5",
+  "records": [
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-5cff662dced1df81",
+      "timestamp": "2026-08-13T23:13:07.734Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "triage.classify",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Users/aarusso/Development/stech/stynx",
+        "git": {
+          "head_sha": "8bdd68bae53f36986bdc673d31041cd7b73115ee",
+          "dirty_files": [
+            ".devai/state/counters.json",
+            ".devai/state/backlog.jsonl",
+            ".devai/state/rgr/",
+            ".devai/state/tasks/",
+            ".devai/state/triage/",
+            ".devai/state/worktrees.json",
+            "record/proofs/work/"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/triage/TRG-7082fdc15796445e.json",
+          "sha256": "b09de8f20dce7777f5c4b9d806f0617abd2024747b0ea0c71d36c784e9193cda",
+          "kind": "triage"
+        }
+      ],
+      "notes": ["classification=reference_gap", "route=emit_rgr"],
+      "previous_run_hash": null,
+      "manifest_hash": "d456fa75dc2198f26b647e8928ede6d7557903ea12d6df1d419fc83818e8bcef"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-05299e250799cca6",
+      "timestamp": "2026-08-14T00:06:06.361Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "audit.observe",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Users/aarusso/Development/stech/stynx",
+        "git": {
+          "head_sha": "e841de020c35773b454f3bb2d82f40d1f0866082",
+          "dirty_files": [
+            ".devai/state/counters.json",
+            "record/proofs/chain.json",
+            ".devai/state/audit-observations/",
+            ".devai/state/backlog.jsonl",
+            ".devai/state/rgr/",
+            ".devai/state/round-runs/",
+            ".devai/state/tasks/",
+            ".devai/state/triage/",
+            ".devai/state/worktrees.json",
+            "record/proofs/work/"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/audit-observations/e841de020c35773b454f3bb2d82f40d1f0866082/inventory.json",
+          "sha256": "35e012a24d71e327af5d0051760d7ee5e36c5c9112d4fbbbb88bb79a7c515aa7",
+          "kind": "audit"
+        },
+        {
+          "path": ".devai/state/audit-observations/e841de020c35773b454f3bb2d82f40d1f0866082/scorecard.json",
+          "sha256": "50ff07029d389db96d16f501cf5ee5432cee6bcb5a9ccb98bf65f5d6dbea665b",
+          "kind": "audit"
+        },
+        {
+          "path": ".devai/state/audit-observations/e841de020c35773b454f3bb2d82f40d1f0866082/backlog.json",
+          "sha256": "32a756826bbc78ddf3d28f071acad010343ea0e47e9f8f8978c664348a3cfec8",
+          "kind": "audit"
+        },
+        {
+          "path": ".devai/state/audit-observations/e841de020c35773b454f3bb2d82f40d1f0866082/assessment.json",
+          "sha256": "e9d6a56e56ab027a413b8c000a2f2c8e2a2a8c1280dd55625fdb3bb000f97a28",
+          "kind": "audit"
+        },
+        {
+          "path": ".devai/state/audit-observations/e841de020c35773b454f3bb2d82f40d1f0866082/status.json",
+          "sha256": "4ad99242216093d7c6f12e82141f023e27f646353c48b6b05afd2d39ac1d4fde",
+          "kind": "audit"
+        }
+      ],
+      "notes": ["exact_sha=e841de020c35773b454f3bb2d82f40d1f0866082", "readiness_promoting=false"],
+      "previous_run_hash": "d456fa75dc2198f26b647e8928ede6d7557903ea12d6df1d419fc83818e8bcef",
+      "manifest_hash": "ce3202f31b8d3f6ebcaf2fa8dce5613275b3f08464a9b0978ff752355cb96755"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-61f2c447aa6ba84a",
+      "timestamp": "2026-08-14T07:30:42.272Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "audit.observe",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Users/aarusso/Development/stech/stynx",
+        "git": {
+          "head_sha": "d8bb896cf4d76368c05540cc273bb8c62bdf3892",
+          "dirty_files": [
+            ".devai/state/audit-observations/d8bb896cf4d76368c05540cc273bb8c62bdf3892/"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/audit-observations/d8bb896cf4d76368c05540cc273bb8c62bdf3892/inventory.json",
+          "sha256": "996064d42e65333d33ec1901e76f055019571a855f74f6bb1fccb57f0b5a0070",
+          "kind": "audit"
+        },
+        {
+          "path": ".devai/state/audit-observations/d8bb896cf4d76368c05540cc273bb8c62bdf3892/scorecard.json",
+          "sha256": "225ec603fdb33c9587c13417592f770c5f01300a7cf7dcd00506031b1cf3165f",
+          "kind": "audit"
+        },
+        {
+          "path": ".devai/state/audit-observations/d8bb896cf4d76368c05540cc273bb8c62bdf3892/backlog.json",
+          "sha256": "cea228668d51e08060698551444a1bec3dad88dc8e4ab3efb0d0be54ee2e42d1",
+          "kind": "audit"
+        },
+        {
+          "path": ".devai/state/audit-observations/d8bb896cf4d76368c05540cc273bb8c62bdf3892/assessment.json",
+          "sha256": "5275fecce6fe5b3ff8930bff555dc76231941bd152fa6f86a4ea771b1f35e68e",
+          "kind": "audit"
+        },
+        {
+          "path": ".devai/state/audit-observations/d8bb896cf4d76368c05540cc273bb8c62bdf3892/status.json",
+          "sha256": "93081adcaa1ea55c1909ef66fc4bbcf3e6ad22fd2c6d1882e82f03a300680915",
+          "kind": "audit"
+        }
+      ],
+      "notes": ["exact_sha=d8bb896cf4d76368c05540cc273bb8c62bdf3892", "readiness_promoting=false"],
+      "previous_run_hash": "ce3202f31b8d3f6ebcaf2fa8dce5613275b3f08464a9b0978ff752355cb96755",
+      "manifest_hash": "a60598bea397b445e5530f6726f8a21124afb111633ac411a3ad1cd1776af7b7"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-a4919f0fbe22e99c",
+      "timestamp": "2026-08-14T13:15:13.275Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "triage.classify",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Users/aarusso/Development/stech/stynx",
+        "git": {
+          "head_sha": "e141fd765ef57ccf2d70bc6165952ae45943d337",
+          "dirty_files": [".devai/state/triage/TRG-5a9e1cdef8dd34bc.json"]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/triage/TRG-5a9e1cdef8dd34bc.json",
+          "sha256": "aebaf96057c31bfe5c80bdaa068583a275621b5398af6d4f8e6ff79e6f8ea4b8",
+          "kind": "triage"
+        }
+      ],
+      "notes": ["classification=sensor_error", "route=fix_sensor_adapter"],
+      "previous_run_hash": "a60598bea397b445e5530f6726f8a21124afb111633ac411a3ad1cd1776af7b7",
+      "manifest_hash": "a456f4e4bab40fcedcbb0a5e9cba853516c89f999fd46c8b0f37db43e110fbe5"
+    }
+  ]
+}

@@ -14,16 +14,12 @@
 #   node-version      Node major (default 24).
 #   pnpm-version      pnpm version (default 9.15.0).
 #   fetch-depth       Checkout depth (default 1; pass 0 for full history).
-#   install           Run pnpm install (default true; pass 'false' for
-#                     evidence-gate-style jobs that only need the tree).
+#   install           Run pnpm install (default true; pass 'false' for jobs
+#                     that only need the checked-out tree).
 #   frozen-lockfile   Pass --frozen-lockfile to pnpm install (default true).
-#   node-auth-token   Registry auth token for the install step (e.g.
-#                     secrets.DEVAI_REPO_TOKEN). Composite actions do not
-#                     have implicit access to the secrets context, so the
-#                     caller must pass this explicitly -- required since
-#                     @devai-nyx/* resolves from GitHub Packages
-#                     (npm.pkg.github.com), which needs an authenticated
-#                     read regardless of the source repo's visibility.
+#   node-auth-token   Registry auth token for the install step. Composite
+#                     actions do not have implicit access to the secrets
+#                     context, so callers must pass it explicitly.
 #
 # Outputs:
 #   pnpm-store-path   Absolute path to the pnpm content-addressed store.
@@ -63,8 +59,8 @@ inputs:
     default: 'true'
   node-auth-token:
     description: >-
-      Registry auth token for @devai-nyx/* (GitHub Packages). Pass
-      secrets.DEVAI_REPO_TOKEN || github.token from the caller.
+      Registry auth token for @stynx-nyx/* (GitHub Packages). Pass
+      github.token or a package-read token from the caller.
     required: false
     default: ''
 

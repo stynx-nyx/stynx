@@ -2,7 +2,12 @@ import { Test } from '@nestjs/testing';
 import { type INestApplication } from '@nestjs/common';
 import { GenericContainer, Wait } from 'testcontainers';
 import { RequestContextMutator } from '@stynx-nyx/core';
-import { createStynxPgClient, Database, StynxDataModule, type StynxPgClient } from '@stynx-nyx/data';
+import {
+  createStynxPgClient,
+  Database,
+  StynxDataModule,
+  type StynxPgClient,
+} from '@stynx-nyx/data';
 import type {
   CreateTestAppOptions,
   StartedCognitoHandle,
@@ -32,7 +37,10 @@ async function startPostgresContainer(): Promise<StartedPostgresHandle> {
       POSTGRES_PASSWORD: 'postgres',
     })
     .withExposedPorts(5432)
-    .withWaitStrategy(Wait.forLogMessage(/database system is ready to accept connections/u))
+    // The official Postgres image emits this line once for the temporary
+    // initdb server and again for the final server. Waiting for both prevents
+    // callers from connecting during the intervening shutdown/startup window.
+    .withWaitStrategy(Wait.forLogMessage(/database system is ready to accept connections/u, 2))
     .start();
 
   const host = container.getHost();
@@ -125,9 +133,10 @@ export async function createTestApp(options: CreateTestAppOptions = {}): Promise
   try {
     postgres = await startPostgresContainer();
     redis = await startRedisContainer();
-    localstack = options.localstack?.enabled === false
-      ? undefined
-      : await startLocalstackContainer(options.localstack?.services ?? ['s3', 'kms']);
+    localstack =
+      options.localstack?.enabled === false
+        ? undefined
+        : await startLocalstackContainer(options.localstack?.services ?? ['s3', 'kms']);
     cognito = options.cognito?.enabled
       ? await startCognitoContainer(options.cognito.image ?? 'jagregory/cognito-local:latest')
       : undefined;
@@ -136,9 +145,24 @@ export async function createTestApp(options: CreateTestAppOptions = {}): Promise
       imports: [
         StynxDataModule.forRoot({
           connections: {
-            owner: { connectionString: connectionStringWithAppName(postgres.connectionString, '@stynx-nyx/testing:owner') },
-            app: { connectionString: connectionStringWithAppName(postgres.connectionString, '@stynx-nyx/testing:app') },
-            reader: { connectionString: connectionStringWithAppName(postgres.connectionString, '@stynx-nyx/testing:reader') },
+            owner: {
+              connectionString: connectionStringWithAppName(
+                postgres.connectionString,
+                '@stynx-nyx/testing:owner',
+              ),
+            },
+            app: {
+              connectionString: connectionStringWithAppName(
+                postgres.connectionString,
+                '@stynx-nyx/testing:app',
+              ),
+            },
+            reader: {
+              connectionString: connectionStringWithAppName(
+                postgres.connectionString,
+                '@stynx-nyx/testing:reader',
+              ),
+            },
           },
           migrations: { enabled: true },
         }),

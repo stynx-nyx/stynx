@@ -67,6 +67,9 @@
         "\\bDROP\\s+DATABASE\\b",
         "\\bTRUNCATE\\s+TABLE\\b"
       ],
+      "allowed_change_line_patterns": [
+        "\\b(?:DROP\\s+(?:TABLE|DATABASE)|TRUNCATE\\s+TABLE)\\s+(?:IF\\s+EXISTS\\s+)?(?:devai_task_[A-Za-z0-9_]+\\b|devai_task_<id>|devai_template\\b)(?=\\s*(?:[\\\"'`]|;|$))"
+      ],
       "safer_alternative": "Soft-delete; run on dev with verified backup"
     },
     {
@@ -79,30 +82,38 @@
     },
     {
       "id": "FORBID-DELETE-AUTHORITY-DOCS",
-      "action": "Deleting any file under docs/architecture, docs/contracts, docs/operations, docs/security",
+      "action": "Deleting law, product intent, runtime audit output, or machine proofs outside the owning authority path",
       "rationale": "Authority violation",
       "severity": "critical",
-      "safer_alternative": "Architect amendment via ADR + tombstone"
+      "detect_patterns": [
+        "\\b(?:git\\s+rm|rm)\\s+[^\\n]*(?:law|product|record|\\.devai/local/rounds)/"
+      ],
+      "safer_alternative": "Use the owning role and explicit action authority"
     },
     {
       "id": "FORBID-EXTERNAL-MESSAGES",
       "action": "Sending external messages (Slack, email, GitHub issue comments outside the PR)",
       "rationale": "Visible action",
       "severity": "medium",
+      "detect_patterns": ["\\b(?:slack|sendmail|mail)\\b", "\\bgh\\s+(?:issue|pr)\\s+comment\\b"],
       "safer_alternative": "Comment in the PR; let a human relay externally"
     },
     {
       "id": "FORBID-CI-WITHOUT-ADR",
-      "action": "Modifying CI/CD pipelines without ADR",
+      "action": "Modifying CI/CD pipelines without explicit review",
       "rationale": "Gate weakening",
       "severity": "high",
-      "safer_alternative": "Draft an ADR explaining the gate change first"
+      "detect_patterns": [
+        "(?:\\.github/workflows/|scripts/(?:run-ci-stages|check-workflows)\\.mjs)"
+      ],
+      "safer_alternative": "Record the gate change rationale and obtain explicit review"
     },
     {
       "id": "FORBID-SECRETS-PROD",
       "action": "Modifying KMS, IAM, SSM, Secrets Manager in stage or prod",
       "rationale": "Security surface",
       "severity": "critical",
+      "detect_patterns": ["\\baws\\s+(?:kms|iam|ssm|secretsmanager)\\b"],
       "safer_alternative": "Use the ops authority path with per-action authorisation"
     },
     {
@@ -123,10 +134,13 @@
     },
     {
       "id": "FORBID-MUTATE-INVARIANTS",
-      "action": "Modifying docs/architecture/invariants/* or .devai/config/* without Architect authority",
+      "action": "Modifying law or committed policy materializations without Architect authority",
       "rationale": "Constitutional change",
       "severity": "critical",
-      "safer_alternative": "Architect amendment via ADR + DESIGN-DECISIONS entry"
+      "detect_patterns": [
+        "\\b(?:git\\s+(?:add|rm)|rm)\\s+[^\\n]*(?:law/|product/|record/|\\.devai/(?:config|local/rounds)/)"
+      ],
+      "safer_alternative": "Use Architect authority and record the current rationale"
     }
   ]
 }

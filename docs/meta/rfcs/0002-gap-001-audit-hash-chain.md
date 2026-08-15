@@ -1,16 +1,16 @@
 # RFC 0002: GAP-001-audit-hash-chain
 
 - Status: Implemented
-- Source: [GAP-001-audit-hash-chain.md](../legacy/completed-gap-tasks/GAP-001-audit-hash-chain.md)
+- Historical source: retired; use Git history for the original gap record.
 
 ## Problem
 
-The linked GAP is implemented by the append-only `audit.events` hash chain,
+This decision is implemented by the append-only `audit.events` hash chain,
 `StynxAuditService.verifyChain()`, and the `stynx audit verify` CLI command.
 
 ## Constraints
 
-Follow the linked GAP acceptance criteria and the STYNX governance process.
+Preserve the behavior and acceptance criteria documented below.
 
 ## Options
 

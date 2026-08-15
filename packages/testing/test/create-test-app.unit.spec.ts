@@ -1,43 +1,43 @@
 // vi.hoisted bundle: declarations referenced by vi.mock factories must be
 // hoisted alongside the mock call (Vitest only hoists vi.mock + vi.hoisted).
 const { stop, connect, end, query, close, init, get, FakeContainer } = vi.hoisted(() => {
-    const stop = vi.fn(async () => undefined);
-    const connect = vi.fn(async () => undefined);
-    const end = vi.fn(async () => undefined);
-    const query = vi.fn(async (_sql?: unknown, _params?: unknown[]) => ({ rows: [] }));
-    const tx = vi.fn(async (callback: (trx: unknown) => Promise<unknown>) => callback({}));
-    const withSystemContext = vi.fn(
-      async (_label: string, callback: () => Promise<unknown>) => callback(),
-    );
-    const close = vi.fn(async () => undefined);
-    const init = vi.fn(async () => undefined);
-    const get = vi.fn((token: unknown) => {
-      if (typeof token === 'function' && token.name === 'Database') {
-        return { withSystemContext, tx };
-      }
-      return { runWithRequestContext: vi.fn() };
-    });
-    class FakeContainer {
-      constructor(readonly image: string) {}
-      withEnvironment() {
-        return this;
-      }
-      withExposedPorts() {
-        return this;
-      }
-      withWaitStrategy() {
-        return this;
-      }
-      async start() {
-        return {
-          stop,
-          getHost: () => '127.0.0.1',
-          getMappedPort: (port: number) => port + 10_000,
-        };
-      }
+  const stop = vi.fn(async () => undefined);
+  const connect = vi.fn(async () => undefined);
+  const end = vi.fn(async () => undefined);
+  const query = vi.fn(async (_sql?: unknown, _params?: unknown[]) => ({ rows: [] }));
+  const tx = vi.fn(async (callback: (trx: unknown) => Promise<unknown>) => callback({}));
+  const withSystemContext = vi.fn(async (_label: string, callback: () => Promise<unknown>) =>
+    callback(),
+  );
+  const close = vi.fn(async () => undefined);
+  const init = vi.fn(async () => undefined);
+  const get = vi.fn((token: unknown) => {
+    if (typeof token === 'function' && token.name === 'Database') {
+      return { withSystemContext, tx };
     }
-    return { stop, connect, end, query, tx, withSystemContext, close, init, get, FakeContainer };
+    return { runWithRequestContext: vi.fn() };
   });
+  class FakeContainer {
+    constructor(readonly image: string) {}
+    withEnvironment() {
+      return this;
+    }
+    withExposedPorts() {
+      return this;
+    }
+    withWaitStrategy() {
+      return this;
+    }
+    async start() {
+      return {
+        stop,
+        getHost: () => '127.0.0.1',
+        getMappedPort: (port: number) => port + 10_000,
+      };
+    }
+  }
+  return { stop, connect, end, query, tx, withSystemContext, close, init, get, FakeContainer };
+});
 
 vi.mock('testcontainers', () => ({
   GenericContainer: FakeContainer,
@@ -72,6 +72,7 @@ vi.mock('@stynx-nyx/core', () => ({
 
 import { createTestApp } from '../src/create-test-app';
 import type { TestSqlStep } from '../src/types';
+import { Wait } from 'testcontainers';
 
 describe('createTestApp', () => {
   beforeEach(() => {
@@ -117,6 +118,16 @@ describe('createTestApp', () => {
       }),
     );
     expect(app.cognito).toBe(undefined);
+    await app.teardown();
+  });
+
+  it('waits for the final Postgres server readiness event', async () => {
+    const app = await createTestApp({ localstack: { enabled: false } });
+
+    expect(Wait.forLogMessage).toHaveBeenCalledWith(
+      /database system is ready to accept connections/u,
+      2,
+    );
     await app.teardown();
   });
 

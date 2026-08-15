@@ -69,6 +69,6 @@ jobs:
     # propagate to other packages via @stynx-nyx/* imports.
     uses: ./.github/workflows/reusable-typecheck.yml
     secrets:
-      devai-repo-token: ${{ secrets.DEVAI_REPO_TOKEN }}
+      DEVAI_REPO_TOKEN: ${{ secrets.DEVAI_REPO_TOKEN }}
     with:
       node-version: '24'

@@ -1,6 +1,6 @@
 # Signature Contract
 
-**Authority:** Architect (DEVAI Constitution Article 6).
+**Status:** Architecture contract.
 **Package:** `@stynx-nyx/signature`.
 
 `@stynx-nyx/signature` owns the STYNX signing facade and evidence shape. External

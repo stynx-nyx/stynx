@@ -1,34 +1,30 @@
 # STYNX
 
-> **C-4 done** — stynx is a [DEVAI](https://github.com/anthropics/devai)-managed adopter at maturity. See [docs/adopters/pilots/c-4/phase-i-retro.md](docs/adopters/pilots/c-4/phase-i-retro.md) for the full pilot retro (Phases A–I + R1, S1–S11, T1–T8).
+STYNX is a `pnpm` and Turborepo monorepo for reusable NestJS and Angular
+packages published under the `@stynx-nyx/*` scope.
 
-STYNX is a `pnpm` + `Turborepo` monorepo targeting GitHub Packages for the spec-defined `@stynx-nyx/*` and `@stynx-nyx/*` package families.
+Release preparation is implemented in the repository. STYNX is not considered
+shipped until an explicit versioning and publishing decision is made.
 
-`1.0.0` release preparation is implemented in-repo and the tracked release-readiness gates are closed. STYNX is not marked as shipped until an explicit versioning and publishing decision is made.
+## Workspace shape
 
-## Active workspace shape (post-C-4 adoption pilot)
+| Tree                                  | Purpose                                                                  |
+| ------------------------------------- | ------------------------------------------------------------------------ |
+| `packages/*`                          | Backend reusable libraries                                               |
+| `packages-web/*`                      | Angular reusable libraries                                               |
+| `reference/{api,web}/`                | Reference applications demonstrating framework usage                     |
+| `domain/<module>/`                    | Product modules with API, web, database, and docs surfaces               |
+| `tools/*`                             | Internal repository tooling                                              |
+| `infra/cdk/`                          | AWS CDK infrastructure                                                   |
+| `test/`                               | Central test harness                                                     |
+| `database/{ddl,seed,migrations}/`     | Canonical SQL bootstrap, seed, and migration support                     |
+| `docs/`                               | Architecture, contracts, operations, security, and product documentation |
+| `tools/npm-security-upgrade-auditor/` | Repository-specific dependency security audit procedure                  |
 
-| Tree                                                           | Purpose                                                                                                                                              |
-| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/*`                                                   | Backend reusable libraries (`@stynx-nyx/*`)                                                                                                          |
-| `packages-web/*`                                               | Frontend reusable libraries (`@stynx-nyx/*`)                                                                                                         |
-| `reference/{api,web}/`                                         | Reference applications demonstrating framework usage (analogous to DEVAI's `examples/`). Relocated here from `apps/reference-*` in Session S2 (C-4). |
-| `domain/<module>/`                                             | DEVAI-scaffolded modules. First example: `domain/demo-bookmark/` (C-4 Phase D).                                                                      |
-| `tools/*`                                                      | Internal repo tooling (`@stynx-internal/*`).                                                                                                         |
-| `infra/cdk/`                                                   | AWS CDK infrastructure. Out of DEVAI's purview (stynx-specific).                                                                                     |
-| `test/`                                                        | Centralized test harness (backend, frontend, perf, scripts).                                                                                         |
-| `database/{ddl,seed,migrations}/`                              | Canonical SQL bootstrap, seed, and migration support files.                                                                                          |
-| `.devai/`                                                      | DEVAI substrate (config + state + evidence chain + constitution pointer). Auto-generated; do not hand-edit.                                          |
-| `docs/{product,arch,contracts,adr,ops,gov,security,glossary}/` | DEVAI-shaped Article 6 F1 substrate roots; `docs/meta/gov/` delegates substantive governance to sibling DEVAI.                                       |
-| `docs/{stynx,dev,api}/`                                        | Stynx-specific documentation.                                                                                                                        |
-| `docs/meta/legacy/`                                            | Pre-pilot governance + completed GAP tasks, archived for archeology. NOT authoritative for current state.                                            |
-| `tools/npm-security-upgrade-auditor/`                          | Stynx-idiosyncratic dep-security skill. Was `.codex/skills/npm-security-upgrade-auditor/`; relocated in C-4 Session T7 when `.codex/` was retired.   |
+The engineering rules and ownership boundaries for these paths are documented
+in [docs/meta/development-contract.md](docs/meta/development-contract.md).
 
-Pre-extraction `backend/`, `frontend/`, `bootstrap/` trees were removed prior to the C-4 pilot close; root `test/` remains as the centralized test harness (active workspace member).
-
-The porting pack is docs-native at `docs/stynx/porting-pack/`. It is adoption guidance and historical generation context, not a root drop-in bundle.
-
-## Workspace Commands
+## Workspace commands
 
 ```bash
 corepack pnpm install
@@ -41,34 +37,14 @@ corepack pnpm test:e2e
 corepack pnpm changeset
 ```
 
-## Publishing
+## CI and release
 
-- Package manager: `pnpm@9`
-- Task runner: `turbo`
-- Release manager: `changesets`
-- Registries: GitHub Packages for the `@stynx-nyx/*` scope, owned by the `stynx-nyx` org. All packages — the 24 backend packages and the 13 web packages under `packages-web/*` (formerly `@stynx-web/*`) — publish under this single scope.
+- `pnpm ci:stynx` runs the primary framework checks.
+- `pnpm ci:stynx:full` adds end-to-end, mutation, performance, and RLS smoke tests.
+- `pnpm ci:reference-apps` verifies the reference consumers.
+- `pnpm ci:stynx:release` verifies the release policy, provenance, fixtures, and drafts.
+- `pnpm release:status`, `pnpm release:drafts`, `pnpm version-packages`, and
+  `pnpm release` provide the changesets release flow.
 
-## CI and Release
-
-- STYNX framework CI entrypoints:
-  - `pnpm ci:stynx`
-  - `pnpm lint:stynx`
-  - `pnpm typecheck:stynx`
-  - `pnpm test:stynx`
-  - `pnpm test:int:stynx`
-  - `pnpm build:stynx`
-- Reference app consumer entrypoint:
-  - `pnpm ci:reference-apps`
-- Local GitHub-compatible evidence entrypoints:
-  - `pnpm ci:local:stynx`
-  - `pnpm ci:local:stynx-release`
-  - `pnpm ci:local:reference-apps`
-- Release entrypoints:
-  - `pnpm ci:stynx:release`
-  - `pnpm release:policy`
-  - `pnpm release:status`
-  - `pnpm release:drafts`
-  - `pnpm version-packages`
-  - `pnpm release`
-- `.npmrc` maps the STYNX package scopes to GitHub Packages; release publishing still gets auth from the workflow `NODE_AUTH_TOKEN`.
-- In GitHub Actions release publishing, map `NODE_AUTH_TOKEN` to a token with package publish rights.
+`.npmrc` maps the STYNX package scope to GitHub Packages. CI and release jobs
+receive registry credentials through `NODE_AUTH_TOKEN`.

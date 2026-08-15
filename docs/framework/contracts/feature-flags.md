@@ -1,6 +1,6 @@
 # Feature Flags Contract
 
-**Authority:** Architect (DEVAI Constitution Article 6).
+**Status:** Architecture contract.
 **Package:** `@stynx-nyx/feature-flags`.
 
 Feature flags are tenant and environment scoped configuration decisions. They

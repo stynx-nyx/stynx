@@ -8,7 +8,7 @@ import { FlowRunLifecycle } from './internal/runtime/run-lifecycle';
 import { FlowRuntimeReadModel } from './internal/runtime/runtime-read-model';
 import { FlowTaskDispatch } from './internal/runtime/task-dispatch';
 
-type FilterInput = Record<string, unknown>;
+export type FilterInput = Record<string, unknown>;
 
 @Injectable()
 export class FlowRuntimeService {

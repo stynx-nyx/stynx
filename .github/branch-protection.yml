@@ -18,7 +18,6 @@ branches:
         strict: true
         contexts:
           - semantic-pr-title
-          - evidence-gate
           - lint
           - typecheck
           - lint:cycles

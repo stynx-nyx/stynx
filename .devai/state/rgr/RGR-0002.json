@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "RGR-0002",
+  "emitting_task_id": "TASK-0001",
+  "emitting_discipline": "inspector",
+  "created_at": "2026-08-13T23:11:41.485Z",
+  "problem": {
+    "summary": "Confirm the repaired installed-package reference-gap lifecycle before task execution.",
+    "ambiguity": "DEVAI 1.1.1 could not load the packaged RGR validator; 1.1.2 must prove create, pause, resolve, and resume through supported commands."
+  },
+  "questions": [
+    {
+      "qid": "Q1",
+      "question": "DEVAI 1.1.1 could not load the packaged RGR validator; 1.1.2 must prove create, pause, resolve, and resume through supported commands."
+    }
+  ],
+  "evidence_refs": [
+    "EV-R0001-RGR-TRIGGER"
+  ],
+  "status": "resolved",
+  "resolution": {
+    "resolved_at": "2026-08-13T23:13:26.097Z",
+    "resolver": "Architect:DEVAI-1.1.2-installed-package-proof"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "adapter_id": "post-merge-932bfb326001eb90",
+  "adapter_kind": "installed-checkout",
+  "repository": "/Users/aarusso/Development/stech/stynx",
+  "repository_id": "stynx",
+  "hook_path": "/Users/aarusso/Development/stech/stynx/.husky/post-merge",
+  "hook_digest_sha256": "0d250c20ee8f26d3b4b06c238dda0b6e50cd76063e83c34891d5489f3959ce9f",
+  "key_digest_sha256": "d9bcc2e5c52b93913afdb0584ecc138ddb93fb18e49939c57e344decd51f795b",
+  "policy_digest_sha256": "2c3d87986d5b54dc670359a977c3917c7648047e780571fc17a978f9474ef77b",
+  "constitution_digest_sha256": "3f0e2ddc45d0f4102eda34776700d8da7a1e56aab30c6ab43cc6ee6dbe972542",
+  "package_binding": {
+    "name": "@aarusso-nyx/devai",
+    "version": "1.1.7"
+  },
+  "installed_at_head": "8806774c04c1bd89eb6f217d8212e22ffcbfd610",
+  "installed_at": "2026-08-14T10:21:16.632Z",
+  "cadence": {
+    "installed_checkout": "persistent",
+    "remote_host": "unknown"
+  },
+  "signature_hmac_sha256": "e464959209970ad6ff9da292181aad94031b7d53fd6caa8c53b0d88cfadd84e4"
+}

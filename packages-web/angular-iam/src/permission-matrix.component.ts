@@ -11,7 +11,7 @@ import {
 import { IamApiService } from './iam-api.service';
 import type { StynxPermission } from './types';
 
-interface PermissionGroup {
+export interface PermissionGroup {
   resource: string;
   permissions: StynxPermission[];
 }

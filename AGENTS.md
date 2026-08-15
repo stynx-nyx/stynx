@@ -1,42 +1,22 @@
-# stynx Agent Guide
+# STYNX agent guide
 
-> **Phase G of the C-4 DEVAI adoption pilot (2026-05).** This file used to define Codex-style approval modes for autonomous agents in stynx. Per session directive 5.2 (DEVAI is authoritative; supersedes legacy stynx governance), agent discipline now defers to DEVAI.
+STYNX adopts the published `@aarusso-nyx/devai` 1.0.1 package at tier 1. Read
+the repository authority sources in this order before making changes:
 
-This file is the [`agents.md`](https://agents.md) protocol surface. AI sessions operating on stynx should:
+1. `README.md`
+2. `law/constitution.md` and its pinned source at `.devai/pin/constitution.md`
+3. `law/adr`
+4. `law/schemas`
+5. `docs/meta/development-contract.md`
 
-1. **Read [`CLAUDE.md`](CLAUDE.md) first** — stynx's session-governance pointer (created in Phase H so DEVAI's `doctor` agents-claude-sync check passes against stynx). It points at DEVAI's full canonical reading order: `../devai/CLAUDE.md`, `../devai/README.md`, `../devai/CONSTITUTION.md`, `../devai/BUILD-PLAN.md`, `../devai/DESIGN-DECISIONS.md`, and the `../devai/docs/framework/schemas/` registry that every JSON instance in stynx must validate against.
-2. **Read [`../devai/CONSTITUTION.md`](../devai/CONSTITUTION.md), Article 6** — the five human roles (Owner, Architect, Engineer, Inspector, Auditor) and their substrate authority by path. **Declare your role in every commit subject** (e.g., `Architect: ...`); the merged commitlint config (`tools/repo-config/commitlint.config.cjs`) accepts both role-prefix and Conventional Commits shapes.
-3. **Read [`GOVERNANCE.md`](GOVERNANCE.md)** — the canonical pointer to stynx's DEVAI-shaped governance surfaces.
-4. **Read [`docs/adopters/pilots/c-4/phase-a-retro.md`](docs/adopters/pilots/c-4/phase-a-retro.md) and the C-4 pilot brief at `../devai-adoption-by-stynx.md`** — context for how stynx adopts DEVAI and which gaps (D-A-1 … D-A-9) are filed for follow-up devai sessions.
+Constitution Article 6 assigns authority by path. Declare exactly one current
+human role for governed work: Owner, Architect, Inspector, Engineer, or
+Auditor. A role declaration does not broaden the user's requested scope.
 
-## Stynx-specific operational notes (NOT superseded by DEVAI)
+Work only within that scope, preserve unrelated user changes, and verify
+changes in proportion to their risk. Never weaken or delete tests to make a
+change pass. Use Conventional Commit subjects.
 
-These are stynx-side conventions DEVAI doesn't speak to; they remain authoritative.
-
-### Directory responsibilities
-
-- `reference/{api,web}/` — reference applications (NestJS API + Angular web) that demonstrate stynx framework usage. Relocated here in C-4 Session S2 (per directive 5.4), analogous to DEVAI's `examples/`.
-- `packages/*` (16 packages, `@stynx-nyx/*`) — backend reusable modules (NestJS-shaped: audit, auth, backend, contracts, core, data, health, i18n, idempotency, logging, privacy, ratelimit, sessions, storage, tenancy, testing).
-- `packages-web/*` (10 packages, `@stynx-nyx/*`) — Angular reusable modules (sdk, angular, angular-auth, angular-i18n, angular-profile, angular-sessions, angular-storage, angular-tenancy, angular-trash, angular-ui).
-- `tools/*` — internal repo tooling (`@stynx-internal/*`).
-- `domain/*` — DEVAI-scaffolded modules (Phase D output and onward).
-- `infra/cdk/` — AWS CDK infrastructure.
-- `database/ddl/` — canonical SQL definitions; update seeds + tests in `test/db/` when DDL changes.
-- `legacy: backend/, frontend/, bootstrap/, test/` — preserved during framework extraction; outside the active workspace graph.
-
-### Stynx-specific rules
-
-1. Mirror existing naming, module boundaries, and linting conventions.
-2. **Enforce RLS and tenancy** in every new table or API surface (see `INV-RBAC-001` and the tenancy module).
-3. Update seeds + DDL tests alongside schema changes.
-4. Prefer path aliases (`@core`, `@shared`, `@admin`, `@storage`, `@env`) over deep relative imports.
-5. Do not delete or bypass generated scripts — they are referenced by CI/CD.
-6. When in doubt about release state, study `docs/stynx/release-readiness.md`, `docs/stynx/implementation-status.md`, and recent `git log`.
-
-### Idiosyncratic stynx skills (kept after T7 `.codex/` retirement)
-
-- [`tools/npm-security-upgrade-auditor/`](tools/npm-security-upgrade-auditor/) — dependency security audit. No DEVAI equivalent. Relocated from `.codex/skills/` in C-4 Session T7.
-
-### Retired Codex-era surfaces
-
-In C-4 Sessions G, S5, T6, T7, the `.codex/` tree was retired entirely. The pre-pilot skills `governance-structure-auditor` + `repo-governance-aligner` were superseded by DEVAI's `SKILL-compute-scorecard` + `SKILL-assess-state` + `SKILL-compile-backlog` triplet and by `devai init --execute` respectively. The Codex-style approval modes (`danger-full-access`, `workspace-write`, `read-only`, `approval_policy: never`) no longer apply — DEVAI's five-role authority (Owner / Architect / Engineer / Inspector / Auditor) is the framing for agent authority in stynx.
+For STYNX-specific boundaries, tenancy and RLS requirements, database change
+obligations, generated tooling, and release-state references, the development
+contract remains authoritative.

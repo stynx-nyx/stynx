@@ -6,13 +6,15 @@ slug: /
 
 # STYNX
 
-A multi-tenant document and work-item management platform — a [DEVAI](https://aarusso-nyx.github.io/devai/)-managed library at maturity. Constitution pin: **0.2.0** (R15, 2026-06-05).
+A multi-tenant document and work-item management platform distributed as a
+library-oriented monorepo.
 
 **Audiences:**
 
 - **Integrators** building on `@stynx-nyx/*` and `@stynx-nyx/*`: head to [Framework](/docs/framework/) for the contract surface, then [Adopters → STYNX adoption pack](/docs/adopters/stynx/) for the AI-agent porting reference.
-- **Architects** operating in this repo: read `AGENTS.md` + `CLAUDE.md`, then [`framework/arch/`](/docs/framework/arch/) and the locked decisions in [`meta/adr/`](/docs/meta/adr/).
-- **DEVAI adopters** evaluating STYNX as a reference: see the C-4 pilot retros under [`adopters/pilots/c-4/`](/docs/adopters/pilots/c-4/) and the migration ADR at [`meta/adr/ADR-DEVAI-0.2.0-MIGRATION`](/docs/meta/adr/ADR-DEVAI-0.2.0-MIGRATION).
+- **Contributors** operating in this repo: read `AGENTS.md` and
+  [`docs/meta/development-contract.md`](/docs/meta/development-contract), then the
+  architecture and accepted decisions.
 
 ## Purpose
 
@@ -52,7 +54,8 @@ Source roots: `packages/*/src`, `packages-web/*/src`, `reference/{api,web}/src`,
 
 ## Notable gaps
 
-- **Reference app RBAC is authored outside the current sensor body** — the durable source is [Reference App RBAC Inventory](../framework/arch/reference-app-rbac.md), because current DEVAI `sense-rbac` still emits empty route bindings.
+- **Reference app RBAC has an authored inventory** — the durable source is
+  [Reference App RBAC Inventory](../framework/arch/reference-app-rbac.md).
 - **Operations and infra gaps remain** — see [Known Gaps](/docs/meta/known-gaps) for the current open runbook, EdgeStack, Docker healthcheck, and local Cognito gaps.
 - **Frontend/package test depth remains uneven** — the reference app is now visible to route/use-case coverage, but package-level frontend coverage still needs a broader audit.
 

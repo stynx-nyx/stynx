@@ -22,7 +22,7 @@ COPY reference/api ./reference/api
 
 FROM workspace AS build
 
-# @devai-nyx/* resolves from GitHub Packages (see .npmrc); NODE_AUTH_TOKEN is
+# Private workspace dependencies resolve from GitHub Packages; NODE_AUTH_TOKEN is
 # passed as a BuildKit secret (not an ARG/ENV) so it never lands in an image
 # layer or build-history entry.
 RUN --mount=type=secret,id=node_auth_token \

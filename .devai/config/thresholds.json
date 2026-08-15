@@ -18,6 +18,7 @@
     "max_errors": 0
   },
   "freshness": {
-    "default_max_age_hours": 168
+    "default_max_age_hours": 168,
+    "scorecard_failure_max_age_hours": 168
   }
 }

@@ -58,7 +58,7 @@ const drizzleIsPatch = {
 };
 
 // Coverage thresholds resolve from tools/repo-config/test-thresholds.mjs
-// (which reads scripts/test-matrix.config.json). Keep these named exports
+// (which reads tools/repo-config/test-policy.json). Keep these named exports
 // as transitional aliases for configs that import them directly; prefer
 // `getCoverageThreshold(packageName)` going forward.
 const baseCoverageThreshold = { statements: 85, branches: 80, functions: 85, lines: 85 };
@@ -91,6 +91,7 @@ export function createVitestConfig({
   hookTimeout = 60_000,
   retry = 0,
   singleThread = false,
+  sequentialFiles = false,
   passWithNoTests = false,
   patchDrizzle = false,
 }) {
@@ -142,6 +143,19 @@ export function createVitestConfig({
             minWorkers: 1,
             pool: 'threads',
             poolOptions: { threads: { singleThread: true } },
+          }
+        : {}),
+      // Container-backed suites can require both serialization and a fresh
+      // process per file. Unlike threads.singleThread/singleFork, this keeps
+      // one worker slot while allowing Vitest to recycle the isolated fork
+      // between files, preventing a stopped Testcontainers lifecycle from
+      // poisoning the next file.
+      ...(sequentialFiles
+        ? {
+            fileParallelism: false,
+            maxWorkers: 1,
+            minWorkers: 1,
+            pool: 'forks',
           }
         : {}),
       reporters: ['default'],

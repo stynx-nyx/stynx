@@ -15,7 +15,7 @@ pnpm-debug.log*
 .pnpm-store/
 .turbo/
 
-# Round-artifact log exception (DEVAI round-break canon)
+# Preserve tracked round prompt logs when present.
 !align/stynx/round-*/prompts/*.log
 
 # Env files
@@ -64,6 +64,12 @@ frontend/src/environments/*.ts
 # Root level
 # ------------------------
 node_modules/
+.devai/state/check-cache/
+.devai/worktrees/
+scratch/*
+!scratch/worktrees/
+scratch/worktrees/*
+!scratch/worktrees/README.md
 dist/
 build/
 *.tgz
@@ -98,9 +104,6 @@ docs/site/build/
 docs/site/.docusaurus/
 docs/site/.generated/
 
-# Docusaurus publish state (local-only baseline tracking)
-.devai/state/docs-publish-baseline.txt
-
 # Test artefacts
 .test-results/
 test-results/
@@ -115,8 +118,4 @@ docs/work/
 /.release/
 /.changeset/status.json
 
-# DEVAI per-task git worktrees (created by `devai loop-run`).
-# Real git worktrees rooted at .devai/worktrees/WT-TASK-*/; the
-# branches themselves are tracked, just not the checked-out trees.
-/.devai/worktrees/
 stryker-setup-*.js

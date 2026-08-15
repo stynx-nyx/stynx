@@ -1,14 +1,27 @@
 import { spawn, spawnSync } from 'node:child_process';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const workspaceRoot = resolve(scriptDir, '..', '..', '..');
-const composeFile = resolve(workspaceRoot, 'reference/api/docker-compose.yml');
 const referenceApiMain = resolve(workspaceRoot, 'reference/api/dist/reference/api/src/main.js');
 const scriptPath = fileURLToPath(import.meta.url);
 const postgresPort = process.env.STYNX_POSTGRES_PORT ?? '55432';
+const composeTempDir = process.env.STYNX_REFERENCE_API_STACK_COMPOSE_DIR
+  ?? await mkdtemp(resolve(tmpdir(), 'stynx-reference-api-stack-'));
+const composeFile = resolve(composeTempDir, 'compose.yml');
+
+if (!process.env.STYNX_REFERENCE_API_STACK_COMPOSE_DIR) {
+  await writeFile(
+    composeFile,
+    `services:\n  postgres:\n    image: postgres:16-alpine\n    environment:\n      GLOG_minloglevel: '2'\n      POSTGRES_DB: postgres\n      POSTGRES_USER: postgres\n      POSTGRES_PASSWORD: postgres\n    healthcheck:\n      test: ['CMD-SHELL', 'pg_isready -U postgres -d postgres']\n      interval: 5s\n      timeout: 5s\n      retries: 20\n    ports:\n      - '${postgresPort}:5432'\n  redis:\n    image: redis:7-alpine\n    environment:\n      GLOG_minloglevel: '2'\n    healthcheck:\n      test: ['CMD', 'redis-cli', 'ping']\n      interval: 5s\n      timeout: 5s\n      retries: 20\n    ports:\n      - '6379:6379'\n`,
+    'utf8',
+  );
+}
 
 let shuttingDown = false;
 let composeDownComplete = false;
@@ -52,6 +65,7 @@ async function runWatchdog() {
     cwd: workspaceRoot,
     stdio: 'ignore',
   });
+  rmSync(composeTempDir, { recursive: true, force: true });
   process.exit(0);
 }
 
@@ -85,6 +99,7 @@ function startCleanupWatchdog() {
       STYNX_REFERENCE_API_STACK_WATCHDOG: '1',
       STYNX_REFERENCE_API_STACK_PARENT_PID: String(process.pid),
       STYNX_REFERENCE_API_STACK_API_PID: String(apiProcess.pid),
+      STYNX_REFERENCE_API_STACK_COMPOSE_DIR: composeTempDir,
     },
   });
   watchdog.unref();
@@ -132,6 +147,7 @@ async function composeDown() {
     stdio: 'ignore',
   });
   await waitForExit(composeDownProcess);
+  await rm(composeTempDir, { recursive: true, force: true });
   composeDownComplete = true;
 }
 
@@ -148,6 +164,7 @@ function composeDownSync() {
     cwd: workspaceRoot,
     stdio: 'inherit',
   });
+  rmSync(composeTempDir, { recursive: true, force: true });
   composeDownComplete = true;
 }
 

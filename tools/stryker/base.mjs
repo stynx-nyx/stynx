@@ -3,12 +3,12 @@
 // Threshold resolution
 // --------------------
 // `threshold` argument is optional. When absent, resolves from
-// scripts/test-matrix.config.json via getMutationThresholds(packageName).
+// tools/repo-config/test-policy.json via getMutationThresholds(packageName).
 // Policies may be a number (legacy single-floor) or an object {break, high}
 // (tiered floor + target). The resolved triplet drives Stryker's
 // thresholds.{high, low, break}.
 //
-// CI / PR split modes (see docs/meta/adr/2026-05-21-mutation-thresholds-tiered.md)
+// CI / PR split modes (see law/adr/2026-05-21-mutation-thresholds-tiered.md)
 // --------------------------------------------------------------------------
 // `STRYKER_INCREMENTAL` (env) is the split-mode knob:
 //   - unset / 'true'  → incremental: true.  Use for local dev iteration and

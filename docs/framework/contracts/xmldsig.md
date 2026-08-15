@@ -2,7 +2,7 @@
 
 **Package:** `@stynx-nyx/signature`
 **Subpath:** `@stynx-nyx/signature/xmldsig`
-**Authority:** Architect, per DEVAI Constitution Article 6
+**Status:** Architecture contract.
 
 `@stynx-nyx/signature/xmldsig` signs and verifies enveloped XMLDSig payloads for
 adopter-owned fiscal XML flows such as DCTFWeb and EFD-Reinf.

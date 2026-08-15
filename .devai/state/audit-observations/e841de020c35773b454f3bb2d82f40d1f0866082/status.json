@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "1.0.0",
+  "merge_sha": "e841de020c35773b454f3bb2d82f40d1f0866082",
+  "status": "completed",
+  "generated_at": "2026-08-13T21:02:15-03:00",
+  "readiness_promoting": false,
+  "previous_observation_digest_sha256": null,
+  "artifact_digest_sha256": "bc3609b9a4f9e562643b1b79970f4024f5ec40fda9f45fdd1345cebdb7bd5b8a",
+  "observation_digest_sha256": "88859f54e71ca8b4ac86bbb161b8954a183f6fe77ab44d67366772978789842b"
+}

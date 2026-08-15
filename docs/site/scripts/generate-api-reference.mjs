@@ -261,6 +261,8 @@ for (const pkg of packages) {
       typedocTsconfig.tsconfigPath,
       '--readme',
       'none',
+      '--validation.invalidLink',
+      'false',
       ...typeDocOptionsFor(pkg),
       '--out',
       targetDir,

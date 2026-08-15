@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
@@ -6,6 +7,7 @@ import { dirname, join, relative, resolve } from 'node:path';
 const repoRoot = process.cwd();
 const args = new Set(process.argv.slice(2));
 const outputPath = resolve(repoRoot, 'docs/meta/security/sbom.cdx.json');
+await verifyLocalImageSizeFork();
 const packageManifests = discoverPackageManifests(repoRoot);
 const rootManifest = readJson(resolve(repoRoot, 'package.json'));
 const lockPath = resolve(repoRoot, 'pnpm-lock.yaml');
@@ -18,7 +20,8 @@ for (const manifestPath of packageManifests) {
     componentIndex.set(manifest.name, workspaceComponent(manifest, manifestPath));
   }
   for (const dependencyName of dependencyNames(manifest)) {
-    if (dependencyName.startsWith('@stynx-nyx/') || dependencyName.startsWith('@stynx-nyx/')) continue;
+    if (dependencyName.startsWith('@stynx-nyx/') || dependencyName.startsWith('@stynx-nyx/'))
+      continue;
     const dependencyManifest = resolveInstalledManifest(dependencyName);
     if (!dependencyManifest || componentIndex.has(dependencyName)) continue;
     componentIndex.set(dependencyName, externalComponent(dependencyName, dependencyManifest));
@@ -162,4 +165,40 @@ function uuidFromHash(hash) {
     `8${hash.slice(17, 20)}`,
     hash.slice(20, 32),
   ].join('-');
+}
+
+async function verifyLocalImageSizeFork() {
+  const forkRoot = resolve(repoRoot, 'tools/image-size-safe');
+  const forkManifest = readJson(resolve(forkRoot, 'package.json'));
+  assert.equal(forkManifest.name, 'image-size');
+  assert.equal(forkManifest.version, '2.0.3-stynx.1');
+
+  const [{ HEIF }, { ICNS }, { JXL }] = await Promise.all([
+    import(resolve(forkRoot, 'dist/types/heif.mjs')),
+    import(resolve(forkRoot, 'dist/types/icns.mjs')),
+    import(resolve(forkRoot, 'dist/types/jxl.mjs')),
+  ]);
+  const writeAscii = (target, offset, value) => target.set(Buffer.from(value, 'ascii'), offset);
+  const writeUint32 = (target, offset, value) =>
+    new DataView(target.buffer).setUint32(offset, value, false);
+
+  const icns = new Uint8Array(16);
+  writeAscii(icns, 0, 'icns');
+  writeUint32(icns, 4, icns.length);
+  writeAscii(icns, 8, 'ic07');
+  assert.throws(() => ICNS.calculate(icns), /entry length/);
+
+  const jxl = new Uint8Array(8);
+  writeAscii(jxl, 4, 'jxlp');
+  assert.throws(() => JXL.calculate(jxl), /No codestream/);
+
+  const heif = new Uint8Array(40);
+  writeUint32(heif, 0, 40);
+  writeAscii(heif, 4, 'meta');
+  writeUint32(heif, 12, 28);
+  writeAscii(heif, 16, 'iprp');
+  writeUint32(heif, 20, 20);
+  writeAscii(heif, 24, 'ipco');
+  writeAscii(heif, 32, 'ispe');
+  assert.throws(() => HEIF.calculate(heif), /no sizes/);
 }

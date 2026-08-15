@@ -5,7 +5,7 @@ import { finalize } from 'rxjs';
 import { AuditApiService } from './audit-api.service';
 import type { AuditIntegrityReport } from './types';
 
-type IntegrityBadgeTone = 'valid' | 'broken' | 'unchecked';
+export type IntegrityBadgeTone = 'valid' | 'broken' | 'unchecked';
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Audit integrity check failed';

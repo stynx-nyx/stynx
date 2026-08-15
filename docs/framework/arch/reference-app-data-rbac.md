@@ -1,6 +1,5 @@
 # Reference App Data and RBAC Baseline
 
-**Authority:** Architect (Constitution Article 6).
 **Status:** Wave 04 baseline, 2026-05-17.
 
 The reference application is a canonical worked example for STYNX adopters, not
@@ -58,17 +57,15 @@ route bindings, and entity bindings that are currently implemented by:
 - `@Permission(...)` decorators in `reference/api/src/sample/*controller.ts`;
 - `stynxPermissionGuard(...)` calls in `reference/web/src/app/app.routes.ts`.
 
-Current DEVAI `sense-rbac` still synthesizes endpoint bindings from guard names
-and always emits an empty `routeBindings` array. Until that upstream sensor can
-read STYNX permission decorators and Angular permission guards, this authored
-inventory is the STYNX source of truth for reference-app RBAC bindings.
+This authored inventory is the STYNX source of truth for reference-app RBAC
+bindings and is checked alongside permission decorators and Angular guards.
 
 ## Use-Case Links
 
 Reference endpoints and Angular routes are claimed by:
 
-- `docs/framework/product/use-cases/stynx-reference-app.json`;
-- `docs/framework/product/use-cases/stynx-reference-app-extended.json`.
+- `product/use-cases/stynx-reference-app.json`;
+- `product/use-cases/stynx-reference-app-extended.json`.
 
 The primary user-facing routes are bound to stable route ids from the current
 `sense-routes` Angular inventory. Auth-only routes (`login`, `tenant`,

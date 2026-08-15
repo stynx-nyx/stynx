@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "1.0.0",
+  "version": "1.0.0",
+  "id": "INV-PERF-001",
+  "domain": "PERF",
+  "severity": "gate",
+  "type": "performance",
+  "title": "Every release-gated HTTP endpoint must declare a latency SLO and stay within it under nominal load",
+  "statement": "Every non-public endpoint implemented by STYNX and not present on the bootstrap allow-list MUST declare latency SLOs covering at least p50 and p95. The SLO may be declared in a use-case acceptance criterion, a sibling `*.slo.json` file under `docs/performance/`, or the repository test policy. Defaults are p50 < 200ms and p95 < 800ms for reads, and p50 < 500ms and p95 < 2000ms for writes. Exceeding the declared p95 under nominal-load probes or `pnpm test:perf` is release-gating.",
+  "rationale": "Stynx surfaces dedicated `/_probes/*` endpoints (data-tx, idempotency, ratelimit, readonly-write) as a built-in performance smoke surface, but pre-Phase-30 no invariant referenced them — `sense-spec-performance-targets` (Phase 27.D) flagged stynx with FAIL on F1×T7 because the spec layer carried zero perf-typed invariants. This invariant promotes a baseline gate: endpoints inherit pack defaults if they don't author per-endpoint SLOs, so initial adopters get measured-and-graded performance for free. Adopters with stricter requirements override per-endpoint via `*.slo.json`. The 'gate' severity is conservative for an initial promotion — the actual enforcement triggers only when `sense-perf-test` produces SR readings (post-Phase-30.H ships the sensor); pre-30.H the invariant is structurally present but un-measurable, mirroring INV-RBAC-001's pre-Phase-22 stance.",
+  "status": "active",
+  "lifecycle": "supported",
+  "verification": {
+    "required_suites": ["int"],
+    "oracle": "tests",
+    "strategy": {
+      "primary": "regression",
+      "supplemental": ["structural"],
+      "deterministic_check_available": true,
+      "rationale": "Executable repository tests and structural trace verification deterministically enforce this established STYNX behavior."
+    }
+  },
+  "authority_docs": {
+    "docs": [
+      {
+        "doc": "docs/meta/security/threat-model.md",
+        "anchor": "t-8--denial-of-service-via-expensive-endpoints"
+      }
+    ]
+  },
+  "scope": {
+    "components": ["api", "performance", "ratelimit"],
+    "code_areas": [
+      "reference/api/src/sample",
+      "packages/ratelimit/src",
+      "packages/backend/src",
+      "docs/performance"
+    ]
+  },
+  "change_policy": {
+    "breaking_change_requires": ["doc_update", "test_update", "human_approval"],
+    "test_weakening_allowed": false,
+    "human_approval_required": true
+  },
+  "tags": ["stynx", "performance", "slo", "promoted-during-u5", "closes-F1xT7"],
+  "measurable_via": ["check", "sense run", "audit observe"]
+}

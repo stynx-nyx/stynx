@@ -73,11 +73,11 @@ try {
   for (const fixture of fixtureSpecs) {
     const fixtureDir = join(fixturesRoot, fixture.name);
     mkdirSync(fixtureDir, { recursive: true });
+    fixture.packageJson.pnpm = { overrides: tarballOverrides(tarballs) };
     writeFileSync(
       join(fixtureDir, 'package.json'),
       `${JSON.stringify(fixture.packageJson, null, 2)}\n`,
     );
-    writeFileSync(join(fixtureDir, 'pnpm-workspace.yaml'), fixtureWorkspace(tarballs));
     writeFileSync(join(fixtureDir, 'tsconfig.json'), `${JSON.stringify(tsconfig(), null, 2)}\n`);
     writeFileSync(join(fixtureDir, 'index.ts'), fixture.indexTs);
     run('pnpm', ['install', '--ignore-scripts', '--config.auto-install-peers=false'], fixtureDir);
@@ -118,11 +118,10 @@ function fileDependency(tarballs, packageName) {
   return `file:${tarballs.get(packageName)}`;
 }
 
-function fixtureWorkspace(tarballs) {
-  const overrides = [...tarballs.entries()]
-    .map(([name, tarball]) => `  '${name}': 'file:${tarball}'`)
-    .join('\n');
-  return `packages: []\noverrides:\n${overrides}\n`;
+function tarballOverrides(tarballs) {
+  return Object.fromEntries(
+    [...tarballs.entries()].map(([packageName, tarball]) => [packageName, `file:${tarball}`]),
+  );
 }
 
 function sgpFixture(tarballs) {

@@ -102,7 +102,7 @@ stynx assumes the following actors with distinct authority:
 - No `pull_request_target` + `actions/checkout` combination (known CVE pattern).
 
 **Invariants:** Future `INV-SUPPLY-001` candidate.
-**Tests:** `sense-harness-security` runs on every PR via `devai-gates.yml`.
+**Tests:** repository security and release gates run from the STYNX workflows.
 **Residual risk:** Currently REVIEW per scorecard — actions/checkout, setup-node, pnpm/action-setup, upload-artifact are pinned to version tags, not SHAs. Hardening tracked separately.
 
 ### T-7 — Dependency vulnerability exposure
@@ -158,7 +158,7 @@ Two scanner-visible weak algorithms are intentional and bounded:
 This is the **initial threat model** authored to close F1×T6 (`spec_security_coverage`) in the post-trilogy scorecard refresh (stynx U5+, 2026-05-17). Future iterations should:
 
 1. Add a threat per new attack surface introduced by domain modules (e.g. file upload → injection).
-2. Promote any threat's "future INV-\*" candidate to an actual invariant under `docs/framework/arch/invariants/` once the verification mechanism exists.
+2. Promote any threat's "future INV-\*" candidate to an actual invariant under `law/invariants/` once the verification mechanism exists.
 3. Refresh annually or after any incident response postmortem.
 
 Authority for updates: Architect (this file lives under `docs/meta/security/`, an Architect-substrate path per Constitution Article 6).

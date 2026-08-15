@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "1.0.0",
+  "version": "1.0.0",
+  "id": "INV-ERROR-001",
+  "domain": "ERROR",
+  "severity": "gate",
+  "type": "error_semantics",
+  "title": "Every state-mutating HTTP endpoint must declare its error contract enumerating all failure modes a client can observe",
+  "statement": "Every implemented endpoint with HTTP method in `{POST, PATCH, PUT, DELETE}` MUST declare an error contract enumerating every distinct response the caller can observe, keyed by `{statusCode, errorCode, retriability}`. The contract may be a sibling `*.errors.json` file under `docs/framework/contracts/`, a discoverable `@ApiResponse` decorator chain, or use-case `alternateFlows[]` documentation. The minimum set includes validation, authorization, not-found, applicable conflict, and applicable rate-limit failures. An undocumented mutating endpoint is a release-gating finding.",
+  "rationale": "Stynx's `StynxErrorFilter` (in `@stynx-nyx/core`) translates exceptions into stable error response shapes, and adopters get consistent error envelopes for free — but pre-Phase-30 no invariant required adopters to *document* which exceptions each endpoint can throw. `sense-spec-robustness-targets` (Phase 27.E) flagged stynx FAIL on F1×T8 because zero invariants were typed `error_semantics`. This invariant promotes a baseline gate scoped to mutations (write endpoints have the highest impact when a client can't predict failure modes — silent retries can corrupt state). Adopters who use NestJS's `@ApiResponse` decorators get most of this for free; the gate forces the documentation discipline. Conservative scope (mutations only) keeps the initial promotion tractable — read-endpoint error contracts can land as INV-ERROR-002 if/when needed.",
+  "status": "active",
+  "lifecycle": "supported",
+  "verification": {
+    "required_suites": ["int"],
+    "oracle": "tests",
+    "strategy": {
+      "primary": "regression",
+      "supplemental": ["structural"],
+      "deterministic_check_available": true,
+      "rationale": "Executable repository tests and structural trace verification deterministically enforce this established STYNX behavior."
+    }
+  },
+  "authority_docs": {
+    "docs": [
+      {
+        "doc": "docs/meta/security/threat-model.md",
+        "anchor": "trust-boundaries"
+      }
+    ]
+  },
+  "scope": {
+    "components": ["api", "error-semantics", "contracts"],
+    "code_areas": [
+      "reference/api/src",
+      "packages/core/src",
+      "packages/backend/src",
+      "domain/demo-bookmark/api/src",
+      "docs/contracts"
+    ]
+  },
+  "change_policy": {
+    "breaking_change_requires": ["doc_update", "test_update", "human_approval"],
+    "test_weakening_allowed": false,
+    "human_approval_required": true
+  },
+  "tags": ["stynx", "error-semantics", "promoted-during-u5", "closes-F1xT8"],
+  "measurable_via": ["check", "triage classify", "audit observe"]
+}

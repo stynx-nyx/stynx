@@ -1,15 +1,57 @@
 {
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "2.0.0",
   "id": "TASK-0002",
-  "title": "Remove unsupported /meta field from docs/architecture/trace.json",
-  "discipline": "architect",
-  "target_modules": ["MOD-core"],
-  "target_substrates": ["F2"],
+  "round_id": "R-0001",
+  "discipline": "engineer",
+  "title": "Verify canonical STYNX trace after runner correction",
+  "description": "Repeat the read-only trace verification through the corrected DEVAI 1.1.3 managed round runner.",
+  "lifecycle": "supported",
+  "acceptance_commands": [
+    [
+      "pnpm",
+      "devai:trace:verify"
+    ]
+  ],
+  "target_modules": [
+    "MOD-TRACE-VERIFIER"
+  ],
+  "target_substrates": [
+    "F2"
+  ],
+  "created_at": "2026-08-13T23:59:00.000Z",
   "db_isolation": "database",
-  "description": "spec-validate-all flags 3 errors on docs/architecture/trace.json /meta: additionalProperties. The trace.schema.json forbids the 'meta' key but the file uses it for prose context. Closure: delete the entire meta block (lines containing schemaVersion+version+meta), keeping authored_in/purpose/tests_pending prose in a sibling notes.md if useful. Verify: devai spec-validate-all --human shows trace 0 error(s).",
-  "status": "escalated",
-  "iteration_count": 0,
-  "created_at": "2026-05-16T17:46:29.623Z",
+  "iteration_count": 1,
+  "max_iterations": 1,
+  "priority": 100,
+  "tags": [
+    "devai-adoption",
+    "trace",
+    "validation",
+    "runner-correction"
+  ],
+  "executor": {
+    "kind": "routine",
+    "argv": [
+      "pnpm",
+      "devai:trace:verify"
+    ],
+    "cwd": ".",
+    "inputs": [
+      "law/trace.json",
+      "scripts/verify-devai-trace.mjs"
+    ],
+    "outputs": [],
+    "effects": [
+      "read"
+    ],
+    "timeout_ms": 120000,
+    "authority_checks": [
+      "trace-paths-and-invariant-coverage"
+    ]
+  },
+  "status": "completed",
   "worktree_id": "WT-TASK-0002",
-  "branch": "escalated/TASK-0002"
+  "branch": "TASK-0002",
+  "spawned_at": "2026-08-14T00:02:56.853Z",
+  "completed_at": "2026-08-14T00:03:05.801Z"
 }

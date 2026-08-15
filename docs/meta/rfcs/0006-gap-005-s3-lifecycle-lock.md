@@ -1,15 +1,15 @@
 # RFC 0006: GAP-005-s3-lifecycle-lock
 
 - Status: Proposed
-- Source: [GAP-005-s3-lifecycle-lock.md](../legacy/completed-gap-tasks/GAP-005-s3-lifecycle-lock.md)
+- Historical source: retired; use Git history for the original gap record.
 
 ## Problem
 
-This RFC tracks the implementation decision for the linked GAP specification.
+This RFC records the storage lifecycle-lock decision.
 
 ## Constraints
 
-Follow the linked GAP acceptance criteria and the STYNX governance process.
+Preserve the behavior and acceptance criteria documented below.
 
 ## Options
 

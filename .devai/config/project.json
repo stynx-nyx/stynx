@@ -1,29 +1,27 @@
 {
   "schemaVersion": "1.0.0",
-  "project_type": "runtime-host",
-  "devai_version": "0.0.0",
-  "devai_consumption": "npm-package",
-  "constitution": {
-    "version": "0.2.0"
+  "project_type": "platform-package",
+  "authority_enforcement": {
+    "mode": "host-integrated",
+    "adapter_config": ".devai/config/post-merge-host-adapter.json"
   },
+  "profile": "tier1",
+  "constitution": {
+    "version": "1.0.0",
+    "sha256": "3f0e2ddc45d0f4102eda34776700d8da7a1e56aab30c6ab43cc6ee6dbe972542"
+  },
+  "devai_version": "1.1.7",
   "repo": {
     "kind": "library"
   },
   "docs": {
     "builder": "docusaurus",
-    "build_command": "pnpm --filter @stynx-nyx/docs-site run build",
-    "output_dir": "docs/site/build",
-    "publish_target": "gh-pages",
-    "gh_pages_branch": "gh-pages"
-  },
-  "ci_economy": {
-    "local_evidence": {
-      "manifest_path": ".ci/evidence/local-ci.json",
-      "max_age_hours": 24,
-      "required_jobs": ["all-linux", "stynx-release"],
-      "allowed_platforms": ["linux/arm64", "linux/amd64"],
-      "forbidden_paths": ["infra/github/"],
-      "require_docker": true
+    "build_command": "pnpm --dir docs/site build",
+    "ia": {
+      "path_overrides": {
+        "dev/operations": "meta/ops",
+        "dev/security": "meta/security"
+      }
     }
   }
 }

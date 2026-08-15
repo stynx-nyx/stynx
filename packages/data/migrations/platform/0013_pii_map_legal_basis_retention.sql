@@ -4,11 +4,8 @@
 -- columns to core.pii_map so PII registrations can declare both at the
 -- platform layer rather than only via the existing free-form `notes` field.
 --
--- DEVAI-side note: sense-data-handling currently reads legal_basis/retention
--- from data-model.json column metadata, but sense-data-model does not extract
--- them from migrations or pii_map inserts. Filed as D-A-13 for the next
--- devai alignment session. Until D-A-13 closes, this enrichment is a stynx
--- runtime/compliance improvement, not yet a sensor-visible signal.
+-- These columns are canonical runtime and compliance data and are verified
+-- directly from the migration and privacy-map tests.
 
 ALTER TABLE core.pii_map
   ADD COLUMN IF NOT EXISTS legal_basis text,
