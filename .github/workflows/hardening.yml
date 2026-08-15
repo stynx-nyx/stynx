@@ -244,6 +244,9 @@ jobs:
           - package: privacy
             filter: '@stynx-nyx/privacy'
             report_path: packages/privacy/reports/mutation
+          - package: preferences
+            filter: '@stynx-nyx/preferences'
+            report_path: packages/preferences/reports/mutation
           - package: core
             filter: '@stynx-nyx/core'
             report_path: packages/core/reports/mutation
