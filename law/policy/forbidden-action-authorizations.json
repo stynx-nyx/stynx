@@ -295,6 +295,12 @@
       "commit": "9e6969d2c642ec5de8fd3397af507f78b53c5db4",
       "authorized_by": "Owner",
       "reason": "Records the exact OWNER authorization receipts for the mutation-roster workflow and trace remediation without changing invariant authority or test scope."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "b5f4adc374d2d9aef26f8b61fe2f868a171a95af",
+      "authorized_by": "Owner",
+      "reason": "Records the exact OWNER authorization receipt for the mutation-roster authority binding without changing invariant authority or test scope."
     }
   ]
 }
