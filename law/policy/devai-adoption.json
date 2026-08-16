@@ -1,7 +1,18 @@
 {
   "schemaVersion": "1.0.0",
   "policy_id": "stynx.devai-adoption",
-  "policy_version": "1.0.0",
+  "policy_version": "1.1.0",
+  "ci_economy": {
+    "attested_rc": {
+      "profile": "rc",
+      "transport": "protected-tag-v1",
+      "tag_prefix": "devai-local-evidence/",
+      "binding": "exact-tree",
+      "required_check": "verified-local-rc",
+      "failure_mode": "fail-closed",
+      "local_only_nodes": ["test:mutation"]
+    }
+  },
   "project": {
     "project_type": "platform-package",
     "repo": {
