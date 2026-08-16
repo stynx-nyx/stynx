@@ -2,16 +2,10 @@ name: STYNX CI
 
 on:
   pull_request:
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
   push:
     branches:
       - main
       - 'release/**'
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
   # No schedule trigger here (ADR-CI-ECONOMY Decision 5.4 / rule
   # no-triple-trigger): the scheduled full re-run lives in audit.yml.
 
@@ -111,7 +105,7 @@ jobs:
         run: pnpm ci:stynx
       - name: Run comprehensive test gate
         if: ${{ startsWith(github.ref, 'refs/heads/release/') }}
-        run: pnpm ci:stynx:full
+        run: pnpm ci:stynx:remote-full
 
   lint:
     name: lint

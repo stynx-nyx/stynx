@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "descriptorVersion": "stynx-devai-1.1.0-v3",
+  "descriptorVersion": "stynx-devai-1.2.0-v1",
   "repositoryId": "stynx-nyx/stynx",
   "fallbackNodeId": "test:local-full",
   "dynamicFallbackSelectors": [
@@ -269,6 +269,12 @@
         { "kind": "glob", "pattern": "packages/*/test/**" },
         { "kind": "glob", "pattern": "packages-web/*/src/**" },
         { "kind": "glob", "pattern": "packages-web/*/test/**" },
+        { "kind": "glob", "pattern": "packages/*/package.json" },
+        { "kind": "glob", "pattern": "packages/*/stryker.*" },
+        { "kind": "glob", "pattern": "packages-web/*/package.json" },
+        { "kind": "glob", "pattern": "packages-web/*/stryker.*" },
+        { "kind": "exact", "pattern": "scripts/run-mutation-evidence.mjs" },
+        { "kind": "exact", "pattern": "scripts/lib/mutation-roster.mjs" },
         { "kind": "prefix", "pattern": "tools/stryker/" },
         { "kind": "exact", "pattern": "tools/repo-config/test-policy.json" }
       ],
@@ -284,7 +290,13 @@
         "STYNX_TEST_PG_SOCKET_DIR",
         "STYNX_TEST_PG_TEMPLATE"
       ],
-      "outputContract": { "kind": "command", "requiredResult": "pass" }
+      "outputContract": {
+        "kind": "mutation-report-set-discovery-v1",
+        "workspaceRoots": ["packages", "packages-web"],
+        "testPolicyPath": "tools/repo-config/test-policy.json",
+        "artifactRoot": ".devai/state/check-cache/v1/artifacts/mutation",
+        "summaryPath": ".devai/state/check-cache/v1/artifacts/mutation/summary.json"
+      }
     },
     {
       "nodeId": "test:performance",
