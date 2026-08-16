@@ -1,10 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
+import { RequestContext } from '@stynx-nyx/core';
 import { PreferencesController } from '../src/preferences.controller';
 import { PreferencesError } from '../src/errors';
 import { InMemoryPreferencesStore } from '../src/in-memory-preferences.store';
 import { PLATFORM_PREFERENCE_DEFAULTS } from '../src/schema';
 import { PreferencesService } from '../src/preferences.service';
-import type { PreferenceValues, PreferencesAuditEvent } from '../src/types';
+import type { PreferenceValues, PreferencesAuditEvent, PreferencesStore } from '../src/types';
 
 const tenantA = '00000000-0000-4000-8000-000000000001';
 const tenantB = '00000000-0000-4000-8000-000000000002';
@@ -31,6 +32,17 @@ const changed: PreferenceValues = {
 
 function errorCode(error: unknown): string | undefined {
   return error instanceof PreferencesError ? error.code : undefined;
+}
+
+async function preferencesError(operation: Promise<unknown>): Promise<PreferencesError> {
+  let captured: unknown;
+  try {
+    await operation;
+  } catch (error) {
+    captured = error;
+  }
+  expect(captured).toBeInstanceOf(PreferencesError);
+  return captured as PreferencesError;
 }
 
 describe('@stynx-nyx/preferences W04 closed contract', () => {
@@ -155,5 +167,286 @@ describe('@stynx-nyx/preferences W04 closed contract', () => {
       (e: unknown) => errorCode(e) === 'PREFERENCES_TOO_LARGE',
     );
     expect(await store.read({ tenantId: tenantA, subjectId: 'external|subject-1' })).toEqual(null);
+  });
+
+  it('rejects invalid configured defaults and requests the non-strict request context', async () => {
+    const get = vi.fn(() => ({ tenantId: tenantA, actorId: 'subject' }));
+    const store = new InMemoryPreferencesStore();
+    expect(
+      () =>
+        new PreferencesService(
+          { get } as never,
+          store,
+          { defaults: { ...PLATFORM_PREFERENCE_DEFAULTS, theme: {} } as PreferenceValues },
+          { write: vi.fn() },
+          { resolve: async () => null },
+        ),
+    ).toThrowError('Invalid STYNX preference defaults');
+
+    const service = new PreferencesService(
+      { get } as never,
+      store,
+      {},
+      { write: vi.fn() },
+      { resolve: async () => null },
+    );
+    await service.getPreferences();
+    expect(get).toHaveBeenCalledWith(RequestContext, { strict: false });
+  });
+
+  it('reports exact invalid fields for full values, patches, and profiles', async () => {
+    const { service } = harness();
+    const invalidValue = await preferencesError(
+      service.putPreferences({ ...changed, theme: { ...changed.theme, density: 'wide' } }, 0),
+    );
+    expect(invalidValue.getStatus()).toBe(400);
+    expect(invalidValue.getResponse()).toEqual({
+      code: 'PREFERENCES_INVALID',
+      message: 'PREFERENCES_INVALID',
+      fields: ['theme.density'],
+    });
+
+    const invalidPatch = await preferencesError(service.patchPreferences({}, 0));
+    expect(invalidPatch.getResponse()).toEqual({
+      code: 'PREFERENCES_INVALID',
+      message: 'PREFERENCES_INVALID',
+      fields: [''],
+    });
+
+    const invalidProfile = await preferencesError(service.patchProfile({ displayName: '' }, 0));
+    expect(invalidProfile.getResponse()).toEqual({
+      code: 'PREFERENCES_INVALID',
+      message: 'PREFERENCES_INVALID',
+      fields: ['displayName'],
+    });
+
+    const forbiddenProfile = await preferencesError(service.patchProfile({ salary: 1 }, 0));
+    expect(forbiddenProfile.getResponse()).toEqual({
+      code: 'PREFERENCES_FORBIDDEN_FIELD',
+      message: 'PREFERENCES_FORBIDDEN_FIELD',
+      fields: ['salary'],
+    });
+  });
+
+  it('enforces exact trusted-scope failures and the 255-byte subject boundary', async () => {
+    const cases = [
+      {
+        context: () => {
+          throw new Error('context unavailable');
+        },
+        code: 'PREFERENCES_UNAUTHENTICATED',
+        status: 401,
+        fields: undefined,
+      },
+      {
+        context: () => ({ tenantId: tenantA, actorId: undefined }),
+        code: 'PREFERENCES_UNAUTHENTICATED',
+        status: 401,
+        fields: undefined,
+      },
+      {
+        context: () => ({ tenantId: undefined, actorId: 'subject' }),
+        code: 'PREFERENCES_FORBIDDEN',
+        status: 403,
+        fields: undefined,
+      },
+      {
+        context: () => ({ tenantId: tenantA, actorId: 'x'.repeat(256) }),
+        code: 'PREFERENCES_INVALID',
+        status: 400,
+        fields: ['subject'],
+      },
+    ];
+
+    for (const entry of cases) {
+      const service = new PreferencesService(
+        { get: entry.context } as never,
+        new InMemoryPreferencesStore(),
+        {},
+        { write: vi.fn() },
+        { resolve: async () => null },
+      );
+      const error = await preferencesError(service.getPreferences());
+      expect(error.getStatus()).toBe(entry.status);
+      expect(error.getResponse()).toEqual({
+        code: entry.code,
+        message: entry.code,
+        ...(entry.fields ? { fields: entry.fields } : {}),
+      });
+    }
+
+    const boundary = harness(tenantA, 'x'.repeat(255));
+    await expect(boundary.service.getPreferences()).resolves.toMatchObject({ revision: 0 });
+  });
+
+  it('records precise full-update and patch paths while dropping default-valued overrides', async () => {
+    const { service, store, events } = harness();
+    await service.putPreferences(changed, 0);
+    expect(events[0]).toMatchObject({
+      operation: 'preferences.updated',
+      changedPaths: [
+        'locale.locale',
+        'locale.timezone',
+        'theme.colorScheme',
+        'theme.contrast',
+        'theme.density',
+      ],
+    });
+    expect(
+      (await store.read({ tenantId: tenantA, subjectId: 'external|subject-1' }))?.overrides,
+    ).toEqual({ locale: changed.locale, theme: changed.theme });
+
+    await service.patchPreferences(
+      { locale: null, theme: { colorScheme: null }, notificationDelivery: { email: false } },
+      1,
+    );
+    expect(events[1]).toMatchObject({
+      operation: 'preferences.updated',
+      changedPaths: ['locale', 'theme.colorScheme', 'notificationDelivery.email'],
+    });
+    expect(
+      (await store.read({ tenantId: tenantA, subjectId: 'external|subject-1' }))?.overrides,
+    ).toEqual({
+      theme: { contrast: 'more', density: 'compact' },
+      notificationDelivery: { email: false },
+    });
+  });
+
+  it('resets one category with its exact audit operation and rejects unknown categories', async () => {
+    const { service, events } = harness();
+    await service.putPreferences(changed, 0);
+    const reset = await service.reset('theme', 1);
+    expect(reset.values.theme).toEqual(PLATFORM_PREFERENCE_DEFAULTS.theme);
+    expect(reset.values.locale).toEqual(changed.locale);
+    expect(events[1]).toMatchObject({
+      operation: 'preferences.category_reset',
+      changedPaths: ['theme'],
+      previousRevision: 1,
+      newRevision: 2,
+    });
+
+    const error = await preferencesError(service.reset('unknown' as never, 2));
+    expect(error.getStatus()).toBe(404);
+    expect(error.getResponse()).toEqual({
+      code: 'PREFERENCES_CATEGORY_NOT_FOUND',
+      message: 'PREFERENCES_CATEGORY_NOT_FOUND',
+      fields: ['category'],
+    });
+  });
+
+  it('patches profile fields independently, resolves avatars, and audits exact paths', async () => {
+    const { service, events } = harness();
+    const named = await service.patchProfile({ displayName: ' Ada ' }, 0);
+    expect(named).toMatchObject({
+      subjectId: 'external|subject-1',
+      displayName: 'Ada',
+      avatarDocumentId: null,
+      avatarUrl: null,
+      revision: 1,
+    });
+    const avatar = await service.patchProfile({ avatarDocumentId: 'avatar-1' }, 1);
+    expect(avatar).toMatchObject({
+      displayName: 'Ada',
+      avatarDocumentId: 'avatar-1',
+      avatarUrl: 'signed:avatar-1',
+      revision: 2,
+    });
+    expect(events).toMatchObject([
+      { operation: 'profile.updated', changedPaths: ['displayName'] },
+      { operation: 'profile.updated', changedPaths: ['avatarDocumentId'] },
+    ]);
+  });
+
+  it('enforces empty profile patches and avatar document byte boundaries', async () => {
+    const { service } = harness();
+    for (const raw of [{}, { avatarDocumentId: 'x'.repeat(256) }]) {
+      const error = await preferencesError(service.patchProfile(raw, 0));
+      expect(error.getResponse()).toMatchObject({ code: 'PREFERENCES_INVALID' });
+    }
+    await expect(
+      service.patchProfile({ avatarDocumentId: 'x'.repeat(255) }, 0),
+    ).resolves.toMatchObject({ avatarDocumentId: 'x'.repeat(255), revision: 1 });
+  });
+
+  it('distinguishes stale reads from compare-and-set conflicts', async () => {
+    const stale = harness();
+    const staleError = await preferencesError(stale.service.putPreferences(changed, 1));
+    expect(staleError.getResponse()).toEqual({
+      code: 'PREFERENCES_REVISION_CONFLICT',
+      message: 'PREFERENCES_REVISION_CONFLICT',
+    });
+
+    const conflictStore: PreferencesStore = {
+      read: async () => null,
+      compareAndSet: async () => 'conflict',
+    };
+    const service = new PreferencesService(
+      { get: () => ({ tenantId: tenantA, actorId: 'subject' }) } as never,
+      conflictStore,
+      {},
+      { write: vi.fn() },
+      { resolve: async () => null },
+    );
+    const mutationConflict = await preferencesError(service.putPreferences(changed, 0));
+    expect(mutationConflict.getStatus()).toBe(412);
+    const profileConflict = await preferencesError(service.patchProfile({ displayName: 'Ada' }, 0));
+    expect(profileConflict.getStatus()).toBe(412);
+  });
+
+  it('checks configured locale and timezone allowlists independently', async () => {
+    const build = (supportedLocales?: string[], supportedTimezones?: string[]) => {
+      const { context, store } = harness();
+      return new PreferencesService(
+        { get: () => context } as never,
+        store,
+        { supportedLocales, supportedTimezones },
+        { write: vi.fn() },
+        { resolve: async () => null },
+      );
+    };
+    const localeError = await preferencesError(
+      build(['en-US'], ['America/Sao_Paulo']).putPreferences(changed, 0),
+    );
+    expect(localeError.getResponse()).toEqual({
+      code: 'PREFERENCES_INVALID',
+      message: 'PREFERENCES_INVALID',
+      fields: ['locale.locale'],
+    });
+    const timezoneError = await preferencesError(
+      build(['pt-BR'], ['UTC']).putPreferences(changed, 0),
+    );
+    expect(timezoneError.getResponse()).toEqual({
+      code: 'PREFERENCES_INVALID',
+      message: 'PREFERENCES_INVALID',
+      fields: ['locale.timezone'],
+    });
+    await expect(
+      build(['pt-BR'], ['America/Sao_Paulo']).putPreferences(changed, 0),
+    ).resolves.toMatchObject({ revision: 1 });
+  });
+
+  it('rejects cyclic JSON and enforces the serialized-size boundary exactly', async () => {
+    const { service } = harness();
+    const cyclic: Record<string, unknown> = {};
+    cyclic.self = cyclic;
+    const cyclicError = await preferencesError(service.patchProfile(cyclic, 0));
+    expect(cyclicError.getResponse()).toEqual({
+      code: 'PREFERENCES_INVALID',
+      message: 'PREFERENCES_INVALID',
+    });
+
+    const exact = { displayName: 'x'.repeat(16 * 1024 - 18) };
+    expect(Buffer.byteLength(JSON.stringify(exact))).toBe(16 * 1024);
+    const schemaError = await preferencesError(service.patchProfile(exact, 0));
+    expect(schemaError.getStatus()).toBe(400);
+
+    const oversized = { displayName: 'x'.repeat(16 * 1024 - 17) };
+    expect(Buffer.byteLength(JSON.stringify(oversized))).toBe(16 * 1024 + 1);
+    const sizeError = await preferencesError(service.patchProfile(oversized, 0));
+    expect(sizeError.getStatus()).toBe(413);
+    expect(sizeError.getResponse()).toEqual({
+      code: 'PREFERENCES_TOO_LARGE',
+      message: 'PREFERENCES_TOO_LARGE',
+    });
   });
 });
