@@ -103,7 +103,13 @@
         { "kind": "prefix", "pattern": "test/" }
       ],
       "toolchainKeys": ["node", "pnpm", "vitest"],
-      "allowlistedEnv": ["CI"],
+      "allowlistedEnv": [
+        "CI",
+        "DOCKER_CONFIG",
+        "DOCKER_HOST",
+        "TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE",
+        "TESTCONTAINERS_REUSE_ENABLE"
+      ],
       "outputContract": { "kind": "command", "requiredResult": "pass" }
     },
     {
@@ -121,6 +127,8 @@
       "toolchainKeys": ["node", "pnpm", "vitest", "postgres"],
       "allowlistedEnv": [
         "CI",
+        "DOCKER_CONFIG",
+        "DOCKER_HOST",
         "DATABASE_URL",
         "STYNX_DATABASE_URL",
         "STYNX_TEST_PG_HOST",
@@ -128,7 +136,9 @@
         "STYNX_TEST_PG_USER",
         "STYNX_TEST_PG_PASSWORD",
         "STYNX_TEST_PG_SOCKET_DIR",
-        "STYNX_TEST_PG_TEMPLATE"
+        "STYNX_TEST_PG_TEMPLATE",
+        "TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE",
+        "TESTCONTAINERS_REUSE_ENABLE"
       ],
       "outputContract": { "kind": "command", "requiredResult": "pass" }
     },
@@ -174,6 +184,8 @@
       "toolchainKeys": ["node", "pnpm", "vitest", "typescript", "postgres"],
       "allowlistedEnv": [
         "CI",
+        "DOCKER_CONFIG",
+        "DOCKER_HOST",
         "DATABASE_URL",
         "STYNX_DATABASE_URL",
         "STYNX_TEST_PG_HOST",
@@ -181,7 +193,9 @@
         "STYNX_TEST_PG_USER",
         "STYNX_TEST_PG_PASSWORD",
         "STYNX_TEST_PG_SOCKET_DIR",
-        "STYNX_TEST_PG_TEMPLATE"
+        "STYNX_TEST_PG_TEMPLATE",
+        "TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE",
+        "TESTCONTAINERS_REUSE_ENABLE"
       ],
       "outputContract": { "kind": "command", "requiredResult": "pass" }
     },
@@ -229,6 +243,8 @@
       "toolchainKeys": ["node", "pnpm", "postgres"],
       "allowlistedEnv": [
         "CI",
+        "DOCKER_CONFIG",
+        "DOCKER_HOST",
         "DATABASE_URL",
         "STYNX_DATABASE_URL",
         "STYNX_TEST_PG_HOST",
@@ -236,7 +252,9 @@
         "STYNX_TEST_PG_USER",
         "STYNX_TEST_PG_PASSWORD",
         "STYNX_TEST_PG_SOCKET_DIR",
-        "STYNX_TEST_PG_TEMPLATE"
+        "STYNX_TEST_PG_TEMPLATE",
+        "TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE",
+        "TESTCONTAINERS_REUSE_ENABLE"
       ],
       "outputContract": { "kind": "command", "requiredResult": "pass" }
     },
@@ -281,6 +299,8 @@
       "toolchainKeys": ["node", "pnpm", "vitest", "typescript", "postgres"],
       "allowlistedEnv": [
         "CI",
+        "DOCKER_CONFIG",
+        "DOCKER_HOST",
         "DATABASE_URL",
         "STYNX_DATABASE_URL",
         "STYNX_TEST_PG_HOST",
@@ -288,7 +308,9 @@
         "STYNX_TEST_PG_USER",
         "STYNX_TEST_PG_PASSWORD",
         "STYNX_TEST_PG_SOCKET_DIR",
-        "STYNX_TEST_PG_TEMPLATE"
+        "STYNX_TEST_PG_TEMPLATE",
+        "TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE",
+        "TESTCONTAINERS_REUSE_ENABLE"
       ],
       "outputContract": {
         "kind": "mutation-report-set-discovery-v1",
@@ -314,6 +336,8 @@
       "toolchainKeys": ["node", "pnpm", "postgres"],
       "allowlistedEnv": [
         "CI",
+        "DOCKER_CONFIG",
+        "DOCKER_HOST",
         "DATABASE_URL",
         "STYNX_DATABASE_URL",
         "STYNX_TEST_PG_HOST",
@@ -321,7 +345,9 @@
         "STYNX_TEST_PG_USER",
         "STYNX_TEST_PG_PASSWORD",
         "STYNX_TEST_PG_SOCKET_DIR",
-        "STYNX_TEST_PG_TEMPLATE"
+        "STYNX_TEST_PG_TEMPLATE",
+        "TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE",
+        "TESTCONTAINERS_REUSE_ENABLE"
       ],
       "outputContract": { "kind": "command", "requiredResult": "pass" }
     },
