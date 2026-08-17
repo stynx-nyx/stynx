@@ -247,6 +247,7 @@
         "DOCKER_HOST",
         "DATABASE_URL",
         "STYNX_DATABASE_URL",
+        "STYNX_POSTGRES_PORT",
         "STYNX_TEST_PG_HOST",
         "STYNX_TEST_PG_PORT",
         "STYNX_TEST_PG_USER",

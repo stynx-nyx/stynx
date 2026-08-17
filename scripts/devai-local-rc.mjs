@@ -9,6 +9,7 @@ import { canonicalize } from './lib/mutation-roster.mjs';
 
 const repoRoot = realpathSync(resolve(dirname(fileURLToPath(import.meta.url)), '..'));
 const command = process.argv[2];
+const localRcTaskTimeoutMs = 6 * 60 * 60 * 1000;
 
 function fail(message) {
   process.stderr.write(`${JSON.stringify({ ok: false, code: 'STYNX_LOCAL_RC', message })}\n`);
@@ -199,6 +200,8 @@ function prepare(values) {
     'check',
     '--rc',
     '--run',
+    '--task-timeout-ms',
+    String(localRcTaskTimeoutMs),
     '--repo-root',
     repoRoot,
     '--as-role',
