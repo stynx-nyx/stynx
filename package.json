@@ -18,7 +18,7 @@
     "test:int": "turbo run test:int --concurrency=1 --filter='./packages/*'",
     "check:engines": "node scripts/check-engines.mjs",
     "lint:deadcode": "knip --config tools/repo-config/knip.config.ts --no-config-hints",
-    "lint:deps": "depcheck --ignore-patterns='**/*.test.ts,**/*.spec.ts' --skip-missing --ignores='@aarusso-nyx/devai,@commitlint/cli,@commitlint/config-conventional,@stryker-mutator/typescript-checker,@stryker-mutator/vitest-runner,@vitest/coverage-v8,eslint-plugin-boundaries,eslint-plugin-jsdoc,github-actionlint,prettier'",
+    "lint:deps": "depcheck --ignore-patterns='**/*.test.ts,**/*.spec.ts' --skip-missing --ignores='@aarusso-nyx/devai,@commitlint/cli,@commitlint/config-conventional,@stryker-mutator/core,@stryker-mutator/typescript-checker,@stryker-mutator/vitest-runner,@vitest/coverage-v8,eslint-plugin-boundaries,eslint-plugin-jsdoc,github-actionlint,prettier'",
     "lint:migrations": "pnpm --filter migration-linter run lint:repo",
     "lint:cycles": "madge --circular packages/ packages-web/ tools/ --extensions ts,mjs --exclude '(^|/)(dist|build|coverage|node_modules)/'",
     "lint:workflows": "node scripts/lint-workflows.mjs",
