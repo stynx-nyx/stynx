@@ -39,9 +39,10 @@ function run(executable, args, options = {}) {
     env: options.env ?? process.env,
   });
   if (result.error !== undefined || result.status !== 0 || result.signal !== null) {
-    fail(
-      `${executable} failed: ${result.error?.message ?? result.signal ?? String(result.stderr).trim()}`,
-    );
+    const stderr = String(result.stderr ?? '').trim();
+    const stdout = String(result.stdout ?? '').trim();
+    const detail = (result.error?.message ?? result.signal ?? stderr) || stdout.slice(-8192);
+    fail(`${executable} failed: ${detail}`);
   }
   return String(result.stdout ?? '').trim();
 }
