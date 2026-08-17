@@ -179,7 +179,7 @@ function prepare(values) {
     'environment control',
   );
 
-  run('pnpm', ['exec', 'playwright', '--version']);
+  run('pnpm', ['--filter', '@stynx-nyx/reference-web', 'exec', 'playwright', '--version']);
   run('pg_isready', [
     '-h',
     requiredEnvironment('STYNX_TEST_PG_HOST'),
