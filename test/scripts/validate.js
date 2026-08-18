@@ -253,6 +253,43 @@ async function runMutationEvidenceTests() {
   );
   assertEqual(normalized.projectRoot, '.', 'exact repository-root normalization');
 
+  const diagnosticReport = structuredClone(baseReport);
+  diagnosticReport.files['packages/example/src/index.ts'].mutants.push({
+    id: '1',
+    status: 'Killed',
+    statusReason: 'expected /Users/T/log_2025_01.sql.gz to be rejected by the domain',
+  });
+  const normalizedDiagnosticReport = mutationEvidence.normalizeMutationReport(
+    diagnosticReport,
+    thresholds,
+    'packages/example',
+    repoRoot,
+  );
+  assertEqual(
+    normalizedDiagnosticReport.files['packages/example/src/index.ts'].mutants[0].statusReason,
+    undefined,
+    'non-evidentiary mutation diagnostic exclusion',
+  );
+
+  const credentialDiagnosticReport = structuredClone(baseReport);
+  credentialDiagnosticReport.files['packages/example/src/index.ts'].mutants.push({
+    id: '2',
+    status: 'Killed',
+    statusReason: `unexpected child output ${syntheticToken}`,
+  });
+  assertThrowsCode(
+    () =>
+      mutationEvidence.normalizeMutationReport(
+        credentialDiagnosticReport,
+        thresholds,
+        'packages/example',
+        repoRoot,
+      ),
+    'MUTATION_REPORT_CREDENTIAL_MATERIAL',
+    syntheticToken,
+    'mutation diagnostic credential rejection',
+  );
+
   const credentialReport = structuredClone(baseReport);
   credentialReport.framework.detail = { token: syntheticToken };
   assertThrowsCode(
