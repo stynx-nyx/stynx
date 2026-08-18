@@ -163,13 +163,22 @@ function assertNoCredentialMaterial(value, state, depth = 0) {
   }
 }
 
-function omitNonEvidentiaryMutationDiagnostics(report) {
+function omitNonEvidentiaryMutationContent(report) {
   for (const fileResult of Object.values(report.files ?? {})) {
+    if (fileResult && typeof fileResult === 'object' && !Array.isArray(fileResult)) {
+      delete fileResult.source;
+    }
     if (!Array.isArray(fileResult?.mutants)) continue;
     for (const mutant of fileResult.mutants) {
       if (mutant && typeof mutant === 'object' && !Array.isArray(mutant)) {
+        delete mutant.replacement;
         delete mutant.statusReason;
       }
+    }
+  }
+  for (const testFile of Object.values(report.testFiles ?? {})) {
+    if (testFile && typeof testFile === 'object' && !Array.isArray(testFile)) {
+      delete testFile.source;
     }
   }
 }
@@ -204,7 +213,7 @@ export function buildMutationEnvironment(parentEnvironment) {
 export function normalizeMutationReport(raw, thresholds, workspace, repoRoot) {
   assertNoCredentialMaterial(raw, { nodes: 0 });
   const portableRaw = structuredClone(raw);
-  omitNonEvidentiaryMutationDiagnostics(portableRaw);
+  omitNonEvidentiaryMutationContent(portableRaw);
   const report = sanitizeJson(portableRaw, repoRoot, { nodes: 0 });
   if (
     report.thresholds?.break !== thresholds.break ||
