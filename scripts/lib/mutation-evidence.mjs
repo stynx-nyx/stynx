@@ -128,6 +128,52 @@ function sanitizeJson(value, repoRoot, state, depth = 0) {
   );
 }
 
+function assertNoCredentialMaterial(value, state, depth = 0) {
+  state.nodes += 1;
+  if (state.nodes > MAX_JSON_NODES || depth > MAX_JSON_DEPTH) {
+    throw new MutationEvidenceError(
+      'MUTATION_REPORT_BOUNDS',
+      'mutation report exceeds the portable evidence structure bound',
+    );
+  }
+  if (typeof value === 'string') {
+    if (Buffer.byteLength(value, 'utf8') > MAX_TEXT_BYTES) {
+      throw new MutationEvidenceError(
+        'MUTATION_REPORT_BOUNDS',
+        'mutation report text exceeds the portable evidence bound',
+      );
+    }
+    if (unsafeCredential(value)) {
+      throw new MutationEvidenceError(
+        'MUTATION_REPORT_CREDENTIAL_MATERIAL',
+        'mutation report contains credential-shaped material',
+      );
+    }
+    return;
+  }
+  if (value === null || typeof value === 'boolean' || typeof value === 'number') return;
+  if (Array.isArray(value)) {
+    for (const entry of value) assertNoCredentialMaterial(entry, state, depth + 1);
+    return;
+  }
+  if (typeof value !== 'object') return;
+  for (const [key, entry] of Object.entries(value)) {
+    assertNoCredentialMaterial(key, state, depth + 1);
+    assertNoCredentialMaterial(entry, state, depth + 1);
+  }
+}
+
+function omitNonEvidentiaryMutationDiagnostics(report) {
+  for (const fileResult of Object.values(report.files ?? {})) {
+    if (!Array.isArray(fileResult?.mutants)) continue;
+    for (const mutant of fileResult.mutants) {
+      if (mutant && typeof mutant === 'object' && !Array.isArray(mutant)) {
+        delete mutant.statusReason;
+      }
+    }
+  }
+}
+
 function portablePath(path, label) {
   if (
     typeof path !== 'string' ||
@@ -156,7 +202,10 @@ export function buildMutationEnvironment(parentEnvironment) {
 }
 
 export function normalizeMutationReport(raw, thresholds, workspace, repoRoot) {
-  const report = sanitizeJson(structuredClone(raw), repoRoot, { nodes: 0 });
+  assertNoCredentialMaterial(raw, { nodes: 0 });
+  const portableRaw = structuredClone(raw);
+  omitNonEvidentiaryMutationDiagnostics(portableRaw);
+  const report = sanitizeJson(portableRaw, repoRoot, { nodes: 0 });
   if (
     report.thresholds?.break !== thresholds.break ||
     report.thresholds?.high !== thresholds.high ||
