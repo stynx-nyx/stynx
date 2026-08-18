@@ -10,6 +10,12 @@ import {
   discoverMutationRoster,
   sha256Hex,
 } from './lib/mutation-roster.mjs';
+import {
+  buildMutationEnvironment,
+  normalizeMutationReport,
+  sanitizeMutationDiagnostic,
+  withMutationReportCleanup,
+} from './lib/mutation-evidence.mjs';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const artifactRoot = '.devai/state/check-cache/v1/artifacts/mutation';
@@ -58,95 +64,84 @@ function score(statusTotals) {
   return scored === 0 ? 100 : (detected / scored) * 100;
 }
 
-function normalizeReport(raw, thresholds, workspace) {
-  const report = structuredClone(raw);
-  if (
-    report.thresholds?.break !== thresholds.break ||
-    report.thresholds?.high !== thresholds.high ||
-    report.thresholds?.low !== thresholds.low
-  ) {
-    throw new Error(`${workspace}: Stryker report thresholds differ from the discovered contract`);
-  }
-  report.projectRoot = '.';
-  report.config = {};
-  report.thresholds = { ...thresholds };
-  for (const path of Object.keys(report.files ?? {})) portablePath(path, `${workspace} source`);
-  for (const path of Object.keys(report.testFiles ?? {})) portablePath(path, `${workspace} test`);
-  if (!report.framework || typeof report.framework !== 'object') {
-    throw new Error(`${workspace}: Stryker framework metadata is missing`);
-  }
-  if (typeof report.framework.version !== 'string' || report.framework.version === '') {
-    throw new Error(`${workspace}: Stryker version is missing`);
-  }
-  return report;
-}
-
 function runPackage(entry) {
-  const started = process.hrtime.bigint();
-  if (!normalizeExisting) {
-    const result = spawnSync('pnpm', ['--filter', entry.packageName, 'run', 'stryker'], {
-      cwd: repoRoot,
-      env: { ...process.env, STRYKER_INCREMENTAL: 'false' },
-      stdio: 'inherit',
-      shell: false,
-    });
-    if (result.error !== undefined || result.status !== 0 || result.signal !== null) {
+  return withMutationReportCleanup(repoRoot, entry.workspace, (rawReportDirectory) => {
+    const started = process.hrtime.bigint();
+    if (!normalizeExisting) {
+      const result = spawnSync('pnpm', ['--filter', entry.packageName, 'run', 'stryker'], {
+        cwd: repoRoot,
+        env: buildMutationEnvironment(process.env),
+        encoding: 'utf8',
+        maxBuffer: 64 * 1024 * 1024,
+        stdio: ['ignore', 'pipe', 'pipe'],
+        shell: false,
+      });
+      if (result.error !== undefined || result.status !== 0 || result.signal !== null) {
+        const detail =
+          result.error?.message ??
+          result.signal ??
+          String(result.stderr || result.stdout || result.status);
+        throw new Error(
+          `${entry.packageName}: Stryker failed (${sanitizeMutationDiagnostic(detail)})`,
+        );
+      }
+    }
+    const durationMs = normalizeExisting
+      ? 0
+      : Number((process.hrtime.bigint() - started) / BigInt(1_000_000));
+    const rawReportPath = resolve(rawReportDirectory, 'mutation.json');
+    if (!existsSync(rawReportPath))
+      throw new Error(`${entry.packageName}: mutation report is missing`);
+    const report = normalizeMutationReport(
+      JSON.parse(readFileSync(rawReportPath, 'utf8')),
+      entry.thresholds,
+      entry.workspace,
+      repoRoot,
+    );
+    const statusTotals = totals(report);
+    const mutationScore = score(statusTotals);
+    const passed = mutationScore >= entry.thresholds.break;
+    if (!passed) {
       throw new Error(
-        `${entry.packageName}: Stryker failed (${result.error?.message ?? result.signal ?? String(result.status)})`,
+        `${entry.packageName}: mutation score ${mutationScore} is below ${entry.thresholds.break}`,
       );
     }
-  }
-  const durationMs = normalizeExisting
-    ? 0
-    : Number((process.hrtime.bigint() - started) / BigInt(1_000_000));
-  const rawReportPath = resolve(repoRoot, entry.workspace, 'reports/mutation/mutation.json');
-  if (!existsSync(rawReportPath))
-    throw new Error(`${entry.packageName}: mutation report is missing`);
-  const report = normalizeReport(
-    JSON.parse(readFileSync(rawReportPath, 'utf8')),
-    entry.thresholds,
-    entry.workspace,
-  );
-  const statusTotals = totals(report);
-  const mutationScore = score(statusTotals);
-  const passed = mutationScore >= entry.thresholds.break;
-  if (!passed) {
-    throw new Error(
-      `${entry.packageName}: mutation score ${mutationScore} is below ${entry.thresholds.break}`,
+    const stem = entry.workspace.replaceAll('/', '-');
+    const reportPath = `${artifactRoot}/${stem}.stryker.json`;
+    const resultPath = `${artifactRoot}/${stem}.result.json`;
+    const reportBytes = canonicalize(report);
+    const result = {
+      schemaVersion: '1.0.0',
+      kind: 'mutation-package-result-v1',
+      packageName: entry.packageName,
+      workspace: entry.workspace,
+      passed,
+      durationMs,
+      toolVersions: { stryker: report.framework.version },
+      thresholds: entry.thresholds,
+      score: mutationScore,
+      statusTotals,
+      reportDigest: sha256Hex(reportBytes),
+    };
+    const resultBytes = canonicalize(result);
+    canonicalWrite(resolve(stagingDirectory, `${stem}.stryker.json`), report);
+    canonicalWrite(resolve(stagingDirectory, `${stem}.result.json`), result);
+    process.stdout.write(
+      `${JSON.stringify({ packageName: entry.packageName, passed, score: mutationScore, durationMs })}\n`,
     );
-  }
-  const stem = entry.workspace.replaceAll('/', '-');
-  const reportPath = `${artifactRoot}/${stem}.stryker.json`;
-  const resultPath = `${artifactRoot}/${stem}.result.json`;
-  const reportBytes = canonicalize(report);
-  const result = {
-    schemaVersion: '1.0.0',
-    kind: 'mutation-package-result-v1',
-    packageName: entry.packageName,
-    workspace: entry.workspace,
-    passed,
-    durationMs,
-    toolVersions: { stryker: report.framework.version },
-    thresholds: entry.thresholds,
-    score: mutationScore,
-    statusTotals,
-    reportDigest: sha256Hex(reportBytes),
-  };
-  const resultBytes = canonicalize(result);
-  canonicalWrite(resolve(stagingDirectory, `${stem}.stryker.json`), report);
-  canonicalWrite(resolve(stagingDirectory, `${stem}.result.json`), result);
-  return {
-    packageName: entry.packageName,
-    workspace: entry.workspace,
-    resultPath,
-    reportPath,
-    resultDigest: sha256Hex(resultBytes),
-    reportDigest: sha256Hex(reportBytes),
-    score: mutationScore,
-    passed,
-    durationMs,
-    statusTotals,
-  };
+    return {
+      packageName: entry.packageName,
+      workspace: entry.workspace,
+      resultPath,
+      reportPath,
+      resultDigest: sha256Hex(resultBytes),
+      reportDigest: sha256Hex(reportBytes),
+      score: mutationScore,
+      passed,
+      durationMs,
+      statusTotals,
+    };
+  });
 }
 
 const finalRelative = relative(repoRoot, finalDirectory).split('\\').join('/');
@@ -170,7 +165,25 @@ try {
     complete: true,
     passed: true,
     packages: packages.map(
-      ({ durationMs: _durationMs, statusTotals: _statusTotals, ...entry }) => entry,
+      ({
+        packageName,
+        workspace,
+        resultPath,
+        reportPath,
+        resultDigest,
+        reportDigest,
+        score: packageScore,
+        passed,
+      }) => ({
+        packageName,
+        workspace,
+        resultPath,
+        reportPath,
+        resultDigest,
+        reportDigest,
+        score: packageScore,
+        passed,
+      }),
     ),
     aggregate: {
       packageCount: packages.length,

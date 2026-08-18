@@ -3,6 +3,7 @@
 import { readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { verifyNoRemoteMutationWorkflows } from './lib/mutation-roster.mjs';
 
 const repoRoot = resolve(import.meta.dirname, '..');
 const workflowsDir = resolve(repoRoot, '.github/workflows');
@@ -10,6 +11,8 @@ const generatedWorkflow = 'devai-main-observation.yml';
 const workflows = readdirSync(workflowsDir)
   .filter((name) => /\.ya?ml$/u.test(name))
   .sort();
+
+verifyNoRemoteMutationWorkflows(repoRoot);
 
 function runActionlint(args) {
   const result = spawnSync('github-actionlint', args, {

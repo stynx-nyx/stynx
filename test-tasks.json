@@ -293,6 +293,7 @@
         { "kind": "glob", "pattern": "packages-web/*/package.json" },
         { "kind": "glob", "pattern": "packages-web/*/stryker.*" },
         { "kind": "exact", "pattern": "scripts/run-mutation-evidence.mjs" },
+        { "kind": "exact", "pattern": "scripts/lib/mutation-evidence.mjs" },
         { "kind": "exact", "pattern": "scripts/lib/mutation-roster.mjs" },
         { "kind": "prefix", "pattern": "tools/stryker/" },
         { "kind": "exact", "pattern": "tools/repo-config/test-policy.json" }
