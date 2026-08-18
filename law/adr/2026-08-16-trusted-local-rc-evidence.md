@@ -80,6 +80,25 @@ This decision becomes operational only after all of the following hold together:
 Until that atomic cutover completes, this ADR authorizes implementation but does not assert that
 trusted-local-RC adoption is operational.
 
+### D6. Mutation evidence is a credential-free portable boundary
+
+The local RC graph may require registry credentials for independently scoped security or release
+preparation nodes. Those credentials are not mutation inputs. DEVAI must deliver only each task's
+own declared environment, and the STYNX mutation wrapper must construct its child environment from
+the mutation node's explicit infrastructure allowlist plus the minimum process bootstrap variables.
+Registry credentials, GitHub credentials, signing keys, and unrelated CI secrets are excluded.
+
+Every package report is normalized before it crosses the evidence boundary. The exact repository
+root is replaced with `.`, remaining workstation-specific absolute paths and credential-shaped
+values are rejected, and only canonical JSON reports plus normalized result records are exported.
+Raw Stryker JSON, HTML, and logs are not evidence and are removed after both successful and failed
+normalization attempts. The independently pinned verifier repeats the content-safety checks before
+signing, publication, and remote acceptance.
+
+This is defense in depth. Pattern matching does not prove that every possible secret can be
+recognized, and trusted local attestation still does not prove that the Inspector workstation was
+uncompromised.
+
 ## Consequences
 
 - Fast remote PR gates continue to run lint, typecheck, unit, integration, build, reference,
