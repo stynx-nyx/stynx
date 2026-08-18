@@ -254,8 +254,15 @@ async function runMutationEvidenceTests() {
   assertEqual(normalized.projectRoot, '.', 'exact repository-root normalization');
 
   const diagnosticReport = structuredClone(baseReport);
+  diagnosticReport.files['packages/example/src/index.ts'].source =
+    "export const fixture = '/tmp/domain-fixture';";
+  diagnosticReport.testFiles['packages/example/test/index.spec.ts'] = {
+    source: "expect(value).toBe('/Users/T/domain-fixture');",
+    tests: [{ id: 'test-1', name: 'domain fixture' }],
+  };
   diagnosticReport.files['packages/example/src/index.ts'].mutants.push({
     id: '1',
+    replacement: "'/tmp/domain-fixture'",
     status: 'Killed',
     statusReason: 'expected /Users/T/log_2025_01.sql.gz to be rejected by the domain',
   });
@@ -269,6 +276,26 @@ async function runMutationEvidenceTests() {
     normalizedDiagnosticReport.files['packages/example/src/index.ts'].mutants[0].statusReason,
     undefined,
     'non-evidentiary mutation diagnostic exclusion',
+  );
+  assertEqual(
+    normalizedDiagnosticReport.files['packages/example/src/index.ts'].source,
+    undefined,
+    'non-evidentiary mutated-source exclusion',
+  );
+  assertEqual(
+    normalizedDiagnosticReport.files['packages/example/src/index.ts'].mutants[0].replacement,
+    undefined,
+    'non-evidentiary mutation replacement exclusion',
+  );
+  assertEqual(
+    normalizedDiagnosticReport.testFiles['packages/example/test/index.spec.ts'].source,
+    undefined,
+    'non-evidentiary test-source exclusion',
+  );
+  assertEqual(
+    normalizedDiagnosticReport.testFiles['packages/example/test/index.spec.ts'].tests[0].id,
+    'test-1',
+    'portable test identity retention',
   );
 
   const credentialDiagnosticReport = structuredClone(baseReport);
