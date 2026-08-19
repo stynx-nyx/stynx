@@ -301,6 +301,102 @@
       "commit": "b5f4adc374d2d9aef26f8b61fe2f868a171a95af",
       "authorized_by": "Owner",
       "reason": "Records the exact OWNER authorization receipt for the mutation-roster authority binding without changing invariant authority or test scope."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "32b3d4dc607d7b7cfbd29164364d005932dcb7b6",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the exact DEVAI 1.2.0-rc.3 generated policy and host-adapter binding for the installed-package trial."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "15cdaf6224f6a7e2b5825a07ad19d03453a7cfde",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the exact portable RC.2 candidate rebind retained in the adoption history."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "cc9c42ae62ec039fdf3c783a8135fa515f558cb1",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the exact corrected RC.2 candidate rebind retained in the adoption history."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "ac90fc041891c73b070982011539d5acd5864244",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the DEVAI 1.2.0-rc.2 generated verifier workflow update under the trusted-local-RC adoption decision."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "ac90fc041891c73b070982011539d5acd5864244",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the exact DEVAI 1.2.0-rc.2 generated policy and host-adapter binding retained in the adoption history."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "59e597b310ac44e8edbfd55d9457d7309f741f44",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the local RC evidence-boundary hardening without weakening tests, thresholds, or trace coverage."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "2bc8bccd904c6ca41c76f00b31d11816b396f947",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the exact local RC candidate generated binding retained in the trial history."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "1dd5a66995308428a74ca9a2c2c7ab29305d3496",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the bounded local RC resource controls without changing invariant authority or test scope."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "219ed93fad818c83220abfa76fd1f41e7cfa5ad2",
+      "authorized_by": "Owner",
+      "reason": "Authorizes binding the exact container controls into the local RC task policy."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "3a31ab1f0d4b7ad3e85d0fa9228f1f20fea60944",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the isolated local RC database binding without changing production database authority."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "9f2a89b96a6683ada123ec8fd5a1469cef69df78",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the exact DEVAI 1.2.0-rc.1 trial binding retained in the adoption history."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "bbeb47b671385f61c2d08afe09274547e925ff96",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the trusted-local-RC verifier workflow controls under the canonical evidence-boundary ADR."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "bbeb47b671385f61c2d08afe09274547e925ff96",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the exact signer, toolchain, and environment control bindings for trusted local RC evidence."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "e7f6f2e8a6c9c9413d089725d51041c0baf594c2",
+      "authorized_by": "Owner",
+      "reason": "Authorizes adoption of the trusted-local-RC workflow boundary with zero remote mutation execution."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "b77273e4031593190df257fed2e30950205aee46",
+      "authorized_by": "Owner",
+      "reason": "Authorizes materialization of the attested-RC adopter policy under the canonical adoption decision."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "925724a04d1c166c9cb5be7109ecee10ce299308",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the canonical trusted-local-RC evidence policy without weakening tests or remote fail-closed verification."
     }
   ]
 }
