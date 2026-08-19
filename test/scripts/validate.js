@@ -426,12 +426,39 @@ async function runMutationEvidenceTests() {
   mutationRoster.verifyNoRemoteMutationWorkflows(repoRoot);
 }
 
+async function runLocalRcAdapterTests() {
+  const { unwrapDevaiCheckReport } = await import('../../scripts/lib/devai-local-rc.mjs');
+  const report = {
+    receipt: {
+      digest: 'a'.repeat(64),
+      path: '/tmp/devai-receipt.json',
+    },
+  };
+
+  assertEqual(
+    unwrapDevaiCheckReport({
+      action_id: 'check',
+      ok: true,
+      result: {
+        media_type: 'application/json',
+        value: report,
+        verdict: 'pass',
+      },
+      schemaVersion: '1.0.0',
+    }),
+    report,
+    'DEVAI authority-envelope check report',
+  );
+  assertEqual(unwrapDevaiCheckReport(report), report, 'legacy top-level DEVAI check report');
+}
+
 async function main() {
   runVerifierTests();
   await runMutationEvidenceTests();
+  await runLocalRcAdapterTests();
 
   console.log('All scripts validated');
-  console.log('Tests: 2 passed, 2 total');
+  console.log('Tests: 3 passed, 3 total');
 }
 
 main().catch((error) => {
