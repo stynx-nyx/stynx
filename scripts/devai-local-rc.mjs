@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { unwrapDevaiCheckReport } from './lib/devai-local-rc.mjs';
 import { canonicalize } from './lib/mutation-roster.mjs';
 
 const repoRoot = realpathSync(resolve(dirname(fileURLToPath(import.meta.url)), '..'));
@@ -210,7 +211,7 @@ function prepare(values) {
     '--format',
     'json',
   ]);
-  const check = JSON.parse(checkOutput);
+  const check = unwrapDevaiCheckReport(JSON.parse(checkOutput));
   if (!check.receipt?.path || !check.receipt?.digest) fail('DEVAI RC run produced no receipt');
 
   const privateKey = externalPath(
