@@ -1,5 +1,21 @@
 # @stynx-nyx/testing
 
+## 1.0.5
+
+### Patch Changes
+
+- 0a5a49a: Publish the post-v1 package changes already proven on main: additive Angular
+  and backend APIs, regenerated SDK contracts, tenant-scoped preferences/data
+  runtime behavior, dependency-advisory remediation, and the PostgreSQL test-app
+  readiness fix. Test-only mutation and timeout stabilization does not expand the
+  release roster.
+- Updated dependencies [0a5a49a]
+  - @stynx-nyx/data@1.1.0
+  - @stynx-nyx/sessions@1.2.0
+  - @stynx-nyx/audit@1.0.5
+  - @stynx-nyx/auth@1.0.5
+  - @stynx-nyx/storage@1.0.4
+
 ## 1.0.4
 
 ### Patch Changes

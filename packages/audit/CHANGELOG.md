@@ -1,5 +1,13 @@
 # @stynx-nyx/audit
 
+## 1.0.5
+
+### Patch Changes
+
+- Updated dependencies [0a5a49a]
+  - @stynx-nyx/data@1.1.0
+  - @stynx-nyx/auth@1.0.5
+
 ## 1.0.4
 
 ### Patch Changes

@@ -1,5 +1,24 @@
 # @stynx-nyx/angular-iam
 
+## 1.0.0
+
+### Minor Changes
+
+- 0a5a49a: Publish the post-v1 package changes already proven on main: additive Angular
+  and backend APIs, regenerated SDK contracts, tenant-scoped preferences/data
+  runtime behavior, dependency-advisory remediation, and the PostgreSQL test-app
+  readiness fix. Test-only mutation and timeout stabilization does not expand the
+  release roster.
+
+### Patch Changes
+
+- Updated dependencies [0a5a49a]
+  - @stynx-nyx/angular-auth@1.0.4
+  - @stynx-nyx/angular-i18n@1.1.0
+  - @stynx-nyx/angular-ui@1.0.4
+  - @stynx-nyx/angular@1.0.4
+  - @stynx-nyx/sdk@1.1.0
+
 ## 0.1.3
 
 ### Patch Changes
