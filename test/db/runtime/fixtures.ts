@@ -51,8 +51,10 @@ async function applySqlFiles(client: AdminClient, relativeDirectory: string): Pr
   return filenames.map((filename) => filename.slice(repoRoot.length + 1));
 }
 
-export async function createDbRuntimeFixture(prefix = 'stynx_db_runtime'): Promise<DbRuntimeFixture> {
-  const database = await createPostgresTestDatabase(prefix);
+export async function createDbRuntimeFixture(
+  prefix = 'stynx_db_runtime',
+): Promise<DbRuntimeFixture> {
+  const database = await createPostgresTestDatabase(prefix, { useTemplate: false });
   const client = await database.connectAsAdmin();
 
   try {

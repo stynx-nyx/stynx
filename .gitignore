@@ -119,3 +119,6 @@ docs/work/
 /.changeset/status.json
 
 stryker-setup-*.js
+scratch/*
+!scratch/worktrees/
+!scratch/worktrees/README.md

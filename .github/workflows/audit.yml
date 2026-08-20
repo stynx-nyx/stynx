@@ -116,7 +116,7 @@ jobs:
       - name: Prepare migrated template database (ADR-CI-ECONOMY Decision 6a)
         run: node scripts/ci-local/prepare-int-template.mjs --github-env "$GITHUB_ENV"
       - name: Run comprehensive test gate (evidence ignored)
-        run: pnpm ci:stynx:full
+        run: pnpm ci:stynx:remote-full
 
   audit-integration:
     name: audit-integration
