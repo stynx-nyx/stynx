@@ -415,6 +415,12 @@
       "commit": "bbd49db3269159ab38aab3fa4fb27f9baaf4fc42",
       "authorized_by": "Owner",
       "reason": "Authorizes the exact stable DEVAI 1.2.0 binding materializations for the final adoption candidate."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "f42112cb750e84e929319e2d8162a022e0027ddd",
+      "authorized_by": "Owner",
+      "reason": "Authorizes explicit-dispatch release hardening and non-mutating CI reporting cleanup under the existing release and trusted-local-RC decisions."
     }
   ]
 }
