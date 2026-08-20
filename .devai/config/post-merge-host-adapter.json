@@ -1,23 +1,23 @@
 {
   "schemaVersion": "1.0.0",
-  "adapter_id": "post-merge-932bfb326001eb90",
+  "adapter_id": "post-merge-84cd64541417a645",
   "adapter_kind": "installed-checkout",
-  "repository": "/Users/aarusso/Development/stech/stynx",
-  "repository_id": "stynx",
-  "hook_path": "/Users/aarusso/Development/stech/stynx/.husky/post-merge",
+  "repository": "/Users/aarusso/Development/stech/stynx-devai-1.2.0-rc.3-trial",
+  "repository_id": "stynx-devai-1.2.0-rc.3-trial",
+  "hook_path": "/Users/aarusso/Development/stech/stynx-devai-1.2.0-rc.3-trial/.husky/post-merge",
   "hook_digest_sha256": "0d250c20ee8f26d3b4b06c238dda0b6e50cd76063e83c34891d5489f3959ce9f",
-  "key_digest_sha256": "d9bcc2e5c52b93913afdb0584ecc138ddb93fb18e49939c57e344decd51f795b",
-  "policy_digest_sha256": "2c3d87986d5b54dc670359a977c3917c7648047e780571fc17a978f9474ef77b",
+  "key_digest_sha256": "90e873dfdb8a435e5adfd7626a29080b4e28f067b12f517aa81e2e89ddf60037",
+  "policy_digest_sha256": "228c092428a874cd0af127ae2b8daf6dedb7c9a0e0b45e8e16d236dff85399ce",
   "constitution_digest_sha256": "3f0e2ddc45d0f4102eda34776700d8da7a1e56aab30c6ab43cc6ee6dbe972542",
   "package_binding": {
     "name": "@aarusso-nyx/devai",
-    "version": "1.1.7"
+    "version": "1.2.0-rc.3"
   },
-  "installed_at_head": "8806774c04c1bd89eb6f217d8212e22ffcbfd610",
-  "installed_at": "2026-08-14T10:21:16.632Z",
+  "installed_at_head": "35fc6115fcf0c9173e03b903ed44e8f8724954c7",
+  "installed_at": "2026-08-19T04:52:29.791Z",
   "cadence": {
     "installed_checkout": "persistent",
     "remote_host": "unknown"
   },
-  "signature_hmac_sha256": "e464959209970ad6ff9da292181aad94031b7d53fd6caa8c53b0d88cfadd84e4"
+  "signature_hmac_sha256": "61b2b6182f07ac6be919691ae7c8083232bef806644f0601518f949c65232308"
 }

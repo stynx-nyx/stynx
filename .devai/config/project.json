@@ -3,14 +3,14 @@
   "project_type": "platform-package",
   "authority_enforcement": {
     "mode": "host-integrated",
-    "adapter_config": ".devai/config/post-merge-host-adapter.json"
+    "adapter_config": ".devai/config/github-actions-host-adapter.json"
   },
   "profile": "tier1",
   "constitution": {
     "version": "1.0.0",
     "sha256": "3f0e2ddc45d0f4102eda34776700d8da7a1e56aab30c6ab43cc6ee6dbe972542"
   },
-  "devai_version": "1.1.7",
+  "devai_version": "1.2.0-rc.3",
   "repo": {
     "kind": "library"
   },
@@ -22,6 +22,19 @@
         "dev/operations": "meta/ops",
         "dev/security": "meta/security"
       }
+    }
+  },
+  "ci_economy": {
+    "attested_rc": {
+      "profile": "rc",
+      "transport": "protected-tag-v1",
+      "tag_prefix": "devai-local-evidence/",
+      "binding": "exact-tree",
+      "required_check": "verified-local-rc",
+      "failure_mode": "fail-closed",
+      "local_only_nodes": [
+        "test:mutation"
+      ]
     }
   }
 }
