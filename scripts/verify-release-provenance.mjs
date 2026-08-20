@@ -17,6 +17,32 @@ const failures = [];
 
 requireText(workflow, /id-token:\s*write/u, 'release workflow must grant OIDC id-token: write');
 requireText(workflow, /packages:\s*write/u, 'release workflow must grant packages: write');
+requireText(workflow, /candidate_sha:/u, 'release workflow must accept an exact candidate SHA');
+requireText(
+  workflow,
+  /\^\[0-9a-f\]\{40\}\$/u,
+  'release workflow must require a full lowercase candidate SHA',
+);
+requireText(
+  workflow,
+  /git rev-parse origin\/main/u,
+  'release workflow must bind publication to exact origin/main',
+);
+requireText(
+  workflow,
+  /refs\/heads\/main:refs\/remotes\/origin\/main/u,
+  'release workflow must refresh the exact origin/main ref before publication',
+);
+requireText(
+  workflow,
+  /OWNER_PUBLISH_OPT_IN/u,
+  'release workflow must fail closed without the Owner-controlled opt-in',
+);
+requireText(
+  workflow,
+  /PUBLISH_TOKEN:\s*\$\{\{ secrets\.NPM_TOKEN \}\}/u,
+  'release workflow must fail closed without the protected publication token',
+);
 requireText(
   workflow,
   /registry-url:\s*https:\/\/npm\.pkg\.github\.com/u,
@@ -26,6 +52,11 @@ requireText(
   workflow,
   /NPM_CONFIG_PROVENANCE:\s*['"]false['"]/u,
   'release workflow must explicitly disable unsupported npm provenance',
+);
+forbidText(
+  workflow,
+  /^\s{2}NODE_AUTH_TOKEN:/mu,
+  'release workflow must not expose a registry token through workflow-wide environment',
 );
 requireText(
   publishScript,
@@ -58,4 +89,8 @@ console.log('[release-provenance] OK: release provenance controls are wired');
 
 function requireText(text, pattern, message) {
   if (!pattern.test(text)) failures.push(message);
+}
+
+function forbidText(text, pattern, message) {
+  if (pattern.test(text)) failures.push(message);
 }

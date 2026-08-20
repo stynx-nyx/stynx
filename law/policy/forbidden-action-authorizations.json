@@ -421,6 +421,12 @@
       "commit": "f42112cb750e84e929319e2d8162a022e0027ddd",
       "authorized_by": "Owner",
       "reason": "Authorizes explicit-dispatch release hardening and non-mutating CI reporting cleanup under the existing release and trusted-local-RC decisions."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "ce43209482e2f3a6e936c85c03e95f7feaaa7625",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the exact package and Pages publication controls under the existing release and trusted-local-RC decisions."
     }
   ]
 }

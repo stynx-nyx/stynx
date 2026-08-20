@@ -5,6 +5,9 @@ import { fileURLToPath } from 'node:url';
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(scriptDir, '..');
 const rootManifest = JSON.parse(readFileSync(resolve(repoRoot, 'package.json'), 'utf8'));
+const changesetConfig = JSON.parse(
+  readFileSync(resolve(repoRoot, '.changeset/config.json'), 'utf8'),
+);
 const expectedLicense = rootManifest.license;
 
 if (typeof expectedLicense !== 'string' || expectedLicense.length === 0) {
@@ -27,7 +30,10 @@ function collectPackages(baseDir, matcher) {
 }
 
 const packages = [
-  ...collectPackages('packages', (name) => typeof name === 'string' && name.startsWith('@stynx-nyx/')),
+  ...collectPackages(
+    'packages',
+    (name) => typeof name === 'string' && name.startsWith('@stynx-nyx/'),
+  ),
   ...collectPackages(
     'packages-web',
     (name) => typeof name === 'string' && name.startsWith('@stynx-nyx/'),
@@ -35,6 +41,12 @@ const packages = [
 ];
 
 const errors = [];
+if (
+  changesetConfig.privatePackages?.version !== false ||
+  changesetConfig.privatePackages?.tag !== false
+) {
+  errors.push('Changesets must not version or tag private reference applications');
+}
 const requiredPublicExports = {
   '@stynx-nyx/pdf': ['.', './evidence', './fixed-layout', './public-payroll'],
   '@stynx-nyx/signature': ['.', './xmldsig'],

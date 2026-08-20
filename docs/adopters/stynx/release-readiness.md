@@ -83,3 +83,53 @@ The spec’s public post-release label is still intentionally not applied by thi
 readiness closure:
 
 - `README.md` is **not** changed to `STYNX v1.0 - Shipped`.
+
+## Exact-main package and documentation publication
+
+The current publication candidate is prepared through two independent manual
+lanes. Neither lane publishes from a pull request, a branch tip supplied by a
+candidate, or an automatic `main` push.
+
+Package publication uses the Changesets version PR. The scoped changeset names
+only packages with release-visible changes already proven on `main`; test-only
+mutation and timeout stabilization is intentionally excluded. Private reference
+applications are neither versioned nor tagged by the public package lane. After
+the version PR reaches exact `main`, an Owner-authorized `STYNX Release` dispatch
+must supply that full 40-character commit as `candidate_sha`, set `publish:
+true`, and have the Owner-controlled
+`STYNX_ENABLE_REGISTRY_PUBLISH=true` opt-in. The workflow fails if the authorized
+commit, checked-out commit, or current `origin/main` differ. Registry credentials
+are scoped to install and publication steps.
+
+The prepared Changesets projection contains 28 publishable packages: 18 direct
+release entries and 10 dependency-propagated entries. The projection includes
+two intentional stable-boundary transitions, `@stynx-nyx/angular-audit@1.0.0`
+and `@stynx-nyx/angular-iam@1.0.0`; their exact workspace peer dependencies are
+moving with minor releases, so the existing Changesets peer-dependency rule
+promotes these pre-1.0 dependents to a major release. The version PR remains the
+reviewable authority for the final package/version manifest.
+
+Documentation publication remains a local, human-authorized act as required by
+DEVAI documentation governance. `node scripts/publish-docs-site.mjs prepare`
+builds an exact `main` candidate with no tracked or untracked drift into an
+external bundle and records the repository, commit, Git tree, every file
+digest, and aggregate site digest.
+`node scripts/publish-docs-site.mjs publish --manifest <external-manifest>
+--signing-key <external-private-key> --confirm-publish` re-verifies that bundle
+and advances the existing `gh-pages` branch with a signed commit only when the
+Owner supplies the exact manifest and the local
+`STYNX_ENABLE_PAGES_DEPLOY=true` opt-in. The private SSH signing key must remain
+outside the repository, have a matching public key, and deny group and other
+access. The publisher verifies the commit signature locally and records the
+signer fingerprint in the external publication receipt. GitHub's separate
+`Verified` badge depends on that public key also being registered as a signing
+key and is not substituted for local verification. Signature verification
+precedes every push and is repeated for an idempotent publication. CI validates
+documentation freshness and the local publication contract but never publishes
+the site.
+
+Publication readiness is therefore established only after the version PR and
+this preparation PR are merged, exact-main checks pass, and the Owner names the
+exact commit in the package dispatch and local Pages authorization. Package and
+Pages publication receipts must then be reconciled with that same commit before
+the result is described as shipped.
