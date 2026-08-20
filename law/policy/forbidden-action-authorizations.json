@@ -397,6 +397,24 @@
       "commit": "925724a04d1c166c9cb5be7109ecee10ce299308",
       "authorized_by": "Owner",
       "reason": "Authorizes the canonical trusted-local-RC evidence policy without weakening tests or remote fail-closed verification."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "d8f26ba59951a411e50308d3fac2e3d8c16ba524",
+      "authorized_by": "Owner",
+      "reason": "Authorizes reconstruction of the reviewed trusted-local-RC workflow boundary with zero remote mutation execution."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "d8f26ba59951a411e50308d3fac2e3d8c16ba524",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the reconstructed DEVAI 1.2 adoption policy and authority materializations without weakening tests or invariants."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "bbd49db3269159ab38aab3fa4fb27f9baaf4fc42",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the exact stable DEVAI 1.2.0 binding materializations for the final adoption candidate."
     }
   ]
 }
