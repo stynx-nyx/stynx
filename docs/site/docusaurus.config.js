@@ -25,11 +25,12 @@ function suppressKnownWebpackWarnings() {
 const config = {
   title: 'STYNX',
   tagline: 'Platform documentation, specifications, and API reference',
-  favicon: 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%23111827%22/%3E%3Cpath d=%22M8 10h16v3H18v9h-4v-9H8z%22 fill=%22%23f8fafc%22/%3E%3C/svg%3E',
-  url: 'https://aarusso-nyx.github.io',
+  favicon:
+    'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%23111827%22/%3E%3Cpath d=%22M8 10h16v3H18v9h-4v-9H8z%22 fill=%22%23f8fafc%22/%3E%3C/svg%3E',
+  url: 'https://stynx-nyx.github.io',
   baseUrl: '/stynx/',
   onBrokenLinks: 'throw',
-  organizationName: 'stynx',
+  organizationName: 'stynx-nyx',
   projectName: 'stynx',
   i18n: {
     defaultLocale: 'en',
