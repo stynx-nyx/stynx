@@ -2,6 +2,12 @@ name: STYNX Release
 
 on:
   workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish versioned packages and create GitHub Releases
+        required: true
+        default: false
+        type: boolean
   push:
     branches:
       - main
@@ -26,7 +32,10 @@ env:
   # release-provenance verifier.
   NPM_CONFIG_PROVENANCE: 'false'
   PNPM_VERSION: '9.15.0'
-  STYNX_ENABLE_REGISTRY_PUBLISH: ${{ vars.STYNX_ENABLE_REGISTRY_PUBLISH || 'false' }}
+  # A main push may prepare or update the Changesets release PR, but can never
+  # publish packages. Publication requires both an explicit publish:true
+  # workflow dispatch and the Owner-controlled repository opt-in.
+  STYNX_ENABLE_REGISTRY_PUBLISH: ${{ github.event_name == 'workflow_dispatch' && inputs.publish == true && vars.STYNX_ENABLE_REGISTRY_PUBLISH == 'true' && 'true' || 'false' }}
   # Step-level env in the Changesets publish step overrides this default.
   NODE_AUTH_TOKEN: ${{ secrets.DEVAI_REPO_TOKEN || github.token }}
 
@@ -72,4 +81,4 @@ jobs:
           # repository linkage. NPM_TOKEN keeps waves autonomous; once the
           # owner grants 'Manage Actions access' per package in the UI, delete
           # the secret and the ambient-token fallback takes over.
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ github.event_name == 'workflow_dispatch' && inputs.publish == true && secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}

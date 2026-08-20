@@ -73,7 +73,11 @@ publishing is intentionally opt-in because the historical package scopes
 (`@stynx`, `@stynx-web`, and `@stech`) could not be published with this
 repository's default `GITHUB_TOKEN`. All packages now live under the
 `@stynx-nyx/*` scope (owned by the `stynx-nyx` org) and publish with
-`STYNX_ENABLE_REGISTRY_PUBLISH=true` plus an appropriate `NPM_TOKEN`.
+an explicit manual `STYNX Release` dispatch with `publish: true`, the
+Owner-controlled `STYNX_ENABLE_REGISTRY_PUBLISH=true` repository opt-in, and
+an appropriate `NPM_TOKEN`. A push to `main` is always forced into
+non-publishing Changesets preparation mode, even while the repository opt-in
+is enabled.
 
 The spec’s public post-release label is still intentionally not applied by this
 readiness closure:
