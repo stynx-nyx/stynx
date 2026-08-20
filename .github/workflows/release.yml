@@ -3,6 +3,11 @@ name: STYNX Release
 on:
   workflow_dispatch:
     inputs:
+      candidate_sha:
+        description: Exact 40-character main commit authorized for package publication
+        required: false
+        default: ''
+        type: string
       publish:
         description: Publish versioned packages and create GitHub Releases
         required: true
@@ -36,8 +41,6 @@ env:
   # publish packages. Publication requires both an explicit publish:true
   # workflow dispatch and the Owner-controlled repository opt-in.
   STYNX_ENABLE_REGISTRY_PUBLISH: ${{ github.event_name == 'workflow_dispatch' && inputs.publish == true && vars.STYNX_ENABLE_REGISTRY_PUBLISH == 'true' && 'true' || 'false' }}
-  # Step-level env in the Changesets publish step overrides this default.
-  NODE_AUTH_TOKEN: ${{ secrets.DEVAI_REPO_TOKEN || github.token }}
 
 jobs:
   release:
@@ -47,6 +50,36 @@ jobs:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 0
+
+      - name: Verify exact-main publication authorization
+        env:
+          AUTHORIZED_CANDIDATE_SHA: ${{ inputs.candidate_sha || '' }}
+          OWNER_PUBLISH_OPT_IN: ${{ vars.STYNX_ENABLE_REGISTRY_PUBLISH || 'false' }}
+          PUBLISH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          PUBLISH_REQUESTED: ${{ github.event_name == 'workflow_dispatch' && inputs.publish == true && 'true' || 'false' }}
+        run: |
+          if [ "$PUBLISH_REQUESTED" != 'true' ]; then
+            exit 0
+          fi
+          if [ "$OWNER_PUBLISH_OPT_IN" != 'true' ]; then
+            echo 'Package publication requires the Owner-controlled repository opt-in' >&2
+            exit 1
+          fi
+          if [ -z "$PUBLISH_TOKEN" ]; then
+            echo 'Package publication requires the protected NPM_TOKEN secret' >&2
+            exit 1
+          fi
+          if ! printf '%s' "$AUTHORIZED_CANDIDATE_SHA" | grep -Eq '^[0-9a-f]{40}$'; then
+            echo 'candidate_sha must be a full lowercase Git commit SHA' >&2
+            exit 1
+          fi
+          if [ "$GITHUB_REF" != 'refs/heads/main' ]; then
+            echo 'Package publication must be dispatched from main' >&2
+            exit 1
+          fi
+          git fetch --no-tags origin refs/heads/main:refs/remotes/origin/main
+          test "$(git rev-parse HEAD)" = "$AUTHORIZED_CANDIDATE_SHA"
+          test "$(git rev-parse origin/main)" = "$AUTHORIZED_CANDIDATE_SHA"
       - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5
         with:
           version: ${{ env.PNPM_VERSION }}
@@ -60,6 +93,8 @@ jobs:
           registry-url: https://npm.pkg.github.com
 
       - name: Install workspace dependencies
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.DEVAI_REPO_TOKEN || github.token }}
         run: pnpm install --frozen-lockfile
 
       - name: Build publishable STYNX workspace packages
