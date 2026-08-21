@@ -53,6 +53,14 @@ function readGitJson(revision, path) {
   return JSON.parse(git(['show', `${revision}:${path}`]));
 }
 
+function candidateHead(baseCommit) {
+  const [checkoutCommit, ...parents] = git(['rev-list', '--parents', '-n', '1', 'HEAD']).split(' ');
+  if (parents.length === 2 && parents[0] === baseCommit) {
+    return parents[1];
+  }
+  return checkoutCommit;
+}
+
 function rootManifestFollowUpValid(versionCommit, rebaseline) {
   const before = readGitJson(versionCommit, 'package.json');
   const after = JSON.parse(readFileSync(resolve(repoRoot, 'package.json'), 'utf8'));
@@ -89,7 +97,10 @@ function versionRebaselineValid(baseCommit, versionCommit, changes) {
 
 function releaseContext() {
   const baseCommit = git(['rev-parse', 'origin/main']);
-  const headCommit = git(['rev-parse', 'HEAD']);
+  // pull_request workflows are checked out at GitHub's synthetic merge commit.
+  // When its first parent is the exact base, classify the candidate second
+  // parent rather than mistaking the merge wrapper for an ordinary change.
+  const headCommit = candidateHead(baseCommit);
   const commitShas = git([
     'rev-list',
     '--first-parent',
