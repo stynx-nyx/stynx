@@ -38,7 +38,7 @@
     "ci:stynx": "pnpm check:engines && pnpm api:coverage && pnpm api:contract && pnpm sdk:route-smoke && pnpm check:rls-negative && pnpm frontend:production-smoke && pnpm frontend:a11y-gate && pnpm production:readiness-reference && pnpm lint && pnpm lint:tests && pnpm lint:deadcode && pnpm lint:deps && pnpm lint:cycles && pnpm typecheck && pnpm test && pnpm test:int && pnpm build && pnpm run doctor",
     "ci:stynx:full": "pnpm ci:stynx && pnpm test:e2e && pnpm test:mutation && pnpm test:perf && pnpm check:rls-smoke",
     "ci:stynx:remote-full": "pnpm ci:stynx && pnpm test:e2e && pnpm test:perf && pnpm check:rls-smoke",
-    "ci:stynx:release": "pnpm security:release && pnpm release:provenance && pnpm release:policy && pnpm api:baselines && pnpm release:consumer-fixtures && pnpm release:drafts",
+    "ci:stynx:release": "node scripts/run-release-preparation.mjs",
     "ci:reference-apps": "pnpm --filter @stynx-nyx/reference-api build && pnpm --filter @stynx-nyx/reference-api test && pnpm --filter @stynx-nyx/reference-api test:int && pnpm --filter @stynx-nyx/reference-web build && pnpm --filter @stynx-nyx/reference-web build:web",
     "ci:local": "bash scripts/ci-local/run.sh",
     "clean": "node scripts/clean-workspace.mjs",
