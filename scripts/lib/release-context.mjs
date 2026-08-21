@@ -10,6 +10,7 @@ const allowedVersionSupportPaths = new Set([
 
 const allowedVersionFollowUpPaths = new Set([
   '.changeset/config.json',
+  'docs/adopters/stynx/release-readiness.md',
   'docs/meta/security/sbom.cdx.json',
   'package.json',
   'scripts/lib/release-context.mjs',
