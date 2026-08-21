@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { validateReleaseVersionPolicy } from './lib/release-version-policy.mjs';
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(scriptDir, '..');
@@ -41,6 +42,7 @@ const packages = [
 ];
 
 const errors = [];
+errors.push(...validateReleaseVersionPolicy(repoRoot, changesetConfig));
 if (
   changesetConfig.privatePackages?.version !== false ||
   changesetConfig.privatePackages?.tag !== false

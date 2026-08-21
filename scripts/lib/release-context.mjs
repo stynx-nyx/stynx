@@ -1,11 +1,23 @@
 const fullSha = /^[0-9a-f]{40}$/u;
 const versionCommitSubject = 'ci: version packages';
+const unifiedRebaselineVersion = '0.5.0';
+
+const allowedVersionSupportPaths = new Set([
+  'docs/meta/security/sbom.cdx.json',
+  'package.json',
+  'tools/create-stynx-app/template/package.json',
+]);
 
 const allowedVersionFollowUpPaths = new Set([
+  '.changeset/config.json',
   'docs/meta/security/sbom.cdx.json',
   'package.json',
   'scripts/lib/release-context.mjs',
+  'scripts/lib/release-version-policy.mjs',
   'scripts/run-release-preparation.mjs',
+  'scripts/sync-release-version.mjs',
+  'scripts/verify-release-policy.mjs',
+  'tools/create-stynx-app/template/package.json',
 ]);
 
 export class ReleaseContextError extends Error {
@@ -29,7 +41,7 @@ function packageDirectory(path) {
   return match ? path.slice(0, path.lastIndexOf('/')) : null;
 }
 
-function validateVersionChanges(changes) {
+function validateVersionChanges(changes, versionRebaselineValid) {
   const deletedChangesets = [];
   const manifests = new Set();
   const changelogs = new Set();
@@ -48,13 +60,15 @@ function validateVersionChanges(changes) {
       continue;
     }
 
+    if (status === 'M' && allowedVersionSupportPaths.has(path)) continue;
+
     fail(
       'RELEASE_CONTEXT_VERSION_DIFF',
       `version commit contains unexpected ${status} path ${path}`,
     );
   }
 
-  if (deletedChangesets.length === 0) {
+  if (deletedChangesets.length === 0 && !versionRebaselineValid) {
     fail('RELEASE_CONTEXT_NO_CHANGESETS', 'version commit consumes no changesets');
   }
   if (manifests.size === 0) {
@@ -80,6 +94,7 @@ function validateVersionChanges(changes) {
   return {
     changesetCount: deletedChangesets.length,
     packageCount: manifests.size,
+    rebaseline: deletedChangesets.length === 0,
   };
 }
 
@@ -108,6 +123,7 @@ export function classifyReleaseContext({
   versionChanges,
   followUpChanges,
   rootManifestFollowUpValid,
+  versionRebaselineValid = false,
 }) {
   if (!fullSha.test(baseCommit) || !fullSha.test(headCommit)) {
     fail('RELEASE_CONTEXT_IDENTITY', 'base and head must be full commit SHAs');
@@ -129,7 +145,7 @@ export function classifyReleaseContext({
     );
   }
 
-  const counts = validateVersionChanges(versionChanges);
+  const counts = validateVersionChanges(versionChanges, versionRebaselineValid);
   validateFollowUpChanges(followUpChanges, rootManifestFollowUpValid);
 
   return {
@@ -143,5 +159,8 @@ export function classifyReleaseContext({
 
 export const releaseContextConstants = Object.freeze({
   versionCommitSubject,
+  unifiedRebaselineVersion,
   releasePreparationCommand: 'node scripts/run-release-preparation.mjs',
+  versionPackagesCommand:
+    'changeset version && node scripts/sync-release-version.mjs && pnpm security:sbom',
 });

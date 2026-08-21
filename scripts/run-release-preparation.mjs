@@ -2,13 +2,14 @@
 
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   classifyReleaseContext,
   releaseContextConstants,
   ReleaseContextError,
 } from './lib/release-context.mjs';
+import { collectPublicPackages } from './lib/release-version-policy.mjs';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -52,12 +53,37 @@ function readGitJson(revision, path) {
   return JSON.parse(git(['show', `${revision}:${path}`]));
 }
 
-function rootManifestFollowUpValid(versionCommit) {
+function rootManifestFollowUpValid(versionCommit, rebaseline) {
   const before = readGitJson(versionCommit, 'package.json');
   const after = JSON.parse(readFileSync(resolve(repoRoot, 'package.json'), 'utf8'));
   const expected = structuredClone(before);
   expected.scripts['ci:stynx:release'] = releaseContextConstants.releasePreparationCommand;
+  if (rebaseline) {
+    expected.version = releaseContextConstants.unifiedRebaselineVersion;
+    expected.scripts['version-packages'] = releaseContextConstants.versionPackagesCommand;
+  }
   return JSON.stringify(expected) === JSON.stringify(after);
+}
+
+function versionRebaselineValid(baseCommit, versionCommit, changes) {
+  if (changes.some(({ status, path }) => status === 'D' && /^\.changeset\//u.test(path))) {
+    return false;
+  }
+  const changedManifests = changes
+    .filter(({ status, path }) => status === 'M' && path.endsWith('/package.json'))
+    .map(({ path }) => path)
+    .sort();
+  const expectedManifests = collectPublicPackages(repoRoot)
+    .map(({ manifestPath }) => relative(repoRoot, manifestPath))
+    .sort();
+  if (JSON.stringify(changedManifests) !== JSON.stringify(expectedManifests)) return false;
+
+  const target = releaseContextConstants.unifiedRebaselineVersion;
+  const beforeVersions = expectedManifests.map((path) => readGitJson(baseCommit, path).version);
+  return (
+    beforeVersions.some((version) => version !== target) &&
+    expectedManifests.every((path) => readGitJson(versionCommit, path).version === target)
+  );
 }
 
 function releaseContext() {
@@ -79,15 +105,20 @@ function releaseContext() {
   const marker = commits.find(
     (commit) => commit.subject === releaseContextConstants.versionCommitSubject,
   );
+  const versionChanges = marker ? parseChanges(baseCommit, marker.sha) : [];
+  const rebaseline = marker
+    ? versionRebaselineValid(baseCommit, marker.sha, versionChanges)
+    : false;
 
   return classifyReleaseContext({
     baseCommit,
     headCommit,
     commits,
     versionParent: marker ? git(['rev-parse', `${marker.sha}^`]) : null,
-    versionChanges: marker ? parseChanges(baseCommit, marker.sha) : [],
+    versionChanges,
     followUpChanges: marker ? parseChanges(marker.sha, headCommit) : [],
-    rootManifestFollowUpValid: marker ? rootManifestFollowUpValid(marker.sha) : false,
+    rootManifestFollowUpValid: marker ? rootManifestFollowUpValid(marker.sha, rebaseline) : false,
+    versionRebaselineValid: rebaseline,
   });
 }
 
@@ -106,9 +137,12 @@ try {
   if (context.kind === 'ordinary') {
     run('pnpm', ['run', 'release:drafts']);
   } else {
+    const source = context.rebaseline
+      ? `one-time ${releaseContextConstants.unifiedRebaselineVersion} unified rebaseline`
+      : `${context.changesetCount} consumed changesets`;
     console.log(
       `[release-preparation] validated version candidate ${context.versionCommit}: ` +
-        `${context.packageCount} packages, ${context.changesetCount} consumed changesets; ` +
+        `${context.packageCount} packages, ${source}; ` +
         'release draft generation is not applicable',
     );
   }
