@@ -1,5 +1,11 @@
 # @stynx-nyx/pdf-a
 
+## 0.5.0
+
+### Unified Version Rebaseline
+
+- Align the STYNX root workspace and every public package on the shared 0.5.0 release line without changing runtime behavior or public contracts.
+
 ## 0.2.2
 
 ### Patch Changes

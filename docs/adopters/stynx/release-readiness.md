@@ -90,24 +90,25 @@ The current publication candidate is prepared through two independent manual
 lanes. Neither lane publishes from a pull request, a branch tip supplied by a
 candidate, or an automatic `main` push.
 
-Package publication uses the Changesets version PR. The scoped changeset names
-only packages with release-visible changes already proven on `main`; test-only
-mutation and timeout stabilization is intentionally excluded. Private reference
-applications are neither versioned nor tagged by the public package lane. After
-the version PR reaches exact `main`, an Owner-authorized `STYNX Release` dispatch
-must supply that full 40-character commit as `candidate_sha`, set `publish:
-true`, and have the Owner-controlled
+Package publication for the current candidate uses a one-time unified-version
+rebaseline rather than an ordinary Changesets projection. The private root
+workspace and all 38 public `@stynx-nyx/*` packages move together to `0.5.0`;
+private reference applications and internal tooling retain their independent
+operational versions and are neither versioned nor tagged by the public package
+lane. Existing registry releases remain immutable, and consumers whose ranges
+target a later major version will not select `0.5.0` automatically.
+
+Release preparation accepts this exceptional candidate only when the
+`ci: version packages` commit is the direct first-parent child of the verified
+base, changes the exact 38-package manifest and changelog roster, and is followed
+only by the narrow release-policy support paths. Future public package releases
+return to the normal Changesets flow, with the fixed package group preserving
+one shared version. After this candidate reaches exact `main`, an
+Owner-authorized `STYNX Release` dispatch must supply that full 40-character
+commit as `candidate_sha`, set `publish: true`, and have the Owner-controlled
 `STYNX_ENABLE_REGISTRY_PUBLISH=true` opt-in. The workflow fails if the authorized
 commit, checked-out commit, or current `origin/main` differ. Registry credentials
 are scoped to install and publication steps.
-
-The prepared Changesets projection contains 28 publishable packages: 18 direct
-release entries and 10 dependency-propagated entries. The projection includes
-two intentional stable-boundary transitions, `@stynx-nyx/angular-audit@1.0.0`
-and `@stynx-nyx/angular-iam@1.0.0`; their exact workspace peer dependencies are
-moving with minor releases, so the existing Changesets peer-dependency rule
-promotes these pre-1.0 dependents to a major release. The version PR remains the
-reviewable authority for the final package/version manifest.
 
 Documentation publication remains a local, human-authorized act as required by
 DEVAI documentation governance. `node scripts/publish-docs-site.mjs prepare`
@@ -128,8 +129,8 @@ precedes every push and is repeated for an idempotent publication. CI validates
 documentation freshness and the local publication contract but never publishes
 the site.
 
-Publication readiness is therefore established only after the version PR and
-this preparation PR are merged, exact-main checks pass, and the Owner names the
-exact commit in the package dispatch and local Pages authorization. Package and
-Pages publication receipts must then be reconciled with that same commit before
-the result is described as shipped.
+Publication readiness is therefore established only after the unified-version
+candidate is merged, exact-main checks pass, and the Owner names the exact
+commit in the package dispatch and local Pages authorization. Package and Pages
+publication receipts must then be reconciled with that same commit before the
+result is described as shipped.
