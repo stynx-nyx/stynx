@@ -44,7 +44,7 @@
     "clean": "node scripts/clean-workspace.mjs",
     "clean:dry": "node scripts/clean-workspace.mjs --dry-run",
     "changeset": "changeset",
-    "release:status": "changeset status --since origin/main --output .changeset/status.json",
+    "release:status": "node scripts/run-release-preparation.mjs --release-status",
     "release:drafts": "pnpm release:status && node scripts/generate-release-drafts.mjs",
     "release:policy": "node scripts/verify-release-policy.mjs && node scripts/verify-web-sourcemaps.mjs",
     "release:provenance": "node scripts/verify-release-provenance.mjs",

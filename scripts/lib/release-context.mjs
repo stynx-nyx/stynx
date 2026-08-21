@@ -1,6 +1,7 @@
 const fullSha = /^[0-9a-f]{40}$/u;
 const versionCommitSubject = 'ci: version packages';
 const unifiedRebaselineVersion = '0.5.0';
+const releaseStatusCommand = 'node scripts/run-release-preparation.mjs --release-status';
 
 const allowedVersionSupportPaths = new Set([
   'docs/meta/security/sbom.cdx.json',
@@ -159,6 +160,7 @@ export function classifyReleaseContext({
 }
 
 export const releaseContextConstants = Object.freeze({
+  releaseStatusCommand,
   versionCommitSubject,
   unifiedRebaselineVersion,
   releasePreparationCommand: 'node scripts/run-release-preparation.mjs',

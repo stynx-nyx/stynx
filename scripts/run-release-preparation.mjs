@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -58,6 +58,7 @@ function rootManifestFollowUpValid(versionCommit, rebaseline) {
   const after = JSON.parse(readFileSync(resolve(repoRoot, 'package.json'), 'utf8'));
   const expected = structuredClone(before);
   expected.scripts['ci:stynx:release'] = releaseContextConstants.releasePreparationCommand;
+  expected.scripts['release:status'] = releaseContextConstants.releaseStatusCommand;
   if (rebaseline) {
     expected.version = releaseContextConstants.unifiedRebaselineVersion;
     expected.scripts['version-packages'] = releaseContextConstants.versionPackagesCommand;
@@ -120,6 +121,39 @@ function releaseContext() {
     rootManifestFollowUpValid: marker ? rootManifestFollowUpValid(marker.sha, rebaseline) : false,
     versionRebaselineValid: rebaseline,
   });
+}
+
+function prepareReleaseStatus() {
+  const context = releaseContext();
+  if (context.kind === 'ordinary') {
+    run('pnpm', [
+      'exec',
+      'changeset',
+      'status',
+      '--since',
+      'origin/main',
+      '--output',
+      '.changeset/status.json',
+    ]);
+    return;
+  }
+
+  const statusPath = resolve(repoRoot, '.changeset/status.json');
+  mkdirSync(dirname(statusPath), { recursive: true });
+  writeFileSync(statusPath, `${JSON.stringify({ changesets: [], releases: [] }, null, 2)}\n`);
+  console.log(
+    `[release-preparation] release status is not applicable to version candidate ${context.versionCommit}`,
+  );
+}
+
+if (process.argv.includes('--release-status')) {
+  try {
+    prepareReleaseStatus();
+    process.exit(0);
+  } catch (error) {
+    if (error instanceof ReleaseContextError) fail(error.code, error.message);
+    throw error;
+  }
 }
 
 for (const command of [
