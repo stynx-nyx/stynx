@@ -1,7 +1,8 @@
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validateReleaseVersionPolicy } from './lib/release-version-policy.mjs';
+import { discoverPublishablePackages } from './lib/publishable-packages.mjs';
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(scriptDir, '..');
@@ -16,30 +17,7 @@ if (typeof expectedLicense !== 'string' || expectedLicense.length === 0) {
   process.exit(1);
 }
 
-function collectPackages(baseDir, matcher) {
-  const resolvedBase = resolve(repoRoot, baseDir);
-  return readdirSync(resolvedBase)
-    .map((entry) => resolve(resolvedBase, entry))
-    .filter((dirPath) => existsSync(resolve(dirPath, 'package.json')))
-    .map((dirPath) => ({
-      dirPath,
-      relativeDir: dirPath.replace(`${repoRoot}/`, ''),
-      manifest: JSON.parse(readFileSync(resolve(dirPath, 'package.json'), 'utf8')),
-    }))
-    .filter(({ manifest }) => !manifest.private)
-    .filter(({ manifest }) => matcher(manifest.name));
-}
-
-const packages = [
-  ...collectPackages(
-    'packages',
-    (name) => typeof name === 'string' && name.startsWith('@stynx-nyx/'),
-  ),
-  ...collectPackages(
-    'packages-web',
-    (name) => typeof name === 'string' && name.startsWith('@stynx-nyx/'),
-  ),
-];
+const packages = discoverPublishablePackages(repoRoot);
 
 const errors = [];
 errors.push(...validateReleaseVersionPolicy(repoRoot, changesetConfig));

@@ -3,59 +3,20 @@ import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, isAbsolute, join, resolve } from 'node:path';
+import { discoverPublishablePackages } from './lib/publishable-packages.mjs';
 
 const repoRoot = process.cwd();
 const tempRoot = mkdtempSync(join(tmpdir(), 'stynx-consumer-fixture-'));
 const packDir = join(tempRoot, 'packs');
 const fixturesRoot = join(tempRoot, 'consumers');
 
-const packageSpecs = [
-  { name: '@stynx-nyx/audit', dir: 'packages/audit' },
-  { name: '@stynx-nyx/auth', dir: 'packages/auth' },
-  { name: '@stynx-nyx/backend', dir: 'packages/backend' },
-  { name: '@stynx-nyx/contracts', dir: 'packages/contracts' },
-  { name: '@stynx-nyx/core', dir: 'packages/core' },
-  { name: '@stynx-nyx/data', dir: 'packages/data' },
-  { name: '@stynx-nyx/feature-flags', dir: 'packages/feature-flags' },
-  { name: '@stynx-nyx/flow', dir: 'packages/flow' },
-  { name: '@stynx-nyx/health', dir: 'packages/health' },
-  { name: '@stynx-nyx/i18n', dir: 'packages/i18n' },
-  { name: '@stynx-nyx/idempotency', dir: 'packages/idempotency' },
-  { name: '@stynx-nyx/storage', dir: 'packages/storage' },
-  { name: '@stynx-nyx/tenancy', dir: 'packages/tenancy' },
-  { name: '@stynx-nyx/integration-adapter', dir: 'packages/integration-adapter' },
-  { name: '@stynx-nyx/logging', dir: 'packages/logging' },
-  { name: '@stynx-nyx/pdf-a', dir: 'packages/pdf-a' },
-  { name: '@stynx-nyx/pdf-a-vera-docker', dir: 'packages/pdf-a-vera-docker' },
-  { name: '@stynx-nyx/signature', dir: 'packages/signature' },
-  { name: '@stynx-nyx/pdf', dir: 'packages/pdf' },
-  { name: '@stynx-nyx/preferences', dir: 'packages/preferences' },
-  { name: '@stynx-nyx/privacy', dir: 'packages/privacy' },
-  { name: '@stynx-nyx/ratelimit', dir: 'packages/ratelimit' },
-  { name: '@stynx-nyx/sessions', dir: 'packages/sessions' },
-  { name: '@stynx-nyx/testing', dir: 'packages/testing' },
-  { name: '@stynx-nyx/angular', dir: 'packages-web/angular' },
-  { name: '@stynx-nyx/angular-audit', dir: 'packages-web/angular-audit' },
-  { name: '@stynx-nyx/angular-auth', dir: 'packages-web/angular-auth' },
-  { name: '@stynx-nyx/angular-flow', dir: 'packages-web/angular-flow' },
-  { name: '@stynx-nyx/angular-i18n', dir: 'packages-web/angular-i18n' },
-  { name: '@stynx-nyx/angular-iam', dir: 'packages-web/angular-iam' },
-  { name: '@stynx-nyx/angular-profile', dir: 'packages-web/angular-profile' },
-  { name: '@stynx-nyx/angular-sessions', dir: 'packages-web/angular-sessions' },
-  { name: '@stynx-nyx/angular-storage', dir: 'packages-web/angular-storage' },
-  { name: '@stynx-nyx/angular-tenancy', dir: 'packages-web/angular-tenancy' },
-  { name: '@stynx-nyx/angular-trash', dir: 'packages-web/angular-trash' },
-  { name: '@stynx-nyx/angular-ui', dir: 'packages-web/angular-ui' },
-  { name: '@stynx-nyx/sdk', dir: 'packages-web/sdk' },
-];
+const packageSpecs = discoverPublishablePackages(repoRoot);
 
 try {
   mkdirSync(packDir, { recursive: true });
   mkdirSync(fixturesRoot, { recursive: true });
 
-  for (const spec of packageSpecs) {
-    run('pnpm', ['--filter', spec.name, 'build'], repoRoot);
-  }
+  run('pnpm', ['build'], repoRoot);
 
   const tarballs = new Map();
   for (const spec of packageSpecs) {

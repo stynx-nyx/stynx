@@ -1,5 +1,6 @@
-import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { discoverPublishablePackages, publishablePackageNames } from './publishable-packages.mjs';
 
 const dependencySections = [
   'dependencies',
@@ -17,29 +18,12 @@ function writeJson(path, value) {
   if (readFileSync(path, 'utf8') !== next) writeFileSync(path, next);
 }
 
-function collectPackages(repoRoot, directory) {
-  const base = resolve(repoRoot, directory);
-  return readdirSync(base)
-    .map((entry) => resolve(base, entry, 'package.json'))
-    .filter((manifestPath) => existsSync(manifestPath))
-    .map((manifestPath) => ({ manifestPath, manifest: readJson(manifestPath) }))
-    .filter(
-      ({ manifest }) =>
-        manifest.private !== true &&
-        typeof manifest.name === 'string' &&
-        manifest.name.startsWith('@stynx-nyx/'),
-    );
-}
-
 export function collectPublicPackages(repoRoot) {
-  return [
-    ...collectPackages(repoRoot, 'packages'),
-    ...collectPackages(repoRoot, 'packages-web'),
-  ].sort((left, right) => left.manifest.name.localeCompare(right.manifest.name));
+  return discoverPublishablePackages(repoRoot);
 }
 
 export function publicPackageNames(repoRoot) {
-  return collectPublicPackages(repoRoot).map(({ manifest }) => manifest.name);
+  return publishablePackageNames(repoRoot);
 }
 
 export function validateReleaseVersionPolicy(repoRoot, changesetConfig) {

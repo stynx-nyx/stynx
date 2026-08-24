@@ -54,8 +54,9 @@
       "dependencies": ["engines"],
       "argv": ["pnpm", "run", "devai:lint-families"],
       "cwd": ".",
-      "runner": "stynx-lint-v1",
+      "runner": "stynx-lint-v2",
       "inputSelectors": [
+        { "kind": "exact", "pattern": "package.json" },
         { "kind": "prefix", "pattern": "packages/" },
         { "kind": "prefix", "pattern": "packages-web/" },
         { "kind": "prefix", "pattern": "domain/" },

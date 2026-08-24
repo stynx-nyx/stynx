@@ -40,7 +40,10 @@ corepack pnpm changeset
 ## CI and release
 
 - `pnpm ci:stynx` runs the primary framework checks.
-- `pnpm ci:stynx:full` adds end-to-end, mutation, performance, and RLS smoke tests.
+- The required DEVAI local-RC lane is the canonical full release-candidate graph;
+  it includes the governed lint families, end-to-end, mutation, performance, and
+  RLS checks.
+- `pnpm ci:stynx:remote-full` provides the remote non-mutation full lane.
 - `pnpm ci:reference-apps` verifies the reference consumers.
 - `pnpm ci:stynx:release` verifies the release policy, provenance, fixtures, and drafts.
 - `pnpm release:status`, `pnpm release:drafts`, `pnpm version-packages`, and

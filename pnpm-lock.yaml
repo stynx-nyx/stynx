@@ -153,6 +153,9 @@ importers:
       vitest:
         specifier: 3.2.7
         version: 3.2.7(@types/debug@4.1.13)(@types/node@24.12.4)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0))(less@4.9.0)(sass@1.99.0)(terser@5.47.1)(yaml@2.9.0)
+      yaml:
+        specifier: 2.9.0
+        version: 2.9.0
 
   docs/site:
     dependencies:
