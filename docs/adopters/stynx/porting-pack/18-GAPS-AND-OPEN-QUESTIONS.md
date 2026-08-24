@@ -63,11 +63,11 @@ generation**. Verify before relying on it for compliance.
 
 **Severity:** MAJOR (audit FIND-031).
 
-`docs/meta/ops/` and `docs/runbooks/` were absent at audit time.
-The pack does not provide them. Consuming teams need their own
-runbooks for: tenant suspension, LGPD erasure execution, manual
-session revocation, DB role password rotation, Cognito federation
-onboarding. See `docs/work/prompts/AUDIT-REMEDIATION-09-operability-docs.md`.
+Runbooks are now available under `docs/meta/ops/` and
+`docs/adopters/stynx/`, including [gov.br Login federation](../govbr-login-federation.md).
+The gov.br procedure is unvalidated until the PORTAL app has approved
+credentials and completes its staging rehearsal. See
+`docs/work/prompts/AUDIT-REMEDIATION-09-operability-docs.md`.
 
 ### G-006 — Tenant-switch session exchange
 
@@ -198,9 +198,10 @@ deferred mitigation. Evaluate growth modeling for your data.
 
 ### Q-003 — Cognito federation onboarding runbook
 
-The pack does not include this runbook (G-005). Confirm whether
-your operations team has one, or accept the cost of writing one
-during the port.
+**Runbook available, unvalidated until PORTAL.** Use
+[`govbr-login-federation.md`](../govbr-login-federation.md) for gov.br as an
+OIDC IdP behind the existing Cognito user pool. Validation remains blocked on
+PORTAL's approved gov.br and AWS credentials.
 
 ### Q-004 — Quarterly session keypair rotation
 

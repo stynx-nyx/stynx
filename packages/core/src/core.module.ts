@@ -23,13 +23,21 @@ import { STYNX_CORE_CONFIG, STYNX_CORE_OPTIONS, STYNX_SYSTEM_OPERATION_SINK } fr
 
 type ModuleImport = Type<unknown> | ForwardReference | DynamicModule | Promise<DynamicModule>;
 
+// `nestjs-cls` creates a dynamic `ClsRootModule` for each `forRoot()` call.
+// STYNX packages compose `StynxCoreModule.forRoot()` transitively, so creating
+// that descriptor in every call produces multiple global ClsRootModule
+// instances. Nest 11 performs the middleware-options lookup in the strict
+// module context, which makes those duplicate roots fail during application
+// boot. Keep one descriptor for the process and let every STYNX core import
+// reference it.
+const STYNX_CLS_MODULE = ClsModule.forRoot({ global: true });
+
 function createConfigProvider(): Provider {
   return {
     provide: STYNX_CORE_CONFIG,
     inject: [STYNX_CORE_OPTIONS],
-    useFactory: async <TSchema extends ZodTypeAny>(
-      options: StynxCoreModuleOptions<TSchema>,
-    ) => loadStynxConfiguration(options),
+    useFactory: async <TSchema extends ZodTypeAny>(options: StynxCoreModuleOptions<TSchema>) =>
+      loadStynxConfiguration(options),
   };
 }
 
@@ -56,11 +64,14 @@ export class StynxCoreModule {
   static forRootAsync<TSchema extends ZodTypeAny>(
     options: StynxCoreModuleAsyncOptions<TSchema>,
   ): DynamicModule {
-    return this.createModule({
-      provide: STYNX_CORE_OPTIONS,
-      inject: (options.inject ?? []) as never[],
-      useFactory: options.useFactory,
-    }, (options.imports ?? []) as ModuleImport[]);
+    return this.createModule(
+      {
+        provide: STYNX_CORE_OPTIONS,
+        inject: (options.inject ?? []) as never[],
+        useFactory: options.useFactory,
+      },
+      (options.imports ?? []) as ModuleImport[],
+    );
   }
 
   private static createModule(
@@ -70,7 +81,7 @@ export class StynxCoreModule {
     return {
       module: StynxCoreModule,
       global: true,
-      imports: [ClsModule.forRoot({ global: true }), ...imports],
+      imports: [STYNX_CLS_MODULE, ...imports],
       providers: [
         optionsProvider,
         createConfigProvider(),

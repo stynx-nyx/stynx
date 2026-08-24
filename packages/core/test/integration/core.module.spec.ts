@@ -1,4 +1,4 @@
-import { Controller, Get, type CallHandler, type ExecutionContext } from '@nestjs/common';
+import { Controller, Get, Module, type CallHandler, type ExecutionContext } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { defer, from, lastValueFrom } from 'rxjs';
 import { z } from 'zod';
@@ -7,7 +7,11 @@ import { StynxConfigService } from '../../src/config';
 import { RequestContext, RequestContextMutator } from '../../src/request-context';
 import { RequestContextInterceptor } from '../../src/request-context.interceptor';
 import { SystemContext } from '../../src/system-context';
-import { STYNX_SYSTEM_OPERATION_SINK, type SystemOperationRecord, type SystemOperationSink } from '../../src/tokens';
+import {
+  STYNX_SYSTEM_OPERATION_SINK,
+  type SystemOperationRecord,
+  type SystemOperationSink,
+} from '../../src/tokens';
 
 class RecordingSink implements SystemOperationSink {
   readonly records: SystemOperationRecord[] = [];
@@ -41,6 +45,29 @@ class TestController {
     }));
   }
 }
+
+@Module({
+  imports: [
+    StynxCoreModule.forRoot({
+      appName: 'composed-core-a',
+      schema: z.object({}),
+    }),
+  ],
+})
+class ComposedCoreModuleA {}
+
+@Module({
+  imports: [
+    StynxCoreModule.forRoot({
+      appName: 'composed-core-b',
+      schema: z.object({}),
+    }),
+  ],
+})
+class ComposedCoreModuleB {}
+
+@Module({ imports: [ComposedCoreModuleA, ComposedCoreModuleB] })
+class ComposedCoreRootModule {}
 
 interface MockResponse {
   headers: Record<string, string>;
@@ -146,5 +173,15 @@ describe('StynxCoreModule integration', () => {
         moduleRef.get(StynxConfigService);
       })(),
     ).rejects.toThrow('Configuration validation failed');
+  });
+
+  it('boots when composed STYNX modules each register core', async () => {
+    const moduleRef = await Test.createTestingModule({
+      imports: [ComposedCoreRootModule],
+    }).compile();
+    const app = moduleRef.createNestApplication();
+
+    await expect(app.init()).resolves.toBe(app);
+    await app.close();
   });
 });
