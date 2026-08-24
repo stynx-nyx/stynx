@@ -205,6 +205,10 @@ function rewriteGeneratedDocLinks(content) {
     .replace(/\/docs\/framework\/api\/?/gu, '/docs/api-reference/')
     .replace(/\/docs\/api-reference\/stynx-web-/gu, '/docs/api-reference/stynx-nyx-')
     .replace(/\/docs\/api-reference\/stynx-(?!nyx-)/gu, '/docs/api-reference/stynx-nyx-')
+    .replace(
+      /\[G-013 — Background-job patterns\]\(\.\.\/\.\.\/docs\/adopters\/stynx\/porting-pack\/18-GAPS-AND-OPEN-QUESTIONS\.md\)/gu,
+      '`G-013 — Background-job patterns`',
+    )
     .replace(/\]\(\.\/glossary\/?\)/gu, '](/docs/glossary/)')
     .replace(/\]\((?:\.\.\/)+law\/invariants\/?\)/gu, '](/docs/law/invariants/)')
     .replace(/\]\(\.\.\/invariants\/?\)/gu, '](/docs/law/invariants/)')
