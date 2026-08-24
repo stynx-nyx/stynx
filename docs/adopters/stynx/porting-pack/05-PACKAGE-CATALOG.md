@@ -191,6 +191,27 @@ should reach for it. Surfaces are pulled from each package's
 - **Import when:** consumer needs pt-BR or en-US user-facing strings.
 - **Citation:** `packages/i18n/src/index.ts`.
 
+### `@stynx-nyx/worklist` — v0.5.0
+
+- **Purpose:** Tenant-scoped operational work distribution over polymorphic
+  entity references, including atomic claim/release/complete, audited
+  reassignment and supervisor override, RBAC-derived queue eligibility,
+  extensible distribution strategies, and SLA/prazo breach clocks.
+- **Maturity:** NEW. The Flow boundary and ports are fixed by
+  `ADR-WORKLIST-0001` and `docs/framework/contracts/worklist-api.md`.
+- **Public surface:** `StynxWorklistModule`, `WorklistQueuesService`,
+  `WorklistItemsService`, `WorklistSlaService`, `WorklistStrategyRegistry`,
+  built-in strategy keys, validation schemas, event/deadline types, and narrow
+  business-calendar, scheduler, and event-sink ports.
+- **Dependencies:** `@stynx-nyx/data` for transactions/RLS-backed persistence;
+  NestJS peers. It intentionally does not depend on Flow, jobs, outbox, or
+  notifications.
+- **Import when:** a consuming app needs fair, concurrent-safe distribution of
+  domain entities or Flow tasks among permission-qualified workers. Do not use
+  it to model workflow transitions or domain lifecycle.
+- **Citation:** `packages/worklist/src/index.ts` and
+  `docs/framework/contracts/worklist-api.md`.
+
 ### `@stynx-nyx/idempotency` (already covered)
 
 ### `@stynx-nyx/health` (already covered)
@@ -340,6 +361,7 @@ should reach for it. Surfaces are pulled from each package's
 | LGPD export/erasure               | `@stynx-nyx/privacy`                            |
 | File uploads / S3                 | `@stynx-nyx/storage`                            |
 | i18n catalogs                     | `@stynx-nyx/i18n`                               |
+| Work queues, claiming, SLA clocks | `@stynx-nyx/worklist`                           |
 | Test fixtures + matchers          | `@stynx-nyx/testing`                            |
 | CLI ops (migrate, doctor)         | `@stynx-nyx/cli`                                |
 | Shared TypeScript types           | `@stynx-nyx/contracts`                          |
