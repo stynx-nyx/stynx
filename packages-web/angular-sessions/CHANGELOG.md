@@ -1,12 +1,10 @@
 # @stynx-nyx/angular-sessions
 
-## 0.5.0
+## 1.1.1
 
 ### Unified Version Rebaseline
 
-- Align the STYNX root workspace and every public package on the shared 0.5.0 release line without changing runtime behavior or public contracts.
-
-## 1.1.1
+- Re-establish the canonical STYNX 1.x line at exact version 1.1.1 for the complete 38-package fixed group without changing runtime behavior or public contracts.
 
 ### Patch Changes
 
@@ -20,6 +18,12 @@
   - @stynx-nyx/angular-i18n@1.1.0
   - @stynx-nyx/angular-ui@1.0.4
   - @stynx-nyx/angular@1.0.4
+
+## 0.5.0
+
+### Unified Version Rebaseline
+
+- Align the STYNX root workspace and every public package on the shared 0.5.0 release line without changing runtime behavior or public contracts.
 
 ## 1.1.0
 

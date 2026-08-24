@@ -1,5 +1,11 @@
 # @stynx-nyx/logging
 
+## 1.1.1
+
+### Unified Version Rebaseline
+
+- Re-establish the canonical STYNX 1.x line at exact version 1.1.1 for the complete 38-package fixed group without changing runtime behavior or public contracts.
+
 ## 0.5.0
 
 ### Unified Version Rebaseline

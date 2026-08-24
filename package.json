@@ -1,7 +1,7 @@
 {
   "name": "stynx-workspace",
   "private": true,
-  "version": "0.5.0",
+  "version": "1.1.1",
   "license": "BUSL-1.1",
   "description": "STYNX monorepo foundation for backend, frontend, apps, and tooling",
   "packageManager": "pnpm@9.15.0",
