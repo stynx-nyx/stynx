@@ -34,6 +34,7 @@
       "@stynx-nyx/notifications",
       "@stynx-nyx/mobile-runtime",
       "@stynx-nyx/offline-sync",
+      "@stynx-nyx/outbox",
       "@stynx-nyx/pdf",
       "@stynx-nyx/pdf-a",
       "@stynx-nyx/pdf-a-vera-docker",
