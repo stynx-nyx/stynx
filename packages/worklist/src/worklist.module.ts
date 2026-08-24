@@ -6,9 +6,9 @@ import {
   WORKLIST_CLOCK,
   WORKLIST_EVENT_SINK,
   WORKLIST_SCHEDULER,
+  type WorklistModuleOptions,
 } from './ports';
 import { WorklistStrategyRegistry } from './strategies';
-import type { WorklistModuleOptions } from './types';
 import { WorklistItemsService } from './worklist-items.service';
 import { WorklistQueuesService } from './worklist-queues.service';
 import { WorklistSlaService } from './worklist-sla.service';

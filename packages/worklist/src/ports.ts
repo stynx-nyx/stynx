@@ -1,4 +1,4 @@
-import type { WorklistEvent } from './types';
+import type { WorklistDistributionStrategy, WorklistEvent } from './types';
 
 export const WORKLIST_BUSINESS_CALENDAR = Symbol('WORKLIST_BUSINESS_CALENDAR');
 export const WORKLIST_SCHEDULER = Symbol('WORKLIST_SCHEDULER');
@@ -32,6 +32,14 @@ export interface WorklistEventSink {
 
 export interface WorklistClock {
   now(): Date;
+}
+
+export interface WorklistModuleOptions {
+  calendar?: WorklistBusinessCalendar;
+  scheduler?: WorklistSchedulerPort;
+  eventSink?: WorklistEventSink;
+  clock?: WorklistClock;
+  strategies?: WorklistDistributionStrategy[];
 }
 
 export class SystemWorklistClock implements WorklistClock {

@@ -178,11 +178,3 @@ export interface ResolvedWorklistDeadline {
   businessDays: number | null;
   calendarKey: string | null;
 }
-
-export interface WorklistModuleOptions {
-  calendar?: import('./ports').WorklistBusinessCalendar;
-  scheduler?: import('./ports').WorklistSchedulerPort;
-  eventSink?: import('./ports').WorklistEventSink;
-  clock?: import('./ports').WorklistClock;
-  strategies?: WorklistDistributionStrategy[];
-}
