@@ -41,7 +41,8 @@
       "@stynx-nyx/signature",
       "@stynx-nyx/storage",
       "@stynx-nyx/tenancy",
-      "@stynx-nyx/testing"
+      "@stynx-nyx/testing",
+      "@stynx-nyx/worklist"
     ]
   ],
   "linked": [],

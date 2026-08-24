@@ -1974,6 +1974,49 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
 
+  packages/worklist:
+    dependencies:
+      '@nestjs/common':
+        specifier: ^11.1.19
+        version: 11.1.21(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/core':
+        specifier: ^11.1.19
+        version: 11.1.21(@nestjs/common@11.1.21(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.21)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@stynx-nyx/core':
+        specifier: workspace:*
+        version: link:../core
+      '@stynx-nyx/data':
+        specifier: workspace:*
+        version: link:../data
+      reflect-metadata:
+        specifier: ^0.2.2
+        version: 0.2.2
+      rxjs:
+        specifier: ^7.8.2
+        version: 7.8.2
+      zod:
+        specifier: ^4.3.6
+        version: 4.4.3
+    devDependencies:
+      '@nestjs/platform-express':
+        specifier: ^11.1.19
+        version: 11.1.21(@nestjs/common@11.1.21(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.21)
+      '@nestjs/testing':
+        specifier: ^11.1.19
+        version: 11.1.21(@nestjs/common@11.1.21(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.21)(@nestjs/platform-express@11.1.21)
+      '@stynx-nyx/testing':
+        specifier: workspace:*
+        version: link:../testing
+      '@types/node':
+        specifier: 24.12.4
+        version: 24.12.4
+      ts-node:
+        specifier: ^10.9.2
+        version: 10.9.2(@swc/core@1.15.33)(@types/node@24.12.4)(typescript@6.0.3)
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+
   reference/api:
     dependencies:
       '@nestjs/common':
