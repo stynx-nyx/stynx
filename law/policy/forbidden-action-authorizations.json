@@ -721,6 +721,12 @@
       "commit": "c793a9dee81c51f0e26bebf4f3fa74381416c03b",
       "authorized_by": "Owner",
       "reason": "Binds the merged transactional outbox capability to its prior Owner-authorized Architect-owned ADR, invariant, trace, contracts, and policy materializations for the rebased Phase-1 integration range."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "b102fdd34b2ee59abb60f3358b56070f909eb29a",
+      "authorized_by": "Owner",
+      "reason": "Records the Owner authorization for the release-interval squash merge that re-authored a law commit under Owner authority without weakening invariant authority."
     }
   ]
 }
