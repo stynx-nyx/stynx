@@ -619,6 +619,12 @@
       "commit": "d9a7f38cb8a570f0ea39116872166393de4b868a",
       "authorized_by": "Owner",
       "reason": "Authorizes the lossless merge reconciliation of both Architect ADR indexes and both previously authorized receipt histories in the integrated release-policy candidate."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "1a49408b7264a73a6550761a5b42d012b1fb311f",
+      "authorized_by": "Owner",
+      "reason": "Closes the intermediate Owner receipt-ledger mutation created while recording the reviewed release-policy integration authorizations."
     }
   ]
 }
