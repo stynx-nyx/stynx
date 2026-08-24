@@ -1,0 +1,46 @@
+{
+  "name": "@stynx-nyx/mobile-runtime",
+  "version": "0.5.0",
+  "license": "BUSL-1.1",
+  "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
+  "description": "Framework-free offline-first mobile runtime (E6) for stynx consumer apps",
+  "main": "dist/mobile-runtime/src/index.js",
+  "types": "dist/mobile-runtime/src/index.d.ts",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/mobile-runtime/src/index.d.ts",
+      "require": "./dist/mobile-runtime/src/index.js",
+      "default": "./dist/mobile-runtime/src/index.js"
+    },
+    "./testing": {
+      "types": "./dist/mobile-runtime/src/testing.d.ts",
+      "require": "./dist/mobile-runtime/src/testing.js",
+      "default": "./dist/mobile-runtime/src/testing.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist coverage",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint --config ../../tools/eslint-config/lib.mjs \"src/**/*.ts\"",
+    "test": "vitest run --config ./vitest.config.ts",
+    "stryker": "pnpm exec stryker run stryker.conf.mjs",
+    "test:mutation": "pnpm run stryker"
+  },
+  "devDependencies": {
+    "@types/node": "24.12.4",
+    "typescript": "^6.0.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stynx-nyx/stynx.git",
+    "directory": "packages/mobile-runtime"
+  }
+}

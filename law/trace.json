@@ -11,8 +11,8 @@
     },
     "provenance": [
       "DEVAI 1.1.0 deterministic inventory for exact tracked source bytes.",
-      "The 460 tracked test-path census is partitioned into 346 executable tests and 114 non-executable fixtures or support modules.",
-      "Fourteen tracked verification scripts and configuration attestations complete the 474-item governed test surface."
+      "The 469 tracked test-path census is partitioned into 354 executable tests and 115 non-executable fixtures or support modules.",
+      "Fourteen tracked verification scripts and configuration attestations complete the 483-item governed test surface."
     ]
   },
   "invariants": [
@@ -134,6 +134,48 @@
         }
       ],
       "code_areas": []
+    },
+    {
+      "id": "INV-OFFLINE-001",
+      "docs": [
+        {
+          "doc": "law/invariants/INV-OFFLINE-001.json",
+          "anchor": "statement"
+        },
+        {
+          "doc": "docs/framework/contracts/mobile-runtime-api.md",
+          "anchor": "normative-sequence"
+        },
+        {
+          "doc": "docs/framework/contracts/offline-sync-api.md",
+          "anchor": "invariants"
+        }
+      ],
+      "tests": [
+        {
+          "suite": "unit",
+          "path": "packages/mobile-runtime/test/mobile-runtime.spec.ts",
+          "names": ["INV-OFFLINE-001"],
+          "assertions": [
+            "encrypted-store construction guard is enforced",
+            "offline lifecycle preserves idempotency, numbering, normative context and sha256 hashes",
+            "consumer-defined entity types flow through drafts and queue payloads"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/offline-sync/test/integration/offline-sync.database.integration.spec.ts",
+          "names": ["INV-OFFLINE-001"],
+          "assertions": [
+            "all offline tables enforce forced tenant RLS",
+            "entity-scoped numbering intervals are allocated atomically",
+            "payload hash replay is idempotent within a tenant and independent across tenants"
+          ],
+          "mode": "gray_box"
+        }
+      ],
+      "code_areas": ["packages/mobile-runtime/src/**", "packages/offline-sync/src/**"]
     },
     {
       "id": "INV-FLOW-001",
@@ -3388,6 +3430,70 @@
       "lifecycle": "supported",
       "assertion_count": 24,
       "assertion_digest_sha256": "660b8a3ad8b5821dc6f0b9315de7b70fa453a6631b0f4007b5e8c189c5193bf4"
+    },
+    {
+      "path": "packages/mobile-runtime/test/mobile-runtime-edge-cases.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 20,
+      "assertion_digest_sha256": "428d8c1076bc4f8d0d7f618666ee345a6f4110950a567b6a014c94a59147d8a2"
+    },
+    {
+      "path": "packages/mobile-runtime/test/mobile-runtime.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 27,
+      "assertion_digest_sha256": "ebd6b3bed881492172915377354615aae439a03b22b25c2c1d91633e6c3a2986"
+    },
+    {
+      "path": "packages/offline-sync/test/integration/offline-sync.database.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 10,
+      "assertion_digest_sha256": "60db15cdaf4024ac6e961d970113ee06556a2283a8a58d49dd828f5a8bb74ee0"
+    },
+    {
+      "path": "packages/offline-sync/test/unit/offline-sync.migration.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 14,
+      "assertion_digest_sha256": "7e2f68180dc9b2278e9a34831f43d1aea0b156bd33458bd77e5fdbba730c2766"
+    },
+    {
+      "path": "packages/offline-sync/test/unit/offline-sync.service.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 13,
+      "assertion_digest_sha256": "8e207bd1c1cbf75ce1c065be9cc1a532107a138eb8477ae861b2776d6ca32cdd"
+    },
+    {
+      "path": "scripts/lib/publishable-packages.spec.mjs",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 5,
+      "assertion_digest_sha256": "7ef54e5ccc31a272cbbf44740f05b1420bb7d59c9c342b849a35e622fb345485"
+    },
+    {
+      "path": "scripts/verify-branch-protection.spec.mjs",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 5,
+      "assertion_digest_sha256": "2e727059c778fa4bd5990ebb64687c1a0d63d58994d139dc04ab0d72eed410b1"
+    },
+    {
+      "path": "test/scripts/release-version-policy.test.mjs",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 23,
+      "assertion_digest_sha256": "0de3d58b574e04696c6aa74337f59007920975a4f3a28f4eb4785b8e23137cc3"
     }
   ],
   "suites": {

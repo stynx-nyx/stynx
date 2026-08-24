@@ -27,6 +27,7 @@ import { FlowTasksService } from './services/FlowTasksService';
 import { FlowTransitionEffectsService } from './services/FlowTransitionEffectsService';
 import { FlowWaiversService } from './services/FlowWaiversService';
 import { I18NService } from './services/I18NService';
+import { OfflineSyncService } from './services/OfflineSyncService';
 import { PreferencesService } from './services/PreferencesService';
 import { PrivacyService } from './services/PrivacyService';
 import { RecordNotesService } from './services/RecordNotesService';
@@ -66,6 +67,7 @@ export class GeneratedStynxSdk {
     public readonly flowTransitionEffects: FlowTransitionEffectsService;
     public readonly flowWaivers: FlowWaiversService;
     public readonly i18N: I18NService;
+    public readonly offlineSync: OfflineSyncService;
     public readonly preferences: PreferencesService;
     public readonly privacy: PrivacyService;
     public readonly recordNotes: RecordNotesService;
@@ -116,6 +118,7 @@ export class GeneratedStynxSdk {
         this.flowTransitionEffects = new FlowTransitionEffectsService(this.request);
         this.flowWaivers = new FlowWaiversService(this.request);
         this.i18N = new I18NService(this.request);
+        this.offlineSync = new OfflineSyncService(this.request);
         this.preferences = new PreferencesService(this.request);
         this.privacy = new PrivacyService(this.request);
         this.recordNotes = new RecordNotesService(this.request);

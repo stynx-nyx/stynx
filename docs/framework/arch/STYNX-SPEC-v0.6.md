@@ -46,8 +46,10 @@ Where this spec references AWS primitives, the target is one AWS account per env
 
 ### 1.2 Non‑goals [SPEC]
 
+> **Amended 2026-08-24:** Native mobile is now a supported consumer surface through
+> `@stynx-nyx/mobile-runtime`; platform/hardware adapters remain consumer-owned.
+
 - **No multi‑cloud.** AWS‑only.
-- **No native mobile shells.** Web/Angular (including PWAs) only.
 - **No product‑specific domain logic.** STYNX has no opinion about consumer domains.
 - **No event bus, no background jobs, no webhooks in v1.0.** Deferred (§24).
 - **No ABAC.** Pure RBAC of shape `resource:action:scope`.
@@ -595,7 +597,12 @@ Baseline metrics:
 
 ## 12. Sessions [SPEC]
 
-12h hard cap, 30 min idle, refresh rotation with reuse detection, optional device binding, revocation paths. Web storage: access in memory, refresh in `sessionStorage`; strict CSP. Cookie mode opt‑in. No native mobile.
+12h hard cap, 30 min idle, refresh rotation with reuse detection, optional device binding, revocation paths. Web storage: access in memory, refresh in `sessionStorage`; strict CSP. Cookie mode opt‑in.
+
+**Amended 2026-08-24:** Native clients integrate their authenticated STYNX session through the
+`MobileStynxSessionPort` in `@stynx-nyx/mobile-runtime`. The framework does not prescribe token
+storage on a device; the consumer-supplied adapter must use platform secure storage. Client-reported
+device posture is not attestation; server-side attestation remains Phase 5 work.
 
 ---
 
@@ -1132,17 +1139,17 @@ Per v0.3. ICU MessageFormat, `pt-BR` + `en-US`, resolution order: session → Ac
 
 ## 24. Deferred Extensions [v1.1+]
 
-| #   | Capability                           | Target | Notes                                                           |
-| --- | ------------------------------------ | ------ | --------------------------------------------------------------- |
-| E1  | Feature flags                        | v1.1   | Per‑tenant + per‑user, Redis pub/sub invalidation.              |
-| E2  | Background jobs                      | v1.1   | BullMQ; jobs carry `TenantContext` + `ActorContext`.            |
-| E3  | Outbox + EventBridge                 | v1.1   | Transactional outbox; per‑(tenant, aggregate) ordering.         |
-| E4  | Webhook subscriptions                | v1.2   | Built atop the outbox.                                          |
-| E5  | Blue/green schema migrations         | v1.2   | Expand‑contract recipes.                                        |
-| E6  | Offline write queueing in client SDK | v1.2   | PWA outbox; relies on §22.                                      |
-| E7  | Per‑tenant KMS CMK                   | v1.2   | BYOK.                                                           |
-| E8  | Document virus scanning              | v1.1   | GuardDuty Malware Protection for S3, ClamAV‑in‑Lambda fallback. |
-| E9  | Archive partitioning by `deleted_at` | v1.2   | If archive growth becomes a concern.                            |
+| #   | Capability                           | Target               | Notes                                                                         |
+| --- | ------------------------------------ | -------------------- | ----------------------------------------------------------------------------- |
+| E1  | Feature flags                        | v1.1                 | Per‑tenant + per‑user, Redis pub/sub invalidation.                            |
+| E2  | Background jobs                      | v1.1                 | BullMQ; jobs carry `TenantContext` + `ActorContext`.                          |
+| E3  | Outbox + EventBridge                 | v1.1                 | Transactional outbox; per‑(tenant, aggregate) ordering.                       |
+| E4  | Webhook subscriptions                | v1.2                 | Built atop the outbox.                                                        |
+| E5  | Blue/green schema migrations         | v1.2                 | Expand‑contract recipes.                                                      |
+| E6  | Offline write queueing in client SDK | Delivered 2026-08-24 | `mobile-runtime` + `offline-sync`; web/native adapters remain consumer-owned. |
+| E7  | Per‑tenant KMS CMK                   | v1.2                 | BYOK.                                                                         |
+| E8  | Document virus scanning              | v1.1                 | GuardDuty Malware Protection for S3, ClamAV‑in‑Lambda fallback.               |
+| E9  | Archive partitioning by `deleted_at` | v1.2                 | If archive growth becomes a concern.                                          |
 
 ---
 

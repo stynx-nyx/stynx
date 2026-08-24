@@ -5,6 +5,7 @@ shape package boundaries, generated diagnostics, or adoption policy.
 
 ## Accepted Decisions
 
+- [Mobile/offline E6 promotion from TEAT](ADR-MOBILE-OFFLINE-0001-teat-promotion.md)
 - [Canonical 1.x package line and registry anomaly correction](ADR-VERSION-LINE-0001.md)
 - [CI economy, release authority, and database isolation](2026-08-24-ci-economy.md)
 - [ADR-WORKLIST-0001 — Flow and worklist boundary, distribution, and SLA clocks](ADR-WORKLIST-0001-flow-boundary-distribution-sla.md)

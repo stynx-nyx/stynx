@@ -7,7 +7,7 @@ export const registryVersionPolicyConstants = Object.freeze({
   anomalyPolicySha256: '2be2ece2dea2c36b4aaad0e45214b878feae5dbc0461f4f0486bbe2bca520816',
   candidate: '1.1.1',
   canonicalMajor: 1,
-  packageCount: 38,
+  packageCount: 40,
   registryUrl: 'https://npm.pkg.github.com',
 });
 

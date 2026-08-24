@@ -2,6 +2,15 @@
   "schemaVersion": "1",
   "requiredEvidence": [
     {
+      "surface": "offline-sync",
+      "file": "packages/offline-sync/test/integration/offline-sync.database.integration.spec.ts",
+      "patterns": [
+        "applies idempotently with forced RLS and tenant-leading payload uniqueness",
+        "deduplicates payload hashes per tenant and RLS hides the other tenant",
+        "set local role stynx_app"
+      ]
+    },
+    {
       "surface": "auth",
       "file": "test/db/runtime/auth/rls-policies.runtime.spec.ts",
       "patterns": [

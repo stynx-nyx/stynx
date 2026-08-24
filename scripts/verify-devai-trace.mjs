@@ -63,8 +63,12 @@ const executableSet = new Set(executableTests);
 const invariantFiles = readdirSync(resolve(repoRoot, 'law/invariants'))
   .filter((name) => /^INV-.*\.json$/u.test(name))
   .sort();
-const invariants = invariantFiles.map((name) => JSON.parse(readFileSync(resolve(repoRoot, 'law/invariants', name), 'utf8')));
-const activeIds = new Set(invariants.filter(({ status }) => status === 'active').map(({ id }) => id));
+const invariants = invariantFiles.map((name) =>
+  JSON.parse(readFileSync(resolve(repoRoot, 'law/invariants', name), 'utf8')),
+);
+const activeIds = new Set(
+  invariants.filter(({ status }) => status === 'active').map(({ id }) => id),
+);
 const traceInvariantIds = new Set(trace.invariants.map(({ id }) => id));
 const corpusByPath = new Map();
 
@@ -74,7 +78,9 @@ for (const entry of trace.test_corpus) {
   if (!trackedSet.has(entry.path)) fail(`untracked or missing test path: ${entry.path}`);
   if (!executableSet.has(entry.path)) fail(`non-executable path in test_corpus: ${entry.path}`);
   if (entry.suite !== classifySuite(entry.path)) {
-    fail(`suite mismatch for ${entry.path}: expected ${classifySuite(entry.path)}, found ${entry.suite}`);
+    fail(
+      `suite mismatch for ${entry.path}: expected ${classifySuite(entry.path)}, found ${entry.suite}`,
+    );
   }
   if (!Array.isArray(entry.invariant_ids) || entry.invariant_ids.length === 0) {
     fail(`unmapped executable test: ${entry.path}`);
@@ -84,7 +90,9 @@ for (const entry of trace.test_corpus) {
   }
   const projection = assertionProjection(entry.path);
   if (projection.length !== entry.assertion_count) {
-    fail(`assertion count mismatch for ${entry.path}: expected ${projection.length}, found ${entry.assertion_count}`);
+    fail(
+      `assertion count mismatch for ${entry.path}: expected ${projection.length}, found ${entry.assertion_count}`,
+    );
   }
   const digest = sha256(projection);
   if (digest !== entry.assertion_digest_sha256) fail(`assertion digest mismatch for ${entry.path}`);
@@ -101,7 +109,9 @@ for (const id of activeIds) {
 }
 
 const supplemental = trace.invariants.flatMap((entry) =>
-  entry.tests.filter(({ target_type: targetType }) => targetType === 'script' || targetType === 'config-attestation'),
+  entry.tests.filter(
+    ({ target_type: targetType }) => targetType === 'script' || targetType === 'config-attestation',
+  ),
 );
 for (const entry of trace.invariants) {
   for (const doc of entry.docs ?? []) {
@@ -112,20 +122,34 @@ for (const entry of trace.invariants) {
   }
 }
 
-const mustIds = invariants.filter(({ status, severity }) => status === 'active' && severity === 'gate').map(({ id }) => id);
-const mustMapped = mustIds.filter((id) => [...corpusByPath.values()].some((entry) => entry.invariant_ids.includes(id)));
-if (testSurface.length !== 460) fail(`tracked test-path census drifted: expected 460, found ${testSurface.length}`);
-if (executableTests.length !== 346) fail(`executable test census drifted: expected 346, found ${executableTests.length}`);
-if (testSurface.length - executableTests.length !== 114) {
-  fail(`fixture/support census drifted: expected 114, found ${testSurface.length - executableTests.length}`);
+const mustIds = invariants
+  .filter(({ status, severity }) => status === 'active' && severity === 'gate')
+  .map(({ id }) => id);
+const mustMapped = mustIds.filter((id) =>
+  [...corpusByPath.values()].some((entry) => entry.invariant_ids.includes(id)),
+);
+if (testSurface.length !== 469)
+  fail(`tracked test-path census drifted: expected 469, found ${testSurface.length}`);
+if (executableTests.length !== 354)
+  fail(`executable test census drifted: expected 354, found ${executableTests.length}`);
+if (testSurface.length - executableTests.length !== 115) {
+  fail(
+    `fixture/support census drifted: expected 115, found ${testSurface.length - executableTests.length}`,
+  );
 }
-if (supplemental.length !== 14) fail(`script/config-attestation census drifted: expected 14, found ${supplemental.length}`);
-if (testSurface.length + supplemental.length !== 474) {
-  fail(`governed test surface drifted: expected 474, found ${testSurface.length + supplemental.length}`);
+if (supplemental.length !== 14)
+  fail(`script/config-attestation census drifted: expected 14, found ${supplemental.length}`);
+if (testSurface.length + supplemental.length !== 483) {
+  fail(
+    `governed test surface drifted: expected 483, found ${testSurface.length + supplemental.length}`,
+  );
 }
-if (trace.meta?.completeness?.min_invariants_with_tests_ratio !== 1) fail('active invariant completeness floor is not 1');
-if (trace.meta?.completeness?.min_must_invariants_with_tests_ratio !== 1) fail('readiness-bearing completeness floor is not 1');
-if (mustMapped.length !== mustIds.length) fail(`readiness-bearing invariant coverage is ${mustMapped.length}/${mustIds.length}`);
+if (trace.meta?.completeness?.min_invariants_with_tests_ratio !== 1)
+  fail('active invariant completeness floor is not 1');
+if (trace.meta?.completeness?.min_must_invariants_with_tests_ratio !== 1)
+  fail('readiness-bearing completeness floor is not 1');
+if (mustMapped.length !== mustIds.length)
+  fail(`readiness-bearing invariant coverage is ${mustMapped.length}/${mustIds.length}`);
 
 const summary = {
   ok: failures.length === 0,

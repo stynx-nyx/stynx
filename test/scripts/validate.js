@@ -376,7 +376,7 @@ async function runMutationEvidenceTests() {
 
   const { roster, failures: rosterFailures } = mutationRoster.discoverMutationRoster(repoRoot);
   assertEqual(rosterFailures.length, 0, 'mutation roster failures');
-  assertEqual(roster.length, 35, 'mutation package roster');
+  assertEqual(roster.length, 37, 'mutation package roster');
   const thresholdBytes = mutationRoster.canonicalize(
     roster.map(({ packageName, thresholds: packageThresholds }) => ({
       packageName,
@@ -385,7 +385,7 @@ async function runMutationEvidenceTests() {
   );
   assertEqual(
     createHash('sha256').update(thresholdBytes).digest('hex'),
-    '175d4322b634363aa93161fc1d5d9ee1091eb207d97fd9afaf4879656e553f32',
+    'a89bbddf93eab549fb71f70778d57f0a176705e3c8082c41f9011459a3c39876',
     'mutation package and threshold contract',
   );
 

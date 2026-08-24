@@ -1,7 +1,7 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:1d99cb84-7531-4e88-81e7-f32b892a2c84",
+  "serialNumber": "urn:uuid:e8e3b3d4-1afe-4d4c-8202-8e5744392461",
   "version": 1,
   "metadata": {
     "timestamp": "2026-05-29T00:00:00.000Z",
@@ -27,7 +27,7 @@
     "properties": [
       {
         "name": "stynx:pnpm-lock-sha256",
-        "value": "1d99cb847531ae88e1e7f32b892a2c8440b3e4cddd3c75b3d8acdc5f94e61546"
+        "value": "e8e3b3d41afefd4c22028e57443924614f1b93a347b48e39d02eb2bd2f9f0d7a"
       },
       {
         "name": "stynx:package-manager",
@@ -1258,6 +1258,46 @@
         {
           "name": "stynx:workspacePath",
           "value": "packages/logging"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@stynx-nyx/mobile-runtime",
+      "version": "0.5.0",
+      "scope": "required",
+      "licenses": [
+        {
+          "license": {
+            "id": "BUSL-1.1"
+          }
+        }
+      ],
+      "purl": "pkg:npm/@stynx-nyx%2fmobile-runtime@0.5.0",
+      "properties": [
+        {
+          "name": "stynx:workspacePath",
+          "value": "packages/mobile-runtime"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@stynx-nyx/offline-sync",
+      "version": "0.5.0",
+      "scope": "required",
+      "licenses": [
+        {
+          "license": {
+            "id": "BUSL-1.1"
+          }
+        }
+      ],
+      "purl": "pkg:npm/@stynx-nyx%2foffline-sync@0.5.0",
+      "properties": [
+        {
+          "name": "stynx:workspacePath",
+          "value": "packages/offline-sync"
         }
       ]
     },

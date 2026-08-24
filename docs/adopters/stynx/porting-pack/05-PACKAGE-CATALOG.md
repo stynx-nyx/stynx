@@ -29,6 +29,26 @@ should reach for it. Surfaces are pulled from each package's
   per tenant; do not import AWS SDKs from adopter code.
 - **Citation:** `packages/notifications/src/index.ts`.
 
+### `@stynx-nyx/mobile-runtime` — v0.5.0
+
+- **Purpose:** Framework-free E6 runtime for encrypted offline drafts, hash-first evidence,
+  entity-scoped numbering, retryable sync batches, printing, and simple conflict resolution.
+- **Maturity:** PROMOTED from TEAT (unit-tested); production device adapters remain consumer-owned.
+- **Public surface:** `OfflineFirstMobileRuntime`, its seven port interfaces, generic mobile types,
+  and a separate `@stynx-nyx/mobile-runtime/testing` sandbox entry.
+- **Import when:** a web or native client must keep creating and queueing entities while offline.
+- **Contract:** [`mobile-runtime-api.md`](../../../framework/contracts/mobile-runtime-api.md).
+
+### `@stynx-nyx/offline-sync` — v0.5.0
+
+- **Purpose:** NestJS server pair for generic numbering reservations, idempotent sync batches,
+  conflict resolution, and tenant-scoped PostgreSQL persistence.
+- **Maturity:** PROMOTED from TEAT (unit and real-PostgreSQL integration tested).
+- **Public surface:** `StynxOfflineSyncModule`, service/controller, PostgreSQL store, store contract,
+  types, and an in-memory test store. The tarball includes `migrations/0001_offline_sync.sql`.
+- **Import when:** a consumer accepts offline-originated entity batches.
+- **Contract:** [`offline-sync-api.md`](../../../framework/contracts/offline-sync-api.md).
+
 ### `@stynx-nyx/core` — v0.1.0
 
 - **Purpose:** RequestContext, error filter, base Database
@@ -395,6 +415,8 @@ should reach for it. Surfaces are pulled from each package's
 | CLI ops (migrate, doctor)         | `@stynx-nyx/cli`                                |
 | Shared TypeScript types           | `@stynx-nyx/contracts`                          |
 | Pipeline composition (one module) | `@stynx-nyx/backend`                            |
+| Offline mobile orchestration      | `@stynx-nyx/mobile-runtime`                     |
+| Number reservations + sync API    | `@stynx-nyx/offline-sync`                       |
 | Angular HTTP client               | `@stynx-nyx/sdk`                                |
 | Angular module + interceptors     | `@stynx-nyx/angular`                            |
 | Angular auth UI                   | `@stynx-nyx/angular-auth`                       |

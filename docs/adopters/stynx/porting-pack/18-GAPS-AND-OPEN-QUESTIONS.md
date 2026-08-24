@@ -178,6 +178,17 @@ Spec §4.6 explicitly disables impersonation. Use `@System()` + `withSystemConte
 for platform admin operations. Foreign products that have
 "login as customer" features must keep them outside STYNX.
 
+### G-016 — Native hardware adapters and device attestation
+
+**Severity:** MAJOR for hostile-device deployments; MINOR for sandbox adoption.
+
+E6 is implemented by `@stynx-nyx/mobile-runtime` and `@stynx-nyx/offline-sync`, but STYNX does
+not ship Capacitor secure-storage/session bindings or camera, GPS, and printer adapters. Device
+posture is client-asserted. Consumers must supply and validate hardware adapters; Phase 5 must add
+server-side attestation before treating posture as a security proof. TEAT must separately adopt the
+published packages, map its `ait` and `trafficAgencyId` vocabulary, migrate data, and preserve its
+product-specific parity tests.
+
 ## TODOs / FIXMEs in the codebase that affect porting
 
 `[VERIFY in your port — sweep `packages/`and`packages-web/`for`TODO|FIXME|XXX|HACK` and review the top-20 results]`. The pack
