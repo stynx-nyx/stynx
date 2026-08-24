@@ -78,6 +78,6 @@ describe('resolveWorklistDeadline', () => {
   });
 
   it('returns no clock when neither item nor queue defines one', async () => {
-    await expect(resolveWorklistDeadline({ tenantId, now })).resolves.toBeNull();
+    await expect(resolveWorklistDeadline({ tenantId, now })).resolves.toEqual(null);
   });
 });
