@@ -4,6 +4,12 @@
   "authorizations": [
     {
       "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "8907183d3249754660c0f68ae344994886a1a538",
+      "authorized_by": "Owner",
+      "reason": "Records the standing Owner and Architect authorization for the outbox promotion ADR and contract without weakening invariant authority."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
       "commit": "5476617ea181cf8de14121b9d5a6388ea77535db",
       "authorized_by": "Owner",
       "reason": "Records the exact candidate observation while preserving the reviewed invariant set."
@@ -697,6 +703,18 @@
       "commit": "8be52b0c535d6236376d258340d5c3380efc7fff",
       "authorized_by": "Owner",
       "reason": "Authorizes only the package-local dist and coverage clean-script literals in the reviewed W1.5 package commit; no broad or unresolved cleanup target is authorized."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "f90c5a6b3a16aa3c3b49f42f190c9733f6d3a5c7",
+      "authorized_by": "Owner",
+      "reason": "Binds the merged mobile-runtime and offline-sync capability to its Architect-owned ADR, invariant, trace, contracts, and policy materializations after the approved Phase-1 integration rebase."
+    },
+    {
+      "forbidden_id": "FORBID-RM-RF",
+      "commit": "f90c5a6b3a16aa3c3b49f42f190c9733f6d3a5c7",
+      "authorized_by": "Owner",
+      "reason": "Authorizes only the package-local dist and coverage clean-script literals in the merged mobile-runtime and offline-sync capability; no broad or unresolved cleanup target is authorized."
     }
   ]
 }

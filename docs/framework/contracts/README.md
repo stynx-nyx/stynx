@@ -12,6 +12,8 @@ can compile or validate against without importing implementation internals.
   orchestration, seven-port boundary, lifecycle, and hash/idempotency contract.
 - [offline-sync-api.md](offline-sync-api.md) — tenant-scoped numbering reservations,
   sync batches, conflicts, HTTP routes, and RLS contract.
+- [outbox-api.md](outbox-api.md) — transactional outbox envelope, lifecycle,
+  dispatch port, retry policy, and inbound ACK verification contract.
 - [session-control.md](session-control.md) — provider-neutral logical-session
   registry, capabilities, revocation guarantees, retry, privacy, and compatible wire contract.
 - [preferences-api.md](preferences-api.md) — closed tenant-subject preferences,
