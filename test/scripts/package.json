@@ -2,7 +2,7 @@
   "name": "stynx-script-tests",
   "private": true,
   "scripts": {
-    "test": "node validate.js",
-    "lint": "eslint --config ../../tools/eslint-config/scripts.mjs \"./**/*.js\""
+    "test": "node --test ./*.test.mjs && node validate.js",
+    "lint": "eslint --config ../../tools/eslint-config/scripts.mjs \"./**/*.js\" \"./**/*.mjs\""
   }
 }
