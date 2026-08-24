@@ -427,6 +427,12 @@
       "commit": "ce43209482e2f3a6e936c85c03e95f7feaaa7625",
       "authorized_by": "Owner",
       "reason": "Authorizes the exact package and Pages publication controls under the existing release and trusted-local-RC decisions."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "3f7a6659308b04927f4873d781ef061bace56155",
+      "authorized_by": "Owner",
+      "reason": "Authorizes ADR-JOBS-0001 and the E2 jobs contract under the Owner standing Architect authorization for the Phase-1 platform round."
     }
   ]
 }
