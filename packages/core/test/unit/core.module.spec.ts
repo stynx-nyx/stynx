@@ -1,7 +1,11 @@
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { z } from 'zod';
 import { StynxCoreModule } from '../../src/core.module';
-import { STYNX_CORE_CONFIG, STYNX_CORE_OPTIONS, STYNX_SYSTEM_OPERATION_SINK } from '../../src/tokens';
+import {
+  STYNX_CORE_CONFIG,
+  STYNX_CORE_OPTIONS,
+  STYNX_SYSTEM_OPERATION_SINK,
+} from '../../src/tokens';
 
 describe('StynxCoreModule', () => {
   it('wires sync and async option providers plus global infrastructure', async () => {
@@ -11,13 +15,15 @@ describe('StynxCoreModule', () => {
     };
     const syncModule = StynxCoreModule.forRoot(options);
     expect(syncModule.global).toBe(true);
-    expect(syncModule.providers).toEqual(expect.arrayContaining([
-      expect.objectContaining({ provide: STYNX_CORE_OPTIONS, useValue: options }),
-      expect.objectContaining({ provide: STYNX_CORE_CONFIG }),
-      expect.objectContaining({ provide: STYNX_SYSTEM_OPERATION_SINK }),
-      expect.objectContaining({ provide: APP_INTERCEPTOR }),
-      expect.objectContaining({ provide: APP_FILTER }),
-    ]));
+    expect(syncModule.providers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ provide: STYNX_CORE_OPTIONS, useValue: options }),
+        expect.objectContaining({ provide: STYNX_CORE_CONFIG }),
+        expect.objectContaining({ provide: STYNX_SYSTEM_OPERATION_SINK }),
+        expect.objectContaining({ provide: APP_INTERCEPTOR }),
+        expect.objectContaining({ provide: APP_FILTER }),
+      ]),
+    );
 
     const asyncFactory = vi.fn(async () => options);
     const asyncModule = StynxCoreModule.forRootAsync({
@@ -26,31 +32,49 @@ describe('StynxCoreModule', () => {
       useFactory: asyncFactory,
     });
     expect(asyncModule.imports).toHaveLength(2);
-    expect(asyncModule.providers).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        provide: STYNX_CORE_OPTIONS,
-        inject: ['dep'],
-        useFactory: asyncFactory,
-      }),
-    ]));
+    expect(asyncModule.providers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          provide: STYNX_CORE_OPTIONS,
+          inject: ['dep'],
+          useFactory: asyncFactory,
+        }),
+      ]),
+    );
 
     const defaultAsyncModule = StynxCoreModule.forRootAsync({
       useFactory: asyncFactory,
     });
     expect(defaultAsyncModule.imports).toHaveLength(1);
-    expect(defaultAsyncModule.providers).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        provide: STYNX_CORE_OPTIONS,
-        inject: [],
-      }),
-    ]));
+    expect(defaultAsyncModule.providers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          provide: STYNX_CORE_OPTIONS,
+          inject: [],
+        }),
+      ]),
+    );
 
-    const sinkProvider = syncModule.providers?.find((provider) =>
-      typeof provider === 'object'
-      && provider !== null
-      && 'provide' in provider
-      && provider.provide === STYNX_SYSTEM_OPERATION_SINK,
+    const sinkProvider = syncModule.providers?.find(
+      (provider) =>
+        typeof provider === 'object' &&
+        provider !== null &&
+        'provide' in provider &&
+        provider.provide === STYNX_SYSTEM_OPERATION_SINK,
     ) as { useValue: { write: () => Promise<void> } };
     await expect(sinkProvider.useValue.write()).resolves.toBe(undefined);
+  });
+
+  it('reuses one global CLS root registration across composed core modules', () => {
+    const first = StynxCoreModule.forRoot({
+      appName: 'first-consumer',
+      schema: z.object({}),
+    });
+    const second = StynxCoreModule.forRoot({
+      appName: 'second-consumer',
+      schema: z.object({}),
+    });
+
+    expect(first.imports?.[0]).toBe(second.imports?.[0]);
   });
 });
