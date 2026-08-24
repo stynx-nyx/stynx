@@ -79,7 +79,10 @@ function versionRebaselineValid(baseCommit, versionCommit, changes) {
     return false;
   }
   const changedManifests = changes
-    .filter(({ status, path }) => status === 'M' && path.endsWith('/package.json'))
+    .filter(
+      ({ status, path }) =>
+        status === 'M' && /^(packages|packages-web)\/[^/]+\/package\.json$/u.test(path),
+    )
     .map(({ path }) => path)
     .sort();
   const expectedManifests = collectPublicPackages(repoRoot)
