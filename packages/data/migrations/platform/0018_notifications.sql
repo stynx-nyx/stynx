@@ -66,6 +66,7 @@ CREATE TABLE IF NOT EXISTS notifications.deliveries (
 CREATE INDEX IF NOT EXISTS deliveries_due_idx ON notifications.deliveries (tenant_id, next_attempt_at)
   WHERE status = 'QUEUED';
 
+-- @no_soft_delete: inbox records remain auditable operational delivery evidence.
 CREATE TABLE IF NOT EXISTS notifications.inbox_items (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL REFERENCES tenancy.tenants(id),
