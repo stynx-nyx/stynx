@@ -1,5 +1,17 @@
 # @stynx-nyx/tenancy
 
+## 1.0.0
+
+### Patch Changes
+
+- Updated dependencies [bb469ee]
+- Updated dependencies [0aa9695]
+- Updated dependencies [e99b2cc]
+  - @stynx-nyx/core@1.0.0
+  - @stynx-nyx/data@1.0.0
+  - @stynx-nyx/idempotency@1.0.0
+  - @stynx-nyx/contracts@1.0.0
+
 ## 0.5.0
 
 ### Unified Version Rebaseline

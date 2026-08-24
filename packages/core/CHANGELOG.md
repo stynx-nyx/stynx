@@ -1,5 +1,11 @@
 # @stynx-nyx/core
 
+## 1.0.0
+
+### Patch Changes
+
+- bb469ee: Deduplicate the global `nestjs-cls` root module when multiple STYNX modules compose.
+
 ## 0.5.0
 
 ### Unified Version Rebaseline

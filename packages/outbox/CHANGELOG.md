@@ -1,5 +1,22 @@
 # @stynx-nyx/outbox
 
+## 1.0.0
+
+### Minor Changes
+
+- c793a9d: Add the transactional outbox promoted from PEC: same-transaction enqueue,
+  concurrent safe claiming, pluggable HTTP dispatch, configurable retry backoff,
+  and HMAC-verified inbound ACK helpers.
+
+### Patch Changes
+
+- Updated dependencies [bb469ee]
+- Updated dependencies [0aa9695]
+- Updated dependencies [e99b2cc]
+  - @stynx-nyx/core@1.0.0
+  - @stynx-nyx/data@1.0.0
+  - @stynx-nyx/contracts@1.0.0
+
 ## 0.5.0
 
 ### Minor Changes

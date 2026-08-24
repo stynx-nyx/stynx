@@ -1,5 +1,11 @@
 # @stynx-nyx/cli
 
+## 1.0.0
+
+### Patch Changes
+
+- @stynx-nyx/privacy@1.0.0
+
 ## 0.5.0
 
 ### Unified Version Rebaseline

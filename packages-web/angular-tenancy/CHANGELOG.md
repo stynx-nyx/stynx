@@ -1,5 +1,11 @@
 # @stynx-nyx/angular-tenancy
 
+## 1.0.0
+
+### Patch Changes
+
+- @stynx-nyx/angular-i18n@1.0.0
+
 ## 0.5.0
 
 ### Unified Version Rebaseline

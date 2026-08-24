@@ -1,5 +1,12 @@
 # @stynx-nyx/mobile-runtime
 
+## 1.0.0
+
+### Minor Changes
+
+- f90c5a6: Promote TEAT's proven offline-first mobile orchestration into a framework-free runtime with
+  consumer-defined entity types and a sandbox adapter test kit.
+
 ## 0.5.0
 
 ### Minor Changes

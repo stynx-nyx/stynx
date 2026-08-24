@@ -1,5 +1,14 @@
 # @stynx-nyx/angular-trash
 
+## 1.0.0
+
+### Patch Changes
+
+- @stynx-nyx/sdk@1.0.0
+- @stynx-nyx/angular-auth@1.0.0
+- @stynx-nyx/angular-i18n@1.0.0
+- @stynx-nyx/angular-ui@1.0.0
+
 ## 0.5.0
 
 ### Unified Version Rebaseline

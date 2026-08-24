@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/notifications",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Multi-channel notification delivery (email/SMS/push/in-app) with templates, preference-aware suppression, and retryable delivery tracking for stynx",
