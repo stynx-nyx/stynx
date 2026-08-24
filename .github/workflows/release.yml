@@ -100,6 +100,12 @@ jobs:
       - name: Build publishable STYNX workspace packages
         run: pnpm build
 
+      - name: Validate unified registry monotonicity
+        if: env.STYNX_ENABLE_REGISTRY_PUBLISH == 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: node scripts/verify-release-policy.mjs --registry-monotonicity --candidate 1.1.1
+
       - name: Run Changesets release flow
         uses: changesets/action@d94a5c301145045a0960133674e003b265942a22 # v1.8.0
         with:

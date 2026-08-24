@@ -42,12 +42,13 @@ export function publicPackageNames(repoRoot) {
   return collectPublicPackages(repoRoot).map(({ manifest }) => manifest.name);
 }
 
-export function validateReleaseVersionPolicy(repoRoot, changesetConfig) {
+export function validateReleaseVersionPolicy(repoRoot, changesetConfig, options = {}) {
   const rootPath = resolve(repoRoot, 'package.json');
   const rootManifest = readJson(rootPath);
   const packages = collectPublicPackages(repoRoot);
   const packageNames = packages.map(({ manifest }) => manifest.name);
   const errors = [];
+  const expectedVersion = options.expectedVersion;
 
   if (packages.length === 0) errors.push('release version policy found no public packages');
 
@@ -58,6 +59,16 @@ export function validateReleaseVersionPolicy(repoRoot, changesetConfig) {
         ...versions,
       ].join(',')}`,
     );
+  }
+  if (expectedVersion !== undefined && rootManifest.version !== expectedVersion) {
+    errors.push(`root package version must be exactly ${expectedVersion}`);
+  }
+  if (expectedVersion !== undefined) {
+    for (const { manifest } of packages) {
+      if (manifest.version !== expectedVersion) {
+        errors.push(`${manifest.name}: version must be exactly ${expectedVersion}`);
+      }
+    }
   }
 
   const fixed = changesetConfig.fixed;
@@ -72,7 +83,15 @@ export function validateReleaseVersionPolicy(repoRoot, changesetConfig) {
   for (const { manifest } of packages) {
     for (const section of dependencySections) {
       for (const [name, range] of Object.entries(manifest[section] ?? {})) {
-        if (!packageNames.includes(name) || String(range).startsWith('workspace:')) continue;
+        if (!packageNames.includes(name)) continue;
+        if (String(range).startsWith('workspace:')) {
+          if (expectedVersion !== undefined && range !== 'workspace:*') {
+            errors.push(
+              `${manifest.name}: ${section}.${name} must be workspace:* for exact ${expectedVersion} publication`,
+            );
+          }
+          continue;
+        }
         if (range !== `^${rootManifest.version}`) {
           errors.push(`${manifest.name}: ${section}.${name} must be ^${rootManifest.version}`);
         }
