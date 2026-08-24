@@ -439,6 +439,162 @@
       "commit": "1fa4a1df71340e5120612ece08324667f8e114c7",
       "authorized_by": "Owner",
       "reason": "Authorizes the exact pre-publication 1.1.1 registry monotonicity guard and its placement before the Changesets publication action under ADR-VERSION-LINE-0001."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "f2e6abe55484cd1d1ad8a76053069f7c6d99ba5c",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the weekly audit RLS-before-reset ordering required by ADR-CI-ECONOMY Decision 6a and runner-local file-based package authentication for the hardening build without weakening either workflow."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "e1007a95c322812b2fa35ba71257c1514b65f90d",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the release workflow to fail closed on the deterministic forbidden-action range from ADR-CI-ECONOMY before changesets publication, with HUSKY disabled only in write-capable CI."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "324527147b2ffe1986484c815d676a42cecdef94",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the Architect-authored ADR-CI-ECONOMY and its index entry as the governing record for CI economy, release scan boundaries, database ordering, and branch-versus-tag controls."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "b643613a3c817a4c31903b0ede7d438f116db35e",
+      "authorized_by": "Owner",
+      "reason": "Authorizes exclusion of checkout-only Git metadata from trusted local-RC source proof under the accepted 2026-08-16 trusted-local-RC evidence ADR."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "fd45d9596981621ce6322576ae34f9ed035b33ad",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the trusted local-RC verifier workflow and its exact trust, toolchain, environment, and task bindings under the Architect decision committed with that implementation."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "75d3e795fc7069dd2ab09b84a337d99e81ddd9bd",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the reviewed merge resolution that preserves DEVAI npm-package consumption D-118 and the inventory-coverage workflow behavior from both parent histories."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "75d3e795fc7069dd2ab09b84a337d99e81ddd9bd",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the merge reconciliation of generated route evidence and product use-case links without weakening the governed coverage population."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "bbe7e186938f1c0b80828a43c4d72022c91b895f",
+      "authorized_by": "Owner",
+      "reason": "Authorizes file-based BuildKit authentication for the reference API compose build under the accepted DEVAI npm-package consumption decision, with no token persisted in the image."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "d1730126efd326b67bf13208d0c9b26d809483bf",
+      "authorized_by": "Owner",
+      "reason": "Authorizes secret-mounted package authentication for reference Docker builds and the matching CLI-consumed dependency allowlist under DEVAI npm-package consumption D-118."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "d8cc2edb25bac88d4361bdc4e85f69530336d499",
+      "authorized_by": "Owner",
+      "reason": "Authorizes replacing inherited reusable-workflow secrets with the single declared package-read secret, narrowing credential exposure under the npm-package consumption decision."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "121483c7d46cc02b571e8184620eaf53f83f24d2",
+      "authorized_by": "Owner",
+      "reason": "Authorizes resynchronized route evidence and the explicit distinction between a DEVAI coverage REVIEW and a failing sensor while preserving all route inventory checks."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "8b745641c0405a104c11dfdb4687862920151952",
+      "authorized_by": "Owner",
+      "reason": "Authorizes environment-only GitHub Packages read authentication for every workflow installation path required by DEVAI npm-package consumption D-118."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "b7b31cd83c00c74760b5b73e84d02c3d9841642b",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the CI transition from sibling source checkout to published DEVAI packages under the accepted D-118 and D-122 npm-consumption architecture decision."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "b7b31cd83c00c74760b5b73e84d02c3d9841642b",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the exact DEVAI npm-package consumption materialization in project policy under the Architect-owned D-118 and D-122 decision."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "53b324be8c330843ec5b81d6bb63dc3688839b06",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the governed TASK-0003 rename wiring and replacement of the hand-written invariant validator with the canonical DEVAI validator."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "aaea3f79436eaad0f9bd1799079ea904fc6c9405",
+      "authorized_by": "Owner",
+      "reason": "Authorizes building the reference API dependency graph before its workflow verification so the existing reference-app gate can execute completely."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "95cf368f6411279a40f9cc33f2785e683c2c8a79",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the Architect-defined DEVAI workflow path-glob guards to fail closed on unsupported or overbroad path selection."
+    },
+    {
+      "forbidden_id": "FORBID-RM-RF",
+      "commit": "d7a6c410caf42e10472671195a836baa1c54a839",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the package-local clean script literal introduced with the governed R21 Preferences and Sessions implementation; the commit did not execute destructive cleanup."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "707a77cb789964873d13ea74e967907fd29c47f5",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the reviewed merge of Docker-bound test stabilization with the canonical DEVAI local-evidence workflow migration, preserving both parent gate sets."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "707a77cb789964873d13ea74e967907fd29c47f5",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the merge reconciliation of the DEVAI local-evidence project policy under D-117 without weakening product invariants or tests."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "c6616141649f87ed3acbacb50b369f76417ec873",
+      "authorized_by": "Owner",
+      "reason": "Authorizes migration from the repository prototype to the canonical DEVAI local-evidence CLI and corresponding workflow path cleanup under D-117."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "c6616141649f87ed3acbacb50b369f76417ec873",
+      "authorized_by": "Owner",
+      "reason": "Authorizes materializing D-117 local-evidence policy in the DEVAI project configuration while retaining the prior evidence requirements."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "e7b7e356780c08bc08feb9331795a4ffb491599e",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the release workflow token fallback as reviewed historical CI configuration; this receipt does not authorize any publication or registry mutation."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "a2059cdb1ddf0ee8a5a812db86a4807dff6248e5",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the SHA-pinned JUnit reporting action update within the reviewed 2026-07 dependency and security consolidation, with workflow lint recorded green."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "c56d0002846f47c383473c6c613fd9f92355aa68",
+      "authorized_by": "Owner",
+      "reason": "Records the Owner's exact F7 authorization receipts after reviewing each historical and current finding against its governing decision and observed commit diff."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "c945fd1c512cd3c71eddbb16dc71718bcd1a1e30",
+      "authorized_by": "Owner",
+      "reason": "Closes the intermediate Owner receipt-ledger mutation created while applying the reviewed F7 authorization batch."
     }
   ]
 }

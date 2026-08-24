@@ -40,7 +40,15 @@ jobs:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - name: Start reference stack
-        run: docker compose -f reference/api/docker-compose.yml up -d --build
+        # NODE_AUTH_TOKEN_FILE feeds docker-compose.yml's file-based build
+        # secret for GitHub Packages -- runner-local temp file, never committed, gone
+        # when the VM is torn down.
+        run: |
+          set -euo pipefail
+          NODE_AUTH_TOKEN_FILE="$(mktemp)"
+          printf '%s' "$NODE_AUTH_TOKEN" > "$NODE_AUTH_TOKEN_FILE"
+          export NODE_AUTH_TOKEN_FILE
+          docker compose -f reference/api/docker-compose.yml up -d --build
 
       - name: Wait for API
         run: |
