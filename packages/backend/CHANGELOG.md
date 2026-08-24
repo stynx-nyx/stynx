@@ -1,5 +1,13 @@
 # @stynx-nyx/backend
 
+## 1.0.0
+
+### Patch Changes
+
+- @stynx-nyx/idempotency@1.0.0
+- @stynx-nyx/ratelimit@1.0.0
+- @stynx-nyx/contracts@1.0.0
+
 ## 0.5.0
 
 ### Unified Version Rebaseline

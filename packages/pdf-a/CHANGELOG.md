@@ -1,5 +1,11 @@
 # @stynx-nyx/pdf-a
 
+## 1.0.0
+
+### Patch Changes
+
+- @stynx-nyx/logging@1.0.0
+
 ## 0.5.0
 
 ### Unified Version Rebaseline

@@ -1,5 +1,11 @@
 # @stynx-nyx/pdf
 
+## 1.0.0
+
+### Patch Changes
+
+- @stynx-nyx/signature@1.0.0
+
 ## 0.5.0
 
 ### Unified Version Rebaseline

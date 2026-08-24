@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/worklist",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Tenant-scoped work distribution primitives for stynx: queues, atomic claiming, distribution strategies, and SLA clocks",

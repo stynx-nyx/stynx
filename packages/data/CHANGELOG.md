@@ -1,5 +1,20 @@
 # @stynx-nyx/data
 
+## 1.0.0
+
+### Minor Changes
+
+- 0aa9695: Add tenant-scoped notification delivery with versioned templates, SES/SNS adapters,
+  in-app inbox delivery, preference suppression, and retryable tracking.
+- e99b2cc: Add the tenant-scoped worklist package with RBAC-derived queue eligibility,
+  atomic claiming, extensible distribution strategies, audited reassignment and
+  supervisor overrides, and absolute or business-day SLA clocks.
+
+### Patch Changes
+
+- Updated dependencies [bb469ee]
+  - @stynx-nyx/core@1.0.0
+
 ## 0.5.0
 
 ### Unified Version Rebaseline

@@ -1,5 +1,7 @@
 # @stynx-nyx/sdk
 
+## 1.0.0
+
 ## 0.5.0
 
 ### Unified Version Rebaseline
