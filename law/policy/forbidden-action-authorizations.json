@@ -625,6 +625,12 @@
       "commit": "1a49408b7264a73a6550761a5b42d012b1fb311f",
       "authorized_by": "Owner",
       "reason": "Closes the intermediate Owner receipt-ledger mutation created while recording the reviewed release-policy integration authorizations."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "f189487fbee82210a7014317e742a7075ffcc2f6",
+      "authorized_by": "Owner",
+      "reason": "Closes the receipt-ledger mutation that bound the exact release-policy integration authorization chain."
     }
   ]
 }
