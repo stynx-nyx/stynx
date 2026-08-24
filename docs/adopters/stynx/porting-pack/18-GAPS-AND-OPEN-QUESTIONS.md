@@ -148,15 +148,17 @@ SDK error handling and refresh flow yourself.
 
 ### G-013 — Background-job patterns
 
-**Severity:** MAJOR.
+**Status:** CLOSED by `@stynx-nyx/jobs` (E2; ADR-JOBS-0001). **Severity:** MAJOR.
 
 Spec §1.2 / §24 explicitly says no event bus, no job runner, no
 webhooks in v1.0. Foreign codebases often have these. Consumers
-must keep their existing job runner (Bull, BullMQ, Agenda, cron)
+formerly had to keep their existing job runner (Bull, BullMQ, Agenda, cron)
 outside STYNX and wrap each handler in
 `withSystemContext('job-name', fn)`. The pack documents
 `withSystemContext` but does not provide a job-runner integration
-pattern.
+pattern. Consumers now use the narrow `JobsPort` and register handlers with
+`JobsRegistry`; the Postgres worker wraps every claim and execution in system
+context and carries tenant/actor metadata.
 
 ### G-014 — Multi-tenant report queries that need cross-tenant aggregation
 

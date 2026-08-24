@@ -18,6 +18,8 @@ can compile or validate against without importing implementation internals.
   `@stynx-nyx/angular-audit` list, detail, entity-history, and integrity views.
 - [flow-api.md](flow-api.md) — HTTP contract for `@stynx-nyx/flow` and
   `@stynx-nyx/angular-flow`.
+- [jobs-api.md](jobs-api.md) — tenant-scoped Postgres scheduler and worker
+  contract for `@stynx-nyx/jobs`.
 - [signature.md](signature.md) — PAdES/TSA signing and verification contract for
   `@stynx-nyx/signature`.
 - [xmldsig.md](xmldsig.md) — XMLDSig signing and verification contract for
