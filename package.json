@@ -22,6 +22,7 @@
     "lint:migrations": "pnpm --filter migration-linter run lint:repo",
     "lint:cycles": "madge --circular packages/ packages-web/ tools/ --extensions ts,mjs --exclude '(^|/)(dist|build|coverage|node_modules)/'",
     "lint:workflows": "node scripts/lint-workflows.mjs",
+    "verify:branch-protection": "node scripts/verify-branch-protection.mjs",
     "db:verify": "node scripts/db-verify.mjs",
     "db:acceptance": "node scripts/verify-db-acceptance.mjs",
     "api:coverage": "node scripts/verify-api-coverage.mjs --strict",
@@ -110,7 +111,8 @@
     "turbo": "^2.9.6",
     "typescript": "^6.0.3",
     "unplugin-swc": "^1.5.9",
-    "vitest": "^3"
+    "vitest": "^3",
+    "yaml": "2.9.0"
   },
   "lint-staged": {
     "*.{js,cjs,mjs,ts,tsx,cts,mts}": [
