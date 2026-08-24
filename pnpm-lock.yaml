@@ -1643,6 +1643,43 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
 
+  packages/outbox:
+    dependencies:
+      '@nestjs/common':
+        specifier: ^11.1.19
+        version: 11.1.21(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/core':
+        specifier: ^11.1.19
+        version: 11.1.21(@nestjs/common@11.1.21(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.21)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@stynx-nyx/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@stynx-nyx/core':
+        specifier: workspace:*
+        version: link:../core
+      '@stynx-nyx/data':
+        specifier: workspace:*
+        version: link:../data
+      reflect-metadata:
+        specifier: ^0.2.2
+        version: 0.2.2
+      rxjs:
+        specifier: ^7.8.2
+        version: 7.8.2
+    devDependencies:
+      '@types/node':
+        specifier: 24.12.4
+        version: 24.12.4
+      '@types/supertest':
+        specifier: ^7.2.0
+        version: 7.2.0
+      supertest:
+        specifier: ^7.2.2
+        version: 7.2.2
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+
   packages/pdf:
     dependencies:
       '@nestjs/common':
