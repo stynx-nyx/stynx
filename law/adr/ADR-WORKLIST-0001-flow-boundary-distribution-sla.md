@@ -42,13 +42,13 @@ observable. Two PEC precedents sharpen the decision:
 Flow owns **what work means and how it advances**. Worklist owns **who receives
 open work, under which queue policy, and by when it should be handled**.
 
-| Concern | Flow | Worklist |
-| --- | --- | --- |
-| Process graph, run, node, transition | Owns | Never models |
-| Human task actions and completion semantics | Owns | Never interprets |
-| Queue/pool, claim, release, reassignment, workload | Never owns | Owns |
-| Operational due date and breach observation | May supply a task SLA hint | Owns the persisted distribution clock |
-| Domain entity lifecycle | Host domain owns | References only |
+| Concern                                            | Flow                       | Worklist                              |
+| -------------------------------------------------- | -------------------------- | ------------------------------------- |
+| Process graph, run, node, transition               | Owns                       | Never models                          |
+| Human task actions and completion semantics        | Owns                       | Never interprets                      |
+| Queue/pool, claim, release, reassignment, workload | Never owns                 | Owns                                  |
+| Operational due date and breach observation        | May supply a task SLA hint | Owns the persisted distribution clock |
+| Domain entity lifecycle                            | Host domain owns           | References only                       |
 
 A work item references any host entity through `(entity_type, entity_id)`. A
 Flow integration uses `entity_type = 'flow.task'` and the Flow task UUID as

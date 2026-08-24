@@ -40,11 +40,11 @@ request context unless the documented host scheduler adapter establishes one.
 
 ### `WorklistQueuesService`
 
-| Operation | Contract |
-| --- | --- |
-| `create(input)` | Creates a tenant queue with concrete worker and supervisor RBAC permission keys. |
-| `update(id, input)` | Updates queue policy; permission and strategy changes are audited. |
-| `get(id)` / `list(query)` | Reads tenant-visible queue definitions. |
+| Operation                        | Contract                                                                                                 |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `create(input)`                  | Creates a tenant queue with concrete worker and supervisor RBAC permission keys.                         |
+| `update(id, input)`              | Updates queue policy; permission and strategy changes are audited.                                       |
+| `get(id)` / `list(query)`        | Reads tenant-visible queue definitions.                                                                  |
 | `setWorkerState(queueId, input)` | Records availability, weight, and rotation state for an RBAC-eligible user; it never grants eligibility. |
 
 Queue strategy keys are `pull`, `round_robin`, `load_balanced`, or a registered
@@ -53,18 +53,18 @@ never both.
 
 ### `WorklistItemsService`
 
-| Operation | Contract |
-| --- | --- |
-| `enqueue(input)` | Creates one open item per `(queue, entityType, entityId)` and resolves the deadline. |
-| `claimNext(queueId, userId?)` | Atomically claims the next ordered item for the actor or specified eligible user. |
-| `claim(itemId, userId?)` | Atomically claims one known pending item. |
-| `assignNext(queueId)` | Applies the queue's push strategy; `pull` queues reject this operation. |
-| `release(itemId, reason?)` | Returns a claimed item to pending; only its assignee may call it. |
-| `complete(itemId, note?, payload?)` | Idempotently completes a claimed item for its assignee. |
-| `reassign(itemId, toUserId, reason)` | Supervisor-authorized reassignment; reason is mandatory. |
-| `supervisorOverride(input)` | Explicit `release`, `complete`, or `reassign` override; supervisor permission and reason are mandatory. |
-| `get(id)` / `list(query)` | Reads tenant-visible work items. |
-| `listEvents(query)` | Reads the append-only, cursor-ordered worklist event stream. |
+| Operation                            | Contract                                                                                                |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| `enqueue(input)`                     | Creates one open item per `(queue, entityType, entityId)` and resolves the deadline.                    |
+| `claimNext(queueId, userId?)`        | Atomically claims the next ordered item for the actor or specified eligible user.                       |
+| `claim(itemId, userId?)`             | Atomically claims one known pending item.                                                               |
+| `assignNext(queueId)`                | Applies the queue's push strategy; `pull` queues reject this operation.                                 |
+| `release(itemId, reason?)`           | Returns a claimed item to pending; only its assignee may call it.                                       |
+| `complete(itemId, note?, payload?)`  | Idempotently completes a claimed item for its assignee.                                                 |
+| `reassign(itemId, toUserId, reason)` | Supervisor-authorized reassignment; reason is mandatory.                                                |
+| `supervisorOverride(input)`          | Explicit `release`, `complete`, or `reassign` override; supervisor permission and reason are mandatory. |
+| `get(id)` / `list(query)`            | Reads tenant-visible work items.                                                                        |
+| `listEvents(query)`                  | Reads the append-only, cursor-ordered worklist event stream.                                            |
 
 Claim ordering is priority ascending, due date ascending with undated items
 last, creation time ascending, then id. Claim and assignment return `null` when
@@ -91,10 +91,10 @@ resolved `dueAt` and the deadline kind/count/calendar key.
 
 ### `WorklistSlaService`
 
-| Operation | Contract |
-| --- | --- |
-| `detectBreaches(limit?)` | Atomically marks at most `limit` overdue open items and returns their newly appended breach events. |
-| `scheduleBreachDetection(input)` | Delegates recurring scheduling through the optional narrow scheduler port. |
+| Operation                        | Contract                                                                                            |
+| -------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `detectBreaches(limit?)`         | Atomically marks at most `limit` overdue open items and returns their newly appended breach events. |
+| `scheduleBreachDetection(input)` | Delegates recurring scheduling through the optional narrow scheduler port.                          |
 
 `detectBreaches` is safe under concurrent sweepers: each item produces at most
 one `deadline_breach` event. The stable job type is
@@ -159,13 +159,13 @@ already exist in `auth.perms`.
 
 Suggested route permissions for host APIs are:
 
-| Host operation | Permission |
-| --- | --- |
-| Read queues/items/events | `worklist:read:*` |
-| Enqueue | `worklist:enqueue:*` |
-| Claim/release/complete own work | queue-specific worker permission |
-| Configure queues | `worklist:configure:*` |
-| Reassign/override | queue-specific supervisor permission |
+| Host operation                  | Permission                           |
+| ------------------------------- | ------------------------------------ |
+| Read queues/items/events        | `worklist:read:*`                    |
+| Enqueue                         | `worklist:enqueue:*`                 |
+| Claim/release/complete own work | queue-specific worker permission     |
+| Configure queues                | `worklist:configure:*`               |
+| Reassign/override               | queue-specific supervisor permission |
 
 ## Audit, events, and tenancy
 
