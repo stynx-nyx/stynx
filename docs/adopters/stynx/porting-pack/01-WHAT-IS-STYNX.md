@@ -15,7 +15,7 @@ The architecture is opinionated: pool + RLS multi-tenancy (no
 schema-per-tenant or DB-per-tenant); RBAC only (no ABAC, no
 relationship-based authz); Cognito as IdP with tenancy + roles in
 STYNX DB; archive-schema soft delete (no `deleted_at` on live
-tables); DB-trigger audit; AWS-only; web/Angular only. Eight
+tables); DB-trigger audit; AWS-only; web/Angular plus a framework-free mobile runtime. Eight
 non-negotiable invariants (I1–I8) are enforced by a combination of
 runtime checks (`@stynx-nyx/data`), decorators (`@stynx-nyx/auth`,
 `@stynx-nyx/backend`), a SQL migration helper, a migration linter, and
@@ -23,25 +23,27 @@ the `stynx doctor` CLI.
 
 What STYNX is not: a CMS, a workflow engine, an event bus, a job
 runner, a webhook system, a feature-flag service, or a tenant
-self-signup product. v1.0 has no native mobile shell. (§24
-deferrals.)
+self-signup product. Since the 2026-08-24 E6 amendment, native consumers can use
+`@stynx-nyx/mobile-runtime` with consumer-owned platform adapters and
+`@stynx-nyx/offline-sync` on the server.
 
 ## Capability matrix
 
-| Capability                 | Description                                                                                              | Spec §       |
-| -------------------------- | -------------------------------------------------------------------------------------------------------- | ------------ |
-| Multi-tenancy (pool + RLS) | Tenants live in one DB; isolation via `tenant_id` + RLS policies keyed on `app.tenant_id` GUC.           | §4           |
-| Identity (Cognito as IdP)  | OIDC PKCE; STYNX exchanges Cognito tokens for bearer (10 min) + refresh (24 h sliding).                  | §5           |
-| RBAC permissions           | `resource:action:scope` keys; resolved once per session into `perms_hash`; three-tier cache.             | §6, ADR-002  |
-| Audit trail                | DB triggers on every opted-in live + archive table; LGPD-tagged 5-year hot retention.                    | §9           |
-| Soft delete via archive    | Live → archive on delete; restore validates uniqueness; FK annotations cascade/block/hide.               | §14, ADR-001 |
-| Storage (S3 + presigned)   | Per-tenant prefix; KMS envelope; presigned URL with tenant claim check.                                  | §8           |
-| LGPD pipeline              | Export + erasure across live and archive; PII map drives strategies (nullify/hash/tombstone/delete).     | §9, §21      |
-| Logging + redaction        | Pino structured JSON; redacts `password`, `token`, headers, JWT fields; request-context fields per line. | §10–§11      |
-| Health + metrics + tracing | `/healthz`, `/readyz`, `/metrics` (Prometheus), `/info`. OTel SDK in `@stynx-nyx/core`.                  | §11          |
-| Rate limiting              | Distributed (Redis primary, PG fallback); `@RateLimit({ bucket, scope })` decorator.                     | §15          |
-| Idempotency                | `@Idempotent('Idempotency-Key')` decorator; 24 h Redis + durable mirror.                                 | §22          |
-| i18n (pt-BR + en-US)       | `@stynx-nyx/i18n` resolves locale per request; consumer overrides via `@stynx-nyx/angular-i18n`.         | §23          |
+| Capability                 | Description                                                                                              | Spec §         |
+| -------------------------- | -------------------------------------------------------------------------------------------------------- | -------------- |
+| Multi-tenancy (pool + RLS) | Tenants live in one DB; isolation via `tenant_id` + RLS policies keyed on `app.tenant_id` GUC.           | §4             |
+| Identity (Cognito as IdP)  | OIDC PKCE; STYNX exchanges Cognito tokens for bearer (10 min) + refresh (24 h sliding).                  | §5             |
+| RBAC permissions           | `resource:action:scope` keys; resolved once per session into `perms_hash`; three-tier cache.             | §6, ADR-002    |
+| Audit trail                | DB triggers on every opted-in live + archive table; LGPD-tagged 5-year hot retention.                    | §9             |
+| Soft delete via archive    | Live → archive on delete; restore validates uniqueness; FK annotations cascade/block/hide.               | §14, ADR-001   |
+| Storage (S3 + presigned)   | Per-tenant prefix; KMS envelope; presigned URL with tenant claim check.                                  | §8             |
+| LGPD pipeline              | Export + erasure across live and archive; PII map drives strategies (nullify/hash/tombstone/delete).     | §9, §21        |
+| Logging + redaction        | Pino structured JSON; redacts `password`, `token`, headers, JWT fields; request-context fields per line. | §10–§11        |
+| Health + metrics + tracing | `/healthz`, `/readyz`, `/metrics` (Prometheus), `/info`. OTel SDK in `@stynx-nyx/core`.                  | §11            |
+| Rate limiting              | Distributed (Redis primary, PG fallback); `@RateLimit({ bucket, scope })` decorator.                     | §15            |
+| Idempotency                | `@Idempotent('Idempotency-Key')` decorator; 24 h Redis + durable mirror.                                 | §22            |
+| i18n (pt-BR + en-US)       | `@stynx-nyx/i18n` resolves locale per request; consumer overrides via `@stynx-nyx/angular-i18n`.         | §23            |
+| Offline mobile (E6)        | Framework-free runtime, encrypted local state, numbering, sync queue, conflicts, and RLS server pair.    | §1.2, §12, §24 |
 
 (Each row maps to a package in [`05-PACKAGE-CATALOG.md`](05-PACKAGE-CATALOG.md).)
 

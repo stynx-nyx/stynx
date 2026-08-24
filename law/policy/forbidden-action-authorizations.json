@@ -679,6 +679,24 @@
       "commit": "0aa9695e71c505ecc9da2743090ce16a31be390d",
       "authorized_by": "Owner",
       "reason": "Binds the merged notifications delivery capability to its prior Owner-authorized Architect-owned ADR and policy materializations for the rebased Phase-1 integration range."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "695d0fc338e6cc49c235691b2be42ad3e34657b1",
+      "authorized_by": "Owner",
+      "reason": "Binds the merged jobs runtime capability to its prior Owner-authorized Architect-owned ADR and policy materializations for the rebased Phase-1 integration range."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "8be52b0c535d6236376d258340d5c3380efc7fff",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the W1.5 engineering ADR, invariant, trace, contracts, and dated E6 specification amendment explicitly required by the approved DETRAN Phase 1 mobile-promotion task."
+    },
+    {
+      "forbidden_id": "FORBID-RM-RF",
+      "commit": "8be52b0c535d6236376d258340d5c3380efc7fff",
+      "authorized_by": "Owner",
+      "reason": "Authorizes only the package-local dist and coverage clean-script literals in the reviewed W1.5 package commit; no broad or unresolved cleanup target is authorized."
     }
   ]
 }

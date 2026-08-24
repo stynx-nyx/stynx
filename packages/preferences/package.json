@@ -19,7 +19,7 @@
     "node": ">=24 <25"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "rm -rf dist && tsc -p tsconfig.json",
     "clean": "rm -rf dist coverage",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",

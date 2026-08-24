@@ -36,9 +36,9 @@ larger than the cost of declining cleanly.
   ABAC) — STYNX is RBAC only.
 - **Targeting non-AWS cloud** (GCP, Azure, on-premise) — Cognito is
   the IdP and AWS primitives are baked in.
-- **Native mobile-only frontend** — no native shell support in v1.0;
-  if the only client is iOS/Android, you can integrate with the
-  backend but won't get the `@stynx-nyx/*` UI benefit.
+- **Native mobile-only frontend requiring turnkey hardware bindings** — STYNX supplies the
+  framework-free `mobile-runtime` and server-side `offline-sync` contracts, but not Capacitor,
+  camera, GPS, printer, or device-attestation implementations.
 - **API-key / M2M-only product** — v1.0 doesn't issue API keys;
   every request is a user session.
 

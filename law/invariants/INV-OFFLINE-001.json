@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "1.0.0",
+  "version": "1.0.0",
+  "id": "INV-OFFLINE-001",
+  "domain": "OFFLINE",
+  "severity": "gate",
+  "type": "api_contract",
+  "title": "Offline-originated entity mutations are idempotent, numbered, and hash-verifiable",
+  "statement": "Every offline-originated entity mutation MUST carry a consumer-defined entity type, an idempotency key, tenant-scoped reserved numbering context, a sha256-prefixed payload hash, trusted device and actor context, a local timestamp, and the installed normative package identifier and version.",
+  "rationale": "Offline operation is a supported mobile behavior. Safe retry, deterministic numbering, tenant isolation, and later audit depend on stable idempotency, reserved ranges, content hashes, and explicit normative context without embedding any consumer domain vocabulary in STYNX.",
+  "status": "active",
+  "lifecycle": "supported",
+  "verification": {
+    "required_suites": ["unit", "int"],
+    "oracle": "tests",
+    "strategy": {
+      "primary": "regression",
+      "supplemental": ["structural"],
+      "deterministic_check_available": true,
+      "rationale": "Mobile runtime regression tests and real-PostgreSQL integration tests deterministically verify retry, numbering, hashing, and tenant RLS behavior."
+    }
+  },
+  "authority_docs": {
+    "docs": [
+      {
+        "doc": "docs/framework/contracts/mobile-runtime-api.md",
+        "anchor": "normative-sequence"
+      },
+      {
+        "doc": "docs/framework/contracts/offline-sync-api.md",
+        "anchor": "invariants"
+      },
+      {
+        "doc": "law/adr/ADR-MOBILE-OFFLINE-0001-teat-promotion.md",
+        "anchor": "decision"
+      }
+    ]
+  },
+  "scope": {
+    "components": ["mobile-runtime", "offline-sync", "db"],
+    "code_areas": [
+      "packages/mobile-runtime/src/**",
+      "packages/offline-sync/src/**",
+      "packages/offline-sync/migrations/**"
+    ],
+    "data": [
+      "offline.numbering_ranges",
+      "offline.numbering_reservations",
+      "offline.sync_queue_items",
+      "offline.sync_conflicts"
+    ]
+  },
+  "change_policy": {
+    "breaking_change_requires": [
+      "doc_update",
+      "trace_update",
+      "test_update",
+      "migration",
+      "human_approval",
+      "adr"
+    ],
+    "test_weakening_allowed": false,
+    "human_approval_required": true
+  },
+  "tags": ["offline", "mobile", "sync", "idempotency", "numbering", "rls", "stynx"],
+  "measurable_via": ["check", "sense inventory", "audit observe"]
+}

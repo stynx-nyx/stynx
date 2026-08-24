@@ -18,7 +18,7 @@ import {
 } from '../../scripts/lib/unified-rebaseline.mjs';
 
 const repoRoot = resolve(import.meta.dirname, '..', '..');
-const packageNames = Array.from({ length: 37 }, (_, index) =>
+const packageNames = Array.from({ length: 39 }, (_, index) =>
   index === 0
     ? '@stynx-nyx/angular-profile'
     : index === 1
@@ -55,7 +55,7 @@ function assertPolicyError(callback, code) {
   });
 }
 
-test('registry census accepts all 38 packages below 1.1.1 plus the exact anomaly', () => {
+test('registry census accepts all 40 packages below 1.1.1 plus the exact anomaly', () => {
   const result = validateRegistryCensus({
     packageNames,
     metadataByPackage: validRegistryCensus(),
@@ -63,7 +63,7 @@ test('registry census accepts all 38 packages below 1.1.1 plus the exact anomaly
     anomaly,
   });
 
-  assert.deepEqual(result, { anomalyMatches: 1, packageCount: 38 });
+  assert.deepEqual(result, { anomalyMatches: 1, packageCount: 40 });
 });
 
 test('registry census rejects candidate presence and legitimate canonical-line collisions', () => {
@@ -312,20 +312,20 @@ function createRebaselineFixture() {
   return { names, root };
 }
 
-test('one-time rebaseline deterministically updates the exact 38-package release surface', () => {
+test('one-time rebaseline deterministically updates the exact 40-package release surface', () => {
   const fixture = createRebaselineFixture();
   try {
     const changesetConfig = JSON.parse(
       readFileSync(join(fixture.root, '.changeset', 'config.json'), 'utf8'),
     );
     const first = runUnifiedRebaseline(fixture.root, changesetConfig, 'write');
-    assert.deepEqual(first, { packageCount: 38, changedFiles: 79 });
+    assert.deepEqual(first, { packageCount: 40, changedFiles: 83 });
     assert.deepEqual(runUnifiedRebaseline(fixture.root, changesetConfig, 'check'), {
-      packageCount: 38,
+      packageCount: 40,
       changedFiles: 0,
     });
     assert.deepEqual(runUnifiedRebaseline(fixture.root, changesetConfig, 'write'), {
-      packageCount: 38,
+      packageCount: 40,
       changedFiles: 0,
     });
 

@@ -195,7 +195,12 @@ function teatFixture(tarballs) {
       '@stynx-nyx/angular-storage': fileDependency(tarballs, '@stynx-nyx/angular-storage'),
       '@stynx-nyx/angular-tenancy': fileDependency(tarballs, '@stynx-nyx/angular-tenancy'),
       '@stynx-nyx/angular-ui': fileDependency(tarballs, '@stynx-nyx/angular-ui'),
+      '@stynx-nyx/mobile-runtime': fileDependency(tarballs, '@stynx-nyx/mobile-runtime'),
+      '@stynx-nyx/offline-sync': fileDependency(tarballs, '@stynx-nyx/offline-sync'),
       '@stynx-nyx/sdk': fileDependency(tarballs, '@stynx-nyx/sdk'),
+      '@nestjs/common': '^11.1.19',
+      '@nestjs/core': '^11.1.19',
+      'reflect-metadata': '^0.2.2',
       rxjs: '^7.8.2',
       tslib: '^2.8.1',
       'zone.js': '^0.16.0',
@@ -208,6 +213,9 @@ import { DocumentService } from '@stynx-nyx/angular-storage';
 import { provideStynxFlow } from '@stynx-nyx/angular-flow';
 import { provideTenancy, TenantContextService } from '@stynx-nyx/angular-tenancy';
 import { StynxBannerComponent, StynxPaginationComponent } from '@stynx-nyx/angular-ui';
+import { OfflineFirstMobileRuntime } from '@stynx-nyx/mobile-runtime';
+import { InMemoryEncryptedMobileStore } from '@stynx-nyx/mobile-runtime/testing';
+import { StynxOfflineSyncModule } from '@stynx-nyx/offline-sync';
 
 const sdk = new GeneratedStynxSdk({ BASE: 'https://api.example.test' });
 if (typeof sdk.stynxAuth.stynxAuthGetPlatformPermsBySidInspect !== 'function') {
@@ -225,6 +233,10 @@ export const sdkClient = StynxSdkClient;
 export const documentService = DocumentService;
 export const teatComponents = [StynxAuditLogComponent, StynxBannerComponent, StynxPaginationComponent];
 export const tenantContext = TenantContextService;
+export type TeatMobileEntityType = 'ait';
+export const mobileRuntime = OfflineFirstMobileRuntime;
+export const mobileEncryptedStore = InMemoryEncryptedMobileStore;
+export const offlineSyncModule = StynxOfflineSyncModule;
 `,
   };
 }

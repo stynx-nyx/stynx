@@ -59,6 +59,7 @@ if (
   errors.push('Changesets must not version or tag private reference applications');
 }
 const requiredPublicExports = {
+  '@stynx-nyx/mobile-runtime': ['.', './testing'],
   '@stynx-nyx/pdf': ['.', './evidence', './fixed-layout', './public-payroll'],
   '@stynx-nyx/signature': ['.', './xmldsig'],
   '@stynx-nyx/sessions': ['.', './control'],

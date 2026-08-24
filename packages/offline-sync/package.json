@@ -1,0 +1,57 @@
+{
+  "name": "@stynx-nyx/offline-sync",
+  "version": "0.5.0",
+  "license": "BUSL-1.1",
+  "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
+  "description": "Tenant-isolated NestJS numbering reservation and offline sync services for stynx",
+  "main": "dist/offline-sync/src/index.js",
+  "types": "dist/offline-sync/src/index.d.ts",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/offline-sync/src/index.d.ts",
+      "require": "./dist/offline-sync/src/index.js",
+      "default": "./dist/offline-sync/src/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "migrations"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist coverage",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+    "test": "vitest run --config ./vitest.config.ts",
+    "test:int": "vitest run --config ./vitest.int.config.ts",
+    "stryker": "pnpm exec stryker run stryker.conf.mjs",
+    "test:mutation": "pnpm run stryker"
+  },
+  "dependencies": {
+    "@stynx-nyx/auth": "workspace:*",
+    "@stynx-nyx/backend": "workspace:*",
+    "@stynx-nyx/core": "workspace:*",
+    "@stynx-nyx/data": "workspace:*",
+    "@stynx-nyx/idempotency": "workspace:*"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^11.1.19",
+    "@nestjs/core": "^11.1.19",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^11.1.19",
+    "@types/node": "24.12.4",
+    "typescript": "^6.0.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stynx-nyx/stynx.git",
+    "directory": "packages/offline-sync"
+  }
+}

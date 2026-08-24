@@ -32,6 +32,8 @@
       "@stynx-nyx/integration-adapter",
       "@stynx-nyx/logging",
       "@stynx-nyx/notifications",
+      "@stynx-nyx/mobile-runtime",
+      "@stynx-nyx/offline-sync",
       "@stynx-nyx/pdf",
       "@stynx-nyx/pdf-a",
       "@stynx-nyx/pdf-a-vera-docker",

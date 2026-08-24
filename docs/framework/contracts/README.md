@@ -8,6 +8,10 @@ can compile or validate against without importing implementation internals.
 
 ## Contract Surfaces
 
+- [mobile-runtime-api.md](mobile-runtime-api.md) — framework-free offline mobile
+  orchestration, seven-port boundary, lifecycle, and hash/idempotency contract.
+- [offline-sync-api.md](offline-sync-api.md) — tenant-scoped numbering reservations,
+  sync batches, conflicts, HTTP routes, and RLS contract.
 - [session-control.md](session-control.md) — provider-neutral logical-session
   registry, capabilities, revocation guarantees, retry, privacy, and compatible wire contract.
 - [preferences-api.md](preferences-api.md) — closed tenant-subject preferences,

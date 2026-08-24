@@ -193,6 +193,16 @@
         ],
         "x-stynx-source": "packages/flow/src/types.ts"
       },
+      "CancelNumberingReservationInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        },
+        "x-stynx-source": "packages/offline-sync/src/types.ts"
+      },
       "CompleteDocumentDto": {
         "type": "object",
         "additionalProperties": false,
@@ -1355,6 +1365,77 @@
         "required": ["email", "inApp", "push"],
         "x-stynx-source": "packages/preferences/src/types.ts"
       },
+      "NumberingReservation": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "agentId": {
+            "type": "string"
+          },
+          "deviceId": {
+            "type": "string"
+          },
+          "endNumber": {
+            "type": "number"
+          },
+          "entityType": {
+            "type": "string"
+          },
+          "nextNumber": {
+            "type": "number"
+          },
+          "orgUnitId": {
+            "type": "string"
+          },
+          "rangeId": {
+            "type": "string"
+          },
+          "reservationId": {
+            "type": "string"
+          },
+          "series": {
+            "type": "string"
+          },
+          "shiftId": {
+            "type": "string"
+          },
+          "startNumber": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["reserved", "consumed", "expired", "cancelled"]
+          },
+          "tenantId": {
+            "type": "string"
+          },
+          "validUntil": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "agentId",
+          "deviceId",
+          "endNumber",
+          "entityType",
+          "nextNumber",
+          "orgUnitId",
+          "rangeId",
+          "reservationId",
+          "series",
+          "shiftId",
+          "startNumber",
+          "status",
+          "tenantId",
+          "validUntil"
+        ],
+        "x-stynx-source": "packages/offline-sync/src/types.ts"
+      },
+      "OfflineSyncConflictResolutionStrategy": {
+        "type": "string",
+        "enum": ["device-wins", "server-wins", "manual-review"],
+        "x-stynx-source": "packages/offline-sync/src/types.ts"
+      },
       "PlatformProfile": {
         "type": "object",
         "additionalProperties": false,
@@ -1740,6 +1821,52 @@
         },
         "x-stynx-source": "packages/flow/src/types.ts"
       },
+      "ReserveNumberingInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "deviceId": {
+            "type": "string"
+          },
+          "entityType": {
+            "type": "string"
+          },
+          "orgUnitId": {
+            "type": "string"
+          },
+          "rangeId": {
+            "type": "string"
+          },
+          "requestedSize": {
+            "type": "number"
+          },
+          "series": {
+            "type": "string"
+          },
+          "shiftId": {
+            "type": "string"
+          },
+          "validUntil": {
+            "type": "string"
+          }
+        },
+        "required": ["deviceId", "entityType", "orgUnitId", "requestedSize", "shiftId"],
+        "x-stynx-source": "packages/offline-sync/src/types.ts"
+      },
+      "ResolveSyncConflictInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "resolution": {
+            "$ref": "#/components/schemas/OfflineSyncConflictResolutionStrategy"
+          }
+        },
+        "required": ["resolution"],
+        "x-stynx-source": "packages/offline-sync/src/types.ts"
+      },
       "SessionAction": {
         "type": "string",
         "enum": [
@@ -1985,6 +2112,49 @@
         "required": ["current", "guarantee", "sessionId"],
         "x-stynx-source": "packages/sessions/src/control/types.ts"
       },
+      "SubmitSyncBatchInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "deviceBatchId": {
+            "type": "string"
+          },
+          "deviceId": {
+            "type": "string"
+          },
+          "items": {
+            "$ref": "#/components/schemas/UnknownJson"
+          },
+          "orgUnitId": {
+            "type": "string"
+          }
+        },
+        "required": ["deviceBatchId", "deviceId", "items", "orgUnitId"],
+        "x-stynx-source": "packages/offline-sync/src/types.ts"
+      },
+      "SubmitSyncBatchResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "acceptedItems": {
+            "type": "number"
+          },
+          "batchId": {
+            "type": "string"
+          },
+          "conflicts": {
+            "$ref": "#/components/schemas/UnknownJson"
+          },
+          "duplicateItems": {
+            "type": "number"
+          },
+          "items": {
+            "$ref": "#/components/schemas/UnknownJson"
+          }
+        },
+        "required": ["acceptedItems", "batchId", "conflicts", "duplicateItems", "items"],
+        "x-stynx-source": "packages/offline-sync/src/types.ts"
+      },
       "SuspendTenantInput": {
         "type": "object",
         "additionalProperties": false,
@@ -2009,6 +2179,57 @@
         },
         "required": ["activeSessionCount", "tenant"],
         "x-stynx-source": "packages/tenancy/src/types.ts"
+      },
+      "SyncConflict": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "conflictId": {
+            "type": "string"
+          },
+          "conflictType": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "localEntityId": {
+            "type": "string"
+          },
+          "payloadHash": {
+            "type": "string"
+          },
+          "queueItemId": {
+            "type": "string"
+          },
+          "resolution": {
+            "$ref": "#/components/schemas/OfflineSyncConflictResolutionStrategy"
+          },
+          "resolvedAt": {
+            "type": "string"
+          },
+          "resolvedBy": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["open", "resolved"]
+          },
+          "tenantId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "conflictId",
+          "conflictType",
+          "description",
+          "localEntityId",
+          "payloadHash",
+          "queueItemId",
+          "status",
+          "tenantId"
+        ],
+        "x-stynx-source": "packages/offline-sync/src/types.ts"
       },
       "TenantDetail": {
         "type": "object",
@@ -24520,6 +24741,685 @@
                   "default": {
                     "value": {
                       "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Bad request",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unauthorized",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Forbidden",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Not found",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unexpected error",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/offline-sync/conflicts/{id}/resolve": {
+      "post": {
+        "operationId": "OfflineSync-post-offline-sync-conflicts-by-id-resolve-resolveConflict",
+        "tags": ["OfflineSync"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "00000000-0000-4000-8000-000000000000"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveSyncConflictInput"
+              },
+              "x-stynx-source-type": "ResolveSyncConflictInput",
+              "examples": {
+                "default": {
+                  "value": {
+                    "description": "example",
+                    "resolution": "device-wins"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": [],
+            "tenantHeader": []
+          }
+        ],
+        "x-stynx-source": "packages/offline-sync/src/offline-sync.controller.ts",
+        "x-stynx-route": "/offline-sync/conflicts/:id/resolve",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncConflict"
+                },
+                "x-stynx-source-type": "Promise<SyncConflict>",
+                "examples": {
+                  "default": {
+                    "value": {
+                      "conflictId": "example",
+                      "conflictType": "example",
+                      "description": "example",
+                      "localEntityId": "example",
+                      "payloadHash": "example",
+                      "queueItemId": "example",
+                      "resolution": "device-wins",
+                      "resolvedAt": "example",
+                      "resolvedBy": "example",
+                      "status": "open",
+                      "tenantId": "example"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Bad request",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unauthorized",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Forbidden",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Not found",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unexpected error",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/offline-sync/numbering-reservations": {
+      "post": {
+        "operationId": "OfflineSync-post-offline-sync-numbering-reservations-reserveNumbering",
+        "tags": ["OfflineSync"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReserveNumberingInput"
+              },
+              "x-stynx-source-type": "ReserveNumberingInput",
+              "examples": {
+                "default": {
+                  "value": {
+                    "deviceId": "example",
+                    "entityType": "example",
+                    "orgUnitId": "example",
+                    "rangeId": "example",
+                    "requestedSize": 1,
+                    "series": "example",
+                    "shiftId": "example",
+                    "validUntil": "example"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": [],
+            "tenantHeader": []
+          }
+        ],
+        "x-stynx-source": "packages/offline-sync/src/offline-sync.controller.ts",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NumberingReservation"
+                },
+                "x-stynx-source-type": "Promise<NumberingReservation>",
+                "examples": {
+                  "default": {
+                    "value": {
+                      "agentId": "example",
+                      "deviceId": "example",
+                      "endNumber": 1,
+                      "entityType": "example",
+                      "nextNumber": 1,
+                      "orgUnitId": "example",
+                      "rangeId": "example",
+                      "reservationId": "example",
+                      "series": "example",
+                      "shiftId": "example",
+                      "startNumber": 1,
+                      "status": "reserved",
+                      "tenantId": "example",
+                      "validUntil": "example"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Bad request",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unauthorized",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Forbidden",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Not found",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unexpected error",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/offline-sync/numbering-reservations/{id}/cancel": {
+      "post": {
+        "operationId": "OfflineSync-post-offline-sync-numbering-reservations-by-id-cancel-cancelNumbering",
+        "tags": ["OfflineSync"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "00000000-0000-4000-8000-000000000000"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelNumberingReservationInput"
+              },
+              "x-stynx-source-type": "CancelNumberingReservationInput",
+              "examples": {
+                "default": {
+                  "value": {
+                    "reason": "example"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": [],
+            "tenantHeader": []
+          }
+        ],
+        "x-stynx-source": "packages/offline-sync/src/offline-sync.controller.ts",
+        "x-stynx-route": "/offline-sync/numbering-reservations/:id/cancel",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NumberingReservation"
+                },
+                "x-stynx-source-type": "Promise<NumberingReservation>",
+                "examples": {
+                  "default": {
+                    "value": {
+                      "agentId": "example",
+                      "deviceId": "example",
+                      "endNumber": 1,
+                      "entityType": "example",
+                      "nextNumber": 1,
+                      "orgUnitId": "example",
+                      "rangeId": "example",
+                      "reservationId": "example",
+                      "series": "example",
+                      "shiftId": "example",
+                      "startNumber": 1,
+                      "status": "reserved",
+                      "tenantId": "example",
+                      "validUntil": "example"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Bad request",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unauthorized",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Forbidden",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Not found",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "statusCode": 400,
+                      "code": "STYNX_ERROR",
+                      "message": "Unexpected error",
+                      "correlationId": "req_000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/offline-sync/sync-batches": {
+      "post": {
+        "operationId": "OfflineSync-post-offline-sync-sync-batches-submitBatch",
+        "tags": ["OfflineSync"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitSyncBatchInput"
+              },
+              "x-stynx-source-type": "SubmitSyncBatchInput",
+              "examples": {
+                "default": {
+                  "value": {
+                    "deviceBatchId": "example",
+                    "deviceId": "example",
+                    "items": "example",
+                    "orgUnitId": "example"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": [],
+            "tenantHeader": []
+          }
+        ],
+        "x-stynx-source": "packages/offline-sync/src/offline-sync.controller.ts",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubmitSyncBatchResult"
+                },
+                "x-stynx-source-type": "Promise<SubmitSyncBatchResult>",
+                "examples": {
+                  "default": {
+                    "value": {
+                      "acceptedItems": 1,
+                      "batchId": "example",
+                      "conflicts": "example",
+                      "duplicateItems": 1,
+                      "items": {}
                     }
                   }
                 }
