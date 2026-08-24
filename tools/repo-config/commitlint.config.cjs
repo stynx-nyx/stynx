@@ -49,6 +49,7 @@ const allowedScopes = [
   'deps',
   'deps-dev',
   'repo',
+  'worklist',
 ];
 
 module.exports = {
