@@ -269,6 +269,11 @@ function rewriteGeneratedDocLinks(content) {
       /\]\(\.\.\/\.\.\/docs\/framework\/arch\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
       (_match, filename, hash = '') => `](/docs/framework/arch/${filename}${hash})`,
     )
+    .replace(/\]\(\.\.\/\.\.\/docs\/framework\/contracts\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/framework/contracts$1)')
+    .replace(
+      /\]\(\.\.\/\.\.\/docs\/framework\/contracts\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
+      (_match, filename, hash = '') => `](/docs/framework/contracts/${filename}${hash})`,
+    )
     .replace(/\]\(\.\.\/\.\.\/docs\/contracts\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/contracts$1)')
     .replace(
       /\]\(\.\.\/\.\.\/docs\/contracts\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
