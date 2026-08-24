@@ -5,6 +5,7 @@ shape package boundaries, generated diagnostics, or adoption policy.
 
 ## Accepted Decisions
 
+- [ADR-JOBS-0001 — Postgres-backed scheduler and worker runtime for `@stynx-nyx/jobs`](ADR-JOBS-0001-postgres-scheduler-worker.md)
 - [Trusted local RC evidence and mutation execution boundary](2026-08-16-trusted-local-rc-evidence.md)
 - [ADR-SESSIONS-0001 — Provider-neutral session inventory and control](ADR-SESSIONS-0001-provider-neutral-session-control.md)
 - [ADR-PREFERENCES-0001 — Tenant-subject preferences boundary](ADR-PREFERENCES-0001-tenant-subject-preferences.md)
