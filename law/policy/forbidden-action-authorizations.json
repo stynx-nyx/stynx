@@ -577,6 +577,12 @@
       "commit": "c56d0002846f47c383473c6c613fd9f92355aa68",
       "authorized_by": "Owner",
       "reason": "Records the Owner's exact F7 authorization receipts after reviewing each historical and current finding against its governing decision and observed commit diff."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "c945fd1c512cd3c71eddbb16dc71718bcd1a1e30",
+      "authorized_by": "Owner",
+      "reason": "Closes the intermediate Owner receipt-ledger mutation created while applying the reviewed F7 authorization batch."
     }
   ]
 }
