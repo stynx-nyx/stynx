@@ -427,6 +427,18 @@
       "commit": "ce43209482e2f3a6e936c85c03e95f7feaaa7625",
       "authorized_by": "Owner",
       "reason": "Authorizes the exact package and Pages publication controls under the existing release and trusted-local-RC decisions."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "4bccf26cef347b5b1a8b6565b1e1bbb477c075ed",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the exact Architect ADR and narrowly adjudicated registry anomaly policy establishing the canonical 1.x line and unified 1.1.1 target."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "1fa4a1df71340e5120612ece08324667f8e114c7",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the exact pre-publication 1.1.1 registry monotonicity guard and its placement before the Changesets publication action under ADR-VERSION-LINE-0001."
     }
   ]
 }
