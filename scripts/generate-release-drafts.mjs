@@ -1,6 +1,7 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { publishablePackageNames } from './lib/publishable-packages.mjs';
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(scriptDir, '..');
@@ -15,27 +16,7 @@ if (!existsSync(statusPath)) {
 }
 
 const status = JSON.parse(readFileSync(statusPath, 'utf8'));
-function collectPublishablePackageNames(baseDir, matcher) {
-  const resolvedBase = resolve(repoRoot, baseDir);
-  return readdirSync(resolvedBase)
-    .map((entry) => resolve(resolvedBase, entry))
-    .filter((dirPath) => existsSync(resolve(dirPath, 'package.json')))
-    .map((dirPath) => JSON.parse(readFileSync(resolve(dirPath, 'package.json'), 'utf8')))
-    .filter((manifest) => !manifest.private)
-    .map((manifest) => manifest.name)
-    .filter((name) => matcher(name));
-}
-
-const publishablePackages = new Set([
-  ...collectPublishablePackageNames(
-    'packages',
-    (name) => typeof name === 'string' && name.startsWith('@stynx-nyx/'),
-  ),
-  ...collectPublishablePackageNames(
-    'packages-web',
-    (name) => typeof name === 'string' && name.startsWith('@stynx-nyx/'),
-  ),
-]);
+const publishablePackages = new Set(publishablePackageNames(repoRoot));
 
 const releases = (Array.isArray(status.releases) ? status.releases : []).filter((release) =>
   publishablePackages.has(release.name),

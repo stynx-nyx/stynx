@@ -3,25 +3,17 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { discoverPublishablePackages } from './lib/publishable-packages.mjs';
 
 const repoRoot = process.cwd();
 const write = process.argv.includes('--write');
 const baselinePath = resolve(repoRoot, 'docs/framework/contracts/public-api-baselines.json');
-const packageSpecs = [
-  { name: '@stynx-nyx/preferences', dir: 'packages/preferences' },
-  { name: '@stynx-nyx/sdk', dir: 'packages-web/sdk' },
-  { name: '@stynx-nyx/angular-profile', dir: 'packages-web/angular-profile' },
-  { name: '@stynx-nyx/sessions', dir: 'packages/sessions' },
-  { name: '@stynx-nyx/angular-sessions', dir: 'packages-web/angular-sessions' },
-  { name: '@stynx-nyx/integration-adapter', dir: 'packages/integration-adapter' },
-  { name: '@stynx-nyx/pdf', dir: 'packages/pdf' },
-  { name: '@stynx-nyx/signature', dir: 'packages/signature' },
-];
+const packageSpecs = discoverPublishablePackages(repoRoot);
 
 for (const spec of packageSpecs) {
   rmSync(resolve(repoRoot, spec.dir, 'dist'), { recursive: true, force: true });
-  run('pnpm', ['--filter', spec.name, 'build'], repoRoot);
 }
+run('pnpm', ['build'], repoRoot);
 
 const current = {
   schemaVersion: '1',
@@ -75,15 +67,20 @@ console.log(`[api-baseline] OK: ${packageSpecs.length} package baselines matched
 function packageBaseline(spec) {
   const manifest = JSON.parse(readFileSync(resolve(repoRoot, spec.dir, 'package.json'), 'utf8'));
   const distDir = resolve(repoRoot, spec.dir, 'dist');
+  const declarationFiles = walk(distDir)
+    .filter((file) => file.endsWith('.d.ts'))
+    .sort((left, right) => left.localeCompare(right));
+  if (declarationFiles.length === 0) {
+    throw new Error(
+      `${spec.name}: build emitted no public declaration files under ${spec.dir}/dist`,
+    );
+  }
   const declarationHashes = Object.fromEntries(
-    walk(distDir)
-      .filter((file) => file.endsWith('.d.ts'))
-      .sort((left, right) => left.localeCompare(right))
-      .map((file) => {
-        const relativeFile = relative(distDir, file);
-        const normalized = readFileSync(file, 'utf8').replace(/\r\n/gu, '\n').trim();
-        return [relativeFile, createHash('sha256').update(normalized).digest('hex')];
-      }),
+    declarationFiles.map((file) => {
+      const relativeFile = relative(distDir, file);
+      const normalized = readFileSync(file, 'utf8').replace(/\r\n/gu, '\n').trim();
+      return [relativeFile, createHash('sha256').update(normalized).digest('hex')];
+    }),
   );
   return {
     exports: manifest.exports ?? {},
