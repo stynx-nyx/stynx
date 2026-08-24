@@ -80,6 +80,26 @@ should reach for it. Surfaces are pulled from each package's
 - **Import when:** any DB access. Always.
 - **Citation:** `packages/data/src/index.ts`.
 
+### `@stynx-nyx/outbox` — v0.5.0
+
+- **Purpose:** Durable transactional outbox: compose an entity-agnostic
+  message into the caller's domain transaction, claim due rows safely, and
+  dispatch them through an application-selected transport.
+- **Maturity:** STABLE. Promoted from PEC's proven RENACH outbox; one
+  outstanding row per `(tenant, entity, entityId)`.
+- **Public surface:** `StynxOutboxModule`, `OutboxService`,
+  `OutboxDispatcherPort`, `HttpOutboxDispatcher`, `OutboxBackoffPolicy`,
+  fixed/exponential policies, message/ACK types, metrics sink, and HMAC ACK
+  sign/verify helpers.
+- **Peer deps:** `@nestjs/common`, `@nestjs/core`, `reflect-metadata`, `rxjs`;
+  uses `@stynx-nyx/data` for transaction and system-context boundaries.
+- **Import when:** a domain mutation must atomically record an external
+  delivery intent. Call `enqueue(tx, envelope)` within the existing domain
+  transaction; drive `dispatchDue()` from the application scheduler. It does
+  not include a scheduler or EventBridge adapter.
+- **Citation:** `packages/outbox/src/index.ts`; contract
+  `docs/framework/contracts/outbox-api.md`; ADR-OUTBOX-0001.
+
 ### `@stynx-nyx/auth` — v0.1.0
 
 - **Purpose:** Cognito JWT verification, permission cache (ADR-002),
@@ -398,6 +418,7 @@ should reach for it. Surfaces are pulled from each package's
 | --------------------------------- | ----------------------------------------------- |
 | HTTP request handling baseline    | `@stynx-nyx/core` + `@stynx-nyx/backend`        |
 | DB access (read & write)          | `@stynx-nyx/data`                               |
+| Transactional external delivery   | `@stynx-nyx/outbox`                             |
 | Multi-tenant context              | `@stynx-nyx/tenancy`                            |
 | Auth (Cognito JWT verify, login)  | `@stynx-nyx/auth`                               |
 | Session issuance + refresh        | `@stynx-nyx/sessions`                           |
