@@ -1,6 +1,1359 @@
 {
   "schemaVersion": "1",
   "packages": {
+    "@stynx-nyx/angular": {
+      "exports": {
+        ".": {
+          "types": "./dist/types/stynx-nyx-angular.d.ts",
+          "default": "./dist/fesm2022/stynx-nyx-angular.mjs"
+        },
+        "./testing": {
+          "types": "./dist/types/stynx-nyx-angular-testing.d.ts",
+          "default": "./dist/fesm2022/stynx-nyx-angular-testing.mjs"
+        },
+        "./package.json": {
+          "default": "./package.json"
+        }
+      },
+      "declarationHashes": {
+        "types/stynx-nyx-angular-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
+        "types/stynx-nyx-angular.d.ts": "1cd460eaf3435bb8daa6b57c28382151b2cfa28ec22e07876eb21bfe929896a6"
+      }
+    },
+    "@stynx-nyx/angular-audit": {
+      "exports": {
+        ".": {
+          "types": "./dist/types/stynx-nyx-angular-audit.d.ts",
+          "default": "./dist/fesm2022/stynx-nyx-angular-audit.mjs"
+        },
+        "./testing": {
+          "types": "./dist/types/stynx-nyx-angular-audit-testing.d.ts",
+          "default": "./dist/fesm2022/stynx-nyx-angular-audit-testing.mjs"
+        },
+        "./catalogs/en.json": {
+          "default": "./dist/catalogs/en.json"
+        },
+        "./catalogs/pt-BR.json": {
+          "default": "./dist/catalogs/pt-BR.json"
+        },
+        "./package.json": {
+          "default": "./package.json"
+        }
+      },
+      "declarationHashes": {
+        "types/stynx-nyx-angular-audit-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
+        "types/stynx-nyx-angular-audit.d.ts": "35f9f301c6002e5e6f0ddd2ffcc76b16be89f1751b33d4abb1d414619ffb3449"
+      }
+    },
+    "@stynx-nyx/angular-auth": {
+      "exports": {
+        ".": {
+          "types": "./dist/types/stynx-nyx-angular-auth.d.ts",
+          "default": "./dist/fesm2022/stynx-nyx-angular-auth.mjs"
+        },
+        "./testing": {
+          "types": "./dist/types/stynx-nyx-angular-auth-testing.d.ts",
+          "default": "./dist/fesm2022/stynx-nyx-angular-auth-testing.mjs"
+        },
+        "./catalogs/en.json": {
+          "default": "./dist/catalogs/en.json"
+        },
+        "./catalogs/pt-BR.json": {
+          "default": "./dist/catalogs/pt-BR.json"
+        },
+        "./package.json": {
+          "default": "./package.json"
+        }
+      },
+      "declarationHashes": {
+        "types/stynx-nyx-angular-auth-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
+        "types/stynx-nyx-angular-auth.d.ts": "ea26d0e684e41f6c20b61b9fa636a4e5a3d8ba02493215ba3cf2386687ac6c13"
+      }
+    },
+    "@stynx-nyx/angular-flow": {
+      "exports": {
+        ".": {
+          "types": "./dist/types/stynx-nyx-angular-flow.d.ts",
+          "default": "./dist/fesm2022/stynx-nyx-angular-flow.mjs"
+        },
+        "./testing": {
+          "types": "./dist/types/stynx-nyx-angular-flow-testing.d.ts",
+          "default": "./dist/fesm2022/stynx-nyx-angular-flow-testing.mjs"
+        },
+        "./catalogs/en.json": {
+          "default": "./dist/catalogs/en.json"
+        },
+        "./catalogs/pt-BR.json": {
+          "default": "./dist/catalogs/pt-BR.json"
+        },
+        "./package.json": {
+          "default": "./package.json"
+        }
+      },
+      "declarationHashes": {
+        "types/stynx-nyx-angular-flow-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
+        "types/stynx-nyx-angular-flow.d.ts": "709301b1816e6333b7424398e02ad74696418839e7238af615e07eec9f1d6c6d"
+      }
+    },
+    "@stynx-nyx/angular-i18n": {
+      "exports": {
+        ".": {
+          "types": "./dist/types/stynx-nyx-angular-i18n.d.ts",
+          "default": "./dist/fesm2022/stynx-nyx-angular-i18n.mjs"
+        },
+        "./testing": {
+          "types": "./dist/types/stynx-nyx-angular-i18n-testing.d.ts",
+          "default": "./dist/fesm2022/stynx-nyx-angular-i18n-testing.mjs"
+        },
+        "./catalogs/en.json": {
+          "default": "./dist/catalogs/en.json"
+        },
+        "./catalogs/pt-BR.json": {
+          "default": "./dist/catalogs/pt-BR.json"
+        },
+        "./package.json": {
+          "default": "./package.json"
+        }
+      },
+      "declarationHashes": {
+        "types/stynx-nyx-angular-i18n-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
+        "types/stynx-nyx-angular-i18n.d.ts": "256f3a7a9b10e23e46ba18836018e5760f5e90e7b279b4f2a6fa48f09c7f64b2"
+      }
+    },
+    "@stynx-nyx/angular-iam": {
+      "exports": {
+        ".": {
+          "types": "./dist/types/stynx-nyx-angular-iam.d.ts",
+          "default": "./dist/fesm2022/stynx-nyx-angular-iam.mjs"
+        },
+        "./testing": {
+          "types": "./dist/types/stynx-nyx-angular-iam-testing.d.ts",
+          "default": "./dist/fesm2022/stynx-nyx-angular-iam-testing.mjs"
+        },
+        "./catalogs/en.json": {
+          "default": "./dist/catalogs/en.json"
+        },
+        "./catalogs/pt-BR.json": {
+          "default": "./dist/catalogs/pt-BR.json"
+        },
+        "./package.json": {
+          "default": "./package.json"
+        }
+      },
+      "declarationHashes": {
+        "types/stynx-nyx-angular-iam-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
+        "types/stynx-nyx-angular-iam.d.ts": "4eeb19c972b2965af0a85bff9ba7cb313c85c56b19bd4ea2c1503ebcbc45bab2"
+      }
+    },
+    "@stynx-nyx/angular-profile": {
+      "exports": {
+        ".": {
+          "types": "./dist/types/stynx-nyx-angular-profile.d.ts",
+          "default": "./dist/fesm2022/stynx-nyx-angular-profile.mjs"
+        },
+        "./testing": {
+          "types": "./dist/types/stynx-nyx-angular-profile-testing.d.ts",
+          "default": "./dist/fesm2022/stynx-nyx-angular-profile-testing.mjs"
+        },
+        "./catalogs/en.json": {
+          "default": "./dist/catalogs/en.json"
+        },
+        "./catalogs/pt-BR.json": {
+          "default": "./dist/catalogs/pt-BR.json"
+        },
+        "./package.json": {
+          "default": "./package.json"
+        }
+      },
+      "declarationHashes": {
+        "types/stynx-nyx-angular-profile-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
+        "types/stynx-nyx-angular-profile.d.ts": "cb4781c7022aa6c4bc6590cf0944ac9fc37ae9ac7a70dc258726ab6a0aad1f2c"
+      }
+    },
+    "@stynx-nyx/angular-sessions": {
+      "exports": {
+        ".": {
+          "types": "./dist/types/stynx-nyx-angular-sessions.d.ts",
+          "default": "./dist/fesm2022/stynx-nyx-angular-sessions.mjs"
+        },
+        "./testing": {
+          "types": "./dist/types/stynx-nyx-angular-sessions-testing.d.ts",
+          "default": "./dist/fesm2022/stynx-nyx-angular-sessions-testing.mjs"
+        },
+        "./catalogs/en.json": {
+          "default": "./dist/catalogs/en.json"
+        },
+        "./catalogs/pt-BR.json": {
+          "default": "./dist/catalogs/pt-BR.json"
+        },
+        "./package.json": {
+          "default": "./package.json"
+        }
+      },
+      "declarationHashes": {
+        "types/stynx-nyx-angular-sessions-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
+        "types/stynx-nyx-angular-sessions.d.ts": "b46c7429c81b16a72bcc08bb31930321e0bf8ccaadee77c477cc92c584c9eefb"
+      }
+    },
+    "@stynx-nyx/angular-storage": {
+      "exports": {
+        ".": {
+          "types": "./dist/types/stynx-nyx-angular-storage.d.ts",
+          "default": "./dist/fesm2022/stynx-nyx-angular-storage.mjs"
+        },
+        "./testing": {
+          "types": "./dist/types/stynx-nyx-angular-storage-testing.d.ts",
+          "default": "./dist/fesm2022/stynx-nyx-angular-storage-testing.mjs"
+        },
+        "./catalogs/en.json": {
+          "default": "./dist/catalogs/en.json"
+        },
+        "./catalogs/pt-BR.json": {
+          "default": "./dist/catalogs/pt-BR.json"
+        },
+        "./package.json": {
+          "default": "./package.json"
+        }
+      },
+      "declarationHashes": {
+        "types/stynx-nyx-angular-storage-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
+        "types/stynx-nyx-angular-storage.d.ts": "cac4ae037f197f4ace7e06c2ed4eae84706d52e8659404360e53047259ccd05c"
+      }
+    },
+    "@stynx-nyx/angular-tenancy": {
+      "exports": {
+        ".": {
+          "types": "./dist/types/stynx-nyx-angular-tenancy.d.ts",
+          "default": "./dist/fesm2022/stynx-nyx-angular-tenancy.mjs"
+        },
+        "./testing": {
+          "types": "./dist/types/stynx-nyx-angular-tenancy-testing.d.ts",
+          "default": "./dist/fesm2022/stynx-nyx-angular-tenancy-testing.mjs"
+        },
+        "./catalogs/en.json": {
+          "default": "./dist/catalogs/en.json"
+        },
+        "./catalogs/pt-BR.json": {
+          "default": "./dist/catalogs/pt-BR.json"
+        },
+        "./package.json": {
+          "default": "./package.json"
+        }
+      },
+      "declarationHashes": {
+        "types/stynx-nyx-angular-tenancy-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
+        "types/stynx-nyx-angular-tenancy.d.ts": "6d5cd977a0ceae8c0f63f3905139386625d036388148e9c6bf8b16ec45b7b5fb"
+      }
+    },
+    "@stynx-nyx/angular-trash": {
+      "exports": {
+        ".": {
+          "types": "./dist/types/stynx-nyx-angular-trash.d.ts",
+          "default": "./dist/fesm2022/stynx-nyx-angular-trash.mjs"
+        },
+        "./testing": {
+          "types": "./dist/types/stynx-nyx-angular-trash-testing.d.ts",
+          "default": "./dist/fesm2022/stynx-nyx-angular-trash-testing.mjs"
+        },
+        "./catalogs/en.json": {
+          "default": "./dist/catalogs/en.json"
+        },
+        "./catalogs/pt-BR.json": {
+          "default": "./dist/catalogs/pt-BR.json"
+        },
+        "./package.json": {
+          "default": "./package.json"
+        }
+      },
+      "declarationHashes": {
+        "types/stynx-nyx-angular-trash-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
+        "types/stynx-nyx-angular-trash.d.ts": "81a210809b9cd8ee3185aa531be7e897254e7d951d8c999ed1d25fe02b39a369"
+      }
+    },
+    "@stynx-nyx/angular-ui": {
+      "exports": {
+        ".": {
+          "types": "./dist/types/stynx-nyx-angular-ui.d.ts",
+          "default": "./dist/fesm2022/stynx-nyx-angular-ui.mjs"
+        },
+        "./testing": {
+          "types": "./dist/types/stynx-nyx-angular-ui-testing.d.ts",
+          "default": "./dist/fesm2022/stynx-nyx-angular-ui-testing.mjs"
+        },
+        "./catalogs/en.json": {
+          "default": "./dist/catalogs/en.json"
+        },
+        "./catalogs/pt-BR.json": {
+          "default": "./dist/catalogs/pt-BR.json"
+        },
+        "./package.json": {
+          "default": "./package.json"
+        }
+      },
+      "declarationHashes": {
+        "types/stynx-nyx-angular-ui-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
+        "types/stynx-nyx-angular-ui.d.ts": "a773f50f20b505476e471720e7367cf5eb5f893bc5e5557c531694f466454bd2"
+      }
+    },
+    "@stynx-nyx/audit": {
+      "exports": {
+        ".": {
+          "types": "./dist/audit/src/index.d.ts",
+          "require": "./dist/audit/src/index.js",
+          "default": "./dist/audit/src/index.js"
+        }
+      },
+      "declarationHashes": {
+        "audit/src/audit.controller.d.ts": "654671c21d26fa4b0fcd4345e9cd10be5061699e5060f42b0d069dfe11d0bf2b",
+        "audit/src/audit.module.d.ts": "15958d08d60ea26347a7b65997ddfe74acce8ee8dd145e33c119eea06595e1c2",
+        "audit/src/audit.service.d.ts": "e8c20552d706c5d864311b2e89a8434e8ef5db0fb13637ea5aa2024bf5c9a2d2",
+        "audit/src/index.d.ts": "d767230105993dbd382d097aafa0c0d3d8c4a8c7d404a928412054c249f8f38e",
+        "audit/src/retention.d.ts": "846a338ccaff9ebe04041ab77b6130343ea96694de2522428753bce1b1a187dc",
+        "audit/src/sql-adapter.d.ts": "6e4ddaf67f5bd8adaf88e8126956863a89b11e38cc661966a3a5cc2de1502bde",
+        "audit/src/test-helpers.d.ts": "da24bbbf6214de2fb45e3234b1cee870f1f9db44f7f5ddc0a54d9e15da2fbb97",
+        "audit/src/tokens.d.ts": "c009a4251a47605fa951071c2346f3186d1b3fbb8b85e762971b67895aa9d4c6",
+        "audit/src/types.d.ts": "7fb0bbeb70cd893d25b308e5b3c7b93bfcb9d940aa4788bc95b269cd67e05529",
+        "auth/src/actor-context.interceptor.d.ts": "38e6a58b7af80da4a1c11db5141fa564bbab98d69ba26d0dda3c5d0bcbd119ec",
+        "auth/src/auth.controller.d.ts": "c2f8233555f581cec6bda8cb1ec54570b2ae2ba159885c2eeedafbccd866e943",
+        "auth/src/auth.module.d.ts": "4103f18a2bcb494bdaa45df04763d45fd090df007d85f461b452b07919c2aeec",
+        "auth/src/auth.service.d.ts": "b5ef07bc27351d1ffed26e676e06dd762d9a85a5863bac29dbf6b78620ceadc8",
+        "auth/src/cognito-admin.adapter.d.ts": "125c655bbab8ca1bb5f2bef79a23925a88632e106995aa06675a8860d7a201dd",
+        "auth/src/cognito-jwt.validator.d.ts": "c44c117177eeb01ca806e75f313b955217f96c09661a71492fec4f4b21737968",
+        "auth/src/cognito-token-verifier.d.ts": "c9e485dcb5d6b33132448f7a241587263cc11b5523644cae5862751c1a429341",
+        "auth/src/decorators.d.ts": "0621ae5b8c552371eb407ea2405633d833fba49c4548b6a240f4ae0f850948da",
+        "auth/src/doctor.d.ts": "3e77dae98d76995b4e8bf27992c91345c896723f2cf0eea6d86ac291146fa229",
+        "auth/src/effective-hash-computer.d.ts": "0d83db43b1019d0b1635720b8560adb5c176234cbe589ad466141e404ee90512",
+        "auth/src/in-memory-permission-cache-backend.d.ts": "55c9b966fc50a26b053f426d4a64679ad93ba823108d2ad787659ed1b6025a7f",
+        "auth/src/index.d.ts": "a3944c46fa8085282f57af98ed1276c16d90dd7ec9e808ad8f2820ded3a2cdce",
+        "auth/src/permission-cache-metrics.d.ts": "9f69d168e31e9b496636f13ea912490947f0ee4510a72ea4e8213bd7ac0605ce",
+        "auth/src/permission-cache.d.ts": "b0b73960cd5a5f7d36a28192e2a41399bf19ff9ffc70a75f6d54d084baa59302",
+        "auth/src/permission-query.service.d.ts": "db2acecb983cd459fdbf03c329028c1fb1c4aa41338cc0b378062728e3ade0db",
+        "auth/src/permission.guard.d.ts": "8d23b58ea250e46ebf830be56698448d8d0544d8fb62d299217330d4484eacff",
+        "auth/src/redis-permission-cache-backend.d.ts": "e636a10c01cfc5f89f0d05b3b598f7b5e2cc64bbd6fdb8d1e2ce3125b2664d9e",
+        "auth/src/stynx-auth.guard.d.ts": "45dd01c82e0aab6d6c3c493ebec040a2a7b9765b72a4d4b9d6c3e2423989ed60",
+        "auth/src/stynx-jwt.validator.d.ts": "f665988a8d3d5f7e521db4c6234c4286a4d9219ed75d7b0d9408c3a43c567d0e",
+        "auth/src/tokens.d.ts": "2c546f9de1cd8485cad01c4e452a1482863d425a3f77e3add89fcf0cae14b03a",
+        "auth/src/types.d.ts": "b0e9d7be17335f29ed818e2c4f4b21439c40ec5f213fb593b1ae391c1756f4fd",
+        "auth/src/utils.d.ts": "aba68801bb513039b6a7b8f9f43f9ea1ee83fda5786bfb10ae0a1ae5e16a667d",
+        "contracts/src/audit.d.ts": "058e629573fa95934d8771871b696f10ef73091f6a1feac686381df44c52c2f3",
+        "contracts/src/auth.d.ts": "0fb84c9fc2fb7a14cf88f8db281fe475165d391bd7271fb7eb687699496bc158",
+        "contracts/src/authorization.d.ts": "9c73b8adc21cd56c45420e018f14bb81d42a5aa6c60af57b3e26521534966abb",
+        "contracts/src/db-context.d.ts": "c8926488df2eb99e1284842624c144a18206f04cf6cc1161e12701f49c347a39",
+        "contracts/src/errors.d.ts": "5d8dc1bbc6b4917e9cf4ec8e4450105396baaa8684823d48dd7435585eea86b3",
+        "contracts/src/headers.d.ts": "05ab327e5262b1c83c24096f158c8ca8c2bdfaf4f9c47f91df4164ce5fc01467",
+        "contracts/src/identity-admin.d.ts": "1f7454e205f744e64cd240509d27d503346ad2904f38c9d43daf1db855012987",
+        "contracts/src/index.d.ts": "02d820363a1da769da451f6be644e2c5d343507848e983caec82fd8a731a2445",
+        "contracts/src/storage.d.ts": "1756795ef8be04f5248825ca76f61a776d0437a14cfae20b54d4ce58feea51dd",
+        "contracts/src/tenancy.d.ts": "27e10a40d36fe9ad4c68c5d4de53692d58e3646935273a757f50c14594e0807f",
+        "core/src/config.d.ts": "112130b6b65a92c42e2662b03efd077713d0008c5ee6909959783921b38724d7",
+        "core/src/core.module.d.ts": "75e31dbe8e4bbc2bf36d3f3bee59819b5d043eed45f85286a97a0ce3db5cb41a",
+        "core/src/database.d.ts": "570e73fd7f9c3b5298a6a069c38347810df9c9bbc847b0096464c9d025903547",
+        "core/src/error.filter.d.ts": "0e293939739a7082dc6dc274c2d3c91a206357a31b188e4a3505b1c5f71c83be",
+        "core/src/errors.d.ts": "ffab0c79378c22f12687e95e9e24dcccd736e6601952fe4585595ad8dbd2a650",
+        "core/src/index.d.ts": "a5137d9b5d3c22c4e0177a78f7d672738074a23ff37232454fa0547a3daf2032",
+        "core/src/request-context.d.ts": "850af73b1956889d90e9b7f811299f301466c33be30631052abf7f7ccf529f23",
+        "core/src/request-context.interceptor.d.ts": "940b06b3ae1893dfbd3ed4cf28ee1e73baa0ac1501134c35c1712ff539044b85",
+        "core/src/request-id.d.ts": "a258212b40d3425262e8e179c57ea5cb5094793391d95661f8dea8937f47a5ca",
+        "core/src/secret-loader.d.ts": "91d498a19e8e93e5fa2ab95e2295e6a90581f5eb2b4faff32f4e06fa4710a2a4",
+        "core/src/system-context.d.ts": "555843da0ef77940684816990c681202b5577e3e5da772c49eb166076cfdd069",
+        "core/src/tokens.d.ts": "8e948f17a6bd7b879132e0b3ac573b32c52bb0e0ccf31f73b19025c0774bd04c",
+        "data/src/client.d.ts": "e8f45f0ed73338fd10a202f0dc04a35a760bc9679b7abfd38ab753d48f06e69f",
+        "data/src/data.module.d.ts": "e3efeeaa36c5cfa8c097a2e6546d0fdd6a66e4abcdc53b5d39836030ba8b53de",
+        "data/src/database.d.ts": "a8cbfc90daf4be077fad1e23042e783b275810462f563b86225904c5b90d21a7",
+        "data/src/errors.d.ts": "72bd1833098e80cd2a5194a3ceb3e5db90edb57a6ca1b180ec950776b7f86a0b",
+        "data/src/index.d.ts": "7678bca67df1fb99b09d2995fbcd54edd0fc0e070f41bfe53d8f8223ea760c73",
+        "data/src/internal/archive-relations.d.ts": "c3ddf3b783ef66d2fdf6b8db82452b5959848ae6f17bee25be44ee287fc65a04",
+        "data/src/internal/archive-restore.d.ts": "813a3956213d7a03b4452e39bddf880aa58e115b33675a7fffa70bbcdc6b0561",
+        "data/src/internal/archive-schema.d.ts": "8017f39158dbc46c4756498ea66c86dc0e8f09c3c4c67d9b78a7d73b90222c40",
+        "data/src/internal/soft-delete-cascade.d.ts": "8bfe40cc096763a33fce124a63bccce5a9838b0c1950ac709da3c9b9d53e47ad",
+        "data/src/internal/table-meta.d.ts": "0dcfd383900a6b6dae5881b51f2c69d9488c2dbb6e48b2d0dcb07055e334bbea",
+        "data/src/migration-runner.d.ts": "c5b09632a35501232527725cbfcda4ff593d78e51db619869dc45ab0dd32efa0",
+        "data/src/pools.d.ts": "fb8c8dbbe8e5449971ec65ea06a055cd614db2c17f3526d3c653e100608c8324",
+        "data/src/query-helpers.d.ts": "cbc95b742001f8cb6e7d4c7b414f34d8260404337778291da09adb97090a20f7",
+        "data/src/schema/audit.d.ts": "9ac16944bc1584a2a14a0cb874824a580dcd255a4d5ce678810c8a2448756325",
+        "data/src/schema/auth.d.ts": "671bf351e8f7a1dc741753c0b38fa97173224d67ad6c82f25b507c3fcaba3ae3",
+        "data/src/schema/core.d.ts": "e4c18f22333d9ba31176a7c69f855659c8b24bbd75425f509d242c365402608f",
+        "data/src/schema/flow.d.ts": "b863fbda07b4fca5d407bf498b5aef8721e8d06780c49018e2d186dc72d9721e",
+        "data/src/schema/index.d.ts": "416a354de4f6cbd4591c7c3f3ecb485554d204ee8cb30b2c4d0c571830609165",
+        "data/src/schema/storage.d.ts": "466bc65af7c250a73ad8a8a6573e7a6cfc0ddf647be2d8c0a987fd7b98e9cd12",
+        "data/src/schema/tenancy.d.ts": "584a77143ba59a7fbde6da73c06b6030a10b6a0d3db7337287e159028d699fe1",
+        "data/src/system-context.d.ts": "f70d103096bdf07c2d4d9dbb4b14cd8fe12889ad4403d809a473442f213b25ff",
+        "data/src/table-markers.d.ts": "70d9edcd4399ee727f9d59cf9367dab4104cbc3a4b53e5015d54c8cd79161548",
+        "data/src/tokens.d.ts": "883df905f406fa9afb7bc1fce7872f615a2d357ca2e6c91d94255075145aa895",
+        "data/src/transaction.d.ts": "6eadca4e079fd3c965d6b4920e2a450119027752acddadbc7427a312eca92c3b",
+        "data/src/types.d.ts": "2396489c933e07d6f2023bf0cf8575d07e03373498de3425a46273730716a925",
+        "idempotency/src/constants.d.ts": "9e9d06a1259f454fe8584f8afe86b8a7598cc87977e5fed5add0d5c74e1567b1",
+        "idempotency/src/database-idempotency.store.d.ts": "e7205862adc3b4e177037008892e34a2e710f0da7023ad16aa875cfa51592e4d",
+        "idempotency/src/decorators.d.ts": "7f32ec2bd8dc62768792b7fa772861d8110f1cfd612b76a5c881f729fd563a14",
+        "idempotency/src/idempotency.interceptor.d.ts": "926abca23768d298053f34a7f57d27dd3ba0048b905cb7ab20c509ca6f8196f2",
+        "idempotency/src/idempotency.module.d.ts": "209d94f0ee0e150771948f2793432e073e7fdad96169cbef4aeaa09d4cd4af4a",
+        "idempotency/src/index.d.ts": "a5ffd4f36a1f20eb097ac96d3423846b872c42cbb9de243e407d1bfc8528c771",
+        "idempotency/src/metrics.d.ts": "10b202911d405cb9ab068da1b9632bd794cb02bea9d2dcb0da82f1976effc77c",
+        "idempotency/src/pg-idempotency.store.d.ts": "c4e9e829cd3c88dd00fcbb6685b79f88f515de38a9f7524e7f58254c807d3c38",
+        "idempotency/src/redis-idempotency.backend.d.ts": "22baf926143d522a037dc556c073a2354b047b46c0792e395f3d6ad41cd1beea",
+        "idempotency/src/request-context.d.ts": "9a125b580d7a4ff81f08f0191cfaca161ccde30261088c4ab0236dd7f54a1d2f",
+        "idempotency/src/types.d.ts": "383d64ba3cc8cd1ca80b1a2a3343d87abf5c71a070ab5d15b6a06be429b4d27a",
+        "sessions/src/control/errors.d.ts": "d9fef179242c47691d9fb3913006e49cdf144a4540c2b98ae3340156c041cd7c",
+        "sessions/src/control/in-memory-registry.d.ts": "2e417e408c52e98c1a543b4aa0c57bdaca674b2d8b1e816d7d5fce8df380451c",
+        "sessions/src/control/index.d.ts": "b401a40382a49e23e33020763bb5d100cab214c35693ba9d4a66f242960e7e68",
+        "sessions/src/control/postgres-registry.d.ts": "d481df684448c9ee9ceda68850e321e1aaa193ce8b42accee031c86ab72ab9c8",
+        "sessions/src/control/provider-fake.d.ts": "8969e0f71d0851891ebff779411311f9cf39a0d4af608f07955995aac7de7d95",
+        "sessions/src/control/session-control.controller.d.ts": "367108e285f4dd6d7fb79fb54882a63db3e8c08cad786f35bfa6c9b58b5ef5a6",
+        "sessions/src/control/session-control.module.d.ts": "260fc4b8f94d4c0d8ecd3477bbb3e6ff2e5131cc638f7e23d62a228897349465",
+        "sessions/src/control/session-control.service.d.ts": "9f27a14c9e8946d45a9b37506f8d5c049da93d0423efa3a68aade40861664da2",
+        "sessions/src/control/tokens.d.ts": "45911ee8f0c6dcdfac4a9e3d334fe521b7e8b8f371e1f77b81588db39567d9bc",
+        "sessions/src/control/types.d.ts": "a3ac307f1c2f01635eb37b56aa73aabcf2c963b525b55a06ab5a81dff90e42fc",
+        "sessions/src/errors.d.ts": "806945968b547594fe0da25bb7ca9b048c829babdfe9cb5f14fa4e49dad69467",
+        "sessions/src/in-memory-session-store.d.ts": "d752d4573c5ec5d870996ab7c884aa525ce6c83ce65b963eae4c2355d33919ca",
+        "sessions/src/index.d.ts": "4ca0e91906bcb070f43ee982b958c88590915db564eea012c55eb3ac63bbdf3c",
+        "sessions/src/jwks.controller.d.ts": "461577eec8bdc7b61fb1758d90f3d11dcb482157ffd8a2576f754393e27a9156",
+        "sessions/src/jwt-signing.service.d.ts": "9955dabf01d606acbaa5e1f46722e6f7af44305075c71c8ca493870522434d6b",
+        "sessions/src/redis-session-store.d.ts": "a01398e57ec739d329a2ee1a8e9d35111e38b25223ad2a166cb4390012e9d3f0",
+        "sessions/src/session-mirror.writer.d.ts": "2283b1cab54f85374e577502bf9762662a9a75a065839137e0a12b8974d42460",
+        "sessions/src/session.service.d.ts": "4d2515907de149f2664fe83805a7edf252f981b758ea734e00af9b0e6c862969",
+        "sessions/src/sessions.module.d.ts": "62ad498fd318ebb0c4e752ecf4baa9d1c098284127761bfdca54077cda6bf734",
+        "sessions/src/tokens.d.ts": "58a49a56766868247690f27a464d1f2f1bc96425502084ba0601edfc5c84950e",
+        "sessions/src/types.d.ts": "4b9c3ba81c26100def7fcf715ab315a22e12cfcda5fa960e4e5accf29e3bb78b"
+      }
+    },
+    "@stynx-nyx/auth": {
+      "exports": {
+        ".": {
+          "types": "./dist/auth/src/index.d.ts",
+          "require": "./dist/auth/src/index.js",
+          "default": "./dist/auth/src/index.js"
+        }
+      },
+      "declarationHashes": {
+        "auth/src/actor-context.interceptor.d.ts": "38e6a58b7af80da4a1c11db5141fa564bbab98d69ba26d0dda3c5d0bcbd119ec",
+        "auth/src/auth.controller.d.ts": "c2f8233555f581cec6bda8cb1ec54570b2ae2ba159885c2eeedafbccd866e943",
+        "auth/src/auth.module.d.ts": "4103f18a2bcb494bdaa45df04763d45fd090df007d85f461b452b07919c2aeec",
+        "auth/src/auth.service.d.ts": "b5ef07bc27351d1ffed26e676e06dd762d9a85a5863bac29dbf6b78620ceadc8",
+        "auth/src/cognito-admin.adapter.d.ts": "125c655bbab8ca1bb5f2bef79a23925a88632e106995aa06675a8860d7a201dd",
+        "auth/src/cognito-jwt.validator.d.ts": "c44c117177eeb01ca806e75f313b955217f96c09661a71492fec4f4b21737968",
+        "auth/src/cognito-token-verifier.d.ts": "c9e485dcb5d6b33132448f7a241587263cc11b5523644cae5862751c1a429341",
+        "auth/src/decorators.d.ts": "0621ae5b8c552371eb407ea2405633d833fba49c4548b6a240f4ae0f850948da",
+        "auth/src/doctor.d.ts": "3e77dae98d76995b4e8bf27992c91345c896723f2cf0eea6d86ac291146fa229",
+        "auth/src/effective-hash-computer.d.ts": "0d83db43b1019d0b1635720b8560adb5c176234cbe589ad466141e404ee90512",
+        "auth/src/in-memory-permission-cache-backend.d.ts": "55c9b966fc50a26b053f426d4a64679ad93ba823108d2ad787659ed1b6025a7f",
+        "auth/src/index.d.ts": "a3944c46fa8085282f57af98ed1276c16d90dd7ec9e808ad8f2820ded3a2cdce",
+        "auth/src/permission-cache-metrics.d.ts": "9f69d168e31e9b496636f13ea912490947f0ee4510a72ea4e8213bd7ac0605ce",
+        "auth/src/permission-cache.d.ts": "b0b73960cd5a5f7d36a28192e2a41399bf19ff9ffc70a75f6d54d084baa59302",
+        "auth/src/permission-query.service.d.ts": "db2acecb983cd459fdbf03c329028c1fb1c4aa41338cc0b378062728e3ade0db",
+        "auth/src/permission.guard.d.ts": "8d23b58ea250e46ebf830be56698448d8d0544d8fb62d299217330d4484eacff",
+        "auth/src/redis-permission-cache-backend.d.ts": "e636a10c01cfc5f89f0d05b3b598f7b5e2cc64bbd6fdb8d1e2ce3125b2664d9e",
+        "auth/src/stynx-auth.guard.d.ts": "45dd01c82e0aab6d6c3c493ebec040a2a7b9765b72a4d4b9d6c3e2423989ed60",
+        "auth/src/stynx-jwt.validator.d.ts": "f665988a8d3d5f7e521db4c6234c4286a4d9219ed75d7b0d9408c3a43c567d0e",
+        "auth/src/tokens.d.ts": "2c546f9de1cd8485cad01c4e452a1482863d425a3f77e3add89fcf0cae14b03a",
+        "auth/src/types.d.ts": "b0e9d7be17335f29ed818e2c4f4b21439c40ec5f213fb593b1ae391c1756f4fd",
+        "auth/src/utils.d.ts": "aba68801bb513039b6a7b8f9f43f9ea1ee83fda5786bfb10ae0a1ae5e16a667d",
+        "contracts/src/audit.d.ts": "058e629573fa95934d8771871b696f10ef73091f6a1feac686381df44c52c2f3",
+        "contracts/src/auth.d.ts": "0fb84c9fc2fb7a14cf88f8db281fe475165d391bd7271fb7eb687699496bc158",
+        "contracts/src/authorization.d.ts": "9c73b8adc21cd56c45420e018f14bb81d42a5aa6c60af57b3e26521534966abb",
+        "contracts/src/db-context.d.ts": "c8926488df2eb99e1284842624c144a18206f04cf6cc1161e12701f49c347a39",
+        "contracts/src/errors.d.ts": "5d8dc1bbc6b4917e9cf4ec8e4450105396baaa8684823d48dd7435585eea86b3",
+        "contracts/src/headers.d.ts": "05ab327e5262b1c83c24096f158c8ca8c2bdfaf4f9c47f91df4164ce5fc01467",
+        "contracts/src/identity-admin.d.ts": "1f7454e205f744e64cd240509d27d503346ad2904f38c9d43daf1db855012987",
+        "contracts/src/index.d.ts": "02d820363a1da769da451f6be644e2c5d343507848e983caec82fd8a731a2445",
+        "contracts/src/storage.d.ts": "1756795ef8be04f5248825ca76f61a776d0437a14cfae20b54d4ce58feea51dd",
+        "contracts/src/tenancy.d.ts": "27e10a40d36fe9ad4c68c5d4de53692d58e3646935273a757f50c14594e0807f",
+        "core/src/config.d.ts": "112130b6b65a92c42e2662b03efd077713d0008c5ee6909959783921b38724d7",
+        "core/src/core.module.d.ts": "75e31dbe8e4bbc2bf36d3f3bee59819b5d043eed45f85286a97a0ce3db5cb41a",
+        "core/src/database.d.ts": "570e73fd7f9c3b5298a6a069c38347810df9c9bbc847b0096464c9d025903547",
+        "core/src/error.filter.d.ts": "0e293939739a7082dc6dc274c2d3c91a206357a31b188e4a3505b1c5f71c83be",
+        "core/src/errors.d.ts": "ffab0c79378c22f12687e95e9e24dcccd736e6601952fe4585595ad8dbd2a650",
+        "core/src/index.d.ts": "a5137d9b5d3c22c4e0177a78f7d672738074a23ff37232454fa0547a3daf2032",
+        "core/src/request-context.d.ts": "850af73b1956889d90e9b7f811299f301466c33be30631052abf7f7ccf529f23",
+        "core/src/request-context.interceptor.d.ts": "940b06b3ae1893dfbd3ed4cf28ee1e73baa0ac1501134c35c1712ff539044b85",
+        "core/src/request-id.d.ts": "a258212b40d3425262e8e179c57ea5cb5094793391d95661f8dea8937f47a5ca",
+        "core/src/secret-loader.d.ts": "91d498a19e8e93e5fa2ab95e2295e6a90581f5eb2b4faff32f4e06fa4710a2a4",
+        "core/src/system-context.d.ts": "555843da0ef77940684816990c681202b5577e3e5da772c49eb166076cfdd069",
+        "core/src/tokens.d.ts": "8e948f17a6bd7b879132e0b3ac573b32c52bb0e0ccf31f73b19025c0774bd04c",
+        "data/src/client.d.ts": "e8f45f0ed73338fd10a202f0dc04a35a760bc9679b7abfd38ab753d48f06e69f",
+        "data/src/data.module.d.ts": "e3efeeaa36c5cfa8c097a2e6546d0fdd6a66e4abcdc53b5d39836030ba8b53de",
+        "data/src/database.d.ts": "a8cbfc90daf4be077fad1e23042e783b275810462f563b86225904c5b90d21a7",
+        "data/src/errors.d.ts": "72bd1833098e80cd2a5194a3ceb3e5db90edb57a6ca1b180ec950776b7f86a0b",
+        "data/src/index.d.ts": "7678bca67df1fb99b09d2995fbcd54edd0fc0e070f41bfe53d8f8223ea760c73",
+        "data/src/internal/archive-relations.d.ts": "c3ddf3b783ef66d2fdf6b8db82452b5959848ae6f17bee25be44ee287fc65a04",
+        "data/src/internal/archive-restore.d.ts": "813a3956213d7a03b4452e39bddf880aa58e115b33675a7fffa70bbcdc6b0561",
+        "data/src/internal/archive-schema.d.ts": "8017f39158dbc46c4756498ea66c86dc0e8f09c3c4c67d9b78a7d73b90222c40",
+        "data/src/internal/soft-delete-cascade.d.ts": "8bfe40cc096763a33fce124a63bccce5a9838b0c1950ac709da3c9b9d53e47ad",
+        "data/src/internal/table-meta.d.ts": "0dcfd383900a6b6dae5881b51f2c69d9488c2dbb6e48b2d0dcb07055e334bbea",
+        "data/src/migration-runner.d.ts": "c5b09632a35501232527725cbfcda4ff593d78e51db619869dc45ab0dd32efa0",
+        "data/src/pools.d.ts": "fb8c8dbbe8e5449971ec65ea06a055cd614db2c17f3526d3c653e100608c8324",
+        "data/src/query-helpers.d.ts": "cbc95b742001f8cb6e7d4c7b414f34d8260404337778291da09adb97090a20f7",
+        "data/src/schema/audit.d.ts": "9ac16944bc1584a2a14a0cb874824a580dcd255a4d5ce678810c8a2448756325",
+        "data/src/schema/auth.d.ts": "671bf351e8f7a1dc741753c0b38fa97173224d67ad6c82f25b507c3fcaba3ae3",
+        "data/src/schema/core.d.ts": "e4c18f22333d9ba31176a7c69f855659c8b24bbd75425f509d242c365402608f",
+        "data/src/schema/flow.d.ts": "a643ae90990a650dc1649b7576b8baa75cc91dd0cd4a6a0b659c8d185ab18b96",
+        "data/src/schema/index.d.ts": "416a354de4f6cbd4591c7c3f3ecb485554d204ee8cb30b2c4d0c571830609165",
+        "data/src/schema/storage.d.ts": "466bc65af7c250a73ad8a8a6573e7a6cfc0ddf647be2d8c0a987fd7b98e9cd12",
+        "data/src/schema/tenancy.d.ts": "584a77143ba59a7fbde6da73c06b6030a10b6a0d3db7337287e159028d699fe1",
+        "data/src/system-context.d.ts": "f70d103096bdf07c2d4d9dbb4b14cd8fe12889ad4403d809a473442f213b25ff",
+        "data/src/table-markers.d.ts": "70d9edcd4399ee727f9d59cf9367dab4104cbc3a4b53e5015d54c8cd79161548",
+        "data/src/tokens.d.ts": "883df905f406fa9afb7bc1fce7872f615a2d357ca2e6c91d94255075145aa895",
+        "data/src/transaction.d.ts": "6eadca4e079fd3c965d6b4920e2a450119027752acddadbc7427a312eca92c3b",
+        "data/src/types.d.ts": "2396489c933e07d6f2023bf0cf8575d07e03373498de3425a46273730716a925",
+        "idempotency/src/constants.d.ts": "9e9d06a1259f454fe8584f8afe86b8a7598cc87977e5fed5add0d5c74e1567b1",
+        "idempotency/src/database-idempotency.store.d.ts": "e7205862adc3b4e177037008892e34a2e710f0da7023ad16aa875cfa51592e4d",
+        "idempotency/src/decorators.d.ts": "7f32ec2bd8dc62768792b7fa772861d8110f1cfd612b76a5c881f729fd563a14",
+        "idempotency/src/idempotency.interceptor.d.ts": "926abca23768d298053f34a7f57d27dd3ba0048b905cb7ab20c509ca6f8196f2",
+        "idempotency/src/idempotency.module.d.ts": "209d94f0ee0e150771948f2793432e073e7fdad96169cbef4aeaa09d4cd4af4a",
+        "idempotency/src/index.d.ts": "a5ffd4f36a1f20eb097ac96d3423846b872c42cbb9de243e407d1bfc8528c771",
+        "idempotency/src/metrics.d.ts": "10b202911d405cb9ab068da1b9632bd794cb02bea9d2dcb0da82f1976effc77c",
+        "idempotency/src/pg-idempotency.store.d.ts": "c4e9e829cd3c88dd00fcbb6685b79f88f515de38a9f7524e7f58254c807d3c38",
+        "idempotency/src/redis-idempotency.backend.d.ts": "22baf926143d522a037dc556c073a2354b047b46c0792e395f3d6ad41cd1beea",
+        "idempotency/src/request-context.d.ts": "9a125b580d7a4ff81f08f0191cfaca161ccde30261088c4ab0236dd7f54a1d2f",
+        "idempotency/src/types.d.ts": "383d64ba3cc8cd1ca80b1a2a3343d87abf5c71a070ab5d15b6a06be429b4d27a",
+        "sessions/src/control/errors.d.ts": "d9fef179242c47691d9fb3913006e49cdf144a4540c2b98ae3340156c041cd7c",
+        "sessions/src/control/in-memory-registry.d.ts": "2e417e408c52e98c1a543b4aa0c57bdaca674b2d8b1e816d7d5fce8df380451c",
+        "sessions/src/control/index.d.ts": "b401a40382a49e23e33020763bb5d100cab214c35693ba9d4a66f242960e7e68",
+        "sessions/src/control/postgres-registry.d.ts": "d481df684448c9ee9ceda68850e321e1aaa193ce8b42accee031c86ab72ab9c8",
+        "sessions/src/control/provider-fake.d.ts": "8969e0f71d0851891ebff779411311f9cf39a0d4af608f07955995aac7de7d95",
+        "sessions/src/control/session-control.controller.d.ts": "367108e285f4dd6d7fb79fb54882a63db3e8c08cad786f35bfa6c9b58b5ef5a6",
+        "sessions/src/control/session-control.module.d.ts": "260fc4b8f94d4c0d8ecd3477bbb3e6ff2e5131cc638f7e23d62a228897349465",
+        "sessions/src/control/session-control.service.d.ts": "9f27a14c9e8946d45a9b37506f8d5c049da93d0423efa3a68aade40861664da2",
+        "sessions/src/control/tokens.d.ts": "45911ee8f0c6dcdfac4a9e3d334fe521b7e8b8f371e1f77b81588db39567d9bc",
+        "sessions/src/control/types.d.ts": "a3ac307f1c2f01635eb37b56aa73aabcf2c963b525b55a06ab5a81dff90e42fc",
+        "sessions/src/errors.d.ts": "806945968b547594fe0da25bb7ca9b048c829babdfe9cb5f14fa4e49dad69467",
+        "sessions/src/in-memory-session-store.d.ts": "d752d4573c5ec5d870996ab7c884aa525ce6c83ce65b963eae4c2355d33919ca",
+        "sessions/src/index.d.ts": "4ca0e91906bcb070f43ee982b958c88590915db564eea012c55eb3ac63bbdf3c",
+        "sessions/src/jwks.controller.d.ts": "461577eec8bdc7b61fb1758d90f3d11dcb482157ffd8a2576f754393e27a9156",
+        "sessions/src/jwt-signing.service.d.ts": "9955dabf01d606acbaa5e1f46722e6f7af44305075c71c8ca493870522434d6b",
+        "sessions/src/redis-session-store.d.ts": "a01398e57ec739d329a2ee1a8e9d35111e38b25223ad2a166cb4390012e9d3f0",
+        "sessions/src/session-mirror.writer.d.ts": "2283b1cab54f85374e577502bf9762662a9a75a065839137e0a12b8974d42460",
+        "sessions/src/session.service.d.ts": "4d2515907de149f2664fe83805a7edf252f981b758ea734e00af9b0e6c862969",
+        "sessions/src/sessions.module.d.ts": "62ad498fd318ebb0c4e752ecf4baa9d1c098284127761bfdca54077cda6bf734",
+        "sessions/src/tokens.d.ts": "58a49a56766868247690f27a464d1f2f1bc96425502084ba0601edfc5c84950e",
+        "sessions/src/types.d.ts": "4b9c3ba81c26100def7fcf715ab315a22e12cfcda5fa960e4e5accf29e3bb78b"
+      }
+    },
+    "@stynx-nyx/backend": {
+      "exports": {
+        ".": {
+          "types": "./dist/backend/src/index.d.ts",
+          "require": "./dist/backend/src/index.js",
+          "default": "./dist/backend/src/index.js"
+        }
+      },
+      "declarationHashes": {
+        "auth/src/actor-context.interceptor.d.ts": "38e6a58b7af80da4a1c11db5141fa564bbab98d69ba26d0dda3c5d0bcbd119ec",
+        "auth/src/auth.controller.d.ts": "c2f8233555f581cec6bda8cb1ec54570b2ae2ba159885c2eeedafbccd866e943",
+        "auth/src/auth.module.d.ts": "4103f18a2bcb494bdaa45df04763d45fd090df007d85f461b452b07919c2aeec",
+        "auth/src/auth.service.d.ts": "b5ef07bc27351d1ffed26e676e06dd762d9a85a5863bac29dbf6b78620ceadc8",
+        "auth/src/cognito-admin.adapter.d.ts": "125c655bbab8ca1bb5f2bef79a23925a88632e106995aa06675a8860d7a201dd",
+        "auth/src/cognito-jwt.validator.d.ts": "c44c117177eeb01ca806e75f313b955217f96c09661a71492fec4f4b21737968",
+        "auth/src/cognito-token-verifier.d.ts": "c9e485dcb5d6b33132448f7a241587263cc11b5523644cae5862751c1a429341",
+        "auth/src/decorators.d.ts": "0621ae5b8c552371eb407ea2405633d833fba49c4548b6a240f4ae0f850948da",
+        "auth/src/doctor.d.ts": "3e77dae98d76995b4e8bf27992c91345c896723f2cf0eea6d86ac291146fa229",
+        "auth/src/effective-hash-computer.d.ts": "0d83db43b1019d0b1635720b8560adb5c176234cbe589ad466141e404ee90512",
+        "auth/src/in-memory-permission-cache-backend.d.ts": "55c9b966fc50a26b053f426d4a64679ad93ba823108d2ad787659ed1b6025a7f",
+        "auth/src/index.d.ts": "a3944c46fa8085282f57af98ed1276c16d90dd7ec9e808ad8f2820ded3a2cdce",
+        "auth/src/permission-cache-metrics.d.ts": "9f69d168e31e9b496636f13ea912490947f0ee4510a72ea4e8213bd7ac0605ce",
+        "auth/src/permission-cache.d.ts": "b0b73960cd5a5f7d36a28192e2a41399bf19ff9ffc70a75f6d54d084baa59302",
+        "auth/src/permission-query.service.d.ts": "db2acecb983cd459fdbf03c329028c1fb1c4aa41338cc0b378062728e3ade0db",
+        "auth/src/permission.guard.d.ts": "8d23b58ea250e46ebf830be56698448d8d0544d8fb62d299217330d4484eacff",
+        "auth/src/redis-permission-cache-backend.d.ts": "e636a10c01cfc5f89f0d05b3b598f7b5e2cc64bbd6fdb8d1e2ce3125b2664d9e",
+        "auth/src/stynx-auth.guard.d.ts": "45dd01c82e0aab6d6c3c493ebec040a2a7b9765b72a4d4b9d6c3e2423989ed60",
+        "auth/src/stynx-jwt.validator.d.ts": "f665988a8d3d5f7e521db4c6234c4286a4d9219ed75d7b0d9408c3a43c567d0e",
+        "auth/src/tokens.d.ts": "2c546f9de1cd8485cad01c4e452a1482863d425a3f77e3add89fcf0cae14b03a",
+        "auth/src/types.d.ts": "b0e9d7be17335f29ed818e2c4f4b21439c40ec5f213fb593b1ae391c1756f4fd",
+        "auth/src/utils.d.ts": "aba68801bb513039b6a7b8f9f43f9ea1ee83fda5786bfb10ae0a1ae5e16a667d",
+        "backend/src/audit/audit.interceptor.d.ts": "1b30d0548d65d441d494d36754724a3a9f818fd6fa97f190260ca4deb11317ff",
+        "backend/src/audit/audit.module.d.ts": "75c13b806f8d91cc6622c7d76640d1f3d8f4b598751dbc683f9a5ce36480e55f",
+        "backend/src/audit/constants.d.ts": "86249cefc3abd1e8ee13dc3fe9ae747ab0ef38ea209ba7a3bc3a874ee1ddcb6c",
+        "backend/src/audit/decorators.d.ts": "b2e5e0a15a4dcd7ffd5bee4c2202baaf9c10b9c429e42dc5a1fc2d89d6bee447",
+        "backend/src/audit/redaction-policy.d.ts": "508af02dfee6cd38df3731c264b266a916891450a8d116a351d5da45b36793a9",
+        "backend/src/auth/auth-context.guard.d.ts": "57879d6602e1e86b6f60ccba1190e780de9f85358303a38f293cb86f10b06579",
+        "backend/src/auth/auth.module.d.ts": "9c2a18f82ced7bc2bc02cf25c10e5a7a454c40f782f77eb93c501c97dcc158b2",
+        "backend/src/auth/claim-first-tenant-entitlement.policy.d.ts": "5dfb271861e3214988466a19eab8df405703c604e9aab776f2b0571c1b99f07d",
+        "backend/src/auth/constants.d.ts": "3387fd8d5efba50cea2a0a0c2191f33ec3cae6c8f3ed7f22c0e1ec03378255f8",
+        "backend/src/auth/current-principal.decorator.d.ts": "11b38590f5124eed194172dde140392996a33409d3568163c17aed2b3cb13722",
+        "backend/src/auth/default-principal-mapper.d.ts": "29887c5ab0b43e3f17f32f288a7ce0bc05eed04161cde00841fa9ce003072539",
+        "backend/src/auth/required-tenant-header.resolver.d.ts": "716781a14e83168cf38febdc8c2e286d540c5d8b02ef4b4a8e69d7605391acca",
+        "backend/src/auth/sql-tenant-entitlement.fallback.d.ts": "e18bfeff86d12dd996b23ee473a38ebb9bcc21f81dc8d4ee459e0bfc525265df",
+        "backend/src/authorization/authorization.guard.d.ts": "a39e971824c230822baa918f28c22fcac4a295c559832475e099e9bcabb3e809",
+        "backend/src/authorization/authorization.module.d.ts": "9fcf58c359fa8c248291a8107935d3ec731c676bcedd63431de9cb4875cceaff",
+        "backend/src/authorization/constants.d.ts": "2ed82c11e7e2f11b06165118a68f3fa1c4812eb03860ccf999d6b013f73ad073",
+        "backend/src/authorization/decorators.d.ts": "f65aa53ac598543e76bd4bfb85ffd3d4b8715cbd10291534a8f8ac3d93bebf2a",
+        "backend/src/authorization/default-policy-evaluator.d.ts": "31f628446b24b7a7da16bcaa5cfbfec776bc69e4e6c88999f59a99841cce1f2e",
+        "backend/src/common/request-context.d.ts": "6251ce6e1b863099050fac0d76790ca7d92040b2e64befb0d1aaec7aaacc05f1",
+        "backend/src/db-context/constants.d.ts": "d41fa7274acc589c72796d9a0d3f2e86de57ff7ef20f939eb0e732b2e60af6a2",
+        "backend/src/db-context/db-context.interceptor.d.ts": "a5a9f1cbed56f141bec2f14cbc489e9378f0dabb49930574a1f1c59bd1ccfd76",
+        "backend/src/db-context/db-context.module.d.ts": "774b86d9153aa1f49ba31a88c429f5c3937b83717fae8173bb5cd8b567eb24fa",
+        "backend/src/db-context/pg-session-db-context.applier.d.ts": "065d4e18d97a82189736af31da9cbd1af5593ea2c12f2832694f5037045fae00",
+        "backend/src/db-context/request-db-client-lifecycle.d.ts": "24c7308795a8333cbe8f99d04b3d895f8fc0fe79a7d4fec7237eb615762589d4",
+        "backend/src/db-context/tenant-lifecycle.middleware.d.ts": "1e4fc748abf8ac91b92654294da9c6df153871393b8a876db74b16d9f39821b2",
+        "backend/src/idempotency/constants.d.ts": "7ba1c5fc3c869eb1e0e0dc7a3741d8b33e0a96a1bf8ed30c3c9552ea112ee7b7",
+        "backend/src/idempotency/idempotency.interceptor.d.ts": "ecc0e0d5995b62beb64ce0d85fb0b2cf6740c1dfcef36e995a06a41cfafa161e",
+        "backend/src/idempotency/idempotency.module.d.ts": "3b6ac947cba88219c863bea87930eff30ef2d4bc891c3c51696bbab031a1a335",
+        "backend/src/idempotency/pg-idempotency.store.d.ts": "a6cf5087ea91787d2fdf98cc288201ed8ebf914790f094ae5630721e6e01c60f",
+        "backend/src/idempotency/types.d.ts": "be89838e66bbb4ee672354994d261b59e5997bd4d20a4aea99864eed9b9d8172",
+        "backend/src/identity-admin/constants.d.ts": "3a8937a201feeadd08257e1c33619612fb1d7465353c59e51db229628ae65ce0",
+        "backend/src/identity-admin/identity-admin.module.d.ts": "d806310478b60b41adeaf4e0d78952de62c82817f38ba626b3a14c5ab71246ef",
+        "backend/src/identity-admin/identity-admin.service.d.ts": "9be8e7e5395a4e8e2efd28c7362f1c8f24b32abac981ccd96f8cb895e49ad556",
+        "backend/src/identity-admin/integration-facades.d.ts": "c6b7e96335f530649e538e061efb680c357e295107eb3f7721562ba6cada6dcb",
+        "backend/src/identity-admin/pg-local-sync.adapter.d.ts": "4b34ac0045d2531bc85d0d7755802861692e165354790a1c6c1df5b767e38508",
+        "backend/src/index.d.ts": "208f63396fc54e00994bf7ecb65dd708fa5c3182de46792f23e206c0d0eede86",
+        "backend/src/pipeline/platform-pipeline.module.d.ts": "643b7a422d5bd2cfb602491907159dcee76f12e7ecaaf212008d6a13185959a5",
+        "backend/src/rate-limit/constants.d.ts": "482ab6c828fa70c589a8430353014e6cfea91c48f16da41feb4ab0a1ddae736b",
+        "backend/src/rate-limit/pg-rate-limit.store.d.ts": "e1e5e542b59a6fde8ff79cacd997b5735b6273a961c4c329bd894c72034d3072",
+        "backend/src/rate-limit/rate-limit.guard.d.ts": "5885a65b41db10d50b8c4535e479409c59dfc41e64f35aaf76fb267d4dd43588",
+        "backend/src/rate-limit/rate-limit.module.d.ts": "c91c44e181e709f26e87ad4eea253f3045c61773aa9ec6235cd52591403294fc",
+        "backend/src/rate-limit/types.d.ts": "40325a9dcc335658d8ccd47e4656b25b68dc08eb5f214a700b576420d081b8aa",
+        "backend/src/sla/constants.d.ts": "879f08bac5eecc148b8d5e7b0cd49095356598b164c357d8df710b27be0e0013",
+        "backend/src/sla/default-sla-category.resolver.d.ts": "eba781f1ebf8b23a69ea4aa7ca7e05cc998f1cb331fa0ce6659109c674604f0b",
+        "backend/src/sla/logger-sla-event.sink.d.ts": "7126f8407ff740710e1891f9c743decd9959ca9139aeeb5245022bdd60922d0c",
+        "backend/src/sla/sla-monitor.interceptor.d.ts": "223aa708948187a0bcbc0e8673e5734db1976d842f073326dd754442c4e2721e",
+        "backend/src/sla/sla.module.d.ts": "9c875b26fc8b9eedb44e8d987dec2e91caa7811a076ea068b77f71b3fd378ba7",
+        "backend/src/sla/types.d.ts": "a383acd0af6806a7e5316c3564b4f4e96b28b5d2fb0f07391f22fd1f542433d8",
+        "backend/src/storage/constants.d.ts": "5d58b0e654b733fb6f4d5bc7519dce24696cd4b8a2553645f884a586a8f8fbb8",
+        "backend/src/storage/storage.module.d.ts": "be6a3f79d843a2e02287ff5dd00b48a8d831ca16a689e89da6d24cf3d5dbd97d",
+        "contracts/src/audit.d.ts": "058e629573fa95934d8771871b696f10ef73091f6a1feac686381df44c52c2f3",
+        "contracts/src/auth.d.ts": "0fb84c9fc2fb7a14cf88f8db281fe475165d391bd7271fb7eb687699496bc158",
+        "contracts/src/authorization.d.ts": "9c73b8adc21cd56c45420e018f14bb81d42a5aa6c60af57b3e26521534966abb",
+        "contracts/src/db-context.d.ts": "c8926488df2eb99e1284842624c144a18206f04cf6cc1161e12701f49c347a39",
+        "contracts/src/errors.d.ts": "5d8dc1bbc6b4917e9cf4ec8e4450105396baaa8684823d48dd7435585eea86b3",
+        "contracts/src/headers.d.ts": "05ab327e5262b1c83c24096f158c8ca8c2bdfaf4f9c47f91df4164ce5fc01467",
+        "contracts/src/identity-admin.d.ts": "1f7454e205f744e64cd240509d27d503346ad2904f38c9d43daf1db855012987",
+        "contracts/src/index.d.ts": "02d820363a1da769da451f6be644e2c5d343507848e983caec82fd8a731a2445",
+        "contracts/src/storage.d.ts": "1756795ef8be04f5248825ca76f61a776d0437a14cfae20b54d4ce58feea51dd",
+        "contracts/src/tenancy.d.ts": "27e10a40d36fe9ad4c68c5d4de53692d58e3646935273a757f50c14594e0807f",
+        "core/src/config.d.ts": "112130b6b65a92c42e2662b03efd077713d0008c5ee6909959783921b38724d7",
+        "core/src/core.module.d.ts": "75e31dbe8e4bbc2bf36d3f3bee59819b5d043eed45f85286a97a0ce3db5cb41a",
+        "core/src/database.d.ts": "570e73fd7f9c3b5298a6a069c38347810df9c9bbc847b0096464c9d025903547",
+        "core/src/error.filter.d.ts": "0e293939739a7082dc6dc274c2d3c91a206357a31b188e4a3505b1c5f71c83be",
+        "core/src/errors.d.ts": "ffab0c79378c22f12687e95e9e24dcccd736e6601952fe4585595ad8dbd2a650",
+        "core/src/index.d.ts": "a5137d9b5d3c22c4e0177a78f7d672738074a23ff37232454fa0547a3daf2032",
+        "core/src/request-context.d.ts": "850af73b1956889d90e9b7f811299f301466c33be30631052abf7f7ccf529f23",
+        "core/src/request-context.interceptor.d.ts": "940b06b3ae1893dfbd3ed4cf28ee1e73baa0ac1501134c35c1712ff539044b85",
+        "core/src/request-id.d.ts": "a258212b40d3425262e8e179c57ea5cb5094793391d95661f8dea8937f47a5ca",
+        "core/src/secret-loader.d.ts": "91d498a19e8e93e5fa2ab95e2295e6a90581f5eb2b4faff32f4e06fa4710a2a4",
+        "core/src/system-context.d.ts": "555843da0ef77940684816990c681202b5577e3e5da772c49eb166076cfdd069",
+        "core/src/tokens.d.ts": "8e948f17a6bd7b879132e0b3ac573b32c52bb0e0ccf31f73b19025c0774bd04c",
+        "data/src/client.d.ts": "e8f45f0ed73338fd10a202f0dc04a35a760bc9679b7abfd38ab753d48f06e69f",
+        "data/src/data.module.d.ts": "e3efeeaa36c5cfa8c097a2e6546d0fdd6a66e4abcdc53b5d39836030ba8b53de",
+        "data/src/database.d.ts": "a8cbfc90daf4be077fad1e23042e783b275810462f563b86225904c5b90d21a7",
+        "data/src/errors.d.ts": "72bd1833098e80cd2a5194a3ceb3e5db90edb57a6ca1b180ec950776b7f86a0b",
+        "data/src/index.d.ts": "7678bca67df1fb99b09d2995fbcd54edd0fc0e070f41bfe53d8f8223ea760c73",
+        "data/src/internal/archive-relations.d.ts": "c3ddf3b783ef66d2fdf6b8db82452b5959848ae6f17bee25be44ee287fc65a04",
+        "data/src/internal/archive-restore.d.ts": "813a3956213d7a03b4452e39bddf880aa58e115b33675a7fffa70bbcdc6b0561",
+        "data/src/internal/archive-schema.d.ts": "8017f39158dbc46c4756498ea66c86dc0e8f09c3c4c67d9b78a7d73b90222c40",
+        "data/src/internal/soft-delete-cascade.d.ts": "8bfe40cc096763a33fce124a63bccce5a9838b0c1950ac709da3c9b9d53e47ad",
+        "data/src/internal/table-meta.d.ts": "0dcfd383900a6b6dae5881b51f2c69d9488c2dbb6e48b2d0dcb07055e334bbea",
+        "data/src/migration-runner.d.ts": "c5b09632a35501232527725cbfcda4ff593d78e51db619869dc45ab0dd32efa0",
+        "data/src/pools.d.ts": "fb8c8dbbe8e5449971ec65ea06a055cd614db2c17f3526d3c653e100608c8324",
+        "data/src/query-helpers.d.ts": "cbc95b742001f8cb6e7d4c7b414f34d8260404337778291da09adb97090a20f7",
+        "data/src/schema/audit.d.ts": "9ac16944bc1584a2a14a0cb874824a580dcd255a4d5ce678810c8a2448756325",
+        "data/src/schema/auth.d.ts": "671bf351e8f7a1dc741753c0b38fa97173224d67ad6c82f25b507c3fcaba3ae3",
+        "data/src/schema/core.d.ts": "e4c18f22333d9ba31176a7c69f855659c8b24bbd75425f509d242c365402608f",
+        "data/src/schema/flow.d.ts": "b863fbda07b4fca5d407bf498b5aef8721e8d06780c49018e2d186dc72d9721e",
+        "data/src/schema/index.d.ts": "416a354de4f6cbd4591c7c3f3ecb485554d204ee8cb30b2c4d0c571830609165",
+        "data/src/schema/storage.d.ts": "466bc65af7c250a73ad8a8a6573e7a6cfc0ddf647be2d8c0a987fd7b98e9cd12",
+        "data/src/schema/tenancy.d.ts": "584a77143ba59a7fbde6da73c06b6030a10b6a0d3db7337287e159028d699fe1",
+        "data/src/system-context.d.ts": "f70d103096bdf07c2d4d9dbb4b14cd8fe12889ad4403d809a473442f213b25ff",
+        "data/src/table-markers.d.ts": "70d9edcd4399ee727f9d59cf9367dab4104cbc3a4b53e5015d54c8cd79161548",
+        "data/src/tokens.d.ts": "883df905f406fa9afb7bc1fce7872f615a2d357ca2e6c91d94255075145aa895",
+        "data/src/transaction.d.ts": "6eadca4e079fd3c965d6b4920e2a450119027752acddadbc7427a312eca92c3b",
+        "data/src/types.d.ts": "2396489c933e07d6f2023bf0cf8575d07e03373498de3425a46273730716a925",
+        "idempotency/src/constants.d.ts": "9e9d06a1259f454fe8584f8afe86b8a7598cc87977e5fed5add0d5c74e1567b1",
+        "idempotency/src/database-idempotency.store.d.ts": "e7205862adc3b4e177037008892e34a2e710f0da7023ad16aa875cfa51592e4d",
+        "idempotency/src/decorators.d.ts": "7f32ec2bd8dc62768792b7fa772861d8110f1cfd612b76a5c881f729fd563a14",
+        "idempotency/src/idempotency.interceptor.d.ts": "926abca23768d298053f34a7f57d27dd3ba0048b905cb7ab20c509ca6f8196f2",
+        "idempotency/src/idempotency.module.d.ts": "209d94f0ee0e150771948f2793432e073e7fdad96169cbef4aeaa09d4cd4af4a",
+        "idempotency/src/index.d.ts": "a5ffd4f36a1f20eb097ac96d3423846b872c42cbb9de243e407d1bfc8528c771",
+        "idempotency/src/metrics.d.ts": "10b202911d405cb9ab068da1b9632bd794cb02bea9d2dcb0da82f1976effc77c",
+        "idempotency/src/pg-idempotency.store.d.ts": "c4e9e829cd3c88dd00fcbb6685b79f88f515de38a9f7524e7f58254c807d3c38",
+        "idempotency/src/redis-idempotency.backend.d.ts": "22baf926143d522a037dc556c073a2354b047b46c0792e395f3d6ad41cd1beea",
+        "idempotency/src/request-context.d.ts": "9a125b580d7a4ff81f08f0191cfaca161ccde30261088c4ab0236dd7f54a1d2f",
+        "idempotency/src/types.d.ts": "383d64ba3cc8cd1ca80b1a2a3343d87abf5c71a070ab5d15b6a06be429b4d27a",
+        "ratelimit/src/constants.d.ts": "f1630757acaa18c99b46f14333e41ee658ce8074fa4491b0d8eeeff290bfe2d9",
+        "ratelimit/src/decorators.d.ts": "f65c70534099fabe4dbbc0b966626223b0ac408466c137899a786044a33ac478",
+        "ratelimit/src/index.d.ts": "7a47d53410475bc838cd640bc0e09339cf9e8af42cf9eb93d5702216dc16c6e8",
+        "ratelimit/src/metrics.d.ts": "fcba61679961cf668119eda223dd590fc4c1d9976f449904d5c71747d350e263",
+        "ratelimit/src/pg-rate-limit.store.d.ts": "687ab80dc3c2bca105459d85c4ffa3020e75d27745195c1136c3b4c93bcfd058",
+        "ratelimit/src/rate-limit-policy.service.d.ts": "6f2c4aae52494160de1cbc9a54e2dad4580f5802f64a523de88cff51f87b48dd",
+        "ratelimit/src/rate-limit.guard.d.ts": "b908ab92d5ec9b5e7f8b4e4621469e44326286c8efa06e6bfa5426ebb23dd002",
+        "ratelimit/src/rate-limit.module.d.ts": "2783783e1588d57b619b636c8b954d049d51e17e61ecbb82a9fcb1768761c93f",
+        "ratelimit/src/redis-rate-limit.store.d.ts": "2074856a0d49510939626cee9f1ee0784972ac9afd085363a227742a11c03ecc",
+        "ratelimit/src/request-context.d.ts": "ae6d5e440e939a1254a4b3e9699fe2fc152fbe0ed87d27d2147e561e9851b096",
+        "ratelimit/src/types.d.ts": "5b9f7fb113a3d9b1cd59fcc28291f1df3dbba670761d9e861602cd76c2e5be1f",
+        "sessions/src/control/errors.d.ts": "d9fef179242c47691d9fb3913006e49cdf144a4540c2b98ae3340156c041cd7c",
+        "sessions/src/control/in-memory-registry.d.ts": "2e417e408c52e98c1a543b4aa0c57bdaca674b2d8b1e816d7d5fce8df380451c",
+        "sessions/src/control/index.d.ts": "b401a40382a49e23e33020763bb5d100cab214c35693ba9d4a66f242960e7e68",
+        "sessions/src/control/postgres-registry.d.ts": "d481df684448c9ee9ceda68850e321e1aaa193ce8b42accee031c86ab72ab9c8",
+        "sessions/src/control/provider-fake.d.ts": "8969e0f71d0851891ebff779411311f9cf39a0d4af608f07955995aac7de7d95",
+        "sessions/src/control/session-control.controller.d.ts": "367108e285f4dd6d7fb79fb54882a63db3e8c08cad786f35bfa6c9b58b5ef5a6",
+        "sessions/src/control/session-control.module.d.ts": "260fc4b8f94d4c0d8ecd3477bbb3e6ff2e5131cc638f7e23d62a228897349465",
+        "sessions/src/control/session-control.service.d.ts": "9f27a14c9e8946d45a9b37506f8d5c049da93d0423efa3a68aade40861664da2",
+        "sessions/src/control/tokens.d.ts": "45911ee8f0c6dcdfac4a9e3d334fe521b7e8b8f371e1f77b81588db39567d9bc",
+        "sessions/src/control/types.d.ts": "a3ac307f1c2f01635eb37b56aa73aabcf2c963b525b55a06ab5a81dff90e42fc",
+        "sessions/src/errors.d.ts": "806945968b547594fe0da25bb7ca9b048c829babdfe9cb5f14fa4e49dad69467",
+        "sessions/src/in-memory-session-store.d.ts": "d752d4573c5ec5d870996ab7c884aa525ce6c83ce65b963eae4c2355d33919ca",
+        "sessions/src/index.d.ts": "4ca0e91906bcb070f43ee982b958c88590915db564eea012c55eb3ac63bbdf3c",
+        "sessions/src/jwks.controller.d.ts": "461577eec8bdc7b61fb1758d90f3d11dcb482157ffd8a2576f754393e27a9156",
+        "sessions/src/jwt-signing.service.d.ts": "9955dabf01d606acbaa5e1f46722e6f7af44305075c71c8ca493870522434d6b",
+        "sessions/src/redis-session-store.d.ts": "a01398e57ec739d329a2ee1a8e9d35111e38b25223ad2a166cb4390012e9d3f0",
+        "sessions/src/session-mirror.writer.d.ts": "2283b1cab54f85374e577502bf9762662a9a75a065839137e0a12b8974d42460",
+        "sessions/src/session.service.d.ts": "4d2515907de149f2664fe83805a7edf252f981b758ea734e00af9b0e6c862969",
+        "sessions/src/sessions.module.d.ts": "62ad498fd318ebb0c4e752ecf4baa9d1c098284127761bfdca54077cda6bf734",
+        "sessions/src/tokens.d.ts": "58a49a56766868247690f27a464d1f2f1bc96425502084ba0601edfc5c84950e",
+        "sessions/src/types.d.ts": "4b9c3ba81c26100def7fcf715ab315a22e12cfcda5fa960e4e5accf29e3bb78b"
+      }
+    },
+    "@stynx-nyx/cli": {
+      "exports": {
+        ".": {
+          "types": "./dist/cli/src/index.d.ts",
+          "require": "./dist/cli/src/index.js",
+          "default": "./dist/cli/src/index.js"
+        }
+      },
+      "declarationHashes": {
+        "cli/src/adopt.d.ts": "4701a83f0cef68e4a1158293065984805393075f86543bd32d7cdfb3372ad029",
+        "cli/src/audit.d.ts": "fac6919d37e9e25c60ff1b968e0207d22a0d15a0e464d16998ec113b865ae040",
+        "cli/src/cli.d.ts": "a4d32be3e59cdfe29ba34f4ea3a7446e6834a2195222adb1c1a25e5d7f4dc00d",
+        "cli/src/doctor.d.ts": "e41f2994aa99fe6d5378b6b45c5ca20b3b2e37b5f977113a98788f1e037b4c78",
+        "cli/src/index.d.ts": "6118f7a8fa7d3a96c5ac99ea116139c9a797b3a15d208d50a09d4259a1e04231",
+        "cli/src/init.d.ts": "63a5193f65ed89824acc2bfe7a4db8dd1b0d1ebcbe3a07aed48cd8ff4bcb475a",
+        "cli/src/main.d.ts": "fdbeaaceb1047d486b9d1e7fc381a8cb7f589bbe8e78d591cd17a7797f425c49",
+        "cli/src/migrate.d.ts": "82a64abcaad20ed8e78b317271220a17f33a5358f4119cde5273cb72e2bc644b",
+        "cli/src/privacy-ropa.d.ts": "e8c294172be32c1faff086f0c570980dfa3403727585875131aeb417a42ebef0"
+      }
+    },
+    "@stynx-nyx/contracts": {
+      "exports": {
+        ".": {
+          "types": "./dist/contracts/src/index.d.ts",
+          "require": "./dist/contracts/src/index.js",
+          "default": "./dist/contracts/src/index.js"
+        }
+      },
+      "declarationHashes": {
+        "contracts/src/audit.d.ts": "058e629573fa95934d8771871b696f10ef73091f6a1feac686381df44c52c2f3",
+        "contracts/src/auth.d.ts": "0fb84c9fc2fb7a14cf88f8db281fe475165d391bd7271fb7eb687699496bc158",
+        "contracts/src/authorization.d.ts": "9c73b8adc21cd56c45420e018f14bb81d42a5aa6c60af57b3e26521534966abb",
+        "contracts/src/db-context.d.ts": "c8926488df2eb99e1284842624c144a18206f04cf6cc1161e12701f49c347a39",
+        "contracts/src/errors.d.ts": "5d8dc1bbc6b4917e9cf4ec8e4450105396baaa8684823d48dd7435585eea86b3",
+        "contracts/src/headers.d.ts": "05ab327e5262b1c83c24096f158c8ca8c2bdfaf4f9c47f91df4164ce5fc01467",
+        "contracts/src/identity-admin.d.ts": "1f7454e205f744e64cd240509d27d503346ad2904f38c9d43daf1db855012987",
+        "contracts/src/index.d.ts": "02d820363a1da769da451f6be644e2c5d343507848e983caec82fd8a731a2445",
+        "contracts/src/storage.d.ts": "1756795ef8be04f5248825ca76f61a776d0437a14cfae20b54d4ce58feea51dd",
+        "contracts/src/tenancy.d.ts": "27e10a40d36fe9ad4c68c5d4de53692d58e3646935273a757f50c14594e0807f"
+      }
+    },
+    "@stynx-nyx/core": {
+      "exports": {
+        ".": {
+          "types": "./dist/core/src/index.d.ts",
+          "require": "./dist/core/src/index.js",
+          "default": "./dist/core/src/index.js"
+        }
+      },
+      "declarationHashes": {
+        "core/src/config.d.ts": "112130b6b65a92c42e2662b03efd077713d0008c5ee6909959783921b38724d7",
+        "core/src/core.module.d.ts": "75e31dbe8e4bbc2bf36d3f3bee59819b5d043eed45f85286a97a0ce3db5cb41a",
+        "core/src/database.d.ts": "570e73fd7f9c3b5298a6a069c38347810df9c9bbc847b0096464c9d025903547",
+        "core/src/error.filter.d.ts": "0e293939739a7082dc6dc274c2d3c91a206357a31b188e4a3505b1c5f71c83be",
+        "core/src/errors.d.ts": "ffab0c79378c22f12687e95e9e24dcccd736e6601952fe4585595ad8dbd2a650",
+        "core/src/index.d.ts": "a5137d9b5d3c22c4e0177a78f7d672738074a23ff37232454fa0547a3daf2032",
+        "core/src/request-context.d.ts": "850af73b1956889d90e9b7f811299f301466c33be30631052abf7f7ccf529f23",
+        "core/src/request-context.interceptor.d.ts": "940b06b3ae1893dfbd3ed4cf28ee1e73baa0ac1501134c35c1712ff539044b85",
+        "core/src/request-id.d.ts": "a258212b40d3425262e8e179c57ea5cb5094793391d95661f8dea8937f47a5ca",
+        "core/src/secret-loader.d.ts": "91d498a19e8e93e5fa2ab95e2295e6a90581f5eb2b4faff32f4e06fa4710a2a4",
+        "core/src/system-context.d.ts": "555843da0ef77940684816990c681202b5577e3e5da772c49eb166076cfdd069",
+        "core/src/tokens.d.ts": "8e948f17a6bd7b879132e0b3ac573b32c52bb0e0ccf31f73b19025c0774bd04c"
+      }
+    },
+    "@stynx-nyx/data": {
+      "exports": {
+        ".": {
+          "types": "./dist/data/src/index.d.ts",
+          "require": "./dist/data/src/index.js",
+          "default": "./dist/data/src/index.js"
+        }
+      },
+      "declarationHashes": {
+        "data/src/client.d.ts": "e8f45f0ed73338fd10a202f0dc04a35a760bc9679b7abfd38ab753d48f06e69f",
+        "data/src/data.module.d.ts": "e3efeeaa36c5cfa8c097a2e6546d0fdd6a66e4abcdc53b5d39836030ba8b53de",
+        "data/src/database.d.ts": "a8cbfc90daf4be077fad1e23042e783b275810462f563b86225904c5b90d21a7",
+        "data/src/errors.d.ts": "72bd1833098e80cd2a5194a3ceb3e5db90edb57a6ca1b180ec950776b7f86a0b",
+        "data/src/index.d.ts": "7678bca67df1fb99b09d2995fbcd54edd0fc0e070f41bfe53d8f8223ea760c73",
+        "data/src/internal/archive-relations.d.ts": "c3ddf3b783ef66d2fdf6b8db82452b5959848ae6f17bee25be44ee287fc65a04",
+        "data/src/internal/archive-restore.d.ts": "813a3956213d7a03b4452e39bddf880aa58e115b33675a7fffa70bbcdc6b0561",
+        "data/src/internal/archive-schema.d.ts": "8017f39158dbc46c4756498ea66c86dc0e8f09c3c4c67d9b78a7d73b90222c40",
+        "data/src/internal/soft-delete-cascade.d.ts": "8bfe40cc096763a33fce124a63bccce5a9838b0c1950ac709da3c9b9d53e47ad",
+        "data/src/internal/table-meta.d.ts": "0dcfd383900a6b6dae5881b51f2c69d9488c2dbb6e48b2d0dcb07055e334bbea",
+        "data/src/migration-runner.d.ts": "c5b09632a35501232527725cbfcda4ff593d78e51db619869dc45ab0dd32efa0",
+        "data/src/pools.d.ts": "fb8c8dbbe8e5449971ec65ea06a055cd614db2c17f3526d3c653e100608c8324",
+        "data/src/query-helpers.d.ts": "cbc95b742001f8cb6e7d4c7b414f34d8260404337778291da09adb97090a20f7",
+        "data/src/schema/audit.d.ts": "9ac16944bc1584a2a14a0cb874824a580dcd255a4d5ce678810c8a2448756325",
+        "data/src/schema/auth.d.ts": "671bf351e8f7a1dc741753c0b38fa97173224d67ad6c82f25b507c3fcaba3ae3",
+        "data/src/schema/core.d.ts": "e4c18f22333d9ba31176a7c69f855659c8b24bbd75425f509d242c365402608f",
+        "data/src/schema/flow.d.ts": "69d2d022ad5dc6b85f796509773abf9d4b04ee48398adc45d24ecf36220d3792",
+        "data/src/schema/index.d.ts": "416a354de4f6cbd4591c7c3f3ecb485554d204ee8cb30b2c4d0c571830609165",
+        "data/src/schema/storage.d.ts": "466bc65af7c250a73ad8a8a6573e7a6cfc0ddf647be2d8c0a987fd7b98e9cd12",
+        "data/src/schema/tenancy.d.ts": "584a77143ba59a7fbde6da73c06b6030a10b6a0d3db7337287e159028d699fe1",
+        "data/src/system-context.d.ts": "f70d103096bdf07c2d4d9dbb4b14cd8fe12889ad4403d809a473442f213b25ff",
+        "data/src/table-markers.d.ts": "70d9edcd4399ee727f9d59cf9367dab4104cbc3a4b53e5015d54c8cd79161548",
+        "data/src/tokens.d.ts": "883df905f406fa9afb7bc1fce7872f615a2d357ca2e6c91d94255075145aa895",
+        "data/src/transaction.d.ts": "6eadca4e079fd3c965d6b4920e2a450119027752acddadbc7427a312eca92c3b",
+        "data/src/types.d.ts": "2396489c933e07d6f2023bf0cf8575d07e03373498de3425a46273730716a925"
+      }
+    },
+    "@stynx-nyx/feature-flags": {
+      "exports": {
+        ".": {
+          "types": "./dist/feature-flags/src/index.d.ts",
+          "require": "./dist/feature-flags/src/index.js",
+          "default": "./dist/feature-flags/src/index.js"
+        }
+      },
+      "declarationHashes": {
+        "feature-flags/src/index.d.ts": "fbdbedf9aa211c2a5bd55a5e75ef93fbc00bc5b44b5b4a6f1583eeae8a52d26f",
+        "feature-flags/src/types.d.ts": "72c05f33c2dcc09dd9b139ee88aa1070e9367e8af844f89ac8d70ffe05fbf17f"
+      }
+    },
+    "@stynx-nyx/flow": {
+      "exports": {
+        ".": {
+          "types": "./dist/flow/src/index.d.ts",
+          "require": "./dist/flow/src/index.js",
+          "default": "./dist/flow/src/index.js"
+        }
+      },
+      "declarationHashes": {
+        "auth/src/actor-context.interceptor.d.ts": "38e6a58b7af80da4a1c11db5141fa564bbab98d69ba26d0dda3c5d0bcbd119ec",
+        "auth/src/auth.controller.d.ts": "c2f8233555f581cec6bda8cb1ec54570b2ae2ba159885c2eeedafbccd866e943",
+        "auth/src/auth.module.d.ts": "4103f18a2bcb494bdaa45df04763d45fd090df007d85f461b452b07919c2aeec",
+        "auth/src/auth.service.d.ts": "b5ef07bc27351d1ffed26e676e06dd762d9a85a5863bac29dbf6b78620ceadc8",
+        "auth/src/cognito-admin.adapter.d.ts": "125c655bbab8ca1bb5f2bef79a23925a88632e106995aa06675a8860d7a201dd",
+        "auth/src/cognito-jwt.validator.d.ts": "c44c117177eeb01ca806e75f313b955217f96c09661a71492fec4f4b21737968",
+        "auth/src/cognito-token-verifier.d.ts": "c9e485dcb5d6b33132448f7a241587263cc11b5523644cae5862751c1a429341",
+        "auth/src/decorators.d.ts": "0621ae5b8c552371eb407ea2405633d833fba49c4548b6a240f4ae0f850948da",
+        "auth/src/doctor.d.ts": "3e77dae98d76995b4e8bf27992c91345c896723f2cf0eea6d86ac291146fa229",
+        "auth/src/effective-hash-computer.d.ts": "0d83db43b1019d0b1635720b8560adb5c176234cbe589ad466141e404ee90512",
+        "auth/src/in-memory-permission-cache-backend.d.ts": "55c9b966fc50a26b053f426d4a64679ad93ba823108d2ad787659ed1b6025a7f",
+        "auth/src/index.d.ts": "a3944c46fa8085282f57af98ed1276c16d90dd7ec9e808ad8f2820ded3a2cdce",
+        "auth/src/permission-cache-metrics.d.ts": "9f69d168e31e9b496636f13ea912490947f0ee4510a72ea4e8213bd7ac0605ce",
+        "auth/src/permission-cache.d.ts": "b0b73960cd5a5f7d36a28192e2a41399bf19ff9ffc70a75f6d54d084baa59302",
+        "auth/src/permission-query.service.d.ts": "db2acecb983cd459fdbf03c329028c1fb1c4aa41338cc0b378062728e3ade0db",
+        "auth/src/permission.guard.d.ts": "8d23b58ea250e46ebf830be56698448d8d0544d8fb62d299217330d4484eacff",
+        "auth/src/redis-permission-cache-backend.d.ts": "e636a10c01cfc5f89f0d05b3b598f7b5e2cc64bbd6fdb8d1e2ce3125b2664d9e",
+        "auth/src/stynx-auth.guard.d.ts": "45dd01c82e0aab6d6c3c493ebec040a2a7b9765b72a4d4b9d6c3e2423989ed60",
+        "auth/src/stynx-jwt.validator.d.ts": "f665988a8d3d5f7e521db4c6234c4286a4d9219ed75d7b0d9408c3a43c567d0e",
+        "auth/src/tokens.d.ts": "2c546f9de1cd8485cad01c4e452a1482863d425a3f77e3add89fcf0cae14b03a",
+        "auth/src/types.d.ts": "b0e9d7be17335f29ed818e2c4f4b21439c40ec5f213fb593b1ae391c1756f4fd",
+        "auth/src/utils.d.ts": "aba68801bb513039b6a7b8f9f43f9ea1ee83fda5786bfb10ae0a1ae5e16a667d",
+        "backend/src/audit/audit.interceptor.d.ts": "1b30d0548d65d441d494d36754724a3a9f818fd6fa97f190260ca4deb11317ff",
+        "backend/src/audit/audit.module.d.ts": "75c13b806f8d91cc6622c7d76640d1f3d8f4b598751dbc683f9a5ce36480e55f",
+        "backend/src/audit/constants.d.ts": "86249cefc3abd1e8ee13dc3fe9ae747ab0ef38ea209ba7a3bc3a874ee1ddcb6c",
+        "backend/src/audit/decorators.d.ts": "b2e5e0a15a4dcd7ffd5bee4c2202baaf9c10b9c429e42dc5a1fc2d89d6bee447",
+        "backend/src/audit/redaction-policy.d.ts": "508af02dfee6cd38df3731c264b266a916891450a8d116a351d5da45b36793a9",
+        "backend/src/auth/auth-context.guard.d.ts": "57879d6602e1e86b6f60ccba1190e780de9f85358303a38f293cb86f10b06579",
+        "backend/src/auth/auth.module.d.ts": "9c2a18f82ced7bc2bc02cf25c10e5a7a454c40f782f77eb93c501c97dcc158b2",
+        "backend/src/auth/claim-first-tenant-entitlement.policy.d.ts": "5dfb271861e3214988466a19eab8df405703c604e9aab776f2b0571c1b99f07d",
+        "backend/src/auth/constants.d.ts": "3387fd8d5efba50cea2a0a0c2191f33ec3cae6c8f3ed7f22c0e1ec03378255f8",
+        "backend/src/auth/current-principal.decorator.d.ts": "11b38590f5124eed194172dde140392996a33409d3568163c17aed2b3cb13722",
+        "backend/src/auth/default-principal-mapper.d.ts": "29887c5ab0b43e3f17f32f288a7ce0bc05eed04161cde00841fa9ce003072539",
+        "backend/src/auth/required-tenant-header.resolver.d.ts": "716781a14e83168cf38febdc8c2e286d540c5d8b02ef4b4a8e69d7605391acca",
+        "backend/src/auth/sql-tenant-entitlement.fallback.d.ts": "e18bfeff86d12dd996b23ee473a38ebb9bcc21f81dc8d4ee459e0bfc525265df",
+        "backend/src/authorization/authorization.guard.d.ts": "a39e971824c230822baa918f28c22fcac4a295c559832475e099e9bcabb3e809",
+        "backend/src/authorization/authorization.module.d.ts": "9fcf58c359fa8c248291a8107935d3ec731c676bcedd63431de9cb4875cceaff",
+        "backend/src/authorization/constants.d.ts": "2ed82c11e7e2f11b06165118a68f3fa1c4812eb03860ccf999d6b013f73ad073",
+        "backend/src/authorization/decorators.d.ts": "f65aa53ac598543e76bd4bfb85ffd3d4b8715cbd10291534a8f8ac3d93bebf2a",
+        "backend/src/authorization/default-policy-evaluator.d.ts": "31f628446b24b7a7da16bcaa5cfbfec776bc69e4e6c88999f59a99841cce1f2e",
+        "backend/src/common/request-context.d.ts": "6251ce6e1b863099050fac0d76790ca7d92040b2e64befb0d1aaec7aaacc05f1",
+        "backend/src/db-context/constants.d.ts": "d41fa7274acc589c72796d9a0d3f2e86de57ff7ef20f939eb0e732b2e60af6a2",
+        "backend/src/db-context/db-context.interceptor.d.ts": "a5a9f1cbed56f141bec2f14cbc489e9378f0dabb49930574a1f1c59bd1ccfd76",
+        "backend/src/db-context/db-context.module.d.ts": "774b86d9153aa1f49ba31a88c429f5c3937b83717fae8173bb5cd8b567eb24fa",
+        "backend/src/db-context/pg-session-db-context.applier.d.ts": "065d4e18d97a82189736af31da9cbd1af5593ea2c12f2832694f5037045fae00",
+        "backend/src/db-context/request-db-client-lifecycle.d.ts": "24c7308795a8333cbe8f99d04b3d895f8fc0fe79a7d4fec7237eb615762589d4",
+        "backend/src/db-context/tenant-lifecycle.middleware.d.ts": "1e4fc748abf8ac91b92654294da9c6df153871393b8a876db74b16d9f39821b2",
+        "backend/src/identity-admin/constants.d.ts": "3a8937a201feeadd08257e1c33619612fb1d7465353c59e51db229628ae65ce0",
+        "backend/src/identity-admin/identity-admin.module.d.ts": "d806310478b60b41adeaf4e0d78952de62c82817f38ba626b3a14c5ab71246ef",
+        "backend/src/identity-admin/identity-admin.service.d.ts": "9be8e7e5395a4e8e2efd28c7362f1c8f24b32abac981ccd96f8cb895e49ad556",
+        "backend/src/identity-admin/integration-facades.d.ts": "c6b7e96335f530649e538e061efb680c357e295107eb3f7721562ba6cada6dcb",
+        "backend/src/identity-admin/pg-local-sync.adapter.d.ts": "4b34ac0045d2531bc85d0d7755802861692e165354790a1c6c1df5b767e38508",
+        "backend/src/index.d.ts": "208f63396fc54e00994bf7ecb65dd708fa5c3182de46792f23e206c0d0eede86",
+        "backend/src/pipeline/platform-pipeline.module.d.ts": "643b7a422d5bd2cfb602491907159dcee76f12e7ecaaf212008d6a13185959a5",
+        "backend/src/sla/constants.d.ts": "879f08bac5eecc148b8d5e7b0cd49095356598b164c357d8df710b27be0e0013",
+        "backend/src/sla/default-sla-category.resolver.d.ts": "eba781f1ebf8b23a69ea4aa7ca7e05cc998f1cb331fa0ce6659109c674604f0b",
+        "backend/src/sla/logger-sla-event.sink.d.ts": "7126f8407ff740710e1891f9c743decd9959ca9139aeeb5245022bdd60922d0c",
+        "backend/src/sla/sla-monitor.interceptor.d.ts": "223aa708948187a0bcbc0e8673e5734db1976d842f073326dd754442c4e2721e",
+        "backend/src/sla/sla.module.d.ts": "9c875b26fc8b9eedb44e8d987dec2e91caa7811a076ea068b77f71b3fd378ba7",
+        "backend/src/sla/types.d.ts": "a383acd0af6806a7e5316c3564b4f4e96b28b5d2fb0f07391f22fd1f542433d8",
+        "backend/src/storage/constants.d.ts": "5d58b0e654b733fb6f4d5bc7519dce24696cd4b8a2553645f884a586a8f8fbb8",
+        "backend/src/storage/storage.module.d.ts": "be6a3f79d843a2e02287ff5dd00b48a8d831ca16a689e89da6d24cf3d5dbd97d",
+        "contracts/src/audit.d.ts": "058e629573fa95934d8771871b696f10ef73091f6a1feac686381df44c52c2f3",
+        "contracts/src/auth.d.ts": "0fb84c9fc2fb7a14cf88f8db281fe475165d391bd7271fb7eb687699496bc158",
+        "contracts/src/authorization.d.ts": "9c73b8adc21cd56c45420e018f14bb81d42a5aa6c60af57b3e26521534966abb",
+        "contracts/src/db-context.d.ts": "c8926488df2eb99e1284842624c144a18206f04cf6cc1161e12701f49c347a39",
+        "contracts/src/errors.d.ts": "5d8dc1bbc6b4917e9cf4ec8e4450105396baaa8684823d48dd7435585eea86b3",
+        "contracts/src/headers.d.ts": "05ab327e5262b1c83c24096f158c8ca8c2bdfaf4f9c47f91df4164ce5fc01467",
+        "contracts/src/identity-admin.d.ts": "1f7454e205f744e64cd240509d27d503346ad2904f38c9d43daf1db855012987",
+        "contracts/src/index.d.ts": "02d820363a1da769da451f6be644e2c5d343507848e983caec82fd8a731a2445",
+        "contracts/src/storage.d.ts": "1756795ef8be04f5248825ca76f61a776d0437a14cfae20b54d4ce58feea51dd",
+        "contracts/src/tenancy.d.ts": "27e10a40d36fe9ad4c68c5d4de53692d58e3646935273a757f50c14594e0807f",
+        "core/src/config.d.ts": "112130b6b65a92c42e2662b03efd077713d0008c5ee6909959783921b38724d7",
+        "core/src/core.module.d.ts": "75e31dbe8e4bbc2bf36d3f3bee59819b5d043eed45f85286a97a0ce3db5cb41a",
+        "core/src/database.d.ts": "570e73fd7f9c3b5298a6a069c38347810df9c9bbc847b0096464c9d025903547",
+        "core/src/error.filter.d.ts": "0e293939739a7082dc6dc274c2d3c91a206357a31b188e4a3505b1c5f71c83be",
+        "core/src/errors.d.ts": "ffab0c79378c22f12687e95e9e24dcccd736e6601952fe4585595ad8dbd2a650",
+        "core/src/index.d.ts": "a5137d9b5d3c22c4e0177a78f7d672738074a23ff37232454fa0547a3daf2032",
+        "core/src/request-context.d.ts": "850af73b1956889d90e9b7f811299f301466c33be30631052abf7f7ccf529f23",
+        "core/src/request-context.interceptor.d.ts": "940b06b3ae1893dfbd3ed4cf28ee1e73baa0ac1501134c35c1712ff539044b85",
+        "core/src/request-id.d.ts": "a258212b40d3425262e8e179c57ea5cb5094793391d95661f8dea8937f47a5ca",
+        "core/src/secret-loader.d.ts": "91d498a19e8e93e5fa2ab95e2295e6a90581f5eb2b4faff32f4e06fa4710a2a4",
+        "core/src/system-context.d.ts": "555843da0ef77940684816990c681202b5577e3e5da772c49eb166076cfdd069",
+        "core/src/tokens.d.ts": "8e948f17a6bd7b879132e0b3ac573b32c52bb0e0ccf31f73b19025c0774bd04c",
+        "data/src/client.d.ts": "e8f45f0ed73338fd10a202f0dc04a35a760bc9679b7abfd38ab753d48f06e69f",
+        "data/src/data.module.d.ts": "e3efeeaa36c5cfa8c097a2e6546d0fdd6a66e4abcdc53b5d39836030ba8b53de",
+        "data/src/database.d.ts": "a8cbfc90daf4be077fad1e23042e783b275810462f563b86225904c5b90d21a7",
+        "data/src/errors.d.ts": "72bd1833098e80cd2a5194a3ceb3e5db90edb57a6ca1b180ec950776b7f86a0b",
+        "data/src/index.d.ts": "7678bca67df1fb99b09d2995fbcd54edd0fc0e070f41bfe53d8f8223ea760c73",
+        "data/src/internal/archive-relations.d.ts": "c3ddf3b783ef66d2fdf6b8db82452b5959848ae6f17bee25be44ee287fc65a04",
+        "data/src/internal/archive-restore.d.ts": "813a3956213d7a03b4452e39bddf880aa58e115b33675a7fffa70bbcdc6b0561",
+        "data/src/internal/archive-schema.d.ts": "8017f39158dbc46c4756498ea66c86dc0e8f09c3c4c67d9b78a7d73b90222c40",
+        "data/src/internal/soft-delete-cascade.d.ts": "8bfe40cc096763a33fce124a63bccce5a9838b0c1950ac709da3c9b9d53e47ad",
+        "data/src/internal/table-meta.d.ts": "0dcfd383900a6b6dae5881b51f2c69d9488c2dbb6e48b2d0dcb07055e334bbea",
+        "data/src/migration-runner.d.ts": "c5b09632a35501232527725cbfcda4ff593d78e51db619869dc45ab0dd32efa0",
+        "data/src/pools.d.ts": "fb8c8dbbe8e5449971ec65ea06a055cd614db2c17f3526d3c653e100608c8324",
+        "data/src/query-helpers.d.ts": "cbc95b742001f8cb6e7d4c7b414f34d8260404337778291da09adb97090a20f7",
+        "data/src/schema/audit.d.ts": "9ac16944bc1584a2a14a0cb874824a580dcd255a4d5ce678810c8a2448756325",
+        "data/src/schema/auth.d.ts": "671bf351e8f7a1dc741753c0b38fa97173224d67ad6c82f25b507c3fcaba3ae3",
+        "data/src/schema/core.d.ts": "e4c18f22333d9ba31176a7c69f855659c8b24bbd75425f509d242c365402608f",
+        "data/src/schema/flow.d.ts": "8e5f2f5c4716ff101a0bf9b9490092e85c401aa6e7c71efb3b063a562c705b9d",
+        "data/src/schema/index.d.ts": "416a354de4f6cbd4591c7c3f3ecb485554d204ee8cb30b2c4d0c571830609165",
+        "data/src/schema/storage.d.ts": "466bc65af7c250a73ad8a8a6573e7a6cfc0ddf647be2d8c0a987fd7b98e9cd12",
+        "data/src/schema/tenancy.d.ts": "584a77143ba59a7fbde6da73c06b6030a10b6a0d3db7337287e159028d699fe1",
+        "data/src/system-context.d.ts": "f70d103096bdf07c2d4d9dbb4b14cd8fe12889ad4403d809a473442f213b25ff",
+        "data/src/table-markers.d.ts": "70d9edcd4399ee727f9d59cf9367dab4104cbc3a4b53e5015d54c8cd79161548",
+        "data/src/tokens.d.ts": "883df905f406fa9afb7bc1fce7872f615a2d357ca2e6c91d94255075145aa895",
+        "data/src/transaction.d.ts": "6eadca4e079fd3c965d6b4920e2a450119027752acddadbc7427a312eca92c3b",
+        "data/src/types.d.ts": "2396489c933e07d6f2023bf0cf8575d07e03373498de3425a46273730716a925",
+        "flow/src/adapters.d.ts": "f049fc6a8f2b698ebb0eb7f07668b6b45e7d10312b8a41deaa28a862a418f073",
+        "flow/src/controllers/agent-rules.controller.d.ts": "ef03da17d9215c0c97fee5819102c856bc5d9695c14708b8b85b14b984f57eaf",
+        "flow/src/controllers/analytics.controller.d.ts": "c03029993d3696158f527603b8fe72e4b24b1f9f13788479122f89ab087294b1",
+        "flow/src/controllers/answers.controller.d.ts": "c7e75829326c9e83c92ac2df8e3e2e4b2b7dbb0ebba19ee9207a5b5998d6070f",
+        "flow/src/controllers/edges.controller.d.ts": "0aaab52d2c1b0cfe12a9e9406cabf8190597b36599ac2002102d9a89da39c6ae",
+        "flow/src/controllers/effects.controller.d.ts": "de409d86b16a88e16304851e57a74dc8b02bd722167410d2c58fa74849129675",
+        "flow/src/controllers/events.controller.d.ts": "64e0b014be6bfecc0759e957404f1ba2bf577576fcfadb398b93d02cc89d2910",
+        "flow/src/controllers/fills.controller.d.ts": "276b4319087dd4c32d179fe367c5338e495b8e0e319393bc2719ac46372663cc",
+        "flow/src/controllers/forms.controller.d.ts": "ae51412347b53baf9a62d591d304874adb73d7aef14839d50743facb35eef663",
+        "flow/src/controllers/graphs.controller.d.ts": "fd2a0a676e4f291440d047a83dc0e7684dd270e4234bc1983726d8862bc03cfc",
+        "flow/src/controllers/node-form-rules.controller.d.ts": "5c16461930488a9e3f1e1fa2faf40897c839ed0f8cdcc334fbeb9357d5552166",
+        "flow/src/controllers/node-runs.controller.d.ts": "b1cfdb09dbac3051cd5f0bad4650b0653845ef68dfa01f023c2ddf569063e232",
+        "flow/src/controllers/nodes.controller.d.ts": "818331ab257e5c9ce95de57d1c749d2324670dee5d7596d2c2e6beedd50ecc5e",
+        "flow/src/controllers/policies.controller.d.ts": "73acd307ca4d6fb1b300bcc668234e6ce99e92d93b729aae06104c74e0e4abd8",
+        "flow/src/controllers/questions.controller.d.ts": "ea03749047641fc0cc6aad7b04c6eda653f4c20512010d8219d9b32738139696",
+        "flow/src/controllers/runs.controller.d.ts": "062ce93c26c7784b6399170fbdd4a269ba599984004637be568f72d0a97c7d6d",
+        "flow/src/controllers/scopes.controller.d.ts": "69f87d14cd53274fb74451c45f0b414a20d60a554d6a72e32174ab658b0ea61e",
+        "flow/src/controllers/signal.controller.d.ts": "634741965fa80a182653e49885403b18fd223fcc7b50ea7ee99e735deab78059",
+        "flow/src/controllers/tasks.controller.d.ts": "dc2b2305a2cc8f294a63d321fbf0ab1b552e721e39a5fee003731281b52b4b2b",
+        "flow/src/controllers/transition-effects.controller.d.ts": "173e691da1674450f93621f50f62a102c23cfef3103cc06c3db871c624aece68",
+        "flow/src/controllers/waivers.controller.d.ts": "324a6b15acd40d6417b82e949d114db7c02f324e13e8b1cd1f0469b033f46965",
+        "flow/src/flow-analytics.service.d.ts": "af2930c24a10f47246a74c505401397e3d146f6c0b30d0256b170cc462763408",
+        "flow/src/flow-design.service.d.ts": "6ed4a779abec7a338af19375e5802a54f909ff446bd9f69283a6b4ce27d0ed1b",
+        "flow/src/flow-forms.service.d.ts": "6fbc92665f2fd10c95099802cc1ae7975359ad00e28d25f1bf39f55e1bf9d422",
+        "flow/src/flow-policy.service.d.ts": "d3862c80bf4e622dae5881e5f42af0406b214a75f6957f03e4b0c9b25366ca37",
+        "flow/src/flow-runtime.service.d.ts": "2129cc01ab3c0f739e399d0fa69ad86f134a1a706eb188f702e28b79a546aa12",
+        "flow/src/flow.module.d.ts": "88787beeb752832649df818a980e0d07361d4f2d1692f7d231e2c1f65016ba8a",
+        "flow/src/index.d.ts": "5e239e62e6faa19e628e331bc13ec236aec7e7a0156e70199b6eee603636da4b",
+        "flow/src/internal/design/design-table-store.d.ts": "8322d3b892402dfbe5aaff3ef60586a1852ad794ae215ca3058ce4f89524141c",
+        "flow/src/internal/design/graph-package.d.ts": "bd48a911d21dfeaa3385a84e9520d35af051fa8a9586a55b63d5ad8fa9fb9798",
+        "flow/src/internal/forms/form-tables.d.ts": "1825fbb6100b950685d06156689038dfaf6dd37112d179d672045c9fc2f156f3",
+        "flow/src/internal/runtime/effect-dispatch.d.ts": "4bc7a4c7129e12a41f5a963a6d9512387faf4e970ee01e93c0be9bcebd8580b5",
+        "flow/src/internal/runtime/run-lifecycle.d.ts": "41335b594486f2c27c5ee00871be6788b8f2a4b5b673ba176f3ad9b13f70f3cf",
+        "flow/src/internal/runtime/runtime-filters.d.ts": "5c5570958f290aa41973640aa5ad4f28cf72a176f6be79f5cfcc7a7e2ec707aa",
+        "flow/src/internal/runtime/runtime-read-model.d.ts": "0e66b56f4679db5dc05eb9a4da60dceb002619874778a9949a7ca7c1d8c876fc",
+        "flow/src/internal/runtime/task-dispatch.d.ts": "0f21e38420ffe1e9c3babd0d29be7186d4b6d03835dece1134edc95ae052c74c",
+        "flow/src/row-utils.d.ts": "a904d599424fbd99f8d4ff180edb6c0058dc5bb6e7c59d0dbe2fa9983db8d8d7",
+        "flow/src/tokens.d.ts": "bb4c8acf17a988b7ec96655a09fcb8f7ae60bbd227fe3a26f58c8ec3965eaa1c",
+        "flow/src/types.d.ts": "5db13acccc664054f7aadfa1a3200a27ac410f62ff1d29fef180eefd6052415e",
+        "flow/src/validation.d.ts": "9dc391a3015ea5c63935bdafcd76098c7a137e410ea47dc69d8cdf77f1690302",
+        "idempotency/src/constants.d.ts": "9e9d06a1259f454fe8584f8afe86b8a7598cc87977e5fed5add0d5c74e1567b1",
+        "idempotency/src/database-idempotency.store.d.ts": "e7205862adc3b4e177037008892e34a2e710f0da7023ad16aa875cfa51592e4d",
+        "idempotency/src/decorators.d.ts": "7f32ec2bd8dc62768792b7fa772861d8110f1cfd612b76a5c881f729fd563a14",
+        "idempotency/src/idempotency.interceptor.d.ts": "926abca23768d298053f34a7f57d27dd3ba0048b905cb7ab20c509ca6f8196f2",
+        "idempotency/src/idempotency.module.d.ts": "209d94f0ee0e150771948f2793432e073e7fdad96169cbef4aeaa09d4cd4af4a",
+        "idempotency/src/index.d.ts": "a5ffd4f36a1f20eb097ac96d3423846b872c42cbb9de243e407d1bfc8528c771",
+        "idempotency/src/metrics.d.ts": "10b202911d405cb9ab068da1b9632bd794cb02bea9d2dcb0da82f1976effc77c",
+        "idempotency/src/pg-idempotency.store.d.ts": "c4e9e829cd3c88dd00fcbb6685b79f88f515de38a9f7524e7f58254c807d3c38",
+        "idempotency/src/redis-idempotency.backend.d.ts": "22baf926143d522a037dc556c073a2354b047b46c0792e395f3d6ad41cd1beea",
+        "idempotency/src/request-context.d.ts": "9a125b580d7a4ff81f08f0191cfaca161ccde30261088c4ab0236dd7f54a1d2f",
+        "idempotency/src/types.d.ts": "383d64ba3cc8cd1ca80b1a2a3343d87abf5c71a070ab5d15b6a06be429b4d27a",
+        "ratelimit/src/constants.d.ts": "f1630757acaa18c99b46f14333e41ee658ce8074fa4491b0d8eeeff290bfe2d9",
+        "ratelimit/src/decorators.d.ts": "f65c70534099fabe4dbbc0b966626223b0ac408466c137899a786044a33ac478",
+        "ratelimit/src/index.d.ts": "7a47d53410475bc838cd640bc0e09339cf9e8af42cf9eb93d5702216dc16c6e8",
+        "ratelimit/src/metrics.d.ts": "fcba61679961cf668119eda223dd590fc4c1d9976f449904d5c71747d350e263",
+        "ratelimit/src/pg-rate-limit.store.d.ts": "687ab80dc3c2bca105459d85c4ffa3020e75d27745195c1136c3b4c93bcfd058",
+        "ratelimit/src/rate-limit-policy.service.d.ts": "6f2c4aae52494160de1cbc9a54e2dad4580f5802f64a523de88cff51f87b48dd",
+        "ratelimit/src/rate-limit.guard.d.ts": "b908ab92d5ec9b5e7f8b4e4621469e44326286c8efa06e6bfa5426ebb23dd002",
+        "ratelimit/src/rate-limit.module.d.ts": "2783783e1588d57b619b636c8b954d049d51e17e61ecbb82a9fcb1768761c93f",
+        "ratelimit/src/redis-rate-limit.store.d.ts": "2074856a0d49510939626cee9f1ee0784972ac9afd085363a227742a11c03ecc",
+        "ratelimit/src/request-context.d.ts": "ae6d5e440e939a1254a4b3e9699fe2fc152fbe0ed87d27d2147e561e9851b096",
+        "ratelimit/src/types.d.ts": "5b9f7fb113a3d9b1cd59fcc28291f1df3dbba670761d9e861602cd76c2e5be1f",
+        "sessions/src/control/errors.d.ts": "d9fef179242c47691d9fb3913006e49cdf144a4540c2b98ae3340156c041cd7c",
+        "sessions/src/control/in-memory-registry.d.ts": "2e417e408c52e98c1a543b4aa0c57bdaca674b2d8b1e816d7d5fce8df380451c",
+        "sessions/src/control/index.d.ts": "b401a40382a49e23e33020763bb5d100cab214c35693ba9d4a66f242960e7e68",
+        "sessions/src/control/postgres-registry.d.ts": "d481df684448c9ee9ceda68850e321e1aaa193ce8b42accee031c86ab72ab9c8",
+        "sessions/src/control/provider-fake.d.ts": "8969e0f71d0851891ebff779411311f9cf39a0d4af608f07955995aac7de7d95",
+        "sessions/src/control/session-control.controller.d.ts": "367108e285f4dd6d7fb79fb54882a63db3e8c08cad786f35bfa6c9b58b5ef5a6",
+        "sessions/src/control/session-control.module.d.ts": "260fc4b8f94d4c0d8ecd3477bbb3e6ff2e5131cc638f7e23d62a228897349465",
+        "sessions/src/control/session-control.service.d.ts": "9f27a14c9e8946d45a9b37506f8d5c049da93d0423efa3a68aade40861664da2",
+        "sessions/src/control/tokens.d.ts": "45911ee8f0c6dcdfac4a9e3d334fe521b7e8b8f371e1f77b81588db39567d9bc",
+        "sessions/src/control/types.d.ts": "a3ac307f1c2f01635eb37b56aa73aabcf2c963b525b55a06ab5a81dff90e42fc",
+        "sessions/src/errors.d.ts": "806945968b547594fe0da25bb7ca9b048c829babdfe9cb5f14fa4e49dad69467",
+        "sessions/src/in-memory-session-store.d.ts": "d752d4573c5ec5d870996ab7c884aa525ce6c83ce65b963eae4c2355d33919ca",
+        "sessions/src/index.d.ts": "4ca0e91906bcb070f43ee982b958c88590915db564eea012c55eb3ac63bbdf3c",
+        "sessions/src/jwks.controller.d.ts": "461577eec8bdc7b61fb1758d90f3d11dcb482157ffd8a2576f754393e27a9156",
+        "sessions/src/jwt-signing.service.d.ts": "9955dabf01d606acbaa5e1f46722e6f7af44305075c71c8ca493870522434d6b",
+        "sessions/src/redis-session-store.d.ts": "a01398e57ec739d329a2ee1a8e9d35111e38b25223ad2a166cb4390012e9d3f0",
+        "sessions/src/session-mirror.writer.d.ts": "2283b1cab54f85374e577502bf9762662a9a75a065839137e0a12b8974d42460",
+        "sessions/src/session.service.d.ts": "4d2515907de149f2664fe83805a7edf252f981b758ea734e00af9b0e6c862969",
+        "sessions/src/sessions.module.d.ts": "62ad498fd318ebb0c4e752ecf4baa9d1c098284127761bfdca54077cda6bf734",
+        "sessions/src/tokens.d.ts": "58a49a56766868247690f27a464d1f2f1bc96425502084ba0601edfc5c84950e",
+        "sessions/src/types.d.ts": "4b9c3ba81c26100def7fcf715ab315a22e12cfcda5fa960e4e5accf29e3bb78b"
+      }
+    },
+    "@stynx-nyx/health": {
+      "exports": {
+        ".": {
+          "types": "./dist/health/src/index.d.ts",
+          "require": "./dist/health/src/index.js",
+          "default": "./dist/health/src/index.js"
+        }
+      },
+      "declarationHashes": {
+        "health/src/health.controller.d.ts": "1eb94774c303b3f07a12279bcc0048c1f28b29ce78a879064fb742b9ea6260d9",
+        "health/src/health.module.d.ts": "d41886c0a735974c16e4b30c563c8225be1831f35e0d0dbaaa1a0b3206cd25d7",
+        "health/src/health.service.d.ts": "e279dfff3f64586cb594f0626af84a51dda162911643f5b373b5382790b81c85",
+        "health/src/index.d.ts": "e1078ddbd0d1f2e9ea330131c4cf286cb4ce11e64efc97f0bffefe4ca7916262",
+        "health/src/info.guard.d.ts": "29213d9e5ee61af5f8794a3d1f6b0aac1f9dee745418f3d4f92a7fa51edad828",
+        "health/src/metrics.service.d.ts": "baa1e4ddbfe6587977d7d4feb233701ca9e917ebb859f5ae92d9e6c9ffc283be",
+        "health/src/tokens.d.ts": "a0fa21d716a8de1828247026a49505ae7b80abb482eeedd384c48a6b0126b406"
+      }
+    },
+    "@stynx-nyx/i18n": {
+      "exports": {
+        ".": {
+          "types": "./dist/i18n/src/index.d.ts",
+          "require": "./dist/i18n/src/index.js",
+          "default": "./dist/i18n/src/index.js"
+        }
+      },
+      "declarationHashes": {
+        "contracts/src/audit.d.ts": "058e629573fa95934d8771871b696f10ef73091f6a1feac686381df44c52c2f3",
+        "contracts/src/auth.d.ts": "0fb84c9fc2fb7a14cf88f8db281fe475165d391bd7271fb7eb687699496bc158",
+        "contracts/src/authorization.d.ts": "9c73b8adc21cd56c45420e018f14bb81d42a5aa6c60af57b3e26521534966abb",
+        "contracts/src/db-context.d.ts": "c8926488df2eb99e1284842624c144a18206f04cf6cc1161e12701f49c347a39",
+        "contracts/src/errors.d.ts": "5d8dc1bbc6b4917e9cf4ec8e4450105396baaa8684823d48dd7435585eea86b3",
+        "contracts/src/headers.d.ts": "05ab327e5262b1c83c24096f158c8ca8c2bdfaf4f9c47f91df4164ce5fc01467",
+        "contracts/src/identity-admin.d.ts": "1f7454e205f744e64cd240509d27d503346ad2904f38c9d43daf1db855012987",
+        "contracts/src/index.d.ts": "02d820363a1da769da451f6be644e2c5d343507848e983caec82fd8a731a2445",
+        "contracts/src/storage.d.ts": "1756795ef8be04f5248825ca76f61a776d0437a14cfae20b54d4ce58feea51dd",
+        "contracts/src/tenancy.d.ts": "27e10a40d36fe9ad4c68c5d4de53692d58e3646935273a757f50c14594e0807f",
+        "core/src/config.d.ts": "112130b6b65a92c42e2662b03efd077713d0008c5ee6909959783921b38724d7",
+        "core/src/core.module.d.ts": "75e31dbe8e4bbc2bf36d3f3bee59819b5d043eed45f85286a97a0ce3db5cb41a",
+        "core/src/database.d.ts": "570e73fd7f9c3b5298a6a069c38347810df9c9bbc847b0096464c9d025903547",
+        "core/src/error.filter.d.ts": "0e293939739a7082dc6dc274c2d3c91a206357a31b188e4a3505b1c5f71c83be",
+        "core/src/errors.d.ts": "ffab0c79378c22f12687e95e9e24dcccd736e6601952fe4585595ad8dbd2a650",
+        "core/src/index.d.ts": "a5137d9b5d3c22c4e0177a78f7d672738074a23ff37232454fa0547a3daf2032",
+        "core/src/request-context.d.ts": "850af73b1956889d90e9b7f811299f301466c33be30631052abf7f7ccf529f23",
+        "core/src/request-context.interceptor.d.ts": "940b06b3ae1893dfbd3ed4cf28ee1e73baa0ac1501134c35c1712ff539044b85",
+        "core/src/request-id.d.ts": "a258212b40d3425262e8e179c57ea5cb5094793391d95661f8dea8937f47a5ca",
+        "core/src/secret-loader.d.ts": "91d498a19e8e93e5fa2ab95e2295e6a90581f5eb2b4faff32f4e06fa4710a2a4",
+        "core/src/system-context.d.ts": "555843da0ef77940684816990c681202b5577e3e5da772c49eb166076cfdd069",
+        "core/src/tokens.d.ts": "8e948f17a6bd7b879132e0b3ac573b32c52bb0e0ccf31f73b19025c0774bd04c",
+        "data/src/client.d.ts": "e8f45f0ed73338fd10a202f0dc04a35a760bc9679b7abfd38ab753d48f06e69f",
+        "data/src/data.module.d.ts": "e3efeeaa36c5cfa8c097a2e6546d0fdd6a66e4abcdc53b5d39836030ba8b53de",
+        "data/src/database.d.ts": "a8cbfc90daf4be077fad1e23042e783b275810462f563b86225904c5b90d21a7",
+        "data/src/errors.d.ts": "72bd1833098e80cd2a5194a3ceb3e5db90edb57a6ca1b180ec950776b7f86a0b",
+        "data/src/index.d.ts": "7678bca67df1fb99b09d2995fbcd54edd0fc0e070f41bfe53d8f8223ea760c73",
+        "data/src/internal/archive-relations.d.ts": "c3ddf3b783ef66d2fdf6b8db82452b5959848ae6f17bee25be44ee287fc65a04",
+        "data/src/internal/archive-restore.d.ts": "813a3956213d7a03b4452e39bddf880aa58e115b33675a7fffa70bbcdc6b0561",
+        "data/src/internal/archive-schema.d.ts": "8017f39158dbc46c4756498ea66c86dc0e8f09c3c4c67d9b78a7d73b90222c40",
+        "data/src/internal/soft-delete-cascade.d.ts": "8bfe40cc096763a33fce124a63bccce5a9838b0c1950ac709da3c9b9d53e47ad",
+        "data/src/internal/table-meta.d.ts": "0dcfd383900a6b6dae5881b51f2c69d9488c2dbb6e48b2d0dcb07055e334bbea",
+        "data/src/migration-runner.d.ts": "c5b09632a35501232527725cbfcda4ff593d78e51db619869dc45ab0dd32efa0",
+        "data/src/pools.d.ts": "fb8c8dbbe8e5449971ec65ea06a055cd614db2c17f3526d3c653e100608c8324",
+        "data/src/query-helpers.d.ts": "cbc95b742001f8cb6e7d4c7b414f34d8260404337778291da09adb97090a20f7",
+        "data/src/schema/audit.d.ts": "9ac16944bc1584a2a14a0cb874824a580dcd255a4d5ce678810c8a2448756325",
+        "data/src/schema/auth.d.ts": "671bf351e8f7a1dc741753c0b38fa97173224d67ad6c82f25b507c3fcaba3ae3",
+        "data/src/schema/core.d.ts": "e4c18f22333d9ba31176a7c69f855659c8b24bbd75425f509d242c365402608f",
+        "data/src/schema/flow.d.ts": "a643ae90990a650dc1649b7576b8baa75cc91dd0cd4a6a0b659c8d185ab18b96",
+        "data/src/schema/index.d.ts": "416a354de4f6cbd4591c7c3f3ecb485554d204ee8cb30b2c4d0c571830609165",
+        "data/src/schema/storage.d.ts": "466bc65af7c250a73ad8a8a6573e7a6cfc0ddf647be2d8c0a987fd7b98e9cd12",
+        "data/src/schema/tenancy.d.ts": "584a77143ba59a7fbde6da73c06b6030a10b6a0d3db7337287e159028d699fe1",
+        "data/src/system-context.d.ts": "f70d103096bdf07c2d4d9dbb4b14cd8fe12889ad4403d809a473442f213b25ff",
+        "data/src/table-markers.d.ts": "70d9edcd4399ee727f9d59cf9367dab4104cbc3a4b53e5015d54c8cd79161548",
+        "data/src/tokens.d.ts": "883df905f406fa9afb7bc1fce7872f615a2d357ca2e6c91d94255075145aa895",
+        "data/src/transaction.d.ts": "6eadca4e079fd3c965d6b4920e2a450119027752acddadbc7427a312eca92c3b",
+        "data/src/types.d.ts": "2396489c933e07d6f2023bf0cf8575d07e03373498de3425a46273730716a925",
+        "i18n/src/catalog.service.d.ts": "fc2d9b1a90a45ad17dc0f0c1c5a77c31f9d84748079e0c73691bbff1657e8ce1",
+        "i18n/src/error-translator.service.d.ts": "8381a87d6ca45d1b01806c4aefb2066731c0f383e0c3ad415246260800c89c27",
+        "i18n/src/i18n-admin.service.d.ts": "5d970985ed7f4be28e66e8d4ea2fc2d964f93d9fca49875d6fd6cd5f3cf22621",
+        "i18n/src/i18n.controller.d.ts": "5b3d98a97c63b598f02d19f6818d5a95c6a300b969d534a95439071562e93d36",
+        "i18n/src/i18n.module.d.ts": "dff309a3e7c1da7428f8cfb5d22d596ad088e52181be1bac25fc124f722d7d44",
+        "i18n/src/index.d.ts": "b95072cc28dba227d1fad9bfc2f8bb8d5cb366645cba3ba7f1a7e3deeab8f2c7",
+        "i18n/src/locale.interceptor.d.ts": "3ff88471f998d2dc268fe079d66abb0f605633bc94dc0e0d0ddbaf39345c5096",
+        "i18n/src/locale.service.d.ts": "6f2a2acf52422f3b3eb97ecdd955dcb15b10ab15608e1ae73340ff703e50850e",
+        "i18n/src/localized-error.filter.d.ts": "80834d4bdac6c5379738c2d712edefd7293eac07feda957aa2e0c845b94631b9",
+        "i18n/src/tokens.d.ts": "c5c9d1b441e6f80de3629cc322e65cace99ef2929bc555577198c377cc9c6715",
+        "i18n/src/types.d.ts": "4cc4eda209efad8e108fa69c03dbaa948d1f50c4ec20bcce8aff7c0ac5795fe6",
+        "idempotency/src/constants.d.ts": "9e9d06a1259f454fe8584f8afe86b8a7598cc87977e5fed5add0d5c74e1567b1",
+        "idempotency/src/database-idempotency.store.d.ts": "e7205862adc3b4e177037008892e34a2e710f0da7023ad16aa875cfa51592e4d",
+        "idempotency/src/decorators.d.ts": "7f32ec2bd8dc62768792b7fa772861d8110f1cfd612b76a5c881f729fd563a14",
+        "idempotency/src/idempotency.interceptor.d.ts": "926abca23768d298053f34a7f57d27dd3ba0048b905cb7ab20c509ca6f8196f2",
+        "idempotency/src/idempotency.module.d.ts": "209d94f0ee0e150771948f2793432e073e7fdad96169cbef4aeaa09d4cd4af4a",
+        "idempotency/src/index.d.ts": "a5ffd4f36a1f20eb097ac96d3423846b872c42cbb9de243e407d1bfc8528c771",
+        "idempotency/src/metrics.d.ts": "10b202911d405cb9ab068da1b9632bd794cb02bea9d2dcb0da82f1976effc77c",
+        "idempotency/src/pg-idempotency.store.d.ts": "c4e9e829cd3c88dd00fcbb6685b79f88f515de38a9f7524e7f58254c807d3c38",
+        "idempotency/src/redis-idempotency.backend.d.ts": "22baf926143d522a037dc556c073a2354b047b46c0792e395f3d6ad41cd1beea",
+        "idempotency/src/request-context.d.ts": "9a125b580d7a4ff81f08f0191cfaca161ccde30261088c4ab0236dd7f54a1d2f",
+        "idempotency/src/types.d.ts": "383d64ba3cc8cd1ca80b1a2a3343d87abf5c71a070ab5d15b6a06be429b4d27a"
+      }
+    },
+    "@stynx-nyx/idempotency": {
+      "exports": {
+        ".": {
+          "types": "./dist/idempotency/src/index.d.ts",
+          "require": "./dist/idempotency/src/index.js",
+          "default": "./dist/idempotency/src/index.js"
+        }
+      },
+      "declarationHashes": {
+        "contracts/src/audit.d.ts": "058e629573fa95934d8771871b696f10ef73091f6a1feac686381df44c52c2f3",
+        "contracts/src/auth.d.ts": "0fb84c9fc2fb7a14cf88f8db281fe475165d391bd7271fb7eb687699496bc158",
+        "contracts/src/authorization.d.ts": "9c73b8adc21cd56c45420e018f14bb81d42a5aa6c60af57b3e26521534966abb",
+        "contracts/src/db-context.d.ts": "c8926488df2eb99e1284842624c144a18206f04cf6cc1161e12701f49c347a39",
+        "contracts/src/errors.d.ts": "5d8dc1bbc6b4917e9cf4ec8e4450105396baaa8684823d48dd7435585eea86b3",
+        "contracts/src/headers.d.ts": "05ab327e5262b1c83c24096f158c8ca8c2bdfaf4f9c47f91df4164ce5fc01467",
+        "contracts/src/identity-admin.d.ts": "1f7454e205f744e64cd240509d27d503346ad2904f38c9d43daf1db855012987",
+        "contracts/src/index.d.ts": "02d820363a1da769da451f6be644e2c5d343507848e983caec82fd8a731a2445",
+        "contracts/src/storage.d.ts": "1756795ef8be04f5248825ca76f61a776d0437a14cfae20b54d4ce58feea51dd",
+        "contracts/src/tenancy.d.ts": "27e10a40d36fe9ad4c68c5d4de53692d58e3646935273a757f50c14594e0807f",
+        "core/src/config.d.ts": "112130b6b65a92c42e2662b03efd077713d0008c5ee6909959783921b38724d7",
+        "core/src/core.module.d.ts": "75e31dbe8e4bbc2bf36d3f3bee59819b5d043eed45f85286a97a0ce3db5cb41a",
+        "core/src/database.d.ts": "570e73fd7f9c3b5298a6a069c38347810df9c9bbc847b0096464c9d025903547",
+        "core/src/error.filter.d.ts": "0e293939739a7082dc6dc274c2d3c91a206357a31b188e4a3505b1c5f71c83be",
+        "core/src/errors.d.ts": "ffab0c79378c22f12687e95e9e24dcccd736e6601952fe4585595ad8dbd2a650",
+        "core/src/index.d.ts": "a5137d9b5d3c22c4e0177a78f7d672738074a23ff37232454fa0547a3daf2032",
+        "core/src/request-context.d.ts": "850af73b1956889d90e9b7f811299f301466c33be30631052abf7f7ccf529f23",
+        "core/src/request-context.interceptor.d.ts": "940b06b3ae1893dfbd3ed4cf28ee1e73baa0ac1501134c35c1712ff539044b85",
+        "core/src/request-id.d.ts": "a258212b40d3425262e8e179c57ea5cb5094793391d95661f8dea8937f47a5ca",
+        "core/src/secret-loader.d.ts": "91d498a19e8e93e5fa2ab95e2295e6a90581f5eb2b4faff32f4e06fa4710a2a4",
+        "core/src/system-context.d.ts": "555843da0ef77940684816990c681202b5577e3e5da772c49eb166076cfdd069",
+        "core/src/tokens.d.ts": "8e948f17a6bd7b879132e0b3ac573b32c52bb0e0ccf31f73b19025c0774bd04c",
+        "data/src/client.d.ts": "e8f45f0ed73338fd10a202f0dc04a35a760bc9679b7abfd38ab753d48f06e69f",
+        "data/src/data.module.d.ts": "e3efeeaa36c5cfa8c097a2e6546d0fdd6a66e4abcdc53b5d39836030ba8b53de",
+        "data/src/database.d.ts": "a8cbfc90daf4be077fad1e23042e783b275810462f563b86225904c5b90d21a7",
+        "data/src/errors.d.ts": "72bd1833098e80cd2a5194a3ceb3e5db90edb57a6ca1b180ec950776b7f86a0b",
+        "data/src/index.d.ts": "7678bca67df1fb99b09d2995fbcd54edd0fc0e070f41bfe53d8f8223ea760c73",
+        "data/src/internal/archive-relations.d.ts": "c3ddf3b783ef66d2fdf6b8db82452b5959848ae6f17bee25be44ee287fc65a04",
+        "data/src/internal/archive-restore.d.ts": "813a3956213d7a03b4452e39bddf880aa58e115b33675a7fffa70bbcdc6b0561",
+        "data/src/internal/archive-schema.d.ts": "8017f39158dbc46c4756498ea66c86dc0e8f09c3c4c67d9b78a7d73b90222c40",
+        "data/src/internal/soft-delete-cascade.d.ts": "8bfe40cc096763a33fce124a63bccce5a9838b0c1950ac709da3c9b9d53e47ad",
+        "data/src/internal/table-meta.d.ts": "0dcfd383900a6b6dae5881b51f2c69d9488c2dbb6e48b2d0dcb07055e334bbea",
+        "data/src/migration-runner.d.ts": "c5b09632a35501232527725cbfcda4ff593d78e51db619869dc45ab0dd32efa0",
+        "data/src/pools.d.ts": "fb8c8dbbe8e5449971ec65ea06a055cd614db2c17f3526d3c653e100608c8324",
+        "data/src/query-helpers.d.ts": "cbc95b742001f8cb6e7d4c7b414f34d8260404337778291da09adb97090a20f7",
+        "data/src/schema/audit.d.ts": "9ac16944bc1584a2a14a0cb874824a580dcd255a4d5ce678810c8a2448756325",
+        "data/src/schema/auth.d.ts": "671bf351e8f7a1dc741753c0b38fa97173224d67ad6c82f25b507c3fcaba3ae3",
+        "data/src/schema/core.d.ts": "e4c18f22333d9ba31176a7c69f855659c8b24bbd75425f509d242c365402608f",
+        "data/src/schema/flow.d.ts": "a643ae90990a650dc1649b7576b8baa75cc91dd0cd4a6a0b659c8d185ab18b96",
+        "data/src/schema/index.d.ts": "416a354de4f6cbd4591c7c3f3ecb485554d204ee8cb30b2c4d0c571830609165",
+        "data/src/schema/storage.d.ts": "466bc65af7c250a73ad8a8a6573e7a6cfc0ddf647be2d8c0a987fd7b98e9cd12",
+        "data/src/schema/tenancy.d.ts": "584a77143ba59a7fbde6da73c06b6030a10b6a0d3db7337287e159028d699fe1",
+        "data/src/system-context.d.ts": "f70d103096bdf07c2d4d9dbb4b14cd8fe12889ad4403d809a473442f213b25ff",
+        "data/src/table-markers.d.ts": "70d9edcd4399ee727f9d59cf9367dab4104cbc3a4b53e5015d54c8cd79161548",
+        "data/src/tokens.d.ts": "883df905f406fa9afb7bc1fce7872f615a2d357ca2e6c91d94255075145aa895",
+        "data/src/transaction.d.ts": "6eadca4e079fd3c965d6b4920e2a450119027752acddadbc7427a312eca92c3b",
+        "data/src/types.d.ts": "2396489c933e07d6f2023bf0cf8575d07e03373498de3425a46273730716a925",
+        "idempotency/src/constants.d.ts": "9e9d06a1259f454fe8584f8afe86b8a7598cc87977e5fed5add0d5c74e1567b1",
+        "idempotency/src/database-idempotency.store.d.ts": "e7205862adc3b4e177037008892e34a2e710f0da7023ad16aa875cfa51592e4d",
+        "idempotency/src/decorators.d.ts": "7f32ec2bd8dc62768792b7fa772861d8110f1cfd612b76a5c881f729fd563a14",
+        "idempotency/src/idempotency.interceptor.d.ts": "926abca23768d298053f34a7f57d27dd3ba0048b905cb7ab20c509ca6f8196f2",
+        "idempotency/src/idempotency.module.d.ts": "209d94f0ee0e150771948f2793432e073e7fdad96169cbef4aeaa09d4cd4af4a",
+        "idempotency/src/index.d.ts": "a5ffd4f36a1f20eb097ac96d3423846b872c42cbb9de243e407d1bfc8528c771",
+        "idempotency/src/metrics.d.ts": "10b202911d405cb9ab068da1b9632bd794cb02bea9d2dcb0da82f1976effc77c",
+        "idempotency/src/pg-idempotency.store.d.ts": "c4e9e829cd3c88dd00fcbb6685b79f88f515de38a9f7524e7f58254c807d3c38",
+        "idempotency/src/redis-idempotency.backend.d.ts": "22baf926143d522a037dc556c073a2354b047b46c0792e395f3d6ad41cd1beea",
+        "idempotency/src/request-context.d.ts": "9a125b580d7a4ff81f08f0191cfaca161ccde30261088c4ab0236dd7f54a1d2f",
+        "idempotency/src/types.d.ts": "383d64ba3cc8cd1ca80b1a2a3343d87abf5c71a070ab5d15b6a06be429b4d27a"
+      }
+    },
+    "@stynx-nyx/integration-adapter": {
+      "exports": {
+        ".": {
+          "types": "./dist/integration-adapter/src/index.d.ts",
+          "require": "./dist/integration-adapter/src/index.js",
+          "default": "./dist/integration-adapter/src/index.js"
+        }
+      },
+      "declarationHashes": {
+        "integration-adapter/src/index.d.ts": "685101fe521c5770fa2a6a6cd4311f05ed6b3373c7f25f456266c829eb451348",
+        "integration-adapter/src/types.d.ts": "34e869829671246b73a6e3bdf2f0b3242242e490db8630d9cf2751f16f624071"
+      }
+    },
+    "@stynx-nyx/logging": {
+      "exports": {
+        ".": {
+          "types": "./dist/logging/src/index.d.ts",
+          "require": "./dist/logging/src/index.js",
+          "default": "./dist/logging/src/index.js"
+        }
+      },
+      "declarationHashes": {
+        "core/src/config.d.ts": "112130b6b65a92c42e2662b03efd077713d0008c5ee6909959783921b38724d7",
+        "core/src/core.module.d.ts": "75e31dbe8e4bbc2bf36d3f3bee59819b5d043eed45f85286a97a0ce3db5cb41a",
+        "core/src/database.d.ts": "570e73fd7f9c3b5298a6a069c38347810df9c9bbc847b0096464c9d025903547",
+        "core/src/error.filter.d.ts": "0e293939739a7082dc6dc274c2d3c91a206357a31b188e4a3505b1c5f71c83be",
+        "core/src/errors.d.ts": "ffab0c79378c22f12687e95e9e24dcccd736e6601952fe4585595ad8dbd2a650",
+        "core/src/index.d.ts": "a5137d9b5d3c22c4e0177a78f7d672738074a23ff37232454fa0547a3daf2032",
+        "core/src/request-context.d.ts": "850af73b1956889d90e9b7f811299f301466c33be30631052abf7f7ccf529f23",
+        "core/src/request-context.interceptor.d.ts": "940b06b3ae1893dfbd3ed4cf28ee1e73baa0ac1501134c35c1712ff539044b85",
+        "core/src/request-id.d.ts": "a258212b40d3425262e8e179c57ea5cb5094793391d95661f8dea8937f47a5ca",
+        "core/src/secret-loader.d.ts": "91d498a19e8e93e5fa2ab95e2295e6a90581f5eb2b4faff32f4e06fa4710a2a4",
+        "core/src/system-context.d.ts": "555843da0ef77940684816990c681202b5577e3e5da772c49eb166076cfdd069",
+        "core/src/tokens.d.ts": "8e948f17a6bd7b879132e0b3ac573b32c52bb0e0ccf31f73b19025c0774bd04c",
+        "logging/src/dedupe.d.ts": "1921426d447b3be94913af70a42afedd3d957f913f571a9e44312d577261e466",
+        "logging/src/index.d.ts": "7172455eb07c12eba510577e2f30f0b6f195d2c5edf8e246dceca17607007f1d",
+        "logging/src/logger.service.d.ts": "53bc54051fc07e496dfaf4025eb427bb3148a85666192b4b0483d557160fe6d6",
+        "logging/src/logging.module.d.ts": "2753c35f9b42d202be08678f5674d3fbc1e838029eb9244f87e3983bb29debe6",
+        "logging/src/pino.factory.d.ts": "a3f90731b637b6a572b05600a78ebae32bb5ca1b52cc6c2d64763ee3a1d0147f",
+        "logging/src/request-logging.middleware.d.ts": "7181ea679808c7e6af40d50135257ce29c7a2948cb0abf4fd350ae6be7082b8f",
+        "logging/src/tokens.d.ts": "c81aef3c22eaf07eae105869de47a10c17dbec08f5ee6e019d40960a755c1c6d"
+      }
+    },
+    "@stynx-nyx/pdf": {
+      "exports": {
+        ".": {
+          "types": "./dist/pdf/src/index.d.ts",
+          "require": "./dist/pdf/src/index.js",
+          "default": "./dist/pdf/src/index.js"
+        },
+        "./fixed-layout": {
+          "types": "./dist/pdf/src/fixed-layout/index.d.ts",
+          "require": "./dist/pdf/src/fixed-layout/index.js",
+          "default": "./dist/pdf/src/fixed-layout/index.js"
+        },
+        "./evidence": {
+          "types": "./dist/pdf/src/evidence/index.d.ts",
+          "require": "./dist/pdf/src/evidence/index.js",
+          "default": "./dist/pdf/src/evidence/index.js"
+        },
+        "./public-payroll": {
+          "types": "./dist/pdf/src/templates/public-payroll/index.d.ts",
+          "require": "./dist/pdf/src/templates/public-payroll/index.js",
+          "default": "./dist/pdf/src/templates/public-payroll/index.js"
+        }
+      },
+      "declarationHashes": {
+        "pdf/src/errors.d.ts": "7c8f32f0097a09bb0cc5479d72c12f4d45f0bb27392993c2301ef5759231477c",
+        "pdf/src/evidence/index.d.ts": "55ab478c2aa73c9b2781aff5f2b2bfb04a6ace4dcaa4c71ce7272ba1ac4592cb",
+        "pdf/src/evidence/pdf-verification-evidence-appender.d.ts": "441d0846b1703af6108f0d8e7553382b596018f72341f8e353206fa4773311c7",
+        "pdf/src/evidence/types.d.ts": "9feb9a983541e4935d0bd03d986bc1a2806774d303c1fefa09b63edb1da5c64d",
+        "pdf/src/fixed-layout/fixed-layout-builder.d.ts": "b959df1401f1286ec27fc8c70ed603d15bc6c4ac8872b23c3de0a1651ea42183",
+        "pdf/src/fixed-layout/index.d.ts": "0117caf8157ac101baf881a2a9574dd06e8ea17746d387b16aec3f88161511e8",
+        "pdf/src/fixed-layout/pdf-a-style-validator.d.ts": "99e6d63bc2598adbbffd7d41446161f09bd5dca5e69b39067d6279ae299cc7fb",
+        "pdf/src/fixed-layout/text.d.ts": "f42cceb5646333b4f89369e6d95ab4eece42b6cf20896caff2f77b0adcd4b3dc",
+        "pdf/src/fixed-layout/types.d.ts": "2b9ca446f52df7ede999315086c2c7c7ca2531c77cb638275f46bba5ab4fd2b0",
+        "pdf/src/fixture-backend.d.ts": "7383589e14ee7b281025cc6d4a5dc10cf4109c012fbfd4ee7cff2b4a49221bb0",
+        "pdf/src/index.d.ts": "cbd747ea995cadb2fb27ca0b2a6b9929160cbabea18729361a59dd21acaa511e",
+        "pdf/src/internals/assets.d.ts": "123f0162f7316ce1b33ce102c445f6938c030091d58ff629a9e7347c14dc0b25",
+        "pdf/src/internals/pdf-a-fonts.d.ts": "8c5bec39aae53fc6156f598a3cb814667a62e2d471b99be9a7f13619451b9d5e",
+        "pdf/src/internals/pdf-a-metadata.d.ts": "728b67ce3f7037de54b520f91468214cebccb8ba777e983b80b9da478ce8181e",
+        "pdf/src/internals/pdf-incremental-evidence.d.ts": "35c6ef1ed4f2fc28390733674953de43d1672a4e42c4762099feb6594433786d",
+        "pdf/src/local-backend.d.ts": "bd32a1b990bfab68991768964b632010ed8fc7b9ea9fb9d35dcda122fa3266bb",
+        "pdf/src/pdf-renderer.d.ts": "d5761784f422f802d7e04ba19e253d3c63fbb202e25c8e805e9596f762756a06",
+        "pdf/src/pdf.module.d.ts": "5eb3198fbdc460af3fefd4de862fca7fd0b3e506eb8cd19321508c53a07bcc58",
+        "pdf/src/templates/public-payroll/index.d.ts": "43ec0898ce39fb533abef6983ef42a6ea8c27d1d4a467655779fc977e5497616",
+        "pdf/src/templates/public-payroll/payslip.d.ts": "e669fa3468fd58becbefbff97ba1c29b09da0b764c7c46a24b5dec16a0823136",
+        "pdf/src/templates/public-payroll/public-payroll-builder.d.ts": "6fe6f3837554653961c1999aac249e016a3104ab2305acc3e2051b0ca5bdba7c",
+        "pdf/src/templates/public-payroll/types.d.ts": "f7459a470cb76cea8ba2cd5e03dc7e6a2f62e455c661dd90cae432ba3b10d4f7",
+        "pdf/src/templates/public-payroll/yearly-income.d.ts": "e986a09266871507176689da6265f55ce8beefbd3bca6564879c376b33d1f6e3",
+        "pdf/src/tokens.d.ts": "e941c95f8db8f41ae63d3941b7f437c93ba24b3432d0fdca083884cae3bb3ed8",
+        "pdf/src/types.d.ts": "d44cc789df01ecba424732e6dc3965d9682bf01adcd85656934c7b2d7341f8ae"
+      }
+    },
+    "@stynx-nyx/pdf-a": {
+      "exports": {
+        ".": {
+          "types": "./dist/pdf-a/src/index.d.ts",
+          "require": "./dist/pdf-a/src/index.js",
+          "default": "./dist/pdf-a/src/index.js"
+        }
+      },
+      "declarationHashes": {
+        "core/src/config.d.ts": "112130b6b65a92c42e2662b03efd077713d0008c5ee6909959783921b38724d7",
+        "core/src/core.module.d.ts": "75e31dbe8e4bbc2bf36d3f3bee59819b5d043eed45f85286a97a0ce3db5cb41a",
+        "core/src/database.d.ts": "570e73fd7f9c3b5298a6a069c38347810df9c9bbc847b0096464c9d025903547",
+        "core/src/error.filter.d.ts": "0e293939739a7082dc6dc274c2d3c91a206357a31b188e4a3505b1c5f71c83be",
+        "core/src/errors.d.ts": "ffab0c79378c22f12687e95e9e24dcccd736e6601952fe4585595ad8dbd2a650",
+        "core/src/index.d.ts": "a5137d9b5d3c22c4e0177a78f7d672738074a23ff37232454fa0547a3daf2032",
+        "core/src/request-context.d.ts": "850af73b1956889d90e9b7f811299f301466c33be30631052abf7f7ccf529f23",
+        "core/src/request-context.interceptor.d.ts": "940b06b3ae1893dfbd3ed4cf28ee1e73baa0ac1501134c35c1712ff539044b85",
+        "core/src/request-id.d.ts": "a258212b40d3425262e8e179c57ea5cb5094793391d95661f8dea8937f47a5ca",
+        "core/src/secret-loader.d.ts": "91d498a19e8e93e5fa2ab95e2295e6a90581f5eb2b4faff32f4e06fa4710a2a4",
+        "core/src/system-context.d.ts": "555843da0ef77940684816990c681202b5577e3e5da772c49eb166076cfdd069",
+        "core/src/tokens.d.ts": "8e948f17a6bd7b879132e0b3ac573b32c52bb0e0ccf31f73b19025c0774bd04c",
+        "logging/src/dedupe.d.ts": "1921426d447b3be94913af70a42afedd3d957f913f571a9e44312d577261e466",
+        "logging/src/index.d.ts": "7172455eb07c12eba510577e2f30f0b6f195d2c5edf8e246dceca17607007f1d",
+        "logging/src/logger.service.d.ts": "53bc54051fc07e496dfaf4025eb427bb3148a85666192b4b0483d557160fe6d6",
+        "logging/src/logging.module.d.ts": "2753c35f9b42d202be08678f5674d3fbc1e838029eb9244f87e3983bb29debe6",
+        "logging/src/pino.factory.d.ts": "a3f90731b637b6a572b05600a78ebae32bb5ca1b52cc6c2d64763ee3a1d0147f",
+        "logging/src/request-logging.middleware.d.ts": "7181ea679808c7e6af40d50135257ce29c7a2948cb0abf4fd350ae6be7082b8f",
+        "logging/src/tokens.d.ts": "c81aef3c22eaf07eae105869de47a10c17dbec08f5ee6e019d40960a755c1c6d",
+        "pdf-a/src/index.d.ts": "5b30ac9bb8ed2266ac090a24388a6469f794d14336d43fe82bb2956f783df4ed",
+        "pdf-a/src/stubs/noop.d.ts": "7b364d9bd6f9b235afd1e34d2e7aea87780137d829797e0c36cd5799d3f05d55",
+        "pdf-a/src/stubs/strict.d.ts": "f156d1a0b66788377e37ef35b6ec0f7a9cc52286feeaee7d7a3fc5426dc14166",
+        "pdf-a/src/telemetry.d.ts": "1047092ab690e9e19600b8b10e13513cf52dd2553996b54cb5d6f3076d11c863",
+        "pdf-a/src/types.d.ts": "2723c3bfaef2c01524bacab15b068cc3cb81bf06c82c7663993559e544760056"
+      }
+    },
+    "@stynx-nyx/pdf-a-vera-docker": {
+      "exports": {
+        ".": {
+          "types": "./dist/pdf-a-vera-docker/src/index.d.ts",
+          "require": "./dist/pdf-a-vera-docker/src/index.js",
+          "default": "./dist/pdf-a-vera-docker/src/index.js"
+        }
+      },
+      "declarationHashes": {
+        "core/src/config.d.ts": "112130b6b65a92c42e2662b03efd077713d0008c5ee6909959783921b38724d7",
+        "core/src/core.module.d.ts": "75e31dbe8e4bbc2bf36d3f3bee59819b5d043eed45f85286a97a0ce3db5cb41a",
+        "core/src/database.d.ts": "570e73fd7f9c3b5298a6a069c38347810df9c9bbc847b0096464c9d025903547",
+        "core/src/error.filter.d.ts": "0e293939739a7082dc6dc274c2d3c91a206357a31b188e4a3505b1c5f71c83be",
+        "core/src/errors.d.ts": "ffab0c79378c22f12687e95e9e24dcccd736e6601952fe4585595ad8dbd2a650",
+        "core/src/index.d.ts": "a5137d9b5d3c22c4e0177a78f7d672738074a23ff37232454fa0547a3daf2032",
+        "core/src/request-context.d.ts": "850af73b1956889d90e9b7f811299f301466c33be30631052abf7f7ccf529f23",
+        "core/src/request-context.interceptor.d.ts": "940b06b3ae1893dfbd3ed4cf28ee1e73baa0ac1501134c35c1712ff539044b85",
+        "core/src/request-id.d.ts": "a258212b40d3425262e8e179c57ea5cb5094793391d95661f8dea8937f47a5ca",
+        "core/src/secret-loader.d.ts": "91d498a19e8e93e5fa2ab95e2295e6a90581f5eb2b4faff32f4e06fa4710a2a4",
+        "core/src/system-context.d.ts": "555843da0ef77940684816990c681202b5577e3e5da772c49eb166076cfdd069",
+        "core/src/tokens.d.ts": "8e948f17a6bd7b879132e0b3ac573b32c52bb0e0ccf31f73b19025c0774bd04c",
+        "logging/src/dedupe.d.ts": "1921426d447b3be94913af70a42afedd3d957f913f571a9e44312d577261e466",
+        "logging/src/index.d.ts": "7172455eb07c12eba510577e2f30f0b6f195d2c5edf8e246dceca17607007f1d",
+        "logging/src/logger.service.d.ts": "53bc54051fc07e496dfaf4025eb427bb3148a85666192b4b0483d557160fe6d6",
+        "logging/src/logging.module.d.ts": "2753c35f9b42d202be08678f5674d3fbc1e838029eb9244f87e3983bb29debe6",
+        "logging/src/pino.factory.d.ts": "a3f90731b637b6a572b05600a78ebae32bb5ca1b52cc6c2d64763ee3a1d0147f",
+        "logging/src/request-logging.middleware.d.ts": "7181ea679808c7e6af40d50135257ce29c7a2948cb0abf4fd350ae6be7082b8f",
+        "logging/src/tokens.d.ts": "c81aef3c22eaf07eae105869de47a10c17dbec08f5ee6e019d40960a755c1c6d",
+        "pdf-a-vera-docker/src/constants.d.ts": "dab3f86d220bfb6da51c372534e1dd46cb5e6d796956af6157704aea3e4aabf3",
+        "pdf-a-vera-docker/src/docker.d.ts": "d3bfc3dde6e6cbb93c07d4e9594cc3f9776752e97b6f6c69b80152eae1a3d498",
+        "pdf-a-vera-docker/src/errors.d.ts": "a24416d4d93dccc2f9583ac7dd7f81acfc6ac754bd269bc4bdbcab90d201b11c",
+        "pdf-a-vera-docker/src/index.d.ts": "2c1c09e9df40f41aa4c31413ea4952cf21d708495b98feb6483822411a00d408",
+        "pdf-a-vera-docker/src/parse-report.d.ts": "29a60445fa5842906f7389a3ed9fce4a07ec539697068cabcb60c0fc50220732",
+        "pdf-a-vera-docker/src/validator.d.ts": "863757867d8a4bfe3314918f082be63be914881f3e32505b68a948636abdbe21",
+        "pdf-a/src/index.d.ts": "5b30ac9bb8ed2266ac090a24388a6469f794d14336d43fe82bb2956f783df4ed",
+        "pdf-a/src/stubs/noop.d.ts": "7b364d9bd6f9b235afd1e34d2e7aea87780137d829797e0c36cd5799d3f05d55",
+        "pdf-a/src/stubs/strict.d.ts": "f156d1a0b66788377e37ef35b6ec0f7a9cc52286feeaee7d7a3fc5426dc14166",
+        "pdf-a/src/telemetry.d.ts": "1047092ab690e9e19600b8b10e13513cf52dd2553996b54cb5d6f3076d11c863",
+        "pdf-a/src/types.d.ts": "2723c3bfaef2c01524bacab15b068cc3cb81bf06c82c7663993559e544760056"
+      }
+    },
     "@stynx-nyx/preferences": {
       "exports": {
         ".": {
@@ -80,6 +1433,216 @@
         "preferences/src/types.d.ts": "f8eddfe8083f23605b5ad7faa213a12731fbaee23a7ee4481b5ae1eb6b5d4852"
       }
     },
+    "@stynx-nyx/privacy": {
+      "exports": {
+        ".": {
+          "types": "./dist/privacy/src/index.d.ts",
+          "require": "./dist/privacy/src/index.js",
+          "default": "./dist/privacy/src/index.js"
+        }
+      },
+      "declarationHashes": {
+        "contracts/src/audit.d.ts": "058e629573fa95934d8771871b696f10ef73091f6a1feac686381df44c52c2f3",
+        "contracts/src/auth.d.ts": "0fb84c9fc2fb7a14cf88f8db281fe475165d391bd7271fb7eb687699496bc158",
+        "contracts/src/authorization.d.ts": "9c73b8adc21cd56c45420e018f14bb81d42a5aa6c60af57b3e26521534966abb",
+        "contracts/src/db-context.d.ts": "c8926488df2eb99e1284842624c144a18206f04cf6cc1161e12701f49c347a39",
+        "contracts/src/errors.d.ts": "5d8dc1bbc6b4917e9cf4ec8e4450105396baaa8684823d48dd7435585eea86b3",
+        "contracts/src/headers.d.ts": "05ab327e5262b1c83c24096f158c8ca8c2bdfaf4f9c47f91df4164ce5fc01467",
+        "contracts/src/identity-admin.d.ts": "1f7454e205f744e64cd240509d27d503346ad2904f38c9d43daf1db855012987",
+        "contracts/src/index.d.ts": "02d820363a1da769da451f6be644e2c5d343507848e983caec82fd8a731a2445",
+        "contracts/src/storage.d.ts": "1756795ef8be04f5248825ca76f61a776d0437a14cfae20b54d4ce58feea51dd",
+        "contracts/src/tenancy.d.ts": "27e10a40d36fe9ad4c68c5d4de53692d58e3646935273a757f50c14594e0807f",
+        "core/src/config.d.ts": "112130b6b65a92c42e2662b03efd077713d0008c5ee6909959783921b38724d7",
+        "core/src/core.module.d.ts": "75e31dbe8e4bbc2bf36d3f3bee59819b5d043eed45f85286a97a0ce3db5cb41a",
+        "core/src/database.d.ts": "570e73fd7f9c3b5298a6a069c38347810df9c9bbc847b0096464c9d025903547",
+        "core/src/error.filter.d.ts": "0e293939739a7082dc6dc274c2d3c91a206357a31b188e4a3505b1c5f71c83be",
+        "core/src/errors.d.ts": "ffab0c79378c22f12687e95e9e24dcccd736e6601952fe4585595ad8dbd2a650",
+        "core/src/index.d.ts": "a5137d9b5d3c22c4e0177a78f7d672738074a23ff37232454fa0547a3daf2032",
+        "core/src/request-context.d.ts": "850af73b1956889d90e9b7f811299f301466c33be30631052abf7f7ccf529f23",
+        "core/src/request-context.interceptor.d.ts": "940b06b3ae1893dfbd3ed4cf28ee1e73baa0ac1501134c35c1712ff539044b85",
+        "core/src/request-id.d.ts": "a258212b40d3425262e8e179c57ea5cb5094793391d95661f8dea8937f47a5ca",
+        "core/src/secret-loader.d.ts": "91d498a19e8e93e5fa2ab95e2295e6a90581f5eb2b4faff32f4e06fa4710a2a4",
+        "core/src/system-context.d.ts": "555843da0ef77940684816990c681202b5577e3e5da772c49eb166076cfdd069",
+        "core/src/tokens.d.ts": "8e948f17a6bd7b879132e0b3ac573b32c52bb0e0ccf31f73b19025c0774bd04c",
+        "data/src/client.d.ts": "e8f45f0ed73338fd10a202f0dc04a35a760bc9679b7abfd38ab753d48f06e69f",
+        "data/src/data.module.d.ts": "e3efeeaa36c5cfa8c097a2e6546d0fdd6a66e4abcdc53b5d39836030ba8b53de",
+        "data/src/database.d.ts": "a8cbfc90daf4be077fad1e23042e783b275810462f563b86225904c5b90d21a7",
+        "data/src/errors.d.ts": "72bd1833098e80cd2a5194a3ceb3e5db90edb57a6ca1b180ec950776b7f86a0b",
+        "data/src/index.d.ts": "7678bca67df1fb99b09d2995fbcd54edd0fc0e070f41bfe53d8f8223ea760c73",
+        "data/src/internal/archive-relations.d.ts": "c3ddf3b783ef66d2fdf6b8db82452b5959848ae6f17bee25be44ee287fc65a04",
+        "data/src/internal/archive-restore.d.ts": "813a3956213d7a03b4452e39bddf880aa58e115b33675a7fffa70bbcdc6b0561",
+        "data/src/internal/archive-schema.d.ts": "8017f39158dbc46c4756498ea66c86dc0e8f09c3c4c67d9b78a7d73b90222c40",
+        "data/src/internal/soft-delete-cascade.d.ts": "8bfe40cc096763a33fce124a63bccce5a9838b0c1950ac709da3c9b9d53e47ad",
+        "data/src/internal/table-meta.d.ts": "0dcfd383900a6b6dae5881b51f2c69d9488c2dbb6e48b2d0dcb07055e334bbea",
+        "data/src/migration-runner.d.ts": "c5b09632a35501232527725cbfcda4ff593d78e51db619869dc45ab0dd32efa0",
+        "data/src/pools.d.ts": "fb8c8dbbe8e5449971ec65ea06a055cd614db2c17f3526d3c653e100608c8324",
+        "data/src/query-helpers.d.ts": "cbc95b742001f8cb6e7d4c7b414f34d8260404337778291da09adb97090a20f7",
+        "data/src/schema/audit.d.ts": "9ac16944bc1584a2a14a0cb874824a580dcd255a4d5ce678810c8a2448756325",
+        "data/src/schema/auth.d.ts": "671bf351e8f7a1dc741753c0b38fa97173224d67ad6c82f25b507c3fcaba3ae3",
+        "data/src/schema/core.d.ts": "e4c18f22333d9ba31176a7c69f855659c8b24bbd75425f509d242c365402608f",
+        "data/src/schema/flow.d.ts": "a643ae90990a650dc1649b7576b8baa75cc91dd0cd4a6a0b659c8d185ab18b96",
+        "data/src/schema/index.d.ts": "416a354de4f6cbd4591c7c3f3ecb485554d204ee8cb30b2c4d0c571830609165",
+        "data/src/schema/storage.d.ts": "466bc65af7c250a73ad8a8a6573e7a6cfc0ddf647be2d8c0a987fd7b98e9cd12",
+        "data/src/schema/tenancy.d.ts": "584a77143ba59a7fbde6da73c06b6030a10b6a0d3db7337287e159028d699fe1",
+        "data/src/system-context.d.ts": "f70d103096bdf07c2d4d9dbb4b14cd8fe12889ad4403d809a473442f213b25ff",
+        "data/src/table-markers.d.ts": "70d9edcd4399ee727f9d59cf9367dab4104cbc3a4b53e5015d54c8cd79161548",
+        "data/src/tokens.d.ts": "883df905f406fa9afb7bc1fce7872f615a2d357ca2e6c91d94255075145aa895",
+        "data/src/transaction.d.ts": "6eadca4e079fd3c965d6b4920e2a450119027752acddadbc7427a312eca92c3b",
+        "data/src/types.d.ts": "2396489c933e07d6f2023bf0cf8575d07e03373498de3425a46273730716a925",
+        "idempotency/src/constants.d.ts": "9e9d06a1259f454fe8584f8afe86b8a7598cc87977e5fed5add0d5c74e1567b1",
+        "idempotency/src/database-idempotency.store.d.ts": "e7205862adc3b4e177037008892e34a2e710f0da7023ad16aa875cfa51592e4d",
+        "idempotency/src/decorators.d.ts": "7f32ec2bd8dc62768792b7fa772861d8110f1cfd612b76a5c881f729fd563a14",
+        "idempotency/src/idempotency.interceptor.d.ts": "926abca23768d298053f34a7f57d27dd3ba0048b905cb7ab20c509ca6f8196f2",
+        "idempotency/src/idempotency.module.d.ts": "209d94f0ee0e150771948f2793432e073e7fdad96169cbef4aeaa09d4cd4af4a",
+        "idempotency/src/index.d.ts": "a5ffd4f36a1f20eb097ac96d3423846b872c42cbb9de243e407d1bfc8528c771",
+        "idempotency/src/metrics.d.ts": "10b202911d405cb9ab068da1b9632bd794cb02bea9d2dcb0da82f1976effc77c",
+        "idempotency/src/pg-idempotency.store.d.ts": "c4e9e829cd3c88dd00fcbb6685b79f88f515de38a9f7524e7f58254c807d3c38",
+        "idempotency/src/redis-idempotency.backend.d.ts": "22baf926143d522a037dc556c073a2354b047b46c0792e395f3d6ad41cd1beea",
+        "idempotency/src/request-context.d.ts": "9a125b580d7a4ff81f08f0191cfaca161ccde30261088c4ab0236dd7f54a1d2f",
+        "idempotency/src/types.d.ts": "383d64ba3cc8cd1ca80b1a2a3343d87abf5c71a070ab5d15b6a06be429b4d27a",
+        "privacy/src/errors.d.ts": "cb743660c5bdecfa23a17ccec019ee31329c3ddf1eace746dbe43933aa5d31e4",
+        "privacy/src/index.d.ts": "a64bd8be070958652b28c02e0bae8ebd9ae10620cb8face584d24a2909576d42",
+        "privacy/src/pii-map.service.d.ts": "23b6447b8937ddff5dbdf389ffb7ada87c8e2090635c3cf964b308daced4b2a9",
+        "privacy/src/privacy-object-store.service.d.ts": "be0152be8e6b6c21fefe0419c4e59597d981d23455212097dd2e5c82f37d9b61",
+        "privacy/src/privacy.controller.d.ts": "f54c934f9a98b3ed035ba9cd6512ca22371a075676ac78b302815ec657f5251c",
+        "privacy/src/privacy.module.d.ts": "9175c8f27f54ee2257d100e94fec9b2df6c8d0dec893087b1826ec7c905522b4",
+        "privacy/src/privacy.service.d.ts": "737b71fd710a0a866d66bf66f06f469db8e773d8786fc300187fe76e5c1db4d1",
+        "privacy/src/ropa.d.ts": "a022e12109aa9382e7e01f99f10ed4de8f49d6002375b46ec46e1a5af6bf62f9",
+        "privacy/src/tokens.d.ts": "0a4f3657984e3736ac5df144f72a92760ba284f9ed87a9b93aa8958618b3bc81",
+        "privacy/src/types.d.ts": "d42c15703458d689419715459d095ddcf9ced1c852f169ab66d5cdb267662146",
+        "storage/src/documents.service.d.ts": "5c6348efa061cb579eca6543bbce02800e5ac422e4b5996a41db183d1da76cc9",
+        "storage/src/errors.d.ts": "6ffd0769c5dce3a6c58e3f85c1f786e25e62594e8aa4ee1906bdcc949077b7aa",
+        "storage/src/index.d.ts": "460666dc745b2e11623fae9f2a9a45743da7a4440066f41c7a65e8afa8c989f2",
+        "storage/src/object-store.service.d.ts": "e880e86bbbfb2fdf2db8540f2028d6796ae780c83bdf6e8af0ad4438a9797a52",
+        "storage/src/s3.service.d.ts": "75b309f005a6c3480c923c9ae2bf3032586b88409f7e9f49a8fa14a7e8bf2cb2",
+        "storage/src/storage.module.d.ts": "3022cabd628c8c59dad19d1b2741049578f7e0637f4c4aa36a089837fb540ecd",
+        "storage/src/tokens.d.ts": "680b92be5f41c72a78c4565e8733629c190c7c0ed53570ef57bbf2a2d8ae3226",
+        "storage/src/types.d.ts": "3ea0c625338132e690252075d9205525520bb8037ac909dc8b453fa29acca7f5"
+      }
+    },
+    "@stynx-nyx/ratelimit": {
+      "exports": {
+        ".": {
+          "types": "./dist/ratelimit/src/index.d.ts",
+          "require": "./dist/ratelimit/src/index.js",
+          "default": "./dist/ratelimit/src/index.js"
+        }
+      },
+      "declarationHashes": {
+        "auth/src/actor-context.interceptor.d.ts": "38e6a58b7af80da4a1c11db5141fa564bbab98d69ba26d0dda3c5d0bcbd119ec",
+        "auth/src/auth.controller.d.ts": "c2f8233555f581cec6bda8cb1ec54570b2ae2ba159885c2eeedafbccd866e943",
+        "auth/src/auth.module.d.ts": "4103f18a2bcb494bdaa45df04763d45fd090df007d85f461b452b07919c2aeec",
+        "auth/src/auth.service.d.ts": "b5ef07bc27351d1ffed26e676e06dd762d9a85a5863bac29dbf6b78620ceadc8",
+        "auth/src/cognito-admin.adapter.d.ts": "125c655bbab8ca1bb5f2bef79a23925a88632e106995aa06675a8860d7a201dd",
+        "auth/src/cognito-jwt.validator.d.ts": "c44c117177eeb01ca806e75f313b955217f96c09661a71492fec4f4b21737968",
+        "auth/src/cognito-token-verifier.d.ts": "c9e485dcb5d6b33132448f7a241587263cc11b5523644cae5862751c1a429341",
+        "auth/src/decorators.d.ts": "0621ae5b8c552371eb407ea2405633d833fba49c4548b6a240f4ae0f850948da",
+        "auth/src/doctor.d.ts": "3e77dae98d76995b4e8bf27992c91345c896723f2cf0eea6d86ac291146fa229",
+        "auth/src/effective-hash-computer.d.ts": "0d83db43b1019d0b1635720b8560adb5c176234cbe589ad466141e404ee90512",
+        "auth/src/in-memory-permission-cache-backend.d.ts": "55c9b966fc50a26b053f426d4a64679ad93ba823108d2ad787659ed1b6025a7f",
+        "auth/src/index.d.ts": "a3944c46fa8085282f57af98ed1276c16d90dd7ec9e808ad8f2820ded3a2cdce",
+        "auth/src/permission-cache-metrics.d.ts": "9f69d168e31e9b496636f13ea912490947f0ee4510a72ea4e8213bd7ac0605ce",
+        "auth/src/permission-cache.d.ts": "b0b73960cd5a5f7d36a28192e2a41399bf19ff9ffc70a75f6d54d084baa59302",
+        "auth/src/permission-query.service.d.ts": "db2acecb983cd459fdbf03c329028c1fb1c4aa41338cc0b378062728e3ade0db",
+        "auth/src/permission.guard.d.ts": "8d23b58ea250e46ebf830be56698448d8d0544d8fb62d299217330d4484eacff",
+        "auth/src/redis-permission-cache-backend.d.ts": "e636a10c01cfc5f89f0d05b3b598f7b5e2cc64bbd6fdb8d1e2ce3125b2664d9e",
+        "auth/src/stynx-auth.guard.d.ts": "45dd01c82e0aab6d6c3c493ebec040a2a7b9765b72a4d4b9d6c3e2423989ed60",
+        "auth/src/stynx-jwt.validator.d.ts": "f665988a8d3d5f7e521db4c6234c4286a4d9219ed75d7b0d9408c3a43c567d0e",
+        "auth/src/tokens.d.ts": "2c546f9de1cd8485cad01c4e452a1482863d425a3f77e3add89fcf0cae14b03a",
+        "auth/src/types.d.ts": "b0e9d7be17335f29ed818e2c4f4b21439c40ec5f213fb593b1ae391c1756f4fd",
+        "auth/src/utils.d.ts": "aba68801bb513039b6a7b8f9f43f9ea1ee83fda5786bfb10ae0a1ae5e16a667d",
+        "contracts/src/audit.d.ts": "058e629573fa95934d8771871b696f10ef73091f6a1feac686381df44c52c2f3",
+        "contracts/src/auth.d.ts": "0fb84c9fc2fb7a14cf88f8db281fe475165d391bd7271fb7eb687699496bc158",
+        "contracts/src/authorization.d.ts": "9c73b8adc21cd56c45420e018f14bb81d42a5aa6c60af57b3e26521534966abb",
+        "contracts/src/db-context.d.ts": "c8926488df2eb99e1284842624c144a18206f04cf6cc1161e12701f49c347a39",
+        "contracts/src/errors.d.ts": "5d8dc1bbc6b4917e9cf4ec8e4450105396baaa8684823d48dd7435585eea86b3",
+        "contracts/src/headers.d.ts": "05ab327e5262b1c83c24096f158c8ca8c2bdfaf4f9c47f91df4164ce5fc01467",
+        "contracts/src/identity-admin.d.ts": "1f7454e205f744e64cd240509d27d503346ad2904f38c9d43daf1db855012987",
+        "contracts/src/index.d.ts": "02d820363a1da769da451f6be644e2c5d343507848e983caec82fd8a731a2445",
+        "contracts/src/storage.d.ts": "1756795ef8be04f5248825ca76f61a776d0437a14cfae20b54d4ce58feea51dd",
+        "contracts/src/tenancy.d.ts": "27e10a40d36fe9ad4c68c5d4de53692d58e3646935273a757f50c14594e0807f",
+        "core/src/config.d.ts": "112130b6b65a92c42e2662b03efd077713d0008c5ee6909959783921b38724d7",
+        "core/src/core.module.d.ts": "75e31dbe8e4bbc2bf36d3f3bee59819b5d043eed45f85286a97a0ce3db5cb41a",
+        "core/src/database.d.ts": "570e73fd7f9c3b5298a6a069c38347810df9c9bbc847b0096464c9d025903547",
+        "core/src/error.filter.d.ts": "0e293939739a7082dc6dc274c2d3c91a206357a31b188e4a3505b1c5f71c83be",
+        "core/src/errors.d.ts": "ffab0c79378c22f12687e95e9e24dcccd736e6601952fe4585595ad8dbd2a650",
+        "core/src/index.d.ts": "a5137d9b5d3c22c4e0177a78f7d672738074a23ff37232454fa0547a3daf2032",
+        "core/src/request-context.d.ts": "850af73b1956889d90e9b7f811299f301466c33be30631052abf7f7ccf529f23",
+        "core/src/request-context.interceptor.d.ts": "940b06b3ae1893dfbd3ed4cf28ee1e73baa0ac1501134c35c1712ff539044b85",
+        "core/src/request-id.d.ts": "a258212b40d3425262e8e179c57ea5cb5094793391d95661f8dea8937f47a5ca",
+        "core/src/secret-loader.d.ts": "91d498a19e8e93e5fa2ab95e2295e6a90581f5eb2b4faff32f4e06fa4710a2a4",
+        "core/src/system-context.d.ts": "555843da0ef77940684816990c681202b5577e3e5da772c49eb166076cfdd069",
+        "core/src/tokens.d.ts": "8e948f17a6bd7b879132e0b3ac573b32c52bb0e0ccf31f73b19025c0774bd04c",
+        "data/src/client.d.ts": "e8f45f0ed73338fd10a202f0dc04a35a760bc9679b7abfd38ab753d48f06e69f",
+        "data/src/data.module.d.ts": "e3efeeaa36c5cfa8c097a2e6546d0fdd6a66e4abcdc53b5d39836030ba8b53de",
+        "data/src/database.d.ts": "a8cbfc90daf4be077fad1e23042e783b275810462f563b86225904c5b90d21a7",
+        "data/src/errors.d.ts": "72bd1833098e80cd2a5194a3ceb3e5db90edb57a6ca1b180ec950776b7f86a0b",
+        "data/src/index.d.ts": "7678bca67df1fb99b09d2995fbcd54edd0fc0e070f41bfe53d8f8223ea760c73",
+        "data/src/internal/archive-relations.d.ts": "c3ddf3b783ef66d2fdf6b8db82452b5959848ae6f17bee25be44ee287fc65a04",
+        "data/src/internal/archive-restore.d.ts": "813a3956213d7a03b4452e39bddf880aa58e115b33675a7fffa70bbcdc6b0561",
+        "data/src/internal/archive-schema.d.ts": "8017f39158dbc46c4756498ea66c86dc0e8f09c3c4c67d9b78a7d73b90222c40",
+        "data/src/internal/soft-delete-cascade.d.ts": "8bfe40cc096763a33fce124a63bccce5a9838b0c1950ac709da3c9b9d53e47ad",
+        "data/src/internal/table-meta.d.ts": "0dcfd383900a6b6dae5881b51f2c69d9488c2dbb6e48b2d0dcb07055e334bbea",
+        "data/src/migration-runner.d.ts": "c5b09632a35501232527725cbfcda4ff593d78e51db619869dc45ab0dd32efa0",
+        "data/src/pools.d.ts": "fb8c8dbbe8e5449971ec65ea06a055cd614db2c17f3526d3c653e100608c8324",
+        "data/src/query-helpers.d.ts": "cbc95b742001f8cb6e7d4c7b414f34d8260404337778291da09adb97090a20f7",
+        "data/src/schema/audit.d.ts": "9ac16944bc1584a2a14a0cb874824a580dcd255a4d5ce678810c8a2448756325",
+        "data/src/schema/auth.d.ts": "671bf351e8f7a1dc741753c0b38fa97173224d67ad6c82f25b507c3fcaba3ae3",
+        "data/src/schema/core.d.ts": "e4c18f22333d9ba31176a7c69f855659c8b24bbd75425f509d242c365402608f",
+        "data/src/schema/flow.d.ts": "a643ae90990a650dc1649b7576b8baa75cc91dd0cd4a6a0b659c8d185ab18b96",
+        "data/src/schema/index.d.ts": "416a354de4f6cbd4591c7c3f3ecb485554d204ee8cb30b2c4d0c571830609165",
+        "data/src/schema/storage.d.ts": "466bc65af7c250a73ad8a8a6573e7a6cfc0ddf647be2d8c0a987fd7b98e9cd12",
+        "data/src/schema/tenancy.d.ts": "584a77143ba59a7fbde6da73c06b6030a10b6a0d3db7337287e159028d699fe1",
+        "data/src/system-context.d.ts": "f70d103096bdf07c2d4d9dbb4b14cd8fe12889ad4403d809a473442f213b25ff",
+        "data/src/table-markers.d.ts": "70d9edcd4399ee727f9d59cf9367dab4104cbc3a4b53e5015d54c8cd79161548",
+        "data/src/tokens.d.ts": "883df905f406fa9afb7bc1fce7872f615a2d357ca2e6c91d94255075145aa895",
+        "data/src/transaction.d.ts": "6eadca4e079fd3c965d6b4920e2a450119027752acddadbc7427a312eca92c3b",
+        "data/src/types.d.ts": "2396489c933e07d6f2023bf0cf8575d07e03373498de3425a46273730716a925",
+        "idempotency/src/constants.d.ts": "9e9d06a1259f454fe8584f8afe86b8a7598cc87977e5fed5add0d5c74e1567b1",
+        "idempotency/src/database-idempotency.store.d.ts": "e7205862adc3b4e177037008892e34a2e710f0da7023ad16aa875cfa51592e4d",
+        "idempotency/src/decorators.d.ts": "7f32ec2bd8dc62768792b7fa772861d8110f1cfd612b76a5c881f729fd563a14",
+        "idempotency/src/idempotency.interceptor.d.ts": "926abca23768d298053f34a7f57d27dd3ba0048b905cb7ab20c509ca6f8196f2",
+        "idempotency/src/idempotency.module.d.ts": "209d94f0ee0e150771948f2793432e073e7fdad96169cbef4aeaa09d4cd4af4a",
+        "idempotency/src/index.d.ts": "a5ffd4f36a1f20eb097ac96d3423846b872c42cbb9de243e407d1bfc8528c771",
+        "idempotency/src/metrics.d.ts": "10b202911d405cb9ab068da1b9632bd794cb02bea9d2dcb0da82f1976effc77c",
+        "idempotency/src/pg-idempotency.store.d.ts": "c4e9e829cd3c88dd00fcbb6685b79f88f515de38a9f7524e7f58254c807d3c38",
+        "idempotency/src/redis-idempotency.backend.d.ts": "22baf926143d522a037dc556c073a2354b047b46c0792e395f3d6ad41cd1beea",
+        "idempotency/src/request-context.d.ts": "9a125b580d7a4ff81f08f0191cfaca161ccde30261088c4ab0236dd7f54a1d2f",
+        "idempotency/src/types.d.ts": "383d64ba3cc8cd1ca80b1a2a3343d87abf5c71a070ab5d15b6a06be429b4d27a",
+        "ratelimit/src/constants.d.ts": "f1630757acaa18c99b46f14333e41ee658ce8074fa4491b0d8eeeff290bfe2d9",
+        "ratelimit/src/decorators.d.ts": "f65c70534099fabe4dbbc0b966626223b0ac408466c137899a786044a33ac478",
+        "ratelimit/src/index.d.ts": "7a47d53410475bc838cd640bc0e09339cf9e8af42cf9eb93d5702216dc16c6e8",
+        "ratelimit/src/metrics.d.ts": "fcba61679961cf668119eda223dd590fc4c1d9976f449904d5c71747d350e263",
+        "ratelimit/src/pg-rate-limit.store.d.ts": "687ab80dc3c2bca105459d85c4ffa3020e75d27745195c1136c3b4c93bcfd058",
+        "ratelimit/src/rate-limit-policy.service.d.ts": "6f2c4aae52494160de1cbc9a54e2dad4580f5802f64a523de88cff51f87b48dd",
+        "ratelimit/src/rate-limit.guard.d.ts": "b908ab92d5ec9b5e7f8b4e4621469e44326286c8efa06e6bfa5426ebb23dd002",
+        "ratelimit/src/rate-limit.module.d.ts": "2783783e1588d57b619b636c8b954d049d51e17e61ecbb82a9fcb1768761c93f",
+        "ratelimit/src/redis-rate-limit.store.d.ts": "2074856a0d49510939626cee9f1ee0784972ac9afd085363a227742a11c03ecc",
+        "ratelimit/src/request-context.d.ts": "ae6d5e440e939a1254a4b3e9699fe2fc152fbe0ed87d27d2147e561e9851b096",
+        "ratelimit/src/types.d.ts": "5b9f7fb113a3d9b1cd59fcc28291f1df3dbba670761d9e861602cd76c2e5be1f",
+        "sessions/src/control/errors.d.ts": "d9fef179242c47691d9fb3913006e49cdf144a4540c2b98ae3340156c041cd7c",
+        "sessions/src/control/in-memory-registry.d.ts": "2e417e408c52e98c1a543b4aa0c57bdaca674b2d8b1e816d7d5fce8df380451c",
+        "sessions/src/control/index.d.ts": "b401a40382a49e23e33020763bb5d100cab214c35693ba9d4a66f242960e7e68",
+        "sessions/src/control/postgres-registry.d.ts": "d481df684448c9ee9ceda68850e321e1aaa193ce8b42accee031c86ab72ab9c8",
+        "sessions/src/control/provider-fake.d.ts": "8969e0f71d0851891ebff779411311f9cf39a0d4af608f07955995aac7de7d95",
+        "sessions/src/control/session-control.controller.d.ts": "367108e285f4dd6d7fb79fb54882a63db3e8c08cad786f35bfa6c9b58b5ef5a6",
+        "sessions/src/control/session-control.module.d.ts": "260fc4b8f94d4c0d8ecd3477bbb3e6ff2e5131cc638f7e23d62a228897349465",
+        "sessions/src/control/session-control.service.d.ts": "9f27a14c9e8946d45a9b37506f8d5c049da93d0423efa3a68aade40861664da2",
+        "sessions/src/control/tokens.d.ts": "45911ee8f0c6dcdfac4a9e3d334fe521b7e8b8f371e1f77b81588db39567d9bc",
+        "sessions/src/control/types.d.ts": "a3ac307f1c2f01635eb37b56aa73aabcf2c963b525b55a06ab5a81dff90e42fc",
+        "sessions/src/errors.d.ts": "806945968b547594fe0da25bb7ca9b048c829babdfe9cb5f14fa4e49dad69467",
+        "sessions/src/in-memory-session-store.d.ts": "d752d4573c5ec5d870996ab7c884aa525ce6c83ce65b963eae4c2355d33919ca",
+        "sessions/src/index.d.ts": "4ca0e91906bcb070f43ee982b958c88590915db564eea012c55eb3ac63bbdf3c",
+        "sessions/src/jwks.controller.d.ts": "461577eec8bdc7b61fb1758d90f3d11dcb482157ffd8a2576f754393e27a9156",
+        "sessions/src/jwt-signing.service.d.ts": "9955dabf01d606acbaa5e1f46722e6f7af44305075c71c8ca493870522434d6b",
+        "sessions/src/redis-session-store.d.ts": "a01398e57ec739d329a2ee1a8e9d35111e38b25223ad2a166cb4390012e9d3f0",
+        "sessions/src/session-mirror.writer.d.ts": "2283b1cab54f85374e577502bf9762662a9a75a065839137e0a12b8974d42460",
+        "sessions/src/session.service.d.ts": "4d2515907de149f2664fe83805a7edf252f981b758ea734e00af9b0e6c862969",
+        "sessions/src/sessions.module.d.ts": "62ad498fd318ebb0c4e752ecf4baa9d1c098284127761bfdca54077cda6bf734",
+        "sessions/src/tokens.d.ts": "58a49a56766868247690f27a464d1f2f1bc96425502084ba0601edfc5c84950e",
+        "sessions/src/types.d.ts": "4b9c3ba81c26100def7fcf715ab315a22e12cfcda5fa960e4e5accf29e3bb78b"
+      }
+    },
     "@stynx-nyx/sdk": {
       "exports": {
         ".": {
@@ -97,31 +1660,6 @@
       "declarationHashes": {
         "types/stynx-nyx-sdk-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
         "types/stynx-nyx-sdk.d.ts": "572fdf93c26495aca89f1e6288e6279947e80705ffac1811f8693e2e36a55d0f"
-      }
-    },
-    "@stynx-nyx/angular-profile": {
-      "exports": {
-        ".": {
-          "types": "./dist/types/stynx-nyx-angular-profile.d.ts",
-          "default": "./dist/fesm2022/stynx-nyx-angular-profile.mjs"
-        },
-        "./testing": {
-          "types": "./dist/types/stynx-nyx-angular-profile-testing.d.ts",
-          "default": "./dist/fesm2022/stynx-nyx-angular-profile-testing.mjs"
-        },
-        "./catalogs/en.json": {
-          "default": "./dist/catalogs/en.json"
-        },
-        "./catalogs/pt-BR.json": {
-          "default": "./dist/catalogs/pt-BR.json"
-        },
-        "./package.json": {
-          "default": "./package.json"
-        }
-      },
-      "declarationHashes": {
-        "types/stynx-nyx-angular-profile-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
-        "types/stynx-nyx-angular-profile.d.ts": "cb4781c7022aa6c4bc6590cf0944ac9fc37ae9ac7a70dc258726ab6a0aad1f2c"
       }
     },
     "@stynx-nyx/sessions": {
@@ -219,95 +1757,6 @@
         "sessions/src/types.d.ts": "4b9c3ba81c26100def7fcf715ab315a22e12cfcda5fa960e4e5accf29e3bb78b"
       }
     },
-    "@stynx-nyx/angular-sessions": {
-      "exports": {
-        ".": {
-          "types": "./dist/types/stynx-nyx-angular-sessions.d.ts",
-          "default": "./dist/fesm2022/stynx-nyx-angular-sessions.mjs"
-        },
-        "./testing": {
-          "types": "./dist/types/stynx-nyx-angular-sessions-testing.d.ts",
-          "default": "./dist/fesm2022/stynx-nyx-angular-sessions-testing.mjs"
-        },
-        "./catalogs/en.json": {
-          "default": "./dist/catalogs/en.json"
-        },
-        "./catalogs/pt-BR.json": {
-          "default": "./dist/catalogs/pt-BR.json"
-        },
-        "./package.json": {
-          "default": "./package.json"
-        }
-      },
-      "declarationHashes": {
-        "types/stynx-nyx-angular-sessions-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
-        "types/stynx-nyx-angular-sessions.d.ts": "b46c7429c81b16a72bcc08bb31930321e0bf8ccaadee77c477cc92c584c9eefb"
-      }
-    },
-    "@stynx-nyx/integration-adapter": {
-      "exports": {
-        ".": {
-          "types": "./dist/integration-adapter/src/index.d.ts",
-          "require": "./dist/integration-adapter/src/index.js",
-          "default": "./dist/integration-adapter/src/index.js"
-        }
-      },
-      "declarationHashes": {
-        "integration-adapter/src/index.d.ts": "685101fe521c5770fa2a6a6cd4311f05ed6b3373c7f25f456266c829eb451348",
-        "integration-adapter/src/types.d.ts": "34e869829671246b73a6e3bdf2f0b3242242e490db8630d9cf2751f16f624071"
-      }
-    },
-    "@stynx-nyx/pdf": {
-      "exports": {
-        ".": {
-          "types": "./dist/pdf/src/index.d.ts",
-          "require": "./dist/pdf/src/index.js",
-          "default": "./dist/pdf/src/index.js"
-        },
-        "./fixed-layout": {
-          "types": "./dist/pdf/src/fixed-layout/index.d.ts",
-          "require": "./dist/pdf/src/fixed-layout/index.js",
-          "default": "./dist/pdf/src/fixed-layout/index.js"
-        },
-        "./evidence": {
-          "types": "./dist/pdf/src/evidence/index.d.ts",
-          "require": "./dist/pdf/src/evidence/index.js",
-          "default": "./dist/pdf/src/evidence/index.js"
-        },
-        "./public-payroll": {
-          "types": "./dist/pdf/src/templates/public-payroll/index.d.ts",
-          "require": "./dist/pdf/src/templates/public-payroll/index.js",
-          "default": "./dist/pdf/src/templates/public-payroll/index.js"
-        }
-      },
-      "declarationHashes": {
-        "pdf/src/errors.d.ts": "7c8f32f0097a09bb0cc5479d72c12f4d45f0bb27392993c2301ef5759231477c",
-        "pdf/src/evidence/index.d.ts": "55ab478c2aa73c9b2781aff5f2b2bfb04a6ace4dcaa4c71ce7272ba1ac4592cb",
-        "pdf/src/evidence/pdf-verification-evidence-appender.d.ts": "441d0846b1703af6108f0d8e7553382b596018f72341f8e353206fa4773311c7",
-        "pdf/src/evidence/types.d.ts": "9feb9a983541e4935d0bd03d986bc1a2806774d303c1fefa09b63edb1da5c64d",
-        "pdf/src/fixed-layout/fixed-layout-builder.d.ts": "b959df1401f1286ec27fc8c70ed603d15bc6c4ac8872b23c3de0a1651ea42183",
-        "pdf/src/fixed-layout/index.d.ts": "0117caf8157ac101baf881a2a9574dd06e8ea17746d387b16aec3f88161511e8",
-        "pdf/src/fixed-layout/pdf-a-style-validator.d.ts": "99e6d63bc2598adbbffd7d41446161f09bd5dca5e69b39067d6279ae299cc7fb",
-        "pdf/src/fixed-layout/text.d.ts": "f42cceb5646333b4f89369e6d95ab4eece42b6cf20896caff2f77b0adcd4b3dc",
-        "pdf/src/fixed-layout/types.d.ts": "2b9ca446f52df7ede999315086c2c7c7ca2531c77cb638275f46bba5ab4fd2b0",
-        "pdf/src/fixture-backend.d.ts": "7383589e14ee7b281025cc6d4a5dc10cf4109c012fbfd4ee7cff2b4a49221bb0",
-        "pdf/src/index.d.ts": "cbd747ea995cadb2fb27ca0b2a6b9929160cbabea18729361a59dd21acaa511e",
-        "pdf/src/internals/assets.d.ts": "123f0162f7316ce1b33ce102c445f6938c030091d58ff629a9e7347c14dc0b25",
-        "pdf/src/internals/pdf-a-fonts.d.ts": "8c5bec39aae53fc6156f598a3cb814667a62e2d471b99be9a7f13619451b9d5e",
-        "pdf/src/internals/pdf-a-metadata.d.ts": "728b67ce3f7037de54b520f91468214cebccb8ba777e983b80b9da478ce8181e",
-        "pdf/src/internals/pdf-incremental-evidence.d.ts": "35c6ef1ed4f2fc28390733674953de43d1672a4e42c4762099feb6594433786d",
-        "pdf/src/local-backend.d.ts": "bd32a1b990bfab68991768964b632010ed8fc7b9ea9fb9d35dcda122fa3266bb",
-        "pdf/src/pdf-renderer.d.ts": "d5761784f422f802d7e04ba19e253d3c63fbb202e25c8e805e9596f762756a06",
-        "pdf/src/pdf.module.d.ts": "5eb3198fbdc460af3fefd4de862fca7fd0b3e506eb8cd19321508c53a07bcc58",
-        "pdf/src/templates/public-payroll/index.d.ts": "43ec0898ce39fb533abef6983ef42a6ea8c27d1d4a467655779fc977e5497616",
-        "pdf/src/templates/public-payroll/payslip.d.ts": "e669fa3468fd58becbefbff97ba1c29b09da0b764c7c46a24b5dec16a0823136",
-        "pdf/src/templates/public-payroll/public-payroll-builder.d.ts": "6fe6f3837554653961c1999aac249e016a3104ab2305acc3e2051b0ca5bdba7c",
-        "pdf/src/templates/public-payroll/types.d.ts": "f7459a470cb76cea8ba2cd5e03dc7e6a2f62e455c661dd90cae432ba3b10d4f7",
-        "pdf/src/templates/public-payroll/yearly-income.d.ts": "e986a09266871507176689da6265f55ce8beefbd3bca6564879c376b33d1f6e3",
-        "pdf/src/tokens.d.ts": "e941c95f8db8f41ae63d3941b7f437c93ba24b3432d0fdca083884cae3bb3ed8",
-        "pdf/src/types.d.ts": "d44cc789df01ecba424732e6dc3965d9682bf01adcd85656934c7b2d7341f8ae"
-      }
-    },
     "@stynx-nyx/signature": {
       "exports": {
         ".": {
@@ -341,6 +1790,163 @@
         "signature/src/xmldsig/sign.d.ts": "09bcf810064399ab8796825a0b6db9f16456a2a85967e82836f6ed48d2cf8723",
         "signature/src/xmldsig/types.d.ts": "cb72e14a04cdd5a7e6e9c81718ec8e2de601dc382199ca1171dfdee9296b2099",
         "signature/src/xmldsig/verify.d.ts": "0e66c8e9c314d8d6a96483a77134d75f598327df7fac18e3e6277e24b5b96848"
+      }
+    },
+    "@stynx-nyx/storage": {
+      "exports": {
+        ".": {
+          "types": "./dist/storage/src/index.d.ts",
+          "require": "./dist/storage/src/index.js",
+          "default": "./dist/storage/src/index.js"
+        }
+      },
+      "declarationHashes": {
+        "core/src/config.d.ts": "112130b6b65a92c42e2662b03efd077713d0008c5ee6909959783921b38724d7",
+        "core/src/core.module.d.ts": "75e31dbe8e4bbc2bf36d3f3bee59819b5d043eed45f85286a97a0ce3db5cb41a",
+        "core/src/database.d.ts": "570e73fd7f9c3b5298a6a069c38347810df9c9bbc847b0096464c9d025903547",
+        "core/src/error.filter.d.ts": "0e293939739a7082dc6dc274c2d3c91a206357a31b188e4a3505b1c5f71c83be",
+        "core/src/errors.d.ts": "ffab0c79378c22f12687e95e9e24dcccd736e6601952fe4585595ad8dbd2a650",
+        "core/src/index.d.ts": "a5137d9b5d3c22c4e0177a78f7d672738074a23ff37232454fa0547a3daf2032",
+        "core/src/request-context.d.ts": "850af73b1956889d90e9b7f811299f301466c33be30631052abf7f7ccf529f23",
+        "core/src/request-context.interceptor.d.ts": "940b06b3ae1893dfbd3ed4cf28ee1e73baa0ac1501134c35c1712ff539044b85",
+        "core/src/request-id.d.ts": "a258212b40d3425262e8e179c57ea5cb5094793391d95661f8dea8937f47a5ca",
+        "core/src/secret-loader.d.ts": "91d498a19e8e93e5fa2ab95e2295e6a90581f5eb2b4faff32f4e06fa4710a2a4",
+        "core/src/system-context.d.ts": "555843da0ef77940684816990c681202b5577e3e5da772c49eb166076cfdd069",
+        "core/src/tokens.d.ts": "8e948f17a6bd7b879132e0b3ac573b32c52bb0e0ccf31f73b19025c0774bd04c",
+        "data/src/client.d.ts": "e8f45f0ed73338fd10a202f0dc04a35a760bc9679b7abfd38ab753d48f06e69f",
+        "data/src/data.module.d.ts": "e3efeeaa36c5cfa8c097a2e6546d0fdd6a66e4abcdc53b5d39836030ba8b53de",
+        "data/src/database.d.ts": "a8cbfc90daf4be077fad1e23042e783b275810462f563b86225904c5b90d21a7",
+        "data/src/errors.d.ts": "72bd1833098e80cd2a5194a3ceb3e5db90edb57a6ca1b180ec950776b7f86a0b",
+        "data/src/index.d.ts": "7678bca67df1fb99b09d2995fbcd54edd0fc0e070f41bfe53d8f8223ea760c73",
+        "data/src/internal/archive-relations.d.ts": "c3ddf3b783ef66d2fdf6b8db82452b5959848ae6f17bee25be44ee287fc65a04",
+        "data/src/internal/archive-restore.d.ts": "813a3956213d7a03b4452e39bddf880aa58e115b33675a7fffa70bbcdc6b0561",
+        "data/src/internal/archive-schema.d.ts": "8017f39158dbc46c4756498ea66c86dc0e8f09c3c4c67d9b78a7d73b90222c40",
+        "data/src/internal/soft-delete-cascade.d.ts": "8bfe40cc096763a33fce124a63bccce5a9838b0c1950ac709da3c9b9d53e47ad",
+        "data/src/internal/table-meta.d.ts": "0dcfd383900a6b6dae5881b51f2c69d9488c2dbb6e48b2d0dcb07055e334bbea",
+        "data/src/migration-runner.d.ts": "c5b09632a35501232527725cbfcda4ff593d78e51db619869dc45ab0dd32efa0",
+        "data/src/pools.d.ts": "fb8c8dbbe8e5449971ec65ea06a055cd614db2c17f3526d3c653e100608c8324",
+        "data/src/query-helpers.d.ts": "cbc95b742001f8cb6e7d4c7b414f34d8260404337778291da09adb97090a20f7",
+        "data/src/schema/audit.d.ts": "9ac16944bc1584a2a14a0cb874824a580dcd255a4d5ce678810c8a2448756325",
+        "data/src/schema/auth.d.ts": "671bf351e8f7a1dc741753c0b38fa97173224d67ad6c82f25b507c3fcaba3ae3",
+        "data/src/schema/core.d.ts": "e4c18f22333d9ba31176a7c69f855659c8b24bbd75425f509d242c365402608f",
+        "data/src/schema/flow.d.ts": "a643ae90990a650dc1649b7576b8baa75cc91dd0cd4a6a0b659c8d185ab18b96",
+        "data/src/schema/index.d.ts": "416a354de4f6cbd4591c7c3f3ecb485554d204ee8cb30b2c4d0c571830609165",
+        "data/src/schema/storage.d.ts": "466bc65af7c250a73ad8a8a6573e7a6cfc0ddf647be2d8c0a987fd7b98e9cd12",
+        "data/src/schema/tenancy.d.ts": "584a77143ba59a7fbde6da73c06b6030a10b6a0d3db7337287e159028d699fe1",
+        "data/src/system-context.d.ts": "f70d103096bdf07c2d4d9dbb4b14cd8fe12889ad4403d809a473442f213b25ff",
+        "data/src/table-markers.d.ts": "70d9edcd4399ee727f9d59cf9367dab4104cbc3a4b53e5015d54c8cd79161548",
+        "data/src/tokens.d.ts": "883df905f406fa9afb7bc1fce7872f615a2d357ca2e6c91d94255075145aa895",
+        "data/src/transaction.d.ts": "6eadca4e079fd3c965d6b4920e2a450119027752acddadbc7427a312eca92c3b",
+        "data/src/types.d.ts": "2396489c933e07d6f2023bf0cf8575d07e03373498de3425a46273730716a925",
+        "storage/src/documents.service.d.ts": "5c6348efa061cb579eca6543bbce02800e5ac422e4b5996a41db183d1da76cc9",
+        "storage/src/errors.d.ts": "6ffd0769c5dce3a6c58e3f85c1f786e25e62594e8aa4ee1906bdcc949077b7aa",
+        "storage/src/index.d.ts": "460666dc745b2e11623fae9f2a9a45743da7a4440066f41c7a65e8afa8c989f2",
+        "storage/src/object-store.service.d.ts": "e880e86bbbfb2fdf2db8540f2028d6796ae780c83bdf6e8af0ad4438a9797a52",
+        "storage/src/s3.service.d.ts": "75b309f005a6c3480c923c9ae2bf3032586b88409f7e9f49a8fa14a7e8bf2cb2",
+        "storage/src/storage.module.d.ts": "3022cabd628c8c59dad19d1b2741049578f7e0637f4c4aa36a089837fb540ecd",
+        "storage/src/tokens.d.ts": "680b92be5f41c72a78c4565e8733629c190c7c0ed53570ef57bbf2a2d8ae3226",
+        "storage/src/types.d.ts": "3ea0c625338132e690252075d9205525520bb8037ac909dc8b453fa29acca7f5"
+      }
+    },
+    "@stynx-nyx/tenancy": {
+      "exports": {
+        ".": {
+          "types": "./dist/tenancy/src/index.d.ts",
+          "require": "./dist/tenancy/src/index.js",
+          "default": "./dist/tenancy/src/index.js"
+        }
+      },
+      "declarationHashes": {
+        "contracts/src/audit.d.ts": "058e629573fa95934d8771871b696f10ef73091f6a1feac686381df44c52c2f3",
+        "contracts/src/auth.d.ts": "0fb84c9fc2fb7a14cf88f8db281fe475165d391bd7271fb7eb687699496bc158",
+        "contracts/src/authorization.d.ts": "9c73b8adc21cd56c45420e018f14bb81d42a5aa6c60af57b3e26521534966abb",
+        "contracts/src/db-context.d.ts": "c8926488df2eb99e1284842624c144a18206f04cf6cc1161e12701f49c347a39",
+        "contracts/src/errors.d.ts": "5d8dc1bbc6b4917e9cf4ec8e4450105396baaa8684823d48dd7435585eea86b3",
+        "contracts/src/headers.d.ts": "05ab327e5262b1c83c24096f158c8ca8c2bdfaf4f9c47f91df4164ce5fc01467",
+        "contracts/src/identity-admin.d.ts": "1f7454e205f744e64cd240509d27d503346ad2904f38c9d43daf1db855012987",
+        "contracts/src/index.d.ts": "02d820363a1da769da451f6be644e2c5d343507848e983caec82fd8a731a2445",
+        "contracts/src/storage.d.ts": "1756795ef8be04f5248825ca76f61a776d0437a14cfae20b54d4ce58feea51dd",
+        "contracts/src/tenancy.d.ts": "27e10a40d36fe9ad4c68c5d4de53692d58e3646935273a757f50c14594e0807f",
+        "core/src/config.d.ts": "112130b6b65a92c42e2662b03efd077713d0008c5ee6909959783921b38724d7",
+        "core/src/core.module.d.ts": "75e31dbe8e4bbc2bf36d3f3bee59819b5d043eed45f85286a97a0ce3db5cb41a",
+        "core/src/database.d.ts": "570e73fd7f9c3b5298a6a069c38347810df9c9bbc847b0096464c9d025903547",
+        "core/src/error.filter.d.ts": "0e293939739a7082dc6dc274c2d3c91a206357a31b188e4a3505b1c5f71c83be",
+        "core/src/errors.d.ts": "ffab0c79378c22f12687e95e9e24dcccd736e6601952fe4585595ad8dbd2a650",
+        "core/src/index.d.ts": "a5137d9b5d3c22c4e0177a78f7d672738074a23ff37232454fa0547a3daf2032",
+        "core/src/request-context.d.ts": "850af73b1956889d90e9b7f811299f301466c33be30631052abf7f7ccf529f23",
+        "core/src/request-context.interceptor.d.ts": "940b06b3ae1893dfbd3ed4cf28ee1e73baa0ac1501134c35c1712ff539044b85",
+        "core/src/request-id.d.ts": "a258212b40d3425262e8e179c57ea5cb5094793391d95661f8dea8937f47a5ca",
+        "core/src/secret-loader.d.ts": "91d498a19e8e93e5fa2ab95e2295e6a90581f5eb2b4faff32f4e06fa4710a2a4",
+        "core/src/system-context.d.ts": "555843da0ef77940684816990c681202b5577e3e5da772c49eb166076cfdd069",
+        "core/src/tokens.d.ts": "8e948f17a6bd7b879132e0b3ac573b32c52bb0e0ccf31f73b19025c0774bd04c",
+        "data/src/client.d.ts": "e8f45f0ed73338fd10a202f0dc04a35a760bc9679b7abfd38ab753d48f06e69f",
+        "data/src/data.module.d.ts": "e3efeeaa36c5cfa8c097a2e6546d0fdd6a66e4abcdc53b5d39836030ba8b53de",
+        "data/src/database.d.ts": "a8cbfc90daf4be077fad1e23042e783b275810462f563b86225904c5b90d21a7",
+        "data/src/errors.d.ts": "72bd1833098e80cd2a5194a3ceb3e5db90edb57a6ca1b180ec950776b7f86a0b",
+        "data/src/index.d.ts": "7678bca67df1fb99b09d2995fbcd54edd0fc0e070f41bfe53d8f8223ea760c73",
+        "data/src/internal/archive-relations.d.ts": "c3ddf3b783ef66d2fdf6b8db82452b5959848ae6f17bee25be44ee287fc65a04",
+        "data/src/internal/archive-restore.d.ts": "813a3956213d7a03b4452e39bddf880aa58e115b33675a7fffa70bbcdc6b0561",
+        "data/src/internal/archive-schema.d.ts": "8017f39158dbc46c4756498ea66c86dc0e8f09c3c4c67d9b78a7d73b90222c40",
+        "data/src/internal/soft-delete-cascade.d.ts": "8bfe40cc096763a33fce124a63bccce5a9838b0c1950ac709da3c9b9d53e47ad",
+        "data/src/internal/table-meta.d.ts": "0dcfd383900a6b6dae5881b51f2c69d9488c2dbb6e48b2d0dcb07055e334bbea",
+        "data/src/migration-runner.d.ts": "c5b09632a35501232527725cbfcda4ff593d78e51db619869dc45ab0dd32efa0",
+        "data/src/pools.d.ts": "fb8c8dbbe8e5449971ec65ea06a055cd614db2c17f3526d3c653e100608c8324",
+        "data/src/query-helpers.d.ts": "cbc95b742001f8cb6e7d4c7b414f34d8260404337778291da09adb97090a20f7",
+        "data/src/schema/audit.d.ts": "9ac16944bc1584a2a14a0cb874824a580dcd255a4d5ce678810c8a2448756325",
+        "data/src/schema/auth.d.ts": "671bf351e8f7a1dc741753c0b38fa97173224d67ad6c82f25b507c3fcaba3ae3",
+        "data/src/schema/core.d.ts": "e4c18f22333d9ba31176a7c69f855659c8b24bbd75425f509d242c365402608f",
+        "data/src/schema/flow.d.ts": "a643ae90990a650dc1649b7576b8baa75cc91dd0cd4a6a0b659c8d185ab18b96",
+        "data/src/schema/index.d.ts": "416a354de4f6cbd4591c7c3f3ecb485554d204ee8cb30b2c4d0c571830609165",
+        "data/src/schema/storage.d.ts": "466bc65af7c250a73ad8a8a6573e7a6cfc0ddf647be2d8c0a987fd7b98e9cd12",
+        "data/src/schema/tenancy.d.ts": "584a77143ba59a7fbde6da73c06b6030a10b6a0d3db7337287e159028d699fe1",
+        "data/src/system-context.d.ts": "f70d103096bdf07c2d4d9dbb4b14cd8fe12889ad4403d809a473442f213b25ff",
+        "data/src/table-markers.d.ts": "70d9edcd4399ee727f9d59cf9367dab4104cbc3a4b53e5015d54c8cd79161548",
+        "data/src/tokens.d.ts": "883df905f406fa9afb7bc1fce7872f615a2d357ca2e6c91d94255075145aa895",
+        "data/src/transaction.d.ts": "6eadca4e079fd3c965d6b4920e2a450119027752acddadbc7427a312eca92c3b",
+        "data/src/types.d.ts": "2396489c933e07d6f2023bf0cf8575d07e03373498de3425a46273730716a925",
+        "idempotency/src/constants.d.ts": "9e9d06a1259f454fe8584f8afe86b8a7598cc87977e5fed5add0d5c74e1567b1",
+        "idempotency/src/database-idempotency.store.d.ts": "e7205862adc3b4e177037008892e34a2e710f0da7023ad16aa875cfa51592e4d",
+        "idempotency/src/decorators.d.ts": "7f32ec2bd8dc62768792b7fa772861d8110f1cfd612b76a5c881f729fd563a14",
+        "idempotency/src/idempotency.interceptor.d.ts": "926abca23768d298053f34a7f57d27dd3ba0048b905cb7ab20c509ca6f8196f2",
+        "idempotency/src/idempotency.module.d.ts": "209d94f0ee0e150771948f2793432e073e7fdad96169cbef4aeaa09d4cd4af4a",
+        "idempotency/src/index.d.ts": "a5ffd4f36a1f20eb097ac96d3423846b872c42cbb9de243e407d1bfc8528c771",
+        "idempotency/src/metrics.d.ts": "10b202911d405cb9ab068da1b9632bd794cb02bea9d2dcb0da82f1976effc77c",
+        "idempotency/src/pg-idempotency.store.d.ts": "c4e9e829cd3c88dd00fcbb6685b79f88f515de38a9f7524e7f58254c807d3c38",
+        "idempotency/src/redis-idempotency.backend.d.ts": "22baf926143d522a037dc556c073a2354b047b46c0792e395f3d6ad41cd1beea",
+        "idempotency/src/request-context.d.ts": "9a125b580d7a4ff81f08f0191cfaca161ccde30261088c4ab0236dd7f54a1d2f",
+        "idempotency/src/types.d.ts": "383d64ba3cc8cd1ca80b1a2a3343d87abf5c71a070ab5d15b6a06be429b4d27a",
+        "tenancy/src/index.d.ts": "a4712ac422aa92296254733b255866a152ae56a508a5e27373413aa1dc12b7aa",
+        "tenancy/src/membership-cache.d.ts": "1955ed28047dbb4bbf0235eb41b298d63084047b041f8a03dd44bda3bdbfbd3c",
+        "tenancy/src/tenancy-platform-admin.guard.d.ts": "f9286d4fd262c6bd6e874554ae53fd6d935b7720b3c5e6fb53ec8ae51ff9ca0f",
+        "tenancy/src/tenancy.controller.d.ts": "57012500e9bd55a929791e5c32789f2a9f3c22fcfbab058c119409c6a97de1b9",
+        "tenancy/src/tenancy.module.d.ts": "3dc040d19dbc00de388e7611b6fd1c59f0f3f7f2ad8f0c13f5de99dd52b05f5a",
+        "tenancy/src/tenancy.platform-admin.guard.d.ts": "0c72cf770364094bd0f2f16266dd5f8d44ac8364e275d38ddebdce127bc95323",
+        "tenancy/src/tenancy.service.d.ts": "7eb2dcb3553011f7ebb0bfb8a60002d58a3314d4dc9877329f0d4f847b4b4666",
+        "tenancy/src/tenant-context.interceptor.d.ts": "55a28aa6ced62ccb780147a9cfe8a9bd58354e7708b96e8d2de403113d7584ba",
+        "tenancy/src/tenant-system-operation.sink.d.ts": "4c90b15336c42716dd86153097bf931fb7cde3293879a6f8d5ab562b979711cd",
+        "tenancy/src/tokens.d.ts": "d107a3767a9e4e1120a752f82bad19c48cacb4ab19e678ee7dc2964a0abd8e26",
+        "tenancy/src/types.d.ts": "6e554235a78981350d705e2dbe9be52f17f3c048ca6e1fe8a21ffe11bd5713c3",
+        "tenancy/src/utils.d.ts": "267139ca3e4e37f11ba56da9da21be5be91e7433b8e3e823b380fb11d9157cbb"
+      }
+    },
+    "@stynx-nyx/testing": {
+      "exports": {
+        ".": {
+          "types": "./dist/testing/src/index.d.ts",
+          "require": "./dist/testing/src/index.js",
+          "default": "./dist/testing/src/index.js"
+        }
+      },
+      "declarationHashes": {
+        "testing/src/context.d.ts": "8ff587afd65df0ff9a4b332d9bc284711ddd63ac82e8e3fe271a83170a956c17",
+        "testing/src/create-test-app.d.ts": "911a8ae3ae7cad5adb8fe343dce81e3ae82676ed51ec53b2bb8d4c98a828ab09",
+        "testing/src/doctor.d.ts": "6b4fa9b212becbd8d09b4dbe9e10ca209bc3baee2d264af81d61cb000791fe49",
+        "testing/src/fixtures.d.ts": "5e8323605a330f5e81eaecef54668941e21d92eb219114fdb74d6bd4fa0593e7",
+        "testing/src/index.d.ts": "0615c1373a361b56b0265d3d977d486422077dabd55734e4d5bb1d97232eb8eb",
+        "testing/src/lgpd-fixture.d.ts": "af76fa9d9ba94395f1d81a9a3514991f70a5f7fc57a077465a5db8acf15cb49a",
+        "testing/src/matchers.d.ts": "9a5c914452f4738a7046b5395343b133bea3e72699ca9f00c95f881799196468",
+        "testing/src/mint-test-session.d.ts": "ff09b79223d8f3db5491898ae7e3cba54ba4bf71d7cc53820821b47d6073242b",
+        "testing/src/types.d.ts": "b9877aa6b1b271fd14793ce522d5f97498e07973eb36a9c323e4837f9447c216"
       }
     }
   }
