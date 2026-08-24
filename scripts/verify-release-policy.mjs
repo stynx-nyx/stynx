@@ -2,6 +2,13 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validateReleaseVersionPolicy } from './lib/release-version-policy.mjs';
+import {
+  fetchRegistryCensus,
+  loadRegistryAnomalyPolicy,
+  RegistryVersionPolicyError,
+  registryVersionPolicyConstants,
+  validateRegistryCensus,
+} from './lib/registry-version-policy.mjs';
 import { discoverPublishablePackages } from './lib/publishable-packages.mjs';
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
@@ -11,6 +18,17 @@ const changesetConfig = JSON.parse(
   readFileSync(resolve(repoRoot, '.changeset/config.json'), 'utf8'),
 );
 const expectedLicense = rootManifest.license;
+const registryMode = process.argv.includes('--registry-monotonicity');
+const candidate = optionValue('--candidate');
+
+if (registryMode && candidate === null) {
+  console.error('Release policy verification failed: --candidate is required in registry mode.');
+  process.exit(1);
+}
+if (!registryMode && candidate !== null) {
+  console.error('Release policy verification failed: --candidate requires registry mode.');
+  process.exit(1);
+}
 
 if (typeof expectedLicense !== 'string' || expectedLicense.length === 0) {
   console.error('Root package.json must declare the repository license choice.');
@@ -20,7 +38,20 @@ if (typeof expectedLicense !== 'string' || expectedLicense.length === 0) {
 const packages = discoverPublishablePackages(repoRoot);
 
 const errors = [];
-errors.push(...validateReleaseVersionPolicy(repoRoot, changesetConfig));
+errors.push(
+  ...validateReleaseVersionPolicy(
+    repoRoot,
+    changesetConfig,
+    registryMode ? { expectedVersion: candidate } : {},
+  ),
+);
+if (registryMode) {
+  if (packages.length !== registryVersionPolicyConstants.packageCount) {
+    errors.push(
+      `registry validation requires exactly ${registryVersionPolicyConstants.packageCount} publishable packages`,
+    );
+  }
+}
 if (
   changesetConfig.privatePackages?.version !== false ||
   changesetConfig.privatePackages?.tag !== false
@@ -74,6 +105,30 @@ if (errors.length > 0) {
 
 console.log(`Verified release policy for ${packages.length} publishable packages.`);
 
+if (registryMode) {
+  try {
+    const packageNames = packages.map(({ manifest }) => manifest.name).sort();
+    const anomaly = loadRegistryAnomalyPolicy(repoRoot, candidate);
+    const token = process.env.NODE_AUTH_TOKEN || process.env.NPM_TOKEN;
+    const metadataByPackage = await fetchRegistryCensus({ packageNames, token });
+    const result = validateRegistryCensus({
+      packageNames,
+      metadataByPackage,
+      candidate,
+      anomaly,
+    });
+    console.log(
+      `Verified authenticated registry history for ${result.packageCount} packages at candidate ${candidate}.`,
+    );
+  } catch (error) {
+    if (error instanceof RegistryVersionPolicyError) {
+      console.error(`Release policy verification failed: ${error.code}: ${error.message}`);
+      process.exit(1);
+    }
+    throw error;
+  }
+}
+
 function allowedExportKeys(packageName) {
   const keys = new Set(['.', './package.json']);
   if (packageName.startsWith('@stynx-nyx/angular') || packageName === '@stynx-nyx/sdk') {
@@ -87,4 +142,15 @@ function allowedExportKeys(packageName) {
     keys.add(required);
   }
   return keys;
+}
+
+function optionValue(name) {
+  const index = process.argv.indexOf(name);
+  if (index === -1) return null;
+  const value = process.argv[index + 1];
+  if (!value || value.startsWith('--')) {
+    console.error(`Release policy verification failed: ${name} requires a value.`);
+    process.exit(1);
+  }
+  return value;
 }

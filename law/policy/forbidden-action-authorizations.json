@@ -429,6 +429,18 @@
       "reason": "Authorizes the exact package and Pages publication controls under the existing release and trusted-local-RC decisions."
     },
     {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "4bccf26cef347b5b1a8b6565b1e1bbb477c075ed",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the exact Architect ADR and narrowly adjudicated registry anomaly policy establishing the canonical 1.x line and unified 1.1.1 target."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "1fa4a1df71340e5120612ece08324667f8e114c7",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the exact pre-publication 1.1.1 registry monotonicity guard and its placement before the Changesets publication action under ADR-VERSION-LINE-0001."
+    },
+    {
       "forbidden_id": "FORBID-CI-WITHOUT-ADR",
       "commit": "f2e6abe55484cd1d1ad8a76053069f7c6d99ba5c",
       "authorized_by": "Owner",
@@ -583,6 +595,42 @@
       "commit": "c945fd1c512cd3c71eddbb16dc71718bcd1a1e30",
       "authorized_by": "Owner",
       "reason": "Closes the intermediate Owner receipt-ledger mutation created while applying the reviewed F7 authorization batch."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "c37bacf731b502d36952d460df7cca4ae6890649",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the exact receipt-ledger entries for the Architect-owned 1.1.1 version-line ADR and Engineer-owned pre-publication registry guard."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "7bc4d583952f2143d682ef69ac42ffbf199e8df6",
+      "authorized_by": "Owner",
+      "reason": "Authorizes refreshing the committed local-RC environment binding to the current reviewed host control without weakening the trusted local-RC requirements."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "d9a7f38cb8a570f0ea39116872166393de4b868a",
+      "authorized_by": "Owner",
+      "reason": "Authorizes merging the accepted ADR-CI-ECONOMY pre-publication workflow gates into the 1.1.1 release-policy branch while preserving the ADR-VERSION-LINE-0001 registry guard."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "d9a7f38cb8a570f0ea39116872166393de4b868a",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the lossless merge reconciliation of both Architect ADR indexes and both previously authorized receipt histories in the integrated release-policy candidate."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "1a49408b7264a73a6550761a5b42d012b1fb311f",
+      "authorized_by": "Owner",
+      "reason": "Closes the intermediate Owner receipt-ledger mutation created while recording the reviewed release-policy integration authorizations."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "f189487fbee82210a7014317e742a7075ffcc2f6",
+      "authorized_by": "Owner",
+      "reason": "Closes the receipt-ledger mutation that bound the exact release-policy integration authorization chain."
     }
   ]
 }

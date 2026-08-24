@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "1.0.0",
+  "policy_id": "stynx.registry-version-anomalies",
+  "canonical_line": "1.x",
+  "next_unified_version": "1.1.1",
+  "owner_decision": {
+    "date": "2026-08-23",
+    "repository_baseline": "6ab2107969bf72a15264925722a40d2336c8a0be",
+    "statement": "The canonical STYNX line remains 1.x and the next unified version is exactly 1.1.1."
+  },
+  "anomalies": [
+    {
+      "anomaly_id": "REGISTRY-VERSION-ANOMALY-0001",
+      "package": "@stynx-nyx/angular-profile",
+      "version": "2.0.0",
+      "github_package_version_id": 1024692931,
+      "classification": "erroneous-semver-publication",
+      "evidence": {
+        "npm_integrity": "sha512-YVcTjo0jNNdn9/Xb2M5b/aeOjkU4fAPyYWsWuW0DFjOh+DJG87meWwfUbFBUgZiS6ZFntnaSOi9MHqrAGMXXtw==",
+        "tarball_sha256": "7cefacd0535d0f5e7398a8a5d1e44d29415dd4aa234269d36eb28c97f25b7aee",
+        "observed_at": "2026-08-24T02:04:20.663Z"
+      },
+      "rationale": "The Owner adjudicated 2.0.0 as an incorrect major assignment rather than a canonical STYNX 2.x decision.",
+      "allowed_candidate": "1.1.1",
+      "allowed_effects": ["registry-monotonicity-exception"],
+      "permitted_remediation": [
+        "deprecate-after-verified-1.1.1-with-separate-owner-authorization",
+        "retain-as-noncanonical-history"
+      ],
+      "deletion_requires": "new-owner-authorization-naming-version-id-and-recovery-evidence",
+      "closure_condition": "Unified 1.1.1 is verified for all publishable packages and angular-profile 2.0.0 carries the authorized correction marker.",
+      "applies_to_other_packages": false,
+      "applies_to_other_versions": false
+    }
+  ]
+}
