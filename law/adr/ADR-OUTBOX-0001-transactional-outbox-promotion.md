@@ -10,7 +10,7 @@ tags: [stynx, outbox, e3, tenancy, integration, promotion]
 # ADR-OUTBOX-0001 — Transactional outbox promoted from pec (E3)
 
 **Status:** Accepted architecture decision.
-**Contract:** [`docs/framework/contracts/outbox-api.md`](../../docs/framework/contracts/outbox-api.md).
+**Contract:** [Outbox API contract](pathname:///framework/contracts/outbox-api).
 **Spec:** STYNX-SPEC-v0.6 §24, E3 — "Transactional outbox; per-(tenant, aggregate) ordering."
 **Provenance:** promotion, not a green-field design — see "Source" below.
 

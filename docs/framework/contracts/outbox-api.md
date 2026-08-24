@@ -2,7 +2,7 @@
 
 **Status:** Architecture contract.
 **Package:** `@stynx-nyx/outbox`.
-**Decision:** [ADR-OUTBOX-0001](../../../law/adr/ADR-OUTBOX-0001-transactional-outbox-promotion.md).
+**Decision:** [ADR-OUTBOX-0001](pathname:///adr/ADR-OUTBOX-0001-transactional-outbox-promotion).
 
 ## Scope
 
