@@ -16,6 +16,19 @@ should reach for it. Surfaces are pulled from each package's
 
 ## Backend (`packages/`)
 
+### `@stynx-nyx/notifications` — v0.5.0
+
+- **Purpose:** Preference-aware, durable email/SMS/push/in-app notification delivery.
+- **Maturity:** DELIVERY FOUNDATION; SES and SNS adapters plus a Postgres inbox are
+  available. Push provider and jobs scheduling are deferred.
+- **Public surface:** `StynxNotificationsModule`, `NotificationsService`,
+  `NotificationDispatchPort`, `NotificationDispatchService`, `NotificationInboxService`,
+  code-registered `NotificationTemplateRegistry`, channel adapter port, types and errors.
+- **Import when:** an adopter needs durable, tenant-scoped notification delivery. Import
+  i18n/data/preferences/logging at the app root and schedule the narrow dispatch port
+  per tenant; do not import AWS SDKs from adopter code.
+- **Citation:** `packages/notifications/src/index.ts`.
+
 ### `@stynx-nyx/core` — v0.1.0
 
 - **Purpose:** RequestContext, error filter, base Database
