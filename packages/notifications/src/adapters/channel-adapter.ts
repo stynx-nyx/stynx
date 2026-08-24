@@ -32,8 +32,9 @@ export interface ChannelSendResult {
 /**
  * Channel send port. Every AWS SDK client (SES, SNS) is isolated inside its adapter
  * implementation — mirrors the storage-style adapter isolation invariant (I3) that
- * confines `@aws-sdk/client-s3` to `packages/storage`: no other file in this package,
- * and nothing outside it, imports `@aws-sdk/client-ses` or `@aws-sdk/client-sns`.
+ * confines object-storage SDK usage to `packages/storage`: no other file in this
+ * package, and nothing outside it, imports `@aws-sdk/client-ses` or
+ * `@aws-sdk/client-sns`.
  */
 export interface ChannelAdapter {
   readonly channel: ChannelAdapterChannel;
