@@ -571,6 +571,12 @@
       "commit": "a2059cdb1ddf0ee8a5a812db86a4807dff6248e5",
       "authorized_by": "Owner",
       "reason": "Authorizes the SHA-pinned JUnit reporting action update within the reviewed 2026-07 dependency and security consolidation, with workflow lint recorded green."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "c56d0002846f47c383473c6c613fd9f92355aa68",
+      "authorized_by": "Owner",
+      "reason": "Records the Owner's exact F7 authorization receipts after reviewing each historical and current finding against its governing decision and observed commit diff."
     }
   ]
 }
