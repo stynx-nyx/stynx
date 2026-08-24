@@ -28,6 +28,7 @@
       "@stynx-nyx/health",
       "@stynx-nyx/i18n",
       "@stynx-nyx/idempotency",
+      "@stynx-nyx/jobs",
       "@stynx-nyx/integration-adapter",
       "@stynx-nyx/logging",
       "@stynx-nyx/notifications",

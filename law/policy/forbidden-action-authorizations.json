@@ -667,6 +667,18 @@
       "commit": "e99b2ccb6b6a12f23c721fc2b7c500c87b6cf644",
       "authorized_by": "Owner",
       "reason": "Binds the squash-merged worklist commit to the existing authorization for its package-local clean-script literal; it does not authorize destructive cleanup of uncommitted work."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "23dd5127276bd7a3e24e2497f4351ccc99370822",
+      "authorized_by": "Owner",
+      "reason": "Authorizes ADR-JOBS-0001 and the E2 jobs contract under the Owner standing Architect authorization for the Phase-1 platform round; rebound after rebase."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "0aa9695e71c505ecc9da2743090ce16a31be390d",
+      "authorized_by": "Owner",
+      "reason": "Binds the merged notifications delivery capability to its prior Owner-authorized Architect-owned ADR and policy materializations for the rebased Phase-1 integration range."
     }
   ]
 }

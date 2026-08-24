@@ -179,6 +179,21 @@ should reach for it. Surfaces are pulled from each package's
   benefit from safe retry.
 - **Citation:** `packages/idempotency/src/index.ts`.
 
+### `@stynx-nyx/jobs` — v0.5.0
+
+- **Purpose:** Tenant-owned, Postgres-backed one-shot and recurring background
+  work; jobs are atomically claimed with `FOR UPDATE SKIP LOCKED` and execute
+  under STYNX system context.
+- **Maturity:** E2 extension (ADR-JOBS-0001).
+- **Public surface:** `StynxJobsModule`, `JobsService`/`JobsPort`,
+  `JobsRegistry`, `JobsWorker`, `JobsScheduler`, job and schedule contracts,
+  cron parsing, retry/backoff helpers, errors, and tokens.
+- **Peer deps:** `@nestjs/common`, `@nestjs/core`, `reflect-metadata`, `rxjs`.
+- **Import when:** a consuming application needs delayed work, recurring
+  schedules, or a durable worker without adding an external queue. Apply the
+  platform migrations before enabling workers.
+- **Citation:** `packages/jobs/src/index.ts`.
+
 ### `@stynx-nyx/privacy` — v0.1.0
 
 - **Purpose:** LGPD pipeline (export, erasure, ROPA), PII map,
@@ -371,6 +386,7 @@ should reach for it. Surfaces are pulled from each package's
 | Health/probes/metrics             | `@stynx-nyx/health`                             |
 | Rate limiting                     | `@stynx-nyx/ratelimit`                          |
 | Idempotency keys                  | `@stynx-nyx/idempotency`                        |
+| Background jobs and schedules     | `@stynx-nyx/jobs`                               |
 | LGPD export/erasure               | `@stynx-nyx/privacy`                            |
 | File uploads / S3                 | `@stynx-nyx/storage`                            |
 | i18n catalogs                     | `@stynx-nyx/i18n`                               |

@@ -26,6 +26,7 @@ package API surface.
 | Observability and audit | `@stynx-nyx/health`, `@stynx-nyx/logging`, `@stynx-nyx/audit`                                                    | Health/readiness/metrics, structured logs, audit writing, retention, and evidence queries.                       |
 | Data governance         | `@stynx-nyx/privacy`, `@stynx-nyx/storage`, `@stynx-nyx/i18n`                                                    | LGPD export/erasure/ROPA, document metadata/object storage, and localized messages.                              |
 | Workflow                | `@stynx-nyx/flow`                                                                                                | Tenant-scoped workflow design, runtime, forms, policy, analytics, and PORM-compatible migration aliases.         |
+| Background work         | `@stynx-nyx/jobs`                                                                                                | Tenant-owned Postgres-backed delayed and recurring work, with durable claims, retries, and worker scheduling.    |
 | Tooling                 | `@stynx-nyx/cli`, `@stynx-nyx/testing`                                                                           | Adoption/migration commands plus reusable test harnesses, fixtures, and matchers.                                |
 
 ## Web Package Groups
