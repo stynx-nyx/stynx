@@ -1,0 +1,5 @@
+{
+  "notifications.example.subject": "Notification update",
+  "notifications.example.body": "Hello, {name}. There is an update for you.",
+  "notifications.example.inappTitle": "New update"
+}

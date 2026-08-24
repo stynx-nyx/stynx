@@ -5,3 +5,4 @@ export * from './audit';
 export * from './storage';
 export * from './flow';
 export * from './worklist';
+export * from './notifications';

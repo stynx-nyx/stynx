@@ -649,6 +649,24 @@
       "commit": "3e1065fc98bb5cbbb27512c53db6bd9256c05566",
       "authorized_by": "Owner",
       "reason": "Authorizes the package-local worklist clean-script literal; the commit did not execute destructive cleanup of uncommitted work."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "91af561d5639f16b77cf91884066f6c36677a0aa",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the Architect-owned notification delivery ADR under the Owner standing authorization; the capability preserves tenant RLS, preference contracts, and all existing tests."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "e99b2ccb6b6a12f23c721fc2b7c500c87b6cf644",
+      "authorized_by": "Owner",
+      "reason": "Binds the squash-merged worklist commit to the existing Owner-authorized Architect-owned boundary ADR, contract, and policy materializations."
+    },
+    {
+      "forbidden_id": "FORBID-RM-RF",
+      "commit": "e99b2ccb6b6a12f23c721fc2b7c500c87b6cf644",
+      "authorized_by": "Owner",
+      "reason": "Binds the squash-merged worklist commit to the existing authorization for its package-local clean-script literal; it does not authorize destructive cleanup of uncommitted work."
     }
   ]
 }
