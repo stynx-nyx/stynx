@@ -715,6 +715,12 @@
       "commit": "f90c5a6b3a16aa3c3b49f42f190c9733f6d3a5c7",
       "authorized_by": "Owner",
       "reason": "Authorizes only the package-local dist and coverage clean-script literals in the merged mobile-runtime and offline-sync capability; no broad or unresolved cleanup target is authorized."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "c793a9dee81c51f0e26bebf4f3fa74381416c03b",
+      "authorized_by": "Owner",
+      "reason": "Binds the merged transactional outbox capability to its prior Owner-authorized Architect-owned ADR, invariant, trace, contracts, and policy materializations for the rebased Phase-1 integration range."
     }
   ]
 }
