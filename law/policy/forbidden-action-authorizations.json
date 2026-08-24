@@ -631,6 +631,24 @@
       "commit": "f189487fbee82210a7014317e742a7075ffcc2f6",
       "authorized_by": "Owner",
       "reason": "Closes the receipt-ledger mutation that bound the exact release-policy integration authorization chain."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "1ff6cc62f3307f952eae3f41e3c6914a20d76d01",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the Architect-owned worklist boundary ADR, API contract, and porting guidance explicitly required by the human-directed W1.4 Phase-1 task."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "1184200c9a25552b088b0ea1651be562589e04fb",
+      "authorized_by": "Owner",
+      "reason": "Authorizes alignment of the reviewed worklist ADR and contract with the implemented public API without weakening product authority or tests."
+    },
+    {
+      "forbidden_id": "FORBID-RM-RF",
+      "commit": "3e1065fc98bb5cbbb27512c53db6bd9256c05566",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the package-local worklist clean-script literal; the commit did not execute destructive cleanup of uncommitted work."
     }
   ]
 }
