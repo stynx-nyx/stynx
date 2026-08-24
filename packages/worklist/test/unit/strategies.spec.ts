@@ -33,11 +33,7 @@ const candidates: WorklistCandidate[] = [
 
 describe('worklist distribution strategies', () => {
   it('reserves the canonical built-in keys', () => {
-    expect(BUILTIN_WORKLIST_STRATEGY_KEYS).toEqual([
-      'pull',
-      'round_robin',
-      'load_balanced',
-    ]);
+    expect(BUILTIN_WORKLIST_STRATEGY_KEYS).toEqual(['pull', 'round_robin', 'load_balanced']);
   });
 
   it('round-robins by availability, oldest cursor, then stable user id', async () => {
@@ -62,14 +58,16 @@ describe('worklist distribution strategies', () => {
     const registry = new WorklistStrategyRegistry([expertise]);
 
     expect(registry.get('expertise_v1')).toBe(expertise);
-    await expect(registry.get('expertise_v1')?.select({ queueId: 'queue-1', candidates })).resolves.toBe(
-      '01978f4a-32bf-7c27-a131-fd73a9e201c3',
-    );
+    await expect(
+      registry.get('expertise_v1')?.select({ queueId: 'queue-1', candidates }),
+    ).resolves.toBe('01978f4a-32bf-7c27-a131-fd73a9e201c3');
     expect(() => registry.register(expertise)).toThrow('already registered');
     expect(() => registry.register({ ...expertise, key: 'round_robin' })).toThrow('reserved');
   });
 
   it('fails closed for unknown strategy keys', () => {
-    expect(() => new WorklistStrategyRegistry().require('missing')).toThrow('Unknown worklist strategy');
+    expect(() => new WorklistStrategyRegistry().require('missing')).toThrow(
+      'Unknown worklist strategy',
+    );
   });
 });

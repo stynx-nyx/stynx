@@ -127,9 +127,14 @@ async function createQueue(
   strategy = 'pull',
   tenantId = tenantA,
 ): Promise<string> {
-  return asRole(client, 'stynx_app', tenantId, tenantId === tenantA ? supervisor : reviewerA, async () => {
-    const result = await client.query<IdRow>(
-      `
+  return asRole(
+    client,
+    'stynx_app',
+    tenantId,
+    tenantId === tenantA ? supervisor : reviewerA,
+    async () => {
+      const result = await client.query<IdRow>(
+        `
         insert into worklist.queues (
           tenant_id, code, name, strategy, required_permission,
           supervisor_permission, created_by, updated_by
@@ -141,10 +146,11 @@ async function createQueue(
         )
         returning id
       `,
-      [code, strategy],
-    );
-    return result.rows[0]?.id ?? '';
-  });
+        [code, strategy],
+      );
+      return result.rows[0]?.id ?? '';
+    },
+  );
 }
 
 async function enqueue(
@@ -214,9 +220,13 @@ describe('worklist database integration', () => {
       where n.nspname = 'worklist' and not t.tgisinternal
       order by c.relname, t.tgname
     `);
-    expect(new Set(triggers.rows.filter((row) => row.trigger_name.startsWith('trg_audit_')).map((row) => row.table_name))).toEqual(
-      new Set(['queues', 'worker_state', 'items', 'item_events']),
-    );
+    expect(
+      new Set(
+        triggers.rows
+          .filter((row) => row.trigger_name.startsWith('trg_audit_'))
+          .map((row) => row.table_name),
+      ),
+    ).toEqual(new Set(['queues', 'worker_state', 'items', 'item_events']));
     expect(triggers.rows).toContainEqual({
       table_name: 'item_events',
       trigger_name: 'trg_worklist_item_events_append_only',
@@ -247,18 +257,24 @@ describe('worklist database integration', () => {
     });
 
     const eligible = await asRole(admin, 'stynx_reader', tenantA, undefined, () =>
-      admin.query<{ user_id: string }>(`select user_id from worklist.eligible_workers($1) order by user_id`, [queueId]),
+      admin.query<{ user_id: string }>(
+        `select user_id from worklist.eligible_workers($1) order by user_id`,
+        [queueId],
+      ),
     );
     expect(eligible.rows.map((row) => row.user_id)).toEqual([reviewerA]);
 
     await asRole(admin, 'stynx_app', tenantA, supervisor, () =>
-      admin.query(`update worklist.worker_state set is_available = true where queue_id = $1 and user_id = $2`, [
-        queueId,
-        reviewerB,
-      ]),
+      admin.query(
+        `update worklist.worker_state set is_available = true where queue_id = $1 and user_id = $2`,
+        [queueId, reviewerB],
+      ),
     );
     const restored = await asRole(admin, 'stynx_reader', tenantA, undefined, () =>
-      admin.query<{ user_id: string }>(`select user_id from worklist.eligible_workers($1) order by user_id`, [queueId]),
+      admin.query<{ user_id: string }>(
+        `select user_id from worklist.eligible_workers($1) order by user_id`,
+        [queueId],
+      ),
     );
     expect(restored.rows.map((row) => row.user_id)).toEqual([reviewerA, reviewerB]);
   });
@@ -272,10 +288,16 @@ describe('worklist database integration', () => {
     try {
       const claims = await Promise.all([
         asRole(first, 'stynx_app', tenantA, reviewerA, () =>
-          first.query<ClaimRow>(`select worklist.item_claim_next($1, $2) as item_id`, [queueId, reviewerA]),
+          first.query<ClaimRow>(`select worklist.item_claim_next($1, $2) as item_id`, [
+            queueId,
+            reviewerA,
+          ]),
         ),
         asRole(second, 'stynx_app', tenantA, reviewerB, () =>
-          second.query<ClaimRow>(`select worklist.item_claim_next($1, $2) as item_id`, [queueId, reviewerB]),
+          second.query<ClaimRow>(`select worklist.item_claim_next($1, $2) as item_id`, [
+            queueId,
+            reviewerB,
+          ]),
         ),
       ]);
       expect(claims.map((result) => result.rows[0]?.item_id).sort()).toEqual([null, itemId].sort());
@@ -301,8 +323,12 @@ describe('worklist database integration', () => {
     await enqueue(admin, 'round-robin', 'rr-1');
     await enqueue(admin, 'round-robin', 'rr-2');
     const assigned = await asRole(admin, 'stynx_app', tenantA, supervisor, async () => {
-      const one = await admin.query<ClaimRow>(`select worklist.assign_next($1) as item_id`, [roundRobinQueue]);
-      const two = await admin.query<ClaimRow>(`select worklist.assign_next($1) as item_id`, [roundRobinQueue]);
+      const one = await admin.query<ClaimRow>(`select worklist.assign_next($1) as item_id`, [
+        roundRobinQueue,
+      ]);
+      const two = await admin.query<ClaimRow>(`select worklist.assign_next($1) as item_id`, [
+        roundRobinQueue,
+      ]);
       return [one.rows[0]?.item_id, two.rows[0]?.item_id];
     });
     const assignees = await admin.query<{ assignee_id: string }>(
@@ -333,9 +359,11 @@ describe('worklist database integration', () => {
     await asRole(admin, 'stynx_app', tenantA, reviewerA, () =>
       admin.query(`select worklist.item_claim($1, $2)`, [released, reviewerA]),
     );
-    await expect(asRole(admin, 'stynx_app', tenantA, reviewerB, () =>
-      admin.query(`select worklist.item_release($1, 'not mine', false)`, [released]),
-    )).rejects.toThrow('current assignee');
+    await expect(
+      asRole(admin, 'stynx_app', tenantA, reviewerB, () =>
+        admin.query(`select worklist.item_release($1, 'not mine', false)`, [released]),
+      ),
+    ).rejects.toThrow('current assignee');
     await asRole(admin, 'stynx_app', tenantA, reviewerA, () =>
       admin.query(`select worklist.item_release($1, 'return to pool', false)`, [released]),
     );
@@ -344,14 +372,22 @@ describe('worklist database integration', () => {
     await asRole(admin, 'stynx_app', tenantA, reviewerA, () =>
       admin.query(`select worklist.item_claim($1, $2)`, [reassigned, reviewerA]),
     );
-    await expect(asRole(admin, 'stynx_app', tenantA, supervisor, () =>
-      admin.query(`select worklist.item_reassign($1, $2, ' ', false)`, [reassigned, reviewerB]),
-    )).rejects.toThrow('reason');
+    await expect(
+      asRole(admin, 'stynx_app', tenantA, supervisor, () =>
+        admin.query(`select worklist.item_reassign($1, $2, ' ', false)`, [reassigned, reviewerB]),
+      ),
+    ).rejects.toThrow('reason');
     await asRole(admin, 'stynx_app', tenantA, supervisor, () =>
-      admin.query(`select worklist.item_reassign($1, $2, 'balance JARI load', false)`, [reassigned, reviewerB]),
+      admin.query(`select worklist.item_reassign($1, $2, 'balance JARI load', false)`, [
+        reassigned,
+        reviewerB,
+      ]),
     );
     await asRole(admin, 'stynx_app', tenantA, reviewerB, () =>
-      admin.query(`select worklist.item_complete($1, 'reviewed', '{"decision":"uphold"}'::jsonb, false)`, [reassigned]),
+      admin.query(
+        `select worklist.item_complete($1, 'reviewed', '{"decision":"uphold"}'::jsonb, false)`,
+        [reassigned],
+      ),
     );
 
     const overrideItem = await enqueue(admin, 'operations', 'override-me');
@@ -362,7 +398,10 @@ describe('worklist database integration', () => {
          on conflict (tenant_id, queue_id, user_id) do update set is_available = false`,
         [queueId, reviewerB],
       );
-      await admin.query(`select worklist.item_reassign($1, $2, 'board override', true)`, [overrideItem, reviewerB]);
+      await admin.query(`select worklist.item_reassign($1, $2, 'board override', true)`, [
+        overrideItem,
+        reviewerB,
+      ]);
     });
 
     const events = await admin.query<{ kind: string; reason: string | null }>(
@@ -370,41 +409,51 @@ describe('worklist database integration', () => {
        where item_id = any($1::uuid[]) order by created_at, id`,
       [[released, reassigned, overrideItem]],
     );
-    expect(events.rows).toEqual(expect.arrayContaining([
-      { kind: 'release', reason: 'return to pool' },
-      { kind: 'reassign', reason: 'balance JARI load' },
-      { kind: 'complete', reason: 'reviewed' },
-      { kind: 'override', reason: 'board override' },
-    ]));
+    expect(events.rows).toEqual(
+      expect.arrayContaining([
+        { kind: 'release', reason: 'return to pool' },
+        { kind: 'reassign', reason: 'balance JARI load' },
+        { kind: 'complete', reason: 'reviewed' },
+        { kind: 'override', reason: 'board override' },
+      ]),
+    );
 
     const auditRows = await admin.query<{ table_name: string }>(
       `select distinct table_name from audit.log where table_schema = 'worklist' order by table_name`,
     );
-    expect(auditRows.rows.map((row) => row.table_name)).toEqual(expect.arrayContaining([
-      'item_events',
-      'items',
-      'queues',
-      'worker_state',
-    ]));
+    expect(auditRows.rows.map((row) => row.table_name)).toEqual(
+      expect.arrayContaining(['item_events', 'items', 'queues', 'worker_state']),
+    );
 
     const eventId = await admin.query<IdRow>(
       `select id from worklist.item_events where item_id = $1 order by created_at limit 1`,
       [released],
     );
-    await expect(asRole(admin, 'stynx_app', tenantA, supervisor, () =>
-      admin.query(`update worklist.item_events set reason = 'mutated' where id = $1`, [eventId.rows[0]?.id]),
-    )).rejects.toThrow('append-only');
+    await expect(
+      asRole(admin, 'stynx_app', tenantA, supervisor, () =>
+        admin.query(`update worklist.item_events set reason = 'mutated' where id = $1`, [
+          eventId.rows[0]?.id,
+        ]),
+      ),
+    ).rejects.toThrow('append-only');
   });
 
   it('records each overdue item once across concurrent breach sweeps', async () => {
     await createQueue(admin, 'sla-breach');
-    const itemId = await enqueue(admin, 'sla-breach', 'overdue', new Date('2026-08-01T00:00:00.000Z'));
+    const itemId = await enqueue(
+      admin,
+      'sla-breach',
+      'overdue',
+      new Date('2026-08-01T00:00:00.000Z'),
+    );
     const [first, second] = await Promise.all([
       asRole(admin, 'stynx_app', tenantA, supervisor, () =>
         admin.query<{ item_id: string }>(`select item_id from worklist.detect_breaches(10)`),
       ),
       (async () => {
-        const client = new Client({ connectionString: database.connectionString('worklist-sla-racer') });
+        const client = new Client({
+          connectionString: database.connectionString('worklist-sla-racer'),
+        });
         await client.connect();
         try {
           return await asRole(client, 'stynx_app', tenantA, supervisor, () =>
