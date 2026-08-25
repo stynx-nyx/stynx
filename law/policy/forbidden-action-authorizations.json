@@ -769,6 +769,24 @@
       "commit": "7cec3819d20ea84e8f5a31ce9197260c198058c3",
       "authorized_by": "Owner",
       "reason": "Closes the receipt-ledger mutation created while recording the Owner-reviewed authorization for the exact PR A remote-control checkpoint, without broadening preparation authority or authorizing push, PR creation, merge, workflow dispatch, publication, tags, registry mutation, or live repository-settings changes."
+    },
+    {
+      "forbidden_id": "FORBID-RM-RF",
+      "commit": "b95a1582aadf6dad7cb91adb193576cb65c1683e",
+      "authorized_by": "Owner",
+      "reason": "Authorizes at tree 54fceda776d6d4d29b9bb5eb38bf3a5f613fa4b7 only the DEVAI 1.2.13 init-bind generated workflow cleanup of the resolved runner-temporary control directory $RUNNER_TEMP/devai-verifier-package in workflow SHA-256 96f18933cbe3ac2b93637d81a27009075e8d4043b4dd8b14bae67003775893b2; no deletion outside that temporary directory is authorized."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "b95a1582aadf6dad7cb91adb193576cb65c1683e",
+      "authorized_by": "Owner",
+      "reason": "Authorizes at tree 54fceda776d6d4d29b9bb5eb38bf3a5f613fa4b7 only the exact DEVAI 1.2.13 init-bind generated .github/workflows/devai-local-rc-verify.yml bytes with SHA-256 96f18933cbe3ac2b93637d81a27009075e8d4043b4dd8b14bae67003775893b2 under canonical verifier-materializer policy SHA-256 9990ce69fee0bca529b6337334a403cb569a200ad508c00b08d9e60b563696a0, preserving fail-closed authentication, provenance, immutable verifier identity, tests, and thresholds."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "b95a1582aadf6dad7cb91adb193576cb65c1683e",
+      "authorized_by": "Owner",
+      "reason": "Authorizes at tree 54fceda776d6d4d29b9bb5eb38bf3a5f613fa4b7 only the supported DEVAI 1.2.13 init-bind invocation cli-33247-a7477f02-8fe4-43ec-a88d-56f26f4845dd generated configuration, constitution pointer, and adopter binding with materialization SHA-256 56120ebccdc75bb7237523983c00b3451e3332e28cc56c86fb0e71332183883b; it authorizes no settings change, tag or evidence publication, push, PR, merge, registry mutation, STYNX publication, test weakening, other deletion, or other DEVAI version."
     }
   ]
 }
