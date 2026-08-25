@@ -30,6 +30,10 @@
       "dependsOn": ["^build"],
       "outputs": []
     },
+    "@stynx-nyx/sdk#typecheck": {
+      "dependsOn": ["build", "^build"],
+      "outputs": []
+    },
     "test": {
       "dependsOn": ["build", "^build"],
       "outputs": [
