@@ -1,7 +1,7 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:692a078e-a531-4c3f-8696-2e4ffa1ca59c",
+  "serialNumber": "urn:uuid:2ecbe46d-cd7b-4422-8ea5-d1c119067fb0",
   "version": 1,
   "metadata": {
     "timestamp": "2026-05-29T00:00:00.000Z",
@@ -27,7 +27,7 @@
     "properties": [
       {
         "name": "stynx:pnpm-lock-sha256",
-        "value": "692a078ea531dc3f66962e4ffa1ca59cf386e882c15c5d3ea5796628bde288e9"
+        "value": "2ecbe46dcd7be422bea5d1c119067fb044ef0adccbf76c984e17d3ff653fd7dd"
       },
       {
         "name": "stynx:package-manager",
@@ -52,7 +52,7 @@
     {
       "type": "library",
       "name": "@aarusso-nyx/devai",
-      "version": "1.2.12",
+      "version": "1.2.13",
       "scope": "required",
       "licenses": [
         {
@@ -61,7 +61,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@aarusso-nyx%2fdevai@1.2.12"
+      "purl": "pkg:npm/@aarusso-nyx%2fdevai@1.2.13"
     },
     {
       "type": "library",
