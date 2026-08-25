@@ -8,6 +8,7 @@ branches:
     protection:
       enforce_admins: true
       required_linear_history: true
+      required_conversation_resolution: true
       allow_force_pushes: false
       allow_deletions: false
       required_pull_request_reviews:
@@ -18,15 +19,15 @@ branches:
         strict: true
         contexts:
           - semantic-pr-title
+          - install
           - lint
           - typecheck
-          - lint:cycles
           - migration-lint
           - unit-tests
           - integration-tests
-          - build
-          - doctor
-          - reference-api
+          - stynx-tier-gate
+          - build (ubuntu-latest)
+          - verified-local-rc
           - reference-web-e2e
           - package-policy
           - dependency-audit
