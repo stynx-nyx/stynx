@@ -745,6 +745,12 @@
       "commit": "c45edfaf7e31efd53eeeda9529ea79661153e775",
       "authorized_by": "Owner",
       "reason": "Closes the receipt-ledger mutation created while recording the Owner-reviewed authorization for the exact DEVAI 1.2.12 binding checkpoint, without broadening preparation authority or authorizing push, merge, publication, tags, registry mutation, or repository-settings changes."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "4b1172f14c6c2e62056fa18fd90edd511b1a07fd",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the exact PR A preparation workflow changes that make explicit hardening dispatch cover every k6 scenario and preserve the ordered publication plan and per-package receipts required by campaign Decisions 7 and 9, without authorizing workflow dispatch, push, merge, publication, tags, registry mutation, or repository-settings changes."
     }
   ]
 }
