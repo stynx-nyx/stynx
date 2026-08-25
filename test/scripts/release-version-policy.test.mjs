@@ -1,5 +1,14 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import {
+  existsSync,
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import test from 'node:test';
@@ -7,6 +16,7 @@ import test from 'node:test';
 import {
   fetchRegistryCensus,
   loadRegistryAnomalyPolicy,
+  registryVersionPolicyConstants,
   RegistryVersionPolicyError,
   validateRegistryCensus,
 } from '../../scripts/lib/registry-version-policy.mjs';
@@ -16,16 +26,30 @@ import {
   unifiedRebaselinePackageCount,
   unifiedRebaselineTarget,
 } from '../../scripts/lib/unified-rebaseline.mjs';
+import { discoverMutationRoster } from '../../scripts/lib/mutation-roster.mjs';
 
 const repoRoot = resolve(import.meta.dirname, '..', '..');
-const packageNames = Array.from({ length: 39 }, (_, index) =>
-  index === 0
-    ? '@stynx-nyx/angular-profile'
-    : index === 1
-      ? '@stynx-nyx/angular-sessions'
-      : `@stynx-nyx/fixture-${String(index).padStart(2, '0')}`,
-).concat('@stynx-nyx/sessions');
-const anomaly = loadRegistryAnomalyPolicy(repoRoot, unifiedRebaselineTarget);
+const anomalyPolicy = JSON.parse(
+  readFileSync(join(repoRoot, 'law', 'policy', 'registry-version-anomalies.json'), 'utf8'),
+);
+const campaignPolicy = JSON.parse(
+  readFileSync(join(repoRoot, 'law', 'policy', 'release-campaign-1.1.1.json'), 'utf8'),
+);
+const changesetConfig = JSON.parse(
+  readFileSync(join(repoRoot, '.changeset', 'config.json'), 'utf8'),
+);
+const packageNames = [...changesetConfig.fixed[0]].sort();
+const firstPublicationNames = [
+  '@stynx-nyx/jobs',
+  '@stynx-nyx/mobile-runtime',
+  '@stynx-nyx/notifications',
+  '@stynx-nyx/offline-sync',
+  '@stynx-nyx/outbox',
+  '@stynx-nyx/worklist',
+];
+const publishedPackageNames = packageNames.filter(
+  (packageName) => !firstPublicationNames.includes(packageName),
+);
 
 function registryMetadata(name, versions) {
   return {
@@ -35,16 +59,51 @@ function registryMetadata(name, versions) {
   };
 }
 
+function publishedRegistryState(name, versions) {
+  return {
+    authenticated: true,
+    status: 200,
+    metadata: registryMetadata(name, versions),
+  };
+}
+
+function absentRegistryState() {
+  return { authenticated: true, status: 404 };
+}
+
 function validRegistryCensus() {
   return new Map(
-    packageNames.map((name) => [
-      name,
-      registryMetadata(
-        name,
-        name === '@stynx-nyx/angular-profile' ? ['1.0.0', '1.1.0', '2.0.0'] : ['1.0.0', '1.1.0'],
-      ),
-    ]),
+    packageNames.map((name) => {
+      if (firstPublicationNames.includes(name)) return [name, absentRegistryState()];
+      const versions =
+        name === '@stynx-nyx/angular-profile'
+          ? ['0.5.0', '1.0.0', '1.1.0', '2.0.0']
+          : name === '@stynx-nyx/angular-sessions' || name === '@stynx-nyx/sessions'
+            ? ['0.5.0', '1.0.0', '1.1.0']
+            : ['0.5.0', '1.0.0'];
+      return [name, publishedRegistryState(name, versions)];
+    }),
   );
+}
+
+function validInventory() {
+  return {
+    authenticated: true,
+    complete: true,
+    packageNames: [...publishedPackageNames],
+  };
+}
+
+function validate(overrides = {}) {
+  return validateRegistryCensus({
+    packageNames,
+    registryStatesByPackage: validRegistryCensus(),
+    githubPackagesInventory: validInventory(),
+    candidate: unifiedRebaselineTarget,
+    anomalyPolicy,
+    campaignPolicy,
+    ...overrides,
+  });
 }
 
 function assertPolicyError(callback, code) {
@@ -55,156 +114,165 @@ function assertPolicyError(callback, code) {
   });
 }
 
-test('registry census accepts all 40 packages below 1.1.1 plus the exact anomaly', () => {
-  const result = validateRegistryCensus({
-    packageNames,
-    metadataByPackage: validRegistryCensus(),
-    candidate: unifiedRebaselineTarget,
-    anomaly,
+test('Architect policy and workspace structurally define exactly 44/38/6', () => {
+  const { roster: mutationRoster, failures: mutationFailures } = discoverMutationRoster(repoRoot);
+  const mutationNames = mutationRoster.map(({ packageName }) => packageName).sort();
+  assert.equal(registryVersionPolicyConstants.packageCount, 44);
+  assert.equal(packageNames.length, 44);
+  assert.equal(new Set(packageNames).size, 44);
+  assert.equal(publishedPackageNames.length, 38);
+  assert.deepEqual([...campaignPolicy.publishable_packages].sort(), packageNames);
+  assert.deepEqual([...campaignPolicy.existing_private_packages].sort(), publishedPackageNames);
+  assert.deepEqual(mutationFailures, []);
+  assert.equal(mutationNames.length, 38);
+  assert.deepEqual([...campaignPolicy.mutation_packages].sort(), mutationNames);
+  assert.deepEqual([...campaignPolicy.approved_first_publications].sort(), firstPublicationNames);
+  assert.equal(campaignPolicy.candidate.publishable_count, 44);
+  assert.equal(campaignPolicy.candidate.mutation_count, 38);
+  assert.equal(campaignPolicy.candidate.existing_private_count, 38);
+  assert.equal(campaignPolicy.candidate.approved_first_publication_count, 6);
+});
+
+test('complete authenticated registry and inventory census returns 44/38/6', () => {
+  assert.deepEqual(validate(), {
+    anomalyMatches: 1,
+    absentPackageCount: 6,
+    packageCount: 44,
+    publishedPackageCount: 38,
   });
-
-  assert.deepEqual(result, { anomalyMatches: 1, packageCount: 40 });
 });
 
-test('registry census rejects candidate presence and legitimate canonical-line collisions', () => {
-  const candidatePresent = validRegistryCensus();
-  candidatePresent.set(
-    '@stynx-nyx/sessions',
-    registryMetadata('@stynx-nyx/sessions', ['1.1.0', '1.1.1']),
-  );
-  assertPolicyError(
-    () =>
-      validateRegistryCensus({
-        packageNames,
-        metadataByPackage: candidatePresent,
-        candidate: unifiedRebaselineTarget,
-        anomaly,
-      }),
-    'REGISTRY_CANDIDATE_EXISTS',
-  );
-
-  const higherCanonicalVersion = validRegistryCensus();
-  higherCanonicalVersion.set(
-    '@stynx-nyx/sessions',
-    registryMetadata('@stynx-nyx/sessions', ['1.1.0', '1.2.0']),
-  );
-  assertPolicyError(
-    () =>
-      validateRegistryCensus({
-        packageNames,
-        metadataByPackage: higherCanonicalVersion,
-        candidate: unifiedRebaselineTarget,
-        anomaly,
-      }),
-    'REGISTRY_CANONICAL_LINE_NOT_MONOTONIC',
-  );
+test('1.1.1 collision in any of the 44 packages blocks the unified candidate', () => {
+  for (const packageName of packageNames) {
+    const states = validRegistryCensus();
+    states.set(packageName, publishedRegistryState(packageName, ['0.5.0', '1.1.0', '1.1.1']));
+    assertPolicyError(
+      () => validate({ registryStatesByPackage: states }),
+      'REGISTRY_CANDIDATE_EXISTS',
+    );
+  }
 });
 
-test('registry census rejects every broader or unmatched anomaly', () => {
+test('legitimate 1.1.0 history and the exact angular-profile 2.0.0 anomaly are accepted', () => {
+  const result = validate();
+  assert.equal(result.anomalyMatches, 1);
+  assert.equal(result.publishedPackageCount, 38);
+});
+
+test('unadjudicated, missing, broadened, altered, or unmatched anomaly policy fails closed', () => {
   const unadjudicatedMajor = validRegistryCensus();
   unadjudicatedMajor.set(
     '@stynx-nyx/sessions',
-    registryMetadata('@stynx-nyx/sessions', ['1.1.0', '2.0.0']),
+    publishedRegistryState('@stynx-nyx/sessions', ['1.1.0', '2.0.0']),
   );
   assertPolicyError(
-    () =>
-      validateRegistryCensus({
-        packageNames,
-        metadataByPackage: unadjudicatedMajor,
-        candidate: unifiedRebaselineTarget,
-        anomaly,
-      }),
+    () => validate({ registryStatesByPackage: unadjudicatedMajor }),
     'REGISTRY_UNADJUDICATED_VERSION',
   );
 
   const missingExactAnomaly = validRegistryCensus();
   missingExactAnomaly.set(
     '@stynx-nyx/angular-profile',
-    registryMetadata('@stynx-nyx/angular-profile', ['1.0.0', '1.1.0']),
+    publishedRegistryState('@stynx-nyx/angular-profile', ['1.0.0', '1.1.0']),
   );
   assertPolicyError(
-    () =>
-      validateRegistryCensus({
-        packageNames,
-        metadataByPackage: missingExactAnomaly,
-        candidate: unifiedRebaselineTarget,
-        anomaly,
-      }),
+    () => validate({ registryStatesByPackage: missingExactAnomaly }),
     'REGISTRY_ANOMALY_UNMATCHED',
   );
 
+  const broadened = structuredClone(anomalyPolicy);
+  broadened.anomalies[0].applies_to_other_packages = true;
   assertPolicyError(
-    () =>
-      validateRegistryCensus({
-        packageNames,
-        metadataByPackage: validRegistryCensus(),
-        candidate: '1.1.2',
-        anomaly,
-      }),
-    'REGISTRY_CANDIDATE_UNSUPPORTED',
+    () => validate({ anomalyPolicy: broadened }),
+    'REGISTRY_ANOMALY_POLICY_UNSUPPORTED',
   );
+
+  const altered = structuredClone(anomalyPolicy);
+  altered.anomalies[0].version = '2.0.1';
+  assertPolicyError(
+    () => validate({ anomalyPolicy: altered }),
+    'REGISTRY_ANOMALY_POLICY_UNSUPPORTED',
+  );
+
+  assertPolicyError(() => validate({ candidate: '1.1.2' }), 'REGISTRY_CANDIDATE_UNSUPPORTED');
 });
 
-test('registry census rejects roster drift, partial responses, and malformed metadata', () => {
+test('first-publication exceptions reject extra, missing, renamed, and wrong-candidate policy', () => {
+  const mutations = [
+    (policy) => policy.approved_first_publications.push('@stynx-nyx/extra'),
+    (policy) => policy.approved_first_publications.pop(),
+    (policy) => {
+      policy.approved_first_publications[0] = '@stynx-nyx/jobs-renamed';
+    },
+    (policy) => {
+      policy.candidate.version = '1.1.2';
+    },
+  ];
+  for (const mutate of mutations) {
+    const policy = structuredClone(campaignPolicy);
+    mutate(policy);
+    assertPolicyError(
+      () => validate({ campaignPolicy: policy }),
+      'REGISTRY_FIRST_PUBLICATION_POLICY_UNSUPPORTED',
+    );
+  }
+});
+
+test('roster drift, incomplete census, malformed metadata, and unsupported versions fail closed', () => {
   assertPolicyError(
-    () =>
-      validateRegistryCensus({
-        packageNames: packageNames.slice(1),
-        metadataByPackage: validRegistryCensus(),
-        candidate: unifiedRebaselineTarget,
-        anomaly,
-      }),
+    () => validate({ packageNames: packageNames.slice(1) }),
     'REGISTRY_ROSTER_DRIFT',
   );
 
   const partial = validRegistryCensus();
   partial.delete('@stynx-nyx/sessions');
   assertPolicyError(
-    () =>
-      validateRegistryCensus({
-        packageNames,
-        metadataByPackage: partial,
-        candidate: unifiedRebaselineTarget,
-        anomaly,
-      }),
+    () => validate({ registryStatesByPackage: partial }),
     'REGISTRY_CENSUS_INCOMPLETE',
   );
 
   const malformed = validRegistryCensus();
-  malformed.set('@stynx-nyx/sessions', {
-    name: '@stynx-nyx/sessions',
-    versions: {},
-    'dist-tags': { latest: '1.1.0' },
-  });
+  malformed.set('@stynx-nyx/sessions', publishedRegistryState('@stynx-nyx/sessions', []));
   assertPolicyError(
-    () =>
-      validateRegistryCensus({
-        packageNames,
-        metadataByPackage: malformed,
-        candidate: unifiedRebaselineTarget,
-        anomaly,
-      }),
+    () => validate({ registryStatesByPackage: malformed }),
     'REGISTRY_METADATA_MALFORMED',
   );
 
   const unsupportedVersion = validRegistryCensus();
   unsupportedVersion.set(
     '@stynx-nyx/sessions',
-    registryMetadata('@stynx-nyx/sessions', ['1.1.0', 'v1.1.1']),
+    publishedRegistryState('@stynx-nyx/sessions', ['1.1.0', 'v1.1.1']),
   );
   assertPolicyError(
-    () =>
-      validateRegistryCensus({
-        packageNames,
-        metadataByPackage: unsupportedVersion,
-        candidate: unifiedRebaselineTarget,
-        anomaly,
-      }),
+    () => validate({ registryStatesByPackage: unsupportedVersion }),
     'REGISTRY_VERSION_UNSUPPORTED',
   );
 });
 
-test('authenticated census fails closed without credentials or on authentication failure', async () => {
+test('registry and authenticated inventory must be complete and agree exactly', () => {
+  const disagreement = validInventory();
+  disagreement.packageNames.push('@stynx-nyx/jobs');
+  assertPolicyError(
+    () => validate({ githubPackagesInventory: disagreement }),
+    'REGISTRY_INVENTORY_DISAGREEMENT',
+  );
+
+  const incomplete = validInventory();
+  incomplete.complete = false;
+  assertPolicyError(
+    () => validate({ githubPackagesInventory: incomplete }),
+    'REGISTRY_INVENTORY_INCOMPLETE',
+  );
+
+  const unauthenticated = validInventory();
+  unauthenticated.authenticated = false;
+  assertPolicyError(
+    () => validate({ githubPackagesInventory: unauthenticated }),
+    'REGISTRY_AUTH_MISSING',
+  );
+});
+
+test('authenticated census fails closed on missing auth, authentication failure, and timeout', async () => {
   await assert.rejects(
     fetchRegistryCensus({ packageNames, token: '' }),
     (error) => error.code === 'REGISTRY_AUTH_MISSING',
@@ -223,9 +291,42 @@ test('authenticated census fails closed without credentials or on authentication
       return true;
     },
   );
+
+  await assert.rejects(
+    fetchRegistryCensus({
+      packageNames,
+      token: syntheticToken,
+      fetchImpl: async () => {
+        throw new DOMException('timed out', 'TimeoutError');
+      },
+    }),
+    (error) => error.code === 'REGISTRY_REQUEST_FAILED',
+  );
+});
+
+test('authenticated census rejects malformed metadata and unsupported HTTP status', async () => {
+  const syntheticToken = `ghp_${'B'.repeat(36)}`;
+  await assert.rejects(
+    fetchRegistryCensus({
+      packageNames: ['@stynx-nyx/sessions'],
+      token: syntheticToken,
+      fetchImpl: async () => ({ ok: true, status: 200, json: async () => Promise.reject() }),
+    }),
+    (error) => error.code === 'REGISTRY_METADATA_MALFORMED',
+  );
+
+  await assert.rejects(
+    fetchRegistryCensus({
+      packageNames: ['@stynx-nyx/sessions'],
+      token: syntheticToken,
+      fetchImpl: async () => ({ ok: false, status: 418 }),
+    }),
+    (error) => error.code === 'REGISTRY_REQUEST_FAILED',
+  );
 });
 
 test('Architect anomaly policy is required at its exact approved digest', () => {
+  const anomaly = loadRegistryAnomalyPolicy(repoRoot, unifiedRebaselineTarget);
   assert.equal(anomaly.package, '@stynx-nyx/angular-profile');
   assert.equal(anomaly.version, '2.0.0');
   assert.equal(anomaly.allowed_candidate, '1.1.1');
@@ -312,20 +413,20 @@ function createRebaselineFixture() {
   return { names, root };
 }
 
-test('one-time rebaseline deterministically updates the exact 40-package release surface', () => {
+test('one-time rebaseline deterministically updates the exact 44-package release surface', () => {
   const fixture = createRebaselineFixture();
   try {
     const changesetConfig = JSON.parse(
       readFileSync(join(fixture.root, '.changeset', 'config.json'), 'utf8'),
     );
     const first = runUnifiedRebaseline(fixture.root, changesetConfig, 'write');
-    assert.deepEqual(first, { packageCount: 40, changedFiles: 83 });
+    assert.deepEqual(first, { packageCount: 44, changedFiles: 91 });
     assert.deepEqual(runUnifiedRebaseline(fixture.root, changesetConfig, 'check'), {
-      packageCount: 40,
+      packageCount: 44,
       changedFiles: 0,
     });
     assert.deepEqual(runUnifiedRebaseline(fixture.root, changesetConfig, 'write'), {
-      packageCount: 40,
+      packageCount: 44,
       changedFiles: 0,
     });
 
@@ -363,4 +464,186 @@ test('one-time rebaseline deterministically updates the exact 40-package release
   } finally {
     rmSync(fixture.root, { recursive: true, force: true });
   }
+});
+
+const rootManifest = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8'));
+const repositorySource = (path) => readFileSync(join(repoRoot, path), 'utf8');
+
+function publicWorkspaceManifests() {
+  return ['packages', 'packages-web']
+    .flatMap((directory) =>
+      readdirSync(join(repoRoot, directory), { withFileTypes: true })
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => join(repoRoot, directory, entry.name, 'package.json'))
+        .filter(existsSync),
+    )
+    .map((path) => ({ path, manifest: JSON.parse(readFileSync(path, 'utf8')) }))
+    .filter(({ manifest }) => packageNames.includes(manifest.name))
+    .sort((left, right) => left.manifest.name.localeCompare(right.manifest.name));
+}
+
+function runNode(path, args = [], options = {}) {
+  return spawnSync(process.execPath, [join(repoRoot, path), ...args], {
+    cwd: options.cwd ?? repoRoot,
+    encoding: 'utf8',
+    env: { ...process.env, ...(options.env ?? {}) },
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+}
+
+test('generated README dependency truth covers the exact 44-package manifest graph', () => {
+  assert.match(rootManifest.scripts['package-readmes:write'] ?? '', /--write/u);
+  assert.match(rootManifest.scripts['package-readmes:check'] ?? '', /--check/u);
+  assert.match(rootManifest.scripts['release:policy'], /package-readmes:check/u);
+  const generator = repositorySource('scripts/generate-package-readmes.mjs');
+  for (const marker of [
+    'dependencies',
+    'optionalDependencies',
+    'peerDependencies',
+    'devDependencies',
+  ]) {
+    assert.match(generator, new RegExp(marker, 'u'));
+  }
+  const check = runNode('scripts/generate-package-readmes.mjs', ['--check']);
+  assert.equal(check.status, 0, check.stderr || check.stdout);
+});
+
+test('coverage is executable and reports four metrics for every one of the 44 packages', () => {
+  assert.match(rootManifest.scripts['test:coverage'], /scripts\/run-coverage/u);
+  assert.match(rootManifest.scripts['ci:stynx:release'], /test:coverage/u);
+  const coverage = repositorySource('scripts/run-coverage.mjs');
+  assert.match(coverage, /discoverPublishablePackages/u);
+  for (const metric of ['branches', 'functions', 'lines', 'statements']) {
+    assert.match(coverage, new RegExp(metric, 'u'));
+  }
+  const workspaces = publicWorkspaceManifests();
+  assert.equal(workspaces.length, 44);
+  for (const { manifest } of workspaces) {
+    assert.match(
+      manifest.scripts?.['test:coverage'] ?? '',
+      /(?:vitest|jest|coverage)/u,
+      `${manifest.name}: missing executable test:coverage command`,
+    );
+  }
+});
+
+test('public API baselines exactly cover 44 packages including jobs, notifications, and outbox', () => {
+  const baseline = JSON.parse(
+    repositorySource('docs/framework/contracts/public-api-baselines.json'),
+  );
+  assert.deepEqual(
+    Object.keys(baseline.packages).sort(),
+    [...campaignPolicy.publishable_packages].sort(),
+  );
+  for (const name of ['@stynx-nyx/jobs', '@stynx-nyx/notifications', '@stynx-nyx/outbox']) {
+    assert.ok(
+      Object.keys(baseline.packages[name]?.declarationHashes ?? {}).length > 0,
+      `${name}: missing public API baseline`,
+    );
+  }
+  const check = runNode('scripts/verify-public-api-baselines.mjs');
+  assert.equal(check.status, 0, check.stderr || check.stdout);
+});
+
+test('trace closes 481/366/115/14=495 with all 12 mappings and current assertion digests', () => {
+  const check = runNode('scripts/verify-devai-trace.mjs');
+  const summary = JSON.parse(check.stdout);
+  assert.equal(summary.tracked_test_paths, 481);
+  assert.equal(summary.executable_tests, 366);
+  assert.equal(summary.fixtures_and_support, 115);
+  assert.equal(summary.scripts_and_config_attestations, 14);
+  assert.equal(summary.governed_test_surface, 495);
+  assert.deepEqual(summary.failures, []);
+  assert.equal(check.status, 0, check.stderr || check.stdout);
+});
+
+test('readiness-bearing RLS fails closed when live PostgreSQL observation is unavailable', () => {
+  const check = spawnSync('bash', [join(repoRoot, 'scripts/check-rls-smoke.sh')], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    env: {
+      ...process.env,
+      STYNX_RLS_LIVE_REQUIRED: '1',
+      STYNX_TEST_DATABASE_URL: '',
+      DATABASE_URL: '',
+    },
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  assert.notEqual(check.status, 0, 'live-required RLS must not convert unavailable input to PASS');
+  assert.match(`${check.stdout}\n${check.stderr}`, /RLS_LIVE_(?:CONFIG|OBSERVATION)_MISSING/u);
+});
+
+test('sourcemap verification fails closed on an empty expected population', () => {
+  const fixture = mkdtempSync(join(tmpdir(), 'stynx-empty-sourcemaps-'));
+  try {
+    writeJson(join(fixture, 'tools', 'tsconfig', 'angular18.json'), {
+      compilerOptions: { inlineSources: true },
+    });
+    mkdirSync(join(fixture, 'packages-web'), { recursive: true });
+    const check = runNode('scripts/verify-web-sourcemaps.mjs', ['--repo-root', fixture]);
+    assert.notEqual(check.status, 0, 'zero sourcemaps must not establish a readiness observation');
+    assert.match(`${check.stdout}\n${check.stderr}`, /SOURCEMAP_(?:DIST_)?POPULATION_EMPTY/u);
+  } finally {
+    rmSync(fixture, { recursive: true, force: true });
+  }
+});
+
+test('scenario=all hardening reaches every k6 scenario with authenticated fail-closed evidence', () => {
+  const hardening = repositorySource('.github/workflows/hardening.yml');
+  assert.match(hardening, /default:\s*all/u);
+  for (const scenario of ['auth', 'crud', 'upload', 'cascade-delete']) {
+    assert.match(hardening, new RegExp(`${scenario}.*summary`, 'su'));
+  }
+  assert.match(hardening, /github\.event_name == 'workflow_dispatch'/u);
+  assert.match(hardening, /NODE_AUTH_TOKEN_FILE/u);
+  assert.match(hardening, /healthz/u);
+  assert.match(hardening, /No current k6 summary files were produced/u);
+});
+
+test('missing, stale, failed, or foreign-tree campaign evidence blocks release preparation', () => {
+  assert.ok(existsSync(join(repoRoot, 'scripts/verify-missing-evidence.mjs')));
+  assert.match(rootManifest.scripts['ci:stynx:release'], /missing-evidence/u);
+  const evidence = repositorySource('scripts/verify-missing-evidence.mjs');
+  for (const marker of [
+    'candidate',
+    'tree',
+    'verified-local-rc',
+    'hardening',
+    'stale',
+    'missing',
+  ]) {
+    assert.match(evidence, new RegExp(marker, 'iu'));
+  }
+});
+
+test('live branch and release-tag protection drift are both fail-closed', () => {
+  const protection = repositorySource('scripts/verify-branch-protection.mjs');
+  for (const field of [
+    'enforce_admins',
+    'require_code_owner_reviews',
+    'required_conversation_resolution',
+  ]) {
+    assert.match(protection, new RegExp(field, 'u'));
+  }
+  for (const marker of ['refs/tags', 'ruleset', 'required_status_checks']) {
+    assert.match(protection, new RegExp(marker, 'iu'));
+  }
+});
+
+test('publication uses an ordered 44-package plan, durable per-package receipts, and stop-first recovery', () => {
+  const workflow = repositorySource('.github/workflows/release.yml');
+  for (const marker of [
+    'publication-plan',
+    'publication-receipt',
+    'candidate_tree',
+    'integrity',
+    'shasum',
+    'stop-on-first-failure',
+    'partial',
+    'recovery',
+  ]) {
+    assert.match(workflow, new RegExp(marker, 'u'));
+  }
+  assert.match(workflow, /candidate_sha.*40-character/su);
+  assert.match(workflow, /44/u);
 });

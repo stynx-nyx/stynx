@@ -1,4 +1,5 @@
 const {
+  cpSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -452,13 +453,374 @@ async function runLocalRcAdapterTests() {
   assertEqual(unwrapDevaiCheckReport(report), report, 'legacy top-level DEVAI check report');
 }
 
+const forbiddenId = 'FORBID-MUTATE-INVARIANTS';
+const authorizationLedgerPath = 'law/policy/forbidden-action-authorizations.json';
+const priorReceipt = {
+  forbidden_id: forbiddenId,
+  commit: 'a'.repeat(40),
+  authorized_by: 'Owner',
+  reason: 'Preserves one exact historical authorization receipt.',
+};
+const secondPriorReceipt = {
+  forbidden_id: forbiddenId,
+  commit: 'c'.repeat(40),
+  authorized_by: 'Owner',
+  reason: 'Preserves a second exact historical authorization receipt.',
+};
+
+function createForbiddenFixture() {
+  const root = mkdtempSync(join(tmpdir(), 'stynx-forbidden-actions-'));
+  mkdirSync(join(root, '.devai'), { recursive: true });
+  cpSync(join(repoRoot, '.devai', 'config'), join(root, '.devai', 'config'), {
+    recursive: true,
+  });
+  cpSync(join(repoRoot, '.devai', 'pin'), join(root, '.devai', 'pin'), { recursive: true });
+  mkdirSync(join(root, 'law', 'policy'), { recursive: true });
+  writeJson(join(root, authorizationLedgerPath), {
+    schemaVersion: '1.0.0',
+    authorizations: [priorReceipt, secondPriorReceipt],
+  });
+  run('git', ['init', '--quiet'], { cwd: root });
+  run('git', ['config', 'user.name', 'Fixture'], { cwd: root });
+  run('git', ['config', 'user.email', 'fixture@example.invalid'], { cwd: root });
+  run('git', ['add', '--all'], { cwd: root });
+  run('git', ['commit', '--quiet', '--message', 'baseline'], { cwd: root });
+  return { root, base: run('git', ['rev-parse', 'HEAD'], { cwd: root }) };
+}
+
+function commitFixture(root, subject, author = 'Fixture') {
+  run('git', ['add', '--all'], { cwd: root });
+  run(
+    'git',
+    [
+      '-c',
+      `user.name=${author}`,
+      '-c',
+      `user.email=${author.toLowerCase().replaceAll(' ', '-')}@example.invalid`,
+      'commit',
+      '--quiet',
+      '--message',
+      subject,
+    ],
+    { cwd: root },
+  );
+  return run('git', ['rev-parse', 'HEAD'], { cwd: root });
+}
+
+function writeOrdinaryLawCommit(root) {
+  mkdirSync(join(root, 'law', 'adr'), { recursive: true });
+  writeFileSync(join(root, 'law', 'adr', 'ordinary-policy.md'), '# Ordinary policy\n');
+  return commitFixture(root, 'docs: ordinary law policy');
+}
+
+function receipt(commit, overrides = {}) {
+  return {
+    forbidden_id: forbiddenId,
+    commit,
+    authorized_by: 'Owner',
+    reason: 'Authorizes the exact independently detected historical finding.',
+    ...overrides,
+  };
+}
+
+function writeLedger(root, authorizations) {
+  writeJson(join(root, authorizationLedgerPath), {
+    schemaVersion: '1.0.0',
+    authorizations,
+  });
+}
+
+function forbiddenReport(root, sinceRef, expectedStatus) {
+  const result = spawnSync(
+    join(repoRoot, 'node_modules', '.bin', 'devai'),
+    [
+      'check',
+      '--repo-root',
+      root,
+      '--only',
+      'forbidden-actions',
+      '--strict',
+      '--since-ref',
+      sinceRef,
+      '--format',
+      'json',
+    ],
+    { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
+  );
+  const output = result.stdout.trim() || result.stderr.trim();
+  if (!output) throw new Error('forbidden-action detector emitted no JSON');
+  const envelope = JSON.parse(output);
+  const report = envelope.ok
+    ? envelope.result.value
+    : (envelope.error?.context?.payload ?? JSON.parse(envelope.error.message));
+  if (result.status !== expectedStatus) {
+    throw new Error(
+      `forbidden-action detector exit: expected ${expectedStatus}, got ${result.status}; findings=${JSON.stringify(report.findings ?? [])}`,
+    );
+  }
+  return report;
+}
+
+function assertMutateFinding(report, label) {
+  if (!report.findings.some((finding) => finding.forbidden_id === forbiddenId)) {
+    throw new Error(`${label}: missing ${forbiddenId} finding`);
+  }
+}
+
+function runForbiddenActionTests() {
+  {
+    const fixture = createForbiddenFixture();
+    try {
+      writeOrdinaryLawCommit(fixture.root);
+      assertMutateFinding(forbiddenReport(fixture.root, fixture.base, 2), 'ordinary law commit');
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  }
+
+  for (const scenario of [
+    {
+      label: 'extra path',
+      mutate(root, target) {
+        writeLedger(root, [priorReceipt, secondPriorReceipt, receipt(target)]);
+        writeFileSync(join(root, 'extra.txt'), 'mixed commit\n');
+      },
+    },
+    {
+      label: 'modified prior receipt',
+      mutate(root, target) {
+        writeLedger(root, [
+          { ...priorReceipt, reason: 'Changed historical receipt bytes are forbidden.' },
+          secondPriorReceipt,
+          receipt(target),
+        ]);
+      },
+    },
+    {
+      label: 'deleted prior receipt',
+      mutate(root, target) {
+        writeLedger(root, [secondPriorReceipt, receipt(target)]);
+      },
+    },
+    {
+      label: 'reordered prior receipts',
+      mutate(root, target) {
+        writeLedger(root, [secondPriorReceipt, priorReceipt, receipt(target)]);
+      },
+    },
+    {
+      label: 'unmatched receipt',
+      mutate(root, target) {
+        writeLedger(root, [
+          priorReceipt,
+          secondPriorReceipt,
+          receipt(target),
+          receipt('b'.repeat(40)),
+        ]);
+      },
+    },
+    {
+      label: 'missing exact receipt',
+      mutate(root) {
+        writeLedger(root, [priorReceipt, secondPriorReceipt, receipt('d'.repeat(40))]);
+      },
+    },
+  ]) {
+    const fixture = createForbiddenFixture();
+    try {
+      const target = writeOrdinaryLawCommit(fixture.root);
+      scenario.mutate(fixture.root, target);
+      commitFixture(fixture.root, `chore: ${scenario.label}`);
+      assertMutateFinding(forbiddenReport(fixture.root, fixture.base, 2), scenario.label);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  }
+
+  for (const scenario of [
+    {
+      label: 'non-Owner receipt',
+      entry(target) {
+        return receipt(target, { authorized_by: 'Architect' });
+      },
+    },
+    {
+      label: 'malformed receipt',
+      entry() {
+        return receipt('abc123');
+      },
+    },
+    {
+      label: 'unknown receipt',
+      entry(target) {
+        return receipt(target, { forbidden_id: 'FORBID-UNKNOWN' });
+      },
+    },
+  ]) {
+    const fixture = createForbiddenFixture();
+    try {
+      const target = writeOrdinaryLawCommit(fixture.root);
+      writeLedger(fixture.root, [priorReceipt, secondPriorReceipt, scenario.entry(target)]);
+      commitFixture(fixture.root, `chore: ${scenario.label}`);
+      const report = forbiddenReport(fixture.root, fixture.base, 2);
+      assertEqual(
+        report.findings[0].forbidden_id,
+        'FORBIDDEN-AUTHORIZATION-INVALID',
+        scenario.label,
+      );
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  }
+
+  {
+    const fixture = createForbiddenFixture();
+    try {
+      const target = writeOrdinaryLawCommit(fixture.root);
+      writeLedger(fixture.root, [
+        priorReceipt,
+        secondPriorReceipt,
+        receipt(target),
+        receipt(target, { reason: 'Conflicts with the first receipt for the same pair.' }),
+      ]);
+      commitFixture(fixture.root, 'chore: conflicting receipts');
+      const report = forbiddenReport(fixture.root, fixture.base, 2);
+      assertEqual(
+        report.findings[0].forbidden_id,
+        'FORBIDDEN-AUTHORIZATION-INVALID',
+        'conflicting receipts',
+      );
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  }
+
+  {
+    const fixture = createForbiddenFixture();
+    try {
+      const target = writeOrdinaryLawCommit(fixture.root);
+      writeLedger(fixture.root, [priorReceipt, secondPriorReceipt, receipt(target)]);
+      const ownerReceipt = commitFixture(
+        fixture.root,
+        'chore(owner): record exact target authorization',
+        'DEVAI Owner',
+      );
+      writeLedger(fixture.root, [
+        priorReceipt,
+        secondPriorReceipt,
+        receipt(target),
+        receipt(ownerReceipt, {
+          reason: 'Closes the exact Owner receipt mutation through an Architect binding.',
+        }),
+      ]);
+      commitFixture(fixture.root, 'chore(architect): bind exact Owner receipt', 'DEVAI Architect');
+      const report = forbiddenReport(fixture.root, fixture.base, 0);
+      assertEqual(
+        report.findings.length,
+        0,
+        'target to Owner receipt to Architect binding findings',
+      );
+      assertIncludes(
+        JSON.stringify(report.authorization_receipts.applied),
+        `${forbiddenId}@${target}`,
+        'exact target authorization application',
+      );
+      assertIncludes(
+        JSON.stringify(report.authorization_receipts.applied),
+        `${forbiddenId}@${ownerReceipt}`,
+        'exact Owner receipt closure application',
+      );
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  }
+}
+
+function runDoctorAdopterPolicyPrecedenceTest() {
+  const exactVersion = '1.2.12';
+  const exactTarball =
+    'https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.2.12/04a8bb1edd4f85f8a3663be931634f4e077139b2';
+  const exactIntegrity =
+    'sha512-WXd1oRdBDenC/VOLFzquIdGZ5giBAT7DBPppdtUDfCUQKioflzL2xO1iOmYKf5E6G5dDuRCgmMDoUOoq1Mxsgw==';
+  const campaign = JSON.parse(
+    readFileSync(join(repoRoot, 'law', 'policy', 'release-campaign-1.1.1.json'), 'utf8'),
+  );
+  assertEqual(campaign.devai.version, exactVersion, 'campaign DEVAI version');
+  assertEqual(campaign.devai.tarball, exactTarball, 'campaign DEVAI tarball');
+  assertEqual(campaign.devai.integrity, exactIntegrity, 'campaign DEVAI integrity');
+  assertEqual(
+    campaign.devai.shasum,
+    '04a8bb1edd4f85f8a3663be931634f4e077139b2',
+    'campaign DEVAI shasum',
+  );
+
+  const rootManifest = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8'));
+  assertEqual(rootManifest.devDependencies['@aarusso-nyx/devai'], exactVersion, 'root DEVAI pin');
+  const lockfile = readFileSync(join(repoRoot, 'pnpm-lock.yaml'), 'utf8');
+  assertIncludes(lockfile, `'@aarusso-nyx/devai@${exactVersion}'`, 'lockfile DEVAI identity');
+  assertIncludes(lockfile, exactTarball, 'lockfile DEVAI tarball');
+  assertIncludes(lockfile, exactIntegrity, 'lockfile DEVAI integrity');
+
+  const installedManifest = JSON.parse(
+    readFileSync(join(repoRoot, 'node_modules', '@aarusso-nyx', 'devai', 'package.json'), 'utf8'),
+  );
+  assertEqual(installedManifest.version, exactVersion, 'installed DEVAI version');
+
+  const adopterPolicyPath = join(repoRoot, 'law', 'policy', 'devai-adoption.json');
+  const adopterPolicy = JSON.parse(readFileSync(adopterPolicyPath, 'utf8'));
+  assertEqual(
+    JSON.stringify(adopterPolicy.domains.client),
+    JSON.stringify(['COVERAGE', 'ERROR', 'FLOW', 'PRIVACY', 'RBAC']),
+    'accepted adopter domains',
+  );
+  const binding = JSON.parse(
+    readFileSync(join(repoRoot, '.devai', 'config', 'adopter-policy-binding.json'), 'utf8'),
+  );
+  assertEqual(binding.source_path, 'law/policy/devai-adoption.json', 'adopter policy source');
+  assertEqual(
+    createHash('sha256').update(readFileSync(adopterPolicyPath)).digest('hex'),
+    binding.source_digest_sha256,
+    'adopter policy source digest',
+  );
+  for (const [path, expectedDigest] of Object.entries(binding.materialized)) {
+    const actualDigest = createHash('sha256')
+      .update(readFileSync(join(repoRoot, path)))
+      .digest('hex');
+    assertEqual(actualDigest, expectedDigest, `adopter-policy materialization ${path}`);
+  }
+  const domains = JSON.parse(
+    readFileSync(join(repoRoot, '.devai', 'config', 'domains.json'), 'utf8'),
+  );
+  assertEqual(
+    JSON.stringify(domains.client),
+    JSON.stringify(adopterPolicy.domains.client),
+    'materialized adopter domains',
+  );
+
+  const result = spawnSync(
+    join(repoRoot, 'node_modules', '.bin', 'devai'),
+    ['doctor', '--repo-root', repoRoot, '--format', 'json'],
+    { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
+  );
+  if (!result.stdout.trim()) throw new Error('DEVAI Doctor emitted no JSON');
+  const envelope = JSON.parse(result.stdout);
+  const policyCheck = envelope.result?.value?.checks?.find(
+    (check) => check.name === 'policy-materialization-current',
+  );
+  assertEqual(result.status, 0, 'DEVAI Doctor exit');
+  assertEqual(policyCheck?.ok, true, 'Doctor adopter-policy precedence');
+  assertEqual(policyCheck?.info?.mismatches?.length, 0, 'Doctor adopter-policy mismatches');
+}
+
 async function main() {
   runVerifierTests();
   await runMutationEvidenceTests();
+  runForbiddenActionTests();
   await runLocalRcAdapterTests();
+  runDoctorAdopterPolicyPrecedenceTest();
 
   console.log('All scripts validated');
-  console.log('Tests: 3 passed, 3 total');
+  console.log('Tests: 5 passed, 5 total');
 }
 
 main().catch((error) => {
