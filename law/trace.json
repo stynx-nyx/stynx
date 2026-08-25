@@ -3652,8 +3652,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 83,
-      "assertion_digest_sha256": "3e2c24ac857cbf28996eb123405433d6f3ac63e0a1f9e8eebeefbf559bc0a3f5"
+      "assertion_count": 89,
+      "assertion_digest_sha256": "74213e915ff1d432730d7370df60b7ba7aaba126bbd661c84319c4656573060a"
     }
   ],
   "suites": {
