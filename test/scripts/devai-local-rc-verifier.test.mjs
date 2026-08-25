@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
@@ -12,6 +14,18 @@ const workflow = readFileSync(
   'utf8',
 );
 const contract = campaign.devai.verifier_materialization;
+const rootManifest = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8'));
+const lockfile = readFileSync(join(repoRoot, 'pnpm-lock.yaml'), 'utf8');
+const projectBinding = JSON.parse(
+  readFileSync(join(repoRoot, '.devai', 'config', 'project.json'), 'utf8'),
+);
+const installedDevaiRoot = join(repoRoot, 'node_modules', '@aarusso-nyx', 'devai');
+const installedManifest = JSON.parse(
+  readFileSync(join(installedDevaiRoot, 'package.json'), 'utf8'),
+);
+const installedVerifierPolicy = readFileSync(
+  join(installedDevaiRoot, 'dist', 'law', 'policy', 'trusted-local-rc-verifier-package.json'),
+);
 
 const provider = {
   package: '@aarusso-nyx/devai',
@@ -40,6 +54,7 @@ const verifier = {
   provenance: 'e6be4198ded731b9733c8e5c720fc5beb1ec8393a1eda01b76e6119b172d17c0',
   embeddedSourceCommit: '9e115014f8da5a16be526c7da5207bc0aae0801b',
   policyDigest: '9990ce69fee0bca529b6337334a403cb569a200ad508c00b08d9e60b563696a0',
+  workflowDigest: '96f18933cbe3ac2b93637d81a27009075e8d4043b4dd8b14bae67003775893b2',
 };
 
 const evidenceBins = {
@@ -100,24 +115,27 @@ test('generated workflow requires the dedicated package token without a GitHub t
   assert.match(permissions, /^\s{2}packages: read$/mu);
   assert.match(permissions, /^\s{2}checks: write$/mu);
   assert.ok(step.includes('NODE_AUTH_TOKEN: ${{ secrets.PACKAGES_READ_TOKEN }}'));
-  assert.match(step, /test\s+-n\s+"\$\{NODE_AUTH_TOKEN(?::-)?\}"/u);
-  assert.doesNotMatch(step, /github\.token|GITHUB_TOKEN|\|\|/u);
+  assert.match(step, /set\s+-euo\s+pipefail/u);
+  assert.match(step, /test\s+-n\s+["']?\$(?:\{NODE_AUTH_TOKEN(?::-)?\}|NODE_AUTH_TOKEN)["']?/u);
+  assert.doesNotMatch(step, /github\.token|GITHUB_TOKEN/u);
+  assert.doesNotMatch(step, /NODE_AUTH_TOKEN[^\n]*\|\|/u);
   assert.doesNotMatch(workflow, /PACKAGES_READ_TOKEN[^\n]*github\.token/u);
 });
 
 test('generated workflow keeps provider 1.2.13 distinct from verifier package 1.2.12', () => {
   const step = materializationStep();
+  assert.equal(rootManifest.devDependencies[provider.package], provider.version);
+  assert.equal(projectBinding.devai_version, provider.version);
+  assert.equal(installedManifest.name, provider.package);
+  assert.equal(installedManifest.version, provider.version);
+  assertContainsAll(
+    lockfile,
+    [provider.version, provider.tarball, provider.integrity],
+    'provider package lock',
+  );
   assertContainsAll(
     step,
     [
-      provider.version,
-      provider.tarball,
-      provider.shasum,
-      provider.sha256,
-      provider.integrity,
-      provider.sourceCommit,
-      provider.sourceTree,
-      provider.signedTagObject,
       verifier.version,
       verifier.tarball,
       verifier.shasum,
@@ -125,15 +143,18 @@ test('generated workflow keeps provider 1.2.13 distinct from verifier package 1.
       verifier.sourceCommit,
       verifier.sourceTree,
     ],
-    'provider and verifier distributions',
+    'independent verifier distribution',
   );
+  assert.doesNotMatch(step, /1\.2\.13|6e766187269db2e5f494786adc7c00c62acad006/u);
 });
 
 test('generated workflow rejects mutable package selectors and unpinned distribution sources', () => {
   const step = materializationStep();
   assert.doesNotMatch(step, /@latest|\^1\.|~1\.|\b1\.2\.x\b|dist-tags|npm\s+view/u);
   assert.ok(step.includes(verifier.tarball));
-  assert.ok(step.includes(provider.tarball));
+  assert.equal(rootManifest.devDependencies[provider.package], provider.version);
+  assert.match(lockfile, /specifier:\s+1\.2\.13/u);
+  assert.ok(lockfile.includes(provider.tarball));
   assert.match(step, /https:\/\/npm\.pkg\.github\.com/u);
   assert.doesNotMatch(step, /https:\/\/github\.com\/.+\/archive\//u);
 });
@@ -156,7 +177,13 @@ test('generated workflow validates archives before extraction and rejects unsafe
   const validationPrefix = step.slice(0, extractionIndex);
   assertContainsAll(
     validationPrefix,
-    ['absolute-path', 'path-traversal', 'symlink', 'hardlink', 'special-file'],
+    [
+      'DEVAI_VERIFIER_ARCHIVE_ABSOLUTE_PATH_INVALID',
+      'DEVAI_VERIFIER_ARCHIVE_PATH_TRAVERSAL_INVALID',
+      'DEVAI_VERIFIER_ARCHIVE_SYMLINK_INVALID',
+      'DEVAI_VERIFIER_ARCHIVE_HARDLINK_INVALID',
+      'DEVAI_VERIFIER_ARCHIVE_SPECIAL_FILE_INVALID',
+    ],
     'pre-extraction archive validation',
   );
 });
@@ -178,10 +205,9 @@ test('generated workflow verifies exact provenance, population, file digests, an
   assertContainsAll(
     step,
     [
-      verifier.policyDigest,
       verifier.provenance,
       verifier.embeddedSourceCommit,
-      'PAYLOAD_FILE_COUNT=21',
+      'provenance.files.length !== 21',
       'DEVAI_VERIFIER_PACKAGE_POPULATION_INVALID',
       'DEVAI_VERIFIER_PACKAGE_FILE_DIGEST_INVALID',
       'DEVAI_VERIFIER_PACKAGE_PROVENANCE_INVALID',
@@ -196,21 +222,47 @@ test('generated workflow verifies exact provenance, population, file digests, an
 
 test('external provenance duplicate is required, matched, and never the sole trust root', () => {
   const step = materializationStep();
+  const committedTrust = `test "$actual_provenance_sha256" = "${verifier.provenance}"`;
+  const externalDuplicate = 'test "$actual_provenance_sha256" = "$VERIFIER_PROVENANCE_SHA256"';
+  const committedTrustIndex = step.indexOf(committedTrust);
+  const externalDuplicateIndex = step.indexOf(externalDuplicate);
+  assert.notEqual(committedTrustIndex, -1);
+  assert.notEqual(externalDuplicateIndex, -1);
+  assert.ok(committedTrustIndex < externalDuplicateIndex);
   assert.ok(step.includes('DEVAI_LEDGER_VERIFIER_PROVENANCE_SHA256'));
-  assert.ok(step.includes(verifier.provenance));
-  assert.match(step, /DEVAI_LEDGER_VERIFIER_PROVENANCE_SHA256[^\n]*e6be4198/u);
   assert.equal(contract.external_duplicate.required, true);
   assert.equal(contract.external_duplicate.sole_trust_root, false);
 });
 
-test('generated workflow carries the canonical provider policy binding for byte-drift detection', () => {
-  assertContainsAll(
-    workflow,
+test('installed provider policy and supported Doctor bind the exact generated workflow bytes', () => {
+  const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
+  assert.equal(rootManifest.devDependencies[provider.package], provider.version);
+  assert.ok(lockfile.includes(provider.tarball));
+  assert.equal(installedManifest.version, provider.version);
+  assert.equal(digest(installedVerifierPolicy), verifier.policyDigest);
+  assert.equal(digest(workflow), verifier.workflowDigest);
+
+  const doctor = spawnSync(
+    process.execPath,
     [
-      'Generated by DEVAI v1.2.13',
-      'dist/law/policy/trusted-local-rc-verifier-package.json',
-      verifier.policyDigest,
+      join(installedDevaiRoot, 'dist', 'runtime', 'index', 'bin.js'),
+      'doctor',
+      '--repo-root',
+      repoRoot,
+      '--format',
+      'json',
     ],
-    'generated workflow provenance',
+    { cwd: repoRoot, encoding: 'utf8' },
   );
+  assert.equal(doctor.status, 0, doctor.stderr);
+  const result = JSON.parse(doctor.stdout);
+  assert.equal(result.ok, true);
+  assert.equal(result.result.verdict, 'pass');
+  const checks = result.result.value.checks;
+  assert.deepEqual(checks.find(({ name }) => name === 'devai-version-match')?.info, {
+    pinned: provider.version,
+    running: provider.version,
+    provenance: { source: 'npm-package' },
+  });
+  assert.equal(checks.find(({ name }) => name === 'trusted-local-rc-boundary')?.ok, true);
 });
