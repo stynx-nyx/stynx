@@ -3652,8 +3652,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 60,
-      "assertion_digest_sha256": "5de6b1b8565a9dca5038ead6269063d98bae47ddc513c705cda89a97156ac5b1"
+      "assertion_count": 66,
+      "assertion_digest_sha256": "e2fcaa0419fcb8954f20707ea17def3a713e59aeb42ffc6f33143f02ac1e1664"
     },
     {
       "path": "test/scripts/release-version-policy.test.mjs",
