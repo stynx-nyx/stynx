@@ -12,7 +12,7 @@ tags: [stynx, release, semver, registry, packages]
 > **Controlling amendment (2026-08-24):**
 > [`2026-08-24-stynx-1.1.1-campaign-controls.md`](2026-08-24-stynx-1.1.1-campaign-controls.md)
 > establishes the current 44-package release unit, 38-package mutation roster, exact six-package
-> first-publication boundary, and authenticated DEVAI 1.2.12 preparation dependency. Historical
+> first-publication boundary, and authenticated DEVAI 1.2.13 preparation dependency. Historical
 > 38- and 40-package observations below remain evidence only and do not govern the current release.
 
 **Authority:** Architect, implementing the Owner's superseding version-line decision of
