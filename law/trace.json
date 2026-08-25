@@ -885,7 +885,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001"],
       "lifecycle": "supported",
       "assertion_count": 26,
-      "assertion_digest_sha256": "0de2cee4e9330bc9ccae2edcd8f20a98e81e5172b74d487234cf25461358cb76"
+      "assertion_digest_sha256": "de938d12fa7d21e98ec5e725d8d1693578189808a7c0d402fab1ca1e64df096c"
     },
     {
       "path": "packages-web/angular-profile/test/profile-service-contract-depth.spec.ts",
@@ -893,7 +893,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001"],
       "lifecycle": "supported",
       "assertion_count": 30,
-      "assertion_digest_sha256": "68d89234e412a67594ec14f970c11dac644745dda04b1979ad1c5cfac419eb98"
+      "assertion_digest_sha256": "e9e85cba333fb4f0151d8882e4377ba2ce2437d765b1ce06679a6164e756d67c"
     },
     {
       "path": "packages-web/angular-sessions/test/active-sessions-contract-depth.spec.ts",
@@ -2131,7 +2131,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 34,
-      "assertion_digest_sha256": "9c8cf3ab6384021a9d495c2b1cf875d164897837fcf3300123cb300c0e24d90d"
+      "assertion_digest_sha256": "bb8c03564e710883f67fdeeefd7b3fffa8fae91d52f973ce44b2ff29ca55bd00"
     },
     {
       "path": "packages/logging/test/integration/logging.module.spec.ts",
@@ -2467,7 +2467,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001", "INV-RBAC-001"],
       "lifecycle": "supported",
       "assertion_count": 58,
-      "assertion_digest_sha256": "871af6441e735c28eff044af93bdd46c9ab948b35d301eb7a5f9da47bee2ffe9"
+      "assertion_digest_sha256": "ce18fb2346ea85d552167bffc1f1f3757fd65e427c594ca259e9031ed9fd03a9"
     },
     {
       "path": "packages/sessions/test/unit/session-control-storage.contract.spec.ts",
@@ -3501,7 +3501,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
       "assertion_count": 19,
-      "assertion_digest_sha256": "9fff7f4e2e66ee4b51d182e0263bd1a770c548f857cb20dda3e9fb4ec3eb71ba"
+      "assertion_digest_sha256": "a618c040684bc473304049f09347c0801b8642ca0473b08bd853173752985d45"
     },
     {
       "path": "scripts/lib/publishable-packages.spec.mjs",
@@ -3541,7 +3541,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 27,
-      "assertion_digest_sha256": "10b4d9abf019281d94cc47b45407b22f622df24aff74d931786a1eead7145e00"
+      "assertion_digest_sha256": "adbcf9447411c93b0c0dac0936b6f68003bccbd9c863e5c7a7fc4f4825288dce"
     },
     {
       "path": "packages/jobs/test/unit/worker.spec.ts",
@@ -3565,7 +3565,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 47,
-      "assertion_digest_sha256": "cf3124b2e822f1629e21f1102ec13f71550a0ce8b4e1941958e34615ac4fa468"
+      "assertion_digest_sha256": "737709a2be8865a65993959434ff32aa1f4f15581d00a5c0f1188890e11d123c"
     },
     {
       "path": "packages/notifications/test/unit/push-stub.spec.ts",
@@ -3645,7 +3645,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 86,
-      "assertion_digest_sha256": "7ca97b2c04fe39267d3b5d479821a439d26d580c86c4fb54a6dfbce030c22fd3"
+      "assertion_digest_sha256": "f8137669099054ccca2d67a9ca6ad2beab0a1d1136004e4c6925e880ff3a5ee6"
     },
     {
       "path": "test/scripts/release-version-policy.test.mjs",
