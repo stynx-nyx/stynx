@@ -80,7 +80,7 @@
     "i18n:extract": "node tools/i18n-extract.mjs --write"
   },
   "devDependencies": {
-    "@aarusso-nyx/devai": "1.2.0",
+    "@aarusso-nyx/devai": "1.2.12",
     "@angular-eslint/eslint-plugin": "21.4.0",
     "@angular-eslint/eslint-plugin-template": "21.4.0",
     "@angular-eslint/template-parser": "21.4.0",
