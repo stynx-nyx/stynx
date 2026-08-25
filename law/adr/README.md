@@ -7,6 +7,7 @@ shape package boundaries, generated diagnostics, or adoption policy.
 
 - [Mobile/offline E6 promotion from TEAT](ADR-MOBILE-OFFLINE-0001-teat-promotion.md)
 - [Canonical 1.x package line and registry anomaly correction](ADR-VERSION-LINE-0001.md)
+- [STYNX 1.1.1 campaign control contract](2026-08-24-stynx-1.1.1-campaign-controls.md)
 - [CI economy, release authority, and database isolation](2026-08-24-ci-economy.md)
 - [ADR-WORKLIST-0001 — Flow and worklist boundary, distribution, and SLA clocks](ADR-WORKLIST-0001-flow-boundary-distribution-sla.md)
 - [ADR-JOBS-0001 — Postgres-backed scheduler and worker runtime for `@stynx-nyx/jobs`](ADR-JOBS-0001-postgres-scheduler-worker.md)
