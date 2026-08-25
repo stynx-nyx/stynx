@@ -216,4 +216,46 @@ describe('IntegrationAdapter', () => {
 
     await expect(adapter.execute({})).rejects.toThrow('Integration disabled-provider failed');
   });
+
+  it('uses the default retry delay and normalizes a terminal non-Error rejection', async () => {
+    let attempts = 0;
+    const adapter = new IntegrationAdapter({
+      name: 'default-delay-provider',
+      request: async () => {
+        attempts += 1;
+        if (attempts === 1) throw 'retry';
+        throw 'terminal';
+      },
+      parseResponse: (raw) => raw,
+      retryPolicy: { maxAttempts: 2, baseDelayMs: 0 },
+    });
+
+    await expect(adapter.execute({})).rejects.toThrow(
+      'Integration default-delay-provider failed: terminal',
+    );
+    expect(attempts).toBe(2);
+  });
+
+  it('keeps a timestamp-less open circuit closed to requests before half-open time', async () => {
+    const breaker = new InMemoryCircuitBreaker(
+      {
+        failureThreshold: 1,
+        openAfterMs: 0,
+        halfOpenAfterMs: 10,
+      },
+      () => 0,
+    );
+    const internal = breaker as unknown as {
+      snapshots: Map<string, { key: string; state: 'open'; failures: number }>;
+    };
+    internal.snapshots.set('missing-timestamp', {
+      key: 'missing-timestamp',
+      state: 'open',
+      failures: 1,
+    });
+
+    await expect(breaker.beforeRequest('missing-timestamp')).rejects.toThrow(
+      'Circuit breaker is open for missing-timestamp',
+    );
+  });
 });

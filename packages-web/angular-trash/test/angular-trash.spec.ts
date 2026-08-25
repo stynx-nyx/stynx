@@ -311,6 +311,48 @@ describe('@stynx-nyx/angular-trash', () => {
     expect(client.post).toHaveBeenCalledWith('/trash/bulk-hard-delete', { kind: 'document', ids: ['doc-3'] });
   });
 
+  it('normalizes a single-kind SDK response without relying on optional wire fields', async () => {
+    const responses: unknown[] = [
+      {
+        items: [{
+          trashId: 'trash-fallback',
+          name: 'Fallback name',
+          deletedAt: '2026-05-18T00:00:00.000Z',
+          canHardDelete: false,
+          retentionUntil: '2026-05-25T00:00:00.000Z',
+        }],
+      },
+      {},
+    ];
+    const client = {
+      get: vi.fn(async () => responses.shift()),
+      post: vi.fn(async () => undefined),
+    } as unknown as StynxSdkClient;
+    const adapter = Injector.create({
+      providers: [
+        { provide: STYNX_TRASH_CLIENT, useValue: client },
+        { provide: STYNX_TRASH_OPTIONS, useValue: { kinds: [{ kind: 'record', label: 'Records' }] } },
+        SdkTrashAdapter,
+      ],
+    }).get(SdkTrashAdapter);
+
+    await expect(adapter.list('document', { pageIndex: 0, pageSize: 10, sort: 'deleted_at_desc' }))
+      .resolves.toEqual({
+        items: [{
+          id: 'trash-fallback',
+          kind: 'document',
+          label: 'Fallback name',
+          deletedAt: '2026-05-18T00:00:00.000Z',
+          deletedBy: null,
+          autoPurgeAt: '2026-05-25T00:00:00.000Z',
+          canHardDelete: false,
+        }],
+        total: 1,
+      });
+    await expect(adapter.list('*', { pageIndex: 0, pageSize: 10, sort: 'deleted_at_desc' }))
+      .resolves.toEqual({ items: [], total: 0 });
+  });
+
   it('supports provider-backed components, tabs, filters, bulk actions, and retention countdowns', async () => {
     vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-05-19T00:00:00.000Z'));
     const items: StynxTrashItem[] = [
@@ -545,11 +587,17 @@ describe('@stynx-nyx/angular-trash', () => {
       restore: vi.fn(async () => undefined),
     };
     const component = createComponent(
-      createSession(),
+      {
+        hasAllPermissions: () => true,
+        snapshot: () => ({ sid: 'session-1', claims: null }),
+      },
       { push: vi.fn() },
       adapter,
     );
     component.resource = '' as never;
+    component.kinds = [{ kind: 'document', label: 'Documents' }];
+
+    expect(component.activeKind()).toBe('document');
     component.kinds = [];
 
     expect(component.activeKind()).toBe('record');
@@ -564,6 +612,14 @@ describe('@stynx-nyx/angular-trash', () => {
     await component.bulkRestore();
     await component.bulkHardDelete();
     expect(adapter.restore).not.toHaveBeenCalledTimes(1);
+
+    await component.toggleFilter('by_me');
+    expect(adapter.list).toHaveBeenLastCalledWith('record', {
+      pageIndex: 0,
+      pageSize: 10,
+      sort: 'deleted_at_desc',
+      deletedBy: 'session-1',
+    });
 
     const missingAdapter = createComponent(createSession(), { push: vi.fn() });
     expect(() => missingAdapter.activeKind()).not.toThrow();

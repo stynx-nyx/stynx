@@ -132,4 +132,31 @@ describe('FeatureFlagsService', () => {
       await rm(directory, { recursive: true, force: true });
     }
   });
+
+  it('falls back for explicitly undefined tenant and environment overrides', async () => {
+    const provider = new InMemoryFeatureFlagProvider({
+      flags: {
+        'billing.undefined-overrides': {
+          default: 'global',
+          tenants: { 'tenant-a': undefined },
+          environments: { staging: undefined },
+        },
+        'billing.no-overrides': { default: 'global' },
+      },
+    });
+
+    await expect(
+      provider.evaluate('billing.undefined-overrides', { tenantId: 'tenant-a' }, 'fallback'),
+    ).resolves.toMatchObject({ value: 'fallback', source: 'tenant' });
+    await expect(
+      provider.evaluate('billing.undefined-overrides', { environment: 'staging' }, 'fallback'),
+    ).resolves.toMatchObject({ value: 'fallback', source: 'environment' });
+    await expect(
+      provider.evaluate(
+        'billing.no-overrides',
+        { tenantId: 'tenant-a', environment: 'staging' },
+        'fallback',
+      ),
+    ).resolves.toMatchObject({ value: 'global', source: 'global' });
+  });
 });

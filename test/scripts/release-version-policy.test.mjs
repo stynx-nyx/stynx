@@ -27,6 +27,7 @@ import {
   unifiedRebaselineTarget,
 } from '../../scripts/lib/unified-rebaseline.mjs';
 import { discoverMutationRoster } from '../../scripts/lib/mutation-roster.mjs';
+import { createVitestConfig } from '../../tools/repo-config/vitest.base.mjs';
 
 const repoRoot = resolve(import.meta.dirname, '..', '..');
 const anomalyPolicy = JSON.parse(
@@ -518,6 +519,29 @@ test('coverage is executable and reports four metrics for every one of the 44 pa
     /^\s*'src\/index\.ts',\s*$/mu,
     'executable package entry points cannot be blanket-excluded from coverage',
   );
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'stynx-coverage-classifier-'));
+  try {
+    const cases = [
+      ['pure-barrel', "export { value } from './value';\n", true],
+      ['runtime-declaration', 'export const value = 1;\n', false],
+      ['runtime-initializer', "export { value } from './value';\ninitialize();\n", false],
+      ['invalid-syntax', 'export {\n', false],
+      ['empty-entrypoint', '', false],
+    ];
+    for (const [name, source, excluded] of cases) {
+      const packageDir = join(fixtureRoot, name);
+      mkdirSync(join(packageDir, 'src'), { recursive: true });
+      writeFileSync(join(packageDir, 'src', 'index.ts'), source);
+      const config = createVitestConfig({ packageDir, packageName: `fixture-${name}` });
+      assert.equal(
+        config.test.coverage.exclude.includes('src/index.ts'),
+        excluded,
+        `${name}: executable, empty, or unparseable entrypoints must remain coverage-bearing`,
+      );
+    }
+  } finally {
+    rmSync(fixtureRoot, { recursive: true, force: true });
+  }
   assert.match(coverage, /discoverPublishablePackages/u);
   for (const metric of ['branches', 'functions', 'lines', 'statements']) {
     assert.match(coverage, new RegExp(metric, 'u'));

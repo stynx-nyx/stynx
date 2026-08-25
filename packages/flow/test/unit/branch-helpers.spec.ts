@@ -222,6 +222,41 @@ describe('FlowAnalyticsService', () => {
     expect(sql).toContain('where r.graph_id = $1::uuid and s.code = $2 and r.status = $3');
     expect(params).toEqual([SCOPE, 'main', 'active', 50, 0]);
   });
+
+  it('assembles filtered dashboard aggregates and completion ratios', async () => {
+    const { db, trx } = makeDb([
+      [{ total: '5' }],
+      [{ p50_seconds: '10.4', p95_seconds: '42.6' }],
+      [
+        { window: 'last7Days', completed: '3', total: '4' },
+        { window: 'last30Days', completed: '0', total: '0' },
+      ],
+      [{ total: '2' }],
+    ]);
+
+    await expect(new FlowAnalyticsService(db as never).dashboard({ scopeId: SCOPE, scopeCode: 'main' }))
+      .resolves.toEqual({
+        openTasks: 5,
+        cycleTime: { p50Seconds: 10, p95Seconds: 43 },
+        completionRate: { last7Days: 0.75, last30Days: 0 },
+        slaBreaches: 2,
+      });
+    expect(trx.query.mock.calls.every(([, values]) => values[0] === SCOPE && values[1] === 'main')).toBe(true);
+    expect(trx.query.mock.calls[0]?.[0]).toContain("and t.status = 'open'");
+  });
+
+  it('defaults absent dashboard rows and unfiltered windows to zero', async () => {
+    const { db, trx } = makeDb([[], [], [], []]);
+
+    await expect(new FlowAnalyticsService(db as never).dashboard()).resolves.toEqual({
+      openTasks: 0,
+      cycleTime: { p50Seconds: 0, p95Seconds: 0 },
+      completionRate: { last7Days: 0, last30Days: 0 },
+      slaBreaches: 0,
+    });
+    expect(trx.query.mock.calls[0]?.[0]).toContain("where t.status = 'open'");
+    expect(trx.query.mock.calls.every(([, values]) => Array.isArray(values) && values.length === 0)).toBe(true);
+  });
 });
 
 describe('FlowPolicyService', () => {

@@ -346,6 +346,14 @@ describe('@stynx-nyx/angular-storage', () => {
 
     expect(component.status()).toBe('errored');
     expect(component.errorMessage()).toBe('Download failed with status 503');
+
+    const nonErrorFailure = createDownloadComponent({
+      getSignedUrl: vi.fn(async () => Promise.reject('offline')),
+    });
+    nonErrorFailure.documentId = 'doc-offline';
+    await nonErrorFailure.download();
+    expect(nonErrorFailure.status()).toBe('errored');
+    expect(nonErrorFailure.errorMessage()).toBe('Download failed');
   });
 
   it('uses explicit download filenames before encoded headers and URL fallbacks', async () => {
@@ -1121,6 +1129,29 @@ describe('@stynx-nyx/angular-storage', () => {
     expect(component.status).toBe('idle');
   });
 
+  it('ignores enabled drop events that do not contain a file', async () => {
+    const component = createUploadComponent(
+      {
+        initiate: vi.fn(async () => {
+          throw new Error('empty drops must not initiate uploads');
+        }),
+        complete: vi.fn(async () => ({ id: 'doc-drop', scanStatus: 'completed' as const })),
+      },
+      { push: vi.fn() },
+      { upload: vi.fn(async () => undefined) },
+    );
+    const event = createDragEvent();
+    component.enableDragAndDrop = true;
+    component.isDragActive = true;
+
+    await component.onDrop(event);
+
+    expect(event.preventDefault).toHaveBeenCalledTimes(1);
+    expect(event.stopPropagation).toHaveBeenCalledTimes(1);
+    expect(component.isDragActive).toBe(false);
+    expect(component.status).toBe('idle');
+  });
+
   it('calls the document API endpoints with normalized base URLs', async () => {
     const calls: Array<{ method: string; url: string; body?: unknown; options?: unknown }> = [];
     const http = {
@@ -1158,11 +1189,13 @@ describe('@stynx-nyx/angular-storage', () => {
     });
     await service.complete('doc-1');
     await service.getDownloadUrl('doc-1');
+    await service.getSignedUrl('doc-1');
     await service.list('records');
 
     expect(calls.map((call) => call.url)).toEqual([
       'https://api.example.test/documents',
       'https://api.example.test/documents/doc-1/complete',
+      'https://api.example.test/documents/doc-1/download',
       'https://api.example.test/documents/doc-1/download',
       'https://api.example.test/documents',
     ]);
