@@ -633,7 +633,7 @@ describe('@stynx-nyx/angular-trash', () => {
     const anonymous = createComponent(
       {
         hasAllPermissions: () => false,
-        snapshot: () => ({ claims: { sub: 42 } }),
+        snapshot: () => ({ sid: null, claims: { sub: 42 } }),
       },
       { push: vi.fn() },
       adapter,
