@@ -751,6 +751,12 @@
       "commit": "4b1172f14c6c2e62056fa18fd90edd511b1a07fd",
       "authorized_by": "Owner",
       "reason": "Authorizes the exact PR A preparation workflow changes that make explicit hardening dispatch cover every k6 scenario and preserve the ordered publication plan and per-package receipts required by campaign Decisions 7 and 9, without authorizing workflow dispatch, push, merge, publication, tags, registry mutation, or repository-settings changes."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "4a983c7ccaf629f071c09f67c6bb75fed0cc7a1c",
+      "authorized_by": "Owner",
+      "reason": "Closes the receipt-ledger mutation created while recording the Owner-reviewed authorization for the exact PR A preparation workflow evidence, without broadening preparation authority or authorizing workflow dispatch, push, merge, publication, tags, registry mutation, or repository-settings changes."
     }
   ]
 }
