@@ -9,6 +9,7 @@ import {
   releaseContextConstants,
   ReleaseContextError,
 } from './lib/release-context.mjs';
+import { discoverMutationRoster } from './lib/mutation-roster.mjs';
 import { collectPublicPackages } from './lib/release-version-policy.mjs';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -95,6 +96,29 @@ function versionRebaselineValid(baseCommit, versionCommit, changes) {
   );
 }
 
+function prAPreparation(baseCommit, headCommit) {
+  const campaignPolicy = readGitJson(headCommit, 'law/policy/release-campaign-1.1.1.json');
+  if (git(['rev-parse', `${baseCommit}^{tree}`]) !== campaignPolicy?.baseline?.tree) {
+    return undefined;
+  }
+
+  const rootManifest = readGitJson(headCommit, 'package.json');
+  const packageVersions = collectPublicPackages(repoRoot).map(({ manifestPath }) => {
+    const manifest = readGitJson(headCommit, relative(repoRoot, manifestPath));
+    return { name: manifest.name, version: manifest.version };
+  });
+  const { roster: mutationRoster, failures: mutationFailures } = discoverMutationRoster(repoRoot);
+  if (mutationFailures.length > 0) return undefined;
+
+  return {
+    campaignPolicy,
+    rootVersion: rootManifest.version,
+    packageVersions,
+    mutationPackageNames: mutationRoster.map(({ packageName }) => packageName).sort(),
+    changes: parseChanges(baseCommit, headCommit),
+  };
+}
+
 function releaseContext() {
   const baseCommit = git(['rev-parse', 'origin/main']);
   // pull_request workflows are checked out at GitHub's synthetic merge commit.
@@ -131,6 +155,7 @@ function releaseContext() {
     followUpChanges: marker ? parseChanges(marker.sha, headCommit) : [],
     rootManifestFollowUpValid: marker ? rootManifestFollowUpValid(marker.sha, rebaseline) : false,
     versionRebaselineValid: rebaseline,
+    prAPreparation: marker ? undefined : prAPreparation(baseCommit, headCommit),
   });
 }
 
@@ -152,9 +177,17 @@ function prepareReleaseStatus() {
   const statusPath = resolve(repoRoot, '.changeset/status.json');
   mkdirSync(dirname(statusPath), { recursive: true });
   writeFileSync(statusPath, `${JSON.stringify({ changesets: [], releases: [] }, null, 2)}\n`);
-  console.log(
-    `[release-preparation] release status is not applicable to version candidate ${context.versionCommit}`,
-  );
+  if (context.kind === 'pr-a-preparation') {
+    console.log(
+      `[release-preparation] ${context.policyId} PR A is non-promoting: ` +
+        `${context.packageCount}/${context.mutationCount}/${context.firstPublicationCount}; ` +
+        `version projection ${context.versionProjection}`,
+    );
+  } else {
+    console.log(
+      `[release-preparation] release status is not applicable to version candidate ${context.versionCommit}`,
+    );
+  }
 }
 
 if (process.argv.includes('--release-status')) {
