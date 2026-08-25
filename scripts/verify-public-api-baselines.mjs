@@ -9,9 +9,13 @@ const repoRoot = process.cwd();
 const write = process.argv.includes('--write');
 const baselinePath = resolve(repoRoot, 'docs/framework/contracts/public-api-baselines.json');
 const packageSpecs = discoverPublishablePackages(repoRoot);
+const runningInsideTestGraph =
+  process.env.npm_lifecycle_event === 'test' && typeof process.env.TURBO_HASH === 'string';
 
-for (const spec of packageSpecs) {
-  rmSync(resolve(repoRoot, spec.dir, 'dist'), { recursive: true, force: true });
+if (!runningInsideTestGraph) {
+  for (const spec of packageSpecs) {
+    rmSync(resolve(repoRoot, spec.dir, 'dist'), { recursive: true, force: true });
+  }
 }
 run('pnpm', ['build'], repoRoot);
 
