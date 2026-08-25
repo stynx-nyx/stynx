@@ -575,14 +575,14 @@ test('public API baselines exactly cover 44 packages including jobs, notificatio
   assert.equal(check.status, 0, check.stderr || check.stdout);
 });
 
-test('trace closes 481/366/115/14=495 with all 12 mappings and current assertion digests', () => {
+test('trace closes 489/374/115/14=503 with all 12 mappings and current assertion digests', () => {
   const check = runNode('scripts/verify-devai-trace.mjs');
   const summary = JSON.parse(check.stdout);
-  assert.equal(summary.tracked_test_paths, 481);
-  assert.equal(summary.executable_tests, 366);
+  assert.equal(summary.tracked_test_paths, 489);
+  assert.equal(summary.executable_tests, 374);
   assert.equal(summary.fixtures_and_support, 115);
   assert.equal(summary.scripts_and_config_attestations, 14);
-  assert.equal(summary.governed_test_surface, 495);
+  assert.equal(summary.governed_test_surface, 503);
   assert.deepEqual(summary.failures, []);
   assert.equal(check.status, 0, check.stderr || check.stdout);
 });
