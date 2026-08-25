@@ -459,7 +459,7 @@ describe('notification service and adapter depth', () => {
         { channel: 'push', status: 'FAILED' },
       ],
     });
-    expect(random).toHaveBeenCalled();
+    expect(random).toHaveBeenCalledWith();
     expect(logger.log).toHaveBeenCalledTimes(4);
     const pushDb = databaseWith(async (sql) =>
       sql.includes('select d.id')

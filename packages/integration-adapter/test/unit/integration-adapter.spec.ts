@@ -103,7 +103,7 @@ describe('IntegrationAdapter', () => {
   it('persists and retrieves explicit idempotency values', async () => {
     const store = new InMemoryIdempotencyStore<number>();
 
-    await expect(store.get('missing')).resolves.toBeUndefined();
+    await expect(store.get('missing')).resolves.toEqual(undefined);
     await store.set('answer', 42);
     await expect(store.get('answer')).resolves.toBe(42);
   });

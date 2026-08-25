@@ -187,7 +187,7 @@ describe('profile and preferences form behavior', () => {
   });
 
   it('saves legacy and wire preferences, preserves existing values, and surfaces provider errors', () => {
-    const toast = { push: vi.fn() };
+    const _toast = { push: vi.fn() };
     const banner = { clear: vi.fn(), show: vi.fn() };
     const service = {
       preferences: vi.fn<() => StynxPreferences | undefined>(() => preferences),
@@ -230,7 +230,11 @@ describe('profile and preferences form behavior', () => {
     service.setPreferences.mockReturnValue(throwError(() => new Error('save failed')));
     component.submit();
     expect(component.status()).toBe('error');
-    expect(banner.show).toHaveBeenCalled();
+    expect(banner.show).toHaveBeenCalledWith({
+      message: 'profile.preferences.error.saveFailed',
+      tone: 'error',
+      code: 'profile.preferences_save_failed',
+    });
     component.ngOnDestroy();
 
     const untranslated = runInInjectionContext(
@@ -265,7 +269,11 @@ describe('profile and preferences form behavior', () => {
     component.form.setValue({ name: 'Ada', email: 'ada@example.test', locale: 'en-US' });
     component.submit();
     expect(component.status()).toBe('error');
-    expect(banner.show).toHaveBeenCalled();
+    expect(banner.show).toHaveBeenCalledWith({
+      message: 'profile.form.error.saveFailed',
+      tone: 'error',
+      code: 'profile.save_failed',
+    });
     const originalWindow = globalThis.window;
     vi.stubGlobal('window', undefined);
     expect(component.confirmDiscardChanges()).toBe(true);
@@ -289,10 +297,10 @@ describe('unsaved changes beforeunload behavior', () => {
       preventDefault: vi.fn(),
       returnValue: undefined,
     } as unknown as BeforeUnloadEvent & { preventDefault: ReturnType<typeof vi.fn> };
-    expect(listener(event)).toBeUndefined();
+    expect(listener(event)).toEqual(undefined);
     dirty = true;
     expect(listener(event)).toBe('');
-    expect(event.preventDefault).toHaveBeenCalled();
+    expect(event.preventDefault).toHaveBeenCalledWith();
     addEventListener.mockRestore();
 
     const originalWindow = globalThis.window;

@@ -165,7 +165,7 @@ describe('@stynx-nyx/angular-profile W04 profile service contract depth', () => 
         headers: { 'If-Match': '"0"' },
       },
     );
-    expect(service.profile()).toBeNull();
+    expect(service.profile()).toEqual(null);
   });
 
   it('uploads avatars through storage and updates an existing profile', async () => {
@@ -227,7 +227,7 @@ describe('@stynx-nyx/angular-profile W04 profile service contract depth', () => 
     });
     service.profile.set(null);
     await firstValueFrom(service.uploadAvatar(file));
-    expect(service.profile()).toBeNull();
+    expect(service.profile()).toEqual(null);
   });
 
   it('fails closed when required HTTP, Angular, or storage providers are absent', async () => {

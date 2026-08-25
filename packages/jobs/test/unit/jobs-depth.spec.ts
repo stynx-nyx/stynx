@@ -219,9 +219,9 @@ describe('jobs repository, registry, scheduler, and validation depth', () => {
     const trx = { query: vi.fn(async () => ({ rows: [], rowCount: undefined })) };
     const database = { tx: vi.fn(async (fn: (value: typeof trx) => unknown) => fn(trx)) };
     const repository = new JobsRepository(database as never);
-    await expect(repository.getJob('missing', 'tenant-1')).resolves.toBeNull();
+    await expect(repository.getJob('missing', 'tenant-1')).resolves.toEqual(null);
     await expect(repository.cancel('missing', 'tenant-1')).resolves.toBe(false);
-    await expect(repository.getSchedule('missing', 'tenant-1')).resolves.toBeNull();
+    await expect(repository.getSchedule('missing', 'tenant-1')).resolves.toEqual(null);
     await repository.upsertSchedule({
       tenantId: 'tenant-1',
       name: 'interval',
