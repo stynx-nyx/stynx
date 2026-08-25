@@ -10,7 +10,7 @@
     "version": "1.0.0",
     "sha256": "3f0e2ddc45d0f4102eda34776700d8da7a1e56aab30c6ab43cc6ee6dbe972542"
   },
-  "devai_version": "1.2.12",
+  "devai_version": "1.2.13",
   "repo": {
     "kind": "library"
   },
