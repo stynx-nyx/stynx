@@ -32,7 +32,8 @@
     "lint": "eslint --config ../../tools/eslint-config/lib.mjs \"src/**/*.ts\" --ignore-pattern \"src/generated/**\"",
     "test": "vitest run --config ./vitest.config.ts",
     "stryker": "NODE_OPTIONS=\"--disable-warning=ExperimentalWarning --experimental-vm-modules\" pnpm exec stryker run stryker.conf.mjs",
-    "build:tsc": "pnpm run codegen && tsc -p tsconfig.json"
+    "build:tsc": "pnpm run codegen && tsc -p tsconfig.json",
+    "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
   },
   "devDependencies": {
     "@angular/compiler": "21.2.19",

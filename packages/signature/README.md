@@ -143,3 +143,34 @@ const signed2 = await sequentialSigner.append(signed1, { signer: 'employee' });
 ## TypeDoc reference
 
 Full symbol-level API: [`/docs/api-reference/stynx-signature/`](/docs/api-reference/stynx-signature/)
+
+<!-- stynx:generated-dependencies:start -->
+
+## Generated dependency reference
+
+This section is generated from `package.json`. Run `pnpm package-readmes:write` to update it.
+
+### Runtime dependencies
+
+- `@stynx-nyx/integration-adapter`: `workspace:*`
+- `@xmldom/xmldom`: `^0.9.10`
+- `xml-crypto`: `^6.1.2`
+
+### Optional dependencies
+
+_None._
+
+### Peer dependencies
+
+- `@nestjs/common`: `^11.1.19`
+- `@nestjs/core`: `^11.1.19`
+- `reflect-metadata`: `^0.2.2`
+- `rxjs`: `^7.8.2`
+
+### Development-only dependencies
+
+- `@nestjs/testing`: `^11.1.19`
+- `@types/node`: `24.12.4`
+- `typescript`: `^6.0.3`
+
+<!-- stynx:generated-dependencies:end -->

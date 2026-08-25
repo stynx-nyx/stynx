@@ -64,15 +64,15 @@ That gives you: authenticated requests with principal + tenant attached, rate-li
 | Submodule                       | Wraps                                                                           | Wave                | Documentation                                                                       |
 | ------------------------------- | ------------------------------------------------------------------------------- | ------------------- | ----------------------------------------------------------------------------------- |
 | `StynxPlatformPipelineModule`   | Rate-limit + SLA + idempotency interceptors as global APP_GUARD/APP_INTERCEPTOR | **W02 (this wave)** | [`backend/pipeline`](/docs/packages/backend/pipeline/)                              |
-| `StynxBackendAuthModule`        | `@stynx-nyx/auth` — JWT verifier + AuthContextGuard                                 | W03                 | [`backend/auth`](/docs/packages/backend/auth/) (live after W03)                     |
+| `StynxBackendAuthModule`        | `@stynx-nyx/auth` — JWT verifier + AuthContextGuard                             | W03                 | [`backend/auth`](/docs/packages/backend/auth/) (live after W03)                     |
 | `StynxAuthorizationModule`      | Role + permission predicates                                                    | W03                 | [`backend/authorization`](/docs/packages/backend/authorization/) (live after W03)   |
-| `StynxBackendIdempotencyModule` | `@stynx-nyx/idempotency` — interceptor + store wiring                               | W03                 | [`backend/idempotency`](/docs/packages/backend/idempotency/) (live after W03)       |
+| `StynxBackendIdempotencyModule` | `@stynx-nyx/idempotency` — interceptor + store wiring                           | W03                 | [`backend/idempotency`](/docs/packages/backend/idempotency/) (live after W03)       |
 | `StynxIdentityAdminModule`      | User/role/group admin endpoints                                                 | W03                 | [`backend/identity-admin`](/docs/packages/backend/identity-admin/) (live after W03) |
-| `StynxBackendRateLimitModule`   | `@stynx-nyx/ratelimit` — global guard wiring                                        | W03                 | [`backend/rate-limit`](/docs/packages/backend/rate-limit/) (live after W03)         |
-| `StynxBackendAuditModule`       | `@stynx-nyx/audit` — interceptor + sink wiring                                      | W04                 | [`backend/audit`](/docs/packages/backend/audit/) (live after W04)                   |
-| `StynxDbContextModule`          | `@stynx-nyx/data` — request-scoped DB session                                       | W04                 | [`backend/db-context`](/docs/packages/backend/db-context/) (live after W04)         |
+| `StynxBackendRateLimitModule`   | `@stynx-nyx/ratelimit` — global guard wiring                                    | W03                 | [`backend/rate-limit`](/docs/packages/backend/rate-limit/) (live after W03)         |
+| `StynxBackendAuditModule`       | `@stynx-nyx/audit` — interceptor + sink wiring                                  | W04                 | [`backend/audit`](/docs/packages/backend/audit/) (live after W04)                   |
+| `StynxDbContextModule`          | `@stynx-nyx/data` — request-scoped DB session                                   | W04                 | [`backend/db-context`](/docs/packages/backend/db-context/) (live after W04)         |
 | `StynxSlaModule`                | SLA threshold monitoring                                                        | W04                 | [`backend/sla`](/docs/packages/backend/sla/) (live after W04)                       |
-| `StynxBackendStorageModule`     | `@stynx-nyx/storage` — S3 wiring                                                    | W04                 | [`backend/storage`](/docs/packages/backend/storage/) (live after W04)               |
+| `StynxBackendStorageModule`     | `@stynx-nyx/storage` — S3 wiring                                                | W04                 | [`backend/storage`](/docs/packages/backend/storage/) (live after W04)               |
 
 ### Re-exports from `@stynx-nyx/contracts`
 
@@ -169,3 +169,33 @@ Plus:
 ## TypeDoc reference
 
 Full symbol-level API: [`/docs/api-reference/stynx-backend/`](/docs/api-reference/stynx-backend/)
+
+<!-- stynx:generated-dependencies:start -->
+
+## Generated dependency reference
+
+This section is generated from `package.json`. Run `pnpm package-readmes:write` to update it.
+
+### Runtime dependencies
+
+- `@stynx-nyx/contracts`: `workspace:*`
+- `@stynx-nyx/idempotency`: `workspace:*`
+- `@stynx-nyx/ratelimit`: `workspace:*`
+
+### Optional dependencies
+
+_None._
+
+### Peer dependencies
+
+- `@nestjs/common`: `^11.1.19`
+- `@nestjs/core`: `^11.1.19`
+- `reflect-metadata`: `^0.2.2`
+- `rxjs`: `^7.8.2`
+
+### Development-only dependencies
+
+- `@nestjs/testing`: `^11.1.19`
+- `@types/node`: `24.12.4`
+
+<!-- stynx:generated-dependencies:end -->

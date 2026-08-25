@@ -7,7 +7,11 @@ import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const currentDir = dirname(fileURLToPath(import.meta.url));
-const repoRoot = resolve(currentDir, '..');
+const repoRootArgument = process.argv.indexOf('--repo-root');
+const repoRoot =
+  repoRootArgument === -1
+    ? resolve(currentDir, '..')
+    : resolve(process.argv[repoRootArgument + 1] ?? '');
 const angularTsconfigPath = resolve(repoRoot, 'tools/tsconfig/angular18.json');
 const localNpmDir = resolve(repoRoot, '.release/local-npm');
 const failures = [];
@@ -90,6 +94,10 @@ if (angularTsconfig.compilerOptions?.inlineSources !== true) {
 
 validateDistMaps();
 validateTarballMaps();
+
+if (checkedMaps === 0) {
+  failures.push('SOURCEMAP_POPULATION_EMPTY: no expected Angular source maps were found');
+}
 
 if (failures.length > 0) {
   console.error('[web-sourcemaps] failed checks:');

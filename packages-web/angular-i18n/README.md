@@ -131,3 +131,38 @@ export class Notifier {
 ## TypeDoc reference
 
 Full symbol-level API: [`/docs/api-reference/stynx-web-angular-i18n/`](/docs/api-reference/stynx-web-angular-i18n/)
+
+<!-- stynx:generated-dependencies:start -->
+
+## Generated dependency reference
+
+This section is generated from `package.json`. Run `pnpm package-readmes:write` to update it.
+
+### Runtime dependencies
+
+- `intl-messageformat`: `^11.2.2`
+- `rxjs`: `^7.8.2`
+
+### Optional dependencies
+
+_None._
+
+### Peer dependencies
+
+- `@angular/common`: `>=20.3.0 <22`
+- `@angular/core`: `>=20.3.0 <22`
+
+### Development-only dependencies
+
+- `@angular/common`: `21.2.19`
+- `@angular/compiler`: `21.2.19`
+- `@angular/compiler-cli`: `21.2.19`
+- `@angular/core`: `21.2.19`
+- `@angular/platform-browser`: `21.2.19`
+- `@types/node`: `24.12.4`
+- `jsdom`: `^29.0.2`
+- `ng-packagr`: `21.2.3`
+- `tslib`: `^2.8.1`
+- `typescript`: `5.9.3`
+
+<!-- stynx:generated-dependencies:end -->

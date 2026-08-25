@@ -161,8 +161,8 @@ function prepare(values) {
     join(repoRoot, 'node_modules', '@aarusso-nyx', 'devai', 'package.json'),
     'installed DEVAI manifest',
   );
-  if (!/^1\.2\.0(?:-rc\.\d+)?$/u.test(devaiManifest.version ?? '')) {
-    fail('installed DEVAI must be 1.2.0 or a 1.2.0 RC');
+  if (devaiManifest.version !== '1.2.12') {
+    fail('installed DEVAI must be exact 1.2.12');
   }
 
   const descriptor = json(join(repoRoot, 'test-tasks.json'), 'task descriptor');

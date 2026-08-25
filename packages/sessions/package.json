@@ -31,7 +31,8 @@
     "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
     "test": "vitest run --config ./vitest.config.ts",
     "test:int": "vitest run --config ./vitest.int.config.ts",
-    "stryker": "pnpm exec stryker run stryker.conf.mjs"
+    "stryker": "pnpm exec stryker run stryker.conf.mjs",
+    "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
   },
   "dependencies": {
     "@stynx-nyx/core": "workspace:*",

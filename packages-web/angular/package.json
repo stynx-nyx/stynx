@@ -31,7 +31,8 @@
     "lint": "eslint --config ../../tools/eslint-config/angular.mjs \"src/**/*.ts\"",
     "test": "vitest run --config ./vitest.config.ts",
     "stryker": "NODE_OPTIONS=\"--disable-warning=ExperimentalWarning --experimental-vm-modules\" pnpm exec stryker run stryker.conf.mjs",
-    "build:tsc": "tsc -p tsconfig.json"
+    "build:tsc": "tsc -p tsconfig.json",
+    "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
   },
   "dependencies": {
     "@stynx-nyx/angular-tenancy": "workspace:*",

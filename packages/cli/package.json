@@ -29,7 +29,8 @@
     "lint": "eslint --config ../../tools/eslint-config/lib.mjs \"src/**/*.ts\"",
     "test": "vitest run --config ./vitest.config.ts",
     "test:adopt": "vitest run --config ./vitest.config.ts test/adopt.spec.ts",
-    "stryker": "pnpm exec stryker run stryker.conf.mjs"
+    "stryker": "pnpm exec stryker run stryker.conf.mjs",
+    "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
   },
   "dependencies": {
     "@stynx-nyx/privacy": "workspace:*",

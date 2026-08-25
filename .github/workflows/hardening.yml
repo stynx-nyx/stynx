@@ -6,7 +6,7 @@ on:
       scenario:
         description: k6 scenario to run
         required: false
-        default: crud
+        default: all
         type: choice
         options:
           - auth
@@ -21,7 +21,7 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
   NODE_VERSION: '24'
   PNPM_VERSION: '9.15.0'
-  K6_ARTIFACT_NAME: k6-results-${{ github.event.inputs.scenario || 'all' }}
+  K6_ARTIFACT_NAME: k6-results-${{ github.event_name == 'workflow_dispatch' && inputs.scenario || 'all' }}
   NODE_AUTH_TOKEN: ${{ secrets.DEVAI_REPO_TOKEN || github.token }}
 
 permissions:
@@ -63,7 +63,7 @@ jobs:
 
       - name: Run k6 scenarios
         env:
-          STYNX_K6_SCENARIO: ${{ github.event.inputs.scenario || 'all' }}
+          STYNX_K6_SCENARIO: ${{ github.event_name == 'workflow_dispatch' && inputs.scenario || 'all' }}
           STYNX_K6_AUTH_RATE: '10'
           STYNX_K6_CRUD_RATE: '4'
           STYNX_K6_UPLOAD_RATE: '5'

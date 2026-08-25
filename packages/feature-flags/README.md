@@ -128,3 +128,28 @@ class LaunchDarklyProvider implements FeatureFlagProvider {
 ## TypeDoc reference
 
 Full symbol-level API: [`/docs/api-reference/stynx-feature-flags/`](/docs/api-reference/stynx-feature-flags/)
+
+<!-- stynx:generated-dependencies:start -->
+
+## Generated dependency reference
+
+This section is generated from `package.json`. Run `pnpm package-readmes:write` to update it.
+
+### Runtime dependencies
+
+_None._
+
+### Optional dependencies
+
+_None._
+
+### Peer dependencies
+
+_None._
+
+### Development-only dependencies
+
+- `@types/node`: `24.12.4`
+- `typescript`: `^6.0.3`
+
+<!-- stynx:generated-dependencies:end -->

@@ -51,13 +51,13 @@ export class StripeAdapter implements IntegrationAdapter<StripeRequest, StripeRe
 | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `IntegrationAdapter<TRequest, TResponse>` | The contract: `call(request, ctx): Promise<response>`.                                                                                                                    |
 | `IntegrationAdapterOptions`               | Per-adapter config shape: retry, circuit-break, telemetry, idempotency.                                                                                                   |
-| `IntegrationContext`                      | Per-call context: `{ requestId, tenantId, actorId, correlationId }` — typically projected from `@stynx-nyx/core`'s `RequestContext`.                                          |
+| `IntegrationContext`                      | Per-call context: `{ requestId, tenantId, actorId, correlationId }` — typically projected from `@stynx-nyx/core`'s `RequestContext`.                                      |
 | `RetryPolicy`                             | `{ maxAttempts, backoffMs, jitter?, retryableErrors? }`.                                                                                                                  |
 | `CircuitBreakerPolicy`                    | `{ failureThreshold, resetMs, halfOpenProbes? }`.                                                                                                                         |
 | `CircuitBreaker`                          | Stateful breaker the adapter holds (or borrows from a registry).                                                                                                          |
 | `CircuitSnapshot`                         | Observable state: `{ state: 'closed'\|'open'\|'half-open', failureCount, openedAt? }`.                                                                                    |
 | `IntegrationTelemetryEvent`               | Structured event type emitted at every call boundary: `'call_started'`, `'call_succeeded'`, `'call_failed'`, `'retry_scheduled'`, `'circuit_opened'`, `'circuit_closed'`. |
-| `IdempotencyStore`                        | Re-exported from `@stynx-nyx/contracts`; outbound idempotency-cache contract (rarely used — usually upstream idempotency is enough).                                          |
+| `IdempotencyStore`                        | Re-exported from `@stynx-nyx/contracts`; outbound idempotency-cache contract (rarely used — usually upstream idempotency is enough).                                      |
 
 ## Configuration
 
@@ -136,3 +136,28 @@ export class PaymentService {
 ## TypeDoc reference
 
 Full symbol-level API: [`/docs/api-reference/stynx-integration-adapter/`](/docs/api-reference/stynx-integration-adapter/)
+
+<!-- stynx:generated-dependencies:start -->
+
+## Generated dependency reference
+
+This section is generated from `package.json`. Run `pnpm package-readmes:write` to update it.
+
+### Runtime dependencies
+
+_None._
+
+### Optional dependencies
+
+_None._
+
+### Peer dependencies
+
+_None._
+
+### Development-only dependencies
+
+- `@types/node`: `24.12.4`
+- `typescript`: `^6.0.3`
+
+<!-- stynx:generated-dependencies:end -->
