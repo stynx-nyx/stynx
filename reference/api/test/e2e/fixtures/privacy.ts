@@ -17,6 +17,7 @@ import {
   lgpdFixturePiiMapYaml,
 } from '@stynx-nyx/testing';
 import { GenericContainer, Wait, type StartedTestContainer } from 'testcontainers';
+import { expect } from 'vitest';
 import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../../../packages/data/test/support/postgres';
 import { actors, tenants, type ActorName, seedRecordsAndNotesE2e } from './seed';
 
@@ -331,6 +332,8 @@ export async function setupReferenceApiPrivacyE2e(): Promise<ReferenceApiPrivacy
 
   const app = moduleRef.createNestApplication();
   await app.init();
+  await app.listen(0, '127.0.0.1');
+  expect(app.getHttpServer().listening).toBe(true);
   await seedRecordsAndNotesE2e(postgres);
   const subjects = await seedPrivacyE2e(postgres);
 
@@ -350,7 +353,12 @@ export async function setupReferenceApiPrivacyE2e(): Promise<ReferenceApiPrivacy
 }
 
 export async function closeReferenceApiPrivacyE2e(context: ReferenceApiPrivacyE2eContext | undefined): Promise<void> {
-  await context?.app.close();
+  if (context) {
+    const httpServer = context.app.getHttpServer();
+    expect(httpServer.listening).toBe(true);
+    await context.app.close();
+    expect(httpServer.listening).toBe(false);
+  }
   await context?.redis.stop();
   await context?.postgres.dispose();
   if (context?.appRoot) {

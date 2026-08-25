@@ -283,6 +283,7 @@ describe('@stynx-nyx/reference-api runtime suite', () => {
     operation: SupertestTest,
     expectedStatus: number,
   ): Promise<TBody> {
+    expect(app.getHttpServer().listening, `${stage}: reference server must remain listening before request`).toBe(true);
     const before = await sessionService.get(adminASid);
     expect(before?.sid, `${stage}: admin session must be active before request`).toBe(adminASid);
     expect(before?.userId, `${stage}: admin session must retain its actor`).toBe(adminAUser);
@@ -307,6 +308,7 @@ describe('@stynx-nyx/reference-api runtime suite', () => {
     expect(after?.sid, `${stage}: admin session must be active after request`).toBe(adminASid);
     expect(after?.userId, `${stage}: admin session must retain its actor`).toBe(adminAUser);
     expect(after?.tenantId, `${stage}: admin session must retain its tenant`).toBe(tenantA);
+    expect(app.getHttpServer().listening, `${stage}: reference server must remain listening after request`).toBe(true);
     return response.body as TBody;
   }
 
@@ -531,6 +533,8 @@ describe('@stynx-nyx/reference-api runtime suite', () => {
 
     app = moduleRef.createNestApplication();
     await app.init();
+    await app.listen(0, '127.0.0.1');
+    expect(app.getHttpServer().listening).toBe(true);
 
     database = moduleRef.get(Database);
     requestContextMutator = moduleRef.get(RequestContextMutator);
@@ -547,7 +551,10 @@ describe('@stynx-nyx/reference-api runtime suite', () => {
   }, 90_000);
 
   afterAll(async () => {
-    await app?.close();
+    const httpServer = app.getHttpServer();
+    expect(httpServer.listening).toBe(true);
+    await app.close();
+    expect(httpServer.listening).toBe(false);
     await localstack?.stop();
     await redis?.stop();
     await postgres?.dispose();
@@ -1057,6 +1064,7 @@ describe('@stynx-nyx/reference-api runtime suite', () => {
   });
 
   it('family 9: rejects hard delete without the hard-delete permission', async () => {
+    expect(app.getHttpServer().listening).toBe(true);
     const created = await authRequest(adminAToken)
       .post('/records')
       .set('Idempotency-Key', 'hard-authz-create')
@@ -1072,6 +1080,7 @@ describe('@stynx-nyx/reference-api runtime suite', () => {
       .delete(`/records/${created.body.id}/hard`)
       .set('Idempotency-Key', 'hard-authz-hard')
       .expect(403);
+    expect(app.getHttpServer().listening).toBe(true);
   });
 
   it('family 10: returns 409 on restore conflicts against natural unique keys', async () => {
