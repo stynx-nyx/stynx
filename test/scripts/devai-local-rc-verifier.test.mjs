@@ -13,6 +13,7 @@ const workflow = readFileSync(
   join(repoRoot, '.github', 'workflows', 'devai-local-rc-verify.yml'),
   'utf8',
 );
+const localRcWrapper = readFileSync(join(repoRoot, 'scripts', 'devai-local-rc.mjs'), 'utf8');
 const contract = campaign.devai.verifier_materialization;
 const rootManifest = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8'));
 const lockfile = readFileSync(join(repoRoot, 'pnpm-lock.yaml'), 'utf8');
@@ -77,6 +78,14 @@ function assertContainsAll(source, expected, label) {
   for (const value of expected) {
     assert.ok(source.includes(String(value)), `${label} must bind ${String(value)}`);
   }
+}
+
+function localRcProviderGuard() {
+  const condition = localRcWrapper.match(/devaiManifest\.version\s*!==\s*'([^']+)'/u);
+  const failure = localRcWrapper.match(/installed DEVAI must be exact ([^']+)'/u);
+  assert.ok(condition, 'local RC prepare must have an exact installed-provider condition');
+  assert.ok(failure, 'local RC prepare must name the exact installed provider in its failure');
+  return { conditionVersion: condition[1], failureVersion: failure[1] };
 }
 
 test('campaign binds the exact provider and independent verifier materialization contract', () => {
@@ -146,6 +155,33 @@ test('generated workflow keeps provider 1.2.13 distinct from verifier package 1.
     'independent verifier distribution',
   );
   assert.doesNotMatch(step, /1\.2\.13|6e766187269db2e5f494786adc7c00c62acad006/u);
+});
+
+test('local RC prepare accepts only provider 1.2.13 without conflating verifier 1.2.12', () => {
+  const guard = localRcProviderGuard();
+  const candidateVersions = [
+    provider.version,
+    verifier.version,
+    '1.2.11',
+    '1.2.14',
+    'latest',
+    '^1.2.13',
+  ];
+  const acceptedVersions = candidateVersions.filter(
+    (candidateVersion) => candidateVersion === guard.conditionVersion,
+  );
+
+  assert.equal(contract.provider_version, provider.version);
+  assert.equal(contract.package.version, verifier.version);
+  assert.notEqual(contract.provider_version, contract.package.version);
+  assert.deepEqual(
+    { ...guard, acceptedVersions },
+    {
+      conditionVersion: provider.version,
+      failureVersion: provider.version,
+      acceptedVersions: [provider.version],
+    },
+  );
 });
 
 test('generated workflow rejects mutable package selectors and unpinned distribution sources', () => {
