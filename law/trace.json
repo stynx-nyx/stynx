@@ -2723,7 +2723,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001", "INV-RBAC-001"],
       "lifecycle": "supported",
       "assertion_count": 122,
-      "assertion_digest_sha256": "3aadf639fbcd07ec5d63a89e6f3065ca9d65a3aea82fcc4747fdfde914e3cf39"
+      "assertion_digest_sha256": "fd14195d71b535b4b5d2c9e6d7f8591485d547a0b4e9d6504397d77d29a711d6"
     },
     {
       "path": "reference/api/test/integration/reference-api.unit-coverage.spec.ts",
