@@ -193,9 +193,9 @@ describe('worklist row, error, clock, and deadline behavior', () => {
     expect(new WorklistCalendarRequiredError()).toMatchObject({ status: 500 });
     expect(new WorklistSchedulerRequiredError()).toMatchObject({ status: 500 });
     expect(new SystemWorklistClock().now()).toBeInstanceOf(Date);
-    await expect(
-      new NoopWorklistEventSink().publish(mapEventRow(eventRow)),
-    ).resolves.toBeUndefined();
+    await expect(new NoopWorklistEventSink().publish(mapEventRow(eventRow))).resolves.toEqual(
+      undefined,
+    );
   });
 
   it('covers invalid and default business-day deadline paths', async () => {
@@ -263,10 +263,10 @@ describe('worklist row, error, clock, and deadline behavior', () => {
     await new LoadBalancedWorklistStrategy().select({ queueId: uuid, candidates: dated });
     await expect(
       new RoundRobinWorklistStrategy().select({ queueId: uuid, candidates: [] }),
-    ).resolves.toBeNull();
+    ).resolves.toEqual(null);
     await expect(
       new LoadBalancedWorklistStrategy().select({ queueId: uuid, candidates: [] }),
-    ).resolves.toBeNull();
+    ).resolves.toEqual(null);
     expect(() => new WorklistStrategyRegistry().require('missing')).toThrow(
       UnknownWorklistStrategyError,
     );
@@ -451,7 +451,7 @@ describe('WorklistItemsService', () => {
         meta: { b: 2 },
       }),
     ).resolves.toMatchObject({ id: uuid });
-    expect(success.eventSink.publish).toHaveBeenCalled();
+    expect(success.eventSink.publish).toHaveBeenCalledWith(mapEventRow(eventRow));
     await expect(
       itemsHarness(mutationQuery(), {}, null as never).service.enqueue({
         queueCode: 'review',
@@ -509,7 +509,7 @@ describe('WorklistItemsService', () => {
     const empty = vi.fn(async (sql: string) =>
       sql.includes('claim_next') ? { rows: [] } : { rows: [] },
     );
-    await expect(itemsHarness(empty).service.claimNext(uuid)).resolves.toBeNull();
+    await expect(itemsHarness(empty).service.claimNext(uuid)).resolves.toEqual(null);
     await expect(
       itemsHarness(
         vi.fn(async () => {
@@ -576,7 +576,7 @@ describe('WorklistItemsService', () => {
         uuid,
         new WorklistStrategyRegistry([none]),
       ).service.assignNext(uuid),
-    ).resolves.toBeNull();
+    ).resolves.toEqual(null);
     const outside = { key: 'custom', select: vi.fn(async () => uuid) };
     await expect(
       itemsHarness(
@@ -634,7 +634,7 @@ describe('WorklistSlaService', () => {
       sink,
     );
     await expect(service.detectBreaches()).resolves.toHaveLength(1);
-    expect(sink.publish).toHaveBeenCalled();
+    expect(sink.publish).toHaveBeenCalledWith(mapEventRow(eventRow));
     for (const limit of [0, 1001, 1.5])
       await expect(service.detectBreaches(limit)).rejects.toBeInstanceOf(WorklistInputError);
     await expect(

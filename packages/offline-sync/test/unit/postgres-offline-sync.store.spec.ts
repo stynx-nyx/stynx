@@ -1,4 +1,4 @@
-import { OfflineSyncError } from '../../src/errors';
+import { OfflineSyncError as _OfflineSyncError } from '../../src/errors';
 import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store';
 import type { SyncBatchItemInput, TrustedOfflineSyncScope } from '../../src/types';
 
@@ -193,7 +193,7 @@ describe('PostgresOfflineSyncStore', () => {
       {},
       now,
     );
-    expect(noReasonQuery.mock.calls[1]?.[1]?.[2]).toBeNull();
+    expect(noReasonQuery.mock.calls[1]?.[1]?.[2]).toEqual(null);
   });
 
   it.each([

@@ -139,7 +139,7 @@ describe('PostgresSessionRegistry depth', () => {
       expiresAt: '2026-08-26T00:00:00.000Z',
     });
     expect(query.mock.calls[0]?.[1]?.[2]).toEqual(new Uint8Array([1]));
-    expect(query.mock.calls[0]?.[1]?.[3]).toBeNull();
+    expect(query.mock.calls[0]?.[1]?.[3]).toEqual(null);
   });
 
   it('lists and maps complete and nullable registration metadata', async () => {
@@ -193,9 +193,9 @@ describe('PostgresSessionRegistry depth', () => {
       nextAttemptAt: null,
       leaseUntil: '2026-08-25T12:01:00.000Z',
     });
-    await expect(registry.operation('invalid')).resolves.toBeNull();
+    await expect(registry.operation('invalid')).resolves.toEqual(null);
     const absent = postgres(vi.fn(async () => ({ rows: [] })));
-    await expect(absent.registry.operation(operation.key)).resolves.toBeNull();
+    await expect(absent.registry.operation(operation.key)).resolves.toEqual(null);
   });
 
   it('rejects invalid operation keys and stores pending and terminal attempts', async () => {
@@ -212,7 +212,7 @@ describe('PostgresSessionRegistry depth', () => {
     await registry.saveOperation(operation);
     expect(query).toHaveBeenCalledTimes(4);
     expect(query.mock.calls[1]?.[1]?.at(-1)).toBe('SESSION_OPERATION_PENDING');
-    expect(query.mock.calls[3]?.[1]?.at(-1)).toBeNull();
+    expect(query.mock.calls[3]?.[1]?.at(-1)).toEqual(null);
   });
 
   it('claims pending work and maps operation keys', async () => {
@@ -491,7 +491,12 @@ describe('SessionControlService remaining behavior', () => {
       operationId,
       targetSessionId: sid,
     });
-    await vi.waitFor(() => expect(registry.list).toHaveBeenCalled());
+    await vi.waitFor(() =>
+      expect(registry.list).toHaveBeenCalledWith(context, {
+        scope: 'tenant',
+        subjectId: context.subjectId,
+      }),
+    );
     await expect(
       service.execute(context, {
         action: 'revoke-one',
