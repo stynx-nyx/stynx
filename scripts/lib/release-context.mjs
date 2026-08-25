@@ -4,7 +4,7 @@ const fullSha = /^[0-9a-f]{40}$/u;
 const versionCommitSubject = 'ci: version packages';
 const unifiedRebaselineVersion = '1.1.1';
 const releaseStatusCommand = 'node scripts/run-release-preparation.mjs --release-status';
-const prAPolicyDigest = 'cc283642a43daa297d7bfc0a6bffacc51d8e6361df6c6b6a84b00044edef12d8';
+const prAPolicyDigest = 'fc4360097fe195ee1120ce9fd1a65cc93ee19e67b020568d9ad58d79a15fc579';
 
 const allowedVersionSupportPaths = new Set([
   'docs/meta/security/sbom.cdx.json',
