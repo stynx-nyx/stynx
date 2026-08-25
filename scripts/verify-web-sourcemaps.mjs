@@ -30,6 +30,10 @@ function walk(dir, predicate) {
   });
 }
 
+function isJavaScriptSourceMap(path) {
+  return path.endsWith('.js.map') || path.endsWith('.mjs.map');
+}
+
 function hasSourcesContent(map) {
   return (
     Array.isArray(map.sourcesContent) &&
@@ -54,7 +58,7 @@ function validateMap(mapPath, sourceRoot) {
 }
 
 function validateDistMaps() {
-  const mapFiles = walk(resolve(repoRoot, 'packages-web'), (path) => path.endsWith('.js.map'));
+  const mapFiles = walk(resolve(repoRoot, 'packages-web'), isJavaScriptSourceMap);
   for (const mapPath of mapFiles) {
     validateMap(mapPath, repoRoot);
   }
@@ -71,7 +75,7 @@ function validateTarballMaps() {
     try {
       execFileSync('tar', ['-xzf', tarball, '-C', tempDir], { stdio: 'ignore' });
       const packageRoot = resolve(tempDir, 'package');
-      const mapFiles = walk(packageRoot, (path) => path.endsWith('.js.map'));
+      const mapFiles = walk(packageRoot, isJavaScriptSourceMap);
       for (const mapPath of mapFiles) {
         const map = readJson(mapPath);
         checkedMaps += 1;
