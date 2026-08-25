@@ -739,6 +739,12 @@
       "commit": "cbcaf352bb43f57136857be161d456b75d6c6c21",
       "authorized_by": "Owner",
       "reason": "Authorizes the exact DEVAI 1.2.12 supported init-bind materialization for STYNX 1.1.1 PR A preparation, preserving adopter policy, invariant authority, tests, thresholds, and the separate publication and repository-settings boundaries."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "c45edfaf7e31efd53eeeda9529ea79661153e775",
+      "authorized_by": "Owner",
+      "reason": "Closes the receipt-ledger mutation created while recording the Owner-reviewed authorization for the exact DEVAI 1.2.12 binding checkpoint, without broadening preparation authority or authorizing push, merge, publication, tags, registry mutation, or repository-settings changes."
     }
   ]
 }
