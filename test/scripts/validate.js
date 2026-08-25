@@ -737,11 +737,11 @@ function runForbiddenActionTests() {
 }
 
 function runDoctorAdopterPolicyPrecedenceTest() {
-  const exactVersion = '1.2.12';
+  const exactVersion = '1.2.13';
   const exactTarball =
-    'https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.2.12/04a8bb1edd4f85f8a3663be931634f4e077139b2';
+    'https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.2.13/6e766187269db2e5f494786adc7c00c62acad006';
   const exactIntegrity =
-    'sha512-WXd1oRdBDenC/VOLFzquIdGZ5giBAT7DBPppdtUDfCUQKioflzL2xO1iOmYKf5E6G5dDuRCgmMDoUOoq1Mxsgw==';
+    'sha512-QM9PyGNtPRzhRBsYTiJFg6eM3OVw4/fSyAPnn1h8yHBq20GcEBrp91wxzqlvGREGkOAzezwvK3INze2OjqZV3Q==';
   const campaign = JSON.parse(
     readFileSync(join(repoRoot, 'law', 'policy', 'release-campaign-1.1.1.json'), 'utf8'),
   );
@@ -750,8 +750,28 @@ function runDoctorAdopterPolicyPrecedenceTest() {
   assertEqual(campaign.devai.integrity, exactIntegrity, 'campaign DEVAI integrity');
   assertEqual(
     campaign.devai.shasum,
-    '04a8bb1edd4f85f8a3663be931634f4e077139b2',
+    '6e766187269db2e5f494786adc7c00c62acad006',
     'campaign DEVAI shasum',
+  );
+  assertEqual(
+    campaign.devai.sha256,
+    '47f07c9ea4eecfb06c9ee6d0ec01ea46e3e76231e4c6151ddbde73ada26122d0',
+    'campaign DEVAI sha256',
+  );
+  assertEqual(
+    campaign.devai.source_commit,
+    '5df84ca88179a8fe53cc29cf8201c32c9439d552',
+    'campaign DEVAI source commit',
+  );
+  assertEqual(
+    campaign.devai.source_tree,
+    '36b5c714e8da19b5f42fb7db57d8fe9783c99b4f',
+    'campaign DEVAI source tree',
+  );
+  assertEqual(
+    campaign.devai.signed_tag_object,
+    '32c9b98603d49fcabbf1db220b2f7438e0a40fc6',
+    'campaign DEVAI signed tag object',
   );
 
   const rootManifest = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8'));
