@@ -727,6 +727,18 @@
       "commit": "b102fdd34b2ee59abb60f3358b56070f909eb29a",
       "authorized_by": "Owner",
       "reason": "Records the Owner authorization for the release-interval squash merge that re-authored a law commit under Owner authority without weakening invariant authority."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "cbcaf352bb43f57136857be161d456b75d6c6c21",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the exact DEVAI 1.2.12 generated trusted-local-RC verifier workflow binding for STYNX 1.1.1 PR A preparation under the accepted campaign and trusted-local-RC decisions, without authorizing push, merge, publication, tags, or repository-settings changes."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "cbcaf352bb43f57136857be161d456b75d6c6c21",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the exact DEVAI 1.2.12 supported init-bind materialization for STYNX 1.1.1 PR A preparation, preserving adopter policy, invariant authority, tests, thresholds, and the separate publication and repository-settings boundaries."
     }
   ]
 }
