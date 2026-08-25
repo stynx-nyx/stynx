@@ -763,6 +763,12 @@
       "commit": "d53dacb3906f1a968cc36d56a4388ffa2b3b01fe",
       "authorized_by": "Owner",
       "reason": "Authorizes the exact DEVAI 1.2.12 generated GitHub observation adapter and declarative branch-control reconciliation for PR A preparation, preserving fail-closed package authentication, provenance, immutable binding, tests, and thresholds, while retaining separate push, merge, publication, tag, registry, and live repository-settings authorization boundaries."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "7cec3819d20ea84e8f5a31ce9197260c198058c3",
+      "authorized_by": "Owner",
+      "reason": "Closes the receipt-ledger mutation created while recording the Owner-reviewed authorization for the exact PR A remote-control checkpoint, without broadening preparation authority or authorizing push, PR creation, merge, workflow dispatch, publication, tags, registry mutation, or live repository-settings changes."
     }
   ]
 }
