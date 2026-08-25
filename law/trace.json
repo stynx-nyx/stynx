@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "version": "1.2.0",
   "meta": {
-    "last_updated": "2026-08-24T22:58:13-03:00",
+    "last_updated": "2026-08-25T13:13:03-03:00",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -10,9 +10,9 @@
       "require_test_links": true
     },
     "provenance": [
-      "DEVAI 1.2.12 deterministic inventory for exact tracked source bytes.",
-      "The 481 tracked test-path census is partitioned into 366 executable tests and 115 non-executable fixtures or support modules.",
-      "Fourteen tracked verification scripts and configuration attestations complete the 495-item governed test surface."
+      "DEVAI 1.2.13 deterministic inventory for exact tracked source bytes.",
+      "The 490 tracked test-path census is partitioned into 375 executable tests and 115 non-executable fixtures or support modules.",
+      "Fourteen tracked verification scripts and configuration attestations complete the 504-item governed test surface."
     ]
   },
   "invariants": [
@@ -3646,6 +3646,14 @@
       "lifecycle": "supported",
       "assertion_count": 86,
       "assertion_digest_sha256": "f8137669099054ccca2d67a9ca6ad2beab0a1d1136004e4c6925e880ff3a5ee6"
+    },
+    {
+      "path": "test/scripts/devai-local-rc-verifier.test.mjs",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 60,
+      "assertion_digest_sha256": "5de6b1b8565a9dca5038ead6269063d98bae47ddc513c705cda89a97156ac5b1"
     },
     {
       "path": "test/scripts/release-version-policy.test.mjs",
