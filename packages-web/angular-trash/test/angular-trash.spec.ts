@@ -323,6 +323,7 @@ describe('@stynx-nyx/angular-trash', () => {
         }],
       },
       {},
+      { items: [42, { id: 'id-only' }] },
     ];
     const client = {
       get: vi.fn(async () => responses.shift()),
@@ -351,6 +352,14 @@ describe('@stynx-nyx/angular-trash', () => {
       });
     await expect(adapter.list('*', { pageIndex: 0, pageSize: 10, sort: 'deleted_at_desc' }))
       .resolves.toEqual({ items: [], total: 0 });
+    await expect(adapter.list('document', { pageIndex: 0, pageSize: 10, sort: 'deleted_at_desc' }))
+      .resolves.toEqual({
+        items: [
+          { id: '', kind: 'document', label: '', deletedAt: '', deletedBy: null, autoPurgeAt: null },
+          { id: 'id-only', kind: 'document', label: 'id-only', deletedAt: '', deletedBy: null, autoPurgeAt: null },
+        ],
+        total: 2,
+      });
   });
 
   it('supports provider-backed components, tabs, filters, bulk actions, and retention countdowns', async () => {
@@ -619,6 +628,21 @@ describe('@stynx-nyx/angular-trash', () => {
       pageSize: 10,
       sort: 'deleted_at_desc',
       deletedBy: 'session-1',
+    });
+
+    const anonymous = createComponent(
+      {
+        hasAllPermissions: () => false,
+        snapshot: () => ({ claims: { sub: 42 } }),
+      },
+      { push: vi.fn() },
+      adapter,
+    );
+    await anonymous.toggleFilter('by_me');
+    expect(adapter.list).toHaveBeenLastCalledWith('record', {
+      pageIndex: 0,
+      pageSize: 10,
+      sort: 'deleted_at_desc',
     });
 
     const missingAdapter = createComponent(createSession(), { push: vi.fn() });

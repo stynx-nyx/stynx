@@ -108,6 +108,21 @@ describe('IntegrationAdapter', () => {
     await expect(store.get('answer')).resolves.toBe(42);
   });
 
+  it('uses the system clock when a circuit breaker clock is not supplied', async () => {
+    const now = vi.spyOn(Date, 'now').mockReturnValue(12_345);
+    const breaker = new InMemoryCircuitBreaker({
+      failureThreshold: 1,
+      openAfterMs: 5,
+      halfOpenAfterMs: 100,
+    });
+
+    await expect(breaker.recordFailure('provider')).resolves.toMatchObject({
+      state: 'open',
+      openedAt: 12_350,
+    });
+    expect(now).toHaveBeenCalledTimes(1);
+  });
+
   it('moves open circuits through half-open and closed states', async () => {
     let now = 1_000;
     const breaker = new InMemoryCircuitBreaker(

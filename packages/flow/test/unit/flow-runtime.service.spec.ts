@@ -805,6 +805,46 @@ describe('FlowRuntimeService.signal', () => {
       service.signal({ scopeId: SCOPE, targetType: 'doc', targetId: 'd-1' }),
     ).resolves.toMatchObject({ signaled: true });
   });
+
+  it('builds tenant-bound adapter facts with optional signal context before signaling', async () => {
+    const { service, adapters } = makeService([[]]);
+
+    await expect(service.signal({
+      scopeId: SCOPE,
+      adapterKey: 'documents',
+      targetType: 'doc',
+      targetId: 'd-1',
+      signalKey: 'changed',
+      payload: { revision: 2 },
+    })).resolves.toMatchObject({ scopeId: SCOPE, signaled: true });
+
+    expect(adapters.buildFacts).toHaveBeenCalledWith({
+      tenantId: 't-1',
+      adapterKey: 'documents',
+      targetType: 'doc',
+      targetId: 'd-1',
+      signalKey: 'changed',
+      payload: { revision: 2 },
+    });
+  });
+
+  it('builds adapter facts without inventing absent optional signal context', async () => {
+    const { service, adapters } = makeService([[]]);
+
+    await service.signal({
+      scopeId: SCOPE,
+      adapterKey: 'documents',
+      targetType: 'doc',
+      targetId: 'd-1',
+    });
+
+    expect(adapters.buildFacts).toHaveBeenCalledWith({
+      tenantId: 't-1',
+      adapterKey: 'documents',
+      targetType: 'doc',
+      targetId: 'd-1',
+    });
+  });
 });
 
 describe('FlowRuntimeService.dispatchPendingEffects', () => {
