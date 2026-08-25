@@ -233,10 +233,6 @@ export class FlowEffectDispatch {
     });
   }
 
-  // Retained as a private declaration compatibility marker for the generated
-  // API baseline; signal dispatch has no run identifier to record against.
-  private recordAdapterFailure(): void {}
-
   private requireTenantId(): string {
     const tenantId = this.requestContext.tenantId;
     if (!tenantId) {
