@@ -1,5 +1,11 @@
 import '@angular/compiler';
-import { APP_INITIALIZER, Injector, runInInjectionContext, signal, type Provider } from '@angular/core';
+import {
+  APP_INITIALIZER,
+  Injector,
+  runInInjectionContext,
+  signal,
+  type Provider,
+} from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
@@ -14,9 +20,10 @@ import { STYNX_TENANCY_OPTIONS, STYNX_TENANCY_WINDOW } from '../src/tokens';
 import type { TenancyOptions, TenantTransition } from '../src/types';
 import { renderComponent } from './support/test-bed';
 
-type ProviderRecord = Provider & Record<string, unknown> & {
-  provide: unknown;
-};
+type ProviderRecord = Provider &
+  Record<string, unknown> & {
+    provide: unknown;
+  };
 
 class FakeHeaders {
   private readonly values = new Map<string, string>();
@@ -44,7 +51,9 @@ class FakeRequest {
   constructor(readonly headers = new FakeHeaders()) {}
 
   clone(options: { setHeaders?: Record<string, string> }): FakeRequest {
-    return new FakeRequest(new FakeHeaders({ ...this.headers.toObject(), ...(options.setHeaders ?? {}) }));
+    return new FakeRequest(
+      new FakeHeaders({ ...this.headers.toObject(), ...(options.setHeaders ?? {}) }),
+    );
   }
 }
 
@@ -57,7 +66,10 @@ class FakeHandler {
   }
 }
 
-function createTenantContext(options: TenancyOptions = {}, browserWindow: Window | null = null): TenantContextService {
+function createTenantContext(
+  options: TenancyOptions = {},
+  browserWindow: Window | null = null,
+): TenantContextService {
   const injector = Injector.create({
     parent: TestBed.inject(Injector),
     providers: [
@@ -77,12 +89,18 @@ function createTenantInterceptor(tenantContext: TenantContextService): TenantInt
 }
 
 function isProviderRecord(provider: Provider): provider is ProviderRecord {
-  return typeof provider === 'object' && provider !== null && !Array.isArray(provider) && 'provide' in provider;
+  return (
+    typeof provider === 'object' &&
+    provider !== null &&
+    !Array.isArray(provider) &&
+    'provide' in provider
+  );
 }
 
 function findProvider(providers: Provider[], token: unknown): ProviderRecord {
-  const provider = providers.find((candidate): candidate is ProviderRecord =>
-    isProviderRecord(candidate) && candidate.provide === token,
+  const provider = providers.find(
+    (candidate): candidate is ProviderRecord =>
+      isProviderRecord(candidate) && candidate.provide === token,
   );
   if (!provider) {
     throw new Error(`Expected provider for ${String(token)}`);
@@ -90,7 +108,9 @@ function findProvider(providers: Provider[], token: unknown): ProviderRecord {
   return provider;
 }
 
-function providerFactory<TArgs extends unknown[], TResult>(provider: ProviderRecord): (...args: TArgs) => TResult {
+function providerFactory<TArgs extends unknown[], TResult>(
+  provider: ProviderRecord,
+): (...args: TArgs) => TResult {
   expect(provider.useFactory).toEqual(expect.any(Function));
   return provider.useFactory as (...args: TArgs) => TResult;
 }
@@ -124,10 +144,11 @@ describe('@stynx-nyx/angular-tenancy', () => {
           provide: StynxI18nService,
           useValue: {
             locale: () => 'en',
-            translate: (key: string) => ({
-              'tenancy.switcher.label': 'Tenant',
-              'tenancy.switcher.placeholder': 'Choose tenant',
-            })[key] ?? key,
+            translate: (key: string) =>
+              ({
+                'tenancy.switcher.label': 'Tenant',
+                'tenancy.switcher.placeholder': 'Choose tenant',
+              })[key] ?? key,
           },
         },
       ],
@@ -157,9 +178,11 @@ describe('@stynx-nyx/angular-tenancy', () => {
     expect(providers).toContain(TenantContextService);
     expect(optionProvider['useValue']).toBe(options);
     expect(providerFactory<[], Window | null>(windowProvider)()).toBe(window);
-    expect((initializerProvider['deps'] as unknown[])).toEqual([TenantContextService]);
+    expect(initializerProvider['deps'] as unknown[]).toEqual([TenantContextService]);
     expect(initializerProvider['multi']).toBe(true);
-    await expect(providerFactory<[typeof service], () => Promise<void>>(initializerProvider)(service)()).resolves.toBe(undefined);
+    await expect(
+      providerFactory<[typeof service], () => Promise<void>>(initializerProvider)(service)(),
+    ).resolves.toBe(undefined);
     expect(service.initialize).toHaveBeenCalledTimes(1);
     expect(interceptorProvider['useClass']).toBe(TenantInterceptor);
     expect(interceptorProvider['multi']).toBe(true);
@@ -176,7 +199,8 @@ describe('@stynx-nyx/angular-tenancy', () => {
     const emitted: Array<string | null> = [];
     const tenantContext = createTenantContext(
       {
-        defaultTenantResolver: async ({ host }) => host === 'localhost' ? 'fallback-tenant' : null,
+        defaultTenantResolver: async ({ host }) =>
+          host === 'localhost' ? 'fallback-tenant' : null,
       },
       null,
     );
@@ -434,7 +458,9 @@ describe('@stynx-nyx/angular-tenancy', () => {
     const interceptor = createTenantInterceptor(tenantContext);
     const handler = new FakeHandler();
 
-    await expect(firstValueFrom(interceptor.intercept(new FakeRequest() as never, handler as never))).resolves.toEqual({
+    await expect(
+      firstValueFrom(interceptor.intercept(new FakeRequest() as never, handler as never)),
+    ).resolves.toEqual({
       ok: true,
     });
 
@@ -447,10 +473,12 @@ describe('@stynx-nyx/angular-tenancy', () => {
     const interceptor = createTenantInterceptor(tenantContext);
     const handler = new FakeHandler();
 
-    await firstValueFrom(interceptor.intercept(
-      new FakeRequest(new FakeHeaders({ 'x-tenant-id': 'tenant-existing' })) as never,
-      handler as never,
-    ));
+    await firstValueFrom(
+      interceptor.intercept(
+        new FakeRequest(new FakeHeaders({ 'x-tenant-id': 'tenant-existing' })) as never,
+        handler as never,
+      ),
+    );
 
     expect(handler.seen[0]?.headers.get('x-tenant-id')).toBe('tenant-existing');
   });
@@ -510,7 +538,9 @@ describe('@stynx-nyx/angular-tenancy', () => {
     expect(fixture.nativeElement.textContent).toContain('Tenant A');
     expect(fixture.nativeElement.textContent).toContain('Operations workspace');
 
-    const buttons = fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>;
+    const buttons = fixture.nativeElement.querySelectorAll(
+      'button',
+    ) as NodeListOf<HTMLButtonElement>;
     buttons[1]?.click();
     fixture.detectChanges();
 
@@ -540,8 +570,26 @@ describe('@stynx-nyx/angular-tenancy', () => {
       { id: 'tenant-a', label: 'Tenant A' },
       { id: 'tenant-b', label: 'Tenant B' },
     ]);
+    fixture.componentRef.setInput('labels', {
+      title: 'Select workspace',
+      availableTenants: 'Workspaces',
+    });
     fixture.detectChanges();
     expect(fixture.componentInstance.shouldRenderPicker()).toBe(true);
+    expect(fixture.componentInstance.resolvedLabels()).toMatchObject({
+      title: 'Select workspace',
+      description: 'Select the tenant workspace to continue.',
+      availableTenants: 'Workspaces',
+    });
+
+    fixture.componentRef.setInput('labels', null);
+    fixture.componentRef.setInput('tenants', null);
+    tenantContext.setAvailableTenants([
+      { id: 'tenant-a', label: 'Tenant A' },
+      { id: 'tenant-b', label: 'Tenant B' },
+    ]);
+    fixture.detectChanges();
+    expect(fixture.componentInstance.resolvedLabels().title).toBe('Choose a tenant');
 
     tenantContext.setTenant('tenant-a', 'manual');
     fixture.detectChanges();

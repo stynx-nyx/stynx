@@ -1,6 +1,13 @@
 import { LoggingDedupeService } from '../../src/dedupe';
 
 describe('LoggingDedupeService', () => {
+  it('uses the default dedupe window when no options are provided', () => {
+    const dedupe = new LoggingDedupeService();
+
+    expect(dedupe.register('default-window')).toEqual({ shouldLog: true });
+    expect(dedupe.register('default-window')).toEqual({ shouldLog: false });
+  });
+
   it('suppresses duplicate errors inside the same window', () => {
     const dedupe = new LoggingDedupeService({ dedupeWindowMs: 60_000 });
 

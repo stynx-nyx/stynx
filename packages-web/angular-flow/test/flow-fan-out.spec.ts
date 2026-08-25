@@ -6,13 +6,20 @@ import { STYNX_ANGULAR_AUTH_OPTIONS, StynxSessionService } from '@stynx-nyx/angu
 import { StynxI18nService } from '@stynx-nyx/angular-i18n';
 import { Subject, of } from 'rxjs';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { StynxFlowDashboardComponent, StynxFlowOpenTasksComponent, StynxFlowRunSummaryComponent } from '../src/analytics.component';
+import {
+  StynxFlowDashboardComponent,
+  StynxFlowOpenTasksComponent,
+  StynxFlowRunSummaryComponent,
+} from '../src/analytics.component';
 import { FlowApiService } from '../src/flow-api.service';
 import { StynxFlowFillEditorComponent, StynxFlowFillsComponent } from '../src/flow-fills.component';
 import { StynxFlowFormsComponent } from '../src/flow-forms.component';
 import { StynxFlowGraphDesignerComponent } from '../src/flow-graph-designer.component';
 import { StynxFlowRunActivityComponent } from '../src/flow-run-activity.component';
-import { StynxFlowMyTasksInboxComponent, StynxFlowTaskListComponent } from '../src/flow-tasks.component';
+import {
+  StynxFlowMyTasksInboxComponent,
+  StynxFlowTaskListComponent,
+} from '../src/flow-tasks.component';
 import { StynxFlowWaiversComponent } from '../src/flow-waivers.component';
 import { flowRoutes } from '../src/routes';
 import { STYNX_FLOW_CLIENT, STYNX_FLOW_TENANT_CHANGED, provideStynxFlow } from '../src/tokens';
@@ -49,17 +56,57 @@ function createPage<T>(data: T[] = [], total = data.length) {
 
 function createApi() {
   return {
-    listScopes: vi.fn(async () => [{ id: 'scope-1', code: 'scope', label: 'Scope', adapterKey: 'test' }]),
-    listGraphs: vi.fn(async () => [{ id: 'graph-1', scopeId: 'scope-1', code: 'approval', version: 'v1', status: 'draft', isActive: true }]),
-    listGraphNodes: vi.fn(async () => [{ id: 'node-1', graphId: 'graph-1', code: 'review', kind: 'human' }]),
-    listGraphEdges: vi.fn(async () => [{ id: 'edge-1', graphId: 'graph-1', fromNodeId: 'start', toNodeId: 'review' }]),
+    listScopes: vi.fn(async () => [
+      { id: 'scope-1', code: 'scope', label: 'Scope', adapterKey: 'test' },
+    ]),
+    listGraphs: vi.fn(async () => [
+      {
+        id: 'graph-1',
+        scopeId: 'scope-1',
+        code: 'approval',
+        version: 'v1',
+        status: 'draft',
+        isActive: true,
+      },
+    ]),
+    listGraphNodes: vi.fn(async () => [
+      { id: 'node-1', graphId: 'graph-1', code: 'review', kind: 'human' },
+    ]),
+    listGraphEdges: vi.fn(async () => [
+      { id: 'edge-1', graphId: 'graph-1', fromNodeId: 'start', toNodeId: 'review' },
+    ]),
     listForms: vi.fn(async () => []),
     listFills: vi.fn(async () => []),
-    listTasks: vi.fn(async () => createPage([{ id: 'task-1', runId: 'run-1', nodeRunId: 'node-run-1', nodeId: 'node-1', assigneeType: 'user', status: 'open', allowedActions: ['approve'] }])),
+    listTasks: vi.fn(async () =>
+      createPage([
+        {
+          id: 'task-1',
+          runId: 'run-1',
+          nodeRunId: 'node-run-1',
+          nodeId: 'node-1',
+          assigneeType: 'user',
+          status: 'open',
+          allowedActions: ['approve'],
+        },
+      ]),
+    ),
     listWaivers: vi.fn(async () => []),
     openTasks: vi.fn(async () => createPage([])),
     runsSummary: vi.fn(async () => createPage([])),
-    listRunActivity: vi.fn(async () => createPage([{ id: 'event-1', runId: 'run-1', kind: 'task_assigned', note: 'Assigned', createdAt: '2026-05-20T10:00:00.000Z' }], 2)),
+    listRunActivity: vi.fn(async () =>
+      createPage(
+        [
+          {
+            id: 'event-1',
+            runId: 'run-1',
+            kind: 'task_assigned',
+            note: 'Assigned',
+            createdAt: '2026-05-20T10:00:00.000Z',
+          },
+        ],
+        2,
+      ),
+    ),
     dashboardAnalytics: vi.fn(async () => ({
       openTasks: 8,
       cycleTime: { p50Seconds: 42, p95Seconds: 95 },
@@ -95,7 +142,10 @@ async function configureRouterTest(allowed: boolean) {
       ]),
       { provide: FlowApiService, useValue: api },
       { provide: StynxI18nService, useClass: FakeI18nService },
-      { provide: StynxSessionService, useValue: { active$: of(allowed), hasAllPermissions: vi.fn(() => allowed) } },
+      {
+        provide: StynxSessionService,
+        useValue: { active$: of(allowed), hasAllPermissions: vi.fn(() => allowed) },
+      },
       { provide: STYNX_ANGULAR_AUTH_OPTIONS, useValue: { permissionDeniedPath: '/forbidden' } },
     ],
   }).compileComponents();
@@ -105,7 +155,8 @@ async function configureRouterTest(allowed: boolean) {
 }
 
 beforeAll(async () => {
-  const { BrowserTestingModule, platformBrowserTesting } = await import('@angular/platform-browser/testing');
+  const { BrowserTestingModule, platformBrowserTesting } =
+    await import('@angular/platform-browser/testing');
   try {
     TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
   } catch (error) {
@@ -169,12 +220,16 @@ describe('@stynx-nyx/angular-flow FE-G fan-out', () => {
   });
 
   it('loads dashboard analytics filters, formats percentages, and ignores stale refreshes', async () => {
-    let resolveFirst: (value: Awaited<ReturnType<FlowApiService['dashboardAnalytics']>>) => void = () => undefined;
+    let resolveFirst: (
+      value: Awaited<ReturnType<FlowApiService['dashboardAnalytics']>>,
+    ) => void = () => undefined;
     const api = createApi();
     (api.dashboardAnalytics as ReturnType<typeof vi.fn>)
-      .mockReturnValueOnce(new Promise((resolve) => {
-        resolveFirst = resolve;
-      }))
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveFirst = resolve;
+        }),
+      )
       .mockResolvedValueOnce({
         openTasks: 2,
         cycleTime: { p50Seconds: 12, p95Seconds: 22 },
@@ -209,6 +264,12 @@ describe('@stynx-nyx/angular-flow FE-G fan-out', () => {
     await component.load();
     expect(component.errorMessage()).toBe('Dashboard analytics load failed');
     expect(component.loading()).toBe(false);
+
+    (api.dashboardAnalytics as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+      new Error('dashboard down'),
+    );
+    await component.load();
+    expect(component.errorMessage()).toBe('dashboard down');
   });
 
   it('loads dashboard analytics with empty filters when inputs are unset', async () => {
@@ -233,8 +294,14 @@ describe('@stynx-nyx/angular-flow FE-G fan-out', () => {
   it('loads run activity pages, appends older events, and clears when no run is selected', async () => {
     const api = createApi();
     (api.listRunActivity as ReturnType<typeof vi.fn>)
-      .mockResolvedValueOnce({ data: [{ id: 'event-1', runId: 'run-1', kind: 'started' }], meta: { page: 1, pageSize: 1, total: 2 } })
-      .mockResolvedValueOnce({ data: [{ id: 'event-2', runId: 'run-1', kind: 'approved' }], meta: { page: 2, pageSize: 1, total: 2 } });
+      .mockResolvedValueOnce({
+        data: [{ id: 'event-1', runId: 'run-1', kind: 'started' }],
+        meta: { page: 1, pageSize: 1, total: 2 },
+      })
+      .mockResolvedValueOnce({
+        data: [{ id: 'event-2', runId: 'run-1', kind: 'approved' }],
+        meta: { page: 2, pageSize: 1, total: 2 },
+      });
     const component = createWithApi(api, () => new StynxFlowRunActivityComponent());
     component.runId = 'run-1';
     component.pageSize = 1;
@@ -257,19 +324,29 @@ describe('@stynx-nyx/angular-flow FE-G fan-out', () => {
     expect(component.hasNextPage()).toBe(false);
 
     component.runId = 'run-1';
-    (api.listRunActivity as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('activity down'));
+    (api.listRunActivity as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+      new Error('activity down'),
+    );
     await component.refresh();
     expect(component.errorMessage()).toBe('activity down');
     expect(component.loading()).toBe(false);
+
+    (api.listRunActivity as ReturnType<typeof vi.fn>).mockRejectedValueOnce('offline');
+    await component.refresh();
+    expect(component.errorMessage()).toBe('Run activity load failed');
   });
 
   it('ignores stale run activity refreshes and uses page math for next-page state', async () => {
-    let resolveFirst: (value: Awaited<ReturnType<FlowApiService['listRunActivity']>>) => void = () => undefined;
+    let resolveFirst: (
+      value: Awaited<ReturnType<FlowApiService['listRunActivity']>>,
+    ) => void = () => undefined;
     const api = createApi();
     (api.listRunActivity as ReturnType<typeof vi.fn>)
-      .mockReturnValueOnce(new Promise((resolve) => {
-        resolveFirst = resolve;
-      }))
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveFirst = resolve;
+        }),
+      )
       .mockResolvedValueOnce({
         data: [{ id: 'event-latest', runId: 'run-1', kind: 'approved' }],
         meta: { page: 2, pageSize: 10, total: 20 },
@@ -299,13 +376,60 @@ describe('@stynx-nyx/angular-flow FE-G fan-out', () => {
     const emitted: unknown[] = [];
     component.answer.subscribe((value) => emitted.push(value));
     component.questions = [
-      { id: 'approved', formId: 'form-1', key: 'approved', label: 'Approved', fieldType: 'boolean', required: false, blocksSubmit: false },
-      { id: 'comment', formId: 'form-1', key: 'comment', label: 'Comment', fieldType: 'text', required: false, blocksSubmit: false, validators: { mode: 'long', maxLength: 8000 } },
-      { id: 'attachment', formId: 'form-1', key: 'attachment', label: 'Attachment', fieldType: 'file', required: false, blocksSubmit: false, options: { collection: 'flow-attachments' }, revealIf: { question: 'approved', equals: true } },
-      { id: 'signature', formId: 'form-1', key: 'signature', label: 'Signature', fieldType: 'signature', required: false, blocksSubmit: false, visibleIf: { key: 'approved', value: true } },
-      { id: 'hidden', formId: 'form-1', key: 'hidden', label: 'Hidden', fieldType: 'text', required: false, blocksSubmit: false, revealIf: { question: 'missing', equals: 'yes' } },
+      {
+        id: 'approved',
+        formId: 'form-1',
+        key: 'approved',
+        label: 'Approved',
+        fieldType: 'boolean',
+        required: false,
+        blocksSubmit: false,
+      },
+      {
+        id: 'comment',
+        formId: 'form-1',
+        key: 'comment',
+        label: 'Comment',
+        fieldType: 'text',
+        required: false,
+        blocksSubmit: false,
+        validators: { mode: 'long', maxLength: 8000 },
+      },
+      {
+        id: 'attachment',
+        formId: 'form-1',
+        key: 'attachment',
+        label: 'Attachment',
+        fieldType: 'file',
+        required: false,
+        blocksSubmit: false,
+        options: { collection: 'flow-attachments' },
+        revealIf: { question: 'approved', equals: true },
+      },
+      {
+        id: 'signature',
+        formId: 'form-1',
+        key: 'signature',
+        label: 'Signature',
+        fieldType: 'signature',
+        required: false,
+        blocksSubmit: false,
+        visibleIf: { key: 'approved', value: true },
+      },
+      {
+        id: 'hidden',
+        formId: 'form-1',
+        key: 'hidden',
+        label: 'Hidden',
+        fieldType: 'text',
+        required: false,
+        blocksSubmit: false,
+        revealIf: { question: 'missing', equals: 'yes' },
+      },
     ];
-    component.answers = [{ id: 'answer-approved', fillId: 'fill-1', questionId: 'approved', value: true }];
+    component.answers = [
+      { id: 'answer-approved', fillId: 'fill-1', questionId: 'approved', value: true },
+    ];
 
     expect(component.isQuestionVisible(component.questions[2]!)).toBe(true);
     expect(component.isQuestionVisible(component.questions[3]!)).toBe(true);
@@ -314,8 +438,18 @@ describe('@stynx-nyx/angular-flow FE-G fan-out', () => {
     expect(component.questionTextMaxLength(component.questions[1]!)).toBe(4000);
     expect(component.fileCollection(component.questions[2]!)).toBe('flow-attachments');
 
-    component.setFileAnswer(component.questions[2]!, { id: 'document-1', documentId: 'document-1' } as never);
+    component.setFileAnswer(component.questions[2]!, {
+      id: 'document-1',
+      documentId: 'document-1',
+    } as never);
     expect(component.textValue(component.questions[2]!)).toBe('document-1');
+    expect(
+      (
+        component as unknown as {
+          parseAnswerValue(question: (typeof component.questions)[number], value: unknown): unknown;
+        }
+      ).parseAnswerValue(component.questions[2]!, null),
+    ).toBe('');
 
     const canvas = document.createElement('canvas');
     const context = {
@@ -329,12 +463,30 @@ describe('@stynx-nyx/angular-flow FE-G fan-out', () => {
       strokeStyle: '',
     };
     vi.spyOn(canvas, 'getContext').mockReturnValue(context as never);
-    vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({ left: 10, top: 20, width: 100, height: 50 } as DOMRect);
+    vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({
+      left: 10,
+      top: 20,
+      width: 100,
+      height: 50,
+    } as DOMRect);
     vi.spyOn(canvas, 'toDataURL').mockReturnValue('data:image/png;base64,signature');
 
-    component.beginSignature(component.questions[3]!, { target: canvas, clientX: 20, clientY: 30, preventDefault: vi.fn() } as never);
-    component.drawSignature(component.questions[3]!, { target: canvas, clientX: 40, clientY: 35, preventDefault: vi.fn() } as never);
-    component.endSignature(component.questions[3]!, { target: canvas, preventDefault: vi.fn() } as never);
+    component.beginSignature(component.questions[3]!, {
+      target: canvas,
+      clientX: 20,
+      clientY: 30,
+      preventDefault: vi.fn(),
+    } as never);
+    component.drawSignature(component.questions[3]!, {
+      target: canvas,
+      clientX: 40,
+      clientY: 35,
+      preventDefault: vi.fn(),
+    } as never);
+    component.endSignature(component.questions[3]!, {
+      target: canvas,
+      preventDefault: vi.fn(),
+    } as never);
 
     expect(context.beginPath).toHaveBeenCalledTimes(1);
     expect(context.lineTo).toHaveBeenCalledWith(90, 45);
@@ -349,15 +501,23 @@ describe('@stynx-nyx/angular-flow FE-G fan-out', () => {
     expect(component.textValue(component.questions[3]!)).toBe('');
 
     component.saveAllAnswers();
-    expect(emitted).toEqual(expect.arrayContaining([
-      { questionId: 'attachment', value: 'document-1' },
-      { questionId: 'signature', value: 'data:image/png;base64,signature' },
-      { questionId: 'signature', value: null },
-    ]));
+    expect(emitted).toEqual(
+      expect.arrayContaining([
+        { questionId: 'attachment', value: 'document-1' },
+        { questionId: 'signature', value: 'data:image/png;base64,signature' },
+        { questionId: 'signature', value: null },
+      ]),
+    );
   });
 
   it('wires provideStynxFlow for instance-backed and factory-backed package hosts', () => {
-    const instanceClient = { get: vi.fn(), post: vi.fn(), put: vi.fn(), patch: vi.fn(), delete: vi.fn() };
+    const instanceClient = {
+      get: vi.fn(),
+      post: vi.fn(),
+      put: vi.fn(),
+      patch: vi.fn(),
+      delete: vi.fn(),
+    };
     TestBed.configureTestingModule({
       providers: [provideStynxFlow(instanceClient)],
     });
@@ -365,7 +525,13 @@ describe('@stynx-nyx/angular-flow FE-G fan-out', () => {
     TestBed.resetTestingModule();
 
     const tenantChanged$ = new Subject<void>();
-    const factoryClient = { get: vi.fn(), post: vi.fn(), put: vi.fn(), patch: vi.fn(), delete: vi.fn() };
+    const factoryClient = {
+      get: vi.fn(),
+      post: vi.fn(),
+      put: vi.fn(),
+      patch: vi.fn(),
+      delete: vi.fn(),
+    };
     const clientFactory = vi.fn(() => factoryClient);
     TestBed.configureTestingModule({
       providers: [provideStynxFlow({ clientFactory, tenantChanged$ })],

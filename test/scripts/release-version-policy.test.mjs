@@ -512,6 +512,12 @@ test('coverage is executable and reports four metrics for every one of the 44 pa
   assert.match(rootManifest.scripts['test:coverage'], /scripts\/run-coverage/u);
   assert.match(rootManifest.scripts['ci:stynx:release'], /test:coverage/u);
   const coverage = repositorySource('scripts/run-coverage.mjs');
+  const coverageBase = repositorySource('tools/repo-config/vitest.base.mjs');
+  assert.doesNotMatch(
+    coverageBase,
+    /^\s*'src\/index\.ts',\s*$/mu,
+    'executable package entry points cannot be blanket-excluded from coverage',
+  );
   assert.match(coverage, /discoverPublishablePackages/u);
   for (const metric of ['branches', 'functions', 'lines', 'statements']) {
     assert.match(coverage, new RegExp(metric, 'u'));

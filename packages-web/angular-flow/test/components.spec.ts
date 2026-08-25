@@ -1,10 +1,10 @@
 import '@angular/compiler';
 import { Injector, runInInjectionContext } from '@angular/core';
-import { StynxFlowOpenTasksComponent, StynxFlowRunSummaryComponent } from '../src/analytics.component';
 import {
-  StynxFlowFillEditorComponent,
-  StynxFlowFillsComponent,
-} from '../src/flow-fills.component';
+  StynxFlowOpenTasksComponent,
+  StynxFlowRunSummaryComponent,
+} from '../src/analytics.component';
+import { StynxFlowFillEditorComponent, StynxFlowFillsComponent } from '../src/flow-fills.component';
 import { FlowApiService } from '../src/flow-api.service';
 import {
   StynxFlowAgentRuleDialogComponent,
@@ -38,8 +38,20 @@ import { Subject } from 'rxjs';
 
 function createApi(): FlowApiService {
   return {
-    listScopes: vi.fn(async () => [{ id: 'scope-1', code: 'scope', label: 'Scope', adapterKey: 'test' }]),
-    listGraphs: vi.fn(async () => [{ id: 'graph-1', scopeId: 'scope-1', code: 'approval', version: 'v1', status: 'draft', isActive: true, name: 'Approval' }]),
+    listScopes: vi.fn(async () => [
+      { id: 'scope-1', code: 'scope', label: 'Scope', adapterKey: 'test' },
+    ]),
+    listGraphs: vi.fn(async () => [
+      {
+        id: 'graph-1',
+        scopeId: 'scope-1',
+        code: 'approval',
+        version: 'v1',
+        status: 'draft',
+        isActive: true,
+        name: 'Approval',
+      },
+    ]),
     publishGraph: vi.fn(async () => ({
       graphId: 'graph-1',
       status: 'published',
@@ -49,14 +61,73 @@ function createApi(): FlowApiService {
       publishedBy: 'user-1',
       runtimeGraphRef: { graphId: 'graph-1', version: 1 },
     })),
-    listGraphNodes: vi.fn(async () => [{ id: 'node-1', graphId: 'graph-1', code: 'review', kind: 'human', allowedActions: ['approve'] }]),
-    listGraphEdges: vi.fn(async () => [{ id: 'edge-1', graphId: 'graph-1', fromNodeId: 'start', toNodeId: 'review' }]),
-    openTasks: vi.fn(async () => ({ data: [{ id: 'task-1', runId: 'run-1', nodeRunId: 'nr-1', nodeId: 'node-1', assigneeType: 'user', status: 'open', allowedActions: ['approve'], targetType: 'generic', targetId: 'target-1' }], meta: { page: 1, pageSize: 50, total: 1 } })),
-    runsSummary: vi.fn(async () => ({ data: [{ scopeId: 'scope-1', graphId: 'graph-1', status: 'active', runCount: 2 }], meta: { page: 1, pageSize: 50, total: 1 } })),
-    listForms: vi.fn(async () => [{ id: 'form-1', scopeId: 'scope-1', code: 'form', title: 'Form', version: 'v1' }]),
-    listFills: vi.fn(async () => [{ id: 'fill-1', formId: 'form-1', targetType: 'record', targetId: 'record-1', status: 'draft' }]),
-    listTasks: vi.fn(async () => ({ data: [{ id: 'task-1', runId: 'run-1', nodeRunId: 'nr-1', nodeId: 'node-1', assigneeType: 'user', status: 'open', allowedActions: ['approve'] }], meta: { page: 1, pageSize: 50, total: 1 } })),
-    listWaivers: vi.fn(async () => [{ id: 'waiver-1', fillId: 'fill-1', targetType: 'question', targetId: 'q-1', reason: 'Manual' }]),
+    listGraphNodes: vi.fn(async () => [
+      {
+        id: 'node-1',
+        graphId: 'graph-1',
+        code: 'review',
+        kind: 'human',
+        allowedActions: ['approve'],
+      },
+    ]),
+    listGraphEdges: vi.fn(async () => [
+      { id: 'edge-1', graphId: 'graph-1', fromNodeId: 'start', toNodeId: 'review' },
+    ]),
+    openTasks: vi.fn(async () => ({
+      data: [
+        {
+          id: 'task-1',
+          runId: 'run-1',
+          nodeRunId: 'nr-1',
+          nodeId: 'node-1',
+          assigneeType: 'user',
+          status: 'open',
+          allowedActions: ['approve'],
+          targetType: 'generic',
+          targetId: 'target-1',
+        },
+      ],
+      meta: { page: 1, pageSize: 50, total: 1 },
+    })),
+    runsSummary: vi.fn(async () => ({
+      data: [{ scopeId: 'scope-1', graphId: 'graph-1', status: 'active', runCount: 2 }],
+      meta: { page: 1, pageSize: 50, total: 1 },
+    })),
+    listForms: vi.fn(async () => [
+      { id: 'form-1', scopeId: 'scope-1', code: 'form', title: 'Form', version: 'v1' },
+    ]),
+    listFills: vi.fn(async () => [
+      {
+        id: 'fill-1',
+        formId: 'form-1',
+        targetType: 'record',
+        targetId: 'record-1',
+        status: 'draft',
+      },
+    ]),
+    listTasks: vi.fn(async () => ({
+      data: [
+        {
+          id: 'task-1',
+          runId: 'run-1',
+          nodeRunId: 'nr-1',
+          nodeId: 'node-1',
+          assigneeType: 'user',
+          status: 'open',
+          allowedActions: ['approve'],
+        },
+      ],
+      meta: { page: 1, pageSize: 50, total: 1 },
+    })),
+    listWaivers: vi.fn(async () => [
+      {
+        id: 'waiver-1',
+        fillId: 'fill-1',
+        targetType: 'question',
+        targetId: 'q-1',
+        reason: 'Manual',
+      },
+    ]),
   } as unknown as FlowApiService;
 }
 
@@ -74,7 +145,10 @@ function createWithApi<T>(api: FlowApiService, factory: () => T): T {
   return runInInjectionContext(injector, factory);
 }
 
-function createInbox(api: FlowApiService, tenantChanged: Subject<void>): StynxFlowMyTasksInboxComponent {
+function createInbox(
+  api: FlowApiService,
+  tenantChanged: Subject<void>,
+): StynxFlowMyTasksInboxComponent {
   const injector = Injector.create({
     providers: [
       { provide: FlowApiService, useValue: api },
@@ -99,7 +173,9 @@ describe('@stynx-nyx/angular-flow components', () => {
     expect(api.listGraphNodes).toHaveBeenCalledWith('graph-1');
     expect(component.activeScope?.code).toBe('scope');
     expect(component.activeGraph?.code).toBe('approval');
-    expect(component.graphStatusLabel(component.activeGraph!)).toBe('flow.graphDesigner.status.draft');
+    expect(component.graphStatusLabel(component.activeGraph!)).toBe(
+      'flow.graphDesigner.status.draft',
+    );
     expect(component.nodes).toHaveLength(1);
     expect(component.edges).toHaveLength(1);
     expect(component.loading).toBe(false);
@@ -125,27 +201,45 @@ describe('@stynx-nyx/angular-flow components', () => {
     expect(component.errorMessage).toBe('');
   });
 
+  it('does not publish when no graph is active', async () => {
+    const api = createApi();
+    const component = createWithApi(api, () => new StynxFlowGraphDesignerComponent());
+
+    await component.publishActiveGraph();
+
+    expect(api.publishGraph).not.toHaveBeenCalled();
+    expect(component.publishingGraphId).toBe('');
+  });
+
   it('surfaces publish failures and labels published versions', async () => {
     const api = createApi();
-    (api.listGraphs as Mock).mockResolvedValueOnce([{
-      id: 'graph-1',
-      scopeId: 'scope-1',
-      code: 'approval',
-      version: 'v1',
-      status: 'published',
-      publishedVersion: 3,
-      isActive: true,
-    }]);
+    (api.listGraphs as Mock).mockResolvedValueOnce([
+      {
+        id: 'graph-1',
+        scopeId: 'scope-1',
+        code: 'approval',
+        version: 'v1',
+        status: 'published',
+        publishedVersion: 3,
+        isActive: true,
+      },
+    ]);
     const component = createWithApi(api, () => new StynxFlowGraphDesignerComponent());
     component.scopeId = 'scope-1';
     component.graphId = 'graph-1';
 
     await component.load();
-    expect(component.graphStatusLabel(component.activeGraph!)).toBe('flow.graphDesigner.status.published');
+    expect(component.graphStatusLabel(component.activeGraph!)).toBe(
+      'flow.graphDesigner.status.published',
+    );
 
     (api.publishGraph as Mock).mockRejectedValueOnce(new Error('publish rejected'));
     await component.publishActiveGraph();
     expect(component.errorMessage).toBe('publish rejected');
+
+    (api.publishGraph as Mock).mockRejectedValueOnce('offline');
+    await component.publishActiveGraph();
+    expect(component.errorMessage).toBe('Flow graph publish failed');
   });
 
   it('surfaces the first-run scope empty state intent', async () => {
@@ -230,7 +324,9 @@ describe('@stynx-nyx/angular-flow components', () => {
     expect(component.tasks).toHaveLength(1);
     await component.load();
 
-    expect(component.tasks).toEqual([expect.objectContaining({ id: 'task-1', targetId: 'target-1' })]);
+    expect(component.tasks).toEqual([
+      expect.objectContaining({ id: 'task-1', targetId: 'target-1' }),
+    ]);
     expect(component.loading).toBe(false);
     expect(component.errorMessage).toBe('');
   });
@@ -268,7 +364,9 @@ describe('@stynx-nyx/angular-flow components', () => {
     await component.ngOnInit();
     expect(component.summaries).toHaveLength(1);
     await component.load();
-    expect(component.summaries).toEqual([expect.objectContaining({ status: 'active', runCount: 2 })]);
+    expect(component.summaries).toEqual([
+      expect.objectContaining({ status: 'active', runCount: 2 }),
+    ]);
 
     (api.runsSummary as Mock).mockRejectedValueOnce(new Error('summary down'));
     await component.load();
@@ -417,11 +515,34 @@ describe('@stynx-nyx/angular-flow components', () => {
     expect(component.pollingIntervalMs).toBe(0);
     component.pollingIntervalMs = 'not-a-number';
     expect(component.pollingIntervalMs).toBe(30000);
+    component.pollingIntervalMs = null;
+    expect(component.pollingIntervalMs).toBe(30000);
 
     (api.listTasks as Mock).mockRejectedValueOnce('offline');
     await component.refresh();
     expect(component.errorMessage()).toBe('My tasks load failed');
     expect(component.loading()).toBe(false);
+
+    (api.listTasks as Mock).mockRejectedValueOnce(new Error('tasks unavailable'));
+    await component.refresh();
+    expect(component.errorMessage()).toBe('tasks unavailable');
+  });
+
+  it('polls my tasks only while the component is active', async () => {
+    vi.useFakeTimers();
+    try {
+      const api = createApi();
+      const component = createWithApi(api, () => new StynxFlowMyTasksInboxComponent());
+      component.pollingIntervalMs = 10;
+      component.ngOnInit();
+      await Promise.resolve();
+      (api.listTasks as Mock).mockClear();
+
+      await vi.advanceTimersByTimeAsync(10);
+      expect(api.listTasks).toHaveBeenCalledWith({ assignee: 'me', status: 'open' });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('supports fill editor answer lookup and bulk save intent', () => {
@@ -429,8 +550,20 @@ describe('@stynx-nyx/angular-flow components', () => {
     const saved: unknown[] = [];
     const answers: unknown[] = [];
     const waivers: unknown[] = [];
-    component.questions = [{ id: 'question-1', formId: 'form-1', key: 'approved', label: 'Approved', fieldType: 'boolean', required: true, blocksSubmit: false }];
-    component.answers = [{ id: 'answer-1', fillId: 'fill-1', questionId: 'question-1', value: true }];
+    component.questions = [
+      {
+        id: 'question-1',
+        formId: 'form-1',
+        key: 'approved',
+        label: 'Approved',
+        fieldType: 'boolean',
+        required: true,
+        blocksSubmit: false,
+      },
+    ];
+    component.answers = [
+      { id: 'answer-1', fillId: 'fill-1', questionId: 'question-1', value: true },
+    ];
     component.answer.subscribe((value) => answers.push(value));
     component.saveAnswers.subscribe((value) => saved.push(value));
     component.waiveQuestion.subscribe((value) => waivers.push(value));
@@ -474,10 +607,44 @@ describe('@stynx-nyx/angular-flow components', () => {
     const component = new StynxFlowFillEditorComponent();
     const saved: unknown[] = [];
     component.questions = [
-      { id: 'number-question', formId: 'form-1', key: 'amount', label: 'Amount', fieldType: 'number', required: false, blocksSubmit: false },
-      { id: 'select-question', formId: 'form-1', key: 'choice', label: 'Choice', fieldType: 'select', required: false, blocksSubmit: false, options: [{ label: 'Option A', value: 'a' }] },
-      { id: 'multi-question', formId: 'form-1', key: 'tags', label: 'Tags', fieldType: 'multiselect', required: false, blocksSubmit: false, options: { a: 'Alpha', b: 'Beta' } },
-      { id: 'date-question', formId: 'form-1', key: 'due', label: 'Due', fieldType: 'date', required: false, blocksSubmit: false },
+      {
+        id: 'number-question',
+        formId: 'form-1',
+        key: 'amount',
+        label: 'Amount',
+        fieldType: 'number',
+        required: false,
+        blocksSubmit: false,
+      },
+      {
+        id: 'select-question',
+        formId: 'form-1',
+        key: 'choice',
+        label: 'Choice',
+        fieldType: 'select',
+        required: false,
+        blocksSubmit: false,
+        options: [{ label: 'Option A', value: 'a' }],
+      },
+      {
+        id: 'multi-question',
+        formId: 'form-1',
+        key: 'tags',
+        label: 'Tags',
+        fieldType: 'multiselect',
+        required: false,
+        blocksSubmit: false,
+        options: { a: 'Alpha', b: 'Beta' },
+      },
+      {
+        id: 'date-question',
+        formId: 'form-1',
+        key: 'due',
+        label: 'Due',
+        fieldType: 'date',
+        required: false,
+        blocksSubmit: false,
+      },
     ];
     component.answers = [
       { id: 'answer-number', fillId: 'fill-1', questionId: 'number-question', value: '4' },
@@ -486,7 +653,9 @@ describe('@stynx-nyx/angular-flow components', () => {
     component.saveAnswers.subscribe((value) => saved.push(value));
 
     expect(component.numberValue(component.questions[0]!)).toBe('4');
-    expect(component.questionOptions(component.questions[1]!)).toEqual([{ label: 'Option A', value: 'a', key: 'a' }]);
+    expect(component.questionOptions(component.questions[1]!)).toEqual([
+      { label: 'Option A', value: 'a', key: 'a' },
+    ]);
     expect(component.questionOptions(component.questions[2]!)).toEqual([
       { label: 'Alpha', value: 'a', key: 'a' },
       { label: 'Beta', value: 'b', key: 'b' },
@@ -494,7 +663,10 @@ describe('@stynx-nyx/angular-flow components', () => {
     expect(component.isSelected(component.questions[2]!, 'a')).toBe(true);
 
     component.setValue(component.questions[0]!, '8');
-    component.setValue(component.questions[1]!, component.optionValueFromKey(component.questions[1]!, 'a'));
+    component.setValue(
+      component.questions[1]!,
+      component.optionValueFromKey(component.questions[1]!, 'a'),
+    );
     component.setValue(component.questions[2]!, ['a', 'b']);
     component.setValue(component.questions[3]!, '2026-05-17');
     component.setMultiselectValue(component.questions[2]!, {
@@ -505,12 +677,14 @@ describe('@stynx-nyx/angular-flow components', () => {
     } as unknown as HTMLCollectionOf<HTMLOptionElement>);
     component.saveAllAnswers();
 
-    expect(saved).toEqual([[
-      { questionId: 'number-question', value: 8 },
-      { questionId: 'select-question', value: 'a' },
-      { questionId: 'multi-question', value: ['a', 'b'] },
-      { questionId: 'date-question', value: '2026-05-17' },
-    ]]);
+    expect(saved).toEqual([
+      [
+        { questionId: 'number-question', value: 8 },
+        { questionId: 'select-question', value: 'a' },
+        { questionId: 'multi-question', value: ['a', 'b'] },
+        { questionId: 'date-question', value: '2026-05-17' },
+      ],
+    ]);
   });
 
   it('serializes fill-editor boundary values and excludes hidden answers from bulk save', () => {
@@ -518,18 +692,92 @@ describe('@stynx-nyx/angular-flow components', () => {
     const saved: unknown[] = [];
     const emitted: unknown[] = [];
     component.questions = [
-      { id: 'source', formId: 'form-1', key: 'source', label: 'Source', fieldType: 'select', required: false, blocksSubmit: false, options: [{ label: 'Yes', value: 'yes' }] },
-      { id: 'visible', formId: 'form-1', key: 'visible', label: 'Visible', fieldType: 'number', required: false, blocksSubmit: false, visibleIf: { questionKey: 'source', value: 'yes' } },
-      { id: 'hidden', formId: 'form-1', key: 'hidden', label: 'Hidden', fieldType: 'text', required: false, blocksSubmit: false, revealIf: { question: 'source', equals: 'no' } },
-      { id: 'invalid-number', formId: 'form-1', key: 'invalidNumber', label: 'Invalid number', fieldType: 'number', required: false, blocksSubmit: false },
-      { id: 'file', formId: 'form-1', key: 'file', label: 'File', fieldType: 'file', required: false, blocksSubmit: false },
-      { id: 'signature', formId: 'form-1', key: 'signature', label: 'Signature', fieldType: 'signature', required: false, blocksSubmit: false },
-      { id: 'long-default', formId: 'form-1', key: 'longDefault', label: 'Long default', fieldType: 'text', required: false, blocksSubmit: false, validators: { mode: 'long' } },
-      { id: 'zero-max', formId: 'form-1', key: 'zeroMax', label: 'Zero max', fieldType: 'text', required: false, blocksSubmit: false, validators: { maxLength: 0 } },
+      {
+        id: 'source',
+        formId: 'form-1',
+        key: 'source',
+        label: 'Source',
+        fieldType: 'select',
+        required: false,
+        blocksSubmit: false,
+        options: [{ label: 'Yes', value: 'yes' }],
+      },
+      {
+        id: 'visible',
+        formId: 'form-1',
+        key: 'visible',
+        label: 'Visible',
+        fieldType: 'number',
+        required: false,
+        blocksSubmit: false,
+        visibleIf: { questionKey: 'source', value: 'yes' },
+      },
+      {
+        id: 'hidden',
+        formId: 'form-1',
+        key: 'hidden',
+        label: 'Hidden',
+        fieldType: 'text',
+        required: false,
+        blocksSubmit: false,
+        revealIf: { question: 'source', equals: 'no' },
+      },
+      {
+        id: 'invalid-number',
+        formId: 'form-1',
+        key: 'invalidNumber',
+        label: 'Invalid number',
+        fieldType: 'number',
+        required: false,
+        blocksSubmit: false,
+      },
+      {
+        id: 'file',
+        formId: 'form-1',
+        key: 'file',
+        label: 'File',
+        fieldType: 'file',
+        required: false,
+        blocksSubmit: false,
+      },
+      {
+        id: 'signature',
+        formId: 'form-1',
+        key: 'signature',
+        label: 'Signature',
+        fieldType: 'signature',
+        required: false,
+        blocksSubmit: false,
+      },
+      {
+        id: 'long-default',
+        formId: 'form-1',
+        key: 'longDefault',
+        label: 'Long default',
+        fieldType: 'text',
+        required: false,
+        blocksSubmit: false,
+        validators: { mode: 'long' },
+      },
+      {
+        id: 'zero-max',
+        formId: 'form-1',
+        key: 'zeroMax',
+        label: 'Zero max',
+        fieldType: 'text',
+        required: false,
+        blocksSubmit: false,
+        validators: { maxLength: 0 },
+      },
     ];
     component.answers = [
       { id: 'source-answer', fillId: 'fill-1', questionId: 'source', value: 'yes' },
-      { id: 'invalid-answer', fillId: 'fill-1', questionId: 'invalid-number', value: 'not-a-number' },
+      {
+        id: 'invalid-answer',
+        fillId: 'fill-1',
+        questionId: 'invalid-number',
+        value: 'not-a-number',
+      },
     ];
     component.saveAnswers.subscribe((value) => saved.push(value));
     component.answer.subscribe((value) => emitted.push(value));
@@ -550,20 +798,30 @@ describe('@stynx-nyx/angular-flow components', () => {
       { questionId: 'file', value: null },
       { questionId: 'signature', value: null },
     ]);
-    expect(saved).toEqual([[
-      { questionId: 'source', value: 'yes' },
-      { questionId: 'visible', value: null },
-      { questionId: 'invalid-number', value: Number.NaN },
-      { questionId: 'file', value: null },
-      { questionId: 'signature', value: null },
-      { questionId: 'long-default', value: null },
-      { questionId: 'zero-max', value: null },
-    ]]);
+    expect(saved).toEqual([
+      [
+        { questionId: 'source', value: 'yes' },
+        { questionId: 'visible', value: null },
+        { questionId: 'invalid-number', value: Number.NaN },
+        { questionId: 'file', value: null },
+        { questionId: 'signature', value: null },
+        { questionId: 'long-default', value: null },
+        { questionId: 'zero-max', value: null },
+      ],
+    ]);
   });
 
   it('draws signature points with scaled canvas coordinates and stroke style', () => {
     const component = new StynxFlowFillEditorComponent();
-    const question = { id: 'signature', formId: 'form-1', key: 'signature', label: 'Signature', fieldType: 'signature', required: false, blocksSubmit: false } as const;
+    const question = {
+      id: 'signature',
+      formId: 'form-1',
+      key: 'signature',
+      label: 'Signature',
+      fieldType: 'signature',
+      required: false,
+      blocksSubmit: false,
+    } as const;
     const canvas = document.createElement('canvas');
     canvas.width = 200;
     canvas.height = 100;
@@ -578,11 +836,26 @@ describe('@stynx-nyx/angular-flow components', () => {
       strokeStyle: '',
     };
     vi.spyOn(canvas, 'getContext').mockReturnValue(context as never);
-    vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({ left: 10, top: 20, width: 100, height: 50 } as DOMRect);
+    vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({
+      left: 10,
+      top: 20,
+      width: 100,
+      height: 50,
+    } as DOMRect);
     vi.spyOn(canvas, 'toDataURL').mockReturnValue('data:image/png;base64,signature');
 
-    component.beginSignature(question, { target: canvas, clientX: 60, clientY: 45, preventDefault: vi.fn() } as never);
-    component.drawSignature(question, { target: canvas, clientX: 85, clientY: 60, preventDefault: vi.fn() } as never);
+    component.beginSignature(question, {
+      target: canvas,
+      clientX: 60,
+      clientY: 45,
+      preventDefault: vi.fn(),
+    } as never);
+    component.drawSignature(question, {
+      target: canvas,
+      clientX: 85,
+      clientY: 60,
+      preventDefault: vi.fn(),
+    } as never);
     component.endSignature(question, { target: canvas, preventDefault: vi.fn() } as never);
 
     expect(context.lineWidth).toBe(2);
@@ -599,19 +872,81 @@ describe('@stynx-nyx/angular-flow components', () => {
     const emitted: unknown[] = [];
     component.answer.subscribe((value) => emitted.push(value));
     component.questions = [
-      { id: 'text-question', formId: 'form-1', key: 'text', label: 'Text', fieldType: 'text', required: false, blocksSubmit: false },
-      { id: 'number-question', formId: 'form-1', key: 'amount', label: 'Amount', fieldType: 'number', required: false, blocksSubmit: false },
-      { id: 'boolean-question', formId: 'form-1', key: 'ok', label: 'Ok', fieldType: 'boolean', required: false, blocksSubmit: false },
-      { id: 'select-question', formId: 'form-1', key: 'choice', label: 'Choice', fieldType: 'select', required: false, blocksSubmit: false, options: [{ id: 'a', title: 'Option A' }, null] },
-      { id: 'multi-question', formId: 'form-1', key: 'tags', label: 'Tags', fieldType: 'multiselect', required: false, blocksSubmit: false },
-      { id: 'date-question', formId: 'form-1', key: 'due', label: 'Due', fieldType: 'date', required: false, blocksSubmit: false },
-      { id: 'email-question', formId: 'form-1', key: 'email', label: 'Email', fieldType: 'email', required: false, blocksSubmit: false },
+      {
+        id: 'text-question',
+        formId: 'form-1',
+        key: 'text',
+        label: 'Text',
+        fieldType: 'text',
+        required: false,
+        blocksSubmit: false,
+      },
+      {
+        id: 'number-question',
+        formId: 'form-1',
+        key: 'amount',
+        label: 'Amount',
+        fieldType: 'number',
+        required: false,
+        blocksSubmit: false,
+      },
+      {
+        id: 'boolean-question',
+        formId: 'form-1',
+        key: 'ok',
+        label: 'Ok',
+        fieldType: 'boolean',
+        required: false,
+        blocksSubmit: false,
+      },
+      {
+        id: 'select-question',
+        formId: 'form-1',
+        key: 'choice',
+        label: 'Choice',
+        fieldType: 'select',
+        required: false,
+        blocksSubmit: false,
+        options: [{ id: 'a', title: 'Option A' }, null],
+      },
+      {
+        id: 'multi-question',
+        formId: 'form-1',
+        key: 'tags',
+        label: 'Tags',
+        fieldType: 'multiselect',
+        required: false,
+        blocksSubmit: false,
+      },
+      {
+        id: 'date-question',
+        formId: 'form-1',
+        key: 'due',
+        label: 'Due',
+        fieldType: 'date',
+        required: false,
+        blocksSubmit: false,
+      },
+      {
+        id: 'email-question',
+        formId: 'form-1',
+        key: 'email',
+        label: 'Email',
+        fieldType: 'email',
+        required: false,
+        blocksSubmit: false,
+      },
     ];
     component.answers = [
       { id: 'bool-answer', fillId: 'fill-1', questionId: 'boolean-question', value: 'true' },
       { id: 'number-empty-answer', fillId: 'fill-1', questionId: 'number-question', value: '' },
       { id: 'multi-array-answer', fillId: 'fill-1', questionId: 'multi-question', value: ['a'] },
-      { id: 'date-answer', fillId: 'fill-1', questionId: 'date-question', value: '2026-05-18T12:00:00Z' },
+      {
+        id: 'date-answer',
+        fillId: 'fill-1',
+        questionId: 'date-question',
+        value: '2026-05-18T12:00:00Z',
+      },
     ];
     component.ngOnChanges();
 
@@ -625,16 +960,18 @@ describe('@stynx-nyx/angular-flow components', () => {
       value: 'a',
       key: 'a',
     });
-    expect(component.questionOptions({
-      id: 'invalid-options',
-      formId: 'form-1',
-      key: 'invalid',
-      label: 'Invalid',
-      fieldType: 'select',
-      required: false,
-      blocksSubmit: false,
-      options: 'not-options' as never,
-    })).toEqual([]);
+    expect(
+      component.questionOptions({
+        id: 'invalid-options',
+        formId: 'form-1',
+        key: 'invalid',
+        label: 'Invalid',
+        fieldType: 'select',
+        required: false,
+        blocksSubmit: false,
+        options: 'not-options' as never,
+      }),
+    ).toEqual([]);
     expect(component.isSelected(component.questions[0]!, 'anything')).toBe(false);
     expect(component.optionValueFromKey(component.questions[3]!, 'missing')).toBe('missing');
     expect(component.optionKey({ a: 1 })).toBe(JSON.stringify({ a: 1 }));
@@ -662,11 +999,51 @@ describe('@stynx-nyx/angular-flow components', () => {
     const component = new StynxFlowFillEditorComponent();
     const saved: unknown[] = [];
     component.questions = [
-      { id: 'text-null', formId: 'form-1', key: 'textNull', label: 'Text null', fieldType: 'text', required: false, blocksSubmit: false },
-      { id: 'number-native', formId: 'form-1', key: 'count', label: 'Count', fieldType: 'number', required: false, blocksSubmit: false },
-      { id: 'date-null', formId: 'form-1', key: 'dateNull', label: 'Date null', fieldType: 'date', required: false, blocksSubmit: false },
-      { id: 'multi-null', formId: 'form-1', key: 'multiNull', label: 'Multi null', fieldType: 'multiselect', required: false, blocksSubmit: false },
-      { id: 'multi-default', formId: 'form-1', key: 'multiDefault', label: 'Multi default', fieldType: 'multiselect', required: false, blocksSubmit: false },
+      {
+        id: 'text-null',
+        formId: 'form-1',
+        key: 'textNull',
+        label: 'Text null',
+        fieldType: 'text',
+        required: false,
+        blocksSubmit: false,
+      },
+      {
+        id: 'number-native',
+        formId: 'form-1',
+        key: 'count',
+        label: 'Count',
+        fieldType: 'number',
+        required: false,
+        blocksSubmit: false,
+      },
+      {
+        id: 'date-null',
+        formId: 'form-1',
+        key: 'dateNull',
+        label: 'Date null',
+        fieldType: 'date',
+        required: false,
+        blocksSubmit: false,
+      },
+      {
+        id: 'multi-null',
+        formId: 'form-1',
+        key: 'multiNull',
+        label: 'Multi null',
+        fieldType: 'multiselect',
+        required: false,
+        blocksSubmit: false,
+      },
+      {
+        id: 'multi-default',
+        formId: 'form-1',
+        key: 'multiDefault',
+        label: 'Multi default',
+        fieldType: 'multiselect',
+        required: false,
+        blocksSubmit: false,
+      },
     ];
     component.answers = [
       { id: 'text-null-answer', fillId: 'fill-1', questionId: 'text-null', value: null },
@@ -681,26 +1058,30 @@ describe('@stynx-nyx/angular-flow components', () => {
     expect(component.dateValue(component.questions[2]!)).toBe('');
     expect(component.isSelected(component.questions[3]!, 'a')).toBe(false);
     expect(component.questionOptions(component.questions[4]!)).toEqual([]);
-    expect(component.questionOptions({
-      id: 'sparse-options',
-      formId: 'form-1',
-      key: 'sparse',
-      label: 'Sparse',
-      fieldType: 'select',
-      required: false,
-      blocksSubmit: false,
-      options: { fallback: undefined },
-    })).toEqual([{ label: 'fallback', value: 'fallback', key: 'fallback' }]);
-    expect(component.questionOptions({
-      id: 'object-options',
-      formId: 'form-1',
-      key: 'object',
-      label: 'Object',
-      fieldType: 'select',
-      required: false,
-      blocksSubmit: false,
-      options: [{ value: 'value-only' }, { id: 'id-only' }, {}],
-    })).toEqual([
+    expect(
+      component.questionOptions({
+        id: 'sparse-options',
+        formId: 'form-1',
+        key: 'sparse',
+        label: 'Sparse',
+        fieldType: 'select',
+        required: false,
+        blocksSubmit: false,
+        options: { fallback: undefined },
+      }),
+    ).toEqual([{ label: 'fallback', value: 'fallback', key: 'fallback' }]);
+    expect(
+      component.questionOptions({
+        id: 'object-options',
+        formId: 'form-1',
+        key: 'object',
+        label: 'Object',
+        fieldType: 'select',
+        required: false,
+        blocksSubmit: false,
+        options: [{ value: 'value-only' }, { id: 'id-only' }, {}],
+      }),
+    ).toEqual([
       { label: 'value-only', value: 'value-only', key: 'value-only' },
       { label: 'id-only', value: 'id-only', key: 'id-only' },
       { label: '{}', value: {}, key: '{}' },
@@ -715,13 +1096,15 @@ describe('@stynx-nyx/angular-flow components', () => {
     component.setValue(component.questions[2]!, null);
 
     component.saveAllAnswers();
-    expect(saved).toEqual([[
-      { questionId: 'text-null', value: null },
-      { questionId: 'number-native', value: 7 },
-      { questionId: 'date-null', value: null },
-      { questionId: 'multi-null', value: [] },
-      { questionId: 'multi-default', value: [] },
-    ]]);
+    expect(saved).toEqual([
+      [
+        { questionId: 'text-null', value: null },
+        { questionId: 'number-native', value: 7 },
+        { questionId: 'date-null', value: null },
+        { questionId: 'multi-null', value: [] },
+        { questionId: 'multi-default', value: [] },
+      ],
+    ]);
   });
 
   it('keeps task card action outputs permission-scoped by intent', () => {
@@ -754,17 +1137,104 @@ describe('@stynx-nyx/angular-flow components', () => {
   it('keeps fill reveal, text-mode, collection, and signature guard branches observable', () => {
     const component = new StynxFlowFillEditorComponent();
     component.questions = [
-      { id: 'source-id', formId: 'form-1', key: 'sourceKey', label: 'Source', fieldType: 'select', required: false, blocksSubmit: false, options: [{ label: 'Approved', value: { code: 'APPROVED' } }] },
-      { id: 'visible-by-id', formId: 'form-1', key: 'visibleById', label: 'By id', fieldType: 'text', required: false, blocksSubmit: false, revealIf: { question: 'source-id', equals: { code: 'APPROVED' } } },
-      { id: 'visible-by-question-key', formId: 'form-1', key: 'visibleByQuestionKey', label: 'By question key', fieldType: 'text', required: false, blocksSubmit: false, visibleIf: { questionKey: 'sourceKey', value: { code: 'APPROVED' } } },
-      { id: 'short-limited', formId: 'form-1', key: 'shortLimited', label: 'Short limited', fieldType: 'text', required: false, blocksSubmit: false, validators: { maxLength: 120 } },
-      { id: 'short-overflow', formId: 'form-1', key: 'shortOverflow', label: 'Short overflow', fieldType: 'text', required: false, blocksSubmit: false, validators: { maxLength: 201 } },
-      { id: 'long-option', formId: 'form-1', key: 'longOption', label: 'Long option', fieldType: 'text', required: false, blocksSubmit: false, options: { mode: 'long', collection: '' } },
-      { id: 'file-default', formId: 'form-1', key: 'fileDefault', label: 'File default', fieldType: 'file', required: false, blocksSubmit: false, validators: { collection: '' } },
-      { id: 'file-validator', formId: 'form-1', key: 'fileValidator', label: 'File validator', fieldType: 'file', required: false, blocksSubmit: false, validators: { collection: 'validator-docs' } },
-      { id: 'signature', formId: 'form-1', key: 'signature', label: 'Signature', fieldType: 'signature', required: false, blocksSubmit: false },
+      {
+        id: 'source-id',
+        formId: 'form-1',
+        key: 'sourceKey',
+        label: 'Source',
+        fieldType: 'select',
+        required: false,
+        blocksSubmit: false,
+        options: [{ label: 'Approved', value: { code: 'APPROVED' } }],
+      },
+      {
+        id: 'visible-by-id',
+        formId: 'form-1',
+        key: 'visibleById',
+        label: 'By id',
+        fieldType: 'text',
+        required: false,
+        blocksSubmit: false,
+        revealIf: { question: 'source-id', equals: { code: 'APPROVED' } },
+      },
+      {
+        id: 'visible-by-question-key',
+        formId: 'form-1',
+        key: 'visibleByQuestionKey',
+        label: 'By question key',
+        fieldType: 'text',
+        required: false,
+        blocksSubmit: false,
+        visibleIf: { questionKey: 'sourceKey', value: { code: 'APPROVED' } },
+      },
+      {
+        id: 'short-limited',
+        formId: 'form-1',
+        key: 'shortLimited',
+        label: 'Short limited',
+        fieldType: 'text',
+        required: false,
+        blocksSubmit: false,
+        validators: { maxLength: 120 },
+      },
+      {
+        id: 'short-overflow',
+        formId: 'form-1',
+        key: 'shortOverflow',
+        label: 'Short overflow',
+        fieldType: 'text',
+        required: false,
+        blocksSubmit: false,
+        validators: { maxLength: 201 },
+      },
+      {
+        id: 'long-option',
+        formId: 'form-1',
+        key: 'longOption',
+        label: 'Long option',
+        fieldType: 'text',
+        required: false,
+        blocksSubmit: false,
+        options: { mode: 'long', collection: '' },
+      },
+      {
+        id: 'file-default',
+        formId: 'form-1',
+        key: 'fileDefault',
+        label: 'File default',
+        fieldType: 'file',
+        required: false,
+        blocksSubmit: false,
+        validators: { collection: '' },
+      },
+      {
+        id: 'file-validator',
+        formId: 'form-1',
+        key: 'fileValidator',
+        label: 'File validator',
+        fieldType: 'file',
+        required: false,
+        blocksSubmit: false,
+        validators: { collection: 'validator-docs' },
+      },
+      {
+        id: 'signature',
+        formId: 'form-1',
+        key: 'signature',
+        label: 'Signature',
+        fieldType: 'signature',
+        required: false,
+        blocksSubmit: false,
+      },
     ];
-    component.answers = [{ id: 'answer-source', fillId: 'fill-1', questionId: 'source-id', value: { code: 'APPROVED' } }];
+    component.answers = [
+      {
+        id: 'answer-source',
+        fillId: 'fill-1',
+        questionId: 'source-id',
+        value: { code: 'APPROVED' },
+      },
+    ];
 
     expect(component.isQuestionVisible(component.questions[1]!)).toBe(true);
     expect(component.isQuestionVisible(component.questions[2]!)).toBe(true);
@@ -787,16 +1257,39 @@ describe('@stynx-nyx/angular-flow components', () => {
       strokeStyle: '',
     };
     vi.spyOn(canvas, 'getContext').mockReturnValue(context as never);
-    vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, width: 100, height: 50 } as DOMRect);
-    const toDataURL = vi.spyOn(canvas, 'toDataURL').mockReturnValue('data:image/png;base64,signature');
+    vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({
+      left: 0,
+      top: 0,
+      width: 100,
+      height: 50,
+    } as DOMRect);
+    const toDataURL = vi
+      .spyOn(canvas, 'toDataURL')
+      .mockReturnValue('data:image/png;base64,signature');
 
-    component.drawSignature(component.questions[8]!, { target: canvas, clientX: 1, clientY: 1, preventDefault: vi.fn() } as never);
-    component.endSignature(component.questions[8]!, { target: canvas, preventDefault: vi.fn() } as never);
+    component.drawSignature(component.questions[8]!, {
+      target: canvas,
+      clientX: 1,
+      clientY: 1,
+      preventDefault: vi.fn(),
+    } as never);
+    component.endSignature(component.questions[8]!, {
+      target: canvas,
+      preventDefault: vi.fn(),
+    } as never);
     expect(context.lineTo).not.toHaveBeenCalledTimes(1);
     expect(toDataURL).not.toHaveBeenCalledTimes(1);
 
-    component.beginSignature(component.questions[8]!, { target: document.createElement('button'), clientX: 1, clientY: 1, preventDefault: vi.fn() } as never);
-    component.endSignature(component.questions[8]!, { target: document.createElement('button'), preventDefault: vi.fn() } as never);
+    component.beginSignature(component.questions[8]!, {
+      target: document.createElement('button'),
+      clientX: 1,
+      clientY: 1,
+      preventDefault: vi.fn(),
+    } as never);
+    component.endSignature(component.questions[8]!, {
+      target: document.createElement('button'),
+      preventDefault: vi.fn(),
+    } as never);
     expect(component.textValue(component.questions[8]!)).toBe('');
   });
 
