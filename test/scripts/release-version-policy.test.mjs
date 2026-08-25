@@ -717,19 +717,39 @@ test('trace closes 489/374/115/14=503 with all 12 mappings and current assertion
 });
 
 test('readiness-bearing RLS fails closed when live PostgreSQL observation is unavailable', () => {
+  const isolatedEnvironment = { ...process.env, STYNX_RLS_LIVE_REQUIRED: '1' };
+  for (const variable of [
+    'DATABASE_URL',
+    'STYNX_DATABASE_URL',
+    'STYNX_TEST_DATABASE_URL',
+    'STYNX_TEST_PG_HOST',
+    'STYNX_TEST_PG_PASSWORD',
+    'STYNX_TEST_PG_PORT',
+    'STYNX_TEST_PG_SOCKET_DIR',
+    'STYNX_TEST_PG_TEMPLATE',
+    'STYNX_TEST_PG_USER',
+    'PGDATABASE',
+    'PGHOST',
+    'PGHOSTADDR',
+    'PGPASSFILE',
+    'PGPASSWORD',
+    'PGPORT',
+    'PGSERVICE',
+    'PGSERVICEFILE',
+    'PGUSER',
+  ]) {
+    delete isolatedEnvironment[variable];
+  }
   const check = spawnSync('bash', [join(repoRoot, 'scripts/check-rls-smoke.sh')], {
     cwd: repoRoot,
     encoding: 'utf8',
-    env: {
-      ...process.env,
-      STYNX_RLS_LIVE_REQUIRED: '1',
-      STYNX_TEST_DATABASE_URL: '',
-      DATABASE_URL: '',
-    },
+    env: isolatedEnvironment,
     stdio: ['ignore', 'pipe', 'pipe'],
   });
+  const evidence = `${check.stdout}\n${check.stderr}`;
   assert.notEqual(check.status, 0, 'live-required RLS must not convert unavailable input to PASS');
-  assert.match(`${check.stdout}\n${check.stderr}`, /RLS_LIVE_(?:CONFIG|OBSERVATION)_MISSING/u);
+  assert.match(evidence, /RLS_LIVE_(?:CONFIG|OBSERVATION)_MISSING/u);
+  assert.doesNotMatch(evidence, /\[RLS\]\[missing\]/u);
 });
 
 test('sourcemap verification fails closed on an empty expected population', () => {
