@@ -27,6 +27,7 @@ import {
   unifiedRebaselineTarget,
 } from '../../scripts/lib/unified-rebaseline.mjs';
 import { discoverMutationRoster } from '../../scripts/lib/mutation-roster.mjs';
+import { classifyReleaseContext, ReleaseContextError } from '../../scripts/lib/release-context.mjs';
 import { createVitestConfig } from '../../tools/repo-config/vitest.base.mjs';
 
 const repoRoot = resolve(import.meta.dirname, '..', '..');
@@ -114,6 +115,134 @@ function assertPolicyError(callback, code) {
     return true;
   });
 }
+
+const preparedBaseCommit = 'b77b50230e3906cee632eb9218b06603cce6c89a';
+const preparedBaseTree = 'd0cde059f7a93a624ff01d485ebda9ac3cb9422e';
+const preparedHeadCommit = '6d7f86d70e784a281fe025bf50babc9f3b3e8aee';
+const exactPrAChangesetPolicy = {
+  kind: 'campaign-preparation-only',
+  baseline_commit: preparedBaseCommit,
+  baseline_tree: preparedBaseTree,
+  current_version: '1.0.0',
+  candidate_version: '1.1.1',
+  changesets: 'forbidden',
+  release_status_projection: 'empty-non-promoting',
+  version_projection: 'deferred-to-pr-b',
+};
+
+function prAReleaseContext(overrides = {}) {
+  const { roster: mutationRoster } = discoverMutationRoster(repoRoot);
+  return {
+    baseCommit: preparedBaseCommit,
+    headCommit: preparedHeadCommit,
+    commits: [{ sha: preparedHeadCommit, subject: 'test(release): prepare campaign controls' }],
+    versionParent: null,
+    versionChanges: [],
+    followUpChanges: [],
+    rootManifestFollowUpValid: false,
+    versionRebaselineValid: false,
+    prAPreparation: {
+      campaignPolicy,
+      rootVersion: '1.0.0',
+      packageVersions: packageNames.map((name) => ({ name, version: '1.0.0' })),
+      mutationPackageNames: mutationRoster.map(({ packageName }) => packageName).sort(),
+      changes: [{ status: 'M', path: 'scripts/run-release-preparation.mjs' }],
+      ...overrides,
+    },
+  };
+}
+
+test('exact PR A campaign preparation emits only an empty non-promoting release status', () => {
+  assert.deepEqual(campaignPolicy.pr_a_changeset_policy, exactPrAChangesetPolicy);
+  assert.deepEqual(classifyReleaseContext(prAReleaseContext()), {
+    kind: 'pr-a-preparation',
+    baseCommit: preparedBaseCommit,
+    headCommit: preparedHeadCommit,
+    policyId: 'stynx.release-campaign-1.1.1',
+    packageCount: 44,
+    mutationCount: 38,
+    firstPublicationCount: 6,
+    currentVersion: '1.0.0',
+    targetVersion: '1.1.1',
+    changesetCount: 0,
+    promoting: false,
+    releaseStatusProjection: 'empty-non-promoting',
+    versionProjection: 'deferred-to-pr-b',
+  });
+});
+
+test('ordinary changed publishable packages without a Changeset remain ordinary and fail closed', () => {
+  const context = prAReleaseContext();
+  context.prAPreparation = undefined;
+  context.commits = [{ sha: preparedHeadCommit, subject: 'feat(core): change public behavior' }];
+  assert.deepEqual(classifyReleaseContext(context), {
+    kind: 'ordinary',
+    baseCommit: preparedBaseCommit,
+    headCommit: preparedHeadCommit,
+  });
+});
+
+test('PR A exemption rejects base, policy, roster, and non-candidate version drift', () => {
+  const mutations = [
+    (context) => {
+      context.baseCommit = 'a'.repeat(40);
+    },
+    (context) => {
+      context.prAPreparation.campaignPolicy = structuredClone(campaignPolicy);
+      context.prAPreparation.campaignPolicy.policy_id = 'stynx.release-campaign-other';
+    },
+    (context) => {
+      context.prAPreparation.packageVersions.pop();
+    },
+    (context) => {
+      context.prAPreparation.mutationPackageNames.pop();
+    },
+    (context) => {
+      context.prAPreparation.campaignPolicy = structuredClone(campaignPolicy);
+      context.prAPreparation.campaignPolicy.approved_first_publications.pop();
+    },
+    (context) => {
+      context.prAPreparation.packageVersions[0].version = '1.1.1';
+    },
+    (context) => {
+      context.prAPreparation.campaignPolicy = structuredClone(campaignPolicy);
+      context.prAPreparation.campaignPolicy.candidate.version = '1.1.2';
+    },
+  ];
+
+  for (const mutate of mutations) {
+    const context = prAReleaseContext();
+    mutate(context);
+    assert.deepEqual(classifyReleaseContext(context), {
+      kind: 'ordinary',
+      baseCommit: context.baseCommit,
+      headCommit: preparedHeadCommit,
+    });
+  }
+});
+
+test('Changeset additions or deletions and version-package commits cannot classify as PR A', () => {
+  for (const change of [
+    { status: 'A', path: '.changeset/not-pr-a.md' },
+    { status: 'D', path: '.changeset/not-pr-a.md' },
+  ]) {
+    const context = prAReleaseContext({ changes: [change] });
+    assert.deepEqual(classifyReleaseContext(context), {
+      kind: 'ordinary',
+      baseCommit: preparedBaseCommit,
+      headCommit: preparedHeadCommit,
+    });
+  }
+
+  const versionCandidate = prAReleaseContext();
+  versionCandidate.commits = [{ sha: preparedHeadCommit, subject: 'ci: version packages' }];
+  versionCandidate.versionParent = preparedBaseCommit;
+  assert.throws(
+    () => classifyReleaseContext(versionCandidate),
+    (error) =>
+      error instanceof ReleaseContextError && error.code === 'RELEASE_CONTEXT_NO_CHANGESETS',
+  );
+});
 
 test('Architect policy and workspace structurally define exactly 44/38/6', () => {
   const { roster: mutationRoster, failures: mutationFailures } = discoverMutationRoster(repoRoot);
