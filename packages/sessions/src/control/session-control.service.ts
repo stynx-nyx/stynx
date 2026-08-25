@@ -192,7 +192,7 @@ export class SessionControlService {
         : results.some((item) => item.status === 'unsupported')
           ? 'unsupported'
           : 'revoked';
-    const guarantee = results[0]?.guarantee ?? this.none();
+    const guarantee = results[0]!.guarantee;
     const result: SessionMutationResult = {
       operationId: command.operationId,
       action: command.action,

@@ -70,6 +70,7 @@ export class WorklistItemsService {
       queueDefault: queue.defaultDeadline,
       calendar: this.calendar,
     });
+    const { dueAt, kind } = deadline!;
 
     try {
       const mutation = await this.database.tx(async (trx) => {
@@ -82,8 +83,8 @@ export class WorklistItemsService {
             value.entityType,
             value.entityId,
             value.priority ?? null,
-            deadline?.dueAt ?? null,
-            deadline?.kind ?? null,
+            dueAt,
+            kind,
             deadline?.businessDays ?? null,
             deadline?.calendarKey ?? null,
             JSON.stringify(value.payload ?? {}),
