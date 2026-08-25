@@ -2722,8 +2722,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 122,
-      "assertion_digest_sha256": "fd14195d71b535b4b5d2c9e6d7f8591485d547a0b4e9d6504397d77d29a711d6"
+      "assertion_count": 129,
+      "assertion_digest_sha256": "7a5e20b13c2ffc72f4ef030ee7b715004c5f87c7e539a64fb0dcd3d96b721ca3"
     },
     {
       "path": "reference/api/test/integration/reference-api.unit-coverage.spec.ts",
@@ -2746,8 +2746,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 24,
-      "assertion_digest_sha256": "71aae01fdd965d10f3244a404638825730733218f4dc4aa0150bed67524eb6c8"
+      "assertion_count": 27,
+      "assertion_digest_sha256": "bd55122e1302fcaa4fd64bd9fd7605b1d863ef1c4026fe6daa888f96714cdb4f"
     },
     {
       "path": "reference/api/test/integration/reference-dev-auth.gating.spec.ts",
@@ -2762,8 +2762,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 45,
-      "assertion_digest_sha256": "817faa15398b36b87dec49c19fc76714f21a14fefe5d096f62a2196f00b5aa68"
+      "assertion_count": 48,
+      "assertion_digest_sha256": "d2ad93c86c7918d1518005e245bd2b0e0d05ca6039d6be8c05af517eb8eb79ab"
     },
     {
       "path": "reference/api/test/integration/sample.schema.spec.ts",
@@ -2778,8 +2778,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 8,
-      "assertion_digest_sha256": "09e7cb72f39096f16ca8d3cfc0bd09777e5eb4b1eb581318f1ffccc839822ae7"
+      "assertion_count": 11,
+      "assertion_digest_sha256": "b0be712586adb100fdaa6e7dbc0cd311494c7f4846b8c01f27d03dc22cbaf84f"
     },
     {
       "path": "reference/web/test/e2e/auth/login-failure.spec.ts",
