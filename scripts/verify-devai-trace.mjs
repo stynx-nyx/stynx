@@ -128,10 +128,10 @@ const mustIds = invariants
 const mustMapped = mustIds.filter((id) =>
   [...corpusByPath.values()].some((entry) => entry.invariant_ids.includes(id)),
 );
-if (testSurface.length !== 489)
-  fail(`tracked test-path census drifted: expected 489, found ${testSurface.length}`);
-if (executableTests.length !== 374)
-  fail(`executable test census drifted: expected 374, found ${executableTests.length}`);
+if (testSurface.length !== 490)
+  fail(`tracked test-path census drifted: expected 490, found ${testSurface.length}`);
+if (executableTests.length !== 375)
+  fail(`executable test census drifted: expected 375, found ${executableTests.length}`);
 if (testSurface.length - executableTests.length !== 115) {
   fail(
     `fixture/support census drifted: expected 115, found ${testSurface.length - executableTests.length}`,
@@ -139,9 +139,9 @@ if (testSurface.length - executableTests.length !== 115) {
 }
 if (supplemental.length !== 14)
   fail(`script/config-attestation census drifted: expected 14, found ${supplemental.length}`);
-if (testSurface.length + supplemental.length !== 503) {
+if (testSurface.length + supplemental.length !== 504) {
   fail(
-    `governed test surface drifted: expected 503, found ${testSurface.length + supplemental.length}`,
+    `governed test surface drifted: expected 504, found ${testSurface.length + supplemental.length}`,
   );
 }
 if (trace.meta?.completeness?.min_invariants_with_tests_ratio !== 1)
