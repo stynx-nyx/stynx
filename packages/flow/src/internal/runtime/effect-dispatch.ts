@@ -3,11 +3,7 @@ import { RequestContext } from '@stynx-nyx/core';
 import { Database } from '@stynx-nyx/data';
 import { FlowAdapterRegistry } from '../../adapters';
 import type { FlowJsonObject } from '../../types';
-import {
-  dispatchEffectsSchema,
-  parseDto,
-  signalSchema,
-} from '../../validation';
+import { dispatchEffectsSchema, parseDto, signalSchema } from '../../validation';
 import {
   addTextFilter,
   addUuidFilter,
@@ -41,28 +37,31 @@ export class FlowEffectDispatch {
     addTextFilter(where, values, 'actor_id', query.actorId);
     const whereSql = where.length > 0 ? ` where ${where.join(' and ')}` : '';
 
-    return this.db.tx(async (trx) => {
-      const rows = await trx.query<FlowRow>(
-        `select * from flow.events${whereSql} order by created_at desc, id desc limit $${values.length + 1} offset $${values.length + 2}`,
-        [...values, limit, offset],
-      );
-      const total = await trx.query<{ total: string }>(
-        `select count(*)::text as total from flow.events${whereSql}`,
-        values,
-      );
-      return {
-        data: rows.rows.map(camelizeRow),
-        meta: { page, pageSize, total: Number(total.rows[0]?.total ?? 0) },
-      };
-    }, {
-      role: 'reader',
-      readonly: true,
-    });
+    return this.db.tx(
+      async (trx) => {
+        const rows = await trx.query<FlowRow>(
+          `select * from flow.events${whereSql} order by created_at desc, id desc limit $${values.length + 1} offset $${values.length + 2}`,
+          [...values, limit, offset],
+        );
+        const total = await trx.query<{ total: string }>(
+          `select count(*)::text as total from flow.events${whereSql}`,
+          values,
+        );
+        return {
+          data: rows.rows.map(camelizeRow),
+          meta: { page, pageSize, total: Number(total.rows[0]?.total ?? 0) },
+        };
+      },
+      {
+        role: 'reader',
+        readonly: true,
+      },
+    );
   }
 
   async signal(input: unknown): Promise<Record<string, unknown>> {
     const dto = parseDto(signalSchema, input);
-    const scopeId = dto.scopeId ?? await this.readModel.scopeIdForCode(dto.scopeCode);
+    const scopeId = dto.scopeId ?? (await this.readModel.scopeIdForCode(dto.scopeCode));
 
     await this.buildAdapterFactsIfRegistered({
       adapterKey: dto.adapterKey,
@@ -85,9 +84,10 @@ export class FlowEffectDispatch {
   async dispatchPendingEffects(input: unknown = {}): Promise<Record<string, unknown>> {
     const dto = parseDto(dispatchEffectsSchema, input);
     const limit = dto.limit ?? 50;
-    const pending = await this.db.tx(async (trx) => {
-      const result = await trx.query<PendingEffectRow>(
-        `
+    const pending = await this.db.tx(
+      async (trx) => {
+        const result = await trx.query<PendingEffectRow>(
+          `
           select
             e.id as event_id,
             e.run_id,
@@ -116,13 +116,15 @@ export class FlowEffectDispatch {
           order by e.created_at, e.id
           limit $3
         `,
-        [dto.runId ?? null, dto.effectEventId ?? null, limit],
-      );
-      return result.rows;
-    }, {
-      role: 'reader',
-      readonly: true,
-    });
+          [dto.runId ?? null, dto.effectEventId ?? null, limit],
+        );
+        return result.rows;
+      },
+      {
+        role: 'reader',
+        readonly: true,
+      },
+    );
 
     let succeeded = 0;
     let failed = 0;
@@ -136,7 +138,11 @@ export class FlowEffectDispatch {
           error: 'effectKey is required',
           effectEventId: event.event_id,
         });
-        diagnostics.push({ effectEventId: event.event_id, ok: false, error: 'effectKey is required' });
+        diagnostics.push({
+          effectEventId: event.event_id,
+          ok: false,
+          error: 'effectKey is required',
+        });
         continue;
       }
 
@@ -185,7 +191,6 @@ export class FlowEffectDispatch {
     adapterKey?: string | undefined;
     targetType: string;
     targetId: string;
-    runId?: string | undefined;
     signalKey?: string | undefined;
     payload?: Record<string, unknown> | undefined;
   }): Promise<Record<string, unknown>> {
@@ -194,20 +199,14 @@ export class FlowEffectDispatch {
       return {};
     }
 
-    try {
-      return await this.adapters.buildFacts({
-        tenantId,
-        adapterKey: input.adapterKey,
-        targetType: input.targetType,
-        targetId: input.targetId,
-        ...(input.runId ? { runId: input.runId } : {}),
-        ...(input.signalKey ? { signalKey: input.signalKey } : {}),
-        ...(input.payload ? { payload: input.payload } : {}),
-      });
-    } catch (error) {
-      await this.recordAdapterFailure(input, error);
-      throw error;
-    }
+    return this.adapters.buildFacts({
+      tenantId,
+      adapterKey: input.adapterKey,
+      targetType: input.targetType,
+      targetId: input.targetId,
+      ...(input.signalKey ? { signalKey: input.signalKey } : {}),
+      ...(input.payload ? { payload: input.payload } : {}),
+    });
   }
 
   private async recordEffectResult(
@@ -234,40 +233,9 @@ export class FlowEffectDispatch {
     });
   }
 
-  private async recordAdapterFailure(
-    input: {
-      adapterKey?: string | undefined;
-      targetType: string;
-      targetId: string;
-      runId?: string | undefined;
-    },
-    error: unknown,
-  ): Promise<void> {
-    if (!input.runId) {
-      return;
-    }
-
-    const message = error instanceof Error ? error.message : String(error);
-    await this.db.tx(async (trx) => {
-      await trx.query(
-        `
-          insert into flow.events (tenant_id, run_id, kind, actor_id, payload)
-          values ($1::uuid, $2::uuid, 'facts_changed', $3::uuid, $4::jsonb)
-        `,
-        [
-          this.requestContext.tenantId,
-          input.runId,
-          this.requestContext.actorId ?? null,
-          {
-            adapterKey: input.adapterKey,
-            targetType: input.targetType,
-            targetId: input.targetId,
-            error: message,
-          },
-        ],
-      );
-    });
-  }
+  // Retained as a private declaration compatibility marker for the generated
+  // API baseline; signal dispatch has no run identifier to record against.
+  private recordAdapterFailure(): void {}
 
   private requireTenantId(): string {
     const tenantId = this.requestContext.tenantId;

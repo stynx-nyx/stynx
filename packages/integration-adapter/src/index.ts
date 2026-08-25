@@ -27,10 +27,6 @@ const DEFAULT_CIRCUIT_POLICY: CircuitBreakerPolicy = {
   halfOpenAfterMs: 30_000,
 };
 
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
-
 function shouldRetry(policy: RetryPolicy, error: unknown, attempt: number): boolean {
   if (attempt >= policy.maxAttempts) {
     return false;
@@ -248,7 +244,7 @@ export class IntegrationAdapter<TReq, TRaw, TRes> {
     if (lastError instanceof Error) {
       throw lastError;
     }
-    throw new Error(`Integration ${this.options.name} failed: ${errorMessage(lastError)}`);
+    throw new Error(`Integration ${this.options.name} failed: ${String(lastError)}`);
   }
 
   private async emit(event: Omit<IntegrationTelemetryEvent, 'adapter'>): Promise<void> {
