@@ -10,7 +10,11 @@ import { describe, expect, it, vi } from 'vitest';
 import { ProfileService } from '../src/profile.service';
 import { provideStynxProfile } from '../src/provide-profile';
 import { STYNX_PROFILE_CLIENT } from '../src/tokens';
-import { UnsavedChangesGuard, UnsavedChangesRegistry, unsavedChangesGuard } from '../src/unsaved-changes.guard';
+import {
+  UnsavedChangesGuard,
+  UnsavedChangesRegistry,
+  unsavedChangesGuard,
+} from '../src/unsaved-changes.guard';
 import type { StynxPreferences, StynxProfile } from '../src/types';
 
 function createService(client: StynxSdkClient): ProfileService {
@@ -117,7 +121,7 @@ describe('@stynx-nyx/angular-profile W04 profile service contract depth', () => 
       preferences: null,
       revision: 2,
       updatedAt: '2026-07-13T00:00:00.000Z',
-    } as StynxProfile;
+    } as unknown as StynxProfile;
     const preferences: StynxPreferences = {
       values: {
         locale: { locale: 'en-US', timezone: 'UTC' },
@@ -147,64 +151,112 @@ describe('@stynx-nyx/angular-profile W04 profile service contract depth', () => 
     await firstValueFrom(service.setPreferences(preferences.values));
 
     expect(http.get).toHaveBeenCalledWith('https://api.example.test/profile');
-    expect(http.patch).toHaveBeenCalledWith('https://api.example.test/profile', { displayName: 'Patched' }, {
-      headers: { 'If-Match': '"2"' },
-    });
-    expect(http.put).toHaveBeenCalledWith('https://api.example.test/profile/preferences', preferences.values, {
-      headers: { 'If-Match': '"0"' },
-    });
+    expect(http.patch).toHaveBeenCalledWith(
+      'https://api.example.test/profile',
+      { displayName: 'Patched' },
+      {
+        headers: { 'If-Match': '"2"' },
+      },
+    );
+    expect(http.put).toHaveBeenCalledWith(
+      'https://api.example.test/profile/preferences',
+      preferences.values,
+      {
+        headers: { 'If-Match': '"0"' },
+      },
+    );
     expect(service.profile()).toBeNull();
   });
 
   it('uploads avatars through storage and updates an existing profile', async () => {
-    const upload = vi.fn(async (_url, _file, _headers, progress: (value: number) => void) => progress(100));
+    const upload = vi.fn(async (_url, _file, _headers, progress: (value: number) => void) =>
+      progress(100),
+    );
     const documents = {
       initiate: vi.fn(async () => ({
         id: 'avatar-1',
         s3Key: 'avatars/avatar-1',
-        upload: { method: 'PUT', url: 'https://upload.example.test/avatar', headers: { 'x-test': '1' }, expiresInSeconds: 60 },
+        upload: {
+          method: 'PUT',
+          url: 'https://upload.example.test/avatar',
+          headers: { 'x-test': '1' },
+          expiresInSeconds: 60,
+        },
       })),
       complete: vi.fn(async () => ({ id: 'avatar-1', scanStatus: 'completed' })),
-      getDownloadUrl: vi.fn(async () => ({ id: 'avatar-1', url: 'https://cdn.example.test/avatar-1', expiresInSeconds: 60 })),
+      getDownloadUrl: vi.fn(async () => ({
+        id: 'avatar-1',
+        url: 'https://cdn.example.test/avatar-1',
+        expiresInSeconds: 60,
+      })),
     };
-    const service = runInInjectionContext(Injector.create({ providers: [
-      { provide: DocumentService, useValue: documents },
-      { provide: STYNX_UPLOAD_EXECUTOR, useValue: { upload } },
-    ] }), () => new ProfileService());
+    const service = runInInjectionContext(
+      Injector.create({
+        providers: [
+          { provide: DocumentService, useValue: documents },
+          { provide: STYNX_UPLOAD_EXECUTOR, useValue: { upload } },
+        ],
+      }),
+      () => new ProfileService(),
+    );
     service.profile.set({
-      subjectId: 'subject-1', displayName: 'Ada', avatarDocumentId: null, avatarUrl: null,
-      preferences: null, revision: 1, updatedAt: '2026-07-13T00:00:00.000Z',
-    });
+      subjectId: 'subject-1',
+      displayName: 'Ada',
+      avatarDocumentId: null,
+      avatarUrl: null,
+      preferences: null,
+      revision: 1,
+      updatedAt: '2026-07-13T00:00:00.000Z',
+    } as unknown as StynxProfile);
     const file = new File(['avatar'], 'avatar.png', { type: 'image/png' });
 
-    await expect(firstValueFrom(service.uploadAvatar(file))).resolves.toEqual({ url: 'https://cdn.example.test/avatar-1' });
-    expect(documents.initiate).toHaveBeenCalledWith(expect.objectContaining({
-      collection: 'avatars', filename: 'avatar.png', mimeType: 'image/png', byteSize: 6,
-    }));
-    expect(service.profile()).toMatchObject({
-      avatarDocumentId: 'avatar-1', avatarUrl: 'https://cdn.example.test/avatar-1',
+    await expect(firstValueFrom(service.uploadAvatar(file))).resolves.toEqual({
+      url: 'https://cdn.example.test/avatar-1',
     });
+    expect(documents.initiate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        collection: 'avatars',
+        filename: 'avatar.png',
+        mimeType: 'image/png',
+        byteSize: 6,
+      }),
+    );
+    expect(service.profile()).toMatchObject({
+      avatarDocumentId: 'avatar-1',
+      avatarUrl: 'https://cdn.example.test/avatar-1',
+    });
+    service.profile.set(null);
+    await firstValueFrom(service.uploadAvatar(file));
+    expect(service.profile()).toBeNull();
   });
 
   it('fails closed when required HTTP, Angular, or storage providers are absent', async () => {
-    const service = runInInjectionContext(Injector.create({ providers: [] }), () => new ProfileService());
+    const service = runInInjectionContext(
+      Injector.create({ providers: [] }),
+      () => new ProfileService(),
+    );
 
     expect(() => service.reload()).toThrow('ProfileService requires HttpClient');
-    await expect(firstValueFrom(service.uploadAvatar(new File([], 'avatar.png'))))
-      .rejects.toThrow('Avatar upload requires @stynx-nyx/angular-storage providers.');
+    await expect(firstValueFrom(service.uploadAvatar(new File([], 'avatar.png')))).rejects.toThrow(
+      'Avatar upload requires @stynx-nyx/angular-storage providers.',
+    );
 
-    const httpOnly = runInInjectionContext(Injector.create({ providers: [
-      { provide: HttpClient, useValue: { get: vi.fn() } },
-    ] }), () => new ProfileService());
+    const httpOnly = runInInjectionContext(
+      Injector.create({ providers: [{ provide: HttpClient, useValue: { get: vi.fn() } }] }),
+      () => new ProfileService(),
+    );
     expect(() => httpOnly.reload()).toThrow('ProfileService requires provideStynxProfile');
     expect(provideStynxProfile({ clientFactory: vi.fn() })).toEqual(expect.anything());
   });
 
   it('tracks unsaved registrations and delegates guard confirmation paths', () => {
     const addEventListener = vi.spyOn(window, 'addEventListener');
-    const registry = runInInjectionContext(Injector.create({ providers: [
-      { provide: NgZone, useValue: { runOutsideAngular: (fn: () => void) => fn() } },
-    ] }), () => new UnsavedChangesRegistry());
+    const registry = runInInjectionContext(
+      Injector.create({
+        providers: [{ provide: NgZone, useValue: { runOutsideAngular: (fn: () => void) => fn() } }],
+      }),
+      () => new UnsavedChangesRegistry(),
+    );
     const clean = { hasUnsavedChanges: () => false };
     const dirty = { hasUnsavedChanges: () => true };
     const unregisterClean = registry.register(clean);
@@ -216,16 +268,23 @@ describe('@stynx-nyx/angular-profile W04 profile service contract depth', () => 
     unregisterClean();
 
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
-    const injector = Injector.create({ providers: [
-      { provide: StynxI18nService, useValue: { translate: () => 'Discard changes?' } },
-      UnsavedChangesGuard,
-    ] });
+    const injector = Injector.create({
+      providers: [
+        { provide: StynxI18nService, useValue: { translate: () => 'Discard changes?' } },
+        UnsavedChangesGuard,
+      ],
+    });
     const guard = injector.get(UnsavedChangesGuard);
     expect(guard.canDeactivate(clean)).toBe(true);
-    expect(guard.canDeactivate({ hasUnsavedChanges: () => true, confirmDiscardChanges: () => true })).toBe(true);
+    expect(
+      guard.canDeactivate({ hasUnsavedChanges: () => true, confirmDiscardChanges: () => true }),
+    ).toBe(true);
     expect(guard.canDeactivate(dirty)).toBe(false);
     expect(confirm).toHaveBeenCalledWith('Discard changes?');
-    expect(runInInjectionContext(injector, () => unsavedChangesGuard(clean, {} as never, {} as never, {} as never)))
-      .toBe(true);
+    expect(
+      runInInjectionContext(injector, () =>
+        unsavedChangesGuard(clean, {} as never, {} as never, {} as never),
+      ),
+    ).toBe(true);
   });
 });
