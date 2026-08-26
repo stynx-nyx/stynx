@@ -263,6 +263,52 @@ test('Architect policy and workspace structurally define exactly 44/38/6', () =>
   assert.equal(campaignPolicy.candidate.approved_first_publication_count, 6);
 });
 
+function assertGovernedMutationFloor({ roster, failures }) {
+  const expectedNames = [...campaignPolicy.mutation_packages].sort();
+  const actualNames = roster.map(({ packageName }) => packageName).sort();
+  assert.deepEqual(failures, []);
+  assert.equal(roster.length, 38);
+  assert.equal(new Set(actualNames).size, 38);
+  assert.deepEqual(actualNames, expectedNames);
+  for (const { packageName, thresholds } of roster) {
+    assert.equal(thresholds.break, 90, `${packageName}: mutation break must resolve to 90`);
+    assert.ok(
+      [
+        [90, 90, 80],
+        [90, 95, 85],
+        [90, 100, 90],
+      ].some(
+        ([breakThreshold, high, low]) =>
+          thresholds.break === breakThreshold && thresholds.high === high && thresholds.low === low,
+      ),
+      `${packageName}: mutation reporting bands must resolve to a governed tier`,
+    );
+  }
+}
+
+test('complete discovered mutation roster resolves the governed break=90 floor', () => {
+  const discovered = discoverMutationRoster(repoRoot);
+  assertGovernedMutationFloor(discovered);
+
+  const mutations = [
+    ({ roster }) => roster.pop(),
+    ({ roster }) => roster.push({ ...roster[0], packageName: '@stynx-nyx/extra' }),
+    ({ roster }) => roster.push(structuredClone(roster[0])),
+    ({ roster }) => {
+      roster[0].thresholds.break = 89;
+    },
+    ({ roster }) => {
+      roster[0].thresholds.break = 91;
+    },
+    ({ failures }) => failures.push('unknown mutation policy unresolved'),
+  ];
+  for (const mutate of mutations) {
+    const candidate = structuredClone(discovered);
+    mutate(candidate);
+    assert.throws(() => assertGovernedMutationFloor(candidate), assert.AssertionError);
+  }
+});
+
 test('complete authenticated registry and inventory census returns 44/38/6', () => {
   assert.deepEqual(validate(), {
     anomalyMatches: 1,
