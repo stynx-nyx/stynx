@@ -15,7 +15,7 @@
     "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
     "test": "vitest run --config ./vitest.config.ts",
     "test:int": "vitest run --config ./vitest.config.ts test/integration/*.spec.ts",
-    "test:e2e": "vitest run --config ./vitest.e2e.config.ts test/e2e/flows/*.e2e.ts"
+    "test:e2e": "pnpm --filter @stynx-nyx/preferences... build && vitest run --config ./vitest.e2e.config.ts test/e2e/flows/*.e2e.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.19",
