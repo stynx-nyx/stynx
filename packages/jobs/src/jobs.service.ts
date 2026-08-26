@@ -13,7 +13,7 @@ export class JobsService implements JobsPort {
     if (!input.jobType.trim() || !input.tenantId || (input.runAt && input.delayMs !== undefined) || (input.delayMs !== undefined && input.delayMs < 0)) throw new InvalidJobInputError('jobType, tenantId, and a non-negative exclusive delay/runAt are required');
     return this.repository.inSystem('jobs enqueue one-shot job', () => this.repository.enqueue({ tenantId: input.tenantId, jobType: input.jobType, payload: input.payload ?? {}, runAt: input.runAt ?? new Date(Date.now() + (input.delayMs ?? 0)), priority: input.priority ?? 0, maxAttempts: input.maxAttempts ?? DEFAULT_MAX_ATTEMPTS, ...(input.idempotencyKey ? { idempotencyKey: input.idempotencyKey } : {}), ...(input.actorId ? { actorId: input.actorId } : {}) }));
   }
-  getJob(jobId: string, tenantId?: string): Promise<JobRecord | null> { if (!tenantId) throw new InvalidJobInputError('tenantId is required'); return this.repository.inSystem('jobs read tenant job', () => this.repository.getJob(jobId, tenantId)); }
+  getJob(jobId: string, tenantId: string): Promise<JobRecord | null> { if (!tenantId) throw new InvalidJobInputError('tenantId is required'); return this.repository.inSystem('jobs read tenant job', () => this.repository.getJob(jobId, tenantId)); }
   cancel(jobId: string, tenantId?: string): Promise<boolean> { if (!tenantId) throw new InvalidJobInputError('tenantId is required'); return this.repository.inSystem('jobs cancel tenant job', () => this.repository.cancel(jobId, tenantId)); }
   async upsertSchedule(input: UpsertScheduleInput): Promise<ScheduleRecord> {
     if (!input.tenantId || !input.name.trim() || !input.jobType.trim()) throw new InvalidScheduleError('tenantId, name, and jobType are required');

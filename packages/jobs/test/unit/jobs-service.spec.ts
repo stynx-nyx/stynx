@@ -118,7 +118,9 @@ describe('JobsService behavioral contract', () => {
       expect.any(Function),
     );
     expect(repository.getJob).toHaveBeenCalledWith('job-1', 'tenant-1');
-    expect(() => service.getJob('job-1')).toThrow('Invalid job input: tenantId is required');
+    expect(() =>
+      (service.getJob as (jobId: string, tenantId?: string) => unknown)('job-1'),
+    ).toThrow('Invalid job input: tenantId is required');
 
     await expect(service.cancel('job-1', 'tenant-1')).resolves.toBe(true);
     expect(repository.inSystem).toHaveBeenLastCalledWith(
