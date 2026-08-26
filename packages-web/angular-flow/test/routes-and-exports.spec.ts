@@ -1,4 +1,7 @@
 import '@angular/compiler';
+import { Injector, runInInjectionContext } from '@angular/core';
+import { Router } from '@angular/router';
+import { STYNX_ANGULAR_AUTH_OPTIONS, StynxSessionService } from '@stynx-nyx/angular-auth';
 import * as flow from '../src';
 import { StynxFlowDashboardComponent, StynxFlowOpenTasksComponent, StynxFlowRunSummaryComponent } from '../src/analytics.component';
 import { StynxFlowFillsComponent } from '../src/flow-fills.component';
@@ -74,6 +77,41 @@ describe('@stynx-nyx/angular-flow exports and routes', () => {
       { path: 'open-tasks', component: StynxFlowOpenTasksComponent, guardCount: 1 },
       { path: 'summary', component: StynxFlowRunSummaryComponent, guardCount: 1 },
       { path: 'policies', component: StynxFlowGraphDesignerComponent, guardCount: 1 },
+    ]);
+  });
+
+  it('binds every route guard to its exact permission', () => {
+    const hasAllPermissions = vi.fn(() => true);
+    const injector = Injector.create({
+      providers: [
+        { provide: StynxSessionService, useValue: { hasAllPermissions } },
+        { provide: Router, useValue: { parseUrl: vi.fn() } },
+        { provide: STYNX_ANGULAR_AUTH_OPTIONS, useValue: {} },
+      ],
+    });
+
+    for (const route of flowRoutes()) {
+      const guard = route.canActivate?.[0];
+      expect(typeof guard).toBe('function');
+      runInInjectionContext(injector, () => (guard as Function)({}, {}));
+    }
+
+    expect(hasAllPermissions.mock.calls).toEqual([
+      [['flow:read:design']],
+      [['flow:read:design']],
+      [['flow:read:design']],
+      [['flow:read:runtime']],
+      [['flow:read:runtime']],
+      [['flow:read:runtime']],
+      [['flow:read:runtime']],
+      [['flow:read:runtime']],
+      [['flow:read:runtime']],
+      [['flow:read:runtime']],
+      [['flow:read:runtime']],
+      [['flow:read:analytics']],
+      [['flow:read:analytics']],
+      [['flow:read:analytics']],
+      [['flow:read:design']],
     ]);
   });
 });

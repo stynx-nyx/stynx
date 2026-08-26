@@ -291,6 +291,30 @@ describe('@stynx-nyx/angular-flow FE-G fan-out', () => {
     expect(component.percent(0.125)).toBe('13%');
   });
 
+  it('exposes dashboard loading and clears stale errors while a request is pending', async () => {
+    let resolveRequest: (value: Awaited<ReturnType<FlowApiService['dashboardAnalytics']>>) => void = () => undefined;
+    const api = createApi();
+    (api.dashboardAnalytics as ReturnType<typeof vi.fn>).mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveRequest = resolve;
+      }),
+    );
+    const component = createWithApi(api, () => new StynxFlowDashboardComponent());
+    component.errorMessage.set('stale error');
+
+    const pending = component.load();
+    expect(component.loading()).toBe(true);
+    expect(component.errorMessage()).toBe('');
+    resolveRequest({
+      openTasks: 1,
+      cycleTime: { p50Seconds: 1, p95Seconds: 2 },
+      completionRate: { last7Days: 0.5, last30Days: 0.75 },
+      slaBreaches: 0,
+    });
+    await pending;
+    expect(component.loading()).toBe(false);
+  });
+
   it('loads run activity pages, appends older events, and clears when no run is selected', async () => {
     const api = createApi();
     (api.listRunActivity as ReturnType<typeof vi.fn>)
@@ -368,6 +392,26 @@ describe('@stynx-nyx/angular-flow FE-G fan-out', () => {
     expect(api.listRunActivity).toHaveBeenNthCalledWith(2, 'run-1', { page: 2, pageSize: 10 });
     expect(component.events()).toEqual([{ id: 'event-latest', runId: 'run-1', kind: 'approved' }]);
     expect(component.hasNextPage()).toBe(false);
+    expect(component.loading()).toBe(false);
+  });
+
+  it('exposes run-activity loading and clears stale errors while a request is pending', async () => {
+    let resolveRequest: (value: Awaited<ReturnType<FlowApiService['listRunActivity']>>) => void = () => undefined;
+    const api = createApi();
+    (api.listRunActivity as ReturnType<typeof vi.fn>).mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveRequest = resolve;
+      }),
+    );
+    const component = createWithApi(api, () => new StynxFlowRunActivityComponent());
+    component.runId = 'run-1';
+    component.errorMessage.set('stale error');
+
+    const pending = component.refresh();
+    expect(component.loading()).toBe(true);
+    expect(component.errorMessage()).toBe('');
+    resolveRequest({ data: [], meta: { page: 1, pageSize: 25, total: 0 } });
+    await pending;
     expect(component.loading()).toBe(false);
   });
 

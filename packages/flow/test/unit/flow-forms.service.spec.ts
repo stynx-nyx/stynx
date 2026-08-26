@@ -46,6 +46,68 @@ function makeService(
 }
 
 describe('FlowFormsService', () => {
+  describe('exact helper and read-transaction contracts', () => {
+    it('accepts only object request bodies and preserves their identity', () => {
+      const { service } = makeService();
+      const helpers = service as unknown as {
+        objectInput: (input: unknown) => Record<string, unknown>;
+      };
+      const body = { formId: FORM };
+      expect(helpers.objectInput(body)).toBe(body);
+      for (const invalid of [null, undefined, 'body', 1, []]) {
+        expect(() => helpers.objectInput(invalid)).toThrow('Request body must be an object');
+      }
+    });
+
+    it('requires exact non-empty string fields', () => {
+      const { service } = makeService();
+      const stringField = (service as unknown as {
+        stringField: (row: Record<string, unknown>, key: string, message: string) => string;
+      }).stringField.bind(service);
+      expect(stringField({ value: 'exact' }, 'value', 'value required')).toBe('exact');
+      for (const value of [undefined, null, 0, '']) {
+        expect(() => stringField({ value }, 'value', 'value required')).toThrow('value required');
+      }
+    });
+
+    it('requires an exact tenant context', () => {
+      const { service } = makeService([], { actorId: 'u-1' });
+      expect(() => (service as unknown as { requireTenantId: () => string }).requireTenantId())
+        .toThrow('Tenant context is required');
+    });
+
+    it('binds read helpers to the exact reader transaction policy', async () => {
+      const { service, db } = makeService([[{ id: FORM }]]);
+      await service.getForm(FORM);
+      expect(db.tx).toHaveBeenLastCalledWith(expect.any(Function), {
+        role: 'reader',
+        readonly: true,
+      });
+
+      const listed = makeService([[]]);
+      await listed.service.listForms();
+      expect(listed.db.tx).toHaveBeenLastCalledWith(expect.any(Function), {
+        role: 'reader',
+        readonly: true,
+      });
+    });
+
+    it('normalizes answer aliases without retaining an undefined questionId', () => {
+      const { service } = makeService();
+      const normalize = (service as unknown as {
+        normalizeAnswerInput: (input: unknown) => Record<string, unknown>;
+      }).normalizeAnswerInput.bind(service);
+      expect(normalize({ itemId: QUESTION, value: 1 })).toEqual({
+        itemId: QUESTION,
+        questionId: QUESTION,
+        value: 1,
+      });
+      const withoutQuestion = normalize({ questionId: undefined, value: 1 });
+      expect(withoutQuestion).toEqual({ value: 1 });
+      expect(Object.keys(withoutQuestion)).toEqual(['value']);
+    });
+  });
+
   describe('forms CRUD', () => {
     it('listForms scopes by scope_id when provided', async () => {
       const { service, trx } = makeService([[{ id: 'f-1', scope_id: SCOPE }]]);
@@ -506,6 +568,15 @@ describe('FlowFormsService', () => {
   });
 
   describe('waivers', () => {
+    it.each([
+      [{ targetType: 'doc', targetId: 'target', formId: FORM }, 'Fill scope is required'],
+      [{ scopeId: SCOPE, targetId: 'target', formId: FORM }, 'Fill target type is required'],
+      [{ scopeId: SCOPE, targetType: 'doc', formId: FORM }, 'Fill target id is required'],
+      [{ scopeId: SCOPE, targetType: 'doc', targetId: 'target' }, 'Fill form is required'],
+    ])('createFillWaiver rejects incomplete fill context %#', async (fill, message) => {
+      const { service } = makeService([[{ id: FILL, ...fill }]]);
+      await expect(service.createFillWaiver(FILL, {})).rejects.toThrow(message);
+    });
     it('listWaivers filters by allowed keys', async () => {
       const { service, trx } = makeService([[]]);
       await service.listWaivers({

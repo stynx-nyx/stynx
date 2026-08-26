@@ -159,9 +159,16 @@ function createInbox(
 }
 
 describe('@stynx-nyx/angular-flow components', () => {
+  it('publishes stable injection-token identities for host providers', () => {
+    expect(STYNX_FLOW_CLIENT.toString()).toBe('InjectionToken STYNX_FLOW_CLIENT');
+    expect(STYNX_FLOW_TENANT_CHANGED.toString()).toBe('InjectionToken STYNX_FLOW_TENANT_CHANGED');
+  });
+
   it('binds graph designer inputs to route-like scope and graph ids', async () => {
     const api = createApi();
     const component = createWithApi(api, () => new StynxFlowGraphDesignerComponent());
+    expect(component.loading).toBe(false);
+    expect(component.errorMessage).toBe('');
     component.scopeId = 'scope-1';
     component.graphId = 'graph-1';
 
@@ -444,6 +451,71 @@ describe('@stynx-nyx/angular-flow components', () => {
     expect(api.listWaivers).toHaveBeenLastCalledWith({});
   });
 
+  it('preserves exact list-component defaults and exposes pending loading state', async () => {
+    const api = createApi();
+    const forms = createWithApi(api, () => new StynxFlowFormsComponent());
+    const fills = createWithApi(api, () => new StynxFlowFillsComponent());
+    const tasks = createWithApi(api, () => new StynxFlowTaskListComponent());
+    const waivers = createWithApi(api, () => new StynxFlowWaiversComponent());
+
+    expect({ scopeId: forms.scopeId, forms: forms.forms, loading: forms.loading, error: forms.errorMessage })
+      .toEqual({ scopeId: '', forms: [], loading: false, error: '' });
+    expect({
+      formId: fills.formId,
+      targetType: fills.targetType,
+      targetId: fills.targetId,
+      fills: fills.fills,
+      loading: fills.loading,
+      error: fills.errorMessage,
+    }).toEqual({ formId: '', targetType: '', targetId: '', fills: [], loading: false, error: '' });
+    expect({ mine: tasks.mine, status: tasks.status, tasks: tasks.tasks, loading: tasks.loading, error: tasks.errorMessage })
+      .toEqual({ mine: false, status: 'open', tasks: [], loading: false, error: '' });
+    expect({
+      scopeId: waivers.scopeId,
+      targetType: waivers.targetType,
+      targetId: waivers.targetId,
+      waivers: waivers.waivers,
+      loading: waivers.loading,
+      error: waivers.errorMessage,
+    }).toEqual({ scopeId: '', targetType: '', targetId: '', waivers: [], loading: false, error: '' });
+
+    let resolveForms: (value: Awaited<ReturnType<FlowApiService['listForms']>>) => void = () => undefined;
+    (api.listForms as Mock).mockReturnValueOnce(new Promise((resolve) => { resolveForms = resolve; }));
+    forms.errorMessage = 'stale';
+    const pendingForms = forms.load();
+    expect({ loading: forms.loading, error: forms.errorMessage }).toEqual({ loading: true, error: '' });
+    resolveForms([]);
+    await pendingForms;
+    expect(forms.loading).toBe(false);
+
+    let resolveFills: (value: Awaited<ReturnType<FlowApiService['listFills']>>) => void = () => undefined;
+    (api.listFills as Mock).mockReturnValueOnce(new Promise((resolve) => { resolveFills = resolve; }));
+    fills.errorMessage = 'stale';
+    const pendingFills = fills.load();
+    expect({ loading: fills.loading, error: fills.errorMessage }).toEqual({ loading: true, error: '' });
+    resolveFills([]);
+    await pendingFills;
+    expect(fills.loading).toBe(false);
+
+    let resolveTasks: (value: Awaited<ReturnType<FlowApiService['listTasks']>>) => void = () => undefined;
+    (api.listTasks as Mock).mockReturnValueOnce(new Promise((resolve) => { resolveTasks = resolve; }));
+    tasks.errorMessage = 'stale';
+    const pendingTasks = tasks.load();
+    expect({ loading: tasks.loading, error: tasks.errorMessage }).toEqual({ loading: true, error: '' });
+    resolveTasks({ data: [], meta: { page: 1, pageSize: 50, total: 0 } });
+    await pendingTasks;
+    expect(tasks.loading).toBe(false);
+
+    let resolveWaivers: (value: Awaited<ReturnType<FlowApiService['listWaivers']>>) => void = () => undefined;
+    (api.listWaivers as Mock).mockReturnValueOnce(new Promise((resolve) => { resolveWaivers = resolve; }));
+    waivers.errorMessage = 'stale';
+    const pendingWaivers = waivers.load();
+    expect({ loading: waivers.loading, error: waivers.errorMessage }).toEqual({ loading: true, error: '' });
+    resolveWaivers([]);
+    await pendingWaivers;
+    expect(waivers.loading).toBe(false);
+  });
+
   it('describes branch: distinguishes empty filters and fallback load errors across flow lists', async () => {
     const api = createApi();
     const forms = createWithApi(api, () => new StynxFlowFormsComponent());
@@ -528,6 +600,23 @@ describe('@stynx-nyx/angular-flow components', () => {
     expect(component.errorMessage()).toBe('tasks unavailable');
   });
 
+  it('exposes my-tasks loading and clears stale errors while refresh is pending', async () => {
+    let resolveRequest: (value: Awaited<ReturnType<FlowApiService['listTasks']>>) => void = () => undefined;
+    const api = createApi();
+    (api.listTasks as Mock).mockReturnValueOnce(new Promise((resolve) => {
+      resolveRequest = resolve;
+    }));
+    const component = createWithApi(api, () => new StynxFlowMyTasksInboxComponent());
+    component.errorMessage.set('stale error');
+
+    const pending = component.refresh();
+    expect(component.loading()).toBe(true);
+    expect(component.errorMessage()).toBe('');
+    resolveRequest({ data: [], meta: { page: 1, pageSize: 50, total: 0 } });
+    await pending;
+    expect(component.loading()).toBe(false);
+  });
+
   it('polls my tasks only while the component is active', async () => {
     vi.useFakeTimers();
     try {
@@ -601,6 +690,59 @@ describe('@stynx-nyx/angular-flow components', () => {
     waiverDialog.dismissed.emit();
 
     expect(emitted).toEqual([{}, {}, 'user-1', 'assignment-cancel', {}, 'waiver-cancel']);
+    expect(assignment.open).toBe(false);
+    expect(waiverDialog.open).toBe(false);
+  });
+
+  it('preserves exact empty, scalar, and nullable fill value semantics', () => {
+    const component = new StynxFlowFillEditorComponent();
+    const question = (id: string, fieldType: string) => ({
+      id,
+      formId: 'form-1',
+      key: id,
+      label: id,
+      fieldType,
+      required: false,
+      blocksSubmit: false,
+    }) as never;
+    const boolean = question('boolean', 'boolean');
+    const number = question('number', 'number');
+    const multiselect = question('multiselect', 'multiselect');
+    const select = question('select', 'select');
+    const date = question('date', 'date');
+    const signature = question('signature', 'signature');
+    component.questions = [boolean, number, multiselect, select, date, signature];
+    component.answers = [
+      { questionId: 'boolean', value: 'false' },
+      { questionId: 'number', value: '' },
+      { questionId: 'select', value: '' },
+      { questionId: 'date', value: '' },
+      { questionId: 'signature', value: null },
+    ] as never;
+
+    expect(component.valueFor(boolean)).toBe(false);
+    expect(component.valueFor(number)).toBe(null);
+    expect(component.valueFor(multiselect)).toEqual([]);
+    expect(component.valueFor(signature)).toBe('');
+
+    component.setValue(boolean, false);
+    component.setValue(number, undefined);
+    component.setValue(multiselect, 'not-an-array');
+    component.setValue(select, '');
+    component.setValue(date, '');
+    component.setValue(signature, '');
+    const saved: unknown[] = [];
+    component.saveAnswers.subscribe((value) => saved.push(value));
+    component.saveAllAnswers();
+
+    expect(saved).toEqual([[
+      { questionId: 'boolean', value: false },
+      { questionId: 'number', value: null },
+      { questionId: 'multiselect', value: [] },
+      { questionId: 'select', value: null },
+      { questionId: 'date', value: null },
+      { questionId: 'signature', value: null },
+    ]]);
   });
 
   it('normalizes typed fill editor values for package hosts', () => {

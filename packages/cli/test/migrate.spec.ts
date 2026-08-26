@@ -116,6 +116,10 @@ describe('migrate command surface', () => {
     expect(status.pending).toEqual(['0001_first.sql', '0002_second.sql']);
     expect(status.applied).toEqual([]);
     expect(status.rollbackable).toEqual([]);
+    expect(fake.connected).toBe(false);
+    expect(fake.executedSql[0]).toBe('create schema if not exists core');
+    expect(fake.executedSql[1]).toContain('create table if not exists core.schema_migrations');
+    expect(fake.executedSql[2]).toContain('create table if not exists core.schema_migration_journal');
   });
 
   it('uses the default pg client factory when no factory override is supplied', async () => {
@@ -240,6 +244,20 @@ describe('migrate command surface', () => {
       id: '0001_platform.sql',
       upPath: resolve(dir, '0001_platform.sql'),
       downPath: resolve(dir, '0001_platform.down.sql'),
+    }]);
+  });
+
+  it('derives a down path by replacing only the final sql suffix', () => {
+    const root = mkdtempSync(resolve(tmpdir(), 'stynx-cli-migrate-repeat-suffix-'));
+    const dir = resolve(root, 'migrations');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(resolve(dir, '0001_repeat.sql.sql'), 'select 1;', 'utf8');
+    writeFileSync(resolve(dir, '0001_repeat.sql.down.sql'), 'select 11;', 'utf8');
+
+    expect(listMigrations(process.cwd(), { migrationDir: dir })).toEqual([{
+      id: '0001_repeat.sql.sql',
+      upPath: resolve(dir, '0001_repeat.sql.sql'),
+      downPath: resolve(dir, '0001_repeat.sql.down.sql'),
     }]);
   });
 

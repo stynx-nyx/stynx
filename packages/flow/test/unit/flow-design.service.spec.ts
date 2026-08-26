@@ -1,5 +1,12 @@
 import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { FlowDesignService } from '../../src/flow-design.service';
+import {
+  FlowDesignTableStore,
+  graphPublishMeta,
+  jsonObject,
+  requireString,
+  withGraphPublishState,
+} from '../../src/internal/design/design-table-store';
 import type { Mock } from 'vitest';
 
 const SCOPE = '0190abcd-1234-7abc-89ab-000000000001';
@@ -39,6 +46,83 @@ function makeService(
   const { db, trx } = makeDb(rowsByCall);
   return { service: new FlowDesignService(db, ctx as never), trx, db };
 }
+
+describe('FlowDesignTableStore exact helper contracts', () => {
+  it('accepts only plain JSON objects', () => {
+    const object = { key: 'value' };
+    expect(jsonObject(object)).toBe(object);
+    for (const invalid of [null, undefined, 'value', 1, true, []]) {
+      expect(jsonObject(invalid)).toEqual({});
+    }
+  });
+
+  it('requires exact non-empty strings', () => {
+    expect(requireString('value', 'field')).toBe('value');
+    for (const invalid of [undefined, null, 1, '']) {
+      expect(() => requireString(invalid, 'field')).toThrow('field is required');
+    }
+  });
+
+  it('extracts and presents exact graph publication metadata', () => {
+    expect(graphPublishMeta(null)).toBe(null);
+    expect(graphPublishMeta([])).toBe(null);
+    expect(graphPublishMeta({ publish: [] })).toBe(null);
+    expect(graphPublishMeta({ publish: { publishedVersion: Infinity, publishedAt: 'at' } }))
+      .toBe(null);
+    expect(graphPublishMeta({ publish: { publishedVersion: 2, publishedAt: 'at' } })).toEqual({
+      publishedVersion: 2,
+      publishedAt: 'at',
+      publishedBy: null,
+    });
+    expect(withGraphPublishState({ id: GRAPH, meta: {} })).toEqual({
+      id: GRAPH,
+      meta: {},
+      status: 'draft',
+    });
+    expect(withGraphPublishState({
+      id: GRAPH,
+      meta: { publish: { publishedVersion: 2, publishedAt: 'at', publishedBy: 'u-1' } },
+    })).toEqual({
+      id: GRAPH,
+      meta: { publish: { publishedVersion: 2, publishedAt: 'at', publishedBy: 'u-1' } },
+      status: 'published',
+      publishedVersion: 2,
+      publishedAt: 'at',
+      publishedBy: 'u-1',
+    });
+  });
+
+  it('uses exact default SQL and reader policy for unfiltered lists', async () => {
+    const { db, trx } = makeDb([[]]);
+    const store = new FlowDesignTableStore(db as never, { tenantId: 't-1', actorId: 'u-1' } as never);
+    await store.listRows('scopes');
+    expect(trx.query).toHaveBeenCalledWith(
+      'select * from flow.scopes order by created_at DESC',
+      [],
+    );
+    expect(db.tx).toHaveBeenCalledWith(expect.any(Function), {
+      role: 'reader',
+      readonly: true,
+    });
+  });
+
+  it('requires a tenant and an actual update field', async () => {
+    const missingTenant = makeDb();
+    const noTenantStore = new FlowDesignTableStore(missingTenant.db as never, { actorId: 'u-1' } as never);
+    await expect(noTenantStore.createRow('scopes', { code: 'scope' })).rejects.toThrow(
+      'Tenant context is required',
+    );
+
+    const emptyUpdate = makeDb();
+    const store = new FlowDesignTableStore(
+      emptyUpdate.db as never,
+      { tenantId: 't-1', actorId: 'u-1' } as never,
+    );
+    await expect(store.updateRow('scopes', SCOPE, {})).rejects.toThrow(
+      'At least one update field is required',
+    );
+  });
+});
 
 describe('FlowDesignService — scopes', () => {
   it('listScopes returns camelized rows', async () => {

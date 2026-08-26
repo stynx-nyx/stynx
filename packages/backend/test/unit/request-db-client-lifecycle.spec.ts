@@ -101,6 +101,21 @@ describe('ResponseEventRequestDbClientLifecycle', () => {
     expect(delegate.release).toHaveBeenCalledTimes(1);
   });
 
+  it('releases immediately when the response is already writable-ended', async () => {
+    const delegate = makeDelegate();
+    const wrapper = new ResponseEventRequestDbClientLifecycle(delegate);
+    const response = fakeResponse();
+    (response as unknown as { writableEnded: boolean }).writableEnded = true;
+    const context = {
+      request: { headers: {}, response } as never,
+      tenantId: 't',
+      client: {},
+    };
+    await wrapper.release(context);
+    await wrapper.release(context);
+    expect(delegate.release).toHaveBeenCalledTimes(1);
+  });
+
   it('releases immediately when there is no response to listen on', async () => {
     const delegate = makeDelegate();
     const wrapper = new ResponseEventRequestDbClientLifecycle(delegate);
@@ -135,6 +150,36 @@ describe('ResponseEventRequestDbClientLifecycle', () => {
     });
     res.emit('finish');
     await new Promise((r) => setImmediate(r));
+    expect(delegate.release).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores an invalid direct response and falls back to a valid nested response', async () => {
+    const delegate = makeDelegate();
+    const wrapper = new ResponseEventRequestDbClientLifecycle(delegate);
+    const res = fakeResponse();
+    await wrapper.release({
+      request: { headers: {}, response: { once: 'not-a-function' }, res } as never,
+      tenantId: 't',
+      client: {},
+    });
+    expect(delegate.release).not.toHaveBeenCalled();
+    res.emit('close');
+    await new Promise((r) => setImmediate(r));
+    expect(delegate.release).toHaveBeenCalledTimes(1);
+  });
+
+  it('releases immediately when neither response candidate exposes once()', async () => {
+    const delegate = makeDelegate();
+    const wrapper = new ResponseEventRequestDbClientLifecycle(delegate);
+    await wrapper.release({
+      request: {
+        headers: {},
+        response: { once: 'not-a-function' },
+        res: { once: 42 },
+      } as never,
+      tenantId: 't',
+      client: {},
+    });
     expect(delegate.release).toHaveBeenCalledTimes(1);
   });
 

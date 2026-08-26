@@ -83,12 +83,66 @@ describe('ClaimFirstTenantEntitlementPolicy', () => {
     ).resolves.toBe(true);
   });
 
+  it('trims array entries and treats blank-only arrays as absent claims', async () => {
+    const fallback = { isEntitled: vi.fn(async () => true) };
+    const policy = new ClaimFirstTenantEntitlementPolicy({ fallback });
+
+    await expect(policy.isEntitled(mkContext({ tenants: ['  t-1  '] }))).resolves.toBe(true);
+    expect(fallback.isEntitled).not.toHaveBeenCalled();
+
+    const blankContext = mkContext({ tenants: [' ', 42] });
+    await expect(policy.isEntitled(blankContext)).resolves.toBe(true);
+    expect(fallback.isEntitled).toHaveBeenCalledExactlyOnceWith(blankContext);
+  });
+
+  it('normalizes JSON-array entries before deciding whether a claim exists', async () => {
+    const fallback = { isEntitled: vi.fn(async () => true) };
+    const policy = new ClaimFirstTenantEntitlementPolicy({ fallback });
+
+    await expect(
+      policy.isEntitled(mkContext({ tenant_ids: '["  t-1  ", 42]' })),
+    ).resolves.toBe(true);
+    expect(fallback.isEntitled).not.toHaveBeenCalled();
+
+    const blankContext = mkContext({ tenant_ids: '[" ", 42]' });
+    await expect(policy.isEntitled(blankContext)).resolves.toBe(true);
+    expect(fallback.isEntitled).toHaveBeenCalledExactlyOnceWith(blankContext);
+  });
+
+  it('trims CSV entries and treats blank-only CSV as an absent claim', async () => {
+    const fallback = { isEntitled: vi.fn(async () => true) };
+    const policy = new ClaimFirstTenantEntitlementPolicy({ fallback });
+
+    await expect(policy.isEntitled(mkContext({ tenant_ids: ' x,  t-1  , y ' }))).resolves.toBe(
+      true,
+    );
+    expect(fallback.isEntitled).not.toHaveBeenCalled();
+
+    const blankContext = mkContext({ tenant_ids: ' , , ' });
+    await expect(policy.isEntitled(blankContext)).resolves.toBe(true);
+    expect(fallback.isEntitled).toHaveBeenCalledExactlyOnceWith(blankContext);
+  });
+
   it('honors custom claimKeys list', async () => {
     const policy = new ClaimFirstTenantEntitlementPolicy({ claimKeys: ['my:tenant'] });
     await expect(policy.isEntitled(mkContext({ my: { tenant: 't-1' } } as never))).resolves.toBe(
       false,
     );
     await expect(policy.isEntitled(mkContext({ 'my:tenant': 't-1' }))).resolves.toBe(true);
+  });
+
+  it('parses claim representations with exact normalization semantics', () => {
+    const parse = (new ClaimFirstTenantEntitlementPolicy() as unknown as {
+      parseClaimValues: (value: unknown) => string[];
+    }).parseClaimValues.bind(new ClaimFirstTenantEntitlementPolicy());
+    expect(parse(undefined)).toEqual([]);
+    expect(parse(42)).toEqual([]);
+    expect(parse(['  t-1  ', 42, ' ', 't-2'])).toEqual(['t-1', 't-2']);
+    expect(parse(' [ "t-1", 42, " ", "t-2" ] ')).toEqual(['t-1', 't-2']);
+    expect(parse('[not-json]')).toEqual(['[not-json]']);
+    expect(parse('[not-json')).toEqual(['[not-json']);
+    expect(parse('not-json]')).toEqual(['not-json]']);
+    expect(parse(' a, , b ')).toEqual(['a', 'b']);
   });
 });
 

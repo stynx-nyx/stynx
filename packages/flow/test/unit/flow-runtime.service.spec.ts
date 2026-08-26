@@ -138,7 +138,7 @@ describe('FlowRuntimeService.ensureRun', () => {
         targetType: 'doc',
         targetId: 'doc-1',
       }),
-    ).rejects.toBeInstanceOf(BadRequestException);
+    ).rejects.toThrow('Flow run was not created');
   });
 
   it('requires scopeId when scopeCode is absent', async () => {
@@ -361,7 +361,7 @@ describe('FlowRuntimeService getRun / updateRun / getNodeRun / getTask', () => {
       [RUN],
     );
     const m = makeService([[]]);
-    await expect(m.service.getRun(RUN)).rejects.toBeInstanceOf(NotFoundException);
+    await expect(m.service.getRun(RUN)).rejects.toThrow('Run not found');
   });
 
   it('updateRun returns the camelized updated row', async () => {
@@ -388,9 +388,7 @@ describe('FlowRuntimeService getRun / updateRun / getNodeRun / getTask', () => {
 
   it('updateRun throws NotFoundException when row is absent', async () => {
     const { service, trx } = makeService([[]]);
-    await expect(service.updateRun(RUN, { status: 'completed' })).rejects.toBeInstanceOf(
-      NotFoundException,
-    );
+    await expect(service.updateRun(RUN, { status: 'completed' })).rejects.toThrow('Run not found');
     expect(trx.query.mock.calls[0]?.[1]).toEqual([RUN, 'completed', USER]);
   });
 
@@ -398,23 +396,29 @@ describe('FlowRuntimeService getRun / updateRun / getNodeRun / getTask', () => {
     const f = makeService([[{ id: 'nr-1' }]]);
     await expect(f.service.getNodeRun('nr-1')).resolves.toMatchObject({ id: 'nr-1' });
     const m = makeService([[]]);
-    await expect(m.service.getNodeRun('nr-x')).rejects.toBeInstanceOf(NotFoundException);
+    await expect(m.service.getNodeRun('nr-x')).rejects.toThrow('Node run not found');
   });
 
   it('getTask returns one or throws NotFound', async () => {
     const f = makeService([[{ id: TASK }]]);
     await expect(f.service.getTask(TASK)).resolves.toMatchObject({ id: TASK });
     const m = makeService([[]]);
-    await expect(m.service.getTask(TASK)).rejects.toBeInstanceOf(NotFoundException);
+    await expect(m.service.getTask(TASK)).rejects.toThrow('Task not found');
   });
 
   it('listRunNodeRuns / listRunTasks / listRunEvents share the same list shape', async () => {
     const a = makeService([[{ id: 'nr-1' }]]);
     await expect(a.service.listRunNodeRuns(RUN)).resolves.toHaveLength(1);
+    expect(a.trx.query.mock.calls[0]?.[0]).toContain('where nr.run_id = $1::uuid');
+    expect(a.trx.query.mock.calls[0]?.[1]).toEqual([RUN]);
     const b = makeService([[{ id: TASK }]]);
     await expect(b.service.listRunTasks(RUN)).resolves.toHaveLength(1);
+    expect(b.trx.query.mock.calls[0]?.[0]).toContain('where t.run_id = $1::uuid');
+    expect(b.trx.query.mock.calls[0]?.[1]).toEqual([RUN]);
     const c = makeService([[{ id: EVENT }]]);
     await expect(c.service.listRunEvents(RUN)).resolves.toHaveLength(1);
+    expect(c.trx.query.mock.calls[0]?.[0]).toContain('where e.run_id = $1::uuid');
+    expect(c.trx.query.mock.calls[0]?.[1]).toEqual([RUN]);
   });
 });
 
@@ -583,8 +587,8 @@ describe('FlowRuntimeService task action flows', () => {
       [[{ assignee_user_id: USER, adapter_key: 'k', target_type: 't', target_id: 't-1' }]],
       { actorId: USER },
     );
-    await expect(service.assignTask(TASK, { userId: USER })).rejects.toBeInstanceOf(
-      BadRequestException,
+    await expect(service.assignTask(TASK, { userId: USER })).rejects.toThrow(
+      'Tenant context is required',
     );
     expect(adapters.canManage).not.toHaveBeenCalled();
   });
@@ -1115,6 +1119,47 @@ describe('FlowRuntimeService.dispatchPendingEffects', () => {
 });
 
 describe('FlowRuntimeService — small helpers + edges', () => {
+  it('uses the exact reader transaction policy for run and task reads', async () => {
+    const runs = makeService([[], []]);
+    await runs.service.listRuns();
+    expect(runs.db.tx).toHaveBeenLastCalledWith(expect.any(Function), {
+      role: 'reader',
+      readonly: true,
+    });
+
+    const nodes = makeService([[], []]);
+    await nodes.service.listNodeRuns();
+    expect(nodes.db.tx).toHaveBeenLastCalledWith(expect.any(Function), {
+      role: 'reader',
+      readonly: true,
+    });
+
+    const tasks = makeService([[], []]);
+    await tasks.service.listTasks();
+    expect(tasks.db.tx).toHaveBeenLastCalledWith(expect.any(Function), {
+      role: 'reader',
+      readonly: true,
+    });
+  });
+
+  it('uses exact reader transactions for allowed-action and task-access checks', async () => {
+    const { service, db } = makeService([
+      [{ allowed: true }],
+      [{
+        assignee_user_id: USER,
+        adapter_key: 'k',
+        target_type: 'doc',
+        target_id: 'd-1',
+        is_user_candidate: true,
+      }],
+      [],
+      [{ id: TASK }],
+    ]);
+    await service.actTask(TASK, { action: 'approve' });
+    expect(db.tx.mock.calls[0]?.[1]).toEqual({ role: 'reader', readonly: true });
+    expect(db.tx.mock.calls[1]?.[1]).toEqual({ role: 'reader', readonly: true });
+  });
+
   it('listUsersForRole adds an ilike search clause when search is provided', async () => {
     const { service, trx } = makeService([[]]);
     await service.listUsersForRole('admin', 'alice');

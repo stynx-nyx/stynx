@@ -43,6 +43,30 @@ describe('LocaleService', () => {
     expect(mutator.patch).toHaveBeenCalledWith({ locale: 'pt-BR' });
   });
 
+  it('trims a supported non-fallback language from a weighted header', async () => {
+    const mutator = { patch: vi.fn() } as unknown as RequestContextMutator;
+    const catalog = { supportedLocales: vi.fn(() => ['pt-BR', 'en-US']) } as unknown as CatalogService;
+    const service = new LocaleService(
+      moduleRef(new Map([[RequestContext, context({ active: false })], [RequestContextMutator, mutator]])),
+      catalog,
+    );
+
+    await expect(service.resolve('fr-FR;q=0.9, en-US;q=0.8')).resolves.toBe('en-US');
+    expect(mutator.patch).toHaveBeenCalledWith({ locale: 'en-US' });
+  });
+
+  it('does not treat a partial or untrimmed language token as supported', async () => {
+    const mutator = { patch: vi.fn() } as unknown as RequestContextMutator;
+    const catalog = { supportedLocales: vi.fn(() => ['pt-BR', 'en-US']) } as unknown as CatalogService;
+    const service = new LocaleService(
+      moduleRef(new Map([[RequestContext, context({ active: false })], [RequestContextMutator, mutator]])),
+      catalog,
+    );
+
+    await expect(service.resolve('en-US-extra')).resolves.toBe('pt-BR');
+    expect(mutator.patch).toHaveBeenCalledWith({ locale: 'pt-BR' });
+  });
+
   it('loads tenant overrides and tenant locale when the header has no supported locale', async () => {
     const mutator = { patch: vi.fn() } as unknown as RequestContextMutator;
     const catalog = {
@@ -69,6 +93,12 @@ describe('LocaleService', () => {
     await expect(service.resolve('fr-FR')).resolves.toBe('en-US');
     expect(catalog.primeTenantOverrides).toHaveBeenCalledWith('tenant-1');
     expect(mutator.patch).toHaveBeenCalledWith({ locale: 'en-US' });
+    expect(database.withSystemContext).toHaveBeenCalledWith('i18n tenant locale lookup', expect.any(Function));
+    expect(database.tx).toHaveBeenCalledWith(expect.any(Function), {
+      role: 'owner',
+      readonly: true,
+      replica: false,
+    });
   });
 
   it('falls through tenant lookup when settings have no locale', async () => {
