@@ -11,8 +11,8 @@
     },
     "provenance": [
       "DEVAI 1.2.13 deterministic inventory for exact tracked source bytes.",
-      "The 490 tracked test-path census is partitioned into 375 executable tests and 115 non-executable fixtures or support modules.",
-      "Fourteen tracked verification scripts and configuration attestations complete the 504-item governed test surface."
+      "The 493 tracked test-path census is partitioned into 378 executable tests and 115 non-executable fixtures or support modules.",
+      "Fourteen tracked verification scripts and configuration attestations complete the 507-item governed test surface."
     ]
   },
   "invariants": [
@@ -3542,6 +3542,30 @@
       "lifecycle": "supported",
       "assertion_count": 27,
       "assertion_digest_sha256": "adbcf9447411c93b0c0dac0936b6f68003bccbd9c863e5c7a7fc4f4825288dce"
+    },
+    {
+      "path": "packages/jobs/test/unit/jobs-lifecycle-contract.spec.ts",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 26,
+      "assertion_digest_sha256": "cc5160ea61e5c85c8b46515f70a1c9afdc9d8f5fba88537e7244fedcdbc2cab2"
+    },
+    {
+      "path": "packages/jobs/test/unit/jobs-repository-contract.spec.ts",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 36,
+      "assertion_digest_sha256": "7f2aed22cf345487d8dda52723d660a950e3bfe507363de271172622f75350f9"
+    },
+    {
+      "path": "packages/jobs/test/unit/jobs-service.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 40,
+      "assertion_digest_sha256": "b1c3d1ee7760ebb3d6af0cf23699168531c37c31310889920227fe9068ad709c"
     },
     {
       "path": "packages/jobs/test/unit/worker.spec.ts",
