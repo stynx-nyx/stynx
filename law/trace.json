@@ -3452,8 +3452,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-OFFLINE-001"],
       "lifecycle": "supported",
-      "assertion_count": 20,
-      "assertion_digest_sha256": "428d8c1076bc4f8d0d7f618666ee345a6f4110950a567b6a014c94a59147d8a2"
+      "assertion_count": 55,
+      "assertion_digest_sha256": "876e60ebf526819179ad99a75794d109fb31aa83dd116a6853645e993e5c9cda"
     },
     {
       "path": "packages/mobile-runtime/test/mobile-runtime.spec.ts",
@@ -3684,8 +3684,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 90,
-      "assertion_digest_sha256": "1d7a7640b85cc6d1a97928695dd8528b6e0909bc672b58eedf27803cc93219c5"
+      "assertion_count": 97,
+      "assertion_digest_sha256": "2fca6e53883ca8ecf66cc47406418afed68ab493f4ae9afbb302cdaeece56f85"
     }
   ],
   "suites": {
