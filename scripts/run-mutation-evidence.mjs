@@ -87,14 +87,34 @@ function score(statusTotals) {
   return scored === 0 ? 100 : (detected / scored) * 100;
 }
 
+function buildMutationPackage(entry, environment) {
+  const result = spawnSync('pnpm', ['--filter', `${entry.packageName}...`, 'run', 'build'], {
+    cwd: repoRoot,
+    env: environment,
+    encoding: 'utf8',
+    maxBuffer: 64 * 1024 * 1024,
+    stdio: ['ignore', 'pipe', 'pipe'],
+    shell: false,
+  });
+  if (result.error === undefined && result.signal === null && result.status === 0) return;
+  const { reason } = classifyMutationOutcome({
+    reportState: 'missing',
+    subprocessResult: result,
+    repoRoot,
+  });
+  throw new Error(`${entry.packageName}: mutation-harness-failure (build-precondition-${reason})`);
+}
+
 function runPackage(entry) {
   return withMutationReportCleanup(repoRoot, entry.workspace, (rawReportDirectory) => {
     const started = process.hrtime.bigint();
     let subprocessResult;
     if (!normalizeExisting) {
+      const environment = buildMutationEnvironment(process.env);
+      buildMutationPackage(entry, environment);
       subprocessResult = spawnSync('pnpm', ['--filter', entry.packageName, 'run', 'stryker'], {
         cwd: repoRoot,
-        env: buildMutationEnvironment(process.env),
+        env: environment,
         encoding: 'utf8',
         maxBuffer: 64 * 1024 * 1024,
         stdio: ['ignore', 'pipe', 'pipe'],
