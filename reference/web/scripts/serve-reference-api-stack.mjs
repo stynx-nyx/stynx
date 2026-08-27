@@ -15,8 +15,15 @@ const verifyReferenceApiBuildInputs = resolve(
   'scripts/verify-reference-api-build-inputs.mjs',
 );
 const startupProtocol = 'stynx-reference-api-startup-v1';
+const startupOutputPrefix = '[reference-api-startup]';
 const startupSuccessStates = ['bootstrap-entered', 'nest-created', 'listening'];
 const startupFailureReasons = ['nest-initialization', 'pre-listen-configuration', 'listen'];
+const visibleStartupFailureCodes = new Set([
+  ...startupFailureReasons.map((reason) => `bootstrap-failed:${reason}`),
+  'child-error',
+  'child-disconnect',
+  'child-exit',
+]);
 const scriptPath = fileURLToPath(import.meta.url);
 const postgresPort = process.env.STYNX_POSTGRES_PORT ?? '55432';
 const redisPublish = process.env.TESTCONTAINERS_HOST_OVERRIDE ? '0.0.0.0::6379' : '127.0.0.1::6379';
@@ -41,6 +48,7 @@ let startupStateIndex = 0;
 let startupTerminal = false;
 let startupFailureStarted = false;
 let apiListening = false;
+const recordedStartupCodes = new Set();
 
 function isProcessAlive(pid) {
   try {
@@ -146,13 +154,29 @@ function stopApiProcess(signal = 'SIGTERM') {
   apiProcess.kill(signal);
 }
 
+function recordAcceptedStartupState(record) {
+  if (recordedStartupCodes.has(record.state)) {
+    return;
+  }
+  recordedStartupCodes.add(record.state);
+  console.log(`${startupOutputPrefix} ${record.state}`);
+}
+
+function recordStartupFailure(code) {
+  if (!visibleStartupFailureCodes.has(code) || recordedStartupCodes.has(code)) {
+    return;
+  }
+  recordedStartupCodes.add(code);
+  console.error(`${startupOutputPrefix} ${code}`);
+}
+
 function failStartup(code) {
   if (startupFailureStarted) {
     return;
   }
   startupFailureStarted = true;
   startupTerminal = true;
-  console.error(`[reference-api-startup] ${code}`);
+  recordStartupFailure(code);
   void shutdown('SIGTERM', 1);
 }
 
@@ -200,6 +224,7 @@ function handleStartupMessage(record) {
     return;
   }
   startupStateIndex += 1;
+  recordAcceptedStartupState(record);
   if (record.state === 'listening') {
     apiListening = true;
     startupTerminal = true;

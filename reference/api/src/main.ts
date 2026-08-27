@@ -1,9 +1,3 @@
-import 'reflect-metadata';
-import { Logger } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { configureSecurityHeaders } from './security-headers';
-
 const startupProtocol = 'stynx-reference-api-startup-v1' as const;
 type StartupFailureReason = 'nest-initialization' | 'pre-listen-configuration' | 'listen';
 
@@ -39,6 +33,12 @@ async function bootstrap(): Promise<void> {
   let failureReason: StartupFailureReason = 'nest-initialization';
   emitStartupRecord({ protocol: startupProtocol, state: 'bootstrap-entered' });
   try {
+    await import('reflect-metadata');
+    const [{ NestFactory }, { AppModule }, { configureSecurityHeaders }] = await Promise.all([
+      import('@nestjs/core'),
+      import('./app.module.js'),
+      import('./security-headers.js'),
+    ]);
     const app = await NestFactory.create(AppModule, { bufferLogs: true });
     emitStartupRecord({ protocol: startupProtocol, state: 'nest-created' });
 
@@ -61,14 +61,14 @@ async function bootstrap(): Promise<void> {
     failureReason = 'listen';
     await app.listen(port);
     emitStartupRecord({ protocol: startupProtocol, state: 'listening' });
-    Logger.log('reference-api startup listening', 'Bootstrap');
+    console.log('reference-api startup listening');
   } catch {
     emitStartupRecord({
       protocol: startupProtocol,
       state: 'bootstrap-failed',
       reason: failureReason,
     });
-    Logger.error(`reference-api startup failed: ${failureReason}`, 'Bootstrap');
+    console.error(`reference-api startup failed: ${failureReason}`);
     process.exitCode = 1;
   }
 }
