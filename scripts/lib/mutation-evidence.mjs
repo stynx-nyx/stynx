@@ -271,3 +271,54 @@ export function sanitizeMutationDiagnostic(value) {
   }
   return text.slice(-4096);
 }
+
+export function classifyMutationSubprocess(result) {
+  const diagnostic = `${String(result.error?.message ?? '')}\n${String(result.stdout ?? '')}\n${String(result.stderr ?? '')}`;
+  if (result.error !== undefined) return 'spawn-error';
+  if (result.signal !== null) return 'signal';
+  if (unsafeCredential(diagnostic)) return 'rejected-credential-material';
+  if (HOST_PATH_PATTERNS.some((pattern) => pattern.test(diagnostic))) {
+    return 'rejected-workstation-path';
+  }
+  if (result.status !== 0) return 'nonzero-exit';
+  return undefined;
+}
+
+export function classifyMutationOutcome({
+  reportState,
+  score,
+  threshold,
+  subprocessResult,
+  reportFailureCode,
+}) {
+  const subprocessFailure = subprocessResult
+    ? classifyMutationSubprocess(subprocessResult)
+    : undefined;
+  if (reportState === 'normalized') {
+    if (score < threshold) return { classification: 'mutation-score-failure' };
+    if (subprocessFailure) {
+      return { classification: 'mutation-harness-failure', reason: subprocessFailure };
+    }
+    return { classification: 'mutation-pass' };
+  }
+  if (reportState === 'missing') {
+    return {
+      classification: 'mutation-harness-failure',
+      reason: subprocessFailure ?? 'missing-report',
+    };
+  }
+  const subprocessFailed =
+    subprocessResult &&
+    (subprocessResult.error !== undefined ||
+      subprocessResult.signal !== null ||
+      subprocessResult.status !== 0);
+  return subprocessFailed
+    ? {
+        classification: 'mutation-harness-failure',
+        reason: subprocessFailure ?? 'nonzero-exit',
+      }
+    : {
+        classification: 'mutation-portability-failure',
+        reason: reportFailureCode ?? 'unsafe-report',
+      };
+}

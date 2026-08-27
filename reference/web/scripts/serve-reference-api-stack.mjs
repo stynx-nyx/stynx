@@ -9,10 +9,15 @@ import { fileURLToPath } from 'node:url';
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const workspaceRoot = resolve(scriptDir, '..', '..', '..');
 const referenceApiMain = resolve(workspaceRoot, 'reference/api/dist/reference/api/src/main.js');
+const verifyReferenceApiBuildInputs = resolve(
+  workspaceRoot,
+  'scripts/verify-reference-api-build-inputs.mjs',
+);
 const scriptPath = fileURLToPath(import.meta.url);
 const postgresPort = process.env.STYNX_POSTGRES_PORT ?? '55432';
-const composeTempDir = process.env.STYNX_REFERENCE_API_STACK_COMPOSE_DIR
-  ?? await mkdtemp(resolve(tmpdir(), 'stynx-reference-api-stack-'));
+const composeTempDir =
+  process.env.STYNX_REFERENCE_API_STACK_COMPOSE_DIR ??
+  (await mkdtemp(resolve(tmpdir(), 'stynx-reference-api-stack-')));
 const composeFile = resolve(composeTempDir, 'compose.yml');
 
 if (!process.env.STYNX_REFERENCE_API_STACK_COMPOSE_DIR) {
@@ -79,10 +84,6 @@ function run(command, args, options = {}) {
     stdio: 'inherit',
     ...options,
   });
-}
-
-function runCompose(args) {
-  return run('docker', ['compose', '-f', composeFile, ...args]);
 }
 
 function startCleanupWatchdog() {
@@ -177,7 +178,7 @@ async function runChecked(command, args) {
 }
 
 await runChecked('docker', ['compose', '-f', composeFile, 'up', '--wait', 'postgres', 'redis']);
-await runChecked('pnpm', ['--filter', '@stynx-nyx/reference-api...', 'build']);
+await runChecked('node', [verifyReferenceApiBuildInputs]);
 
 apiProcess = run('node', [referenceApiMain], {
   env: {

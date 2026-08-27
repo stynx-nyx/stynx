@@ -12,8 +12,8 @@ import {
 } from './lib/mutation-roster.mjs';
 import {
   buildMutationEnvironment,
+  classifyMutationOutcome,
   normalizeMutationReport,
-  sanitizeMutationDiagnostic,
   withMutationReportCleanup,
 } from './lib/mutation-evidence.mjs';
 
@@ -23,6 +23,29 @@ const finalDirectory = resolve(repoRoot, artifactRoot);
 const stagingDirectory = resolve(dirname(finalDirectory), `.mutation-stage-${String(process.pid)}`);
 const backupDirectory = resolve(dirname(finalDirectory), `.mutation-backup-${String(process.pid)}`);
 const normalizeExisting = process.argv.includes('--normalize-existing');
+const packageArgumentIndex = process.argv.indexOf('--package');
+const diagnosticPackageName =
+  packageArgumentIndex === -1 ? undefined : process.argv[packageArgumentIndex + 1];
+
+process.on('uncaughtException', (error) => {
+  const message = error instanceof Error ? error.message : '';
+  const portableMessage =
+    /^@stynx-nyx\/[a-z0-9-]+: mutation-(?:score|harness|portability)-failure/u.test(message)
+      ? message
+      : 'mutation evidence failed';
+  process.stderr.write(`${JSON.stringify({ ok: false, error: portableMessage })}\n`);
+  process.exitCode = 1;
+});
+
+if (
+  packageArgumentIndex !== -1 &&
+  (!diagnosticPackageName || diagnosticPackageName.startsWith('-'))
+) {
+  throw new Error('--package requires one exact package name');
+}
+if (normalizeExisting && diagnosticPackageName) {
+  throw new Error('--normalize-existing cannot be combined with --package');
+}
 
 function portablePath(path, label) {
   if (
@@ -67,8 +90,9 @@ function score(statusTotals) {
 function runPackage(entry) {
   return withMutationReportCleanup(repoRoot, entry.workspace, (rawReportDirectory) => {
     const started = process.hrtime.bigint();
+    let subprocessResult;
     if (!normalizeExisting) {
-      const result = spawnSync('pnpm', ['--filter', entry.packageName, 'run', 'stryker'], {
+      subprocessResult = spawnSync('pnpm', ['--filter', entry.packageName, 'run', 'stryker'], {
         cwd: repoRoot,
         env: buildMutationEnvironment(process.env),
         encoding: 'utf8',
@@ -76,34 +100,56 @@ function runPackage(entry) {
         stdio: ['ignore', 'pipe', 'pipe'],
         shell: false,
       });
-      if (result.error !== undefined || result.status !== 0 || result.signal !== null) {
-        const detail =
-          result.error?.message ??
-          result.signal ??
-          String(result.stderr || result.stdout || result.status);
-        throw new Error(
-          `${entry.packageName}: Stryker failed (${sanitizeMutationDiagnostic(detail)})`,
-        );
-      }
     }
     const durationMs = normalizeExisting
       ? 0
       : Number((process.hrtime.bigint() - started) / BigInt(1_000_000));
     const rawReportPath = resolve(rawReportDirectory, 'mutation.json');
-    if (!existsSync(rawReportPath))
-      throw new Error(`${entry.packageName}: mutation report is missing`);
-    const report = normalizeMutationReport(
-      JSON.parse(readFileSync(rawReportPath, 'utf8')),
-      entry.thresholds,
-      entry.workspace,
-      repoRoot,
-    );
+    if (!existsSync(rawReportPath)) {
+      const { classification, reason } = classifyMutationOutcome({
+        reportState: 'missing',
+        subprocessResult,
+      });
+      throw new Error(`${entry.packageName}: ${classification} (${reason})`);
+    }
+    let report;
+    try {
+      report = normalizeMutationReport(
+        JSON.parse(readFileSync(rawReportPath, 'utf8')),
+        entry.thresholds,
+        entry.workspace,
+        repoRoot,
+      );
+    } catch (error) {
+      const { classification, reason } = classifyMutationOutcome({
+        reportState: 'unsafe',
+        subprocessResult,
+        reportFailureCode: error.code,
+      });
+      throw new Error(`${entry.packageName}: ${classification} (${reason})`, { cause: error });
+    }
     const statusTotals = totals(report);
     const mutationScore = score(statusTotals);
-    const passed = mutationScore >= entry.thresholds.break;
-    if (!passed) {
+    const outcome = classifyMutationOutcome({
+      reportState: 'normalized',
+      score: mutationScore,
+      threshold: entry.thresholds.break,
+      subprocessResult,
+    });
+    const passed = outcome.classification === 'mutation-pass';
+    if (outcome.classification === 'mutation-score-failure') {
       throw new Error(
-        `${entry.packageName}: mutation score ${mutationScore} is below ${entry.thresholds.break}`,
+        `${entry.packageName}: mutation-score-failure ` +
+          `(Killed=${statusTotals.Killed}, Timeout=${statusTotals.Timeout}, ` +
+          `Survived=${statusTotals.Survived}, NoCoverage=${statusTotals.NoCoverage}, ` +
+          `total=${statusTotals.Killed + statusTotals.Timeout + statusTotals.Survived + statusTotals.NoCoverage}, ` +
+          `score=${mutationScore}, break=${entry.thresholds.break})`,
+      );
+    }
+    if (outcome.classification === 'mutation-harness-failure') {
+      throw new Error(
+        `${entry.packageName}: mutation-harness-failure (${outcome.reason}; ` +
+          `score=${mutationScore})`,
       );
     }
     const stem = entry.workspace.replaceAll('/', '-');
@@ -148,11 +194,31 @@ const finalRelative = relative(repoRoot, finalDirectory).split('\\').join('/');
 if (finalRelative !== artifactRoot) throw new Error('mutation artifact target escaped repository');
 const { roster, failures } = discoverMutationRoster(repoRoot);
 if (failures.length > 0) throw new Error(failures.join('\n'));
+const selectedRoster = diagnosticPackageName
+  ? roster.filter((entry) => entry.packageName === diagnosticPackageName)
+  : roster;
+if (diagnosticPackageName && selectedRoster.length !== 1) {
+  throw new Error(`unknown mutation package: ${diagnosticPackageName}`);
+}
 
 rmSync(stagingDirectory, { recursive: true, force: true });
 mkdirSync(stagingDirectory, { recursive: true });
 try {
-  const packages = roster.map(runPackage);
+  const packages = selectedRoster.map(runPackage);
+  if (diagnosticPackageName) {
+    const [entry] = packages;
+    rmSync(stagingDirectory, { recursive: true, force: true });
+    process.stdout.write(
+      `${JSON.stringify({
+        ok: true,
+        mode: 'diagnostic',
+        packageName: entry.packageName,
+        score: entry.score,
+        statusTotals: entry.statusTotals,
+      })}\n`,
+    );
+    process.exit(0);
+  }
   const aggregateTotals = Object.fromEntries(MUTANT_STATUSES.map((status) => [status, 0]));
   let durationMs = 0;
   for (const entry of packages) {

@@ -122,6 +122,10 @@
     "test:e2e": {
       "dependsOn": ["build", "^build"],
       "outputs": [".test-results/e2e.json", ".test-results/e2e.log", ".test-results/e2e.junit.xml"]
+    },
+    "@stynx-nyx/reference-web#test:e2e": {
+      "dependsOn": ["build", "^build", "@stynx-nyx/reference-api#build"],
+      "outputs": [".test-results/e2e.json", ".test-results/e2e.log", ".test-results/e2e.junit.xml"]
     }
   }
 }
