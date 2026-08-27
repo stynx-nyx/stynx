@@ -596,6 +596,46 @@ const actionsPath = process.env.D16_ACTIONS;
 const rawText = 'unbounded exception stack /private/workstation env credential https://host:6379 command argument';
 const action = (name) => fs.appendFileSync(actionsPath, name + '\n');
 const later = (callback) => setImmediate(callback);
+const syncCleanupScenario = [
+  'sync-cleanup-output',
+  'sync-cleanup-failure',
+  'sync-cleanup-watchdog-only',
+  'sync-cleanup-api-only',
+].includes(scenario);
+let watchdogSpawnObserved = false;
+let apiSpawnEmitted = false;
+let syncCleanupExitStarted = false;
+
+function maybeExitSyncCleanup() {
+  if (
+    !syncCleanupScenario ||
+    syncCleanupExitStarted ||
+    !watchdogSpawnObserved ||
+    !apiSpawnEmitted
+  ) {
+    return;
+  }
+  syncCleanupExitStarted = true;
+  action('sync-exit');
+  process.exit(31);
+}
+
+function observeWatchdogSpawn() {
+  if (!syncCleanupScenario) return;
+  if (watchdogSpawnObserved) return;
+  watchdogSpawnObserved = true;
+  action('watchdog-spawn-observed');
+  maybeExitSyncCleanup();
+}
+
+function recordApiSpawnEmitted() {
+  if (!syncCleanupScenario) return;
+  if (apiSpawnEmitted) return;
+  apiSpawnEmitted = true;
+  action('api-spawn-emitted');
+  maybeExitSyncCleanup();
+}
+
 process.on('uncaughtExceptionMonitor', () => action('uncaught'));
 
 class SeamChild extends EventEmitter {
@@ -663,6 +703,7 @@ childProcess.spawn = (command, args = [], options = {}) => {
     const child = new SeamChild(41001, 'api');
     later(() => {
       child.emit('spawn');
+      if (scenario !== 'sync-cleanup-watchdog-only') recordApiSpawnEmitted();
       later(() => {
         if (scenario === 'child-raw-error') {
           process.stdout.write(rawText + '\n');
@@ -685,6 +726,7 @@ childProcess.spawn = (command, args = [], options = {}) => {
   }
   if (command === process.execPath && options.env?.STYNX_REFERENCE_API_STACK_WATCHDOG === '1') {
     action('watchdog');
+    if (scenario !== 'sync-cleanup-api-only') observeWatchdogSpawn();
     if (scenario === 'watchdog-spawn-failure') throw new Error(rawText);
     const child = new SeamChild(41002);
     if (scenario === 'watchdog-error') {
@@ -713,10 +755,6 @@ childProcess.spawnSync = (command, args = []) => {
   }
   return { status: 0, signal: null, stdout: '', stderr: '' };
 };
-
-if (scenario === 'sync-cleanup-output' || scenario === 'sync-cleanup-failure') {
-  setTimeout(() => process.exit(31), 50);
-}
 
 syncBuiltinESMExports();
 `;
@@ -1182,6 +1220,13 @@ test('D16.1 production contains every remaining setup, child, watchdog, and clea
   const throughBuild = helperCodes.slice(0, 4);
   const throughChild = helperCodes;
   const childActions = ['up', 'port', 'verify', 'api', 'watchdog'];
+  const syncCleanupActions = [
+    ...childActions,
+    'watchdog-spawn-observed',
+    'api-spawn-emitted',
+    'sync-exit',
+    'sync-down',
+  ];
   const scenarios = [
     { name: 'mkdtemp-failure', codes: [], actions: [] },
     { name: 'compose-write-failure', codes: [], actions: [] },
@@ -1221,12 +1266,12 @@ test('D16.1 production contains every remaining setup, child, watchdog, and clea
     {
       name: 'sync-cleanup-output',
       codes: throughChild,
-      actions: [...childActions, 'sync-down'],
+      actions: syncCleanupActions,
     },
     {
       name: 'sync-cleanup-failure',
       codes: throughChild,
-      actions: [...childActions, 'sync-down'],
+      actions: syncCleanupActions,
     },
   ];
   assert.equal(scenarios.length, 15);
@@ -1244,6 +1289,45 @@ test('D16.1 production contains every remaining setup, child, watchdog, and clea
 });
 
 test('D16.1 lifecycle-seam oracle distinguishes consumed failures from silenced escalation', () => {
+  const preloadSource = helperSeamPreloadSource();
+  const controlSource = runRemainingHelperSeamScenario.toString();
+  assert.doesNotMatch(preloadSource, /\bsetTimeout\s*\(/u);
+  assert.doesNotMatch(controlSource, /\bsetTimeout\s*\(/u);
+  assert.equal((controlSource.match(/timeout:\s*5_000/gu) ?? []).length, 1);
+  assert.match(
+    preloadSource,
+    /child\.emit\('spawn'\);\s*if \(scenario !== 'sync-cleanup-watchdog-only'\) recordApiSpawnEmitted\(\)/u,
+  );
+
+  const prerequisiteControls = [
+    {
+      name: 'sync-cleanup-watchdog-only',
+      requiredAction: 'watchdog-spawn-observed',
+      forbiddenAction: 'api-spawn-emitted',
+    },
+    {
+      name: 'sync-cleanup-api-only',
+      requiredAction: 'api-spawn-emitted',
+      forbiddenAction: 'watchdog-spawn-observed',
+    },
+  ];
+  for (const control of prerequisiteControls) {
+    const result = runRemainingHelperSeamScenario(control.name);
+    assert.equal(result.status, 0);
+    assert.equal(result.signal, null);
+    assert.equal(result.stdout, '');
+    assert.deepEqual(
+      result.stderr.trim().split(/\r?\n/u),
+      helperSuccessStates.map(fixedStartupOutput),
+    );
+    assert.equal(result.actions.filter((action) => action === control.requiredAction).length, 1);
+    assert.equal(result.actions.includes(control.forbiddenAction), false);
+    assert.equal(result.actions.includes('sync-exit'), false);
+    assert.equal(result.actions.at(-1), 'down');
+    assert.equal(result.ownedComposePresent, false);
+    assert.equal(result.leakedFixturePath, false);
+  }
+
   const workerExpected = {
     codes: [],
     actions: ['sync-down'],
