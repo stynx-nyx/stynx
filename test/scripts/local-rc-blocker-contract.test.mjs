@@ -562,7 +562,8 @@ function remainingHelperSeamViolations(result, expected) {
   if (result.ownedComposePresent !== expected.ownedComposePresent) {
     violations.push('owned-compose-confinement');
   }
-  if (result.actions.join(',') !== expected.actions.join(',')) {
+  const actionAlternatives = expected.actionAlternatives ?? [expected.actions];
+  if (!actionAlternatives.some((actions) => result.actions.join(',') === actions.join(','))) {
     violations.push('seam-operation-sequence');
   }
   if (governedLines.join('\n') !== expected.codes.map(fixedStartupOutput).join('\n')) {
@@ -595,11 +596,13 @@ const actionsPath = process.env.D16_ACTIONS;
 const rawText = 'unbounded exception stack /private/workstation env credential https://host:6379 command argument';
 const action = (name) => fs.appendFileSync(actionsPath, name + '\n');
 const later = (callback) => setImmediate(callback);
+process.on('uncaughtExceptionMonitor', () => action('uncaught'));
 
 class SeamChild extends EventEmitter {
-  constructor(pid = 41001) {
+  constructor(pid = 41001, kind = 'operation') {
     super();
     this.pid = pid;
+    this.kind = kind;
     this.exitCode = null;
     this.signalCode = null;
   }
@@ -611,6 +614,7 @@ class SeamChild extends EventEmitter {
   }
 
   kill(signal = 'SIGTERM') {
+    if (scenario === 'child-kill-throw' && this.kind === 'api') throw new Error(rawText);
     if (this.exitCode === null && this.signalCode === null) this.signalCode = signal;
     return true;
   }
@@ -625,6 +629,11 @@ if (scenario === 'compose-write-failure') {
 }
 if (scenario.endsWith('-rm-rejection')) {
   fs.promises.rm = async () => {
+    throw new Error(rawText);
+  };
+}
+if (scenario === 'watchdog-worker-rmsync-throw') {
+  fs.rmSync = () => {
     throw new Error(rawText);
   };
 }
@@ -651,13 +660,17 @@ childProcess.spawn = (command, args = [], options = {}) => {
   }
   if (command === 'node') {
     action('api');
-    const child = new SeamChild();
+    const child = new SeamChild(41001, 'api');
     later(() => {
       child.emit('spawn');
       later(() => {
         if (scenario === 'child-raw-error') {
           process.stdout.write(rawText + '\n');
           process.stderr.write(rawText + '\n');
+          child.emit('error', new Error(rawText));
+          return;
+        }
+        if (scenario === 'child-kill-throw') {
           child.emit('error', new Error(rawText));
           return;
         }
@@ -764,6 +777,12 @@ function runRemainingHelperSeamScenario(scenario) {
         D16_SCENARIO: scenario,
         ...(setupScenario ? {} : { STYNX_REFERENCE_API_STACK_COMPOSE_DIR: composeRoot }),
         ...(scenario === 'empty-host' ? { TESTCONTAINERS_HOST_OVERRIDE: '' } : {}),
+        ...(scenario === 'watchdog-worker-rmsync-throw'
+          ? {
+              STYNX_REFERENCE_API_STACK_WATCHDOG: '1',
+              STYNX_REFERENCE_API_STACK_PARENT_PID: '2147483647',
+            }
+          : {}),
       },
     });
     assert.ifError(child.error);
@@ -1219,6 +1238,86 @@ test('D16.1 production contains every remaining setup, child, watchdog, and clea
         ...scenario,
         ownedComposePresent: false,
       }).map((violation) => `${scenario.name}:${violation}`),
+    );
+  }
+  assert.deepEqual(violations, []);
+});
+
+test('D16.1 lifecycle-seam oracle distinguishes consumed failures from silenced escalation', () => {
+  const workerExpected = {
+    codes: [],
+    actions: ['sync-down'],
+    ownedComposePresent: true,
+  };
+  const workerSafe = {
+    status: 1,
+    signal: null,
+    stdout: '',
+    stderr: '',
+    actions: ['sync-down'],
+    ownedComposePresent: true,
+    leakedFixturePath: false,
+  };
+  assert.deepEqual(remainingHelperSeamViolations(workerSafe, workerExpected), []);
+  assert.deepEqual(
+    remainingHelperSeamViolations(
+      { ...workerSafe, actions: ['sync-down', 'uncaught'] },
+      workerExpected,
+    ),
+    ['seam-operation-sequence'],
+  );
+
+  const childCodes = [...helperSuccessStates, 'child-error'];
+  const childActions = ['up', 'port', 'verify', 'api', 'watchdog'];
+  assert.deepEqual(
+    remainingHelperSeamViolations(
+      {
+        ...workerSafe,
+        stderr: `${childCodes.map(fixedStartupOutput).join('\n')}\n`,
+        actions: [...childActions, 'down'],
+        ownedComposePresent: false,
+      },
+      {
+        codes: childCodes,
+        actions: [...childActions, 'down'],
+        actionAlternatives: [
+          [...childActions, 'down'],
+          [...childActions, 'sync-down'],
+        ],
+        ownedComposePresent: false,
+      },
+    ),
+    [],
+  );
+});
+
+test('D16.1 production contains watchdog-worker rmSync and shutdown child-kill throws', () => {
+  const childActions = ['up', 'port', 'verify', 'api', 'watchdog'];
+  const scenarios = [
+    {
+      name: 'watchdog-worker-rmsync-throw',
+      codes: [],
+      actions: ['sync-down'],
+      ownedComposePresent: true,
+    },
+    {
+      name: 'child-kill-throw',
+      codes: [...helperSuccessStates, 'child-error'],
+      actions: [...childActions, 'down'],
+      actionAlternatives: [
+        [...childActions, 'down'],
+        [...childActions, 'sync-down'],
+      ],
+      ownedComposePresent: false,
+    },
+  ];
+  const violations = [];
+  for (const scenario of scenarios) {
+    const result = runRemainingHelperSeamScenario(scenario.name);
+    violations.push(
+      ...remainingHelperSeamViolations(result, scenario).map(
+        (violation) => `${scenario.name}:${violation}`,
+      ),
     );
   }
   assert.deepEqual(violations, []);
