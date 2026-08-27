@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
@@ -217,6 +218,13 @@ function assertD14HelperContract(helper, rootManifest) {
 
 const startupProtocol = 'stynx-reference-api-startup-v1';
 const startupOutputPrefix = '[reference-api-startup]';
+const helperSuccessStates = [
+  'helper-entered',
+  'compose-ready',
+  'redis-mapping-resolved',
+  'build-inputs-verified',
+  'child-spawned',
+];
 const startupSuccessStates = ['bootstrap-entered', 'nest-created', 'listening'];
 const startupFailureReasons = ['nest-initialization', 'pre-listen-configuration', 'listen'];
 const startupChildTerminals = ['child-error', 'child-disconnect', 'child-exit'];
@@ -224,6 +232,7 @@ const startupChildTerminals = ['child-error', 'child-disconnect', 'child-exit'];
 function fixedStartupOutput(code) {
   assert.ok(
     [
+      ...helperSuccessStates,
       ...startupSuccessStates,
       ...startupFailureReasons.map((reason) => `bootstrap-failed:${reason}`),
       ...startupChildTerminals,
@@ -312,6 +321,107 @@ function assertBootstrapBeforeRuntimeLoads(source) {
     true,
     'bootstrap-entered must precede every runtime and application dynamic import',
   );
+}
+
+function helperStartupFixture() {
+  const stdout = [];
+  const stderr = [];
+  const operations = [];
+  let pending = 'start';
+  let terminal = false;
+  let childOracle;
+
+  function requirePending(expected) {
+    assert.equal(terminal, false, 'terminal startup cannot advance');
+    assert.equal(pending, expected, `expected pending ${expected}`);
+  }
+
+  function emit(code) {
+    stderr.push(fixedStartupOutput(code));
+  }
+
+  function start() {
+    requirePending('start');
+    emit('helper-entered');
+    operations.push('compose-up');
+    pending = 'compose-up';
+  }
+
+  function resolveCompose() {
+    requirePending('compose-up');
+    emit('compose-ready');
+    operations.push('redis-mapping');
+    pending = 'redis-mapping';
+  }
+
+  function resolveRedisMapping() {
+    requirePending('redis-mapping');
+    emit('redis-mapping-resolved');
+    operations.push('build-inputs');
+    pending = 'build-inputs';
+  }
+
+  function resolveBuildInputs() {
+    requirePending('build-inputs');
+    emit('build-inputs-verified');
+    operations.push('child-spawn-call');
+    pending = 'child-spawn-call';
+  }
+
+  function spawnCall() {
+    requirePending('child-spawn-call');
+    operations.push('child-spawn-event');
+    pending = 'child-spawn-event';
+  }
+
+  function spawnEvent() {
+    requirePending('child-spawn-event');
+    emit('child-spawned');
+    pending = 'ipc';
+    childOracle = startupOracle(
+      () => {
+        terminal = true;
+      },
+      (line) => stderr.push(line),
+    );
+  }
+
+  function ipc(record) {
+    requirePending('ipc');
+    const result = childOracle.message(record);
+    if (!result.accepted || result.state === 'bootstrap-failed') terminal = true;
+    return result;
+  }
+
+  function childTerminal(event) {
+    requirePending('ipc');
+    const result = childOracle.childTerminal(event);
+    if (!result.accepted) terminal = true;
+    return result;
+  }
+
+  return {
+    stdout,
+    stderr,
+    operations,
+    start,
+    resolveCompose,
+    resolveRedisMapping,
+    resolveBuildInputs,
+    spawnCall,
+    spawnEvent,
+    ipc,
+    childTerminal,
+  };
+}
+
+function advanceHelperToSpawn(fixture) {
+  fixture.start();
+  fixture.resolveCompose();
+  fixture.resolveRedisMapping();
+  fixture.resolveBuildInputs();
+  fixture.spawnCall();
+  fixture.spawnEvent();
 }
 
 test('D16 oracle accepts only the ordered fixed startup sequence and bounded failures', () => {
@@ -464,6 +574,183 @@ test('D16 import-order oracle loads runtime modules only after bootstrap-entered
   );
 });
 
+test('D16.1 fixture emits eight stderr-only success codes at exact operation boundaries', () => {
+  const fixture = helperStartupFixture();
+  assert.deepEqual(fixture.stdout, []);
+  assert.deepEqual(fixture.stderr, []);
+  fixture.start();
+  assert.deepEqual(fixture.operations, ['compose-up']);
+  assert.deepEqual(fixture.stderr, [fixedStartupOutput('helper-entered')]);
+  fixture.resolveCompose();
+  assert.equal(fixture.stderr.at(-1), fixedStartupOutput('compose-ready'));
+  fixture.resolveRedisMapping();
+  assert.equal(fixture.stderr.at(-1), fixedStartupOutput('redis-mapping-resolved'));
+  fixture.resolveBuildInputs();
+  assert.equal(fixture.stderr.at(-1), fixedStartupOutput('build-inputs-verified'));
+  const beforeSpawnEvent = [...fixture.stderr];
+  fixture.spawnCall();
+  assert.deepEqual(fixture.stderr, beforeSpawnEvent);
+  fixture.spawnEvent();
+  assert.equal(fixture.stderr.at(-1), fixedStartupOutput('child-spawned'));
+  for (const state of startupSuccessStates) {
+    assert.equal(fixture.ipc({ protocol: startupProtocol, state }).accepted, true);
+  }
+  assert.deepEqual(fixture.stdout, []);
+  assert.deepEqual(
+    fixture.stderr,
+    [...helperSuccessStates, ...startupSuccessStates].map(fixedStartupOutput),
+  );
+  assert.equal(new Set(fixture.stderr).size, 8);
+});
+
+test('D16.1 fixture cuts off once for all six bounded terminal alternatives', () => {
+  for (const reason of startupFailureReasons) {
+    const fixture = helperStartupFixture();
+    advanceHelperToSpawn(fixture);
+    assert.equal(
+      fixture.ipc({ protocol: startupProtocol, state: 'bootstrap-entered' }).accepted,
+      true,
+    );
+    if (reason !== 'nest-initialization') {
+      assert.equal(
+        fixture.ipc({ protocol: startupProtocol, state: 'nest-created' }).accepted,
+        true,
+      );
+    }
+    assert.equal(
+      fixture.ipc({ protocol: startupProtocol, state: 'bootstrap-failed', reason }).accepted,
+      true,
+    );
+    const terminal = fixedStartupOutput(`bootstrap-failed:${reason}`);
+    assert.equal(fixture.stderr.at(-1), terminal);
+    assert.equal(fixture.stderr.filter((line) => line === terminal).length, 1);
+    assert.throws(() => fixture.ipc({ protocol: startupProtocol, state: 'listening' }));
+    assert.deepEqual(fixture.stdout, []);
+  }
+
+  for (const event of ['error', 'disconnect', 'exit']) {
+    const fixture = helperStartupFixture();
+    advanceHelperToSpawn(fixture);
+    const result = fixture.childTerminal(event);
+    assert.deepEqual(result, { accepted: false, code: `child-${event}` });
+    const terminal = fixedStartupOutput(`child-${event}`);
+    assert.equal(fixture.stderr.at(-1), terminal);
+    assert.equal(fixture.stderr.filter((line) => line === terminal).length, 1);
+    assert.throws(() => fixture.ipc({ protocol: startupProtocol, state: 'bootstrap-entered' }));
+    assert.deepEqual(fixture.stdout, []);
+  }
+});
+
+test('D16.1 fixture fails closed without printing malformed or sensitive IPC payloads', () => {
+  const invalidRecords = [
+    null,
+    { protocol: 'unknown', state: 'bootstrap-entered' },
+    { protocol: startupProtocol, state: 'unknown' },
+    { protocol: startupProtocol, state: 'nest-created' },
+    { protocol: startupProtocol, state: 'bootstrap-entered', error: 'raw-secret' },
+    { protocol: startupProtocol, state: 'bootstrap-entered', path: '/private/workstation' },
+    { protocol: startupProtocol, state: 'bootstrap-entered', env: 'production' },
+    { protocol: startupProtocol, state: 'bootstrap-entered', credential: 'token' },
+    { protocol: startupProtocol, state: 'bootstrap-entered', url: 'scheme://host' },
+    { protocol: startupProtocol, state: 'bootstrap-entered', port: 3000 },
+    { protocol: startupProtocol, state: 'bootstrap-entered', command: 'node api' },
+  ];
+  for (const record of invalidRecords) {
+    const fixture = helperStartupFixture();
+    advanceHelperToSpawn(fixture);
+    const before = [...fixture.stderr];
+    assert.equal(fixture.ipc(record).accepted, false);
+    assert.deepEqual(fixture.stderr, before);
+    assert.deepEqual(fixture.stdout, []);
+    assert.doesNotMatch(
+      fixture.stderr.join('\n'),
+      /raw-secret|private|workstation|production|credential|token|scheme|host|3000|node api/iu,
+    );
+  }
+
+  const duplicate = helperStartupFixture();
+  advanceHelperToSpawn(duplicate);
+  assert.equal(
+    duplicate.ipc({ protocol: startupProtocol, state: 'bootstrap-entered' }).accepted,
+    true,
+  );
+  const beforeDuplicate = [...duplicate.stderr];
+  assert.equal(
+    duplicate.ipc({ protocol: startupProtocol, state: 'bootstrap-entered' }).accepted,
+    false,
+  );
+  assert.deepEqual(duplicate.stderr, beforeDuplicate);
+  assert.throws(() => duplicate.ipc({ protocol: startupProtocol, state: 'nest-created' }));
+});
+
+test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14', () => {
+  const frozen = {
+    'reference/api/src/main.ts': 'c6175bfa1f231730a0c339a8f48fd28a7a04c1c3f6f60de643ae4b767bf7c7a9',
+    'reference/web/playwright.config.mjs':
+      'af051b2fdaf1223c03d3a73fe621b9a389dd3158908648f0164c7544f565be5b',
+    'package.json': '07f672f29660f90cb9480a7ff395463f5ccb08ecd5f74e61869391ef1653b47c',
+    'reference/api/package.json':
+      'bffedbee254dde969ae2a2a77689587fa9f553f0b9df2b869bd2b8fe910a5b64',
+    'reference/web/package.json':
+      'b1e3b617a0db97bc380dc7577700460e6fa1bbe1e64f54146e0e80943df37b0c',
+    'turbo.json': 'd32a54129f37eb21a86d346cfcf09eb914cda06ebdc5166c432a9f23c67db467',
+  };
+  for (const [path, digest] of Object.entries(frozen)) {
+    assert.equal(
+      createHash('sha256')
+        .update(readFileSync(join(repoRoot, path)))
+        .digest('hex'),
+      digest,
+    );
+  }
+  const helper = readFileSync(
+    join(repoRoot, 'reference/web/scripts/serve-reference-api-stack.mjs'),
+    'utf8',
+  );
+  const rootManifest = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8'));
+  assertD14HelperContract(helper, rootManifest);
+});
+
+test('D16.1 production binds all governed phases to stderr and none to stdout', () => {
+  const helper = readFileSync(
+    join(repoRoot, 'reference/web/scripts/serve-reference-api-stack.mjs'),
+    'utf8',
+  );
+  assert.doesNotMatch(
+    helper,
+    /console\.log\(\s*`\$\{startupOutputPrefix\}/u,
+    'D16.1 still emits governed startup phases on stdout',
+  );
+  assert.match(helper, /console\.error\(\s*`\$\{startupOutputPrefix\} \$\{code\}`\s*\)/u);
+  for (const code of helperSuccessStates) {
+    assert.match(helper, new RegExp(`['"]${code}['"]`, 'u'));
+  }
+  assert.match(
+    helper,
+    /recordStartupCode\(\s*['"]helper-entered['"]\s*\);\s*await runChecked\(\s*['"]docker['"][\s\S]*?['"]up['"]/u,
+  );
+  assert.match(
+    helper,
+    /await runChecked\(\s*['"]docker['"][\s\S]*?['"]up['"][\s\S]*?recordStartupCode\(\s*['"]compose-ready['"]\s*\)/u,
+  );
+  assert.match(
+    helper,
+    /redisPort\s*=\s*discoverOwnedRedisPort\(\);\s*recordStartupCode\(\s*['"]redis-mapping-resolved['"]\s*\)/u,
+  );
+  assert.match(
+    helper,
+    /await runChecked\(\s*['"]node['"],\s*\[verifyReferenceApiBuildInputs\]\s*\);\s*recordStartupCode\(\s*['"]build-inputs-verified['"]\s*\)/u,
+  );
+  assert.match(
+    helper,
+    /apiProcess\.once\(\s*['"]spawn['"],\s*\(\)\s*=>\s*\{\s*recordStartupCode\(\s*['"]child-spawned['"]\s*\)/u,
+  );
+  assert.doesNotMatch(
+    helper,
+    /console\.error[^;\n]*(?:record|error|exception|stack|path|env|credential|url|port|pid|command|args)/iu,
+  );
+});
+
 test('D16 preserves D14 dynamic Redis and Playwright readiness configuration', () => {
   const helper = readFileSync(
     join(repoRoot, 'reference/web/scripts/serve-reference-api-stack.mjs'),
@@ -492,7 +779,7 @@ test('D16 production binds the fixed credential-free startup protocol before wat
     /const startupOutputPrefix\s*=\s*['"]\[reference-api-startup\]['"]/u,
     'D16 fixed Playwright-visible startup prefix is not implemented',
   );
-  assert.match(helper, /console\.log\(\s*`\$\{startupOutputPrefix\} \$\{record\.state\}`\s*\)/u);
+  assert.match(helper, /recordAcceptedStartupState\(record\)/u);
   assert.match(helper, /console\.error\(\s*`\$\{startupOutputPrefix\} \$\{code\}`\s*\)/u);
   for (const fixedValue of [
     ...startupSuccessStates,
