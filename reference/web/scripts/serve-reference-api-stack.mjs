@@ -16,7 +16,15 @@ const verifyReferenceApiBuildInputs = resolve(
 );
 const startupProtocol = 'stynx-reference-api-startup-v1';
 const startupOutputPrefix = '[reference-api-startup]';
+const helperSuccessStates = [
+  'helper-entered',
+  'compose-ready',
+  'redis-mapping-resolved',
+  'build-inputs-verified',
+  'child-spawned',
+];
 const startupSuccessStates = ['bootstrap-entered', 'nest-created', 'listening'];
+const visibleStartupSuccessCodes = [...helperSuccessStates, ...startupSuccessStates];
 const startupFailureReasons = ['nest-initialization', 'pre-listen-configuration', 'listen'];
 const visibleStartupFailureCodes = new Set([
   ...startupFailureReasons.map((reason) => `bootstrap-failed:${reason}`),
@@ -45,6 +53,7 @@ let composeDownComplete = false;
 let composeDownProcess;
 let apiProcess;
 let startupStateIndex = 0;
+let visibleStartupStateIndex = 0;
 let startupTerminal = false;
 let startupFailureStarted = false;
 let apiListening = false;
@@ -154,20 +163,24 @@ function stopApiProcess(signal = 'SIGTERM') {
   apiProcess.kill(signal);
 }
 
-function recordAcceptedStartupState(record) {
-  if (recordedStartupCodes.has(record.state)) {
-    return;
-  }
-  recordedStartupCodes.add(record.state);
-  console.log(`${startupOutputPrefix} ${record.state}`);
-}
-
-function recordStartupFailure(code) {
-  if (!visibleStartupFailureCodes.has(code) || recordedStartupCodes.has(code)) {
-    return;
+function recordStartupCode(code) {
+  const isSuccess = visibleStartupSuccessCodes[visibleStartupStateIndex] === code;
+  const isTerminal = visibleStartupFailureCodes.has(code);
+  if (startupTerminal || recordedStartupCodes.has(code) || (!isSuccess && !isTerminal)) {
+    return false;
   }
   recordedStartupCodes.add(code);
+  if (isSuccess) {
+    visibleStartupStateIndex += 1;
+  } else {
+    startupTerminal = true;
+  }
   console.error(`${startupOutputPrefix} ${code}`);
+  return true;
+}
+
+function recordAcceptedStartupState(record) {
+  recordStartupCode(record.state);
 }
 
 function failStartup(code) {
@@ -175,8 +188,8 @@ function failStartup(code) {
     return;
   }
   startupFailureStarted = true;
+  recordStartupCode(code);
   startupTerminal = true;
-  recordStartupFailure(code);
   void shutdown('SIGTERM', 1);
 }
 
@@ -311,15 +324,19 @@ const redisHost = process.env.TESTCONTAINERS_HOST_OVERRIDE ?? '127.0.0.1';
 if (redisHost.length === 0) {
   throw new Error('The Redis host override is empty');
 }
+recordStartupCode('helper-entered');
 await runChecked('docker', ['compose', '-f', composeFile, 'up', '--wait', 'postgres', 'redis']);
+recordStartupCode('compose-ready');
 let redisPort;
 try {
   redisPort = discoverOwnedRedisPort();
+  recordStartupCode('redis-mapping-resolved');
 } catch (error) {
   await composeDown();
   throw error;
 }
 await runChecked('node', [verifyReferenceApiBuildInputs]);
+recordStartupCode('build-inputs-verified');
 
 apiProcess = run('node', [referenceApiMain], {
   stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
@@ -346,6 +363,9 @@ apiProcess = run('node', [referenceApiMain], {
   },
 });
 
+apiProcess.once('spawn', () => {
+  recordStartupCode('child-spawned');
+});
 apiProcess.on('message', (record) => {
   handleStartupMessage(record);
 });
