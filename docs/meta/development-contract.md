@@ -27,6 +27,12 @@ This is the repository-local engineering contract for all contributors.
 6. Preserve existing tests, assertions, coverage thresholds, mutation targets,
    and quality gates. A feature change must add or update tests for its behavior.
 7. Use Conventional Commit subjects and do not bypass hooks during routine work.
+8. Package clean commands may remove only package-local disposable, untracked
+   outputs; workspace clean commands may remove only repository-local
+   disposable, untracked outputs. They must preserve every tracked path and use
+   only the declared Node runtime, explicitly supported host commands, or tools
+   resolvable from the exact frozen dependency graph; undeclared package
+   executables and downloaded-on-demand tools are invalid.
 
 ## Release and security references
 
