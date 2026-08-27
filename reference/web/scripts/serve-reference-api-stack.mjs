@@ -138,8 +138,11 @@ function waitForExit(child) {
   }
 
   return new Promise((resolveExit) => {
+    child.once('error', () => {
+      resolveExit({ code: null, signal: null, failed: true });
+    });
     child.once('exit', (code, signal) => {
-      resolveExit({ code, signal });
+      resolveExit({ code, signal, failed: false });
     });
   });
 }
@@ -277,9 +280,9 @@ function composeDownSync() {
 }
 
 async function runChecked(command, args) {
-  const child = run(command, args);
+  const child = run(command, args, { stdio: 'ignore' });
   const result = await waitForExit(child);
-  if (result.code !== 0) {
+  if (result.failed || result.code !== 0) {
     throw new Error(`${command} ${args.join(' ')} exited with ${result.code ?? result.signal}`);
   }
 }
@@ -324,19 +327,22 @@ const redisHost = process.env.TESTCONTAINERS_HOST_OVERRIDE ?? '127.0.0.1';
 if (redisHost.length === 0) {
   throw new Error('The Redis host override is empty');
 }
-recordStartupCode('helper-entered');
-await runChecked('docker', ['compose', '-f', composeFile, 'up', '--wait', 'postgres', 'redis']);
-recordStartupCode('compose-ready');
 let redisPort;
 try {
+  recordStartupCode('helper-entered');
+  await runChecked('docker', ['compose', '-f', composeFile, 'up', '--wait', 'postgres', 'redis']);
+  recordStartupCode('compose-ready');
   redisPort = discoverOwnedRedisPort();
   recordStartupCode('redis-mapping-resolved');
-} catch (error) {
-  await composeDown();
-  throw error;
+  await runChecked('node', [verifyReferenceApiBuildInputs]);
+  recordStartupCode('build-inputs-verified');
+} catch {
+  try {
+    await composeDown();
+  } finally {
+    process.exit(1);
+  }
 }
-await runChecked('node', [verifyReferenceApiBuildInputs]);
-recordStartupCode('build-inputs-verified');
 
 apiProcess = run('node', [referenceApiMain], {
   stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
