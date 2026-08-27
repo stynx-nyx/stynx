@@ -105,11 +105,15 @@ async function runWatchdog() {
     killPid(apiPid);
   }
 
-  spawnSync('docker', ['compose', '-f', composeFile, 'down', '-v'], {
-    cwd: workspaceRoot,
-    stdio: 'ignore',
-  });
-  rmSync(composeTempDir, { recursive: true, force: true });
+  try {
+    spawnSync('docker', ['compose', '-f', composeFile, 'down', '-v'], {
+      cwd: workspaceRoot,
+      stdio: 'ignore',
+    });
+    rmSync(composeTempDir, { recursive: true, force: true });
+  } catch {
+    process.exit(1);
+  }
   process.exit(0);
 }
 
@@ -181,7 +185,11 @@ async function shutdown(signal, exitCode = 0) {
   }
   shuttingDown = true;
 
-  stopApiProcess(signal);
+  try {
+    stopApiProcess(signal);
+  } catch {
+    // Continue into the existing confined owned-stack cleanup.
+  }
   try {
     await composeDown();
   } finally {
