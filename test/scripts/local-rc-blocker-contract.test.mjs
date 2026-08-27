@@ -1,17 +1,8 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
-import {
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  readdirSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import test from 'node:test';
 
 import {
@@ -23,7 +14,6 @@ import {
 import { discoverMutationRoster } from '../../scripts/lib/mutation-roster.mjs';
 
 const repoRoot = resolve(import.meta.dirname, '..', '..');
-const preferencesDist = join(repoRoot, 'packages/preferences/dist');
 const expectedNotificationsMutate = [
   'src/notifications.service.ts',
   'src/dispatch.service.ts',
@@ -65,30 +55,60 @@ function mutationReport({ status = 'Killed', path = 'src/index.ts' } = {}) {
   };
 }
 
-function treeDigest(root) {
-  if (!existsSync(root)) return undefined;
-  const hash = createHash('sha256');
-  const visit = (directory) => {
-    for (const entry of readdirSync(directory, { withFileTypes: true }).sort((a, b) =>
-      a.name.localeCompare(b.name),
-    )) {
-      const path = join(directory, entry.name);
-      const relativePath = path.slice(root.length + 1);
-      hash.update(`${entry.isDirectory() ? 'directory' : 'file'}:${relativePath}\0`);
-      if (entry.isDirectory()) visit(path);
-      else hash.update(readFileSync(path));
-    }
-  };
-  visit(root);
-  return hash.digest('hex');
+function assertSafeFixtureRoot(fixtureRoot) {
+  const resolvedFixtureRoot = resolve(fixtureRoot);
+  assert.notEqual(resolvedFixtureRoot, repoRoot, 'fixture must not resolve to the shared checkout');
+  assert.equal(
+    dirname(resolvedFixtureRoot),
+    resolve(tmpdir()),
+    'fixture must be a direct temp child',
+  );
+  assert.match(basename(resolvedFixtureRoot), /^stynx-d10-fixture-/u);
+  return resolvedFixtureRoot;
+}
+
+function assertInsideFixture(fixtureRoot, target, label) {
+  const resolvedFixtureRoot = assertSafeFixtureRoot(fixtureRoot);
+  const resolvedTarget = resolve(target);
+  const displacement = relative(resolvedFixtureRoot, resolvedTarget);
+  assert.ok(
+    displacement !== '' && !displacement.startsWith('..') && !isAbsolute(displacement),
+    `${label} must resolve inside the isolated fixture`,
+  );
+  return resolvedTarget;
+}
+
+function spawnInFixture(fixture, command, args, options = {}) {
+  const fixtureRoot = assertSafeFixtureRoot(fixture.root);
+  fixture.subprocessCwds.push(fixtureRoot);
+  return spawnSync(command, args, { ...options, cwd: fixtureRoot });
+}
+
+function removeInsideFixture(fixture, target, options) {
+  const resolvedTarget = assertInsideFixture(fixture.root, target, 'destructive target');
+  fixture.destructiveTargets.push(resolvedTarget);
+  rmSync(resolvedTarget, options);
+}
+
+function removeFixture(fixture) {
+  const fixtureRoot = assertSafeFixtureRoot(fixture.root);
+  fixture.destructiveTargets.push(fixtureRoot);
+  rmSync(fixtureRoot, { recursive: true, force: true });
 }
 
 function createBuildFixture() {
-  const fixtureRoot = mkdtempSync(join(tmpdir(), 'stynx-d10-fixture-'));
+  const fixture = {
+    root: mkdtempSync(join(tmpdir(), 'stynx-d10-fixture-')),
+    destructiveTargets: [],
+    subprocessCwds: [],
+  };
   try {
-    const archive = spawnSync(
+    const archive = spawnInFixture(
+      fixture,
       'git',
       [
+        '-C',
+        repoRoot,
         'archive',
         '--format=tar',
         'HEAD',
@@ -102,19 +122,19 @@ function createBuildFixture() {
         'scripts/verify-reference-api-build-inputs.mjs',
         'tools',
       ],
-      { cwd: repoRoot, maxBuffer: 128 * 1024 * 1024 },
+      { maxBuffer: 128 * 1024 * 1024 },
     );
     assert.ifError(archive.error);
     assert.equal(archive.status, 0, archive.stderr.toString());
-    const extracted = spawnSync('tar', ['-xf', '-', '-C', fixtureRoot], {
+    const extracted = spawnInFixture(fixture, 'tar', ['-xf', '-'], {
       input: archive.stdout,
       maxBuffer: 128 * 1024 * 1024,
     });
     assert.ifError(extracted.error);
     assert.equal(extracted.status, 0, extracted.stderr.toString());
-    return fixtureRoot;
+    return fixture;
   } catch (error) {
-    rmSync(fixtureRoot, { recursive: true, force: true });
+    removeFixture(fixture);
     throw error;
   }
 }
@@ -172,14 +192,23 @@ test('E2E task bodies and web-server helpers consume builds without nesting prod
 });
 
 test('clean preferences build emits both exact exports and reference-api fails closed without declarations', () => {
-  const sharedOutputDigest = treeDigest(preferencesDist);
-  const fixtureRoot = createBuildFixture();
+  const fixture = createBuildFixture();
+  const fixtureRoot = assertSafeFixtureRoot(fixture.root);
   const fixturePreferencesDist = join(fixtureRoot, 'packages/preferences/dist');
   const fixturePreferencesRuntime = join(fixturePreferencesDist, 'preferences/src/index.js');
   const fixturePreferencesDeclaration = join(fixturePreferencesDist, 'preferences/src/index.d.ts');
   const fixtureVerifier = join(fixtureRoot, 'scripts/verify-reference-api-build-inputs.mjs');
+  for (const [target, label] of [
+    [fixturePreferencesDist, 'preferences output directory'],
+    [fixturePreferencesRuntime, 'preferences runtime output'],
+    [fixturePreferencesDeclaration, 'preferences declaration output'],
+    [fixtureVerifier, 'reference API verifier'],
+  ]) {
+    assert.equal(assertInsideFixture(fixtureRoot, target, label), resolve(target));
+  }
   try {
-    const installed = run(
+    const installed = spawnInFixture(
+      fixture,
       'pnpm',
       [
         'install',
@@ -191,26 +220,56 @@ test('clean preferences build emits both exact exports and reference-api fails c
         '--filter',
         '@stynx-nyx/reference-api',
       ],
-      { cwd: fixtureRoot },
+      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
     );
+    assert.ifError(installed.error);
     assert.equal(installed.status, 0, installed.stderr);
-    rmSync(fixturePreferencesDist, { recursive: true, force: true });
-    const built = run('pnpm', ['--filter', '@stynx-nyx/preferences', 'run', 'build'], {
-      cwd: fixtureRoot,
-    });
+    removeInsideFixture(fixture, fixturePreferencesDist, { recursive: true, force: true });
+    const built = spawnInFixture(
+      fixture,
+      'pnpm',
+      ['--filter', '@stynx-nyx/preferences', 'run', 'build'],
+      {
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      },
+    );
+    assert.ifError(built.error);
     assert.equal(built.status, 0, built.stderr);
     assert.equal(existsSync(fixturePreferencesRuntime), true);
     assert.equal(existsSync(fixturePreferencesDeclaration), true);
-    const verified = run('node', [fixtureVerifier], { cwd: fixtureRoot });
+    const verified = spawnInFixture(fixture, 'node', [fixtureVerifier], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    assert.ifError(verified.error);
     assert.equal(verified.status, 0, verified.stderr);
-    rmSync(fixturePreferencesDeclaration, { force: true });
-    const rejected = run('node', [fixtureVerifier], { cwd: fixtureRoot });
+    removeInsideFixture(fixture, fixturePreferencesDeclaration, { force: true });
+    const rejected = spawnInFixture(fixture, 'node', [fixtureVerifier], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    assert.ifError(rejected.error);
     assert.notEqual(rejected.status, 0);
     assert.match(rejected.stderr, /declaration output is unavailable/u);
   } finally {
-    rmSync(fixtureRoot, { recursive: true, force: true });
+    assert.ok(fixture.subprocessCwds.length >= 6);
+    assert.equal(
+      fixture.subprocessCwds.every((cwd) => cwd === fixtureRoot),
+      true,
+    );
+    assert.equal(
+      fixture.destructiveTargets.every((target) =>
+        target === fixtureRoot
+          ? true
+          : relative(fixtureRoot, target) !== '' &&
+            !relative(fixtureRoot, target).startsWith('..') &&
+            !isAbsolute(relative(fixtureRoot, target)),
+      ),
+      true,
+    );
+    removeFixture(fixture);
     assert.equal(existsSync(fixtureRoot), false);
-    assert.equal(treeDigest(preferencesDist), sharedOutputDigest);
   }
 });
 
