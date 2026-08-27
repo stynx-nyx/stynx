@@ -16,6 +16,10 @@ const verifyReferenceApiBuildInputs = resolve(
 );
 const startupProtocol = 'stynx-reference-api-startup-v1';
 const startupOutputPrefix = '[reference-api-startup]';
+const governedStderrWrite = process.stderr.write.bind(process.stderr);
+const suppressProcessOutput = () => true;
+process.stdout.write = suppressProcessOutput;
+process.stderr.write = suppressProcessOutput;
 const helperSuccessStates = [
   'helper-entered',
   'compose-ready',
@@ -35,17 +39,26 @@ const visibleStartupFailureCodes = new Set([
 const scriptPath = fileURLToPath(import.meta.url);
 const postgresPort = process.env.STYNX_POSTGRES_PORT ?? '55432';
 const redisPublish = process.env.TESTCONTAINERS_HOST_OVERRIDE ? '0.0.0.0::6379' : '127.0.0.1::6379';
-const composeTempDir =
-  process.env.STYNX_REFERENCE_API_STACK_COMPOSE_DIR ??
-  (await mkdtemp(resolve(tmpdir(), 'stynx-reference-api-stack-')));
-const composeFile = resolve(composeTempDir, 'compose.yml');
+let composeTempDir;
+let composeFile;
+try {
+  composeTempDir =
+    process.env.STYNX_REFERENCE_API_STACK_COMPOSE_DIR ??
+    (await mkdtemp(resolve(tmpdir(), 'stynx-reference-api-stack-')));
+  composeFile = resolve(composeTempDir, 'compose.yml');
 
-if (!process.env.STYNX_REFERENCE_API_STACK_COMPOSE_DIR) {
-  await writeFile(
-    composeFile,
-    `services:\n  postgres:\n    image: postgres:16-alpine\n    environment:\n      GLOG_minloglevel: '2'\n      POSTGRES_DB: postgres\n      POSTGRES_USER: postgres\n      POSTGRES_PASSWORD: postgres\n    healthcheck:\n      test: ['CMD-SHELL', 'pg_isready -U postgres -d postgres']\n      interval: 5s\n      timeout: 5s\n      retries: 20\n    ports:\n      - '${postgresPort}:5432'\n  redis:\n    image: redis:7-alpine\n    environment:\n      GLOG_minloglevel: '2'\n    healthcheck:\n      test: ['CMD', 'redis-cli', 'ping']\n      interval: 5s\n      timeout: 5s\n      retries: 20\n    ports:\n      - '${redisPublish}'\n`,
-    'utf8',
-  );
+  if (!process.env.STYNX_REFERENCE_API_STACK_COMPOSE_DIR) {
+    await writeFile(
+      composeFile,
+      `services:\n  postgres:\n    image: postgres:16-alpine\n    environment:\n      GLOG_minloglevel: '2'\n      POSTGRES_DB: postgres\n      POSTGRES_USER: postgres\n      POSTGRES_PASSWORD: postgres\n    healthcheck:\n      test: ['CMD-SHELL', 'pg_isready -U postgres -d postgres']\n      interval: 5s\n      timeout: 5s\n      retries: 20\n    ports:\n      - '${postgresPort}:5432'\n  redis:\n    image: redis:7-alpine\n    environment:\n      GLOG_minloglevel: '2'\n    healthcheck:\n      test: ['CMD', 'redis-cli', 'ping']\n      interval: 5s\n      timeout: 5s\n      retries: 20\n    ports:\n      - '${redisPublish}'\n`,
+      'utf8',
+    );
+  }
+} catch {
+  if (composeTempDir) {
+    await rm(composeTempDir, { recursive: true, force: true }).catch(() => undefined);
+  }
+  process.exit(1);
 }
 
 let shuttingDown = false;
@@ -117,17 +130,32 @@ function startCleanupWatchdog() {
     return;
   }
 
-  const watchdog = spawn(process.execPath, [scriptPath], {
-    cwd: workspaceRoot,
-    detached: true,
-    stdio: 'ignore',
-    env: {
-      ...process.env,
-      STYNX_REFERENCE_API_STACK_WATCHDOG: '1',
-      STYNX_REFERENCE_API_STACK_PARENT_PID: String(process.pid),
-      STYNX_REFERENCE_API_STACK_API_PID: String(apiProcess.pid),
-      STYNX_REFERENCE_API_STACK_COMPOSE_DIR: composeTempDir,
-    },
+  let watchdog;
+  try {
+    watchdog = spawn(process.execPath, [scriptPath], {
+      cwd: workspaceRoot,
+      detached: true,
+      stdio: 'ignore',
+      env: {
+        ...process.env,
+        STYNX_REFERENCE_API_STACK_WATCHDOG: '1',
+        STYNX_REFERENCE_API_STACK_PARENT_PID: String(process.pid),
+        STYNX_REFERENCE_API_STACK_API_PID: String(apiProcess.pid),
+        STYNX_REFERENCE_API_STACK_COMPOSE_DIR: composeTempDir,
+      },
+    });
+  } catch {
+    stopApiProcess();
+    try {
+      rmSync(composeTempDir, { recursive: true, force: true });
+    } catch {
+      // The owned temporary directory remains the only cleanup target.
+    }
+    process.exit(1);
+  }
+  watchdog.once('error', () => {
+    stopApiProcess();
+    process.exit(1);
   });
   watchdog.unref();
 }
@@ -154,8 +182,11 @@ async function shutdown(signal, exitCode = 0) {
   shuttingDown = true;
 
   stopApiProcess(signal);
-  await composeDown();
-  process.exit(exitCode);
+  try {
+    await composeDown();
+  } finally {
+    process.exit(exitCode);
+  }
 }
 
 function stopApiProcess(signal = 'SIGTERM') {
@@ -178,7 +209,13 @@ function recordStartupCode(code) {
   } else {
     startupTerminal = true;
   }
-  console.error(`${startupOutputPrefix} ${code}`);
+  const suppressedStderrWrite = process.stderr.write;
+  process.stderr.write = governedStderrWrite;
+  try {
+    console.error(`${startupOutputPrefix} ${code}`);
+  } finally {
+    process.stderr.write = suppressedStderrWrite;
+  }
   return true;
 }
 
@@ -271,11 +308,15 @@ function composeDownSync() {
     apiProcess.kill('SIGTERM');
   }
 
-  spawnSync('docker', ['compose', '-f', composeFile, 'down', '-v'], {
-    cwd: workspaceRoot,
-    stdio: 'inherit',
-  });
-  rmSync(composeTempDir, { recursive: true, force: true });
+  try {
+    spawnSync('docker', ['compose', '-f', composeFile, 'down', '-v'], {
+      cwd: workspaceRoot,
+      stdio: 'ignore',
+    });
+    rmSync(composeTempDir, { recursive: true, force: true });
+  } catch {
+    // Exit cleanup is best-effort and must never expose host diagnostics.
+  }
   composeDownComplete = true;
 }
 
@@ -325,7 +366,8 @@ function discoverOwnedRedisPort() {
 
 const redisHost = process.env.TESTCONTAINERS_HOST_OVERRIDE ?? '127.0.0.1';
 if (redisHost.length === 0) {
-  throw new Error('The Redis host override is empty');
+  await rm(composeTempDir, { recursive: true, force: true }).catch(() => undefined);
+  process.exit(1);
 }
 let redisPort;
 try {
@@ -345,7 +387,7 @@ try {
 }
 
 apiProcess = run('node', [referenceApiMain], {
-  stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
+  stdio: ['inherit', 'ignore', 'ignore', 'ipc'],
   env: {
     ...process.env,
     AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID ?? 'test',
