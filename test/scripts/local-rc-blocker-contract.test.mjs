@@ -14,6 +14,7 @@ import {
 import { discoverMutationRoster } from '../../scripts/lib/mutation-roster.mjs';
 
 const repoRoot = resolve(import.meta.dirname, '..', '..');
+const privacyRoot = join(repoRoot, 'packages/privacy');
 const expectedNotificationsMutate = [
   'src/notifications.service.ts',
   'src/dispatch.service.ts',
@@ -139,6 +140,25 @@ function createBuildFixture() {
   }
 }
 
+function resolvedPrivacyPopulation(configName) {
+  const result = run(
+    'pnpm',
+    [
+      '--filter',
+      '@stynx-nyx/privacy',
+      'exec',
+      'vitest',
+      'list',
+      '--config',
+      `./${configName}`,
+      '--filesOnly',
+    ],
+    { cwd: privacyRoot },
+  );
+  assert.equal(result.status, 0, result.stderr);
+  return result.stdout.split(/\r?\n/u).filter(Boolean).sort();
+}
+
 test('resolved root E2E graph has one preferences producer before both reference consumers', () => {
   const result = run('pnpm', [
     'exec',
@@ -189,6 +209,63 @@ test('E2E task bodies and web-server helpers consume builds without nesting prod
     assert.doesNotMatch(body, /(?:pnpm|npm|yarn)[^\n]*(?:reference-api|preferences)[^\n]*build/u);
   }
   assert.match(helper, /runChecked\('node', \[verifyReferenceApiBuildInputs\]\)/u);
+});
+
+test('privacy ordinary, integration, and coverage tiers resolve exact disjoint populations', () => {
+  const expectedOrdinary = [
+    'test/unit/privacy-runtime.spec.ts',
+    'test/unit/privacy.controller.spec.ts',
+    'test/unit/privacy.service.spec.ts',
+    'test/wiring/privacy-http.wiring-spec.ts',
+  ].sort();
+  const expectedIntegration = ['test/integration/privacy.module.spec.ts'];
+  const expectedAll = [...expectedOrdinary, ...expectedIntegration].sort();
+  const ordinary = resolvedPrivacyPopulation('vitest.config.ts');
+  const integration = resolvedPrivacyPopulation('vitest.int.config.ts');
+  const coverage = resolvedPrivacyPopulation('vitest.coverage.config.ts');
+
+  assert.equal(ordinary.length, 4);
+  assert.deepEqual(ordinary, expectedOrdinary);
+  assert.equal(integration.length, 1);
+  assert.deepEqual(integration, expectedIntegration);
+  assert.equal(coverage.length, 5);
+  assert.deepEqual(coverage, expectedAll);
+  assert.deepEqual(
+    ordinary.filter((path) => integration.includes(path)),
+    [],
+  );
+  assert.deepEqual([...new Set([...ordinary, ...integration])].sort(), expectedAll);
+
+  const ordinaryConfig = readFileSync(join(privacyRoot, 'vitest.config.ts'), 'utf8');
+  const integrationConfig = readFileSync(join(privacyRoot, 'vitest.int.config.ts'), 'utf8');
+  const coverageConfig = readFileSync(join(privacyRoot, 'vitest.coverage.config.ts'), 'utf8');
+  const withoutPopulation = (source) =>
+    source.replace(/^\s*include: \[[^\n]+\],$/mu, '  include: [D13_POPULATION],');
+  assert.equal(withoutPopulation(coverageConfig), withoutPopulation(ordinaryConfig));
+  assert.match(ordinaryConfig, /test\/unit\/\*\*\/\*\.spec\.ts/u);
+  assert.doesNotMatch(ordinaryConfig, /test\/integration/u);
+  assert.match(integrationConfig, /include: \['test\/integration\/\*\*\/\*\.spec\.ts'\]/u);
+  assert.match(integrationConfig, /testTimeout: 60000/u);
+  assert.match(
+    readFileSync(join(privacyRoot, 'test/integration/privacy.module.spec.ts'), 'utf8'),
+    /timeout: 120_000/u,
+  );
+
+  const rootManifest = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8'));
+  const privacyManifest = JSON.parse(readFileSync(join(privacyRoot, 'package.json'), 'utf8'));
+  const turbo = readFileSync(join(repoRoot, 'turbo.json'), 'utf8');
+  assert.equal(
+    rootManifest.scripts['test:int'],
+    "turbo run test:int --concurrency=1 --filter='./packages/*'",
+  );
+  assert.doesNotMatch(rootManifest.scripts.test, /--concurrency/u);
+  assert.equal(privacyManifest.scripts.test, 'vitest run --config ./vitest.config.ts');
+  assert.equal(privacyManifest.scripts['test:int'], 'vitest run --config ./vitest.int.config.ts');
+  assert.doesNotMatch(turbo, /"test"\s*:\s*\{[^}]*"cache"\s*:\s*false/su);
+  assert.doesNotMatch(
+    `${ordinaryConfig}\n${integrationConfig}\n${coverageConfig}`,
+    /\b(?:sleep|retry|exclude|singleThread|sequentialFiles)\b/u,
+  );
 });
 
 test('clean preferences build emits both exact exports and reference-api fails closed without declarations', () => {

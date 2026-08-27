@@ -4,7 +4,7 @@ import { createVitestConfig } from '../../tools/repo-config/vitest.base.mjs';
 export default createVitestConfig({
   packageDir: __dirname,
   packageName: '@stynx-nyx/privacy',
-  include: ['test/unit/**/*.spec.ts', 'test/wiring/**/*.wiring-spec.ts'],
+  include: ['test/**/*.spec.ts', 'test/wiring/**/*.wiring-spec.ts'],
   collectCoverageFrom: ['src/**/*.ts', '!src/index.ts', '!src/tokens.ts', '!src/privacy.module.ts'],
   alias: {
     '@stynx-nyx/core': resolve(__dirname, '../core/src/index.ts'),
