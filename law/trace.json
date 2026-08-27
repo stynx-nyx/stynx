@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "version": "1.2.0",
   "meta": {
-    "last_updated": "2026-08-25T13:13:03-03:00",
+    "last_updated": "2026-08-27T00:38:35-03:00",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -11,8 +11,8 @@
     },
     "provenance": [
       "DEVAI 1.2.13 deterministic inventory for exact tracked source bytes.",
-      "The 493 tracked test-path census is partitioned into 378 executable tests and 115 non-executable fixtures or support modules.",
-      "Fourteen tracked verification scripts and configuration attestations complete the 507-item governed test surface."
+      "The 495 tracked test-path census is partitioned into 380 executable tests and 115 non-executable fixtures or support modules.",
+      "Fourteen tracked verification scripts and configuration attestations complete the 509-item governed test surface."
     ]
   },
   "invariants": [
@@ -3592,6 +3592,14 @@
       "assertion_digest_sha256": "737709a2be8865a65993959434ff32aa1f4f15581d00a5c0f1188890e11d123c"
     },
     {
+      "path": "packages/notifications/test/unit/mutation-survivors.spec.ts",
+      "suite": "regression",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 64,
+      "assertion_digest_sha256": "de68df6873904cd239e1936bd39c1b2a53b394b25d7b5a94f7b57932525d2d16"
+    },
+    {
       "path": "packages/notifications/test/unit/push-stub.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
@@ -3678,6 +3686,14 @@
       "lifecycle": "supported",
       "assertion_count": 66,
       "assertion_digest_sha256": "e2fcaa0419fcb8954f20707ea17def3a713e59aeb42ffc6f33143f02ac1e1664"
+    },
+    {
+      "path": "test/scripts/local-rc-blocker-contract.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 34,
+      "assertion_digest_sha256": "2fd1bdcd99394a83a38a7bcfb615036fbaefc544a72b8e7583ff358677f8a02d"
     },
     {
       "path": "test/scripts/release-version-policy.test.mjs",
