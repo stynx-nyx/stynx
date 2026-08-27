@@ -216,16 +216,38 @@ function assertD14HelperContract(helper, rootManifest) {
 }
 
 const startupProtocol = 'stynx-reference-api-startup-v1';
+const startupOutputPrefix = '[reference-api-startup]';
 const startupSuccessStates = ['bootstrap-entered', 'nest-created', 'listening'];
 const startupFailureReasons = ['nest-initialization', 'pre-listen-configuration', 'listen'];
+const startupChildTerminals = ['child-error', 'child-disconnect', 'child-exit'];
 
-function startupOracle(cleanup) {
+function fixedStartupOutput(code) {
+  assert.ok(
+    [
+      ...startupSuccessStates,
+      ...startupFailureReasons.map((reason) => `bootstrap-failed:${reason}`),
+      ...startupChildTerminals,
+    ].includes(code),
+    'startup output must be one bounded fixed code',
+  );
+  return `${startupOutputPrefix} ${code}`;
+}
+
+function startupOracle(cleanup, recorder = () => undefined) {
   let nextState = 0;
   let terminal = false;
   let cleanupComplete = false;
+  const recorded = new Set();
+
+  function recordFixed(code) {
+    assert.equal(recorded.has(code), false, 'a fixed startup state must be recorded once');
+    recorded.add(code);
+    recorder(fixedStartupOutput(code));
+  }
 
   function fail(code) {
     terminal = true;
+    if (startupChildTerminals.includes(code)) recordFixed(code);
     if (!cleanupComplete) {
       cleanupComplete = true;
       cleanup(code);
@@ -251,12 +273,14 @@ function startupOracle(cleanup) {
       if (!permittedAtPhase) return fail('out-of-order-record');
       terminal = true;
       cleanupComplete = true;
+      recordFixed(`bootstrap-failed:${record.reason}`);
       cleanup(`bootstrap-failed:${record.reason}`);
       return { accepted: true, state: 'bootstrap-failed', reason: record.reason };
     }
     if (keys.join(',') !== 'protocol,state') return fail('unbounded-record');
     if (record.state !== startupSuccessStates[nextState]) return fail('out-of-order-record');
     nextState += 1;
+    recordFixed(record.state);
     if (record.state === 'listening') terminal = true;
     return { accepted: true, state: record.state };
   }
@@ -272,9 +296,31 @@ function startupOracle(cleanup) {
   return { message, childTerminal };
 }
 
+function assertBootstrapBeforeRuntimeLoads(source) {
+  const runtimeStaticImports = source.match(/^import\s+(?!type(?:\s|\{))/gmu) ?? [];
+  assert.deepEqual(
+    runtimeStaticImports,
+    [],
+    'main may retain only erased type-only static imports',
+  );
+  const enteredIndex = source.indexOf("state: 'bootstrap-entered'");
+  assert.ok(enteredIndex >= 0, 'bootstrap-entered must be present');
+  const dynamicImports = [...source.matchAll(/\bimport\s*\(/gu)].map(({ index }) => index);
+  assert.ok(dynamicImports.length > 0, 'runtime and application modules must load dynamically');
+  assert.equal(
+    dynamicImports.every((index) => index > enteredIndex),
+    true,
+    'bootstrap-entered must precede every runtime and application dynamic import',
+  );
+}
+
 test('D16 oracle accepts only the ordered fixed startup sequence and bounded failures', () => {
   const successCleanup = [];
-  const success = startupOracle((code) => successCleanup.push(code));
+  const successRecords = [];
+  const success = startupOracle(
+    (code) => successCleanup.push(code),
+    (record) => successRecords.push(record),
+  );
   for (const state of startupSuccessStates) {
     assert.deepEqual(success.message({ protocol: startupProtocol, state }), {
       accepted: true,
@@ -282,11 +328,19 @@ test('D16 oracle accepts only the ordered fixed startup sequence and bounded fai
     });
   }
   assert.deepEqual(successCleanup, []);
+  assert.deepEqual(
+    successRecords,
+    startupSuccessStates.map((state) => `${startupOutputPrefix} ${state}`),
+  );
   assert.deepEqual(success.childTerminal('exit'), { accepted: true, state: 'already-listening' });
 
   for (const reason of startupFailureReasons) {
     const cleanup = [];
-    const oracle = startupOracle((code) => cleanup.push(code));
+    const records = [];
+    const oracle = startupOracle(
+      (code) => cleanup.push(code),
+      (record) => records.push(record),
+    );
     assert.equal(
       oracle.message({ protocol: startupProtocol, state: 'bootstrap-entered' }).accepted,
       true,
@@ -302,6 +356,12 @@ test('D16 oracle accepts only the ordered fixed startup sequence and bounded fai
       { accepted: true, state: 'bootstrap-failed', reason },
     );
     assert.deepEqual(cleanup, [`bootstrap-failed:${reason}`]);
+    assert.equal(records.at(-1), `${startupOutputPrefix} bootstrap-failed:${reason}`);
+    assert.equal(
+      records.filter((record) => record === `${startupOutputPrefix} bootstrap-failed:${reason}`)
+        .length,
+      1,
+    );
   }
 });
 
@@ -325,9 +385,14 @@ test('D16 oracle rejects malformed, unknown, unbounded, duplicate, and out-of-or
   ];
   for (const record of invalidRecords) {
     const cleanup = [];
-    const oracle = startupOracle((code) => cleanup.push(code));
+    const records = [];
+    const oracle = startupOracle(
+      (code) => cleanup.push(code),
+      (output) => records.push(output),
+    );
     assert.equal(oracle.message(record).accepted, false);
     assert.equal(cleanup.length, 1);
+    assert.deepEqual(records, []);
   }
 
   for (const duplicateOrOutOfOrder of [
@@ -356,14 +421,47 @@ test('D16 oracle rejects malformed, unknown, unbounded, duplicate, and out-of-or
 test('D16 oracle immediately confines child error, disconnect, and pre-listening exit', () => {
   for (const event of ['error', 'disconnect', 'exit']) {
     const cleanup = [];
-    const oracle = startupOracle((code) => cleanup.push(code));
+    const records = [];
+    const oracle = startupOracle(
+      (code) => cleanup.push(code),
+      (record) => records.push(record),
+    );
     assert.equal(
       oracle.message({ protocol: startupProtocol, state: 'bootstrap-entered' }).accepted,
       true,
     );
     assert.deepEqual(oracle.childTerminal(event), { accepted: false, code: `child-${event}` });
     assert.deepEqual(cleanup, [`child-${event}`]);
+    assert.equal(records.at(-1), `${startupOutputPrefix} child-${event}`);
+    assert.equal(
+      records.filter((record) => record === `${startupOutputPrefix} child-${event}`).length,
+      1,
+    );
   }
+});
+
+test('D16 import-order oracle loads runtime modules only after bootstrap-entered', () => {
+  assertBootstrapBeforeRuntimeLoads(`
+    import type { RuntimeShape } from './runtime-shape';
+    async function bootstrap(): Promise<void> {
+      emitStartupRecord({ protocol: startupProtocol, state: 'bootstrap-entered' });
+      const runtime = await import('@nestjs/core');
+      void runtime;
+    }
+  `);
+  assert.throws(() =>
+    assertBootstrapBeforeRuntimeLoads(`
+      import { NestFactory } from '@nestjs/core';
+      emitStartupRecord({ protocol: startupProtocol, state: 'bootstrap-entered' });
+    `),
+  );
+  assert.throws(() =>
+    assertBootstrapBeforeRuntimeLoads(`
+      const runtime = await import('@nestjs/core');
+      emitStartupRecord({ protocol: startupProtocol, state: 'bootstrap-entered' });
+      void runtime;
+    `),
+  );
 });
 
 test('D16 preserves D14 dynamic Redis and Playwright readiness configuration', () => {
@@ -389,6 +487,13 @@ test('D16 production binds the fixed credential-free startup protocol before wat
   );
   assert.match(main, /stynx-reference-api-startup-v1/u, 'D16 startup protocol is not implemented');
   assert.match(helper, /stynx-reference-api-startup-v1/u);
+  assert.match(
+    helper,
+    /const startupOutputPrefix\s*=\s*['"]\[reference-api-startup\]['"]/u,
+    'D16 fixed Playwright-visible startup prefix is not implemented',
+  );
+  assert.match(helper, /console\.log\(\s*`\$\{startupOutputPrefix\} \$\{record\.state\}`\s*\)/u);
+  assert.match(helper, /console\.error\(\s*`\$\{startupOutputPrefix\} \$\{code\}`\s*\)/u);
   for (const fixedValue of [
     ...startupSuccessStates,
     'bootstrap-failed',
@@ -398,6 +503,7 @@ test('D16 production binds the fixed credential-free startup protocol before wat
     assert.match(helper, new RegExp(`['"]${fixedValue}['"]`, 'u'));
   }
   assert.match(main, /(?:typeof process\.send === 'function'|process\.send\?\.)/u);
+  assertBootstrapBeforeRuntimeLoads(main);
   assert.doesNotMatch(
     main,
     /process\.send[^;\n]*(?:error|stack|path|env|credential|url|port|command)/iu,
@@ -414,6 +520,10 @@ test('D16 production binds the fixed credential-free startup protocol before wat
   }
   assert.match(helper, /shutdown\(\s*['"]SIGTERM['"]\s*,\s*1\s*\)/u);
   assert.doesNotMatch(helper, /(?:setTimeout|retry|poll)\s*\(/iu);
+  assert.doesNotMatch(
+    helper,
+    /console\.(?:log|error)[^;\n]*(?:error|stack|path|env|credential|url|port|command|record\b(?!\.state))/iu,
+  );
 });
 
 test('D14 oracle resolves only one valid owned Redis mapping and honors the host override', () => {
