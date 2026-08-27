@@ -1,6 +1,16 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
 
@@ -13,16 +23,7 @@ import {
 import { discoverMutationRoster } from '../../scripts/lib/mutation-roster.mjs';
 
 const repoRoot = resolve(import.meta.dirname, '..', '..');
-const preferencesRuntime = join(
-  repoRoot,
-  'packages/preferences/dist/preferences/src/index.js',
-);
-const preferencesDeclaration = join(
-  repoRoot,
-  'packages/preferences/dist/preferences/src/index.d.ts',
-);
 const preferencesDist = join(repoRoot, 'packages/preferences/dist');
-const verifyReferenceInputs = join(repoRoot, 'scripts/verify-reference-api-build-inputs.mjs');
 const expectedNotificationsMutate = [
   'src/notifications.service.ts',
   'src/dispatch.service.ts',
@@ -64,6 +65,60 @@ function mutationReport({ status = 'Killed', path = 'src/index.ts' } = {}) {
   };
 }
 
+function treeDigest(root) {
+  if (!existsSync(root)) return undefined;
+  const hash = createHash('sha256');
+  const visit = (directory) => {
+    for (const entry of readdirSync(directory, { withFileTypes: true }).sort((a, b) =>
+      a.name.localeCompare(b.name),
+    )) {
+      const path = join(directory, entry.name);
+      const relativePath = path.slice(root.length + 1);
+      hash.update(`${entry.isDirectory() ? 'directory' : 'file'}:${relativePath}\0`);
+      if (entry.isDirectory()) visit(path);
+      else hash.update(readFileSync(path));
+    }
+  };
+  visit(root);
+  return hash.digest('hex');
+}
+
+function createBuildFixture() {
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'stynx-d10-fixture-'));
+  try {
+    const archive = spawnSync(
+      'git',
+      [
+        'archive',
+        '--format=tar',
+        'HEAD',
+        '--',
+        'package.json',
+        'pnpm-lock.yaml',
+        'pnpm-workspace.yaml',
+        'tsconfig.json',
+        'packages',
+        'reference/api/package.json',
+        'scripts/verify-reference-api-build-inputs.mjs',
+        'tools',
+      ],
+      { cwd: repoRoot, maxBuffer: 128 * 1024 * 1024 },
+    );
+    assert.ifError(archive.error);
+    assert.equal(archive.status, 0, archive.stderr.toString());
+    const extracted = spawnSync('tar', ['-xf', '-', '-C', fixtureRoot], {
+      input: archive.stdout,
+      maxBuffer: 128 * 1024 * 1024,
+    });
+    assert.ifError(extracted.error);
+    assert.equal(extracted.status, 0, extracted.stderr.toString());
+    return fixtureRoot;
+  } catch (error) {
+    rmSync(fixtureRoot, { recursive: true, force: true });
+    throw error;
+  }
+}
+
 test('resolved root E2E graph has one preferences producer before both reference consumers', () => {
   const result = run('pnpm', [
     'exec',
@@ -71,18 +126,13 @@ test('resolved root E2E graph has one preferences producer before both reference
     'run',
     'test:e2e',
     '--dry=json',
-    "--filter=./reference/*",
+    '--filter=./reference/*',
   ]);
   assert.equal(result.status, 0, result.stderr);
   const graph = JSON.parse(result.stdout);
-  const producers = graph.tasks.filter(
-    ({ taskId }) => taskId === '@stynx-nyx/preferences#build',
-  );
+  const producers = graph.tasks.filter(({ taskId }) => taskId === '@stynx-nyx/preferences#build');
   assert.equal(producers.length, 1);
-  for (const taskId of [
-    '@stynx-nyx/reference-api#build',
-    '@stynx-nyx/reference-web#test:e2e',
-  ]) {
+  for (const taskId of ['@stynx-nyx/reference-api#build', '@stynx-nyx/reference-web#test:e2e']) {
     const task = graph.tasks.find((entry) => entry.taskId === taskId);
     assert.ok(task, `${taskId} must be present in the resolved graph`);
     assert.ok(
@@ -98,35 +148,69 @@ test('resolved root E2E graph has one preferences producer before both reference
 
 test('E2E task bodies and web-server helpers consume builds without nesting producers', () => {
   const rootManifest = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8'));
-  const apiManifest = JSON.parse(readFileSync(join(repoRoot, 'reference/api/package.json'), 'utf8'));
-  const webManifest = JSON.parse(readFileSync(join(repoRoot, 'reference/web/package.json'), 'utf8'));
+  const apiManifest = JSON.parse(
+    readFileSync(join(repoRoot, 'reference/api/package.json'), 'utf8'),
+  );
+  const webManifest = JSON.parse(
+    readFileSync(join(repoRoot, 'reference/web/package.json'), 'utf8'),
+  );
   const playwright = readFileSync(join(repoRoot, 'reference/web/playwright.config.mjs'), 'utf8');
   const helper = readFileSync(
     join(repoRoot, 'reference/web/scripts/serve-reference-api-stack.mjs'),
     'utf8',
   );
   assert.match(rootManifest.scripts['test:e2e'], /^turbo run test:e2e\b/u);
-  for (const body of [apiManifest.scripts['test:e2e'], webManifest.scripts['test:e2e'], playwright, helper]) {
+  for (const body of [
+    apiManifest.scripts['test:e2e'],
+    webManifest.scripts['test:e2e'],
+    playwright,
+    helper,
+  ]) {
     assert.doesNotMatch(body, /(?:pnpm|npm|yarn)[^\n]*(?:reference-api|preferences)[^\n]*build/u);
   }
   assert.match(helper, /runChecked\('node', \[verifyReferenceApiBuildInputs\]\)/u);
 });
 
 test('clean preferences build emits both exact exports and reference-api fails closed without declarations', () => {
-  rmSync(preferencesDist, { recursive: true, force: true });
+  const sharedOutputDigest = treeDigest(preferencesDist);
+  const fixtureRoot = createBuildFixture();
+  const fixturePreferencesDist = join(fixtureRoot, 'packages/preferences/dist');
+  const fixturePreferencesRuntime = join(fixturePreferencesDist, 'preferences/src/index.js');
+  const fixturePreferencesDeclaration = join(fixturePreferencesDist, 'preferences/src/index.d.ts');
+  const fixtureVerifier = join(fixtureRoot, 'scripts/verify-reference-api-build-inputs.mjs');
   try {
-    const built = run('pnpm', ['--filter', '@stynx-nyx/preferences', 'run', 'build']);
+    const installed = run(
+      'pnpm',
+      [
+        'install',
+        '--offline',
+        '--frozen-lockfile',
+        '--ignore-scripts',
+        '--filter',
+        '@stynx-nyx/preferences...',
+        '--filter',
+        '@stynx-nyx/reference-api',
+      ],
+      { cwd: fixtureRoot },
+    );
+    assert.equal(installed.status, 0, installed.stderr);
+    rmSync(fixturePreferencesDist, { recursive: true, force: true });
+    const built = run('pnpm', ['--filter', '@stynx-nyx/preferences', 'run', 'build'], {
+      cwd: fixtureRoot,
+    });
     assert.equal(built.status, 0, built.stderr);
-    assert.equal(existsSync(preferencesRuntime), true);
-    assert.equal(existsSync(preferencesDeclaration), true);
-    const verified = run('node', [verifyReferenceInputs]);
+    assert.equal(existsSync(fixturePreferencesRuntime), true);
+    assert.equal(existsSync(fixturePreferencesDeclaration), true);
+    const verified = run('node', [fixtureVerifier], { cwd: fixtureRoot });
     assert.equal(verified.status, 0, verified.stderr);
-    rmSync(preferencesDeclaration, { force: true });
-    const rejected = run('node', [verifyReferenceInputs]);
+    rmSync(fixturePreferencesDeclaration, { force: true });
+    const rejected = run('node', [fixtureVerifier], { cwd: fixtureRoot });
     assert.notEqual(rejected.status, 0);
     assert.match(rejected.stderr, /declaration output is unavailable/u);
   } finally {
-    rmSync(preferencesDist, { recursive: true, force: true });
+    rmSync(fixtureRoot, { recursive: true, force: true });
+    assert.equal(existsSync(fixtureRoot), false);
+    assert.equal(treeDigest(preferencesDist), sharedOutputDigest);
   }
 });
 
@@ -245,7 +329,10 @@ test('notifications keeps the exact roster membership, break floor, and mutate p
   );
   assert.ok(notifications);
   assert.equal(notifications.thresholds.break, 90);
-  assert.equal(roster.filter(({ packageName }) => packageName === notifications.packageName).length, 1);
+  assert.equal(
+    roster.filter(({ packageName }) => packageName === notifications.packageName).length,
+    1,
+  );
   const config = (await import('../../packages/notifications/stryker.conf.mjs')).default;
   assert.deepEqual(config.mutate, expectedNotificationsMutate);
 });
