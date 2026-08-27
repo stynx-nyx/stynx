@@ -1,7 +1,15 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import test from 'node:test';
@@ -424,6 +432,120 @@ function advanceHelperToSpawn(fixture) {
   fixture.spawnEvent();
 }
 
+function boundedHelperFailureViolations(result, expectedCodes) {
+  const governedLines = result.stderr
+    .split(/\r?\n/u)
+    .filter((line) => line.startsWith(`${startupOutputPrefix} `));
+  const ungovernedStderr = result.stderr
+    .split(/\r?\n/u)
+    .filter((line) => line.length > 0 && !line.startsWith(`${startupOutputPrefix} `));
+  const violations = [];
+  if (result.status === 0 || result.signal !== null) violations.push('nonzero-exit');
+  if (result.stdout.length !== 0) violations.push('governed-stdout');
+  if (ungovernedStderr.length !== 0) violations.push('raw-stderr');
+  if (result.leakedFixturePath) violations.push('temporary-compose-path');
+  if (!result.composeRemoved) violations.push('owned-compose-cleanup');
+  if (governedLines.join('\n') !== expectedCodes.map(fixedStartupOutput).join('\n')) {
+    violations.push('governed-phase-sequence');
+  }
+  if (
+    [...result.stdout, ...ungovernedStderr].some((line) =>
+      /(?:exception|error|stack|path|env|credential|token|secret|https?:|redis:|port|command|argument|argv)/iu.test(
+        line,
+      ),
+    )
+  ) {
+    violations.push('raw-failure-payload');
+  }
+  return violations;
+}
+
+function runActualHelperFailureScenario(scenario) {
+  assert.ok(['run-checked', 'redis-mapping'].includes(scenario));
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'stynx-d16-helper-fixture-'));
+  const helperSource = readFileSync(
+    join(repoRoot, 'reference/web/scripts/serve-reference-api-stack.mjs'),
+    'utf8',
+  );
+  const helperPath = join(fixtureRoot, 'reference/web/scripts/serve-reference-api-stack.mjs');
+  const composeRoot = join(fixtureRoot, 'owned-compose');
+  const fakeBin = join(fixtureRoot, 'bin');
+  const dockerLog = join(fixtureRoot, 'docker-actions.log');
+  try {
+    for (const directory of [
+      dirname(helperPath),
+      composeRoot,
+      fakeBin,
+      join(fixtureRoot, 'scripts'),
+    ]) {
+      mkdirSync(directory, { recursive: true });
+    }
+    writeFileSync(helperPath, helperSource);
+    assert.equal(
+      readFileSync(helperPath, 'utf8'),
+      helperSource,
+      'fixture must execute exact helper bytes',
+    );
+    writeFileSync(join(composeRoot, 'compose.yml'), 'services: {}\n');
+    writeFileSync(
+      join(fixtureRoot, 'scripts/verify-reference-api-build-inputs.mjs'),
+      'process.exit(0);\n',
+    );
+    writeFileSync(
+      join(fakeBin, 'docker'),
+      `#!/bin/sh
+case " $* " in
+  *" up "*)
+    printf '%s\\n' up >> "$D16_DOCKER_ACTIONS"
+    ${scenario === 'run-checked' ? 'exit 23' : 'exit 0'}
+    ;;
+  *" port redis 6379 "*)
+    printf '%s\\n' port >> "$D16_DOCKER_ACTIONS"
+    printf '%s\\n' not-a-mapping
+    exit 0
+    ;;
+  *" down "*)
+    printf '%s\\n' down >> "$D16_DOCKER_ACTIONS"
+    exit 0
+    ;;
+esac
+exit 97
+`,
+    );
+    chmodSync(join(fakeBin, 'docker'), 0o700);
+
+    const child = spawnSync(process.execPath, [helperPath], {
+      cwd: fixtureRoot,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: {
+        PATH: `${fakeBin}:${process.env.PATH}`,
+        HOME: process.env.HOME,
+        TMPDIR: tmpdir(),
+        D16_DOCKER_ACTIONS: dockerLog,
+        STYNX_REFERENCE_API_STACK_COMPOSE_DIR: composeRoot,
+      },
+    });
+    assert.ifError(child.error);
+    const stdout = child.stdout ?? '';
+    const stderr = child.stderr ?? '';
+    return {
+      status: child.status,
+      signal: child.signal,
+      stdout,
+      stderr,
+      dockerActions: existsSync(dockerLog)
+        ? readFileSync(dockerLog, 'utf8').trim().split(/\r?\n/u)
+        : [],
+      composeRemoved: !existsSync(composeRoot),
+      leakedFixturePath: stdout.includes(fixtureRoot) || stderr.includes(fixtureRoot),
+    };
+  } finally {
+    rmSync(fixtureRoot, { recursive: true, force: true });
+    assert.equal(existsSync(fixtureRoot), false, 'failure fixture must be removed on every exit');
+  }
+}
+
 test('D16 oracle accepts only the ordered fixed startup sequence and bounded failures', () => {
   const successCleanup = [];
   const successRecords = [];
@@ -681,6 +803,66 @@ test('D16.1 fixture fails closed without printing malformed or sensitive IPC pay
   );
   assert.deepEqual(duplicate.stderr, beforeDuplicate);
   assert.throws(() => duplicate.ipc({ protocol: startupProtocol, state: 'nest-created' }));
+});
+
+test('D16.1 pre-child failure oracle rejects cleanup, phase, and raw-output escapes', () => {
+  const safe = {
+    status: 1,
+    signal: null,
+    stdout: '',
+    stderr: `${fixedStartupOutput('helper-entered')}\n`,
+    composeRemoved: true,
+    leakedFixturePath: false,
+  };
+  assert.deepEqual(boundedHelperFailureViolations(safe, ['helper-entered']), []);
+  assert.deepEqual(
+    boundedHelperFailureViolations(
+      {
+        ...safe,
+        stdout: 'raw command argument',
+        stderr: `${safe.stderr}Error: /private/owned-compose/compose.yml\n`,
+        composeRemoved: false,
+        leakedFixturePath: true,
+      },
+      ['helper-entered', 'compose-ready'],
+    ).sort(),
+    [
+      'governed-phase-sequence',
+      'governed-stdout',
+      'owned-compose-cleanup',
+      'raw-failure-payload',
+      'raw-stderr',
+      'temporary-compose-path',
+    ],
+  );
+});
+
+test('D16.1 production contains runChecked and Redis mapping failures before child spawn', () => {
+  const scenarios = [
+    {
+      name: 'run-checked',
+      expectedCodes: ['helper-entered'],
+      expectedDockerActions: ['up', 'down'],
+    },
+    {
+      name: 'redis-mapping',
+      expectedCodes: ['helper-entered', 'compose-ready'],
+      expectedDockerActions: ['up', 'port', 'down'],
+    },
+  ];
+  const violations = [];
+  for (const scenario of scenarios) {
+    const result = runActualHelperFailureScenario(scenario.name);
+    if (result.dockerActions.join(',') !== scenario.expectedDockerActions.join(',')) {
+      violations.push(`${scenario.name}:confined-owned-cleanup`);
+    }
+    violations.push(
+      ...boundedHelperFailureViolations(result, scenario.expectedCodes).map(
+        (violation) => `${scenario.name}:${violation}`,
+      ),
+    );
+  }
+  assert.deepEqual(violations, []);
 });
 
 test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14', () => {
