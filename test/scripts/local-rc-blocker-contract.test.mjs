@@ -7,6 +7,7 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  readdirSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
@@ -546,6 +547,250 @@ exit 97
   }
 }
 
+function remainingHelperSeamViolations(result, expected) {
+  const governedLines = result.stderr
+    .split(/\r?\n/u)
+    .filter((line) => line.startsWith(`${startupOutputPrefix} `));
+  const ungovernedStderr = result.stderr
+    .split(/\r?\n/u)
+    .filter((line) => line.length > 0 && !line.startsWith(`${startupOutputPrefix} `));
+  const violations = [];
+  if (result.status === 0 || result.signal !== null) violations.push('nonzero-exit');
+  if (result.stdout.length !== 0) violations.push('raw-stdout');
+  if (ungovernedStderr.length !== 0) violations.push('raw-stderr');
+  if (result.leakedFixturePath) violations.push('temporary-path-output');
+  if (result.ownedComposePresent !== expected.ownedComposePresent) {
+    violations.push('owned-compose-confinement');
+  }
+  if (result.actions.join(',') !== expected.actions.join(',')) {
+    violations.push('seam-operation-sequence');
+  }
+  if (governedLines.join('\n') !== expected.codes.map(fixedStartupOutput).join('\n')) {
+    violations.push('governed-phase-sequence');
+  }
+  if (new Set(governedLines).size !== governedLines.length) {
+    violations.push('duplicate-governed-phase');
+  }
+  if (
+    [...result.stdout, ...ungovernedStderr].some((line) =>
+      /(?:exception|error|stack|path|env|credential|token|secret|https?:|redis:|port|command|argument|argv|compose\.yml)/iu.test(
+        line,
+      ),
+    )
+  ) {
+    violations.push('raw-failure-payload');
+  }
+  return violations;
+}
+
+function helperSeamPreloadSource() {
+  return String.raw`
+import childProcess from 'node:child_process';
+import fs from 'node:fs';
+import { EventEmitter } from 'node:events';
+import { syncBuiltinESMExports } from 'node:module';
+
+const scenario = process.env.D16_SCENARIO;
+const actionsPath = process.env.D16_ACTIONS;
+const rawText = 'unbounded exception stack /private/workstation env credential https://host:6379 command argument';
+const action = (name) => fs.appendFileSync(actionsPath, name + '\n');
+const later = (callback) => setImmediate(callback);
+
+class SeamChild extends EventEmitter {
+  constructor(pid = 41001) {
+    super();
+    this.pid = pid;
+    this.exitCode = null;
+    this.signalCode = null;
+  }
+
+  finish(code = 0, signal = null) {
+    this.exitCode = code;
+    this.signalCode = signal;
+    this.emit('exit', code, signal);
+  }
+
+  kill(signal = 'SIGTERM') {
+    if (this.exitCode === null && this.signalCode === null) this.signalCode = signal;
+    return true;
+  }
+
+  unref() {}
+}
+
+if (scenario === 'compose-write-failure') {
+  fs.promises.writeFile = async () => {
+    throw new Error(rawText);
+  };
+}
+if (scenario.endsWith('-rm-rejection')) {
+  fs.promises.rm = async () => {
+    throw new Error(rawText);
+  };
+}
+
+childProcess.spawn = (command, args = [], options = {}) => {
+  if (command === 'docker' && args.includes('up')) {
+    action('up');
+    const child = new SeamChild();
+    later(() => child.finish(0));
+    return child;
+  }
+  if (command === 'docker' && args.includes('down')) {
+    action('down');
+    if (scenario.endsWith('-compose-rejection')) throw new Error(rawText);
+    const child = new SeamChild();
+    later(() => child.finish(0));
+    return child;
+  }
+  if (command === 'node' && String(args[0]).includes('verify-reference-api-build-inputs')) {
+    action('verify');
+    const child = new SeamChild();
+    later(() => child.finish(scenario === 'build-verifier-failure' ? 19 : 0));
+    return child;
+  }
+  if (command === 'node') {
+    action('api');
+    const child = new SeamChild();
+    later(() => {
+      child.emit('spawn');
+      later(() => {
+        if (scenario === 'child-raw-error') {
+          process.stdout.write(rawText + '\n');
+          process.stderr.write(rawText + '\n');
+          child.emit('error', new Error(rawText));
+          return;
+        }
+        const match = /^child-(error|disconnect|exit)-(?:compose|rm)-rejection$/u.exec(scenario);
+        if (!match) return;
+        if (match[1] === 'error') child.emit('error', new Error(rawText));
+        if (match[1] === 'disconnect') child.emit('disconnect');
+        if (match[1] === 'exit') child.finish(29);
+      });
+    });
+    return child;
+  }
+  if (command === process.execPath && options.env?.STYNX_REFERENCE_API_STACK_WATCHDOG === '1') {
+    action('watchdog');
+    if (scenario === 'watchdog-spawn-failure') throw new Error(rawText);
+    const child = new SeamChild(41002);
+    if (scenario === 'watchdog-error') {
+      later(() => child.emit('error', new Error(rawText)));
+    }
+    return child;
+  }
+  throw new Error(rawText);
+};
+
+childProcess.spawnSync = (command, args = []) => {
+  if (command === 'docker' && args.includes('port')) {
+    action('port');
+    return { status: 0, signal: null, stdout: '127.0.0.1:49152\n', stderr: '' };
+  }
+  if (command === 'docker' && args.includes('down')) {
+    action('sync-down');
+    if (scenario === 'sync-cleanup-output') {
+      process.stdout.write(rawText + '\n');
+      process.stderr.write(rawText + '\n');
+    }
+    if (scenario === 'sync-cleanup-failure') {
+      return { status: null, signal: null, error: new Error(rawText), stdout: '', stderr: '' };
+    }
+    return { status: 0, signal: null, stdout: '', stderr: '' };
+  }
+  return { status: 0, signal: null, stdout: '', stderr: '' };
+};
+
+if (scenario === 'sync-cleanup-output' || scenario === 'sync-cleanup-failure') {
+  setTimeout(() => process.exit(31), 50);
+}
+
+syncBuiltinESMExports();
+`;
+}
+
+function runRemainingHelperSeamScenario(scenario) {
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'stynx-d16-remaining-seams-'));
+  const helperSource = readFileSync(
+    join(repoRoot, 'reference/web/scripts/serve-reference-api-stack.mjs'),
+    'utf8',
+  );
+  const helperPath = join(fixtureRoot, 'reference/web/scripts/serve-reference-api-stack.mjs');
+  const preloadPath = join(fixtureRoot, 'seam-preload.mjs');
+  const actionsPath = join(fixtureRoot, 'actions.log');
+  const composeRoot = join(fixtureRoot, 'owned-compose');
+  const generatedComposeParent = join(fixtureRoot, 'generated-compose');
+  const setupScenario = ['mkdtemp-failure', 'compose-write-failure'].includes(scenario);
+  try {
+    for (const directory of [
+      dirname(helperPath),
+      join(fixtureRoot, 'scripts'),
+      join(fixtureRoot, 'reference/api/dist/reference/api/src'),
+      generatedComposeParent,
+      ...(setupScenario ? [] : [composeRoot]),
+    ]) {
+      mkdirSync(directory, { recursive: true });
+    }
+    writeFileSync(helperPath, helperSource);
+    assert.equal(
+      readFileSync(helperPath, 'utf8'),
+      helperSource,
+      'fixture must execute exact helper bytes',
+    );
+    writeFileSync(preloadPath, helperSeamPreloadSource());
+    writeFileSync(
+      join(fixtureRoot, 'scripts/verify-reference-api-build-inputs.mjs'),
+      'process.exit(0);\n',
+    );
+    writeFileSync(
+      join(fixtureRoot, 'reference/api/dist/reference/api/src/main.js'),
+      'process.exit(0);\n',
+    );
+    if (!setupScenario) writeFileSync(join(composeRoot, 'compose.yml'), 'services: {}\n');
+
+    const child = spawnSync(process.execPath, ['--import', preloadPath, helperPath], {
+      cwd: fixtureRoot,
+      encoding: 'utf8',
+      timeout: 5_000,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: {
+        PATH: process.env.PATH,
+        HOME: process.env.HOME,
+        TMPDIR:
+          scenario === 'mkdtemp-failure'
+            ? join(fixtureRoot, 'absent-temp-root')
+            : generatedComposeParent,
+        D16_ACTIONS: actionsPath,
+        D16_SCENARIO: scenario,
+        ...(setupScenario ? {} : { STYNX_REFERENCE_API_STACK_COMPOSE_DIR: composeRoot }),
+        ...(scenario === 'empty-host' ? { TESTCONTAINERS_HOST_OVERRIDE: '' } : {}),
+      },
+    });
+    assert.ifError(child.error);
+    const stdout = child.stdout ?? '';
+    const stderr = child.stderr ?? '';
+    const generatedComposeDirectories = readdirSync(generatedComposeParent).filter((name) =>
+      name.startsWith('stynx-reference-api-stack-'),
+    );
+    return {
+      status: child.status,
+      signal: child.signal,
+      stdout,
+      stderr,
+      actions: existsSync(actionsPath)
+        ? readFileSync(actionsPath, 'utf8').trim().split(/\r?\n/u).filter(Boolean)
+        : [],
+      ownedComposePresent: setupScenario
+        ? generatedComposeDirectories.length > 0
+        : existsSync(composeRoot),
+      leakedFixturePath: stdout.includes(fixtureRoot) || stderr.includes(fixtureRoot),
+    };
+  } finally {
+    rmSync(fixtureRoot, { recursive: true, force: true });
+    assert.equal(existsSync(fixtureRoot), false, 'remaining-seam fixture must always be removed');
+  }
+}
+
 test('D16 oracle accepts only the ordered fixed startup sequence and bounded failures', () => {
   const successCleanup = [];
   const successRecords = [];
@@ -860,6 +1105,120 @@ test('D16.1 production contains runChecked and Redis mapping failures before chi
       ...boundedHelperFailureViolations(result, scenario.expectedCodes).map(
         (violation) => `${scenario.name}:${violation}`,
       ),
+    );
+  }
+  assert.deepEqual(violations, []);
+});
+
+test('D16.1 remaining-seam oracle consumes failures and rejects every raw channel', () => {
+  const expected = {
+    codes: ['helper-entered'],
+    actions: ['up', 'down'],
+    ownedComposePresent: false,
+  };
+  const safe = {
+    status: 1,
+    signal: null,
+    stdout: '',
+    stderr: `${fixedStartupOutput('helper-entered')}\n`,
+    actions: ['up', 'down'],
+    ownedComposePresent: false,
+    leakedFixturePath: false,
+  };
+  assert.deepEqual(remainingHelperSeamViolations(safe, expected), []);
+  const violations = remainingHelperSeamViolations(
+    {
+      ...safe,
+      status: 0,
+      stdout: 'unbounded command argument',
+      stderr: `${safe.stderr}${safe.stderr}Error: /private/compose.yml\n`,
+      actions: ['up'],
+      ownedComposePresent: true,
+      leakedFixturePath: true,
+    },
+    expected,
+  );
+  assert.deepEqual([...new Set(violations)].sort(), [
+    'duplicate-governed-phase',
+    'governed-phase-sequence',
+    'nonzero-exit',
+    'owned-compose-confinement',
+    'raw-failure-payload',
+    'raw-stderr',
+    'raw-stdout',
+    'seam-operation-sequence',
+    'temporary-path-output',
+  ]);
+});
+
+test('D16.1 production contains every remaining setup, child, watchdog, and cleanup seam', () => {
+  const helperCodes = [
+    'helper-entered',
+    'compose-ready',
+    'redis-mapping-resolved',
+    'build-inputs-verified',
+    'child-spawned',
+  ];
+  const throughVerifier = helperCodes.slice(0, 3);
+  const throughBuild = helperCodes.slice(0, 4);
+  const throughChild = helperCodes;
+  const childActions = ['up', 'port', 'verify', 'api', 'watchdog'];
+  const scenarios = [
+    { name: 'mkdtemp-failure', codes: [], actions: [] },
+    { name: 'compose-write-failure', codes: [], actions: [] },
+    { name: 'empty-host', codes: [], actions: [] },
+    {
+      name: 'build-verifier-failure',
+      codes: throughVerifier,
+      actions: ['up', 'port', 'verify', 'down'],
+    },
+    {
+      name: 'child-raw-error',
+      codes: [...throughChild, 'child-error'],
+      actions: [...childActions, 'down'],
+    },
+    {
+      name: 'watchdog-spawn-failure',
+      codes: throughBuild,
+      actions: childActions,
+    },
+    {
+      name: 'watchdog-error',
+      codes: throughChild,
+      actions: [...childActions, 'sync-down'],
+    },
+    ...['error', 'disconnect', 'exit'].flatMap((event) => [
+      {
+        name: `child-${event}-compose-rejection`,
+        codes: [...throughChild, `child-${event}`],
+        actions: [...childActions, 'down', 'sync-down'],
+      },
+      {
+        name: `child-${event}-rm-rejection`,
+        codes: [...throughChild, `child-${event}`],
+        actions: [...childActions, 'down', 'sync-down'],
+      },
+    ]),
+    {
+      name: 'sync-cleanup-output',
+      codes: throughChild,
+      actions: [...childActions, 'sync-down'],
+    },
+    {
+      name: 'sync-cleanup-failure',
+      codes: throughChild,
+      actions: [...childActions, 'sync-down'],
+    },
+  ];
+  assert.equal(scenarios.length, 15);
+  const violations = [];
+  for (const scenario of scenarios) {
+    const result = runRemainingHelperSeamScenario(scenario.name);
+    violations.push(
+      ...remainingHelperSeamViolations(result, {
+        ...scenario,
+        ownedComposePresent: false,
+      }).map((violation) => `${scenario.name}:${violation}`),
     );
   }
   assert.deepEqual(violations, []);
