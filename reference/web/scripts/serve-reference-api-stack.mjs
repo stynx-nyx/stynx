@@ -14,6 +14,9 @@ const verifyReferenceApiBuildInputs = resolve(
   workspaceRoot,
   'scripts/verify-reference-api-build-inputs.mjs',
 );
+const startupProtocol = 'stynx-reference-api-startup-v1';
+const startupSuccessStates = ['bootstrap-entered', 'nest-created', 'listening'];
+const startupFailureReasons = ['nest-initialization', 'pre-listen-configuration', 'listen'];
 const scriptPath = fileURLToPath(import.meta.url);
 const postgresPort = process.env.STYNX_POSTGRES_PORT ?? '55432';
 const redisPublish = process.env.TESTCONTAINERS_HOST_OVERRIDE ? '0.0.0.0::6379' : '127.0.0.1::6379';
@@ -34,6 +37,10 @@ let shuttingDown = false;
 let composeDownComplete = false;
 let composeDownProcess;
 let apiProcess;
+let startupStateIndex = 0;
+let startupTerminal = false;
+let startupFailureStarted = false;
+let apiListening = false;
 
 function isProcessAlive(pid) {
   try {
@@ -139,6 +146,66 @@ function stopApiProcess(signal = 'SIGTERM') {
   apiProcess.kill(signal);
 }
 
+function failStartup(code) {
+  if (startupFailureStarted) {
+    return;
+  }
+  startupFailureStarted = true;
+  startupTerminal = true;
+  console.error(`[reference-api-startup] ${code}`);
+  void shutdown('SIGTERM', 1);
+}
+
+function handleStartupMessage(record) {
+  if (startupTerminal) {
+    failStartup('terminal-record');
+    return;
+  }
+  if (!record || typeof record !== 'object' || Array.isArray(record)) {
+    failStartup('malformed-record');
+    return;
+  }
+  if (record.protocol !== startupProtocol || typeof record.state !== 'string') {
+    failStartup('malformed-record');
+    return;
+  }
+
+  const keys = Object.keys(record).sort().join(',');
+  if (record.state === 'bootstrap-failed') {
+    if (!startupFailureReasons.includes(record.reason)) {
+      failStartup('invalid-failure-reason');
+      return;
+    }
+    if (keys !== 'protocol,reason,state') {
+      failStartup('unbounded-record');
+      return;
+    }
+    const permittedAtPhase =
+      (startupStateIndex === 1 && record.reason === 'nest-initialization') ||
+      (startupStateIndex === 2 && ['pre-listen-configuration', 'listen'].includes(record.reason));
+    if (!permittedAtPhase) {
+      failStartup('out-of-order-record');
+      return;
+    }
+    failStartup(`bootstrap-failed:${record.reason}`);
+    return;
+  }
+
+  if (keys !== 'protocol,state') {
+    failStartup('unbounded-record');
+    return;
+  }
+  if (record.state !== startupSuccessStates[startupStateIndex]) {
+    failStartup('out-of-order-record');
+    return;
+  }
+  startupStateIndex += 1;
+  if (record.state === 'listening') {
+    apiListening = true;
+    startupTerminal = true;
+  }
+}
+
 async function composeDown() {
   if (composeDownComplete) {
     return;
@@ -230,6 +297,7 @@ try {
 await runChecked('node', [verifyReferenceApiBuildInputs]);
 
 apiProcess = run('node', [referenceApiMain], {
+  stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
   env: {
     ...process.env,
     AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID ?? 'test',
@@ -252,14 +320,31 @@ apiProcess = run('node', [referenceApiMain], {
     STYNX_COGNITO_ISSUER: process.env.STYNX_COGNITO_ISSUER ?? 'https://cognito.local',
   },
 });
-startCleanupWatchdog();
 
+apiProcess.on('message', (record) => {
+  handleStartupMessage(record);
+});
+apiProcess.once('error', () => {
+  if (!apiListening) {
+    failStartup('child-error');
+  }
+});
+apiProcess.once('disconnect', () => {
+  if (!apiListening) {
+    failStartup('child-disconnect');
+  }
+});
 apiProcess.once('exit', (code, signal) => {
-  if (shuttingDown) {
+  if (shuttingDown || startupFailureStarted) {
+    return;
+  }
+  if (!apiListening) {
+    failStartup('child-exit');
     return;
   }
   void shutdown('SIGTERM', typeof code === 'number' ? code : signal ? 1 : 0);
 });
+startCleanupWatchdog();
 
 process.once('SIGINT', () => {
   void shutdown('SIGINT');
