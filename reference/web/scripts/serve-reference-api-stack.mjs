@@ -1,6 +1,7 @@
 import { spawn, spawnSync } from 'node:child_process';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { rmSync } from 'node:fs';
+import { isIP } from 'node:net';
 import { tmpdir } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
@@ -15,6 +16,7 @@ const verifyReferenceApiBuildInputs = resolve(
 );
 const scriptPath = fileURLToPath(import.meta.url);
 const postgresPort = process.env.STYNX_POSTGRES_PORT ?? '55432';
+const redisPublish = process.env.TESTCONTAINERS_HOST_OVERRIDE ? '0.0.0.0::6379' : '127.0.0.1::6379';
 const composeTempDir =
   process.env.STYNX_REFERENCE_API_STACK_COMPOSE_DIR ??
   (await mkdtemp(resolve(tmpdir(), 'stynx-reference-api-stack-')));
@@ -23,7 +25,7 @@ const composeFile = resolve(composeTempDir, 'compose.yml');
 if (!process.env.STYNX_REFERENCE_API_STACK_COMPOSE_DIR) {
   await writeFile(
     composeFile,
-    `services:\n  postgres:\n    image: postgres:16-alpine\n    environment:\n      GLOG_minloglevel: '2'\n      POSTGRES_DB: postgres\n      POSTGRES_USER: postgres\n      POSTGRES_PASSWORD: postgres\n    healthcheck:\n      test: ['CMD-SHELL', 'pg_isready -U postgres -d postgres']\n      interval: 5s\n      timeout: 5s\n      retries: 20\n    ports:\n      - '${postgresPort}:5432'\n  redis:\n    image: redis:7-alpine\n    environment:\n      GLOG_minloglevel: '2'\n    healthcheck:\n      test: ['CMD', 'redis-cli', 'ping']\n      interval: 5s\n      timeout: 5s\n      retries: 20\n    ports:\n      - '6379:6379'\n`,
+    `services:\n  postgres:\n    image: postgres:16-alpine\n    environment:\n      GLOG_minloglevel: '2'\n      POSTGRES_DB: postgres\n      POSTGRES_USER: postgres\n      POSTGRES_PASSWORD: postgres\n    healthcheck:\n      test: ['CMD-SHELL', 'pg_isready -U postgres -d postgres']\n      interval: 5s\n      timeout: 5s\n      retries: 20\n    ports:\n      - '${postgresPort}:5432'\n  redis:\n    image: redis:7-alpine\n    environment:\n      GLOG_minloglevel: '2'\n    healthcheck:\n      test: ['CMD', 'redis-cli', 'ping']\n      interval: 5s\n      timeout: 5s\n      retries: 20\n    ports:\n      - '${redisPublish}'\n`,
     'utf8',
   );
 }
@@ -177,7 +179,54 @@ async function runChecked(command, args) {
   }
 }
 
+function discoverOwnedRedisPort() {
+  const result = spawnSync('docker', ['compose', '-f', composeFile, 'port', 'redis', '6379'], {
+    cwd: workspaceRoot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  if (result.status !== 0 || result.signal !== null) {
+    throw new Error('Failed to resolve the owned Compose Redis port');
+  }
+
+  const mappings = result.stdout
+    .split(/\r?\n/u)
+    .map((mapping) => mapping.trim())
+    .filter(Boolean);
+  if (mappings.length === 0) {
+    throw new Error('The owned Compose Redis port mapping is absent');
+  }
+
+  const ports = mappings.map((mapping) => {
+    const match = /^(\[[^\]]+\]|[^:\s]+):(\d+)$/u.exec(mapping);
+    const address = match?.[1].replace(/^\[|\]$/gu, '');
+    if (!match || !address || isIP(address) === 0) {
+      throw new Error('The owned Compose Redis port mapping is malformed');
+    }
+    const port = Number(match[2]);
+    if (!Number.isSafeInteger(port) || port < 1 || port > 65_535) {
+      throw new Error('The owned Compose Redis port mapping is out of range');
+    }
+    return port;
+  });
+  if (new Set(ports).size !== 1) {
+    throw new Error('The owned Compose Redis port mappings conflict');
+  }
+  return ports[0];
+}
+
+const redisHost = process.env.TESTCONTAINERS_HOST_OVERRIDE ?? '127.0.0.1';
+if (redisHost.length === 0) {
+  throw new Error('The Redis host override is empty');
+}
 await runChecked('docker', ['compose', '-f', composeFile, 'up', '--wait', 'postgres', 'redis']);
+let redisPort;
+try {
+  redisPort = discoverOwnedRedisPort();
+} catch (error) {
+  await composeDown();
+  throw error;
+}
 await runChecked('node', [verifyReferenceApiBuildInputs]);
 
 apiProcess = run('node', [referenceApiMain], {
@@ -193,7 +242,7 @@ apiProcess = run('node', [referenceApiMain], {
     STYNX_OWNER_DATABASE_URL: `postgresql://postgres:postgres@127.0.0.1:${postgresPort}/postgres`,
     STYNX_APP_DATABASE_URL: `postgresql://postgres:postgres@127.0.0.1:${postgresPort}/postgres`,
     STYNX_READER_DATABASE_URL: `postgresql://postgres:postgres@127.0.0.1:${postgresPort}/postgres`,
-    STYNX_REDIS_URL: 'redis://127.0.0.1:6379',
+    STYNX_REDIS_URL: `redis://${redisHost}:${redisPort}`,
     STYNX_STORAGE_ENDPOINT: process.env.STYNX_STORAGE_ENDPOINT ?? 'http://127.0.0.1:4566',
     STYNX_STORAGE_FORCE_PATH_STYLE: process.env.STYNX_STORAGE_FORCE_PATH_STYLE ?? 'true',
     STYNX_STORAGE_BUCKET: process.env.STYNX_STORAGE_BUCKET ?? 'stynx-docs-local-us-east-1',
