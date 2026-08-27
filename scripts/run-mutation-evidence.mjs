@@ -109,6 +109,7 @@ function runPackage(entry) {
       const { classification, reason } = classifyMutationOutcome({
         reportState: 'missing',
         subprocessResult,
+        repoRoot,
       });
       throw new Error(`${entry.packageName}: ${classification} (${reason})`);
     }
@@ -125,6 +126,7 @@ function runPackage(entry) {
         reportState: 'unsafe',
         subprocessResult,
         reportFailureCode: error.code,
+        repoRoot,
       });
       throw new Error(`${entry.packageName}: ${classification} (${reason})`, { cause: error });
     }
@@ -135,6 +137,7 @@ function runPackage(entry) {
       score: mutationScore,
       threshold: entry.thresholds.break,
       subprocessResult,
+      repoRoot,
     });
     const passed = outcome.classification === 'mutation-pass';
     if (outcome.classification === 'mutation-score-failure') {

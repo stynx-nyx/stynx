@@ -78,6 +78,37 @@ function normalizeRepositoryPath(value, repoRoot) {
   return value;
 }
 
+function normalizeKnownPathInText(value, knownPath) {
+  let result = '';
+  let cursor = 0;
+  while (cursor < value.length) {
+    const rootIndex = value.indexOf(knownPath, cursor);
+    if (rootIndex === -1) return result + value.slice(cursor);
+    const following = value[rootIndex + knownPath.length];
+    const isRepositoryPath =
+      following === undefined || following === '/' || /[\s"'():,;]/u.test(following);
+    result += value.slice(cursor, rootIndex);
+    if (isRepositoryPath) {
+      result += '.';
+      cursor = rootIndex + knownPath.length;
+    } else {
+      result += knownPath;
+      cursor = rootIndex + knownPath.length;
+    }
+  }
+  return result;
+}
+
+function normalizeRepositoryPathsInText(value, repoRoot) {
+  const normalizedRoot = resolve(repoRoot).replaceAll('\\', '/').replace(/\/$/u, '');
+  const normalizedValue = value.replaceAll('\\', '/');
+  const withoutRepositoryFileUrls = normalizeKnownPathInText(
+    normalizedValue,
+    `file://${normalizedRoot}`,
+  );
+  return normalizeKnownPathInText(withoutRepositoryFileUrls, normalizedRoot);
+}
+
 function sanitizeString(value, repoRoot) {
   if (Buffer.byteLength(value, 'utf8') > MAX_TEXT_BYTES) {
     throw new MutationEvidenceError(
@@ -272,11 +303,14 @@ export function sanitizeMutationDiagnostic(value) {
   return text.slice(-4096);
 }
 
-export function classifyMutationSubprocess(result) {
-  const diagnostic = `${String(result.error?.message ?? '')}\n${String(result.stdout ?? '')}\n${String(result.stderr ?? '')}`;
+export function classifyMutationSubprocess(result, repoRoot) {
+  const rawDiagnostic = `${String(result.error?.message ?? '')}\n${String(result.stdout ?? '')}\n${String(result.stderr ?? '')}`;
   if (result.error !== undefined) return 'spawn-error';
   if (result.signal !== null) return 'signal';
-  if (unsafeCredential(diagnostic)) return 'rejected-credential-material';
+  if (unsafeCredential(rawDiagnostic)) return 'rejected-credential-material';
+  const diagnostic = repoRoot
+    ? normalizeRepositoryPathsInText(rawDiagnostic, repoRoot)
+    : rawDiagnostic;
   if (HOST_PATH_PATTERNS.some((pattern) => pattern.test(diagnostic))) {
     return 'rejected-workstation-path';
   }
@@ -290,9 +324,10 @@ export function classifyMutationOutcome({
   threshold,
   subprocessResult,
   reportFailureCode,
+  repoRoot,
 }) {
   const subprocessFailure = subprocessResult
-    ? classifyMutationSubprocess(subprocessResult)
+    ? classifyMutationSubprocess(subprocessResult, repoRoot)
     : undefined;
   if (reportState === 'normalized') {
     if (score < threshold) return { classification: 'mutation-score-failure' };
