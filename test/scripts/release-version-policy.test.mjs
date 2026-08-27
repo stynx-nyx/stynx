@@ -1,16 +1,22 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import {
+  accessSync,
+  constants,
   existsSync,
+  lstatSync,
   mkdtempSync,
   mkdirSync,
   readFileSync,
+  readlinkSync,
+  realpathSync,
   readdirSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { delimiter, dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import test from 'node:test';
 
 import {
@@ -657,6 +663,200 @@ function publicWorkspaceManifests() {
     .filter(({ manifest }) => packageNames.includes(manifest.name))
     .sort((left, right) => left.manifest.name.localeCompare(right.manifest.name));
 }
+
+function executableFromPath(name) {
+  for (const directory of (process.env.PATH ?? '').split(delimiter)) {
+    if (!directory) continue;
+    const candidate = join(directory, name);
+    try {
+      accessSync(candidate, constants.X_OK);
+      return realpathSync(candidate);
+    } catch {
+      continue;
+    }
+  }
+  return undefined;
+}
+
+function trackedPaths() {
+  const result = spawnSync('git', ['ls-files', '-z'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  assert.ifError(result.error);
+  assert.equal(result.status, 0, result.stderr);
+  return result.stdout.split('\0').filter(Boolean).sort();
+}
+
+function trackedProjection(root, paths) {
+  return paths.map((path) => {
+    const absolutePath = join(root, path);
+    const stat = lstatSync(absolutePath);
+    const bytes = stat.isSymbolicLink()
+      ? Buffer.from(readlinkSync(absolutePath))
+      : readFileSync(absolutePath);
+    return {
+      path,
+      mode: stat.mode & 0o777,
+      type: stat.isSymbolicLink() ? 'symlink' : 'file',
+      digest: createHash('sha256').update(bytes).digest('hex'),
+    };
+  });
+}
+
+function cleanOperation(manifest) {
+  const command = manifest.scripts?.clean;
+  assert.equal(typeof command, 'string', `${manifest.name}: clean operation is required`);
+  const rmMatch = /^rm -rf (dist(?: coverage)?)$/u.exec(command);
+  if (rmMatch) {
+    const executable = executableFromPath('rm');
+    assert.ok(executable, `${manifest.name}: supported host rm must resolve`);
+    assert.ok(isAbsolute(executable), `${manifest.name}: rm resolution must be absolute`);
+    return { command, executable, args: ['-rf', ...rmMatch[1].split(' ')] };
+  }
+
+  const nodeMatch = /^node -e "([\s\S]+)"$/u.exec(command);
+  assert.ok(nodeMatch, `${manifest.name}: unsupported clean command`);
+  accessSync(process.execPath, constants.X_OK);
+  const source = nodeMatch[1];
+  assert.match(source, /require\(['"]node:fs['"]\)/u, `${manifest.name}: node:fs is required`);
+  assert.match(source, /rmSync/u, `${manifest.name}: clean must remove outputs`);
+  assert.match(source, /recursive\s*:\s*true/u, `${manifest.name}: recursive removal required`);
+  assert.match(source, /force\s*:\s*true/u, `${manifest.name}: missing outputs must succeed`);
+  assert.doesNotMatch(source, /(?:\.\.|\/|\\|src|generated)/u, `${manifest.name}: target escape`);
+  assert.ok(
+    /^const fs=require\(['"]node:fs['"]\); fs\.rmSync\(['"]dist['"],\{recursive:true,force:true\}\); fs\.rmSync\(['"]coverage['"],\{recursive:true,force:true\}\)$/u.test(
+      source,
+    ) ||
+      /^for \(const path of \[['"]dist['"], ['"]coverage['"]\]\) require\(['"]node:fs['"]\)\.rmSync\(path, \{ recursive: true, force: true \}\)$/u.test(
+        source,
+      ),
+    `${manifest.name}: node clean body must contain only the approved removals`,
+  );
+  const targets = [...source.matchAll(/['"](dist|coverage)['"]/gu)].map((match) => match[1]);
+  assert.deepEqual([...new Set(targets)].sort(), ['coverage', 'dist']);
+  return { command, executable: process.execPath, args: ['-e', source] };
+}
+
+function assertConfined(packageRoot, target, label) {
+  const displacement = relative(realpathSync(packageRoot), realpathSync(target));
+  assert.ok(
+    displacement !== '' && !displacement.startsWith('..') && !isAbsolute(displacement),
+    `${label}: target must remain inside its package`,
+  );
+  assert.equal(lstatSync(target).isSymbolicLink(), false, `${label}: symlink target is forbidden`);
+}
+
+test('all 44 package clean operations are confined, executable, idempotent, and tracked-tree preserving', () => {
+  const manifests = publicWorkspaceManifests();
+  const names = manifests.map(({ manifest }) => manifest.name);
+  assert.equal(manifests.length, 44);
+  assert.equal(new Set(names).size, 44);
+  assert.deepEqual(names, [...campaignPolicy.publishable_packages].sort());
+
+  const paths = trackedPaths();
+  const trackedSet = new Set(paths);
+  assert.ok(paths.some((path) => path.startsWith('packages-web/sdk/src/generated/')));
+  const sharedBefore = trackedProjection(repoRoot, paths);
+  const operations = manifests.map(({ path, manifest }) => {
+    const packageRoot = dirname(path);
+    const operation = cleanOperation(manifest);
+    const targets = operation.args.filter(
+      (argument) => argument === 'dist' || argument === 'coverage',
+    );
+    const declaredTargets = targets.length
+      ? targets
+      : [...operation.args.at(-1).matchAll(/['"](dist|coverage)['"]/gu)].map((match) => match[1]);
+    assert.ok(declaredTargets.length > 0, `${manifest.name}: clean targets are required`);
+    assert.equal(new Set(declaredTargets).size, declaredTargets.length);
+    for (const target of declaredTargets) {
+      assert.ok(['dist', 'coverage'].includes(target), `${manifest.name}: unapproved target`);
+      const relativeTarget = relative(repoRoot, join(packageRoot, target));
+      assert.equal(trackedSet.has(relativeTarget), false, `${manifest.name}: target is tracked`);
+      assert.equal(
+        paths.some((trackedPath) => trackedPath.startsWith(`${relativeTarget}/`)),
+        false,
+        `${manifest.name}: target contains tracked paths`,
+      );
+    }
+    return {
+      manifest,
+      operation,
+      relativePackageRoot: relative(repoRoot, packageRoot),
+      declaredTargets,
+    };
+  });
+  assert.equal(operations.length, 44);
+
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'stynx-clean-contract-'));
+  const fixtureDisplacement = relative(resolve(tmpdir()), fixtureRoot);
+  assert.ok(fixtureDisplacement && !fixtureDisplacement.startsWith('..'));
+  try {
+    const archive = spawnSync('git', ['-C', repoRoot, 'archive', '--format=tar', 'HEAD'], {
+      cwd: fixtureRoot,
+      maxBuffer: 128 * 1024 * 1024,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    assert.ifError(archive.error);
+    assert.equal(archive.status, 0, archive.stderr.toString());
+    const extracted = spawnSync('tar', ['-xf', '-'], {
+      cwd: fixtureRoot,
+      input: archive.stdout,
+      maxBuffer: 128 * 1024 * 1024,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+    assert.ifError(extracted.error);
+    assert.equal(extracted.status, 0, extracted.stderr.toString());
+    const fixtureBefore = trackedProjection(fixtureRoot, paths);
+    assert.equal(fixtureBefore.length, paths.length);
+
+    const seededExecutions = [];
+    for (const { manifest, operation, relativePackageRoot, declaredTargets } of operations) {
+      const packageRoot = join(fixtureRoot, relativePackageRoot);
+      for (const target of declaredTargets) {
+        const output = join(packageRoot, target);
+        mkdirSync(output, { recursive: true });
+        writeFileSync(join(output, 'd12-seeded-output.txt'), manifest.name);
+        assertConfined(packageRoot, output, manifest.name);
+      }
+      const result = spawnSync(operation.executable, operation.args, {
+        cwd: packageRoot,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+      assert.ifError(result.error);
+      assert.equal(result.signal, null, `${manifest.name}: clean received a signal`);
+      assert.equal(result.status, 0, `${manifest.name}: ${result.stderr || result.stdout}`);
+      for (const target of declaredTargets)
+        assert.equal(existsSync(join(packageRoot, target)), false);
+      seededExecutions.push(manifest.name);
+    }
+    assert.deepEqual(seededExecutions, names, 'every seeded clean operation must execute once');
+
+    const idempotenceExecutions = [];
+    for (const { manifest, operation, relativePackageRoot } of operations) {
+      const result = spawnSync(operation.executable, operation.args, {
+        cwd: join(fixtureRoot, relativePackageRoot),
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+      assert.ifError(result.error);
+      assert.equal(result.signal, null, `${manifest.name}: idempotence run received a signal`);
+      assert.equal(result.status, 0, `${manifest.name}: idempotence failed`);
+      idempotenceExecutions.push(manifest.name);
+    }
+    assert.deepEqual(idempotenceExecutions, names, 'every clean operation must be idempotent');
+    assert.deepEqual(trackedProjection(fixtureRoot, paths), fixtureBefore);
+  } finally {
+    try {
+      assert.deepEqual(trackedProjection(repoRoot, paths), sharedBefore);
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+      assert.equal(existsSync(fixtureRoot), false);
+    }
+  }
+});
 
 function runNode(path, args = [], options = {}) {
   return spawnSync(process.execPath, [join(repoRoot, path), ...args], {
