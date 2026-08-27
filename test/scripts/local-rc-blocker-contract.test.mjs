@@ -433,6 +433,150 @@ function advanceHelperToSpawn(fixture) {
   fixture.spawnEvent();
 }
 
+const readinessIndicatorNames = ['postgres', 'redis', 'jwks', 's3'];
+
+function readinessDiagnosticFixture() {
+  const requests = [];
+  const requestCounts = { healthz: 0, readyz: 0 };
+  const cleanupTargets = [];
+  let state = 'await-listening';
+  let healthClassification;
+  let healthConnectFailed = false;
+  let outcome;
+  let cleanupComplete = false;
+
+  function cleanup() {
+    if (cleanupComplete) return;
+    cleanupComplete = true;
+    requests.length = 0;
+    cleanupTargets.push('owned-d17-diagnostic');
+  }
+
+  function stop(nextOutcome) {
+    outcome = nextOutcome;
+    state = 'stopped';
+    cleanup();
+    return { accepted: true, outcome };
+  }
+
+  function reject() {
+    state = 'stopped';
+    cleanup();
+    return { accepted: false };
+  }
+
+  function issue(endpoint) {
+    requestCounts[endpoint] += 1;
+    requests.push(`GET ${endpoint}`);
+    state = `await-${endpoint}`;
+  }
+
+  function phase(line) {
+    if (state === 'stopped') return { accepted: false };
+    if (line !== fixedStartupOutput('listening')) {
+      return { accepted: true, triggered: false };
+    }
+    if (state !== 'await-listening') return reject();
+    issue('healthz');
+    return { accepted: true, triggered: true };
+  }
+
+  function response(endpoint, event) {
+    if (state !== `await-${endpoint}` || !['healthz', 'readyz'].includes(endpoint)) {
+      return reject();
+    }
+    if (!event || typeof event !== 'object' || Array.isArray(event)) return reject();
+    const keys = Object.keys(event).sort().join(',');
+    if (event.kind === 'connect-failed') {
+      if (keys !== 'kind') return reject();
+      if (endpoint === 'healthz') {
+        healthConnectFailed = true;
+        issue('readyz');
+        return { accepted: true, classified: false };
+      }
+      return stop({
+        classifications: healthConnectFailed
+          ? ['connect-failed']
+          : [healthClassification, 'connect-failed'],
+      });
+    }
+    if (event.kind !== 'response' || !Number.isSafeInteger(event.status)) return reject();
+    if (event.status < 100 || event.status > 599) return reject();
+
+    if (endpoint === 'healthz') {
+      if (keys !== 'kind,status') return reject();
+      healthClassification =
+        event.status >= 200 && event.status < 300 ? 'healthz-2xx' : 'healthz-non2xx';
+      issue('readyz');
+      return { accepted: true, classified: false };
+    }
+
+    if (healthConnectFailed) {
+      if (keys !== 'kind,status') return reject();
+      return stop({ classifications: ['connect-failed'] });
+    }
+    if (!healthClassification) return reject();
+    if (event.status === 503) {
+      if (keys !== 'indicators,kind,status' || !Array.isArray(event.indicators)) return reject();
+      if (event.indicators.length === 0) return reject();
+      const seen = new Set();
+      const indicators = [];
+      for (const indicator of event.indicators) {
+        if (!indicator || typeof indicator !== 'object' || Array.isArray(indicator))
+          return reject();
+        if (Object.keys(indicator).sort().join(',') !== 'name,passing') return reject();
+        if (!readinessIndicatorNames.includes(indicator.name)) return reject();
+        if (seen.has(indicator.name) || typeof indicator.passing !== 'boolean') return reject();
+        seen.add(indicator.name);
+        indicators.push({ name: indicator.name, passing: indicator.passing });
+      }
+      indicators.sort(
+        (left, right) =>
+          readinessIndicatorNames.indexOf(left.name) - readinessIndicatorNames.indexOf(right.name),
+      );
+      return stop({
+        classifications: [healthClassification, 'readyz-503'],
+        indicators,
+      });
+    }
+    if (keys !== 'kind,status') return reject();
+    const readinessClassification =
+      event.status >= 200 && event.status < 300
+        ? 'readyz-2xx'
+        : event.status === 404
+          ? 'readyz-404'
+          : 'readyz-other';
+    return stop({ classifications: [healthClassification, readinessClassification] });
+  }
+
+  function snapshot() {
+    return {
+      state,
+      requests: [...requests],
+      requestCounts: { ...requestCounts },
+      outcome: outcome ? structuredClone(outcome) : undefined,
+      cleanupTargets: [...cleanupTargets],
+    };
+  }
+
+  return { phase, response, snapshot };
+}
+
+function startReadinessDiagnostic(fixture) {
+  for (const code of [...helperSuccessStates, ...startupSuccessStates.slice(0, 2)]) {
+    assert.deepEqual(fixture.phase(fixedStartupOutput(code)), {
+      accepted: true,
+      triggered: false,
+    });
+    assert.deepEqual(fixture.snapshot().requests, []);
+  }
+  assert.deepEqual(fixture.phase(fixedStartupOutput('listening')), {
+    accepted: true,
+    triggered: true,
+  });
+  assert.deepEqual(fixture.snapshot().requests, ['GET healthz']);
+}
+
 function boundedHelperFailureViolations(result, expectedCodes) {
   const governedLines = result.stderr
     .split(/\r?\n/u)
@@ -1405,6 +1549,192 @@ test('D16.1 production contains watchdog-worker rmSync and shutdown child-kill t
     );
   }
   assert.deepEqual(violations, []);
+});
+
+test('D17 starts only on listening and classifies each HTTP status exactly once in order', () => {
+  const cases = [
+    {
+      healthStatus: 204,
+      readyStatus: 204,
+      expected: ['healthz-2xx', 'readyz-2xx'],
+    },
+    {
+      healthStatus: 500,
+      readyStatus: 404,
+      expected: ['healthz-non2xx', 'readyz-404'],
+    },
+    {
+      healthStatus: 204,
+      readyStatus: 418,
+      expected: ['healthz-2xx', 'readyz-other'],
+    },
+  ];
+  const observed = new Set();
+  for (const scenario of cases) {
+    const fixture = readinessDiagnosticFixture();
+    startReadinessDiagnostic(fixture);
+    assert.deepEqual(fixture.snapshot().requestCounts, { healthz: 1, readyz: 0 });
+    assert.deepEqual(
+      fixture.response('healthz', { kind: 'response', status: scenario.healthStatus }),
+      { accepted: true, classified: false },
+    );
+    assert.deepEqual(fixture.snapshot().requests, ['GET healthz', 'GET readyz']);
+    assert.deepEqual(fixture.snapshot().requestCounts, { healthz: 1, readyz: 1 });
+    assert.deepEqual(
+      fixture.response('readyz', { kind: 'response', status: scenario.readyStatus }),
+      { accepted: true, outcome: { classifications: scenario.expected } },
+    );
+    const completed = fixture.snapshot();
+    assert.deepEqual(completed.outcome, { classifications: scenario.expected });
+    assert.deepEqual(completed.requests, []);
+    assert.deepEqual(completed.cleanupTargets, ['owned-d17-diagnostic']);
+    for (const classification of scenario.expected) observed.add(classification);
+    assert.deepEqual(fixture.response('readyz', { kind: 'response', status: 204 }), {
+      accepted: false,
+    });
+    assert.deepEqual(fixture.snapshot(), completed);
+  }
+  assert.deepEqual([...observed].sort(), [
+    'healthz-2xx',
+    'healthz-non2xx',
+    'readyz-2xx',
+    'readyz-404',
+    'readyz-other',
+  ]);
+});
+
+test('D17 maps either connection terminal to only fixed connect-failed outcomes', () => {
+  const healthFailure = readinessDiagnosticFixture();
+  startReadinessDiagnostic(healthFailure);
+  assert.deepEqual(healthFailure.response('healthz', { kind: 'connect-failed' }), {
+    accepted: true,
+    classified: false,
+  });
+  assert.deepEqual(healthFailure.snapshot().requests, ['GET healthz', 'GET readyz']);
+  assert.deepEqual(healthFailure.response('readyz', { kind: 'response', status: 204 }), {
+    accepted: true,
+    outcome: { classifications: ['connect-failed'] },
+  });
+  assert.deepEqual(healthFailure.snapshot().cleanupTargets, ['owned-d17-diagnostic']);
+
+  const readyFailure = readinessDiagnosticFixture();
+  startReadinessDiagnostic(readyFailure);
+  assert.deepEqual(readyFailure.response('healthz', { kind: 'response', status: 204 }), {
+    accepted: true,
+    classified: false,
+  });
+  assert.deepEqual(readyFailure.response('readyz', { kind: 'connect-failed' }), {
+    accepted: true,
+    outcome: { classifications: ['healthz-2xx', 'connect-failed'] },
+  });
+  assert.deepEqual(readyFailure.snapshot().requestCounts, { healthz: 1, readyz: 1 });
+  assert.deepEqual(readyFailure.snapshot().cleanupTargets, ['owned-d17-diagnostic']);
+});
+
+test('D17 readyz-503 retains only canonical allowlisted boolean indicator projections', () => {
+  const fixture = readinessDiagnosticFixture();
+  startReadinessDiagnostic(fixture);
+  assert.deepEqual(fixture.response('healthz', { kind: 'response', status: 200 }), {
+    accepted: true,
+    classified: false,
+  });
+  const indicators = [
+    { name: 's3', passing: true },
+    { name: 'postgres', passing: false },
+    { name: 'jwks', passing: true },
+    { name: 'redis', passing: false },
+  ];
+  assert.deepEqual(fixture.response('readyz', { kind: 'response', status: 503, indicators }), {
+    accepted: true,
+    outcome: {
+      classifications: ['healthz-2xx', 'readyz-503'],
+      indicators: [
+        { name: 'postgres', passing: false },
+        { name: 'redis', passing: false },
+        { name: 'jwks', passing: true },
+        { name: 's3', passing: true },
+      ],
+    },
+  });
+  const completed = fixture.snapshot();
+  assert.deepEqual(completed.requests, []);
+  assert.deepEqual(completed.requestCounts, { healthz: 1, readyz: 1 });
+  assert.deepEqual(completed.cleanupTargets, ['owned-d17-diagnostic']);
+  assert.deepEqual(
+    completed.outcome.indicators.map(({ name }) => name),
+    readinessIndicatorNames,
+  );
+  assert.equal(
+    completed.outcome.indicators.every(({ passing }) => typeof passing === 'boolean'),
+    true,
+  );
+});
+
+test('D17 rejects malformed or raw readiness material without retaining it', () => {
+  const invalidEvents = [
+    null,
+    { kind: 'response' },
+    { kind: 'response', status: 0 },
+    { kind: 'response', status: 503 },
+    { kind: 'response', status: 503, indicators: [] },
+    { kind: 'response', status: 503, indicators: [{ name: 'unknown', passing: false }] },
+    {
+      kind: 'response',
+      status: 503,
+      indicators: [
+        { name: 'redis', passing: false },
+        { name: 'redis', passing: true },
+      ],
+    },
+    { kind: 'response', status: 503, indicators: [{ name: 'redis', passing: 'false' }] },
+    { kind: 'response', status: 503, indicators: [{ passing: false }] },
+    { kind: 'response', status: 503, indicators: [{ name: 'redis' }] },
+    { kind: 'response', status: 503, indicators: [{ name: 'redis', passing: false, body: 'x' }] },
+    { kind: 'response', status: 204, body: 'raw-body' },
+    { kind: 'connect-failed', error: 'raw-error' },
+    { kind: 'response', status: 204, url: 'http://127.0.0.1:3000/readyz' },
+    { kind: 'response', status: 204, port: 3000 },
+    { kind: 'response', status: 204, path: '/private/workstation' },
+    { kind: 'response', status: 204, env: 'production' },
+    { kind: 'response', status: 204, credential: 'secret' },
+  ];
+  for (const event of invalidEvents) {
+    const fixture = readinessDiagnosticFixture();
+    startReadinessDiagnostic(fixture);
+    assert.deepEqual(fixture.response('healthz', { kind: 'response', status: 204 }), {
+      accepted: true,
+      classified: false,
+    });
+    assert.deepEqual(fixture.response('readyz', event), { accepted: false });
+    const rejected = fixture.snapshot();
+    assert.equal(rejected.state, 'stopped');
+    assert.deepEqual(rejected.requestCounts, { healthz: 1, readyz: 1 });
+    assert.equal(rejected.outcome, undefined);
+    assert.deepEqual(rejected.cleanupTargets, ['owned-d17-diagnostic']);
+    assert.doesNotMatch(
+      JSON.stringify(rejected),
+      /raw|unknown|127\.0\.0\.1|3000|private|workstation|production|credential|secret/iu,
+    );
+  }
+
+  const outOfOrder = readinessDiagnosticFixture();
+  assert.deepEqual(outOfOrder.response('readyz', { kind: 'response', status: 204 }), {
+    accepted: false,
+  });
+  assert.deepEqual(outOfOrder.snapshot().requests, []);
+  assert.deepEqual(outOfOrder.snapshot().cleanupTargets, ['owned-d17-diagnostic']);
+
+  const duplicateListening = readinessDiagnosticFixture();
+  startReadinessDiagnostic(duplicateListening);
+  assert.deepEqual(duplicateListening.phase(fixedStartupOutput('listening')), {
+    accepted: false,
+  });
+  assert.deepEqual(duplicateListening.snapshot().requestCounts, { healthz: 1, readyz: 0 });
+  assert.deepEqual(duplicateListening.snapshot().cleanupTargets, ['owned-d17-diagnostic']);
+
+  const source = `${readinessDiagnosticFixture}\n${startReadinessDiagnostic}`;
+  assert.doesNotMatch(source, /\b(?:setTimeout|setInterval|sleep|retry|poll)\s*\(/iu);
+  assert.doesNotMatch(source, /\btimeout\b/iu);
 });
 
 test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14', () => {
