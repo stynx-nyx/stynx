@@ -159,6 +159,103 @@ function resolvedPrivacyPopulation(configName) {
   return result.stdout.split(/\r?\n/u).filter(Boolean).sort();
 }
 
+function ownedRedisPort(mappingOutput) {
+  const mappings = mappingOutput
+    .split(/\r?\n/u)
+    .map((mapping) => mapping.trim())
+    .filter(Boolean);
+  assert.ok(mappings.length > 0, 'the owned Compose redis mapping must be present');
+  const ports = mappings.map((mapping) => {
+    const match = /:(\d+)$/u.exec(mapping);
+    assert.ok(match, 'every owned Compose redis mapping must end in a numeric host port');
+    const port = Number(match[1]);
+    assert.ok(
+      Number.isSafeInteger(port) && port >= 1 && port <= 65_535,
+      'the owned Compose redis host port must be within 1..65535',
+    );
+    return port;
+  });
+  const distinctPorts = [...new Set(ports)];
+  assert.equal(distinctPorts.length, 1, 'owned Compose redis mappings must yield one port');
+  return distinctPorts[0];
+}
+
+function ownedRedisUrl(mappingOutput, hostOverride) {
+  const host = hostOverride ?? '127.0.0.1';
+  assert.ok(host.length > 0, 'the redis host must not be empty');
+  return `redis://${host}:${ownedRedisPort(mappingOutput)}`;
+}
+
+function assertD14HelperContract(helper, rootManifest) {
+  assert.doesNotMatch(
+    helper,
+    /['"](?:127\.0\.0\.1:)?6379:6379['"]/u,
+    'D14 rejects the current fixed 6379:6379 host publication',
+  );
+  assert.match(helper, /127\.0\.0\.1::6379/u);
+  assert.match(
+    helper,
+    /\[\s*'compose',\s*'-f',\s*composeFile,\s*'port',\s*'redis',\s*'6379'\s*\]/su,
+  );
+  assert.match(helper, /process\.env\.TESTCONTAINERS_HOST_OVERRIDE\s*\?\?\s*'127\.0\.0\.1'/u);
+  assert.match(
+    helper,
+    /STYNX_REDIS_URL:\s*`redis:\/\/\$\{[A-Za-z_$][\w$]*\}:\$\{[A-Za-z_$][\w$]*\}`/u,
+  );
+  assert.doesNotMatch(helper, /redis:\/\/127\.0\.0\.1:6379/u);
+  assert.doesNotMatch(
+    helper,
+    /spawn(?:Sync)?\(\s*'docker',\s*\[\s*'(?:ps|inspect|stop|kill|rm|container|network|volume)'/su,
+  );
+  assert.doesNotMatch(helper, /(?:find|reserve|probe)(?:Free|Available)?Port/iu);
+  assert.doesNotMatch(helper, /(?:retry|setTimeout)\s*\(/u);
+  assert.equal((helper.match(/\bawait sleep\(/gu) ?? []).length, 1);
+  assert.match(helper, /while \(isProcessAlive\(parentPid\)\) \{\s*await sleep\(250\);\s*\}/su);
+  assert.doesNotMatch(rootManifest.scripts['test:e2e'], /--concurrency/u);
+  assert.doesNotMatch(rootManifest.scripts.test, /--concurrency/u);
+}
+
+test('D14 oracle resolves only one valid owned Redis mapping and honors the host override', () => {
+  assert.equal(ownedRedisUrl('127.0.0.1:49152'), 'redis://127.0.0.1:49152');
+  assert.equal(
+    ownedRedisUrl('0.0.0.0:49153\n[::]:49153\n', 'host.docker.internal'),
+    'redis://host.docker.internal:49153',
+  );
+  assert.equal(ownedRedisPort('127.0.0.1:49154\n[::1]:49154'), 49154);
+  for (const mappingOutput of [
+    '',
+    '127.0.0.1',
+    '127.0.0.1:not-a-port',
+    '127.0.0.1:0',
+    '127.0.0.1:65536',
+    '127.0.0.1:49152 trailing-data',
+    '127.0.0.1:49152\n[::]:49153',
+  ]) {
+    assert.throws(() => ownedRedisPort(mappingOutput));
+  }
+  assert.throws(() => ownedRedisUrl('127.0.0.1:49152', ''));
+
+  const contractFixture = [
+    "ports:\n  - '127.0.0.1::6379'",
+    "const mappingArgs = ['compose', '-f', composeFile, 'port', 'redis', '6379'];",
+    "const redisHost = process.env.TESTCONTAINERS_HOST_OVERRIDE ?? '127.0.0.1';",
+    'STYNX_REDIS_URL: `redis://${redisHost}:${redisPort}`',
+    'while (isProcessAlive(parentPid)) { await sleep(250); }',
+  ].join('\n');
+  assertD14HelperContract(contractFixture, {
+    scripts: { 'test:e2e': 'turbo run test:e2e --force', test: 'turbo run test' },
+  });
+});
+
+test('D14 helper uses only its owned Docker-assigned Redis endpoint', () => {
+  const helper = readFileSync(
+    join(repoRoot, 'reference/web/scripts/serve-reference-api-stack.mjs'),
+    'utf8',
+  );
+  const rootManifest = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8'));
+  assertD14HelperContract(helper, rootManifest);
+});
+
 test('resolved root E2E graph has one preferences producer before both reference consumers', () => {
   const result = run('pnpm', [
     'exec',
