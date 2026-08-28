@@ -4,11 +4,14 @@ import { createHash } from 'node:crypto';
 import {
   chmodSync,
   existsSync,
+  lstatSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
   readdirSync,
+  readlinkSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -25,6 +28,8 @@ import { discoverMutationRoster } from '../../scripts/lib/mutation-roster.mjs';
 
 const repoRoot = resolve(import.meta.dirname, '..', '..');
 const privacyRoot = join(repoRoot, 'packages/privacy');
+const preferencesRoot = join(repoRoot, 'packages/preferences');
+const preferencesDist = join(preferencesRoot, 'dist');
 const expectedNotificationsMutate = [
   'src/notifications.service.ts',
   'src/dispatch.service.ts',
@@ -148,6 +153,202 @@ function createBuildFixture() {
     removeFixture(fixture);
     throw error;
   }
+}
+
+function modeOf(stat) {
+  return stat.mode & 0o7777;
+}
+
+function entryExists(target) {
+  try {
+    lstatSync(target);
+    return true;
+  } catch (error) {
+    if (error?.code === 'ENOENT') return false;
+    throw error;
+  }
+}
+
+function inventoryTree(root, { exclude } = {}) {
+  const resolvedRoot = resolve(root);
+  const resolvedExclude = exclude === undefined ? undefined : resolve(exclude);
+  if (!entryExists(resolvedRoot)) {
+    const inventory = { present: false, entries: [] };
+    return {
+      ...inventory,
+      digest: createHash('sha256').update(JSON.stringify(inventory)).digest('hex'),
+    };
+  }
+
+  const entries = [];
+  const visit = (target) => {
+    const resolvedTarget = resolve(target);
+    if (resolvedTarget === resolvedExclude) return;
+    const stat = lstatSync(resolvedTarget);
+    const path = relative(repoRoot, resolvedTarget);
+    assert.ok(path !== '' && !path.startsWith('..') && !isAbsolute(path));
+    if (stat.isDirectory()) {
+      entries.push({ path, type: 'directory', mode: modeOf(stat) });
+      for (const name of readdirSync(resolvedTarget).sort()) visit(join(resolvedTarget, name));
+      return;
+    }
+    if (stat.isFile()) {
+      const bytes = readFileSync(resolvedTarget);
+      entries.push({
+        path,
+        type: 'file',
+        mode: modeOf(stat),
+        size: bytes.length,
+        sha256: createHash('sha256').update(bytes).digest('hex'),
+      });
+      return;
+    }
+    if (stat.isSymbolicLink()) {
+      const targetBytes = Buffer.from(readlinkSync(resolvedTarget));
+      entries.push({
+        path,
+        type: 'symlink',
+        mode: modeOf(stat),
+        size: targetBytes.length,
+        sha256: createHash('sha256').update(targetBytes).digest('hex'),
+      });
+      return;
+    }
+    assert.fail(`unsupported preferences entry type: ${path}`);
+  };
+  visit(resolvedRoot);
+  const inventory = { present: true, entries };
+  return {
+    ...inventory,
+    digest: createHash('sha256').update(JSON.stringify(inventory)).digest('hex'),
+  };
+}
+
+function assertPreferencesDistTarget(target) {
+  const resolvedTarget = resolve(target);
+  const displacement = relative(preferencesDist, resolvedTarget);
+  assert.ok(
+    displacement === '' || (!displacement.startsWith('..') && !isAbsolute(displacement)),
+    'preferences output mutation must remain inside packages/preferences/dist',
+  );
+  return resolvedTarget;
+}
+
+function assertPreferencesSnapshotRoot(snapshotRoot) {
+  const resolvedSnapshotRoot = resolve(snapshotRoot);
+  assert.equal(dirname(resolvedSnapshotRoot), resolve(tmpdir()));
+  assert.match(basename(resolvedSnapshotRoot), /^stynx-d17-1-preferences-snapshot-/u);
+  return resolvedSnapshotRoot;
+}
+
+function snapshotPreferencesDist() {
+  const snapshotRoot = mkdtempSync(join(tmpdir(), 'stynx-d17-1-preferences-snapshot-'));
+  const resolvedSnapshotRoot = assertPreferencesSnapshotRoot(snapshotRoot);
+  try {
+    const inventory = inventoryTree(preferencesDist);
+    const storedEntries = [];
+    for (const [index, entry] of inventory.entries.entries()) {
+      const source = resolve(repoRoot, entry.path);
+      assertPreferencesDistTarget(source);
+      if (entry.type === 'file') {
+        const storagePath = join(resolvedSnapshotRoot, `entry-${index}`);
+        writeFileSync(storagePath, readFileSync(source), { mode: entry.mode });
+        storedEntries.push({ ...entry, storagePath });
+      } else if (entry.type === 'symlink') {
+        const storagePath = join(resolvedSnapshotRoot, `entry-${index}`);
+        writeFileSync(storagePath, Buffer.from(readlinkSync(source)), { mode: 0o600 });
+        storedEntries.push({ ...entry, storagePath });
+      } else {
+        storedEntries.push(entry);
+      }
+    }
+    writeFileSync(join(resolvedSnapshotRoot, 'inventory.json'), `${JSON.stringify(inventory)}\n`, {
+      mode: 0o600,
+    });
+    return { root: resolvedSnapshotRoot, inventory, entries: storedEntries };
+  } catch (error) {
+    rmSync(resolvedSnapshotRoot, { recursive: true, force: true });
+    throw error;
+  }
+}
+
+function restorePreferencesDist(snapshot) {
+  assertPreferencesSnapshotRoot(snapshot.root);
+  assertPreferencesDistTarget(preferencesDist);
+  const currentInventory = inventoryTree(preferencesDist);
+  if (JSON.stringify(currentInventory) === JSON.stringify(snapshot.inventory)) return false;
+  rmSync(preferencesDist, { recursive: true, force: true });
+  if (!snapshot.inventory.present) return true;
+
+  for (const entry of snapshot.entries.filter(({ type }) => type === 'directory')) {
+    const target = assertPreferencesDistTarget(resolve(repoRoot, entry.path));
+    mkdirSync(target, { recursive: true, mode: entry.mode });
+  }
+  for (const entry of snapshot.entries.filter(({ type }) => type !== 'directory')) {
+    const target = assertPreferencesDistTarget(resolve(repoRoot, entry.path));
+    mkdirSync(dirname(target), { recursive: true });
+    if (entry.type === 'file') {
+      writeFileSync(target, readFileSync(entry.storagePath), { mode: entry.mode });
+      chmodSync(target, entry.mode);
+    } else {
+      symlinkSync(readFileSync(entry.storagePath, 'utf8'), target);
+    }
+  }
+  for (const entry of snapshot.entries
+    .filter(({ type }) => type === 'directory')
+    .toSorted((left, right) => right.path.length - left.path.length)) {
+    chmodSync(assertPreferencesDistTarget(resolve(repoRoot, entry.path)), entry.mode);
+  }
+  return true;
+}
+
+function withPreferencesDistRestored(operation, evidence = {}) {
+  const snapshot = snapshotPreferencesDist();
+  evidence.snapshotRoot = snapshot.root;
+  evidence.before = snapshot.inventory;
+  evidence.outsideBefore = inventoryTree(preferencesRoot, { exclude: preferencesDist });
+  try {
+    return operation();
+  } finally {
+    try {
+      evidence.restorationRequired = restorePreferencesDist(snapshot);
+      evidence.after = inventoryTree(preferencesDist);
+      evidence.outsideAfter = inventoryTree(preferencesRoot, { exclude: preferencesDist });
+      assert.deepEqual(evidence.after, evidence.before);
+      assert.deepEqual(evidence.outsideAfter, evidence.outsideBefore);
+    } finally {
+      rmSync(assertPreferencesSnapshotRoot(snapshot.root), { recursive: true, force: true });
+      evidence.snapshotRemoved = !entryExists(snapshot.root);
+      assert.equal(evidence.snapshotRemoved, true);
+    }
+  }
+}
+
+function seedPreferencesDist(state) {
+  assertPreferencesDistTarget(preferencesDist);
+  rmSync(preferencesDist, { recursive: true, force: true });
+  if (state === 'absent') return;
+  assert.equal(state, 'seeded');
+  const emptyDirectory = assertPreferencesDistTarget(join(preferencesDist, 'empty'));
+  const nestedDirectory = assertPreferencesDistTarget(join(preferencesDist, 'mixed/nested'));
+  const dataFile = assertPreferencesDistTarget(join(nestedDirectory, 'payload.bin'));
+  const executable = assertPreferencesDistTarget(join(preferencesDist, 'mixed/tool'));
+  const link = assertPreferencesDistTarget(join(preferencesDist, 'mixed/payload-link'));
+  mkdirSync(emptyDirectory, { recursive: true, mode: 0o750 });
+  mkdirSync(nestedDirectory, { recursive: true, mode: 0o711 });
+  writeFileSync(dataFile, Buffer.from([0, 255, 10, 13, 42]), { mode: 0o640 });
+  writeFileSync(executable, '#!/bin/sh\nexit 0\n', { mode: 0o751 });
+  symlinkSync('nested/payload.bin', link);
+  chmodSync(emptyDirectory, 0o750);
+  chmodSync(nestedDirectory, 0o711);
+}
+
+function mutatePreferencesDist() {
+  assertPreferencesDistTarget(preferencesDist);
+  rmSync(preferencesDist, { recursive: true, force: true });
+  const generated = assertPreferencesDistTarget(join(preferencesDist, 'preferences/src/index.js'));
+  mkdirSync(dirname(generated), { recursive: true });
+  writeFileSync(generated, 'export const generated = true;\n', { mode: 0o644 });
 }
 
 function resolvedPrivacyPopulation(configName) {
@@ -2018,85 +2219,147 @@ test('privacy ordinary, integration, and coverage tiers resolve exact disjoint p
 });
 
 test('clean preferences build emits both exact exports and reference-api fails closed without declarations', () => {
-  const fixture = createBuildFixture();
-  const fixtureRoot = assertSafeFixtureRoot(fixture.root);
-  const fixturePreferencesDist = join(fixtureRoot, 'packages/preferences/dist');
-  const fixturePreferencesRuntime = join(fixturePreferencesDist, 'preferences/src/index.js');
-  const fixturePreferencesDeclaration = join(fixturePreferencesDist, 'preferences/src/index.d.ts');
-  const fixtureVerifier = join(fixtureRoot, 'scripts/verify-reference-api-build-inputs.mjs');
-  for (const [target, label] of [
-    [fixturePreferencesDist, 'preferences output directory'],
-    [fixturePreferencesRuntime, 'preferences runtime output'],
-    [fixturePreferencesDeclaration, 'preferences declaration output'],
-    [fixtureVerifier, 'reference API verifier'],
-  ]) {
-    assert.equal(assertInsideFixture(fixtureRoot, target, label), resolve(target));
-  }
-  try {
-    const installed = spawnInFixture(
-      fixture,
-      'pnpm',
-      [
-        'install',
-        '--offline',
-        '--frozen-lockfile',
-        '--ignore-scripts',
-        '--filter',
-        '@stynx-nyx/preferences...',
-        '--filter',
-        '@stynx-nyx/reference-api',
-      ],
-      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
+  const sharedEvidence = {};
+  withPreferencesDistRestored(() => {
+    const fixture = createBuildFixture();
+    const fixtureRoot = assertSafeFixtureRoot(fixture.root);
+    const fixturePreferencesDist = join(fixtureRoot, 'packages/preferences/dist');
+    const fixturePreferencesRuntime = join(fixturePreferencesDist, 'preferences/src/index.js');
+    const fixturePreferencesDeclaration = join(
+      fixturePreferencesDist,
+      'preferences/src/index.d.ts',
     );
-    assert.ifError(installed.error);
-    assert.equal(installed.status, 0, installed.stderr);
-    removeInsideFixture(fixture, fixturePreferencesDist, { recursive: true, force: true });
-    const built = spawnInFixture(
-      fixture,
-      'pnpm',
-      ['--filter', '@stynx-nyx/preferences', 'run', 'build'],
-      {
+    const fixtureVerifier = join(fixtureRoot, 'scripts/verify-reference-api-build-inputs.mjs');
+    for (const [target, label] of [
+      [fixturePreferencesDist, 'preferences output directory'],
+      [fixturePreferencesRuntime, 'preferences runtime output'],
+      [fixturePreferencesDeclaration, 'preferences declaration output'],
+      [fixtureVerifier, 'reference API verifier'],
+    ]) {
+      assert.equal(assertInsideFixture(fixtureRoot, target, label), resolve(target));
+    }
+    try {
+      const installed = spawnInFixture(
+        fixture,
+        'pnpm',
+        [
+          'install',
+          '--offline',
+          '--frozen-lockfile',
+          '--ignore-scripts',
+          '--filter',
+          '@stynx-nyx/preferences...',
+          '--filter',
+          '@stynx-nyx/reference-api',
+        ],
+        { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
+      );
+      assert.ifError(installed.error);
+      assert.equal(installed.status, 0, installed.stderr);
+      removeInsideFixture(fixture, fixturePreferencesDist, { recursive: true, force: true });
+      const built = spawnInFixture(
+        fixture,
+        'pnpm',
+        ['--filter', '@stynx-nyx/preferences', 'run', 'build'],
+        {
+          encoding: 'utf8',
+          stdio: ['ignore', 'pipe', 'pipe'],
+        },
+      );
+      assert.ifError(built.error);
+      assert.equal(built.status, 0, built.stderr);
+      assert.equal(existsSync(fixturePreferencesRuntime), true);
+      assert.equal(existsSync(fixturePreferencesDeclaration), true);
+      const verified = spawnInFixture(fixture, 'node', [fixtureVerifier], {
         encoding: 'utf8',
         stdio: ['ignore', 'pipe', 'pipe'],
-      },
-    );
-    assert.ifError(built.error);
-    assert.equal(built.status, 0, built.stderr);
-    assert.equal(existsSync(fixturePreferencesRuntime), true);
-    assert.equal(existsSync(fixturePreferencesDeclaration), true);
-    const verified = spawnInFixture(fixture, 'node', [fixtureVerifier], {
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
-    assert.ifError(verified.error);
-    assert.equal(verified.status, 0, verified.stderr);
-    removeInsideFixture(fixture, fixturePreferencesDeclaration, { force: true });
-    const rejected = spawnInFixture(fixture, 'node', [fixtureVerifier], {
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
-    assert.ifError(rejected.error);
-    assert.notEqual(rejected.status, 0);
-    assert.match(rejected.stderr, /declaration output is unavailable/u);
-  } finally {
-    assert.ok(fixture.subprocessCwds.length >= 6);
-    assert.equal(
-      fixture.subprocessCwds.every((cwd) => cwd === fixtureRoot),
-      true,
-    );
-    assert.equal(
-      fixture.destructiveTargets.every((target) =>
-        target === fixtureRoot
-          ? true
-          : relative(fixtureRoot, target) !== '' &&
-            !relative(fixtureRoot, target).startsWith('..') &&
-            !isAbsolute(relative(fixtureRoot, target)),
-      ),
-      true,
-    );
-    removeFixture(fixture);
-    assert.equal(existsSync(fixtureRoot), false);
-  }
+      });
+      assert.ifError(verified.error);
+      assert.equal(verified.status, 0, verified.stderr);
+      removeInsideFixture(fixture, fixturePreferencesDeclaration, { force: true });
+      const rejected = spawnInFixture(fixture, 'node', [fixtureVerifier], {
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+      assert.ifError(rejected.error);
+      assert.notEqual(rejected.status, 0);
+      assert.match(rejected.stderr, /declaration output is unavailable/u);
+    } finally {
+      assert.ok(fixture.subprocessCwds.length >= 6);
+      assert.equal(
+        fixture.subprocessCwds.every((cwd) => cwd === fixtureRoot),
+        true,
+      );
+      assert.equal(
+        fixture.destructiveTargets.every((target) =>
+          target === fixtureRoot
+            ? true
+            : relative(fixtureRoot, target) !== '' &&
+              !relative(fixtureRoot, target).startsWith('..') &&
+              !isAbsolute(relative(fixtureRoot, target)),
+        ),
+        true,
+      );
+      removeFixture(fixture);
+      assert.equal(existsSync(fixtureRoot), false);
+    }
+  }, sharedEvidence);
+  assert.deepEqual(sharedEvidence.after, sharedEvidence.before);
+  assert.deepEqual(sharedEvidence.outsideAfter, sharedEvidence.outsideBefore);
+  assert.equal(sharedEvidence.restorationRequired, false);
+  assert.equal(sharedEvidence.snapshotRemoved, true);
+});
+
+test('preferences output restoration is exact across success and injected failures', () => {
+  const originalEvidence = {};
+  const matrix = [];
+  withPreferencesDistRestored(() => {
+    for (const state of ['absent', 'seeded']) {
+      for (const outcome of ['success', 'command-failure', 'assertion-failure']) {
+        seedPreferencesDist(state);
+        const evidence = {};
+        const scenario = () =>
+          withPreferencesDistRestored(() => {
+            mutatePreferencesDist();
+            if (outcome === 'command-failure') throw new Error('injected command failure');
+            if (outcome === 'assertion-failure') assert.fail('injected assertion failure');
+            assert.equal(existsSync(join(preferencesDist, 'preferences/src/index.js')), true);
+          }, evidence);
+        if (outcome === 'success') {
+          scenario();
+        } else {
+          assert.throws(scenario, new RegExp(`injected ${outcome.replace('-', ' ')}`, 'u'));
+        }
+        assert.deepEqual(evidence.after, evidence.before);
+        assert.equal(evidence.after.digest, evidence.before.digest);
+        assert.deepEqual(evidence.outsideAfter, evidence.outsideBefore);
+        assert.equal(evidence.outsideAfter.digest, evidence.outsideBefore.digest);
+        assert.equal(evidence.restorationRequired, true);
+        assert.equal(evidence.snapshotRemoved, true);
+        assert.equal(entryExists(evidence.snapshotRoot), false);
+        matrix.push({ state, outcome, restored: true });
+      }
+    }
+    assert.deepEqual(matrix, [
+      { state: 'absent', outcome: 'success', restored: true },
+      { state: 'absent', outcome: 'command-failure', restored: true },
+      { state: 'absent', outcome: 'assertion-failure', restored: true },
+      { state: 'seeded', outcome: 'success', restored: true },
+      { state: 'seeded', outcome: 'command-failure', restored: true },
+      { state: 'seeded', outcome: 'assertion-failure', restored: true },
+    ]);
+    const restorationSource = [
+      inventoryTree,
+      snapshotPreferencesDist,
+      restorePreferencesDist,
+      withPreferencesDistRestored,
+    ].join('\n');
+    assert.doesNotMatch(restorationSource, /\bgit\s+(?:status|diff)\b/u);
+    assert.doesNotMatch(restorationSource, /\b(?:setTimeout|setInterval|sleep|retry|poll)\b/u);
+  }, originalEvidence);
+  assert.deepEqual(originalEvidence.after, originalEvidence.before);
+  assert.deepEqual(originalEvidence.outsideAfter, originalEvidence.outsideBefore);
+  assert.equal(originalEvidence.snapshotRemoved, true);
 });
 
 test('report-first classification distinguishes score, harness, missing, and portability failures', () => {
