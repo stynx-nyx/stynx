@@ -2367,7 +2367,10 @@ test('clean preferences build emits both exact exports and reference-api fails c
       'turbo.json',
       'reference/api/package.json',
       'reference/api/tsconfig.json',
+      'reference/api/src/app.module.ts',
       'reference/api/src/main.ts',
+      'packages/health/src/health.controller.ts',
+      'packages/health/src/health.module.ts',
       'reference/web/package.json',
       'reference/web/playwright.config.mjs',
       'reference/web/scripts/serve-reference-api-stack.mjs',
@@ -2409,6 +2412,55 @@ test('clean preferences build emits both exact exports and reference-api fails c
     );
     assert.equal(emittedMain, fixtureReferenceApiMain);
     assert.equal(entryExists(fixtureReferenceApiMain), false);
+
+    const sourceAppModule = readFileSync(join(fixtureApiRoot, 'src/app.module.ts'), 'utf8');
+    const sourceMain = readFileSync(join(fixtureApiRoot, 'src/main.ts'), 'utf8');
+    const sourceHealthModule = readFileSync(
+      join(fixtureRoot, 'packages/health/src/health.module.ts'),
+      'utf8',
+    );
+    const sourceHealthController = readFileSync(
+      join(fixtureRoot, 'packages/health/src/health.controller.ts'),
+      'utf8',
+    );
+    assert.equal((sourceAppModule.match(/\bStynxHealthModule\.forRoot\(/gu) ?? []).length, 1);
+    assert.doesNotMatch(
+      `${sourceMain}\n${sourceAppModule}`,
+      /\b(?:setGlobalPrefix|enableVersioning)\s*\(|\bRouterModule\b/u,
+    );
+    assert.match(sourceHealthModule, /controllers:\s*\[StynxHealthController\]/u);
+    assert.equal((sourceHealthModule.match(/\bStynxHealthController\b/gu) ?? []).length, 2);
+    assert.equal((sourceHealthController.match(/@Controller\(\)/gu) ?? []).length, 1);
+    assert.equal((sourceHealthController.match(/@Get\('\/healthz'\)/gu) ?? []).length, 1);
+    assert.equal((sourceHealthController.match(/@Get\('\/readyz'\)/gu) ?? []).length, 1);
+    assert.match(
+      sourceHealthController,
+      /error instanceof HealthCheckError[\s\S]*throw new ServiceUnavailableException\(/u,
+    );
+    assert.doesNotMatch(sourceHealthController, /(?:NotFoundException|\b404\b)/u);
+    const healthHttpSensor = readFileSync(
+      join(fixtureRoot, 'packages/health/test/wiring/health-http.wiring-spec.ts'),
+      'utf8',
+    );
+    const healthMatrixSensor = readFileSync(
+      join(fixtureRoot, 'packages/health/test/integration/health.api-matrix.spec.ts'),
+      'utf8',
+    );
+    const referenceApiSensor = readFileSync(
+      join(fixtureRoot, 'reference/api/test/integration/reference-api.runtime.spec.ts'),
+      'utf8',
+    );
+    assert.match(healthHttpSensor, /get\('\/healthz'\)\.expect\(200\)/u);
+    assert.match(healthHttpSensor, /get\('\/readyz'\)\.expect\(200\)/u);
+    assert.match(
+      healthMatrixSensor,
+      /get\('\/readyz'\)[\s\S]*?expect\(200\)[\s\S]*?get\('\/readyz'\)[\s\S]*?expect\(503\)/u,
+    );
+    assert.doesNotMatch(healthMatrixSensor, /get\('\/readyz'\)[^;]*expect\(404\)/u);
+    assert.match(
+      referenceApiSensor,
+      /\.get\('\/healthz'\)\.expect\(200\);\s*await request[\s\S]*?\.get\('\/readyz'\)\.expect\(200\)/u,
+    );
 
     const manifestEntries = readdirSync(join(fixtureRoot, 'packages'), {
       withFileTypes: true,
@@ -2614,6 +2666,156 @@ test('clean preferences build emits both exact exports and reference-api fails c
     assert.equal(importProbe.status, 0, 'compiled AppModule import-fail');
     assert.equal(importProbe.stdout, 'import-pass\n');
     assert.equal(importProbe.stderr, '');
+    const metadataProbeSource = String.raw`
+const { createRequire } = require('node:module');
+const { readFileSync, realpathSync } = require('node:fs');
+const write = process.stdout.write.bind(process.stdout);
+process.stdout.write = () => true;
+process.stderr.write = () => true;
+const codes = [
+  'app-health-import',
+  'health-controller',
+  'health-root',
+  'healthz-metadata',
+  'readyz-metadata',
+  'route-bootstrap',
+];
+let terminal = false;
+function emit(code, passed) {
+  if (terminal) return false;
+  write(code + (passed ? '-pass' : '-fail') + '\n');
+  if (!passed) {
+    terminal = true;
+    process.exitCode = 1;
+  }
+  return passed;
+}
+let appExports;
+let healthExports;
+let constants;
+let common;
+try {
+  const fixtureRequire = createRequire(process.argv[1]);
+  const healthEntry = fixtureRequire.resolve('@stynx-nyx/health');
+  if (realpathSync(healthEntry) !== realpathSync(process.argv[2])) throw new Error();
+  appExports = fixtureRequire(process.argv[1]);
+  healthExports = fixtureRequire(healthEntry);
+  constants = fixtureRequire('@nestjs/common/constants');
+  common = fixtureRequire('@nestjs/common');
+} catch {
+  emit(codes[0], false);
+}
+if (!terminal) {
+  const imports = Reflect.getMetadata(constants.MODULE_METADATA.IMPORTS, appExports.AppModule);
+  const matches = Array.isArray(imports)
+    ? imports.filter(
+        (entry) =>
+          entry && typeof entry === 'object' && entry.module === healthExports.StynxHealthModule,
+      )
+    : [];
+  if (emit(codes[0], matches.length === 1)) {
+    const controllers = matches[0].controllers;
+    if (
+      emit(
+        codes[1],
+        Array.isArray(controllers) &&
+          controllers.length === 1 &&
+          controllers[0] === healthExports.StynxHealthController,
+      )
+    ) {
+      const controllerPath = Reflect.getMetadata(
+        constants.PATH_METADATA,
+        healthExports.StynxHealthController,
+      );
+      const normalizedControllerPath =
+        typeof controllerPath === 'string'
+          ? '/' + controllerPath.replace(/^\/+|\/+$/gu, '')
+          : controllerPath === undefined
+            ? '/'
+            : null;
+      if (emit(codes[2], normalizedControllerPath === '/')) {
+        const liveness = healthExports.StynxHealthController.prototype.liveness;
+        const readiness = healthExports.StynxHealthController.prototype.readiness;
+        if (
+          emit(
+            codes[3],
+            typeof liveness === 'function' &&
+              Reflect.getMetadata(constants.METHOD_METADATA, liveness) === common.RequestMethod.GET &&
+              Reflect.getMetadata(constants.PATH_METADATA, liveness) === '/healthz',
+          )
+        ) {
+          if (
+            emit(
+              codes[4],
+              typeof readiness === 'function' &&
+                Reflect.getMetadata(constants.METHOD_METADATA, readiness) ===
+                  common.RequestMethod.GET &&
+                Reflect.getMetadata(constants.PATH_METADATA, readiness) === '/readyz',
+            )
+          ) {
+            let compiledBootstrap;
+            let compiledAppModule;
+            try {
+              compiledBootstrap = readFileSync(process.argv[3], 'utf8');
+              compiledAppModule = readFileSync(process.argv[1], 'utf8');
+            } catch {
+              compiledBootstrap = '';
+              compiledAppModule = '';
+            }
+            emit(
+              codes[5],
+              compiledBootstrap.length > 0 &&
+                compiledAppModule.length > 0 &&
+                !/\b(?:setGlobalPrefix|enableVersioning)\s*\(|\bRouterModule\b/u.test(
+                  compiledBootstrap + '\n' + compiledAppModule,
+                ),
+            );
+          }
+        }
+      }
+    }
+  }
+}
+`;
+    const metadataProbe = spawnInFixture(
+      fixture,
+      process.execPath,
+      [
+        '-e',
+        metadataProbeSource,
+        compiledAppModule,
+        runtimeTargets.get('@stynx-nyx/health'),
+        fixtureReferenceApiMain,
+      ],
+      {
+        encoding: 'utf8',
+        env: {},
+        stdio: ['ignore', 'pipe', 'pipe'],
+        timeout: 30_000,
+      },
+    );
+    const expectedMetadataCodes = [
+      'app-health-import-pass',
+      'health-controller-pass',
+      'health-root-pass',
+      'healthz-metadata-pass',
+      'readyz-metadata-pass',
+      'route-bootstrap-pass',
+    ];
+    const permittedMetadataCodes = new Set(
+      expectedMetadataCodes.flatMap((code) => [code, code.replace(/-pass$/u, '-fail')]),
+    );
+    const metadataCodes = metadataProbe.stdout.trimEnd().split('\n');
+    assert.equal(metadataProbe.error === undefined, true, 'compiled metadata child spawn-fail');
+    assert.equal(metadataProbe.signal, null);
+    assert.equal(
+      metadataCodes.every((code) => permittedMetadataCodes.has(code)),
+      true,
+      'compiled metadata child emitted an unapproved classification',
+    );
+    assert.equal(metadataProbe.stderr.length, 0, 'compiled metadata child emitted stderr');
+    assert.equal(metadataProbe.status, 0, metadataCodes.at(-1));
+    assert.deepEqual(metadataCodes, expectedMetadataCodes);
     for (const [path, before] of frozenBytes) {
       assert.deepEqual(readFileSync(join(fixtureRoot, path)), before);
     }
@@ -2626,7 +2828,7 @@ test('clean preferences build emits both exact exports and reference-api fails c
     assert.notEqual(rejected.status, 0);
     assert.match(rejected.stderr, /declaration output is unavailable/u);
   } finally {
-    assert.ok(fixture.subprocessCwds.length >= 9);
+    assert.ok(fixture.subprocessCwds.length >= 10);
     assert.equal(
       fixture.subprocessCwds.every((cwd) => cwd === fixtureRoot),
       true,
