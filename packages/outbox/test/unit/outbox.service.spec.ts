@@ -122,6 +122,8 @@ describe('OutboxService', () => {
     await expect(
       service.ack({ entity: row.entity, entityId: row.entityId, status: 'ACKED' }),
     ).rejects.toBeInstanceOf(OutboxAmbiguousAckError);
+    expect(query).toHaveBeenCalledOnce();
+    expect(query.mock.calls[0]?.[1]).toEqual([row.entity, row.entityId]);
   });
 
   it('verifies HMAC ACK signatures in constant-time-compatible header form', () => {
@@ -131,7 +133,10 @@ describe('OutboxService', () => {
 
     expect(signature).toBe(`sha256=${createHmac('sha256', secret).update(rawBody).digest('hex')}`);
     expect(verifyOutboxAckSignature(secret, rawBody, signature)).toBe(true);
+    expect(verifyOutboxAckSignature('different-secret', rawBody, signature)).toBe(false);
+    expect(verifyOutboxAckSignature(secret, Buffer.from('different-body'), signature)).toBe(false);
     expect(verifyOutboxAckSignature(secret, rawBody, 'sha256=00')).toBe(false);
+    expect(verifyOutboxAckSignature(secret, rawBody, 'sha256=not-hex')).toBe(false);
     expect(verifyOutboxAckSignature(secret, rawBody, 'invalid')).toBe(false);
   });
 });
