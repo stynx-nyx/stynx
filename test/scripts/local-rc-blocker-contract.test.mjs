@@ -2030,6 +2030,11 @@ case " $* " in
     printf '%s\\n' up >> "$D16_DOCKER_ACTIONS"
     ${scenario === 'run-checked' ? 'exit 23' : 'exit 0'}
     ;;
+  *" port postgres 5432 "*)
+    printf '%s\\n' port >> "$D16_DOCKER_ACTIONS"
+    printf '%s\\n' 127.0.0.1:49151
+    exit 0
+    ;;
   *" port redis 6379 "*)
     printf '%s\\n' port >> "$D16_DOCKER_ACTIONS"
     printf '%s\\n' not-a-mapping
@@ -2679,7 +2684,7 @@ test('D16.1 production contains runChecked and Redis mapping failures before chi
     {
       name: 'redis-mapping',
       expectedCodes: ['helper-entered', 'compose-ready'],
-      expectedDockerActions: ['up', 'port', 'down'],
+      expectedDockerActions: ['up', 'port', 'port', 'down'],
     },
   ];
   const violations = [];
@@ -2749,7 +2754,7 @@ test('D16.1 production contains every remaining setup, child, watchdog, and clea
   const throughVerifier = helperCodes.slice(0, 3);
   const throughBuild = helperCodes.slice(0, 4);
   const throughChild = helperCodes;
-  const childActions = ['up', 'port', 'verify', 'api', 'watchdog'];
+  const childActions = ['up', 'port', 'port', 'verify', 'api', 'watchdog'];
   const syncCleanupActions = [
     ...childActions,
     'watchdog-spawn-observed',
@@ -2764,7 +2769,7 @@ test('D16.1 production contains every remaining setup, child, watchdog, and clea
     {
       name: 'build-verifier-failure',
       codes: throughVerifier,
-      actions: ['up', 'port', 'verify', 'down'],
+      actions: ['up', 'port', 'port', 'verify', 'down'],
     },
     {
       name: 'child-raw-error',
@@ -2906,7 +2911,7 @@ test('D16.1 lifecycle-seam oracle distinguishes consumed failures from silenced 
 });
 
 test('D16.1 production contains watchdog-worker rmSync and shutdown child-kill throws', () => {
-  const childActions = ['up', 'port', 'verify', 'api', 'watchdog'];
+  const childActions = ['up', 'port', 'port', 'verify', 'api', 'watchdog'];
   const scenarios = [
     {
       name: 'watchdog-worker-rmsync-throw',
@@ -4311,7 +4316,7 @@ test('D21 production binds exact Compose-up terminals without D14-D20 drift', ()
   assert.match(helper, /mkdtemp\(resolve\(tmpdir\(\), ['"]stynx-reference-api-stack-['"]\)\)/u);
   assert.match(
     helper,
-    /services:\\n  postgres:[\s\S]*?ports:\\n      - '\$\{postgresPort\}:5432'[\s\S]*?redis:[\s\S]*?ports:\\n      - '\$\{redisPublish\}'/u,
+    /services:\\n  postgres:[\s\S]*?ports:\\n      - '\$\{postgresPublish\}'[\s\S]*?redis:[\s\S]*?ports:\\n      - '\$\{redisPublish\}'/u,
   );
   assert.match(
     helper,
