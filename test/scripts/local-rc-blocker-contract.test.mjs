@@ -600,6 +600,10 @@ const ownedListenerFinalCodes = [
   'owned-full-table-indeterminate',
 ];
 
+function escapeRegExpLiteral(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
+}
+
 function fixedStartupOutput(code) {
   assert.ok(
     [
@@ -2583,6 +2587,19 @@ test('D17.6 production binds one IPC-only live route-table state after listening
 });
 
 test('D17.7 CLI oracle keeps default HTTP-free and admits only one exact opt-in', () => {
+  const exactPrefix = new RegExp(
+    `^${escapeRegExpLiteral(ownedListenerOutputPrefix)} owned-healthz-2xx$`,
+    'u',
+  );
+  assert.match(`${ownedListenerOutputPrefix} owned-healthz-2xx`, exactPrefix);
+  for (const nearMiss of [
+    '[reference-api-owned-route owned-healthz-2xx',
+    '[reference-api-owned-routE] owned-healthz-2xx',
+    '[reference-api-owned-route]] owned-healthz-2xx',
+    `raw ${ownedListenerOutputPrefix} owned-healthz-2xx`,
+  ]) {
+    assert.doesNotMatch(nearMiss, exactPrefix);
+  }
   const normal = ownedListenerDiagnosticFixture([], true);
   assert.deepEqual(normal.start(), { accepted: true, diagnostic: false });
   assert.deepEqual(normal.routeTable('runtime-route-table-present'), {
@@ -2804,7 +2821,7 @@ test('D17.7 production binds the singleton owned-listener classifier without def
   ]) {
     assert.equal(helper.includes(`'${code}'`) || helper.includes(`"${code}"`), true);
   }
-  assert.match(helper, new RegExp(ownedListenerOutputPrefix.replaceAll('[', '\\['), 'u'));
+  assert.match(helper, new RegExp(escapeRegExpLiteral(ownedListenerOutputPrefix), 'u'));
   assert.equal((helper.match(/\bawait sleep\(/gu) ?? []).length, 1);
   assert.doesNotMatch(helper, /(?:retry|setTimeout|setInterval)\s*\(/u);
   assert.equal(main.includes(ownedListenerBindingBegin), true);
