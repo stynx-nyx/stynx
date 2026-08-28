@@ -112,6 +112,7 @@ try {
 
 let shuttingDown = false;
 let composeDownComplete = false;
+let suppressExitCleanupRetry = false;
 let composeDownProcess;
 let apiProcess;
 let startupStateIndex = 0;
@@ -242,11 +243,13 @@ async function shutdown(signal, exitCode = 0) {
   } catch {
     // Continue into the existing confined owned-stack cleanup.
   }
+  let boundedExitCode = exitCode;
   try {
     await composeDown();
-  } finally {
-    process.exit(exitCode);
+  } catch {
+    boundedExitCode = 1;
   }
+  process.exit(boundedExitCode);
 }
 
 function stopApiProcess(signal = 'SIGTERM') {
@@ -384,6 +387,7 @@ async function runOwnedRouteClassifier() {
     return;
   }
   ownedRouteClassifierComplete = true;
+  suppressExitCleanupRetry = true;
   await shutdown('SIGTERM', 0);
 }
 
@@ -433,7 +437,9 @@ function handleStartupMessage(record) {
         failStartup('owned-route-table-not-present');
         return;
       }
-      void runOwnedRouteClassifier();
+      void runOwnedRouteClassifier().catch(() => {
+        failStartup('owned-route-classifier-failed');
+      });
     }
     return;
   }
@@ -488,7 +494,7 @@ async function composeDown() {
 }
 
 function composeDownSync() {
-  if (composeDownComplete) {
+  if (composeDownComplete || suppressExitCleanupRetry) {
     return;
   }
 
