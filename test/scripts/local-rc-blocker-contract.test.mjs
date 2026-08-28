@@ -3962,30 +3962,41 @@ test('D20 binds the exact installed Playwright 1.60 spawned-readiness semantics'
 
 test('D20 frozen Playwright normalization admits only the exact API wait field', () => {
   const configSource = readFileSync(join(repoRoot, 'reference/web/playwright.config.mjs'), 'utf8');
-  assert.equal(normalizeD20PlaywrightWait(configSource), configSource);
+  const occurrenceCount = configSource.split(playwrightApiReadyWaitLine).length - 1;
+  const frozenBaseline = normalizeD20PlaywrightWait(configSource);
+  assert.equal(
+    createHash('sha256').update(frozenBaseline).digest('hex'),
+    'af051b2fdaf1223c03d3a73fe621b9a389dd3158908648f0164c7544f565be5b',
+  );
+  if (occurrenceCount === 0) {
+    assert.equal(frozenBaseline, configSource);
+  } else {
+    assert.equal(occurrenceCount, 1);
+    assert.equal(configSource.replace(playwrightApiReadyWaitLine, ''), frozenBaseline);
+  }
 
   const apiAnchor = '      reuseExistingServer: true,\n      timeout: 300_000,\n';
   assert.equal(
-    (configSource.match(new RegExp(escapeRegExpLiteral(apiAnchor), 'gu')) ?? []).length,
+    (frozenBaseline.match(new RegExp(escapeRegExpLiteral(apiAnchor), 'gu')) ?? []).length,
     1,
   );
-  const withExactWait = configSource.replace(
+  const withExactWait = frozenBaseline.replace(
     apiAnchor,
     `      reuseExistingServer: true,\n${playwrightApiReadyWaitLine}      timeout: 300_000,\n`,
   );
-  assert.equal(normalizeD20PlaywrightWait(withExactWait), configSource);
+  assert.equal(normalizeD20PlaywrightWait(withExactWait), frozenBaseline);
   assert.throws(() => normalizeD20PlaywrightWait(`${withExactWait}${playwrightApiReadyWaitLine}`));
 
   const staticAnchor =
     "    {\n      command: 'pnpm build:web && PORT=3100 node scripts/serve-static.mjs',\n";
   assert.throws(() =>
     normalizeD20PlaywrightWait(
-      configSource.replace(staticAnchor, `${staticAnchor}${playwrightApiReadyWaitLine}`),
+      frozenBaseline.replace(staticAnchor, `${staticAnchor}${playwrightApiReadyWaitLine}`),
     ),
   );
   assert.throws(() =>
     normalizeD20PlaywrightWait(
-      configSource.replace(
+      frozenBaseline.replace(
         apiAnchor,
         '      reuseExistingServer: true,\n      wait: { stderr: /(runtime-route-table-present)/g },\n      timeout: 300_000,\n',
       ),
@@ -3993,7 +4004,7 @@ test('D20 frozen Playwright normalization admits only the exact API wait field',
   );
   assert.throws(() =>
     normalizeD20PlaywrightWait(
-      configSource.replace(
+      frozenBaseline.replace(
         apiAnchor,
         '      reuseExistingServer: true,\n      wait: { stdout: /runtime-route-table-present/m },\n      timeout: 300_000,\n',
       ),
