@@ -10,6 +10,7 @@ import {
   readFileSync,
   readdirSync,
   readlinkSync,
+  realpathSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -28,8 +29,7 @@ import { discoverMutationRoster } from '../../scripts/lib/mutation-roster.mjs';
 
 const repoRoot = resolve(import.meta.dirname, '..', '..');
 const privacyRoot = join(repoRoot, 'packages/privacy');
-const preferencesRoot = join(repoRoot, 'packages/preferences');
-const preferencesDist = join(preferencesRoot, 'dist');
+const repositoryPreferencesDist = join(repoRoot, 'packages/preferences/dist');
 const expectedNotificationsMutate = [
   'src/notifications.service.ts',
   'src/dispatch.service.ts',
@@ -169,9 +169,63 @@ function entryExists(target) {
   }
 }
 
-function inventoryTree(root, { exclude } = {}) {
-  const resolvedRoot = resolve(root);
-  const resolvedExclude = exclude === undefined ? undefined : resolve(exclude);
+function assertPreferencesFixtureRoot(fixtureRoot) {
+  const resolvedFixtureRoot = resolve(fixtureRoot);
+  assert.equal(dirname(resolvedFixtureRoot), realpathSync(tmpdir()));
+  assert.match(basename(resolvedFixtureRoot), /^stynx-d17-2-preferences-fixture-/u);
+  const stat = lstatSync(resolvedFixtureRoot);
+  assert.equal(stat.isDirectory(), true);
+  assert.equal(stat.isSymbolicLink(), false);
+  assert.equal(realpathSync(resolvedFixtureRoot), resolvedFixtureRoot);
+  return resolvedFixtureRoot;
+}
+
+function assertInsidePreferencesFixture(fixture, target, label, { allowLeafSymlink = false } = {}) {
+  const fixtureRoot = assertPreferencesFixtureRoot(fixture.root);
+  const resolvedTarget = resolve(target);
+  const displacement = relative(fixtureRoot, resolvedTarget);
+  assert.ok(
+    displacement !== '' && !displacement.startsWith('..') && !isAbsolute(displacement),
+    `${label} must resolve inside the owned preferences fixture`,
+  );
+  const segments = displacement.split('/');
+  let cursor = fixtureRoot;
+  for (const [index, segment] of segments.entries()) {
+    cursor = join(cursor, segment);
+    if (!entryExists(cursor)) continue;
+    const stat = lstatSync(cursor);
+    assert.ok(
+      !stat.isSymbolicLink() || (allowLeafSymlink && index === segments.length - 1),
+      `${label} must not traverse a symbolic link`,
+    );
+    if (!stat.isSymbolicLink()) assert.equal(realpathSync(cursor), resolve(cursor));
+  }
+  assert.notEqual(resolvedTarget, repositoryPreferencesDist);
+  return resolvedTarget;
+}
+
+function assertFixtureDist(fixture, distRoot = fixture.distRoot) {
+  const resolvedDist = assertInsidePreferencesFixture(fixture, distRoot, 'fixture dist root');
+  assert.equal(resolvedDist, resolve(fixture.distRoot), 'fixture dist root must match ownership');
+  return resolvedDist;
+}
+
+function createPreferencesFixture() {
+  const root = mkdtempSync(join(realpathSync(tmpdir()), 'stynx-d17-2-preferences-fixture-'));
+  const fixture = {
+    root,
+    distRoot: join(root, 'packages/preferences/dist'),
+    destructiveTargets: [],
+  };
+  assertPreferencesFixtureRoot(root);
+  assertFixtureDist(fixture);
+  return fixture;
+}
+
+function inventoryFixtureTree(fixture, root) {
+  const resolvedRoot = assertInsidePreferencesFixture(fixture, root, 'inventory root', {
+    allowLeafSymlink: true,
+  });
   if (!entryExists(resolvedRoot)) {
     const inventory = { present: false, entries: [] };
     return {
@@ -182,10 +236,11 @@ function inventoryTree(root, { exclude } = {}) {
 
   const entries = [];
   const visit = (target) => {
-    const resolvedTarget = resolve(target);
-    if (resolvedTarget === resolvedExclude) return;
+    const resolvedTarget = assertInsidePreferencesFixture(fixture, target, 'inventory entry', {
+      allowLeafSymlink: true,
+    });
     const stat = lstatSync(resolvedTarget);
-    const path = relative(repoRoot, resolvedTarget);
+    const path = relative(fixture.root, resolvedTarget);
     assert.ok(path !== '' && !path.startsWith('..') && !isAbsolute(path));
     if (stat.isDirectory()) {
       entries.push({ path, type: 'directory', mode: modeOf(stat) });
@@ -224,68 +279,93 @@ function inventoryTree(root, { exclude } = {}) {
   };
 }
 
-function assertPreferencesDistTarget(target) {
-  const resolvedTarget = resolve(target);
-  const displacement = relative(preferencesDist, resolvedTarget);
-  assert.ok(
-    displacement === '' || (!displacement.startsWith('..') && !isAbsolute(displacement)),
-    'preferences output mutation must remain inside packages/preferences/dist',
+function snapshotPreferencesDist(fixture, distRoot = fixture.distRoot) {
+  const resolvedDistRoot = assertFixtureDist(fixture, distRoot);
+  const snapshotParent = assertInsidePreferencesFixture(
+    fixture,
+    join(fixture.root, 'snapshots'),
+    'snapshot parent',
   );
-  return resolvedTarget;
-}
-
-function assertPreferencesSnapshotRoot(snapshotRoot) {
-  const resolvedSnapshotRoot = resolve(snapshotRoot);
-  assert.equal(dirname(resolvedSnapshotRoot), resolve(tmpdir()));
-  assert.match(basename(resolvedSnapshotRoot), /^stynx-d17-1-preferences-snapshot-/u);
-  return resolvedSnapshotRoot;
-}
-
-function snapshotPreferencesDist() {
-  const snapshotRoot = mkdtempSync(join(tmpdir(), 'stynx-d17-1-preferences-snapshot-'));
-  const resolvedSnapshotRoot = assertPreferencesSnapshotRoot(snapshotRoot);
+  mkdirSync(snapshotParent, { recursive: true, mode: 0o700 });
+  const snapshotRoot = mkdtempSync(join(snapshotParent, 'snapshot-'));
+  const resolvedSnapshotRoot = assertInsidePreferencesFixture(
+    fixture,
+    snapshotRoot,
+    'snapshot root',
+  );
   try {
-    const inventory = inventoryTree(preferencesDist);
+    const inventory = inventoryFixtureTree(fixture, resolvedDistRoot);
     const storedEntries = [];
     for (const [index, entry] of inventory.entries.entries()) {
-      const source = resolve(repoRoot, entry.path);
-      assertPreferencesDistTarget(source);
+      const source = assertInsidePreferencesFixture(
+        fixture,
+        resolve(fixture.root, entry.path),
+        'snapshot source',
+        { allowLeafSymlink: true },
+      );
       if (entry.type === 'file') {
-        const storagePath = join(resolvedSnapshotRoot, `entry-${index}`);
+        const storagePath = assertInsidePreferencesFixture(
+          fixture,
+          join(resolvedSnapshotRoot, `entry-${index}`),
+          'snapshot storage',
+        );
         writeFileSync(storagePath, readFileSync(source), { mode: entry.mode });
         storedEntries.push({ ...entry, storagePath });
       } else if (entry.type === 'symlink') {
-        const storagePath = join(resolvedSnapshotRoot, `entry-${index}`);
+        const storagePath = assertInsidePreferencesFixture(
+          fixture,
+          join(resolvedSnapshotRoot, `entry-${index}`),
+          'snapshot storage',
+        );
         writeFileSync(storagePath, Buffer.from(readlinkSync(source)), { mode: 0o600 });
         storedEntries.push({ ...entry, storagePath });
       } else {
         storedEntries.push(entry);
       }
     }
-    writeFileSync(join(resolvedSnapshotRoot, 'inventory.json'), `${JSON.stringify(inventory)}\n`, {
-      mode: 0o600,
-    });
-    return { root: resolvedSnapshotRoot, inventory, entries: storedEntries };
+    const inventoryPath = assertInsidePreferencesFixture(
+      fixture,
+      join(resolvedSnapshotRoot, 'inventory.json'),
+      'snapshot inventory',
+    );
+    writeFileSync(inventoryPath, `${JSON.stringify(inventory)}\n`, { mode: 0o600 });
+    return {
+      root: resolvedSnapshotRoot,
+      distRoot: resolvedDistRoot,
+      inventory,
+      entries: storedEntries,
+    };
   } catch (error) {
+    fixture.destructiveTargets.push(resolvedSnapshotRoot);
     rmSync(resolvedSnapshotRoot, { recursive: true, force: true });
     throw error;
   }
 }
 
-function restorePreferencesDist(snapshot) {
-  assertPreferencesSnapshotRoot(snapshot.root);
-  assertPreferencesDistTarget(preferencesDist);
-  const currentInventory = inventoryTree(preferencesDist);
+function restorePreferencesDist(fixture, snapshot, distRoot = fixture.distRoot) {
+  const resolvedDistRoot = assertFixtureDist(fixture, distRoot);
+  assert.equal(snapshot.distRoot, resolvedDistRoot, 'snapshot root must match fixture dist root');
+  assertInsidePreferencesFixture(fixture, snapshot.root, 'snapshot root');
+  const currentInventory = inventoryFixtureTree(fixture, resolvedDistRoot);
   if (JSON.stringify(currentInventory) === JSON.stringify(snapshot.inventory)) return false;
-  rmSync(preferencesDist, { recursive: true, force: true });
+  fixture.destructiveTargets.push(resolvedDistRoot);
+  rmSync(resolvedDistRoot, { recursive: true, force: true });
   if (!snapshot.inventory.present) return true;
 
   for (const entry of snapshot.entries.filter(({ type }) => type === 'directory')) {
-    const target = assertPreferencesDistTarget(resolve(repoRoot, entry.path));
+    const target = assertInsidePreferencesFixture(
+      fixture,
+      resolve(fixture.root, entry.path),
+      'restored directory',
+    );
     mkdirSync(target, { recursive: true, mode: entry.mode });
   }
   for (const entry of snapshot.entries.filter(({ type }) => type !== 'directory')) {
-    const target = assertPreferencesDistTarget(resolve(repoRoot, entry.path));
+    const target = assertInsidePreferencesFixture(
+      fixture,
+      resolve(fixture.root, entry.path),
+      'restored entry',
+    );
     mkdirSync(dirname(target), { recursive: true });
     if (entry.type === 'file') {
       writeFileSync(target, readFileSync(entry.storagePath), { mode: entry.mode });
@@ -297,43 +377,66 @@ function restorePreferencesDist(snapshot) {
   for (const entry of snapshot.entries
     .filter(({ type }) => type === 'directory')
     .toSorted((left, right) => right.path.length - left.path.length)) {
-    chmodSync(assertPreferencesDistTarget(resolve(repoRoot, entry.path)), entry.mode);
+    chmodSync(
+      assertInsidePreferencesFixture(
+        fixture,
+        resolve(fixture.root, entry.path),
+        'restored mode target',
+      ),
+      entry.mode,
+    );
   }
   return true;
 }
 
-function withPreferencesDistRestored(operation, evidence = {}) {
-  const snapshot = snapshotPreferencesDist();
+function withPreferencesDistRestored(fixture, operation, evidence = {}) {
+  const snapshot = snapshotPreferencesDist(fixture);
   evidence.snapshotRoot = snapshot.root;
   evidence.before = snapshot.inventory;
-  evidence.outsideBefore = inventoryTree(preferencesRoot, { exclude: preferencesDist });
   try {
     return operation();
   } finally {
     try {
-      evidence.restorationRequired = restorePreferencesDist(snapshot);
-      evidence.after = inventoryTree(preferencesDist);
-      evidence.outsideAfter = inventoryTree(preferencesRoot, { exclude: preferencesDist });
+      evidence.restorationRequired = restorePreferencesDist(fixture, snapshot);
+      evidence.after = inventoryFixtureTree(fixture, fixture.distRoot);
       assert.deepEqual(evidence.after, evidence.before);
-      assert.deepEqual(evidence.outsideAfter, evidence.outsideBefore);
     } finally {
-      rmSync(assertPreferencesSnapshotRoot(snapshot.root), { recursive: true, force: true });
+      const snapshotTarget = assertInsidePreferencesFixture(
+        fixture,
+        snapshot.root,
+        'snapshot cleanup',
+      );
+      fixture.destructiveTargets.push(snapshotTarget);
+      rmSync(snapshotTarget, { recursive: true, force: true });
       evidence.snapshotRemoved = !entryExists(snapshot.root);
       assert.equal(evidence.snapshotRemoved, true);
     }
   }
 }
 
-function seedPreferencesDist(state) {
-  assertPreferencesDistTarget(preferencesDist);
-  rmSync(preferencesDist, { recursive: true, force: true });
+function seedPreferencesDist(fixture, state) {
+  const distRoot = assertFixtureDist(fixture);
+  fixture.destructiveTargets.push(distRoot);
+  rmSync(distRoot, { recursive: true, force: true });
   if (state === 'absent') return;
   assert.equal(state, 'seeded');
-  const emptyDirectory = assertPreferencesDistTarget(join(preferencesDist, 'empty'));
-  const nestedDirectory = assertPreferencesDistTarget(join(preferencesDist, 'mixed/nested'));
-  const dataFile = assertPreferencesDistTarget(join(nestedDirectory, 'payload.bin'));
-  const executable = assertPreferencesDistTarget(join(preferencesDist, 'mixed/tool'));
-  const link = assertPreferencesDistTarget(join(preferencesDist, 'mixed/payload-link'));
+  const emptyDirectory = assertInsidePreferencesFixture(fixture, join(distRoot, 'empty'), 'seed');
+  const nestedDirectory = assertInsidePreferencesFixture(
+    fixture,
+    join(distRoot, 'mixed/nested'),
+    'seed',
+  );
+  const dataFile = assertInsidePreferencesFixture(
+    fixture,
+    join(nestedDirectory, 'payload.bin'),
+    'seed',
+  );
+  const executable = assertInsidePreferencesFixture(fixture, join(distRoot, 'mixed/tool'), 'seed');
+  const link = assertInsidePreferencesFixture(
+    fixture,
+    join(distRoot, 'mixed/payload-link'),
+    'seed',
+  );
   mkdirSync(emptyDirectory, { recursive: true, mode: 0o750 });
   mkdirSync(nestedDirectory, { recursive: true, mode: 0o711 });
   writeFileSync(dataFile, Buffer.from([0, 255, 10, 13, 42]), { mode: 0o640 });
@@ -343,12 +446,24 @@ function seedPreferencesDist(state) {
   chmodSync(nestedDirectory, 0o711);
 }
 
-function mutatePreferencesDist() {
-  assertPreferencesDistTarget(preferencesDist);
-  rmSync(preferencesDist, { recursive: true, force: true });
-  const generated = assertPreferencesDistTarget(join(preferencesDist, 'preferences/src/index.js'));
+function mutatePreferencesDist(fixture) {
+  const distRoot = assertFixtureDist(fixture);
+  fixture.destructiveTargets.push(distRoot);
+  rmSync(distRoot, { recursive: true, force: true });
+  const generated = assertInsidePreferencesFixture(
+    fixture,
+    join(distRoot, 'preferences/src/index.js'),
+    'mutation output',
+  );
   mkdirSync(dirname(generated), { recursive: true });
   writeFileSync(generated, 'export const generated = true;\n', { mode: 0o644 });
+}
+
+function removePreferencesFixture(fixture, remover = rmSync) {
+  const fixtureRoot = assertPreferencesFixtureRoot(fixture.root);
+  fixture.destructiveTargets.push(fixtureRoot);
+  remover(fixtureRoot, { recursive: true, force: true });
+  assert.equal(entryExists(fixtureRoot), false);
 }
 
 function resolvedPrivacyPopulation(configName) {
@@ -2219,10 +2334,9 @@ test('privacy ordinary, integration, and coverage tiers resolve exact disjoint p
 });
 
 test('clean preferences build emits both exact exports and reference-api fails closed without declarations', () => {
-  const sharedEvidence = {};
-  withPreferencesDistRestored(() => {
-    const fixture = createBuildFixture();
-    const fixtureRoot = assertSafeFixtureRoot(fixture.root);
+  const fixture = createBuildFixture();
+  const fixtureRoot = assertSafeFixtureRoot(fixture.root);
+  try {
     const fixturePreferencesDist = join(fixtureRoot, 'packages/preferences/dist');
     const fixturePreferencesRuntime = join(fixturePreferencesDist, 'preferences/src/index.js');
     const fixturePreferencesDeclaration = join(
@@ -2238,93 +2352,93 @@ test('clean preferences build emits both exact exports and reference-api fails c
     ]) {
       assert.equal(assertInsideFixture(fixtureRoot, target, label), resolve(target));
     }
-    try {
-      const installed = spawnInFixture(
-        fixture,
-        'pnpm',
-        [
-          'install',
-          '--offline',
-          '--frozen-lockfile',
-          '--ignore-scripts',
-          '--filter',
-          '@stynx-nyx/preferences...',
-          '--filter',
-          '@stynx-nyx/reference-api',
-        ],
-        { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
-      );
-      assert.ifError(installed.error);
-      assert.equal(installed.status, 0, installed.stderr);
-      removeInsideFixture(fixture, fixturePreferencesDist, { recursive: true, force: true });
-      const built = spawnInFixture(
-        fixture,
-        'pnpm',
-        ['--filter', '@stynx-nyx/preferences', 'run', 'build'],
-        {
-          encoding: 'utf8',
-          stdio: ['ignore', 'pipe', 'pipe'],
-        },
-      );
-      assert.ifError(built.error);
-      assert.equal(built.status, 0, built.stderr);
-      assert.equal(existsSync(fixturePreferencesRuntime), true);
-      assert.equal(existsSync(fixturePreferencesDeclaration), true);
-      const verified = spawnInFixture(fixture, 'node', [fixtureVerifier], {
+    const installed = spawnInFixture(
+      fixture,
+      'pnpm',
+      [
+        'install',
+        '--offline',
+        '--frozen-lockfile',
+        '--ignore-scripts',
+        '--filter',
+        '@stynx-nyx/preferences...',
+        '--filter',
+        '@stynx-nyx/reference-api',
+      ],
+      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
+    );
+    assert.ifError(installed.error);
+    assert.equal(installed.status, 0, installed.stderr);
+    removeInsideFixture(fixture, fixturePreferencesDist, { recursive: true, force: true });
+    const built = spawnInFixture(
+      fixture,
+      'pnpm',
+      ['--filter', '@stynx-nyx/preferences', 'run', 'build'],
+      {
         encoding: 'utf8',
         stdio: ['ignore', 'pipe', 'pipe'],
-      });
-      assert.ifError(verified.error);
-      assert.equal(verified.status, 0, verified.stderr);
-      removeInsideFixture(fixture, fixturePreferencesDeclaration, { force: true });
-      const rejected = spawnInFixture(fixture, 'node', [fixtureVerifier], {
-        encoding: 'utf8',
-        stdio: ['ignore', 'pipe', 'pipe'],
-      });
-      assert.ifError(rejected.error);
-      assert.notEqual(rejected.status, 0);
-      assert.match(rejected.stderr, /declaration output is unavailable/u);
-    } finally {
-      assert.ok(fixture.subprocessCwds.length >= 6);
-      assert.equal(
-        fixture.subprocessCwds.every((cwd) => cwd === fixtureRoot),
-        true,
-      );
-      assert.equal(
-        fixture.destructiveTargets.every((target) =>
-          target === fixtureRoot
-            ? true
-            : relative(fixtureRoot, target) !== '' &&
-              !relative(fixtureRoot, target).startsWith('..') &&
-              !isAbsolute(relative(fixtureRoot, target)),
-        ),
-        true,
-      );
-      removeFixture(fixture);
-      assert.equal(existsSync(fixtureRoot), false);
-    }
-  }, sharedEvidence);
-  assert.deepEqual(sharedEvidence.after, sharedEvidence.before);
-  assert.deepEqual(sharedEvidence.outsideAfter, sharedEvidence.outsideBefore);
-  assert.equal(sharedEvidence.restorationRequired, false);
-  assert.equal(sharedEvidence.snapshotRemoved, true);
+      },
+    );
+    assert.ifError(built.error);
+    assert.equal(built.status, 0, built.stderr);
+    assert.equal(existsSync(fixturePreferencesRuntime), true);
+    assert.equal(existsSync(fixturePreferencesDeclaration), true);
+    const verified = spawnInFixture(fixture, 'node', [fixtureVerifier], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    assert.ifError(verified.error);
+    assert.equal(verified.status, 0, verified.stderr);
+    removeInsideFixture(fixture, fixturePreferencesDeclaration, { force: true });
+    const rejected = spawnInFixture(fixture, 'node', [fixtureVerifier], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    assert.ifError(rejected.error);
+    assert.notEqual(rejected.status, 0);
+    assert.match(rejected.stderr, /declaration output is unavailable/u);
+  } finally {
+    assert.ok(fixture.subprocessCwds.length >= 6);
+    assert.equal(
+      fixture.subprocessCwds.every((cwd) => cwd === fixtureRoot),
+      true,
+    );
+    assert.equal(
+      fixture.destructiveTargets.every((target) =>
+        target === fixtureRoot
+          ? true
+          : relative(fixtureRoot, target) !== '' &&
+            !relative(fixtureRoot, target).startsWith('..') &&
+            !isAbsolute(relative(fixtureRoot, target)),
+      ),
+      true,
+    );
+    assert.equal(fixture.subprocessCwds.includes(repoRoot), false);
+    assert.equal(fixture.destructiveTargets.includes(repositoryPreferencesDist), false);
+    removeFixture(fixture);
+    assert.equal(existsSync(fixtureRoot), false);
+  }
 });
 
 test('preferences output restoration is exact across success and injected failures', () => {
-  const originalEvidence = {};
+  const fixture = createPreferencesFixture();
   const matrix = [];
-  withPreferencesDistRestored(() => {
+  try {
     for (const state of ['absent', 'seeded']) {
       for (const outcome of ['success', 'command-failure', 'assertion-failure']) {
-        seedPreferencesDist(state);
+        seedPreferencesDist(fixture, state);
         const evidence = {};
         const scenario = () =>
-          withPreferencesDistRestored(() => {
-            mutatePreferencesDist();
-            if (outcome === 'command-failure') throw new Error('injected command failure');
-            if (outcome === 'assertion-failure') assert.fail('injected assertion failure');
-            assert.equal(existsSync(join(preferencesDist, 'preferences/src/index.js')), true);
-          }, evidence);
+          withPreferencesDistRestored(
+            fixture,
+            () => {
+              mutatePreferencesDist(fixture);
+              if (outcome === 'command-failure') throw new Error('injected command failure');
+              if (outcome === 'assertion-failure') assert.fail('injected assertion failure');
+              assert.equal(existsSync(join(fixture.distRoot, 'preferences/src/index.js')), true);
+            },
+            evidence,
+          );
         if (outcome === 'success') {
           scenario();
         } else {
@@ -2332,8 +2446,6 @@ test('preferences output restoration is exact across success and injected failur
         }
         assert.deepEqual(evidence.after, evidence.before);
         assert.equal(evidence.after.digest, evidence.before.digest);
-        assert.deepEqual(evidence.outsideAfter, evidence.outsideBefore);
-        assert.equal(evidence.outsideAfter.digest, evidence.outsideBefore.digest);
         assert.equal(evidence.restorationRequired, true);
         assert.equal(evidence.snapshotRemoved, true);
         assert.equal(entryExists(evidence.snapshotRoot), false);
@@ -2349,17 +2461,59 @@ test('preferences output restoration is exact across success and injected failur
       { state: 'seeded', outcome: 'assertion-failure', restored: true },
     ]);
     const restorationSource = [
-      inventoryTree,
+      inventoryFixtureTree,
       snapshotPreferencesDist,
       restorePreferencesDist,
       withPreferencesDistRestored,
+      seedPreferencesDist,
+      mutatePreferencesDist,
     ].join('\n');
     assert.doesNotMatch(restorationSource, /\bgit\s+(?:status|diff)\b/u);
     assert.doesNotMatch(restorationSource, /\b(?:setTimeout|setInterval|sleep|retry|poll)\b/u);
-  }, originalEvidence);
-  assert.deepEqual(originalEvidence.after, originalEvidence.before);
-  assert.deepEqual(originalEvidence.outsideAfter, originalEvidence.outsideBefore);
-  assert.equal(originalEvidence.snapshotRemoved, true);
+    assert.doesNotMatch(
+      restorationSource,
+      /repositoryPreferencesDist|packages\/preferences\/dist/u,
+    );
+    assert.notEqual(resolve(fixture.distRoot), repositoryPreferencesDist);
+    assert.throws(() => assertInsidePreferencesFixture(fixture, fixture.root, 'fixture root'));
+    assert.throws(() =>
+      assertInsidePreferencesFixture(fixture, join(fixture.root, '..', 'escape'), 'escape'),
+    );
+    assert.throws(() => snapshotPreferencesDist(fixture, join(fixture.root, 'wrong-dist')));
+    const escapeLink = assertInsidePreferencesFixture(
+      fixture,
+      join(fixture.root, 'escape-link'),
+      'escape link',
+    );
+    symlinkSync(repositoryPreferencesDist, escapeLink);
+    assert.throws(() =>
+      assertInsidePreferencesFixture(fixture, join(escapeLink, 'child'), 'symlink escape'),
+    );
+    fixture.destructiveTargets.push(escapeLink);
+    rmSync(escapeLink, { force: true });
+    assert.throws(
+      () =>
+        removePreferencesFixture(fixture, () => {
+          throw new Error('injected cleanup failure');
+        }),
+      /injected cleanup failure/u,
+    );
+    assert.equal(entryExists(fixture.root), true);
+    assert.equal(
+      fixture.destructiveTargets.every(
+        (target) =>
+          target === fixture.root ||
+          (relative(fixture.root, target) !== '' &&
+            !relative(fixture.root, target).startsWith('..') &&
+            !isAbsolute(relative(fixture.root, target))),
+      ),
+      true,
+    );
+    assert.equal(fixture.destructiveTargets.includes(repositoryPreferencesDist), false);
+  } finally {
+    removePreferencesFixture(fixture);
+    assert.equal(entryExists(fixture.root), false);
+  }
 });
 
 test('report-first classification distinguishes score, harness, missing, and portability failures', () => {
