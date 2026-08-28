@@ -559,6 +559,14 @@ const helperSuccessStates = [
 const startupSuccessStates = ['bootstrap-entered', 'nest-created', 'listening'];
 const startupFailureReasons = ['nest-initialization', 'pre-listen-configuration', 'listen'];
 const startupChildTerminals = ['child-error', 'child-disconnect', 'child-exit'];
+const runtimeRouteTableStates = [
+  'runtime-route-table-present',
+  'runtime-route-table-absent',
+  'runtime-route-table-indeterminate',
+];
+const governedRuntimeRoutes = ['GET /healthz', 'GET /readyz', 'GET /_reference/demo-tenants'];
+const runtimeRouteTableBegin = '// D17.6 runtime route table inspection: begin';
+const runtimeRouteTableEnd = '// D17.6 runtime route table inspection: end';
 
 function fixedStartupOutput(code) {
   assert.ok(
@@ -567,10 +575,26 @@ function fixedStartupOutput(code) {
       ...startupSuccessStates,
       ...startupFailureReasons.map((reason) => `bootstrap-failed:${reason}`),
       ...startupChildTerminals,
+      ...runtimeRouteTableStates,
     ].includes(code),
     'startup output must be one bounded fixed code',
   );
   return `${startupOutputPrefix} ${code}`;
+}
+
+function frozenMainWithoutRuntimeRouteTableInspection(source) {
+  const beginCount = source.split(runtimeRouteTableBegin).length - 1;
+  const endCount = source.split(runtimeRouteTableEnd).length - 1;
+  if (beginCount === 0 && endCount === 0) return source;
+  assert.equal(beginCount, 1, 'D17.6 main inspection begin marker must occur exactly once');
+  assert.equal(endCount, 1, 'D17.6 main inspection end marker must occur exactly once');
+  const begin = source.indexOf(runtimeRouteTableBegin);
+  const end = source.indexOf(runtimeRouteTableEnd, begin);
+  assert.ok(end > begin, 'D17.6 main inspection markers must be ordered');
+  const beginLine = source.lastIndexOf('\n', begin) + 1;
+  const afterEnd = source.indexOf('\n', end);
+  assert.ok(afterEnd >= 0, 'D17.6 main inspection end marker must terminate its line');
+  return `${source.slice(0, beginLine)}${source.slice(afterEnd + 1)}`;
 }
 
 function startupOracle(cleanup, recorder = () => undefined) {
@@ -897,6 +921,89 @@ function startReadinessDiagnostic(fixture) {
     triggered: true,
   });
   assert.deepEqual(fixture.snapshot().requests, ['GET healthz']);
+}
+
+function runtimeRouteTableFixture() {
+  const stdout = [];
+  const stderr = [];
+  const cleanupTargets = [];
+  const phases = [...helperSuccessStates, ...startupSuccessStates];
+  let nextPhase = 0;
+  let state = 'phases';
+  let acceptedRouteState;
+  let cleanupComplete = false;
+
+  function cleanup() {
+    if (cleanupComplete) return;
+    cleanupComplete = true;
+    cleanupTargets.push('owned-d17-route-table-fixture');
+  }
+
+  function reject(reason) {
+    state = 'rejected';
+    cleanup();
+    return { accepted: false, reason };
+  }
+
+  function phase(code) {
+    if (state !== 'phases') return reject('phase-after-terminal');
+    if (code !== phases[nextPhase]) return reject('phase-order');
+    stderr.push(fixedStartupOutput(code));
+    nextPhase += 1;
+    if (nextPhase === phases.length) state = 'await-route-table';
+    return { accepted: true, code };
+  }
+
+  function ipc(record) {
+    if (state === 'phases') return reject('early-route-table');
+    if (state === 'classified') return reject('duplicate-route-table');
+    if (state !== 'await-route-table') return reject('route-table-after-terminal');
+    if (!record || typeof record !== 'object' || Array.isArray(record)) {
+      return reject('malformed-route-table');
+    }
+    if (Object.keys(record).sort().join(',') !== 'protocol,state') {
+      return reject('payload-bearing-route-table');
+    }
+    if (record.protocol !== startupProtocol || !runtimeRouteTableStates.includes(record.state)) {
+      return reject('unknown-route-table');
+    }
+    acceptedRouteState = record.state;
+    stderr.push(fixedStartupOutput(record.state));
+    state = 'classified';
+    return { accepted: true, state: record.state };
+  }
+
+  function childTerminal(event) {
+    if (!['error', 'disconnect', 'exit'].includes(event)) {
+      return reject('unknown-child-event');
+    }
+    if (state === 'classified') {
+      state = 'completed';
+      cleanup();
+      return { accepted: true, state: acceptedRouteState };
+    }
+    if (state === 'await-route-table') stderr.push(fixedStartupOutput(`child-${event}`));
+    return reject('child-without-route-table');
+  }
+
+  function snapshot() {
+    return {
+      stdout: [...stdout],
+      stderr: [...stderr],
+      cleanupTargets: [...cleanupTargets],
+      nextPhase,
+      state,
+      acceptedRouteState,
+    };
+  }
+
+  return { phase, ipc, childTerminal, snapshot };
+}
+
+function advanceRuntimeRouteTableFixture(fixture) {
+  for (const code of [...helperSuccessStates, ...startupSuccessStates]) {
+    assert.deepEqual(fixture.phase(code), { accepted: true, code });
+  }
 }
 
 function boundedHelperFailureViolations(result, expectedCodes) {
@@ -2059,6 +2166,189 @@ test('D17 rejects malformed or raw readiness material without retaining it', () 
   assert.doesNotMatch(source, /\btimeout\b/iu);
 });
 
+test('D17.6 route-table oracle records one exact post-listening outcome', () => {
+  assert.deepEqual(governedRuntimeRoutes, [
+    'GET /healthz',
+    'GET /readyz',
+    'GET /_reference/demo-tenants',
+  ]);
+  const expectedPhases = [...helperSuccessStates, ...startupSuccessStates].map(fixedStartupOutput);
+  for (const outcome of runtimeRouteTableStates) {
+    const fixture = runtimeRouteTableFixture();
+    assert.deepEqual(fixture.snapshot(), {
+      stdout: [],
+      stderr: [],
+      cleanupTargets: [],
+      nextPhase: 0,
+      state: 'phases',
+      acceptedRouteState: undefined,
+    });
+    advanceRuntimeRouteTableFixture(fixture);
+    assert.deepEqual(fixture.snapshot().stderr, expectedPhases);
+    assert.equal(fixture.snapshot().state, 'await-route-table');
+    assert.deepEqual(fixture.ipc({ protocol: startupProtocol, state: outcome }), {
+      accepted: true,
+      state: outcome,
+    });
+    assert.deepEqual(fixture.snapshot().stderr, [...expectedPhases, fixedStartupOutput(outcome)]);
+    assert.deepEqual(fixture.snapshot().stdout, []);
+    assert.deepEqual(fixture.snapshot().cleanupTargets, []);
+    assert.deepEqual(fixture.childTerminal('exit'), { accepted: true, state: outcome });
+    assert.deepEqual(fixture.snapshot().cleanupTargets, ['owned-d17-route-table-fixture']);
+    assert.equal(
+      fixture.snapshot().stderr.filter((line) => line === fixedStartupOutput(outcome)).length,
+      1,
+    );
+  }
+});
+
+test('D17.6 route-table oracle fails closed on every invalid message and child terminal', () => {
+  const early = runtimeRouteTableFixture();
+  for (const code of [...helperSuccessStates, ...startupSuccessStates].slice(0, -1)) {
+    assert.equal(early.phase(code).accepted, true);
+  }
+  assert.deepEqual(early.ipc({ protocol: startupProtocol, state: runtimeRouteTableStates[0] }), {
+    accepted: false,
+    reason: 'early-route-table',
+  });
+  assert.deepEqual(early.snapshot().cleanupTargets, ['owned-d17-route-table-fixture']);
+  assert.equal(
+    early.snapshot().stderr.some((line) => /runtime-route-table/u.test(line)),
+    false,
+  );
+
+  const invalidRecords = [
+    null,
+    [],
+    'runtime-route-table-present',
+    { state: 'runtime-route-table-present' },
+    { protocol: 'unknown-protocol', state: 'runtime-route-table-present' },
+    { protocol: startupProtocol, state: 'unknown-route-table' },
+    { protocol: startupProtocol, state: 'runtime-route-table-present', route: '/healthz' },
+    { protocol: startupProtocol, state: 'runtime-route-table-absent', table: 'raw-table' },
+    { protocol: startupProtocol, state: 'runtime-route-table-indeterminate', error: 'raw-error' },
+    { protocol: startupProtocol, state: 'runtime-route-table-present', address: '127.0.0.1' },
+    { protocol: startupProtocol, state: 'runtime-route-table-present', port: 3000 },
+    { protocol: startupProtocol, state: 'runtime-route-table-present', env: 'production' },
+    { protocol: startupProtocol, state: 'runtime-route-table-present', credential: 'secret' },
+  ];
+  for (const record of invalidRecords) {
+    const fixture = runtimeRouteTableFixture();
+    advanceRuntimeRouteTableFixture(fixture);
+    assert.equal(fixture.ipc(record).accepted, false);
+    const snapshot = fixture.snapshot();
+    assert.deepEqual(snapshot.cleanupTargets, ['owned-d17-route-table-fixture']);
+    assert.equal(
+      snapshot.stderr.some((line) => /runtime-route-table/u.test(line)),
+      false,
+    );
+    assert.doesNotMatch(
+      JSON.stringify(snapshot),
+      /(?:raw-table|raw-error|127\.0\.0\.1|production|secret|\/healthz)/u,
+    );
+  }
+
+  const duplicate = runtimeRouteTableFixture();
+  advanceRuntimeRouteTableFixture(duplicate);
+  assert.equal(
+    duplicate.ipc({ protocol: startupProtocol, state: runtimeRouteTableStates[0] }).accepted,
+    true,
+  );
+  assert.deepEqual(
+    duplicate.ipc({ protocol: startupProtocol, state: runtimeRouteTableStates[0] }),
+    { accepted: false, reason: 'duplicate-route-table' },
+  );
+  assert.equal(
+    duplicate
+      .snapshot()
+      .stderr.filter((line) => line === fixedStartupOutput(runtimeRouteTableStates[0])).length,
+    1,
+  );
+  assert.deepEqual(duplicate.snapshot().cleanupTargets, ['owned-d17-route-table-fixture']);
+
+  for (const event of ['error', 'disconnect', 'exit']) {
+    const fixture = runtimeRouteTableFixture();
+    advanceRuntimeRouteTableFixture(fixture);
+    assert.deepEqual(fixture.childTerminal(event), {
+      accepted: false,
+      reason: 'child-without-route-table',
+    });
+    assert.deepEqual(fixture.snapshot().stderr.slice(-1), [fixedStartupOutput(`child-${event}`)]);
+    assert.deepEqual(fixture.snapshot().cleanupTargets, ['owned-d17-route-table-fixture']);
+  }
+
+  const outOfOrder = runtimeRouteTableFixture();
+  assert.deepEqual(outOfOrder.phase('compose-ready'), {
+    accepted: false,
+    reason: 'phase-order',
+  });
+  assert.deepEqual(outOfOrder.snapshot().cleanupTargets, ['owned-d17-route-table-fixture']);
+  const source = `${runtimeRouteTableFixture}\n${advanceRuntimeRouteTableFixture}`;
+  assert.doesNotMatch(source, /\b(?:setTimeout|setInterval|sleep|retry|poll)\s*\(/iu);
+  assert.doesNotMatch(source, /\b(?:process\.env|fetch|request|listen|connect)\b/iu);
+});
+
+test('D17.6 production binds one IPC-only live route-table state after listening', () => {
+  const main = readFileSync(join(repoRoot, 'reference/api/src/main.ts'), 'utf8');
+  const helper = readFileSync(
+    join(repoRoot, 'reference/web/scripts/serve-reference-api-stack.mjs'),
+    'utf8',
+  );
+  const healthController = readFileSync(
+    join(repoRoot, 'packages/health/src/health.controller.ts'),
+    'utf8',
+  );
+  const referenceController = readFileSync(
+    join(repoRoot, 'reference/api/src/sample/reference-dev-auth.controller.ts'),
+    'utf8',
+  );
+  assert.equal((healthController.match(/@Get\('\/healthz'\)/gu) ?? []).length, 1);
+  assert.equal((healthController.match(/@Get\('\/readyz'\)/gu) ?? []).length, 1);
+  assert.match(referenceController, /@Controller\('\/_reference'\)/u);
+  assert.equal((referenceController.match(/@Get\('\/demo-tenants'\)/gu) ?? []).length, 1);
+
+  const mainBindingPresent =
+    main.includes(runtimeRouteTableBegin) &&
+    main.includes(runtimeRouteTableEnd) &&
+    runtimeRouteTableStates.every((state) => main.includes(`'${state}'`));
+  assert.equal(
+    mainBindingPresent,
+    true,
+    'D17.6 main runtime route-table inspection is not implemented',
+  );
+  const inspectionBegin = main.indexOf(runtimeRouteTableBegin);
+  const inspectionEnd = main.indexOf(runtimeRouteTableEnd, inspectionBegin);
+  const inspection = main.slice(inspectionBegin, inspectionEnd);
+  const listeningIndex = main.indexOf("state: 'listening'");
+  assert.ok(inspectionBegin > listeningIndex);
+  assert.deepEqual(
+    governedRuntimeRoutes.filter((route) => inspection.includes(route)),
+    governedRuntimeRoutes,
+  );
+  assert.match(inspection, /(?:getHttpAdapter|getInstance|httpAdapter)/u);
+  assert.match(inspection, /process\.send|emitStartupRecord/u);
+  assert.doesNotMatch(inspection, /console\.(?:log|error)|process\.env|\b(?:fetch|request)\s*\(/u);
+
+  const helperBindingPresent = runtimeRouteTableStates.every((state) =>
+    helper.includes(`'${state}'`),
+  );
+  assert.equal(
+    helperBindingPresent,
+    true,
+    'D17.6 helper runtime route-table acceptance is not implemented',
+  );
+  const helperListeningIndex = helper.indexOf("'listening'");
+  const helperRouteIndex = Math.min(
+    ...runtimeRouteTableStates.map((state) => helper.indexOf(`'${state}'`)),
+  );
+  assert.ok(helperRouteIndex > helperListeningIndex);
+  assert.match(helper, /console\.error\(\s*`\$\{startupOutputPrefix\} \$\{code\}`\s*\)/u);
+  assert.doesNotMatch(
+    helper,
+    /runtime-route-table[^;\n]*(?:route|table|error|address|host|port|env|credential|url|path)/iu,
+  );
+});
+
 test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14', () => {
   const frozen = {
     'reference/api/src/main.ts': 'c6175bfa1f231730a0c339a8f48fd28a7a04c1c3f6f60de643ae4b767bf7c7a9',
@@ -2072,9 +2362,14 @@ test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14
     'turbo.json': 'd32a54129f37eb21a86d346cfcf09eb914cda06ebdc5166c432a9f23c67db467',
   };
   for (const [path, digest] of Object.entries(frozen)) {
+    const source = readFileSync(join(repoRoot, path), 'utf8');
     assert.equal(
       createHash('sha256')
-        .update(readFileSync(join(repoRoot, path)))
+        .update(
+          path === 'reference/api/src/main.ts'
+            ? frozenMainWithoutRuntimeRouteTableInspection(source)
+            : source,
+        )
         .digest('hex'),
       digest,
     );
