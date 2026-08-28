@@ -3476,8 +3476,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
-      "assertion_count": 25,
-      "assertion_digest_sha256": "41a211d41e7c0325d84712688df31c46e54577470f5b661c60d5477b715f825d"
+      "assertion_count": 80,
+      "assertion_digest_sha256": "6e6308eaaed25b608e8f57caa581e9a6c6ed2d5bfce3f987e08c6f6add63ba79"
     },
     {
       "path": "packages/offline-sync/test/unit/offline-sync.migration.spec.ts",
@@ -3492,8 +3492,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
-      "assertion_count": 13,
-      "assertion_digest_sha256": "8e207bd1c1cbf75ce1c065be9cc1a532107a138eb8477ae861b2776d6ca32cdd"
+      "assertion_count": 18,
+      "assertion_digest_sha256": "0b8953c2d50c5ff01662fbe590fa317c11e031fb436d373249721026bb5740d8"
     },
     {
       "path": "packages/offline-sync/test/unit/postgres-offline-sync.store.spec.ts",
