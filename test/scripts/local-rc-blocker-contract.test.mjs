@@ -573,6 +573,7 @@ const helperManagedBindingBegin = '// D18 helper-managed listener binding: begin
 const helperManagedBindingEnd = '// D18 helper-managed listener binding: end';
 const helperManagedMarker = 'STYNX_REFERENCE_API_HELPER_MANAGED';
 const ownedListenerOptIn = '--d17-owned-route-classifier';
+const defaultEndpointOptIn = '--d19-default-endpoint-classifier';
 const ownedListenerOutputPrefix = '[reference-api-owned-route]';
 const ownedListenerSlots = ['health', 'readiness', 'api-local', 'sentinel'];
 const ownedListenerSlotCodes = {
@@ -601,6 +602,27 @@ const ownedListenerFinalCodes = [
   'owned-full-table-present',
   'owned-full-table-absent',
   'owned-full-table-indeterminate',
+];
+const defaultEndpointOutputPrefix = '[reference-api-default-endpoint]';
+const defaultEndpointSlotCodes = {
+  healthz: [
+    'default-healthz-2xx',
+    'default-healthz-404',
+    'default-healthz-other',
+    'default-healthz-connect-failed',
+  ],
+  readyz: [
+    'default-readyz-2xx',
+    'default-readyz-404',
+    'default-readyz-503',
+    'default-readyz-other',
+    'default-readyz-connect-failed',
+  ],
+};
+const defaultEndpointFinalCodes = [
+  'default-endpoint-ready',
+  'default-endpoint-unavailable',
+  'default-endpoint-indeterminate',
 ];
 
 function escapeRegExpLiteral(value) {
@@ -1121,6 +1143,296 @@ function d18HelperInvocationOracle(args = [], inherited = {}) {
     port: exactOptIn ? 33_117 : 3_000,
     exitCode: undefined,
   };
+}
+
+function d19HelperModeOracle(args = [], inherited = {}) {
+  const normalMode = args.length === 0;
+  const d17Mode = args.length === 1 && args[0] === ownedListenerOptIn;
+  const d19Mode = args.length === 1 && args[0] === defaultEndpointOptIn;
+  if (!normalMode && !d17Mode && !d19Mode) {
+    return {
+      accepted: false,
+      operations: [],
+      phases: [],
+      requests: [],
+      childEnvironment: undefined,
+      exitCode: 1,
+    };
+  }
+  const childEnvironment = { ...inherited };
+  delete childEnvironment[helperManagedMarker];
+  delete childEnvironment.STYNX_REFERENCE_API_OWNED_DIAGNOSTIC;
+  childEnvironment[helperManagedMarker] = '1';
+  if (d17Mode) childEnvironment.STYNX_REFERENCE_API_OWNED_DIAGNOSTIC = '1';
+  return {
+    accepted: true,
+    mode: normalMode ? 'default' : d17Mode ? 'd17' : 'd19',
+    operations: ['owned-resource-setup', 'child-spawn'],
+    phases: [...helperSuccessStates, ...startupSuccessStates],
+    requests: [],
+    childEnvironment,
+    childInputs: {
+      host: '127.0.0.1',
+      port: d17Mode ? 33_117 : 3_000,
+      helperManaged: '1',
+      ownedDiagnostic: d17Mode ? '1' : undefined,
+    },
+    exitCode: undefined,
+  };
+}
+
+function parseUniqueJson(text) {
+  let index = 0;
+  function skipWhitespace() {
+    while (/\s/u.test(text[index] ?? '')) index += 1;
+  }
+  function stringToken() {
+    if (text[index] !== '"') throw new Error('string-required');
+    const start = index;
+    index += 1;
+    while (index < text.length) {
+      if (text[index] === '\\') {
+        index += 2;
+        continue;
+      }
+      if (text[index] === '"') {
+        index += 1;
+        return JSON.parse(text.slice(start, index));
+      }
+      index += 1;
+    }
+    throw new Error('unterminated-string');
+  }
+  function value() {
+    skipWhitespace();
+    if (text[index] === '{') return object();
+    if (text[index] === '[') {
+      index += 1;
+      skipWhitespace();
+      if (text[index] === ']') {
+        index += 1;
+        return;
+      }
+      while (true) {
+        value();
+        skipWhitespace();
+        if (text[index] === ']') {
+          index += 1;
+          return;
+        }
+        if (text[index] !== ',') throw new Error('array-separator');
+        index += 1;
+      }
+    }
+    if (text[index] === '"') {
+      stringToken();
+      return;
+    }
+    const match = /^(?:true|false|null|-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?)/u.exec(
+      text.slice(index),
+    );
+    if (!match) throw new Error('value-required');
+    index += match[0].length;
+  }
+  function object() {
+    const keys = new Set();
+    index += 1;
+    skipWhitespace();
+    if (text[index] === '}') {
+      index += 1;
+      return;
+    }
+    while (true) {
+      skipWhitespace();
+      const key = stringToken();
+      if (keys.has(key)) throw new Error('duplicate-member');
+      keys.add(key);
+      skipWhitespace();
+      if (text[index] !== ':') throw new Error('member-separator');
+      index += 1;
+      value();
+      skipWhitespace();
+      if (text[index] === '}') {
+        index += 1;
+        return;
+      }
+      if (text[index] !== ',') throw new Error('object-separator');
+      index += 1;
+    }
+  }
+  value();
+  skipWhitespace();
+  if (index !== text.length) throw new Error('trailing-material');
+  return JSON.parse(text);
+}
+
+function validateD19ReadinessBody(body) {
+  if (typeof body !== 'string' || Buffer.byteLength(body) > 16_384) return undefined;
+  let parsed;
+  try {
+    parsed = parseUniqueJson(body);
+  } catch {
+    return undefined;
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return undefined;
+  if (Object.keys(parsed).sort().join(',') !== 'details,error,info,status') return undefined;
+  if (parsed.status !== 'error') return undefined;
+  for (const projection of [parsed.info, parsed.details]) {
+    if (!projection || typeof projection !== 'object' || Array.isArray(projection))
+      return undefined;
+    if (
+      Object.keys(projection).sort().join(',') !== readinessIndicatorNames.slice().sort().join(',')
+    ) {
+      return undefined;
+    }
+  }
+  const indicators = [];
+  for (const name of readinessIndicatorNames) {
+    const info = parsed.info[name];
+    const details = parsed.details[name];
+    if (
+      !info ||
+      typeof info !== 'object' ||
+      Array.isArray(info) ||
+      !Object.hasOwn(info, 'status') ||
+      !details ||
+      typeof details !== 'object' ||
+      Array.isArray(details) ||
+      !Object.hasOwn(details, 'status') ||
+      !['up', 'down'].includes(info.status) ||
+      details.status !== info.status
+    ) {
+      return undefined;
+    }
+    indicators.push({ name, passing: info.status === 'up' });
+  }
+  const down = indicators.filter(({ passing }) => !passing).map(({ name }) => name);
+  if (down.length === 0) return undefined;
+  if (!parsed.error || typeof parsed.error !== 'object' || Array.isArray(parsed.error)) {
+    return undefined;
+  }
+  if (Object.keys(parsed.error).sort().join(',') !== down.slice().sort().join(','))
+    return undefined;
+  return indicators;
+}
+
+function d19ReadinessBody(statuses) {
+  const projection = Object.fromEntries(
+    readinessIndicatorNames.map((name) => [
+      name,
+      statuses[name] === 'down'
+        ? { status: 'down', error: 'discarded indicator detail' }
+        : { status: 'up' },
+    ]),
+  );
+  const error = Object.fromEntries(
+    readinessIndicatorNames
+      .filter((name) => statuses[name] === 'down')
+      .map((name) => [name, { error: 'discarded indicator detail' }]),
+  );
+  return JSON.stringify({ status: 'error', info: projection, error, details: projection });
+}
+
+function d19ClassifierFixture(cleanupKind = 'async') {
+  const requests = [];
+  const attempted = { healthz: 0, readyz: 0 };
+  const codes = [];
+  const stderr = [];
+  const cleanupEvents = [];
+  let state = 'await-route-table';
+  let healthCode;
+  let bodyReads = 0;
+
+  function emit(code) {
+    codes.push(code);
+    stderr.push(`${defaultEndpointOutputPrefix} ${code}`);
+  }
+  function cleanup() {
+    if (cleanupEvents.length === 0)
+      cleanupEvents.push({ kind: cleanupKind, target: 'owned-d19-fixture' });
+  }
+  function stop(finalCode, accepted = true) {
+    if (finalCode) emit(finalCode);
+    state = 'stopped';
+    cleanup();
+    return { accepted };
+  }
+  function issue(slot) {
+    attempted[slot] += 1;
+    requests.push(`GET ${slot}`);
+    state = `await-${slot}`;
+  }
+  function routeTable(record) {
+    if (state !== 'await-route-table') return stop(undefined, false);
+    if (record !== 'runtime-route-table-present') return stop(undefined, false);
+    issue('healthz');
+    return { accepted: true };
+  }
+  function response(slot, event) {
+    if (state !== `await-${slot}` || !event || typeof event !== 'object' || Array.isArray(event)) {
+      return stop(undefined, false);
+    }
+    let code;
+    if (event.kind === 'connect-failed') {
+      if (Object.keys(event).join(',') !== 'kind') return stop(undefined, false);
+      code = `default-${slot}-connect-failed`;
+    } else if (
+      event.kind === 'response' &&
+      Number.isSafeInteger(event.status) &&
+      event.status >= 100 &&
+      event.status <= 599 &&
+      ['kind,status', 'body,kind,status'].includes(Object.keys(event).sort().join(','))
+    ) {
+      if (slot === 'readyz' && event.status === 503) {
+        const indicators = validateD19ReadinessBody(event.body);
+        if (!indicators) return stop(undefined, false);
+        bodyReads += Buffer.byteLength(event.body);
+        code = 'default-readyz-503';
+        emit(code);
+        for (const { name, passing } of indicators) {
+          emit(`default-readyz-${name}-${passing ? 'pass' : 'fail'}`);
+        }
+      } else {
+        code =
+          event.status >= 200 && event.status < 300
+            ? `default-${slot}-2xx`
+            : event.status === 404
+              ? `default-${slot}-404`
+              : `default-${slot}-other`;
+      }
+    } else {
+      return stop(undefined, false);
+    }
+    if (!(slot === 'readyz' && event.status === 503)) emit(code);
+    if (slot === 'healthz') {
+      healthCode = code;
+      issue('readyz');
+      return { accepted: true };
+    }
+    const finalCode =
+      healthCode === 'default-healthz-2xx' && code === 'default-readyz-2xx'
+        ? 'default-endpoint-ready'
+        : healthCode === 'default-healthz-2xx' && code === 'default-readyz-503'
+          ? 'default-endpoint-unavailable'
+          : 'default-endpoint-indeterminate';
+    return stop(finalCode);
+  }
+  function terminal() {
+    return stop(undefined, false);
+  }
+  function snapshot() {
+    return {
+      requests: [...requests],
+      attempted: { ...attempted },
+      codes: [...codes],
+      stderr: [...stderr],
+      stdout: [],
+      cleanupEvents: [...cleanupEvents],
+      bodyReads,
+      state,
+    };
+  }
+  return { routeTable, response, terminal, snapshot };
 }
 
 function ownedListenerDiagnosticFixture(args = [], inheritedInternalControl = false) {
@@ -3277,6 +3589,251 @@ test('D18 production marks every helper child and binds only exact managed main'
   );
   assert.doesNotMatch(helper, /(?:find|reserve|probe)(?:Free|Available)?(?:Host|Port)/iu);
   assert.doesNotMatch(helper, /(?:fallbackHost|fallbackPort|alternateHost)/u);
+  assert.equal((helper.match(/\bawait sleep\(/gu) ?? []).length, 1);
+  assert.doesNotMatch(helper, /(?:retry|setTimeout|setInterval)\s*\(/u);
+});
+
+test('D19 CLI oracle partitions modes before resources and preserves D17 bytes', () => {
+  const inherited = {
+    [helperManagedMarker]: 'inherited-helper',
+    STYNX_REFERENCE_API_OWNED_DIAGNOSTIC: 'inherited-diagnostic',
+  };
+  const normal = d19HelperModeOracle([], inherited);
+  const d19 = d19HelperModeOracle([defaultEndpointOptIn], inherited);
+  assert.equal(normal.mode, 'default');
+  assert.equal(d19.mode, 'd19');
+  assert.deepEqual(d19.childEnvironment, normal.childEnvironment);
+  assert.deepEqual(d19.childInputs, normal.childInputs);
+  assert.deepEqual(normal.requests, []);
+  assert.deepEqual(d19.requests, []);
+  assert.equal(normal.childEnvironment[helperManagedMarker], '1');
+  assert.equal('STYNX_REFERENCE_API_OWNED_DIAGNOSTIC' in normal.childEnvironment, false);
+
+  const d17 = d19HelperModeOracle([ownedListenerOptIn], inherited);
+  assert.equal(d17.mode, 'd17');
+  assert.equal(d17.childInputs.port, 33_117);
+  assert.equal(d17.childInputs.host, '127.0.0.1');
+  assert.equal(d17.childEnvironment.STYNX_REFERENCE_API_OWNED_DIAGNOSTIC, '1');
+  assert.equal(d17.childEnvironment[helperManagedMarker], '1');
+  assert.deepEqual(ownedListenerSlots, ['health', 'readiness', 'api-local', 'sentinel']);
+  assert.equal(ownedListenerOptIn, '--d17-owned-route-classifier');
+
+  for (const args of [
+    ['--unknown'],
+    [defaultEndpointOptIn, defaultEndpointOptIn],
+    [ownedListenerOptIn, defaultEndpointOptIn],
+    [defaultEndpointOptIn, '--additional'],
+    [`${defaultEndpointOptIn}=1`],
+  ]) {
+    const rejected = d19HelperModeOracle(args, inherited);
+    assert.equal(rejected.accepted, false);
+    assert.equal(rejected.exitCode, 1);
+    assert.deepEqual(rejected.operations, []);
+    assert.deepEqual(rejected.phases, []);
+    assert.deepEqual(rejected.requests, []);
+    assert.equal(rejected.childEnvironment, undefined);
+  }
+});
+
+test('D19 classifier starts only after present and requests health then readiness once', () => {
+  for (const record of [
+    'runtime-route-table-absent',
+    'runtime-route-table-indeterminate',
+    'unknown',
+    { state: 'runtime-route-table-present', payload: 'raw' },
+  ]) {
+    const fixture = d19ClassifierFixture();
+    assert.deepEqual(fixture.routeTable(record), { accepted: false });
+    const stopped = fixture.snapshot();
+    assert.deepEqual(stopped.requests, []);
+    assert.deepEqual(stopped.attempted, { healthz: 0, readyz: 0 });
+    assert.equal(stopped.cleanupEvents.length, 1);
+  }
+  const terminal = d19ClassifierFixture();
+  assert.deepEqual(terminal.terminal(), { accepted: false });
+  assert.deepEqual(terminal.snapshot().requests, []);
+
+  const ordered = d19ClassifierFixture();
+  assert.deepEqual(ordered.routeTable('runtime-route-table-present'), { accepted: true });
+  assert.deepEqual(ordered.snapshot().requests, ['GET healthz']);
+  assert.deepEqual(ordered.response('healthz', { kind: 'response', status: 204 }), {
+    accepted: true,
+  });
+  assert.deepEqual(ordered.snapshot().requests, ['GET healthz', 'GET readyz']);
+  assert.deepEqual(ordered.response('readyz', { kind: 'response', status: 204 }), {
+    accepted: true,
+  });
+  const complete = ordered.snapshot();
+  assert.deepEqual(complete.attempted, { healthz: 1, readyz: 1 });
+  assert.deepEqual(complete.codes, [
+    'default-healthz-2xx',
+    'default-readyz-2xx',
+    'default-endpoint-ready',
+  ]);
+  assert.equal(complete.cleanupEvents.length, 1);
+  assert.deepEqual(ordered.routeTable('runtime-route-table-present'), { accepted: false });
+});
+
+test('D19 classifier covers every fixed slot code and complete-pair final mapping', () => {
+  const valid503 = d19ReadinessBody({ postgres: 'down', redis: 'up', jwks: 'up', s3: 'up' });
+  const healthEvents = [
+    { event: { kind: 'response', status: 200, body: 'raw-unread' }, code: 'default-healthz-2xx' },
+    { event: { kind: 'response', status: 404, body: 'raw-unread' }, code: 'default-healthz-404' },
+    { event: { kind: 'response', status: 500, body: 'raw-unread' }, code: 'default-healthz-other' },
+    { event: { kind: 'connect-failed' }, code: 'default-healthz-connect-failed' },
+  ];
+  const readyEvents = [
+    { event: { kind: 'response', status: 200, body: 'raw-unread' }, code: 'default-readyz-2xx' },
+    { event: { kind: 'response', status: 404, body: 'raw-unread' }, code: 'default-readyz-404' },
+    { event: { kind: 'response', status: 503, body: valid503 }, code: 'default-readyz-503' },
+    { event: { kind: 'response', status: 500, body: 'raw-unread' }, code: 'default-readyz-other' },
+    { event: { kind: 'connect-failed' }, code: 'default-readyz-connect-failed' },
+  ];
+  const observed = new Set();
+  const finals = new Set();
+  for (const health of healthEvents) {
+    for (const readiness of readyEvents) {
+      const fixture = d19ClassifierFixture();
+      fixture.routeTable('runtime-route-table-present');
+      fixture.response('healthz', health.event);
+      fixture.response('readyz', readiness.event);
+      const snapshot = fixture.snapshot();
+      observed.add(health.code);
+      observed.add(readiness.code);
+      finals.add(snapshot.codes.at(-1));
+      assert.equal(snapshot.attempted.healthz, 1);
+      assert.equal(snapshot.attempted.readyz, 1);
+      assert.equal(snapshot.stdout.length, 0);
+      if (readiness.event.status !== 503) assert.equal(snapshot.bodyReads, 0);
+      assert.doesNotMatch(JSON.stringify(snapshot), /raw-unread/u);
+    }
+  }
+  assert.deepEqual([...observed].sort(), Object.values(defaultEndpointSlotCodes).flat().sort());
+  assert.deepEqual([...finals].sort(), defaultEndpointFinalCodes.slice().sort());
+});
+
+test('D19 readiness-503 oracle enforces bounded exact shape and fixed indicator order', () => {
+  const validBody = d19ReadinessBody({ postgres: 'down', redis: 'up', jwks: 'down', s3: 'up' });
+  const valid = d19ClassifierFixture();
+  valid.routeTable('runtime-route-table-present');
+  valid.response('healthz', { kind: 'response', status: 200 });
+  assert.deepEqual(valid.response('readyz', { kind: 'response', status: 503, body: validBody }), {
+    accepted: true,
+  });
+  const accepted = valid.snapshot();
+  assert.deepEqual(accepted.codes, [
+    'default-healthz-2xx',
+    'default-readyz-503',
+    'default-readyz-postgres-fail',
+    'default-readyz-redis-pass',
+    'default-readyz-jwks-fail',
+    'default-readyz-s3-pass',
+    'default-endpoint-unavailable',
+  ]);
+  assert.equal(accepted.bodyReads, Buffer.byteLength(validBody));
+  assert.doesNotMatch(JSON.stringify(accepted), /discarded indicator detail/u);
+
+  const boundaryBody = `${validBody}${' '.repeat(16_384 - Buffer.byteLength(validBody))}`;
+  assert.equal(Buffer.byteLength(boundaryBody), 16_384);
+  assert.deepEqual(validateD19ReadinessBody(boundaryBody), [
+    { name: 'postgres', passing: false },
+    { name: 'redis', passing: true },
+    { name: 'jwks', passing: false },
+    { name: 's3', passing: true },
+  ]);
+
+  const base = JSON.parse(validBody);
+  const invalidBodies = [
+    `${validBody}${' '.repeat(16_385)}`,
+    '{not-json',
+    '[]',
+    JSON.stringify({ ...base, extra: true }),
+    JSON.stringify({ ...base, status: 'ok' }),
+    JSON.stringify({ ...base, info: { ...base.info, unknown: { status: 'down' } } }),
+    JSON.stringify({ ...base, info: { ...base.info, s3: undefined } }),
+    JSON.stringify({ ...base, details: { ...base.details, postgres: { status: 'up' } } }),
+    JSON.stringify({ ...base, error: { redis: {} } }),
+    d19ReadinessBody({ postgres: 'up', redis: 'up', jwks: 'up', s3: 'up' }),
+    validBody.replace('"status":"error"', '"status":"error","status":"error"'),
+    validBody.replace('"postgres":', '"postgres":{"status":"down"},"postgres":'),
+  ];
+  for (const body of invalidBodies) {
+    const fixture = d19ClassifierFixture();
+    fixture.routeTable('runtime-route-table-present');
+    fixture.response('healthz', { kind: 'response', status: 200 });
+    assert.deepEqual(fixture.response('readyz', { kind: 'response', status: 503, body }), {
+      accepted: false,
+    });
+    const rejected = fixture.snapshot();
+    assert.deepEqual(rejected.codes, ['default-healthz-2xx']);
+    assert.equal(rejected.bodyReads, 0);
+    assert.equal(rejected.cleanupEvents.length, 1);
+  }
+  const premature = d19ClassifierFixture();
+  premature.routeTable('runtime-route-table-present');
+  premature.response('healthz', { kind: 'response', status: 200 });
+  assert.deepEqual(
+    premature.response('readyz', {
+      kind: 'response',
+      status: 503,
+      body: validBody,
+      premature: true,
+    }),
+    { accepted: false },
+  );
+  assert.equal(premature.snapshot().bodyReads, 0);
+});
+
+test('D19 classifier keeps bounded output and once-only synchronous or asynchronous cleanup', () => {
+  for (const cleanupKind of ['async', 'sync']) {
+    const fixture = d19ClassifierFixture(cleanupKind);
+    fixture.routeTable('runtime-route-table-present');
+    fixture.response('healthz', { kind: 'connect-failed' });
+    fixture.response('readyz', { kind: 'connect-failed' });
+    fixture.terminal();
+    const snapshot = fixture.snapshot();
+    assert.equal(snapshot.stdout.length, 0);
+    assert.deepEqual(snapshot.cleanupEvents, [{ kind: cleanupKind, target: 'owned-d19-fixture' }]);
+    assert.equal(new Set(snapshot.codes).size, snapshot.codes.length);
+    for (const line of snapshot.stderr) {
+      assert.match(line, new RegExp(`^${escapeRegExpLiteral(defaultEndpointOutputPrefix)} `, 'u'));
+    }
+  }
+  const fixtureSource = `${d19HelperModeOracle}\n${parseUniqueJson}\n${validateD19ReadinessBody}\n${d19ClassifierFixture}`;
+  assert.doesNotMatch(fixtureSource, /\b(?:setTimeout|setInterval|sleep|retry|poll)\s*\(/iu);
+  assert.doesNotMatch(fixtureSource, /\btimeout\b/iu);
+});
+
+test('D19 production binds the exact default-endpoint classifier without frozen drift', () => {
+  const main = readFileSync(join(repoRoot, 'reference/api/src/main.ts'), 'utf8');
+  const helper = readFileSync(
+    join(repoRoot, 'reference/web/scripts/serve-reference-api-stack.mjs'),
+    'utf8',
+  );
+  assert.equal(
+    helper.includes(`'${defaultEndpointOptIn}'`) || helper.includes(`"${defaultEndpointOptIn}"`),
+    true,
+    'D19 exact singleton CLI is not implemented',
+  );
+  assert.equal(
+    createHash('sha256').update(main).digest('hex'),
+    'c56246aa274b5df7cd88ca11692f580fca724d60a41b69b0021bb63fbf0acc0b',
+  );
+  assert.match(helper, new RegExp(escapeRegExpLiteral(defaultEndpointOutputPrefix), 'u'));
+  assert.match(helper, /16384|16_384/u);
+  for (const code of [
+    ...Object.values(defaultEndpointSlotCodes).flat(),
+    ...defaultEndpointFinalCodes,
+    ...readinessIndicatorNames.flatMap((name) => [
+      `default-readyz-${name}-pass`,
+      `default-readyz-${name}-fail`,
+    ]),
+  ]) {
+    assert.equal(helper.includes(`'${code}'`) || helper.includes(`"${code}"`), true);
+  }
+  assert.equal((helper.match(/['"]\/healthz['"]/gu) ?? []).length >= 2, true);
+  assert.equal((helper.match(/['"]\/readyz['"]/gu) ?? []).length >= 2, true);
+  assert.equal((helper.match(/33117/gu) ?? []).length, 1);
   assert.equal((helper.match(/\bawait sleep\(/gu) ?? []).length, 1);
   assert.doesNotMatch(helper, /(?:retry|setTimeout|setInterval)\s*\(/u);
 });
