@@ -624,6 +624,8 @@ const defaultEndpointFinalCodes = [
   'default-endpoint-unavailable',
   'default-endpoint-indeterminate',
 ];
+const playwrightApiReadyLine = '[reference-api-startup] runtime-route-table-present';
+const playwrightApiReadyWaitSource = '^\\[reference-api-startup\\] runtime-route-table-present$';
 
 function escapeRegExpLiteral(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
@@ -3836,6 +3838,145 @@ test('D19 production binds the exact default-endpoint classifier without frozen 
   assert.equal((helper.match(/33117/gu) ?? []).length, 1);
   assert.equal((helper.match(/\bawait sleep\(/gu) ?? []).length, 1);
   assert.doesNotMatch(helper, /(?:retry|setTimeout|setInterval)\s*\(/u);
+});
+
+test('D20 binds the exact installed Playwright 1.60 spawned-readiness semantics', () => {
+  const referenceWebRequire = createRequire(join(repoRoot, 'reference/web/package.json'));
+  const playwrightTestPackagePath = referenceWebRequire.resolve('@playwright/test/package.json');
+  const playwrightTestPackage = JSON.parse(readFileSync(playwrightTestPackagePath, 'utf8'));
+  const playwrightRequire = createRequire(playwrightTestPackagePath);
+  const playwrightPackagePath = playwrightRequire.resolve('playwright/package.json');
+  const playwrightPackage = JSON.parse(readFileSync(playwrightPackagePath, 'utf8'));
+  const playwrightCorePackagePath = playwrightRequire.resolve('playwright-core/package.json');
+  const playwrightCorePackage = JSON.parse(readFileSync(playwrightCorePackagePath, 'utf8'));
+  const runnerSource = readFileSync(
+    join(dirname(playwrightPackagePath), 'lib/runner/index.js'),
+    'utf8',
+  );
+  const lock = readFileSync(join(repoRoot, 'pnpm-lock.yaml'), 'utf8');
+
+  assert.equal(playwrightTestPackage.version, '1.60.0');
+  assert.equal(playwrightPackage.version, '1.60.0');
+  assert.equal(playwrightCorePackage.version, '1.60.0');
+  assert.match(lock, /'@playwright\/test@1\.60\.0':\n\s+dependencies:\n\s+playwright: 1\.60\.0/u);
+  assert.match(lock, /playwright@1\.60\.0:\n\s+dependencies:\n\s+playwright-core: 1\.60\.0/u);
+  assert.match(lock, /playwright-core@1\.60\.0: \{\}/u);
+
+  const initialUrlCheck = runnerSource.indexOf(
+    'const isAlreadyAvailable = await this._isAvailableCallback?.();',
+  );
+  const reuseReturn = runnerSource.indexOf(
+    'if (this._options.reuseExistingServer)\n        return;',
+    initialUrlCheck,
+  );
+  const processLaunch = runnerSource.indexOf(
+    'const { launchedProcess, gracefullyClose } = await launchProcess({',
+  );
+  const stderrWaitCreation = runnerSource.indexOf(
+    'if (this._options.wait?.stdout || this._options.wait?.stderr)\n      this._waitForStdioPromise = new ManualPromise();',
+  );
+  assert.ok(initialUrlCheck >= 0);
+  assert.ok(reuseReturn > initialUrlCheck);
+  assert.ok(processLaunch > reuseReturn);
+  assert.ok(stderrWaitCreation > processLaunch);
+
+  const reporterProjection = runnerSource.indexOf(
+    'this._reporter.onStdErr?.(prefixOutputLines(data.toString(), this._options.name));',
+    stderrWaitCreation,
+  );
+  const rawCollector = runnerSource.indexOf(
+    'stdioWaitCollectors[stdio] += data.toString();',
+    reporterProjection,
+  );
+  const rawMatch = runnerSource.indexOf(
+    'const result = this._options.wait[stdio].exec(stdioWaitCollectors[stdio]);',
+    rawCollector,
+  );
+  assert.ok(reporterProjection > stderrWaitCreation);
+  assert.ok(rawCollector > reporterProjection);
+  assert.ok(rawMatch > rawCollector);
+  assert.equal(runnerSource.includes('prefixOutputLines(stdioWaitCollectors[stdio]'), false);
+
+  const waitForProcessStart = runnerSource.indexOf('async _waitForProcess() {');
+  const waitForProcessEnd = runnerSource.indexOf('\n  }\n};', waitForProcessStart);
+  const waitForProcessSource = runnerSource.slice(waitForProcessStart, waitForProcessEnd);
+  assert.match(waitForProcessSource, /const racingPromises = \[this\._processExitedPromise\];/u);
+  assert.match(
+    waitForProcessSource,
+    /racingPromises\.push\(raceAgainstDeadline\(\(\) => waitFor\(this\._isAvailableCallback, cancellationToken\), deadline\)\);/u,
+  );
+  assert.match(
+    waitForProcessSource,
+    /racingPromises\.push\(raceAgainstDeadline\(\(\) => this\._waitForStdioPromise, deadline\)\);/u,
+  );
+  assert.match(waitForProcessSource, /await Promise\.race\(racingPromises\)/u);
+
+  const collectorSource = runnerSource.slice(stderrWaitCreation, waitForProcessStart);
+  assert.match(
+    collectorSource,
+    /for \(const \[key, value\] of Object\.entries\(result\.groups \|\| \{\}\)\)\n\s+process\.env\[key\.toUpperCase\(\)\] = value;/u,
+  );
+  assert.equal(
+    (collectorSource.match(/process\.env\[key\.toUpperCase\(\)\] = value;/gu) ?? []).length,
+    1,
+  );
+});
+
+test('D20 production adds only the exact API-entry raw-stderr wait', async () => {
+  const configPath = join(repoRoot, 'reference/web/playwright.config.mjs');
+  const configSource = readFileSync(configPath, 'utf8');
+  const exactWaitLine =
+    '      wait: { stderr: /^\\[reference-api-startup\\] runtime-route-table-present$/m },\n';
+  const frozenWithoutWait = configSource.replace(exactWaitLine, '');
+  assert.equal(
+    createHash('sha256').update(frozenWithoutWait).digest('hex'),
+    'af051b2fdaf1223c03d3a73fe621b9a389dd3158908648f0164c7544f565be5b',
+  );
+  assert.equal(
+    configSource.includes(exactWaitLine),
+    true,
+    'D20 exact API stderr wait is not implemented',
+  );
+  assert.equal((configSource.match(/\bwait\s*:/gu) ?? []).length, 1);
+  assert.equal((configSource.match(/\bstdout\s*:/gu) ?? []).length, 0);
+
+  const config = (await import(`../../reference/web/playwright.config.mjs?d20=${Date.now()}`))
+    .default;
+  assert.equal(Array.isArray(config.webServer), true);
+  assert.equal(config.webServer.length, 2);
+  const [apiEntry, staticEntry] = config.webServer;
+  assert.deepEqual(Object.keys(apiEntry).sort(), [
+    'command',
+    'cwd',
+    'reuseExistingServer',
+    'timeout',
+    'url',
+    'wait',
+  ]);
+  assert.equal(apiEntry.command, 'node scripts/serve-reference-api-stack.mjs');
+  assert.equal(apiEntry.cwd, new URL('../../reference/web/', import.meta.url).pathname);
+  assert.equal(apiEntry.url, 'http://127.0.0.1:3000/readyz');
+  assert.equal(apiEntry.reuseExistingServer, true);
+  assert.equal(apiEntry.timeout, 300_000);
+  assert.ok(apiEntry.wait, 'D20 exact API stderr wait is not implemented');
+  assert.deepEqual(Object.keys(apiEntry.wait), ['stderr']);
+  assert.equal(apiEntry.wait.stderr instanceof RegExp, true);
+  assert.equal(apiEntry.wait.stderr.source, playwrightApiReadyWaitSource);
+  assert.equal(apiEntry.wait.stderr.flags, 'm');
+  assert.equal(apiEntry.wait.stderr.global, false);
+  assert.equal(apiEntry.wait.stderr.exec(playwrightApiReadyLine)?.groups, undefined);
+  assert.equal(apiEntry.wait.stderr.test(`${playwrightApiReadyLine}-extra`), false);
+  assert.equal(apiEntry.wait.stderr.test(`[webServer] ${playwrightApiReadyLine}`), false);
+
+  assert.deepEqual(staticEntry, {
+    command: 'pnpm build:web && PORT=3100 node scripts/serve-static.mjs',
+    cwd: new URL('../../reference/web/', import.meta.url).pathname,
+    port: 3100,
+    reuseExistingServer: true,
+    timeout: 120_000,
+  });
+  assert.doesNotMatch(configSource, /wait:\s*\{\s*stdout:/u);
+  assert.doesNotMatch(exactWaitLine, /\(\?<|\([^?]|\bg\b/u);
 });
 
 test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14', () => {
