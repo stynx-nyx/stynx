@@ -682,6 +682,7 @@ function fixedStartupOutput(code) {
       ...startupFailureReasons.map((reason) => `bootstrap-failed:${reason}`),
       ...startupChildTerminals,
       ...runtimeRouteTableStates,
+      ...d21ComposeTerminalCodes,
     ].includes(code),
     'startup output must be one bounded fixed code',
   );
@@ -2606,7 +2607,7 @@ test('D16.1 production contains runChecked and Redis mapping failures before chi
   const scenarios = [
     {
       name: 'run-checked',
-      expectedCodes: ['helper-entered'],
+      expectedCodes: ['helper-entered', 'compose-up-exit-nonzero'],
       expectedDockerActions: ['up', 'down'],
     },
     {
@@ -4151,15 +4152,16 @@ test('D21 Compose-up oracle selects one bounded terminal before confined cleanup
       `${startupOutputPrefix} ${classification}`,
     ]);
     assert.equal(snapshot.stderr.includes(fixedStartupOutput('compose-ready')), false);
-    assert.deepEqual(snapshot.cleanupEvents, [
-      { kind: 'confined', target: 'owned-d21-fixture' },
-    ]);
+    assert.deepEqual(snapshot.cleanupEvents, [{ kind: 'confined', target: 'owned-d21-fixture' }]);
     assert.equal(snapshot.terminal, classification);
   }
 
   for (const events of [
     [{ kind: 'error' }, { kind: 'exit', code: 1, signal: null }],
-    [{ kind: 'exit', code: null, signal: true }, { kind: 'exit', code: 1, signal: null }],
+    [
+      { kind: 'exit', code: null, signal: true },
+      { kind: 'exit', code: 1, signal: null },
+    ],
     [{ kind: 'error' }, { kind: 'error' }, { kind: 'exit', code: null, signal: true }],
   ]) {
     const fixture = d21ComposeUpFixture();
@@ -4232,11 +4234,19 @@ test('D21 production binds exact Compose-up terminals without D14-D20 drift', ()
     'turbo.json': 'd32a54129f37eb21a86d346cfcf09eb914cda06ebdc5166c432a9f23c67db467',
   };
   for (const [path, digest] of Object.entries(frozenFiles)) {
-    assert.equal(createHash('sha256').update(readFileSync(join(repoRoot, path))).digest('hex'), digest);
+    assert.equal(
+      createHash('sha256')
+        .update(readFileSync(join(repoRoot, path)))
+        .digest('hex'),
+      digest,
+    );
   }
   assertD14HelperContract(helper, JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8')));
   assert.match(helper, /mkdtemp\(resolve\(tmpdir\(\), ['"]stynx-reference-api-stack-['"]\)\)/u);
-  assert.match(helper, /services:\\n  postgres:[\s\S]*?ports:\\n      - '\$\{postgresPort\}:5432'[\s\S]*?redis:[\s\S]*?ports:\\n      - '\$\{redisPublish\}'/u);
+  assert.match(
+    helper,
+    /services:\\n  postgres:[\s\S]*?ports:\\n      - '\$\{postgresPort\}:5432'[\s\S]*?redis:[\s\S]*?ports:\\n      - '\$\{redisPublish\}'/u,
+  );
   assert.match(
     helper,
     /\[\s*['"]compose['"],\s*['"]-f['"],\s*composeFile,\s*['"]up['"],\s*['"]--wait['"],\s*['"]postgres['"],\s*['"]redis['"]\s*\]/su,
