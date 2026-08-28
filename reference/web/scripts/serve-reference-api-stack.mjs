@@ -35,6 +35,11 @@ const runtimeRouteTableStates = [
   'runtime-route-table-absent',
   'runtime-route-table-indeterminate',
 ];
+const composeUpTerminalCodes = [
+  'compose-up-spawn-failed',
+  'compose-up-exit-nonzero',
+  'compose-up-signaled',
+];
 const ownedRouteClassifierArgument = '--d17-owned-route-classifier';
 const defaultEndpointClassifierArgument = '--d19-default-endpoint-classifier';
 const helperArguments = process.argv.slice(2);
@@ -120,6 +125,7 @@ const visibleStartupSuccessCodes = [...helperSuccessStates, ...startupSuccessSta
 const startupFailureReasons = ['nest-initialization', 'pre-listen-configuration', 'listen'];
 const visibleStartupFailureCodes = new Set([
   ...startupFailureReasons.map((reason) => `bootstrap-failed:${reason}`),
+  ...composeUpTerminalCodes,
   'child-error',
   'child-disconnect',
   'child-exit',
@@ -901,9 +907,25 @@ function composeDownSync() {
   composeDownComplete = true;
 }
 
-async function runChecked(command, args) {
+async function runChecked(command, args, terminalCodes) {
   const child = run(command, args, { stdio: 'ignore' });
   const result = await waitForExit(child);
+  if (terminalCodes) {
+    let classification;
+    if (result.failed) {
+      classification = terminalCodes[0];
+    } else if (result.signal !== null) {
+      classification = terminalCodes[2];
+    } else if (Number.isInteger(result.code) && result.code !== 0) {
+      classification = terminalCodes[1];
+    } else if (result.code === 0) {
+      return;
+    }
+    if (classification) {
+      recordStartupCode(classification);
+    }
+    throw new Error('compose-up-failed');
+  }
   if (result.failed || result.code !== 0) {
     throw new Error(`${command} ${args.join(' ')} exited with ${result.code ?? result.signal}`);
   }
@@ -953,7 +975,11 @@ if (redisHost.length === 0) {
 let redisPort;
 try {
   recordStartupCode('helper-entered');
-  await runChecked('docker', ['compose', '-f', composeFile, 'up', '--wait', 'postgres', 'redis']);
+  await runChecked(
+    'docker',
+    ['compose', '-f', composeFile, 'up', '--wait', 'postgres', 'redis'],
+    composeUpTerminalCodes,
+  );
   recordStartupCode('compose-ready');
   redisPort = discoverOwnedRedisPort();
   recordStartupCode('redis-mapping-resolved');
