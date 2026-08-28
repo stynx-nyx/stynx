@@ -3692,8 +3692,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 712,
-      "assertion_digest_sha256": "227627db255f3198606499d638c8f9436c38876b6ca1b4d6aa60f9ddb0d0478b"
+      "assertion_count": 747,
+      "assertion_digest_sha256": "0a9b53eaeeacc00b2c8bf363b059aaff234ee5e48fa2c08ced1daaafbda07aca"
     },
     {
       "path": "test/scripts/release-version-policy.test.mjs",
