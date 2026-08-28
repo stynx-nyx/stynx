@@ -569,6 +569,9 @@ const runtimeRouteTableBegin = '// D17.6 runtime route table inspection: begin';
 const runtimeRouteTableEnd = '// D17.6 runtime route table inspection: end';
 const ownedListenerBindingBegin = '// D17.7 owned listener binding: begin';
 const ownedListenerBindingEnd = '// D17.7 owned listener binding: end';
+const helperManagedBindingBegin = '// D18 helper-managed listener binding: begin';
+const helperManagedBindingEnd = '// D18 helper-managed listener binding: end';
+const helperManagedMarker = 'STYNX_REFERENCE_API_HELPER_MANAGED';
 const ownedListenerOptIn = '--d17-owned-route-classifier';
 const ownedListenerOutputPrefix = '[reference-api-owned-route]';
 const ownedListenerSlots = ['health', 'readiness', 'api-local', 'sentinel'];
@@ -1055,6 +1058,69 @@ function advanceRuntimeRouteTableFixture(fixture) {
   for (const code of [...helperSuccessStates, ...startupSuccessStates]) {
     assert.deepEqual(fixture.phase(code), { accepted: true, code });
   }
+}
+
+function d18ListenerOwnershipOracle({
+  marker,
+  ambientIpv4 = false,
+  bindCollision = false,
+  cleanupKind = 'async',
+} = {}) {
+  const helperManaged = marker === '1';
+  const bindHost = helperManaged ? '127.0.0.1' : 'host-omitted';
+  if (helperManaged && bindCollision) {
+    return {
+      bindHost,
+      listening: false,
+      routeTable: undefined,
+      ipv4ProbeOwnedByChild: false,
+      stderr: [fixedStartupOutput('bootstrap-failed:listen')],
+      classifierRequests: [],
+      cleanupEvents: [{ kind: cleanupKind, target: 'owned-d18-fixture' }],
+      exitCode: 1,
+    };
+  }
+  return {
+    bindHost,
+    listening: true,
+    routeTable: 'runtime-route-table-present',
+    ipv4ProbeOwnedByChild: helperManaged,
+    ipv4ProbeMayReachAmbient: !helperManaged && ambientIpv4,
+    stderr: [],
+    classifierRequests: [],
+    cleanupEvents: [],
+    exitCode: undefined,
+  };
+}
+
+function d18HelperInvocationOracle(args = [], inherited = {}) {
+  const exactOptIn = args.length === 1 && args[0] === ownedListenerOptIn;
+  const normalMode = args.length === 0;
+  if (!normalMode && !exactOptIn) {
+    return {
+      accepted: false,
+      operations: [],
+      phases: [],
+      classifierRequests: [],
+      childEnvironment: undefined,
+      exitCode: 1,
+    };
+  }
+  const childEnvironment = { ...inherited };
+  delete childEnvironment[helperManagedMarker];
+  delete childEnvironment.STYNX_REFERENCE_API_OWNED_DIAGNOSTIC;
+  childEnvironment[helperManagedMarker] = '1';
+  if (exactOptIn) childEnvironment.STYNX_REFERENCE_API_OWNED_DIAGNOSTIC = '1';
+  return {
+    accepted: true,
+    operations: ['owned-resource-setup', 'child-spawn'],
+    phases: [...helperSuccessStates, ...startupSuccessStates, 'runtime-route-table-present'],
+    classifierRequests: exactOptIn ? [...ownedListenerSlots] : [],
+    childEnvironment,
+    host: '127.0.0.1',
+    port: exactOptIn ? 33_117 : 3_000,
+    exitCode: undefined,
+  };
 }
 
 function ownedListenerDiagnosticFixture(args = [], inheritedInternalControl = false) {
@@ -3078,6 +3144,141 @@ test('D17.7 production fails closed on asynchronous owned cleanup rejection', ()
     [],
     'D17.7 async owned cleanup rejection must fail closed without duplicate cleanup',
   );
+});
+
+test('D18 listener oracle distinguishes a present table from IPv4 child ownership', () => {
+  const ambiguous = d18ListenerOwnershipOracle({ ambientIpv4: true });
+  assert.equal(ambiguous.bindHost, 'host-omitted');
+  assert.equal(ambiguous.listening, true);
+  assert.equal(ambiguous.routeTable, 'runtime-route-table-present');
+  assert.equal(ambiguous.ipv4ProbeOwnedByChild, false);
+  assert.equal(ambiguous.ipv4ProbeMayReachAmbient, true);
+  assert.deepEqual(ambiguous.classifierRequests, []);
+
+  const owned = d18ListenerOwnershipOracle({ marker: '1', ambientIpv4: true });
+  assert.equal(owned.bindHost, '127.0.0.1');
+  assert.equal(owned.listening, true);
+  assert.equal(owned.routeTable, 'runtime-route-table-present');
+  assert.equal(owned.ipv4ProbeOwnedByChild, true);
+  assert.equal(owned.ipv4ProbeMayReachAmbient, false);
+
+  for (const marker of [undefined, '', '0', 'true', '01', ' 1 ', 'inherited']) {
+    const standalone = d18ListenerOwnershipOracle({ marker });
+    assert.equal(standalone.bindHost, 'host-omitted');
+    assert.equal(standalone.ipv4ProbeOwnedByChild, false);
+  }
+});
+
+test('D18 helper oracle strips inherited controls and preserves exact CLI tiers', () => {
+  const inherited = {
+    [helperManagedMarker]: 'inherited-helper',
+    STYNX_REFERENCE_API_OWNED_DIAGNOSTIC: 'inherited-diagnostic',
+  };
+  const normal = d18HelperInvocationOracle([], inherited);
+  assert.equal(normal.accepted, true);
+  assert.equal(normal.childEnvironment[helperManagedMarker], '1');
+  assert.equal('STYNX_REFERENCE_API_OWNED_DIAGNOSTIC' in normal.childEnvironment, false);
+  assert.equal(normal.host, '127.0.0.1');
+  assert.equal(normal.port, 3_000);
+  assert.deepEqual(normal.classifierRequests, []);
+  assert.deepEqual(normal.phases, [
+    ...helperSuccessStates,
+    ...startupSuccessStates,
+    'runtime-route-table-present',
+  ]);
+
+  const diagnostic = d18HelperInvocationOracle([ownedListenerOptIn], inherited);
+  assert.equal(diagnostic.accepted, true);
+  assert.equal(diagnostic.childEnvironment[helperManagedMarker], '1');
+  assert.equal(diagnostic.childEnvironment.STYNX_REFERENCE_API_OWNED_DIAGNOSTIC, '1');
+  assert.equal(diagnostic.host, '127.0.0.1');
+  assert.equal(diagnostic.port, 33_117);
+  assert.deepEqual(diagnostic.classifierRequests, ownedListenerSlots);
+
+  for (const args of [
+    ['--unknown'],
+    [ownedListenerOptIn, ownedListenerOptIn],
+    [ownedListenerOptIn, '--additional'],
+    [`${ownedListenerOptIn}=1`],
+  ]) {
+    const rejected = d18HelperInvocationOracle(args, inherited);
+    assert.equal(rejected.accepted, false);
+    assert.equal(rejected.exitCode, 1);
+    assert.deepEqual(rejected.operations, []);
+    assert.deepEqual(rejected.phases, []);
+    assert.deepEqual(rejected.classifierRequests, []);
+    assert.equal(rejected.childEnvironment, undefined);
+  }
+});
+
+test('D18 bind-collision oracle emits one bounded failure and one confined cleanup', () => {
+  for (const cleanupKind of ['async', 'sync']) {
+    const collision = d18ListenerOwnershipOracle({
+      marker: '1',
+      ambientIpv4: true,
+      bindCollision: true,
+      cleanupKind,
+    });
+    assert.equal(collision.bindHost, '127.0.0.1');
+    assert.equal(collision.listening, false);
+    assert.equal(collision.routeTable, undefined);
+    assert.equal(collision.ipv4ProbeOwnedByChild, false);
+    assert.deepEqual(collision.stderr, [fixedStartupOutput('bootstrap-failed:listen')]);
+    assert.deepEqual(collision.classifierRequests, []);
+    assert.deepEqual(collision.cleanupEvents, [{ kind: cleanupKind, target: 'owned-d18-fixture' }]);
+    assert.equal(collision.exitCode, 1);
+  }
+  const oracleSource = `${d18ListenerOwnershipOracle}\n${d18HelperInvocationOracle}`;
+  assert.doesNotMatch(oracleSource, /\b(?:setTimeout|setInterval|sleep|retry|poll)\s*\(/iu);
+  assert.doesNotMatch(oracleSource, /\btimeout\b/iu);
+});
+
+test('D18 production marks every helper child and binds only exact managed main', () => {
+  const main = readFileSync(join(repoRoot, 'reference/api/src/main.ts'), 'utf8');
+  const helper = readFileSync(
+    join(repoRoot, 'reference/web/scripts/serve-reference-api-stack.mjs'),
+    'utf8',
+  );
+  assert.equal(
+    helper.includes(helperManagedMarker),
+    true,
+    'D18 helper-managed marker is not implemented',
+  );
+  const deleteManaged = helper.indexOf(`delete childEnvironment.${helperManagedMarker}`);
+  const deleteDiagnostic = helper.indexOf(
+    'delete childEnvironment.STYNX_REFERENCE_API_OWNED_DIAGNOSTIC',
+  );
+  const setManaged = helper.search(
+    /childEnvironment\.STYNX_REFERENCE_API_HELPER_MANAGED\s*=\s*['"]1['"]/u,
+  );
+  const setDiagnostic = helper.search(
+    /if \(ownedRouteClassifierEnabled\) \{\s*childEnvironment\.STYNX_REFERENCE_API_OWNED_DIAGNOSTIC\s*=\s*['"]1['"]/su,
+  );
+  assert.ok(deleteManaged >= 0);
+  assert.ok(deleteDiagnostic > deleteManaged);
+  assert.ok(setManaged > deleteDiagnostic);
+  assert.ok(setDiagnostic > setManaged);
+  assert.match(main, /process\.env\.STYNX_REFERENCE_API_HELPER_MANAGED\s*===\s*['"]1['"]/u);
+  assert.equal((main.match(/STYNX_REFERENCE_API_HELPER_MANAGED/gu) ?? []).length, 1);
+  assert.equal((main.match(/app\.listen\(port,\s*['"]127\.0\.0\.1['"]\)/gu) ?? []).length, 1);
+  assert.equal((main.match(/await app\.listen\(port\);/gu) ?? []).length, 1);
+  assert.equal(
+    (main.match(new RegExp(escapeRegExpLiteral(helperManagedBindingBegin), 'gu')) ?? []).length,
+    1,
+  );
+  assert.equal(
+    (main.match(new RegExp(escapeRegExpLiteral(helperManagedBindingEnd), 'gu')) ?? []).length,
+    1,
+  );
+  const reconstructedMain = frozenMainWithoutOwnedListenerBinding(main);
+  assert.equal(
+    createHash('sha256').update(reconstructedMain).digest('hex'),
+    '47a9ae09aa32abf13ca7b079c035d2b5e17c43b3c730651e82eccf8f292bd3eb',
+  );
+  assert.doesNotMatch(helper, /(?:find|reserve|probe)(?:Free|Available)?(?:Host|Port)/iu);
+  assert.doesNotMatch(helper, /(?:fallbackHost|fallbackPort|alternateHost)/u);
+  assert.equal((helper.match(/\bawait sleep\(/gu) ?? []).length, 1);
+  assert.doesNotMatch(helper, /(?:retry|setTimeout|setInterval)\s*\(/u);
 });
 
 test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14', () => {
