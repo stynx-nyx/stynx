@@ -581,7 +581,9 @@ try {
 }
 
 const childEnvironment = { ...process.env };
+delete childEnvironment.STYNX_REFERENCE_API_HELPER_MANAGED;
 delete childEnvironment.STYNX_REFERENCE_API_OWNED_DIAGNOSTIC;
+childEnvironment.STYNX_REFERENCE_API_HELPER_MANAGED = '1';
 if (ownedRouteClassifierEnabled) {
   childEnvironment.STYNX_REFERENCE_API_OWNED_DIAGNOSTIC = '1';
 }
