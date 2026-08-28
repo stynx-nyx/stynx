@@ -134,7 +134,8 @@ function createBuildFixture() {
         'pnpm-workspace.yaml',
         'tsconfig.json',
         'packages',
-        'reference/api/package.json',
+        'reference/api',
+        'reference/web/scripts/serve-reference-api-stack.mjs',
         'scripts/verify-reference-api-build-inputs.mjs',
         'tools',
       ],
@@ -2337,6 +2338,17 @@ test('clean preferences build emits both exact exports and reference-api fails c
   const fixture = createBuildFixture();
   const fixtureRoot = assertSafeFixtureRoot(fixture.root);
   try {
+    const trackedReferenceApiDist = run('git', [
+      'ls-files',
+      '--',
+      'reference/api/dist',
+      'reference/api/dist/**',
+    ]);
+    assert.equal(trackedReferenceApiDist.status, 0, trackedReferenceApiDist.stderr);
+    assert.equal(trackedReferenceApiDist.stdout, '');
+    const fixtureApiRoot = join(fixtureRoot, 'reference/api');
+    const fixtureReferenceApiDist = join(fixtureApiRoot, 'dist');
+    const fixtureReferenceApiMain = join(fixtureReferenceApiDist, 'reference/api/src/main.js');
     const fixturePreferencesDist = join(fixtureRoot, 'packages/preferences/dist');
     const fixturePreferencesRuntime = join(fixturePreferencesDist, 'preferences/src/index.js');
     const fixturePreferencesDeclaration = join(
@@ -2344,18 +2356,46 @@ test('clean preferences build emits both exact exports and reference-api fails c
       'preferences/src/index.d.ts',
     );
     const fixtureVerifier = join(fixtureRoot, 'scripts/verify-reference-api-build-inputs.mjs');
+    const fixtureHelper = join(fixtureRoot, 'reference/web/scripts/serve-reference-api-stack.mjs');
     for (const [target, label] of [
+      [fixtureReferenceApiDist, 'reference API output directory'],
+      [fixtureReferenceApiMain, 'reference API executable'],
       [fixturePreferencesDist, 'preferences output directory'],
       [fixturePreferencesRuntime, 'preferences runtime output'],
       [fixturePreferencesDeclaration, 'preferences declaration output'],
       [fixtureVerifier, 'reference API verifier'],
+      [fixtureHelper, 'reference API helper'],
     ]) {
       assert.equal(assertInsideFixture(fixtureRoot, target, label), resolve(target));
     }
+
+    const apiManifest = JSON.parse(readFileSync(join(fixtureApiRoot, 'package.json'), 'utf8'));
+    const apiTsconfig = JSON.parse(readFileSync(join(fixtureApiRoot, 'tsconfig.json'), 'utf8'));
+    const helperSource = readFileSync(fixtureHelper, 'utf8');
+    const helperTarget = /const referenceApiMain = resolve\(workspaceRoot, '([^']+)'\);/u.exec(
+      helperSource,
+    );
+    assert.ok(helperTarget);
+    assert.equal(resolve(fixtureRoot, helperTarget[1]), fixtureReferenceApiMain);
+    assert.equal(apiManifest.scripts.start, 'node dist/reference/api/src/main.js');
+    assert.equal(
+      resolve(fixtureApiRoot, apiManifest.scripts.start.slice('node '.length)),
+      fixtureReferenceApiMain,
+    );
+    const compilerRootDir = resolve(fixtureApiRoot, apiTsconfig.compilerOptions.rootDir);
+    const compilerOutDir = resolve(fixtureApiRoot, apiTsconfig.compilerOptions.outDir);
+    const emittedMain = join(
+      compilerOutDir,
+      relative(compilerRootDir, join(fixtureApiRoot, 'src/main.ts')).replace(/\.ts$/u, '.js'),
+    );
+    assert.equal(emittedMain, fixtureReferenceApiMain);
+    assert.equal(entryExists(fixtureReferenceApiMain), false);
+
     const installed = spawnInFixture(
       fixture,
-      'pnpm',
+      'corepack',
       [
+        'pnpm',
         'install',
         '--offline',
         '--frozen-lockfile',
@@ -2363,7 +2403,7 @@ test('clean preferences build emits both exact exports and reference-api fails c
         '--filter',
         '@stynx-nyx/preferences...',
         '--filter',
-        '@stynx-nyx/reference-api',
+        '@stynx-nyx/reference-api...',
       ],
       { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
     );
@@ -2372,8 +2412,8 @@ test('clean preferences build emits both exact exports and reference-api fails c
     removeInsideFixture(fixture, fixturePreferencesDist, { recursive: true, force: true });
     const built = spawnInFixture(
       fixture,
-      'pnpm',
-      ['--filter', '@stynx-nyx/preferences', 'run', 'build'],
+      'corepack',
+      ['pnpm', '--filter', '@stynx-nyx/preferences', 'build'],
       {
         encoding: 'utf8',
         stdio: ['ignore', 'pipe', 'pipe'],
@@ -2389,6 +2429,31 @@ test('clean preferences build emits both exact exports and reference-api fails c
     });
     assert.ifError(verified.error);
     assert.equal(verified.status, 0, verified.stderr);
+    const apiBuilt = spawnInFixture(
+      fixture,
+      'corepack',
+      ['pnpm', '--filter', '@stynx-nyx/reference-api', 'build'],
+      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
+    );
+    assert.ifError(apiBuilt.error);
+    assert.equal(apiBuilt.status, 0, `${apiBuilt.stderr}\n${apiBuilt.stdout}`);
+    const executableStat = lstatSync(fixtureReferenceApiMain);
+    assert.equal(executableStat.isFile(), true);
+    assert.equal(executableStat.isSymbolicLink(), false);
+    assert.equal(
+      assertInsideFixture(fixtureRoot, fixtureReferenceApiMain, 'compiled executable'),
+      resolve(fixtureReferenceApiMain),
+    );
+    const compiledMain = readFileSync(fixtureReferenceApiMain, 'utf8');
+    assert.match(compiledMain, /stynx-reference-api-startup-v1/u);
+    assert.deepEqual(
+      [...compiledMain.matchAll(/state:\s*['"]([^'"]+)['"]/gu)].map((match) => match[1]),
+      ['bootstrap-entered', 'nest-created', 'listening', 'bootstrap-failed'],
+    );
+    const bootstrapEnteredIndex = compiledMain.search(/state:\s*['"]bootstrap-entered['"]/u);
+    const runtimeImportIndex = compiledMain.search(/import\(['"]reflect-metadata['"]\)/u);
+    assert.ok(bootstrapEnteredIndex >= 0);
+    assert.ok(runtimeImportIndex > bootstrapEnteredIndex);
     removeInsideFixture(fixture, fixturePreferencesDeclaration, { force: true });
     const rejected = spawnInFixture(fixture, 'node', [fixtureVerifier], {
       encoding: 'utf8',
@@ -2398,7 +2463,7 @@ test('clean preferences build emits both exact exports and reference-api fails c
     assert.notEqual(rejected.status, 0);
     assert.match(rejected.stderr, /declaration output is unavailable/u);
   } finally {
-    assert.ok(fixture.subprocessCwds.length >= 6);
+    assert.ok(fixture.subprocessCwds.length >= 7);
     assert.equal(
       fixture.subprocessCwds.every((cwd) => cwd === fixtureRoot),
       true,
@@ -2415,6 +2480,7 @@ test('clean preferences build emits both exact exports and reference-api fails c
     );
     assert.equal(fixture.subprocessCwds.includes(repoRoot), false);
     assert.equal(fixture.destructiveTargets.includes(repositoryPreferencesDist), false);
+    assert.equal(fixture.destructiveTargets.includes(join(repoRoot, 'reference/api/dist')), false);
     removeFixture(fixture);
     assert.equal(existsSync(fixtureRoot), false);
   }
