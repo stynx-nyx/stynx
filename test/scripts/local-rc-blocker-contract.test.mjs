@@ -626,6 +626,44 @@ const defaultEndpointFinalCodes = [
 ];
 const playwrightApiReadyLine = '[reference-api-startup] runtime-route-table-present';
 const playwrightApiReadyWaitSource = '^\\[reference-api-startup\\] runtime-route-table-present$';
+const playwrightApiReadyWaitLine =
+  '      wait: { stderr: /^\\[reference-api-startup\\] runtime-route-table-present$/m },\n';
+
+function normalizeD20PlaywrightWait(source) {
+  const occurrenceCount = source.split(playwrightApiReadyWaitLine).length - 1;
+  assert.ok([0, 1].includes(occurrenceCount), 'D20 wait field must occur at most once');
+  assert.equal((source.match(/\bwait\s*:/gu) ?? []).length, occurrenceCount);
+  assert.equal((source.match(/\bstdout\s*:/gu) ?? []).length, 0);
+
+  if (occurrenceCount === 1) {
+    const apiEntryStart = source.indexOf(
+      "    {\n      command: 'node scripts/serve-reference-api-stack.mjs',",
+    );
+    const apiEntryEnd = source.indexOf('\n    },', apiEntryStart);
+    const waitIndex = source.indexOf(playwrightApiReadyWaitLine);
+    assert.ok(apiEntryStart >= 0);
+    assert.ok(apiEntryEnd > apiEntryStart);
+    assert.ok(waitIndex > apiEntryStart && waitIndex < apiEntryEnd);
+
+    const waitExpression = /^\[reference-api-startup\] runtime-route-table-present$/m;
+    assert.equal(waitExpression.source, playwrightApiReadyWaitSource);
+    assert.equal(waitExpression.flags, 'm');
+    assert.equal(waitExpression.global, false);
+    assert.equal(waitExpression.exec(playwrightApiReadyLine)?.groups, undefined);
+    assert.doesNotMatch(playwrightApiReadyWaitLine, /\(\?<|\([^?]|\/g\b/u);
+  }
+
+  const normalized = source.replace(playwrightApiReadyWaitLine, '');
+  assert.equal(normalized.includes(playwrightApiReadyWaitLine), false);
+  if (occurrenceCount === 1) {
+    const insertionIndex = source.indexOf(playwrightApiReadyWaitLine);
+    assert.equal(
+      `${normalized.slice(0, insertionIndex)}${playwrightApiReadyWaitLine}${normalized.slice(insertionIndex)}`,
+      source,
+    );
+  }
+  return normalized;
+}
 
 function escapeRegExpLiteral(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
@@ -3922,24 +3960,60 @@ test('D20 binds the exact installed Playwright 1.60 spawned-readiness semantics'
   );
 });
 
+test('D20 frozen Playwright normalization admits only the exact API wait field', () => {
+  const configSource = readFileSync(join(repoRoot, 'reference/web/playwright.config.mjs'), 'utf8');
+  assert.equal(normalizeD20PlaywrightWait(configSource), configSource);
+
+  const apiAnchor = '      reuseExistingServer: true,\n      timeout: 300_000,\n';
+  assert.equal(
+    (configSource.match(new RegExp(escapeRegExpLiteral(apiAnchor), 'gu')) ?? []).length,
+    1,
+  );
+  const withExactWait = configSource.replace(
+    apiAnchor,
+    `      reuseExistingServer: true,\n${playwrightApiReadyWaitLine}      timeout: 300_000,\n`,
+  );
+  assert.equal(normalizeD20PlaywrightWait(withExactWait), configSource);
+  assert.throws(() => normalizeD20PlaywrightWait(`${withExactWait}${playwrightApiReadyWaitLine}`));
+
+  const staticAnchor =
+    "    {\n      command: 'pnpm build:web && PORT=3100 node scripts/serve-static.mjs',\n";
+  assert.throws(() =>
+    normalizeD20PlaywrightWait(
+      configSource.replace(staticAnchor, `${staticAnchor}${playwrightApiReadyWaitLine}`),
+    ),
+  );
+  assert.throws(() =>
+    normalizeD20PlaywrightWait(
+      configSource.replace(
+        apiAnchor,
+        '      reuseExistingServer: true,\n      wait: { stderr: /(runtime-route-table-present)/g },\n      timeout: 300_000,\n',
+      ),
+    ),
+  );
+  assert.throws(() =>
+    normalizeD20PlaywrightWait(
+      configSource.replace(
+        apiAnchor,
+        '      reuseExistingServer: true,\n      wait: { stdout: /runtime-route-table-present/m },\n      timeout: 300_000,\n',
+      ),
+    ),
+  );
+});
+
 test('D20 production adds only the exact API-entry raw-stderr wait', async () => {
   const configPath = join(repoRoot, 'reference/web/playwright.config.mjs');
   const configSource = readFileSync(configPath, 'utf8');
-  const exactWaitLine =
-    '      wait: { stderr: /^\\[reference-api-startup\\] runtime-route-table-present$/m },\n';
-  const frozenWithoutWait = configSource.replace(exactWaitLine, '');
+  const frozenWithoutWait = normalizeD20PlaywrightWait(configSource);
   assert.equal(
     createHash('sha256').update(frozenWithoutWait).digest('hex'),
     'af051b2fdaf1223c03d3a73fe621b9a389dd3158908648f0164c7544f565be5b',
   );
   assert.equal(
-    configSource.includes(exactWaitLine),
+    configSource.includes(playwrightApiReadyWaitLine),
     true,
     'D20 exact API stderr wait is not implemented',
   );
-  assert.equal((configSource.match(/\bwait\s*:/gu) ?? []).length, 1);
-  assert.equal((configSource.match(/\bstdout\s*:/gu) ?? []).length, 0);
-
   const config = (await import(`../../reference/web/playwright.config.mjs?d20=${Date.now()}`))
     .default;
   assert.equal(Array.isArray(config.webServer), true);
@@ -3976,7 +4050,7 @@ test('D20 production adds only the exact API-entry raw-stderr wait', async () =>
     timeout: 120_000,
   });
   assert.doesNotMatch(configSource, /wait:\s*\{\s*stdout:/u);
-  assert.doesNotMatch(exactWaitLine, /\(\?<|\([^?]|\bg\b/u);
+  assert.doesNotMatch(playwrightApiReadyWaitLine, /\(\?<|\([^?]|\/g\b/u);
 });
 
 test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14', () => {
@@ -3993,18 +4067,15 @@ test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14
   };
   for (const [path, digest] of Object.entries(frozen)) {
     const source = readFileSync(join(repoRoot, path), 'utf8');
-    assert.equal(
-      createHash('sha256')
-        .update(
-          path === 'reference/api/src/main.ts'
-            ? frozenMainWithoutRuntimeRouteTableInspection(
-                frozenMainWithoutOwnedListenerBinding(source),
-              )
-            : source,
-        )
-        .digest('hex'),
-      digest,
-    );
+    const normalizedSource =
+      path === 'reference/api/src/main.ts'
+        ? frozenMainWithoutRuntimeRouteTableInspection(
+            frozenMainWithoutOwnedListenerBinding(source),
+          )
+        : path === 'reference/web/playwright.config.mjs'
+          ? normalizeD20PlaywrightWait(source)
+          : source;
+    assert.equal(createHash('sha256').update(normalizedSource).digest('hex'), digest);
   }
   const helper = readFileSync(
     join(repoRoot, 'reference/web/scripts/serve-reference-api-stack.mjs'),
