@@ -1284,6 +1284,72 @@ function d21ComposeUpFixture() {
   return { childEvent, snapshot };
 }
 
+function parseD22OwnedPostgresMapping(mappingText, hostOverrideDeclared) {
+  const lines = mappingText
+    .split(/\r?\n/u)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  if (lines.length === 0) throw new Error('mapping-absent');
+  const allowedAddresses = hostOverrideDeclared
+    ? new Set(['0.0.0.0', '::'])
+    : new Set(['127.0.0.1']);
+  const ports = lines.map((line) => {
+    const match = /^(\[[^\]]+\]|[^\[\]]+):(\d+)$/u.exec(line);
+    const address = match?.[1].replace(/^\[|\]$/gu, '');
+    const port = Number(match?.[2]);
+    if (
+      !match ||
+      !address ||
+      !allowedAddresses.has(address) ||
+      !Number.isSafeInteger(port) ||
+      port < 1 ||
+      port > 65_535
+    ) {
+      throw new Error('mapping-invalid');
+    }
+    return port;
+  });
+  if (new Set(ports).size !== 1) throw new Error('mapping-conflict');
+  return ports[0];
+}
+
+function d22PostgresMappingFixture({ mappingText, hostOverride, inheritedPort = '55433' }) {
+  const hostOverrideDeclared = hostOverride !== undefined;
+  const operations = ['compose-up', 'postgres-port-query'];
+  const cleanupEvents = [];
+  try {
+    const discoveredPort = parseD22OwnedPostgresMapping(mappingText, hostOverrideDeclared);
+    const endpointHost = hostOverride ?? '127.0.0.1';
+    const databaseUrl = `postgresql://postgres:postgres@${endpointHost}:${discoveredPort}/postgres`;
+    operations.push('build-input-verification', 'child-spawn');
+    return {
+      accepted: true,
+      postgresPublish: hostOverrideDeclared ? '0.0.0.0::5432' : '127.0.0.1::5432',
+      mappingCommand: ['compose', '-f', 'owned-compose-file', 'port', 'postgres', '5432'],
+      childEnvironment: {
+        STYNX_OWNER_DATABASE_URL: databaseUrl,
+        STYNX_APP_DATABASE_URL: databaseUrl,
+        STYNX_READER_DATABASE_URL: databaseUrl,
+      },
+      operations,
+      cleanupEvents,
+      stdout: [],
+      stderr: [],
+    };
+  } catch {
+    cleanupEvents.push({ kind: 'confined', target: 'owned-d22-fixture' });
+    return {
+      accepted: false,
+      operations,
+      cleanupEvents,
+      stdout: [],
+      stderr: [],
+    };
+  } finally {
+    void inheritedPort;
+  }
+}
+
 function parseUniqueJson(text) {
   let index = 0;
   function skipWhitespace() {
@@ -4277,6 +4343,178 @@ test('D21 production binds exact Compose-up terminals without D14-D20 drift', ()
   assert.doesNotMatch(
     helper,
     /compose-up-(?:spawn-failed|exit-nonzero|signaled)[^'"\n]*(?:error|stack|path|env|command|url|port|credential|code|signal)/iu,
+  );
+});
+
+test('D22 PostgreSQL mapping oracle generates atomic publications and accepts one safe port', () => {
+  const local = d22PostgresMappingFixture({ mappingText: '127.0.0.1:49152' });
+  assert.equal(local.accepted, true);
+  assert.equal(local.postgresPublish, '127.0.0.1::5432');
+  assert.deepEqual(local.mappingCommand, [
+    'compose',
+    '-f',
+    'owned-compose-file',
+    'port',
+    'postgres',
+    '5432',
+  ]);
+  assert.deepEqual(local.operations, [
+    'compose-up',
+    'postgres-port-query',
+    'build-input-verification',
+    'child-spawn',
+  ]);
+  assert.deepEqual(local.stdout, []);
+  assert.deepEqual(local.stderr, []);
+
+  for (const mappingText of [
+    '0.0.0.0:49200',
+    '[::]:49200',
+    ':::49200',
+    '0.0.0.0:49200\n[::]:49200',
+  ]) {
+    const overridden = d22PostgresMappingFixture({
+      mappingText,
+      hostOverride: 'owned-docker-host',
+    });
+    assert.equal(overridden.accepted, true);
+    assert.equal(overridden.postgresPublish, '0.0.0.0::5432');
+    assert.deepEqual(overridden.operations, local.operations);
+  }
+  assert.equal(parseD22OwnedPostgresMapping('[127.0.0.1]:49152', false), 49_152);
+});
+
+test('D22 PostgreSQL mapping oracle rejects absent, unsafe, malformed, and conflicting mappings', () => {
+  const invalidLocalMappings = [
+    '',
+    '\n',
+    'localhost:49152',
+    '0.0.0.0:49152',
+    '::1:49152',
+    '[127.0.0.1:49152',
+    '127.0.0.1',
+    '127.0.0.1:not-decimal',
+    '127.0.0.1:0',
+    '127.0.0.1:65536',
+    '127.0.0.1:49152\n127.0.0.1:49153',
+  ];
+  const invalidOverrideMappings = [
+    '127.0.0.1:49152',
+    '[::1]:49152',
+    'example.invalid:49152',
+    '0.0.0.0:49152\n[::]:49153',
+  ];
+  for (const [mappingText, hostOverride] of [
+    ...invalidLocalMappings.map((mappingText) => [mappingText, undefined]),
+    ...invalidOverrideMappings.map((mappingText) => [mappingText, 'owned-docker-host']),
+  ]) {
+    const rejected = d22PostgresMappingFixture({ mappingText, hostOverride });
+    assert.equal(rejected.accepted, false);
+    assert.deepEqual(rejected.operations, ['compose-up', 'postgres-port-query']);
+    assert.deepEqual(rejected.cleanupEvents, [{ kind: 'confined', target: 'owned-d22-fixture' }]);
+    assert.deepEqual(rejected.stdout, []);
+    assert.deepEqual(rejected.stderr, []);
+    assert.equal('childEnvironment' in rejected, false);
+  }
+});
+
+test('D22 PostgreSQL endpoint handoff ignores inherited fixed ports and retains no mapping text', () => {
+  const first = d22PostgresMappingFixture({
+    mappingText: '127.0.0.1:49321',
+    inheritedPort: '55433',
+  });
+  const changedInherited = d22PostgresMappingFixture({
+    mappingText: '127.0.0.1:49321',
+    inheritedPort: '1',
+  });
+  assert.deepEqual(changedInherited, first);
+  assert.deepEqual(Object.keys(first.childEnvironment).sort(), [
+    'STYNX_APP_DATABASE_URL',
+    'STYNX_OWNER_DATABASE_URL',
+    'STYNX_READER_DATABASE_URL',
+  ]);
+  assert.equal(new Set(Object.values(first.childEnvironment)).size, 1);
+  for (const url of Object.values(first.childEnvironment)) {
+    assert.equal(url, 'postgresql://postgres:postgres@127.0.0.1:49321/postgres');
+    assert.equal(url.includes('55433'), false);
+  }
+  const overridden = d22PostgresMappingFixture({
+    mappingText: '[::]:49444',
+    hostOverride: 'owned-docker-host',
+    inheritedPort: '55433',
+  });
+  for (const url of Object.values(overridden.childEnvironment)) {
+    assert.equal(url, 'postgresql://postgres:postgres@owned-docker-host:49444/postgres');
+  }
+  const projection = JSON.stringify({ first, overridden });
+  assert.doesNotMatch(projection, /127\.0\.0\.1:49321\n|\[::\]:49444|55433/u);
+  assert.doesNotMatch(
+    `${parseD22OwnedPostgresMapping}\n${d22PostgresMappingFixture}`,
+    /\b(?:setTimeout|setInterval|sleep|retry|poll|fallback)\s*\(/iu,
+  );
+});
+
+test('D22 production binds owned PostgreSQL mapping without D14-D21 drift', () => {
+  const helper = readFileSync(
+    join(repoRoot, 'reference/web/scripts/serve-reference-api-stack.mjs'),
+    'utf8',
+  );
+  const frozenFiles = {
+    'reference/api/src/main.ts': 'c56246aa274b5df7cd88ca11692f580fca724d60a41b69b0021bb63fbf0acc0b',
+    'reference/web/playwright.config.mjs':
+      'efcea2a9cb4c7e92e48f793f784135f1680346601c28c14543532190f869bf21',
+    'package.json': '07f672f29660f90cb9480a7ff395463f5ccb08ecd5f74e61869391ef1653b47c',
+    'reference/api/package.json':
+      'bffedbee254dde969ae2a2a77689587fa9f553f0b9df2b869bd2b8fe910a5b64',
+    'reference/web/package.json':
+      'b1e3b617a0db97bc380dc7577700460e6fa1bbe1e64f54146e0e80943df37b0c',
+    'turbo.json': 'd32a54129f37eb21a86d346cfcf09eb914cda06ebdc5166c432a9f23c67db467',
+  };
+  for (const [path, digest] of Object.entries(frozenFiles)) {
+    assert.equal(
+      createHash('sha256')
+        .update(readFileSync(join(repoRoot, path)))
+        .digest('hex'),
+      digest,
+    );
+  }
+  assertD14HelperContract(helper, JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8')));
+  assert.match(
+    helper,
+    /POSTGRES_DB: postgres[\s\S]*?POSTGRES_USER: postgres[\s\S]*?POSTGRES_PASSWORD: postgres/u,
+  );
+  assert.match(helper, /pg_isready -U postgres -d postgres/u);
+  assert.match(helper, /['"]postgres['"],\s*['"]redis['"]/u);
+  assert.match(
+    helper,
+    /['"]compose['"],\s*['"]-f['"],\s*composeFile,\s*['"]down['"],\s*['"]-v['"]/u,
+  );
+  for (const code of d21ComposeTerminalCodes) {
+    assert.equal((helper.match(new RegExp(`['"]${code}['"]`, 'gu')) ?? []).length, 1);
+  }
+  assert.equal((helper.match(/\bawait sleep\(/gu) ?? []).length, 1);
+  assert.doesNotMatch(helper, /(?:retry|setTimeout|setInterval)\s*\(/u);
+  assert.doesNotMatch(
+    helper,
+    /spawn(?:Sync)?\(\s*['"]docker['"],\s*\[\s*['"](?:ps|inspect|stop|kill|rm|container|network|volume)['"]/su,
+  );
+
+  assert.equal(
+    helper.includes(
+      "const postgresPublish = process.env.TESTCONTAINERS_HOST_OVERRIDE ? '0.0.0.0::5432' : '127.0.0.1::5432';",
+    ),
+    true,
+    'D22 atomic PostgreSQL host publication is not implemented',
+  );
+  assert.doesNotMatch(helper, /\$\{postgresPort\}:5432/u);
+  assert.match(
+    helper,
+    /\[\s*['"]compose['"],\s*['"]-f['"],\s*composeFile,\s*['"]port['"],\s*['"]postgres['"],\s*['"]5432['"]\s*\]/su,
+  );
+  assert.equal((helper.match(/STYNX_(?:OWNER|APP|READER)_DATABASE_URL:/gu) ?? []).length, 3);
+  assert.doesNotMatch(
+    helper,
+    /(?:postgresPublish|OwnedPostgres|postgresMapping)[^\n]*(?:console|stdout|stderr)/iu,
   );
 });
 
