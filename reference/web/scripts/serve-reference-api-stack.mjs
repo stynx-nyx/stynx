@@ -36,11 +36,14 @@ const runtimeRouteTableStates = [
   'runtime-route-table-indeterminate',
 ];
 const ownedRouteClassifierArgument = '--d17-owned-route-classifier';
+const defaultEndpointClassifierArgument = '--d19-default-endpoint-classifier';
 const helperArguments = process.argv.slice(2);
 const ownedRouteClassifierEnabled =
   helperArguments.length === 1 && helperArguments[0] === ownedRouteClassifierArgument;
+const defaultEndpointClassifierEnabled =
+  helperArguments.length === 1 && helperArguments[0] === defaultEndpointClassifierArgument;
 const normalHelperMode = helperArguments.length === 0;
-if (!normalHelperMode && !ownedRouteClassifierEnabled) {
+if (!normalHelperMode && !ownedRouteClassifierEnabled && !defaultEndpointClassifierEnabled) {
   process.exit(1);
 }
 const ownedRouteHost = '127.0.0.1';
@@ -76,6 +79,42 @@ const ownedRouteClassifications = {
     other: 'owned-sentinel-other',
     connectFailed: 'owned-sentinel-connect-failed',
   },
+};
+const defaultEndpointOutputPrefix = '[reference-api-default-endpoint]';
+const defaultEndpointPort = 3000;
+const defaultEndpointSlots = [
+  { name: 'healthz', requestPath: '/healthz' },
+  { name: 'readyz', requestPath: '/readyz' },
+];
+const defaultEndpointClassifications = {
+  healthz: {
+    success: 'default-healthz-2xx',
+    missing: 'default-healthz-404',
+    other: 'default-healthz-other',
+    connectFailed: 'default-healthz-connect-failed',
+  },
+  readyz: {
+    success: 'default-readyz-2xx',
+    missing: 'default-readyz-404',
+    unavailable: 'default-readyz-503',
+    other: 'default-readyz-other',
+    connectFailed: 'default-readyz-connect-failed',
+  },
+};
+const readinessIndicatorNames = ['postgres', 'redis', 'jwks', 's3'];
+const defaultReadinessIndicatorCodes = {
+  postgres: {
+    pass: 'default-readyz-postgres-pass',
+    fail: 'default-readyz-postgres-fail',
+  },
+  redis: { pass: 'default-readyz-redis-pass', fail: 'default-readyz-redis-fail' },
+  jwks: { pass: 'default-readyz-jwks-pass', fail: 'default-readyz-jwks-fail' },
+  s3: { pass: 'default-readyz-s3-pass', fail: 'default-readyz-s3-fail' },
+};
+const defaultEndpointFinalCodes = {
+  ready: 'default-endpoint-ready',
+  unavailable: 'default-endpoint-unavailable',
+  indeterminate: 'default-endpoint-indeterminate',
 };
 const visibleStartupSuccessCodes = [...helperSuccessStates, ...startupSuccessStates];
 const startupFailureReasons = ['nest-initialization', 'pre-listen-configuration', 'listen'];
@@ -122,8 +161,10 @@ let startupFailureStarted = false;
 let apiListening = false;
 let runtimeRouteTableAccepted = false;
 let ownedRouteClassifierComplete = false;
+let defaultEndpointClassifierComplete = false;
 const recordedStartupCodes = new Set();
 const recordedOwnedRouteCodes = new Set();
+const recordedDefaultEndpointCodes = new Set();
 
 function isProcessAlive(pid) {
   try {
@@ -305,6 +346,189 @@ function recordOwnedRouteCode(code) {
   return true;
 }
 
+function recordDefaultEndpointCode(code) {
+  if (recordedDefaultEndpointCodes.has(code)) {
+    return false;
+  }
+  recordedDefaultEndpointCodes.add(code);
+  const suppressedStderrWrite = process.stderr.write;
+  process.stderr.write = governedStderrWrite;
+  try {
+    console.error(`${defaultEndpointOutputPrefix} ${code}`);
+  } finally {
+    process.stderr.write = suppressedStderrWrite;
+  }
+  return true;
+}
+
+function parseUniqueJson(text) {
+  let index = 0;
+  const skipWhitespace = () => {
+    while (/\s/u.test(text[index] ?? '')) {
+      index += 1;
+    }
+  };
+  const stringToken = () => {
+    if (text[index] !== '"') {
+      throw new Error('invalid-default-readiness-body');
+    }
+    const start = index;
+    index += 1;
+    while (index < text.length) {
+      if (text[index] === '\\') {
+        index += 2;
+        continue;
+      }
+      if (text[index] === '"') {
+        index += 1;
+        return JSON.parse(text.slice(start, index));
+      }
+      index += 1;
+    }
+    throw new Error('invalid-default-readiness-body');
+  };
+  const value = () => {
+    skipWhitespace();
+    if (text[index] === '{') {
+      object();
+      return;
+    }
+    if (text[index] === '[') {
+      index += 1;
+      skipWhitespace();
+      if (text[index] === ']') {
+        index += 1;
+        return;
+      }
+      while (true) {
+        value();
+        skipWhitespace();
+        if (text[index] === ']') {
+          index += 1;
+          return;
+        }
+        if (text[index] !== ',') {
+          throw new Error('invalid-default-readiness-body');
+        }
+        index += 1;
+      }
+    }
+    if (text[index] === '"') {
+      stringToken();
+      return;
+    }
+    const match = /^(?:true|false|null|-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?)/u.exec(
+      text.slice(index),
+    );
+    if (!match) {
+      throw new Error('invalid-default-readiness-body');
+    }
+    index += match[0].length;
+  };
+  const object = () => {
+    const keys = new Set();
+    index += 1;
+    skipWhitespace();
+    if (text[index] === '}') {
+      index += 1;
+      return;
+    }
+    while (true) {
+      skipWhitespace();
+      const key = stringToken();
+      if (keys.has(key)) {
+        throw new Error('invalid-default-readiness-body');
+      }
+      keys.add(key);
+      skipWhitespace();
+      if (text[index] !== ':') {
+        throw new Error('invalid-default-readiness-body');
+      }
+      index += 1;
+      value();
+      skipWhitespace();
+      if (text[index] === '}') {
+        index += 1;
+        return;
+      }
+      if (text[index] !== ',') {
+        throw new Error('invalid-default-readiness-body');
+      }
+      index += 1;
+    }
+  };
+
+  value();
+  skipWhitespace();
+  if (index !== text.length) {
+    throw new Error('invalid-default-readiness-body');
+  }
+  return JSON.parse(text);
+}
+
+function validateDefaultReadinessBody(body) {
+  if (typeof body !== 'string' || Buffer.byteLength(body) > 16_384) {
+    return undefined;
+  }
+  let parsed;
+  try {
+    parsed = parseUniqueJson(body);
+  } catch {
+    return undefined;
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return undefined;
+  }
+  if (Object.keys(parsed).sort().join(',') !== 'details,error,info,status') {
+    return undefined;
+  }
+  if (parsed.status !== 'error') {
+    return undefined;
+  }
+  for (const projection of [parsed.info, parsed.details]) {
+    if (!projection || typeof projection !== 'object' || Array.isArray(projection)) {
+      return undefined;
+    }
+    if (
+      Object.keys(projection).sort().join(',') !== readinessIndicatorNames.slice().sort().join(',')
+    ) {
+      return undefined;
+    }
+  }
+
+  const indicators = [];
+  for (const name of readinessIndicatorNames) {
+    const info = parsed.info[name];
+    const details = parsed.details[name];
+    if (
+      !info ||
+      typeof info !== 'object' ||
+      Array.isArray(info) ||
+      !Object.hasOwn(info, 'status') ||
+      !details ||
+      typeof details !== 'object' ||
+      Array.isArray(details) ||
+      !Object.hasOwn(details, 'status') ||
+      !['up', 'down'].includes(info.status) ||
+      details.status !== info.status
+    ) {
+      return undefined;
+    }
+    indicators.push({ name, passing: info.status === 'up' });
+  }
+  const downIndicators = indicators.filter(({ passing }) => !passing).map(({ name }) => name);
+  if (downIndicators.length === 0) {
+    return undefined;
+  }
+  if (!parsed.error || typeof parsed.error !== 'object' || Array.isArray(parsed.error)) {
+    return undefined;
+  }
+  if (Object.keys(parsed.error).sort().join(',') !== downIndicators.slice().sort().join(',')) {
+    return undefined;
+  }
+  return indicators;
+}
+
 function classifyOwnedRouteStatus(slot, status) {
   const classifications = ownedRouteClassifications[slot];
   if (status >= 200 && status < 300 && classifications.success) {
@@ -391,11 +615,165 @@ async function runOwnedRouteClassifier() {
   await shutdown('SIGTERM', 0);
 }
 
+function classifyDefaultEndpointStatus(slot, status) {
+  const classifications = defaultEndpointClassifications[slot];
+  if (status >= 200 && status < 300) {
+    return classifications.success;
+  }
+  if (status === 404) {
+    return classifications.missing;
+  }
+  if (slot === 'readyz' && status === 503) {
+    return classifications.unavailable;
+  }
+  return classifications.other;
+}
+
+function requestDefaultEndpoint(slot) {
+  return new Promise((resolveClassification, rejectClassification) => {
+    let settled = false;
+    let awaitingReadinessBody = false;
+    const settle = (result) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      resolveClassification(result);
+    };
+    const reject = () => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      rejectClassification(new Error('default-endpoint-classifier-failed'));
+    };
+    try {
+      const request = get(
+        {
+          host: ownedRouteHost,
+          port: defaultEndpointPort,
+          path: slot.requestPath,
+          method: 'GET',
+        },
+        (response) => {
+          const status = response.statusCode;
+          if (!Number.isSafeInteger(status) || status < 100 || status > 599) {
+            response.resume();
+            reject();
+            return;
+          }
+          if (slot.name !== 'readyz' || status !== 503) {
+            response.once('error', () => undefined);
+            response.resume();
+            settle({ code: classifyDefaultEndpointStatus(slot.name, status) });
+            return;
+          }
+
+          awaitingReadinessBody = true;
+          const chunks = [];
+          let byteLength = 0;
+          response.on('data', (chunk) => {
+            if (settled) {
+              return;
+            }
+            const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+            byteLength += bytes.length;
+            if (byteLength > 16_384) {
+              chunks.length = 0;
+              response.destroy();
+              reject();
+              return;
+            }
+            chunks.push(bytes);
+          });
+          response.once('aborted', reject);
+          response.once('error', reject);
+          response.once('close', () => {
+            if (!response.complete) {
+              reject();
+            }
+          });
+          response.once('end', () => {
+            if (settled || !response.complete) {
+              reject();
+              return;
+            }
+            let body;
+            try {
+              body = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(
+                Buffer.concat(chunks, byteLength),
+              );
+            } catch {
+              chunks.length = 0;
+              reject();
+              return;
+            }
+            chunks.length = 0;
+            const indicators = validateDefaultReadinessBody(body);
+            if (!indicators) {
+              reject();
+              return;
+            }
+            settle({ code: defaultEndpointClassifications.readyz.unavailable, indicators });
+          });
+        },
+      );
+      request.once('error', () => {
+        if (awaitingReadinessBody) {
+          reject();
+        } else {
+          settle({ code: defaultEndpointClassifications[slot.name].connectFailed });
+        }
+      });
+    } catch {
+      settle({ code: defaultEndpointClassifications[slot.name].connectFailed });
+    }
+  });
+}
+
+async function runDefaultEndpointClassifier() {
+  const health = await requestDefaultEndpoint(defaultEndpointSlots[0]);
+  if (startupFailureStarted || shuttingDown || !recordDefaultEndpointCode(health.code)) {
+    throw new Error('default-endpoint-classifier-failed');
+  }
+
+  const readiness = await requestDefaultEndpoint(defaultEndpointSlots[1]);
+  if (startupFailureStarted || shuttingDown || !recordDefaultEndpointCode(readiness.code)) {
+    throw new Error('default-endpoint-classifier-failed');
+  }
+  if (readiness.indicators) {
+    for (const { name, passing } of readiness.indicators) {
+      const code = defaultReadinessIndicatorCodes[name][passing ? 'pass' : 'fail'];
+      if (!recordDefaultEndpointCode(code)) {
+        throw new Error('default-endpoint-classifier-failed');
+      }
+    }
+  }
+
+  const finalCode =
+    health.code === defaultEndpointClassifications.healthz.success &&
+    readiness.code === defaultEndpointClassifications.readyz.success
+      ? defaultEndpointFinalCodes.ready
+      : health.code === defaultEndpointClassifications.healthz.success &&
+          readiness.code === defaultEndpointClassifications.readyz.unavailable
+        ? defaultEndpointFinalCodes.unavailable
+        : defaultEndpointFinalCodes.indeterminate;
+  if (!recordDefaultEndpointCode(finalCode)) {
+    throw new Error('default-endpoint-classifier-failed');
+  }
+  defaultEndpointClassifierComplete = true;
+  suppressExitCleanupRetry = true;
+  await shutdown('SIGTERM', 0);
+}
+
 function failStartup(code) {
   if (startupFailureStarted) {
     return;
   }
   startupFailureStarted = true;
+  if (defaultEndpointClassifierEnabled) {
+    suppressExitCleanupRetry = true;
+  }
   recordStartupCode(code);
   startupTerminal = true;
   void shutdown('SIGTERM', 1);
@@ -439,6 +817,15 @@ function handleStartupMessage(record) {
       }
       void runOwnedRouteClassifier().catch(() => {
         failStartup('owned-route-classifier-failed');
+      });
+    }
+    if (defaultEndpointClassifierEnabled) {
+      if (record.state !== 'runtime-route-table-present') {
+        failStartup('default-endpoint-route-table-not-present');
+        return;
+      }
+      void runDefaultEndpointClassifier().catch(() => {
+        failStartup('default-endpoint-classifier-failed');
       });
     }
     return;
@@ -622,7 +1009,8 @@ apiProcess.on('message', (record) => {
 apiProcess.once('error', () => {
   if (
     !runtimeRouteTableAccepted ||
-    (ownedRouteClassifierEnabled && !ownedRouteClassifierComplete)
+    (ownedRouteClassifierEnabled && !ownedRouteClassifierComplete) ||
+    (defaultEndpointClassifierEnabled && !defaultEndpointClassifierComplete)
   ) {
     failStartup('child-error');
   }
@@ -630,7 +1018,8 @@ apiProcess.once('error', () => {
 apiProcess.once('disconnect', () => {
   if (
     !runtimeRouteTableAccepted ||
-    (ownedRouteClassifierEnabled && !ownedRouteClassifierComplete)
+    (ownedRouteClassifierEnabled && !ownedRouteClassifierComplete) ||
+    (defaultEndpointClassifierEnabled && !defaultEndpointClassifierComplete)
   ) {
     failStartup('child-disconnect');
   }
@@ -641,7 +1030,8 @@ apiProcess.once('exit', (code, signal) => {
   }
   if (
     !runtimeRouteTableAccepted ||
-    (ownedRouteClassifierEnabled && !ownedRouteClassifierComplete)
+    (ownedRouteClassifierEnabled && !ownedRouteClassifierComplete) ||
+    (defaultEndpointClassifierEnabled && !defaultEndpointClassifierComplete)
   ) {
     failStartup('child-exit');
     return;
