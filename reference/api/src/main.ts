@@ -59,7 +59,13 @@ async function bootstrap(): Promise<void> {
     const port = Number(process.env.PORT ?? '3000');
 
     failureReason = 'listen';
-    await app.listen(port);
+    // D17.7 owned listener binding: begin
+    if (process.env.STYNX_REFERENCE_API_OWNED_DIAGNOSTIC === '1') {
+      await app.listen(port, '127.0.0.1');
+    } else {
+      await app.listen(port);
+    }
+    // D17.7 owned listener binding: end
     emitStartupRecord({ protocol: startupProtocol, state: 'listening' });
     // D17.6 runtime route table inspection: begin
     let runtimeRouteTableState:

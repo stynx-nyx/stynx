@@ -1,6 +1,7 @@
 import { spawn, spawnSync } from 'node:child_process';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { rmSync } from 'node:fs';
+import { get } from 'node:http';
 import { isIP } from 'node:net';
 import { tmpdir } from 'node:os';
 import { dirname, resolve } from 'node:path';
@@ -16,6 +17,7 @@ const verifyReferenceApiBuildInputs = resolve(
 );
 const startupProtocol = 'stynx-reference-api-startup-v1';
 const startupOutputPrefix = '[reference-api-startup]';
+const ownedRouteOutputPrefix = '[reference-api-owned-route]';
 const governedStderrWrite = process.stderr.write.bind(process.stderr);
 const suppressProcessOutput = () => true;
 process.stdout.write = suppressProcessOutput;
@@ -33,6 +35,48 @@ const runtimeRouteTableStates = [
   'runtime-route-table-absent',
   'runtime-route-table-indeterminate',
 ];
+const ownedRouteClassifierArgument = '--d17-owned-route-classifier';
+const helperArguments = process.argv.slice(2);
+const ownedRouteClassifierEnabled =
+  helperArguments.length === 1 && helperArguments[0] === ownedRouteClassifierArgument;
+const normalHelperMode = helperArguments.length === 0;
+if (!normalHelperMode && !ownedRouteClassifierEnabled) {
+  process.exit(1);
+}
+const ownedRouteHost = '127.0.0.1';
+const ownedRoutePort = 33117;
+const ownedRouteSlots = [
+  { name: 'health', requestPath: '/healthz' },
+  { name: 'readiness', requestPath: '/readyz' },
+  { name: 'api-local', requestPath: '/_reference/demo-tenants' },
+  { name: 'sentinel', requestPath: '/_reference/__d17-owned-route-classifier-absent__' },
+];
+const ownedRouteClassifications = {
+  health: {
+    success: 'owned-healthz-2xx',
+    missing: 'owned-healthz-404',
+    other: 'owned-healthz-other',
+    connectFailed: 'owned-healthz-connect-failed',
+  },
+  readiness: {
+    success: 'owned-readyz-2xx',
+    missing: 'owned-readyz-404',
+    unavailable: 'owned-readyz-503',
+    other: 'owned-readyz-other',
+    connectFailed: 'owned-readyz-connect-failed',
+  },
+  'api-local': {
+    success: 'owned-api-local-2xx',
+    missing: 'owned-api-local-404',
+    other: 'owned-api-local-other',
+    connectFailed: 'owned-api-local-connect-failed',
+  },
+  sentinel: {
+    missing: 'owned-sentinel-404',
+    other: 'owned-sentinel-other',
+    connectFailed: 'owned-sentinel-connect-failed',
+  },
+};
 const visibleStartupSuccessCodes = [...helperSuccessStates, ...startupSuccessStates];
 const startupFailureReasons = ['nest-initialization', 'pre-listen-configuration', 'listen'];
 const visibleStartupFailureCodes = new Set([
@@ -76,7 +120,9 @@ let startupTerminal = false;
 let startupFailureStarted = false;
 let apiListening = false;
 let runtimeRouteTableAccepted = false;
+let ownedRouteClassifierComplete = false;
 const recordedStartupCodes = new Set();
+const recordedOwnedRouteCodes = new Set();
 
 function isProcessAlive(pid) {
   try {
@@ -241,6 +287,106 @@ function recordAcceptedStartupState(record) {
   recordStartupCode(record.state);
 }
 
+function recordOwnedRouteCode(code) {
+  if (recordedOwnedRouteCodes.has(code)) {
+    return false;
+  }
+  recordedOwnedRouteCodes.add(code);
+  const suppressedStderrWrite = process.stderr.write;
+  process.stderr.write = governedStderrWrite;
+  try {
+    console.error(`${ownedRouteOutputPrefix} ${code}`);
+  } finally {
+    process.stderr.write = suppressedStderrWrite;
+  }
+  return true;
+}
+
+function classifyOwnedRouteStatus(slot, status) {
+  const classifications = ownedRouteClassifications[slot];
+  if (status >= 200 && status < 300 && classifications.success) {
+    return classifications.success;
+  }
+  if (status === 404) {
+    return classifications.missing;
+  }
+  if (slot === 'readiness' && status === 503) {
+    return classifications.unavailable;
+  }
+  return classifications.other;
+}
+
+function requestOwnedRoute(slot) {
+  return new Promise((resolveClassification) => {
+    let settled = false;
+    const settle = (code) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      resolveClassification(code);
+    };
+    try {
+      const request = get(
+        {
+          host: ownedRouteHost,
+          port: ownedRoutePort,
+          path: slot.requestPath,
+          method: 'GET',
+        },
+        (response) => {
+          const code = classifyOwnedRouteStatus(slot.name, response.statusCode);
+          response.resume();
+          settle(code);
+        },
+      );
+      request.once('error', () => {
+        settle(ownedRouteClassifications[slot.name].connectFailed);
+      });
+    } catch {
+      settle(ownedRouteClassifications[slot.name].connectFailed);
+    }
+  });
+}
+
+async function runOwnedRouteClassifier() {
+  const slotCodes = [];
+  for (const slot of ownedRouteSlots) {
+    const code = await requestOwnedRoute(slot);
+    if (startupFailureStarted || shuttingDown) {
+      return;
+    }
+    slotCodes.push(code);
+    if (!recordOwnedRouteCode(code)) {
+      failStartup('duplicate-owned-route-code');
+      return;
+    }
+  }
+
+  const finalCode =
+    slotCodes[0] === 'owned-healthz-2xx' &&
+    ['owned-readyz-2xx', 'owned-readyz-503'].includes(slotCodes[1]) &&
+    slotCodes[2] === 'owned-api-local-2xx' &&
+    slotCodes[3] === 'owned-sentinel-404'
+      ? 'owned-full-table-present'
+      : slotCodes.every((code) =>
+            [
+              'owned-healthz-404',
+              'owned-readyz-404',
+              'owned-api-local-404',
+              'owned-sentinel-404',
+            ].includes(code),
+          )
+        ? 'owned-full-table-absent'
+        : 'owned-full-table-indeterminate';
+  if (!recordOwnedRouteCode(finalCode)) {
+    failStartup('duplicate-owned-route-code');
+    return;
+  }
+  ownedRouteClassifierComplete = true;
+  await shutdown('SIGTERM', 0);
+}
+
 function failStartup(code) {
   if (startupFailureStarted) {
     return;
@@ -282,6 +428,13 @@ function handleStartupMessage(record) {
     runtimeRouteTableAccepted = true;
     recordAcceptedStartupState(record);
     startupTerminal = true;
+    if (ownedRouteClassifierEnabled) {
+      if (record.state !== 'runtime-route-table-present') {
+        failStartup('owned-route-table-not-present');
+        return;
+      }
+      void runOwnedRouteClassifier();
+    }
     return;
   }
   if (record.state === 'bootstrap-failed') {
@@ -421,16 +574,22 @@ try {
   }
 }
 
+const childEnvironment = { ...process.env };
+delete childEnvironment.STYNX_REFERENCE_API_OWNED_DIAGNOSTIC;
+if (ownedRouteClassifierEnabled) {
+  childEnvironment.STYNX_REFERENCE_API_OWNED_DIAGNOSTIC = '1';
+}
+
 apiProcess = run('node', [referenceApiMain], {
   stdio: ['inherit', 'ignore', 'ignore', 'ipc'],
   env: {
-    ...process.env,
+    ...childEnvironment,
     AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID ?? 'test',
     AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY ?? 'test',
     AWS_DEFAULT_REGION: process.env.AWS_DEFAULT_REGION ?? 'us-east-1',
     AWS_EC2_METADATA_DISABLED: process.env.AWS_EC2_METADATA_DISABLED ?? 'true',
     NODE_ENV: 'development',
-    PORT: '3000',
+    PORT: ownedRouteClassifierEnabled ? String(ownedRoutePort) : '3000',
     STYNX_ENVIRONMENT: 'local',
     STYNX_OWNER_DATABASE_URL: `postgresql://postgres:postgres@127.0.0.1:${postgresPort}/postgres`,
     STYNX_APP_DATABASE_URL: `postgresql://postgres:postgres@127.0.0.1:${postgresPort}/postgres`,
@@ -453,12 +612,18 @@ apiProcess.on('message', (record) => {
   handleStartupMessage(record);
 });
 apiProcess.once('error', () => {
-  if (!runtimeRouteTableAccepted) {
+  if (
+    !runtimeRouteTableAccepted ||
+    (ownedRouteClassifierEnabled && !ownedRouteClassifierComplete)
+  ) {
     failStartup('child-error');
   }
 });
 apiProcess.once('disconnect', () => {
-  if (!runtimeRouteTableAccepted) {
+  if (
+    !runtimeRouteTableAccepted ||
+    (ownedRouteClassifierEnabled && !ownedRouteClassifierComplete)
+  ) {
     failStartup('child-disconnect');
   }
 });
@@ -466,7 +631,10 @@ apiProcess.once('exit', (code, signal) => {
   if (shuttingDown || startupFailureStarted) {
     return;
   }
-  if (!runtimeRouteTableAccepted) {
+  if (
+    !runtimeRouteTableAccepted ||
+    (ownedRouteClassifierEnabled && !ownedRouteClassifierComplete)
+  ) {
     failStartup('child-exit');
     return;
   }
