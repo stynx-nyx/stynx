@@ -1243,6 +1243,179 @@ function runOwnedListenerResponses(events) {
   return fixture.snapshot();
 }
 
+function ownedListenerCleanupPreloadSource() {
+  return String.raw`
+import childProcess from 'node:child_process';
+import fs from 'node:fs';
+import http from 'node:http';
+import { EventEmitter } from 'node:events';
+import { syncBuiltinESMExports } from 'node:module';
+
+const actionsPath = process.env.D17_7_ACTIONS;
+const action = (name) => fs.appendFileSync(actionsPath, name + '\n');
+const later = (callback) => setImmediate(callback);
+const statuses = [204, 503, 200, 404];
+let requestIndex = 0;
+
+process.on('unhandledRejection', () => action('unhandled-rejection'));
+process.on('uncaughtExceptionMonitor', () => action('uncaught-exception'));
+
+class SeamChild extends EventEmitter {
+  constructor(kind) {
+    super();
+    this.kind = kind;
+    this.pid = 51001;
+    this.exitCode = null;
+    this.signalCode = null;
+  }
+
+  finish(code = 0, signal = null) {
+    this.exitCode = code;
+    this.signalCode = signal;
+    this.emit('exit', code, signal);
+  }
+
+  kill(signal = 'SIGTERM') {
+    this.signalCode = signal;
+    return true;
+  }
+
+  unref() {}
+}
+
+fs.promises.rm = async () => {
+  action('async-rm');
+  throw new Error('private cleanup rejection');
+};
+
+childProcess.spawn = (command, args = []) => {
+  if (command === 'docker' && args.includes('up')) {
+    action('up');
+    const child = new SeamChild('up');
+    later(() => child.finish(0));
+    return child;
+  }
+  if (command === 'docker' && args.includes('down')) {
+    action('async-down');
+    const child = new SeamChild('down');
+    later(() => child.finish(0));
+    return child;
+  }
+  if (command === 'node' && String(args[0]).includes('verify-reference-api-build-inputs')) {
+    action('verify');
+    const child = new SeamChild('verify');
+    later(() => child.finish(0));
+    return child;
+  }
+  if (command === 'node') {
+    action('api');
+    const child = new SeamChild('api');
+    later(() => {
+      child.emit('spawn');
+      for (const state of ['bootstrap-entered', 'nest-created', 'listening', 'runtime-route-table-present']) {
+        child.emit('message', { protocol: 'stynx-reference-api-startup-v1', state });
+      }
+    });
+    return child;
+  }
+  if (command === process.execPath) {
+    action('watchdog');
+    return new SeamChild('watchdog');
+  }
+  throw new Error('unexpected seam command');
+};
+
+childProcess.spawnSync = (command, args = []) => {
+  if (command === 'docker' && args.includes('port')) {
+    action('port');
+    return { status: 0, signal: null, stdout: '127.0.0.1:49152\n', stderr: '' };
+  }
+  if (command === 'docker' && args.includes('down')) {
+    action('sync-down');
+    return { status: 0, signal: null, stdout: '', stderr: '' };
+  }
+  throw new Error('unexpected seam sync command');
+};
+
+http.get = (_options, callback) => {
+  const current = requestIndex;
+  requestIndex += 1;
+  action('request-' + String(current + 1));
+  const request = new EventEmitter();
+  later(() => {
+    const response = new EventEmitter();
+    response.statusCode = statuses[current];
+    response.resume = () => action('discard-' + String(current + 1));
+    callback(response);
+  });
+  return request;
+};
+
+syncBuiltinESMExports();
+`;
+}
+
+function runOwnedListenerCleanupRejection() {
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'stynx-d17-7-cleanup-seam-'));
+  const helperSource = readFileSync(
+    join(repoRoot, 'reference/web/scripts/serve-reference-api-stack.mjs'),
+    'utf8',
+  );
+  const helperPath = join(fixtureRoot, 'reference/web/scripts/serve-reference-api-stack.mjs');
+  const preloadPath = join(fixtureRoot, 'cleanup-preload.mjs');
+  const actionsPath = join(fixtureRoot, 'actions.log');
+  const composeRoot = join(fixtureRoot, 'owned-compose');
+  try {
+    for (const directory of [
+      dirname(helperPath),
+      join(fixtureRoot, 'scripts'),
+      join(fixtureRoot, 'reference/api/dist/reference/api/src'),
+      composeRoot,
+    ]) {
+      mkdirSync(directory, { recursive: true });
+    }
+    writeFileSync(helperPath, helperSource);
+    assert.equal(readFileSync(helperPath, 'utf8'), helperSource);
+    writeFileSync(preloadPath, ownedListenerCleanupPreloadSource());
+    writeFileSync(join(fixtureRoot, 'scripts/verify-reference-api-build-inputs.mjs'), '');
+    writeFileSync(join(fixtureRoot, 'reference/api/dist/reference/api/src/main.js'), '');
+    writeFileSync(join(composeRoot, 'compose.yml'), 'services: {}\n');
+
+    const child = spawnSync(
+      process.execPath,
+      ['--import', preloadPath, helperPath, ownedListenerOptIn],
+      {
+        cwd: fixtureRoot,
+        encoding: 'utf8',
+        timeout: 5_000,
+        stdio: ['ignore', 'pipe', 'pipe'],
+        env: {
+          PATH: process.env.PATH,
+          HOME: process.env.HOME,
+          TMPDIR: tmpdir(),
+          D17_7_ACTIONS: actionsPath,
+          STYNX_REFERENCE_API_STACK_COMPOSE_DIR: composeRoot,
+        },
+      },
+    );
+    assert.ifError(child.error);
+    return {
+      status: child.status,
+      signal: child.signal,
+      stdout: child.stdout ?? '',
+      stderr: child.stderr ?? '',
+      actions: existsSync(actionsPath)
+        ? readFileSync(actionsPath, 'utf8').trim().split(/\r?\n/u).filter(Boolean)
+        : [],
+      leakedFixturePath:
+        (child.stdout ?? '').includes(fixtureRoot) || (child.stderr ?? '').includes(fixtureRoot),
+    };
+  } finally {
+    rmSync(fixtureRoot, { recursive: true, force: true });
+    assert.equal(existsSync(fixtureRoot), false, 'D17.7 cleanup seam must always be removed');
+  }
+}
+
 function boundedHelperFailureViolations(result, expectedCodes) {
   const governedLines = result.stderr
     .split(/\r?\n/u)
@@ -2836,6 +3009,75 @@ test('D17.7 production binds the singleton owned-listener classifier without def
   assert.equal(reconstructedMain.includes(ownedListenerBindingBegin), false);
   assert.equal(reconstructedMain.includes(ownedListenerBindingEnd), false);
   assert.equal((reconstructedMain.match(/await app\.listen\(port\);/gu) ?? []).length, 1);
+});
+
+test('D17.7 production fails closed on asynchronous owned cleanup rejection', () => {
+  const result = runOwnedListenerCleanupRejection();
+  const helper = readFileSync(
+    join(repoRoot, 'reference/web/scripts/serve-reference-api-stack.mjs'),
+    'utf8',
+  );
+  const startupLines = result.stderr
+    .split(/\r?\n/u)
+    .filter((line) => line.startsWith(`${startupOutputPrefix} `));
+  const classifierLines = result.stderr
+    .split(/\r?\n/u)
+    .filter((line) => line.startsWith(`${ownedListenerOutputPrefix} `));
+  const ungovernedLines = result.stderr
+    .split(/\r?\n/u)
+    .filter(
+      (line) =>
+        line.length > 0 &&
+        !line.startsWith(`${startupOutputPrefix} `) &&
+        !line.startsWith(`${ownedListenerOutputPrefix} `),
+    );
+  const expectedStartupLines = [
+    ...helperSuccessStates,
+    ...startupSuccessStates,
+    'runtime-route-table-present',
+  ].map(fixedStartupOutput);
+  const expectedClassifierLines = [
+    'owned-healthz-2xx',
+    'owned-readyz-503',
+    'owned-api-local-2xx',
+    'owned-sentinel-404',
+    'owned-full-table-present',
+  ].map((code) => `${ownedListenerOutputPrefix} ${code}`);
+  const violations = [];
+  if (result.status === 0 || result.signal !== null) violations.push('nonzero-terminal');
+  if (result.stdout.length !== 0 || ungovernedLines.length !== 0) {
+    violations.push('raw-output');
+  }
+  if (result.leakedFixturePath) violations.push('fixture-path-output');
+  if (startupLines.join('\n') !== expectedStartupLines.join('\n')) {
+    violations.push('startup-sequence');
+  }
+  if (classifierLines.join('\n') !== expectedClassifierLines.join('\n')) {
+    violations.push('classifier-sequence');
+  }
+  if (new Set(classifierLines).size !== classifierLines.length) {
+    violations.push('duplicate-classifier-code');
+  }
+  for (const action of [
+    'async-down',
+    'async-rm',
+    ...[1, 2, 3, 4].flatMap((index) => [`request-${index}`, `discard-${index}`]),
+  ]) {
+    if (result.actions.filter((candidate) => candidate === action).length !== 1) {
+      violations.push(`action-count:${action}`);
+    }
+  }
+  if (result.actions.includes('sync-down')) violations.push('duplicate-cleanup-attempt');
+  if (result.actions.includes('unhandled-rejection')) violations.push('unhandled-rejection');
+  if (result.actions.includes('uncaught-exception')) violations.push('uncaught-exception');
+  if (!/void runOwnedRouteClassifier\(\)\.catch\(\(\) =>/u.test(helper)) {
+    violations.push('classifier-rejection-routing');
+  }
+  assert.deepEqual(
+    violations,
+    [],
+    'D17.7 async owned cleanup rejection must fail closed without duplicate cleanup',
+  );
 });
 
 test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14', () => {
