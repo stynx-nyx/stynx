@@ -628,6 +628,11 @@ const playwrightApiReadyLine = '[reference-api-startup] runtime-route-table-pres
 const playwrightApiReadyWaitSource = '^\\[reference-api-startup\\] runtime-route-table-present$';
 const playwrightApiReadyWaitLine =
   '      wait: { stderr: /^\\[reference-api-startup\\] runtime-route-table-present$/m },\n';
+const d21ComposeTerminalCodes = [
+  'compose-up-spawn-failed',
+  'compose-up-exit-nonzero',
+  'compose-up-signaled',
+];
 
 function normalizeD20PlaywrightWait(source) {
   const occurrenceCount = source.split(playwrightApiReadyWaitLine).length - 1;
@@ -1219,6 +1224,63 @@ function d19HelperModeOracle(args = [], inherited = {}) {
     },
     exitCode: undefined,
   };
+}
+
+function d21ComposeUpFixture() {
+  const stderr = [fixedStartupOutput('helper-entered')];
+  const stdout = [];
+  const cleanupEvents = [];
+  let terminal;
+  let complete = false;
+
+  function cleanup() {
+    if (cleanupEvents.length === 0) {
+      cleanupEvents.push({ kind: 'confined', target: 'owned-d21-fixture' });
+    }
+  }
+
+  function childEvent(event) {
+    if (complete || !event || typeof event !== 'object' || Array.isArray(event)) {
+      return { accepted: false };
+    }
+    const keys = Object.keys(event).sort();
+    let classification;
+    if (keys.join(',') === 'kind' && event.kind === 'error') {
+      classification = 'compose-up-spawn-failed';
+    } else if (keys.join(',') === 'code,kind,signal' && event.kind === 'exit') {
+      if (event.signal !== null) {
+        classification = 'compose-up-signaled';
+      } else if (Number.isInteger(event.code) && event.code !== 0) {
+        classification = 'compose-up-exit-nonzero';
+      } else if (event.code === 0 && event.signal === null) {
+        stderr.push(fixedStartupOutput('compose-ready'));
+        complete = true;
+        return { accepted: true, classification: undefined };
+      }
+    }
+    if (!classification) {
+      complete = true;
+      cleanup();
+      return { accepted: false };
+    }
+    terminal = classification;
+    stderr.push(`${startupOutputPrefix} ${classification}`);
+    complete = true;
+    cleanup();
+    return { accepted: true, classification };
+  }
+
+  function snapshot() {
+    return {
+      stdout: [...stdout],
+      stderr: [...stderr],
+      terminal,
+      cleanupEvents: [...cleanupEvents],
+      complete,
+    };
+  }
+
+  return { childEvent, snapshot };
 }
 
 function parseUniqueJson(text) {
@@ -4062,6 +4124,150 @@ test('D20 production adds only the exact API-entry raw-stderr wait', async () =>
   });
   assert.doesNotMatch(configSource, /wait:\s*\{\s*stdout:/u);
   assert.doesNotMatch(playwrightApiReadyWaitLine, /\(\?<|\([^?]|\/g\b/u);
+});
+
+test('D21 Compose-up oracle selects one bounded terminal before confined cleanup', () => {
+  const matrix = [
+    {
+      event: { kind: 'error' },
+      classification: 'compose-up-spawn-failed',
+    },
+    {
+      event: { kind: 'exit', code: 17, signal: null },
+      classification: 'compose-up-exit-nonzero',
+    },
+    {
+      event: { kind: 'exit', code: null, signal: true },
+      classification: 'compose-up-signaled',
+    },
+  ];
+  for (const { event, classification } of matrix) {
+    const fixture = d21ComposeUpFixture();
+    assert.deepEqual(fixture.childEvent(event), { accepted: true, classification });
+    const snapshot = fixture.snapshot();
+    assert.deepEqual(snapshot.stdout, []);
+    assert.deepEqual(snapshot.stderr, [
+      fixedStartupOutput('helper-entered'),
+      `${startupOutputPrefix} ${classification}`,
+    ]);
+    assert.equal(snapshot.stderr.includes(fixedStartupOutput('compose-ready')), false);
+    assert.deepEqual(snapshot.cleanupEvents, [
+      { kind: 'confined', target: 'owned-d21-fixture' },
+    ]);
+    assert.equal(snapshot.terminal, classification);
+  }
+
+  for (const events of [
+    [{ kind: 'error' }, { kind: 'exit', code: 1, signal: null }],
+    [{ kind: 'exit', code: null, signal: true }, { kind: 'exit', code: 1, signal: null }],
+    [{ kind: 'error' }, { kind: 'error' }, { kind: 'exit', code: null, signal: true }],
+  ]) {
+    const fixture = d21ComposeUpFixture();
+    assert.equal(fixture.childEvent(events[0]).accepted, true);
+    for (const event of events.slice(1)) {
+      assert.deepEqual(fixture.childEvent(event), { accepted: false });
+    }
+    const snapshot = fixture.snapshot();
+    assert.equal(snapshot.stderr.length, 2);
+    assert.equal(snapshot.cleanupEvents.length, 1);
+    assert.equal(d21ComposeTerminalCodes.includes(snapshot.terminal), true);
+  }
+
+  const success = d21ComposeUpFixture();
+  assert.deepEqual(success.childEvent({ kind: 'exit', code: 0, signal: null }), {
+    accepted: true,
+    classification: undefined,
+  });
+  assert.deepEqual(success.snapshot(), {
+    stdout: [],
+    stderr: [fixedStartupOutput('helper-entered'), fixedStartupOutput('compose-ready')],
+    terminal: undefined,
+    cleanupEvents: [],
+    complete: true,
+  });
+});
+
+test('D21 Compose-up oracle rejects payload and retains no raw diagnostic material', () => {
+  const forbiddenEvents = [
+    { kind: 'error', error: new Error('raw') },
+    { kind: 'error', output: 'raw' },
+    { kind: 'exit', code: 1, signal: null, path: '/private/fixture' },
+    { kind: 'exit', code: 1, signal: null, env: 'TOKEN' },
+    { kind: 'exit', code: 1, signal: null, command: 'docker compose' },
+    { kind: 'exit', code: 1, signal: null, url: 'http://127.0.0.1' },
+    { kind: 'exit', code: 1, signal: null, port: 6379 },
+    { kind: 'exit', code: 1, signal: null, credential: 'secret' },
+  ];
+  for (const event of forbiddenEvents) {
+    const fixture = d21ComposeUpFixture();
+    assert.deepEqual(fixture.childEvent(event), { accepted: false });
+    const snapshot = fixture.snapshot();
+    assert.deepEqual(snapshot.stdout, []);
+    assert.deepEqual(snapshot.stderr, [fixedStartupOutput('helper-entered')]);
+    assert.equal(snapshot.cleanupEvents.length, 1);
+    assert.doesNotMatch(
+      JSON.stringify(snapshot),
+      /raw|private|TOKEN|docker compose|127\.0\.0\.1|6379|secret/u,
+    );
+  }
+  const fixtureSource = `${d21ComposeUpFixture}`;
+  assert.doesNotMatch(fixtureSource, /\b(?:setTimeout|setInterval|sleep|retry|poll)\s*\(/iu);
+  assert.doesNotMatch(fixtureSource, /\btimeout\b/iu);
+});
+
+test('D21 production binds exact Compose-up terminals without D14-D20 drift', () => {
+  const helper = readFileSync(
+    join(repoRoot, 'reference/web/scripts/serve-reference-api-stack.mjs'),
+    'utf8',
+  );
+  const frozenFiles = {
+    'reference/api/src/main.ts': 'c56246aa274b5df7cd88ca11692f580fca724d60a41b69b0021bb63fbf0acc0b',
+    'reference/web/playwright.config.mjs':
+      'efcea2a9cb4c7e92e48f793f784135f1680346601c28c14543532190f869bf21',
+    'package.json': '07f672f29660f90cb9480a7ff395463f5ccb08ecd5f74e61869391ef1653b47c',
+    'reference/api/package.json':
+      'bffedbee254dde969ae2a2a77689587fa9f553f0b9df2b869bd2b8fe910a5b64',
+    'reference/web/package.json':
+      'b1e3b617a0db97bc380dc7577700460e6fa1bbe1e64f54146e0e80943df37b0c',
+    'turbo.json': 'd32a54129f37eb21a86d346cfcf09eb914cda06ebdc5166c432a9f23c67db467',
+  };
+  for (const [path, digest] of Object.entries(frozenFiles)) {
+    assert.equal(createHash('sha256').update(readFileSync(join(repoRoot, path))).digest('hex'), digest);
+  }
+  assertD14HelperContract(helper, JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8')));
+  assert.match(helper, /mkdtemp\(resolve\(tmpdir\(\), ['"]stynx-reference-api-stack-['"]\)\)/u);
+  assert.match(helper, /services:\\n  postgres:[\s\S]*?ports:\\n      - '\$\{postgresPort\}:5432'[\s\S]*?redis:[\s\S]*?ports:\\n      - '\$\{redisPublish\}'/u);
+  assert.match(
+    helper,
+    /\[\s*['"]compose['"],\s*['"]-f['"],\s*composeFile,\s*['"]up['"],\s*['"]--wait['"],\s*['"]postgres['"],\s*['"]redis['"]\s*\]/su,
+  );
+  assert.match(
+    helper,
+    /return spawn\(command, args, \{\s*cwd: workspaceRoot,\s*stdio: ['"]inherit['"],\s*\.\.\.options,\s*\}\);/su,
+  );
+  assert.match(helper, /const childEnvironment = \{ \.\.\.process\.env \};/u);
+  assert.match(helper, /stdio:\s*['"]ignore['"]/u);
+  assert.equal((helper.match(/\bawait sleep\(/gu) ?? []).length, 1);
+  assert.doesNotMatch(helper, /(?:retry|setTimeout|setInterval)\s*\(/u);
+  assert.match(helper, /await composeDown\(\);\s*\} finally \{\s*process\.exit\(1\);/su);
+
+  for (const code of d21ComposeTerminalCodes) {
+    assert.equal(
+      (helper.match(new RegExp(`['"]${escapeRegExpLiteral(code)}['"]`, 'gu')) ?? []).length,
+      1,
+      'D21 Compose-up terminal classifications are not implemented',
+    );
+  }
+  const helperEntered = helper.indexOf("recordStartupCode('helper-entered')");
+  const composeReady = helper.indexOf("recordStartupCode('compose-ready')", helperEntered);
+  const cleanup = helper.indexOf('await composeDown();', composeReady);
+  assert.ok(helperEntered >= 0);
+  assert.ok(composeReady > helperEntered);
+  assert.ok(cleanup > composeReady);
+  assert.doesNotMatch(
+    helper,
+    /compose-up-(?:spawn-failed|exit-nonzero|signaled)[^'"\n]*(?:error|stack|path|env|command|url|port|credential|code|signal)/iu,
+  );
 });
 
 test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14', () => {
