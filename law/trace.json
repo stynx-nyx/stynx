@@ -3628,16 +3628,16 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 58,
-      "assertion_digest_sha256": "de80a7029f84ef68c929bb3b7cc11581d22565903b418f0a2b7f220f21c4b488"
+      "assertion_count": 137,
+      "assertion_digest_sha256": "d8a4f309ec034e0007eee602f2a2ccdca746c9b5d15b297cc4bb0b44eb6d78f0"
     },
     {
       "path": "packages/outbox/test/unit/outbox.service.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 23,
-      "assertion_digest_sha256": "cf922d8a3cc204b5281ec3144c457b0f4e7ec626a12f3c8ad27dca7ebfbed9b5"
+      "assertion_count": 28,
+      "assertion_digest_sha256": "b92a285c529e92f2c1ea332e1a2a967ef8da33d4e7b6abac2f24bc851929c641"
     },
     {
       "path": "packages/worklist/test/integration/worklist.database.spec.ts",
