@@ -567,6 +567,38 @@ const runtimeRouteTableStates = [
 const governedRuntimeRoutes = ['GET /healthz', 'GET /readyz', 'GET /_reference/demo-tenants'];
 const runtimeRouteTableBegin = '// D17.6 runtime route table inspection: begin';
 const runtimeRouteTableEnd = '// D17.6 runtime route table inspection: end';
+const ownedListenerBindingBegin = '// D17.7 owned listener binding: begin';
+const ownedListenerBindingEnd = '// D17.7 owned listener binding: end';
+const ownedListenerOptIn = '--d17-owned-route-classifier';
+const ownedListenerOutputPrefix = '[reference-api-owned-route]';
+const ownedListenerSlots = ['health', 'readiness', 'api-local', 'sentinel'];
+const ownedListenerSlotCodes = {
+  health: [
+    'owned-healthz-2xx',
+    'owned-healthz-404',
+    'owned-healthz-other',
+    'owned-healthz-connect-failed',
+  ],
+  readiness: [
+    'owned-readyz-2xx',
+    'owned-readyz-404',
+    'owned-readyz-503',
+    'owned-readyz-other',
+    'owned-readyz-connect-failed',
+  ],
+  'api-local': [
+    'owned-api-local-2xx',
+    'owned-api-local-404',
+    'owned-api-local-other',
+    'owned-api-local-connect-failed',
+  ],
+  sentinel: ['owned-sentinel-404', 'owned-sentinel-other', 'owned-sentinel-connect-failed'],
+};
+const ownedListenerFinalCodes = [
+  'owned-full-table-present',
+  'owned-full-table-absent',
+  'owned-full-table-indeterminate',
+];
 
 function fixedStartupOutput(code) {
   assert.ok(
@@ -595,6 +627,21 @@ function frozenMainWithoutRuntimeRouteTableInspection(source) {
   const afterEnd = source.indexOf('\n', end);
   assert.ok(afterEnd >= 0, 'D17.6 main inspection end marker must terminate its line');
   return `${source.slice(0, beginLine)}${source.slice(afterEnd + 1)}`;
+}
+
+function frozenMainWithoutOwnedListenerBinding(source) {
+  const beginCount = source.split(ownedListenerBindingBegin).length - 1;
+  const endCount = source.split(ownedListenerBindingEnd).length - 1;
+  if (beginCount === 0 && endCount === 0) return source;
+  assert.equal(beginCount, 1, 'D17.7 main binding begin marker must occur exactly once');
+  assert.equal(endCount, 1, 'D17.7 main binding end marker must occur exactly once');
+  const begin = source.indexOf(ownedListenerBindingBegin);
+  const end = source.indexOf(ownedListenerBindingEnd, begin);
+  assert.ok(end > begin, 'D17.7 main binding markers must be ordered');
+  const beginLine = source.lastIndexOf('\n', begin) + 1;
+  const afterEnd = source.indexOf('\n', end);
+  assert.ok(afterEnd >= 0, 'D17.7 main binding end marker must terminate its line');
+  return `${source.slice(0, beginLine)}    await app.listen(port);\n${source.slice(afterEnd + 1)}`;
 }
 
 function startupOracle(cleanup, recorder = () => undefined) {
@@ -1004,6 +1051,192 @@ function advanceRuntimeRouteTableFixture(fixture) {
   for (const code of [...helperSuccessStates, ...startupSuccessStates]) {
     assert.deepEqual(fixture.phase(code), { accepted: true, code });
   }
+}
+
+function ownedListenerDiagnosticFixture(args = [], inheritedInternalControl = false) {
+  const stdout = [];
+  const stderr = [];
+  const operations = [];
+  const attemptedSlots = [];
+  const slotCodes = [];
+  const cleanupTargets = [];
+  const exactOptIn = args.length === 1 && args[0] === ownedListenerOptIn;
+  const normalMode = args.length === 0;
+  const fixedDiagnosticHost = '127.0.0.1';
+  const fixedDiagnosticPort = 33_117;
+  const childBinding = exactOptIn
+    ? { host: fixedDiagnosticHost, port: fixedDiagnosticPort }
+    : undefined;
+  const requesterBinding = exactOptIn
+    ? { host: fixedDiagnosticHost, port: fixedDiagnosticPort }
+    : undefined;
+  let internalControl = inheritedInternalControl ? 'inherited' : undefined;
+  internalControl = undefined;
+  if (exactOptIn) internalControl = '1';
+  let state = normalMode ? 'default-ready' : exactOptIn ? 'diagnostic-ready' : 'rejected';
+  let currentSlot = -1;
+  let cleanupComplete = false;
+  let discardedStreams = 0;
+  let exitCode = state === 'rejected' ? 1 : undefined;
+  const controls = {
+    inheritedControlStripped: internalControl !== 'inherited',
+    internalControlSetByCliOnly: exactOptIn && internalControl === '1',
+    childUsesFixedDiagnosticBinding:
+      childBinding?.host === fixedDiagnosticHost && childBinding?.port === fixedDiagnosticPort,
+    requesterUsesFixedDiagnosticBinding:
+      requesterBinding?.host === fixedDiagnosticHost &&
+      requesterBinding?.port === fixedDiagnosticPort,
+    bindingConsistent:
+      !exactOptIn ||
+      (childBinding.host === requesterBinding.host && childBinding.port === requesterBinding.port),
+  };
+
+  function cleanup() {
+    if (cleanupComplete) return;
+    cleanupComplete = true;
+    cleanupTargets.push('owned-d17-7-fixture');
+  }
+
+  function reject() {
+    state = 'stopped';
+    exitCode = 1;
+    if (operations.length > 0) cleanup();
+    return { accepted: false };
+  }
+
+  function emit(code) {
+    const allowed = [...Object.values(ownedListenerSlotCodes).flat(), ...ownedListenerFinalCodes];
+    assert.equal(allowed.includes(code), true, 'D17.7 output must be one exact fixed code');
+    stderr.push(`${ownedListenerOutputPrefix} ${code}`);
+  }
+
+  function start() {
+    if (!['default-ready', 'diagnostic-ready'].includes(state)) return reject();
+    operations.push('owned-resource-setup', 'docker-closure', 'build-verifier', 'child-spawn');
+    state = normalMode ? 'default-running' : 'await-route-table';
+    return { accepted: true, diagnostic: exactOptIn };
+  }
+
+  function issueNextSlot() {
+    currentSlot += 1;
+    if (currentSlot === ownedListenerSlots.length) {
+      const finalCode =
+        slotCodes.join(',') ===
+        'owned-healthz-2xx,owned-readyz-2xx,owned-api-local-2xx,owned-sentinel-404'
+          ? 'owned-full-table-present'
+          : slotCodes.join(',') ===
+              'owned-healthz-2xx,owned-readyz-503,owned-api-local-2xx,owned-sentinel-404'
+            ? 'owned-full-table-present'
+            : slotCodes.join(',') ===
+                'owned-healthz-404,owned-readyz-404,owned-api-local-404,owned-sentinel-404'
+              ? 'owned-full-table-absent'
+              : 'owned-full-table-indeterminate';
+      emit(finalCode);
+      state = 'completed';
+      exitCode = 0;
+      cleanup();
+      return { accepted: true, finalCode };
+    }
+    attemptedSlots.push(ownedListenerSlots[currentSlot]);
+    state = `await-${ownedListenerSlots[currentSlot]}`;
+    return { accepted: true, slot: ownedListenerSlots[currentSlot] };
+  }
+
+  function routeTable(record) {
+    if (state === 'default-running') {
+      if (!runtimeRouteTableStates.includes(record)) return reject();
+      stderr.push(fixedStartupOutput(record));
+      return { accepted: true, diagnostic: false };
+    }
+    if (state !== 'await-route-table' || !runtimeRouteTableStates.includes(record)) return reject();
+    stderr.push(fixedStartupOutput(record));
+    if (record !== 'runtime-route-table-present') return reject();
+    return issueNextSlot();
+  }
+
+  function classify(slot, event) {
+    if (state !== `await-${slot}` || slot !== ownedListenerSlots[currentSlot]) return reject();
+    if (!event || typeof event !== 'object' || Array.isArray(event)) return reject();
+    const keys = Object.keys(event).sort().join(',');
+    let code;
+    if (event.kind === 'connect-failed') {
+      if (keys !== 'kind') return reject();
+      code = `owned-${slot === 'health' ? 'healthz' : slot === 'readiness' ? 'readyz' : slot}-connect-failed`;
+    } else if (
+      event.kind === 'response' &&
+      keys === 'kind,status' &&
+      Number.isSafeInteger(event.status) &&
+      event.status >= 100 &&
+      event.status <= 599
+    ) {
+      discardedStreams += 1;
+      const stem = slot === 'health' ? 'healthz' : slot === 'readiness' ? 'readyz' : slot;
+      const classification =
+        event.status >= 200 && event.status < 300
+          ? '2xx'
+          : event.status === 404
+            ? '404'
+            : slot === 'readiness' && event.status === 503
+              ? '503'
+              : 'other';
+      code = `owned-${stem}-${classification}`;
+    } else {
+      return reject();
+    }
+    if (!ownedListenerSlotCodes[slot].includes(code)) return reject();
+    slotCodes.push(code);
+    emit(code);
+    return issueNextSlot();
+  }
+
+  function terminal(kind) {
+    if (
+      ![
+        'bind-failure',
+        'child-error',
+        'child-disconnect',
+        'child-exit',
+        'protocol-failure',
+        'assertion-failure',
+        'command-failure',
+        'cleanup-failure',
+      ].includes(kind)
+    ) {
+      return reject();
+    }
+    return reject();
+  }
+
+  function snapshot() {
+    return {
+      stdout: [...stdout],
+      stderr: [...stderr],
+      operations: [...operations],
+      attemptedSlots: [...attemptedSlots],
+      slotCodes: [...slotCodes],
+      cleanupTargets: [...cleanupTargets],
+      controls: { ...controls },
+      discardedStreams,
+      state,
+      exitCode,
+    };
+  }
+
+  return { start, routeTable, classify, terminal, snapshot };
+}
+
+function runOwnedListenerResponses(events) {
+  const fixture = ownedListenerDiagnosticFixture([ownedListenerOptIn], true);
+  assert.deepEqual(fixture.start(), { accepted: true, diagnostic: true });
+  assert.deepEqual(fixture.routeTable('runtime-route-table-present'), {
+    accepted: true,
+    slot: 'health',
+  });
+  for (const [index, event] of events.entries()) {
+    const slot = ownedListenerSlots[index];
+    assert.equal(fixture.classify(slot, event).accepted, true);
+  }
+  return fixture.snapshot();
 }
 
 function boundedHelperFailureViolations(result, expectedCodes) {
@@ -2349,6 +2582,245 @@ test('D17.6 production binds one IPC-only live route-table state after listening
   );
 });
 
+test('D17.7 CLI oracle keeps default HTTP-free and admits only one exact opt-in', () => {
+  const normal = ownedListenerDiagnosticFixture([], true);
+  assert.deepEqual(normal.start(), { accepted: true, diagnostic: false });
+  assert.deepEqual(normal.routeTable('runtime-route-table-present'), {
+    accepted: true,
+    diagnostic: false,
+  });
+  const normalSnapshot = normal.snapshot();
+  assert.deepEqual(normalSnapshot.attemptedSlots, []);
+  assert.deepEqual(normalSnapshot.slotCodes, []);
+  assert.equal(
+    normalSnapshot.stderr.some((line) => line.startsWith(`${ownedListenerOutputPrefix} `)),
+    false,
+  );
+  assert.deepEqual(normalSnapshot.controls, {
+    inheritedControlStripped: true,
+    internalControlSetByCliOnly: false,
+    childUsesFixedDiagnosticBinding: false,
+    requesterUsesFixedDiagnosticBinding: false,
+    bindingConsistent: true,
+  });
+
+  const diagnostic = ownedListenerDiagnosticFixture([ownedListenerOptIn], true);
+  assert.deepEqual(diagnostic.start(), { accepted: true, diagnostic: true });
+  assert.deepEqual(diagnostic.snapshot().attemptedSlots, []);
+  assert.deepEqual(diagnostic.snapshot().controls, {
+    inheritedControlStripped: true,
+    internalControlSetByCliOnly: true,
+    childUsesFixedDiagnosticBinding: true,
+    requesterUsesFixedDiagnosticBinding: true,
+    bindingConsistent: true,
+  });
+
+  const rejectedArgs = [
+    ['--unknown'],
+    [ownedListenerOptIn, ownedListenerOptIn],
+    [ownedListenerOptIn, '--additional'],
+    [`${ownedListenerOptIn}=1`],
+    ['d17-owned-route-classifier'],
+    ['', ownedListenerOptIn],
+  ];
+  for (const args of rejectedArgs) {
+    const fixture = ownedListenerDiagnosticFixture(args, true);
+    const rejected = fixture.snapshot();
+    assert.equal(rejected.exitCode, 1);
+    assert.equal(rejected.state, 'rejected');
+    assert.deepEqual(rejected.operations, []);
+    assert.deepEqual(rejected.attemptedSlots, []);
+    assert.deepEqual(rejected.cleanupTargets, []);
+    assert.deepEqual(rejected.stdout, []);
+    assert.deepEqual(rejected.stderr, []);
+    assert.doesNotMatch(JSON.stringify(rejected), /unknown|additional|classifier=|argument|argv/iu);
+  }
+});
+
+test('D17.7 route-table oracle requests only after one exact present state', () => {
+  for (const routeState of ['runtime-route-table-absent', 'runtime-route-table-indeterminate']) {
+    const fixture = ownedListenerDiagnosticFixture([ownedListenerOptIn], true);
+    assert.deepEqual(fixture.start(), { accepted: true, diagnostic: true });
+    assert.deepEqual(fixture.routeTable(routeState), { accepted: false });
+    const stopped = fixture.snapshot();
+    assert.deepEqual(stopped.attemptedSlots, []);
+    assert.deepEqual(stopped.slotCodes, []);
+    assert.deepEqual(stopped.cleanupTargets, ['owned-d17-7-fixture']);
+    assert.equal(stopped.exitCode, 1);
+  }
+
+  const present = ownedListenerDiagnosticFixture([ownedListenerOptIn], true);
+  assert.deepEqual(present.start(), { accepted: true, diagnostic: true });
+  assert.deepEqual(present.routeTable('runtime-route-table-present'), {
+    accepted: true,
+    slot: 'health',
+  });
+  assert.deepEqual(present.snapshot().attemptedSlots, ['health']);
+  assert.deepEqual(present.snapshot().slotCodes, []);
+  assert.deepEqual(present.snapshot().cleanupTargets, []);
+  assert.deepEqual(present.routeTable('runtime-route-table-present'), { accepted: false });
+  assert.deepEqual(present.snapshot().cleanupTargets, ['owned-d17-7-fixture']);
+});
+
+test('D17.7 classifier oracle emits every slot class and exact final mapping', () => {
+  const response = (status) => ({ kind: 'response', status });
+  const connect = { kind: 'connect-failed' };
+  const present = runOwnedListenerResponses([
+    response(204),
+    response(503),
+    response(200),
+    response(404),
+  ]);
+  assert.deepEqual(present.attemptedSlots, ownedListenerSlots);
+  assert.deepEqual(present.slotCodes, [
+    'owned-healthz-2xx',
+    'owned-readyz-503',
+    'owned-api-local-2xx',
+    'owned-sentinel-404',
+  ]);
+  assert.equal(present.stderr.at(-1), `${ownedListenerOutputPrefix} owned-full-table-present`);
+  assert.equal(present.discardedStreams, 4);
+  assert.deepEqual(present.cleanupTargets, ['owned-d17-7-fixture']);
+
+  const absent = runOwnedListenerResponses([
+    response(404),
+    response(404),
+    response(404),
+    response(404),
+  ]);
+  assert.equal(absent.stderr.at(-1), `${ownedListenerOutputPrefix} owned-full-table-absent`);
+  const indeterminate = runOwnedListenerResponses([
+    response(500),
+    response(200),
+    response(404),
+    response(500),
+  ]);
+  assert.equal(
+    indeterminate.stderr.at(-1),
+    `${ownedListenerOutputPrefix} owned-full-table-indeterminate`,
+  );
+
+  const slotCases = {
+    health: [response(200), response(404), response(500), connect],
+    readiness: [response(200), response(404), response(503), response(500), connect],
+    'api-local': [response(200), response(404), response(500), connect],
+    sentinel: [response(404), response(500), connect],
+  };
+  const observed = new Set();
+  for (const [targetSlot, events] of Object.entries(slotCases)) {
+    for (const targetEvent of events) {
+      const scenario = [response(200), response(200), response(200), response(404)];
+      scenario[ownedListenerSlots.indexOf(targetSlot)] = targetEvent;
+      const snapshot = runOwnedListenerResponses(scenario);
+      assert.deepEqual(snapshot.attemptedSlots, ownedListenerSlots);
+      assert.equal(snapshot.slotCodes.length, 4);
+      assert.equal(snapshot.stderr.length, 6);
+      assert.equal(snapshot.stdout.length, 0);
+      assert.equal(snapshot.cleanupTargets.length, 1);
+      for (const code of snapshot.slotCodes) observed.add(code);
+    }
+  }
+  assert.deepEqual([...observed].sort(), Object.values(ownedListenerSlotCodes).flat().sort());
+});
+
+test('D17.7 classifier oracle discards bodies and confines every terminal path', () => {
+  const rawEvents = [
+    { kind: 'response', status: 200, body: 'raw-body' },
+    { kind: 'response', status: 200, headers: { authorization: 'secret' } },
+    { kind: 'connect-failed', error: 'raw-error' },
+    { kind: 'response', status: 200, path: '/private/workstation' },
+    { kind: 'response', status: 200, url: 'http://127.0.0.1:33117/healthz' },
+    { kind: 'response', status: 200, port: 33117 },
+    { kind: 'response', status: 200, env: 'production' },
+  ];
+  for (const event of rawEvents) {
+    const fixture = ownedListenerDiagnosticFixture([ownedListenerOptIn], true);
+    fixture.start();
+    fixture.routeTable('runtime-route-table-present');
+    assert.deepEqual(fixture.classify('health', event), { accepted: false });
+    const rejected = fixture.snapshot();
+    assert.equal(rejected.discardedStreams, 0);
+    assert.deepEqual(rejected.slotCodes, []);
+    assert.deepEqual(rejected.cleanupTargets, ['owned-d17-7-fixture']);
+    assert.doesNotMatch(
+      JSON.stringify(rejected),
+      /raw|authorization|secret|private|workstation|https?:|33117|production/iu,
+    );
+  }
+
+  for (const terminal of [
+    'bind-failure',
+    'child-error',
+    'child-disconnect',
+    'child-exit',
+    'protocol-failure',
+    'assertion-failure',
+    'command-failure',
+    'cleanup-failure',
+  ]) {
+    const fixture = ownedListenerDiagnosticFixture([ownedListenerOptIn], true);
+    fixture.start();
+    assert.deepEqual(fixture.terminal(terminal), { accepted: false });
+    const stopped = fixture.snapshot();
+    assert.equal(stopped.exitCode, 1);
+    assert.deepEqual(stopped.attemptedSlots, []);
+    assert.deepEqual(stopped.cleanupTargets, ['owned-d17-7-fixture']);
+    assert.deepEqual(stopped.stdout, []);
+  }
+
+  const incomplete = ownedListenerDiagnosticFixture([ownedListenerOptIn], true);
+  incomplete.start();
+  incomplete.routeTable('runtime-route-table-present');
+  incomplete.classify('health', { kind: 'connect-failed' });
+  assert.deepEqual(incomplete.snapshot().attemptedSlots, ['health', 'readiness']);
+  assert.deepEqual(incomplete.terminal('child-exit'), { accepted: false });
+  assert.deepEqual(incomplete.snapshot().cleanupTargets, ['owned-d17-7-fixture']);
+  const fixtureSource = `${ownedListenerDiagnosticFixture}\n${runOwnedListenerResponses}`;
+  assert.doesNotMatch(fixtureSource, /\b(?:setTimeout|setInterval|sleep|retry|poll)\s*\(/iu);
+  assert.doesNotMatch(fixtureSource, /\btimeout\b/iu);
+});
+
+test('D17.7 production binds the singleton owned-listener classifier without default drift', () => {
+  const main = readFileSync(join(repoRoot, 'reference/api/src/main.ts'), 'utf8');
+  const helper = readFileSync(
+    join(repoRoot, 'reference/web/scripts/serve-reference-api-stack.mjs'),
+    'utf8',
+  );
+  assert.equal(
+    helper.includes(`'${ownedListenerOptIn}'`) || helper.includes(`"${ownedListenerOptIn}"`),
+    true,
+    'D17.7 exact singleton CLI opt-in is not implemented',
+  );
+  assert.match(helper, /process\.argv\.slice\(2\)/u);
+  assert.match(helper, /STYNX_REFERENCE_API_OWNED_DIAGNOSTIC/u);
+  assert.match(helper, /127\.0\.0\.1/u);
+  assert.match(helper, /33117/u);
+  for (const path of ['/healthz', '/readyz', '/_reference/demo-tenants']) {
+    assert.match(helper, new RegExp(path.replaceAll('/', '\\/'), 'u'));
+  }
+  for (const code of [
+    ...Object.values(ownedListenerSlotCodes).flat(),
+    ...ownedListenerFinalCodes,
+  ]) {
+    assert.equal(helper.includes(`'${code}'`) || helper.includes(`"${code}"`), true);
+  }
+  assert.match(helper, new RegExp(ownedListenerOutputPrefix.replaceAll('[', '\\['), 'u'));
+  assert.equal((helper.match(/\bawait sleep\(/gu) ?? []).length, 1);
+  assert.doesNotMatch(helper, /(?:retry|setTimeout|setInterval)\s*\(/u);
+  assert.equal(main.includes(ownedListenerBindingBegin), true);
+  assert.equal(main.includes(ownedListenerBindingEnd), true);
+  assert.match(main, /STYNX_REFERENCE_API_OWNED_DIAGNOSTIC/u);
+  assert.match(main, /app\.listen\(port,\s*['"]127\.0\.0\.1['"]\)/u);
+  const reconstructedMain = frozenMainWithoutOwnedListenerBinding(main);
+  assert.equal(
+    createHash('sha256').update(reconstructedMain).digest('hex'),
+    '47a9ae09aa32abf13ca7b079c035d2b5e17c43b3c730651e82eccf8f292bd3eb',
+  );
+  assert.equal(reconstructedMain.includes(ownedListenerBindingBegin), false);
+  assert.equal(reconstructedMain.includes(ownedListenerBindingEnd), false);
+  assert.equal((reconstructedMain.match(/await app\.listen\(port\);/gu) ?? []).length, 1);
+});
+
 test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14', () => {
   const frozen = {
     'reference/api/src/main.ts': 'c6175bfa1f231730a0c339a8f48fd28a7a04c1c3f6f60de643ae4b767bf7c7a9',
@@ -2367,7 +2839,9 @@ test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14
       createHash('sha256')
         .update(
           path === 'reference/api/src/main.ts'
-            ? frozenMainWithoutRuntimeRouteTableInspection(source)
+            ? frozenMainWithoutRuntimeRouteTableInspection(
+                frozenMainWithoutOwnedListenerBinding(source),
+              )
             : source,
         )
         .digest('hex'),
