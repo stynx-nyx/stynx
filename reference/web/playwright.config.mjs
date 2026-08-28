@@ -57,6 +57,7 @@ export default defineConfig({
       command: 'node scripts/serve-reference-api-stack.mjs',
       cwd: new URL('.', import.meta.url).pathname,
       url: 'http://127.0.0.1:3000/readyz',
+      wait: { stderr: /^\[reference-api-startup\] runtime-route-table-present$/m },
       reuseExistingServer: true,
       timeout: 300_000,
     },
