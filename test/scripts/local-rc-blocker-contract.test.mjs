@@ -17,6 +17,7 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
+import { createRequire } from 'node:module';
 import test from 'node:test';
 
 import {
@@ -133,8 +134,12 @@ function createBuildFixture() {
         'pnpm-lock.yaml',
         'pnpm-workspace.yaml',
         'tsconfig.json',
+        'turbo.json',
+        'docs/framework/api/openapi.json',
         'packages',
         'reference/api',
+        'reference/web/package.json',
+        'reference/web/playwright.config.mjs',
         'reference/web/scripts/serve-reference-api-stack.mjs',
         'scripts/verify-reference-api-build-inputs.mjs',
         'tools',
@@ -2357,6 +2362,20 @@ test('clean preferences build emits both exact exports and reference-api fails c
     );
     const fixtureVerifier = join(fixtureRoot, 'scripts/verify-reference-api-build-inputs.mjs');
     const fixtureHelper = join(fixtureRoot, 'reference/web/scripts/serve-reference-api-stack.mjs');
+    const frozenPaths = [
+      'package.json',
+      'turbo.json',
+      'reference/api/package.json',
+      'reference/api/tsconfig.json',
+      'reference/api/src/main.ts',
+      'reference/web/package.json',
+      'reference/web/playwright.config.mjs',
+      'reference/web/scripts/serve-reference-api-stack.mjs',
+      'scripts/verify-reference-api-build-inputs.mjs',
+    ];
+    const frozenBytes = new Map(
+      frozenPaths.map((path) => [path, readFileSync(join(fixtureRoot, path))]),
+    );
     for (const [target, label] of [
       [fixtureReferenceApiDist, 'reference API output directory'],
       [fixtureReferenceApiMain, 'reference API executable'],
@@ -2390,6 +2409,51 @@ test('clean preferences build emits both exact exports and reference-api fails c
     );
     assert.equal(emittedMain, fixtureReferenceApiMain);
     assert.equal(entryExists(fixtureReferenceApiMain), false);
+
+    const manifestEntries = readdirSync(join(fixtureRoot, 'packages'), {
+      withFileTypes: true,
+    })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => join(fixtureRoot, 'packages', entry.name, 'package.json'))
+      .filter(entryExists)
+      .map((path) => ({
+        path,
+        root: dirname(path),
+        manifest: JSON.parse(readFileSync(path, 'utf8')),
+      }));
+    manifestEntries.push({
+      path: join(fixtureApiRoot, 'package.json'),
+      root: fixtureApiRoot,
+      manifest: apiManifest,
+    });
+    const manifestsByName = new Map(manifestEntries.map((entry) => [entry.manifest.name, entry]));
+    assert.equal(manifestsByName.size, manifestEntries.length);
+    const closure = new Map();
+    const visiting = new Set();
+    const workspaceDependencies = (manifest) =>
+      Object.entries({
+        ...(manifest.dependencies ?? {}),
+        ...(manifest.optionalDependencies ?? {}),
+        ...(manifest.peerDependencies ?? {}),
+        ...(manifest.devDependencies ?? {}),
+      }).filter(
+        ([dependency, version]) =>
+          dependency.startsWith('@stynx-nyx/') && String(version).startsWith('workspace:'),
+      );
+    const visitRuntimeDependency = (name) => {
+      assert.equal(visiting.has(name), false, `runtime workspace dependency cycle at ${name}`);
+      if (closure.has(name)) return;
+      const entry = manifestsByName.get(name);
+      assert.ok(entry, `runtime workspace dependency manifest missing for ${name}`);
+      visiting.add(name);
+      for (const [dependency] of workspaceDependencies(entry.manifest)) {
+        visitRuntimeDependency(dependency);
+      }
+      visiting.delete(name);
+      closure.set(name, entry);
+    };
+    visitRuntimeDependency('@stynx-nyx/reference-api');
+    const derivedTaskIds = [...closure.keys()].map((name) => `${name}#build`).sort();
 
     const installed = spawnInFixture(
       fixture,
@@ -2429,10 +2493,33 @@ test('clean preferences build emits both exact exports and reference-api fails c
     });
     assert.ifError(verified.error);
     assert.equal(verified.status, 0, verified.stderr);
+    const dryBuild = spawnInFixture(
+      fixture,
+      'corepack',
+      ['pnpm', 'exec', 'turbo', 'run', 'build', '--filter=@stynx-nyx/reference-api', '--dry=json'],
+      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
+    );
+    assert.ifError(dryBuild.error);
+    assert.equal(dryBuild.status, 0, dryBuild.stderr);
+    const dryGraph = JSON.parse(dryBuild.stdout);
+    const graphTaskIds = dryGraph.tasks.map(({ taskId }) => taskId).sort();
+    assert.equal(new Set(graphTaskIds).size, graphTaskIds.length);
+    assert.deepEqual(graphTaskIds, derivedTaskIds);
+    assert.equal(
+      graphTaskIds.filter((taskId) => taskId === '@stynx-nyx/reference-api#build').length,
+      1,
+    );
+    for (const [name, entry] of closure) {
+      const graphTask = dryGraph.tasks.find(({ taskId }) => taskId === `${name}#build`);
+      assert.ok(graphTask);
+      for (const [dependency] of workspaceDependencies(entry.manifest)) {
+        assert.ok(graphTask.dependencies.includes(`${dependency}#build`));
+      }
+    }
     const apiBuilt = spawnInFixture(
       fixture,
       'corepack',
-      ['pnpm', '--filter', '@stynx-nyx/reference-api', 'build'],
+      ['pnpm', 'exec', 'turbo', 'run', 'build', '--filter=@stynx-nyx/reference-api', '--force'],
       { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
     );
     assert.ifError(apiBuilt.error);
@@ -2454,6 +2541,82 @@ test('clean preferences build emits both exact exports and reference-api fails c
     const runtimeImportIndex = compiledMain.search(/import\(['"]reflect-metadata['"]\)/u);
     assert.ok(bootstrapEnteredIndex >= 0);
     assert.ok(runtimeImportIndex > bootstrapEnteredIndex);
+    const runtimeTargets = new Map();
+    for (const [name, entry] of closure) {
+      let runtimeTarget;
+      if (name === '@stynx-nyx/reference-api') {
+        assert.equal(entry.manifest.scripts.start, 'node dist/reference/api/src/main.js');
+        runtimeTarget = entry.manifest.scripts.start.slice('node '.length);
+      } else {
+        assert.equal(typeof entry.manifest.main, 'string');
+        const rootExport = entry.manifest.exports?.['.'];
+        assert.equal(typeof rootExport, 'object');
+        assert.equal(rootExport.require, `./${entry.manifest.main}`);
+        assert.equal(rootExport.default, `./${entry.manifest.main}`);
+        runtimeTarget = entry.manifest.main;
+      }
+      const expectedRuntime = assertInsideFixture(
+        fixtureRoot,
+        join(entry.root, runtimeTarget),
+        `${name} runtime target`,
+      );
+      const runtimeStat = lstatSync(expectedRuntime);
+      assert.equal(runtimeStat.isFile(), true);
+      assert.equal(runtimeStat.isSymbolicLink(), false);
+      const canonicalRuntime = realpathSync(expectedRuntime);
+      const canonicalDisplacement = relative(realpathSync(fixtureRoot), canonicalRuntime);
+      assert.ok(
+        canonicalDisplacement !== '' &&
+          !canonicalDisplacement.startsWith('..') &&
+          !isAbsolute(canonicalDisplacement),
+      );
+      runtimeTargets.set(name, expectedRuntime);
+    }
+    const resolvedPackages = new Set(['@stynx-nyx/reference-api']);
+    for (const [importerName, entry] of closure) {
+      const importerRequire = createRequire(runtimeTargets.get(importerName));
+      for (const [dependencyName] of workspaceDependencies(entry.manifest)) {
+        const resolvedRuntime = importerRequire.resolve(dependencyName);
+        assert.equal(
+          realpathSync(resolvedRuntime),
+          realpathSync(runtimeTargets.get(dependencyName)),
+        );
+        assert.deepEqual(
+          readFileSync(resolvedRuntime),
+          readFileSync(runtimeTargets.get(dependencyName)),
+        );
+        resolvedPackages.add(dependencyName);
+      }
+    }
+    assert.deepEqual([...resolvedPackages].sort(), [...closure.keys()].sort());
+    const compiledAppModule = join(fixtureReferenceApiDist, 'reference/api/src/app.module.js');
+    assert.equal(
+      assertInsideFixture(fixtureRoot, compiledAppModule, 'compiled AppModule'),
+      resolve(compiledAppModule),
+    );
+    const importProbe = spawnInFixture(
+      fixture,
+      process.execPath,
+      [
+        '-e',
+        "const write=process.stdout.write.bind(process.stdout);process.stdout.write=()=>true;process.stderr.write=()=>true;try{require(process.argv[1]);write('import-pass\\n')}catch{write('import-fail\\n');process.exitCode=1}",
+        compiledAppModule,
+      ],
+      {
+        encoding: 'utf8',
+        env: {},
+        stdio: ['ignore', 'pipe', 'pipe'],
+        timeout: 30_000,
+      },
+    );
+    assert.ifError(importProbe.error);
+    assert.equal(importProbe.signal, null);
+    assert.equal(importProbe.status, 0, 'compiled AppModule import-fail');
+    assert.equal(importProbe.stdout, 'import-pass\n');
+    assert.equal(importProbe.stderr, '');
+    for (const [path, before] of frozenBytes) {
+      assert.deepEqual(readFileSync(join(fixtureRoot, path)), before);
+    }
     removeInsideFixture(fixture, fixturePreferencesDeclaration, { force: true });
     const rejected = spawnInFixture(fixture, 'node', [fixtureVerifier], {
       encoding: 'utf8',
@@ -2463,7 +2626,7 @@ test('clean preferences build emits both exact exports and reference-api fails c
     assert.notEqual(rejected.status, 0);
     assert.match(rejected.stderr, /declaration output is unavailable/u);
   } finally {
-    assert.ok(fixture.subprocessCwds.length >= 7);
+    assert.ok(fixture.subprocessCwds.length >= 9);
     assert.equal(
       fixture.subprocessCwds.every((cwd) => cwd === fixtureRoot),
       true,
