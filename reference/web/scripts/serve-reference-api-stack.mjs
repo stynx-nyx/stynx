@@ -28,6 +28,11 @@ const helperSuccessStates = [
   'child-spawned',
 ];
 const startupSuccessStates = ['bootstrap-entered', 'nest-created', 'listening'];
+const runtimeRouteTableStates = [
+  'runtime-route-table-present',
+  'runtime-route-table-absent',
+  'runtime-route-table-indeterminate',
+];
 const visibleStartupSuccessCodes = [...helperSuccessStates, ...startupSuccessStates];
 const startupFailureReasons = ['nest-initialization', 'pre-listen-configuration', 'listen'];
 const visibleStartupFailureCodes = new Set([
@@ -70,6 +75,7 @@ let visibleStartupStateIndex = 0;
 let startupTerminal = false;
 let startupFailureStarted = false;
 let apiListening = false;
+let runtimeRouteTableAccepted = false;
 const recordedStartupCodes = new Set();
 
 function isProcessAlive(pid) {
@@ -206,7 +212,11 @@ function stopApiProcess(signal = 'SIGTERM') {
 }
 
 function recordStartupCode(code) {
-  const isSuccess = visibleStartupSuccessCodes[visibleStartupStateIndex] === code;
+  const isStartupSuccess = visibleStartupSuccessCodes[visibleStartupStateIndex] === code;
+  const isRuntimeRouteTableState =
+    visibleStartupStateIndex === visibleStartupSuccessCodes.length &&
+    runtimeRouteTableStates.includes(code);
+  const isSuccess = isStartupSuccess || isRuntimeRouteTableState;
   const isTerminal = visibleStartupFailureCodes.has(code);
   if (startupTerminal || recordedStartupCodes.has(code) || (!isSuccess && !isTerminal)) {
     return false;
@@ -256,6 +266,24 @@ function handleStartupMessage(record) {
   }
 
   const keys = Object.keys(record).sort().join(',');
+  if (runtimeRouteTableStates.includes(record.state)) {
+    if (keys !== 'protocol,state') {
+      failStartup('unbounded-record');
+      return;
+    }
+    if (
+      !apiListening ||
+      startupStateIndex !== startupSuccessStates.length ||
+      runtimeRouteTableAccepted
+    ) {
+      failStartup('out-of-order-record');
+      return;
+    }
+    runtimeRouteTableAccepted = true;
+    recordAcceptedStartupState(record);
+    startupTerminal = true;
+    return;
+  }
   if (record.state === 'bootstrap-failed') {
     if (!startupFailureReasons.includes(record.reason)) {
       failStartup('invalid-failure-reason');
@@ -288,7 +316,6 @@ function handleStartupMessage(record) {
   recordAcceptedStartupState(record);
   if (record.state === 'listening') {
     apiListening = true;
-    startupTerminal = true;
   }
 }
 
@@ -426,12 +453,12 @@ apiProcess.on('message', (record) => {
   handleStartupMessage(record);
 });
 apiProcess.once('error', () => {
-  if (!apiListening) {
+  if (!runtimeRouteTableAccepted) {
     failStartup('child-error');
   }
 });
 apiProcess.once('disconnect', () => {
-  if (!apiListening) {
+  if (!runtimeRouteTableAccepted) {
     failStartup('child-disconnect');
   }
 });
@@ -439,7 +466,7 @@ apiProcess.once('exit', (code, signal) => {
   if (shuttingDown || startupFailureStarted) {
     return;
   }
-  if (!apiListening) {
+  if (!runtimeRouteTableAccepted) {
     failStartup('child-exit');
     return;
   }
