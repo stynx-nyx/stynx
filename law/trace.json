@@ -3477,7 +3477,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
       "assertion_count": 80,
-      "assertion_digest_sha256": "6e6308eaaed25b608e8f57caa581e9a6c6ed2d5bfce3f987e08c6f6add63ba79"
+      "assertion_digest_sha256": "d2c115002b0a7ab68f90bb6eadf8ef8f7c5696c632eb947195871e134b9b472a"
     },
     {
       "path": "packages/offline-sync/test/unit/offline-sync.migration.spec.ts",
@@ -3661,7 +3661,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 26,
-      "assertion_digest_sha256": "9893fc6c67a1a98a3919f715b893ca114533bd1ceef3085da2219c99be7afbc1"
+      "assertion_digest_sha256": "cf81cd29f2200c14056cbfababef047c8869def67dd57a3d792ad3e56c0cb3f8"
     },
     {
       "path": "packages/worklist/test/unit/validation.spec.ts",
@@ -3677,7 +3677,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 183,
-      "assertion_digest_sha256": "0d3fbc7598793f256780d5e3f226bcb3e1418c8b330b546af4112cc0e6bc2e40"
+      "assertion_digest_sha256": "85d1e8edfa36840035e9968c206a4312b0f4db293ba82ec5919ab77ce4a8bd63"
     },
     {
       "path": "test/scripts/devai-local-rc-verifier.test.mjs",
