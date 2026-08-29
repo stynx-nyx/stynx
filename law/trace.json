@@ -3693,7 +3693,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 912,
-      "assertion_digest_sha256": "ded0562109a4afec7dd5cfc5ed7bee32f80f41631e72f51ba76742d2cc78ae57"
+      "assertion_digest_sha256": "6ffbac1022a427dbe3fe9357d4e49aab768a5e73d2dd925b28c66d0f1044b6f6"
     },
     {
       "path": "test/scripts/release-version-policy.test.mjs",
