@@ -1,4 +1,5 @@
 import { defineConfig } from '@playwright/test';
+import { fileURLToPath } from 'node:url';
 
 const useRealOidc = process.env.PLAYWRIGHT_USE_REAL_OIDC === '1';
 
@@ -47,7 +48,7 @@ export default defineConfig({
     ...(useRealOidc
       ? [{
           command: 'node scripts/serve-fake-oidc.mjs',
-          cwd: new URL('.', import.meta.url).pathname,
+          cwd: fileURLToPath(new URL('.', import.meta.url)),
           url: 'http://127.0.0.1:3200/readyz',
           reuseExistingServer: true,
           timeout: 30_000,
@@ -55,7 +56,7 @@ export default defineConfig({
       : []),
     {
       command: 'node scripts/serve-reference-api-stack.mjs',
-      cwd: new URL('.', import.meta.url).pathname,
+      cwd: fileURLToPath(new URL('.', import.meta.url)),
       url: 'http://127.0.0.1:3000/readyz',
       wait: { stderr: /^\[reference-api-startup\] runtime-route-table-present$/m },
       reuseExistingServer: true,
@@ -63,7 +64,7 @@ export default defineConfig({
     },
     {
       command: 'pnpm build:web && PORT=3100 node scripts/serve-static.mjs',
-      cwd: new URL('.', import.meta.url).pathname,
+      cwd: fileURLToPath(new URL('.', import.meta.url)),
       port: 3100,
       reuseExistingServer: true,
       timeout: 120_000,
