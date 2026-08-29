@@ -138,11 +138,12 @@ export function preflightFullMutationInfrastructure({
   environment = process.env,
   commandRun = runInfrastructureCommand,
 } = {}) {
+  const childEnvironment = buildMutationEnvironment(environment);
   const missingPostgresControls = FULL_MUTATION_POSTGRES_CONTROLS.some(
-    (key) => typeof environment[key] !== 'string' || environment[key].length === 0,
+    (key) => typeof childEnvironment[key] !== 'string' || childEnvironment[key].length === 0,
   );
   const dockerReady = infrastructureCommandPassed(
-    commandRun('docker', ['info'], { env: environment }),
+    commandRun('docker', ['info'], { env: childEnvironment }),
   );
   if (missingPostgresControls) {
     return fullMutationPreflightFailure(
@@ -159,15 +160,15 @@ export function preflightFullMutationInfrastructure({
       'pg_isready',
       [
         '-h',
-        environment.STYNX_TEST_PG_HOST,
+        childEnvironment.STYNX_TEST_PG_HOST,
         '-p',
-        environment.STYNX_TEST_PG_PORT,
+        childEnvironment.STYNX_TEST_PG_PORT,
         '-U',
-        environment.STYNX_TEST_PG_USER,
+        childEnvironment.STYNX_TEST_PG_USER,
         '-d',
-        environment.STYNX_TEST_PG_TEMPLATE,
+        childEnvironment.STYNX_TEST_PG_TEMPLATE,
       ],
-      { env: environment },
+      { env: childEnvironment },
     ),
   );
   if (!postgresReady) {
