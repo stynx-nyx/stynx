@@ -20,6 +20,7 @@ import { tmpdir } from 'node:os';
 import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { createRequire } from 'node:module';
 import test from 'node:test';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import {
   FOCUSED_MUTATION_ARTIFACT_ROOT,
@@ -6651,6 +6652,196 @@ test('D24.15 runner bypasses preflight only for non-executing modes', () => {
   assert.match(preflightBranch, /JSON\.stringify\([^)]*preflight[^)]*\)/u);
   assert.match(preflightBranch, /process\.exit\(1\)/u);
   assert.doesNotMatch(preflightBranch, /(?:runPackage|mkdirSync|rmSync|renameSync)/u);
+});
+
+test('D24.22 filesystem URLs preserve decoded space-bearing engine and Playwright paths', async () => {
+  const fixtureParent = mkdtempSync(join(realpathSync(tmpdir()), 'stynx-d24-22-'));
+  const engineRoot = join(fixtureParent, 'engine fixture with space');
+  const playwrightRoot = join(fixtureParent, 'playwright fixture with space');
+  const engineSource = readFileSync(join(repoRoot, 'scripts/check-engines.mjs'));
+  const playwrightSource = readFileSync(join(repoRoot, 'reference/web/playwright.config.mjs'));
+  const priorOidc = process.env.PLAYWRIGHT_USE_REAL_OIDC;
+  const hadPriorOidc = Object.hasOwn(process.env, 'PLAYWRIGHT_USE_REAL_OIDC');
+  let engineResult;
+  let oidcOff;
+  let oidcOn;
+
+  try {
+    mkdirSync(join(engineRoot, 'scripts'), { recursive: true });
+    const enginePath = join(engineRoot, 'scripts/check-engines.mjs');
+    writeFileSync(enginePath, engineSource);
+    writeFileSync(
+      join(engineRoot, 'package.json'),
+      `${JSON.stringify({
+        engines: { node: '>=24 <25', pnpm: '>=9 <10' },
+        packageManager: 'pnpm@9.15.0',
+      })}\n`,
+    );
+    const engineImports = [
+      ...engineSource.toString('utf8').matchAll(/\bfrom\s+['"]([^'"]+)['"]/gu),
+    ].map((match) => match[1]);
+    assert.equal(engineImports.length > 0, true);
+    assert.equal(
+      engineImports.every(
+        (specifier) =>
+          specifier.startsWith('node:') && ['node:fs', 'node:path', 'node:url'].includes(specifier),
+      ),
+      true,
+    );
+    engineResult = spawnSync(process.execPath, [enginePath], {
+      cwd: engineRoot,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    mkdirSync(join(playwrightRoot, 'node_modules/@playwright/test'), { recursive: true });
+    const playwrightPath = join(playwrightRoot, 'playwright.config.mjs');
+    writeFileSync(playwrightPath, playwrightSource);
+    writeFileSync(
+      join(playwrightRoot, 'node_modules/@playwright/test/package.json'),
+      `${JSON.stringify({
+        name: '@playwright/test',
+        type: 'module',
+        exports: './index.mjs',
+      })}\n`,
+    );
+    writeFileSync(
+      join(playwrightRoot, 'node_modules/@playwright/test/index.mjs'),
+      'export const defineConfig = (value) => value;\n',
+    );
+    const oidcOffUrl = pathToFileURL(playwrightPath);
+    oidcOffUrl.searchParams.set('d24_22', 'oidc-off');
+    const oidcOnUrl = pathToFileURL(playwrightPath);
+    oidcOnUrl.searchParams.set('d24_22', 'oidc-on');
+    delete process.env.PLAYWRIGHT_USE_REAL_OIDC;
+    oidcOff = (await import(oidcOffUrl.href)).default;
+    process.env.PLAYWRIGHT_USE_REAL_OIDC = '1';
+    oidcOn = (await import(oidcOnUrl.href)).default;
+  } finally {
+    if (hadPriorOidc) process.env.PLAYWRIGHT_USE_REAL_OIDC = priorOidc;
+    else delete process.env.PLAYWRIGHT_USE_REAL_OIDC;
+    rmSync(fixtureParent, { recursive: true, force: false });
+  }
+
+  assert.equal(existsSync(fixtureParent), false, 'D24.22 fixture root must be removed');
+  assert.equal(
+    hadPriorOidc
+      ? process.env.PLAYWRIGHT_USE_REAL_OIDC === priorOidc
+      : Object.hasOwn(process.env, 'PLAYWRIGHT_USE_REAL_OIDC') === false,
+    true,
+    'D24.22 must restore PLAYWRIGHT_USE_REAL_OIDC',
+  );
+  const decodedPlaywrightRoot = fileURLToPath(
+    new URL('.', pathToFileURL(join(playwrightRoot, 'playwright.config.mjs'))),
+  );
+  const projectServer = (entry) => ({
+    keys: Object.keys(entry).sort(),
+    command: entry.command,
+    cwd: entry.cwd === decodedPlaywrightRoot ? 'decoded-fixture-directory' : 'not-decoded',
+    url: entry.url ?? null,
+    port: entry.port ?? null,
+    wait:
+      entry.wait === undefined
+        ? null
+        : {
+            keys: Object.keys(entry.wait).sort(),
+            stderrSource: entry.wait.stderr?.source ?? null,
+            stderrFlags: entry.wait.stderr?.flags ?? null,
+          },
+    reuseExistingServer: entry.reuseExistingServer,
+    timeout: entry.timeout,
+  });
+  const oidcServer = {
+    keys: ['command', 'cwd', 'reuseExistingServer', 'timeout', 'url'],
+    command: 'node scripts/serve-fake-oidc.mjs',
+    cwd: 'decoded-fixture-directory',
+    url: 'http://127.0.0.1:3200/readyz',
+    port: null,
+    wait: null,
+    reuseExistingServer: true,
+    timeout: 30_000,
+  };
+  const apiServer = {
+    keys: ['command', 'cwd', 'reuseExistingServer', 'timeout', 'url', 'wait'],
+    command: 'node scripts/serve-reference-api-stack.mjs',
+    cwd: 'decoded-fixture-directory',
+    url: 'http://127.0.0.1:3000/readyz',
+    port: null,
+    wait: {
+      keys: ['stderr'],
+      stderrSource: playwrightApiReadyWaitSource,
+      stderrFlags: 'm',
+    },
+    reuseExistingServer: true,
+    timeout: 300_000,
+  };
+  const staticServer = {
+    keys: ['command', 'cwd', 'port', 'reuseExistingServer', 'timeout'],
+    command: 'pnpm build:web && PORT=3100 node scripts/serve-static.mjs',
+    cwd: 'decoded-fixture-directory',
+    url: null,
+    port: 3100,
+    wait: null,
+    reuseExistingServer: true,
+    timeout: 120_000,
+  };
+  const compensatingDecoder = /(?:decodeURI(?:Component)?|replace(?:All)?\([^)]*%20)/u;
+  const engineText = engineSource.toString('utf8');
+  const playwrightText = playwrightSource.toString('utf8');
+  assert.deepEqual(
+    {
+      engine: {
+        copiedBytesExact: readFileSync(join(repoRoot, 'scripts/check-engines.mjs')).equals(
+          engineSource,
+        ),
+        errorAbsent: engineResult.error === undefined,
+        status: engineResult.status,
+        signal: engineResult.signal,
+        stderrEmpty: engineResult.stderr === '',
+        stdoutExact:
+          engineResult.stdout ===
+          `[engines][ok] node ${process.versions.node}; pnpm >=9 <10; Angular 21.2.19; NestJS ^11.1.19; TypeScript ^6.0.3/5.9.3\n`,
+      },
+      playwright: {
+        copiedBytesExact: readFileSync(
+          join(repoRoot, 'reference/web/playwright.config.mjs'),
+        ).equals(playwrightSource),
+        oidcOffPopulation: oidcOff.webServer.length,
+        oidcOff: oidcOff.webServer.map(projectServer),
+        oidcOnPopulation: oidcOn.webServer.length,
+        oidcOn: oidcOn.webServer.map(projectServer),
+      },
+      staticSafety: {
+        enginePathnameCount: engineText.match(/\.pathname\b/gu)?.length ?? 0,
+        playwrightPathnameCount: playwrightText.match(/\.pathname\b/gu)?.length ?? 0,
+        engineCompensatingDecoder: compensatingDecoder.test(engineText),
+        playwrightCompensatingDecoder: compensatingDecoder.test(playwrightText),
+      },
+    },
+    {
+      engine: {
+        copiedBytesExact: true,
+        errorAbsent: true,
+        status: 0,
+        signal: null,
+        stderrEmpty: true,
+        stdoutExact: true,
+      },
+      playwright: {
+        copiedBytesExact: true,
+        oidcOffPopulation: 2,
+        oidcOff: [apiServer, staticServer],
+        oidcOnPopulation: 3,
+        oidcOn: [oidcServer, apiServer, staticServer],
+      },
+      staticSafety: {
+        enginePathnameCount: 0,
+        playwrightPathnameCount: 0,
+        engineCompensatingDecoder: false,
+        playwrightCompensatingDecoder: false,
+      },
+    },
+  );
 });
 
 test('notifications keeps the exact roster membership, break floor, and mutate population', async () => {
