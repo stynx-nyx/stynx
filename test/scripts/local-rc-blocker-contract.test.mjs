@@ -6404,12 +6404,17 @@ test('D24.15 full-roster infrastructure preflight fails before package one', asy
     PGUSER: 'forbidden-fallback-user',
     PGPASSWORD: 'github_pat_forbiddenfallback000000000000',
     DATABASE_URL: 'postgresql://forbidden-user:forbidden-password@forbidden-host.invalid/forbidden',
+    NODE_AUTH_TOKEN: 'npm_forbiddenambientcredential000000000000',
+    GITHUB_TOKEN: 'ghp_forbiddenambientcredential000000000000',
+    AWS_SECRET_ACCESS_KEY: 'forbidden-ambient-aws-secret',
+    DEVAI_SIGNING_PRIVATE_KEY: 'forbidden-ambient-signing-key',
+    UNRELATED_SENTINEL: 'forbidden-ambient-sentinel',
   });
   const rejectedDiagnostic =
     '/Users/example/private-workstation github_pat_forbiddendiagnostic000000000000';
-  const subprocessResult = (status) => ({
-    error: undefined,
-    signal: null,
+  const subprocessResult = (status, { error = undefined, signal = null } = {}) => ({
+    error,
+    signal,
     status,
     stdout: rejectedDiagnostic,
     stderr: rejectedDiagnostic,
@@ -6423,16 +6428,44 @@ test('D24.15 full-roster infrastructure preflight fails before package one', asy
     preflight: { docker, postgres },
   });
   const fixtures = [];
-  const invoke = ({ missing = [], dockerStatus = 0, postgresStatus = 0 } = {}) => {
+  const invoke = ({
+    missing = [],
+    dockerStatus = 0,
+    postgresStatus = 0,
+    dockerError = undefined,
+    postgresError = undefined,
+    dockerSignal = null,
+    postgresSignal = null,
+  } = {}) => {
     const environment = { ...sentinelEnvironment };
     for (const key of missing) delete environment[key];
+    const childEnvironment = buildMutationEnvironment(environment);
     const calls = [];
     const commandRun = (command, arguments_, options = {}) => {
-      assert.deepEqual(options.env, environment);
+      assert.equal(
+        canonicalize(options.env) === canonicalize(childEnvironment),
+        true,
+        'D24.15 preflight child environment must use buildMutationEnvironment allowlist',
+      );
+      assert.equal(options.env.CI, 'true');
+      assert.equal(options.env.STRYKER_INCREMENTAL, 'false');
+      for (const key of [
+        'NODE_AUTH_TOKEN',
+        'GITHUB_TOKEN',
+        'AWS_SECRET_ACCESS_KEY',
+        'DEVAI_SIGNING_PRIVATE_KEY',
+        'UNRELATED_SENTINEL',
+        'PGHOST',
+        'PGPORT',
+        'PGUSER',
+        'PGPASSWORD',
+      ]) {
+        assert.equal(options.env[key], undefined);
+      }
       calls.push([command, [...arguments_]]);
       if (command === 'docker') {
         assert.deepEqual(arguments_, ['info']);
-        return subprocessResult(dockerStatus);
+        return subprocessResult(dockerStatus, { error: dockerError, signal: dockerSignal });
       }
       if (command === 'pg_isready') {
         assert.deepEqual(arguments_, [
@@ -6445,7 +6478,10 @@ test('D24.15 full-roster infrastructure preflight fails before package one', asy
           '-d',
           environment.STYNX_TEST_PG_TEMPLATE,
         ]);
-        return subprocessResult(postgresStatus);
+        return subprocessResult(postgresStatus, {
+          error: postgresError,
+          signal: postgresSignal,
+        });
       }
       assert.fail(`D24.15 invoked forbidden command class: ${command}`);
     };
@@ -6502,12 +6538,29 @@ test('D24.15 full-roster infrastructure preflight fails before package one', asy
   );
   assert.deepEqual(dockerUnreachable.calls, dockerCall);
 
+  const dockerCommandError = invoke({
+    dockerError: { message: rejectedDiagnostic },
+    dockerStatus: null,
+  });
+  assert.deepEqual(
+    dockerCommandError.result,
+    fixedFailure('docker-unreachable', 'unreachable', 'not-checked'),
+  );
+  assert.deepEqual(dockerCommandError.calls, dockerCall);
+
   const postgresUnreachable = invoke({ postgresStatus: 1 });
   assert.deepEqual(
     postgresUnreachable.result,
     fixedFailure('postgres-unreachable', 'ready', 'unreachable'),
   );
   assert.deepEqual(postgresUnreachable.calls, [...dockerCall, postgresCall]);
+
+  const postgresCommandSignal = invoke({ postgresSignal: 'SIGTERM', postgresStatus: null });
+  assert.deepEqual(
+    postgresCommandSignal.result,
+    fixedFailure('postgres-unreachable', 'ready', 'unreachable'),
+  );
+  assert.deepEqual(postgresCommandSignal.calls, [...dockerCall, postgresCall]);
 
   const simultaneous = invoke({
     missing: ['STYNX_TEST_PG_HOST'],
@@ -6569,11 +6622,14 @@ test('D24.15 full-roster infrastructure preflight fails before package one', asy
     helperSource,
     /(?:docker\s+(?:context|run|start)|createdb|create\s+database|template\s+clone|setTimeout|sleep|retry|skip-package)/iu,
   );
+});
 
+test('D24.15 runner bypasses preflight only for non-executing modes', () => {
   const runnerSource = readFileSync(resolve(repoRoot, 'scripts/run-mutation-evidence.mjs'), 'utf8');
   const focusedBranch = runnerSource.indexOf('\nif (diagnosticPackageName) {');
   const focusedExit = runnerSource.indexOf('process.exit(0);', focusedBranch);
   const preflightCall = runnerSource.lastIndexOf('preflightFullMutationInfrastructure(');
+  const normalizeBypass = runnerSource.lastIndexOf('if (!normalizeExisting) {', preflightCall);
   const stagingAction = runnerSource.indexOf(
     '\nrmSync(stagingDirectory, { recursive: true, force: true });',
   );
@@ -6581,9 +6637,16 @@ test('D24.15 full-roster infrastructure preflight fails before package one', asy
   assert.equal(focusedBranch > 0, true);
   assert.equal(focusedExit > focusedBranch, true);
   assert.equal(preflightCall > focusedExit, true, 'focused mode must bypass full-roster preflight');
+  assert.equal(
+    normalizeBypass > focusedExit && normalizeBypass < preflightCall,
+    true,
+    '--normalize-existing must bypass full-roster infrastructure preflight',
+  );
   assert.equal(preflightCall < stagingAction, true, 'preflight must precede staging action');
   assert.equal(preflightCall < packageAction, true, 'preflight must precede package one');
-  const preflightBranch = runnerSource.slice(preflightCall, stagingAction);
+  const preflightBranch = runnerSource.slice(normalizeBypass, stagingAction);
+  assert.match(preflightBranch, /if \(!normalizeExisting\) \{/u);
+  assert.match(preflightBranch, /preflightFullMutationInfrastructure\(\)/u);
   assert.match(preflightBranch, /JSON\.stringify\([^)]*preflight[^)]*\)/u);
   assert.match(preflightBranch, /process\.exit\(1\)/u);
   assert.doesNotMatch(preflightBranch, /(?:runPackage|mkdirSync|rmSync|renameSync)/u);
