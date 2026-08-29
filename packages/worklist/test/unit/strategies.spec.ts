@@ -70,4 +70,137 @@ describe('worklist distribution strategies', () => {
       'Unknown worklist strategy',
     );
   });
+
+  it('observes availability, weight, cursor, stable-id, and registry boundaries independently', async () => {
+    const selectable: WorklistCandidate[] = [
+      {
+        userId: 'user-z',
+        available: true,
+        weight: 4,
+        openItemCount: 8,
+        lastAssignedAt: new Date('2026-08-24T08:00:00.000Z'),
+      },
+      {
+        userId: 'user-a',
+        available: true,
+        weight: 2,
+        openItemCount: 1,
+        lastAssignedAt: new Date('2026-08-24T09:00:00.000Z'),
+      },
+      {
+        userId: 'user-0',
+        available: false,
+        weight: 100,
+        openItemCount: 0,
+        lastAssignedAt: null,
+      },
+    ];
+    await expect(
+      new RoundRobinWorklistStrategy().select({
+        queueId: 'queue-observable',
+        candidates: selectable,
+      }),
+    ).resolves.toBe('user-z');
+    await expect(
+      new LoadBalancedWorklistStrategy().select({
+        queueId: 'queue-observable',
+        candidates: selectable,
+      }),
+    ).resolves.toBe('user-a');
+
+    const tie = selectable.slice(0, 2).map((candidate) => ({
+      ...candidate,
+      weight: 1,
+      openItemCount: 1,
+      lastAssignedAt: null,
+    }));
+    await expect(
+      new RoundRobinWorklistStrategy().select({ queueId: 'queue-tie', candidates: tie }),
+    ).resolves.toBe('user-a');
+    await expect(
+      new LoadBalancedWorklistStrategy().select({ queueId: 'queue-tie', candidates: tie }),
+    ).resolves.toBe('user-a');
+
+    const custom: WorklistDistributionStrategy = { key: 'geo_v2', select: async () => 'user-z' };
+    const registry = new WorklistStrategyRegistry();
+    expect(registry.register(custom)).toBeUndefined();
+    expect(registry.get('geo_v2')).toBe(custom);
+    expect(registry.require('geo_v2')).toBe(custom);
+  });
+
+  it('binds both strategy keys and round-robin comparator directions exactly', async () => {
+    expect(new RoundRobinWorklistStrategy().key).toBe('round_robin');
+    expect(new LoadBalancedWorklistStrategy().key).toBe('load_balanced');
+    const older = {
+      userId: 'older',
+      available: true,
+      weight: 1,
+      openItemCount: 1,
+      lastAssignedAt: new Date('2026-08-24T08:00:00.000Z'),
+    };
+    const newer = {
+      ...older,
+      userId: 'newer',
+      lastAssignedAt: new Date('2026-08-24T09:00:00.000Z'),
+    };
+    const strategy = new RoundRobinWorklistStrategy();
+    await expect(
+      strategy.select({ queueId: 'queue-order-a', candidates: [older, newer] }),
+    ).resolves.toBe('older');
+    await expect(
+      strategy.select({ queueId: 'queue-order-b', candidates: [newer, older] }),
+    ).resolves.toBe('older');
+  });
+
+  it('binds weighted-load arithmetic and equal-load age ordering in both input orders', async () => {
+    const lowLoad = {
+      userId: 'low-load',
+      available: true,
+      weight: 4,
+      openItemCount: 4,
+      lastAssignedAt: new Date('2026-08-24T10:00:00.000Z'),
+    };
+    const highLoad = {
+      userId: 'high-load',
+      available: true,
+      weight: 1,
+      openItemCount: 2,
+      lastAssignedAt: new Date('2026-08-24T08:00:00.000Z'),
+    };
+    const strategy = new LoadBalancedWorklistStrategy();
+    await expect(
+      strategy.select({ queueId: 'queue-load-a', candidates: [lowLoad, highLoad] }),
+    ).resolves.toBe('low-load');
+    await expect(
+      strategy.select({ queueId: 'queue-load-b', candidates: [highLoad, lowLoad] }),
+    ).resolves.toBe('low-load');
+
+    const equalNewer = {
+      ...lowLoad,
+      userId: 'equal-newer',
+      lastAssignedAt: highLoad.lastAssignedAt,
+    };
+    const equalOlder = {
+      ...lowLoad,
+      userId: 'equal-older',
+      lastAssignedAt: new Date('2026-08-24T07:00:00.000Z'),
+    };
+    await expect(
+      strategy.select({ queueId: 'queue-age-a', candidates: [equalNewer, equalOlder] }),
+    ).resolves.toBe('equal-older');
+    await expect(
+      strategy.select({ queueId: 'queue-age-b', candidates: [equalOlder, equalNewer] }),
+    ).resolves.toBe('equal-older');
+  });
+
+  it('registers a trimmed custom key as the exact public lookup key', () => {
+    const custom: WorklistDistributionStrategy = {
+      key: '  geographic_v3  ',
+      select: async () => null,
+    };
+    const registry = new WorklistStrategyRegistry();
+    expect(registry.register(custom)).toBeUndefined();
+    expect(registry.get('geographic_v3')).toBe(custom);
+    expect(registry.get('  geographic_v3  ')).toBeUndefined();
+  });
 });
