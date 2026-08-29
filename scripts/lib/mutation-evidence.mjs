@@ -308,14 +308,14 @@ export function classifyMutationSubprocess(result, repoRoot) {
   if (result.error !== undefined) return 'spawn-error';
   if (result.signal !== null) return 'signal';
   if (unsafeCredential(rawDiagnostic)) return 'rejected-credential-material';
+  if (result.status === 0) return undefined;
   const diagnostic = repoRoot
     ? normalizeRepositoryPathsInText(rawDiagnostic, repoRoot)
     : rawDiagnostic;
   if (HOST_PATH_PATTERNS.some((pattern) => pattern.test(diagnostic))) {
     return 'rejected-workstation-path';
   }
-  if (result.status !== 0) return 'nonzero-exit';
-  return undefined;
+  return 'nonzero-exit';
 }
 
 export function classifyMutationOutcome({
