@@ -2,8 +2,8 @@
 
 import { spawnSync } from 'node:child_process';
 import {
-  chmodSync,
   existsSync,
+  lstatSync,
   mkdirSync,
   readFileSync,
   renameSync,
@@ -19,9 +19,21 @@ import {
   sha256Hex,
 } from './lib/mutation-roster.mjs';
 import {
+  FOCUSED_MUTATION_LIMITS,
+  assertFocusedEvidenceSafe,
+  assertFocusedMutationAttemptAvailable,
+  assertFocusedMutationCandidate,
+  assertFocusedMutationCensus,
+  assertFocusedMutationProcessResult,
+  captureFocusedMutationCandidate,
+  encodeFocusedMutationJson,
+  focusedMutationAttemptPaths,
+  focusedMutationCensus,
   buildMutationEnvironment,
   classifyMutationOutcome,
   normalizeMutationReport,
+  projectFocusedMutationReport,
+  publishFocusedMutationEvidence,
   withMutationReportCleanup,
 } from './lib/mutation-evidence.mjs';
 
@@ -30,7 +42,6 @@ const artifactRoot = '.devai/state/check-cache/v1/artifacts/mutation';
 const finalDirectory = resolve(repoRoot, artifactRoot);
 const stagingDirectory = resolve(dirname(finalDirectory), `.mutation-stage-${String(process.pid)}`);
 const backupDirectory = resolve(dirname(finalDirectory), `.mutation-backup-${String(process.pid)}`);
-const focusedManifestMaxBytes = 64 * 1024;
 const normalizeExisting = process.argv.includes('--normalize-existing');
 const packageArgumentIndex = process.argv.indexOf('--package');
 const diagnosticPackageName =
@@ -70,131 +81,9 @@ function portablePath(path, label) {
   return path;
 }
 
-function canonicalWrite(path, value, mode) {
+function canonicalWrite(path, value) {
   mkdirSync(dirname(path), { recursive: true });
-  const options = mode === undefined ? { flag: 'wx' } : { flag: 'wx', mode };
-  writeFileSync(path, `${canonicalize(value)}\n`, options);
-  if (mode !== undefined) chmodSync(path, mode);
-}
-
-function gitOutput(arguments_, label) {
-  const result = spawnSync('git', arguments_, {
-    cwd: repoRoot,
-    encoding: null,
-    maxBuffer: 64 * 1024 * 1024,
-    stdio: ['ignore', 'pipe', 'pipe'],
-    shell: false,
-  });
-  if (result.error !== undefined || result.signal !== null || result.status !== 0) {
-    throw new Error(`focused mutation evidence could not bind ${label}`);
-  }
-  return result.stdout;
-}
-
-function focusedCandidateIdentity() {
-  const commit = gitOutput(['rev-parse', 'HEAD^{commit}'], 'candidate commit')
-    .toString('utf8')
-    .trim();
-  const tree = gitOutput(['rev-parse', 'HEAD^{tree}'], 'candidate tree').toString('utf8').trim();
-  if (!/^[0-9a-f]{40}$/u.test(commit) || !/^[0-9a-f]{40}$/u.test(tree)) {
-    throw new Error('focused mutation evidence received an invalid candidate identity');
-  }
-  const diff = gitOutput(
-    ['diff', '--binary', '--full-index', '--no-ext-diff', 'HEAD', '--'],
-    'candidate diff',
-  );
-  return { commit, tree, diffDigest: sha256Hex(diff) };
-}
-
-function assertFocusedCandidate(expected) {
-  const actual = focusedCandidateIdentity();
-  if (canonicalize(actual) !== canonicalize(expected)) {
-    throw new Error('focused mutation candidate changed during execution');
-  }
-}
-
-function confinedWorkspaceFile(entry, path, label) {
-  portablePath(path, label);
-  const workspaceRoot = resolve(repoRoot, entry.workspace);
-  const absolute = resolve(workspaceRoot, path);
-  const escaped = relative(workspaceRoot, absolute);
-  if (escaped.startsWith('..') || escaped === '' || escaped.startsWith('/')) {
-    throw new Error(`${label} escaped the mutation workspace`);
-  }
-  return absolute;
-}
-
-function focusedInputDigests(entry, report) {
-  const packageDigest = sha256Hex(readFileSync(resolve(repoRoot, entry.workspace, 'package.json')));
-  const configDigest = sha256Hex(readFileSync(resolve(repoRoot, entry.config)));
-  const sources = Object.keys(report.files ?? {})
-    .sort()
-    .map((path) => ({
-      path,
-      digest: sha256Hex(readFileSync(confinedWorkspaceFile(entry, path, 'mutation source path'))),
-    }));
-  const targets = Object.entries(report.files ?? {})
-    .sort(([left], [right]) => left.localeCompare(right))
-    .flatMap(([path, fileResult]) =>
-      fileResult.mutants.map((mutant) => ({
-        path,
-        identity: String(mutant.id ?? ''),
-        location: mutant.location,
-        mutator: mutant.mutatorName,
-      })),
-    );
-  return {
-    packageDigest,
-    configDigest,
-    sourceDigest: sha256Hex(canonicalize(sources)),
-    targetDigest: sha256Hex(canonicalize(targets)),
-  };
-}
-
-function focusedPersistenceReport(report) {
-  const persisted = structuredClone(report);
-  delete persisted.testFiles;
-  for (const fileResult of Object.values(persisted.files ?? {})) {
-    for (const mutant of fileResult.mutants ?? []) {
-      delete mutant.coveredBy;
-      delete mutant.killedBy;
-    }
-  }
-  return persisted;
-}
-
-function focusedArtifactDirectory(stem) {
-  portablePath(stem, 'focused mutation artifact stem');
-  return resolve(finalDirectory, 'focused', stem);
-}
-
-function publishFocusedArtifacts(stem) {
-  const focusedDirectory = focusedArtifactDirectory(stem);
-  const focusedRoot = dirname(focusedDirectory);
-  const focusedBackup = resolve(focusedRoot, `.${stem}-backup-${String(process.pid)}`);
-  mkdirSync(focusedRoot, { recursive: true });
-  rmSync(focusedBackup, { recursive: true, force: true });
-  if (existsSync(focusedDirectory)) renameSync(focusedDirectory, focusedBackup);
-  let published = false;
-  try {
-    renameSync(stagingDirectory, focusedDirectory);
-    published = true;
-    rmSync(focusedBackup, { recursive: true, force: true });
-  } catch (error) {
-    if (existsSync(focusedBackup)) {
-      if (published) rmSync(focusedDirectory, { recursive: true, force: true });
-      renameSync(focusedBackup, focusedDirectory);
-    }
-    throw error;
-  }
-}
-
-function writeFocusedManifest(stem, manifest) {
-  const bytes = Buffer.from(`${canonicalize(manifest)}\n`, 'utf8');
-  if (bytes.length > focusedManifestMaxBytes) {
-    throw new Error('focused mutation manifest exceeds the bounded evidence limit');
-  }
-  canonicalWrite(resolve(stagingDirectory, `${stem}.manifest.json`), manifest, 0o600);
+  writeFileSync(path, `${canonicalize(value)}\n`, { flag: 'wx' });
 }
 
 function totals(report) {
@@ -218,6 +107,267 @@ function score(statusTotals) {
   return scored === 0 ? 100 : (detected / scored) * 100;
 }
 
+const D24_WORKLIST_UNSTAGED_PATHS = [
+  'packages/worklist/test/unit/deadline.spec.ts',
+  'packages/worklist/test/unit/strategies.spec.ts',
+  'packages/worklist/test/unit/validation.spec.ts',
+  'packages/worklist/test/unit/worklist-services-depth.spec.ts',
+];
+const D24_WORKLIST_DIFF_DIGEST = 'fa412ac92080b5ebd183c2cb05034a16ecce68880dee8b7770a5dedf216ba6f9';
+const D24_WORKLIST_CENSUS = {
+  targetFileCount: 10,
+  total: 808,
+  scored: 428,
+  nonScored: 380,
+};
+
+function focusedTargetPaths(entry) {
+  const config = readFileSync(resolve(repoRoot, entry.config), 'utf8');
+  const block = /\bmutate\s*:\s*\[([\s\S]*?)\]/u.exec(config)?.[1];
+  if (block === undefined)
+    throw new Error(`${entry.packageName}: focused mutation targets missing`);
+  const targets = [...block.matchAll(/['"]([^'"]+)['"]/gu)].map((match) => match[1]).sort();
+  if (targets.length === 0 || new Set(targets).size !== targets.length) {
+    throw new Error(`${entry.packageName}: focused mutation targets are invalid`);
+  }
+  for (const path of targets) {
+    portablePath(path, 'focused mutation target');
+    if (/[*?!{}[\]]/u.test(path) || !existsSync(resolve(repoRoot, entry.workspace, path))) {
+      throw new Error(`${entry.packageName}: focused mutation target is not an exact source file`);
+    }
+  }
+  return targets;
+}
+
+function readFocusedInputDigests(entry, targets) {
+  const workspaceRoot = resolve(repoRoot, entry.workspace);
+  const sources = targets.map((path) => {
+    const absolute = resolve(workspaceRoot, path);
+    const escaped = relative(workspaceRoot, absolute);
+    if (escaped.startsWith('..') || escaped === '' || escaped.startsWith('/')) {
+      throw new Error(`${entry.packageName}: focused mutation source escaped its workspace`);
+    }
+    const metadata = lstatSync(absolute);
+    if (!metadata.isFile() || metadata.isSymbolicLink())
+      throw new Error(`${entry.packageName}: focused mutation source missing`);
+    return { path, digest: sha256Hex(readFileSync(absolute)) };
+  });
+  return {
+    packageDigest: sha256Hex(readFileSync(resolve(workspaceRoot, 'package.json'))),
+    configDigest: sha256Hex(readFileSync(resolve(repoRoot, entry.config))),
+    sourceSetDigest: sha256Hex(canonicalize(sources)),
+    targetSetDigest: sha256Hex(canonicalize(targets)),
+  };
+}
+
+function focusedLifecyclePrefixes(entry) {
+  return [
+    `${entry.workspace}/.stryker-tmp`,
+    `${entry.workspace}/coverage`,
+    `${entry.workspace}/dist`,
+    `${entry.workspace}/reports`,
+  ];
+}
+
+function createFocusedContext(entry) {
+  const targets = focusedTargetPaths(entry);
+  const allowedUnstagedPaths =
+    entry.packageName === '@stynx-nyx/worklist' ? D24_WORKLIST_UNSTAGED_PATHS : [];
+  const readInputDigests = () => readFocusedInputDigests(entry, targets);
+  const candidate = captureFocusedMutationCandidate({
+    repoRoot,
+    allowedUnstagedPaths,
+    readInputDigests,
+  });
+  if (
+    entry.packageName === '@stynx-nyx/worklist' &&
+    candidate.diffDigest !== D24_WORKLIST_DIFF_DIGEST
+  ) {
+    throw new Error(`${entry.packageName}: focused mutation candidate has the wrong governed diff`);
+  }
+  const stem = entry.workspace.replaceAll('/', '-');
+  const preflight = focusedMutationAttemptPaths({
+    repoRoot,
+    packageStem: stem,
+    commit: candidate.commit,
+    diffDigest: candidate.diffDigest,
+    kind: 'success',
+  });
+  assertFocusedMutationAttemptAvailable(preflight);
+  return {
+    entry,
+    targets,
+    allowedUnstagedPaths,
+    readInputDigests,
+    candidate,
+    stem,
+    lifecyclePrefixes: focusedLifecyclePrefixes(entry),
+  };
+}
+
+function validateFocusedContext(context, additions = []) {
+  const current = captureFocusedMutationCandidate({
+    repoRoot,
+    allowedUnstagedPaths: context.allowedUnstagedPaths,
+    readInputDigests: context.readInputDigests,
+  });
+  const additionPrefixes = additions.map((path) => relative(repoRoot, path).split('\\').join('/'));
+  assertFocusedMutationCandidate(context.candidate, current, [
+    ...context.lifecyclePrefixes,
+    ...additionPrefixes,
+  ]);
+}
+
+function focusedCandidateManifest(candidate) {
+  return {
+    commit: candidate.commit,
+    tree: candidate.tree,
+    diffDigest: candidate.diffDigest,
+    cleanIndex: candidate.cleanIndex,
+    allowedUnstaged: candidate.allowedUnstaged,
+  };
+}
+
+function focusedFile(name, bytes) {
+  return { name, bytes, digest: sha256Hex(bytes) };
+}
+
+function publishFocusedFailure({
+  context,
+  report,
+  statusTotals,
+  census,
+  mutationScore,
+  durationMs,
+  processResult,
+  outcome,
+}) {
+  const paths = focusedMutationAttemptPaths({
+    repoRoot,
+    packageStem: context.stem,
+    commit: context.candidate.commit,
+    diffDigest: context.candidate.diffDigest,
+    kind: 'failure',
+  });
+  const manifest = {
+    schemaVersion: '2.0.0',
+    kind: 'mutation-focused-failure-v2',
+    packageName: context.entry.packageName,
+    workspace: context.entry.workspace,
+    candidate: focusedCandidateManifest(context.candidate),
+    inputDigests: context.candidate.inputDigests,
+    process: processResult,
+    durationMs,
+    thresholds: context.entry.thresholds,
+    score: mutationScore,
+    statusTotals,
+    census,
+    classification: outcome.classification,
+    reason: outcome.reason,
+    paths: { manifest: paths.relative.manifest },
+    normalizedReportByteCount: encodeFocusedMutationJson(
+      projectFocusedMutationReport(report, repoRoot),
+      FOCUSED_MUTATION_LIMITS.report,
+      'focused mutation report',
+    ).length,
+  };
+  assertFocusedEvidenceSafe(manifest, repoRoot);
+  const manifestBytes = encodeFocusedMutationJson(
+    manifest,
+    FOCUSED_MUTATION_LIMITS.manifest,
+    'focused mutation failure manifest',
+  );
+  publishFocusedMutationEvidence({
+    paths,
+    files: [focusedFile(paths.manifestName, manifestBytes)],
+    byteSet: { manifestBytes },
+    validateCandidate: (_phase, additions) => validateFocusedContext(context, additions),
+  });
+}
+
+function publishFocusedSuccess({
+  context,
+  report,
+  statusTotals,
+  census,
+  mutationScore,
+  durationMs,
+  processResult,
+}) {
+  const paths = focusedMutationAttemptPaths({
+    repoRoot,
+    packageStem: context.stem,
+    commit: context.candidate.commit,
+    diffDigest: context.candidate.diffDigest,
+    kind: 'success',
+  });
+  const persistedReport = projectFocusedMutationReport(report, repoRoot);
+  const reportBytes = encodeFocusedMutationJson(
+    persistedReport,
+    FOCUSED_MUTATION_LIMITS.report,
+    'focused mutation report',
+  );
+  const reportDigest = sha256Hex(reportBytes);
+  const result = {
+    schemaVersion: '2.0.0',
+    kind: 'mutation-focused-result-v2',
+    packageName: context.entry.packageName,
+    workspace: context.entry.workspace,
+    passed: true,
+    durationMs,
+    toolVersions: { stryker: report.framework.version },
+    thresholds: context.entry.thresholds,
+    score: mutationScore,
+    statusTotals,
+    census,
+    process: processResult,
+    inputDigests: context.candidate.inputDigests,
+    reportDigest,
+    reportPath: paths.relative.report,
+  };
+  assertFocusedEvidenceSafe(result, repoRoot);
+  const resultBytes = encodeFocusedMutationJson(
+    result,
+    FOCUSED_MUTATION_LIMITS.result,
+    'focused mutation result',
+  );
+  const resultDigest = sha256Hex(resultBytes);
+  const manifest = {
+    schemaVersion: '2.0.0',
+    kind: 'mutation-focused-evidence-v2',
+    packageName: context.entry.packageName,
+    workspace: context.entry.workspace,
+    candidate: focusedCandidateManifest(context.candidate),
+    inputDigests: context.candidate.inputDigests,
+    process: processResult,
+    durationMs,
+    thresholds: context.entry.thresholds,
+    score: mutationScore,
+    statusTotals,
+    census,
+    reportDigest,
+    resultDigest,
+    paths: paths.relative,
+  };
+  assertFocusedEvidenceSafe(manifest, repoRoot);
+  const manifestBytes = encodeFocusedMutationJson(
+    manifest,
+    FOCUSED_MUTATION_LIMITS.manifest,
+    'focused mutation manifest',
+  );
+  publishFocusedMutationEvidence({
+    paths,
+    files: [
+      focusedFile(paths.reportName, reportBytes),
+      focusedFile(paths.resultName, resultBytes),
+      focusedFile(paths.manifestName, manifestBytes),
+    ],
+    byteSet: { reportBytes, resultBytes, manifestBytes },
+    validateCandidate: (_phase, additions) => validateFocusedContext(context, additions),
+  });
+  return paths.relative;
+}
+
 function buildMutationPackage(entry, environment) {
   const result = spawnSync('pnpm', ['--filter', `${entry.packageName}...`, 'run', 'build'], {
     cwd: repoRoot,
@@ -236,7 +386,7 @@ function buildMutationPackage(entry, environment) {
   throw new Error(`${entry.packageName}: mutation-harness-failure (build-precondition-${reason})`);
 }
 
-function runPackage(entry, candidate) {
+function runPackage(entry) {
   return withMutationReportCleanup(repoRoot, entry.workspace, (rawReportDirectory) => {
     const started = process.hrtime.bigint();
     let subprocessResult;
@@ -266,8 +416,12 @@ function runPackage(entry, candidate) {
     }
     let report;
     try {
-      const rawReport = JSON.parse(readFileSync(rawReportPath, 'utf8'));
-      report = normalizeMutationReport(rawReport, entry.thresholds, entry.workspace, repoRoot);
+      report = normalizeMutationReport(
+        JSON.parse(readFileSync(rawReportPath, 'utf8')),
+        entry.thresholds,
+        entry.workspace,
+        repoRoot,
+      );
     } catch (error) {
       const { classification, reason } = classifyMutationOutcome({
         reportState: 'unsafe',
@@ -279,11 +433,6 @@ function runPackage(entry, candidate) {
     }
     const statusTotals = totals(report);
     const mutationScore = score(statusTotals);
-    const processResult = {
-      status: subprocessResult?.status ?? null,
-      signal: subprocessResult?.signal ?? null,
-    };
-    const inputDigests = diagnosticPackageName ? focusedInputDigests(entry, report) : undefined;
     const outcome = classifyMutationOutcome({
       reportState: 'normalized',
       score: mutationScore,
@@ -302,40 +451,15 @@ function runPackage(entry, candidate) {
       );
     }
     if (outcome.classification === 'mutation-harness-failure') {
-      if (diagnosticPackageName) {
-        assertFocusedCandidate(candidate);
-        const stem = entry.workspace.replaceAll('/', '-');
-        writeFocusedManifest(stem, {
-          schemaVersion: '1.0.0',
-          kind: 'mutation-focused-failure-v1',
-          candidate,
-          packageName: entry.packageName,
-          inputDigests,
-          process: processResult,
-          score: mutationScore,
-          thresholds: entry.thresholds,
-          statusTotals,
-          classification: outcome.classification,
-          reason: outcome.reason,
-        });
-        publishFocusedArtifacts(stem);
-      }
       throw new Error(
         `${entry.packageName}: mutation-harness-failure (${outcome.reason}; ` +
           `score=${mutationScore})`,
       );
     }
     const stem = entry.workspace.replaceAll('/', '-');
-    const focusedRoot = `${artifactRoot}/focused/${stem}`;
-    const reportPath = diagnosticPackageName
-      ? `${focusedRoot}/${stem}.stryker.json`
-      : `${artifactRoot}/${stem}.stryker.json`;
-    const resultPath = diagnosticPackageName
-      ? `${focusedRoot}/${stem}.result.json`
-      : `${artifactRoot}/${stem}.result.json`;
-    const persistedReport = diagnosticPackageName ? focusedPersistenceReport(report) : report;
-    const reportBytes = canonicalize(persistedReport);
-    const reportDigest = sha256Hex(diagnosticPackageName ? `${reportBytes}\n` : reportBytes);
+    const reportPath = `${artifactRoot}/${stem}.stryker.json`;
+    const resultPath = `${artifactRoot}/${stem}.result.json`;
+    const reportBytes = canonicalize(report);
     const result = {
       schemaVersion: '1.0.0',
       kind: 'mutation-package-result-v1',
@@ -347,21 +471,11 @@ function runPackage(entry, candidate) {
       thresholds: entry.thresholds,
       score: mutationScore,
       statusTotals,
-      reportDigest,
-      ...(diagnosticPackageName ? { process: processResult } : {}),
+      reportDigest: sha256Hex(reportBytes),
     };
     const resultBytes = canonicalize(result);
-    const resultDigest = sha256Hex(diagnosticPackageName ? `${resultBytes}\n` : resultBytes);
-    canonicalWrite(
-      resolve(stagingDirectory, `${stem}.stryker.json`),
-      persistedReport,
-      diagnosticPackageName ? 0o600 : undefined,
-    );
-    canonicalWrite(
-      resolve(stagingDirectory, `${stem}.result.json`),
-      result,
-      diagnosticPackageName ? 0o600 : undefined,
-    );
+    canonicalWrite(resolve(stagingDirectory, `${stem}.stryker.json`), report);
+    canonicalWrite(resolve(stagingDirectory, `${stem}.result.json`), result);
     process.stdout.write(
       `${JSON.stringify({ packageName: entry.packageName, passed, score: mutationScore, durationMs })}\n`,
     );
@@ -370,14 +484,128 @@ function runPackage(entry, candidate) {
       workspace: entry.workspace,
       resultPath,
       reportPath,
-      resultDigest,
-      reportDigest,
+      resultDigest: sha256Hex(resultBytes),
+      reportDigest: sha256Hex(reportBytes),
       score: mutationScore,
       passed,
       durationMs,
       statusTotals,
-      process: processResult,
-      inputDigests,
+    };
+  });
+}
+
+function runFocusedPackage(entry, context) {
+  return withMutationReportCleanup(repoRoot, entry.workspace, (rawReportDirectory) => {
+    const started = process.hrtime.bigint();
+    const environment = buildMutationEnvironment(process.env);
+    validateFocusedContext(context);
+    buildMutationPackage(entry, environment);
+    validateFocusedContext(context);
+    const subprocessResult = spawnSync('pnpm', ['--filter', entry.packageName, 'run', 'stryker'], {
+      cwd: repoRoot,
+      env: environment,
+      encoding: 'utf8',
+      maxBuffer: 64 * 1024 * 1024,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      shell: false,
+    });
+    const durationMs = Number((process.hrtime.bigint() - started) / BigInt(1_000_000));
+    const rawReportPath = resolve(rawReportDirectory, 'mutation.json');
+    if (!existsSync(rawReportPath)) {
+      const { classification, reason } = classifyMutationOutcome({
+        reportState: 'missing',
+        subprocessResult,
+        repoRoot,
+      });
+      throw new Error(`${entry.packageName}: ${classification} (${reason})`);
+    }
+    let report;
+    try {
+      report = normalizeMutationReport(
+        JSON.parse(readFileSync(rawReportPath, 'utf8')),
+        entry.thresholds,
+        entry.workspace,
+        repoRoot,
+      );
+    } catch (error) {
+      const { classification, reason } = classifyMutationOutcome({
+        reportState: 'unsafe',
+        subprocessResult,
+        reportFailureCode: error.code,
+        repoRoot,
+      });
+      throw new Error(`${entry.packageName}: ${classification} (${reason})`, { cause: error });
+    }
+    validateFocusedContext(context);
+    const reportTargets = Object.keys(report.files ?? {}).sort();
+    if (canonicalize(reportTargets) !== canonicalize(context.targets)) {
+      throw new Error(`${entry.packageName}: focused mutation target set changed`);
+    }
+    const statusTotals = totals(report);
+    const census = focusedMutationCensus(report, statusTotals);
+    if (entry.packageName === '@stynx-nyx/worklist') {
+      assertFocusedMutationCensus(census, D24_WORKLIST_CENSUS);
+      if (statusTotals.Timeout !== 0 || statusTotals.NoCoverage !== 0) {
+        throw new Error(`${entry.packageName}: mutation-harness-failure (governed-status-drift)`);
+      }
+    }
+    const mutationScore = score(statusTotals);
+    const processResult = {
+      errorAbsent: subprocessResult.error === undefined,
+      status: subprocessResult.status ?? null,
+      signal: subprocessResult.signal ?? null,
+    };
+    const outcome = classifyMutationOutcome({
+      reportState: 'normalized',
+      score: mutationScore,
+      threshold: entry.thresholds.break,
+      subprocessResult,
+      repoRoot,
+    });
+    if (outcome.classification === 'mutation-score-failure') {
+      throw new Error(
+        `${entry.packageName}: mutation-score-failure ` +
+          `(Killed=${statusTotals.Killed}, Timeout=${statusTotals.Timeout}, ` +
+          `Survived=${statusTotals.Survived}, NoCoverage=${statusTotals.NoCoverage}, ` +
+          `total=${census.scored}, score=${mutationScore}, break=${entry.thresholds.break})`,
+      );
+    }
+    validateFocusedContext(context);
+    if (outcome.classification === 'mutation-harness-failure') {
+      assertFocusedMutationProcessResult(processResult, 'failure');
+      publishFocusedFailure({
+        context,
+        report,
+        statusTotals,
+        census,
+        mutationScore,
+        durationMs,
+        processResult,
+        outcome,
+      });
+      throw new Error(
+        `${entry.packageName}: mutation-harness-failure (${outcome.reason}; ` +
+          `score=${mutationScore})`,
+      );
+    }
+    assertFocusedMutationProcessResult(processResult, 'success');
+    const paths = publishFocusedSuccess({
+      context,
+      report,
+      statusTotals,
+      census,
+      mutationScore,
+      durationMs,
+      processResult,
+    });
+    process.stdout.write(
+      `${JSON.stringify({ packageName: entry.packageName, passed: true, score: mutationScore, durationMs })}\n`,
+    );
+    return {
+      packageName: entry.packageName,
+      score: mutationScore,
+      statusTotals,
+      manifestPath: paths.manifest,
     };
   });
 }
@@ -392,42 +620,27 @@ const selectedRoster = diagnosticPackageName
 if (diagnosticPackageName && selectedRoster.length !== 1) {
   throw new Error(`unknown mutation package: ${diagnosticPackageName}`);
 }
-const candidate = diagnosticPackageName ? focusedCandidateIdentity() : undefined;
+if (diagnosticPackageName) {
+  const [selected] = selectedRoster;
+  const context = createFocusedContext(selected);
+  const entry = runFocusedPackage(selected, context);
+  process.stdout.write(
+    `${JSON.stringify({
+      ok: true,
+      mode: 'diagnostic',
+      packageName: entry.packageName,
+      score: entry.score,
+      statusTotals: entry.statusTotals,
+      manifestPath: entry.manifestPath,
+    })}\n`,
+  );
+  process.exit(0);
+}
 
 rmSync(stagingDirectory, { recursive: true, force: true });
 mkdirSync(stagingDirectory, { recursive: true });
 try {
-  const packages = selectedRoster.map((entry) => runPackage(entry, candidate));
-  if (diagnosticPackageName) {
-    const [entry] = packages;
-    assertFocusedCandidate(candidate);
-    const stem = entry.workspace.replaceAll('/', '-');
-    writeFocusedManifest(stem, {
-      schemaVersion: '1.0.0',
-      kind: 'mutation-focused-evidence-v1',
-      candidate,
-      packageName: entry.packageName,
-      inputDigests: entry.inputDigests,
-      process: entry.process,
-      score: entry.score,
-      thresholds: selectedRoster[0].thresholds,
-      statusTotals: entry.statusTotals,
-      reportDigest: entry.reportDigest,
-      resultDigest: entry.resultDigest,
-    });
-    publishFocusedArtifacts(stem);
-    process.stdout.write(
-      `${JSON.stringify({
-        ok: true,
-        mode: 'diagnostic',
-        packageName: entry.packageName,
-        score: entry.score,
-        statusTotals: entry.statusTotals,
-        manifestPath: `${artifactRoot}/focused/${stem}/${stem}.manifest.json`,
-      })}\n`,
-    );
-    process.exit(0);
-  }
+  const packages = selectedRoster.map(runPackage);
   const aggregateTotals = Object.fromEntries(MUTANT_STATUSES.map((status) => [status, 0]));
   let durationMs = 0;
   for (const entry of packages) {
