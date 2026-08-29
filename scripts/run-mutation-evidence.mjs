@@ -32,6 +32,7 @@ import {
   buildMutationEnvironment,
   classifyMutationOutcome,
   normalizeMutationReport,
+  preflightFullMutationInfrastructure,
   projectFocusedMutationReport,
   publishFocusedMutationEvidence,
   withMutationReportCleanup,
@@ -635,6 +636,12 @@ if (diagnosticPackageName) {
     })}\n`,
   );
   process.exit(0);
+}
+
+const preflight = preflightFullMutationInfrastructure();
+if (preflight) {
+  process.stderr.write(`${JSON.stringify(preflight)}\n`);
+  process.exit(1);
 }
 
 rmSync(stagingDirectory, { recursive: true, force: true });

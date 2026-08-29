@@ -70,6 +70,12 @@ const HOST_PATH_PATTERNS = [
 const MAX_JSON_DEPTH = 64;
 const MAX_JSON_NODES = 1_000_000;
 const MAX_TEXT_BYTES = 16 * 1024 * 1024;
+const FULL_MUTATION_POSTGRES_CONTROLS = [
+  'STYNX_TEST_PG_HOST',
+  'STYNX_TEST_PG_PORT',
+  'STYNX_TEST_PG_USER',
+  'STYNX_TEST_PG_TEMPLATE',
+];
 
 export const FOCUSED_MUTATION_ARTIFACT_ROOT =
   '.devai/state/check-cache/v1/artifacts/mutation-focused';
@@ -103,6 +109,72 @@ export const GOVERNED_MUTATION_DIFF_ARGUMENTS = Object.freeze([
   'HEAD',
   '--',
 ]);
+
+function runInfrastructureCommand(command, arguments_, options) {
+  return spawnSync(command, arguments_, {
+    ...options,
+    encoding: 'utf8',
+    shell: false,
+    stdio: ['ignore', 'ignore', 'ignore'],
+  });
+}
+
+function infrastructureCommandPassed(result) {
+  return result.error === undefined && result.signal === null && result.status === 0;
+}
+
+function fullMutationPreflightFailure(reason, docker, postgres) {
+  return {
+    ok: false,
+    mode: 'full-roster',
+    classification: 'mutation-harness-failure',
+    reason,
+    packagesStarted: 0,
+    preflight: { docker, postgres },
+  };
+}
+
+export function preflightFullMutationInfrastructure({
+  environment = process.env,
+  commandRun = runInfrastructureCommand,
+} = {}) {
+  const missingPostgresControls = FULL_MUTATION_POSTGRES_CONTROLS.some(
+    (key) => typeof environment[key] !== 'string' || environment[key].length === 0,
+  );
+  const dockerReady = infrastructureCommandPassed(
+    commandRun('docker', ['info'], { env: environment }),
+  );
+  if (missingPostgresControls) {
+    return fullMutationPreflightFailure(
+      'missing-postgres-controls',
+      dockerReady ? 'ready' : 'unreachable',
+      'missing-controls',
+    );
+  }
+  if (!dockerReady) {
+    return fullMutationPreflightFailure('docker-unreachable', 'unreachable', 'not-checked');
+  }
+  const postgresReady = infrastructureCommandPassed(
+    commandRun(
+      'pg_isready',
+      [
+        '-h',
+        environment.STYNX_TEST_PG_HOST,
+        '-p',
+        environment.STYNX_TEST_PG_PORT,
+        '-U',
+        environment.STYNX_TEST_PG_USER,
+        '-d',
+        environment.STYNX_TEST_PG_TEMPLATE,
+      ],
+      { env: environment },
+    ),
+  );
+  if (!postgresReady) {
+    return fullMutationPreflightFailure('postgres-unreachable', 'ready', 'unreachable');
+  }
+  return undefined;
+}
 
 const FOCUSED_FORBIDDEN_KEYS = new Set([
   'coveredBy',
