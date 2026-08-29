@@ -1046,7 +1046,7 @@ describe('D24.4 observable survivor boundaries', () => {
       ],
       strategyConfig: { lane: 'appeals' },
     });
-    expect(eventSink.publish).toHaveBeenCalled();
+    expect(eventSink.publish).toHaveBeenCalledWith(mapEventRow(eventRow));
 
     await service.list({
       page: 2,

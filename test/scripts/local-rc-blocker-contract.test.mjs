@@ -1478,7 +1478,7 @@ function parseD22OwnedPostgresMapping(mappingText, hostOverrideDeclared) {
     ? new Set(['0.0.0.0', '::'])
     : new Set(['127.0.0.1']);
   const ports = lines.map((line) => {
-    const match = /^(\[[^\]]+\]|[^\[\]]+):(\d+)$/u.exec(line);
+    const match = /^(\[[^\]]+\]|[^[\]]+):(\d+)$/u.exec(line);
     const address = match?.[1].replace(/^\[|\]$/gu, '');
     const port = Number(match?.[2]);
     if (
@@ -1805,16 +1805,16 @@ function ownedListenerDiagnosticFixture(args = [], inheritedInternalControl = fa
   const requesterBinding = exactOptIn
     ? { host: fixedDiagnosticHost, port: fixedDiagnosticPort }
     : undefined;
-  let internalControl = inheritedInternalControl ? 'inherited' : undefined;
-  internalControl = undefined;
-  if (exactOptIn) internalControl = '1';
+  const inheritedControl = inheritedInternalControl ? 'inherited' : undefined;
+  const internalControl = exactOptIn ? '1' : undefined;
   let state = normalMode ? 'default-ready' : exactOptIn ? 'diagnostic-ready' : 'rejected';
   let currentSlot = -1;
   let cleanupComplete = false;
   let discardedStreams = 0;
   let exitCode = state === 'rejected' ? 1 : undefined;
   const controls = {
-    inheritedControlStripped: internalControl !== 'inherited',
+    inheritedControlStripped:
+      inheritedControl === undefined || internalControl !== inheritedControl,
     internalControlSetByCliOnly: exactOptIn && internalControl === '1',
     childUsesFixedDiagnosticBinding:
       childBinding?.host === fixedDiagnosticHost && childBinding?.port === fixedDiagnosticPort,
@@ -4500,7 +4500,7 @@ test('D21 production binds exact Compose-up terminals without D14-D20 drift', ()
   assert.match(helper, /mkdtemp\(resolve\(tmpdir\(\), ['"]stynx-reference-api-stack-['"]\)\)/u);
   assert.match(
     helper,
-    /services:\\n  postgres:[\s\S]*?ports:\\n      - '\$\{postgresPublish\}'[\s\S]*?redis:[\s\S]*?ports:\\n      - '\$\{redisPublish\}'/u,
+    /services:\\n {2}postgres:[\s\S]*?ports:\\n {6}- '\$\{postgresPublish\}'[\s\S]*?redis:[\s\S]*?ports:\\n {6}- '\$\{redisPublish\}'/u,
   );
   assert.match(
     helper,

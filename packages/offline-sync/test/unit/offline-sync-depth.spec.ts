@@ -777,7 +777,7 @@ describe('InMemoryOfflineSyncStore fail-closed behavior', () => {
       items: [expectedItem],
     });
     expect(store.getQueueItem(tenantId, 'queue-1')).toEqual(expectedItem);
-    expect(store.getQueueItem('other-tenant', 'queue-1')).toBeUndefined();
+    expect(store.getQueueItem('other-tenant', 'queue-1')).toBe(undefined);
 
     const replay = await store.submitSyncBatch(
       scope,

@@ -123,7 +123,7 @@ describe('worklist distribution strategies', () => {
 
     const custom: WorklistDistributionStrategy = { key: 'geo_v2', select: async () => 'user-z' };
     const registry = new WorklistStrategyRegistry();
-    expect(registry.register(custom)).toBeUndefined();
+    expect(registry.register(custom)).toBe(undefined);
     expect(registry.get('geo_v2')).toBe(custom);
     expect(registry.require('geo_v2')).toBe(custom);
   });
@@ -199,8 +199,8 @@ describe('worklist distribution strategies', () => {
       select: async () => null,
     };
     const registry = new WorklistStrategyRegistry();
-    expect(registry.register(custom)).toBeUndefined();
+    expect(registry.register(custom)).toBe(undefined);
     expect(registry.get('geographic_v3')).toBe(custom);
-    expect(registry.get('  geographic_v3  ')).toBeUndefined();
+    expect(registry.get('  geographic_v3  ')).toBe(undefined);
   });
 });
