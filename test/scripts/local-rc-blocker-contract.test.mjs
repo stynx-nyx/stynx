@@ -6385,6 +6385,210 @@ test('D24.12 focused and full-roster publication roots are mechanically independ
   }
 });
 
+test('D24.15 full-roster infrastructure preflight fails before package one', async () => {
+  const mutationEvidence = await import('../../scripts/lib/mutation-evidence.mjs');
+  const preflight = mutationEvidence.preflightFullMutationInfrastructure;
+  assert.equal(
+    typeof preflight,
+    'function',
+    'D24.15 requires exported injectable preflightFullMutationInfrastructure',
+  );
+
+  const sentinelEnvironment = Object.freeze({
+    STYNX_TEST_PG_HOST: 'sentinel-postgres-host.invalid',
+    STYNX_TEST_PG_PORT: '65432',
+    STYNX_TEST_PG_TEMPLATE: 'sentinel_template',
+    STYNX_TEST_PG_USER: 'sentinel-user',
+    PGHOST: 'forbidden-fallback-host.invalid',
+    PGPORT: '7654',
+    PGUSER: 'forbidden-fallback-user',
+    PGPASSWORD: 'github_pat_forbiddenfallback000000000000',
+    DATABASE_URL: 'postgresql://forbidden-user:forbidden-password@forbidden-host.invalid/forbidden',
+  });
+  const rejectedDiagnostic =
+    '/Users/example/private-workstation github_pat_forbiddendiagnostic000000000000';
+  const subprocessResult = (status) => ({
+    error: undefined,
+    signal: null,
+    status,
+    stdout: rejectedDiagnostic,
+    stderr: rejectedDiagnostic,
+  });
+  const fixedFailure = (reason, docker, postgres) => ({
+    ok: false,
+    mode: 'full-roster',
+    classification: 'mutation-harness-failure',
+    reason,
+    packagesStarted: 0,
+    preflight: { docker, postgres },
+  });
+  const fixtures = [];
+  const invoke = ({ missing = [], dockerStatus = 0, postgresStatus = 0 } = {}) => {
+    const environment = { ...sentinelEnvironment };
+    for (const key of missing) delete environment[key];
+    const calls = [];
+    const commandRun = (command, arguments_, options = {}) => {
+      assert.deepEqual(options.env, environment);
+      calls.push([command, [...arguments_]]);
+      if (command === 'docker') {
+        assert.deepEqual(arguments_, ['info']);
+        return subprocessResult(dockerStatus);
+      }
+      if (command === 'pg_isready') {
+        assert.deepEqual(arguments_, [
+          '-h',
+          environment.STYNX_TEST_PG_HOST,
+          '-p',
+          environment.STYNX_TEST_PG_PORT,
+          '-U',
+          environment.STYNX_TEST_PG_USER,
+          '-d',
+          environment.STYNX_TEST_PG_TEMPLATE,
+        ]);
+        return subprocessResult(postgresStatus);
+      }
+      assert.fail(`D24.15 invoked forbidden command class: ${command}`);
+    };
+    const result = preflight({ environment, commandRun });
+    fixtures.push({ calls, result });
+    return { calls, result };
+  };
+  const dockerCall = [['docker', ['info']]];
+  const postgresCall = [
+    'pg_isready',
+    [
+      '-h',
+      sentinelEnvironment.STYNX_TEST_PG_HOST,
+      '-p',
+      sentinelEnvironment.STYNX_TEST_PG_PORT,
+      '-U',
+      sentinelEnvironment.STYNX_TEST_PG_USER,
+      '-d',
+      sentinelEnvironment.STYNX_TEST_PG_TEMPLATE,
+    ],
+  ];
+
+  for (const missingControl of [
+    'STYNX_TEST_PG_HOST',
+    'STYNX_TEST_PG_PORT',
+    'STYNX_TEST_PG_USER',
+    'STYNX_TEST_PG_TEMPLATE',
+  ]) {
+    const fixture = invoke({ missing: [missingControl] });
+    assert.deepEqual(
+      fixture.result,
+      fixedFailure('missing-postgres-controls', 'ready', 'missing-controls'),
+    );
+    assert.deepEqual(fixture.calls, dockerCall);
+  }
+  const allMissing = invoke({
+    missing: [
+      'STYNX_TEST_PG_HOST',
+      'STYNX_TEST_PG_PORT',
+      'STYNX_TEST_PG_USER',
+      'STYNX_TEST_PG_TEMPLATE',
+    ],
+  });
+  assert.deepEqual(
+    allMissing.result,
+    fixedFailure('missing-postgres-controls', 'ready', 'missing-controls'),
+  );
+  assert.deepEqual(allMissing.calls, dockerCall);
+
+  const dockerUnreachable = invoke({ dockerStatus: 1, postgresStatus: 1 });
+  assert.deepEqual(
+    dockerUnreachable.result,
+    fixedFailure('docker-unreachable', 'unreachable', 'not-checked'),
+  );
+  assert.deepEqual(dockerUnreachable.calls, dockerCall);
+
+  const postgresUnreachable = invoke({ postgresStatus: 1 });
+  assert.deepEqual(
+    postgresUnreachable.result,
+    fixedFailure('postgres-unreachable', 'ready', 'unreachable'),
+  );
+  assert.deepEqual(postgresUnreachable.calls, [...dockerCall, postgresCall]);
+
+  const simultaneous = invoke({
+    missing: ['STYNX_TEST_PG_HOST'],
+    dockerStatus: 1,
+    postgresStatus: 1,
+  });
+  assert.deepEqual(
+    simultaneous.result,
+    fixedFailure('missing-postgres-controls', 'unreachable', 'missing-controls'),
+  );
+  assert.deepEqual(simultaneous.calls, dockerCall);
+
+  const success = invoke();
+  assert.equal(success.result, undefined, 'successful preflight emits no new record');
+  assert.deepEqual(success.calls, [...dockerCall, postgresCall]);
+
+  for (const { calls, result } of fixtures) {
+    for (const [command, arguments_] of calls) {
+      assert.equal(['docker', 'pg_isready'].includes(command), true);
+      assert.equal(
+        arguments_.some((argument) =>
+          /(?:context|run|start|create|clone|skip|retry|socket|fallback|stryker|pnpm)/iu.test(
+            String(argument),
+          ),
+        ),
+        false,
+      );
+    }
+    if (result === undefined) continue;
+    assert.deepEqual(Object.keys(result).sort(), [
+      'classification',
+      'mode',
+      'ok',
+      'packagesStarted',
+      'preflight',
+      'reason',
+    ]);
+    assert.deepEqual(Object.keys(result.preflight).sort(), ['docker', 'postgres']);
+    const encoded = `${canonicalize(result)}\n`;
+    assert.equal(Buffer.byteLength(encoded) <= 512, true);
+    for (const forbidden of [
+      ...Object.values(sentinelEnvironment),
+      rejectedDiagnostic,
+      '/Users/',
+      'github_pat_',
+      'docker info',
+      'pg_isready',
+    ]) {
+      assert.equal(encoded.includes(forbidden), false);
+    }
+  }
+
+  const helperSource = Function.prototype.toString.call(preflight);
+  assert.doesNotMatch(
+    helperSource,
+    /(?:rmSync|renameSync|mkdirSync|writeFileSync|mutation-stage|mutation-backup|artifactRoot|runPackage|stryker|sanitizeMutationDiagnostic|classifyMutationSubprocess)/u,
+  );
+  assert.doesNotMatch(
+    helperSource,
+    /(?:docker\s+(?:context|run|start)|createdb|create\s+database|template\s+clone|setTimeout|sleep|retry|skip-package)/iu,
+  );
+
+  const runnerSource = readFileSync(resolve(repoRoot, 'scripts/run-mutation-evidence.mjs'), 'utf8');
+  const focusedBranch = runnerSource.indexOf('\nif (diagnosticPackageName) {');
+  const focusedExit = runnerSource.indexOf('process.exit(0);', focusedBranch);
+  const preflightCall = runnerSource.lastIndexOf('preflightFullMutationInfrastructure(');
+  const stagingAction = runnerSource.indexOf(
+    '\nrmSync(stagingDirectory, { recursive: true, force: true });',
+  );
+  const packageAction = runnerSource.indexOf('selectedRoster.map(runPackage)');
+  assert.equal(focusedBranch > 0, true);
+  assert.equal(focusedExit > focusedBranch, true);
+  assert.equal(preflightCall > focusedExit, true, 'focused mode must bypass full-roster preflight');
+  assert.equal(preflightCall < stagingAction, true, 'preflight must precede staging action');
+  assert.equal(preflightCall < packageAction, true, 'preflight must precede package one');
+  const preflightBranch = runnerSource.slice(preflightCall, stagingAction);
+  assert.match(preflightBranch, /JSON\.stringify\([^)]*preflight[^)]*\)/u);
+  assert.match(preflightBranch, /process\.exit\(1\)/u);
+  assert.doesNotMatch(preflightBranch, /(?:runPackage|mkdirSync|rmSync|renameSync)/u);
+});
+
 test('notifications keeps the exact roster membership, break floor, and mutate population', async () => {
   const { roster, failures } = discoverMutationRoster(repoRoot);
   assert.deepEqual(failures, []);
