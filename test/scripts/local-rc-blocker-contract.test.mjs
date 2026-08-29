@@ -11,6 +11,7 @@ import {
   readdirSync,
   readlinkSync,
   realpathSync,
+  renameSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -21,12 +22,33 @@ import { createRequire } from 'node:module';
 import test from 'node:test';
 
 import {
+  FOCUSED_MUTATION_ARTIFACT_ROOT,
+  FOCUSED_MUTATION_FILE_SYSTEM,
+  FOCUSED_MUTATION_LIMITS,
+  FULL_MUTATION_ARTIFACT_ROOT,
+  GOVERNED_MUTATION_DIFF_ARGUMENTS,
+  assertFocusedEvidenceSafe,
+  assertFocusedMutationAttemptAvailable,
+  assertFocusedMutationByteBounds,
+  assertFocusedMutationCandidate,
+  assertFocusedMutationCensus,
+  assertFocusedMutationProcessResult,
   buildMutationEnvironment,
+  captureFocusedMutationCandidate,
   classifyMutationOutcome,
+  encodeFocusedMutationJson,
+  focusedMutationAttemptPaths,
+  focusedMutationCensus,
   normalizeMutationReport,
+  projectFocusedMutationReport,
+  publishFocusedMutationEvidence,
   withMutationReportCleanup,
 } from '../../scripts/lib/mutation-evidence.mjs';
-import { discoverMutationRoster } from '../../scripts/lib/mutation-roster.mjs';
+import {
+  canonicalize,
+  discoverMutationRoster,
+  sha256Hex,
+} from '../../scripts/lib/mutation-roster.mjs';
 
 const repoRoot = resolve(import.meta.dirname, '..', '..');
 const privacyRoot = join(repoRoot, 'packages/privacy');
@@ -70,6 +92,167 @@ function mutationReport({ status = 'Killed', path = 'src/index.ts' } = {}) {
     },
     testFiles: {},
   };
+}
+
+const focusedStatusTotals = Object.freeze({
+  CompileError: 304,
+  Ignored: 76,
+  Killed: 302,
+  NoCoverage: 0,
+  Pending: 0,
+  RuntimeError: 0,
+  Survived: 126,
+  Timeout: 0,
+});
+const focusedCensus = Object.freeze({
+  targetFileCount: 10,
+  total: 808,
+  scored: 428,
+  nonScored: 380,
+});
+const focusedCommit = 'a'.repeat(40);
+const focusedTree = 'b'.repeat(40);
+const focusedDiffDigest = 'c'.repeat(64);
+const focusedInputDigests = Object.freeze({
+  configDigest: '1'.repeat(64),
+  packageDigest: '2'.repeat(64),
+  sourceSetDigest: '3'.repeat(64),
+  targetSetDigest: '4'.repeat(64),
+});
+
+function focusedCurrentShapeReport() {
+  const statuses = Object.entries(focusedStatusTotals).flatMap(([status, count]) =>
+    Array.from({ length: count }, () => status),
+  );
+  const files = Object.fromEntries(
+    Array.from({ length: 10 }, (_, fileIndex) => [
+      `src/target-${String(fileIndex).padStart(2, '0')}.ts`,
+      {
+        language: 'typescript',
+        source: `transient source ${String(fileIndex)}`,
+        mutants: [],
+      },
+    ]),
+  );
+  const targets = Object.keys(files);
+  statuses.forEach((status, index) => {
+    files[targets[index % targets.length]].mutants.push({
+      id: String(index),
+      mutatorName: 'BooleanLiteral',
+      replacement: 'github_pat_transientcredential000000000000',
+      statusReason: '/Users/example/transient-reason',
+      coveredBy: [`covered-${String(index)}`],
+      killedBy: [`killed-${String(index)}`],
+      status,
+      location: {
+        start: { line: index + 1, column: 0 },
+        end: { line: index + 1, column: 1 },
+      },
+    });
+  });
+  return {
+    thresholds: { break: 90, high: 100, low: 90 },
+    projectRoot: '.',
+    config: {},
+    framework: { name: 'Stryker', version: '9.6.1' },
+    files,
+    testFiles: {
+      'test/transient.spec.ts': {
+        source: 'private transient test source',
+        tests: [{ id: 'private-test-identifier', name: 'private test identifier' }],
+      },
+    },
+  };
+}
+
+function focusedAttempt(root, { kind = 'success', digest = focusedDiffDigest, pid = 7001 } = {}) {
+  return focusedMutationAttemptPaths({
+    repoRoot: root,
+    packageStem: 'packages-worklist',
+    commit: focusedCommit,
+    diffDigest: digest,
+    kind,
+    pid,
+  });
+}
+
+function focusedFile(name, value, limit = FOCUSED_MUTATION_LIMITS.manifest) {
+  const bytes = encodeFocusedMutationJson(value, limit, name);
+  return { name, bytes, digest: sha256Hex(bytes) };
+}
+
+function focusedInventory(root) {
+  if (!existsSync(root)) return [];
+  const entries = [];
+  const visit = (path) => {
+    const metadata = lstatSync(path);
+    const relativePath = relative(root, path) || '.';
+    const entry = {
+      path: relativePath,
+      mode: metadata.mode & 0o777,
+      type: metadata.isDirectory() ? 'directory' : metadata.isSymbolicLink() ? 'symlink' : 'file',
+    };
+    if (metadata.isFile()) {
+      const bytes = readFileSync(path);
+      entry.size = bytes.length;
+      entry.digest = sha256Hex(bytes);
+    }
+    entries.push(entry);
+    if (metadata.isDirectory()) {
+      for (const name of readdirSync(path).sort()) visit(join(path, name));
+    }
+  };
+  visit(root);
+  return entries;
+}
+
+function focusedCandidateFixture() {
+  const root = mkdtempSync(join(realpathSync(tmpdir()), 'stynx-d24-12-candidate-'));
+  const allowedUnstagedPaths = Array.from(
+    { length: 4 },
+    (_, index) => `spec-${String(index + 1)}.ts`,
+  );
+  for (const [index, path] of allowedUnstagedPaths.entries()) {
+    writeFileSync(join(root, path), `spec ${String(index + 1)}\n`, { mode: 0o644 });
+  }
+  const state = {
+    commit: focusedCommit,
+    tree: focusedTree,
+    indexStatus: 0,
+    status: allowedUnstagedPaths.map((path) => ` M ${path}\0`).join(''),
+    ignored: '!! node_modules/\0',
+    diffBytes: Buffer.from('governed diff bytes\n'),
+    inputDigests: { ...focusedInputDigests },
+  };
+  const gitRun = (_root, arguments_) => {
+    let status = 0;
+    let stdout = Buffer.alloc(0);
+    if (arguments_[0] === 'rev-parse' && arguments_[1] === 'HEAD^{commit}') {
+      stdout = Buffer.from(`${state.commit}\n`);
+    } else if (arguments_[0] === 'rev-parse' && arguments_[1] === 'HEAD^{tree}') {
+      stdout = Buffer.from(`${state.tree}\n`);
+    } else if (arguments_[0] === 'diff' && arguments_[1] === '--cached') {
+      status = state.indexStatus;
+    } else if (arguments_[0] === 'status' && arguments_.includes('--ignored=matching')) {
+      stdout = Buffer.from(`${state.status}${state.ignored}`);
+    } else if (arguments_[0] === 'status') {
+      stdout = Buffer.from(state.status);
+    } else if (canonicalize(arguments_) === canonicalize(GOVERNED_MUTATION_DIFF_ARGUMENTS)) {
+      stdout = state.diffBytes;
+    } else {
+      throw new Error(`unexpected focused git arguments: ${arguments_.join(' ')}`);
+    }
+    return { error: undefined, signal: null, status, stdout, stderr: Buffer.alloc(0) };
+  };
+  const capture = (overrides = {}) =>
+    captureFocusedMutationCandidate({
+      repoRoot: root,
+      allowedUnstagedPaths,
+      readInputDigests: () => ({ ...state.inputDigests }),
+      gitRun,
+      ...overrides,
+    });
+  return { root, allowedUnstagedPaths, state, gitRun, capture };
 }
 
 function assertSafeFixtureRoot(fixtureRoot) {
@@ -5582,6 +5765,623 @@ test('raw mutation reports are removed after every callback exit', () => {
       );
     }
     assert.equal(existsSync(reportDirectory), false);
+  }
+});
+
+test('D24.12 focused report projection enforces census, process, safety, and headroom', () => {
+  const report = focusedCurrentShapeReport();
+  const projected = projectFocusedMutationReport(report, repoRoot);
+  assert.equal(projected.testFiles, undefined);
+  const persisted = canonicalize(projected);
+  for (const forbidden of [
+    'source',
+    'replacement',
+    'statusReason',
+    'coveredBy',
+    'killedBy',
+    'private-test-identifier',
+    'github_pat_',
+    '/Users/example',
+  ]) {
+    assert.equal(persisted.includes(forbidden), false);
+  }
+  assert.equal(assertFocusedEvidenceSafe(projected, repoRoot), true);
+  const census = focusedMutationCensus(projected, focusedStatusTotals);
+  assert.deepEqual(census, focusedCensus);
+  assert.equal(assertFocusedMutationCensus(census, focusedCensus), true);
+  for (const [key, value] of Object.entries(focusedCensus)) {
+    for (const displacement of [-1, 1]) {
+      assert.throws(
+        () =>
+          assertFocusedMutationCensus(
+            { ...focusedCensus, [key]: value + displacement },
+            focusedCensus,
+          ),
+        { code: 'MUTATION_FOCUSED_CENSUS' },
+      );
+    }
+  }
+  const incompleteTotals = { ...focusedStatusTotals };
+  delete incompleteTotals.Pending;
+  assert.throws(() => focusedMutationCensus(projected, incompleteTotals), {
+    code: 'MUTATION_FOCUSED_ACCOUNTING',
+  });
+  assert.equal(
+    assertFocusedMutationProcessResult({ errorAbsent: true, signal: null, status: 0 }, 'success'),
+    true,
+  );
+  for (const processResult of [
+    { errorAbsent: false, signal: null, status: 0 },
+    { errorAbsent: true, signal: 'SIGTERM', status: 0 },
+    { errorAbsent: true, signal: null, status: 1 },
+    { errorAbsent: true, signal: null, status: 0, stdout: 'not retained' },
+  ]) {
+    assert.throws(() => assertFocusedMutationProcessResult(processResult, 'success'), {
+      code: 'MUTATION_FOCUSED_PROCESS',
+    });
+  }
+  assert.equal(
+    assertFocusedMutationProcessResult({ errorAbsent: true, signal: null, status: 1 }, 'failure'),
+    true,
+  );
+  for (const unsafe of [
+    { source: 'retained' },
+    { nested: { replacement: 'retained' } },
+    { value: '/Users/example/retained' },
+    { value: 'github_pat_abcdefghijklmnopqrstuvwxyz0123456789' },
+  ]) {
+    assert.throws(() => assertFocusedEvidenceSafe(unsafe, repoRoot));
+  }
+  const reportBytes = encodeFocusedMutationJson(
+    projected,
+    FOCUSED_MUTATION_LIMITS.report,
+    'current-shape report',
+  );
+  assert.equal(reportBytes.length <= FOCUSED_MUTATION_LIMITS.syntheticReportHeadroom, true);
+  assert.equal(
+    (FOCUSED_MUTATION_LIMITS.report - reportBytes.length) / FOCUSED_MUTATION_LIMITS.report >= 0.25,
+    true,
+  );
+});
+
+test('D24.12 focused evidence bounds enforce every exact byte boundary', () => {
+  const reportMax = Buffer.allocUnsafe(FOCUSED_MUTATION_LIMITS.report);
+  const resultMax = Buffer.allocUnsafe(FOCUSED_MUTATION_LIMITS.result);
+  const manifestMax = Buffer.allocUnsafe(FOCUSED_MUTATION_LIMITS.manifest);
+  assert.equal(
+    assertFocusedMutationByteBounds({
+      reportBytes: reportMax,
+      resultBytes: resultMax,
+      manifestBytes: manifestMax,
+      kind: 'success',
+    }),
+    FOCUSED_MUTATION_LIMITS.aggregate,
+  );
+  const one = Buffer.from('x');
+  for (const [field, limit] of [
+    ['reportBytes', FOCUSED_MUTATION_LIMITS.report],
+    ['resultBytes', FOCUSED_MUTATION_LIMITS.result],
+    ['manifestBytes', FOCUSED_MUTATION_LIMITS.manifest],
+  ]) {
+    const base = { reportBytes: one, resultBytes: one, manifestBytes: one, kind: 'success' };
+    assert.doesNotThrow(() =>
+      assertFocusedMutationByteBounds({ ...base, [field]: Buffer.allocUnsafe(limit - 1) }),
+    );
+    assert.doesNotThrow(() =>
+      assertFocusedMutationByteBounds({ ...base, [field]: Buffer.allocUnsafe(limit) }),
+    );
+    assert.throws(
+      () => assertFocusedMutationByteBounds({ ...base, [field]: Buffer.allocUnsafe(limit + 1) }),
+      { code: 'MUTATION_FOCUSED_BOUNDS' },
+    );
+  }
+  assert.doesNotThrow(() =>
+    assertFocusedMutationByteBounds({
+      manifestBytes: manifestMax.subarray(0, -1),
+      kind: 'failure',
+    }),
+  );
+  assert.doesNotThrow(() =>
+    assertFocusedMutationByteBounds({ manifestBytes: manifestMax, kind: 'failure' }),
+  );
+  assert.throws(
+    () =>
+      assertFocusedMutationByteBounds({
+        manifestBytes: Buffer.allocUnsafe(FOCUSED_MUTATION_LIMITS.manifest + 1),
+        kind: 'failure',
+      }),
+    { code: 'MUTATION_FOCUSED_BOUNDS' },
+  );
+});
+
+test('D24.12 focused publication is immutable, exact, and rollback-safe', () => {
+  const root = mkdtempSync(join(realpathSync(tmpdir()), 'stynx-d24-12-publish-'));
+  try {
+    const paths = focusedAttempt(root);
+    const report = focusedFile(paths.reportName, { kind: 'report', total: 808 }, 4096);
+    const result = focusedFile(paths.resultName, { kind: 'result', scored: 428 }, 4096);
+    const manifest = focusedFile(paths.manifestName, {
+      kind: 'manifest',
+      paths: paths.relative,
+      reportDigest: report.digest,
+      resultDigest: result.digest,
+    });
+    const files = [report, result, manifest];
+    const byteSet = {
+      reportBytes: report.bytes,
+      resultBytes: result.bytes,
+      manifestBytes: manifest.bytes,
+    };
+    const phases = [];
+    assert.deepEqual(
+      publishFocusedMutationEvidence({
+        paths,
+        files,
+        byteSet,
+        validateCandidate: (phase) => phases.push(phase),
+      }),
+      paths.relative,
+    );
+    assert.deepEqual(phases, ['before-write', 'before-publication', 'after-publication']);
+    assert.equal(lstatSync(paths.finalDirectory).mode & 0o777, 0o700);
+    assert.equal(existsSync(paths.stageDirectory), false);
+    assert.deepEqual(
+      readdirSync(paths.finalDirectory).sort(),
+      files.map(({ name }) => name).sort(),
+    );
+    for (const entry of files) {
+      const path = join(paths.finalDirectory, entry.name);
+      const bytes = readFileSync(path);
+      assert.equal(lstatSync(path).mode & 0o777, 0o600);
+      assert.deepEqual(bytes, entry.bytes);
+      assert.equal(sha256Hex(bytes), entry.digest);
+    }
+    const successInventory = focusedInventory(paths.finalDirectory);
+    assert.throws(
+      () =>
+        publishFocusedMutationEvidence({
+          paths,
+          files,
+          byteSet,
+          validateCandidate: () => undefined,
+        }),
+      { code: 'MUTATION_FOCUSED_COLLISION' },
+    );
+    const sameAttemptFailure = focusedAttempt(root, { kind: 'failure', pid: 7002 });
+    const failureManifest = focusedFile(sameAttemptFailure.manifestName, { kind: 'failure' });
+    assert.throws(
+      () =>
+        publishFocusedMutationEvidence({
+          paths: sameAttemptFailure,
+          files: [failureManifest],
+          byteSet: { manifestBytes: failureManifest.bytes },
+          validateCandidate: () => undefined,
+        }),
+      { code: 'MUTATION_FOCUSED_COLLISION' },
+    );
+    const separateFailure = focusedAttempt(root, { kind: 'failure', digest: 'd'.repeat(64) });
+    const separateManifest = focusedFile(separateFailure.manifestName, { kind: 'failure' });
+    publishFocusedMutationEvidence({
+      paths: separateFailure,
+      files: [separateManifest],
+      byteSet: { manifestBytes: separateManifest.bytes },
+      validateCandidate: () => undefined,
+    });
+    assert.deepEqual(focusedInventory(paths.finalDirectory), successInventory);
+    assert.equal(
+      lstatSync(join(separateFailure.finalDirectory, separateManifest.name)).mode & 0o777,
+      0o600,
+    );
+    assert.throws(
+      () =>
+        publishFocusedMutationEvidence({
+          paths: separateFailure,
+          files: [separateManifest],
+          byteSet: { manifestBytes: separateManifest.bytes },
+          validateCandidate: () => undefined,
+        }),
+      { code: 'MUTATION_FOCUSED_COLLISION' },
+    );
+
+    const inject = (label, fileSystem, validateCandidate = () => undefined) => {
+      const injectedPaths = focusedAttempt(root, {
+        digest: sha256Hex(label),
+        pid: 7100 + label.length,
+      });
+      const injectedReport = focusedFile(injectedPaths.reportName, { label, kind: 'report' }, 4096);
+      const injectedResult = focusedFile(injectedPaths.resultName, { label, kind: 'result' }, 4096);
+      const injectedManifest = focusedFile(injectedPaths.manifestName, { label, kind: 'manifest' });
+      assert.throws(() =>
+        publishFocusedMutationEvidence({
+          paths: injectedPaths,
+          files: [injectedReport, injectedResult, injectedManifest],
+          byteSet: {
+            reportBytes: injectedReport.bytes,
+            resultBytes: injectedResult.bytes,
+            manifestBytes: injectedManifest.bytes,
+          },
+          validateCandidate,
+          fileSystem,
+        }),
+      );
+      assert.deepEqual(focusedInventory(paths.finalDirectory), successInventory);
+      return injectedPaths;
+    };
+    inject('write', {
+      ...FOCUSED_MUTATION_FILE_SYSTEM,
+      writeFileSync: () => {
+        throw new Error('injected write');
+      },
+    });
+    let closeInjected = false;
+    inject('close', {
+      ...FOCUSED_MUTATION_FILE_SYSTEM,
+      closeSync: (descriptor) => {
+        if (!closeInjected) {
+          closeInjected = true;
+          throw new Error('injected close');
+        }
+        FOCUSED_MUTATION_FILE_SYSTEM.closeSync(descriptor);
+      },
+    });
+    inject('chmod', {
+      ...FOCUSED_MUTATION_FILE_SYSTEM,
+      chmodSync: () => {
+        throw new Error('injected chmod');
+      },
+    });
+    inject('rename', {
+      ...FOCUSED_MUTATION_FILE_SYSTEM,
+      renameSync: () => {
+        throw new Error('injected rename');
+      },
+    });
+    const digestPaths = focusedAttempt(root, { digest: 'f'.repeat(64), pid: 7199 });
+    const digestReport = focusedFile(digestPaths.reportName, { kind: 'report' }, 4096);
+    const digestResult = focusedFile(digestPaths.resultName, { kind: 'result' }, 4096);
+    const digestManifest = focusedFile(digestPaths.manifestName, { kind: 'manifest' });
+    assert.throws(
+      () =>
+        publishFocusedMutationEvidence({
+          paths: digestPaths,
+          files: [{ ...digestReport, digest: '0'.repeat(64) }, digestResult, digestManifest],
+          byteSet: {
+            reportBytes: digestReport.bytes,
+            resultBytes: digestResult.bytes,
+            manifestBytes: digestManifest.bytes,
+          },
+          validateCandidate: () => undefined,
+        }),
+      { code: 'MUTATION_FOCUSED_DIGEST' },
+    );
+    assert.equal(existsSync(digestPaths.stageDirectory), false);
+    for (const phase of ['before-write', 'before-publication', 'after-publication']) {
+      const injectedPaths = inject(`candidate-${phase}`, FOCUSED_MUTATION_FILE_SYSTEM, (actual) => {
+        if (actual === phase) throw new Error(`injected ${phase}`);
+      });
+      assert.equal(existsSync(injectedPaths.finalDirectory), phase === 'after-publication');
+      if (phase === 'after-publication') {
+        assert.deepEqual(
+          readdirSync(injectedPaths.finalDirectory).sort(),
+          [injectedPaths.manifestName, injectedPaths.reportName, injectedPaths.resultName].sort(),
+        );
+      }
+      assert.equal(existsSync(injectedPaths.stageDirectory), false);
+    }
+    const boundPaths = focusedAttempt(root, { digest: 'e'.repeat(64), pid: 7200 });
+    const boundReport = focusedFile(boundPaths.reportName, { kind: 'report' }, 4096);
+    const boundResult = focusedFile(boundPaths.resultName, { kind: 'result' }, 4096);
+    const boundManifest = focusedFile(boundPaths.manifestName, { kind: 'manifest' });
+    assert.throws(
+      () =>
+        publishFocusedMutationEvidence({
+          paths: boundPaths,
+          files: [boundReport, boundResult, boundManifest],
+          byteSet: {
+            reportBytes: boundReport.bytes,
+            resultBytes: boundResult.bytes,
+            manifestBytes: Buffer.allocUnsafe(FOCUSED_MUTATION_LIMITS.manifest + 1),
+          },
+          validateCandidate: () => undefined,
+        }),
+      { code: 'MUTATION_FOCUSED_BOUNDS' },
+    );
+    assert.equal(existsSync(boundPaths.stageDirectory), false);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('D24.12 focused paths reject containment, symlink, collision, file, and mode faults', () => {
+  const root = mkdtempSync(join(realpathSync(tmpdir()), 'stynx-d24-12-paths-'));
+  try {
+    const sibling = focusedAttempt(root);
+    assert.equal(
+      relative(resolve(root, FULL_MUTATION_ARTIFACT_ROOT), sibling.focusedRoot).startsWith('..'),
+      true,
+    );
+    assert.throws(
+      () =>
+        focusedMutationAttemptPaths({
+          repoRoot: root,
+          packageStem: 'packages-worklist',
+          commit: focusedCommit,
+          diffDigest: focusedDiffDigest,
+          kind: 'success',
+          artifactRoot: '../escape',
+        }),
+      { code: 'MUTATION_REPORT_PATH' },
+    );
+    for (const artifactRoot of [
+      FULL_MUTATION_ARTIFACT_ROOT,
+      `${FULL_MUTATION_ARTIFACT_ROOT}/nested`,
+    ]) {
+      assert.throws(
+        () =>
+          focusedMutationAttemptPaths({
+            repoRoot: root,
+            packageStem: 'packages-worklist',
+            commit: focusedCommit,
+            diffDigest: focusedDiffDigest,
+            kind: 'success',
+            artifactRoot,
+          }),
+        { code: 'MUTATION_FOCUSED_PATH' },
+      );
+    }
+    const outside = mkdtempSync(join(realpathSync(tmpdir()), 'stynx-d24-12-outside-'));
+    mkdirSync(join(root, '.devai/state/check-cache/v1/artifacts'), { recursive: true });
+    symlinkSync(outside, sibling.focusedRoot);
+    assert.throws(() => assertFocusedMutationAttemptAvailable(sibling), {
+      code: 'MUTATION_FOCUSED_SYMLINK',
+    });
+    rmSync(sibling.focusedRoot, { force: true });
+    rmSync(outside, { recursive: true, force: true });
+
+    const fileFault = (label, overrides, expectedCode) => {
+      const paths = focusedAttempt(root, { digest: sha256Hex(label), pid: 7300 + label.length });
+      const report = focusedFile(paths.reportName, { label, kind: 'report' }, 4096);
+      const result = focusedFile(paths.resultName, { label, kind: 'result' }, 4096);
+      const manifest = focusedFile(paths.manifestName, { label, kind: 'manifest' });
+      assert.throws(
+        () =>
+          publishFocusedMutationEvidence({
+            paths,
+            files: [report, result, manifest],
+            byteSet: {
+              reportBytes: report.bytes,
+              resultBytes: result.bytes,
+              manifestBytes: manifest.bytes,
+            },
+            validateCandidate: () => undefined,
+            fileSystem: { ...FOCUSED_MUTATION_FILE_SYSTEM, ...overrides(paths) },
+          }),
+        { code: expectedCode },
+      );
+      return paths;
+    };
+    fileFault(
+      'extra-file',
+      (paths) => ({
+        readdirSync: (path) => {
+          const names = FOCUSED_MUTATION_FILE_SYSTEM.readdirSync(path);
+          return path === paths.stageDirectory ? [...names, 'extra.json'] : names;
+        },
+      }),
+      'MUTATION_FOCUSED_FILES',
+    );
+    fileFault(
+      'stage-symlink',
+      (paths) => ({
+        lstatSync: (path) => {
+          const metadata = FOCUSED_MUTATION_FILE_SYSTEM.lstatSync(path);
+          if (path.startsWith(`${paths.stageDirectory}/`)) {
+            return { ...metadata, isFile: () => true, isSymbolicLink: () => true };
+          }
+          return metadata;
+        },
+      }),
+      'MUTATION_FOCUSED_MODE',
+    );
+    const wrongFinal = fileFault(
+      'wrong-final-mode',
+      (paths) => ({
+        lstatSync: (path) => {
+          const metadata = FOCUSED_MUTATION_FILE_SYSTEM.lstatSync(path);
+          if (path.startsWith(`${paths.finalDirectory}/`)) {
+            return {
+              ...metadata,
+              mode: (metadata.mode & ~0o777) | 0o644,
+              isFile: () => true,
+              isSymbolicLink: () => false,
+            };
+          }
+          return metadata;
+        },
+      }),
+      'MUTATION_FOCUSED_MODE',
+    );
+    assert.equal(existsSync(wrongFinal.finalDirectory), true);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('D24.12 focused candidate rejects index, population, mode, identity, digest, and input drift', () => {
+  const fixture = focusedCandidateFixture();
+  try {
+    const expected = fixture.capture();
+    assert.equal(expected.commit, focusedCommit);
+    assert.equal(expected.tree, focusedTree);
+    assert.equal(expected.cleanIndex, true);
+    assert.equal(expected.allowedUnstaged.length, 4);
+    assert.equal(expected.diffDigest, sha256Hex(fixture.state.diffBytes));
+    assert.deepEqual(expected.inputDigests, focusedInputDigests);
+    assert.deepEqual(GOVERNED_MUTATION_DIFF_ARGUMENTS, [
+      '-c',
+      'core.abbrev=9',
+      '-c',
+      'color.ui=false',
+      '-c',
+      'diff.noprefix=false',
+      '-c',
+      'diff.mnemonicprefix=false',
+      '-c',
+      'diff.algorithm=myers',
+      '-c',
+      'diff.indentHeuristic=true',
+      '-c',
+      'core.autocrlf=false',
+      'diff',
+      '--no-ext-diff',
+      '--no-textconv',
+      '--binary',
+      'HEAD',
+      '--',
+    ]);
+    fixture.state.indexStatus = 1;
+    assert.throws(() => fixture.capture(), { code: 'MUTATION_FOCUSED_INDEX' });
+    fixture.state.indexStatus = 0;
+    const originalStatus = fixture.state.status;
+    fixture.state.status += '?? fifth.ts\0';
+    assert.throws(() => fixture.capture(), { code: 'MUTATION_FOCUSED_STATUS' });
+    fixture.state.status = originalStatus;
+    chmodSync(join(fixture.root, fixture.allowedUnstagedPaths[0]), 0o600);
+    assert.throws(() => fixture.capture(), { code: 'MUTATION_FOCUSED_MODE' });
+    chmodSync(join(fixture.root, fixture.allowedUnstagedPaths[0]), 0o644);
+    const symlinkPath = join(fixture.root, fixture.allowedUnstagedPaths[1]);
+    rmSync(symlinkPath);
+    symlinkSync(join(fixture.root, fixture.allowedUnstagedPaths[0]), symlinkPath);
+    assert.throws(() => fixture.capture(), { code: 'MUTATION_FOCUSED_MODE' });
+    rmSync(symlinkPath);
+    writeFileSync(symlinkPath, 'spec 2\n', { mode: 0o644 });
+    writeFileSync(join(fixture.root, fixture.allowedUnstagedPaths[0]), 'drifted spec\n');
+    const fileDrift = fixture.capture();
+    assert.throws(() => assertFocusedMutationCandidate(expected, fileDrift), {
+      code: 'MUTATION_FOCUSED_DRIFT',
+    });
+    writeFileSync(join(fixture.root, fixture.allowedUnstagedPaths[0]), 'spec 1\n');
+    for (const [field, drifted] of [
+      ['commit', 'd'.repeat(40)],
+      ['tree', 'e'.repeat(40)],
+    ]) {
+      const original = fixture.state[field];
+      fixture.state[field] = drifted;
+      assert.throws(() => assertFocusedMutationCandidate(expected, fixture.capture()), {
+        code: 'MUTATION_FOCUSED_DRIFT',
+      });
+      fixture.state[field] = original;
+    }
+    const originalDiff = fixture.state.diffBytes;
+    fixture.state.diffBytes = Buffer.from('different governed diff\n');
+    assert.throws(() => assertFocusedMutationCandidate(expected, fixture.capture()), {
+      code: 'MUTATION_FOCUSED_DRIFT',
+    });
+    fixture.state.diffBytes = originalDiff;
+    for (const key of Object.keys(focusedInputDigests)) {
+      const original = fixture.state.inputDigests[key];
+      fixture.state.inputDigests[key] = 'f'.repeat(64);
+      assert.throws(() => assertFocusedMutationCandidate(expected, fixture.capture()), {
+        code: 'MUTATION_FOCUSED_DRIFT',
+      });
+      fixture.state.inputDigests[key] = original;
+    }
+    delete fixture.state.inputDigests.configDigest;
+    assert.throws(() => fixture.capture(), { code: 'MUTATION_FOCUSED_INPUT' });
+    fixture.state.inputDigests.configDigest = focusedInputDigests.configDigest;
+    const ignored = fixture.capture();
+    fixture.state.ignored += '!! unexpected-cache/\0';
+    const ignoredDrift = fixture.capture();
+    assert.throws(() => assertFocusedMutationCandidate(ignored, ignoredDrift), {
+      code: 'MUTATION_FOCUSED_IGNORED_DRIFT',
+    });
+    assert.equal(assertFocusedMutationCandidate(ignored, ignoredDrift, ['unexpected-cache']), true);
+    fixture.state.status = ' M ../escape.ts\0';
+    assert.throws(() => fixture.capture({ allowedUnstagedPaths: ['../escape.ts'] }), {
+      code: 'MUTATION_REPORT_PATH',
+    });
+  } finally {
+    rmSync(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test('D24.12 focused and full-roster publication roots are mechanically independent', () => {
+  const root = mkdtempSync(join(realpathSync(tmpdir()), 'stynx-d24-12-roots-'));
+  try {
+    const runnerSource = readFileSync(
+      resolve(repoRoot, 'scripts/run-mutation-evidence.mjs'),
+      'utf8',
+    );
+    const runPackageSource = runnerSource.slice(
+      runnerSource.indexOf('function runPackage(entry) {'),
+      runnerSource.indexOf('\nfunction runFocusedPackage'),
+    );
+    const fullPublisherMarker = '\nrmSync(stagingDirectory, { recursive: true, force: true });';
+    const fullPublisherSource = runnerSource.slice(runnerSource.indexOf(fullPublisherMarker));
+    assert.equal(
+      sha256Hex(runPackageSource),
+      'c108fc80c04d5000bde417beb9c1040c09cba95d9c69611b31f56688a7130cd7',
+    );
+    assert.equal(
+      sha256Hex(fullPublisherSource),
+      '6f5bad355e6c5c8f38cd389470863ba98c5f4e1a5ea31806b0864ea1720439c8',
+    );
+    const focusedPaths = focusedAttempt(root);
+    const focusedManifest = focusedFile(focusedPaths.manifestName, { kind: 'focused' });
+    const focusedReport = focusedFile(focusedPaths.reportName, { kind: 'focused-report' }, 4096);
+    const focusedResult = focusedFile(focusedPaths.resultName, { kind: 'focused-result' }, 4096);
+    publishFocusedMutationEvidence({
+      paths: focusedPaths,
+      files: [focusedReport, focusedResult, focusedManifest],
+      byteSet: {
+        reportBytes: focusedReport.bytes,
+        resultBytes: focusedResult.bytes,
+        manifestBytes: focusedManifest.bytes,
+      },
+      validateCandidate: () => undefined,
+    });
+    const focusedBefore = focusedInventory(focusedPaths.focusedRoot);
+    const fullRoot = resolve(root, FULL_MUTATION_ARTIFACT_ROOT);
+    const fullStage = resolve(
+      root,
+      '.devai/state/check-cache/v1/artifacts/.mutation-stage-synthetic',
+    );
+    mkdirSync(fullStage, { recursive: true });
+    const legacyReport = `${canonicalize({ kind: 'mutation-report-v1', total: 3 })}\n`;
+    const legacyResult = `${canonicalize({
+      kind: 'mutation-package-result-v1',
+      reportDigest: sha256Hex(legacyReport),
+    })}\n`;
+    writeFileSync(join(fullStage, 'packages-synthetic.stryker.json'), legacyReport);
+    writeFileSync(join(fullStage, 'packages-synthetic.result.json'), legacyResult);
+    renameSync(fullStage, fullRoot);
+    assert.equal(
+      readFileSync(join(fullRoot, 'packages-synthetic.stryker.json'), 'utf8'),
+      legacyReport,
+    );
+    assert.equal(
+      readFileSync(join(fullRoot, 'packages-synthetic.result.json'), 'utf8'),
+      legacyResult,
+    );
+    assert.equal(
+      sha256Hex(readFileSync(join(fullRoot, 'packages-synthetic.stryker.json'))),
+      sha256Hex(legacyReport),
+    );
+    assert.deepEqual(focusedInventory(focusedPaths.focusedRoot), focusedBefore);
+    rmSync(fullRoot, { recursive: true, force: true });
+    mkdirSync(fullStage, { recursive: true });
+    writeFileSync(join(fullStage, 'summary.json'), `${canonicalize({ complete: true })}\n`);
+    renameSync(fullStage, fullRoot);
+    assert.deepEqual(focusedInventory(focusedPaths.focusedRoot), focusedBefore);
+    assert.equal(
+      relative(
+        resolve(root, FULL_MUTATION_ARTIFACT_ROOT),
+        resolve(root, FOCUSED_MUTATION_ARTIFACT_ROOT),
+      ).startsWith('..'),
+      true,
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
   }
 });
 
