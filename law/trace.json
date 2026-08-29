@@ -3652,32 +3652,32 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 6,
-      "assertion_digest_sha256": "f3ab2441b8b2e155604cb551f8c60024b799cbe58e866d3526174cd8b8341942"
+      "assertion_count": 21,
+      "assertion_digest_sha256": "a0c2d71f55886f54e9b6ac9994d76de090a069d55ca6133434ac4e4adaacd403"
     },
     {
       "path": "packages/worklist/test/unit/strategies.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 8,
-      "assertion_digest_sha256": "2c39e90afcad6238b9344e11f88cd76e40e5933c5996a55477b08817a04cbbcc"
+      "assertion_count": 26,
+      "assertion_digest_sha256": "9893fc6c67a1a98a3919f715b893ca114533bd1ceef3085da2219c99be7afbc1"
     },
     {
       "path": "packages/worklist/test/unit/validation.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 11,
-      "assertion_digest_sha256": "258c317294a17eb4f82fed977290ad0544cc2e7b91738f71424792777310d4ed"
+      "assertion_count": 23,
+      "assertion_digest_sha256": "775c8ea3fb53dbb62ef4f0602137de229237bd837e5724b96ac0a46008dfa105"
     },
     {
       "path": "packages/worklist/test/unit/worklist-services-depth.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 86,
-      "assertion_digest_sha256": "f8137669099054ccca2d67a9ca6ad2beab0a1d1136004e4c6925e880ff3a5ee6"
+      "assertion_count": 183,
+      "assertion_digest_sha256": "0d3fbc7598793f256780d5e3f226bcb3e1418c8b330b546af4112cc0e6bc2e40"
     },
     {
       "path": "test/scripts/devai-local-rc-verifier.test.mjs",
@@ -3692,8 +3692,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 785,
-      "assertion_digest_sha256": "700a62d4ce79b2605cf76a27872a1f2a43213a62024910d258f1dbd8a4f7d3cb"
+      "assertion_count": 864,
+      "assertion_digest_sha256": "87be0e2c13e660d7a3ff4fcb75dc2956acf5c56073d5645dff9b0d8a289886ca"
     },
     {
       "path": "test/scripts/release-version-policy.test.mjs",
