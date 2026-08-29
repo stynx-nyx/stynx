@@ -5416,6 +5416,63 @@ test('preferences output restoration is exact across success and injected failur
 });
 
 test('report-first classification distinguishes score, harness, missing, and portability failures', () => {
+  for (const channel of ['stdout', 'stderr']) {
+    assert.deepEqual(
+      classifyMutationOutcome({
+        reportState: 'normalized',
+        score: 90,
+        threshold: 90,
+        repoRoot,
+        subprocessResult: {
+          error: undefined,
+          signal: null,
+          status: 0,
+          stdout: '',
+          stderr: '',
+          [channel]: '/Users/example/transient-output',
+        },
+      }),
+      { classification: 'mutation-pass' },
+    );
+    assert.deepEqual(
+      classifyMutationOutcome({
+        reportState: 'normalized',
+        score: 90,
+        threshold: 90,
+        repoRoot,
+        subprocessResult: {
+          error: undefined,
+          signal: null,
+          status: 1,
+          stdout: '',
+          stderr: '',
+          [channel]: '/Users/example/failed-child-output',
+        },
+      }),
+      { classification: 'mutation-harness-failure', reason: 'rejected-workstation-path' },
+    );
+  }
+  for (const status of [0, 1]) {
+    for (const channel of ['stdout', 'stderr']) {
+      assert.deepEqual(
+        classifyMutationOutcome({
+          reportState: 'normalized',
+          score: 90,
+          threshold: 90,
+          repoRoot,
+          subprocessResult: {
+            error: undefined,
+            signal: null,
+            status,
+            stdout: '',
+            stderr: '',
+            [channel]: 'github_pat_abcdefghijklmnopqrstuvwxyz0123456789',
+          },
+        }),
+        { classification: 'mutation-harness-failure', reason: 'rejected-credential-material' },
+      );
+    }
+  }
   assert.deepEqual(
     classifyMutationOutcome({
       reportState: 'normalized',
@@ -5474,6 +5531,13 @@ test('mutation normalization replaces the repository root and rejects unsafe rep
         'packages/notifications',
         repoRoot,
       ),
+    { code: 'MUTATION_REPORT_HOST_PATH' },
+  );
+  const retainedValueReport = mutationReport();
+  retainedValueReport.framework.name = '/Users/example/private-framework';
+  assert.throws(
+    () =>
+      normalizeMutationReport(retainedValueReport, thresholds, 'packages/notifications', repoRoot),
     { code: 'MUTATION_REPORT_HOST_PATH' },
   );
 });
