@@ -6395,6 +6395,7 @@ test('D24.15 full-roster infrastructure preflight fails before package one', asy
   );
 
   const sentinelEnvironment = Object.freeze({
+    CI: 'true',
     STYNX_TEST_PG_HOST: 'sentinel-postgres-host.invalid',
     STYNX_TEST_PG_PORT: '65432',
     STYNX_TEST_PG_TEMPLATE: 'sentinel_template',
