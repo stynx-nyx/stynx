@@ -2322,8 +2322,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001"],
       "lifecycle": "supported",
-      "assertion_count": 67,
-      "assertion_digest_sha256": "38d2f2d68c9b8cd6af46b6434549f9bd42d422cb1f033d99cc7ed25fc36a2d9c"
+      "assertion_count": 104,
+      "assertion_digest_sha256": "e868d5320240ac051a5ebf91cd4bd4a849ed861441f41c02f22a3a99b795fd25"
     },
     {
       "path": "packages/privacy/test/integration/privacy.module.spec.ts",
@@ -3452,8 +3452,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-OFFLINE-001"],
       "lifecycle": "supported",
-      "assertion_count": 55,
-      "assertion_digest_sha256": "876e60ebf526819179ad99a75794d109fb31aa83dd116a6853645e993e5c9cda"
+      "assertion_count": 61,
+      "assertion_digest_sha256": "0f33b6ea864cb33ef2cf728feae3c78ac317f515a023037f5aa0d51facb809d4"
     },
     {
       "path": "packages/mobile-runtime/test/mobile-runtime.spec.ts",
@@ -3692,16 +3692,16 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 912,
-      "assertion_digest_sha256": "6ffbac1022a427dbe3fe9357d4e49aab768a5e73d2dd925b28c66d0f1044b6f6"
+      "assertion_count": 933,
+      "assertion_digest_sha256": "155d56135e023f4d0063dafe3c9a30d575f9a2fc0c6eef1116ad77d88c996ad0"
     },
     {
       "path": "test/scripts/release-version-policy.test.mjs",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 140,
-      "assertion_digest_sha256": "1902f805d930ddf2aa398f98cdad22219ed9120c4e1a8fd68ede36e317323d7b"
+      "assertion_count": 153,
+      "assertion_digest_sha256": "ecad860eec84214d84e91ee5ba8391bc9d7bd16cb2a6708082f351d3c0abbfb3"
     }
   ],
   "suites": {
