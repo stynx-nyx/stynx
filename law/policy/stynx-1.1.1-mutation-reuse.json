@@ -54,6 +54,7 @@
     "law/adr/2026-08-24-stynx-1.1.1-campaign-controls.md",
     "law/policy/stynx-1.1.1-mutation-reuse.json",
     "law/trace.json",
+    "package.json",
     "packages/idempotency/vitest.config.ts",
     "packages/mobile-runtime/test/mobile-runtime-edge-cases.spec.ts",
     "packages/mobile-runtime/vitest.config.ts",
@@ -66,6 +67,28 @@
     "tools/repo-config/coverage-population.mjs"
   ],
   "composedSummaryKind": "mutation-composed-report-set-v1",
+  "candidateRebind": {
+    "kind": "zero-mutation-candidate-rebind-v1",
+    "sourceCandidate": {
+      "commit": "6754d65f89cc9c2f23ab82f61a4b68c543f0bef4",
+      "tree": "fa3f2a43eeb89e73dff04074d021e2ba1783cf84"
+    },
+    "sourceSummary": {
+      "path": ".devai/state/check-cache/v1/artifacts/mutation/summary.json",
+      "bytes": 36649,
+      "sha256": "00af2696162936a3f2ca4d7cfc7f68d8f2134a3639b111b07db1a34df1560e29",
+      "packageCount": 38,
+      "artifactBindingCount": 76
+    },
+    "inputProjection": {
+      "kind": "sorted-package-input-projection-digest-map-v1",
+      "bytes": 4934,
+      "sha256": "f9222176e2fcde022dae67e8a776fb7de4cfb9e0eb4f85d5c0a1f2c36a86b674"
+    },
+    "mutationSubprocesses": 0,
+    "packageStarts": 0,
+    "mismatchDisposition": "fail-before-package-start"
+  },
   "requiredRosterCount": 38,
   "requiredFreshCount": 4,
   "requiredReusedCount": 34
