@@ -1106,7 +1106,7 @@ test('D24.33 candidate rebind is executable, exhaustive, atomic, and starts no p
         prepare: ({ sourceDirectory }) => {
           const summary = JSON.parse(readFileSync(join(sourceDirectory, 'summary.json'), 'utf8'));
           const report = summary.packages[0].reportPath.split('/').at(-1);
-          chmodSync(join(sourceDirectory, report), 0o644);
+          chmodSync(join(sourceDirectory, report), 0o600);
         },
         expected: /mode/u,
       },
