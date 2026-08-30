@@ -669,7 +669,7 @@ describe('Offline-first mobile runtime edge cases', () => {
     const store = new InMemoryEncryptedMobileStore();
     await store.put('temporary', 'one', { value: 1 });
     await store.remove('temporary', 'one');
-    expect(await store.get('temporary', 'one')).toBeUndefined();
+    expect(await store.get('temporary', 'one')).toBe(undefined);
     await store.put('temporary', 'two', { value: 2 });
     await store.clear();
     expect(await store.list('temporary')).toEqual([]);

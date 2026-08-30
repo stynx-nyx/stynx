@@ -577,7 +577,7 @@ describe('@stynx-nyx/preferences W04 closed contract', () => {
       createdAt: '2026-08-30T00:00:00.000Z',
       updatedAt: '2026-08-30T01:00:00.000Z',
     });
-    await expect(store.read(scope)).resolves.toBeNull();
+    await expect(store.read(scope)).resolves.toBe(null);
     const mutation = {
       scope,
       expectedRevision: 0,

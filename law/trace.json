@@ -2323,7 +2323,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001"],
       "lifecycle": "supported",
       "assertion_count": 104,
-      "assertion_digest_sha256": "e868d5320240ac051a5ebf91cd4bd4a849ed861441f41c02f22a3a99b795fd25"
+      "assertion_digest_sha256": "191f67d3ff35b15030c845ae38cc16a995e1be1d4b9f8cb1f20acee34e40b252"
     },
     {
       "path": "packages/privacy/test/integration/privacy.module.spec.ts",
@@ -3453,7 +3453,7 @@
       "invariant_ids": ["INV-OFFLINE-001"],
       "lifecycle": "supported",
       "assertion_count": 61,
-      "assertion_digest_sha256": "0f33b6ea864cb33ef2cf728feae3c78ac317f515a023037f5aa0d51facb809d4"
+      "assertion_digest_sha256": "717e0db7f14a11082b688fdc582a1de29354cd92ff962926cd14b4b4cacc517c"
     },
     {
       "path": "packages/mobile-runtime/test/mobile-runtime.spec.ts",
