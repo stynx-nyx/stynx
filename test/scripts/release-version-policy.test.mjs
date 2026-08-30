@@ -3,6 +3,8 @@ import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import {
   accessSync,
+  chmodSync,
+  copyFileSync,
   constants,
   existsSync,
   lstatSync,
@@ -13,6 +15,7 @@ import {
   realpathSync,
   readdirSync,
   rmSync,
+  statSync,
   symlinkSync,
   writeFileSync,
 } from 'node:fs';
@@ -856,6 +859,317 @@ test('D24.33 runner validates and atomically rebinds without a package start', (
     /runPackage|freshRoster\.map|selectedRoster\.map|preflightFullMutationInfrastructure/u,
     'candidate rebind cannot start mutation or a package process',
   );
+});
+
+function copyMutationEvidence(sourceDirectory, targetDirectory) {
+  mkdirSync(targetDirectory, { recursive: true });
+  for (const name of readdirSync(sourceDirectory)) {
+    const source = join(sourceDirectory, name);
+    const target = join(targetDirectory, name);
+    copyFileSync(source, target);
+    chmodSync(target, statSync(source).mode & 0o777);
+  }
+}
+
+function mutationEvidenceSnapshot(directory) {
+  return Object.fromEntries(
+    readdirSync(directory)
+      .sort()
+      .map((name) => {
+        const path = join(directory, name);
+        return [
+          name,
+          {
+            mode: statSync(path).mode & 0o777,
+            bytes: readFileSync(path),
+          },
+        ];
+      }),
+  );
+}
+
+function refreshFixtureSummaryIdentity(policy, sourceDirectory) {
+  const bytes = readFileSync(join(sourceDirectory, 'summary.json'));
+  policy.candidateRebind.sourceSummary.bytes = bytes.length;
+  policy.candidateRebind.sourceSummary.sha256 = sha256(bytes);
+}
+
+test('D24.33 candidate rebind is executable, exhaustive, atomic, and starts no package', async () => {
+  const runner = repositorySource('scripts/run-mutation-evidence.mjs');
+  assert.match(
+    runner,
+    /export (?:async )?function rebindCandidateComposition\s*\(/u,
+    'candidate rebind must expose the production operation for bounded non-mutation testing',
+  );
+  assert.match(
+    runner,
+    /const isDirectInvocation\s*=.*fileURLToPath\(import\.meta\.url\)/su,
+    'importing the candidate rebind seam must not execute the mutation runner',
+  );
+  assert.match(
+    runner,
+    /if \(isDirectInvocation\) \{/u,
+    'all command-line execution must remain behind the direct-invocation guard',
+  );
+
+  const { rebindCandidateComposition } = await import(
+    `../../scripts/run-mutation-evidence.mjs?d24-33=${sha256(runner)}`
+  );
+  assert.equal(typeof rebindCandidateComposition, 'function');
+
+  const sourceEvidence = join(repoRoot, '.devai/state/check-cache/v1/artifacts/mutation');
+  const sourcePolicy = JSON.parse(repositorySource('law/policy/stynx-1.1.1-mutation-reuse.json'));
+  const currentCommit = spawnSync('git', ['rev-parse', 'HEAD'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+  }).stdout.trim();
+  const currentTree = spawnSync('git', ['rev-parse', 'HEAD^{tree}'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+  }).stdout.trim();
+  const changedPaths = spawnSync(
+    'git',
+    ['diff', '--name-only', `${frozenCompositionCommit}..HEAD`],
+    { cwd: repoRoot, encoding: 'utf8' },
+  )
+    .stdout.trim()
+    .split('\n');
+  const candidate = {
+    commit: currentCommit,
+    tree: currentTree,
+    clean: true,
+    changedPaths,
+  };
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'stynx-d24-33-rebind-'));
+  let packageStarts = 0;
+  const onPackageStart = () => {
+    packageStarts += 1;
+    throw new Error('package start sentinel tripped');
+  };
+
+  function writeFixtureSummary(sourceDirectory, mutate) {
+    const summaryPath = join(sourceDirectory, 'summary.json');
+    const summary = JSON.parse(readFileSync(summaryPath, 'utf8'));
+    mutate(summary);
+    writeFileSync(summaryPath, `${canonicalize(summary)}\n`, { mode: 0o600 });
+  }
+
+  async function exerciseFailure({ name, prepare, expected }) {
+    const caseRoot = join(fixtureRoot, name);
+    const sourceDirectory = join(caseRoot, 'source');
+    const finalDirectory = join(caseRoot, 'final');
+    copyMutationEvidence(sourceEvidence, sourceDirectory);
+    copyMutationEvidence(sourceEvidence, finalDirectory);
+    const sourceBefore = mutationEvidenceSnapshot(sourceDirectory);
+    const finalBefore = mutationEvidenceSnapshot(finalDirectory);
+    const policy = structuredClone(sourcePolicy);
+    const inputs = {
+      repositoryRoot: repoRoot,
+      policy,
+      sourceDirectory,
+      finalDirectory,
+      candidate: structuredClone(candidate),
+      onPackageStart,
+    };
+    prepare({ inputs, policy, sourceDirectory, finalDirectory, writeFixtureSummary });
+    const preparedSource = mutationEvidenceSnapshot(sourceDirectory);
+    await assert.rejects(() => rebindCandidateComposition(inputs), expected);
+    assert.deepEqual(
+      mutationEvidenceSnapshot(sourceDirectory),
+      preparedSource,
+      `${name}: source evidence changed on failure`,
+    );
+    assert.deepEqual(
+      mutationEvidenceSnapshot(finalDirectory),
+      finalBefore,
+      `${name}: committed evidence changed on failure`,
+    );
+    assert.equal(packageStarts, 0, `${name}: package start sentinel must remain zero`);
+    assert.notDeepEqual(sourceBefore, {}, `${name}: source fixture must be populated`);
+  }
+
+  try {
+    const mismatchCases = [
+      {
+        name: 'candidate-drift',
+        prepare: ({ inputs }) => {
+          inputs.candidate.clean = false;
+        },
+        expected: /candidate.*(?:dirty|drift)|clean/u,
+      },
+      {
+        name: 'tree-drift',
+        prepare: ({ inputs }) => {
+          inputs.candidate.tree = '0'.repeat(40);
+        },
+        expected: /tree/u,
+      },
+      {
+        name: 'path-drift',
+        prepare: ({ inputs }) => {
+          inputs.candidate.changedPaths.push('README.md');
+        },
+        expected: /path/u,
+      },
+      {
+        name: 'roster-drift',
+        prepare: ({ policy }) => {
+          policy.candidateRebind.sourceSummary.packageCount = 37;
+        },
+        expected: /roster|package.*count/u,
+      },
+      {
+        name: 'binding-drift',
+        prepare: ({ policy }) => {
+          policy.candidateRebind.sourceSummary.artifactBindingCount = 75;
+        },
+        expected: /binding/u,
+      },
+      {
+        name: 'artifact-digest',
+        prepare: ({ sourceDirectory }) => {
+          const summary = JSON.parse(readFileSync(join(sourceDirectory, 'summary.json'), 'utf8'));
+          const report = summary.packages[0].reportPath.split('/').at(-1);
+          writeFileSync(join(sourceDirectory, report), '{}\n', { mode: 0o600 });
+        },
+        expected: /artifact|report|digest|size/u,
+      },
+      {
+        name: 'provenance-drift',
+        prepare: ({ policy, sourceDirectory, writeFixtureSummary: writeSummary }) => {
+          writeSummary(sourceDirectory, (summary) => {
+            summary.packages[0].provenance = 'foreign';
+          });
+          refreshFixtureSummaryIdentity(policy, sourceDirectory);
+        },
+        expected: /provenance/u,
+      },
+      {
+        name: 'threshold-drift',
+        prepare: ({ policy, sourceDirectory, writeFixtureSummary: writeSummary }) => {
+          writeSummary(sourceDirectory, (summary) => {
+            summary.packages[0].thresholds.break = 89;
+          });
+          refreshFixtureSummaryIdentity(policy, sourceDirectory);
+        },
+        expected: /threshold/u,
+      },
+      {
+        name: 'target-drift',
+        prepare: ({ policy, sourceDirectory, writeFixtureSummary: writeSummary }) => {
+          writeSummary(sourceDirectory, (summary) => {
+            summary.packages[0].targetCensus.targetFileCount += 1;
+          });
+          refreshFixtureSummaryIdentity(policy, sourceDirectory);
+        },
+        expected: /target/u,
+      },
+      {
+        name: 'status-drift',
+        prepare: ({ policy, sourceDirectory, writeFixtureSummary: writeSummary }) => {
+          writeSummary(sourceDirectory, (summary) => {
+            summary.packages[0].statusTotals.Killed += 1;
+          });
+          refreshFixtureSummaryIdentity(policy, sourceDirectory);
+        },
+        expected: /status/u,
+      },
+      {
+        name: 'score-drift',
+        prepare: ({ policy, sourceDirectory, writeFixtureSummary: writeSummary }) => {
+          writeSummary(sourceDirectory, (summary) => {
+            summary.packages[0].score -= 1;
+          });
+          refreshFixtureSummaryIdentity(policy, sourceDirectory);
+        },
+        expected: /score/u,
+      },
+      {
+        name: 'baseline-drift',
+        prepare: ({ policy, sourceDirectory, writeFixtureSummary: writeSummary }) => {
+          writeSummary(sourceDirectory, (summary) => {
+            summary.baseline.tree = '0'.repeat(40);
+          });
+          refreshFixtureSummaryIdentity(policy, sourceDirectory);
+        },
+        expected: /baseline/u,
+      },
+      {
+        name: 'semantic-comparison-drift',
+        prepare: ({ policy }) => {
+          policy.candidateRebind.semanticRebindComparison.canonicalContractSha256 = '0'.repeat(64);
+        },
+        expected: /semantic|comparison/u,
+      },
+      {
+        name: 'mode-drift',
+        prepare: ({ sourceDirectory }) => {
+          const summary = JSON.parse(readFileSync(join(sourceDirectory, 'summary.json'), 'utf8'));
+          const report = summary.packages[0].reportPath.split('/').at(-1);
+          chmodSync(join(sourceDirectory, report), 0o644);
+        },
+        expected: /mode/u,
+      },
+      {
+        name: 'size-drift',
+        prepare: ({ policy }) => {
+          policy.candidateRebind.sourceSummary.bytes += 1;
+        },
+        expected: /size|bytes/u,
+      },
+      {
+        name: 'summary-digest-drift',
+        prepare: ({ policy }) => {
+          policy.candidateRebind.sourceSummary.sha256 = '0'.repeat(64);
+        },
+        expected: /digest|sha256/u,
+      },
+    ];
+    for (const mismatch of mismatchCases) await exerciseFailure(mismatch);
+
+    await exerciseFailure({
+      name: 'atomic-publication-failure',
+      prepare: ({ inputs }) => {
+        inputs.publishDirectory = () => {
+          throw new Error('synthetic atomic publication failure');
+        };
+      },
+      expected: /synthetic atomic publication failure/u,
+    });
+
+    const successRoot = join(fixtureRoot, 'success');
+    const successSource = join(successRoot, 'source');
+    const successFinal = join(successRoot, 'final');
+    copyMutationEvidence(sourceEvidence, successSource);
+    const sourceBefore = mutationEvidenceSnapshot(successSource);
+    const result = await rebindCandidateComposition({
+      repositoryRoot: repoRoot,
+      policy: structuredClone(sourcePolicy),
+      sourceDirectory: successSource,
+      finalDirectory: successFinal,
+      candidate: structuredClone(candidate),
+      onPackageStart,
+    });
+    assert.deepEqual(mutationEvidenceSnapshot(successSource), sourceBefore);
+    const successFiles = mutationEvidenceSnapshot(successFinal);
+    assert.equal(Object.keys(successFiles).length, 77);
+    for (const [name, identity] of Object.entries(sourceBefore)) {
+      if (name !== 'summary.json') assert.deepEqual(successFiles[name], identity, name);
+    }
+    const reboundSummary = JSON.parse(readFileSync(join(successFinal, 'summary.json'), 'utf8'));
+    assert.deepEqual(reboundSummary.candidate, {
+      commit: candidate.commit,
+      tree: candidate.tree,
+    });
+    assert.deepEqual(
+      reboundSummary.semanticRebindComparison,
+      sourcePolicy.candidateRebind.semanticRebindComparison,
+    );
+    assert.equal(result.mode, 'candidate-rebound-composition');
+    assert.equal(packageStarts, 0);
+  } finally {
+    rmSync(fixtureRoot, { recursive: true, force: true });
+  }
 });
 
 function publicWorkspaceManifests() {
