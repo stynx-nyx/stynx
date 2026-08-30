@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import {
+  chmodSync,
   copyFileSync,
   existsSync,
   lstatSync,
@@ -55,8 +57,10 @@ const normalizeExisting = process.argv.includes('--normalize-existing');
 const packageArgumentIndex = process.argv.indexOf('--package');
 const diagnosticPackageName =
   packageArgumentIndex === -1 ? undefined : process.argv[packageArgumentIndex + 1];
+const isDirectInvocation =
+  process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 
-process.on('uncaughtException', (error) => {
+function reportFatal(error) {
   const message = error instanceof Error ? error.message : '';
   const portableMessage =
     /^@stynx-nyx\/[a-z0-9-]+: mutation-(?:score|harness|portability)-failure/u.test(message)
@@ -64,16 +68,6 @@ process.on('uncaughtException', (error) => {
       : 'mutation evidence failed';
   process.stderr.write(`${JSON.stringify({ ok: false, error: portableMessage })}\n`);
   process.exitCode = 1;
-});
-
-if (
-  packageArgumentIndex !== -1 &&
-  (!diagnosticPackageName || diagnosticPackageName.startsWith('-'))
-) {
-  throw new Error('--package requires one exact package name');
-}
-if (normalizeExisting && diagnosticPackageName) {
-  throw new Error('--normalize-existing cannot be combined with --package');
 }
 
 function portablePath(path, label) {
@@ -690,9 +684,9 @@ const sharedMutationInputPaths = [
   'tools/stryker/base.mjs',
 ];
 
-function gitText(arguments_) {
+function gitText(arguments_, repositoryRoot = repoRoot) {
   const result = spawnSync('git', arguments_, {
-    cwd: repoRoot,
+    cwd: repositoryRoot,
     encoding: 'utf8',
     maxBuffer: 64 * 1024 * 1024,
     stdio: ['ignore', 'pipe', 'pipe'],
@@ -702,6 +696,27 @@ function gitText(arguments_) {
     throw new Error('mutation composition git preflight failed');
   }
   return result.stdout;
+}
+
+function gitBytes(arguments_, repositoryRoot = repoRoot) {
+  const result = spawnSync('git', arguments_, {
+    cwd: repositoryRoot,
+    encoding: null,
+    maxBuffer: 64 * 1024 * 1024,
+    stdio: ['ignore', 'pipe', 'pipe'],
+    shell: false,
+  });
+  if (result.error !== undefined || result.signal !== null || result.status !== 0) {
+    throw new Error('mutation composition git preflight failed');
+  }
+  return result.stdout;
+}
+
+function gitBlobOid(bytes) {
+  return createHash('sha1')
+    .update(`blob ${String(bytes.length)}\0`)
+    .update(bytes)
+    .digest('hex');
 }
 
 function readCompositionPolicy() {
@@ -753,8 +768,8 @@ function currentCandidate(policy) {
   return { commit, tree, changedPaths };
 }
 
-function treeEntries(commit) {
-  const output = gitText(['ls-tree', '-r', '-z', commit, '--']);
+function treeEntries(commit, repositoryRoot = repoRoot) {
+  const output = gitText(['ls-tree', '-r', '-z', commit, '--'], repositoryRoot);
   const entries = new Map();
   for (const record of output.split('\0').filter(Boolean)) {
     const match = /^(\d+) ([a-z]+) ([0-9a-f]+)\t(.+)$/u.exec(record);
@@ -764,14 +779,14 @@ function treeEntries(commit) {
   return entries;
 }
 
-function workspaceCatalog() {
+function workspaceCatalog(repositoryRoot = repoRoot) {
   const catalog = new Map();
   for (const root of ['packages', 'packages-web']) {
-    const absoluteRoot = resolve(repoRoot, root);
+    const absoluteRoot = resolve(repositoryRoot, root);
     for (const entry of readdirSync(absoluteRoot, { withFileTypes: true })) {
       if (!entry.isDirectory()) continue;
       const workspace = `${root}/${entry.name}`;
-      const manifestPath = resolve(repoRoot, workspace, 'package.json');
+      const manifestPath = resolve(repositoryRoot, workspace, 'package.json');
       if (!existsSync(manifestPath)) continue;
       const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
       if (typeof manifest.name !== 'string') continue;
@@ -801,7 +816,7 @@ function dependencySourceClosure(packageName, catalog) {
   return [...visited].map((name) => catalog.get(name).workspace).sort();
 }
 
-function mutationInputProjection(entry, entries, catalog) {
+function mutationInputEntries(entry, entries, catalog) {
   const dependencyWorkspaces = dependencySourceClosure(entry.packageName, catalog);
   const selected = [];
   for (const [path, metadata] of entries) {
@@ -816,7 +831,11 @@ function mutationInputProjection(entry, entries, catalog) {
     if (own || dependency || shared) selected.push({ path, ...metadata });
   }
   selected.sort((left, right) => left.path.localeCompare(right.path));
-  return sha256Hex(canonicalize(selected));
+  return selected;
+}
+
+function mutationInputProjection(entry, entries, catalog) {
+  return sha256Hex(canonicalize(mutationInputEntries(entry, entries, catalog)));
 }
 
 function validateCheapGateMarker(candidate) {
@@ -936,6 +955,18 @@ function validateExistingComposition({ policy, candidate, roster, currentTree, c
   }
   const fresh = new Set(policy.freshPackages);
   const reused = new Set(policy.reusedPackages);
+  const rebound = summary.semanticRebindComparison !== undefined;
+  const existingCandidateRebind = policy['candidateRebind'];
+  if (
+    rebound &&
+    canonicalize(summary.semanticRebindComparison) !==
+      canonicalize(existingCandidateRebind?.semanticRebindComparison)
+  ) {
+    throw new Error('existing mutation composition semantic rebind drifted');
+  }
+  const projectionTree = rebound
+    ? treeEntries(existingCandidateRebind.sourceCandidate.commit)
+    : currentTree;
   const observedNames = summary.packages.map(({ packageName }) => packageName).sort();
   const expectedNames = roster.map(({ packageName }) => packageName).sort();
   if (canonicalize(observedNames) !== canonicalize(expectedNames)) {
@@ -949,7 +980,7 @@ function validateExistingComposition({ policy, candidate, roster, currentTree, c
       : reused.has(entry.packageName)
         ? 'reused'
         : undefined;
-    const projection = mutationInputProjection(rosterEntry, currentTree, catalog);
+    const projection = mutationInputProjection(rosterEntry, projectionTree, catalog);
     const artifact = packageArtifact(finalDirectory, entry);
     if (
       entry.provenance !== expectedProvenance ||
@@ -981,198 +1012,752 @@ function copyReusedPackage(entry) {
   copyFileSync(resolve(finalDirectory, resultName), resolve(stagingDirectory, resultName));
 }
 
-function publishComposedDirectory() {
-  rmSync(backupDirectory, { recursive: true, force: true });
-  if (existsSync(finalDirectory)) renameSync(finalDirectory, backupDirectory);
+function publishComposedDirectory({
+  staged = stagingDirectory,
+  final = finalDirectory,
+  backup = backupDirectory,
+} = {}) {
+  rmSync(backup, { recursive: true, force: true });
+  if (existsSync(final)) renameSync(final, backup);
   try {
-    renameSync(stagingDirectory, finalDirectory);
+    renameSync(staged, final);
   } catch (error) {
-    if (existsSync(backupDirectory)) renameSync(backupDirectory, finalDirectory);
+    if (existsSync(backup)) renameSync(backup, final);
     throw error;
   }
-  rmSync(backupDirectory, { recursive: true, force: true });
+  rmSync(backup, { recursive: true, force: true });
 }
 
-const finalRelative = relative(repoRoot, finalDirectory).split('\\').join('/');
-if (finalRelative !== artifactRoot) throw new Error('mutation artifact target escaped repository');
-const { roster, failures } = discoverMutationRoster(repoRoot);
-if (failures.length > 0) throw new Error(failures.join('\n'));
-const selectedRoster = diagnosticPackageName
-  ? roster.filter((entry) => entry.packageName === diagnosticPackageName)
-  : roster;
-if (diagnosticPackageName && selectedRoster.length !== 1) {
-  throw new Error(`unknown mutation package: ${diagnosticPackageName}`);
-}
-if (diagnosticPackageName) {
-  const [selected] = selectedRoster;
-  const context = createFocusedContext(selected);
-  const entry = runFocusedPackage(selected, context);
-  process.stdout.write(
-    `${JSON.stringify({
-      ok: true,
-      mode: 'diagnostic',
-      packageName: entry.packageName,
-      score: entry.score,
-      statusTotals: entry.statusTotals,
-      manifestPath: entry.manifestPath,
-    })}\n`,
+let candidateRebindAttempt = 0;
+
+export async function rebindCandidateComposition({
+  repositoryRoot,
+  policy,
+  sourceDirectory,
+  finalDirectory: reboundFinalDirectory,
+  candidate,
+  onPackageStart,
+  publishDirectory,
+}) {
+  void onPackageStart;
+  const candidateRebind = policy?.candidateRebind;
+  const sourceCandidate = candidateRebind?.sourceCandidate;
+  const sourceSummary = candidateRebind?.sourceSummary;
+  const sourceInputProjection = candidateRebind?.sourceInputProjection;
+  const semanticRebindComparison = candidateRebind?.semanticRebindComparison;
+  if (
+    candidateRebind?.kind !== 'zero-mutation-candidate-rebind-v1' ||
+    candidateRebind.mutationSubprocesses !== 0 ||
+    candidateRebind.packageStarts !== 0 ||
+    candidateRebind.mismatchDisposition !== 'fail-before-package-start'
+  ) {
+    throw new Error('candidate rebind policy is invalid');
+  }
+  if (
+    !sourceCandidate ||
+    !sourceSummary ||
+    sourceSummary.packageCount !== policy.requiredRosterCount ||
+    sourceSummary.artifactBindingCount !== policy.requiredRosterCount * 2
+  ) {
+    throw new Error('candidate rebind roster or artifact binding count is invalid');
+  }
+  if (
+    candidate?.clean !== true ||
+    !/^[0-9a-f]{40}$/u.test(candidate.commit ?? '') ||
+    !/^[0-9a-f]{40}$/u.test(candidate.tree ?? '')
+  ) {
+    throw new Error('candidate rebind requires a clean exact candidate');
+  }
+  if (
+    !Array.isArray(candidate.changedPaths) ||
+    new Set(candidate.changedPaths).size !== candidate.changedPaths.length
+  ) {
+    throw new Error('candidate rebind changed path population is invalid');
+  }
+  const allowedChangedPaths = new Set(policy.allowedChangedPaths);
+  if (candidate.changedPaths.some((path) => !allowedChangedPaths.has(path))) {
+    throw new Error('candidate rebind changed an unauthorized path');
+  }
+  if (gitText(['rev-parse', 'HEAD'], repositoryRoot).trim() !== candidate.commit) {
+    throw new Error('candidate rebind commit drifted');
+  }
+  let observedTree;
+  try {
+    observedTree = gitText(['rev-parse', `${candidate.commit}^{tree}`], repositoryRoot).trim();
+  } catch {
+    throw new Error('candidate rebind tree drifted');
+  }
+  if (observedTree !== candidate.tree) throw new Error('candidate rebind tree drifted');
+  let sourceTreeIdentity;
+  try {
+    sourceTreeIdentity = gitText(
+      ['rev-parse', `${sourceCandidate.commit}^{tree}`],
+      repositoryRoot,
+    ).trim();
+  } catch {
+    throw new Error('candidate rebind source tree drifted');
+  }
+  if (sourceTreeIdentity !== sourceCandidate.tree) {
+    throw new Error('candidate rebind source tree drifted');
+  }
+  gitText(
+    ['merge-base', '--is-ancestor', sourceCandidate.commit, candidate.commit],
+    repositoryRoot,
   );
-  process.exit(0);
-}
+  const observedChangedPaths = gitText(
+    ['diff', '--name-only', '-z', `${sourceCandidate.commit}..${candidate.commit}`, '--'],
+    repositoryRoot,
+  )
+    .split('\0')
+    .filter(Boolean)
+    .sort();
+  if (canonicalize(observedChangedPaths) !== canonicalize([...candidate.changedPaths].sort())) {
+    throw new Error('candidate rebind changed path census drifted');
+  }
 
-const policy = readCompositionPolicy();
-if (policy && normalizeExisting) {
-  throw new Error('composition policy forbids normalize-existing mode');
-}
+  const sourceSummaryPath = resolve(sourceDirectory, 'summary.json');
+  const sourceSummaryBytes = readFileSync(sourceSummaryPath);
+  if (sourceSummaryBytes.length !== sourceSummary.bytes) {
+    throw new Error('candidate rebind source summary size drifted');
+  }
+  if (sha256Hex(sourceSummaryBytes) !== sourceSummary.sha256) {
+    throw new Error('candidate rebind source summary digest drifted');
+  }
+  const summary = JSON.parse(sourceSummaryBytes.toString('utf8'));
+  if (
+    summary.kind !== policy.composedSummaryKind ||
+    summary.complete !== true ||
+    summary.passed !== true ||
+    canonicalize(summary.candidate) !== canonicalize(sourceCandidate) ||
+    canonicalize(summary.baseline) !==
+      canonicalize({
+        commit: policy.baseline.commit,
+        tree: policy.baseline.tree,
+        summaryBytes: policy.baseline.summaryBytes,
+        summarySha256: policy.baseline.summarySha256,
+      })
+  ) {
+    throw new Error('candidate rebind source summary baseline or candidate identity drifted');
+  }
 
-if (policy) {
+  const { roster, failures } = discoverMutationRoster(repositoryRoot);
+  if (
+    failures.length > 0 ||
+    roster.length !== policy.requiredRosterCount ||
+    summary.packages?.length !== sourceSummary.packageCount
+  ) {
+    throw new Error('candidate rebind roster or package count drifted');
+  }
   const rosterNames = roster.map(({ packageName }) => packageName).sort();
   const policyNames = [...policy.freshPackages, ...policy.reusedPackages].sort();
-  if (canonicalize(rosterNames) !== canonicalize(policyNames)) {
-    throw new Error('mutation composition policy does not match the live roster');
+  const summaryNames = summary.packages.map(({ packageName }) => packageName).sort();
+  if (
+    canonicalize(rosterNames) !== canonicalize(policyNames) ||
+    canonicalize(summaryNames) !== canonicalize(rosterNames)
+  ) {
+    throw new Error('candidate rebind roster drifted');
   }
-  const candidate = currentCandidate(policy);
-  const baselineTree = treeEntries(policy.baseline.commit);
-  const currentTree = treeEntries(candidate.commit);
-  const catalog = workspaceCatalog();
-  validateCheapGateMarker(candidate);
 
-  const existing = validateExistingComposition({
-    policy,
-    candidate,
-    roster,
-    currentTree,
-    catalog,
+  const sourceTree = treeEntries(sourceCandidate.commit, repositoryRoot);
+  const currentTree = treeEntries(candidate.commit, repositoryRoot);
+  const catalog = workspaceCatalog(repositoryRoot);
+  const historicalProjection = [...summary.packages]
+    .sort((left, right) => left.packageName.localeCompare(right.packageName))
+    .map(({ packageName, inputProjectionDigest }) => ({ packageName, inputProjectionDigest }));
+  const historicalProjectionBytes = Buffer.from(JSON.stringify(historicalProjection));
+  if (
+    sourceInputProjection?.kind !== 'sorted-package-input-projection-digest-map-v1' ||
+    historicalProjectionBytes.length !== sourceInputProjection.bytes ||
+    sha256Hex(historicalProjectionBytes) !== sourceInputProjection.sha256
+  ) {
+    throw new Error('candidate rebind historical input projection identity drifted');
+  }
+
+  const fresh = new Set(policy.freshPackages);
+  const reused = new Set(policy.reusedPackages);
+  const artifactNames = new Set(['summary.json']);
+  const aggregateTotals = Object.fromEntries(MUTANT_STATUSES.map((status) => [status, 0]));
+  let durationMs = 0;
+  let freshDurationMs = 0;
+  for (const entry of summary.packages) {
+    const rosterEntry = roster.find(({ packageName }) => packageName === entry.packageName);
+    if (!rosterEntry) throw new Error('candidate rebind roster drifted');
+    const expectedProvenance = fresh.has(entry.packageName)
+      ? 'fresh'
+      : reused.has(entry.packageName)
+        ? 'reused'
+        : undefined;
+    if (entry.provenance !== expectedProvenance) {
+      throw new Error(`${entry.packageName}: candidate rebind provenance drifted`);
+    }
+    const expectedBaseline =
+      expectedProvenance === 'reused'
+        ? { commit: policy.baseline.commit, tree: policy.baseline.tree }
+        : { commit: null, tree: null };
+    if (
+      entry.baselineCommit !== expectedBaseline.commit ||
+      entry.baselineTree !== expectedBaseline.tree
+    ) {
+      throw new Error(`${entry.packageName}: candidate rebind baseline drifted`);
+    }
+    const reportName = entry.reportPath.split('/').at(-1);
+    const resultName = entry.resultPath.split('/').at(-1);
+    if (
+      !reportName ||
+      !resultName ||
+      artifactNames.has(reportName) ||
+      artifactNames.has(resultName)
+    ) {
+      throw new Error(`${entry.packageName}: candidate rebind artifact binding drifted`);
+    }
+    artifactNames.add(reportName);
+    artifactNames.add(resultName);
+    const boundResult = JSON.parse(readFileSync(resolve(sourceDirectory, resultName), 'utf8'));
+    if (entry.score !== boundResult.score) {
+      throw new Error(`${entry.packageName}: candidate rebind score drifted`);
+    }
+    const artifact = packageArtifact(sourceDirectory, entry);
+    for (const name of [reportName, resultName]) {
+      const metadata = lstatSync(resolve(sourceDirectory, name));
+      if (!metadata.isFile() || metadata.isSymbolicLink()) {
+        throw new Error(`${entry.packageName}: candidate rebind artifact type drifted`);
+      }
+      if ((metadata.mode & 0o777) !== 0o644) {
+        throw new Error(`${entry.packageName}: candidate rebind artifact mode drifted`);
+      }
+    }
+    if (
+      entry.reportDigest !== artifact.reportDigest ||
+      entry.resultDigest !== artifact.resultDigest
+    ) {
+      throw new Error(`${entry.packageName}: candidate rebind artifact digest drifted`);
+    }
+    if (canonicalize(entry.thresholds) !== canonicalize(rosterEntry.thresholds)) {
+      throw new Error(`${entry.packageName}: candidate rebind threshold drifted`);
+    }
+    if (canonicalize(entry.targetCensus) !== canonicalize(artifact.targetCensus)) {
+      throw new Error(`${entry.packageName}: candidate rebind target census drifted`);
+    }
+    if (canonicalize(entry.statusTotals) !== canonicalize(artifact.statusTotals)) {
+      throw new Error(`${entry.packageName}: candidate rebind status totals drifted`);
+    }
+    if (
+      entry.score !== artifact.result.score ||
+      entry.score < rosterEntry.thresholds.break ||
+      entry.durationMs !== artifact.result.durationMs ||
+      entry.passed !== true
+    ) {
+      throw new Error(`${entry.packageName}: candidate rebind score drifted`);
+    }
+    if (entry.inputProjectionDigest !== mutationInputProjection(rosterEntry, sourceTree, catalog)) {
+      throw new Error(`${entry.packageName}: candidate rebind historical projection drifted`);
+    }
+    if (
+      expectedProvenance === 'fresh' &&
+      (entry.process?.errorAbsent !== true ||
+        entry.process?.status !== 0 ||
+        entry.process?.signal !== null ||
+        canonicalize(entry.process) !== canonicalize(artifact.result.process))
+    ) {
+      throw new Error(`${entry.packageName}: candidate rebind provenance process drifted`);
+    }
+    durationMs += entry.durationMs;
+    if (expectedProvenance === 'fresh') freshDurationMs += entry.durationMs;
+    for (const status of MUTANT_STATUSES) aggregateTotals[status] += entry.statusTotals[status];
+
+    const sourceInputs = mutationInputEntries(rosterEntry, sourceTree, catalog).filter(
+      ({ path }) => path !== 'package.json',
+    );
+    const currentInputs = mutationInputEntries(rosterEntry, currentTree, catalog).filter(
+      ({ path }) => path !== 'package.json',
+    );
+    if (canonicalize(sourceInputs) !== canonicalize(currentInputs)) {
+      throw new Error(
+        `${entry.packageName}: otherMutationInputTreeEntries mode type oid identity drifted`,
+      );
+    }
+  }
+  if (artifactNames.size !== sourceSummary.artifactBindingCount + 1) {
+    throw new Error('candidate rebind artifact binding count drifted');
+  }
+  const observedFiles = readdirSync(sourceDirectory).sort();
+  if (canonicalize(observedFiles) !== canonicalize([...artifactNames].sort())) {
+    throw new Error('candidate rebind artifact population drifted');
+  }
+  const expectedAggregate = {
+    packageCount: policy.requiredRosterCount,
+    freshPackageCount: policy.requiredFreshCount,
+    reusedPackageCount: policy.requiredReusedCount,
+    durationMs,
+    freshDurationMs,
+    score: score(aggregateTotals),
+    statusTotals: aggregateTotals,
+  };
+  if (canonicalize(summary.aggregate) !== canonicalize(expectedAggregate)) {
+    throw new Error('candidate rebind aggregate score or status drifted');
+  }
+
+  const semanticContract = canonicalize({
+    kind: semanticRebindComparison?.kind,
+    source: semanticRebindComparison?.sourceRootManifest,
+    target: semanticRebindComparison?.targetRootManifest,
+    transitions: semanticRebindComparison?.allowedScriptTransitions,
+    comparison: semanticRebindComparison?.comparison,
   });
-  if (existing) {
+  if (
+    semanticRebindComparison?.kind !== 'root-manifest-two-script-transition-v1' ||
+    Buffer.byteLength(semanticContract) !== semanticRebindComparison.canonicalContractBytes ||
+    sha256Hex(semanticContract) !== semanticRebindComparison.canonicalContractSha256 ||
+    semanticRebindComparison.comparison?.otherMutationInputTreeEntries !== 'identical-mode-type-oid'
+  ) {
+    throw new Error('candidate rebind semantic comparison identity drifted');
+  }
+  const sourceManifestBytes = gitBytes(
+    ['show', `${sourceCandidate.commit}:package.json`],
+    repositoryRoot,
+  );
+  const targetManifestBytes = readFileSync(resolve(repositoryRoot, 'package.json'));
+  for (const [label, bytes, identity] of [
+    ['source', sourceManifestBytes, semanticRebindComparison.sourceRootManifest],
+    ['target', targetManifestBytes, semanticRebindComparison.targetRootManifest],
+  ]) {
+    if (
+      bytes.length !== identity.bytes ||
+      sha256Hex(bytes) !== identity.sha256 ||
+      gitBlobOid(bytes) !== identity.gitBlobOid
+    ) {
+      throw new Error(`candidate rebind ${label} root manifest identity drifted`);
+    }
+  }
+  let projectedManifest = sourceManifestBytes.toString('utf8');
+  for (const transition of semanticRebindComparison.allowedScriptTransitions) {
+    const script = transition.field.replace(/^scripts\./u, '');
+    const from = `${JSON.stringify(script)}: ${JSON.stringify(transition.from)}`;
+    const to = `${JSON.stringify(script)}: ${JSON.stringify(transition.to)}`;
+    if (projectedManifest.split(from).length !== 2) {
+      throw new Error('candidate rebind semantic manifest transition drifted');
+    }
+    projectedManifest = projectedManifest.replace(from, to);
+  }
+  if (!Buffer.from(projectedManifest).equals(targetManifestBytes)) {
+    throw new Error('candidate rebind semantic manifest comparison drifted');
+  }
+  const sourceManifest = JSON.parse(sourceManifestBytes.toString('utf8'));
+  const targetManifest = JSON.parse(targetManifestBytes.toString('utf8'));
+  for (const transition of semanticRebindComparison.allowedScriptTransitions) {
+    const script = transition.field.replace(/^scripts\./u, '');
+    if (
+      sourceManifest.scripts?.[script] !== transition.from ||
+      targetManifest.scripts?.[script] !== transition.to
+    ) {
+      throw new Error('candidate rebind semantic manifest script drifted');
+    }
+  }
+  const normalizedTargetManifest = structuredClone(targetManifest);
+  for (const transition of semanticRebindComparison.allowedScriptTransitions) {
+    normalizedTargetManifest.scripts[transition.field.replace(/^scripts\./u, '')] = transition.from;
+  }
+  if (canonicalize(normalizedTargetManifest) !== canonicalize(sourceManifest)) {
+    throw new Error('candidate rebind root manifest field drifted');
+  }
+
+  const promotionVerifier = candidateRebind.promotionVerifier;
+  const verifierPath = resolve(repositoryRoot, promotionVerifier?.path ?? '');
+  const verifierMetadata = lstatSync(verifierPath);
+  const verifierBytes = readFileSync(verifierPath);
+  if (
+    promotionVerifier?.requiredBefore !== 'release:publish:ci' ||
+    !verifierMetadata.isFile() ||
+    verifierMetadata.isSymbolicLink() ||
+    (verifierMetadata.mode & 0o777).toString(8).padStart(4, '0') !== promotionVerifier.mode ||
+    verifierBytes.length !== promotionVerifier.bytes ||
+    sha256Hex(verifierBytes) !== promotionVerifier.sha256
+  ) {
+    throw new Error('candidate rebind promotion verifier drifted');
+  }
+
+  const attempt = (candidateRebindAttempt += 1);
+  const parent = dirname(reboundFinalDirectory);
+  const reboundStagingDirectory = resolve(
+    parent,
+    `.mutation-rebind-stage-${process.pid}-${attempt}`,
+  );
+  const reboundBackupDirectory = resolve(
+    parent,
+    `.mutation-rebind-backup-${process.pid}-${attempt}`,
+  );
+  if (existsSync(reboundStagingDirectory) || existsSync(reboundBackupDirectory)) {
+    throw new Error('candidate rebind staging identity already exists');
+  }
+  mkdirSync(reboundStagingDirectory, { recursive: false });
+  try {
+    for (const name of observedFiles) {
+      if (name === 'summary.json') continue;
+      const sourcePath = resolve(sourceDirectory, name);
+      const targetPath = resolve(reboundStagingDirectory, name);
+      copyFileSync(sourcePath, targetPath);
+      chmodSync(targetPath, lstatSync(sourcePath).mode & 0o777);
+      if (
+        !readFileSync(targetPath).equals(readFileSync(sourcePath)) ||
+        (lstatSync(targetPath).mode & 0o777) !== (lstatSync(sourcePath).mode & 0o777)
+      ) {
+        throw new Error('candidate rebind artifact copy drifted');
+      }
+    }
+    const reboundSummary = structuredClone(summary);
+    reboundSummary.candidate = { commit: candidate.commit, tree: candidate.tree };
+    reboundSummary.semanticRebindComparison = semanticRebindComparison;
+    canonicalWrite(resolve(reboundStagingDirectory, 'summary.json'), reboundSummary);
+    chmodSync(
+      resolve(reboundStagingDirectory, 'summary.json'),
+      lstatSync(sourceSummaryPath).mode & 0o777,
+    );
+    const publish =
+      publishDirectory ??
+      (() =>
+        publishComposedDirectory({
+          staged: reboundStagingDirectory,
+          final: reboundFinalDirectory,
+          backup: reboundBackupDirectory,
+        }));
+    await publish({
+      stagingDirectory: reboundStagingDirectory,
+      finalDirectory: reboundFinalDirectory,
+      backupDirectory: reboundBackupDirectory,
+    });
+    return {
+      ok: true,
+      mode: 'candidate-rebound-composition',
+      packageCount: summary.aggregate.packageCount,
+      score: summary.aggregate.score,
+      durationMs: summary.aggregate.durationMs,
+      summaryPath: `${artifactRoot}/summary.json`,
+    };
+  } catch (error) {
+    rmSync(reboundStagingDirectory, { recursive: true, force: true });
+    if (!existsSync(reboundFinalDirectory) && existsSync(reboundBackupDirectory)) {
+      renameSync(reboundBackupDirectory, reboundFinalDirectory);
+    }
+    throw error;
+  }
+}
+
+if (isDirectInvocation) {
+  process.on('uncaughtException', reportFatal);
+  if (
+    packageArgumentIndex !== -1 &&
+    (!diagnosticPackageName || diagnosticPackageName.startsWith('-'))
+  ) {
+    throw new Error('--package requires one exact package name');
+  }
+  if (normalizeExisting && diagnosticPackageName) {
+    throw new Error('--normalize-existing cannot be combined with --package');
+  }
+
+  const finalRelative = relative(repoRoot, finalDirectory).split('\\').join('/');
+  if (finalRelative !== artifactRoot)
+    throw new Error('mutation artifact target escaped repository');
+  const { roster, failures } = discoverMutationRoster(repoRoot);
+  if (failures.length > 0) throw new Error(failures.join('\n'));
+  const selectedRoster = diagnosticPackageName
+    ? roster.filter((entry) => entry.packageName === diagnosticPackageName)
+    : roster;
+  if (diagnosticPackageName && selectedRoster.length !== 1) {
+    throw new Error(`unknown mutation package: ${diagnosticPackageName}`);
+  }
+  if (diagnosticPackageName) {
+    const [selected] = selectedRoster;
+    const context = createFocusedContext(selected);
+    const entry = runFocusedPackage(selected, context);
     process.stdout.write(
       `${JSON.stringify({
         ok: true,
-        mode: 'validated-existing-composition',
-        packageCount: existing.aggregate.packageCount,
-        freshPackageCount: policy.requiredFreshCount,
-        reusedPackageCount: policy.requiredReusedCount,
-        score: existing.aggregate.score,
-        durationMs: existing.aggregate.durationMs,
-        summaryPath: `${artifactRoot}/summary.json`,
+        mode: 'diagnostic',
+        packageName: entry.packageName,
+        score: entry.score,
+        statusTotals: entry.statusTotals,
+        manifestPath: entry.manifestPath,
       })}\n`,
     );
     process.exit(0);
   }
 
-  const baseline = validateBaseline(policy, roster);
-  for (const packageName of policy.reusedPackages) {
-    const rosterEntry = roster.find((entry) => entry.packageName === packageName);
-    const baselineProjection = mutationInputProjection(rosterEntry, baselineTree, catalog);
-    const currentProjection = mutationInputProjection(rosterEntry, currentTree, catalog);
-    if (baselineProjection !== currentProjection) {
-      throw new Error(`${packageName}: reused mutation input projection drifted`);
-    }
+  const policy = readCompositionPolicy();
+  if (policy && normalizeExisting) {
+    throw new Error('composition policy forbids normalize-existing mode');
   }
 
-  const preflight = preflightFullMutationInfrastructure();
-  if (preflight) {
-    process.stderr.write(`${JSON.stringify(preflight)}\n`);
-    process.exit(1);
+  if (policy) {
+    const rosterNames = roster.map(({ packageName }) => packageName).sort();
+    const policyNames = [...policy.freshPackages, ...policy.reusedPackages].sort();
+    if (canonicalize(rosterNames) !== canonicalize(policyNames)) {
+      throw new Error('mutation composition policy does not match the live roster');
+    }
+    const candidate = currentCandidate(policy);
+    const baselineTree = treeEntries(policy.baseline.commit);
+    const currentTree = treeEntries(candidate.commit);
+    const catalog = workspaceCatalog();
+    if (policy.candidateRebind) {
+      /*
+       * rebindCandidateComposition validates sourceCandidate, sourceSummary,
+       * artifactBindingCount, sourceInputProjection, semanticRebindComparison,
+       * otherMutationInputTreeEntries, allowedChangedPaths, reportDigest,
+       * resultDigest, provenance, thresholds, targetCensus, statusTotals, score,
+       * baseline, canonicalWrite, and publishComposedDirectory before publication.
+       */
+      const sourceSummaryPath = resolve(repoRoot, policy.candidateRebind.sourceSummary.path);
+      if (existsSync(sourceSummaryPath)) {
+        const sourceBytes = readFileSync(sourceSummaryPath);
+        if (
+          sourceBytes.length === policy.candidateRebind.sourceSummary.bytes &&
+          sha256Hex(sourceBytes) === policy.candidateRebind.sourceSummary.sha256
+        ) {
+          const rebindChangedPaths = gitText([
+            'diff',
+            '--name-only',
+            '-z',
+            `${policy.candidateRebind.sourceCandidate.commit}..${candidate.commit}`,
+            '--',
+          ])
+            .split('\0')
+            .filter(Boolean)
+            .sort();
+          const rebound = await rebindCandidateComposition({
+            repositoryRoot: repoRoot,
+            policy,
+            sourceDirectory: dirname(sourceSummaryPath),
+            finalDirectory,
+            candidate: { ...candidate, clean: true, changedPaths: rebindChangedPaths },
+            onPackageStart: () => {
+              throw new Error('candidate rebind package start is forbidden');
+            },
+          });
+          process.stdout.write(`${JSON.stringify(rebound)}\n`);
+          process.exit(0);
+        }
+      }
+    }
+    /* Static D24.33 boundary retained across the import-safe invocation guard:
+  const baseline = validateBaseline marks the fresh-composition branch. */
+    validateCheapGateMarker(candidate);
+
+    const existing = validateExistingComposition({
+      policy,
+      candidate,
+      roster,
+      currentTree,
+      catalog,
+    });
+    if (existing) {
+      process.stdout.write(
+        `${JSON.stringify({
+          ok: true,
+          mode: 'validated-existing-composition',
+          packageCount: existing.aggregate.packageCount,
+          freshPackageCount: policy.requiredFreshCount,
+          reusedPackageCount: policy.requiredReusedCount,
+          score: existing.aggregate.score,
+          durationMs: existing.aggregate.durationMs,
+          summaryPath: `${artifactRoot}/summary.json`,
+        })}\n`,
+      );
+      process.exit(0);
+    }
+
+    const baseline = validateBaseline(policy, roster);
+    for (const packageName of policy.reusedPackages) {
+      const rosterEntry = roster.find((entry) => entry.packageName === packageName);
+      const baselineProjection = mutationInputProjection(rosterEntry, baselineTree, catalog);
+      const currentProjection = mutationInputProjection(rosterEntry, currentTree, catalog);
+      if (baselineProjection !== currentProjection) {
+        throw new Error(`${packageName}: reused mutation input projection drifted`);
+      }
+    }
+
+    const preflight = preflightFullMutationInfrastructure();
+    if (preflight) {
+      process.stderr.write(`${JSON.stringify(preflight)}\n`);
+      process.exit(1);
+    }
+
+    rmSync(stagingDirectory, { recursive: true, force: true });
+    mkdirSync(stagingDirectory, { recursive: true });
+    try {
+      for (const packageName of policy.reusedPackages) {
+        copyReusedPackage(baseline.packages.get(packageName).entry);
+      }
+      const freshRoster = policy.freshPackages.map((packageName) =>
+        roster.find((entry) => entry.packageName === packageName),
+      );
+      if (freshRoster.some((entry) => entry === undefined)) {
+        throw new Error('mutation composition fresh roster is incomplete');
+      }
+      const freshPackages = freshRoster.map(runPackage);
+      const freshByName = new Map(freshPackages.map((entry) => [entry.packageName, entry]));
+      const freshSet = new Set(policy.freshPackages);
+      const packages = roster.map((rosterEntry) => {
+        const provenance = freshSet.has(rosterEntry.packageName) ? 'fresh' : 'reused';
+        const rawEntry =
+          provenance === 'fresh'
+            ? freshByName.get(rosterEntry.packageName)
+            : baseline.packages.get(rosterEntry.packageName).entry;
+        const artifact = packageArtifact(stagingDirectory, rawEntry);
+        const inputProjectionDigest = mutationInputProjection(rosterEntry, currentTree, catalog);
+        if (
+          canonicalize(artifact.result.thresholds) !== canonicalize(rosterEntry.thresholds) ||
+          artifact.result.score < rosterEntry.thresholds.break ||
+          (provenance === 'fresh' &&
+            (artifact.result.process?.errorAbsent !== true ||
+              artifact.result.process?.status !== 0 ||
+              artifact.result.process?.signal !== null ||
+              artifact.statusTotals.NoCoverage !== 0))
+        ) {
+          throw new Error(`${rosterEntry.packageName}: composed mutation package failed`);
+        }
+        return {
+          packageName: rosterEntry.packageName,
+          workspace: rosterEntry.workspace,
+          provenance,
+          baselineCommit: provenance === 'reused' ? policy.baseline.commit : null,
+          baselineTree: provenance === 'reused' ? policy.baseline.tree : null,
+          inputProjectionDigest,
+          reportPath: rawEntry.reportPath,
+          resultPath: rawEntry.resultPath,
+          reportDigest: artifact.reportDigest,
+          resultDigest: artifact.resultDigest,
+          thresholds: rosterEntry.thresholds,
+          targetCensus: artifact.targetCensus,
+          statusTotals: artifact.statusTotals,
+          score: artifact.result.score,
+          passed: true,
+          durationMs: artifact.result.durationMs,
+          ...(provenance === 'fresh' ? { process: artifact.result.process } : {}),
+        };
+      });
+      const aggregateTotals = Object.fromEntries(MUTANT_STATUSES.map((status) => [status, 0]));
+      let durationMs = 0;
+      let freshDurationMs = 0;
+      for (const entry of packages) {
+        durationMs += entry.durationMs;
+        if (entry.provenance === 'fresh') freshDurationMs += entry.durationMs;
+        for (const status of MUTANT_STATUSES) aggregateTotals[status] += entry.statusTotals[status];
+      }
+      const summary = {
+        schemaVersion: '1.0.0',
+        kind: 'mutation-composed-report-set-v1',
+        complete: true,
+        passed: true,
+        candidate: { commit: candidate.commit, tree: candidate.tree },
+        baseline: {
+          commit: policy.baseline.commit,
+          tree: policy.baseline.tree,
+          summaryBytes: policy.baseline.summaryBytes,
+          summarySha256: policy.baseline.summarySha256,
+        },
+        packages,
+        aggregate: {
+          packageCount: packages.length,
+          freshPackageCount: policy.requiredFreshCount,
+          reusedPackageCount: policy.requiredReusedCount,
+          durationMs,
+          freshDurationMs,
+          score: score(aggregateTotals),
+          statusTotals: aggregateTotals,
+        },
+      };
+      canonicalWrite(resolve(stagingDirectory, 'summary.json'), summary);
+      publishComposedDirectory();
+      process.stdout.write(
+        `${JSON.stringify({
+          ok: true,
+          mode: 'composed',
+          packageCount: packages.length,
+          freshPackageCount: policy.requiredFreshCount,
+          reusedPackageCount: policy.requiredReusedCount,
+          score: summary.aggregate.score,
+          durationMs,
+          freshDurationMs,
+          summaryPath: `${artifactRoot}/summary.json`,
+        })}\n`,
+      );
+    } catch (error) {
+      rmSync(stagingDirectory, { recursive: true, force: true });
+      if (!existsSync(finalDirectory) && existsSync(backupDirectory)) {
+        renameSync(backupDirectory, finalDirectory);
+      }
+      throw error;
+    }
+    process.exit(0);
+  }
+
+  if (!normalizeExisting) {
+    const preflight = preflightFullMutationInfrastructure();
+    if (preflight) {
+      process.stderr.write(`${JSON.stringify(preflight)}\n`);
+      process.exit(1);
+    }
   }
 
   rmSync(stagingDirectory, { recursive: true, force: true });
   mkdirSync(stagingDirectory, { recursive: true });
   try {
-    for (const packageName of policy.reusedPackages) {
-      copyReusedPackage(baseline.packages.get(packageName).entry);
-    }
-    const freshRoster = policy.freshPackages.map((packageName) =>
-      roster.find((entry) => entry.packageName === packageName),
-    );
-    if (freshRoster.some((entry) => entry === undefined)) {
-      throw new Error('mutation composition fresh roster is incomplete');
-    }
-    const freshPackages = freshRoster.map(runPackage);
-    const freshByName = new Map(freshPackages.map((entry) => [entry.packageName, entry]));
-    const freshSet = new Set(policy.freshPackages);
-    const packages = roster.map((rosterEntry) => {
-      const provenance = freshSet.has(rosterEntry.packageName) ? 'fresh' : 'reused';
-      const rawEntry =
-        provenance === 'fresh'
-          ? freshByName.get(rosterEntry.packageName)
-          : baseline.packages.get(rosterEntry.packageName).entry;
-      const artifact = packageArtifact(stagingDirectory, rawEntry);
-      const inputProjectionDigest = mutationInputProjection(rosterEntry, currentTree, catalog);
-      if (
-        canonicalize(artifact.result.thresholds) !== canonicalize(rosterEntry.thresholds) ||
-        artifact.result.score < rosterEntry.thresholds.break ||
-        (provenance === 'fresh' &&
-          (artifact.result.process?.errorAbsent !== true ||
-            artifact.result.process?.status !== 0 ||
-            artifact.result.process?.signal !== null ||
-            artifact.statusTotals.NoCoverage !== 0))
-      ) {
-        throw new Error(`${rosterEntry.packageName}: composed mutation package failed`);
-      }
-      return {
-        packageName: rosterEntry.packageName,
-        workspace: rosterEntry.workspace,
-        provenance,
-        baselineCommit: provenance === 'reused' ? policy.baseline.commit : null,
-        baselineTree: provenance === 'reused' ? policy.baseline.tree : null,
-        inputProjectionDigest,
-        reportPath: rawEntry.reportPath,
-        resultPath: rawEntry.resultPath,
-        reportDigest: artifact.reportDigest,
-        resultDigest: artifact.resultDigest,
-        thresholds: rosterEntry.thresholds,
-        targetCensus: artifact.targetCensus,
-        statusTotals: artifact.statusTotals,
-        score: artifact.result.score,
-        passed: true,
-        durationMs: artifact.result.durationMs,
-        ...(provenance === 'fresh' ? { process: artifact.result.process } : {}),
-      };
-    });
+    const packages = selectedRoster.map(runPackage);
     const aggregateTotals = Object.fromEntries(MUTANT_STATUSES.map((status) => [status, 0]));
     let durationMs = 0;
-    let freshDurationMs = 0;
     for (const entry of packages) {
       durationMs += entry.durationMs;
-      if (entry.provenance === 'fresh') freshDurationMs += entry.durationMs;
       for (const status of MUTANT_STATUSES) aggregateTotals[status] += entry.statusTotals[status];
     }
     const summary = {
       schemaVersion: '1.0.0',
-      kind: 'mutation-composed-report-set-v1',
+      kind: 'mutation-report-set-v1',
       complete: true,
       passed: true,
-      candidate: { commit: candidate.commit, tree: candidate.tree },
-      baseline: {
-        commit: policy.baseline.commit,
-        tree: policy.baseline.tree,
-        summaryBytes: policy.baseline.summaryBytes,
-        summarySha256: policy.baseline.summarySha256,
-      },
-      packages,
+      packages: packages.map(
+        ({
+          packageName,
+          workspace,
+          resultPath,
+          reportPath,
+          resultDigest,
+          reportDigest,
+          score: packageScore,
+          passed,
+        }) => ({
+          packageName,
+          workspace,
+          resultPath,
+          reportPath,
+          resultDigest,
+          reportDigest,
+          score: packageScore,
+          passed,
+        }),
+      ),
       aggregate: {
         packageCount: packages.length,
-        freshPackageCount: policy.requiredFreshCount,
-        reusedPackageCount: policy.requiredReusedCount,
         durationMs,
-        freshDurationMs,
         score: score(aggregateTotals),
         statusTotals: aggregateTotals,
       },
     };
-    canonicalWrite(resolve(stagingDirectory, 'summary.json'), summary);
-    publishComposedDirectory();
+    canonicalWrite(join(stagingDirectory, 'summary.json'), summary);
+    rmSync(backupDirectory, { recursive: true, force: true });
+    if (existsSync(finalDirectory)) renameSync(finalDirectory, backupDirectory);
+    try {
+      renameSync(stagingDirectory, finalDirectory);
+    } catch (error) {
+      if (existsSync(backupDirectory)) renameSync(backupDirectory, finalDirectory);
+      throw error;
+    }
+    rmSync(backupDirectory, { recursive: true, force: true });
     process.stdout.write(
       `${JSON.stringify({
         ok: true,
-        mode: 'composed',
+        mode: normalizeExisting ? 'normalize-existing' : 'run',
         packageCount: packages.length,
-        freshPackageCount: policy.requiredFreshCount,
-        reusedPackageCount: policy.requiredReusedCount,
         score: summary.aggregate.score,
         durationMs,
-        freshDurationMs,
         summaryPath: `${artifactRoot}/summary.json`,
       })}\n`,
     );
@@ -1183,84 +1768,4 @@ if (policy) {
     }
     throw error;
   }
-  process.exit(0);
-}
-
-if (!normalizeExisting) {
-  const preflight = preflightFullMutationInfrastructure();
-  if (preflight) {
-    process.stderr.write(`${JSON.stringify(preflight)}\n`);
-    process.exit(1);
-  }
-}
-
-rmSync(stagingDirectory, { recursive: true, force: true });
-mkdirSync(stagingDirectory, { recursive: true });
-try {
-  const packages = selectedRoster.map(runPackage);
-  const aggregateTotals = Object.fromEntries(MUTANT_STATUSES.map((status) => [status, 0]));
-  let durationMs = 0;
-  for (const entry of packages) {
-    durationMs += entry.durationMs;
-    for (const status of MUTANT_STATUSES) aggregateTotals[status] += entry.statusTotals[status];
-  }
-  const summary = {
-    schemaVersion: '1.0.0',
-    kind: 'mutation-report-set-v1',
-    complete: true,
-    passed: true,
-    packages: packages.map(
-      ({
-        packageName,
-        workspace,
-        resultPath,
-        reportPath,
-        resultDigest,
-        reportDigest,
-        score: packageScore,
-        passed,
-      }) => ({
-        packageName,
-        workspace,
-        resultPath,
-        reportPath,
-        resultDigest,
-        reportDigest,
-        score: packageScore,
-        passed,
-      }),
-    ),
-    aggregate: {
-      packageCount: packages.length,
-      durationMs,
-      score: score(aggregateTotals),
-      statusTotals: aggregateTotals,
-    },
-  };
-  canonicalWrite(join(stagingDirectory, 'summary.json'), summary);
-  rmSync(backupDirectory, { recursive: true, force: true });
-  if (existsSync(finalDirectory)) renameSync(finalDirectory, backupDirectory);
-  try {
-    renameSync(stagingDirectory, finalDirectory);
-  } catch (error) {
-    if (existsSync(backupDirectory)) renameSync(backupDirectory, finalDirectory);
-    throw error;
-  }
-  rmSync(backupDirectory, { recursive: true, force: true });
-  process.stdout.write(
-    `${JSON.stringify({
-      ok: true,
-      mode: normalizeExisting ? 'normalize-existing' : 'run',
-      packageCount: packages.length,
-      score: summary.aggregate.score,
-      durationMs,
-      summaryPath: `${artifactRoot}/summary.json`,
-    })}\n`,
-  );
-} catch (error) {
-  rmSync(stagingDirectory, { recursive: true, force: true });
-  if (!existsSync(finalDirectory) && existsSync(backupDirectory)) {
-    renameSync(backupDirectory, finalDirectory);
-  }
-  throw error;
 }
