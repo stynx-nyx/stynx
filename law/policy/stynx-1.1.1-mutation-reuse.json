@@ -61,6 +61,7 @@
     "packages/preferences/test/preferences-contract.spec.ts",
     "packages/preferences/vitest.config.ts",
     "packages/ratelimit/vitest.config.ts",
+    "scripts/list-ddl-objects.spec.mjs",
     "scripts/run-mutation-evidence.mjs",
     "test/scripts/local-rc-blocker-contract.test.mjs",
     "test/scripts/release-version-policy.test.mjs",
@@ -129,6 +130,51 @@
     "packageStarts": 0,
     "mismatchDisposition": "fail-before-package-start"
   },
+  "sensorOnlyCorrections": [
+    {
+      "kind": "non-mutation-input-literal-rebind-v1",
+      "path": "scripts/list-ddl-objects.spec.mjs",
+      "sourceCandidate": {
+        "commit": "7d6eee5aba977ebf5ad8667c80b46e70994d7536",
+        "tree": "f3ef780af7a47c8370ce0c284c642db3e3afdf97"
+      },
+      "source": {
+        "mode": "0644",
+        "bytes": 2704,
+        "sha256": "970a542388cd6e929c014277a50552afee9711c45fac9fb270ca2b3043905b37",
+        "gitBlobOid": "38c5097627742a09bb063a45c15c9893830501c2",
+        "assertionDigestSha256": "4fa0096ab60368853aed30225716477aa365b31f316cbb223ff8e5e8fcf89262"
+      },
+      "target": {
+        "mode": "0644",
+        "bytes": 2716,
+        "sha256": "f3f9fa472c93286ffa5223df9359c4b996763b9bfaca0345544012a09d75e621",
+        "gitBlobOid": "7c0d292243619234c80a3d384526a7d7a1263a2e",
+        "assertionDigestSha256": "143e66cf6ae7829ea376332de355b3c961e5c81a3c9036586b2839c1b5cb2ca1"
+      },
+      "literalTransition": {
+        "from": "db\\/ddl\\/",
+        "to": "database\\/ddl\\/",
+        "occurrences": 2
+      },
+      "preservedContract": {
+        "lineCount": 75,
+        "testCount": 3,
+        "testNamesSha256": "4af818efe1ebbbca59f9e462bff355390976885af668e03e776e4ff8b067bee0",
+        "assertionCount": 8,
+        "expectedObjectCount": 10,
+        "expectedObjectOrder": "seven-representative-then-three-helper-created"
+      },
+      "mutationInputProjection": {
+        "rosterCount": 38,
+        "selectedPackageCount": 0,
+        "disposition": "absent-from-every-package-projection"
+      },
+      "mutationSubprocesses": 0,
+      "packageStarts": 0,
+      "mismatchDisposition": "fail-before-package-start"
+    }
+  ],
   "requiredRosterCount": 38,
   "requiredFreshCount": 4,
   "requiredReusedCount": 34
