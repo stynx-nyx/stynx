@@ -6626,10 +6626,6 @@ test('D24.15 full-roster infrastructure preflight fails before package one', asy
 
 test('D24.15 runner bypasses preflight only for non-executing modes', () => {
   const runnerSource = readFileSync(resolve(repoRoot, 'scripts/run-mutation-evidence.mjs'), 'utf8');
-  const compositionSource = runnerSource.slice(
-    runnerSource.indexOf('\nif (policy) {'),
-    runnerSource.indexOf('\nif (!normalizeExisting) {', runnerSource.indexOf('\nif (policy) {')),
-  );
   const focusedBranch = runnerSource.indexOf('\nif (diagnosticPackageName) {');
   const focusedExit = runnerSource.indexOf('process.exit(0);', focusedBranch);
   const compositionBranch = runnerSource.indexOf('\nif (policy) {');
