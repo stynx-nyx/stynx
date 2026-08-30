@@ -8,6 +8,7 @@ import {
   SandboxStynxMobileSessionPort,
   SequentialMobileIdPort,
   SimulatedMobilePrinterPort,
+  stableJson,
 } from '../src/testing';
 import type {
   CreateMobileDraftInput,
@@ -662,5 +663,46 @@ describe('Offline-first mobile runtime edge cases', () => {
         'Offline entity draft lacks device, agent, location or normative package context',
       );
     }
+  });
+
+  it('covers sandbox adapter maintenance and primitive stable serialization', async () => {
+    const store = new InMemoryEncryptedMobileStore();
+    await store.put('temporary', 'one', { value: 1 });
+    await store.remove('temporary', 'one');
+    expect(await store.get('temporary', 'one')).toBeUndefined();
+    await store.put('temporary', 'two', { value: 2 });
+    await store.clear();
+    expect(await store.list('temporary')).toEqual([]);
+
+    const clock = new FixedMobileClock();
+    clock.setNow('2026-05-21T00:00:00.000Z');
+    expect(clock.now()).toBe('2026-05-21T00:00:00.000Z');
+    expect(stableJson(undefined)).toBe('null');
+    expect(stableJson(() => undefined)).toBe('null');
+
+    const backend = new SandboxMobileBackendClient();
+    await expect(
+      backend.submitSyncBatch({
+        tenantId: baseSession.tenantId,
+        orgUnitId: baseSession.orgUnitId,
+        agentId: baseSession.agentId,
+        deviceId: baseSession.deviceId,
+        deviceBatchId: 'batch-without-number',
+        items: [
+          {
+            queueItemId: 'queue-without-number',
+            localEntityId: 'entity-without-number',
+            entityType: 'ait',
+            idempotencyKey: 'mobile:without-number',
+            status: 'pending',
+            payloadHash: 'sha256:without-number',
+            payloadJson: {},
+            attemptCount: 0,
+            createdAt: clock.now(),
+            updatedAt: clock.now(),
+          },
+        ],
+      }),
+    ).resolves.toMatchObject({ conflicts: [] });
   });
 });

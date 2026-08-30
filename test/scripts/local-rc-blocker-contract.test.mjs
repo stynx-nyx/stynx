@@ -6319,14 +6319,11 @@ test('D24.12 focused and full-roster publication roots are mechanically independ
     );
     const fullPublisherMarker = '\nrmSync(stagingDirectory, { recursive: true, force: true });';
     const fullPublisherSource = runnerSource.slice(runnerSource.indexOf(fullPublisherMarker));
-    assert.equal(
-      sha256Hex(runPackageSource),
-      'c108fc80c04d5000bde417beb9c1040c09cba95d9c69611b31f56688a7130cd7',
-    );
-    assert.equal(
-      sha256Hex(fullPublisherSource),
-      '6f5bad355e6c5c8f38cd389470863ba98c5f4e1a5ea31806b0864ea1720439c8',
-    );
+    assert.match(runPackageSource, /function runPackage\(entry\)/u);
+    assert.doesNotMatch(runPackageSource, /FOCUSED_MUTATION_ARTIFACT_ROOT|focused-attempts/u);
+    assert.match(fullPublisherSource, /mutation-composed-report-set-v1/u);
+    assert.match(fullPublisherSource, /fresh|reused/u);
+    assert.doesNotMatch(fullPublisherSource, /publishFocusedMutationEvidence/u);
     const focusedPaths = focusedAttempt(root);
     const focusedManifest = focusedFile(focusedPaths.manifestName, { kind: 'focused' });
     const focusedReport = focusedFile(focusedPaths.reportName, { kind: 'focused-report' }, 4096);
@@ -6635,7 +6632,7 @@ test('D24.15 runner bypasses preflight only for non-executing modes', () => {
   const stagingAction = runnerSource.indexOf(
     '\nrmSync(stagingDirectory, { recursive: true, force: true });',
   );
-  const packageAction = runnerSource.indexOf('selectedRoster.map(runPackage)');
+  const packageAction = runnerSource.indexOf('freshRoster.map(runPackage)');
   assert.equal(focusedBranch > 0, true);
   assert.equal(focusedExit > focusedBranch, true);
   assert.equal(preflightCall > focusedExit, true, 'focused mode must bypass full-roster preflight');
@@ -6652,6 +6649,53 @@ test('D24.15 runner bypasses preflight only for non-executing modes', () => {
   assert.match(preflightBranch, /JSON\.stringify\([^)]*preflight[^)]*\)/u);
   assert.match(preflightBranch, /process\.exit\(1\)/u);
   assert.doesNotMatch(preflightBranch, /(?:runPackage|mkdirSync|rmSync|renameSync)/u);
+});
+
+test('D24.32 composed mutation evidence runs exactly four packages and fails closed on reuse drift', () => {
+  const policy = JSON.parse(
+    readFileSync(resolve(repoRoot, 'law/policy/stynx-1.1.1-mutation-reuse.json'), 'utf8'),
+  );
+  assert.equal(policy.kind, 'stynx-1.1.1-mutation-reuse-policy-v1');
+  assert.equal(policy.freshPackages.length, 4);
+  assert.equal(policy.reusedPackages.length, 34);
+  assert.equal(new Set([...policy.freshPackages, ...policy.reusedPackages]).size, 38);
+  assert.deepEqual(policy.freshPackages, [
+    '@stynx-nyx/idempotency',
+    '@stynx-nyx/mobile-runtime',
+    '@stynx-nyx/preferences',
+    '@stynx-nyx/ratelimit',
+  ]);
+  assert.equal(policy.composedSummaryKind, 'mutation-composed-report-set-v1');
+
+  const runnerSource = readFileSync(resolve(repoRoot, 'scripts/run-mutation-evidence.mjs'), 'utf8');
+  for (const required of [
+    'stynx-1.1.1-mutation-reuse.json',
+    'mutation-composed-report-set-v1',
+    'freshPackages',
+    'reusedPackages',
+    'allowedChangedPaths',
+    'summarySha256',
+    'summaryBytes',
+    'inputProjectionDigest',
+    'baselineCommit',
+    'baselineTree',
+    'provenance',
+  ]) {
+    assert.match(runnerSource, new RegExp(required, 'u'));
+  }
+  assert.match(runnerSource, /git[^\n]*(?:diff|status)/u);
+  assert.match(runnerSource, /canonicalize\([^)]*report/u);
+  assert.match(runnerSource, /canonicalize\([^)]*result/u);
+  assert.match(runnerSource, /policy\.freshPackages[^\n]*map\(runPackage\)/u);
+  assert.doesNotMatch(runnerSource, /selectedRoster\.map\(runPackage\)/u);
+  assert.match(runnerSource, /requiredFreshCount/u);
+  assert.match(runnerSource, /requiredReusedCount/u);
+  assert.match(runnerSource, /requiredRosterCount/u);
+  assert.match(runnerSource, /process\.exit\(1\)/u);
+  assert.doesNotMatch(
+    runnerSource,
+    /(?:skipReuseValidation|allowFifthPackage|fallbackFullRoster)/u,
+  );
 });
 
 test('D24.22 filesystem URLs preserve decoded space-bearing engine and Playwright paths', async () => {

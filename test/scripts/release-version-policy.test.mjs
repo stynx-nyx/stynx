@@ -13,6 +13,7 @@ import {
   realpathSync,
   readdirSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -34,6 +35,7 @@ import {
 } from '../../scripts/lib/unified-rebaseline.mjs';
 import { discoverMutationRoster } from '../../scripts/lib/mutation-roster.mjs';
 import { classifyReleaseContext, ReleaseContextError } from '../../scripts/lib/release-context.mjs';
+import { typeOnlyCoverageExclusions } from '../../tools/repo-config/coverage-population.mjs';
 import { createVitestConfig } from '../../tools/repo-config/vitest.base.mjs';
 
 const repoRoot = resolve(import.meta.dirname, '..', '..');
@@ -930,6 +932,103 @@ test('coverage is executable and reports four metrics for every one of the 44 pa
       `${manifest.name}: missing executable test:coverage command`,
     );
   }
+});
+
+test('D24.32 exact type-only coverage candidates fail closed and four configs bind shared coverage', () => {
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'stynx-coverage-type-only-'));
+  try {
+    const cases = [
+      [
+        'erased',
+        "import type { Input } from './input';\nexport type { Output } from './output';\nexport interface Contract { value: Input }\ntype Local = string;\n",
+        true,
+      ],
+      ['runtime-const', 'export const value = 1;\n', false],
+      ['runtime-enum', 'export enum Value { One }\n', false],
+      ['runtime-class', 'export class Value {}\n', false],
+      ['runtime-namespace', 'export namespace Value { export const one = 1; }\n', false],
+      ['side-effect-import', "import './runtime';\nexport interface Contract {}\n", false],
+      ['value-export', "export { value } from './runtime';\n", false],
+      ['invalid', 'export interface {\n', false],
+      ['empty', '', false],
+    ];
+    for (const [name, source, excluded] of cases) {
+      const packageDir = join(fixtureRoot, name);
+      mkdirSync(join(packageDir, 'src'), { recursive: true });
+      writeFileSync(join(packageDir, 'src', 'candidate.ts'), source);
+      assert.deepEqual(
+        typeOnlyCoverageExclusions({ packageDir, candidates: ['src/candidate.ts'] }),
+        excluded ? ['src/candidate.ts'] : [],
+        `${name}: ambiguous or executable candidates must remain coverage-bearing`,
+      );
+    }
+
+    const missingRoot = join(fixtureRoot, 'missing');
+    mkdirSync(join(missingRoot, 'src'), { recursive: true });
+    assert.deepEqual(
+      typeOnlyCoverageExclusions({ packageDir: missingRoot, candidates: ['src/missing.ts'] }),
+      [],
+    );
+    const symlinkRoot = join(fixtureRoot, 'symlink');
+    mkdirSync(join(symlinkRoot, 'src'), { recursive: true });
+    writeFileSync(join(symlinkRoot, 'outside.ts'), 'export interface Contract {}\n');
+    symlinkSync(join(symlinkRoot, 'outside.ts'), join(symlinkRoot, 'src/candidate.ts'));
+    assert.deepEqual(
+      typeOnlyCoverageExclusions({ packageDir: symlinkRoot, candidates: ['src/candidate.ts'] }),
+      [],
+    );
+    assert.throws(() =>
+      typeOnlyCoverageExclusions({ packageDir: missingRoot, candidates: ['../escape.ts'] }),
+    );
+  } finally {
+    rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+
+  const exactCandidates = new Map([
+    ['packages/idempotency', ['src/request-context.ts']],
+    ['packages/ratelimit', ['src/request-context.ts']],
+    ['packages/mobile-runtime', ['src/ports.ts']],
+  ]);
+  for (const [workspace, candidates] of exactCandidates) {
+    assert.deepEqual(
+      typeOnlyCoverageExclusions({ packageDir: join(repoRoot, workspace), candidates }),
+      candidates,
+      `${workspace}: exact erased-only candidate must remain mechanically classified`,
+    );
+  }
+
+  for (const workspace of [
+    'packages/idempotency',
+    'packages/ratelimit',
+    'packages/mobile-runtime',
+    'packages/preferences',
+  ]) {
+    const source = repositorySource(`${workspace}/vitest.config.ts`);
+    assert.match(source, /createVitestConfig/u);
+    assert.match(source, /packageName:\s*['"]@stynx-nyx\//u);
+    assert.doesNotMatch(source, /\bdefineConfig\b/u);
+  }
+  for (const workspace of exactCandidates.keys()) {
+    const source = repositorySource(`${workspace}/vitest.config.ts`);
+    assert.match(source, /typeOnlyCoverageExclusions/u);
+  }
+
+  const sentinel = createVitestConfig({
+    packageDir: join(repoRoot, 'packages/mobile-runtime'),
+    packageName: '@stynx-nyx/mobile-runtime',
+  });
+  assert.deepEqual(sentinel.test.coverage.include, ['src/**/*.ts']);
+  assert.deepEqual(
+    {
+      statements: sentinel.test.coverage.thresholds.statements,
+      branches: sentinel.test.coverage.thresholds.branches,
+      functions: sentinel.test.coverage.thresholds.functions,
+      lines: sentinel.test.coverage.thresholds.lines,
+    },
+    { statements: 100, branches: 100, functions: 100, lines: 100 },
+  );
+  assert.equal(sentinel.test.coverage.thresholds.autoUpdate, false);
+  assert.equal('stryker-setup-1.js'.startsWith('src/'), false);
 });
 
 test('public API baselines exactly cover 44 packages including jobs, notifications, and outbox', () => {
