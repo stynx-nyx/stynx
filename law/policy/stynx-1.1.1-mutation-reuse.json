@@ -80,10 +80,50 @@
       "packageCount": 38,
       "artifactBindingCount": 76
     },
-    "inputProjection": {
+    "sourceInputProjection": {
       "kind": "sorted-package-input-projection-digest-map-v1",
       "bytes": 4934,
-      "sha256": "f9222176e2fcde022dae67e8a776fb7de4cfb9e0eb4f85d5c0a1f2c36a86b674"
+      "sha256": "f9222176e2fcde022dae67e8a776fb7de4cfb9e0eb4f85d5c0a1f2c36a86b674",
+      "disposition": "historical-source-identities"
+    },
+    "semanticRebindComparison": {
+      "kind": "root-manifest-two-script-transition-v1",
+      "sourceRootManifest": {
+        "bytes": 10790,
+        "sha256": "07f672f29660f90cb9480a7ff395463f5ccb08ecd5f74e61869391ef1653b47c",
+        "gitBlobOid": "6d232561370502cac0489bc2cddeaf316be6beea"
+      },
+      "targetRootManifest": {
+        "bytes": 10790,
+        "sha256": "cccac5d19c5b38dd2f2d4840451c7c7d1b2fbb6403451bc0c2b149f0e8f80846",
+        "gitBlobOid": "da1ed88ad64acc60996d76e150af883ece7ba944"
+      },
+      "allowedScriptTransitions": [
+        {
+          "field": "scripts.ci:stynx:release",
+          "from": "pnpm test:coverage && node scripts/verify-missing-evidence.mjs && node scripts/run-release-preparation.mjs",
+          "to": "pnpm test:coverage && node scripts/run-release-preparation.mjs"
+        },
+        {
+          "field": "scripts.release:publish:ci",
+          "from": "node scripts/changesets-publish-ci.mjs",
+          "to": "node scripts/verify-missing-evidence.mjs && node scripts/changesets-publish-ci.mjs"
+        }
+      ],
+      "comparison": {
+        "rootManifest": "target-bytes-equal-exact-two-source-byte-replacements",
+        "otherRootManifestBytes": "identical",
+        "otherMutationInputTreeEntries": "identical-mode-type-oid"
+      },
+      "canonicalContractBytes": 960,
+      "canonicalContractSha256": "cc7054ec2e3cdaf15ed6b2a30259ac483496ed3f25cb180933a08d6d1b45aa28"
+    },
+    "promotionVerifier": {
+      "path": "scripts/verify-missing-evidence.mjs",
+      "mode": "0644",
+      "bytes": 2400,
+      "sha256": "3b9422b1c137e01116d0775c5e5b77361a1d8024d08076583cf96a5b300cfa73",
+      "requiredBefore": "release:publish:ci"
     },
     "mutationSubprocesses": 0,
     "packageStarts": 0,
