@@ -6317,8 +6317,9 @@ test('D24.12 focused and full-roster publication roots are mechanically independ
       runnerSource.indexOf('function runPackage(entry) {'),
       runnerSource.indexOf('\nfunction runFocusedPackage'),
     );
-    const fullPublisherMarker = '\nrmSync(stagingDirectory, { recursive: true, force: true });';
-    const fullPublisherSource = runnerSource.slice(runnerSource.indexOf(fullPublisherMarker));
+    const compositionStart = runnerSource.indexOf('\nif (policy) {');
+    const legacyStart = runnerSource.indexOf('\nif (!normalizeExisting) {', compositionStart);
+    const fullPublisherSource = runnerSource.slice(compositionStart, legacyStart);
     assert.match(runPackageSource, /function runPackage\(entry\)/u);
     assert.doesNotMatch(runPackageSource, /FOCUSED_MUTATION_ARTIFACT_ROOT|focused-attempts/u);
     assert.match(fullPublisherSource, /mutation-composed-report-set-v1/u);
@@ -6625,14 +6626,23 @@ test('D24.15 full-roster infrastructure preflight fails before package one', asy
 
 test('D24.15 runner bypasses preflight only for non-executing modes', () => {
   const runnerSource = readFileSync(resolve(repoRoot, 'scripts/run-mutation-evidence.mjs'), 'utf8');
+  const compositionSource = runnerSource.slice(
+    runnerSource.indexOf('\nif (policy) {'),
+    runnerSource.indexOf('\nif (!normalizeExisting) {', runnerSource.indexOf('\nif (policy) {')),
+  );
   const focusedBranch = runnerSource.indexOf('\nif (diagnosticPackageName) {');
   const focusedExit = runnerSource.indexOf('process.exit(0);', focusedBranch);
+  const compositionBranch = runnerSource.indexOf('\nif (policy) {');
+  const compositionPreflight = runnerSource.indexOf(
+    'preflightFullMutationInfrastructure()',
+    compositionBranch,
+  );
+  const packageAction = runnerSource.indexOf('freshRoster.map(runPackage)', compositionBranch);
   const preflightCall = runnerSource.lastIndexOf('preflightFullMutationInfrastructure(');
   const normalizeBypass = runnerSource.lastIndexOf('if (!normalizeExisting) {', preflightCall);
-  const stagingAction = runnerSource.indexOf(
+  const stagingAction = runnerSource.lastIndexOf(
     '\nrmSync(stagingDirectory, { recursive: true, force: true });',
   );
-  const packageAction = runnerSource.indexOf('freshRoster.map(runPackage)');
   assert.equal(focusedBranch > 0, true);
   assert.equal(focusedExit > focusedBranch, true);
   assert.equal(preflightCall > focusedExit, true, 'focused mode must bypass full-roster preflight');
@@ -6642,7 +6652,11 @@ test('D24.15 runner bypasses preflight only for non-executing modes', () => {
     '--normalize-existing must bypass full-roster infrastructure preflight',
   );
   assert.equal(preflightCall < stagingAction, true, 'preflight must precede staging action');
-  assert.equal(preflightCall < packageAction, true, 'preflight must precede package one');
+  assert.equal(
+    compositionPreflight > compositionBranch && compositionPreflight < packageAction,
+    true,
+    'composition preflight must precede fresh package one',
+  );
   const preflightBranch = runnerSource.slice(normalizeBypass, stagingAction);
   assert.match(preflightBranch, /if \(!normalizeExisting\) \{/u);
   assert.match(preflightBranch, /preflightFullMutationInfrastructure\(\)/u);
@@ -6668,6 +6682,10 @@ test('D24.32 composed mutation evidence runs exactly four packages and fails clo
   assert.equal(policy.composedSummaryKind, 'mutation-composed-report-set-v1');
 
   const runnerSource = readFileSync(resolve(repoRoot, 'scripts/run-mutation-evidence.mjs'), 'utf8');
+  const compositionSource = runnerSource.slice(
+    runnerSource.indexOf('\nif (policy) {'),
+    runnerSource.indexOf('\nif (!normalizeExisting) {', runnerSource.indexOf('\nif (policy) {')),
+  );
   for (const required of [
     'stynx-1.1.1-mutation-reuse.json',
     'mutation-composed-report-set-v1',
@@ -6686,8 +6704,9 @@ test('D24.32 composed mutation evidence runs exactly four packages and fails clo
   assert.match(runnerSource, /git[^\n]*(?:diff|status)/u);
   assert.match(runnerSource, /canonicalize\([^)]*report/u);
   assert.match(runnerSource, /canonicalize\([^)]*result/u);
-  assert.match(runnerSource, /policy\.freshPackages[^\n]*map\(runPackage\)/u);
-  assert.doesNotMatch(runnerSource, /selectedRoster\.map\(runPackage\)/u);
+  assert.match(compositionSource, /policy\.freshPackages\.map\(\(packageName\)/u);
+  assert.match(compositionSource, /freshRoster\.map\(runPackage\)/u);
+  assert.doesNotMatch(compositionSource, /selectedRoster\.map\(runPackage\)/u);
   assert.match(runnerSource, /requiredFreshCount/u);
   assert.match(runnerSource, /requiredReusedCount/u);
   assert.match(runnerSource, /requiredRosterCount/u);
