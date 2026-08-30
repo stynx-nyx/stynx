@@ -3079,7 +3079,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 8,
-      "assertion_digest_sha256": "4fa0096ab60368853aed30225716477aa365b31f316cbb223ff8e5e8fcf89262"
+      "assertion_digest_sha256": "143e66cf6ae7829ea376332de355b3c961e5c81a3c9036586b2839c1b5cb2ca1"
     },
     {
       "path": "scripts/list-routes.spec.mjs",
