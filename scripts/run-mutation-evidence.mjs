@@ -2,10 +2,12 @@
 
 import { spawnSync } from 'node:child_process';
 import {
+  copyFileSync,
   existsSync,
   lstatSync,
   mkdirSync,
   readFileSync,
+  readdirSync,
   renameSync,
   rmSync,
   writeFileSync,
@@ -43,6 +45,11 @@ const artifactRoot = '.devai/state/check-cache/v1/artifacts/mutation';
 const finalDirectory = resolve(repoRoot, artifactRoot);
 const stagingDirectory = resolve(dirname(finalDirectory), `.mutation-stage-${String(process.pid)}`);
 const backupDirectory = resolve(dirname(finalDirectory), `.mutation-backup-${String(process.pid)}`);
+const compositionPolicyPath = resolve(repoRoot, 'law/policy/stynx-1.1.1-mutation-reuse.json');
+const cheapGateMarkerPath = resolve(
+  repoRoot,
+  '.devai/state/check-cache/v1/artifacts/d24-32-cheap-gates.json',
+);
 const normalizeExisting = process.argv.includes('--normalize-existing');
 const packageArgumentIndex = process.argv.indexOf('--package');
 const diagnosticPackageName =
@@ -472,6 +479,13 @@ function runPackage(entry) {
       thresholds: entry.thresholds,
       score: mutationScore,
       statusTotals,
+      process: normalizeExisting
+        ? null
+        : {
+            errorAbsent: subprocessResult?.error === undefined,
+            status: subprocessResult?.status ?? null,
+            signal: subprocessResult?.signal ?? null,
+          },
       reportDigest: sha256Hex(reportBytes),
     };
     const resultBytes = canonicalize(result);
@@ -491,6 +505,7 @@ function runPackage(entry) {
       passed,
       durationMs,
       statusTotals,
+      process: result.process,
     };
   });
 }
@@ -611,6 +626,338 @@ function runFocusedPackage(entry, context) {
   });
 }
 
+const requiredCheapGates = [
+  'four-package-coverage',
+  'root-coverage',
+  'script-tests',
+  'trace',
+  'secrets',
+  'format',
+  'diff-check',
+  'typecheck',
+  'build',
+  'lint',
+  'test-unit',
+  'test-integration',
+  'ci-stynx',
+  'test-e2e',
+];
+
+const sharedMutationInputPaths = [
+  'package.json',
+  'pnpm-lock.yaml',
+  'pnpm-workspace.yaml',
+  'scripts/lib/mutation-evidence.mjs',
+  'scripts/lib/mutation-roster.mjs',
+  'tools/repo-config/test-policy.json',
+  'tools/repo-config/test-thresholds.mjs',
+  'tools/repo-config/vitest.base.mjs',
+  'tools/stryker/base.mjs',
+];
+
+function gitText(arguments_) {
+  const result = spawnSync('git', arguments_, {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    maxBuffer: 64 * 1024 * 1024,
+    stdio: ['ignore', 'pipe', 'pipe'],
+    shell: false,
+  });
+  if (result.error !== undefined || result.signal !== null || result.status !== 0) {
+    throw new Error('mutation composition git preflight failed');
+  }
+  return result.stdout;
+}
+
+function readCompositionPolicy() {
+  if (!existsSync(compositionPolicyPath)) return undefined;
+  const policy = JSON.parse(readFileSync(compositionPolicyPath, 'utf8'));
+  const fresh = policy.freshPackages;
+  const reused = policy.reusedPackages;
+  if (!Array.isArray(fresh) || !Array.isArray(reused)) {
+    throw new Error('mutation composition policy is invalid');
+  }
+  const union = [...fresh, ...reused];
+  if (
+    policy.kind !== 'stynx-1.1.1-mutation-reuse-policy-v1' ||
+    fresh.length !== policy.requiredFreshCount ||
+    reused.length !== policy.requiredReusedCount ||
+    union.length !== policy.requiredRosterCount ||
+    new Set(union).size !== union.length ||
+    policy.composedSummaryKind !== 'mutation-composed-report-set-v1' ||
+    !Array.isArray(policy.allowedChangedPaths)
+  ) {
+    throw new Error('mutation composition policy is invalid');
+  }
+  return policy;
+}
+
+function currentCandidate(policy) {
+  const commit = gitText(['rev-parse', 'HEAD']).trim();
+  const tree = gitText(['rev-parse', 'HEAD^{tree}']).trim();
+  const baselineTree = gitText(['rev-parse', `${policy.baseline.commit}^{tree}`]).trim();
+  if (baselineTree !== policy.baseline.tree) throw new Error('mutation baseline tree drifted');
+  gitText(['merge-base', '--is-ancestor', policy.baseline.commit, commit]);
+  if (gitText(['status', '--porcelain=v1', '-z', '--untracked-files=all']) !== '') {
+    throw new Error('mutation composition requires a clean candidate');
+  }
+  const changedPaths = gitText([
+    'diff',
+    '--name-only',
+    '-z',
+    `${policy.baseline.commit}..${commit}`,
+    '--',
+  ])
+    .split('\0')
+    .filter(Boolean)
+    .sort();
+  const allowed = new Set(policy.allowedChangedPaths);
+  if (changedPaths.some((path) => !allowed.has(path))) {
+    throw new Error('mutation composition candidate changed an unauthorized path');
+  }
+  return { commit, tree, changedPaths };
+}
+
+function treeEntries(commit) {
+  const output = gitText(['ls-tree', '-r', '-z', commit, '--']);
+  const entries = new Map();
+  for (const record of output.split('\0').filter(Boolean)) {
+    const match = /^(\d+) ([a-z]+) ([0-9a-f]+)\t(.+)$/u.exec(record);
+    if (!match) throw new Error('mutation input tree entry is invalid');
+    entries.set(match[4], { mode: match[1], type: match[2], oid: match[3] });
+  }
+  return entries;
+}
+
+function workspaceCatalog() {
+  const catalog = new Map();
+  for (const root of ['packages', 'packages-web']) {
+    const absoluteRoot = resolve(repoRoot, root);
+    for (const entry of readdirSync(absoluteRoot, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const workspace = `${root}/${entry.name}`;
+      const manifestPath = resolve(repoRoot, workspace, 'package.json');
+      if (!existsSync(manifestPath)) continue;
+      const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+      if (typeof manifest.name !== 'string') continue;
+      catalog.set(manifest.name, { workspace, manifest });
+    }
+  }
+  return catalog;
+}
+
+function dependencySourceClosure(packageName, catalog) {
+  const visited = new Set();
+  const visit = (name) => {
+    if (visited.has(name)) return;
+    visited.add(name);
+    const entry = catalog.get(name);
+    if (!entry) return;
+    const dependencyNames = [
+      ...Object.keys(entry.manifest.dependencies ?? {}),
+      ...Object.keys(entry.manifest.devDependencies ?? {}),
+      ...Object.keys(entry.manifest.optionalDependencies ?? {}),
+      ...Object.keys(entry.manifest.peerDependencies ?? {}),
+    ];
+    for (const dependency of dependencyNames) if (catalog.has(dependency)) visit(dependency);
+  };
+  visit(packageName);
+  visited.delete(packageName);
+  return [...visited].map((name) => catalog.get(name).workspace).sort();
+}
+
+function mutationInputProjection(entry, entries, catalog) {
+  const dependencyWorkspaces = dependencySourceClosure(entry.packageName, catalog);
+  const selected = [];
+  for (const [path, metadata] of entries) {
+    const own = path === entry.workspace || path.startsWith(`${entry.workspace}/`);
+    const dependency = dependencyWorkspaces.some(
+      (workspace) =>
+        path === `${workspace}/package.json` ||
+        path.startsWith(`${workspace}/src/`) ||
+        (path.startsWith(`${workspace}/`) && /\/tsconfig[^/]*\.json$/u.test(path)),
+    );
+    const shared = sharedMutationInputPaths.includes(path) || path.startsWith('tools/tsconfig/');
+    if (own || dependency || shared) selected.push({ path, ...metadata });
+  }
+  selected.sort((left, right) => left.path.localeCompare(right.path));
+  return sha256Hex(canonicalize(selected));
+}
+
+function validateCheapGateMarker(candidate) {
+  if (!existsSync(cheapGateMarkerPath)) {
+    throw new Error('mutation composition cheap-gate marker is missing');
+  }
+  const marker = JSON.parse(readFileSync(cheapGateMarkerPath, 'utf8'));
+  const gates = Array.isArray(marker.gates) ? marker.gates : [];
+  if (
+    marker.kind !== 'd24.32-cheap-gates-v1' ||
+    marker.candidate !== candidate.commit ||
+    marker.tree !== candidate.tree ||
+    gates.length !== requiredCheapGates.length ||
+    canonicalize(gates.map(({ name }) => name)) !== canonicalize(requiredCheapGates) ||
+    gates.some(
+      ({ passed, resultDigest }) => passed !== true || !/^[0-9a-f]{64}$/u.test(resultDigest ?? ''),
+    )
+  ) {
+    throw new Error('mutation composition cheap-gate marker is invalid');
+  }
+}
+
+function packageArtifact(directory, entry) {
+  const reportName = entry.reportPath.split('/').at(-1);
+  const resultName = entry.resultPath.split('/').at(-1);
+  const stem = entry.workspace.replaceAll('/', '-');
+  if (
+    entry.reportPath !== `${artifactRoot}/${stem}.stryker.json` ||
+    entry.resultPath !== `${artifactRoot}/${stem}.result.json` ||
+    !reportName ||
+    !resultName ||
+    reportName.includes('..') ||
+    resultName.includes('..')
+  ) {
+    throw new Error(`${entry.packageName}: mutation artifact path is invalid`);
+  }
+  const report = JSON.parse(readFileSync(resolve(directory, reportName), 'utf8'));
+  const result = JSON.parse(readFileSync(resolve(directory, resultName), 'utf8'));
+  const reportDigest = sha256Hex(canonicalize(report));
+  const resultDigest = sha256Hex(canonicalize(result));
+  const statusTotals = totals(report);
+  const mutationScore = score(statusTotals);
+  if (
+    reportDigest !== entry.reportDigest ||
+    resultDigest !== entry.resultDigest ||
+    result.reportDigest !== reportDigest ||
+    result.packageName !== entry.packageName ||
+    result.workspace !== entry.workspace ||
+    result.passed !== true ||
+    canonicalize(result.statusTotals) !== canonicalize(statusTotals) ||
+    result.score !== mutationScore ||
+    entry.score !== result.score ||
+    entry.passed !== true
+  ) {
+    throw new Error(`${entry.packageName}: mutation artifact binding failed`);
+  }
+  const targetCensus = {
+    targetFileCount: Object.keys(report.files ?? {}).length,
+    totalMutants: Object.values(statusTotals).reduce((sum, value) => sum + value, 0),
+  };
+  return { report, result, reportDigest, resultDigest, statusTotals, targetCensus };
+}
+
+function validateBaseline(policy, roster) {
+  const summaryPath = resolve(finalDirectory, 'summary.json');
+  const raw = readFileSync(summaryPath);
+  if (
+    raw.length !== policy.baseline.summaryBytes ||
+    sha256Hex(raw) !== policy.baseline.summarySha256
+  ) {
+    throw new Error('mutation baseline summary identity failed');
+  }
+  const summary = JSON.parse(raw.toString('utf8'));
+  const expectedNames = roster.map(({ packageName }) => packageName).sort();
+  const observedNames = summary.packages?.map(({ packageName }) => packageName).sort() ?? [];
+  if (
+    summary.kind !== 'mutation-report-set-v1' ||
+    summary.complete !== true ||
+    summary.passed !== true ||
+    summary.aggregate?.packageCount !== policy.requiredRosterCount ||
+    canonicalize(observedNames) !== canonicalize(expectedNames)
+  ) {
+    throw new Error('mutation baseline summary is incomplete');
+  }
+  const packages = new Map();
+  for (const entry of summary.packages) {
+    const artifact = packageArtifact(finalDirectory, entry);
+    const rosterEntry = roster.find(({ packageName }) => packageName === entry.packageName);
+    if (
+      !rosterEntry ||
+      canonicalize(artifact.result.thresholds) !== canonicalize(rosterEntry.thresholds)
+    ) {
+      throw new Error(`${entry.packageName}: mutation baseline threshold drifted`);
+    }
+    packages.set(entry.packageName, { entry, artifact });
+  }
+  return { summary, packages };
+}
+
+function validateExistingComposition({ policy, candidate, roster, currentTree, catalog }) {
+  const path = resolve(finalDirectory, 'summary.json');
+  if (!existsSync(path)) return undefined;
+  const summary = JSON.parse(readFileSync(path, 'utf8'));
+  if (summary.kind !== policy.composedSummaryKind) return undefined;
+  if (
+    summary.complete !== true ||
+    summary.passed !== true ||
+    summary.candidate?.commit !== candidate.commit ||
+    summary.candidate?.tree !== candidate.tree ||
+    summary.baseline?.commit !== policy.baseline.commit ||
+    summary.baseline?.tree !== policy.baseline.tree ||
+    summary.baseline?.summarySha256 !== policy.baseline.summarySha256 ||
+    summary.aggregate?.packageCount !== policy.requiredRosterCount ||
+    summary.packages?.length !== policy.requiredRosterCount
+  ) {
+    throw new Error('existing mutation composition identity failed');
+  }
+  const fresh = new Set(policy.freshPackages);
+  const reused = new Set(policy.reusedPackages);
+  const observedNames = summary.packages.map(({ packageName }) => packageName).sort();
+  const expectedNames = roster.map(({ packageName }) => packageName).sort();
+  if (canonicalize(observedNames) !== canonicalize(expectedNames)) {
+    throw new Error('existing mutation composition roster drifted');
+  }
+  for (const entry of summary.packages) {
+    const rosterEntry = roster.find(({ packageName }) => packageName === entry.packageName);
+    if (!rosterEntry) throw new Error('existing mutation composition roster drifted');
+    const expectedProvenance = fresh.has(entry.packageName)
+      ? 'fresh'
+      : reused.has(entry.packageName)
+        ? 'reused'
+        : undefined;
+    const projection = mutationInputProjection(rosterEntry, currentTree, catalog);
+    const artifact = packageArtifact(finalDirectory, entry);
+    if (
+      entry.provenance !== expectedProvenance ||
+      entry.inputProjectionDigest !== projection ||
+      canonicalize(entry.thresholds) !== canonicalize(rosterEntry.thresholds) ||
+      canonicalize(entry.statusTotals) !== canonicalize(artifact.statusTotals) ||
+      entry.score !== artifact.result.score ||
+      entry.passed !== true
+    ) {
+      throw new Error(`${entry.packageName}: existing mutation composition drifted`);
+    }
+    if (
+      entry.provenance === 'fresh' &&
+      (artifact.result.process?.errorAbsent !== true ||
+        artifact.result.process?.status !== 0 ||
+        artifact.result.process?.signal !== null ||
+        artifact.statusTotals.NoCoverage !== 0)
+    ) {
+      throw new Error(`${entry.packageName}: existing fresh mutation process is invalid`);
+    }
+  }
+  return summary;
+}
+
+function copyReusedPackage(entry) {
+  const reportName = entry.reportPath.split('/').at(-1);
+  const resultName = entry.resultPath.split('/').at(-1);
+  copyFileSync(resolve(finalDirectory, reportName), resolve(stagingDirectory, reportName));
+  copyFileSync(resolve(finalDirectory, resultName), resolve(stagingDirectory, resultName));
+}
+
+function publishComposedDirectory() {
+  rmSync(backupDirectory, { recursive: true, force: true });
+  if (existsSync(finalDirectory)) renameSync(finalDirectory, backupDirectory);
+  try {
+    renameSync(stagingDirectory, finalDirectory);
+  } catch (error) {
+    if (existsSync(backupDirectory)) renameSync(backupDirectory, finalDirectory);
+    throw error;
+  }
+  rmSync(backupDirectory, { recursive: true, force: true });
+}
+
 const finalRelative = relative(repoRoot, finalDirectory).split('\\').join('/');
 if (finalRelative !== artifactRoot) throw new Error('mutation artifact target escaped repository');
 const { roster, failures } = discoverMutationRoster(repoRoot);
@@ -635,6 +982,172 @@ if (diagnosticPackageName) {
       manifestPath: entry.manifestPath,
     })}\n`,
   );
+  process.exit(0);
+}
+
+const policy = readCompositionPolicy();
+if (policy && normalizeExisting) {
+  throw new Error('composition policy forbids normalize-existing mode');
+}
+
+if (policy) {
+  const rosterNames = roster.map(({ packageName }) => packageName).sort();
+  const policyNames = [...policy.freshPackages, ...policy.reusedPackages].sort();
+  if (canonicalize(rosterNames) !== canonicalize(policyNames)) {
+    throw new Error('mutation composition policy does not match the live roster');
+  }
+  const candidate = currentCandidate(policy);
+  const baselineTree = treeEntries(policy.baseline.commit);
+  const currentTree = treeEntries(candidate.commit);
+  const catalog = workspaceCatalog();
+  validateCheapGateMarker(candidate);
+
+  const existing = validateExistingComposition({
+    policy,
+    candidate,
+    roster,
+    currentTree,
+    catalog,
+  });
+  if (existing) {
+    process.stdout.write(
+      `${JSON.stringify({
+        ok: true,
+        mode: 'validated-existing-composition',
+        packageCount: existing.aggregate.packageCount,
+        freshPackageCount: policy.requiredFreshCount,
+        reusedPackageCount: policy.requiredReusedCount,
+        score: existing.aggregate.score,
+        durationMs: existing.aggregate.durationMs,
+        summaryPath: `${artifactRoot}/summary.json`,
+      })}\n`,
+    );
+    process.exit(0);
+  }
+
+  const baseline = validateBaseline(policy, roster);
+  for (const packageName of policy.reusedPackages) {
+    const rosterEntry = roster.find((entry) => entry.packageName === packageName);
+    const baselineProjection = mutationInputProjection(rosterEntry, baselineTree, catalog);
+    const currentProjection = mutationInputProjection(rosterEntry, currentTree, catalog);
+    if (baselineProjection !== currentProjection) {
+      throw new Error(`${packageName}: reused mutation input projection drifted`);
+    }
+  }
+
+  const preflight = preflightFullMutationInfrastructure();
+  if (preflight) {
+    process.stderr.write(`${JSON.stringify(preflight)}\n`);
+    process.exit(1);
+  }
+
+  rmSync(stagingDirectory, { recursive: true, force: true });
+  mkdirSync(stagingDirectory, { recursive: true });
+  try {
+    for (const packageName of policy.reusedPackages) {
+      copyReusedPackage(baseline.packages.get(packageName).entry);
+    }
+    const freshRoster = policy.freshPackages.map((packageName) =>
+      roster.find((entry) => entry.packageName === packageName),
+    );
+    if (freshRoster.some((entry) => entry === undefined)) {
+      throw new Error('mutation composition fresh roster is incomplete');
+    }
+    const freshPackages = freshRoster.map(runPackage);
+    const freshByName = new Map(freshPackages.map((entry) => [entry.packageName, entry]));
+    const freshSet = new Set(policy.freshPackages);
+    const packages = roster.map((rosterEntry) => {
+      const provenance = freshSet.has(rosterEntry.packageName) ? 'fresh' : 'reused';
+      const rawEntry =
+        provenance === 'fresh'
+          ? freshByName.get(rosterEntry.packageName)
+          : baseline.packages.get(rosterEntry.packageName).entry;
+      const artifact = packageArtifact(stagingDirectory, rawEntry);
+      const inputProjectionDigest = mutationInputProjection(rosterEntry, currentTree, catalog);
+      if (
+        canonicalize(artifact.result.thresholds) !== canonicalize(rosterEntry.thresholds) ||
+        artifact.result.score < rosterEntry.thresholds.break ||
+        (provenance === 'fresh' &&
+          (artifact.result.process?.errorAbsent !== true ||
+            artifact.result.process?.status !== 0 ||
+            artifact.result.process?.signal !== null ||
+            artifact.statusTotals.NoCoverage !== 0))
+      ) {
+        throw new Error(`${rosterEntry.packageName}: composed mutation package failed`);
+      }
+      return {
+        packageName: rosterEntry.packageName,
+        workspace: rosterEntry.workspace,
+        provenance,
+        baselineCommit: provenance === 'reused' ? policy.baseline.commit : null,
+        baselineTree: provenance === 'reused' ? policy.baseline.tree : null,
+        inputProjectionDigest,
+        reportPath: rawEntry.reportPath,
+        resultPath: rawEntry.resultPath,
+        reportDigest: artifact.reportDigest,
+        resultDigest: artifact.resultDigest,
+        thresholds: rosterEntry.thresholds,
+        targetCensus: artifact.targetCensus,
+        statusTotals: artifact.statusTotals,
+        score: artifact.result.score,
+        passed: true,
+        durationMs: artifact.result.durationMs,
+        ...(provenance === 'fresh' ? { process: artifact.result.process } : {}),
+      };
+    });
+    const aggregateTotals = Object.fromEntries(MUTANT_STATUSES.map((status) => [status, 0]));
+    let durationMs = 0;
+    let freshDurationMs = 0;
+    for (const entry of packages) {
+      durationMs += entry.durationMs;
+      if (entry.provenance === 'fresh') freshDurationMs += entry.durationMs;
+      for (const status of MUTANT_STATUSES) aggregateTotals[status] += entry.statusTotals[status];
+    }
+    const summary = {
+      schemaVersion: '1.0.0',
+      kind: 'mutation-composed-report-set-v1',
+      complete: true,
+      passed: true,
+      candidate: { commit: candidate.commit, tree: candidate.tree },
+      baseline: {
+        commit: policy.baseline.commit,
+        tree: policy.baseline.tree,
+        summaryBytes: policy.baseline.summaryBytes,
+        summarySha256: policy.baseline.summarySha256,
+      },
+      packages,
+      aggregate: {
+        packageCount: packages.length,
+        freshPackageCount: policy.requiredFreshCount,
+        reusedPackageCount: policy.requiredReusedCount,
+        durationMs,
+        freshDurationMs,
+        score: score(aggregateTotals),
+        statusTotals: aggregateTotals,
+      },
+    };
+    canonicalWrite(resolve(stagingDirectory, 'summary.json'), summary);
+    publishComposedDirectory();
+    process.stdout.write(
+      `${JSON.stringify({
+        ok: true,
+        mode: 'composed',
+        packageCount: packages.length,
+        freshPackageCount: policy.requiredFreshCount,
+        reusedPackageCount: policy.requiredReusedCount,
+        score: summary.aggregate.score,
+        durationMs,
+        freshDurationMs,
+        summaryPath: `${artifactRoot}/summary.json`,
+      })}\n`,
+    );
+  } catch (error) {
+    rmSync(stagingDirectory, { recursive: true, force: true });
+    if (!existsSync(finalDirectory) && existsSync(backupDirectory)) {
+      renameSync(backupDirectory, finalDirectory);
+    }
+    throw error;
+  }
   process.exit(0);
 }
 

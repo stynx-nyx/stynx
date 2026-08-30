@@ -1,3 +1,7 @@
-import { defineConfig } from 'vitest/config';
+import { createVitestConfig } from '../../tools/repo-config/vitest.base.mjs';
 
-export default defineConfig({ test: { include: ['test/**/*.spec.ts'] } });
+export default createVitestConfig({
+  packageDir: __dirname,
+  packageName: '@stynx-nyx/preferences',
+  include: ['test/**/*.spec.ts'],
+});
