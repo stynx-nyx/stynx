@@ -173,6 +173,130 @@
       "mutationSubprocesses": 0,
       "packageStarts": 0,
       "mismatchDisposition": "fail-before-package-start"
+    },
+    {
+      "kind": "non-mutation-input-assertion-rebind-v1",
+      "path": "test/scripts/local-rc-blocker-contract.test.mjs",
+      "sourceCandidate": {
+        "commit": "34d133b7fd2c5bedfb278cb5606d0c3eae7ff897",
+        "tree": "1d5f6609d1cdaea6456c74531be86d0c6a5e7396"
+      },
+      "source": {
+        "mode": "0644",
+        "bytes": 258847,
+        "sha256": "aa7a3d1a3d9954716c1e7cfe925b186048de30d78d11589e18321325087d6797",
+        "gitBlobOid": "4090de353a8a23f636f8ca5a3171c9a569ef4b45",
+        "lineCount": 6937,
+        "assertionCount": 938,
+        "assertionDigestSha256": "fbcf6995a227000f3c7d42712a6ff383c644ede90f1f99c4ff552fe8a82cd2fc"
+      },
+      "semanticProjection": {
+        "bytes": 258861,
+        "sha256": "f343a56df1b80e5422e9b1d5b41b54ae41a313bd3ba80dd2a59d1ec09af246fa",
+        "gitBlobOid": "947bdd53eaabbde35a9875593059bc8a13eabf5a",
+        "lineCount": 6937
+      },
+      "target": {
+        "mode": "0644",
+        "bytes": 258880,
+        "sha256": "75356c6b47517472e0bbcb6b7a1e4bc4576b0d97fec50f40918d033c735bc1b3",
+        "gitBlobOid": "45d24285c3081faff86bb279a6917270bd0d49f2",
+        "lineCount": 6940,
+        "assertionCount": 938,
+        "assertionDigestSha256": "abac6d8b71c3d652dd6f59e111dd7034ce64c9d9655d367ee4c673c4ecab18fa"
+      },
+      "transitions": {
+        "rootManifestDigest": {
+          "from": "07f672f29660f90cb9480a7ff395463f5ccb08ecd5f74e61869391ef1653b47c",
+          "to": "cccac5d19c5b38dd2f2d4840451c7c7d1b2fbb6403451bc0c2b149f0e8f80846",
+          "occurrences": 3
+        },
+        "twoSpaceAnchors": [
+          {
+            "from": "\\nif (policy) {",
+            "to": "\\n  if (policy) {",
+            "occurrences": 4,
+            "tests": "D24.12:1,D24.15:1,D24.32:2"
+          },
+          {
+            "from": "\\nif (!normalizeExisting) {",
+            "to": "\\n  if (!normalizeExisting) {",
+            "occurrences": 2,
+            "tests": "D24.12:1,D24.32:1"
+          },
+          {
+            "from": "\\nif (diagnosticPackageName) {",
+            "to": "\\n  if (diagnosticPackageName) {",
+            "occurrences": 1,
+            "tests": "D24.15:1"
+          }
+        ]
+      },
+      "formatProjection": {
+        "prettierVersion": "3.8.3",
+        "addedLines": 4,
+        "removedLines": 1,
+        "scope": "wrap-only-the-D24.32-nested-indexOf-anchor"
+      },
+      "preservedContract": {
+        "testCount": 72,
+        "testNamesSha256": "fb44a3852661152360a52c2cad3451650eca57fffc1d20b9ebfeb9028f5f8b57",
+        "assertionCount": 938
+      },
+      "mutationInputProjection": {
+        "rosterCount": 38,
+        "selectedPackageCount": 0,
+        "disposition": "absent-from-every-package-projection"
+      },
+      "mutationSubprocesses": 0,
+      "packageStarts": 0,
+      "mismatchDisposition": "fail-before-package-start"
+    },
+    {
+      "kind": "non-mutation-input-assertion-rebind-v1",
+      "path": "test/scripts/release-version-policy.test.mjs",
+      "sourceCandidate": {
+        "commit": "34d133b7fd2c5bedfb278cb5606d0c3eae7ff897",
+        "tree": "1d5f6609d1cdaea6456c74531be86d0c6a5e7396"
+      },
+      "source": {
+        "mode": "0644",
+        "bytes": 66784,
+        "sha256": "d5bd617081e40e9ffb2210d5fdc84f3208af61e463a3c789ef087551a51ae1c4",
+        "gitBlobOid": "7948959bb10ecacde3c880f0bc36cecde1e8bfa7",
+        "lineCount": 1771,
+        "assertionCount": 203,
+        "assertionDigestSha256": "f5efdc8b5a553daef8907a95d339ea062aa06628a2874c9589879bbdd0674f0c"
+      },
+      "target": {
+        "mode": "0644",
+        "bytes": 66878,
+        "sha256": "81af371bb9953f85367abf4c9ac68dfe02d8d4f80615366d9c9533154504a02c",
+        "gitBlobOid": "9292b221d222a2e415ca4182aef44e9763bec78f",
+        "lineCount": 1773,
+        "assertionCount": 203,
+        "assertionDigestSha256": "214b585610a853d198dd66e793e6132da9a9e262d0ba1079dfc7a50a07090160"
+      },
+      "transition": {
+        "kind": "ordered-allowed-path-insertion-v1",
+        "path": "scripts/list-ddl-objects.spec.mjs",
+        "afterSourceIndex": 8,
+        "before": "scripts/run-mutation-evidence.mjs",
+        "occurrences": 1
+      },
+      "preservedContract": {
+        "testCount": 35,
+        "testNamesSha256": "4b31d27cf7966926c4a718d7fce68efaf038bdacbb9d87bb07d4f1503a246fe0",
+        "assertionCount": 203
+      },
+      "mutationInputProjection": {
+        "rosterCount": 38,
+        "selectedPackageCount": 0,
+        "disposition": "absent-from-every-package-projection"
+      },
+      "mutationSubprocesses": 0,
+      "packageStarts": 0,
+      "mismatchDisposition": "fail-before-package-start"
     }
   ],
   "requiredRosterCount": 38,
