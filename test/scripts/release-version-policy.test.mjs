@@ -820,13 +820,23 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
   );
 });
 
+function stripJavaScriptComments(source) {
+  return source.replace(/\/\*[\s\S]*?\*\//gu, '').replace(/\/\/.*$/gmu, '');
+}
+
+function candidateRebindFunctionBody(runner) {
+  const start = runner.indexOf('export async function rebindCandidateComposition');
+  assert.notEqual(start, -1, 'candidate rebind export is missing');
+  const end = runner.indexOf('\nif (isDirectInvocation) {', start);
+  assert.notEqual(end, -1, 'candidate rebind must close at the direct-invocation boundary');
+  const body = runner.slice(start, end).trim();
+  assert.equal(body.at(-1), '}', 'candidate rebind function does not close at its boundary');
+  return stripJavaScriptComments(body);
+}
+
 test('D24.33 runner validates and atomically rebinds without a package start', () => {
   const runner = repositorySource('scripts/run-mutation-evidence.mjs');
-  const branchStart = runner.indexOf('policy.candidateRebind');
-  assert.notEqual(branchStart, -1, 'candidate rebind branch is missing');
-  const branchEnd = runner.indexOf('\n  const baseline = validateBaseline', branchStart);
-  assert.notEqual(branchEnd, -1, 'candidate rebind must precede fresh composition');
-  const branch = runner.slice(branchStart, branchEnd);
+  const branch = candidateRebindFunctionBody(runner);
   for (const marker of [
     'sourceCandidate',
     'sourceSummary',
@@ -852,12 +862,43 @@ test('D24.33 runner validates and atomically rebinds without a package start', (
     branch.indexOf('sourceSummary') < branch.indexOf('publishComposedDirectory'),
     'source validation must precede publication',
   );
-  assert.match(runner, /renameSync\(stagingDirectory, finalDirectory\)/u);
-  assert.match(runner, /renameSync\(backupDirectory, finalDirectory\)/u);
+  assert.match(branch, /publishComposedDirectory/u);
   assert.doesNotMatch(
     branch,
-    /runPackage|freshRoster\.map|selectedRoster\.map|preflightFullMutationInfrastructure/u,
+    /runPackage|freshRoster\.map|selectedRoster\.map|validateCheapGateMarker|validateBaseline|preflightFullMutationInfrastructure/u,
     'candidate rebind cannot start mutation or a package process',
+  );
+});
+
+test('D24.33 direct candidate rebind rejects missing or drifted source before fallback', () => {
+  const runner = stripJavaScriptComments(repositorySource('scripts/run-mutation-evidence.mjs'));
+  const directStart = runner.indexOf('if (isDirectInvocation) {');
+  const rebindStart = runner.indexOf('if (policy.candidateRebind) {', directStart);
+  const fallbackStart = runner.indexOf('validateCheapGateMarker(candidate)', rebindStart);
+  assert.notEqual(directStart, -1);
+  assert.notEqual(rebindStart, -1);
+  assert.notEqual(fallbackStart, -1);
+  const directRebind = runner.slice(rebindStart, fallbackStart);
+  assert.match(
+    directRebind,
+    /if \(!existsSync\(sourceSummaryPath\)\)\s*throw new Error\([^)]*source summary[^)]*\)/u,
+    'missing source summary must fail instead of falling through',
+  );
+  assert.match(
+    directRebind,
+    /sourceBytes\.length !== policy\.candidateRebind\.sourceSummary\.bytes[\s\S]*?throw new Error\([^)]*(?:size|bytes)[^)]*\)/u,
+    'wrong source summary size must fail instead of falling through',
+  );
+  assert.match(
+    directRebind,
+    /sha256Hex\(sourceBytes\) !== policy\.candidateRebind\.sourceSummary\.sha256[\s\S]*?throw new Error\([^)]*(?:digest|sha256)[^)]*\)/u,
+    'wrong source summary digest must fail instead of falling through',
+  );
+  assert.match(directRebind, /await rebindCandidateComposition/u);
+  assert.match(directRebind, /candidate rebind package start is forbidden/u);
+  assert.doesNotMatch(
+    directRebind,
+    /validateCheapGateMarker|validateBaseline|preflightFullMutationInfrastructure|runPackage|freshRoster/u,
   );
 });
 
@@ -986,10 +1027,40 @@ test('D24.33 candidate rebind is executable, exhaustive, atomic, and starts no p
     );
     assert.equal(packageStarts, 0, `${name}: package start sentinel must remain zero`);
     assert.notDeepEqual(sourceBefore, {}, `${name}: source fixture must be populated`);
+    assert.deepEqual(
+      readdirSync(caseRoot).filter((entry) => entry.startsWith('.mutation-rebind-')),
+      [],
+      `${name}: staging or backup residue remains`,
+    );
   }
 
   try {
     const mismatchCases = [
+      {
+        name: 'missing-source-summary',
+        prepare: ({ sourceDirectory }) => {
+          rmSync(join(sourceDirectory, 'summary.json'));
+        },
+        expected: /source summary|ENOENT/u,
+      },
+      {
+        name: 'wrong-source-summary-size',
+        prepare: ({ sourceDirectory }) => {
+          const summaryPath = join(sourceDirectory, 'summary.json');
+          writeFileSync(summaryPath, Buffer.concat([readFileSync(summaryPath), Buffer.from(' ')]));
+        },
+        expected: /size|bytes/u,
+      },
+      {
+        name: 'wrong-source-summary-digest',
+        prepare: ({ sourceDirectory }) => {
+          const summaryPath = join(sourceDirectory, 'summary.json');
+          const bytes = readFileSync(summaryPath);
+          bytes[0] ^= 1;
+          writeFileSync(summaryPath, bytes);
+        },
+        expected: /digest|sha256/u,
+      },
       {
         name: 'candidate-drift',
         prepare: ({ inputs }) => {
@@ -1127,20 +1198,25 @@ test('D24.33 candidate rebind is executable, exhaustive, atomic, and starts no p
     ];
     for (const mismatch of mismatchCases) await exerciseFailure(mismatch);
 
-    await exerciseFailure({
-      name: 'atomic-publication-failure',
-      prepare: ({ inputs }) => {
-        inputs.publishDirectory = () => {
-          throw new Error('synthetic atomic publication failure');
-        };
-      },
-      expected: /synthetic atomic publication failure/u,
-    });
+    for (const phase of ['after-final-to-backup', 'after-staging-to-final']) {
+      await exerciseFailure({
+        name: `atomic-publication-${phase}`,
+        prepare: ({ inputs }) => {
+          inputs.onPublicationPhase = (observedPhase) => {
+            if (observedPhase === phase) {
+              throw new Error(`synthetic atomic publication failure: ${phase}`);
+            }
+          };
+        },
+        expected: new RegExp(`synthetic atomic publication failure: ${phase}`, 'u'),
+      });
+    }
 
     const successRoot = join(fixtureRoot, 'success');
     const successSource = join(successRoot, 'source');
     const successFinal = join(successRoot, 'final');
     copyMutationEvidence(sourceEvidence, successSource);
+    copyMutationEvidence(sourceEvidence, successFinal);
     const sourceBefore = mutationEvidenceSnapshot(successSource);
     const result = await rebindCandidateComposition({
       repositoryRoot: repoRoot,
