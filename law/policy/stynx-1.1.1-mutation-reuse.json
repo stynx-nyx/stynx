@@ -191,16 +191,16 @@
         "assertionDigestSha256": "fbcf6995a227000f3c7d42712a6ff383c644ede90f1f99c4ff552fe8a82cd2fc"
       },
       "semanticProjection": {
-        "bytes": 258861,
-        "sha256": "f343a56df1b80e5422e9b1d5b41b54ae41a313bd3ba80dd2a59d1ec09af246fa",
-        "gitBlobOid": "947bdd53eaabbde35a9875593059bc8a13eabf5a",
+        "bytes": 258863,
+        "sha256": "040413250ec5f38b1c676c3278aefba4f02c2dd2b004d59003baebe9818dcb60",
+        "gitBlobOid": "9152126aa9edd0f49299fece7d5e0cde4364a123",
         "lineCount": 6937
       },
       "target": {
         "mode": "0644",
-        "bytes": 258880,
-        "sha256": "75356c6b47517472e0bbcb6b7a1e4bc4576b0d97fec50f40918d033c735bc1b3",
-        "gitBlobOid": "45d24285c3081faff86bb279a6917270bd0d49f2",
+        "bytes": 258882,
+        "sha256": "c8c6045dfccf6210d0267db993220e22b1bda5695bc5d6a1222fb311ed29cef9",
+        "gitBlobOid": "58c4217c7e5e86aef446f88fbc8ae757a930c1d8",
         "lineCount": 6940,
         "assertionCount": 938,
         "assertionDigestSha256": "abac6d8b71c3d652dd6f59e111dd7034ce64c9d9655d367ee4c673c4ecab18fa"
@@ -227,6 +227,12 @@
           {
             "from": "\\nif (diagnosticPackageName) {",
             "to": "\\n  if (diagnosticPackageName) {",
+            "occurrences": 1,
+            "tests": "D24.15:1"
+          },
+          {
+            "from": "\\nrmSync(stagingDirectory, { recursive: true, force: true });",
+            "to": "\\n  rmSync(stagingDirectory, { recursive: true, force: true });",
             "occurrences": 1,
             "tests": "D24.15:1"
           }
