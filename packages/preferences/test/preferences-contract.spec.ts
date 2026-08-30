@@ -616,4 +616,34 @@ describe('@stynx-nyx/preferences W04 closed contract', () => {
       changedPaths: ['notificationDelivery.email'],
     });
   });
+
+  it('covers absent stored optionals and explicit undefined patch fallbacks', async () => {
+    const empty = harness();
+    await expect(empty.service.getProfile()).resolves.toMatchObject({
+      displayName: null,
+      avatarDocumentId: null,
+      revision: 0,
+      updatedAt: null,
+    });
+    await expect(
+      empty.service.patchPreferences({ theme: { density: 'compact' } }, 0),
+    ).resolves.toMatchObject({ revision: 1 });
+
+    const reset = harness();
+    await expect(reset.service.reset(null, 0)).resolves.toMatchObject({ revision: 0 });
+    await expect(reset.service.patchProfile('invalid', 0)).rejects.toSatisfy(
+      (error: unknown) => errorCode(error) === 'PREFERENCES_INVALID',
+    );
+
+    const existing = harness();
+    await existing.service.patchProfile({ avatarDocumentId: 'avatar-1' }, 0);
+    await expect(existing.service.patchProfile({ displayName: 'Ada' }, 1)).resolves.toMatchObject({
+      avatarDocumentId: 'avatar-1',
+      displayName: 'Ada',
+      revision: 2,
+    });
+    await expect(
+      existing.service.patchPreferences({ theme: undefined } as never, 2),
+    ).resolves.toMatchObject({ revision: 2 });
+  });
 });
