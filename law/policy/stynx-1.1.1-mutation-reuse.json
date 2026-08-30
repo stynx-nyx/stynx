@@ -51,6 +51,7 @@
     "@stynx-nyx/worklist"
   ],
   "allowedChangedPaths": [
+    ".github/workflows/ci.yml",
     "law/adr/2026-08-24-stynx-1.1.1-campaign-controls.md",
     "law/policy/stynx-1.1.1-mutation-reuse.json",
     "law/trace.json",
@@ -220,6 +221,36 @@
       "workflow": "STYNX Reference Apps",
       "runId": 33337393155,
       "conclusion": "success"
+    },
+    "mutationSubprocesses": 0,
+    "packageStarts": 0,
+    "mismatchDisposition": "fail-before-package-start"
+  },
+  "ordinaryCiSensorPortabilityCorrection": {
+    "kind": "non-mutation-input-ordinary-ci-portability-v1",
+    "architectAnchor": {
+      "commit": "f4c08bfa97c733d359c9b6603bd1a75fc4a12825",
+      "tree": "11b64d64c3c39a880e92ca4e5b2af0df14ad6a8e"
+    },
+    "workflow": {
+      "path": ".github/workflows/ci.yml",
+      "jobs": ["stynx-tier-gate", "unit-tests"],
+      "transition": "checkout-fetch-depth-zero-only"
+    },
+    "sensor": {
+      "path": "test/scripts/release-version-policy.test.mjs",
+      "frozenCommitCount": 2,
+      "testCount": 35,
+      "minimumAssertionCount": 203,
+      "fixture": "credential-free-temporary-complete-synthetic-composition",
+      "packageCount": 38,
+      "artifactBindingCount": 76,
+      "mutationPackageStarts": 0
+    },
+    "mutationInputProjection": {
+      "rosterCount": 38,
+      "selectedPackageCount": 0,
+      "disposition": "both-paths-absent-from-every-package-projection"
     },
     "mutationSubprocesses": 0,
     "packageStarts": 0,
