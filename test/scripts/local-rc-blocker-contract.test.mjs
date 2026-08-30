@@ -6715,6 +6715,22 @@ test('D24.32 composed mutation evidence runs exactly four packages and fails clo
     runnerSource,
     /(?:skipReuseValidation|allowFifthPackage|fallbackFullRoster)/u,
   );
+
+  const restorationSource = runnerSource.slice(
+    runnerSource.indexOf('function restoreOwnedStrykerSetup'),
+    runnerSource.indexOf(
+      '\nfunction runPackage',
+      runnerSource.indexOf('function restoreOwnedStrykerSetup'),
+    ),
+  );
+  assert.match(
+    restorationSource,
+    /11ea94ed9ba49a916fb0f6cbb365e896f4ce67958009f7a4320ceebaba14febb/u,
+  );
+  assert.match(restorationSource, /\^stryker-setup-\\d\+\\\.js\$/u);
+  assert.match(restorationSource, /stryker-setup\.js\.map/u);
+  assert.match(restorationSource, /unlinkSync/u);
+  assert.doesNotMatch(restorationSource, /recursive|glob|rmSync|\.stryker-tmp|coverage|dist/u);
 });
 
 test('D24.22 filesystem URLs preserve decoded space-bearing engine and Playwright paths', async () => {
