@@ -969,7 +969,7 @@ test('D24.33 candidate rebind is executable, exhaustive, atomic, and starts no p
   }).stdout.trim();
   const changedPaths = spawnSync(
     'git',
-    ['diff', '--name-only', `${frozenCompositionCommit}..HEAD`],
+    ['diff', '--name-only', `${sourcePolicy.candidateRebind.sourceCandidate.commit}..HEAD`],
     { cwd: repoRoot, encoding: 'utf8' },
   )
     .stdout.trim()
