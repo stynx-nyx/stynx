@@ -10,6 +10,7 @@ import {
   readdirSync,
   renameSync,
   rmSync,
+  unlinkSync,
   writeFileSync,
 } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
@@ -394,120 +395,154 @@ function buildMutationPackage(entry, environment) {
   throw new Error(`${entry.packageName}: mutation-harness-failure (build-precondition-${reason})`);
 }
 
+function restoreOwnedStrykerSetup(workspace, remove = false) {
+  const root = resolve(repoRoot, workspace);
+  const names = readdirSync(root)
+    .filter((name) => /^stryker-setup-\d+\.js$/u.test(name))
+    .sort();
+  if (!remove && names.length > 0) {
+    throw new Error(`${workspace}: mutation setup residue exists before package start`);
+  }
+  for (const name of names) {
+    const path = resolve(root, name);
+    const metadata = lstatSync(path);
+    const bytes = readFileSync(path);
+    if (
+      !metadata.isFile() ||
+      metadata.isSymbolicLink() ||
+      (metadata.mode & 0o777) !== 0o644 ||
+      metadata.size !== 2411 ||
+      sha256Hex(bytes) !== '11ea94ed9ba49a916fb0f6cbb365e896f4ce67958009f7a4320ceebaba14febb' ||
+      !bytes.toString('utf8').endsWith('//# sourceMappingURL=stryker-setup.js.map')
+    ) {
+      throw new Error(`${workspace}: unexpected mutation setup residue`);
+    }
+    unlinkSync(path);
+  }
+  if (readdirSync(root).some((name) => /^stryker-setup-\d+\.js$/u.test(name))) {
+    throw new Error(`${workspace}: mutation setup residue restoration failed`);
+  }
+}
+
 function runPackage(entry) {
-  return withMutationReportCleanup(repoRoot, entry.workspace, (rawReportDirectory) => {
-    const started = process.hrtime.bigint();
-    let subprocessResult;
-    if (!normalizeExisting) {
-      const environment = buildMutationEnvironment(process.env);
-      buildMutationPackage(entry, environment);
-      subprocessResult = spawnSync('pnpm', ['--filter', entry.packageName, 'run', 'stryker'], {
-        cwd: repoRoot,
-        env: environment,
-        encoding: 'utf8',
-        maxBuffer: 64 * 1024 * 1024,
-        stdio: ['ignore', 'pipe', 'pipe'],
-        shell: false,
-      });
-    }
-    const durationMs = normalizeExisting
-      ? 0
-      : Number((process.hrtime.bigint() - started) / BigInt(1_000_000));
-    const rawReportPath = resolve(rawReportDirectory, 'mutation.json');
-    if (!existsSync(rawReportPath)) {
-      const { classification, reason } = classifyMutationOutcome({
-        reportState: 'missing',
+  restoreOwnedStrykerSetup(entry.workspace);
+  try {
+    return withMutationReportCleanup(repoRoot, entry.workspace, (rawReportDirectory) => {
+      const started = process.hrtime.bigint();
+      let subprocessResult;
+      if (!normalizeExisting) {
+        const environment = buildMutationEnvironment(process.env);
+        buildMutationPackage(entry, environment);
+        subprocessResult = spawnSync('pnpm', ['--filter', entry.packageName, 'run', 'stryker'], {
+          cwd: repoRoot,
+          env: environment,
+          encoding: 'utf8',
+          maxBuffer: 64 * 1024 * 1024,
+          stdio: ['ignore', 'pipe', 'pipe'],
+          shell: false,
+        });
+      }
+      const durationMs = normalizeExisting
+        ? 0
+        : Number((process.hrtime.bigint() - started) / BigInt(1_000_000));
+      const rawReportPath = resolve(rawReportDirectory, 'mutation.json');
+      if (!existsSync(rawReportPath)) {
+        const { classification, reason } = classifyMutationOutcome({
+          reportState: 'missing',
+          subprocessResult,
+          repoRoot,
+        });
+        throw new Error(`${entry.packageName}: ${classification} (${reason})`);
+      }
+      let report;
+      try {
+        report = normalizeMutationReport(
+          JSON.parse(readFileSync(rawReportPath, 'utf8')),
+          entry.thresholds,
+          entry.workspace,
+          repoRoot,
+        );
+      } catch (error) {
+        const { classification, reason } = classifyMutationOutcome({
+          reportState: 'unsafe',
+          subprocessResult,
+          reportFailureCode: error.code,
+          repoRoot,
+        });
+        throw new Error(`${entry.packageName}: ${classification} (${reason})`, { cause: error });
+      }
+      const statusTotals = totals(report);
+      const mutationScore = score(statusTotals);
+      const outcome = classifyMutationOutcome({
+        reportState: 'normalized',
+        score: mutationScore,
+        threshold: entry.thresholds.break,
         subprocessResult,
         repoRoot,
       });
-      throw new Error(`${entry.packageName}: ${classification} (${reason})`);
-    }
-    let report;
-    try {
-      report = normalizeMutationReport(
-        JSON.parse(readFileSync(rawReportPath, 'utf8')),
-        entry.thresholds,
-        entry.workspace,
-        repoRoot,
+      const passed = outcome.classification === 'mutation-pass';
+      if (outcome.classification === 'mutation-score-failure') {
+        throw new Error(
+          `${entry.packageName}: mutation-score-failure ` +
+            `(Killed=${statusTotals.Killed}, Timeout=${statusTotals.Timeout}, ` +
+            `Survived=${statusTotals.Survived}, NoCoverage=${statusTotals.NoCoverage}, ` +
+            `total=${statusTotals.Killed + statusTotals.Timeout + statusTotals.Survived + statusTotals.NoCoverage}, ` +
+            `score=${mutationScore}, break=${entry.thresholds.break})`,
+        );
+      }
+      if (outcome.classification === 'mutation-harness-failure') {
+        throw new Error(
+          `${entry.packageName}: mutation-harness-failure (${outcome.reason}; ` +
+            `score=${mutationScore})`,
+        );
+      }
+      const stem = entry.workspace.replaceAll('/', '-');
+      const reportPath = `${artifactRoot}/${stem}.stryker.json`;
+      const resultPath = `${artifactRoot}/${stem}.result.json`;
+      const reportBytes = canonicalize(report);
+      const result = {
+        schemaVersion: '1.0.0',
+        kind: 'mutation-package-result-v1',
+        packageName: entry.packageName,
+        workspace: entry.workspace,
+        passed,
+        durationMs,
+        toolVersions: { stryker: report.framework.version },
+        thresholds: entry.thresholds,
+        score: mutationScore,
+        statusTotals,
+        process: normalizeExisting
+          ? null
+          : {
+              errorAbsent: subprocessResult?.error === undefined,
+              status: subprocessResult?.status ?? null,
+              signal: subprocessResult?.signal ?? null,
+            },
+        reportDigest: sha256Hex(reportBytes),
+      };
+      const resultBytes = canonicalize(result);
+      canonicalWrite(resolve(stagingDirectory, `${stem}.stryker.json`), report);
+      canonicalWrite(resolve(stagingDirectory, `${stem}.result.json`), result);
+      process.stdout.write(
+        `${JSON.stringify({ packageName: entry.packageName, passed, score: mutationScore, durationMs })}\n`,
       );
-    } catch (error) {
-      const { classification, reason } = classifyMutationOutcome({
-        reportState: 'unsafe',
-        subprocessResult,
-        reportFailureCode: error.code,
-        repoRoot,
-      });
-      throw new Error(`${entry.packageName}: ${classification} (${reason})`, { cause: error });
-    }
-    const statusTotals = totals(report);
-    const mutationScore = score(statusTotals);
-    const outcome = classifyMutationOutcome({
-      reportState: 'normalized',
-      score: mutationScore,
-      threshold: entry.thresholds.break,
-      subprocessResult,
-      repoRoot,
+      return {
+        packageName: entry.packageName,
+        workspace: entry.workspace,
+        resultPath,
+        reportPath,
+        resultDigest: sha256Hex(resultBytes),
+        reportDigest: sha256Hex(reportBytes),
+        score: mutationScore,
+        passed,
+        durationMs,
+        statusTotals,
+        process: result.process,
+      };
     });
-    const passed = outcome.classification === 'mutation-pass';
-    if (outcome.classification === 'mutation-score-failure') {
-      throw new Error(
-        `${entry.packageName}: mutation-score-failure ` +
-          `(Killed=${statusTotals.Killed}, Timeout=${statusTotals.Timeout}, ` +
-          `Survived=${statusTotals.Survived}, NoCoverage=${statusTotals.NoCoverage}, ` +
-          `total=${statusTotals.Killed + statusTotals.Timeout + statusTotals.Survived + statusTotals.NoCoverage}, ` +
-          `score=${mutationScore}, break=${entry.thresholds.break})`,
-      );
-    }
-    if (outcome.classification === 'mutation-harness-failure') {
-      throw new Error(
-        `${entry.packageName}: mutation-harness-failure (${outcome.reason}; ` +
-          `score=${mutationScore})`,
-      );
-    }
-    const stem = entry.workspace.replaceAll('/', '-');
-    const reportPath = `${artifactRoot}/${stem}.stryker.json`;
-    const resultPath = `${artifactRoot}/${stem}.result.json`;
-    const reportBytes = canonicalize(report);
-    const result = {
-      schemaVersion: '1.0.0',
-      kind: 'mutation-package-result-v1',
-      packageName: entry.packageName,
-      workspace: entry.workspace,
-      passed,
-      durationMs,
-      toolVersions: { stryker: report.framework.version },
-      thresholds: entry.thresholds,
-      score: mutationScore,
-      statusTotals,
-      process: normalizeExisting
-        ? null
-        : {
-            errorAbsent: subprocessResult?.error === undefined,
-            status: subprocessResult?.status ?? null,
-            signal: subprocessResult?.signal ?? null,
-          },
-      reportDigest: sha256Hex(reportBytes),
-    };
-    const resultBytes = canonicalize(result);
-    canonicalWrite(resolve(stagingDirectory, `${stem}.stryker.json`), report);
-    canonicalWrite(resolve(stagingDirectory, `${stem}.result.json`), result);
-    process.stdout.write(
-      `${JSON.stringify({ packageName: entry.packageName, passed, score: mutationScore, durationMs })}\n`,
-    );
-    return {
-      packageName: entry.packageName,
-      workspace: entry.workspace,
-      resultPath,
-      reportPath,
-      resultDigest: sha256Hex(resultBytes),
-      reportDigest: sha256Hex(reportBytes),
-      score: mutationScore,
-      passed,
-      durationMs,
-      statusTotals,
-      process: result.process,
-    };
-  });
+  } finally {
+    restoreOwnedStrykerSetup(entry.workspace, true);
+  }
 }
 
 function runFocusedPackage(entry, context) {
