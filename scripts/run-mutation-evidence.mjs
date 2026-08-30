@@ -1016,16 +1016,35 @@ function publishComposedDirectory({
   staged = stagingDirectory,
   final = finalDirectory,
   backup = backupDirectory,
+  onPublicationPhase,
 } = {}) {
-  rmSync(backup, { recursive: true, force: true });
-  if (existsSync(final)) renameSync(final, backup);
+  let finalMoved = false;
+  let stagingMoved = false;
   try {
+    renameSync(final, backup);
+    finalMoved = true;
+    onPublicationPhase?.('after-final-to-backup');
     renameSync(staged, final);
+    stagingMoved = true;
+    onPublicationPhase?.('after-staging-to-final');
+    rmSync(backup, { recursive: true, force: false });
   } catch (error) {
-    if (existsSync(backup)) renameSync(backup, final);
+    let rollbackError;
+    try {
+      if (finalMoved) {
+        if (stagingMoved && existsSync(final)) {
+          rmSync(final, { recursive: true, force: false });
+        }
+        if (existsSync(backup)) renameSync(backup, final);
+      }
+    } catch (caught) {
+      rollbackError = caught;
+    }
+    rmSync(staged, { recursive: true, force: true });
+    if (!rollbackError) rmSync(backup, { recursive: true, force: true });
+    if (rollbackError) Object.defineProperty(error, 'rollbackError', { value: rollbackError });
     throw error;
   }
-  rmSync(backup, { recursive: true, force: true });
 }
 
 let candidateRebindAttempt = 0;
@@ -1037,7 +1056,7 @@ export async function rebindCandidateComposition({
   finalDirectory: reboundFinalDirectory,
   candidate,
   onPackageStart,
-  publishDirectory,
+  onPublicationPhase,
 }) {
   void onPackageStart;
   const candidateRebind = policy?.candidateRebind;
@@ -1386,6 +1405,10 @@ export async function rebindCandidateComposition({
     parent,
     `.mutation-rebind-backup-${process.pid}-${attempt}`,
   );
+  const finalMetadata = lstatSync(reboundFinalDirectory);
+  if (!finalMetadata.isDirectory() || finalMetadata.isSymbolicLink()) {
+    throw new Error('candidate rebind final evidence directory is invalid');
+  }
   if (existsSync(reboundStagingDirectory) || existsSync(reboundBackupDirectory)) {
     throw new Error('candidate rebind staging identity already exists');
   }
@@ -1412,18 +1435,11 @@ export async function rebindCandidateComposition({
       resolve(reboundStagingDirectory, 'summary.json'),
       lstatSync(sourceSummaryPath).mode & 0o777,
     );
-    const publish =
-      publishDirectory ??
-      (() =>
-        publishComposedDirectory({
-          staged: reboundStagingDirectory,
-          final: reboundFinalDirectory,
-          backup: reboundBackupDirectory,
-        }));
-    await publish({
-      stagingDirectory: reboundStagingDirectory,
-      finalDirectory: reboundFinalDirectory,
-      backupDirectory: reboundBackupDirectory,
+    publishComposedDirectory({
+      staged: reboundStagingDirectory,
+      final: reboundFinalDirectory,
+      backup: reboundBackupDirectory,
+      onPublicationPhase,
     });
     return {
       ok: true,
@@ -1435,9 +1451,6 @@ export async function rebindCandidateComposition({
     };
   } catch (error) {
     rmSync(reboundStagingDirectory, { recursive: true, force: true });
-    if (!existsSync(reboundFinalDirectory) && existsSync(reboundBackupDirectory)) {
-      renameSync(reboundBackupDirectory, reboundFinalDirectory);
-    }
     throw error;
   }
 }
@@ -1498,47 +1511,39 @@ if (isDirectInvocation) {
     const currentTree = treeEntries(candidate.commit);
     const catalog = workspaceCatalog();
     if (policy.candidateRebind) {
-      /*
-       * rebindCandidateComposition validates sourceCandidate, sourceSummary,
-       * artifactBindingCount, sourceInputProjection, semanticRebindComparison,
-       * otherMutationInputTreeEntries, allowedChangedPaths, reportDigest,
-       * resultDigest, provenance, thresholds, targetCensus, statusTotals, score,
-       * baseline, canonicalWrite, and publishComposedDirectory before publication.
-       */
       const sourceSummaryPath = resolve(repoRoot, policy.candidateRebind.sourceSummary.path);
-      if (existsSync(sourceSummaryPath)) {
-        const sourceBytes = readFileSync(sourceSummaryPath);
-        if (
-          sourceBytes.length === policy.candidateRebind.sourceSummary.bytes &&
-          sha256Hex(sourceBytes) === policy.candidateRebind.sourceSummary.sha256
-        ) {
-          const rebindChangedPaths = gitText([
-            'diff',
-            '--name-only',
-            '-z',
-            `${policy.candidateRebind.sourceCandidate.commit}..${candidate.commit}`,
-            '--',
-          ])
-            .split('\0')
-            .filter(Boolean)
-            .sort();
-          const rebound = await rebindCandidateComposition({
-            repositoryRoot: repoRoot,
-            policy,
-            sourceDirectory: dirname(sourceSummaryPath),
-            finalDirectory,
-            candidate: { ...candidate, clean: true, changedPaths: rebindChangedPaths },
-            onPackageStart: () => {
-              throw new Error('candidate rebind package start is forbidden');
-            },
-          });
-          process.stdout.write(`${JSON.stringify(rebound)}\n`);
-          process.exit(0);
-        }
+      if (!existsSync(sourceSummaryPath))
+        throw new Error('candidate rebind source summary is missing');
+      const sourceBytes = readFileSync(sourceSummaryPath);
+      if (sourceBytes.length !== policy.candidateRebind.sourceSummary.bytes) {
+        throw new Error('candidate rebind source summary size drifted');
       }
+      if (sha256Hex(sourceBytes) !== policy.candidateRebind.sourceSummary.sha256) {
+        throw new Error('candidate rebind source summary digest drifted');
+      }
+      const rebindChangedPaths = gitText([
+        'diff',
+        '--name-only',
+        '-z',
+        `${policy.candidateRebind.sourceCandidate.commit}..${candidate.commit}`,
+        '--',
+      ])
+        .split('\0')
+        .filter(Boolean)
+        .sort();
+      const rebound = await rebindCandidateComposition({
+        repositoryRoot: repoRoot,
+        policy,
+        sourceDirectory: dirname(sourceSummaryPath),
+        finalDirectory,
+        candidate: { ...candidate, clean: true, changedPaths: rebindChangedPaths },
+        onPackageStart: () => {
+          throw new Error('candidate rebind package start is forbidden');
+        },
+      });
+      process.stdout.write(`${JSON.stringify(rebound)}\n`);
+      process.exit(0);
     }
-    /* Static D24.33 boundary retained across the import-safe invocation guard:
-  const baseline = validateBaseline marks the fresh-composition branch. */
     validateCheapGateMarker(candidate);
 
     const existing = validateExistingComposition({
