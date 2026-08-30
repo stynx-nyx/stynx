@@ -1,4 +1,10 @@
-import { DEFAULT_VERAPDF_IMAGE, flavourFrom, VeraPdfDockerError, VeraPdfDockerValidator } from '../../src';
+import {
+  DEFAULT_VERAPDF_IMAGE,
+  flavourFrom,
+  VeraPdfDockerError,
+  VeraPdfDockerValidator,
+  VeraPdfReportParseError,
+} from '../../src';
 import type { VeraPdfDockerRunRequest } from '../../src';
 
 describe('VeraPdfDockerValidator', () => {
@@ -60,7 +66,9 @@ describe('VeraPdfDockerValidator', () => {
         valid: 'true',
       },
     );
-    expect(logger.log).toHaveBeenCalledWith(expect.stringMatching(/^pdf\/a validation completed valid=true/u));
+    expect(logger.log).toHaveBeenCalledWith(
+      expect.stringMatching(/^pdf\/a validation completed valid=true/u),
+    );
   });
 
   it('returns a synthetic timeout result', async () => {
@@ -107,5 +115,31 @@ describe('VeraPdfDockerValidator', () => {
     expect(flavourFrom()).toBe('2b');
     expect(flavourFrom({ version: 'A-1', conformance: 'a' })).toBe('1a');
     expect(flavourFrom({ version: 'A-4', conformance: 'u' })).toBe('4u');
+  });
+
+  it('propagates a status-zero semantic rejection without success telemetry', async () => {
+    const logger = {
+      increment: vi.fn(),
+      observe: vi.fn(),
+      log: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+    };
+    const validator = new VeraPdfDockerValidator({
+      logger,
+      runner: async () => ({
+        stdout: JSON.stringify({ report: { jobs: [{}] } }),
+        stderr: '',
+        exitCode: 0,
+        timedOut: false,
+      }),
+    });
+
+    const rejection = await validator.validate(new Uint8Array()).catch((error: unknown) => error);
+    expect(rejection).toBeInstanceOf(VeraPdfReportParseError);
+    expect(rejection).toMatchObject({ message: 'VERAPDF_REPORT_VALIDATION_MISSING' });
+    expect(logger.increment).toHaveBeenCalledTimes(1);
+    expect(logger.observe).not.toHaveBeenCalled();
+    expect(logger.log).not.toHaveBeenCalled();
   });
 });

@@ -706,19 +706,20 @@ test('D24.33 promotion keeps the unchanged evidence verifier before publish:true
 
 test('D24.33 policy binds exact source evidence and a semantics-preserving manifest rebind', () => {
   const policy = JSON.parse(repositorySource('law/policy/stynx-1.1.1-mutation-reuse.json'));
-  const sourcePolicy = JSON.parse(
-    repositorySourceAt(frozenCompositionCommit, 'law/policy/stynx-1.1.1-mutation-reuse.json'),
-  );
   assert.deepEqual(policy.candidateRebind, {
-    kind: 'zero-mutation-candidate-rebind-v1',
+    kind: 'zero-mutation-candidate-rebind-v2',
     sourceCandidate: {
+      commit: '17ea3c42a2e129cf59739f2c8d74a885841712e2',
+      tree: 'a1f5b03d27066c27231ac9b3e8bfe9db261ac431',
+    },
+    historicalInputCandidate: {
       commit: frozenCompositionCommit,
       tree: 'fa3f2a43eeb89e73dff04074d021e2ba1783cf84',
     },
     sourceSummary: {
       path: '.devai/state/check-cache/v1/artifacts/mutation/summary.json',
-      bytes: 36_649,
-      sha256: '00af2696162936a3f2ca4d7cfc7f68d8f2134a3639b111b07db1a34df1560e29',
+      bytes: 37_796,
+      sha256: 'fa4e5a4c021bd6f73e020e8debc7f9d65adc731cab7bc05cec65198659b602ff',
       packageCount: 38,
       artifactBindingCount: 76,
     },
@@ -729,36 +730,25 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
       disposition: 'historical-source-identities',
     },
     semanticRebindComparison: {
-      kind: 'root-manifest-two-script-transition-v1',
+      kind: 'root-manifest-unchanged-with-historical-input-v1',
       sourceRootManifest: {
         bytes: 10_790,
-        sha256: '07f672f29660f90cb9480a7ff395463f5ccb08ecd5f74e61869391ef1653b47c',
-        gitBlobOid: '6d232561370502cac0489bc2cddeaf316be6beea',
+        sha256: 'cccac5d19c5b38dd2f2d4840451c7c7d1b2fbb6403451bc0c2b149f0e8f80846',
+        gitBlobOid: 'da1ed88ad64acc60996d76e150af883ece7ba944',
       },
       targetRootManifest: {
         bytes: 10_790,
         sha256: 'cccac5d19c5b38dd2f2d4840451c7c7d1b2fbb6403451bc0c2b149f0e8f80846',
         gitBlobOid: 'da1ed88ad64acc60996d76e150af883ece7ba944',
       },
-      allowedScriptTransitions: [
-        {
-          field: 'scripts.ci:stynx:release',
-          from: 'pnpm test:coverage && node scripts/verify-missing-evidence.mjs && node scripts/run-release-preparation.mjs',
-          to: 'pnpm test:coverage && node scripts/run-release-preparation.mjs',
-        },
-        {
-          field: 'scripts.release:publish:ci',
-          from: 'node scripts/changesets-publish-ci.mjs',
-          to: 'node scripts/verify-missing-evidence.mjs && node scripts/changesets-publish-ci.mjs',
-        },
-      ],
+      allowedScriptTransitions: [],
       comparison: {
-        rootManifest: 'target-bytes-equal-exact-two-source-byte-replacements',
-        otherRootManifestBytes: 'identical',
+        rootManifest: 'source-and-target-identical',
+        historicalMutationInputTreeEntries: 'match-explicit-historical-candidate-mode-type-oid',
         otherMutationInputTreeEntries: 'identical-mode-type-oid',
       },
-      canonicalContractBytes: 960,
-      canonicalContractSha256: 'cc7054ec2e3cdaf15ed6b2a30259ac483496ed3f25cb180933a08d6d1b45aa28',
+      canonicalContractBytes: 597,
+      canonicalContractSha256: '9df3992b0d495e5f7857dd6f1cacda8b2e5ece76085f0bd3802ffeaf830d5b83',
     },
     promotionVerifier: {
       path: 'scripts/verify-missing-evidence.mjs',
@@ -772,22 +762,38 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
     mismatchDisposition: 'fail-before-package-start',
   });
   assert.deepEqual(policy.allowedChangedPaths, [
-    ...sourcePolicy.allowedChangedPaths.slice(0, 3),
+    'law/adr/2026-08-24-stynx-1.1.1-campaign-controls.md',
+    'law/policy/stynx-1.1.1-mutation-reuse.json',
+    'law/trace.json',
     'package.json',
-    ...sourcePolicy.allowedChangedPaths.slice(3, 9),
+    'packages/pdf-a-vera-docker/src/parse-report.ts',
+    'packages/pdf-a-vera-docker/test/unit/parse-report.spec.ts',
+    'packages/pdf-a-vera-docker/test/unit/validator.spec.ts',
+    'packages/pdf/test/conformance/payslip.spec.ts',
+    'packages/pdf/test/conformance/verapdf.ts',
+    'packages/idempotency/vitest.config.ts',
+    'packages/mobile-runtime/test/mobile-runtime-edge-cases.spec.ts',
+    'packages/mobile-runtime/vitest.config.ts',
+    'packages/preferences/test/preferences-contract.spec.ts',
+    'packages/preferences/vitest.config.ts',
+    'packages/ratelimit/vitest.config.ts',
     'scripts/list-ddl-objects.spec.mjs',
-    ...sourcePolicy.allowedChangedPaths.slice(9),
+    'scripts/run-mutation-evidence.mjs',
+    'test/scripts/local-rc-blocker-contract.test.mjs',
+    'test/scripts/release-version-policy.test.mjs',
+    'tools/repo-config/coverage-population.mjs',
   ]);
 
-  const sourceManifest = JSON.parse(repositorySourceAt(frozenCompositionCommit, 'package.json'));
-  assert.equal(
-    Buffer.byteLength(repositorySourceAt(frozenCompositionCommit, 'package.json')),
-    10_790,
+  const sourceManifest = repositorySourceAt(
+    policy.candidateRebind.sourceCandidate.commit,
+    'package.json',
   );
+  assert.equal(Buffer.byteLength(sourceManifest), 10_790);
   assert.equal(
-    sha256(repositorySourceAt(frozenCompositionCommit, 'package.json')),
+    sha256(sourceManifest),
     policy.candidateRebind.semanticRebindComparison.sourceRootManifest.sha256,
   );
+  assert.equal(repositorySource('package.json'), sourceManifest);
   const { canonicalContractBytes, canonicalContractSha256, ...semanticRebindComparison } =
     policy.candidateRebind.semanticRebindComparison;
   const semanticContract = canonicalize({
@@ -799,27 +805,13 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
   });
   assert.equal(Buffer.byteLength(semanticContract), canonicalContractBytes);
   assert.equal(sha256(semanticContract), canonicalContractSha256);
-  const normalizedManifest = structuredClone(rootManifest);
-  for (const script of ['ci:stynx:release', 'release:publish:ci']) {
-    normalizedManifest.scripts[script] = sourceManifest.scripts[script];
-  }
-  assert.deepEqual(
-    normalizedManifest,
-    sourceManifest,
-    'only the two release sequencing fields may differ from the frozen mutation input',
+  assert.deepEqual(JSON.parse(sourceManifest), rootManifest);
+  assert.notEqual(
+    policy.candidateRebind.sourceCandidate.commit,
+    policy.candidateRebind.historicalInputCandidate.commit,
   );
-  assert.deepEqual(
-    Object.fromEntries(
-      Object.entries(rootManifest.scripts).filter(
-        ([script]) => !['ci:stynx:release', 'release:publish:ci'].includes(script),
-      ),
-    ),
-    Object.fromEntries(
-      Object.entries(sourceManifest.scripts).filter(
-        ([script]) => !['ci:stynx:release', 'release:publish:ci'].includes(script),
-      ),
-    ),
-  );
+  assert.equal(policy.veraPdfRobustnessRemediation.mutationProjection.rosterCount, 38);
+  assert.equal(policy.veraPdfRobustnessRemediation.mutationProjection.affectedPackageCount, 0);
 });
 
 function stripJavaScriptComments(source) {
@@ -841,6 +833,7 @@ test('D24.33 runner validates and atomically rebinds without a package start', (
   const branch = candidateRebindFunctionBody(runner);
   for (const marker of [
     'sourceCandidate',
+    'historicalInputCandidate',
     'sourceSummary',
     'artifactBindingCount',
     'sourceInputProjection',
@@ -863,6 +856,10 @@ test('D24.33 runner validates and atomically rebinds without a package start', (
   assert.ok(
     branch.indexOf('sourceSummary') < branch.indexOf('publishComposedDirectory'),
     'source validation must precede publication',
+  );
+  assert.ok(
+    branch.indexOf('sourceCandidate') < branch.indexOf('historicalInputCandidate'),
+    'the rebound source identity must be validated separately from historical mutation inputs',
   );
   assert.match(branch, /publishComposedDirectory/u);
   assert.doesNotMatch(

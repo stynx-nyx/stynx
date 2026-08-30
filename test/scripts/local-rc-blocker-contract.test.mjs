@@ -6732,6 +6732,73 @@ test('D24.32 composed mutation evidence runs exactly four packages and fails clo
   assert.doesNotMatch(restorationSource, /recursive|glob|rmSync|\.stryker-tmp|coverage|dist/u);
 });
 
+test('D24.36 chained rebind preserves historical inputs and exits before every mutation start', () => {
+  const policy = JSON.parse(
+    readFileSync(resolve(repoRoot, 'law/policy/stynx-1.1.1-mutation-reuse.json'), 'utf8'),
+  );
+  assert.equal(policy.candidateRebind.kind, 'zero-mutation-candidate-rebind-v2');
+  assert.deepEqual(policy.candidateRebind.sourceCandidate, {
+    commit: '17ea3c42a2e129cf59739f2c8d74a885841712e2',
+    tree: 'a1f5b03d27066c27231ac9b3e8bfe9db261ac431',
+  });
+  assert.deepEqual(policy.candidateRebind.historicalInputCandidate, {
+    commit: '6754d65f89cc9c2f23ab82f61a4b68c543f0bef4',
+    tree: 'fa3f2a43eeb89e73dff04074d021e2ba1783cf84',
+  });
+  assert.deepEqual(policy.candidateRebind.sourceSummary, {
+    path: '.devai/state/check-cache/v1/artifacts/mutation/summary.json',
+    bytes: 37_796,
+    sha256: 'fa4e5a4c021bd6f73e020e8debc7f9d65adc731cab7bc05cec65198659b602ff',
+    packageCount: 38,
+    artifactBindingCount: 76,
+  });
+  assert.equal(
+    policy.candidateRebind.sourceInputProjection.sha256,
+    'f9222176e2fcde022dae67e8a776fb7de4cfb9e0eb4f85d5c0a1f2c36a86b674',
+  );
+  assert.equal(policy.candidateRebind.semanticRebindComparison.allowedScriptTransitions.length, 0);
+  assert.deepEqual(
+    policy.candidateRebind.semanticRebindComparison.sourceRootManifest,
+    policy.candidateRebind.semanticRebindComparison.targetRootManifest,
+  );
+  assert.equal(policy.candidateRebind.mutationSubprocesses, 0);
+  assert.equal(policy.candidateRebind.packageStarts, 0);
+
+  const runnerSource = readFileSync(resolve(repoRoot, 'scripts/run-mutation-evidence.mjs'), 'utf8');
+  const rebindStart = runnerSource.indexOf('export async function rebindCandidateComposition');
+  const directStart = runnerSource.indexOf('\nif (isDirectInvocation) {', rebindStart);
+  assert.notEqual(rebindStart, -1);
+  assert.notEqual(directStart, -1);
+  const rebindSource = runnerSource.slice(rebindStart, directStart);
+  for (const required of [
+    'historicalInputCandidate',
+    'historicalMutationInputTreeEntries',
+    'sourceRootManifest',
+    'targetRootManifest',
+    'sourceInputProjection',
+    'artifactBindingCount',
+    'publishComposedDirectory',
+  ]) {
+    assert.match(rebindSource, new RegExp(required, 'u'));
+  }
+  assert.doesNotMatch(
+    rebindSource,
+    /(?:preflightFullMutationInfrastructure|runPackage|stryker|freshRoster\.map|selectedRoster\.map)/iu,
+  );
+
+  const directSource = runnerSource.slice(directStart);
+  const rebindCall = directSource.indexOf('await rebindCandidateComposition');
+  const preflightCall = directSource.indexOf('preflightFullMutationInfrastructure(');
+  const packageCall = directSource.indexOf('freshRoster.map(runPackage)');
+  assert.notEqual(rebindCall, -1);
+  assert.equal(preflightCall === -1 || rebindCall < preflightCall, true);
+  assert.equal(packageCall === -1 || rebindCall < packageCall, true);
+  assert.match(
+    directSource.slice(rebindCall, preflightCall === -1 ? undefined : preflightCall),
+    /process\.exit\(0\)/u,
+  );
+});
+
 test('D24.22 filesystem URLs preserve decoded space-bearing engine and Playwright paths', async () => {
   const fixtureParent = mkdtempSync(join(realpathSync(tmpdir()), 'stynx-d24-22-'));
   const engineRoot = join(fixtureParent, 'engine fixture with space');
