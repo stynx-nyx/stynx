@@ -66,6 +66,7 @@
     "packages/preferences/test/preferences-contract.spec.ts",
     "packages/preferences/vitest.config.ts",
     "packages/ratelimit/vitest.config.ts",
+    "reference/api/Dockerfile",
     "scripts/list-ddl-objects.spec.mjs",
     "scripts/run-mutation-evidence.mjs",
     "test/scripts/local-rc-blocker-contract.test.mjs",
@@ -179,6 +180,50 @@
       "affectedPackageCount": 0,
       "taskKeyDisposition": "zero-execution-candidate-rebind-v2-required"
     }
+  },
+  "referenceApiContainerBuildInputCorrection": {
+    "kind": "non-mutation-input-container-build-context-v1",
+    "sourceCandidate": {
+      "commit": "c932d76c27be467936a827d96ad71a995cf91776",
+      "tree": "dcab7e653ddd3eac47f4be935bd2e8694e2fdc82"
+    },
+    "targetCandidate": {
+      "commit": "56e3f48085bae929c8a1eb958ff3602399705572",
+      "tree": "0599e30c5a2286bd532070c770593d255c449235"
+    },
+    "path": "reference/api/Dockerfile",
+    "source": {
+      "mode": "0644",
+      "bytes": 2743,
+      "sha256": "5e2d0258d19ad261ebbb8122c14cc968123393f757e3c631a448c3eb2c324d29",
+      "gitBlobOid": "020b28450e07be4dfdb7ff87b03f10d74572f5f1"
+    },
+    "target": {
+      "mode": "0644",
+      "bytes": 2842,
+      "sha256": "3ec930267b977279d2f9aaa1b2ca00898f52604a2d6daa25c1e91ab9a425935b",
+      "gitBlobOid": "3926096a4efbd695313681c922c2851e0b164cbf"
+    },
+    "transition": {
+      "kind": "single-build-context-copy-v1",
+      "source": "scripts/verify-reference-api-build-inputs.mjs",
+      "target": "scripts/verify-reference-api-build-inputs.mjs",
+      "occurrences": 1,
+      "before": "COPY reference/api ./reference/api"
+    },
+    "mutationInputProjection": {
+      "rosterCount": 38,
+      "selectedPackageCount": 0,
+      "disposition": "absent-from-every-package-projection"
+    },
+    "remoteVerification": {
+      "workflow": "STYNX Reference Apps",
+      "runId": 33337393155,
+      "conclusion": "success"
+    },
+    "mutationSubprocesses": 0,
+    "packageStarts": 0,
+    "mismatchDisposition": "fail-before-package-start"
   },
   "sensorOnlyCorrections": [
     {
