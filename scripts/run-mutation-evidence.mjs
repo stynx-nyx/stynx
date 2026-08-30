@@ -1061,11 +1061,12 @@ export async function rebindCandidateComposition({
   void onPackageStart;
   const candidateRebind = policy?.candidateRebind;
   const sourceCandidate = candidateRebind?.sourceCandidate;
+  const historicalInputCandidate = candidateRebind?.historicalInputCandidate;
   const sourceSummary = candidateRebind?.sourceSummary;
   const sourceInputProjection = candidateRebind?.sourceInputProjection;
   const semanticRebindComparison = candidateRebind?.semanticRebindComparison;
   if (
-    candidateRebind?.kind !== 'zero-mutation-candidate-rebind-v1' ||
+    candidateRebind?.kind !== 'zero-mutation-candidate-rebind-v2' ||
     candidateRebind.mutationSubprocesses !== 0 ||
     candidateRebind.packageStarts !== 0 ||
     candidateRebind.mismatchDisposition !== 'fail-before-package-start'
@@ -1074,6 +1075,7 @@ export async function rebindCandidateComposition({
   }
   if (
     !sourceCandidate ||
+    !historicalInputCandidate ||
     !sourceSummary ||
     sourceSummary.packageCount !== policy.requiredRosterCount ||
     sourceSummary.artifactBindingCount !== policy.requiredRosterCount * 2
@@ -1118,6 +1120,18 @@ export async function rebindCandidateComposition({
   }
   if (sourceTreeIdentity !== sourceCandidate.tree) {
     throw new Error('candidate rebind source tree drifted');
+  }
+  let historicalInputTreeIdentity;
+  try {
+    historicalInputTreeIdentity = gitText(
+      ['rev-parse', `${historicalInputCandidate.commit}^{tree}`],
+      repositoryRoot,
+    ).trim();
+  } catch {
+    throw new Error('candidate rebind historical input tree drifted');
+  }
+  if (historicalInputTreeIdentity !== historicalInputCandidate.tree) {
+    throw new Error('candidate rebind historical input tree drifted');
   }
   gitText(
     ['merge-base', '--is-ancestor', sourceCandidate.commit, candidate.commit],
@@ -1178,6 +1192,10 @@ export async function rebindCandidateComposition({
   }
 
   const sourceTree = treeEntries(sourceCandidate.commit, repositoryRoot);
+  const historicalMutationInputTreeEntries = treeEntries(
+    historicalInputCandidate.commit,
+    repositoryRoot,
+  );
   const currentTree = treeEntries(candidate.commit, repositoryRoot);
   const catalog = workspaceCatalog(repositoryRoot);
   const historicalProjection = [...summary.packages]
@@ -1268,7 +1286,10 @@ export async function rebindCandidateComposition({
     ) {
       throw new Error(`${entry.packageName}: candidate rebind score drifted`);
     }
-    if (entry.inputProjectionDigest !== mutationInputProjection(rosterEntry, sourceTree, catalog)) {
+    if (
+      entry.inputProjectionDigest !==
+      mutationInputProjection(rosterEntry, historicalMutationInputTreeEntries, catalog)
+    ) {
       throw new Error(`${entry.packageName}: candidate rebind historical projection drifted`);
     }
     if (
@@ -1284,13 +1305,21 @@ export async function rebindCandidateComposition({
     if (expectedProvenance === 'fresh') freshDurationMs += entry.durationMs;
     for (const status of MUTANT_STATUSES) aggregateTotals[status] += entry.statusTotals[status];
 
+    const historicalInputs = mutationInputEntries(
+      rosterEntry,
+      historicalMutationInputTreeEntries,
+      catalog,
+    ).filter(({ path }) => path !== 'package.json');
     const sourceInputs = mutationInputEntries(rosterEntry, sourceTree, catalog).filter(
       ({ path }) => path !== 'package.json',
     );
     const currentInputs = mutationInputEntries(rosterEntry, currentTree, catalog).filter(
       ({ path }) => path !== 'package.json',
     );
-    if (canonicalize(sourceInputs) !== canonicalize(currentInputs)) {
+    if (
+      canonicalize(historicalInputs) !== canonicalize(sourceInputs) ||
+      canonicalize(sourceInputs) !== canonicalize(currentInputs)
+    ) {
       throw new Error(
         `${entry.packageName}: otherMutationInputTreeEntries mode type oid identity drifted`,
       );
@@ -1324,9 +1353,12 @@ export async function rebindCandidateComposition({
     comparison: semanticRebindComparison?.comparison,
   });
   if (
-    semanticRebindComparison?.kind !== 'root-manifest-two-script-transition-v1' ||
+    semanticRebindComparison?.kind !== 'root-manifest-unchanged-with-historical-input-v1' ||
     Buffer.byteLength(semanticContract) !== semanticRebindComparison.canonicalContractBytes ||
     sha256Hex(semanticContract) !== semanticRebindComparison.canonicalContractSha256 ||
+    semanticRebindComparison.comparison?.rootManifest !== 'source-and-target-identical' ||
+    semanticRebindComparison.comparison?.historicalMutationInputTreeEntries !==
+      'match-explicit-historical-candidate-mode-type-oid' ||
     semanticRebindComparison.comparison?.otherMutationInputTreeEntries !== 'identical-mode-type-oid'
   ) {
     throw new Error('candidate rebind semantic comparison identity drifted');

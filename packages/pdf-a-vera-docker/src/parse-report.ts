@@ -14,18 +14,36 @@ export function parseVeraPdfJson(raw: string): PdfAValidationResult {
   const report = asRecord(parsed.report) ?? parsed;
   const job = firstRecord(report.jobs) ?? report;
   const validation =
-    firstRecord(job.validationResult) ?? asRecord(job.validationResult) ?? asRecord(job.validation) ?? job;
+    firstRecord(job.validationResult) ?? asRecord(job.validationResult) ?? asRecord(job.validation);
+  if (!validation) {
+    throw new VeraPdfReportParseError('VERAPDF_REPORT_VALIDATION_MISSING');
+  }
+  const valid = readBoolean(validation, ['isCompliant', 'compliant', 'valid']);
+  if (valid === undefined) {
+    throw new VeraPdfReportParseError('VERAPDF_REPORT_COMPLIANCE_MISSING');
+  }
+  const declared = declaredFrom(validation, job, report);
+  if (!declared) {
+    throw new VeraPdfReportParseError('VERAPDF_REPORT_PROFILE_MISSING');
+  }
+  const details = asRecord(validation.details);
+  if (!details || !hasRulePopulation(details)) {
+    throw new VeraPdfReportParseError('VERAPDF_REPORT_DETAILS_MISSING');
+  }
   const errors = collectRuleErrors(validation);
-  const valid = readBoolean(validation, ['isCompliant', 'compliant', 'valid']) ?? errors.length === 0;
 
   return {
     valid,
-    declared: valid ? declaredFrom(validation, job, report) : null,
+    declared: valid ? declared : null,
     rulesetVersion: rulesetVersionFrom(report),
     validatedAt: new Date().toISOString(),
     durationMs: readNumber(validation, ['durationMs', 'duration']) ?? 0,
     errors: valid ? [] : errors.length > 0 ? errors : [syntheticFailure()],
   };
+}
+
+function hasRulePopulation(details: JsonRecord): boolean {
+  return ['failedRules', 'rules', 'ruleSummaries'].some((key) => Array.isArray(details[key]));
 }
 
 function parseJson(raw: string): JsonRecord {
@@ -51,7 +69,10 @@ function collectRuleErrors(validation: JsonRecord): PdfARuleError[] {
   return failedRules.flatMap((rule) => {
     const ruleRecord = asRecord(rule);
     if (!ruleRecord) return [];
-    if (readBoolean(ruleRecord, ['passed']) === true || readBoolean(ruleRecord, ['isCompliant']) === true) {
+    if (
+      readBoolean(ruleRecord, ['passed']) === true ||
+      readBoolean(ruleRecord, ['isCompliant']) === true
+    ) {
       return [];
     }
     const checks = readArray(ruleRecord, ['failedChecks', 'checks']);
@@ -90,7 +111,8 @@ function buildRuleId(rule: JsonRecord, clause: string): string {
 }
 
 function severityFrom(rule: JsonRecord, check?: JsonRecord): 'error' | 'warning' {
-  const severity = `${stringFrom(check?.severity) ?? stringFrom(rule.severity) ?? ''}`.toLowerCase();
+  const severity =
+    `${stringFrom(check?.severity) ?? stringFrom(rule.severity) ?? ''}`.toLowerCase();
   return severity.includes('warn') ? 'warning' : 'error';
 }
 
@@ -109,7 +131,9 @@ function locationFrom(check?: JsonRecord): PdfARuleLocation[] {
   return Object.keys(item).length > 0 ? [item] : [];
 }
 
-function declaredFrom(...records: JsonRecord[]): { version: PdfAVersion; conformance: PdfAConformance } | null {
+function declaredFrom(
+  ...records: JsonRecord[]
+): { version: PdfAVersion; conformance: PdfAConformance } | null {
   const haystack = records
     .flatMap((record) => [
       stringFrom(record.profileName),
@@ -119,7 +143,8 @@ function declaredFrom(...records: JsonRecord[]): { version: PdfAVersion; conform
     ])
     .filter((value): value is string => value !== undefined)
     .join(' ');
-  const match = /PDF\/A-?([1-4])\s*([ABU])/iu.exec(haystack) ?? /\b([1-4])([abu])\b/iu.exec(haystack);
+  const match =
+    /PDF\/A-?([1-4])\s*([ABU])/iu.exec(haystack) ?? /\b([1-4])([abu])\b/iu.exec(haystack);
   if (!match?.[1] || !match[2]) {
     return null;
   }
@@ -131,7 +156,8 @@ function declaredFrom(...records: JsonRecord[]): { version: PdfAVersion; conform
 
 function rulesetVersionFrom(report: JsonRecord): string {
   const buildInformation = asRecord(report.buildInformation);
-  const releaseDetails = firstRecord(buildInformation?.releaseDetails) ?? asRecord(buildInformation?.releaseDetails);
+  const releaseDetails =
+    firstRecord(buildInformation?.releaseDetails) ?? asRecord(buildInformation?.releaseDetails);
   return (
     stringFrom(report.rulesetVersion) ??
     stringFrom(releaseDetails?.version) ??
@@ -150,7 +176,9 @@ function syntheticFailure(): PdfARuleError {
 }
 
 function asRecord(value: unknown): JsonRecord | undefined {
-  return value && typeof value === 'object' && !Array.isArray(value) ? (value as JsonRecord) : undefined;
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as JsonRecord)
+    : undefined;
 }
 
 function firstRecord(value: unknown): JsonRecord | undefined {
