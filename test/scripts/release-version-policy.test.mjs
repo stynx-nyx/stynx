@@ -774,7 +774,9 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
   assert.deepEqual(policy.allowedChangedPaths, [
     ...sourcePolicy.allowedChangedPaths.slice(0, 3),
     'package.json',
-    ...sourcePolicy.allowedChangedPaths.slice(3),
+    ...sourcePolicy.allowedChangedPaths.slice(3, 9),
+    'scripts/list-ddl-objects.spec.mjs',
+    ...sourcePolicy.allowedChangedPaths.slice(9),
   ]);
 
   const sourceManifest = JSON.parse(repositorySourceAt(frozenCompositionCommit, 'package.json'));

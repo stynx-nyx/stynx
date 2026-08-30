@@ -4481,7 +4481,7 @@ test('D21 production binds exact Compose-up terminals without D14-D20 drift', ()
     'reference/api/src/main.ts': 'c56246aa274b5df7cd88ca11692f580fca724d60a41b69b0021bb63fbf0acc0b',
     'reference/web/playwright.config.mjs':
       '126344dd1fcbceb9496ade28ae95eea73686884d305681c13afc00c94a02c4be',
-    'package.json': '07f672f29660f90cb9480a7ff395463f5ccb08ecd5f74e61869391ef1653b47c',
+    'package.json': 'cccac5d19c5b38dd2f2d4840451c7c7d1b2fbb6403451bc0c2b149f0e8f80846',
     'reference/api/package.json':
       'bffedbee254dde969ae2a2a77689587fa9f553f0b9df2b869bd2b8fe910a5b64',
     'reference/web/package.json':
@@ -4652,7 +4652,7 @@ test('D22 production binds owned PostgreSQL mapping without D14-D21 drift', () =
     'reference/api/src/main.ts': 'c56246aa274b5df7cd88ca11692f580fca724d60a41b69b0021bb63fbf0acc0b',
     'reference/web/playwright.config.mjs':
       '126344dd1fcbceb9496ade28ae95eea73686884d305681c13afc00c94a02c4be',
-    'package.json': '07f672f29660f90cb9480a7ff395463f5ccb08ecd5f74e61869391ef1653b47c',
+    'package.json': 'cccac5d19c5b38dd2f2d4840451c7c7d1b2fbb6403451bc0c2b149f0e8f80846',
     'reference/api/package.json':
       'bffedbee254dde969ae2a2a77689587fa9f553f0b9df2b869bd2b8fe910a5b64',
     'reference/web/package.json':
@@ -4712,7 +4712,7 @@ test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14
     'reference/api/src/main.ts': 'c6175bfa1f231730a0c339a8f48fd28a7a04c1c3f6f60de643ae4b767bf7c7a9',
     'reference/web/playwright.config.mjs':
       '3fbbb1a4dc5bcafe289113674ae8176f2cc90af74dfd69c6f1dc4f138fbff067',
-    'package.json': '07f672f29660f90cb9480a7ff395463f5ccb08ecd5f74e61869391ef1653b47c',
+    'package.json': 'cccac5d19c5b38dd2f2d4840451c7c7d1b2fbb6403451bc0c2b149f0e8f80846',
     'reference/api/package.json':
       'bffedbee254dde969ae2a2a77689587fa9f553f0b9df2b869bd2b8fe910a5b64',
     'reference/web/package.json':
@@ -6317,8 +6317,8 @@ test('D24.12 focused and full-roster publication roots are mechanically independ
       runnerSource.indexOf('function runPackage(entry) {'),
       runnerSource.indexOf('\nfunction runFocusedPackage'),
     );
-    const compositionStart = runnerSource.indexOf('\nif (policy) {');
-    const legacyStart = runnerSource.indexOf('\nif (!normalizeExisting) {', compositionStart);
+    const compositionStart = runnerSource.indexOf('\n  if (policy) {');
+    const legacyStart = runnerSource.indexOf('\n  if (!normalizeExisting) {', compositionStart);
     const fullPublisherSource = runnerSource.slice(compositionStart, legacyStart);
     assert.match(runPackageSource, /function runPackage\(entry\)/u);
     assert.doesNotMatch(runPackageSource, /FOCUSED_MUTATION_ARTIFACT_ROOT|focused-attempts/u);
@@ -6626,9 +6626,9 @@ test('D24.15 full-roster infrastructure preflight fails before package one', asy
 
 test('D24.15 runner bypasses preflight only for non-executing modes', () => {
   const runnerSource = readFileSync(resolve(repoRoot, 'scripts/run-mutation-evidence.mjs'), 'utf8');
-  const focusedBranch = runnerSource.indexOf('\nif (diagnosticPackageName) {');
+  const focusedBranch = runnerSource.indexOf('\n  if (diagnosticPackageName) {');
   const focusedExit = runnerSource.indexOf('process.exit(0);', focusedBranch);
-  const compositionBranch = runnerSource.indexOf('\nif (policy) {');
+  const compositionBranch = runnerSource.indexOf('\n  if (policy) {');
   const compositionPreflight = runnerSource.indexOf(
     'preflightFullMutationInfrastructure()',
     compositionBranch,
@@ -6637,7 +6637,7 @@ test('D24.15 runner bypasses preflight only for non-executing modes', () => {
   const preflightCall = runnerSource.lastIndexOf('preflightFullMutationInfrastructure(');
   const normalizeBypass = runnerSource.lastIndexOf('if (!normalizeExisting) {', preflightCall);
   const stagingAction = runnerSource.lastIndexOf(
-    '\nrmSync(stagingDirectory, { recursive: true, force: true });',
+    '\n  rmSync(stagingDirectory, { recursive: true, force: true });',
   );
   assert.equal(focusedBranch > 0, true);
   assert.equal(focusedExit > focusedBranch, true);
@@ -6679,8 +6679,11 @@ test('D24.32 composed mutation evidence runs exactly four packages and fails clo
 
   const runnerSource = readFileSync(resolve(repoRoot, 'scripts/run-mutation-evidence.mjs'), 'utf8');
   const compositionSource = runnerSource.slice(
-    runnerSource.indexOf('\nif (policy) {'),
-    runnerSource.indexOf('\nif (!normalizeExisting) {', runnerSource.indexOf('\nif (policy) {')),
+    runnerSource.indexOf('\n  if (policy) {'),
+    runnerSource.indexOf(
+      '\n  if (!normalizeExisting) {',
+      runnerSource.indexOf('\n  if (policy) {'),
+    ),
   );
   for (const required of [
     'stynx-1.1.1-mutation-reuse.json',
