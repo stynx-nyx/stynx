@@ -652,6 +652,211 @@ test('one-time rebaseline deterministically updates the exact 44-package release
 
 const rootManifest = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8'));
 const repositorySource = (path) => readFileSync(join(repoRoot, path), 'utf8');
+const frozenCompositionCommit = '6754d65f89cc9c2f23ab82f61a4b68c543f0bef4';
+
+function repositorySourceAt(commit, path) {
+  const result = spawnSync('git', ['show', `${commit}:${path}`], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  assert.ifError(result.error);
+  assert.equal(result.signal, null);
+  assert.equal(result.status, 0, result.stderr);
+  return result.stdout;
+}
+
+function sha256(value) {
+  return createHash('sha256').update(value).digest('hex');
+}
+
+function canonicalize(value) {
+  if (value === null || typeof value !== 'object') return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(canonicalize).join(',')}]`;
+  return `{${Object.keys(value)
+    .sort()
+    .map((key) => `${JSON.stringify(key)}:${canonicalize(value[key])}`)
+    .join(',')}}`;
+}
+
+test('D24.33 local release preparation keeps coverage first and excludes remote evidence', () => {
+  assert.deepEqual(rootManifest.scripts['ci:stynx:release'].split(' && '), [
+    'pnpm test:coverage',
+    'node scripts/run-release-preparation.mjs',
+  ]);
+  assert.doesNotMatch(rootManifest.scripts['ci:stynx:release'], /verify-missing-evidence/u);
+});
+
+test('D24.33 promotion keeps the unchanged evidence verifier before publish:true', () => {
+  assert.deepEqual(rootManifest.scripts['release:publish:ci'].split(' && '), [
+    'node scripts/verify-missing-evidence.mjs',
+    'node scripts/changesets-publish-ci.mjs',
+  ]);
+  const workflow = repositorySource('.github/workflows/release.yml');
+  assert.match(workflow, /inputs\.publish == true/u);
+  assert.match(workflow, /publish:\s*pnpm release:publish:ci/u);
+  assert.ok(
+    workflow.indexOf('inputs.publish == true') <
+      workflow.indexOf('publish: pnpm release:publish:ci'),
+  );
+});
+
+test('D24.33 policy binds exact source evidence and a semantics-preserving manifest rebind', () => {
+  const policy = JSON.parse(repositorySource('law/policy/stynx-1.1.1-mutation-reuse.json'));
+  const sourcePolicy = JSON.parse(
+    repositorySourceAt(frozenCompositionCommit, 'law/policy/stynx-1.1.1-mutation-reuse.json'),
+  );
+  assert.deepEqual(policy.candidateRebind, {
+    kind: 'zero-mutation-candidate-rebind-v1',
+    sourceCandidate: {
+      commit: frozenCompositionCommit,
+      tree: 'fa3f2a43eeb89e73dff04074d021e2ba1783cf84',
+    },
+    sourceSummary: {
+      path: '.devai/state/check-cache/v1/artifacts/mutation/summary.json',
+      bytes: 36_649,
+      sha256: '00af2696162936a3f2ca4d7cfc7f68d8f2134a3639b111b07db1a34df1560e29',
+      packageCount: 38,
+      artifactBindingCount: 76,
+    },
+    sourceInputProjection: {
+      kind: 'sorted-package-input-projection-digest-map-v1',
+      bytes: 4_934,
+      sha256: 'f9222176e2fcde022dae67e8a776fb7de4cfb9e0eb4f85d5c0a1f2c36a86b674',
+      disposition: 'historical-source-identities',
+    },
+    semanticRebindComparison: {
+      kind: 'root-manifest-two-script-transition-v1',
+      sourceRootManifest: {
+        bytes: 10_790,
+        sha256: '07f672f29660f90cb9480a7ff395463f5ccb08ecd5f74e61869391ef1653b47c',
+        gitBlobOid: '6d232561370502cac0489bc2cddeaf316be6beea',
+      },
+      targetRootManifest: {
+        bytes: 10_790,
+        sha256: 'cccac5d19c5b38dd2f2d4840451c7c7d1b2fbb6403451bc0c2b149f0e8f80846',
+        gitBlobOid: 'da1ed88ad64acc60996d76e150af883ece7ba944',
+      },
+      allowedScriptTransitions: [
+        {
+          field: 'scripts.ci:stynx:release',
+          from: 'pnpm test:coverage && node scripts/verify-missing-evidence.mjs && node scripts/run-release-preparation.mjs',
+          to: 'pnpm test:coverage && node scripts/run-release-preparation.mjs',
+        },
+        {
+          field: 'scripts.release:publish:ci',
+          from: 'node scripts/changesets-publish-ci.mjs',
+          to: 'node scripts/verify-missing-evidence.mjs && node scripts/changesets-publish-ci.mjs',
+        },
+      ],
+      comparison: {
+        rootManifest: 'target-bytes-equal-exact-two-source-byte-replacements',
+        otherRootManifestBytes: 'identical',
+        otherMutationInputTreeEntries: 'identical-mode-type-oid',
+      },
+      canonicalContractBytes: 960,
+      canonicalContractSha256: 'cc7054ec2e3cdaf15ed6b2a30259ac483496ed3f25cb180933a08d6d1b45aa28',
+    },
+    promotionVerifier: {
+      path: 'scripts/verify-missing-evidence.mjs',
+      mode: '0644',
+      bytes: 2_400,
+      sha256: '3b9422b1c137e01116d0775c5e5b77361a1d8024d08076583cf96a5b300cfa73',
+      requiredBefore: 'release:publish:ci',
+    },
+    mutationSubprocesses: 0,
+    packageStarts: 0,
+    mismatchDisposition: 'fail-before-package-start',
+  });
+  assert.deepEqual(policy.allowedChangedPaths, [
+    ...sourcePolicy.allowedChangedPaths.slice(0, 3),
+    'package.json',
+    ...sourcePolicy.allowedChangedPaths.slice(3),
+  ]);
+
+  const sourceManifest = JSON.parse(repositorySourceAt(frozenCompositionCommit, 'package.json'));
+  assert.equal(
+    Buffer.byteLength(repositorySourceAt(frozenCompositionCommit, 'package.json')),
+    10_790,
+  );
+  assert.equal(
+    sha256(repositorySourceAt(frozenCompositionCommit, 'package.json')),
+    policy.candidateRebind.semanticRebindComparison.sourceRootManifest.sha256,
+  );
+  const { canonicalContractBytes, canonicalContractSha256, ...semanticRebindComparison } =
+    policy.candidateRebind.semanticRebindComparison;
+  const semanticContract = canonicalize({
+    kind: semanticRebindComparison.kind,
+    source: semanticRebindComparison.sourceRootManifest,
+    target: semanticRebindComparison.targetRootManifest,
+    transitions: semanticRebindComparison.allowedScriptTransitions,
+    comparison: semanticRebindComparison.comparison,
+  });
+  assert.equal(Buffer.byteLength(semanticContract), canonicalContractBytes);
+  assert.equal(sha256(semanticContract), canonicalContractSha256);
+  const normalizedManifest = structuredClone(rootManifest);
+  for (const script of ['ci:stynx:release', 'release:publish:ci']) {
+    normalizedManifest.scripts[script] = sourceManifest.scripts[script];
+  }
+  assert.deepEqual(
+    normalizedManifest,
+    sourceManifest,
+    'only the two release sequencing fields may differ from the frozen mutation input',
+  );
+  assert.deepEqual(
+    Object.fromEntries(
+      Object.entries(rootManifest.scripts).filter(
+        ([script]) => !['ci:stynx:release', 'release:publish:ci'].includes(script),
+      ),
+    ),
+    Object.fromEntries(
+      Object.entries(sourceManifest.scripts).filter(
+        ([script]) => !['ci:stynx:release', 'release:publish:ci'].includes(script),
+      ),
+    ),
+  );
+});
+
+test('D24.33 runner validates and atomically rebinds without a package start', () => {
+  const runner = repositorySource('scripts/run-mutation-evidence.mjs');
+  const branchStart = runner.indexOf('policy.candidateRebind');
+  assert.notEqual(branchStart, -1, 'candidate rebind branch is missing');
+  const branchEnd = runner.indexOf('\n  const baseline = validateBaseline', branchStart);
+  assert.notEqual(branchEnd, -1, 'candidate rebind must precede fresh composition');
+  const branch = runner.slice(branchStart, branchEnd);
+  for (const marker of [
+    'sourceCandidate',
+    'sourceSummary',
+    'artifactBindingCount',
+    'sourceInputProjection',
+    'semanticRebindComparison',
+    'otherMutationInputTreeEntries',
+    'allowedChangedPaths',
+    'reportDigest',
+    'resultDigest',
+    'provenance',
+    'thresholds',
+    'targetCensus',
+    'statusTotals',
+    'score',
+    'baseline',
+    'canonicalWrite',
+    'publishComposedDirectory',
+  ]) {
+    assert.match(branch, new RegExp(marker, 'u'), `${marker}: missing rebind validation`);
+  }
+  assert.ok(
+    branch.indexOf('sourceSummary') < branch.indexOf('publishComposedDirectory'),
+    'source validation must precede publication',
+  );
+  assert.match(runner, /renameSync\(stagingDirectory, finalDirectory\)/u);
+  assert.match(runner, /renameSync\(backupDirectory, finalDirectory\)/u);
+  assert.doesNotMatch(
+    branch,
+    /runPackage|freshRoster\.map|selectedRoster\.map|preflightFullMutationInfrastructure/u,
+    'candidate rebind cannot start mutation or a package process',
+  );
+});
 
 function publicWorkspaceManifests() {
   return ['packages', 'packages-web']
@@ -1124,10 +1329,13 @@ test('scenario=all hardening reaches every k6 scenario with authenticated fail-c
   assert.match(hardening, /No current k6 summary files were produced/u);
 });
 
-test('missing, stale, failed, or foreign-tree campaign evidence blocks release preparation', () => {
+test('missing, stale, failed, or foreign-tree campaign evidence remains fail-closed', () => {
   assert.ok(existsSync(join(repoRoot, 'scripts/verify-missing-evidence.mjs')));
-  assert.match(rootManifest.scripts['ci:stynx:release'], /missing-evidence/u);
   const evidence = repositorySource('scripts/verify-missing-evidence.mjs');
+  assert.equal(
+    sha256(evidence),
+    sha256(repositorySourceAt(frozenCompositionCommit, 'scripts/verify-missing-evidence.mjs')),
+  );
   for (const marker of [
     'candidate',
     'tree',
