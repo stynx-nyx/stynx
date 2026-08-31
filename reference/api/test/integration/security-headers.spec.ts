@@ -23,6 +23,8 @@ async function createProbeApp(isProduction: boolean): Promise<INestApplication> 
   const app = moduleRef.createNestApplication();
   configureSecurityHeaders(app, { isProduction });
   await app.init();
+  await app.listen(0, '127.0.0.1');
+  expect(app.getHttpServer().listening).toBe(true);
   return app;
 }
 
@@ -30,7 +32,12 @@ describe('reference API security headers', () => {
   let app: INestApplication | undefined;
 
   afterEach(async () => {
-    await app?.close();
+    if (app) {
+      const httpServer = app.getHttpServer();
+      expect(httpServer.listening).toBe(true);
+      await app.close();
+      expect(httpServer.listening).toBe(false);
+    }
     app = undefined;
   });
 

@@ -14,7 +14,7 @@ import { provideStynxDefaults } from '../src/provide-defaults';
 import { AuthInterceptor } from '../src/auth.interceptor';
 import { ErrorInterceptor as ProvidedErrorInterceptor } from '../src/error.interceptor';
 import { RequestIdInterceptor } from '../src/request-id.interceptor';
-import { STYNX_ANGULAR_OPTIONS, STYNX_AUTH_PROVIDER } from '../src/tokens';
+import { STYNX_ANGULAR_OPTIONS, STYNX_AUTH_PROVIDER, STYNX_WINDOW } from '../src/tokens';
 
 beforeAll(() => {
   TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
@@ -32,19 +32,23 @@ describe('@stynx-nyx/angular provider depth', () => {
     const interceptor = TestBed.inject(ErrorInterceptor);
     const banner = TestBed.inject(ErrorBannerService);
     const next: HttpHandler = {
-      handle: () => throwError(() => new HttpErrorResponse({
-        error: {
-          code: 'FORM_VALIDATION_ERROR',
-          context: { field: 'email' },
-          message: 'Email is invalid',
-        },
-        status: 422,
-      })),
+      handle: () =>
+        throwError(
+          () =>
+            new HttpErrorResponse({
+              error: {
+                code: 'FORM_VALIDATION_ERROR',
+                context: { field: 'email' },
+                message: 'Email is invalid',
+              },
+              status: 422,
+            }),
+        ),
     };
 
-    await expect(firstValueFrom(interceptor.intercept({} as HttpRequest<unknown>, next))).rejects.toBeInstanceOf(
-      ValidationError,
-    );
+    await expect(
+      firstValueFrom(interceptor.intercept({} as HttpRequest<unknown>, next)),
+    ).rejects.toBeInstanceOf(ValidationError);
     expect(banner.current()).toEqual({
       code: 'FORM_VALIDATION_ERROR',
       context: { field: 'email' },
@@ -79,10 +83,30 @@ describe('@stynx-nyx/angular provider depth', () => {
     });
     expect(TestBed.inject(STYNX_AUTH_PROVIDER)).toBe(authProvider);
     expect(TestBed.inject(CSP_NONCE)).toBe('nonce-r17');
-    expect(TestBed.inject(HTTP_INTERCEPTORS)).toEqual(expect.arrayContaining([
-      expect.any(RequestIdInterceptor),
-      expect.any(AuthInterceptor),
-      expect.any(ProvidedErrorInterceptor),
-    ]));
+    expect(TestBed.inject(HTTP_INTERCEPTORS)).toEqual(
+      expect.arrayContaining([
+        expect.any(RequestIdInterceptor),
+        expect.any(AuthInterceptor),
+        expect.any(ProvidedErrorInterceptor),
+      ]),
+    );
+  });
+
+  it('provides a null window when evaluated outside a browser', () => {
+    const browserWindow = globalThis.window;
+    Object.defineProperty(globalThis, 'window', { configurable: true, value: undefined });
+    try {
+      TestBed.configureTestingModule({
+        providers: [
+          provideStynxDefaults({
+            angular: { apiBaseUrl: '/api', sessionMode: 'cookie' },
+          }),
+        ],
+      });
+
+      expect(TestBed.inject(STYNX_WINDOW)).toBe(null);
+    } finally {
+      Object.defineProperty(globalThis, 'window', { configurable: true, value: browserWindow });
+    }
   });
 });

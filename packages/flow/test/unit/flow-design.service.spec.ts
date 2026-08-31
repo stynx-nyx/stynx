@@ -1,5 +1,12 @@
 import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { FlowDesignService } from '../../src/flow-design.service';
+import {
+  FlowDesignTableStore,
+  graphPublishMeta,
+  jsonObject,
+  requireString,
+  withGraphPublishState,
+} from '../../src/internal/design/design-table-store';
 import type { Mock } from 'vitest';
 
 const SCOPE = '0190abcd-1234-7abc-89ab-000000000001';
@@ -39,6 +46,83 @@ function makeService(
   const { db, trx } = makeDb(rowsByCall);
   return { service: new FlowDesignService(db, ctx as never), trx, db };
 }
+
+describe('FlowDesignTableStore exact helper contracts', () => {
+  it('accepts only plain JSON objects', () => {
+    const object = { key: 'value' };
+    expect(jsonObject(object)).toBe(object);
+    for (const invalid of [null, undefined, 'value', 1, true, []]) {
+      expect(jsonObject(invalid)).toEqual({});
+    }
+  });
+
+  it('requires exact non-empty strings', () => {
+    expect(requireString('value', 'field')).toBe('value');
+    for (const invalid of [undefined, null, 1, '']) {
+      expect(() => requireString(invalid, 'field')).toThrow('field is required');
+    }
+  });
+
+  it('extracts and presents exact graph publication metadata', () => {
+    expect(graphPublishMeta(null)).toBe(null);
+    expect(graphPublishMeta([])).toBe(null);
+    expect(graphPublishMeta({ publish: [] })).toBe(null);
+    expect(graphPublishMeta({ publish: { publishedVersion: Infinity, publishedAt: 'at' } }))
+      .toBe(null);
+    expect(graphPublishMeta({ publish: { publishedVersion: 2, publishedAt: 'at' } })).toEqual({
+      publishedVersion: 2,
+      publishedAt: 'at',
+      publishedBy: null,
+    });
+    expect(withGraphPublishState({ id: GRAPH, meta: {} })).toEqual({
+      id: GRAPH,
+      meta: {},
+      status: 'draft',
+    });
+    expect(withGraphPublishState({
+      id: GRAPH,
+      meta: { publish: { publishedVersion: 2, publishedAt: 'at', publishedBy: 'u-1' } },
+    })).toEqual({
+      id: GRAPH,
+      meta: { publish: { publishedVersion: 2, publishedAt: 'at', publishedBy: 'u-1' } },
+      status: 'published',
+      publishedVersion: 2,
+      publishedAt: 'at',
+      publishedBy: 'u-1',
+    });
+  });
+
+  it('uses exact default SQL and reader policy for unfiltered lists', async () => {
+    const { db, trx } = makeDb([[]]);
+    const store = new FlowDesignTableStore(db as never, { tenantId: 't-1', actorId: 'u-1' } as never);
+    await store.listRows('scopes');
+    expect(trx.query).toHaveBeenCalledWith(
+      'select * from flow.scopes order by created_at DESC',
+      [],
+    );
+    expect(db.tx).toHaveBeenCalledWith(expect.any(Function), {
+      role: 'reader',
+      readonly: true,
+    });
+  });
+
+  it('requires a tenant and an actual update field', async () => {
+    const missingTenant = makeDb();
+    const noTenantStore = new FlowDesignTableStore(missingTenant.db as never, { actorId: 'u-1' } as never);
+    await expect(noTenantStore.createRow('scopes', { code: 'scope' })).rejects.toThrow(
+      'Tenant context is required',
+    );
+
+    const emptyUpdate = makeDb();
+    const store = new FlowDesignTableStore(
+      emptyUpdate.db as never,
+      { tenantId: 't-1', actorId: 'u-1' } as never,
+    );
+    await expect(store.updateRow('scopes', SCOPE, {})).rejects.toThrow(
+      'At least one update field is required',
+    );
+  });
+});
 
 describe('FlowDesignService — scopes', () => {
   it('listScopes returns camelized rows', async () => {
@@ -110,20 +194,22 @@ describe('FlowDesignService — graphs / nodes / edges', () => {
   });
 
   it('listGraphs derives draft and published presentation state from graph metadata', async () => {
-    const { service } = makeService([[
-      { id: GRAPH, code: 'draft', meta: {} },
-      {
-        id: '0190abcd-1234-7abc-89ab-000000000009',
-        code: 'published',
-        meta: {
-          publish: {
-            publishedVersion: 3,
-            publishedAt: '2026-05-19T00:00:00.000Z',
-            publishedBy: '0190abcd-1234-7abc-89ab-000000000010',
+    const { service } = makeService([
+      [
+        { id: GRAPH, code: 'draft', meta: {} },
+        {
+          id: '0190abcd-1234-7abc-89ab-000000000009',
+          code: 'published',
+          meta: {
+            publish: {
+              publishedVersion: 3,
+              publishedAt: '2026-05-19T00:00:00.000Z',
+              publishedBy: '0190abcd-1234-7abc-89ab-000000000010',
+            },
           },
         },
-      },
-    ]]);
+      ],
+    ]);
 
     await expect(service.listGraphs()).resolves.toEqual([
       expect.objectContaining({ id: GRAPH, status: 'draft' }),
@@ -222,6 +308,67 @@ describe('FlowDesignService — graphs / nodes / edges', () => {
     });
   });
 
+  it('publishGraph increments existing metadata without an actor or notes', async () => {
+    const { service, trx } = makeService(
+      [
+        [
+          {
+            id: GRAPH,
+            version: 'v2',
+            meta: {
+              publish: {
+                publishedVersion: 2,
+                publishedAt: '2026-05-18T00:00:00.000Z',
+              },
+            },
+          },
+        ],
+        [
+          { id: NODE, code: 'start', kind: 'start' },
+          { id: '0190abcd-1234-7abc-89ab-000000000009', code: 'end', kind: 'end' },
+        ],
+        [{ id: EDGE, from_node_id: NODE, to_node_id: '0190abcd-1234-7abc-89ab-000000000009' }],
+        [{ id: GRAPH }],
+      ],
+      { tenantId: 't-1' },
+    );
+
+    await expect(service.publishGraph(GRAPH, {})).resolves.toMatchObject({
+      publishedVersion: 3,
+      publishedBy: null,
+    });
+    expect(trx.query.mock.calls[3]?.[1]?.[1]).toMatchObject({
+      publish: {
+        publishedVersion: 3,
+        publishedBy: null,
+      },
+    });
+    expect(trx.query.mock.calls[3]?.[1]?.[1]?.publish).not.toHaveProperty('notes');
+  });
+
+  it('publishGraph normalizes non-object metadata before recording publication', async () => {
+    const { service, trx } = makeService([
+      [{ id: GRAPH, version: 'v2', meta: [] }],
+      [
+        { id: NODE, code: 'start', kind: 'start' },
+        { id: '0190abcd-1234-7abc-89ab-000000000009', code: 'end', kind: 'end' },
+      ],
+      [{ id: EDGE, from_node_id: NODE, to_node_id: '0190abcd-1234-7abc-89ab-000000000009' }],
+      [{ id: GRAPH }],
+    ]);
+
+    await service.publishGraph(GRAPH, {});
+    expect(trx.query.mock.calls[3]?.[1]?.[1]).toEqual({
+      publish: expect.objectContaining({ publishedVersion: 1 }),
+    });
+  });
+
+  it('publishGraph rejects a missing graph before loading its structure', async () => {
+    const { service, trx } = makeService([[]]);
+    await expect(service.publishGraph(GRAPH, {})).rejects.toBeInstanceOf(NotFoundException);
+    expect(trx.query).toHaveBeenCalledTimes(1);
+  });
+
   it('publishGraph rejects stale draft versions and invalid graph structure', async () => {
     const stale = makeService([[{ id: GRAPH, version: 'v2', meta: {} }]]);
     await expect(stale.service.publishGraph(GRAPH, { expectedDraftVersion: 'v1' })).rejects.toThrow(
@@ -233,9 +380,9 @@ describe('FlowDesignService — graphs / nodes / edges', () => {
       [{ id: NODE, code: 'start', kind: 'start' }],
       [],
     ]);
-    await expect(invalid.service.publishGraph(GRAPH, { expectedDraftVersion: 'v2' })).rejects.toBeInstanceOf(
-      BadRequestException,
-    );
+    await expect(
+      invalid.service.publishGraph(GRAPH, { expectedDraftVersion: 'v2' }),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 
   it('publishGraph rejects invalid graph structure with exact messages', async () => {
@@ -286,7 +433,9 @@ describe('FlowDesignService — graphs / nodes / edges', () => {
     const { service, trx } = makeService([[]]);
     await service.listGraphNodes(GRAPH);
     const [sql, params] = trx.query.mock.calls[0]!;
-    expect(sql).toBe('select * from flow.nodes where graph_id = $1::uuid order by sort_order, code');
+    expect(sql).toBe(
+      'select * from flow.nodes where graph_id = $1::uuid order by sort_order, code',
+    );
     expect(sql).toContain('graph_id = $1::uuid');
     expect(params).toEqual([GRAPH]);
   });
@@ -423,7 +572,9 @@ describe('FlowDesignService — agentRules / transitionEffects / nodeFormRules',
     ]);
 
     const update = makeService([[{ id: 'te-1', effect_key: 'email' }]]);
-    await expect(update.service.updateTransitionEffect('te-1', { effectKey: 'email' })).resolves.toMatchObject({
+    await expect(
+      update.service.updateTransitionEffect('te-1', { effectKey: 'email' }),
+    ).resolves.toMatchObject({
       id: 'te-1',
       effectKey: 'email',
     });
@@ -432,7 +583,10 @@ describe('FlowDesignService — agentRules / transitionEffects / nodeFormRules',
     await expect(get.service.getTransitionEffect('te-1')).resolves.toMatchObject({ id: 'te-1' });
 
     const del = makeService([[{ id: 'te-1' }]]);
-    await expect(del.service.deleteTransitionEffect('te-1')).resolves.toEqual({ id: 'te-1', deleted: true });
+    await expect(del.service.deleteTransitionEffect('te-1')).resolves.toEqual({
+      id: 'te-1',
+      deleted: true,
+    });
     expect(del.trx.softDelete).toHaveBeenCalledWith(expect.anything(), 'te-1');
   });
 
@@ -457,7 +611,9 @@ describe('FlowDesignService — policySets / policyRules', () => {
     const { service, trx } = makeService([[]]);
     await service.listPolicySets(SCOPE);
     const [sql, params] = trx.query.mock.calls[0]!;
-    expect(sql).toBe('select * from flow.policy_sets where scope_id = $1::uuid order by version, id');
+    expect(sql).toBe(
+      'select * from flow.policy_sets where scope_id = $1::uuid order by version, id',
+    );
     expect(sql).toContain('scope_id = $1::uuid');
     expect(params).toEqual([SCOPE]);
   });
@@ -483,7 +639,9 @@ describe('FlowDesignService — policySets / policyRules', () => {
 
   it('updatePolicySet, getPolicySet, and deletePolicySet route through shared helpers', async () => {
     const update = makeService([[{ id: POLICYSET, name: 'Policy' }]]);
-    await expect(update.service.updatePolicySet(POLICYSET, { name: 'Policy' })).resolves.toMatchObject({
+    await expect(
+      update.service.updatePolicySet(POLICYSET, { name: 'Policy' }),
+    ).resolves.toMatchObject({
       id: POLICYSET,
       name: 'Policy',
     });
@@ -503,7 +661,9 @@ describe('FlowDesignService — policySets / policyRules', () => {
     const { service, trx } = makeService([[]]);
     await service.listPolicyRules(POLICYSET);
     const [sql, params] = trx.query.mock.calls[0]!;
-    expect(sql).toBe('select * from flow.policy_rules where policy_set_id = $1::uuid order by priority, id');
+    expect(sql).toBe(
+      'select * from flow.policy_rules where policy_set_id = $1::uuid order by priority, id',
+    );
     expect(sql).toContain('policy_set_id = $1::uuid');
     expect(params).toEqual([POLICYSET]);
   });
@@ -697,27 +857,29 @@ describe('FlowDesignService.importGraph', () => {
 
   it('throws when an insert returns no row', async () => {
     const { service } = makeService([[]]);
-    await expect(service.createScope({ code: 'c', label: 'L', adapterKey: 'foo' }))
-      .rejects.toThrow(new BadRequestException('Flow insert did not return a row'));
+    await expect(service.createScope({ code: 'c', label: 'L', adapterKey: 'foo' })).rejects.toThrow(
+      new BadRequestException('Flow insert did not return a row'),
+    );
   });
 
   it('throws when import graph insertion returns a non-string graph id', async () => {
     const { service } = makeService([[{ id: null }]]);
-    await expect(service.importGraph({
-      graph: { scopeId: SCOPE, code: 'g' },
-      nodes: [{ code: 'a', kind: 'start' }],
-    })).rejects.toThrow(new BadRequestException('graph.id is required'));
+    await expect(
+      service.importGraph({
+        graph: { scopeId: SCOPE, code: 'g' },
+        nodes: [{ code: 'a', kind: 'start' }],
+      }),
+    ).rejects.toThrow(new BadRequestException('graph.id is required'));
   });
 
   it('throws when import node insertion returns a non-string node id', async () => {
-    const { service } = makeService([
-      [{ id: GRAPH, scope_id: SCOPE }],
-      [{ id: null, code: 'a' }],
-    ]);
-    await expect(service.importGraph({
-      graph: { scopeId: SCOPE, code: 'g' },
-      nodes: [{ code: 'a', kind: 'start' }],
-    })).rejects.toThrow(new BadRequestException('node a is required'));
+    const { service } = makeService([[{ id: GRAPH, scope_id: SCOPE }], [{ id: null, code: 'a' }]]);
+    await expect(
+      service.importGraph({
+        graph: { scopeId: SCOPE, code: 'g' },
+        nodes: [{ code: 'a', kind: 'start' }],
+      }),
+    ).rejects.toThrow(new BadRequestException('node a is required'));
   });
 });
 
@@ -755,7 +917,9 @@ describe('FlowDesignService.exportGraph', () => {
     ]);
     expect(trx.query.mock.calls[4]?.[0]).toContain('from flow.agent_rules rule');
     expect(trx.query.mock.calls[4]?.[0]).toContain('where node.graph_id = $1::uuid');
-    expect(trx.query.mock.calls[4]?.[0]).toContain('order by node.sort_order, rule.sort_order, rule.id');
+    expect(trx.query.mock.calls[4]?.[0]).toContain(
+      'order by node.sort_order, rule.sort_order, rule.id',
+    );
     expect(trx.query.mock.calls[4]?.[1]).toEqual([GRAPH]);
     expect(trx.query.mock.calls[5]?.[0]).toContain('from flow.node_form_rules rule');
     expect(trx.query.mock.calls[5]?.[0]).toContain('where node.graph_id = $1::uuid');
@@ -827,7 +991,9 @@ describe('FlowDesignService — tenant + input validation', () => {
 
   it('objectInput rejects string primitive (kills ConditionalExpression at flow-design.service.ts:847)', () => {
     const { service } = makeService([]);
-    expect(() => service.createNodeAgentRule(NODE, 'string-input' as never)).toThrow(BadRequestException);
+    expect(() => service.createNodeAgentRule(NODE, 'string-input' as never)).toThrow(
+      BadRequestException,
+    );
   });
 
   it('objectInput rejects numeric primitive', () => {
@@ -857,62 +1023,86 @@ describe('FlowDesignService — tenant + input validation', () => {
 describe('FlowDesignService — graphPublishMeta validation (kills survivors at L226-L243)', () => {
   it('rejects non-object meta and falls back to draft status', async () => {
     // meta=null route: graphPublishMeta returns null → status 'draft'.
-    const { service } = makeService([[
-      { id: GRAPH, code: 'g', meta: null },
-    ]]);
+    const { service } = makeService([[{ id: GRAPH, code: 'g', meta: null }]]);
     await expect(service.listGraphs()).resolves.toEqual([
       expect.objectContaining({ id: GRAPH, status: 'draft' }),
     ]);
   });
 
   it('rejects array meta and falls back to draft status (kills Array.isArray ConditionalExpression at L226)', async () => {
-    const { service } = makeService([[
-      { id: GRAPH, code: 'g', meta: [1, 2] },
-    ]]);
+    const { service } = makeService([[{ id: GRAPH, code: 'g', meta: [1, 2] }]]);
     await expect(service.listGraphs()).resolves.toEqual([
       expect.objectContaining({ id: GRAPH, status: 'draft' }),
     ]);
   });
 
   it('rejects publish entry when array (kills second Array.isArray check at L230)', async () => {
-    const { service } = makeService([[
-      { id: GRAPH, code: 'g', meta: { publish: ['not-object'] } },
-    ]]);
+    const { service } = makeService([
+      [{ id: GRAPH, code: 'g', meta: { publish: ['not-object'] } }],
+    ]);
     await expect(service.listGraphs()).resolves.toEqual([
       expect.objectContaining({ id: GRAPH, status: 'draft' }),
     ]);
   });
 
   it('rejects publishedVersion of wrong type (kills ConditionalExpression at L235)', async () => {
-    const { service } = makeService([[
-      { id: GRAPH, code: 'g', meta: { publish: { publishedVersion: 'not-a-number', publishedAt: '2026-01-01' } } },
-    ]]);
+    const { service } = makeService([
+      [
+        {
+          id: GRAPH,
+          code: 'g',
+          meta: { publish: { publishedVersion: 'not-a-number', publishedAt: '2026-01-01' } },
+        },
+      ],
+    ]);
     await expect(service.listGraphs()).resolves.toEqual([
       expect.objectContaining({ id: GRAPH, status: 'draft' }),
     ]);
   });
 
   it('rejects infinite publishedVersion (kills !Number.isFinite mutation)', async () => {
-    const { service } = makeService([[
-      { id: GRAPH, code: 'g', meta: { publish: { publishedVersion: Number.POSITIVE_INFINITY, publishedAt: '2026-01-01' } } },
-    ]]);
+    const { service } = makeService([
+      [
+        {
+          id: GRAPH,
+          code: 'g',
+          meta: {
+            publish: { publishedVersion: Number.POSITIVE_INFINITY, publishedAt: '2026-01-01' },
+          },
+        },
+      ],
+    ]);
     await expect(service.listGraphs()).resolves.toEqual([
       expect.objectContaining({ id: GRAPH, status: 'draft' }),
     ]);
   });
 
   it('coalesces non-string publishedBy to null (kills typeof guard at L242)', async () => {
-    const { service } = makeService([[
-      { id: GRAPH, code: 'g', meta: { publish: { publishedVersion: 1, publishedAt: '2026-01-01', publishedBy: 42 } } },
-    ]]);
+    const { service } = makeService([
+      [
+        {
+          id: GRAPH,
+          code: 'g',
+          meta: { publish: { publishedVersion: 1, publishedAt: '2026-01-01', publishedBy: 42 } },
+        },
+      ],
+    ]);
     const result = await service.listGraphs();
     expect(result[0]).toMatchObject({ status: 'published', publishedBy: null });
   });
 
   it('preserves string publishedBy verbatim', async () => {
-    const { service } = makeService([[
-      { id: GRAPH, code: 'g', meta: { publish: { publishedVersion: 1, publishedAt: '2026-01-01', publishedBy: 'actor-1' } } },
-    ]]);
+    const { service } = makeService([
+      [
+        {
+          id: GRAPH,
+          code: 'g',
+          meta: {
+            publish: { publishedVersion: 1, publishedAt: '2026-01-01', publishedBy: 'actor-1' },
+          },
+        },
+      ],
+    ]);
     const result = await service.listGraphs();
     expect(result[0]).toMatchObject({ status: 'published', publishedBy: 'actor-1' });
   });
@@ -923,7 +1113,9 @@ describe('FlowDesignService — definedEntries undefined-value omission (kills L
     // With `&&`: undefined value → skip → entries empty → throws BadRequest.
     // With `||`: hasOwnProperty true → push entry → ensureNonEmptyUpdate passes → SQL writes undefined.
     const { service } = makeService([]);
-    await expect(service.updateScope(SCOPE, { label: undefined } as never)).rejects.toBeInstanceOf(BadRequestException);
+    await expect(service.updateScope(SCOPE, { label: undefined } as never)).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
   });
 
   it('includes defined values in the UPDATE while skipping undefined ones', async () => {
@@ -971,22 +1163,18 @@ describe('FlowDesignService — normalizeNodeFormRule gating-mode rewrites (kill
 describe('FlowDesignService — requireString validation (kills survivors at L252-256)', () => {
   it('publishGraph throws BadRequest when graph.version is empty string (kills EqualityOperator on length > 0)', async () => {
     const { service } = makeService([
-      [{ id: GRAPH, version: '', meta: {} }],  // empty-string version
+      [{ id: GRAPH, version: '', meta: {} }], // empty-string version
     ]);
     await expect(service.publishGraph(GRAPH)).rejects.toBeInstanceOf(BadRequestException);
   });
 
   it('publishGraph throws BadRequest with "graph.version is required" message', async () => {
-    const { service } = makeService([
-      [{ id: GRAPH, version: '', meta: {} }],
-    ]);
+    const { service } = makeService([[{ id: GRAPH, version: '', meta: {} }]]);
     await expect(service.publishGraph(GRAPH)).rejects.toThrow(/graph\.version is required/);
   });
 
   it('publishGraph throws BadRequest when graph.version is non-string', async () => {
-    const { service } = makeService([
-      [{ id: GRAPH, version: 42, meta: {} }],
-    ]);
+    const { service } = makeService([[{ id: GRAPH, version: 42, meta: {} }]]);
     await expect(service.publishGraph(GRAPH)).rejects.toBeInstanceOf(BadRequestException);
   });
 });

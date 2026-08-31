@@ -9,11 +9,25 @@ const repoRoot = process.cwd();
 const write = process.argv.includes('--write');
 const baselinePath = resolve(repoRoot, 'docs/framework/contracts/public-api-baselines.json');
 const packageSpecs = discoverPublishablePackages(repoRoot);
+const runningInsideTestGraph =
+  process.env.npm_lifecycle_event === 'test' && typeof process.env.TURBO_HASH === 'string';
+const preverifiedTestGraph = process.env.STYNX_API_BASELINE_MODE === 'preverified-test-graph';
 
-for (const spec of packageSpecs) {
-  rmSync(resolve(repoRoot, spec.dir, 'dist'), { recursive: true, force: true });
+if (preverifiedTestGraph && !runningInsideTestGraph) {
+  throw new Error(
+    'preverified-test-graph mode is valid only inside the supported Turbo test harness',
+  );
 }
-run('pnpm', ['build'], repoRoot);
+if (runningInsideTestGraph && !preverifiedTestGraph) {
+  throw new Error('public API baselines inside Turbo require the preverified pnpm test harness');
+}
+
+if (!preverifiedTestGraph) {
+  for (const spec of packageSpecs) {
+    rmSync(resolve(repoRoot, spec.dir, 'dist'), { recursive: true, force: true });
+  }
+  run('pnpm', ['build'], repoRoot);
+}
 
 const current = {
   schemaVersion: '1',

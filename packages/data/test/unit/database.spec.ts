@@ -1,4 +1,9 @@
-import { RequestContext, SystemContext, SystemContextRequiredError } from '@stynx-nyx/core';
+import {
+  RequestContext,
+  type RequestContextMutator,
+  SystemContext,
+  SystemContextRequiredError,
+} from '@stynx-nyx/core';
 import { ClsService } from 'nestjs-cls';
 import type { PoolClient } from 'pg';
 import {
@@ -77,8 +82,8 @@ describe('Database', () => {
     } = {},
   ) =>
     new Database(
-      overrides.requestContext
-        ?? ({
+      overrides.requestContext ??
+        ({
           hasActiveContext: () => true,
           snapshot: () => ({
             requestId: 'req-1',
@@ -94,8 +99,8 @@ describe('Database', () => {
           connect: vi.fn(async () => client),
         })),
       } as unknown as StynxPoolRegistry,
-      overrides.cls
-        ?? ({
+      overrides.cls ??
+        ({
           get: vi.fn(() => undefined),
           set: vi.fn(),
         } as unknown as ClsService<Record<PropertyKey, unknown>>),
@@ -113,15 +118,17 @@ describe('Database', () => {
   it('rejects app transactions without tenant context', async () => {
     const database = createDatabase();
 
-    await expect(database.tx(async () => undefined)).rejects.toBeInstanceOf(TenantContextMissingError);
+    await expect(database.tx(async () => undefined)).rejects.toBeInstanceOf(
+      TenantContextMissingError,
+    );
   });
 
   it('rejects owner transactions outside system context', async () => {
     const database = createDatabase();
 
-    await expect(database.tx(async () => undefined, { role: 'owner', readonly: true })).rejects.toBeInstanceOf(
-      SystemContextRequiredError,
-    );
+    await expect(
+      database.tx(async () => undefined, { role: 'owner', readonly: true }),
+    ).rejects.toBeInstanceOf(SystemContextRequiredError);
   });
 
   it('rejects app transactions without actor context when tenant context exists', async () => {
@@ -161,7 +168,9 @@ describe('Database', () => {
       },
     );
 
-    await expect(database.tx(async () => undefined)).rejects.toBeInstanceOf(ActorContextMissingError);
+    await expect(database.tx(async () => undefined)).rejects.toBeInstanceOf(
+      ActorContextMissingError,
+    );
   });
 
   it('applies request session state, readonly mode, deadline, commit, context cleanup, and release', async () => {
@@ -175,11 +184,14 @@ describe('Database', () => {
     } as unknown as ClsService<Record<PropertyKey, unknown>>;
     const database = createPoolBackedDatabase(client, { cls });
 
-    const result = await database.tx(async (trx) => {
-      const probe = await trx.query('select 1 as ok');
-      expect(probe.rows).toEqual([]);
-      return 'committed';
-    }, { readonly: true, deadlineMs: 1500 });
+    const result = await database.tx(
+      async (trx) => {
+        const probe = await trx.query('select 1 as ok');
+        expect(probe.rows).toEqual([]);
+        return 'committed';
+      },
+      { readonly: true, deadlineMs: 1500 },
+    );
 
     expect(result).toBe('committed');
     expect(queries.map((query) => query.text)).toEqual([
@@ -196,7 +208,10 @@ describe('Database', () => {
     ]);
     expect(queries[1]?.values).toEqual(['app']);
     expect(queries[7]?.values).toEqual(['1500']);
-    expect(cls.set).toHaveBeenCalledWith(expect.any(Symbol), expect.objectContaining({ savepointCounter: 0 }));
+    expect(cls.set).toHaveBeenCalledWith(
+      expect.any(Symbol),
+      expect.objectContaining({ savepointCounter: 0 }),
+    );
     expect(cls.set).toHaveBeenLastCalledWith(expect.any(Symbol), null);
     expect(client.release).toHaveBeenCalledTimes(1);
   });
@@ -211,9 +226,14 @@ describe('Database', () => {
       const error = new Error(code) as Error & { code: string };
       error.code = code;
 
-      await expect(database.tx(async () => {
-        throw error;
-      }, { retry: false })).rejects.toMatchObject({
+      await expect(
+        database.tx(
+          async () => {
+            throw error;
+          },
+          { retry: false },
+        ),
+      ).rejects.toMatchObject({
         name: ErrorClass.name,
         context: { originalCode: code },
       });
@@ -235,9 +255,14 @@ describe('Database', () => {
     });
     const database = createPoolBackedDatabase(client);
 
-    await expect(database.tx(async () => {
-      throw original;
-    }, { retry: false })).rejects.toBe(original);
+    await expect(
+      database.tx(
+        async () => {
+          throw original;
+        },
+        { retry: false },
+      ),
+    ).rejects.toBe(original);
 
     expect(client.query).toHaveBeenCalledWith('ROLLBACK');
     expect(client.release).toHaveBeenCalledTimes(1);
@@ -247,18 +272,28 @@ describe('Database', () => {
     const plain = new Error('plain');
     const nonRetryableClient = createClient();
     const nonRetryableDatabase = createPoolBackedDatabase(nonRetryableClient.client);
-    await expect(nonRetryableDatabase.tx(async () => {
-      throw plain;
-    }, { retry: { attempts: 3, jitterMs: [0, 0] } })).rejects.toBe(plain);
+    await expect(
+      nonRetryableDatabase.tx(
+        async () => {
+          throw plain;
+        },
+        { retry: { attempts: 3, jitterMs: [0, 0] } },
+      ),
+    ).rejects.toBe(plain);
     expect(nonRetryableClient.client.release).toHaveBeenCalledTimes(1);
 
     const retryable = new Error('deadlock') as Error & { code: string };
     retryable.code = '40P01';
     const retryDisabledClient = createClient();
     const retryDisabledDatabase = createPoolBackedDatabase(retryDisabledClient.client);
-    await expect(retryDisabledDatabase.tx(async () => {
-      throw retryable;
-    }, { retry: false })).rejects.toMatchObject<SerializationFailureError>({
+    await expect(
+      retryDisabledDatabase.tx(
+        async () => {
+          throw retryable;
+        },
+        { retry: false },
+      ),
+    ).rejects.toMatchObject<SerializationFailureError>({
       context: expect.objectContaining({ attempts: 1, code: '40P01' }),
     });
     expect(retryDisabledClient.client.release).toHaveBeenCalledTimes(1);
@@ -273,9 +308,9 @@ describe('Database', () => {
       throw serialization;
     });
 
-    await expect(database.tx(fn, { retry: { attempts: 2, jitterMs: [0, 0] } })).rejects.toMatchObject<
-      SerializationFailureError
-    >({
+    await expect(
+      database.tx(fn, { retry: { attempts: 2, jitterMs: [0, 0] } }),
+    ).rejects.toMatchObject<SerializationFailureError>({
       context: expect.objectContaining({
         attempts: 2,
         code: '40001',
@@ -291,9 +326,11 @@ describe('Database', () => {
     const { client } = createClient();
     const database = createPoolBackedDatabase(client);
 
-    await expect(database.tx(async () => 'unreached', {
-      retry: { attempts: Number.NaN, jitterMs: [0, 0] },
-    })).rejects.toBeInstanceOf(SerializationFailureError);
+    await expect(
+      database.tx(async () => 'unreached', {
+        retry: { attempts: Number.NaN, jitterMs: [0, 0] },
+      }),
+    ).rejects.toBeInstanceOf(SerializationFailureError);
 
     expect(client.query).not.toHaveBeenCalledTimes(1);
     expect(client.release).not.toHaveBeenCalledTimes(1);
@@ -307,15 +344,18 @@ describe('Database', () => {
     const database = createPoolBackedDatabase(client);
     let attempts = 0;
 
-    const promise = database.tx(async () => {
-      attempts += 1;
-      if (attempts === 1) {
-        const error = new Error('retry me') as Error & { code: string };
-        error.code = '40001';
-        throw error;
-      }
-      return 'retried';
-    }, { retry: { attempts: 2, jitterMs: [10, 20] } });
+    const promise = database.tx(
+      async () => {
+        attempts += 1;
+        if (attempts === 1) {
+          const error = new Error('retry me') as Error & { code: string };
+          error.code = '40001';
+          throw error;
+        }
+        return 'retried';
+      },
+      { retry: { attempts: 2, jitterMs: [10, 20] } },
+    );
 
     await vi.advanceTimersByTimeAsync(15);
     await expect(promise).resolves.toBe('retried');
@@ -331,16 +371,26 @@ describe('Database', () => {
     const codedObject = { code: '40001' };
     const codedClient = createClient();
     const codedDatabase = createPoolBackedDatabase(codedClient.client);
-    await expect(codedDatabase.tx(async () => {
-      throw codedObject;
-    }, { retry: { attempts: 2, jitterMs: [0, 0] } })).rejects.toBe(codedObject);
+    await expect(
+      codedDatabase.tx(
+        async () => {
+          throw codedObject;
+        },
+        { retry: { attempts: 2, jitterMs: [0, 0] } },
+      ),
+    ).rejects.toBe(codedObject);
     expect(codedClient.client.release).toHaveBeenCalledTimes(1);
 
     const nullClient = createClient();
     const nullDatabase = createPoolBackedDatabase(nullClient.client);
-    await expect(nullDatabase.tx(async () => {
-      throw null;
-    }, { retry: false })).rejects.toBe(null);
+    await expect(
+      nullDatabase.tx(
+        async () => {
+          throw null;
+        },
+        { retry: false },
+      ),
+    ).rejects.toBe(null);
     expect(nullClient.client.release).toHaveBeenCalledTimes(1);
   });
 
@@ -355,7 +405,10 @@ describe('Database', () => {
     await database.tx(async () => 'done');
 
     expect(cls.set).toHaveBeenCalledTimes(1);
-    expect(cls.set).toHaveBeenCalledWith(expect.any(Symbol), expect.objectContaining({ savepointCounter: 0 }));
+    expect(cls.set).toHaveBeenCalledWith(
+      expect.any(Symbol),
+      expect.objectContaining({ savepointCounter: 0 }),
+    );
   });
 
   it('rejects replica write transactions before resolving tenant context', async () => {
@@ -434,10 +487,51 @@ describe('Database', () => {
       options,
     );
 
-    await expect(database.withSystemContext('maintenance', async (context) => JSON.stringify(context))).resolves.toBe(
-      '{"system":true}',
+    await expect(
+      database.withSystemContext('maintenance', async (context) => JSON.stringify(context)),
+    ).resolves.toBe('{"system":true}');
+    expect(systemContext.withSystemContext).toHaveBeenCalledWith(
+      'maintenance',
+      expect.any(Function),
     );
-    expect(systemContext.withSystemContext).toHaveBeenCalledWith('maintenance', expect.any(Function));
+  });
+
+  it('creates a request context with optional session state and returns the callback result', async () => {
+    const runWithRequestContext = vi.fn(async (_context: unknown, fn: () => Promise<string>) =>
+      fn(),
+    );
+    const database = new Database(
+      inactiveRequestContext,
+      failingSystemContext,
+      { get: vi.fn() } as unknown as StynxPoolRegistry,
+      { get: vi.fn(), set: vi.fn() } as unknown as ClsService<Record<PropertyKey, unknown>>,
+      options,
+      undefined,
+      { runWithRequestContext } as unknown as RequestContextMutator,
+    );
+
+    await expect(
+      database.withRequestContext(
+        { tenantId: 'tenant-1', actorId: 'actor-1', sessionId: 'session-1' },
+        async () => 'scoped',
+      ),
+    ).resolves.toBe('scoped');
+    expect(runWithRequestContext).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requestId: expect.any(String),
+        tenantId: 'tenant-1',
+        actorId: 'actor-1',
+        sessionId: 'session-1',
+        startedAt: expect.any(Date),
+      }),
+      expect.any(Function),
+    );
+
+    await database.withRequestContext(
+      { tenantId: 'tenant-2', actorId: 'actor-2' },
+      async () => 'without-session',
+    );
+    expect(runWithRequestContext.mock.calls[1]?.[0]).not.toHaveProperty('sessionId');
   });
 
   it('runs nested transactions with savepoints and maps nested errors', async () => {
@@ -454,19 +548,23 @@ describe('Database', () => {
       } as unknown as ClsService<Record<PropertyKey, unknown>>,
     });
 
-    await expect(database.tx(async (trx) => {
-      await trx.query('select nested');
-      return 'nested';
-    })).resolves.toBe('nested');
+    await expect(
+      database.tx(async (trx) => {
+        await trx.query('select nested');
+        return 'nested';
+      }),
+    ).resolves.toBe('nested');
     expect(active.savepointCounter).toBe(1);
     expect(client.query).toHaveBeenCalledWith('SAVEPOINT stynx_sp_1');
     expect(client.query).toHaveBeenCalledWith('RELEASE SAVEPOINT stynx_sp_1');
 
     const timeout = new Error('timeout') as Error & { code: string };
     timeout.code = '57014';
-    await expect(database.tx(async () => {
-      throw timeout;
-    })).rejects.toBeInstanceOf(StatementTimeoutError);
+    await expect(
+      database.tx(async () => {
+        throw timeout;
+      }),
+    ).rejects.toBeInstanceOf(StatementTimeoutError);
     expect(active.savepointCounter).toBe(2);
     expect(client.query).toHaveBeenCalledWith('SAVEPOINT stynx_sp_2');
     expect(client.query).toHaveBeenCalledWith('ROLLBACK TO SAVEPOINT stynx_sp_2');
@@ -485,11 +583,13 @@ describe('Database', () => {
 
     await database.tx(async () => 'owner', { role: 'owner', readonly: true });
 
-    expect(queries).toEqual(expect.arrayContaining([
-      { text: `SELECT set_config('app.role', $1, true)`, values: ['owner'] },
-      { text: `SELECT set_config('app.request_id', $1, true)`, values: ['sys-req'] },
-      { text: `SELECT set_config('app.actor_id', $1, true)`, values: ['sys-actor'] },
-    ]));
+    expect(queries).toEqual(
+      expect.arrayContaining([
+        { text: `SELECT set_config('app.role', $1, true)`, values: ['owner'] },
+        { text: `SELECT set_config('app.request_id', $1, true)`, values: ['sys-req'] },
+        { text: `SELECT set_config('app.actor_id', $1, true)`, values: ['sys-actor'] },
+      ]),
+    );
     expect(queries.some((query) => query.text.includes('app.tenant_id'))).toBe(false);
     expect(queries.some((query) => query.text.includes('app.session_id'))).toBe(false);
     expect(current).toHaveBeenCalledTimes(2);

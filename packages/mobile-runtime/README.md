@@ -18,3 +18,28 @@ unencrypted store; evidence and payload digests use `sha256:` prefixes.
 
 Production secure-storage, session, backend, camera, GPS, and printer adapters are consumer-owned.
 See the [mobile runtime contract](/docs/framework/contracts/mobile-runtime-api).
+
+<!-- stynx:generated-dependencies:start -->
+
+## Generated dependency reference
+
+This section is generated from `package.json`. Run `pnpm package-readmes:write` to update it.
+
+### Runtime dependencies
+
+_None._
+
+### Optional dependencies
+
+_None._
+
+### Peer dependencies
+
+_None._
+
+### Development-only dependencies
+
+- `@types/node`: `24.12.4`
+- `typescript`: `^6.0.3`
+
+<!-- stynx:generated-dependencies:end -->

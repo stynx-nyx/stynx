@@ -328,6 +328,25 @@ describe('privacy runtime helpers', () => {
     expect(md).not.toContain('Controllers:');
   });
 
+  it('preserves the exact blank-line structure around data-flow metadata', () => {
+    expect(generateRopaMarkdown([], {
+      controllers: ['STYNX'],
+      processors: ['AWS'],
+    })).toBe([
+      '# STYNX ROPA',
+      '',
+      '| Table | Column | Strategy | Category | Subject Link | Retention | Notes |',
+      '| --- | --- | --- | --- | --- | --- | --- |',
+      '',
+      '## Data Flow',
+      '',
+      'Controllers: STYNX',
+      '',
+      'Processors: AWS',
+      '',
+    ].join('\n'));
+  });
+
   it('terminates the markdown with a trailing newline (kills StringLiteral mutation on the final empty line)', () => {
     // The `lines.push('')` and `lines.join('\n')` together yield a trailing '\n'.
     const md = generateRopaMarkdown([], {});

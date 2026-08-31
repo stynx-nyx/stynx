@@ -4,9 +4,10 @@
   "canonical_line": "1.x",
   "next_unified_version": "1.1.1",
   "owner_decision": {
-    "date": "2026-08-23",
-    "repository_baseline": "6ab2107969bf72a15264925722a40d2336c8a0be",
-    "statement": "The canonical STYNX line remains 1.x and the next unified version is exactly 1.1.1."
+    "date": "2026-08-24",
+    "repository_baseline": "b77b50230e3906cee632eb9218b06603cce6c89a",
+    "repository_tree": "d0cde059f7a93a624ff01d485ebda9ac3cb9422e",
+    "statement": "The canonical STYNX line remains 1.x and the next unified version is exactly 1.1.1 for the complete 44-package release unit."
   },
   "anomalies": [
     {
@@ -23,12 +24,10 @@
       "rationale": "The Owner adjudicated 2.0.0 as an incorrect major assignment rather than a canonical STYNX 2.x decision.",
       "allowed_candidate": "1.1.1",
       "allowed_effects": ["registry-monotonicity-exception"],
-      "permitted_remediation": [
-        "deprecate-after-verified-1.1.1-with-separate-owner-authorization",
-        "retain-as-noncanonical-history"
-      ],
+      "permitted_remediation": ["retain-as-noncanonical-history"],
       "deletion_requires": "new-owner-authorization-naming-version-id-and-recovery-evidence",
-      "closure_condition": "Unified 1.1.1 is verified for all publishable packages and angular-profile 2.0.0 carries the authorized correction marker.",
+      "deprecation_requires": "new-owner-authorization-naming-package-version-action-and-message",
+      "closure_condition": "Unified 1.1.1 is verified for all 44 publishable packages, latest resolves to 1.1.1, and angular-profile 2.0.0 remains immutable non-canonical history.",
       "applies_to_other_packages": false,
       "applies_to_other_versions": false
     }

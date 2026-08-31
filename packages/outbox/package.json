@@ -21,12 +21,13 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "clean": "pnpm exec rimraf dist coverage",
+    "clean": "node -e \"const fs=require('node:fs'); fs.rmSync('dist',{recursive:true,force:true}); fs.rmSync('coverage',{recursive:true,force:true})\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
     "test": "vitest run --config ./vitest.config.ts",
     "test:int": "vitest run --config ./vitest.int.config.ts",
-    "stryker": "pnpm exec stryker run stryker.conf.mjs"
+    "stryker": "pnpm exec stryker run stryker.conf.mjs",
+    "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
   },
   "dependencies": {
     "@stynx-nyx/contracts": "workspace:*",

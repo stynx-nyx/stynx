@@ -1,0 +1,588 @@
+{
+  "schemaVersion": "1.0.0",
+  "kind": "stynx-1.1.1-mutation-reuse-policy-v1",
+  "baseline": {
+    "commit": "cbf0fafd87c180d83b2e5d024b25fad0e0e65a45",
+    "tree": "29d31463c7f8e59e08996769a3b465b999798e0d",
+    "summaryPath": ".devai/state/check-cache/v1/artifacts/mutation/summary.json",
+    "summaryBytes": 17978,
+    "summarySha256": "f425780398a067209730f65934fe79ab2b3001f543ee4196e382eb9ce861ba5c"
+  },
+  "freshPackages": [
+    "@stynx-nyx/idempotency",
+    "@stynx-nyx/mobile-runtime",
+    "@stynx-nyx/preferences",
+    "@stynx-nyx/ratelimit"
+  ],
+  "reusedPackages": [
+    "@stynx-nyx/angular",
+    "@stynx-nyx/angular-audit",
+    "@stynx-nyx/angular-auth",
+    "@stynx-nyx/angular-flow",
+    "@stynx-nyx/angular-i18n",
+    "@stynx-nyx/angular-iam",
+    "@stynx-nyx/angular-profile",
+    "@stynx-nyx/angular-sessions",
+    "@stynx-nyx/angular-storage",
+    "@stynx-nyx/angular-tenancy",
+    "@stynx-nyx/angular-trash",
+    "@stynx-nyx/angular-ui",
+    "@stynx-nyx/audit",
+    "@stynx-nyx/auth",
+    "@stynx-nyx/backend",
+    "@stynx-nyx/cli",
+    "@stynx-nyx/contracts",
+    "@stynx-nyx/core",
+    "@stynx-nyx/data",
+    "@stynx-nyx/flow",
+    "@stynx-nyx/health",
+    "@stynx-nyx/i18n",
+    "@stynx-nyx/jobs",
+    "@stynx-nyx/logging",
+    "@stynx-nyx/notifications",
+    "@stynx-nyx/offline-sync",
+    "@stynx-nyx/outbox",
+    "@stynx-nyx/privacy",
+    "@stynx-nyx/sdk",
+    "@stynx-nyx/sessions",
+    "@stynx-nyx/storage",
+    "@stynx-nyx/tenancy",
+    "@stynx-nyx/testing",
+    "@stynx-nyx/worklist"
+  ],
+  "allowedChangedPaths": [
+    ".devai/config/adopter-policy-binding.json",
+    ".devai/config/authority-policy.json",
+    ".devai/config/github-actions-host-adapter.json",
+    ".devai/config/project.json",
+    ".devai/config/subprocess-effects.json",
+    ".devai/constitution.md",
+    ".github/workflows/ci.yml",
+    ".github/workflows/devai-local-rc-verify.yml",
+    "AGENTS.md",
+    "docs/meta/security/sbom.cdx.json",
+    "law/adr/2026-08-24-stynx-1.1.1-campaign-controls.md",
+    "law/policy/devai-local-rc-trust-store.json",
+    "law/policy/forbidden-action-authorizations.json",
+    "law/policy/release-campaign-1.1.1.json",
+    "law/policy/stynx-1.1.1-mutation-reuse.json",
+    "law/trace.json",
+    "package.json",
+    "pnpm-lock.yaml",
+    "packages/pdf-a-vera-docker/src/parse-report.ts",
+    "packages/pdf-a-vera-docker/test/unit/parse-report.spec.ts",
+    "packages/pdf-a-vera-docker/test/unit/validator.spec.ts",
+    "packages/pdf/test/conformance/payslip.spec.ts",
+    "packages/pdf/test/conformance/verapdf.ts",
+    "packages/idempotency/vitest.config.ts",
+    "packages/mobile-runtime/test/mobile-runtime-edge-cases.spec.ts",
+    "packages/mobile-runtime/vitest.config.ts",
+    "packages/preferences/test/preferences-contract.spec.ts",
+    "packages/preferences/vitest.config.ts",
+    "packages/ratelimit/vitest.config.ts",
+    "reference/api/Dockerfile",
+    "scripts/devai-local-rc.mjs",
+    "scripts/lib/release-context.mjs",
+    "scripts/list-ddl-objects.spec.mjs",
+    "scripts/run-mutation-evidence.mjs",
+    "test/scripts/devai-local-rc-verifier.test.mjs",
+    "test/scripts/local-rc-blocker-contract.test.mjs",
+    "test/scripts/release-version-policy.test.mjs",
+    "test/scripts/validate.js",
+    "tools/repo-config/coverage-population.mjs"
+  ],
+  "composedSummaryKind": "mutation-composed-report-set-v1",
+  "candidateRebind": {
+    "kind": "zero-mutation-candidate-rebind-v2",
+    "sourceCandidate": {
+      "commit": "17ea3c42a2e129cf59739f2c8d74a885841712e2",
+      "tree": "a1f5b03d27066c27231ac9b3e8bfe9db261ac431"
+    },
+    "historicalInputCandidate": {
+      "commit": "6754d65f89cc9c2f23ab82f61a4b68c543f0bef4",
+      "tree": "fa3f2a43eeb89e73dff04074d021e2ba1783cf84"
+    },
+    "sourceSummary": {
+      "path": ".devai/state/check-cache/v1/artifacts/mutation/summary.json",
+      "bytes": 37796,
+      "sha256": "fa4e5a4c021bd6f73e020e8debc7f9d65adc731cab7bc05cec65198659b602ff",
+      "packageCount": 38,
+      "artifactBindingCount": 76
+    },
+    "sourceInputProjection": {
+      "kind": "sorted-package-input-projection-digest-map-v1",
+      "bytes": 4934,
+      "sha256": "f9222176e2fcde022dae67e8a776fb7de4cfb9e0eb4f85d5c0a1f2c36a86b674",
+      "disposition": "historical-source-identities"
+    },
+    "semanticRebindComparison": {
+      "kind": "root-manifest-unchanged-with-historical-input-v1",
+      "sourceRootManifest": {
+        "bytes": 10790,
+        "sha256": "cccac5d19c5b38dd2f2d4840451c7c7d1b2fbb6403451bc0c2b149f0e8f80846",
+        "gitBlobOid": "da1ed88ad64acc60996d76e150af883ece7ba944"
+      },
+      "targetRootManifest": {
+        "bytes": 10790,
+        "sha256": "cccac5d19c5b38dd2f2d4840451c7c7d1b2fbb6403451bc0c2b149f0e8f80846",
+        "gitBlobOid": "da1ed88ad64acc60996d76e150af883ece7ba944"
+      },
+      "allowedScriptTransitions": [],
+      "comparison": {
+        "rootManifest": "source-and-target-identical",
+        "historicalMutationInputTreeEntries": "match-explicit-historical-candidate-mode-type-oid",
+        "otherMutationInputTreeEntries": "identical-mode-type-oid"
+      },
+      "canonicalContractBytes": 597,
+      "canonicalContractSha256": "9df3992b0d495e5f7857dd6f1cacda8b2e5ece76085f0bd3802ffeaf830d5b83"
+    },
+    "promotionVerifier": {
+      "path": "scripts/verify-missing-evidence.mjs",
+      "mode": "0644",
+      "bytes": 2400,
+      "sha256": "3b9422b1c137e01116d0775c5e5b77361a1d8024d08076583cf96a5b300cfa73",
+      "requiredBefore": "release:publish:ci"
+    },
+    "mutationSubprocesses": 0,
+    "packageStarts": 0,
+    "mismatchDisposition": "fail-before-package-start"
+  },
+  "veraPdfRobustnessRemediation": {
+    "kind": "verapdf-semantic-report-robustness-v1",
+    "sourceCandidate": {
+      "commit": "17ea3c42a2e129cf59739f2c8d74a885841712e2",
+      "tree": "a1f5b03d27066c27231ac9b3e8bfe9db261ac431"
+    },
+    "fixes": [
+      {
+        "id": "fail-closed-adapter-parser",
+        "implementation": "packages/pdf-a-vera-docker/src/parse-report.ts",
+        "sensors": [
+          "packages/pdf-a-vera-docker/test/unit/parse-report.spec.ts",
+          "packages/pdf-a-vera-docker/test/unit/validator.spec.ts"
+        ],
+        "requiredSignals": [
+          "validation-record",
+          "explicit-compliance-boolean",
+          "parseable-pdf-a-profile",
+          "details-rule-population"
+        ],
+        "missingSignalDisposition": "throw-bounded-report-parse-error"
+      },
+      {
+        "id": "fail-closed-conformance-report-guard",
+        "implementation": "packages/pdf/test/conformance/verapdf.ts",
+        "sensors": ["packages/pdf/test/conformance/payslip.spec.ts"],
+        "requiredSignals": [
+          "job-cardinality",
+          "explicit-compliance-boolean",
+          "expected-profile",
+          "numeric-failed-checks",
+          "numeric-failed-rules"
+        ],
+        "semanticInvalidDisposition": "consume-existing-attempt-only-then-fixed-error"
+      }
+    ],
+    "preserved": {
+      "newPaths": 0,
+      "newAttempts": 0,
+      "timeoutChanges": 0,
+      "sleepChanges": 0,
+      "pollingChanges": 0,
+      "fixtureChanges": 0,
+      "thresholdChanges": 0,
+      "mutationPackageStarts": 0
+    },
+    "mutationProjection": {
+      "rosterCount": 38,
+      "affectedPackageCount": 0,
+      "taskKeyDisposition": "zero-execution-candidate-rebind-v2-required"
+    }
+  },
+  "referenceApiContainerBuildInputCorrection": {
+    "kind": "non-mutation-input-container-build-context-v1",
+    "sourceCandidate": {
+      "commit": "c932d76c27be467936a827d96ad71a995cf91776",
+      "tree": "dcab7e653ddd3eac47f4be935bd2e8694e2fdc82"
+    },
+    "targetCandidate": {
+      "commit": "56e3f48085bae929c8a1eb958ff3602399705572",
+      "tree": "0599e30c5a2286bd532070c770593d255c449235"
+    },
+    "path": "reference/api/Dockerfile",
+    "source": {
+      "mode": "0644",
+      "bytes": 2743,
+      "sha256": "5e2d0258d19ad261ebbb8122c14cc968123393f757e3c631a448c3eb2c324d29",
+      "gitBlobOid": "020b28450e07be4dfdb7ff87b03f10d74572f5f1"
+    },
+    "target": {
+      "mode": "0644",
+      "bytes": 2842,
+      "sha256": "3ec930267b977279d2f9aaa1b2ca00898f52604a2d6daa25c1e91ab9a425935b",
+      "gitBlobOid": "3926096a4efbd695313681c922c2851e0b164cbf"
+    },
+    "transition": {
+      "kind": "single-build-context-copy-v1",
+      "source": "scripts/verify-reference-api-build-inputs.mjs",
+      "target": "scripts/verify-reference-api-build-inputs.mjs",
+      "occurrences": 1,
+      "before": "COPY reference/api ./reference/api"
+    },
+    "mutationInputProjection": {
+      "rosterCount": 38,
+      "selectedPackageCount": 0,
+      "disposition": "absent-from-every-package-projection"
+    },
+    "remoteVerification": {
+      "workflow": "STYNX Reference Apps",
+      "runId": 33337393155,
+      "conclusion": "success"
+    },
+    "mutationSubprocesses": 0,
+    "packageStarts": 0,
+    "mismatchDisposition": "fail-before-package-start"
+  },
+  "ordinaryCiSensorPortabilityCorrection": {
+    "kind": "non-mutation-input-ordinary-ci-portability-v1",
+    "architectAnchor": {
+      "commit": "f4c08bfa97c733d359c9b6603bd1a75fc4a12825",
+      "tree": "11b64d64c3c39a880e92ca4e5b2af0df14ad6a8e"
+    },
+    "workflow": {
+      "path": ".github/workflows/ci.yml",
+      "jobs": ["stynx-tier-gate", "unit-tests"],
+      "transition": "checkout-fetch-depth-zero-only"
+    },
+    "sensor": {
+      "path": "test/scripts/release-version-policy.test.mjs",
+      "frozenCommitCount": 2,
+      "testCount": 35,
+      "minimumAssertionCount": 203,
+      "fixture": "credential-free-temporary-complete-synthetic-composition",
+      "packageCount": 38,
+      "artifactBindingCount": 76,
+      "mutationPackageStarts": 0
+    },
+    "mutationInputProjection": {
+      "rosterCount": 38,
+      "selectedPackageCount": 0,
+      "disposition": "both-paths-absent-from-every-package-projection"
+    },
+    "mutationSubprocesses": 0,
+    "packageStarts": 0,
+    "mismatchDisposition": "fail-before-package-start"
+  },
+  "authorizationReceiptPortabilityCorrection": {
+    "kind": "non-mutation-input-governance-receipt-portability-v1",
+    "architectAnchor": {
+      "commit": "7021710f28befef934f54fec205e9d72387bba0a",
+      "tree": "162a045a2b0f780e0f91f612d4e78926dd80ec4b"
+    },
+    "receipt": {
+      "path": "law/policy/forbidden-action-authorizations.json",
+      "forbiddenId": "FORBID-CI-WITHOUT-ADR",
+      "authorizedCommit": "b86188c19b11f4bd933ee3629ab3237aa90bad9e",
+      "disposition": "exact-d24-40-owner-authorized-governance-receipt"
+    },
+    "sensor": {
+      "path": "test/scripts/release-version-policy.test.mjs",
+      "transition": "ordered-allowed-changed-path-projection-only",
+      "testCount": 35,
+      "minimumAssertionCount": 214,
+      "mismatchCases": "preserved-exact",
+      "atomicPublicationFailurePhases": 2,
+      "packageCount": 38,
+      "artifactBindingCount": 76,
+      "mutationPackageStarts": 0
+    },
+    "mutationInputProjection": {
+      "rosterCount": 38,
+      "selectedPackageCount": 0,
+      "disposition": "receipt-and-sensor-paths-absent-from-every-package-projection"
+    },
+    "mutationSubprocesses": 0,
+    "packageStarts": 0,
+    "mismatchDisposition": "fail-before-package-start"
+  },
+  "devai145Adoption": {
+    "kind": "non-product-devai-provider-and-verifier-rollover-v1",
+    "provider": {
+      "name": "@aarusso-nyx/devai",
+      "sourceVersion": "1.2.13",
+      "targetVersion": "1.4.5",
+      "targetTarballSha256": "f5fa97bb2c0d7b81487de6c13eac1d78bcb1fdaa8021a051d0c4c9f7e7371d26",
+      "sourceCommit": "5461ba55d8fba23d8e0a310480eb62d1e3c6c52c",
+      "sourceTree": "b339fa7fb13b0792ac929b5f3f57f4b84366b649",
+      "signedTagObject": "11eaeaf34b4aad76565ae1adc0fb1abf0ad37ae9"
+    },
+    "verifier": {
+      "providerVersion": "1.4.4",
+      "policySha256": "8d16a2dc7754920f0b27e2d37eb5ce3464d5a62df7db720a45c3a03c2ee1cba1",
+      "provenanceSha256": "8ebafff53524031a3207a2256ebcd0fa6e0cc4271fd4bb6bca5aa003395034bd",
+      "sourceCommit": "37e75a5c27569d4cb3fdb4a3dc97a140da4d78de",
+      "payloadFileCount": 21
+    },
+    "semanticMutationInputTransition": {
+      "kind": "exact-devai-provider-input-transition-v1",
+      "sourceRootManifest": {
+        "bytes": 10790,
+        "sha256": "cccac5d19c5b38dd2f2d4840451c7c7d1b2fbb6403451bc0c2b149f0e8f80846",
+        "gitBlobOid": "da1ed88ad64acc60996d76e150af883ece7ba944"
+      },
+      "targetRootManifest": {
+        "bytes": 10789,
+        "sha256": "8b5e61616e02acdc4442248ac31f2968a86dc20b6fcbf99dd2d13183aced260a",
+        "gitBlobOid": "eb33c50ff06dbd7f6e81c534de98d7d116cfce0a"
+      },
+      "sourceLockfile": {
+        "bytes": 959807,
+        "sha256": "2ecbe46dcd7be422bea5d1c119067fb044ef0adccbf76c984e17d3ff653fd7dd",
+        "gitBlobOid": "7926cb31a4b6605fdddc71b89e8b0e15abd2c88d"
+      },
+      "targetLockfile": {
+        "bytes": 959802,
+        "sha256": "32afdd6bdad69213129226d9e26611594dbf298536dc2d81374713682cf3d98e",
+        "gitBlobOid": "6bbb933d50649e90b4c6ba77534f890bc79fc402"
+      },
+      "manifestTransition": {
+        "field": "devDependencies.@aarusso-nyx/devai",
+        "from": "1.2.13",
+        "to": "1.4.5"
+      },
+      "lockfileTransitions": [
+        {
+          "from": "specifier: 1.2.13",
+          "to": "specifier: 1.4.5"
+        },
+        {
+          "from": "version: 1.2.13(ws@8.21.0)(zod@3.25.76)",
+          "to": "version: 1.4.5(ws@8.21.0)(zod@3.25.76)"
+        },
+        {
+          "from": "'@aarusso-nyx/devai@1.2.13':",
+          "to": "'@aarusso-nyx/devai@1.4.5':"
+        },
+        {
+          "from": "resolution: {integrity: sha512-QM9PyGNtPRzhRBsYTiJFg6eM3OVw4/fSyAPnn1h8yHBq20GcEBrp91wxzqlvGREGkOAzezwvK3INze2OjqZV3Q==, tarball: https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.2.13/6e766187269db2e5f494786adc7c00c62acad006}",
+          "to": "resolution: {integrity: sha512-5XuNGqbiqRGx+3MJOlO9VdJoKwX5MZ9a1BxdX/APUeD/j48CgtLwf5hNyxDkujxexekNn5TGSLUmU7aki2LTeQ==, tarball: https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.4.5/1d5aa3fc8748a3ac7c2150750f60803c0b357b86}"
+        },
+        {
+          "from": "'@aarusso-nyx/devai@1.2.13(ws@8.21.0)(zod@3.25.76)':",
+          "to": "'@aarusso-nyx/devai@1.4.5(ws@8.21.0)(zod@3.25.76)':"
+        }
+      ],
+      "lockfileTransitionCount": 5,
+      "otherMutationInputTreeEntries": "identical-mode-type-oid"
+    },
+    "governanceRunnerTransition": {
+      "path": "scripts/run-mutation-evidence.mjs",
+      "scope": "zero-execution-candidate-rebind-validation-only",
+      "packageExecutionPathChanged": false,
+      "requiredDirectInvocationSentinel": "candidate rebind package start is forbidden",
+      "source": {
+        "bytes": 66676,
+        "sha256": "54f7c7b12aed4256ec8c30b6e505b5d0cee08e14a1adb56f381ee8c303d82181",
+        "gitBlobOid": "aba7506fada7efed5c06486bf13d997bf2756659"
+      },
+      "target": {
+        "bytes": 73117,
+        "sha256": "1fb78fb13b3b6e809f61bbb7440df761d5e3b74c2dbd63ac013c73430448881b",
+        "gitBlobOid": "2dc4d90d7de03e1c46b80bc0350b8e75a95a51fb"
+      }
+    },
+    "releaseContextPolicyDigestTransition": {
+      "path": "scripts/lib/release-context.mjs",
+      "from": "fc4360097fe195ee1120ce9fd1a65cc93ee19e67b020568d9ad58d79a15fc579",
+      "to": "7218cd47417a3f33eba9231b0ded060e19dc919472ead8e40cf55d565a4cb71f",
+      "mutationInputProjection": "absent-from-every-package-projection"
+    },
+    "mutationInputProjection": {
+      "rosterCount": 38,
+      "artifactBindingCount": 76,
+      "productPackageSelectionCount": 0,
+      "disposition": "exact-semantic-devai-input-transition-only"
+    },
+    "mutationSubprocesses": 0,
+    "packageStarts": 0,
+    "mismatchDisposition": "fail-before-package-start"
+  },
+  "sensorOnlyCorrections": [
+    {
+      "kind": "non-mutation-input-literal-rebind-v1",
+      "path": "scripts/list-ddl-objects.spec.mjs",
+      "sourceCandidate": {
+        "commit": "7d6eee5aba977ebf5ad8667c80b46e70994d7536",
+        "tree": "f3ef780af7a47c8370ce0c284c642db3e3afdf97"
+      },
+      "source": {
+        "mode": "0644",
+        "bytes": 2704,
+        "sha256": "970a542388cd6e929c014277a50552afee9711c45fac9fb270ca2b3043905b37",
+        "gitBlobOid": "38c5097627742a09bb063a45c15c9893830501c2",
+        "assertionDigestSha256": "4fa0096ab60368853aed30225716477aa365b31f316cbb223ff8e5e8fcf89262"
+      },
+      "target": {
+        "mode": "0644",
+        "bytes": 2716,
+        "sha256": "f3f9fa472c93286ffa5223df9359c4b996763b9bfaca0345544012a09d75e621",
+        "gitBlobOid": "7c0d292243619234c80a3d384526a7d7a1263a2e",
+        "assertionDigestSha256": "143e66cf6ae7829ea376332de355b3c961e5c81a3c9036586b2839c1b5cb2ca1"
+      },
+      "literalTransition": {
+        "from": "db\\/ddl\\/",
+        "to": "database\\/ddl\\/",
+        "occurrences": 2
+      },
+      "preservedContract": {
+        "lineCount": 75,
+        "testCount": 3,
+        "testNamesSha256": "4af818efe1ebbbca59f9e462bff355390976885af668e03e776e4ff8b067bee0",
+        "assertionCount": 8,
+        "expectedObjectCount": 10,
+        "expectedObjectOrder": "seven-representative-then-three-helper-created"
+      },
+      "mutationInputProjection": {
+        "rosterCount": 38,
+        "selectedPackageCount": 0,
+        "disposition": "absent-from-every-package-projection"
+      },
+      "mutationSubprocesses": 0,
+      "packageStarts": 0,
+      "mismatchDisposition": "fail-before-package-start"
+    },
+    {
+      "kind": "non-mutation-input-assertion-rebind-v1",
+      "path": "test/scripts/local-rc-blocker-contract.test.mjs",
+      "sourceCandidate": {
+        "commit": "34d133b7fd2c5bedfb278cb5606d0c3eae7ff897",
+        "tree": "1d5f6609d1cdaea6456c74531be86d0c6a5e7396"
+      },
+      "source": {
+        "mode": "0644",
+        "bytes": 258847,
+        "sha256": "aa7a3d1a3d9954716c1e7cfe925b186048de30d78d11589e18321325087d6797",
+        "gitBlobOid": "4090de353a8a23f636f8ca5a3171c9a569ef4b45",
+        "lineCount": 6937,
+        "assertionCount": 938,
+        "assertionDigestSha256": "fbcf6995a227000f3c7d42712a6ff383c644ede90f1f99c4ff552fe8a82cd2fc"
+      },
+      "semanticProjection": {
+        "bytes": 258863,
+        "sha256": "040413250ec5f38b1c676c3278aefba4f02c2dd2b004d59003baebe9818dcb60",
+        "gitBlobOid": "9152126aa9edd0f49299fece7d5e0cde4364a123",
+        "lineCount": 6937
+      },
+      "target": {
+        "mode": "0644",
+        "bytes": 258882,
+        "sha256": "c8c6045dfccf6210d0267db993220e22b1bda5695bc5d6a1222fb311ed29cef9",
+        "gitBlobOid": "58c4217c7e5e86aef446f88fbc8ae757a930c1d8",
+        "lineCount": 6940,
+        "assertionCount": 938,
+        "assertionDigestSha256": "abac6d8b71c3d652dd6f59e111dd7034ce64c9d9655d367ee4c673c4ecab18fa"
+      },
+      "transitions": {
+        "rootManifestDigest": {
+          "from": "07f672f29660f90cb9480a7ff395463f5ccb08ecd5f74e61869391ef1653b47c",
+          "to": "cccac5d19c5b38dd2f2d4840451c7c7d1b2fbb6403451bc0c2b149f0e8f80846",
+          "occurrences": 3
+        },
+        "twoSpaceAnchors": [
+          {
+            "from": "\\nif (policy) {",
+            "to": "\\n  if (policy) {",
+            "occurrences": 4,
+            "tests": "D24.12:1,D24.15:1,D24.32:2"
+          },
+          {
+            "from": "\\nif (!normalizeExisting) {",
+            "to": "\\n  if (!normalizeExisting) {",
+            "occurrences": 2,
+            "tests": "D24.12:1,D24.32:1"
+          },
+          {
+            "from": "\\nif (diagnosticPackageName) {",
+            "to": "\\n  if (diagnosticPackageName) {",
+            "occurrences": 1,
+            "tests": "D24.15:1"
+          },
+          {
+            "from": "\\nrmSync(stagingDirectory, { recursive: true, force: true });",
+            "to": "\\n  rmSync(stagingDirectory, { recursive: true, force: true });",
+            "occurrences": 1,
+            "tests": "D24.15:1"
+          }
+        ]
+      },
+      "formatProjection": {
+        "prettierVersion": "3.8.3",
+        "addedLines": 4,
+        "removedLines": 1,
+        "scope": "wrap-only-the-D24.32-nested-indexOf-anchor"
+      },
+      "preservedContract": {
+        "testCount": 72,
+        "testNamesSha256": "fb44a3852661152360a52c2cad3451650eca57fffc1d20b9ebfeb9028f5f8b57",
+        "assertionCount": 938
+      },
+      "mutationInputProjection": {
+        "rosterCount": 38,
+        "selectedPackageCount": 0,
+        "disposition": "absent-from-every-package-projection"
+      },
+      "mutationSubprocesses": 0,
+      "packageStarts": 0,
+      "mismatchDisposition": "fail-before-package-start"
+    },
+    {
+      "kind": "non-mutation-input-assertion-rebind-v1",
+      "path": "test/scripts/release-version-policy.test.mjs",
+      "sourceCandidate": {
+        "commit": "34d133b7fd2c5bedfb278cb5606d0c3eae7ff897",
+        "tree": "1d5f6609d1cdaea6456c74531be86d0c6a5e7396"
+      },
+      "source": {
+        "mode": "0644",
+        "bytes": 66784,
+        "sha256": "d5bd617081e40e9ffb2210d5fdc84f3208af61e463a3c789ef087551a51ae1c4",
+        "gitBlobOid": "7948959bb10ecacde3c880f0bc36cecde1e8bfa7",
+        "lineCount": 1771,
+        "assertionCount": 203,
+        "assertionDigestSha256": "f5efdc8b5a553daef8907a95d339ea062aa06628a2874c9589879bbdd0674f0c"
+      },
+      "target": {
+        "mode": "0644",
+        "bytes": 66878,
+        "sha256": "81af371bb9953f85367abf4c9ac68dfe02d8d4f80615366d9c9533154504a02c",
+        "gitBlobOid": "9292b221d222a2e415ca4182aef44e9763bec78f",
+        "lineCount": 1773,
+        "assertionCount": 203,
+        "assertionDigestSha256": "214b585610a853d198dd66e793e6132da9a9e262d0ba1079dfc7a50a07090160"
+      },
+      "transition": {
+        "kind": "ordered-allowed-path-insertion-v1",
+        "path": "scripts/list-ddl-objects.spec.mjs",
+        "afterSourceIndex": 8,
+        "before": "scripts/run-mutation-evidence.mjs",
+        "occurrences": 1
+      },
+      "preservedContract": {
+        "testCount": 35,
+        "testNamesSha256": "4b31d27cf7966926c4a718d7fce68efaf038bdacbb9d87bb07d4f1503a246fe0",
+        "assertionCount": 203
+      },
+      "mutationInputProjection": {
+        "rosterCount": 38,
+        "selectedPackageCount": 0,
+        "disposition": "absent-from-every-package-projection"
+      },
+      "mutationSubprocesses": 0,
+      "packageStarts": 0,
+      "mismatchDisposition": "fail-before-package-start"
+    }
+  ],
+  "requiredRosterCount": 38,
+  "requiredFreshCount": 4,
+  "requiredReusedCount": 34
+}

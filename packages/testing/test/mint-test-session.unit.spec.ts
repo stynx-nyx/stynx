@@ -35,6 +35,9 @@ describe('mintTestSession', () => {
     expect(payload.aud).toBe('stynx-tests');
     expect(payload.sid).toBe('sid-1');
     expect(payload.perms_hash).toBe(undefined);
+    expect(session.jwks.keys).toEqual([
+      expect.objectContaining({ kid: 'stynx-testing-key' }),
+    ]);
   });
 
   it('uses default issuer, cognito fallback, and sorted permissions hash', async () => {
@@ -57,9 +60,24 @@ describe('mintTestSession', () => {
       expect(payload.iss).toBe('https://stynx.testing.local');
       expect(payload.sub).toBe(userId);
       expect(payload.tenant_id).toBe(tenantId);
+      expect(payload.cognito_sub).toBe(userId);
       expect(payload.perms_hash).toBe('audit:read|storage:write');
+      expect(payload.exp).toBe(Math.floor(now.getTime() / 1000) + 10 * 60);
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it('preserves an explicit Cognito subject instead of substituting the user id', async () => {
+    process.env.NODE_ENV = 'test';
+    const session = await mintTestSession({
+      userId: randomUUID(),
+      tenantId: randomUUID(),
+      cognitoSub: 'cognito-sub-1',
+    });
+    const [, payloadSegment] = session.token.split('.');
+    const payload = JSON.parse(Buffer.from(payloadSegment ?? '', 'base64url').toString('utf8')) as Record<string, unknown>;
+
+    expect(payload.cognito_sub).toBe('cognito-sub-1');
   });
 });

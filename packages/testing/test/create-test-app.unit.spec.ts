@@ -1,6 +1,6 @@
 // vi.hoisted bundle: declarations referenced by vi.mock factories must be
 // hoisted alongside the mock call (Vitest only hoists vi.mock + vi.hoisted).
-const { stop, connect, end, query, close, init, get, FakeContainer } = vi.hoisted(() => {
+const { stop, connect, end, query, tx, withSystemContext, close, init, get, containers, FakeContainer } = vi.hoisted(() => {
   const stop = vi.fn(async () => undefined);
   const connect = vi.fn(async () => undefined);
   const end = vi.fn(async () => undefined);
@@ -17,15 +17,29 @@ const { stop, connect, end, query, close, init, get, FakeContainer } = vi.hoiste
     }
     return { runWithRequestContext: vi.fn() };
   });
+  const containers: Array<{
+    image: string;
+    environments: Record<string, string>[];
+    exposedPorts: number[][];
+    waitStrategies: unknown[];
+  }> = [];
   class FakeContainer {
-    constructor(readonly image: string) {}
-    withEnvironment() {
+    readonly environments: Record<string, string>[] = [];
+    readonly exposedPorts: number[][] = [];
+    readonly waitStrategies: unknown[] = [];
+    constructor(readonly image: string) {
+      containers.push(this);
+    }
+    withEnvironment(environment: Record<string, string>) {
+      this.environments.push(environment);
       return this;
     }
-    withExposedPorts() {
+    withExposedPorts(...ports: number[]) {
+      this.exposedPorts.push(ports);
       return this;
     }
-    withWaitStrategy() {
+    withWaitStrategy(strategy: unknown) {
+      this.waitStrategies.push(strategy);
       return this;
     }
     async start() {
@@ -36,7 +50,7 @@ const { stop, connect, end, query, close, init, get, FakeContainer } = vi.hoiste
       };
     }
   }
-  return { stop, connect, end, query, tx, withSystemContext, close, init, get, FakeContainer };
+  return { stop, connect, end, query, tx, withSystemContext, close, init, get, containers, FakeContainer };
 });
 
 vi.mock('testcontainers', () => ({
@@ -77,6 +91,7 @@ import { Wait } from 'testcontainers';
 describe('createTestApp', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    containers.length = 0;
   });
 
   it('starts optional services, applies SQL steps, exposes tx/admin helpers, and tears down', async () => {
@@ -106,6 +121,12 @@ describe('createTestApp', () => {
     await app.teardown();
     expect(close).toHaveBeenCalledTimes(1);
     expect(stop).toHaveBeenCalledTimes(3);
+    expect(withSystemContext).toHaveBeenCalledWith('stynx testing harness', expect.any(Function));
+    expect(tx).toHaveBeenCalledWith(expect.any(Function), {
+      role: 'owner',
+      readonly: false,
+      replica: false,
+    });
   });
 
   it('uses default LocalStack services and omits Cognito when disabled', async () => {
@@ -118,6 +139,69 @@ describe('createTestApp', () => {
       }),
     );
     expect(app.cognito).toBe(undefined);
+    expect(containers.map((container) => ({
+      image: container.image,
+      environments: container.environments,
+      exposedPorts: container.exposedPorts,
+    }))).toEqual([
+      {
+        image: 'postgres:16-alpine',
+        environments: [{
+          GLOG_minloglevel: '2',
+          POSTGRES_DB: 'postgres',
+          POSTGRES_USER: 'postgres',
+          POSTGRES_PASSWORD: 'postgres',
+        }],
+        exposedPorts: [[5432]],
+      },
+      {
+        image: 'redis:7-alpine',
+        environments: [{ GLOG_minloglevel: '2' }],
+        exposedPorts: [[6379]],
+      },
+      {
+        image: 'localstack/localstack:3.8.1',
+        environments: [{
+          GLOG_minloglevel: '2',
+          SERVICES: 's3,kms',
+          AWS_DEFAULT_REGION: 'us-east-1',
+        }],
+        exposedPorts: [[4566]],
+      },
+    ]);
+    expect(app.postgres.connectionString).toBe('postgresql://postgres:postgres@127.0.0.1:15432/postgres');
+    expect(app.postgres.adminConnectionString).toBe('postgresql://postgres:postgres@127.0.0.1:15432/postgres');
+    expect(app.redis.url).toBe('redis://127.0.0.1:16379');
+    await app.teardown();
+  });
+
+  it('uses exact Cognito defaults and exposes its complete connection contract', async () => {
+    const app = await createTestApp({
+      localstack: { enabled: false },
+      cognito: { enabled: true },
+    });
+
+    const cognito = containers.find((container) => container.image === 'jagregory/cognito-local:latest');
+    expect(cognito).toEqual(expect.objectContaining({
+      environments: [{
+        GLOG_minloglevel: '2',
+        AWS_DEFAULT_REGION: 'us-east-1',
+        COGNITO_LOCAL_PORT: '9229',
+        COGNITO_LOCAL_USER_POOLS: JSON.stringify([{
+          Id: 'local_testing_pool',
+          Name: 'stynx-testing',
+          Clients: [{ ClientId: 'local_testing_client', ClientName: 'stynx-testing-client' }],
+        }]),
+      }],
+      exposedPorts: [[9229]],
+    }));
+    expect(app.cognito).toEqual(expect.objectContaining({
+      endpoint: 'http://127.0.0.1:19229',
+      region: 'us-east-1',
+      userPoolId: 'local_testing_pool',
+      clientId: 'local_testing_client',
+    }));
+
     await app.teardown();
   });
 

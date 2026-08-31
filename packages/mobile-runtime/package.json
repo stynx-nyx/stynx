@@ -32,7 +32,8 @@
     "lint": "eslint --config ../../tools/eslint-config/lib.mjs \"src/**/*.ts\"",
     "test": "vitest run --config ./vitest.config.ts",
     "stryker": "pnpm exec stryker run stryker.conf.mjs",
-    "test:mutation": "pnpm run stryker"
+    "test:mutation": "pnpm run stryker",
+    "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
   },
   "devDependencies": {
     "@types/node": "24.12.4",

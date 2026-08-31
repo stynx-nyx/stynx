@@ -82,7 +82,7 @@ describe('expectROCannotWrite', () => {
 
 describe('archive-aware matchers', () => {
   it('accepts archive and live row counts for moved and restored rows', async () => {
-    const { database, query } = databaseWithRows([
+    const { database, query, tx, withSystemContext } = databaseWithRows([
       { rows: [{ value: 1 }] },
       { rows: [{ value: 0 }] },
       { rows: [{ value: 1 }] },
@@ -96,6 +96,12 @@ describe('archive-aware matchers', () => {
       'select count(*)::int as value from "archive"."unit_documents" where id = $1::uuid',
       ['row-1'],
     );
+    expect(withSystemContext).toHaveBeenCalledWith('testing matcher scalar', expect.any(Function));
+    expect(tx).toHaveBeenCalledWith(expect.any(Function), {
+      role: 'owner',
+      readonly: true,
+      replica: false,
+    });
   });
 
   it('reports rows missing from archive or still present in live tables', async () => {
@@ -118,6 +124,14 @@ describe('archive-aware matchers', () => {
         'archived',
       ),
     ).rejects.toThrow('Expected archived to be restored into "unit"."documents"');
+
+    await expect(
+      expectRestored(
+        databaseWithRows([{ rows: [{ value: 1 }] }, { rows: [{ value: 1 }] }]).database,
+        unitDocuments,
+        'still-archived',
+      ),
+    ).rejects.toThrow('Expected still-archived to be restored into "unit"."documents"');
   });
 
   it('uses public schema metadata for tables without an explicit schema', async () => {
@@ -172,13 +186,43 @@ describe('archive-aware matchers', () => {
         ]).database,
         unitDocuments,
       ),
-    ).rejects.toThrow('Archive mirror drift detected');
+    ).rejects.toThrow('Archive mirror drift detected. Missing: title, created_at, updated_at Extra: extra_column');
+
+    await expect(
+      expectArchiveMirrorInSync(
+        databaseWithRows([{
+          rows: [
+            { column_name: 'id' },
+            { column_name: 'tenant_id' },
+            { column_name: 'title' },
+            { column_name: 'created_at' },
+            { column_name: 'updated_at' },
+            { column_name: 'extra_column' },
+          ],
+        }]).database,
+        unitDocuments,
+      ),
+    ).rejects.toThrow('Archive mirror drift detected. Missing:  Extra: extra_column');
+
+    await expect(
+      expectArchiveMirrorInSync(
+        databaseWithRows([{
+          rows: [
+            { column_name: 'id' },
+            { column_name: 'tenant_id' },
+            { column_name: 'title' },
+            { column_name: 'created_at' },
+          ],
+        }]).database,
+        unitDocuments,
+      ),
+    ).rejects.toThrow('Archive mirror drift detected. Missing: updated_at Extra: ');
   });
 });
 
 describe('auditExpect', () => {
   it('finds an audit row whose tags match every requested tag', async () => {
-    const { database, query } = databaseWithRows([
+    const { database, query, tx, withSystemContext } = databaseWithRows([
       {
         rows: [
           { tags: { requestId: 'wrong' } },
@@ -200,6 +244,12 @@ describe('auditExpect', () => {
       'documents',
       'row-1',
     ]);
+    expect(withSystemContext).toHaveBeenCalledWith('testing audit expectation', expect.any(Function));
+    expect(tx).toHaveBeenCalledWith(expect.any(Function), {
+      role: 'owner',
+      readonly: true,
+      replica: false,
+    });
   });
 
   it('uses schema, row id, and tags defaults when only entity and operation are provided', async () => {

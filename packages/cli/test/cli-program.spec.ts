@@ -118,6 +118,71 @@ describe('buildProgram', () => {
     expect(optionDefault(audit?.commands[0], '--format <format>')).toBe('human');
   });
 
+  it('preserves exact command arguments, flags, descriptions, and defaults', () => {
+    const program = buildProgram();
+    const init = program.commands.find((command) => command.name() === 'init')!;
+    const migrate = program.commands.find((command) => command.name() === 'migrate')!;
+    const doctor = program.commands.find((command) => command.name() === 'doctor')!;
+    const privacy = program.commands.find((command) => command.name() === 'privacy')!;
+    const audit = program.commands.find((command) => command.name() === 'audit')!;
+    const adopt = program.commands.find((command) => command.name() === 'adopt')!;
+
+    expect(init.registeredArguments.map((argument) => ({
+      name: argument.name(),
+      required: argument.required,
+    }))).toEqual([{ name: 'app-name', required: true }]);
+    expect(init.options.map((option) => ({
+      flags: option.flags,
+      description: option.description,
+      defaultValue: option.defaultValue,
+    }))).toEqual([
+      { flags: '--angular', description: 'Scaffold Angular workspace files', defaultValue: false },
+      { flags: '--dir <dir>', description: 'Output directory', defaultValue: process.cwd() },
+    ]);
+    expect(migrate.commands.map((command) => ({
+      name: command.name(),
+      options: command.options.map((option) => ({
+        flags: option.flags,
+        description: option.description,
+        defaultValue: option.defaultValue,
+        mandatory: option.mandatory,
+      })),
+    }))).toEqual([
+      { name: 'status', options: [{ flags: '--database-url <url>', description: '', defaultValue: undefined, mandatory: true }] },
+      { name: 'up', options: [
+        { flags: '--database-url <url>', description: '', defaultValue: undefined, mandatory: true },
+        { flags: '--dry', description: 'Dry-run pending list', defaultValue: false, mandatory: false },
+      ] },
+      { name: 'down', options: [
+        { flags: '--database-url <url>', description: '', defaultValue: undefined, mandatory: true },
+        { flags: '--steps <n>', description: 'How many applied migrations to roll back', defaultValue: '1', mandatory: false },
+        { flags: '--dry', description: 'Dry-run rollback list', defaultValue: false, mandatory: false },
+      ] },
+      { name: 'redo', options: [
+        { flags: '--database-url <url>', description: '', defaultValue: undefined, mandatory: true },
+        { flags: '--dry', description: 'Dry-run redo plan', defaultValue: false, mandatory: false },
+      ] },
+    ]);
+    expect(doctor.options.map((option) => [option.flags, option.description]))
+      .toEqual([['--dir <dir>', 'Workspace directory']]);
+    expect(privacy.commands[0]?.options.map((option) => [option.flags, option.description]))
+      .toEqual([['--dir <dir>', 'App directory']]);
+    expect(audit.commands[0]?.options.map((option) => [option.flags, option.description, option.defaultValue]))
+      .toEqual([
+        ['--database-url <url>', '', undefined],
+        ['--tenant-id <uuid>', 'Verify a single tenant chain', undefined],
+        ['--limit <n>', 'Maximum events to verify per tenant', '1000'],
+        ['--format <format>', 'human or json', 'human'],
+      ]);
+    expect(adopt.commands.flatMap((command) => command.options.map((option) => option.description)))
+      .toEqual([
+        'json or human', 'Target directory',
+        'Target directory', 'Report without writing',
+        'Replacement pairs', 'Target directory',
+        '', '', 'Only report matches',
+      ]);
+  });
+
   it('runs init, doctor, and privacy commands', async () => {
     const root = mkdtempSync(resolve(tmpdir(), 'stynx-cli-program-'));
 
@@ -235,5 +300,28 @@ describe('buildProgram', () => {
       [{ sub: 'sub1', email: 'a@example.test' }],
     );
     expect(logs.at(-1)).toContain('"matched"');
+  });
+
+  it('honors command defaults, recursive init paths, and repeated replacements', async () => {
+    const root = mkdtempSync(resolve(tmpdir(), 'stynx-cli-defaults-'));
+
+    await runCli(['init', 'nested/demo', '--dir', root]);
+    expect(mocks.scaffoldApp).toHaveBeenCalledWith(resolve(root, 'nested/demo'), 'nested/demo', false);
+
+    await runCli(['adopt', 'scan', '--dir', root]);
+    expect(logs.at(-1)).toContain('"report": true');
+    expect(mocks.formatAdoptScanHuman).not.toHaveBeenCalled();
+
+    await runCli(['adopt', 'apply', '--dir', root]);
+    expect(mocks.adoptApply).toHaveBeenCalledWith(root, false);
+
+    await runCli([
+      'adopt', 'apply-proposed-permissions', '--dir', root,
+      '--replacement', 'FIRST=one', '--replacement', 'SECOND=two',
+    ]);
+    expect(mocks.adoptApplyProposedPermissions).toHaveBeenCalledWith(root, {
+      FIRST: 'one',
+      SECOND: 'two',
+    });
   });
 });

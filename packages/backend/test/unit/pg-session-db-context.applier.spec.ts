@@ -181,4 +181,70 @@ describe('PgSessionDbContextApplier', () => {
     );
     expect(settings.get('stynx.app_user_id')).toBe('42');
   });
+
+  it('emits the complete default session-setting contract in deterministic order', async () => {
+    const client = makeClient();
+    const applier = new PgSessionDbContextApplier({ enableRowSecurity: false });
+
+    await applier.apply(client, {
+      tenantId: ' tenant-1 ',
+      userId: ' user-1 ',
+      roles: [' owner ', ' member '],
+      permissions: [' read ', ' write '],
+      correlationId: ' corr-1 ',
+      requestId: ' req-1 ',
+      extras: { locale: ' pt-BR ', orgCnpj: ' 123 ' },
+    });
+
+    expect(client.query.mock.calls).toEqual([
+      ['select set_config($1, $2, false)', ['stynx.app_user_id', 'user-1']],
+      ['select set_config($1, $2, false)', ['auth.app_user_id', 'user-1']],
+      ['select set_config($1, $2, false)', ['stynx.roles', 'owner,member']],
+      ['select set_config($1, $2, false)', ['auth.roles', 'owner,member']],
+      ['select set_config($1, $2, false)', ['stynx.permissions', 'read,write']],
+      ['select set_config($1, $2, false)', ['stynx.current_tenant', 'tenant-1']],
+      ['select set_config($1, $2, false)', ['auth.current_tenant', 'tenant-1']],
+      ['select set_config($1, $2, false)', ['app.current_tenant', 'tenant-1']],
+      ['select set_config($1, $2, false)', ['stynx.correlation_id', 'corr-1']],
+      ['select set_config($1, $2, false)', ['stynx.request_id', 'req-1']],
+      ['select set_config($1, $2, false)', ['stynx.lang', 'pt-BR']],
+      ['select set_config($1, $2, false)', ['auth.lang', 'pt-BR']],
+      ['select set_config($1, $2, false)', ['stynx.org_cnpj', '123']],
+      ['select set_config($1, $2, false)', ['auth.org_cnpj', '123']],
+    ]);
+  });
+
+  it('normalizes setting names, blank lists, and fallback extras exactly', async () => {
+    const client = makeClient();
+    const applier = new PgSessionDbContextApplier({
+      enableRowSecurity: false,
+      clearMissing: false,
+      settings: {
+        tenantId: ['  custom.tenant  ', 'custom.tenant', ' ', 'custom.tenant.secondary'],
+      },
+    });
+
+    await applier.apply(client, {
+      tenantId: ' tenant-1 ',
+      roles: [' ', ' admin ', '  '],
+      permissions: [' ', '  '],
+      extras: {
+        lang: ' ',
+        locale: ' pt-BR ',
+        orgCnpj: null,
+        org_cnpj: ' 123 ',
+      },
+    });
+
+    expect(client.query.mock.calls).toEqual([
+      ['select set_config($1, $2, false)', ['stynx.roles', 'admin']],
+      ['select set_config($1, $2, false)', ['auth.roles', 'admin']],
+      ['select set_config($1, $2, false)', ['custom.tenant', 'tenant-1']],
+      ['select set_config($1, $2, false)', ['custom.tenant.secondary', 'tenant-1']],
+      ['select set_config($1, $2, false)', ['stynx.lang', 'pt-BR']],
+      ['select set_config($1, $2, false)', ['auth.lang', 'pt-BR']],
+      ['select set_config($1, $2, false)', ['stynx.org_cnpj', '123']],
+      ['select set_config($1, $2, false)', ['auth.org_cnpj', '123']],
+    ]);
+  });
 });

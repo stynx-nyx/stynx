@@ -346,6 +346,14 @@ describe('@stynx-nyx/angular-storage', () => {
 
     expect(component.status()).toBe('errored');
     expect(component.errorMessage()).toBe('Download failed with status 503');
+
+    const nonErrorFailure = createDownloadComponent({
+      getSignedUrl: vi.fn(async () => Promise.reject('offline')),
+    });
+    nonErrorFailure.documentId = 'doc-offline';
+    await nonErrorFailure.download();
+    expect(nonErrorFailure.status()).toBe('errored');
+    expect(nonErrorFailure.errorMessage()).toBe('Download failed');
   });
 
   it('uses explicit download filenames before encoded headers and URL fallbacks', async () => {
@@ -613,13 +621,25 @@ describe('@stynx-nyx/angular-storage', () => {
         ok: true,
         status: 200,
         body: null,
-        headers: new Headers({ 'content-length': '0' }),
-        blob: async () => new Blob(['fallback']),
+        headers: new Headers({ 'content-length': '7', 'content-disposition': 'inline' }),
+        blob: async () => new Blob([]),
       })),
     });
 
     try {
       component.documentId = 'doc-bodyless';
+      await component.download();
+      expect(progress.at(-1)).toEqual({ loadedBytes: 0, totalBytes: 7, percentage: 0 });
+      Object.defineProperty(globalThis, 'fetch', {
+        configurable: true,
+        value: vi.fn(async () => ({
+          ok: true,
+          status: 200,
+          body: null,
+          headers: new Headers({ 'content-length': '0' }),
+          blob: async () => new Blob([]),
+        })),
+      });
       await component.download();
     } finally {
       vi.restoreAllMocks();
@@ -637,7 +657,23 @@ describe('@stynx-nyx/angular-storage', () => {
       });
     }
 
-    expect(progress.at(-1)).toEqual({ loadedBytes: 8, totalBytes: 8, percentage: 100 });
+    expect(progress.at(-1)).toEqual({ loadedBytes: 0, totalBytes: null, percentage: 0 });
+  });
+
+  it('preserves streamed bytes when a download omits its content type', async () => {
+    const component = createDownloadComponent({
+      getSignedUrl: vi.fn(async () => ({
+        id: 'doc-no-type',
+        url: 'https://download.example.test/no-type.bin',
+        expiresInSeconds: 60,
+      })),
+    } as never);
+    const response = new Response(new Uint8Array([1, 2, 3]));
+    response.headers.delete('content-type');
+
+    await expect((component as unknown as {
+      readResponseBlob(response: Response, totalBytes: number | null): Promise<Blob>;
+    }).readResponseBlob(response, null)).resolves.toMatchObject({ size: 3, type: '' });
   });
 
   it('computes streamed download progress and blob metadata from chunked bodies', async () => {
@@ -1024,6 +1060,29 @@ describe('@stynx-nyx/angular-storage', () => {
     expect(toasts).toEqual([['Upload completed', 'warning']]);
   });
 
+  it('emits warning toasts when a watched scan becomes quarantined', async () => {
+    const toasts: unknown[] = [];
+    const component = createUploadComponent(
+      {
+        initiate: vi.fn(async () => ({
+          id: 'doc-quarantined-scan',
+          s3Key: 'storage/doc-quarantined-scan',
+          upload: { method: 'PUT' as const, url: 'https://upload.example.test', headers: {}, expiresInSeconds: 60 },
+        })),
+        complete: vi.fn(async () => ({ id: 'doc-quarantined-scan', scanStatus: 'pending' as const })),
+        scanStatus$: vi.fn(() => of({ id: 'doc-quarantined-scan', status: 'quarantined' as const })),
+      },
+      { push: (...args: unknown[]) => toasts.push(args) } as never,
+      { upload: vi.fn(async (_url, _file, _headers, onProgress) => onProgress(100)) },
+    );
+    component.collection = 'attachments';
+
+    await component.upload(new File(['body'], 'quarantined.pdf', { type: 'application/pdf' }));
+
+    expect(component.scanStatus).toBe('quarantined');
+    expect(toasts).toEqual([['Upload completed', 'warning']]);
+  });
+
   it('rejects invalid files and surfaces upload failures', async () => {
     const component = createUploadComponent(
       {
@@ -1121,6 +1180,29 @@ describe('@stynx-nyx/angular-storage', () => {
     expect(component.status).toBe('idle');
   });
 
+  it('ignores enabled drop events that do not contain a file', async () => {
+    const component = createUploadComponent(
+      {
+        initiate: vi.fn(async () => {
+          throw new Error('empty drops must not initiate uploads');
+        }),
+        complete: vi.fn(async () => ({ id: 'doc-drop', scanStatus: 'completed' as const })),
+      },
+      { push: vi.fn() },
+      { upload: vi.fn(async () => undefined) },
+    );
+    const event = createDragEvent();
+    component.enableDragAndDrop = true;
+    component.isDragActive = true;
+
+    await component.onDrop(event);
+
+    expect(event.preventDefault).toHaveBeenCalledTimes(1);
+    expect(event.stopPropagation).toHaveBeenCalledTimes(1);
+    expect(component.isDragActive).toBe(false);
+    expect(component.status).toBe('idle');
+  });
+
   it('calls the document API endpoints with normalized base URLs', async () => {
     const calls: Array<{ method: string; url: string; body?: unknown; options?: unknown }> = [];
     const http = {
@@ -1158,11 +1240,13 @@ describe('@stynx-nyx/angular-storage', () => {
     });
     await service.complete('doc-1');
     await service.getDownloadUrl('doc-1');
+    await service.getSignedUrl('doc-1');
     await service.list('records');
 
     expect(calls.map((call) => call.url)).toEqual([
       'https://api.example.test/documents',
       'https://api.example.test/documents/doc-1/complete',
+      'https://api.example.test/documents/doc-1/download',
       'https://api.example.test/documents/doc-1/download',
       'https://api.example.test/documents',
     ]);
@@ -1212,6 +1296,21 @@ describe('@stynx-nyx/angular-storage', () => {
       'https://api.example.test/storage/documents/doc%2Ffallback/scan-status',
       'https://api.example.test/storage/documents/doc%2Ffallback/scan-status',
     ]);
+  });
+
+  it('uses the default scan polling interval when no options are supplied', async () => {
+    const service = createDocumentService({
+      get: vi.fn(() => of({
+        id: 'doc-default-poll',
+        status: 'completed',
+        checkedAt: '2026-05-19T06:40:00.000Z',
+      })),
+      post: vi.fn(),
+    } as unknown as HttpClient);
+
+    await expect(firstValueFrom(service.scanStatus$('doc-default-poll'))).resolves.toMatchObject({
+      status: 'completed',
+    });
   });
 
   it('long-polls scan status until a terminal status is returned', async () => {
@@ -1661,6 +1760,65 @@ describe('@stynx-nyx/angular-storage', () => {
       },
     ]);
     expect(progress).toEqual([0, 50, 99, 100]);
+  });
+
+  it('resumes completed chunks, preserves headerless parts, and tolerates unavailable status', async () => {
+    const originalFetch = globalThis.fetch;
+    const executor = createMultipartExecutor({
+      chunkThreshold: 1,
+      chunkSize: 4,
+      concurrency: 1,
+      retryAttempts: 0,
+    }) as unknown as {
+      uploadChunks(
+        file: File,
+        init: { uploadId: string; chunks: Array<{ partNumber: number; url: string }> },
+        headers: Record<string, string>,
+        completed: Map<number, { partNumber: number; etag?: string }>,
+        onProgress: (value: number) => void,
+      ): Promise<void>;
+      putChunk(
+        file: File,
+        chunk: { partNumber: number; url: string },
+        headers: Record<string, string>,
+      ): Promise<{ partNumber: number; etag?: string }>;
+      refreshCompletedParts(
+        uploadId: string,
+        completed: Map<number, { partNumber: number; etag?: string }>,
+      ): Promise<void>;
+    };
+    const file = new File(['abcd'], 'resume.bin', { type: 'application/octet-stream' });
+    const completed = new Map([[1, { partNumber: 1, etag: 'saved-etag' }]]);
+    const progress = vi.fn();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(makeResponse(''))
+      .mockResolvedValueOnce(makeResponse('', { status: 503 }));
+    Object.defineProperty(globalThis, 'fetch', { configurable: true, value: fetchMock });
+
+    try {
+      await executor.uploadChunks(
+        file,
+        { uploadId: 'upload-resume', chunks: [{ partNumber: 1, url: 'https://upload.example.test/chunk-1' }] },
+        {},
+        completed,
+        progress,
+      );
+      await expect(executor.putChunk(
+        file,
+        { partNumber: 1, url: 'https://upload.example.test/headerless' },
+        {},
+      )).resolves.toEqual({ partNumber: 1 });
+      await executor.refreshCompletedParts('upload/status unavailable', completed);
+    } finally {
+      Object.defineProperty(globalThis, 'fetch', { configurable: true, value: originalFetch });
+    }
+
+    expect(progress).not.toHaveBeenCalled();
+    expect(completed.get(1)).toEqual({ partNumber: 1, etag: 'saved-etag' });
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      'https://api.example.test/storage/uploads/upload%2Fstatus%20unavailable',
+    );
   });
 
   it('uses multipart status numbers, explicit completion URL, and failure statuses', async () => {

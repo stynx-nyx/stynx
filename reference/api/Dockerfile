@@ -16,6 +16,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.json .n
 COPY docs/framework/api ./docs/framework/api
 COPY docs/framework/contracts ./docs/framework/contracts
 COPY tools ./tools
+COPY scripts/verify-reference-api-build-inputs.mjs ./scripts/verify-reference-api-build-inputs.mjs
 COPY packages ./packages
 COPY packages-web ./packages-web
 COPY reference/api ./reference/api

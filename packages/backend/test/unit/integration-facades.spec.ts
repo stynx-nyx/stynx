@@ -67,6 +67,13 @@ describe('PormIdentityAdminFacade', () => {
     });
   });
 
+  it('list() forwards an exactly empty query when no filters are present', async () => {
+    const service = makeAdminService();
+    await new PormIdentityAdminFacade(service).list({});
+    expect(service.listUsers).toHaveBeenCalledWith({});
+    expect(Object.keys(service.listUsers.mock.calls[0]![0])).toEqual([]);
+  });
+
   it('list() handles items without a username inline', async () => {
     const service = makeAdminService({
       listUsers: vi.fn(async () => ({
@@ -103,6 +110,8 @@ describe('PormIdentityAdminFacade', () => {
     expect(result).toEqual({
       users: [{ username: '', enabled: true, attributes: {}, groups: [] }],
     });
+    expect(Object.keys(result.users[0]!)).toEqual(['username', 'enabled', 'attributes', 'groups']);
+    expect(Object.keys(result)).toEqual(['users']);
   });
 
   it('get() composes user details + group names', async () => {
@@ -132,6 +141,8 @@ describe('PormIdentityAdminFacade', () => {
       attributes: {},
       groups: [],
     });
+    const result = await new PormIdentityAdminFacade(service).get('u');
+    expect(Object.keys(result)).toEqual(['username', 'enabled', 'attributes', 'groups']);
   });
 
   it('getBySub() resolves username via getUserBySubject then composes', async () => {
@@ -187,16 +198,21 @@ describe('PormIdentityAdminFacade', () => {
     const facade = new PormIdentityAdminFacade(service);
     await expect(facade.update('alice', input)).resolves.toEqual({ updated: true });
     expect(service.updateUser).toHaveBeenCalledWith('alice', expected);
+    expect(Object.keys(service.updateUser.mock.calls[0]![1])).toEqual(Object.keys(expected));
   });
 
   it('disable/enable/addToGroup/removeFromGroup/resetPassword/setPassword return their tags', async () => {
-    const facade = new PormIdentityAdminFacade(makeAdminService());
+    const service = makeAdminService();
+    const facade = new PormIdentityAdminFacade(service);
     await expect(facade.disable('u')).resolves.toEqual({ disabled: true });
     await expect(facade.enable('u')).resolves.toEqual({ enabled: true });
     await expect(facade.addToGroup('u', 'g')).resolves.toEqual({ added: true });
     await expect(facade.removeFromGroup('u', 'g')).resolves.toEqual({ removed: true });
     await expect(facade.resetPassword('u')).resolves.toEqual({ reset: true });
     await expect(facade.setPassword('u', 'pw')).resolves.toEqual({ updated: true });
+    expect(service.setUserPassword).toHaveBeenLastCalledWith('u', 'pw', true);
+    await expect(facade.setPassword('u', 'pw-once', false)).resolves.toEqual({ updated: true });
+    expect(service.setUserPassword).toHaveBeenLastCalledWith('u', 'pw-once', false);
   });
 
   it('verify() short-circuits when neither email nor phone is requested', async () => {
@@ -230,6 +246,8 @@ describe('PormIdentityAdminFacade', () => {
     await expect(new PormIdentityAdminFacade(service).listAllGroups()).resolves.toEqual({
       groups: [{ name: 'g' }],
     });
+    const result = await new PormIdentityAdminFacade(service).listAllGroups();
+    expect(Object.keys(result)).toEqual(['groups']);
   });
 
   it('syncToLocal / syncUser delegate', async () => {
@@ -296,6 +314,7 @@ describe('PecIdentityAdminFacade', () => {
     const result = await facade.list({});
     expect(result.items[0].email).toBe(null);
     expect(result.items[0].phone_number).toBe(null);
+    expect(Object.keys(result)).toEqual(['items']);
   });
 
   it('get() maps user detail with parsed dates', async () => {
@@ -347,6 +366,7 @@ describe('PecIdentityAdminFacade', () => {
     });
     const result = await new PecIdentityAdminFacade(service).update('u', {});
     expect(service.updateUser).toHaveBeenCalledWith('u', {});
+    expect(Object.keys(service.updateUser.mock.calls[0]![1])).toEqual([]);
     expect(result).toEqual({
       username: 'u',
       status: undefined,
@@ -355,6 +375,14 @@ describe('PecIdentityAdminFacade', () => {
       updatedAt: undefined,
       attributes: {},
     });
+    expect(Object.keys(result)).toEqual([
+      'username',
+      'status',
+      'enabled',
+      'createdAt',
+      'updatedAt',
+      'attributes',
+    ]);
   });
 
   it('disable/enable/listGroups/addToGroup/removeFromGroup/verify/resetPassword delegate', async () => {
@@ -382,8 +410,10 @@ describe('PecIdentityAdminFacade', () => {
     const service = makeAdminService({
       listGroups: vi.fn(async () => ({ items: [{ name: 'g' }] })),
     });
-    await expect(new PecIdentityAdminFacade(service).listAllGroups()).resolves.toEqual({
+    const result = await new PecIdentityAdminFacade(service).listAllGroups();
+    expect(result).toEqual({
       items: [{ name: 'g' }],
     });
+    expect(Object.keys(result)).toEqual(['items']);
   });
 });

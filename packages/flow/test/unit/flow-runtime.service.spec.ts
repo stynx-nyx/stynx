@@ -73,9 +73,7 @@ describe('FlowRuntimeService.ensureRun', () => {
   });
 
   it('uses scopeCode directly when provided', async () => {
-    const { service, trx } = makeService([
-      [{ run_id: RUN }],
-    ]);
+    const { service, trx } = makeService([[{ run_id: RUN }]]);
     const result = await service.ensureRun({
       graphCode: 'g',
       version: 'v2',
@@ -94,9 +92,7 @@ describe('FlowRuntimeService.ensureRun', () => {
   });
 
   it('passes default version and null adapterKey params when optional values are absent', async () => {
-    const { service, trx } = makeService([
-      [{ run_id: RUN }],
-    ]);
+    const { service, trx } = makeService([[{ run_id: RUN }]]);
     await service.ensureRun({
       graphCode: 'g',
       scopeCode: 's',
@@ -119,15 +115,21 @@ describe('FlowRuntimeService.ensureRun', () => {
       signalKey: 'changed',
       payload: { id: 'doc-1' },
     });
-    expect(adapters.buildFacts).toHaveBeenCalledWith(expect.objectContaining({
-      signalKey: 'changed',
-      payload: { id: 'doc-1' },
-    }));
+    expect(adapters.buildFacts).toHaveBeenCalledWith(
+      expect.objectContaining({
+        signalKey: 'changed',
+        payload: { id: 'doc-1' },
+      }),
+    );
   });
 
   it('throws when flow.run_ensure returns no run_id', async () => {
     const { service } = makeService([
-      [{ /* no run_id */ }],
+      [
+        {
+          /* no run_id */
+        },
+      ],
     ]);
     await expect(
       service.ensureRun({
@@ -136,7 +138,7 @@ describe('FlowRuntimeService.ensureRun', () => {
         targetType: 'doc',
         targetId: 'doc-1',
       }),
-    ).rejects.toBeInstanceOf(BadRequestException);
+    ).rejects.toThrow('Flow run was not created');
   });
 
   it('requires scopeId when scopeCode is absent', async () => {
@@ -151,10 +153,10 @@ describe('FlowRuntimeService.ensureRun', () => {
   });
 
   it('calls adapter.buildFacts when adapterKey + tenantId are present', async () => {
-    const { service, adapters } = makeService(
-      [[{ run_id: RUN }]],
-      { tenantId: 't-1', actorId: USER },
-    );
+    const { service, adapters } = makeService([[{ run_id: RUN }]], {
+      tenantId: 't-1',
+      actorId: USER,
+    });
     await service.ensureRun({
       graphCode: 'g',
       scopeCode: 's',
@@ -177,7 +179,11 @@ describe('FlowRuntimeService.ensureRun', () => {
     const { service } = makeService(
       [],
       { tenantId: 't-1', actorId: USER },
-      { buildFacts: vi.fn(async () => { throw new Error('adapter boom'); }) },
+      {
+        buildFacts: vi.fn(async () => {
+          throw new Error('adapter boom');
+        }),
+      },
     );
     await expect(
       service.ensureRun({
@@ -293,7 +299,9 @@ describe('FlowRuntimeService listRuns / listNodeRuns / listTasks / listEvents', 
     expect(sql).toContain('limit $2 offset $3');
     expect(params).toEqual([USER, 50, 0]);
     const [countSql, countParams] = trx.query.mock.calls[1]!;
-    expect(countSql).toContain('select count(*)::text as total from flow.tasks t where t.assignee_user_id = $1::uuid');
+    expect(countSql).toContain(
+      'select count(*)::text as total from flow.tasks t where t.assignee_user_id = $1::uuid',
+    );
     expect(countParams).toEqual([USER]);
     expect(db.tx).toHaveBeenCalledWith(expect.any(Function), { role: 'reader', readonly: true });
   });
@@ -314,7 +322,9 @@ describe('FlowRuntimeService listRuns / listNodeRuns / listTasks / listEvents', 
     expect(sql).toContain('limit $4 offset $5');
     expect(params).toEqual([RUN, USER, 'open', 50, 0]);
     const [countSql, countParams] = trx.query.mock.calls[1]!;
-    expect(countSql).toContain('select count(*)::text as total from flow.tasks t where t.run_id = $1::uuid and t.assignee_user_id = $2::uuid and t.status = $3');
+    expect(countSql).toContain(
+      'select count(*)::text as total from flow.tasks t where t.run_id = $1::uuid and t.assignee_user_id = $2::uuid and t.status = $3',
+    );
     expect(countParams).toEqual([RUN, USER, 'open']);
   });
 
@@ -351,7 +361,7 @@ describe('FlowRuntimeService getRun / updateRun / getNodeRun / getTask', () => {
       [RUN],
     );
     const m = makeService([[]]);
-    await expect(m.service.getRun(RUN)).rejects.toBeInstanceOf(NotFoundException);
+    await expect(m.service.getRun(RUN)).rejects.toThrow('Run not found');
   });
 
   it('updateRun returns the camelized updated row', async () => {
@@ -378,9 +388,7 @@ describe('FlowRuntimeService getRun / updateRun / getNodeRun / getTask', () => {
 
   it('updateRun throws NotFoundException when row is absent', async () => {
     const { service, trx } = makeService([[]]);
-    await expect(service.updateRun(RUN, { status: 'completed' })).rejects.toBeInstanceOf(
-      NotFoundException,
-    );
+    await expect(service.updateRun(RUN, { status: 'completed' })).rejects.toThrow('Run not found');
     expect(trx.query.mock.calls[0]?.[1]).toEqual([RUN, 'completed', USER]);
   });
 
@@ -388,23 +396,29 @@ describe('FlowRuntimeService getRun / updateRun / getNodeRun / getTask', () => {
     const f = makeService([[{ id: 'nr-1' }]]);
     await expect(f.service.getNodeRun('nr-1')).resolves.toMatchObject({ id: 'nr-1' });
     const m = makeService([[]]);
-    await expect(m.service.getNodeRun('nr-x')).rejects.toBeInstanceOf(NotFoundException);
+    await expect(m.service.getNodeRun('nr-x')).rejects.toThrow('Node run not found');
   });
 
   it('getTask returns one or throws NotFound', async () => {
     const f = makeService([[{ id: TASK }]]);
     await expect(f.service.getTask(TASK)).resolves.toMatchObject({ id: TASK });
     const m = makeService([[]]);
-    await expect(m.service.getTask(TASK)).rejects.toBeInstanceOf(NotFoundException);
+    await expect(m.service.getTask(TASK)).rejects.toThrow('Task not found');
   });
 
   it('listRunNodeRuns / listRunTasks / listRunEvents share the same list shape', async () => {
     const a = makeService([[{ id: 'nr-1' }]]);
     await expect(a.service.listRunNodeRuns(RUN)).resolves.toHaveLength(1);
+    expect(a.trx.query.mock.calls[0]?.[0]).toContain('where nr.run_id = $1::uuid');
+    expect(a.trx.query.mock.calls[0]?.[1]).toEqual([RUN]);
     const b = makeService([[{ id: TASK }]]);
     await expect(b.service.listRunTasks(RUN)).resolves.toHaveLength(1);
+    expect(b.trx.query.mock.calls[0]?.[0]).toContain('where t.run_id = $1::uuid');
+    expect(b.trx.query.mock.calls[0]?.[1]).toEqual([RUN]);
     const c = makeService([[{ id: EVENT }]]);
     await expect(c.service.listRunEvents(RUN)).resolves.toHaveLength(1);
+    expect(c.trx.query.mock.calls[0]?.[0]).toContain('where e.run_id = $1::uuid');
+    expect(c.trx.query.mock.calls[0]?.[1]).toEqual([RUN]);
   });
 });
 
@@ -412,11 +426,23 @@ describe('FlowRuntimeService task action flows', () => {
   it('actTask asserts allowed action + execution allowed, then calls task_complete', async () => {
     const { service, trx } = makeService([
       [{ allowed: true }], // assertAllowedAction
-      [{ assignee_user_id: USER, adapter_key: 'docs', target_type: 'doc', target_id: 'd-1', is_user_candidate: true }], // taskAccess
+      [
+        {
+          assignee_user_id: USER,
+          adapter_key: 'docs',
+          target_type: 'doc',
+          target_id: 'd-1',
+          is_user_candidate: true,
+        },
+      ], // taskAccess
       [], // task_complete sql function call
       [{ id: TASK, status: 'completed' }], // getTaskFromTransaction
     ]);
-    const result = await service.actTask(TASK, { action: 'approve', note: 'done', payload: { p: 1 } });
+    const result = await service.actTask(TASK, {
+      action: 'approve',
+      note: 'done',
+      payload: { p: 1 },
+    });
     expect(result).toMatchObject({ id: TASK, status: 'completed' });
     expect(trx.query.mock.calls.length).toBe(4);
     expect(trx.query.mock.calls[0]).toEqual([
@@ -427,16 +453,21 @@ describe('FlowRuntimeService task action flows', () => {
       'select flow.task_complete($1::uuid, $2::text, $3::text, $4::jsonb)',
       [TASK, 'approve', 'done', { p: 1 }],
     ]);
-    expect(trx.query.mock.calls[3]).toEqual([
-      expect.stringContaining('from flow.tasks t'),
-      [TASK],
-    ]);
+    expect(trx.query.mock.calls[3]).toEqual([expect.stringContaining('from flow.tasks t'), [TASK]]);
   });
 
   it('actTask passes null note and empty payload defaults to task_complete', async () => {
     const { service, trx } = makeService([
       [{ allowed: true }],
-      [{ assignee_user_id: USER, adapter_key: 'docs', target_type: 'doc', target_id: 'd-1', is_user_candidate: true }],
+      [
+        {
+          assignee_user_id: USER,
+          adapter_key: 'docs',
+          target_type: 'doc',
+          target_id: 'd-1',
+          is_user_candidate: true,
+        },
+      ],
       [],
       [{ id: TASK }],
     ]);
@@ -460,10 +491,7 @@ describe('FlowRuntimeService task action flows', () => {
   });
 
   it('actTask throws Forbidden when actorId is missing', async () => {
-    const { service } = makeService(
-      [[{ allowed: true }]],
-      { tenantId: 't-1' /* no actorId */ },
-    );
+    const { service } = makeService([[{ allowed: true }]], { tenantId: 't-1' /* no actorId */ });
     await expect(service.actTask(TASK, { action: 'approve' })).rejects.toThrow(
       /Task actor context is required/,
     );
@@ -472,7 +500,15 @@ describe('FlowRuntimeService task action flows', () => {
   it('actTask throws Forbidden when assignee belongs to another actor', async () => {
     const { service } = makeService([
       [{ allowed: true }],
-      [{ assignee_user_id: 'other-user', adapter_key: 'k', target_type: 't', target_id: 't-1', is_user_candidate: true }],
+      [
+        {
+          assignee_user_id: 'other-user',
+          adapter_key: 'k',
+          target_type: 't',
+          target_id: 't-1',
+          is_user_candidate: true,
+        },
+      ],
     ]);
     await expect(service.actTask(TASK, { action: 'approve' })).rejects.toThrow(
       /Only the current assignee may execute this task/,
@@ -482,7 +518,15 @@ describe('FlowRuntimeService task action flows', () => {
   it('actTask throws Forbidden when no assignee and actor is not a candidate', async () => {
     const { service } = makeService([
       [{ allowed: true }],
-      [{ assignee_user_id: null, adapter_key: 'k', target_type: 't', target_id: 't-1', is_user_candidate: false }],
+      [
+        {
+          assignee_user_id: null,
+          adapter_key: 'k',
+          target_type: 't',
+          target_id: 't-1',
+          is_user_candidate: false,
+        },
+      ],
     ]);
     await expect(service.actTask(TASK, { action: 'approve' })).rejects.toThrow(
       /Actor is not a task candidate/,
@@ -524,9 +568,7 @@ describe('FlowRuntimeService task action flows', () => {
 
   it('assignTask throws Forbidden when canManage denies', async () => {
     const { service } = makeService(
-      [
-        [{ assignee_user_id: USER, adapter_key: 'k', target_type: 't', target_id: 't-1' }],
-      ],
+      [[{ assignee_user_id: USER, adapter_key: 'k', target_type: 't', target_id: 't-1' }]],
       { tenantId: 't-1', actorId: USER },
       { canManage: vi.fn(async () => false) },
     );
@@ -540,6 +582,17 @@ describe('FlowRuntimeService task action flows', () => {
     await expect(service.assignTask(TASK, { userId: USER })).rejects.toThrow(/Task not found/);
   });
 
+  it('assignTask rejects missing tenant context before adapter management', async () => {
+    const { service, adapters } = makeService(
+      [[{ assignee_user_id: USER, adapter_key: 'k', target_type: 't', target_id: 't-1' }]],
+      { actorId: USER },
+    );
+    await expect(service.assignTask(TASK, { userId: USER })).rejects.toThrow(
+      'Tenant context is required',
+    );
+    expect(adapters.canManage).not.toHaveBeenCalled();
+  });
+
   it('assignTask omits actorId from adapter checks when actor context is absent', async () => {
     const { service, adapters, trx } = makeService(
       [
@@ -550,7 +603,9 @@ describe('FlowRuntimeService task action flows', () => {
       { tenantId: 't-1' },
     );
     await service.assignTask(TASK, { userId: USER });
-    expect(adapters.canManage).toHaveBeenCalledWith(expect.not.objectContaining({ actorId: expect.anything() }));
+    expect(adapters.canManage).toHaveBeenCalledWith(
+      expect.not.objectContaining({ actorId: expect.anything() }),
+    );
     expect(trx.query.mock.calls[0]?.[1]).toEqual([TASK, '']);
   });
 
@@ -560,18 +615,21 @@ describe('FlowRuntimeService task action flows', () => {
       sqlFunction: string,
       note: string,
     ) => {
-      const { service, trx } = makeService(
+      const { service, trx } = makeService([
         [
-          [{ assignee_user_id: USER, adapter_key: 'k', target_type: 't', target_id: 't-1', is_user_candidate: true }],
-          [],
-          [{ id: TASK }],
+          {
+            assignee_user_id: USER,
+            adapter_key: 'k',
+            target_type: 't',
+            target_id: 't-1',
+            is_user_candidate: true,
+          },
         ],
-      );
-      await service[method](TASK, { note });
-      expect(trx.query.mock.calls[1]).toEqual([
-        `select ${sqlFunction}`,
-        [TASK, note],
+        [],
+        [{ id: TASK }],
       ]);
+      await service[method](TASK, { note });
+      expect(trx.query.mock.calls[1]).toEqual([`select ${sqlFunction}`, [TASK, note]]);
     };
     await taskFn('acceptTask', 'flow.task_accept($1::uuid, $2::text)', 'accept-note');
     await taskFn('declineTask', 'flow.task_decline($1::uuid, $2::text)', 'decline-note');
@@ -596,7 +654,15 @@ describe('FlowRuntimeService task action flows', () => {
       sqlFunction: string,
     ) => {
       const { service, trx } = makeService([
-        [{ assignee_user_id: USER, adapter_key: 'k', target_type: 't', target_id: 't-1', is_user_candidate: true }],
+        [
+          {
+            assignee_user_id: USER,
+            adapter_key: 'k',
+            target_type: 't',
+            target_id: 't-1',
+            is_user_candidate: true,
+          },
+        ],
         [],
         [{ id: TASK }],
       ]);
@@ -607,6 +673,17 @@ describe('FlowRuntimeService task action flows', () => {
     await taskFn('declineTask', 'flow.task_decline($1::uuid, $2::text)');
     await taskFn('unacceptTask', 'flow.task_unaccept($1::uuid, $2::text)');
     await taskFn('withdrawTask', 'flow.task_withdraw($1::uuid, $2::text)');
+
+    const { service, trx } = makeService([
+      [{ assignee_user_id: USER, adapter_key: 'k', target_type: 't', target_id: 't-1' }],
+      [],
+      [{ id: TASK }],
+    ]);
+    await service.unassignTask(TASK, {});
+    expect(trx.query.mock.calls[1]).toEqual([
+      'select flow.task_unassign($1::uuid, $2::text)',
+      [TASK, null],
+    ]);
   });
 });
 
@@ -630,7 +707,9 @@ describe('FlowRuntimeService.taskCandidates', () => {
     const result = await service.taskCandidates(TASK);
     expect(result[0].agentType).toBe('user');
     expect(trx.query.mock.calls[1]).toEqual([
-      expect.stringContaining('cross join lateral flow.resolve_agents(t.node_id, t.run_id) candidate'),
+      expect.stringContaining(
+        'cross join lateral flow.resolve_agents(t.node_id, t.run_id) candidate',
+      ),
       [TASK],
     ]);
   });
@@ -721,16 +800,18 @@ describe('FlowRuntimeService.taskCandidates', () => {
   it('leaves resolver candidates unresolved when resolver id is null', async () => {
     const { service, adapters } = makeService([
       [{ assignee_user_id: USER, adapter_key: 'k', target_type: 't', target_id: 't-1' }],
-      [{
-        agent_type: 'resolver',
-        agent_id: null,
-        rule_id: 'r-1',
-        run_id: RUN,
-        node_id: NODE,
-        adapter_key: 'k',
-        target_type: 't',
-        target_id: 't-1',
-      }],
+      [
+        {
+          agent_type: 'resolver',
+          agent_id: null,
+          rule_id: 'r-1',
+          run_id: RUN,
+          node_id: NODE,
+          adapter_key: 'k',
+          target_type: 't',
+          target_id: 't-1',
+        },
+      ],
     ]);
     const result = await service.taskCandidates(TASK);
     expect(result[0]).toMatchObject({ agentType: 'resolver', agentId: null });
@@ -740,47 +821,55 @@ describe('FlowRuntimeService.taskCandidates', () => {
   it('passes empty strings for nullable resolver candidate context', async () => {
     const { service, adapters } = makeService([
       [{ assignee_user_id: USER, adapter_key: 'k', target_type: 't', target_id: 't-1' }],
-      [{
-        agent_type: 'resolver',
-        agent_id: 'resolver-key',
-        rule_id: null,
-        params: null,
-        run_id: null,
-        node_id: null,
-        adapter_key: 'k',
-        target_type: null,
-        target_id: null,
-      }],
+      [
+        {
+          agent_type: 'resolver',
+          agent_id: 'resolver-key',
+          rule_id: null,
+          params: null,
+          run_id: null,
+          node_id: null,
+          adapter_key: 'k',
+          target_type: null,
+          target_id: null,
+        },
+      ],
     ]);
     await service.taskCandidates(TASK);
-    expect(adapters.resolveAgents).toHaveBeenCalledWith(expect.objectContaining({
-      targetType: '',
-      targetId: '',
-      runId: '',
-      nodeId: '',
-      ruleId: '',
-    }));
+    expect(adapters.resolveAgents).toHaveBeenCalledWith(
+      expect.objectContaining({
+        targetType: '',
+        targetId: '',
+        runId: '',
+        nodeId: '',
+        ruleId: '',
+      }),
+    );
   });
 
   it('normalizes non-object resolver params to an empty object', async () => {
     const { service, adapters } = makeService([
       [{ assignee_user_id: USER, adapter_key: 'k', target_type: 't', target_id: 't-1' }],
-      [{
-        agent_type: 'resolver',
-        agent_id: 'resolver-key',
-        rule_id: 'r-1',
-        params: ['not-object'],
-        run_id: RUN,
-        node_id: NODE,
-        adapter_key: 'k',
-        target_type: 't',
-        target_id: 't-1',
-      }],
+      [
+        {
+          agent_type: 'resolver',
+          agent_id: 'resolver-key',
+          rule_id: 'r-1',
+          params: ['not-object'],
+          run_id: RUN,
+          node_id: NODE,
+          adapter_key: 'k',
+          target_type: 't',
+          target_id: 't-1',
+        },
+      ],
     ]);
     await service.taskCandidates(TASK);
-    expect(adapters.resolveAgents).toHaveBeenCalledWith(expect.objectContaining({
-      params: {},
-    }));
+    expect(adapters.resolveAgents).toHaveBeenCalledWith(
+      expect.objectContaining({
+        params: {},
+      }),
+    );
   });
 });
 
@@ -804,6 +893,48 @@ describe('FlowRuntimeService.signal', () => {
     await expect(
       service.signal({ scopeId: SCOPE, targetType: 'doc', targetId: 'd-1' }),
     ).resolves.toMatchObject({ signaled: true });
+  });
+
+  it('builds tenant-bound adapter facts with optional signal context before signaling', async () => {
+    const { service, adapters } = makeService([[]]);
+
+    await expect(
+      service.signal({
+        scopeId: SCOPE,
+        adapterKey: 'documents',
+        targetType: 'doc',
+        targetId: 'd-1',
+        signalKey: 'changed',
+        payload: { revision: 2 },
+      }),
+    ).resolves.toMatchObject({ scopeId: SCOPE, signaled: true });
+
+    expect(adapters.buildFacts).toHaveBeenCalledWith({
+      tenantId: 't-1',
+      adapterKey: 'documents',
+      targetType: 'doc',
+      targetId: 'd-1',
+      signalKey: 'changed',
+      payload: { revision: 2 },
+    });
+  });
+
+  it('builds adapter facts without inventing absent optional signal context', async () => {
+    const { service, adapters } = makeService([[]]);
+
+    await service.signal({
+      scopeId: SCOPE,
+      adapterKey: 'documents',
+      targetType: 'doc',
+      targetId: 'd-1',
+    });
+
+    expect(adapters.buildFacts).toHaveBeenCalledWith({
+      tenantId: 't-1',
+      adapterKey: 'documents',
+      targetType: 'doc',
+      targetId: 'd-1',
+    });
   });
 });
 
@@ -862,7 +993,7 @@ describe('FlowRuntimeService.dispatchPendingEffects', () => {
       diagnostics: [{ effectEventId: EVENT, ok: true }],
     });
     expect(trx.query.mock.calls[0]).toEqual([
-      expect.stringContaining('where e.kind = \'effect_requested\''),
+      expect.stringContaining("where e.kind = 'effect_requested'"),
       [null, null, 50],
     ]);
     expect(db.tx).toHaveBeenCalledWith(expect.any(Function), { role: 'reader', readonly: true });
@@ -890,10 +1021,7 @@ describe('FlowRuntimeService.dispatchPendingEffects', () => {
 
   it('records successful effects without optional result payload or actor', async () => {
     const { service, trx } = makeService(
-      [
-        [effectRow({ node_id: null })],
-        [],
-      ],
+      [[effectRow({ node_id: null })], []],
       { tenantId: 't-1' },
       { applyEffect: vi.fn(async () => ({ ok: true })) },
     );
@@ -918,12 +1046,14 @@ describe('FlowRuntimeService.dispatchPendingEffects', () => {
 
   it('uses dispatch defaults and tolerates non-object effect payload wrappers', async () => {
     const { service, adapters } = makeService([
-      [effectRow({
-        payload: { effectKey: 'send-email', payload: ['not-object'] },
-        node_code: null,
-        action: null,
-        task_id: null,
-      })],
+      [
+        effectRow({
+          payload: { effectKey: 'send-email', payload: ['not-object'] },
+          node_code: null,
+          action: null,
+          task_id: null,
+        }),
+      ],
       [],
     ]);
     const result = await service.dispatchPendingEffects();
@@ -934,19 +1064,22 @@ describe('FlowRuntimeService.dispatchPendingEffects', () => {
       skipped: 0,
       diagnostics: [{ effectEventId: EVENT, ok: true }],
     });
-    expect(adapters.applyEffect).toHaveBeenCalledWith(expect.objectContaining({
-      payload: {},
-    }));
+    expect(adapters.applyEffect).toHaveBeenCalledWith(
+      expect.objectContaining({
+        payload: {},
+      }),
+    );
   });
 
   it('records failure when adapter.applyEffect throws', async () => {
     const { service } = makeService(
-      [
-        [effectRow()],
-        [],
-      ],
+      [[effectRow()], []],
       { tenantId: 't-1', actorId: USER },
-      { applyEffect: vi.fn(async () => { throw new Error('apply-boom'); }) },
+      {
+        applyEffect: vi.fn(async () => {
+          throw new Error('apply-boom');
+        }),
+      },
     );
     const result = await service.dispatchPendingEffects({});
     expect(result).toEqual({
@@ -960,12 +1093,13 @@ describe('FlowRuntimeService.dispatchPendingEffects', () => {
 
   it('records string effect failures without losing diagnostics', async () => {
     const { service } = makeService(
-      [
-        [effectRow()],
-        [],
-      ],
+      [[effectRow()], []],
       { tenantId: 't-1', actorId: USER },
-      { applyEffect: vi.fn(async () => { throw 'apply-string'; }) },
+      {
+        applyEffect: vi.fn(async () => {
+          throw 'apply-string';
+        }),
+      },
     );
     const result = await service.dispatchPendingEffects({});
     expect(result).toEqual({
@@ -977,7 +1111,6 @@ describe('FlowRuntimeService.dispatchPendingEffects', () => {
     });
   });
 
-
   it('returns zero counts when no pending events', async () => {
     const { service } = makeService([[]]);
     const result = await service.dispatchPendingEffects({});
@@ -986,6 +1119,47 @@ describe('FlowRuntimeService.dispatchPendingEffects', () => {
 });
 
 describe('FlowRuntimeService — small helpers + edges', () => {
+  it('uses the exact reader transaction policy for run and task reads', async () => {
+    const runs = makeService([[], []]);
+    await runs.service.listRuns();
+    expect(runs.db.tx).toHaveBeenLastCalledWith(expect.any(Function), {
+      role: 'reader',
+      readonly: true,
+    });
+
+    const nodes = makeService([[], []]);
+    await nodes.service.listNodeRuns();
+    expect(nodes.db.tx).toHaveBeenLastCalledWith(expect.any(Function), {
+      role: 'reader',
+      readonly: true,
+    });
+
+    const tasks = makeService([[], []]);
+    await tasks.service.listTasks();
+    expect(tasks.db.tx).toHaveBeenLastCalledWith(expect.any(Function), {
+      role: 'reader',
+      readonly: true,
+    });
+  });
+
+  it('uses exact reader transactions for allowed-action and task-access checks', async () => {
+    const { service, db } = makeService([
+      [{ allowed: true }],
+      [{
+        assignee_user_id: USER,
+        adapter_key: 'k',
+        target_type: 'doc',
+        target_id: 'd-1',
+        is_user_candidate: true,
+      }],
+      [],
+      [{ id: TASK }],
+    ]);
+    await service.actTask(TASK, { action: 'approve' });
+    expect(db.tx.mock.calls[0]?.[1]).toEqual({ role: 'reader', readonly: true });
+    expect(db.tx.mock.calls[1]?.[1]).toEqual({ role: 'reader', readonly: true });
+  });
+
   it('listUsersForRole adds an ilike search clause when search is provided', async () => {
     const { service, trx } = makeService([[]]);
     await service.listUsersForRole('admin', 'alice');
@@ -1028,18 +1202,22 @@ describe('FlowRuntimeService — small helpers + edges', () => {
 
   it('signal rejects when neither scopeCode nor scopeId is provided', async () => {
     const { service } = makeService([[]]);
-    await expect(
-      service.signal({ targetType: 'doc', targetId: 'd-1' }),
-    ).rejects.toBeInstanceOf(BadRequestException);
+    await expect(service.signal({ targetType: 'doc', targetId: 'd-1' })).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
   });
 
   it('scope resolver helpers require either scope id or scope code', async () => {
     const { service } = makeService([[]]);
     await expect(
-      (service as unknown as { scopeCodeForId: (scopeId?: string) => Promise<string> }).scopeCodeForId(undefined),
+      (
+        service as unknown as { scopeCodeForId: (scopeId?: string) => Promise<string> }
+      ).scopeCodeForId(undefined),
     ).rejects.toBeInstanceOf(BadRequestException);
     await expect(
-      (service as unknown as { scopeIdForCode: (scopeCode?: string) => Promise<string> }).scopeIdForCode(undefined),
+      (
+        service as unknown as { scopeIdForCode: (scopeCode?: string) => Promise<string> }
+      ).scopeIdForCode(undefined),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
@@ -1050,7 +1228,11 @@ describe('FlowRuntimeService — small helpers + edges', () => {
         [],
       ],
       { tenantId: 't-1', actorId: USER },
-      { buildFacts: vi.fn(async () => { throw new Error('facts failed'); }) },
+      {
+        buildFacts: vi.fn(async () => {
+          throw new Error('facts failed');
+        }),
+      },
     );
 
     await expect(service.getRunFacts(RUN)).rejects.toThrow('facts failed');
@@ -1075,7 +1257,11 @@ describe('FlowRuntimeService — small helpers + edges', () => {
         [],
       ],
       { tenantId: 't-1' },
-      { buildFacts: vi.fn(async () => { throw 'facts-string'; }) },
+      {
+        buildFacts: vi.fn(async () => {
+          throw 'facts-string';
+        }),
+      },
     );
 
     await expect(service.getRunFacts(RUN)).rejects.toBe('facts-string');
@@ -1094,7 +1280,15 @@ describe('FlowRuntimeService — small helpers + edges', () => {
 
   it('throws when a task function cannot reload the task', async () => {
     const { service } = makeService([
-      [{ assignee_user_id: USER, adapter_key: 'k', target_type: 't', target_id: 't-1', is_user_candidate: true }],
+      [
+        {
+          assignee_user_id: USER,
+          adapter_key: 'k',
+          target_type: 't',
+          target_id: 't-1',
+          is_user_candidate: true,
+        },
+      ],
       [],
       [],
     ]);
@@ -1106,18 +1300,24 @@ describe('FlowRuntimeService — small helpers + edges', () => {
     expect(() => service.objectInput('not-object')).toThrow(BadRequestException);
 
     const noTenant = makeService(
-      [[{
-        event_id: EVENT,
-        run_id: RUN,
-        node_id: NODE,
-        task_id: TASK,
-        payload: { effectKey: 'send-email' },
-        adapter_key: 'k',
-        target_type: 't',
-        target_id: 't-1',
-      }]],
+      [
+        [
+          {
+            event_id: EVENT,
+            run_id: RUN,
+            node_id: NODE,
+            task_id: TASK,
+            payload: { effectKey: 'send-email' },
+            adapter_key: 'k',
+            target_type: 't',
+            target_id: 't-1',
+          },
+        ],
+      ],
       { actorId: USER },
     );
-    await expect(noTenant.service.dispatchPendingEffects({})).rejects.toBeInstanceOf(BadRequestException);
+    await expect(noTenant.service.dispatchPendingEffects({})).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
   });
 });

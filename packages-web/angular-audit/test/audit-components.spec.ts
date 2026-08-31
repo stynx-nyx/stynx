@@ -142,6 +142,43 @@ describe('@stynx-nyx/angular-audit E.6 components', () => {
     expect(fixture.componentInstance.pageIndex()).toBe(1);
   });
 
+  it('clears and refreshes audit filters while preserving fallback labels and read errors', () => {
+    const api = createApi();
+    TestBed.configureTestingModule({
+      imports: [StynxAuditLogComponent],
+      providers: [
+        { provide: AuditApiService, useValue: api },
+        { provide: StynxI18nService, useClass: FakeI18nService },
+      ],
+    });
+    const fixture = TestBed.createComponent(StynxAuditLogComponent);
+    fixture.detectChanges();
+    const fallbackEvent: AuditEventSummary = {
+      ...SUMMARY,
+      actor: { id: '', displayName: '' },
+      entity: { kind: 'flow.graphs', id: '', label: '' },
+    };
+
+    expect(fixture.componentInstance.actorLabel(fallbackEvent)).toBe('System');
+    expect(fixture.componentInstance.entityLabel(fallbackEvent)).toBe('flow.graphs');
+    expect(fixture.componentInstance.formatTimestamp('not-a-date')).toBe('not-a-date');
+    fixture.componentInstance.filterForm.patchValue({ search: 'pending', actorId: 'actor-1' });
+    fixture.componentInstance.clearFilters();
+    expect(fixture.componentInstance.filterForm.getRawValue()).toEqual({
+      search: '',
+      actorId: '',
+      action: '',
+      entityKind: '',
+      entityId: '',
+    });
+
+    api.listEvents.mockReturnValueOnce(throwError(() => 'audit offline'));
+    fixture.componentInstance.refresh();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.error()).toBe('Audit request failed');
+    fixture.componentInstance.pageChanged(fixture.componentInstance.pageIndex());
+  });
+
   it('renders detail payloads and verifies event integrity on demand', () => {
     const api = createApi();
     TestBed.configureTestingModule({

@@ -84,13 +84,13 @@ That's the minimum. `StynxCoreModule` registers the request-context interceptor 
 
 ### Services / Injectables
 
-| Export                  | Description                                                                                                                                                                                                                                                       |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `RequestContext`        | Read-only view of the current request frame: `requestId`, `tenantId`, `actorId`, `sessionId`, `locale`, `startedAt`. Injectable in any service; throws `RequestContextMissingError` if read outside an active request frame.                                      |
+| Export                  | Description                                                                                                                                                                                                                                                           |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `RequestContext`        | Read-only view of the current request frame: `requestId`, `tenantId`, `actorId`, `sessionId`, `locale`, `startedAt`. Injectable in any service; throws `RequestContextMissingError` if read outside an active request frame.                                          |
 | `RequestContextMutator` | Write surface for the request frame. Allows interceptors / guards (e.g. `@stynx-nyx/auth`'s `AuthContextGuard`) to populate `tenantId`, `actorId`, `sessionId`, `locale` once at the request boundary. Mutations outside a frame throw `RequestContextMutationError`. |
-| `StynxConfigService`    | Schema-validated config reader. `.get(key)` returns the typed value the Zod schema declared. Configuration is loaded once at bootstrap from `process.env` + optional SSM hydration + `options.defaults`.                                                          |
-| `SecretLoader`          | AWS Secrets Manager wrapper with TTL cache + connection-error retry. `.load(secretId)` returns the secret value or throws `SecretLoadError`.                                                                                                                      |
-| `SystemContext`         | Marks an operation as "system-initiated" (no actor) for audit purposes. Required for cron jobs, migrations, system-fired effects. Throws `SystemContextRequiredError` if downstream operations require it and it isn't active.                                    |
+| `StynxConfigService`    | Schema-validated config reader. `.get(key)` returns the typed value the Zod schema declared. Configuration is loaded once at bootstrap from `process.env` + optional SSM hydration + `options.defaults`.                                                              |
+| `SecretLoader`          | AWS Secrets Manager wrapper with TTL cache + connection-error retry. `.load(secretId)` returns the secret value or throws `SecretLoadError`.                                                                                                                          |
+| `SystemContext`         | Marks an operation as "system-initiated" (no actor) for audit purposes. Required for cron jobs, migrations, system-fired effects. Throws `SystemContextRequiredError` if downstream operations require it and it isn't active.                                        |
 
 ### Classes
 
@@ -134,10 +134,10 @@ That's the minimum. `StynxCoreModule` registers the request-context interceptor 
 
 ### Tokens
 
-| Export                        | Used to                                                                                                                         |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `STYNX_CORE_OPTIONS`          | Inject the raw `StynxCoreModuleOptions` (rarely needed in app code; useful for plugin authors).                                 |
-| `STYNX_CORE_CONFIG`           | Inject the resolved, validated config object.                                                                                   |
+| Export                        | Used to                                                                                                                             |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `STYNX_CORE_OPTIONS`          | Inject the raw `StynxCoreModuleOptions` (rarely needed in app code; useful for plugin authors).                                     |
+| `STYNX_CORE_CONFIG`           | Inject the resolved, validated config object.                                                                                       |
 | `STYNX_SYSTEM_OPERATION_SINK` | DI slot for the audit sink `SystemContext` writes to. Default is a no-op; `@stynx-nyx/audit` rebinds it to its sink at module load. |
 
 ## Configuration
@@ -240,3 +240,39 @@ In practice you'd use [`@stynx-nyx/tenancy`](/docs/packages/tenancy/) (W03 wave)
 ## TypeDoc reference
 
 Full symbol-level API: [`/docs/api-reference/stynx-core/`](/docs/api-reference/stynx-core/)
+
+<!-- stynx:generated-dependencies:start -->
+
+## Generated dependency reference
+
+This section is generated from `package.json`. Run `pnpm package-readmes:write` to update it.
+
+### Runtime dependencies
+
+- `@aws-sdk/client-secrets-manager`: `^3.1037.0`
+- `@aws-sdk/client-ssm`: `^3.1037.0`
+- `nestjs-cls`: `^6.2.0`
+- `zod`: `^4.3.6`
+
+### Optional dependencies
+
+_None._
+
+### Peer dependencies
+
+- `@nestjs/common`: `^11.1.19`
+- `@nestjs/core`: `^11.1.19`
+- `reflect-metadata`: `^0.2.2`
+- `rxjs`: `^7.8.2`
+
+### Development-only dependencies
+
+- `@nestjs/platform-express`: `^11.1.19`
+- `@nestjs/testing`: `^11.1.19`
+- `@types/node`: `24.12.4`
+- `@types/supertest`: `^7.2.0`
+- `supertest`: `^7.2.2`
+- `ts-node`: `^10.9.2`
+- `typescript`: `^6.0.3`
+
+<!-- stynx:generated-dependencies:end -->

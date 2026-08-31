@@ -1,10 +1,5 @@
 import '@angular/compiler';
-import {
-  Injector,
-  createEnvironmentInjector,
-  inject,
-  runInInjectionContext,
-} from '@angular/core';
+import { Injector, createEnvironmentInjector, inject, runInInjectionContext } from '@angular/core';
 import type { EnvironmentInjector, Provider } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
@@ -15,10 +10,7 @@ import { firstValueFrom } from 'rxjs';
 import { StynxActiveSessionsComponent } from '../src/active-sessions.component';
 import { provideStynxSessions } from '../src/provide-sessions';
 import { SdkSessionsAdapter } from '../src/sdk-sessions.adapter';
-import {
-  STYNX_SESSIONS_ADAPTER,
-  STYNX_SESSIONS_CLIENT,
-} from '../src/tokens';
+import { STYNX_SESSIONS_ADAPTER, STYNX_SESSIONS_CLIENT } from '../src/tokens';
 import type {
   StynxActiveSession,
   StynxSessionsAdapter,
@@ -34,9 +26,7 @@ function createJwt(claims: Record<string, unknown>): string {
   ].join('.');
 }
 
-function createClient(
-  sessions: unknown[] = [],
-): StynxSessionsSdkClient & {
+function createClient(sessions: unknown[] = []): StynxSessionsSdkClient & {
   get: ReturnType<typeof vi.fn>;
   post: ReturnType<typeof vi.fn>;
   delete: ReturnType<typeof vi.fn>;
@@ -105,18 +95,19 @@ describe('@stynx-nyx/angular-sessions', () => {
           provide: StynxI18nService,
           useValue: {
             locale: () => 'en',
-            translate: (key: string) => ({
-              'sessions.active.actions.revoke': 'Revoke',
-              'sessions.active.actions.revokeOthers': 'Revoke other sessions',
-              'sessions.active.columns.createdAt': 'Created',
-              'sessions.active.columns.expiresAt': 'Expires',
-              'sessions.active.columns.lastIp': 'IP',
-              'sessions.active.columns.lastSeenAt': 'Last seen',
-              'sessions.active.columns.userAgent': 'Browser',
-              'sessions.active.current': 'This device',
-              'sessions.active.labels.thisDevice': 'This device',
-              'sessions.active.values.unknown': 'Unknown',
-            })[key] ?? key,
+            translate: (key: string) =>
+              ({
+                'sessions.active.actions.revoke': 'Revoke',
+                'sessions.active.actions.revokeOthers': 'Revoke other sessions',
+                'sessions.active.columns.createdAt': 'Created',
+                'sessions.active.columns.expiresAt': 'Expires',
+                'sessions.active.columns.lastIp': 'IP',
+                'sessions.active.columns.lastSeenAt': 'Last seen',
+                'sessions.active.columns.userAgent': 'Browser',
+                'sessions.active.current': 'This device',
+                'sessions.active.labels.thisDevice': 'This device',
+                'sessions.active.values.unknown': 'Unknown',
+              })[key] ?? key,
           },
         },
         { provide: StynxToastService, useValue: { push: vi.fn() } },
@@ -127,8 +118,12 @@ describe('@stynx-nyx/angular-sessions', () => {
     fixture.detectChanges();
 
     const host = fixture.nativeElement as HTMLElement;
-    expect(host.querySelector('[data-testid="active-session-current-sid-current"]')?.textContent).toContain('This device');
-    expect(host.querySelector('[data-testid="active-session-revoke-sid-other"]')?.textContent).toContain('Revoke');
+    expect(
+      host.querySelector('[data-testid="active-session-current-sid-current"]')?.textContent,
+    ).toContain('This device');
+    expect(
+      host.querySelector('[data-testid="active-session-revoke-sid-other"]')?.textContent,
+    ).toContain('Revoke');
     expect(host.textContent).toContain('tenant-b');
   });
 
@@ -230,10 +225,7 @@ describe('@stynx-nyx/angular-sessions', () => {
   it('normalizes missing SDK fields without requiring an auth session provider', async () => {
     const client = createClient([{}]);
     const injector = Injector.create({
-      providers: [
-        SdkSessionsAdapter,
-        { provide: STYNX_SESSIONS_CLIENT, useValue: client },
-      ],
+      providers: [SdkSessionsAdapter, { provide: STYNX_SESSIONS_CLIENT, useValue: client }],
     });
 
     await expect(firstValueFrom(injector.get(SdkSessionsAdapter).list())).resolves.toEqual([
@@ -249,6 +241,73 @@ describe('@stynx-nyx/angular-sessions', () => {
         current: false,
       },
     ]);
+  });
+
+  it('preserves extended SDK fields and mutation status contracts with idempotency options', async () => {
+    const mutation = { operationId: 'op-1', status: 'completed' } as never;
+    const client = createClient([
+      {
+        sessionId: 'session-1',
+        tenant_id: 'tenant-1',
+        created_at: 'created',
+        expires_at: 'expires',
+        state: 'active',
+        provider: 'oidc',
+        deviceLabel: 'Laptop',
+        client: 'browser',
+        capabilities: ['revoke'],
+        guarantee: 'eventual',
+      },
+    ]);
+    client.delete.mockResolvedValueOnce(mutation).mockResolvedValueOnce(null);
+    client.post
+      .mockResolvedValueOnce(mutation)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(mutation);
+    const injector = Injector.create({
+      providers: [
+        SdkSessionsAdapter,
+        { provide: STYNX_SESSIONS_CLIENT, useValue: client },
+        {
+          provide: StynxSessionService,
+          useValue: { snapshot: () => ({ accessToken: createJwt({ session_id: 'session-1' }) }) },
+        },
+      ],
+    });
+    const adapter = injector.get(SdkSessionsAdapter);
+
+    await expect(firstValueFrom(adapter.list())).resolves.toEqual([
+      expect.objectContaining({
+        sid: 'session-1',
+        sessionId: 'session-1',
+        current: true,
+        state: 'active',
+        provider: 'oidc',
+        deviceLabel: 'Laptop',
+        client: 'browser',
+        capabilities: ['revoke'],
+        guarantee: 'eventual',
+      }),
+    ]);
+    await expect(firstValueFrom(adapter.revokeWithStatus('session/1', 'op-1'))).resolves.toBe(
+      mutation,
+    );
+    await expect(firstValueFrom(adapter.revokeWithStatus('session-2'))).resolves.toBe(null);
+    await expect(firstValueFrom(adapter.revokeOthersWithStatus('op-2'))).resolves.toBe(mutation);
+    await expect(firstValueFrom(adapter.logoutCurrent())).resolves.toBe(null);
+    await expect(firstValueFrom(adapter.revokeAll('op-3'))).resolves.toBe(mutation);
+
+    expect(client.delete).toHaveBeenNthCalledWith(1, '/auth/sessions/session%2F1', {
+      headers: { 'Idempotency-Key': 'op-1' },
+    });
+    expect(client.delete).toHaveBeenNthCalledWith(2, '/auth/sessions/session-2', undefined);
+    expect(client.post).toHaveBeenNthCalledWith(
+      1,
+      '/auth/sessions/revoke-others',
+      {},
+      { headers: { 'Idempotency-Key': 'op-2' } },
+    );
+    expect(client.post).toHaveBeenNthCalledWith(2, '/auth/sessions/logout-current', {}, undefined);
   });
 
   it('uses snapshot sid before token claims and ignores empty token sid claims', async () => {
@@ -313,6 +372,23 @@ describe('@stynx-nyx/angular-sessions', () => {
         current: false,
       }),
     ]);
+
+    const camelCaseClient = createClient([{ sid: 'camel-session' }]);
+    const camelCaseInjector = Injector.create({
+      providers: [
+        SdkSessionsAdapter,
+        { provide: STYNX_SESSIONS_CLIENT, useValue: camelCaseClient },
+        {
+          provide: StynxSessionService,
+          useValue: {
+            snapshot: () => ({ accessToken: createJwt({ sessionId: 'camel-session' }) }),
+          },
+        },
+      ],
+    });
+    await expect(firstValueFrom(camelCaseInjector.get(SdkSessionsAdapter).list())).resolves.toEqual(
+      [expect.objectContaining({ sid: 'camel-session', current: true })],
+    );
   });
 
   it('fails fast when the SDK adapter is used without a client provider', () => {
@@ -349,29 +425,46 @@ describe('@stynx-nyx/angular-sessions', () => {
         },
       ],
     });
-    const defaultInjector = createEnvironmentInjector([
-      provideStynxSessions({
-        clientFactory: () => client,
-      }),
-    ], parent as unknown as EnvironmentInjector);
+    const defaultInjector = createEnvironmentInjector(
+      [
+        provideStynxSessions({
+          clientFactory: () => client,
+        }),
+      ],
+      parent as unknown as EnvironmentInjector,
+    );
 
-    expect(runInInjectionContext(defaultInjector, () => inject(STYNX_SESSIONS_CLIENT))).toBe(client);
+    expect(runInInjectionContext(defaultInjector, () => inject(STYNX_SESSIONS_CLIENT))).toBe(
+      client,
+    );
     expect(
       runInInjectionContext(defaultInjector, () => inject(STYNX_SESSIONS_ADAPTER)),
     ).toBeInstanceOf(SdkSessionsAdapter);
     defaultInjector.destroy();
 
-    const overrideInjector = createEnvironmentInjector([
-      provideStynxSessions({
-        adapter: () => override,
-      }),
-    ], Injector.create({ providers: [] }) as unknown as EnvironmentInjector);
+    const overrideInjector = createEnvironmentInjector(
+      [
+        provideStynxSessions({
+          adapter: () => override,
+        }),
+      ],
+      Injector.create({ providers: [] }) as unknown as EnvironmentInjector,
+    );
 
     await expect(
       runInInjectionContext(overrideInjector, () => inject(STYNX_SESSIONS_ADAPTER)).list(),
     ).resolves.toEqual([]);
     expect(override.list).toHaveBeenCalledTimes(1);
     overrideInjector.destroy();
+
+    const valueInjector = createEnvironmentInjector(
+      [provideStynxSessions({ adapter: override })],
+      Injector.create({ providers: [] }) as unknown as EnvironmentInjector,
+    );
+    expect(runInInjectionContext(valueInjector, () => inject(STYNX_SESSIONS_ADAPTER))).toBe(
+      override,
+    );
+    valueInjector.destroy();
   });
 
   it('loads active sessions with current-device, metadata, and empty-state behavior', async () => {
@@ -460,7 +553,10 @@ describe('@stynx-nyx/angular-sessions', () => {
     const adapter: StynxSessionsAdapter = {
       list: vi.fn(async () => [...state]),
       revoke: vi.fn(async (sid: string) => {
-        state.splice(state.findIndex((entry) => entry.sid === sid), 1);
+        state.splice(
+          state.findIndex((entry) => entry.sid === sid),
+          1,
+        );
       }),
       revokeOthers: vi.fn(async () => {
         state.splice(1);

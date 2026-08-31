@@ -103,6 +103,26 @@ describe('AuditInterceptor', () => {
     });
   });
 
+  it('passes the exact audit context to redaction and omits rejected metadata', async () => {
+    const sink = { write: vi.fn(async () => undefined) };
+    const policy = { redact: vi.fn(() => undefined) };
+    const reflector = new FakeReflector({
+      action: 'document.updated',
+      entity: 'Document',
+      metadataSelector: () => ({ secret: true }),
+    });
+    const interceptor = new AuditInterceptor(reflector, sink, policy);
+    const request = { headers: {}, principal: PRINCIPAL, tenantId: 't-1' };
+    await lastValueFrom(interceptor.intercept(ctx(request), makeHandler({ id: 'doc-1' })));
+    expect(policy.redact).toHaveBeenCalledWith({ secret: true }, {
+      action: 'document.updated',
+      entity: 'Document',
+      request,
+      principal: PRINCIPAL,
+    });
+    expect(sink.write.mock.calls[0]![0]).not.toHaveProperty('metadata');
+  });
+
   it('omits entityId when inference yields nothing', async () => {
     const sink = { write: vi.fn(async () => undefined) };
     const reflector = new FakeReflector({ action: 'a' });
@@ -110,6 +130,19 @@ describe('AuditInterceptor', () => {
     await lastValueFrom(interceptor.intercept(ctx({ headers: {} }), makeHandler(null)));
     const envelope = sink.write.mock.calls[0]![0] as Record<string, unknown>;
     expect(envelope).not.toHaveProperty('entityId');
+  });
+
+  it('infers entity ids only from non-empty string id fields', () => {
+    const interceptor = new AuditInterceptor(new FakeReflector(undefined), { write: vi.fn() });
+    const infer = (interceptor as unknown as {
+      inferEntityId: (payload: unknown) => string | undefined;
+    }).inferEntityId.bind(interceptor);
+    expect(infer(undefined)).toBe(undefined);
+    expect(infer('entity-1')).toBe(undefined);
+    expect(infer({})).toBe(undefined);
+    expect(infer({ id: 1 })).toBe(undefined);
+    expect(infer({ id: '' })).toBe(undefined);
+    expect(infer({ id: 'entity-1' })).toBe('entity-1');
   });
 
   it('logs but does not fail the request when sink.write throws', async () => {

@@ -106,3 +106,34 @@ This re-runs OpenAPI codegen against the backend's contract. Commit the regenera
 ## TypeDoc reference
 
 Full symbol-level API (the authoritative source for the generated surface): [`/docs/api-reference/stynx-web-sdk/`](/docs/api-reference/stynx-web-sdk/)
+
+<!-- stynx:generated-dependencies:start -->
+
+## Generated dependency reference
+
+This section is generated from `package.json`. Run `pnpm package-readmes:write` to update it.
+
+### Runtime dependencies
+
+_None._
+
+### Optional dependencies
+
+_None._
+
+### Peer dependencies
+
+_None._
+
+### Development-only dependencies
+
+- `@angular/compiler`: `21.2.19`
+- `@angular/compiler-cli`: `21.2.19`
+- `@stynx-nyx/core`: `workspace:*`
+- `@types/node`: `24.12.4`
+- `ng-packagr`: `21.2.3`
+- `openapi-typescript-codegen`: `^0.30.0`
+- `tslib`: `^2.8.1`
+- `typescript`: `5.9.3`
+
+<!-- stynx:generated-dependencies:end -->

@@ -727,6 +727,90 @@
       "commit": "b102fdd34b2ee59abb60f3358b56070f909eb29a",
       "authorized_by": "Owner",
       "reason": "Records the Owner authorization for the release-interval squash merge that re-authored a law commit under Owner authority without weakening invariant authority."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "cbcaf352bb43f57136857be161d456b75d6c6c21",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the exact DEVAI 1.2.12 generated trusted-local-RC verifier workflow binding for STYNX 1.1.1 PR A preparation under the accepted campaign and trusted-local-RC decisions, without authorizing push, merge, publication, tags, or repository-settings changes."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "cbcaf352bb43f57136857be161d456b75d6c6c21",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the exact DEVAI 1.2.12 supported init-bind materialization for STYNX 1.1.1 PR A preparation, preserving adopter policy, invariant authority, tests, thresholds, and the separate publication and repository-settings boundaries."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "c45edfaf7e31efd53eeeda9529ea79661153e775",
+      "authorized_by": "Owner",
+      "reason": "Closes the receipt-ledger mutation created while recording the Owner-reviewed authorization for the exact DEVAI 1.2.12 binding checkpoint, without broadening preparation authority or authorizing push, merge, publication, tags, registry mutation, or repository-settings changes."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "4b1172f14c6c2e62056fa18fd90edd511b1a07fd",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the exact PR A preparation workflow changes that make explicit hardening dispatch cover every k6 scenario and preserve the ordered publication plan and per-package receipts required by campaign Decisions 7 and 9, without authorizing workflow dispatch, push, merge, publication, tags, registry mutation, or repository-settings changes."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "4a983c7ccaf629f071c09f67c6bb75fed0cc7a1c",
+      "authorized_by": "Owner",
+      "reason": "Closes the receipt-ledger mutation created while recording the Owner-reviewed authorization for the exact PR A preparation workflow evidence, without broadening preparation authority or authorizing workflow dispatch, push, merge, publication, tags, registry mutation, or repository-settings changes."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "d53dacb3906f1a968cc36d56a4388ffa2b3b01fe",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the exact DEVAI 1.2.12 generated GitHub observation adapter and declarative branch-control reconciliation for PR A preparation, preserving fail-closed package authentication, provenance, immutable binding, tests, and thresholds, while retaining separate push, merge, publication, tag, registry, and live repository-settings authorization boundaries."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "7cec3819d20ea84e8f5a31ce9197260c198058c3",
+      "authorized_by": "Owner",
+      "reason": "Closes the receipt-ledger mutation created while recording the Owner-reviewed authorization for the exact PR A remote-control checkpoint, without broadening preparation authority or authorizing push, PR creation, merge, workflow dispatch, publication, tags, registry mutation, or live repository-settings changes."
+    },
+    {
+      "forbidden_id": "FORBID-RM-RF",
+      "commit": "b95a1582aadf6dad7cb91adb193576cb65c1683e",
+      "authorized_by": "Owner",
+      "reason": "Authorizes at tree 54fceda776d6d4d29b9bb5eb38bf3a5f613fa4b7 only the DEVAI 1.2.13 init-bind generated workflow cleanup of the resolved runner-temporary control directory $RUNNER_TEMP/devai-verifier-package in workflow SHA-256 96f18933cbe3ac2b93637d81a27009075e8d4043b4dd8b14bae67003775893b2; no deletion outside that temporary directory is authorized."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "b95a1582aadf6dad7cb91adb193576cb65c1683e",
+      "authorized_by": "Owner",
+      "reason": "Authorizes at tree 54fceda776d6d4d29b9bb5eb38bf3a5f613fa4b7 only the exact DEVAI 1.2.13 init-bind generated .github/workflows/devai-local-rc-verify.yml bytes with SHA-256 96f18933cbe3ac2b93637d81a27009075e8d4043b4dd8b14bae67003775893b2 under canonical verifier-materializer policy SHA-256 9990ce69fee0bca529b6337334a403cb569a200ad508c00b08d9e60b563696a0, preserving fail-closed authentication, provenance, immutable verifier identity, tests, and thresholds."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "b95a1582aadf6dad7cb91adb193576cb65c1683e",
+      "authorized_by": "Owner",
+      "reason": "Authorizes at tree 54fceda776d6d4d29b9bb5eb38bf3a5f613fa4b7 only the supported DEVAI 1.2.13 init-bind invocation cli-33247-a7477f02-8fe4-43ec-a88d-56f26f4845dd generated configuration, constitution pointer, and adopter binding with materialization SHA-256 56120ebccdc75bb7237523983c00b3451e3332e28cc56c86fb0e71332183883b; it authorizes no settings change, tag or evidence publication, push, PR, merge, registry mutation, STYNX publication, test weakening, other deletion, or other DEVAI version."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "bd6c96e68a84d9f467aec0dd69985a67e4d74214",
+      "authorized_by": "Owner",
+      "reason": "Closes the receipt-ledger mutation created while recording the Owner-reviewed authorization for the exact DEVAI 1.2.13 binding checkpoint, without broadening preparation authority or authorizing push, PR creation, merge, workflow dispatch, publication, tags, registry mutation, live repository-settings changes, test weakening, deletion, or any other DEVAI version."
+    },
+    {
+      "forbidden_id": "FORBID-RM-RF",
+      "commit": "19180e4747e704e4a191f8224d74525be9de269a",
+      "authorized_by": "Owner",
+      "reason": "Owner reviewed and authorizes only FORBID-RM-RF at Engineer commit 19180e4747e704e4a191f8224d74525be9de269a, tree 677a6523c648ca087ce467c8b71f1ddd446e1e48: the diff removes tracked packages-web/sdk/src/generated from the package clean target while retaining only package-local disposable dist and coverage; the commit executes no deletion and authorizes no other rm -rf, cleanup, test weakening, release, publication, or remote action."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "b86188c19b11f4bd933ee3629ab3237aa90bad9e",
+      "authorized_by": "Owner",
+      "reason": "Adds full Git history only to the stynx-tier-gate and unit-tests checkouts under the reviewed D24.40 ordinary-CI portability ADR."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "5e0943c98c614442177fb6918de87b4fff76358d",
+      "authorized_by": "Owner",
+      "reason": "Authorizes at tree 49610d279e64abd6c481ad519fdd74e29c23c9a2 only the DEVAI 1.4.5 generated trusted-local-RC workflow with SHA-256 615cb94cf9b6ab79883c9b0a409fdefac296197779777bb8834e7dca6c43455d under D24.42 and canonical verifier policy SHA-256 8d16a2dc7754920f0b27e2d37eb5ce3464d5a62df7db720a45c3a03c2ee1cba1."
     }
   ]
 }

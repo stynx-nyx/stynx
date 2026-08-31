@@ -342,6 +342,8 @@ describe('ReferenceProbesController API error matrix', () => {
 
     app = moduleRef.createNestApplication();
     await app.init();
+    await app.listen(0, '127.0.0.1');
+    expect(app.getHttpServer().listening).toBe(true);
 
     database = moduleRef.get(Database);
 
@@ -352,7 +354,10 @@ describe('ReferenceProbesController API error matrix', () => {
   }, 90_000);
 
   afterAll(async () => {
-    await app?.close();
+    const httpServer = app.getHttpServer();
+    expect(httpServer.listening).toBe(true);
+    await app.close();
+    expect(httpServer.listening).toBe(false);
     await postgres?.dispose();
   });
 

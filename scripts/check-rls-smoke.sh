@@ -46,7 +46,17 @@ assert_pattern "$STORAGE_DDL" "auth\\.create_rls_policy\\(\\s*'storage'\\s*,\\s*
 assert_pattern "$AUDIT_DDL" "CREATE POLICY tenant_scope ON audit\\.events" "explicit audit.events tenant policy"
 assert_pattern "$AUDIT_DDL" "tenancy_id IS NULL" "audit.events policy keeps global events visibility"
 
-DB_URL="${STYNX_DATABASE_URL:-${DATABASE_URL:-}}"
+DB_URL="${STYNX_TEST_DATABASE_URL:-${STYNX_DATABASE_URL:-${DATABASE_URL:-}}}"
+LIVE_REQUIRED="${STYNX_RLS_LIVE_REQUIRED:-0}"
+if [ "$LIVE_REQUIRED" = "1" ] && [ -z "$DB_URL" ]; then
+  echo "[RLS][error] RLS_LIVE_CONFIG_MISSING: live PostgreSQL URL is required"
+  exit 1
+fi
+if [ "$LIVE_REQUIRED" = "1" ] && ! command -v psql >/dev/null 2>&1; then
+  echo "[RLS][error] RLS_LIVE_OBSERVATION_MISSING: psql is required"
+  exit 1
+fi
+
 if command -v psql >/dev/null 2>&1 && [ -n "$DB_URL" ]; then
   echo "[RLS] running optional live checks via psql"
 
@@ -79,6 +89,9 @@ if command -v psql >/dev/null 2>&1 && [ -n "$DB_URL" ]; then
     echo "[RLS][missing] storage.documents tenant_isolation policy not found in connected database"
     MISSING=1
   fi
+elif [ "$LIVE_REQUIRED" = "1" ]; then
+  echo "[RLS][error] RLS_LIVE_OBSERVATION_MISSING: no live assertions executed"
+  exit 1
 fi
 
 if [ "$MISSING" -ne 0 ]; then

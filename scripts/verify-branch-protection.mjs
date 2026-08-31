@@ -22,6 +22,12 @@ export function compareBranchProtection(declared, live) {
     live.allow_force_pushes?.enabled,
   );
   compareScalar(drift, 'allow_deletions', declared.allow_deletions, live.allow_deletions?.enabled);
+  compareScalar(
+    drift,
+    'required_conversation_resolution',
+    declared.required_conversation_resolution,
+    live.required_conversation_resolution?.enabled,
+  );
 
   const declaredReviews = declared.required_pull_request_reviews ?? null;
   const liveReviews = live.required_pull_request_reviews ?? null;
@@ -148,6 +154,26 @@ function main() {
     ),
   );
   const drift = compareBranchProtection(declared, live);
+  const rulesets = JSON.parse(
+    command('gh', ['api', `repos/${repository}/rulesets?includes_parents=true`], repoRoot),
+  );
+  if (!Array.isArray(rulesets)) throw new Error('live ruleset response must be an array');
+  const releaseTagRule = rulesets.some((ruleset) => {
+    const include = ruleset?.conditions?.ref_name?.include ?? [];
+    return (
+      ruleset?.enforcement === 'active' &&
+      include.some(
+        (pattern) => pattern === 'refs/tags/v*' || pattern === 'refs/tags/@stynx-nyx/*@*',
+      )
+    );
+  });
+  if (!releaseTagRule) {
+    drift.push({
+      path: 'ruleset.refs/tags',
+      declared: ['refs/tags/v*', 'refs/tags/@stynx-nyx/*@*'],
+      live: null,
+    });
+  }
   const result = {
     ok: drift.length === 0,
     repository,

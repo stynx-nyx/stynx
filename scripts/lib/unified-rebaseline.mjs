@@ -5,7 +5,7 @@ import { collectPublicPackages, validateReleaseVersionPolicy } from './release-v
 
 export const unifiedRebaselineSource = '0.5.0';
 export const unifiedRebaselineTarget = '1.1.1';
-export const unifiedRebaselinePackageCount = 40;
+export const unifiedRebaselinePackageCount = 44;
 
 const dependencySections = [
   'dependencies',
@@ -15,7 +15,7 @@ const dependencySections = [
 ];
 const rebaselineSection = `### Unified Version Rebaseline
 
-- Re-establish the canonical STYNX 1.x line at exact version 1.1.1 for the complete 40-package fixed group without changing runtime behavior or public contracts.`;
+- Re-establish the canonical STYNX 1.x line at exact version 1.1.1 for the complete 44-package fixed group without changing runtime behavior or public contracts.`;
 
 function readJson(path) {
   return JSON.parse(readFileSync(path, 'utf8'));

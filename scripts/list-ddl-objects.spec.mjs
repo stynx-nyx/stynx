@@ -64,8 +64,8 @@ test('formatCsv emits the required stable CSV columns', () => {
   const csv = formatCsv(objects);
 
   assert.match(csv, /^schema,name,type,source_file,line,target\n/);
-  assert.match(csv, /^public,pgcrypto,extension,db\/ddl\/00-extensions\.sql,4,/m);
-  assert.match(csv, /^audit,audit_events_set_row_hash,trigger,db\/ddl\/02-audit\.sql,94,audit\.events$/m);
+  assert.match(csv, /^public,pgcrypto,extension,database\/ddl\/00-extensions\.sql,4,/m);
+  assert.match(csv, /^audit,audit_events_set_row_hash,trigger,database\/ddl\/02-audit\.sql,94,audit\.events$/m);
   assert.deepEqual(
     objects.map((object) => [object.source_file, object.line]),
     objects.map((object) => [object.source_file, object.line]).toSorted(([leftFile, leftLine], [rightFile, rightLine]) => (

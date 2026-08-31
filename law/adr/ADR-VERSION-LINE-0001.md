@@ -9,6 +9,12 @@ tags: [stynx, release, semver, registry, packages]
 
 # ADR-VERSION-LINE-0001 — Canonical 1.x package line and registry anomaly correction
 
+> **Controlling amendment (2026-08-24):**
+> [`2026-08-24-stynx-1.1.1-campaign-controls.md`](2026-08-24-stynx-1.1.1-campaign-controls.md)
+> establishes the current 44-package release unit, 38-package mutation roster, exact six-package
+> first-publication boundary, and authenticated DEVAI 1.2.13 preparation dependency. Historical
+> 38- and 40-package observations below remain evidence only and do not govern the current release.
+
 **Authority:** Architect, implementing the Owner's superseding version-line decision of
 2026-08-23 for repository baseline `6ab2107969bf72a15264925722a40d2336c8a0be`.
 
@@ -20,8 +26,9 @@ or repository-settings change.
 
 ## Context
 
-STYNX publishes one fixed group of 40 `@stynx-nyx/*` packages. The repository manifests and
-`latest` dist-tags are currently `0.5.0`, but the registry contains earlier `1.x` releases and one
+STYNX publishes one fixed group of 44 `@stynx-nyx/*` packages. The repository manifests are
+currently projected to `1.0.0`, but that projection is not a release candidate or registry event.
+The registry contains earlier `1.x` releases and one
 erroneous `@stynx-nyx/angular-profile@2.0.0` release. The Owner has ruled that `2.0.0` is not a
 canonical major-line decision, that STYNX remains on `1.x`, and that the next unified version is
 exactly `1.1.1`.
@@ -50,13 +57,15 @@ The authenticated census and downloaded historical tarballs were retained outsid
 at `/tmp/stynx-version-line-evidence.Y3775F` for this local planning session. That temporary path is
 non-promoting evidence and is not a durable release receipt.
 
-### 2026-08-24 roster amendment
+### 2026-08-24 historical and current roster amendments
 
 The W1.5 E6 promotion added `@stynx-nyx/mobile-runtime` and `@stynx-nyx/offline-sync`, expanding
-the deterministic fixed group from 38 to 40 packages. The 38-package registry observation below is
-retained as historical evidence only. Under D2 it is now stale and cannot support publication:
-both new package names and the other 38 names require a fresh authenticated 40-package census at
-the exact future candidate tree. This amendment authorizes no publication or registry mutation.
+the deterministic fixed group from 38 to a historical intermediate count of 40 packages. Later
+promotion added `@stynx-nyx/jobs`, `@stynx-nyx/notifications`, `@stynx-nyx/outbox`, and
+`@stynx-nyx/worklist`, establishing the current 44-package release unit. The 38-package registry
+observation below is retained as historical evidence only. Under D2 it is stale and cannot support
+publication: all 44 names require a fresh authenticated census at the exact future candidate tree.
+This amendment authorizes no publication or registry mutation.
 
 ### Complete registry census
 
@@ -117,7 +126,7 @@ The registry census JSON SHA-256 was
 
 ### D1. Canonical line and exact next version
 
-The canonical package line is `1.x`. The next unified version is exactly `1.1.1` for all 40
+The canonical package line is `1.x`. The next unified version is exactly `1.1.1` for all 44
 publishable packages. No implementation or release task may substitute another version without a
 new Owner decision.
 
@@ -126,7 +135,7 @@ before publication. Presence in even one package blocks the entire release.
 
 ### D2. Complete fixed-group identity
 
-The release unit is the deterministically discovered 40-package roster, not a hand-maintained
+The release unit is the deterministically discovered 44-package roster, not a hand-maintained
 count. All public manifests, internal STYNX dependency ranges, changelogs, the root manifest,
 create-app templates, SBOM data, tarballs, and release evidence must agree on one exact candidate
 and `1.1.1` version policy. A roster addition, removal, rename, private/public classification
@@ -146,7 +155,7 @@ and script-driven; it must not hand-edit generated evidence. The expected prepar
 node scripts/prepare-unified-rebaseline.mjs --target 1.1.1 --write
 ```
 
-The command must update exactly the 40 package manifests and changelogs, the root manifest,
+The command must update exactly the 44 package manifests and changelogs, the root manifest,
 internal published STYNX ranges, the create-app template, and SBOM inputs or outputs declared by
 release policy. A `--check --target 1.1.1` mode must prove byte-stable reruns. The version commit
 subject remains `ci: version packages`, and the existing exact-base/follow-up path restrictions
@@ -182,7 +191,7 @@ drift, or unknown anomalies fail closed.
 Version preparation, publication, deprecation, deletion, and dist-tag mutation are separate
 authorization boundaries. Publication requires an exact 40-character `main` commit named by the
 Owner after merge and after exact-main gates pass. The checked-out commit and current
-`origin/main` must equal the authorized commit. All 40 artifacts must be built from that exact
+`origin/main` must equal the authorized commit. All 44 artifacts must be built from that exact
 tree; a partial publish is not a unified release and requires recovery before any success claim.
 
 ### D6. Consumer migration
@@ -193,26 +202,18 @@ tree; a partial publish is not a unified release and requires recovery before an
 - Deprecation text and release notes must state that `2.0.0` was an incorrect major assignment;
   they must not imply that SemVer automatically moves `^2` consumers back to `1.x`.
 
-### D7. Angular-profile remediation
+### D7. Angular-profile anomaly boundary
 
-The selected remediation is **deprecate, do not delete**:
-
-1. First publish and verify unified `1.1.1` under separate Owner authorization.
-2. Then, under a second exact Owner authorization, deprecate only
-   `@stynx-nyx/angular-profile@2.0.0` with a message directing consumers to `^1.1.1`.
-3. Retain the immutable tarball and version record as recoverable historical evidence.
-
-This is the least destructive option that makes the correction explicit. Retaining `2.0.0`
-without a deprecation marker is too ambiguous. Deletion is not recommended because it removes
-consumer-visible history, the API did not expose download counts, and the Owner has not authorized
-it. Deletion remains possible only through a new Owner decision naming version ID `1024692931`,
-after durable recovery evidence and current deletion/restoration eligibility are positively
-demonstrated.
+`@stynx-nyx/angular-profile@2.0.0` remains immutable non-canonical history. This campaign permits
+only the exact registry-monotonicity exception needed to prepare and verify candidate `1.1.1`.
+Deprecation, deletion, explicit dist-tag mutation, or any other change to `2.0.0` is outside this
+campaign and requires a new Owner authorization naming the exact package, version, action, and
+recovery evidence where applicable.
 
 ### D8. Dist-tags
 
 Successful publication should make `1.1.1` the `latest` dist-tag through the normal release flow.
-Post-publication verification must prove this for all 40 packages. Any explicit `npm dist-tag`
+Post-publication verification must prove this for all 44 packages. Any explicit `npm dist-tag`
 repair is a separate Owner-authorized mutation; it is never inferred from publication authority.
 
 ## Stop conditions
@@ -226,7 +227,7 @@ Stop without mutation or readiness claim if any of the following occurs:
   one exact package/version;
 - the candidate is not an exact clean tree or is not current exact `main` at publication time;
 - any manifest, internal range, changelog, template, SBOM, tarball, or receipt disagrees;
-- publication succeeds for fewer than all 40 packages;
+- publication succeeds for fewer than all 44 packages;
 - any required gate is skipped, stale, cancelled, timed out, or bound to another SHA/tree; or
 - a requested destructive action lacks a separate exact Owner authorization and recovery proof.
 
@@ -246,7 +247,7 @@ git worktree list --porcelain
 node scripts/verify-release-policy.mjs --registry-monotonicity --candidate 1.1.1
 ```
 
-Stop unless entry is the authorized clean base, the roster is 40, every query succeeds, and
+Stop unless entry is the authorized clean base, the roster is 44, every query succeeds, and
 `1.1.1` is absent everywhere.
 
 ### Phase 2: Engineer preparation
@@ -295,11 +296,14 @@ npm view '<package>@1.1.1' version dist.integrity dist.shasum --json \
 npm view '<package>' dist-tags --json --registry=https://npm.pkg.github.com
 ```
 
-Reconcile all 40 registry artifacts with the candidate tarballs, manifests, internal ranges,
+Reconcile all 44 registry artifacts with the candidate tarballs, manifests, internal ranges,
 integrities, exact tree, Git tags/releases, and publication receipt. Report `NOT READY` if any
 package or tag differs.
 
 ## Non-executed runbook 2 — Angular-profile `2.0.0` correction
+
+This runbook is retained as historical planning evidence and is not authorized by the current
+campaign. Any execution requires a new exact Owner authorization after unified `1.1.1` is verified.
 
 This runbook begins only after unified `1.1.1` is fully verified and after a new Owner
 authorization names the exact package, version, action, and message.

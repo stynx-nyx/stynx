@@ -20,7 +20,7 @@ if (!token) {
 // GitHub Packages publishes are restricted and do not support npm provenance.
 // Force false so an ambient runner setting cannot recreate the known EUSAGE
 // failure. The release verifier keeps this exception aligned with policy.
-const result = spawnSync('pnpm', ['release'], {
+const result = spawnSync(process.execPath, ['scripts/publish-release-plan.mjs'], {
   env: {
     ...process.env,
     NPM_CONFIG_PROVENANCE: 'false',

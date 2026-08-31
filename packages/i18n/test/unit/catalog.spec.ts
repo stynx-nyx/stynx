@@ -202,4 +202,27 @@ describe('CatalogService.supportedLocales', () => {
       rmSync(webRoot, { recursive: true, force: true });
     }
   });
+
+  it('ignores filenames that merely contain or extend the json suffix', () => {
+    writeFileSync(join(root, 'packages', 'sample-a', 'i18n', 'fr-FR.json.backup'), JSON.stringify({
+      'greeting.hello': 'Bonjour',
+    }));
+    writeFileSync(join(root, 'packages', 'sample-a', 'i18n', 'READMEjson'), '{}');
+    const svc = buildService(root);
+
+    expect(svc.supportedLocales()).not.toContain('fr-FR.json.backup');
+    expect(svc.supportedLocales()).not.toContain('READMEjson');
+  });
+
+  it('accepts only fully anchored tenant override keys', () => {
+    service.setTenantOverrides('tenant-a', {
+      'prefix.i18n.override.pt-BR.greeting.hello': 'prefix accepted',
+      'i18n.override.pt-BR.greeting.hello.suffix': 'suffix key',
+    });
+
+    expect(service.translate('greeting.hello', 'pt-BR', { name: 'Ana' }, 'tenant-a'))
+      .toBe('Olá, Ana!');
+    expect(service.translate('greeting.hello.suffix', 'pt-BR', {}, 'tenant-a'))
+      .toBe('suffix key');
+  });
 });

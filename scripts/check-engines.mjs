@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const repoRoot = resolve(new URL('..', import.meta.url).pathname);
+const repoRoot = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const manifest = readJson(join(repoRoot, 'package.json'));
 const expectedNode = manifest.engines?.node;
 const expectedPnpm = manifest.engines?.pnpm;
