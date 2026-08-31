@@ -799,6 +799,12 @@
       "commit": "19180e4747e704e4a191f8224d74525be9de269a",
       "authorized_by": "Owner",
       "reason": "Owner reviewed and authorizes only FORBID-RM-RF at Engineer commit 19180e4747e704e4a191f8224d74525be9de269a, tree 677a6523c648ca087ce467c8b71f1ddd446e1e48: the diff removes tracked packages-web/sdk/src/generated from the package clean target while retaining only package-local disposable dist and coverage; the commit executes no deletion and authorizes no other rm -rf, cleanup, test weakening, release, publication, or remote action."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "b86188c19b11f4bd933ee3629ab3237aa90bad9e",
+      "authorized_by": "Owner",
+      "reason": "Adds full Git history only to the stynx-tier-gate and unit-tests checkouts under the reviewed D24.40 ordinary-CI portability ADR."
     }
   ]
 }
