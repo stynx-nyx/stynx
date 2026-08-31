@@ -6738,8 +6738,8 @@ test('D24.36 chained rebind preserves historical inputs and exits before every m
   );
   assert.equal(policy.candidateRebind.kind, 'zero-mutation-candidate-rebind-v2');
   assert.deepEqual(policy.candidateRebind.sourceCandidate, {
-    commit: 'fce985d4914f3f2b450b4ca4e0828d665ca0e36e',
-    tree: '684d6c3012f4745961c8448f337c430634b3a8fe',
+    commit: 'f8a3521a944abc4b5c8a07e1ebae8d349e549fd7',
+    tree: '32a3a8fd59afcd500f9d67552081f819cba9b4d7',
   });
   assert.deepEqual(policy.candidateRebind.historicalInputCandidate, {
     commit: '6754d65f89cc9c2f23ab82f61a4b68c543f0bef4',
@@ -6756,7 +6756,7 @@ test('D24.36 chained rebind preserves historical inputs and exits before every m
     {
       path: '.devai/state/check-cache/v1/artifacts/mutation/summary.json',
       bytes: 37_433,
-      sha256: 'fc8396fa8fb3add85b6aa81332bef75cfdf234b970cebed595167d2e1b76d05d',
+      sha256: 'd86162cf5e2055dbea7e418c18de0904bcc2d077f25def95b32e2c71a147cf70',
       packageCount: 38,
       artifactBindingCount: 76,
     },

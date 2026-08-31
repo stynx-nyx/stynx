@@ -750,8 +750,8 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
   assert.deepEqual(policy.candidateRebind, {
     kind: 'zero-mutation-candidate-rebind-v2',
     sourceCandidate: {
-      commit: 'fce985d4914f3f2b450b4ca4e0828d665ca0e36e',
-      tree: '684d6c3012f4745961c8448f337c430634b3a8fe',
+      commit: 'f8a3521a944abc4b5c8a07e1ebae8d349e549fd7',
+      tree: '32a3a8fd59afcd500f9d67552081f819cba9b4d7',
     },
     historicalInputCandidate: {
       commit: frozenCompositionCommit,
@@ -760,7 +760,7 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
     sourceSummary: {
       path: '.devai/state/check-cache/v1/artifacts/mutation/summary.json',
       bytes: 37_433,
-      sha256: 'fc8396fa8fb3add85b6aa81332bef75cfdf234b970cebed595167d2e1b76d05d',
+      sha256: 'd86162cf5e2055dbea7e418c18de0904bcc2d077f25def95b32e2c71a147cf70',
       packageCount: 38,
       artifactBindingCount: 76,
       provenance: {
@@ -776,13 +776,13 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
         kind: 'root-manifest-unchanged-with-historical-input-v1',
         sourceRootManifest: {
           bytes: 10_789,
-          sha256: '8b5e61616e02acdc4442248ac31f2968a86dc20b6fcbf99dd2d13183aced260a',
-          gitBlobOid: 'eb33c50ff06dbd7f6e81c534de98d7d116cfce0a',
+          sha256: '2bd0ff37f68b2f2a6bebfa6876170555319082853239990ad2354a94fc13ee8d',
+          gitBlobOid: '793f046a90b619ff4a770d31c4c15ac9bfa766cc',
         },
         targetRootManifest: {
           bytes: 10_789,
-          sha256: '8b5e61616e02acdc4442248ac31f2968a86dc20b6fcbf99dd2d13183aced260a',
-          gitBlobOid: 'eb33c50ff06dbd7f6e81c534de98d7d116cfce0a',
+          sha256: '2bd0ff37f68b2f2a6bebfa6876170555319082853239990ad2354a94fc13ee8d',
+          gitBlobOid: '793f046a90b619ff4a770d31c4c15ac9bfa766cc',
         },
         allowedScriptTransitions: [],
         comparison: {
@@ -791,7 +791,7 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
           otherMutationInputTreeEntries: 'identical-mode-type-oid',
         },
         canonicalContractBytes: 597,
-        canonicalContractSha256: '1a7ef5b98bcfb28bd8edef4452f3203ce178cbd2c49fcb627ea3e5fcc39998b5',
+        canonicalContractSha256: '18810544b0301b329b030d1d52d5a117fc74264b554d99a28e1c1e9bed5d44e3',
       },
     },
     sourceInputProjection: {
