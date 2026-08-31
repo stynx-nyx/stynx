@@ -1065,6 +1065,7 @@ export async function rebindCandidateComposition({
   const sourceSummary = candidateRebind?.sourceSummary;
   const sourceInputProjection = candidateRebind?.sourceInputProjection;
   const semanticRebindComparison = candidateRebind?.semanticRebindComparison;
+  const devai145Adoption = policy?.devai145Adoption;
   if (
     candidateRebind?.kind !== 'zero-mutation-candidate-rebind-v2' ||
     candidateRebind.mutationSubprocesses !== 0 ||
@@ -1081,6 +1082,18 @@ export async function rebindCandidateComposition({
     sourceSummary.artifactBindingCount !== policy.requiredRosterCount * 2
   ) {
     throw new Error('candidate rebind roster or artifact binding count is invalid');
+  }
+  if (
+    devai145Adoption?.kind !== 'non-product-devai-provider-and-verifier-rollover-v1' ||
+    devai145Adoption.mutationSubprocesses !== 0 ||
+    devai145Adoption.packageStarts !== 0 ||
+    devai145Adoption.mismatchDisposition !== 'fail-before-package-start' ||
+    devai145Adoption.mutationInputProjection?.rosterCount !== policy.requiredRosterCount ||
+    devai145Adoption.mutationInputProjection?.artifactBindingCount !==
+      policy.requiredRosterCount * 2 ||
+    devai145Adoption.mutationInputProjection?.productPackageSelectionCount !== 0
+  ) {
+    throw new Error('candidate rebind DEVAI adoption policy is invalid');
   }
   if (
     candidate?.clean !== true ||
@@ -1310,14 +1323,22 @@ export async function rebindCandidateComposition({
       historicalMutationInputTreeEntries,
       catalog,
     ).filter(({ path }) => path !== 'package.json');
-    const sourceInputs = mutationInputEntries(rosterEntry, sourceTree, catalog).filter(
+    const historicalSourceInputs = mutationInputEntries(rosterEntry, sourceTree, catalog).filter(
       ({ path }) => path !== 'package.json',
+    );
+    const semanticTransitionPaths = new Set([
+      'package.json',
+      'pnpm-lock.yaml',
+      devai145Adoption.governanceRunnerTransition?.path,
+    ]);
+    const sourceInputs = mutationInputEntries(rosterEntry, sourceTree, catalog).filter(
+      ({ path }) => !semanticTransitionPaths.has(path),
     );
     const currentInputs = mutationInputEntries(rosterEntry, currentTree, catalog).filter(
-      ({ path }) => path !== 'package.json',
+      ({ path }) => !semanticTransitionPaths.has(path),
     );
     if (
-      canonicalize(historicalInputs) !== canonicalize(sourceInputs) ||
+      canonicalize(historicalInputs) !== canonicalize(historicalSourceInputs) ||
       canonicalize(sourceInputs) !== canonicalize(currentInputs)
     ) {
       throw new Error(
@@ -1367,7 +1388,10 @@ export async function rebindCandidateComposition({
     ['show', `${sourceCandidate.commit}:package.json`],
     repositoryRoot,
   );
-  const targetManifestBytes = readFileSync(resolve(repositoryRoot, 'package.json'));
+  const targetManifestBytes = gitBytes(
+    ['show', `${sourceCandidate.commit}:package.json`],
+    repositoryRoot,
+  );
   for (const [label, bytes, identity] of [
     ['source', sourceManifestBytes, semanticRebindComparison.sourceRootManifest],
     ['target', targetManifestBytes, semanticRebindComparison.targetRootManifest],
@@ -1411,6 +1435,96 @@ export async function rebindCandidateComposition({
   if (canonicalize(normalizedTargetManifest) !== canonicalize(sourceManifest)) {
     throw new Error('candidate rebind root manifest field drifted');
   }
+
+  const devaiTransition = devai145Adoption.semanticMutationInputTransition;
+  if (
+    devaiTransition?.kind !== 'exact-devai-provider-input-transition-v1' ||
+    devaiTransition.manifestTransition?.field !== 'devDependencies.@aarusso-nyx/devai' ||
+    devaiTransition.manifestTransition.from !== devai145Adoption.provider.sourceVersion ||
+    devaiTransition.manifestTransition.to !== devai145Adoption.provider.targetVersion ||
+    !Array.isArray(devaiTransition.lockfileTransitions) ||
+    devaiTransition.lockfileTransitions.length !== devaiTransition.lockfileTransitionCount ||
+    devaiTransition.otherMutationInputTreeEntries !== 'identical-mode-type-oid'
+  ) {
+    throw new Error('candidate rebind DEVAI semantic transition is invalid');
+  }
+  const validateIdentity = (label, bytes, identity) => {
+    if (
+      bytes.length !== identity?.bytes ||
+      sha256Hex(bytes) !== identity.sha256 ||
+      gitBlobOid(bytes) !== identity.gitBlobOid
+    ) {
+      throw new Error(`candidate rebind ${label} identity drifted`);
+    }
+  };
+  const currentManifestBytes = readFileSync(resolve(repositoryRoot, 'package.json'));
+  validateIdentity(
+    'DEVAI source root manifest',
+    sourceManifestBytes,
+    devaiTransition.sourceRootManifest,
+  );
+  validateIdentity(
+    'DEVAI target root manifest',
+    currentManifestBytes,
+    devaiTransition.targetRootManifest,
+  );
+  const sourceDevaiManifest = JSON.parse(sourceManifestBytes.toString('utf8'));
+  const currentDevaiManifest = JSON.parse(currentManifestBytes.toString('utf8'));
+  if (
+    sourceDevaiManifest.devDependencies?.['@aarusso-nyx/devai'] !==
+      devaiTransition.manifestTransition.from ||
+    currentDevaiManifest.devDependencies?.['@aarusso-nyx/devai'] !==
+      devaiTransition.manifestTransition.to
+  ) {
+    throw new Error('candidate rebind DEVAI manifest transition drifted');
+  }
+  const normalizedCurrentManifest = structuredClone(currentDevaiManifest);
+  normalizedCurrentManifest.devDependencies['@aarusso-nyx/devai'] =
+    devaiTransition.manifestTransition.from;
+  if (canonicalize(normalizedCurrentManifest) !== canonicalize(sourceDevaiManifest)) {
+    throw new Error('candidate rebind DEVAI manifest field drifted');
+  }
+
+  const sourceLockfileBytes = gitBytes(
+    ['show', `${sourceCandidate.commit}:pnpm-lock.yaml`],
+    repositoryRoot,
+  );
+  const currentLockfileBytes = readFileSync(resolve(repositoryRoot, 'pnpm-lock.yaml'));
+  validateIdentity('DEVAI source lockfile', sourceLockfileBytes, devaiTransition.sourceLockfile);
+  validateIdentity('DEVAI target lockfile', currentLockfileBytes, devaiTransition.targetLockfile);
+  let projectedLockfile = sourceLockfileBytes.toString('utf8');
+  for (const transition of devaiTransition.lockfileTransitions) {
+    if (
+      typeof transition?.from !== 'string' ||
+      typeof transition.to !== 'string' ||
+      transition.from === transition.to ||
+      projectedLockfile.split(transition.from).length !== 2
+    ) {
+      throw new Error('candidate rebind DEVAI lockfile transition drifted');
+    }
+    projectedLockfile = projectedLockfile.replace(transition.from, transition.to);
+  }
+  if (!Buffer.from(projectedLockfile).equals(currentLockfileBytes)) {
+    throw new Error('candidate rebind DEVAI lockfile comparison drifted');
+  }
+
+  const runnerTransition = devai145Adoption.governanceRunnerTransition;
+  if (
+    runnerTransition?.path !== 'scripts/run-mutation-evidence.mjs' ||
+    runnerTransition.scope !== 'zero-execution-candidate-rebind-validation-only' ||
+    runnerTransition.packageExecutionPathChanged !== false ||
+    runnerTransition.requiredDirectInvocationSentinel !==
+      'candidate rebind package start is forbidden'
+  ) {
+    throw new Error('candidate rebind governance runner transition is invalid');
+  }
+  const sourceRunnerBytes = gitBytes(
+    ['show', `${sourceCandidate.commit}:${runnerTransition.path}`],
+    repositoryRoot,
+  );
+  const currentRunnerBytes = readFileSync(resolve(repositoryRoot, runnerTransition.path));
+  validateIdentity('source governance runner', sourceRunnerBytes, runnerTransition.source);
+  validateIdentity('target governance runner', currentRunnerBytes, runnerTransition.target);
 
   const promotionVerifier = candidateRebind.promotionVerifier;
   const verifierPath = resolve(repositoryRoot, promotionVerifier?.path ?? '');
