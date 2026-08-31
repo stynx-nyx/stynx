@@ -79,12 +79,13 @@ function versionRebaselineValid(baseCommit, versionCommit, changes) {
   if (changes.some(({ status, path }) => status === 'D' && /^\.changeset\//u.test(path))) {
     return false;
   }
-  const changedManifests = changes
-    .filter(({ status, path }) => status === 'M' && path.endsWith('/package.json'))
-    .map(({ path }) => path)
-    .sort();
   const expectedManifests = collectPublicPackages(repoRoot)
     .map(({ manifestPath }) => relative(repoRoot, manifestPath))
+    .sort();
+  const expectedManifestSet = new Set(expectedManifests);
+  const changedManifests = changes
+    .filter(({ status, path }) => status === 'M' && expectedManifestSet.has(path))
+    .map(({ path }) => path)
     .sort();
   if (JSON.stringify(changedManifests) !== JSON.stringify(expectedManifests)) return false;
 
