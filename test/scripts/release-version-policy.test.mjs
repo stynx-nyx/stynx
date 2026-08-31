@@ -792,6 +792,7 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
     'packages/ratelimit/vitest.config.ts',
     'reference/api/Dockerfile',
     'scripts/devai-local-rc.mjs',
+    'scripts/lib/release-context.mjs',
     'scripts/list-ddl-objects.spec.mjs',
     'scripts/run-mutation-evidence.mjs',
     'test/scripts/devai-local-rc-verifier.test.mjs',
