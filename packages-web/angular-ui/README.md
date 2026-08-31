@@ -20,8 +20,6 @@ Angular frontend developers building STYNX UIs.
 pnpm add @stynx-nyx/angular-ui
 ```
 
-**Peer dependencies:** `@angular/core` `^18`, `@angular/common` `^18`, `@stynx-nyx/angular` `^1`.
-
 ## Quick start
 
 ```ts

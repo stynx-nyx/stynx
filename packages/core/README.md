@@ -20,8 +20,6 @@ NestJS backend developers building a STYNX-based application. You inject `Reques
 pnpm add @stynx-nyx/core
 ```
 
-**Peer dependencies:** `@nestjs/common` `^11`, `@nestjs/core` `^11`, `nestjs-cls` `^4`, `zod` `^3`. `@aws-sdk/client-ssm` and `@aws-sdk/client-secrets-manager` are required at runtime only when you enable SSM hydration or call `SecretLoader.load()`.
-
 **Node:** 24.x. **pnpm:** 9.x.
 
 ## Quick start

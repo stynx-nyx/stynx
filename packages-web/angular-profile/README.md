@@ -20,8 +20,6 @@ Angular frontend developers building account-settings screens.
 pnpm add @stynx-nyx/angular-profile
 ```
 
-**Peer dependencies:** `@angular/core` `^18`, `@angular/router` `^18`, `@angular/forms` `^18`, `@stynx-nyx/angular` `^1`, `@stynx-nyx/angular-auth` `^1`.
-
 ## Quick start
 
 ```ts

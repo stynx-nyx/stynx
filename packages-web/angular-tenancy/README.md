@@ -20,8 +20,6 @@ Angular frontend developers building multi-tenant UIs.
 pnpm add @stynx-nyx/angular-tenancy
 ```
 
-**Peer dependencies:** `@angular/core` `^18`, `@stynx-nyx/angular` `^1`, `@stynx-nyx/sdk` `^1`.
-
 ## Quick start
 
 ```ts

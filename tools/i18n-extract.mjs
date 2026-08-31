@@ -3,6 +3,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { format, resolveConfig } from 'prettier';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const packagesWebRoot = join(repoRoot, 'packages-web');
@@ -28,7 +29,11 @@ for (const packageDir of discoverPackageDirs()) {
   const scan = scanSource(packageInfo, sourceDir);
   const i18nDir = join(sourceDir, 'i18n');
   const keysPath = join(i18nDir, 'keys.json');
-  const expectedKeysJson = `${JSON.stringify(scan.keys, null, 2)}\n`;
+  const prettierConfig = (await resolveConfig(keysPath)) ?? {};
+  const expectedKeysJson = await format(JSON.stringify(scan.keys), {
+    ...prettierConfig,
+    filepath: keysPath,
+  });
   const existingKeysJson = existsSync(keysPath) ? readFileSync(keysPath, 'utf8') : null;
 
   if (writeMode && scan.keys.length > 0) {
@@ -133,7 +138,12 @@ function scanSource(packageInfo, sourceDir) {
       collectTemplateLiterals(source, relative(repoRoot, file), literals);
     } else if (file.endsWith('.component.ts')) {
       for (const template of extractInlineTemplates(source)) {
-        collectTemplateLiterals(template.value, relative(repoRoot, file), literals, template.lineOffset);
+        collectTemplateLiterals(
+          template.value,
+          relative(repoRoot, file),
+          literals,
+          template.lineOffset,
+        );
       }
     }
   }
@@ -149,7 +159,8 @@ function* walkFiles(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const path = join(dir, entry.name);
     if (entry.isDirectory()) {
-      if (entry.name === 'node_modules' || entry.name === 'dist' || entry.name.startsWith('.')) continue;
+      if (entry.name === 'node_modules' || entry.name === 'dist' || entry.name.startsWith('.'))
+        continue;
       yield* walkFiles(path);
     } else if (entry.isFile()) {
       yield path;
@@ -162,8 +173,10 @@ function sep() {
 }
 
 function collectTranslateKeys(source, keySet) {
-  const pipePattern = /(['"`])([a-z][a-z0-9-]*(?:\.[a-zA-Z0-9_-]+)+)\1\s*\|\s*(?:stynxTranslate|translate)\b/g;
-  const methodPattern = /\b(?:i18n|i18nService|stynxI18n|this\.i18n|this\.i18nService|this\.stynxI18n)\.translate\(\s*(['"`])([a-z][a-z0-9-]*(?:\.[a-zA-Z0-9_-]+)+)\1/g;
+  const pipePattern =
+    /(['"`])([a-z][a-z0-9-]*(?:\.[a-zA-Z0-9_-]+)+)\1\s*\|\s*(?:stynxTranslate|translate)\b/g;
+  const methodPattern =
+    /\b(?:i18n|i18nService|stynxI18n|this\.i18n|this\.i18nService|this\.stynxI18n)\.translate\(\s*(['"`])([a-z][a-z0-9-]*(?:\.[a-zA-Z0-9_-]+)+)\1/g;
 
   for (const match of source.matchAll(pipePattern)) {
     keySet.add(match[2]);
@@ -202,7 +215,11 @@ function extractInlineTemplates(source) {
   for (const match of source.matchAll(pattern)) {
     const raw = match[2] ?? match[3] ?? match[4] ?? '';
     templates.push({
-      value: raw.replace(/\\n/g, '\n').replace(/\\'/g, "'").replace(/\\"/g, '"').replace(/\\`/g, '`'),
+      value: raw
+        .replace(/\\n/g, '\n')
+        .replace(/\\'/g, "'")
+        .replace(/\\"/g, '"')
+        .replace(/\\`/g, '`'),
       lineOffset: countLines(source.slice(0, match.index)),
     });
   }
@@ -272,13 +289,7 @@ function extractTextNodes(template) {
 }
 
 function collectAttributeLiterals(template, file, literals, lineOffset) {
-  const attributes = [
-    'aria-label',
-    'aria-placeholder',
-    'label',
-    'placeholder',
-    'title',
-  ];
+  const attributes = ['aria-label', 'aria-placeholder', 'label', 'placeholder', 'title'];
   const pattern = new RegExp(`\\b(?:${attributes.join('|')})=(["'])([^"']*[A-Za-z][^"']*)\\1`, 'g');
 
   for (const match of template.matchAll(pattern)) {
@@ -344,7 +355,10 @@ function validateCatalog(packageName, packageDir, locale, sourceKeys, dynamicPre
   const catalogKeys = flattenCatalogKeys(catalog);
   const missing = sourceKeys.filter((key) => !catalogKeys.has(key));
   const stale = [...catalogKeys]
-    .filter((key) => !sourceKeys.includes(key) && !dynamicPrefixes.some((prefix) => key.startsWith(prefix)))
+    .filter(
+      (key) =>
+        !sourceKeys.includes(key) && !dynamicPrefixes.some((prefix) => key.startsWith(prefix)),
+    )
     .sort((a, b) => a.localeCompare(b));
 
   if (missing.length > 0) {
@@ -380,11 +394,15 @@ function flattenCatalogKeys(value, prefix = '', out = new Set()) {
 
 function printReport(value, isWriteMode = false) {
   for (const item of value.packages) {
-    process.stdout.write(`${item.dir}: ${item.keyCount} keys, ${item.literalCount} untranslated literals\n`);
+    process.stdout.write(
+      `${item.dir}: ${item.keyCount} keys, ${item.literalCount} untranslated literals\n`,
+    );
   }
 
   if (value.errors.length === 0) {
-    process.stdout.write(isWriteMode ? 'i18n extraction completed.\n' : 'i18n extraction check passed.\n');
+    process.stdout.write(
+      isWriteMode ? 'i18n extraction completed.\n' : 'i18n extraction check passed.\n',
+    );
     return;
   }
 

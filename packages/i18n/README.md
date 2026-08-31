@@ -20,8 +20,6 @@ Backend developers building multi-locale apps.
 pnpm add @stynx-nyx/i18n
 ```
 
-**Peer dependencies:** `@nestjs/common` `^11`, `@stynx-nyx/core` `^1`, `intl-messageformat` `^10`.
-
 ## Quick start
 
 ```ts

@@ -20,8 +20,6 @@ Backend developers wiring authentication. Direct interaction is unusual — most
 pnpm add @stynx-nyx/sessions
 ```
 
-**Peer dependencies:** `@nestjs/common` `^11`, `@stynx-nyx/core` `^1`, `@stynx-nyx/contracts` `^1`, `jose` `^5` (for JWT signing/verification), `ioredis` (optional, for Redis store).
-
 **Node:** 24.x.
 
 ## Quick start

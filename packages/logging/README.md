@@ -20,8 +20,6 @@ NestJS backend developers who want structured + context-aware logs from day one.
 pnpm add @stynx-nyx/logging
 ```
 
-**Peer dependencies:** `@nestjs/common` `^11`, `@stynx-nyx/core` `^1`, `pino` `^9`, `zod` `^3`. Optional: `pino-pretty` `^11` for dev-mode pretty-printing.
-
 **Node:** 24.x.
 
 ## Quick start

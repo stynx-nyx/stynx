@@ -20,8 +20,6 @@ Angular frontend developers building account-security screens.
 pnpm add @stynx-nyx/angular-sessions
 ```
 
-**Peer dependencies:** `@angular/core` `^18`, `@stynx-nyx/angular` `^1`, `@stynx-nyx/angular-auth` `^1`, `@stynx-nyx/sdk` `^1`.
-
 ## Quick start
 
 ```ts

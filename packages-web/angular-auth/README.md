@@ -20,8 +20,6 @@ Angular frontend developers building authenticated apps.
 pnpm add @stynx-nyx/angular-auth
 ```
 
-**Peer dependencies:** `@angular/core` `^18`, `@angular/router` `^18`, `@stynx-nyx/angular` `^1`, `@stynx-nyx/sdk` `^1`.
-
 ## Quick start
 
 ```ts

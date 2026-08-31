@@ -20,8 +20,6 @@ Angular frontend developers building multi-locale UIs.
 pnpm add @stynx-nyx/angular-i18n
 ```
 
-**Peer dependencies:** `@angular/core` `^18`, `@stynx-nyx/angular` `^1`, `intl-messageformat` `^10`.
-
 ## Quick start
 
 ```ts

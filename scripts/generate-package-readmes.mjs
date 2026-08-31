@@ -11,6 +11,21 @@ const dependencySections = [
   ['peerDependencies', 'Peer dependencies'],
   ['devDependencies', 'Development-only dependencies'],
 ];
+const handwrittenDependencyHeading =
+  /^\s*(?:#{1,6}\s+)?(?:\*\*)?(?:dependencies|no(?: runtime)? peer dependencies|peer dependencies|runtime dependencies|optional dependencies|development-only dependencies)(?::|\.|\*\*:)/iu;
+
+function handwrittenDependencyProse(current) {
+  const start = current.indexOf(startMarker);
+  const end = current.indexOf(endMarker);
+  const outsideGeneratedSection =
+    start === -1 || end === -1
+      ? current
+      : `${current.slice(0, start)}${current.slice(end + endMarker.length)}`;
+  return outsideGeneratedSection
+    .split('\n')
+    .map((line, index) => ({ line, lineNumber: index + 1 }))
+    .filter(({ line }) => handwrittenDependencyHeading.test(line));
+}
 
 function renderDependencies(manifest) {
   const sections = dependencySections.map(([key, title]) => {
@@ -60,6 +75,14 @@ export function syncPackageReadmes(repoRoot, mode) {
   for (const { dirPath, manifest } of packages) {
     const path = resolve(dirPath, 'README.md');
     const current = existsSync(path) ? readFileSync(path, 'utf8') : '';
+    const handwritten = handwrittenDependencyProse(current);
+    if (mode === 'check' && handwritten.length > 0) {
+      throw new Error(
+        `${relative(repoRoot, path)} contains hand-written dependency prose outside the generated markers:\n${handwritten
+          .map(({ lineNumber, line }) => `- line ${lineNumber}: ${line.trim()}`)
+          .join('\n')}`,
+      );
+    }
     const expected = expectedReadme(current, manifest);
     if (current === expected) continue;
     stale.push(relative(repoRoot, path));

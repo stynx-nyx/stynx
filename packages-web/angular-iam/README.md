@@ -20,8 +20,6 @@ Angular frontend developers building admin consoles.
 pnpm add @stynx-nyx/angular-iam
 ```
 
-**Peer dependencies:** `@angular/core` `^18`, `@angular/router` `^18`, `@stynx-nyx/angular` `^1`, `@stynx-nyx/angular-auth` `^1`, `@stynx-nyx/angular-ui` `^1`.
-
 ## Quick start
 
 ```ts

@@ -20,8 +20,6 @@ Backend developers building file-upload features.
 pnpm add @stynx-nyx/storage @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
 ```
 
-**Peer dependencies:** `@nestjs/common` `^11`, `@stynx-nyx/core` `^1`, `@stynx-nyx/contracts` `^1`, `@aws-sdk/client-s3` `^3`, `@aws-sdk/s3-request-presigner` `^3`.
-
 ## Quick start
 
 ```ts

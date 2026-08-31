@@ -20,8 +20,6 @@ Backend developers building any STYNX app with Postgres persistence.
 pnpm add @stynx-nyx/data drizzle-orm pg
 ```
 
-**Peer dependencies:** `@nestjs/common` `^11`, `@stynx-nyx/core` `^1`, `@stynx-nyx/contracts` `^1`, `drizzle-orm` `^0.34`, `pg` `^8`.
-
 ## Quick start
 
 ```ts

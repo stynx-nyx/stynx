@@ -14,11 +14,24 @@ const includeReferenceApps =
 function runCheck(name, fn) {
   try {
     fn();
-    checks.push({ name, ok: true });
+    checks.push({ name, status: 'ok' });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    checks.push({ name, ok: false, message });
+    checks.push({ name, status: 'failed', message });
   }
+}
+
+function skipCheck(name, message) {
+  checks.push({ name, status: 'skipped', message });
+}
+
+function commandAvailable(command, args = ['--version']) {
+  const result = spawnSync(command, args, {
+    cwd: rootDir,
+    stdio: 'ignore',
+    env: process.env,
+  });
+  return !result.error && result.status === 0;
 }
 
 function walk(dir, visitor) {
@@ -50,16 +63,24 @@ function walk(dir, visitor) {
   }
 }
 
-runCheck('rls-smoke', () => {
-  const result = spawnSync('bash', ['scripts/check-rls-smoke.sh'], {
-    cwd: rootDir,
-    stdio: 'inherit',
-    env: process.env,
+const databaseUrl =
+  process.env.STYNX_TEST_DATABASE_URL ?? process.env.STYNX_DATABASE_URL ?? process.env.DATABASE_URL;
+if (!databaseUrl) {
+  skipCheck('rls-smoke', 'not attempted: DATABASE_URL is not configured');
+} else if (!commandAvailable('psql')) {
+  skipCheck('rls-smoke', 'not attempted: psql is unavailable');
+} else {
+  runCheck('rls-smoke', () => {
+    const result = spawnSync('bash', ['scripts/check-rls-smoke.sh'], {
+      cwd: rootDir,
+      stdio: 'inherit',
+      env: { ...process.env, STYNX_RLS_LIVE_REQUIRED: '1' },
+    });
+    if (result.status !== 0) {
+      throw new Error('scripts/check-rls-smoke.sh failed');
+    }
   });
-  if (result.status !== 0) {
-    throw new Error('scripts/check-rls-smoke.sh failed');
-  }
-});
+}
 
 runCheck('engine-version', () => {
   const result = spawnSync('node', ['scripts/check-engines.mjs'], {
@@ -197,7 +218,7 @@ if (includeReferenceApps) {
   });
 }
 
-const failures = checks.filter((check) => !check.ok);
+const failures = checks.filter((check) => check.status === 'failed');
 if (jsonOutput) {
   console.log(
     JSON.stringify(
@@ -211,8 +232,12 @@ if (jsonOutput) {
   );
 } else {
   for (const check of checks) {
-    if (check.ok) {
+    if (check.status === 'ok') {
       console.log(`[doctor][ok] ${check.name}`);
+      continue;
+    }
+    if (check.status === 'skipped') {
+      console.log(`[doctor][skipped] ${check.name}: ${check.message}`);
       continue;
     }
     console.error(`[doctor][fail] ${check.name}`);
@@ -225,5 +250,7 @@ if (failures.length > 0) {
 }
 
 if (!jsonOutput) {
-  console.log(`[doctor] ${checks.length} checks passed`);
+  const verified = checks.filter((check) => check.status === 'ok').length;
+  const skipped = checks.filter((check) => check.status === 'skipped').length;
+  console.log(`[doctor] ${verified} checks verified; ${skipped} skipped`);
 }

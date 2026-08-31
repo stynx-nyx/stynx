@@ -24,8 +24,6 @@ pnpm add -g @stynx-nyx/cli
 
 Then invoke as `stynx <verb>` (or via `pnpm exec stynx <verb>` if installed locally).
 
-**Peer dependencies:** `@stynx-nyx/core` `^1`, `@stynx-nyx/data` `^1`, `@stynx-nyx/audit` `^1`, `@stynx-nyx/privacy` `^1`. **Node:** 24.x.
-
 ## Quick start
 
 ```bash

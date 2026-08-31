@@ -20,8 +20,6 @@ Backend developers gating new code paths.
 pnpm add @stynx-nyx/feature-flags
 ```
 
-**Peer dependencies:** `@stynx-nyx/core` `^1` (for `RequestContext` projection into `FlagContext`).
-
 ## Quick start
 
 ```ts
