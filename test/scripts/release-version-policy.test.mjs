@@ -36,7 +36,7 @@ import {
   unifiedRebaselinePackageCount,
   unifiedRebaselineTarget,
 } from '../../scripts/lib/unified-rebaseline.mjs';
-import { discoverMutationRoster } from '../../scripts/lib/mutation-roster.mjs';
+import { discoverMutationRoster, MUTANT_STATUSES } from '../../scripts/lib/mutation-roster.mjs';
 import { classifyReleaseContext, ReleaseContextError } from '../../scripts/lib/release-context.mjs';
 import { typeOnlyCoverageExclusions } from '../../tools/repo-config/coverage-population.mjs';
 import { createVitestConfig } from '../../tools/repo-config/vitest.base.mjs';
@@ -762,6 +762,7 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
     mismatchDisposition: 'fail-before-package-start',
   });
   assert.deepEqual(policy.allowedChangedPaths, [
+    '.github/workflows/ci.yml',
     'law/adr/2026-08-24-stynx-1.1.1-campaign-controls.md',
     'law/policy/stynx-1.1.1-mutation-reuse.json',
     'law/trace.json',
@@ -777,6 +778,7 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
     'packages/preferences/test/preferences-contract.spec.ts',
     'packages/preferences/vitest.config.ts',
     'packages/ratelimit/vitest.config.ts',
+    'reference/api/Dockerfile',
     'scripts/list-ddl-objects.spec.mjs',
     'scripts/run-mutation-evidence.mjs',
     'test/scripts/local-rc-blocker-contract.test.mjs',
@@ -934,6 +936,205 @@ function refreshFixtureSummaryIdentity(policy, sourceDirectory) {
   policy.candidateRebind.sourceSummary.sha256 = sha256(bytes);
 }
 
+const syntheticSharedMutationInputPaths = [
+  'package.json',
+  'pnpm-lock.yaml',
+  'pnpm-workspace.yaml',
+  'scripts/lib/mutation-evidence.mjs',
+  'scripts/lib/mutation-roster.mjs',
+  'tools/repo-config/test-policy.json',
+  'tools/repo-config/test-thresholds.mjs',
+  'tools/repo-config/vitest.base.mjs',
+  'tools/stryker/base.mjs',
+];
+
+function syntheticTreeEntries(commit) {
+  const result = spawnSync('git', ['ls-tree', '-r', '-z', commit, '--'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  assert.ifError(result.error);
+  assert.equal(result.signal, null);
+  assert.equal(result.status, 0, result.stderr);
+  const entries = new Map();
+  for (const record of result.stdout.split('\0').filter(Boolean)) {
+    const match = /^(\d+) ([a-z]+) ([0-9a-f]+)\t(.+)$/u.exec(record);
+    assert.ok(match, `invalid synthetic tree record: ${record}`);
+    entries.set(match[4], { mode: match[1], type: match[2], oid: match[3] });
+  }
+  return entries;
+}
+
+function syntheticWorkspaceCatalog() {
+  const catalog = new Map();
+  for (const root of ['packages', 'packages-web']) {
+    for (const entry of readdirSync(join(repoRoot, root), { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const workspace = `${root}/${entry.name}`;
+      const manifestPath = join(repoRoot, workspace, 'package.json');
+      if (!existsSync(manifestPath)) continue;
+      const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+      if (typeof manifest.name === 'string') catalog.set(manifest.name, { workspace, manifest });
+    }
+  }
+  return catalog;
+}
+
+function syntheticDependencySourceClosure(packageName, catalog) {
+  const visited = new Set();
+  const visit = (name) => {
+    if (visited.has(name)) return;
+    visited.add(name);
+    const entry = catalog.get(name);
+    if (!entry) return;
+    for (const dependency of [
+      ...Object.keys(entry.manifest.dependencies ?? {}),
+      ...Object.keys(entry.manifest.devDependencies ?? {}),
+      ...Object.keys(entry.manifest.optionalDependencies ?? {}),
+      ...Object.keys(entry.manifest.peerDependencies ?? {}),
+    ]) {
+      if (catalog.has(dependency)) visit(dependency);
+    }
+  };
+  visit(packageName);
+  visited.delete(packageName);
+  return [...visited].map((name) => catalog.get(name).workspace).sort();
+}
+
+function syntheticMutationInputProjection(entry, entries, catalog) {
+  const dependencyWorkspaces = syntheticDependencySourceClosure(entry.packageName, catalog);
+  const selected = [];
+  for (const [path, metadata] of entries) {
+    const own = path === entry.workspace || path.startsWith(`${entry.workspace}/`);
+    const dependency = dependencyWorkspaces.some(
+      (workspace) =>
+        path === `${workspace}/package.json` ||
+        path.startsWith(`${workspace}/src/`) ||
+        (path.startsWith(`${workspace}/`) && /\/tsconfig[^/]*\.json$/u.test(path)),
+    );
+    const shared =
+      syntheticSharedMutationInputPaths.includes(path) || path.startsWith('tools/tsconfig/');
+    if (own || dependency || shared) selected.push({ path, ...metadata });
+  }
+  selected.sort((left, right) => left.path.localeCompare(right.path));
+  return sha256(canonicalize(selected));
+}
+
+function writeSyntheticMutationEvidence(sourceDirectory, policy) {
+  mkdirSync(sourceDirectory, { recursive: true });
+  const { roster, failures } = discoverMutationRoster(repoRoot);
+  assert.deepEqual(failures, []);
+  assert.equal(roster.length, 38);
+  const historicalTree = syntheticTreeEntries(
+    policy.candidateRebind.historicalInputCandidate.commit,
+  );
+  const catalog = syntheticWorkspaceCatalog();
+  const fresh = new Set(policy.freshPackages);
+  const aggregateTotals = Object.fromEntries(MUTANT_STATUSES.map((status) => [status, 0]));
+  const packages = [];
+  let durationMs = 0;
+  let freshDurationMs = 0;
+
+  for (const [index, rosterEntry] of roster.entries()) {
+    const provenance = fresh.has(rosterEntry.packageName) ? 'fresh' : 'reused';
+    const stem = rosterEntry.workspace.replaceAll('/', '-');
+    const reportName = `${stem}.stryker.json`;
+    const resultName = `${stem}.result.json`;
+    const reportPath = `.devai/state/check-cache/v1/artifacts/mutation/${reportName}`;
+    const resultPath = `.devai/state/check-cache/v1/artifacts/mutation/${resultName}`;
+    const report = {
+      files: {
+        [`${rosterEntry.workspace}/src/synthetic-mutation-target.ts`]: {
+          mutants: [{ id: String(index + 1), status: 'Killed' }],
+        },
+      },
+    };
+    const statusTotals = Object.fromEntries(MUTANT_STATUSES.map((status) => [status, 0]));
+    statusTotals.Killed = 1;
+    const packageDurationMs = index + 1;
+    const process = { errorAbsent: true, signal: null, status: 0 };
+    const reportDigest = sha256(canonicalize(report));
+    const result = {
+      packageName: rosterEntry.packageName,
+      workspace: rosterEntry.workspace,
+      passed: true,
+      durationMs: packageDurationMs,
+      thresholds: rosterEntry.thresholds,
+      score: 100,
+      statusTotals,
+      ...(provenance === 'fresh' ? { process } : {}),
+      reportDigest,
+      reportPath,
+    };
+    const resultDigest = sha256(canonicalize(result));
+    writeFileSync(join(sourceDirectory, reportName), `${canonicalize(report)}\n`, { mode: 0o644 });
+    writeFileSync(join(sourceDirectory, resultName), `${canonicalize(result)}\n`, { mode: 0o644 });
+    packages.push({
+      packageName: rosterEntry.packageName,
+      workspace: rosterEntry.workspace,
+      provenance,
+      baselineCommit: provenance === 'reused' ? policy.baseline.commit : null,
+      baselineTree: provenance === 'reused' ? policy.baseline.tree : null,
+      inputProjectionDigest: syntheticMutationInputProjection(rosterEntry, historicalTree, catalog),
+      reportPath,
+      resultPath,
+      reportDigest,
+      resultDigest,
+      thresholds: rosterEntry.thresholds,
+      targetCensus: { targetFileCount: 1, totalMutants: 1 },
+      statusTotals,
+      score: 100,
+      durationMs: packageDurationMs,
+      passed: true,
+      ...(provenance === 'fresh' ? { process } : {}),
+    });
+    durationMs += packageDurationMs;
+    if (provenance === 'fresh') freshDurationMs += packageDurationMs;
+    aggregateTotals.Killed += 1;
+  }
+
+  const projectionBytes = Buffer.from(
+    JSON.stringify(
+      packages
+        .map(({ packageName, inputProjectionDigest }) => ({
+          packageName,
+          inputProjectionDigest,
+        }))
+        .sort((left, right) => left.packageName.localeCompare(right.packageName)),
+    ),
+  );
+  policy.candidateRebind.sourceInputProjection.bytes = projectionBytes.length;
+  policy.candidateRebind.sourceInputProjection.sha256 = sha256(projectionBytes);
+  const summary = {
+    kind: policy.composedSummaryKind,
+    complete: true,
+    passed: true,
+    candidate: policy.candidateRebind.sourceCandidate,
+    baseline: {
+      commit: policy.baseline.commit,
+      tree: policy.baseline.tree,
+      summaryBytes: policy.baseline.summaryBytes,
+      summarySha256: policy.baseline.summarySha256,
+    },
+    aggregate: {
+      packageCount: 38,
+      freshPackageCount: policy.requiredFreshCount,
+      reusedPackageCount: policy.requiredReusedCount,
+      durationMs,
+      freshDurationMs,
+      score: 100,
+      statusTotals: aggregateTotals,
+    },
+    packages,
+  };
+  writeFileSync(join(sourceDirectory, 'summary.json'), `${canonicalize(summary)}\n`, {
+    mode: 0o644,
+  });
+  refreshFixtureSummaryIdentity(policy, sourceDirectory);
+  assert.equal(readdirSync(sourceDirectory).length, 77);
+}
+
 test('D24.33 candidate rebind is executable, exhaustive, atomic, and starts no package', async () => {
   const runner = repositorySource('scripts/run-mutation-evidence.mjs');
   assert.match(
@@ -957,7 +1158,6 @@ test('D24.33 candidate rebind is executable, exhaustive, atomic, and starts no p
   );
   assert.equal(typeof rebindCandidateComposition, 'function');
 
-  const sourceEvidence = join(repoRoot, '.devai/state/check-cache/v1/artifacts/mutation');
   const sourcePolicy = JSON.parse(repositorySource('law/policy/stynx-1.1.1-mutation-reuse.json'));
   const currentCommit = spawnSync('git', ['rev-parse', 'HEAD'], {
     cwd: repoRoot,
@@ -981,6 +1181,8 @@ test('D24.33 candidate rebind is executable, exhaustive, atomic, and starts no p
     changedPaths,
   };
   const fixtureRoot = mkdtempSync(join(tmpdir(), 'stynx-d24-33-rebind-'));
+  const sourceEvidence = join(fixtureRoot, 'synthetic-source');
+  writeSyntheticMutationEvidence(sourceEvidence, sourcePolicy);
   let packageStarts = 0;
   const onPackageStart = () => {
     packageStarts += 1;
