@@ -841,6 +841,7 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
     '.devai/constitution.md',
     '.github/workflows/ci.yml',
     '.github/workflows/devai-local-rc-verify.yml',
+    '.github/workflows/hardening.yml',
     'AGENTS.md',
     'docs/meta/security/sbom.cdx.json',
     'law/adr/2026-08-24-stynx-1.1.1-campaign-controls.md',
@@ -2073,6 +2074,13 @@ test('scenario=all hardening reaches every k6 scenario with authenticated fail-c
   assert.match(hardening, /github\.event_name == 'workflow_dispatch'/u);
   assert.match(hardening, /NODE_AUTH_TOKEN_FILE/u);
   assert.match(hardening, /healthz/u);
+  assert.match(hardening, /scenarios=\(auth crud upload cascade-delete\)/u);
+  assert.match(hardening, /for scenario in "\$\{scenarios\[@\]\}"/u);
+  assert.match(
+    hardening,
+    /for scenario in[\s\S]*docker compose[^\n]+up -d --build[\s\S]*run-scenarios\.mjs --scenario "\$scenario"[\s\S]*docker compose[^\n]+down -v/u,
+  );
+  assert.doesNotMatch(hardening, /STYNX_K6_SCENARIO_PAUSE_MS/u);
   assert.match(hardening, /No current k6 summary files were produced/u);
 });
 
