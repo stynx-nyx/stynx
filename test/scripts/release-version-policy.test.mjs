@@ -35,7 +35,6 @@ import {
   expectedRebaselineChangelog,
   runUnifiedRebaseline,
   unifiedRebaselinePackageCount,
-  unifiedRebaselineTarget,
 } from '../../scripts/lib/unified-rebaseline.mjs';
 import { discoverMutationRoster, MUTANT_STATUSES } from '../../scripts/lib/mutation-roster.mjs';
 import { classifyReleaseContext, ReleaseContextError } from '../../scripts/lib/release-context.mjs';
