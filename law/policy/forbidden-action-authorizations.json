@@ -841,6 +841,12 @@
       "commit": "d00de2674190b9ec3e52215cc8deda551ce33a07",
       "authorized_by": "Owner",
       "reason": "Authorizes at tree c898ebd4c0eda706741325a7c597081f2b91d154 only registry anomaly policy SHA-256 5d502fc748830b4e4c09c5de534195bc846617a7d7c6dd74c28fdfb636d82cd9: exact angular-profile 2.0.0 history may cause explicit latest tagging only for canonical 1.x candidates, with every other package, version, effect, test, threshold, release, and live-setting boundary preserved."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "b8bf6cc432a9e6f1ec230c661fd55fc6bea43683",
+      "authorized_by": "Owner",
+      "reason": "Authorizes at tree 97fba35cf146886262759650af8648c84b55c6a4 only the INV-COVERAGE-001 scope alignment to the six Owner-authored operational package use cases. Gate severity, human approval, deterministic verification, existing endpoint and route claims, tests, thresholds, and all other invariants remain unchanged."
     }
   ]
 }
