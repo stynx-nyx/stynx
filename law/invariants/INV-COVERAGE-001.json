@@ -5,8 +5,8 @@
   "domain": "COVERAGE",
   "severity": "gate",
   "type": "governance",
-  "title": "Every HTTP endpoint and frontend route must be claimed by at least one authored use-case",
-  "statement": "Every HTTP endpoint implemented under the reference and domain API sources and every frontend route implemented under their web sources MUST be claimed by at least one use-case JSON under product/use-cases/*.json through refs.endpointIds[] or refs.routeIds[]. A surface with no claiming use case is a release-gating finding. The fix is either to author or extend a use case or to remove the dead surface.",
+  "title": "Every adopter-facing operation, HTTP endpoint, and frontend route must be claimed by an authored use-case",
+  "statement": "Every HTTP endpoint implemented under the reference and domain API sources, every frontend route implemented under their web sources, and every adopter-facing service operation in the jobs, mobile-runtime, notifications, offline-sync, outbox, and worklist package families MUST be claimed by at least one use-case JSON under product/use-cases/*.json through refs.endpointIds[], refs.routeIds[], or refs.serviceOperationIds[]. A surface with no claiming use case is a release-gating finding. The fix is either to author or extend a use case or to remove the dead surface.",
   "rationale": "Unmapped surfaces represent untraced API or UI behavior. A downstream consumer, integration, or compliance review cannot reason reliably about a surface that has no specification.",
   "status": "active",
   "lifecycle": "supported",
@@ -29,12 +29,18 @@
     ]
   },
   "scope": {
-    "components": ["api", "routes", "coverage", "use-cases"],
+    "components": ["api", "routes", "package-service-operations", "coverage", "use-cases"],
     "code_areas": [
       "reference/api/src",
       "reference/web/src",
       "domain/demo-bookmark/api/src",
       "domain/demo-bookmark/web/src",
+      "packages/jobs/src",
+      "packages/mobile-runtime/src",
+      "packages/notifications/src",
+      "packages/offline-sync/src",
+      "packages/outbox/src",
+      "packages/worklist/src",
       "product/use-cases"
     ]
   },

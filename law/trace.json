@@ -330,6 +330,10 @@
         {
           "doc": "law/invariants/INV-COVERAGE-001.json",
           "anchor": "statement"
+        },
+        {
+          "doc": "product/use-cases/stynx-operational-packages.json",
+          "anchor": "cases"
         }
       ],
       "tests": [
@@ -363,7 +367,14 @@
           "mode": "white_box"
         }
       ],
-      "code_areas": ["product/use-cases/**", "product/use-cases/**"]
+      "code_areas": [
+        "reference/api/src/**",
+        "reference/web/src/**",
+        "domain/demo-bookmark/api/src/**",
+        "domain/demo-bookmark/web/src/**",
+        "packages/{jobs,mobile-runtime,notifications,offline-sync,outbox,worklist}/src/**",
+        "product/use-cases/**"
+      ]
     },
     {
       "id": "INV-PERF-001",
