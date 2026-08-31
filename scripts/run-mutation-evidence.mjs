@@ -1066,6 +1066,38 @@ export async function rebindCandidateComposition({
   const sourceInputProjection = candidateRebind?.sourceInputProjection;
   const semanticRebindComparison = candidateRebind?.semanticRebindComparison;
   const devai145Adoption = policy?.devai145Adoption;
+  const devaiTransition = devai145Adoption?.semanticMutationInputTransition;
+  const currentRootManifestBytes = readFileSync(resolve(repositoryRoot, 'package.json'));
+  const identityMatches = (bytes, identity) =>
+    bytes.length === identity?.bytes &&
+    sha256Hex(bytes) === identity.sha256 &&
+    gitBlobOid(bytes) === identity.gitBlobOid;
+  const versionRebaseline = identityMatches(
+    currentRootManifestBytes,
+    devaiTransition?.versionRebaselineTarget?.targetRootManifest,
+  );
+  const catalog = workspaceCatalog(repositoryRoot);
+  const versionPathContract = devaiTransition?.versionRebaselineTarget?.changedPathContract;
+  const versionChangedPaths = new Set();
+  if (versionRebaseline) {
+    if (
+      catalog.size !== versionPathContract?.workspaceCount ||
+      canonicalize(versionPathContract.perWorkspacePaths) !==
+        canonicalize(['CHANGELOG.md', 'package.json']) ||
+      !Array.isArray(versionPathContract.additionalPaths)
+    ) {
+      throw new Error('candidate rebind version path contract drifted');
+    }
+    for (const { workspace } of catalog.values()) {
+      for (const path of versionPathContract.perWorkspacePaths) {
+        versionChangedPaths.add(`${workspace}/${path}`);
+      }
+    }
+    for (const path of versionPathContract.additionalPaths) versionChangedPaths.add(path);
+    if (versionChangedPaths.size !== versionPathContract.exactPathCount) {
+      throw new Error('candidate rebind version path census drifted');
+    }
+  }
   if (
     candidateRebind?.kind !== 'zero-mutation-candidate-rebind-v2' ||
     candidateRebind.mutationSubprocesses !== 0 ||
@@ -1109,7 +1141,13 @@ export async function rebindCandidateComposition({
     throw new Error('candidate rebind changed path population is invalid');
   }
   const allowedChangedPaths = new Set(policy.allowedChangedPaths);
-  if (candidate.changedPaths.some((path) => !allowedChangedPaths.has(path))) {
+  if (
+    candidate.changedPaths.some(
+      (path) => !allowedChangedPaths.has(path) && !versionChangedPaths.has(path),
+    ) ||
+    (versionRebaseline &&
+      [...versionChangedPaths].some((path) => !candidate.changedPaths.includes(path)))
+  ) {
     throw new Error('candidate rebind changed an unauthorized path');
   }
   if (gitText(['rev-parse', 'HEAD'], repositoryRoot).trim() !== candidate.commit) {
@@ -1210,7 +1248,6 @@ export async function rebindCandidateComposition({
     repositoryRoot,
   );
   const currentTree = treeEntries(candidate.commit, repositoryRoot);
-  const catalog = workspaceCatalog(repositoryRoot);
   const historicalProjection = [...summary.packages]
     .sort((left, right) => left.packageName.localeCompare(right.packageName))
     .map(({ packageName, inputProjectionDigest }) => ({ packageName, inputProjectionDigest }));
@@ -1330,6 +1367,7 @@ export async function rebindCandidateComposition({
       'package.json',
       'pnpm-lock.yaml',
       devai145Adoption.governanceRunnerTransition?.path,
+      ...(versionRebaseline ? versionChangedPaths : []),
     ]);
     const sourceInputs = mutationInputEntries(rosterEntry, sourceTree, catalog).filter(
       ({ path }) => !semanticTransitionPaths.has(path),
@@ -1436,12 +1474,14 @@ export async function rebindCandidateComposition({
     throw new Error('candidate rebind root manifest field drifted');
   }
 
-  const devaiTransition = devai145Adoption.semanticMutationInputTransition;
   if (
     devaiTransition?.kind !== 'exact-devai-provider-input-transition-v1' ||
     devaiTransition.manifestTransition?.field !== 'devDependencies.@aarusso-nyx/devai' ||
     devaiTransition.manifestTransition.from !== devai145Adoption.provider.sourceVersion ||
     devaiTransition.manifestTransition.to !== devai145Adoption.provider.targetVersion ||
+    devaiTransition.versionRebaselineTarget?.manifestTransition?.field !== 'version' ||
+    devaiTransition.versionRebaselineTarget.manifestTransition.from !== '1.0.0' ||
+    devaiTransition.versionRebaselineTarget.manifestTransition.to !== '1.1.1' ||
     !Array.isArray(devaiTransition.lockfileTransitions) ||
     devaiTransition.lockfileTransitions.length !== devaiTransition.lockfileTransitionCount ||
     devaiTransition.otherMutationInputTreeEntries !== 'identical-mode-type-oid'
@@ -1457,17 +1497,19 @@ export async function rebindCandidateComposition({
       throw new Error(`candidate rebind ${label} identity drifted`);
     }
   };
-  const currentManifestBytes = readFileSync(resolve(repositoryRoot, 'package.json'));
+  const currentManifestBytes = currentRootManifestBytes;
   validateIdentity(
     'DEVAI source root manifest',
     sourceManifestBytes,
     devaiTransition.sourceRootManifest,
   );
-  validateIdentity(
-    'DEVAI target root manifest',
-    currentManifestBytes,
-    devaiTransition.targetRootManifest,
-  );
+  if (!versionRebaseline) {
+    validateIdentity(
+      'DEVAI target root manifest',
+      currentManifestBytes,
+      devaiTransition.targetRootManifest,
+    );
+  }
   const sourceDevaiManifest = JSON.parse(sourceManifestBytes.toString('utf8'));
   const currentDevaiManifest = JSON.parse(currentManifestBytes.toString('utf8'));
   if (
@@ -1481,8 +1523,66 @@ export async function rebindCandidateComposition({
   const normalizedCurrentManifest = structuredClone(currentDevaiManifest);
   normalizedCurrentManifest.devDependencies['@aarusso-nyx/devai'] =
     devaiTransition.manifestTransition.from;
+  if (versionRebaseline) {
+    const versionTransition = devaiTransition.versionRebaselineTarget.manifestTransition;
+    if (
+      sourceDevaiManifest.version !== versionTransition.from ||
+      currentDevaiManifest.version !== versionTransition.to
+    ) {
+      throw new Error('candidate rebind version manifest transition drifted');
+    }
+    normalizedCurrentManifest.version = versionTransition.from;
+  }
   if (canonicalize(normalizedCurrentManifest) !== canonicalize(sourceDevaiManifest)) {
     throw new Error('candidate rebind DEVAI manifest field drifted');
+  }
+
+  if (versionRebaseline) {
+    const sourceWorkspaceManifests = new Map();
+    for (const [packageName, { workspace }] of catalog) {
+      sourceWorkspaceManifests.set(
+        packageName,
+        JSON.parse(
+          gitBytes(
+            ['show', `${sourceCandidate.commit}:${workspace}/package.json`],
+            repositoryRoot,
+          ).toString('utf8'),
+        ),
+      );
+    }
+    for (const [packageName, { manifest: targetWorkspaceManifest }] of catalog) {
+      const sourceWorkspaceManifest = sourceWorkspaceManifests.get(packageName);
+      if (targetWorkspaceManifest.version !== '1.1.1') {
+        throw new Error(`${packageName}: candidate rebind version drifted`);
+      }
+      const normalizedWorkspaceManifest = structuredClone(targetWorkspaceManifest);
+      normalizedWorkspaceManifest.version = sourceWorkspaceManifest.version;
+      for (const field of [
+        'dependencies',
+        'devDependencies',
+        'peerDependencies',
+        'optionalDependencies',
+      ]) {
+        for (const [dependencyName, sourceRange] of Object.entries(
+          sourceWorkspaceManifest[field] ?? {},
+        )) {
+          const targetRange = targetWorkspaceManifest[field]?.[dependencyName];
+          if (targetRange === sourceRange) continue;
+          const dependencySourceVersion = sourceWorkspaceManifests.get(dependencyName)?.version;
+          if (
+            !dependencySourceVersion ||
+            sourceRange !== `^${dependencySourceVersion}` ||
+            targetRange !== '^1.1.1'
+          ) {
+            throw new Error(`${packageName}: candidate rebind dependency version drifted`);
+          }
+          normalizedWorkspaceManifest[field][dependencyName] = sourceRange;
+        }
+      }
+      if (canonicalize(normalizedWorkspaceManifest) !== canonicalize(sourceWorkspaceManifest)) {
+        throw new Error(`${packageName}: candidate rebind package manifest field drifted`);
+      }
+    }
   }
 
   const sourceLockfileBytes = gitBytes(

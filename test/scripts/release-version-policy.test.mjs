@@ -255,6 +255,43 @@ test('Changeset additions or deletions and version-package commits cannot classi
   );
 });
 
+test('version rebaseline permits only the three generated dependency README consequences', () => {
+  const context = {
+    baseCommit: preparedBaseCommit,
+    headCommit: preparedHeadCommit,
+    commits: [{ sha: preparedHeadCommit, subject: 'ci: version packages' }],
+    versionParent: preparedBaseCommit,
+    versionChanges: [
+      { status: 'M', path: 'packages/pdf/package.json' },
+      { status: 'M', path: 'packages/pdf/CHANGELOG.md' },
+      { status: 'M', path: 'packages/pdf/README.md' },
+      { status: 'M', path: 'packages/pdf-a/README.md' },
+      { status: 'M', path: 'packages/pdf-a-vera-docker/README.md' },
+    ],
+    followUpChanges: [],
+    rootManifestFollowUpValid: false,
+    versionRebaselineValid: true,
+  };
+
+  assert.deepEqual(classifyReleaseContext(context), {
+    kind: 'version-pr',
+    baseCommit: preparedBaseCommit,
+    headCommit: preparedHeadCommit,
+    versionCommit: preparedHeadCommit,
+    changesetCount: 0,
+    packageCount: 1,
+    rebaseline: true,
+  });
+
+  const unrelatedReadme = structuredClone(context);
+  unrelatedReadme.versionChanges.push({ status: 'M', path: 'packages/core/README.md' });
+  assert.throws(
+    () => classifyReleaseContext(unrelatedReadme),
+    (error) =>
+      error instanceof ReleaseContextError && error.code === 'RELEASE_CONTEXT_VERSION_DIFF',
+  );
+});
+
 test('Architect policy and workspace structurally define exactly 44/38/6', () => {
   const { roster: mutationRoster, failures: mutationFailures } = discoverMutationRoster(repoRoot);
   const mutationNames = mutationRoster.map(({ packageName }) => packageName).sort();
@@ -794,6 +831,7 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
     'reference/api/Dockerfile',
     'scripts/devai-local-rc.mjs',
     'scripts/lib/release-context.mjs',
+    'scripts/lib/unified-rebaseline.mjs',
     'scripts/list-ddl-objects.spec.mjs',
     'scripts/run-mutation-evidence.mjs',
     'test/scripts/devai-local-rc-verifier.test.mjs',
@@ -817,6 +855,30 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
   assert.equal(
     sha256(targetManifest),
     policy.devai145Adoption.semanticMutationInputTransition.targetRootManifest.sha256,
+  );
+  assert.deepEqual(
+    policy.devai145Adoption.semanticMutationInputTransition.versionRebaselineTarget,
+    {
+      targetRootManifest: {
+        bytes: 10_789,
+        sha256: '2bd0ff37f68b2f2a6bebfa6876170555319082853239990ad2354a94fc13ee8d',
+        gitBlobOid: '793f046a90b619ff4a770d31c4c15ac9bfa766cc',
+      },
+      manifestTransition: { field: 'version', from: '1.0.0', to: '1.1.1' },
+      changedPathContract: {
+        workspaceCount: 44,
+        perWorkspacePaths: ['CHANGELOG.md', 'package.json'],
+        additionalPaths: [
+          'docs/meta/security/sbom.cdx.json',
+          'package.json',
+          'packages/pdf-a-vera-docker/README.md',
+          'packages/pdf-a/README.md',
+          'packages/pdf/README.md',
+          'tools/create-stynx-app/template/package.json',
+        ],
+        exactPathCount: 94,
+      },
+    },
   );
   const { canonicalContractBytes, canonicalContractSha256, ...semanticRebindComparison } =
     policy.candidateRebind.semanticRebindComparison;
@@ -878,6 +940,8 @@ test('D24.33 runner validates and atomically rebinds without a package start', (
     'sourceLockfile',
     'targetLockfile',
     'manifestTransition',
+    'versionRebaselineTarget',
+    'versionChangedPaths',
     'lockfileTransitionCount',
     'governanceRunnerTransition',
     'otherMutationInputTreeEntries',

@@ -9,6 +9,9 @@ const prAPolicyDigest = '7218cd47417a3f33eba9231b0ded060e19dc919472ead8e40cf55d5
 const allowedVersionSupportPaths = new Set([
   'docs/meta/security/sbom.cdx.json',
   'package.json',
+  'packages/pdf/README.md',
+  'packages/pdf-a/README.md',
+  'packages/pdf-a-vera-docker/README.md',
   'tools/create-stynx-app/template/package.json',
 ]);
 

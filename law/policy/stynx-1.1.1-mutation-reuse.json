@@ -83,6 +83,7 @@
     "reference/api/Dockerfile",
     "scripts/devai-local-rc.mjs",
     "scripts/lib/release-context.mjs",
+    "scripts/lib/unified-rebaseline.mjs",
     "scripts/list-ddl-objects.spec.mjs",
     "scripts/run-mutation-evidence.mjs",
     "test/scripts/devai-local-rc-verifier.test.mjs",
@@ -335,6 +336,31 @@
         "sha256": "8b5e61616e02acdc4442248ac31f2968a86dc20b6fcbf99dd2d13183aced260a",
         "gitBlobOid": "eb33c50ff06dbd7f6e81c534de98d7d116cfce0a"
       },
+      "versionRebaselineTarget": {
+        "targetRootManifest": {
+          "bytes": 10789,
+          "sha256": "2bd0ff37f68b2f2a6bebfa6876170555319082853239990ad2354a94fc13ee8d",
+          "gitBlobOid": "793f046a90b619ff4a770d31c4c15ac9bfa766cc"
+        },
+        "manifestTransition": {
+          "field": "version",
+          "from": "1.0.0",
+          "to": "1.1.1"
+        },
+        "changedPathContract": {
+          "workspaceCount": 44,
+          "perWorkspacePaths": ["CHANGELOG.md", "package.json"],
+          "additionalPaths": [
+            "docs/meta/security/sbom.cdx.json",
+            "package.json",
+            "packages/pdf-a-vera-docker/README.md",
+            "packages/pdf-a/README.md",
+            "packages/pdf/README.md",
+            "tools/create-stynx-app/template/package.json"
+          ],
+          "exactPathCount": 94
+        }
+      },
       "sourceLockfile": {
         "bytes": 959807,
         "sha256": "2ecbe46dcd7be422bea5d1c119067fb044ef0adccbf76c984e17d3ff653fd7dd",
@@ -386,15 +412,15 @@
         "gitBlobOid": "aba7506fada7efed5c06486bf13d997bf2756659"
       },
       "target": {
-        "bytes": 73117,
-        "sha256": "1fb78fb13b3b6e809f61bbb7440df761d5e3b74c2dbd63ac013c73430448881b",
-        "gitBlobOid": "2dc4d90d7de03e1c46b80bc0350b8e75a95a51fb"
+        "bytes": 77308,
+        "sha256": "8a203247200338baa35011cca024aafb5b789f4a53aad19d16d82970a915f9ae",
+        "gitBlobOid": "83c7ff49565aad24826c873724e4f2515f1d416d"
       }
     },
     "releaseContextPolicyDigestTransition": {
       "path": "scripts/lib/release-context.mjs",
       "from": "fc4360097fe195ee1120ce9fd1a65cc93ee19e67b020568d9ad58d79a15fc579",
-      "to": "7218cd47417a3f33eba9231b0ded060e19dc919472ead8e40cf55d565a4cb71f",
+      "to": "0aaa46aad82c31340b449bd8dd4f86a7d922ec6f119ad2ab6824216ff5d0617c",
       "mutationInputProjection": "absent-from-every-package-projection"
     },
     "mutationInputProjection": {
