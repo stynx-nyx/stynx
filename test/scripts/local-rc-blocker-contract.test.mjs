@@ -4481,7 +4481,7 @@ test('D21 production binds exact Compose-up terminals without D14-D20 drift', ()
     'reference/api/src/main.ts': 'c56246aa274b5df7cd88ca11692f580fca724d60a41b69b0021bb63fbf0acc0b',
     'reference/web/playwright.config.mjs':
       '126344dd1fcbceb9496ade28ae95eea73686884d305681c13afc00c94a02c4be',
-    'package.json': '8b5e61616e02acdc4442248ac31f2968a86dc20b6fcbf99dd2d13183aced260a',
+    'package.json': '2bd0ff37f68b2f2a6bebfa6876170555319082853239990ad2354a94fc13ee8d',
     'reference/api/package.json':
       'bffedbee254dde969ae2a2a77689587fa9f553f0b9df2b869bd2b8fe910a5b64',
     'reference/web/package.json':
@@ -4652,7 +4652,7 @@ test('D22 production binds owned PostgreSQL mapping without D14-D21 drift', () =
     'reference/api/src/main.ts': 'c56246aa274b5df7cd88ca11692f580fca724d60a41b69b0021bb63fbf0acc0b',
     'reference/web/playwright.config.mjs':
       '126344dd1fcbceb9496ade28ae95eea73686884d305681c13afc00c94a02c4be',
-    'package.json': '8b5e61616e02acdc4442248ac31f2968a86dc20b6fcbf99dd2d13183aced260a',
+    'package.json': '2bd0ff37f68b2f2a6bebfa6876170555319082853239990ad2354a94fc13ee8d',
     'reference/api/package.json':
       'bffedbee254dde969ae2a2a77689587fa9f553f0b9df2b869bd2b8fe910a5b64',
     'reference/web/package.json':
@@ -4712,7 +4712,7 @@ test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14
     'reference/api/src/main.ts': 'c6175bfa1f231730a0c339a8f48fd28a7a04c1c3f6f60de643ae4b767bf7c7a9',
     'reference/web/playwright.config.mjs':
       '3fbbb1a4dc5bcafe289113674ae8176f2cc90af74dfd69c6f1dc4f138fbff067',
-    'package.json': '8b5e61616e02acdc4442248ac31f2968a86dc20b6fcbf99dd2d13183aced260a',
+    'package.json': '2bd0ff37f68b2f2a6bebfa6876170555319082853239990ad2354a94fc13ee8d',
     'reference/api/package.json':
       'bffedbee254dde969ae2a2a77689587fa9f553f0b9df2b869bd2b8fe910a5b64',
     'reference/web/package.json':
@@ -6738,20 +6738,29 @@ test('D24.36 chained rebind preserves historical inputs and exits before every m
   );
   assert.equal(policy.candidateRebind.kind, 'zero-mutation-candidate-rebind-v2');
   assert.deepEqual(policy.candidateRebind.sourceCandidate, {
-    commit: '17ea3c42a2e129cf59739f2c8d74a885841712e2',
-    tree: 'a1f5b03d27066c27231ac9b3e8bfe9db261ac431',
+    commit: '738b0e4564ea5c88d6947d4c3eabc8cf593325cb',
+    tree: '23e5f6bd76e29047bae82cf05e8a776474ab35f7',
   });
   assert.deepEqual(policy.candidateRebind.historicalInputCandidate, {
     commit: '6754d65f89cc9c2f23ab82f61a4b68c543f0bef4',
     tree: 'fa3f2a43eeb89e73dff04074d021e2ba1783cf84',
   });
-  assert.deepEqual(policy.candidateRebind.sourceSummary, {
-    path: '.devai/state/check-cache/v1/artifacts/mutation/summary.json',
-    bytes: 37_796,
-    sha256: 'fa4e5a4c021bd6f73e020e8debc7f9d65adc731cab7bc05cec65198659b602ff',
-    packageCount: 38,
-    artifactBindingCount: 76,
-  });
+  assert.deepEqual(
+    {
+      path: policy.candidateRebind.sourceSummary.path,
+      bytes: policy.candidateRebind.sourceSummary.bytes,
+      sha256: policy.candidateRebind.sourceSummary.sha256,
+      packageCount: policy.candidateRebind.sourceSummary.packageCount,
+      artifactBindingCount: policy.candidateRebind.sourceSummary.artifactBindingCount,
+    },
+    {
+      path: '.devai/state/check-cache/v1/artifacts/mutation/summary.json',
+      bytes: 37_433,
+      sha256: '6548078707306ef7d28169e34ba50ee8d324c5766f60c50fdf41a153f7800d45',
+      packageCount: 38,
+      artifactBindingCount: 76,
+    },
+  );
   assert.equal(
     policy.candidateRebind.sourceInputProjection.sha256,
     'f9222176e2fcde022dae67e8a776fb7de4cfb9e0eb4f85d5c0a1f2c36a86b674',
