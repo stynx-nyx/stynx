@@ -256,6 +256,10 @@ test('Changeset additions or deletions and version-package commits cannot classi
 });
 
 test('version rebaseline permits only the three generated dependency README consequences', () => {
+  assert.match(
+    repositorySource('scripts/run-release-preparation.mjs'),
+    /const expectedManifestSet = new Set\(expectedManifests\);[\s\S]*expectedManifestSet\.has\(path\)/u,
+  );
   const context = {
     baseCommit: preparedBaseCommit,
     headCommit: preparedHeadCommit,
@@ -834,6 +838,7 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
     'scripts/lib/unified-rebaseline.mjs',
     'scripts/list-ddl-objects.spec.mjs',
     'scripts/run-mutation-evidence.mjs',
+    'scripts/run-release-preparation.mjs',
     'test/scripts/devai-local-rc-verifier.test.mjs',
     'test/scripts/local-rc-blocker-contract.test.mjs',
     'test/scripts/release-version-policy.test.mjs',
