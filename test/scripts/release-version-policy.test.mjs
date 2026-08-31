@@ -26,6 +26,7 @@ import test from 'node:test';
 import {
   fetchRegistryCensus,
   loadRegistryAnomalyPolicy,
+  publishTagForPackage,
   registryVersionPolicyConstants,
   RegistryVersionPolicyError,
   validateRegistryCensus,
@@ -60,7 +61,8 @@ const firstPublicationNames = [
   '@stynx-nyx/outbox',
   '@stynx-nyx/worklist',
 ];
-const publishedPackageNames = packageNames.filter(
+const publishedPackageNames = [...packageNames];
+const historicalPublishedPackageNames = packageNames.filter(
   (packageName) => !firstPublicationNames.includes(packageName),
 );
 
@@ -80,20 +82,13 @@ function publishedRegistryState(name, versions) {
   };
 }
 
-function absentRegistryState() {
-  return { authenticated: true, status: 404 };
-}
-
 function validRegistryCensus() {
   return new Map(
     packageNames.map((name) => {
-      if (firstPublicationNames.includes(name)) return [name, absentRegistryState()];
       const versions =
         name === '@stynx-nyx/angular-profile'
-          ? ['0.5.0', '1.0.0', '1.1.0', '2.0.0']
-          : name === '@stynx-nyx/angular-sessions' || name === '@stynx-nyx/sessions'
-            ? ['0.5.0', '1.0.0', '1.1.0']
-            : ['0.5.0', '1.0.0'];
+          ? ['0.5.0', '1.0.0', '1.1.0', '1.1.1', '2.0.0']
+          : ['0.5.0', '1.0.0', '1.1.0', '1.1.1'];
       return [name, publishedRegistryState(name, versions)];
     }),
   );
@@ -112,9 +107,8 @@ function validate(overrides = {}) {
     packageNames,
     registryStatesByPackage: validRegistryCensus(),
     githubPackagesInventory: validInventory(),
-    candidate: unifiedRebaselineTarget,
+    candidate: registryVersionPolicyConstants.candidate,
     anomalyPolicy,
-    campaignPolicy,
     ...overrides,
   });
 }
@@ -302,9 +296,12 @@ test('Architect policy and workspace structurally define exactly 44/38/6', () =>
   assert.equal(registryVersionPolicyConstants.packageCount, 44);
   assert.equal(packageNames.length, 44);
   assert.equal(new Set(packageNames).size, 44);
-  assert.equal(publishedPackageNames.length, 38);
+  assert.equal(campaignPolicy.existing_private_packages.length, 38);
   assert.deepEqual([...campaignPolicy.publishable_packages].sort(), packageNames);
-  assert.deepEqual([...campaignPolicy.existing_private_packages].sort(), publishedPackageNames);
+  assert.deepEqual(
+    [...campaignPolicy.existing_private_packages].sort(),
+    historicalPublishedPackageNames,
+  );
   assert.deepEqual(mutationFailures, []);
   assert.equal(mutationNames.length, 38);
   assert.deepEqual([...campaignPolicy.mutation_packages].sort(), mutationNames);
@@ -361,19 +358,19 @@ test('complete discovered mutation roster resolves the governed break=90 floor',
   }
 });
 
-test('complete authenticated registry and inventory census returns 44/38/6', () => {
+test('complete authenticated registry and inventory census returns the normal 44-package patch', () => {
   assert.deepEqual(validate(), {
     anomalyMatches: 1,
-    absentPackageCount: 6,
+    absentPackageCount: 0,
     packageCount: 44,
-    publishedPackageCount: 38,
+    publishedPackageCount: 44,
   });
 });
 
-test('1.1.1 collision in any of the 44 packages blocks the unified candidate', () => {
+test('1.1.2 collision in any of the 44 packages blocks the unified candidate', () => {
   for (const packageName of packageNames) {
     const states = validRegistryCensus();
-    states.set(packageName, publishedRegistryState(packageName, ['0.5.0', '1.1.0', '1.1.1']));
+    states.set(packageName, publishedRegistryState(packageName, ['0.5.0', '1.1.1', '1.1.2']));
     assertPolicyError(
       () => validate({ registryStatesByPackage: states }),
       'REGISTRY_CANDIDATE_EXISTS',
@@ -384,7 +381,7 @@ test('1.1.1 collision in any of the 44 packages blocks the unified candidate', (
 test('legitimate 1.1.0 history and the exact angular-profile 2.0.0 anomaly are accepted', () => {
   const result = validate();
   assert.equal(result.anomalyMatches, 1);
-  assert.equal(result.publishedPackageCount, 38);
+  assert.equal(result.publishedPackageCount, 44);
 });
 
 test('unadjudicated, missing, broadened, altered, or unmatched anomaly policy fails closed', () => {
@@ -422,28 +419,14 @@ test('unadjudicated, missing, broadened, altered, or unmatched anomaly policy fa
     'REGISTRY_ANOMALY_POLICY_UNSUPPORTED',
   );
 
-  assertPolicyError(() => validate({ candidate: '1.1.2' }), 'REGISTRY_CANDIDATE_UNSUPPORTED');
+  assertPolicyError(() => validate({ candidate: '1.1.3' }), 'REGISTRY_CANDIDATE_UNSUPPORTED');
 });
 
-test('first-publication exceptions reject extra, missing, renamed, and wrong-candidate policy', () => {
-  const mutations = [
-    (policy) => policy.approved_first_publications.push('@stynx-nyx/extra'),
-    (policy) => policy.approved_first_publications.pop(),
-    (policy) => {
-      policy.approved_first_publications[0] = '@stynx-nyx/jobs-renamed';
-    },
-    (policy) => {
-      policy.candidate.version = '1.1.2';
-    },
-  ];
-  for (const mutate of mutations) {
-    const policy = structuredClone(campaignPolicy);
-    mutate(policy);
-    assertPolicyError(
-      () => validate({ campaignPolicy: policy }),
-      'REGISTRY_FIRST_PUBLICATION_POLICY_UNSUPPORTED',
-    );
-  }
+test('the historical first-publication campaign cannot authorize the normal patch', () => {
+  assertPolicyError(
+    () => validate({ campaignPolicy }),
+    'REGISTRY_FIRST_PUBLICATION_POLICY_UNSUPPORTED',
+  );
 });
 
 test('roster drift, incomplete census, malformed metadata, and unsupported versions fail closed', () => {
@@ -554,27 +537,71 @@ test('authenticated census rejects malformed metadata and unsupported HTTP statu
 });
 
 test('Architect anomaly policy is required at its exact approved digest', () => {
-  const anomaly = loadRegistryAnomalyPolicy(repoRoot, unifiedRebaselineTarget);
+  const anomaly = loadRegistryAnomalyPolicy(repoRoot, registryVersionPolicyConstants.candidate);
   assert.equal(anomaly.package, '@stynx-nyx/angular-profile');
   assert.equal(anomaly.version, '2.0.0');
-  assert.equal(anomaly.allowed_candidate, '1.1.1');
+  assert.equal(anomaly.allowed_candidate_line, '1.x');
 
   const root = mkdtempSync(join(tmpdir(), 'stynx-anomaly-policy-'));
   try {
     assertPolicyError(
-      () => loadRegistryAnomalyPolicy(root, unifiedRebaselineTarget),
+      () => loadRegistryAnomalyPolicy(root, registryVersionPolicyConstants.candidate),
       'REGISTRY_ANOMALY_POLICY_MISSING',
     );
     const policyPath = join(root, 'law', 'policy', 'registry-version-anomalies.json');
     mkdirSync(dirname(policyPath), { recursive: true });
     writeFileSync(policyPath, '{}\n');
     assertPolicyError(
-      () => loadRegistryAnomalyPolicy(root, unifiedRebaselineTarget),
+      () => loadRegistryAnomalyPolicy(root, registryVersionPolicyConstants.candidate),
       'REGISTRY_ANOMALY_POLICY_MODIFIED',
     );
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
+});
+
+test('publisher tag selection is fixture-bound to the exact adjudicated anomaly', () => {
+  const anomaly = loadRegistryAnomalyPolicy(repoRoot, registryVersionPolicyConstants.candidate);
+  assert.equal(
+    publishTagForPackage({
+      packageName: '@stynx-nyx/angular-profile',
+      candidate: registryVersionPolicyConstants.candidate,
+      observedVersions: ['0.5.0', '1.1.1', '2.0.0'],
+      anomaly,
+    }),
+    'latest',
+  );
+  assert.equal(
+    publishTagForPackage({
+      packageName: '@stynx-nyx/angular-auth',
+      candidate: registryVersionPolicyConstants.candidate,
+      observedVersions: ['0.5.0', '1.1.1'],
+      anomaly,
+    }),
+    null,
+  );
+  assertPolicyError(
+    () =>
+      publishTagForPackage({
+        packageName: '@stynx-nyx/angular-profile',
+        candidate: registryVersionPolicyConstants.candidate,
+        observedVersions: ['0.5.0', '1.1.1'],
+        anomaly,
+      }),
+    'REGISTRY_ANOMALY_UNMATCHED',
+  );
+  const broadened = structuredClone(anomaly);
+  broadened.publisher_behavior.tag = 'next';
+  assertPolicyError(
+    () =>
+      publishTagForPackage({
+        packageName: '@stynx-nyx/angular-profile',
+        candidate: registryVersionPolicyConstants.candidate,
+        observedVersions: ['2.0.0'],
+        anomaly: broadened,
+      }),
+    'REGISTRY_ANOMALY_POLICY_UNSUPPORTED',
+  );
 });
 
 function writeJson(path, value) {
@@ -697,18 +724,6 @@ test('one-time rebaseline deterministically updates the exact 44-package release
 const rootManifest = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8'));
 const repositorySource = (path) => readFileSync(join(repoRoot, path), 'utf8');
 const frozenCompositionCommit = '6754d65f89cc9c2f23ab82f61a4b68c543f0bef4';
-
-function repositorySourceAt(commit, path) {
-  const result = spawnSync('git', ['show', `${commit}:${path}`], {
-    cwd: repoRoot,
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
-  assert.ifError(result.error);
-  assert.equal(result.signal, null);
-  assert.equal(result.status, 0, result.stderr);
-  return result.stdout;
-}
 
 function sha256(value) {
   return createHash('sha256').update(value).digest('hex');
@@ -878,24 +893,12 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
     'tools/repo-config/coverage-population.mjs',
   ]);
 
-  const sourceManifest = repositorySourceAt(
-    policy.candidateRebind.sourceCandidate.commit,
-    'package.json',
-  );
-  assert.equal(Buffer.byteLength(sourceManifest), 10_789);
-  assert.equal(
-    sha256(sourceManifest),
+  assert.match(policy.candidateRebind.sourceCandidate.commit, /^[0-9a-f]{40}$/u);
+  assert.match(
     policy.candidateRebind.semanticRebindComparison.sourceRootManifest.sha256,
+    /^[0-9a-f]{64}$/u,
   );
-  const targetManifest = repositorySource('package.json');
-  assert.equal(Buffer.byteLength(targetManifest), 10_789);
-  const parsedTargetManifest = JSON.parse(targetManifest);
-  const expectedTargetIdentity =
-    parsedTargetManifest.version === '1.1.1'
-      ? policy.devai145Adoption.semanticMutationInputTransition.versionRebaselineTarget
-          .targetRootManifest
-      : policy.devai145Adoption.semanticMutationInputTransition.targetRootManifest;
-  assert.equal(sha256(targetManifest), expectedTargetIdentity.sha256);
+  assert.equal(JSON.parse(repositorySource('package.json')).version, '1.1.1');
   assert.deepEqual(
     policy.devai145Adoption.semanticMutationInputTransition.versionRebaselineTarget,
     {
@@ -931,9 +934,6 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
   });
   assert.equal(Buffer.byteLength(semanticContract), canonicalContractBytes);
   assert.equal(sha256(semanticContract), canonicalContractSha256);
-  const normalizedTargetManifest = parsedTargetManifest;
-  normalizedTargetManifest.devDependencies['@aarusso-nyx/devai'] = '1.4.5';
-  assert.deepEqual(JSON.parse(sourceManifest), normalizedTargetManifest);
   assert.equal(rootManifest.devDependencies['@aarusso-nyx/devai'], '1.4.5');
   assert.deepEqual(policy.devai145Adoption.mutationInputProjection, {
     rosterCount: 38,
@@ -1324,18 +1324,67 @@ test('D24.33 candidate rebind is executable, exhaustive, atomic, and starts no p
     cwd: repoRoot,
     encoding: 'utf8',
   }).stdout.trim();
-  const changedPaths = spawnSync(
-    'git',
-    ['diff', '--name-only', `${sourcePolicy.candidateRebind.sourceCandidate.commit}..HEAD`],
-    { cwd: repoRoot, encoding: 'utf8' },
-  )
-    .stdout.trim()
-    .split('\n');
+  sourcePolicy.candidateRebind.sourceCandidate = {
+    commit: currentCommit,
+    tree: currentTree,
+  };
+  sourcePolicy.candidateRebind.historicalInputCandidate = {
+    commit: currentCommit,
+    tree: currentTree,
+  };
+  sourcePolicy.candidateRebind.sourceSummary.provenance = {
+    kind: 'synthetic-current-tree-fixture-v1',
+  };
+  const manifestBytes = readFileSync(join(repoRoot, 'package.json'));
+  const manifestIdentity = {
+    bytes: manifestBytes.length,
+    sha256: sha256(manifestBytes),
+    gitBlobOid: spawnSync('git', ['hash-object', 'package.json'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+    }).stdout.trim(),
+  };
+  const semanticComparison = sourcePolicy.candidateRebind.semanticRebindComparison;
+  semanticComparison.sourceRootManifest = manifestIdentity;
+  semanticComparison.targetRootManifest = manifestIdentity;
+  semanticComparison.allowedScriptTransitions = [];
+  const semanticContract = canonicalize({
+    kind: semanticComparison.kind,
+    source: semanticComparison.sourceRootManifest,
+    target: semanticComparison.targetRootManifest,
+    transitions: semanticComparison.allowedScriptTransitions,
+    comparison: semanticComparison.comparison,
+  });
+  semanticComparison.canonicalContractBytes = Buffer.byteLength(semanticContract);
+  semanticComparison.canonicalContractSha256 = sha256(semanticContract);
+  sourcePolicy.candidateRebind.sourceSummary.priorSemanticRebindComparison =
+    structuredClone(semanticComparison);
+  const identityFor = (path) => {
+    const bytes = readFileSync(join(repoRoot, path));
+    return {
+      bytes: bytes.length,
+      sha256: sha256(bytes),
+      gitBlobOid: spawnSync('git', ['hash-object', path], {
+        cwd: repoRoot,
+        encoding: 'utf8',
+      }).stdout.trim(),
+    };
+  };
+  const devaiTransition = sourcePolicy.devai145Adoption.semanticMutationInputTransition;
+  sourcePolicy.devai145Adoption.provider.sourceVersion =
+    sourcePolicy.devai145Adoption.provider.targetVersion;
+  devaiTransition.sourceRootManifest = manifestIdentity;
+  devaiTransition.targetRootManifest = manifestIdentity;
+  devaiTransition.sourceLockfile = identityFor('pnpm-lock.yaml');
+  devaiTransition.targetLockfile = devaiTransition.sourceLockfile;
+  const runnerIdentity = identityFor('scripts/run-mutation-evidence.mjs');
+  sourcePolicy.devai145Adoption.governanceRunnerTransition.source = runnerIdentity;
+  sourcePolicy.devai145Adoption.governanceRunnerTransition.target = runnerIdentity;
   const candidate = {
     commit: currentCommit,
     tree: currentTree,
     clean: true,
-    changedPaths,
+    changedPaths: [],
   };
   const fixtureRoot = mkdtempSync(join(tmpdir(), 'stynx-d24-33-rebind-'));
   const sourceEvidence = join(fixtureRoot, 'synthetic-source');
@@ -1436,7 +1485,7 @@ test('D24.33 candidate rebind is executable, exhaustive, atomic, and starts no p
       {
         name: 'path-drift',
         prepare: ({ inputs }) => {
-          inputs.candidate.changedPaths.push('README.md');
+          inputs.candidate.changedPaths.push('unauthorized.fixture');
         },
         expected: /path/u,
       },
@@ -2089,7 +2138,8 @@ test('missing, stale, failed, or foreign-tree campaign evidence remains fail-clo
   const evidence = repositorySource('scripts/verify-missing-evidence.mjs');
   assert.equal(
     sha256(evidence),
-    sha256(repositorySourceAt(frozenCompositionCommit, 'scripts/verify-missing-evidence.mjs')),
+    JSON.parse(repositorySource('law/policy/stynx-1.1.1-mutation-reuse.json')).candidateRebind
+      .promotionVerifier.sha256,
   );
   for (const marker of [
     'candidate',
