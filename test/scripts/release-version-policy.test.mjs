@@ -1865,7 +1865,7 @@ function runNode(path, args = [], options = {}) {
   return spawnSync(process.execPath, [join(repoRoot, path), ...args], {
     cwd: options.cwd ?? repoRoot,
     encoding: 'utf8',
-    env: { ...process.env, ...(options.env ?? {}) },
+    env: options.env ?? process.env,
     stdio: ['ignore', 'pipe', 'pipe'],
   });
 }

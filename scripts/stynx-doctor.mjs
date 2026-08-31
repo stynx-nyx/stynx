@@ -73,11 +73,14 @@ if (!databaseUrl) {
   runCheck('rls-smoke', () => {
     const result = spawnSync('bash', ['scripts/check-rls-smoke.sh'], {
       cwd: rootDir,
-      stdio: 'inherit',
+      stdio: jsonOutput ? 'pipe' : 'inherit',
       env: { ...process.env, STYNX_RLS_LIVE_REQUIRED: '1' },
+      encoding: 'utf8',
     });
     if (result.status !== 0) {
-      throw new Error('scripts/check-rls-smoke.sh failed');
+      throw new Error(
+        (result.stderr || result.stdout || 'scripts/check-rls-smoke.sh failed').trim(),
+      );
     }
   });
 }
