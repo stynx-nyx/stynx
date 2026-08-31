@@ -59,6 +59,7 @@
     ".devai/constitution.md",
     ".github/workflows/ci.yml",
     ".github/workflows/devai-local-rc-verify.yml",
+    ".github/workflows/hardening.yml",
     "AGENTS.md",
     "docs/meta/security/sbom.cdx.json",
     "law/adr/2026-08-24-stynx-1.1.1-campaign-controls.md",
@@ -98,8 +99,8 @@
   "candidateRebind": {
     "kind": "zero-mutation-candidate-rebind-v2",
     "sourceCandidate": {
-      "commit": "738b0e4564ea5c88d6947d4c3eabc8cf593325cb",
-      "tree": "23e5f6bd76e29047bae82cf05e8a776474ab35f7"
+      "commit": "f8a3521a944abc4b5c8a07e1ebae8d349e549fd7",
+      "tree": "32a3a8fd59afcd500f9d67552081f819cba9b4d7"
     },
     "historicalInputCandidate": {
       "commit": "6754d65f89cc9c2f23ab82f61a4b68c543f0bef4",
@@ -108,7 +109,7 @@
     "sourceSummary": {
       "path": ".devai/state/check-cache/v1/artifacts/mutation/summary.json",
       "bytes": 37433,
-      "sha256": "6548078707306ef7d28169e34ba50ee8d324c5766f60c50fdf41a153f7800d45",
+      "sha256": "d86162cf5e2055dbea7e418c18de0904bcc2d077f25def95b32e2c71a147cf70",
       "packageCount": 38,
       "artifactBindingCount": 76,
       "provenance": {
@@ -123,14 +124,14 @@
       "priorSemanticRebindComparison": {
         "kind": "root-manifest-unchanged-with-historical-input-v1",
         "sourceRootManifest": {
-          "bytes": 10790,
-          "sha256": "cccac5d19c5b38dd2f2d4840451c7c7d1b2fbb6403451bc0c2b149f0e8f80846",
-          "gitBlobOid": "da1ed88ad64acc60996d76e150af883ece7ba944"
+          "bytes": 10789,
+          "sha256": "2bd0ff37f68b2f2a6bebfa6876170555319082853239990ad2354a94fc13ee8d",
+          "gitBlobOid": "793f046a90b619ff4a770d31c4c15ac9bfa766cc"
         },
         "targetRootManifest": {
-          "bytes": 10790,
-          "sha256": "cccac5d19c5b38dd2f2d4840451c7c7d1b2fbb6403451bc0c2b149f0e8f80846",
-          "gitBlobOid": "da1ed88ad64acc60996d76e150af883ece7ba944"
+          "bytes": 10789,
+          "sha256": "2bd0ff37f68b2f2a6bebfa6876170555319082853239990ad2354a94fc13ee8d",
+          "gitBlobOid": "793f046a90b619ff4a770d31c4c15ac9bfa766cc"
         },
         "allowedScriptTransitions": [],
         "comparison": {
@@ -139,7 +140,7 @@
           "otherMutationInputTreeEntries": "identical-mode-type-oid"
         },
         "canonicalContractBytes": 597,
-        "canonicalContractSha256": "9df3992b0d495e5f7857dd6f1cacda8b2e5ece76085f0bd3802ffeaf830d5b83"
+        "canonicalContractSha256": "18810544b0301b329b030d1d52d5a117fc74264b554d99a28e1c1e9bed5d44e3"
       }
     },
     "sourceInputProjection": {
@@ -152,13 +153,13 @@
       "kind": "root-manifest-unchanged-with-historical-input-v1",
       "sourceRootManifest": {
         "bytes": 10789,
-        "sha256": "8b5e61616e02acdc4442248ac31f2968a86dc20b6fcbf99dd2d13183aced260a",
-        "gitBlobOid": "eb33c50ff06dbd7f6e81c534de98d7d116cfce0a"
+        "sha256": "2bd0ff37f68b2f2a6bebfa6876170555319082853239990ad2354a94fc13ee8d",
+        "gitBlobOid": "793f046a90b619ff4a770d31c4c15ac9bfa766cc"
       },
       "targetRootManifest": {
         "bytes": 10789,
-        "sha256": "8b5e61616e02acdc4442248ac31f2968a86dc20b6fcbf99dd2d13183aced260a",
-        "gitBlobOid": "eb33c50ff06dbd7f6e81c534de98d7d116cfce0a"
+        "sha256": "2bd0ff37f68b2f2a6bebfa6876170555319082853239990ad2354a94fc13ee8d",
+        "gitBlobOid": "793f046a90b619ff4a770d31c4c15ac9bfa766cc"
       },
       "allowedScriptTransitions": [],
       "comparison": {
@@ -167,7 +168,7 @@
         "otherMutationInputTreeEntries": "identical-mode-type-oid"
       },
       "canonicalContractBytes": 597,
-      "canonicalContractSha256": "1a7ef5b98bcfb28bd8edef4452f3203ce178cbd2c49fcb627ea3e5fcc39998b5"
+      "canonicalContractSha256": "18810544b0301b329b030d1d52d5a117fc74264b554d99a28e1c1e9bed5d44e3"
     },
     "promotionVerifier": {
       "path": "scripts/verify-missing-evidence.mjs",
@@ -419,14 +420,14 @@
       "packageExecutionPathChanged": false,
       "requiredDirectInvocationSentinel": "candidate rebind package start is forbidden",
       "source": {
-        "bytes": 73117,
-        "sha256": "1fb78fb13b3b6e809f61bbb7440df761d5e3b74c2dbd63ac013c73430448881b",
-        "gitBlobOid": "2dc4d90d7de03e1c46b80bc0350b8e75a95a51fb"
+        "bytes": 80000,
+        "sha256": "2df5445ce56dcf7e0ef8da0be6b72cf1540e9b3b807bcf637610646ead119b02",
+        "gitBlobOid": "657da63dbe1a7343bb7ea428a2f0157138abaf74"
       },
       "target": {
-        "bytes": 79353,
-        "sha256": "619907fc10f87dcbb72f002aa8aa94baa83bd76c5610a30694485da9b70785e0",
-        "gitBlobOid": "42e1b760449d14126c7bebab7f5a16af253a4b82"
+        "bytes": 80000,
+        "sha256": "2df5445ce56dcf7e0ef8da0be6b72cf1540e9b3b807bcf637610646ead119b02",
+        "gitBlobOid": "657da63dbe1a7343bb7ea428a2f0157138abaf74"
       }
     },
     "releaseContextPolicyDigestTransition": {
@@ -612,6 +613,77 @@
       },
       "mutationInputProjection": {
         "rosterCount": 38,
+        "selectedPackageCount": 0,
+        "disposition": "absent-from-every-package-projection"
+      },
+      "mutationSubprocesses": 0,
+      "packageStarts": 0,
+      "mismatchDisposition": "fail-before-package-start"
+    },
+    {
+      "kind": "non-mutation-input-orchestration-isolation-v1",
+      "sourceCandidate": {
+        "commit": "fce985d4914f3f2b450b4ca4e0828d665ca0e36e",
+        "tree": "684d6c3012f4745961c8448f337c430634b3a8fe"
+      },
+      "workflow": {
+        "path": ".github/workflows/hardening.yml",
+        "source": {
+          "mode": "0644",
+          "bytes": 7596,
+          "sha256": "278bce5e89411bc8c05e6197b545c6e57e70bc07cd5d1c6b338ddd5f5e1b6b62",
+          "gitBlobOid": "9e0db5bf3a9779ab30cafa7104e687bc951037de",
+          "lineCount": 199
+        },
+        "target": {
+          "mode": "0644",
+          "bytes": 7917,
+          "sha256": "82ecc5bb5759480d333b6464082cf131b8601ed92ee4e0b72e4f100252d09395",
+          "gitBlobOid": "d5f70d208caa84942c41b78973f1d14a322b967e",
+          "lineCount": 206
+        }
+      },
+      "sensor": {
+        "path": "test/scripts/release-version-policy.test.mjs",
+        "source": {
+          "mode": "0644",
+          "bytes": 81246,
+          "sha256": "fc2ac28c2c5e277a19668ee4c9def44927bb7328ddfaa8f104db0a014e826411",
+          "gitBlobOid": "4ea3e63479b5a1b65ea301f852932891027f5f94",
+          "lineCount": 2128,
+          "assertionCount": 225,
+          "assertionDigestSha256": "c30ee52df282d1104b1195c1db98e7b15b585b04ada7862cd8b09a1a0e7fb69c"
+        },
+        "target": {
+          "mode": "0644",
+          "bytes": 81620,
+          "sha256": "51d79be82013fb11ef68bd72fd4ab04414b52abfcb3185866cb9b32a2c37fd3c",
+          "gitBlobOid": "cd56cdc3870d9b5923448ac478f6783544119980",
+          "lineCount": 2136,
+          "assertionCount": 229,
+          "assertionDigestSha256": "f4f3dc3c6867c97620706406046c542150a2b91a4954ab8211dc2e9791eff467"
+        }
+      },
+      "diagnostic": {
+        "runId": 33372924153,
+        "scenario": "cascade-delete",
+        "ratePerSecond": 2,
+        "thresholdP95Milliseconds": 1000,
+        "observedP95Milliseconds": 84.96753159999996,
+        "observedP99Milliseconds": 176.21437270000004,
+        "iterations": 601,
+        "droppedIterations": 0,
+        "checksPassed": 5409,
+        "checksFailed": 0
+      },
+      "preservedContract": {
+        "scenarioSet": ["auth", "crud", "upload", "cascade-delete"],
+        "ratesDurationsThresholds": "unchanged",
+        "failureDisposition": "fail-closed"
+      },
+      "mutationInputProjection": {
+        "rosterCount": 38,
+        "artifactBindingCount": 76,
         "selectedPackageCount": 0,
         "disposition": "absent-from-every-package-projection"
       },

@@ -1067,10 +1067,14 @@ export async function rebindCandidateComposition({
     bytes.length === identity?.bytes &&
     sha256Hex(bytes) === identity.sha256 &&
     gitBlobOid(bytes) === identity.gitBlobOid;
-  const versionRebaseline = identityMatches(
-    currentRootManifestBytes,
-    devaiTransition?.versionRebaselineTarget?.targetRootManifest,
-  );
+  const versionTargetIdentity = devaiTransition?.versionRebaselineTarget?.targetRootManifest;
+  const sourceAlreadyAtVersionTarget =
+    semanticRebindComparison?.sourceRootManifest?.bytes === versionTargetIdentity?.bytes &&
+    semanticRebindComparison?.sourceRootManifest?.sha256 === versionTargetIdentity?.sha256 &&
+    semanticRebindComparison?.sourceRootManifest?.gitBlobOid === versionTargetIdentity?.gitBlobOid;
+  const versionRebaseline =
+    identityMatches(currentRootManifestBytes, versionTargetIdentity) &&
+    !sourceAlreadyAtVersionTarget;
   const catalog = workspaceCatalog(repositoryRoot);
   const versionPathContract = devaiTransition?.versionRebaselineTarget?.changedPathContract;
   const versionChangedPaths = new Set();
@@ -1538,16 +1542,18 @@ export async function rebindCandidateComposition({
     }
   };
   const currentManifestBytes = currentRootManifestBytes;
-  validateIdentity(
-    'DEVAI source root manifest',
-    sourceManifestBytes,
-    devaiTransition.sourceRootManifest,
-  );
+  const governedSourceRootIdentity = sourceAlreadyAtVersionTarget
+    ? versionTargetIdentity
+    : devaiTransition.sourceRootManifest;
+  const governedTargetRootIdentity = sourceAlreadyAtVersionTarget
+    ? versionTargetIdentity
+    : devaiTransition.targetRootManifest;
+  validateIdentity('DEVAI source root manifest', sourceManifestBytes, governedSourceRootIdentity);
   if (!versionRebaseline) {
     validateIdentity(
       'DEVAI target root manifest',
       currentManifestBytes,
-      devaiTransition.targetRootManifest,
+      governedTargetRootIdentity,
     );
   }
   const sourceDevaiManifest = JSON.parse(sourceManifestBytes.toString('utf8'));
