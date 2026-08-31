@@ -817,6 +817,18 @@
       "commit": "77aa9fd3e516012a6e8d3302b7f30f8affcf534e",
       "authorized_by": "Owner",
       "reason": "Authorizes at tree e04d46bc53a0d2f7aee95b3f1ea8794dd419dd79 only the D24.45 hardening orchestration that executes all four unchanged k6 scenarios against fresh owned reference stacks while preserving every rate, duration, check, and threshold."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "78b347c975a9e257a6a18a8259188139bcc3aabd",
+      "authorized_by": "Owner",
+      "reason": "Authorizes at tree 3c38153c65a7edcfc337e81f1ac36c8546587120 only the STYNX 1.1.2 workflow changes governed by the accepted 2026-08-31 assessment-closure ADR: main-only module-demo push execution, fail-closed live-RLS requirements in database-backed CI jobs, and weekly read-only branch and tag protection drift verification. No test, threshold, package roster, publication authority, tag, repository setting, or protected resource is weakened or mutated."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "78b347c975a9e257a6a18a8259188139bcc3aabd",
+      "authorized_by": "Owner",
+      "reason": "Authorizes at tree 3c38153c65a7edcfc337e81f1ac36c8546587120 the Architect-owned STYNX 1.1.2 closure ADR and declarative protection target while preserving every invariant severity, test, threshold, and separate Owner-controlled publication, deprecation, visibility, and repository-settings boundary."
     }
   ]
 }
