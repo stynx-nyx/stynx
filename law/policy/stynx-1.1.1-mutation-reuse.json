@@ -81,6 +81,7 @@
     "packages/ratelimit/vitest.config.ts",
     "reference/api/Dockerfile",
     "scripts/devai-local-rc.mjs",
+    "scripts/lib/release-context.mjs",
     "scripts/list-ddl-objects.spec.mjs",
     "scripts/run-mutation-evidence.mjs",
     "test/scripts/devai-local-rc-verifier.test.mjs",
@@ -388,6 +389,12 @@
         "sha256": "1fb78fb13b3b6e809f61bbb7440df761d5e3b74c2dbd63ac013c73430448881b",
         "gitBlobOid": "2dc4d90d7de03e1c46b80bc0350b8e75a95a51fb"
       }
+    },
+    "releaseContextPolicyDigestTransition": {
+      "path": "scripts/lib/release-context.mjs",
+      "from": "fc4360097fe195ee1120ce9fd1a65cc93ee19e67b020568d9ad58d79a15fc579",
+      "to": "7218cd47417a3f33eba9231b0ded060e19dc919472ead8e40cf55d565a4cb71f",
+      "mutationInputProjection": "absent-from-every-package-projection"
     },
     "mutationInputProjection": {
       "rosterCount": 38,
