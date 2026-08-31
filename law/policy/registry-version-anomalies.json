@@ -1,13 +1,13 @@
 {
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "1.1.0",
   "policy_id": "stynx.registry-version-anomalies",
   "canonical_line": "1.x",
-  "next_unified_version": "1.1.1",
+  "next_unified_version": "1.1.2",
   "owner_decision": {
     "date": "2026-08-24",
     "repository_baseline": "b77b50230e3906cee632eb9218b06603cce6c89a",
     "repository_tree": "d0cde059f7a93a624ff01d485ebda9ac3cb9422e",
-    "statement": "The canonical STYNX line remains 1.x and the next unified version is exactly 1.1.1 for the complete 44-package release unit."
+    "statement": "The canonical STYNX line remains 1.x and the next unified version is exactly 1.1.2 for the complete 44-package release unit."
   },
   "anomalies": [
     {
@@ -22,12 +22,16 @@
         "observed_at": "2026-08-24T02:04:20.663Z"
       },
       "rationale": "The Owner adjudicated 2.0.0 as an incorrect major assignment rather than a canonical STYNX 2.x decision.",
-      "allowed_candidate": "1.1.1",
-      "allowed_effects": ["registry-monotonicity-exception"],
+      "allowed_candidate_line": "1.x",
+      "allowed_effects": ["registry-monotonicity-exception", "explicit-latest-publish-tag"],
+      "publisher_behavior": {
+        "tag": "latest",
+        "requires_exact_package_and_version_match": true
+      },
       "permitted_remediation": ["retain-as-noncanonical-history"],
       "deletion_requires": "new-owner-authorization-naming-version-id-and-recovery-evidence",
       "deprecation_requires": "new-owner-authorization-naming-package-version-action-and-message",
-      "closure_condition": "Unified 1.1.1 is verified for all 44 publishable packages, latest resolves to 1.1.1, and angular-profile 2.0.0 remains immutable non-canonical history.",
+      "closure_condition": "Every canonical 1.x candidate is verified for all 44 publishable packages, latest resolves to that candidate, and angular-profile 2.0.0 remains immutable non-canonical history.",
       "applies_to_other_packages": false,
       "applies_to_other_versions": false
     }
