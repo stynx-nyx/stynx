@@ -218,6 +218,13 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
+      - name: Materialize proof bundle without checkout metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/devai-local-rc/evidence-bundle"
+          git -C evidence archive HEAD | tar -x -C "$RUNNER_TEMP/devai-local-rc/evidence-bundle"
+
       - name: Reconstruct exact RC task policy
         id: policy
         shell: bash
@@ -235,7 +242,7 @@ jobs:
             --schema-version 1.1.0 \
             --output "$RUNNER_TEMP/devai-local-rc/expected-task-policy.json" \
             > "$RUNNER_TEMP/devai-local-rc/policy-result.json"
-          cmp "$RUNNER_TEMP/devai-local-rc/expected-task-policy.json" evidence/task-policy.json
+          cmp "$RUNNER_TEMP/devai-local-rc/expected-task-policy.json" "$RUNNER_TEMP/devai-local-rc/evidence-bundle/task-policy.json"
           digest="$(node -e 'const fs=require("fs");const x=JSON.parse(fs.readFileSync(process.argv[1]));process.stdout.write(x.taskPolicyDigest)' "$RUNNER_TEMP/devai-local-rc/policy-result.json")"
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
 
@@ -246,7 +253,7 @@ jobs:
         run: |
           set -euo pipefail
           node "$DEVAI_EVIDENCE_BUNDLE_VERIFY" \
-            --bundle evidence \
+            --bundle "$RUNNER_TEMP/devai-local-rc/evidence-bundle" \
             --trust control/law/policy/devai-local-rc-trust-store.json \
             --repository "$GITHUB_REPOSITORY" \
             --commit "$CANDIDATE_SHA" \
@@ -268,7 +275,15 @@ jobs:
           node - "$RUNNER_TEMP/devai-local-rc/verified.json" "$RUNNER_TEMP/devai-local-rc/verification-summary.json" <<'NODE'
           const fs = require('node:fs');
           const [input, output] = process.argv.slice(2);
-          const verified = fs.existsSync(input) ? JSON.parse(fs.readFileSync(input, 'utf8')) : {};
+          const raw = fs.existsSync(input) ? fs.readFileSync(input, 'utf8').trim() : '';
+          let verified = {};
+          if (raw) {
+            try {
+              verified = JSON.parse(raw);
+            } catch {
+              verified = {};
+            }
+          }
           const mutation = Array.isArray(verified.verifiedMutation) ? verified.verifiedMutation : [];
           const summary = {
             schemaVersion: '1.0.0',
