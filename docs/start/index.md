@@ -11,24 +11,27 @@ library-oriented monorepo.
 
 **Audiences:**
 
-- **Integrators** building on `@stynx-nyx/*` and `@stynx-nyx/*`: head to [Framework](/docs/framework/) for the contract surface, then [Adopters → STYNX adoption pack](/docs/adopters/stynx/) for the AI-agent porting reference.
+- **Integrators** building on `@stynx-nyx/*`: head to [Framework](/docs/framework/) for the contract surface, then [Adopters → STYNX adoption pack](/docs/adopters/stynx/) for the AI-agent porting reference.
 - **Contributors** operating in this repo: read `AGENTS.md` and
   [`docs/meta/development-contract.md`](/docs/meta/development-contract), then the
   architecture and accepted decisions.
 
 ## Purpose
 
-Stynx is a multi-tenant document and work-item management platform (inferred) built as a pnpm monorepo. It exposes a NestJS REST API backed by PostgreSQL, consumed by an Angular front-end. Core business objects are documents, records, record notes, and work items.
+STYNX is a multi-tenant application framework distributed as a pnpm monorepo of
+NestJS, Angular, and framework-neutral TypeScript packages. Its reference
+applications demonstrate PostgreSQL-backed document and work-item capabilities;
+they do not redefine the reusable package contract as a single hosted product.
 
 ## Stack at a glance
 
-| Layer            | Technology                                    |
-| ---------------- | --------------------------------------------- |
-| API              | NestJS                                        |
-| Frontend         | Angular                                       |
-| Database         | PostgreSQL                                    |
-| Package manager  | pnpm                                          |
-| Primary language | TypeScript (494 files), JavaScript (99 files) |
+| Layer            | Technology                                           |
+| ---------------- | ---------------------------------------------------- |
+| API              | NestJS                                               |
+| Frontend         | Angular                                              |
+| Database         | PostgreSQL                                           |
+| Package manager  | pnpm                                                 |
+| Primary language | TypeScript, with JavaScript-based repository tooling |
 
 Source roots: `packages/*/src`, `packages-web/*/src`, `reference/{api,web}/src`, `domain/*`.
 

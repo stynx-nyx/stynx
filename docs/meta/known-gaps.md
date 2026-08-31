@@ -1,7 +1,7 @@
 # Known Gaps — stynx
 
-**Compiled:** 2026-05-18 (rebaselined; closed rows removed)
-**Author role (Constitution Article 6):** Auditor (analysis-only synthesis).
+**Compiled:** 2026-08-31 (live re-triage; closed rows removed)
+**Author role (Constitution Article 6):** Architect.
 **Scope:** `./docs/` only. This file tracks **live, unresolved** gaps. Closed gaps and their evidence ledgers have been removed; recover prior history from git if needed.
 
 When a previously-listed gap is verified closed, delete its row from this file rather than annotating it as "(CLOSED)". The git log is the audit trail.
@@ -10,15 +10,17 @@ When a previously-listed gap is verified closed, delete its row from this file r
 
 ## 1. PORM Flow transposition — outstanding work
 
-| #     | Gap / capability                   | Status                                              | Detail                                                                                                                                                                                                                                              |
-| ----- | ---------------------------------- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| PF-06 | **Original PORM consumer cutover** | Planned, awaiting explicit consuming-repo execution | The STYNX packages are ready for adoption, but replacing `../porm`'s in-repo Flow module with `@stynx-nyx/flow` + `@stynx-nyx/angular-flow` is a sibling-repo migration that has not been executed. Run only when explicitly requested by the user. |
+| #     | Gap / capability                   | Status                                                       | Detail                                                                                                                                                                                                                                    |
+| ----- | ---------------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PF-06 | **Original PORM consumer cutover** | Open; blocked on explicit consuming-repository authorization | STYNX publishes `@stynx-nyx/flow` and `@stynx-nyx/angular-flow`, but replacing PORM's in-repository Flow module is a separate sibling-repository migration. STYNX package readiness does not authorize or complete that consumer cutover. |
 
-## 2. Sibling-checkout CI verification
+## 2. Closed during the 31 Aug re-triage
 
-| #      | Gap / capability                                              | Status                                            | Detail                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| ------ | ------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| R17-K6 | **k6 reference scenarios breach latency/capacity thresholds** | E3 performance blocker; triaged 2026-06-12 in R19 | R19 ruled out route drift and `http_req_failed`: the manual CRUD sequence (`/_reference/dev-login`, `/records`, `/records`, `/_probes/data-tx`, `/_probes/ratelimit`, `/_probes/idempotency`, `DELETE /records/:id`) returned only expected 2xx statuses, and k6 CRUD at the CI envelope (`rate=10`, `preAllocatedVUs=4`, `maxVUs=25`, 30 s) had `http_req_failed=0` and checks=100%. The blocker is capacity/latency: CRUD crossed `data_tx_overhead_ms`, `ratelimit_overhead_ms`, and `http_req_duration` with 104 dropped iterations; upload crossed `http_req_duration` with 27 dropped iterations; cascade-delete crossed `data_tx_overhead_ms` and `http_req_duration` with 185 dropped iterations. Auth was green. Do not loosen thresholds until the reference API/probe hot paths are profiled and either optimized or an explicit baseline policy is approved. |
+R17-K6 is no longer an open gap. Hardening run `33372924153` executed `scenario=all`
+against isolated owned stacks and passed the unchanged `auth`, `crud`, `upload`,
+and `cascade-delete` thresholds. Scheduled run `33382745035` then passed on the
+merged `1.1.1` candidate. The historical failing measurements remain available in
+Git and Actions history; they do not describe current readiness.
 
 ---
 

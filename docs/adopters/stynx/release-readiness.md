@@ -1,6 +1,6 @@
-# v1.0 Release Readiness
+# STYNX 1.1.x Release and Adoption Readiness
 
-Prompt 37 release readiness is **closed** as of 2026-04-27 under the revised
+The historical v1.0 Prompt 37 readiness review was **closed** on 2026-04-27 under the revised
 no-cloud-secret artifact scope. AWS/ECR push and Cosign signing are no longer
 Prompt 37 gates; reference app image scans and SBOM generation are owned by the
 reference-app workflow instead of the STYNX package release lane.
@@ -8,7 +8,7 @@ reference-app workflow instead of the STYNX package release lane.
 ## Implemented release-prep surfaces
 
 - Major `1.0.0` changeset stubs for every publishable workspace package under `.changeset/`.
-- Root `MIT` license plus per-package `LICENSE` files for every publishable package.
+- Root and package `BUSL-1.1` licensing for the 1.1.x line.
 - Release policy verification script:
   - `pnpm release:policy`
 - Security release lane:
@@ -68,42 +68,34 @@ readiness can be proven without repository AWS/ECR/Cosign secrets. Container
 registry publication and keyless image signing can be restored as a later
 deployment hardening task when those environments exist.
 
-The release workflow still owns package versioning through Changesets. Registry
-publishing is intentionally opt-in because the historical package scopes
-(`@stynx`, `@stynx-web`, and `@stech`) could not be published with this
-repository's default `GITHUB_TOKEN`. All packages now live under the
-`@stynx-nyx/*` scope (owned by the `stynx-nyx` org) and publish with
+The release workflow owns package versioning through Changesets. Registry
+publishing is intentionally opt-in. All 44 packages live under the
+`@stynx-nyx/*` scope (owned by the `stynx-nyx` org), are published as private
+GitHub Packages, and publish with
 an explicit manual `STYNX Release` dispatch with `publish: true`, the
 Owner-controlled `STYNX_ENABLE_REGISTRY_PUBLISH=true` repository opt-in, and
 an appropriate `NPM_TOKEN`. A push to `main` is always forced into
 non-publishing Changesets preparation mode, even while the repository opt-in
 is enabled.
 
-The spec’s public post-release label is still intentionally not applied by this
-readiness closure:
-
-- `README.md` is **not** changed to `STYNX v1.0 - Shipped`.
+Consumers therefore need package-read authentication for
+`https://npm.pkg.github.com` and an `@stynx-nyx` scope mapping; a public source
+repository does not make the packages anonymously installable. Changing package
+visibility is a separate Owner decision.
 
 ## Exact-main package and documentation publication
 
-The current publication candidate is prepared through two independent manual
-lanes. Neither lane publishes from a pull request, a branch tip supplied by a
-candidate, or an automatic `main` push.
+STYNX 1.1.1 is present for all 44 packages and `latest` resolves to `1.1.1`.
+The 1.1.2 correction is a normal unified patch through Changesets. Neither the
+package nor documentation lane publishes from a pull request or automatic
+`main` push.
 
-Package publication for the current candidate uses a one-time unified-version
-rebaseline rather than an ordinary Changesets projection. The private root
-workspace and all 38 public `@stynx-nyx/*` packages move together to `0.5.0`;
-private reference applications and internal tooling retain their independent
-operational versions and are neither versioned nor tagged by the public package
-lane. Existing registry releases remain immutable, and consumers whose ranges
-target a later major version will not select `0.5.0` automatically.
+The one-time 1.1.1 unified rebaseline is historical and must not be reused.
+Normal patch releases move the private root and the fixed group of 44 publishable
+manifests together; private reference applications and internal tooling retain
+their independent operational versions.
 
-Release preparation accepts this exceptional candidate only when the
-`ci: version packages` commit is the direct first-parent child of the verified
-base, changes the exact 38-package manifest and changelog roster, and is followed
-only by the narrow release-policy support paths. Future public package releases
-return to the normal Changesets flow, with the fixed package group preserving
-one shared version. After this candidate reaches exact `main`, an
+After a patch candidate reaches exact `main`, an
 Owner-authorized `STYNX Release` dispatch must supply that full 40-character
 commit as `candidate_sha`, set `publish: true`, and have the Owner-controlled
 `STYNX_ENABLE_REGISTRY_PUBLISH=true` opt-in. The workflow fails if the authorized
@@ -133,4 +125,6 @@ Publication readiness is therefore established only after the unified-version
 candidate is merged, exact-main checks pass, and the Owner names the exact
 commit in the package dispatch and local Pages authorization. Package and Pages
 publication receipts must then be reconciled with that same commit before the
-result is described as shipped.
+result is described as shipped. For 1.1.2 specifically, the release workflow
+must publish and verify all 44 packages and push every tag itself; manual
+continuation does not satisfy the release-lane acceptance criterion.

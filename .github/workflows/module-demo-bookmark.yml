@@ -4,6 +4,8 @@ name: module-demo-bookmark
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     paths:
       - 'domain/demo-bookmark/**'
   pull_request:

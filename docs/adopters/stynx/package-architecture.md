@@ -1,5 +1,10 @@
 # stynx Package Architecture
 
+> **Registry access:** The 44 `@stynx-nyx/*` packages are private GitHub
+> Packages. Consumers must map `@stynx-nyx` to
+> `https://npm.pkg.github.com` and authenticate with `read:packages` authority.
+> The public STYNX source repository does not provide anonymous package access.
+
 This document is the consumer entrypoint for the installable package topology.
 Canonical package docs live in each package README; this page explains how the
 packages fit together.
