@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/preferences",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "license": "BUSL-1.1",
   "description": "Closed tenant-subject profile and preference contracts for stynx",
   "main": "dist/preferences/src/index.js",

@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/flow",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Tenant-scoped workflow design and runtime primitives for stynx",
