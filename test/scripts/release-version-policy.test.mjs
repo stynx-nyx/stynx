@@ -550,7 +550,7 @@ function createRebaselineFixture() {
   writeJson(join(root, 'package.json'), {
     name: 'stynx-workspace',
     private: true,
-    version: '0.5.0',
+    version: '1.0.0',
   });
   writeJson(join(root, '.changeset', 'config.json'), {
     fixed: [names],
@@ -561,8 +561,8 @@ function createRebaselineFixture() {
     const packageDirectory = join(root, 'packages', `fixture-${String(index).padStart(2, '0')}`);
     const manifest = {
       name,
-      version: '0.5.0',
-      dependencies: index === 0 ? { [names[1]]: '^0.5.0', [names[2]]: 'workspace:*' } : undefined,
+      version: '1.0.0',
+      dependencies: index === 0 ? { [names[1]]: '^1.0.0', [names[2]]: 'workspace:*' } : undefined,
     };
     writeJson(join(packageDirectory, 'package.json'), manifest);
     const priorTargetSection =
@@ -579,7 +579,7 @@ function createRebaselineFixture() {
   writeJson(join(root, 'tools', 'create-stynx-app', 'template', 'package.json'), {
     name: 'consumer-template',
     private: true,
-    dependencies: { [names[0]]: '^0.5.0' },
+    dependencies: { [names[0]]: '^1.0.0' },
   });
   writeJson(join(root, 'docs', 'meta', 'security', 'sbom.cdx.json'), {
     version: '0.5.0',
