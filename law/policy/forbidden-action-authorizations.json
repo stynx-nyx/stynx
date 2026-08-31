@@ -805,6 +805,12 @@
       "commit": "b86188c19b11f4bd933ee3629ab3237aa90bad9e",
       "authorized_by": "Owner",
       "reason": "Adds full Git history only to the stynx-tier-gate and unit-tests checkouts under the reviewed D24.40 ordinary-CI portability ADR."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "5e0943c98c614442177fb6918de87b4fff76358d",
+      "authorized_by": "Owner",
+      "reason": "Authorizes at tree 49610d279e64abd6c481ad519fdd74e29c23c9a2 only the DEVAI 1.4.5 generated trusted-local-RC workflow with SHA-256 615cb94cf9b6ab79883c9b0a409fdefac296197779777bb8834e7dca6c43455d under D24.42 and canonical verifier policy SHA-256 8d16a2dc7754920f0b27e2d37eb5ce3464d5a62df7db720a45c3a03c2ee1cba1."
     }
   ]
 }
