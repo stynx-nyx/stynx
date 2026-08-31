@@ -1888,6 +1888,102 @@ test('generated README dependency truth covers the exact 44-package manifest gra
   assert.equal(check.status, 0, check.stderr || check.stdout);
 });
 
+test('generated README check rejects hand-written dependency prose outside its markers', () => {
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'stynx-readme-prose-'));
+  try {
+    mkdirSync(join(fixtureRoot, 'scripts', 'lib'), { recursive: true });
+    mkdirSync(join(fixtureRoot, 'packages-web'), { recursive: true });
+    copyFileSync(
+      join(repoRoot, 'scripts', 'generate-package-readmes.mjs'),
+      join(fixtureRoot, 'scripts', 'generate-package-readmes.mjs'),
+    );
+    copyFileSync(
+      join(repoRoot, 'scripts', 'lib', 'publishable-packages.mjs'),
+      join(fixtureRoot, 'scripts', 'lib', 'publishable-packages.mjs'),
+    );
+    writeJson(join(fixtureRoot, 'packages', 'fixture', 'package.json'), {
+      name: '@stynx-nyx/fixture',
+      version: '1.1.2',
+    });
+    writeFileSync(
+      join(fixtureRoot, 'packages', 'fixture', 'README.md'),
+      '# Fixture\n\nPeer dependencies: stale hand-written claim.\n',
+    );
+    const check = spawnSync(
+      process.execPath,
+      [join(fixtureRoot, 'scripts', 'generate-package-readmes.mjs'), '--check'],
+      { cwd: fixtureRoot, encoding: 'utf8' },
+    );
+    assert.notEqual(check.status, 0);
+    assert.match(check.stderr, /hand-written dependency prose outside the generated markers/u);
+  } finally {
+    rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+});
+
+test('Doctor distinguishes an unavailable live RLS observation from a verified check', () => {
+  const env = { ...process.env };
+  for (const variable of ['DATABASE_URL', 'STYNX_DATABASE_URL', 'STYNX_TEST_DATABASE_URL']) {
+    delete env[variable];
+  }
+  const doctor = runNode('scripts/stynx-doctor.mjs', ['--json'], { env });
+  const result = JSON.parse(doctor.stdout);
+  const rls = result.checks.find(({ name }) => name === 'rls-smoke');
+  assert.equal(rls.status, 'skipped');
+  assert.match(rls.message, /not attempted/u);
+  assert.equal(Object.hasOwn(rls, 'ok'), false);
+});
+
+test('INV-COVERAGE-001 remains a gate and claims all six operational package families', () => {
+  const invariant = JSON.parse(repositorySource('law/invariants/INV-COVERAGE-001.json'));
+  const useCases = JSON.parse(
+    repositorySource('product/use-cases/stynx-operational-packages.json'),
+  );
+  assert.equal(invariant.severity, 'gate');
+  assert.match(invariant.statement, /refs\.serviceOperationIds\[\]/u);
+  assert.equal(useCases.cases.length, 6);
+  assert.deepEqual(
+    useCases.cases.map(({ id }) => id),
+    [
+      'UC-stynx-015',
+      'UC-stynx-016',
+      'UC-stynx-017',
+      'UC-stynx-018',
+      'UC-stynx-019',
+      'UC-stynx-020',
+    ],
+  );
+  const serviceOperations = [
+    ...new Set(
+      useCases.cases.flatMap(({ mainFlow }) =>
+        mainFlow.flatMap(({ refs }) => refs.serviceOperationIds ?? []),
+      ),
+    ),
+  ];
+  for (const packageName of [
+    'jobs',
+    'mobile-runtime',
+    'notifications',
+    'offline-sync',
+    'outbox',
+    'worklist',
+  ]) {
+    assert.ok(
+      serviceOperations.some((operation) => operation.startsWith(`@stynx-nyx/${packageName}:`)),
+      `${packageName}: no authored service-operation claim`,
+    );
+  }
+  const endpointIds = useCases.cases.flatMap(({ mainFlow }) =>
+    mainFlow.flatMap(({ refs }) => refs.endpointIds ?? []),
+  );
+  assert.deepEqual(endpointIds.sort(), [
+    'POST /offline-sync/conflicts/:id/resolve',
+    'POST /offline-sync/numbering-reservations',
+    'POST /offline-sync/numbering-reservations/:id/cancel',
+    'POST /offline-sync/sync-batches',
+  ]);
+});
+
 test('coverage is executable and reports four metrics for every one of the 44 packages', () => {
   assert.match(rootManifest.scripts['test:coverage'], /scripts\/run-coverage/u);
   assert.match(rootManifest.scripts['ci:stynx:release'], /test:coverage/u);
