@@ -775,14 +775,14 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
       priorSemanticRebindComparison: {
         kind: 'root-manifest-unchanged-with-historical-input-v1',
         sourceRootManifest: {
-          bytes: 10_790,
-          sha256: 'cccac5d19c5b38dd2f2d4840451c7c7d1b2fbb6403451bc0c2b149f0e8f80846',
-          gitBlobOid: 'da1ed88ad64acc60996d76e150af883ece7ba944',
+          bytes: 10_789,
+          sha256: '8b5e61616e02acdc4442248ac31f2968a86dc20b6fcbf99dd2d13183aced260a',
+          gitBlobOid: 'eb33c50ff06dbd7f6e81c534de98d7d116cfce0a',
         },
         targetRootManifest: {
-          bytes: 10_790,
-          sha256: 'cccac5d19c5b38dd2f2d4840451c7c7d1b2fbb6403451bc0c2b149f0e8f80846',
-          gitBlobOid: 'da1ed88ad64acc60996d76e150af883ece7ba944',
+          bytes: 10_789,
+          sha256: '8b5e61616e02acdc4442248ac31f2968a86dc20b6fcbf99dd2d13183aced260a',
+          gitBlobOid: 'eb33c50ff06dbd7f6e81c534de98d7d116cfce0a',
         },
         allowedScriptTransitions: [],
         comparison: {
@@ -791,7 +791,7 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
           otherMutationInputTreeEntries: 'identical-mode-type-oid',
         },
         canonicalContractBytes: 597,
-        canonicalContractSha256: '9df3992b0d495e5f7857dd6f1cacda8b2e5ece76085f0bd3802ffeaf830d5b83',
+        canonicalContractSha256: '1a7ef5b98bcfb28bd8edef4452f3203ce178cbd2c49fcb627ea3e5fcc39998b5',
       },
     },
     sourceInputProjection: {
