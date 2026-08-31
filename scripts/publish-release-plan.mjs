@@ -5,9 +5,11 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { discoverPublishablePackages } from './lib/publishable-packages.mjs';
+import { loadRegistryAnomalyPolicy, publishTagForPackage } from './lib/registry-version-policy.mjs';
 
 const repoRoot = process.cwd();
-const version = '1.1.1';
+const rootManifest = JSON.parse(readFileSync(resolve(repoRoot, 'package.json'), 'utf8'));
+const version = rootManifest.version;
 const registry = 'https://npm.pkg.github.com';
 const artifactRoot = resolve(repoRoot, '.artifacts/publication');
 const tarballRoot = resolve(artifactRoot, 'tarballs');
@@ -16,6 +18,7 @@ const candidateSha = git(['rev-parse', 'HEAD']);
 const candidateTree = git(['rev-parse', 'HEAD^{tree}']);
 const workflowRun = process.env.GITHUB_RUN_ID ?? null;
 const packages = discoverPublishablePackages(repoRoot);
+const anomaly = loadRegistryAnomalyPolicy(repoRoot, version);
 
 if (packages.length !== 44)
   fail('PUBLICATION_ROSTER_DRIFT', `expected 44 packages, found ${packages.length}`);
@@ -70,7 +73,6 @@ const plan = {
   partial_publication_recovery: 'new-exact-owner-authorization-required',
   packages: planEntries,
 };
-writeJson(resolve(artifactRoot, 'publication-plan.json'), plan);
 
 for (const entry of planEntries) {
   const observed = registryMetadata(entry.package);
@@ -80,22 +82,33 @@ for (const entry of planEntries) {
   if (observed.kind === 'published') {
     fail('PUBLICATION_CANDIDATE_COLLISION', `${entry.package}@${version} already exists`);
   }
+  entry.tag = publishTagForPackage({
+    packageName: entry.package,
+    candidate: version,
+    observedVersions: entry.package === anomaly.package ? registryVersions(entry.package) : [],
+    anomaly,
+  });
 }
+writeJson(resolve(artifactRoot, 'publication-plan.json'), plan);
 
 for (const entry of planEntries) {
   const attemptedAt = new Date().toISOString();
   const tarball = resolve(tarballRoot, entry.tarball);
-  const result = spawnSync(
-    'npm',
-    ['publish', tarball, '--registry', registry, '--access', 'restricted'],
-    { cwd: repoRoot, env: publishEnvironment(), encoding: 'utf8', stdio: 'inherit' },
-  );
+  const publishArguments = ['publish', tarball, '--registry', registry, '--access', 'restricted'];
+  if (entry.tag !== null) publishArguments.push('--tag', entry.tag);
+  const result = spawnSync('npm', publishArguments, {
+    cwd: repoRoot,
+    env: publishEnvironment(),
+    encoding: 'utf8',
+    stdio: 'inherit',
+  });
   const observed = registryMetadata(entry.package);
   const receipt = {
     schemaVersion: '1.0.0',
     kind: 'publication-receipt',
     package: entry.package,
     version,
+    publish_tag: entry.tag,
     outcome:
       result.status === 0 && observed.kind === 'published'
         ? 'verified-published'
@@ -122,6 +135,28 @@ for (const entry of planEntries) {
       'PUBLICATION_STOP_FIRST',
       `${entry.package}: stopped on first failure or ambiguous outcome; partial recovery requires a new Owner authorization`,
     );
+  }
+}
+
+function registryVersions(packageName) {
+  const result = spawnSync(
+    'npm',
+    ['view', packageName, 'versions', '--json', '--registry', registry],
+    {
+      cwd: repoRoot,
+      env: publishEnvironment(),
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    },
+  );
+  if (result.status !== 0) {
+    fail('PUBLICATION_PREFLIGHT_UNKNOWN', `${packageName}: registry history is unknown`);
+  }
+  try {
+    const versions = JSON.parse(result.stdout);
+    return Array.isArray(versions) ? versions : [versions];
+  } catch {
+    fail('PUBLICATION_PREFLIGHT_UNKNOWN', `${packageName}: registry history is malformed`);
   }
 }
 
