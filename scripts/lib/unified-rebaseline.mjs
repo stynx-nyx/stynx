@@ -3,7 +3,7 @@ import { dirname, relative, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { collectPublicPackages, validateReleaseVersionPolicy } from './release-version-policy.mjs';
 
-export const unifiedRebaselineSource = '0.5.0';
+export const unifiedRebaselineSource = '1.0.0';
 export const unifiedRebaselineTarget = '1.1.1';
 export const unifiedRebaselinePackageCount = 44;
 
