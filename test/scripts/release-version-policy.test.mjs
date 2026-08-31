@@ -764,6 +764,7 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
   assert.deepEqual(policy.allowedChangedPaths, [
     '.github/workflows/ci.yml',
     'law/adr/2026-08-24-stynx-1.1.1-campaign-controls.md',
+    'law/policy/forbidden-action-authorizations.json',
     'law/policy/stynx-1.1.1-mutation-reuse.json',
     'law/trace.json',
     'package.json',
