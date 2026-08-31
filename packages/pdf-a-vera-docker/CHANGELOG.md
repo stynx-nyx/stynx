@@ -1,5 +1,11 @@
 # @stynx-nyx/pdf-a-vera-docker
 
+## 1.1.1
+
+### Unified Version Rebaseline
+
+- Re-establish the canonical STYNX 1.x line at exact version 1.1.1 for the complete 44-package fixed group without changing runtime behavior or public contracts.
+
 ## 1.0.0
 
 ### Patch Changes

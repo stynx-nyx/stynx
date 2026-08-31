@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/integration-adapter",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Retry, timeout, idempotency, and circuit-breaker framework for stynx integrations",

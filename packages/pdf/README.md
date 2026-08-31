@@ -185,7 +185,7 @@ _None._
 
 - `@nestjs/common`: `^11.1.19`
 - `@nestjs/core`: `^11.1.19`
-- `@stynx-nyx/signature`: `^1.0.0`
+- `@stynx-nyx/signature`: `^1.1.1`
 - `reflect-metadata`: `^0.2.2`
 - `rxjs`: `^7.8.2`
 

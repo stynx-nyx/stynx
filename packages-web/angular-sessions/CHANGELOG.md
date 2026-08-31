@@ -1,5 +1,24 @@
 # @stynx-nyx/angular-sessions
 
+## 1.1.1
+
+### Unified Version Rebaseline
+
+- Re-establish the canonical STYNX 1.x line at exact version 1.1.1 for the complete 44-package fixed group without changing runtime behavior or public contracts.
+
+### Patch Changes
+
+- 0a5a49a: Publish the post-v1 package changes already proven on main: additive Angular
+  and backend APIs, regenerated SDK contracts, tenant-scoped preferences/data
+  runtime behavior, dependency-advisory remediation, and the PostgreSQL test-app
+  readiness fix. Test-only mutation and timeout stabilization does not expand the
+  release roster.
+- Updated dependencies [0a5a49a]
+  - @stynx-nyx/angular-auth@1.0.4
+  - @stynx-nyx/angular-i18n@1.1.0
+  - @stynx-nyx/angular-ui@1.0.4
+  - @stynx-nyx/angular@1.0.4
+
 ## 1.0.0
 
 ### Patch Changes
@@ -14,21 +33,6 @@
 ### Unified Version Rebaseline
 
 - Align the STYNX root workspace and every public package on the shared 0.5.0 release line without changing runtime behavior or public contracts.
-
-## 1.1.1
-
-### Patch Changes
-
-- 0a5a49a: Publish the post-v1 package changes already proven on main: additive Angular
-  and backend APIs, regenerated SDK contracts, tenant-scoped preferences/data
-  runtime behavior, dependency-advisory remediation, and the PostgreSQL test-app
-  readiness fix. Test-only mutation and timeout stabilization does not expand the
-  release roster.
-- Updated dependencies [0a5a49a]
-  - @stynx-nyx/angular-auth@1.0.4
-  - @stynx-nyx/angular-i18n@1.1.0
-  - @stynx-nyx/angular-ui@1.0.4
-  - @stynx-nyx/angular@1.0.4
 
 ## 1.1.0
 
