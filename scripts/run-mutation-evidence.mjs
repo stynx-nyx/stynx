@@ -1208,6 +1208,35 @@ export async function rebindCandidateComposition({
     throw new Error('candidate rebind source summary digest drifted');
   }
   const summary = JSON.parse(sourceSummaryBytes.toString('utf8'));
+  const sourceProvenance = sourceSummary.provenance;
+  const chainedProtectedSource = sourceProvenance?.kind === 'protected-evidence-tag-rebound-v1';
+  if (chainedProtectedSource) {
+    const tagReference = `refs/tags/${sourceProvenance.tag}`;
+    const observedTagObject = gitText(['rev-parse', tagReference], repositoryRoot).trim();
+    const observedEvidenceCommit = gitText(
+      ['rev-parse', `${tagReference}^{}`],
+      repositoryRoot,
+    ).trim();
+    const observedEvidenceTree = gitText(
+      ['rev-parse', `${observedEvidenceCommit}^{tree}`],
+      repositoryRoot,
+    ).trim();
+    const evidenceManifestBytes = gitBytes(
+      ['show', `${observedEvidenceCommit}:manifest.json`],
+      repositoryRoot,
+    );
+    if (
+      observedTagObject !== sourceProvenance.tagObject ||
+      observedEvidenceCommit !== sourceProvenance.evidenceCommit ||
+      observedEvidenceTree !== sourceProvenance.evidenceTree ||
+      evidenceManifestBytes.length !== sourceProvenance.manifestBytes ||
+      sha256Hex(evidenceManifestBytes) !== sourceProvenance.manifestSha256 ||
+      canonicalize(summary.semanticRebindComparison) !==
+        canonicalize(sourceSummary.priorSemanticRebindComparison)
+    ) {
+      throw new Error('candidate rebind protected source provenance drifted');
+    }
+  }
   if (
     summary.kind !== policy.composedSummaryKind ||
     summary.complete !== true ||
@@ -1376,7 +1405,8 @@ export async function rebindCandidateComposition({
       ({ path }) => !semanticTransitionPaths.has(path),
     );
     if (
-      canonicalize(historicalInputs) !== canonicalize(historicalSourceInputs) ||
+      (!chainedProtectedSource &&
+        canonicalize(historicalInputs) !== canonicalize(historicalSourceInputs)) ||
       canonicalize(sourceInputs) !== canonicalize(currentInputs)
     ) {
       throw new Error(
@@ -1477,7 +1507,10 @@ export async function rebindCandidateComposition({
   if (
     devaiTransition?.kind !== 'exact-devai-provider-input-transition-v1' ||
     devaiTransition.manifestTransition?.field !== 'devDependencies.@aarusso-nyx/devai' ||
-    devaiTransition.manifestTransition.from !== devai145Adoption.provider.sourceVersion ||
+    devaiTransition.manifestTransition.from !==
+      (chainedProtectedSource
+        ? devai145Adoption.provider.targetVersion
+        : devai145Adoption.provider.sourceVersion) ||
     devaiTransition.manifestTransition.to !== devai145Adoption.provider.targetVersion ||
     devaiTransition.versionRebaselineTarget?.manifestTransition?.field !== 'version' ||
     devaiTransition.versionRebaselineTarget.manifestTransition.from !== '1.0.0' ||
@@ -1487,6 +1520,18 @@ export async function rebindCandidateComposition({
     devaiTransition.otherMutationInputTreeEntries !== 'identical-mode-type-oid'
   ) {
     throw new Error('candidate rebind DEVAI semantic transition is invalid');
+  }
+  if (
+    chainedProtectedSource &&
+    (devaiTransition.sourceDisposition !==
+      'provider-transition-already-validated-in-protected-source' ||
+      canonicalize(devaiTransition.sourceRootManifest) !==
+        canonicalize(devaiTransition.targetRootManifest) ||
+      canonicalize(devaiTransition.sourceLockfile) !==
+        canonicalize(devaiTransition.targetLockfile) ||
+      devaiTransition.lockfileTransitionCount !== 0)
+  ) {
+    throw new Error('candidate rebind protected DEVAI source transition is invalid');
   }
   const validateIdentity = (label, bytes, identity) => {
     if (

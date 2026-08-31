@@ -750,8 +750,8 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
   assert.deepEqual(policy.candidateRebind, {
     kind: 'zero-mutation-candidate-rebind-v2',
     sourceCandidate: {
-      commit: '17ea3c42a2e129cf59739f2c8d74a885841712e2',
-      tree: 'a1f5b03d27066c27231ac9b3e8bfe9db261ac431',
+      commit: '738b0e4564ea5c88d6947d4c3eabc8cf593325cb',
+      tree: '23e5f6bd76e29047bae82cf05e8a776474ab35f7',
     },
     historicalInputCandidate: {
       commit: frozenCompositionCommit,
@@ -759,10 +759,40 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
     },
     sourceSummary: {
       path: '.devai/state/check-cache/v1/artifacts/mutation/summary.json',
-      bytes: 37_796,
-      sha256: 'fa4e5a4c021bd6f73e020e8debc7f9d65adc731cab7bc05cec65198659b602ff',
+      bytes: 37_433,
+      sha256: '6548078707306ef7d28169e34ba50ee8d324c5766f60c50fdf41a153f7800d45',
       packageCount: 38,
       artifactBindingCount: 76,
+      provenance: {
+        kind: 'protected-evidence-tag-rebound-v1',
+        tag: 'devai-local-evidence/23e5f6bd76e29047bae82cf05e8a776474ab35f7',
+        tagObject: '766b31c243c8d9a14f3c3cef883d2935e716e828',
+        evidenceCommit: '5d07b2923a44750f8daa06d2d0b8cd847d1c99ce',
+        evidenceTree: 'dd41ab82ade66608738b442b88f26eb7cca6e989',
+        manifestBytes: 17_263,
+        manifestSha256: '954f2e3bf369f403612657e49bc1e5d3f289e27a317293865088349965fe347e',
+      },
+      priorSemanticRebindComparison: {
+        kind: 'root-manifest-unchanged-with-historical-input-v1',
+        sourceRootManifest: {
+          bytes: 10_790,
+          sha256: 'cccac5d19c5b38dd2f2d4840451c7c7d1b2fbb6403451bc0c2b149f0e8f80846',
+          gitBlobOid: 'da1ed88ad64acc60996d76e150af883ece7ba944',
+        },
+        targetRootManifest: {
+          bytes: 10_790,
+          sha256: 'cccac5d19c5b38dd2f2d4840451c7c7d1b2fbb6403451bc0c2b149f0e8f80846',
+          gitBlobOid: 'da1ed88ad64acc60996d76e150af883ece7ba944',
+        },
+        allowedScriptTransitions: [],
+        comparison: {
+          rootManifest: 'source-and-target-identical',
+          historicalMutationInputTreeEntries: 'match-explicit-historical-candidate-mode-type-oid',
+          otherMutationInputTreeEntries: 'identical-mode-type-oid',
+        },
+        canonicalContractBytes: 597,
+        canonicalContractSha256: '9df3992b0d495e5f7857dd6f1cacda8b2e5ece76085f0bd3802ffeaf830d5b83',
+      },
     },
     sourceInputProjection: {
       kind: 'sorted-package-input-projection-digest-map-v1',
@@ -773,14 +803,14 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
     semanticRebindComparison: {
       kind: 'root-manifest-unchanged-with-historical-input-v1',
       sourceRootManifest: {
-        bytes: 10_790,
-        sha256: 'cccac5d19c5b38dd2f2d4840451c7c7d1b2fbb6403451bc0c2b149f0e8f80846',
-        gitBlobOid: 'da1ed88ad64acc60996d76e150af883ece7ba944',
+        bytes: 10_789,
+        sha256: '8b5e61616e02acdc4442248ac31f2968a86dc20b6fcbf99dd2d13183aced260a',
+        gitBlobOid: 'eb33c50ff06dbd7f6e81c534de98d7d116cfce0a',
       },
       targetRootManifest: {
-        bytes: 10_790,
-        sha256: 'cccac5d19c5b38dd2f2d4840451c7c7d1b2fbb6403451bc0c2b149f0e8f80846',
-        gitBlobOid: 'da1ed88ad64acc60996d76e150af883ece7ba944',
+        bytes: 10_789,
+        sha256: '8b5e61616e02acdc4442248ac31f2968a86dc20b6fcbf99dd2d13183aced260a',
+        gitBlobOid: 'eb33c50ff06dbd7f6e81c534de98d7d116cfce0a',
       },
       allowedScriptTransitions: [],
       comparison: {
@@ -789,7 +819,7 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
         otherMutationInputTreeEntries: 'identical-mode-type-oid',
       },
       canonicalContractBytes: 597,
-      canonicalContractSha256: '9df3992b0d495e5f7857dd6f1cacda8b2e5ece76085f0bd3802ffeaf830d5b83',
+      canonicalContractSha256: '1a7ef5b98bcfb28bd8edef4452f3203ce178cbd2c49fcb627ea3e5fcc39998b5',
     },
     promotionVerifier: {
       path: 'scripts/verify-missing-evidence.mjs',
@@ -850,7 +880,7 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
     policy.candidateRebind.sourceCandidate.commit,
     'package.json',
   );
-  assert.equal(Buffer.byteLength(sourceManifest), 10_790);
+  assert.equal(Buffer.byteLength(sourceManifest), 10_789);
   assert.equal(
     sha256(sourceManifest),
     policy.candidateRebind.semanticRebindComparison.sourceRootManifest.sha256,
@@ -900,7 +930,7 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
   assert.equal(Buffer.byteLength(semanticContract), canonicalContractBytes);
   assert.equal(sha256(semanticContract), canonicalContractSha256);
   const normalizedTargetManifest = parsedTargetManifest;
-  normalizedTargetManifest.devDependencies['@aarusso-nyx/devai'] = '1.2.13';
+  normalizedTargetManifest.devDependencies['@aarusso-nyx/devai'] = '1.4.5';
   if (normalizedTargetManifest.version === '1.1.1') normalizedTargetManifest.version = '1.0.0';
   assert.deepEqual(JSON.parse(sourceManifest), normalizedTargetManifest);
   assert.equal(rootManifest.devDependencies['@aarusso-nyx/devai'], '1.4.5');
@@ -941,6 +971,8 @@ test('D24.33 runner validates and atomically rebinds without a package start', (
     'sourceCandidate',
     'historicalInputCandidate',
     'sourceSummary',
+    'protected-evidence-tag-rebound-v1',
+    'priorSemanticRebindComparison',
     'artifactBindingCount',
     'sourceInputProjection',
     'semanticRebindComparison',
@@ -1240,6 +1272,7 @@ function writeSyntheticMutationEvidence(sourceDirectory, policy) {
       statusTotals: aggregateTotals,
     },
     packages,
+    semanticRebindComparison: policy.candidateRebind.sourceSummary.priorSemanticRebindComparison,
   };
   writeFileSync(join(sourceDirectory, 'summary.json'), `${canonicalize(summary)}\n`, {
     mode: 0o644,

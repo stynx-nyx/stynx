@@ -97,8 +97,8 @@
   "candidateRebind": {
     "kind": "zero-mutation-candidate-rebind-v2",
     "sourceCandidate": {
-      "commit": "17ea3c42a2e129cf59739f2c8d74a885841712e2",
-      "tree": "a1f5b03d27066c27231ac9b3e8bfe9db261ac431"
+      "commit": "738b0e4564ea5c88d6947d4c3eabc8cf593325cb",
+      "tree": "23e5f6bd76e29047bae82cf05e8a776474ab35f7"
     },
     "historicalInputCandidate": {
       "commit": "6754d65f89cc9c2f23ab82f61a4b68c543f0bef4",
@@ -106,10 +106,40 @@
     },
     "sourceSummary": {
       "path": ".devai/state/check-cache/v1/artifacts/mutation/summary.json",
-      "bytes": 37796,
-      "sha256": "fa4e5a4c021bd6f73e020e8debc7f9d65adc731cab7bc05cec65198659b602ff",
+      "bytes": 37433,
+      "sha256": "6548078707306ef7d28169e34ba50ee8d324c5766f60c50fdf41a153f7800d45",
       "packageCount": 38,
-      "artifactBindingCount": 76
+      "artifactBindingCount": 76,
+      "provenance": {
+        "kind": "protected-evidence-tag-rebound-v1",
+        "tag": "devai-local-evidence/23e5f6bd76e29047bae82cf05e8a776474ab35f7",
+        "tagObject": "766b31c243c8d9a14f3c3cef883d2935e716e828",
+        "evidenceCommit": "5d07b2923a44750f8daa06d2d0b8cd847d1c99ce",
+        "evidenceTree": "dd41ab82ade66608738b442b88f26eb7cca6e989",
+        "manifestBytes": 17263,
+        "manifestSha256": "954f2e3bf369f403612657e49bc1e5d3f289e27a317293865088349965fe347e"
+      },
+      "priorSemanticRebindComparison": {
+        "kind": "root-manifest-unchanged-with-historical-input-v1",
+        "sourceRootManifest": {
+          "bytes": 10790,
+          "sha256": "cccac5d19c5b38dd2f2d4840451c7c7d1b2fbb6403451bc0c2b149f0e8f80846",
+          "gitBlobOid": "da1ed88ad64acc60996d76e150af883ece7ba944"
+        },
+        "targetRootManifest": {
+          "bytes": 10790,
+          "sha256": "cccac5d19c5b38dd2f2d4840451c7c7d1b2fbb6403451bc0c2b149f0e8f80846",
+          "gitBlobOid": "da1ed88ad64acc60996d76e150af883ece7ba944"
+        },
+        "allowedScriptTransitions": [],
+        "comparison": {
+          "rootManifest": "source-and-target-identical",
+          "historicalMutationInputTreeEntries": "match-explicit-historical-candidate-mode-type-oid",
+          "otherMutationInputTreeEntries": "identical-mode-type-oid"
+        },
+        "canonicalContractBytes": 597,
+        "canonicalContractSha256": "9df3992b0d495e5f7857dd6f1cacda8b2e5ece76085f0bd3802ffeaf830d5b83"
+      }
     },
     "sourceInputProjection": {
       "kind": "sorted-package-input-projection-digest-map-v1",
@@ -120,14 +150,14 @@
     "semanticRebindComparison": {
       "kind": "root-manifest-unchanged-with-historical-input-v1",
       "sourceRootManifest": {
-        "bytes": 10790,
-        "sha256": "cccac5d19c5b38dd2f2d4840451c7c7d1b2fbb6403451bc0c2b149f0e8f80846",
-        "gitBlobOid": "da1ed88ad64acc60996d76e150af883ece7ba944"
+        "bytes": 10789,
+        "sha256": "8b5e61616e02acdc4442248ac31f2968a86dc20b6fcbf99dd2d13183aced260a",
+        "gitBlobOid": "eb33c50ff06dbd7f6e81c534de98d7d116cfce0a"
       },
       "targetRootManifest": {
-        "bytes": 10790,
-        "sha256": "cccac5d19c5b38dd2f2d4840451c7c7d1b2fbb6403451bc0c2b149f0e8f80846",
-        "gitBlobOid": "da1ed88ad64acc60996d76e150af883ece7ba944"
+        "bytes": 10789,
+        "sha256": "8b5e61616e02acdc4442248ac31f2968a86dc20b6fcbf99dd2d13183aced260a",
+        "gitBlobOid": "eb33c50ff06dbd7f6e81c534de98d7d116cfce0a"
       },
       "allowedScriptTransitions": [],
       "comparison": {
@@ -136,7 +166,7 @@
         "otherMutationInputTreeEntries": "identical-mode-type-oid"
       },
       "canonicalContractBytes": 597,
-      "canonicalContractSha256": "9df3992b0d495e5f7857dd6f1cacda8b2e5ece76085f0bd3802ffeaf830d5b83"
+      "canonicalContractSha256": "1a7ef5b98bcfb28bd8edef4452f3203ce178cbd2c49fcb627ea3e5fcc39998b5"
     },
     "promotionVerifier": {
       "path": "scripts/verify-missing-evidence.mjs",
@@ -327,10 +357,11 @@
     },
     "semanticMutationInputTransition": {
       "kind": "exact-devai-provider-input-transition-v1",
+      "sourceDisposition": "provider-transition-already-validated-in-protected-source",
       "sourceRootManifest": {
-        "bytes": 10790,
-        "sha256": "cccac5d19c5b38dd2f2d4840451c7c7d1b2fbb6403451bc0c2b149f0e8f80846",
-        "gitBlobOid": "da1ed88ad64acc60996d76e150af883ece7ba944"
+        "bytes": 10789,
+        "sha256": "8b5e61616e02acdc4442248ac31f2968a86dc20b6fcbf99dd2d13183aced260a",
+        "gitBlobOid": "eb33c50ff06dbd7f6e81c534de98d7d116cfce0a"
       },
       "targetRootManifest": {
         "bytes": 10789,
@@ -363,9 +394,9 @@
         }
       },
       "sourceLockfile": {
-        "bytes": 959807,
-        "sha256": "2ecbe46dcd7be422bea5d1c119067fb044ef0adccbf76c984e17d3ff653fd7dd",
-        "gitBlobOid": "7926cb31a4b6605fdddc71b89e8b0e15abd2c88d"
+        "bytes": 959802,
+        "sha256": "32afdd6bdad69213129226d9e26611594dbf298536dc2d81374713682cf3d98e",
+        "gitBlobOid": "6bbb933d50649e90b4c6ba77534f890bc79fc402"
       },
       "targetLockfile": {
         "bytes": 959802,
@@ -374,32 +405,11 @@
       },
       "manifestTransition": {
         "field": "devDependencies.@aarusso-nyx/devai",
-        "from": "1.2.13",
+        "from": "1.4.5",
         "to": "1.4.5"
       },
-      "lockfileTransitions": [
-        {
-          "from": "specifier: 1.2.13",
-          "to": "specifier: 1.4.5"
-        },
-        {
-          "from": "version: 1.2.13(ws@8.21.0)(zod@3.25.76)",
-          "to": "version: 1.4.5(ws@8.21.0)(zod@3.25.76)"
-        },
-        {
-          "from": "'@aarusso-nyx/devai@1.2.13':",
-          "to": "'@aarusso-nyx/devai@1.4.5':"
-        },
-        {
-          "from": "resolution: {integrity: sha512-QM9PyGNtPRzhRBsYTiJFg6eM3OVw4/fSyAPnn1h8yHBq20GcEBrp91wxzqlvGREGkOAzezwvK3INze2OjqZV3Q==, tarball: https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.2.13/6e766187269db2e5f494786adc7c00c62acad006}",
-          "to": "resolution: {integrity: sha512-5XuNGqbiqRGx+3MJOlO9VdJoKwX5MZ9a1BxdX/APUeD/j48CgtLwf5hNyxDkujxexekNn5TGSLUmU7aki2LTeQ==, tarball: https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.4.5/1d5aa3fc8748a3ac7c2150750f60803c0b357b86}"
-        },
-        {
-          "from": "'@aarusso-nyx/devai@1.2.13(ws@8.21.0)(zod@3.25.76)':",
-          "to": "'@aarusso-nyx/devai@1.4.5(ws@8.21.0)(zod@3.25.76)':"
-        }
-      ],
-      "lockfileTransitionCount": 5,
+      "lockfileTransitions": [],
+      "lockfileTransitionCount": 0,
       "otherMutationInputTreeEntries": "identical-mode-type-oid"
     },
     "governanceRunnerTransition": {
@@ -408,14 +418,14 @@
       "packageExecutionPathChanged": false,
       "requiredDirectInvocationSentinel": "candidate rebind package start is forbidden",
       "source": {
-        "bytes": 66676,
-        "sha256": "54f7c7b12aed4256ec8c30b6e505b5d0cee08e14a1adb56f381ee8c303d82181",
-        "gitBlobOid": "aba7506fada7efed5c06486bf13d997bf2756659"
+        "bytes": 73117,
+        "sha256": "1fb78fb13b3b6e809f61bbb7440df761d5e3b74c2dbd63ac013c73430448881b",
+        "gitBlobOid": "2dc4d90d7de03e1c46b80bc0350b8e75a95a51fb"
       },
       "target": {
-        "bytes": 77308,
-        "sha256": "8a203247200338baa35011cca024aafb5b789f4a53aad19d16d82970a915f9ae",
-        "gitBlobOid": "83c7ff49565aad24826c873724e4f2515f1d416d"
+        "bytes": 79259,
+        "sha256": "33f4b45b8ae5a50f877e2c53b1f3e953f48df7ac8fab58f2412c7465979b381f",
+        "gitBlobOid": "fa1211ef408c4173e81c31ce611dd9d1f23eaf8c"
       }
     },
     "releaseContextPolicyDigestTransition": {
