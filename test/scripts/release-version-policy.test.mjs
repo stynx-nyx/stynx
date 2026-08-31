@@ -933,7 +933,6 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
   assert.equal(sha256(semanticContract), canonicalContractSha256);
   const normalizedTargetManifest = parsedTargetManifest;
   normalizedTargetManifest.devDependencies['@aarusso-nyx/devai'] = '1.4.5';
-  if (normalizedTargetManifest.version === '1.1.1') normalizedTargetManifest.version = '1.0.0';
   assert.deepEqual(JSON.parse(sourceManifest), normalizedTargetManifest);
   assert.equal(rootManifest.devDependencies['@aarusso-nyx/devai'], '1.4.5');
   assert.deepEqual(policy.devai145Adoption.mutationInputProjection, {
@@ -984,6 +983,7 @@ test('D24.33 runner validates and atomically rebinds without a package start', (
     'targetLockfile',
     'manifestTransition',
     'versionRebaselineTarget',
+    'sourceAlreadyAtVersionTarget',
     'versionChangedPaths',
     'lockfileTransitionCount',
     'governanceRunnerTransition',
