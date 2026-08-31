@@ -847,6 +847,12 @@
       "commit": "b8bf6cc432a9e6f1ec230c661fd55fc6bea43683",
       "authorized_by": "Owner",
       "reason": "Authorizes at tree 97fba35cf146886262759650af8648c84b55c6a4 only the INV-COVERAGE-001 scope alignment to the six Owner-authored operational package use cases. Gate severity, human approval, deterministic verification, existing endpoint and route claims, tests, thresholds, and all other invariants remain unchanged."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "ec203051c41f07b33cfe0bf116ca7de40814b8f1",
+      "authorized_by": "Owner",
+      "reason": "Authorizes at tree c0708d392b10d614618b00196df10ec504667079 only the six Owner-authored operational package use cases requested for STYNX 1.1.2 coverage closure. INV-COVERAGE-001 remains a gate; existing claims, tests, thresholds, release controls, publication authority, deprecation, visibility, and repository-settings boundaries remain unchanged."
     }
   ]
 }
