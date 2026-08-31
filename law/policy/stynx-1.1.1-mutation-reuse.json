@@ -80,8 +80,8 @@
     "packages/preferences/vitest.config.ts",
     "packages/ratelimit/vitest.config.ts",
     "reference/api/Dockerfile",
-    "scripts/list-ddl-objects.spec.mjs",
     "scripts/devai-local-rc.mjs",
+    "scripts/list-ddl-objects.spec.mjs",
     "scripts/run-mutation-evidence.mjs",
     "test/scripts/devai-local-rc-verifier.test.mjs",
     "test/scripts/local-rc-blocker-contract.test.mjs",
@@ -348,6 +348,28 @@
         "from": "1.2.13",
         "to": "1.4.5"
       },
+      "lockfileTransitions": [
+        {
+          "from": "specifier: 1.2.13",
+          "to": "specifier: 1.4.5"
+        },
+        {
+          "from": "version: 1.2.13(ws@8.21.0)(zod@3.25.76)",
+          "to": "version: 1.4.5(ws@8.21.0)(zod@3.25.76)"
+        },
+        {
+          "from": "'@aarusso-nyx/devai@1.2.13':",
+          "to": "'@aarusso-nyx/devai@1.4.5':"
+        },
+        {
+          "from": "resolution: {integrity: sha512-QM9PyGNtPRzhRBsYTiJFg6eM3OVw4/fSyAPnn1h8yHBq20GcEBrp91wxzqlvGREGkOAzezwvK3INze2OjqZV3Q==, tarball: https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.2.13/6e766187269db2e5f494786adc7c00c62acad006}",
+          "to": "resolution: {integrity: sha512-5XuNGqbiqRGx+3MJOlO9VdJoKwX5MZ9a1BxdX/APUeD/j48CgtLwf5hNyxDkujxexekNn5TGSLUmU7aki2LTeQ==, tarball: https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.4.5/1d5aa3fc8748a3ac7c2150750f60803c0b357b86}"
+        },
+        {
+          "from": "'@aarusso-nyx/devai@1.2.13(ws@8.21.0)(zod@3.25.76)':",
+          "to": "'@aarusso-nyx/devai@1.4.5(ws@8.21.0)(zod@3.25.76)':"
+        }
+      ],
       "lockfileTransitionCount": 5,
       "otherMutationInputTreeEntries": "identical-mode-type-oid"
     },
@@ -355,7 +377,17 @@
       "path": "scripts/run-mutation-evidence.mjs",
       "scope": "zero-execution-candidate-rebind-validation-only",
       "packageExecutionPathChanged": false,
-      "requiredDirectInvocationSentinel": "candidate rebind package start is forbidden"
+      "requiredDirectInvocationSentinel": "candidate rebind package start is forbidden",
+      "source": {
+        "bytes": 66676,
+        "sha256": "54f7c7b12aed4256ec8c30b6e505b5d0cee08e14a1adb56f381ee8c303d82181",
+        "gitBlobOid": "aba7506fada7efed5c06486bf13d997bf2756659"
+      },
+      "target": {
+        "bytes": 73117,
+        "sha256": "1fb78fb13b3b6e809f61bbb7440df761d5e3b74c2dbd63ac013c73430448881b",
+        "gitBlobOid": "2dc4d90d7de03e1c46b80bc0350b8e75a95a51fb"
+      }
     },
     "mutationInputProjection": {
       "rosterCount": 38,
