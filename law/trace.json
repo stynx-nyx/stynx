@@ -3709,10 +3709,10 @@
     {
       "path": "test/scripts/release-version-policy.test.mjs",
       "suite": "unit",
-      "invariant_ids": ["INV-CORE-001"],
+      "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001"],
       "lifecycle": "supported",
-      "assertion_count": 226,
-      "assertion_digest_sha256": "28644c9d621d3f77ca7d75e307b80c162d0e88ce586d81c07a3abc0af4762897"
+      "assertion_count": 237,
+      "assertion_digest_sha256": "462be464460b0af2d50be8285cd52b6860fdd5e023e6c8e2e37ea2674e8b806a"
     }
   ],
   "suites": {
