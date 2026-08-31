@@ -3693,7 +3693,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 955,
-      "assertion_digest_sha256": "093d197d9b29c21c0683beb548e0545665517b0a589e6ec5bb793be3dbfbd8b5"
+      "assertion_digest_sha256": "cb7967d087e1fb0502f1909eac8a78450525d21d6c27f03bc5d4b18347ed2a76"
     },
     {
       "path": "test/scripts/release-version-policy.test.mjs",
@@ -3701,7 +3701,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 225,
-      "assertion_digest_sha256": "ba4142c1f9d336238ae1a598f260b96395e39c2e4736aa92d0fa03e683bd2c59"
+      "assertion_digest_sha256": "c30ee52df282d1104b1195c1db98e7b15b585b04ada7862cd8b09a1a0e7fb69c"
     }
   ],
   "suites": {

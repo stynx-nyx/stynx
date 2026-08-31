@@ -9,7 +9,15 @@ const allowlist = new Set(
     (entry) => `${entry.file}:${entry.label}`,
   ),
 );
-const excludedDirs = new Set(['.git', '.turbo', 'coverage', 'dist', 'node_modules', 'tmp']);
+const excludedDirs = new Set([
+  '.devai',
+  '.git',
+  '.turbo',
+  'coverage',
+  'dist',
+  'node_modules',
+  'tmp',
+]);
 const excludedFiles = new Set(['pnpm-lock.yaml', 'sbom.cdx.json']);
 const textExtensions = new Set([
   '.cjs',

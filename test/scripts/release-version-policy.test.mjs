@@ -869,6 +869,7 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
     'scripts/list-ddl-objects.spec.mjs',
     'scripts/run-mutation-evidence.mjs',
     'scripts/run-release-preparation.mjs',
+    'scripts/verify-secret-scan.mjs',
     'test/scripts/devai-local-rc-verifier.test.mjs',
     'test/scripts/local-rc-blocker-contract.test.mjs',
     'test/scripts/release-version-policy.test.mjs',
