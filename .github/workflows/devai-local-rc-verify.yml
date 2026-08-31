@@ -16,7 +16,6 @@ concurrency:
 
 permissions:
   contents: read
-  packages: read
   checks: write
 
 env:
@@ -44,144 +43,19 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
+      - name: Check out pinned independent verifier
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: devai-nyx/devai-verifier
+          ref: 5f71d43a3d55b07fe866ea2df139dfaacc84f7db
+          path: .devai-verifier
+          fetch-depth: 1
+          persist-credentials: false
+
       - name: Set up verifier runtime
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
-
-      - name: Materialize protected DEVAI verifier package
-        id: verifier-package
-        shell: bash
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.PACKAGES_READ_TOKEN }}
-          VERIFIER_PROVENANCE_SHA256: ${{ vars.DEVAI_LEDGER_VERIFIER_PROVENANCE_SHA256 }}
-        run: |
-          set -euo pipefail
-          test -n "$NODE_AUTH_TOKEN"
-          test "$VERIFIER_PROVENANCE_SHA256" != ""
-          test "${#VERIFIER_PROVENANCE_SHA256}" = 64
-          control="$RUNNER_TEMP/devai-verifier-package"
-          rm -rf "$control"
-          mkdir -p "$control/download" "$control/extracted"
-          metadata="$control/download/metadata.json"
-          archive="$control/download/package.tgz"
-          auth_header="Authorization: Bearer $NODE_AUTH_TOKEN"
-          curl --fail-with-body --silent --show-error --location             --header "$auth_header"             --output "$metadata"             "https://npm.pkg.github.com/@aarusso-nyx%2Fdevai"
-          node - "$metadata" <<'NODE'
-          const { readFileSync } = require('node:fs');
-          const metadata = JSON.parse(readFileSync(process.argv[2], 'utf8'));
-          const selected = metadata.versions?.['1.4.4'];
-          if (metadata.name !== '@aarusso-nyx/devai') throw new Error('DEVAI_VERIFIER_PACKAGE_NAME_INVALID');
-          if (selected?.version !== '1.4.4') throw new Error('DEVAI_VERIFIER_PACKAGE_VERSION_INVALID');
-          if (selected.dist?.tarball !== 'https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.4.4/fcdf9a21f92094fce10d4cee42440abf44200467') throw new Error('DEVAI_VERIFIER_PACKAGE_TARBALL_URL_INVALID');
-          if (selected.dist?.shasum !== 'fcdf9a21f92094fce10d4cee42440abf44200467') throw new Error('DEVAI_VERIFIER_PACKAGE_SHASUM_INVALID');
-          if (selected.dist?.integrity !== 'sha512-B1AJzDAZNw+UM1m7bQjwHT9q0gO3cutNpGPRAXFEBtq3L6AZymI6RvLc4ghh05ssOoREynXKuJyjsayRJbWPEQ==') throw new Error('DEVAI_VERIFIER_PACKAGE_INTEGRITY_INVALID');
-          NODE
-          curl --fail-with-body --silent --show-error --location             --header "$auth_header"             --output "$archive"             "https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.4.4/fcdf9a21f92094fce10d4cee42440abf44200467"
-          node - "$archive" <<'NODE'
-          const { createHash } = require('node:crypto');
-          const { readFileSync } = require('node:fs');
-          const bytes = readFileSync(process.argv[2]);
-          if (createHash('sha1').update(bytes).digest('hex') !== 'fcdf9a21f92094fce10d4cee42440abf44200467') throw new Error('DEVAI_VERIFIER_PACKAGE_SHASUM_INVALID');
-          if ('sha512-' + createHash('sha512').update(bytes).digest('base64') !== 'sha512-B1AJzDAZNw+UM1m7bQjwHT9q0gO3cutNpGPRAXFEBtq3L6AZymI6RvLc4ghh05ssOoREynXKuJyjsayRJbWPEQ==') throw new Error('DEVAI_VERIFIER_PACKAGE_INTEGRITY_INVALID');
-          NODE
-          release_ref="$control/download/release-ref.json"
-          release_tag="$control/download/release-tag.json"
-          release_commit="$control/download/release-commit.json"
-          curl --fail-with-body --silent --show-error             --header "$auth_header"             --header "Accept: application/vnd.github+json"             --output "$release_ref"             "https://api.github.com/repos/aarusso-nyx/devai/git/ref/tags/v1.4.4"
-          tag_url="$(node -e 'const x=require(process.argv[1]); if(x.object?.type!=="tag"||typeof x.object?.url!=="string") process.exit(1); process.stdout.write(x.object.url)' "$release_ref")"
-          curl --fail-with-body --silent --show-error             --header "$auth_header"             --header "Accept: application/vnd.github+json"             --output "$release_tag" "$tag_url"
-          commit_url="$(node -e 'const x=require(process.argv[1]); if(x.object?.type!=="commit"||typeof x.object?.url!=="string") process.exit(1); process.stdout.write(x.object.url)' "$release_tag")"
-          curl --fail-with-body --silent --show-error             --header "$auth_header"             --header "Accept: application/vnd.github+json"             --output "$release_commit" "$commit_url"
-          node - "$release_tag" "$release_commit" <<'NODE'
-          const { readFileSync } = require('node:fs');
-          const tag = JSON.parse(readFileSync(process.argv[2], 'utf8'));
-          const commit = JSON.parse(readFileSync(process.argv[3], 'utf8'));
-          if (tag.object?.sha !== '3aec624d0c0aecc534e60ee45306a4e5e6a7e94d' || commit.sha !== '3aec624d0c0aecc534e60ee45306a4e5e6a7e94d') throw new Error('DEVAI_VERIFIER_PACKAGE_RELEASE_COMMIT_INVALID');
-          if (commit.tree?.sha !== '2cad519aba8117a1850eee85d41eae452d51a141') throw new Error('DEVAI_VERIFIER_PACKAGE_RELEASE_TREE_INVALID');
-          NODE
-          node - "$archive" <<'NODE'
-          const { readFileSync } = require('node:fs');
-          const { gunzipSync } = require('node:zlib');
-          const archive = gunzipSync(readFileSync(process.argv[2]));
-          const text = (buffer) => buffer.toString('utf8').replace(/\0.*$/su, '');
-          const octal = (buffer) => Number.parseInt(text(buffer).trim() || '0', 8);
-          for (let offset = 0; offset + 512 <= archive.length;) {
-            const header = archive.subarray(offset, offset + 512);
-            if (header.every((byte) => byte === 0)) break;
-            const name = [text(header.subarray(345, 500)), text(header.subarray(0, 100))].filter(Boolean).join('/');
-            const type = String.fromCharCode(header[156] ?? 0);
-            if (name.startsWith('/') || /^[A-Za-z]:/u.test(name)) throw new Error('DEVAI_VERIFIER_ARCHIVE_ABSOLUTE_PATH_INVALID:' + name);
-            if (name.includes('\\') || name.split('/').includes('..')) throw new Error('DEVAI_VERIFIER_ARCHIVE_PATH_TRAVERSAL_INVALID:' + name);
-            if (!(name === 'package' || name.startsWith('package/'))) throw new Error('DEVAI_VERIFIER_ARCHIVE_PATH_TRAVERSAL_INVALID:' + name);
-            if (type === '2') throw new Error('DEVAI_VERIFIER_ARCHIVE_SYMLINK_INVALID:' + name);
-            if (type === '1') throw new Error('DEVAI_VERIFIER_ARCHIVE_HARDLINK_INVALID:' + name);
-            if (!(type === '\0' || type === '0' || type === '5')) throw new Error('DEVAI_VERIFIER_ARCHIVE_SPECIAL_FILE_INVALID:' + name);
-            const size = octal(header.subarray(124, 136));
-            if (!Number.isSafeInteger(size) || size < 0) throw new Error('DEVAI_VERIFIER_ARCHIVE_SPECIAL_FILE_INVALID:' + name);
-            offset += 512 + Math.ceil(size / 512) * 512;
-          }
-          NODE
-          tar -xzf "$archive" --directory "$control/extracted" --no-same-owner --no-same-permissions
-          package_root="$control/extracted/package"
-          verifier_root="$package_root/dist/runtime/evidence-verification"
-          provenance="$verifier_root/provenance.json"
-          actual_provenance_sha256="$(sha256sum "$provenance" | cut -d' ' -f1)"
-          test "$actual_provenance_sha256" = "8ebafff53524031a3207a2256ebcd0fa6e0cc4271fd4bb6bca5aa003395034bd"
-          test "$actual_provenance_sha256" = "$VERIFIER_PROVENANCE_SHA256"
-          node - "$package_root" "$verifier_root" <<'NODE'
-          const { createHash } = require('node:crypto');
-          const { lstatSync, readFileSync, readdirSync } = require('node:fs');
-          const { join, relative } = require('node:path');
-          const [packageRoot, verifierRoot] = process.argv.slice(2);
-          const expectedBins = {"devai-evidence-policy":"./dist/runtime/evidence-verification/src/build-policy-cli.js","devai-evidence-verify":"./dist/runtime/evidence-verification/src/cli.js","devai-evidence-bundle-verify":"./dist/runtime/evidence-verification/src/bundle-cli.js","devai-evidence-export":"./dist/runtime/evidence-verification/src/export-cli.js","devai-evidence-publish":"./dist/runtime/evidence-verification/src/publish-cli.js"};
-          const manifest = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'));
-          if (manifest.name !== '@aarusso-nyx/devai') throw new Error('DEVAI_VERIFIER_PACKAGE_NAME_INVALID');
-          if (manifest.version !== '1.4.4') throw new Error('DEVAI_VERIFIER_PACKAGE_VERSION_INVALID');
-          const evidenceBins = Object.fromEntries(Object.entries(manifest.bin ?? {}).filter(([name]) => name.startsWith('devai-evidence-')));
-          if (JSON.stringify(evidenceBins) !== JSON.stringify(expectedBins)) throw new Error('DEVAI_VERIFIER_PACKAGE_BIN_INVALID:population');
-          for (const [name, path] of Object.entries(expectedBins)) {
-            if (manifest.bin?.[name] !== path) throw new Error('DEVAI_VERIFIER_PACKAGE_BIN_INVALID:' + name);
-          }
-          const provenancePath = join(verifierRoot, 'provenance.json');
-          const provenance = JSON.parse(readFileSync(provenancePath, 'utf8'));
-          if (provenance.schemaVersion !== '1.0.0' || provenance.sourceCommit !== '37e75a5c27569d4cb3fdb4a3dc97a140da4d78de') {
-            throw new Error('DEVAI_VERIFIER_PACKAGE_PROVENANCE_INVALID');
-          }
-          if (!Array.isArray(provenance.files) || provenance.files.length !== 21) {
-            throw new Error('DEVAI_VERIFIER_PACKAGE_POPULATION_INVALID');
-          }
-          const listed = new Map(provenance.files.map((entry) => [entry.path, entry.sha256]));
-          const walk = (root, directory = root) => readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-            const path = join(directory, entry.name);
-            const stat = lstatSync(path);
-            if (stat.isSymbolicLink()) {
-              throw new Error('DEVAI_VERIFIER_PACKAGE_SYMLINK_INVALID:' + relative(root, path));
-            }
-            if (!stat.isDirectory() && !stat.isFile()) {
-              throw new Error('DEVAI_VERIFIER_PACKAGE_SPECIAL_FILE_INVALID:' + relative(root, path));
-            }
-            return stat.isDirectory() ? walk(root, path) : [relative(root, path).replaceAll('\\', '/')];
-          });
-          const actual = walk(verifierRoot).filter((path) => path !== 'provenance.json').sort();
-          const expected = [...listed.keys()].sort();
-          const missing = expected.filter((path) => !actual.includes(path));
-          const extra = actual.filter((path) => !listed.has(path));
-          if (missing.length > 0) throw new Error('DEVAI_VERIFIER_PACKAGE_FILE_MISSING:' + missing.join(','));
-          if (extra.length > 0) throw new Error('DEVAI_VERIFIER_PACKAGE_FILE_EXTRA:' + extra.join(','));
-          for (const [path, expected] of listed) {
-            const file = join(verifierRoot, path);
-            const actualDigest = createHash('sha256').update(readFileSync(file)).digest('hex');
-            if (actualDigest !== expected) throw new Error('DEVAI_VERIFIER_PACKAGE_FILE_DIGEST_INVALID:' + path);
-          }
-          NODE
-          {
-            echo "DEVAI_EVIDENCE_POLICY=$verifier_root/src/build-policy-cli.js"
-            echo "DEVAI_EVIDENCE_VERIFY=$verifier_root/src/cli.js"
-            echo "DEVAI_EVIDENCE_BUNDLE_VERIFY=$verifier_root/src/bundle-cli.js"
-          } >> "$GITHUB_ENV"
-          echo "version=1.4.4" >> "$GITHUB_OUTPUT"
-          echo "provenance_sha256=$actual_provenance_sha256" >> "$GITHUB_OUTPUT"
 
       - name: Bind candidate and protected evidence tag
         id: identity
@@ -231,7 +105,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/devai-local-rc"
-          node "$DEVAI_EVIDENCE_POLICY" \
+          node .devai-verifier/src/build-policy-cli.js \
             --repo candidate \
             --descriptor control/test-tasks.json \
             --profile rc \
@@ -252,7 +126,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node "$DEVAI_EVIDENCE_BUNDLE_VERIFY" \
+          node .devai-verifier/src/bundle-cli.js \
             --bundle "$RUNNER_TEMP/devai-local-rc/evidence-bundle" \
             --trust control/law/policy/devai-local-rc-trust-store.json \
             --repository "$GITHUB_REPOSITORY" \
