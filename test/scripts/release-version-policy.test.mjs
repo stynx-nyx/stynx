@@ -852,10 +852,13 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
   );
   const targetManifest = repositorySource('package.json');
   assert.equal(Buffer.byteLength(targetManifest), 10_789);
-  assert.equal(
-    sha256(targetManifest),
-    policy.devai145Adoption.semanticMutationInputTransition.targetRootManifest.sha256,
-  );
+  const parsedTargetManifest = JSON.parse(targetManifest);
+  const expectedTargetIdentity =
+    parsedTargetManifest.version === '1.1.1'
+      ? policy.devai145Adoption.semanticMutationInputTransition.versionRebaselineTarget
+          .targetRootManifest
+      : policy.devai145Adoption.semanticMutationInputTransition.targetRootManifest;
+  assert.equal(sha256(targetManifest), expectedTargetIdentity.sha256);
   assert.deepEqual(
     policy.devai145Adoption.semanticMutationInputTransition.versionRebaselineTarget,
     {
@@ -891,8 +894,9 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
   });
   assert.equal(Buffer.byteLength(semanticContract), canonicalContractBytes);
   assert.equal(sha256(semanticContract), canonicalContractSha256);
-  const normalizedTargetManifest = JSON.parse(targetManifest);
+  const normalizedTargetManifest = parsedTargetManifest;
   normalizedTargetManifest.devDependencies['@aarusso-nyx/devai'] = '1.2.13';
+  if (normalizedTargetManifest.version === '1.1.1') normalizedTargetManifest.version = '1.0.0';
   assert.deepEqual(JSON.parse(sourceManifest), normalizedTargetManifest);
   assert.equal(rootManifest.devDependencies['@aarusso-nyx/devai'], '1.4.5');
   assert.deepEqual(policy.devai145Adoption.mutationInputProjection, {
