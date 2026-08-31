@@ -53,6 +53,7 @@
   "allowedChangedPaths": [
     ".github/workflows/ci.yml",
     "law/adr/2026-08-24-stynx-1.1.1-campaign-controls.md",
+    "law/policy/forbidden-action-authorizations.json",
     "law/policy/stynx-1.1.1-mutation-reuse.json",
     "law/trace.json",
     "package.json",
@@ -251,6 +252,38 @@
       "rosterCount": 38,
       "selectedPackageCount": 0,
       "disposition": "both-paths-absent-from-every-package-projection"
+    },
+    "mutationSubprocesses": 0,
+    "packageStarts": 0,
+    "mismatchDisposition": "fail-before-package-start"
+  },
+  "authorizationReceiptPortabilityCorrection": {
+    "kind": "non-mutation-input-governance-receipt-portability-v1",
+    "architectAnchor": {
+      "commit": "7021710f28befef934f54fec205e9d72387bba0a",
+      "tree": "162a045a2b0f780e0f91f612d4e78926dd80ec4b"
+    },
+    "receipt": {
+      "path": "law/policy/forbidden-action-authorizations.json",
+      "forbiddenId": "FORBID-CI-WITHOUT-ADR",
+      "authorizedCommit": "b86188c19b11f4bd933ee3629ab3237aa90bad9e",
+      "disposition": "exact-d24-40-owner-authorized-governance-receipt"
+    },
+    "sensor": {
+      "path": "test/scripts/release-version-policy.test.mjs",
+      "transition": "ordered-allowed-changed-path-projection-only",
+      "testCount": 35,
+      "minimumAssertionCount": 214,
+      "mismatchCases": "preserved-exact",
+      "atomicPublicationFailurePhases": 2,
+      "packageCount": 38,
+      "artifactBindingCount": 76,
+      "mutationPackageStarts": 0
+    },
+    "mutationInputProjection": {
+      "rosterCount": 38,
+      "selectedPackageCount": 0,
+      "disposition": "receipt-and-sensor-paths-absent-from-every-package-projection"
     },
     "mutationSubprocesses": 0,
     "packageStarts": 0,
