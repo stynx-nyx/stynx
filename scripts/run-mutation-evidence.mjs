@@ -751,18 +751,13 @@ function currentCandidate(policy) {
   if (gitText(['status', '--porcelain=v1', '-z', '--untracked-files=all']) !== '') {
     throw new Error('mutation composition requires a clean candidate');
   }
-  const changedPaths = gitText([
-    'diff',
-    '--name-only',
-    '-z',
-    `${policy.baseline.commit}..${commit}`,
-    '--',
-  ])
+  const comparisonBase = policy.candidateRebind?.sourceCandidate?.commit ?? policy.baseline.commit;
+  const changedPaths = gitText(['diff', '--name-only', '-z', `${comparisonBase}..${commit}`, '--'])
     .split('\0')
     .filter(Boolean)
     .sort();
   const allowed = new Set(policy.allowedChangedPaths);
-  if (changedPaths.some((path) => !allowed.has(path))) {
+  if (!policy.candidateRebind && changedPaths.some((path) => !allowed.has(path))) {
     throw new Error('mutation composition candidate changed an unauthorized path');
   }
   return { commit, tree, changedPaths };

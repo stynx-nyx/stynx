@@ -1018,6 +1018,15 @@ test('D24.33 runner validates and atomically rebinds without a package start', (
 
 test('D24.33 direct candidate rebind rejects missing or drifted source before fallback', () => {
   const runner = stripJavaScriptComments(repositorySource('scripts/run-mutation-evidence.mjs'));
+  assert.match(
+    runner,
+    /const comparisonBase = policy\.candidateRebind\?\.sourceCandidate\?\.commit \?\? policy\.baseline\.commit/u,
+  );
+  assert.match(
+    runner,
+    /!policy\.candidateRebind && changedPaths\.some/u,
+    'the strict rebind validator must own chained changed-path validation',
+  );
   const directStart = runner.indexOf('if (isDirectInvocation) {');
   const rebindStart = runner.indexOf('if (policy.candidateRebind) {', directStart);
   const fallbackStart = runner.indexOf('validateCheapGateMarker(candidate)', rebindStart);
