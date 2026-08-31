@@ -7,7 +7,7 @@
     "node": ">=24 <25"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "node ../../scripts/verify-reference-api-build-inputs.mjs && tsc -p tsconfig.json",
     "clean": "rm -rf dist coverage",
     "smoke:local": "bash scripts/smoke-local.sh",
     "start": "node dist/reference/api/src/main.js",

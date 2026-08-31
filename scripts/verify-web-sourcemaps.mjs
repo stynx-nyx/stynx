@@ -7,7 +7,11 @@ import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const currentDir = dirname(fileURLToPath(import.meta.url));
-const repoRoot = resolve(currentDir, '..');
+const repoRootArgument = process.argv.indexOf('--repo-root');
+const repoRoot =
+  repoRootArgument === -1
+    ? resolve(currentDir, '..')
+    : resolve(process.argv[repoRootArgument + 1] ?? '');
 const angularTsconfigPath = resolve(repoRoot, 'tools/tsconfig/angular18.json');
 const localNpmDir = resolve(repoRoot, '.release/local-npm');
 const failures = [];
@@ -24,6 +28,10 @@ function walk(dir, predicate) {
     if (entry.isDirectory()) return walk(path, predicate);
     return predicate(path) ? [path] : [];
   });
+}
+
+function isJavaScriptSourceMap(path) {
+  return path.endsWith('.js.map') || path.endsWith('.mjs.map');
 }
 
 function hasSourcesContent(map) {
@@ -50,7 +58,7 @@ function validateMap(mapPath, sourceRoot) {
 }
 
 function validateDistMaps() {
-  const mapFiles = walk(resolve(repoRoot, 'packages-web'), (path) => path.endsWith('.js.map'));
+  const mapFiles = walk(resolve(repoRoot, 'packages-web'), isJavaScriptSourceMap);
   for (const mapPath of mapFiles) {
     validateMap(mapPath, repoRoot);
   }
@@ -67,7 +75,7 @@ function validateTarballMaps() {
     try {
       execFileSync('tar', ['-xzf', tarball, '-C', tempDir], { stdio: 'ignore' });
       const packageRoot = resolve(tempDir, 'package');
-      const mapFiles = walk(packageRoot, (path) => path.endsWith('.js.map'));
+      const mapFiles = walk(packageRoot, isJavaScriptSourceMap);
       for (const mapPath of mapFiles) {
         const map = readJson(mapPath);
         checkedMaps += 1;
@@ -90,6 +98,10 @@ if (angularTsconfig.compilerOptions?.inlineSources !== true) {
 
 validateDistMaps();
 validateTarballMaps();
+
+if (checkedMaps === 0) {
+  failures.push('SOURCEMAP_POPULATION_EMPTY: no expected Angular source maps were found');
+}
 
 if (failures.length > 0) {
   console.error('[web-sourcemaps] failed checks:');

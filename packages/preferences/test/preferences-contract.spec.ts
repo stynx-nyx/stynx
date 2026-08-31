@@ -3,6 +3,7 @@ import { RequestContext } from '@stynx-nyx/core';
 import { PreferencesController } from '../src/preferences.controller';
 import { PreferencesError } from '../src/errors';
 import { InMemoryPreferencesStore } from '../src/in-memory-preferences.store';
+import { PostgresPreferencesStore } from '../src/postgres-preferences.store';
 import { PLATFORM_PREFERENCE_DEFAULTS } from '../src/schema';
 import { PreferencesService } from '../src/preferences.service';
 import type { PreferenceValues, PreferencesAuditEvent, PreferencesStore } from '../src/types';
@@ -448,5 +449,201 @@ describe('@stynx-nyx/preferences W04 closed contract', () => {
       code: 'PREFERENCES_TOO_LARGE',
       message: 'PREFERENCES_TOO_LARGE',
     });
+  });
+
+  it('routes every controller operation through trusted scope, strong revision, and ETag', async () => {
+    const profile = {
+      subjectId: 'subject-1',
+      displayName: null,
+      avatarDocumentId: null,
+      avatarUrl: null,
+      preferences: { values: PLATFORM_PREFERENCE_DEFAULTS, revision: 7, updatedAt: null },
+      revision: 7,
+      updatedAt: null,
+    };
+    const preferences = {
+      values: PLATFORM_PREFERENCE_DEFAULTS,
+      revision: 7,
+      updatedAt: null,
+    };
+    const service = {
+      getProfile: vi.fn(async () => profile),
+      patchProfile: vi.fn(async () => profile),
+      getPreferences: vi.fn(async () => preferences),
+      putPreferences: vi.fn(async () => preferences),
+      patchPreferences: vi.fn(async () => preferences),
+      reset: vi.fn(async () => preferences),
+    };
+    const controller = new PreferencesController(service as never);
+    const response = { setHeader: vi.fn() };
+    const request = { tenantId: tenantA, stynxClaims: { sub: 'subject-1' } };
+
+    await expect(controller.profile({}, response, request)).resolves.toBe(profile);
+    await expect(
+      controller.patchProfile({ displayName: 'Ada' }, {}, '"7"', response, request),
+    ).resolves.toBe(profile);
+    await expect(controller.get({}, response, request)).resolves.toBe(preferences);
+    await expect(controller.put(changed, {}, '"7"', response, request)).resolves.toBe(preferences);
+    await expect(
+      controller.patch({ theme: { density: 'compact' } }, {}, '"7"', response, request),
+    ).resolves.toBe(preferences);
+    await expect(controller.reset({}, '"7"', response, request)).resolves.toBe(preferences);
+    await expect(controller.resetCategory('theme', {}, '"7"', response, request)).resolves.toBe(
+      preferences,
+    );
+
+    const scope = { tenantId: tenantA, subjectId: 'subject-1' };
+    expect(service.getProfile).toHaveBeenCalledWith(scope);
+    expect(service.patchProfile).toHaveBeenCalledWith({ displayName: 'Ada' }, 7, scope);
+    expect(service.getPreferences).toHaveBeenCalledWith(scope);
+    expect(service.putPreferences).toHaveBeenCalledWith(changed, 7, scope);
+    expect(service.patchPreferences).toHaveBeenCalledWith(
+      { theme: { density: 'compact' } },
+      7,
+      scope,
+    );
+    expect(service.reset).toHaveBeenNthCalledWith(1, null, 7, scope);
+    expect(service.reset).toHaveBeenNthCalledWith(2, 'theme', 7, scope);
+    expect(response.setHeader).toHaveBeenCalledTimes(7);
+    expect(response.setHeader).toHaveBeenLastCalledWith('ETag', '"7"');
+  });
+
+  it('accepts each trusted controller subject source and rejects incomplete scope or unsafe tags', async () => {
+    const service = {
+      getPreferences: vi.fn(async () => ({
+        values: PLATFORM_PREFERENCE_DEFAULTS,
+        revision: 0,
+        updatedAt: null,
+      })),
+    };
+    const controller = new PreferencesController(service as never);
+    const response = { setHeader: vi.fn() };
+    const requests = [
+      { tenantId: tenantA, principal: { id: 'principal-1' } },
+      { tenantId: tenantA, actor: { id: 'actor-1' } },
+      { tenantId: tenantA, user: { id: 'user-1' } },
+      { stynxClaims: { sub: 'claims-1', tenantId: tenantA } },
+    ];
+    for (const request of requests) await controller.get({}, response, request);
+    expect(service.getPreferences.mock.calls.map(([scope]) => scope)).toEqual([
+      { tenantId: tenantA, subjectId: 'principal-1' },
+      { tenantId: tenantA, subjectId: 'actor-1' },
+      { tenantId: tenantA, subjectId: 'user-1' },
+      { tenantId: tenantA, subjectId: 'claims-1' },
+    ]);
+
+    for (const [request, code] of [
+      [{ tenantId: tenantA }, 'PREFERENCES_UNAUTHENTICATED'],
+      [{ user: { id: 'subject-1' } }, 'PREFERENCES_FORBIDDEN'],
+      [{ tenantId: tenantA, user: { id: 'x'.repeat(256) } }, 'PREFERENCES_INVALID'],
+    ] as const) {
+      await expect(controller.get({}, response, request)).rejects.toSatisfy(
+        (error: unknown) => errorCode(error) === code,
+      );
+    }
+    await expect(
+      controller.reset({}, '"9007199254740992"', response, requests[0]),
+    ).rejects.toSatisfy((error: unknown) => errorCode(error) === 'PREFERENCES_REVISION_CONFLICT');
+  });
+
+  it('maps Postgres reads and compare-and-set insert, update, and conflict results', async () => {
+    const scope = { tenantId: tenantA, subjectId: 'subject-1' };
+    const row = {
+      tenant_id: tenantA,
+      subject_id: 'subject-1',
+      display_name: 'Ada',
+      avatar_document_id: 'avatar-1',
+      preference_overrides: { theme: { colorScheme: 'dark' as const } },
+      revision: '3',
+      created_at: '2026-08-30T00:00:00.000Z',
+      updated_at: new Date('2026-08-30T01:00:00.000Z'),
+    };
+    const returnedRows = [[row], [], [row], [row], []];
+    const query = vi.fn(async () => ({ rows: returnedRows.shift() ?? [] }));
+    const tx = vi.fn(async (operation: (trx: { query: typeof query }) => unknown) =>
+      operation({ query }),
+    );
+    const withRequestContext = vi.fn(async (_context, operation: () => unknown) => operation());
+    const database = { tx, withRequestContext };
+    const get = vi.fn(() => database);
+    const store = new PostgresPreferencesStore({ get } as never);
+
+    await expect(store.read(scope)).resolves.toEqual({
+      scope,
+      displayName: 'Ada',
+      avatarDocumentId: 'avatar-1',
+      overrides: { theme: { colorScheme: 'dark' } },
+      revision: 3,
+      createdAt: '2026-08-30T00:00:00.000Z',
+      updatedAt: '2026-08-30T01:00:00.000Z',
+    });
+    await expect(store.read(scope)).resolves.toBe(null);
+    const mutation = {
+      scope,
+      expectedRevision: 0,
+      displayName: 'Ada',
+      avatarDocumentId: null,
+      overrides: { theme: { colorScheme: 'dark' as const } },
+    };
+    await expect(store.compareAndSet(mutation)).resolves.toMatchObject({ revision: 3 });
+    await expect(store.compareAndSet({ ...mutation, expectedRevision: 3 })).resolves.toMatchObject({
+      revision: 3,
+    });
+    await expect(store.compareAndSet({ ...mutation, expectedRevision: 4 })).resolves.toBe(
+      'conflict',
+    );
+
+    expect(get).toHaveBeenCalledWith(expect.anything(), { strict: false });
+    expect(withRequestContext).toHaveBeenCalledWith(
+      { tenantId: tenantA, actorId: 'subject-1' },
+      expect.any(Function),
+    );
+    expect(tx.mock.calls[0]?.[1]).toEqual({ readonly: true });
+    expect(query.mock.calls.some(([sql]) => String(sql).includes('insert into'))).toBe(true);
+    expect(query.mock.calls.some(([sql]) => String(sql).includes('update profile'))).toBe(true);
+  });
+
+  it('removes the final preference override leaf and records the exact patch path', async () => {
+    const { service, events } = harness();
+    const values = structuredClone(PLATFORM_PREFERENCE_DEFAULTS);
+    values.notificationDelivery.email = false;
+    await service.putPreferences(values, 0);
+    await expect(
+      service.patchPreferences({ notificationDelivery: { email: null } }, 1),
+    ).resolves.toMatchObject({ values: PLATFORM_PREFERENCE_DEFAULTS, revision: 2 });
+    expect(events[1]).toMatchObject({
+      operation: 'preferences.updated',
+      changedPaths: ['notificationDelivery.email'],
+    });
+  });
+
+  it('covers absent stored optionals and explicit undefined patch fallbacks', async () => {
+    const empty = harness();
+    await expect(empty.service.getProfile()).resolves.toMatchObject({
+      displayName: null,
+      avatarDocumentId: null,
+      revision: 0,
+      updatedAt: null,
+    });
+    await expect(
+      empty.service.patchPreferences({ theme: { density: 'compact' } }, 0),
+    ).resolves.toMatchObject({ revision: 1 });
+
+    const reset = harness();
+    await expect(reset.service.reset(null, 0)).resolves.toMatchObject({ revision: 0 });
+    await expect(reset.service.patchProfile('invalid', 0)).rejects.toSatisfy(
+      (error: unknown) => errorCode(error) === 'PREFERENCES_INVALID',
+    );
+
+    const existing = harness();
+    await existing.service.patchProfile({ avatarDocumentId: 'avatar-1' }, 0);
+    await expect(existing.service.patchProfile({ displayName: 'Ada' }, 1)).resolves.toMatchObject({
+      avatarDocumentId: 'avatar-1',
+      displayName: 'Ada',
+      revision: 2,
+    });
+    await expect(
+      existing.service.patchPreferences({ theme: undefined } as never, 2),
+    ).resolves.toMatchObject({ revision: 2 });
   });
 });

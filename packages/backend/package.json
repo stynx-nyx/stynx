@@ -25,7 +25,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
     "test": "vitest run --config ./vitest.config.ts",
-    "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json",
+    "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary",
     "stryker": "pnpm exec stryker run stryker.conf.mjs"
   },
   "dependencies": {

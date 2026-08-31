@@ -140,3 +140,32 @@ await program.parseAsync(['node', 'stynx', 'migrate', 'status']);
 ## TypeDoc reference
 
 Full symbol-level API: [`/docs/api-reference/stynx-cli/`](/docs/api-reference/stynx-cli/)
+
+<!-- stynx:generated-dependencies:start -->
+
+## Generated dependency reference
+
+This section is generated from `package.json`. Run `pnpm package-readmes:write` to update it.
+
+### Runtime dependencies
+
+- `@stynx-nyx/privacy`: `workspace:*`
+- `commander`: `^14.0.3`
+- `pg`: `^8.20.0`
+- `yaml`: `^2.8.3`
+
+### Optional dependencies
+
+_None._
+
+### Peer dependencies
+
+_None._
+
+### Development-only dependencies
+
+- `@types/node`: `24.12.4`
+- `@types/pg`: `^8.20.0`
+- `typescript`: `^6.0.3`
+
+<!-- stynx:generated-dependencies:end -->

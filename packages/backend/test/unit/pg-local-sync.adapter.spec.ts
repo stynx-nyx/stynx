@@ -69,6 +69,27 @@ describe('PgIdentityLocalSyncAdapter', () => {
     expect(db.withTransaction).toHaveBeenCalledWith(expect.any(Function), undefined);
   });
 
+  it.each([`${UUID_A}suffix`, `prefix${UUID_A}`])(
+    'syncToLocal rejects UUID-shaped subjects with extra characters: %s',
+    async (subject) => {
+      const admin = fakeAdmin({
+        listUsers: vi.fn(async () => ({ items: [{ username: 'alice' }] })),
+        getUser: vi.fn(async () => ({
+          username: 'alice',
+          enabled: true,
+          attributes: { sub: subject },
+        })),
+      });
+      const db = fakeDb();
+      const result = await new PgIdentityLocalSyncAdapter({
+        identityAdmin: admin as never,
+        db: db as never,
+      }).syncToLocal();
+      expect(result).toMatchObject({ skipped: 1, users: 0 });
+      expect(db.query).not.toHaveBeenCalled();
+    },
+  );
+
   it('describes branch: syncToLocal skips users whose subject is missing entirely', async () => {
     const admin = fakeAdmin({
       listUsers: vi.fn(async () => ({ items: [{ username: 'alice' }] })),
@@ -524,6 +545,71 @@ describe('PgIdentityLocalSyncAdapter', () => {
       ['power_users-team', 'Power Users Team'],
       'client-handle',
     );
+  });
+
+  it('normalizes default role codes and repeated name separators exactly', async () => {
+    const admin = fakeAdmin({
+      listGroups: vi.fn(async () => ({
+        items: [
+          { name: '  USERS  ', description: '   ' },
+          { name: 's', description: '' },
+          { name: 'power__users---team', description: '   ' },
+        ],
+      })),
+      listUsers: vi.fn(async () => ({ items: [] })),
+    });
+    const db = fakeDb([
+      [{ role_id: 'r-user' }],
+      [{ role_id: 'r-s' }],
+      [{ role_id: 'r-power' }],
+    ]);
+
+    const result = await new PgIdentityLocalSyncAdapter({
+      identityAdmin: admin as never,
+      db: db as never,
+    }).syncToLocal();
+
+    expect(result.groups).toBe(3);
+    expect(db.query).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining('INSERT INTO auth.roles'),
+      ['user', 'USERS'],
+      'client-handle',
+    );
+    expect(db.query).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining('INSERT INTO auth.roles'),
+      ['s', 'S'],
+      'client-handle',
+    );
+    expect(db.query).toHaveBeenNthCalledWith(
+      3,
+      expect.stringContaining('INSERT INTO auth.roles'),
+      ['power__users---team', 'Power Users Team'],
+      'client-handle',
+    );
+  });
+
+  it('does not count or bind a group when the role upsert returns no id', async () => {
+    const admin = fakeAdmin({
+      listGroups: vi.fn(async () => ({ items: [{ name: 'admins' }] })),
+      listUsers: vi.fn(async () => ({ items: [{ username: 'alice' }] })),
+      getUser: vi.fn(async () => ({
+        username: 'alice',
+        enabled: true,
+        attributes: { sub: UUID_A },
+      })),
+      listGroupsForUser: vi.fn(async () => [{ name: 'admins' }]),
+    });
+    const db = fakeDb([[], []]);
+
+    const result = await new PgIdentityLocalSyncAdapter({
+      identityAdmin: admin as never,
+      db: db as never,
+    }).syncToLocal();
+
+    expect(result).toMatchObject({ groups: 0, users: 1, memberships: 0 });
+    expect(db.query).toHaveBeenCalledTimes(2);
   });
 
   it('default role descriptions prefer a trimmed provider description', async () => {

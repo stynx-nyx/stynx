@@ -160,3 +160,43 @@ expect(user).toEqual(archiveAwareEqual({ id: 'u1', email: 'seed@b.com' }));
 ## TypeDoc reference
 
 Full symbol-level API: [`/docs/api-reference/stynx-testing/`](/docs/api-reference/stynx-testing/)
+
+<!-- stynx:generated-dependencies:start -->
+
+## Generated dependency reference
+
+This section is generated from `package.json`. Run `pnpm package-readmes:write` to update it.
+
+### Runtime dependencies
+
+- `@nestjs/common`: `^11.1.19`
+- `@nestjs/core`: `^11.1.19`
+- `@nestjs/platform-express`: `^11.1.19`
+- `@nestjs/testing`: `^11.1.19`
+- `@stynx-nyx/audit`: `workspace:*`
+- `@stynx-nyx/auth`: `workspace:*`
+- `@stynx-nyx/core`: `workspace:*`
+- `@stynx-nyx/data`: `workspace:*`
+- `@stynx-nyx/sessions`: `workspace:*`
+- `@stynx-nyx/storage`: `workspace:*`
+- `drizzle-orm`: `^0.45.2`
+- `redis`: `^5.12.1`
+- `reflect-metadata`: `^0.2.2`
+- `rxjs`: `^7.8.2`
+- `testcontainers`: `^11.14.0`
+
+### Optional dependencies
+
+_None._
+
+### Peer dependencies
+
+_None._
+
+### Development-only dependencies
+
+- `@types/node`: `24.12.4`
+- `ts-node`: `^10.9.2`
+- `typescript`: `^6.0.3`
+
+<!-- stynx:generated-dependencies:end -->

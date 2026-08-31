@@ -68,7 +68,9 @@ describe('IdentityAdminService', () => {
   it('throws ServiceUnavailableException for getUserBySubject when adapter lacks support', async () => {
     const adapter = makeAdapter({ getUserBySubject: undefined });
     const svc = new IdentityAdminService(adapter);
-    await expect(svc.getUserBySubject('sub-1')).rejects.toBeInstanceOf(ServiceUnavailableException);
+    await expect(svc.getUserBySubject('sub-1')).rejects.toMatchObject({
+      message: 'Identity provider adapter does not support getUserBySubject',
+    });
   });
 
   it('delegates getUserBySubject when the adapter supports it', async () => {
@@ -81,17 +83,27 @@ describe('IdentityAdminService', () => {
   it('throws ServiceUnavailableException for setUserPassword when adapter lacks support', async () => {
     const adapter = makeAdapter({ setUserPassword: undefined });
     const svc = new IdentityAdminService(adapter);
-    await expect(svc.setUserPassword('alice', 'pw')).rejects.toBeInstanceOf(
-      ServiceUnavailableException,
-    );
+    await expect(svc.setUserPassword('alice', 'pw')).rejects.toMatchObject({
+      message: 'Identity provider adapter does not support setUserPassword',
+    });
   });
 
   it('throws ServiceUnavailableException for verifyUserChannels when adapter lacks support', async () => {
     const adapter = makeAdapter({ verifyUserChannels: undefined });
     const svc = new IdentityAdminService(adapter);
-    await expect(svc.verifyUserChannels('alice', {} as never)).rejects.toBeInstanceOf(
-      ServiceUnavailableException,
-    );
+    await expect(svc.verifyUserChannels('alice', {} as never)).rejects.toMatchObject({
+      message: 'Identity provider adapter does not support verifyUserChannels',
+    });
+  });
+
+  it('uses a permanent password by default and forwards channel verification exactly', async () => {
+    const adapter = makeAdapter();
+    const svc = new IdentityAdminService(adapter);
+    await svc.setUserPassword('alice', 'pw');
+    expect(adapter.setUserPassword).toHaveBeenCalledWith('alice', 'pw', true);
+    const request = { email: true, phone: false } as never;
+    await svc.verifyUserChannels('alice', request);
+    expect(adapter.verifyUserChannels).toHaveBeenCalledWith('alice', request);
   });
 
   describe('IdentityAdminError → HttpException mapping', () => {
@@ -110,7 +122,9 @@ describe('IdentityAdminService', () => {
         }),
       });
       const svc = new IdentityAdminService(adapter);
-      await expect(svc.getUser('x')).rejects.toBeInstanceOf(ExpectedException);
+      const rejection = svc.getUser('x');
+      await expect(rejection).rejects.toBeInstanceOf(ExpectedException);
+      await expect(rejection).rejects.toMatchObject({ message: `${code} msg` });
     });
   });
 
@@ -127,18 +141,22 @@ describe('IdentityAdminService', () => {
   describe('local-sync adapter delegations', () => {
     it('throws ServiceUnavailableException when no local-sync adapter is wired', async () => {
       const svc = new IdentityAdminService(makeAdapter());
-      await expect(svc.syncToLocal()).rejects.toBeInstanceOf(ServiceUnavailableException);
-      await expect(svc.syncUser('alice')).rejects.toBeInstanceOf(ServiceUnavailableException);
-      await expect(svc.listGroupsWithMetaByUserId('user-x')).rejects.toBeInstanceOf(
-        ServiceUnavailableException,
-      );
+      await expect(svc.syncToLocal()).rejects.toMatchObject({
+        message: 'Identity local sync adapter is not configured',
+      });
+      await expect(svc.syncUser('alice')).rejects.toMatchObject({
+        message: 'Identity local sync adapter is not configured',
+      });
+      await expect(svc.listGroupsWithMetaByUserId('user-x')).rejects.toMatchObject({
+        message: 'Identity local sync adapter is not configured',
+      });
     });
 
     it('delegates syncToLocal / syncUser / listGroupsWithMetaByUserId to the local-sync adapter', async () => {
       const localSync = makeLocalSync();
       const svc = new IdentityAdminService(makeAdapter(), localSync);
       await svc.syncToLocal();
-      expect(localSync.syncToLocal).toHaveBeenCalledTimes(1);
+      expect(localSync.syncToLocal).toHaveBeenCalledWith(undefined);
       await svc.syncUser('alice', { reason: 'manual' } as never);
       expect(localSync.syncUser).toHaveBeenCalledWith('alice', { reason: 'manual' });
       await svc.listGroupsWithMetaByUserId('user-1');

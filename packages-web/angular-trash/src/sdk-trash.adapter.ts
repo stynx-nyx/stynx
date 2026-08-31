@@ -12,7 +12,7 @@ type QueryValue = string | number | boolean | null | undefined;
 type QueryRecord = Record<string, QueryValue>;
 
 function asRecord(value: unknown): Record<string, unknown> {
-  return typeof value === 'object' && value !== null ? value as Record<string, unknown> : {};
+  return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {};
 }
 
 function stringValue(value: unknown): string | undefined {
@@ -51,14 +51,14 @@ export class SdkTrashAdapter implements StynxTrashAdapter {
 
     const items: StynxTrashItem[] = [];
     pages.forEach((page, index) => {
-      items.push(...this.normalizePage(page, kinds[index] ?? resource).items);
+      items.push(...this.normalizePage(page, kinds[index]!).items);
     });
     items.sort((left, right) => Date.parse(right.deletedAt) - Date.parse(left.deletedAt));
 
     if (kinds.length === 1) {
       return {
         items,
-        total: this.normalizePage(pages[0], kinds[0] ?? resource).total,
+        total: this.normalizePage(pages[0], kinds[0]!).total,
       };
     }
 
@@ -66,7 +66,7 @@ export class SdkTrashAdapter implements StynxTrashAdapter {
     return {
       items: items.slice(start, start + query.pageSize),
       total: pages.reduce<number>(
-        (total, page, index) => total + this.normalizePage(page, kinds[index] ?? resource).total,
+        (total, page, index) => total + this.normalizePage(page, kinds[index]!).total,
         0,
       ),
     };
@@ -117,18 +117,21 @@ export class SdkTrashAdapter implements StynxTrashAdapter {
   private normalizeItem(input: unknown, fallbackKind: StynxTrashKind): StynxTrashItem {
     const record = asRecord(input);
     const id = stringValue(record.id) ?? stringValue(record.trashId) ?? '';
-    const canHardDelete = booleanValue(record.canHardDelete) ?? booleanValue(record.can_hard_delete);
+    const canHardDelete =
+      booleanValue(record.canHardDelete) ?? booleanValue(record.can_hard_delete);
     const item: StynxTrashItem = {
       id,
       kind: (stringValue(record.kind) ?? fallbackKind) as StynxTrashKind,
-      label: stringValue(record.label) ?? stringValue(record.title) ?? stringValue(record.name) ?? id,
+      label:
+        stringValue(record.label) ?? stringValue(record.title) ?? stringValue(record.name) ?? id,
       deletedAt: stringValue(record.deletedAt) ?? stringValue(record.deleted_at) ?? '',
       deletedBy: stringValue(record.deletedBy) ?? stringValue(record.deleted_by) ?? null,
-      autoPurgeAt: stringValue(record.autoPurgeAt)
-        ?? stringValue(record.auto_purge_at)
-        ?? stringValue(record.purgeAt)
-        ?? stringValue(record.retentionUntil)
-        ?? null,
+      autoPurgeAt:
+        stringValue(record.autoPurgeAt) ??
+        stringValue(record.auto_purge_at) ??
+        stringValue(record.purgeAt) ??
+        stringValue(record.retentionUntil) ??
+        null,
     };
     if (canHardDelete !== undefined) {
       item.canHardDelete = canHardDelete;

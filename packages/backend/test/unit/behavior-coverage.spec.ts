@@ -293,6 +293,46 @@ describe('backend SLA behavior', () => {
       breachP95: true,
     }));
   });
+
+  it('maintains exact SLA window, counter, and percentile boundaries', () => {
+    const sink = { sample: vi.fn(), aggregate: vi.fn() };
+    const interceptor = new SlaMonitorInterceptor(
+      { aggregateEvery: 2, windowSize: 2 },
+      { resolve: vi.fn(() => 'CUSTOM') },
+      sink,
+    );
+    const internals = interceptor as unknown as {
+      recordAggregate: (category: string, duration: number, threshold: number) => void;
+      percentile: (samples: number[], percentile: number) => number;
+      latencyWindows: Map<string, number[]>;
+      categoryCounters: Map<string, number>;
+    };
+
+    expect(internals.percentile([100, 1, 50], 50)).toBe(50);
+    expect(internals.percentile([100, 1, 50], 95)).toBe(100);
+    internals.recordAggregate('CUSTOM', 30, 20);
+    expect(sink.aggregate).not.toHaveBeenCalled();
+    internals.recordAggregate('CUSTOM', 10, 20);
+    expect(sink.aggregate).toHaveBeenCalledTimes(1);
+    expect(sink.aggregate).toHaveBeenLastCalledWith(expect.objectContaining({
+      samples: 2,
+      p50Ms: 10,
+      p95Ms: 30,
+      p99Ms: 30,
+    }));
+    internals.recordAggregate('CUSTOM', 20, 20);
+    expect(internals.latencyWindows.get('CUSTOM')).toEqual([10, 20]);
+    expect(internals.categoryCounters.get('CUSTOM')).toBe(3);
+    expect(sink.aggregate).toHaveBeenCalledTimes(1);
+    internals.recordAggregate('CUSTOM', 40, 20);
+    expect(internals.latencyWindows.get('CUSTOM')).toEqual([20, 40]);
+    expect(sink.aggregate).toHaveBeenCalledTimes(2);
+  });
+
+  it('uses the exact default SLA logger context', () => {
+    const sink = new LoggerSlaEventSink();
+    expect((sink as unknown as { logger: { context: string } }).logger.context).toBe('SlaMonitor');
+  });
 });
 
 describe('backend authorization and auth behavior', () => {
@@ -429,6 +469,25 @@ describe('backend authorization and auth behavior', () => {
     await expect(new ClaimFirstTenantEntitlementPolicy({
       fallback: { isEntitled: vi.fn(async () => true) },
     }).isEntitled({ principal, tenantId: 'tenant-1' })).resolves.toBe(true);
+  });
+
+  it('enforces exact required-tenant header errors and whole-value UUID matching', () => {
+    const resolver = new RequiredTenantHeaderResolver({ headerName: 'X-Org-Tenant' });
+    expect(() => resolver.resolve({ principal, headerTenantId: '   ' })).toThrow(
+      'X-Org-Tenant header is required',
+    );
+    expect(() => resolver.resolve({
+      principal,
+      headerTenantId: 'prefix00000000-0000-0000-0000-000000000001',
+    })).toThrow('X-Org-Tenant must be a UUID');
+    expect(() => resolver.resolve({
+      principal,
+      headerTenantId: '00000000-0000-0000-0000-000000000001suffix',
+    })).toThrow('X-Org-Tenant must be a UUID');
+    expect(resolver.resolve({
+      principal,
+      headerTenantId: ' 00000000-0000-0000-0000-000000000001 ',
+    })).toBe('00000000-0000-0000-0000-000000000001');
   });
 
   it('auth guard attaches principal context and resolves tenant paths', async () => {
@@ -1162,6 +1221,108 @@ describe('backend idempotency behavior', () => {
     expect(store.lookup).toHaveBeenCalledTimes(1);
     interceptor.onModuleDestroy();
   });
+
+  it('preserves exact default idempotency timing and key normalization contracts', () => {
+    const interceptor = new IdempotencyInterceptor();
+    const internals = interceptor as unknown as {
+      options: Record<string, unknown>;
+      getIdempotencyKey: (request: { headers: Record<string, unknown> }) => string | undefined;
+      requestFingerprint: (request: Record<string, unknown>) => string;
+    };
+    expect(internals.options).toMatchObject({
+      keyHeaderName: 'x-idempotency-key',
+      replayKeyHeaderName: 'X-Idempotency-Key',
+      replayMarkerHeaderName: 'X-Idempotency-Replay',
+      ttlMs: 86_400_000,
+      cacheCleanupMs: 1_800_000,
+      waitAttempts: 12,
+      waitIntervalMs: 50,
+    });
+    expect(internals.getIdempotencyKey({
+      headers: { 'x-idempotency-key': '  exact-key  ' },
+    })).toBe('exact-key');
+    expect(internals.getIdempotencyKey({
+      headers: { 'x-idempotency-key': '   ' },
+    })).toBe(undefined);
+    expect(internals.requestFingerprint({
+      method: 'patch',
+      originalUrl: '/original?first=1',
+      url: '/fallback?second=2',
+      body: undefined,
+    })).toBe('PATCH:/original:null');
+    expect(internals.requestFingerprint({
+      method: 'DELETE',
+      url: '/fallback?second=2',
+      body: false,
+    })).toBe('DELETE:/fallback:false');
+    interceptor.onModuleDestroy();
+  });
+
+  it('expires local cache entries exactly at their deadline', async () => {
+    const now = vi.spyOn(Date, 'now').mockReturnValue(1_000);
+    const interceptor = new IdempotencyInterceptor({ ttlMs: 100, cacheCleanupMs: 10_000 });
+    const internals = interceptor as unknown as {
+      cache: Map<string, {
+        body: unknown;
+        statusCode: number;
+        expiresAt: number;
+        requestFingerprint: string;
+      }>;
+      cleanup: () => void;
+    };
+    internals.cache.set('expired-at-boundary', {
+      body: { stale: true },
+      statusCode: 201,
+      expiresAt: 1_000,
+      requestFingerprint: 'POST:/boundary:null',
+    });
+    internals.cleanup();
+    expect(internals.cache.has('expired-at-boundary')).toBe(false);
+
+    internals.cache.set(':boundary', {
+      body: { stale: true },
+      statusCode: 201,
+      expiresAt: 1_000,
+      requestFingerprint: 'POST:/boundary:null',
+    });
+    const next = { handle: vi.fn(() => of({ fresh: true })) };
+    await expect(lastValueFrom(interceptor.intercept(
+      httpContextWithResponse({
+        method: 'POST',
+        headers: { 'x-idempotency-key': 'boundary' },
+        url: '/boundary',
+      }, responseStub(202)) as never,
+      next,
+    ))).resolves.toEqual({ fresh: true });
+    expect(next.handle).toHaveBeenCalledTimes(1);
+    expect(internals.cache.get(':boundary')).toMatchObject({
+      body: { fresh: true },
+      statusCode: 202,
+      expiresAt: 1_100,
+      requestFingerprint: 'POST:/boundary:null',
+    });
+    now.mockRestore();
+    interceptor.onModuleDestroy();
+  });
+
+  it('converts stored idempotency entries without losing exact response metadata', async () => {
+    const interceptor = new IdempotencyInterceptor({ cacheCleanupMs: 10_000 });
+    const toCachedFromStored = (interceptor as unknown as {
+      toCachedFromStored: (entry: Record<string, unknown>) => Promise<Record<string, unknown>>;
+    }).toCachedFromStored.bind(interceptor);
+    await expect(toCachedFromStored({
+      body: { exact: true },
+      statusCode: 209,
+      expiresAt: 123_456,
+      requestFingerprint: 'POST:/exact:null',
+    })).resolves.toEqual({
+      body: { exact: true },
+      statusCode: 209,
+      expiresAt: 123_456,
+      requestFingerprint: 'POST:/exact:null',
+    });
+    interceptor.onModuleDestroy();
+  });
 });
 
 describe('backend rate-limit behavior', () => {
@@ -1387,6 +1548,33 @@ describe('backend rate-limit behavior', () => {
       method: 'POST',
       path: '/distributed',
     }) as never)).resolves.toBe(true);
+  });
+
+  it('keeps exact in-memory cleanup counter, expiry, and overflow boundaries', () => {
+    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(1_000);
+    const guard = new RateLimitGuard({ cleanupEvery: 2, maxBuckets: 1 });
+    const internals = guard as unknown as {
+      buckets: Map<string, { count: number; resetAt: number }>;
+      callsSinceInMemoryCleanup: number;
+      maybeCleanupInMemory: () => void;
+    };
+    try {
+      internals.buckets.set('boundary', { count: 1, resetAt: 1_000 });
+      internals.maybeCleanupInMemory();
+      expect(internals.callsSinceInMemoryCleanup).toBe(1);
+      expect([...internals.buckets.keys()]).toEqual(['boundary']);
+
+      internals.maybeCleanupInMemory();
+      expect(internals.callsSinceInMemoryCleanup).toBe(0);
+      expect([...internals.buckets.keys()]).toEqual(['boundary']);
+
+      internals.buckets.set('overflow', { count: 1, resetAt: 2_000 });
+      internals.maybeCleanupInMemory();
+      expect(internals.callsSinceInMemoryCleanup).toBe(0);
+      expect([...internals.buckets.keys()]).toEqual(['overflow']);
+    } finally {
+      nowSpy.mockRestore();
+    }
   });
 });
 

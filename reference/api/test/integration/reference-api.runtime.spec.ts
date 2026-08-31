@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { Test } from '@nestjs/testing';
 import { Logger, type INestApplication } from '@nestjs/common';
-import request from 'supertest';
+import request, { type Response, type Test as SupertestTest } from 'supertest';
 import {
   CreateBucketCommand,
   ListObjectVersionsCommand,
@@ -212,6 +212,7 @@ describe('@stynx-nyx/reference-api runtime suite', () => {
   let bucketName = 'stynx-docs-local-us-east-1';
   let redisUrl = '';
   let localstackEndpoint = '';
+  let adminASid = '';
   let adminAToken = '';
   let readerAToken = '';
   let adminBToken = '';
@@ -246,13 +247,18 @@ describe('@stynx-nyx/reference-api runtime suite', () => {
     targetId: string;
   }
 
-  async function createTokenViaSessionRoute(): Promise<string> {
+  async function createTokenViaSessionRoute(): Promise<{ sid: string; accessToken: string }> {
     const response = await request(app.getHttpServer())
       .post('/sessions')
       .set('x-tenant-id', tenantA)
       .send({ cognitoToken: 'fake-cognito-access-token' })
       .expect(201);
-    return response.body.accessToken as string;
+    expect(response.body.sid).toEqual(expect.any(String));
+    expect(response.body.accessToken).toEqual(expect.any(String));
+    return {
+      sid: response.body.sid as string,
+      accessToken: response.body.accessToken as string,
+    };
   }
 
   async function createDirectToken(userId: string, tenantId: string, membershipId: string): Promise<string> {
@@ -260,88 +266,134 @@ describe('@stynx-nyx/reference-api runtime suite', () => {
     return bundle.accessToken;
   }
 
+  function sanitizeFlowFailureBody(body: unknown): Record<string, unknown> {
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return { bodyType: Array.isArray(body) ? 'array' : typeof body };
+    }
+    const source = body as Record<string, unknown>;
+    return Object.fromEntries(
+      ['statusCode', 'error', 'message', 'code']
+        .filter((key) => key in source)
+        .map((key) => [key, source[key]]),
+    );
+  }
+
+  async function expectFlowStage<TBody>(
+    stage: string,
+    operation: SupertestTest,
+    expectedStatus: number,
+  ): Promise<TBody> {
+    expect(app.getHttpServer().listening, `${stage}: reference server must remain listening before request`).toBe(true);
+    const before = await sessionService.get(adminASid);
+    expect(before?.sid, `${stage}: admin session must be active before request`).toBe(adminASid);
+    expect(before?.userId, `${stage}: admin session must retain its actor`).toBe(adminAUser);
+    expect(before?.tenantId, `${stage}: admin session must retain its tenant`).toBe(tenantA);
+
+    const response = (await operation) as Response;
+    const after = await sessionService.get(adminASid);
+    const diagnostic = JSON.stringify({
+      stage,
+      expectedStatus,
+      actualStatus: response.status,
+      sessionActiveBefore: before !== null,
+      sessionActiveAfter: after !== null,
+      response: sanitizeFlowFailureBody(response.body),
+    });
+    expect(diagnostic, `${stage}: diagnostics must not expose the access token`).not.toContain(adminAToken);
+    expect(diagnostic, `${stage}: diagnostics must not expose the session id`).not.toContain(adminASid);
+    expect(diagnostic, `${stage}: diagnostics must not expose the Redis endpoint`).not.toContain(redisUrl);
+    expect(diagnostic, `${stage}: diagnostics must not expose the storage endpoint`).not.toContain(localstackEndpoint);
+
+    expect(response.status, diagnostic).toBe(expectedStatus);
+    expect(after?.sid, `${stage}: admin session must be active after request`).toBe(adminASid);
+    expect(after?.userId, `${stage}: admin session must retain its actor`).toBe(adminAUser);
+    expect(after?.tenantId, `${stage}: admin session must retain its tenant`).toBe(tenantA);
+    expect(app.getHttpServer().listening, `${stage}: reference server must remain listening after request`).toBe(true);
+    return response.body as TBody;
+  }
+
   async function createFlowScenario(admin: AuthenticatedRequester, suffix: string): Promise<FlowScenario> {
-    const scope = (await admin.post('/flow/scopes').send({
+    const scope = await expectFlowStage<FlowScenario['scope']>('create scope', admin.post('/flow/scopes').send({
       code: `wave09-${suffix}`,
       label: `Wave 09 ${suffix}`,
       adapterKey: 'reference',
-    }).expect(201)).body as FlowScenario['scope'];
+    }), 201);
     expect(scope.createdBy).toBe(adminAUser);
 
-    const graph = (await admin.post('/flow/graphs').send({
+    const graph = await expectFlowStage<FlowScenario['graph']>('create graph', admin.post('/flow/graphs').send({
       scopeId: scope.id,
       code: `approval-${suffix}`,
       version: 'v1',
       isActive: true,
       name: `Approval ${suffix}`,
-    }).expect(201)).body as FlowScenario['graph'];
+    }), 201);
 
-    const start = (await admin.post(`/flow/graphs/${graph.id}/nodes`).send({
+    const start = await expectFlowStage<FlowRowBody>('create start node', admin.post(`/flow/graphs/${graph.id}/nodes`).send({
       code: 'start',
       kind: 'start',
       sortOrder: 1,
-    }).expect(201)).body as FlowRowBody;
-    const reviewNode = (await admin.post(`/flow/graphs/${graph.id}/nodes`).send({
+    }), 201);
+    const reviewNode = await expectFlowStage<FlowRowBody>('create review node', admin.post(`/flow/graphs/${graph.id}/nodes`).send({
       code: 'review',
       name: 'Review',
       kind: 'human',
       decisionPolicy: 'any',
       allowedActions: ['approve', 'reject'],
       sortOrder: 2,
-    }).expect(201)).body as FlowRowBody;
-    const end = (await admin.post(`/flow/graphs/${graph.id}/nodes`).send({
+    }), 201);
+    const end = await expectFlowStage<FlowRowBody>('create end node', admin.post(`/flow/graphs/${graph.id}/nodes`).send({
       code: 'end',
       kind: 'end',
       sortOrder: 3,
-    }).expect(201)).body as FlowRowBody;
+    }), 201);
 
-    await admin.post(`/flow/graphs/${graph.id}/edges`).send({
+    await expectFlowStage('create start edge', admin.post(`/flow/graphs/${graph.id}/edges`).send({
       fromNodeId: start.id,
       toNodeId: reviewNode.id,
       sortOrder: 1,
-    }).expect(201);
-    await admin.post(`/flow/graphs/${graph.id}/edges`).send({
+    }), 201);
+    await expectFlowStage('create review edge', admin.post(`/flow/graphs/${graph.id}/edges`).send({
       fromNodeId: reviewNode.id,
       toNodeId: end.id,
       action: 'approve',
       sortOrder: 2,
-    }).expect(201);
-    await admin.post(`/flow/nodes/${reviewNode.id}/agent-rules`).send({
+    }), 201);
+    await expectFlowStage('create agent rule', admin.post(`/flow/nodes/${reviewNode.id}/agent-rules`).send({
       ruleType: 'user',
       userId: adminAUser,
       sortOrder: 1,
-    }).expect(201);
+    }), 201);
 
-    const form = (await admin.post('/flow/forms').send({
+    const form = await expectFlowStage<FlowRowBody>('create form', admin.post('/flow/forms').send({
       scopeId: scope.id,
       code: `screen-${suffix}`,
       title: `Review screen ${suffix}`,
       isActive: true,
-    }).expect(201)).body as FlowRowBody;
-    const requiredQuestion = (await admin.post(`/flow/forms/${form.id}/questions`).send({
+    }), 201);
+    const requiredQuestion = await expectFlowStage<FlowRowBody>('create required question', admin.post(`/flow/forms/${form.id}/questions`).send({
       key: 'approved',
       label: 'Approved',
       fieldType: 'boolean',
       required: true,
       sortOrder: 1,
-    }).expect(201)).body as FlowRowBody;
-    const waivedQuestion = (await admin.post(`/flow/forms/${form.id}/questions`).send({
+    }), 201);
+    const waivedQuestion = await expectFlowStage<FlowRowBody>('create waived question', admin.post(`/flow/forms/${form.id}/questions`).send({
       key: 'evidence',
       label: 'Evidence',
       fieldType: 'file',
       required: true,
       sortOrder: 2,
-    }).expect(201)).body as FlowRowBody;
+    }), 201);
 
-    await admin.put(`/flow/questions/${requiredQuestion.id}/score`).send({
+    await expectFlowStage('update question score', admin.put(`/flow/questions/${requiredQuestion.id}/score`).send({
       passPoints: '2',
       failPoints: '0',
-    }).expect(200);
-    await admin.post(`/flow/nodes/${reviewNode.id}/form-rules`).send({
+    }), 200);
+    await expectFlowStage('create form rule', admin.post(`/flow/nodes/${reviewNode.id}/form-rules`).send({
       formId: form.id,
       required: true,
       gatingMode: 'all_required',
-    }).expect(201);
+    }), 201);
 
     return {
       scope,
@@ -481,6 +533,8 @@ describe('@stynx-nyx/reference-api runtime suite', () => {
 
     app = moduleRef.createNestApplication();
     await app.init();
+    await app.listen(0, '127.0.0.1');
+    expect(app.getHttpServer().listening).toBe(true);
 
     database = moduleRef.get(Database);
     requestContextMutator = moduleRef.get(RequestContextMutator);
@@ -489,13 +543,18 @@ describe('@stynx-nyx/reference-api runtime suite', () => {
 
     await seedBaseState(postgres);
 
-    adminAToken = await createTokenViaSessionRoute();
+    const adminABundle = await createTokenViaSessionRoute();
+    adminASid = adminABundle.sid;
+    adminAToken = adminABundle.accessToken;
     readerAToken = await createDirectToken(readerAUser, tenantA, readerAMembership);
     adminBToken = await createDirectToken(adminBUser, tenantB, adminBMembership);
   }, 90_000);
 
   afterAll(async () => {
-    await app?.close();
+    const httpServer = app.getHttpServer();
+    expect(httpServer.listening).toBe(true);
+    await app.close();
+    expect(httpServer.listening).toBe(false);
     await localstack?.stop();
     await redis?.stop();
     await postgres?.dispose();
@@ -1005,6 +1064,7 @@ describe('@stynx-nyx/reference-api runtime suite', () => {
   });
 
   it('family 9: rejects hard delete without the hard-delete permission', async () => {
+    expect(app.getHttpServer().listening).toBe(true);
     const created = await authRequest(adminAToken)
       .post('/records')
       .set('Idempotency-Key', 'hard-authz-create')
@@ -1020,6 +1080,7 @@ describe('@stynx-nyx/reference-api runtime suite', () => {
       .delete(`/records/${created.body.id}/hard`)
       .set('Idempotency-Key', 'hard-authz-hard')
       .expect(403);
+    expect(app.getHttpServer().listening).toBe(true);
   });
 
   it('family 10: returns 409 on restore conflicts against natural unique keys', async () => {

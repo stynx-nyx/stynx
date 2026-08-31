@@ -149,3 +149,43 @@ export class HeaderComponent {
 ## TypeDoc reference
 
 Full symbol-level API: [`/docs/api-reference/stynx-web-angular/`](/docs/api-reference/stynx-web-angular/)
+
+<!-- stynx:generated-dependencies:start -->
+
+## Generated dependency reference
+
+This section is generated from `package.json`. Run `pnpm package-readmes:write` to update it.
+
+### Runtime dependencies
+
+- `@stynx-nyx/angular-tenancy`: `workspace:*`
+- `@stynx-nyx/sdk`: `workspace:*`
+- `rxjs`: `^7.8.2`
+
+### Optional dependencies
+
+_None._
+
+### Peer dependencies
+
+- `@angular/common`: `>=20.3.0 <22`
+- `@angular/core`: `>=20.3.0 <22`
+- `@angular/router`: `>=20.3.0 <22`
+
+### Development-only dependencies
+
+- `@angular/common`: `21.2.19`
+- `@angular/compiler`: `21.2.19`
+- `@angular/compiler-cli`: `21.2.19`
+- `@angular/core`: `21.2.19`
+- `@angular/platform-browser`: `21.2.19`
+- `@angular/platform-browser-dynamic`: `21.2.19`
+- `@angular/router`: `21.2.19`
+- `@types/node`: `24.12.4`
+- `cross-env`: `^10.1.0`
+- `jsdom`: `^29.0.2`
+- `ng-packagr`: `21.2.3`
+- `tslib`: `^2.8.1`
+- `typescript`: `5.9.3`
+
+<!-- stynx:generated-dependencies:end -->

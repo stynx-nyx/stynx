@@ -1,8 +1,14 @@
-import { BadGatewayException, BadRequestException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import { FlowAdapterRegistry, type FlowDomainAdapter } from '../../src/adapters';
 import { FlowAnalyticsService } from '../../src/flow-analytics.service';
 import { FlowPolicyService } from '../../src/flow-policy.service';
 import { camelizeKey, camelizeRow, pageLimitOffset, requireObject } from '../../src/row-utils';
+import {
+  addTextFilter,
+  addUuidFilter,
+  asJsonObject,
+  optionalString,
+} from '../../src/internal/runtime/runtime-filters';
 
 const SCOPE = '0190abcd-1234-7abc-89ab-000000000001';
 const POLICY_SET = '0190abcd-1234-7abc-89ab-000000000002';
@@ -67,6 +73,28 @@ describe('Flow row utilities', () => {
     expect(() => requireObject([])).toThrow(BadRequestException);
     expect(() => requireObject('x')).toThrow(BadRequestException);
   });
+
+  it('normalizes runtime filters and JSON objects exactly', () => {
+    expect(optionalString('value')).toBe('value');
+    for (const invalid of ['', null, undefined, 1, []]) {
+      expect(optionalString(invalid)).toBe(undefined);
+    }
+
+    const object = { exact: true };
+    expect(asJsonObject(object)).toBe(object);
+    for (const invalid of [null, undefined, 'value', 1, true, []]) {
+      expect(asJsonObject(invalid)).toEqual({});
+    }
+
+    const where: string[] = [];
+    const values: unknown[] = [];
+    addUuidFilter(where, values, 'run_id', 'run-1');
+    addTextFilter(where, values, 'status', 'open');
+    addUuidFilter(where, values, 'ignored_uuid', '');
+    addTextFilter(where, values, 'ignored_text', null);
+    expect(where).toEqual(['run_id = $1::uuid', 'status = $2']);
+    expect(values).toEqual(['run-1', 'open']);
+  });
 });
 
 describe('FlowAdapterRegistry', () => {
@@ -125,20 +153,41 @@ describe('FlowAdapterRegistry', () => {
       adapterKey: 'docs',
       targetType: 'doc',
       targetId: 'd-1',
-    })).rejects.toBeInstanceOf(BadGatewayException);
+    })).rejects.toMatchObject({
+      response: {
+        code: 'FLOW_ADAPTER_ERROR',
+        adapterKey: 'docs',
+        operation: 'canManage',
+        message: 'no manage',
+      },
+    });
     await expect(registry.canView({
       tenantId: 't-1',
       adapterKey: 'docs',
       targetType: 'doc',
       targetId: 'd-1',
-    })).rejects.toBeInstanceOf(BadGatewayException);
+    })).rejects.toMatchObject({
+      response: {
+        code: 'FLOW_ADAPTER_ERROR',
+        adapterKey: 'docs',
+        operation: 'canView',
+        message: 'no view',
+      },
+    });
     await expect(registry.applyEffect({
       tenantId: 't-1',
       adapterKey: 'docs',
       targetType: 'doc',
       targetId: 'd-1',
       effectKey: 'email',
-    })).rejects.toBeInstanceOf(BadGatewayException);
+    })).rejects.toMatchObject({
+      response: {
+        code: 'FLOW_ADAPTER_ERROR',
+        adapterKey: 'docs',
+        operation: 'applyEffect',
+        message: 'bad effect',
+      },
+    });
     await expect(registry.resolveAgents({
       tenantId: 't-1',
       adapterKey: 'docs',
@@ -147,7 +196,14 @@ describe('FlowAdapterRegistry', () => {
       nodeId: 'n-1',
       ruleId: 'r-1',
       resolverKey: 'owner',
-    })).rejects.toBeInstanceOf(BadGatewayException);
+    })).rejects.toMatchObject({
+      response: {
+        code: 'FLOW_ADAPTER_ERROR',
+        adapterKey: 'docs',
+        operation: 'resolveAgents',
+        message: 'no agents',
+      },
+    });
     await expect(registry.applyEffect({
       tenantId: 't-1',
       adapterKey: 'missing',
@@ -155,7 +211,30 @@ describe('FlowAdapterRegistry', () => {
       targetId: 'd-1',
       effectKey: 'email',
     })).rejects.toMatchObject({
-      response: expect.objectContaining({ code: 'FLOW_ADAPTER_NOT_FOUND' }),
+      response: {
+        code: 'FLOW_ADAPTER_NOT_FOUND',
+        adapterKey: 'missing',
+        operation: 'applyEffect',
+      },
+    });
+  });
+
+  it('wraps buildFacts failures with the exact adapter diagnostic', async () => {
+    const registry = new FlowAdapterRegistry([
+      makeAdapter({ buildFacts: vi.fn(async () => { throw new Error('facts failed'); }) }),
+    ]);
+    await expect(registry.buildFacts({
+      tenantId: 't-1',
+      adapterKey: 'docs',
+      targetType: 'doc',
+      targetId: 'd-1',
+    })).rejects.toMatchObject({
+      response: {
+        code: 'FLOW_ADAPTER_ERROR',
+        adapterKey: 'docs',
+        operation: 'buildFacts',
+        message: 'facts failed',
+      },
     });
   });
 });
@@ -221,6 +300,41 @@ describe('FlowAnalyticsService', () => {
     const [sql, params] = trx.query.mock.calls[0]!;
     expect(sql).toContain('where r.graph_id = $1::uuid and s.code = $2 and r.status = $3');
     expect(params).toEqual([SCOPE, 'main', 'active', 50, 0]);
+  });
+
+  it('assembles filtered dashboard aggregates and completion ratios', async () => {
+    const { db, trx } = makeDb([
+      [{ total: '5' }],
+      [{ p50_seconds: '10.4', p95_seconds: '42.6' }],
+      [
+        { window: 'last7Days', completed: '3', total: '4' },
+        { window: 'last30Days', completed: '0', total: '0' },
+      ],
+      [{ total: '2' }],
+    ]);
+
+    await expect(new FlowAnalyticsService(db as never).dashboard({ scopeId: SCOPE, scopeCode: 'main' }))
+      .resolves.toEqual({
+        openTasks: 5,
+        cycleTime: { p50Seconds: 10, p95Seconds: 43 },
+        completionRate: { last7Days: 0.75, last30Days: 0 },
+        slaBreaches: 2,
+      });
+    expect(trx.query.mock.calls.every(([, values]) => values[0] === SCOPE && values[1] === 'main')).toBe(true);
+    expect(trx.query.mock.calls[0]?.[0]).toContain("and t.status = 'open'");
+  });
+
+  it('defaults absent dashboard rows and unfiltered windows to zero', async () => {
+    const { db, trx } = makeDb([[], [], [], []]);
+
+    await expect(new FlowAnalyticsService(db as never).dashboard()).resolves.toEqual({
+      openTasks: 0,
+      cycleTime: { p50Seconds: 0, p95Seconds: 0 },
+      completionRate: { last7Days: 0, last30Days: 0 },
+      slaBreaches: 0,
+    });
+    expect(trx.query.mock.calls[0]?.[0]).toContain("where t.status = 'open'");
+    expect(trx.query.mock.calls.every(([, values]) => Array.isArray(values) && values.length === 0)).toBe(true);
   });
 });
 

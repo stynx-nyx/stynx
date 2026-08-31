@@ -27,6 +27,19 @@ This is the repository-local engineering contract for all contributors.
 6. Preserve existing tests, assertions, coverage thresholds, mutation targets,
    and quality gates. A feature change must add or update tests for its behavior.
 7. Use Conventional Commit subjects and do not bypass hooks during routine work.
+8. Package clean commands may remove only package-local disposable, untracked
+   outputs; workspace clean commands may remove only repository-local
+   disposable, untracked outputs. They must preserve every tracked path and use
+   only the declared Node runtime, explicitly supported host commands, or tools
+   resolvable from the exact frozen dependency graph; undeclared package
+   executables and downloaded-on-demand tools are invalid.
+9. The `@stynx-nyx/privacy` ordinary test tier contains exactly its three unit
+   specs and one wiring spec, while its serialized integration tier contains
+   exactly its single integration spec. These populations are disjoint and
+   their union is all five tests. Coverage continues to execute all five through
+   its dedicated configuration without changing thresholds, timeouts, or
+   unrelated task concurrency. The exact campaign boundary and role ownership
+   are frozen in Decision D13 of the STYNX 1.1.1 campaign controls ADR.
 
 ## Release and security references
 

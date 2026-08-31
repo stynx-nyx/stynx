@@ -85,4 +85,60 @@ describe('parseVeraPdfJson', () => {
     expect(() => parseVeraPdfJson('{bad')).toThrow(VeraPdfReportParseError);
     expect(() => parseVeraPdfJson('{bad')).toThrow(/Unable to parse veraPDF JSON report/u);
   });
+
+  it.each([
+    ['validation record', { report: { jobs: [{}] } }, 'VERAPDF_REPORT_VALIDATION_MISSING'],
+    [
+      'explicit compliance boolean',
+      {
+        report: {
+          jobs: [
+            {
+              validationResult: {
+                profileName: 'PDF/A-2B validation profile',
+                details: { failedRules: [] },
+              },
+            },
+          ],
+        },
+      },
+      'VERAPDF_REPORT_COMPLIANCE_MISSING',
+    ],
+    [
+      'parseable PDF/A profile',
+      {
+        report: {
+          jobs: [
+            {
+              validationResult: {
+                isCompliant: true,
+                profileName: 'unknown validation profile',
+                details: { failedRules: [] },
+              },
+            },
+          ],
+        },
+      },
+      'VERAPDF_REPORT_PROFILE_MISSING',
+    ],
+    [
+      'details rule population',
+      {
+        report: {
+          jobs: [
+            {
+              validationResult: {
+                isCompliant: true,
+                profileName: 'PDF/A-2B validation profile',
+              },
+            },
+          ],
+        },
+      },
+      'VERAPDF_REPORT_DETAILS_MISSING',
+    ],
+  ])('fails closed when the %s is missing', (_signal, report, code) => {
+    expect(() => parseVeraPdfJson(JSON.stringify(report))).toThrow(VeraPdfReportParseError);
+    expect(() => parseVeraPdfJson(JSON.stringify(report))).toThrow(new RegExp(`^${code}$`, 'u'));
+  });
 });

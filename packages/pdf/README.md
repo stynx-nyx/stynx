@@ -163,3 +163,37 @@ const result = await renderer.render({
 ## TypeDoc reference
 
 Full symbol-level API: [`/docs/api-reference/stynx-pdf/`](/docs/api-reference/stynx-pdf/)
+
+<!-- stynx:generated-dependencies:start -->
+
+## Generated dependency reference
+
+This section is generated from `package.json`. Run `pnpm package-readmes:write` to update it.
+
+### Runtime dependencies
+
+- `@pdf-lib/fontkit`: `^1.1.1`
+- `handlebars`: `4.7.9`
+- `pdf-lib`: `^1.17.1`
+- `playwright`: `^1.60.0`
+
+### Optional dependencies
+
+_None._
+
+### Peer dependencies
+
+- `@nestjs/common`: `^11.1.19`
+- `@nestjs/core`: `^11.1.19`
+- `@stynx-nyx/signature`: `^1.0.0`
+- `reflect-metadata`: `^0.2.2`
+- `rxjs`: `^7.8.2`
+
+### Development-only dependencies
+
+- `@nestjs/testing`: `^11.1.19`
+- `@stynx-nyx/signature`: `workspace:*`
+- `@types/node`: `24.12.4`
+- `typescript`: `^6.0.3`
+
+<!-- stynx:generated-dependencies:end -->

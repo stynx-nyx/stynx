@@ -81,6 +81,8 @@ describe('ReferenceDevAuthController API error matrix', () => {
 
     app = moduleRef.createNestApplication();
     await app.init();
+    await app.listen(0, '127.0.0.1');
+    expect(app.getHttpServer().listening).toBe(true);
   });
 
   beforeEach(() => {
@@ -88,7 +90,10 @@ describe('ReferenceDevAuthController API error matrix', () => {
   });
 
   afterAll(async () => {
-    await app?.close();
+    const httpServer = app.getHttpServer();
+    expect(httpServer.listening).toBe(true);
+    await app.close();
+    expect(httpServer.listening).toBe(false);
   });
 
   describe('GET /_reference/demo-tenants', () => {

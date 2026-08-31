@@ -71,68 +71,91 @@ export function validatePdfsA2b(inputs: VeraPdfInput[]): VeraPdfSummary[] {
     inputs.forEach((input, index) => {
       writeFileSync(join(dir, fileNames[index]!), input.pdf);
     });
-    const result = runVeraPdf(fileNames, dir);
-
-    if (result.status !== 0) {
-      throw new Error(`veraPDF failed for ${fileNames.join(', ')}: ${dockerResultMessage(result)}`);
-    }
-
-    const raw = JSON.parse(result.stdout) as {
-      report: {
-        jobs: Array<{
-          validationResult: Array<{
-            compliant: boolean;
-            profileName: string;
-            details: {
-              failedChecks: number;
-              failedRules: number;
-            };
-          }>;
-        }>;
-      };
-    };
-    return inputs.map((input, index) => {
-      const validation = raw.report.jobs[index]?.validationResult[0];
-      if (!validation) {
-        throw new Error(`veraPDF returned no validation result for ${input.name}`);
-      }
-      return {
-        compliant: validation.compliant,
-        failedChecks: validation.details.failedChecks,
-        failedRules: validation.details.failedRules,
-        profileName: validation.profileName,
-        raw,
-      };
-    });
+    return validateVeraPdfAttemptsWithRunner(
+      inputs.map(({ name }) => name),
+      () => runVeraPdfAttempt(fileNames, dir),
+    );
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
 }
 
-function runVeraPdf(fileNames: string[], dir: string): DockerRunResult {
+export function parseVeraPdfConformanceReport(
+  rawOutput: string,
+  expectedNames: string[],
+): VeraPdfSummary[] {
+  try {
+    const raw = JSON.parse(rawOutput) as unknown;
+    const report = asRecord(asRecord(raw)?.report);
+    const jobs = report?.jobs;
+    if (!Array.isArray(jobs) || jobs.length !== expectedNames.length) {
+      throw new Error('semantic-invalid');
+    }
+    return jobs.map((job) => {
+      const validationResults = asRecord(job)?.validationResult;
+      const validation = Array.isArray(validationResults)
+        ? asRecord(validationResults[0])
+        : asRecord(validationResults);
+      const details = asRecord(validation?.details);
+      if (
+        typeof validation?.compliant !== 'boolean' ||
+        typeof validation.profileName !== 'string' ||
+        !/PDF\/A-2b\b/iu.test(validation.profileName) ||
+        typeof details?.failedChecks !== 'number' ||
+        typeof details.failedRules !== 'number'
+      ) {
+        throw new Error('semantic-invalid');
+      }
+      return {
+        compliant: validation.compliant,
+        failedChecks: details.failedChecks,
+        failedRules: details.failedRules,
+        profileName: validation.profileName,
+        raw,
+      };
+    });
+  } catch {
+    throw new Error('VERAPDF_SEMANTIC_OUTPUT_INVALID');
+  }
+}
+
+export function validateVeraPdfAttemptsWithRunner(
+  expectedNames: string[],
+  runAttempt: () => DockerRunResult,
+): VeraPdfSummary[] {
   let lastResult: DockerRunResult | undefined;
   for (let attempt = 0; attempt < DOCKER_ATTEMPTS; attempt += 1) {
-    const containerFiles = fileNames.map((fileName) => `/tmp/${fileName}`);
-    lastResult = runDockerVeraPdf(
-      [
-        '--format',
-        'json',
-        '--flavour',
-        '2b',
-        ...containerFiles,
-      ],
-      fileNames[0] ?? 'validation',
-      VERAPDF_RUN_TIMEOUT_MS,
-      fileNames.map((fileName) => ({
-        source: join(dir, fileName),
-        target: `/tmp/${fileName}`,
-      })),
-    );
+    lastResult = runAttempt();
     if (lastResult.status === 0) {
-      return lastResult;
+      try {
+        return parseVeraPdfConformanceReport(lastResult.stdout, expectedNames);
+      } catch (error) {
+        if (attempt === DOCKER_ATTEMPTS - 1) throw error;
+      }
     }
   }
-  return lastResult ?? toDockerRunResult(spawnSync('docker', ['--version'], { encoding: 'utf8' }));
+  const result =
+    lastResult ?? toDockerRunResult(spawnSync('docker', ['--version'], { encoding: 'utf8' }));
+  throw new Error(`veraPDF failed: ${dockerResultMessage(result)}`);
+}
+
+function runVeraPdfAttempt(fileNames: string[], dir: string): DockerRunResult {
+  const containerFiles = fileNames.map((fileName) => `/tmp/${fileName}`);
+  return runDockerVeraPdf(
+    ['--format', 'json', '--flavour', '2b', ...containerFiles],
+    fileNames[0] ?? 'validation',
+    VERAPDF_RUN_TIMEOUT_MS,
+    fileNames.map((fileName) => ({
+      source: join(dir, fileName),
+      target: `/tmp/${fileName}`,
+    })),
+  );
+}
+
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined;
 }
 
 function runDockerVeraPdf(
@@ -155,9 +178,13 @@ function runDockerVeraPdf(
   }
 
   for (const copyFile of copyFiles) {
-    const copy = spawnSync('docker', ['cp', copyFile.source, `${containerName}:${copyFile.target}`], {
-      encoding: 'utf8',
-    });
+    const copy = spawnSync(
+      'docker',
+      ['cp', copyFile.source, `${containerName}:${copyFile.target}`],
+      {
+        encoding: 'utf8',
+      },
+    );
     if (copy.status !== 0 || copy.error) {
       cleanupContainer(containerName);
       return toDockerRunResult(copy);

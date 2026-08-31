@@ -6,6 +6,7 @@ import { Database } from '@stynx-nyx/data';
 import { StynxI18nModule } from '@stynx-nyx/i18n';
 import { SessionService } from '@stynx-nyx/sessions';
 import { GenericContainer, Wait, type StartedTestContainer } from 'testcontainers';
+import { expect } from 'vitest';
 import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../../../packages/data/test/support/postgres';
 import { actors, type ActorName, seedRecordsAndNotesE2e } from './seed';
 
@@ -101,6 +102,8 @@ export async function setupReferenceApiE2e(options: ReferenceApiE2eOptions = {})
 
   const app = moduleRef.createNestApplication();
   await app.init();
+  await app.listen(0, '127.0.0.1');
+  expect(app.getHttpServer().listening).toBe(true);
 
   await seedRecordsAndNotesE2e(postgres);
 
@@ -116,7 +119,12 @@ export async function setupReferenceApiE2e(options: ReferenceApiE2eOptions = {})
 }
 
 export async function closeReferenceApiE2e(context: ReferenceApiE2eContext | undefined): Promise<void> {
-  await context?.app.close();
+  if (context) {
+    const httpServer = context.app.getHttpServer();
+    expect(httpServer.listening).toBe(true);
+    await context.app.close();
+    expect(httpServer.listening).toBe(false);
+  }
   await context?.redis.stop();
   await context?.postgres.dispose();
 }

@@ -1,6 +1,6 @@
 # STYNX agent guide
 
-STYNX adopts the published `@aarusso-nyx/devai` 1.0.1 package at tier 1. Read
+STYNX adopts the published `@aarusso-nyx/devai` 1.4.5 package at tier 1. Read
 the repository authority sources in this order before making changes:
 
 1. `README.md`

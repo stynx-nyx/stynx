@@ -128,3 +128,29 @@ new VeraPdfDockerValidator({
 ## TypeDoc reference
 
 Full symbol-level API: [`/docs/api-reference/stynx-pdf-a-vera-docker/`](/docs/api-reference/stynx-pdf-a-vera-docker/)
+
+<!-- stynx:generated-dependencies:start -->
+
+## Generated dependency reference
+
+This section is generated from `package.json`. Run `pnpm package-readmes:write` to update it.
+
+### Runtime dependencies
+
+- `@stynx-nyx/pdf-a`: `workspace:*`
+
+### Optional dependencies
+
+_None._
+
+### Peer dependencies
+
+- `@stynx-nyx/logging`: `^1.0.0`
+
+### Development-only dependencies
+
+- `@stynx-nyx/logging`: `workspace:*`
+- `@types/node`: `24.12.4`
+- `typescript`: `^6.0.3`
+
+<!-- stynx:generated-dependencies:end -->

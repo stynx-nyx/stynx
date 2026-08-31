@@ -36,7 +36,8 @@ function mergeOptions(
 export class MultipartUploadExecutor implements StynxUploadExecutor {
   private readonly angularOptions = inject(STYNX_ANGULAR_OPTIONS);
   private readonly options = inject(STYNX_MULTIPART_UPLOAD_OPTIONS);
-  private readonly singlePartExecutor = inject(XhrUploadExecutor, { optional: true }) ?? new XhrUploadExecutor();
+  private readonly singlePartExecutor =
+    inject(XhrUploadExecutor, { optional: true }) ?? new XhrUploadExecutor();
 
   async upload(
     url: string,
@@ -101,9 +102,9 @@ export class MultipartUploadExecutor implements StynxUploadExecutor {
       { length: Math.min(this.options.concurrency, chunks.length) },
       async () => {
         while (cursor < chunks.length) {
-          const chunk = chunks[cursor];
+          const chunk = chunks[cursor]!;
           cursor += 1;
-          if (!chunk || completed.has(chunk.partNumber)) {
+          if (completed.has(chunk.partNumber)) {
             continue;
           }
           await this.uploadChunkWithRetry(file, init.uploadId, chunk, uploadHeaders, completed);
@@ -122,7 +123,8 @@ export class MultipartUploadExecutor implements StynxUploadExecutor {
     uploadHeaders: Record<string, string>,
     completed: Map<number, StynxMultipartUploadedPart>,
   ): Promise<void> {
-    for (let attempt = 0; attempt <= this.options.retryAttempts; attempt += 1) {
+    let attempt = 0;
+    for (;;) {
       try {
         const part = await this.putChunk(file, chunk, uploadHeaders);
         completed.set(chunk.partNumber, part);
@@ -135,6 +137,7 @@ export class MultipartUploadExecutor implements StynxUploadExecutor {
         if (attempt >= this.options.retryAttempts) {
           throw error;
         }
+        attempt += 1;
       }
     }
   }
@@ -165,11 +168,13 @@ export class MultipartUploadExecutor implements StynxUploadExecutor {
     uploadId: string,
     completed: Map<number, StynxMultipartUploadedPart>,
   ): Promise<void> {
-    const response = await fetch(`${this.storageBaseUrl()}/uploads/${encodeURIComponent(uploadId)}`);
+    const response = await fetch(
+      `${this.storageBaseUrl()}/uploads/${encodeURIComponent(uploadId)}`,
+    );
     if (!response.ok) {
       return;
     }
-    const status = await response.json() as StynxMultipartUploadStatusResponse;
+    const status = (await response.json()) as StynxMultipartUploadStatusResponse;
     for (const part of status.completedParts) {
       const normalized = typeof part === 'number' ? { partNumber: part } : part;
       completed.set(normalized.partNumber, normalized);
@@ -184,13 +189,16 @@ export class MultipartUploadExecutor implements StynxUploadExecutor {
       uploadId: init.uploadId,
       parts: [...completed.values()].sort((left, right) => left.partNumber - right.partNumber),
     };
-    const response = await fetch(init.completeUrl ?? `${this.storageBaseUrl()}/uploads/complete-multipart`, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
+    const response = await fetch(
+      init.completeUrl ?? `${this.storageBaseUrl()}/uploads/complete-multipart`,
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify(body),
       },
-      body: JSON.stringify(body),
-    });
+    );
     if (!response.ok) {
       throw new Error(`Multipart upload completion failed with status ${response.status}`);
     }

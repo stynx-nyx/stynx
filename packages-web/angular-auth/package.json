@@ -38,7 +38,8 @@
     "test": "vitest run --config ./vitest.config.ts",
     "stryker": "NODE_OPTIONS=\"--disable-warning=ExperimentalWarning --experimental-vm-modules\" pnpm exec stryker run stryker.conf.mjs",
     "normalize:dist-exports": "node -e \"const fs=require('node:fs');const path='dist/package.json';const pkg=JSON.parse(fs.readFileSync(path,'utf8'));pkg.exports['./catalogs/en.json']={default:'./catalogs/en.json'};pkg.exports['./catalogs/pt-BR.json']={default:'./catalogs/pt-BR.json'};fs.writeFileSync(path, JSON.stringify(pkg,null,2)+'\\n');\"",
-    "build:tsc": "tsc -p tsconfig.json"
+    "build:tsc": "tsc -p tsconfig.json",
+    "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
   },
   "dependencies": {
     "@stynx-nyx/angular": "workspace:*",

@@ -233,7 +233,7 @@ describe('Flow controllers', () => {
       'signal',
       'dispatchPendingEffects',
     ]);
-    const analytics = service(['openTasks', 'runsSummary']);
+    const analytics = service(['openTasks', 'runsSummary', 'dashboard']);
     const policies = service([
       'listPolicySets',
       'getPolicySet',
@@ -257,6 +257,7 @@ describe('Flow controllers', () => {
     runs.listNodeRuns('run-1');
     runs.listTasks('run-1');
     runs.listEvents('run-1');
+    runs.activity('run-1', { cursor: 'next' });
     runs.facts('run-1');
 
     const tasks = new FlowTasksController(runtime as never);
@@ -279,7 +280,9 @@ describe('Flow controllers', () => {
     nodeRuns.get('node-run-1');
     new FlowSignalController(runtime as never).signal({ runId: 'run-1' });
     new FlowEffectsController(runtime as never).dispatch({ effectKey: 'email' });
-    new FlowAnalyticsController(analytics as never).openTasks({ status: 'open' });
+    const analyticsController = new FlowAnalyticsController(analytics as never);
+    analyticsController.openTasks({ status: 'open' });
+    analyticsController.dashboard({ scopeId: 'scope-1' });
 
     const policyController = new FlowPoliciesController(policies as never);
     policyController.listSets('scope-1');
@@ -295,7 +298,9 @@ describe('Flow controllers', () => {
     policyController.evaluate({ action: 'approve' });
 
     expect(runtime.acceptTask).toHaveBeenCalledWith('task-1', { note: 'ok' });
+    expect(runtime.listEvents).toHaveBeenCalledWith({ cursor: 'next', runId: 'run-1' });
     expect(analytics.runsSummary).toHaveBeenCalledWith({ scopeId: 'scope-1' });
+    expect(analytics.dashboard).toHaveBeenCalledWith({ scopeId: 'scope-1' });
     expect(policies.createPolicyRule).toHaveBeenCalledWith('policy-set-1', { effect: 'allow' });
   });
 });

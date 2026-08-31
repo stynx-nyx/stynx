@@ -193,3 +193,27 @@ export class MySQLContextApplier implements DbContextApplier<MySQLClient> {
 ## TypeDoc reference
 
 Full symbol-level API: [`/docs/api-reference/stynx-contracts/`](/docs/api-reference/stynx-contracts/)
+
+<!-- stynx:generated-dependencies:start -->
+
+## Generated dependency reference
+
+This section is generated from `package.json`. Run `pnpm package-readmes:write` to update it.
+
+### Runtime dependencies
+
+_None._
+
+### Optional dependencies
+
+_None._
+
+### Peer dependencies
+
+_None._
+
+### Development-only dependencies
+
+- `@types/node`: `24.12.4`
+
+<!-- stynx:generated-dependencies:end -->

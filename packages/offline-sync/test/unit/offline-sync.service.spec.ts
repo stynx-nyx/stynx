@@ -62,6 +62,80 @@ function item(overrides: Partial<SyncBatchItemInput> = {}): SyncBatchItemInput {
 }
 
 describe('OfflineSyncService', () => {
+  it('returns the complete reservation projection and explicit validity override', async () => {
+    const { service } = createHarness();
+    const reservation = await service.reserveNumbering({
+      orgUnitId: 'org-a',
+      deviceId: 'device-a',
+      shiftId: 'shift-a',
+      entityType: 'crash-record',
+      requestedSize: 2,
+      rangeId: '10000000-0000-4000-8000-000000000001',
+      series: 'CRASH',
+      validUntil: '2026-08-25T12:00:00.001Z',
+    });
+    expect(reservation).toEqual({
+      reservationId: reservation.reservationId,
+      rangeId: '10000000-0000-4000-8000-000000000001',
+      tenantId: tenantA,
+      orgUnitId: 'org-a',
+      entityType: 'crash-record',
+      series: 'CRASH',
+      agentId: 'agent-a',
+      deviceId: 'device-a',
+      shiftId: 'shift-a',
+      startNumber: 1000,
+      endNumber: 1001,
+      nextNumber: 1000,
+      validUntil: '2026-08-25T12:00:00.001Z',
+      status: 'reserved',
+    });
+  });
+
+  it('returns exact non-retryable queue reuse and reservation-state failures', async () => {
+    const { service } = createHarness();
+    const reservation = await service.reserveNumbering({
+      orgUnitId: 'org-a',
+      deviceId: 'device-a',
+      shiftId: 'shift-a',
+      entityType: 'crash-record',
+      requestedSize: 1,
+    });
+    await service.cancelNumberingReservation(reservation.reservationId);
+    const reservationError = await service
+      .cancelNumberingReservation(reservation.reservationId)
+      .catch((error: unknown) => error);
+    expect(reservationError.getStatus()).toBe(409);
+    expect(reservationError.getResponse()).toEqual({
+      statusCode: 409,
+      errorCode: 'OFFLINE_SYNC_RESERVATION_STATE',
+      message: `Numbering reservation ${reservation.reservationId} is cancelled; expected reserved.`,
+      retryable: false,
+    });
+
+    const batch = {
+      orgUnitId: 'org-a',
+      deviceId: 'device-a',
+      deviceBatchId: 'batch-a',
+      items: [item()],
+    };
+    await service.submitSyncBatch(batch);
+    const reuseError = await service
+      .submitSyncBatch({
+        ...batch,
+        deviceBatchId: 'batch-b',
+        items: [item({ payloadHash: `sha256:${'b'.repeat(64)}` })],
+      })
+      .catch((error: unknown) => error);
+    expect(reuseError.getStatus()).toBe(409);
+    expect(reuseError.getResponse()).toEqual({
+      statusCode: 409,
+      errorCode: 'OFFLINE_SYNC_QUEUE_ID_REUSED',
+      message: 'Queue item sync-item-1 was already used with another payload hash.',
+      retryable: false,
+    });
+  });
+
   it('reserves generic entity numbering without AIT vocabulary', async () => {
     const { service } = createHarness();
     await expect(

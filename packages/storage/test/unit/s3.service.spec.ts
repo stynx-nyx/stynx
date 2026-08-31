@@ -77,7 +77,11 @@ describe('S3Service', () => {
 
     vi.spyOn(Date, 'now').mockReturnValue(new Date('2026-04-26T12:01:01.000Z').getTime());
     await expect(
-      service.presignDownloadForTenant({ key: 'tenant-a/docs/four.pdf', tenantId: 'tenant-a', expiresInSeconds: 10 }),
+      service.presignDownloadForTenant({
+        key: 'tenant-a/docs/four.pdf',
+        tenantId: 'tenant-a',
+        expiresInSeconds: 10,
+      }),
     ).resolves.toBe('https://signed.example.test/object');
   });
 
@@ -123,7 +127,8 @@ describe('S3Service', () => {
       },
     ]);
 
-    const command = send.mock.calls[0]?.[0] as CommandWithInput<PutBucketLifecycleConfigurationCommandInput>;
+    const command = send.mock
+      .calls[0]?.[0] as CommandWithInput<PutBucketLifecycleConfigurationCommandInput>;
     expect(command).toBeInstanceOf(PutBucketLifecycleConfigurationCommand);
     expect(command.input).toEqual({
       Bucket: 'stynx-docs-prod-us-east-1',
@@ -156,7 +161,8 @@ describe('S3Service', () => {
 
     await service.configureLifecycle([{ name: 'empty-rule' }]);
 
-    const command = send.mock.calls[0]?.[0] as CommandWithInput<PutBucketLifecycleConfigurationCommandInput>;
+    const command = send.mock
+      .calls[0]?.[0] as CommandWithInput<PutBucketLifecycleConfigurationCommandInput>;
     expect(command.input.LifecycleConfiguration?.Rules?.[0]).toEqual({
       ID: 'empty-rule',
       Status: 'Enabled',
@@ -188,7 +194,9 @@ describe('S3Service', () => {
     expect(command.input.Key).toBe('tenant-a/docs/one.pdf');
     expect(command.input.VersionId).toBe('version-1');
     expect(command.input.Retention?.Mode).toBe('COMPLIANCE');
-    expect(command.input.Retention?.RetainUntilDate?.toISOString()).toBe('2026-05-03T12:00:00.000Z');
+    expect(command.input.Retention?.RetainUntilDate?.toISOString()).toBe(
+      '2026-05-03T12:00:00.000Z',
+    );
   });
 
   describe('presignUpload', () => {
@@ -209,14 +217,14 @@ describe('S3Service', () => {
       expect(result.headers['content-type']).toBe('application/pdf');
       expect(result.headers['x-amz-meta-sha256']).toBe('abc123');
       expect(result.headers['x-amz-server-side-encryption']).toBe('aws:kms');
-      expect(result.headers['x-amz-server-side-encryption-aws-kms-key-id']).toBe('alias/stynx-docs');
+      expect(result.headers['x-amz-server-side-encryption-aws-kms-key-id']).toBe(
+        'alias/stynx-docs',
+      );
       expect(result.expiresInSeconds).toBe(300);
 
-      expect(getSignedUrl).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.any(PutObjectCommand),
-        { expiresIn: 300 },
-      );
+      expect(getSignedUrl).toHaveBeenCalledWith(expect.anything(), expect.any(PutObjectCommand), {
+        expiresIn: 300,
+      });
       const command = (getSignedUrl as Mock).mock.calls[0]?.[1] as PutObjectCommand;
       expect(command.input).toMatchObject({
         Bucket: 'stynx-docs-prod-us-east-1',
@@ -243,11 +251,9 @@ describe('S3Service', () => {
         expiresInSeconds: 30,
       });
       expect(result.expiresInSeconds).toBe(30);
-      expect(getSignedUrl).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.any(PutObjectCommand),
-        { expiresIn: 30 },
-      );
+      expect(getSignedUrl).toHaveBeenCalledWith(expect.anything(), expect.any(PutObjectCommand), {
+        expiresIn: 30,
+      });
     });
   });
 
@@ -265,11 +271,9 @@ describe('S3Service', () => {
       });
       expect(result.url).toBe('https://signed.example.test/object');
       expect(result.expiresInSeconds).toBe(300);
-      expect(getSignedUrl).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.any(GetObjectCommand),
-        { expiresIn: 300 },
-      );
+      expect(getSignedUrl).toHaveBeenCalledWith(expect.anything(), expect.any(GetObjectCommand), {
+        expiresIn: 300,
+      });
       const cmd = (getSignedUrl as Mock).mock.calls[0]?.[1] as GetObjectCommand;
       expect(cmd.input.Bucket).toBe('stynx-docs-prod-us-east-1');
       expect(cmd.input.Key).toBe('tenant-a/docs/file.pdf');
@@ -310,10 +314,14 @@ describe('S3Service', () => {
       downloadExpiresInSeconds: 222,
     });
 
-    await expect(service.presignUpload({ key: 'k', contentType: 'text/plain', checksumSha256: 'sha' })).resolves.toMatchObject({
+    await expect(
+      service.presignUpload({ key: 'k', contentType: 'text/plain', checksumSha256: 'sha' }),
+    ).resolves.toMatchObject({
       expiresInSeconds: 111,
     });
-    await expect(service.presignDownload({ key: 'k', filename: 'file.txt' })).resolves.toMatchObject({
+    await expect(
+      service.presignDownload({ key: 'k', filename: 'file.txt' }),
+    ).resolves.toMatchObject({
       expiresInSeconds: 222,
     });
   });
@@ -334,7 +342,10 @@ describe('S3Service', () => {
         VersionId: 'v1',
       })
       .mockResolvedValueOnce({
-        Versions: [{ Key: 'key', VersionId: 'v1' }, { Key: 'other', VersionId: 'v2' }],
+        Versions: [
+          { Key: 'key', VersionId: 'v1' },
+          { Key: 'other', VersionId: 'v2' },
+        ],
         DeleteMarkers: [{ Key: 'key', VersionId: 'd1' }],
       })
       .mockResolvedValueOnce({})
@@ -404,6 +415,25 @@ describe('S3Service', () => {
     expect(command.input.Delete?.Objects).toEqual([{ Key: 'key', VersionId: 'deleted-v1' }]);
   });
 
+  it('deletes matching versions when delete-marker listings are omitted', async () => {
+    const service = new S3Service({
+      environment: 'prod',
+      region: 'us-east-1',
+      kmsAlias: 'stynx-docs',
+      collections: {},
+    });
+    const send = vi
+      .fn()
+      .mockResolvedValueOnce({ Versions: [{ Key: 'key', VersionId: 'version-1' }] })
+      .mockResolvedValueOnce({});
+    Object.defineProperty(service, 'client', { value: { send } satisfies Pick<S3Client, 'send'> });
+
+    await service.deleteAllVersions('key');
+
+    const command = send.mock.calls[1]?.[0] as DeleteObjectsCommand;
+    expect(command.input.Delete?.Objects).toEqual([{ Key: 'key', VersionId: 'version-1' }]);
+  });
+
   it('uses the default presign rate limit when no compliance override is configured', async () => {
     const service = new S3Service({
       environment: 'prod',
@@ -415,10 +445,8 @@ describe('S3Service', () => {
     await expect(
       service.presignDownloadForTenant({ key: 'tenant-a/docs/file.pdf', tenantId: 'tenant-a' }),
     ).resolves.toBe('https://signed.example.test/object');
-    expect(getSignedUrl).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.any(GetObjectCommand),
-      { expiresIn: 300 },
-    );
+    expect(getSignedUrl).toHaveBeenCalledWith(expect.anything(), expect.any(GetObjectCommand), {
+      expiresIn: 300,
+    });
   });
 });

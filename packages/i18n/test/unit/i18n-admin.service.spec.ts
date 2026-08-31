@@ -25,6 +25,12 @@ describe('I18nAdminService', () => {
       'i18n.override.pt-BR.title': 'Titulo',
     });
     expect(query).toHaveBeenCalledWith(expect.stringContaining('tenant_settings'), ['tenant-1']);
+    expect(database.withSystemContext).toHaveBeenCalledWith('i18n override listing', expect.any(Function));
+    expect(database.tx).toHaveBeenCalledWith(expect.any(Function), {
+      role: 'owner',
+      readonly: true,
+      replica: false,
+    });
   });
 
   it('returns no overrides when the tenant has no settings row', async () => {
@@ -68,6 +74,12 @@ describe('I18nAdminService', () => {
     ]);
     expect(catalog.setTenantOverrides).toHaveBeenCalledWith('tenant-1', {
       'i18n.override.pt-BR.title': 'Titulo',
+    });
+    expect(database.withSystemContext).toHaveBeenCalledWith('i18n override update', expect.any(Function));
+    expect(database.tx).toHaveBeenCalledWith(expect.any(Function), {
+      role: 'owner',
+      readonly: false,
+      replica: false,
     });
   });
 

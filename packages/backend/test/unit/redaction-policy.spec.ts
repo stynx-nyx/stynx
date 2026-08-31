@@ -48,6 +48,11 @@ describe('PatternAuditMetadataRedactionPolicy', () => {
     expect(policy.redact({ s: 'abcdefghijk' }, ctx)).toEqual({ s: 'abcde...' });
   });
 
+  it('does not truncate a string exactly at maxStringLength', () => {
+    const policy = new PatternAuditMetadataRedactionPolicy({ maxStringLength: 5 });
+    expect(policy.redact({ s: 'abcde' }, ctx)).toEqual({ s: 'abcde' });
+  });
+
   it('truncates large arrays to maxArrayLength', () => {
     const policy = new PatternAuditMetadataRedactionPolicy({ maxArrayLength: 3 });
     const result = policy.redact({ arr: [1, 2, 3, 4, 5] }, ctx) as { arr: unknown[] };
@@ -72,6 +77,20 @@ describe('PatternAuditMetadataRedactionPolicy', () => {
     const policy = new PatternAuditMetadataRedactionPolicy();
     // Arrays at the root are not valid metadata containers — should return undefined.
     expect(policy.redact([1, 2] as unknown as Record<string, unknown>, ctx)).toBe(undefined);
+  });
+
+  it('rejects primitive and null root metadata while preserving exact falsy metadata', () => {
+    const policy = new PatternAuditMetadataRedactionPolicy();
+    expect(policy.redact(null as never, ctx)).toBe(null);
+    expect(policy.redact('root' as never, ctx)).toBe(undefined);
+    expect(policy.redact(0 as never, ctx)).toBe(0);
+  });
+
+  it('increments depth while sanitizing array entries', () => {
+    const policy = new PatternAuditMetadataRedactionPolicy({ maxDepth: 1 });
+    expect(policy.redact({ values: [[{ secret: 'too deep' }]] }, ctx)).toEqual({
+      values: ['[MaxDepth]'],
+    });
   });
 
   it('emits [Unsupported] for function/symbol values', () => {

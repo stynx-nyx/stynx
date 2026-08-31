@@ -7,6 +7,7 @@
     "DOCKER_CONFIG",
     "DOCKER_HOST",
     "STYNX_DATABASE_URL",
+    "STYNX_API_BASELINE_MODE",
     "STYNX_POSTGRES_PORT",
     "STYNX_TEST_PG_HOST",
     "STYNX_TEST_PG_PASSWORD",
@@ -29,8 +30,65 @@
       "dependsOn": ["^build"],
       "outputs": []
     },
+    "@stynx-nyx/sdk#typecheck": {
+      "dependsOn": ["build", "^build"],
+      "outputs": []
+    },
     "test": {
       "dependsOn": ["build", "^build"],
+      "outputs": [
+        ".test-results/unit.json",
+        ".test-results/unit.log",
+        ".test-results/unit.junit.xml"
+      ]
+    },
+    "stynx-script-tests#test": {
+      "dependsOn": [
+        "@stynx-nyx/angular#build",
+        "@stynx-nyx/angular-audit#build",
+        "@stynx-nyx/angular-auth#build",
+        "@stynx-nyx/angular-flow#build",
+        "@stynx-nyx/angular-i18n#build",
+        "@stynx-nyx/angular-iam#build",
+        "@stynx-nyx/angular-profile#build",
+        "@stynx-nyx/angular-sessions#build",
+        "@stynx-nyx/angular-storage#build",
+        "@stynx-nyx/angular-tenancy#build",
+        "@stynx-nyx/angular-trash#build",
+        "@stynx-nyx/angular-ui#build",
+        "@stynx-nyx/audit#build",
+        "@stynx-nyx/auth#build",
+        "@stynx-nyx/backend#build",
+        "@stynx-nyx/cli#build",
+        "@stynx-nyx/contracts#build",
+        "@stynx-nyx/core#build",
+        "@stynx-nyx/data#build",
+        "@stynx-nyx/feature-flags#build",
+        "@stynx-nyx/flow#build",
+        "@stynx-nyx/health#build",
+        "@stynx-nyx/i18n#build",
+        "@stynx-nyx/idempotency#build",
+        "@stynx-nyx/integration-adapter#build",
+        "@stynx-nyx/jobs#build",
+        "@stynx-nyx/logging#build",
+        "@stynx-nyx/mobile-runtime#build",
+        "@stynx-nyx/notifications#build",
+        "@stynx-nyx/offline-sync#build",
+        "@stynx-nyx/outbox#build",
+        "@stynx-nyx/pdf#build",
+        "@stynx-nyx/pdf-a#build",
+        "@stynx-nyx/pdf-a-vera-docker#build",
+        "@stynx-nyx/preferences#build",
+        "@stynx-nyx/privacy#build",
+        "@stynx-nyx/ratelimit#build",
+        "@stynx-nyx/sdk#build",
+        "@stynx-nyx/sessions#build",
+        "@stynx-nyx/signature#build",
+        "@stynx-nyx/storage#build",
+        "@stynx-nyx/tenancy#build",
+        "@stynx-nyx/testing#build",
+        "@stynx-nyx/worklist#build"
+      ],
       "outputs": [
         ".test-results/unit.json",
         ".test-results/unit.log",
@@ -63,6 +121,10 @@
     },
     "test:e2e": {
       "dependsOn": ["build", "^build"],
+      "outputs": [".test-results/e2e.json", ".test-results/e2e.log", ".test-results/e2e.junit.xml"]
+    },
+    "@stynx-nyx/reference-web#test:e2e": {
+      "dependsOn": ["build", "^build", "@stynx-nyx/reference-api#build"],
       "outputs": [".test-results/e2e.json", ".test-results/e2e.log", ".test-results/e2e.junit.xml"]
     }
   }

@@ -1,9 +1,10 @@
 import { defineConfig } from 'vitest/config';
 import swcMod from 'unplugin-swc';
 import { createRequire } from 'node:module';
-import { existsSync } from 'node:fs';
-import { resolve, dirname } from 'node:path';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { resolve, dirname, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import ts from 'typescript';
 import { getCoverageThreshold } from './test-thresholds.mjs';
 
 // unplugin-swc exports its plugin factories as `{ vite, esbuild, ... }` on the
@@ -73,6 +74,45 @@ function coverageThresholdValues(threshold) {
 
 function isCompleteCoverageThreshold(threshold) {
   return coverageMetricKeys.every((key) => threshold[key] === completeCoverageThreshold[key]);
+}
+
+function pureBarrelEntryPoints(packageDir) {
+  const sourceRoot = resolve(packageDir, 'src');
+  if (!existsSync(sourceRoot)) return [];
+
+  const candidates = [];
+  const visit = (directory) => {
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const path = resolve(directory, entry.name);
+      if (entry.isDirectory()) visit(path);
+      if (entry.isFile() && entry.name === 'index.ts') candidates.push(path);
+    }
+  };
+  visit(sourceRoot);
+
+  return candidates.flatMap((path) => {
+    try {
+      const source = ts.createSourceFile(
+        path,
+        readFileSync(path, 'utf8'),
+        ts.ScriptTarget.Latest,
+        false,
+        ts.ScriptKind.TS,
+      );
+      const isPureBarrel =
+        source.parseDiagnostics.length === 0 &&
+        source.statements.length > 0 &&
+        source.statements.every(
+          (statement) =>
+            ts.isExportDeclaration(statement) ||
+            (ts.isImportDeclaration(statement) && statement.importClause?.isTypeOnly === true),
+        );
+      return isPureBarrel ? [relative(packageDir, path).split(sep).join('/')] : [];
+    } catch {
+      // A file that cannot be classified remains in the coverage population.
+      return [];
+    }
+  });
 }
 
 export function createVitestConfig({
@@ -166,14 +206,13 @@ export function createVitestConfig({
         include: collectCoverageFrom,
         exclude: [
           'src/generated/**',
-          'src/**/index.ts',
-          'src/index.ts',
           'src/main.ts',
           'src/**/*.module.ts',
           'src/**/constants.ts',
           'src/**/tokens.ts',
           'src/**/types.ts',
           'src/**/*.d.ts',
+          ...pureBarrelEntryPoints(packageDir),
           ...coverageExclude,
         ],
         thresholds: {

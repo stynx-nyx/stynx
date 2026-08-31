@@ -1,6 +1,5 @@
 import { createHash } from 'node:crypto';
 import { Test } from '@nestjs/testing';
-import type { INestApplication } from '@nestjs/common';
 import {
   CreateBucketCommand,
   ListObjectVersionsCommand,
@@ -209,6 +208,8 @@ async function setupDocumentsE2e(): Promise<DocumentsE2eContext> {
 
   const app = moduleRef.createNestApplication();
   await app.init();
+  await app.listen(0, '127.0.0.1');
+  expect(app.getHttpServer().listening).toBe(true);
 
   await seedRecordsAndNotesE2e(postgres);
   await grantDocumentPermissions(postgres);
