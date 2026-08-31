@@ -3685,7 +3685,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 66,
-      "assertion_digest_sha256": "e2fcaa0419fcb8954f20707ea17def3a713e59aeb42ffc6f33143f02ac1e1664"
+      "assertion_digest_sha256": "4dc70b030c29ebb05e41092ac4c642308c92823ef7d94d8729c2693e66bf9a2f"
     },
     {
       "path": "test/scripts/local-rc-blocker-contract.test.mjs",
@@ -3700,8 +3700,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 214,
-      "assertion_digest_sha256": "f2dc5da0573b3def6d8d58d4e0f10143364930b1896920f98027aaf614062d9a"
+      "assertion_count": 219,
+      "assertion_digest_sha256": "f199e653907db31c00fa20ad03df1052bff5e151b62d7a50304d167ab677e17c"
     }
   ],
   "suites": {
