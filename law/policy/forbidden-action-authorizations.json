@@ -829,6 +829,18 @@
       "commit": "78b347c975a9e257a6a18a8259188139bcc3aabd",
       "authorized_by": "Owner",
       "reason": "Authorizes at tree 3c38153c65a7edcfc337e81f1ac36c8546587120 the Architect-owned STYNX 1.1.2 closure ADR and declarative protection target while preserving every invariant severity, test, threshold, and separate Owner-controlled publication, deprecation, visibility, and repository-settings boundary."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "d00de2674190b9ec3e52215cc8deda551ce33a07",
+      "authorized_by": "Owner",
+      "reason": "Authorizes at tree c898ebd4c0eda706741325a7c597081f2b91d154 only the release workflow SHA-256 ef6c78ad48abf341ef06bc3962ab9c2cae4599a37702beb2ed59e467bd8542a7 under the accepted STYNX 1.1.2 closure ADR: registry monotonicity derives the exact candidate from the root manifest while preserving publish:true, exact-main, token, opt-in, stop-first, test, threshold, publication, tag, and repository-settings boundaries."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "d00de2674190b9ec3e52215cc8deda551ce33a07",
+      "authorized_by": "Owner",
+      "reason": "Authorizes at tree c898ebd4c0eda706741325a7c597081f2b91d154 only registry anomaly policy SHA-256 5d502fc748830b4e4c09c5de534195bc846617a7d7c6dd74c28fdfb636d82cd9: exact angular-profile 2.0.0 history may cause explicit latest tagging only for canonical 1.x candidates, with every other package, version, effect, test, threshold, release, and live-setting boundary preserved."
     }
   ]
 }
