@@ -771,6 +771,7 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
     '.github/workflows/ci.yml',
     '.github/workflows/devai-local-rc-verify.yml',
     'AGENTS.md',
+    'docs/meta/security/sbom.cdx.json',
     'law/adr/2026-08-24-stynx-1.1.1-campaign-controls.md',
     'law/policy/devai-local-rc-trust-store.json',
     'law/policy/forbidden-action-authorizations.json',
