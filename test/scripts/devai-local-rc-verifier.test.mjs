@@ -30,32 +30,32 @@ const installedVerifierPolicy = readFileSync(
 
 const provider = {
   package: '@aarusso-nyx/devai',
-  version: '1.2.13',
+  version: '1.4.5',
   tarball:
-    'https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.2.13/6e766187269db2e5f494786adc7c00c62acad006',
-  shasum: '6e766187269db2e5f494786adc7c00c62acad006',
-  sha256: '47f07c9ea4eecfb06c9ee6d0ec01ea46e3e76231e4c6151ddbde73ada26122d0',
+    'https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.4.5/1d5aa3fc8748a3ac7c2150750f60803c0b357b86',
+  shasum: '1d5aa3fc8748a3ac7c2150750f60803c0b357b86',
+  sha256: 'f5fa97bb2c0d7b81487de6c13eac1d78bcb1fdaa8021a051d0c4c9f7e7371d26',
   integrity:
-    'sha512-QM9PyGNtPRzhRBsYTiJFg6eM3OVw4/fSyAPnn1h8yHBq20GcEBrp91wxzqlvGREGkOAzezwvK3INze2OjqZV3Q==',
-  sourceCommit: '5df84ca88179a8fe53cc29cf8201c32c9439d552',
-  sourceTree: '36b5c714e8da19b5f42fb7db57d8fe9783c99b4f',
-  signedTagObject: '32c9b98603d49fcabbf1db220b2f7438e0a40fc6',
+    'sha512-5XuNGqbiqRGx+3MJOlO9VdJoKwX5MZ9a1BxdX/APUeD/j48CgtLwf5hNyxDkujxexekNn5TGSLUmU7aki2LTeQ==',
+  sourceCommit: '5461ba55d8fba23d8e0a310480eb62d1e3c6c52c',
+  sourceTree: 'b339fa7fb13b0792ac929b5f3f57f4b84366b649',
+  signedTagObject: '11eaeaf34b4aad76565ae1adc0fb1abf0ad37ae9',
 };
 
 const verifier = {
   package: '@aarusso-nyx/devai',
-  version: '1.2.12',
+  version: '1.4.4',
   tarball:
-    'https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.2.12/04a8bb1edd4f85f8a3663be931634f4e077139b2',
-  shasum: '04a8bb1edd4f85f8a3663be931634f4e077139b2',
+    'https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.4.4/fcdf9a21f92094fce10d4cee42440abf44200467',
+  shasum: 'fcdf9a21f92094fce10d4cee42440abf44200467',
   integrity:
-    'sha512-WXd1oRdBDenC/VOLFzquIdGZ5giBAT7DBPppdtUDfCUQKioflzL2xO1iOmYKf5E6G5dDuRCgmMDoUOoq1Mxsgw==',
-  sourceCommit: 'e365abdcf245882e3f5ee1fb0ea8ef7bebe3ab0d',
-  sourceTree: '5a89a8c482e0f145708b311904bd86bd7bd45939',
-  provenance: 'e6be4198ded731b9733c8e5c720fc5beb1ec8393a1eda01b76e6119b172d17c0',
-  embeddedSourceCommit: '9e115014f8da5a16be526c7da5207bc0aae0801b',
-  policyDigest: '9990ce69fee0bca529b6337334a403cb569a200ad508c00b08d9e60b563696a0',
-  workflowDigest: '96f18933cbe3ac2b93637d81a27009075e8d4043b4dd8b14bae67003775893b2',
+    'sha512-B1AJzDAZNw+UM1m7bQjwHT9q0gO3cutNpGPRAXFEBtq3L6AZymI6RvLc4ghh05ssOoREynXKuJyjsayRJbWPEQ==',
+  sourceCommit: '3aec624d0c0aecc534e60ee45306a4e5e6a7e94d',
+  sourceTree: '2cad519aba8117a1850eee85d41eae452d51a141',
+  provenance: '8ebafff53524031a3207a2256ebcd0fa6e0cc4271fd4bb6bca5aa003395034bd',
+  embeddedSourceCommit: '37e75a5c27569d4cb3fdb4a3dc97a140da4d78de',
+  policyDigest: '8d16a2dc7754920f0b27e2d37eb5ce3464d5a62df7db720a45c3a03c2ee1cba1',
+  workflowDigest: '615cb94cf9b6ab79883c9b0a409fdefac296197779777bb8834e7dca6c43455d',
 };
 
 const evidenceBins = {
@@ -131,7 +131,7 @@ test('generated workflow requires the dedicated package token without a GitHub t
   assert.doesNotMatch(workflow, /PACKAGES_READ_TOKEN[^\n]*github\.token/u);
 });
 
-test('generated workflow keeps provider 1.2.13 distinct from verifier package 1.2.12', () => {
+test('generated workflow keeps provider 1.4.5 distinct from verifier package 1.4.4', () => {
   const step = materializationStep();
   assert.equal(rootManifest.devDependencies[provider.package], provider.version);
   assert.equal(projectBinding.devai_version, provider.version);
@@ -154,18 +154,18 @@ test('generated workflow keeps provider 1.2.13 distinct from verifier package 1.
     ],
     'independent verifier distribution',
   );
-  assert.doesNotMatch(step, /1\.2\.13|6e766187269db2e5f494786adc7c00c62acad006/u);
+  assert.doesNotMatch(step, /1\.4\.5|1d5aa3fc8748a3ac7c2150750f60803c0b357b86/u);
 });
 
-test('local RC prepare accepts only provider 1.2.13 without conflating verifier 1.2.12', () => {
+test('local RC prepare accepts only provider 1.4.5 without conflating verifier 1.4.4', () => {
   const guard = localRcProviderGuard();
   const candidateVersions = [
     provider.version,
     verifier.version,
-    '1.2.11',
-    '1.2.14',
+    '1.4.3',
+    '1.4.6',
     'latest',
-    '^1.2.13',
+    '^1.4.5',
   ];
   const acceptedVersions = candidateVersions.filter(
     (candidateVersion) => candidateVersion === guard.conditionVersion,
@@ -189,7 +189,7 @@ test('generated workflow rejects mutable package selectors and unpinned distribu
   assert.doesNotMatch(step, /@latest|\^1\.|~1\.|\b1\.2\.x\b|dist-tags|npm\s+view/u);
   assert.ok(step.includes(verifier.tarball));
   assert.equal(rootManifest.devDependencies[provider.package], provider.version);
-  assert.match(lockfile, /specifier:\s+1\.2\.13/u);
+  assert.match(lockfile, /specifier:\s+1\.4\.5/u);
   assert.ok(lockfile.includes(provider.tarball));
   assert.match(step, /https:\/\/npm\.pkg\.github\.com/u);
   assert.doesNotMatch(step, /https:\/\/github\.com\/.+\/archive\//u);

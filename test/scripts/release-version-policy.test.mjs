@@ -762,12 +762,23 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
     mismatchDisposition: 'fail-before-package-start',
   });
   assert.deepEqual(policy.allowedChangedPaths, [
+    '.devai/config/adopter-policy-binding.json',
+    '.devai/config/authority-policy.json',
+    '.devai/config/github-actions-host-adapter.json',
+    '.devai/config/project.json',
+    '.devai/config/subprocess-effects.json',
+    '.devai/constitution.md',
     '.github/workflows/ci.yml',
+    '.github/workflows/devai-local-rc-verify.yml',
+    'AGENTS.md',
     'law/adr/2026-08-24-stynx-1.1.1-campaign-controls.md',
+    'law/policy/devai-local-rc-trust-store.json',
     'law/policy/forbidden-action-authorizations.json',
+    'law/policy/release-campaign-1.1.1.json',
     'law/policy/stynx-1.1.1-mutation-reuse.json',
     'law/trace.json',
     'package.json',
+    'pnpm-lock.yaml',
     'packages/pdf-a-vera-docker/src/parse-report.ts',
     'packages/pdf-a-vera-docker/test/unit/parse-report.spec.ts',
     'packages/pdf-a-vera-docker/test/unit/validator.spec.ts',
@@ -780,10 +791,13 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
     'packages/preferences/vitest.config.ts',
     'packages/ratelimit/vitest.config.ts',
     'reference/api/Dockerfile',
+    'scripts/devai-local-rc.mjs',
     'scripts/list-ddl-objects.spec.mjs',
     'scripts/run-mutation-evidence.mjs',
+    'test/scripts/devai-local-rc-verifier.test.mjs',
     'test/scripts/local-rc-blocker-contract.test.mjs',
     'test/scripts/release-version-policy.test.mjs',
+    'test/scripts/validate.js',
     'tools/repo-config/coverage-population.mjs',
   ]);
 
@@ -796,7 +810,12 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
     sha256(sourceManifest),
     policy.candidateRebind.semanticRebindComparison.sourceRootManifest.sha256,
   );
-  assert.equal(repositorySource('package.json'), sourceManifest);
+  const targetManifest = repositorySource('package.json');
+  assert.equal(Buffer.byteLength(targetManifest), 10_789);
+  assert.equal(
+    sha256(targetManifest),
+    policy.devai145Adoption.semanticMutationInputTransition.targetRootManifest.sha256,
+  );
   const { canonicalContractBytes, canonicalContractSha256, ...semanticRebindComparison } =
     policy.candidateRebind.semanticRebindComparison;
   const semanticContract = canonicalize({
@@ -808,7 +827,18 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
   });
   assert.equal(Buffer.byteLength(semanticContract), canonicalContractBytes);
   assert.equal(sha256(semanticContract), canonicalContractSha256);
-  assert.deepEqual(JSON.parse(sourceManifest), rootManifest);
+  const normalizedTargetManifest = JSON.parse(targetManifest);
+  normalizedTargetManifest.devDependencies['@aarusso-nyx/devai'] = '1.2.13';
+  assert.deepEqual(JSON.parse(sourceManifest), normalizedTargetManifest);
+  assert.equal(rootManifest.devDependencies['@aarusso-nyx/devai'], '1.4.5');
+  assert.deepEqual(policy.devai145Adoption.mutationInputProjection, {
+    rosterCount: 38,
+    artifactBindingCount: 76,
+    productPackageSelectionCount: 0,
+    disposition: 'exact-semantic-devai-input-transition-only',
+  });
+  assert.equal(policy.devai145Adoption.mutationSubprocesses, 0);
+  assert.equal(policy.devai145Adoption.packageStarts, 0);
   assert.notEqual(
     policy.candidateRebind.sourceCandidate.commit,
     policy.candidateRebind.historicalInputCandidate.commit,
@@ -841,6 +871,13 @@ test('D24.33 runner validates and atomically rebinds without a package start', (
     'artifactBindingCount',
     'sourceInputProjection',
     'semanticRebindComparison',
+    'devai145Adoption',
+    'semanticMutationInputTransition',
+    'sourceLockfile',
+    'targetLockfile',
+    'manifestTransition',
+    'lockfileTransitionCount',
+    'governanceRunnerTransition',
     'otherMutationInputTreeEntries',
     'allowedChangedPaths',
     'reportDigest',
