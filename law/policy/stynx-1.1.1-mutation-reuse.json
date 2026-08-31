@@ -51,12 +51,23 @@
     "@stynx-nyx/worklist"
   ],
   "allowedChangedPaths": [
+    ".devai/config/adopter-policy-binding.json",
+    ".devai/config/authority-policy.json",
+    ".devai/config/github-actions-host-adapter.json",
+    ".devai/config/project.json",
+    ".devai/config/subprocess-effects.json",
+    ".devai/constitution.md",
     ".github/workflows/ci.yml",
+    ".github/workflows/devai-local-rc-verify.yml",
+    "AGENTS.md",
     "law/adr/2026-08-24-stynx-1.1.1-campaign-controls.md",
+    "law/policy/devai-local-rc-trust-store.json",
     "law/policy/forbidden-action-authorizations.json",
+    "law/policy/release-campaign-1.1.1.json",
     "law/policy/stynx-1.1.1-mutation-reuse.json",
     "law/trace.json",
     "package.json",
+    "pnpm-lock.yaml",
     "packages/pdf-a-vera-docker/src/parse-report.ts",
     "packages/pdf-a-vera-docker/test/unit/parse-report.spec.ts",
     "packages/pdf-a-vera-docker/test/unit/validator.spec.ts",
@@ -70,9 +81,12 @@
     "packages/ratelimit/vitest.config.ts",
     "reference/api/Dockerfile",
     "scripts/list-ddl-objects.spec.mjs",
+    "scripts/devai-local-rc.mjs",
     "scripts/run-mutation-evidence.mjs",
+    "test/scripts/devai-local-rc-verifier.test.mjs",
     "test/scripts/local-rc-blocker-contract.test.mjs",
     "test/scripts/release-version-policy.test.mjs",
+    "test/scripts/validate.js",
     "tools/repo-config/coverage-population.mjs"
   ],
   "composedSummaryKind": "mutation-composed-report-set-v1",
@@ -284,6 +298,70 @@
       "rosterCount": 38,
       "selectedPackageCount": 0,
       "disposition": "receipt-and-sensor-paths-absent-from-every-package-projection"
+    },
+    "mutationSubprocesses": 0,
+    "packageStarts": 0,
+    "mismatchDisposition": "fail-before-package-start"
+  },
+  "devai145Adoption": {
+    "kind": "non-product-devai-provider-and-verifier-rollover-v1",
+    "provider": {
+      "name": "@aarusso-nyx/devai",
+      "sourceVersion": "1.2.13",
+      "targetVersion": "1.4.5",
+      "targetTarballSha256": "f5fa97bb2c0d7b81487de6c13eac1d78bcb1fdaa8021a051d0c4c9f7e7371d26",
+      "sourceCommit": "5461ba55d8fba23d8e0a310480eb62d1e3c6c52c",
+      "sourceTree": "b339fa7fb13b0792ac929b5f3f57f4b84366b649",
+      "signedTagObject": "11eaeaf34b4aad76565ae1adc0fb1abf0ad37ae9"
+    },
+    "verifier": {
+      "providerVersion": "1.4.4",
+      "policySha256": "8d16a2dc7754920f0b27e2d37eb5ce3464d5a62df7db720a45c3a03c2ee1cba1",
+      "provenanceSha256": "8ebafff53524031a3207a2256ebcd0fa6e0cc4271fd4bb6bca5aa003395034bd",
+      "sourceCommit": "37e75a5c27569d4cb3fdb4a3dc97a140da4d78de",
+      "payloadFileCount": 21
+    },
+    "semanticMutationInputTransition": {
+      "kind": "exact-devai-provider-input-transition-v1",
+      "sourceRootManifest": {
+        "bytes": 10790,
+        "sha256": "cccac5d19c5b38dd2f2d4840451c7c7d1b2fbb6403451bc0c2b149f0e8f80846",
+        "gitBlobOid": "da1ed88ad64acc60996d76e150af883ece7ba944"
+      },
+      "targetRootManifest": {
+        "bytes": 10789,
+        "sha256": "8b5e61616e02acdc4442248ac31f2968a86dc20b6fcbf99dd2d13183aced260a",
+        "gitBlobOid": "eb33c50ff06dbd7f6e81c534de98d7d116cfce0a"
+      },
+      "sourceLockfile": {
+        "bytes": 959807,
+        "sha256": "2ecbe46dcd7be422bea5d1c119067fb044ef0adccbf76c984e17d3ff653fd7dd",
+        "gitBlobOid": "7926cb31a4b6605fdddc71b89e8b0e15abd2c88d"
+      },
+      "targetLockfile": {
+        "bytes": 959802,
+        "sha256": "32afdd6bdad69213129226d9e26611594dbf298536dc2d81374713682cf3d98e",
+        "gitBlobOid": "6bbb933d50649e90b4c6ba77534f890bc79fc402"
+      },
+      "manifestTransition": {
+        "field": "devDependencies.@aarusso-nyx/devai",
+        "from": "1.2.13",
+        "to": "1.4.5"
+      },
+      "lockfileTransitionCount": 5,
+      "otherMutationInputTreeEntries": "identical-mode-type-oid"
+    },
+    "governanceRunnerTransition": {
+      "path": "scripts/run-mutation-evidence.mjs",
+      "scope": "zero-execution-candidate-rebind-validation-only",
+      "packageExecutionPathChanged": false,
+      "requiredDirectInvocationSentinel": "candidate rebind package start is forbidden"
+    },
+    "mutationInputProjection": {
+      "rosterCount": 38,
+      "artifactBindingCount": 76,
+      "productPackageSelectionCount": 0,
+      "disposition": "exact-semantic-devai-input-transition-only"
     },
     "mutationSubprocesses": 0,
     "packageStarts": 0,
