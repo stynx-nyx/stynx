@@ -1,5 +1,6 @@
 -- Keep auth.sessions writable across UTC month boundaries without relying on a
 -- process restart or on schema migrations being newly applicable.
+-- @security-definer-approved: platform-architects/STYNX-SESSION-PARTITIONS
 
 CREATE TABLE IF NOT EXISTS auth.sessions_default
   PARTITION OF auth.sessions DEFAULT;
