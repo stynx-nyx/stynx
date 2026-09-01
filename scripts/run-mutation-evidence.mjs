@@ -2200,10 +2200,13 @@ export async function rebindCandidateComposition({
   }
 
   const runnerTransition = devai145Adoption.governanceRunnerTransition;
+  const expectedRunnerScope = selectiveRefresh
+    ? 'protected-source-selective-refresh-validation-and-execution'
+    : 'zero-execution-candidate-rebind-validation-only';
   if (
     runnerTransition?.path !== 'scripts/run-mutation-evidence.mjs' ||
-    runnerTransition.scope !== 'zero-execution-candidate-rebind-validation-only' ||
-    runnerTransition.packageExecutionPathChanged !== false ||
+    runnerTransition.scope !== expectedRunnerScope ||
+    runnerTransition.packageExecutionPathChanged !== selectiveRefresh ||
     runnerTransition.requiredDirectInvocationSentinel !==
       'candidate rebind package start is forbidden'
   ) {
