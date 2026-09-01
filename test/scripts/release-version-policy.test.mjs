@@ -1697,10 +1697,28 @@ function createMaterializationFixture({ unsafeArtifact = false } = {}) {
   const relativeArtifactRoot = '.devai/state/check-cache/v1/artifacts/mutation';
   const protectedArtifactRoot = join(root, 'artifacts', relativeArtifactRoot);
   mkdirSync(protectedArtifactRoot, { recursive: true });
-  const report = { files: { 'packages/example/src/index.ts': { mutants: [] } } };
-  const result = unsafeArtifact
-    ? { packageName: '@stynx-nyx/example', credential: 'npm_abcdefghijklmnopqrstuvwxyz' }
-    : { packageName: '@stynx-nyx/example', workspace: 'packages/example', passed: true };
+  const report = {
+    testFiles: {},
+    files: {
+      'packages/example/src/index.ts': {
+        source: unsafeArtifact ? 'npm_abcdefghijklmnopqrstuvwxyz' : 'export const value = 1;',
+        mutants: [
+          {
+            coveredBy: [],
+            killedBy: [],
+            replacement: '2',
+            status: 'Killed',
+            statusReason: 'fixture',
+          },
+        ],
+      },
+    },
+  };
+  const result = {
+    packageName: '@stynx-nyx/example',
+    workspace: 'packages/example',
+    passed: true,
+  };
   const sourceSummary = {
     kind: 'mutation-composed-report-set-v1',
     complete: true,
