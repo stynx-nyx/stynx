@@ -13,6 +13,7 @@ shape package boundaries, generated diagnostics, or adoption policy.
 - [ADR-JOBS-0001 — Postgres-backed scheduler and worker runtime for `@stynx-nyx/jobs`](ADR-JOBS-0001-postgres-scheduler-worker.md)
 - [ADR-OUTBOX-0001 — Transactional outbox promoted from pec (E3)](ADR-OUTBOX-0001-transactional-outbox-promotion.md)
 - [Trusted local RC evidence and mutation execution boundary](2026-08-16-trusted-local-rc-evidence.md)
+- [Session partition lifecycle and protected mutation refresh](2026-09-01-session-partition-lifecycle-and-mutation-refresh.md)
 - [ADR-SESSIONS-0001 — Provider-neutral session inventory and control](ADR-SESSIONS-0001-provider-neutral-session-control.md)
 - [ADR-PREFERENCES-0001 — Tenant-subject preferences boundary](ADR-PREFERENCES-0001-tenant-subject-preferences.md)
 - [ADR-001 — Soft Delete](ADR-001-soft-delete.md)
