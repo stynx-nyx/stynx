@@ -1095,11 +1095,14 @@ test('D24.33 direct candidate rebind rejects missing or drifted source before fa
   );
   const directStart = runner.indexOf('if (isDirectInvocation) {');
   const rebindStart = runner.indexOf('if (policy.candidateRebind) {', directStart);
-  const fallbackStart = runner.indexOf('validateCheapGateMarker(candidate)', rebindStart);
+  const selectiveRefreshStart = runner.indexOf(
+    "if (policy.candidateRebind.kind === 'protected-source-selective-refresh-v1') {",
+    rebindStart,
+  );
   assert.notEqual(directStart, -1);
   assert.notEqual(rebindStart, -1);
-  assert.notEqual(fallbackStart, -1);
-  const directRebind = runner.slice(rebindStart, fallbackStart);
+  assert.notEqual(selectiveRefreshStart, -1);
+  const directRebind = runner.slice(rebindStart, selectiveRefreshStart);
   assert.match(
     directRebind,
     /if \(!existsSync\(sourceSummaryPath\)\)\s*throw new Error\([^)]*source summary[^)]*\)/u,
