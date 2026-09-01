@@ -2004,7 +2004,8 @@ test('D24.46 protected source materialization is exact, atomic, portable, and ze
   assert.equal(typeof materializeCandidateRebindSource, 'function');
 
   const fixture = createMaterializationFixture();
-  const finalDirectory = join(fixture.root, 'accepted-source');
+  const finalDirectory = join(fixture.root, 'fresh-cache', 'artifacts', 'mutation');
+  assert.equal(existsSync(dirname(finalDirectory)), false);
   let packageStarts = 0;
   const onPackageStart = () => {
     packageStarts += 1;
