@@ -1654,6 +1654,415 @@ test('D24.33 candidate rebind is executable, exhaustive, atomic, and starts no p
   }
 });
 
+function materializationFixtureGit(root, args) {
+  const result = spawnSync('git', args, {
+    cwd: root,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  assert.ifError(result.error);
+  assert.equal(result.status, 0, `${args.join(' ')}: ${result.stderr}`);
+  return result.stdout.trim();
+}
+
+function gitObjectIdentity(root, commit, path) {
+  const bytes = spawnSync('git', ['cat-file', 'blob', `${commit}:${path}`], {
+    cwd: root,
+    encoding: null,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  assert.ifError(bytes.error);
+  assert.equal(bytes.status, 0, String(bytes.stderr));
+  return {
+    path,
+    bytes: bytes.stdout.length,
+    gitBlobOid: materializationFixtureGit(root, ['rev-parse', `${commit}:${path}`]),
+    sha256: sha256(bytes.stdout),
+  };
+}
+
+function createMaterializationFixture({ unsafeArtifact = false } = {}) {
+  const root = mkdtempSync(join(tmpdir(), 'stynx-d24-46-materialization-'));
+  materializationFixtureGit(root, ['init', '-b', 'main']);
+  materializationFixtureGit(root, ['config', 'user.name', 'STYNX Fixture']);
+  materializationFixtureGit(root, ['config', 'user.email', 'fixture@stynx.invalid']);
+  writeFileSync(join(root, 'seed.txt'), 'source candidate\n');
+  materializationFixtureGit(root, ['add', 'seed.txt']);
+  materializationFixtureGit(root, ['commit', '-m', 'fixture: source candidate']);
+  const sourceCommit = materializationFixtureGit(root, ['rev-parse', 'HEAD']);
+  const sourceTree = materializationFixtureGit(root, ['rev-parse', 'HEAD^{tree}']);
+
+  const relativeArtifactRoot = '.devai/state/check-cache/v1/artifacts/mutation';
+  const protectedArtifactRoot = join(root, 'artifacts', relativeArtifactRoot);
+  mkdirSync(protectedArtifactRoot, { recursive: true });
+  const report = { files: { 'packages/example/src/index.ts': { mutants: [] } } };
+  const result = unsafeArtifact
+    ? { packageName: '@stynx-nyx/example', credential: 'npm_abcdefghijklmnopqrstuvwxyz' }
+    : { packageName: '@stynx-nyx/example', workspace: 'packages/example', passed: true };
+  const sourceSummary = {
+    kind: 'mutation-composed-report-set-v1',
+    complete: true,
+    passed: true,
+    candidate: { commit: sourceCommit, tree: sourceTree },
+    aggregate: { packageCount: 1 },
+    packages: [
+      {
+        packageName: '@stynx-nyx/example',
+        reportPath: `${relativeArtifactRoot}/packages-example.stryker.json`,
+        resultPath: `${relativeArtifactRoot}/packages-example.result.json`,
+      },
+    ],
+  };
+  const artifactValues = new Map([
+    ['packages-example.stryker.json', report],
+    ['packages-example.result.json', result],
+    ['summary.json', sourceSummary],
+  ]);
+  for (const [name, value] of artifactValues) {
+    writeFileSync(join(protectedArtifactRoot, name), `${canonicalize(value)}\n`, { mode: 0o644 });
+  }
+  const manifest = {
+    schemaVersion: '1.1.0',
+    repositoryId: 'stynx-nyx/stynx-fixture',
+    commit: sourceCommit,
+    tree: sourceTree,
+    profile: 'rc',
+    signerId: 'fixture-inspector',
+    artifacts: [...artifactValues.keys()].map((name) => ({
+      mediaType: 'application/json',
+      path: `${relativeArtifactRoot}/${name}`,
+      sha256: sha256(readFileSync(join(protectedArtifactRoot, name))),
+    })),
+    resultDigests: [],
+  };
+  writeFileSync(join(root, 'manifest.json'), `${canonicalize(manifest)}\n`, { mode: 0o644 });
+  materializationFixtureGit(root, ['add', 'artifacts', 'manifest.json']);
+  materializationFixtureGit(root, ['commit', '-m', 'fixture: protected evidence']);
+  const evidenceCommit = materializationFixtureGit(root, ['rev-parse', 'HEAD']);
+  const evidenceTree = materializationFixtureGit(root, ['rev-parse', 'HEAD^{tree}']);
+  materializationFixtureGit(root, ['tag', '-a', 'fixture-evidence', '-m', 'fixture evidence']);
+  const tagObject = materializationFixtureGit(root, ['rev-parse', 'fixture-evidence']);
+
+  const historicalRunner = `
+    import { chmodSync, copyFileSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+    import { join } from 'node:path';
+    function canonical(value) {
+      if (Array.isArray(value)) return '[' + value.map(canonical).join(',') + ']';
+      if (value && typeof value === 'object') return '{' + Object.keys(value).sort().map((key) => JSON.stringify(key) + ':' + canonical(value[key])).join(',') + '}';
+      return JSON.stringify(value);
+    }
+    export async function rebindCandidateComposition({ policy, sourceDirectory, finalDirectory, candidate }) {
+      for (const name of readdirSync(sourceDirectory).sort()) {
+        if (name === 'summary.json') continue;
+        copyFileSync(join(sourceDirectory, name), join(finalDirectory, name));
+        chmodSync(join(finalDirectory, name), 0o644);
+      }
+      const summary = JSON.parse(readFileSync(join(sourceDirectory, 'summary.json'), 'utf8'));
+      summary.candidate = { commit: candidate.commit, tree: candidate.tree };
+      summary.semanticRebindComparison = policy.semanticRebindComparison;
+      writeFileSync(join(finalDirectory, 'summary.json'), canonical(summary) + '\\n', { mode: 0o644 });
+      return { mode: 'candidate-rebound-composition' };
+    }
+  `;
+  function commitStep(id) {
+    mkdirSync(join(root, 'law'), { recursive: true });
+    mkdirSync(join(root, 'scripts'), { recursive: true });
+    writeFileSync(
+      join(root, 'law', 'step-policy.json'),
+      `${canonicalize({ semanticRebindComparison: { kind: `fixture-step-${id}` } })}\n`,
+    );
+    writeFileSync(join(root, 'scripts', 'historical-runner.mjs'), historicalRunner);
+    materializationFixtureGit(root, [
+      'add',
+      'law/step-policy.json',
+      'scripts/historical-runner.mjs',
+    ]);
+    materializationFixtureGit(root, ['commit', '-m', `fixture: rebind ${id}`]);
+    const commit = materializationFixtureGit(root, ['rev-parse', 'HEAD']);
+    const tree = materializationFixtureGit(root, ['rev-parse', 'HEAD^{tree}']);
+    return {
+      candidate: { commit, tree },
+      policy: gitObjectIdentity(root, commit, 'law/step-policy.json'),
+      runner: gitObjectIdentity(root, commit, 'scripts/historical-runner.mjs'),
+      semanticRebindComparison: { kind: `fixture-step-${id}` },
+    };
+  }
+  const first = commitStep('one');
+  const second = commitStep('two');
+  const sourceBytes = readFileSync(join(protectedArtifactRoot, 'summary.json'));
+  const firstSummary = { ...sourceSummary, candidate: first.candidate };
+  firstSummary.semanticRebindComparison = first.semanticRebindComparison;
+  const firstBytes = Buffer.from(`${canonicalize(firstSummary)}\n`);
+  const secondSummary = { ...firstSummary, candidate: second.candidate };
+  secondSummary.semanticRebindComparison = second.semanticRebindComparison;
+  const secondBytes = Buffer.from(`${canonicalize(secondSummary)}\n`);
+  const manifestBytes = readFileSync(join(root, 'manifest.json'));
+  const policy = {
+    candidateRebind: {
+      sourceSummary: {
+        path: `${relativeArtifactRoot}/summary.json`,
+        bytes: secondBytes.length,
+        sha256: sha256(secondBytes),
+        packageCount: 1,
+        artifactBindingCount: 2,
+      },
+      sourceMaterialization: {
+        kind: 'protected-tag-chained-zero-execution-rebind-v1',
+        destination: relativeArtifactRoot,
+        protectedSource: {
+          tag: 'fixture-evidence',
+          tagObject,
+          evidenceCommit,
+          evidenceTree,
+          repositoryId: manifest.repositoryId,
+          profile: manifest.profile,
+          signerId: manifest.signerId,
+          manifest: {
+            path: 'manifest.json',
+            bytes: manifestBytes.length,
+            sha256: sha256(manifestBytes),
+          },
+          artifactPrefix: `artifacts/${relativeArtifactRoot}/`,
+          artifactCount: 3,
+          reportCount: 1,
+          resultCount: 1,
+          summary: { bytes: sourceBytes.length, sha256: sha256(sourceBytes) },
+        },
+        steps: [
+          {
+            ...first,
+            inputSummary: { bytes: sourceBytes.length, sha256: sha256(sourceBytes) },
+            outputSummary: { bytes: firstBytes.length, sha256: sha256(firstBytes) },
+          },
+          {
+            ...second,
+            inputSummary: { bytes: firstBytes.length, sha256: sha256(firstBytes) },
+            outputSummary: { bytes: secondBytes.length, sha256: sha256(secondBytes) },
+          },
+        ],
+        checkout: 'local-shared-clone-exact-detached-commit',
+        publication: 'same-filesystem-atomic-rename',
+        existingDestination: 'accept-only-exact-complete-source',
+        interruptedStaging: 'reject-without-reuse',
+        credentialInputs: 0,
+        mutationSubprocesses: 0,
+        packageStarts: 0,
+        mismatchDisposition: 'fail-before-destination-publication',
+      },
+    },
+  };
+  return { root, policy, expectedSummary: secondBytes, unsafeArtifact };
+}
+
+test('D24.46 protected source materialization is exact, atomic, portable, and zero-execution', async () => {
+  const governed = JSON.parse(
+    repositorySource('law/policy/stynx-1.1.1-mutation-reuse.json'),
+  ).candidateRebind;
+  const contract = governed.sourceMaterialization;
+  assert.equal(contract.kind, 'protected-tag-chained-zero-execution-rebind-v1');
+  assert.equal(contract.protectedSource.tagObject, '766b31c243c8d9a14f3c3cef883d2935e716e828');
+  assert.equal(contract.protectedSource.evidenceCommit, '5d07b2923a44750f8daa06d2d0b8cd847d1c99ce');
+  assert.equal(contract.protectedSource.evidenceTree, 'dd41ab82ade66608738b442b88f26eb7cca6e989');
+  assert.equal(contract.protectedSource.artifactCount, 77);
+  assert.equal(contract.protectedSource.reportCount, 38);
+  assert.equal(contract.protectedSource.resultCount, 38);
+  assert.equal(
+    contract.protectedSource.summary.sha256,
+    '6548078707306ef7d28169e34ba50ee8d324c5766f60c50fdf41a153f7800d45',
+  );
+  assert.deepEqual(
+    contract.steps.map((step) => ({
+      commit: step.candidate.commit,
+      tree: step.candidate.tree,
+      policy: step.policy.gitBlobOid,
+      runner: step.runner.gitBlobOid,
+      output: step.outputSummary.sha256,
+    })),
+    [
+      {
+        commit: 'fce985d4914f3f2b450b4ca4e0828d665ca0e36e',
+        tree: '684d6c3012f4745961c8448f337c430634b3a8fe',
+        policy: '3961061d0f5be3ba87758d1633e60dcbceb8aa65',
+        runner: '42e1b760449d14126c7bebab7f5a16af253a4b82',
+        output: 'fc8396fa8fb3add85b6aa81332bef75cfdf234b970cebed595167d2e1b76d05d',
+      },
+      {
+        commit: 'f8a3521a944abc4b5c8a07e1ebae8d349e549fd7',
+        tree: '32a3a8fd59afcd500f9d67552081f819cba9b4d7',
+        policy: '3ada5eca7193976c1d281ca1bd4964c5997c8d98',
+        runner: '657da63dbe1a7343bb7ea428a2f0157138abaf74',
+        output: 'd86162cf5e2055dbea7e418c18de0904bcc2d077f25def95b32e2c71a147cf70',
+      },
+    ],
+  );
+  assert.equal(contract.steps.at(-1).outputSummary.sha256, governed.sourceSummary.sha256);
+  assert.equal(contract.credentialInputs, 0);
+  assert.equal(contract.mutationSubprocesses, 0);
+  assert.equal(contract.packageStarts, 0);
+
+  const runner = repositorySource('scripts/run-mutation-evidence.mjs');
+  assert.match(runner, /export (?:async )?function materializeCandidateRebindSource\s*\(/u);
+  assert.match(runner, /git[^\n]*clone[^\n]*(?:--shared|--local)/u);
+  assert.match(runner, /assertFocusedEvidenceSafe/u);
+  assert.match(runner, /candidate rebind package start is forbidden/u);
+  assert.match(runner, /renameSync/u);
+  const { materializeCandidateRebindSource } = await import(
+    `../../scripts/run-mutation-evidence.mjs?d24-46=${sha256(runner)}`
+  );
+  assert.equal(typeof materializeCandidateRebindSource, 'function');
+
+  const fixture = createMaterializationFixture();
+  const finalDirectory = join(fixture.root, 'accepted-source');
+  let packageStarts = 0;
+  const onPackageStart = () => {
+    packageStarts += 1;
+    throw new Error('package start sentinel tripped');
+  };
+  const baseInputs = {
+    repositoryRoot: fixture.root,
+    policy: fixture.policy,
+    finalDirectory,
+    onPackageStart,
+  };
+  try {
+    const result = await materializeCandidateRebindSource(baseInputs);
+    assert.equal(result.mode, 'materialized-protected-source');
+    assert.equal(result.packageStarts, 0);
+    assert.equal(packageStarts, 0);
+    assert.equal(readdirSync(finalDirectory).length, 3);
+    assert.equal(
+      sha256(readFileSync(join(finalDirectory, 'summary.json'))),
+      sha256(fixture.expectedSummary),
+    );
+    assert.deepEqual(readFileSync(join(finalDirectory, 'summary.json')), fixture.expectedSummary);
+    assert.deepEqual(
+      readdirSync(fixture.root).filter((name) => name.startsWith('.mutation-source-materialize')),
+      [],
+    );
+    const validated = await materializeCandidateRebindSource(baseInputs);
+    assert.equal(validated.mode, 'validated-existing-source');
+    assert.equal(packageStarts, 0);
+
+    const mismatchCases = [
+      ['missing-tag', (value) => (value.protectedSource.tag = 'missing-evidence'), /tag|ref/u],
+      ['tag-object', (value) => (value.protectedSource.tagObject = '0'.repeat(40)), /tag/u],
+      [
+        'evidence-commit',
+        (value) => (value.protectedSource.evidenceCommit = '0'.repeat(40)),
+        /commit/u,
+      ],
+      ['evidence-tree', (value) => (value.protectedSource.evidenceTree = '0'.repeat(40)), /tree/u],
+      [
+        'manifest-size',
+        (value) => (value.protectedSource.manifest.bytes += 1),
+        /manifest.*(?:size|bytes)/u,
+      ],
+      [
+        'manifest-digest',
+        (value) => (value.protectedSource.manifest.sha256 = '0'.repeat(64)),
+        /manifest.*(?:digest|sha256)/u,
+      ],
+      [
+        'artifact-path',
+        (value) => (value.protectedSource.artifactPrefix = '../escape/'),
+        /path|prefix/u,
+      ],
+      [
+        'artifact-count',
+        (value) => (value.protectedSource.artifactCount += 1),
+        /artifact.*count|population/u,
+      ],
+      [
+        'report-count',
+        (value) => (value.protectedSource.reportCount += 1),
+        /report.*count|population/u,
+      ],
+      [
+        'result-count',
+        (value) => (value.protectedSource.resultCount += 1),
+        /result.*count|population/u,
+      ],
+      ['old-summary-final', (value) => (value.steps = []), /step|final.*summary|source summary/u],
+      ['step-policy', (value) => (value.steps[0].policy.sha256 = '0'.repeat(64)), /policy/u],
+      ['step-runner', (value) => (value.steps[0].runner.gitBlobOid = '0'.repeat(40)), /runner/u],
+      [
+        'step-input',
+        (value) => (value.steps[0].inputSummary.sha256 = '0'.repeat(64)),
+        /input.*summary/u,
+      ],
+      [
+        'step-output',
+        (value) => (value.steps[0].outputSummary.sha256 = '0'.repeat(64)),
+        /output.*summary/u,
+      ],
+      [
+        'final-summary',
+        (value) => (value.steps[1].outputSummary.sha256 = '0'.repeat(64)),
+        /output.*summary|final.*summary/u,
+      ],
+      ['package-starts', (value) => (value.packageStarts = 1), /package.*start/u],
+      [
+        'mutation-subprocesses',
+        (value) => (value.mutationSubprocesses = 1),
+        /mutation.*subprocess/u,
+      ],
+    ];
+    for (const [name, mutate, expected] of mismatchCases) {
+      const caseFinal = join(fixture.root, `rejected-${name}`);
+      const policy = structuredClone(fixture.policy);
+      mutate(policy.candidateRebind.sourceMaterialization);
+      await assert.rejects(
+        () =>
+          materializeCandidateRebindSource({
+            repositoryRoot: fixture.root,
+            policy,
+            finalDirectory: caseFinal,
+            onPackageStart,
+          }),
+        expected,
+        name,
+      );
+      assert.equal(existsSync(caseFinal), false, `${name}: rejected source was published`);
+      assert.equal(packageStarts, 0, `${name}: package start sentinel changed`);
+    }
+
+    const interruptedFinal = join(fixture.root, 'interrupted-final');
+    const interruptedStage = join(fixture.root, '.mutation-source-materialize');
+    mkdirSync(interruptedStage);
+    await assert.rejects(
+      () =>
+        materializeCandidateRebindSource({
+          ...baseInputs,
+          finalDirectory: interruptedFinal,
+          stagingDirectory: interruptedStage,
+        }),
+      /staging|residue/u,
+    );
+    assert.equal(existsSync(interruptedFinal), false);
+    assert.equal(packageStarts, 0);
+  } finally {
+    rmSync(fixture.root, { recursive: true, force: true });
+  }
+
+  const unsafeFixture = createMaterializationFixture({ unsafeArtifact: true });
+  try {
+    await assert.rejects(
+      () =>
+        materializeCandidateRebindSource({
+          repositoryRoot: unsafeFixture.root,
+          policy: unsafeFixture.policy,
+          finalDirectory: join(unsafeFixture.root, 'unsafe-final'),
+          onPackageStart,
+        }),
+      /credential|unsafe|portable/u,
+    );
+    assert.equal(existsSync(join(unsafeFixture.root, 'unsafe-final')), false);
+    assert.equal(packageStarts, 0);
+  } finally {
+    rmSync(unsafeFixture.root, { recursive: true, force: true });
+  }
+});
+
 function publicWorkspaceManifests() {
   return ['packages', 'packages-web']
     .flatMap((directory) =>
