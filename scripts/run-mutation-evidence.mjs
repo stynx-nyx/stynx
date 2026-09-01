@@ -1922,12 +1922,16 @@ export async function rebindCandidateComposition({
     const historicalSourceInputs = mutationInputEntries(rosterEntry, sourceTree, catalog).filter(
       ({ path }) => path !== 'package.json',
     );
-    const semanticTransitionPaths = new Set([
-      'package.json',
-      'pnpm-lock.yaml',
-      devai145Adoption.governanceRunnerTransition?.path,
-      ...(versionRebaseline ? versionChangedPaths : []),
-    ]);
+    const semanticTransitionPaths = new Set(
+      selectiveRefresh
+        ? []
+        : [
+            'package.json',
+            'pnpm-lock.yaml',
+            devai145Adoption.governanceRunnerTransition?.path,
+            ...(versionRebaseline ? versionChangedPaths : []),
+          ],
+    );
     const sourceInputs = mutationInputEntries(rosterEntry, sourceTree, catalog).filter(
       ({ path }) => !semanticTransitionPaths.has(path),
     );
