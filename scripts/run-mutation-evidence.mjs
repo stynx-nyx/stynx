@@ -1402,10 +1402,14 @@ export async function materializeCandidateRebindSource({
   }
 
   const attempt = (candidateSourceMaterializationAttempt += 1);
+  const materializationParentDirectory = dirname(materializedFinalDirectory);
+  if (!requestedStagingDirectory) {
+    mkdirSync(materializationParentDirectory, { recursive: true });
+  }
   const materializationStagingDirectory = requestedStagingDirectory
     ? resolve(requestedStagingDirectory)
     : resolve(
-        dirname(materializedFinalDirectory),
+        materializationParentDirectory,
         `.mutation-source-materialize-${String(process.pid)}-${String(attempt)}`,
       );
   if (existsSync(materializationStagingDirectory)) {
