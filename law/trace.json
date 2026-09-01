@@ -3703,8 +3703,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 969,
-      "assertion_digest_sha256": "406246c45d42d04387c9cf049fe8d0caa1d4ba61eaa735a7867ca05b72890148"
+      "assertion_count": 970,
+      "assertion_digest_sha256": "8553cae85c86cb3593334586e37952d90bce765a5f873b5e335327c44399d032"
     },
     {
       "path": "test/scripts/release-version-policy.test.mjs",
@@ -3712,7 +3712,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001"],
       "lifecycle": "supported",
       "assertion_count": 294,
-      "assertion_digest_sha256": "1932da7a779caa9cac26f2992bd4e1d72d36cf2cfeac899b4991142e15b05fa1"
+      "assertion_digest_sha256": "868e67758789cab6b56af8f429c965f15845bcd780051f4393a2588d4cd1b9a5"
     }
   ],
   "suites": {
