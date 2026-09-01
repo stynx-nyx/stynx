@@ -1728,6 +1728,225 @@ test('D24.33 candidate rebind is executable, exhaustive, atomic, and starts no p
   }
 });
 
+test('Decision 7 selective refresh treats a changed lockfile as a shared mutation input', async () => {
+  const runner = readFileSync(join(repoRoot, 'scripts', 'run-mutation-evidence.mjs'), 'utf8');
+  const { rebindCandidateComposition } = await import(
+    `../../scripts/run-mutation-evidence.mjs?decision-7=${sha256(runner)}`
+  );
+  assert.equal(typeof rebindCandidateComposition, 'function');
+
+  const governedHead = materializationFixtureGit(repoRoot, ['rev-parse', 'HEAD']);
+  const fixtureRoot = mkdtempSync(join(realpathSync(tmpdir()), 'stynx-decision-7-lockfile-'));
+  try {
+    // A shared clone keeps the synthetic lockfile commit out of the governed repository.
+    const candidateRoot = join(fixtureRoot, 'candidate');
+    materializationFixtureGit(fixtureRoot, [
+      'clone',
+      '--quiet',
+      '--shared',
+      repoRoot,
+      candidateRoot,
+    ]);
+    const sourceCommit = materializationFixtureGit(candidateRoot, ['rev-parse', 'HEAD']);
+    const sourceTree = materializationFixtureGit(candidateRoot, ['rev-parse', 'HEAD^{tree}']);
+    assert.equal(sourceCommit, governedHead);
+
+    const lockfilePath = join(candidateRoot, 'pnpm-lock.yaml');
+    const sourceLockfile = readFileSync(lockfilePath, 'utf8');
+    const transitionFrom = "lockfileVersion: '9.0'";
+    const transitionTo = "lockfileVersion: '9.0' # decision-7 synthetic lockfile refresh";
+    assert.equal(
+      sourceLockfile.split(transitionFrom).length,
+      2,
+      'the synthetic lockfile transition must be unique',
+    );
+    writeFileSync(lockfilePath, sourceLockfile.replace(transitionFrom, transitionTo));
+    materializationFixtureGit(candidateRoot, ['add', 'pnpm-lock.yaml']);
+    materializationFixtureGit(candidateRoot, [
+      '-c',
+      'user.name=stynx-decision-7-fixture',
+      '-c',
+      'user.email=fixture@stynx.invalid',
+      '-c',
+      'commit.gpgsign=false',
+      'commit',
+      '--quiet',
+      '--no-verify',
+      '-m',
+      'fixture: refresh lockfile',
+    ]);
+    const candidateCommit = materializationFixtureGit(candidateRoot, ['rev-parse', 'HEAD']);
+    const candidateTree = materializationFixtureGit(candidateRoot, ['rev-parse', 'HEAD^{tree}']);
+    assert.notEqual(candidateCommit, sourceCommit);
+    assert.equal(
+      materializationFixtureGit(candidateRoot, [
+        'diff',
+        '--name-only',
+        `${sourceCommit}..${candidateCommit}`,
+        '--',
+      ]),
+      'pnpm-lock.yaml',
+    );
+
+    const basePolicy = JSON.parse(
+      readFileSync(join(repoRoot, 'law', 'policy', 'stynx-1.1.1-mutation-reuse.json'), 'utf8'),
+    );
+    assert.ok(basePolicy.allowedChangedPaths.includes('pnpm-lock.yaml'));
+    assert.equal(basePolicy.candidateRebind.kind, 'protected-source-selective-refresh-v1');
+    basePolicy.candidateRebind.sourceCandidate = { commit: sourceCommit, tree: sourceTree };
+    basePolicy.candidateRebind.historicalInputCandidate = {
+      commit: sourceCommit,
+      tree: sourceTree,
+    };
+    basePolicy.candidateRebind.sourceSummary.provenance = {
+      kind: 'synthetic-current-tree-fixture-v1',
+    };
+    basePolicy.candidateRebind.refreshPackages = [...basePolicy.freshPackages];
+    const identityFor = (path) => {
+      const {
+        bytes,
+        gitBlobOid,
+        sha256: digest,
+      } = gitObjectIdentity(candidateRoot, sourceCommit, path);
+      return { bytes, sha256: digest, gitBlobOid };
+    };
+    const manifestIdentity = identityFor('package.json');
+    const semanticComparison = basePolicy.candidateRebind.semanticRebindComparison;
+    semanticComparison.sourceRootManifest = manifestIdentity;
+    semanticComparison.targetRootManifest = manifestIdentity;
+    semanticComparison.allowedScriptTransitions = [];
+    const semanticContract = canonicalize({
+      kind: semanticComparison.kind,
+      source: semanticComparison.sourceRootManifest,
+      target: semanticComparison.targetRootManifest,
+      transitions: semanticComparison.allowedScriptTransitions,
+      comparison: semanticComparison.comparison,
+    });
+    semanticComparison.canonicalContractBytes = Buffer.byteLength(semanticContract);
+    semanticComparison.canonicalContractSha256 = sha256(semanticContract);
+    basePolicy.candidateRebind.sourceSummary.priorSemanticRebindComparison =
+      structuredClone(semanticComparison);
+    const devaiTransition = basePolicy.devai145Adoption.semanticMutationInputTransition;
+    basePolicy.devai145Adoption.provider.sourceVersion =
+      basePolicy.devai145Adoption.provider.targetVersion;
+    devaiTransition.sourceRootManifest = manifestIdentity;
+    devaiTransition.targetRootManifest = manifestIdentity;
+    // Decision 7: the policy lockfile pair records the protected-source transition only; it is
+    // never rebound to the candidate lockfile, and the candidate lockfile differs from it here.
+    devaiTransition.sourceLockfile = identityFor('pnpm-lock.yaml');
+    devaiTransition.targetLockfile = structuredClone(devaiTransition.sourceLockfile);
+    devaiTransition.lockfileTransitions = [];
+    devaiTransition.lockfileTransitionCount = 0;
+    const runnerIdentity = identityFor('scripts/run-mutation-evidence.mjs');
+    basePolicy.devai145Adoption.governanceRunnerTransition.source = runnerIdentity;
+    basePolicy.devai145Adoption.governanceRunnerTransition.target = runnerIdentity;
+
+    const sourceEvidence = join(fixtureRoot, 'synthetic-source');
+    writeSyntheticMutationEvidence(sourceEvidence, basePolicy);
+
+    let packageStarts = 0;
+    const onPackageStart = () => {
+      packageStarts += 1;
+      throw new Error('package start sentinel tripped');
+    };
+    const exercise = async ({ name, prepare = () => {}, legacy = false }) => {
+      const caseRoot = join(fixtureRoot, name);
+      const sourceDirectory = join(caseRoot, 'source');
+      const finalDirectory = join(caseRoot, 'final');
+      copyMutationEvidence(sourceEvidence, sourceDirectory);
+      copyMutationEvidence(sourceEvidence, finalDirectory);
+      const sourceBefore = mutationEvidenceSnapshot(sourceDirectory);
+      const finalBefore = mutationEvidenceSnapshot(finalDirectory);
+      const policy = structuredClone(basePolicy);
+      if (legacy) {
+        policy.candidateRebind.kind = 'zero-mutation-candidate-rebind-v2';
+        delete policy.candidateRebind.refreshPackages;
+        delete policy.candidateRebind.nonBehavioralPaths;
+        policy.candidateRebind.mutationSubprocesses = 0;
+        policy.candidateRebind.packageStarts = 0;
+        policy.devai145Adoption.governanceRunnerTransition.scope =
+          'zero-execution-candidate-rebind-validation-only';
+        policy.devai145Adoption.governanceRunnerTransition.packageExecutionPathChanged = false;
+      }
+      prepare(policy);
+      let outcome;
+      try {
+        outcome = {
+          result: await rebindCandidateComposition({
+            repositoryRoot: candidateRoot,
+            policy,
+            sourceDirectory,
+            finalDirectory,
+            candidate: {
+              commit: candidateCommit,
+              tree: candidateTree,
+              clean: true,
+              changedPaths: ['pnpm-lock.yaml'],
+            },
+            onPackageStart,
+            refreshPackages: policy.candidateRebind.refreshPackages ?? [],
+            nonBehavioralPaths: policy.candidateRebind.nonBehavioralPaths ?? [],
+            validationOnly: true,
+          }),
+        };
+      } catch (error) {
+        outcome = { error };
+      }
+      assert.deepEqual(
+        mutationEvidenceSnapshot(sourceDirectory),
+        sourceBefore,
+        `${name}: source evidence changed`,
+      );
+      assert.deepEqual(
+        mutationEvidenceSnapshot(finalDirectory),
+        finalBefore,
+        `${name}: committed evidence changed`,
+      );
+      assert.equal(packageStarts, 0, `${name}: package start sentinel must remain zero`);
+      return outcome;
+    };
+    const message = (outcome) => outcome.error?.message ?? 'accepted';
+
+    const accepted = await exercise({ name: 'changed-lockfile-selects-complete-roster' });
+    assert.equal(message(accepted), 'accepted');
+    assert.equal(accepted.result.ok, true);
+    assert.equal(accepted.result.mode, 'validated-protected-source-for-selective-refresh');
+    assert.equal(accepted.result.packageStarts, 0);
+
+    const transitions = await exercise({
+      name: 'lockfile-transitions-are-forbidden',
+      prepare: (policy) => {
+        const transition = policy.devai145Adoption.semanticMutationInputTransition;
+        transition.lockfileTransitions = [{ from: transitionFrom, to: transitionTo }];
+        transition.lockfileTransitionCount = 1;
+      },
+    });
+    assert.match(message(transitions), /candidate refresh lockfile transitions are forbidden/u);
+
+    const partial = await exercise({
+      name: 'partial-selection-with-changed-lockfile',
+      prepare: (policy) => {
+        policy.candidateRebind.refreshPackages = policy.candidateRebind.refreshPackages.slice(
+          0,
+          -1,
+        );
+      },
+    });
+    assert.match(message(partial), /candidate refresh package selection drifted/u);
+
+    const legacy = await exercise({
+      name: 'legacy-zero-execution-rejects-lockfile-drift',
+      legacy: true,
+    });
+    assert.match(message(legacy), /DEVAI target lockfile identity drifted/u);
+
+    assert.equal(packageStarts, 0);
+    assert.equal(materializationFixtureGit(repoRoot, ['rev-parse', 'HEAD']), governedHead);
+  } finally {
+    rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+});
+
 function materializationFixtureGit(root, args) {
   const result = spawnSync('git', args, {
     cwd: root,
