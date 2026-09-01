@@ -260,6 +260,9 @@ Architect rebinds only the existing `governanceRunnerTransition.target` identity
 resulting runner bytes and the actual changed assertion projection in `law/trace.json`.
 Every touched path is already a member of the exact 86-path population, so
 `allowedChangedPaths` does not change.
+The resulting governed runner is exactly 110,019 bytes, SHA-256
+`45ac846430f6ef2b5404b7c12d557d62d71cc180f5052c557b37747261f1e58b`, Git blob
+`3664c010e1f5c08a30b7890c29e6acc5bf332680`.
 
 DEVAI Architect and an independent reviewer must return `PASS` with no must-fix before the
 Architect checkpoint is committed. The candidate remains NOT READY until the validation-only
