@@ -208,6 +208,63 @@ Git blob `96944a68fc2825cf5bbca1562471774441a7f7ca`. Architect rebinds only the 
 `devai145Adoption.governanceRunnerTransition.target` identity to those bytes;
 its source identity and every other policy field remain unchanged.
 
+## Decision 7 — A refreshed lockfile is a shared mutation input, not a rebind drift
+
+The exact candidate at commit `d93cfe1e5b072ed666e4c11f1a15271944ecdb39`, tree
+`51fec4e124e3aac8a1e5777ebe2593587c264a05`, carries the repaired 86-path changed-path
+population and passes the release-policy, blocker-contract, trace, roster, security, and
+complete unit surfaces. A bounded validation-only invocation of the governed runner's
+`rebindCandidateComposition` against the exact materialized protected source, with a
+package-start sentinel, stopped at `candidate rebind DEVAI target lockfile identity drifted`
+with zero package starts. A PREPARE at this candidate would fail `test:mutation` before any
+package start.
+
+The cause is the repaired lockfile. The chained source candidate
+`f8a3521a944abc4b5c8a07e1ebae8d349e549fd7` binds `pnpm-lock.yaml` at exactly 959,802 bytes,
+SHA-256 `32afdd6bdad69213129226d9e26611594dbf298536dc2d81374713682cf3d98e`. That lockfile
+fails `pnpm audit --prod` with two high browserslist advisories (`GHSA-c83g-rgw3-j3cx`,
+`GHSA-73wf-gq98-2v4g`) and two low postcss-selector-parser advisories
+(`GHSA-w9m9-85wc-3x92`); the preserved `security` diagnostic of the 1 September attempt
+records that gate failing on exactly those four. The Engineer repair pinned the patched
+versions, and reverting the pins is not an available disposition.
+
+The selective-refresh branch inherited the D24.42 zero-execution rule that the current
+lockfile must be byte-identical to the source lockfile apart from declared provider records.
+That rule protected reused results. Under `protected-source-selective-refresh-v1` no result
+is reused: `pnpm-lock.yaml` is a shared mutation input of every roster package, so any
+lockfile change selects the complete roster for fresh execution, exactly as Decision 4
+requires. The branch already treats the root manifest this way by exempting the current
+manifest from its target identity and field comparisons. The lockfile receives the same
+treatment.
+
+Under selective refresh the runner validates only the source lockfile against
+`semanticMutationInputTransition.sourceLockfile`, requires `lockfileTransitions` to remain
+empty so no lockfile record is normalized or excluded from the input comparison, and
+otherwise lets the lockfile difference drive refresh selection through the unchanged
+input-projection comparison. It does not bind the current lockfile to a policy identity and
+does not compare the current lockfile to the source. The `sourceLockfile` and
+`targetLockfile` pair remains the record of the provider transition already validated in
+the protected source and is not consulted for the current candidate. The legacy
+`zero-mutation-candidate-rebind-v2` branch keeps every lockfile control unchanged.
+
+No test, mutation target, threshold, roster member, non-behavioral exclusion, protected
+source identity, materialization step, artifact binding, process provenance, environment,
+or toolchain control is weakened.
+
+Inspector owns only assertion-only sensors and lands them red first. They must prove that
+the selective-refresh branch accepts a changed lockfile with zero package starts, still
+rejects a non-empty transition list, and still selects every package whose shared input
+changed; and that the legacy branch still rejects any lockfile difference. Engineer owns
+only the selective-refresh lockfile controls in `scripts/run-mutation-evidence.mjs`.
+Architect rebinds only the existing `governanceRunnerTransition.target` identity to the
+resulting runner bytes and the actual changed assertion projection in `law/trace.json`.
+Every touched path is already a member of the exact 86-path population, so
+`allowedChangedPaths` does not change.
+
+DEVAI Architect and an independent reviewer must return `PASS` with no must-fix before the
+Architect checkpoint is committed. The candidate remains NOT READY until the validation-only
+invocation returns success with zero package starts on the resulting exact commit and tree.
+
 ## Verification
 
 Inspector sensors must prove:
