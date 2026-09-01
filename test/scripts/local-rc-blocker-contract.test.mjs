@@ -6731,6 +6731,17 @@ test('D24.32 selective mutation refresh runs the exact governed roster and fails
   assert.match(restorationSource, /stryker-setup\.js\.map/u);
   assert.match(restorationSource, /unlinkSync/u);
   assert.doesNotMatch(restorationSource, /recursive|glob|rmSync|\.stryker-tmp|coverage|dist/u);
+
+  const packageRootStrykerHelpers = ['packages', 'packages-web'].flatMap((packageRoot) =>
+    readdirSync(resolve(repoRoot, packageRoot), { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .flatMap((entry) =>
+        readdirSync(resolve(repoRoot, packageRoot, entry.name))
+          .filter((name) => /^stryker-setup-\d+\.js$/u.test(name))
+          .map((name) => `${packageRoot}/${entry.name}/${name}`),
+      ),
+  );
+  assert.deepEqual(packageRootStrykerHelpers, []);
 });
 
 test('D24.36 protected source preserves historical inputs before exact selective refresh', () => {
