@@ -1403,9 +1403,11 @@ export async function materializeCandidateRebindSource({
         `step-${stepNumber}-output`,
       );
       mkdirSync(stepFinalDirectory, { recursive: false });
-      const comparisonBase = historicalPolicy.candidateRebind?.sourceCandidate?.commit;
+      const inputSummary = JSON.parse(inputBytes.toString('utf8'));
+      const comparisonBase =
+        historicalPolicy.candidateRebind?.sourceCandidate?.commit ?? inputSummary.candidate?.commit;
       if (!/^[0-9a-f]{40}$/u.test(comparisonBase ?? '')) {
-        throw new Error(`candidate rebind step ${stepNumber} policy source candidate is invalid`);
+        throw new Error(`candidate rebind step ${stepNumber} input source candidate is invalid`);
       }
       const changedPaths = materializationGit(
         ['diff', '--name-only', '-z', `${comparisonBase}..${step.candidate.commit}`, '--'],
