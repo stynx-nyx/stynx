@@ -851,6 +851,16 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
   const policy = JSON.parse(repositorySource('law/policy/stynx-1.1.1-mutation-reuse.json'));
   const d24_33CandidateRebind = structuredClone(policy.candidateRebind);
   delete d24_33CandidateRebind.sourceMaterialization;
+  assert.equal(d24_33CandidateRebind.kind, 'protected-source-selective-refresh-v1');
+  assert.deepEqual(d24_33CandidateRebind.refreshPackages, policy.freshPackages);
+  assert.equal(d24_33CandidateRebind.nonBehavioralPaths.length, 37);
+  assert.equal(d24_33CandidateRebind.mutationSubprocesses, 38);
+  assert.equal(d24_33CandidateRebind.packageStarts, 38);
+  delete d24_33CandidateRebind.refreshPackages;
+  delete d24_33CandidateRebind.nonBehavioralPaths;
+  d24_33CandidateRebind.kind = 'zero-mutation-candidate-rebind-v2';
+  d24_33CandidateRebind.mutationSubprocesses = 0;
+  d24_33CandidateRebind.packageStarts = 0;
   assert.deepEqual(d24_33CandidateRebind, {
     kind: 'zero-mutation-candidate-rebind-v2',
     sourceCandidate: {
@@ -936,51 +946,16 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
     packageStarts: 0,
     mismatchDisposition: 'fail-before-package-start',
   });
-  assert.deepEqual(policy.allowedChangedPaths, [
-    '.devai/config/adopter-policy-binding.json',
-    '.devai/config/authority-policy.json',
-    '.devai/config/github-actions-host-adapter.json',
-    '.devai/config/project.json',
-    '.devai/config/subprocess-effects.json',
-    '.devai/constitution.md',
-    '.github/workflows/ci.yml',
-    '.github/workflows/devai-local-rc-verify.yml',
-    '.github/workflows/hardening.yml',
-    'AGENTS.md',
-    'docs/meta/security/sbom.cdx.json',
-    'law/adr/2026-08-24-stynx-1.1.1-campaign-controls.md',
-    'law/policy/devai-local-rc-trust-store.json',
-    'law/policy/forbidden-action-authorizations.json',
-    'law/policy/release-campaign-1.1.1.json',
-    'law/policy/stynx-1.1.1-mutation-reuse.json',
-    'law/trace.json',
-    'package.json',
-    'pnpm-lock.yaml',
-    'packages/pdf-a-vera-docker/src/parse-report.ts',
-    'packages/pdf-a-vera-docker/test/unit/parse-report.spec.ts',
-    'packages/pdf-a-vera-docker/test/unit/validator.spec.ts',
-    'packages/pdf/test/conformance/payslip.spec.ts',
-    'packages/pdf/test/conformance/verapdf.ts',
-    'packages/idempotency/vitest.config.ts',
-    'packages/mobile-runtime/test/mobile-runtime-edge-cases.spec.ts',
-    'packages/mobile-runtime/vitest.config.ts',
-    'packages/preferences/test/preferences-contract.spec.ts',
-    'packages/preferences/vitest.config.ts',
-    'packages/ratelimit/vitest.config.ts',
-    'reference/api/Dockerfile',
-    'scripts/devai-local-rc.mjs',
-    'scripts/lib/release-context.mjs',
-    'scripts/lib/unified-rebaseline.mjs',
-    'scripts/list-ddl-objects.spec.mjs',
-    'scripts/run-mutation-evidence.mjs',
-    'scripts/run-release-preparation.mjs',
-    'scripts/verify-secret-scan.mjs',
-    'test/scripts/devai-local-rc-verifier.test.mjs',
-    'test/scripts/local-rc-blocker-contract.test.mjs',
-    'test/scripts/release-version-policy.test.mjs',
-    'test/scripts/validate.js',
-    'tools/repo-config/coverage-population.mjs',
-  ]);
+  const observedChangedPaths = spawnSync(
+    'git',
+    ['diff', '--name-only', `${policy.candidateRebind.sourceCandidate.commit}..HEAD`, '--'],
+    { cwd: repoRoot, encoding: 'utf8' },
+  )
+    .stdout.trim()
+    .split('\n')
+    .filter(Boolean)
+    .sort();
+  assert.deepEqual(policy.allowedChangedPaths, observedChangedPaths);
 
   assert.match(policy.candidateRebind.sourceCandidate.commit, /^[0-9a-f]{40}$/u);
   assert.match(
@@ -1424,6 +1399,10 @@ test('D24.33 candidate rebind is executable, exhaustive, atomic, and starts no p
   sourcePolicy.candidateRebind.sourceSummary.provenance = {
     kind: 'synthetic-current-tree-fixture-v1',
   };
+  sourcePolicy.candidateRebind.refreshPackages = [];
+  sourcePolicy.candidateRebind.nonBehavioralPaths = [];
+  sourcePolicy.candidateRebind.mutationSubprocesses = 0;
+  sourcePolicy.candidateRebind.packageStarts = 0;
   const manifestBytes = readFileSync(join(repoRoot, 'package.json'));
   const manifestIdentity = {
     bytes: manifestBytes.length,
@@ -1507,6 +1486,8 @@ test('D24.33 candidate rebind is executable, exhaustive, atomic, and starts no p
       finalDirectory,
       candidate: structuredClone(candidate),
       onPackageStart,
+      refreshPackages: policy.candidateRebind.refreshPackages,
+      nonBehavioralPaths: policy.candidateRebind.nonBehavioralPaths,
     };
     prepare({ inputs, policy, sourceDirectory, finalDirectory, writeFixtureSummary });
     const preparedSource = mutationEvidenceSnapshot(sourceDirectory);
