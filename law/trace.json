@@ -3009,8 +3009,8 @@
       "suite": "e2e",
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001"],
       "lifecycle": "supported",
-      "assertion_count": 7,
-      "assertion_digest_sha256": "23c0d52f07eed3a709ba4b8cc62c98bdebe8000cf7a1e465843130100694623f"
+      "assertion_count": 8,
+      "assertion_digest_sha256": "885535fd81dae07ea83e264d0d0e3e5a3509ec4898d784648d8ae1e8d4aeb0d7"
     },
     {
       "path": "reference/web/test/e2e/records/crud.spec.ts",
@@ -3703,8 +3703,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 970,
-      "assertion_digest_sha256": "8553cae85c86cb3593334586e37952d90bce765a5f873b5e335327c44399d032"
+      "assertion_count": 971,
+      "assertion_digest_sha256": "a09c8096d4dfd283a0bac668c15ceb6e1c07916eaec12f703f00509517f620ae"
     },
     {
       "path": "test/scripts/release-version-policy.test.mjs",
