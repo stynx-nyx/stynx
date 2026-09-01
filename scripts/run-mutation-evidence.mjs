@@ -16,7 +16,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   MUTANT_STATUSES,
   canonicalize,
@@ -1042,6 +1042,447 @@ function publishComposedDirectory({
   }
 }
 
+let candidateSourceMaterializationAttempt = 0;
+
+function materializationGit(arguments_, repositoryRoot, label, encoding = 'utf8') {
+  const result = spawnSync('git', arguments_, {
+    cwd: repositoryRoot,
+    encoding,
+    maxBuffer: 64 * 1024 * 1024,
+    stdio: ['ignore', 'pipe', 'pipe'],
+    shell: false,
+  });
+  if (result.error !== undefined || result.signal !== null || result.status !== 0) {
+    throw new Error(`candidate rebind ${label} git operation failed`);
+  }
+  return result.stdout;
+}
+
+function assertMaterializationIdentity(label, bytes, identity, includeBlob = false) {
+  if (
+    !identity ||
+    bytes.length !== identity.bytes ||
+    sha256Hex(bytes) !== identity.sha256 ||
+    (includeBlob && gitBlobOid(bytes) !== identity.gitBlobOid)
+  ) {
+    throw new Error(`candidate rebind ${label} identity drifted`);
+  }
+}
+
+function materializationArtifactNames(directory) {
+  const names = readdirSync(directory).sort();
+  for (const name of names) {
+    portablePath(name, 'candidate rebind artifact path');
+    if (name.includes('/') || name.includes('\\')) {
+      throw new Error('candidate rebind artifact path is not a direct child');
+    }
+    const metadata = lstatSync(resolve(directory, name));
+    if (!metadata.isFile() || metadata.isSymbolicLink()) {
+      throw new Error('candidate rebind artifact population is invalid');
+    }
+  }
+  return names;
+}
+
+function validateMaterializedDirectory({
+  directory,
+  expectedNames,
+  artifactIdentities,
+  summaryIdentity,
+  repositoryRoot,
+  requireProtectedDigests,
+}) {
+  const names = materializationArtifactNames(directory);
+  if (canonicalize(names) !== canonicalize(expectedNames)) {
+    throw new Error('candidate rebind artifact population drifted');
+  }
+  for (const name of names) {
+    const bytes = readFileSync(resolve(directory, name));
+    if (name === 'summary.json') {
+      assertMaterializationIdentity('final summary', bytes, summaryIdentity);
+    } else if (requireProtectedDigests && sha256Hex(bytes) !== artifactIdentities.get(name)) {
+      throw new Error('candidate rebind protected artifact digest drifted');
+    }
+    let value;
+    try {
+      value = JSON.parse(bytes.toString('utf8'));
+    } catch {
+      throw new Error('candidate rebind protected artifact JSON is invalid');
+    }
+    assertFocusedEvidenceSafe(value, repositoryRoot);
+  }
+}
+
+export async function materializeCandidateRebindSource({
+  repositoryRoot,
+  policy,
+  finalDirectory: materializedFinalDirectory,
+  stagingDirectory: requestedStagingDirectory,
+  onPackageStart,
+  onPublicationPhase,
+}) {
+  const candidateRebind = policy?.candidateRebind;
+  const sourceSummary = candidateRebind?.sourceSummary;
+  const contract = candidateRebind?.sourceMaterialization;
+  const protectedSource = contract?.protectedSource;
+  const steps = contract?.steps;
+  if (
+    contract?.kind !== 'protected-tag-chained-zero-execution-rebind-v1' ||
+    contract.checkout !== 'local-shared-clone-exact-detached-commit' ||
+    contract.publication !== 'same-filesystem-atomic-rename' ||
+    contract.existingDestination !== 'accept-only-exact-complete-source' ||
+    contract.interruptedStaging !== 'reject-without-reuse' ||
+    contract.credentialInputs !== 0 ||
+    contract.mismatchDisposition !== 'fail-before-destination-publication'
+  ) {
+    throw new Error('candidate rebind source materialization contract is invalid');
+  }
+  if (contract.mutationSubprocesses !== 0) {
+    throw new Error('candidate rebind mutation subprocess count is invalid');
+  }
+  if (contract.packageStarts !== 0) {
+    throw new Error('candidate rebind package start count is invalid');
+  }
+  if (!Array.isArray(steps) || steps.length === 0) {
+    throw new Error('candidate rebind materialization step chain is missing');
+  }
+  portablePath(contract.destination, 'candidate rebind destination');
+  if (
+    !sourceSummary ||
+    dirname(sourceSummary.path).split('\\').join('/') !== contract.destination ||
+    steps.at(-1)?.outputSummary?.bytes !== sourceSummary.bytes ||
+    steps.at(-1)?.outputSummary?.sha256 !== sourceSummary.sha256
+  ) {
+    throw new Error('candidate rebind final source summary identity is invalid');
+  }
+
+  portablePath(protectedSource?.tag, 'candidate rebind protected tag ref');
+  portablePath(protectedSource?.manifest?.path, 'candidate rebind manifest path');
+  portablePath(protectedSource?.artifactPrefix, 'candidate rebind artifact prefix');
+  if (!protectedSource.artifactPrefix.endsWith('/')) {
+    throw new Error('candidate rebind artifact prefix is invalid');
+  }
+  const tagType = materializationGit(
+    ['cat-file', '-t', protectedSource.tag],
+    repositoryRoot,
+    'protected tag ref',
+  ).trim();
+  const tagObject = materializationGit(
+    ['rev-parse', protectedSource.tag],
+    repositoryRoot,
+    'protected tag ref',
+  ).trim();
+  if (tagType !== 'tag' || tagObject !== protectedSource.tagObject) {
+    throw new Error('candidate rebind protected tag object identity drifted');
+  }
+  const evidenceCommit = materializationGit(
+    ['rev-parse', `${protectedSource.tag}^{commit}`],
+    repositoryRoot,
+    'protected evidence commit',
+  ).trim();
+  const evidenceTree = materializationGit(
+    ['rev-parse', `${protectedSource.tag}^{tree}`],
+    repositoryRoot,
+    'protected evidence tree',
+  ).trim();
+  if (evidenceCommit !== protectedSource.evidenceCommit) {
+    throw new Error('candidate rebind protected evidence commit identity drifted');
+  }
+  if (evidenceTree !== protectedSource.evidenceTree) {
+    throw new Error('candidate rebind protected evidence tree identity drifted');
+  }
+
+  const manifestBytes = materializationGit(
+    ['cat-file', 'blob', `${protectedSource.tag}:${protectedSource.manifest.path}`],
+    repositoryRoot,
+    'protected manifest',
+    null,
+  );
+  assertMaterializationIdentity('protected manifest', manifestBytes, protectedSource.manifest);
+  let manifest;
+  try {
+    manifest = JSON.parse(manifestBytes.toString('utf8'));
+  } catch {
+    throw new Error('candidate rebind protected manifest JSON is invalid');
+  }
+  assertFocusedEvidenceSafe(manifest, repositoryRoot);
+  if (
+    manifest.repositoryId !== protectedSource.repositoryId ||
+    manifest.profile !== protectedSource.profile ||
+    manifest.signerId !== protectedSource.signerId ||
+    !Array.isArray(manifest.artifacts)
+  ) {
+    throw new Error('candidate rebind protected manifest authority drifted');
+  }
+
+  const treeText = materializationGit(
+    ['ls-tree', '-r', '-z', `${protectedSource.tag}^{tree}`, '--', protectedSource.artifactPrefix],
+    repositoryRoot,
+    'protected artifact population',
+  );
+  const protectedEntries = treeText
+    .split('\0')
+    .filter(Boolean)
+    .map((record) => {
+      const match = /^(\d+) ([a-z]+) ([0-9a-f]+)\t(.+)$/u.exec(record);
+      if (!match || match[1] !== '100644' || match[2] !== 'blob') {
+        throw new Error('candidate rebind protected artifact population is invalid');
+      }
+      const path = match[4];
+      if (!path.startsWith(protectedSource.artifactPrefix)) {
+        throw new Error('candidate rebind protected artifact prefix drifted');
+      }
+      const name = path.slice(protectedSource.artifactPrefix.length);
+      portablePath(name, 'candidate rebind protected artifact path');
+      if (name.includes('/')) {
+        throw new Error('candidate rebind protected artifact path is not a direct child');
+      }
+      return { name, oid: match[3], path };
+    });
+  const reportCount = protectedEntries.filter(({ name }) => name.endsWith('.stryker.json')).length;
+  const resultCount = protectedEntries.filter(({ name }) => name.endsWith('.result.json')).length;
+  if (
+    protectedEntries.length !== protectedSource.artifactCount ||
+    reportCount !== protectedSource.reportCount ||
+    resultCount !== protectedSource.resultCount ||
+    protectedEntries.filter(({ name }) => name === 'summary.json').length !== 1
+  ) {
+    throw new Error('candidate rebind protected artifact population count drifted');
+  }
+  const manifestArtifacts = new Map();
+  for (const entry of manifest.artifacts) {
+    if (typeof entry?.path !== 'string' || !entry.path.startsWith(contract.destination)) continue;
+    const name = entry.path.slice(contract.destination.length).replace(/^\//u, '');
+    if (!name || name.includes('/')) continue;
+    if (manifestArtifacts.has(name) || !/^[0-9a-f]{64}$/u.test(entry.sha256 ?? '')) {
+      throw new Error('candidate rebind protected manifest artifact population is invalid');
+    }
+    manifestArtifacts.set(name, entry.sha256);
+  }
+  const expectedNames = protectedEntries.map(({ name }) => name).sort();
+  if (canonicalize([...manifestArtifacts.keys()].sort()) !== canonicalize(expectedNames)) {
+    throw new Error('candidate rebind protected manifest artifact population drifted');
+  }
+
+  const protectedBytes = new Map();
+  for (const entry of protectedEntries) {
+    const bytes = materializationGit(
+      ['cat-file', 'blob', entry.oid],
+      repositoryRoot,
+      'protected artifact',
+      null,
+    );
+    if (gitBlobOid(bytes) !== entry.oid || sha256Hex(bytes) !== manifestArtifacts.get(entry.name)) {
+      throw new Error('candidate rebind protected artifact digest drifted');
+    }
+    protectedBytes.set(entry.name, bytes);
+  }
+  assertMaterializationIdentity(
+    'protected source summary',
+    protectedBytes.get('summary.json'),
+    protectedSource.summary,
+  );
+
+  let priorSummaryIdentity = protectedSource.summary;
+  for (const [index, step] of steps.entries()) {
+    if (
+      step?.inputSummary?.bytes !== priorSummaryIdentity.bytes ||
+      step.inputSummary.sha256 !== priorSummaryIdentity.sha256
+    ) {
+      throw new Error(`candidate rebind step ${String(index + 1)} input summary identity drifted`);
+    }
+    if (
+      !/^[0-9a-f]{40}$/u.test(step?.candidate?.commit ?? '') ||
+      !/^[0-9a-f]{40}$/u.test(step?.candidate?.tree ?? '') ||
+      !step.policy ||
+      !step.runner ||
+      !step.outputSummary
+    ) {
+      throw new Error(`candidate rebind step ${String(index + 1)} identity is invalid`);
+    }
+    portablePath(step.policy.path, 'candidate rebind historical policy path');
+    portablePath(step.runner.path, 'candidate rebind historical runner path');
+    priorSummaryIdentity = step.outputSummary;
+  }
+
+  if (existsSync(materializedFinalDirectory)) {
+    const metadata = lstatSync(materializedFinalDirectory);
+    if (!metadata.isDirectory() || metadata.isSymbolicLink()) {
+      throw new Error('candidate rebind existing destination is invalid');
+    }
+    validateMaterializedDirectory({
+      directory: materializedFinalDirectory,
+      expectedNames,
+      artifactIdentities: manifestArtifacts,
+      summaryIdentity: sourceSummary,
+      repositoryRoot,
+      requireProtectedDigests: false,
+    });
+    return { ok: true, mode: 'validated-existing-source', packageStarts: 0 };
+  }
+
+  const attempt = (candidateSourceMaterializationAttempt += 1);
+  const materializationStagingDirectory = requestedStagingDirectory
+    ? resolve(requestedStagingDirectory)
+    : resolve(
+        dirname(materializedFinalDirectory),
+        `.mutation-source-materialize-${String(process.pid)}-${String(attempt)}`,
+      );
+  if (existsSync(materializationStagingDirectory)) {
+    throw new Error('candidate rebind materialization staging residue exists');
+  }
+  mkdirSync(materializationStagingDirectory, { recursive: false });
+  let published = false;
+  try {
+    const protectedDirectory = resolve(materializationStagingDirectory, 'protected-source');
+    mkdirSync(protectedDirectory, { recursive: false });
+    for (const [name, bytes] of protectedBytes) {
+      const path = resolve(protectedDirectory, name);
+      writeFileSync(path, bytes, { flag: 'wx', mode: 0o644 });
+      chmodSync(path, 0o644);
+    }
+    validateMaterializedDirectory({
+      directory: protectedDirectory,
+      expectedNames,
+      artifactIdentities: manifestArtifacts,
+      summaryIdentity: protectedSource.summary,
+      repositoryRoot,
+      requireProtectedDigests: true,
+    });
+
+    let sourceDirectory = protectedDirectory;
+    for (const [index, step] of steps.entries()) {
+      const stepNumber = String(index + 1);
+      const inputBytes = readFileSync(resolve(sourceDirectory, 'summary.json'));
+      assertMaterializationIdentity(
+        `step ${stepNumber} input summary`,
+        inputBytes,
+        step.inputSummary,
+      );
+      const checkoutRoot = resolve(materializationStagingDirectory, `step-${stepNumber}-checkout`);
+      // git clone --shared supplies a local object-only checkout with no network or credential input.
+      materializationGit(
+        ['clone', '--shared', '--no-checkout', repositoryRoot, checkoutRoot],
+        repositoryRoot,
+        `step ${stepNumber} local clone`,
+      );
+      materializationGit(
+        ['checkout', '--detach', step.candidate.commit],
+        checkoutRoot,
+        `step ${stepNumber} detached checkout`,
+      );
+      const checkoutCommit = materializationGit(
+        ['rev-parse', 'HEAD'],
+        checkoutRoot,
+        `step ${stepNumber} commit`,
+      ).trim();
+      const checkoutTree = materializationGit(
+        ['rev-parse', 'HEAD^{tree}'],
+        checkoutRoot,
+        `step ${stepNumber} tree`,
+      ).trim();
+      if (checkoutCommit !== step.candidate.commit) {
+        throw new Error(`candidate rebind step ${stepNumber} commit identity drifted`);
+      }
+      if (checkoutTree !== step.candidate.tree) {
+        throw new Error(`candidate rebind step ${stepNumber} tree identity drifted`);
+      }
+      const policyBytes = readFileSync(resolve(checkoutRoot, step.policy.path));
+      const runnerBytes = readFileSync(resolve(checkoutRoot, step.runner.path));
+      assertMaterializationIdentity(`step ${stepNumber} policy`, policyBytes, step.policy, true);
+      assertMaterializationIdentity(`step ${stepNumber} runner`, runnerBytes, step.runner, true);
+      const historicalPolicy = JSON.parse(policyBytes.toString('utf8'));
+      const historicalRunner = await import(
+        `${pathToFileURL(resolve(checkoutRoot, step.runner.path)).href}?materialization=${String(attempt)}-${stepNumber}`
+      );
+      if (typeof historicalRunner.rebindCandidateComposition !== 'function') {
+        throw new Error(`candidate rebind step ${stepNumber} runner export is invalid`);
+      }
+      const stepFinalDirectory = resolve(
+        materializationStagingDirectory,
+        `step-${stepNumber}-output`,
+      );
+      mkdirSync(stepFinalDirectory, { recursive: false });
+      const comparisonBase = historicalPolicy.candidateRebind?.sourceCandidate?.commit;
+      if (!/^[0-9a-f]{40}$/u.test(comparisonBase ?? '')) {
+        throw new Error(`candidate rebind step ${stepNumber} policy source candidate is invalid`);
+      }
+      const changedPaths = materializationGit(
+        ['diff', '--name-only', '-z', `${comparisonBase}..${step.candidate.commit}`, '--'],
+        checkoutRoot,
+        `step ${stepNumber} changed paths`,
+      )
+        .split('\0')
+        .filter(Boolean)
+        .sort();
+      let packageStarts = 0;
+      const packageStartSentinel = () => {
+        packageStarts += 1;
+        onPackageStart?.();
+        throw new Error('candidate rebind package start is forbidden');
+      };
+      await historicalRunner.rebindCandidateComposition({
+        repositoryRoot: checkoutRoot,
+        policy: historicalPolicy,
+        sourceDirectory,
+        finalDirectory: stepFinalDirectory,
+        candidate: {
+          commit: step.candidate.commit,
+          tree: step.candidate.tree,
+          clean: true,
+          changedPaths,
+        },
+        onPackageStart: packageStartSentinel,
+      });
+      if (packageStarts !== 0) {
+        throw new Error('candidate rebind package start is forbidden');
+      }
+      validateMaterializedDirectory({
+        directory: stepFinalDirectory,
+        expectedNames,
+        artifactIdentities: manifestArtifacts,
+        summaryIdentity: step.outputSummary,
+        repositoryRoot,
+        requireProtectedDigests: false,
+      });
+      for (const name of expectedNames) {
+        if (name === 'summary.json') continue;
+        const before = resolve(sourceDirectory, name);
+        const after = resolve(stepFinalDirectory, name);
+        if (
+          !readFileSync(before).equals(readFileSync(after)) ||
+          (lstatSync(before).mode & 0o777) !== (lstatSync(after).mode & 0o777)
+        ) {
+          throw new Error(`candidate rebind step ${stepNumber} artifact copy drifted`);
+        }
+      }
+      sourceDirectory = stepFinalDirectory;
+    }
+    validateMaterializedDirectory({
+      directory: sourceDirectory,
+      expectedNames,
+      artifactIdentities: manifestArtifacts,
+      summaryIdentity: sourceSummary,
+      repositoryRoot,
+      requireProtectedDigests: false,
+    });
+    onPublicationPhase?.('before-final-rename');
+    renameSync(sourceDirectory, materializedFinalDirectory);
+    published = true;
+    onPublicationPhase?.('after-final-rename');
+    rmSync(materializationStagingDirectory, { recursive: true, force: false });
+    return { ok: true, mode: 'materialized-protected-source', packageStarts: 0 };
+  } catch (error) {
+    if (published && existsSync(materializedFinalDirectory)) {
+      rmSync(materializedFinalDirectory, { recursive: true, force: false });
+    }
+    if (existsSync(materializationStagingDirectory)) {
+      rmSync(materializationStagingDirectory, { recursive: true, force: true });
+    }
+    throw error;
+  }
+}
+
 let candidateRebindAttempt = 0;
 
 export async function rebindCandidateComposition({
@@ -1804,6 +2245,14 @@ if (isDirectInvocation) {
     const catalog = workspaceCatalog();
     if (policy.candidateRebind) {
       const sourceSummaryPath = resolve(repoRoot, policy.candidateRebind.sourceSummary.path);
+      await materializeCandidateRebindSource({
+        repositoryRoot: repoRoot,
+        policy,
+        finalDirectory: dirname(sourceSummaryPath),
+        onPackageStart: () => {
+          throw new Error('candidate rebind package start is forbidden');
+        },
+      });
       if (!existsSync(sourceSummaryPath))
         throw new Error('candidate rebind source summary is missing');
       const sourceBytes = readFileSync(sourceSummaryPath);
