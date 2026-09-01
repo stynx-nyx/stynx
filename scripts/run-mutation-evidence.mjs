@@ -2094,7 +2094,7 @@ export async function rebindCandidateComposition({
     ? versionTargetIdentity
     : devaiTransition.targetRootManifest;
   validateIdentity('DEVAI source root manifest', sourceManifestBytes, governedSourceRootIdentity);
-  if (!versionRebaseline) {
+  if (!versionRebaseline && !selectiveRefresh) {
     validateIdentity(
       'DEVAI target root manifest',
       currentManifestBytes,
@@ -2124,7 +2124,10 @@ export async function rebindCandidateComposition({
     }
     normalizedCurrentManifest.version = versionTransition.from;
   }
-  if (canonicalize(normalizedCurrentManifest) !== canonicalize(sourceDevaiManifest)) {
+  if (
+    !selectiveRefresh &&
+    canonicalize(normalizedCurrentManifest) !== canonicalize(sourceDevaiManifest)
+  ) {
     throw new Error('candidate rebind DEVAI manifest field drifted');
   }
 
