@@ -172,6 +172,12 @@ only removal of that one call from the selective-refresh branch. No test,
 threshold, target, package, dependency, gate, evidence identity, or protected
 input is removed or weakened.
 
+The resulting governed runner is exactly 109,259 bytes, SHA-256
+`1c1e04f4fa08692f2a228af3c3d0c336355e1d88d2ec741affbdd1d6c6c6f030`,
+Git blob `8f2ca9a7b42d3751376458104c183dac3eb992fb`. Architect rebinds only the
+existing `devai145Adoption.governanceRunnerTransition.target` identity to those
+bytes; its source identity and every other policy field remain unchanged.
+
 ## Verification
 
 Inspector sensors must prove:
