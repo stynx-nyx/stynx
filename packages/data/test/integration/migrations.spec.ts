@@ -116,7 +116,7 @@ describe('Stynx platform migrations', () => {
           order by 1
         `,
       );
-      expect(partitions).toHaveLength(2);
+      expect(partitions).toHaveLength(5);
 
       const rlsTables = await adminClient.query<{ name: string; forced: boolean }>(`
         select format('%s.%s', n.nspname, c.relname) as name, c.relforcerowsecurity as forced
@@ -252,6 +252,89 @@ describe('Stynx platform migrations', () => {
       expect(appliedMigrations).toEqual(expectedMigrationIds);
       expect(afterCount.rows[0]?.count).toBe(String(expectedMigrationIds.length));
     } finally {
+      await adminClient?.end();
+      await moduleRef?.close();
+      await testDatabase.dispose();
+    }
+  });
+
+  it('maintains the session partition horizon across UTC month rollover and rejects drift', async () => {
+    const testDatabase = await createPostgresTestDatabase('stynx_session_partitions', {
+      useTemplate: false,
+    });
+    let moduleRef: TestingModule | undefined;
+    let adminClient: Client | undefined;
+    let concurrentClient: Client | undefined;
+
+    try {
+      moduleRef = await createMigratedModule(
+        testDatabase.connectionString('stynx-session-partition-owner'),
+      );
+      adminClient = await testDatabase.connectAsAdmin();
+      concurrentClient = await testDatabase.connectAsAdmin();
+
+      await Promise.all([
+        adminClient.query(
+          `select auth.ensure_session_partitions('2040-01-31T23:59:59Z'::timestamptz, 2)`,
+        ),
+        concurrentClient.query(
+          `select auth.ensure_session_partitions('2040-02-01T00:00:00Z'::timestamptz, 2)`,
+        ),
+      ]);
+      await adminClient.query(
+        `select auth.ensure_session_partitions('2040-02-01T00:00:00Z'::timestamptz, 2)`,
+      );
+
+      const partitions = await adminClient.query<{ name: string; bound: string }>(`
+        select child.relname as name, pg_get_expr(child.relpartbound, child.oid) as bound
+        from pg_inherits
+        join pg_class child on child.oid = pg_inherits.inhrelid
+        join pg_class parent on parent.oid = pg_inherits.inhparent
+        join pg_namespace parent_ns on parent_ns.oid = parent.relnamespace
+        where parent_ns.nspname = 'auth'
+          and parent.relname = 'sessions'
+          and child.relname in (
+            'sessions_2040_01',
+            'sessions_2040_02',
+            'sessions_2040_03',
+            'sessions_2040_04',
+            'sessions_default'
+          )
+        order by child.relname
+      `);
+      expect(partitions.rows).toEqual([
+        {
+          name: 'sessions_2040_01',
+          bound: "FOR VALUES FROM ('2040-01-01 00:00:00+00') TO ('2040-02-01 00:00:00+00')",
+        },
+        {
+          name: 'sessions_2040_02',
+          bound: "FOR VALUES FROM ('2040-02-01 00:00:00+00') TO ('2040-03-01 00:00:00+00')",
+        },
+        {
+          name: 'sessions_2040_03',
+          bound: "FOR VALUES FROM ('2040-03-01 00:00:00+00') TO ('2040-04-01 00:00:00+00')",
+        },
+        {
+          name: 'sessions_2040_04',
+          bound: "FOR VALUES FROM ('2040-04-01 00:00:00+00') TO ('2040-05-01 00:00:00+00')",
+        },
+        { name: 'sessions_default', bound: 'DEFAULT' },
+      ]);
+
+      const defaultRows = await adminClient.query<{ count: string }>(
+        'select count(*)::text as count from auth.sessions_default',
+      );
+      expect(defaultRows.rows[0]?.count).toBe('0');
+
+      await adminClient.query('create table auth.sessions_2041_01 (id integer)');
+      await expect(
+        adminClient.query(
+          `select auth.ensure_session_partitions('2041-01-01T00:00:00Z'::timestamptz, 0)`,
+        ),
+      ).rejects.toThrow(/session partition relation drift/u);
+    } finally {
+      await concurrentClient?.end();
       await adminClient?.end();
       await moduleRef?.close();
       await testDatabase.dispose();

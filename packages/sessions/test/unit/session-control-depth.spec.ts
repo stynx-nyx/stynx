@@ -644,9 +644,11 @@ describe('SessionControlService remaining behavior', () => {
 
   it('writes an infrastructure mirror row without an optional membership', async () => {
     const values = vi.fn(async () => undefined);
+    const query = vi.fn(async () => undefined);
     const database = {
       tx: vi.fn(async (callback: (trx: unknown) => Promise<void>) =>
         callback({
+          query,
           insert: vi.fn(() => ({ values })),
         }),
       ),
@@ -667,6 +669,8 @@ describe('SessionControlService remaining behavior', () => {
       createdAt: now,
       expiresAt: '2026-08-26T12:00:00.000Z',
     });
+    expect(query).toHaveBeenCalledWith('select auth.ensure_current_session_partitions()');
+    expect(query.mock.invocationCallOrder[0]).toBeLessThan(values.mock.invocationCallOrder[0]);
     expect(values).toHaveBeenCalledWith(
       expect.not.objectContaining({ membershipId: expect.anything() }),
     );

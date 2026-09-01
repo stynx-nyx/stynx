@@ -41,6 +41,94 @@ import { classifyReleaseContext, ReleaseContextError } from '../../scripts/lib/r
 import { typeOnlyCoverageExclusions } from '../../tools/repo-config/coverage-population.mjs';
 import { createVitestConfig } from '../../tools/repo-config/vitest.base.mjs';
 
+test('D24.46 selective refresh ignores only package prose and selects changed behavior inputs', async () => {
+  const { selectCandidateRefreshPackages } = await import(
+    `../../scripts/run-mutation-evidence.mjs?selective-refresh=${String(Date.now())}`
+  );
+  assert.equal(typeof selectCandidateRefreshPackages, 'function');
+
+  const entry = (path, oid) => ({ path, mode: '100644', type: 'blob', oid });
+  const sourceOid = '1'.repeat(40);
+  const candidateOid = '2'.repeat(40);
+  const packageInputs = [
+    {
+      packageName: '@stynx-nyx/data',
+      sourceEntries: [
+        entry('packages/data/README.md', sourceOid),
+        entry('packages/data/migrations/platform/0019_auth_session_partitions.sql', sourceOid),
+      ],
+      candidateEntries: [
+        entry('packages/data/README.md', candidateOid),
+        entry('packages/data/migrations/platform/0019_auth_session_partitions.sql', candidateOid),
+      ],
+    },
+    {
+      packageName: '@stynx-nyx/angular-i18n',
+      sourceEntries: [
+        entry('packages-web/angular-i18n/README.md', sourceOid),
+        entry('packages-web/angular-i18n/src/i18n/keys.json', sourceOid),
+      ],
+      candidateEntries: [
+        entry('packages-web/angular-i18n/README.md', candidateOid),
+        entry('packages-web/angular-i18n/src/i18n/keys.json', candidateOid),
+      ],
+    },
+    {
+      packageName: '@stynx-nyx/core',
+      sourceEntries: [entry('packages/core/README.md', sourceOid)],
+      candidateEntries: [entry('packages/core/README.md', candidateOid)],
+    },
+  ];
+
+  assert.deepEqual(
+    selectCandidateRefreshPackages({
+      packageInputs,
+      nonBehavioralPaths: [
+        'packages-web/angular-i18n/README.md',
+        'packages/core/README.md',
+        'packages/data/README.md',
+      ],
+    }),
+    ['@stynx-nyx/angular-i18n', '@stynx-nyx/data'],
+  );
+
+  assert.throws(
+    () =>
+      selectCandidateRefreshPackages({
+        packageInputs,
+        nonBehavioralPaths: ['packages-web/angular-i18n/src/i18n/keys.json'],
+      }),
+    /non-behavioral mutation path is invalid/u,
+  );
+  assert.throws(
+    () =>
+      selectCandidateRefreshPackages({
+        packageInputs,
+        nonBehavioralPaths: ['packages/data/README.md', 'packages/data/README.md'],
+      }),
+    /non-behavioral mutation path population is invalid/u,
+  );
+});
+
+test('D24.46 local RC advances and verifies the migrated template before DEVAI starts', () => {
+  const prepareTemplate = readFileSync(
+    join(repoRoot, 'scripts', 'ci-local', 'prepare-int-template.mjs'),
+    'utf8',
+  );
+  const localRc = readFileSync(join(repoRoot, 'scripts', 'devai-local-rc.mjs'), 'utf8');
+
+  assert.match(prepareTemplate, /--maintain/u);
+  assert.match(prepareTemplate, /auth\.ensure_current_session_partitions\(\)/u);
+  assert.match(prepareTemplate, /auth\.sessions_default/u);
+  assert.match(prepareTemplate, /session template partition horizon drifted/u);
+
+  const maintenanceCall = localRc.indexOf("'--maintain'");
+  const devaiCall = localRc.indexOf("'check',");
+  assert.notEqual(maintenanceCall, -1);
+  assert.notEqual(devaiCall, -1);
+  assert.ok(maintenanceCall < devaiCall, 'template maintenance must precede the governed graph');
+});
+
 const repoRoot = resolve(import.meta.dirname, '..', '..');
 const anomalyPolicy = JSON.parse(
   readFileSync(join(repoRoot, 'law', 'policy', 'registry-version-anomalies.json'), 'utf8'),
