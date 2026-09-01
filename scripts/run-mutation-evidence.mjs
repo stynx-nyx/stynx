@@ -2191,23 +2191,33 @@ export async function rebindCandidateComposition({
     ['show', `${sourceCandidate.commit}:pnpm-lock.yaml`],
     repositoryRoot,
   );
-  const currentLockfileBytes = readFileSync(resolve(repositoryRoot, 'pnpm-lock.yaml'));
   validateIdentity('DEVAI source lockfile', sourceLockfileBytes, devaiTransition.sourceLockfile);
-  validateIdentity('DEVAI target lockfile', currentLockfileBytes, devaiTransition.targetLockfile);
-  let projectedLockfile = sourceLockfileBytes.toString('utf8');
-  for (const transition of devaiTransition.lockfileTransitions) {
-    if (
-      typeof transition?.from !== 'string' ||
-      typeof transition.to !== 'string' ||
-      transition.from === transition.to ||
-      projectedLockfile.split(transition.from).length !== 2
-    ) {
-      throw new Error('candidate rebind DEVAI lockfile transition drifted');
+  if (selectiveRefresh) {
+    // Under selective refresh the lockfile is a shared mutation input: any change already selects
+    // every roster package for fresh execution through the input-projection comparison above, so
+    // the current lockfile is neither bound to a policy identity nor compared to the source. No
+    // lockfile record may be normalized out of that comparison.
+    if (devaiTransition.lockfileTransitions.length !== 0) {
+      throw new Error('candidate refresh lockfile transitions are forbidden');
     }
-    projectedLockfile = projectedLockfile.replace(transition.from, transition.to);
-  }
-  if (!Buffer.from(projectedLockfile).equals(currentLockfileBytes)) {
-    throw new Error('candidate rebind DEVAI lockfile comparison drifted');
+  } else {
+    const currentLockfileBytes = readFileSync(resolve(repositoryRoot, 'pnpm-lock.yaml'));
+    validateIdentity('DEVAI target lockfile', currentLockfileBytes, devaiTransition.targetLockfile);
+    let projectedLockfile = sourceLockfileBytes.toString('utf8');
+    for (const transition of devaiTransition.lockfileTransitions) {
+      if (
+        typeof transition?.from !== 'string' ||
+        typeof transition.to !== 'string' ||
+        transition.from === transition.to ||
+        projectedLockfile.split(transition.from).length !== 2
+      ) {
+        throw new Error('candidate rebind DEVAI lockfile transition drifted');
+      }
+      projectedLockfile = projectedLockfile.replace(transition.from, transition.to);
+    }
+    if (!Buffer.from(projectedLockfile).equals(currentLockfileBytes)) {
+      throw new Error('candidate rebind DEVAI lockfile comparison drifted');
+    }
   }
 
   const runnerTransition = devai145Adoption.governanceRunnerTransition;
