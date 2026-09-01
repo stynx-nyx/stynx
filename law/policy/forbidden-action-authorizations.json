@@ -859,6 +859,12 @@
       "commit": "37debd5d091af05b55b9de0f644a0769c4f19412",
       "authorized_by": "Owner",
       "reason": "Authorizes the commit.gpgsign=false literal inside the Decision 7 selective-refresh lockfile sensor, where it configures only a disposable shared-clone fixture commit created and deleted by the test; no governed commit, push, or signing control was bypassed."
+    },
+    {
+      "forbidden_id": "FORBID-NO-GPG-SIGN",
+      "commit": "71e5887516ad163b55b9a7d865bb8837c6761e0f",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the removal diff that deletes the commit.gpgsign=false literal from the Decision 7 selective-refresh lockfile sensor fixture; the scanner matches the deleted line, and no governed commit, push, or signing control was bypassed."
     }
   ]
 }
