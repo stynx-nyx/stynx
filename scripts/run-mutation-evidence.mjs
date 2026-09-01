@@ -1198,7 +1198,12 @@ export async function materializeCandidateRebindSource({
     'protected manifest',
     null,
   );
-  assertMaterializationIdentity('protected manifest', manifestBytes, protectedSource.manifest);
+  if (manifestBytes.length !== protectedSource.manifest.bytes) {
+    throw new Error('candidate rebind protected manifest size drifted');
+  }
+  if (sha256Hex(manifestBytes) !== protectedSource.manifest.sha256) {
+    throw new Error('candidate rebind protected manifest digest drifted');
+  }
   let manifest;
   try {
     manifest = JSON.parse(manifestBytes.toString('utf8'));
@@ -1302,6 +1307,13 @@ export async function materializeCandidateRebindSource({
     }
     portablePath(step.policy.path, 'candidate rebind historical policy path');
     portablePath(step.runner.path, 'candidate rebind historical runner path');
+    const chainedOutputIdentity = steps[index + 1]?.inputSummary ?? sourceSummary;
+    if (
+      step.outputSummary.bytes !== chainedOutputIdentity.bytes ||
+      step.outputSummary.sha256 !== chainedOutputIdentity.sha256
+    ) {
+      throw new Error(`candidate rebind step ${String(index + 1)} output summary chain drifted`);
+    }
     priorSummaryIdentity = step.outputSummary;
   }
 
