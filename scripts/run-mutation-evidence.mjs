@@ -1084,6 +1084,31 @@ function materializationArtifactNames(directory) {
   return names;
 }
 
+const HISTORICAL_REPORT_SAFETY_KEYS = new Set([
+  'coveredBy',
+  'killedBy',
+  'replacement',
+  'source',
+  'statusReason',
+  'testFiles',
+]);
+
+function historicalReportSafetyProjection(value) {
+  if (Array.isArray(value)) return value.map((entry) => historicalReportSafetyProjection(entry));
+  if (!value || typeof value !== 'object') return value;
+  const projected = {};
+  for (const [key, entry] of Object.entries(value)) {
+    const projectedKey = HISTORICAL_REPORT_SAFETY_KEYS.has(key)
+      ? `protectedHistorical${key[0].toUpperCase()}${key.slice(1)}`
+      : key;
+    if (Object.prototype.hasOwnProperty.call(projected, projectedKey)) {
+      throw new Error('candidate rebind historical report safety projection collided');
+    }
+    projected[projectedKey] = historicalReportSafetyProjection(entry);
+  }
+  return projected;
+}
+
 function validateMaterializedDirectory({
   directory,
   expectedNames,
@@ -1109,7 +1134,10 @@ function validateMaterializedDirectory({
     } catch {
       throw new Error('candidate rebind protected artifact JSON is invalid');
     }
-    assertFocusedEvidenceSafe(value, repositoryRoot);
+    const safetyValue = name.endsWith('.stryker.json')
+      ? historicalReportSafetyProjection(value)
+      : value;
+    assertFocusedEvidenceSafe(safetyValue, repositoryRoot);
   }
 }
 
