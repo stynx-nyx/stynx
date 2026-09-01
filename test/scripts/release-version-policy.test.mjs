@@ -1762,16 +1762,11 @@ test('Decision 7 selective refresh treats a changed lockfile as a shared mutatio
     );
     writeFileSync(lockfilePath, sourceLockfile.replace(transitionFrom, transitionTo));
     materializationFixtureGit(candidateRoot, ['add', 'pnpm-lock.yaml']);
+    materializationFixtureGit(candidateRoot, ['config', 'user.name', 'STYNX Fixture']);
+    materializationFixtureGit(candidateRoot, ['config', 'user.email', 'fixture@stynx.invalid']);
     materializationFixtureGit(candidateRoot, [
-      '-c',
-      'user.name=stynx-decision-7-fixture',
-      '-c',
-      'user.email=fixture@stynx.invalid',
-      '-c',
-      'commit.gpgsign=false',
       'commit',
       '--quiet',
-      '--no-verify',
       '-m',
       'fixture: refresh lockfile',
     ]);
