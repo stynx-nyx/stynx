@@ -853,6 +853,12 @@
       "commit": "ec203051c41f07b33cfe0bf116ca7de40814b8f1",
       "authorized_by": "Owner",
       "reason": "Authorizes at tree c0708d392b10d614618b00196df10ec504667079 only the six Owner-authored operational package use cases requested for STYNX 1.1.2 coverage closure. INV-COVERAGE-001 remains a gate; existing claims, tests, thresholds, release controls, publication authority, deprecation, visibility, and repository-settings boundaries remain unchanged."
+    },
+    {
+      "forbidden_id": "FORBID-NO-GPG-SIGN",
+      "commit": "37debd5d091af05b55b9de0f644a0769c4f19412",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the commit.gpgsign=false literal inside the Decision 7 selective-refresh lockfile sensor, where it configures only a disposable shared-clone fixture commit created and deleted by the test; no governed commit, push, or signing control was bypassed."
     }
   ]
 }
