@@ -833,6 +833,46 @@ function mutationInputProjection(entry, entries, catalog) {
   return sha256Hex(canonicalize(mutationInputEntries(entry, entries, catalog)));
 }
 
+export function selectCandidateRefreshPackages({ packageInputs, nonBehavioralPaths }) {
+  if (
+    !Array.isArray(packageInputs) ||
+    !Array.isArray(nonBehavioralPaths) ||
+    new Set(nonBehavioralPaths).size !== nonBehavioralPaths.length
+  ) {
+    throw new Error('non-behavioral mutation path population is invalid');
+  }
+  if (
+    nonBehavioralPaths.some(
+      (path) =>
+        typeof path !== 'string' ||
+        !/^(?:packages|packages-web)\/[a-z0-9-]+\/README\.md$/u.test(path),
+    )
+  ) {
+    throw new Error('non-behavioral mutation path is invalid');
+  }
+  const packageNames = packageInputs.map(({ packageName }) => packageName);
+  if (
+    packageNames.some((packageName) => typeof packageName !== 'string' || packageName === '') ||
+    new Set(packageNames).size !== packageNames.length ||
+    packageInputs.some(
+      ({ sourceEntries, candidateEntries }) =>
+        !Array.isArray(sourceEntries) || !Array.isArray(candidateEntries),
+    )
+  ) {
+    throw new Error('candidate refresh package input population is invalid');
+  }
+
+  const excluded = new Set(nonBehavioralPaths);
+  const behavioral = (entries) => entries.filter(({ path }) => !excluded.has(path));
+  return packageInputs
+    .filter(
+      ({ sourceEntries, candidateEntries }) =>
+        canonicalize(behavioral(sourceEntries)) !== canonicalize(behavioral(candidateEntries)),
+    )
+    .map(({ packageName }) => packageName)
+    .sort();
+}
+
 function validateCheapGateMarker(candidate) {
   if (!existsSync(cheapGateMarkerPath)) {
     throw new Error('mutation composition cheap-gate marker is missing');
@@ -1535,6 +1575,9 @@ export async function rebindCandidateComposition({
   candidate,
   onPackageStart,
   onPublicationPhase,
+  refreshPackages = [],
+  nonBehavioralPaths = [],
+  validationOnly = false,
 }) {
   void onPackageStart;
   const candidateRebind = policy?.candidateRebind;
@@ -1580,13 +1623,23 @@ export async function rebindCandidateComposition({
       throw new Error('candidate rebind version path census drifted');
     }
   }
+  const selectiveRefresh = candidateRebind?.kind === 'protected-source-selective-refresh-v1';
   if (
-    candidateRebind?.kind !== 'zero-mutation-candidate-rebind-v2' ||
-    candidateRebind.mutationSubprocesses !== 0 ||
-    candidateRebind.packageStarts !== 0 ||
-    candidateRebind.mismatchDisposition !== 'fail-before-package-start'
+    (!selectiveRefresh && candidateRebind?.kind !== 'zero-mutation-candidate-rebind-v2') ||
+    candidateRebind.mismatchDisposition !== 'fail-before-package-start' ||
+    (!selectiveRefresh &&
+      (candidateRebind.mutationSubprocesses !== 0 || candidateRebind.packageStarts !== 0))
   ) {
     throw new Error('candidate rebind policy is invalid');
+  }
+  if (
+    selectiveRefresh &&
+    (canonicalize([...refreshPackages].sort()) !==
+      canonicalize([...(candidateRebind.refreshPackages ?? [])].sort()) ||
+      canonicalize([...nonBehavioralPaths].sort()) !==
+        canonicalize([...(candidateRebind.nonBehavioralPaths ?? [])].sort()))
+  ) {
+    throw new Error('candidate refresh selection policy drifted');
   }
   if (
     !sourceCandidate ||
@@ -1771,21 +1824,16 @@ export async function rebindCandidateComposition({
     throw new Error('candidate rebind historical input projection identity drifted');
   }
 
-  const fresh = new Set(policy.freshPackages);
-  const reused = new Set(policy.reusedPackages);
   const artifactNames = new Set(['summary.json']);
   const aggregateTotals = Object.fromEntries(MUTANT_STATUSES.map((status) => [status, 0]));
   let durationMs = 0;
   let freshDurationMs = 0;
+  const observedRefreshPackages = [];
   for (const entry of summary.packages) {
     const rosterEntry = roster.find(({ packageName }) => packageName === entry.packageName);
     if (!rosterEntry) throw new Error('candidate rebind roster drifted');
-    const expectedProvenance = fresh.has(entry.packageName)
-      ? 'fresh'
-      : reused.has(entry.packageName)
-        ? 'reused'
-        : undefined;
-    if (entry.provenance !== expectedProvenance) {
+    const expectedProvenance = entry.provenance;
+    if (expectedProvenance !== 'fresh' && expectedProvenance !== 'reused') {
       throw new Error(`${entry.packageName}: candidate rebind provenance drifted`);
     }
     const expectedBaseline =
@@ -1886,15 +1934,26 @@ export async function rebindCandidateComposition({
     const currentInputs = mutationInputEntries(rosterEntry, currentTree, catalog).filter(
       ({ path }) => !semanticTransitionPaths.has(path),
     );
+    const sourceBehavioralInputs = sourceInputs.filter(
+      ({ path }) => !nonBehavioralPaths.includes(path),
+    );
+    const currentBehavioralInputs = currentInputs.filter(
+      ({ path }) => !nonBehavioralPaths.includes(path),
+    );
     if (
-      (!chainedProtectedSource &&
-        canonicalize(historicalInputs) !== canonicalize(historicalSourceInputs)) ||
-      canonicalize(sourceInputs) !== canonicalize(currentInputs)
+      !chainedProtectedSource &&
+      canonicalize(historicalInputs) !== canonicalize(historicalSourceInputs)
     ) {
       throw new Error(
         `${entry.packageName}: otherMutationInputTreeEntries mode type oid identity drifted`,
       );
     }
+    if (canonicalize(sourceBehavioralInputs) !== canonicalize(currentBehavioralInputs)) {
+      observedRefreshPackages.push(entry.packageName);
+    }
+  }
+  if (canonicalize(observedRefreshPackages.sort()) !== canonicalize([...refreshPackages].sort())) {
+    throw new Error('candidate refresh package selection drifted');
   }
   if (artifactNames.size !== sourceSummary.artifactBindingCount + 1) {
     throw new Error('candidate rebind artifact binding count drifted');
@@ -1903,10 +1962,13 @@ export async function rebindCandidateComposition({
   if (canonicalize(observedFiles) !== canonicalize([...artifactNames].sort())) {
     throw new Error('candidate rebind artifact population drifted');
   }
+  const sourceFreshCount = summary.packages.filter(
+    ({ provenance }) => provenance === 'fresh',
+  ).length;
   const expectedAggregate = {
     packageCount: policy.requiredRosterCount,
-    freshPackageCount: policy.requiredFreshCount,
-    reusedPackageCount: policy.requiredReusedCount,
+    freshPackageCount: sourceFreshCount,
+    reusedPackageCount: policy.requiredRosterCount - sourceFreshCount,
     durationMs,
     freshDurationMs,
     score: score(aggregateTotals),
@@ -2170,6 +2232,16 @@ export async function rebindCandidateComposition({
     throw new Error('candidate rebind promotion verifier drifted');
   }
 
+  if (validationOnly) {
+    return {
+      ok: true,
+      mode: 'validated-protected-source-for-selective-refresh',
+      packageStarts: 0,
+      summary,
+      observedFiles,
+    };
+  }
+
   const attempt = (candidateRebindAttempt += 1);
   const parent = dirname(reboundFinalDirectory);
   const reboundStagingDirectory = resolve(
@@ -2314,6 +2386,28 @@ if (isDirectInvocation) {
         .split('\0')
         .filter(Boolean)
         .sort();
+      const nonBehavioralPaths = policy.candidateRebind.nonBehavioralPaths ?? [];
+      const packageInputs = roster.map((entry) => ({
+        packageName: entry.packageName,
+        sourceEntries: mutationInputEntries(
+          entry,
+          treeEntries(policy.candidateRebind.sourceCandidate.commit),
+          catalog,
+        ),
+        candidateEntries: mutationInputEntries(entry, currentTree, catalog),
+      }));
+      const refreshPackages = selectCandidateRefreshPackages({
+        packageInputs,
+        nonBehavioralPaths,
+      });
+      if (
+        policy.candidateRebind.kind === 'protected-source-selective-refresh-v1' &&
+        (canonicalize(refreshPackages) !==
+          canonicalize([...(policy.candidateRebind.refreshPackages ?? [])].sort()) ||
+          canonicalize(refreshPackages) !== canonicalize([...policy.freshPackages].sort()))
+      ) {
+        throw new Error('candidate refresh package selection drifted');
+      }
       const rebound = await rebindCandidateComposition({
         repositoryRoot: repoRoot,
         policy,
@@ -2323,7 +2417,136 @@ if (isDirectInvocation) {
         onPackageStart: () => {
           throw new Error('candidate rebind package start is forbidden');
         },
+        refreshPackages,
+        nonBehavioralPaths,
+        validationOnly: policy.candidateRebind.kind === 'protected-source-selective-refresh-v1',
       });
+      if (policy.candidateRebind.kind === 'protected-source-selective-refresh-v1') {
+        validateCheapGateMarker(candidate);
+        const preflight = preflightFullMutationInfrastructure();
+        if (preflight) {
+          process.stderr.write(`${JSON.stringify(preflight)}\n`);
+          process.exit(1);
+        }
+
+        rmSync(stagingDirectory, { recursive: true, force: true });
+        mkdirSync(stagingDirectory, { recursive: true });
+        try {
+          const sourceByName = new Map(
+            rebound.summary.packages.map((entry) => [entry.packageName, entry]),
+          );
+          for (const packageName of policy.reusedPackages) {
+            const sourceEntry = sourceByName.get(packageName);
+            if (!sourceEntry) throw new Error('candidate refresh protected roster is incomplete');
+            copyReusedPackage(sourceEntry);
+          }
+          const freshRoster = policy.freshPackages.map((packageName) =>
+            roster.find((entry) => entry.packageName === packageName),
+          );
+          if (freshRoster.some((entry) => entry === undefined)) {
+            throw new Error('candidate refresh fresh roster is incomplete');
+          }
+          const freshPackages = freshRoster.map(runPackage);
+          const freshByName = new Map(freshPackages.map((entry) => [entry.packageName, entry]));
+          const freshSet = new Set(policy.freshPackages);
+          const packages = roster.map((rosterEntry) => {
+            const provenance = freshSet.has(rosterEntry.packageName) ? 'fresh' : 'reused';
+            const rawEntry =
+              provenance === 'fresh'
+                ? freshByName.get(rosterEntry.packageName)
+                : sourceByName.get(rosterEntry.packageName);
+            if (!rawEntry) throw new Error('candidate refresh package binding is incomplete');
+            const artifact = packageArtifact(stagingDirectory, rawEntry);
+            if (
+              canonicalize(artifact.result.thresholds) !== canonicalize(rosterEntry.thresholds) ||
+              artifact.result.score < rosterEntry.thresholds.break ||
+              (provenance === 'fresh' &&
+                (artifact.result.process?.errorAbsent !== true ||
+                  artifact.result.process?.status !== 0 ||
+                  artifact.result.process?.signal !== null ||
+                  artifact.statusTotals.NoCoverage !== 0))
+            ) {
+              throw new Error(`${rosterEntry.packageName}: refreshed mutation package failed`);
+            }
+            return {
+              packageName: rosterEntry.packageName,
+              workspace: rosterEntry.workspace,
+              provenance,
+              baselineCommit:
+                provenance === 'reused' ? policy.candidateRebind.sourceCandidate.commit : null,
+              baselineTree:
+                provenance === 'reused' ? policy.candidateRebind.sourceCandidate.tree : null,
+              inputProjectionDigest: mutationInputProjection(rosterEntry, currentTree, catalog),
+              reportPath: rawEntry.reportPath,
+              resultPath: rawEntry.resultPath,
+              reportDigest: artifact.reportDigest,
+              resultDigest: artifact.resultDigest,
+              thresholds: rosterEntry.thresholds,
+              targetCensus: artifact.targetCensus,
+              statusTotals: artifact.statusTotals,
+              score: artifact.result.score,
+              passed: true,
+              durationMs: artifact.result.durationMs,
+              ...(provenance === 'fresh' ? { process: artifact.result.process } : {}),
+            };
+          });
+          const aggregateTotals = Object.fromEntries(MUTANT_STATUSES.map((status) => [status, 0]));
+          let durationMs = 0;
+          let freshDurationMs = 0;
+          for (const entry of packages) {
+            durationMs += entry.durationMs;
+            if (entry.provenance === 'fresh') freshDurationMs += entry.durationMs;
+            for (const status of MUTANT_STATUSES) {
+              aggregateTotals[status] += entry.statusTotals[status];
+            }
+          }
+          const summary = {
+            schemaVersion: '1.0.0',
+            kind: policy.composedSummaryKind,
+            complete: true,
+            passed: true,
+            candidate: { commit: candidate.commit, tree: candidate.tree },
+            baseline: {
+              commit: policy.baseline.commit,
+              tree: policy.baseline.tree,
+              summaryBytes: policy.baseline.summaryBytes,
+              summarySha256: policy.baseline.summarySha256,
+            },
+            packages,
+            aggregate: {
+              packageCount: packages.length,
+              freshPackageCount: policy.requiredFreshCount,
+              reusedPackageCount: policy.requiredReusedCount,
+              durationMs,
+              freshDurationMs,
+              score: score(aggregateTotals),
+              statusTotals: aggregateTotals,
+            },
+          };
+          canonicalWrite(resolve(stagingDirectory, 'summary.json'), summary);
+          publishComposedDirectory();
+          process.stdout.write(
+            `${JSON.stringify({
+              ok: true,
+              mode: 'protected-source-selective-refresh',
+              packageCount: packages.length,
+              freshPackageCount: policy.requiredFreshCount,
+              reusedPackageCount: policy.requiredReusedCount,
+              score: summary.aggregate.score,
+              durationMs,
+              freshDurationMs,
+              summaryPath: `${artifactRoot}/summary.json`,
+            })}\n`,
+          );
+        } catch (error) {
+          rmSync(stagingDirectory, { recursive: true, force: true });
+          if (!existsSync(finalDirectory) && existsSync(backupDirectory)) {
+            renameSync(backupDirectory, finalDirectory);
+          }
+          throw error;
+        }
+        process.exit(0);
+      }
       process.stdout.write(`${JSON.stringify(rebound)}\n`);
       process.exit(0);
     }

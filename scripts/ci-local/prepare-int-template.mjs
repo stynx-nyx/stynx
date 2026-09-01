@@ -15,7 +15,7 @@
  * file-level copy) when STYNX_TEST_PG_TEMPLATE is set.
  *
  * Usage:
- *   node scripts/ci-local/prepare-int-template.mjs [--template <name>] [--github-env <path>]
+ *   node scripts/ci-local/prepare-int-template.mjs [--template <name>] [--github-env <path>] [--maintain]
  *
  * Connection resolution mirrors the test harness: STYNX_TEST_PG_HOST /
  * STYNX_TEST_PG_PORT / STYNX_TEST_PG_USER / STYNX_TEST_PG_PASSWORD when a
@@ -34,9 +34,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
 // Resolve `pg` through @stynx-nyx/data's dependency tree (no root dep needed).
-const requireFromData = createRequire(
-  new URL('../../packages/data/package.json', import.meta.url),
-);
+const requireFromData = createRequire(new URL('../../packages/data/package.json', import.meta.url));
 const { Client } = requireFromData('pg');
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -44,7 +42,7 @@ const CLI_MAIN = resolve(repoRoot, 'packages/cli/dist/cli/src/main.js');
 const DEFAULT_TEMPLATE = 'stynx_int_tpl';
 
 function parseArgs(argv) {
-  const args = { template: DEFAULT_TEMPLATE, githubEnv: undefined };
+  const args = { template: DEFAULT_TEMPLATE, githubEnv: undefined, maintain: false };
   for (let i = 0; i < argv.length; i += 1) {
     if (argv[i] === '--template') {
       args.template = argv[i + 1];
@@ -52,6 +50,8 @@ function parseArgs(argv) {
     } else if (argv[i] === '--github-env') {
       args.githubEnv = argv[i + 1];
       i += 1;
+    } else if (argv[i] === '--maintain') {
+      args.maintain = true;
     } else {
       throw new Error(`Unknown argument: ${argv[i]}`);
     }
@@ -60,6 +60,72 @@ function parseArgs(argv) {
     throw new Error(`Invalid template database name: ${args.template}`);
   }
   return args;
+}
+
+function utcMonth(offset) {
+  const now = new Date();
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + offset, 1));
+}
+
+function postgresTimestamp(date) {
+  return date.toISOString().replace('T', ' ').replace('.000Z', '+00');
+}
+
+async function maintainAndVerifyTemplate(settings, template) {
+  const client = new Client(adminClientConfig(settings, template));
+  await client.connect();
+  try {
+    const functionCheck = await client.query(
+      `select to_regprocedure('auth.ensure_current_session_partitions()') is not null as present`,
+    );
+    if (functionCheck.rows[0]?.present !== true) {
+      throw new Error('session template partition horizon drifted: maintenance function missing');
+    }
+    await client.query('select auth.ensure_current_session_partitions()');
+
+    const expected = [0, 1, 2].map((offset) => {
+      const start = utcMonth(offset);
+      const end = utcMonth(offset + 1);
+      const name = `sessions_${String(start.getUTCFullYear())}_${String(start.getUTCMonth() + 1).padStart(2, '0')}`;
+      return {
+        name,
+        bound: `FOR VALUES FROM ('${postgresTimestamp(start)}') TO ('${postgresTimestamp(end)}')`,
+      };
+    });
+    const names = expected.map(({ name }) => name);
+    const partitions = await client.query(
+      `select child.relname as name, pg_get_expr(child.relpartbound, child.oid) as bound
+       from pg_inherits
+       join pg_class child on child.oid = pg_inherits.inhrelid
+       join pg_class parent on parent.oid = pg_inherits.inhparent
+       join pg_namespace parent_ns on parent_ns.oid = parent.relnamespace
+       where parent_ns.nspname = 'auth'
+         and parent.relname = 'sessions'
+         and child.relname = any($1::text[])
+       order by child.relname`,
+      [names],
+    );
+    const actual = [...partitions.rows].sort((left, right) => left.name.localeCompare(right.name));
+    const sortedExpected = [...expected].sort((left, right) => left.name.localeCompare(right.name));
+    if (JSON.stringify(actual) !== JSON.stringify(sortedExpected)) {
+      throw new Error('session template partition horizon drifted: monthly bounds mismatch');
+    }
+
+    const defaultCheck = await client.query(
+      `select to_regclass('auth.sessions_default') is not null as present,
+              case when to_regclass('auth.sessions_default') is null
+                then null
+                else (select count(*)::text from auth.sessions_default)
+              end as row_count`,
+    );
+    if (defaultCheck.rows[0]?.present !== true || defaultCheck.rows[0]?.row_count !== '0') {
+      throw new Error(
+        'session template partition horizon drifted: auth.sessions_default is not empty',
+      );
+    }
+  } finally {
+    await client.end();
+  }
 }
 
 function connectionSettings() {
@@ -122,6 +188,12 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
   const settings = connectionSettings();
 
+  if (args.maintain) {
+    await maintainAndVerifyTemplate(settings, args.template);
+    console.log(`Template database "${args.template}" partition horizon is current`);
+    return;
+  }
+
   ensureCliBuilt();
 
   const admin = new Client(adminClientConfig(settings, 'postgres'));
@@ -150,6 +222,7 @@ async function main() {
   console.log(
     `Template database "${args.template}" migrated in ${((Date.now() - started) / 1000).toFixed(1)}s`,
   );
+  await maintainAndVerifyTemplate(settings, args.template);
 
   if (args.githubEnv) {
     appendFileSync(args.githubEnv, `STYNX_TEST_PG_TEMPLATE=${args.template}\n`);

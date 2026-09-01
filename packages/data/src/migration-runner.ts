@@ -95,12 +95,16 @@ export class StynxMigrationRunner implements OnModuleInit {
           throw error;
         }
       }
+
+      await client.query('SELECT auth.ensure_current_session_partitions()');
     } finally {
       client.release();
     }
   }
 
-  private async promoteBootstrapObjectsToOwner(client: { query: (sql: string) => Promise<unknown> }): Promise<void> {
+  private async promoteBootstrapObjectsToOwner(client: {
+    query: (sql: string) => Promise<unknown>;
+  }): Promise<void> {
     await client.query('ALTER SCHEMA core OWNER TO stynx_owner');
     await client.query('ALTER TABLE core.schema_migrations OWNER TO stynx_owner');
     await client.query('SET ROLE stynx_owner');

@@ -194,6 +194,13 @@ function prepare(values) {
     requiredEnvironment('STYNX_TEST_PG_TEMPLATE'),
   ]);
 
+  run(process.execPath, [
+    join(repoRoot, 'scripts/ci-local/prepare-int-template.mjs'),
+    '--template',
+    requiredEnvironment('STYNX_TEST_PG_TEMPLATE'),
+    '--maintain',
+  ]);
+
   const verifier = verifierRoot();
   const devai = join(repoRoot, 'node_modules', '.bin', 'devai');
   if (!existsSync(devai)) fail('repository-local DEVAI binary is missing');
