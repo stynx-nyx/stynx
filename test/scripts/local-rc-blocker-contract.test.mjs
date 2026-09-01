@@ -6661,20 +6661,21 @@ test('D24.15 runner bypasses preflight only for non-executing modes', () => {
   assert.doesNotMatch(preflightBranch, /(?:runPackage|mkdirSync|rmSync|renameSync)/u);
 });
 
-test('D24.32 composed mutation evidence runs exactly four packages and fails closed on reuse drift', () => {
+test('D24.32 selective mutation refresh runs the exact governed roster and fails closed on drift', () => {
   const policy = JSON.parse(
     readFileSync(resolve(repoRoot, 'law/policy/stynx-1.1.1-mutation-reuse.json'), 'utf8'),
   );
+  const { roster, failures } = discoverMutationRoster(repoRoot);
+  const rosterNames = roster.map(({ packageName }) => packageName).sort();
+  assert.deepEqual(failures, []);
   assert.equal(policy.kind, 'stynx-1.1.1-mutation-reuse-policy-v1');
-  assert.equal(policy.freshPackages.length, 4);
-  assert.equal(policy.reusedPackages.length, 34);
+  assert.equal(policy.freshPackages.length, 38);
+  assert.equal(policy.reusedPackages.length, 0);
+  assert.equal(policy.requiredFreshCount, 38);
+  assert.equal(policy.requiredReusedCount, 0);
   assert.equal(new Set([...policy.freshPackages, ...policy.reusedPackages]).size, 38);
-  assert.deepEqual(policy.freshPackages, [
-    '@stynx-nyx/idempotency',
-    '@stynx-nyx/mobile-runtime',
-    '@stynx-nyx/preferences',
-    '@stynx-nyx/ratelimit',
-  ]);
+  assert.deepEqual(policy.freshPackages, rosterNames);
+  assert.deepEqual(policy.candidateRebind.refreshPackages, rosterNames);
   assert.equal(policy.composedSummaryKind, 'mutation-composed-report-set-v1');
 
   const runnerSource = readFileSync(resolve(repoRoot, 'scripts/run-mutation-evidence.mjs'), 'utf8');
@@ -6732,11 +6733,11 @@ test('D24.32 composed mutation evidence runs exactly four packages and fails clo
   assert.doesNotMatch(restorationSource, /recursive|glob|rmSync|\.stryker-tmp|coverage|dist/u);
 });
 
-test('D24.36 chained rebind preserves historical inputs and exits before every mutation start', () => {
+test('D24.36 protected source preserves historical inputs before exact selective refresh', () => {
   const policy = JSON.parse(
     readFileSync(resolve(repoRoot, 'law/policy/stynx-1.1.1-mutation-reuse.json'), 'utf8'),
   );
-  assert.equal(policy.candidateRebind.kind, 'zero-mutation-candidate-rebind-v2');
+  assert.equal(policy.candidateRebind.kind, 'protected-source-selective-refresh-v1');
   assert.deepEqual(policy.candidateRebind.sourceCandidate, {
     commit: 'f8a3521a944abc4b5c8a07e1ebae8d349e549fd7',
     tree: '32a3a8fd59afcd500f9d67552081f819cba9b4d7',
@@ -6770,8 +6771,19 @@ test('D24.36 chained rebind preserves historical inputs and exits before every m
     policy.candidateRebind.semanticRebindComparison.sourceRootManifest,
     policy.candidateRebind.semanticRebindComparison.targetRootManifest,
   );
-  assert.equal(policy.candidateRebind.mutationSubprocesses, 0);
-  assert.equal(policy.candidateRebind.packageStarts, 0);
+  assert.deepEqual(policy.candidateRebind.refreshPackages, policy.freshPackages);
+  assert.equal(policy.candidateRebind.nonBehavioralPaths.length, 37);
+  assert.equal(new Set(policy.candidateRebind.nonBehavioralPaths).size, 37);
+  assert.equal(
+    policy.candidateRebind.nonBehavioralPaths.every((path) =>
+      /^(?:packages|packages-web)\/[a-z0-9-]+\/README\.md$/u.test(path),
+    ),
+    true,
+  );
+  assert.equal(policy.candidateRebind.mutationSubprocesses, 38);
+  assert.equal(policy.candidateRebind.packageStarts, 38);
+  assert.equal(policy.candidateRebind.sourceMaterialization.mutationSubprocesses, 0);
+  assert.equal(policy.candidateRebind.sourceMaterialization.packageStarts, 0);
 
   const runnerSource = readFileSync(resolve(repoRoot, 'scripts/run-mutation-evidence.mjs'), 'utf8');
   const rebindStart = runnerSource.indexOf('export async function rebindCandidateComposition');
@@ -6800,12 +6812,16 @@ test('D24.36 chained rebind preserves historical inputs and exits before every m
   const preflightCall = directSource.indexOf('preflightFullMutationInfrastructure(');
   const packageCall = directSource.indexOf('freshRoster.map(runPackage)');
   assert.notEqual(rebindCall, -1);
-  assert.equal(preflightCall === -1 || rebindCall < preflightCall, true);
-  assert.equal(packageCall === -1 || rebindCall < packageCall, true);
+  assert.notEqual(preflightCall, -1);
+  assert.notEqual(packageCall, -1);
+  assert.equal(rebindCall < preflightCall, true);
+  assert.equal(preflightCall < packageCall, true);
   assert.match(
-    directSource.slice(rebindCall, preflightCall === -1 ? undefined : preflightCall),
-    /process\.exit\(0\)/u,
+    directSource.slice(rebindCall, preflightCall),
+    /validationOnly: policy\.candidateRebind\.kind === 'protected-source-selective-refresh-v1'/u,
   );
+  assert.match(directSource.slice(rebindCall, preflightCall), /validateCheapGateMarker/u);
+  assert.doesNotMatch(directSource.slice(rebindCall, preflightCall), /runPackage/u);
 });
 
 test('D24.22 filesystem URLs preserve decoded space-bearing engine and Playwright paths', async () => {
