@@ -136,6 +136,42 @@ Reused entries retain their original report/result bytes and historical input
 identity plus the exact non-behavioral exclusion contract. Fresh entries bind
 the current candidate input projection and successful process tuple.
 
+## Decision 5 — Selective refresh has no ambient cheap-gate marker dependency
+
+The exact candidate at commit
+`05ee9ad4b0fc155c64916eddcc85bc65055874f8`, tree
+`072dc4333b715a7b27fcb0ec483415a1579e705c`, passed every PREPARE dependency
+through documentation, but `test:mutation` failed after 1,930 milliseconds and
+before any package start. Protected source materialization and validation-only
+selective rebind both passed independently with zero package starts. The next
+statement required the ignored file
+`.devai/state/check-cache/v1/artifacts/d24-32-cheap-gates.json`; no repository
+code creates that file, so a fresh worktree cannot satisfy the prerequisite.
+
+That marker belonged to D24.32's one-time, manually sequenced four-package
+composition. It is not an input to this decision's protected-source selective
+refresh and cannot authenticate PREPARE results: its schema contains only the
+candidate, tree, 14 historical gate names, Boolean pass values, and opaque
+digests. Retaining it would make a fresh PREPARE depend on untracked ambient
+state and would still not bind those values to DEVAI's task descriptors,
+inputs, dependency results, toolchain, or environment.
+
+The selective-refresh branch therefore must not read or require the D24.32
+marker. It continues to fail closed on the exact candidate and tree,
+cleanliness, protected source and reconstruction chain, complete mutation-input
+projections, exact 38-package refresh selection, roster, targets, thresholds,
+infrastructure preflight, process outcomes, artifact bindings, atomic
+publication, and every DEVAI dependency of `release:prepare`. The marker
+validator remains unchanged for the legacy D24.32 composition branch where its
+campaign-specific contract applies.
+
+Inspector owns the assertion-only regression proving that the
+`protected-source-selective-refresh-v1` path reaches infrastructure preflight
+and the exact package roster without reading the ambient marker. Engineer owns
+only removal of that one call from the selective-refresh branch. No test,
+threshold, target, package, dependency, gate, evidence identity, or protected
+input is removed or weakened.
+
 ## Verification
 
 Inspector sensors must prove:
