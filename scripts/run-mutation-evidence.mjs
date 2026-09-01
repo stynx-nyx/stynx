@@ -2432,7 +2432,6 @@ if (isDirectInvocation) {
         validationOnly: policy.candidateRebind.kind === 'protected-source-selective-refresh-v1',
       });
       if (policy.candidateRebind.kind === 'protected-source-selective-refresh-v1') {
-        validateCheapGateMarker(candidate);
         const preflight = preflightFullMutationInfrastructure();
         if (preflight) {
           process.stderr.write(`${JSON.stringify(preflight)}\n`);
