@@ -513,9 +513,9 @@
         "gitBlobOid": "657da63dbe1a7343bb7ea428a2f0157138abaf74"
       },
       "target": {
-        "bytes": 80000,
-        "sha256": "2df5445ce56dcf7e0ef8da0be6b72cf1540e9b3b807bcf637610646ead119b02",
-        "gitBlobOid": "657da63dbe1a7343bb7ea428a2f0157138abaf74"
+        "bytes": 97757,
+        "sha256": "760c28b2a8653042be709c56330cd25ec7d92713432733b4fe23083c6353077f",
+        "gitBlobOid": "821b2d34c8a2e28a1ee1d7c81acae38c32f39145"
       }
     },
     "releaseContextPolicyDigestTransition": {
