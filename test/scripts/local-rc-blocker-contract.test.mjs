@@ -6820,8 +6820,17 @@ test('D24.36 protected source preserves historical inputs before exact selective
     directSource.slice(rebindCall, preflightCall),
     /validationOnly: policy\.candidateRebind\.kind === 'protected-source-selective-refresh-v1'/u,
   );
-  assert.match(directSource.slice(rebindCall, preflightCall), /validateCheapGateMarker/u);
+  assert.doesNotMatch(
+    directSource.slice(rebindCall, preflightCall),
+    /validateCheapGateMarker/u,
+    'protected selective refresh cannot depend on the ambient D24.32 marker',
+  );
   assert.doesNotMatch(directSource.slice(rebindCall, preflightCall), /runPackage/u);
+  assert.match(
+    directSource.slice(packageCall),
+    /validateCheapGateMarker/u,
+    'the legacy D24.32 composition branch must retain its marker validator',
+  );
 });
 
 test('D24.22 filesystem URLs preserve decoded space-bearing engine and Playwright paths', async () => {
