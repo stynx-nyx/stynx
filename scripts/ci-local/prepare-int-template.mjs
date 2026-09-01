@@ -184,11 +184,28 @@ function ensureCliBuilt() {
   }
 }
 
+function migrateTemplate(settings, template) {
+  const started = Date.now();
+  const migrate = spawnSync(
+    'node',
+    [CLI_MAIN, 'migrate', 'up', '--database-url', databaseUrl(settings, template)],
+    { cwd: repoRoot, stdio: 'inherit' },
+  );
+  if (migrate.status !== 0) {
+    throw new Error(`Platform migration into template "${template}" failed`);
+  }
+  console.log(
+    `Template database "${template}" migrated in ${((Date.now() - started) / 1000).toFixed(1)}s`,
+  );
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const settings = connectionSettings();
 
   if (args.maintain) {
+    ensureCliBuilt();
+    migrateTemplate(settings, args.template);
     await maintainAndVerifyTemplate(settings, args.template);
     console.log(`Template database "${args.template}" partition horizon is current`);
     return;
@@ -210,18 +227,7 @@ async function main() {
     await admin.end();
   }
 
-  const started = Date.now();
-  const migrate = spawnSync(
-    'node',
-    [CLI_MAIN, 'migrate', 'up', '--database-url', databaseUrl(settings, args.template)],
-    { cwd: repoRoot, stdio: 'inherit' },
-  );
-  if (migrate.status !== 0) {
-    throw new Error(`Platform migration into template "${args.template}" failed`);
-  }
-  console.log(
-    `Template database "${args.template}" migrated in ${((Date.now() - started) / 1000).toFixed(1)}s`,
-  );
+  migrateTemplate(settings, args.template);
   await maintainAndVerifyTemplate(settings, args.template);
 
   if (args.githubEnv) {
