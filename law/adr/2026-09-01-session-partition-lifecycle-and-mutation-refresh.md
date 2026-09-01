@@ -178,6 +178,36 @@ Git blob `8f2ca9a7b42d3751376458104c183dac3eb992fb`. Architect rebinds only the
 existing `devai145Adoption.governanceRunnerTransition.target` identity to those
 bytes; its source identity and every other policy field remain unchanged.
 
+## Decision 6 — Protected materialization creates its ignored parent
+
+The exact candidate at commit
+`5bd8945e4e0c501f37490dec1e106d4e1791d210`, tree
+`b39e4a80f23aee098333a8ddac7c115d30662fd7`, passed every PREPARE dependency
+through documentation. Its `test:mutation` node then failed after 1,599
+milliseconds and before any package start. A bounded diagnostic exposed the
+underlying error: the protected-source materializer attempted to create its
+private staging directory beneath `.devai/state/check-cache/v1/artifacts`, but
+that ignored parent does not exist in a fresh worktree. The non-recursive staging
+creation therefore raised `ENOENT` before protected reconstruction or mutation
+execution could proceed.
+
+The materializer now creates only the parent of its governed final evidence
+directory, recursively, immediately before deriving its private staging path.
+The staging directory itself remains a fresh non-recursive creation, so residue,
+collision, and interruption continue to fail closed. An explicitly supplied
+diagnostic staging path is not created or repaired by this behavior. Protected
+tag, manifest, artifact, reconstruction-chain, roster, projection, process,
+atomic-publication, and package-start controls remain unchanged.
+
+Inspector binds the D24.46 materialization sensor to a nested destination whose
+parent is initially absent. Engineer owns only the parent initialization and
+reuse of that exact parent for the private staging path. The resulting governed
+runner is exactly 109,440 bytes, SHA-256
+`68f0c18a75a2c7ac98df58f0766e553e03eb5271b3715daaa71f14ce7145e63d`,
+Git blob `96944a68fc2825cf5bbca1562471774441a7f7ca`. Architect rebinds only the existing
+`devai145Adoption.governanceRunnerTransition.target` identity to those bytes;
+its source identity and every other policy field remain unchanged.
+
 ## Verification
 
 Inspector sensors must prove:
