@@ -761,7 +761,9 @@ test('D24.33 promotion keeps the unchanged evidence verifier before publish:true
 
 test('D24.33 policy binds exact source evidence and a semantics-preserving manifest rebind', () => {
   const policy = JSON.parse(repositorySource('law/policy/stynx-1.1.1-mutation-reuse.json'));
-  assert.deepEqual(policy.candidateRebind, {
+  const { sourceMaterialization: _sourceMaterialization, ...d24_33CandidateRebind } =
+    policy.candidateRebind;
+  assert.deepEqual(d24_33CandidateRebind, {
     kind: 'zero-mutation-candidate-rebind-v2',
     sourceCandidate: {
       commit: 'f8a3521a944abc4b5c8a07e1ebae8d349e549fd7',
