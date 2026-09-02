@@ -37,12 +37,15 @@ import {
   buildMutationEnvironment,
   captureFocusedMutationCandidate,
   classifyMutationOutcome,
+  classifyMutationSubprocess,
   encodeFocusedMutationJson,
   focusedMutationAttemptPaths,
   focusedMutationCensus,
   normalizeMutationReport,
   projectFocusedMutationReport,
   publishFocusedMutationEvidence,
+  portableMutationFatalMessage,
+  sanitizeMutationDiagnostic,
   withMutationReportCleanup,
 } from '../../scripts/lib/mutation-evidence.mjs';
 import {
@@ -5693,6 +5696,92 @@ test('report-first classification distinguishes score, harness, missing, and por
       reason: 'MUTATION_REPORT_HOST_PATH',
     },
   );
+});
+
+test('mutation subprocess diagnostics normalize encoded repository URLs without weakening host rejection', () => {
+  const encodedRepositoryUrl = `${pathToFileURL(repoRoot).href}/packages/flow/test/unit/x.spec.ts`;
+  const encodedRepositoryPath = `${encodeURI(repoRoot)}/packages/flow/test/unit/x.spec.ts`;
+  const rawRepositoryUrl = `file://${repoRoot}/packages/flow/test/unit/x.spec.ts`;
+  const failed = (stderr) => ({
+    error: undefined,
+    signal: null,
+    status: 1,
+    stdout: '',
+    stderr,
+  });
+
+  for (const repositoryDiagnostic of [
+    encodedRepositoryUrl,
+    encodedRepositoryPath,
+    rawRepositoryUrl,
+    `${repoRoot}/packages/flow/test/unit/x.spec.ts`,
+  ]) {
+    assert.equal(
+      classifyMutationSubprocess(failed(repositoryDiagnostic), repoRoot),
+      'nonzero-exit',
+    );
+    const sanitized = sanitizeMutationDiagnostic(repositoryDiagnostic, repoRoot);
+    assert.match(sanitized, /^\.\/?packages\/flow\/test\/unit\/x\.spec\.ts$/u);
+    assert.equal(assertFocusedEvidenceSafe({ diagnostic: sanitized }, repoRoot), true);
+  }
+
+  for (const hostDiagnostic of [
+    'file:///Users/example/worktree/file.mjs',
+    '/Users/example/worktree/file.mjs',
+    '/private/tmp/worktree/file.mjs',
+    '/tmp/worktree/file.mjs',
+    '/var/folders/zz/worktree/file.mjs',
+    String.raw`C:\worktree\file.mjs`,
+  ]) {
+    assert.equal(
+      classifyMutationSubprocess(failed(hostDiagnostic), repoRoot),
+      'rejected-workstation-path',
+    );
+    const sanitized = sanitizeMutationDiagnostic(hostDiagnostic, repoRoot);
+    assert.equal(sanitized.includes('[host-path]'), true);
+    assert.equal(assertFocusedEvidenceSafe({ diagnostic: sanitized }, repoRoot), true);
+    assert.doesNotMatch(
+      sanitized,
+      /(?:file:\/\/|\/Users\/|\/private\/|\/tmp\/|\/var\/folders\/|[A-Za-z]:[\\/])/u,
+    );
+  }
+});
+
+test('mutation subprocess diagnostics preserve only a bounded portable redacted tail', () => {
+  const secret = 'github_pat_abcdefghijklmnopqrstuvwxyz0123456789';
+  assert.equal(
+    sanitizeMutationDiagnostic(`startup failed ${secret}`, repoRoot),
+    'mutation subprocess emitted rejected credential material',
+  );
+
+  const raw = `${'x'.repeat(5000)}\nError at ${pathToFileURL(repoRoot).href}/packages/flow/x.mjs\n/private/tmp/daemon.sock`;
+  const diagnostic = sanitizeMutationDiagnostic(raw, repoRoot);
+  assert.equal(Buffer.byteLength(diagnostic, 'utf8') <= 4096, true);
+  assert.equal(diagnostic.includes(secret), false);
+  assert.equal(diagnostic.includes(repoRoot), false);
+  assert.equal(diagnostic.includes(encodeURI(repoRoot)), false);
+  assert.equal(diagnostic.includes('[host-path]'), true);
+  assert.equal(assertFocusedEvidenceSafe({ diagnostic }, repoRoot), true);
+  const record = encodeFocusedMutationJson({ diagnostic }, 8192, 'mutation diagnostic record');
+  assert.equal(record.includes(raw), false, 'raw subprocess text must never enter evidence');
+});
+
+test('mutation fatal reporting exposes only classified failures and portable setup-residue messages', () => {
+  for (const message of [
+    'packages/flow: mutation setup residue exists before package start',
+    'packages/flow: unexpected mutation setup residue',
+    'packages/flow: mutation setup residue restoration failed',
+    '@stynx-nyx/flow: mutation-harness-failure (nonzero-exit; diagnostic=startup failed)',
+  ]) {
+    assert.equal(portableMutationFatalMessage(new Error(message)), message);
+  }
+  for (const message of [
+    'packages/flow: unrelated failure /Users/example/private',
+    'arbitrary internal error',
+    '',
+  ]) {
+    assert.equal(portableMutationFatalMessage(new Error(message)), 'mutation evidence failed');
+  }
 });
 
 test('mutation normalization replaces the repository root and rejects unsafe report content', () => {
