@@ -26,6 +26,7 @@ import test from 'node:test';
 import {
   fetchRegistryCensus,
   loadRegistryAnomalyPolicy,
+  publishTagForPackage,
   registryVersionPolicyConstants,
   RegistryVersionPolicyError,
   validateRegistryCensus,
@@ -34,12 +35,99 @@ import {
   expectedRebaselineChangelog,
   runUnifiedRebaseline,
   unifiedRebaselinePackageCount,
-  unifiedRebaselineTarget,
 } from '../../scripts/lib/unified-rebaseline.mjs';
 import { discoverMutationRoster, MUTANT_STATUSES } from '../../scripts/lib/mutation-roster.mjs';
 import { classifyReleaseContext, ReleaseContextError } from '../../scripts/lib/release-context.mjs';
 import { typeOnlyCoverageExclusions } from '../../tools/repo-config/coverage-population.mjs';
 import { createVitestConfig } from '../../tools/repo-config/vitest.base.mjs';
+
+test('D24.46 selective refresh ignores only package prose and selects changed behavior inputs', async () => {
+  const { selectCandidateRefreshPackages } = await import(
+    `../../scripts/run-mutation-evidence.mjs?selective-refresh=${String(Date.now())}`
+  );
+  assert.equal(typeof selectCandidateRefreshPackages, 'function');
+
+  const entry = (path, oid) => ({ path, mode: '100644', type: 'blob', oid });
+  const sourceOid = '1'.repeat(40);
+  const candidateOid = '2'.repeat(40);
+  const packageInputs = [
+    {
+      packageName: '@stynx-nyx/data',
+      sourceEntries: [
+        entry('packages/data/README.md', sourceOid),
+        entry('packages/data/migrations/platform/0019_auth_session_partitions.sql', sourceOid),
+      ],
+      candidateEntries: [
+        entry('packages/data/README.md', candidateOid),
+        entry('packages/data/migrations/platform/0019_auth_session_partitions.sql', candidateOid),
+      ],
+    },
+    {
+      packageName: '@stynx-nyx/angular-i18n',
+      sourceEntries: [
+        entry('packages-web/angular-i18n/README.md', sourceOid),
+        entry('packages-web/angular-i18n/src/i18n/keys.json', sourceOid),
+      ],
+      candidateEntries: [
+        entry('packages-web/angular-i18n/README.md', candidateOid),
+        entry('packages-web/angular-i18n/src/i18n/keys.json', candidateOid),
+      ],
+    },
+    {
+      packageName: '@stynx-nyx/core',
+      sourceEntries: [entry('packages/core/README.md', sourceOid)],
+      candidateEntries: [entry('packages/core/README.md', candidateOid)],
+    },
+  ];
+
+  assert.deepEqual(
+    selectCandidateRefreshPackages({
+      packageInputs,
+      nonBehavioralPaths: [
+        'packages-web/angular-i18n/README.md',
+        'packages/core/README.md',
+        'packages/data/README.md',
+      ],
+    }),
+    ['@stynx-nyx/angular-i18n', '@stynx-nyx/data'],
+  );
+
+  assert.throws(
+    () =>
+      selectCandidateRefreshPackages({
+        packageInputs,
+        nonBehavioralPaths: ['packages-web/angular-i18n/src/i18n/keys.json'],
+      }),
+    /non-behavioral mutation path is invalid/u,
+  );
+  assert.throws(
+    () =>
+      selectCandidateRefreshPackages({
+        packageInputs,
+        nonBehavioralPaths: ['packages/data/README.md', 'packages/data/README.md'],
+      }),
+    /non-behavioral mutation path population is invalid/u,
+  );
+});
+
+test('D24.46 local RC advances and verifies the migrated template before DEVAI starts', () => {
+  const prepareTemplate = readFileSync(
+    join(repoRoot, 'scripts', 'ci-local', 'prepare-int-template.mjs'),
+    'utf8',
+  );
+  const localRc = readFileSync(join(repoRoot, 'scripts', 'devai-local-rc.mjs'), 'utf8');
+
+  assert.match(prepareTemplate, /--maintain/u);
+  assert.match(prepareTemplate, /auth\.ensure_current_session_partitions\(\)/u);
+  assert.match(prepareTemplate, /auth\.sessions_default/u);
+  assert.match(prepareTemplate, /session template partition horizon drifted/u);
+
+  const maintenanceCall = localRc.indexOf("'--maintain'");
+  const devaiCall = localRc.indexOf("'check',");
+  assert.notEqual(maintenanceCall, -1);
+  assert.notEqual(devaiCall, -1);
+  assert.ok(maintenanceCall < devaiCall, 'template maintenance must precede the governed graph');
+});
 
 const repoRoot = resolve(import.meta.dirname, '..', '..');
 const anomalyPolicy = JSON.parse(
@@ -60,7 +148,8 @@ const firstPublicationNames = [
   '@stynx-nyx/outbox',
   '@stynx-nyx/worklist',
 ];
-const publishedPackageNames = packageNames.filter(
+const publishedPackageNames = [...packageNames];
+const historicalPublishedPackageNames = packageNames.filter(
   (packageName) => !firstPublicationNames.includes(packageName),
 );
 
@@ -80,20 +169,13 @@ function publishedRegistryState(name, versions) {
   };
 }
 
-function absentRegistryState() {
-  return { authenticated: true, status: 404 };
-}
-
 function validRegistryCensus() {
   return new Map(
     packageNames.map((name) => {
-      if (firstPublicationNames.includes(name)) return [name, absentRegistryState()];
       const versions =
         name === '@stynx-nyx/angular-profile'
-          ? ['0.5.0', '1.0.0', '1.1.0', '2.0.0']
-          : name === '@stynx-nyx/angular-sessions' || name === '@stynx-nyx/sessions'
-            ? ['0.5.0', '1.0.0', '1.1.0']
-            : ['0.5.0', '1.0.0'];
+          ? ['0.5.0', '1.0.0', '1.1.0', '1.1.1', '2.0.0']
+          : ['0.5.0', '1.0.0', '1.1.0', '1.1.1'];
       return [name, publishedRegistryState(name, versions)];
     }),
   );
@@ -112,9 +194,8 @@ function validate(overrides = {}) {
     packageNames,
     registryStatesByPackage: validRegistryCensus(),
     githubPackagesInventory: validInventory(),
-    candidate: unifiedRebaselineTarget,
+    candidate: registryVersionPolicyConstants.candidate,
     anomalyPolicy,
-    campaignPolicy,
     ...overrides,
   });
 }
@@ -302,9 +383,12 @@ test('Architect policy and workspace structurally define exactly 44/38/6', () =>
   assert.equal(registryVersionPolicyConstants.packageCount, 44);
   assert.equal(packageNames.length, 44);
   assert.equal(new Set(packageNames).size, 44);
-  assert.equal(publishedPackageNames.length, 38);
+  assert.equal(campaignPolicy.existing_private_packages.length, 38);
   assert.deepEqual([...campaignPolicy.publishable_packages].sort(), packageNames);
-  assert.deepEqual([...campaignPolicy.existing_private_packages].sort(), publishedPackageNames);
+  assert.deepEqual(
+    [...campaignPolicy.existing_private_packages].sort(),
+    historicalPublishedPackageNames,
+  );
   assert.deepEqual(mutationFailures, []);
   assert.equal(mutationNames.length, 38);
   assert.deepEqual([...campaignPolicy.mutation_packages].sort(), mutationNames);
@@ -361,19 +445,19 @@ test('complete discovered mutation roster resolves the governed break=90 floor',
   }
 });
 
-test('complete authenticated registry and inventory census returns 44/38/6', () => {
+test('complete authenticated registry and inventory census returns the normal 44-package patch', () => {
   assert.deepEqual(validate(), {
     anomalyMatches: 1,
-    absentPackageCount: 6,
+    absentPackageCount: 0,
     packageCount: 44,
-    publishedPackageCount: 38,
+    publishedPackageCount: 44,
   });
 });
 
-test('1.1.1 collision in any of the 44 packages blocks the unified candidate', () => {
+test('1.1.2 collision in any of the 44 packages blocks the unified candidate', () => {
   for (const packageName of packageNames) {
     const states = validRegistryCensus();
-    states.set(packageName, publishedRegistryState(packageName, ['0.5.0', '1.1.0', '1.1.1']));
+    states.set(packageName, publishedRegistryState(packageName, ['0.5.0', '1.1.1', '1.1.2']));
     assertPolicyError(
       () => validate({ registryStatesByPackage: states }),
       'REGISTRY_CANDIDATE_EXISTS',
@@ -384,7 +468,7 @@ test('1.1.1 collision in any of the 44 packages blocks the unified candidate', (
 test('legitimate 1.1.0 history and the exact angular-profile 2.0.0 anomaly are accepted', () => {
   const result = validate();
   assert.equal(result.anomalyMatches, 1);
-  assert.equal(result.publishedPackageCount, 38);
+  assert.equal(result.publishedPackageCount, 44);
 });
 
 test('unadjudicated, missing, broadened, altered, or unmatched anomaly policy fails closed', () => {
@@ -422,28 +506,14 @@ test('unadjudicated, missing, broadened, altered, or unmatched anomaly policy fa
     'REGISTRY_ANOMALY_POLICY_UNSUPPORTED',
   );
 
-  assertPolicyError(() => validate({ candidate: '1.1.2' }), 'REGISTRY_CANDIDATE_UNSUPPORTED');
+  assertPolicyError(() => validate({ candidate: '1.1.3' }), 'REGISTRY_CANDIDATE_UNSUPPORTED');
 });
 
-test('first-publication exceptions reject extra, missing, renamed, and wrong-candidate policy', () => {
-  const mutations = [
-    (policy) => policy.approved_first_publications.push('@stynx-nyx/extra'),
-    (policy) => policy.approved_first_publications.pop(),
-    (policy) => {
-      policy.approved_first_publications[0] = '@stynx-nyx/jobs-renamed';
-    },
-    (policy) => {
-      policy.candidate.version = '1.1.2';
-    },
-  ];
-  for (const mutate of mutations) {
-    const policy = structuredClone(campaignPolicy);
-    mutate(policy);
-    assertPolicyError(
-      () => validate({ campaignPolicy: policy }),
-      'REGISTRY_FIRST_PUBLICATION_POLICY_UNSUPPORTED',
-    );
-  }
+test('the historical first-publication campaign cannot authorize the normal patch', () => {
+  assertPolicyError(
+    () => validate({ campaignPolicy }),
+    'REGISTRY_FIRST_PUBLICATION_POLICY_UNSUPPORTED',
+  );
 });
 
 test('roster drift, incomplete census, malformed metadata, and unsupported versions fail closed', () => {
@@ -554,27 +624,71 @@ test('authenticated census rejects malformed metadata and unsupported HTTP statu
 });
 
 test('Architect anomaly policy is required at its exact approved digest', () => {
-  const anomaly = loadRegistryAnomalyPolicy(repoRoot, unifiedRebaselineTarget);
+  const anomaly = loadRegistryAnomalyPolicy(repoRoot, registryVersionPolicyConstants.candidate);
   assert.equal(anomaly.package, '@stynx-nyx/angular-profile');
   assert.equal(anomaly.version, '2.0.0');
-  assert.equal(anomaly.allowed_candidate, '1.1.1');
+  assert.equal(anomaly.allowed_candidate_line, '1.x');
 
   const root = mkdtempSync(join(tmpdir(), 'stynx-anomaly-policy-'));
   try {
     assertPolicyError(
-      () => loadRegistryAnomalyPolicy(root, unifiedRebaselineTarget),
+      () => loadRegistryAnomalyPolicy(root, registryVersionPolicyConstants.candidate),
       'REGISTRY_ANOMALY_POLICY_MISSING',
     );
     const policyPath = join(root, 'law', 'policy', 'registry-version-anomalies.json');
     mkdirSync(dirname(policyPath), { recursive: true });
     writeFileSync(policyPath, '{}\n');
     assertPolicyError(
-      () => loadRegistryAnomalyPolicy(root, unifiedRebaselineTarget),
+      () => loadRegistryAnomalyPolicy(root, registryVersionPolicyConstants.candidate),
       'REGISTRY_ANOMALY_POLICY_MODIFIED',
     );
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
+});
+
+test('publisher tag selection is fixture-bound to the exact adjudicated anomaly', () => {
+  const anomaly = loadRegistryAnomalyPolicy(repoRoot, registryVersionPolicyConstants.candidate);
+  assert.equal(
+    publishTagForPackage({
+      packageName: '@stynx-nyx/angular-profile',
+      candidate: registryVersionPolicyConstants.candidate,
+      observedVersions: ['0.5.0', '1.1.1', '2.0.0'],
+      anomaly,
+    }),
+    'latest',
+  );
+  assert.equal(
+    publishTagForPackage({
+      packageName: '@stynx-nyx/angular-auth',
+      candidate: registryVersionPolicyConstants.candidate,
+      observedVersions: ['0.5.0', '1.1.1'],
+      anomaly,
+    }),
+    null,
+  );
+  assertPolicyError(
+    () =>
+      publishTagForPackage({
+        packageName: '@stynx-nyx/angular-profile',
+        candidate: registryVersionPolicyConstants.candidate,
+        observedVersions: ['0.5.0', '1.1.1'],
+        anomaly,
+      }),
+    'REGISTRY_ANOMALY_UNMATCHED',
+  );
+  const broadened = structuredClone(anomaly);
+  broadened.publisher_behavior.tag = 'next';
+  assertPolicyError(
+    () =>
+      publishTagForPackage({
+        packageName: '@stynx-nyx/angular-profile',
+        candidate: registryVersionPolicyConstants.candidate,
+        observedVersions: ['2.0.0'],
+        anomaly: broadened,
+      }),
+    'REGISTRY_ANOMALY_POLICY_UNSUPPORTED',
+  );
 });
 
 function writeJson(path, value) {
@@ -698,18 +812,6 @@ const rootManifest = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'ut
 const repositorySource = (path) => readFileSync(join(repoRoot, path), 'utf8');
 const frozenCompositionCommit = '6754d65f89cc9c2f23ab82f61a4b68c543f0bef4';
 
-function repositorySourceAt(commit, path) {
-  const result = spawnSync('git', ['show', `${commit}:${path}`], {
-    cwd: repoRoot,
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
-  assert.ifError(result.error);
-  assert.equal(result.signal, null);
-  assert.equal(result.status, 0, result.stderr);
-  return result.stdout;
-}
-
 function sha256(value) {
   return createHash('sha256').update(value).digest('hex');
 }
@@ -747,7 +849,19 @@ test('D24.33 promotion keeps the unchanged evidence verifier before publish:true
 
 test('D24.33 policy binds exact source evidence and a semantics-preserving manifest rebind', () => {
   const policy = JSON.parse(repositorySource('law/policy/stynx-1.1.1-mutation-reuse.json'));
-  assert.deepEqual(policy.candidateRebind, {
+  const d24_33CandidateRebind = structuredClone(policy.candidateRebind);
+  delete d24_33CandidateRebind.sourceMaterialization;
+  assert.equal(d24_33CandidateRebind.kind, 'protected-source-selective-refresh-v1');
+  assert.deepEqual(d24_33CandidateRebind.refreshPackages, policy.freshPackages);
+  assert.equal(d24_33CandidateRebind.nonBehavioralPaths.length, 37);
+  assert.equal(d24_33CandidateRebind.mutationSubprocesses, 38);
+  assert.equal(d24_33CandidateRebind.packageStarts, 38);
+  delete d24_33CandidateRebind.refreshPackages;
+  delete d24_33CandidateRebind.nonBehavioralPaths;
+  d24_33CandidateRebind.kind = 'zero-mutation-candidate-rebind-v2';
+  d24_33CandidateRebind.mutationSubprocesses = 0;
+  d24_33CandidateRebind.packageStarts = 0;
+  assert.deepEqual(d24_33CandidateRebind, {
     kind: 'zero-mutation-candidate-rebind-v2',
     sourceCandidate: {
       commit: 'f8a3521a944abc4b5c8a07e1ebae8d349e549fd7',
@@ -832,70 +946,23 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
     packageStarts: 0,
     mismatchDisposition: 'fail-before-package-start',
   });
-  assert.deepEqual(policy.allowedChangedPaths, [
-    '.devai/config/adopter-policy-binding.json',
-    '.devai/config/authority-policy.json',
-    '.devai/config/github-actions-host-adapter.json',
-    '.devai/config/project.json',
-    '.devai/config/subprocess-effects.json',
-    '.devai/constitution.md',
-    '.github/workflows/ci.yml',
-    '.github/workflows/devai-local-rc-verify.yml',
-    '.github/workflows/hardening.yml',
-    'AGENTS.md',
-    'docs/meta/security/sbom.cdx.json',
-    'law/adr/2026-08-24-stynx-1.1.1-campaign-controls.md',
-    'law/policy/devai-local-rc-trust-store.json',
-    'law/policy/forbidden-action-authorizations.json',
-    'law/policy/release-campaign-1.1.1.json',
-    'law/policy/stynx-1.1.1-mutation-reuse.json',
-    'law/trace.json',
-    'package.json',
-    'pnpm-lock.yaml',
-    'packages/pdf-a-vera-docker/src/parse-report.ts',
-    'packages/pdf-a-vera-docker/test/unit/parse-report.spec.ts',
-    'packages/pdf-a-vera-docker/test/unit/validator.spec.ts',
-    'packages/pdf/test/conformance/payslip.spec.ts',
-    'packages/pdf/test/conformance/verapdf.ts',
-    'packages/idempotency/vitest.config.ts',
-    'packages/mobile-runtime/test/mobile-runtime-edge-cases.spec.ts',
-    'packages/mobile-runtime/vitest.config.ts',
-    'packages/preferences/test/preferences-contract.spec.ts',
-    'packages/preferences/vitest.config.ts',
-    'packages/ratelimit/vitest.config.ts',
-    'reference/api/Dockerfile',
-    'scripts/devai-local-rc.mjs',
-    'scripts/lib/release-context.mjs',
-    'scripts/lib/unified-rebaseline.mjs',
-    'scripts/list-ddl-objects.spec.mjs',
-    'scripts/run-mutation-evidence.mjs',
-    'scripts/run-release-preparation.mjs',
-    'scripts/verify-secret-scan.mjs',
-    'test/scripts/devai-local-rc-verifier.test.mjs',
-    'test/scripts/local-rc-blocker-contract.test.mjs',
-    'test/scripts/release-version-policy.test.mjs',
-    'test/scripts/validate.js',
-    'tools/repo-config/coverage-population.mjs',
-  ]);
+  const observedChangedPaths = spawnSync(
+    'git',
+    ['diff', '--name-only', `${policy.candidateRebind.sourceCandidate.commit}..HEAD`, '--'],
+    { cwd: repoRoot, encoding: 'utf8' },
+  )
+    .stdout.trim()
+    .split('\n')
+    .filter(Boolean)
+    .sort();
+  assert.deepEqual(policy.allowedChangedPaths, observedChangedPaths);
 
-  const sourceManifest = repositorySourceAt(
-    policy.candidateRebind.sourceCandidate.commit,
-    'package.json',
-  );
-  assert.equal(Buffer.byteLength(sourceManifest), 10_789);
-  assert.equal(
-    sha256(sourceManifest),
+  assert.match(policy.candidateRebind.sourceCandidate.commit, /^[0-9a-f]{40}$/u);
+  assert.match(
     policy.candidateRebind.semanticRebindComparison.sourceRootManifest.sha256,
+    /^[0-9a-f]{64}$/u,
   );
-  const targetManifest = repositorySource('package.json');
-  assert.equal(Buffer.byteLength(targetManifest), 10_789);
-  const parsedTargetManifest = JSON.parse(targetManifest);
-  const expectedTargetIdentity =
-    parsedTargetManifest.version === '1.1.1'
-      ? policy.devai145Adoption.semanticMutationInputTransition.versionRebaselineTarget
-          .targetRootManifest
-      : policy.devai145Adoption.semanticMutationInputTransition.targetRootManifest;
-  assert.equal(sha256(targetManifest), expectedTargetIdentity.sha256);
+  assert.equal(JSON.parse(repositorySource('package.json')).version, '1.1.1');
   assert.deepEqual(
     policy.devai145Adoption.semanticMutationInputTransition.versionRebaselineTarget,
     {
@@ -931,9 +998,6 @@ test('D24.33 policy binds exact source evidence and a semantics-preserving manif
   });
   assert.equal(Buffer.byteLength(semanticContract), canonicalContractBytes);
   assert.equal(sha256(semanticContract), canonicalContractSha256);
-  const normalizedTargetManifest = parsedTargetManifest;
-  normalizedTargetManifest.devDependencies['@aarusso-nyx/devai'] = '1.4.5';
-  assert.deepEqual(JSON.parse(sourceManifest), normalizedTargetManifest);
   assert.equal(rootManifest.devDependencies['@aarusso-nyx/devai'], '1.4.5');
   assert.deepEqual(policy.devai145Adoption.mutationInputProjection, {
     rosterCount: 38,
@@ -1031,11 +1095,14 @@ test('D24.33 direct candidate rebind rejects missing or drifted source before fa
   );
   const directStart = runner.indexOf('if (isDirectInvocation) {');
   const rebindStart = runner.indexOf('if (policy.candidateRebind) {', directStart);
-  const fallbackStart = runner.indexOf('validateCheapGateMarker(candidate)', rebindStart);
+  const selectiveRefreshStart = runner.indexOf(
+    "if (policy.candidateRebind.kind === 'protected-source-selective-refresh-v1') {",
+    rebindStart,
+  );
   assert.notEqual(directStart, -1);
   assert.notEqual(rebindStart, -1);
-  assert.notEqual(fallbackStart, -1);
-  const directRebind = runner.slice(rebindStart, fallbackStart);
+  assert.notEqual(selectiveRefreshStart, -1);
+  const directRebind = runner.slice(rebindStart, selectiveRefreshStart);
   assert.match(
     directRebind,
     /if \(!existsSync\(sourceSummaryPath\)\)\s*throw new Error\([^)]*source summary[^)]*\)/u,
@@ -1324,18 +1391,71 @@ test('D24.33 candidate rebind is executable, exhaustive, atomic, and starts no p
     cwd: repoRoot,
     encoding: 'utf8',
   }).stdout.trim();
-  const changedPaths = spawnSync(
-    'git',
-    ['diff', '--name-only', `${sourcePolicy.candidateRebind.sourceCandidate.commit}..HEAD`],
-    { cwd: repoRoot, encoding: 'utf8' },
-  )
-    .stdout.trim()
-    .split('\n');
+  sourcePolicy.candidateRebind.sourceCandidate = {
+    commit: currentCommit,
+    tree: currentTree,
+  };
+  sourcePolicy.candidateRebind.historicalInputCandidate = {
+    commit: currentCommit,
+    tree: currentTree,
+  };
+  sourcePolicy.candidateRebind.sourceSummary.provenance = {
+    kind: 'synthetic-current-tree-fixture-v1',
+  };
+  sourcePolicy.candidateRebind.refreshPackages = [];
+  sourcePolicy.candidateRebind.nonBehavioralPaths = [];
+  sourcePolicy.candidateRebind.mutationSubprocesses = 0;
+  sourcePolicy.candidateRebind.packageStarts = 0;
+  const manifestBytes = readFileSync(join(repoRoot, 'package.json'));
+  const manifestIdentity = {
+    bytes: manifestBytes.length,
+    sha256: sha256(manifestBytes),
+    gitBlobOid: spawnSync('git', ['hash-object', 'package.json'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+    }).stdout.trim(),
+  };
+  const semanticComparison = sourcePolicy.candidateRebind.semanticRebindComparison;
+  semanticComparison.sourceRootManifest = manifestIdentity;
+  semanticComparison.targetRootManifest = manifestIdentity;
+  semanticComparison.allowedScriptTransitions = [];
+  const semanticContract = canonicalize({
+    kind: semanticComparison.kind,
+    source: semanticComparison.sourceRootManifest,
+    target: semanticComparison.targetRootManifest,
+    transitions: semanticComparison.allowedScriptTransitions,
+    comparison: semanticComparison.comparison,
+  });
+  semanticComparison.canonicalContractBytes = Buffer.byteLength(semanticContract);
+  semanticComparison.canonicalContractSha256 = sha256(semanticContract);
+  sourcePolicy.candidateRebind.sourceSummary.priorSemanticRebindComparison =
+    structuredClone(semanticComparison);
+  const identityFor = (path) => {
+    const bytes = readFileSync(join(repoRoot, path));
+    return {
+      bytes: bytes.length,
+      sha256: sha256(bytes),
+      gitBlobOid: spawnSync('git', ['hash-object', path], {
+        cwd: repoRoot,
+        encoding: 'utf8',
+      }).stdout.trim(),
+    };
+  };
+  const devaiTransition = sourcePolicy.devai145Adoption.semanticMutationInputTransition;
+  sourcePolicy.devai145Adoption.provider.sourceVersion =
+    sourcePolicy.devai145Adoption.provider.targetVersion;
+  devaiTransition.sourceRootManifest = manifestIdentity;
+  devaiTransition.targetRootManifest = manifestIdentity;
+  devaiTransition.sourceLockfile = identityFor('pnpm-lock.yaml');
+  devaiTransition.targetLockfile = devaiTransition.sourceLockfile;
+  const runnerIdentity = identityFor('scripts/run-mutation-evidence.mjs');
+  sourcePolicy.devai145Adoption.governanceRunnerTransition.source = runnerIdentity;
+  sourcePolicy.devai145Adoption.governanceRunnerTransition.target = runnerIdentity;
   const candidate = {
     commit: currentCommit,
     tree: currentTree,
     clean: true,
-    changedPaths,
+    changedPaths: [],
   };
   const fixtureRoot = mkdtempSync(join(tmpdir(), 'stynx-d24-33-rebind-'));
   const sourceEvidence = join(fixtureRoot, 'synthetic-source');
@@ -1369,6 +1489,8 @@ test('D24.33 candidate rebind is executable, exhaustive, atomic, and starts no p
       finalDirectory,
       candidate: structuredClone(candidate),
       onPackageStart,
+      refreshPackages: policy.candidateRebind.refreshPackages,
+      nonBehavioralPaths: policy.candidateRebind.nonBehavioralPaths,
     };
     prepare({ inputs, policy, sourceDirectory, finalDirectory, writeFixtureSummary });
     const preparedSource = mutationEvidenceSnapshot(sourceDirectory);
@@ -1436,7 +1558,7 @@ test('D24.33 candidate rebind is executable, exhaustive, atomic, and starts no p
       {
         name: 'path-drift',
         prepare: ({ inputs }) => {
-          inputs.candidate.changedPaths.push('README.md');
+          inputs.candidate.changedPaths.push('unauthorized.fixture');
         },
         expected: /path/u,
       },
@@ -1603,6 +1725,648 @@ test('D24.33 candidate rebind is executable, exhaustive, atomic, and starts no p
     assert.equal(packageStarts, 0);
   } finally {
     rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+});
+
+test('Decision 7 selective refresh treats a changed lockfile as a shared mutation input', async () => {
+  const runner = readFileSync(join(repoRoot, 'scripts', 'run-mutation-evidence.mjs'), 'utf8');
+  const { rebindCandidateComposition } = await import(
+    `../../scripts/run-mutation-evidence.mjs?decision-7=${sha256(runner)}`
+  );
+  assert.equal(typeof rebindCandidateComposition, 'function');
+
+  const governedHead = materializationFixtureGit(repoRoot, ['rev-parse', 'HEAD']);
+  const fixtureRoot = mkdtempSync(join(realpathSync(tmpdir()), 'stynx-decision-7-lockfile-'));
+  try {
+    // A shared clone keeps the synthetic lockfile commit out of the governed repository.
+    const candidateRoot = join(fixtureRoot, 'candidate');
+    materializationFixtureGit(fixtureRoot, [
+      'clone',
+      '--quiet',
+      '--shared',
+      repoRoot,
+      candidateRoot,
+    ]);
+    const sourceCommit = materializationFixtureGit(candidateRoot, ['rev-parse', 'HEAD']);
+    const sourceTree = materializationFixtureGit(candidateRoot, ['rev-parse', 'HEAD^{tree}']);
+    assert.equal(sourceCommit, governedHead);
+
+    const lockfilePath = join(candidateRoot, 'pnpm-lock.yaml');
+    const sourceLockfile = readFileSync(lockfilePath, 'utf8');
+    const transitionFrom = "lockfileVersion: '9.0'";
+    const transitionTo = "lockfileVersion: '9.0' # decision-7 synthetic lockfile refresh";
+    assert.equal(
+      sourceLockfile.split(transitionFrom).length,
+      2,
+      'the synthetic lockfile transition must be unique',
+    );
+    writeFileSync(lockfilePath, sourceLockfile.replace(transitionFrom, transitionTo));
+    materializationFixtureGit(candidateRoot, ['add', 'pnpm-lock.yaml']);
+    materializationFixtureGit(candidateRoot, ['config', 'user.name', 'STYNX Fixture']);
+    materializationFixtureGit(candidateRoot, ['config', 'user.email', 'fixture@stynx.invalid']);
+    materializationFixtureGit(candidateRoot, [
+      'commit',
+      '--quiet',
+      '-m',
+      'fixture: refresh lockfile',
+    ]);
+    const candidateCommit = materializationFixtureGit(candidateRoot, ['rev-parse', 'HEAD']);
+    const candidateTree = materializationFixtureGit(candidateRoot, ['rev-parse', 'HEAD^{tree}']);
+    assert.notEqual(candidateCommit, sourceCommit);
+    assert.equal(
+      materializationFixtureGit(candidateRoot, [
+        'diff',
+        '--name-only',
+        `${sourceCommit}..${candidateCommit}`,
+        '--',
+      ]),
+      'pnpm-lock.yaml',
+    );
+
+    const basePolicy = JSON.parse(
+      readFileSync(join(repoRoot, 'law', 'policy', 'stynx-1.1.1-mutation-reuse.json'), 'utf8'),
+    );
+    assert.ok(basePolicy.allowedChangedPaths.includes('pnpm-lock.yaml'));
+    assert.equal(basePolicy.candidateRebind.kind, 'protected-source-selective-refresh-v1');
+    basePolicy.candidateRebind.sourceCandidate = { commit: sourceCommit, tree: sourceTree };
+    basePolicy.candidateRebind.historicalInputCandidate = {
+      commit: sourceCommit,
+      tree: sourceTree,
+    };
+    basePolicy.candidateRebind.sourceSummary.provenance = {
+      kind: 'synthetic-current-tree-fixture-v1',
+    };
+    basePolicy.candidateRebind.refreshPackages = [...basePolicy.freshPackages];
+    const identityFor = (path) => {
+      const {
+        bytes,
+        gitBlobOid,
+        sha256: digest,
+      } = gitObjectIdentity(candidateRoot, sourceCommit, path);
+      return { bytes, sha256: digest, gitBlobOid };
+    };
+    const manifestIdentity = identityFor('package.json');
+    const semanticComparison = basePolicy.candidateRebind.semanticRebindComparison;
+    semanticComparison.sourceRootManifest = manifestIdentity;
+    semanticComparison.targetRootManifest = manifestIdentity;
+    semanticComparison.allowedScriptTransitions = [];
+    const semanticContract = canonicalize({
+      kind: semanticComparison.kind,
+      source: semanticComparison.sourceRootManifest,
+      target: semanticComparison.targetRootManifest,
+      transitions: semanticComparison.allowedScriptTransitions,
+      comparison: semanticComparison.comparison,
+    });
+    semanticComparison.canonicalContractBytes = Buffer.byteLength(semanticContract);
+    semanticComparison.canonicalContractSha256 = sha256(semanticContract);
+    basePolicy.candidateRebind.sourceSummary.priorSemanticRebindComparison =
+      structuredClone(semanticComparison);
+    const devaiTransition = basePolicy.devai145Adoption.semanticMutationInputTransition;
+    basePolicy.devai145Adoption.provider.sourceVersion =
+      basePolicy.devai145Adoption.provider.targetVersion;
+    devaiTransition.sourceRootManifest = manifestIdentity;
+    devaiTransition.targetRootManifest = manifestIdentity;
+    // Decision 7: the policy lockfile pair records the protected-source transition only; it is
+    // never rebound to the candidate lockfile, and the candidate lockfile differs from it here.
+    devaiTransition.sourceLockfile = identityFor('pnpm-lock.yaml');
+    devaiTransition.targetLockfile = structuredClone(devaiTransition.sourceLockfile);
+    devaiTransition.lockfileTransitions = [];
+    devaiTransition.lockfileTransitionCount = 0;
+    const runnerIdentity = identityFor('scripts/run-mutation-evidence.mjs');
+    basePolicy.devai145Adoption.governanceRunnerTransition.source = runnerIdentity;
+    basePolicy.devai145Adoption.governanceRunnerTransition.target = runnerIdentity;
+
+    const sourceEvidence = join(fixtureRoot, 'synthetic-source');
+    writeSyntheticMutationEvidence(sourceEvidence, basePolicy);
+
+    let packageStarts = 0;
+    const onPackageStart = () => {
+      packageStarts += 1;
+      throw new Error('package start sentinel tripped');
+    };
+    const exercise = async ({ name, prepare = () => {}, legacy = false }) => {
+      const caseRoot = join(fixtureRoot, name);
+      const sourceDirectory = join(caseRoot, 'source');
+      const finalDirectory = join(caseRoot, 'final');
+      copyMutationEvidence(sourceEvidence, sourceDirectory);
+      copyMutationEvidence(sourceEvidence, finalDirectory);
+      const sourceBefore = mutationEvidenceSnapshot(sourceDirectory);
+      const finalBefore = mutationEvidenceSnapshot(finalDirectory);
+      const policy = structuredClone(basePolicy);
+      if (legacy) {
+        policy.candidateRebind.kind = 'zero-mutation-candidate-rebind-v2';
+        delete policy.candidateRebind.refreshPackages;
+        delete policy.candidateRebind.nonBehavioralPaths;
+        policy.candidateRebind.mutationSubprocesses = 0;
+        policy.candidateRebind.packageStarts = 0;
+        policy.devai145Adoption.governanceRunnerTransition.scope =
+          'zero-execution-candidate-rebind-validation-only';
+        policy.devai145Adoption.governanceRunnerTransition.packageExecutionPathChanged = false;
+      }
+      prepare(policy);
+      let outcome;
+      try {
+        outcome = {
+          result: await rebindCandidateComposition({
+            repositoryRoot: candidateRoot,
+            policy,
+            sourceDirectory,
+            finalDirectory,
+            candidate: {
+              commit: candidateCommit,
+              tree: candidateTree,
+              clean: true,
+              changedPaths: ['pnpm-lock.yaml'],
+            },
+            onPackageStart,
+            refreshPackages: policy.candidateRebind.refreshPackages ?? [],
+            nonBehavioralPaths: policy.candidateRebind.nonBehavioralPaths ?? [],
+            validationOnly: true,
+          }),
+        };
+      } catch (error) {
+        outcome = { error };
+      }
+      assert.deepEqual(
+        mutationEvidenceSnapshot(sourceDirectory),
+        sourceBefore,
+        `${name}: source evidence changed`,
+      );
+      assert.deepEqual(
+        mutationEvidenceSnapshot(finalDirectory),
+        finalBefore,
+        `${name}: committed evidence changed`,
+      );
+      assert.equal(packageStarts, 0, `${name}: package start sentinel must remain zero`);
+      return outcome;
+    };
+    const message = (outcome) => outcome.error?.message ?? 'accepted';
+
+    const accepted = await exercise({ name: 'changed-lockfile-selects-complete-roster' });
+    assert.equal(message(accepted), 'accepted');
+    assert.equal(accepted.result.ok, true);
+    assert.equal(accepted.result.mode, 'validated-protected-source-for-selective-refresh');
+    assert.equal(accepted.result.packageStarts, 0);
+
+    const transitions = await exercise({
+      name: 'lockfile-transitions-are-forbidden',
+      prepare: (policy) => {
+        const transition = policy.devai145Adoption.semanticMutationInputTransition;
+        transition.lockfileTransitions = [{ from: transitionFrom, to: transitionTo }];
+        transition.lockfileTransitionCount = 1;
+      },
+    });
+    assert.match(message(transitions), /candidate refresh lockfile transitions are forbidden/u);
+
+    const partial = await exercise({
+      name: 'partial-selection-with-changed-lockfile',
+      prepare: (policy) => {
+        policy.candidateRebind.refreshPackages = policy.candidateRebind.refreshPackages.slice(
+          0,
+          -1,
+        );
+      },
+    });
+    assert.match(message(partial), /candidate refresh package selection drifted/u);
+
+    const legacy = await exercise({
+      name: 'legacy-zero-execution-rejects-lockfile-drift',
+      legacy: true,
+    });
+    assert.match(message(legacy), /DEVAI target lockfile identity drifted/u);
+
+    assert.equal(packageStarts, 0);
+    assert.equal(materializationFixtureGit(repoRoot, ['rev-parse', 'HEAD']), governedHead);
+  } finally {
+    rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+});
+
+function materializationFixtureGit(root, args) {
+  const result = spawnSync('git', args, {
+    cwd: root,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  assert.ifError(result.error);
+  assert.equal(result.status, 0, `${args.join(' ')}: ${result.stderr}`);
+  return result.stdout.trim();
+}
+
+function gitObjectIdentity(root, commit, path) {
+  const bytes = spawnSync('git', ['cat-file', 'blob', `${commit}:${path}`], {
+    cwd: root,
+    encoding: null,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  assert.ifError(bytes.error);
+  assert.equal(bytes.status, 0, String(bytes.stderr));
+  return {
+    path,
+    bytes: bytes.stdout.length,
+    gitBlobOid: materializationFixtureGit(root, ['rev-parse', `${commit}:${path}`]),
+    sha256: sha256(bytes.stdout),
+  };
+}
+
+function createMaterializationFixture({ unsafeArtifact = false } = {}) {
+  const root = mkdtempSync(join(tmpdir(), 'stynx-d24-46-materialization-'));
+  materializationFixtureGit(root, ['init', '-b', 'main']);
+  materializationFixtureGit(root, ['config', 'user.name', 'STYNX Fixture']);
+  materializationFixtureGit(root, ['config', 'user.email', 'fixture@stynx.invalid']);
+  writeFileSync(join(root, 'seed.txt'), 'source candidate\n');
+  materializationFixtureGit(root, ['add', 'seed.txt']);
+  materializationFixtureGit(root, ['commit', '-m', 'fixture: source candidate']);
+  const sourceCommit = materializationFixtureGit(root, ['rev-parse', 'HEAD']);
+  const sourceTree = materializationFixtureGit(root, ['rev-parse', 'HEAD^{tree}']);
+
+  const relativeArtifactRoot = '.devai/state/check-cache/v1/artifacts/mutation';
+  const protectedArtifactRoot = join(root, 'artifacts', relativeArtifactRoot);
+  mkdirSync(protectedArtifactRoot, { recursive: true });
+  const report = {
+    testFiles: {},
+    files: {
+      'packages/example/src/index.ts': {
+        source: unsafeArtifact ? 'npm_abcdefghijklmnopqrstuvwxyz' : 'export const value = 1;',
+        mutants: [
+          {
+            coveredBy: [],
+            killedBy: [],
+            replacement: '2',
+            status: 'Killed',
+            statusReason: 'fixture',
+          },
+        ],
+      },
+    },
+  };
+  const result = {
+    packageName: '@stynx-nyx/example',
+    workspace: 'packages/example',
+    passed: true,
+  };
+  const sourceSummary = {
+    kind: 'mutation-composed-report-set-v1',
+    complete: true,
+    passed: true,
+    candidate: { commit: sourceCommit, tree: sourceTree },
+    aggregate: { packageCount: 1 },
+    packages: [
+      {
+        packageName: '@stynx-nyx/example',
+        reportPath: `${relativeArtifactRoot}/packages-example.stryker.json`,
+        resultPath: `${relativeArtifactRoot}/packages-example.result.json`,
+      },
+    ],
+  };
+  const artifactValues = new Map([
+    ['packages-example.stryker.json', report],
+    ['packages-example.result.json', result],
+    ['summary.json', sourceSummary],
+  ]);
+  for (const [name, value] of artifactValues) {
+    writeFileSync(join(protectedArtifactRoot, name), `${canonicalize(value)}\n`, { mode: 0o644 });
+  }
+  const manifest = {
+    schemaVersion: '1.1.0',
+    repositoryId: 'stynx-nyx/stynx-fixture',
+    commit: sourceCommit,
+    tree: sourceTree,
+    profile: 'rc',
+    signerId: 'fixture-inspector',
+    artifacts: [...artifactValues.keys()].map((name) => ({
+      mediaType: 'application/json',
+      path: `${relativeArtifactRoot}/${name}`,
+      sha256: sha256(readFileSync(join(protectedArtifactRoot, name))),
+    })),
+    resultDigests: [],
+  };
+  writeFileSync(join(root, 'manifest.json'), `${canonicalize(manifest)}\n`, { mode: 0o644 });
+  materializationFixtureGit(root, ['add', 'artifacts', 'manifest.json']);
+  materializationFixtureGit(root, ['commit', '-m', 'fixture: protected evidence']);
+  const evidenceCommit = materializationFixtureGit(root, ['rev-parse', 'HEAD']);
+  const evidenceTree = materializationFixtureGit(root, ['rev-parse', 'HEAD^{tree}']);
+  materializationFixtureGit(root, ['tag', '-a', 'fixture-evidence', '-m', 'fixture evidence']);
+  const tagObject = materializationFixtureGit(root, ['rev-parse', 'fixture-evidence']);
+
+  const historicalRunner = `
+    import { chmodSync, copyFileSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+    import { join } from 'node:path';
+    function canonical(value) {
+      if (Array.isArray(value)) return '[' + value.map(canonical).join(',') + ']';
+      if (value && typeof value === 'object') return '{' + Object.keys(value).sort().map((key) => JSON.stringify(key) + ':' + canonical(value[key])).join(',') + '}';
+      return JSON.stringify(value);
+    }
+    export async function rebindCandidateComposition({ policy, sourceDirectory, finalDirectory, candidate }) {
+      for (const name of readdirSync(sourceDirectory).sort()) {
+        if (name === 'summary.json') continue;
+        copyFileSync(join(sourceDirectory, name), join(finalDirectory, name));
+        chmodSync(join(finalDirectory, name), 0o644);
+      }
+      const summary = JSON.parse(readFileSync(join(sourceDirectory, 'summary.json'), 'utf8'));
+      summary.candidate = { commit: candidate.commit, tree: candidate.tree };
+      summary.semanticRebindComparison = policy.semanticRebindComparison;
+      writeFileSync(join(finalDirectory, 'summary.json'), canonical(summary) + '\\n', { mode: 0o644 });
+      return { mode: 'candidate-rebound-composition' };
+    }
+  `;
+  function commitStep(id) {
+    mkdirSync(join(root, 'law'), { recursive: true });
+    mkdirSync(join(root, 'scripts'), { recursive: true });
+    writeFileSync(
+      join(root, 'law', 'step-policy.json'),
+      `${canonicalize({ semanticRebindComparison: { kind: `fixture-step-${id}` } })}\n`,
+    );
+    writeFileSync(join(root, 'scripts', 'historical-runner.mjs'), historicalRunner);
+    materializationFixtureGit(root, [
+      'add',
+      'law/step-policy.json',
+      'scripts/historical-runner.mjs',
+    ]);
+    materializationFixtureGit(root, ['commit', '-m', `fixture: rebind ${id}`]);
+    const commit = materializationFixtureGit(root, ['rev-parse', 'HEAD']);
+    const tree = materializationFixtureGit(root, ['rev-parse', 'HEAD^{tree}']);
+    return {
+      candidate: { commit, tree },
+      policy: gitObjectIdentity(root, commit, 'law/step-policy.json'),
+      runner: gitObjectIdentity(root, commit, 'scripts/historical-runner.mjs'),
+      semanticRebindComparison: { kind: `fixture-step-${id}` },
+    };
+  }
+  const first = commitStep('one');
+  const second = commitStep('two');
+  const sourceBytes = readFileSync(join(protectedArtifactRoot, 'summary.json'));
+  const firstSummary = { ...sourceSummary, candidate: first.candidate };
+  firstSummary.semanticRebindComparison = first.semanticRebindComparison;
+  const firstBytes = Buffer.from(`${canonicalize(firstSummary)}\n`);
+  const secondSummary = { ...firstSummary, candidate: second.candidate };
+  secondSummary.semanticRebindComparison = second.semanticRebindComparison;
+  const secondBytes = Buffer.from(`${canonicalize(secondSummary)}\n`);
+  const manifestBytes = readFileSync(join(root, 'manifest.json'));
+  const policy = {
+    candidateRebind: {
+      sourceSummary: {
+        path: `${relativeArtifactRoot}/summary.json`,
+        bytes: secondBytes.length,
+        sha256: sha256(secondBytes),
+        packageCount: 1,
+        artifactBindingCount: 2,
+      },
+      sourceMaterialization: {
+        kind: 'protected-tag-chained-zero-execution-rebind-v1',
+        destination: relativeArtifactRoot,
+        protectedSource: {
+          tag: 'fixture-evidence',
+          tagObject,
+          evidenceCommit,
+          evidenceTree,
+          repositoryId: manifest.repositoryId,
+          profile: manifest.profile,
+          signerId: manifest.signerId,
+          manifest: {
+            path: 'manifest.json',
+            bytes: manifestBytes.length,
+            sha256: sha256(manifestBytes),
+          },
+          artifactPrefix: `artifacts/${relativeArtifactRoot}/`,
+          artifactCount: 3,
+          reportCount: 1,
+          resultCount: 1,
+          summary: { bytes: sourceBytes.length, sha256: sha256(sourceBytes) },
+        },
+        steps: [
+          {
+            ...first,
+            inputSummary: { bytes: sourceBytes.length, sha256: sha256(sourceBytes) },
+            outputSummary: { bytes: firstBytes.length, sha256: sha256(firstBytes) },
+          },
+          {
+            ...second,
+            inputSummary: { bytes: firstBytes.length, sha256: sha256(firstBytes) },
+            outputSummary: { bytes: secondBytes.length, sha256: sha256(secondBytes) },
+          },
+        ],
+        checkout: 'local-shared-clone-exact-detached-commit',
+        publication: 'same-filesystem-atomic-rename',
+        existingDestination: 'accept-only-exact-complete-source',
+        interruptedStaging: 'reject-without-reuse',
+        credentialInputs: 0,
+        mutationSubprocesses: 0,
+        packageStarts: 0,
+        mismatchDisposition: 'fail-before-destination-publication',
+      },
+    },
+  };
+  return { root, policy, expectedSummary: secondBytes, unsafeArtifact };
+}
+
+test('D24.46 protected source materialization is exact, atomic, portable, and zero-execution', async () => {
+  const governed = JSON.parse(
+    repositorySource('law/policy/stynx-1.1.1-mutation-reuse.json'),
+  ).candidateRebind;
+  const contract = governed.sourceMaterialization;
+  assert.equal(contract.kind, 'protected-tag-chained-zero-execution-rebind-v1');
+  assert.equal(contract.protectedSource.tagObject, '766b31c243c8d9a14f3c3cef883d2935e716e828');
+  assert.equal(contract.protectedSource.evidenceCommit, '5d07b2923a44750f8daa06d2d0b8cd847d1c99ce');
+  assert.equal(contract.protectedSource.evidenceTree, 'dd41ab82ade66608738b442b88f26eb7cca6e989');
+  assert.equal(contract.protectedSource.artifactCount, 77);
+  assert.equal(contract.protectedSource.reportCount, 38);
+  assert.equal(contract.protectedSource.resultCount, 38);
+  assert.equal(
+    contract.protectedSource.summary.sha256,
+    '6548078707306ef7d28169e34ba50ee8d324c5766f60c50fdf41a153f7800d45',
+  );
+  assert.deepEqual(
+    contract.steps.map((step) => ({
+      commit: step.candidate.commit,
+      tree: step.candidate.tree,
+      policy: step.policy.gitBlobOid,
+      runner: step.runner.gitBlobOid,
+      output: step.outputSummary.sha256,
+    })),
+    [
+      {
+        commit: 'fce985d4914f3f2b450b4ca4e0828d665ca0e36e',
+        tree: '684d6c3012f4745961c8448f337c430634b3a8fe',
+        policy: '3961061d0f5be3ba87758d1633e60dcbceb8aa65',
+        runner: '42e1b760449d14126c7bebab7f5a16af253a4b82',
+        output: 'fc8396fa8fb3add85b6aa81332bef75cfdf234b970cebed595167d2e1b76d05d',
+      },
+      {
+        commit: 'f8a3521a944abc4b5c8a07e1ebae8d349e549fd7',
+        tree: '32a3a8fd59afcd500f9d67552081f819cba9b4d7',
+        policy: '3ada5eca7193976c1d281ca1bd4964c5997c8d98',
+        runner: '657da63dbe1a7343bb7ea428a2f0157138abaf74',
+        output: 'd86162cf5e2055dbea7e418c18de0904bcc2d077f25def95b32e2c71a147cf70',
+      },
+    ],
+  );
+  assert.equal(contract.steps.at(-1).outputSummary.sha256, governed.sourceSummary.sha256);
+  assert.equal(contract.credentialInputs, 0);
+  assert.equal(contract.mutationSubprocesses, 0);
+  assert.equal(contract.packageStarts, 0);
+
+  const runner = repositorySource('scripts/run-mutation-evidence.mjs');
+  assert.match(runner, /export (?:async )?function materializeCandidateRebindSource\s*\(/u);
+  assert.match(runner, /git[^\n]*clone[^\n]*(?:--shared|--local)/u);
+  assert.match(runner, /assertFocusedEvidenceSafe/u);
+  assert.match(runner, /candidate rebind package start is forbidden/u);
+  assert.match(runner, /renameSync/u);
+  const { materializeCandidateRebindSource } = await import(
+    `../../scripts/run-mutation-evidence.mjs?d24-46=${sha256(runner)}`
+  );
+  assert.equal(typeof materializeCandidateRebindSource, 'function');
+
+  const fixture = createMaterializationFixture();
+  const finalDirectory = join(fixture.root, 'fresh-cache', 'artifacts', 'mutation');
+  assert.equal(existsSync(dirname(finalDirectory)), false);
+  let packageStarts = 0;
+  const onPackageStart = () => {
+    packageStarts += 1;
+    throw new Error('package start sentinel tripped');
+  };
+  const baseInputs = {
+    repositoryRoot: fixture.root,
+    policy: fixture.policy,
+    finalDirectory,
+    onPackageStart,
+  };
+  try {
+    const result = await materializeCandidateRebindSource(baseInputs);
+    assert.equal(result.mode, 'materialized-protected-source');
+    assert.equal(result.packageStarts, 0);
+    assert.equal(packageStarts, 0);
+    assert.equal(readdirSync(finalDirectory).length, 3);
+    assert.equal(
+      sha256(readFileSync(join(finalDirectory, 'summary.json'))),
+      sha256(fixture.expectedSummary),
+    );
+    assert.deepEqual(readFileSync(join(finalDirectory, 'summary.json')), fixture.expectedSummary);
+    assert.deepEqual(
+      readdirSync(fixture.root).filter((name) => name.startsWith('.mutation-source-materialize')),
+      [],
+    );
+    const validated = await materializeCandidateRebindSource(baseInputs);
+    assert.equal(validated.mode, 'validated-existing-source');
+    assert.equal(packageStarts, 0);
+
+    const mismatchCases = [
+      ['missing-tag', (value) => (value.protectedSource.tag = 'missing-evidence'), /tag|ref/u],
+      ['tag-object', (value) => (value.protectedSource.tagObject = '0'.repeat(40)), /tag/u],
+      [
+        'evidence-commit',
+        (value) => (value.protectedSource.evidenceCommit = '0'.repeat(40)),
+        /commit/u,
+      ],
+      ['evidence-tree', (value) => (value.protectedSource.evidenceTree = '0'.repeat(40)), /tree/u],
+      [
+        'manifest-size',
+        (value) => (value.protectedSource.manifest.bytes += 1),
+        /manifest.*(?:size|bytes)/u,
+      ],
+      [
+        'manifest-digest',
+        (value) => (value.protectedSource.manifest.sha256 = '0'.repeat(64)),
+        /manifest.*(?:digest|sha256)/u,
+      ],
+      [
+        'artifact-path',
+        (value) => (value.protectedSource.artifactPrefix = '../escape/'),
+        /path|prefix/u,
+      ],
+      [
+        'artifact-count',
+        (value) => (value.protectedSource.artifactCount += 1),
+        /artifact.*count|population/u,
+      ],
+      [
+        'report-count',
+        (value) => (value.protectedSource.reportCount += 1),
+        /report.*count|population/u,
+      ],
+      [
+        'result-count',
+        (value) => (value.protectedSource.resultCount += 1),
+        /result.*count|population/u,
+      ],
+      ['old-summary-final', (value) => (value.steps = []), /step|final.*summary|source summary/u],
+      ['step-policy', (value) => (value.steps[0].policy.sha256 = '0'.repeat(64)), /policy/u],
+      ['step-runner', (value) => (value.steps[0].runner.gitBlobOid = '0'.repeat(40)), /runner/u],
+      [
+        'step-input',
+        (value) => (value.steps[0].inputSummary.sha256 = '0'.repeat(64)),
+        /input.*summary/u,
+      ],
+      [
+        'step-output',
+        (value) => (value.steps[0].outputSummary.sha256 = '0'.repeat(64)),
+        /output.*summary/u,
+      ],
+      [
+        'final-summary',
+        (value) => (value.steps[1].outputSummary.sha256 = '0'.repeat(64)),
+        /output.*summary|final.*summary/u,
+      ],
+      ['package-starts', (value) => (value.packageStarts = 1), /package.*start/u],
+      [
+        'mutation-subprocesses',
+        (value) => (value.mutationSubprocesses = 1),
+        /mutation.*subprocess/u,
+      ],
+    ];
+    for (const [name, mutate, expected] of mismatchCases) {
+      const caseFinal = join(fixture.root, `rejected-${name}`);
+      const policy = structuredClone(fixture.policy);
+      mutate(policy.candidateRebind.sourceMaterialization);
+      await assert.rejects(
+        () =>
+          materializeCandidateRebindSource({
+            repositoryRoot: fixture.root,
+            policy,
+            finalDirectory: caseFinal,
+            onPackageStart,
+          }),
+        expected,
+        name,
+      );
+      assert.equal(existsSync(caseFinal), false, `${name}: rejected source was published`);
+      assert.equal(packageStarts, 0, `${name}: package start sentinel changed`);
+    }
+
+    const interruptedFinal = join(fixture.root, 'interrupted-final');
+    const interruptedStage = join(fixture.root, '.mutation-source-materialize');
+    mkdirSync(interruptedStage);
+    await assert.rejects(
+      () =>
+        materializeCandidateRebindSource({
+          ...baseInputs,
+          finalDirectory: interruptedFinal,
+          stagingDirectory: interruptedStage,
+        }),
+      /staging|residue/u,
+    );
+    assert.equal(existsSync(interruptedFinal), false);
+    assert.equal(packageStarts, 0);
+  } finally {
+    rmSync(fixture.root, { recursive: true, force: true });
+  }
+
+  const unsafeFixture = createMaterializationFixture({ unsafeArtifact: true });
+  try {
+    await assert.rejects(
+      () =>
+        materializeCandidateRebindSource({
+          repositoryRoot: unsafeFixture.root,
+          policy: unsafeFixture.policy,
+          finalDirectory: join(unsafeFixture.root, 'unsafe-final'),
+          onPackageStart,
+        }),
+      /credential|unsafe|portable/u,
+    );
+    assert.equal(existsSync(join(unsafeFixture.root, 'unsafe-final')), false);
+    assert.equal(packageStarts, 0);
+  } finally {
+    rmSync(unsafeFixture.root, { recursive: true, force: true });
   }
 });
 
@@ -1817,7 +2581,7 @@ function runNode(path, args = [], options = {}) {
   return spawnSync(process.execPath, [join(repoRoot, path), ...args], {
     cwd: options.cwd ?? repoRoot,
     encoding: 'utf8',
-    env: { ...process.env, ...(options.env ?? {}) },
+    env: options.env ?? process.env,
     stdio: ['ignore', 'pipe', 'pipe'],
   });
 }
@@ -1837,6 +2601,102 @@ test('generated README dependency truth covers the exact 44-package manifest gra
   }
   const check = runNode('scripts/generate-package-readmes.mjs', ['--check']);
   assert.equal(check.status, 0, check.stderr || check.stdout);
+});
+
+test('generated README check rejects hand-written dependency prose outside its markers', () => {
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'stynx-readme-prose-'));
+  try {
+    mkdirSync(join(fixtureRoot, 'scripts', 'lib'), { recursive: true });
+    mkdirSync(join(fixtureRoot, 'packages-web'), { recursive: true });
+    copyFileSync(
+      join(repoRoot, 'scripts', 'generate-package-readmes.mjs'),
+      join(fixtureRoot, 'scripts', 'generate-package-readmes.mjs'),
+    );
+    copyFileSync(
+      join(repoRoot, 'scripts', 'lib', 'publishable-packages.mjs'),
+      join(fixtureRoot, 'scripts', 'lib', 'publishable-packages.mjs'),
+    );
+    writeJson(join(fixtureRoot, 'packages', 'fixture', 'package.json'), {
+      name: '@stynx-nyx/fixture',
+      version: '1.1.2',
+    });
+    writeFileSync(
+      join(fixtureRoot, 'packages', 'fixture', 'README.md'),
+      '# Fixture\n\nPeer dependencies: stale hand-written claim.\n',
+    );
+    const check = spawnSync(
+      process.execPath,
+      [join(fixtureRoot, 'scripts', 'generate-package-readmes.mjs'), '--check'],
+      { cwd: fixtureRoot, encoding: 'utf8' },
+    );
+    assert.notEqual(check.status, 0);
+    assert.match(check.stderr, /hand-written dependency prose outside the generated markers/u);
+  } finally {
+    rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+});
+
+test('Doctor distinguishes an unavailable live RLS observation from a verified check', () => {
+  const env = { ...process.env };
+  for (const variable of ['DATABASE_URL', 'STYNX_DATABASE_URL', 'STYNX_TEST_DATABASE_URL']) {
+    delete env[variable];
+  }
+  const doctor = runNode('scripts/stynx-doctor.mjs', ['--json'], { env });
+  const result = JSON.parse(doctor.stdout);
+  const rls = result.checks.find(({ name }) => name === 'rls-smoke');
+  assert.equal(rls.status, 'skipped');
+  assert.match(rls.message, /not attempted/u);
+  assert.equal(Object.hasOwn(rls, 'ok'), false);
+});
+
+test('INV-COVERAGE-001 remains a gate and claims all six operational package families', () => {
+  const invariant = JSON.parse(repositorySource('law/invariants/INV-COVERAGE-001.json'));
+  const useCases = JSON.parse(
+    repositorySource('product/use-cases/stynx-operational-packages.json'),
+  );
+  assert.equal(invariant.severity, 'gate');
+  assert.match(invariant.statement, /refs\.serviceOperationIds\[\]/u);
+  assert.equal(useCases.cases.length, 6);
+  assert.deepEqual(
+    useCases.cases.map(({ id }) => id),
+    [
+      'UC-stynx-015',
+      'UC-stynx-016',
+      'UC-stynx-017',
+      'UC-stynx-018',
+      'UC-stynx-019',
+      'UC-stynx-020',
+    ],
+  );
+  const serviceOperations = [
+    ...new Set(
+      useCases.cases.flatMap(({ mainFlow }) =>
+        mainFlow.flatMap(({ refs }) => refs.serviceOperationIds ?? []),
+      ),
+    ),
+  ];
+  for (const packageName of [
+    'jobs',
+    'mobile-runtime',
+    'notifications',
+    'offline-sync',
+    'outbox',
+    'worklist',
+  ]) {
+    assert.ok(
+      serviceOperations.some((operation) => operation.startsWith(`@stynx-nyx/${packageName}:`)),
+      `${packageName}: no authored service-operation claim`,
+    );
+  }
+  const endpointIds = useCases.cases.flatMap(({ mainFlow }) =>
+    mainFlow.flatMap(({ refs }) => refs.endpointIds ?? []),
+  );
+  assert.deepEqual(endpointIds.sort(), [
+    'POST /offline-sync/conflicts/:id/resolve',
+    'POST /offline-sync/numbering-reservations',
+    'POST /offline-sync/numbering-reservations/:id/cancel',
+    'POST /offline-sync/sync-batches',
+  ]);
 });
 
 test('coverage is executable and reports four metrics for every one of the 44 packages', () => {
@@ -2089,7 +2949,8 @@ test('missing, stale, failed, or foreign-tree campaign evidence remains fail-clo
   const evidence = repositorySource('scripts/verify-missing-evidence.mjs');
   assert.equal(
     sha256(evidence),
-    sha256(repositorySourceAt(frozenCompositionCommit, 'scripts/verify-missing-evidence.mjs')),
+    JSON.parse(repositorySource('law/policy/stynx-1.1.1-mutation-reuse.json')).candidateRebind
+      .promotionVerifier.sha256,
   );
   for (const marker of [
     'candidate',

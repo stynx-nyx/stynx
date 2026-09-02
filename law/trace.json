@@ -330,6 +330,10 @@
         {
           "doc": "law/invariants/INV-COVERAGE-001.json",
           "anchor": "statement"
+        },
+        {
+          "doc": "product/use-cases/stynx-operational-packages.json",
+          "anchor": "cases"
         }
       ],
       "tests": [
@@ -363,7 +367,14 @@
           "mode": "white_box"
         }
       ],
-      "code_areas": ["product/use-cases/**", "product/use-cases/**"]
+      "code_areas": [
+        "reference/api/src/**",
+        "reference/web/src/**",
+        "domain/demo-bookmark/api/src/**",
+        "domain/demo-bookmark/web/src/**",
+        "packages/{jobs,mobile-runtime,notifications,offline-sync,outbox,worklist}/src/**",
+        "product/use-cases/**"
+      ]
     },
     {
       "id": "INV-PERF-001",
@@ -1652,8 +1663,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
-      "assertion_count": 16,
-      "assertion_digest_sha256": "98fcc537d486d1524c1df7fd4b31cc117fdbedd08f7cdff11121f1c8d537502d"
+      "assertion_count": 19,
+      "assertion_digest_sha256": "863aae7fb627871f9afc9f49d1bdca90b7611bac59a24174c506f0f5926e032b"
     },
     {
       "path": "packages/data/test/integration/soft-delete.spec.ts",
@@ -2466,8 +2477,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 58,
-      "assertion_digest_sha256": "ce18fb2346ea85d552167bffc1f1f3757fd65e427c594ca259e9031ed9fd03a9"
+      "assertion_count": 60,
+      "assertion_digest_sha256": "5af93fa4b3ed62554c692d33f7f344cd4ca290f221bb08db1581948602f325b3"
     },
     {
       "path": "packages/sessions/test/unit/session-control-storage.contract.spec.ts",
@@ -2490,8 +2501,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 78,
-      "assertion_digest_sha256": "c37db96ac03c02ae88801829ea80c7f22ecb85270c21b168486182240b3fc3e6"
+      "assertion_count": 80,
+      "assertion_digest_sha256": "ce9269824d2de67a9821213e25eb559fc1f6c3ed1a0682877737b350aa5f32ce"
     },
     {
       "path": "packages/signature/test/unit/digest.spec.ts",
@@ -2998,8 +3009,8 @@
       "suite": "e2e",
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001"],
       "lifecycle": "supported",
-      "assertion_count": 7,
-      "assertion_digest_sha256": "23c0d52f07eed3a709ba4b8cc62c98bdebe8000cf7a1e465843130100694623f"
+      "assertion_count": 8,
+      "assertion_digest_sha256": "885535fd81dae07ea83e264d0d0e3e5a3509ec4898d784648d8ae1e8d4aeb0d7"
     },
     {
       "path": "reference/web/test/e2e/records/crud.spec.ts",
@@ -3692,16 +3703,16 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 955,
-      "assertion_digest_sha256": "cb7967d087e1fb0502f1909eac8a78450525d21d6c27f03bc5d4b18347ed2a76"
+      "assertion_count": 988,
+      "assertion_digest_sha256": "d9869e074b4ce2d08bed484a1023fa967ce3cc67bdf8b3f33104964cc5787239"
     },
     {
       "path": "test/scripts/release-version-policy.test.mjs",
       "suite": "unit",
-      "invariant_ids": ["INV-CORE-001"],
+      "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001"],
       "lifecycle": "supported",
-      "assertion_count": 229,
-      "assertion_digest_sha256": "f4f3dc3c6867c97620706406046c542150a2b91a4954ab8211dc2e9791eff467"
+      "assertion_count": 314,
+      "assertion_digest_sha256": "be72414536c536e537ace80d93ef7fafcdcf14b2653c2be594462788e3752417"
     }
   ],
   "suites": {

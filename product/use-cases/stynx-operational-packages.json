@@ -1,0 +1,212 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-08-31T00:00:00Z",
+  "roles": ["tenant-member", "tenant-supervisor", "system-worker"],
+  "cases": [
+    {
+      "id": "UC-stynx-015",
+      "title": "Tenant schedules and executes reliable background work",
+      "goal": "A tenant schedules idempotent work and the system executes it with bounded retries.",
+      "actors": ["tenant-member", "system-worker"],
+      "mainFlow": [
+        {
+          "id": "1",
+          "action": "The tenant enqueues immediate or recurring work.",
+          "actorRole": "tenant-member",
+          "refs": {
+            "serviceOperationIds": [
+              "@stynx-nyx/jobs:JobsService.enqueue",
+              "@stynx-nyx/jobs:JobsService.upsertSchedule"
+            ]
+          }
+        },
+        {
+          "id": "2",
+          "action": "The scheduler materializes due schedules and a worker claims and executes jobs.",
+          "actorRole": "system-worker",
+          "refs": {
+            "serviceOperationIds": [
+              "@stynx-nyx/jobs:JobsScheduler.tick",
+              "@stynx-nyx/jobs:JobsWorker.tick"
+            ]
+          }
+        }
+      ],
+      "acceptanceCriteria": [
+        "Every job remains tenant-owned, idempotency keys suppress duplicates, and exhausted retries enter the dead-letter state."
+      ]
+    },
+    {
+      "id": "UC-stynx-016",
+      "title": "Mobile member works offline and safely synchronizes",
+      "goal": "A mobile member reserves identifiers, records offline mutations, and synchronizes them after connectivity returns.",
+      "actors": ["tenant-member"],
+      "mainFlow": [
+        {
+          "id": "1",
+          "action": "The client validates the session and device posture before opening local storage.",
+          "actorRole": "tenant-member",
+          "refs": {
+            "serviceOperationIds": ["@stynx-nyx/mobile-runtime:bootstrapFromStynxSession"]
+          }
+        },
+        {
+          "id": "2",
+          "action": "The client reserves numbering, records a mutation, and synchronizes the queued change.",
+          "actorRole": "tenant-member",
+          "refs": {
+            "serviceOperationIds": [
+              "@stynx-nyx/mobile-runtime:MobileRuntime.reserveNumbering",
+              "@stynx-nyx/mobile-runtime:MobileRuntime.enqueueMutation",
+              "@stynx-nyx/mobile-runtime:MobileRuntime.sync"
+            ]
+          }
+        }
+      ],
+      "acceptanceCriteria": [
+        "Tenant and device context bind every local mutation, and conflicts require explicit resolution rather than silent overwrite."
+      ]
+    },
+    {
+      "id": "UC-stynx-017",
+      "title": "Tenant sends preference-aware notifications",
+      "goal": "A tenant queues a notification that is rendered, dispatched, and visible in the recipient inbox without leaking PII.",
+      "actors": ["tenant-member", "system-worker"],
+      "mainFlow": [
+        {
+          "id": "1",
+          "action": "The tenant queues a template-backed notification for a recipient.",
+          "actorRole": "tenant-member",
+          "refs": {
+            "serviceOperationIds": ["@stynx-nyx/notifications:NotificationsService.enqueue"]
+          }
+        },
+        {
+          "id": "2",
+          "action": "A worker dispatches due deliveries and the recipient reads the in-app item.",
+          "actorRole": "system-worker",
+          "refs": {
+            "serviceOperationIds": [
+              "@stynx-nyx/notifications:NotificationDispatchPort.dispatchDue",
+              "@stynx-nyx/notifications:NotificationsInboxService.markRead"
+            ]
+          }
+        }
+      ],
+      "acceptanceCriteria": [
+        "Opt-outs are honored, delivery transitions are auditable, and logs contain identifiers rather than rendered PII."
+      ]
+    },
+    {
+      "id": "UC-stynx-018",
+      "title": "Offline client reserves numbers and resolves synchronization conflicts",
+      "goal": "An authenticated tenant client reserves numbering, submits a sync batch, and explicitly resolves any conflict.",
+      "actors": ["tenant-member"],
+      "mainFlow": [
+        {
+          "id": "1",
+          "action": "The client reserves and, when necessary, cancels an unused numbering interval.",
+          "actorRole": "tenant-member",
+          "refs": {
+            "endpointIds": [
+              "POST /offline-sync/numbering-reservations",
+              "POST /offline-sync/numbering-reservations/:id/cancel"
+            ],
+            "serviceOperationIds": [
+              "@stynx-nyx/offline-sync:OfflineSyncService.reserveNumbering",
+              "@stynx-nyx/offline-sync:OfflineSyncService.cancelNumberingReservation"
+            ]
+          }
+        },
+        {
+          "id": "2",
+          "action": "The client submits a batch and explicitly resolves a reported conflict.",
+          "actorRole": "tenant-member",
+          "refs": {
+            "endpointIds": [
+              "POST /offline-sync/sync-batches",
+              "POST /offline-sync/conflicts/:id/resolve"
+            ],
+            "serviceOperationIds": [
+              "@stynx-nyx/offline-sync:OfflineSyncService.submitBatch",
+              "@stynx-nyx/offline-sync:OfflineSyncService.resolveConflict"
+            ]
+          }
+        }
+      ],
+      "acceptanceCriteria": [
+        "All four operations require tenant context, permission checks, and audit events; a conflict is never silently overwritten."
+      ]
+    },
+    {
+      "id": "UC-stynx-019",
+      "title": "Domain write produces a reliably acknowledged integration event",
+      "goal": "A domain transaction emits an outbox message that is dispatched and acknowledged without losing tenant identity.",
+      "actors": ["tenant-member", "system-worker"],
+      "mainFlow": [
+        {
+          "id": "1",
+          "action": "The domain write enqueues its event in the same database transaction.",
+          "actorRole": "tenant-member",
+          "refs": { "serviceOperationIds": ["@stynx-nyx/outbox:OutboxService.enqueue"] }
+        },
+        {
+          "id": "2",
+          "action": "A worker claims and dispatches the message; the receiver returns a signed acknowledgement.",
+          "actorRole": "system-worker",
+          "refs": {
+            "serviceOperationIds": [
+              "@stynx-nyx/outbox:OutboxService.dispatchDue",
+              "@stynx-nyx/outbox:OutboxService.ack"
+            ]
+          }
+        }
+      ],
+      "acceptanceCriteria": [
+        "The domain write and enqueue commit atomically, retries are bounded, and ambiguous or invalid acknowledgements fail closed."
+      ]
+    },
+    {
+      "id": "UC-stynx-020",
+      "title": "Supervisor manages a tenant work queue from enqueue to completion",
+      "goal": "A tenant creates a governed queue, assigns eligible work, completes it, and detects SLA breaches.",
+      "actors": ["tenant-member", "tenant-supervisor", "system-worker"],
+      "mainFlow": [
+        {
+          "id": "1",
+          "action": "A supervisor creates a queue and a member enqueues a tenant work item.",
+          "actorRole": "tenant-supervisor",
+          "refs": {
+            "serviceOperationIds": [
+              "@stynx-nyx/worklist:WorklistQueuesService.create",
+              "@stynx-nyx/worklist:WorklistItemsService.enqueue"
+            ]
+          }
+        },
+        {
+          "id": "2",
+          "action": "An eligible member claims and completes the item.",
+          "actorRole": "tenant-member",
+          "refs": {
+            "serviceOperationIds": [
+              "@stynx-nyx/worklist:WorklistItemsService.claimNext",
+              "@stynx-nyx/worklist:WorklistItemsService.complete"
+            ]
+          }
+        },
+        {
+          "id": "3",
+          "action": "The system detects overdue open work and records breach events.",
+          "actorRole": "system-worker",
+          "refs": {
+            "serviceOperationIds": ["@stynx-nyx/worklist:WorklistSlaService.detectBreaches"]
+          }
+        }
+      ],
+      "acceptanceCriteria": [
+        "RLS, RBAC eligibility, assignment ownership, supervisor overrides, and the append-only event history remain enforced."
+      ]
+    }
+  ],
+  "stats": { "roleCount": 3, "caseCount": 6, "stepCount": 13 }
+}

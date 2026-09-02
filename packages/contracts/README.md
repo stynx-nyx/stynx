@@ -20,8 +20,6 @@ NestJS backend developers in two scenarios: (1) you're authoring a custom adapte
 pnpm add @stynx-nyx/contracts
 ```
 
-**No peer dependencies.** This package has no runtime imports of NestJS, Angular, Drizzle, AWS SDKs, or any other library. Safe to consume from sibling packages, frontend code, or standalone scripts.
-
 **Node:** 24.x. **TS target:** ES2022.
 
 ## Quick start

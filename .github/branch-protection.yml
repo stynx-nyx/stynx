@@ -31,3 +31,19 @@ branches:
           - reference-web-e2e
           - package-policy
           - dependency-audit
+
+# Release tags are a separate server-control surface from main-branch
+# protection. Apply this target through a repository ruleset; local hooks are
+# not an equivalent control.
+tag_rulesets:
+  - name: stynx-release-tags
+    enforcement: active
+    target: tag
+    include:
+      - refs/tags/v*
+      - refs/tags/@stynx-nyx/*@*
+    rules:
+      creation: release-workflow-only
+      deletion: blocked
+      non_fast_forward: blocked
+    bypass_actors: []

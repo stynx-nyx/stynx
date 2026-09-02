@@ -20,8 +20,6 @@ NestJS backend developers wiring authentication for the first time, OR replacing
 pnpm add @stynx-nyx/auth
 ```
 
-**Peer dependencies:** `@nestjs/common` `^11`, `@nestjs/core` `^11`, `@stynx-nyx/core` `^1`, `@stynx-nyx/contracts` `^1`, `@stynx-nyx/sessions` `^1`, `aws-jwt-verify` (Cognito), `ioredis` (optional, for the Redis permission cache).
-
 **Node:** 24.x.
 
 ## Quick start

@@ -22,8 +22,6 @@ Angular frontend developers calling the STYNX backend. Most interaction is throu
 pnpm add @stynx-nyx/sdk
 ```
 
-**Peer dependencies:** none required for the core client; `@stynx-nyx/angular` adapts it to Angular DI.
-
 ## Quick start
 
 ```ts

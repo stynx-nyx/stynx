@@ -37,12 +37,15 @@ import {
   buildMutationEnvironment,
   captureFocusedMutationCandidate,
   classifyMutationOutcome,
+  classifyMutationSubprocess,
   encodeFocusedMutationJson,
   focusedMutationAttemptPaths,
   focusedMutationCensus,
   normalizeMutationReport,
   projectFocusedMutationReport,
   publishFocusedMutationEvidence,
+  portableMutationFatalMessage,
+  sanitizeMutationDiagnostic,
   withMutationReportCleanup,
 } from '../../scripts/lib/mutation-evidence.mjs';
 import {
@@ -4481,7 +4484,7 @@ test('D21 production binds exact Compose-up terminals without D14-D20 drift', ()
     'reference/api/src/main.ts': 'c56246aa274b5df7cd88ca11692f580fca724d60a41b69b0021bb63fbf0acc0b',
     'reference/web/playwright.config.mjs':
       '126344dd1fcbceb9496ade28ae95eea73686884d305681c13afc00c94a02c4be',
-    'package.json': '2bd0ff37f68b2f2a6bebfa6876170555319082853239990ad2354a94fc13ee8d',
+    'package.json': '72d04d2f70d4722030ec4252b19a02ccd214c2f4d0bcdca15e457183fda30ec8',
     'reference/api/package.json':
       'bffedbee254dde969ae2a2a77689587fa9f553f0b9df2b869bd2b8fe910a5b64',
     'reference/web/package.json':
@@ -4652,7 +4655,7 @@ test('D22 production binds owned PostgreSQL mapping without D14-D21 drift', () =
     'reference/api/src/main.ts': 'c56246aa274b5df7cd88ca11692f580fca724d60a41b69b0021bb63fbf0acc0b',
     'reference/web/playwright.config.mjs':
       '126344dd1fcbceb9496ade28ae95eea73686884d305681c13afc00c94a02c4be',
-    'package.json': '2bd0ff37f68b2f2a6bebfa6876170555319082853239990ad2354a94fc13ee8d',
+    'package.json': '72d04d2f70d4722030ec4252b19a02ccd214c2f4d0bcdca15e457183fda30ec8',
     'reference/api/package.json':
       'bffedbee254dde969ae2a2a77689587fa9f553f0b9df2b869bd2b8fe910a5b64',
     'reference/web/package.json':
@@ -4712,7 +4715,7 @@ test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14
     'reference/api/src/main.ts': 'c6175bfa1f231730a0c339a8f48fd28a7a04c1c3f6f60de643ae4b767bf7c7a9',
     'reference/web/playwright.config.mjs':
       '3fbbb1a4dc5bcafe289113674ae8176f2cc90af74dfd69c6f1dc4f138fbff067',
-    'package.json': '2bd0ff37f68b2f2a6bebfa6876170555319082853239990ad2354a94fc13ee8d',
+    'package.json': '72d04d2f70d4722030ec4252b19a02ccd214c2f4d0bcdca15e457183fda30ec8',
     'reference/api/package.json':
       'bffedbee254dde969ae2a2a77689587fa9f553f0b9df2b869bd2b8fe910a5b64',
     'reference/web/package.json':
@@ -5695,6 +5698,92 @@ test('report-first classification distinguishes score, harness, missing, and por
   );
 });
 
+test('mutation subprocess diagnostics normalize encoded repository URLs without weakening host rejection', () => {
+  const encodedRepositoryUrl = `${pathToFileURL(repoRoot).href}/packages/flow/test/unit/x.spec.ts`;
+  const encodedRepositoryPath = `${encodeURI(repoRoot)}/packages/flow/test/unit/x.spec.ts`;
+  const rawRepositoryUrl = `file://${repoRoot}/packages/flow/test/unit/x.spec.ts`;
+  const failed = (stderr) => ({
+    error: undefined,
+    signal: null,
+    status: 1,
+    stdout: '',
+    stderr,
+  });
+
+  for (const repositoryDiagnostic of [
+    encodedRepositoryUrl,
+    encodedRepositoryPath,
+    rawRepositoryUrl,
+    `${repoRoot}/packages/flow/test/unit/x.spec.ts`,
+  ]) {
+    assert.equal(
+      classifyMutationSubprocess(failed(repositoryDiagnostic), repoRoot),
+      'nonzero-exit',
+    );
+    const sanitized = sanitizeMutationDiagnostic(repositoryDiagnostic, repoRoot);
+    assert.match(sanitized, /^\.\/?packages\/flow\/test\/unit\/x\.spec\.ts$/u);
+    assert.equal(assertFocusedEvidenceSafe({ diagnostic: sanitized }, repoRoot), true);
+  }
+
+  for (const hostDiagnostic of [
+    'file:///Users/example/worktree/file.mjs',
+    '/Users/example/worktree/file.mjs',
+    '/private/tmp/worktree/file.mjs',
+    '/tmp/worktree/file.mjs',
+    '/var/folders/zz/worktree/file.mjs',
+    String.raw`C:\worktree\file.mjs`,
+  ]) {
+    assert.equal(
+      classifyMutationSubprocess(failed(hostDiagnostic), repoRoot),
+      'rejected-workstation-path',
+    );
+    const sanitized = sanitizeMutationDiagnostic(hostDiagnostic, repoRoot);
+    assert.equal(sanitized.includes('[host-path]'), true);
+    assert.equal(assertFocusedEvidenceSafe({ diagnostic: sanitized }, repoRoot), true);
+    assert.doesNotMatch(
+      sanitized,
+      /(?:file:\/\/|\/Users\/|\/private\/|\/tmp\/|\/var\/folders\/|[A-Za-z]:[\\/])/u,
+    );
+  }
+});
+
+test('mutation subprocess diagnostics preserve only a bounded portable redacted tail', () => {
+  const secret = 'github_pat_abcdefghijklmnopqrstuvwxyz0123456789';
+  assert.equal(
+    sanitizeMutationDiagnostic(`startup failed ${secret}`, repoRoot),
+    'mutation subprocess emitted rejected credential material',
+  );
+
+  const raw = `${'x'.repeat(5000)}\nError at ${pathToFileURL(repoRoot).href}/packages/flow/x.mjs\n/private/tmp/daemon.sock`;
+  const diagnostic = sanitizeMutationDiagnostic(raw, repoRoot);
+  assert.equal(Buffer.byteLength(diagnostic, 'utf8') <= 4096, true);
+  assert.equal(diagnostic.includes(secret), false);
+  assert.equal(diagnostic.includes(repoRoot), false);
+  assert.equal(diagnostic.includes(encodeURI(repoRoot)), false);
+  assert.equal(diagnostic.includes('[host-path]'), true);
+  assert.equal(assertFocusedEvidenceSafe({ diagnostic }, repoRoot), true);
+  const record = encodeFocusedMutationJson({ diagnostic }, 8192, 'mutation diagnostic record');
+  assert.equal(record.includes(raw), false, 'raw subprocess text must never enter evidence');
+});
+
+test('mutation fatal reporting exposes only classified failures and portable setup-residue messages', () => {
+  for (const message of [
+    'packages/flow: mutation setup residue exists before package start',
+    'packages/flow: unexpected mutation setup residue',
+    'packages/flow: mutation setup residue restoration failed',
+    '@stynx-nyx/flow: mutation-harness-failure (nonzero-exit; diagnostic=startup failed)',
+  ]) {
+    assert.equal(portableMutationFatalMessage(new Error(message)), message);
+  }
+  for (const message of [
+    'packages/flow: unrelated failure /Users/example/private',
+    'arbitrary internal error',
+    '',
+  ]) {
+    assert.equal(portableMutationFatalMessage(new Error(message)), 'mutation evidence failed');
+  }
+});
+
 test('mutation normalization replaces the repository root and rejects unsafe report content', () => {
   const thresholds = { break: 90, high: 100, low: 90 };
   const normalized = normalizeMutationReport(
@@ -6661,20 +6750,21 @@ test('D24.15 runner bypasses preflight only for non-executing modes', () => {
   assert.doesNotMatch(preflightBranch, /(?:runPackage|mkdirSync|rmSync|renameSync)/u);
 });
 
-test('D24.32 composed mutation evidence runs exactly four packages and fails closed on reuse drift', () => {
+test('D24.32 selective mutation refresh runs the exact governed roster and fails closed on drift', () => {
   const policy = JSON.parse(
     readFileSync(resolve(repoRoot, 'law/policy/stynx-1.1.1-mutation-reuse.json'), 'utf8'),
   );
+  const { roster, failures } = discoverMutationRoster(repoRoot);
+  const rosterNames = roster.map(({ packageName }) => packageName).sort();
+  assert.deepEqual(failures, []);
   assert.equal(policy.kind, 'stynx-1.1.1-mutation-reuse-policy-v1');
-  assert.equal(policy.freshPackages.length, 4);
-  assert.equal(policy.reusedPackages.length, 34);
+  assert.equal(policy.freshPackages.length, 38);
+  assert.equal(policy.reusedPackages.length, 0);
+  assert.equal(policy.requiredFreshCount, 38);
+  assert.equal(policy.requiredReusedCount, 0);
   assert.equal(new Set([...policy.freshPackages, ...policy.reusedPackages]).size, 38);
-  assert.deepEqual(policy.freshPackages, [
-    '@stynx-nyx/idempotency',
-    '@stynx-nyx/mobile-runtime',
-    '@stynx-nyx/preferences',
-    '@stynx-nyx/ratelimit',
-  ]);
+  assert.deepEqual(policy.freshPackages, rosterNames);
+  assert.deepEqual(policy.candidateRebind.refreshPackages, rosterNames);
   assert.equal(policy.composedSummaryKind, 'mutation-composed-report-set-v1');
 
   const runnerSource = readFileSync(resolve(repoRoot, 'scripts/run-mutation-evidence.mjs'), 'utf8');
@@ -6730,13 +6820,24 @@ test('D24.32 composed mutation evidence runs exactly four packages and fails clo
   assert.match(restorationSource, /stryker-setup\.js\.map/u);
   assert.match(restorationSource, /unlinkSync/u);
   assert.doesNotMatch(restorationSource, /recursive|glob|rmSync|\.stryker-tmp|coverage|dist/u);
+
+  const packageRootStrykerHelpers = ['packages', 'packages-web'].flatMap((packageRoot) =>
+    readdirSync(resolve(repoRoot, packageRoot), { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .flatMap((entry) =>
+        readdirSync(resolve(repoRoot, packageRoot, entry.name))
+          .filter((name) => /^stryker-setup-\d+\.js$/u.test(name))
+          .map((name) => `${packageRoot}/${entry.name}/${name}`),
+      ),
+  );
+  assert.deepEqual(packageRootStrykerHelpers, []);
 });
 
-test('D24.36 chained rebind preserves historical inputs and exits before every mutation start', () => {
+test('D24.36 protected source preserves historical inputs before exact selective refresh', () => {
   const policy = JSON.parse(
     readFileSync(resolve(repoRoot, 'law/policy/stynx-1.1.1-mutation-reuse.json'), 'utf8'),
   );
-  assert.equal(policy.candidateRebind.kind, 'zero-mutation-candidate-rebind-v2');
+  assert.equal(policy.candidateRebind.kind, 'protected-source-selective-refresh-v1');
   assert.deepEqual(policy.candidateRebind.sourceCandidate, {
     commit: 'f8a3521a944abc4b5c8a07e1ebae8d349e549fd7',
     tree: '32a3a8fd59afcd500f9d67552081f819cba9b4d7',
@@ -6770,8 +6871,19 @@ test('D24.36 chained rebind preserves historical inputs and exits before every m
     policy.candidateRebind.semanticRebindComparison.sourceRootManifest,
     policy.candidateRebind.semanticRebindComparison.targetRootManifest,
   );
-  assert.equal(policy.candidateRebind.mutationSubprocesses, 0);
-  assert.equal(policy.candidateRebind.packageStarts, 0);
+  assert.deepEqual(policy.candidateRebind.refreshPackages, policy.freshPackages);
+  assert.equal(policy.candidateRebind.nonBehavioralPaths.length, 37);
+  assert.equal(new Set(policy.candidateRebind.nonBehavioralPaths).size, 37);
+  assert.equal(
+    policy.candidateRebind.nonBehavioralPaths.every((path) =>
+      /^(?:packages|packages-web)\/[a-z0-9-]+\/README\.md$/u.test(path),
+    ),
+    true,
+  );
+  assert.equal(policy.candidateRebind.mutationSubprocesses, 38);
+  assert.equal(policy.candidateRebind.packageStarts, 38);
+  assert.equal(policy.candidateRebind.sourceMaterialization.mutationSubprocesses, 0);
+  assert.equal(policy.candidateRebind.sourceMaterialization.packageStarts, 0);
 
   const runnerSource = readFileSync(resolve(repoRoot, 'scripts/run-mutation-evidence.mjs'), 'utf8');
   const rebindStart = runnerSource.indexOf('export async function rebindCandidateComposition');
@@ -6800,11 +6912,24 @@ test('D24.36 chained rebind preserves historical inputs and exits before every m
   const preflightCall = directSource.indexOf('preflightFullMutationInfrastructure(');
   const packageCall = directSource.indexOf('freshRoster.map(runPackage)');
   assert.notEqual(rebindCall, -1);
-  assert.equal(preflightCall === -1 || rebindCall < preflightCall, true);
-  assert.equal(packageCall === -1 || rebindCall < packageCall, true);
+  assert.notEqual(preflightCall, -1);
+  assert.notEqual(packageCall, -1);
+  assert.equal(rebindCall < preflightCall, true);
+  assert.equal(preflightCall < packageCall, true);
   assert.match(
-    directSource.slice(rebindCall, preflightCall === -1 ? undefined : preflightCall),
-    /process\.exit\(0\)/u,
+    directSource.slice(rebindCall, preflightCall),
+    /validationOnly: policy\.candidateRebind\.kind === 'protected-source-selective-refresh-v1'/u,
+  );
+  assert.doesNotMatch(
+    directSource.slice(rebindCall, preflightCall),
+    /validateCheapGateMarker/u,
+    'protected selective refresh cannot depend on the ambient D24.32 marker',
+  );
+  assert.doesNotMatch(directSource.slice(rebindCall, preflightCall), /runPackage/u);
+  assert.match(
+    directSource.slice(packageCall),
+    /validateCheapGateMarker/u,
+    'the legacy D24.32 composition branch must retain its marker validator',
   );
 });
 

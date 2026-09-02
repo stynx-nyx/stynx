@@ -4,8 +4,8 @@ import { resolve } from 'node:path';
 
 export const registryVersionPolicyConstants = Object.freeze({
   anomalyPolicyPath: 'law/policy/registry-version-anomalies.json',
-  anomalyPolicySha256: 'a7e906a92b6c3c17c02f39034afbc58f89b9d9c0c98d83280d3e5e4057af2c33',
-  candidate: '1.1.1',
+  anomalyPolicySha256: '5d502fc748830b4e4c09c5de534195bc846617a7d7c6dd74c28fdfb636d82cd9',
+  candidate: '1.1.2',
   canonicalMajor: 1,
   packageCount: 44,
   registryUrl: 'https://npm.pkg.github.com',
@@ -49,7 +49,7 @@ export function loadRegistryAnomalyPolicy(repoRoot, candidate) {
 
   const anomalies = policy.anomalies;
   if (
-    policy.schemaVersion !== '1.0.0' ||
+    policy.schemaVersion !== '1.1.0' ||
     policy.policy_id !== 'stynx.registry-version-anomalies' ||
     policy.canonical_line !== '1.x' ||
     policy.next_unified_version !== registryVersionPolicyConstants.candidate ||
@@ -70,9 +70,11 @@ export function loadRegistryAnomalyPolicy(repoRoot, candidate) {
     anomaly.version !== '2.0.0' ||
     anomaly.github_package_version_id !== 1024692931 ||
     anomaly.classification !== 'erroneous-semver-publication' ||
-    anomaly.allowed_candidate !== candidate ||
+    anomaly.allowed_candidate_line !== policy.canonical_line ||
     JSON.stringify(anomaly.allowed_effects) !==
-      JSON.stringify(['registry-monotonicity-exception']) ||
+      JSON.stringify(['registry-monotonicity-exception', 'explicit-latest-publish-tag']) ||
+    anomaly.publisher_behavior?.tag !== 'latest' ||
+    anomaly.publisher_behavior?.requires_exact_package_and_version_match !== true ||
     anomaly.applies_to_other_packages !== false ||
     anomaly.applies_to_other_versions !== false
   ) {
@@ -83,6 +85,35 @@ export function loadRegistryAnomalyPolicy(repoRoot, candidate) {
   }
 
   return anomaly;
+}
+
+export function publishTagForPackage({ packageName, candidate, observedVersions, anomaly }) {
+  const parsedCandidate = parseSemver(candidate, 'candidate');
+  if (parsedCandidate.major !== registryVersionPolicyConstants.canonicalMajor) {
+    fail(
+      'REGISTRY_CANDIDATE_UNSUPPORTED',
+      `candidate ${candidate} is outside the approved canonical 1.x line`,
+    );
+  }
+  if (packageName !== anomaly.package) return null;
+  if (!Array.isArray(observedVersions) || !observedVersions.includes(anomaly.version)) {
+    fail(
+      'REGISTRY_ANOMALY_UNMATCHED',
+      `${packageName}: approved historical anomaly ${anomaly.version} was not observed`,
+    );
+  }
+  if (
+    anomaly.allowed_candidate_line !== '1.x' ||
+    anomaly.publisher_behavior?.tag !== 'latest' ||
+    anomaly.publisher_behavior?.requires_exact_package_and_version_match !== true ||
+    !anomaly.allowed_effects?.includes('explicit-latest-publish-tag')
+  ) {
+    fail(
+      'REGISTRY_ANOMALY_POLICY_UNSUPPORTED',
+      `${packageName}: anomaly policy does not authorize explicit latest tagging`,
+    );
+  }
+  return 'latest';
 }
 
 export function validateRegistryCensus({
@@ -96,7 +127,7 @@ export function validateRegistryCensus({
   campaignPolicy,
 }) {
   if (candidate !== registryVersionPolicyConstants.candidate) {
-    fail('REGISTRY_CANDIDATE_UNSUPPORTED', 'only the Architect-approved 1.1.1 candidate is valid');
+    fail('REGISTRY_CANDIDATE_UNSUPPORTED', 'only the Architect-approved 1.1.2 candidate is valid');
   }
   if (
     packageNames.length !== registryVersionPolicyConstants.packageCount ||
@@ -218,7 +249,7 @@ function exactAnomalyFromPolicy(policy, candidate) {
     policy.anomalies.length !== 1 ||
     anomaly.package !== '@stynx-nyx/angular-profile' ||
     anomaly.version !== '2.0.0' ||
-    anomaly.allowed_candidate !== candidate ||
+    anomaly.allowed_candidate_line !== '1.x' ||
     anomaly.applies_to_other_packages !== false ||
     anomaly.applies_to_other_versions !== false
   ) {
@@ -283,7 +314,7 @@ function validatePackageMetadata(packageName, metadata, candidate, anomaly) {
       comparison >= 0 &&
       packageName === anomaly.package &&
       version === anomaly.version &&
-      anomaly.allowed_candidate === candidate
+      anomaly.allowed_candidate_line === '1.x'
     ) {
       anomalyMatches += 1;
       continue;

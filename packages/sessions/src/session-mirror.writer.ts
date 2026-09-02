@@ -27,6 +27,7 @@ export class SessionMirrorWriter implements SessionMirror {
         },
         async () => {
           await database.tx(async (trx) => {
+            await trx.query('select auth.ensure_current_session_partitions()');
             await trx.insert(authSessions).values({
               id: randomUUID(),
               tenantId: entry.tenantId,

@@ -20,8 +20,6 @@ Angular frontend developers building file-upload features.
 pnpm add @stynx-nyx/angular-storage
 ```
 
-**Peer dependencies:** `@angular/core` `^18`, `@stynx-nyx/angular` `^1`, `@stynx-nyx/sdk` `^1`.
-
 ## Quick start
 
 ```html

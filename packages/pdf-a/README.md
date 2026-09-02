@@ -20,8 +20,6 @@ Backend developers authoring or consuming PDF/A validators. Most apps consume th
 pnpm add @stynx-nyx/pdf-a
 ```
 
-**No runtime peer dependencies** — pure types + lightweight stubs.
-
 ## Quick start
 
 ```ts

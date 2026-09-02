@@ -20,8 +20,6 @@ Angular frontend developers building workflow-driven UIs.
 pnpm add @stynx-nyx/angular-flow
 ```
 
-**Peer dependencies:** `@angular/core` `^18`, `@angular/router` `^18`, `@stynx-nyx/angular` `^1`, `@stynx-nyx/angular-ui` `^1`, `@stynx-nyx/sdk` `^1`.
-
 ## Quick start
 
 ```ts

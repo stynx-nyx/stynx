@@ -20,8 +20,6 @@ Backend developers building multi-tenant apps. Most use is configuration + decor
 pnpm add @stynx-nyx/tenancy
 ```
 
-**Peer dependencies:** `@nestjs/common` `^11`, `@stynx-nyx/core` `^1`, `@stynx-nyx/contracts` `^1`, `@stynx-nyx/data` `^1`.
-
 ## Quick start
 
 ```ts

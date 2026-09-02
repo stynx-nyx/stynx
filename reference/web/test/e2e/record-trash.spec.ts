@@ -27,13 +27,23 @@ test('record soft-delete appears in trash and can be restored', async ({ page })
   await expect(page.getByTestId(`record-row-${recordId}`)).toBeHidden();
 
   await page.goto('/trash');
-  await expect.poll(async () => {
-    await page.getByTestId('trash-resource-records').click();
-    return page.getByRole('article').filter({ hasText: recordTitle }).count();
-  }).toBe(1);
+  await expect
+    .poll(async () => {
+      await page.getByTestId('trash-resource-records').click();
+      return page.getByRole('article').filter({ hasText: recordTitle }).count();
+    })
+    .toBe(1);
   const trashedRecord = page.getByRole('article').filter({ hasText: recordTitle });
   await expect(trashedRecord).toBeVisible();
-  await trashedRecord.getByRole('button', { name: 'Restore' }).click();
+  const [restoreResponse] = await Promise.all([
+    page.waitForResponse(
+      (response) =>
+        response.request().method() === 'POST' &&
+        response.url().endsWith(`/records/${recordId}/restore`),
+    ),
+    trashedRecord.getByRole('button', { name: 'Restore' }).click(),
+  ]);
+  expect(restoreResponse.ok()).toBe(true);
   await expect(trashedRecord).toBeHidden();
 
   await page.goto(`/records/${recordId}`);

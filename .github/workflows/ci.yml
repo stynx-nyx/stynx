@@ -258,6 +258,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://stynx:stynx@127.0.0.1:5432/stynx
       STYNX_DATABASE_URL: postgresql://stynx:stynx@127.0.0.1:5432/stynx
+      STYNX_RLS_LIVE_REQUIRED: '1'
       STYNX_TEST_PG_HOST: 127.0.0.1
       STYNX_TEST_PG_PORT: '5432'
       STYNX_TEST_PG_USER: stynx

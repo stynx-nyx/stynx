@@ -114,9 +114,6 @@ if (registryMode) {
       readFileSync(resolve(repoRoot, 'law/policy/registry-version-anomalies.json'), 'utf8'),
     );
     loadRegistryAnomalyPolicy(repoRoot, candidate);
-    const campaignPolicy = JSON.parse(
-      readFileSync(resolve(repoRoot, 'law/policy/release-campaign-1.1.1.json'), 'utf8'),
-    );
     const token = process.env.NODE_AUTH_TOKEN || process.env.NPM_TOKEN;
     const registryStatesByPackage = await fetchRegistryCensus({ packageNames, token });
     const githubPackagesInventory = await fetchGithubPackagesInventory({ packageNames, token });
@@ -126,7 +123,6 @@ if (registryMode) {
       githubPackagesInventory,
       candidate,
       anomalyPolicy,
-      campaignPolicy,
     });
     console.log(
       `Verified authenticated registry history for ${result.packageCount} packages at candidate ${candidate}.`,

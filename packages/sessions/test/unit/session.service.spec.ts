@@ -619,6 +619,7 @@ describe('SessionService', () => {
 
   it('writes mirror rows with membership ids when infrastructure providers are available', async () => {
     const values = vi.fn(async () => undefined);
+    const query = vi.fn(async () => undefined);
     const runWithRequestContext = vi.fn(async (_context: unknown, callback: () => Promise<void>) => callback());
     const writer = new SessionMirrorWriter({
       get: vi.fn((token: { name?: string }) => {
@@ -626,6 +627,7 @@ describe('SessionService', () => {
           return {
             tx: vi.fn(async (callback: (trx: unknown) => Promise<void>) =>
               callback({
+                query,
                 insert: vi.fn(() => ({ values })),
               }),
             ),
@@ -649,6 +651,8 @@ describe('SessionService', () => {
     });
 
     expect(runWithRequestContext).toHaveBeenCalledTimes(1);
+    expect(query).toHaveBeenCalledWith('select auth.ensure_current_session_partitions()');
+    expect(query.mock.invocationCallOrder[0]).toBeLessThan(values.mock.invocationCallOrder[0] ?? 0);
     expect(values).toHaveBeenCalledWith(expect.objectContaining({
       membershipId: 'membership-1',
       sid: 'sid-1',

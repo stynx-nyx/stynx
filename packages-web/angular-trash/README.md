@@ -20,8 +20,6 @@ Angular frontend developers building data-management UIs.
 pnpm add @stynx-nyx/angular-trash
 ```
 
-**Peer dependencies:** `@angular/core` `^18`, `@stynx-nyx/angular` `^1`, `@stynx-nyx/angular-ui` `^1`, `@stynx-nyx/sdk` `^1`.
-
 ## Quick start
 
 ```ts

@@ -22,8 +22,6 @@ pnpm add @stynx-nyx/pdf-a-vera-docker @stynx-nyx/pdf-a
 docker pull verapdf/cli
 ```
 
-**Peer dependencies:** `@stynx-nyx/pdf-a` `^1`. **Docker required at runtime.**
-
 ## Quick start
 
 ```ts

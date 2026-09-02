@@ -14,6 +14,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { MUTANT_STATUSES, canonicalize, sha256Hex } from './mutation-roster.mjs';
 
 const MUTATION_ENVIRONMENT_KEYS = [
@@ -233,11 +234,20 @@ function normalizeKnownPathInText(value, knownPath) {
 function normalizeRepositoryPathsInText(value, repoRoot) {
   const normalizedRoot = resolve(repoRoot).replaceAll('\\', '/').replace(/\/$/u, '');
   const normalizedValue = value.replaceAll('\\', '/');
-  const withoutRepositoryFileUrls = normalizeKnownPathInText(
-    normalizedValue,
+  const encodedRoot = encodeURI(normalizedRoot);
+  const repositoryRoots = [
+    pathToFileURL(normalizedRoot).href,
+    `file://${encodedRoot}`,
     `file://${normalizedRoot}`,
+    encodedRoot,
+    normalizedRoot,
+  ]
+    .filter((root, index, roots) => roots.indexOf(root) === index)
+    .sort((left, right) => right.length - left.length);
+  return repositoryRoots.reduce(
+    (normalized, root) => normalizeKnownPathInText(normalized, root),
+    normalizedValue,
   );
-  return normalizeKnownPathInText(withoutRepositoryFileUrls, normalizedRoot);
 }
 
 function sanitizeString(value, repoRoot) {
@@ -253,7 +263,7 @@ function sanitizeString(value, repoRoot) {
       'mutation report contains credential-shaped material',
     );
   }
-  const normalized = normalizeRepositoryPath(value, repoRoot);
+  const normalized = normalizeRepositoryPathsInText(value, repoRoot);
   if (HOST_PATH_PATTERNS.some((pattern) => pattern.test(normalized))) {
     throw new MutationEvidenceError(
       'MUTATION_REPORT_HOST_PATH',
@@ -1025,14 +1035,45 @@ export function withMutationReportCleanup(repoRoot, workspace, callback) {
   }
 }
 
-export function sanitizeMutationDiagnostic(value) {
+function redactHostPathsInText(value) {
+  const marker = '[host-path]';
+  return value
+    .replace(/\bfile:\/\/[^\s"'<>]+/giu, marker)
+    .replace(/(^|[\s"'(=:])\/(?:Users|home|private|tmp|var\/folders)\/[^\s"'<>)]*/gu, `$1${marker}`)
+    .replace(/(^|[\s"'(=])[A-Za-z]:[\\/][^\s"'<>)]*/gu, `$1${marker}`)
+    .replace(/(^|[\s"'(=])\\\\[^\\\s]+\\[^\s"'<>)]*/gu, `$1${marker}`);
+}
+
+function boundedUtf8Tail(value, maximumBytes) {
+  const bytes = Buffer.from(value, 'utf8');
+  if (bytes.length <= maximumBytes) return value;
+  let start = bytes.length - maximumBytes;
+  while (start < bytes.length && (bytes[start] & 0xc0) === 0x80) start += 1;
+  return bytes.subarray(start).toString('utf8');
+}
+
+export function sanitizeMutationDiagnostic(value, repoRoot) {
   const text = String(value ?? '').trim();
   if (text === '') return 'mutation subprocess failed without a diagnostic';
   if (unsafeCredential(text)) return 'mutation subprocess emitted rejected credential material';
-  if (HOST_PATH_PATTERNS.some((pattern) => pattern.test(text))) {
-    return 'mutation subprocess emitted a rejected workstation path';
+  const normalized = repoRoot ? normalizeRepositoryPathsInText(text, repoRoot) : text;
+  const redacted = redactHostPathsInText(normalized);
+  return boundedUtf8Tail(redacted, 4096);
+}
+
+export function portableMutationFatalMessage(error) {
+  const message = error instanceof Error ? error.message : '';
+  if (/^@stynx-nyx\/[a-z0-9-]+: mutation-(?:score|harness|portability)-failure/u.test(message)) {
+    return message;
   }
-  return text.slice(-4096);
+  if (
+    /^packages\/[a-z0-9-]+: (?:mutation setup residue exists before package start|unexpected mutation setup residue|mutation setup residue restoration failed)$/u.test(
+      message,
+    )
+  ) {
+    return message;
+  }
+  return 'mutation evidence failed';
 }
 
 export function classifyMutationSubprocess(result, repoRoot) {
