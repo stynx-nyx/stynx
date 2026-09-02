@@ -127,6 +127,7 @@
     "scripts/ci-local/prepare-int-template.mjs",
     "scripts/devai-local-rc.mjs",
     "scripts/generate-package-readmes.mjs",
+    "scripts/lib/mutation-evidence.mjs",
     "scripts/lib/registry-version-policy.mjs",
     "scripts/publish-release-plan.mjs",
     "scripts/run-mutation-evidence.mjs",
@@ -634,9 +635,9 @@
         "gitBlobOid": "657da63dbe1a7343bb7ea428a2f0157138abaf74"
       },
       "target": {
-        "bytes": 110019,
-        "sha256": "45ac846430f6ef2b5404b7c12d557d62d71cc180f5052c557b37747261f1e58b",
-        "gitBlobOid": "3664c010e1f5c08a30b7890c29e6acc5bf332680"
+        "bytes": 110798,
+        "sha256": "2d2978b3a4adf500d35266d9b59153cc11caf53ddc17b58cd11cab8a29e78339",
+        "gitBlobOid": "893a3fd1763607cd047b59458351491ff3bc8485"
       }
     },
     "releaseContextPolicyDigestTransition": {

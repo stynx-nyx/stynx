@@ -268,6 +268,71 @@ DEVAI Architect and an independent reviewer must return `PASS` with no must-fix 
 Architect checkpoint is committed. The candidate remains NOT READY until the validation-only
 invocation returns success with zero package starts on the resulting exact commit and tree.
 
+## Decision 8 — Mutation startup diagnostics remain portable and observable
+
+The exact candidate at commit `877e0c8ce39887fa4470c30653dca0fb775acdf7`, tree
+`7c71e76774a39f5e90ca109ec85bb098a0eacb22`, received two Owner-authorized PREPARE
+attempts on 2 September 2026. Both passed nineteen freshly executed mutation packages before
+`@stynx-nyx/flow`. The first attempt ran from 02:58Z through 04:22Z; its nineteen recorded package
+durations total 4,379,329 milliseconds, and its 4,421,006-millisecond mutation node then reported
+`mutation-harness-failure (rejected-workstation-path)` without a score suffix. The protected
+diagnostic is exactly 3,020 bytes with SHA-256
+`d77c99293354e49dc63ed0faed30093374c9287786889da28693f2efa957ec6b`. The missing score suffix
+binds the missing-report path: the flow subprocess exited nonzero without publishing
+`reports/mutation/mutation.json`.
+
+A later standalone flow diagnostic was not PREPARE credit and left prohibited setup residue, but
+it independently showed that the unchanged flow population could complete in 17 minutes 27
+seconds at score 90.83 with status totals Killed 792, Survived 79, CompileError 607, Ignored 310,
+and NoCoverage 1. Its normal reporter output included the percent-encoded repository URL
+`file:///Volumes/Thiamat%20II/...`. The first failure occurred before the flow report existed and
+well before a normal flow duration. Flow is the first roster package whose mutation-test
+population starts Testcontainers, and no Colima container event was recorded in the failure
+minute. A transient container or spawn failure during Stryker startup is therefore only the
+leading hypothesis; the underlying cause is not recoverable and is not a finding.
+
+The second PREPARE ran from 12:48Z through 13:59Z. Its protected diagnostic is exactly 2,974 bytes
+with SHA-256 `24884c78590df7b5df208915009605a4d2abdfbabd6a4bb9ebfc588d21aa02fc` and exposed only
+`mutation evidence failed`. The independently verified cause was
+`packages/flow/stryker-setup-1.js`, created by the standalone diagnostic. The file was a regular
+mode-`0644` runner-owned helper at 2,411 bytes and SHA-256
+`11ea94ed9ba49a916fb0f6cbb365e896f4ce67958009f7a4320ceebaba14febb`; it was removed before this
+decision, and the governed worktree has no remaining mutation residue. This setup-residue refusal
+occurred before flow started and was collapsed by the fatal reporter's generic fallback.
+
+The two plant gaps are distinct. First, repository-text normalization recognized only the raw
+repository root and raw `file://` form. Node and Stryker percent-encode the space in the volume
+name, so routine encoded ESM frames and report locations survived normalization and matched the
+otherwise mandatory `file://` host-path rejection. Second, subprocess output was discarded after
+classification, while the fatal reporter hid the three portable setup-residue failures. The first
+attempt's actual startup error is consequently unrecoverable.
+
+Repository normalization now recognizes the raw root, its `encodeURI` form, and both raw and
+`pathToFileURL` repository URLs in text and JSON string values. This exception applies only to the
+exact repository root. External `file://`, `/Users/`, `/home/`, `/private/`, `/tmp/`,
+`/var/folders/`, Windows drive, and UNC paths remain rejected for classification. A failing
+subprocess contributes only its credential-checked, repository-normalized, fixed-host-marker,
+UTF-8-safe 4,096-byte tail to the bounded portable failure record; raw stdout and stderr are never
+written to evidence. Credential-shaped material is replaced by the existing fixed rejection
+message. Fatal reporting admits only the existing package-scoped mutation failures and the exact
+three setup-residue messages; every other error remains `mutation evidence failed`.
+
+`scripts/lib/mutation-evidence.mjs` is a shared mutation input, so it is added to the exact
+`allowedChangedPaths` population and its change selects the complete 38-package roster already
+required fresh by Decision 7. No result, target, threshold, roster member, protected source,
+lockfile identity or transition, toolchain, environment, retry, fallback, or normalization of
+mutation results changes. The resulting governed runner is exactly 110,798 bytes, SHA-256
+`2d2978b3a4adf500d35266d9b59153cc11caf53ddc17b58cd11cab8a29e78339`, Git blob
+`893a3fd1763607cd047b59458351491ff3bc8485`. Architect rebinds only the existing
+`devai145Adoption.governanceRunnerTransition.target` and the actual Inspector assertion projection
+in `law/trace.json`; every other policy and trace field remains unchanged.
+
+Inspector sensors land before the Engineer implementation and prove encoded repository
+normalization, unchanged external-host rejection, credential refusal, bounded redaction accepted
+by focused-evidence safety checks, absence of raw persistence, and exact fatal-message exposure.
+The candidate remains NOT READY until the complete local verification, exact changed-path
+equality, and validation-only protected-source rebind all pass with zero package starts.
+
 ## Verification
 
 Inspector sensors must prove:
