@@ -40,6 +40,8 @@ import {
   preflightFullMutationInfrastructure,
   projectFocusedMutationReport,
   publishFocusedMutationEvidence,
+  portableMutationFatalMessage,
+  sanitizeMutationDiagnostic,
   withMutationReportCleanup,
 } from './lib/mutation-evidence.mjs';
 
@@ -61,13 +63,24 @@ const isDirectInvocation =
   process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 
 function reportFatal(error) {
-  const message = error instanceof Error ? error.message : '';
-  const portableMessage =
-    /^@stynx-nyx\/[a-z0-9-]+: mutation-(?:score|harness|portability)-failure/u.test(message)
-      ? message
-      : 'mutation evidence failed';
+  const portableMessage = portableMutationFatalMessage(error);
   process.stderr.write(`${JSON.stringify({ ok: false, error: portableMessage })}\n`);
   process.exitCode = 1;
+}
+
+function subprocessDiagnostic(result) {
+  const raw = `${String(result?.error?.message ?? '')}\n${String(result?.stdout ?? '')}\n${String(result?.stderr ?? '')}`;
+  return sanitizeMutationDiagnostic(raw, repoRoot);
+}
+
+function subprocessDiagnosticClause(result) {
+  if (
+    result === undefined ||
+    (result.error === undefined && result.signal === null && result.status === 0)
+  ) {
+    return '';
+  }
+  return `; diagnostic=${subprocessDiagnostic(result)}`;
 }
 
 function portablePath(path, label) {
@@ -386,7 +399,9 @@ function buildMutationPackage(entry, environment) {
     subprocessResult: result,
     repoRoot,
   });
-  throw new Error(`${entry.packageName}: mutation-harness-failure (build-precondition-${reason})`);
+  throw new Error(
+    `${entry.packageName}: mutation-harness-failure (build-precondition-${reason}${subprocessDiagnosticClause(result)})`,
+  );
 }
 
 function restoreOwnedStrykerSetup(workspace, remove = false) {
@@ -446,7 +461,9 @@ function runPackage(entry) {
           subprocessResult,
           repoRoot,
         });
-        throw new Error(`${entry.packageName}: ${classification} (${reason})`);
+        throw new Error(
+          `${entry.packageName}: ${classification} (${reason}${subprocessDiagnosticClause(subprocessResult)})`,
+        );
       }
       let report;
       try {
@@ -463,7 +480,10 @@ function runPackage(entry) {
           reportFailureCode: error.code,
           repoRoot,
         });
-        throw new Error(`${entry.packageName}: ${classification} (${reason})`, { cause: error });
+        throw new Error(
+          `${entry.packageName}: ${classification} (${reason}${subprocessDiagnosticClause(subprocessResult)})`,
+          { cause: error },
+        );
       }
       const statusTotals = totals(report);
       const mutationScore = score(statusTotals);
@@ -487,7 +507,7 @@ function runPackage(entry) {
       if (outcome.classification === 'mutation-harness-failure') {
         throw new Error(
           `${entry.packageName}: mutation-harness-failure (${outcome.reason}; ` +
-            `score=${mutationScore})`,
+            `score=${mutationScore}${subprocessDiagnosticClause(subprocessResult)})`,
         );
       }
       const stem = entry.workspace.replaceAll('/', '-');
@@ -562,7 +582,9 @@ function runFocusedPackage(entry, context) {
         subprocessResult,
         repoRoot,
       });
-      throw new Error(`${entry.packageName}: ${classification} (${reason})`);
+      throw new Error(
+        `${entry.packageName}: ${classification} (${reason}${subprocessDiagnosticClause(subprocessResult)})`,
+      );
     }
     let report;
     try {
@@ -579,7 +601,10 @@ function runFocusedPackage(entry, context) {
         reportFailureCode: error.code,
         repoRoot,
       });
-      throw new Error(`${entry.packageName}: ${classification} (${reason})`, { cause: error });
+      throw new Error(
+        `${entry.packageName}: ${classification} (${reason}${subprocessDiagnosticClause(subprocessResult)})`,
+        { cause: error },
+      );
     }
     validateFocusedContext(context);
     const reportTargets = Object.keys(report.files ?? {}).sort();
@@ -630,7 +655,7 @@ function runFocusedPackage(entry, context) {
       });
       throw new Error(
         `${entry.packageName}: mutation-harness-failure (${outcome.reason}; ` +
-          `score=${mutationScore})`,
+          `score=${mutationScore}${subprocessDiagnosticClause(subprocessResult)})`,
       );
     }
     assertFocusedMutationProcessResult(processResult, 'success');
