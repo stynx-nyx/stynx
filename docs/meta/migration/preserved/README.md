@@ -30,12 +30,20 @@ Additions and edits (product):
 - `packages/sessions/test/unit/session.service.spec.ts` (+4)
 - `packages/sessions/src/session-mirror.writer.ts` (+1)
 
-Deletion (**not** product — read carefully):
+Deletion (**this half is a genuine fix** — corrected 2026-09-04):
 
 - `packages/contracts/stryker-setup-1.js` (-71). The source branch *removes*
-  this file; it exists on `main`. It is mutation scaffolding, not product
-  source. Do not treat this deletion as product work to restore. It may be
-  superseded independently by the 1.2.0 mutation-roster rebind.
+  this file. An earlier revision of this note said not to treat the deletion as
+  work to restore. **That was wrong.** The file is Stryker scaffolding that was
+  accidentally committed in `b74c7752`, even though `.gitignore` line 121
+  already ignores `stryker-setup-*.js`. Because it is tracked, it is always
+  present before a mutation run, and `restoreOwnedStrykerSetup()` rejects it as
+  `unexpected mutation setup residue` — its size (2325) and digest do not match
+  the guard's expected residue. That permanently blocked
+  `@stynx-nyx/contracts` mutation on `main`.
+
+  The 1.2.0 migration removes it from tracking for the same reason, so this part
+  of the patch is already applied and must not be re-applied.
 
 ## Re-applying later
 
