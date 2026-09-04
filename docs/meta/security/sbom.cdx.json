@@ -1,7 +1,7 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:32afdd6b-dad6-4213-8292-26d9e2661159",
+  "serialNumber": "urn:uuid:ea30cb4f-5771-4e5d-87ab-6c60f970bb57",
   "version": 1,
   "metadata": {
     "timestamp": "2026-05-29T00:00:00.000Z",
@@ -27,7 +27,7 @@
     "properties": [
       {
         "name": "stynx:pnpm-lock-sha256",
-        "value": "32afdd6bdad69213129226d9e26611594dbf298536dc2d81374713682cf3d98e"
+        "value": "ea30cb4f5771fe5d17ab6c60f970bb57e7d3ab42956d55c31b89b10169f1477f"
       },
       {
         "name": "stynx:package-manager",
@@ -1776,7 +1776,7 @@
     {
       "type": "library",
       "name": "@xmldom/xmldom",
-      "version": "0.9.10",
+      "version": "0.9.12",
       "scope": "required",
       "licenses": [
         {
@@ -1785,7 +1785,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@xmldom%2fxmldom@0.9.10"
+      "purl": "pkg:npm/@xmldom%2fxmldom@0.9.12"
     },
     {
       "type": "library",
