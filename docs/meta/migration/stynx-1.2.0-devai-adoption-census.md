@@ -212,3 +212,141 @@ migration is an Owner sequencing decision.
 **BLOCKED.** The required dependency `@aarusso-nyx/devai@1.5.0` does not exist
 on the resolving registry. Census, classification, and migration mapping are
 complete; no governance removal or adoption has been attempted.
+
+---
+
+# Part II — Migration outcome (2026-09-04)
+
+The Owner authorized adopting `1.4.5` after `1.5.0` was confirmed unpublished.
+This part records what was actually done. Part I above is the pre-migration
+census and is unchanged.
+
+## Correction to Part I
+
+Part I classified `scripts/run-mutation-evidence.mjs` as pure generic
+governance. **That was wrong.** DEVAI does not execute mutation testing: the
+`test:mutation` task node invokes `pnpm run test:mutation` under
+`runner: stryker-v1`, and `devai check --only mutation` only compares reports
+against thresholds. Deleting the script would have broken all 38 packages with
+no replacement. It is a mixed file: reduced from 2068 to 380 lines, retaining
+only per-package Stryker execution and report emission.
+
+The same applies to `scripts/lib/mutation-evidence.mjs` (1091 → 475 lines) and
+`scripts/lib/mutation-roster.mjs`, which is used by `run-release-preparation.mjs`
+and `lint-workflows.mjs` and is retained unchanged.
+
+## Adoption state
+
+STYNX was **already bound to 1.4.5** before this migration
+(`.devai/config/authority-policy.json`, materialized 2026-08-31). This was a
+governance-removal migration, not a version bump.
+
+| Item | Value |
+| --- | --- |
+| Package | `@aarusso-nyx/devai@1.4.5` |
+| Registry | `https://npm.pkg.github.com` |
+| Integrity | `sha512-5XuNGqbiqRGx+3MJOlO9VdJoKwX5MZ9a1BxdX/APUeD/j48CgtLwf5hNyxDkujxexekNn5TGSLUmU7aki2LTeQ==` |
+| Pin recorded in | `law/policy/devai-package-identity.json` |
+| Verified against | `node_modules`, `pnpm-lock.yaml` |
+
+Rebound through supported commands only: `devai init bind --full` then
+`devai init bind --adopter-policy law/policy/devai-adoption.json`.
+No generated file was hand-edited.
+
+## Test census reconciliation
+
+| Measure | Baseline | After | Delta |
+| --- | --- | --- | --- |
+| Test files | 379 | 378 | −1 |
+| Declared cases | 2840 | 2810 | −30 |
+| Assertions | 9436 | 9183 | −253 |
+| Skip/todo/only markers | 7 | 7 | 0 |
+| Mutation packages | 38 | 38 | 0 |
+| Coverage thresholds | 70/60/70/70 | unchanged | 0 |
+| Mutation break floor | 90 | unchanged | 0 |
+
+All test changes are confined to three files under `test/scripts/`. No
+`packages/`, `packages-web/`, `db/`, `domain/`, or `reference/` test changed.
+
+### Retirement ledger (31 retired, 1 added, net −30)
+
+| File | Before | After | Retired | Added |
+| --- | --- | --- | --- | --- |
+| `local-rc-blocker-contract.test.mjs` | 73 | 66 | 8 | 1 |
+| `release-version-policy.test.mjs` | 36 | 24 | 12 | 0 |
+| `devai-local-rc-verifier.test.mjs` | 11 | — | 11 | 0 |
+
+**Retired from `local-rc-blocker-contract`** — all covered focused-mode or
+composed-campaign evidence, which no longer exists: five `D24.12 focused …`
+tests, `D24.12 focused and full-roster publication roots are mechanically
+independent`, `D24.32 composed mutation evidence …`, `D24.36 chained rebind …`.
+
+**Ported, not deleted:** `D24.15 runner bypasses preflight only for
+non-executing modes` kept its `--normalize-existing` bypass and
+preflight-before-staging assertions, and gained assertions that exactly one
+roster execution path remains.
+
+**Added:** `full-roster mutation publication is atomic and rollback-safe`,
+replacing the retired publication-roots test with coverage of the
+staging → backup → final promotion and its failure restore.
+
+**Retired from `release-version-policy`** — PR A campaign preparation and
+exemption (2), Changeset PR A classification (1), 1.1.1 candidate collision (1),
+six `D24.33` candidate-rebind tests, `trace closes 495/380/115/14=509` (1), and
+campaign evidence fail-closed (1).
+
+**Retired whole:** `devai-local-rc-verifier.test.mjs` — all 11 tests covered the
+deleted `devai-local-rc.mjs` wrapper, the deleted campaign policy, and the
+deleted `devai-local-rc-verify.yml` workflow. Nothing in it described behavior
+that survives.
+
+**Preserved explicitly:** the privacy package test-tier partition
+(`privacy ordinary, integration, and coverage tiers resolve exact disjoint
+populations`) and the space-bearing path test
+(`D24.22 filesystem URLs preserve decoded space-bearing engine and Playwright
+paths`) both pass unchanged. No skip, todo, `only`, reduced scope, or
+success-returning stub was added anywhere.
+
+## Product requirements extracted before their carriers were retired
+
+| Requirement | New home | Verification |
+| --- | --- | --- |
+| 44/38/6 package census | `law/policy/stynx-package-roster.json` | 38 mutation packages byte-identical to filesystem discovery |
+| Adopted DEVAI identity | `law/policy/devai-package-identity.json` | matches `node_modules` and `pnpm-lock.yaml` |
+| Retired-governance provenance | `law/policy/retired-governance-catalog.json` | all 15 digests self-verify |
+
+## Verification results
+
+| Check | Result |
+| --- | --- |
+| `test/scripts/local-rc-blocker-contract.test.mjs` | **66/66 pass** |
+| `test/scripts/release-version-policy.test.mjs` | 23/24 pass, then **24/24** after helper restore |
+| `test/scripts/validate.js` | **4/4 suites pass** |
+| `devai doctor` | verdict **pass**, tier1, 13 checks, 2 advisory failures (see limits) |
+| `devai check --task-plan --local` | **pass**, 9 nodes |
+| `devai check --task-plan --rc` | **pass**, 16 nodes including `test:mutation` |
+| Module load, `run-mutation-evidence.mjs` | pass |
+| Task graph dependency integrity | pass, 17 nodes, no dangling |
+
+## Open items
+
+1. **`devai doctor` reports 2 advisory failures that were 0 at baseline.**
+   `trusted-local-rc-boundary` and `authority-enforcement` both fail because
+   `.devai/config/project.json` still contains `ci_economy.attested_rc` after
+   that block was removed from the adopter policy source. `devai init bind`
+   merges rather than replaces, so the retired declaration cannot be cleared
+   through any supported command. `devai init apply architect --force` does not
+   clear it either and instead re-projects unrelated scaffolding, overwriting
+   `CLAUDE.md`, `AGENTS.md`, and several READMEs; it was reverted. Per the rule
+   against hand-editing generated files to simulate adoption, this is left
+   failing and reported as a **DEVAI 1.4.5 limitation**.
+
+2. **The mission's six-stage lifecycle is not reachable on 1.4.5.** The action
+   catalog has 48 actions and contains no `prepare` and no `export`.
+
+3. **Export requires signing control identities** (`--private-key`,
+   `--public-key`, `--signer-id`) that this migration does not hold and must
+   not invent.
+
+4. **Unmerged product work remains unlanded**, preserved at
+   `docs/meta/migration/preserved/`.
