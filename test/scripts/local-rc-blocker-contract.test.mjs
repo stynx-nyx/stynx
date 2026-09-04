@@ -11,7 +11,6 @@ import {
   readdirSync,
   readlinkSync,
   realpathSync,
-  renameSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -23,8 +22,6 @@ import test from 'node:test';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import {
-  FULL_MUTATION_ARTIFACT_ROOT,
-  GOVERNED_MUTATION_DIFF_ARGUMENTS,
   buildMutationEnvironment,
   classifyMutationOutcome,
   normalizeMutationReport,
@@ -33,7 +30,6 @@ import {
 import {
   canonicalize,
   discoverMutationRoster,
-  sha256Hex,
 } from '../../scripts/lib/mutation-roster.mjs';
 
 const repoRoot = resolve(import.meta.dirname, '..', '..');

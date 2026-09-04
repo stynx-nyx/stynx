@@ -3,8 +3,6 @@ import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import {
   accessSync,
-  chmodSync,
-  copyFileSync,
   constants,
   existsSync,
   lstatSync,
@@ -15,7 +13,6 @@ import {
   realpathSync,
   readdirSync,
   rmSync,
-  statSync,
   symlinkSync,
   writeFileSync,
 } from 'node:fs';
@@ -36,7 +33,7 @@ import {
   unifiedRebaselinePackageCount,
   unifiedRebaselineTarget,
 } from '../../scripts/lib/unified-rebaseline.mjs';
-import { discoverMutationRoster, MUTANT_STATUSES } from '../../scripts/lib/mutation-roster.mjs';
+import { discoverMutationRoster } from '../../scripts/lib/mutation-roster.mjs';
 import { classifyReleaseContext, ReleaseContextError } from '../../scripts/lib/release-context.mjs';
 import { typeOnlyCoverageExclusions } from '../../tools/repo-config/coverage-population.mjs';
 import { createVitestConfig } from '../../tools/repo-config/vitest.base.mjs';
@@ -149,18 +146,7 @@ function assertPolicyError(callback, code) {
 }
 
 const preparedBaseCommit = 'b77b50230e3906cee632eb9218b06603cce6c89a';
-const preparedBaseTree = 'd0cde059f7a93a624ff01d485ebda9ac3cb9422e';
 const preparedHeadCommit = '6d7f86d70e784a281fe025bf50babc9f3b3e8aee';
-const exactPrAChangesetPolicy = {
-  kind: 'campaign-preparation-only',
-  baseline_commit: preparedBaseCommit,
-  baseline_tree: preparedBaseTree,
-  current_version: '1.0.0',
-  candidate_version: '1.1.1',
-  changesets: 'forbidden',
-  release_status_projection: 'empty-non-promoting',
-  version_projection: 'deferred-to-pr-b',
-};
 
 function prAReleaseContext(overrides = {}) {
   const { roster: mutationRoster } = discoverMutationRoster(repoRoot);
@@ -625,32 +611,6 @@ test('one-time rebaseline deterministically updates the exact 44-package release
 
 const rootManifest = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8'));
 const repositorySource = (path) => readFileSync(join(repoRoot, path), 'utf8');
-const frozenCompositionCommit = '6754d65f89cc9c2f23ab82f61a4b68c543f0bef4';
-
-function repositorySourceAt(commit, path) {
-  const result = spawnSync('git', ['show', `${commit}:${path}`], {
-    cwd: repoRoot,
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
-  assert.ifError(result.error);
-  assert.equal(result.signal, null);
-  assert.equal(result.status, 0, result.stderr);
-  return result.stdout;
-}
-
-function sha256(value) {
-  return createHash('sha256').update(value).digest('hex');
-}
-
-function canonicalize(value) {
-  if (value === null || typeof value !== 'object') return JSON.stringify(value);
-  if (Array.isArray(value)) return `[${value.map(canonicalize).join(',')}]`;
-  return `{${Object.keys(value)
-    .sort()
-    .map((key) => `${JSON.stringify(key)}:${canonicalize(value[key])}`)
-    .join(',')}}`;
-}
 
 function publicWorkspaceManifests() {
   return ['packages', 'packages-web']
